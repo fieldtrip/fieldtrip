@@ -1,9 +1,9 @@
 function [hs] = ft_plot_mesh(mesh, varargin)
 
-% FT_PLOT_MESH visualizes the information of a mesh contained in the first
-% argument mesh. The boundary argument (mesh) typically contains two fields
-% called .pos and .tri referring to the vertices and the triangulation of
-% the mesh.
+% FT_PLOT_MESH visualizes a surface or volumetric mesh, for example describing the
+% realistic shape of the head. Surface meshes should be described by triangles and
+% contain the fields "pos" and "tri". Volumetric meshes should be described with
+% tetraheders or hexaheders and have the fields "pos" and "tet" or "hex".
 %
 % Use as
 %   ft_plot_mesh(mesh, ...)
@@ -38,8 +38,8 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %
 % See also TRIMESH, PATCH
 
-% Copyright (C) 2009-2015, Robert Oostenveld
 % Copyright (C) 2009, Cristiano Micheli
+% Copyright (C) 2009-2015, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -268,48 +268,49 @@ switch maskstyle
       set(hs, 'FaceVertexCData', vertexcolor, 'FaceColor', 'interp');
       if numel(vertexcolor)==size(pos,1)
         if ~isempty(clim), set(gca, 'clim', clim); end
-          if ~isempty(cmap), colormap(cmap); end
-        end
-      elseif facepotential
-        set(hs, 'FaceVertexCData', facecolor, 'FaceColor', 'flat');
-        if numel(facecolor)==size(tri,1)
-          if ~isempty(clim), set(gca, 'clim', clim); end
-          if ~isempty(cmap), colormap(cmap); end
-        end
+        if ~isempty(cmap), colormap(cmap); end
+      end
+    elseif facepotential
+      set(hs, 'FaceVertexCData', facecolor, 'FaceColor', 'flat');
+      if numel(facecolor)==size(tri,1)
+        if ~isempty(clim), set(gca, 'clim', clim); end
+        if ~isempty(cmap), colormap(cmap); end
+      end
     else
       % the color is indicated as a single character or as a single RGB triplet
       set(hs, 'FaceColor', facecolor);
     end
-        
-    % if facealpha is an array with number of elements equal to the number of vertices
+    
+    % facealpha is a scalar, or an vector matching the number of vertices
     if size(pos,1)==numel(facealpha)
       set(hs, 'FaceVertexAlphaData', facealpha);
       set(hs, 'FaceAlpha', 'interp');
     elseif ~isempty(pos) && numel(facealpha)==1 && facealpha~=1
-       % the default is 1, so that does not have to be set
-       set(hs, 'FaceAlpha', facealpha);
+      % the default is 1, so that does not have to be set
+      set(hs, 'FaceAlpha', facealpha);
     end
-       
+    
     if edgealpha~=1
       % the default is 1, so that does not have to be set
       set(hs, 'EdgeAlpha', edgealpha);
     end
-        
-    if ~(facealpha==1 & edgealpha==1)
+    
+    if ~(all(facealpha==1) && edgealpha==1)
       if ~isempty(alphalim)
         alim(gca, alphalim);
       end
       alphamap(alphamapping);
     end
-  case 'colormix' 
+    
+  case 'colormix'
     % ensure facecolor to be 1x3
     assert(isequal(size(facecolor),[1 3]), 'facecolor should be 1x3');
     
     % ensure facealpha to be nvertex x 1
     if numel(facealpha)==1
-     facealpha = repmat(facealpha, size(pos,1), 1);
+      facealpha = repmat(facealpha, size(pos,1), 1);
     end
-    assert(isequal(numel(facealpha),size(pos,1)), 'facealpha should have npos elements');
+    assert(isequal(numel(facealpha),size(pos,1)), 'facealpha should be %dx1', size(pos,1));
     
     bgcolor = repmat(facecolor, [numel(vertexcolor) 1]);
     rgb     = bg_rgba2rgb(bgcolor, vertexcolor, cmap, clim, facealpha, alphamapping, alphalim);
@@ -399,7 +400,6 @@ if ~isequal(vertexcolor, 'none') && ~vertexpotential
       end
     end
     
-    
   elseif ~ischar(vertexcolor) && size(vertexcolor,1)==1
     % one RGB color for all points
     if size(pos,2)==2
@@ -437,7 +437,6 @@ if ~isequal(vertexcolor, 'none') && ~vertexpotential
   end
   
 end % plotting the vertices as points
-
 
 
 if vertexindex

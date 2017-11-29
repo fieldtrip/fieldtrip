@@ -38,7 +38,7 @@ function [ s ] = xml2struct( file )
 % Written by W. Falkena, ASTI, TUDelft, 21-08-2010
 % Attribute parsing speed increased by 40% by A. Wanner, 14-6-2011
 % 2011/12/14 giopia: changes in the main function to make more similar to xml2struct of the XML4MAT toolbox, bc it's used by fieldtrip
-% 2012/04/04 roboos: added the original license clause, see also http://bugzilla.fcdonders.nl/show_bug.cgi?id=645#c11
+% 2012/04/04 roboos: added the original license clause, see also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=645#c11
 % 2012/04/04 roboos: don't print the filename that is being read
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

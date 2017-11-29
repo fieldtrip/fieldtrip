@@ -1,5 +1,6 @@
-% FT_POSTAMBLE_HISTORY stores the configuration structure that is present in the
-% present workspace in the output variable.
+% FT_POSTAMBLE_HISTORY is a helper script that stores the configuration structure that
+% is present in the present workspace (i.e. the workspace of the calling function) in
+% the output variable.
 %
 % Use as
 %   ft_postamble history outputvar
@@ -39,6 +40,3 @@ for tmpindx=1:length(ft_default.postamble)
   end
 end
 clear tmpindx
-
-% clear warnings from ft_default, so that they don't end up in the next cfg
-ft_warning('-clear');

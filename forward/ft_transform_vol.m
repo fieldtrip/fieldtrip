@@ -8,7 +8,7 @@ function [headmodel] = ft_transform_vol(transform, headmodel)
 % Use as
 %   headmodel = ft_transform_vol(transform, headmodel)
 %
-% See also FT_READ_VOL, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
+% See also FT_READ_VOL, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD, FT_TRANSFORM_GEOMETRY
 
 % Copyright (C) 2008, Robert Oostenveld
 %

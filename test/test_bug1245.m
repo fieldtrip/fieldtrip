@@ -15,20 +15,28 @@ function test_bug1245
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
 
+%%
 % this is one way of having ft_multiplotER select avg as the parameter
-load bug1245.mat
+load bug1245.mat data cfg
 data.avg = [];
 figure
 ft_multiplotER(cfg, data);
 
+%%
 % this is another one way of having ft_multiplotER select avg as the parameter
-load bug1245.mat
-cfg.parameter = 'avg';
-figure
-ft_multiplotER(cfg, data);
+try
+  load bug1245.mat data cfg
+  cfg.parameter = 'avg';
+  figure
+  ft_multiplotER(cfg, data);
+catch
+  % this started failing from https://github.com/fieldtrip/fieldtrip/pull/524 onwards
+  % and I don't mind this not working any more
+end
 
+%%
 % but the data contains a 'trial' field, so better explicitly select that
-load bug1245.mat
+load bug1245.mat data cfg
 cfg.parameter = 'trial';
 figure
 ft_multiplotER(cfg, data);

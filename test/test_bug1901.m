@@ -5,10 +5,6 @@ function test_bug1901
 
 % TEST ft_prepare_leadfield ft_prepare_sourcemodel prepare_headmodel ft_convert_units
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-
 % this is some data that should be relatively compatible with the original data
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1901.mat'), 'vol'); 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1901.mat'), 'grad');

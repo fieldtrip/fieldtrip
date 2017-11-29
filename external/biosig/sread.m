@@ -1221,7 +1221,7 @@ elseif strcmp(HDR.TYPE,'EEProbe-CNT'),
 	else
                 fprintf(HDR.FILE.stderr,'ERROR SREAD (EEProbe): Cannot open EEProbe-file, because read_eep_cnt.mex not installed. \n');
                 fprintf(HDR.FILE.stderr,'ERROR SREAD (EEProbe): You can downlad it from http://www.smi.auc.dk/~roberto/eeprobe/\n');
-		%% ftp://ftp.fcdonders.nl/pub/fieldtrip/external/eeprobe.zip
+		%% ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/external/eeprobe.zip
                 return;
         end
        

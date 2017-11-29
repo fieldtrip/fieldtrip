@@ -11,9 +11,9 @@ function test_bug1646
 % done is to search for as many as possible other tets cases and replicated
 % them here.
 
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=105 is obsolete
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=115 is obsolete
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=964 is obsolete
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=105 is obsolete
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=115 is obsolete
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=964 is obsolete
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -45,8 +45,8 @@ bnd = ft_prepare_mesh(cfg, headmodel);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the following piece of test code relates loosely to
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=222
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=373
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=222
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=373
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 cfg = [];
@@ -55,7 +55,7 @@ bnd = ft_prepare_mesh(cfg);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is the same test data as used for bug 1652
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=1652
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1652
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 datadir = fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1646'));
@@ -233,7 +233,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this shares the test data with bug 1651
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=1651
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1651
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear all
@@ -245,13 +245,13 @@ cfg.numvertices = [1000 2000 3000];
 bnd = ft_prepare_mesh(cfg, seg2);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=997
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=997
 % this one does not state an explicit way of reproducing the problems, it rather refers to 937
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=937
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=937
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug937.mat'));

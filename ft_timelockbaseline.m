@@ -71,6 +71,7 @@ timelock = ft_checkdata(timelock, 'datatype',...
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamed', {'blcwindow', 'baselinewindow'});
+cfg = ft_checkconfig(cfg, 'forbidden', 'baselinetype');
 
 % set the defaults
 cfg.baseline  = ft_getopt(cfg, 'baseline',  'no');

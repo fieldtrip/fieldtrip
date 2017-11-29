@@ -136,7 +136,7 @@ spikeTrials   = ft_spike_maketrials(cfg,spike);
 
 cfg          = [];
 cfg.dataset  = filenex;
-cfg.trialfun = 'trialfun_stimon'; % this was defined in the [ftp:fieldtrip.fcdonders.nl/tutorial/spike] tutorial
+cfg.trialfun = 'trialfun_stimon'; % this was defined in the spike tutorial
 cfg          = ft_definetrial(cfg);
 cfg.timestampspersecond = 40000;
 spikeTrials2 = ft_spike_maketrials(cfg,spike);

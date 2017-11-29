@@ -1,14 +1,14 @@
 function fieldtrip2spss(filename, labels, data)
 
 % FIELDTRIP2SPSS compiles data and correpsonding labels into a textfile,
-% suitable for import to SPSS.
+% suitable for importing into SPSS or JASP (jasp-stats.org).
 %
 % Use as
 %   fieldtrip2spss(filename, labels, data)
 %
 % When exporting from MATLAB, set:
 %   - filename; should be string (e.g. 'counts.txt')
-%   - labels; should be a cell array (e.g. {'ones','twos','threes'})
+%   - labels; should be a cell array (e.g. {'ones', 'twos', 'threes'})
 %   - data; should be either a vector or matrix (e.g. [1 2 3; 1 2 3; 1 2 3])
 %
 % When importing to SPSS, set;
@@ -24,7 +24,7 @@ function fieldtrip2spss(filename, labels, data)
 % After importing to SPSS, click the Missing cell in the Variable View
 % window and enter 9999 as the missing value definition.
 
-% Copyright (C) 2011-2014, Arjen Stolk
+% Copyright (C) 2011-2017, Arjen Stolk
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -44,14 +44,6 @@ function fieldtrip2spss(filename, labels, data)
 %
 % $Id$
 
-% these are used by the ft_preamble/ft_postamble function and scripts
-ft_revision = '$Id$';
-ft_nargin   = nargin;
-ft_nargout  = nargout;
-
-% do the general setup of the function
-ft_defaults
-ft_preamble callinfo
 
 % check whether data and labels have the same lengths
 if ~isequal(size(data,2),size(labels,2))
@@ -64,6 +56,3 @@ txt = sprintf('%s\t',labels{:});
 txt(end) = '';
 dlmwrite(filename, txt, '');
 dlmwrite(filename, data, '-append', 'delimiter', '\t', 'precision', 4);
-
-% do the general cleanup and bookkeeping at the end of the function
-ft_postamble callinfo

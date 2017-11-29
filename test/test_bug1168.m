@@ -80,7 +80,7 @@ cfg = d.cfg;
 try
   ft_multiplotTFR(cfg, freq);
 catch exception
-  assert(strcmp(exception.message,'This function requires freq data as input.'))
+  assert(strcmp(exception.message, 'This function requires freq data as input, see ft_datatype_freq.'))
 end
 
 
@@ -102,5 +102,5 @@ cfg = d.cfg;
 try
   ft_multiplotTFR(cfg, freq);
 catch exception
-  assert(strcmp(exception.message,'unexpected dimord "chan_freq_ax2"'))
+  assert(strcmp(exception.message, 'unexpected dimord "chan_freq_ax2"'))
 end

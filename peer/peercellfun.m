@@ -119,7 +119,7 @@ end
 
 % there are potentially errors to catch from the which() function
 if isempty(which(fname))
-  ft_error('Not a valid M-file (%s).', fname);
+  error('Not a valid M-file (%s).', fname);
 end
 
 % determine the number of input arguments and the number of jobs
@@ -147,16 +147,16 @@ elseif numargout>nargout
   % the number of output arguments is constrained by the users' call to this function
   numargout = nargout;
 elseif nargout>numargout
-  ft_error('Too many output arguments.');
+  error('Too many output arguments.');
 end
 
 % check the input arguments
 for i=1:numargin
   if ~isa(varargin{i}, 'cell')
-    ft_error('input argument #%d should be a cell-array', i+1);
+    error('input argument #%d should be a cell-array', i+1);
   end
   if numel(varargin{i})~=numjob
-    ft_error('inconsistent number of elements in input #%d', i+1);
+    error('inconsistent number of elements in input #%d', i+1);
   end
 end
 
@@ -164,7 +164,7 @@ end
 list = peerlist;
 list = list([list.status]==2 | [list.status]==3);
 if isempty(list)
-  ft_warning('there is no peer available as slave, reverting to local cellfun');
+  warning('there is no peer available as slave, reverting to local cellfun');
   % prepare the output arguments
   varargout = cell(1,numargout);
   % use the standard cellfun
@@ -224,7 +224,7 @@ if strcmp(order, 'random')
 elseif strcmp(order, 'original')
   priority = 1:numjob;
 else
-  ft_error('unsupported order');
+  error('unsupported order');
 end
 
 % post all jobs and gather their results
@@ -250,10 +250,10 @@ while ~all(submitted) || ~all(collected)
     end
 
     % submit the job for execution
-    ws = ft_warning('off', 'FieldTrip:peer:noSlaveAvailable');
+    ws = warning('off', 'FieldTrip:peer:noSlaveAvailable');
     % peerfeval will give a warning if the submission timed out
     [curjobid curputtime] = peerfeval(fname, argin{:}, 'timeout', 5, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'nargout', numargout);
-    ft_warning(ws);
+    warning(ws);
 
     if ~isempty(curjobid)
       % fprintf('submitted job %d\n', submit);
@@ -314,7 +314,7 @@ while ~all(submitted) || ~all(collected)
       collect = [resubmitted([resubmitted.jobid] == joblist(i).jobid).jobnum];
       if ~isempty(collect) && ~collected(collect)
         % forget the resubmitted job, take these results instead
-        ft_warning('the original job %d did return, reverting to its original results', collect);
+        warning('the original job %d did return, reverting to its original results', collect);
       end
     end
 
@@ -333,9 +333,9 @@ while ~all(submitted) || ~all(collected)
 
     % collect the output arguments
     try
-      ws = ft_warning('Off','Backtrace');
+      ws = warning('Off','Backtrace');
       [argout, options] = peerget(joblist(i).jobid, 'timeout', inf, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
-      ft_warning(ws);
+      warning(ws);
     catch
       % the "catch me" syntax is broken on MATLAB74, this fixes it
       peerget_err = lasterror;
@@ -355,7 +355,7 @@ while ~all(submitted) || ~all(collected)
          ~isempty(strfind(peerget_err.message, 'failed to execute the job (optin)'))
         % this is due to a license problem or a memory problem
         if ~isempty(strfind(peerget_err.message, 'could not start the MATLAB engine'))
-          ft_warning('resubmitting job %d because the MATLAB engine could not get a license', collect);
+          warning('resubmitting job %d because the MATLAB engine could not get a license', collect);
         end
         % reset all job information, this will cause it to be automatically resubmitted
         jobid      (collect) = nan;
@@ -459,7 +459,7 @@ while ~all(submitted) || ~all(collected)
   % this is only a warning, no action is taken here
   % sel = find((toc(stopwatch)-lastseen)>60);
   % for i=1:length(sel)
-  %   ft_warning('job %d has not been seen for 60 seconds\n', sel(i));
+  %   warning('job %d has not been seen for 60 seconds\n', sel(i));
   % end
 
   % search for jobs that were submitted but that are still not busy after 60 seconds
@@ -471,7 +471,7 @@ while ~all(submitted) || ~all(collected)
   sel = find(elapsed>60);
 
   for i=1:length(sel)
-    ft_warning('resubmitting job %d because it takes too long to get started', sel(i));
+    warning('resubmitting job %d because it takes too long to get started', sel(i));
     % remember the job that will be resubmitted, it still might return its results
     resubmitted(end+1).jobnum = sel(i);
     resubmitted(end  ).jobid  = jobid(sel(i));
@@ -510,7 +510,7 @@ while ~all(submitted) || ~all(collected)
   sel = find(submitted & ~collected & (elapsed>estimated));
 
   for i=1:length(sel)
-    ft_warning('resubmitting job %d because it takes too long to finish (estimated = %s)', sel(i), print_tim(estimated));
+    warning('resubmitting job %d because it takes too long to finish (estimated = %s)', sel(i), print_tim(estimated));
     % remember the job that will be resubmitted, it still might return its results
     resubmitted(end+1).jobnum = sel(i);
     resubmitted(end  ).jobid  = jobid(sel(i));
@@ -566,7 +566,7 @@ if numargout>0 && UniformOutput
     for j=1:numel(varargout{i})
       if numel(varargout{i}{j})~=1
         % this error message is consistent with the one from cellfun
-        ft_error('Non-scalar in Uniform output, at index %d, output %d. Set ''UniformOutput'' to false.', j, i);
+        error('Non-scalar in Uniform output, at index %d, output %d. Set ''UniformOutput'' to false.', j, i);
       end
     end
   end
@@ -588,7 +588,7 @@ fprintf('computational time = %.1f sec, elapsed = %.1f sec, speedup %.1f x (memr
 if all(puttime>timused)
   % FIXME this could be detected in the loop above, and the strategy could automatically
   % be adjusted from using the peers to local execution
-  ft_warning('copying the jobs over the network took more time than their execution');
+  warning('copying the jobs over the network took more time than their execution');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -7,8 +7,6 @@ function test_bug3124
 
 %%
 
-global ft_default
-
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/vol.mat'))
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/dataFIC.mat'))
 
@@ -34,8 +32,6 @@ sourcemodel = ft_prepare_leadfield(cfg, freq);
 
 %%
 % make a manual selection of a single frequency
-
-ft_default.checkconfig = 'loose';
 
 fcfg = [];
 fcfg.frequency = 10;
@@ -73,8 +69,6 @@ assert(isequaln(source0.avg.pow, source2.avg.pow));
 
 %%
 % make a manual selection of a range
-
-ft_default.checkconfig = 'loose';
 
 fcfg = [];
 fcfg.frequency = [9 11];

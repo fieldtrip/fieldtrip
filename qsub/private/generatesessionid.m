@@ -25,7 +25,7 @@ function id = generatesessionid()
 % $Id$
 
 if nargin~=0
-  ft_error('incorrect number of input arguments');
+  error('incorrect number of input arguments');
 end
 
 id = sprintf('%s_%s_p%d', getusername(), gethostname(), getpid());

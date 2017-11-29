@@ -6,6 +6,8 @@ function [label] = atlas_lookup(atlas, pos, varargin)
 %   label = atlas_lookup(atlas, pos, ...);
 %
 % Optinal input arguments should come in key-value pairs and can include
+%   'method'       = 'sphere' (default) searches surrounding voxels in a sphere
+%                    'cube' searches surrounding voxels in a cube
 %   'queryrange'   = number, should be 1, 3, 5, 7, 9 or 11 (default = 3)
 %   'inputcoord'   = 'mni' or 'tal' (default = [])
 % 
@@ -34,6 +36,7 @@ function [label] = atlas_lookup(atlas, pos, varargin)
 % $Id$
 
 % get the optional input arguments
+method      = ft_getopt(varargin, 'method', 'sphere');
 queryrange  = ft_getopt(varargin, 'queryrange', 3);
 inputcoord  = ft_getopt(varargin, 'inputcoord');
 
@@ -41,8 +44,8 @@ if isempty(inputcoord)
   ft_error('you must specify inputcoord');
 end
 
-if isempty(intersect(queryrange, [1 3 5 7 9 11]))
-  ft_error('incorrect query range, should be one of [1 3 5 7 9 11]');
+if isempty(intersect(queryrange, 1:2:queryrange))
+  ft_error('incorrect query range, should be an odd number');
 end
 
 if size(pos,1)==3 && size(pos,2)~=3
@@ -101,34 +104,86 @@ for i=1:num
   ijk_center = vox(i,:);
 
   if isindexed
-    for di=(-(queryrange-1)/2):1:((queryrange-1)/2)
-      for dj=(-(queryrange-1)/2):1:((queryrange-1)/2)
-        for dk=(-(queryrange-1)/2):1:((queryrange-1)/2)
-          
-          % search in a cube around the center voxel
-          ijk = round(ijk_center + [di dj dk]);
-          
-          if ijk(1)>=1 && ijk(1)<=atlas.dim(1) && ...
-              ijk(2)>=1 && ijk(2)<=atlas.dim(2) && ...
-              ijk(3)>=1 && ijk(3)<=atlas.dim(3)
-            for k=1:numel(fn)
-              sel{k} = [sel{k}; atlas.(fn{k})(ijk(1), ijk(2), ijk(3))];
-            end
-            %brick0_val = atlas.brick0(ijk(1), ijk(2), ijk(3));
-            %brick1_val = atlas.brick1(ijk(1), ijk(2), ijk(3));
-            %sel = [sel; find(atlas.descr.brick==0 & atlas.descr.value==brick0_val)];
-            %sel = [sel; find(atlas.descr.brick==1 & atlas.descr.value==brick1_val)];
-          else
-            ft_warning('location is outside atlas volume');
-          end % k
-          %FIXME the three loops can probably be easily vectorized
-        end % dk
-      end % dj
-    end % di
+    if strcmp(method, 'sphere');
+      % search in a sphere around the center voxel
+      
+      % first, identify the voxels (x,y,z) in a sphere around the center voxel
+      [x, y, z] = sphere(1000);
+      ori = [0 0 0];
+      ptswithinq = [];
+      for r = 0:(queryrange/2 - 0.5)
+        xs = round(r*x(:));
+        ys = round(r*y(:));
+        zs = round(r*z(:));
+        pts = unique([xs ys zs], 'rows');
+        
+        spherepts = [];
+        for a = 1:size(pts,1)
+          d2ori = sqrt(sum((pts(a, :)-ori).^2));
+          if d2ori <= r
+            spherepts = [spherepts; pts(a, :)];
+          end
+        end
+        
+        ptswithinr = []; % voxels located at a radius of r voxels from the center voxel
+        for n = 1:size(spherepts,1)
+          ptswithinr = [ptswithinr; spherepts(n, 1)+ijk_center(1), spherepts(n, 2)+ijk_center(2), spherepts(n,3)+ijk_center(3)];
+        end
+        
+        ptswithinq = [ptswithinq; ptswithinr]; % voxels within a radius of queryrange from the center voxel
+      end
+      ptswithinq = unique(round(ptswithinq), 'rows');
+      
+      for n = 1:size(ptswithinq,1)
+        ijk = ptswithinq(n, :);
+        if ijk(1)>=1 && ijk(1)<=atlas.dim(1) && ...
+            ijk(2)>=1 && ijk(2)<=atlas.dim(2) && ...
+            ijk(3)>=1 && ijk(3)<=atlas.dim(3)
+          for k=1:numel(fn)
+            sel{k} = [sel{k}; atlas.(fn{k})(ijk(1), ijk(2), ijk(3))];
+          end
+        else
+          ft_warning('location is outside atlas volume');
+        end
+      end
+      
+    elseif strcmp(method, 'cube');
+      % search in a cube around the center voxel
+      for di=(-(queryrange-1)/2):1:((queryrange-1)/2)
+        for dj=(-(queryrange-1)/2):1:((queryrange-1)/2)
+          for dk=(-(queryrange-1)/2):1:((queryrange-1)/2)
+            
+            % search in a cube around the center voxel
+            ijk = round(ijk_center + [di dj dk]);
+            
+            if ijk(1)>=1 && ijk(1)<=atlas.dim(1) && ...
+                ijk(2)>=1 && ijk(2)<=atlas.dim(2) && ...
+                ijk(3)>=1 && ijk(3)<=atlas.dim(3)
+              for k=1:numel(fn)
+                sel{k} = [sel{k}; atlas.(fn{k})(ijk(1), ijk(2), ijk(3))];
+              end
+              %brick0_val = atlas.brick0(ijk(1), ijk(2), ijk(3));
+              %brick1_val = atlas.brick1(ijk(1), ijk(2), ijk(3));
+              %sel = [sel; find(atlas.descr.brick==0 & atlas.descr.value==brick0_val)];
+              %sel = [sel; find(atlas.descr.brick==1 & atlas.descr.value==brick1_val)];
+            else
+              ft_warning('location is outside atlas volume');
+            end % k
+            %FIXME the three loops can probably be easily vectorized
+          end % dk
+        end % dj
+      end % di
+    end
     
     for k = 1:numel(fn)
       if ~isempty(sel{k})
-        label = [label; atlas.([fn{k} 'label'])(setdiff(unique(sel{k}),0))];
+        % Get rid of zeros in sel{k}
+        for t = numel(sel{k}):-1:1
+          if sel{k}(t) == 0;
+            sel{k}(t) = [];
+          end
+        end
+        label = [label; atlas.([fn{k} 'label'])(sel{k})]; % by using setdiff and/or unique, the count for each label is lost, and ft_volumelookup cannot provide an accurate number for labels.count
       end
     end
   else

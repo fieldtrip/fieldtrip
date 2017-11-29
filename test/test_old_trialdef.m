@@ -44,33 +44,33 @@ cfg.trl(:,1:2) = cfg.trl(:,1:2) + 11000;
 cfg.trl(:,3)   = round(randn(10,1)*100);
 data2          = ft_preprocessing(cfg);
 
-% test subselection of trialsclear 
+% test subselection of trialsclear
 cfg        = [];
 cfg.trials = (1:5);
 datax      = ft_preprocessing(cfg, data1);
 
 % test some other preprocessing (so nargin==2 for ft_preprocessing)
 cfg        = [];
-cfg.blc    = 'yes';
+cfg.demean = 'yes';
 datax2     = ft_preprocessing(cfg, data1);
 
-% test checkdata
+% test ft_checkdata
 datay = data1;
 datay = rmfield(datay,   'sampleinfo');
 datay = rmfield(datay,   'trialinfo');
-datay = checkdata(datay, 'hastrialdef', 'yes');
+datay = ft_checkdata(datay, 'hastrialdef', 'yes');
 
 datay.trialinfo(:) = 3;
-datay = checkdata(datay, 'hastrialdef', 'yes'); % should give all(datay.trialinfo==3)
+datay = ft_checkdata(datay, 'hastrialdef', 'yes'); % should give all(datay.trialinfo==3)
 
 datay.trialinfo = [];
-datay = checkdata(datay, 'hastrialdef', 'yes'); % should give all(datay.trialinfo==trl(:,4))
+datay = ft_checkdata(datay, 'hastrialdef', 'yes'); % should give all(datay.trialinfo==trl(:,4))
 
 datay = data1;
 datay = rmfield(datay,   'sampleinfo');
 datay = rmfield(datay,   'trialinfo');
 datay.cfg = rmfield(datay.cfg, 'trl');
-datay = checkdata(datay, 'hastrialdef', 'yes');
+datay = ft_checkdata(datay, 'hastrialdef', 'yes');
 
 % test appenddata
 data1b = rmfield(data1, 'sampleinfo');
@@ -104,18 +104,18 @@ data1z       = ft_redefinetrial(cfg, data1 );
 cfg = [];
 cfg.resamplefs = 300;
 cfg.detrend    = 'no';
-cfg.blc        = 'yes';
+cfg.demean     = 'yes';
 data1rs        = ft_resampledata(cfg, data1);
 data1brs       = ft_resampledata(cfg, data1b);
 cfg.trials     = [1:5];
 data1rs2       = ft_resampledata(cfg, data1b);
 
 % test ft_databrowser
-cfg            = [];
-cfg.viewmethod = 'butterfly';
-cfg.preproc.blc = 'yes';
-cfg.channel    = 'MEG';
-cfg.continuous = 'yes';
+cfg = [];
+cfg.viewmethod      = 'butterfly';
+cfg.preproc.demean  = 'yes';
+cfg.channel         = 'MEG';
+cfg.continuous      = 'yes';
 ft_databrowser(cfg, data1b);
 
 % test ft_rejectartifact
@@ -131,7 +131,7 @@ cfg.trl(:,4) = [ones(5,1); ones(5,1)*2];
 cfg.continuous = 'yes';
 cfg.artfctdef.type  = 'eog';
 cfg.artfctdef.eog.channel = 'MLO11';
-cfg.artfctdef.eog.feedback = 'no'; % yes does not work in the test script, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2840
+cfg.artfctdef.eog.feedback = 'no'; % yes does not work in the test script, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2840
 cfg          = ft_rejectartifact(cfg);
 
 datay = data1;

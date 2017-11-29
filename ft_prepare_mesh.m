@@ -20,6 +20,7 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %   cfg.tissue      = cell-array with tissue types or numeric vector with integer values
 %   cfg.numvertices = numeric vector, should have same number of elements as cfg.tissue
 %   cfg.downsample  = integer number (default = 1, i.e. no downsampling), see FT_VOLUMEDOWNSAMPLE
+%   cfg.spmversion  = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
 %
 % For method 'headshape you should specify
 %   cfg.headshape   = a filename containing headshape, a Nx3 matrix with surface
@@ -115,6 +116,7 @@ cfg = ft_checkconfig(cfg, 'forbidden', {'numcompartments', 'outputfile', 'source
 cfg.downsample  = ft_getopt(cfg, 'downsample', 1); % default is no downsampling
 cfg.numvertices = ft_getopt(cfg, 'numvertices');   % no default
 cfg.smooth      = ft_getopt(cfg, 'smooth');        % no default
+cfg.spmversion  = ft_getopt(cfg, 'spmversion', 'spm8');
 
 % Translate the input options in the appropriate default for cfg.method
 if isfield(cfg, 'headshape') && ~isempty(cfg.headshape)
@@ -165,7 +167,7 @@ switch cfg.method
     fprintf('triangulating the sphere in the volume conductor\n');
     [pos, tri] = makesphere(cfg.numvertices);
     bnd = [];
-    mri = ft_convert_units(mri);      % ensure that it has units
+    mri = ft_determine_units(mri);      % ensure that it has units
     headmodel = ft_datatype_headmodel(mri); % rename it and ensure that it is consistent and up-to-date
     for i=1:length(headmodel.r)
       bnd(i).pos(:,1) = pos(:,1)*headmodel.r(i) + headmodel.o(1);
@@ -187,7 +189,7 @@ if ~isfield(bnd, 'unit') && hasdata && isfield(mri, 'unit')
     bnd(i).unit = mri.unit;
   end
 elseif ~isfield(bnd, 'unit')
-  bnd = ft_convert_units(bnd);
+  bnd = ft_determine_units(bnd);
 end
 
 % copy the coordinate system from the input to the output

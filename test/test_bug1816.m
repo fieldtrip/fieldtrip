@@ -4,7 +4,7 @@ function test_bug1816
 % WALLTIME 00:10:00
 
 % test the ft_volumesegment function used for segmentation with FSL BET and FAST
-% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1816
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1816
 
 % TEST ft_read_mri ft_volumesegment
 

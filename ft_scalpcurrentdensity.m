@@ -149,7 +149,7 @@ end
 dtype = ft_datatype(data);
 
 % check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'iseeg','yes','ismeg',[]);
+data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes','ismeg',[]);
 
 % select trials of interest
 tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'});

@@ -15,7 +15,7 @@ if(isfield(st.nmt,'time')) %& ~isfield(st.nmt,'freq'))
             end
         case 'ts'
             if(isfinite(st.nmt.cfg.vox_idx))
-                plot(st.nmt.gui.ax_ts(axsel),st.nmt.time,squeeze(st.nmt.fun{axsel}(st.nmt.cfg.vox_idx,:,:)));
+                plot(st.nmt.gui.ax_ts(axsel),st.nmt.time,squeeze(st.nmt.fun{axsel}(st.nmt.cfg.vox_idx,:,:)) ,'LineWidth',2);
                 grid(st.nmt.gui.ax_ts(axsel),'on');
             else
                 plot(st.nmt.gui.ax_ts(axsel),st.nmt.time,nan(length(st.nmt.time),1));
@@ -30,12 +30,11 @@ if(isfield(st.nmt,'time')) %& ~isfield(st.nmt,'freq'))
                 ymin =  min(min(st.nmt.fun{axsel}(:,st.nmt.cfg.time_idx(1):st.nmt.cfg.time_idx(2))));
                 ymax =  max(max(st.nmt.fun{axsel}(:,st.nmt.cfg.time_idx(1):st.nmt.cfg.time_idx(2))));
             end
-            set(st.nmt.gui.ax_ts(axsel),'YLim',[ymin ymax]);
-            
+            set(st.nmt.gui.ax_ts(axsel),'YLim',[ymin ymax],'FontSize',14,'FontWeight','bold');
     end
-    set(st.nmt.gui.ax_ts(axsel),'XLim',st.nmt.time([1 end]));
-    xlabel(st.nmt.gui.ax_ts(axsel),['Time (s)']);
     
+    set(st.nmt.gui.ax_ts(axsel),'XLim',st.nmt.time([1 end]));
+    xlabel(st.nmt.gui.ax_ts(axsel),['Time (s)'],'FontSize',14,'FontWeight','bold');
     
     %% plot vertical line indicating selected time point
     switch(st.nmt.cfg.plottype)
@@ -49,7 +48,7 @@ if(isfield(st.nmt,'time')) %& ~isfield(st.nmt,'freq'))
     axes(st.nmt.gui.ax_ts(axsel));
     zlim = get(st.nmt.gui.ax_ts(axsel),'ZLim'); % selection patch needs to have a Z higher than the TF range so that it's not hidden by the TF plot
     h=patch([st.nmt.time(st.nmt.cfg.time_idx(1)) st.nmt.time(st.nmt.cfg.time_idx(2)) st.nmt.time(st.nmt.cfg.time_idx(2)) st.nmt.time(st.nmt.cfg.time_idx(1))]',[ylim(1) ylim(1) ylim(2) ylim(2)]',[zlim(2) zlim(2) zlim(2) zlim(2)],[1 0.4 0.4],'EdgeColor','red','FaceAlpha',facealpha);
-
+    
     set(st.nmt.gui.ax_ts(axsel),'ButtonDownFcn',@nmt_repos_start);
     
     
@@ -80,7 +79,14 @@ if(isfield(st.nmt,'time')) %& ~isfield(st.nmt,'freq'))
         set(st.nmt.gui.f1,'String',num2str(st.nmt.freq(st.nmt.cfg.freq_idx(1),1)));
         set(st.nmt.gui.f2,'String',num2str(st.nmt.freq(st.nmt.cfg.freq_idx(2),2)));
     end
-        
+
+    %% update orientation vectors, if orientation has time samples    
+    if(isfield(st.nmt,'ori'))
+        if(size(st.nmt.ori,3)>1)
+            nmt_sourceoriplot;
+        end
+    end
+
     %% optionally add topoplot
     switch(st.nmt.cfg.topoplot)
         case 'timelock'
