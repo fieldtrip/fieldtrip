@@ -373,12 +373,7 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
     drawnow
     
   end % if enough new samples
-  image(count) = getframe(hMainFig);
-end % while true
-v = VideoWriter('myFile');
-open(v)
-writeVideo(v,image)
-close(v)
+end
 
 close(hMainFig); % close the figure
 
