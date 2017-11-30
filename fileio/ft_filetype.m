@@ -314,6 +314,10 @@ elseif filetype_check_extension(filename, '.log') && filetype_check_header(filen
   type = 'neuromag_maxfilterlog'; 
   manufacturer = 'Neuromag';
   content = 'MaxFilter log information';
+elseif filetype_check_extension(filename, '.pos') && filetype_check_header(filename, ' Time       q1      ', 0)
+  type = 'neuromag_headpos'; 
+  manufacturer = 'Neuromag';
+  content = 'MaxFilter head position information';  
   
   % known Yokogawa file types
 elseif filetype_check_extension(filename, '.ave') || filetype_check_extension(filename, '.sqd')
@@ -596,7 +600,7 @@ elseif filetype_check_extension(filename, '.nse') && filetype_check_header(filen
   type = 'neuralynx_nse';
   manufacturer = 'Neuralynx';
   content = 'spike waveforms';
-elseif filetype_check_extension(filename, '.nts')  && filetype_check_header(filename, '####')
+elseif filetype_check_extension(filename, f)  && filetype_check_header(filename, '####')
   type = 'neuralynx_nts';
   manufacturer = 'Neuralynx';
   content = 'timestamps only';

@@ -398,6 +398,11 @@ switch dataformat
     orig = readBESAswf(filename);
     dat  = orig.data(chanindx, begsample:endsample);
     
+  case 'neuromag_headpos'
+    % BESA source waveform
+    orig = read_neuromag_headpos(filename);
+    dat  = orig.data(chanindx, begsample:endsample);  
+    
   case {'biosemi_bdf', 'bham_bdf'}
     % this uses a mex file for reading the 24 bit data
     dat = read_biosemi_bdf(filename, hdr, begsample, endsample, chanindx);
