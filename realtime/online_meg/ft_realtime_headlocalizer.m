@@ -75,8 +75,6 @@ cfg.bufferdata      = ft_getopt(cfg, 'bufferdata',   'last'); % first (replay) o
 cfg.coilfreq        = ft_getopt(cfg, 'coilfreq',   [293, 307, 314, 321, 328]); % Hz, Neuromag
 cfg.dewar           = ft_getopt(cfg, 'dewar',            []); % mesh of the dewar
 cfg.head            = ft_getopt(cfg, 'head',             []); % mesh of the head
-cfg.headmovement    = ft_getopt(cfg, 'headmovement',     []); % movement file computed with maxfilter
-
 
 % ensure pesistent variables are cleared
 clear ft_read_header
@@ -163,7 +161,7 @@ elseif isneuromag
   %cfg.channel = setdiff(ft_channelselection('MEG', hdr.label),ft_channelselection('MEGMAG', hdr.label)); % just trying out (planar mags)
   %cfg.channel = ft_channelselection('IAS*',hdr.label); % internal active shielding
   [vol, sens] = ft_prepare_vol_sens([], hdr.grad, 'channel', cfg.channel);
-  sens = ft_datatype_sens(sens, 'scaling', 'amplitude/distance', 'distance', 'm'); % ensure SI units
+  sens = ft_datatype_sens(sens, 'scaling', 'amplitude/distance', 'distance', 'cm'); % ensure SI units
   coilsignal = [];
   
   % update distances, given that sensor units are m an not cm
@@ -182,7 +180,7 @@ if isctf
   
 elseif isneuromag
   
-  chanindx = find(startsWith(hdr.label, 'CHPI'));
+  chanindx = find(startsWith(hdr.label, 'QUAT'));
   if numel(chanindx)==9
     % work with these channels
   else
@@ -276,9 +274,7 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
     data.label    = info.hdr.label(chanindx);
     data.hdr      = info.hdr;
     data.fsample  = info.hdr.Fs;
-    if info.isneuromag
-        data.shape    = shape;
-    end
+
     if info.isneuromag && size(coilsignal,2)~=info.blocksize
       % construct the reference signal for each of the coils
       % this needs to be updated if the blocksize changes
@@ -296,7 +292,7 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
     end
     
     % compute the HPI coil positions, this takes some time
-    [hpi, info.dip, info.q] = data2hpi(data, info.dip, info.vol, info.sens, coilsignal, info.cfg, count, info.isctf, info.isneuromag); % for neuromag datasets this is relatively slow
+    [hpi, info.dip] = data2hpi(data, info.dip, info.vol, info.sens, coilsignal, info.isctf, info.isneuromag); % for neuromag datasets this is relatively slow
     
     guidata(hMainFig, info);
     
@@ -377,8 +373,13 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
     drawnow
     
   end % if enough new samples
-  
+  image(count) = getframe(hMainFig);
 end % while true
+v = VideoWriter('myFile');
+open(v)
+writeVideo(v,image)
+close(v)
+
 close(hMainFig); % close the figure
 
 
@@ -528,7 +529,7 @@ guidata(handle, info);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that computes the HPI coil positions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [hpi, dip, q] = data2hpi(data, dip, vol, sens, coilsignal, cfg, count, isctf, isneuromag)
+function [hpi, dip] = data2hpi(data, dip, vol, sens, coilsignal, isctf, isneuromag)
 
 % The CTF275 system localizes the HPI coil positions online, and writes them
 % to the dataset. For the Neuromag systems the signals evoked by the HPI coils
@@ -552,59 +553,49 @@ if isctf
   hpi{2} = data.trial{1}([x2 y2 z2],end) * 100;
   hpi{3} = data.trial{1}([x3 y3 z3],end) * 100;
   
-  q = [];
-  
 elseif isneuromag
-  if all(startsWith(data.label, 'CHPI'))
-      q1 = data.trial{1}(strcmp(data.label, 'CHPI001'),:);
-      q2 = data.trial{1}(strcmp(data.label, 'CHPI002'),:);
-      q3 = data.trial{1}(strcmp(data.label, 'CHPI003'),:);
-      q4 = data.trial{1}(strcmp(data.label, 'CHPI004'),:);
-      q5 = data.trial{1}(strcmp(data.label, 'CHPI005'),:);
-      q6 = data.trial{1}(strcmp(data.label, 'CHPI006'),:);
-      q = [q1(:) q2(:) q3(:) q4(:) q5(:) q6(:)];
-  elseif ~isempty(cfg.headmovement)
-      movement = importdata(cfg.headmovement);
-      q1 = movement.data(count,2);
-      q(1:6) = movement.data(count,2:7);
-  end
-  for i=1:numel(q1)
-    % compute the anatomical landmark location in cm
-    hpi{1}(:,i) = (ft_warp_apply(q(i,:), data.hdr.orig.dig(1).r', 'quaternion') - ft_warp_apply(q, [0 0 0], 'quaternion'))'*100;
-    hpi{2}(:,i) = (ft_warp_apply(q(i,:), data.hdr.orig.dig(2).r', 'quaternion') - ft_warp_apply(q, [0 0 0], 'quaternion'))'*100;
-    hpi{3}(:,i) = (ft_warp_apply(q(i,:), data.hdr.orig.dig(3).r', 'quaternion') - ft_warp_apply(q, [0 0 0], 'quaternion'))'*100;
-  end
-  
-elseif isneuromag
-  
-  % estimate the complex-valued MEG topography for each coil
-  % this implements a discrete Fourier transform (DFT)
-  topo = [];
-  %[x, ut] = svdfft( data.trial{1} );
-  %data.trial{1} = x;
-  topo = ft_preproc_detrend(data.trial{1}) * ctranspose(coilsignal);
-  
-  % ignore the out-of-phase spectral component in the topography
-  topo = real(topo); % THIS SEEMS TO BE CRUCIAL
-  
-  % fit a magnetic dipole to each of the topographies
-  constr.sequential = true; % for BTI systems this would be 'false' as all coils have the same frequency
-  constr.rigidbody = true;
-  
-  % fit the coils together
-  dipall = [];
-  ncoil = numel(dip);
-  for i=1:ncoil
-    dipall.pos(i,:) = dip(i).pos;
-  end
-  dipall = dipole_fit(dipall, sens, vol, topo, 'constr', constr, 'display', 'off');
-  for i=1:ncoil
-    sel = (1:3) + 3*(i-1);
-    dip(i).pos = dipall.pos(i,:);
-    dip(i).mom = real(dipall.mom(sel,i)); % ignore the complex phase information
-    hpi{i} = dip(i).pos;
-  end
-  
+  if all(startsWith(data.label, 'QUAT'))
+      q1 = data.trial{1}(strcmp(data.label, 'QUAT001'),:);
+      q2 = data.trial{1}(strcmp(data.label, 'QUAT002'),:);
+      q3 = data.trial{1}(strcmp(data.label, 'QUAT003'),:);
+      q4 = -data.trial{1}(strcmp(data.label, 'QUAT004'),:);
+      q5 = -data.trial{1}(strcmp(data.label, 'QUAT005'),:);
+      q6 = -data.trial{1}(strcmp(data.label, 'QUAT006'),:);
+      q = [q1(1) q2(1) q3(1) q4(1) q5(1) q6(1)];
+     
+      % compute the anatomical landmark location in cm
+      hpi{1} = ft_warp_apply(q(end,:), data.hdr.orig.dig(1).r' , 'quaternion')'*100;
+      hpi{2} = ft_warp_apply(q(end,:), data.hdr.orig.dig(2).r' , 'quaternion')'*100;
+      hpi{3} = ft_warp_apply(q(end,:), data.hdr.orig.dig(3).r' , 'quaternion')'*100;
+  else
+      % estimate the complex-valued MEG topography for each coil
+      % this implements a discrete Fourier transform (DFT)
+      topo = [];
+      %[x, ut] = svdfft( data.trial{1} );
+      %data.trial{1} = x;
+      topo = ft_preproc_detrend(data.trial{1}) * ctranspose(coilsignal);
+
+      % ignore the out-of-phase spectral component in the topography
+      topo = real(topo); % THIS SEEMS TO BE CRUCIAL
+
+      % fit a magnetic dipole to each of the topographies
+      constr.sequential = true; % for BTI systems this would be 'false' as all coils have the same frequency
+      constr.rigidbody = true;
+
+      % fit the coils together
+      dipall = [];
+      ncoil = numel(dip);
+      for i=1:ncoil
+        dipall.pos(i,:) = dip(i).pos;
+      end
+      dipall = dipole_fit(dipall, sens, vol, topo, 'constr', constr, 'display', 'off');
+      for i=1:ncoil
+        sel = (1:3) + 3*(i-1);
+        dip(i).pos = dipall.pos(i,:);
+        dip(i).mom = real(dipall.mom(sel,i)); % ignore the complex phase information
+        hpi{i} = dip(i).pos;
+      end
+   end
 else
   ft_error('the data does not resemble ctf, nor neuromag')
 end % if ctf or neuromag
@@ -666,11 +657,11 @@ info = guidata(handle);
 % compute transformation
     if info.isctf    
         M          = ft_headcoordinates([info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3)],[info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3)],[info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3)],'ctf');
-        M(1:3,1:3) = inv(M(1:3,1:3));
-        M(1:3,4)   = -M(1:3,4)'/M(1:3,1:3);   
-    elseif info.isneuromag
-        info.origin = ft_warp_apply(info.q, [0 0 0], 'quaternion')*100;
+    elseif info.isneuromag    
+        M          = ft_headcoordinates([info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3)],[info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3)],[info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3)],'neuromag');
     end
+        M(1:3,1:3) = inv(M(1:3,1:3));
+        M(1:3,4)   = (-M(1:3,4)'/M(1:3,1:3))'; 
 
 %plot the HPI mismatch
 if get(info.hCoilCheckBox, 'Value')
@@ -798,22 +789,15 @@ end
 
 %plot realistic head mdoel
 if get(info.hRealistic, 'Value') && ~isempty(info.cfg.head) 
-    if info.isctf
-        head     = info.cfg.head;
-        head.pos = ft_warp_apply(M,head.pos);  
-        ft_plot_mesh(head)
-      % draw 3d head
-    elseif info.isneuromag
-         head     = info.cfg.head;
-         head.pos = ft_warp_apply(info.q,head.pos,'quaternion')-repmat(info.origin,length(head.pos),1);
-         ft_plot_mesh(head)
-    end
+    head     = info.cfg.head;
+    head.pos = ft_warp_apply(M,head.pos);  
+    ft_plot_mesh(head)
 end   
 
 %plot sensors
 if get(info.hSensorCheckBox, 'Value') && ~isempty(info.sens)
   % plot the sensors
-  hold on; ft_plot_sens(info.sens, 'style', 'k.');
+  ft_plot_sens(info.hdr.grad, 'style', 'k.');
 end
 
 % plot the HPI coil positions
@@ -822,20 +806,14 @@ for j = 1:numel(info.hpi)
 end
 
 %plot the dewar
-if get(info.hDewarCheckBox, 'Value')
-    if ~isempty(info.cfg.dewar)
-        ft_plot_mesh(info.cfg.dewar,'facecolor','skin','facealpha',0.5);  
-    end  
+if get(info.hDewarCheckBox, 'Value') && ~isempty(info.cfg.dewar)
+    ft_plot_mesh(info.cfg.dewar,'facecolor','skin','facealpha',0.5);   
 end
 
 %plot Polhemus
 if get(info.hPolhemusCheckBox, 'Value')
     if ~isempty(info.hdr.elec)
-        if info.isctf 
-            ft_plot_mesh(ft_warp_apply(M,info.hdr.elec.elecpos),'vertexmarker','.')
-        elseif info.isneuromag    
-            ft_plot_mesh(info.hdr.elec.elecpos-repmat(info.origin,length(info.hdr.elec.elecpos),1),'vertexmarker','.')
-        end    
+        ft_plot_mesh(ft_warp_apply(M,info.hdr.elec.elecpos),'vertexmarker','.')
     end     
 end
 
