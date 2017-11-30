@@ -34,4 +34,18 @@ function [data] = read_neuromag_headpos(filename)
 
 data = importdata(filename);
 data.data = data.data';
+data.colheaders{2} = 'QUAT001';
+data.colheaders{3} = 'QUAT002';
+data.colheaders{4} = 'QUAT003';
+data.colheaders{5} = 'QUAT004';
+data.colheaders{6} = 'QUAT005';
+data.colheaders{7} = 'QUAT006';
+
+data.textdata{2} = 'QUAT001';
+data.textdata{3} = 'QUAT002';
+data.textdata{4} = 'QUAT003';
+data.textdata{5} = 'QUAT004';
+data.textdata{6} = 'QUAT005';
+data.textdata{7} = 'QUAT006';
+
 
