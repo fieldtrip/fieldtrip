@@ -1757,7 +1757,7 @@ switch headerformat
   
   case 'neuromag_headpos'  
     orig = read_neuromag_headpos(filename);
-    hdr.Fs          = 1000/(orig.data(2,1)-orig.data(1,1));
+    hdr.Fs          = 1/(orig.data(1,2)-orig.data(1,1));
     hdr.nChans      = size(orig.data,1);
     hdr.nSamples    = size(orig.data,2);
     hdr.nSamplesPre = 0;   % convert from ms to samples
