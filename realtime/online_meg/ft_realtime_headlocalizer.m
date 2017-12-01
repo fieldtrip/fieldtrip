@@ -921,12 +921,22 @@ end
 
 % axis
 grid on
+axis on
 xlabel('x (cm)');
 ylabel('y (cm)');
 zlabel('z (cm)');
-set(gca, 'xtick', -10:2:10)
-set(gca, 'ytick', -10:2:10)
-set(gca, 'ztick', -60:2:-10) % note the different scaling
+%fix axis to avoid 
+if info.isctf
+    set(gca, 'xtick', -15:2:15)
+    set(gca, 'ytick', -15:2:15)
+    set(gca, 'ztick', -40:2:-10) % note the different scaling
+    axis([-15 15 -15 15 -40 -10])
+elseif info.isneuromag
+    set(gca, 'xtick', -15:2:15)
+    set(gca, 'ytick', -15:2:15)
+    set(gca, 'ztick', -25:2:15) % note the different scaling
+    axis([-15 15 -15 15 -25 15])
+end    
 %axis square
 
 
