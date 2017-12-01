@@ -31,6 +31,7 @@ function ft_realtime_headlocalizer(cfg)
 % Neuroimage. 2013 Mar;68:39-48. doi: 10.1016/j.neuroimage.2012.11.047.
 
 % Copyright (C) 2008-2013,  Arjen Stolk & Robert Oostenveld
+% Copyright (C) 2017,  Simon Homoelle
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -75,7 +76,7 @@ cfg.bufferdata      = ft_getopt(cfg, 'bufferdata',   'last'); % first (replay) o
 cfg.coilfreq        = ft_getopt(cfg, 'coilfreq',   [293, 307, 314, 321, 328]); % Hz, Neuromag
 cfg.dewar           = ft_getopt(cfg, 'dewar',            []); % mesh of the dewar
 cfg.head            = ft_getopt(cfg, 'head',             []); % mesh of the head
-
+cfg.headmovement    = ft_getopt(cfg, 'headmovement',     []); % maxfilter created file containing quaternions information for headlocalistation
 % ensure pesistent variables are cleared
 clear ft_read_header
 
@@ -122,7 +123,15 @@ if isctf
   
 elseif isneuromag
   if ~isempty(cfg.template)
-    template = dlmread(cfg.template);
+    [p, f, x]=fileparts(cfg.template);
+    if strcmp(x, '.fif') 
+      shape = ft_read_headshape(cfg.template, 'coordsys', 'dewar', 'format', 'neuromag_fif');
+      template(1,:) = [shape.fid.pos(1,1), shape.fid.pos(1,2), shape.fid.pos(1,3)]; % chan X pos
+      template(2,:) = [shape.fid.pos(2,1), shape.fid.pos(2,2), shape.fid.pos(2,3)];
+      template(3,:) = [shape.fid.pos(3,1), shape.fid.pos(3,2), shape.fid.pos(3,3)];
+    elseif strcmp(x, '.txt') 
+      template = dlmread(cfg.template);
+    end    
   else
     template = [];
   end
@@ -181,11 +190,18 @@ if isctf
 elseif isneuromag
   
   chanindx = find(startsWith(hdr.label, 'QUAT'));
+  
   if numel(chanindx)==9
     % work with these channels
   else
-    % select the 102 magnetometers
-    [dum, chanindx] = match_str('megmag', hdr.chantype);
+    % data uses headmovemented corrected data  
+    chanindx = find(startsWith(hdr.label, 'CHPI'));  
+      if numel(chanindx)==9
+    % work with these channels
+      else  
+      % select the 102 magnetometers
+      [dum, chanindx] = match_str('megmag', hdr.chantype);
+      end
   end
   
   
@@ -199,6 +215,21 @@ elseif isneuromag
   
   % 11 IAS
   % chanindx = 1:11;
+end
+
+if ~isempty(cfg.headmovement) && isneuromag     
+    % load head location information from cfg.headmovement
+    hdr_movement = ft_read_header(cfg.headmovement);
+    chanindx_movement = find(startsWith(hdr_movement.label, 'QUAT'));
+    dat_movement = ft_read_data(cfg.headmovement, 'chanindx', chanindx_movement);    
+    data_movement.trial{1} = double(dat_movement(:,:));
+    data_movement.time{1}  = 1:length(data_movement.trial{1});
+    data_movement.label    = hdr_movement.label(chanindx_movement);
+    data_movement.hdr      = hdr;
+    data_movement.fsample  = hdr_movement.Fs;
+    cfg_tmp = [];
+    cfg_tmp.time{1} = (1:hdr.nSamples)/hdr.Fs;
+    data_movement = ft_resampledata(cfg_tmp,data_movement); 
 end
 
 if isempty(chanindx)
@@ -263,7 +294,8 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
     % read data segment from buffer
     dat = ft_read_data(info.cfg.datafile, 'header', info.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
     
-    
+   
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % from here onward it is specific to the head localization
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -274,7 +306,18 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
     data.label    = info.hdr.label(chanindx);
     data.hdr      = info.hdr;
     data.fsample  = info.hdr.Fs;
+    
+    if ~isempty(info.cfg.headmovement) && info.isneuromag
+        if ~all(startsWith(data.label, 'QUAT')) || ~all(startsWith(data.label, 'CHPI'))
+            data.trial{1} = data_movement.trial{1}(1:size(data_movement.trial{1}),(begsample:endsample)*round(data_movement.fsample));
+            data.label    = data_movement.label;
+        else
+            fprintf('Channels for head localisation already in the .fif file, will use data form the .fif file')
+        end    
+    end
 
+
+    
     if info.isneuromag && size(coilsignal,2)~=info.blocksize
       % construct the reference signal for each of the coils
       % this needs to be updated if the blocksize changes
@@ -373,7 +416,7 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
     drawnow
     
   end % if enough new samples
-end
+end % while true
 
 close(hMainFig); % close the figure
 
@@ -426,7 +469,7 @@ hHeadCheckBox = uicontrol(...
   'Position', [.125 .1 .1 .05],...
   'FontSize', 8,...
   'BackgroundColor', [.8 .8 .8],...
-  'Value', 1,... % by default switched on
+  'Value', 0,... % by default switched on
   'Callback', {@head_CheckBox});
 
 hPolhemusCheckBox = uicontrol(...
@@ -459,7 +502,7 @@ hCoilCheckBox = uicontrol(...
   'Position', [.35 .1 .075 .05],...
   'FontSize', 8,...
   'BackgroundColor', [.8 .8 .8],...
-  'Value', 0,...
+  'Value', 1,...
   'Callback', {@coil_CheckBox});
 
 hSensorCheckBox = uicontrol(...
@@ -562,6 +605,20 @@ elseif isneuromag
       hpi{1} = ft_warp_apply(q(end,:), data.hdr.orig.dig(1).r' , 'quaternion')'*100;
       hpi{2} = ft_warp_apply(q(end,:), data.hdr.orig.dig(2).r' , 'quaternion')'*100;
       hpi{3} = ft_warp_apply(q(end,:), data.hdr.orig.dig(3).r' , 'quaternion')'*100;
+  elseif all(startsWith(data.label, 'CHPI'))
+      q1 = data.trial{1}(strcmp(data.label, 'CHPI001'),:);
+      q2 = data.trial{1}(strcmp(data.label, 'CHPI002'),:);
+      q3 = data.trial{1}(strcmp(data.label, 'CHPI003'),:);
+      q4 = -data.trial{1}(strcmp(data.label, 'CHPI004'),:);
+      q5 = -data.trial{1}(strcmp(data.label, 'CHPI005'),:);
+      q6 = -data.trial{1}(strcmp(data.label, 'CHPI006'),:);
+      q = [q1(1) q2(1) q3(1) q4(1) q5(1) q6(1)];
+     
+      % compute the anatomical landmark location in cm
+      hpi{1} = ft_warp_apply(q(end,:), data.hdr.orig.dig(1).r' , 'quaternion')'*100;
+      hpi{2} = ft_warp_apply(q(end,:), data.hdr.orig.dig(2).r' , 'quaternion')'*100;
+      hpi{3} = ft_warp_apply(q(end,:), data.hdr.orig.dig(3).r' , 'quaternion')'*100;    
+      
   else
       % estimate the complex-valued MEG topography for each coil
       % this implements a discrete Fourier transform (DFT)
@@ -723,29 +780,70 @@ if get(info.hCoilCheckBox, 'Value')
       plot3(info.hpi{3}(1),info.hpi{3}(2), info.hpi{3}(3),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
       head3 = false;
     end
-    elseif info.isneuromag 
-    % plot fitted positions of each coil
+  elseif info.isneuromag 
+    % draw nasion position
     if ~isempty(info.template)
-      for j = 1:size(info.template,1)
-        if abs(info.template(j,1))-info.cfg.accuracy_green < abs(info.hpi{j}(1)) && abs(info.hpi{j}(1)) < abs(info.template(j,1))+info.cfg.accuracy_green ...
-            && abs(info.template(j,2))-info.cfg.accuracy_green < abs(info.hpi{j}(2)) && abs(info.hpi{j}(2)) < abs(info.template(j,2))+info.cfg.accuracy_green ...
-            && abs(info.template(j,3))-info.cfg.accuracy_green < abs(info.hpi{j}(3)) && abs(info.hpi{j}(3)) < abs(info.template(j,3))+info.cfg.accuracy_green
-          plot3(info.hpi{j}(1),info.hpi{j}(2),info.hpi{j}(3),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
-        elseif abs(info.template(j,1))-info.cfg.accuracy_orange < abs(info.hpi{j}(1,end)) && abs(info.hpi{j}(1)) < abs(info.template(j,1))+info.cfg.accuracy_orange ...
-            && abs(info.template(j,2))-info.cfg.accuracy_orange < abs(info.hpi{j}(2)) && abs(info.hpi{j}(2)) < abs(info.template(j,2))+info.cfg.accuracy_orange ...
-            && abs(info.template(j,3))-info.cfg.accuracy_orange < abs(info.hpi{j}(3)) && abs(info.hpi{j}(3)) < abs(info.template(j,3))+info.cfg.accuracy_orange
-          plot3(info.hpi{j}(1),info.hpi{j}(2),info.hpi{j}(3),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
-        else % when not in correct position
-          plot3(info.hpi{j}(1,end),info.hpi{j}(2), info.hpi{j}(3),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25);
-        end
+      if abs(info.template(1,1))-info.cfg.accuracy_green < abs(info.hpi{1}(1)) && abs(info.hpi{1}(1)) < abs(info.template(1,1))+info.cfg.accuracy_green ...
+          && abs(info.template(1,2))-info.cfg.accuracy_green < abs(info.hpi{1}(2)) && abs(info.hpi{1}(2)) < abs(info.template(1,2))+info.cfg.accuracy_green ...
+          && abs(info.template(1,3))-info.cfg.accuracy_green < abs(info.hpi{1}(3)) && abs(info.hpi{1}(3)) < abs(info.template(1,3))+info.cfg.accuracy_green
+        plot3(info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
+        head1 = true;
+      elseif abs(info.template(1,1))-info.cfg.accuracy_orange < abs(info.hpi{1}(1)) && abs(info.hpi{1}(1)) < abs(info.template(1,1))+info.cfg.accuracy_orange ...
+          && abs(info.template(1,2))-info.cfg.accuracy_orange < abs(info.hpi{1}(2)) && abs(info.hpi{1}(2)) < abs(info.template(1,2))+info.cfg.accuracy_orange ...
+          && abs(info.template(1,3))-info.cfg.accuracy_orange < abs(info.hpi{1}(3)) && abs(info.hpi{1}(3)) < abs(info.template(1,3))+info.cfg.accuracy_orange
+        plot3(info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
+        head1 = false;
+      else % when not in correct position
+        plot3(info.hpi{1}(1),info.hpi{1}(2), info.hpi{1}(3),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+        head1 = false;
       end
     else
-      for j = 1:numel(info.hpi)
-        plot3(info.hpi{j}(1),info.hpi{j}(2), info.hpi{j}(3),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25);
-        head1 = false; head2 = false; head3 = false;
-      end
+      plot3(info.hpi{1}(1),info.hpi{1}(2), info.hpi{1}(3),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+      head1 = false;
     end
-  end    
+    
+    % draw left ear position
+    if ~isempty(info.template)
+      if abs(info.template(2,1))-info.cfg.accuracy_green < abs(info.hpi{2}(1)) && abs(info.hpi{2}(1)) < abs(info.template(2,1))+info.cfg.accuracy_green ...
+          && abs(info.template(2,2))-info.cfg.accuracy_green < abs(info.hpi{2}(2)) && abs(info.hpi{2}(2)) < abs(info.template(2,2))+info.cfg.accuracy_green ...
+          && abs(info.template(2,3))-info.cfg.accuracy_green < abs(info.hpi{2}(3)) && abs(info.hpi{2}(3)) < abs(info.template(2,3))+info.cfg.accuracy_green
+        plot3(info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3),'g^', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
+        head2 = true;
+      elseif abs(info.template(2,1))-info.cfg.accuracy_orange < abs(info.hpi{2}(1)) && abs(info.hpi{2}(1)) < abs(info.template(2,1))+info.cfg.accuracy_orange ...
+          && abs(info.template(2,2))-info.cfg.accuracy_orange < abs(info.hpi{2}(2)) && abs(info.hpi{2}(2)) < abs(info.template(2,2))+info.cfg.accuracy_orange ...
+          && abs(info.template(2,3))-info.cfg.accuracy_orange < abs(info.hpi{2}(3)) && abs(info.hpi{2}(3)) < abs(info.template(2,3))+info.cfg.accuracy_orange
+        plot3(info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3),'y^', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
+        head2 = false;
+      else % when not in correct position
+        plot3(info.hpi{2}(1),info.hpi{2}(2), info.hpi{2}(3),'r^', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+        head2 = false;
+      end
+    else
+      plot3(info.hpi{2}(1),info.hpi{2}(2), info.hpi{2}(3),'r^', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+      head2 = false;
+    end
+    
+    % draw right ear position
+    if ~isempty(info.template)
+      if abs(info.template(3,1))-info.cfg.accuracy_green < abs(info.hpi{3}(1)) && abs(info.hpi{3}(1)) < abs(info.template(3,1))+info.cfg.accuracy_green  ...
+          && abs(info.template(3,2))-info.cfg.accuracy_green  < abs(info.hpi{3}(2)) && abs(info.hpi{3}(2)) < abs(info.template(3,2))+info.cfg.accuracy_green  ...
+          && abs(info.template(3,3))-info.cfg.accuracy_green  < abs(info.hpi{3}(3)) && abs(info.hpi{3}(3)) < abs(info.template(3,3))+info.cfg.accuracy_green
+        plot3(info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
+        head3 = true;
+      elseif abs(info.template(3,1))-info.cfg.accuracy_orange < abs(info.hpi{3}(1)) && abs(info.hpi{3}(1)) < abs(info.template(3,1))+info.cfg.accuracy_orange ...
+          && abs(info.template(3,2))-info.cfg.accuracy_orange < abs(info.hpi{3}(2)) && abs(info.hpi{3}(2)) < abs(info.template(3,2))+info.cfg.accuracy_orange ...
+          && abs(info.template(3,3))-info.cfg.accuracy_orange < abs(info.hpi{3}(3)) && abs(info.hpi{3}(3)) < abs(info.template(3,3))+info.cfg.accuracy_orange
+        plot3(info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
+        head3 = false;
+      else % when not in correct position
+        plot3(info.hpi{3}(1),info.hpi{3}(2), info.hpi{3}(3),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+        head3 = false;
+      end
+    else
+      plot3(info.hpi{3}(1),info.hpi{3}(2), info.hpi{3}(3),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+      head3 = false;
+    end
+  end  
 end
 
 % plot the template fiducial positions
@@ -758,9 +856,9 @@ if ~isempty(info.template)
     text(-8,8, info.template(2,3), 'Left', 'FontSize', 15);
     text(6,-6, info.template(3,3), 'Right', 'FontSize', 15);
   elseif info.isneuromag
-    for j = 1:size(info.template,1)
-      plot3(info.template(j,1), info.template(j,2), info.template(j,3), 'ko', 'MarkerSize', 27, 'LineWidth', 2); % chan X pos
-    end
+    plot3(info.template(1,1), info.template(1,2), info.template(1,3), 'ko', 'MarkerSize', 27, 'LineWidth', 2); % chan X pos
+    plot3(info.template(2,1), info.template(2,2), info.template(2,3), 'k^', 'MarkerSize', 27, 'LineWidth', 2);
+    plot3(info.template(3,1), info.template(3,2), info.template(3,3), 'ko', 'MarkerSize', 27, 'LineWidth', 2);
   end
 end
 
@@ -835,7 +933,7 @@ set(gca, 'ztick', -60:2:-10) % note the different scaling
 guidata(handle, info);
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%TOP VIEW%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which handles hot keys in the current plot
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function key_sub(handle, eventdata)
