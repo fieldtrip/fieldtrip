@@ -399,7 +399,7 @@ switch dataformat
     dat  = orig.data(chanindx, begsample:endsample);
     
   case 'neuromag_headpos'
-    % BESA source waveform
+    % neuromag headposition file created with maxfilter
     orig = read_neuromag_headpos(filename);
     dat  = orig.data(chanindx, begsample:endsample);  
     
