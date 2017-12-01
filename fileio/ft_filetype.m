@@ -600,7 +600,7 @@ elseif filetype_check_extension(filename, '.nse') && filetype_check_header(filen
   type = 'neuralynx_nse';
   manufacturer = 'Neuralynx';
   content = 'spike waveforms';
-elseif filetype_check_extension(filename, f)  && filetype_check_header(filename, '####')
+elseif filetype_check_extension(filename, '.nts')  && filetype_check_header(filename, '####')
   type = 'neuralynx_nts';
   manufacturer = 'Neuralynx';
   content = 'timestamps only';
