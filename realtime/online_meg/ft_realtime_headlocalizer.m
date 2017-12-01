@@ -309,7 +309,7 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
     
     if ~isempty(info.cfg.headmovement) && info.isneuromag
         if ~all(startsWith(data.label, 'QUAT')) || ~all(startsWith(data.label, 'CHPI'))
-            data.trial{1} = data_movement.trial{1}(1:size(data_movement.trial{1}),(begsample:endsample)*round(data_movement.fsample));
+            data.trial{1} = data_movement.trial{1}(1:size(data_movement.trial{1}),begsample:endsample);
             data.label    = data_movement.label;
         else
             fprintf('Channels for head localisation already in the .fif file, will use data form the .fif file')
@@ -928,6 +928,7 @@ set(gca, 'xtick', -10:2:10)
 set(gca, 'ytick', -10:2:10)
 set(gca, 'ztick', -60:2:-10) % note the different scaling
 %axis square
+
 
 % put the info back
 guidata(handle, info);
