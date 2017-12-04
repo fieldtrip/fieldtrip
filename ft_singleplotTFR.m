@@ -331,7 +331,7 @@ datamatrix = datamatrix(selchan, sely, selx);
 if ~isempty(cfg.maskparameter)
   maskmatrix = data.(cfg.maskparameter)(selchan, sely, selx);
   if cfg.maskalpha ~= 1
-    maskmatrix( maskmatrix) = 1;
+    maskmatrix = double(maskmatrix);
     maskmatrix(~maskmatrix) = cfg.maskalpha;
   end
 else
