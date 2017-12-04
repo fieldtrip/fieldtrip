@@ -127,7 +127,7 @@ for iUnit = 1:nUnits
     
     % reject the ones that do not have a rising potential to the peak index
     mnOverLead = nanmean(waves,1);% do this for all four leads at the same time    
-    d = find(squeeze(nansum(diff(mnOverLead(:,1:iup,:),[],2),2)));    
+    d = squeeze(nansum(diff(mnOverLead(:,1:iup,:),[],2),2));    
     rm1 = find(d<0);
     
     % these have a later max than min: reject, this removes late peaks.
