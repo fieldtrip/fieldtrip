@@ -371,6 +371,41 @@ switch fileformat
       sens.chanpos = [x y z];
     end
     
+  case 'neuromag_iso'
+    ft_hastoolbox('mne', 1);
+    FIFF = fiff_define_constants();
+    [fid, tree, dir] = fiff_open(filename);
+    isotrak = fiff_dir_tree_find(tree, FIFF.FIFFB_ISOTRAK);
+    sel = find([isotrak.dir.kind]==FIFF.FIFF_DIG_POINT);
+    sens = [];
+    sens.elecpos = nan(numel(sel),3);
+    sens.chanpos = nan(numel(sel),3);
+    coordsys     = nan(numel(sel),1);
+    for i=sel
+        tag = fiff_read_tag(fid,isotrak.dir(i).pos);
+        sens.elecpos(i,:) = tag.data.r;
+        sens.chanpos(i,:) = tag.data.r;
+        coordsys(i)       = tag.data.coord_frame;
+    end
+    fclose(fid);
+    
+    if all(coordsys==FIFF.FIFFV_COORD_DEVICE)
+      sens.coordsys = 'device';
+    elseif all(coordsys==FIFF.FIFFV_COORD_ISOTRAK)
+      sens.coordsys = 'isotrak';
+    elseif all(coordsys==FIFF.FIFFV_COORD_HPI)
+      sens.coordsys = 'hpi';
+    elseif all(coordsys==FIFF.FIFFV_COORD_HEAD)
+      sens.coordsys = 'head';
+    else
+      sens.coordsys = 'unknown';
+    end
+    
+    ft_warning('creating fake channel names for neuromag_iso');
+    for i=1:size(sens.chanpos,1)
+      sens.label{i} = sprintf('%d', i);
+    end
+    
   otherwise
     ft_error('unknown fileformat for electrodes or gradiometers');
 end % switch fileformat
