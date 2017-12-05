@@ -314,6 +314,10 @@ elseif filetype_check_extension(filename, '.log') && filetype_check_header(filen
   type = 'neuromag_maxfilterlog'; 
   manufacturer = 'Neuromag';
   content = 'MaxFilter log information';
+elseif filetype_check_extension(filename, '.iso') && filetype_check_header(filename, char([0 0 0 100]))
+  type = 'neuromag_iso'; 
+  manufacturer = 'Neuromag';
+  content = 'Isotrack digitizer points';
   
   % known Yokogawa file types
 elseif filetype_check_extension(filename, '.ave') || filetype_check_extension(filename, '.sqd')
@@ -457,7 +461,7 @@ elseif filetype_check_extension(filename, '.mri')
   type = 'asa_mri';
   manufacturer = 'ASA';
   content = 'MRI image header';
-elseif filetype_check_extension(filename, '.iso')
+elseif filetype_check_extension(filename, '.iso') && ~filetype_check_header(filename, char([0 0 0 100]))
   type = 'asa_iso';
   manufacturer = 'ASA';
   content = 'MRI image data';
