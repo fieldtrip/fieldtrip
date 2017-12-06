@@ -258,6 +258,9 @@ switch cfg.method
     cfg.dss.denf          = ft_getopt(cfg.dss,      'denf',     []);
     cfg.dss.denf.function = ft_getopt(cfg.dss.denf, 'function', 'denoise_fica_tanh');
     cfg.dss.denf.params   = ft_getopt(cfg.dss.denf, 'params',   []);
+    cfg.dss.preprocf      = ft_getopt(cfg.dss,      'preprocf', []);
+    cfg.dss.preprocf.function = ft_getopt(cfg.dss.preprocf, 'function', 'pre_sphere');
+    cfg.dss.preprocf.params   = ft_getopt(cfg.dss.preprocf, 'params', []);
   case 'csp'
     % additional options, see CSP for details
     cfg.csp = ft_getopt(cfg, 'csp', []);
@@ -645,6 +648,7 @@ switch cfg.method
     
     params         = struct(cfg.dss);
     params.denf.h  = str2func(cfg.dss.denf.function);
+    params.preprocf.h = str2func(cfg.dss.preprocf.function);
     if ~ischar(cfg.numcomponent)
       params.sdim = cfg.numcomponent;
     end
