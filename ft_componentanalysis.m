@@ -669,12 +669,10 @@ switch cfg.method
     % start the decomposition
     % state   = dss(state);  % this is for the DSS toolbox version 0.6 beta
     state   = denss(state);  % this is for the DSS toolbox version 1.0
-    % weights = state.W;
-    % sphere  = state.V;
     
     mixing   = state.A;
     unmixing = state.B;
-    
+  
     % remember the updated configuration details
     cfg.dss.denf      = state.denf;
     cfg.dss.orthof    = state.orthof;
@@ -683,7 +681,8 @@ switch cfg.method
     cfg.dss.W         = state.W;
     cfg.dss.V         = state.V;
     cfg.dss.dV        = state.dV;
-    cfg.numcomponent  = state.sdim;
+    if isfield(state, 'D'), cfg.dss.D = state.D(1:min([state.sdim size(state.dV)])); end
+    cfg.numcomponent  = min([state.sdim size(state.dV)]);
     
   case 'sobi'
     % check whether the required low-level toolboxes are installed
