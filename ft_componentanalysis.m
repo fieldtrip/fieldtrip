@@ -258,6 +258,9 @@ switch cfg.method
     cfg.dss.denf          = ft_getopt(cfg.dss,      'denf',     []);
     cfg.dss.denf.function = ft_getopt(cfg.dss.denf, 'function', 'denoise_fica_tanh');
     cfg.dss.denf.params   = ft_getopt(cfg.dss.denf, 'params',   []);
+    cfg.dss.preprocf      = ft_getopt(cfg.dss,      'preprocf', []);
+    cfg.dss.preprocf.function = ft_getopt(cfg.dss.preprocf, 'function', 'pre_sphere');
+    cfg.dss.preprocf.params   = ft_getopt(cfg.dss.preprocf, 'params', []);
   case 'csp'
     % additional options, see CSP for details
     cfg.csp = ft_getopt(cfg, 'csp', []);
@@ -645,6 +648,7 @@ switch cfg.method
     
     params         = struct(cfg.dss);
     params.denf.h  = str2func(cfg.dss.denf.function);
+    params.preprocf.h = str2func(cfg.dss.preprocf.function);
     if ~ischar(cfg.numcomponent)
       params.sdim = cfg.numcomponent;
     end
@@ -669,12 +673,10 @@ switch cfg.method
     % start the decomposition
     % state   = dss(state);  % this is for the DSS toolbox version 0.6 beta
     state   = denss(state);  % this is for the DSS toolbox version 1.0
-    % weights = state.W;
-    % sphere  = state.V;
     
     mixing   = state.A;
     unmixing = state.B;
-    
+  
     % remember the updated configuration details
     cfg.dss.denf      = state.denf;
     cfg.dss.orthof    = state.orthof;
@@ -683,7 +685,8 @@ switch cfg.method
     cfg.dss.W         = state.W;
     cfg.dss.V         = state.V;
     cfg.dss.dV        = state.dV;
-    cfg.numcomponent  = state.sdim;
+    if isfield(state, 'D'), cfg.dss.D = state.D(1:min([state.sdim size(state.dV)])); end
+    cfg.numcomponent  = min([state.sdim size(state.dV)]);
     
   case 'sobi'
     % check whether the required low-level toolboxes are installed

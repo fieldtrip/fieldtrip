@@ -1729,9 +1729,10 @@ opt.curdata.sampleinfo = [begsample endsample offset];
 
 % to assure current feature is plotted on top
 ordervec = 1:length(opt.artdata.label);
+if numel(opt.ftsel)==1
 ordervec(opt.ftsel) = [];
 ordervec(end+1) = opt.ftsel;
-
+end
 % FIXME speedup ft_prepare_layout
 if strcmp(cfg.viewmode, 'butterfly')
   laytime = [];

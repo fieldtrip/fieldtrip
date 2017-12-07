@@ -179,6 +179,7 @@ try
   cfg.length = 1;
   cfg.overlap = 0;
   redef3 = ft_redefinetrial(cfg, data3);
+  detectederror = false;
 end
 assert(detectederror, 'the expected error was not detected');
 

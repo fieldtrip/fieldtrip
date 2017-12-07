@@ -422,6 +422,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(forward/private/find_mesh_edge.m)
+ARRAY+=(plotting/private/find_mesh_edge.m)
 ARRAY+=(private/find_mesh_edge.m)
 sync ${ARRAY[*]}
 
@@ -440,6 +441,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(forward/private/find_triangle_neighbours.m)
+ARRAY+=(plotting/private/find_triangle_neighbours.m)
 ARRAY+=(private/find_triangle_neighbours.m)
 sync ${ARRAY[*]}
 
@@ -1124,6 +1126,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(forward/private/headsurface.m)
+ARRAY+=(plotting/private/headsurface.m)
 ARRAY+=(private/headsurface.m)
 sync ${ARRAY[*]}
 
