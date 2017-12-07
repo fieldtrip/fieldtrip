@@ -377,6 +377,19 @@ for i=1:numel(varargin)
       keepdim(strcmp(dimtok, 'subj'))   = false;
     end
     
+    % update the sampleinfo, if possible, and needed
+    if strcmp(datfield{j}, 'sampleinfo') && ~isequal(cfg.latency, 'all')
+      if iscell(seltime{i}) && numel(seltime{i})==size(varargin{i}.sampleinfo,1)
+        for k = 1:numel(seltime{i})   
+          varargin{i}.sampleinfo(k,:) = varargin{i}.sampleinfo(k,1) - 1 + seltime{i}{k}([1 end]);
+        end
+      elseif ~iscell(seltime{i})
+        nrpt       = size(varargin{i}.sampleinfo,1);
+        seltime{i} = seltime{i}(:)';
+        varargin{i}.sampleinfo = varargin{i}.sampleinfo(:,[1 1]) - 1 + repmat(seltime{i}([1 end]),nrpt,1);
+      end
+    end
+    
     varargin{i}.(datfield{j}) = squeezedim(varargin{i}.(datfield{j}), ~keepdim);
     
   end % for datfield
@@ -406,7 +419,7 @@ if avgoverrpt
   keepfield = setdiff(keepfield, {'cumsumcnt' 'cumtapcnt' 'trialinfo' 'sampleinfo'});
 end
 
-if avgovertime || ~isequal(cfg.latency, 'all')
+if avgovertime
   % these are invalid after averaging or making a latency selection
   keepfield = setdiff(keepfield, {'sampleinfo'});
 end

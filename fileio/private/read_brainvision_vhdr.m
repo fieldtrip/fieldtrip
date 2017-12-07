@@ -121,3 +121,43 @@ hdr.nSamplesPre = 0;
 hdr.label      = hdr.label(:);
 hdr.reference  = hdr.reference(:);
 hdr.resolution = hdr.resolution(:);
+
+%read in impedance values
+hdr.impedances.channels=[];
+hdr.impedances.reference=[];
+hdr.impedances.ground=NaN;
+if ~isempty(hdr.NumberOfChannels)
+    chanCounter=0;
+    refCounter=0;
+    impCounter=0;
+    while chanCounter<hdr.NumberOfChannels
+        impCounter=impCounter+1;
+        chan_str  = sprintf('%d', impCounter);
+        chan_info = read_asa(filename, chan_str, '%s');
+        if isempty(chan_info)
+            break
+        else
+            [chanName,impedances] = strtok(chan_info,':');
+            if strfind(chanName,'REF_')==1
+                refCounter=refCounter+1;
+                if ~isempty(impedances)
+                    hdr.impedances.reference(refCounter) = str2num(impedances(2:end));
+                else
+                    hdr.impedances.reference(refCounter) = NaN;
+                end
+            else
+                chanCounter=chanCounter+1;
+                if ~isempty(impedances)
+                    hdr.impedances.channels(chanCounter,1) = str2num(impedances(2:end));
+                else
+                    hdr.impedances.channels(chanCounter,1) = NaN;
+                end
+            end;
+        end;
+    end
+    impedances = read_asa(filename, 'GND:', '%s');
+    if ~isempty(impedances)
+        hdr.impedances.ground = str2num(impedances);
+    end
+end
+
