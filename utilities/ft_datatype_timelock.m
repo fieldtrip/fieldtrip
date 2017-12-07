@@ -99,7 +99,10 @@ end
 
 switch version
   case '2017'
+    if isfield(timelock, 'sampleinfo'), sampleinfo = timelock.sampleinfo; end
     timelock = ft_datatype_timelock(timelock, 'version', '2011v2');
+    if exist('sampleinfo', 'var'), timelock.sampleinfo = sampleinfo; end
+    
     fn = fieldnames(timelock);
     fn = setdiff(fn, ignorefields('appendtimelock'));
     dimord = cell(size(fn));
