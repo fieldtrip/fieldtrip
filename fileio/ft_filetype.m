@@ -318,6 +318,10 @@ elseif filetype_check_extension(filename, '.iso') && filetype_check_header(filen
   type = 'neuromag_iso'; 
   manufacturer = 'Neuromag';
   content = 'Isotrack digitizer points';
+elseif strcmp(filename, 'sss_cal.dat')
+  type = 'neuromag_cal'; 
+  manufacturer = 'Neuromag';
+  content = 'Fine calibration';
   
   % known Yokogawa file types
 elseif filetype_check_extension(filename, '.ave') || filetype_check_extension(filename, '.sqd')

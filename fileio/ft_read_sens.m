@@ -382,10 +382,10 @@ switch fileformat
     sens.chanpos = nan(numel(sel),3);
     coordsys     = nan(numel(sel),1);
     for i=sel
-        tag = fiff_read_tag(fid,isotrak.dir(i).pos);
-        sens.elecpos(i,:) = tag.data.r;
-        sens.chanpos(i,:) = tag.data.r;
-        coordsys(i)       = tag.data.coord_frame;
+      tag = fiff_read_tag(fid,isotrak.dir(i).pos);
+      sens.elecpos(i,:) = tag.data.r;
+      sens.chanpos(i,:) = tag.data.r;
+      coordsys(i)       = tag.data.coord_frame;
     end
     fclose(fid);
     
@@ -405,6 +405,21 @@ switch fileformat
     for i=1:size(sens.chanpos,1)
       sens.label{i} = sprintf('%d', i);
     end
+    
+  case 'neuromag_cal'
+    dat = cell(1,14);
+    [dat{:}] = textread(filename, '%s%f%f%f%f%f%f%f%f%f%f%f%f%f');
+    label = dat{1};
+    x = dat{2};
+    y = dat{3};
+    z = dat{4};
+    rot = cat(2, dat{5:13});
+    cal = dat{14}; % ??
+    % construct the sensor structucture
+    % it seems that the channel positions are expressed in dewar cordinates
+    % it would be possible to use coil_def.dat to construct the coil positions
+    sens.label = label;
+    sens.chanpos = [x y z];
     
   otherwise
     ft_error('unknown fileformat for electrodes or gradiometers');
