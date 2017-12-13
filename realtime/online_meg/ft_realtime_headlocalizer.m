@@ -25,6 +25,9 @@ function ft_realtime_headlocalizer(cfg)
 %   cfg.blocksize       = number, size of the blocks/chuncks that are processed (default = 1 second)
 %   cfg.accuracy_green  = distance from fiducial coordinate; green when within limits (default = 0.15 cm)
 %   cfg.accuracy_orange = orange when within limits, red when out (default = 0.3 cm)
+%   cfg.dewar           = mesh, desciption of the mesh of the dewar
+%   cfg.head            = mesh, desciption of the mesh of the head
+%   cfg.headmovement    = string, name or location of the .pos created by maxfilter which describes the location of the head relative to thedewar (only for elekta neuromag) (default = [])
 %
 % This method is described in Stolk A, Todorovic A, Schoffelen JM, Oostenveld R.
 % "Online and offline tools for head movement compensation in MEG."
