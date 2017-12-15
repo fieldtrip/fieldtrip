@@ -603,7 +603,7 @@ end;
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Process the data %%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-icaprintf(verb,fid,'\nInput data size [%d,%d] = %d channels, %d frames/n', ...
+icaprintf(verb,fid,'\nInput data size [%d,%d] = %d channels, %d frames\n', ...
           chans,frames,chans,frames);
 
 if strcmp(pcaflag,'on')
