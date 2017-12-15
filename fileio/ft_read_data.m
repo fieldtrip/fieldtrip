@@ -399,7 +399,7 @@ switch dataformat
     dat  = orig.data(chanindx, begsample:endsample);
     
   case 'neuromag_headpos'
-    % neuromag headposition file created with maxfilter
+    % neuromag headposition file created with maxfilter, the position varies over time
     orig = read_neuromag_headpos(filename);
     dat  = orig.data(chanindx, begsample:endsample);  
     
