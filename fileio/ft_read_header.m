@@ -1754,7 +1754,7 @@ switch headerformat
     
   case 'nexstim_nxe'
     hdr = read_nexstim_nxe(filename);
-  
+    
   case 'neuromag_headpos'
     % neuromag headposition file created with maxfilter, the position varies over time
     orig = read_neuromag_headpos(filename);
@@ -1763,7 +1763,7 @@ switch headerformat
     hdr.nSamples    = size(orig.data,2);
     hdr.nSamplesPre = 0;   % convert from ms to samples
     hdr.nTrials     = 1;
-    hdr.label       = orig.colheaders;  
+    hdr.label       = orig.colheaders;
     
   case 'neuromag_maxfilterlog'
     % neuromag log file created with maxfilter
