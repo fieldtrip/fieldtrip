@@ -1,4 +1,4 @@
-function [association] = nonlinearassociation(cfg, data)
+function [association] = ft_nonlinearassociation(cfg, data)
 
 % NONLINEARASSOCIATION calculate the association coefficient as a
 % function of delay.

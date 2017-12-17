@@ -60,7 +60,7 @@ headmodel.bnd = mesh;
 numboundaries = length(headmodel.bnd);
 
 if numboundaries~=3
-  error('this only works for three surfaces');
+  ft_error('this only works for three surfaces');
 end
 
 % determine the desired nesting of the compartments
@@ -76,13 +76,13 @@ if numel(headmodel.bnd)>1 && ~isequal(order(:)', 1:numel(headmodel.bnd))
 end
 
 if isempty(conductivity)
-  warning('No conductivity is declared, assuming standard values')
+  ft_warning('No conductivity is declared, assuming standard values')
   % brain/skull/skin
   conductivity = [1 1/80 1] * 0.33;
   headmodel.cond = conductivity;
 else
   if numel(conductivity)~=numboundaries
-    error('a conductivity value should be specified for each compartment');
+    ft_error('a conductivity value should be specified for each compartment');
   end
   headmodel.cond = conductivity(order);
 end
@@ -92,10 +92,10 @@ headmodel.source = 1;
 
 % do some sanity checks
 if headmodel.skin_surface~=3
-  error('the third surface should be the skin');
+  ft_error('the third surface should be the skin');
 end
 % if headmodel.source~=1
-%   error('the first surface should be the inside of the skull');
+%   ft_error('the first surface should be the inside of the skull');
 % end
 
 % Build Triangle 4th point

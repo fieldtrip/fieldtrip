@@ -3,16 +3,15 @@ function test_tutorial_coherence
 % MEM 4500mb
 % WALLTIME 00:20:00
 
-% TEST test_tutorial_coherence
 % TEST ft_freqanalysis ft_connectivityanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_sourceanalysis ft_sourceinterpolate ft_prepare_sourcemodel headsurface
 
-addpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/coherence');
-addpath('/home/common/matlab/fieldtrip/data/');
+addpath(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/coherence'));
+addpath(dccnpath('/home/common/matlab/fieldtrip/data/'));
 
 % find the interesting epochs of data
 cfg = [];
 cfg.trialfun                  = 'trialfun_left';
-cfg.dataset                   = '/home/common/matlab/fieldtrip/data/SubjectCMC.ds';
+cfg.dataset                   = dccnpath('/home/common/matlab/fieldtrip/data/SubjectCMC.ds');
 cfg = ft_definetrial(cfg);
 
 % detect EOG artifacts in the MEG data
@@ -209,7 +208,7 @@ cfg           = [];
 cfg.method    = 'dics';
 cfg.refchan   = 'EMGlft';
 cfg.frequency = 18;
-cfg.hdmfile   = 'SubjectCMC.hdm';
+cfg.headmodel = 'SubjectCMC.hdm';
 cfg.inwardshift     = 1;
 cfg.grid.resolution = 1;
 cfg.grid.unit       = 'cm';
@@ -251,7 +250,7 @@ trl = [];
 for j = 1:length(trig)-1
   trg1 = trig(j);
   trg2 = trig(j+1);
-  if trg1<=100 & trg2==2080,
+  if trg1<=100 && trg2==2080
     trlok      = [[indx(j)+1:1200:indx(j+1)-1200]' [indx(j)+1200:1200:indx(j+1)]'];
     trlok(:,3) = [0:-1200:-1200*(size(trlok,1)-1)]';
     trl        = [trl; trlok];

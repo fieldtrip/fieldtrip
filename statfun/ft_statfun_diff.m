@@ -11,7 +11,7 @@ function [s, cfg] = ft_statfun_diff(cfg, dat, design)
 % permutation test, without having to worry about the representation
 % of the data.
 %
-% See also FT_STATFUN_MEAN for an other example function
+% See also FT_STATFUN_MEAN for another example function
 
 % Copyright (C) 2006, Robert Oostenveld 
 %
@@ -39,7 +39,7 @@ dfA  = length(selA);
 dfB  = length(selB);
 if (dfA+dfB)<size(design, 2)
   % there are apparently replications that belong neither to condition 1, nor to condition 2
-  warning('inappropriate design, it should only contain 1''s and 2''s');
+  ft_warning('inappropriate design, it should only contain 1''s and 2''s');
 end
 % compute the averages and the difference
 avgA = nanmean(dat(:,selA), 2);

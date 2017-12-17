@@ -113,7 +113,7 @@ hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'cache', 
 cfg.channel = ft_channelselection(cfg.channel, hdr.label);
 chanindx    = match_str(hdr.label, cfg.channel);
 nchan       = length(chanindx);
-if nchan==0, error('no channels were selected'); end
+if nchan==0, ft_error('no channels were selected'); end
 
 % determine the size of blocks to process
 blocksize = round(cfg.blocksize * hdr.Fs);

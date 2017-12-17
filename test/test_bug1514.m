@@ -3,7 +3,6 @@ function test_bug1514
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST test_bug1514
 % TEST ft_spike_select ft_selectdata
 
 % the following structure corresponds to the one explained in
@@ -25,21 +24,21 @@ spike.freq = 1:20;
 
 cfg = [];
 cfg.trials = 1:50;
-output = ft_selectdata(cfg, spike)
+output = ft_selectdata(cfg, spike);
 
 cfg = [];
 cfg.channel = 2;
-output = ft_selectdata(cfg, spike)
+output = ft_selectdata(cfg, spike);
 
 cfg = [];
 cfg.latency = 'prestim';
-output = ft_selectdata(cfg, spike)
+output = ft_selectdata(cfg, spike);
 
 cfg = [];
 cfg.trials = 1:50;
 cfg.channel = 2;
 cfg.latency = 'prestim';
-output = ft_selectdata(cfg, spike)
+output = ft_selectdata(cfg, spike);
 
 assert(all(output.time{1}<=0));
 assert(all(output.trial{1}>=1 & output.trial{1}<=50));

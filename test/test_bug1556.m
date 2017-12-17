@@ -3,7 +3,6 @@ function test_bug1556
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1556
 % TEST ft_statfun_depsamplesFmultivariate ft_statfun_depsamplesFunivariate
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -38,7 +37,7 @@ cfg.uvar      = 2;
 cfg.design    = [ 1 1 1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3 3 3
   1 2 3 4 5 6 7 8 9 10 1 2 3 4 5 6 7 8 9 10 1 2 3 4 5 6 7 8 9 10 ];
 
-stats = ft_freqstatistics(cfg, data1, data2, data3)
+stats = ft_freqstatistics(cfg, data1, data2, data3);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -94,7 +93,7 @@ cfg.uvar      = 2;
 cfg.design    = [ 1 1 1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3 3 3
                   1 2 3 4 5 6 7 8 9 10 1 2 3 4 5 6 7 8 9 10 1 2 3 4 5 6 7 8 9 10 ];
 
-stats = ft_freqstatistics(cfg, data1, data2, data3)
+stats = ft_freqstatistics(cfg, data1, data2, data3);
 
 
 

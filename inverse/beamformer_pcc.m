@@ -60,7 +60,7 @@ function [dipout] = beamformer_pcc(dip, grad, headmodel, dat, Cf, varargin)
 
 if mod(nargin-5,2)
   % the first 5 arguments are fixed, the other arguments should come in pairs
-  error('invalid number of optional arguments');
+  ft_error('invalid number of optional arguments');
 end
 
 % these optional settings do not have defaults
@@ -144,7 +144,7 @@ end
 
 % sanity check
 if (~isempty(rf) || ~isempty(sf)) && isfield(dip, 'filter')
-  error('precomputed filters cannot be used in combination with a refdip or supdip')
+  ft_error('precomputed filters cannot be used in combination with a refdip or supdip')
 end
 
 refchan  = refchan;               % these can be passed as optional inputs
@@ -157,6 +157,7 @@ Nchan    = size(Cf,1);            % should equal Nmegchan + Nrefchan + Nsupchan
 Cmeg     = Cf(megchan,megchan);   %  the filter uses the csd between all MEG channels
 
 isrankdeficient = (rank(Cmeg)<size(Cmeg,1));
+rankCmeg = rank(Cmeg);
 
 % it is difficult to give a quantitative estimate of lambda, therefore also
 % support relative (percentage) measure that can be specified as string (e.g. '10%')
@@ -167,17 +168,11 @@ if ~isempty(lambda) && ischar(lambda) && lambda(end)=='%'
 end
 
 if projectnoise
-  % estimate the noise power, which is further assumed to be equal and uncorrelated over channels
-  if isrankdeficient
-    % estimated noise floor is equal to or higher than lambda
-    noise = lambda;
-  else
-    % estimate the noise level in the covariance matrix by the smallest singular value
+  % estimate the noise level in the covariance matrix by the smallest singular (non-zero) value
     noise = svd(Cmeg);
-    noise = noise(end);
+    noise = noise(rankCmeg);
     % estimated noise floor is equal to or higher than lambda
     noise = max(noise, lambda);
-  end
 end
 
 if realfilter

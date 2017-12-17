@@ -1,36 +1,35 @@
 function test_ft_datatype
 
 % MEM 8gb
-% WALLTIME 01:30:00
+% WALLTIME 02:00:00
 
-% TEST test_ft_datatype
 % TEST ft_datatype ft_datatype_comp ft_datatype_mvar ft_datatype_source ft_datatype_dip ft_datatype_parcellation ft_datatype_spike ft_datatype_freq ft_datatype_raw ft_datatype_timelock ft_datatype_headmodel ft_datatype_segmentation ft_datatype_volume ft_datatype ft_datatype_sens
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% this style is also used in test_ft_analysisprotocol and test_ft_datatype_source
 
 dirlist = {
-  '/home/common/matlab/fieldtrip/data/test/latest'
-  '/home/common/matlab/fieldtrip/data/test/20131231'
-  '/home/common/matlab/fieldtrip/data/test/20130630'
-  '/home/common/matlab/fieldtrip/data/test/20121231'
-  '/home/common/matlab/fieldtrip/data/test/20120630'
-  '/home/common/matlab/fieldtrip/data/test/20111231'
-  '/home/common/matlab/fieldtrip/data/test/20110630'
-  '/home/common/matlab/fieldtrip/data/test/20101231'
-  '/home/common/matlab/fieldtrip/data/test/20100630'
-  '/home/common/matlab/fieldtrip/data/test/20091231'
-  '/home/common/matlab/fieldtrip/data/test/20090630'
-  '/home/common/matlab/fieldtrip/data/test/20081231'
-  '/home/common/matlab/fieldtrip/data/test/20080630'
-  '/home/common/matlab/fieldtrip/data/test/20071231'
-  '/home/common/matlab/fieldtrip/data/test/20070630'
-  '/home/common/matlab/fieldtrip/data/test/20061231'
-  '/home/common/matlab/fieldtrip/data/test/20060630'
-  '/home/common/matlab/fieldtrip/data/test/20051231'
-  '/home/common/matlab/fieldtrip/data/test/20050630'
-  '/home/common/matlab/fieldtrip/data/test/20040623'
-  '/home/common/matlab/fieldtrip/data/test/20031128'
+  dccnpath('/home/common/matlab/fieldtrip/data/test/latest')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20131231')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20130630')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20121231')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20120630')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20111231')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20110630')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20101231')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20100630')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20091231')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20090630')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20081231')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20080630')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20071231')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20070630')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20061231')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20060630')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20051231')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20050630')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20040623')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20031128')
   };
 
 for j=1:length(dirlist)
@@ -41,14 +40,24 @@ for j=1:length(dirlist)
   filelist = filelist(sel);
   clear p f x
   
+  nbytes = zeros(numel(filelist),1);
   for i=1:length(filelist)
+    % sort for the file size
+    tmp = dir(filelist{i});
+    nbytes(i) = tmp.bytes;
+  end
+  [nbytes,ix] = sort(nbytes);
+  filelist = filelist(ix);
+  
+   for i=1:length(filelist)
     
     try
       fprintf('processing data structure %d from %d\n', i, length(filelist));
+      fprintf('file size %d\n', nbytes(i));
       var = loadvar(filelist{i});
     catch
       % some of the mat files are corrupt, this should not spoil the test
-      disp(var);
+      % disp(var);
       disp(lasterr);
       continue
     end
@@ -96,7 +105,7 @@ end % for dirlist
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% see how it deals with raw/timelock/freq structures with component topographies
-% see SVN revision 9336 and http://bugzilla.fcdonders.nl/show_bug.cgi?id=2518
+% see SVN revision 9336 and http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2518
 
 raw = [];
 raw.label = {'1', '2', '3'};

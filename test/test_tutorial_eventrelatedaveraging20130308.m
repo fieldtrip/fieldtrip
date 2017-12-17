@@ -3,7 +3,6 @@ function test_tutorial_eventrelatedaveraging20130308
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_tutorial_eventrelatedaveraging20130308
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this reflects  http://www.fieldtriptoolbox.org/tutorial/eventrelatedaveraging
@@ -48,7 +47,7 @@ function test_tutorial_eventrelatedaveraging20130308
 % 
 % Reading the FIC data
 % 
-% The ft_definetrial and ft_preprocessing functions require the original MEG dataset, which is available from ftp://ftp.fcdonders.nl/pub/fieldtrip/tutorial/Subject01.zip.
+% The ft_definetrial and ft_preprocessing functions require the original MEG dataset, which is available from ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/Subject01.zip.
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data'));
 
@@ -106,7 +105,7 @@ plot(dataFIC_LP.time{1}, dataFIC_LP.trial{1}(130,:))
 % 
 % Reading the FC data
 % 
-% The ft_definetrial and ft_preprocessing functions require the original MEG dataset, which is available from ftp://ftp.fcdonders.nl/pub/fieldtrip/tutorial/Subject01.zip.
+% The ft_definetrial and ft_preprocessing functions require the original MEG dataset, which is available from ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/Subject01.zip.
 
 % find the interesting segments of data
 cfg = [];                                           % empty configuration
@@ -136,7 +135,7 @@ dataFC_LP = ft_preprocessing(cfg);
 % save dataFC_LP dataFC_LP
 % Reading the IC data
 % 
-% The ft_definetrial and ft_preprocessing functions require the original MEG dataset, which is available from ftp://ftp.fcdonders.nl/pub/fieldtrip/tutorial/Subject01.zip.
+% The ft_definetrial and ft_preprocessing functions require the original MEG dataset, which is available from ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/Subject01.zip.
 
 % find the interesting segments of data
 cfg = [];                                           % empty configuration
@@ -167,7 +166,7 @@ dataIC_LP = ft_preprocessing(cfg);
 %  
 % Timelockanalysis
 % 
-% The function ft_timelockanalysis makes averages of all the trials in a data structure. It requires preprocessed data (see above), which is available from ftp://ftp.fcdonders.nl/pub/fieldtrip/tutorial/eventrelatedaveraging/dataFIC_LP.mat, dataFC_LP.mat and dataIC_LP.mat.
+% The function ft_timelockanalysis makes averages of all the trials in a data structure. It requires preprocessed data (see above), which is available from ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/eventrelatedaveraging/dataFIC_LP.mat, dataFC_LP.mat and dataIC_LP.mat.
 
 % load dataFIC_LP
 % load dataFC_LP

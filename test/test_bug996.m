@@ -3,7 +3,6 @@ function test_bug996
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug996
 % TEST ft_multiplotER ft_singleplotER
 
 % function to reproduce bug 996 and test the fix

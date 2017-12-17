@@ -48,7 +48,7 @@ end
 
 fig = getappdata(gcbf,'select3dhost');
 
-if ~isempty(fig) & ishandle(fig)
+if ~isempty(fig) && ishandle(fig)
     state = getappdata(fig,'select3dtool');     
     uirestore(state.uistate);
     delete(state.marker1);
@@ -58,7 +58,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function click
 
-[p v vi] = select3d;
+[p, v, vi] = select3d;
 state = getappdata(gcbf,'select3dtool');
 
 if ~ishandle(state.text)

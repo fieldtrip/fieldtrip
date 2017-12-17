@@ -43,7 +43,7 @@ model = ft_getopt(varargin, 'sourcemodel', 'dipole');
 cond  = ft_getopt(varargin, 'conductivity'); 
 
 if isempty(cond)
-  warning('Conductivity was not specified, using 1');
+  ft_warning('Conductivity was not specified, using 1');
   cond = 1;
 end
 
@@ -55,7 +55,7 @@ if isstruct(mesh) && isfield(mesh,'pos')
 elseif size(mesh,2)==3
   pos = mesh;
 else
-  error('incorrect specification of the geometry');
+  ft_error('incorrect specification of the geometry');
 end
 
 % fit a plane to the points
@@ -78,7 +78,7 @@ if strcmpi(model,'dipole')
 elseif strcmpi(model,'monopole')
   headmodel.type  = 'halfspace_monopole';    
 else
-  error('unknow method')
+  ft_error('unknow method')
 end
 
 function [N,P] = fit_plane(X)

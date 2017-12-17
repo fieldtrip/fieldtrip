@@ -46,24 +46,18 @@ spatdimlength = size(onoff, 1);
 nfreq = size(onoff, 2);
 ntime = size(onoff, 3);
 
-% ensure that spm8 (preferred) or spm2 is available, needed for spm_bwlabeln
-hasspm = ft_hastoolbox('spm12', 3) || ft_hastoolbox('spm8', 3) || ft_hastoolbox('spm2', 3);
-if ~hasspm
-  error('the spm_bwlabeln function from SPM is needed for clustering');
-end
-
 if length(size(spatdimneighbstructmat))~=2 || ~all(size(spatdimneighbstructmat)==spatdimlength)
-  error('invalid dimension of spatdimneighbstructmat');
+  ft_error('invalid dimension of spatdimneighbstructmat');
 end
 
 minnbchan=0;
 if length(varargin)==1
     minnbchan=varargin{1};
-end;
+end
 if length(varargin)==2
     spatdimneighbselmat=varargin{1};
     minnbchan=varargin{2};
-end;
+end
 
 if minnbchan>0
     % For every (time,frequency)-element, it is calculated how many significant
@@ -72,18 +66,18 @@ if minnbchan>0
     
     if length(varargin)==1
         selectmat = single(spatdimneighbstructmat | spatdimneighbstructmat');
-    end;
+    end
     if length(varargin)==2
         selectmat = single(spatdimneighbselmat | spatdimneighbselmat');
-    end;
+    end
     nremoved=1;
     while nremoved>0
         nsigneighb=reshape(selectmat*reshape(single(onoff),[spatdimlength (nfreq*ntime)]),[spatdimlength nfreq ntime]);
         remove=(onoff.*nsigneighb)<minnbchan;
         nremoved=length(find(remove.*onoff));
         onoff(remove)=0;
-    end;
-end;
+    end
+end
 
 % for each channel (combination), find the connected time-frequency clusters
 labelmat = zeros(size(onoff));

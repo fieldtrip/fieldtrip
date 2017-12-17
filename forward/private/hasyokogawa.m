@@ -74,7 +74,7 @@ elseif exist('GetMeg160ADbitInfoM', 'file') || exist('GetMeg160ChannelInfoM', 'f
     elseif [0 2 2 5] == [rev_ADbitInfoM rev_ChannelInfoM rev_AmpGainM rev_MatchingInfoM]
       version='16bitBeta6';
     else
-      warning('The version of the installed Yokogawa toolbox cannot be determined.');
+      ft_warning('The version of the installed Yokogawa toolbox cannot be determined.');
     end
   catch
     m = lasterror;

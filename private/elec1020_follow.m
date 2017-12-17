@@ -20,17 +20,26 @@ function [cnt1, cnt2] = elec1020_follow(pnt, dhk, v1, v2, v3, feedback)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 
-
 if nargin<6
   feedback = false;
 end
 
-tolerance       = 1e-5;
-tolerance_limit = 1e-6;
+% compute the distribution of edge lengths
+edge = [
+  pnt(dhk(:,1),:) - pnt(dhk(:,2),:)
+  pnt(dhk(:,2),:) - pnt(dhk(:,3),:)
+  pnt(dhk(:,3),:) - pnt(dhk(:,1),:)
+  ];
+edgelength = sqrt(sum(edge.^2,2));
+
+% the tolerance depends on the edge length
+tolerance       = min(edgelength)*1e-6;
+tolerance_limit = min(edgelength)*1e-3;
 
 npnt = size(pnt,1);
 ndhk = size(dhk,1);
 
+pside = nan(1,npnt);
 for i=1:npnt
   % determine on which side of the plane each vertex lies
   pside(i) = ptriside(v1, v2, v3, pnt(i,:), tolerance);
@@ -55,10 +64,10 @@ dcut(all(tmp== 1,2)) = false;
 dcut(all(tmp==-1,2)) = false;
 
 % continue working with only the intersecting triangles
-dhk = dhk(find(dcut),:);
+dhk = dhk(dcut,:);
 ndhk = size(dhk,1);
 
-% for each triangle determine teh neighbouring triangles
+% for each triangle determine the neighbouring triangles
 neighb = zeros(ndhk,ndhk);
 for i=1:ndhk
   for j=(i+1):ndhk
@@ -88,6 +97,7 @@ for i=1:ndhk
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% make a contour from v1 via v2 to v3
 
 % find the nearest triangle on which point v1 projects
 v1_dist = inf;
@@ -97,7 +107,6 @@ for i=1:ndhk
   if dist<v1_dist
     v1_dist = dist;
     v1_indx = i;
-    v1_proj = proj;
     v1_proj = ptriproj(pnt(dhk(i,1),:), pnt(dhk(i,2),:), pnt(dhk(i,3),:), v1, 1);
   end
 end
@@ -129,7 +138,6 @@ else
   prev_indx = v1_indx;
 end
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 while(1)
@@ -140,15 +148,24 @@ while(1)
     c1 = pnt(dhk(i,1),:);
     c2 = pnt(dhk(i,2),:);
     c3 = pnt(dhk(i,3),:);
+%     
+%     if feedback
+%       ft_plot_mesh(struct('pos', pnt, 'tri', dhk(i,:)), 'edgecolor', 'b', 'facecolor', 'none')
+%       ft_plot_mesh(c1, 'vertexsize', 30, 'vertexcolor', 'r')
+%       ft_plot_mesh(c2, 'vertexsize', 30, 'vertexcolor', 'r')
+%       ft_plot_mesh(c3, 'vertexsize', 30, 'vertexcolor', 'r')
+%       ft_plot_mesh(prev_proj, 'vertexsize', 30, 'vertexcolor', 'g')
+%       drawnow
+%     end
     
     [proj, dist] = ptriproj(c1, c2, c3, prev_proj, 1);
     
     if dist<tolerance
       [l1, l2] = tritrisect(v1, v2, v3, c1, c2, c3);
       
-      if pntdist(l1, cnt1(ncnt,:))<tolerance & pntdist(l2, cnt2(ncnt,:))<tolerance
+      if pntdist(l1, cnt1(ncnt,:))<tolerance && pntdist(l2, cnt2(ncnt,:))<tolerance
         continue
-      elseif pntdist(l1, cnt2(ncnt,:))<tolerance & pntdist(l2, cnt1(ncnt,:))<tolerance
+      elseif pntdist(l1, cnt2(ncnt,:))<tolerance && pntdist(l2, cnt1(ncnt,:))<tolerance
         continue
       end
       
@@ -173,10 +190,10 @@ while(1)
   if ~(size(cnt1,1)>ncnt)
     tolerance = 2*tolerance;
     if tolerance>=tolerance_limit
-      warning('premature end of contour')
+      ft_warning('premature end of contour')
       break
     else
-      warning('increasing tolerance');
+      ft_warning('increasing tolerance');
     end
   end
   

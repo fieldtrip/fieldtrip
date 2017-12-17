@@ -94,7 +94,7 @@ else
   % in principle it would be possible to read it from cfg.datafile, but the
   % synchronization information will not automatically be present, as that
   % requires parsing one of the trigger channels
-  error('the data header is not available')
+  ft_error('the data header is not available')
 end
 
 assert(isfield(datahdr, 'FirstTimeStamp'), 'sycnhronization information is missing in the data header');
@@ -108,7 +108,7 @@ elseif hasdata && isfield(data, 'sampleinfo')
   fprintf('using data.sampleinfo\n');
   trl = data.sampleinfo;
 else
-  error('the EEG/MEG data segments should be specified');
+  ft_error('the EEG/MEG data segments should be specified');
 end
 
 numtrl = size(trl,1);
@@ -219,13 +219,13 @@ while (true)
     switch response
       case 'n'
         if trllop==numtrl
-          warning('already at the last trial');
+          ft_warning('already at the last trial');
         else
           trllop = trllop+1;
         end
       case 'p'
         if trllop==1
-          warning('already at first trial');
+          ft_warning('already at first trial');
         else
           trllop = trllop-1;
         end

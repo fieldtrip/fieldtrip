@@ -3,7 +3,6 @@ function test_firwsfiltering
 % MEM 2048mb
 % WALLTIME 00:10:00
 
-% TEST test_firwsfiltering
 % TEST ft_preprocessing filter_with_correction ft_preproc_bandpassfilter
 % TEST ft_preproc_highpassfilter ft_preproc_lowpassfilter firws
 

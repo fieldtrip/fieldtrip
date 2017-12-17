@@ -206,7 +206,7 @@ switch ft_voltype(headmodel)
     end % for each of the dipole positions
     
   otherwise
-    error('unrecognized volume conductor model');
+    ft_error('unrecognized volume conductor model');
 end
 
 % ensure that it is a boolean column vector

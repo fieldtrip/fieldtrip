@@ -35,7 +35,7 @@ for i=1:length(version)
   clear functions
   clear global
   
-  addpath(sprintf('/home/common/matlab/fieldtrip-%s', version{i}));
+  addpath(sprintf(dccnpath('/home/common/matlab/fieldtrip-%s', version{i})));
   
   % beware of using an incorrect ft_defaults or fieldtripdefs
   if exist('ft_defaults.m', 'file')

@@ -1,16 +1,16 @@
-function [s1] = appendstruct(s1, s2)
+function s1 = appendstruct(varargin)
 
 % APPENDSTRUCT appends a structure to a structure or struct-array.
 % It also works if the initial structure is an empty structure or
-% an empty double array.
+% an empty double array. It also works if the input structures have 
+% different fields.
 %
 % Use as
-%   a = appendstruct(a, b)
-% which appends b to a.
+%   ab = appendstruct(a, b)
 %
 % See also PRINTSTRUCT, COPYFIELDS, KEEPFIELDS, REMOVEFIELDS
 
-% Copyright (C) 2015, Robert Oostenveld
+% Copyright (C) 2015-2017, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -30,11 +30,39 @@ function [s1] = appendstruct(s1, s2)
 %
 % $Id$
 
+narginchk(2,inf);
+
+if nargin>2
+  % use recursion to append a whole list of structures
+  s1 = varargin{1};
+  for i=2:nargin
+    s2 = varargin{i};
+    s1 = appendstruct(s1, s2);
+  end
+  return
+else
+  s1 = varargin{1};
+  s2 = varargin{2};
+end
+
 assert(isstruct(s1) || isempty(s1), 'input argument 1 should be empty or a structure');
 assert(isstruct(s2), 'input argument 2 should be a structure');
 
 if isempty(s1)
   s1 = s2;
 elseif isstruct(s1)
-  s1(end+1) = s2;
+  fn1 = fieldnames(s1);
+  fn2 = fieldnames(s2);
+  % find the fields that are missing in either one
+  missing1 = setdiff(union(fn1, fn2), fn1);
+  missing2 = setdiff(union(fn1, fn2), fn2);
+  % add the missing fields
+  for i=1:numel(missing1)
+    s1(1).(missing1{i}) = [];
+  end
+  for i=1:numel(missing2)
+    s2(1).(missing2{i}) = [];
+  end
+  % concatenate the second structure to the first
+  s1 = cat(1,s1(:), s2(:));
 end

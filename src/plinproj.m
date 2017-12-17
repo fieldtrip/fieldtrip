@@ -1,4 +1,4 @@
-function [varargout] = funname(varargin)
+function [varargout] = plinproj(varargin)
 
 % PLINPROJ projects a point onto a line or linepiece
 %

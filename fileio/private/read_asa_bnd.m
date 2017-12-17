@@ -52,7 +52,7 @@ elseif strcmpi(Unit,'cm')
 elseif strcmpi(Unit,'m')
   pnt   = 1000*pnt;
 else
-  error(sprintf('Unknown unit of distance for triangulated boundary (%s)', Unit));
+  ft_error(sprintf('Unknown unit of distance for triangulated boundary (%s)', Unit));
 end
 
 bnd.pnt = pnt;

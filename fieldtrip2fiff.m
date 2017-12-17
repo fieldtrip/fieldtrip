@@ -46,10 +46,10 @@ ft_defaults
 % ensure that the filename has the correct extension
 [pathstr, name, ext] = fileparts(filename);
 if ~strcmp(ext, '.fif')
-  error('if the filename is specified with extension, this should read .fif');
+  ft_error('if the filename is specified with extension, this should read .fif');
 end
-fifffile = [pathstr filesep name '.fif'];
-eventfile = [pathstr filesep name '-eve.fif'];
+fifffile = fullfile(pathstr ,[name '.fif']);
+eventfile = fullfile(pathstr ,[name '-eve.fif']);
 
 % ensure the mne-toolbox to be on the path
 ft_hastoolbox('mne', 1);
@@ -140,7 +140,7 @@ if israw
   
 elseif isepch
   
-  error('fieldtrip2fiff:NotImplementedError', 'Function to write epochs to MNE not implemented yet')
+  ft_error('writing epochs to MNE is not implemented yet')
   
   for j = 1:length(data.trial)
     evoked(j).aspect_kind = 100;
@@ -312,14 +312,14 @@ for i1 = 1:numel(ev_type)
     
     if any(i_type & i_value)
       eve(i_type & i_value, 1) = [event(i_type & i_value).sample];
-      eve(i_type & i_value, 2) = marker;
+      eve(i_type & i_value, 3) = marker;
     end
     
   end
 end
 
 % report event coding
-newev = unique(eve(:,2));
+newev = unique(eve(:,3));
 fprintf('EVENTS have been coded as:\n')
 for i = 1:numel(newev)
   i_type = floor(newev(i)/10);

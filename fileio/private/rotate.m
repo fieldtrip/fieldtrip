@@ -49,7 +49,7 @@ function [H] = rotate(f)
 % $Id$
 
 if numel(f)~=3
-  error('incorrect input vector');
+  ft_error('incorrect input vector');
 end
 
 % convert degrees to radians

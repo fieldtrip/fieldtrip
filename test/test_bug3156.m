@@ -1,6 +1,6 @@
 function test_bug3156
 
-% WALLTIME = 00:10:00
+% WALLTIME 00:10:00
 % MEM 2gb
 
 % TEST test_bug3158
@@ -529,4 +529,17 @@ figure
 ft_plot_mesh(headshape)
 ft_plot_sens(elec)
 ft_plot_axes(elec)
+
+%% try a real head surface
+
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test'));
+load bug3156.mat
+
+elec = ft_electrodeplacement(cfg, headshape);
+
+figure
+ft_plot_mesh(headshape)
+ft_plot_sens(elec)
+ft_plot_axes(elec)
+
 

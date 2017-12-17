@@ -163,7 +163,7 @@ switch dimord
     intent_name = 'ConnUnknown';
     
   otherwise
-    error('unsupported dimord "%s"', dimord);
+    ft_error('unsupported dimord "%s"', dimord);
 end % switch
 
 % determine each of the dimensions
@@ -387,7 +387,7 @@ if any(strcmp(dimtok, 'pos'))
       case 'm'
         MeterExponent = 0;
       otherwise
-        error('unsupported source.unit')
+        ft_error('unsupported source.unit')
     end % case
     
     [tree, uid] = add(tree, branch, 'element', 'Volume');
@@ -461,7 +461,7 @@ if any(strcmp(dimtok, 'chan'))
       case 'm'
         MeterExponent = 0;
       otherwise
-        error('unsupported source.unit')
+        ft_error('unsupported source.unit')
     end % case
     
     [tree, uid] = add(tree, branch, 'element', 'Volume');
@@ -640,7 +640,7 @@ switch precision
   case 'int64'
     hdr.datatype = 1024;
   otherwise
-    error('unsupported precision "%s"', precision);
+    ft_error('unsupported precision "%s"', precision);
 end
 
 switch precision
@@ -657,7 +657,7 @@ switch precision
   case 'double'
     hdr.bitpix = 8*8;
   otherwise
-    error('unsupported precision "%s"', precision);
+    ft_error('unsupported precision "%s"', precision);
 end
 
 % dim(1) represents the number of dimensions
@@ -681,7 +681,7 @@ for i=1:length(dimtok)
     case 'scalar'
       hdr.dim(5+i) = 1;
     otherwise
-      error('unsupported dimord "%s"', dimord)
+      ft_error('unsupported dimord "%s"', dimord)
   end
 end
 

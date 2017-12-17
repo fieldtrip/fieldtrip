@@ -41,7 +41,7 @@ for ii=1:nsens
 end
 
 %% Set the position of the probe dipole
-pos = [0 0 70];
+dip_pos = [0 0 70];
 
 %% Create a BEM volume conduction model
 vol = [];
@@ -49,7 +49,6 @@ for ii=1:length(r)
     vol.bnd(ii).pos = pos * r(ii);
     vol.bnd(ii).tri = fliplr(tri); % pointing inwards!!!
 end
-vol.cond = c;
 
 %% Compute the BEM
 
@@ -60,10 +59,11 @@ vol.cond = c;
 
 cfg=[];
 cfg.method = 'openmeeg';
+cfg.conductivity = c;
 vol = ft_prepare_headmodel(cfg, vol);
 
-cfg.vol = vol;
-cfg.grid.pos = pos;
+cfg.headmodel = vol;
+cfg.grid.pos = dip_pos;
 cfg.elec = sens;
 grid = ft_prepare_leadfield(cfg);
 
@@ -78,9 +78,9 @@ figure; ft_plot_mesh(bnd, 'vertexcolor', lf_openmeeg(:,3))
 %% Compute the analytic leadfield
 
 vol_sphere.r = r;
-vol_sphere.c = c;
+vol_sphere.cond = c;
 
-lf_sphere = ft_compute_leadfield(pos, sens, vol_sphere);
+lf_sphere = ft_compute_leadfield(dip_pos, sens, vol_sphere);
 
 %% Evaluate the quality of the result using RDM and MAG
 rdms = zeros(1,size(lf_openmeeg,2));

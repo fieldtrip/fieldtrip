@@ -13,6 +13,7 @@
 
 /*******************************************************************************
  * communicate with the buffer through TCP
+ * returns 0 on success, -1 on error
  *******************************************************************************/
 int tcprequest(int server, const message_t *request, message_t **response_ptr) {
   unsigned int n, total;
@@ -38,7 +39,7 @@ int tcprequest(int server, const message_t *request, message_t **response_ptr) {
     }
   }
   /* Now check whether the total size is below the merge threshold, in which case
-     we'll copy it to contiguous memory and again send it in one go 
+     we'll copy it to contiguous memory and again send it in one go
    */
   else if (total <= MERGE_THRESHOLD) {
     char merged[MERGE_THRESHOLD];
@@ -54,7 +55,7 @@ int tcprequest(int server, const message_t *request, message_t **response_ptr) {
   /* Otherwise, send "def" and "buf" in separate pieces. This might introduce latencies
      if the other end runs Windows :-(
    */
-     else {		
+     else {
        /* send the request to the server, first the message definition */
        /* FIXME: bufwrite expects unsigned int, gets size_t. Similar for return. */
        if ((n = bufwrite(server, request->def, sizeof(messagedef_t)))!=sizeof(messagedef_t)) {
@@ -101,4 +102,3 @@ cleanup:
      *response_ptr = NULL;
      return -1;
 }
-

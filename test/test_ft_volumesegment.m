@@ -1,34 +1,72 @@
 function test_ft_volumesegment
 
 % MEM 2000mb
-% WALLTIME 00:30:00
+% WALLTIME 01:00:00
 
-% TEST test_ft_volumesegment
 % TEST ft_volumesegment  ft_read_mri
 
 % initial version by Lilla Magyari 2012
 
-clear all
-
 % read in an mri
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/mri/nifti/single_subj_T1.nii'));
 
-mri = ft_read_mri('/home/common/matlab/fieldtrip/data/test/latest/mri/nifti/single_subj_T1.nii');
-
-% teh following could also be done using ft_determine_coordsys
+% the following could also be done using ft_determine_coordsys
 mri.coordsys = 'spm';
 
 %% output:tpm
-cfg = [];
-cfg.output = 'tpm';
-tpm = ft_volumesegment(cfg,mri);
 
-if ~(isfield(tpm,'gray')) || ~(isfield(tpm,'white')) || ~(isfield(tpm,'csf'))
-  error('tissue probability map is missing a field')
-end
+% also test the different spm versions
+mfile = mfilename('fullpath');
+[pathstr, mfile] = fileparts(mfile);
+ftpath           = pathstr(1:(strfind(pathstr, 'test')-1));
+
+restoredefaultpath;
+addpath(ftpath);
+ft_defaults;
+cfg        = [];
+cfg.output = 'tpm';
+cfg.spmversion = 'spm2';
+tpm1 = ft_volumesegment(cfg,mri);
+
+restoredefaultpath;
+addpath(ftpath);
+ft_defaults;
+cfg        = [];
+cfg.output = 'tpm';
+cfg.spmversion = 'spm8';
+tpm2 = ft_volumesegment(cfg,mri);
+
+restoredefaultpath;
+addpath(ftpath);
+ft_defaults;
+cfg        = [];
+cfg.output = 'tpm';
+cfg.spmversion = 'spm12';
+cfg.spmmethod  = 'old';
+tpm3 = ft_volumesegment(cfg,mri);
+
+restoredefaultpath;
+addpath(ftpath);
+ft_defaults;
+cfg        = [];
+cfg.output = 'tpm';
+cfg.spmversion = 'spm12';
+cfg.spmmethod  = 'new';
+tpm4 = ft_volumesegment(cfg,mri);
+
+assert(isfield(tpm1, 'gray')&&isfield(tpm1, 'white')&&isfield(tpm1, 'csf'), 'tissue probability map is missing a field');
+assert(isfield(tpm2, 'gray')&&isfield(tpm2, 'white')&&isfield(tpm2, 'csf'), 'tissue probability map is missing a field');
+assert(isfield(tpm3, 'gray')&&isfield(tpm3, 'white')&&isfield(tpm3, 'csf'), 'tissue probability map is missing a field');
+assert(isfield(tpm4, 'gray')&&isfield(tpm4, 'white')&&isfield(tpm4, 'csf'), 'tissue probability map is missing a field');
 
 %% output:brain
+tpm = tpm2; % use one of the segmentations created above for the rest
+
 cfg = [];
 cfg.output = 'brain';
+cfg.spmversion = 'spm8'; % this is the old default, and needed for the test
+% function to run through, using spm12 leads to rng state dependent minor
+% differences, causing the isequals below to fail.
 brain = ft_volumesegment(cfg,mri);
 
 if ~(isfield(brain,'brain'))
@@ -39,6 +77,7 @@ end
 
 cfg = [];
 cfg.output = 'brain';
+cfg.spmversion = 'spm8';
 brain2 = ft_volumesegment(cfg,tpm);
 
 if ~(isfield(brain2,'brain'))
@@ -56,6 +95,7 @@ tpm.anatomy = mri.anatomy; % for scalp segmentation
 
 cfg = [];
 cfg.output = {'brain' 'skull' 'scalp'};
+cfg.spmversion = 'spm8';
 seg = ft_volumesegment(cfg,tpm);
 
 
@@ -68,6 +108,7 @@ end
 
 cfg = [];
 cfg.output = {'brain' 'skull' 'scalp'};
+cfg.spmversion = 'spm8';
 seg2 = ft_volumesegment(cfg, mri);
 
 if ~(isfield(seg2,'brain')) || ~(isfield(seg2,'skull')) || ~(isfield(seg2,'scalp'))
@@ -141,6 +182,7 @@ clear scalp2;
 
 cfg = [];
 cfg.output = 'skullstrip';
+cfg.spmversion = 'spm8';
 skullstr = ft_volumesegment(cfg,tpm);
 
 if ~(isfield(skullstr,'anatomy'))
@@ -151,6 +193,7 @@ end
 
 cfg = [];
 cfg.output = 'skullstrip';
+cfg.spmversion = 'spm8';
 skullstr2 = ft_volumesegment(cfg,mri);
 
 if ~(isfield(skullstr2,'anatomy'))
@@ -172,6 +215,7 @@ clear skullstr2;
 cfg = [];
 cfg.downsample = 2;
 cfg.output = 'scalp';
+cfg.spmversion = 'spm8';
 scalp3 = ft_volumesegment(cfg,tpm);
 
 if isequal(scalp.scalp,scalp3.scalp)
@@ -203,6 +247,7 @@ cfg = [];
 cfg.threshold = 0.3;
 cfg.smooth = 6;
 cfg.output = 'scalp';
+cfg.spmversion = 'spm8';
 scalp6 = ft_volumesegment(cfg,tpm);
 
 if ~(isequal(scalp4.scalp,scalp6.scalp))
@@ -216,6 +261,7 @@ cfg = [];
 cfg.brainthreshold = 0.1;
 cfg.brainsmooth  =  6;
 cfg.output = 'skullstrip';
+cfg.spmversion = 'spm8';
 skullstr3 = ft_volumesegment(cfg,tpm);
 
 cfg = [];
@@ -233,6 +279,7 @@ cfg = [];
 cfg.threshold = 0.1;
 cfg.smooth  =  6;
 cfg.output = 'skullstrip';
+cfg.spmversion = 'spm8';
 skullstr5 = ft_volumesegment(cfg,tpm);
 
 if ~(isequal(skullstr5.anatomy,skullstr3.anatomy))
@@ -245,6 +292,7 @@ cfg = [];
 cfg.threshold = 0.1;
 cfg.smooth  =  6;
 cfg.output =  {'skullstrip' 'brain'};
+cfg.spmversion = 'spm8';
 skullstr6 = ft_volumesegment(cfg,tpm);
 
 if ~(isequal(skullstr5.anatomy,skullstr6.anatomy))
@@ -255,6 +303,7 @@ end
 
 cfg = [];
 cfg.output = {'skullstrip' 'brain'};
+cfg.spmversion = 'spm8';
 skullstr = ft_volumesegment(cfg,tpm);
 
 assert(isfield(skullstr,'anatomy') & isfield(skullstr,'brain'),'skullstrip segmentation is missing anatomy');

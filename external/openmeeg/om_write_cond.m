@@ -6,6 +6,8 @@ function om_write_cond(condfile,c,names)
 %
 %   Authors: Alexandre Gramfort alexandre.gramfort@inria.fr
 
+% Copyright (C) 2010-2017, OpenMEEG developers
+
 ndomains = length(c);
 
 if nargin < 3

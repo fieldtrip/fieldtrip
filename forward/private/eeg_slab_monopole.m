@@ -41,7 +41,7 @@ elseif siz(2)==3
   rd = rd';
   rd = rd(:)'; % ensure that it is a row vector
 else
-  error('incorrect specification of pole locations');
+  ft_error('incorrect specification of pole locations');
 end
 
 Nelc     = size(elc,1);
@@ -78,10 +78,10 @@ for i=1:Npoles
   invacuum = ~(instrip1&instrip2);
   
   if invacuum
-    warning('a pole lies on the vacuum side of the plane');
+    ft_warning('a pole lies on the vacuum side of the plane');
     lf(:,i) = NaN(Nelc,1);
   elseif any(R1)==0 
-    warning('a pole coincides with one of the electrodes');
+    ft_warning('a pole coincides with one of the electrodes');
     lf(:,i) = NaN(Nelc,1);
   else
     lf(:,i) = (1 ./ R1) + (1 ./ R2) + (1 ./ R3);% + (1 ./ R4);
@@ -101,7 +101,7 @@ pnt2 = vol.pnt2;
 ori2 = vol.ori2;
 
 if abs(dot(P1-pnt1,ori1))<eps || abs(dot(P1-pnt2,ori2))<eps
-  warning(sprintf ('point %f %f %f lies on the plane',P1(1),P1(2),P1(3)))
+  ft_warning(sprintf ('point %f %f %f lies on the plane',P1(1),P1(2),P1(3)))
   P2 = P1;
 else
   

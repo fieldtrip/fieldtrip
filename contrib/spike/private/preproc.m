@@ -79,6 +79,9 @@ function [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, en
 %   cfg.hpfiltdev     = highpass max passband deviation (firws with 'kaiser' window, default 0.001 set in low-level function)
 %   cfg.bpfiltdev     = bandpass max passband deviation (firws with 'kaiser' window, default 0.001 set in low-level function)
 %   cfg.bsfiltdev     = bandstop max passband deviation (firws with 'kaiser' window, default 0.001 set in low-level function)
+%   cfg.dftreplace    = 'zero' or 'neighbour', method used to reduce line noise, 'zero' implies DFT filter, 'neighbour' implies spectrum interpolation (default = 'zero')
+%   cfg.dftbandwidth  = bandwidth of line noise frequencies, applies to spectrum interpolation, in Hz (default = [1 2 3])
+%   cfg.dftneighbourwidth = bandwidth of frequencies neighbouring line noise frequencies, applies to spectrum interpolation, in Hz (default = [2 2 2])
 %   cfg.plotfiltresp  = 'no' or 'yes', plot filter responses (firws, default = 'no')
 %   cfg.usefftfilt    = 'no' or 'yes', use fftfilt instead of filter (firws, default = 'no')
 %   cfg.demean        = 'no' or 'yes'
@@ -136,7 +139,7 @@ end
 if iscell(cfg)
   % recurse over the subsequent preprocessing stages
   if begpadding>0 || endpadding>0
-    error('multiple preprocessing stages are not supported in combination with filter padding');
+    ft_error('multiple preprocessing stages are not supported in combination with filter padding');
   end
   for i=1:length(cfg)
     tmpcfg = cfg{i};
@@ -221,33 +224,33 @@ if ~isfield(cfg, 'resample'),     cfg.resample = '';            end
 
 % test whether the MATLAB signal processing toolbox is available
 if strcmp(cfg.medianfilter, 'yes') && ~ft_hastoolbox('signal')
-  error('median filtering requires the MATLAB signal processing toolbox');
+  ft_error('median filtering requires the MATLAB signal processing toolbox');
 end
 
 % do a sanity check on the filter configuration
 if strcmp(cfg.bpfilter, 'yes') && ...
-    (strcmp(cfg.hpfilter, 'yes') || strcmp(cfg.lpfilter,'yes')),
-  error('you should not apply both a bandpass AND a lowpass/highpass filter');
+    (strcmp(cfg.hpfilter, 'yes') || strcmp(cfg.lpfilter,'yes'))
+  ft_error('you should not apply both a bandpass AND a lowpass/highpass filter');
 end
 
 % do a sanity check on the hilbert transform configuration
 if strcmp(cfg.hilbert, 'yes') && ~strcmp(cfg.bpfilter, 'yes')
-  warning('hilbert transform should be applied in conjunction with bandpass filter')
+  ft_warning('hilbert transform should be applied in conjunction with bandpass filter')
 end
 
 % do a sanity check on hilbert and rectification
 if strcmp(cfg.hilbert, 'yes') && strcmp(cfg.rectify, 'yes')
-  error('hilbert transform and rectification should not be applied both')
+  ft_error('hilbert transform and rectification should not be applied both')
 end
 
 % do a sanity check on the rereferencing/montage
 if ~strcmp(cfg.reref, 'no') && ~strcmp(cfg.montage, 'no')
-  error('cfg.reref and cfg.montage are mutually exclusive')
+  ft_error('cfg.reref and cfg.montage are mutually exclusive')
 end
 
 % lnfilter is no longer used
 if isfield(cfg, 'lnfilter') && strcmp(cfg.lnfilter, 'yes')
-  error('line noise filtering using the option cfg.lnfilter is not supported any more, use cfg.bsfilter instead')
+  ft_error('line noise filtering using the option cfg.lnfilter is not supported any more, use cfg.bsfilter instead')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -258,11 +261,11 @@ if ~isempty(cfg.implicitref) && ~any(match_str(cfg.implicitref,label))
   dat(end+1,:) = 0;
 end
 
-if strcmp(cfg.reref, 'yes'),
+if strcmp(cfg.reref, 'yes')
   cfg.refchannel = ft_channelselection(cfg.refchannel, label);
   refindx = match_str(label, cfg.refchannel);
   if isempty(refindx)
-    error('reference channel was not found')
+    ft_error('reference channel was not found')
   end
   dat = ft_preproc_rereference(dat, refindx, cfg.refmethod);
 end
@@ -358,7 +361,20 @@ else
   end
   if strcmp(cfg.dftfilter, 'yes')
     datorig = dat;
-    dat     = ft_preproc_dftfilter(dat, fsample, cfg.dftfreq);
+    optarg = {};
+    if isfield(cfg, 'dftreplace') 
+        optarg = cat(2, optarg, {'dftreplace', cfg.dftreplace}); 
+        if strcmp(cfg.dftreplace, 'neighbour') && (begpadding>0 || endpadding>0)
+             ft_error('Padding by data mirroring is not supported for spectrum interpolation.');
+        end
+    end
+    if isfield(cfg, 'dftbandwidth')
+        optarg = cat(2, optarg, {'dftbandwidth', cfg.dftbandwidth});
+    end
+    if isfield(cfg, 'dftneighbourwidth') 
+        optarg = cat(2, optarg, {'dftneighbourwidth', cfg.dftneighbourwidth});
+    end
+    dat     = ft_preproc_dftfilter(dat, fsample, cfg.dftfreq, optarg{:}); 
     if strcmp(cfg.dftinvert, 'yes'),
       dat = datorig - dat;
     end

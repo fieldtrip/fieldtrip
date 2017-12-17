@@ -79,8 +79,8 @@ ft_preamble trackconfig
 % read from an old *.mat file
 data = ft_checkdata(data, 'datatype', {'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
-if isfield(data,'fsample');
-  fsample = getsubfield(data,'fsample');
+if isfield(data, 'fsample');
+  fsample = getsubfield(data, 'fsample');
 else
   fsample = 1./(mean(diff(data.time{1})));
 end
@@ -100,15 +100,15 @@ switch cfg.method
     if ~isfield(cfg.velocity2D, 'mindur'),   cfg.velocity2D.mindur  =  3;     end % minimum microsaccade duration in samples
     if ~isfield(cfg.velocity2D, 'velthres'), cfg.velocity2D.velthres = 6;     end
   case 'clustering'
-    error('not implemented yet');
+    ft_error('not implemented yet');
     % Otero-Millan J, Castro JLA, Macknik SL, Martinez-Conde S (2014)
     % Unsupervised clustering method to detect microsaccades. J Vis 14.
   otherwise
-    error('unsupported option for cfg.method');
+    ft_error('unsupported option for cfg.method');
 end
 
 % select channels and trials of interest, by default this will select all channels and trials
-tmpcfg = keepfields(cfg, {'trials', 'channel'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
 data = ft_selectdata(tmpcfg, data);
 [cfg, data] = rollback_provenance(cfg, data);
 
@@ -135,7 +135,7 @@ for i=1:ntrial
     case 'velocity2D'
 
       % demean horizontal and vertical time courses
-      if strcmp(cfg.velocity2D.demean,'yes');
+      if strcmp(cfg.velocity2D.demean, 'yes');
         dat = ft_preproc_polyremoval(dat, 0, 1, ndatsample);
       end
 

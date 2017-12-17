@@ -14,29 +14,32 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 % implemented, which are described in detail below:
 %
 % INTERACTIVE - Use a graphical user interface to click on the location of anatomical
-% fiducials. The coordinate system is updated according to the definition of the
-% coordinates of these fiducials.
+% landmarks or fiducials. The anatomical data can be displayed as three orthogonal
+% MRI slices or as a rendering of the head surface. The coordinate system is updated
+% according to the definition of the coordinates of these fiducials.
 %
 % FIDUCIAL - The coordinate system is updated according to the definition of the
-% coordinates of fiducials that are specified in the configuration.
+% coordinates of anatomical landmarks or fiducials that are specified in the
+% configuration.
 %
 % HEADSHAPE - Match the head surface from the MRI with a measured head surface using
 % an iterative closest point procedure. The MRI will be updated to match the measured
-% head surface. This includes an optional manual coregistration of the two head
+% head surface. You can optionally do an initial manual coregistration of the two head
 % surfaces.
 %
-% SPM - align the individual MRI to the coordinate system of a target or template MRI
+% SPM - Align the individual MRI to the coordinate system of a target or template MRI
 % by matching the two volumes.
 %
-% FSL - align the individual MRI to the coordinate system of a target or template MRI
+% FSL - Align the individual MRI to the coordinate system of a target or template MRI
 % by matching the two volumes.
 %
 % Use as
 %   [mri] = ft_volumerealign(cfg, mri)
 % or
 %   [mri] = ft_volumerealign(cfg, mri, target)
-% where the input MRI should be an anatomical or functional MRI volume and the third
-% input argument is the the target anatomical MRI for SPM or FSL.
+% where the first input is the configuration structure, the second input should be an
+% anatomical or functional MRI volume and the third input is the the target anatomical MRI
+% for SPM or FSL.
 %
 % The configuration can contain the following options
 %   cfg.method         = string representing the method for aligning
@@ -47,8 +50,8 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %                        'fsl'         match to template anatomical MRI
 %   cfg.coordsys       = string specifying the origin and the axes of the coordinate
 %                        system. Supported coordinate systems are 'ctf', '4d',
-%                        'bti', 'yokogawa', 'asa', 'itab', 'neuromag', 'spm',
-%                        'tal' and 'paxinos'. See http://tinyurl.com/ojkuhqz
+%                        'bti', 'yokogawa', 'asa', 'itab', 'neuromag', 'acpc',
+%                        and 'paxinos'. See http://tinyurl.com/ojkuhqz
 %   cfg.clim           = [min max], scaling of the anatomy color (default
 %                        is to adjust to the minimum and maximum)
 %   cfg.parameter      = 'anatomy' the parameter which is used for the
@@ -70,7 +73,7 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %                         handed, the volume is flipped to yield right handed voxel
 %                         axes.
 %
-% When cfg.method = 'fiducial' and cfg.coordsys = 'spm' or 'tal', the following
+% When cfg.method = 'fiducial' and cfg.coordsys = 'acpc', the following
 % is required to specify the voxel indices of the fiducials:
 %   cfg.fiducial.ac      = [i j k], position of anterior commissure
 %   cfg.fiducial.pc      = [i j k], position of posterior commissure
@@ -133,12 +136,15 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %                          resliced conform the target image (default = 'yes')
 %
 % When cfg.method = 'spm', a third input argument is required. The input volume is
-% coregistered to this target volume, using SPM. Additional options pertaining
-% to this method should be defined in the sub-structure cfg.spm and can include:
+% coregistered to this target volume, using SPM. You can specify the version of
+% the SPM toolbox to use with
+%   cfg.spmversion       = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
+% Additional options pertaining to SPM2 and SPM8 should be defined in the
+% sub-structure cfg.spm and can include:
 %   cfg.spm.regtype      = 'subj', 'rigid'
 %   cfg.spm.smosrc       = scalar value
 %   cfg.spm.smoref       = scalar value
-% When cfg.spmversion is 'spm12', the following options apply:
+% Additional options pertaining to SPM12 are
 %   cfg.spm.sep          = optimisation sampling steps (mm), default: [4 2]
 %   cfg.spm.params       = starting estimates (6 elements), default: [0 0 0  0 0 0]
 %   cfg.spm.cost_fun     = cost function string:
@@ -165,8 +171,8 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 % file. These mat files should contain only a single variable,
 % corresponding with the input/output structure.
 %
-% See also FT_READ_MRI, FT_ELECTRODEREALIGN, FT_DETERMINE_COORDSYS, SPM_AFFREG,
-% SPM_NORMALISE, SPM_COREG
+% See also FT_READ_MRI, FT_VOLUMERESLICE, FT_INTERACTIVEREALIGN, FT_ELECTRODEREALIGN,
+% FT_DETERMINE_COORDSYS, SPM_AFFREG, SPM_NORMALISE, SPM_COREG
 
 % Undocumented options:
 %
@@ -222,6 +228,10 @@ mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducial', 'fiducial'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'landmark', 'fiducial'}); % cfg.landmark -> cfg.fiducial
+% mni/spm/tal are to be interpreted as acpc with native scaling, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3304
+cfg = ft_checkconfig(cfg, 'renamedval', {'coordsys', 'mni', 'acpc'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'coordsys', 'spm', 'acpc'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'coordsys', 'tal', 'acpc'});
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2837
 cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
 
@@ -239,7 +249,6 @@ cfg.voxelratio    = ft_getopt(cfg, 'voxelratio', 'data'); % display size of the 
 cfg.axisratio     = ft_getopt(cfg, 'axisratio',  'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
 cfg.viewresult    = ft_getopt(cfg, 'viewresult', 'no');
 
-%
 viewresult = istrue(cfg.viewresult);
 
 if isempty(cfg.method)
@@ -256,18 +265,18 @@ if isempty(cfg.coordsys)
   if     isstruct(cfg.fiducial) && all(ismember(fieldnames(cfg.fiducial), {'lpa', 'rpa', 'nas', 'zpoint'}))
     cfg.coordsys = 'ctf';
   elseif isstruct(cfg.fiducial) && all(ismember(fieldnames(cfg.fiducial), {'ac', 'pc', 'xzpoint', 'right'}))
-    cfg.coordsys = 'spm';
+    cfg.coordsys = 'acpc';
   elseif strcmp(cfg.method, 'interactive')
     cfg.coordsys = 'ctf';
   else
-    error('you should specify the desired head coordinate system in cfg.coordsys')
+    ft_error('you should specify the desired head coordinate system in cfg.coordsys')
   end
-  warning('defaulting to %s coordinate system', cfg.coordsys);
+  ft_warning('defaulting to %s coordinate system', cfg.coordsys);
 end
 
 % these two have to be simultaneously true for a snapshot to be taken
 dosnapshot = istrue(cfg.snapshot);
-if dosnapshot,
+if dosnapshot
   % create an empty array of handles
   snap = [];
 end
@@ -285,11 +294,11 @@ elseif iscell(cfg.parameter) && isempty(cfg.parameter)
   
   % assume anatomy to be the parameter of interest
   siz = size(mri.anatomy);
-  if all(siz(1:3)==mri.dim) && numel(siz)==4,
+  if all(siz(1:3)==mri.dim) && numel(siz)==4
     % it's OK
     cfg.parameter= 'anatomy';
   else
-    error('there''s an unexpected dimension mismatch');
+    ft_error('there''s an unexpected dimension mismatch');
   end
 end
 
@@ -304,7 +313,7 @@ if any(strcmp(cfg.method, {'fiducial', 'interactive'}))
       fidletter = {'n', 'l', 'r', 'z'};
       fidexplanation1 = '      press n for nas, l for lpa, r for rpa\n';
       fidexplanation2 = '      press z for an extra control point that should have a positive z-value\n';
-    case {'spm' 'tal'}
+    case 'acpc'
       fidlabel  = {'ac', 'pc', 'xzpoint', 'right'};
       fidletter = {'a', 'p', 'z', 'r'};
       fidexplanation1 = '      press a for ac, p for pc, z for xzpoint\n';
@@ -315,7 +324,7 @@ if any(strcmp(cfg.method, {'fiducial', 'interactive'}))
       fidexplanation1 = '      press b for bregma, l for lambda, z for yzpoint\n';
       fidexplanation2 = '';
     otherwise
-      error('unknown coordinate system "%s"', cfg.coordsys);
+      ft_error('unknown coordinate system "%s"', cfg.coordsys);
   end
   
   for i=1:length(fidlabel)
@@ -618,11 +627,11 @@ switch cfg.method
     if ischar(cfg.headshape)
       % old-style specification, convert cfg into new representation
       cfg.headshape = struct('headshape', cfg.headshape);
-      if isfield(cfg, 'scalpsmooth'),
+      if isfield(cfg, 'scalpsmooth')
         cfg.headshape.scalpsmooth = cfg.scalpsmooth;
         cfg = rmfield(cfg, 'scalpsmooth');
       end
-      if isfield(cfg, 'scalpthreshold'),
+      if isfield(cfg, 'scalpthreshold')
         cfg.headshape.scalpthreshold = cfg.scalpthreshold;
         cfg = rmfield(cfg, 'scalpthreshold');
       end
@@ -630,18 +639,18 @@ switch cfg.method
     elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pos')
       % old-style specification, convert into new representation
       cfg.headshape = struct('headshape', cfg.headshape);
-      if isfield(cfg, 'scalpsmooth'),
+      if isfield(cfg, 'scalpsmooth')
         cfg.headshape.scalpsmooth = cfg.scalpsmooth;
         cfg = rmfield(cfg, 'scalpsmooth');
       end
-      if isfield(cfg, 'scalpthreshold'),
+      if isfield(cfg, 'scalpthreshold')
         cfg.headshape.scalpthreshold = cfg.scalpthreshold;
         cfg = rmfield(cfg, 'scalpthreshold');
       end
     elseif isstruct(cfg.headshape)
       % new-style specification, do nothing
     else
-      error('incorrect specification of cfg.headshape');
+      ft_error('incorrect specification of cfg.headshape');
     end
     
     if ischar(cfg.headshape.headshape)
@@ -663,6 +672,7 @@ switch cfg.method
       % extract the scalp surface from the anatomical image
       tmpcfg        = [];
       tmpcfg.output = 'scalp';
+      tmpcfg.spmversion     = cfg.spmversion;
       tmpcfg.scalpsmooth    = cfg.headshape.scalpsmooth;
       tmpcfg.scalpthreshold = cfg.headshape.scalpthreshold;
       if isfield(cfg, 'template')
@@ -677,16 +687,16 @@ switch cfg.method
     tmpcfg             = [];
     tmpcfg.tissue      = 'scalp';
     tmpcfg.method      = 'projectmesh';%'isosurface';
+    tmpcfg.spmversion  = cfg.spmversion;
     tmpcfg.numvertices = 20000;
     scalp              = ft_prepare_mesh(tmpcfg, seg);
     
-    if dointeractive,
+    if dointeractive
       fprintf('doing interactive realignment with headshape\n');
-      tmpcfg                       = [];
-      tmpcfg.template.elec         = shape;     % this is the Polhemus recorded headshape
-      tmpcfg.template.elec.chanpos = shape.pos; % ft_interactiverealign needs the field chanpos
-      tmpcfg.template.elec.label = cellstr(num2str((1:size(shape.pos,1))'));
-      tmpcfg.individual.headshape  = scalp;     % this is the headshape extracted from the anatomical MRI
+      tmpcfg                           = [];
+      tmpcfg.template.headshape        = shape;     % this is the Polhemus recorded headshape
+      tmpcfg.template.headshapestyle   = 'vertex'; 
+      tmpcfg.individual.headshape      = scalp;     % this is the headshape extracted from the anatomical MRI
       tmpcfg.individual.headshapestyle = 'surface';
       tmpcfg = ft_interactiverealign(tmpcfg);
       M      = tmpcfg.m;
@@ -702,7 +712,7 @@ switch cfg.method
     % always perform an icp-step, because this will give an estimate of the
     % initial distance of the corresponding points. depending on the value
     % for doicp, deal with the output differently
-    if doicp,
+    if doicp
       numiter = 50;
     else
       numiter = 1;
@@ -712,8 +722,8 @@ switch cfg.method
       w = ones(size(shape.pos,1),1);
     else
       w = cfg.weights(:);
-      if numel(w)~=size(shape.pos,1),
-        error('number of weights should be equal to the number of points in the headshape');
+      if numel(w)~=size(shape.pos,1)
+        ft_error('number of weights should be equal to the number of points in the headshape');
       end
     end
     
@@ -726,7 +736,7 @@ switch cfg.method
     nrm = normals(scalp.pos, scalp.tri, 'vertex');
     [R, t, err, dummy, info] = icp(scalp.pos', shape.pos', numiter, 'Minimize', 'plane', 'Normals', nrm', 'Weight', weights, 'Extrapolation', true, 'WorstRejection', 0.05);
     
-    if doicp,
+    if doicp
       fprintf('doing iterative closest points realignment with headshape\n');
       % create the additional transformation matrix and compute the
       % distance between the corresponding points, both prior and after icp
@@ -910,14 +920,8 @@ switch cfg.method
     delete(tmpname4);
     
   case 'spm'
-    % ensure that SPM is on the path
-    if strcmpi(cfg.spmversion, 'spm2'),
-      ft_hastoolbox('SPM2',1);
-    elseif strcmpi(cfg.spmversion, 'spm8'),
-      ft_hastoolbox('SPM8',1);
-    elseif strcmpi(cfg.spmversion, 'spm12'),
-      ft_hastoolbox('SPM12',1);
-    end
+    % check that the preferred SPM version is on the path
+    ft_hastoolbox(cfg.spmversion, 1);
     
     if strcmpi(cfg.spmversion, 'spm2') || strcmpi(cfg.spmversion, 'spm8')
       
@@ -926,12 +930,12 @@ switch cfg.method
       cfg.spm.smosrc  = ft_getopt(cfg.spm, 'smosrc',  2);
       cfg.spm.smoref  = ft_getopt(cfg.spm, 'smoref',  2);
       
-      if ~isfield(mri,    'coordsys'),
+      if ~isfield(mri,    'coordsys')
         mri = ft_convert_coordsys(mri);
       else
         fprintf('Input volume has coordinate system ''%s''\n', mri.coordsys);
       end
-      if ~isfield(target, 'coordsys'),
+      if ~isfield(target, 'coordsys')
         target = ft_convert_coordsys(target);
       else
         fprintf('Target volume has coordinate system ''%s''\n', target.coordsys);
@@ -939,12 +943,11 @@ switch cfg.method
       if strcmp(mri.coordsys, target.coordsys)
         % this should hopefully work
       else
-        % only works when it is possible to approximately align the input to
-        % the target coordsys
-        if strcmp(target.coordsys, 'spm')
-          mri = ft_convert_coordsys(mri, 'spm');
+        % only works when it is possible to approximately align the input to the target coordsys
+        if strcmp(target.coordsys, 'acpc')
+          mri = ft_convert_coordsys(mri, 'acpc');
         else
-          error('The coordinate systems of the input and target volumes are different, coregistration is not possible');
+          ft_error('The coordinate systems of the input and target volumes are different, coregistration is not possible');
         end
       end
       
@@ -979,6 +982,7 @@ switch cfg.method
       transform     = inv(spm_matrix(x(:)')); % from V1 to V2, to be multiplied still with the original transform (mri.transform), see below
       
     end
+
     if isfield(target, 'coordsys')
       coordsys = target.coordsys;
     else
@@ -989,7 +993,7 @@ switch cfg.method
     delete(tname1);
     delete(tname2);
   otherwise
-    error('unsupported method "%s"', cfg.method);
+    ft_error('unsupported method "%s"', cfg.method);
 end
 
 if any(strcmp(cfg.method, {'fiducial', 'interactive'}))
@@ -1027,7 +1031,7 @@ if ~isempty(transform) && ~any(isnan(transform(:)))
   realign.transform     = transform * mri.transform;
   realign.coordsys      = coordsys;
 else
-  warning('no coordinate system realignment has been done');
+  ft_warning('no coordinate system realignment has been done');
 end
 
 % visualize result
@@ -1607,16 +1611,16 @@ end
 
 if opt.init
   % draw the crosshairs for the first time
-  hch1 = crosshair([xi crossoffs(2) zi], 'parent', h1, 'color', 'yellow');
-  hch2 = crosshair([crossoffs(1) yi zi], 'parent', h2, 'color', 'yellow');
-  hch3 = crosshair([xi yi crossoffs(3)], 'parent', h3, 'color', 'yellow');
+  hch1 = ft_plot_crosshair([xi crossoffs(2) zi], 'parent', h1, 'color', 'yellow');
+  hch2 = ft_plot_crosshair([crossoffs(1) yi zi], 'parent', h2, 'color', 'yellow');
+  hch3 = ft_plot_crosshair([xi yi crossoffs(3)], 'parent', h3, 'color', 'yellow');
   opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
   opt.handlesmarker = [];
 else
   % update the existing crosshairs, don't change the handles
-  crosshair([xi crossoffs(2) zi], 'handle', opt.handlescross(1, :));
-  crosshair([crossoffs(1) yi zi], 'handle', opt.handlescross(2, :));
-  crosshair([xi yi crossoffs(3)], 'handle', opt.handlescross(3, :));
+  ft_plot_crosshair([xi crossoffs(2) zi], 'handle', opt.handlescross(1, :));
+  ft_plot_crosshair([crossoffs(1) yi zi], 'handle', opt.handlescross(2, :));
+  ft_plot_crosshair([xi yi crossoffs(3)], 'handle', opt.handlescross(3, :));
 end
 % For some unknown god-awful reason, the line command 'disables' all transparency.
 % The below command resets it. It was the only axes property that I (=roemei) could
@@ -1756,7 +1760,7 @@ switch key
     elseif strcmp(tag,'jk') && (strcmp(key,'m') || strcmp(key,'downarrow')  || isequal(key, 31)), opt.ijk(3) = opt.ijk(3)-1; opt.update = [0 0 1];
     else
       % do nothing
-    end;
+    end
     
     setappdata(h, 'opt', opt);
     cb_redraw(h);
@@ -1806,7 +1810,7 @@ switch key
     % add point to a list
     l1 = get(get(gca, 'xlabel'), 'string');
     l2 = get(get(gca, 'ylabel'), 'string');
-    switch l1,
+    switch l1
       case 'i'
         xc = d1;
       case 'j'
@@ -1814,7 +1818,7 @@ switch key
       case 'k'
         zc = d1;
     end
-    switch l2,
+    switch l2
       case 'i'
         xc = d2;
       case 'j'

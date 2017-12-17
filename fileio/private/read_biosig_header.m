@@ -45,13 +45,13 @@ sclose(biosig);
 %   hdr.label        cell-array with labels of each channel
 
 if length(biosig.SampleRate)>1 && any(diff(biosig.SampleRate))
-  error('channels with different sampling rates are not supported');
+  ft_error('channels with different sampling rates are not supported');
 else
   hdr.Fs          = biosig.SampleRate(1);
 end
 
 if length(biosig.SPR)>1 && any(diff(biosig.SPR))
-  error('channels with different number of samples are not supported');
+  ft_error('channels with different number of samples are not supported');
 else
   hdr.nSamples  = biosig.SPR(1);
 end

@@ -66,7 +66,7 @@ if ischar(refindx) && strcmp(refindx, 'all')
 end
 
 if numel(lags)>1 || lags~=0,
-  if numel(refindx)>1, error('with multiple lags, or with a lag~=0 only a single refindx is allowed'); end
+  if numel(refindx)>1, ft_error('with multiple lags, or with a lag~=0 only a single refindx is allowed'); end
   refdata = input(refindx,:);
   n       = size(refdata,2);
   
@@ -101,7 +101,7 @@ end
 % check validity of refindx
 if length(refindx)~=numel(refindx)
   % could be channelcmb indexing
-  error('channelcmb indexing is not supported');
+  ft_error('channelcmb indexing is not supported');
 end
 
 

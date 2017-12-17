@@ -1,7 +1,7 @@
 function test_bug2623
 
 % MEM 1500mb
-% WallTIME 00:10:00
+% WALLTIME 00:10:00
 
 % Script tests whether parcellated data can be visualised in ft_sourceplot
 % 1. parcellated data is unparcelled

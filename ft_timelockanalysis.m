@@ -150,8 +150,8 @@ ntrial      = length(data.trial);
 nchan       = length(data.label);   % number of channels
 numsamples  = zeros(ntrial,1);      % number of selected samples in each trial, is determined later
 
-if ntrial==0, error('Number of trials selected in data is zero');   end
-if nchan==0,  error('Number of channels selected in data is zero'); end
+if ntrial==0, ft_error('Number of trials selected in data is zero');   end
+if nchan==0,  ft_error('Number of channels selected in data is zero'); end
 
 % determine the duration of each trial
 begsamplatency = zeros(1,ntrial);
@@ -177,7 +177,7 @@ latency(2)   = maxperlength(2);
 switch cfg.vartrllength
   case 0
     if ~all(minperlength==maxperlength)
-      error('data has variable trial lengths, you specified not to accept that');
+      ft_error('data has variable trial lengths, you specified not to accept that');
     end
   case 1
     if all(minperlength==maxperlength)
@@ -188,12 +188,12 @@ switch cfg.vartrllength
       disp('processing and keeping variable length single trials');
     end
   otherwise
-    error('unknown value for vartrllength');
+    ft_error('unknown value for vartrllength');
 end
 
 if strcmp(cfg.covariance, 'yes')
   if ~isfield(cfg, 'covariancewindow')
-    warning('the option cfg.covariancewindow is not specified, taking all time points');
+    ft_warning('the option cfg.covariancewindow is not specified, taking all time points');
     cfg.covariancewindow = latency;
   end
   if ischar(cfg.covariancewindow)
@@ -205,11 +205,11 @@ if strcmp(cfg.covariance, 'yes')
       case 'all'
         cfg.covariancewindow = latency;
       case 'minperlength'
-        error('cfg.covariancewindow = ''minperlength'' is not supported anymore');
+        ft_error('cfg.covariancewindow = ''minperlength'' is not supported anymore');
       case 'maxperlength'
-        error('cfg.covariancewindow = ''maxperlength'' is not supported anymore');
+        ft_error('cfg.covariancewindow = ''maxperlength'' is not supported anymore');
       otherwise
-        error('unsupported specification of cfg.covariancewindow');
+        ft_error('unsupported specification of cfg.covariancewindow');
     end
   end
 end
@@ -249,7 +249,7 @@ for i=1:ntrial
       %       elseif strcmp(cfg.covariance,'yes') && (begsamplatency(i)>cfg.covariancewindow(1) || endsamplatency(i)<cfg.covariancewindow(2))
       if strcmp(cfg.covariance,'yes') && (begsamplatency(i)>cfg.covariancewindow(1) || endsamplatency(i)<cfg.covariancewindow(2))
         usetrial = 0;
-        warning(['trial ' num2str(i) ' not used for avg computation because it was not used for covariance computation']);
+        ft_warning(['trial ' num2str(i) ' not used for avg computation because it was not used for covariance computation']);
       end
     case 2
       % include this trial if any data points are present in any of the specified windows
@@ -267,6 +267,11 @@ for i=1:ntrial
     endsampl = nearest(data.time{i}, latency(2));
     numsamples(i) = endsampl-begsampl+1;
     dat = data.trial{i}(:, begsampl:endsampl);
+    if isfield(data, 'sampleinfo')
+      tmpsampl = data.sampleinfo(i,1):data.sampleinfo(i,2);
+      data.sampleinfo(i,:) = tmpsampl([begsampl endsampl]);
+    end
+    
     if (latency(1)<begsamplatency(i))
       trlshift = floor((begsamplatency(i)-latency(1))*data.fsample);
     else
@@ -303,7 +308,7 @@ ft_progress('close');
 
 % compute the average
 if ~any(numsamples)
-  warning('no samples found in the specified time window, check option for vartrllength');
+  ft_warning('no samples found in the specified time window, check option for vartrllength');
 end
 avg = s ./ repmat(dof(:)', [nchan 1]);
 
@@ -363,8 +368,10 @@ end
 timelock = copyfields(data, timelock, {'grad', 'elec', 'opto', 'topo', 'topolabel', 'unmixing'});
 
 if isfield(data, 'trialinfo') && strcmp(cfg.keeptrials, 'yes')
-  % copy the trialinfo into the output, but not the sampleinfo
   timelock.trialinfo = data.trialinfo;
+end
+if isfield(data, 'sampleinfo') && strcmp(cfg.keeptrials, 'yes')
+  timelock.sampleinfo = data.sampleinfo;
 end
 
 % do the general cleanup and bookkeeping at the end of the function

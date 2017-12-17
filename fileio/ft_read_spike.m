@@ -56,7 +56,7 @@ function [spike] = ft_read_spike(filename, varargin)
 filename = fetch_url(filename);
 
 if ~exist(filename,'file')
-    error('File or directory does not exist')
+    ft_error('File or directory does not exist')
 end
 
 % get the options
@@ -68,7 +68,7 @@ switch spikeformat
 
   case {'neuralynx_ncs' 'plexon_ddt'}
     % these files only contain continuous data
-    error('file does not contain spike timestamps or waveforms');
+    ft_error('file does not contain spike timestamps or waveforms');
 
   case 'matlab'
     % plain MATLAB file with a single variable in it
@@ -263,7 +263,7 @@ switch spikeformat
       % the times are defined in s, convert to original time stamps
       timestamps = c{k}(sel,1) * hdr.orig.rates.wideband;
       if any(abs(timestamps-round(timestamps))>1e-5),
-        error('there seems to be a mismatch between the spike times and the expected integer-valued timestamps');
+        ft_error('there seems to be a mismatch between the spike times and the expected integer-valued timestamps');
       end
       
       spike.timestamp{k} = round(timestamps(:))';
@@ -273,7 +273,7 @@ switch spikeformat
     end
      
   otherwise
-    error(['unsupported data format (' spikeformat ')']);
+    ft_error(['unsupported data format (' spikeformat ')']);
 end
 
 % add the waveform 

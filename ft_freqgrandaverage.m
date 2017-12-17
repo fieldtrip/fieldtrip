@@ -85,7 +85,7 @@ cfg.parameter      = ft_getopt(cfg, 'parameter',  []);
 if isempty(cfg.parameter) && isfield(varargin{1}, 'powspctrm')
     cfg.parameter = 'powspctrm';
 elseif isempty(cfg.parameter)
-    error('you should specify a valid parameter to average');
+    ft_error('you should specify a valid parameter to average');
 end
 
 if ischar(cfg.parameter)
@@ -101,10 +101,10 @@ hastap   = ~isempty(strfind(varargin{i}.dimord, 'tap'));
 
 % check whether the input data is suitable
 if hasrpt
-    error('the input data of each subject should be an average, use FT_FREQDESCRIPTIVES first');
+    ft_error('the input data of each subject should be an average, use FT_FREQDESCRIPTIVES first');
 end
 if hastap
-    error('multiple tapers in the input are not supported');
+    ft_error('multiple tapers in the input are not supported');
 end
 
 if ischar(cfg.foilim) && strcmp(cfg.foilim, 'all')
@@ -144,7 +144,7 @@ for k=1:numel(cfg.parameter)
     % pick the selections
     for i=1:Nsubj
         if ~isfield(varargin{i}, cfg.parameter{k})
-            error('the field %s is not present in data structure %d', cfg.parameter{k}, i);
+            ft_error('the field %s is not present in data structure %d', cfg.parameter{k}, i);
         end
         [dum, chansel] = match_str(cfg.channel, varargin{i}.label);
         varargin{i}.label = varargin{i}.label(chansel);
@@ -168,7 +168,7 @@ for k=1:numel(cfg.parameter)
             case {'rpt_chan_freq_time' 'rpttap_chan_freq_time' 'subj_chan_freq_time'}
                 varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(:,chansel,freqsel,timesel);
             otherwise
-                error('unsupported dimord');
+                ft_error('unsupported dimord');
         end
     end % for i = subject
 end % for k = parameter
@@ -182,11 +182,11 @@ end
 % give some feedback on the screen
 if strcmp(cfg.keepindividual, 'no')
     for k=1:numel(cfg.parameter)
-        fprintf('computing average %s over %d subjects\n', cfg.parameter{k}, Nsubj);
+        ft_info('computing average %s over %d subjects\n', cfg.parameter{k}, Nsubj);
     end
 else
     for k=1:numel(cfg.parameter)
-        fprintf('not computing average, but keeping individual %s for %d subjects\n', cfg.parameter{k}, Nsubj);
+        ft_info('not computing average, but keeping individual %s for %d subjects\n', cfg.parameter{k}, Nsubj);
     end
 end
 
@@ -217,10 +217,10 @@ if isfield(varargin{1}, 'labelcmb')
     grandavg.labelcmb = varargin{1}.labelcmb;
 end
 if isfield(varargin{1}, 'grad')
-    warning('discarding gradiometer information because it cannot be averaged');
+    ft_warning('discarding gradiometer information because it cannot be averaged');
 end
 if isfield(varargin{1}, 'elec')
-    warning('discarding electrode information because it cannot be averaged');
+    ft_warning('discarding electrode information because it cannot be averaged');
 end
 if strcmp(cfg.keepindividual, 'yes')
     grandavg.dimord = ['subj_',varargin{1}.dimord];

@@ -30,12 +30,11 @@ function [inside] = bounding_mesh(pos, pnt, tri)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id$
 
 % this can be used for printing detailled user feedback
 fb = false;
 
-% this is a work-around for http://bugzilla.fcdonders.nl/show_bug.cgi?id=2369
+% this is a work-around for http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2369
 pos = double(pos);
 pnt = double(pnt);
 tri = double(tri);

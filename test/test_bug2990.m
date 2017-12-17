@@ -3,7 +3,6 @@ function test_bug2990
 % WALLTIME 0:10:00
 % MEM 2gb
 
-% TEST test_bug2990
 % TEST ft_prepare_sourcemodel ft_volumereslice
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2990/4roboos_part1'));
@@ -22,9 +21,9 @@ grid2 = ft_prepare_sourcemodel(cfg);
 
 assert(all(abs(grid1.pos(:)-grid2.pos(:))<0.001));
 
-figure; ft_plot_mesh(cfg.grid.template)
-figure; ft_plot_mesh(grid1.template)
-figure; ft_plot_mesh(grid2.template)
+figure; ft_plot_mesh(cfg.grid.template.pos(cfg.grid.template.inside,:))
+figure; ft_plot_mesh(grid1.pos(grid1.inside,:))
+figure; ft_plot_mesh(grid2.pos(grid2.inside,:))
 
 % cfg.grid.template.pos(1,:)
 % ans =

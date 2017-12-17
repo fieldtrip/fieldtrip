@@ -4,6 +4,7 @@
  * Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  */
+
 #include <FtBuffer.h>
 
 #ifdef WIN32
@@ -29,8 +30,8 @@ bool FtConnection::connectTcp(const char *hostname, int port) {
 	struct hostent *host;
 
 	disconnect();
-	
-#ifdef WIN32	
+
+#ifdef WIN32
 	if (wsa.wVersion == 0) {
 		// We only need to do this once
 		if(WSAStartup(MAKEWORD(1, 1), &wsa)) {
@@ -54,13 +55,13 @@ bool FtConnection::connectTcp(const char *hostname, int port) {
 	sa.sin_family = AF_INET;
 	sa.sin_port = htons(port);
 	memcpy(&(sa.sin_addr.s_addr), host->h_addr_list[0], sizeof(sa.sin_addr.s_addr));
-		
+
 	sock = socket(PF_INET, SOCK_STREAM, 0);
 	if (sock < 0) {
 		perror("connectTcp: socket");
 		return false;
 	}
-		
+
 	for (int r = 0;r<=retry;r++) {
 		if (::connect(sock, (struct sockaddr *)&sa, sizeof(sa))==0) {
 			type = 1;
@@ -75,7 +76,7 @@ bool FtConnection::connectTcp(const char *hostname, int port) {
 	sock = -1;
 	return false;
 }
-	
+
 bool FtConnection::connectUnix(const char *pathname) {
 	disconnect();
 #ifndef WIN32
@@ -84,13 +85,13 @@ bool FtConnection::connectUnix(const char *pathname) {
 	bzero(&sa, sizeof(sa));
 	sa.sun_family = AF_UNIX;
 	strncpy(sa.sun_path, pathname, sizeof(sa.sun_path));
-		
+
 	sock = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (sock < 0) {
 		perror("connectUnix: socket");
 		return false;
 	}
-	
+
 	for (int r = 0;r<=retry;r++) {
 		if (::connect(sock, (struct sockaddr *)&sa, sizeof(sa))==0) {
 			type = 2;
@@ -103,7 +104,7 @@ bool FtConnection::connectUnix(const char *pathname) {
 	}
 	closesocket(sock);
 	sock = -1;
-#endif	
+#endif
 	return false;
 }
 
@@ -114,7 +115,7 @@ bool FtConnection::connect(const char *address) {
 		char *hostname = new char[len+1];
 		memcpy(hostname, address, len);
 		hostname[len] = 0;
-		
+
 		int port = atoi(colPos+1);
 		if (port == 0) return false;
 		bool result = connectTcp(hostname, port);

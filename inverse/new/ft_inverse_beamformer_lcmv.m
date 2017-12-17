@@ -1,4 +1,4 @@
-function [estimate] = ft_inverse_lcmv(cov, leadfield, varargin)
+function [estimate] = ft_inverse_beamformer_lcmv(cov, leadfield, varargin)
 
 % FT_INVERSE_LCMV
 %

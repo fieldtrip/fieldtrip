@@ -38,7 +38,7 @@ recursive = ft_getopt(varargin, 'recursive', false);
 if ischar(fields)
   fields = {fields};
 elseif ~iscell(fields)
-  error('fields input argument must be a cell array of strings or a single string');
+  ft_error('fields input argument must be a cell array of strings or a single string');
 end
 
 remove = intersect(fieldnames(s), fields);

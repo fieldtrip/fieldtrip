@@ -17,7 +17,7 @@ if ~(exist('com.egi.services.mff.api.MFFFactory', 'class')==8)
         
         % Some MATLAB versions have a bug in javaclasspath that causes global
         % variables to be erased. Hence we keep a local copy and restore it afterwards.
-        % See http://bugzilla.fcdonders.nl/show_bug.cgi?id=2133
+        % See http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2133
 
         var = whos('global');
         glob = [var.global];
@@ -33,7 +33,7 @@ if ~(exist('com.egi.services.mff.api.MFFFactory', 'class')==8)
         warning('adding %s to your Java path', jarpath);
         javaclasspath(jarpath);
         
-        % The following pertains to http://bugzilla.fcdonders.nl/show_bug.cgi?id=2133
+        % The following pertains to http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2133
         % also available as http://bit.ly/1o7QlRk, for which we cannot provide a solution. 
         warning('In some versions of Matlab, javaclasspath clears all global variables due to a bug in MATLAB. Please execute %s.m immediately after starting MATLAB. See http://bit.ly/1o7QlRk', mfilename('fullpath'));
 

@@ -3,7 +3,6 @@ function test_bug1916
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1916
 % TEST ft_scalingfactor
 
 if isempty(which('ft_scalingfactor'))

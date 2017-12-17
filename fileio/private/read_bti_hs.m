@@ -1,4 +1,4 @@
-function [output, firstIndexPoint] = read_4d_hs( filename, outfile)
+function [output, firstIndexPoint] = read_bti_hs( filename, outfile)
 
 %read_hs_file Reads in BTI-Headshape files
 %   filename: file with the headshape informations

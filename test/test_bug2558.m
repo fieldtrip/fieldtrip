@@ -3,7 +3,6 @@ function test_bug2558
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST test_bug2558
 % TEST ft_timelockstatistics
 
 nsubj = 23;

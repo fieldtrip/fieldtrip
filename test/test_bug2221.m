@@ -5,7 +5,6 @@ function test_bug2221
 
 % TEST ft_selectdata
 % TEST ft_selectdata_new
-% TEST test_bug2221
 % TEST ft_multiplotER
 
 

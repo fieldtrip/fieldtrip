@@ -1,6 +1,5 @@
 function test_bug2639
 
-% TEST test_bug2639
 % TEST ft_checkdata
 
 % MEM 2gb
@@ -85,7 +84,7 @@ freq2r = ft_checkdata(freq1r, 'cmbrepresentation', 'sparsewithpow', 'channelcmb'
 [selo, selr] = match_strcmb(freq2o.labelcmb, freq2r.labelcmb);
 assert(isequal(freq2o.crsspctrm(selo,:), freq2r.crsspctrm(selr,:)));
 [selo, selr] = match_str(freq2o.label, freq2r.label);
-assert(isequal(freq2o.powspctrm(:,selo,:), freq2r.powspctrm(:,selr,:)));
+assert(isequal(freq2o.powspctrm(selo,:), freq2r.powspctrm(selr,:)));
 
 assert( isequal(freq1r.label,freq2r.label));
 assert(~isequal(freq2o.label,freq2r.label));

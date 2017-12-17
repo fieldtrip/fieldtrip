@@ -3,6 +3,9 @@ function h_tf = nmt_tfplot(axh,twin,fwin,tf,zlim,ButtonDownFcn)
 
 % reformat beam.bands and corresponding tf info to include gaps
 t = unique(twin(:));
+if(size(tf,1)==1)  % tf needs to be proposed for plotting to work if there's only one frequency band
+    tf = tf';
+end
 f = fwin';
 f = f(:);
 
@@ -34,9 +37,10 @@ set(h_tf,'ButtonDownFcn',ButtonDownFcn); % click on TF plot triggers CallbackFcn
 
 % limit labels to defined frequencies
 ytick = unique(f);
-if(length(ytick)<20) % but only if there aren't too many frequency bands!
+if(length(ytick)<10) % but only if there aren't too many frequency bands!
     set(axh,'YTick',unique(f));
 end
+set(axh,'YTick',mean(fwin,2));
 axis(axh,'tight');
 grid(axh,'off');
 set(axh,'YScale','log');

@@ -106,7 +106,7 @@ switch format
     elseif exist(fullfile(path, [file '.dat']), 'file')
       datafile   = fullfile(path, [file '.dat']);
     else
-      error('cannot determine the data file that corresponds to %s', filename);
+      ft_error('cannot determine the data file that corresponds to %s', filename);
     end
   case 'brainvision_eeg'
     [path, file, ext] = fileparts(filename);
@@ -129,7 +129,7 @@ switch format
     headerfile = fullfile(path, [file '.mat']);
     datafile   = fullfile(path, [file '.bin']);
   case 'fcdc_buffer_offline'
-    if isdir(filename)
+    if isfolder(filename)
       path = filename;
     else
       [path, file, ext] = fileparts(filename);
@@ -141,7 +141,7 @@ switch format
     headerfile = fullfile(path, [file '.tsq']);
     datafile   = fullfile(path, [file '.tev']);
   case 'egi_mff'
-    if ~isdir(filename);
+    if ~isfolder(filename);
       [path, file, ext] = fileparts(filename);
       headerfile = path;
       datafile   = path;

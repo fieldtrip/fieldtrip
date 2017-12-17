@@ -19,13 +19,14 @@ function data = ft_denoise_pca(cfg, varargin)
 % The output structure dataout contains the denoised data in a format that is
 % consistent with the output of FT_PREPROCESSING.
 %
-% The configuration should be according to
+% The configuration should contain
 %   cfg.refchannel = the channels used as reference signal (default = 'MEGREF')
 %   cfg.channel    = the channels to be denoised (default = 'MEG')
 %   cfg.truncate   = optional truncation of the singular value spectrum (default = 'no')
 %   cfg.zscore     = standardise reference data prior to PCA (default = 'no')
 %   cfg.pertrial   = 'no' (default) or 'yes'. Regress out the references on a per trial basis
 %   cfg.trials     = list of trials that are used (default = 'all')
+%   cfg.updatesens = 'no' or 'yes' (default = 'yes')
 %
 % if cfg.truncate is integer n > 1, n will be the number of singular values kept.
 % if 0 < cfg.truncate < 1, the singular value spectrum will be thresholded at the
@@ -88,19 +89,21 @@ cfg.zscore     = ft_getopt(cfg, 'zscore',     'no');
 cfg.trials     = ft_getopt(cfg, 'trials',     'all', 1);
 cfg.pertrial   = ft_getopt(cfg, 'pertrial',   'no');
 cfg.feedback   = ft_getopt(cfg, 'feedback',   'none');
+cfg.updatesens = ft_getopt(cfg, 'updatesens', 'yes');
 
-if strcmp(cfg.pertrial, 'yes'),
+
+if strcmp(cfg.pertrial, 'yes')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % iterate over trials
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
-  tmpcfg  = keepfields(cfg, 'trials');
+  tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo'});
   % select trials of interest
   for i=1:numel(varargin)
     varargin{i}        = ft_selectdata(tmpcfg, varargin{i});
     [cfg, varargin{i}] = rollback_provenance(cfg, varargin{i});
   end
-
+  
   tmp             = cell(numel(varargin{1}.trial),1);
   tmpcfg          = cfg;
   tmpcfg.pertrial = 'no';
@@ -119,7 +122,7 @@ else
   
   computeweights = ~isfield(cfg, 'pca');
   
-  if length(varargin)==1,
+  if length(varargin)==1
     % channel data and reference channel data are in 1 data structure
     data    = varargin{1};
     megchan = ft_channelselection(cfg.channel, data.label);
@@ -152,7 +155,7 @@ else
   end
   
   % select trials of interest
-  tmpcfg  = keepfields(cfg, 'trials');
+  tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo'});
   data    = ft_selectdata(tmpcfg, data);
   refdata = ft_selectdata(tmpcfg, refdata);
   % restore the provenance information
@@ -170,7 +173,7 @@ else
   if ischar(cfg.truncate) && strcmp(cfg.truncate, 'no')
     cfg.truncate = length(refindx);
   elseif ischar(cfg.truncate) || (cfg.truncate>1 && cfg.truncate/round(cfg.truncate)~=1) || cfg.truncate>length(refindx)
-    error('cfg.truncate should be either ''no'', an integer number <= the number of references, or a number between 0 and 1');
+    ft_error('cfg.truncate should be either ''no'', an integer number <= the number of references, or a number between 0 and 1');
     % FIXME the default truncation applied by 4D is 1x10^-8
   end
   
@@ -184,10 +187,10 @@ else
   % compute std of data before the regression
   stdpre = cellstd(data.trial, 2);
   
-  if computeweights,
+  if computeweights
     
     % zscore
-    if strcmp(cfg.zscore, 'yes'),
+    if strcmp(cfg.zscore, 'yes')
       fprintf('zscoring the reference channel data\n');
       [refdata.trial, sdref] = cellzscore(refdata.trial, 2, 0); %forced demeaned already
     else
@@ -241,8 +244,8 @@ else
     
     [i1,i2] = match_str(refchan, cfg.pca.reflabel);
     [i3,i4] = match_str(megchan, cfg.pca.label);
-    if length(i2)~=length(cfg.pca.reflabel),
-      error('you specified fewer references to use as there are in the precomputed weight table');
+    if length(i2)~=length(cfg.pca.reflabel)
+      ft_error('you specified fewer references to use as there are in the precomputed weight table');
     end
     
     refindx = refindx(i1);
@@ -250,7 +253,7 @@ else
     cfg.pca.w = cfg.pca.w(i4,i2);
     cfg.pca.label   = cfg.pca.label(i4);
     cfg.pca.reflabel= cfg.pca.reflabel(i2);
-    if isfield(cfg.pca, 'rotmat'),
+    if isfield(cfg.pca, 'rotmat')
       cfg.pca = rmfield(cfg.pca, 'rotmat'); % dont know
     end
     
@@ -268,43 +271,55 @@ else
   m          = cellmean(data.trial, 2);
   data.trial = cellvecadd(data.trial, -m);
   
-  % apply weights to the gradiometer-array
   if isfield(data, 'grad')
-    fprintf('applying the weights to the gradiometer balancing matrix\n');
-    montage     = [];
-    labelnew    = pca.label;
-    nlabelnew   = length(labelnew);
-    
-    % add columns of refchannels not yet present in labelnew
-    % [id, i1]  = setdiff(pca.reflabel, labelnew);
-    % labelorg  = [labelnew; pca.reflabel(sort(i1))];
-    labelorg  = data.grad.label;
-    nlabelorg = length(labelorg);
-    
-    % start with identity
-    montage.tra = eye(nlabelorg);
-    
-    % subtract weights
-    [i1, i2]  = match_str(labelorg, pca.reflabel);
-    [i3, i4]  = match_str(labelorg, pca.label);
-    montage.tra(i3,i1) = montage.tra(i3,i1) - pca.w(i4,i2);
-    montage.labelorg  = labelorg;
-    montage.labelnew  = labelorg;
-    
-    data.grad = ft_apply_montage(data.grad, montage, 'keepunused', 'yes', 'balancename', 'pca');
-    
-    % order the fields
-    fnames = fieldnames(data.grad.balance);
-    tmp    = false(1,numel(fnames));
-    for k = 1:numel(fnames)
-      tmp(k) = isstruct(data.grad.balance.(fnames{k}));
-    end
-    [tmp, ix] = sort(tmp,'descend');
-    data.grad.balance = orderfields(data.grad.balance, fnames(ix));
-    
+    sensfield = 'grad';
+  elseif isfield(data, 'elec')
+    sensfield = 'elec';
+  elseif isfield(data, 'opto')
+    sensfield = 'opto';
   else
-    warning('fieldtrip:ft_denoise_pca:WeightsNotAppliedToSensors', 'weights have been applied to the data only, not to the sensors');
+    sensfield = [];
   end
+  
+  % apply the linear projection also to the sensor description
+  if ~isempty(sensfield)
+    if  strcmp(cfg.updatesens, 'yes')
+      fprintf('also applying the weights to the %s structure\n', sensfield);
+      
+      montage     = [];
+      labelnew    = pca.label;
+      
+      % add columns of refchannels not yet present in labelnew
+      % [id, i1]  = setdiff(pca.reflabel, labelnew);
+      % labelold  = [labelnew; pca.reflabel(sort(i1))];
+      labelold  = data.grad.label;
+      nlabelold = length(labelold);
+      
+      % start with identity
+      montage.tra = eye(nlabelold);
+      
+      % subtract weights
+      [i1, i2]  = match_str(labelold, pca.reflabel);
+      [i3, i4]  = match_str(labelold, pca.label);
+      montage.tra(i3,i1) = montage.tra(i3,i1) - pca.w(i4,i2);
+      montage.labelold  = labelold;
+      montage.labelnew  = labelold;
+      
+      data.(sensfield) = ft_apply_montage(data.(sensfield), montage, 'keepunused', 'yes', 'balancename', 'pca');
+      
+      % order the fields
+      fnames = fieldnames(data.(sensfield).balance);
+      tmp    = false(1,numel(fnames));
+      for k = 1:numel(fnames)
+        tmp(k) = isstruct(data.(sensfield).balance.(fnames{k}));
+      end
+      [tmp, ix] = sort(tmp, 'descend');
+      data.grad.balance = orderfields(data.(sensfield).balance, fnames(ix));
+      
+    else
+      fprintf('not applying the weights to the %s structure\n', sensfield);
+    end
+  end % if sensfield
   
 end % if pertrial
 
@@ -330,32 +345,32 @@ function [c] = cellcov(x, y, dim, flag)
 % X (and Y) should be linear cell-array(s) of matrices for which the size in at
 % least one of the dimensions should be the same for all cells
 
-if nargin==2,
+if nargin==2
   flag = 1;
   dim  = y;
   y    = [];
-elseif nargin==3,
+elseif nargin==3
   flag = 1;
 end
 
 nx = size(x);
-if ~iscell(x) || length(nx)>2 || all(nx>1),
-  error('incorrect input for cellmean');
+if ~iscell(x) || length(nx)>2 || all(nx>1)
+  ft_error('incorrect input for cellmean');
 end
 
-if nargin==1,
+if nargin==1
   scx1 = cellfun('size', x, 1);
   scx2 = cellfun('size', x, 2);
   if     all(scx2==scx2(1)), dim = 2; %let second dimension prevail
   elseif all(scx1==scx1(1)), dim = 1;
-  else   error('no dimension to compute covariance for');
+  else   ft_error('no dimension to compute covariance for');
   end
 end
 
-if flag,
+if flag
   mx   = cellmean(x, 2);
   x    = cellvecadd(x, -mx);
-  if ~isempty(y),
+  if ~isempty(y)
     my = cellmean(y, 2);
     y  = cellvecadd(y, -my);
   end
@@ -363,7 +378,7 @@ end
 
 nx   = max(nx);
 nsmp = cellfun('size', x, dim);
-if isempty(y),
+if isempty(y)
   csmp = cellfun(@covc, x, repmat({dim},1,nx), 'UniformOutput', 0);
 else
   csmp = cellfun(@covc, x, y, repmat({dim},1,nx), 'UniformOutput', 0);
@@ -373,14 +388,14 @@ c    = sum(reshape(cell2mat(csmp), [nc(1) nc(2) nx]), 3)./sum(nsmp);
 
 function [c] = covc(x, y, dim)
 
-if nargin==2,
+if nargin==2
   dim = y;
   y   = x;
 end
 
-if dim==1,
+if dim==1
   c = x'*y;
-elseif dim==2,
+elseif dim==2
   c = x*y';
 end
 
@@ -394,16 +409,16 @@ function [m] = cellmean(x, dim)
 % least one of the dimensions should be the same for all cells
 
 nx = size(x);
-if ~iscell(x) || length(nx)>2 || all(nx>1),
-  error('incorrect input for cellmean');
+if ~iscell(x) || length(nx)>2 || all(nx>1)
+  ft_error('incorrect input for cellmean');
 end
 
-if nargin==1,
+if nargin==1
   scx1 = cellfun('size', x, 1);
   scx2 = cellfun('size', x, 2);
   if     all(scx2==scx2(1)), dim = 2; %let second dimension prevail
   elseif all(scx1==scx1(1)), dim = 1;
-  else   error('no dimension to compute mean for');
+  else   ft_error('no dimension to compute mean for');
   end
 end
 
@@ -424,22 +439,22 @@ function [sd] = cellstd(x, dim, flag)
 % can be set to 0).
 
 nx = size(x);
-if ~iscell(x) || length(nx)>2 || all(nx>1),
-  error('incorrect input for cellstd');
+if ~iscell(x) || length(nx)>2 || all(nx>1)
+  ft_error('incorrect input for cellstd');
 end
 
-if nargin<2,
+if nargin<2
   scx1 = cellfun('size', x, 1);
   scx2 = cellfun('size', x, 2);
   if     all(scx2==scx2(1)), dim = 2; %let second dimension prevail
   elseif all(scx1==scx1(1)), dim = 1;
-  else   error('no dimension to compute mean for');
+  else   ft_error('no dimension to compute mean for');
   end
-elseif nargin==2,
+elseif nargin==2
   flag = 1;
 end
 
-if flag,
+if flag
   m    = cellmean(x, dim);
   x    = cellvecadd(x, -m);
 end
@@ -461,19 +476,19 @@ function [y] = cellvecadd(x, v)
 
 % check once and for all to save time
 persistent bsxfun_exists;
-if isempty(bsxfun_exists);
-  bsxfun_exists=exist('bsxfun','builtin');
-  if ~bsxfun_exists;
-    error('bsxfun not found.');
+if isempty(bsxfun_exists)
+  bsxfun_exists=exist('bsxfun', 'builtin');
+  if ~bsxfun_exists
+    ft_error('bsxfun not found.');
   end
 end
 
 nx = size(x);
-if ~iscell(x) || length(nx)>2 || all(nx>1),
-  error('incorrect input for cellmean');
+if ~iscell(x) || length(nx)>2 || all(nx>1)
+  ft_error('incorrect input for cellmean');
 end
 
-if ~iscell(v),
+if ~iscell(v)
   v = repmat({v}, nx);
 end
 
@@ -488,19 +503,19 @@ function [y] = cellvecmult(x, v)
 
 % check once and for all to save time
 persistent bsxfun_exists;
-if isempty(bsxfun_exists);
-  bsxfun_exists=exist('bsxfun','builtin');
-  if ~bsxfun_exists;
-    error('bsxfun not found.');
+if isempty(bsxfun_exists)
+  bsxfun_exists=exist('bsxfun', 'builtin');
+  if ~bsxfun_exists
+    ft_error('bsxfun not found.');
   end
 end
 
 nx = size(x);
-if ~iscell(x) || length(nx)>2 || all(nx>1),
-  error('incorrect input for cellmean');
+if ~iscell(x) || length(nx)>2 || all(nx>1)
+  ft_error('incorrect input for cellmean');
 end
 
-if ~iscell(v),
+if ~iscell(v)
   v = repmat({v}, nx);
 end
 
@@ -508,10 +523,10 @@ sx1 = cellfun('size', x, 1);
 sx2 = cellfun('size', x, 2);
 sv1 = cellfun('size', v, 1);
 sv2 = cellfun('size', v, 2);
-if all(sx1==sv1) && all(sv2==1),
-elseif all(sx2==sv2) && all(sv1==1),
-elseif all(sv1==1) && all(sv2==1),
-else   error('inconsistent input');
+if     all(sx1==sv1) && all(sv2==1)
+elseif all(sx2==sv2) && all(sv1==1)
+elseif all(sv1==1)   && all(sv2==1)
+else   ft_error('inconsistent input');
 end
 
 y  = cellfun(@bsxfun, repmat({@times}, nx), x, v, 'UniformOutput', 0);
@@ -528,22 +543,22 @@ function [z, sd, m] = cellzscore(x, dim, flag)
 % can be set to 0). SD is a vector containing the standard deviations, used for the normalisation.
 
 nx = size(x);
-if ~iscell(x) || length(nx)>2 || all(nx>1),
-  error('incorrect input for cellstd');
+if ~iscell(x) || length(nx)>2 || all(nx>1)
+  ft_error('incorrect input for cellstd');
 end
 
-if nargin<2,
+if nargin<2
   scx1 = cellfun('size', x, 1);
   scx2 = cellfun('size', x, 2);
-  if     all(scx2==scx2(1)), dim = 2; %let second dimension prevail
+  if     all(scx2==scx2(1)), dim = 2; % let second dimension prevail
   elseif all(scx1==scx1(1)), dim = 1;
-  else   error('no dimension to compute mean for');
+  else   ft_error('no dimension to compute mean for');
   end
-elseif nargin==2,
+elseif nargin==2
   flag = 1;
 end
 
-if flag,
+if flag
   m    = cellmean(x, dim);
   x    = cellvecadd(x, -m);
 end

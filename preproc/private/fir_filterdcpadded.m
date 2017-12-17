@@ -51,17 +51,17 @@ end
 
 % Check arguments
 if nargin < 2
-    error('Not enough input arguments.');
+    ft_error('Not enough input arguments.');
 end
 
 % Is FIR?
 if ~isscalar(a) || a ~= 1
-    error('Not a FIR filter. onepass-zerophase and onepass-minphase filtering is available for FIR filters only.')
+    ft_error('Not a FIR filter. onepass-zerophase and onepass-minphase filtering is available for FIR filters only.')
 end
 
 % Group delay
 if mod(length(b), 2) ~= 1
-    error('Filter order is not even.');
+    ft_error('Filter order is not even.');
 end
 groupDelay = (length(b) - 1) / 2;
 
@@ -69,7 +69,7 @@ groupDelay = (length(b) - 1) / 2;
 isSym = all(b(1:groupDelay) == b(end:-1:groupDelay + 2));
 isAntisym = all([b(1:groupDelay) == -b(end:-1:groupDelay + 2) b(groupDelay + 1) == 0]);
 if causal == 0 && ~(isSym || isAntisym)
-    error('Filter is not anti-/symmetric. For onepass-zerophase filtering the filter must be anti-/symmetric.')
+    ft_error('Filter is not anti-/symmetric. For onepass-zerophase filtering the filter must be anti-/symmetric.')
 end
 
 % Padding

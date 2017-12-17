@@ -3,7 +3,6 @@ function test_bug3195
 % MEM 2gb
 % WALLTIME 00:20:00
 
-% TEST test_bug3195
 % TEST ft_prepare_sourcemodel ft_inside_vol
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3195'));

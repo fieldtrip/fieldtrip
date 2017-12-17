@@ -3,8 +3,9 @@ function test_bug2727
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST test_bug2727
-% TEST ft_clusterplot
+% TEST ft_clusterplot topoplot_common
+
+%%
 
 label = {
   'MLC11'    'MLC12'    'MLC13'    'MLC14'    'MLC15'    'MLC21'    'MLC22'    'MLC23'    'MLC24'    'MLC31'    'MLC32'    'MLC33'    'MLC41'    'MLC42' ...
@@ -78,6 +79,8 @@ statTF1.time = (1:10)/10; % in seconds
 statTF1.dimord = 'chan_freq_time';
 statTF1.posclusterslabelmat = statTF1.prob<0.05;
 statTF1.posclusters(1).prob = 0;
+
+%%
 
 cfg = [];
 cfg.layout = 'CTF151.lay';

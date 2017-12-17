@@ -132,19 +132,19 @@ cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
 
 if ~isfield(cfg, 'trl') && (~isfield(cfg, 'trialfun') || isempty(cfg.trialfun))
   % there used to be other system specific trialfuns in previous versions
-  % of fieldtrip, but they are deprecated and not included in recent
+  % of FieldTrip, but they are deprecated and not included in recent
   % versions any more
   cfg.trialfun = 'ft_trialfun_general';
-  warning('no trialfun was specified, using ft_trialfun_general');
+  ft_warning('no trialfun was specified, using ft_trialfun_general');
 end
 
 % create the trial definition for this dataset and condition
 if isfield(cfg, 'trl')
   % the trial definition is already part of the configuration
-  fprintf('retaining existing trial definition\n');
+  ft_info('retaining existing trial definition\n');
   trl = cfg.trl;
   if isfield(cfg, 'event')
-    fprintf('retaining existing event information\n');
+    ft_info('retaining existing event information\n');
     event = cfg.event;
   else
     event = [];
@@ -152,12 +152,13 @@ if isfield(cfg, 'trl')
 
 elseif isfield(cfg, 'trialfun')
 
+  trialfunSpecified = cfg.trialfun;
   cfg.trialfun = ft_getuserfun(cfg.trialfun, 'trialfun');
 
   if isempty(cfg.trialfun)
-    error('the specified trialfun ''%s'' was not found', func2str(cfg.trialfun));
+    ft_error('the specified trialfun ''%s'' was not found', trialfunSpecified);
   else
-    fprintf('evaluating trialfunction ''%s''\n', func2str(cfg.trialfun));
+    ft_info('evaluating trialfunction ''%s''\n', func2str(cfg.trialfun));
   end
 
   % determine the number of outpout arguments of the user-supplied trial function
@@ -177,20 +178,20 @@ elseif isfield(cfg, 'trialfun')
     [trl, event] = feval(cfg.trialfun, cfg);
   end
 else
-  error('no trialfunction specified, see FT_DEFINETRIAL for help');
+  ft_error('no trialfunction specified, see FT_DEFINETRIAL for help');
 end
 
 if isfield(cfg, 'trialdef') && isfield(cfg.trialdef, 'eventtype') && isequal(cfg.trialdef.eventtype, '?')
   % give a gentle message instead of an error
-  fprintf('no trials have been defined yet, see FT_DEFINETRIAL for further help\n');
+  ft_info('no trials have been defined yet, see FT_DEFINETRIAL for further help\n');
 elseif size(trl,1)<1
-  error('no trials were defined, see FT_DEFINETRIAL for help');
+  ft_error('no trials were defined, see FT_DEFINETRIAL for help');
 end
 
 % add the new trials and events to the output configuration
-fprintf('found %d events\n', length(event));
+ft_info('found %d events\n', length(event));
 cfg.event = event;
-fprintf('created %d trials\n', size(trl,1));
+ft_info('created %d trials\n', size(trl,1));
 cfg.trl = trl;
 
 % do the general cleanup and bookkeeping at the end of the function

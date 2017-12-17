@@ -165,37 +165,37 @@ if strcmp(info.metric, 'zvalue') || strcmp(info.metric, 'maxzvalue')
   runnum = 0;
   for i=1:info.ntrl
     dat = preproc(info.data.trial{i}, info.data.label, offset2time(info.offset(i), info.fsample, size(info.data.trial{i}, 2)), info.cfg.preproc); % not entirely sure whether info.data.time{i} is correct, so making it on the fly
-    runsum = runsum + sum(dat, 2);
-    runss  = runss  + sum(dat.^2, 2);
-    runnum = runnum + size(dat, 2);
+    runsum = runsum + nansum(dat, 2);
+    runss  = runss  + nansum(dat.^2, 2);
+    runnum = runnum + sum(isfinite(dat), 2);
   end
-  mval = runsum/runnum;
-  sd   = sqrt(runss/runnum - (runsum./runnum).^2);
+  mval = runsum./runnum;
+  sd   = sqrt(runss./runnum - (runsum./runnum).^2);
 end
 for i=1:info.ntrl
   ft_progress(i/info.ntrl, 'computing metric %d of %d\n', i, info.ntrl);
   dat = preproc(info.data.trial{i}, info.data.label, offset2time(info.offset(i), info.fsample, size(info.data.trial{i}, 2)), info.cfg.preproc); % not entirely sure whether info.data.time{i} is correct, so making it on the fly
   switch info.metric
     case 'var'
-      level(:, i) = std(dat, [], 2).^2;
+      level(:, i) = nanstd(dat, [], 2).^2;
     case 'min'
-      level(:, i) = min(dat, [], 2);
+      level(:, i) = nanmin(dat, [], 2);
     case 'max'
-      level(:, i) = max(dat, [], 2);
+      level(:, i) = nanmax(dat, [], 2);
     case 'maxabs'
-      level(:, i) = max(abs(dat), [], 2);
+      level(:, i) = nanmax(abs(dat), [], 2);
     case 'range'
-      level(:, i) = max(dat, [], 2) - min(dat, [], 2);
+      level(:, i) = nanmax(dat, [], 2) - nanmin(dat, [], 2);
     case 'kurtosis'
       level(:, i) = kurtosis(dat, [], 2);
     case '1/var'
-      level(:, i) = 1./(std(dat, [], 2).^2);
+      level(:, i) = 1./(nanstd(dat, [], 2).^2);
     case 'zvalue'
-      level(:, i) = mean( (dat-repmat(mval, 1, size(dat, 2)) )./repmat(sd, 1, size(dat, 2)) , 2);
+      level(:, i) = nanmean( (dat-repmat(mval, 1, size(dat, 2)) )./repmat(sd, 1, size(dat, 2)) , 2);
     case 'maxzvalue'
-      level(:, i) = max( ( dat-repmat(mval, 1, size(dat, 2)) )./repmat(sd, 1, size(dat, 2)) , [], 2);
+      level(:, i) = nanmax( ( dat-repmat(mval, 1, size(dat, 2)) )./repmat(sd, 1, size(dat, 2)) , [], 2);
     otherwise
-      error('unsupported method');
+      ft_error('unsupported method');
   end
 end
 ft_progress('close');
@@ -611,10 +611,17 @@ cfg_mp.layout  = info.cfg.layout;
 cfg_mp.channel = info.data.label(info.chansel);
 currfig = gcf;
 for n = 1:length(trls)
+  % ft_multiplotER should be able to make the selection, but fails due to http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2978
+  % that bug is hard to fix, hence it is solved here with a work-around
+  cfg_sd = [];
+  cfg_sd.trials = trls(n);
+  cfg_sd.avgoverrpt = 'yes';
+  cfg_sd.keeprpt = 'no';
+  tmpdata = ft_selectdata(cfg_sd, info.data);
+  
   figure()
-  cfg_mp.trials = trls(n);
   cfg_mp.interactive = 'yes';
-  ft_multiplotER(cfg_mp, info.data);
+  ft_multiplotER(cfg_mp, tmpdata);
   title(sprintf('Trial %i', trls(n)));
 end
 figure(currfig);

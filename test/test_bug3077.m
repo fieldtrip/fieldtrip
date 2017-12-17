@@ -3,7 +3,6 @@ function test_bug3077
 % MEM 1gb
 % WALLTIME 00:20:00
 
-% TEST test_bug3077
 % TEST ft_rejectcomponent
 
 % create some data

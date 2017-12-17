@@ -40,7 +40,7 @@ eventData = [];
 
 fid=fopen([filename],'r');
 if fid==-1
-    error('wrong filename')
+    ft_error('wrong filename')
 end
 
 version     = fread(fid,1,'int32');
@@ -52,29 +52,29 @@ if version < 7
         endian = 'ieee-be';
     elseif cEndian == 'L'
         endian = 'ieee-le';
-    end;
+    end
 elseif (version > 6) && ~bitand(version,6)
     if cEndian == 'B'
         endian = 'ieee-le';
     elseif cEndian == 'L'
         endian = 'ieee-be';
-    end;
+    end
     version = swapbytes(uint32(version));
 else
-    error('ERROR:  This is not a simple binary file.  Note that NetStation does not successfully directly convert EGIS files to simple binary format.\n');
-end;
+    ft_error('ERROR:  This is not a simple binary file.  Note that NetStation does not successfully directly convert EGIS files to simple binary format.\n');
+end
 
 if bitand(version,1) == 0
     %error('ERROR:  This is an unsegmented file, which is not supported.\n');
     unsegmented = 1;
 else
     unsegmented = 0;
-end;
+end
 
 precision = bitand(version,6);
 if precision == 0
-    error('File precision is not defined.');
-end;
+    ft_error('File precision is not defined.');
+end
 
 %       read header...
 year        = fread(fid,1,'int16',endian);
@@ -89,7 +89,7 @@ NChan       = fread(fid,1,'int16',endian);
 Gain        = fread(fid,1,'int16',endian);
 Bits        = fread(fid,1,'int16',endian);
 Range       = fread(fid,1,'int16',endian);
-if unsegmented,
+if unsegmented
     NumCategors = 0;
     NSegments   = 1;
     NSamples    = fread(fid,1,'int32',endian);
@@ -131,7 +131,7 @@ end
 segHdr = zeros(NSegments,2);
 
 if unsegmented
-    eventData = logical(zeros(NEvent,NSegments*NSamples));
+    eventData = false(NEvent,NSegments*NSamples);
     switch precision
         case 2
             dataType = 'int16';

@@ -3,7 +3,6 @@ function test_bug931
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug931
 % TEST ft_appendfreq
 
 freq1.label = {'1'};

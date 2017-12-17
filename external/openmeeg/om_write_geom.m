@@ -8,6 +8,8 @@ function om_write_geom(geomfile,bndfile,names)
 %   Authors: Alexandre Gramfort alexandre.gramfort@inria.fr
 %            Paul Czienskowski
 
+% Copyright (C) 2010-2017, OpenMEEG developers
+
 numbnd = length(bndfile);
 
 if nargin < 3

@@ -68,7 +68,7 @@ ft_plot_mesh(mesh, 'surfaceonly', 1)
 ft_plot_sens(elec)
 
 %% prepare the volume conductor and electrodes for leadfield computation
-[vol, sens] = ft_prepare_vol_sens(headmodel, elec)
+[vol, sens] = ft_prepare_vol_sens(headmodel, elec);
 
 % elec is the original one, sens is the one after projecting
 if isequal(sens.elecpos, elec.elecpos)

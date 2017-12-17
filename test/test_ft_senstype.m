@@ -3,7 +3,6 @@ function test_ft_senstype
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_senstype
 % TEST ft_senstype
 
 % ft_senstype can work on different input data structures. Here, use the

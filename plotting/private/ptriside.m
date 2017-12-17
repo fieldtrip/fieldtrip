@@ -1,7 +1,7 @@
 function [side] = ptriside(v1, v2, v3, r, tolerance)
 
-% PTRISIDE determines the side of a plane on which a set of points lie. it
-% returns 0 for the points that lie on the plane
+% PTRISIDE determines the side of a plane on which a set of points lie. It
+% returns 0 for the points that lie exactly on the plane.
 %
 % [side] = ptriside(v1, v2, v3, r)
 % 

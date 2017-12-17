@@ -54,7 +54,7 @@ switch hdr.VarHeader.Type
     nsamples = size(dat,2);
     nwaves   = 1; % only one continuous datasegment is supported
     if length(hdr.VarHeader)~=nchans
-      error('incorrect number of channels');
+      ft_error('incorrect number of channels');
     end
     % convert the data from floating point into int16 values
     % each channel gets its own optimal calibration factor
@@ -85,7 +85,7 @@ switch hdr.VarHeader.Type
     nsamples = size(dat,1);
     nwaves   = size(dat,2);
     if length(hdr.VarHeader)~=nchans
-      error('incorrect number of channels');
+      ft_error('incorrect number of channels');
     end
     % convert the data from floating point into int16 values
     ADMaxValue = double(intmax('int16'));
@@ -106,7 +106,7 @@ switch hdr.VarHeader.Type
     ADtoMV = 1/MVtoAD;
 
   otherwise
-    error('unsupported data type')
+    ft_error('unsupported data type')
 end % switch type
 
 % determine the first and last timestamp
@@ -197,7 +197,7 @@ return
         fwrite(fid, ts            , 'int32');       % timestamps, one for each spike
         fwrite(fid, dat           , 'int16');       % waveforms, one for each spike
       otherwise
-        error('unsupported data type');
+        ft_error('unsupported data type');
     end % switch
   end % of the nested function
 

@@ -36,5 +36,5 @@ elseif isfield(hdr.mri_info, 'model_name') && strcmp(hdr.mri_info.model_name, 'S
   vol.r = hdr.mri_info.r;
   vol.o = [hdr.mri_info.cx hdr.mri_info.cy hdr.mri_info.cz];
 else
-  error('unsupported volume conductor model');
+  ft_error('unsupported volume conductor model');
 end

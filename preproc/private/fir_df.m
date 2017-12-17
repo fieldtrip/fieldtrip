@@ -38,7 +38,7 @@ function [df, maxDf] = fir_df(cutoffArray, Fs)
 % $Id$
 
 if nargin < 2 || isempty(cutoffArray) || isempty(Fs)
-    error('Not enough input arguments.')
+    ft_error('Not enough input arguments.')
 end
 
 % Constants

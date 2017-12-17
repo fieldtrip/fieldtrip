@@ -3,11 +3,10 @@ function test_bug963
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug963
 % TEST ft_read_header ft_read_sens ft_datatype_sens bti2grad itab2grad netmeg2grad ctf2grad mne2grad yokogawa2grad fif2grad mne2grad.old yokogawa2grad_new ft_compute_leadfield ft_prepare_vol_sens
 
-datadir = '/home/common/matlab/fieldtrip/data/test/bug963';
-rawdataprefix = '/home/common/matlab/fieldtrip/data/test';
+datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/bug963');
+rawdataprefix = dccnpath('/home/common/matlab/fieldtrip/data/test');
 
 dataset = {
   'original/meg/bti148/c,rfhp0.1Hz'
@@ -85,16 +84,16 @@ for i=1:length(dataset)
 %   if isfield(hdr.grad, 'coordsys')
 %     hdr.grad = rmfield(hdr.grad, 'coordsys');
 %   end
-%   if isfield(grad, 'labelorg')
-%     grad = rmfield(grad, 'labelorg');
+%   if isfield(grad, 'labelold')
+%     grad = rmfield(grad, 'labelold');
 %   end
-%   if isfield(hdr.grad, 'labelorg')
-%     hdr.grad = rmfield(hdr.grad, 'labelorg');
+%   if isfield(hdr.grad, 'labelold')
+%     hdr.grad = rmfield(hdr.grad, 'labelold');
 %   end
 %   
-  assert(isequal(hdr.grad,           grad), sprintf('failed for %s', filename));
-  assert(isequal(reference.grad,     grad), sprintf('failed for %s', filename));
-  assert(isequal(reference.hdr.grad, grad), sprintf('failed for %s', filename));
+  assert(isalmostequal(hdr.grad,           grad, 'reltol',eps*1e6), sprintf('failed for %s', filename));
+  assert(isalmostequal(reference.grad,     grad, 'reltol',eps*1e6), sprintf('failed for %s', filename));
+  assert(isalmostequal(reference.hdr.grad, grad, 'reltol',eps*1e6), sprintf('failed for %s', filename));
   
   allhdr{i}  = hdr;
   allgrad{i} = grad;
@@ -107,7 +106,7 @@ end % for all datasets
 % this checks that all three CTF implementations still work
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-filename = '/home/common/matlab/fieldtrip/data/Subject01.ds';
+filename = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
 hdr1 = ft_read_header(filename, 'headerformat', 'ctf_ds');
 hdr2 = ft_read_header(filename, 'headerformat', 'read_ctf_res4');
 %hdr3 = ft_read_header(filename, 'headerformat', 'ctf_read_res4');

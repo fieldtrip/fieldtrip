@@ -8,8 +8,8 @@ function test_ft_plot_mesh
 
 %% the first is a simple triangluar mesh
 
-bnd.pnt = randn(20,3);
-bnd.tri = delaunay(bnd.pnt(:,1:2));
+bnd.pos = randn(20,3);
+bnd.tri = delaunay(bnd.pos(:,1:2));
 
 figure
 ft_plot_mesh(bnd);
@@ -125,7 +125,7 @@ cfg.method = 'hexahedral';
 mesh = ft_prepare_mesh(cfg,seg);
 
 % 1 cube mesh
-mesh0.pnt = mesh.pnt;
+mesh0.pos = mesh.pos;
 mesh0.hex = mesh.hex(1,:);
 mesh0.tissue = mesh.tissue(1,:);
 mesh0.tissuelabel = mesh.tissuelabel;

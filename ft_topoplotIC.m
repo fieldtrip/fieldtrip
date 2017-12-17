@@ -121,20 +121,25 @@ end
 % this will remove all time-series information
 comp = ft_checkdata(comp, 'datatype', 'comp');
 
+% set the config defaults
+cfg.title     = ft_getopt(cfg, 'title', 'auto');
+cfg.parameter = ft_getopt(cfg, 'parameter', 'topo'); % needed in topoplot_common
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', 'component');
-
-% set the config defaults
-cfg.title = ft_getopt(cfg, 'title', 'auto');
+cfg = ft_checkconfig(cfg, 'allowedval', {'parameter' 'topo'});
 
 % interactive plotting doesn't work for chan_comp dimord.
 if isfield(cfg, 'interactive') && strcmp(cfg.interactive, 'yes')
-  warning('Interactive plotting is not supported.');
+  ft_warning('Interactive plotting is not supported.');
 end
 cfg.interactive = 'no';
 
 % prepare the layout, this should be done only once
-cfg.layout = ft_prepare_layout(cfg, comp);
+tmpcfg     = removefields(cfg, 'inputfile');
+tmpcomp.label = comp.topolabel; % the input to ft_prepare_layout needs at least a data.label field
+cfg.layout = ft_prepare_layout(tmpcfg, tmpcomp);
+clear tmpcomp;
 
 % don't show the callinfo for each separate component
 cfg.showcallinfo = 'no';

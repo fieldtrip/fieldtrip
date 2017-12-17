@@ -25,7 +25,6 @@
 
 #include <math.h>
 #include "mex.h"
-#include "matrix.h"
 
 double legendre_Pmm(double m, double x)
 {

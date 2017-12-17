@@ -94,7 +94,7 @@ if ft_filetype(datafile, 'ced_son')
 end
 [st,libinfo] = ns_GetLibraryInfo;
 if st,
-    error(['Could not get NeuroShare library info, please use the NS_SETLIBRARY function.']);
+    ft_error(['Could not get NeuroShare library info, please use the NS_SETLIBRARY function.']);
 else,
     disp(['Loading file ' datafile ' using NeuroShare library v',...
         num2str(libinfo.LibVersionMaj),'.',num2str(libinfo.LibVersionMin),' ...']);
@@ -104,7 +104,7 @@ end;
 [st,fhandle] = ns_OpenFile(datafile);
 if st,
     [st,mesg] = ns_GetLastErrorMsg;
-    error(mesg);
+    ft_error(mesg);
 end;
 
 try,
@@ -113,7 +113,7 @@ try,
     if st,
         [st,mesg] = ns_GetLastErrorMsg;
         ns_CloseFile(fhandle);
-        error(mesg);
+        ft_error(mesg);
     end;
 
     % Build catalogue of entities
@@ -165,11 +165,11 @@ try,
             out.header(cnt).units        = ainfo.Units;
             out.header(cnt).mode         = 'continuous';
         elseif strcmpi(MODE,'triggered'),
-            warning(['Triggered channel mode not implemented yet']);
+            ft_warning(['Triggered channel mode not implemented yet']);
             out = [];
             return
         else,
-            error(['Unknown channel mode for channel ',num2str(channr)]);
+            ft_error(['Unknown channel mode for channel ',num2str(channr)]);
         end;
     end;
     out.header = orderfields(out.header);
@@ -220,7 +220,7 @@ try,
               pars.channels = analoglist; 
           else, % renumber requested channels to entityIDs
               if length(pars.channels)>length(analoglist),
-                  error(['Requested more analog channels than present in datafile']);
+                  ft_error(['Requested more analog channels than present in datafile']);
               else,
                   pars.channels = analoglist(pars.channels);
               end;
@@ -261,14 +261,14 @@ try,
               % get the same number of samples as in the target channel
               endsample               = begsample + itemcount-1;
               [st,contcount,chandata] = ns_GetAnalogData(fhandle,channr, begsample,itemcount);
-              if contcount~=itemcount, warning(['Discontinuity in data']); end;
+              if contcount~=itemcount, ft_warning(['Discontinuity in data']); end;
 
               % make a time scale
               [st,begtime]            = ns_GetTimeByIndex(fhandle,channr,begsample);
               [st,endtime]            = ns_GetTimeByIndex(fhandle,channr,endsample);          
               sourcestep              = out.header([out.header.sonentityid]==channr).samplerate;
     
-              if sourcestep~=targetstep, warning(['Source and target channels have time steps of different size']); end;
+              if sourcestep~=targetstep, ft_warning(['Source and target channels have time steps of different size']); end;
               chantime                = [begtime:1/sourcestep:endtime];
              
               out.data{cnt} = chandata(:)';              
@@ -291,6 +291,6 @@ catch,
         [st,mesg] = ns_GetLastErrorMsg;
         disp(mesg);
     end;
-    error(lasterr);
+    ft_error(lasterr);
 end;
 

@@ -1,4 +1,4 @@
-function [H, Z, S, psi] = sfactorization_wilson(S,freq,Niterations,tol,fb,init,checkflag)
+function [H, Z, S, psi] = sfactorization_wilson(S,freq,Niterations,tol,fb,init,checkflag,stabilityfix)
 
 % SFACTORIZATION_WILSON performs multivariate non-parametric spectral factorization on
 % cross-spectra, based on Wilson's algorithm.
@@ -40,6 +40,7 @@ function [H, Z, S, psi] = sfactorization_wilson(S,freq,Niterations,tol,fb,init,c
 %
 % $Id$
 
+if nargin<8, stabilityfix = false; end
 if nargin<7, checkflag = true;   end
 if nargin<6, init      = 'chol'; end
 if nargin<5, fb        = 'none'; end
@@ -48,7 +49,7 @@ if nargin<3, Niterations = 1000; end
 
 dfreq = round(diff(freq)*1e5)./1e5; % allow for some numeric issues
 if ~all(dfreq==dfreq(1))
-  error('FieldTrip:connectivity:sfactorization_wilson', 'frequency axis is not evenly spaced');
+  ft_error('FieldTrip:connectivity:sfactorization_wilson', 'frequency axis is not evenly spaced');
 end
 
 if freq(1)~=0
@@ -118,7 +119,7 @@ switch init
   case 'chol'
     [tmp, dum] = chol(gam0);
     if dum
-      warning('initialization with ''chol'' for iterations did not work well, using arbitrary starting condition');
+      ft_warning('initialization with ''chol'' for iterations did not work well, using arbitrary starting condition');
       tmp = randn(m,1000); %arbitrary initial condition
       tmp = (tmp*tmp')./1000;
       %tmp = triu(tmp);
@@ -132,7 +133,7 @@ switch init
     %tmp = triu(tmp);
     [tmp, dum] = chol(tmp);
   otherwise
-    error('initialization method should be eithe ''chol'' or ''rand''');
+    ft_error('initialization method should be eithe ''chol'' or ''rand''');
 end
 h = tmp;
 
@@ -149,7 +150,7 @@ for iter = 1:Niterations
     %invpsi     = inv(psi(:,:,ind)); 
     g(:,:,ind) = psi(:,:,ind)\Sarr(:,:,ind)/psi(:,:,ind)'+I;%Eq 3.1
   end
-  gp = PlusOperator(g,m,N); %gp constitutes positive and half of zero lags 
+  gp = PlusOperator(g,m,N,stabilityfix); %gp constitutes positive and half of zero lags 
 
   psi_old = psi;
   for k = 1:N2
@@ -198,7 +199,7 @@ if numel(selfreq)~=numel(freq)
 end
 
 %---------------------------------------------------------------------
-function gp = PlusOperator(g,nchan,nfreq)
+function gp = PlusOperator(g,nchan,nfreq,stabilityfix)
 
 % This function is for [ ]+operation: 
 % to take the positive lags & half of the zero lag and reconstitute 
@@ -213,6 +214,15 @@ beta0 = 0.5*gam(1,:);
 
 gamp(1,          :) = reshape(triu(reshape(beta0, [nchan nchan])),[1 nchan^2]);
 gamp(nfreq+1:end,:) = 0;
+
+% smooth with a window, only for the long latency boundary: this is a
+% stabilityfix proposed by Martin Vinck
+if stabilityfix
+  w = tukeywin(nfreq*2, 0.5);
+  gamp(1:nfreq,:) = gamp(1:nfreq,:).*repmat(w(nfreq+1:end),[1 nchan^2]);
+else
+  % nothing to be done here  
+end
 
 % reconstituting
 gp = fft(gamp);

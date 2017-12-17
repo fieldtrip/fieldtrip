@@ -63,8 +63,8 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_READ_MRI, FT_SOURCEANALYSIS, FT_SOURCESTATISTICS,
-% FT_READ_HEADSHAPE, FT_SOURCEPLOT, FT_SOURCEWRITE
+% See also FT_READ_MRI, FT_READ_HEADSHAPE, FT_SOURCEPLOT, FT_SOURCEANALYSIS,
+% FT_SOURCEWRITE
 
 % Copyright (C) 2003-2007, Robert Oostenveld
 % Copyright (C) 2011-2014, Jan-Mathijs Schoffelen
@@ -106,8 +106,8 @@ if ft_abort
 end
 
 % this is not supported any more as of 26/10/2011
-if ischar(anatomical),
-  error('please use cfg.inputfile instead of specifying the input variable as a sting');
+if ischar(anatomical)
+  ft_error('please use cfg.inputfile instead of specifying the input variable as a sting');
 end
 
 % check if the input cfg is valid for this function
@@ -159,7 +159,7 @@ else
 end
 
 if isUnstructuredAna
-  anatomical = ft_checkdata(anatomical, 'datatype', {'source', 'source+label'}, 'inside', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
+  anatomical = ft_checkdata(anatomical, 'datatype', {'source', 'source+label', 'mesh'}, 'inside', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
 else
   anatomical = ft_checkdata(anatomical, 'datatype', {'volume', 'volume+label'}, 'inside', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
 end
@@ -193,13 +193,13 @@ functional = ft_convert_units(functional, anatomical.unit);
 
 if isfield(functional, 'coordsys') && isfield(anatomical, 'coordsys') && ~isequal(functional.coordsys, anatomical.coordsys)
   % FIXME is this different when smudged or not?
-  % warning('the coordinate systems are not aligned');
-  % error('the coordinate systems are not aligned');
+  % ft_warning('the coordinate systems are not aligned');
+  % ft_error('the coordinate systems are not aligned');
 end
 
 if ~isUnstructuredAna && cfg.downsample~=1
   % downsample the anatomical volume
-  tmpcfg = keepfields(cfg, {'downsample'});
+  tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo'});
   orgcfg.parameter = cfg.parameter;
   tmpcfg.parameter = 'anatomy';
   anatomical = ft_volumedownsample(tmpcfg, anatomical);
@@ -570,7 +570,7 @@ elseif ~isUnstructuredFun && ~isUnstructuredAna
 
     if any(dimf(4:end)>1) && ~strcmp(cfg.feedback, 'none')
       % this is needed to prevent feedback to be displayed for every time-frequency point
-      warning('disabling feedback');
+      ft_warning('disabling feedback');
       cfg.feedback = 'none';
     end
 

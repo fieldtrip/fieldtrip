@@ -3,7 +3,6 @@ function test_bug131
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug131
 % TEST ft_prepare_leadfield
 
 % test the issue related to the scaling of the leadfields in the different implementations

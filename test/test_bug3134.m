@@ -3,7 +3,6 @@ function test_bug3134
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST test_bug3134
 
 list = {
   'isvector'

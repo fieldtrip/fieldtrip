@@ -3,7 +3,6 @@ function test_randomseed
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_randomseed
 
 % this is related to bug 1205
 % call this for every possible MATLAB version

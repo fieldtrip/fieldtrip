@@ -1,4 +1,4 @@
-function [wave,spike] = ft_spike_waveform(cfg,spike)
+function [wave, spike] = ft_spike_waveform(cfg, spike)
 
 % FT_SPIKE_WAVEFORM computes descriptive parameters on
 % waveform (mean and variance), and performs operations like realignment, outlier rejection,
@@ -63,14 +63,14 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance spike
 ft_preamble trackconfig
 
 % ensure that the required options are present
 cfg = ft_checkconfig(cfg, 'required', {'fsample'});
 
 % support the typo in this cfg option that was present in older versions of this function
-% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1814
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1814
 cfg = ft_checkconfig(cfg, 'renamed', {'allign', 'align'});
 
 % get the default options
@@ -127,7 +127,7 @@ for iUnit = 1:nUnits
     
     % reject the ones that do not have a rising potential to the peak index
     mnOverLead = nanmean(waves,1);% do this for all four leads at the same time    
-    d = find(squeeze(nansum(diff(mnOverLead(:,1:iup,:),[],2),2)));    
+    d = squeeze(nansum(diff(mnOverLead(:,1:iup,:),[],2),2));    
     rm1 = find(d<0);
     
     % these have a later max than min: reject, this removes late peaks.
@@ -151,7 +151,7 @@ for iUnit = 1:nUnits
       df         = diff(mnOverLead);
       idx        = find(df==0)+1;
       if ~isempty(idx), 
-        if all(nanmax(mnOverLead(idx))>=mnOverLead) | all(nanmin(mnOverLead(idx))<=mnOverLead)
+        if all(nanmax(mnOverLead(idx))>=mnOverLead) || all(nanmin(mnOverLead(idx))<=mnOverLead)
           dl = [dl iWave];
         end
       end
@@ -253,8 +253,9 @@ wave.var   = varWaveform;
 wave.label = spike.label(spikesel);
 wave.dimord = 'chan_lead_time';
 
+% do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble previous spike
-ft_postamble history spike wave
+ft_postamble previous   spike
+ft_postamble provenance wave spike
+ft_postamble history    wave spike
 

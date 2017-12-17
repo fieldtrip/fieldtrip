@@ -1,15 +1,14 @@
 function test_ft_crossfrequencyanalysis
 
 % MEM 2gb
-% WALLTIME 0:15:00
+% WALLTIME 00:15:00
 
-% TEST test_ft_crossfrequencyanalysis
 % TEST ft_crossfrequencyanalysis
 
-clear all;
-close all;
+clear all
+close all
 
-%%%%%% generate simulation data %%%%%%%%%%%%%
+%% generate simulation data
 
 %  channels
 N  = 2;
@@ -26,17 +25,14 @@ for  i = 1:N
   s(i,:)  = sig(4,1:4000);
 end
 
-%  trials
 M = 20;
-ftdata = zeros(M,N,4000);  %  M trials *N Channels*times
+ftdata = zeros(M,N,4000);  %  M=trials * N=Channels * times
 
 for  j = 1:M
   ftdata(j,:,:) = s+rand(N,4000);
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%  stored in FieldTrip fashion
+% represent it in FieldTrip fashion
 data              = [];
 data.time         = cell(1,M);
 data.trial        = cell(1,M);
@@ -51,11 +47,12 @@ for  j = 1:N
   data.label{j,1} = strcat('chan',num2str(j));
 end
 
+%%
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 f1 = 4:1:20;       % interest low frequency range of CFC
 f2 = 30:10:150;    % interest high frequency range of CFC
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % extract low frquency signal
@@ -68,10 +65,10 @@ cfg.taper        = 'hanning';
 cfg.foi          =  f1;
 cfg.t_ftimwin    = ones(length(cfg.foi),1).*0.5;
 cfg.toi          = 0.5:1/data.fsample:3.5;
-LFsig           = ft_freqanalysis(cfg, data);
+LFsig            = ft_freqanalysis(cfg, data);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% extract high frquency evelope signal
+% extract high frequency evelope signal
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 cfg              = [];
 cfg.output       = 'fourier';
@@ -81,18 +78,35 @@ cfg.taper        = 'hanning';
 cfg.foi          =  f2;
 cfg.t_ftimwin    = 5./cfg.foi;
 cfg.toi          = 0.5:1/data.fsample:3.5;
-HFsig           = ft_freqanalysis(cfg, data);
+HFsig            = ft_freqanalysis(cfg, data);
+
+%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % do the actual testing
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 cfg              = [];
+cfg.method       = 'coh';
+cfg.keeptrials   = 'no';
+CFC              = ft_crossfrequencyanalysis(cfg, LFsig, HFsig);
+
+subplot(411)
+MI = squeeze(CFC.crsspctrm(1,:,:));
+imagesc(f1, f2, MI');
+% set(gca, 'Fontsize',20)
+axis xy;
+xlabel('Low frequency  (Hz)');
+ylabel('High frequency (Hz)');
+title('Coherence')
+axis xy; colorbar
+
+cfg              = [];
 cfg.method       = 'plv';
 cfg.keeptrials   = 'no';
-CFC              = ft_crossfrequencyanalysis(cfg,LFsig,HFsig);
+CFC              = ft_crossfrequencyanalysis(cfg, LFsig, HFsig);
 
-subplot(311)
+subplot(412)
 MI = squeeze(CFC.crsspctrm(1,:,:));
 imagesc(f1, f2, MI');
 % set(gca, 'Fontsize',20)
@@ -102,12 +116,12 @@ ylabel('High frequency (Hz)');
 title('Phase locking value')
 axis xy; colorbar
 
-cfg              =[];
-cfg.method       ='mvl';
+cfg              = [];
+cfg.method       = 'mvl';
 cfg.keeptrials   = 'no';
 CFC              = ft_crossfrequencyanalysis(cfg,LFsig,HFsig);
 
-subplot(312)
+subplot(413)
 MI = squeeze(CFC.crsspctrm(1,:,:));
 imagesc(f1, f2, MI');
 % set(gca, 'Fontsize',20)
@@ -117,17 +131,17 @@ ylabel('High frequency (Hz)');
 title('mean vector length')
 axis xy; colorbar
 
-cfg              =[];
+cfg              = [];
 cfg.method       = 'mi';
 cfg.keeptrials   = 'no';
 CFC              = ft_crossfrequencyanalysis(cfg,LFsig,HFsig);
 
-subplot(313)
+subplot(414)
 MI = squeeze(CFC.crsspctrm(1,:,:));
 imagesc(f1, f2, MI');
 % set(gca, 'Fontsize',20)
 axis xy;
-xlabel('Low frequency  (Hzrand(2,4000))');
+xlabel('Low frequency  (Hz)');
 ylabel('High frequency (Hz)');
 title('Modulation index')
 axis xy; colorbar
@@ -138,7 +152,7 @@ end % main function
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [sigs, T2]=inhibition(num,fs,shift,timdiff,hf,a,c,n1,n2)
+function [sigs, T2] = inhibition(num,fs,shift,timdiff,hf,a,c,n1,n2)
 
 % generate simulation data
 % input:
@@ -150,7 +164,7 @@ function [sigs, T2]=inhibition(num,fs,shift,timdiff,hf,a,c,n1,n2)
 % a(slope)/c(threshold)  :   Sigmoid function parameter sigmf(x, [a, c]) = 1./(1 + exp(-a*(x-c)))
 %  n1                    :   Gaussian white noise level
 %  n2                    :   pinck noise level
-
+%
 % output:
 % sigs:     four signals {alpha0;alphas;gamma;mix}  4*T2   we are looking CFC at mix channel sigs(4,:)
 % T2        time series index

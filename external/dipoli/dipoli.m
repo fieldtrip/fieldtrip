@@ -66,7 +66,7 @@ if ~isempty(dipoli)
     % make sure that normals on the vertices point outwards
     ok = checknormals(bnddip(i));
     if ~ok,  bnddip(i).tri = fliplr(bnddip(i).tri);end
-    write_tri(bndfile{i}, bnddip(i).pnt, bnddip(i).tri);
+    write_tri(bndfile{i}, bnddip(i).pos, bnddip(i).tri);
   end
   
   % these will hold the shell script and the inverted system matrix
@@ -147,15 +147,15 @@ end
 
 function ok = checknormals(bnd)
 ok = 0;
-pnt = bnd.pnt;
+pos = bnd.pos;
 tri = bnd.tri;
 % translate to the center
-org = mean(pnt,1);
-pnt(:,1) = pnt(:,1) - org(1);
-pnt(:,2) = pnt(:,2) - org(2);
-pnt(:,3) = pnt(:,3) - org(3);
+org = mean(pos,1);
+pos(:,1) = pos(:,1) - org(1);
+pos(:,2) = pos(:,2) - org(2);
+pos(:,3) = pos(:,3) - org(3);
 
-w = sum(solid_angle(pnt, tri));
+w = sum(solid_angle(pos, tri));
 
 if w<0 && (abs(w)-4*pi)<1000*eps
   % FIXME: this method is rigorous only for star shaped surfaces

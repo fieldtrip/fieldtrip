@@ -100,7 +100,8 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 %
 % $Id$
 
-ft_preamble randomseed; % deal with the user specified random seed
+% deal with the user specified random seed
+ft_preamble randomseed
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed',     {'factor',           'ivar'});
@@ -131,7 +132,7 @@ cfg.precondition = ft_getopt(cfg, 'precondition', []);
 
 % explicit check for option 'yes' in cfg.correctail.
 if strcmp(cfg.correcttail,'yes')
-  error('cfg.correcttail = ''yes'' is not allowed, use either ''prob'', ''alpha'' or ''no''')
+  ft_error('cfg.correcttail = ''yes'' is not allowed, use either ''prob'', ''alpha'' or ''no''')
 end
 
 if strcmp(cfg.correctm, 'cluster')
@@ -149,9 +150,9 @@ if strcmp(cfg.correctm, 'cluster')
       % input data can be reshaped into a 3D volume, use bwlabeln/spm_bwlabel rather than clusterstat
       fprintf('using connectivity of voxels in 3-D volume\n');
       cfg.connectivity = nan;
-      if isfield(cfg, 'inside')
-        cfg = fixinside(cfg, 'index');
-      end
+      %if isfield(cfg, 'inside')
+      %  cfg = fixinside(cfg, 'index');
+      %end
     elseif isfield(cfg, 'tri')
       % input data describes a surface along which neighbours can be defined
       fprintf('using connectivity of vertices along triangulated surface\n');
@@ -180,7 +181,7 @@ end
 
 % for backward compatibility and other warnings relating correcttail
 if isfield(cfg,'correctp') && strcmp(cfg.correctp,'yes')
-  warning('cfg.correctp has been renamed to cfg.correcttail and the options have been changed')
+  ft_warning('cfg.correctp has been renamed to cfg.correcttail and the options have been changed')
   disp('setting cfg.correcttail to ''prob''')
   cfg.correcttail = 'prob';
   cfg = rmfield(cfg,'correctp');
@@ -188,7 +189,7 @@ elseif isfield(cfg,'correctp') && strcmp(cfg.correctp,'no')
   cfg = ft_checkconfig(cfg, 'renamed', {'correctp', 'correcttail'});
 end
 if strcmp(cfg.correcttail,'no') && cfg.tail==0 && cfg.alpha==0.05
-  warning('doing a two-sided test without correcting p-values or alpha-level, p-values and alpha-level will reflect one-sided tests per tail')
+  ft_warning('doing a two-sided test without correcting p-values or alpha-level, p-values and alpha-level will reflect one-sided tests per tail')
 end
 
 % for backward compatibility
@@ -203,7 +204,7 @@ end
 % fetch function handle to the low-level statistics function
 statfun = ft_getuserfun(cfg.statistic, 'statfun');
 if isempty(statfun)
-  error('could not locate the appropriate statistics function');
+  ft_error('could not locate the appropriate statistics function');
 else
   fprintf('using "%s" for the single-sample statistics\n', func2str(statfun));
 end
@@ -239,7 +240,7 @@ if strcmp(cfg.correctm, 'cluster')
       cfg.clustercritval    = getfield(statfun(tmpcfg, dat, design), 'critval');
     catch
       disp(lasterr);
-      error('could not determine the parametric critical value for clustering');
+      ft_error('could not determine the parametric critical value for clustering');
     end
   elseif strcmp(cfg.clusterthreshold, 'parametric') && ~isempty(cfg.clustercritval)
     fprintf('using the specified parametric threshold for clustering\n');
@@ -259,13 +260,13 @@ catch
   num = 1;
 end
 
-if num==1,
+if num==1
   % only the statistic is returned
   [statobs] = statfun(cfg, dat, design);
-elseif num==2,
+elseif num==2
   % both the statistic and the (updated) configuration are returned
   [statobs, cfg] = statfun(cfg, dat, design);
-elseif num==3,
+elseif num==3
   % both the statistic and the (updated) configuration and the (updated) data are returned
   tmpcfg = cfg;
   if strcmp(cfg. precondition, 'before'), tmpcfg.preconditionflag = 1; end
@@ -292,7 +293,7 @@ else
   prb_neg   = zeros(size(statobs));
 end
 
-if strcmp(cfg.precondition, 'after'),
+if strcmp(cfg.precondition, 'after')
   tmpcfg = cfg;
   tmpcfg.preconditionflag = 1;
   [tmpstat, tmpcfg, dat] = statfun(tmpcfg, dat, design);
@@ -413,7 +414,7 @@ if isfield(stat, 'posclusters')
     stat.posclusters(i).stddev  = sqrt(stat.posclusters(i).prob.*(1-stat.posclusters(i).prob)/Nrand);
     stat.posclusters(i).cirange =  1.96*stat.posclusters(i).stddev;
     if i==1 && stat.posclusters(i).prob<cfg.alpha && stat.posclusters(i).prob+stat.posclusters(i).cirange>=cfg.alpha
-      warning('FieldTrip:posCluster_exceeds_alpha', sprintf('The p-value confidence interval of positive cluster #%i includes %.3f - consider increasing the number of permutations!', i, cfg.alpha));
+      ft_warning('FieldTrip:posCluster_exceeds_alpha', sprintf('The p-value confidence interval of positive cluster #%i includes %.3f - consider increasing the number of permutations!', i, cfg.alpha));
     end
   end
 end
@@ -422,13 +423,13 @@ if isfield(stat, 'negclusters')
     stat.negclusters(i).stddev  = sqrt(stat.negclusters(i).prob.*(1-stat.negclusters(i).prob)/Nrand);
     stat.negclusters(i).cirange =  1.96*stat.negclusters(i).stddev;
     if i==1 && stat.negclusters(i).prob<cfg.alpha && stat.negclusters(i).prob+stat.negclusters(i).cirange>=cfg.alpha
-      warning('FieldTrip:negCluster_exceeds_alpha', sprintf('The p-value confidence interval of negative cluster #%i includes %.3f - consider increasing the number of permutations!', i, cfg.alpha));
+      ft_warning('FieldTrip:negCluster_exceeds_alpha', sprintf('The p-value confidence interval of negative cluster #%i includes %.3f - consider increasing the number of permutations!', i, cfg.alpha));
     end
   end
 end
 
 if ~isfield(stat, 'prob')
-  warning('probability was not computed');
+  ft_warning('probability was not computed');
 else
   switch lower(cfg.correctm)
     case 'max'
@@ -480,7 +481,7 @@ if ~isfield(stat, 'stat')
   stat.stat = statobs;
 end
 
-if exist('statrand', 'var'),
+if exist('statrand', 'var')
   stat.ref = mean(statrand,2);
 end
 
@@ -492,7 +493,8 @@ for i=1:length(fn)
   end
 end
 
-ft_postamble randomseed; % deal with the potential user specified randomseed
+% deal with the potential user specified randomseed
+ft_postamble randomseed
 
 warning(ws); % revert to original state
 

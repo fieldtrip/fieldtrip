@@ -3,12 +3,11 @@ function test_bug921
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug921
 % TEST ft_selectdata ft_selectdata_old ft_selectdata_new
 
 % See also bug 798 that was reported by Yoni, from which I am reusing the data to test this bug
 
-cd /home/common/matlab/fieldtrip/data/test/bug798
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug798'));
 load t2_subj1.mat
 load t2_subj1_null
 load t2_subj2

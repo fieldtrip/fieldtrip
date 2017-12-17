@@ -9,9 +9,6 @@ function test_channelconnectivity
 % a logical NxN matrix of channel connectivity based on a neighbours
 % structure.
 
-% random seed
-rng('shuffle');
-
 fprintf('testing the following version of channelconnectivity():\n%s\n', which('channelconnectivity'));
 
 %% generate random 'true' connectivity and channel labels

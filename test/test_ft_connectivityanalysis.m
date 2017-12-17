@@ -3,7 +3,6 @@ function test_ft_connectivityanalysis
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_connectivityanalysis
 % TEST ft_connectivityanalysis ft_connectivity_granger ft_connectivity_corr ft_connectivity_psi ft_mvaranalysis ft_connectivitysimulation ft_freqanalysis ft_connectivity_pdc ft_connectivity_dtf ft_connectivity_csd2transfer
 
 % this function tests the functionality of FT_CONNECTIVITYANALYSIS
@@ -11,9 +10,6 @@ function test_ft_connectivityanalysis
 
 % apart from using FT_CONNECTIVITYANALYSIS, it also relies on
 % FT_CONNECTIVITYSIMULATION, FT_FREQANALYSIS, FT_MVARANALYSIS
-
-global ft_default;
-ft_default.feedback = 'no';
 
 % first create some data
 %--------------------------------------------------------
@@ -87,6 +83,13 @@ c8m            = ft_connectivityanalysis(cfgc, mfreq);
 cfgc.method    = 'total_interdependence';
 c9             = ft_connectivityanalysis(cfgc, freq);
 c9m            = ft_connectivityanalysis(cfgc, mfreq);
+cfgc.method    = 'ddtf';
+c10            = ft_connectivityanalysis(cfgc, freq);
+c10m           = ft_connectivityanalysis(cfgc, mfreq);
+cfgc.method    = 'gpdc';
+c11            = ft_connectivityanalysis(cfgc, freq);
+c11m           = ft_connectivityanalysis(cfgc, mfreq);
+
 
 cfgc             = [];
 cfgc.partchannel = 'signal003'; % this should destroy coherence between 1 and 2
@@ -501,3 +504,16 @@ g3               = ft_connectivityanalysis(cfgc, freq);
 cfgc.granger.conditional = 'yes';
 g4               = ft_connectivityanalysis(cfgc, freq);
 
+% make the blocks a bit more funky
+cfgc.granger.block(1).name =  'block1';
+cfgc.granger.block(1).label = freq.label(1:2);
+cfgc.granger.block(2).name = 'block2';
+cfgc.granger.block(2).label = freq.label(3:5);
+cfgc.granger.block(3).name = 'block3';
+cfgc.granger.block(3).label = freq.label(6:7);
+cfgc.granger.block(4).name = 'block4';
+cfgc.granger.block(4).label = freq.label(8);
+cfgc.granger.conditional = 'no';
+g5               = ft_connectivityanalysis(cfgc, freq);
+cfgc.granger.conditional = 'yes';
+g6               = ft_connectivityanalysis(cfgc, freq);

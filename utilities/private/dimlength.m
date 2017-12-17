@@ -122,7 +122,7 @@ else
         if isfield(data, 'individual'),    n = [n size(data.individual,    1)]; end
         if isfield(data, 'stat'),          n = [n size(data.stat,          1)]; end
         if ~all(n==n(1))
-          error('inconsistent number of repetitions for dim "%s"', seldim);
+          ft_error('inconsistent number of repetitions for dim "%s"', seldim);
         end
         n = n(1);
         
@@ -156,7 +156,7 @@ else
         if isfield(data, 'trial'),         n = [n size(data.trial,         1)]; end
         if isfield(data, 'fourierspctrm'), n = [n size(data.fourierspctrm, 1)]; end
         if ~all(n==n(1))
-          error('inconsistent number of repetitions for dim "%s"', seldim);
+          ft_error('inconsistent number of repetitions for dim "%s"', seldim);
         end
         n = n(1);
         
@@ -175,7 +175,7 @@ else
       if isfield(data, 'powspctrm'),     n = [n size(data.powspctrm,     1)]; end
       if isfield(data, 'trial'),         n = [n size(data.trial,         1)]; end
       
-      if ~all(n==n(1)), error('inconsistent number of repetitions for dim "%s"', seldim); end
+      if ~all(n==n(1)), ft_error('inconsistent number of repetitions for dim "%s"', seldim); end
       n = n(1);
       
     case 'chan'
@@ -225,7 +225,7 @@ else
       end
       
     otherwise
-      error('unsupported dim "%s"', seldim);
+      ft_error('unsupported dim "%s"', seldim);
   end
   
 end % if nargin

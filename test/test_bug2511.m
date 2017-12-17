@@ -3,10 +3,9 @@ function test_bug2511
 % WALLTIME 00:20:00
 % MEM 8gb
 
-% TEST test_bug2511
 % TEST ft_sourceplot ft_read_headshape
 
-t1 = ft_read_mri('/home/common/matlab/spm8/canonical/single_subj_T1.nii');
+t1 = ft_read_mri(dccnpath('/home/common/matlab/spm8/canonical/single_subj_T1.nii'));
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2511.mat'));
 
 % loading the data takes quite some time, as it is 4.7GB on disk, which is
@@ -35,9 +34,9 @@ cfgS.interactive         = 'yes';
 ft_sourceplot(cfgS, sourceDiffIntAVG);
 
 %% error occurs with
-% addpath('/home/common/matlab/fieldtrip/');
+% addpath(dccnpath('/home/common/matlab/fieldtrip/'));
 %% but not with
-% addpath('/home/common/matlab/fieldtrip-20131231/');
+% addpath(dccnpath('/home/common/matlab/fieldtrip-20131231/'));
 
 %% Error description
 %

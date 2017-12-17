@@ -22,12 +22,10 @@ if ~status
     tmp = mfilename; 
   end
   [p, f] = fileparts(tmp);
-  clc
   fprintf('==============================================================================\n');
-  type(fullfile(p, 'COPYING'));
+  type(fullfile(p, 'LICENSE'));
   fprintf('==============================================================================\n');
   % remember that it has been shown
   status = true;
-  pause(3)
 end
 

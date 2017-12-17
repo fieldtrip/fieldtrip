@@ -3,7 +3,6 @@ function test_tutorial_timefrequencyanalysis20130308
 % MEM 1500mb
 % WALLTIME 00:20:00
 
-% TEST test_tutorial_timefrequencyanalysis20130308
 % TEST ft_freqanalysis ft_preprocessing ft_multiplotTFR ft_singleplotTFR
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -56,7 +55,7 @@ function test_tutorial_timefrequencyanalysis20130308
 % 
 % Reading the FIC data
 % 
-% Ft_definetrial and ft_preprocessing require the original MEG dataset, which is available from ftp://ftp.fcdonders.nl/pub/fieldtrip/tutorial/Subject01.zip.
+% Ft_definetrial and ft_preprocessing require the original MEG dataset, which is available from ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/Subject01.zip.
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data'));
 
@@ -91,7 +90,7 @@ dataFIC = ft_preprocessing(cfg);
 % 
 % We will here describe how to calculate time frequency representations using Hanning tapers. When choosing for a fixed window length procedure the frequency resolution is defined according to the length of the time window (delta T). The frequency resolution (delta f in figure 1) = 1/length of time window in sec (delta T in figure 1). Thus a 500 ms time window results in a 2 Hz frequency resolution (1/0.5 sec= 2 Hz) meaning that power can be calculated for 2 Hz, 4 Hz, 6 Hz etc. An integer number of cycles must fit in the time window.
 % 
-% ft_Freqanalysis requires preprocessed data (see above), which is available from ftp://ftp.fcdonders.nl/pub/fieldtrip/tutorial/timefrequencyanalysis/dataFIC.mat.
+% ft_Freqanalysis requires preprocessed data (see above), which is available from ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/timefrequencyanalysis/dataFIC.mat.
 % 
 % load dataFIC
 % In the following example a time window with length 500 ms is applied.

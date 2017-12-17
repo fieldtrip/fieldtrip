@@ -117,42 +117,42 @@ global NL_CHAR;
 
 % Checks the input arguments
 if nargin < 2
-    error('Not enough input arguments');
+    ft_error('Not enough input arguments');
 end
-if (strcmpi(operation,'read')) | (strcmpi(operation,'deletekeys'))
+if (strcmpi(operation,'read')) || (strcmpi(operation,'deletekeys'))
     if nargin < 3
-        error('Not enough input arguments.');
+        ft_error('Not enough input arguments.');
     end
     if ~exist(fileName)
-        error(['File ' fileName ' does not exist.']);
+        ft_error(['File ' fileName ' does not exist.']);
     end
     [m,n] = size(keys);
     if n > 5
-        error('Keys argument has too many columns');
+        ft_error('Keys argument has too many columns');
     end
     for ii=1:m
-        if isempty(keys(ii,3)) | ~ischar(keys{ii,3})
-            error('Empty or non-char keys are not allowed.');
+        if isempty(keys(ii,3)) || ~ischar(keys{ii,3})
+            ft_error('Empty or non-char keys are not allowed.');
         end
     end
-elseif (strcmpi(operation,'write')) | (strcmpi(operation,'writetext'))
+elseif (strcmpi(operation,'write')) || (strcmpi(operation,'writetext'))
     if nargin < 3
-        error('Not enough input arguments');
+        ft_error('Not enough input arguments');
     end
     [m,n] = size(keys);
     for ii=1:m
-        if isempty(keys(ii,3)) | ~ischar(keys{ii,3})
-            error('Empty or non-char keys are not allowed.');
+        if isempty(keys(ii,3)) || ~ischar(keys{ii,3})
+            ft_error('Empty or non-char keys are not allowed.');
         end
     end
 elseif (~strcmpi(operation,'new'))
-    error(['Unknown inifile operation: ''' operation '''']);
+    ft_error(['Unknown inifile operation: ''' operation '''']);
 end
 if nargin >= 3
     for ii=1:m
         for jj=1:n
             if ~ischar(keys{ii,jj})
-                error('All cells from keys must be given as strings, even the empty ones.');
+                ft_error('All cells from keys must be given as strings, even the empty ones.');
             end
         end
     end
@@ -160,8 +160,8 @@ end
 if nargin < 4 || isempty(style)
     style = 'plain';
 else
-    if ~(strcmpi(style,'plain') | strcmpi(style,'tabbed')) | ~ischar(style)
-        error('Unsupported style given or style not given as a string');
+    if ~(strcmpi(style,'plain') || strcmpi(style,'tabbed')) || ~ischar(style)
+        ft_error('Unsupported style given or style not given as a string');
     end
 end
 
@@ -179,7 +179,7 @@ end
 if strcmpi(operation,'new')
     fh = fopen(fileName,'w');
     if fh == -1
-        error(['File: ''' fileName ''' can not be (re)created']);
+        ft_error(['File: ''' fileName ''' can not be (re)created']);
     end
     fclose(fh);
     return
@@ -208,7 +208,7 @@ elseif (strcmpi(operation,'read'))
 %----------------------------  
 elseif (strcmpi(operation,'write'))
     if m < 1
-        error('At least one key is needed when writing keys');
+        ft_error('At least one key is needed when writing keys');
     end
     if ~exist(fileName)
         inifile(fileName,'new');
@@ -225,7 +225,7 @@ elseif (strcmpi(operation,'deletekeys'))
     
     
 else
-    error('Unknown operation for INIFILE.');
+    ft_error('Unknown operation for INIFILE.');
 end      
 
 
@@ -266,7 +266,7 @@ currSubSection = '';
 
 fh = fopen(fileName,'r');
 if fh == -1
-    error(['File: ''' fileName ''' does not exist or can not be opened.']);
+    ft_error(['File: ''' fileName ''' does not exist or can not be opened.']);
 end
 
 try
@@ -324,7 +324,7 @@ try
             currKey = readValue;
             pos2 = ftell(fh);       % the last-byte position of the read key  - the total sum of chars read so far
             for ii=1:length(keyInd)
-               if strcmpi( keysIn(keyInd(ii),3),readKey ) & ~keysLocated(keyInd(ii))
+               if strcmpi( keysIn(keyInd(ii),3),readKey ) && ~keysLocated(keyInd(ii))
                    keysExist(keyInd(ii)) = 1;
                    startOffsets(keyInd(ii)) = pos1+1;
                    endOffsets(keyInd(ii)) = pos2;
@@ -349,7 +349,7 @@ try
     fclose(fh);
 catch
     fclose(fh);
-    error(['Error parsing the file for keys: ' fileName ': ' lasterr]);
+    ft_error(['Error parsing the file for keys: ' fileName ': ' lasterr]);
 end
 %------------------------------------
 
@@ -370,7 +370,7 @@ NEWLINE = sprintf('\n');
 
 [m,n] = size(keys);
 if n < 4
-    error('Keys to be written are given in an invalid format.');
+    ft_error('Keys to be written are given in an invalid format.');
 end
 
 % Get keys position first using findkeys
@@ -380,20 +380,20 @@ keysIn = keys;
 % Read the whole file's contents out
 fh = fopen(fileName,'r');
 if fh == -1
-    error(['File: ''' fileName ''' does not exist or can not be opened.']);
+    ft_error(['File: ''' fileName ''' does not exist or can not be opened.']);
 end
 try
     dataout = fscanf(fh,'%c');
 catch
     fclose(fh);
-    error(lasterr);
+    ft_error(lasterr);
 end
 fclose(fh);
 
 %--- Rewriting the file -> writing the refined contents
 fh = fopen(fileName,'w');
 if fh == -1
-    error(['File: ''' fileName ''' does not exist or can not be opened.']);
+    ft_error(['File: ''' fileName ''' does not exist or can not be opened.']);
 end
 try
     tab1 = [];
@@ -474,7 +474,7 @@ try
             datain = [datain dataout(from:to)];    % the lines before the key
         end
         
-        if length(datain) & (~(datain(end)==RETURN | datain(end)==NEWLINE))
+        if length(datain) && (~(datain(end)==RETURN || datain(end)==NEWLINE))
             datain = [datain, sprintf(NL_CHAR)];
         end
 
@@ -500,8 +500,8 @@ try
                 subSecsExist(ind) = 1;
             end
         end
-        if secsExist(ii) & (~isempty(keysIn{ii,1})); tab = tab1;  end;
-        if subSecsExist(ii) & (~isempty(keysIn{ii,2})); tab = [tab tab1];  end;
+        if secsExist(ii) && (~isempty(keysIn{ii,1})); tab = tab1;  end;
+        if subSecsExist(ii) && (~isempty(keysIn{ii,2})); tab = [tab tab1];  end;
         datain = [datain sprintf(['%s' NL_CHAR],[tab keysIn{ii,3} ' = ' values{ii}])];
     end
     from = eo(ii);
@@ -515,7 +515,7 @@ try
     fprintf(fh,'%c',datain);
 catch
     fclose(fh);
-    error(['Error writing keys to file: ''' fileName ''' : ' lasterr]);
+    ft_error(['Error writing keys to file: ''' fileName ''' : ' lasterr]);
 end
 fclose(fh);
 %------------------------------------
@@ -529,7 +529,7 @@ function deletekeys(fileName,keys)
 
 [m,n] = size(keys);
 if n < 3
-    error('Keys to be deleted are given in an invalid format.');
+    ft_error('Keys to be deleted are given in an invalid format.');
 end
 
 % Get keys position first
@@ -539,20 +539,20 @@ keysIn = keys;
 % Read the whole file's contents out
 fh = fopen(fileName,'r');
 if fh == -1
-    error(['File: ''' fileName ''' does not exist or can not be opened.']);
+    ft_error(['File: ''' fileName ''' does not exist or can not be opened.']);
 end
 try
     dataout = fscanf(fh,'%c');
 catch
     fclose(fh);
-    error(lasterr);
+    ft_error(lasterr);
 end
 fclose(fh);
 
 %--- Rewriting the file -> writing the refined contents
 fh = fopen(fileName,'w');
 if fh == -1
-    error(['File: ''' fileName ''' does not exist or can not be opened.']);
+    ft_error(['File: ''' fileName ''' does not exist or can not be opened.']);
 end
 try
     ind = find(keysExist);
@@ -595,7 +595,7 @@ try
     fprintf(fh,'%c',datain);
 catch
     fclose(fh);
-    error(['Error deleting keys from file: ''' fileName ''' : ' lasterr]);
+    ft_error(['Error deleting keys from file: ''' fileName ''' : ' lasterr]);
 end
 fclose(fh);
 %------------------------------------
@@ -621,12 +621,12 @@ line = strim(line);                         % removes any leading and trailing s
 if isempty(line)                            % empty line
     return
 end
-if (line(1) == '[') & (line(end) == ']')... % section found
-        & (length(line) >= 3)
+if (line(1) == '[') && (line(end) == ']')... % section found
+        && (length(line) >= 3)
     value = lower(line(2:end-1));
     status = 1;
-elseif (line(1) == '{') &...                % subsection found
-       (line(end) == '}') & (length(line) >= 3)
+elseif (line(1) == '{') &&...                % subsection found
+       (line(end) == '}') && (length(line) >= 3)
     value = lower(line(2:end-1));
     status = 2;
 else    

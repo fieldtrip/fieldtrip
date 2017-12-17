@@ -65,7 +65,7 @@ function [dipout] = beamformer_lcmv(dip, grad, headmodel, dat, Cy, varargin)
 
 if mod(nargin-5,2)
   % the first 5 arguments are fixed, the other arguments should come in pairs
-  error('invalid number of optional arguments');
+  ft_error('invalid number of optional arguments');
 end
 
 % these optional settings do not have defaults
@@ -108,7 +108,7 @@ powtrace   = strcmp(powmethod, 'trace');
 powlambda1 = strcmp(powmethod, 'lambda1');
 
 if isfield(dip, 'mom') && fixedori
-  error('you cannot specify a dipole orientation and fixedmom simultaneously');
+  ft_error('you cannot specify a dipole orientation and fixedmom simultaneously');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -149,6 +149,7 @@ if isfield(dip, 'subspace')
 end
 
 isrankdeficient = (rank(Cy)<size(Cy,1));
+rankCy = rank(Cy);
 
 % it is difficult to give a quantitative estimate of lambda, therefore also
 % support relative (percentage) measure that can be specified as string (e.g. '10%')
@@ -163,17 +164,11 @@ if ~isempty(lambda) && ischar(lambda) && lambda(end)=='%'
 end
 
 if projectnoise
-  % estimate the noise power, which is further assumed to be equal and uncorrelated over channels
-  if isrankdeficient
-    % estimated noise floor is equal to or higher than lambda
-    noise = lambda;
-  else
-    % estimate the noise level in the covariance matrix by the smallest singular value
+    % estimate the noise level in the covariance matrix by the smallest singular (non-zero) value
     noise = svd(Cy);
-    noise = noise(end);
+    noise = noise(rankCy);
     % estimated noise floor is equal to or higher than lambda
     noise = max(noise, lambda);
-  end
 end
 
 % the inverse only has to be computed once for all dipoles
@@ -262,7 +257,7 @@ for i=1:size(dip.pos,1)
       case {'unitnoisegain','nai'};
         % optimal orientation calculation for unit-noise gain beamformer,
         % (also applies to similar NAI), based on equation 4.47 from Sekihara & Nagarajan (2008)
-        [vv, dd] = eig(pinv(lf' * invCy *lf)*(lf' * invCy_squared *lf));
+        [vv, dd] = eig(pinv(lf' * invCy_squared *lf)*(lf' * invCy *lf));
         [~,maxeig]=max(diag(dd));
         eta = vv(:,maxeig);
         lf  = lf * eta;

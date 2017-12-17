@@ -24,14 +24,14 @@ void abortHandler(int sig) {
 
 int main(int argc, char *argv[]) {
 	host_t host;
-#ifndef PLATFORM_WIN32
+#ifndef PLATFORM_WINDOWS
 	sigset_t sigInt;
 #endif
 	int errval, blocksize;
 
     /* verify that all datatypes have the expected syze in bytes */
     check_datatypes();
-	
+
 	strcpy(host.name, DEFAULT_HOSTNAME);
 	if (argc>1) {
 		host.port = atoi(argv[1]);
@@ -39,19 +39,19 @@ int main(int argc, char *argv[]) {
 	else {
 		host.port = DEFAULT_PORT;
 	}
-	
+
 	if (argc>2) {
 		blocksize = atoi(argv[2]);
 	} else {
 		blocksize = 0;
 	}
-	
+
 	if (host.port <= 0 || blocksize < 0) {
 		fprintf(stderr, "Usage: buffer_rda [port [blocksize]]\nPort number must be positive, block size must be >= 0.\n");
 		return 1;
 	}
-	
-#ifndef PLATFORM_WIN32	
+
+#ifndef PLATFORM_WINDOWS
 	/*  Make sure the RDA server thread does not receive CTRL-C, instead it will
 		get terminated properly using rda_stop_server from a handler. We need this
 		because otherwise it is unspecified in which thread the signal will be
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
 	sigaddset(&sigInt, SIGINT);
 	sigprocmask(SIG_BLOCK, &sigInt, NULL);
 #endif
-	
+
 	/* 0,0,0 = dma-connection to fieldtrip, default = float, default port */
 	rdac = rda_start_server(0, 0, 0, blocksize, &errval);
 	if (errval != 0) {
@@ -71,15 +71,14 @@ int main(int argc, char *argv[]) {
 	}
 	rdac->verbosity = 6;
 
-#ifndef PLATFORM_WIN32	
+#ifndef PLATFORM_WINDOWS
 	/* We want CTRL-C in this thread */
 	sigprocmask(SIG_UNBLOCK, &sigInt, NULL);
 #endif
 	signal(SIGINT, abortHandler);
-	
+
 	/* start the buffer */
 	tcpserver((void *)(&host));
 
 	return 0;
 }
-

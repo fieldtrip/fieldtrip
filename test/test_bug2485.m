@@ -1,9 +1,8 @@
 function test_bug2485
 
 % WALLTIME 00:10:00
-% MEM 500mb
+% MEM 1gb
 
-% TEST test_bug2485
 % TEST ft_topoplotTFR
 
 % Based on a script contributed by:

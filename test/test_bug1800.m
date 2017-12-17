@@ -3,7 +3,6 @@ function test_bug1800
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1800
 % TEST ft_defaults ft_selectdata ft_topoplotER
 
 % this was reported by Giorgos Michalareas
@@ -14,7 +13,7 @@ function test_bug1800
 % channels and it seems to assume that the are already matched. This results in a
 % wrong topology plot. 
 %
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=1800
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1800
 
 % Load the timelocked data
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))

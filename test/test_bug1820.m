@@ -3,10 +3,9 @@ function test_bug1820
 % MEM 12gb
 % WALLTIME 04:30:00
 
-% TEST test_bug1820
 % TEST ft_prepare_mesh ft_headmodel_simbio ft_prepare_vol_sens ft_compute_leadfield
 
-% See http://bugzilla.fcdonders.nl/show_bug.cgi?id=1820
+% See http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1820
 
 %% create segmentation 
 
@@ -76,9 +75,9 @@ end
 cd(currdir);
 
 %% create mesh
-cfg=[];
-cfg.method='hexahedral';
-mesh=ft_prepare_mesh(cfg,example);
+cfg = [];
+cfg.method = 'hexahedral';
+mesh = ft_prepare_mesh(cfg,example);
 
 pos = [zeros(181,1)'; -90:1:90; zeros(181,1)']';
 

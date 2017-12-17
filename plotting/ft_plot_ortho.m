@@ -20,6 +20,10 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 %   'transform'           = 4x4 homogeneous transformation matrix specifying the mapping from voxel space to the coordinate system in which the data are plotted
 %   'location'            = 1x3 vector specifying a point on the plane which will be plotted the coordinates are expressed in the coordinate system in which the data will be plotted. location defines the origin of the plane
 %   'datmask'             = 3D-matrix with the same size as the matrix dat, serving as opacitymap if the second input argument to the function contains a matrix, this will be used as the mask
+%   'maskstyle'           = string, 'opacity' or 'colormix', defines the rendering
+%   'background'          = needed when maskstyle is 'colormix', 3D-matrix with
+%                           the same size as the data matrix, serving as
+%                           grayscale image that provides the background
 %   'interpmethod'        = string specifying the method for the interpolation, see INTERPN (default = 'nearest')
 %   'colormap'            = string, see COLORMAP
 %   'unit'                = string, can be 'm', 'cm' or 'mm (default is automatic)
@@ -73,7 +77,7 @@ if strcmp(style, 'subplot')
   surfhandle = ft_getopt(varargin(sellist), 'surfhandle');
   update     = ft_getopt(varargin(sellist), 'update', [true true true]);
   if ~isempty(surfhandle) && ~isempty(parents)
-    error('if specifying handles, you should either specify handles to the axes or to the surface objects, not both');
+    ft_error('if specifying handles, you should either specify handles to the axes or to the surface objects, not both');
   end
 end
 
@@ -175,7 +179,7 @@ switch style
     end
     
   otherwise
-    error('unsupported style %s', style);
+    ft_error('unsupported style %s', style);
     
 end % switch style
 

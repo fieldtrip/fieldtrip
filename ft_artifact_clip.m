@@ -80,18 +80,18 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'artfctdef.clip.thresh', 'artfctdef.cli
 cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 
 % set default rejection parameters for clip artifacts if necessary.
-if ~isfield(cfg,'artfctdef'),                    cfg.artfctdef                    = [];    end;
-if ~isfield(cfg.artfctdef,'clip'),               cfg.artfctdef.clip               = [];    end;
-if ~isfield(cfg.artfctdef.clip,'channel'),       cfg.artfctdef.clip.channel       = 'all'; end;
-if ~isfield(cfg.artfctdef.clip,'timethreshold'), cfg.artfctdef.clip.timethreshold = 0.010; end;
-if ~isfield(cfg.artfctdef.clip,'amplthreshold'), cfg.artfctdef.clip.amplthreshold = 0.000; end;
-if ~isfield(cfg.artfctdef.clip,'pretim'),        cfg.artfctdef.clip.pretim        = 0.000; end;
-if ~isfield(cfg.artfctdef.clip,'psttim'),        cfg.artfctdef.clip.psttim        = 0.000; end;
-if ~isfield(cfg, 'headerformat'),                cfg.headerformat                 = [];    end;
-if ~isfield(cfg, 'dataformat'),                  cfg.dataformat                   = [];    end;
+if ~isfield(cfg, 'artfctdef'),                    cfg.artfctdef                    = [];    end
+if ~isfield(cfg.artfctdef, 'clip'),               cfg.artfctdef.clip               = [];    end
+if ~isfield(cfg.artfctdef.clip, 'channel'),       cfg.artfctdef.clip.channel       = 'all'; end
+if ~isfield(cfg.artfctdef.clip, 'timethreshold'), cfg.artfctdef.clip.timethreshold = 0.010; end
+if ~isfield(cfg.artfctdef.clip, 'amplthreshold'), cfg.artfctdef.clip.amplthreshold = 0.000; end
+if ~isfield(cfg.artfctdef.clip, 'pretim'),        cfg.artfctdef.clip.pretim        = 0.000; end
+if ~isfield(cfg.artfctdef.clip, 'psttim'),        cfg.artfctdef.clip.psttim        = 0.000; end
+if ~isfield(cfg, 'headerformat'),                cfg.headerformat                 = [];    end
+if ~isfield(cfg, 'dataformat'),                  cfg.dataformat                   = [];    end
 
 % for backward compatibility
-if isfield(cfg.artfctdef.clip,'sgn')
+if isfield(cfg.artfctdef.clip, 'sgn')
   cfg.artfctdef.clip.channel = cfg.artfctdef.clip.sgn;
   cfg.artfctdef.clip         = rmfield(cfg.artfctdef.clip, 'sgn');
 end
@@ -105,19 +105,19 @@ hasdata = exist('data', 'var');
 if ~hasdata
   cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
   cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
-  hdr = ft_read_header(cfg.headerfile,'headerformat', cfg.headerformat);
+  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
   trl = cfg.trl;
 else
   data = ft_checkdata(data, 'hassampleinfo', 'yes');
   cfg  = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
   hdr  = ft_fetch_header(data);
-  if isfield(data, 'sampleinfo'),
+  if isfield(data, 'sampleinfo')
     trl = data.sampleinfo;
     for k = 1:numel(data.trial)
       trl(k,3) = time2offset(data.time{k}, data.fsample);
     end
   else
-    error('the input data does not contain a valid description of the sampleinfo');
+    ft_error('the input data does not contain a valid description of the sampleinfo');
   end
 end
 

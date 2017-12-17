@@ -80,7 +80,7 @@ elseif ~isthresh &&  isalpha
   % threshold the single subject probability maps at the alpha level
   x = sum(pobs<=alpha, 2);
 elseif ~isthresh && ~isalpha
-  error('can only determine alpha automatically from thresholded statistical maps');
+  ft_error('can only determine alpha automatically from thresholded statistical maps');
 end
 
 % this uses MATLAB stats toolbox

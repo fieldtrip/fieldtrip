@@ -176,7 +176,7 @@ dim = size(mri);
 % and in case of VoxelOn..., ASA counts voxels from the corner of the MRI
 % In both cases, ASA starts counting at [0 0 0], which is C convention
 % whereas I want to count from the 1st voxel and number that with [1 1 1]
-if ~isempty(hdr.posx) & ~isempty(hdr.negy) & ~isempty(hdr.posy)
+if ~isempty(hdr.posx) && ~isempty(hdr.negy) && ~isempty(hdr.posy)
   offset = (dim + [1 1 1])/2;
   hdr.fiducial.mri.nas = hdr.posx + offset;
   hdr.fiducial.mri.lpa = hdr.posy + offset;

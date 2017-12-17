@@ -4,6 +4,13 @@ function [trl, event] = ft_trialfun_example1(cfg)
 % of type "trigger" and specifically for a trigger with value 7, followed
 % by a trigger with value 64.
 % 
+% You would use this function as follows
+%   cfg           = [];   
+%   cfg.dataset   = string, containing filename or directory
+%   cfg.trialfun  = 'ft_trialfun_example1';
+%   cfg           = definetrial(cfg);
+%   data          = preprocessing(cfg);
+%
 % You can use this example trial function as template for your own
 % conditial trial definitions.
 %
@@ -14,7 +21,7 @@ hdr         = ft_read_header(cfg.headerfile);
 chanindx    = strmatch('EMGlft', hdr.label);
  
 if length(chanindx)>1
-  error('only one EMG channel supported');
+  ft_error('only one EMG channel supported');
 end
  
 % read all data of the EMG channel, assume continuous file format
@@ -23,10 +30,10 @@ endsample = hdr.nSamples*hdr.nTrials;
 emg       = ft_read_data(cfg.datafile, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx);
  
 % apply filtering, hilbert transformation and boxcar convolution (for smoothing)
-emgflt      = ft_preproc_highpassfilter(emg, hdr.Fs, 10);     % highpassfilter (helper function from fieldtrip)
+emgflt      = ft_preproc_highpassfilter(emg, hdr.Fs, 10); % highpassfilter (helper function from fieldtrip/preproc)
 emghlb      = abs(hilbert(emgflt')');                     % hilbert transform
 emgcnv      = conv2([1], ones(1,hdr.Fs), emghlb, 'same'); % smooth using convolution
-emgstd      = ft_preproc_standardize(emgcnv);                % z-transform (helper function from fieldtrip)
+emgstd      = ft_preproc_standardize(emgcnv);             % z-transform (helper function from fieldtrip/preproc)
 emgtrl      = emgstd>0;                                   % detect the muscle activity by thresholding
 emgtrl      = diff(emgtrl, [], 2);
  

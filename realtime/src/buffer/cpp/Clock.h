@@ -1,3 +1,10 @@
+/** Small class for getting a measurement of the system clock in seconds
+    and fractions thereof. On Windows, Multimedia timers are used to get
+    millisecond precision, thus you need to link against winmm.lib (or
+	libwinmm.a for MinGW). Other platforms are handled with the
+	standard 'gettimeofday'.
+*/
+
 #ifndef __Clock_h
 #define __Clock_h
 
@@ -7,16 +14,10 @@
 #include <sys/time.h>
 #endif
 
-/** Small class for getting a measurement of the system clock
-	in seconds and fractions thereof. On Windows, Multimedia timers
-	are used to get millisecond precision, thus you need to link against
-	winmm.lib (or libwinmm.a for MinGW). Other platforms are handled with
-	the standard 'gettimeofday'.
-*/
 class Clock {
 	public:
-	
-	/** Constructur. Will set internal time base to current time, so
+
+	/** Constructor. Will set internal time base to current time, so
 		that succesive getRel() calls will return the time lapsed since
 		construction of this object.
 		On Windows, this initialises the multimedia timer to millisecond
@@ -28,7 +29,7 @@ class Clock {
 		#endif
 		reset();
 	}
-	
+
 	~Clock() {
 		#ifdef WIN32
 		timeEndPeriod(1);
@@ -39,12 +40,12 @@ class Clock {
 	void reset() {
 		t0 = getAbs();
 	}
-	
+
 	/**	Get system clock relative to internal time base */
 	double getRel() {
 		return getAbs() - t0;
 	}
-	
+
 	/** Get absolute system clock (platform specific)
 		On UNIX-like systems this will yield seconds since the epoch (1970)
 		On Windows this yields seconds since the machine started (I think)
@@ -58,9 +59,9 @@ class Clock {
 		return (double) tv.tv_sec + (double) tv.tv_usec*1e-6;
 		#endif
 	}
-	
+
 	protected:
-	
+
 	double t0;
 };
 

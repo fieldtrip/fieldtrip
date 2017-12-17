@@ -4,7 +4,6 @@ function test_bug2071
 % MEM 1gb
 
 
-% TEST test_bug2071
 % TEST ft_postamble
 % TEST ft_postamble_history
 

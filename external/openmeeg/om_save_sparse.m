@@ -10,7 +10,7 @@ function om_save_sparse(data,filename,format)
 %       FORMAT : can be 'ascii' or 'binary' or 'matlab' (default)
 %
 
-% $Id$
+% Copyright (C) 2010-2017, OpenMEEG developers
 
 me = 'OM_SAVE_SPARSE';
 

@@ -24,9 +24,9 @@ function [ts] = timestamp_plexon(tsl, tsh)
 % $Id$
 
 if ~isa(tsl, 'uint32')
-  error('invalid input');
+  ft_error('invalid input');
 elseif ~isa(tsh, 'uint16')
-  error('invalid input');
+  ft_error('invalid input');
 end
 
 % convert the 16 bit high timestamp into a 32 bit integer

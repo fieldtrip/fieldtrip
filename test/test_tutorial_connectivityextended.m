@@ -12,9 +12,6 @@ function test_tutorial_connectivityextended
 
 % See also test_tutorial_connectivity2 and test_tutorial_connectivity3
 
-global ft_default;
-ft_default.feedback = 'no';
-
 %% simulate data
 cfg             = [];
 cfg.ntrials     = 500;

@@ -6,7 +6,7 @@ function test_bug1956
 % TEST test_bug1956 
 % TEST ft_prepare_sourcemodel volumesmooth
 
-mri = ft_read_mri('/home/common/matlab/fieldtrip/data/test/latest/mri/nifti/single_subj_T1.nii');
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/mri/nifti/single_subj_T1.nii'));
 
 % up to ~1 November 2013 it was allowed to specify cfg.coordsys, which would then
 % get copied over into the input data in ft_sourceplot, ft_volumennormalise and

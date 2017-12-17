@@ -33,7 +33,7 @@ end
 
 fid = fopen(filename, 'r');
 if fid==-1
-  error(sprintf('could not open file %s', filename));
+  ft_error(sprintf('could not open file %s', filename));
 end
 
 % start with an empty header structure
@@ -83,7 +83,7 @@ while ischar(line)
     val = line((sep+1):end);
   elseif length(sep)<1
     % this is not what I would expect
-    error('unexpected content in m4d file');
+    ft_error('unexpected content in m4d file');
   end
 
   if ~isempty(strfind(line, 'Begin')) && (~isempty(strfind(line, 'Meg_Position_Information')) || ~isempty(strfind(line, 'Ref_Position_Information'))) 
@@ -130,7 +130,7 @@ while ischar(line)
       msi.grad.coilpos   = [msi.grad.coilpos; num(:,1:3)];
       msi.grad.coilori   = [msi.grad.coilori; num(:,4:6)];
     else
-      error('unknown gradiometer design')
+      ft_error('unknown gradiometer design')
     end
   end
   

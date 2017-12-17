@@ -4,8 +4,9 @@
 
 hostname   = -                            ; for the fieldtrip buffer, using '-' starts a local buffer on the given port
 port       = 1972                         ; for the fieldtrip buffer
-timestamp  = on                           ; add timestamp channel, can be on or off
+timestamp  = off                           ; add timestamp channel, can be on or off
 timeref    = boot                         ; can be epoch, boot or start
+verbose = 1
 
 ;###########################################################
 [ChannelEnable]

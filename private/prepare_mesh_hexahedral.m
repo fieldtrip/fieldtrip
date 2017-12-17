@@ -52,10 +52,10 @@ else
 end
 
 if isempty(cfg.shift)
-  warning('No node-shift selected')
+  ft_warning('No node-shift selected')
   cfg.shift = 0;
 elseif cfg.shift > 0.3
-  warning('Node-shift should not be larger than 0.3')
+  ft_warning('Node-shift should not be larger than 0.3')
   cfg.shift = 0.3;
 end
 
@@ -74,7 +74,7 @@ if iscell(cfg.tissue)
     seg = seg - 1;
     seg = reshape(seg, mri.dim);
   catch
-    error('Please specify cfg.tissue to correspond to tissue types in the segmented MRI')
+    ft_error('Please specify cfg.tissue to correspond to tissue types in the segmented MRI')
   end
   tissue = cfg.tissue;
 else
@@ -88,7 +88,7 @@ else
       try
         tissue{i} = mri.seglabel{cfg.tissue(i)};
       catch
-        error('Please specify cfg.tissue to correspond to (the name or number of) tissue types in the segmented MRI')
+        ft_error('Please specify cfg.tissue to correspond to (the name or number of) tissue types in the segmented MRI')
       end
     else
       tissue{i} = sprintf('tissue %d', i);
@@ -207,7 +207,7 @@ mesh.pos = create_nodes(x_dim, y_dim, z_dim);
 fprintf('Created nodes...\n' )
 
 if shift < 0 || shift > 0.3
-  error('Please choose a shift parameter between 0 and 0.3!');
+  ft_error('Please choose a shift parameter between 0 and 0.3!');
 elseif shift > 0
   mesh.pos = shift_nodes(mesh.pos, mesh.hex, labels, shift, x_dim, y_dim, z_dim);
 end

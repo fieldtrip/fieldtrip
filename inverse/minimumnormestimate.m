@@ -78,9 +78,9 @@ hasleadfield   = isfield(dip, 'leadfield');
 hasfilter      = isfield(dip, 'filter');
 
 if isempty(lambda) && isempty(snr) && ~isfield(dip, 'filter')
-  error('either lambda or snr should be specified');
+  ft_error('either lambda or snr should be specified');
 elseif ~isempty(lambda) && ~isempty(snr)
-  error('either lambda or snr should be specified, not both');
+  ft_error('either lambda or snr should be specified, not both');
 end
 
 
@@ -118,7 +118,7 @@ if isfield(dip, 'filter')
 end
 
 %if ~isempty(snr) && doscale
-%  error('scaling of the source covariance in combination with a specified snr parameter is not allowed');
+%  ft_error('scaling of the source covariance in combination with a specified snr parameter is not allowed');
 %end
 
 % compute leadfield
@@ -182,7 +182,7 @@ if ~hasfilter
   % on source and noise covariance would be useful
   if isempty(noisecov)
     % use an unregularised minimum norm solution, i.e. using the Moore-Penrose pseudoinverse
-    warning('computing a unregularised minimum norm solution. This typically does not work due to numerical accuracy problems');
+    ft_warning('computing a unregularised minimum norm solution. This typically does not work due to numerical accuracy problems');
     w = pinv(lf);
     
   elseif ~isempty(noisecov)
@@ -284,7 +284,7 @@ if ~hasfilter
   
 elseif hasfilter
   if isreal(dat) == 0
-    error('Using precomputed filters is currenly not supported for frequency domain analysis\n')
+    ft_error('Using precomputed filters is currenly not supported for frequency domain analysis\n')
   end
   % use the spatial filters from the data
   dipout.mom = cell(size(dip.pos,1),1);

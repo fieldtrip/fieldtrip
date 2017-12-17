@@ -3,7 +3,6 @@ function test_bug2569
 % WALLTIME 00:10:00
 % MEM 6gb
 
-% TEST test_bug2569
 % TEST read_wdq_header read_wdq_data read_wdq_event
 
 cfg = [];

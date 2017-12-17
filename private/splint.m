@@ -100,7 +100,7 @@ L1 = hx * C(2:end, :);
 L1 = L1 / (sphere1_scale^2);
 
 if all(size(elc1)==size(elc2)) && all(elc1(:)==elc2(:))
-  warning('using shortcut for splint');
+  ft_warning('using shortcut for splint');
   % do not recompute gx and hx
 else
   % compute cosine of angle between all known and unknown electrodes

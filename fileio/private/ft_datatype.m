@@ -51,8 +51,9 @@ isfreqmvar     =  isfield(data, 'freq') && isfield(data, 'transfer');
 ischan         =  check_chan(data);
 issegmentation =  check_segmentation(data);
 isparcellation =  check_parcellation(data);
-ismontage      =  isfield(data, 'labelorg') && isfield(data, 'labelnew') && isfield(data, 'tra');
+ismontage      =  isfield(data, 'labelold') && isfield(data, 'labelnew') && isfield(data, 'tra');
 isevent        =  isfield(data, 'type') && isfield(data, 'value') && isfield(data, 'sample') && isfield(data, 'offset') && isfield(data, 'duration');
+islayout       =  all(isfield(data, {'label', 'pos', 'width', 'height'})); % mask and outline are optional
 isheadmodel    =  false; % FIXME this is not yet implemented
 
 if issource && isstruct(data) && numel(data)>1
@@ -74,6 +75,7 @@ isspike           = isfield(data, 'label') && (spk_hastimestamp || spk_hastrials
 % check if it is a sensor array
 isgrad = isfield(data, 'label') && isfield(data, 'coilpos') && isfield(data, 'coilori');
 iselec = isfield(data, 'label') && isfield(data, 'elecpos');
+isopto = isfield(data, 'label') && isfield(data, 'optopos');
 
 if isspike
   type = 'spike';
@@ -82,7 +84,7 @@ elseif israw && iscomp
 elseif istimelock && iscomp
   type = 'timelock+comp';
 elseif isfreq && iscomp
-    type = 'freq+comp';
+  type = 'freq+comp';
 elseif israw
   type = 'raw';
 elseif iscomp
@@ -103,27 +105,31 @@ elseif isvolume && issegmentation
   type = 'volume+label';
 elseif isvolume
   type = 'volume';
+elseif ismesh && isparcellation
+  type = 'mesh+label';
 elseif issource && isparcellation
   type = 'source+label';
 elseif issource && ismesh
   type = 'source+mesh';
-elseif issource
-  type = 'source';
-elseif ismesh && isparcellation
-  type = 'mesh+label';
 elseif ismesh
   type = 'mesh';
+elseif issource
+  type = 'source';
 elseif ischan
   % this results from avgovertime/avgoverfreq after timelockstatistics or freqstatistics
   type = 'chan';
-elseif iselec
-  type = 'elec';
 elseif isgrad
   type = 'grad';
+elseif iselec
+  type = 'elec';
+elseif isopto
+  type = 'opto';
 elseif ismontage
   type = 'montage';
 elseif isevent
   type = 'event';
+elseif islayout
+  type = 'layout';
 else
   type = 'unknown';
 end
@@ -142,16 +148,16 @@ if nargin>1
     case 'volume'
       type = any(strcmp(type, {'volume', 'volume+label'}));
     case 'source'
-      type = any(strcmp(type, {'source', 'source+label', 'source+mesh' 'mesh', 'mesh+label'})); % a single mesh qualifies as source structure
+      type = any(strcmp(type, {'source', 'source+label', 'mesh', 'mesh+label', 'source+mesh'})); % a single mesh does qualify as source structure
       type = type && isstruct(data) && numel(data)==1;                            % an array of meshes does not qualify
     case 'mesh'
-      type = any(strcmp(type, {'mesh', 'mesh+label' 'source+mesh'}));
+      type = any(strcmp(type, {'mesh', 'mesh+label', 'source+mesh'}));
     case 'segmentation'
       type = any(strcmp(type, {'segmentation', 'volume+label'}));
     case 'parcellation'
       type = any(strcmp(type, {'parcellation', 'source+label' 'mesh+label'}));
     case 'sens'
-      type = any(strcmp(type, {'elec', 'grad'}));
+      type = any(strcmp(type, {'grad', 'elec', 'opto'}));
     otherwise
       type = strcmp(type, desired);
   end % switch

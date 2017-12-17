@@ -3,7 +3,6 @@ function test_bug1407
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1407
 % TEST ft_read_header ft_read_data ft_read_event
 
 % the following are from the fieldtrip/external/egi directory
