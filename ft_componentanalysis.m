@@ -279,10 +279,8 @@ switch cfg.method
 end
 
 % select trials of interest
-tmpcfg = [];
-tmpcfg.trials = cfg.trials;
-tmpcfg.channel = cfg.channel;
-data = ft_selectdata(tmpcfg, data);
+tmpcfg = keepfields(cfg, {'trials' 'channel' 'showcallinfo'});
+data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
 
