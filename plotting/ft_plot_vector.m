@@ -455,20 +455,33 @@ if ~isempty(axis) && ~strcmp(axis, 'no')
   if xaxis
     % x-axis should touch 0,0
     xrange = hlim;
-    if sign(xrange(1))==sign(xrange(2))
-      [dum minind] = min(abs(hlim));
-      xrange(minind) = 0;
-    end
-    ft_plot_line(xrange, [0 0],'hpos',hpos,'vpos',vpos,'hlim',hlim,'vlim',vlim,'width',width,'height',height);
+
+    y_intercept = [0 0]; % If the y-axis crosses zero, the horizontal line should be at y = 0.
+    
+    % If the y-axis is all positive or negative, it should be as close to
+    % zero as possible.
+    if all(vlim > 0)
+      y_intercept = repmat(min(vlim), 1, 2);
+    elseif all(vlim < 0)
+      y_intercept = repmat(max(vlim), 1, 2);
+    end %if
+    
+    ft_plot_line(xrange, y_intercept,'hpos',hpos,'vpos',vpos,'hlim',hlim,'vlim',vlim,'width',width,'height',height);
   end
   if yaxis
-    % y-axis should touch 0,0
     yrange = vlim;
-    if sign(yrange(1))==sign(yrange(2))
-      [dum minind] = min(abs(vlim));
-      yrange(minind) = 0;
-    end
-    ft_plot_line([0 0], yrange,'hpos',hpos,'vpos',vpos,'hlim',hlim,'vlim',vlim,'width',width,'height',height);
+    
+    x_intercept = [0 0]; % If the x-axis crosses zero, the vertical line should be at x = 0.
+    
+    % If the x-axis is all positive or negative, it should be as close to
+    % zero as possible.
+    if all(hlim > 0)
+      x_intercept = repmat(min(hlim), 1, 2);
+    elseif all(vlim < 0)
+      x_intercept = repmat(max(hlim), 1, 2);
+    end %if
+    
+    ft_plot_line(x_intercept, yrange,'hpos',hpos,'vpos',vpos,'hlim',hlim,'vlim',vlim,'width',width,'height',height);
   end
 end
 
