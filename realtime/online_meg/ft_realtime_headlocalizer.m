@@ -7,7 +7,7 @@ function ft_realtime_headlocalizer(cfg)
 %
 % Repositioning the subject to a previous recording session can be done by specifying
 % the previous dataset as cfg.template = 'subject01xxx.ds', or by pointing to a text
-% file created during a previous recording; e.g. cfg.template = '29-Apr-2013-xxx.txt'. 
+% file created during a previous recording; e.g. cfg.template = '29-Apr-2013-xxx.txt'.
 % The latter textfile is written automatically to disk with each 'Update' buttonpress.
 %
 % The online visualization shows the displacement of the head relative to the start
@@ -29,8 +29,9 @@ function ft_realtime_headlocalizer(cfg)
 %   cfg.blocksize       = number, size of the blocks/chuncks that are processed (default = 1 second)
 %   cfg.accuracy_green  = distance from fiducial coordinate; green when within limits (default = 0.15 cm)
 %   cfg.accuracy_orange = orange when within limits, red when out (default = 0.3 cm)
-%   cfg.dewar           = mesh, desciption of the mesh of the dewar
-%   cfg.head            = mesh, desciption of the mesh of the head
+%   cfg.dewar           = filename or mesh, description of the dewar shape (default is loaded automatically)
+%   cfg.polhemus        = filename or mesh, description of the head shape recorded with the Polhemus (default is loaded automatically)
+%   cfg.headshape       = filename or mesh, description of the head shape recorded with the Structure Sensor
 %   cfg.headmovement    = string, name or location of the .pos created by maxfilter which describes the location of the head relative to thedewar (only for elekta neuromag) (default = [])
 %
 % This method is described in Stolk A, Todorovic A, Schoffelen JM, Oostenveld R.
@@ -82,7 +83,8 @@ cfg.blocksize       = ft_getopt(cfg, 'blocksize',         1); % in seconds
 cfg.bufferdata      = ft_getopt(cfg, 'bufferdata',   'last'); % first (replay) or last (real-time)
 cfg.coilfreq        = ft_getopt(cfg, 'coilfreq',   [293, 307, 314, 321, 328]); % Hz, Neuromag
 cfg.dewar           = ft_getopt(cfg, 'dewar',            []); % mesh of the dewar
-cfg.head            = ft_getopt(cfg, 'head',             []); % mesh of the head
+cfg.headshape       = ft_getopt(cfg, 'headshape',        []); % mesh of the head
+cfg.polhemus        = ft_getopt(cfg, 'polhemus',         []); % mesh of the head
 cfg.headmovement    = ft_getopt(cfg, 'headmovement',     []); % maxfilter created file containing quaternions information for headlocalistation
 
 % ensure pesistent variables are cleared
@@ -92,6 +94,9 @@ clear ft_read_header
 cfg = ft_checkconfig(cfg, 'dataset2files', 'yes'); % translate dataset into datafile+headerfile
 hdr = ft_read_header(cfg.headerfile, 'cache', true, 'coordsys', 'dewar');
 
+% for backward compatibility, can be removed end 2018
+cfg = ft_checkconfig(cfg, 'renamed', {'head', 'headshape'});
+
 % determine the size of blocks to process
 blocksize   = round(cfg.blocksize * hdr.Fs);
 prevSample  = 0;
@@ -100,6 +105,52 @@ count       = 0;
 % determine MEG system type
 isneuromag = ft_senstype(hdr.grad, 'neuromag');
 isctf      = ft_senstype(hdr.grad, 'ctf275');
+
+if isempty(cfg.dewar)
+  [v, p] = ft_version;
+  if isctf
+    cfg.dewar = fullfile(p, 'template', 'dewar', 'ctf.mat');
+  elseif isneuromag
+    cfg.dewar = fullfile(p, 'template', 'dewar', 'elekta.mat');
+  end
+end
+
+if ischar(cfg.dewar) && exist(cfg.dewar, 'file')
+  fprintf('reading dewar from file %s\n', cfg.dewar);
+  cfg.dewar = ft_read_headshape(cfg.dewar);
+end
+
+if ischar(cfg.headshape) && exist(cfg.headshape, 'file')
+  fprintf('reading headshape from file %s\n', cfg.headshape);
+  cfg.headshape = ft_read_headshape(cfg.headshape);
+end
+
+if ischar(cfg.polhemus) && exist(cfg.polhemus, 'file')
+  fprintf('reading polhemus data from file %s\n', cfg.polhemus);
+  cfg.polhemus = ft_read_headshape(cfg.polhemus);
+elseif isneuromag
+  fprintf('reading polhemus data from file %s\n', cfg.dataset);
+  % Elekta dataset will contain head shape
+  cfg.polhemus = ft_read_headshape(cfg.dataset);
+elseif isctf
+  fprintf('reading polhemus data from file %s\n', cfg.dataset);
+  % CTF dataset may contain electrode information
+  elec = ft_read_sens(cfg.dataset, 'senstype', 'eeg');
+  cfg.polhemus.pos  = elec.elecpos;
+  cfg.polhemus.unit = elec.unit;
+end
+
+if ~isempty(cfg.headshape)
+  cfg.headshape = ft_convert_units(cfg.headshape, 'cm');
+end
+
+if ~isempty(cfg.polhemus)
+  cfg.polhemus = ft_convert_units(cfg.polhemus, 'cm');
+end
+
+if ~isempty(cfg.dewar)
+  cfg.dewar = ft_convert_units(cfg.dewar, 'cm');
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % read template head position, to reposition to, if template file is specified
@@ -220,7 +271,7 @@ elseif isneuromag
   elseif sum(startsWith(hdr.label, 'CHPI'))==9
     % this is movement corrected data
     chanindx = find(startsWith(hdr.label, 'CHPI'));
-
+    
   else
     % select the 102 magnetometers for fitting of the HPI coils
     [dum, chanindx] = match_str('megmag', hdr.chantype);
@@ -684,9 +735,9 @@ xcirca = ((balength * yca - calength * yba) * zcrossbc - (balength * zca - calen
 ycirca = ((balength * zca - calength * zba) * xcrossbc - (balength * xca - calength * xba) * zcrossbc) * denominator;
 zcirca = ((balength * xca - calength * xba) * ycrossbc - (balength * yca - calength * yba) * xcrossbc) * denominator;
 
-cc(1) = xcirca + hpi{1}(1,end);
-cc(2) = ycirca + hpi{1}(2,end);
-cc(3) = zcirca + hpi{1}(3,end);
+cc(1) = xcirca + hpi{1}(1);
+cc(2) = ycirca + hpi{1}(2);
+cc(3) = zcirca + hpi{1}(3);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -872,10 +923,9 @@ if get(info.hSphereCheckBox, 'Value')
 end
 
 %plot realistic head mdoel
-if get(info.hRealistic, 'Value') && ~isempty(info.cfg.head)
-  head     = info.cfg.head;
-  head.pos = ft_warp_apply(M,head.pos);
-  ft_plot_mesh(head)
+if get(info.hRealistic, 'Value') && ~isempty(info.cfg.headshape)
+  ft_plot_mesh(ft_transform_geometry(M, info.cfg.headshape))
+  camlight
 end
 
 %plot sensors
@@ -896,8 +946,8 @@ end
 
 %plot Polhemus
 if get(info.hPolhemusCheckBox, 'Value')
-  if ~isempty(info.hdr.elec)
-    ft_plot_mesh(ft_warp_apply(M,info.hdr.elec.elecpos),'vertexmarker','.')
+  if ~isempty(info.cfg.polhemus)
+    ft_plot_mesh(ft_transform_geometry(M,info.cfg.polhemus),'vertexmarker','.')
   end
 end
 
