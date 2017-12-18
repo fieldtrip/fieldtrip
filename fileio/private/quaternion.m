@@ -6,15 +6,16 @@ function [H] = quaternion(q)
 % Use as
 %   [H] = quaternion(Q)
 % where
-%   Q       [q0, q1, q2, q3, q4, q5, q6] vector with parameters
+%   Q       [q0, q1, q2, q3, q4, q5, q6] vector with parameters. In case
+%           of vector of length=6 it is assumed q0 is missing [the case for
+%           quanternions from Neuromag MaxFilter output].
 %   H       corresponding homogenous transformation matrix
 %
-% If the input vector has length 6, it is assumed to represent a unit quaternion without scaling.
-%
-% See Elekta/Neuromag MaxFilter manual version 2.2, section "D2 Coordinate Matching", page 77 for more details and
+% See Elekta/Neuromag MaxFilter manual version 2.2, section "D2 Coordinate Matching",
+% page 77 for more details and
 % https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation#Conversion_to_and_from_the_matrix_representation
 
-% Copyright (C) 2016-2017, Robert Oostenveld
+% Copyright (C) 2016, Robert Oostenveld. [!] Edit: 2017-11-27 by MCV.
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -48,25 +49,33 @@ function [H] = quaternion(q)
 %
 % $Id$
 
-if numel(q)==6
-  % this is used a lot by the Elekta software, where the first element is left out and a rigid body transformation wothout scaling is used.
-  % see also https://github.com/mne-tools/mne-python/blob/maint/0.15/mne/transforms.py#L1137
-  q0 = sqrt(1 - q(1)^2 - q(2)^2 - q(3)^2);
-  q = [q0 q];
-end
+if numel(q)==7
+    q0 = q(0+1);
+    q1 = q(1+1);
+    q2 = q(2+1);
+    q3 = q(3+1);
+    q4 = q(4+1);
+    q5 = q(5+1);
+    q6 = q(6+1);
+    
+elseif numel(q)==6  %First q not present (for MaxFilter quaternions)
+    q1 = q(1);
+    q2 = q(2);
+    q3 = q(3);
+    q4 = q(4);
+    q5 = q(5);
+    q6 = q(6); 
+    
+%     q0 = sqrt(1-sum([q1,q2,q3]).^2);  
+    
+    q0 = sqrt(1-q1^2-q2^2-q3^2);  
 
-if numel(q)~=7
+    
+else
   ft_error('incorrect input vector');
 end
 
-% all of these quaternions are zero-offset in the original equation, but one-offset in the MATLAB vector
-q0 = q(0+1);
-q1 = q(1+1);
-q2 = q(2+1);
-q3 = q(3+1);
-q4 = q(4+1);
-q5 = q(5+1);
-q6 = q(6+1);
+
 
 R = [
   q0^2+q1^2-q2^2-q3^2  2*(q1*q2-q0*q3)      2*(q1*q3+q0*q2)

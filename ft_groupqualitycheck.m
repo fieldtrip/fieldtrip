@@ -1,6 +1,8 @@
-function dataout = ft_examplefunction(cfg, datain)
+function dataout = ft_groupqualitycheck(cfg, datain)
 
-% FT_EXAMPLEFUNCTION demonstrates to new developers how a FieldTrip function should look like
+% Function for quick comparison of measurement quality across several
+% recordings. Make plots for visual inspection and export summary measures
+% for statistical comparison.
 %
 % Use as
 %   outdata = ft_examplefunction(cfg, indata)
@@ -9,7 +11,8 @@ function dataout = ft_examplefunction(cfg, datain)
 %
 % <<note that the cfg list should be indented with two spaces
 %
-%  cfg.option1    = value, explain the value here (default = something)
+%  cfg.datasets     = List of files to include in quality check. E.g.
+%                     {filename1, filename2, ...}
 %  cfg.option2    = value, describe the value here and if needed
 %                   continue here to allow automatic parsing of the help
 %
