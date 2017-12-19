@@ -265,7 +265,7 @@ if strcmp(cfg.viewmode, 'component')
     cfg.layout = ft_prepare_layout(tmpcfg);
   else
     ft_warning('No layout specified - will try to construct one using sensor positions');
-    tmpcfg = keepfields(cfg, {'elec','grad','elecfile','gradfile'});
+    tmpcfg = keepfields(cfg, {'elec','grad','elecfile','gradfile','showcallinfo'});
     if hasdata
       cfg.layout = ft_prepare_layout(tmpcfg, data);
     else
