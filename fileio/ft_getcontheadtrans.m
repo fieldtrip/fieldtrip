@@ -31,7 +31,7 @@ function [varargout] = ft_getcontheadtrans(cfg)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_PREPROCESSING, FT_READ_HEADSHAPE
+% See also FT_PREPROCESSING, FT_READ_HEADSHAPE, FT_HEADPOSAVG
 
 % Copyright (C) 2017, Mikkel C. Vinding (mikkel.vinding@ki.se)
 %
@@ -76,7 +76,7 @@ cfg = ft_checkconfig(cfg, 'renamed',     {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'blcwindow', 'baselinewindow'});
 
 % ensure that the required options are present
-%cfg = ft_checkconfig(cfg, 'required', {'method', 'foi', 'tapsmofrq'});
+cfg = ft_checkconfig(cfg, 'required', {'dataset'});
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg, 'dataset', 'char');
