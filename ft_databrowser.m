@@ -261,16 +261,11 @@ if strcmp(cfg.viewmode, 'component')
   % read or create the layout that will be used for the topoplots
   
   if ~isempty(cfg.layout)
-    tmpcfg = [];
-    tmpcfg.layout = cfg.layout;
+    tmpcfg = keepfields(cfg, {'layout', 'showcallinfo'});
     cfg.layout = ft_prepare_layout(tmpcfg);
   else
     ft_warning('No layout specified - will try to construct one using sensor positions');
-    tmpcfg = [];
-    try, tmpcfg.elec = cfg.elec; end
-    try, tmpcfg.grad = cfg.grad; end
-    try, tmpcfg.elecfile = cfg.elecfile; end
-    try, tmpcfg.gradfile = cfg.gradfile; end
+    tmpcfg = keepfields(cfg, {'elec','grad','elecfile','gradfile','showcallinfo'});
     if hasdata
       cfg.layout = ft_prepare_layout(tmpcfg, data);
     else
