@@ -1,4 +1,4 @@
-function tf = isfolder(p)
+function tf = isfolder(dirpath)
 
 %ISFOLDER Determine if the input path points to a folder
 %   TF = ISFOLDER(PATH) returns true if PATH points to a folder and false otherwise.
