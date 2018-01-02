@@ -37,7 +37,7 @@ function [coord_norm] = warp_fsaverage(cfg, elec)
 subj_pial = ft_read_headshape(cfg.headshape);
 [PATHSTR, NAME] = fileparts(cfg.headshape); % lh or rh
 subj_reg = ft_read_headshape([PATHSTR filesep NAME '.sphere.reg']);
-if ~isdir([cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf'])
+if ~isfolder([cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf'])
   ft_error(['freesurfer dir ' cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf cannot be found'])
 end
 fsavg_pial = ft_read_headshape([cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf' filesep NAME '.pial']);
