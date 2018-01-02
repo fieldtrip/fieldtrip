@@ -318,6 +318,10 @@ elseif filetype_check_extension(filename, '.iso') && filetype_check_header(filen
   type = 'neuromag_iso'; 
   manufacturer = 'Neuromag';
   content = 'Isotrack digitizer points';
+elseif strcmp(filename, 'sss_cal.dat')
+  type = 'neuromag_cal'; 
+  manufacturer = 'Neuromag';
+  content = 'Fine calibration';
   
   % known Yokogawa file types
 elseif filetype_check_extension(filename, '.ave') || filetype_check_extension(filename, '.sqd')
@@ -929,6 +933,11 @@ elseif filetype_check_extension(filename, '.dig')
   type = 'curry_dig';
   manufacturer = 'Curry';
   content = 'digitizer file';
+
+elseif filetype_check_extension(filename, '.txt') && filetype_check_header(filename, '#Study')
+  type = 'imotions_txt';
+  manufacturer = 'iMotions';
+  content = 'various biosignals';
   
 elseif filetype_check_extension(filename, '.txt') && filetype_check_header(filename, '##')
   type = 'smi_txt';
