@@ -418,7 +418,7 @@ end
 
 % determine whether it is EEG or MEG
 try
-  [iseeg, ismeg, isctf, fltp] = filetyper(timelock.cfg.dataset);
+  [iseeg, ismeg, isctf, fltp] = filetyper(info.hdr.orig.FileName);
 catch % in case the input is a matfile (and the dataset field does not exist): ugly workaround
   [iseeg, ismeg, isctf, fltp] = filetyper(headpos.cfg.previous.dataset);
 end
