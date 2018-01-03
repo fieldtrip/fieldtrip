@@ -418,7 +418,7 @@ elseif nargin == 5
 end
 
 % determine whether it is EEG or MEG
-if isfield(info, 'filename') % supported as of January 2017
+if isfield(info, 'filename') % supported as of January 2018
   filename = info.filename;
 elseif isfield(timelock.cfg, 'dataset')
   filename = timelock.cfg.dataset;
