@@ -83,8 +83,8 @@ eventtype   = {};
 eventvalue  = {};
 
 % these are not to be considered for events
-sellab(strcmp(label,'Timestamp'))    = true;
-sellab(strcmp(label,'UTCTimestamp')) = true;
+sellab(strcmp(label, 'Timestamp'))    = true;
+sellab(strcmp(label, 'UTCTimestamp')) = true;
 
 for i=find(~sellab)
   str = dat.data.(label{i});
@@ -112,6 +112,14 @@ for i=find(~sellab)
     
     this = next;
     code = code + 1;
+  end
+end
+
+% give some feedback
+for i=1:numel(eventtype)
+  ft_info('column %15s contains the following events\n', eventtype{i});
+  for j=1:numel(eventvalue{i})
+    ft_info('  %15s\n', eventvalue{i}{j});
   end
 end
 
@@ -185,7 +193,7 @@ for i=1:numel(eventtype)
     event(end+1).type     = eventtype{i};
     event(end  ).value    = eventvalue{i}{j};
     event(end  ).sample   = sel(j);
-    event(end  ).duration = sel(j+1)-sel(j)+1;
+    event(end  ).duration = sel(j+1)-sel(j);
     event(end  ).offset   = 0;
   end
 end
