@@ -88,6 +88,7 @@ if strcmp(cfg.analyze,'yes')
   cfg   = ft_checkconfig(cfg, 'dataset2files', 'yes'); % translate into datafile+headerfile
 
   % these will be replaced by more appropriate values
+  info.filename    = cfg.dataset;
   info.datasetname = 'unknown';
   info.starttime   = 'unknown';
   info.startdate   = 'unknown';
@@ -113,7 +114,7 @@ if strcmp(cfg.analyze,'yes')
   cfgdef                      = [];
   cfgdef.dataset              = cfg.dataset;
   cfgdef.trialdef.triallength = 10;
-  %cfgdef.trialdef.ntrials     = 3;
+  %cfgdef.trialdef.ntrials     = 3; % for debugging
   cfgdef.continuous           = 'yes';
   cfgdef                      = ft_definetrial(cfgdef);
   ntrials                     = size(cfgdef.trl,1)-1; % remove last trial
@@ -417,11 +418,18 @@ elseif nargin == 5
 end
 
 % determine whether it is EEG or MEG
-try
-  [iseeg, ismeg, isctf, fltp] = filetyper(timelock.cfg.dataset);
-catch % in case the input is a matfile (and the dataset field does not exist): ugly workaround
-  [iseeg, ismeg, isctf, fltp] = filetyper(headpos.cfg.previous.dataset);
+if isfield(info, 'filename') % supported as of January 2018
+  filename = info.filename;
+elseif isfield(timelock.cfg, 'dataset')
+  filename = timelock.cfg.dataset;
+elseif isfield(info.hdr.orig, 'FileName')
+  filename = info.hdr.orig.FileName;
+elseif exist('headpos','var') && isfield(headpos.cfg.previous, 'dataset')
+  filename = headpos.cfg.previous.dataset;
+else
+  error('could not determine the filename');
 end
+[iseeg, ismeg, isctf, fltp] = filetyper(filename);
 
 if ismeg
   scaling = 1e15; % assuming data is in T and needs to become fT

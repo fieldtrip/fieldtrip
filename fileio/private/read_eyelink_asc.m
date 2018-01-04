@@ -42,7 +42,7 @@ aline = fread(fid, inf, 'char=>char');          % returns a single long string
 fclose(fid);
 
 aline(aline==uint8(sprintf('\r'))) = [];        % remove cariage return
-aline = tokenize(aline, uint8(sprintf('\n')));  % split on newline
+aline = tokenize(aline, uint8(newline));        % split on newline
 
 for i=1:numel(aline)
   tline = aline{i};
