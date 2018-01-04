@@ -32,6 +32,7 @@ function [data] = ft_checkdata(data, varargin)
 %   segmentationstyle  = indexed, probabilistic (only applies to segmentation)
 %   parcellationstyle  = indexed, probabilistic (only applies to parcellation)
 %   hasbrain           = yes, no (only applies to segmentation)
+%   trialinfostyle     = matrix, table or empty
 %
 % For some options you can specify multiple values, e.g.
 %   [data] = ft_checkdata(data, 'senstype', {'ctf151', 'ctf275'}), e.g. in megrealign
@@ -112,6 +113,7 @@ fsample              = ft_getopt(varargin, 'fsample');
 segmentationstyle    = ft_getopt(varargin, 'segmentationstyle'); % this will be passed on to the corresponding ft_datatype_xxx function
 parcellationstyle    = ft_getopt(varargin, 'parcellationstyle'); % this will be passed on to the corresponding ft_datatype_xxx function
 hasbrain             = ft_getopt(varargin, 'hasbrain');
+trialinfostyle       = ft_getopt(varargin, 'trialinfostyle');
 
 % check whether people are using deprecated stuff
 depHastrialdef = ft_getopt(varargin, 'hastrialdef');
@@ -238,6 +240,21 @@ if issource && isvolume
   % the conversion is done by removing the grid positions
   data = rmfield(data, 'pos');
   issource = false;
+end
+
+if isfield(data, 'trialinfo')
+  switch trialinfostyle
+  case 'table'
+    if ismatrix(data.trialinfo)
+      data.trialinfo = array2table(data.trialinfo);
+    end
+  case 'matrix'
+    if istable(data.trialinfo)
+      data.trialinfo = table2array(data.trialinfo);
+    end
+  otherwise
+    % no conversion is needed
+  end
 end
 
 % the ft_datatype_XXX functions ensures the consistency of the XXX datatype
