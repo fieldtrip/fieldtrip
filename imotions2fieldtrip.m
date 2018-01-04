@@ -42,8 +42,8 @@ for i=1:numel(label)
   % try converting the first element
   str = dat.data.(label{i})(1);
   val = str2double(str);
-  if ~isempty(str) && isnan(val)
-    ft_info('column %s is not numeric', label{i});
+  if any(~cellfun(@isempty, str) & isnan(val))
+    ft_info('column %15s does not contain numeric data', label{i});
     continue
   end
   
@@ -51,8 +51,8 @@ for i=1:numel(label)
   if numel(time)>10
     str = dat.data.(label{i})(1:20);
     val = str2double(str);
-    if ~isempty(str) && any(isnan(val))
-      ft_info('column %s is not numeric', label{i});
+    if any(~cellfun(@isempty, str) & isnan(val))
+      ft_info('column %15s does not contain numeric data', label{i});
       continue
     end
   end
@@ -60,16 +60,73 @@ for i=1:numel(label)
   % try converting the whole column
   str = dat.data.(label{i});
   val = str2double(str);
-  if ~isempty(str) && any(isnan(val))
-    ft_info('column %s is not numeric', label{i});
+  if all(cellfun(@isempty, str) | isnan(val))
+    ft_info('column %15s does not contain numeric data', label{i});
     continue
   end
   
   % if it gets here, it means that the whole column is numeric
   sellab(i) = true;
-  ft_info('%s is numeric and will be represented as channel', label{i});
+  ft_info('column %15s will be represented as channel', label{i});
   numeric = cat(1, numeric, val');
 end
+% remember the labels for the columns with numeric data
+numericlabel = label(sellab);
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% construct numeric channels for the columns that represent events
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+eventcode   = zeros(0,numel(time));
+eventtype   = {};
+eventvalue  = {};
+
+% these are not to be considered for events
+sellab(strcmp(label,'Timestamp'))    = true;
+sellab(strcmp(label,'UTCTimestamp')) = true;
+
+for i=find(~sellab)
+  str = dat.data.(label{i});
+  if all(cellfun(@isempty, str))
+    continue
+  end
+  
+  % add one numeric channel per event type
+  eventcode(end+1,:) = 0;
+  eventtype{end+1}   = label{i};
+  eventvalue{end+1}  = {};
+  
+  this = 1;
+  code = 1; % this is the numeric code for the event values
+  while this<numel(str)
+    
+    next = find(~strcmp(str(this:end), str{this}), 1, 'first') + this;
+    if isempty(next)
+      next = numel(str)+1;
+    end
+    
+    % store the event as string and as numeric code
+    eventvalue{end}{end+1} = str{this};
+    eventcode(end,this:next-1) = code;
+    
+    this = next;
+    code = code + 1;
+  end
+end
+
+% construct a raw data structure
+raw.time{1}  = time;
+raw.trial{1} = cat(1, numeric, eventcode);
+raw.label    = cat(1, numericlabel(:), eventtype(:));
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% the next section deals with timestamps that are repeated
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% make a local copy for convenience
+time  = raw.time{1};
+trial = raw.trial{1};
 
 % the same timestamp can be on multiple lines in the file
 dt = diff(sort(time));
@@ -79,22 +136,25 @@ if any(dt==0)
   t = 1;
   while t<numel(time)
     sel = find(time==time(t));
-    numeric(:,t) = nanmean(numeric(:,sel),2);
+    trial(:,t) = nanmean(trial(:,sel),2);
     time(sel(2:end)) = nan;
     t = t+numel(sel);
   end
   
-  ft_notice('keeping %.0f of the original samples\n', mean(~isnan(time)));
-  time    = time   (  ~isnan(time));
-  numeric = numeric(:,~isnan(time));
+  seltime = ~isnan(time);
+  ft_notice('keeping %.0f %% of the original samples\n', 100*mean(seltime));
+  time  = time (  seltime);
+  trial = trial(:,seltime);
 end
 
-% construct a raw data structure
-raw.time = {time};
-raw.trial = {numeric};
-raw.label = label(sellab);
+% put them back
+raw.time{1}  = time;
+raw.trial{1} = trial;
 
-% interpolate the data
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% interpolate the data to ensure a regular time axis
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 dt = diff(time);
 dt = median(dt);
 begtime = min(time);
@@ -107,3 +167,29 @@ if any(diff(time)~=dt)
   raw = ft_resampledata(tmpcfg, raw);
   [~, raw] = rollback_provenance([], raw);
 end
+
+% the channels with the event codes should remain integers
+sel = match_str(raw.label, eventtype);
+raw.trial{1}(sel,:) = floor(raw.trial{1}(sel,:));
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% construct a structure with all events
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+event = [];
+nsample = numel(time)+1;
+for i=1:numel(eventtype)
+  eventcode = raw.trial{1}(i+numel(numericlabel),:);
+  sel = [find(diff([0 eventcode])) nsample+1];
+  for j=1:numel(sel)-1
+    event(end+1).type     = eventtype{i};
+    event(end  ).value    = eventvalue{i}{j};
+    event(end  ).sample   = sel(j);
+    event(end  ).duration = sel(j+1)-sel(j)+1;
+    event(end  ).offset   = 0;
+  end
+end
+
+% the channels with the integer events should be removed, but for now I am
+% keeping them to help with debugging
+
