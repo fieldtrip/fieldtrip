@@ -6,9 +6,6 @@ function test_ft_sourcegrandaverage
 % TEST test_bug2185
 % TEST ft_sourcegrandaverage ft_selectdata ft_selectdata_new ft_datatype_source
 
-global ft_default
-ft_default = [];
-
 %% format 1
 
 source = [];

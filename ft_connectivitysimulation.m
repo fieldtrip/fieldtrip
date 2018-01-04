@@ -171,7 +171,7 @@ tim   = (0:nsmp-1)./cfg.fsample;
 % create the labels
 label = cell(cfg.nsignal,1);
 for k = 1:cfg.nsignal
-  label{k,1} = ['signal',num2str(k,'%03d')];
+  label{k,1} = ['signal',num2str(k, '%03d')];
 end
 
 switch cfg.method
@@ -377,7 +377,10 @@ switch cfg.method
         z = firws_filter((1/fstep).*fs, fs, [fband(k,k,1) fband(k,k,2)]);
         z = z(1:numel(foi));%.*exp(-1i.*pi.*foi.*rand(1)./100); 
         z = z.*ampl(k,k);
-        dat(k,k,:) = (abs(oneoverf)+abs(z)).*exp(1i.*(angle(z)+angle(oneoverf)));
+        
+        plateau = nearest(foi,fband(k,k,1)):nearest(foi,fband(k,k,2));
+        oneoverf(plateau) = mean(abs(oneoverf(plateau)));
+        dat(k,k,:) = -(abs(oneoverf)+abs(z)).*exp(1i.*(angle(z)+angle(oneoverf)));
       else
         dat(k,k,:) = oneoverf;
       end
@@ -418,10 +421,11 @@ switch cfg.method
     % estimate the transfer-matrix non-parametrically
     tmpcfg        = [];
     tmpcfg.method = 'transfer';
+    tmpcfg.granger.stabilityfix = true;
     t             = ft_connectivityanalysis(tmpcfg, freq);
     
     % estimate the ar-model coefficients
-    a = transfer2coeffs(t.transfer,t.freq);
+     a = transfer2coeffs(t.transfer,t.freq);
     
     % recursively call this function to generate the data, this is
     % somewhate tricky with respect to keeping the provenance info. Here,

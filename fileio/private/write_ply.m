@@ -26,7 +26,7 @@ end
 
 if size(tri,2)==4
   % describe the sides of the tetraheders as polygon surface elements
-  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1836
+  % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1836
   tri = [
     tri(:,[3 2 1])
     tri(:,[2 4 1])
@@ -35,7 +35,7 @@ if size(tri,2)==4
     ];
 elseif size(tri,2)==8
   % describe the sides of the hexaheders as polygon surface elements
-  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1836
+  % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1836
   tri = [
     tri(:,[4 3 2 1])
     tri(:,[1 2 6 5])

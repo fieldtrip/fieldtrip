@@ -171,7 +171,7 @@ if isfield(data, 'label')
   if ~isempty(cfg.channelcmb) && ~isequal(cfg.channelcmb, {'all' 'all'})
     tmpcmb = ft_channelcombination(cfg.channelcmb, data.label);
     tmpchan = unique(tmpcmb(:));
-    cfg.channelcmb = ft_channelcombination(cfg.channelcmb, tmpchan, 1);
+    cfg.channelcmb = ft_channelcombination(cfg.channelcmb(:, 1:2), tmpchan, 1);
     selchan = [selchan;unique(cfg.channelcmb(:))];
   end
   
@@ -184,6 +184,8 @@ if isfield(data, 'label')
   tmpcfg = [];
   tmpcfg.channel = unique(selchan);
   data = ft_selectdata(tmpcfg, data);
+  % restore the provenance information
+  [cfg, data] = rollback_provenance(cfg, data);
 elseif isfield(data, 'labelcmb')
   cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
   if ~isempty(cfg.partchannel)
@@ -301,10 +303,8 @@ switch cfg.method
     end
     cfg.granger.conditional = ft_getopt(cfg.granger, 'conditional', 'no');
     cfg.granger.block       = ft_getopt(cfg.granger, 'block', []);
-    if isfield(cfg, 'channelcmb')
-      cfg.granger.channelcmb = cfg.channelcmb;
-      cfg = rmfield(cfg, 'channelcmb');
-    end
+    cfg.granger.channelcmb  = ft_getopt(cfg.granger, 'channelcmb', cfg.channelcmb);
+    cfg                     = removefields(cfg, 'channelcmb');
     data = ft_checkdata(data, 'datatype', {'mvar' 'freqmvar' 'freq'});
     inparam = {'transfer', 'noisecov', 'crsspctrm'};
     if strcmp(cfg.method, 'granger'),                 outparam = 'grangerspctrm'; end
@@ -529,7 +529,7 @@ elseif hasrpt && dojack && ~(exist('debiaswpli', 'var') || exist('weightppc', 'v
     clear sumdat;
   end
   hasjack = 1;
-elseif hasrpt && ~(exist('debiaswpli', 'var') || exist('weightppc', 'var') || strcmp(cfg.method, 'powcorr_ortho'))% || needrpt)
+elseif hasrpt && ~(exist('debiaswpli', 'var') || exist('weightppc', 'var') || any(strcmp({'powcorr_ortho';'mi'},cfg.method)))% || needrpt)
   % create dof variable
   if isfield(data, 'dof')
     dof = data.dof;
@@ -630,7 +630,26 @@ switch cfg.method
   case {'granger' 'instantaneous_causality' 'total_interdependence' 'iis'}
     % granger causality
     if ft_datatype(data, 'freq') || ft_datatype(data, 'freqmvar')
-      if isfield(data, 'labelcmb') && ~istrue(cfg.granger.conditional)
+      if isfield(data, 'labelcmb') && isfield(cfg.granger, 'sfmethod') && strcmp(cfg.granger.sfmethod, 'bivariate_conditional')
+        % create a powindx variable that ft_connectivity_granger can use to
+        % do the conditioning
+        [indx, label, blockindx, blocklabel] = labelcmb2indx(data.labelcmb);
+        cmbindx12 = labelcmb2indx(cfg.granger.channelcmb(:,1:2), label);
+        cmbindx23 = labelcmb2indx(cfg.granger.channelcmb(:,2:3), label);
+        cmbindx   = [cmbindx12 cmbindx23(:,2); cmbindx12(:,[2 1]) cmbindx23(:,2)];
+        
+        powindx.cmbindx   = indx;
+        powindx.blockindx = blockindx;
+        powindx.outindx   = cmbindx;
+        
+        newlabelcmb = cell(size(cmbindx,1),2);
+        for k = 1:size(newlabelcmb,1)
+          newlabelcmb{k,1} = sprintf('%s|%s',label{cmbindx(k,2)},label{cmbindx(k,3)}); % deliberate swap of 2/1 as per the conventional definition in conditional granger computation
+          newlabelcmb{k,2} = sprintf('%s|%s',label{cmbindx(k,1)},label{cmbindx(k,3)});
+        end
+        data.labelcmb = newlabelcmb;
+        
+      elseif isfield(data, 'labelcmb') && ~istrue(cfg.granger.conditional)
         % multiple pairwise non-parametric transfer functions
         % linearly indexed
         
@@ -648,7 +667,6 @@ switch cfg.method
         % ix = ((k-1)*4+1):k*4;
         % powindx(ix, :) = [1 1;4 1;1 4;4 4] + (k-1)*4;
         % end
-        
         powindx = [];
         
         if isfield(data, 'label')
@@ -666,8 +684,7 @@ switch cfg.method
         % first element, while the rest is partialed out.
         % tmp{k, 2} represents the ordered blocks where the driving block
         % is left out
-        
-        
+                
         blocks  = unique(data.blockindx);
         nblocks = numel(blocks);
         
@@ -691,21 +708,19 @@ switch cfg.method
         % make a temporary label list
         tmp2 = cell(numel(data.labelcmb),1);
         for m = 1:numel(data.labelcmb)
-          tok = tokenize(data.labelcmb{m},'[');
+          tok = tokenize(data.labelcmb{m}, '[');
           tmp2{m} = tok{1};
         end
-        label = unique(tmp2);
+        label = cat(1,data.block.label);%unique(tmp2);
         
-        [cmbindx, n] = blockindx2cmbindx(data.labelcmb, {label data.blockindx}, tmp);
-        powindx.cmbindx = cmbindx;
-        powindx.n = n;
-        data.labelcmb = newlabelcmb;
+        [powindx.cmbindx, powindx.n] = blockindx2cmbindx(data.labelcmb, {label data.blockindx}, tmp);
+        data.labelcmb                = newlabelcmb;
         
         if isfield(data, 'label')
           % this field should be removed
           data = rmfield(data, 'label');
         end
-        
+      
       elseif isfield(cfg.granger, 'block') && ~isempty(cfg.granger.block)
         % make a temporary label list
         if isfield(data, 'label')
@@ -713,7 +728,7 @@ switch cfg.method
         else
           tmp = cell(numel(data.labelcmb),1);
           for m = 1:numel(data.labelcmb)
-            tok = tokenize(data.labelcmb{m},'[');
+            tok = tokenize(data.labelcmb{m}, '[');
             tmp{m} = tok{1};
           end
           label = unique(tmp);
@@ -801,9 +816,9 @@ switch cfg.method
       % HACK
       dimord = getdimord(data, 'mom');
       dimtok = tokenize(dimord, '_');
-      posdim = find(strcmp(dimtok,'{pos}'));
+      posdim = find(strcmp(dimtok, '{pos}'));
       posdim = 4; % we concatenate across positions...
-      rptdim = find(~cellfun('isempty',strfind(dimtok,'rpt')));
+      rptdim = find(~cellfun('isempty',strfind(dimtok, 'rpt')));
       rptdim = rptdim-1; % the posdim has to be taken into account...
       dat    = cat(4, data.mom{data.inside});
       dat    = permute(dat,[posdim rptdim setdiff(1:ndims(dat),[posdim rptdim])]);
@@ -871,7 +886,7 @@ switch cfg.method
         end
         if numel(cfg.mi.lags)>1
           data.time = cfg.mi.lags./data.fsample;
-          outdimord = [outdimord,'_time'];
+          outdimord = [outdimord, '_time'];
         else
           data = rmfield(data, 'time');
         end

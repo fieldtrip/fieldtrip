@@ -74,7 +74,7 @@ if isstruct(input)
     temp_chans  = char(input.channellabels');
     Nchan       = size(temp_chans,1);
     %{
-    if strcmp(input.type,'COHERENCE_SQUARED')
+    if strcmp(input.type, 'COHERENCE_SQUARED')
          % it contains coherence between channel pairs
          fprintf('reading coherence between %d channel pairs\n', Nchan);
          for i=1:Nchan
@@ -133,9 +133,9 @@ if isstruct(input)
   elseif strcmp(input.structtype, 'besa_channels')
     %fprintf('BESA data export\n');
 
-    if isfield(input,'datatype')
+    if isfield(input, 'datatype')
       switch input.ft_datatype
-        case {'Raw_Data','Epoched_Data','Segment'}
+        case {'Raw_Data', 'Epoched_Data', 'Segment'}
           data.fsample    = input.samplingrate;
           data.label      = input.channellabels';
           for k=1:size(input.data,2)
@@ -374,9 +374,9 @@ end % isstruct || ischar
 % construct and add a configuration to the output
 cfg = [];
 
-if isstruct(input) && isfield(input,'datafile')
+if isstruct(input) && isfield(input, 'datafile')
   cfg.filename = input.datafile;
-elseif isstruct(input) && ~isfield(input,'datafile')
+elseif isstruct(input) && ~isfield(input, 'datafile')
   cfg.filename = 'Unknown';
 elseif ischar(input)
   cfg.filename = input;

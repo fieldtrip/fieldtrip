@@ -339,7 +339,7 @@ else % not raw or comp
         if hasrpt || hasrpttap, varargin{i} = makeselection_rpt (varargin{i}, selrpt{i});   end % avgoverrpt for the supporting fields is dealt with later
         
         % also deal with the supporting cumtapcnt field, because it has a frequency dimension when time dimension is present
-        % this is a temporary workaround, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2509
+        % this is a temporary workaround, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2509
         if isfield(varargin{i}, 'cumtapcnt') && hastime
           varargin{i} = makeselection_cumtapcnt(varargin{i}, selfreq{i}, avgoverfreq);
         end
@@ -459,7 +459,7 @@ else % not raw or comp
         end
         
         % also deal with the supporting cumtapcnt field, because it has a frequency dimension when time dimension is present
-        % this is a temporary workaround, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2509
+        % this is a temporary workaround, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2509
         if hastime && isfield(varargin{i}, 'cumtapcnt')
           varargin{i} = makeselection_cumtapcnt(varargin{i}, selfreq{i}, avgoverfreq);
         end

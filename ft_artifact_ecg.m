@@ -79,22 +79,22 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 
 % this subfield is required
-if ~isfield(cfg,'artfctdef'),              cfg.artfctdef               = [];            end
-if ~isfield(cfg.artfctdef,'ecg'),          cfg.artfctdef.ecg           = [];            end
+if ~isfield(cfg, 'artfctdef'),              cfg.artfctdef               = [];            end
+if ~isfield(cfg.artfctdef, 'ecg'),          cfg.artfctdef.ecg           = [];            end
 
 cfg.artfctdef = ft_checkconfig(cfg.artfctdef, 'renamed',    {'blc', 'demean'});
 cfg.artfctdef = ft_checkconfig(cfg.artfctdef, 'renamed',    {'blcwindow' 'baselinewindow'});
 
 % set default rejection parameters for eog artifacts if necessary.
-if ~isfield(cfg.artfctdef.ecg,'channel'),  cfg.artfctdef.ecg.channel   = {'ECG'};       end
-if ~isfield(cfg.artfctdef.ecg,'method'),   cfg.artfctdef.ecg.method    = 'zvalue';      end
-if ~isfield(cfg.artfctdef.ecg,'cutoff'),   cfg.artfctdef.ecg.cutoff    = 3;             end
-if ~isfield(cfg.artfctdef.ecg,'padding'),  cfg.artfctdef.ecg.padding   = 0.5;           end
-if ~isfield(cfg.artfctdef.ecg,'inspect'),  cfg.artfctdef.ecg.inspect   = {'MLT' 'MRT'}; end
-if ~isfield(cfg.artfctdef.ecg,'pretim'),   cfg.artfctdef.ecg.pretim    = 0.05;          end
-if ~isfield(cfg.artfctdef.ecg,'psttim'),   cfg.artfctdef.ecg.psttim    = 0.3;           end
-if ~isfield(cfg.artfctdef.ecg,'mindist'),  cfg.artfctdef.ecg.mindist   = 0.5;           end
-if ~isfield(cfg.artfctdef.ecg,'feedback'),  cfg.artfctdef.ecg.feedback = 'yes';   end
+if ~isfield(cfg.artfctdef.ecg, 'channel'),  cfg.artfctdef.ecg.channel   = {'ECG'};       end
+if ~isfield(cfg.artfctdef.ecg, 'method'),   cfg.artfctdef.ecg.method    = 'zvalue';      end
+if ~isfield(cfg.artfctdef.ecg, 'cutoff'),   cfg.artfctdef.ecg.cutoff    = 3;             end
+if ~isfield(cfg.artfctdef.ecg, 'padding'),  cfg.artfctdef.ecg.padding   = 0.5;           end
+if ~isfield(cfg.artfctdef.ecg, 'inspect'),  cfg.artfctdef.ecg.inspect   = {'MLT' 'MRT'}; end
+if ~isfield(cfg.artfctdef.ecg, 'pretim'),   cfg.artfctdef.ecg.pretim    = 0.05;          end
+if ~isfield(cfg.artfctdef.ecg, 'psttim'),   cfg.artfctdef.ecg.psttim    = 0.3;           end
+if ~isfield(cfg.artfctdef.ecg, 'mindist'),  cfg.artfctdef.ecg.mindist   = 0.5;           end
+if ~isfield(cfg.artfctdef.ecg, 'feedback'),  cfg.artfctdef.ecg.feedback = 'yes';   end
 if ~isfield(cfg, 'headerformat'),          cfg.headerformat            = [];            end
 if ~isfield(cfg, 'dataformat'),            cfg.dataformat              = [];            end
 
@@ -108,7 +108,7 @@ hasdata = exist('data', 'var');
 if ~hasdata
   cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
   cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
-  hdr = ft_read_header(cfg.headerfile,'headerformat', cfg.headerformat);
+  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
   trl = cfg.trl;
 else
   data = ft_checkdata(data, 'hassampleinfo', 'yes');
@@ -190,8 +190,8 @@ while accept == 0
   xlabel('samples');
   ylabel('zscore');
 
-  fprintf(['\ncurrent  ',artfctdef.method,' threshold = %1.3f'], artfctdef.cutoff);
-  response = input('\nkeep the current value (y/n) ?\n','s');
+  fprintf(['\ncurrent %s threshold = %1.3f'], artfctdef.method, artfctdef.cutoff);
+  response = input('\nkeep the current value (y/n) ?\n', 's');
   switch response
     case 'n'
       oldcutoff = artfctdef.cutoff;
@@ -278,7 +278,7 @@ while acceptpre == 0 || acceptpst == 0
 
   if acceptpre == 0
     fprintf(['\ncurrent pre-peak interval = %1.3f'], artfctdef.pretim);
-    response = input('\nkeep the current value (y/n) ?\n','s');
+    response = input('\nkeep the current value (y/n) ?\n', 's');
     switch response
       case 'n'
         oldpretim = artfctdef.pretim;
@@ -293,7 +293,7 @@ while acceptpre == 0 || acceptpst == 0
   end
   if acceptpst == 0 && acceptpre == 1
     fprintf(['\ncurrent post-peak interval = %1.3f'], artfctdef.psttim);
-    response = input('\nkeep the current value (y/n) ?\n','s');
+    response = input('\nkeep the current value (y/n) ?\n', 's');
     switch response
       case 'n'
         oldpsttim = artfctdef.psttim;

@@ -1380,7 +1380,7 @@ switch eventformat
     
   case {'neuromag_eve'}
     % previously this was called babysquid_eve, now it is neuromag_eve
-    % see also http://bugzilla.fcdonders.nl/show_bug.cgi?id=2170
+    % see also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2170
     [p, f, x] = fileparts(filename);
     evefile = fullfile(p, [f '.eve']);
     fiffile = fullfile(p, [f '.fif']);
@@ -1717,6 +1717,43 @@ switch eventformat
     ft_warning('FieldTrip:ft_read_event:unsupported_event_format', 'reading of events for the netmeg format is not yet supported');
     event = [];
     
+  case 'neuroomega_mat'
+    
+    hdr = ft_read_header(filename, 'headerformat', eventformat, 'chantype', 'chaninfo');
+    
+    fields_orig=who(hdr.orig); %getting digital event channels
+    fields_orig=fields_orig(startsWith(fields_orig,'CDIG_IN')); %compat/matlablt2016b/startsWidth.m     
+    
+    rx=regexp(fields_orig,'^CDIG_IN_{1}(\d+)[a-zA-Z_]*','tokens');
+    dig_channels=unique(cellfun(@(x) str2num(x{1}), [rx{:}]));
+   
+    event.type=[]; event.sample=[]; event.value=[];
+    if ~ismember(detectflank,{'up','down','both'})
+      ft_error('incorrect specification of ''detectflank''');
+    end
+    if ismember(detectflank,{'up','both'})
+      for i=1:length(dig_channels)
+        channel = ['CDIG_IN_' num2str(dig_channels(i)) '_Up'];
+        data = hdr.orig.(channel);
+        for j=1:length(hdr.orig.(channel))
+          event(end+1).type = channel;
+          event(end  ).value = dig_channels(i);
+          event(end  ).sample = data(j);
+        end
+      end
+    end
+    if ismember(detectflank,{'down','both'})
+      for i=1:length(dig_channels)
+        channel = ['CDIG_IN_' num2str(dig_channels(i)) '_Down'];
+        data = hdr.orig.(channel);
+        for j=1:length(hdr.orig.(channel))
+          event(end+1).type = channel;
+          event(end  ).value = dig_channels(i);
+          event(end  ).sample = data(j);
+        end
+      end
+    end  
+    
   case 'neuroshare' % NOTE: still under development
     % check that the required neuroshare toolbox is available
     ft_hastoolbox('neuroshare', 1);
@@ -2022,6 +2059,47 @@ switch eventformat
       hdr = ft_read_header(filename);
     end
     event = read_spmeeg_event(filename, 'header', hdr);
+  
+  case {'blackrock_nev', 'blackrock_nsx'}
+    % use the NPMK toolbox for the file reading
+    ft_hastoolbox('NPMK', 1);
+    
+    % ensure that the filename contains a full path specification,
+    % otherwise the low-level function fails
+    [p,f,e] = fileparts(filename);
+    if ~isempty(p)
+      % this is OK
+    elseif isempty(p)
+      filename = which(filename);
+		end
+		
+    % 'noread' prevents reading of the spike waveforms 
+    % 'nosave' prevents the automatic conversion of
+    % the .nev file as a .mat file
+    orig = openNEV(filename, 'noread', 'nosave')
+
+    if orig.MetaTags.SampleRes ~= 30000
+      error('sampling rate is different from 30 kHz') 
+      % FIXME: why would this be a problem?
+    end
+
+    fs             = orig.MetaTags.SampleRes; % sampling rate
+    timestamps     = orig.Data.SerialDigitalIO.TimeStamp;
+    eventCodeTimes = double(timestamps)./double(fs); % express in seconds
+    eventCodes     = double(orig.Data.SerialDigitalIO.UnparsedData);
+		
+    % probably not necessary for all but we often have pins up    
+    % FIXME: what is the consequence for the values if the pins were not 'up'?
+    % Should this be solved more generically? E.g. with an option? 
+    eventCodes2= eventCodes-min(eventCodes)+1;
+    
+    for k=1:numel(eventCodes2)
+      event(k).type      = 'trigger';
+      event(k).sample    = eventCodeTimes(k);      
+      event(k).value     = eventCodes2(k); 
+      event(k).duration  = 1;
+      event(k).offset    = [];
+    end
     
   otherwise
     % attempt to run eventformat as a function

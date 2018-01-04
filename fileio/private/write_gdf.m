@@ -77,6 +77,12 @@ end
 % will be terrible for appending data...
 digMin = double(min(data,[],2));
 digMax = double(max(data,[],2));
+
+% adjust the the digital min/max a bit, otherwise the biosig reading code
+% will return NaNs for the most extreme values
+digMin = digMin - 1e5.*eps(digMin);
+digMax = digMax + 1e5.*eps(digMax);
+
 physMin = digMin;
 physMax = digMax;
 

@@ -61,6 +61,10 @@ switch(op)
             
             if(size(st.nmt.fun{1},2)>1)
                 nmt_timeselect;
+                
+                st.nmt.cfg.voxinside_idx=find(st.nmt.cfg.vox_idx==st.nmt.cfg.inside_idx);
+                if(isempty(st.nmt.cfg.voxinside_idx)), st.nmt.cfg.voxinside_idx=NaN,end
+%flash_statori_plotori(st.nmt.cfg.voxinside_idx);
             end
         return
     case 'setposmeg'

@@ -295,11 +295,10 @@ if strcmp(cfg.visualize, 'yes')
     fprintf('visualizing %s of %s \n', num2str(p), num2str(nplots));
     toi = [p*cfg.plotunit-(cfg.plotunit-5) p*cfg.plotunit-5]; % select 1-hour chunks
 
-    tmpcfg.toi = toi;
-    temp_timelock = ft_selectdata(tmpcfg, timelock);
-    temp_timelock.cfg = cfg; % be sure to add the cfg here
-    temp_freq     = ft_selectdata(tmpcfg, freq);
-    temp_summary  = ft_selectdata(tmpcfg, summary);
+    tmpcfg.latency = toi;
+    temp_timelock  = ft_selectdata(tmpcfg, timelock);
+    temp_freq      = ft_selectdata(tmpcfg, freq);
+    temp_summary   = ft_selectdata(tmpcfg, summary);
     if exist('headpos','var')
       temp_headpos  = ft_selectdata(tmpcfg, headpos);
       draw_figure(info, temp_timelock, temp_freq, temp_summary, temp_headpos, toi);
@@ -419,10 +418,11 @@ end
 
 % determine whether it is EEG or MEG
 try
-[iseeg, ismeg, isctf, fltp] = filetyper(timelock.cfg.dataset);
+  [iseeg, ismeg, isctf, fltp] = filetyper(timelock.cfg.dataset);
 catch % in case the input is a matfile (and the dataset field does not exist): ugly workaround
-  [iseeg, ismeg, isctf, fltp] = filetyper(headpos.cfg.dataset);
+  [iseeg, ismeg, isctf, fltp] = filetyper(headpos.cfg.previous.dataset);
 end
+
 if ismeg
   scaling = 1e15; % assuming data is in T and needs to become fT
   powscaling = scaling^2;

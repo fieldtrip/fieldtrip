@@ -63,7 +63,7 @@ end
 if ~isfield(obj, 'coordsys') || isempty(obj.coordsys)
   % the call to ft_determine_coordsys should have taken care of this, but
   % it is possible that the user aborted the coordinate system
-  % determination. See http://bugzilla.fcdonders.nl/show_bug.cgi?id=2526
+  % determination. See http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2526
   ft_error('the coordinate system of the geometrical object is not specified');
 end
 

@@ -46,9 +46,6 @@ spatdimlength = size(onoff, 1);
 nfreq = size(onoff, 2);
 ntime = size(onoff, 3);
 
-% ensure that SPM is available, needed for spm_bwlabeln
-ft_hastoolbox('spm8up', 3) || ft_hastoolbox('spm2', 1);
-
 if length(size(spatdimneighbstructmat))~=2 || ~all(size(spatdimneighbstructmat)==spatdimlength)
   ft_error('invalid dimension of spatdimneighbstructmat');
 end

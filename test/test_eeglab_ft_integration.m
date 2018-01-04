@@ -5,7 +5,7 @@ function test_eeglab_ft_integration
 
 % TEST ft_dipolefitting ft_checkdata
 
-% See http://bugzilla.fcdonders.nl/show_bug.cgi?id=2595
+% See http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2595
 
 load test_EEGLAB_ft_integration.mat
 

@@ -5,11 +5,6 @@ function test_bug1298
 
 % TEST ft_timelockanalysis ft_prepare_leadfield ft_sourceanalysis 
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-ft_default.feedback = 'no';
-
 megraw = load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/dataFIC.mat'));
 
 cfg = [];

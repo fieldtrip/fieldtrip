@@ -10,19 +10,19 @@ function [varargout] = bivariate_common(cfg, varargin)
 % See also TOPOPLOT_COMMON
 
 % reference channel is required
-if ~isfield(cfg, 'refchannel')
+if ~isfield(cfg, 'refchannel') || isempty(cfg.refchannel)
   ft_error('no reference channel is specified');
 end
 
 % check for refchannel being part of selection
 if ~strcmp(cfg.refchannel, 'gui')
-  if haslabelcmb
+  if isfield(varargin{1}, 'labelcmb')
     cfg.refchannel = ft_channelselection(cfg.refchannel, unique(varargin{1}.labelcmb(:)));
   else
     cfg.refchannel = ft_channelselection(cfg.refchannel, varargin{1}.label);
   end
-  if (isfull      && ~any(ismember(varargin{1}.label, cfg.refchannel))) || ...
-      (haslabelcmb && ~any(ismember(varargin{1}.labelcmb(:), cfg.refchannel)))
+  if (isfield(varargin{1}, 'label')    && ~any(ismember(varargin{1}.label,       cfg.refchannel))) || ...
+      (isfield(varargin{1}, 'labelcmb') && ~any(ismember(varargin{1}.labelcmb(:), cfg.refchannel)))
     ft_error('cfg.refchannel is a not present in the (selected) channels)')
   end
 end
@@ -60,23 +60,20 @@ if isfield(cfg, 'inputfile')
   cfg = rmfield(cfg, 'inputfile');
 end
 
-dimord = getdimord(varargin{1}, cfg.parameter);
-dimtok = tokenize(dimord, '_');
-
 for i=1:numel(varargin)
+  dimord = getdimord(varargin{i}, cfg.parameter);
+  dimtok = tokenize(dimord, '_');
+  
   if isequal(dimtok{1}, 'chancmb')
-    % FIXME this needs some thought
-    keyboard
-    
-    % Convert 2-dimensional channel matrix to a single dimension:
+    % Convert 2-dimensional channel matrix to a single dimension
     if isempty(cfg.directionality)
-      sel1 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:, 2)));
-      sel2 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:, 1)));
+      sel1 = match_str(varargin{i}.labelcmb(:, 2), cfg.refchannel);
+      sel2 = match_str(varargin{i}.labelcmb(:, 1), cfg.refchannel);
     elseif strcmp(cfg.directionality, 'outflow')
       sel1 = [];
-      sel2 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:, 1)));
+      sel2 = match_str(varargin{i}.labelcmb(:, 1), cfg.refchannel);
     elseif strcmp(cfg.directionality, 'inflow')
-      sel1 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:, 2)));
+      sel1 = match_str(varargin{i}.labelcmb(:, 2), cfg.refchannel);
       sel2 = [];
     end
     fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.parameter);
@@ -84,8 +81,14 @@ for i=1:numel(varargin)
       ft_error('there are no channels selected for plotting: you may need to look at the specification of cfg.directionality');
     end
     varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)([sel1;sel2], :, :);
-    varargin{i}.label     = [varargin{i}.labelcmb(sel1, 1);varargin{i}.labelcmb(sel2, 2)];
-    varargin{i}.labelcmb  = varargin{i}.labelcmb([sel1;sel2], :);
+    varargin{i}.label           = [varargin{i}.labelcmb(sel1, 1); varargin{i}.labelcmb(sel2, 2)];
+    varargin{i} = rmfield(varargin{i}, 'labelcmb');
+    
+    % Update the dimord
+    dimtok{1} = 'chan';
+    varargin{i} = removefields(varargin{i}, {'dimord', [cfg.parameter 'dimord']});
+    varargin{i}.dimord = sprintf('%s_', dimtok{1:end});
+    varargin{i}.dimord(end) = []; % remove the trailing "_"
     
   elseif isequal(dimtok{1}, 'chan') && isequal(dimtok{2}, 'chan')
     sel = match_str(varargin{i}.label, cfg.refchannel);
@@ -105,10 +108,10 @@ for i=1:numel(varargin)
       meandir = 1;
       
     elseif strcmp(cfg.directionality, 'ff-fd')
-      ft_error('cfg.directionality = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_multiplotTFR');
+      ft_error('cfg.directionality = ''ff-fd'' is not supported anymore, you have to manually subtract the two prior to plotting');
       
     elseif strcmp(cfg.directionality, 'fd-ff')
-      ft_error('cfg.directionality = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_multiplotTFR');
+      ft_error('cfg.directionality = ''fd-ff'' is not supported anymore, you have to manually subtract the two prior to plotting');
     end % if directionality
     
     % Make a univariate selection of the data
@@ -122,8 +125,7 @@ for i=1:numel(varargin)
     varargin{i}.dimord(end) = []; % remove the trailing "_"
     
   else
-    % FIXME this is unexpected
-    keyboard
+    error('unexpected dimord');
     
   end % if sparse or full
 end % for varargin
@@ -132,7 +134,7 @@ end % for varargin
 figure('Position', get(gcf, 'Position'));
 
 % Remove these fields from the configuration
-fn = {'originalfunction', 'inputfile'};
+fn = {'originalfunction', 'inputfile', 'refchannel'};
 
 % This applies to the topoplots
 cfg.highlight = 'on';

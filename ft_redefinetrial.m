@@ -286,7 +286,11 @@ elseif ~isempty(cfg.length)
   nsmp    = round(cfg.length*data.fsample);
   nshift  = round((1-cfg.overlap)*nsmp);
 
-  newtrl = zeros(0,3);
+  if isfield(data, 'trialinfo')
+    newtrl = zeros(0,size(data.trialinfo, 2) + 3);
+  else
+    newtrl = zeros(0,3);
+  end
   for k = 1:numel(data.trial)
     offset = time2offset(data.time{k}, data.fsample);
     tmp1   = [data.sampleinfo(k,:) offset];
@@ -294,13 +298,21 @@ elseif ~isempty(cfg.length)
     if ~isempty(tmp2)
       tmp2(:,2) = tmp2 + nsmp - 1;
       tmp2(:,3) = tmp2(:,1) + offset - tmp2(1,1);
+      if isfield(data, 'trialinfo')
+        for l = 1:size(data.trialinfo, 2)
+          tmp2(:,3+l) = data.trialinfo(k,l);
+        end
+      end
       newtrl = [newtrl; tmp2];
     end
   end
 
-  tmpcfg = keepfields(cfg, {'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'showcallinfo', 'feedback'});
   tmpcfg.trl = newtrl;
+  data   = removefields(data, {'trialinfo'});
   data   = ft_redefinetrial(tmpcfg, data);
+  % restore the provenance information
+  [cfg, data] = rollback_provenance(cfg, data);
 
 end % processing the realignment or data selection
 
@@ -343,7 +355,7 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-if ~isempty(cfg.trl)
+if ~isempty(cfg.trl) && exist('dataold', 'var')
   % the input data has been renamed to dataold
   ft_postamble previous dataold
 else

@@ -516,11 +516,11 @@ if isempty(cfg.trl)
 else
   if hasdata && ~strcmp(cfg.artfctdef.reject, 'nan') % Skip this step to avoid removing parts that should be filled with nans
     % apply the updated trial definition on the data
-    tmpcfg     = keepfields(cfg, {'trl', 'showcallinfo'});
-    data       = ft_redefinetrial(tmpcfg, data);
-    if isfield(data, 'offset')
-      data = rmfield(data, 'offset');
-    end
+    tmpcfg      = keepfields(cfg, {'trl', 'showcallinfo'});
+    data        = removefields(data, {'trialinfo'});
+    data        = ft_redefinetrial(tmpcfg, data);
+    % restore the provenance information
+    [cfg, data] = rollback_provenance(cfg, data);
   end
 end
 

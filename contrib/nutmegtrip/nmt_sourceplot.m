@@ -188,6 +188,7 @@ end
 
     % set the defaults for all methods
     cfg.funparameter  = ft_getopt(cfg, 'funparameter',  []);
+    cfg.vecparameter  = ft_getopt(cfg, 'vecparameter',  []);
     cfg.maskparameter = ft_getopt(cfg, 'maskparameter', []);
     
         
@@ -197,6 +198,10 @@ end
     else
         % check if the input functional is valid for this function, a coordsys is not directly needed
         functional     = ft_checkdata(functional, 'datatype', {'volume', 'source'}, 'feedback', 'yes', 'hasunit', 'yes');
+    end
+    
+    if(isfield(functional,'dim'))
+        functional = rmfield(functional,'dim');
     end
     
     % determine the type of functional
@@ -687,7 +692,9 @@ for funidx = 1:length(funparameters)
             msk(functional.inside) = 1;
         else
             if hasana
-                msk(functional.inside) = 0.5; % so anatomy is visible
+%                msk(functional.inside) = 0.5; % so anatomy is visible
+% FIXME: this lets nutmegtrip display at proper colorscale, but is the 0.5 functionality desired?
+                msk(functional.inside) = 1;
             else
                 msk(functional.inside) = 1;
             end
@@ -739,6 +746,8 @@ for funidx = 1:length(funparameters)
     if ~isempty(cfg.funparameter)
         if issubfield(functional, cfg.funparameter)
             hasfun = 1;
+ 
+            cfg.inside_idx = find(functional.inside);
             
             st.nmt.pos = functional.pos;
             
@@ -844,4 +853,21 @@ for funidx = 1:length(funparameters)
     nmt_spm_plot(cfg);
     nmt_update_panel(funidx);
     nmt_image;
+    
+    if ~isempty(cfg.vecparameter)
+        if issubfield(functional, cfg.vecparameter)
+            oritmp = getsubfield(functional, cfg.vecparameter);
+            Nvoxels = length(insideindx)
+            Nsamples = size(oritmp{insideindx(1)},2)
+            ori = zeros(Nvoxels,3,Nsamples);
+            for ii=1:Nvoxels
+                ori(ii,:,:) = oritmp{insideindx(ii)};
+            end
+            
+            st.nmt.ori = ori;
+            nmt_sourceoriplot;
+        else
+            error('cfg.vecparameter not found in functional');
+        end
+    end
 end

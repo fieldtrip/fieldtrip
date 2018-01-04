@@ -6,10 +6,6 @@ function failed_bug1794
 % TEST test_bug1794
 % TEST ft_prepare_sourcemodel ft_determine_units ft_convert_units ft_prepare_leadfield
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/vol.mat'))
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/dataFIC'))
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri'))

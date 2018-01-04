@@ -9,7 +9,7 @@ function test_bug1637
 % order or whether this can be totally mixed up (it should be able to deal
 % with that!)
 %
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=1637
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1637
 
 % load neighbours
 cfg = [];

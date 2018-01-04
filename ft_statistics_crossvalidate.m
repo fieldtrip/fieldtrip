@@ -20,6 +20,7 @@ function [stat, cfg] = ft_statistics_crossvalidate(cfg, dat, design)
 %   stat.statistic    = the statistics to report
 %   stat.model        = the models associated with this multivariate analysis
 %
+% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS, FT_SOURCESTATISTICS
 
 % Copyright (c) 2007-2011, F.C. Donders Centre, Marcel van Gerven
 %
@@ -80,16 +81,37 @@ end
 stat.model = cv.model;
 
 fn = fieldnames(stat.model{1});
-if any(strcmp(fn, 'weights'))
-  % create the 'encoding' matrix from the weights, as per Haufe 2014.
-  covdat = cov(dat');
-  for i=1:length(stat.model)
-    W = stat.model{i}.weights;
-    M = dat'*W;
-    covM = cov(M);
-    stat.model{i}.weightsinv = covdat*W/covM;
+if any(ismember(fn,  {'weights', 'primal'})),
+  selfn = find(ismember(fn, {'weights', 'primal'}));
+  
+  % the mean subtraction is needed only once, but speeds up the covariance
+  % computation
+  dat = bsxfun(@minus, dat, nanmean(dat,2)); 
+  dat_transp = dat.';
+  for j=1:numel(selfn)
+    % create the 'encoding' matrix from the weights, as per Haufe 2014.
+    %covdat = cov(dat');
+    for i=1:length(stat.model)
+      i
+      W = stat.model{i}.(fn{selfn});
+      
+      sW   = size(W);
+      sdat = size(dat);
+      if sW(2)==sdat(1) && sW(1)~=sdat(1)
+        W = transpose(W);
+      end
+      
+      M    = dat'*W;
+      covM = cov(M);
+      WcovM = (W/covM)./(size(dat,2)-1); % with the correction term for the covariance computation
+      
+      %stat.model{i}.(sprintf('%sinv',fn{selfn})) = covdat*W/covM;
+      stat.model{i}.(sprintf('%sinv',fn{selfn})) = dat*(dat_transp*WcovM);
+      
+    end
   end
 end
+fn = fieldnames(stat.model{1}); % update the fieldnames, because some might have been added
 
 fn = fieldnames(stat.model{1}); % may now also contain weightsinv
 for i=1:length(stat.model)

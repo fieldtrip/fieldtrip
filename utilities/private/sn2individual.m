@@ -8,7 +8,7 @@ function [warped]= sn2individual(P, input)
 % modified from code originally written by John Ashburner:
 % http://www.sph.umich.edu/~nichols/JG2/get_orig_coord2.m
 
-% Copyright (C) 2013, Jan-Mathijs Schoffelen
+% Copyright (C) 2013-2017, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -28,41 +28,107 @@ function [warped]= sn2individual(P, input)
 %
 % $Id$
 
-if numel(P.Tr)==0,
-  % only an affine transformation has been done
-  T      = P.VF.mat*P.Affine/(P.VG.mat);
-  warped = ft_warp_apply(T, input);
-
-else
-  % we need the spm_dctmtx function for the nonlinear case
-  if ~ft_hastoolbox('spm')
-    % add SPM8 or later to the path
-    ft_hastoolbox('spm8up', 1);
-  end
-
-  dim  = P.VG.dim(1:3);
-  xyz  = ft_warp_apply(inv(P.VG.mat), input); % goes into voxel coordinates
+if isfield(P, 'Tr')
+  % this is an old-style representation of the parameters, so it uses the
+  % code adjusted from nut_mni2mri
   
-  basX = spm_dctmtx(dim(1), size(P.Tr,1), xyz(:,1)-1);
-  basY = spm_dctmtx(dim(2), size(P.Tr,2), xyz(:,2)-1);
-  basZ = spm_dctmtx(dim(3), size(P.Tr,3), xyz(:,3)-1);
-
-  siz = size(P.Tr);
-  Tr1 = reshape(P.Tr(:,:,:,1),siz(1)*siz(2),siz(3));
-  Tr2 = reshape(P.Tr(:,:,:,2),siz(1)*siz(2),siz(3));
-  Tr3 = reshape(P.Tr(:,:,:,3),siz(1)*siz(2),siz(3));
+  if numel(P.Tr)==0
+    % only an affine transformation has been done
+    T      = P.VF.mat*P.Affine/(P.VG.mat);
+    warped = ft_warp_apply(T, input);
     
-  xyztmp = zeros(size(xyz));
-  for i=1:size(xyz,1)
-    bx = basX(i,:);
-	  by = basY(i,:);
-	  bz = basZ(i,:);
-	  tx = reshape(Tr1*bz', siz(1), siz(2) );
-	  ty = reshape(Tr2*bz', siz(1), siz(2) );
-	  tz = reshape(Tr3*bz', siz(1), siz(2) );
-	  xyztmp(i,:) = [bx*tx*by' bx*ty*by' bx*tz*by'];
+  else
+    % we need the spm_dctmtx function for the nonlinear case
+    if ~ft_hastoolbox('spm')
+      % add SPM8 or later to the path
+      ft_hastoolbox('spm8up', 1);
+    end
+    
+    dim  = P.VG.dim(1:3);
+    xyz  = ft_warp_apply(inv(P.VG.mat), input); % goes into voxel coordinates
+    
+    basX = spm_dctmtx(dim(1), size(P.Tr,1), xyz(:,1)-1);
+    basY = spm_dctmtx(dim(2), size(P.Tr,2), xyz(:,2)-1);
+    basZ = spm_dctmtx(dim(3), size(P.Tr,3), xyz(:,3)-1);
+    
+    siz = size(P.Tr);
+    Tr1 = reshape(P.Tr(:,:,:,1),siz(1)*siz(2),siz(3));
+    Tr2 = reshape(P.Tr(:,:,:,2),siz(1)*siz(2),siz(3));
+    Tr3 = reshape(P.Tr(:,:,:,3),siz(1)*siz(2),siz(3));
+    
+    xyztmp = zeros(size(xyz));
+    for i=1:size(xyz,1)
+      bx = basX(i,:);
+      by = basY(i,:);
+      bz = basZ(i,:);
+      tx = reshape(Tr1*bz', siz(1), siz(2) );
+      ty = reshape(Tr2*bz', siz(1), siz(2) );
+      tz = reshape(Tr3*bz', siz(1), siz(2) );
+      xyztmp(i,:) = [bx*tx*by' bx*ty*by' bx*tz*by'];
+    end
+    
+    T      = P.VF.mat*P.Affine;
+    warped = ft_warp_apply(T, xyz+xyztmp);
   end
   
-  T      = P.VF.mat*P.Affine;
-  warped = ft_warp_apply(T, xyz+xyztmp);
-end;
+else
+  % the only way I can come up with to do this, is to write a deformation
+  % to disk, and to sample this one. This requires spm12 on the path
+  ft_hastoolbox('spm12', 1);
+   
+  fprintf('creating the deformation field and writing it to a temporary file\n');
+  
+  fname  = [tempname,'.nii'];
+  V      = nifti;
+  V.dat  = file_array(fname, P.image(1).dim(1:3), [spm_type('float32') spm_platform('bigend')], 0, 1, 0);
+  V.mat  = P.image(1).mat;
+  V.mat0 = P.image(1).mat;
+  V.descrip = 'dummy volume';
+  create(V);
+  V.dat(:) = 0;
+  P.image(1).private = V;
+  P.image(1).fname   = fname;
+  
+  spm_preproc_write8(P, zeros(6,4), [0 0], [0 1], 1, 1, nan(2,3), nan);
+  
+  [pth,nam,ext] = fileparts(fname);
+  V  = nifti(fullfile(pth,['y_',nam,ext]));
+  y  = squeeze(V.dat(:,:,:,:,:));
+  
+  siz = size(y);
+  VT.dim = siz(1:3);
+  VT.mat = P.tpm(1).mat;
+  
+  % 2b: write the deformation fields in x/y/z direction to temporary files
+  V1.fname     = [tempname '.img'];
+  V1.dim(1:3)  = VT.dim(1:3);
+  V1.pinfo     = [1 0 0]';
+  V1.mat       = VT.mat;
+  V1.dt        = [64 0];
+  V1.descrip   = 'Deformation field';
+  spm_write_vol(V1,y(:,:,:,1));
+  
+  V2.fname     = [tempname '.img'];
+  V2.dim(1:3)  = VT.dim(1:3);
+  V2.pinfo     = [1 0 0]';
+  V2.mat       = VT.mat;
+  V2.dt        = [64 0];
+  V2.descrip   = 'Deformation field';
+  spm_write_vol(V2,y(:,:,:,2));
+  
+  V3.fname     = [tempname '.img'];
+  V3.dim(1:3)  = VT.dim(1:3);
+  V3.pinfo     = [1 0 0]';
+  V3.mat       = VT.mat;
+  V3.dt        = [64 0];
+  V3.descrip   = 'Deformation field';
+  spm_write_vol(V3,y(:,:,:,3));
+ 
+  % first warp to voxel coordinates 
+  input_vox = ft_warp_apply(inv(VT.mat), input);  % Express as voxel indices
+  
+  % apply the non-linear warp
+  warped = cat(2, spm_sample_vol(V1,input_vox(:,1),input_vox(:,2),input_vox(:,3),1), ...
+    spm_sample_vol(V2,input_vox(:,1),input_vox(:,2),input_vox(:,3),1), ...
+    spm_sample_vol(V3,input_vox(:,1),input_vox(:,2),input_vox(:,3),1));
+end

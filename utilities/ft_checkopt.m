@@ -103,7 +103,7 @@ for i=1:length(allowedtype)
     case 'doublebivector'
       ok = isa(val,'double') && sum(size(val)>1)==1 && length(val)==2;
     case 'ascendingdoublebivector'
-      ok = isa(val,'double') && sum(size(val)>1)==1 && length(val)==2 && val(2)>val(1);       
+      ok = isa(val,'double') && sum(size(val)>1)==1 && length(val)==2 && val(2)>val(1);
     case 'doublematrix'
       ok = isa(val, 'double') && sum(size(val)>1)>1;
     case 'numericscalar'

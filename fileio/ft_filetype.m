@@ -310,6 +310,18 @@ elseif filetype_check_extension(filename, '.eve') && exist(fullfile(p, [f '.fif'
   type = 'neuromag_eve'; % these are being used by Tristan Technologies for the BabySQUID system
   manufacturer = 'Neuromag';
   content = 'events';
+elseif filetype_check_extension(filename, '.log') && filetype_check_header(filename, '*** This is Elekta Neuromag MaxFilter', 61)
+  type = 'neuromag_maxfilterlog'; 
+  manufacturer = 'Neuromag';
+  content = 'MaxFilter log information';
+elseif filetype_check_extension(filename, '.iso') && filetype_check_header(filename, char([0 0 0 100]))
+  type = 'neuromag_iso'; 
+  manufacturer = 'Neuromag';
+  content = 'Isotrack digitizer points';
+elseif strcmp(filename, 'sss_cal.dat')
+  type = 'neuromag_cal'; 
+  manufacturer = 'Neuromag';
+  content = 'Fine calibration';
   
   % known Yokogawa file types
 elseif filetype_check_extension(filename, '.ave') || filetype_check_extension(filename, '.sqd')
@@ -453,7 +465,7 @@ elseif filetype_check_extension(filename, '.mri')
   type = 'asa_mri';
   manufacturer = 'ASA';
   content = 'MRI image header';
-elseif filetype_check_extension(filename, '.iso')
+elseif filetype_check_extension(filename, '.iso') && ~filetype_check_header(filename, char([0 0 0 100]))
   type = 'asa_iso';
   manufacturer = 'ASA';
   content = 'MRI image data';
@@ -921,6 +933,11 @@ elseif filetype_check_extension(filename, '.dig')
   type = 'curry_dig';
   manufacturer = 'Curry';
   content = 'digitizer file';
+
+elseif filetype_check_extension(filename, '.txt') && filetype_check_header(filename, '#Study')
+  type = 'imotions_txt';
+  manufacturer = 'iMotions';
+  content = 'various biosignals';
   
 elseif filetype_check_extension(filename, '.txt') && filetype_check_header(filename, '##')
   type = 'smi_txt';
@@ -1162,6 +1179,10 @@ elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filen
 elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filename, 'MATLAB') && filetype_check_ced_spike6mat(filename)
   type = 'ced_spike6mat';
   manufacturer = 'Cambridge Electronic Design Limited';
+  content = 'electrophysiological data';
+elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filename, 'MATLAB') && filetype_check_neuroomega_mat(filename)
+  type = 'neuroomega_mat';
+  manufacturer = 'Alpha Omega';
   content = 'electrophysiological data';
 elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filename, 'MATLAB')
   type = 'matlab';
@@ -1409,6 +1430,12 @@ else
   d = dir;
 end
 res = any(strcmp(filename,{d.name}));
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION that checks for NeuroOmega mat file
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function res = filetype_check_neuroomega_mat(filename)
+res=~isempty(regexp(filename,'[RL]T[1-5]D[-]{0,1}\d+\.\d+([+-]M){0,1}F\d+\.mat','once'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that checks whether the directory is neuralynx_cds

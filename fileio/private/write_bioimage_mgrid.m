@@ -13,7 +13,7 @@ function write_bioimage_mgrid(filename, elec)
 % the scan (e.g., RAS) corresponds with the orientation of the electrode
 % positions (in head coordinates) of elec
 %
-% Copyright (C) 2016, Arjen Stolk & Sandon Griffin
+% Copyright (C) 2017, Arjen Stolk & Sandon Griffin
 % --------------------------------------------------------
 
 
@@ -79,72 +79,11 @@ for g = 1:ngrids % grid loop
   fprintf(fid, '#Dimensions\n');
   
   % determine grid dimensions
-  if isequal(numel(Grid2Elec{g}), 256)
-    GridDim(1) = 16; GridDim(2) = 16;
-  elseif isequal(numel(Grid2Elec{g}), 64)
-    GridDim(1) = 8; GridDim(2) = 8;
-  elseif isequal(numel(Grid2Elec{g}), 48)
-    e6 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(6)]),:);
-    e7 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(7)]),:);
-    d6to7 = sqrt(sum((e6-e7).^2)); % distance of elec 6 to 7
-    if d6to7 < 15
-      GridDim(1) = 6; GridDim(2) = 8;
-    else
-      GridDim(1) = 8; GridDim(2) = 6;
-    end
-  elseif isequal(numel(Grid2Elec{g}), 32)
-    e4 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(4)]),:);
-    e5 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(5)]),:);
-    d4to5 = sqrt(sum((e4-e5).^2)); % distance of elec 4 to 5
-    if d4to5 < 15 % within 15 mm
-      GridDim(1) = 4; GridDim(2) = 8;
-    else
-      GridDim(1) = 8; GridDim(2) = 4;
-    end
-  elseif isequal(numel(Grid2Elec{g}), 20)
-    e4 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(4)]),:);
-    e5 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(5)]),:);
-    d4to5 = sqrt(sum((e4-e5).^2)); % distance of elec 4 to 5
-    if d4to5 < 15
-      GridDim(1) = 4; GridDim(2) = 5;
-    else
-      GridDim(1) = 5; GridDim(2) = 4;
-    end
-  elseif isequal(numel(Grid2Elec{g}), 16)
-    e4 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(4)]),:);
-    e5 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(5)]),:);
-    e9 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(9)]),:);
-    d4to5 = sqrt(sum((e4-e5).^2)); % distance of elec 4 to 5
-    d4to9 = sqrt(sum((e4-e9).^2)); % distance of elec 4 to 9
-    if d4to5 > 15 && d4to9 > 15
-      GridDim(1) = 4; GridDim(2) = 4;
-    elseif d4to5 < 15 && d4to9 > 15
-      GridDim(1) = 2; GridDim(2) = 8;
-    else
-      GridDim(1) = 1; GridDim(2) = 16;
-    end
-  elseif isequal(numel(Grid2Elec{g}), 12)
-    e6 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(6)]),:);
-    e7 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(7)]),:);
-    d6to7 = sqrt(sum((e6-e7).^2)); % distance of elec 6 to 7
-    if d6to7 > 15
-      GridDim(1) = 2; GridDim(2) = 6;
-    else
-      GridDim(1) = 1; GridDim(2) = 12;
-    end
-  elseif isequal(numel(Grid2Elec{g}), 8)
-    e4 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(4)]),:);
-    e5 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(5)]),:);
-    d4to5 = sqrt(sum((e4-e5).^2)); % distance of elec 4 to 5
-    if d4to5 < 15
-      GridDim(1) = 1; GridDim(2) = 8;
-    else
-      GridDim(1) = 2; GridDim(2) = 4;
-    end
-  else
-    GridDim(1) = 1; GridDim(2) = numel(Grid2Elec{g});
-    % ft_error('At least one of the electrode tracts or grids has dimensions that are not supported by write_bioimage_mgrid. If electrodes are missing from a grid, enter NaN(1,3) for electrode position');
-  end
+  elec_g = elec;
+  elec_g.label = elec.label(Grid2Elec{g});
+  elec_g.elecpos = elec.elecpos(Grid2Elec{g}, :);
+  GridDim = determine_griddim(elec_g);
+
   fprintf(fid, [' ' num2str(GridDim(1)) ' ' num2str(GridDim(2)) '\n']);
   fprintf(fid, '#Electrode Spacing\n');
   fprintf(fid, ' 10.0000 10.0000\n');
@@ -167,16 +106,16 @@ for g = 1:ngrids % grid loop
   %
   % for instance in an 4x5 grid, the electrodes will appear in the
   % following orientation in the BiImage Suite GUI
-  %  
+  %
   %   #5    #10    #15   #20
   %   #4    #9     #14   #19
   %   #3    #8     #13   #18
   %   #2    #7     #12   #17
   %   #1    #6     #11   #16
-    
+  
   % In this example, electrodes must be printed in the electrode file in the following
   % order: 5 10 15 20 4 9 14 19 3 8...
-    
+  
   mgrid_print_order = [];
   for nrows = 0:GridDim(2)-1
     nextrow = GridDim(2)-nrows:GridDim(2):numel(Grid2Elec{g})-nrows;
@@ -205,8 +144,8 @@ for g = 1:ngrids % grid loop
     %   (0,4)   (1,4)    (2,4)   (3,4)
     %
     % In this example, the first electrode to be written in the mgrid file
-    % will be 'Electrode 0 0' which corresponds to electrode #5 of the grid    
-            
+    % will be 'Electrode 0 0' which corresponds to electrode #5 of the grid
+    
     if GridDim(1) == 1 % if the electrode is part of a depth or strip
       ElecNr(1) = 0;
       ElecNr(2) = GridDim(2)-m;

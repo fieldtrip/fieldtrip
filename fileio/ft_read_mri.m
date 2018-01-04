@@ -150,17 +150,18 @@ case 'minc'
 case 'nifti_spm'
   if ~(hasspm5 || hasspm8 || hasspm12)
     fprintf('the SPM5 or newer toolbox is required to read *.nii files\n');
-    ft_hastoolbox('spm8', 1);
+    ft_hastoolbox('spm12', 1);
   end
   % use the functions from SPM
   hdr = spm_vol_nifti(filename);
-  img = spm_read_vols(hdr);
+  img = double(hdr.private.dat);
+  %img = spm_read_vols(hdr);
   transform = hdr.mat;
 
 case {'analyze_img' 'analyze_hdr'}
-  if ~(hasspm8)
-    fprintf('the SPM8 toolbox is required to read analyze files\n');
-    ft_hastoolbox('spm8', 1);
+  if ~(hasspm8 || hasspm12)
+    fprintf('the SPM8 or newer toolbox is required to read analyze files\n');
+    ft_hastoolbox('spm8up', 1);
   end
 
   % use the image file instead of the header
@@ -433,10 +434,10 @@ end
 
 if exist('img', 'var')
   % set up the axes of the volume in voxel coordinates
-  nx = size(img,1);
-  ny = size(img,2);
-  nz = size(img,3);
-  mri.dim = [nx ny nz];
+  %nx = size(img,1);
+  %ny = size(img,2);
+  %nz = size(img,3);
+  mri.dim = size(img);%[nx ny nz];
   % store the anatomical data
   mri.anatomy = img;
 end
