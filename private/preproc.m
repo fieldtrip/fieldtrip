@@ -98,7 +98,7 @@ function [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, en
 % Preprocessing options that you should only use for EEG data are
 %   cfg.reref         = 'no' or 'yes' (default = 'no')
 %   cfg.refchannel    = cell-array with new EEG reference channel(s)
-%   cfg.refmethod     = 'avg' or 'median' (default = 'avg')
+%   cfg.refmethod     = 'avg', 'median', or 'bipolar' for bipolar derivation of consecutive channels (default = 'avg')
 %   cfg.implicitref   = 'label' or empty, add the implicit EEG reference as zeros (default = [])
 %   cfg.montage       = 'no' or a montage structure (default = 'no')
 %
@@ -262,12 +262,22 @@ if ~isempty(cfg.implicitref) && ~any(match_str(cfg.implicitref,label))
 end
 
 if strcmp(cfg.reref, 'yes')
-  cfg.refchannel = ft_channelselection(cfg.refchannel, label);
-  refindx = match_str(label, cfg.refchannel);
-  if isempty(refindx)
-    ft_error('reference channel was not found')
+  if strcmp(cfg.refmethod, 'bipolar') % bipolar derivation of consecutive channels
+    cfg.montage            = [];
+    cfg.montage.labelold   = cfg.channel;
+    cfg.montage.labelnew   = strcat(cfg.channel(1:end-1),'-',cfg.channel(2:end));
+    tra_neg                = diag(-ones(numel(cfg.channel)-1,1),1);
+    tra_plus               = diag(ones(numel(cfg.channel)-1,1),-1);
+    cfg.montage.tra        = tra_neg(1:end-1,:)+tra_plus(2:end,:);
+    cfg.reref              = 'no'; % cfg.reref and cfg.montage are mutually exclusive
+  else % derivation based on specified or all channels
+    cfg.refchannel = ft_channelselection(cfg.refchannel, label);
+    refindx = match_str(label, cfg.refchannel);
+    if isempty(refindx)
+      ft_error('reference channel was not found')
+    end
+    dat = ft_preproc_rereference(dat, refindx, cfg.refmethod);
   end
-  dat = ft_preproc_rereference(dat, refindx, cfg.refmethod);
 end
 
 if ~strcmp(cfg.montage, 'no') && ~isempty(cfg.montage)

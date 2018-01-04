@@ -104,7 +104,7 @@ function [data] = ft_preprocessing(cfg, data)
 % Preprocessing options that you should only use for EEG data are
 %   cfg.reref         = 'no' or 'yes' (default = 'no')
 %   cfg.refchannel    = cell-array with new EEG reference channel(s), this can be 'all' for a common average reference
-%   cfg.refmethod     = 'avg' or 'median' (default = 'avg')
+%   cfg.refmethod     = 'avg', 'median', or 'bipolar' for bipolar derivation of consecutive channels (default = 'avg')
 %   cfg.implicitref   = 'label' or empty, add the implicit EEG reference as zeros (default = [])
 %   cfg.montage       = 'no' or a montage structure, see FT_APPLY_MONTAGE (default = 'no')
 %
@@ -672,7 +672,7 @@ if strcmp(cfg.updatesens, 'yes')
       dataout.grad = ft_apply_montage(dataout.grad, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
     end
     if isfield(dataout, 'elec')
-      ft_info('applying the montage to the grad structure\n');
+      ft_info('applying the montage to the elec structure\n');
       dataout.elec = ft_apply_montage(dataout.elec, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
     end
     if isfield(dataout, 'opto')
