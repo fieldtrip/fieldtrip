@@ -243,16 +243,15 @@ if issource && isvolume
 end
 
 if isfield(data, 'trialinfo')
-  switch trialinfostyle
-  case 'table'
+  if strcmp(trialinfostyle, 'table')
     if ismatrix(data.trialinfo)
       data.trialinfo = array2table(data.trialinfo);
     end
-  case 'matrix'
+  elseif strcmp(trialinfostyle, 'matrix')
     if istable(data.trialinfo)
       data.trialinfo = table2array(data.trialinfo);
     end
-  otherwise
+  else
     % no conversion is needed
   end
 end
