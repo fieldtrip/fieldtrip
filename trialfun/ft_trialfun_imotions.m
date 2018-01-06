@@ -15,6 +15,7 @@ assert(isfield(cfg, 'fsample'), 'the configuration should contain the sampling f
 cfg.trialdef            = ft_getopt(cfg, 'trialdef', []);
 cfg.trialdef.eventtype  = ft_getopt(cfg.trialdef, 'eventtype', 'StimulusName');
 cfg.trialdef.eventvalue = ft_getopt(cfg.trialdef, 'eventvalue', []);
+cfg.trialdef.offset     = ft_getopt(cfg.trialdef, 'offset', 'absolute'); % absolute or relative
 
 event = cfg.event;
 
@@ -35,14 +36,19 @@ value    = {event(sel).value};
 
 begsample = sample(:);
 endsample = sample(:)+duration(:)-1;
-offset    = zeros(size(begsample));
+
+switch cfg.trialdef.offset
+  case 'relative'
+    % start of each trial/segment is t=0
+    offset    = zeros(size(begsample));
+  case 'absolute'
+    % start of recording is t=0
+    offset    = begsample - 1;
+end
+
 type      = type(:);
 value     = value(:);
-if false
-  trl = [begsample endsample offset];
-else
-  trl = table(begsample, endsample, offset, type, value);
-end
+trl = table(begsample, endsample, offset, type, value);
 
 
 
