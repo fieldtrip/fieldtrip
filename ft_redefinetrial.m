@@ -299,10 +299,12 @@ elseif ~isempty(cfg.length)
     endsample = data.sampleinfo(k,2);
     offset    = time2offset(data.time{k}, data.fsample);
     thistrl      = (begsample:nshift:(endsample+1-nsmp))';
-    thistrl(:,2) = thistrl(:,1) + nsmp - 1;
-    thistrl(:,3) = thistrl(:,1) + offset - thistrl(1,1);
-    thistrl(:,4) = k; % keep the trial number in the 4th column
-    newtrl = cat(1, newtrl, thistrl);
+    if ~isempty(thistrl) % the trial might be too short
+      thistrl(:,2) = thistrl(:,1) + nsmp - 1;
+      thistrl(:,3) = thistrl(:,1) + offset - thistrl(1,1);
+      thistrl(:,4) = k; % keep the trial number in the 4th column
+      newtrl = cat(1, newtrl, thistrl);
+    end
   end
   clear begsample endsample offset
   
