@@ -293,30 +293,37 @@ elseif ~isempty(cfg.length)
   nsmp    = round(cfg.length*data.fsample);
   nshift  = round((1-cfg.overlap)*nsmp);
   
-  if isfield(data, 'trialinfo')
-    newtrl = zeros(0,size(data.trialinfo, 2) + 3);
-  else
-    newtrl = zeros(0,3);
-  end
+  newtrl = zeros(0,4);
   for k = 1:numel(data.trial)
-    offset = time2offset(data.time{k}, data.fsample);
-    tmp1   = [data.sampleinfo(k,:) offset];
-    tmp2   = (tmp1(1):nshift:(tmp1(2)+1-nsmp))';
-    if ~isempty(tmp2)
-      tmp2(:,2) = tmp2 + nsmp - 1;
-      tmp2(:,3) = tmp2(:,1) + offset - tmp2(1,1);
-      if isfield(data, 'trialinfo')
-        for l = 1:size(data.trialinfo, 2)
-          tmp2(:,3+l) = data.trialinfo(k,l);
-        end
-      end
-      newtrl = [newtrl; tmp2];
-    end
+    begsample = data.sampleinfo(k,1);
+    endsample = data.sampleinfo(k,2);
+    offset    = time2offset(data.time{k}, data.fsample);
+    thistrl      = (begsample:nshift:(endsample+1-nsmp))';
+    thistrl(:,2) = thistrl(:,1) + nsmp - 1;
+    thistrl(:,3) = thistrl(:,1) + offset - thistrl(1,1);
+    thistrl(:,4) = k; % keep the trial number in the 4th column
+    newtrl = cat(1, newtrl, thistrl);
   end
+  clear begsample endsample offset
   
   tmpcfg = keepfields(cfg, {'showcallinfo', 'feedback'});
   tmpcfg.trl = newtrl;
-  data   = removefields(data, {'trialinfo'});
+  
+  if isfield(data, 'trialinfo') && ~istable(data.trialinfo)
+    % replace the trial number with the trial information
+    tmpcfg.trl = [newtrl data.trialinfo(newtrl(:,4),:)];
+  elseif isfield(data, 'trialinfo') && istable(data.trialinfo)
+    % construct the trl matrix as a table
+    begsample = newtrl(:,1);
+    endsample = newtrl(:,2);
+    offset    = newtrl(:,3);
+    tmpcfg.trl = [table(begsample, endsample, offset) data.trialinfo(newtrl(:,4),:)];
+  elseif ~isfield(data, 'trialinfo')
+    % discard the trial number
+    tmpcfg.trl = newtrl(:,1:3);
+  end
+  
+  data   = removefields(data, {'trialinfo'}); % these are in the additional columns of tmpcfg.trl
   data   = ft_redefinetrial(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
