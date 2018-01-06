@@ -34,13 +34,13 @@ dat = read_imotions_txt(filename);
 
 time    = dat.TimestampInSec;
 numeric = zeros(0,numel(time));
-label   = dat.data.Properties.VariableNames;
+label   = dat.table.Properties.VariableNames;
 sellab  = false(size(label));
 
 % check for each field/column whether it is numeric
 for i=1:numel(label)
   % try converting the first element
-  str = dat.data.(label{i})(1);
+  str = dat.table.(label{i})(1);
   val = str2double(str);
   if any(~cellfun(@isempty, str) & isnan(val))
     ft_info('column %15s does not contain numeric data', label{i});
@@ -49,7 +49,7 @@ for i=1:numel(label)
   
   % try converting the first 20 elements
   if numel(time)>10
-    str = dat.data.(label{i})(1:20);
+    str = dat.table.(label{i})(1:20);
     val = str2double(str);
     if any(~cellfun(@isempty, str) & isnan(val))
       ft_info('column %15s does not contain numeric data', label{i});
@@ -58,7 +58,7 @@ for i=1:numel(label)
   end
   
   % try converting the whole column
-  str = dat.data.(label{i});
+  str = dat.table.(label{i});
   val = str2double(str);
   if all(cellfun(@isempty, str) | isnan(val))
     ft_info('column %15s does not contain numeric data', label{i});
@@ -87,7 +87,7 @@ sellab(strcmp(label, 'Timestamp'))    = true;
 sellab(strcmp(label, 'UTCTimestamp')) = true;
 
 for i=find(~sellab)
-  str = dat.data.(label{i});
+  str = dat.table.(label{i});
   if all(cellfun(@isempty, str))
     continue
   end
