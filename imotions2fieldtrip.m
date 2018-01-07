@@ -34,13 +34,13 @@ dat = read_imotions_txt(filename);
 
 time    = dat.TimestampInSec;
 numeric = zeros(0,numel(time));
-label   = dat.data.Properties.VariableNames;
+label   = dat.table.Properties.VariableNames;
 sellab  = false(size(label));
 
 % check for each field/column whether it is numeric
 for i=1:numel(label)
   % try converting the first element
-  str = dat.data.(label{i})(1);
+  str = dat.table.(label{i})(1);
   val = str2double(str);
   if any(~cellfun(@isempty, str) & isnan(val))
     ft_info('column %15s does not contain numeric data', label{i});
@@ -49,7 +49,7 @@ for i=1:numel(label)
   
   % try converting the first 20 elements
   if numel(time)>10
-    str = dat.data.(label{i})(1:20);
+    str = dat.table.(label{i})(1:20);
     val = str2double(str);
     if any(~cellfun(@isempty, str) & isnan(val))
       ft_info('column %15s does not contain numeric data', label{i});
@@ -58,7 +58,7 @@ for i=1:numel(label)
   end
   
   % try converting the whole column
-  str = dat.data.(label{i});
+  str = dat.table.(label{i});
   val = str2double(str);
   if all(cellfun(@isempty, str) | isnan(val))
     ft_info('column %15s does not contain numeric data', label{i});
@@ -83,11 +83,11 @@ eventtype   = {};
 eventvalue  = {};
 
 % these are not to be considered for events
-sellab(strcmp(label,'Timestamp'))    = true;
-sellab(strcmp(label,'UTCTimestamp')) = true;
+sellab(strcmp(label, 'Timestamp'))    = true;
+sellab(strcmp(label, 'UTCTimestamp')) = true;
 
 for i=find(~sellab)
-  str = dat.data.(label{i});
+  str = dat.table.(label{i});
   if all(cellfun(@isempty, str))
     continue
   end
@@ -112,6 +112,14 @@ for i=find(~sellab)
     
     this = next;
     code = code + 1;
+  end
+end
+
+% give some feedback
+for i=1:numel(eventtype)
+  ft_info('column %15s contains the following events\n', eventtype{i});
+  for j=1:numel(eventvalue{i})
+    ft_info('  %15s\n', eventvalue{i}{j});
   end
 end
 
@@ -185,7 +193,7 @@ for i=1:numel(eventtype)
     event(end+1).type     = eventtype{i};
     event(end  ).value    = eventvalue{i}{j};
     event(end  ).sample   = sel(j);
-    event(end  ).duration = sel(j+1)-sel(j)+1;
+    event(end  ).duration = sel(j+1)-sel(j);
     event(end  ).offset   = 0;
   end
 end
