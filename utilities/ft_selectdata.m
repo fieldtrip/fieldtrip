@@ -1213,6 +1213,8 @@ for i=(numel(siz)+1):numel(dim)
 end
 if isvector(x)
   % there is no harm to keep it as it is
+elseif istable(x)
+  % there is no harm to keep it as it is
 else
   x = reshape(x, [siz(~dim) 1]);
 end
