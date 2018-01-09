@@ -525,14 +525,14 @@ elseif iseeg
       headmodel.transfer = sb_transfer(headmodel,sens);
       
     case 'duneuro'
-      %set electrodes
-      cfg = [];
-      cfg.type = headmodel.electrodes;
-      cfg.codims = headmodel.subentities;
-      headmodel.driver.set_electrodes(sens.elecpos', cfg);
-      
-      %compute transfer matrix
       if(~isfield(headmodel,'eeg_transfer'))
+        %set electrodes
+        cfg = [];
+        cfg.type = headmodel.electrodes;
+        cfg.codims = headmodel.subentities;
+        headmodel.driver.set_electrodes(sens.elecpos', cfg);
+        
+        %compute transfer matrix
         cfg = [];
         cfg.solver.reduction = headmodel.reduction;
         headmodel.eeg_transfer = headmodel.driver.compute_eeg_transfer_matrix(cfg);
