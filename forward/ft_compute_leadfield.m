@@ -338,6 +338,31 @@ elseif ismeg
         lf = sens.tra * lf;
       end
       
+    case {'duneuro'}
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      % finite element method as implemented in software duneuro
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      
+      %TODO: units
+      
+      % compute secondary leadfield numerically
+      lf = leadfield_duneuro(dippos, headmodel, 'meg');
+      
+      % compute primary B-field analytically
+      mu = 4*pi*1e-4;
+      index = repmat(1:size(dippos,1),3,1);
+      index = index(:);
+      dipoles = [dippos(index,:) repmat(eye(3),size(dippos,1),1)];
+      Bp = compute_B_primary(sens.coilpos, dipoles, sens.coilori);
+      
+      % compute full B-field
+      lf = mu/(4*pi) * (Bp - lf);
+      
+      if isfield(sens, 'tra')
+        % construct the channels from a linear combination of all magnetometer coils
+        lf = sens.tra * lf;
+      end
+      
     otherwise
       ft_error('unsupported volume conductor model for MEG');
   end % switch voltype for MEG
@@ -495,7 +520,7 @@ elseif iseeg
       
     case 'duneuro'
       % note that the electrode information is contained in the headmodel
-      lf = leadfield_duneuro(dippos, headmodel);
+      lf = leadfield_duneuro(dippos, headmodel, 'eeg');
       
     case 'fns'
       % note that the electrode information is contained in the headmodel

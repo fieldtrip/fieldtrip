@@ -299,6 +299,23 @@ elseif ismeg
         ft_warning('MEG with openmeeg only supported with NEMO lab pipeline. Please omit the mat matrix from the headmodel structure.');
       end
       
+    case 'duneuro'
+      
+      %compute transfer matrix
+      if(~isfield(headmodel,'meg_transfer'))
+        
+        % set coils and projections
+        coils = sens.coilpos;
+        projections = sens.coilori;
+        headmodel.driver.set_coils_and_projections(coils', projections');
+        
+        % compute transfer matrix
+        cfg = [];
+        cfg.solver.reduction   = headmodel.reduction;
+        cfg.solver.intorderadd = headmodel.intorderadd;
+        headmodel.meg_transfer = headmodel.driver.compute_meg_transfer_matrix(cfg);
+      end
+      
     case 'simbio'
       ft_error('MEG not yet supported with simbio');
       
@@ -515,10 +532,10 @@ elseif iseeg
       headmodel.driver.set_electrodes(sens.elecpos', cfg);
       
       %compute transfer matrix
-      if(~isfield(headmodel,'transfer'))
+      if(~isfield(headmodel,'eeg_transfer'))
         cfg = [];
         cfg.solver.reduction = headmodel.reduction;
-        headmodel.transfer = headmodel.driver.compute_eeg_transfer_matrix(cfg);
+        headmodel.eeg_transfer = headmodel.driver.compute_eeg_transfer_matrix(cfg);
       end
       
     case 'interpolate'

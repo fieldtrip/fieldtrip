@@ -212,7 +212,27 @@ if ft_voltype(headmodel, 'openmeeg')
     clear lf
 
   end % while
-
+  
+elseif ft_voltype(headmodel, 'duneuro')
+  % repeated system calls to the duneuro executable makes it rather slow
+  % calling it once for all dipoles is much more efficient
+  
+  % find the indices of all grid points that are inside the brain
+  insideindx = find(grid.inside);
+  
+  ft_progress('init', cfg.feedback, 'computing leadfield');
+  % compute the leadfield on all grid positions inside the brain
+  grid.leadfield = ft_compute_leadfield(grid.pos(insideindx,:), sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
+  grid.leadfield = mat2cell(grid.leadfield, [size(grid.leadfield,1)], repmat(3,1,size(grid.leadfield,2)/3));
+  for i=1:length(insideindx)
+    thisindx = insideindx(i);
+    if isfield(cfg, 'grid') && isfield(cfg.grid, 'mom')
+      % multiply with the normalized dipole moment to get the leadfield in the desired orientation
+      grid.leadfield{thisindx} = grid.leadfield{thisindx} * grid.mom(:,thisindx);
+    end
+  end % for all grid locations inside the brain
+  ft_progress('close');
+  
 else
   % find the indices of all grid points that are inside the brain
   insideindx = find(grid.inside);

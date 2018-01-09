@@ -98,6 +98,9 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 %   cfg.post_process      (optional)
 %   cfg.subtract_mean     (optional)
 %   cfg.reduction         (optional)
+%   cfg.intorderadd_meg   (optional)
+%   cfg.weightingExponent (optional)
+%   cfg.mixedMoments      (optional)
 %
 % SINGLESHELL
 %   cfg.tissue            see above; in combination with 'seg' input; default options are 'brain' or 'scalp'
@@ -211,20 +214,22 @@ cfg.type            = ft_getopt(cfg, 'type');
 cfg.solver_type     = ft_getopt(cfg, 'solver_type');
 cfg.grid_filename   = ft_getopt(cfg, 'grid_filename');
 cfg.tensors_filename= ft_getopt(cfg, 'tensors_filename');
-cfg.electrodes      =  ft_getopt(cfg, 'electrodes');
-cfg.subentities     =  ft_getopt(cfg, 'subentities');
-cfg.forward         =  ft_getopt(cfg, 'forward');
-cfg.initialization  =  ft_getopt(cfg, 'initialization');
-cfg.intorderadd     =  ft_getopt(cfg, 'intorderadd');
-cfg.intorderadd_lb  =  ft_getopt(cfg, 'intorderadd_lb');
-cfg.numberOfMoments =  ft_getopt(cfg, 'numberOfMoments');
-cfg.referenceLength =  ft_getopt(cfg, 'referenceLength');
-cfg.relaxationFactor=  ft_getopt(cfg, 'relaxationFactor');
-cfg.restrict        =  ft_getopt(cfg, 'restrict');
-cfg.weightingExponent =  ft_getopt(cfg, 'weightingExponent');
-cfg.post_process    =  ft_getopt(cfg, 'post_process');
-cfg.subtract_mean   =  ft_getopt(cfg, 'subtract_mean');
-cfg.reduction       =  ft_getopt(cfg, 'reduction');
+cfg.electrodes      = ft_getopt(cfg, 'electrodes');
+cfg.subentities     = ft_getopt(cfg, 'subentities');
+cfg.forward         = ft_getopt(cfg, 'forward');
+cfg.initialization  = ft_getopt(cfg, 'initialization');
+cfg.intorderadd     = ft_getopt(cfg, 'intorderadd');
+cfg.intorderadd_lb  = ft_getopt(cfg, 'intorderadd_lb');
+cfg.numberOfMoments = ft_getopt(cfg, 'numberOfMoments');
+cfg.referenceLength = ft_getopt(cfg, 'referenceLength');
+cfg.relaxationFactor= ft_getopt(cfg, 'relaxationFactor');
+cfg.restrict        = ft_getopt(cfg, 'restrict');
+cfg.post_process    = ft_getopt(cfg, 'post_process');
+cfg.subtract_mean   = ft_getopt(cfg, 'subtract_mean');
+cfg.reduction       = ft_getopt(cfg, 'reduction');
+cfg.intorderadd_meg = ft_getopt(cfg, 'intorderadd_meg');
+cfg.weightingExponent = ft_getopt(cfg, 'weightingExponent');
+cfg.mixedMoments    = ft_getopt(cfg, 'mixedMoments');
 cfg.tissueval       = ft_getopt(cfg, 'tissueval');      % used for simbio
 cfg.transform       = ft_getopt(cfg, 'transform');
 cfg.siunits         = ft_getopt(cfg, 'siunits', 'no');  % yes/no, convert the input and continue with SI units
@@ -475,7 +480,8 @@ switch cfg.method
       'conductivity', cfg.conductivity,  'electrodes', cfg.electrodes, 'subentities', cfg.subentities, 'forward', cfg.forward, 'initialization', cfg.initialization,...
       'intorderadd', cfg.intorderadd, 'intorderadd_lb', cfg.intorderadd_lb, 'numberOfMoments', cfg.numberOfMoments, 'referenceLength', cfg.referenceLength,...
       'relaxationFactor', cfg.relaxationFactor, 'restrict', cfg.restrict, 'weightingExponent', cfg.weightingExponent,'post_process', cfg.post_process,...
-      'subtract_mean', cfg.subtract_mean, 'reduction', cfg.reduction);
+      'subtract_mean', cfg.subtract_mean, 'reduction', cfg.reduction, 'intorderadd_meg', cfg.intorderadd_meg, 'weightingExponent', cfg.weightingExponent,...
+      'mixedMoments', cfg.mixedMoments);
     
   case {'fns'}
     if input_seg

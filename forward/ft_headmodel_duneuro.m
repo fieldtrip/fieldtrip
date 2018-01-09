@@ -22,22 +22,25 @@ function headmodel = ft_headmodel_duneuro(mesh, varargin)
 %
 % Optional input arguments should be specified in key-value pairs and can
 % include
-%   type            =  string, 'fitted' (default)
-%   solver_type     =  string, 'cg' (default)
-%   electrodes      =  string, 'closest_subentity_center' (default)
-%   subentities     =  string, e.g. '1 2 3' (default) or '3'
-%   forward         =  string, 'venant' (default), 'partial_integration' or 'subtraction'
-%   intorderadd     =  string, e.g. '2' (default)
-%   intorderadd_lb  =  string, e.g. '2' (default)
-%   initialization  =  string, e.g. 'closest_vertex' (default)
-%   numberOfMoments =  string, e.g. '3' (default)
-%   referenceLength =  string, e.g. '20' (default)
-%   relaxationFactor=  string, e.g. '1e-6' (default)
-%   restrict        =  string, e.g. 'true' (default)
+%   type            = string, 'fitted' (default)
+%   solver_type     = string, 'cg' (default)
+%   electrodes      = string, 'closest_subentity_center' (default)
+%   subentities     = string, e.g. '1 2 3' (default) or '3'
+%   forward         = string, 'venant' (default), 'partial_integration' or 'subtraction'
+%   intorderadd     = string, e.g. '2' (default)
+%   intorderadd_lb  = string, e.g. '2' (default)
+%   initialization  = string, e.g. 'closest_vertex' (default)
+%   numberOfMoments = string, e.g. '3' (default)
+%   referenceLength = string, e.g. '20' (default)
+%   relaxationFactor= string, e.g. '1e-6' (default)
+%   restrict        = string, e.g. 'true' (default)
 %   weightingExponent= string, e.g. '1' (default)
-%   post_process    =  string, e.g. 'true' (default)
-%   subtract_mean   =  string, e.g. 'true' (default)
-%   reduction       =  string, e.g. '1e-10' (default)
+%   post_process    = string, e.g. 'true' (default)
+%   subtract_mean   = string, e.g. 'true' (default)
+%   reduction       = string, e.g. '1e-10' (default)
+%   intorderadd_meg = integer, e.g.'0' (default)
+%   mixedMoments    = logical, e.g. 'false' (default)
+%   meg_type        = string, e.g. 'physical' (default)
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 %
@@ -69,20 +72,23 @@ solver_type     = ft_getopt(varargin, 'solver_type', 'cg');
 grid_filename   = ft_getopt(varargin, 'grid_filename');
 tensors_filename= ft_getopt(varargin, 'tensors_filename');
 conductivity    = ft_getopt(varargin, 'conductivity');
-electrodes      =  ft_getopt(varargin, 'electrodes', 'closest_subentity_center');
-subentities     =  ft_getopt(varargin, 'subentities', '1 2 3');
-forward         =  ft_getopt(varargin, 'forward', 'venant');
-intorderadd     =  ft_getopt(varargin, 'intorderadd', '2');
-intorderadd_lb  =  ft_getopt(varargin, 'intorderadd_lb', '2');
-initialization  =  ft_getopt(varargin, 'initialization', 'closest_vertex');
-numberOfMoments =  ft_getopt(varargin, 'numberOfMoments', '3');
-referenceLength =  ft_getopt(varargin, 'referenceLength', '20');
-relaxationFactor=  ft_getopt(varargin, 'relaxationFactor', '1e-6');
-restrict        =  ft_getopt(varargin, 'restrict', 'true');
-weightingExponent =  ft_getopt(varargin, 'weightingExponent', '1');
-post_process    =  ft_getopt(varargin, 'post_process', 'true');
-subtract_mean   =  ft_getopt(varargin, 'subtract_mean', 'true');
-reduction       =  ft_getopt(varargin, 'reduction', '1e-10');
+electrodes      = ft_getopt(varargin, 'electrodes', 'closest_subentity_center');
+subentities     = ft_getopt(varargin, 'subentities', '1 2 3');
+forward         = ft_getopt(varargin, 'forward', 'venant');
+intorderadd     = ft_getopt(varargin, 'intorderadd', '2');
+intorderadd_lb  = ft_getopt(varargin, 'intorderadd_lb', '2');
+initialization  = ft_getopt(varargin, 'initialization', 'closest_vertex');
+numberOfMoments = ft_getopt(varargin, 'numberOfMoments', '3');
+referenceLength = ft_getopt(varargin, 'referenceLength', '20');
+relaxationFactor= ft_getopt(varargin, 'relaxationFactor', '1e-6');
+restrict        = ft_getopt(varargin, 'restrict', 'true');
+weightingExponent = ft_getopt(varargin, 'weightingExponent', '1');
+post_process    = ft_getopt(varargin, 'post_process', 'true');
+subtract_mean   = ft_getopt(varargin, 'subtract_mean', 'true');
+reduction       = ft_getopt(varargin, 'reduction', '1e-10');
+intorderadd_meg = ft_getopt(varargin, 'intorderadd_meg', '0');
+mixedMoments    = ft_getopt(varargin, 'mixedMoments', 'false');
+meg_type        = ft_getopt(varargin, 'meg_type', 'physical');
 
 % start with an empty volume conductor
 mesh = ft_datatype_parcellation(mesh);
@@ -111,7 +117,7 @@ if (isempty(grid_filename) || isempty(tensors_filename)) && (isempty(conductivit
   error('Either a filename for the grid and a filename for the conductivity or a conductivity array must be supplied')
 end
 
-if isfield(mesh,'tissue') && length(conductivity)<length(unique(headmodel.tissue))
+if ~isempty(conductivity) && length(conductivity)<length(unique(headmodel.tissue))
   error('Wrong conductivity information!')
 end
 
@@ -127,9 +133,11 @@ else
 end
 
 % create driver object
-cfg = [];
-cfg.type = type;
-cfg.solver_type = solver_type;
+cfg                 = [];
+cfg.type            = type;
+cfg.solver_type     = solver_type;
+cfg.meg.intorderadd = intorderadd_meg;
+cfg.meg.type        = meg_type;
 
 if isfield(mesh,'tet')
   cfg.element_type = 'tetrahedron';
@@ -156,30 +164,23 @@ else
   cfg.volume_conductor.tensors.labels = uint64(headmodel.tissue -1);
   cfg.volume_conductor.tensors.conductivities = conductivity;
 end
-
 headmodel.driver = duneuro_meeg(cfg);
 
-cfg                 = [];
-cfg.type            = forward;
-
-% optional arguments for subtraction and for Venant approach
-cfg.intorderadd     = intorderadd;
-cfg.intorderadd_lb  = intorderadd_lb;
-cfg.initialization  = initialization;
-cfg.numberOfMoments = numberOfMoments;
-cfg.referenceLength = referenceLength;
-cfg.relaxationFactor = relaxationFactor;
-cfg.restrict        = restrict;
-cfg.weightingExponent = weightingExponent;
-
-%set source model
-headmodel.driver.set_source_model(cfg);
-
-headmodel.type = 'duneuro';
-headmodel.electrodes = electrodes;
-headmodel.subentities = subentities;
-headmodel.post_process = post_process;
-headmodel.subtract_mean = subtract_mean;
-headmodel.reduction = reduction;
+headmodel.type              = 'duneuro';
+headmodel.forward           = forward;
+headmodel.electrodes        = electrodes;
+headmodel.subentities       = subentities;
+headmodel.intorderadd       = intorderadd;
+headmodel.intorderadd_lb    = intorderadd_lb;
+headmodel.initialization    = initialization;
+headmodel.numberOfMoments   = numberOfMoments;
+headmodel.referenceLength   = referenceLength;
+headmodel.relaxationFactor  = relaxationFactor;
+headmodel.restrict          = restrict;
+headmodel.weightingExponent = weightingExponent;
+headmodel.mixedMoments      = mixedMoments;
+headmodel.post_process      = post_process;
+headmodel.subtract_mean     = subtract_mean;
+headmodel.reduction         = reduction;
 
 end
