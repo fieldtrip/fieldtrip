@@ -265,7 +265,7 @@ if usefsample
     nsmp = size(data.trial{itr},2);
     data.time{itr} = data.time{itr}(1) + (0:(nsmp-1))/cfg.resamplefs;
     
-    %un-pad the data
+    % un-pad the data
     begindx         = ceil(cfg.resamplefs.*padsmp(itr)./cfg.origfs) + 1;
     data.time{itr}  = data.time{itr}(begindx:end);
     data.trial{itr} = data.trial{itr}(:, begindx:end);
