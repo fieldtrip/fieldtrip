@@ -49,6 +49,11 @@ end
 
 trl = ft_findcfg(data.cfg, 'trl');
 
+if istable(trl)
+  % the subsequent code requires this to be an array
+  trl = table2array(trl(:,1:3));
+end
+
 if istimelock
   nsmp = ones(ntrial,1) .* size(data.trial,3);
 else

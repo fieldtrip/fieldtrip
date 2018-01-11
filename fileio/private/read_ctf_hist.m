@@ -16,11 +16,12 @@ fid      = fopen(filename,'r');
 
 % the hist file is empty sometimes, in which case the actual reading does not return any useful information
 hist = [];
+hist.filename    = filename;
+hist.datasetname = 'unknown';
 hist.starttime   = 'unknown';
 hist.startdate   = 'unknown';
 hist.stoptime    = 'unknown';
 hist.stopdate    = 'unknown';
-hist.datasetname = 'unknown';
 
 while fileline >= 0
   fileline = fgets(fid);
