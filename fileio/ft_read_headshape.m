@@ -668,6 +668,11 @@ switch fileformat
       % copy some optional fields over with a new name
       shape = copyfields(tmp, shape, {'Faces', 'Curvature', 'SulciMap'});
       shape = renamefields(shape, {'Faces', 'Curvature', 'SulciMap'}, {'tri', 'curv', 'sulc'});
+    elseif numel(fieldnames(tmp))==1
+      fn = fieldnames(tmp);
+      shape = tmp.(fn{1});
+      % check that it has vertices and triangles
+      assert(isfield(shape, 'pos') && isfield(shape, 'tri'), 'no headshape found in MATLAB file')
     else
       ft_error('no headshape found in MATLAB file');
     end

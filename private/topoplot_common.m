@@ -778,10 +778,12 @@ end
 % Write comment
 if ~strcmp(cfg.comment, 'no')
   if strcmp(cfg.commentpos, 'title')
-    title(comment, 'FontSize', cfg.fontsize);
+    comment_handle = title(comment, 'FontSize', cfg.fontsize);
   else
-    ft_plot_text(x_comment, y_comment, comment, 'FontSize', cfg.fontsize, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 'FontWeight', cfg.fontweight);
+    comment_handle = ft_plot_text(x_comment, y_comment, comment, 'FontSize', cfg.fontsize, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 'FontWeight', cfg.fontweight);
   end
+else
+  comment_handle = [];
 end
 
 % Set colour axis
@@ -840,6 +842,7 @@ if strcmp(cfg.interactive, 'yes')
   info.(ident).label       = cfg.layout.label;
   info.(ident).dataname    = dataname;
   info.(ident).cfg         = cfg;
+  info.(ident).commenth    = comment_handle;
   if ~isfield(info.(ident),'datvarargin')
     info.(ident).datvarargin = varargin(1:Ndata); % add all datasets to figure
   end
@@ -923,25 +926,41 @@ end
 % SUBFUNCTION which handles hot keys in the current plot
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function key_sub(handle, eventdata, varargin)
+ident       = get(gca, 'tag');
+info        = guidata(gcf);
+
 climits = caxis;
 incr_c  = abs(climits(2) - climits(1)) /10;
 
+newz = climits;
 if length(eventdata.Modifier) == 1 && strcmp(eventdata.Modifier{:}, 'control')
   % TRANSLATE by 10%
   switch eventdata.Key
     case 'pageup'
-      caxis([climits(1)+incr_c climits(2)+incr_c]);
+      newz = [climits(1)+incr_c climits(2)+incr_c];
     case 'pagedown'
-      caxis([climits(1)-incr_c climits(2)-incr_c]);
+      newz = [climits(1)-incr_c climits(2)-incr_c];
   end % switch
 else
   % ZOOM by 10%
   switch eventdata.Key
     case 'pageup'
-      caxis([climits(1)-incr_c climits(2)+incr_c]);
+      newz = [climits(1)-incr_c climits(2)+incr_c];
     case 'pagedown'
-      caxis([climits(1)+incr_c climits(2)-incr_c]);
+      newz = [climits(1)+incr_c climits(2)-incr_c];
     case 'm'
-      caxis([varargin{1} varargin{2}]);
+      newz = [varargin{1} varargin{2}];
   end % switch
 end % if
+
+% update the color axis
+caxis(newz);
+
+if ~isempty(ident) && isfield(info.(ident), 'commenth') && ~isempty(info.(ident).commenth)
+  commentstr = get(info.(ident).commenth, 'string');
+  sel        = contains(commentstr, info.(ident).cfg.parameter);
+  if any(sel)
+    commentstr{sel} = sprintf('%0s=[%.3g %.3g]', info.(ident).cfg.parameter, newz(1), newz(2));
+    set(info.(ident).commenth, 'string', commentstr);
+  end
+end
