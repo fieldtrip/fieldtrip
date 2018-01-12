@@ -98,7 +98,7 @@ function [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, en
 % Preprocessing options that you should only use for EEG data are
 %   cfg.reref         = 'no' or 'yes' (default = 'no')
 %   cfg.refchannel    = cell-array with new EEG reference channel(s)
-%   cfg.refmethod     = 'avg', 'median', or 'sequential' for bipolar derivation of sequential channels (default = 'avg')
+%   cfg.refmethod     = 'avg', 'median', or 'bipolar' (default = 'avg')
 %   cfg.implicitref   = 'label' or empty, add the implicit EEG reference as zeros (default = [])
 %   cfg.montage       = 'no' or a montage structure (default = 'no')
 %
@@ -262,14 +262,23 @@ if ~isempty(cfg.implicitref) && ~any(match_str(cfg.implicitref,label))
 end
 
 if strcmp(cfg.reref, 'yes')
-  if strcmp(cfg.refmethod, 'sequential') % bipolar derivation of sequential channels
-    cfg.montage            = [];
-    cfg.montage.labelold   = cfg.channel;
-    cfg.montage.labelnew   = strcat(cfg.channel(1:end-1),'-',cfg.channel(2:end));
-    tra_neg                = diag(-ones(numel(cfg.channel)-1,1),1);
-    tra_plus               = diag(ones(numel(cfg.channel)-1,1),-1);
-    cfg.montage.tra        = tra_neg(1:end-1,:)+tra_plus(2:end,:);
-    cfg.reref              = 'no'; % cfg.reref and cfg.montage are mutually exclusive
+  if strcmp(cfg.refmethod, 'bipolar')
+    % this is implemented as a montage that the user does not get to see
+    % make a montage for the bipolar derivation of sequential channels
+    montage            = [];
+    montage.labelold   = cfg.channel;
+    montage.labelnew   = strcat(cfg.channel(1:end-1),'-',cfg.channel(2:end));
+    tra_neg            = diag(-ones(numel(cfg.channel)-1,1), 1);
+    tra_plus           = diag( ones(numel(cfg.channel)-1,1),-1);
+    montage.tra        = tra_neg(1:end-1,:)+tra_plus(2:end,:);
+    % apply the montage to the data
+    tmp.trial = {dat};
+    tmp.time  = {time};
+    tmp.label = label;
+    tmp   = ft_apply_montage(tmp, montage, 'feedback', 'none');
+    dat   = tmp.trial{1}; % the number of channels can have changed
+    label = tmp.label;    % the channels can be different than the input channel labels
+    clear tmp
   else % mean or median based derivation of specified or all channels
     cfg.refchannel = ft_channelselection(cfg.refchannel, label);
     refindx = match_str(label, cfg.refchannel);
