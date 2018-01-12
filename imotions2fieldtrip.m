@@ -39,6 +39,13 @@ sellab  = false(size(label));
 
 % check for each field/column whether it is numeric
 for i=1:numel(label)
+  str = dat.table.(label{i});
+  if all(cellfun(@isempty, str))
+    ft_info('column %15s does not contain numeric data', label{i});
+    continue
+  end
+  
+  
   % try converting the first element
   str = dat.table.(label{i})(1);
   val = str2double(str);
@@ -117,9 +124,16 @@ end
 
 % give some feedback
 for i=1:numel(eventtype)
-  ft_info('column %15s contains the following events\n', eventtype{i});
-  for j=1:numel(eventvalue{i})
-    ft_info('  %15s\n', eventvalue{i}{j});
+  n = numel(eventvalue{i});
+  if n>20
+    % only give the summary
+    ft_info('column %15s contains %d events, which are not shown in detail\n', eventtype{i}, n);
+  else
+    % give the full details
+    ft_info('column %15s contains the following %d events\n', eventtype{i}, n);
+    for j=1:numel(eventvalue{i})
+      ft_info('%2d  %15s\n', j, eventvalue{i}{j});
+    end
   end
 end
 
