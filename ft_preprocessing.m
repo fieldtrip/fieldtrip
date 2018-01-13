@@ -104,7 +104,7 @@ function [data] = ft_preprocessing(cfg, data)
 % Preprocessing options that you should only use for EEG data are
 %   cfg.reref         = 'no' or 'yes' (default = 'no')
 %   cfg.refchannel    = cell-array with new EEG reference channel(s), this can be 'all' for a common average reference
-%   cfg.refmethod     = 'avg', 'median', or 'sequential' for bipolar derivation of sequential channels (default = 'avg')
+%   cfg.refmethod     = 'avg', 'median', or 'bipolar' for bipolar derivation of sequential channels (default = 'avg')
 %   cfg.implicitref   = 'label' or empty, add the implicit EEG reference as zeros (default = [])
 %   cfg.montage       = 'no' or a montage structure, see FT_APPLY_MONTAGE (default = 'no')
 %
@@ -653,8 +653,18 @@ if strcmp(cfg.updatesens, 'yes')
   if ~isempty(cfg.montage) && ~isequal(cfg.montage, 'no')
     montage = cfg.montage;
   elseif strcmp(cfg.reref, 'yes')
-    tmpcfg = keepfields(cfg, {'reref', 'implicitref', 'refchannel', 'channel'});
-    montage = ft_prepare_montage(tmpcfg, data);
+    if strcmp(cfg.refmethod, 'bipolar')
+      % make a montage for the bipolar derivation of sequential channels
+      montage            = [];
+      montage.labelold   = cfg.channel;
+      montage.labelnew   = strcat(cfg.channel(1:end-1),'-',cfg.channel(2:end));
+      tra_neg            = diag(-ones(numel(cfg.channel)-1,1), 1);
+      tra_plus           = diag( ones(numel(cfg.channel)-1,1),-1);
+      montage.tra        = tra_neg(1:end-1,:)+tra_plus(2:end,:);
+    else
+      tmpcfg = keepfields(cfg, {'reref', 'implicitref', 'refchannel', 'channel'});
+      montage = ft_prepare_montage(tmpcfg, data);
+    end
   else
     % do not update anything
     montage = [];
