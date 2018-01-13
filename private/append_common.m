@@ -328,9 +328,9 @@ if hasgrad || haselec || hasopto
   if strcmp(cfg.appendsens, 'yes')
     fprintf('concatenating sensor information across input arguments\n');
     % append the sensor descriptions, skip the empty ones
-    if hasgrad, data.grad = ft_appendsens([], grad{~cellfun(@isempty, grad)}); end
-    if haselec, data.elec = ft_appendsens([], elec{~cellfun(@isempty, elec)}); end
-    if hasopto, data.opto = ft_appendsens([], opto{~cellfun(@isempty, opto)}); end
+    if hasgrad, data.grad = ft_appendsens(cfg, grad{~cellfun(@isempty, grad)}); end
+    if haselec, data.elec = ft_appendsens(cfg, elec{~cellfun(@isempty, elec)}); end
+    if hasopto, data.opto = ft_appendsens(cfg, opto{~cellfun(@isempty, opto)}); end
   else
     % discard sensor information when it is inconsistent across the input arguments
     removegrad = any(cellfun(@isempty, grad));

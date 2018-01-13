@@ -5,6 +5,8 @@ function [sens] = ft_appendsens(cfg, varargin)
 %
 % Use as
 %   combined = ft_appendsens(cfg, sens1, sens2, ...)
+% where cfg may contain
+%   cfg.keepduplicates = 'yes' or 'no' (default), whether to keep duplicates
 %
 % A call to FT_APPENDSENS results in the label, pos and ori fields to be
 % concatenated, and the tra matrix to be merged. Any duplicates will be removed.
@@ -51,6 +53,9 @@ ft_preamble trackconfig
 if ft_abort
   return
 end
+
+% set the defaults
+cfg.keepduplicates          = ft_getopt(cfg, 'keepduplicates', 'no'); % whether to keep duplicates
 
 % check if the input data is valid for this function
 % and ensure it is up to the latest standards
@@ -150,7 +155,7 @@ end
 sens.label = cat(1,label{:});
 [~, labidx] = unique(sens.label);
 labidx = sort(labidx);
-if ~isequal(numel(labidx), numel(sens.label))
+if ~isequal(numel(labidx), numel(sens.label)) && strcmp(cfg.keepduplicates, 'no')
   fprintf('removing duplicate labels\n')
   sens.label = sens.label(labidx);
 end
@@ -158,7 +163,7 @@ end
 sens.chanpos = cat(1,chanpos{:});
 [~, chanidx] = unique(sens.chanpos, 'rows');
 chanidx = sort(chanidx);
-if ~isequal(numel(chanidx), size(sens.chanpos,1))
+if ~isequal(numel(chanidx), size(sens.chanpos,1)) && strcmp(cfg.keepduplicates, 'no')
   fprintf('removing duplicate channels\n')
   sens.chanpos = sens.chanpos(chanidx,:);
   if ~isequal(labidx, chanidx) % check for matching order
@@ -170,7 +175,7 @@ if ~isequal(numel(sens.label), size(sens.chanpos,1)) % check for matching number
 end
 if haschanori
   sens.chanori = cat(1,chanori{:});
-  if ~isequal(numel(chanidx), size(sens.chanpos,1))
+  if ~isequal(numel(chanidx), size(sens.chanpos,1)) && strcmp(cfg.keepduplicates, 'no')
     sens.chanori = sens.chanori(chanidx,:); % chanori should match chanpos
   end
 end
@@ -188,11 +193,11 @@ if haselecpos
   sens.elecpos = cat(1,elecpos{:});
   [~, elecidx, elecidx2] = unique(sens.elecpos, 'rows');
   [elecidx, elecord] = sort(elecidx); % sort and keep track of the order
-  if ~isequal(numel(elecidx), size(sens.elecpos,1))
+  if ~isequal(numel(elecidx), size(sens.elecpos,1)) && strcmp(cfg.keepduplicates, 'no')
     fprintf('removing duplicate electrodes\n')
     sens.elecpos = sens.elecpos(elecidx,:);
   end
-  if isfield(sens, 'tra')
+  if isfield(sens, 'tra') && strcmp(cfg.keepduplicates, 'no')
     % shape duplicates into a single column, if necessary
     for idx = 1:numel(elecidx)
       tmp(:, idx) = sum(sens.tra(chanidx, find(elecord(idx)==elecidx2)),2);
@@ -211,11 +216,11 @@ if hasoptopos
   sens.optopos = cat(1,optopos{:});
   [~, optoidx, optoidx2] = unique(sens.optopos, 'rows');
   [optoidx, optoord] = sort(optoidx); % sort and keep track of the order
-  if ~isequal(numel(optoidx), size(sens.optopos,1))
+  if ~isequal(numel(optoidx), size(sens.optopos,1)) && strcmp(cfg.keepduplicates, 'no')
     fprintf('removing duplicate optodes\n')
     sens.optopos = sens.optopos(optoidx,:);
   end
-  if isfield(sens, 'tra')
+  if isfield(sens, 'tra') && strcmp(cfg.keepduplicates, 'no')
     % shape duplicates into a single column, if necessary
     for idx = 1:numel(optoidx)
       tmp(:, idx) = sum(sens.tra(chanidx, find(optoord(idx)==optoidx2)),2);
@@ -234,11 +239,11 @@ if hascoilpos
   sens.coilpos = cat(1,coilpos{:});
   [~, coilidx, coilidx2] = unique(sens.coilpos, 'rows');
   [coilidx, coilord] = sort(coilidx); % sort and keep track of the order
-  if ~isequal(numel(coilidx), size(sens.coilpos,1))
+  if ~isequal(numel(coilidx), size(sens.coilpos,1)) && strcmp(cfg.keepduplicates, 'no')
     fprintf('removing duplicate coils\n')
     sens.coilpos = sens.coilpos(coilidx,:);
   end
-  if isfield(sens, 'tra')
+  if isfield(sens, 'tra') && strcmp(cfg.keepduplicates, 'no')
     % shape duplicates into a single column, if necessary
     for idx = 1:numel(coilidx)
       tmp(:, idx) = sum(sens.tra(chanidx, find(coilord(idx)==coilidx2)),2);
@@ -260,7 +265,7 @@ if hascoilori
 end
 
 % keep the following fields only when identical across inputs
-if haslabelold && all(strcmp(labelold{1}, labelold)) % labeloldmatch
+if haslabelold && all(isequal(labelold{1}, labelold{:})) % labeloldmatch
   sens.labelold = labelold{1};
 end
 if haschanposold && all(isequal(chanposold{1}, chanposold{:})) % chanposoldmatch
