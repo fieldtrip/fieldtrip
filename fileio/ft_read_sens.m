@@ -63,7 +63,13 @@ function [sens] = ft_read_sens(filename, varargin)
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
 
-realtime = any(strcmp(headerformat, {'fcdc_buffer', 'ctf_shm', 'fcdc_mysql'}));
+% get the options
+fileformat     = ft_getopt(varargin, 'fileformat', ft_filetype(filename));
+senstype       = ft_getopt(varargin, 'senstype');         % can be eeg or meg, default is automatic when []
+coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
+coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0 to 2
+
+realtime = any(strcmp(fileformat, {'fcdc_buffer', 'ctf_shm', 'fcdc_mysql'}));
 
 if realtime
   % skip the rest of the initial checks to increase the speed for realtime operation
@@ -73,12 +79,6 @@ else
     ft_error('file ''%s'' does not exist', filename);
   end
 end
-
-% get the options
-fileformat     = ft_getopt(varargin, 'fileformat', ft_filetype(filename));
-senstype       = ft_getopt(varargin, 'senstype');         % can be eeg or meg, default is automatic when []
-coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
-coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0 to 2
 
 switch fileformat
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
