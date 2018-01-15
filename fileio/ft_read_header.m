@@ -199,7 +199,7 @@ if realtime
 else
   % check whether the file or directory exists
   if  ~exist(filename, 'file')
-    ft_error('FILEIO:InvalidFileName', 'file or directory ''%s'' does not exist', filename);
+    ft_error('file or directory ''%s'' does not exist', filename);
   end
   
   checkUniqueLabels = true;
