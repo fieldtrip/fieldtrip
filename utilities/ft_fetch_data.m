@@ -132,8 +132,9 @@ if trlnum>1
       sel = find(count>1); % must be row vector
       for smplop=sel
         % find in which trials the sample occurs
-        seltrl = find(smplop>=trl(:,1) & smplop<=trl(:,2));  % which trials
-        selsmp = smplop - trl(seltrl,1) + 1;                 % which sample in each of the trials
+        seltrl = find(smplop>=trl(:,1) + 1 - begsample & ... 
+                      smplop<=trl(:,2) + 1 - begsample);  % which trials, requires the adjustment with begsample, if different from 1, JM 20180116
+        selsmp = smplop - trl(seltrl,1) + begsample; % which sample in each of the trials, requires the adjustment with begsample, rather than 1
         for i=2:length(seltrl)
           % compare all occurences to the first one
           if ~all(data.trial{seltrl(i)}(:,selsmp(i)) == data.trial{seltrl(1)}(:,selsmp(1)))
