@@ -7,7 +7,7 @@
  * shared memory segment similar to how CTF's Acq operates.
  */
 #include <stdio.h>
-#include "AcqBuffer.h"
+#include "ctf.h"
 #include <sys/shm.h>
 #include <sys/types.h>
 #include <sys/time.h>
