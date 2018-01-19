@@ -978,7 +978,7 @@ elseif info.isneuromag
   set(gca, 'ztick', -25:2:15) % note the different scaling
   axis([-15 15 -15 15 -25 15])
 end
-%axis square
+axis square
 
 
 % put the info back
