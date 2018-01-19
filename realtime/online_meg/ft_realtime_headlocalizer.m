@@ -1,3 +1,4 @@
+
 function ft_realtime_headlocalizer(cfg)
 
 % FT_REALTIME_HEADLOCALIZER is a real-time application for online visualization of
@@ -940,7 +941,7 @@ end
 
 %plot the dewar
 if get(info.hDewarCheckBox, 'Value') && ~isempty(info.cfg.dewar)
-  ft_plot_mesh(info.cfg.dewar,'facecolor','skin','facealpha',0.5);
+  ft_plot_mesh(info.cfg.dewar,'facecolor','skin','facealpha',0.6,'edgecolor','skin','edgealpha',0.6);
 end
 
 %plot Polhemus
