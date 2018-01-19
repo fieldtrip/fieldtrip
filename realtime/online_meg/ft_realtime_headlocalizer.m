@@ -1,3 +1,4 @@
+
 function ft_realtime_headlocalizer(cfg)
 
 % FT_REALTIME_HEADLOCALIZER is a real-time application for online visualization of
@@ -83,8 +84,8 @@ cfg.blocksize       = ft_getopt(cfg, 'blocksize',         1); % in seconds
 cfg.bufferdata      = ft_getopt(cfg, 'bufferdata',   'last'); % first (replay) or last (real-time)
 cfg.coilfreq        = ft_getopt(cfg, 'coilfreq',   [293, 307, 314, 321, 328]); % Hz, Neuromag
 cfg.dewar           = ft_getopt(cfg, 'dewar',            []); % mesh of the dewar
-cfg.headshape       = ft_getopt(cfg, 'headshape',        []); % mesh of the head
-cfg.polhemus        = ft_getopt(cfg, 'polhemus',         []); % mesh of the head
+cfg.headshape       = ft_getopt(cfg, 'headshape',        []); % mesh of the head with the structure sensor
+cfg.polhemus        = ft_getopt(cfg, 'polhemus',         []); % mesh of the head recorded with the polhemus
 cfg.headmovement    = ft_getopt(cfg, 'headmovement',     []); % maxfilter created file containing quaternions information for headlocalistation
 
 % ensure pesistent variables are cleared
@@ -211,7 +212,7 @@ if isctf
   coilsignal = [];
   
 elseif isneuromag
-  shape = ft_read_headshape(cfg.headerfile, 'coordsys', 'dewar', 'format', 'neuromag_fif', 'unit', 'm'); % ensure SI units
+  shape = ft_read_headshape(cfg.headerfile, 'coordsys', 'dewar', 'format', 'neuromag_fif', 'unit', 'cm');
   for i = 1:min(size(shape.pos,1),length(cfg.coilfreq)) % for as many digitized or specified coils
     if ~isempty(strfind(shape.label{i},'hpi'))
       dip(i).pos = shape.pos(i,:); % chan X pos, initial guess for each of the dipole/coil positions
@@ -925,7 +926,6 @@ end
 %plot realistic head mdoel
 if get(info.hRealistic, 'Value') && ~isempty(info.cfg.headshape)
   ft_plot_mesh(ft_transform_geometry(M, info.cfg.headshape))
-  camlight
 end
 
 %plot sensors
@@ -941,7 +941,7 @@ end
 
 %plot the dewar
 if get(info.hDewarCheckBox, 'Value') && ~isempty(info.cfg.dewar)
-  ft_plot_mesh(info.cfg.dewar,'facecolor','skin','facealpha',0.5);
+  ft_plot_mesh(info.cfg.dewar,'facecolor','skin','facealpha',0.6,'edgecolor','skin','edgealpha',0.6);
 end
 
 %plot Polhemus
@@ -978,7 +978,7 @@ elseif info.isneuromag
   set(gca, 'ztick', -25:2:15) % note the different scaling
   axis([-15 15 -15 15 -25 15])
 end
-%axis square
+axis square
 
 
 % put the info back

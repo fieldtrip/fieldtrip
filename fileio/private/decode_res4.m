@@ -1,9 +1,11 @@
-function R4F = decode_res4(chunk)
+function R4F = decode_res4(chunk, varargin)
 
 % DECODE_RES4 is a helper function for real-time processing of CTF data. This
 % function is used to decode the content of the optional ctf_res4 chunck.
 %
 % See also DECODE_FIF, DECODE_NIFTI1, SAP2MATLAB
+
+coordsys = ft_getopt(varargin, 'coordsys', 'dewar'); 
 
 % decode the res4 file content
 if 0
@@ -34,7 +36,7 @@ else
   fwrite(F, 'MEG42CP');
   fclose(F);
   
-  R4F = ft_read_header(dsname, 'coordsys', 'dewar');
+  R4F = ft_read_header(dsname, 'coordsys', coordsys);
   
   delete(res4fn);
   delete(meg4fn);
