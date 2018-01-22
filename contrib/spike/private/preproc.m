@@ -279,7 +279,8 @@ if strcmp(cfg.reref, 'yes')
     dat   = tmp.trial{1}; % the number of channels can have changed
     label = tmp.label;    % the channels can be different than the input channel labels
     clear tmp
-  else % mean or median based derivation of specified or all channels
+  else
+    % mean or median based derivation of specified or all channels
     cfg.refchannel = ft_channelselection(cfg.refchannel, label);
     refindx = match_str(label, cfg.refchannel);
     if isempty(refindx)
