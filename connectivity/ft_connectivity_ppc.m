@@ -8,34 +8,29 @@ function [c, v, n] = ft_connectivity_ppc(input, varargin)
 % May 15;51(1):112-22
 %
 % Use as
-%   [c, v, n] = ft_connectivity_ppc(input, varargin)
-% 
+%   [c, v, n] = ft_connectivity_ppc(input, ...)
+%
 % The input data input should be organized as:
-%
 %   Repetitions x Channel x Channel (x Frequency) (x Time)
-%
 % or
-%
 %   Repetitions x Channelcombination (x Frequency) (x Time)
-% 
+%
 % The first dimension should contain repetitions and should not contain an
 % average already. Also, it should not consist of leave one out averages.
 %
-% Additional input arguments come as key-value pairs:
-%
-%   feedback 'none', 'text', 'textbar' type of feedback showing progress of
-%            computation
-%   weighted 1 (or true) or 0 (or false), we compute unweighted ppc or
-%              weighted ppc, the weighting is according to the magnitude of
-%              the cross-spectrum
+% Additional optional input arguments come as key-value pairs:
+%   feedback  = 'none', 'text', 'textbar' type of feedback showing progress  of computation
+%   weighted  = 1 (or true) or 0 (or false), we compute unweighted ppc or
+%               weighted ppc, the weighting is according to the magnitude of
+%               the cross-spectrum
 %
 % The output c contains the ppc, v is a leave-one-out variance estimate
 % which is only computed if dojack = 1,and n is the number of repetitions
 % in the input data.
-% 
+%
 % See also FT_CONNECTIVITYANALYSIS
 
-% Copyright (C) 2011, Martin Vinck 
+% Copyright (C) 2011, Martin Vinck
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -72,7 +67,7 @@ if n>1
     outssq   = nansum(input.*conj(input));
     outsumw  = nansum(abs(input));
     c        = (outsum.*conj(outsum) - outssq)./(outsumw.*conj(outsumw) - outssq); % do the pairwise thing in a handy way
-  end    
+  end
   c          = reshape(c,siz(2:end)); % remove the first singular dimension
 else
   c = NaN(siz(2:end)); % for one observation, we should return NaNs
@@ -83,22 +78,22 @@ end
 if dojack && n>2 % n needs to be larger than 2 to get a meaningful variance
   for k = 1:n
     % this code works with both formats of input, also if it is 5-D
-    s       = outsum - input(k,:,:,:,:,:,:); % index up to 7-D, this also works for 5-D then.   
+    s       = outsum - input(k,:,:,:,:,:,:); % index up to 7-D, this also works for 5-D then.
     if ~weighted
       num   = s.*conj(s) - (n-2);
       denom = (n-1)*(n-2);
     else
-      sq    = outssq  - input(k,:,:,:,:,:,:).*conj(input(k,:,:,:,:,:,:));  
+      sq    = outssq  - input(k,:,:,:,:,:,:).*conj(input(k,:,:,:,:,:,:));
       sw    = outsumw - abs(input(k,:,:,:,:,:,:));
       num   = s.*conj(s)   - sq;
       denom = sw.*conj(sw) - sq;
-    end        
+    end
     leave1outsum = leave1outsum + num./denom;
-    leave1outssq = leave1outssq + (num./denom).^2;                              
-  end  
-  % compute the sem here 
+    leave1outssq = leave1outssq + (num./denom).^2;
+  end
+  % compute the sem here
   v = (n-1).^2*(leave1outssq - (leave1outsum.^2)./n)./(n - 1); % 11.5 efron, sqrt and 1/n done in ft_connectivityanalysis
-  v = reshape(v,siz(2:end)); % remove the first singular dimension   
+  v = reshape(v,siz(2:end)); % remove the first singular dimension
 elseif dojack && n<=2
   v = NaN(siz(2:end));
 else

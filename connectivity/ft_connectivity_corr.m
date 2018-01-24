@@ -2,12 +2,13 @@ function [c, v, outcnt] = ft_connectivity_corr(input, varargin)
 
 % FT_CONNECTIVITY_CORR computes correlation, coherence or a related
 % quantity from a data-matrix containing a covariance or cross-spectral
-% density.
+% density. This function is a helper function for
+% FT_CONNECTIVITYANALYSIS.
 %
 % Use as
-%   [c, v, n] = ft_connectivity_corr(input, varargin)
+%   [c, v, n] = ft_connectivity_corr(input, ...)
 %
-% The input data input should be an array organized as:
+% The input data should be an array organized as
 %   Repetitions x Channel x Channel (x Frequency) (x Time)
 % or
 %   Repetitions x Channelcombination (x Frequency) (x Time)
@@ -18,8 +19,7 @@ function [c, v, outcnt] = ft_connectivity_corr(input, varargin)
 % the case, the output will be coherence (or a derived metric), if the
 % latter is the case, the output will be the correlation coefficient.
 %
-% Additional input arguments come as key-value pairs:
-%
+% Additional optional input arguments come as key-value pairs:
 %   hasjack   = 0 or 1 specifying whether the Repetitions represent
 %               leave-one-out samples
 %   complex   = 'abs', 'angle', 'real', 'imag', 'complex', 'logabs' for
@@ -109,16 +109,16 @@ siz = [size(input) 1];
 % do partialisation if necessary
 if ~isempty(pchanindx),
   % partial spectra are computed as in Rosenberg JR et al (1998) J.Neuroscience Methods, equation 38
-  
+
   chan   = allchanindx;
   nchan  = numel(chan);
   pchan  = pchanindx;
   npchan = numel(pchan);
   newsiz = siz;
   newsiz(2:3) = numel(chan); % size of partialised csd
-  
+
   A  = zeros(newsiz);
-  
+
   % FIXME this only works for data without time dimension
   if numel(siz)==5 && siz(5)>1, ft_error('this only works for data without time'); end
   for j = 1:siz(1) %rpt loop
@@ -140,7 +140,7 @@ end
 % compute the metric
 if (length(strfind(dimord, 'chan'))~=2 || ~isempty(strfind(dimord, 'pos'))) && ~isempty(powindx),
   % crossterms are not described with chan_chan_therest, but are linearly indexed
-  
+
   outsum = zeros(siz(2:end));
   outssq = zeros(siz(2:end));
   outcnt = zeros(siz(2:end));
@@ -160,7 +160,7 @@ if (length(strfind(dimord, 'chan'))~=2 || ~isempty(strfind(dimord, 'pos'))) && ~
     outcnt = outcnt + double(~isnan(tmp));
   end
   ft_progress('close');
-  
+
 elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2,
   % crossterms are described by chan_chan_therest
   outsum = zeros(siz(2:end));
@@ -189,7 +189,7 @@ elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2,
     outcnt = outcnt + double(~isnan(tmp));
   end
   ft_progress('close');
-  
+
 end
 
 n  = siz(1);

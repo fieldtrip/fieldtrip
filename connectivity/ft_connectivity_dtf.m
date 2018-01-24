@@ -1,20 +1,21 @@
 function [dtf, dtfvar, n] = ft_connectivity_dtf(input, varargin)
 
-% FT_CONNECTIVITY_DTF computes directed transfer function.
-% 
+% FT_CONNECTIVITY_DTF computes directed transfer function. This function is a helper function for
+% FT_CONNECTIVITYANALYSIS.
+%
 % Use as
-%   [d, v, n] = ft_connectivity_dtf(h, key1, value1, ...)
+%   [d, v, n] = ft_connectivity_dtf(h, ...)
 %
-% Input arguments: 
+% The input data should be
 %   h = spectral transfer matrix, Nrpt x Nchan x Nchan x Nfreq (x Ntime),
-%      Nrpt can be 1.
+%       Nrpt can be 1.
 %
-% additional options need to be specified as key-value pairs and are:
+% Additional optional input arguments come as key-value pairs:
 %   'hasjack'  = 0 (default) is a boolean specifying whether the input
 %                contains leave-one-outs, required for correct variance
 %                estimate.
 %   'feedback' = string, determining verbosity (default = 'none'), see FT_PROGRESS
-%   'crsspctrm' = matrix containing the cross-spectral density. If this 
+%   'crsspctrm' = matrix containing the cross-spectral density. If this
 %                 matrix is defined, the function
 %                 returns the ddtf, which requires an estimation of partial
 %                 coherence from this matrix.
@@ -83,7 +84,7 @@ outssq = zeros(siz(2:end));
 if ~isempty(crsspctrm)
   assert(isequal(size(crsspctrm),size(input)), 'the input data should be of the same size as the crsspctrm');
   fprintf('computing dDTF in the presence of a crsspctrm\n');
-  
+
   % the crsspctrm allows for the partial coherence to be computed
   pdim   = prod(siz(4:end));
   tmpcrs = reshape(crsspctrm, [siz(1:3) pdim]);
@@ -111,7 +112,7 @@ for j = 1:n
   else
     % dDTF
     tmpc   = reshape(crsspctrm(j,:,:,:,:), siz(2:end));
-    
+
     den    = sum(sum(abs(tmph).^2,3),2);
     tmpdtf = abs(tmph)./sqrt(repmat(den, [1 siz(2) siz(4) 1 1 1]));
     tmpdtf = tmpdtf.*tmpc;

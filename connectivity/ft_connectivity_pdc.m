@@ -1,15 +1,15 @@
 function [pdc, pdcvar, n] = ft_connectivity_pdc(input, varargin)
 
 % FT_CONNECTIVITY_PDC computes partial directed coherence.
-% 
+%
 % Use as
 %   [p, v, n] = ft_connectivity_pdc(h, key1, value1, ...)
 %
-% Input arguments: 
+% Input arguments:
 %   H = spectral transfer matrix, Nrpt x Nchan x Nchan x Nfreq (x Ntime),
 %      Nrpt can be 1.
 %
-% additional options need to be specified as key-value pairs and are:
+% Additional optional input arguments come as key-value pairs:
 %   'hasjack'  = 0 (default) is a boolean specifying whether the input
 %                contains leave-one-outs, required for correct variance
 %                estimate
@@ -109,12 +109,12 @@ input = reshape(tmpinput, siz);
 for j = 1:n
   ft_progress(j/n, 'computing metric for replicate %d from %d\n', j, n);
   invh   = reshape(input(j,:,:,:,:), siz(2:end));
-  
-  
+
+
   den    = sum(abs(invh).^2,1);
   tmppdc = abs(invh)./sqrt(repmat(den, [siz(2) 1 1 1 1]));
-  
-  
+
+
   outsum = outsum + tmppdc;
   outssq = outssq + tmppdc.^2;
 end
