@@ -4,7 +4,10 @@ function [raw, event] = imotions2fieldtrip(filename, varargin)
 % raw data structure.
 %
 % Use as
-%   data = imotions2fieldtrip(filename)
+%   data = imotions2fieldtrip(filename, ...)
+%
+% Additional options should be specified in key-value pairs and can be
+%   fixtime = 'squash' or 'interpolate' (default = 'interpolate')
 %
 % See also FT_DATATYPE_RAW, FT_PREPROCESSING
 
@@ -28,6 +31,8 @@ function [raw, event] = imotions2fieldtrip(filename, varargin)
 %
 % $Id$
 
+fixtime = ft_getopt(varargin, 'fixtime', 'interpolate'); % squash or interpolate
+
 % read the whole ASCII file into memory
 % this will include a MATLAB table with the actual data
 dat = read_imotions_txt(filename);
@@ -39,13 +44,13 @@ sellab  = false(size(label));
 
 % check for each field/column whether it is numeric
 for i=1:numel(label)
+  % don't convert if all empty
   str = dat.table.(label{i});
   if all(cellfun(@isempty, str))
     ft_info('column %15s does not contain numeric data', label{i});
     continue
   end
-  
-  
+
   % try converting the first element
   str = dat.table.(label{i})(1);
   val = str2double(str);
@@ -79,7 +84,6 @@ for i=1:numel(label)
 end
 % remember the labels for the columns with numeric data
 numericlabel = label(sellab);
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % construct numeric channels for the columns that represent events
@@ -138,61 +142,85 @@ for i=1:numel(eventtype)
 end
 
 % construct a raw data structure
-raw.time{1}  = time;
+raw.time{1}  = time(:)';
 raw.trial{1} = cat(1, numeric, eventcode);
 raw.label    = cat(1, numericlabel(:), eventtype(:));
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the next section deals with timestamps that are repeated
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% make a local copy for convenience
-time  = raw.time{1};
-trial = raw.trial{1};
-
-% the same timestamp can be on multiple lines in the file
-dt = diff(sort(time));
-
-if any(dt==0)
-  ft_notice('removing overlapping samples...\n');
-  t = 1;
-  while t<numel(time)
-    sel = find(time==time(t));
-    trial(:,t) = nanmean(trial(:,sel),2);
-    time(sel(2:end)) = nan;
-    t = t+numel(sel);
-  end
-  
-  seltime = ~isnan(time);
-  ft_notice('keeping %.0f %% of the original samples\n', 100*mean(seltime));
-  time  = time (  seltime);
-  trial = trial(:,seltime);
+switch fixtime
+  case 'squash'
+    % make a local copy for convenience
+    time  = raw.time{1};
+    trial = raw.trial{1};
+    
+    % the same timestamp can be on multiple lines in the file
+    dt = diff(sort(time));
+    
+    if any(dt==0)
+      ft_notice('removing overlapping samples...\n');
+      t = 1;
+      while t<numel(time)
+        sel = find(time==time(t));
+        trial(:,t) = nanmean(trial(:,sel),2);
+        time(sel(2:end)) = nan;
+        t = t+numel(sel);
+      end
+      
+      seltime = ~isnan(time);
+      ft_notice('keeping %.0f %% of the original samples\n', 100*mean(seltime));
+      time  = time (  seltime);
+      trial = trial(:,seltime);
+    end
+    
+    % put them back
+    raw.time{1}  = time;
+    raw.trial{1} = trial;
+    
+  case 'interpolate'
+    % make a local copy for convenience
+    y = raw.time{1};
+    x = 1:numel(y);
+    % use a GLM to estimate y = b0 * x + b1
+    p = polyfit(x, y, 1);
+    y = polyval(p, x);
+    % replace the time by the estimated linear interpolant
+    raw.time{1} = y;
+    
+  otherwise
+    error('unsupported option')
 end
 
-% put them back
-raw.time{1}  = time;
-raw.trial{1} = trial;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % interpolate the data to ensure a regular time axis
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-dt = diff(time);
-dt = median(dt);
-begtime = min(time);
-endtime = max(time);
-
-if any(diff(time)~=dt)
-  ft_notice('resampling onto regularly spaced time axis\n');
-  tmpcfg = [];
-  tmpcfg.time = {begtime:dt:endtime};
-  raw = ft_resampledata(tmpcfg, raw);
-  [~, raw] = rollback_provenance([], raw);
+if ~strcmp(fixtime, 'interpolate')
+  % make a local copy for convenience
+  time = raw.time{1};
+  
+  dt = diff(time);
+  dt = median(dt);
+  begtime = min(time);
+  endtime = max(time);
+  
+  if any(diff(time)~=dt)
+    ft_notice('resampling onto regularly spaced time axis\n');
+    tmpcfg = [];
+    tmpcfg.time = {begtime:dt:endtime};
+    raw = ft_resampledata(tmpcfg, raw);
+    [~, raw] = rollback_provenance([], raw);
+  end
+  
+  % the channels with the event codes should remain integers
+  sel = match_str(raw.label, eventtype);
+  raw.trial{1}(sel,:) = floor(raw.trial{1}(sel,:));
 end
 
-% the channels with the event codes should remain integers
-sel = match_str(raw.label, eventtype);
-raw.trial{1}(sel,:) = floor(raw.trial{1}(sel,:));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % construct a structure with all events
