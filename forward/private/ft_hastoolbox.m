@@ -586,6 +586,9 @@ v = str2num([token{:}{:}]);
 % helper function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function status = has_license(toolbox_name)
+% NOTE: this explicitly checks out a license, which may be suboptimal in
+% terms of license use. Consider using the option 'test', but this needs to
+% be checked with respect to backward compatibility first
 status = license('checkout', toolbox_name)==1;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
