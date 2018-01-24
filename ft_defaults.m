@@ -152,21 +152,21 @@ if ~isdeployed
   
   try
     % external/signal contains alternative implementations of some signal processing functions
-    if ~ft_platform_supports('signal') || ~ft_hastoolbox('signal') || ~strcmp(ft_default.toolbox.signal, 'matlab')
+    if ~ft_platform_supports('signal') || ~strcmp(ft_default.toolbox.signal, 'matlab') || ~ft_hastoolbox('signal')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
     end
   end
   
   try
     % external/stats contains alternative implementations of some statistics functions
-    if ~ft_platform_supports('stats') || ~ft_hastoolbox('stats') || ~strcmp(ft_default.toolbox.stats, 'matlab')
+    if ~ft_platform_supports('stats') || ~strcmp(ft_default.toolbox.stats, 'matlab') || ~ft_hastoolbox('stats')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
     end
   end
   
   try
     % external/images contains alternative implementations of some image processing functions
-    if ~ft_platform_supports('images') || ~ft_hastoolbox('images') || ~strcmp(ft_default.toolbox.images, 'matlab')
+    if ~ft_platform_supports('images') || ~strcmp(ft_default.toolbox.images, 'matlab') || ~ft_hastoolbox('images')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'images'));
     end
   end
