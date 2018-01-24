@@ -263,7 +263,11 @@ if usefsample
     
     % update the time axis
     nsmp = size(data.trial{itr},2);
-    data.time{itr} = data.time{itr}(1) + (0:(nsmp-1))/cfg.resamplefs;
+    origtime = data.time{itr};
+    data.time{itr} = origtime(1) + (0:(nsmp-1))/cfg.resamplefs;
+    % the first sample does not exactly remain at the same latency, but can be shifted by a sub-sample amount
+    shift = mean(origtime) - mean(data.time{itr});
+    data.time{itr} = data.time{itr} + shift;
     
     % un-pad the data
     begindx         = ceil(cfg.resamplefs.*padsmp(itr)./cfg.origfs) + 1;
