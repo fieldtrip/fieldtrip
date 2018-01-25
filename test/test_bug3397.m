@@ -22,12 +22,10 @@ assert(numel(tmp.trial)==30);
 
 try
   ft_appenddata(alldata{:});
-catch ME
-  if strncmp(ME.message,'It seems as if the first', 24)
-    % this is the expected error
-  else
-    rethrow(ME);
-  end
+  failed = false;  
+catch
+  failed = true;
 end
+assert(failed, 'the expected error was not thrown');
 
 
