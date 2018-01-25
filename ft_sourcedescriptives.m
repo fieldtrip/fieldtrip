@@ -544,7 +544,7 @@ if ispccdata
             Cdr               = lambda1(csd(dipsel, refsel));
             source.avg.coh(i) = abs(Cdr).^2 ./ (Pd*Pr);
           case 'canonical'
-            [ccoh, c2, v1, v2] = cancorr(csd, dipsel, refsel);
+            [ccoh, c2, v1, v2] = ft_connectivity_cancorr(csd, dipsel, refsel);
             [cmax, indmax]     = max(ccoh);
             source.avg.coh(i)  = ccoh(indmax);
           otherwise
