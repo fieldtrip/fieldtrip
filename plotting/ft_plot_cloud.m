@@ -133,6 +133,7 @@ facecolor          = ft_getopt(varargin, 'facecolor', [0.781 0.762 0.664]);
 edgecolor          = ft_getopt(varargin, 'edgecolor', 'none');
 facealpha          = ft_getopt(varargin, 'facealpha', 1);
 edgealpha          = ft_getopt(varargin, 'edgealpha', 0);
+vertexcolor        = ft_getopt(varargin, 'vertexcolor', 'none');
 
 if rmin < 1 * ft_scalingfactor('mm', unit)
   ft_error('cfg.rmin must be equal or larger than 1 mm');
@@ -165,7 +166,7 @@ if ~isempty(meshplot)
     end
   end
   
-  % facecolor and edgecolor should be cell array
+  % facecolor, edgecolor, and vertexcolor should be cell array
   if ~iscell(facecolor)
     tmp = facecolor;
     if ischar(tmp)
@@ -190,6 +191,19 @@ if ~isempty(meshplot)
       end
     else
       edgecolor = {};
+    end
+  end
+  if ~iscell(vertexcolor)
+    tmp = vertexcolor;
+    if ischar(tmp)
+      vertexcolor = {tmp};
+    elseif ismatrix(tmp) && size(tmp, 2) == 3
+      vertexcolor = cell(size(tmp,1), 1);
+      for i=1:size(tmp,1)
+        vertexcolor{i} = tmp(i, 1:3);
+      end
+    else
+      vertexcolor = {};
     end
   end
   
@@ -663,7 +677,7 @@ else % plot 3d cloud
   if ~isempty(meshplot)
     for k = 1:numel(meshplot) % mesh loop
       ft_plot_mesh(meshplot{k}, 'facecolor', facecolor{k}, 'EdgeColor', edgecolor{k}, ...
-        'facealpha', facealpha(k), 'edgealpha', edgealpha(k));
+        'facealpha', facealpha(k), 'edgealpha', edgealpha(k), 'vertexcolor', vertexcolor{k});
       material dull
     end % end mesh loop
     
