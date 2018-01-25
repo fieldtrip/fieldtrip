@@ -133,7 +133,7 @@ facecolor          = ft_getopt(varargin, 'facecolor', [0.781 0.762 0.664]);
 edgecolor          = ft_getopt(varargin, 'edgecolor', 'none');
 facealpha          = ft_getopt(varargin, 'facealpha', 1);
 edgealpha          = ft_getopt(varargin, 'edgealpha', 0);
-vertexcolor        = ft_getopt(varargin, 'vertexcolor', 'none');
+vertexcolor        = ft_getopt(varargin, 'vertexcolor', 'curv');
 
 if rmin < 1 * ft_scalingfactor('mm', unit)
   ft_error('cfg.rmin must be equal or larger than 1 mm');
