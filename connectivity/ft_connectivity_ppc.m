@@ -1,11 +1,10 @@
 function [c, v, n] = ft_connectivity_ppc(input, varargin)
 
-% FT_CONNECTIVITY_PPC computes pairwise phase consistency or weighted
-% pairwise phase consistency from a data-matrix containing a cross-spectral
-% density. It implements the method described in: Vinck M, van Wingerden M,
-% Womelsdorf T, Fries P, Pennartz CM. The pairwise phase consistency: a
-% bias-free measure of rhythmic neuronal synchronization. Neuroimage. 2010
-% May 15;51(1):112-22
+% FT_CONNECTIVITY_PPC computes pairwise phase consistency or weighted pairwise phase
+% consistency from a data-matrix containing a cross-spectral density. This implements
+% the method described in Vinck M, van Wingerden M, Womelsdorf T, Fries P, Pennartz
+% CM. The pairwise phase consistency: a bias-free measure of rhythmic neuronal
+% synchronization. Neuroimage. 2010 May 15;51(1):112-22.
 %
 % Use as
 %   [c, v, n] = ft_connectivity_ppc(input, ...)
@@ -15,8 +14,8 @@ function [c, v, n] = ft_connectivity_ppc(input, varargin)
 % or
 %   Repetitions x Channelcombination (x Frequency) (x Time)
 %
-% The first dimension should contain repetitions and should not contain an
-% average already. Also, it should not consist of leave one out averages.
+% The first dimension should contain repetitions and should not contain an average
+% already. Also, it should not consist of leave-one-out averages.
 %
 % Additional optional input arguments come as key-value pairs:
 %   feedback  = 'none', 'text', 'textbar' type of feedback showing progress  of computation
@@ -24,9 +23,8 @@ function [c, v, n] = ft_connectivity_ppc(input, varargin)
 %               weighted ppc, the weighting is according to the magnitude of
 %               the cross-spectrum
 %
-% The output c contains the ppc, v is a leave-one-out variance estimate
-% which is only computed if dojack = 1,and n is the number of repetitions
-% in the input data.
+% The output c contains the ppc, v is a leave-one-out variance estimate which is only
+% computed if dojack = 1,and n is the number of repetitions in the input data.
 %
 % See also FT_CONNECTIVITYANALYSIS
 
@@ -71,7 +69,7 @@ if n>1
   c          = reshape(c,siz(2:end)); % remove the first singular dimension
 else
   c = NaN(siz(2:end)); % for one observation, we should return NaNs
-  ft_warning('ft_connectivity_ppc:nTrials', 'computation ppc requires >1 trial, returning NaNs')
+  ft_warning('computation ppc requires >1 trial, returning NaNs')
 end
 
 [leave1outsum, leave1outssq] = deal(0);

@@ -69,15 +69,15 @@ if isempty(dimord)
   ft_error('input parameters should contain a dimord');
 end
 
-if (length(strfind(dimord, 'chan'))~=2 || ~isempty(strfind(dimord, 'pos'))>0) && ~isempty(powindx),
+if (length(strfind(dimord, 'chan'))~=2 || contains(dimord, 'pos')>0) && ~isempty(powindx)
   %crossterms are not described with chan_chan_therest, but are linearly indexed
-
+  
   siz = size(input);
-
+  
   outsum = zeros(siz(2:end));
   outssq = zeros(siz(2:end));
   pvec   = [2 setdiff(1:numel(siz),2)];
-
+  
   ft_progress('init', feedback, 'computing metric...');
   %first compute coherency and then phaseslopeindex
   for j = 1:siz(1)
@@ -85,23 +85,23 @@ if (length(strfind(dimord, 'chan'))~=2 || ~isempty(strfind(dimord, 'pos'))>0) &&
     c      = reshape(input(j,:,:,:,:), siz(2:end));
     p1     = abs(reshape(input(j,powindx(:,1),:,:,:), siz(2:end)));
     p2     = abs(reshape(input(j,powindx(:,2),:,:,:), siz(2:end)));
-
+    
     p      = ipermute(phaseslope(permute(c./sqrt(p1.*p2), pvec), nbin, normalize), pvec);
-
+    
     outsum = outsum + p;
     outssq = outssq + p.^2;
   end
   ft_progress('close');
-
-elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2,
+  
+elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2
   %crossterms are described by chan_chan_therest
-
+  
   siz = size(input);
-
+  
   outsum = zeros(siz(2:end));
   outssq = zeros(siz(2:end));
   pvec   = [3 setdiff(1:numel(siz),3)];
-
+  
   ft_progress('init', feedback, 'computing metric...');
   for j = 1:siz(1)
     ft_progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
@@ -120,13 +120,13 @@ elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2,
     outssq = outssq + p.^2;
   end
   ft_progress('close');
-
+  
 end
 
 n = siz(1);
 c = outsum./n;
 
-if n>1,
+if n>1
   n = shiftdim(sum(~isnan(input),1),1);
   if hasjack
     bias = (n-1).^2;
@@ -138,7 +138,8 @@ else
   v = [];
 end
 
-%---------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 function [y] = phaseslope(x, n, norm)
 
 m   = size(x, 1); %total number of frequency bins

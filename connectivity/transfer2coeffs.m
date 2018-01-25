@@ -1,8 +1,8 @@
 function A = transfer2coeffs(H, freq, labelcmb, maxlag)
 
-% TRANSFER2COEFFS converts a spectral transfer matrix into the time domain
-% equivalent multivariate autoregressive coefficients up to a specified
-% lag, starting from lag 1.
+% TRANSFER2COEFFS converts a spectral transfer matrix into the time domain equivalent
+% multivariate autoregressive coefficients up to a specified lag, starting from lag
+% 1.
 
 if nargin<3
   labelcmb = [];
@@ -30,7 +30,7 @@ if ~all(dfreq==dfreq(1))
 end
 
 if freq(1)~=0
-  ft_warning('FieldTrip:transfer2iis', 'when converting the transfer function to coefficients, the frequency axis should ideally start at 0, zero padding the spectral density'); 
+  ft_warning('FieldTrip:transfer2iis', 'when converting the transfer function to coefficients, the frequency axis should ideally start at 0, zero padding the spectral density');
   dfreq = mean(dfreq);
   npad  = freq(1)./dfreq;
   
@@ -65,10 +65,10 @@ if isfull
   else
     N2 = 2*(N-1)+1;
   end
-
+  
   % preallocate memory for efficiency
   Harr   = zeros(m,m,N2) + 1i.*zeros(m,m,N2);
-
+  
   % the input cross-spectral density is assumed to be weighted with a
   % factor of 2 in all non-DC and Nyquist bins, therefore weight the
   % DC-bin with a factor of sqrt(2) to get a correct two-sided representation
@@ -86,7 +86,7 @@ if isfull
   end
   
   % invert the transfer matrix to get the fourier representation of the
-  % coefficients, and add an identity matrix 
+  % coefficients, and add an identity matrix
   I = eye(siz(1));
   for k = 1:size(Harr,3)
     Harr(:,:,k) = I-inv(Harr(:,:,k));
@@ -115,10 +115,10 @@ else
   else
     N2 = 2*(N-1)+1;
   end
-
+  
   % preallocate memory for efficiency
   Harr   = zeros(m,N2) + 1i.*zeros(m,N2);
-
+  
   % the input cross-spectral density is assumed to be weighted with a
   % factor of 2 in all non-DC and Nyquist bins, therefore weight the
   % DC-bin with a factor of sqrt(2) to get a correct two-sided representation
@@ -136,7 +136,7 @@ else
   end
   
   % invert the transfer matrix to get the fourier representation of the
-  % coefficients, and add an identity matrix 
+  % coefficients, and add an identity matrix
   %
   % this assumes Harr to be in the rows quadruplets of pairwise
   % decompositions, i.e. reshapable, without checking the labelcmb
@@ -147,7 +147,7 @@ else
     Htmp = repmat(I, [1 1 ncmb]) - inv2x2(Htmp);
     Harr(:,k) = Htmp(:);
   end
-    
+  
   % take the inverse fft to get the coefficients
   A = ifft(permute(Harr, [2 1]), 'symmetric');
   A = A(2:end,:);
@@ -156,5 +156,5 @@ else
   if ~isempty(maxlag)
     A = A(:,1:maxlag);
   end
-
+  
 end

@@ -1,10 +1,9 @@
 function output = ft_connectivity_mutualinformation(input, varargin)
 
-% FT_CONNECTIVITY_MUTUALINFORMATION computes mutual information using
-% the information breakdown toolbox (ibtb), as described in Magri et al.,
-% BMC Neuroscience 2009, 1471-2202. This function is a helper function for
-% FT_CONNECTIVITYANALYSIS.
-
+% FT_CONNECTIVITY_MUTUALINFORMATION computes mutual information using the information
+% breakdown toolbox (ibtb), as described in Magri et al., BMC Neuroscience 2009,
+% 1471-2202.
+%
 % Use as
 %   mi = ft_connectivity_mutualinformation(data, ...)
 %
@@ -22,6 +21,8 @@ function output = ft_connectivity_mutualinformation(input, varargin)
 %   refdata    = 1xNobservations vector, as an alternative to the refindx. Refdata takes precedence over refindx
 %
 % The output contains the estimated mutual information between all channels and the reference channel(s).
+%
+% See also FT_CONNECTIVITYANALYSIS
 
 % Copyright (C) 2016 Donders Institute, Jan-Mathijs Schoffelen
 %
@@ -48,48 +49,45 @@ function output = ft_connectivity_mutualinformation(input, varargin)
 ft_hastoolbox('ibtb', 1);
 
 % set some options
-histmethod = ft_getopt(varargin, 'histmethod', 'eqpop');
-numbin     = ft_getopt(varargin, 'numbin',     10);
-refindx    = ft_getopt(varargin, 'refindx',    'all');
-refdata    = ft_getopt(varargin, 'refdata',    []);
-lags       = ft_getopt(varargin, 'lags',       0); % shift of data w.r.t. reference, in samples
+histmethod  = ft_getopt(varargin, 'histmethod', 'eqpop');
+numbin      = ft_getopt(varargin, 'numbin',     10);
+refindx     = ft_getopt(varargin, 'refindx',    'all');
+refdata     = ft_getopt(varargin, 'refdata',    []);
+lags        = ft_getopt(varargin, 'lags',       0); % shift of data w.r.t. reference, in samples
 
-% set some additional options that pertain to the algorithmic details of the
-% mutual information computation
-opts        = ft_getopt(varargin, 'opts', []);
-opts.nt     = ft_getopt(opts, 'nt', []);
-opts.method = ft_getopt(opts, 'method', 'dr');
-opts.bias   = ft_getopt(opts, 'bias',   'pt');
+% set some additional options that pertain to the algorithmic details of the mutual information computation
+opts        = ft_getopt(varargin, 'opts',       []);
+opts.nt     = ft_getopt(opts,     'nt',         []);
+opts.method = ft_getopt(opts,     'method',     'dr');
+opts.bias   = ft_getopt(opts,     'bias',       'pt');
 
 if ischar(refindx) && strcmp(refindx, 'all')
   refindx = (1:size(input,1))';
 end
 
-if numel(lags)>1 || lags~=0,
+if numel(lags)>1 || lags~=0
   if numel(refindx)>1, ft_error('with multiple lags, or with a lag~=0 only a single refindx is allowed'); end
   refdata = input(refindx,:);
   n       = size(refdata,2);
-
+  
   output = zeros(size(input,1), numel(lags));
   for k = 1:numel(lags)
     fprintf('computing mutualinformation for time lag in samples %d\n', lags(k));
-
+    
     beg1 = max(0, lags(k))  + 1;
     beg2 = max(0, -lags(k)) + 1;
     n1   = n-abs(lags(k));
-
+    
     end1 = beg1+n1-1;
     end2 = beg2+n1-1;
-
+    
     tmpdata = nan(size(refdata));
     tmpdata(beg1:end1) = refdata(beg2:end2);
-
+    
     tmp = ft_connectivity_mutualinformation(input, 'refdata', tmpdata, 'opts', opts, 'histmethod', histmethod, 'numbin', numbin);
     output(:,k) = tmp(1:end-1);
   end
-  return;
-
-
+  return
 end
 
 if ~isempty(refdata)
@@ -97,13 +95,11 @@ if ~isempty(refdata)
   refindx = size(input,1);
 end
 
-
 % check validity of refindx
 if length(refindx)~=numel(refindx)
   % could be channelcmb indexing
   ft_error('channelcmb indexing is not supported');
 end
-
 
 % get rid of nans in the input
 notsel = sum(~isfinite(input))>0;
@@ -114,13 +110,13 @@ output        = zeros(nchan, numel(refindx))+nan;
 
 for k = 1:numel(refindx)
   signal1 = input(refindx(k),:);
-
+  
   % discretize signal1
   signal1 = binr(signal1, nsmp, numbin, histmethod);
-
+  
   for m = setdiff(1:size(input,1),refindx(k))
     signal2 = input(m,:);
-
+    
     % represent signal2 in bins according to signal1's discretization
     R = zeros(1,3,numbin);
     for j = 1:numbin
@@ -128,10 +124,10 @@ for k = 1:numel(refindx)
       opts.nt(j) = sum(nr);
       R(1, 1:opts.nt(j),j) = signal2(nr);
     end
-
+    
     % discretize signal2 and compute mi
     R2 = binr(R, opts.nt', numbin, histmethod);
     output(m,k) = information(R2, opts, 'I'); % this computes mutual information
-
+    
   end
 end

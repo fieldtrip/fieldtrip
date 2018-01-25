@@ -1,11 +1,11 @@
 function [wpli, v, n] = ft_connectivity_wpli(input, varargin)
 
-% FT_CONNECTIVITY_WPLI computes the weighted phase lag index from a
-% data-matrix containing a cross-spectral density. It implements the method
-% described in: Vinck M, Oostenveld R, van Wingerden M, Battaglia F,
-% Pennartz CM. An improved index of phase-synchronization for
-% electrophysiological data in the presence of volume-conduction, noise and
-% sample-size bias. Neuroimage. 2011 Apr 15;55(4):1548-65.
+% FT_CONNECTIVITY_WPLI computes the weighted phase lag index from a data matrix
+% containing the cross-spectral density. This implements the method described in
+% Vinck M, Oostenveld R, van Wingerden M, Battaglia F, Pennartz CM. An improved index
+% of phase-synchronization for electrophysiological data in the presence of
+% volume-conduction, noise and sample-size bias. Neuroimage. 2011 Apr
+% 15;55(4):1548-65.
 %
 % Use as
 %   [wpi, v, n] = ft_connectivity_wpli(input, ...)
