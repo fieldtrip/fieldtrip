@@ -221,6 +221,7 @@ if ~strcmp(fixtime, 'interpolate')
   raw.trial{1}(sel,:) = floor(raw.trial{1}(sel,:));
 end
 
+raw.fsample = 1/median(diff(raw.time{1}));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % construct a structure with all events

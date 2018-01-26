@@ -46,9 +46,9 @@ switch cfg.trialdef.offset
     offset    = begsample - 1;
 end
 
-type      = type(:);
-value     = value(:);
-trl = table(begsample, endsample, offset, type, value);
+type  = type(:);
+value = value(:);
+trl   = table(begsample, endsample, offset, type, value);
 
 
 
