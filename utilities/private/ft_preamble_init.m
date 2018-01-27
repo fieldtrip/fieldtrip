@@ -48,7 +48,7 @@ end % if nargin
 
 % check if there are fieldnames in the cfg that suggest as if the user
 % erroneously inputted a data argument
-checkdatafields = isfield(cfg, {'cfg' 'label' 'dimord' 'time' 'trialinfo' 'avg'});
+checkdatafields = isfield(cfg, {'cfg' 'label' 'dimord' 'trialinfo' 'avg' 'powspctrm'});
 if any(checkdatafields)
   stack = dbstack('-completenames');
   stack = stack(3);

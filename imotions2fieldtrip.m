@@ -7,14 +7,14 @@ function [raw, event] = imotions2fieldtrip(filename, varargin)
 %   data = imotions2fieldtrip(filename, ...)
 %
 % Additional options should be specified in key-value pairs and can be
-%   fixtime    = 'squash' or 'interpolate' (default = 'interpolate')
-%   isevent    = cell-array with labels corresponding to events
-%   notevent   = cell-array with labels not corresponding to events
-%   isnumeric  = cell-array with labels corresponding to numeric data
-%   notnumeric = cell-array with labels not corresponding to numeric data
+%   fixtime       = 'squash' or 'interpolate' (default = 'interpolate')
+%   isevent       = cell-array with labels corresponding to events (default = {})
+%   isnotevent    = cell-array with labels not corresponding to events (default = {})
+%   isnumeric     = cell-array with labels corresponding to numeric data (default = {})
+%   isnotnumeric  = cell-array with labels not corresponding to numeric data (default = {})
 %
-% Note that isnumeric and notnumeric are mutually exclusive. This also applies to
-% isevent and notevent.
+% Note that isnumeric and isnotnumeric are mutually exclusive. The same applies to
+% isevent and isnotevent.
 %
 % See also FT_DATATYPE_RAW, FT_PREPROCESSING
 
@@ -38,18 +38,18 @@ function [raw, event] = imotions2fieldtrip(filename, varargin)
 %
 % $Id$
 
-fixtime    = ft_getopt(varargin, 'fixtime', 'interpolate'); % squash or interpolate
-notnumeric = ft_getopt(varargin, 'notnumeric', {});         % the default for this will be determined further down
-notevent   = ft_getopt(varargin, 'notevent', {});           % the default for this will be determined further down
-isnumeric  = ft_getopt(varargin, 'isnumeric', {});          % the default for this will be determined further down
-isevent    = ft_getopt(varargin, 'isevent', {});            % the default for this will be determined further down
+fixtime       = ft_getopt(varargin, 'fixtime', 'interpolate'); % squash or interpolate
+isnotnumeric  = ft_getopt(varargin, 'isnotnumeric', {});
+isnotevent    = ft_getopt(varargin, 'isnotevent', {});
+isnumeric     = ft_getopt(varargin, 'isnumeric', {});
+isevent       = ft_getopt(varargin, 'isevent', {});
 
 % these options are mutually exclusive
-if ~isempty(isnumeric) && ~isempty(notnumeric)
-  error('you should specify either ''numeric'' or ''notnumeric''');
+if ~isempty(isnumeric) && ~isempty(isnotnumeric)
+  error('you should specify either ''numeric'' or ''isnotnumeric''');
 end
-if ~isempty(isevent) && ~isempty(notevent)
-  error('you should specify either ''isevent'' or ''notevent''');
+if ~isempty(isevent) && ~isempty(isnotevent)
+  error('you should specify either ''isevent'' or ''isnotevent''');
 end
 
 % read the whole ASCII file into memory
@@ -62,15 +62,15 @@ numericdat = zeros(0,numel(time));
 numericsel = false(size(label));
 
 if ~isempty(isnumeric)
-  notnumeric = setdiff(label, isnumeric);
-elseif ~isempty(notnumeric)
-  isnumeric = setdiff(label, notnumeric);
+  isnotnumeric = setdiff(label, isnumeric);
+elseif ~isempty(isnotnumeric)
+  isnumeric = setdiff(label, isnotnumeric);
 end
 
 if ~isempty(isevent)
-  notevent = setdiff(label, isevent);
-elseif ~isempty(notnumeric)
-  isevent = setdiff(label, notevent);
+  isnotevent = setdiff(label, isevent);
+elseif ~isempty(isnotnumeric)
+  isevent = setdiff(label, isnotevent);
 end
 
 
@@ -80,7 +80,7 @@ end
 
 for i=1:numel(label)
   % skip if it is known to be not numeric
-  if ismember(label{i}, notnumeric)
+  if ismember(label{i}, isnotnumeric)
     continue
   end
   
@@ -135,7 +135,7 @@ eventvalue  = {};
 
 % determine which channels are to be considered for events
 eventsel = ~numericsel;
-eventsel(ismember(label, notevent))     = false;
+eventsel(ismember(label, isnotevent))   = false;
 eventsel(strcmp(label, 'Timestamp'))    = false;
 eventsel(strcmp(label, 'TimestampUTC')) = false;
 
@@ -204,7 +204,7 @@ switch fixtime
     dt = diff(sort(time));
     
     if any(dt==0)
-      ft_notice('removing overlapping samples...\n');
+      ft_notice('squashing overlapping samples...\n');
       t = 1;
       while t<numel(time)
         sel = find(time==time(t));
@@ -224,7 +224,6 @@ switch fixtime
     raw.trial{1} = trial;
     
   case 'interpolate'
-    % make a local copy for convenience
     y = raw.time{1};
     x = 1:numel(y);
     % use a GLM to estimate y = b0 * x + b1
@@ -288,11 +287,9 @@ end
 
 raw.fsample = 1/median(diff(raw.time{1}));
 
-% keep some details of the original tabular data
-raw.hdr.orig.time       = dat.TimestampInSec;
-raw.hdr.orig.label      = dat.table.Properties.VariableNames;
+% keep the details of the original tabular data
+raw.hdr.orig = rmfield(dat, 'table');
 
 % remove the channels with the integer representation of the events
 raw.label    = raw.label(1:numel(numericlabel));
 raw.trial{1} = raw.trial{1}(1:numel(numericlabel), :);
-
