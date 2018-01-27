@@ -7,7 +7,14 @@ function [raw, event] = imotions2fieldtrip(filename, varargin)
 %   data = imotions2fieldtrip(filename, ...)
 %
 % Additional options should be specified in key-value pairs and can be
-%   fixtime = 'squash' or 'interpolate' (default = 'interpolate')
+%   fixtime    = 'squash' or 'interpolate' (default = 'interpolate')
+%   isevent    = cell-array with labels corresponding to events
+%   notevent   = cell-array with labels not corresponding to events
+%   isnumeric  = cell-array with labels corresponding to numeric data
+%   notnumeric = cell-array with labels not corresponding to numeric data
+%
+% Note that isnumeric and notnumeric are mutually exclusive. This also applies to
+% isevent and notevent.
 %
 % See also FT_DATATYPE_RAW, FT_PREPROCESSING
 
@@ -31,26 +38,59 @@ function [raw, event] = imotions2fieldtrip(filename, varargin)
 %
 % $Id$
 
-fixtime = ft_getopt(varargin, 'fixtime', 'interpolate'); % squash or interpolate
+fixtime    = ft_getopt(varargin, 'fixtime', 'interpolate'); % squash or interpolate
+notnumeric = ft_getopt(varargin, 'notnumeric', {});         % the default for this will be determined further down
+notevent   = ft_getopt(varargin, 'notevent', {});           % the default for this will be determined further down
+isnumeric  = ft_getopt(varargin, 'isnumeric', {});          % the default for this will be determined further down
+isevent    = ft_getopt(varargin, 'isevent', {});            % the default for this will be determined further down
+
+% these options are mutually exclusive
+if ~isempty(isnumeric) && ~isempty(notnumeric)
+  error('you should specify either ''numeric'' or ''notnumeric''');
+end
+if ~isempty(isevent) && ~isempty(notevent)
+  error('you should specify either ''isevent'' or ''notevent''');
+end
 
 % read the whole ASCII file into memory
 % this will include a MATLAB table with the actual data
 dat = read_imotions_txt(filename);
 
-time    = dat.TimestampInSec;
-numeric = zeros(0,numel(time));
-label   = dat.table.Properties.VariableNames;
-sellab  = false(size(label));
+time       = dat.TimestampInSec;
+label      = dat.table.Properties.VariableNames;
+numericdat = zeros(0,numel(time));
+numericsel = false(size(label));
 
-% check for each field/column whether it is numeric
+if ~isempty(isnumeric)
+  notnumeric = setdiff(label, isnumeric);
+elseif ~isempty(notnumeric)
+  isnumeric = setdiff(label, notnumeric);
+end
+
+if ~isempty(isevent)
+  notevent = setdiff(label, isevent);
+elseif ~isempty(notnumeric)
+  isevent = setdiff(label, notevent);
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% check for each field/column whether it is numerical
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 for i=1:numel(label)
+  % skip if it is known to be not numeric
+  if ismember(label{i}, notnumeric)
+    continue
+  end
+  
   % don't convert if all empty
   str = dat.table.(label{i});
   if all(cellfun(@isempty, str))
     ft_info('column %15s does not contain numeric data', label{i});
     continue
   end
-
+  
   % try converting the first element
   str = dat.table.(label{i})(1);
   val = str2double(str);
@@ -77,47 +117,50 @@ for i=1:numel(label)
     continue
   end
   
-  % if it gets here, it means that the whole column is numeric
-  sellab(i) = true;
+  % if it gets here, it means that the whole column is numerical
+  numericsel(i) = true;
   ft_info('column %15s will be represented as channel', label{i});
-  numeric = cat(1, numeric, val');
+  numericdat = cat(1, numericdat, val');
 end
-% remember the labels for the columns with numeric data
-numericlabel = label(sellab);
+% remember the labels for the columns with numerical data
+numericlabel = label(numericsel);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% construct numeric channels for the columns that represent events
+% construct numerical channels for the columns that represent events
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 eventcode   = zeros(0,numel(time));
 eventtype   = {};
 eventvalue  = {};
 
-% these are not to be considered for events
-sellab(strcmp(label, 'Timestamp'))    = true;
-sellab(strcmp(label, 'UTCTimestamp')) = true;
+% determine which channels are to be considered for events
+eventsel = ~numericsel;
+eventsel(ismember(label, notevent))     = false;
+eventsel(strcmp(label, 'Timestamp'))    = false;
+eventsel(strcmp(label, 'TimestampUTC')) = false;
 
-for i=find(~sellab)
+for i=find(eventsel)
   str = dat.table.(label{i});
   if all(cellfun(@isempty, str))
+    eventsel(i) = false;
     continue
   end
   
-  % add one numeric channel per event type
+  % add one numerical channel per event type
   eventcode(end+1,:) = 0;
   eventtype{end+1}   = label{i};
   eventvalue{end+1}  = {};
   
   this = 1;
-  code = 1; % this is the numeric code for the event values
+  code = 1; % this is the numerical code for the event values
   while this<numel(str)
     
-    next = find(~strcmp(str(this:end), str{this}), 1, 'first') + this;
+    next = find(~strcmp(str(this:end), str{this}), 1, 'first') + this - 1;
     if isempty(next)
       next = numel(str)+1;
     end
     
-    % store the event as string and as numeric code
+    % store the event as string and as numerical code
     eventvalue{end}{end+1} = str{this};
     eventcode(end,this:next-1) = code;
     
@@ -143,7 +186,7 @@ end
 
 % construct a raw data structure
 raw.time{1}  = time(:)';
-raw.trial{1} = cat(1, numeric, eventcode);
+raw.trial{1} = cat(1, numericdat, eventcode);
 raw.label    = cat(1, numericlabel(:), eventtype(:));
 
 
@@ -221,14 +264,12 @@ if ~strcmp(fixtime, 'interpolate')
   raw.trial{1}(sel,:) = floor(raw.trial{1}(sel,:));
 end
 
-raw.fsample = 1/median(diff(raw.time{1}));
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % construct a structure with all events
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 event = [];
-nsample = numel(time)+1;
+nsample = numel(raw.time{1});
 for i=1:numel(eventtype)
   eventcode = raw.trial{1}(i+numel(numericlabel),:);
   sel = [find(diff([0 eventcode])) nsample+1];
@@ -241,6 +282,17 @@ for i=1:numel(eventtype)
   end
 end
 
-% the channels with the integer events should be removed, but for now I am
-% keeping them to help with debugging
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% wrap up
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+raw.fsample = 1/median(diff(raw.time{1}));
+
+% keep some details of the original tabular data
+raw.hdr.orig.time       = dat.TimestampInSec;
+raw.hdr.orig.label      = dat.table.Properties.VariableNames;
+
+% remove the channels with the integer representation of the events
+raw.label    = raw.label(1:numel(numericlabel));
+raw.trial{1} = raw.trial{1}(1:numel(numericlabel), :);
 
