@@ -27,17 +27,15 @@ function [cfg, artifact] = ft_artifact_threshold(cfg, data)
 %
 % The detection of artifacts is done according to the following settings,
 % you should specify at least one of these thresholds
-%   cfg.artfctdef.threshold.range     = value in uV/T, default  inf
-%   cfg.artfctdef.threshold.min       = value in uV/T, default -inf
-%   cfg.artfctdef.threshold.max       = value in uV/T, default  inf
+%   cfg.artfctdef.threshold.range     = value in uV or T, default  inf
+%   cfg.artfctdef.threshold.min       = value in uV or T, default -inf
+%   cfg.artfctdef.threshold.max       = value in uV or T, default  inf
 %
-% When cfg.artfctdef.threshold.range is used, the within-channel
-% peak-to-peak range is checked against the specified maximum range (so not
-% the overall range across channels).
+% When cfg.artfctdef.threshold.range is used, the within-channel peak-to-peak range
+% is checked against the specified maximum range (so not the overall range across
+% channels). In this case the whole trial will be marked as an artifact.
 %
-% Contrary to the other artifact detection functions, this function
-% will mark the whole trial as an artifact if the threshold is exceeded.
-% Furthermore, this function does not support artifact- or filterpadding.
+% This function does not support artifact- or filterpadding.
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -122,6 +120,10 @@ if ~isfield(artfctdef, 'max'),      artfctdef.max =   inf;           end
 % the data is either passed into the function by the user or read from file with cfg.inputfile
 hasdata = exist('data', 'var');
 
+if hasdata
+  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
+end
+
 % read the header, or get it from the input data
 if ~hasdata
   cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
@@ -145,7 +147,7 @@ end
 
 if ~isfield(cfg, 'trl')
   % get it from the data itself
-  cfg.trl = data.trialinfo;
+  cfg.trl = data.sampleinfo;
   cfg.trl(:,3) = 0;
 end
 
@@ -153,7 +155,7 @@ end
 numtrl      = size(cfg.trl,1);
 channel     = ft_channelselection(artfctdef.channel, hdr.label);
 channelindx = match_str(hdr.label,channel);
-artifact    = [];
+artifact    = zeros(0,2);
 
 for trlop = 1:numtrl
   if hasdata
@@ -162,34 +164,24 @@ for trlop = 1:numtrl
     dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', channelindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
   end
   dat = preproc(dat, channel, offset2time(cfg.trl(trlop,3), hdr.Fs, size(dat,2)), artfctdef);
-  % compute the min, max and range over all channels and samples
-  minval   = min(dat(:));
-  maxval   = max(dat(:));
+
+  % make a vector that indicates for each sample whether there is an artifact
+  artval = false(1,  size(dat,2));
+  artval = artval | any(dat<=artfctdef.min,1);
+  artval = artval | any(dat>=artfctdef.max,1);
   
-  % compute the range as the maximum of the peak-to-peak values for each
-  % channel
+  % compute the range as the maximum of the peak-to-peak values for each channel
   ptpval = max(dat, [], 2) - min(dat, [], 2);
-  
-  % track for bad trials for each channel
-  badChnInd = find(ptpval > artfctdef.range);
-  
-  % determine range and index of 'worst' channel
-  worstChanRange = max(ptpval);
-  worstChanInd = find(worstChanRange == ptpval);
-  
-  % test the min, max and range against the specified thresholds
-  if ~isempty(artfctdef.min) && minval<artfctdef.min
-    ft_info('threshold artifact scanning: trial %d from %d exceeds min-threshold\n', trlop, numtrl);
-    artifact(end+1,1:2) = cfg.trl(trlop,1:2);
-  elseif ~isempty(artfctdef.max) && maxval>artfctdef.max
-    ft_info('threshold artifact scanning: trial %d from %d exceeds max-threshold\n', trlop, numtrl);
-    artifact(end+1,1:2) = cfg.trl(trlop,1:2);
-  elseif ~isempty(artfctdef.range) && worstChanRange>artfctdef.range
-    ft_info('threshold artifact scanning: trial %d from %d exceeds range-threshold; max-range channel = %s\n', trlop, numtrl, hdr.label{channelindx(worstChanInd)});
-    artifact(end+1,1:2) = cfg.trl(trlop,1:2);
-  else
-    ft_info('threshold artifact scanning: trial %d from %d is ok\n', trlop, numtrl);
+  if any(ptpval>=artfctdef.range)
+    artval(:) = true; % mark the whole segment as bad
   end
+  
+  if any(artval)
+    begsample = find(diff([false artval])>0) + cfg.trl(trlop,1) - 1;
+    endsample = find(diff([artval false])<0) + cfg.trl(trlop,1) - 1;
+    artifact  = cat(1, artifact, [begsample(:) endsample(:)]);
+  end
+  
 end
 
 ft_info('detected %d artifacts\n', size(artifact,1));
