@@ -272,12 +272,14 @@ else
   fsample = data.fsample;
 end
 
-begtime   = zeros(1, length(data.time));
-endtime   = zeros(1, length(data.time));
+begtime   = nan(1, length(data.time));
+endtime   = nan(1, length(data.time));
 numsample = zeros(1, length(data.time));
 for i=1:length(data.time)
-  begtime(i)   = data.time{i}(1);
-  endtime(i)   = data.time{i}(end);
+  if ~isempty(data.time{i})
+    begtime(i) = data.time{i}(1);
+    endtime(i) = data.time{i}(end);
+  end
   numsample(i) = length(data.time{i});
 end
 
