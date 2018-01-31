@@ -18,7 +18,7 @@
  * The program is stopped by pressing CTRL-C after which a clean shutdown is performed.
  */
 #include <stdio.h>
-#include "AcqBuffer.h"
+#include "ctf.h"
 #include <buffer.h>
 #include <sys/shm.h>
 #include <sys/types.h>

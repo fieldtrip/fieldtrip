@@ -14,7 +14,7 @@
 #include <sys/shm.h>
 #include <ncurses.h>
 #include <unistd.h>  /* only for usleep */
-#include "AcqBuffer.h"
+#include "ctf.h"
 
 /*#define ACQ_MSGQ_SIZE 20*/
 #define SHOWPACKET 20
