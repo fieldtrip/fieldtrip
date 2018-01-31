@@ -145,6 +145,13 @@ switch cfg.appenddim
             data.(cfg.parameter{i})(:,chansel,:) = varargin{j}.(cfg.parameter{i})(:,chansel,:);
           end
           
+        case {'rpt_chan_freq_time' 'rpttap_chan_freq_time' 'subj_chan_freq_time'}
+          data.(cfg.parameter{i}) = nan(dimsiz);
+          for j=1:numel(varargin)
+            chansel = match_str(varargin{j}.label, oldlabel{j});
+            data.(cfg.parameter{i})(:,chansel,:,:) = varargin{j}.(cfg.parameter{i})(:,chansel,:,:);
+          end
+          
         otherwise
           % do not concatenate this field
       end % switch
