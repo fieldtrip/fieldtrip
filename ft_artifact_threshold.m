@@ -1,8 +1,8 @@
 function [cfg, artifact] = ft_artifact_threshold(cfg, data)
 
-% FT_ARTIFACT_THRESHOLD scans for trials in which the range, i.e. the minimum,
-% the maximum or the range (min-max difference) of the signal in any
-% channel exceeds a specified threshold.
+% FT_ARTIFACT_THRESHOLD scans for trials in which the range, i.e. the minimum, the maximum
+% or the range (min-max difference) of the signal in any channel exceeds a specified
+% threshold.
 %
 % Use as
 %   [cfg, artifact] = ft_artifact_threshold(cfg)
@@ -11,9 +11,13 @@ function [cfg, artifact] = ft_artifact_threshold(cfg, data)
 % or
 %   cfg.headerfile  = string with the filename
 %   cfg.datafile    = string with the filename
+% and optionally
+%   cfg.headerformat
+%   cfg.dataformat
 %
 % Alternatively you can use it as
 %   [cfg, artifact] = ft_artifact_threshold(cfg, data)
+% where the input data is a structure as obtained from FT_PREPROCESSING.
 %
 % In both cases the configuration should also contain
 %   cfg.trl        = structure that defines the data segments of interest, see FT_DEFINETRIAL
@@ -35,7 +39,12 @@ function [cfg, artifact] = ft_artifact_threshold(cfg, data)
 % is checked against the specified maximum range (so not the overall range across
 % channels). In this case the whole trial will be marked as an artifact.
 %
-% This function does not support artifact- or filterpadding.
+% Note that this function does not support artifact- or filterpadding.
+%
+% The output argument "artifact" is a Nx2 matrix comparable to the
+% "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
+% beginsamples of an artifact period, the second column contains the
+% endsamples of the artifactperiods.
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
