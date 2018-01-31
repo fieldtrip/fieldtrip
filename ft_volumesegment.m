@@ -426,7 +426,7 @@ if dotpm
         
       elseif strcmp(cfg.spmmethod, 'new') || strcmp(cfg.spmmethod, 'mars')
         cfg.tpm = ft_getopt(cfg, 'tpm');
-        cfg.tpm = char(cfg.tpm(:));
+        cfg.tpm = char(cfg.tpm);
         if ~isfield(cfg, 'tpm') || isempty(cfg.tpm)
           cfg.tpm = fullfile(spm('dir'),'tpm','TPM.nii');
         end
