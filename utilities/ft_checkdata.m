@@ -23,7 +23,7 @@ function [data] = ft_checkdata(data, varargin)
 %   isnirs             = yes, no
 %   hasunit            = yes, no
 %   hascoordsys        = yes, no
-%   hassampleinfo      = yes, no, ifmakessense (only applies to raw data)
+%   hassampleinfo      = yes, no, ifmakessense (applies to raw and timelock data)
 %   hascumtapcnt       = yes, no (only applies to freq data)
 %   hasdim             = yes, no
 %   hasdof             = yes, no
@@ -263,7 +263,7 @@ if iscomp % this should go before israw/istimelock/isfreq
 elseif israw
   data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
 elseif istimelock
-  data = ft_datatype_timelock(data);
+  data = ft_datatype_timelock(data, 'hassampleinfo', hassampleinfo);
 elseif isfreq
   data = ft_datatype_freq(data);
 elseif isspike
@@ -397,7 +397,7 @@ if ~isempty(dtype)
       okflag = 1;
     elseif isequal(dtype(iCell), {'timelock+comp'}) && israw && iscomp
       data = raw2timelock(data);
-      data = ft_datatype_timelock(data);
+      data = ft_datatype_timelock(data, 'hassampleinfo', hassampleinfo);
       istimelock = 1;
       iscomp = 1;
       israw = 0;
@@ -420,19 +420,19 @@ if ~isempty(dtype)
       okflag = 1;
     elseif isequal(dtype(iCell), {'comp'}) && israw  && iscomp
       data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
-      data = ft_datatype_comp(data);
+      data = ft_datatype_comp(data, 'hassampleinfo', hassampleinfo);
       israw = 0;
       iscomp = 1;
       okflag = 1;
     elseif isequal(dtype(iCell), {'comp'}) && istimelock && iscomp
       data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
-      data = ft_datatype_comp(data);
+      data = ft_datatype_comp(data, 'hassampleinfo', hassampleinfo);
       istimelock = 0;
       iscomp = 1;
       okflag = 1;
     elseif isequal(dtype(iCell), {'comp'}) && isfreq && iscomp
       data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
-      data = ft_datatype_comp(data);
+      data = ft_datatype_comp(data, 'hassampleinfo', 'no'); % freq data does not have sampleinfo
       isfreq = 0;
       iscomp = 1;
       okflag = 1;
@@ -441,14 +441,14 @@ if ~isempty(dtype)
         data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
         iscomp = 0;
       end
-      data = ft_datatype_raw(data);
+      data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
       okflag = 1;
     elseif isequal(dtype(iCell), {'timelock'}) && istimelock
       if iscomp
         data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
         iscomp = 0;
       end
-      data = ft_datatype_timelock(data);
+      data = ft_datatype_timelock(data, 'hassampleinfo', hassampleinfo);
       okflag = 1;
     elseif isequal(dtype(iCell), {'freq'}) && isfreq
       if iscomp
@@ -463,7 +463,7 @@ if ~isempty(dtype)
         iscomp = 0;
       end
       data = raw2timelock(data);
-      data = ft_datatype_timelock(data);
+      data = ft_datatype_timelock(data, 'hassampleinfo', hassampleinfo);
       israw = 0;
       istimelock = 1;
       okflag = 1;
@@ -481,13 +481,13 @@ if ~isempty(dtype)
     elseif isequal(dtype(iCell), {'raw'}) && ischan
       data = chan2timelock(data);
       data = timelock2raw(data);
-      data = ft_datatype_raw(data);
+      data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
       ischan = 0;
       israw = 1;
       okflag = 1;
     elseif isequal(dtype(iCell), {'timelock'}) && ischan
       data = chan2timelock(data);
-      data = ft_datatype_timelock(data);
+      data = ft_datatype_timelock(data, 'hassampleinfo', hassampleinfo);
       ischan = 0;
       istimelock = 1;
       okflag = 1;
