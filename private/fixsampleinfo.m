@@ -40,7 +40,7 @@ if hastrial
   end
 else
   ntrial = dimlength(data, 'rpt');
-  if ~isfinite(ntrial) && strcmp(data.dimord(1:6), 'rpttap') && isfield(data, 'cumtapcnt'),
+  if ~isfinite(ntrial) && strcmp(data.dimord(1:6), 'rpttap') && isfield(data, 'cumtapcnt')
     ntrial = numel(data.cumtapcnt);
   elseif ~isfinite(ntrial)
     ntrial = 1;
@@ -84,7 +84,7 @@ if isempty(trl) || ~all(nsmp==trl(:,2)-trl(:,1)+1)
   ft_warning('reconstructing sampleinfo by assuming that the trials are consecutive segments of a continuous recording');
   % construct a trial definition on the fly, assume that the trials are
   % consecutive segments of a continuous recording
-  if ntrial==1,
+  if ntrial==1
     begsample = 1;
   else
     begsample = cat(1, 0, cumsum(nsmp(1:end-1))) + 1;
@@ -94,8 +94,8 @@ if isempty(trl) || ~all(nsmp==trl(:,2)-trl(:,1)+1)
   if istimelock
     offset = ones(ntrial,1) .* time2offset(data.time, data.fsample);
   else
-    offset    = zeros(ntrial,1);
-    if hastime,
+    offset = zeros(ntrial,1);
+    if hastime
       for i=1:ntrial
         offset(i) = time2offset(data.time{i}, data.fsample);
       end
@@ -111,7 +111,7 @@ elseif ~isfield(data, 'sampleinfo') && isempty(trl)
   ft_warning('failed to create sampleinfo field');
 end
 
-if (~isfield(data, 'trialinfo') || isempty(data.trialinfo)) && ~isempty(trl) && size(trl, 2) > 3,
+if (~isfield(data, 'trialinfo') || isempty(data.trialinfo)) && ~isempty(trl) && size(trl, 2) > 3
   data.trialinfo = trl(:, 4:end);
 end
 
