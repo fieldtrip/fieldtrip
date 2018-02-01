@@ -380,7 +380,7 @@ for i=1:numel(varargin)
     % update the sampleinfo, if possible, and needed
     if strcmp(datfield{j}, 'sampleinfo') && ~isequal(cfg.latency, 'all')
       if iscell(seltime{i}) && numel(seltime{i})==size(varargin{i}.sampleinfo,1)
-        for k = 1:numel(seltime{i})   
+        for k = 1:numel(seltime{i})
           varargin{i}.sampleinfo(k,:) = varargin{i}.sampleinfo(k,1) - 1 + seltime{i}{k}([1 end]);
         end
       elseif ~iscell(seltime{i})
@@ -1213,6 +1213,8 @@ for i=(numel(siz)+1):numel(dim)
 end
 if isvector(x)
   % there is no harm to keep it as it is
+elseif istable(x)
+  % there is no harm to keep it as it is
 else
   x = reshape(x, [siz(~dim) 1]);
 end
@@ -1264,6 +1266,9 @@ if iscell(x)
             % sometimes the data is 1xN, whereas the dimord describes only the first dimension
             % in this case a row and column vector can be interpreted as equivalent
             x{i} = x{i}(selindx);
+          elseif istable(x)
+            % multidimensional indexing is not supported
+            x{i} = x{i}(selindx,:);
           else
             x{i} = x{i}(selindx,:,:,:,:);
           end
@@ -1287,6 +1292,9 @@ else
         % sometimes the data is 1xN, whereas the dimord describes only the first dimension
         % in this case a row and column vector can be interpreted as equivalent
         x = x(selindx);
+      elseif istable(x)
+        % multidimensional indexing is not supported
+        x = x(selindx,:);
       else
         x = x(selindx,:,:,:,:,:);
       end

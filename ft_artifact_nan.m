@@ -1,9 +1,12 @@
 function [cfg, artifact] = ft_artifact_nan(cfg, data)
 
-% FT_ARTIFACT_NAN identifies artifacts that are indicated in the data as nan (not a number) values.
+% FT_ARTIFACT_NAN identifies artifacts that are indicated in the data as nan (not a
+% number) values.
 %
 % Use as
-%   [cfg, artifact] = ft_artifact_eog(cfg, data)
+%   [cfg, artifact] = ft_artifact_nan(cfg, data)
+% where the input data is a structure as obtained from FT_REJECTARTIFACT with
+% the option cfg.artfctdef.reject='nan'.
 %
 % The output argument "artifact" is a Nx2 matrix comparable to the
 % "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the

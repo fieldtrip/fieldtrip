@@ -34,7 +34,7 @@ function [data] = ft_appenddata(cfg, varargin)
 % cell array for this particular function.
 %
 % See also FT_PREPROCESSING, FT_DATAYPE_RAW, FT_APPENDTIMELOCK, FT_APPENDFREQ,
-% FT_APPENDSENS, FT_APPENDSOURCE
+% FT_APPENDSOURCE, FT_APPENDSENS
 
 % Copyright (C) 2005-2008, Robert Oostenveld
 % Copyright (C) 2009-2011, Jan-Mathijs Schoffelen
@@ -77,8 +77,7 @@ end
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
-  % FIXME: raw+comp is not always dealt with correctly
-  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'raw', 'raw+comp'}, 'feedback', 'no');
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'raw', 'raw+comp'}, 'feedback', 'no', 'hassampleinfo', 'ifmakessense');
 end
 
 % set the defaults

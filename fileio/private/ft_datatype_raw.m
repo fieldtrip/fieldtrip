@@ -16,23 +16,19 @@ function [data] = ft_datatype_raw(data, varargin)
 %      trialinfo: [266x1 double]    optional trigger or condition codes for each trial
 %            hdr: [1x1 struct]      the full header information of the original dataset on disk
 %           grad: [1x1 struct]      information about the sensor array (for EEG it is called elec)
-%            cfg: [1x1 struct]      the configuration used by the function that generated this data structure
+%           cfg: [1x1 struct]       the configuration used by the function that generated this data structure
 %
 % Required fields:
 %   - time, trial, label
 %
 % Optional fields:
-%   - sampleinfo, trialinfo, grad, elec, hdr, cfg
+%   - sampleinfo, trialinfo, grad, elec, opto, hdr, cfg
 %
 % Deprecated fields:
 %   - fsample
 %
 % Obsoleted fields:
 %   - offset
-%
-% Historical fields:
-%   - cfg, elec, fsample, grad, hdr, label, offset, sampleinfo, time,
-%   trial, trialdef, see bug2513
 %
 % Revision history:
 %
@@ -136,14 +132,15 @@ end
 switch version
   case '2011'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % ensure that the sensor structures are up to date
     if isfield(data, 'grad')
-      % ensure that the gradiometer structure is up to date
       data.grad = ft_datatype_sens(data.grad);
     end
-    
     if isfield(data, 'elec')
-      % ensure that the electrode structure is up to date
       data.elec = ft_datatype_sens(data.elec);
+    end
+    if isfield(data, 'opto')
+      data.opto = ft_datatype_sens(data.opto);
     end
     
     if ~isfield(data, 'fsample')
@@ -272,12 +269,14 @@ else
   fsample = data.fsample;
 end
 
-begtime   = zeros(1, length(data.time));
-endtime   = zeros(1, length(data.time));
+begtime   = nan(1, length(data.time));
+endtime   = nan(1, length(data.time));
 numsample = zeros(1, length(data.time));
 for i=1:length(data.time)
-  begtime(i)   = data.time{i}(1);
-  endtime(i)   = data.time{i}(end);
+  if ~isempty(data.time{i})
+    begtime(i) = data.time{i}(1);
+    endtime(i) = data.time{i}(end);
+  end
   numsample(i) = length(data.time{i});
 end
 

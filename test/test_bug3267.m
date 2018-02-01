@@ -71,9 +71,9 @@ timelockAppend = ft_appendtimelock(cfg, timelockFIC, timelockFC);
 
 %% compare the two versions
 
-% these should not have sampleinfo as per specification in FT_DATATYPE_TIMELOCK
-assert(~isfield(timelockAppend, 'sampleinfo'));
-assert(~isfield(timelockAll,    'sampleinfo'));
+
+assert(~isfield(timelockAppend, 'sampleinfo')); % this should not have it
+assert( isfield(timelockAll,    'sampleinfo')); % and this one should
 
 % the order should be different
 assert(~isequal(timelockAll.trialinfo,  timelockAppend.trialinfo));

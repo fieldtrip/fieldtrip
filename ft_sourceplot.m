@@ -1375,6 +1375,7 @@ switch cfg.method
     cfg.edgecolor          = ft_getopt(cfg, 'edgecolor', 'none');
     cfg.facealpha          = ft_getopt(cfg, 'facealpha', 1);
     cfg.edgealpha          = ft_getopt(cfg, 'edgealpha', 0);
+    cfg.vertexcolor        = ft_getopt(cfg, 'vertexcolor', 'curv'); % curvature-dependent mix of cortex_light and cortex_dark
     if ~hasanatomical; anatomical = {}; end
     
     if isUnstructuredFun
@@ -1400,7 +1401,8 @@ switch cfg.method
       'intersectcolor', cfg.intersectcolor, 'intersectlinestyle', cfg.intersectlinestyle, ...
       'intersectlinewidth', cfg.intersectlinewidth, 'ncirc', cfg.ncirc, ...
       'scalealpha', cfg.scalealpha, 'facecolor', cfg.facecolor, 'edgecolor', cfg.edgecolor,...
-      'facealpha', cfg.facealpha, 'edgealpha', cfg.edgealpha, 'marker', cfg.marker);
+      'facealpha', cfg.facealpha, 'edgealpha', cfg.edgealpha, 'marker', cfg.marker,...
+      'vertexcolor', cfg.vertexcolor);
     
     if istrue(cfg.colorbar)
       if ~strcmp(cfg.slice, '2d')

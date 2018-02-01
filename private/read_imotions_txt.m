@@ -65,11 +65,19 @@ fclose(fid);
 
 % add each column as a variable to the data structure
 for i=1:numel(dat.Labels)
-  dat.data.(dat.Labels{i}) = c{i};
+  dat.table.(dat.Labels{i}) = c{i};
 end
 % convert to a table object (requires MATLAB R2013b and up)
-dat.data = struct2table(dat.data);
+dat.table = struct2table(dat.table);
 
 fprintf('converting timestamps to seconds\n');
 % convert timestamp to seconds
-dat.TimestampInSec = datenum(dat.data.Timestamp, 'yyyymmdd_hhMMssfff');
+% the first call is not accurate enough to represent the miliseconds
+% dat.TimestampInSec = datenum(dat.table.Timestamp, 'yyyymmdd_HHMMSSFFF');
+time = datevec(dat.table.Timestamp, 'yyyymmdd_HHMMSSFFF');
+time = time(:,4)*60*60 + time(:,5)*60 + time(:,6);
+dat.TimestampInSec = time - time(1);
+
+
+
+

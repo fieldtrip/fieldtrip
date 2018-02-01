@@ -947,8 +947,12 @@ if (~isfield(layout, 'outline') || ~isfield(layout, 'mask')) && ~strcmpi(cfg.sty
     sel = setdiff(1:length(layout.label), [ind_scale ind_comnt]); % these are excluded for scaling
     x = layout.pos(sel,1);
     y = layout.pos(sel,2);
-    xrange = range(x);
-    yrange = range(y);
+    % the following would work even if all electrodes are offset and not centered around zero
+    % xrange = range(x);
+    % yrange = range(y);
+    % the following prevent topography distortion in case electrodes are not evenly distributed over the whole head
+    xrange = 2*( max(max(x),abs(min(x)) ));
+    yrange = 2*( max(max(y),abs(min(y)) ));
     if xrange==0
       xrange = 1;
     end
