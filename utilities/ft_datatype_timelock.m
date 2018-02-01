@@ -175,7 +175,7 @@ switch version
     if ~hastrialinfo && isfield(timelock, 'trialinfo')
       timelock = rmfield(timelock, 'trialinfo');
     end
-
+    
   case '2011v2'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % ensure that the sensor structures are up to date
