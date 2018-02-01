@@ -54,7 +54,7 @@ headerline = 1;
 while ~startsWith(aline{headerline}, 'StudyName')
   headerline = headerline+1;
 end
-dat.Labels = tokenize(aline{headerline});
+dat.Labels = tokenize(aline{headerline}, uint8(9)); % split on tab, which is ascii code 9
 dat.Labels = matlab.lang.makeValidName(dat.Labels);
 
 fprintf('parsing tabular data\n');
