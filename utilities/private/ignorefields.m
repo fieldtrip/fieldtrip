@@ -141,13 +141,18 @@ switch purpose
     
   case 'makessense'
     ignore = {
+      % these fields should not be used to check whether the trialinfo and sampleinfo make sense
       'label'
       'time'
       'freq'
+      'hdr'
       'fsample'
       'dimord'
       'trialinfo'
       'sampleinfo'
+      'grad'
+      'elec'
+      'opto'
       'cfg'
       };
     
