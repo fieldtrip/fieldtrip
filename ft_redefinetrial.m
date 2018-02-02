@@ -298,11 +298,11 @@ elseif ~isempty(cfg.length)
     begsample = data.sampleinfo(k,1);
     endsample = data.sampleinfo(k,2);
     offset    = time2offset(data.time{k}, data.fsample);
-    thistrl      = (begsample:nshift:(endsample+1-nsmp))';
+    thistrl   = (begsample:nshift:(endsample+1-nsmp))';
     if ~isempty(thistrl) % the trial might be too short
       thistrl(:,2) = thistrl(:,1) + nsmp - 1;
       thistrl(:,3) = thistrl(:,1) + offset - thistrl(1,1);
-      thistrl(:,4) = k; % keep the trial number in the 4th column
+      thistrl(:,4) = k; % keep the trial number in the 4th column, this is needed further down
       newtrl = cat(1, newtrl, thistrl);
     end
   end
@@ -312,8 +312,8 @@ elseif ~isempty(cfg.length)
   tmpcfg.trl = newtrl;
   
   if isfield(data, 'trialinfo') && ~istable(data.trialinfo)
-    % replace the trial number with the trial information
-    tmpcfg.trl = [newtrl data.trialinfo(newtrl(:,4),:)];
+    % replace the trial number with the original trial information
+    tmpcfg.trl = [newtrl(:,1:3) data.trialinfo(newtrl(:,4),:)];
   elseif isfield(data, 'trialinfo') && istable(data.trialinfo)
     % construct the trl matrix as a table
     begsample = newtrl(:,1);
@@ -350,7 +350,7 @@ if ~isempty(cfg.minlength)
   data.time  = data.time(~skiptrial);
   data.trial = data.trial(~skiptrial);
   if isfield(data, 'sampleinfo'), data.sampleinfo  = data.sampleinfo(~skiptrial, :); end
-  if isfield(data, 'trialinfo'),  data.trialinfo   =  data.trialinfo(~skiptrial, :); end
+  if isfield(data, 'trialinfo'),  data.trialinfo   = data.trialinfo (~skiptrial, :); end
   if fb, fprintf('removing %d trials that are too short\n', sum(skiptrial));         end
 end
 

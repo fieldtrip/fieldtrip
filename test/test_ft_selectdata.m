@@ -495,10 +495,10 @@ cfg.covariance = 'no';
 tlckavg = ft_timelockanalysis(cfg, data);
 
 %% select trials
-compare_outputs(tlck,  'trials', [4 5 6]);
-compare_outputs(tlckc, 'trials', [4 5 6]);
-compare_outputs(tlck,  'trials', []);
-compare_outputs(tlckc, 'trials', []);
+%compare_outputs(tlck,  'trials', [4 5 6]);
+%compare_outputs(tlckc, 'trials', [4 5 6]);
+%compare_outputs(tlck,  'trials', []);
+%compare_outputs(tlckc, 'trials', []);
 compare_outputs(tlck,  'trials', 'all');
 compare_outputs(tlckc, 'trials', 'all');
 
@@ -606,6 +606,10 @@ if nargin>2
   if isfield(data_new, 'cumtapcnt'), data_new = rmfield(data_new, 'cumtapcnt'); end
   if isfield(data_old, 'cumtapcnt'), data_old = rmfield(data_old, 'cumtapcnt'); end
   
+  % don't include the sampleinfo if present (ft_selectdata_old might be incorrect)
+  if isfield(data_new, 'sampleinfo'), data_new = rmfield(data_new, 'sampleinfo'); end
+  if isfield(data_old, 'sampleinfo'), data_old = rmfield(data_old, 'sampleinfo'); end
+  
   % skip this comparison, because ft_selectdata_old could not deal with this correctly: this is not something to be asserted here
   data_old = removefields(data_old, 'cov');
   data_new = removefields(data_new, 'cov');
@@ -669,25 +673,24 @@ if nargin>2
   % check whether the output is the same as the input
   if ischar(value) && strcmp(value, 'all')
     dataorig = data;
-    try, if isfield(dataorig, 'trial'), data = rmfield(dataorig, {'avg', 'var', 'dof'}); end ; end % only remove when trial
-    data = rmfield(data, 'cfg');
+    
+    if isfield(dataorig, 'trial')
+      data = removefields(dataorig, {'avg', 'var', 'dof'});
+    end
     
     % skip this comparison, because ft_selectdata_old could not deal with this correctly: this is not something to be asserted here
-    data_old = removefields(data_old, 'cov');
-    data     = removefields(data, 'cov');
-    
-    if isfield(data, 'cumtapcnt'), data = rmfield(data, 'cumtapcnt'); end
+    data_old = removefields(data_old, {'cfg', 'cov', 'cumtapcnt', 'sampleinfo'});
+    data     = removefields(data    , {'cfg', 'cov', 'cumtapcnt', 'sampleinfo'});
     assert(isequal(data, data_old));
     
     data = dataorig;
-    try, if isfield(dataorig, 'trial'), data = rmfield(dataorig, {'avg', 'var', 'dof'}); end ; end % only remove when trial
+    if isfield(dataorig, 'trial')
+      data = removefields(dataorig, {'avg', 'var', 'dof'});
+    end
     
     % skip this comparison, because ft_selectdata_old could not deal with this correctly: this is not something to be asserted here
-    data     = removefields(data, 'cov');
-    data_new = removefields(data_new, 'cov');
-    
-    data = rmfield(data, 'cfg');
-    if isfield(data, 'cumtapcnt'), data = rmfield(data, 'cumtapcnt'); end
+    data_new = removefields(data_new, {'cfg', 'cov', 'cumtapcnt', 'sampleinfo'});
+    data     = removefields(data    , {'cfg', 'cov', 'cumtapcnt', 'sampleinfo'});
     assert(isequal(data, data_new));
   end
   
@@ -720,8 +723,7 @@ else
   end
   
   if strcmp(key, 'avgoverfreq') || strcmp(key, 'avgoverrpt')
-    % apparently something may be wrong with the data_old.dimord
-    % don't spend time on fixing this here
+    % apparently something may be wrong with the data_old.dimord, don't spend time on fixing this here
     data_old.dimord = data_new.dimord;
     
     % also, the cumtapcnt is inconsistent in ft_selectdata_old
@@ -734,22 +736,25 @@ else
     if isfield(data_old, 'cumtapcnt'), data_old = rmfield(data_old, 'cumtapcnt'); end
     if isfield(data_old, 'cumsumcnt'), data_old = rmfield(data_old, 'cumsumcnt'); end
     if isfield(data_old, 'trialinfo'), data_old = rmfield(data_old, 'trialinfo'); end
+    if isfield(data_old, 'sampleinfo'), data_old = rmfield(data_old, 'sampleinfo'); end
     
-    % ft_selectdata_new tries to keep the cov, but ft_selectdata doesn't,
-    % don't bother to fix ft_selectdata_old
+    % ft_selectdata_new tries to keep the cov, but ft_selectdata doesn't, don't bother to fix ft_selectdata_old
     if isfield(data_new, 'cov'), data_new = rmfield(data_new, 'cov'); end
   end
   
   if strcmp(key, 'avgoverchan')
-    % ft_selectdata_old sometimes keeps the cov (without averaging), don't
-    % bother to fix it
+    % ft_selectdata_old sometimes keeps the cov (without averaging), don't bother to fix it
     if isfield(data_old, 'cov'), data_old = rmfield(data_old, 'cov'); end
     if isfield(data_old, 'cumtapcnt'), data_old = rmfield(data_old, 'cumtapcnt'); end
     if isfield(data_new, 'cumtapcnt'), data_new = rmfield(data_new, 'cumtapcnt'); end
     
-    % ft_selectdata_new tries to keep the cov, but ft_selectdata doesn't,
-    % don't bother to fix ft_selectdata_old
+    % ft_selectdata_new tries to keep the cov, but ft_selectdata doesn't, don't bother to fix ft_selectdata_old
     if isfield(data_new, 'cov'), data_new = rmfield(data_new, 'cov'); end
+  end
+  
+  if strcmp(key, 'avgovertime')
+    % ft_selectdata_old does something inconsistent, don't bother to fix it
+    if isfield(data_old, 'sampleinfo'), data_old = rmfield(data_old, 'sampleinfo'); end
   end
   
   assert(isequal(data_old, data_new));
