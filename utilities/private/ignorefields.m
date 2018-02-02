@@ -139,6 +139,18 @@ switch purpose
       'previous'
       };
     
+  case 'makessense'
+    ignore = {
+      'label'
+      'time'
+      'freq'
+      'fsample'
+      'dimord'
+      'trialinfo'
+      'sampleinfo'
+      'cfg'
+      };
+    
   otherwise
     ft_error('invalid purpose');
 end % switch purpose
