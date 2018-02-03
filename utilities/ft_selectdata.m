@@ -175,7 +175,7 @@ for i=2:length(varargin)
 end
 datfield  = setdiff(datfield, {'label' 'labelcmb'}); % these fields will be used for selection, but are not treated as data fields
 datfield  = setdiff(datfield, {'dim'});              % not used for selection, also not treated as data field
-xtrafield =  {'cfg' 'hdr' 'fsample' 'fsampleorig' 'grad' 'elec' 'opto' 'transform' 'unit' 'topolabel'}; % these fields will not be touched in any way by the code
+xtrafield = {'cfg' 'hdr' 'fsample' 'fsampleorig' 'grad' 'elec' 'opto' 'transform' 'unit' 'topolabel'}; % these fields will not be touched in any way by the code
 datfield  = setdiff(datfield, xtrafield);
 orgdim1   = datfield(~cellfun(@isempty, regexp(datfield, 'label$')) & cellfun(@isempty, regexp(datfield, '^csd'))); % xxxlabel, with the exception of csdlabel
 datfield  = setdiff(datfield, orgdim1);
@@ -383,13 +383,13 @@ for i=1:numel(varargin)
         for k = 1:numel(seltime{i})
           varargin{i}.sampleinfo(k,:) = varargin{i}.sampleinfo(k,1) - 1 + seltime{i}{k}([1 end]);
         end
-      elseif ~iscell(seltime{i})
+      elseif ~iscell(seltime{i}) && ~isempty(seltime{i}) && ~all(isnan(seltime{i}))
         nrpt       = size(varargin{i}.sampleinfo,1);
         seltime{i} = seltime{i}(:)';
         varargin{i}.sampleinfo = varargin{i}.sampleinfo(:,[1 1]) - 1 + repmat(seltime{i}([1 end]),nrpt,1);
       end
     end
-    
+  
     varargin{i}.(datfield{j}) = squeezedim(varargin{i}.(datfield{j}), ~keepdim);
     
   end % for datfield

@@ -67,39 +67,17 @@ version       = ft_getopt(varargin, 'version', 'latest');
 hassampleinfo = ft_getopt(varargin, 'hassampleinfo', 'ifmakessense'); % can be yes/no/ifmakessense
 hastrialinfo  = ft_getopt(varargin, 'hastrialinfo',  'ifmakessense'); % can be yes/no/ifmakessense
 
-if isequal(hassampleinfo, 'ifmakessense')
-  hassampleinfo = 'no'; % default to not adding it
-  if isfield(timelock, 'sampleinfo') && isfield(timelock, 'trial') && size(timelock.sampleinfo,1)~=size(timelock.trial,1)
-    % it does not make sense, so don't keep it
-    hassampleinfo = 'no';
-  end
-  if isfield(timelock, 'sampleinfo') && isfield(timelock, 'trial')
-    hassampleinfo = 'yes'; % if it's already there, consider keeping it
-    numsmp = timelock.sampleinfo(:,2)-timelock.sampleinfo(:,1)+1;
-    if ~all(size(timelock.trial,3)==numsmp)
-      % it does not make sense, so don't keep it
-      hassampleinfo = 'no';
-      % the actual removal will be done further down
-      ft_warning('removing inconsistent sampleinfo');
-    end
-  end
-end
-
-if isequal(hastrialinfo, 'ifmakessense')
-  hastrialinfo = 'no';
-  if isfield(timelock, 'trialinfo') && isfield(timelock, 'trial')
-    hastrialinfo = 'yes';
-    if size(timelock.trialinfo,1)~=size(timelock.trial,1)
-      % it does not make sense, so don't keep it
-      hastrialinfo = 'no';
-      ft_warning('removing inconsistent trialinfo');
-    end
-  end
-end
-
 % convert it into true/false
-hassampleinfo = istrue(hassampleinfo);
-hastrialinfo  = istrue(hastrialinfo);
+if isequal(hassampleinfo, 'ifmakessense')
+  hassampleinfo = makessense(timelock, 'sampleinfo');
+else
+  hassampleinfo = istrue(hassampleinfo);
+end
+if isequal(hastrialinfo, 'ifmakessense')
+  hastrialinfo = makessense(timelock, 'trialinfo');
+else
+  hastrialinfo = istrue(hastrialinfo);
+end
 
 if strcmp(version, 'latest')
   version = '2017';
