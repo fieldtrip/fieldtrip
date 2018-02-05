@@ -176,12 +176,13 @@ for trlop = 1:numtrl
   else
     dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', channelindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
   end
-
+  
   status = struct2cell(artfctdef);
-  if any(strcmp(status, 'yes'))
+  status = status(cellfun(@(x) ischar(x), status));
+  if any(strcmp(status, 'yes') |  strcmp(status, 'abs') | strcmp(status, 'complex') | strcmp(status, 'real') | strcmp(status, 'imag') | strcmp(status, 'absreal') | strcmp(status, 'absimag') | strcmp(status, 'angle'))
     dat = preproc(dat, channel, offset2time(cfg.trl(trlop,3), hdr.Fs, size(dat,2)), artfctdef);
   end
-
+  
   % make a vector that indicates for each sample whether there is an artifact
   artval = false(1,  size(dat,2));
   artval = artval | any(dat<=artfctdef.min,1);
