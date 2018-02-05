@@ -84,42 +84,17 @@ for i=1:length(data.trial)
   assert(size(data.trial{i},1)==length(data.label), 'inconsistent number of channels in trial %d', i);
 end
 
-if isequal(hassampleinfo, 'ifmakessense')
-  hassampleinfo = 'no'; % default to not adding it
-  if isfield(data, 'sampleinfo') && size(data.sampleinfo,1)~=numel(data.trial)
-    % it does not make sense, so don't keep it
-    hassampleinfo = 'no';
-  end
-  if isfield(data, 'sampleinfo')
-    hassampleinfo = 'yes'; % if it's already there, consider keeping it
-    numsmp = data.sampleinfo(:,2)-data.sampleinfo(:,1)+1;
-    for i=1:length(data.trial)
-      if size(data.trial{i},2)~=numsmp(i)
-        % it does not make sense, so don't keep it
-        hassampleinfo = 'no';
-        % the actual removal will be done further down
-        ft_warning('removing inconsistent sampleinfo');
-        break
-      end
-    end
-  end
-end
-
-if isequal(hastrialinfo, 'ifmakessense')
-  hastrialinfo = 'no';
-  if isfield(data, 'trialinfo')
-    hastrialinfo = 'yes';
-    if size(data.trialinfo,1)~=numel(data.trial)
-      % it does not make sense, so don't keep it
-      hastrialinfo = 'no';
-      ft_warning('removing inconsistent trialinfo');
-    end
-  end
-end
-
 % convert it into true/false
-hassampleinfo = istrue(hassampleinfo);
-hastrialinfo  = istrue(hastrialinfo);
+if isequal(hassampleinfo, 'ifmakessense')
+  hassampleinfo = makessense(data, 'sampleinfo');
+else
+  hassampleinfo = istrue(hassampleinfo);
+end
+if isequal(hastrialinfo, 'ifmakessense')
+  hastrialinfo = makessense(data, 'trialinfo');
+else
+  hastrialinfo = istrue(hastrialinfo);
+end
 
 if strcmp(version, 'latest')
   version = '2011';

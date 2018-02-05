@@ -1,8 +1,8 @@
 function [cfg, artifact] = ft_artifact_threshold(cfg, data)
 
-% FT_ARTIFACT_THRESHOLD scans for trials in which the range, i.e. the minimum, the maximum
-% or the range (min-max difference) of the signal in any channel exceeds a specified
-% threshold.
+% FT_ARTIFACT_THRESHOLD scans for trials in which the range, i.e. the minimum, the
+% maximum or the range (min-max difference) of the signal in any channel exceeds a
+% specified threshold.
 %
 % Use as
 %   [cfg, artifact] = ft_artifact_threshold(cfg)
@@ -25,7 +25,7 @@ function [cfg, artifact] = ft_artifact_threshold(cfg, data)
 %
 % The following configuration options can be specified
 %   cfg.artfctdef.threshold.channel   = cell-array with channel labels
-%   cfg.artfctdef.threshold.bpfilter  = 'no' or 'yes'
+%   cfg.artfctdef.threshold.bpfilter  = 'no' or 'yes' (default = 'yes')
 %   cfg.artfctdef.threshold.bpfreq    = [0.3 30]
 %   cfg.artfctdef.threshold.bpfiltord = 4
 %

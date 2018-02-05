@@ -100,7 +100,7 @@ for i=1:numel(label)
   end
   
   % try converting the first 20 elements
-  if numel(time)>10
+  if numel(time)>20
     str = dat.table.(label{i})(1:20);
     val = str2double(str);
     if any(~cellfun(@isempty, str) & isnan(val))
