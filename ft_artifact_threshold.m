@@ -177,9 +177,10 @@ for trlop = 1:numtrl
     dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', channelindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
   end
   
+  % only do the preprocessing if there is an option that suggests to have an effect
   status = struct2cell(artfctdef);
   status = status(cellfun(@(x) ischar(x), status));
-  if any(strcmp(status, 'yes') |  strcmp(status, 'abs') | strcmp(status, 'complex') | strcmp(status, 'real') | strcmp(status, 'imag') | strcmp(status, 'absreal') | strcmp(status, 'absimag') | strcmp(status, 'angle'))
+  if any(ismember(status, {'yes', 'abs', 'complex', 'real', 'imag', 'absreal', 'absimag', 'angle'}))
     dat = preproc(dat, channel, offset2time(cfg.trl(trlop,3), hdr.Fs, size(dat,2)), artfctdef);
   end
   
