@@ -7,18 +7,21 @@ function [raw, event] = imotions2fieldtrip(filename, varargin)
 %   data = imotions2fieldtrip(filename, ...)
 %
 % Additional options should be specified in key-value pairs and can be
-%   fixtime       = 'squash' or 'interpolate' (default = 'interpolate')
-%   isevent       = cell-array with labels corresponding to events (default = {})
-%   isnotevent    = cell-array with labels not corresponding to events (default = {})
+%   fixtime       = 'no', 'squash' or 'interpolate' (default = 'no')
 %   isnumeric     = cell-array with labels corresponding to numeric data (default = {})
 %   isnotnumeric  = cell-array with labels not corresponding to numeric data (default = {})
+%   isevent       = cell-array with labels corresponding to events (default = {})
+%   isnotevent    = cell-array with labels not corresponding to events (default = {})
 %
-% Note that isnumeric and isnotnumeric are mutually exclusive. The same applies to
-% isevent and isnotevent.
+% The options 'isnumeric' and 'isnotnumeric' are mutually exclusive. Idem for
+% 'isevent' and 'isnotevent'.
+%
+% When using fixtime='squash' identical timetamps are squashed together AND the whole
+% timeaxis is interpolated to obtain a regularly sampled representation.
 %
 % See also FT_DATATYPE_RAW, FT_PREPROCESSING
 
-% Copyright (C) 2017, Robert Oostenveld
+% Copyright (C) 2017-2018, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -38,7 +41,7 @@ function [raw, event] = imotions2fieldtrip(filename, varargin)
 %
 % $Id$
 
-fixtime       = ft_getopt(varargin, 'fixtime', 'interpolate'); % squash or interpolate
+fixtime       = ft_getopt(varargin, 'fixtime', 'interpolate'); % squash, interpolate, none
 isnotnumeric  = ft_getopt(varargin, 'isnotnumeric', {});
 isnotevent    = ft_getopt(varargin, 'isnotevent', {});
 isnumeric     = ft_getopt(varargin, 'isnumeric', {});
@@ -153,7 +156,7 @@ for i=find(eventsel)
   
   this = 1;
   code = 1; % this is the numerical code for the event values
-  while this<numel(str)
+  while this<=numel(str)
     
     next = find(~strcmp(str(this:end), str{this}), 1, 'first') + this - 1;
     if isempty(next)
@@ -195,6 +198,9 @@ raw.label    = cat(1, numericlabel(:), eventtype(:));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 switch fixtime
+  case 'no'
+    % keep it as it is
+    
   case 'squash'
     % make a local copy for convenience
     time  = raw.time{1};
@@ -241,7 +247,7 @@ end
 % interpolate the data to ensure a regular time axis
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ~strcmp(fixtime, 'interpolate')
+if strcmp(fixtime, 'squash')
   % make a local copy for convenience
   time = raw.time{1};
   
