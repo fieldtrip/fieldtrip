@@ -410,7 +410,7 @@ if ~isempty(dtype)
       okflag = 1;
     elseif isequal(dtype(iCell), {'raw'}) && istimelock
       if iscomp
-        data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
+        data = removefields(data, {'topo', 'topolabel', 'topodimord', 'unmixing', 'unmixingdimord'}); % these fields are not desired
         iscomp = 0;
       end
       data = timelock2raw(data);
@@ -438,28 +438,28 @@ if ~isempty(dtype)
       okflag = 1;
     elseif isequal(dtype(iCell), {'raw'}) && israw
       if iscomp
-        data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
+        data = removefields(data, {'topo', 'topolabel', 'topodimord', 'unmixing', 'unmixingdimord'}); % these fields are not desired
         iscomp = 0;
       end
       data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
       okflag = 1;
     elseif isequal(dtype(iCell), {'timelock'}) && istimelock
       if iscomp
-        data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
+        data = removefields(data, {'topo', 'topolabel', 'topodimord', 'unmixing', 'unmixingdimord'}); % these fields are not desired
         iscomp = 0;
       end
       data = ft_datatype_timelock(data, 'hassampleinfo', hassampleinfo);
       okflag = 1;
     elseif isequal(dtype(iCell), {'freq'}) && isfreq
       if iscomp
-        data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
+        data = removefields(data, {'topo', 'topolabel', 'topodimord', 'unmixing', 'unmixingdimord'}); % these fields are not desired
         iscomp = 0;
       end
       data = ft_datatype_freq(data);
       okflag = 1;
     elseif isequal(dtype(iCell), {'timelock'}) && israw
       if iscomp
-        data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
+        data = removefields(data, {'topo', 'topolabel', 'topodimord', 'unmixing', 'unmixingdimord'}); % these fields are not desired
         iscomp = 0;
       end
       data = raw2timelock(data);
@@ -469,7 +469,7 @@ if ~isempty(dtype)
       okflag = 1;
     elseif isequal(dtype(iCell), {'raw'}) && isfreq
       if iscomp
-        data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
+        data = removefields(data, {'topo', 'topolabel', 'topodimord', 'unmixing', 'unmixingdimord'}); % these fields are not desired
         iscomp = 0;
       end
       data = freq2raw(data);
