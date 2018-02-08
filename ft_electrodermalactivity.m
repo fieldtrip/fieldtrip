@@ -12,7 +12,7 @@ function [dataout] = ft_electrodermalactivity(cfg, datain)
 %   cfg.feedback       = 'yes' or 'no'
 %   cfg.medianwindow   = scalar, length of window for median filter in seconds (default = 8)
 %
-% After using this function you can use FT_REDEFINETRIAL and T_TIMELOCKANLAYSIS to
+% After using this function you can use FT_REDEFINETRIAL and FT_TIMELOCKANLAYSIS to
 % investigate electrodermal responses (EDRs) to stimulation. You can use
 % FT_ARTIFACT_THRESHOLD to determine the timing and frequency of nonspecific EDRs.
 %
