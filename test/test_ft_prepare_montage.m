@@ -20,6 +20,11 @@ for i=1:ntrial
   data.trial{i}(:,1) = 1:nchan;  % replace the first sample
 end
 
+cfg = [];
+cfg.method = 'pca';
+comp = ft_componentanalysis(cfg, data);
+
+
 %%
 
 cfg = [];
@@ -69,3 +74,24 @@ assert(all(data3a.trial{1}(:,1)==-1)) % this is 2-1, 3-2, etc.
 assert(numel(data3b.label)==nchan+1-1);
 assert(all(data3b.trial{1}(1:nchan-1,1)==-1)) % this is 2-1, 3-2, etc.
 assert(all(data3b.trial{1}(nchan,1)==nchan))  % this is nchan-0
+
+%%
+
+cfg = [];
+cfg.refmethod = 'comp';
+montage = ft_prepare_montage(cfg, comp);
+
+cfg = [];
+cfg.montage = montage;
+data4a = ft_preprocessing(cfg, data);
+
+cfg = [];
+cfg.refmethod = 'invcomp';
+montage = ft_prepare_montage(cfg, comp);
+
+cfg = [];
+cfg.montage = montage;
+data4b = ft_preprocessing(cfg, comp);
+% FIXME I would expect the output not to contain topo/unmixing/topolabel
+
+

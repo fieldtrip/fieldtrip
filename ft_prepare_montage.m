@@ -2,17 +2,20 @@ function [montage, cfg] = ft_prepare_montage(cfg, data)
 
 % FT_PREPARE_MONTAGE creates a referencing scheme based on the input configuration
 % options and the channels in the data structure. The resulting montage can be
-% given as input to ft_apply_montage, or as cfg.montage to ft_preprocessing.
+% given as input to FT_APPLY_MONTAGE, or as cfg.montage to FT_PREPROCESSING.
 %
 % Use as
 %   montage = ft_prepare_montage(cfg, data)
 %
 % The configuration can contain the following fields:
-%
-%   cfg.implicitref   = 'label' or empty, add the implicit EEG reference as zeros (default = [])
+%   cfg.refmethod     = 'avg', 'bioloar', 'comp' (default = 'avg')
+%   cfg.implicitref   = string with the label of the implicit reference, or empty (default = [])
 %   cfg.refchannel    = cell-array with new EEG reference channel(s), this can be 'all' for a common average reference
 %
-% See also FT_PREPROCESSING
+% The implicitref option allows adding the implicit reference channel to the data as
+% a channel with zeros.
+%
+% See also FT_PREPROCESSING, FT_APPLY_MONTAGE
 
 % Copyright (C) 2017, Robert Oostenveld
 %
@@ -57,11 +60,11 @@ hasdata = exist('data', 'var') && ~isempty(data);
 if ~hasdata
   data = struct([]);
 else
-  data = ft_checkdata(data);
+  data = ft_checkdata(data, 'datatype', {'raw', 'raw+comp', 'timelock', 'timelock+comp'});
 end
 
-% do a sanity check for incompatible options which are used in ft_preprocessing
-cfg = ft_checkconfig(cfg, 'forbidden', {'montage'});
+% do a sanity check for incompatible options which are used in ft_preprocessing and elsewhere
+cfg = ft_checkconfig(cfg, 'forbidden', {'montage', 'method'});
 
 % set default configuration options
 cfg.refmethod    = ft_getopt(cfg, 'refmethod', 'avg');
@@ -108,6 +111,9 @@ switch cfg.refmethod
     refsel = match_str(montage2.labelold, cfg.refchannel);
     montage2.tra(:,refsel) = montage2.tra(:,refsel) - 1/numel(refsel);
     
+    % apply montage2 to montage1, the result is the combination of both
+    montage = ft_apply_montage(montage1, montage2);
+    
   case 'bipolar'
     % make a montage for the bipolar derivation of sequential channels
     montage2          = [];
@@ -117,12 +123,28 @@ switch cfg.refmethod
     tra_plus          = diag( ones(numel(montage1.labelnew)-1,1),-1);
     montage2.tra      = tra_neg(1:end-1,:)+tra_plus(2:end,:);
     
+    % apply montage2 to montage1, the result is the combination of both
+    montage = ft_apply_montage(montage1, montage2);
+    
+  case 'comp'
+    assert(isempty(cfg.implicitref), 'implicitref not supported with refmethod=''%s''', cfg.refmethod);
+    % construct an linear projection from channels to components
+    montage = [];
+    montage.labelold = data.topolabel;
+    montage.labelnew = data.label;
+    montage.tra      = data.unmixing;
+    
+  case 'invcomp'
+    assert(isempty(cfg.implicitref), 'implicitref not supported with refmethod=''%s''', cfg.refmethod);
+    % construct an linear projection from components to channels
+    montage = [];
+    montage.labelold = data.label;
+    montage.labelnew = data.topolabel;
+    montage.tra      = data.topo;
+    
   otherwise
-    error('unsupported refmethod')
+    error('unsupported refmethod=''%s''', cfg.refmethod);
 end
-
-% apply montage2 to montage1, the result is the combination of both
-montage = ft_apply_montage(montage1, montage2);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
