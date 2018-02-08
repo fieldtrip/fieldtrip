@@ -177,7 +177,7 @@ end
 numtrl      = size(cfg.trl,1);
 channel     = ft_channelselection(artfctdef.channel, hdr.label);
 channelindx = match_str(hdr.label,channel);
-artifact    = zeros(0,2);
+artifact    = zeros(0,3);
 
 if ~isempty(artfctdef.onset) || ~isempty(artfctdef.offset)
   if artfctdef.onset>0 && artfctdef.offset>0
@@ -248,9 +248,30 @@ for trlop = 1:numtrl
   if any(artval)
     begsample = find(diff([false artval])>0) + cfg.trl(trlop,1) - 1;
     endsample = find(diff([artval false])<0) + cfg.trl(trlop,1) - 1;
-    artifact  = cat(1, artifact, [begsample(:) endsample(:)]);
+    offset    = nan(size(begsample));
+    
+    if size(dat,1)==1
+      % determine the offset of the peak value, this only works in case of a single channel
+      for i=1:numel(begsample)
+        seg = dat(begsample(i):endsample(i)); % get the segment of data
+        if all(seg>=artfctdef.max) || strcmp(direction, 'up')
+          [~, indx] = max(seg);
+          offset(i) = 1 - indx; % relative to the start of the segment, 0 is the first sample, -1 is the 2nd, etc.
+        elseif all(seg<=artfctdef.min) || strcmp(direction, 'down')
+          [~, indx] = min(seg);
+          offset(i) = 1 - indx; % relative to the start of the segment, 0 is the first sample, -1 is the 2nd, etc.
+        end % if up or down
+      end % for each artifact in this trial
+    end % if single channel
+    
+    artifact  = cat(1, artifact, [begsample(:) endsample(:) offset(:)]);
   end
   
+end % for trllop
+
+if any(isnan(artifact(:,3)))
+  % don't keep the offset if it cannot be determined consistently
+  artifact = artifact(:,[1 2]);
 end
 
 ft_info('detected %d artifacts\n', size(artifact,1));
@@ -264,4 +285,3 @@ cfg.artfctdef.threshold.artifact = artifact;        % detected artifacts
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
 ft_postamble previous data
-
