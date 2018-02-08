@@ -653,20 +653,16 @@ if strcmp(cfg.updatesens, 'yes')
   if ~isempty(cfg.montage) && ~isequal(cfg.montage, 'no')
     montage = cfg.montage;
   elseif strcmp(cfg.reref, 'yes')
-    if strcmp(cfg.refmethod, 'bipolar')
-      % make a montage for the bipolar derivation of sequential channels
-      montage            = [];
-      montage.labelold   = cfg.channel;
-      montage.labelnew   = strcat(cfg.channel(1:end-1),'-',cfg.channel(2:end));
-      tra_neg            = diag(-ones(numel(cfg.channel)-1,1), 1);
-      tra_plus           = diag( ones(numel(cfg.channel)-1,1),-1);
-      montage.tra        = tra_neg(1:end-1,:)+tra_plus(2:end,:);
-    else
-      tmpcfg = keepfields(cfg, {'reref', 'implicitref', 'refchannel', 'channel'});
+    if strcmp(cfg.refmethod, 'bipolar') || strcmp(cfg.refmethod, 'avg')
+      tmpcfg = keepfields(cfg, {'refmethod', 'implicitref', 'refchannel', 'channel'});
+      tmpcfg.showcallinfo = 'no';
       montage = ft_prepare_montage(tmpcfg, data);
+    else
+      % do not update the sensor description
+      montage = [];
     end
   else
-    % do not update anything
+    % do not update the sensor description
     montage = [];
   end
   

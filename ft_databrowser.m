@@ -1118,7 +1118,7 @@ else
   end
   seldata.time{1}     = offset2time(offset+begsel-begsample, opt.fsample, endsel-begsel+1);
   seldata.fsample     = opt.fsample;
-  seldata.sampleinfo  = [begsel endsel offset];
+  seldata.sampleinfo  = [begsel endsel];
   
   % prepare input
   funhandle = ft_getuserfun(cmenulab, 'browse');
@@ -1720,7 +1720,7 @@ opt.curdata.time{1}    = tim;
 opt.curdata.trial{1}   = dat;
 opt.curdata.hdr        = opt.hdr;
 opt.curdata.fsample    = opt.fsample;
-opt.curdata.sampleinfo = [begsample endsample offset];
+opt.curdata.sampleinfo = [begsample endsample];
 
 % to assure current feature is plotted on top
 ordervec = 1:length(opt.artdata.label);

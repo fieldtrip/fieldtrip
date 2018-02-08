@@ -264,21 +264,18 @@ end
 if strcmp(cfg.reref, 'yes')
   if strcmp(cfg.refmethod, 'bipolar')
     % this is implemented as a montage that the user does not get to see
-    % make a montage for the bipolar derivation of sequential channels
-    montage            = [];
-    montage.labelold   = cfg.channel;
-    montage.labelnew   = strcat(cfg.channel(1:end-1),'-',cfg.channel(2:end));
-    tra_neg            = diag(-ones(numel(cfg.channel)-1,1), 1);
-    tra_plus           = diag( ones(numel(cfg.channel)-1,1),-1);
-    montage.tra        = tra_neg(1:end-1,:)+tra_plus(2:end,:);
+    tmpcfg = keepfields(cfg, {'refmethod', 'implicitref', 'refchannel', 'channel'});
+    tmpcfg.showcallinfo = 'no';
+    montage = ft_prepare_montage(tmpcfg);
+    % convert the data temporarily to a raw structure
+    tmpdata.trial = {dat};
+    tmpdata.time  = {time};
+    tmpdata.label = label;
     % apply the montage to the data
-    tmp.trial = {dat};
-    tmp.time  = {time};
-    tmp.label = label;
-    tmp   = ft_apply_montage(tmp, montage, 'feedback', 'none');
-    dat   = tmp.trial{1}; % the number of channels can have changed
-    label = tmp.label;    % the channels can be different than the input channel labels
-    clear tmp
+    tmpdata = ft_apply_montage(tmpdata, montage, 'feedback', 'none');
+    dat   = tmpdata.trial{1}; % the number of channels can have changed
+    label = tmpdata.label;    % the output channels can be different than the input channels
+    clear tmpdata
   else
     % mean or median based derivation of specified or all channels
     cfg.refchannel = ft_channelselection(cfg.refchannel, label);
@@ -291,14 +288,15 @@ if strcmp(cfg.reref, 'yes')
 end
 
 if ~strcmp(cfg.montage, 'no') && ~isempty(cfg.montage)
-  % this is an alternative approach for rereferencing, with arbitrary complex linear combinations of channels
-  tmp.trial = {dat};
-  tmp.time  = {time};
-  tmp.label = label;
-  tmp   = ft_apply_montage(tmp, cfg.montage, 'feedback', 'none');
-  dat   = tmp.trial{1}; % the number of channels can have changed
-  label = tmp.label;    % the channels can be different than the input channel labels
-  clear tmp
+  % convert the data temporarily to a raw structure
+  tmpdata.trial = {dat};
+  tmpdata.time  = {time};
+  tmpdata.label = label;
+  % apply the montage to the data
+  tmpdata = ft_apply_montage(tmpdata, cfg.montage, 'feedback', 'none');
+  dat   = tmpdata.trial{1}; % the number of channels can have changed
+  label = tmpdata.label;    % the output channels can be different than the input channels
+  clear tmpdata
 end
 
 if any(any(isnan(dat)))

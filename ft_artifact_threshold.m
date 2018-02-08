@@ -30,18 +30,25 @@ function [cfg, artifact] = ft_artifact_threshold(cfg, data)
 %   cfg.artfctdef.threshold.bpfiltord = 4
 %
 % It is also possible to use other filter (lpfilter, hpfilter,
-% bsfilter, dftfilter or medianfilter) instead of a bpfilter for 
-% preprocessing, see FT_PREPROCESSING 
+% bsfilter, dftfilter or medianfilter) instead of a bpfilter for
+% preprocessing, see FT_PREPROCESSING
 %
 % The detection of artifacts is done according to the following settings,
 % you should specify at least one of these thresholds
 %   cfg.artfctdef.threshold.range     = value in uV or T, default  inf
 %   cfg.artfctdef.threshold.min       = value in uV or T, default -inf
 %   cfg.artfctdef.threshold.max       = value in uV or T, default  inf
+%   cfg.artfctdef.threshold.onset     = value in uV or T, default  inf
+%   cfg.artfctdef.threshold.offset    = value in uV or T, default  inf
 %
 % When cfg.artfctdef.threshold.range is used, the within-channel peak-to-peak range
 % is checked against the specified maximum range (so not the overall range across
 % channels). In this case the whole trial will be marked as an artifact.
+%
+% When cfg.artfctdef.threshold.onset and offset are used, the rising and falling
+% flank are thresholded with different values. In case onset and offset are both
+% positive, the data will be thresholded above their values. In case both onset and
+% offset are negative, the data will be thresholded below their values.
 %
 % Note that this function does not support artifact- or filterpadding.
 %
@@ -129,6 +136,8 @@ if ~isfield(artfctdef, 'bpfiltord'), artfctdef.bpfiltord = 4;        end
 if ~isfield(artfctdef, 'range'),    artfctdef.range = inf;           end
 if ~isfield(artfctdef, 'min'),      artfctdef.min =  -inf;           end
 if ~isfield(artfctdef, 'max'),      artfctdef.max =   inf;           end
+if ~isfield(artfctdef, 'onset'),    artfctdef.onset  = [];           end
+if ~isfield(artfctdef, 'offset'),   artfctdef.offset = [];           end
 
 % the data is either passed into the function by the user or read from file with cfg.inputfile
 hasdata = exist('data', 'var');
@@ -170,6 +179,19 @@ channel     = ft_channelselection(artfctdef.channel, hdr.label);
 channelindx = match_str(hdr.label,channel);
 artifact    = zeros(0,2);
 
+if ~isempty(artfctdef.onset) || ~isempty(artfctdef.offset)
+  if artfctdef.onset>0 && artfctdef.offset>0
+    direction = 'up';
+  elseif artfctdef.onset<0 && artfctdef.offset<0
+    direction = 'down';
+  else
+    error('incorrect specification of onset and offset');
+  end
+else
+  direction = 'none';
+end
+
+
 for trlop = 1:numtrl
   if hasdata
     dat = ft_fetch_data(data,        'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', channelindx, 'checkboundary', strcmp(cfg.continuous, 'no'));
@@ -195,6 +217,34 @@ for trlop = 1:numtrl
     artval(:) = true; % mark the whole segment as bad
   end
   
+  % this is when a different onset and offset are specified
+  switch direction
+    case 'up'
+      onset  = find(diff([0 any(dat>=artfctdef.onset,1)])>0); % find the rising flank
+      offset = nan(size(onset));
+      for i=1:numel(onset)
+        rem = dat(:,onset(i):end); % this is the remaining data following the artifact onset
+        offset(i) = find(diff([any(rem<=artfctdef.offset,1) 0])>0, 1, 'first'); % find the falling flank
+        offset(i) = offset(i) + onset(i);
+        % add it to the other artifacts in the boolean vector
+        artval(onset(i):offset(i)) = true;
+      end
+      
+    case 'down'
+      onset  = find(diff([0 any(dat<=artfctdef.onset,1)])>0); % find the rising flank
+      offset = nan(size(onset));
+      for i=1:numel(onset)
+        rem = dat(:,onset(i):end); % this is the remaining data following the artifact onset
+        offset(i) = find(diff([any(rem>=artfctdef.offset,1) 0])>0, 1, 'first'); % find the falling flank
+        offset(i) = offset(i) + onset(i);
+        % add it to the other artifacts in the boolean vector
+        artval(onset(i):offset(i)) = true;
+      end
+      
+    case 'none'
+      % nothing to do
+  end
+  
   if any(artval)
     begsample = find(diff([false artval])>0) + cfg.trl(trlop,1) - 1;
     endsample = find(diff([artval false])<0) + cfg.trl(trlop,1) - 1;
@@ -214,3 +264,4 @@ cfg.artfctdef.threshold.artifact = artifact;        % detected artifacts
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
 ft_postamble previous data
+
