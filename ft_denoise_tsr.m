@@ -111,6 +111,8 @@ data    = ft_selectdata(tmpcfg, varargin{1});
 [cfg, data] = rollback_provenance(cfg, data);
 
 % do the time shifting for the reference channel data
+ft_hastoolbox('cellfunction', 1);
+
 timestep = mean(diff(data.time{1}));
 reflags = -round(cfg.reflags./timestep);
 % the convention is to have a positive cfg.reflags defined as a delay of the ref w.r.t. the chan
