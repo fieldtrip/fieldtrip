@@ -81,17 +81,17 @@ end
 
 % set the defaults
 cfg.refchannel = ft_getopt(cfg, 'refchannel', 'MEGREF');
-cfg.channel    = ft_getopt(cfg, 'channel',    'MEG');
+cfg.channel    = ft_getopt(cfg, 'channel',    'all');
 cfg.truncate   = ft_getopt(cfg, 'truncate',   'no');
 cfg.zscore     = ft_getopt(cfg, 'zscore',     'yes');
 cfg.trials     = ft_getopt(cfg, 'trials',     'all', 1);
 cfg.feedback   = ft_getopt(cfg, 'feedback',   'none');
 cfg.updatesens = ft_getopt(cfg, 'updatesens', 'yes');
 cfg.perchannel = ft_getopt(cfg, 'perchannel', 'yes');
-cfg.reflags    = ft_getopt(cfg, 'reflags', 0);
-cfg.method     = ft_getopt(cfg, 'method', 'mlr');
-cfg.threshold  = ft_getopt(cfg, 'threshold', 0);
-cfg.output     = ft_getopt(cfg, 'output', 'model');
+cfg.reflags    = ft_getopt(cfg, 'reflags',    0);
+cfg.method     = ft_getopt(cfg, 'method',     'mlr');
+cfg.threshold  = ft_getopt(cfg, 'threshold',  0);
+cfg.output     = ft_getopt(cfg, 'output',     'model');
 
 % create a separate structure for the reference data
 tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo'});
@@ -132,8 +132,8 @@ data.time  = cellshift(data.time,  0, 2, [abs(min(reflags)) abs(max(reflags))], 
 fprintf('demeaning the data\n');
 mu_refdata    = cellmean(refdata.trial, 2);
 refdata.trial = cellvecadd(refdata.trial, -mu_refdata);
-mu_data    = cellmean(data.trial, 2);
-data.trial = cellvecadd(data.trial, -mu_data);
+mu_data       = cellmean(data.trial, 2);
+data.trial    = cellvecadd(data.trial, -mu_data);
 
 % zscore
 if istrue(cfg.zscore)
@@ -159,13 +159,14 @@ if istrue(cfg.perchannel)
   rho = zeros(nchan,1);
   for k = 1:nchan
     indx = [k nchan+(1:nref)];
-    [Etmp, Dtmp] = multivariate_decomp(C(indx,indx), 1+(1:nref), 1, cfg.method, 1, cfg.threshold);
-    beta_ref(k,:) = Etmp(2:end)./Etmp(1);
-    rho(k)        = Dtmp;
+    [E, rho(k)]   = multivariate_decomp(C(indx,indx), 1+(1:nref), 1, cfg.method, 1, cfg.threshold);
+    beta_ref(k,:) = E(2:end)./E(1);
   end
 else
-  ft_error('not yet implemented');
-  %[E, D] = multivariate_decomp(C, 1:nchan, nchan+(1:nref), cfg.method, 1, cfg.threshold);  
+  %ft_error('not yet implemented');
+  [E, rho]  = multivariate_decomp(C, 1:nchan, nchan+(1:nref), cfg.method, 1, cfg.threshold);  
+  beta_ref  = E(nchan+(1:nref),:)';
+  beta_data = E(1:nchan,:)';
 end
 
 dataout = keepfields(data, {'cfg' 'label' 'time' 'grad' 'elec' 'opto' 'trialinfo' 'fsample'});
@@ -179,11 +180,20 @@ end
 if istrue(cfg.zscore)
   % unzscore the data
   dataout.trial = cellvecmult(dataout.trial, std_data);
+  if exist('beta_data', 'var')
+    beta_ref  = beta_ref*diag(1./std_refdata);
+    beta_data = diag(std_data)*beta_data;
+  else
+    beta_ref = diag(std_data)*beta_ref*diag(1./std_refdata);
+  end
 end
 
 weights.time = cfg.reflags;
 weights.beta = beta_ref;
 weights.rho  = rho;
+if exist('beta_data', 'var')
+  weights.unmixing = beta_data;
+end
 
 dataout.weights = weights;
 
