@@ -139,7 +139,7 @@ data.trial    = cellvecadd(data.trial, -mu_data);
 if istrue(cfg.zscore)
   fprintf('zscoring the data\n');
   [refdata.trial, std_refdata] = cellzscore(refdata.trial, 2, 0);
-  [data.trial,    std_data]    = cellzscore(data.trial, 2, 0);
+  [   data.trial, std_data   ] = cellzscore(   data.trial, 2, 0);
 end
 
 % compute the covariance
@@ -165,8 +165,20 @@ if istrue(cfg.perchannel)
 else
   %ft_error('not yet implemented');
   [E, rho]  = multivariate_decomp(C, 1:nchan, nchan+(1:nref), cfg.method, 1, cfg.threshold);  
-  beta_ref  = E(nchan+(1:nref),:)';
-  beta_data = E(1:nchan,:)';
+  beta_ref  = normc(E(nchan+(1:nref),:))';
+  beta_data = normc(E(1:nchan,:))';
+end
+
+if istrue(cfg.zscore)
+  % unzscore the data
+  data.trial    = cellvecmult(   data.trial, std_data);
+  refdata.trial = cellvecmult(refdata.trial, std_refdata);
+  if exist('beta_data', 'var')
+    beta_ref  = beta_ref*diag(1./std_refdata);
+    beta_data = diag(1./std_data)*beta_data;
+  else
+    beta_ref = diag(1./std_data)*beta_ref*diag(1./std_refdata);
+  end
 end
 
 dataout = keepfields(data, {'cfg' 'label' 'time' 'grad' 'elec' 'opto' 'trialinfo' 'fsample'});
@@ -175,17 +187,6 @@ switch cfg.output
     dataout.trial = beta_ref*refdata.trial;
   case 'residual'
     dataout.trial = data.trial - beta_ref*refdata.trial;
-end
-
-if istrue(cfg.zscore)
-  % unzscore the data
-  dataout.trial = cellvecmult(dataout.trial, std_data);
-  if exist('beta_data', 'var')
-    beta_ref  = beta_ref*diag(1./std_refdata);
-    beta_data = diag(std_data)*beta_data;
-  else
-    beta_ref = diag(std_data)*beta_ref*diag(1./std_refdata);
-  end
 end
 
 weights.time = cfg.reflags;
