@@ -519,7 +519,7 @@ for i=1:length(artlabel)
   sel(i) = isfield(cfg.artfctdef.(artlabel{i}), 'artifact');
   if sel(i)
     artifact{i} = cfg.artfctdef.(artlabel{i}).artifact;
-    fprintf('detected %3d %s artifacts\n', size(artifact{i}, 1), artlabel{i});
+    ft_info('detected %3d %s artifacts\n', size(artifact{i}, 1), artlabel{i});
   end
 end
 
