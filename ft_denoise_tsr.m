@@ -123,10 +123,23 @@ if ~any(reflags==0)
 end
 fprintf('shifting the reference data\n');
 refdata.trial = cellshift(refdata.trial, reflags, 2, [], 'overlap');
+refdata.time  = cellshift(data.time,  0, 2, [abs(min(reflags)) abs(max(reflags))], 'overlap');
+refdata.label = repmat(refdata.label,numel(reflags),1);
+for k = 1:numel(refdata.label)
+  refdata.label{k} = sprintf('%s_shift%03d',refdata.label{k}, k);
+end
 
 % center the data on lag 0
 data.trial = cellshift(data.trial, 0, 2, [abs(min(reflags)) abs(max(reflags))], 'overlap');
 data.time  = cellshift(data.time,  0, 2, [abs(min(reflags)) abs(max(reflags))], 'overlap');
+
+% only keep the trials that have > 0 samples
+tmpcfg = [];
+tmpcfg.trials = find(cellfun('size',data.trial,2)>0);
+data    = ft_selectdata(tmpcfg, data);
+[cfg, data] = rollback_provenance(cfg, data);
+refdata = ft_selectdata(tmpcfg, refdata);
+[~,refdata] = rollback_provenance(cfg, refdata);
 
 % demean
 fprintf('demeaning the data\n');
@@ -163,7 +176,6 @@ if istrue(cfg.perchannel)
     beta_ref(k,:) = E(2:end)./E(1);
   end
 else
-  %ft_error('not yet implemented');
   [E, rho]  = multivariate_decomp(C, 1:nchan, nchan+(1:nref), cfg.method, 1, cfg.threshold);  
   beta_ref  = normc(E(nchan+(1:nref),:))';
   beta_data = normc(E(1:nchan,:))';
@@ -174,10 +186,10 @@ if istrue(cfg.zscore)
   data.trial    = cellvecmult(   data.trial, std_data);
   refdata.trial = cellvecmult(refdata.trial, std_refdata);
   if exist('beta_data', 'var')
-    beta_ref  = beta_ref*diag(1./std_refdata);
-    beta_data = diag(1./std_data)*beta_data;
+    beta_ref  = beta_ref*diag(std_refdata);
+    beta_data = diag(std_data)*beta_data;
   else
-    beta_ref = diag(1./std_data)*beta_ref*diag(1./std_refdata);
+    beta_ref = diag(std_data)*beta_ref*diag(1./std_refdata);
   end
 end
 
