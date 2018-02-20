@@ -152,6 +152,7 @@ url = {
   'BREWERMAP'     'see https://nl.mathworks.com/matlabcentral/fileexchange/45208-colorbrewer--attractive-and-distinctive-colormaps'
   'CELLFUNCTION'  'see https://github.com/schoffelen/cellfunction'
   'MARS'          'see http://www.parralab.org/mars'
+  'LAGEXTRACTION' 'see https://github.com/agramfort/eeglab-plugin-ieee-tbme-2010'
   };
 
 if nargin<2
@@ -371,6 +372,8 @@ switch toolbox
     dependency = {'ghdf5read' 'ghdf5fileimport'};
   case 'MARS'
     dependency = {'spm_mars_mrf'};
+  case 'LAGEXTRACTION'
+    dependency = {'extractlag' 'perform_realign'}
     
     % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
