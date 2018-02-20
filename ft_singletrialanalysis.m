@@ -265,15 +265,127 @@ switch cfg.method
     reconstructed.params = params;
 
 case 'gbve'
+  ft_hastoolbox('lagextraction', 1);
   
+  if ~isfield(cfg, 'gbve'), cfg.gbve = []; end
+  cfg.gbve.null = ft_getopt(cfg.gbve, 'null', 0); % FIXME CHECK THE MINIMUM REQUIREMENTS OF THE OPTIONS NEEDED
+  cfg.gbve.NORMALIZE_DATA    = ft_getopt(cfg.gbve, 'NORMALIZE_DATA', 1);
+  cfg.gbve.CENTER_DATA       = ft_getopt(cfg.gbve, 'CENTER_DATA',    0);
+  cfg.gbve.USE_ADAPTIVE_SIGMA= ft_getopt(cfg.gbve, 'USE_ADAPTIVE_SIGMA', 0);
+  cfg.gbve.DISPLAY_SIGNAL    = ft_getopt(cfg.gbve, 'DISPLAY_SIGNAL', 0);
+  cfg.gbve.CONNECT_EMBEDDED_POINTS = ft_getopt(cfg.gbve, 'CONNECT_EMBEDDED_POINTS', 0);
+  cfg.gbve.sigma             = ft_getopt(cfg.gbve, 'sigma',          0.01:0.01:0.2);
+  cfg.gbve.distance          = ft_getopt(cfg.gbve, 'distance',       'corr2');
+  cfg.gbve.alpha             = ft_getopt(cfg.gbve, 'alpha', [0 0.001 0.01 0.1]);
+  cfg.gbve.exponent          = ft_getopt(cfg.gbve, 'exponent', 1);
+  cfg.gbve.use_maximum       = ft_getopt(cfg.gbve, 'use_maximum', 1);
+  cfg.gbve.show_pca          = ft_getopt(cfg.gbve, 'show_pca', 0);
+  cfg.gbve.show_trial_number = ft_getopt(cfg.gbve, 'show_trial_number', 0);
+  cfg.gbve.verbose           = ft_getopt(cfg.gbve, 'verbose', 1);
+  cfg.gbve.disp_log          = ft_getopt(cfg.gbve, 'disp_log', 1);
+  cfg.gbve.latency           = ft_getopt(cfg.gbve, 'latency', [-inf inf]);
 
+  options = cfg.gbve;
+
+  nchan = numel(data.label);
+  ntrl  = numel(data.trial);
+  nsmp  = numel(data.time{1});
+  
+  tmin  = nearest(data.time{1}, cfg.gbve.latency(1));
+  tmax  = nearest(data.time{1}, cfg.gbve.latency(2));
+
+  % initialize the struct that will contain the output parameters
+  params = struct([]);
+  for k = 1:nchan
+    % preprocessing data
+    tmp     = cellrowselect(data.trial,k);
+    chandat = cat(1,tmp{:});
+    points  = chandat(:,tmin:tmax);
+    
+    % perform a loop across alpha values, cross validation
+    alphas = options.alpha;
+
+    if length(alphas) > 1 % Use Cross validation error if multiple alphas are specified
+      best_CVerr = -Inf;
+
+      K = 5;
+      disp(['--- Running K Cross Validation (K = ',num2str(K),')']);
+
+      block_idx = fix(linspace(1, ntrl, K+1)); % K cross validation
+      for jj=1:length(alphas)
+        options.alpha = alphas(jj);
+
+        CVerr = 0;
+        for kk = 1:K
+          bidx = block_idx(jj):block_idx(jj+1);
+          idx = 1:ntrl;
+          idx(bidx) = [];
+
+          data_k       = chandat(idx,:);
+          points_k     = points(idx,:)
+          [order,lags] = extractlag(points_k,options);
+
+          data_reordered = data_k(order,:);
+          lags           = lags + tmin;
+          [data_aligned, ~] = perform_realign(data_reordered, data.time{1}, lags);
+          data_aligned(~isfinite(data_aligned)) = nan;
+          ep_evoked = nanmean(data_aligned);
+          ep_evoked = ep_evoked ./ norm(ep_evoked);
+
+          data_k = data(bidx,:);
+          data_k = normalize_rows(data_k);
+
+          %ep_raw = nanmean(data);
+          %ep_raw = ep_raw ./ norm(ep_raw);
+          for pp=1:length(bidx)
+            % c = xcorr(ep_raw,data_k(pp,:));
+            % max(c(:))
+            c = xcorr(ep_evoked,data_k(pp,:));
+            % max(c(:))
+            % [mc,mci] = max(c(:));
+          
+            CVerr = CVerr + max(c(:));
+          end
+        end
+
+        CVerr = CVerr/ntrl;
+
+        if CVerr > best_CVerr
+          best_CVerr = CVerr;
+          best_alpha = alphas(jj);
+        end
+      end
+      options.alpha = best_alpha;
+    end
+
+    if options.use_maximum
+      [order,lags] = extractlag( points, options );
+    else
+      [order,lags] = extractlag( -points, options );
+    end
+    disp(['---------- Using alpha = ',num2str(options.alpha)]);
+    data_reordered = chandat(order,:);
+    lags = lags + tmin;
+    [data_aligned] = perform_realign( data_reordered, data.time{1}, lags );
+    data_aligned(~isfinite(data_aligned)) = nan;
+    
+    order_inv     = perminv(order);
+    lags_no_order = lags(order_inv);
+    
+    
+
+  end
+  
+  
 end
+reconstructed.cfg = cfg;
+residual.cfg      = cfg;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble previous   datain
-ft_postamble provenance dataout
-ft_postamble history    dataout
-ft_postamble savevar    dataout
+ft_postamble previous   data
+ft_postamble provenance reconstructed residual
+ft_postamble history    reconstructed residual
+ft_postamble savevar    reconstructed residual
 
