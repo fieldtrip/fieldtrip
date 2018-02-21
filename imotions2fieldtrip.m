@@ -7,8 +7,9 @@ function [raw, event] = imotions2fieldtrip(filename, varargin)
 %   data = imotions2fieldtrip(filename, ...)
 %
 % Additional options should be specified in key-value pairs and can be
-%   fixtime       = 'no', 'squash' or 'interpolate' (default = 'no')
+%   interpolate   = 'no', 'time' or 'data' (default = 'no')
 %   isnumeric     = cell-array with labels corresponding to numeric data (default = {})
+%   isinteger     = cell-array with labels corresponding to integer data that should be interpolated with nearest where applicable (default = {})
 %   isnotnumeric  = cell-array with labels not corresponding to numeric data (default = {})
 %   isevent       = cell-array with labels corresponding to events (default = {})
 %   isnotevent    = cell-array with labels not corresponding to events (default = {})
@@ -16,10 +17,14 @@ function [raw, event] = imotions2fieldtrip(filename, varargin)
 % The options 'isnumeric' and 'isnotnumeric' are mutually exclusive. Idem for
 % 'isevent' and 'isnotevent'.
 %
-% When using fixtime='squash' identical timetamps are squashed together AND the whole
-% timeaxis is interpolated to obtain a regularly sampled representation.
+% When using the interpolate='data' option, both the data and the time are interpolated
+% to a regularly sampled representation, when using the interpolate='time' option, only
+% the time axis is interpolated to a regularly sampled representation.  This addresses
+% the case that the data was actually acquired with a regular sampling rate, but the time
+% stamps in the file are not correctly representing this (a known bug with some type of
+% iMotions data).
 %
-% See also FT_DATATYPE_RAW, FT_PREPROCESSING
+% See also FT_DATATYPE_RAW, FT_PREPROCESSING, FT_HEARTRATE, FT_ELECTRODERMALACTIVITY
 
 % Copyright (C) 2017-2018, Robert Oostenveld
 %
@@ -41,11 +46,27 @@ function [raw, event] = imotions2fieldtrip(filename, varargin)
 %
 % $Id$
 
-fixtime       = ft_getopt(varargin, 'fixtime', 'interpolate'); % squash, interpolate, none
+interpolate   = ft_getopt(varargin, 'interpolate', 'no');
 isnotnumeric  = ft_getopt(varargin, 'isnotnumeric', {});
 isnotevent    = ft_getopt(varargin, 'isnotevent', {});
 isnumeric     = ft_getopt(varargin, 'isnumeric', {});
+isinteger     = ft_getopt(varargin, 'isinteger', {});
 isevent       = ft_getopt(varargin, 'isevent', {});
+
+% try to be kind to the users and provide backwarrd compatibility support
+if ~isempty(ft_getopt(varargin, 'fixtime'))
+  ft_warning('the option ''fixtime'' is obsolete, please use ''interpolate''');
+  switch ft_getopt(varargin, 'fixtime')
+    case {'interpolate_data' 'squash'}
+      interpolate = 'data';
+    case {'interpolate_time' 'interpolate'}
+      interpolate = 'time';
+    case 'no'
+      interpolate = 'no';
+    otherwise
+      ft_error('invalid option for ''fixtime''');
+  end
+end
 
 % these options are mutually exclusive
 if ~isempty(isnumeric) && ~isempty(isnotnumeric)
@@ -128,6 +149,13 @@ end
 % remember the labels for the columns with numerical data
 numericlabel = label(numericsel);
 
+% Note, isinteger should be subselection of isnumeric
+if ~isempty(isinteger)
+  if sum(strcmp(numericlabel, isinteger))==0
+    error('isinteger should be subset of numerical channels')
+  end
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % construct numerical channels for the columns that represent events
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -193,43 +221,64 @@ raw.trial{1} = cat(1, numericdat, eventcode);
 raw.label    = cat(1, numericlabel(:), eventtype(:));
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% the next section deals with timestamps that are repeated
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% the next section deals with interpolation of data and or time axis
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-switch fixtime
+switch interpolate
   case 'no'
     % keep it as it is
     
-  case 'squash'
+  case 'data'
     % make a local copy for convenience
-    time  = raw.time{1};
-    trial = raw.trial{1};
+    time = raw.time{1};
     
-    % the same timestamp can be on multiple lines in the file
-    dt = diff(sort(time));
+    dt = diff(time);
+    dt = median(dt);
+    begtime = min(time);
+    endtime = max(time);
     
-    if any(dt==0)
-      ft_notice('squashing overlapping samples...\n');
-      t = 1;
-      while t<numel(time)
-        sel = find(time==time(t));
-        trial(:,t) = nanmean(trial(:,sel),2);
-        time(sel(2:end)) = nan;
-        t = t+numel(sel);
-      end
+    if any(diff(time)~=dt)
+      ft_notice('resampling data onto regularly spaced time axis\n');
+      tmpcfg = [];
+      tmpcfg.time = {begtime:dt:endtime};
       
-      seltime = ~isnan(time);
-      ft_notice('keeping %.0f %% of the original samples\n', 100*mean(seltime));
-      time  = time (  seltime);
-      trial = trial(:,seltime);
+      if ~isempty(isinteger)
+        % interpolating integer channels using nearest
+        cfgint = [];
+        cfgint.channel = isinteger;
+        raw_int = ft_selectdata(cfgint, raw);
+        [~, raw_int] = rollback_provenance([], raw_int);
+        tmpcfg.method = 'nearest';
+        raw_int = ft_resampledata(tmpcfg, raw_int);
+        [~, raw_int] = rollback_provenance([], raw_int);
+        
+        % interpolating other channels using 'pchip', see INTERP1, shape-preserving piecewise cubic interpolation
+        cfgint = [];
+        cfgint.channel = setdiff(raw.label,isinteger);
+        raw_nonint = ft_selectdata(cfgint, raw);
+        [~, raw_nonint] = rollback_provenance([], raw_nonint);
+        tmpcfg.method = 'pchip';
+        raw_nonint = ft_resampledata(tmpcfg, raw_nonint);
+        [~, raw_nonint] = rollback_provenance([], raw_nonint);
+        
+        % append
+        raw = ft_appenddata([],raw_int, raw_nonint);
+        [~, raw] = rollback_provenance([], raw);
+      else
+        % interpolating all channels using 'pchip', see INTERP1, shape-preserving piecewise cubic interpolation
+        tmpcfg.method = 'pchip';
+        raw = ft_resampledata(tmpcfg, raw);
+        [~, raw] = rollback_provenance([], raw);
+      end
     end
     
-    % put them back
-    raw.time{1}  = time;
-    raw.trial{1} = trial;
+    % the channels with the event codes should remain integers
+    sel = match_str(raw.label, eventtype);
+    raw.trial{1}(sel,:) = floor(raw.trial{1}(sel,:));
     
-  case 'interpolate'
+  case 'time'
+    ft_notice('creating regularly spaced time axis\n');
     y = raw.time{1};
     x = 1:numel(y);
     % use a GLM to estimate y = b0 * x + b1
@@ -240,33 +289,6 @@ switch fixtime
     
   otherwise
     error('unsupported option')
-end
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% interpolate the data to ensure a regular time axis
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-if strcmp(fixtime, 'squash')
-  % make a local copy for convenience
-  time = raw.time{1};
-  
-  dt = diff(time);
-  dt = median(dt);
-  begtime = min(time);
-  endtime = max(time);
-  
-  if any(diff(time)~=dt)
-    ft_notice('resampling onto regularly spaced time axis\n');
-    tmpcfg = [];
-    tmpcfg.time = {begtime:dt:endtime};
-    raw = ft_resampledata(tmpcfg, raw);
-    [~, raw] = rollback_provenance([], raw);
-  end
-  
-  % the channels with the event codes should remain integers
-  sel = match_str(raw.label, eventtype);
-  raw.trial{1}(sel,:) = floor(raw.trial{1}(sel,:));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
