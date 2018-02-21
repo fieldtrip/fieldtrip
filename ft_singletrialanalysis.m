@@ -1,4 +1,4 @@
-function [reconstructed, residual] = ft_singletrialanalysis(cfg, data)
+function [reconstructed] = ft_singletrialanalysis(cfg, data)
 
 % FT_SINGLETRIALANALYSIS computes a single-trial estimate of the event-
 % related activity
@@ -16,6 +16,8 @@ function [reconstructed, residual] = ft_singletrialanalysis(cfg, data)
 %  cfg.channel = Nx1 cell-array with selection of channels (default = 'all'),
 %                see FT_CHANNELSELECTION for details
 %  cfg.trials  = 'all' or a selection given as a 1xN vector (default = 'all')
+%  cfg.output  = 'model', or 'residual', which returns the modelled data,
+%                or the residuals.
 %
 % METHOD SPECIFIC OPTIONS AND DESCRIPTIONS
 %
@@ -95,7 +97,7 @@ data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'h
 cfg         = ft_checkconfig(cfg, 'required', {'method'});
 cfg.trials  = ft_getopt(cfg, 'trials',  'all', 1); % all trials as default
 cfg.channel = ft_getopt(cfg, 'channel', 'all');
-
+cfg.output  = ft_getopt(cfg, 'output',  'model');
 % ensure that the options are valid
 cfg = ft_checkopt(cfg, 'method', 'char', {'aseo' 'gbve'});
 
@@ -150,7 +152,7 @@ switch cfg.method
       jitter = repmat([-jitter jitter], [size(waveformInitSet,1) 1]);
     elseif size(jitter)==size(waveformInitSet)
       jitter = jitter*fsample;
-    elseif size(jitter)<size(waveformInitSet) | size(jitter)>size(waveformInitSet)
+    elseif size(jitter)<size(waveformInitSet) || size(jitter)>size(waveformInitSet)
       ft_error('please specify cfg.aseo.jitter as a universal single value or as a matrix with size(cfg.aseo.searchWindowSet)')
     end
     cfg.aseo.jitter = jitter;
@@ -202,7 +204,7 @@ switch cfg.method
     % initialize the output data
     reconstructed = data;
     residual      = data;
-    if isfield(data, 'cfg');
+    if isfield(data, 'cfg')
       reconstructed = rmfield(reconstructed, 'cfg');
       residual      = rmfield(residual, 'cfg');
     end
@@ -262,8 +264,7 @@ switch cfg.method
         end
       end
     end
-    reconstructed.params = params;
-
+    
 case 'gbve'
   ft_hastoolbox('lagextraction', 1);
   
@@ -274,22 +275,21 @@ case 'gbve'
   cfg.gbve.USE_ADAPTIVE_SIGMA= ft_getopt(cfg.gbve, 'USE_ADAPTIVE_SIGMA', 0);
   cfg.gbve.DISPLAY_SIGNAL    = ft_getopt(cfg.gbve, 'DISPLAY_SIGNAL', 0);
   cfg.gbve.CONNECT_EMBEDDED_POINTS = ft_getopt(cfg.gbve, 'CONNECT_EMBEDDED_POINTS', 0);
-  cfg.gbve.sigma             = ft_getopt(cfg.gbve, 'sigma',          0.01:0.01:0.2);
-  cfg.gbve.distance          = ft_getopt(cfg.gbve, 'distance',       'corr2');
-  cfg.gbve.alpha             = ft_getopt(cfg.gbve, 'alpha', [0 0.001 0.01 0.1]);
+  cfg.gbve.sigma             = ft_getopt(cfg.gbve, 'sigma',    0.01:0.01:0.2);
+  cfg.gbve.distance          = ft_getopt(cfg.gbve, 'distance', 'corr2');
+  cfg.gbve.alpha             = ft_getopt(cfg.gbve, 'alpha',    [0 0.001 0.01 0.1]);
   cfg.gbve.exponent          = ft_getopt(cfg.gbve, 'exponent', 1);
   cfg.gbve.use_maximum       = ft_getopt(cfg.gbve, 'use_maximum', 1);
   cfg.gbve.show_pca          = ft_getopt(cfg.gbve, 'show_pca', 0);
   cfg.gbve.show_trial_number = ft_getopt(cfg.gbve, 'show_trial_number', 0);
-  cfg.gbve.verbose           = ft_getopt(cfg.gbve, 'verbose', 1);
+  cfg.gbve.verbose           = ft_getopt(cfg.gbve, 'verbose',  1);
   cfg.gbve.disp_log          = ft_getopt(cfg.gbve, 'disp_log', 1);
-  cfg.gbve.latency           = ft_getopt(cfg.gbve, 'latency', [-inf inf]);
+  cfg.gbve.latency           = ft_getopt(cfg.gbve, 'latency',  [-inf inf]);
 
   options = cfg.gbve;
 
   nchan = numel(data.label);
   ntrl  = numel(data.trial);
-  nsmp  = numel(data.time{1});
   
   tmin  = nearest(data.time{1}, cfg.gbve.latency(1));
   tmax  = nearest(data.time{1}, cfg.gbve.latency(2));
@@ -322,7 +322,7 @@ case 'gbve'
           idx(bidx) = [];
 
           data_k       = chandat(idx,:);
-          points_k     = points(idx,:)
+          points_k     = points(idx,:);
           [order,lags] = extractlag(points_k,options);
 
           data_reordered = data_k(order,:);
@@ -366,7 +366,7 @@ case 'gbve'
     disp(['---------- Using alpha = ',num2str(options.alpha)]);
     data_reordered = chandat(order,:);
     lags = lags + tmin;
-    [data_aligned] = perform_realign( data_reordered, data.time{1}, lags );
+    [data_aligned] = perform_realign(data_reordered, data.time{1}, lags );
     data_aligned(~isfinite(data_aligned)) = nan;
     
     order_inv     = perminv(order);
@@ -375,11 +375,16 @@ case 'gbve'
     
 
   end
-  
-  
 end
-reconstructed.cfg = cfg;
-residual.cfg      = cfg;
+
+switch cfg.output
+  case 'model'
+    % nothing to be done
+  case 'residual'
+    reconstructed = residual;
+end
+reconstructed.params = params;
+reconstructed.cfg    = cfg;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
