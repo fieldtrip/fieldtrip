@@ -373,7 +373,7 @@ switch toolbox
   case 'MARS'
     dependency = {'spm_mars_mrf'};
   case 'LAGEXTRACTION'
-    dependency = {'extractlag' 'perform_realign'}
+    dependency = {'extractlag' 'perform_realign'};
     
     % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
