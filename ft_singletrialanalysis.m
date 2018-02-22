@@ -1,10 +1,10 @@
-function [reconstructed] = ft_singletrialanalysis(cfg, data)
+function [dataout] = ft_singletrialanalysis(cfg, data)
 
 % FT_SINGLETRIALANALYSIS computes a single-trial estimate of the event-
 % related activity
 %
 % Use as
-%   [reconstructed, residual] = ft_singletrialanalysis(cfg, data)
+%   [dataout] = ft_singletrialanalysis(cfg, data)
 % where data is single-channel raw data as obtained by FT_PREPROCESSING
 % and cfg is a configuration structure according to
 %
@@ -202,15 +202,9 @@ switch cfg.method
     end
         
     % initialize the output data
-    reconstructed = data;
-    residual      = data;
-    if isfield(data, 'cfg')
-      reconstructed = rmfield(reconstructed, 'cfg');
-      residual      = rmfield(residual, 'cfg');
-    end
+    dataout = removefields(data, 'cfg');
     for k = 1:numel(data.trial)
-      reconstructed.trial{k}(:) = nan;
-      residual.trial{k}(:)      = nan;
+      dataout.trial{k}(:) = nan;
     end
         
     % initialize the struct that will contain the output parameters
@@ -259,35 +253,37 @@ switch cfg.method
       
       for m = 1:numel(data.trial)
         if output.rejectflag(m)==0
-          reconstructed.trial{m}(k,:) = data.trial{m}(k,:)-output.residual(:,m)';
-          residual.trial{m}(k,:)      = output.residual(:,m)';
+          switch cfg.output
+            case 'model'
+              dataout.trial{m}(k,:) = data.trial{m}(k,:)-output.residual(:,m)';
+            case 'residual'
+              dataout.trial{m}(k,:) = output.residual(:,m)';
+          end
         end
       end
     end
     
 case 'gbve'
   ft_hastoolbox('lagextraction', 1);
+  ft_hastoolbox('eeglab',        1); % because the low-level code might use a specific moving average function from EEGLAB
+  ft_hastoolbox('cellfunction',  1);
   
   if ~isfield(cfg, 'gbve'), cfg.gbve = []; end
-  cfg.gbve.null = ft_getopt(cfg.gbve, 'null', 0); % FIXME CHECK THE MINIMUM REQUIREMENTS OF THE OPTIONS NEEDED
-  cfg.gbve.NORMALIZE_DATA    = ft_getopt(cfg.gbve, 'NORMALIZE_DATA', 1);
-  cfg.gbve.CENTER_DATA       = ft_getopt(cfg.gbve, 'CENTER_DATA',    0);
-  cfg.gbve.USE_ADAPTIVE_SIGMA= ft_getopt(cfg.gbve, 'USE_ADAPTIVE_SIGMA', 0);
-  cfg.gbve.DISPLAY_SIGNAL    = ft_getopt(cfg.gbve, 'DISPLAY_SIGNAL', 0);
-  cfg.gbve.CONNECT_EMBEDDED_POINTS = ft_getopt(cfg.gbve, 'CONNECT_EMBEDDED_POINTS', 0);
+  cfg.gbve.NORMALIZE_DATA    = ft_getopt(cfg.gbve, 'NORMALIZE_DATA',     true);
+  cfg.gbve.CENTER_DATA       = ft_getopt(cfg.gbve, 'CENTER_DATA',        false);
+  cfg.gbve.USE_ADAPTIVE_SIGMA= ft_getopt(cfg.gbve, 'USE_ADAPTIVE_SIGMA', false);
   cfg.gbve.sigma             = ft_getopt(cfg.gbve, 'sigma',    0.01:0.01:0.2);
   cfg.gbve.distance          = ft_getopt(cfg.gbve, 'distance', 'corr2');
   cfg.gbve.alpha             = ft_getopt(cfg.gbve, 'alpha',    [0 0.001 0.01 0.1]);
   cfg.gbve.exponent          = ft_getopt(cfg.gbve, 'exponent', 1);
-  cfg.gbve.use_maximum       = ft_getopt(cfg.gbve, 'use_maximum', 1);
-  cfg.gbve.show_pca          = ft_getopt(cfg.gbve, 'show_pca', 0);
-  cfg.gbve.show_trial_number = ft_getopt(cfg.gbve, 'show_trial_number', 0);
-  cfg.gbve.verbose           = ft_getopt(cfg.gbve, 'verbose',  1);
-  cfg.gbve.disp_log          = ft_getopt(cfg.gbve, 'disp_log', 1);
+  cfg.gbve.use_maximum       = ft_getopt(cfg.gbve, 'use_maximum', 1); % consider the positive going peak
+  cfg.gbve.show_pca          = ft_getopt(cfg.gbve, 'show_pca',          false);
+  cfg.gbve.show_trial_number = ft_getopt(cfg.gbve, 'show_trial_number', false);
+  cfg.gbve.verbose           = ft_getopt(cfg.gbve, 'verbose',           true);
+  cfg.gbve.disp_log          = ft_getopt(cfg.gbve, 'disp_log',          false);
   cfg.gbve.latency           = ft_getopt(cfg.gbve, 'latency',  [-inf inf]);
-
-  options = cfg.gbve;
-
+  cfg.gbve.xwin              = ft_getopt(cfg.gbve, 'xwin',     1); % default is a bit of smoothing
+  
   nchan = numel(data.label);
   ntrl  = numel(data.trial);
   
@@ -295,7 +291,9 @@ case 'gbve'
   tmax  = nearest(data.time{1}, cfg.gbve.latency(2));
 
   % initialize the struct that will contain the output parameters
-  params = struct([]);
+  dataout = removefields(data, 'cfg');
+  params  = struct([]);
+  options = cfg.gbve;
   for k = 1:nchan
     % preprocessing data
     tmp     = cellrowselect(data.trial,k);
@@ -332,18 +330,13 @@ case 'gbve'
           ep_evoked = nanmean(data_aligned);
           ep_evoked = ep_evoked ./ norm(ep_evoked);
 
-          data_k = data(bidx,:);
-          data_k = normalize_rows(data_k);
-
-          %ep_raw = nanmean(data);
-          %ep_raw = ep_raw ./ norm(ep_raw);
-          for pp=1:length(bidx)
-            % c = xcorr(ep_raw,data_k(pp,:));
-            % max(c(:))
-            c = xcorr(ep_evoked,data_k(pp,:));
-            % max(c(:))
-            % [mc,mci] = max(c(:));
+          data_k = chandat(bidx,:);
+          data_norm = sqrt(sum(data_k.^2,2));
+          data_k = diag(1./data_norm)*data_k;
+          data_k(data_norm==0,:) = 0;
           
+          for pp=1:length(bidx)
+            c     = xcorr(ep_evoked,data_k(pp,:));
             CVerr = CVerr + max(c(:));
           end
         end
@@ -369,28 +362,33 @@ case 'gbve'
     [data_aligned] = perform_realign(data_reordered, data.time{1}, lags );
     data_aligned(~isfinite(data_aligned)) = nan;
     
-    order_inv     = perminv(order);
+    [~,order_inv] = sort(order);
     lags_no_order = lags(order_inv);
+    data_aligned  = data_aligned(order_inv,:);
+      
+    params(k).lags = [lags_no_order data.time{1}(lags_no_order)'];
+    switch cfg.output
+      case 'model'
+        tmp = mat2cell(data_aligned, ones(1,size(data_aligned,1)), size(data_aligned,2))';
+        dataout.trial = cellrowassign(dataout.trial, tmp, k);
+      case 'residual'
+        % to be done
+        error('not yet implemented');
+    end
     
     
 
   end
 end
 
-switch cfg.output
-  case 'model'
-    % nothing to be done
-  case 'residual'
-    reconstructed = residual;
-end
-reconstructed.params = params;
-reconstructed.cfg    = cfg;
+dataout.params = params;
+dataout.cfg    = cfg;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous   data
-ft_postamble provenance reconstructed residual
-ft_postamble history    reconstructed residual
-ft_postamble savevar    reconstructed residual
+ft_postamble provenance dataout
+ft_postamble history    dataout
+ft_postamble savevar    dataout
 
