@@ -4,6 +4,13 @@
 #define ACQ_MSGQ_SHMKEY    0x39457f73
 #define ACQ_MSGQ_SHMPROJID 12345
 #define ACQ_MSGQ_SHMPATH   "/opt/ctf/bin/Acq"
+#define ACQ_BUFFER_SIZE    40000
+
+/*
+ * The ACQ_BUFFER_SIZE should be set to 28160 for older acquisition software and to 40000
+ * for newer (beta) versions of the acquisition software from approximately 2016 onwards.
+ * See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3185
+ */
 
 typedef enum {
   ACQ_MSGQ_SETUP_COLLECTION,

@@ -63,16 +63,22 @@ function [sens] = ft_read_sens(filename, varargin)
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
 
-% test whether the file exists
-if ~exist(filename, 'file')
-  ft_error('file ''%s'' does not exist', filename);
-end
-
 % get the options
 fileformat     = ft_getopt(varargin, 'fileformat', ft_filetype(filename));
 senstype       = ft_getopt(varargin, 'senstype');         % can be eeg or meg, default is automatic when []
 coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
 coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0 to 2
+
+realtime = any(strcmp(fileformat, {'fcdc_buffer', 'ctf_shm', 'fcdc_mysql'}));
+
+if realtime
+  % skip the rest of the initial checks to increase the speed for realtime operation
+else
+  % test whether the file exists
+  if ~exist(filename, 'file')
+    ft_error('file ''%s'' does not exist', filename);
+  end
+end
 
 switch fileformat
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -185,6 +191,29 @@ switch fileformat
       sens = hdr.elec;
     else
       ft_error('neither electrode nor gradiometer information is present');
+    end
+    
+  case 'fcdc_buffer'
+    % the online header should have a binary blob with the sensor information
+    hdr = ft_read_header(filename, 'headerformat', fileformat);
+    if isfield(hdr, 'orig') && isfield(hdr.orig, 'neuromag_header')
+      hdr = decode_fif(hdr.orig.neuromag_header);
+    end
+    if isfield(hdr, 'orig') && isfield(hdr.orig, 'ctf_res4')
+      hdr = decode_res4(hdr.orig.ctf_res4);
+    end
+    if isempty(senstype)
+      % set the default
+      ft_warning('both electrode and gradiometer information is present, returning the electrode information by default');
+      senstype = 'eeg';
+    end
+    switch lower(senstype)
+      case 'eeg'
+        sens = hdr.elec;
+      case 'meg'
+        sens = hdr.grad;
+      otherwise
+        ft_error('incorrect specification of senstype');
     end
     
   case 'neuromag_mne_grad'
@@ -370,6 +399,56 @@ switch fileformat
       sens.elecpos = [x y z];
       sens.chanpos = [x y z];
     end
+    
+  case 'neuromag_iso'
+    ft_hastoolbox('mne', 1);
+    FIFF = fiff_define_constants();
+    [fid, tree, dir] = fiff_open(filename);
+    isotrak = fiff_dir_tree_find(tree, FIFF.FIFFB_ISOTRAK);
+    sel = find([isotrak.dir.kind]==FIFF.FIFF_DIG_POINT);
+    sens = [];
+    sens.elecpos = nan(numel(sel),3);
+    sens.chanpos = nan(numel(sel),3);
+    coordsys     = nan(numel(sel),1);
+    for i=sel
+      tag = fiff_read_tag(fid,isotrak.dir(i).pos);
+      sens.elecpos(i,:) = tag.data.r;
+      sens.chanpos(i,:) = tag.data.r;
+      coordsys(i)       = tag.data.coord_frame;
+    end
+    fclose(fid);
+    
+    if all(coordsys==FIFF.FIFFV_COORD_DEVICE)
+      sens.coordsys = 'device';
+    elseif all(coordsys==FIFF.FIFFV_COORD_ISOTRAK)
+      sens.coordsys = 'isotrak';
+    elseif all(coordsys==FIFF.FIFFV_COORD_HPI)
+      sens.coordsys = 'hpi';
+    elseif all(coordsys==FIFF.FIFFV_COORD_HEAD)
+      sens.coordsys = 'head';
+    else
+      sens.coordsys = 'unknown';
+    end
+    
+    ft_warning('creating fake channel names for neuromag_iso');
+    for i=1:size(sens.chanpos,1)
+      sens.label{i} = sprintf('%d', i);
+    end
+    
+  case 'neuromag_cal'
+    dat = cell(1,14);
+    [dat{:}] = textread(filename, '%s%f%f%f%f%f%f%f%f%f%f%f%f%f');
+    label = dat{1};
+    x = dat{2};
+    y = dat{3};
+    z = dat{4};
+    rot = cat(2, dat{5:13});
+    cal = dat{14}; % ??
+    % construct the sensor structucture
+    % it seems that the channel positions are expressed in dewar cordinates
+    % it would be possible to use coil_def.dat to construct the coil positions
+    sens.label = label;
+    sens.chanpos = [x y z];
     
   otherwise
     ft_error('unknown fileformat for electrodes or gradiometers');

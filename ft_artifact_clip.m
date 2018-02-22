@@ -14,6 +14,7 @@ function [cfg, artifact] = ft_artifact_clip(cfg, data)
 %
 % Alternatively you can use it as
 %   [cfg, artifact] = ft_artifact_clip(cfg, data)
+% where the input data is a structure as obtained from FT_PREPROCESSING.
 %
 % In both cases the configuration should also contain
 %   cfg.artfctdef.clip.channel       = Nx1 cell-array with selection of channels, see FT_CHANNELSELECTION for details

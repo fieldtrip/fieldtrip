@@ -40,7 +40,9 @@ stack = stack(keep);
 
 % remove the non-FieldTrip functions from the path, these should not be part of the default message identifier
 keep = true(size(stack));
-[v, p] = ft_version;
+p = fileparts(mfilename('fullpath'));
+% strip away '/utilities/private' where this function is located
+p = p(1:end-18);
 for i=1:numel(stack)
   keep(i) = strncmp(p, stack(i).file, length(p));
 end

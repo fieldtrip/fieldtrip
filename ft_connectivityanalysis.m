@@ -529,7 +529,7 @@ elseif hasrpt && dojack && ~(exist('debiaswpli', 'var') || exist('weightppc', 'v
     clear sumdat;
   end
   hasjack = 1;
-elseif hasrpt && ~(exist('debiaswpli', 'var') || exist('weightppc', 'var') || strcmp(cfg.method, 'powcorr_ortho'))% || needrpt)
+elseif hasrpt && ~(exist('debiaswpli', 'var') || exist('weightppc', 'var') || any(strcmp({'powcorr_ortho';'mi'},cfg.method)))% || needrpt)
   % create dof variable
   if isfield(data, 'dof')
     dof = data.dof;

@@ -1,18 +1,15 @@
 function [coord_snapped] = warp_dykstra2012(cfg, elec, surf)
 
 % WARP_DYKSTRA2012 projects the ECoG grid / strip onto a cortex hull
-% while minimizing the distance from original positions and the
-% deformation of the grid. To align ECoG electrodes to the pial surface,
-% you first need to compute the cortex hull with FT_PREPARE_MESH.
+% using the algorithm described in Dykstra et al. (2012,
+% Neuroimage) in which the distance from original positions and the
+% deformation of the grid are minimized. This function relies on MATLAB's 
+% optimization toolbox. To align ECoG electrodes to the pial surface, you 
+% first need to compute the cortex hull with FT_PREPARE_MESH.
 %
-% WARP_DYKSTRA2012 uses the algorithm described in Dykstra et al. (2012,
-% Neuroimage) in which electrodes are projected onto pial surface while
-% minimizing the displacement of the electrodes from original location
-% and maintaining the grid shape. It relies on the optimization toolbox.
-%
-% See also FT_ELECTRODEREALIGN, FT_PREPARE_MESH
+% See also FT_ELECTRODEREALIGN, FT_PREPARE_MESH, WARP_HERMES2010
 
-% Copyright (C) 2012-2017, Arjen Stolk, Gio Piantoni, Andrew Dykstra
+% Copyright (C) 2012-2017, Andrew Dykstra, Gio Piantoni, Arjen Stolk
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -58,7 +55,7 @@ cfg.feedback      = ft_getopt(cfg, 'feedback', 'no');
 cfg.pairmethod    = ft_getopt(cfg, 'pairmethod', 'pos'); % eletrode pairing based on electrode 'pos' or 'label' (for computing deformation energy)
 cfg.deformweight  = ft_getopt(cfg, 'deformweight',  1); % weight of deformation relative to shift energy cost
 
-if strcmp(cfg.pairmethod, 'label')
+if strcmp(cfg.pairmethod, 'label') % FIXME: it were cleaner if this were housed under the create_elecpairs subfunction
   % determine if any electrodes are missing and
   % re-order electrode positions based on numbers in the label and replace
   % missing numbers with electrodes at position [NaN NaN NaN]
@@ -77,7 +74,7 @@ if strcmp(cfg.pairmethod, 'label')
   labels_ordered = {};
   elec.cutout = []; % index of electrodes that appear to be cut out
   dowarn = 0;
-  for e = 1:elec.maxdigit;
+  for e = 1:elec.maxdigit
     labels_ordered{e} = [elec.ElecStr num2str(e)];
     if ~isempty(match_str(labels, num2str(e)))
       pos_ordered(e, :) = elec.elecpos(match_str(labels, num2str(e)),:);
@@ -97,14 +94,14 @@ end
 % compute pairs of neighbors
 pairs = create_elecpairs(elec, cfg.pairmethod);
 
-if strcmp(cfg.pairmethod, 'label')
+if strcmp(cfg.pairmethod, 'label') % FIXME: it were cleaner if this were housed under the create_elecpairs subfunction
   % remove electrodes that are cut out from elec.elecpos and update the
   % pairs list to reflect these removals
   elec.elecpos(elec.cutout, :) = [];
   for c = length(elec.cutout):-1:1 % for each of the cutout electrodes, starting with the highest numbered one
     % find pairs that refered to elec.cutout(c) and remove them
     for n = size(pairs, 1):-1:1 % for each of the rows in pairs, starting with the highest
-      if any(intersect(pairs(n, :), elec.cutout(c)));
+      if any(intersect(pairs(n, :), elec.cutout(c)))
         pairs(n, :) = [];
       end
     end
@@ -116,7 +113,7 @@ if strcmp(cfg.pairmethod, 'label')
   % remove any pairs that reference an electrode higher than the number of
   % electrodes in elec.elecpos
   for n = size(pairs, 1):-1:1 % for each of the rows in pairs, starting with the highest
-    if any(pairs(n, :) > size(elec.elecpos, 1));
+    if any(pairs(n, :) > size(elec.elecpos, 1))
       pairs(n, :) = [];
     end
   end
@@ -217,17 +214,15 @@ dist = sqrt(dist);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function pairs = create_elecpairs(elec, method)
 
-if strcmp(method, 'label'); 
+if strcmp(method, 'label')
   
   % determine grid dimensions (1st dim: number of arrays, 2nd dim: number of elecs in an array)
   fprintf('creating electrode pairs based on electrode labels\n');
   GridDim = determine_griddim(elec);
   if GridDim(1)*GridDim(2) ~= elec.maxdigit
-    warning('assuming %s has %d x %d grid dimensions, but the product of the dimensions does not equal the maximum digit in the electrode labels, so if incorrect, use cfg.pairmethod = ''pos'' instead\n', ElecStr, GridDim(1), GridDim(2));
+    warning('the product of the dimensions does not equal the maximum digit in the electrode labels, so if incorrect, use cfg.pairmethod = ''pos'' instead\n');
   elseif any(GridDim(:)==1) % if not because of strips, this could happen in case of missing electrodes
-    warning('assuming %s has %d x %d grid dimensions: if incorrect, use cfg.pairmethod = ''pos'' instead\n', elec.ElecStr, GridDim(1), GridDim(2));
-  else
-    fprintf('assuming %s has %d x %d grid dimensions\n', ElecStr, GridDim(1), GridDim(2));
+    warning('if this not a strip, there may be electrodes missing, so if incorrect, use cfg.pairmethod = ''pos'' instead\n');
   end
   
   % create pairs based on dimensions
@@ -266,7 +261,7 @@ if strcmp(method, 'label');
   pairs( pairs(:,2)<1 | pairs(:,2)>GridDim(1)*GridDim(2) ,:) = []; % out of bounds
   pairs = unique(sort(pairs,2),'rows'); % unique pairs
  
-elseif strcmp(method, 'pos');
+elseif strcmp(method, 'pos')
   
   % KNN_PAIRS compute pairs of neighbors of the grid
   fprintf('creating electrode pairs based on electrode positions\n');

@@ -1,25 +1,39 @@
 function [c, v, outcnt] = ft_connectivity_corr(input, varargin)
 
-% FT_CONNECTIVITY_CORR computes correlation, coherence or a related
-% quantity from a data-matrix containing a covariance or cross-spectral
-% density.
+% FT_CONNECTIVITY_CORR computes correlation, coherence or a related quantity from a
+% data-matrix containing a covariance or cross-spectral density. It implements the
+% methods as described in the following papers:
+%
+% Coherence: Rosenberg et al, The Fourier approach to the identification of
+% functional coupling between neuronal spike trains. Prog Biophys Molec
+% Biol 1989; 53; 1-31
+%
+% Partial coherence: Rosenberg et al, Identification of patterns of
+% neuronal connectivity - partial spectra, partial coherence, and neuronal
+% interactions. J. Neurosci. Methods, 1998; 83; 57-72
+%
+% Phase locking value: Lachaux et al, Measuring phase sychrony in brain
+% signals. Human Brain Mapping, 1999; 8; 194-208.
+%
+% Imaginary part of coherency: Nolte et al, Identifying true brain
+% interaction from EEG data using the imaginary part of coherence. Clinical
+% Neurophysiology, 2004; 115; 2292-2307
 %
 % Use as
-%   [c, v, n] = ft_connectivity_corr(input, varargin)
+%   [c, v, n] = ft_connectivity_corr(input, ...)
 %
-% The input data input should be an array organized as:
+% The input data should be an array organized as
 %   Repetitions x Channel x Channel (x Frequency) (x Time)
 % or
 %   Repetitions x Channelcombination (x Frequency) (x Time)
 %
-% If the input already contains an average, the first dimension should be
-% singleton. Furthermore, the input data can be complex-valued cross
-% spectral densities, or real-valued covariance estimates. If the former is
-% the case, the output will be coherence (or a derived metric), if the
-% latter is the case, the output will be the correlation coefficient.
+% If the input already contains an average, the first dimension should be singleton.
+% Furthermore, the input data can be complex-valued cross spectral densities, or
+% real-valued covariance estimates. If the former is the case, the output will be
+% coherence (or a derived metric), if the latter is the case, the output will be the
+% correlation coefficient.
 %
-% Additional input arguments come as key-value pairs:
-%
+% Additional optional input arguments come as key-value pairs:
 %   hasjack   = 0 or 1 specifying whether the Repetitions represent
 %               leave-one-out samples
 %   complex   = 'abs', 'angle', 'real', 'imag', 'complex', 'logabs' for
@@ -48,23 +62,6 @@ function [c, v, outcnt] = ft_connectivity_corr(input, varargin)
 % The output c contains the correlation/coherence, v is a variance estimate
 % which only can be computed if the data contains leave-one-out samples,
 % and n is the number of repetitions in the input data.
-%
-% It implements the methods as described in the following papers:
-%
-% Coherence: Rosenberg et al, The Fourier approach to the identification of
-% functional coupling between neuronal spike trains. Prog Biophys Molec
-% Biol 1989; 53; 1-31
-%
-% Partial coherence: Rosenberg et al, Identification of patterns of
-% neuronal connectivity - partial spectra, partial coherence, and neuronal
-% interactions. J. Neurosci. Methods, 1998; 83; 57-72
-%
-% Phase locking value: Lachaux et al, Measuring phase sychrony in brain
-% signals. Human Brain Mapping, 1999; 8; 194-208.
-%
-% Imaginary part of coherency: Nolte et al, Identifying true brain
-% interaction from EEG data using the imaginary part of coherence. Clinical
-% Neurophysiology, 2004; 115; 2292-2307
 %
 % See also FT_CONNECTIVITYANALYSIS
 
@@ -107,7 +104,7 @@ end
 siz = [size(input) 1];
 
 % do partialisation if necessary
-if ~isempty(pchanindx),
+if ~isempty(pchanindx)
   % partial spectra are computed as in Rosenberg JR et al (1998) J.Neuroscience Methods, equation 38
   
   chan   = allchanindx;
@@ -138,7 +135,7 @@ else
 end
 
 % compute the metric
-if (length(strfind(dimord, 'chan'))~=2 || ~isempty(strfind(dimord, 'pos'))) && ~isempty(powindx),
+if (length(strfind(dimord, 'chan'))~=2 || contains(dimord, 'pos')) && ~isempty(powindx)
   % crossterms are not described with chan_chan_therest, but are linearly indexed
   
   outsum = zeros(siz(2:end));
@@ -161,7 +158,7 @@ if (length(strfind(dimord, 'chan'))~=2 || ~isempty(strfind(dimord, 'pos'))) && ~
   end
   ft_progress('close');
   
-elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2,
+elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2
   % crossterms are described by chan_chan_therest
   outsum = zeros(siz(2:end));
   outssq = zeros(siz(2:end));
@@ -202,7 +199,7 @@ end
 c = outsum./outcnt;
 
 % correct the variance estimate for the under-estimation introduced by the jackknifing
-if n>1,
+if n>1
   if hasjack
     %bias = (n1-1).^2; % added this for nan support marvin
     bias = (outcnt-1).^2;

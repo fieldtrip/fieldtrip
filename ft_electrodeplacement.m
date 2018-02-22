@@ -36,10 +36,10 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 % where the input headshape should be a surface triangulation.
 %
 % The configuration can contain the following options
-%   cfg.method         = string representing the method for placing6.FT  the electrodes
-%                        'mri'             interactively locate electrodes in a MRI or CT scan
+%   cfg.method         = string representing the method for placing the electrodes
+%                        'volume'          interactively locate electrodes on three orthogonal slices of a volumetric MRI or CT scan
 %                        'headshape'       interactively locate electrodes on a head surface
-%                        '1020'            automatically place electrodes on a head surface
+%                        '1020'            automatically locate electrodes on a head surface according to the 10-20 system
 %
 % The following options apply to the mri method
 %   cfg.parameter      = string, field in data (default = 'anatomy' if present in data)
@@ -63,7 +63,7 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 %
 % See also FT_ELECTRODEREALIGN, FT_VOLUMEREALIGN, FT_VOLUMESEGMENT, FT_PREPARE_MESH
 
-% Copyright (C) 2015-2017, Arjen Stolk, Sandon Griffin & Robert Oostenveld
+% Copyright (C) 2015-2018, Arjen Stolk, Sandon Griffin & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

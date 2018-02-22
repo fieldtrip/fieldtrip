@@ -1,7 +1,7 @@
 function [cfg, artifact] = ft_artifact_tms(cfg, data)
 
-% FT_ARTIFACT_TMS reads the data segments of interest from file and
-% identifies tms artifacts.
+% FT_ARTIFACT_TMS reads the data segments of interest from file and identifies artefacts in
+% EEG recordings that were done during TMS stimulation.
 %
 % Use as
 %   [cfg, artifact] = ft_artifact_tms(cfg)
@@ -10,17 +10,19 @@ function [cfg, artifact] = ft_artifact_tms(cfg, data)
 % or
 %   cfg.headerfile  = string with the filename
 %   cfg.datafile    = string with the filename
+% and optionally
+%   cfg.headerformat
+%   cfg.dataformat
 %
 % Alternatively you can use it as
 %   [cfg, artifact] = ft_artifact_tms(cfg, data)
+% where the input data is a structure as obtained from FT_PREPROCESSING.
 %
 % In both cases the configuration should also contain
 %   cfg.trl         = structure that defines the data segments of interest. See FT_DEFINETRIAL
 %   cfg.continuous  = 'yes' or 'no' whether the file contains continuous data (default   = 'yes')
-%   cfg.method      = 'detect', TMS-artifacts are detected by preprocessing
-%                     the data to be sensitive to transient high gradients, typical for
-%                     TMS-pulses.
-%                     'marker', TMS-artifact onset and offsets are based on
+% and
+%   cfg.method      = 'detect' or 'marker', see below.
 %                     markers written in the EEG.
 %   cfg.prestim     = scalar, time in seconds prior to onset of detected
 %                     event to mark as artifactual (default = 0.005 seconds)
@@ -29,38 +31,34 @@ function [cfg, artifact] = ft_artifact_tms(cfg, data)
 %
 % METHOD SPECIFIC OPTIONS AND DESCRIPTIONS
 %
-% DETECT
-% The data is preprocessed (again) with the following configuration parameters,
-% which are optimal for identifying tms artifacts. This acts as a wrapper
-% around ft_artifact_zvalue
+% With cfg.method='detect', TMS-artifacts are detected by preprocessing the data to be
+% sensitive to transient high gradients, typical for TMS-pulses.  The data is preprocessed
+% (again) with the following configuration parameters, which are optimal for identifying tms
+% artifacts. This acts as a wrapper around ft_artifact_zvalue
 %   cfg.artfctdef.tms.derivative  = 'yes'
-%
 % Artifacts are identified by means of thresholding the z-transformed value
 % of the preprocessed data.
 %   cfg.artfctdef.tms.channel     = Nx1 cell-array with selection of channels, see FT_CHANNELSELECTION for details
 %   cfg.artfctdef.tms.cutoff      = z-value at which to threshold (default = 4)
 %   cfg.artfctdef.tms.trlpadding  = 0.1
 %   cfg.artfctdef.tms.fltpadding  = 0.1
-%   cfg.artfctdef.tms.artpadding  = 0.01 (Be aware that if one artifact
-%   falls within this specified range of another artifact, both artifact
-%   will be counted as one. Depending on cfg.prestim and cfg.poststim you
-%   may not mark enough data as artifactual.)
+%   cfg.artfctdef.tms.artpadding  = 0.01 
+% Be aware that if one artifact falls within this specified range of another artifact, both
+% artifact will be counted as one. Depending on cfg.prestim and cfg.poststim you may not mark
+% enough data as artifactual.)
 %
-% MARKER
-% This method acts as a wrapper around FT_DEFINETRIAL to determine on- and
-% offsets of TMS pulses by reading markers in the EEG.
+% With cfg.method='marker', TMS-artifact onset and offsets are based on markers/triggers that
+% are written into the EEG dataset. This method acts as a wrapper around FT_DEFINETRIAL to
+% determine on- and offsets of TMS pulses by reading markers in the EEG.
 %   cfg.trialfun            = function name, see below (default = 'ft_trialfun_general')
 %   cfg.trialdef.eventtype  = 'string'
 %   cfg.trialdef.eventvalue = number, string or list with numbers or strings
-%
-% The cfg.trialfun option is a string containing the name of a function
-% that you wrote yourself and that FT_ARTIFACT_TMS will call. The
-% function should take the cfg-structure as input and should give a
-% NxM matrix with M equal to or larger than 3) in the same format as
-% "trl" as the output. You can add extra custom fields to the
-% configuration structure to pass as arguments to your own trialfun.
-% Furthermore, inside the trialfun you can use the FT_READ_EVENT
-% function to get the event information from your data file.
+% The cfg.trialfun option is a string containing the name of a function that you wrote
+% yourself and that FT_ARTIFACT_TMS will call. The function should take the cfg-structure as
+% input and should give a NxM matrix with M equal to or larger than 3) in the same format as
+% "trl" as the output. You can add extra custom fields to the configuration structure to
+% pass as arguments to your own trialfun.  Furthermore, inside the trialfun you can use the
+% FT_READ_EVENT function to get the event information from your data file.
 %
 % The output argument "artifact" is a Nx2 matrix comparable to the
 % "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the

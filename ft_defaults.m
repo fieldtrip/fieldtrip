@@ -152,21 +152,21 @@ if ~isdeployed
   
   try
     % external/signal contains alternative implementations of some signal processing functions
-    if ~ft_platform_supports('signal') || ~ft_hastoolbox('signal') || ~strcmp(ft_default.toolbox.signal, 'matlab')
+    if ~ft_platform_supports('signal') || ~strcmp(ft_default.toolbox.signal, 'matlab') || ~ft_hastoolbox('signal')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
     end
   end
   
   try
     % external/stats contains alternative implementations of some statistics functions
-    if ~ft_platform_supports('stats') || ~ft_hastoolbox('stats') || ~strcmp(ft_default.toolbox.stats, 'matlab')
+    if ~ft_platform_supports('stats') || ~strcmp(ft_default.toolbox.stats, 'matlab') || ~ft_hastoolbox('stats')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
     end
   end
   
   try
     % external/images contains alternative implementations of some image processing functions
-    if ~ft_platform_supports('images') || ~ft_hastoolbox('images') || ~strcmp(ft_default.toolbox.images, 'matlab')
+    if ~ft_platform_supports('images') || ~strcmp(ft_default.toolbox.images, 'matlab') || ~ft_hastoolbox('images')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'images'));
     end
   end
@@ -198,6 +198,12 @@ if ~isdeployed
     if ft_platform_supports('matlabversion', -inf, '2016b'), ft_hastoolbox('compat/matlablt2017a', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2017a'), ft_hastoolbox('compat/matlablt2017b', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2017b'), ft_hastoolbox('compat/matlablt2018a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2018a'), ft_hastoolbox('compat/matlablt2018b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2018b'), ft_hastoolbox('compat/matlablt2019a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2019a'), ft_hastoolbox('compat/matlablt2019b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2019b'), ft_hastoolbox('compat/matlablt2020a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2020a'), ft_hastoolbox('compat/matlablt2020b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2020b'), ft_hastoolbox('compat/matlablt2021a', 3, 1); end
   end
   
   try

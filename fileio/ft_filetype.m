@@ -311,9 +311,21 @@ elseif filetype_check_extension(filename, '.eve') && exist(fullfile(p, [f '.fif'
   manufacturer = 'Neuromag';
   content = 'events';
 elseif filetype_check_extension(filename, '.log') && filetype_check_header(filename, '*** This is Elekta Neuromag MaxFilter', 61)
-  type = 'neuromag_maxfilterlog'; 
+  type = 'neuromag_maxfilterlog';
   manufacturer = 'Neuromag';
   content = 'MaxFilter log information';
+elseif filetype_check_extension(filename, '.pos') && filetype_check_header(filename, ' Time       q1      ', 0)
+  type = 'neuromag_headpos';
+  manufacturer = 'Neuromag';
+  content = 'MaxFilter head position information';
+elseif filetype_check_extension(filename, '.iso') && filetype_check_header(filename, char([0 0 0 100]))
+  type = 'neuromag_iso';
+  manufacturer = 'Neuromag';
+  content = 'Isotrack digitizer points';
+elseif strcmp(filename, 'sss_cal.dat')
+  type = 'neuromag_cal';
+  manufacturer = 'Neuromag';
+  content = 'Fine calibration';
   
   % known Yokogawa file types
 elseif filetype_check_extension(filename, '.ave') || filetype_check_extension(filename, '.sqd')
@@ -457,7 +469,7 @@ elseif filetype_check_extension(filename, '.mri')
   type = 'asa_mri';
   manufacturer = 'ASA';
   content = 'MRI image header';
-elseif filetype_check_extension(filename, '.iso')
+elseif filetype_check_extension(filename, '.iso') && ~filetype_check_header(filename, char([0 0 0 100]))
   type = 'asa_iso';
   manufacturer = 'ASA';
   content = 'MRI image data';
@@ -786,7 +798,7 @@ elseif filetype_check_extension(filename, '.srf') && filetype_check_header(filen
   type = 'brainvoyager_srf';
   manufacturer = 'BrainVoyager'; % see http://support.brainvoyager.com/installation-introduction/23-file-formats/375-users-guide-23-the-format-of-srf-files.html
   content = 'surface';
-    
+  
   % known Dataq file formats
 elseif filetype_check_extension(upper(filename), '.WDQ')
   type         = 'dataq_wdq';
@@ -875,7 +887,7 @@ elseif (filetype_check_extension(filename, '.vid') || filetype_check_extension(f
   type = 'videomeg_vid';
   manufacturer = 'VideoMEG';
   content = 'video';
-
+  
 elseif (filetype_check_extension(filename, '.dat') ||  filetype_check_extension(filename, '.Dat')) && (exist(fullfile(p, [f '.ini']), 'file') || exist(fullfile(p, [f '.Ini']), 'file'))
   % this should go before curry_dat
   type = 'deymed_dat';
@@ -885,13 +897,13 @@ elseif (filetype_check_extension(filename, '.ini') ||  filetype_check_extension(
   type = 'deymed_ini';
   manufacturer = 'Deymed';
   content = 'eeg header information';
-
+  
 elseif filetype_check_extension(filename, '.dat') && (filetype_check_header(filename, [0 0 16 0 16 0], 8) || filetype_check_header(filename, [0 0 16 0 16 0], 0))
   % this should go before curry_dat
   type = 'jaga16';
   manufacturer = 'Jinga-Hi';
   content = 'electrophysiological data';
-
+  
   % known Curry V4 file types
 elseif filetype_check_extension(filename, '.dap')
   type = 'curry_dap';   % FIXME, can also be MPI Frankfurt electrophysiological data
@@ -925,6 +937,11 @@ elseif filetype_check_extension(filename, '.dig')
   type = 'curry_dig';
   manufacturer = 'Curry';
   content = 'digitizer file';
+
+elseif filetype_check_extension(filename, '.txt') && filetype_check_header(filename, '#Study')
+  type = 'imotions_txt';
+  manufacturer = 'iMotions';
+  content = 'various biosignals';
   
 elseif filetype_check_extension(filename, '.txt') && filetype_check_header(filename, '##')
   type = 'smi_txt';
@@ -1045,7 +1062,7 @@ elseif filetype_check_extension(filename, '.sd') && filetype_check_header(filena
   content = 'source detector information';
   
   % known Artinis file format
-elseif filetype_check_extension(filename, '.oxy3')  
+elseif filetype_check_extension(filename, '.oxy3')
   type = 'oxy3';
   manufacturer = 'Artinis Medical Systems';
   content = '(f)NIRS data';
@@ -1102,7 +1119,7 @@ elseif filetype_check_extension(filename, '.dfc') && filetype_check_header(filen
   manufacturer = 'LONI'; % it is used in BrainSuite
   content = 'curvature information';
   
-    % some BrainVISA file formats, see http://brainvisa.info
+  % some BrainVISA file formats, see http://brainvisa.info
 elseif filetype_check_extension(filename, '.mesh') && (filetype_check_header(filename, 'ascii') || filetype_check_header(filename, 'binarABCD') || filetype_check_header(filename, 'binarDCBA'))  % http://brainvisa.info/doc/documents-4.4/formats/mesh.pdf
   type = 'brainvisa_mesh';
   manufacturer = 'BrainVISA';
@@ -1275,18 +1292,18 @@ elseif filetype_check_extension(filename, '.csv')
   manufacturer = 'Generic';
   content = 'Comma-separated values, see http://en.wikipedia.org/wiki/Comma-separated_values';
 elseif filetype_check_extension(filename, '.ah5')
-    type = 'AnyWave';
-    manufacturer = 'AnyWave, http://meg.univ-amu.fr/wiki/AnyWave';
-    content = 'MEG/SEEG/EEG data';
+  type = 'AnyWave';
+  manufacturer = 'AnyWave, http://meg.univ-amu.fr/wiki/AnyWave';
+  content = 'MEG/SEEG/EEG data';
 elseif (isdir(filename) && exist(fullfile(p, [d '.EEG.Poly5']), 'file')) || filetype_check_extension(filename, '.Poly5')
-    type = 'tmsi_poly5';
-    manufacturer = 'TMSi PolyBench';
-    content = 'EEG';
+  type = 'tmsi_poly5';
+  manufacturer = 'TMSi PolyBench';
+  content = 'EEG';
 elseif (isdir(filename) && exist(fullfile(filename, 'DataSetSession.xml'), 'file') && exist(fullfile(filename, 'DataSetProtocol.xml'), 'file'))
-    type = 'mega_neurone';
-    manufacturer = 'Mega - http://www.megaemg.com';
-    content = 'EEG';
-elseif filetype_check_extension(filename, '.e') 
+  type = 'mega_neurone';
+  manufacturer = 'Mega - http://www.megaemg.com';
+  content = 'EEG';
+elseif filetype_check_extension(filename, '.e')
   type = 'nervus_eeg';  % Nervus/Nicolet EEG files
   manufacturer = 'Natus';
   content = 'EEG';

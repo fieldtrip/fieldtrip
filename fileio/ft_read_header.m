@@ -199,7 +199,7 @@ if realtime
 else
   % check whether the file or directory exists
   if  ~exist(filename, 'file')
-    ft_error('FILEIO:InvalidFileName', 'file or directory ''%s'' does not exist', filename);
+    ft_error('file or directory ''%s'' does not exist', filename);
   end
   
   checkUniqueLabels = true;
@@ -447,9 +447,9 @@ switch headerformat
     
     orig = openNSx(filename, 'noread');
     channelstype=regexp({orig.ElectrodesInfo.Label},'[a-z]\w+','match');
-    chaninfo=table([orig.ElectrodesInfo.ElectrodeID]',...
+    chaninfo=table({orig.ElectrodesInfo.ElectrodeID}',...
       transpose(deblank({orig.ElectrodesInfo.Label})),[channelstype{1,:}]',...
-      [orig.ElectrodesInfo.ConnectorBank]',[orig.ElectrodesInfo.ConnectorPin]',...
+      {orig.ElectrodesInfo.ConnectorBank}',{orig.ElectrodesInfo.ConnectorPin}',...
       transpose(deblank({orig.ElectrodesInfo.AnalogUnits})),...
       'VariableNames',{'id' 'label' 'chantype' 'bank' 'pin' 'unit'});
     
@@ -1755,7 +1755,18 @@ switch headerformat
   case 'nexstim_nxe'
     hdr = read_nexstim_nxe(filename);
     
+  case 'neuromag_headpos'
+    % neuromag headposition file created with maxfilter, the position varies over time
+    orig = read_neuromag_headpos(filename);
+    hdr.Fs          = 1/(orig.data(1,2)-orig.data(1,1));
+    hdr.nChans      = size(orig.data,1);
+    hdr.nSamples    = size(orig.data,2);
+    hdr.nSamplesPre = 0;   % convert from ms to samples
+    hdr.nTrials     = 1;
+    hdr.label       = orig.colheaders;
+    
   case 'neuromag_maxfilterlog'
+    % neuromag log file created with maxfilter
     log = read_neuromag_maxfilterlog(filename);
     hdr = [];
     hdr.label = {'t' 'e' 'g' 'v' 'r' 'd'};

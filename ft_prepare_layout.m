@@ -504,7 +504,7 @@ elseif ischar(cfg.layout)
     
     cfg.layout = [cfg.layout '.mat'];
     if exist(cfg.layout, 'file')
-      fprintf('layout file without .mat (or .lay) extension specified, appending .mat\n');
+      ft_info('layout file without .mat (or .lay) extension specified, appending .mat\n');
       layout = ft_prepare_layout(cfg);
       return;
     else
@@ -515,7 +515,7 @@ elseif ischar(cfg.layout)
     
   elseif ft_filetype(cfg.layout, 'matlab')
     
-    fprintf('reading layout from file %s\n', cfg.layout);
+    ft_info('reading layout from file %s\n', cfg.layout);
     if ~exist(cfg.layout, 'file')
       ft_error('the specified layout file %s was not found', cfg.layout);
     end
@@ -531,7 +531,7 @@ elseif ischar(cfg.layout)
   elseif ft_filetype(cfg.layout, 'layout')
     
     if exist(cfg.layout, 'file')
-      fprintf('reading layout from file %s\n', cfg.layout);
+      ft_info('reading layout from file %s\n', cfg.layout);
       layout = readlay(cfg.layout);
     else
       [p, f, x] = fileparts(cfg.layout);
@@ -543,43 +543,43 @@ elseif ischar(cfg.layout)
     
   elseif ~ft_filetype(cfg.layout, 'layout')
     % assume that cfg.layout is an electrode file
-    fprintf('creating layout from sensor description file %s\n', cfg.layout);
+    ft_info('creating layout from sensor description file %s\n', cfg.layout);
     sens = ft_read_sens(cfg.layout);
     layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   end
   
 elseif ischar(cfg.gradfile)
-  fprintf('creating layout from gradiometer file %s\n', cfg.gradfile);
+  ft_info('creating layout from gradiometer file %s\n', cfg.gradfile);
   sens = ft_read_sens(cfg.gradfile, 'senstype', 'meg');
   layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   
 elseif ~isempty(cfg.grad) && isstruct(cfg.grad)
-  fprintf('creating layout from cfg.grad\n');
+  ft_info('creating layout from cfg.grad\n');
   sens = ft_datatype_sens(cfg.grad);
   layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   
 elseif isfield(data, 'grad') && isstruct(data.grad)
-  fprintf('creating layout from data.grad\n');
+  ft_info('creating layout from data.grad\n');
   sens = ft_datatype_sens(data.grad);
   layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   
 elseif ischar(cfg.elecfile)
-  fprintf('creating layout from electrode file %s\n', cfg.elecfile);
+  ft_info('creating layout from electrode file %s\n', cfg.elecfile);
   sens = ft_read_sens(cfg.elecfile, 'senstype', 'eeg');
   layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   
 elseif ~isempty(cfg.elec) && isstruct(cfg.elec)
-  fprintf('creating layout from cfg.elec\n');
+  ft_info('creating layout from cfg.elec\n');
   sens = ft_datatype_sens(cfg.elec);
   layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   
 elseif isfield(data, 'elec') && isstruct(data.elec)
-  fprintf('creating layout from data.elec\n');
+  ft_info('creating layout from data.elec\n');
   sens = ft_datatype_sens(data.elec);
   layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   
 elseif ischar(cfg.optofile)
-  fprintf('creating layout from optode file %s\n', cfg.optofile);
+  ft_info('creating layout from optode file %s\n', cfg.optofile);
   sens = ft_read_sens(cfg.optofile, 'senstype', 'nirs');
   if (hasdata)
     layout = opto2lay(sens, data.label);
@@ -588,7 +588,7 @@ elseif ischar(cfg.optofile)
   end
   
 elseif ~isempty(cfg.opto) && isstruct(cfg.opto)
-  fprintf('creating layout from cfg.opto\n');
+  ft_info('creating layout from cfg.opto\n');
   sens = cfg.opto;
   if (hasdata)
     layout = opto2lay(sens, data.label);
@@ -597,7 +597,7 @@ elseif ~isempty(cfg.opto) && isstruct(cfg.opto)
   end
   
 elseif isfield(data, 'opto') && isstruct(data.opto)
-  fprintf('creating layout from data.opto\n');
+  ft_info('creating layout from data.opto\n');
   sens = data.opto;
   if (hasdata)
     layout = opto2lay(sens, data.label);
@@ -609,7 +609,7 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
   % deal with image file
   if ~isempty(cfg.image)
     
-    fprintf('reading background image from %s\n', cfg.image);
+    ft_info('reading background image from %s\n', cfg.image);
     [p, f, e] = fileparts(cfg.image);
     switch e
       case '.mat'
@@ -947,8 +947,12 @@ if (~isfield(layout, 'outline') || ~isfield(layout, 'mask')) && ~strcmpi(cfg.sty
     sel = setdiff(1:length(layout.label), [ind_scale ind_comnt]); % these are excluded for scaling
     x = layout.pos(sel,1);
     y = layout.pos(sel,2);
-    xrange = range(x);
-    yrange = range(y);
+    % the following would work even if all electrodes are offset and not centered around zero
+    % xrange = range(x);
+    % yrange = range(y);
+    % the following prevent topography distortion in case electrodes are not evenly distributed over the whole head
+    xrange = 2*( max(max(x),abs(min(x)) ));
+    yrange = 2*( max(max(y),abs(min(y)) ));
     if xrange==0
       xrange = 1;
     end
@@ -1089,7 +1093,7 @@ end
 
 % to write the layout to a .mat or text file, you can use this code snippet
 if ~isempty(cfg.output) && ~strcmpi(cfg.style, '3d')
-  fprintf('writing layout to ''%s''\n', cfg.output);
+  ft_info('writing layout to ''%s''\n', cfg.output);
   if strcmpi(cfg.output((end-3):end), '.mat')
     save(cfg.output,'layout');
   else
@@ -1189,7 +1193,7 @@ elseif any(all(isnan(sens.chanpos)))
   sens.label   = sens.labelold(sel2);
 end
 
-fprintf('creating layout for %s system\n', ft_senstype(sens));
+ft_info('creating layout for %s system\n', ft_senstype(sens));
 
 % apply rotation, but only if viewpoint is not used specifically
 if isempty(viewpoint)
@@ -1499,7 +1503,7 @@ function outline = outline_headshape(cfg, sens)
 
 if ~isempty(cfg.headshape)
   if ischar(cfg.headshape) && exist(cfg.headshape, 'file')
-    fprintf('reading headshape from file %s\n', cfg.headshape);
+    ft_info('reading headshape from file %s\n', cfg.headshape);
     outlbase = ft_read_headshape(cfg.headshape);
   elseif isstruct(cfg.headshape)
     outlbase = cfg.headshape;
@@ -1508,7 +1512,7 @@ if ~isempty(cfg.headshape)
   end
 elseif ~isempty(cfg.mri)
   if ischar(cfg.mri) && exist(cfg.mri, 'file')
-    fprintf('reading MRI from file %s\n', cfg.mri);
+    ft_info('reading MRI from file %s\n', cfg.mri);
     outlbase = ft_read_mri(cfg.mri);
   elseif ft_datatype(cfg.mri, 'volume')
     outlbase = cfg.mri;

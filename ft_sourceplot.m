@@ -30,7 +30,7 @@ function ft_sourceplot(cfg, functional, anatomical)
 %                       'surface',    plots the data on a 3D brain surface
 %                       'glassbrain', plots a max-projection through the brain
 %                       'vertex',     plots the grid points or vertices scaled according to the functional value
-%                       'cloud',      plot the data as point clouds scaled according to the functional value
+%                       'cloud',      plot the data as clouds, spheres, or points scaled according to the functional value
 %
 %
 %   cfg.anaparameter  = string, field in data with the anatomical data (default = 'anatomy' if present in data)
@@ -166,13 +166,16 @@ function ft_sourceplot(cfg, functional, anatomical)
 %                        or an Nx3 or Nx1 array where N is the number of vertices
 %   cfg.edgecolor      = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
 %
-% When cfg.method = 'cloud', the functional data will be rendered as
-% point clouds around the sensor positions. These point clouds can either
+% When cfg.method = 'cloud', the functional data will be rendered as as clouds (groups of points), spheres, or 
+% single points at each sensor position. These spheres or point clouds can either
 % be viewed in 3D or as 2D slices. The 'anatomical' input may also consist of 
 % a single or multiple triangulated surface mesh(es) in an Nx1 cell-array
 % to be plotted with the interpolated functional data (see FT_PLOT_CLOUD)
 %
-% The following parameters apply to cfg.method='cloud' 
+% The following parameters apply to cfg.method='elec' 
+%   cfg.cloudtype       = 'point' plots a single point at each sensor position
+%                         'cloud' (default) plots each a group of spherically arranged points at each sensor position
+%                         'surf' plots a single spherical surface mesh at each sensor position
 %   cfg.radius          = scalar, maximum radius of cloud (default = 4)
 %   cfg.colorgrad       = 'white' or a scalar (e.g. 1), degree to which color of points in cloud
 %                         changes from its center
@@ -1266,6 +1269,7 @@ switch cfg.method
             % functional values have been transformed to be scaled
             set(hc,'ticks',(0:0.1:1));
             set(hc,'ticklabels',round(100*linspace(fcolmin,fcolmax,numel(get(hc,'ticks'))'))./100);
+            set(hc,'limits',[0 1]);
         end
       else
         ft_warning('no colorbar possible without functional data')
@@ -1349,6 +1353,7 @@ switch cfg.method
     % some defaults depend on the geometrical units
     scale = ft_scalingfactor('mm', functional.unit);
     % set the defaults for method=cloud
+    cfg.cloudtype          = ft_getopt(cfg, 'cloudtype', 'cloud');
     cfg.radius             = ft_getopt(cfg, 'radius', 4*scale);
     cfg.rmin               = ft_getopt(cfg, 'rmin', 1*scale);
     cfg.scalerad           = ft_getopt(cfg, 'scalerad', 'yes');
@@ -1356,8 +1361,8 @@ switch cfg.method
     cfg.ptdensity          = ft_getopt(cfg, 'ptdensity', 20);
     cfg.ptgradient         = ft_getopt(cfg, 'ptgradient', .5);
     cfg.colorgrad          = ft_getopt(cfg, 'colorgrad', 'white');
+    cfg.marker             = ft_getopt(cfg, 'marker', '.');
     cfg.slice              = ft_getopt(cfg, 'slice', 'none');
-    cfg.slicetype          = ft_getopt(cfg, 'slicetype', 'point');
     cfg.ori                = ft_getopt(cfg, 'ori', 'y');
     cfg.slicepos           = ft_getopt(cfg, 'slicepos', 'auto');
     cfg.nslices            = ft_getopt(cfg, 'nslices', 1);
@@ -1371,6 +1376,7 @@ switch cfg.method
     cfg.edgecolor          = ft_getopt(cfg, 'edgecolor', 'none');
     cfg.facealpha          = ft_getopt(cfg, 'facealpha', 1);
     cfg.edgealpha          = ft_getopt(cfg, 'edgealpha', 0);
+    cfg.vertexcolor        = ft_getopt(cfg, 'vertexcolor', 'curv'); % curvature-dependent mix of cortex_light and cortex_dark
     if ~hasanatomical; anatomical = {}; end
     
     if isUnstructuredFun
@@ -1391,12 +1397,13 @@ switch cfg.method
       'radius', cfg.radius, 'rmin', cfg.rmin, 'scalerad', cfg.scalerad, ...
       'ptsize', cfg.ptsize, 'ptdensity', cfg.ptdensity, 'ptgradient', cfg.ptgradient,...
       'colorgrad', cfg.colorgrad, 'colormap', cfg.funcolormap, 'clim', [fcolmin fcolmax], ...
-      'unit', functional.unit, 'slice', cfg.slice, 'slicetype', cfg.slicetype, ...
+      'unit', functional.unit, 'slice', cfg.slice, 'cloudtype', cfg.cloudtype, ...
       'ori', cfg.ori, 'slicepos', cfg.slicepos, 'nslices', cfg.nslices, 'minspace', cfg.minspace,...
       'intersectcolor', cfg.intersectcolor, 'intersectlinestyle', cfg.intersectlinestyle, ...
       'intersectlinewidth', cfg.intersectlinewidth, 'ncirc', cfg.ncirc, ...
       'scalealpha', cfg.scalealpha, 'facecolor', cfg.facecolor, 'edgecolor', cfg.edgecolor,...
-      'facealpha', cfg.facealpha, 'edgealpha', cfg.edgealpha);
+      'facealpha', cfg.facealpha, 'edgealpha', cfg.edgealpha, 'marker', cfg.marker,...
+      'vertexcolor', cfg.vertexcolor);
     
     if istrue(cfg.colorbar)
       if ~strcmp(cfg.slice, '2d')
