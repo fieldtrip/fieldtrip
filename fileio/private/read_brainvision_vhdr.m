@@ -135,20 +135,20 @@ if ~isempty(hdr.NumberOfChannels)
         chan_str  = sprintf('%d', impCounter);
         chan_info = read_asa(filename, chan_str, '%s');
         if isempty(chan_info)
-            break
+            chanCounter=chanCounter+1;
         else
             [chanName,impedances] = strtok(chan_info,':');
             if strfind(chanName,'REF_')==1
                 refCounter=refCounter+1;
                 if ~isempty(impedances)
-                    hdr.impedances.reference(refCounter) = str2num(impedances(2:end));
+                    hdr.impedances.reference(refCounter) = str2double(impedances(2:end));
                 else
                     hdr.impedances.reference(refCounter) = NaN;
                 end
             else
                 chanCounter=chanCounter+1;
                 if ~isempty(impedances)
-                    hdr.impedances.channels(chanCounter,1) = str2num(impedances(2:end));
+                    hdr.impedances.channels(chanCounter,1) = str2double(impedances(2:end));
                 else
                     hdr.impedances.channels(chanCounter,1) = NaN;
                 end
@@ -157,7 +157,7 @@ if ~isempty(hdr.NumberOfChannels)
     end
     impedances = read_asa(filename, 'GND:', '%s');
     if ~isempty(impedances)
-        hdr.impedances.ground = str2num(impedances);
+        hdr.impedances.ground = str2double(impedances);
     end
 end
 
