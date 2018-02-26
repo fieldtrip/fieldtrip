@@ -202,7 +202,7 @@ if ~isempty(datmask)
 end
 
 % take out NaN channels if interpmethod does not work with NaNs
-if flagNaN && strcmp(interpmethod, default_interpmethod)
+if flagNaN && strcmp(interpmethod, 'v4')
   dat(NaNind) = [];
   chanX(NaNind) = [];
   chanY(NaNind) = [];

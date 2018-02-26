@@ -175,6 +175,8 @@ cfg = ft_checkconfig(cfg, 'deprecated',{'coordsys', 'keepintermediate'});
 % as of march 2017 keepintermediate is deprecated, does not seem to be
 % used, nor sensible. If result files are to be kept, use cfg.write
 
+cfg = ft_checkconfig(cfg, 'renamedval', {'output', 'skin', 'scalp'});
+
 % check if the input data is valid for this function
 mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
 
@@ -423,6 +425,8 @@ if dotpm
         
         
       elseif strcmp(cfg.spmmethod, 'new') || strcmp(cfg.spmmethod, 'mars')
+        cfg.tpm = ft_getopt(cfg, 'tpm');
+        cfg.tpm = char(cfg.tpm);
         if ~isfield(cfg, 'tpm') || isempty(cfg.tpm)
           cfg.tpm = fullfile(spm('dir'),'tpm','TPM.nii');
         end

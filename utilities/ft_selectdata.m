@@ -175,7 +175,7 @@ for i=2:length(varargin)
 end
 datfield  = setdiff(datfield, {'label' 'labelcmb'}); % these fields will be used for selection, but are not treated as data fields
 datfield  = setdiff(datfield, {'dim'});              % not used for selection, also not treated as data field
-xtrafield =  {'cfg' 'hdr' 'fsample' 'fsampleorig' 'grad' 'elec' 'opto' 'transform' 'unit' 'topolabel'}; % these fields will not be touched in any way by the code
+xtrafield = {'cfg' 'hdr' 'fsample' 'fsampleorig' 'grad' 'elec' 'opto' 'transform' 'unit' 'topolabel'}; % these fields will not be touched in any way by the code
 datfield  = setdiff(datfield, xtrafield);
 orgdim1   = datfield(~cellfun(@isempty, regexp(datfield, 'label$')) & cellfun(@isempty, regexp(datfield, '^csd'))); % xxxlabel, with the exception of csdlabel
 datfield  = setdiff(datfield, orgdim1);
@@ -377,6 +377,19 @@ for i=1:numel(varargin)
       keepdim(strcmp(dimtok, 'subj'))   = false;
     end
     
+    % update the sampleinfo, if possible, and needed
+    if strcmp(datfield{j}, 'sampleinfo') && ~isequal(cfg.latency, 'all')
+      if iscell(seltime{i}) && numel(seltime{i})==size(varargin{i}.sampleinfo,1)
+        for k = 1:numel(seltime{i})
+          varargin{i}.sampleinfo(k,:) = varargin{i}.sampleinfo(k,1) - 1 + seltime{i}{k}([1 end]);
+        end
+      elseif ~iscell(seltime{i}) && ~isempty(seltime{i}) && ~all(isnan(seltime{i}))
+        nrpt       = size(varargin{i}.sampleinfo,1);
+        seltime{i} = seltime{i}(:)';
+        varargin{i}.sampleinfo = varargin{i}.sampleinfo(:,[1 1]) - 1 + repmat(seltime{i}([1 end]),nrpt,1);
+      end
+    end
+  
     varargin{i}.(datfield{j}) = squeezedim(varargin{i}.(datfield{j}), ~keepdim);
     
   end % for datfield
@@ -406,7 +419,7 @@ if avgoverrpt
   keepfield = setdiff(keepfield, {'cumsumcnt' 'cumtapcnt' 'trialinfo' 'sampleinfo'});
 end
 
-if avgovertime || ~isequal(cfg.latency, 'all')
+if avgovertime
   % these are invalid after averaging or making a latency selection
   keepfield = setdiff(keepfield, {'sampleinfo'});
 end
@@ -1200,6 +1213,8 @@ for i=(numel(siz)+1):numel(dim)
 end
 if isvector(x)
   % there is no harm to keep it as it is
+elseif istable(x)
+  % there is no harm to keep it as it is
 else
   x = reshape(x, [siz(~dim) 1]);
 end
@@ -1251,6 +1266,9 @@ if iscell(x)
             % sometimes the data is 1xN, whereas the dimord describes only the first dimension
             % in this case a row and column vector can be interpreted as equivalent
             x{i} = x{i}(selindx);
+          elseif istable(x)
+            % multidimensional indexing is not supported
+            x{i} = x{i}(selindx,:);
           else
             x{i} = x{i}(selindx,:,:,:,:);
           end
@@ -1274,6 +1292,9 @@ else
         % sometimes the data is 1xN, whereas the dimord describes only the first dimension
         % in this case a row and column vector can be interpreted as equivalent
         x = x(selindx);
+      elseif istable(x)
+        % multidimensional indexing is not supported
+        x = x(selindx,:);
       else
         x = x(selindx,:,:,:,:,:);
       end

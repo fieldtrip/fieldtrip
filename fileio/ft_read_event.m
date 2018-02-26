@@ -1717,6 +1717,43 @@ switch eventformat
     ft_warning('FieldTrip:ft_read_event:unsupported_event_format', 'reading of events for the netmeg format is not yet supported');
     event = [];
     
+  case 'neuroomega_mat'
+    
+    hdr = ft_read_header(filename, 'headerformat', eventformat, 'chantype', 'chaninfo');
+    
+    fields_orig=who(hdr.orig); %getting digital event channels
+    fields_orig=fields_orig(startsWith(fields_orig,'CDIG_IN')); %compat/matlablt2016b/startsWidth.m     
+    
+    rx=regexp(fields_orig,'^CDIG_IN_{1}(\d+)[a-zA-Z_]*','tokens');
+    dig_channels=unique(cellfun(@(x) str2num(x{1}), [rx{:}]));
+   
+    event.type=[]; event.sample=[]; event.value=[];
+    if ~ismember(detectflank,{'up','down','both'})
+      ft_error('incorrect specification of ''detectflank''');
+    end
+    if ismember(detectflank,{'up','both'})
+      for i=1:length(dig_channels)
+        channel = ['CDIG_IN_' num2str(dig_channels(i)) '_Up'];
+        data = hdr.orig.(channel);
+        for j=1:length(hdr.orig.(channel))
+          event(end+1).type = channel;
+          event(end  ).value = dig_channels(i);
+          event(end  ).sample = data(j);
+        end
+      end
+    end
+    if ismember(detectflank,{'down','both'})
+      for i=1:length(dig_channels)
+        channel = ['CDIG_IN_' num2str(dig_channels(i)) '_Down'];
+        data = hdr.orig.(channel);
+        for j=1:length(hdr.orig.(channel))
+          event(end+1).type = channel;
+          event(end  ).value = dig_channels(i);
+          event(end  ).sample = data(j);
+        end
+      end
+    end  
+    
   case 'neuroshare' % NOTE: still under development
     % check that the required neuroshare toolbox is available
     ft_hastoolbox('neuroshare', 1);

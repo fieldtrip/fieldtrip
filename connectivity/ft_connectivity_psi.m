@@ -6,21 +6,17 @@ function [c, v, n] = ft_connectivity_psi(input, varargin)
 % in complex physical systems. Physical Review Letters, 2008; 100; 234101.
 %
 % Use as
-%   [c, v, n] = ft_connectivity_psi(input, varargin)
+%   [c, v, n] = ft_connectivity_psi(input, ...)
 %
-% The input data input should be organized as:
-%
+% The input data input should be organized as
 %   Repetitions x Channel x Channel (x Frequency) (x Time)
-%
 % or
-%
 %   Repetitions x Channelcombination (x Frequency) (x Time)
 %
 % The first dimension should be singleton if the input already contains an
-% average
+% average.
 %
-% Additional input arguments come as key-value pairs:
-%
+% Additional optional input arguments come as key-value pairs:
 %   nbin			=	scalar, half-bandwidth parameter: the number of frequency bins
 %								across which to integrate
 %   hasjack		= 0 or 1, specifying whether the repetitions represent
@@ -28,8 +24,8 @@ function [c, v, n] = ft_connectivity_psi(input, varargin)
 %   feedback	= 'none', 'text', 'textbar' type of feedback showing progress of
 %               computation
 %   dimord		= string, specifying how the input matrix should be interpreted
-%   powindx
-%   normalize
+%   powindx   =
+%   normalize =
 %
 % The output p contains the phase slope index, v is a variance estimate
 % which only can be computed if the data contains leave-one-out samples,
@@ -73,7 +69,7 @@ if isempty(dimord)
   ft_error('input parameters should contain a dimord');
 end
 
-if (length(strfind(dimord, 'chan'))~=2 || ~isempty(strfind(dimord, 'pos'))>0) && ~isempty(powindx),
+if (length(strfind(dimord, 'chan'))~=2 || contains(dimord, 'pos')>0) && ~isempty(powindx)
   %crossterms are not described with chan_chan_therest, but are linearly indexed
   
   siz = size(input);
@@ -97,7 +93,7 @@ if (length(strfind(dimord, 'chan'))~=2 || ~isempty(strfind(dimord, 'pos'))>0) &&
   end
   ft_progress('close');
   
-elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2,
+elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2
   %crossterms are described by chan_chan_therest
   
   siz = size(input);
@@ -130,7 +126,7 @@ end
 n = siz(1);
 c = outsum./n;
 
-if n>1,
+if n>1
   n = shiftdim(sum(~isnan(input),1),1);
   if hasjack
     bias = (n-1).^2;
@@ -142,7 +138,8 @@ else
   v = [];
 end
 
-%---------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 function [y] = phaseslope(x, n, norm)
 
 m   = size(x, 1); %total number of frequency bins

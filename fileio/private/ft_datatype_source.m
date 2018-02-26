@@ -31,10 +31,6 @@ function [source] = ft_datatype_source(source, varargin)
 % Obsoleted fields:
 %   - xgrid, ygrid, zgrid, transform, latency, frequency
 %
-% Historical fields:
-%   - avg, cfg, cumtapcnt, df, dim, freq, frequency, inside, method,
-%   outside, pos, time, trial, vol, see bug2513
-%
 % Revision history:
 %
 % (2014) The subfields in the avg and trial fields are now present in the

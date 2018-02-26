@@ -39,6 +39,7 @@ function [input] = ft_apply_montage(input, montage, varargin)
 %   'balancename'   string, name of the montage (default = '')
 %   'feedback'      string, see FT_PROGRESS (default = 'text')
 %   'warning'       boolean, whether to show warnings (default = true)
+%   'showcallinfo'  string, 'yes' or 'no' (default = 'no')
 %
 % If the first input is a montage, then the second input montage will be
 % applied to the first. In effect, the output montage will first do
@@ -79,11 +80,12 @@ montage = fixoldorg(montage);
 input   = fixoldorg(input); % the input might be a montage or a sensor array
 
 % get optional input arguments
-keepunused  = ft_getopt(varargin, 'keepunused',  'no');
-inverse     = ft_getopt(varargin, 'inverse',     'no');
-feedback    = ft_getopt(varargin, 'feedback',    'text');
-showwarning = ft_getopt(varargin, 'warning',     true);
-bname       = ft_getopt(varargin, 'balancename', '');
+keepunused    = ft_getopt(varargin, 'keepunused',  'no');
+inverse       = ft_getopt(varargin, 'inverse',     'no');
+feedback      = ft_getopt(varargin, 'feedback',    'text');
+showwarning   = ft_getopt(varargin, 'warning',     true);
+bname         = ft_getopt(varargin, 'balancename', '');
+showcallinfo  = ft_getopt(varargin, 'showcallinfo', 'no');
 
 if istrue(showwarning)
   warningfun = @warning;
@@ -254,6 +256,7 @@ k = length(addlabel);
 if k > 0 && isfield(input, 'trial') % check for raw data now only
   cfg = [];
   cfg.channel = addlabel;
+  cfg.showcallinfo = showcallinfo;
   data_unused = ft_selectdata(cfg, input);
   % use an anonymous function to test for the presence of NaNs in the input data
   hasnan = @(x) any(isnan(x(:)));

@@ -529,7 +529,7 @@ elseif hasrpt && dojack && ~(exist('debiaswpli', 'var') || exist('weightppc', 'v
     clear sumdat;
   end
   hasjack = 1;
-elseif hasrpt && ~(exist('debiaswpli', 'var') || exist('weightppc', 'var') || strcmp(cfg.method, 'powcorr_ortho'))% || needrpt)
+elseif hasrpt && ~(exist('debiaswpli', 'var') || exist('weightppc', 'var') || any(strcmp({'powcorr_ortho';'mi'},cfg.method)))% || needrpt)
   % create dof variable
   if isfield(data, 'dof')
     dof = data.dof;
@@ -711,12 +711,10 @@ switch cfg.method
           tok = tokenize(data.labelcmb{m}, '[');
           tmp2{m} = tok{1};
         end
-        label = unique(tmp2);
+        label = cat(1,data.block.label);%unique(tmp2);
         
-        [cmbindx, n] = blockindx2cmbindx(data.labelcmb, {label data.blockindx}, tmp);
-        powindx.cmbindx = cmbindx;
-        powindx.n = n;
-        data.labelcmb = newlabelcmb;
+        [powindx.cmbindx, powindx.n] = blockindx2cmbindx(data.labelcmb, {label data.blockindx}, tmp);
+        data.labelcmb                = newlabelcmb;
         
         if isfield(data, 'label')
           % this field should be removed

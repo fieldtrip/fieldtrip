@@ -1,15 +1,21 @@
 function [pdc, pdcvar, n] = ft_connectivity_pdc(input, varargin)
 
-% FT_CONNECTIVITY_PDC computes partial directed coherence.
-% 
+% FT_CONNECTIVITY_PDC computes partial directed coherence. This function implements
+% the metrices described in Baccala et al., Biological Cybernetics 2001, 84(6),
+% 463-74. and in Baccala et al., 15th Int.Conf.on DSP 2007, 163-66.
+%
+% The implemented algorithm has been tested against the implementation in the
+% SIFT-toolbox. It yields numerically identical results to what is known there as
+% 'nPDC' (for PDC) and 'GPDC' for generalized pdc.
+%
 % Use as
 %   [p, v, n] = ft_connectivity_pdc(h, key1, value1, ...)
 %
-% Input arguments: 
-%   H = spectral transfer matrix, Nrpt x Nchan x Nchan x Nfreq (x Ntime),
-%      Nrpt can be 1.
+% The input argument H should be a spectral transfer matrix organized as
+%   Nrpt x Nchan x Nchan x Nfreq (x Ntime),
+% where Nrpt can be 1.
 %
-% additional options need to be specified as key-value pairs and are:
+% Additional optional input arguments come as key-value pairs:
 %   'hasjack'  = 0 (default) is a boolean specifying whether the input
 %                contains leave-one-outs, required for correct variance
 %                estimate
@@ -33,14 +39,7 @@ function [pdc, pdcvar, n] = ft_connectivity_pdc(input, varargin)
 % is assumed to contain the leave-one-out estimates of H, thus a more
 % reliable estimate of the relevant quantities.
 %
-% This function implements the metrices described in:
-%  - Baccala et al., Biological Cybernetics 2001, 84(6), 463-74.
-%  - Baccala et al., 15th Int.Conf.on DSP 2007, 163-66.
-%
-% The implemented algorithm has been tested against the implementation in
-% the SIFT-toolbox. It yields numerically identical results to what is
-% known in the SIFT-toolbox as 'nPDC' (for PDC) and 'GPDC' for generalized
-% pdc.
+% See also FT_CONNECTIVITYANALYSIS
 
 % Copyright (C) 2009-2017, Jan-Mathijs Schoffelen
 %
@@ -64,7 +63,7 @@ function [pdc, pdcvar, n] = ft_connectivity_pdc(input, varargin)
 
 hasjack  = ft_getopt(varargin, 'hasjack', 0);
 feedback = ft_getopt(varargin, 'feedback', 'none');
-invfun   = ft_getopt(varargin, 'invfun',   'inv');
+invfun   = ft_getopt(varargin, 'invfun', 'inv');
 noisecov = ft_getopt(varargin, 'noisecov');
 
 switch invfun
@@ -110,10 +109,8 @@ for j = 1:n
   ft_progress(j/n, 'computing metric for replicate %d from %d\n', j, n);
   invh   = reshape(input(j,:,:,:,:), siz(2:end));
   
-  
   den    = sum(abs(invh).^2,1);
   tmppdc = abs(invh)./sqrt(repmat(den, [siz(2) 1 1 1 1]));
-  
   
   outsum = outsum + tmppdc;
   outssq = outssq + tmppdc.^2;
@@ -122,7 +119,7 @@ ft_progress('close');
 
 pdc = outsum./n;
 
-if n>1,
+if n>1
   if hasjack
     bias = (n-1).^2;
   else

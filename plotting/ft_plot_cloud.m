@@ -1,8 +1,8 @@
 function ft_plot_cloud(pos, val, varargin)
 
-% FT_PLOT_CLOUD visualizes spatially sparse scalar data as spherical clouds and
-% optionally 2D slices through the spherical clouds. This is for example useful for
-% spectral power on depth (sEEG) electrodes.
+% FT_PLOT_CLOUD visualizes spatially sparse scalar data as points, spheres, or 
+% spherical clouds of points and optionally 2D slices through the spherical 
+% clouds. This is for example useful for spectral power on depth (sEEG) electrodes.
 %
 % Use as
 %   ft_plot_cloud(pos, val, ...)
@@ -10,26 +10,30 @@ function ft_plot_cloud(pos, val, varargin)
 % sensor values.
 %
 % Optional input arguments should come in key-value pairs and can include
-%   'radius'             = scalar, maximum radius of cloud (default = 4)
-%   'rmin'               = scalar >= 1, minimum radius of cloud if scalerad = 'yes' (default = 1)
+%   'cloudtype'          = 'point' plots a single 2D point at each sensor position (see plot3)
+%                          'cloud' (default) plots a group of spherically arranged points at each sensor position
+%                          'surf' plots a single spherical surface mesh at each sensor position
 %   'scalerad'           = scale radius with val, can be 'yes' or 'no' (default = 'yes')
-%   'colormap'           = colormap for functional data, see COLORMAP
-%   'colorgrad'          = 'white' or a scalar (e.g. 1), degree to which color of points
-%                          in cloud changes from its center
+%   'radius'             = scalar, maximum radius of cloud (default = 4)
 %   'clim'               = 1x2 vector specifying the min and max for the colorscale
 %   'unit'               = string, convert the sensor array to the specified geometrical units (default = [])
 %   'mesh'               = string or Nx1 cell array, triangulated mesh(es), see FT_PREPARE_MESH
 %   'slice'              = requires 'mesh' as input (default = 'none')
 %                          '2d', plots 2D slices through the cloud with an outline of the mesh
 %                          '3d', draws an outline around the mesh at a particular slice
-%   'slicetype'          = 'surf' plots the slices as a surface
-%                          'point' (default) plots the slices as points
 %
-% The following inputs apply when 'slice' = 'none' or '3d', or '2dslicetype' = 'point'
+% The following inputs apply when 'cloudtype' = 'cloud'
+%   'rmin'               = scalar >= 1, minimum radius of cloud if scalerad = 'yes' (default = 1)
+%   'colormap'           = colormap for functional data, see COLORMAP
+%   'colorgrad'          = 'white' or a scalar (e.g. 1), degree to which color of points
+%                          in cloud changes from its center
 %   'ptsize'             = scalar, size of points in cloud (default = 1)
 %   'ptdensity'          = scalar, density of points in cloud (default = 20)
 %   'ptgradient'         = scalar, degree to which density of points in cloud changes
 %                          from its center, default = .5 (uniform density)
+%
+% The following options apply when 'cloudtype' = 'point'
+%   'marker'          = marker type representing the channels, see plot3 (default = '.')
 %
 % The following inputs apply when 'slice' = '2d' or '3d'
 %   'ori'                = 'x', 'y', or 'z', specifies the orthogonal plane which will be plotted (default = 'y')
@@ -45,7 +49,7 @@ function ft_plot_cloud(pos, val, varargin)
 %
 % See also FT_ELECTRODEPLACEMENT, FT_PLOT_TOPO, FT_PLOT_TOPO3D
 
-% The following inputs apply when 'slicetype' = 'surf'
+% The following inputs apply when 'cloudtype' = 'surf' and 'slice' = '2d'
 %   'ncirc'           = scalar, number of concentric circles to plot for each
 %                       cloud slice (default = 15) make this hidden or scale
 %   'scalealpha'      = 'yes' or 'no', scale the maximum alpha value of the center circle
@@ -91,6 +95,7 @@ unit = ft_getopt(varargin, 'unit', posunit);
 pos = pos * ft_scalingfactor(posunit, unit);
 
 % get the generic input arguments
+cloudtype          = ft_getopt(varargin, 'cloudtype', 'cloud');
 radius             = ft_getopt(varargin, 'radius', 4 * ft_scalingfactor('mm', unit));
 rmin               = ft_getopt(varargin, 'rmin',   1 * ft_scalingfactor('mm', unit));
 scalerad           = ft_getopt(varargin, 'scalerad', 'yes');
@@ -103,14 +108,16 @@ end
 clim               = ft_getopt(varargin, 'clim');
 meshplot           = ft_getopt(varargin, 'mesh');
 
-% point related inputs
+% cloud related inputs
 ptsize             = ft_getopt(varargin, 'ptsize', 1);
 ptdens             = ft_getopt(varargin, 'ptdensity', 20);
 ptgrad             = ft_getopt(varargin, 'ptgradient', .5);
 
+% point related inputs
+marker             = ft_getopt(varargin, 'marker', '.');
+
 % slice related inputs
 sli                = ft_getopt(varargin, 'slice', 'none');
-slicetype          = ft_getopt(varargin, 'slicetype', 'point');
 ori                = ft_getopt(varargin, 'ori', 'y');
 slicepos           = ft_getopt(varargin, 'slicepos', 'auto');
 nslices            = ft_getopt(varargin, 'nslices', 1);
@@ -126,6 +133,7 @@ facecolor          = ft_getopt(varargin, 'facecolor', [0.781 0.762 0.664]);
 edgecolor          = ft_getopt(varargin, 'edgecolor', 'none');
 facealpha          = ft_getopt(varargin, 'facealpha', 1);
 edgealpha          = ft_getopt(varargin, 'edgealpha', 0);
+vertexcolor        = ft_getopt(varargin, 'vertexcolor', 'curv');
 
 if rmin < 1 * ft_scalingfactor('mm', unit)
   ft_error('cfg.rmin must be equal or larger than 1 mm');
@@ -158,7 +166,7 @@ if ~isempty(meshplot)
     end
   end
   
-  % facecolor and edgecolor should be cell array
+  % facecolor, edgecolor, and vertexcolor should be cell array
   if ~iscell(facecolor)
     tmp = facecolor;
     if ischar(tmp)
@@ -183,6 +191,19 @@ if ~isempty(meshplot)
       end
     else
       edgecolor = {};
+    end
+  end
+  if ~iscell(vertexcolor)
+    tmp = vertexcolor;
+    if ischar(tmp)
+      vertexcolor = {tmp};
+    elseif ismatrix(tmp) && size(tmp, 2) == 3
+      vertexcolor = cell(size(tmp,1), 1);
+      for i=1:size(tmp,1)
+        vertexcolor{i} = tmp(i, 1:3);
+      end
+    else
+      vertexcolor = {};
     end
   end
   
@@ -389,7 +410,7 @@ if strcmp(sli, '2d')
       if oriZ; distance = abs(indpos(3)-slicepos(s)); end
       
       if distance < rmax(c)
-        if strcmp(slicetype, 'surf')
+        if strcmp(cloudtype, 'surf')
           xmax = rmax(c)*x;
           ymax = rmax(c)*y;
           
@@ -443,7 +464,7 @@ if strcmp(sli, '2d')
             ycmax(c) = max(ye+indpos(2)); ycmin(c) = min(ye+indpos(2));
             zcmax(c) = max(slicedime+slicepos(s)); zcmin(c) = min(slicedime+indpos(s));
           end
-        elseif strcmp(slicetype, 'point')
+        elseif strcmp(cloudtype, 'cloud')
           rng(0, 'twister');                          % random number generator
           npoints = round(ptdens*pi*rmax(c)^2);       % number of points based on area of cloud cross section
           azimuth = 2*pi*rand(npoints,1);             % azimuthal angle for each point
@@ -490,7 +511,8 @@ if strcmp(sli, '2d')
             ycmax(c) = max(y+indpos(2)); ycmin(c) = min(y+indpos(2));
             zcmax(c) = max(z+slicepos(s)); zcmin(c) = min(z+slicepos(s));
           end
-          
+        else
+          error('if slice = "2d" then cloudtype must be either "surf" or "cloud"');
         end % cloudtype
       end % if distance < rmax(c)
     end % cloud loop
@@ -607,40 +629,55 @@ else % plot 3d cloud
   % generate point cloud(s)
   hold on;
   for n = 1:size(pos,1) % cloud loop
-    % point cloud with radius scaling
-    rng(0, 'twister'); % random number generator
-    npoints   = round(ptdens*(4/3)*pi*rmax(n)^3);     % number of points based on cloud volume
-    elevation = asin(2*rand(npoints,1)-1);            % elevation angle for each point
-    azimuth   = 2*pi*rand(npoints,1);                 % azimuth angle for each point
-    radii     = rmax(n)*(rand(npoints,1).^ptgrad);    % radius value for each point
-    radii     = sort(radii);                          % sort radii in ascending order so they are plotted from inside out
-    [x,y,z]   = sph2cart(azimuth, elevation, radii);  % convert to Carthesian
-    
-    % color axis with radius scaling
-    if strcmp(cgrad, 'white')                   % color runs up to white
+    if strcmp(cloudtype, 'cloud')
+      % point cloud with radius scaling
+      rng(0, 'twister'); % random number generator
+      npoints   = round(ptdens*(4/3)*pi*rmax(n)^3);     % number of points based on cloud volume
+      elevation = asin(2*rand(npoints,1)-1);            % elevation angle for each point
+      azimuth   = 2*pi*rand(npoints,1);                 % azimuth angle for each point
+      radii     = rmax(n)*(rand(npoints,1).^ptgrad);    % radius value for each point
+      radii     = sort(radii);                          % sort radii in ascending order so they are plotted from inside out
+      [x,y,z]   = sph2cart(azimuth, elevation, radii);  % convert to Carthesian
+      
+      % color axis with radius scaling
+      if strcmp(cgrad, 'white')                   % color runs up to white
+        indx  = ceil(cmid) + sign(colscf(n))*floor(abs(colscf(n)*cmid));
+        indx  = max(min(indx,size(cmapsc,1)),1);  % index should fall within the colormap
+        fcol  = cmapsc(indx,:);                   % color [Nx3]
+        ptcol = [linspace(fcol(1), 1, npoints)' linspace(fcol(2), 1, npoints)' linspace(fcol(3), 1, npoints)'];
+      elseif isscalar(cgrad)                      % color runs down towards colorbar middle
+        rnorm = radii/rmax(n);                    % normalized radius
+        if radscf(n)>=.5                          % extreme values
+          ptcol = val(n) - (flip(1-rnorm).^inv(cgrad))*val(n); % scaled fun [Nx1]
+        elseif radscf(n)<.5                       % values closest to zero
+          ptcol = val(n) + (flip(1-rnorm).^inv(cgrad))*abs(val(n)); % scaled fun [Nx1]
+        end
+      else
+        ft_error('color gradient should be either ''white'' or a scalar determining color falloff')
+      end
+      
+      % draw the points
+      scatter3(x+pos(n,1), y+pos(n,2), z+pos(n,3), ptsize, ptcol, '.');
+    elseif strcmp(cloudtype, 'surf') 
       indx  = ceil(cmid) + sign(colscf(n))*floor(abs(colscf(n)*cmid));
       indx  = max(min(indx,size(cmapsc,1)),1);  % index should fall within the colormap
       fcol  = cmapsc(indx,:);                   % color [Nx3]
-      ptcol = [linspace(fcol(1), 1, npoints)' linspace(fcol(2), 1, npoints)' linspace(fcol(3), 1, npoints)'];
-    elseif isscalar(cgrad)                      % color runs down towards colorbar middle
-      rnorm = radii/rmax(n);                    % normalized radius
-      if radscf(n)>=.5                          % extreme values
-        ptcol = val(n) - (flip(1-rnorm).^inv(cgrad))*val(n); % scaled fun [Nx1]
-      elseif radscf(n)<.5                       % values closest to zero
-        ptcol = val(n) + (flip(1-rnorm).^inv(cgrad))*abs(val(n)); % scaled fun [Nx1]
-      end
-    else
-      ft_error('color gradient should be either ''white'' or a scalar determining color falloff')
+      [xsp, ysp, zsp] = sphere(100);
+      hs = surf(rmax(n)*xsp+pos(n,1), rmax(n)*ysp+pos(n,2), rmax(n)*zsp+pos(n,3));
+      set(hs, 'EdgeColor', 'none', 'FaceColor', fcol, 'FaceAlpha', 1);
+    elseif strcmp(cloudtype, 'point')
+      indx  = ceil(cmid) + sign(colscf(n))*floor(abs(colscf(n)*cmid));
+      indx  = max(min(indx,size(cmapsc,1)),1);  % index should fall within the colormap
+      fcol  = cmapsc(indx,:);                   % color [Nx3]
+
+      hs = plot3(pos(n,1), pos(n,2), pos(n,3), 'Marker', marker, 'MarkerSize', rmax(n), 'Color', fcol, 'Linestyle', 'none');
     end
-    
-    % draw the points
-    scatter3(x+pos(n,1), y+pos(n,2), z+pos(n,3), ptsize, ptcol, '.');
   end % end cloud loop
   
   if ~isempty(meshplot)
     for k = 1:numel(meshplot) % mesh loop
       ft_plot_mesh(meshplot{k}, 'facecolor', facecolor{k}, 'EdgeColor', edgecolor{k}, ...
-        'facealpha', facealpha(k), 'edgealpha', edgealpha(k));
+        'facealpha', facealpha(k), 'edgealpha', edgealpha(k), 'vertexcolor', vertexcolor{k});
       material dull
     end % end mesh loop
     

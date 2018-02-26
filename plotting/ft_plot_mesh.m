@@ -315,6 +315,7 @@ switch maskstyle
     bgcolor = repmat(facecolor, [numel(vertexcolor) 1]);
     rgb     = bg_rgba2rgb(bgcolor, vertexcolor, cmap, clim, facealpha, alphamapping, alphalim);
     set(hs, 'FaceVertexCData', rgb, 'facecolor', 'interp');
+    if ~isempty(clim); caxis(clim); end % set colorbar scale to match [fcolmin fcolmax]
 end
 
 if faceindex

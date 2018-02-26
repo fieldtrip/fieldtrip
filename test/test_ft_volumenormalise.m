@@ -1,3 +1,10 @@
+function test_ft_volumenormalise
+
+% MEM 4000mb
+% WALLTIME 00:45:00
+
+% TEST ft_volumenormalise ft_warp_apply
+
 filename = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri');
 mri = ft_read_mri(filename);
 

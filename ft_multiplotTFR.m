@@ -14,11 +14,14 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 % The configuration can have the following parameters:
 %   cfg.parameter        = field to be represented as color (default depends on data.dimord)
 %                          'powspctrm' or 'cohspctrm'
-%   cfg.maskparameter    = field in the data to be used for opacity masking of data
-%   cfg.maskstyle        = style used to masking, 'opacity', 'saturation', 'outline' or 'colormix' (default = 'opacity')
-%                          use 'saturation' or 'outline' when saving to vector-format (like *.eps) to avoid all
-%                          sorts of image-problems (currently only possible with a white backgroud)
-%   cfg.maskalpha        = alpha value between 0 (transparant) and 1 (opaque) used for masking areas dictated by cfg.maskparameter (default = 1)
+%   cfg.maskparameter    = field in the data to be used for masking of data, can be logical (e.g. significant data points) or numerical (e.g. t-values).
+%                        (not possible for mean over multiple channels, or when input contains multiple subjects
+%                        or trials)
+%   cfg.maskstyle        = style used to masking, 'opacity', 'saturation', or 'outline' (default = 'opacity')
+%                        'outline' can only be used with a logical cfg.maskparameter
+%                        use 'saturation' or 'outline' when saving to vector-format (like *.eps) to avoid all sorts of image-problems
+%   cfg.maskalpha        = alpha value between 0 (transparent) and 1 (opaque) used for masking areas dictated by cfg.maskparameter (default = 1)
+%                        (will be ignored in case of numeric cfg.maskparameter or if cfg.maskstyle = 'outline')   
 %   cfg.masknans         = 'yes' or 'no' (default = 'yes')
 %   cfg.xlim             = 'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.ylim             = 'maxmin' or [ymin ymax] (default = 'maxmin')
@@ -186,7 +189,7 @@ cfg.channel        = ft_getopt(cfg, 'channel', 'all');
 cfg.fontsize       = ft_getopt(cfg, 'fontsize', 8);
 cfg.fontweight     = ft_getopt(cfg, 'fontweight');
 cfg.interactive    = ft_getopt(cfg, 'interactive', 'yes');
-cfg.hotkeys        = ft_getopt(cfg, 'hotkeys', 'no');
+cfg.hotkeys        = ft_getopt(cfg, 'hotkeys', 'yes');
 cfg.renderer       = ft_getopt(cfg, 'renderer'); % let MATLAB decide on default
 cfg.orient         = ft_getopt(cfg, 'orient', 'landscape');
 cfg.maskalpha      = ft_getopt(cfg, 'maskalpha', 1);
@@ -401,9 +404,20 @@ datamatrix = datamatrix(selchan, sely, selx);
 if ~isempty(cfg.maskparameter)
     % one value for each channel-freq-time point
   maskmatrix = data.(cfg.maskparameter)(selchan, sely, selx);
-  if cfg.maskalpha ~= 1
-    maskmatrix( maskmatrix) = 1;
+  if islogical(maskmatrix) && any(strcmp(cfg.maskstyle, {'saturation', 'opacity'}))
+    maskmatrix = double(maskmatrix);
     maskmatrix(~maskmatrix) = cfg.maskalpha;
+  elseif isnumeric(maskmatrix)
+    if strcmp(cfg.maskstyle, 'outline')
+      error('Outline masking with a numeric cfg.maskparameter is not supported. Please use a logical mask instead.')
+    end
+    if cfg.maskalpha ~= 1
+      warning(sprintf('Using field "%s" for masking, cfg.maskalpha is ignored.', cfg.maskparameter))
+    end
+    % scale mask between 0 and 1
+    minval = min(maskmatrix(:));
+    maxval = max(maskmatrix(:));
+    maskmatrix = (maskmatrix - minval) / (maxval-minval);
   end
 else
   % create an Nx0x0 matrix
@@ -477,6 +491,7 @@ if isfield(cfg, 'colormap')
 end
 
 % show comment
+comment_handle = [];
 if istrue(cfg.showcomment)
   k = find(strcmp('COMNT', cfg.layout.label));
   if ~isempty(k)
@@ -489,7 +504,7 @@ if istrue(cfg.showcomment)
       comment = sprintf('%0s\nylim=[%.3g %.3g]', comment, ymin, ymax);
       comment = sprintf('%0s\nzlim=[%.3g %.3g]', comment, zmin, zmax);
     end
-    ft_plot_text(cfg.layout.pos(k, 1), cfg.layout.pos(k, 2), sprintf(comment), 'FontSize', cfg.fontsize, 'FontWeight', cfg.fontweight);
+    comment_handle = ft_plot_text(cfg.layout.pos(k, 1), cfg.layout.pos(k, 2), sprintf(comment), 'FontSize', cfg.fontsize, 'FontWeight', cfg.fontweight);
   end
 end
 
@@ -580,6 +595,7 @@ if strcmp(cfg.interactive, 'yes')
   info.(ident).dataname = dataname;
   info.(ident).cfg      = cfg;
   info.(ident).data     = data;
+  info.(ident).commenth = comment_handle;
   guidata(gcf, info);
   set(gcf, 'WindowButtonUpFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonUpFcn'});
   set(gcf, 'WindowButtonDownFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonDownFcn'});
@@ -643,14 +659,41 @@ end
 % SUBFUNCTION which handles hot keys in the current plot
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function key_sub(handle, eventdata, varargin)
-incr = (max(caxis)-min(caxis)) /10;
-% symmetrically scale color bar down by 10 percent
-if strcmp(eventdata.Key, 'uparrow')
-  caxis([min(caxis)-incr max(caxis)+incr]);
-  % symmetrically scale color bar up by 10 percent
-elseif strcmp(eventdata.Key, 'downarrow')
-  caxis([min(caxis)+incr max(caxis)-incr]);
-  % resort to minmax of data for colorbar
-elseif strcmp(eventdata.Key, 'm')
-  caxis([data varargin{2}]);
+ident       = get(gca, 'tag');
+info        = guidata(gcf);
+
+climits = caxis;
+incr_c  = abs(climits(2) - climits(1)) /10;
+
+newz = climits;
+if length(eventdata.Modifier) == 1 && strcmp(eventdata.Modifier{:}, 'control')
+  % TRANSLATE by 10%
+  switch eventdata.Key
+    case 'pageup'
+      newz = [climits(1)+incr_c climits(2)+incr_c];
+    case 'pagedown'
+      newz = [climits(1)-incr_c climits(2)-incr_c];
+  end % switch
+else
+  % ZOOM by 10%
+  switch eventdata.Key
+    case 'pageup'
+      newz = [climits(1)-incr_c climits(2)+incr_c];
+    case 'pagedown'
+      newz = [climits(1)+incr_c climits(2)-incr_c];
+    case 'm'
+      newz = [varargin{1} varargin{2}];
+  end % switch
+end % if
+
+% update the color axis
+caxis(newz);
+
+if ~isempty(ident) && isfield(info.(ident), 'commenth') && ~isempty(info.(ident).commenth)
+  commentstr = get(info.(ident).commenth, 'string');
+  sel        = contains(commentstr, 'zlim');
+  if any(sel)
+    commentstr{sel} = sprintf('%0s=[%.3g %.3g]', 'zlim', newz(1), newz(2));
+    set(info.(ident).commenth, 'string', commentstr);
+  end
 end
