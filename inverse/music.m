@@ -77,6 +77,12 @@ origpos    = dip.pos;
 dip.pos    = dip.pos(originside,:);
 dip.inside = true(size(dip.pos,1),1);
 
+% also deal with the inside locations of the leadfield, if present
+if isfield(dip, 'leadfield')
+  origleadfield = dip.leadfield;
+  dip.leadfield = dip.leadfield(originside);
+end
+
 if ~isempty(cov)
   % compute signal and noise subspace from covariance matrix
   [u, s, v] = svd(cov);
@@ -119,6 +125,9 @@ ft_progress('close');
 % wrap it all up, prepare the complete output
 dipout.inside   = originside;
 dipout.pos      = origpos;
+if isfield(dip, 'leadfield')
+  dipout.leadfield = origleadfield;
+end
 
 % reassign the scan values over the inside and outside grid positions
 if isfield(dipout, 'jr')
