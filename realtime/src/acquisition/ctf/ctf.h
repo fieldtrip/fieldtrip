@@ -25,6 +25,6 @@ typedef struct {
   int sampleNumber;
   int numSamples;
   int numChannels;
-  int data[28160];
+  int data[ACQ_BUFFER_SIZE];
 } ACQ_MessagePacketType;
 
