@@ -1,17 +1,24 @@
 function [cfg, artifact] = ft_artifact_ecg(cfg, data)
 
-% FT_ARTIFACT_ECG performs a peak-detection on the ECG-channel. The
-% heart activity can be observed in the MEG data as an MCG artifact.
+% FT_ARTIFACT_ECG performs a peak-detection on the ECG-channel and identifies the windows
+% around the QRS peak as artifacts. Using FT_REJECTARTIFACT you can remove these windows from
+% your data, or using FT_REMOVETEMPLATEARTIFACT you can subtract an averaged template artifact
+% from your data.
 %
 % Use as
 %   [cfg, artifact] = ft_artifact_ecg(cfg)
 % with the configuration options
-%   cfg.dataset
-%   cfg.headerfile
-%   cfg.datafile
+%   cfg.dataset     = string with the filename
+% or
+%   cfg.headerfile  = string with the filename
+%   cfg.datafile    = string with the filename
+% and optionally
+%   cfg.headerformat
+%   cfg.dataformat
 %
 % Alternatively you can use it as
 %   [cfg, artifact] = ft_artifact_ecg(cfg, data)
+% where the input data is a structure as obtained from FT_PREPROCESSING.
 %
 % In both cases the configuration should also contain
 %   cfg.trl        = structure that defines the data segments of interest. See FT_DEFINETRIAL
@@ -35,8 +42,9 @@ function [cfg, artifact] = ft_artifact_ecg(cfg, data)
 % file on disk. This mat files should contain only a single variable named 'data',
 % corresponding to the input structure.
 %
-% See also FT_REJECTARTIFACT, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG, FT_ARTIFACT_EOG,
-% FT_ARTIFACT_JUMP, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_ZVALUE
+% See also FT_REJECTARTIFACT, FT_REMOVETEMPLATEARTIFACT, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG,
+% FT_ARTIFACT_EOG, FT_ARTIFACT_JUMP, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_THRESHOLD,
+% FT_ARTIFACT_ZVALUE
 
 % Copyright (C) 2005-2011, Jan-Mathijs Schoffelen
 %
@@ -94,9 +102,9 @@ if ~isfield(cfg.artfctdef.ecg, 'inspect'),  cfg.artfctdef.ecg.inspect   = {'MLT'
 if ~isfield(cfg.artfctdef.ecg, 'pretim'),   cfg.artfctdef.ecg.pretim    = 0.05;          end
 if ~isfield(cfg.artfctdef.ecg, 'psttim'),   cfg.artfctdef.ecg.psttim    = 0.3;           end
 if ~isfield(cfg.artfctdef.ecg, 'mindist'),  cfg.artfctdef.ecg.mindist   = 0.5;           end
-if ~isfield(cfg.artfctdef.ecg, 'feedback'),  cfg.artfctdef.ecg.feedback = 'yes';   end
-if ~isfield(cfg, 'headerformat'),          cfg.headerformat            = [];            end
-if ~isfield(cfg, 'dataformat'),            cfg.dataformat              = [];            end
+if ~isfield(cfg.artfctdef.ecg, 'feedback'), cfg.artfctdef.ecg.feedback = 'yes';   end
+if ~isfield(cfg, 'headerformat'),           cfg.headerformat            = [];            end
+if ~isfield(cfg, 'dataformat'),             cfg.dataformat              = [];            end
 
 if ~strcmp(cfg.artfctdef.ecg.method, 'zvalue')
   ft_error('method "%s" is not applicable', cfg.artfctdef.ecg.method);
@@ -111,7 +119,7 @@ if ~hasdata
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
   trl = cfg.trl;
 else
-  data = ft_checkdata(data, 'hassampleinfo', 'yes');
+  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
   cfg  = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
   hdr  = ft_fetch_header(data);
   if isfield(data, 'sampleinfo')
@@ -125,7 +133,6 @@ else
 end
 
 artfctdef         = cfg.artfctdef.ecg;
-padsmp            = round(artfctdef.padding*hdr.Fs);
 ntrl              = size(trl,1);
 artfctdef.trl     = trl;
 artfctdef.channel = ft_channelselection(artfctdef.channel, hdr.label);
@@ -151,7 +158,47 @@ end
 
 % read in the ecg-channel and do demean and squaring
 if hasdata
-  tmpcfg = [];
+  % this list originates from ft_checkconfig
+  fieldname = {
+    'reref'
+    'refchannel'
+    'implicitref'
+    'detrend'
+    'bpfiltdir'
+    'bpfilter'
+    'bpfiltord'
+    'bpfilttype'
+    'bpfreq'
+    'bsfiltdir'
+    'bsfilter'
+    'bsfiltord'
+    'bsfilttype'
+    'bsfreq'
+    'demean'
+    'baselinewindow'
+    'denoise'
+    'dftfilter'
+    'dftfreq'
+    'hpfiltdir'
+    'hpfilter'
+    'hpfiltord'
+    'hpfilttype'
+    'hpfreq'
+    'lpfiltdir'
+    'lpfilter'
+    'lpfiltord'
+    'lpfilttype'
+    'lpfreq'
+    'medianfilter'
+    'medianfiltord'
+    'hilbert'
+    'derivative'
+    'rectify'
+    'boxcar'
+    'absdiff'
+    };
+  
+  tmpcfg = keepfields(artfctdef, fieldname);
   tmpcfg.channel = artfctdef.channel;
   ecgdata = ft_preprocessing(tmpcfg, data);
   ecg     = ecgdata.trial;

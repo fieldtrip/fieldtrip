@@ -63,16 +63,22 @@ function [sens] = ft_read_sens(filename, varargin)
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
 
-% test whether the file exists
-if ~exist(filename, 'file')
-  ft_error('file ''%s'' does not exist', filename);
-end
-
 % get the options
 fileformat     = ft_getopt(varargin, 'fileformat', ft_filetype(filename));
 senstype       = ft_getopt(varargin, 'senstype');         % can be eeg or meg, default is automatic when []
 coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
 coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0 to 2
+
+realtime = any(strcmp(fileformat, {'fcdc_buffer', 'ctf_shm', 'fcdc_mysql'}));
+
+if realtime
+  % skip the rest of the initial checks to increase the speed for realtime operation
+else
+  % test whether the file exists
+  if ~exist(filename, 'file')
+    ft_error('file ''%s'' does not exist', filename);
+  end
+end
 
 switch fileformat
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -185,6 +191,29 @@ switch fileformat
       sens = hdr.elec;
     else
       ft_error('neither electrode nor gradiometer information is present');
+    end
+    
+  case 'fcdc_buffer'
+    % the online header should have a binary blob with the sensor information
+    hdr = ft_read_header(filename, 'headerformat', fileformat);
+    if isfield(hdr, 'orig') && isfield(hdr.orig, 'neuromag_header')
+      hdr = decode_fif(hdr.orig.neuromag_header);
+    end
+    if isfield(hdr, 'orig') && isfield(hdr.orig, 'ctf_res4')
+      hdr = decode_res4(hdr.orig.ctf_res4);
+    end
+    if isempty(senstype)
+      % set the default
+      ft_warning('both electrode and gradiometer information is present, returning the electrode information by default');
+      senstype = 'eeg';
+    end
+    switch lower(senstype)
+      case 'eeg'
+        sens = hdr.elec;
+      case 'meg'
+        sens = hdr.grad;
+      otherwise
+        ft_error('incorrect specification of senstype');
     end
     
   case 'neuromag_mne_grad'

@@ -161,7 +161,8 @@ switch version
     sens = fixoldorg(sens, false);
     
     % ensure that all numbers are represented in double precision
-    sens = ft_struct2double(sens);
+    % this only affects the top-level fields and does not recurse
+    sens = ft_struct2double(sens, 1);
     
     % in version 2011v2 this was optional, now it is required
     if ~isfield(sens, 'chantype') || all(strcmp(sens.chantype, 'unknown'))

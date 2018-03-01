@@ -6,7 +6,7 @@
  * Small program to inspect the CTF shared memory segment, and to delete it if desired.
  */
 #include <stdio.h>
-#include "AcqBuffer.h"
+#include "ctf.h"
 #include <sys/shm.h>
 #include <sys/types.h>
 #include <sys/ipc.h>

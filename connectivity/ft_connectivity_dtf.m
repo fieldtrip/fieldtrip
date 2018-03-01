@@ -1,20 +1,20 @@
 function [dtf, dtfvar, n] = ft_connectivity_dtf(input, varargin)
 
-% FT_CONNECTIVITY_DTF computes directed transfer function.
-% 
+% FT_CONNECTIVITY_DTF computes the directed transfer function.
+%
 % Use as
-%   [d, v, n] = ft_connectivity_dtf(h, key1, value1, ...)
+%   [d, v, n] = ft_connectivity_dtf(h, ...)
 %
-% Input arguments: 
-%   h = spectral transfer matrix, Nrpt x Nchan x Nchan x Nfreq (x Ntime),
-%      Nrpt can be 1.
+% The input data h should be a spectral transfer matrix organized as
+%   Nrpt x Nchan x Nchan x Nfreq (x Ntime),
+% where Nrpt can be 1.
 %
-% additional options need to be specified as key-value pairs and are:
+% Additional optional input arguments come as key-value pairs:
 %   'hasjack'  = 0 (default) is a boolean specifying whether the input
 %                contains leave-one-outs, required for correct variance
 %                estimate.
 %   'feedback' = string, determining verbosity (default = 'none'), see FT_PROGRESS
-%   'crsspctrm' = matrix containing the cross-spectral density. If this 
+%   'crsspctrm' = matrix containing the cross-spectral density. If this
 %                 matrix is defined, the function
 %                 returns the ddtf, which requires an estimation of partial
 %                 coherence from this matrix.
@@ -29,10 +29,12 @@ function [dtf, dtfvar, n] = ft_connectivity_dtf(input, varargin)
 %   v = variance of d across observations.
 %   n = number of observations.
 %
-% Typically, nrpt should be 1 (where the spectral transfer matrix is
-% computed across observations. When nrpt>1 and hasjack is true the input
-% is assumed to contain the leave-one-out estimates of H, thus a more
-% reliable estimate of the relevant quantities.
+% Typically, nrpt should be 1 (where the spectral transfer matrix is computed across
+% observations. When nrpt>1 and hasjack is true the input is assumed to contain the
+% leave-one-out estimates of H, thus a more reliable estimate of the relevant
+% quantities.
+%
+% See also FT_CONNECTIVITYANALYSIS
 
 % Copyright (C) 2009-2017, Jan-Mathijs Schoffelen
 %
@@ -121,8 +123,8 @@ for j = 1:n
 end
 dtf = outsum./n;
 
-if n>1, %FIXME this is strictly only true for jackknife, otherwise other bias is needed
-  if hasjack,
+if n>1 % FIXME this is strictly only true for jackknife, otherwise other bias is needed
+  if hasjack
     bias = (n - 1).^2;
   else
     bias = 1;

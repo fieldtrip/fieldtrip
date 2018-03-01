@@ -442,19 +442,19 @@ if autoadd>0 && ~status
   
   % for linux computers in the Donders Centre for Cognitive Neuroimaging
   prefix = '/home/common/matlab';
-  if ~status && isfolder(prefix)
+  if ~status && isdir(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
   
   % for windows computers in the Donders Centre for Cognitive Neuroimaging
   prefix = 'h:\common\matlab';
-  if ~status && isfolder(prefix)
+  if ~status && isdir(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
   
   % use the MATLAB subdirectory in your homedirectory, this works on linux and mac
   prefix = fullfile(getenv('HOME'), 'matlab');
-  if ~status && isfolder(prefix)
+  if ~status && isdir(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
   
@@ -586,6 +586,9 @@ v = str2num([token{:}{:}]);
 % helper function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function status = has_license(toolbox_name)
+% NOTE: this explicitly checks out a license, which may be suboptimal in
+% terms of license use. Consider using the option 'test', but this needs to
+% be checked with respect to backward compatibility first
 status = license('checkout', toolbox_name)==1;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -37,7 +37,7 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 %
 % The configuration can contain the following options
 %   cfg.method         = string representing the method for placing the electrodes
-%                        'mri'             interactively locate electrodes in a MRI or CT scan
+%                        'volume'          interactively locate electrodes on three orthogonal slices of a MRI or CT scan
 %                        'headshape'       interactively locate electrodes on a head surface
 %                        '1020'            automatically place electrodes on a head surface
 %

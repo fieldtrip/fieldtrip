@@ -114,7 +114,7 @@ else
   
   % estimate the contribution of the basis functions
   % beta = dat(:,begsample:endsample)/x(:,begsample:endsample); <-this leads to numerical issues, even in simple examples
-  invxcov = inv(x(:,usesamples)*x(:,usesamples)');
+  invxcov = pinv(x(:,usesamples)*x(:,usesamples)');
   beta    = dat(:,usesamples)*x(:,usesamples)'*invxcov;
 end
 
