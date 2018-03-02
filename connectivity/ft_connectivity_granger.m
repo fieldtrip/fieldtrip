@@ -174,7 +174,7 @@ switch method
           indx1 = 1:n1;
           indx1_  = (1:ntot)'; indx1_(indx1) = [];
           indx2   = n1+(1:n2);
-          indx12_ = (1:ntot)'; indx12_([indx1;indx2]) = []; 
+          indx12_ = (1:ntot)'; indx12_([indx1(:);indx2(:)]) = []; 
           
           for kk = 1:n
             tmpZ = reshape(Z(kk,indx,indx), [ntot ntot]);
