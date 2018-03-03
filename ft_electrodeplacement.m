@@ -37,9 +37,9 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 %
 % The configuration can contain the following options
 %   cfg.method         = string representing the method for placing the electrodes
-%                        'volume'          interactively locate electrodes on three orthogonal slices of a MRI or CT scan
+%                        'volume'          interactively locate electrodes on three orthogonal slices of a volumetric MRI or CT scan
 %                        'headshape'       interactively locate electrodes on a head surface
-%                        '1020'            automatically place electrodes on a head surface
+%                        '1020'            automatically locate electrodes on a head surface according to the 10-20 system
 %
 % The following options apply to the mri method
 %   cfg.parameter      = string, field in data (default = 'anatomy' if present in data)
@@ -63,7 +63,7 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 %
 % See also FT_ELECTRODEREALIGN, FT_VOLUMEREALIGN, FT_VOLUMESEGMENT, FT_PREPARE_MESH
 
-% Copyright (C) 2015-2017, Arjen Stolk, Sandon Griffin & Robert Oostenveld
+% Copyright (C) 2015-2018, Arjen Stolk, Sandon Griffin & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -129,6 +129,8 @@ if isempty(cfg.method) && ~isempty(varargin)
       cfg.method = 'volume';
     case 'mesh'
       cfg.method = 'headshape';
+    case 'source+mesh'
+      cfg.method = 'headshape';
   end
 end
 
@@ -143,8 +145,74 @@ switch cfg.method
     headshape = ft_checkdata(headshape, 'hascoordsys', 'yes');
 end
 
+% set-up channels labels if possible
+chanlabel = {}; chanstring = {};
+markerlab = {}; markerpos = {};
+if ~isempty(cfg.elec) % re-use previously placed (cfg.elec) electrodes
+  for e = 1:numel(cfg.elec.label)
+    chanlabel{end+1,1} = cfg.elec.label{e};
+    chanstring{end+1} = ['<HTML><FONT color="black">' cfg.elec.label{e} '</FONT></HTML>']; % hmtl'ize
+    
+    markerlab{end+1,1} = cfg.elec.label{e};
+    markerpos{end+1,1} = cfg.elec.elecpos(e,:);
+  end
+end
+if ~isempty(cfg.channel) % use prespecified (cfg.channel) electrode labels
+  for c = 1:numel(cfg.channel)
+    if ~ismember(cfg.channel{c}, chanlabel) % avoid overlap between cfg.channel and elec.label
+      chanlabel{end+1,1} = cfg.channel{c};
+      chanstring{end+1} = ['<HTML><FONT color="silver">' cfg.channel{c} '</FONT></HTML>']; % hmtl'ize
+      
+      markerlab{end+1,1} = {};
+      markerpos{end+1,1} = zeros(0,3);
+    end
+  end
+end
+if isempty(cfg.elec) && isempty(cfg.channel) % create electrode labels on-the-fly
+  for c = 1:300
+    chanlabel{end+1,1} = sprintf('%d', c);
+    chanstring{end+1} = ['<HTML><FONT color="silver">' sprintf('%d', c) '</FONT></HTML>']; % hmtl'ize
+    
+    markerlab{end+1,1} = {};
+    markerpos{end+1,1} = zeros(0,3);
+  end
+end
+
+% draw the user-interfaces
 switch cfg.method
   case 'headshape'
+    
+    % start building the figure
+    h = figure(...
+      'Name', mfilename,...
+      'Units', 'normalized', ...
+      'Color', [1 1 1], ...
+      'Visible', 'on');
+    set(h, 'windowbuttondownfcn', @cb_buttonpress);
+    set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
+    set(h, 'windowkeypressfcn',   @cb_keyboard);
+    set(h, 'CloseRequestFcn',     @cb_cleanup);
+    set(h, 'renderer', cfg.renderer);
+    
+    % electrode listbox
+    h1 = uicontrol('Style', 'listbox', ...
+      'Parent', h, ...
+      'Value', [], 'Min', 0, 'Max', numel(chanstring), ...
+      'Units', 'normalized', ...
+      'FontSize', 12, ...
+      'Position', [.8 0.001 .2 .5], ...
+      'Callback', @cb_eleclistbox, ...
+      'String', chanstring);
+    
+    h8 = uicontrol('Style', 'checkbox',...
+      'Parent', h, ...
+      'Value', 0, ...
+      'String', 'Labels',...
+      'Units', 'normalized', ...
+      'Position', [.8 0.6 .2 .05],...
+      'BackgroundColor', [1 1 1], ...
+      'HandleVisibility', 'on', ...
+      'Callback', @cb_labelsbutton);
     
     % give the user instructions
     disp('Use the mouse to click on the desired electrode positions');
@@ -153,35 +221,57 @@ switch cfg.method
     disp('Press "+/-" to zoom in/out');
     disp('Press "w/a/s/d" to rotate');
     disp('Press "q" when you are done');
-    % open a figure
-    figure;
-    % plot the faces of the 2D or 3D triangulation
     
-    if isfield(headshape, 'color');
+    % plot the faces of the 2D or 3D triangulation
+    if isfield(headshape, 'color')
       skin = 'none';
       ft_plot_mesh(headshape);
+      view([90, 0]);
     else
-      skin = [255 213 119]/255;
-      ft_plot_mesh(headshape, 'facecolor', skin, 'EdgeColor', 'none', 'facealpha',1);
+      ft_plot_mesh(headshape, 'facecolor', 'skin', 'EdgeColor', 'none', 'facealpha',1);
       lighting gouraud
-      material shiny
-      camlight
+      material dull
+      lightangle(0, 90);
+      alpha 0.9
     end
     
-    % rotate3d on
-    xyz = ft_select_point3d(headshape, 'nearest', false, 'multiple', true, 'marker', '*');
-    numelec = size(xyz, 1);
+    % create structure to be passed to gui
+    opt               = [];
+    opt.method        = 'headshape'; % this is to use the same functionalities across volume and headshape
+    opt.headshape     = headshape;
+    opt.label         = chanlabel;
+    opt.axes          = [h1 h8];
+    opt.mainfig       = h;
+    opt.quit          = false;
+    opt.init          = true;
+    opt.pos           = [0 0 0]; % middle of the scan, head coordinates (FIXME: this might mess up vertex findng, being an anchor)
+    opt.showcrosshair = true;
+    opt.showlabels    = false;
+    opt.showmarkers   = true;
+    opt.markerlab     = markerlab;
+    opt.markerpos     = markerpos;
+    opt.markerdist    = cfg.markerdist; % hidden option
     
-    % construct the output electrode structure
+    setappdata(h, 'opt', opt);
+    
+    while(opt.quit==0)
+      uiwait(h);
+      opt = getappdata(h, 'opt');
+    end
+    delete(h);
+    
+    % collect the results
     elec = keepfields(headshape, {'unit', 'coordsys'});
-    elec.elecpos = xyz;
-    for i=1:numelec
-      try
-        elec.label{i} = cfg.channel{i,1};
-      catch
-        elec.label{i} = sprintf('%d', i);
+    elec.label    = {};
+    elec.elecpos  = [];
+    for i=1:length(opt.markerlab)
+      if ~isempty(opt.markerlab{i,1})
+        elec.label = [elec.label; opt.markerlab{i,1}];
+        elec.elecpos = [elec.elecpos; opt.markerpos{i,1}];
       end
     end
+    elec.chanpos = elec.elecpos;
+    elec.tra = eye(size(elec.elecpos,1));
     
   case 'volume'
     
@@ -298,38 +388,6 @@ switch cfg.method
     %     'Background', java.awt.Color.white, 'StateChangedCallback', @cb_intensityslider);
     
     % electrode listbox
-    chanlabel = {}; chanstring = {};
-    markerlab = {}; markerpos = {};
-    if ~isempty(cfg.elec) % re-use previously placed (cfg.elec) electrodes
-      for e = 1:numel(cfg.elec.label)
-        chanlabel{end+1,1} = cfg.elec.label{e};
-        chanstring{end+1} = ['<HTML><FONT color="black">' cfg.elec.label{e} '</FONT></HTML>']; % hmtl'ize
-        
-        markerlab{end+1,1} = cfg.elec.label{e};
-        markerpos{end+1,1} = cfg.elec.elecpos(e,:);
-      end
-    end
-    if ~isempty(cfg.channel) % use prespecified (cfg.channel) electrode labels
-      for c = 1:numel(cfg.channel)
-        if ~ismember(cfg.channel{c}, chanlabel) % avoid overlap between cfg.channel and elec.label
-          chanlabel{end+1,1} = cfg.channel{c};
-          chanstring{end+1} = ['<HTML><FONT color="silver">' cfg.channel{c} '</FONT></HTML>']; % hmtl'ize
-          
-          markerlab{end+1,1} = {};
-          markerpos{end+1,1} = zeros(0,3);
-        end
-      end
-    end
-    if isempty(cfg.elec) && isempty(cfg.channel) % create electrode labels on-the-fly
-      for c = 1:150
-        chanlabel{end+1,1} = sprintf('%d', c);
-        chanstring{end+1} = ['<HTML><FONT color="silver">' sprintf('%d', c) '</FONT></HTML>']; % hmtl'ize
-        
-        markerlab{end+1,1} = {};
-        markerpos{end+1,1} = zeros(0,3);
-      end
-    end
-    
     h6 = uicontrol('Style', 'listbox', ...
       'Parent', h, ...
       'Value', [], 'Min', 0, 'Max', numel(chanstring), ...
@@ -434,6 +492,7 @@ switch cfg.method
     
     % create structure to be passed to gui
     opt               = [];
+    opt.method        = 'volume'; % this is to use the same functionalities across volume and headshape
     opt.label         = chanlabel;
     opt.axes          = [mri{1}.axes(1) mri{1}.axes(2) mri{1}.axes(3) h4 h5 h6 h7 h8 h9 h10 hscatter hscan];
     opt.mainfig       = h;
@@ -735,7 +794,7 @@ if opt.scatter % radiobutton on
     set(opt.scatterfig, 'CloseRequestFcn', @cb_scattercleanup);
     opt.scatterfig_h1 = axes('position', [0.02 0.02 0.96 0.96]);
     set(opt.scatterfig_h1, 'DataAspectRatio', get(opt.axes(1), 'DataAspectRatio'));
-    axis square; axis tight; axis off; view([0 0]);
+    axis square; axis tight; axis off; view([90 0]);
     xlabel('x'); ylabel('y'); zlabel('z');
     
     % scatter range sliders
@@ -776,7 +835,7 @@ if opt.scatter % radiobutton on
     set(opt.scatterfig_dcm, ...
       'DisplayStyle', 'datatip', ...
       'SnapToDataVertex', 'off', ...
-      'Enable', 'off', ...
+      'Enable', 'on', ...
       'UpdateFcn', @cb_scatter_dcm);
     
     % draw the crosshair for the first time
@@ -831,6 +890,36 @@ if opt.scatter % radiobutton on
   end
   
 end
+setappdata(h, 'opt', opt);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_headshaperedraw(h, eventdata)
+
+h   = getparent(h);
+opt = getappdata(h, 'opt');
+
+figure(h); % make current figure
+
+delete(findobj(h, 'Type', 'line')); % remove all lines and markers
+delete(findobj(h, 'Type', 'text')); % remove all labels
+
+if opt.showmarkers
+  idx = find(~cellfun(@isempty,opt.markerlab)); % find the non-empty markers
+  if ~isempty(idx)
+    elec = [];
+    elec.elecpos = cat(1, opt.markerpos{idx});
+    elec.label   = cat(1, opt.markerlab{idx});
+    
+    if opt.showlabels
+      ft_plot_sens(elec, 'label', 'label');
+    else
+      ft_plot_sens(elec, 'label', 'off');
+    end
+  end % if not empty
+end % if showmarkers
+
 setappdata(h, 'opt', opt);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -975,7 +1064,7 @@ switch key
     % add point to a list
     l1 = get(get(gca, 'xlabel'), 'string');
     l2 = get(get(gca, 'ylabel'), 'string');
-    switch l1,
+    switch l1
       case 'i'
         xc = d1;
       case 'j'
@@ -983,7 +1072,7 @@ switch key
       case 'k'
         zc = d1;
     end
-    switch l2,
+    switch l2
       case 'i'
         xc = d2;
       case 'j'
@@ -1022,14 +1111,17 @@ function cb_buttonpress(h, eventdata)
 
 h = getparent(h);
 cb_getposition(h);
-switch get(h, 'selectiontype')
-  case 'normal'
-    % just update to new position, nothing else to be done here
-    cb_redraw(h);
-  case 'alt'
-    set(h, 'windowbuttonmotionfcn', @cb_tracemouse);
-    cb_redraw(h);
-  otherwise
+opt = getappdata(h, 'opt');
+if strcmp(opt.method, 'volume') % only redraw volume/orthoplot
+  switch get(h, 'selectiontype')
+    case 'normal'
+      % just update to new position, nothing else to be done here
+      cb_redraw(h);
+    case 'alt'
+      set(h, 'windowbuttonmotionfcn', @cb_tracemouse);
+      cb_redraw(h);
+    otherwise
+  end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1055,26 +1147,51 @@ function cb_getposition(h, eventdata)
 
 h   = getparent(h);
 opt = getappdata(h, 'opt');
-curr_ax = get(h,       'currentaxes');
-tag = get(curr_ax, 'tag');
-if ~isempty(tag) && ~opt.init
-  pos     = mean(get(curr_ax, 'currentpoint'));
-  if strcmp(tag, 'ik')
-    opt.pos([1 3])  = pos([1 3]);
-    opt.update = [1 1 1];
-  elseif strcmp(tag, 'ij')
-    opt.pos([1 2])  = pos([1 2]);
-    opt.update = [1 1 1];
-  elseif strcmp(tag, 'jk')
-    opt.pos([2 3])  = pos([2 3]);
-    opt.update = [1 1 1];
-  end
-  opt.pos = min(opt.pos(:)', opt.axis([2 4 6])); % avoid out-of-bounds
-  opt.pos = max(opt.pos(:)', opt.axis([1 3 5]));
-end
 
-if opt.magradius>0 % magnetize
-  opt = magnetize(opt);
+if strcmp(opt.method, 'volume')
+  curr_ax = get(h,       'currentaxes');
+  tag = get(curr_ax, 'tag');
+  if ~isempty(tag) && ~opt.init
+    pos     = mean(get(curr_ax, 'currentpoint'));
+    if strcmp(tag, 'ik')
+      opt.pos([1 3])  = pos([1 3]);
+      opt.update = [1 1 1];
+    elseif strcmp(tag, 'ij')
+      opt.pos([1 2])  = pos([1 2]);
+      opt.update = [1 1 1];
+    elseif strcmp(tag, 'jk')
+      opt.pos([2 3])  = pos([2 3]);
+      opt.update = [1 1 1];
+    end
+    opt.pos = min(opt.pos(:)', opt.axis([2 4 6])); % avoid out-of-bounds
+    opt.pos = max(opt.pos(:)', opt.axis([1 3 5]));
+  end
+  if opt.magradius>0 % magnetize
+    opt = magnetize(opt);
+  end
+elseif strcmp(opt.method, 'headshape')
+  h2 = get(gca, 'children'); % get the object handles
+  iscorrect = false(size(h2));
+  for i=1:length(h2) % select the correct objects
+    try
+      pos = get(h2(i),'vertices');
+      tri = get(h2(i),'faces');
+      if ~isempty(opt.headshape) && isequal(opt.headshape.pos, pos) && isequal(opt.headshape.tri, tri)
+        % it is the same object that the user has plotted before
+        iscorrect(i) = true;
+      elseif isempty(opt.headshape)
+        % assume that it is the same object that the user has plotted before
+        iscorrect(i) = true;
+      end
+    end
+  end
+  h2 = h2(iscorrect);
+  opt.pos = select3d(h2)'; % enforce column direction
+  if ~isempty(opt.pos)
+    delete(findobj(h,'Type','Line','Marker','+','Color',[0 0 0])) % remove previous crosshairs
+    hold on; plot3(opt.pos(:,1),opt.pos(:,2),opt.pos(:,3), 'marker', '+', 'linestyle', 'none', 'color', [0 0 0]); % plot the crosshair
+  end
+  %opt.pos = ft_select_point3d(opt.headshape, 'nearest', true, 'multiple', false, 'marker', '+'); % FIXME: this gets stuck in a loop waiting for any abritrary buttonpress
 end
 setappdata(h, 'opt', opt);
 
@@ -1209,7 +1326,11 @@ if ~isempty(elecidx)
   set(h6, 'ListboxTop', listtopidx); % ensure listbox does not move upon label selec
   opt.redrawmarker = 1;
   setappdata(h, 'opt', opt);
-  cb_redraw(h);
+  if strcmp(opt.method, 'volume')
+    cb_redraw(h);
+  elseif strcmp(opt.method, 'headshape')
+    cb_headshaperedraw(h);
+  end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1252,7 +1373,7 @@ try
     ix = (X(:)' * cubic(:));
     iy = (Y(:)' * cubic(:));
     iz = (Z(:)' * cubic(:));
-  elseif strcmp(opt.magtype, 'peakweighted')    
+  elseif strcmp(opt.magtype, 'peakweighted')
     % find the peak intensity voxel and then the center of mass
     [val, idx] = max(cubic(:));
     [ix, iy, iz] = ind2sub(size(cubic), idx);
@@ -1263,11 +1384,11 @@ try
     cubic = opt.ana(xsel, ysel, zsel);
     dim = size(cubic);
     [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
-    cubic = cubic./sum(cubic(:));  
+    cubic = cubic./sum(cubic(:));
     ix = (X(:)' * cubic(:));
     iy = (Y(:)' * cubic(:));
     iz = (Z(:)' * cubic(:));
-  elseif strcmp(opt.magtype, 'troughweighted')    
+  elseif strcmp(opt.magtype, 'troughweighted')
     % find the peak intensity voxel and then the center of mass
     [val, idx] = min(cubic(:));
     [ix, iy, iz] = ind2sub(size(cubic), idx);
@@ -1279,13 +1400,13 @@ try
     dim = size(cubic);
     [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
     cubic = 1-cubic;
-    cubic = cubic./(sum(cubic(:)));  
+    cubic = cubic./(sum(cubic(:)));
     ix = (X(:)' * cubic(:));
     iy = (Y(:)' * cubic(:));
     iz = (Z(:)' * cubic(:));
   end
   % adjust the indices for the selection
-  voxadj = [ix, iy, iz] + vox - opt.magradius - 1; 
+  voxadj = [ix, iy, iz] + vox - opt.magradius - 1;
   opt.pos = ft_warp_apply(opt.mri{opt.currmri}.transform, voxadj);
   fprintf('==================================================================================\n');
   fprintf(' clicked at [%.1f %.1f %.1f], %s magnetized adjustment [%.1f %.1f %.1f] %s\n', pos, opt.magtype, opt.pos-pos, opt.mri{opt.currmri}.unit);
@@ -1303,7 +1424,11 @@ opt = getappdata(h, 'opt');
 opt.showlabels = get(h8, 'value');
 opt.redrawmarker = 1;
 setappdata(h, 'opt', opt);
-cb_redraw(h);
+if strcmp(opt.method, 'volume')
+  cb_redraw(h);
+elseif strcmp(opt.method, 'headshape')
+  cb_headshaperedraw(h);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -1387,10 +1512,10 @@ cb_scatterredraw(h);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function dcm_txt = cb_scatter_dcm(hObject, eventdata)
 
-h = findobj('type', 'figure', 'name',mfilename);
+h = findobj('type', 'figure', 'name', mfilename);
 opt = getappdata(h, 'opt');
 opt.pos = get(eventdata, 'Position'); % current datamarker position
-if opt.magradius>0 % magnetize
+if strcmp(opt.method, 'volume') && opt.magradius>0 % magnetize
   opt = magnetize(opt);
 end
 dcm_txt = ['']; % ['index = [' num2str(opt.pos) ']'];
@@ -1398,7 +1523,11 @@ dcm_txt = ['']; % ['index = [' num2str(opt.pos) ']'];
 if strcmp(get(opt.scatterfig_dcm, 'Enable'), 'on') % update appl and figures
   setappdata(h, 'opt', opt);
   figure(h);
-  cb_redraw(h);
+  if strcmp(opt.method, 'volume')
+    cb_redraw(h);
+  elseif strcmp(opt.method, 'headshape')
+    cb_headshaperedraw(h);
+  end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1455,3 +1584,383 @@ opt.init = true;
 
 setappdata(h, 'opt', opt);
 cb_redraw(h);
+
+
+
+
+% FIXME: this function is located in plotting/private, hence not accessible
+% to ft_electrodeplacement
+function [pout, vout, viout, facevout, faceiout]  = select3d(obj)
+%SELECT3D(H) Determines the selected point in 3-D data space.
+%  P = SELECT3D determines the point, P, in data space corresponding
+%  to the current selection position. P is a point on the first
+%  patch or surface face intersected along the selection ray. If no
+%  face is encountered along the selection ray, P returns empty.
+%
+%  P = SELECT3D(H) constrains selection to graphics handle H and,
+%  if applicable, any of its children. H can be a figure, axes,
+%  patch, or surface object.
+%
+%  [P V] = SELECT3D(...), V is the closest face or line vertex
+%  selected based on the figure's current object.
+%
+%  [P V VI] = SELECT3D(...), VI is the index into the object's
+%  x,y,zdata properties corresponding to V, the closest face vertex
+%  selected.
+%
+%  [P V VI FACEV] = SELECT3D(...), FACE is an array of vertices
+%  corresponding to the face polygon containing P and V.
+%
+%  [P V VI FACEV FACEI] = SELECT3D(...), FACEI is the row index into
+%  the object's face array corresponding to FACE. For patch
+%  objects, the face array can be obtained by doing
+%  get(mypatch,'faces'). For surface objects, the face array
+%  can be obtained from the output of SURF2PATCH (see
+%  SURF2PATCH for more information).
+%
+%  RESTRICTIONS:
+%  SELECT3D supports surface, patch, or line object primitives. For surface
+%  and patches, the algorithm assumes non-self-intersecting planar faces.
+%  For line objects, the algorithm always returns P as empty, and V will
+%  be the closest vertex relative to the selection point.
+%
+%  Example:
+%
+%  h = surf(peaks);
+%  zoom(10);
+%  disp('Click anywhere on the surface, then hit return')
+%  pause
+%  [p v vi face facei] = select3d;
+%  marker1 = line('xdata',p(1),'ydata',p(2),'zdata',p(3),'marker','o',...
+%                 'erasemode','xor','markerfacecolor','k');
+%  marker2 = line('xdata',v(1),'ydata',v(2),'zdata',v(3),'marker','o',...
+%                 'erasemode','xor','markerfacecolor','k');
+%  marker2 = line('erasemode','xor','xdata',face(1,:),'ydata',face(2,:),...
+%                 'zdata',face(3,:),'linewidth',10);
+%  disp(sprintf('\nYou clicked at\nX: %.2f\nY: %.2f\nZ: %.2f',p(1),p(2),p(3)'))
+%  disp(sprintf('\nThe nearest vertex is\nX: %.2f\nY: %.2f\nZ: %.2f',v(1),v(2),v(3)'))
+%
+%  Version 1.2 2-15-02
+%  Copyright Joe Conti 2002
+%  Send comments to jconti@mathworks.com
+%
+%  See also GINPUT, GCO.
+
+% Output variables
+pout = [];
+vout = [];
+viout = [];
+facevout = [];
+faceiout = [];
+
+% other variables
+ERRMSG = 'Input argument must be a valid graphics handle';
+isline = false;
+isperspective = false;
+
+% Parse input arguments
+if nargin<1
+  obj = gco;
+end
+
+if isempty(obj) || ~ishandle(obj) || length(obj)~=1
+  ft_error(ERRMSG);
+end
+
+% if obj is a figure
+if strcmp(get(obj,'type'),'figure')
+  fig = obj;
+  ax = get(fig,'currentobject');
+  currobj = get(fig,'currentobject');
+  
+  % bail out if not a child of the axes
+  if ~strcmp(get(get(currobj,'parent'),'type'),'axes')
+    return;
+  end
+  
+  % if obj is an axes
+elseif strcmp(get(obj,'type'),'axes')
+  ax = obj;
+  fig = get(ax,'parent');
+  currobj = get(fig,'currentobject');
+  currax = get(currobj,'parent');
+  
+  % Bail out if current object is under an unspecified axes
+  if ~isequal(ax,currax)
+    return;
+  end
+  
+  % if obj is child of axes
+elseif strcmp(get(get(obj,'parent'),'type'),'axes')
+  currobj = obj;
+  ax = get(obj,'parent');
+  fig = get(ax,'parent');
+  
+  % Bail out
+else
+  return
+end
+
+axchild = currobj;
+obj_type = get(axchild,'type');
+is_perspective = strcmp(get(ax,'projection'),'perspective');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Get projection transformation %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% syntax not supported in old versions of MATLAB
+[a b] = view(ax);
+xform = viewmtx(a,b);
+if is_perspective
+  ft_warning('%s does not support perspective axes projection.',mfilename);
+  d = norm(camtarget(ax)-campos(ax))
+  P = [1 0 0 0;
+    0 1 0 0;
+    0 0 1 0;
+    0 0 -1/d 1];
+  xform = P*xform;
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Get vertex, face, and current point data %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+cp = get(ax,'currentpoint')';
+
+% If surface object
+if strcmp(obj_type,'surface')
+  % Get surface face and vertices
+  fv = surf2patch(axchild);
+  vert = fv.vertices;
+  faces = fv.faces;
+  
+  % If patch object
+elseif strcmp(obj_type,'patch')
+  vert = get(axchild,'vertices');
+  faces = get(axchild,'faces');
+  
+  % If line object
+elseif strcmp(obj_type,'line')
+  xdata = get(axchild,'xdata');
+  ydata = get(axchild,'ydata');
+  zdata = get(axchild,'zdata');
+  vert = [xdata', ydata',zdata'];
+  faces = [];
+  isline = true;
+  
+  % Ignore all other objects
+else
+  return;
+end
+
+% Add z if empty
+if size(vert,2)==2
+  vert(:,3) = zeros(size(vert(:,2)));
+  if isline
+    zdata = vert(:,3);
+  end
+end
+
+% NaN and Inf check
+nan_inf_test1 = isnan(faces) | isinf(faces);
+nan_inf_test2 = isnan(vert) | isinf(vert);
+if any(nan_inf_test1(:)) || any(nan_inf_test2(:))
+  ft_warning('%s does not support NaNs or Infs in face/vertex data.',mfilename);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Normalize for data aspect ratio %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+dar = get(ax,'DataAspectRatio');
+
+ncp(1,:) = cp(1,:)./dar(1);
+ncp(2,:) = cp(2,:)./dar(2);
+ncp(3,:) = cp(3,:)./dar(3);
+ncp(4,:) = ones(size(ncp(3,:)));
+
+nvert(:,1) = vert(:,1)./dar(1);
+nvert(:,2) = vert(:,2)./dar(2);
+nvert(:,3) = vert(:,3)./dar(3);
+nvert(:,4) = ones(size(nvert(:,3)));
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Transform data to view space %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+xvert = xform*nvert';
+xcp = xform*ncp;
+
+if is_perspective % normalize 4th dimension
+  xcp(1,:) = xcp(1,:)./xcp(4,:);
+  xcp(2,:) = xcp(2,:)./xcp(4,:);
+  xcp(3,:) = xcp(3,:)./xcp(4,:);
+  xcp(4,:) = xcp(4,:)./xcp(4,:);
+  
+  xvert(1,:) = xvert(1,:)./xvert(4,:);
+  xvert(2,:) = xvert(2,:)./xvert(4,:);
+  xvert(3,:) = xvert(3,:)./xvert(4,:);
+  xvert(4,:) = xvert(4,:)./xvert(4,:);
+end
+
+% Ignore 3rd & 4th dimensions for crossing test
+xvert(4,:) = [];
+xvert(3,:) = [];
+xcp(4,:) = [];
+xcp(3,:) = [];
+
+% For debugging
+% if 0
+%     ax1 = getappdata(ax,'testselect3d');
+%     if isempty(ax1) | ~ishandle(ax1)
+%         fig = figure;
+%         ax1 = axes;
+%         axis(ax1,'equal');
+%         setappdata(ax,'testselect3d',ax1);
+%     end
+%     cla(ax1);
+%     patch('parent',ax1,'faces',faces,'vertices',xvert','facecolor','none','edgecolor','k');
+%     line('parent',ax1,'xdata',xcp(1,2),'ydata',xcp(2,2),'zdata',0,'marker','o','markerfacecolor','r','erasemode','xor');
+% end
+
+% Translate vertices so that the selection point is at the origin.
+xvert(1,:) = xvert(1,:) - xcp(1,2);
+xvert(2,:) = xvert(2,:) - xcp(2,2);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% simple algorithm (almost naive algorithm!) for line objects %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if isline
+  
+  % Ignoring line width and marker attributes, find closest
+  % vertex in 2-D view space.
+  d = xvert(1,:).*xvert(1,:) + xvert(2,:).*xvert(2,:);
+  [val i] = min(d);
+  i = i(1); % enforce only one output
+  
+  % Assign output
+  vout = [ xdata(i) ydata(i) zdata(i)];
+  viout = i;
+  
+  return % Bail out early
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Perform 2-D crossing test (Jordan Curve Theorem) %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Find all vertices that have y components less than zero
+vert_with_negative_y = zeros(size(faces));
+face_y_vert = xvert(2,faces);
+ind_vert_with_negative_y = find(face_y_vert<0);
+vert_with_negative_y(ind_vert_with_negative_y) = true;
+
+% Find all the line segments that span the x axis
+is_line_segment_spanning_x = abs(diff([vert_with_negative_y, vert_with_negative_y(:,1)],1,2));
+
+% Find all the faces that have line segments that span the x axis
+ind_is_face_spanning_x = find(any(is_line_segment_spanning_x,2));
+
+% Ignore data that doesn't span the x axis
+candidate_faces = faces(ind_is_face_spanning_x,:);
+vert_with_negative_y = vert_with_negative_y(ind_is_face_spanning_x,:);
+is_line_segment_spanning_x = is_line_segment_spanning_x(ind_is_face_spanning_x,:);
+
+% Create line segment arrays
+pt1 = candidate_faces;
+pt2 = [candidate_faces(:,2:end), candidate_faces(:,1)];
+
+% Point 1
+x1 = reshape(xvert(1,pt1),size(pt1));
+y1 = reshape(xvert(2,pt1),size(pt1));
+
+% Point 2
+x2 = reshape(xvert(1,pt2),size(pt2));
+y2 = reshape(xvert(2,pt2),size(pt2));
+
+% Cross product of vector to origin with line segment
+cross_product_test = -x1.*(y2-y1) > -y1.*(x2-x1);
+
+% Find all line segments that cross the positive x axis
+crossing_test = (cross_product_test==vert_with_negative_y) & is_line_segment_spanning_x;
+
+% If the number of line segments is odd, then we intersected the polygon
+s = sum(crossing_test,2);
+s = mod(s,2);
+ind_intersection_test = find(s~=0);
+
+% Bail out early if no faces were hit
+if isempty(ind_intersection_test)
+  return;
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Plane/ray intersection test %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Perform plane/ray intersection with the faces that passed
+% the polygon intersection tests. Grab the only the first
+% three vertices since that is all we need to define a plane).
+% assuming planar polygons.
+candidate_faces = candidate_faces(ind_intersection_test,1:3);
+candidate_faces = reshape(candidate_faces',1,numel(candidate_faces));
+vert = vert';
+candidate_facev = vert(:,candidate_faces);
+candidate_facev = reshape(candidate_facev,3,3,length(ind_intersection_test));
+
+% Get three contiguous vertices along polygon
+v1 = squeeze(candidate_facev(:,1,:));
+v2 = squeeze(candidate_facev(:,2,:));
+v3 = squeeze(candidate_facev(:,3,:));
+
+% Get normal to face plane
+vec1 = v2-v1;
+vec2 = v3-v2;
+crs = cross(vec1,vec2);
+mag = sqrt(sum(crs.*crs));
+nplane(1,:) = crs(1,:)./mag;
+nplane(2,:) = crs(2,:)./mag;
+nplane(3,:) = crs(3,:)./mag;
+
+% Compute intersection between plane and ray
+cp1 = cp(:,1);
+cp2 = cp(:,2);
+d = cp2-cp1;
+dp = dot(-nplane,v1);
+
+%A = dot(nplane,d);
+A(1,:) = nplane(1,:).*d(1);
+A(2,:) = nplane(2,:).*d(2);
+A(3,:) = nplane(3,:).*d(3);
+A = sum(A,1);
+
+%B = dot(nplane,pt1)
+B(1,:) = nplane(1,:).*cp1(1);
+B(2,:) = nplane(2,:).*cp1(2);
+B(3,:) = nplane(3,:).*cp1(3);
+B = sum(B,1);
+
+% Distance to intersection point
+t = (-dp-B)./A;
+
+% Find "best" distance (smallest)
+[tbest, ind_best] = min(t);
+
+% Determine intersection point
+pout = cp1 + tbest .* d;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Assign additional output variables %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if nargout>1
+  
+  % Get face index and vertices
+  faceiout = ind_is_face_spanning_x(ind_intersection_test(ind_best));
+  facevout = vert(:,faces(faceiout,:));
+  
+  % Determine index of closest face vertex intersected
+  facexv = xvert(:,faces(faceiout,:));
+  dist = sqrt(facexv(1,:).*facexv(1,:) +  facexv(2,:).*facexv(2,:));
+  min_index = (dist==min(dist));
+  
+  % Get closest vertex index and vertex
+  viout = faces(faceiout,min_index);
+  vout = vert(:,viout);
+end
