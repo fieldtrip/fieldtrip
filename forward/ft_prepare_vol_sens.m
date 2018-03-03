@@ -419,7 +419,7 @@ elseif iseeg
       end
       sens.elecpos = pos;
       
-    case {'bem', 'dipoli', 'asa', 'bemcp', 'openmeeg'}
+    case {'bem', 'dipoli', 'asa', 'bemcp'}
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % do postprocessing of volume and electrodes in case of BEM model
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -466,23 +466,19 @@ elseif iseeg
           % this speeds up the subsequent repeated leadfield computations
           fprintf('combining electrode transfer and system matrix\n');
           
-          if strcmp(ft_voltype(headmodel), 'openmeeg')
-            % check that the external toolbox is present
-            ft_hastoolbox('openmeeg', 1);
-            nb_points_external_surface = size(headmodel.bnd(headmodel.skin_surface).pos,1);
-            headmodel.mat = headmodel.mat((end-nb_points_external_surface+1):end,:);
-            headmodel.mat = interp(:,1:nb_points_external_surface) * headmodel.mat;
-            
-          else
-            % convert to sparse matrix to speed up the subsequent multiplication
-            interp  = sparse(interp);
-            headmodel.mat = interp * headmodel.mat;
-            % ensure that the model potential will be average referenced
-            avg = mean(headmodel.mat, 1);
-            headmodel.mat = headmodel.mat - repmat(avg, size(headmodel.mat,1), 1);
-          end
+          % convert to sparse matrix to speed up the subsequent multiplication
+          interp  = sparse(interp);
+          headmodel.mat = interp * headmodel.mat;
+          % ensure that the model potential will be average referenced
+          avg = mean(headmodel.mat, 1);
+          headmodel.mat = headmodel.mat - repmat(avg, size(headmodel.mat,1), 1);
         end
       end
+    case  'openmeeg' 
+      if ~isfield(headmodel, 'tra') && (isfield(headmodel, 'mat') && ~isempty(headmodel.mat))
+            SensInterPol=openmeeg_sensinterpolmat(sens,headmodel);
+            headmodel.mat =SensInterPol * headmodel.mat;
+      end  
       
     case 'fns'
       if isfield(headmodel,'bnd')
