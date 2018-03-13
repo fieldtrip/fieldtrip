@@ -952,6 +952,19 @@ if isempty(key)
   key = '';
 end
 
+if strcmp(opt.method, 'headshape')
+  % some keyboard commands apply only to the headshape method
+  
+  switch key
+    case 'v' % camlight angle reset
+      delete(findall(h,'Type','light')) % shut out the lights
+      camlight; lighting gouraud; % add a new light from the current camera position
+    otherwise
+      % do nothing
+      
+  end % switch key
+end
+
 % the following code is largely shared with FT_SOURCEPLOT
 switch key
   case {'' 'shift+shift' 'alt-alt' 'control+control' 'command-0'}
