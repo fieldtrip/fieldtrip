@@ -337,7 +337,7 @@ switch varargin{1}
         ft_default.notification.(level) = s;
         % the remainder is fully handled by the ERROR function
         if ~isempty(msgId)
-          error(msgId, varargin{:});
+          error(state);
         else
           error(varargin{:});
         end

@@ -1,24 +1,13 @@
 function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 
-% FT_ARTIFACT_ZVALUE reads the interesting segments of data from file and
-% identifies artifacts by means of thresholding the z-transformed value
-% of the preprocessed raw data. Depending on the preprocessing options,
-% this method will be sensitive to EOG, muscle or jump artifacts.
-% This procedure only works on continuously recorded data.
+% FT_ARTIFACT_ZVALUE reads the interesting segments of data from file and identifies
+% artifacts by means of thresholding the z-transformed value of the preprocessed raw data.
+% Depending on the preprocessing options, this method will be sensitive to EOG, muscle or
+% jump artifacts.  This procedure only works on continuously recorded data.
 %
 % Use as
 %   [cfg, artifact] = ft_artifact_zvalue(cfg)
-% or
-%   [cfg, artifact] = ft_artifact_zvalue(cfg, data)
-%
-% The output argument "artifact" is a Nx2 matrix comparable to the
-% "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
-% beginsamples of an artifact period, the second column contains the
-% endsamples of the artifactperiods.
-%
-% If you are calling FT_ARTIFACT_ZVALUE with only the configuration as first
-% input argument and the data still has to be read from file, you should
-% specify
+% with the configuration options
 %   cfg.dataset     = string with the filename
 % or
 %   cfg.headerfile  = string with the filename
@@ -27,21 +16,22 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %   cfg.headerformat
 %   cfg.dataformat
 %
-% If you are calling FT_ARTIFACT_ZVALUE with also the second input argument
-% "data", then that should contain data that was already read from file
-% a call to FT_PREPROCESSING.
-%
-% If you encounter difficulties with memory usage, you can use
-%   cfg.memory = 'low' or 'high', whether to be memory or computationally efficient, respectively (default = 'high')
+% Alternatively you can use it as
+%   [cfg, artifact] = ft_artifact_zvalue(cfg, data)
+% where the input data is a structure as obtained from FT_PREPROCESSING.
 %
 % The required configuration settings are:
-%   cfg.trl
-%   cfg.continuous
+%   cfg.trl         = structure that defines the data segments of interest. See FT_DEFINETRIAL
+%   cfg.continuous  = 'yes' or 'no' whether the file contains continuous data (default   = 'yes')
+% and
 %   cfg.artfctdef.zvalue.channel
 %   cfg.artfctdef.zvalue.cutoff
 %   cfg.artfctdef.zvalue.trlpadding
 %   cfg.artfctdef.zvalue.fltpadding
 %   cfg.artfctdef.zvalue.artpadding
+%
+% If you encounter difficulties with memory usage, you can use
+%   cfg.memory = 'low' or 'high', whether to be memory or computationally efficient, respectively (default = 'high')
 %
 % The optional configuration settings (see below) are:
 %   cfg.artfctdef.zvalue.artfctpeak  = 'yes' or 'no'
@@ -106,6 +96,11 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %   cfg.artfctdef.zvalue.baselinewindow = [begin end] in seconds, the default is the complete trial
 %   cfg.artfctdef.zvalue.hilbert       = 'no' or 'yes'
 %   cfg.artfctdef.zvalue.rectify       = 'no' or 'yes'
+%
+% The output argument "artifact" is a Nx2 matrix comparable to the
+% "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
+% beginsamples of an artifact period, the second column contains the
+% endsamples of the artifactperiods.
 %
 % See also FT_REJECTARTIFACT, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG, FT_ARTIFACT_EOG,
 % FT_ARTIFACT_JUMP, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_ZVALUE

@@ -16,7 +16,7 @@ function [timelock] = ft_appendtimelock(cfg, varargin)
 %                    are allowed to still be considered compatible (default = 1e-5)
 %
 % See also FT_TIMELOCKANALYSIS, FT_DATATYPE_TIMELOCK, FT_APPENDDATA, FT_APPENDFREQ,
-% FT_APPENDSENS, FT_APPENDSOURCE
+% FT_APPENDSOURCE, FT_APPENDSENS
 
 % Copyright (C) 2011-2017, Robert Oostenveld
 %
@@ -58,8 +58,7 @@ end
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
-  % FIXME: what about timelock+comp?
-  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'timelock', 'timelock+comp'}, 'feedback', 'yes', 'hassampleinfo', 'ifmakessense');
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'timelock', 'timelock+comp'}, 'feedback', 'yes', 'hassampleinfo', 'no');
 end
 
 % set the defaults
@@ -82,7 +81,7 @@ if isempty(cfg.appenddim) || strcmp(cfg.appenddim, 'auto')
     ft_error('cfg.appenddim should be specified');
   end
 end
-fprintf('concatenating over the "%s" dimension\n', cfg.appenddim);
+ft_info('concatenating over the "%s" dimension\n', cfg.appenddim);
 
 if isempty(cfg.parameter)
   fn = fieldnames(varargin{1});

@@ -95,7 +95,7 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.hilbert       = 'no', 'abs', 'complex', 'real', 'imag', 'absreal', 'absimag' or 'angle' (default = 'no')
 %   cfg.rectify       = 'no' or 'yes' (default = 'no')
 %   cfg.precision     = 'single' or 'double' (default = 'double')
-%   cfg.absdiff       = 'no' or 'yes', computes absolute derivative (i.e.first derivative then rectify)
+%   cfg.absdiff       = 'no' or 'yes', computes absolute derivative (i.e. first derivative then rectify)
 %
 % Prperocessing options that only apply to MEG data are
 %   cfg.coordsys      = string, 'head' or 'dewar' (default = 'head')
@@ -104,7 +104,7 @@ function [data] = ft_preprocessing(cfg, data)
 % Preprocessing options that you should only use for EEG data are
 %   cfg.reref         = 'no' or 'yes' (default = 'no')
 %   cfg.refchannel    = cell-array with new EEG reference channel(s), this can be 'all' for a common average reference
-%   cfg.refmethod     = 'avg', 'median', or 'sequential' for bipolar derivation of sequential channels (default = 'avg')
+%   cfg.refmethod     = 'avg', 'median', or 'bipolar' for bipolar derivation of sequential channels (default = 'avg')
 %   cfg.implicitref   = 'label' or empty, add the implicit EEG reference as zeros (default = [])
 %   cfg.montage       = 'no' or a montage structure, see FT_APPLY_MONTAGE (default = 'no')
 %
@@ -653,10 +653,16 @@ if strcmp(cfg.updatesens, 'yes')
   if ~isempty(cfg.montage) && ~isequal(cfg.montage, 'no')
     montage = cfg.montage;
   elseif strcmp(cfg.reref, 'yes')
-    tmpcfg = keepfields(cfg, {'reref', 'implicitref', 'refchannel', 'channel'});
-    montage = ft_prepare_montage(tmpcfg, data);
+    if strcmp(cfg.refmethod, 'bipolar') || strcmp(cfg.refmethod, 'avg')
+      tmpcfg = keepfields(cfg, {'refmethod', 'implicitref', 'refchannel', 'channel'});
+      tmpcfg.showcallinfo = 'no';
+      montage = ft_prepare_montage(tmpcfg, data);
+    else
+      % do not update the sensor description
+      montage = [];
+    end
   else
-    % do not update anything
+    % do not update the sensor description
     montage = [];
   end
   
