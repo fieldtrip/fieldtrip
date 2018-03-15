@@ -1,8 +1,8 @@
 function [s, cfg] = ft_statfun_indepsamplesZcoh(cfg, dat, design)
 
-% FT_STATFUN_INDEPSAMPLESCOHZ calculates the independent samples coherence Z-statistic 
-% on the biological data in dat (the dependent variable), using the information on 
-% the independent variable (ivar) in design.
+% FT_STATFUN_INDEPSAMPLESCOHZ calculates the independent samples coherence
+% Z-statistic on the biological data in dat (the dependent variable), using the
+% information on the independent variable (ivar) in design.
 %
 % Use this function by calling one of the high-level statistics functions as
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
@@ -11,23 +11,13 @@ function [s, cfg] = ft_statfun_indepsamplesZcoh(cfg, dat, design)
 % with the following configuration option
 %   cfg.statistic = 'ft_statfun_indepsamplesZcoh'
 %
-% See FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
-%
-% For low-level use, the external interface of this function has to be
-%   [s,cfg] = ft_statfun_indepsamplesZcoh(cfg, dat, design);
-% where
-%   dat    contains the biological data, Nsamples x Nreplications
-%          dat must contain fourier representations. 
-%   design contains the independent variable (ivar), Nreplications x Nvar
-%
-% The samples-dimension of the dat-variable must be the result of a
-% reshaping-operation applied to a data structure with dimord
-% chan_(freq_time) or pos_(freq_time). The configuration must contain
-% channel labels in cfg.label or position information in cfg.pos. This
-% information is used to determine the number of channels. 
-% The dimord of the output fields is [prod(nchancmb,nfreq,ntime),1]. The
-% channel combinations are the elements of the lower diagonal of the
-% cross-spectral density matrix.
+% The samples-dimension of the dat-variable must be the result of a reshaping
+% operation applied to a data structure with dimord chan_(freq_time) or
+% pos_(freq_time). The configuration must contain channel labels in cfg.label or
+% position information in cfg.pos. This information is used to determine the number
+% of channels. The dimord of the output fields is [prod(nchancmb,nfreq,ntime),1]. The
+% channel combinations are the elements of the lower diagonal of the cross-spectral
+% density matrix.
 %
 % Configuration options
 %   cfg.computestat    = 'yes' or 'no', calculate the statistic (default='yes')
@@ -47,6 +37,8 @@ function [s, cfg] = ft_statfun_indepsamplesZcoh(cfg, dat, design)
 % Design specification
 %   cfg.ivar  = column number of the design that contains the labels of the conditions that
 %               must be compared (default=1). The labels are the numbers 1 and 2.
+%
+% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
 
 % Copyright (C) 2006, Eric Maris
 %

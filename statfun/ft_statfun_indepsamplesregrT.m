@@ -1,9 +1,8 @@
 function [s, cfg] = ft_statfun_indepsamplesregrT(cfg, dat, design)
 
-% FT_STATFUN_INDEPSAMPLESREGRT calculates independent samples regression
-% coefficient T-statistics on the biological data in dat (the dependent
-% variable), using the information on the independent variable
-% (predictor) in design.
+% FT_STATFUN_INDEPSAMPLESREGRT calculates independent samples regression coefficient
+% T-statistics on the biological data in dat (the dependent variable), using the
+% information on the independent variable (predictor) in design.
 %
 % Use this function by calling one of the high-level statistics functions as
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
@@ -11,14 +10,6 @@ function [s, cfg] = ft_statfun_indepsamplesregrT(cfg, dat, design)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
 % with the following configuration option
 %   cfg.statistic = 'ft_statfun_indepsamplesregrT'
-%
-% See FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
-%
-% For low-level use, the external interface of this function has to be
-%   [s,cfg] = ft_statfun_indepsamplesregrT(cfg, dat, design);
-% where
-%   dat    contains the biological data,  Nsamples x Nreplications
-%   design contains the independent variable,  Nvar X Nreplications
 %
 % Configuration options
 %   cfg.computestat    = 'yes' or 'no', calculate the statistic (default='yes')
@@ -37,6 +28,8 @@ function [s, cfg] = ft_statfun_indepsamplesregrT(cfg, dat, design)
 %
 % Design specification
 %   cfg.ivar  = row number of the design that contains the independent variable (default=1)
+%
+% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
 
 % Copyright (C) 2006, Eric Maris
 %

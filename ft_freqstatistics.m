@@ -164,13 +164,13 @@ end
 
 design = cfg.design;
 
-% determine the function handle to the intermediate-level statistics function
-if exist(['ft_statistics_' cfg.method], 'file')
-  statmethod = str2func(['ft_statistics_' cfg.method]);
-else
+% fetch function handle to the intermediate-level statistics function
+statmethod = ft_getuserfun(cfg.method, 'statistics');
+if isempty(statmethod)
   ft_error('could not find the corresponding function for cfg.method="%s"\n', cfg.method);
+else
+  fprintf('using "%s" for the statistical testing\n', func2str(statmethod));
 end
-fprintf('using "%s" for the statistical testing\n', func2str(statmethod));
 
 % check that the design completely describes the data
 if size(dat,2) ~= size(cfg.design,2)
@@ -186,22 +186,11 @@ catch
 end
 
 % perform the statistical test
-if strcmp(func2str(statmethod),'ft_statistics_montecarlo')
-  % because ft_statistics_montecarlo (or to be precise, clusterstat) requires to know whether it is getting source data,
-  % the following (ugly) work around is necessary
-  if num>1
-    [stat, cfg] = statmethod(cfg, dat, design);
-    cfg         = rollback_provenance(cfg); % ensure that changes to the cfg are passed back to the right level
-  else
-    [stat] = statmethod(cfg, dat, design);
-  end
+if num>1
+  [stat, cfg] = statmethod(cfg, dat, design);
+  cfg         = rollback_provenance(cfg); % ensure that changes to the cfg are passed back to the right level
 else
-  if num>1
-    [stat, cfg] = statmethod(cfg, dat, design);
-    cfg         = rollback_provenance(cfg); % ensure that changes to the cfg are passed back to the right level
-  else
-    [stat] = statmethod(cfg, dat, design);
-  end
+  [stat] = statmethod(cfg, dat, design);
 end
 
 if ~isstruct(stat)
