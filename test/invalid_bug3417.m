@@ -1,4 +1,4 @@
-function test_bug3417
+function invalid_bug3417
 
 % WALLTIME 00:20:00
 % MEM 3gb
@@ -6,12 +6,13 @@ function test_bug3417
 % ... works fine on his computer, which has a 2012 version of FieldTrip and Matlab 2013a.
 % But when we try to run either a later version of Fieldtrip (e.g. 2015) or a later version
 % of Matlab (e.g. 2017b), we get the following bug:
-% 
+%
 % Error using findcluster (line 50)
 % invalid dimension of spatdimneighbstructmat
 
-%% figure 4
-% SL - one sample t
+% figure 4
+
+%% SL - one sample t
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3417.mat'))
 
@@ -46,9 +47,19 @@ data2.freq = [1:freqs];
 data1.time =[1:times];
 data2.time= [1:times];
 
+% fix the invalid data structure, see ft_datatype_freq
+data1.dimord = 'rpt_chan_freq_time';
+data2.dimord = 'rpt_chan_freq_time';
+data1.globspctrm = reshape(data1.globspctrm, [nsubj 1 freqs times]);
+data2.globspctrm = reshape(data2.globspctrm, [nsubj 1 freqs times]);
+data1.label = {'TheSame'};
+data2.label = {'TheSame'};
+
 cfg.parameter = 'globspctrm'; % 'avg', 'cohspctrm'
 cfg.method = 'montecarlo'; %  'montecarlo',   'analytic' , 'stats', 'crossvalidate'
 
+cfg.neighbours = [];
+cfg.channel = 'all';
 cfg.correctm = 'cluster'; % 'no', 'max', 'cluster', 'bonferroni', 'holm', 'hochberg', 'fdr' (default = 'no')
 
 cfg.clusterstatistc = 'wcm'; % 'wcm', 'maxsum', 'maxsize'
@@ -57,7 +68,7 @@ cfg.numrandomization = 1000;
 cfg.clusteralpha = 0.05;
 cfg.tail = 0;
 
-stats = ft_freqstatistics(cfg,data1,data2)
+stats = ft_freqstatistics(cfg,data1,data2);
 
 figure;
 
@@ -96,9 +107,9 @@ ylabel('Frequencies')
 xlabel('Time')
 
 
-% JA - one sample t
+%% JA - one sample t
 
-load('Sam_Fig4.mat')
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3417.mat'))
 
 freqs=14; % or 21
 times=81;
@@ -129,9 +140,19 @@ data2.freq = [1:freqs];
 data1.time =[1:times];
 data2.time= [1:times];
 
+% fix the invalid data structure, see ft_datatype_freq
+data1.dimord = 'rpt_chan_freq_time';
+data2.dimord = 'rpt_chan_freq_time';
+data1.globspctrm = reshape(data1.globspctrm, [nsubj 1 freqs times]);
+data2.globspctrm = reshape(data2.globspctrm, [nsubj 1 freqs times]);
+data1.label = {'TheSame'};
+data2.label = {'TheSame'};
+
 cfg.parameter = 'globspctrm'; % 'avg', 'cohspctrm'
 cfg.method = 'montecarlo'; %  'montecarlo',   'analytic' , 'stats', 'crossvalidate'
 
+cfg.neighbours = [];
+cfg.channel = 'all';
 cfg.correctm = 'cluster'; % 'no', 'max', 'cluster', 'bonferroni', 'holm', 'hochberg', 'fdr' (default = 'no')
 
 cfg.clusterstatistc = 'wcm'; % 'wcm', 'maxsum', 'maxsize'
@@ -180,7 +201,7 @@ xlabel('Time')
 
 %% SJ vs. AJ
 
-load('Sam_Fig4.mat')
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3417.mat'))
 
 freqs=14; % or 21
 times=81;
@@ -214,9 +235,19 @@ data2.freq = [1:freqs];
 data1.time =[1:times];
 data2.time= [1:times];
 
+% fix the invalid data structure, see ft_datatype_freq
+data1.dimord = 'rpt_chan_freq_time';
+data2.dimord = 'rpt_chan_freq_time';
+data1.globspctrm = reshape(data1.globspctrm, [nsubj 1 freqs times]);
+data2.globspctrm = reshape(data2.globspctrm, [nsubj 1 freqs times]);
+data1.label = {'TheSame'};
+data2.label = {'TheSame'};
+
 cfg.parameter = 'globspctrm'; % 'avg', 'cohspctrm'
 cfg.method = 'montecarlo'; %  'montecarlo',   'analytic' , 'stats', 'crossvalidate'
 
+cfg.neighbours = [];
+cfg.channel = 'all';
 cfg.correctm = 'cluster'; % 'no', 'max', 'cluster', 'bonferroni', 'holm', 'hochberg', 'fdr' (default = 'no')
 
 cfg.clusterstatistc = 'wcm'; % 'wcm', 'maxsum', 'maxsize'
