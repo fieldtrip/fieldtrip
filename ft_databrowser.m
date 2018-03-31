@@ -198,6 +198,7 @@ cfg.magscale        = ft_getopt(cfg, 'magscale');
 cfg.gradscale       = ft_getopt(cfg, 'gradscale');
 cfg.chanscale       = ft_getopt(cfg, 'chanscale');
 cfg.mychanscale     = ft_getopt(cfg, 'mychanscale');
+cfg.mychan          = ft_getopt(cfg, 'mychan');
 cfg.layout          = ft_getopt(cfg, 'layout');
 cfg.plotlabels      = ft_getopt(cfg, 'plotlabels', 'some');
 cfg.event           = ft_getopt(cfg, 'event');                       % this only exists for backward compatibility and should not be documented
@@ -1056,14 +1057,14 @@ if isempty(cmenulab)
       fprintf('there is no overlap with any event, adding an event to the peak/trough value\n');
       % check if only 1 chan, other wise not clear max in which channel. %
       % ingnie: would be cool to add the option to select the channel when multiple channels
-      if size(opt.curdata.trial{1},1) > 1
+      if size(dat,1) > 1
         ft_error('cfg.selectmode = ''markpeakevent'' and ''marktroughevent'' only supported with 1 channel in the data')
       end
       if strcmp(cfg.selectmode, 'markpeakevent')
-        [dum ind_minmax] = max(opt.curdata.trial{1}(begsel-begsample+1:endsel-begsample+1));
+        [dum ind_minmax] = max(dat(begsel-begsample+1:endsel-begsample+1));
         val = 'peak';
       elseif strcmp(cfg.selectmode, 'marktroughevent')
-        [dum ind_minmax] = min(opt.curdata.trial{1}(begsel-begsample+1:endsel-begsample+1));
+        [dum ind_minmax] = min(dat(begsel-begsample+1:endsel-begsample+1));
         val = 'trough';
       end
       samp_minmax = begsel + ind_minmax - 1;
@@ -1463,12 +1464,12 @@ switch key
     response = inputdlg('vertical scale, [ymin ymax], ''maxabs'' or ''maxmin''', 'specify', 1, {['[ ' num2str(cfg.ylim) ' ]']});
     if ~isempty(response)
       if strcmp(response, 'maxmin')
-        minval = min(opt.curdata.trial{1}(:));
-        maxval = max(opt.curdata.trial{1}(:));
+        minval = min(dat(:));
+        maxval = max(dat(:));
         cfg.ylim = [minval maxval];
       elseif strcmp(response, 'maxabs')
-        minval = min(opt.curdata.trial{1}(:));
-        maxval = max(opt.curdata.trial{1}(:));
+        minval = min(dat(:));
+        maxval = max(dat(:));
         cfg.ylim = [-max(abs([minval maxval])) max(abs([minval maxval]))];
       else
         % convert to string and add brackets, just to ensure that str2num will work
@@ -1538,10 +1539,10 @@ switch key
       ft_plot_text(pos, ypos, channame, 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits, 'tag', 'identify', 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits);
       if ~ishold
         hold on
-        ft_plot_vector(opt.curdata.time{1}, opt.curdata.trial{1}(channb,:), 'box', false, 'tag', 'identify', 'hpos', opt.laytime.pos(chanposind,1), 'vpos', opt.laytime.pos(chanposind,2), 'width', opt.laytime.width(chanposind), 'height', opt.laytime.height(chanposind), 'hlim', opt.hlim, 'vlim', opt.vlim, 'color', 'k', 'linewidth', 2);
+        ft_plot_vector(tim, dat(channb,:), 'box', false, 'tag', 'identify', 'hpos', opt.laytime.pos(chanposind,1), 'vpos', opt.laytime.pos(chanposind,2), 'width', opt.laytime.width(chanposind), 'height', opt.laytime.height(chanposind), 'hlim', opt.hlim, 'vlim', opt.vlim, 'color', 'k', 'linewidth', 2);
         hold off
       else
-        ft_plot_vector(opt.curdata.time{1}, opt.curdata.trial{1}(channb,:), 'box', false, 'tag', 'identify', 'hpos', opt.laytime.pos(chanposind,1), 'vpos', opt.laytime.pos(chanposind,2), 'width', opt.laytime.width(chanposind), 'height', opt.laytime.height(chanposind), 'hlim', opt.hlim, 'vlim', opt.vlim, 'color', 'k', 'linewidth', 2);
+        ft_plot_vector(tim, dat(channb,:), 'box', false, 'tag', 'identify', 'hpos', opt.laytime.pos(chanposind,1), 'vpos', opt.laytime.pos(chanposind,2), 'width', opt.laytime.width(chanposind), 'height', opt.laytime.height(chanposind), 'hlim', opt.hlim, 'vlim', opt.vlim, 'color', 'k', 'linewidth', 2);
       end
     else
       ft_warning('only supported with cfg.viewmode=''butterfly/vertical''');
@@ -1642,7 +1643,6 @@ if opt.changedchanflg
   opt.changedchanflg = false;
 end
 
-
 if ~isempty(opt.event) && isstruct(opt.event)
   % select only the events in the current time window
   event     = opt.event;
@@ -1674,17 +1674,25 @@ if nsamplepad>0
   tim = [tim linspace(tim(end),tim(end)+nsamplepad*mean(diff(tim)),nsamplepad)];  % possible machine precision error here
 end
 
+% make a single-trial data structure for the current data
 opt.curdata.label      = lab;
 opt.curdata.time{1}    = tim;
 opt.curdata.trial{1}   = dat;
 opt.curdata.hdr        = opt.hdr;
 opt.curdata.fsample    = opt.fsample;
 opt.curdata.sampleinfo = [begsample endsample];
+% remove the local copy of the data fields
+clear lab tim dat
 
 fn = fieldnames(cfg);
-tmpcfg = keepfields(cfg, fn(contains(fn, 'scale')));
+tmpcfg = keepfields(cfg, fn(contains(fn, 'scale') | contains(fn, 'mychan')));
 tmpcfg.parameter = 'trial';
 opt.curdata = chanscale_common(tmpcfg, opt.curdata);
+
+% make a local copy (again) of the data fields
+lab = opt.curdata.label;
+tim = opt.curdata.time{1};
+dat = opt.curdata.trial{1};
 
 % to assure current feature is plotted on top
 ordervec = 1:length(opt.artdata.label);
