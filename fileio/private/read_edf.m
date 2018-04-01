@@ -160,21 +160,27 @@ if needhdr
     EDF.DigMax = (2^15-1)*ones(EDF.NS,1);
   end
   if (any(EDF.DigMin >= EDF.DigMax))
-    fprintf(2,'Warning OPENEDF: Digital Minimum larger than Maximum\n');
+    fprintf(2,'Warning OPENEDF: Digital Minimum larger than Maximum.\nTrying to correct Digital Minimum and Maximum\nby switching them for channels where Digital Minimum is larger than Maximum.\nPLEASE recheck if the scaling and polarity in all channels are correct.\n');
+    idx_min_ge_max = EDF.DigMin >= EDF.DigMax;
+    EDF.DigMin(idx_min_ge_max) = EDF.DigMax(idx_min_ge_max);
+    EDF.DigMax(idx_min_ge_max) = -EDF.DigMin(idx_min_ge_max);
   end
   % check validity of PhysMin and PhysMax
   if (length(EDF.PhysMin) ~= EDF.NS)
-    fprintf(2,'Warning OPENEDF: Failing Physical Minimum\n');
+    fprintf(2,'Warning OPENEDF: Failing Physical Minimum, taking Digital Minimum instead\n');
     EDF.PhysMin = EDF.DigMin;
   end
   if (length(EDF.PhysMax) ~= EDF.NS)
-    fprintf(2,'Warning OPENEDF: Failing Physical Maximum\n');
+    fprintf(2,'Warning OPENEDF: Failing Physical Maximum, taking Digital Maximum instead\n');
     EDF.PhysMax = EDF.DigMax;
   end
   if (any(EDF.PhysMin >= EDF.PhysMax))
-    fprintf(2,'Warning OPENEDF: Physical Minimum larger than Maximum\n');
-    EDF.PhysMin = EDF.DigMin;
-    EDF.PhysMax = EDF.DigMax;
+    fprintf(2,'Warning OPENEDF: Physical Minimum larger than Maximum.\nTrying to correct Physical Minimum and Maximum\nby switching them for channels where Physical Minimum is larger than Maximum.\nPLEASE recheck if the scaling and polarity in all channels are correct.\n');
+    idx_min_ge_max = EDF.PhysMin >= EDF.PhysMax;
+    EDF.PhysMin(idx_min_ge_max) = EDF.PhysMax(idx_min_ge_max);
+    EDF.PhysMax(idx_min_ge_max) = -EDF.PhysMin(idx_min_ge_max);
+    %EDF.PhysMin = EDF.DigMin;
+    %EDF.PhysMax = EDF.DigMax;
   end
   EDF.PreFilt= char(fread(EDF.FILE.FID,[80,EDF.NS],'char')');
   EDF.SPR = str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'char')'));  % samples per data record
