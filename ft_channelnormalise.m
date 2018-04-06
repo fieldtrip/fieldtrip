@@ -8,12 +8,13 @@ function [dataout] = ft_channelnormalise(cfg, data)
 %   [dataout] = ft_channelnormalise(cfg, data)
 %
 % The configuration can contain
-%   cfg.channel = 'all', or a selection of channels  
-%   cfg.trials = 'all' or a selection given as a 1xN vector (default = 'all')
-%   cfg.demean = 'yes' or 'no' (or boolean value) (default = 'yes')
-%   cfg.method = 'perchannel', or 'acrosschannel', computes the
+%   cfg.channel = 'all', or a selection of channels
+%   cfg.trials  = 'all' or a selection given as a 1xN vector (default = 'all')
+%   cfg.demean  = 'yes' or 'no' (or boolean value) (default = 'yes')
+%   cfg.scale   = scalar value used for scaling (default = 1)
+%   cfg.method  = 'perchannel', or 'acrosschannel', computes the
 %                   standard deviation per channel, or across all channels.
-%                   The latter method leads to the same scaling across 
+%                   The latter method leads to the same scaling across
 %                   channels and preserves topographical distributions
 %
 % To facilitate data-handling and distributed computing you can use
@@ -67,12 +68,14 @@ end
 cfg = ft_checkconfig(cfg, 'allowedval', {'method', 'perchannel', 'acrosschannel'});
 
 % set the defaults
-cfg.channel = ft_getopt(cfg, 'channel', 'all');
-cfg.trials = ft_getopt(cfg, 'trials', 'all', 1);
-cfg.demean = ft_getopt(cfg, 'demean', 'yes');
-cfg.method = ft_getopt(cfg, 'method', 'perchannel'); % or acrosschannel
-dodemean   = istrue(cfg.demean);
-doperchannel = strcmp(cfg.method, 'perchannel');
+cfg.channel   = ft_getopt(cfg, 'channel', 'all');
+cfg.trials    = ft_getopt(cfg, 'trials', 'all', 1);
+cfg.scale     = ft_getopt(cfg, 'scale', 1);
+cfg.demean    = ft_getopt(cfg, 'demean', 'yes');
+cfg.method    = ft_getopt(cfg, 'method', 'perchannel'); % or acrosschannel
+
+dodemean      = istrue(cfg.demean);
+doperchannel  = strcmp(cfg.method, 'perchannel');
 
 % select channels and trials of interest, by default this will select all channels and trials
 tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
@@ -116,9 +119,9 @@ end
 % compute the mean and std
 n = zeros(numel(data.label), numel(data.trial));
 for k = 1:ntrl
-    n(:,k) = sum(~isnan(data.trial{k}),2);
-    datsum = datsum + nansum(data.trial{k},2);
-    datssq = datssq + nansum(data.trial{k}.^2,2);
+  n(:,k) = sum(~isnan(data.trial{k}),2);
+  datsum = datsum + nansum(data.trial{k},2);
+  datssq = datssq + nansum(data.trial{k}.^2,2);
 end
 datmean = datsum./nansum(n, 2); % apply the mean per channel always
 if ~doperchannel
@@ -127,7 +130,7 @@ if ~doperchannel
   datssq(:) = nansum(datssq);
   n         = repmat(nansum(n, 1), size(n, 1), 1);
 end
-datstd  = sqrt( (datssq - (datsum.^2)./nansum(n, 2))./nansum(n, 2)); %quick way to compute std from sum and sum-of-squared values
+datstd = sqrt( (datssq - (datsum.^2)./nansum(n, 2))./nansum(n, 2)); %quick way to compute std from sum and sum-of-squared values
 
 % keep mean and std in output cfg
 if dodemean
@@ -139,11 +142,11 @@ cfg.sigma = datstd;
 
 % demean and normalise
 for k = 1:ntrl
-  onesvec          = ones(1,size(data.trial{k},2));
-  if dodemean     
-    dataout.trial{k} = (data.trial{k}-datmean(:,onesvec))./datstd(:,onesvec);
+  onesvec = ones(1,size(data.trial{k},2));
+  if dodemean
+    dataout.trial{k} = cfg.scale * (data.trial{k}-datmean(:,onesvec))./datstd(:,onesvec);
   else
-    dataout.trial{k} = data.trial{k}./datstd(:,onesvec);
+    dataout.trial{k} = cfg.scale * data.trial{k}./datstd(:,onesvec);
   end
 end
 

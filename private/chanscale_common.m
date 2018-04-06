@@ -13,8 +13,8 @@ function data = chanscale_common(cfg, data)
 %   cfg.ecgscale                = number, scaling to apply to the ECG channels prior to display
 %   cfg.emgscale                = number, scaling to apply to the EMG channels prior to display
 %   cfg.megscale                = number, scaling to apply to the MEG channels prior to display
-%   cfg.gradscale               = number, scaling to apply to the MEG gradiometer channels prior to display (in addition to the cfg.megscale factor)
 %   cfg.magscale                = number, scaling to apply to the MEG magnetometer channels prior to display (in addition to the cfg.megscale factor)
+%   cfg.gradscale               = number, scaling to apply to the MEG gradiometer channels prior to display (in addition to the cfg.megscale factor)
 %
 % For individual control off the scaling for all channels you can use
 %   cfg.chanscale               = Nx1 vector with scaling factors, one per channel specified in cfg.channel
@@ -22,6 +22,26 @@ function data = chanscale_common(cfg, data)
 % For control over specific channels you can use
 %   cfg.mychanscale             = number, scaling to apply to the channels specified in cfg.mychan
 %   cfg.mychan                  = Nx1 cell-array with selection of channels
+
+% Copyright (C) 2017, Robert Oostenveld
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 cfg.eegscale    = ft_getopt(cfg, 'eegscale');
 cfg.eogscale    = ft_getopt(cfg, 'eogscale');
@@ -33,6 +53,10 @@ cfg.magscale    = ft_getopt(cfg, 'magscale');
 cfg.chanscale   = ft_getopt(cfg, 'chanscale');
 cfg.mychanscale = ft_getopt(cfg, 'mychanscale');
 cfg.mychan      = ft_getopt(cfg, 'mychan');
+
+% these should be column vectors
+cfg.chanscale   = cfg.chanscale(:);
+cfg.mychanscale = cfg.mychanscale(:);
 
 dimord = getdimord(data, cfg.parameter);
 
@@ -76,11 +100,11 @@ switch dimord
     end
     if ~isempty(cfg.chanscale)
       chansel = match_str(data.label, ft_channelselection(cfg.channel, data.label));
-      dat(chansel,:,:) = dat(chansel,:,:) .* repmat(cfg.chanscale(:),1,size(dat,2),size(dat,3));
+      dat(chansel,:,:) = dat(chansel,:,:) .* repmat(cfg.chanscale,1,size(dat,2),size(dat,3));
     end
     if ~isempty(cfg.mychanscale)
-      chansel = match_str(data.label, ft_channelselection(cfg.mychan, data.label));
-      dat(chansel,:,:) = dat(chansel,:,:) .* repmat(cfg.mychanscale(:),1,size(dat,2),size(dat,3));
+      [chansel, scalesel] = match_str(data.label, cfg.mychan);
+      dat(chansel,:,:) = dat(chansel,:,:) .* repmat(cfg.mychanscale(scalesel),1,size(dat,2),size(dat,3));
     end
     
     % put the data back into the structure
@@ -126,11 +150,11 @@ switch dimord
       end
       if ~isempty(cfg.chanscale)
         chansel = match_str(data.label, ft_channelselection(cfg.channel, data.label));
-        dat(chansel,:) = dat(chansel,:) .* repmat(cfg.chanscale(:),1,size(dat,2));
+        dat(chansel,:) = dat(chansel,:) .* repmat(cfg.chanscale,1,size(dat,2));
       end
       if ~isempty(cfg.mychanscale)
-        chansel = match_str(data.label, ft_channelselection(cfg.mychan, data.label));
-        dat(chansel,:) = dat(chansel,:) .* repmat(cfg.mychanscale(:),1,size(dat,2));
+        [chansel, scalesel] = match_str(data.label, cfg.mychan);
+        dat(chansel,:) = dat(chansel,:) .* repmat(cfg.mychanscale(scalesel),1,size(dat,2));
       end
       
       % put the data back into the structure
