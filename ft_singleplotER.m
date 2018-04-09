@@ -262,7 +262,7 @@ else
   assert(~isempty(cfg.trials), 'empty specification of cfg.trials for data with repetitions');
 end
 
-% parse cfg.channel 
+% parse cfg.channel
 if isfield(cfg, 'channel') && isfield(varargin{1}, 'label')
   cfg.channel = ft_channelselection(cfg.channel, varargin{1}.label);
 elseif isfield(cfg, 'channel') && isfield(varargin{1}, 'labelcmb')
@@ -395,9 +395,9 @@ if ~isnumeric(cfg.ylim)
   ymax = [];
   for i=1:Ndata
     % Select the channels in the data that match with the layout and that are selected for plotting
-    dat = mean(varargin{i}.(cfg.parameter)(selchan,selx),1); % mean over channels, as that is what will be plotted 
-    ymin = min([ymin min(min(min(dat)))]);
-    ymax = max([ymax max(max(max(dat)))]);
+    dat = nanmean(varargin{i}.(cfg.parameter)(selchan,selx),1); % mean over channels, as that is what will be plotted
+    ymin = nanmin([ymin nanmin(nanmin(nanmin(dat)))]);
+    ymax = nanmax([ymax nanmax(nanmax(nanmax(dat)))]);
   end
   if strcmp(cfg.ylim, 'maxabs') % handle maxabs, make y-axis center on 0
     ymax = max([abs(ymax) abs(ymin)]);
@@ -450,9 +450,13 @@ if Ndata > 1
   end
 end
 
-% set xlim and ylim:
-xlim([xmin xmax]);
-ylim([ymin ymax]);
+% set xlim and ylim
+if xmin~=xmax
+  xlim([xmin xmax]);
+end
+if ymin~=ymax
+  ylim([ymin ymax]);
+end
 
 % adjust mask box extents to ymin/ymax
 if ~isempty(cfg.maskparameter)
@@ -613,4 +617,3 @@ else
       ylim([varargin{3} varargin{4}])
   end % switch
 end % if
-

@@ -1,8 +1,8 @@
 function [s, cfg] = ft_statfun_indepsamplesF(cfg, dat, design)
 
-% FT_STATFUN_INDEPSAMPLESF calculates the independent samples F-statistic 
-% on the biological data in dat (the dependent variable), using the information on 
-% the independent variable (ivar) in design.
+% FT_STATFUN_INDEPSAMPLESF calculates the independent samples F-statistic on the
+% biological data in dat (the dependent variable), using the information on the
+% independent variable (ivar) in design.
 %
 % Use this function by calling one of the high-level statistics functions as
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
@@ -10,14 +10,6 @@ function [s, cfg] = ft_statfun_indepsamplesF(cfg, dat, design)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
 % with the following configuration option
 %   cfg.statistic = 'ft_statfun_indepsamplesF'
-%
-% See FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
-%
-% For low-level use, the external interface of this function has to be
-%   [s,cfg] = ft_statfun_indepsamplesF(cfg, dat, design);
-% where
-%   dat    contains the biological data, Nsamples x Nreplications
-%   design contains the independent variable (ivar),  Nfac x Nreplications
 %
 % Configuration options
 %   cfg.computestat    = 'yes' or 'no', calculate the statistic (default='yes')
@@ -37,6 +29,8 @@ function [s, cfg] = ft_statfun_indepsamplesF(cfg, dat, design)
 % Design specification
 %   cfg.ivar  = row number of the design that contains the labels of the conditions that must be 
 %               compared (default=1). The labels range from 1 to the number of conditions.
+%
+% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
 
 % Copyright (C) 2006, Eric Maris
 %

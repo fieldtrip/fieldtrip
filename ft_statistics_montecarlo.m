@@ -46,7 +46,7 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 % To include the channel dimension for clustering, you should specify
 %   cfg.neighbours       = neighbourhood structure, see FT_PREPARE_NEIGHBOURS
 % If you specify an empty neighbourhood structure, clustering will only be done
-% in frequency and time (if available) and not over neighbouring channels.
+% over frequency and/or time and not over neighbouring channels.
 %
 % The statistic that is computed for each sample in each random reshuffling
 % of the data is specified as
@@ -100,6 +100,10 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 %
 % $Id$
 
+% do a sanity check on the input data
+assert(isnumeric(dat),    'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
+assert(isnumeric(design), 'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
+
 % deal with the user specified random seed
 ft_preamble randomseed
 
@@ -131,7 +135,7 @@ cfg.correcttail  = ft_getopt(cfg, 'correcttail',  'no');
 cfg.precondition = ft_getopt(cfg, 'precondition', []);
 
 % explicit check for option 'yes' in cfg.correctail.
-if strcmp(cfg.correcttail,'yes')
+if strcmp(cfg.correcttail, 'yes')
   ft_error('cfg.correcttail = ''yes'' is not allowed, use either ''prob'', ''alpha'' or ''no''')
 end
 
@@ -276,7 +280,7 @@ end
 if isstruct(statobs)
   % remember all details for later reference, continue to work with the statistic
   statfull = statobs;
-  statobs  = getfield(statfull, 'stat');
+  statobs  = statobs.stat;
 else
   % remember the statistic for later reference, continue to work with the statistic
   statfull.stat = statobs;

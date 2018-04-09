@@ -1,9 +1,15 @@
 function [cfg, artifact] = ft_artifact_nan(cfg, data)
 
-% FT_ARTIFACT_NAN identifies artifacts that are indicated in the data as nan (not a number) values.
+% FT_ARTIFACT_NAN identifies artifacts that are indicated in the data as nan (not a
+% number) values.
 %
 % Use as
-%   [cfg, artifact] = ft_artifact_eog(cfg, data)
+%   [cfg, artifact] = ft_artifact_nan(cfg, data)
+% where the input data is a structure as obtained from FT_REJECTARTIFACT with
+% the option cfg.artfctdef.reject='nan'.
+%
+% The configuration can contain
+%   cfg.artfctdef.nan.channel = Nx1 cell-array with selection of channels, see FT_CHANNELSELECTION for details
 %
 % The output argument "artifact" is a Nx2 matrix comparable to the
 % "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
@@ -57,12 +63,21 @@ if ft_abort
   return
 end
 
+% set the default options
+cfg.artfctdef             = ft_getopt(cfg, 'artfctdef');
+cfg.artfctdef.nan         = ft_getopt(cfg.artfctdef, 'nan');
+cfg.artfctdef.nan.channel = ft_getopt(cfg.artfctdef.nan, 'channel', {'all'});
+
+% check if the input data is valid for this function, the input data must be raw
 data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
+
+cfg.artfctdef.nan.channel = ft_channelselection(cfg.artfctdef.nan.channel, data.label);
+chansel = match_str(data.label, cfg.artfctdef.nan.channel);
 
 artifact = zeros(0,2);
 
 for i=1:numel(data.trial)
-  tmp = any(isnan(data.trial{i}),1);
+  tmp = any(isnan(data.trial{i}(chansel,:)),1);
   if any(tmp)
     % there can be multiple segments with nans
     begsample = find(diff([0 tmp])>0);

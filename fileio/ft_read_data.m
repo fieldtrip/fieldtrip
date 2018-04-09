@@ -398,6 +398,11 @@ switch dataformat
     orig = readBESAswf(filename);
     dat  = orig.data(chanindx, begsample:endsample);
     
+  case 'neuromag_headpos'
+    % neuromag headposition file created with maxfilter, the position varies over time
+    orig = read_neuromag_headpos(filename);
+    dat  = orig.data(chanindx, begsample:endsample);
+    
   case {'biosemi_bdf', 'bham_bdf'}
     % this uses a mex file for reading the 24 bit data
     dat = read_biosemi_bdf(filename, hdr, begsample, endsample, chanindx);
@@ -447,28 +452,18 @@ switch dataformat
     orig = openNSx(filename, 'channels',find(chan_sel),...
       'duration', [(begsample-1)*hdr.skipfactor+1 endsample*hdr.skipfactor],...
       'skipfactor', hdr.skipfactor);
-
+    
     d_min=[orig.ElectrodesInfo.MinDigiValue];
     d_max=[orig.ElectrodesInfo.MaxDigiValue];
     v_min=[orig.ElectrodesInfo.MinAnalogValue];
     v_max=[orig.ElectrodesInfo.MaxAnalogValue];
-
+    
     %calculating slope (a) and ordinate (b) of the calibration
     b=double(v_min .* d_max - v_max .* d_min) ./ double(d_max - d_min);
     a=double(v_max-v_min)./double(d_max-d_min);
-   
+    
     %apply v = a*d + b to each row of the matrix
     dat=bsxfun(@plus,bsxfun(@times, double(orig.Data), a'),b');
-
-  case 'neuroomega_mat'
-    % These are MATLAB *.mat files created by the software 'Map File
-    % Converter' from the original .mpx files recorded by NeuroOmega
-    dat=zeros(hdr.nChans,hdr.nSamples);
-    for i=1:hdr.nChans
-      v=double(hdr.orig.(hdr.label{i}));
-      v=v*hdr.orig.(char(strcat(hdr.label{i},'_BitResolution')));
-      dat(i,:)=v(begsample:endsample); %channels sometimes have small differences in samples
-    end
     
   case {'brainvision_eeg', 'brainvision_dat', 'brainvision_seg'}
     dat = read_brainvision_eeg(filename, hdr.orig, begsample, endsample, chanindx);
@@ -1142,6 +1137,22 @@ switch dataformat
     dat       = dat(:,chanindx,:);      % select channels
     dimord    = 'trials_chans_samples'; % selection using begsample and endsample will be done later
     
+  case 'neuromag_maxfilterlog'
+    log = hdr.orig;
+    dat = [
+      log.t(:)'
+      log.e(:)'
+      log.g(:)'
+      log.v(:)'
+      log.r(:)'
+      log.d(:)'
+      ];
+    for i=1:length(log.hpi)
+      dat = cat(1, dat, log.hpi{i});
+    end
+    dat = dat(chanindx, begsample:endsample);
+    dimord = 'chans_samples';
+    
   case {'neuromag_fif' 'neuromag_mne'}
     % check that the required low-level toolbox is available
     ft_hastoolbox('mne', 1);
@@ -1192,6 +1203,16 @@ switch dataformat
     begsample = begsample - (begepoch-1)*hdr.nSamples;  % correct for the number of bytes that were skipped
     endsample = endsample - (begepoch-1)*hdr.nSamples;  % correct for the number of bytes that were skipped
     dat = dat(:, begsample:endsample);
+    
+  case 'neuroomega_mat'
+    % These are MATLAB *.mat files created by the software 'Map File
+    % Converter' from the original .mpx files recorded by NeuroOmega
+    dat=zeros(hdr.nChans,endsample - begsample + 1);
+    for i=1:hdr.nChans
+      v=double(hdr.orig.(hdr.label{i}));
+      v=v*hdr.orig.(char(strcat(hdr.label{i},'_BitResolution')));
+      dat(i,:)=v(begsample:endsample); %channels sometimes have small differences in samples
+    end
     
   case {'neurosim_ds' 'neurosim_signals'}
     [hdr, dat] = read_neurosim_signals(filename);
@@ -1409,7 +1430,7 @@ switch dataformat
     end
     orig = openNSx(filename, 'duration', [begsample endsample], 'channels', chanindx);
     dat  = double(orig.Data);
-		
+    
   otherwise
     % attempt to run dataformat as a function
     % in case using an external read function was desired, this is where it is executed

@@ -35,7 +35,7 @@ switch cmd
         Vmask = spm_vol(varargin{4});
         if length(Vq) == 3
             st.vols{volhandle}.quivernmt = struct('qx',Vq(1),'qy',Vq(2),'qz',Vq(3), ...
-                'mask',Vmask, 'fa',[], 'thresh', [.1 Inf], 'ls','y.', ...
+                'mask',Vmask, 'fa',[], 'thresh', [.1 Inf], 'ls','b.', ...
                 'qst',3,'ql',1,'qht',[],'qhc',[],'qhs',[], 'qw', .5);
         else
             error('spm_orthviews(''quivernmt'', ''init'',...): Please specify 3 images!');
@@ -241,11 +241,11 @@ switch cmd
         end; %quiver
 
     case 'delete'
-        if isfield(st.vols{volhandle},'quiver'),
+        if isfield(st.vols{volhandle},'quivernmt'),
             delete(st.vols{volhandle}.quivernmt.qht);
             delete(st.vols{volhandle}.quivernmt.qhc);
             delete(st.vols{volhandle}.quivernmt.qhs);
-            st.vols{volhandle} = rmfield(st.vols{volhandle},'quiver');
+            st.vols{volhandle} = rmfield(st.vols{volhandle},'quivernmt');
         end;
         %-------------------------------------------------------------------------
         % Context menu and callbacks

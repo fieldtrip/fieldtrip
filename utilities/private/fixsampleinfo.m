@@ -23,24 +23,31 @@ hasfsample = isfield(data, 'fsample');
 
 % check whether we're dealing with a timelock structure that has trials
 istimelock = hastime && hastrial && ~iscell(data.trial) && ~iscell(data.time);
+israw      = hastime && hastrial &&  iscell(data.trial) &&  iscell(data.time);
+
+% if the data does not have repetitions (i.e. trials) then it does not make sense to keep the sampleinfo
+if ~hastrial && isfield(data, 'sampleinfo')
+  data = rmfield(data, 'sampleinfo');
+  return
+end
 
 if ~hasfsample && hastime
-  if istimelock
-    data.fsample = median(1./diff(data.time));
-  else
+  if israw
     data.fsample = median(1./diff(data.time{1}));
+  elseif hastime
+    data.fsample = median(1./diff(data.time));
   end
 end
 
 if hastrial
-  if istimelock
-    ntrial = size(data.trial,1);
-  else
+  if israw
     ntrial = numel(data.trial);
+  elseif istimelock
+    ntrial = size(data.trial,1);
   end
 else
   ntrial = dimlength(data, 'rpt');
-  if ~isfinite(ntrial) && strcmp(data.dimord(1:6), 'rpttap') && isfield(data, 'cumtapcnt'),
+  if ~isfinite(ntrial) && strcmp(data.dimord(1:6), 'rpttap') && isfield(data, 'cumtapcnt')
     ntrial = numel(data.cumtapcnt);
   elseif ~isfinite(ntrial)
     ntrial = 1;
@@ -49,17 +56,24 @@ end
 
 trl = ft_findcfg(data.cfg, 'trl');
 
-if istimelock
-  nsmp = ones(ntrial,1) .* size(data.trial,3);
-else
+if istable(trl)
+  % the subsequent code requires this to be an array
+  trl = table2array(trl(:,1:3));
+end
+
+if israw
   nsmp = zeros(ntrial,1);
-  if hastrial
+  if israw
     for i=1:ntrial
       nsmp(i) = size(data.trial{i}, 2);
     end
   elseif ~isempty(trl)
     nsmp = trl(:,2) - trl(:,1) + 1;
   end
+elseif istimelock
+  nsmp = ones(ntrial,1) .* size(data.trial,3);
+elseif hastime
+  nsmp = ones(ntrial,1) .* length(data.time);
 end
 
 if isempty(trl)
@@ -77,24 +91,25 @@ end
 
 if isempty(trl) || ~all(nsmp==trl(:,2)-trl(:,1)+1)
   ft_warning('reconstructing sampleinfo by assuming that the trials are consecutive segments of a continuous recording');
+  dbstack
   % construct a trial definition on the fly, assume that the trials are
   % consecutive segments of a continuous recording
-  if ntrial==1,
+  if ntrial==1
     begsample = 1;
   else
     begsample = cat(1, 0, cumsum(nsmp(1:end-1))) + 1;
   end
   endsample = begsample + nsmp - 1;
-
-  if istimelock
-    offset = ones(ntrial,1) .* time2offset(data.time, data.fsample);
-  else
-    offset    = zeros(ntrial,1);
-    if hastime,
+  
+  if israw
+    offset = zeros(ntrial,1);
+    if hastime
       for i=1:ntrial
         offset(i) = time2offset(data.time{i}, data.fsample);
       end
     end
+  elseif hastime
+    offset = ones(ntrial,1) .* time2offset(data.time, data.fsample);
   end
   trl = [begsample endsample offset];
 end
@@ -106,11 +121,6 @@ elseif ~isfield(data, 'sampleinfo') && isempty(trl)
   ft_warning('failed to create sampleinfo field');
 end
 
-if (~isfield(data, 'trialinfo') || isempty(data.trialinfo)) && ~isempty(trl) && size(trl, 2) > 3,
+if (~isfield(data, 'trialinfo') || isempty(data.trialinfo)) && ~isempty(trl) && size(trl, 2) > 3
   data.trialinfo = trl(:, 4:end);
-end
-
-% if data does not have repetitions (i.e. trials) then it does not make sense to keep the sampleinfo
-if ~hastrial && isfield(data, 'sampleinfo')
-  data = rmfield(data, 'sampleinfo');
 end

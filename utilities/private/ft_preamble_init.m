@@ -46,6 +46,20 @@ if ft_nargin==0
   error(msg);
 end % if nargin
 
+% check if there are fieldnames in the cfg that suggest as if the user
+% erroneously inputted a data argument
+checkdatafields = isfield(cfg, {'cfg' 'label' 'dimord' 'trialinfo' 'avg' 'powspctrm'});
+if any(checkdatafields)
+  stack = dbstack('-completenames');
+  stack = stack(3);
+  help(stack.name);
+  % throw the error as if it happened in the original function
+  msg.message     = 'It seems as if the first input argument is a FieldTrip data structure, while a cfg is expected';
+  msg.identifier  = '';
+  msg.stack       = stack;
+  error(msg);
+end
+
 % convert automatically from cell-array to structure
 if iscell(cfg)
   cfg = ft_keyval2cfg(cfg);

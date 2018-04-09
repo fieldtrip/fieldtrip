@@ -725,7 +725,7 @@ if (s.bytes <= max_size)
 end
 
 % these fields should not be handled recursively
-norecursion = {'event', 'headmodel', 'leadfield'};
+norecursion = {'event', 'headmodel', 'leadfield', 'grid'};
 
 fieldsorig = fieldnames(cfg);
 for i=1:numel(fieldsorig)

@@ -1,8 +1,8 @@
 function [s, cfg] = ft_statfun_depsamplesFunivariate(cfg, dat, design)
 
-% FT_STATFUN_DEPSAMPLESFUNIIVARIATE calculates the univariate repeated-mesures
-% ANOVA on the biological data in dat (the dependent variable), using the
-% information on the independent variable (ivar) in design.
+% FT_STATFUN_DEPSAMPLESFUNIIVARIATE calculates the univariate repeated-mesures ANOVA
+% on the biological data (the dependent variable), using the information on
+% the independent variable (ivar) in design.
 %
 % Use this function by calling one of the high-level statistics functions as
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
@@ -10,15 +10,6 @@ function [s, cfg] = ft_statfun_depsamplesFunivariate(cfg, dat, design)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
 % with the following configuration option
 %   cfg.statistic = 'ft_statfun_depsamplesFunivariate'
-%
-% See FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
-%
-% For low-level use, the external interface of this function has to be
-%   [s,cfg] = ft_statfun_depsamplesFunivariate(cfg, dat, design);
-% where
-%   dat    contains the biological data, Nsamples x Nreplications
-%   design contains the independent variable (ivar) and the unit-of-observation (uvar)
-%          factor, Nfac x Nreplications
 %
 % Configuration options
 %   cfg.computestat    = 'yes' or 'no', calculate the statistic (default='yes')
@@ -37,11 +28,14 @@ function [s, cfg] = ft_statfun_depsamplesFunivariate(cfg, dat, design)
 %               Fstatistic only cfg.tail = 1 makes sense.
 %
 % Design specification
-%   cfg.ivar  = row number of the design that contains the labels of the conditions that must be
-%               compared (default=1). The labels range from 1 to the number of conditions.
-%   cfg.uvar  = row number of design that contains the labels of the units-of-observation (subjects or trials)
-%               (default=2). The labels are assumed to be integers ranging from 1 to
-%               the number of units-of-observation.
+%   cfg.ivar  = independent vatiable, row number of the design that contains the labels
+%               of the conditions that must be compared (default=1). The labels range
+%               from 1 to the number of conditions.
+%   cfg.uvar  = unit variable, row number of design that contains the labels of the
+%               units-of-observation (subjects or trials) (default=2). The labels
+%               are assumed to be integers ranging from 1 to the number of units-of-observation.
+%
+% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
 
 % Copyright (C) 2014, Diego Lozano-Soldevilla
 %
@@ -118,24 +112,24 @@ if strcmp(cfg.computestat,'yes')
   %s.stat=zeros(nsmpls,1);
   %for smplindx=1:nsmpls
   %  datonesmpl=reshape(dat(smplindx,poslabelsperunit),nunits,nconds);
-  %  
+  %
   %  Ysub = mean(datonesmpl,2);
   %  Yfac = mean(datonesmpl,1);
-  %  
+  %
   %  % computing sums of squares
   %  meanYsub = mean(Ysub);
   %  SStot = sum((datonesmpl(:)-meanYsub).^2);
   %  SSsub = nconds * sum(sum((Ysub-meanYsub).^2));
   %  SSfac = nunits * sum(sum((Yfac-meanYsub).^2));
   %  SSerr = SStot - SSsub - SSfac;
-  %  
+  %
   %  % mean sum of squares for factor levels
   %  df  = nconds - 1;
   %  dfe = size(datonesmpl(:),1)  - nunits - df;
-  %  
+  %
   %  MSfac = SSfac/df;
   %  MSerr = SSerr/dfe;
-  %  
+  %
   %  s.stat(smplindx) = MSfac/MSerr;% F-statistic
   %end
   dat  = reshape(dat(:,poslabelsperunit),[nsmpls nunits nconds]);
@@ -147,11 +141,11 @@ if strcmp(cfg.computestat,'yes')
   SSsub    = nconds * sum((Ysub-meanYsub(:,ones(1,nunits))).^2,2);
   SSfac    = nunits * sum((Yfac-meanYsub(:,1,ones(1,nconds))).^2,3);
   SSerr    = SStot - SSsub - SSfac;
-
+  
   % mean sum of squares for factor levels
   df  = nconds - 1;
   dfe = numel(dat(1,:,:)) - nunits - df;
-    
+  
   MSfac = SSfac/df;
   MSerr = SSerr/dfe;
   

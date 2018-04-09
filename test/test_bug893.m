@@ -23,7 +23,6 @@ cfg.parameter = 'fourierspctrm';
 cfg.statistic = 'ft_statfun_indepsamplesZcoh';
 cfg.method    = 'montecarlo';
 cfg.numrandomization = 1;
-cfg.label     = freq.label;
 stat          = ft_freqstatistics(cfg, freq);
 
 % running this prior to the fix confirms the bug
