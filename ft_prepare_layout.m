@@ -90,8 +90,12 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 
 % undocumented and non-recommended option (for SPM only)
 %   cfg.style       string, '2d' or '3d' (default = '2d')
+% undocumented, because inconsistent with cfg.rotate
+%   cfg.center      = string, can be 'yes' or 'no' (default = 'no')
+%   cfg.width       = [] or number
+%   cfg.height      = [] or number
 
-% Copyright (C) 2007-2013, Robert Oostenveld
+% Copyright (C) 2007-2018, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -143,7 +147,8 @@ end
 % set default configuration options
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-cfg.rotate       = ft_getopt(cfg, 'rotate',     []); % [] => rotation is determined based on the type of sensors
+cfg.rotate       = ft_getopt(cfg, 'rotate',     []); % [] => default rotation is determined based on the type of sensors
+cfg.center       = ft_getopt(cfg, 'translate', 'no');
 cfg.style        = ft_getopt(cfg, 'style',      '2d');
 cfg.projection   = ft_getopt(cfg, 'projection', 'polar');
 cfg.layout       = ft_getopt(cfg, 'layout',     []);
@@ -169,6 +174,8 @@ cfg.headshape    = ft_getopt(cfg, 'headshape',  []); % separate form cfg.mesh
 cfg.mri          = ft_getopt(cfg, 'mri',        []);
 cfg.outline      = ft_getopt(cfg, 'outline',    []); % default is handled below
 cfg.mask         = ft_getopt(cfg, 'mask',       []); % default is handled below
+cfg.width        = ft_getopt(cfg, 'width',      []);
+cfg.height       = ft_getopt(cfg, 'height',     []);
 
 if isempty(cfg.skipscale)
   if ischar(cfg.layout) && any(strcmp(cfg.layout, {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular', '1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column', '1row', '2row', '3row', '4row', '5row', '6row', '7row', '8row', '9row'}))
@@ -177,7 +184,6 @@ if isempty(cfg.skipscale)
     cfg.skipscale = 'no';
   end
 end
-
 
 if isempty(cfg.skipcomnt)
   if ischar(cfg.layout) && any(strcmp(cfg.layout, {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular', '1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column', '1row', '2row', '3row', '4row', '5row', '6row', '7row', '8row', '9row'}))
@@ -934,6 +940,16 @@ if strcmpi(cfg.style, '2d')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% overrule the width and height when required
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if ~isempty(cfg.width)
+  layout.width(:) = cfg.width;
+end
+if ~isempty(cfg.height)
+  layout.height(:) = cfg.height;
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % check whether the outline and mask are available, create them if needed
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if (~isfield(layout, 'outline') || ~isfield(layout, 'mask')) && ~strcmpi(cfg.style, '3d')
@@ -947,12 +963,15 @@ if (~isfield(layout, 'outline') || ~isfield(layout, 'mask')) && ~strcmpi(cfg.sty
     sel = setdiff(1:length(layout.label), [ind_scale ind_comnt]); % these are excluded for scaling
     x = layout.pos(sel,1);
     y = layout.pos(sel,2);
-    % the following would work even if all electrodes are offset and not centered around zero
-    % xrange = range(x);
-    % yrange = range(y);
-    % the following prevent topography distortion in case electrodes are not evenly distributed over the whole head
-    xrange = 2*( max(max(x),abs(min(x)) ));
-    yrange = 2*( max(max(y),abs(min(y)) ));
+    if istrue(cfg.center)
+        % the following centers all electrodes around zero
+        xrange = range(x);
+        yrange = range(y);
+    else
+        % the following prevent topography distortion in case electrodes are not evenly distributed over the whole head
+        xrange = 2*( max(max(x),abs(min(x)) ));
+        yrange = 2*( max(max(y),abs(min(y)) ));
+    end
     if xrange==0
       xrange = 1;
     end
