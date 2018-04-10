@@ -1,24 +1,13 @@
 function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 
-% FT_ARTIFACT_ZVALUE reads the interesting segments of data from file and
-% identifies artifacts by means of thresholding the z-transformed value
-% of the preprocessed raw data. Depending on the preprocessing options,
-% this method will be sensitive to EOG, muscle or jump artifacts.
-% This procedure only works on continuously recorded data.
+% FT_ARTIFACT_ZVALUE reads the interesting segments of data from file and identifies
+% artifacts by means of thresholding the z-transformed value of the preprocessed raw data.
+% Depending on the preprocessing options, this method will be sensitive to EOG, muscle or
+% jump artifacts.  This procedure only works on continuously recorded data.
 %
 % Use as
 %   [cfg, artifact] = ft_artifact_zvalue(cfg)
-% or
-%   [cfg, artifact] = ft_artifact_zvalue(cfg, data)
-%
-% The output argument "artifact" is a Nx2 matrix comparable to the
-% "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
-% beginsamples of an artifact period, the second column contains the
-% endsamples of the artifactperiods.
-%
-% If you are calling FT_ARTIFACT_ZVALUE with only the configuration as first
-% input argument and the data still has to be read from file, you should
-% specify
+% with the configuration options
 %   cfg.dataset     = string with the filename
 % or
 %   cfg.headerfile  = string with the filename
@@ -27,21 +16,22 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %   cfg.headerformat
 %   cfg.dataformat
 %
-% If you are calling FT_ARTIFACT_ZVALUE with also the second input argument
-% "data", then that should contain data that was already read from file
-% a call to FT_PREPROCESSING.
-%
-% If you encounter difficulties with memory usage, you can use
-%   cfg.memory = 'low' or 'high', whether to be memory or computationally efficient, respectively (default = 'high')
+% Alternatively you can use it as
+%   [cfg, artifact] = ft_artifact_zvalue(cfg, data)
+% where the input data is a structure as obtained from FT_PREPROCESSING.
 %
 % The required configuration settings are:
-%   cfg.trl
-%   cfg.continuous
+%   cfg.trl         = structure that defines the data segments of interest. See FT_DEFINETRIAL
+%   cfg.continuous  = 'yes' or 'no' whether the file contains continuous data (default   = 'yes')
+% and
 %   cfg.artfctdef.zvalue.channel
 %   cfg.artfctdef.zvalue.cutoff
 %   cfg.artfctdef.zvalue.trlpadding
 %   cfg.artfctdef.zvalue.fltpadding
 %   cfg.artfctdef.zvalue.artpadding
+%
+% If you encounter difficulties with memory usage, you can use
+%   cfg.memory = 'low' or 'high', whether to be memory or computationally efficient, respectively (default = 'high')
 %
 % The optional configuration settings (see below) are:
 %   cfg.artfctdef.zvalue.artfctpeak  = 'yes' or 'no'
@@ -106,6 +96,11 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %   cfg.artfctdef.zvalue.baselinewindow = [begin end] in seconds, the default is the complete trial
 %   cfg.artfctdef.zvalue.hilbert       = 'no' or 'yes'
 %   cfg.artfctdef.zvalue.rectify       = 'no' or 'yes'
+%
+% The output argument "artifact" is a Nx2 matrix comparable to the
+% "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
+% beginsamples of an artifact period, the second column contains the
+% endsamples of the artifactperiods.
 %
 % See also FT_REJECTARTIFACT, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG, FT_ARTIFACT_EOG,
 % FT_ARTIFACT_JUMP, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_ZVALUE
@@ -267,9 +262,9 @@ for trlop = 1:numtrl
   
   if strcmp(cfg.memory, 'low') % store nothing in memory
     if hasdata
-      dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'skipcheckdata', 1);
+      dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'skipcheckdata', 1);
     else
-      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'dataformat', cfg.dataformat);
+      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
     end
     dat = preproc(dat, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(dat,2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
     
@@ -287,8 +282,8 @@ for trlop = 1:numtrl
     
     if ~pertrial
       % accumulate the sum and the sum-of-squares
-      sumval = sumval + sum(dat,2);
-      sumsqr = sumsqr + sum(dat.^2,2);
+      sumval = sumval + nansum(dat,2);
+      sumsqr = sumsqr + nansum(dat.^2,2);
       numsmp = numsmp + size(dat,2);
     else
       % store per trial the sum and the sum-of-squares
@@ -298,9 +293,9 @@ for trlop = 1:numtrl
     end
   else % store all data in memory, saves computation time
     if hasdata
-      dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'skipcheckdata', 1);
+      dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'skipcheckdata', 1);
     else
-      dat{trlop} = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'dataformat', cfg.dataformat);
+      dat{trlop} = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
     end
     dat{trlop} = preproc(dat{trlop}, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(dat{trlop},2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
     
@@ -318,8 +313,8 @@ for trlop = 1:numtrl
     
     if ~pertrial
       % accumulate the sum and the sum-of-squares
-      sumval = sumval + sum(dat{trlop},2);
-      sumsqr = sumsqr + sum(dat{trlop}.^2,2);
+      sumval = sumval + nansum(dat{trlop},2);
+      sumsqr = sumsqr + nansum(dat{trlop}.^2,2);
       numsmp = numsmp + size(dat{trlop},2);
     else
       % store per trial the sum and the sum-of-squares
@@ -361,9 +356,9 @@ for trlop = 1:numtrl
   if strcmp(cfg.memory, 'low') % store nothing in memory (note that we need to preproc AGAIN... *yawn*
     fprintf('.');
     if hasdata
-      dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
+      dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'));
     else
-      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'dataformat', cfg.dataformat);
+      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
     end
     dat = preproc(dat, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(dat,2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
     zmax{trlop}  = -inf + zeros(1,size(dat,2));
@@ -412,9 +407,9 @@ end
 %  for trlop = 1:numtrl
 %    fprintf('.');
 %    if hasdata
-%      dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind(sgnlop), 'checkboundary', strcmp(cfg.continuous,'no'));
+%      dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind(sgnlop), 'checkboundary', strcmp(cfg.continuous, 'no'));
 %    else
-%      dat{trlop} = read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind(sgnlop), 'checkboundary', strcmp(cfg.continuous,'no'));
+%      dat{trlop} = read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind(sgnlop), 'checkboundary', strcmp(cfg.continuous, 'no'));
 %    end
 %    dat{trlop} = preproc(dat{trlop}, cfg.artfctdef.zvalue.channel(sgnlop), hdr.Fs, cfg.artfctdef.zvalue, [], fltpadding, fltpadding);
 %    % accumulate the sum and the sum-of-squares
@@ -572,7 +567,7 @@ artbeg = find(diff([0 artval])== 1);
 artend = find(diff([artval 0])==-1);
 artifact = [artbeg(:) artend(:)];
 
-if strcmp(cfg.artfctdef.zvalue.artfctpeak,'yes')
+if strcmp(cfg.artfctdef.zvalue.artfctpeak, 'yes')
   cnt=1;
   shift=opt.trl(1,1)-1;
   for tt=1:opt.numtrl
@@ -711,7 +706,7 @@ function keyboard_cb(h, eventdata)
 % If a mouseclick was made, use that value. If not, determine the key that
 % corresponds to the uicontrol element that was activated.
 
-if isa(eventdata,'matlab.ui.eventdata.ActionData') % only the case when clicked with mouse
+if isa(eventdata, 'matlab.ui.eventdata.ActionData') % only the case when clicked with mouse
   curKey = get(h, 'userdata');
 elseif isa(eventdata, 'matlab.ui.eventdata.KeyData') % only when key was pressed
   if isempty(eventdata.Character) && any(strcmp(eventdata.Key, {'control', 'shift', 'alt', '0'}))
@@ -722,7 +717,7 @@ elseif isa(eventdata, 'matlab.ui.eventdata.KeyData') % only when key was pressed
     curKey = eventdata.Key;
   else
     curKey = [sprintf('%s+', eventdata.Modifier{:}) eventdata.Key];
-  end  
+  end
 elseif isfield(eventdata, 'Key')  % only when key was pressed
   curKey = eventdata.Key;
 elseif isempty(eventdata) % matlab2012b returns an empty double upon a mouse click
@@ -734,7 +729,6 @@ end
 h = getparent(h); % otherwise h is empty if isa [...].ActionData
 opt = getappdata(h, 'opt');
 
-disp(strcat('Key = ', curKey))
 switch strtrim(curKey)
   case 'leftarrow' % change trials
     opt.trlop = max(opt.trlop - 1, 1); % should not be smaller than 1
@@ -786,38 +780,38 @@ switch strtrim(curKey)
     end
     setappdata(h, 'opt', opt);
     redraw_cb(h, eventdata);
-%   case 'control+uparrow' % change channel
-%     if strcmp(opt.channel, 'artifact')
-%       [dum, indx] = max(opt.zval);
-%       sgnind      = opt.zindx(indx);
-%     else
-%       if ~isempty(opt.data)
-%         sgnind  = match_str(opt.channel, opt.data.label);
-%         selchan = match_str(opt.artcfg.channel, opt.channel);
-%       else
-%         sgnind  = match_str(opt.channel,   opt.hdr.label);
-%         selchan = match_str(opt.artcfg.channel, opt.channel);
-%       end
-%     end
-%     numchan = numel(opt.artcfg.channel);
-%     chansel = min(selchan+1, numchan);
-%     % convert numeric array into cell-array with channel labels
-%     opt.channel = tmpchan(chansel);
-%     setappdata(h, 'opt', opt);
-%     redraw_cb(h, eventdata);
-%   case 'c' % select channel
-%     select = match_str([opt.artcfg.channel;{'artifact'}], opt.channel);
-%     opt.channel = select_channel_list([opt.artcfg.channel;{'artifact'}], select);
-%     setappdata(h, 'opt', opt);
-%     redraw_cb(h, eventdata);
-%   case 'control+downarrow'
-%     tmpchan = [opt.artcfg.channel;{'artifact'}]; % append the 'artifact' channel
-%     chansel = match_str(tmpchan, opt.channel);
-%     chansel = max(chansel-1, 1);
-%     % convert numeric array into cell-array with channel labels
-%     opt.channel = tmpchan(chansel);
-%     setappdata(h, 'opt', opt);
-%     redraw_cb(h, eventdata);
+    %   case 'control+uparrow' % change channel
+    %     if strcmp(opt.channel, 'artifact')
+    %       [dum, indx] = max(opt.zval);
+    %       sgnind      = opt.zindx(indx);
+    %     else
+    %       if ~isempty(opt.data)
+    %         sgnind  = match_str(opt.channel, opt.data.label);
+    %         selchan = match_str(opt.artcfg.channel, opt.channel);
+    %       else
+    %         sgnind  = match_str(opt.channel,   opt.hdr.label);
+    %         selchan = match_str(opt.artcfg.channel, opt.channel);
+    %       end
+    %     end
+    %     numchan = numel(opt.artcfg.channel);
+    %     chansel = min(selchan+1, numchan);
+    %     % convert numeric array into cell-array with channel labels
+    %     opt.channel = tmpchan(chansel);
+    %     setappdata(h, 'opt', opt);
+    %     redraw_cb(h, eventdata);
+    %   case 'c' % select channel
+    %     select = match_str([opt.artcfg.channel;{'artifact'}], opt.channel);
+    %     opt.channel = select_channel_list([opt.artcfg.channel;{'artifact'}], select);
+    %     setappdata(h, 'opt', opt);
+    %     redraw_cb(h, eventdata);
+    %   case 'control+downarrow'
+    %     tmpchan = [opt.artcfg.channel;{'artifact'}]; % append the 'artifact' channel
+    %     chansel = match_str(tmpchan, opt.channel);
+    %     chansel = max(chansel-1, 1);
+    %     % convert numeric array into cell-array with channel labels
+    %     opt.channel = tmpchan(chansel);
+    %     setappdata(h, 'opt', opt);
+    %     redraw_cb(h, eventdata);
   case 'a'
     % select the artifact to display
     response = inputdlg(sprintf('artifact trial to display'), 'specify', 1, {num2str(opt.trlop)});
@@ -942,17 +936,20 @@ else
 end
 
 if ~isempty(opt.data)
-  data = ft_fetch_data(opt.data, 'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
+  data = ft_fetch_data(opt.data, 'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'));
 else
-  data = ft_read_data(cfg.datafile,   'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
+  data = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'));
 end
-%data = preproc(data, '', hdr.Fs, artcfg, [], artcfg.fltpadding, artcfg.fltpadding);
-str  = sprintf('trial %3d, channel %s', opt.trlop, hdr.label{sgnind});
+
+% data = preproc(data, '', hdr.Fs, artcfg, [], artcfg.fltpadding, artcfg.fltpadding);
+
+% the string us used as title and printed in the command window
+str = sprintf('trial %3d of %d, channel %s', trlop, size(trl,1), hdr.label{sgnind});
 fprintf('showing %s\n', str);
 
 %-----------------------------
 % plot summary in left subplot
-subplot(opt.h1);hold on;
+subplot(opt.h1); hold on;
 
 % plot as a blue line only once
 if isempty(get(opt.h1, 'children'))
@@ -1041,10 +1038,10 @@ end
 subplot(opt.h2); hold on
 if isempty(get(opt.h2, 'children'))
   % do the plotting
-  plot(xval(selpad), data(selpad), 'color', [0.5 0.5 1], 'displayname', 'line1');
-  plot(xval(sel),    data(sel),    'color', [0 0 1],     'displayname', 'line2');
-  vline(xval(  1)+(trlpadsmp-1/opt.hdr.Fs),     'color', [0 0 0],     'displayname', 'vline1');
-  vline(xval(end)-(trlpadsmp/opt.hdr.Fs),       'color', [0 0 0],     'displayname', 'vline2');
+  plot(xval(selpad), data(selpad),          'color', [0.5 0.5 1], 'displayname', 'line1');
+  plot(xval(sel),    data(sel),             'color', [0 0 1],     'displayname', 'line2');
+  vline(xval(  1)+(trlpadsmp-1/opt.hdr.Fs), 'color', [0 0 0],     'displayname', 'vline1');
+  vline(xval(end)-(trlpadsmp/opt.hdr.Fs),   'color', [0 0 0],     'displayname', 'vline2');
   data(~artval) = nan;
   plot(xval, data, 'r-', 'displayname', 'line3');
   xlabel('time(s)');
@@ -1099,8 +1096,8 @@ else
   set(findall(h3children, 'displayname', 'line2b'), 'XData', xval(sel));
   set(findall(h3children, 'displayname', 'line2b'), 'YData', zval(sel));
   zval(~artval) = nan;
-  set(findall(h3children, 'displayname', 'line3b'),  'XData', xval);
-  set(findall(h3children, 'displayname', 'line3b'),  'YData', zval);
+  set(findall(h3children, 'displayname', 'line3b'),     'XData', xval);
+  set(findall(h3children, 'displayname', 'line3b'),     'YData', zval);
   set(findall(h3children, 'displayname', 'threshline'), 'YData', [1 1].*opt.threshold);
   set(findall(h3children, 'displayname', 'threshline'), 'XData', xval([1 end]));
   abc = axis(opt.h3);

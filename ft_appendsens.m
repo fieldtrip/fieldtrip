@@ -97,6 +97,7 @@ hascoilpos = 0;
 hascoilori = 0;
 haschanori = 0;
 hasoptopos = 0;
+hastra     = 0;
 haslabelold = 0;
 haschanposold = 0;
 for i=1:length(varargin)
@@ -259,7 +260,7 @@ if hascoilori
 end
 
 % keep the following fields only when identical across inputs
-if haslabelold && all(strcmp(labelold{1}, labelold)) % labeloldmatch
+if haslabelold && all(isequal(labelold{1}, labelold{:})) % labeloldmatch
   sens.labelold = labelold{1};
 end
 if haschanposold && all(isequal(chanposold{1}, chanposold{:})) % chanposoldmatch

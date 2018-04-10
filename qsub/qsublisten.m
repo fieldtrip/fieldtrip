@@ -54,7 +54,7 @@ if ischar(filter)
 elseif iscellstr(filter)
   regexpFilt = 0;
 else
-  ft_error('filter should either be a regexp string or cell array of exact-match strings');
+  error('filter should either be a regexp string or cell array of exact-match strings');
 end
 
 % keep track of which job IDs we have already recognized and fired the callback for

@@ -60,13 +60,13 @@ threads = threads && peer('tcpserver', 'status');
 
 if ~threads
   % start the maintenance threads
-  ws = ft_warning('off');
+  ws = warning('off');
   peer('announce',  'start');
   peer('discover',  'start');
   peer('expire',    'start');
   peer('tcpserver', 'start');
   % peer('udsserver', 'start');
-  ft_warning(ws);
+  warning(ws);
   % wait some time to ensure that all peers on the network have been found
   pause(1.5);
 end
@@ -114,7 +114,7 @@ end
 if ~isempty(previous_argin) && ~isequal(varargin{1}, previous_argin{1})
   % this can be skipped if the previous call used the same function
   if isempty(which(varargin{1}))
-    ft_error('Not a valid M-file (%s).', varargin{1});
+    error('Not a valid M-file (%s).', varargin{1});
   end
 end
 
@@ -151,25 +151,25 @@ while isempty(jobid)
   % only peers that are currently in idle or busy slave mode are interesting
   list = list([list.status]==2 | [list.status]==3);
   if isempty(list)
-    ft_error('there is no peer available as slave');
+    error('there is no peer available as slave');
   end
   
   % only peers with enough memory are interesting
   list = list([list.memavail] >= memreq);
   if isempty(list)
-    ft_error('there are no slave peers available that meet the memory requirements');
+    error('there are no slave peers available that meet the memory requirements');
   end
   
   % only peers with enough CPU speed are interesting
   list = list([list.cpuavail] >= cpureq);
   if isempty(list)
-    ft_error('there are no slave peers available that meet the CPU requirements');
+    error('there are no slave peers available that meet the CPU requirements');
   end
   
   % only peers with enough time for a single job are interesting
   list = list([list.timavail] >= timreq);
   if isempty(list)
-    ft_error('there are no slave peers available to execute a job of this duration');
+    error('there are no slave peers available to execute a job of this duration');
   end
   
   % only the idle slaves are interesting from now on
@@ -210,7 +210,7 @@ while isempty(jobid)
 end % while isempty(jobid)
 
 if isempty(jobid)
-  ft_warning('FieldTrip:peer:noSlaveAvailable', 'none of the slave peers was willing to accept the job');
+  warning('FieldTrip:peer:noSlaveAvailable', 'none of the slave peers was willing to accept the job');
 end
 
 % remember the input arguments to speed up subsequent calls

@@ -17,6 +17,7 @@
     #include <sys/socket.h>
     #include <sys/un.h>
     #include <netinet/in.h>
+    #include <netinet/tcp.h>
     #include <arpa/inet.h>
     #include <netdb.h>
     #include <unistd.h>
@@ -34,6 +35,7 @@
     #include <sys/socket.h>
     #include <sys/un.h>
     #include <netinet/in.h>
+    #include <netinet/tcp.h>
     #include <arpa/inet.h>
     #include <netdb.h>
     #include <unistd.h>
@@ -116,6 +118,7 @@
     #include <sys/socket.h>
     #include <sys/un.h>
     #include <netinet/in.h>
+    #include <netinet/tcp.h>
     #include <netinet/ip.h>
     #include <unistd.h>  /* for close() */
     #include <netdb.h>

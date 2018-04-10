@@ -46,7 +46,12 @@ for i=1:(nargin-1)
     continue
   end
   
-  fn0 = fieldnames(cfg);
+  if isempty(cfg)
+    % allow for [] as the input cfg
+    fn0 = {};
+  else
+    fn0 = fieldnames(cfg);
+  end
   
   if ~isfield(varargin{i}, 'cfg')
     % input does not contain cfg, so no rollback to be performed

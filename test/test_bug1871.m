@@ -25,7 +25,7 @@ freq.powspctrm = ft_struct2single(freq.powspctrm);
 cfg = [];
 cfg.interactive = 'yes';
 % cfg.showlabels  = 'no'; % this is a deprecated option, use cfg.marker instead
-cfg.marker = 'no'; 
+cfg.marker      = 'off'; 
 cfg.zlim        = 'maxabs';
 cfg.layout      = 'neuromag306cmb.lay';
 ft_topoplotTFR(cfg, freq);

@@ -161,7 +161,8 @@ switch version
     sens = fixoldorg(sens, false);
     
     % ensure that all numbers are represented in double precision
-    sens = ft_struct2double(sens);
+    % this only affects the top-level fields and does not recurse
+    sens = ft_struct2double(sens, 1);
     
     % in version 2011v2 this was optional, now it is required
     if ~isfield(sens, 'chantype') || all(strcmp(sens.chantype, 'unknown'))
@@ -368,7 +369,7 @@ switch version
     
     if ~isfield(sens, 'unit')
       % this should be done prior to calling ft_chanunit, since ft_chanunit uses this for planar neuromag channels
-      sens = ft_convert_units(sens);
+      sens = ft_determine_units(sens);
     end
     
     if ~isfield(sens, 'chanunit') || all(strcmp(sens.chanunit, 'unknown'))
@@ -381,7 +382,7 @@ switch version
     
     if any(strcmp(sens.type, {'meg', 'eeg', 'magnetometer', 'electrode', 'unknown'}))
       % this is not sufficiently informative, so better remove it
-      % see also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1806
+      % see also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1806
       sens = rmfield(sens, 'type');
     end
     

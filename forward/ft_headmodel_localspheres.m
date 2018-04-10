@@ -79,7 +79,7 @@ end
 headmodel = [];
 
 % ensure that the mesh has units, estimate them if needed
-mesh = ft_convert_units(mesh);
+mesh = ft_determine_units(mesh);
 
 % ensure that it has a consistent representation and consistent units
 grad = ft_datatype_sens(grad);

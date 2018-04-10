@@ -3,10 +3,6 @@ function failed_bug_harmony
 % WALLTIME 00:45:00
 % MEM 6gb
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-
 % this is to test the implementation of the frequency domain harmony reconstruction
 % see also bug2822
 

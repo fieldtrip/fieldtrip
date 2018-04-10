@@ -54,9 +54,9 @@ while kont==0;
         [ux,sx,vx]=svd(kwinvkt);
         %disp(sx(1,1)/alpha)
         
+        Wold=W;
         for i=1:ng;
         Lloc=squeeze(L(:,i,:));
-        Wold=W;
         W(:,:,i)=sqrtm(Lloc'*M*Lloc);
         end
     reldef=(norm(reshape(W,[],1)-reshape(Wold,[],1))/norm(reshape(Wold,[],1)));

@@ -1,7 +1,7 @@
 function test_ft_plot_cloud
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 3gb
 
 elec = ft_read_sens('easycap-M10.txt');
 

@@ -248,7 +248,7 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   %
 else
 
-  sens = ft_convert_units(data.grad);
+  sens = ft_determine_units(data.grad);
   chanposnans = any(isnan(sens.chanpos(:))) || any(isnan(sens.chanori(:)));
   if chanposnans
     if isfield(sens, 'chanposold')

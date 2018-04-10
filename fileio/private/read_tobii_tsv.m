@@ -25,7 +25,7 @@ if needhdr
       [key, val] = strtok(line, ':');
       key = fixname(key);
       val = val(2:end); % skip the ':'
-      val = deblank2(val);
+      val = strtrim(val);
       tsv.(key) = val;
     end
     

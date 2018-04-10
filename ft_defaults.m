@@ -1,8 +1,9 @@
 function ft_defaults
 
 % FT_DEFAULTS (ending with "s") sets some general settings in the global variable
-% ft_default (without the "s") and takes care of the required path settings. This
-% function is called at the begin of all FieldTrip functions.
+% ft_default (without the "s") and takes care of the required path settings. You can
+% call this function in your startup.m script. This function is also called at the
+% begin of all FieldTrip functions.
 %
 % The configuration defaults are stored in the global "ft_default" structure.
 % The ft_checkconfig function that is called by many FieldTrip functions will
@@ -10,16 +11,25 @@ function ft_defaults
 % the FieldTrip function that you are calling.
 %
 % The global options and their default values are
-%   ft_default.trackdatainfo     = string, can be 'yes' or 'no' (default = 'no')
-%   ft_default.trackconfig       = string, can be 'cleanup', 'report', 'off' (default = 'off')
 %   ft_default.showcallinfo      = string, can be 'yes' or 'no' (default = 'yes')
 %   ft_default.checkconfig       = string, can be 'pedantic', 'loose', 'silent' (default = 'loose')
 %   ft_default.checksize         = number in bytes, can be inf (default = 1e5)
+%   ft_default.trackconfig       = string, can be 'cleanup', 'report', 'off' (default = 'off')
+%   ft_default.trackusage        = false, or string with salt for one-way encryption of identifying information (by default this is enabled and an automatic salt is created)
+%   ft_default.trackdatainfo     = string, can be 'yes' or 'no' (default = 'no')
+%   ft_default.trackcallinfo     = string, can be 'yes' or 'no' (default = 'yes')
 %   ft_default.outputfilepresent = string, can be 'keep', 'overwrite', 'error' (default = 'overwrite')
 %   ft_default.debug             = string, can be 'display', 'displayonerror', 'displayonsuccess', 'save', 'saveonerror', saveonsuccess' or 'no' (default = 'no')
-%   ft_default.trackusage        = false, or string with salt for one-way encryption of identifying information (by default this is enabled and an automatic salt is created)
+%   ft_default.toolbox.signal    = string, can be 'compat' or 'matlab' (default = 'compat')
+%   ft_default.toolbox.stats     = string, can be 'compat' or 'matlab' (default = 'compat')
+%   ft_default.toolbox.images    = string, can be 'compat' or 'matlab' (default = 'compat')
 %
-% See also FT_HASTOOLBOX, FT_CHECKCONFIG
+% The toolbox option for signal, stats and images allows you to specify whether you
+% want to use a compatible drop-in to be used for these MathWorks toolboxes, or the
+% original version from MathWorks.  The default is 'compat', which has the advantage
+% that you do not need a license for these toolboxes.
+%
+% See also FT_HASTOOLBOX, FT_CHECKCONFIG, FT_TRACKUSAGE
 
 % undocumented options
 %   ft_default.siunits        = 'yes' or 'no'
@@ -142,33 +152,28 @@ if ~isdeployed
   
   try
     % external/signal contains alternative implementations of some signal processing functions
-    if ~ft_platform_supports('signal') || ~ft_hastoolbox('signal') || ~strcmp(ft_default.toolbox.signal,'matlab')
-        addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
+    if ~ft_platform_supports('signal') || ~strcmp(ft_default.toolbox.signal, 'matlab') || ~ft_hastoolbox('signal')
+      addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
     end
   end
   
   try
     % external/stats contains alternative implementations of some statistics functions
-    if ~ft_platform_supports('stats') || ~ft_hastoolbox('stats') || ~strcmp(ft_default.toolbox.stats,'matlab')
+    if ~ft_platform_supports('stats') || ~strcmp(ft_default.toolbox.stats, 'matlab') || ~ft_hastoolbox('stats')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
     end
   end
   
   try
     % external/images contains alternative implementations of some image processing functions
-    if ~ft_platform_supports('images') || ~ft_hastoolbox('images') || ~strcmp(ft_default.toolbox.images,'matlab')
-        addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'images'));
+    if ~ft_platform_supports('images') || ~strcmp(ft_default.toolbox.images, 'matlab') || ~ft_hastoolbox('images')
+      addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'images'));
     end
   end
   
   try
     % this directory contains various functions that were obtained from elsewere, e.g. MATLAB file exchange
     ft_hastoolbox('fileexchange', 3, 1); % not required
-  end
-  
-  try
-    % this directory contains the backward compatibility wrappers for the ft_xxx function name change
-    ft_hastoolbox('compat', 3, 1); % not required
   end
   
   try
@@ -193,6 +198,12 @@ if ~isdeployed
     if ft_platform_supports('matlabversion', -inf, '2016b'), ft_hastoolbox('compat/matlablt2017a', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2017a'), ft_hastoolbox('compat/matlablt2017b', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2017b'), ft_hastoolbox('compat/matlablt2018a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2018a'), ft_hastoolbox('compat/matlablt2018b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2018b'), ft_hastoolbox('compat/matlablt2019a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2019a'), ft_hastoolbox('compat/matlablt2019b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2019b'), ft_hastoolbox('compat/matlablt2020a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2020a'), ft_hastoolbox('compat/matlablt2020b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2020b'), ft_hastoolbox('compat/matlablt2021a', 3, 1); end
   end
   
   try

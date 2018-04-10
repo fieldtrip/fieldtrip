@@ -6,7 +6,7 @@ function ft_documentationreference(outdir)
 % http://www.fieldtriptoolbox.org/reference where the output of this function can
 % be found.
 %
-% See FT_DOCUMENTATIONINDEX
+% See also FT_DOCUMENTATIONINDEX
 
 % Copyright (C) 2008-2014, Robert Oostenveld
 %
@@ -105,7 +105,7 @@ for i=1:length(funname)
 end
 
 % create the desired output directory
-if ~isdir(outdir)
+if ~isfolder(outdir)
   mkdir(outdir);
 end
 

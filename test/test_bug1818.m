@@ -4,7 +4,7 @@ function test_bug1818
 % WALLTIME 00:10:00
 
 % test the reading function of meshes used for constructing SIMBIO FEM head models
-% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1818
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1818
 
 % TEST ft_read_headshape ft_datatype_parcellation
 

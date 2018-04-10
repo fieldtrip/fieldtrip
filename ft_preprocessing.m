@@ -31,14 +31,14 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.datafile     = string with the filename
 %   cfg.headerfile   = string with the filename
 %
-% If you are calling FT_PREPROCESSING with also the second input argument
-% "data", then that should contain data that was already read from file in
-% a previous call to FT_PREPROCESSING. In that case only the configuration
-% options below apply.
+% If you are calling FT_PREPROCESSING with the second input argument "data", then
+% that should contain data that was already read from file in a previous call to
+% FT_PREPROCESSING. In that case only the configuration options below apply.
 %
 % The channels that will be read and/or preprocessed are specified with
 %   cfg.channel      = Nx1 cell-array with selection of channels (default = 'all'),
 %                      see FT_CHANNELSELECTION for details
+%   cfg.chantype     = string or Nx1 cell-array with channel types to be read (only for NeuroOmega)
 %
 % The preprocessing options for the selected channels are specified with
 %   cfg.lpfilter      = 'no' or 'yes'  lowpass filter (default = 'no')
@@ -50,7 +50,7 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.lpfreq        = lowpass  frequency in Hz
 %   cfg.hpfreq        = highpass frequency in Hz
 %   cfg.bpfreq        = bandpass frequency range, specified as [lowFreq highFreq] in Hz
-%   cfg.bsfreq        = bandstop frequency range, specified as [low high] in Hz
+%   cfg.bsfreq        = bandstop frequency range, specified as [low high] in Hz (or as Nx2 matrix for notch filter)
 %   cfg.dftfreq       = line noise frequencies in Hz for DFT filter (default = [50 100 150])
 %   cfg.lpfiltord     = lowpass  filter order (default set in low-level function)
 %   cfg.hpfiltord     = highpass filter order (default set in low-level function)
@@ -95,7 +95,7 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.hilbert       = 'no', 'abs', 'complex', 'real', 'imag', 'absreal', 'absimag' or 'angle' (default = 'no')
 %   cfg.rectify       = 'no' or 'yes' (default = 'no')
 %   cfg.precision     = 'single' or 'double' (default = 'double')
-%   cfg.absdiff       = 'no' or 'yes', computes absolute derivative (i.e.first derivative then rectify)
+%   cfg.absdiff       = 'no' or 'yes', computes absolute derivative (i.e. first derivative then rectify)
 %
 % Prperocessing options that only apply to MEG data are
 %   cfg.coordsys      = string, 'head' or 'dewar' (default = 'head')
@@ -104,7 +104,7 @@ function [data] = ft_preprocessing(cfg, data)
 % Preprocessing options that you should only use for EEG data are
 %   cfg.reref         = 'no' or 'yes' (default = 'no')
 %   cfg.refchannel    = cell-array with new EEG reference channel(s), this can be 'all' for a common average reference
-%   cfg.refmethod     = 'avg' or 'median' (default = 'avg')
+%   cfg.refmethod     = 'avg', 'median', or 'bipolar' for bipolar derivation of sequential channels (default = 'avg')
 %   cfg.implicitref   = 'label' or empty, add the implicit EEG reference as zeros (default = [])
 %   cfg.montage       = 'no' or a montage structure, see FT_APPLY_MONTAGE (default = 'no')
 %
@@ -215,6 +215,7 @@ cfg.coilaccuracy   = ft_getopt(cfg, 'coilaccuracy');        % is passed to low-l
 cfg.checkmaxfilter = ft_getopt(cfg, 'checkmaxfilter');      % this allows to read non-maxfiltered neuromag data recorded with internal active shielding
 cfg.montage        = ft_getopt(cfg, 'montage', 'no');
 cfg.updatesens     = ft_getopt(cfg, 'updatesens', 'no');    % in case a montage or rereferencing is specified
+cfg.chantype       = ft_getopt(cfg, 'chantype', {});        %2017.10.10 AB required for NeuroOmega files
 
 % these options relate to the actual preprocessing, it is neccessary to specify here because of padding
 cfg.dftfilter      = ft_getopt(cfg, 'dftfilter', 'no');
@@ -393,7 +394,9 @@ else
   cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
   
   % read the header
-  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'coordsys', cfg.coordsys, 'coilaccuracy', cfg.coilaccuracy, 'checkmaxfilter', istrue(cfg.checkmaxfilter));
+  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat,...
+    'coordsys', cfg.coordsys, 'coilaccuracy', cfg.coilaccuracy,...
+    'checkmaxfilter', istrue(cfg.checkmaxfilter), 'chantype', cfg.chantype);
   
   % this option relates to reading over trial boundaries in a pseudo-continuous dataset
   if ~isfield(cfg, 'continuous')
@@ -650,10 +653,16 @@ if strcmp(cfg.updatesens, 'yes')
   if ~isempty(cfg.montage) && ~isequal(cfg.montage, 'no')
     montage = cfg.montage;
   elseif strcmp(cfg.reref, 'yes')
-    tmpcfg = keepfields(cfg, {'reref', 'implicitref', 'refchannel', 'channel'});
-    montage = ft_prepare_montage(tmpcfg, data);
+    if strcmp(cfg.refmethod, 'bipolar') || strcmp(cfg.refmethod, 'avg')
+      tmpcfg = keepfields(cfg, {'refmethod', 'implicitref', 'refchannel', 'channel'});
+      tmpcfg.showcallinfo = 'no';
+      montage = ft_prepare_montage(tmpcfg, data);
+    else
+      % do not update the sensor description
+      montage = [];
+    end
   else
-    % do not update anything
+    % do not update the sensor description
     montage = [];
   end
   
@@ -669,7 +678,7 @@ if strcmp(cfg.updatesens, 'yes')
       dataout.grad = ft_apply_montage(dataout.grad, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
     end
     if isfield(dataout, 'elec')
-      ft_info('applying the montage to the grad structure\n');
+      ft_info('applying the montage to the elec structure\n');
       dataout.elec = ft_apply_montage(dataout.elec, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
     end
     if isfield(dataout, 'opto')

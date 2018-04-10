@@ -34,7 +34,7 @@ function [data] = ft_appenddata(cfg, varargin)
 % cell array for this particular function.
 %
 % See also FT_PREPROCESSING, FT_DATAYPE_RAW, FT_APPENDTIMELOCK, FT_APPENDFREQ,
-% FT_APPENDSENS, FT_APPENDSOURCE
+% FT_APPENDSOURCE, FT_APPENDSENS
 
 % Copyright (C) 2005-2008, Robert Oostenveld
 % Copyright (C) 2009-2011, Jan-Mathijs Schoffelen
@@ -77,8 +77,7 @@ end
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
-  % FIXME: raw+comp is not always dealt with correctly
-  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'raw', 'raw+comp'}, 'feedback', 'no');
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'raw', 'raw+comp'}, 'feedback', 'no', 'hassampleinfo', 'ifmakessense');
 end
 
 % set the defaults
@@ -104,14 +103,20 @@ if isempty(cfg.appenddim) || strcmp(cfg.appenddim, 'auto')
     ft_error('cannot append this data');
   end
 end
-fprintf('concatenating over the "%s" dimension\n', cfg.appenddim);
+ft_info('concatenating over the "%s" dimension\n', cfg.appenddim);
 
 % ft_selectdata cannot create the union of the data contained in cell-arrays
 % make a dummy without the actual data, but keep trialinfo/sampleinfo/grad/elec/opto
+% also remove the topo/unmixing/topolabel, if present, otherwise it is not
+% possible to concatenate raw and comp data. Note that in append_common the
+% topo etc. is removed anyhow, when appenddim = 'chan'
 dummy = cell(size(varargin));
 for i=1:numel(varargin)
   dummy{i} = removefields(varargin{i}, {'trial', 'time'});
-  % add a dummy data field, this cause the datatype to become 'chan'
+  if strcmp(cfg.appenddim, 'chan')
+    dummy{i} = removefields(dummy{i}, {'topo', 'unmixing', 'topolabel'});
+  end
+  % add a dummy data field, this causes the datatype to become 'chan'
   dummy{i}.dummy       = ones(numel(dummy{i}.label),1);
   dummy{i}.dummydimord = 'chan';
 end

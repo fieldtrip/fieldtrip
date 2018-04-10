@@ -5,10 +5,6 @@ function test_bug1806
 
 % TEST ft_componentanalysis ft_rejectcomponent ft_megplanar ft_combineplanar ft_megrealign ft_datatype_sens
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-
 ctf151_sens = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf151.mat'));
 ctf275_sens = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf275.mat'));
 
@@ -80,7 +76,7 @@ data_c = ft_componentanalysis(cfg, data);
 %   assert(~ft_senstype(data_c.grad, 'ctf151'));
 % end
 
-% on 19 Feb 2013 I changed it, because of http://bugzilla.fcdonders.nl/show_bug.cgi?id=1959#c7
+% on 19 Feb 2013 I changed it, because of http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1959#c7
 if isfield(data_c.grad, 'type')
   % it should still be detected as ctf151
   assert(strcmp(data_c.grad.type, 'ctf151'));

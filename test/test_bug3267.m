@@ -71,9 +71,9 @@ timelockAppend = ft_appendtimelock(cfg, timelockFIC, timelockFC);
 
 %% compare the two versions
 
-% these should not have sampleinfo as per specification in FT_DATATYPE_TIMELOCK
-assert(~isfield(timelockAppend, 'sampleinfo'));
-assert(~isfield(timelockAll,    'sampleinfo'));
+
+assert(~isfield(timelockAppend, 'sampleinfo')); % this should not have it
+assert( isfield(timelockAll,    'sampleinfo')); % and this one should
 
 % the order should be different
 assert(~isequal(timelockAll.trialinfo,  timelockAppend.trialinfo));
@@ -110,3 +110,88 @@ assert(~isequal(freqAll.trialinfo,  freqAppend.trialinfo));
 
 % after sorting it should be the same
 assert(isequal(freqAll.trialinfo(order1,:),  freqAppend.trialinfo(order2,:)));
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% and in the sequel https://github.com/fieldtrip/fieldtrip/pull/448 Arjen solved something else
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+clear all
+
+%% situation 1: without sampleinfos (works fine)
+data1a.label = {'1';'2';'3'};
+for trl = 1:5
+  data1a.trial{1,trl} = randn(3,3);
+  data1a.time{1,trl} = [1 2 3];
+end
+data1a.trialinfo(:,1) = 1:5;
+
+data1b = data1a;
+data1b.trialinfo(:,1) = 6:10;
+
+% append
+data1 = ft_appenddata([], data1a, data1b);
+% this works fine
+
+cfg = [];
+cfg.length = 1;
+cfg.overlap = 0;
+redef1 = ft_redefinetrial(cfg, data1);
+
+% this should be 1 1 1 2 2 2 ... 10 10 10
+assert(all(abs(diff(redef1.trialinfo))<2)); % PASSES
+
+%% situation 2: with identical sampleinfos (produces incorrect trialinfo)
+data2a = data1a;
+data2a.sampleinfo = [1 3; 4 6; 8 10; 11 13; 16 18];
+data2b = data1b;
+data2b.sampleinfo = [1 3; 4 6; 8 10; 11 13; 16 18];
+data2c = data1b;
+data2c.sampleinfo = [1 3; 4 6; 8 10; 11 13; 16 18];
+for i=1:numel(data2b.trial)
+  % replace the data, this should cause an error detected in ft_fetch_data
+  data2c.trial{i} = randn(size(data2c.trial{i}));
+end
+
+% append
+data2ab = ft_appenddata([], data2a, data2b);
+data2ac = ft_appenddata([], data2a, data2c);
+
+cfg = [];
+cfg.length = 1;
+cfg.overlap = 0;
+% this works as there is no conflict in data and sampleinfos
+redef2 = ft_redefinetrial(cfg, data2ab);
+
+try
+  % this fails because of conflicting data and sampleinfos (at line 263)
+  detectederror = true;
+  redef2 = ft_redefinetrial(cfg, data2ac);
+  detectederror = false;
+end
+assert(detectederror, 'the expected error was not detected');
+
+% this should be 1 1 1 2 2 2 ... 10 10 10
+% assert(all(abs(diff(redef2.trialinfo))<2)); % FAILS
+
+%% situation 3: with intertwined and partly overlapping sampleinfos (produces incorrect trialinfo, as in situation 2)
+data3a = data1a;
+data3a.sampleinfo = [1 3; 4 6; 8 10; 11 13; 16 18];
+data3b = data1b;
+data3b.sampleinfo = [2 4; 5 7; 9 11; 12 14; 15 17];
+
+% append
+data3ab = ft_appenddata([], data3a, data3b);
+
+cfg = [];
+cfg.length = 1;
+cfg.overlap = 0;
+try
+  detectederror = true;
+  % this fails because of intertwined sampleinfos (at line 263)
+  redef3 = ft_redefinetrial(cfg, data3ab);
+  detectederror = false;
+end
+assert(detectederror, 'the expected error was not detected');
+
+% this should be 1 1 1 2 2 2 ... 10 10 10
+% assert(all(abs(diff(redef3.trialinfo))<2)); % FAILS

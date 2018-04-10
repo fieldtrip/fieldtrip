@@ -398,6 +398,11 @@ switch dataformat
     orig = readBESAswf(filename);
     dat  = orig.data(chanindx, begsample:endsample);
     
+  case 'neuromag_headpos'
+    % neuromag headposition file created with maxfilter, the position varies over time
+    orig = read_neuromag_headpos(filename);
+    dat  = orig.data(chanindx, begsample:endsample);
+    
   case {'biosemi_bdf', 'bham_bdf'}
     % this uses a mex file for reading the 24 bit data
     dat = read_biosemi_bdf(filename, hdr, begsample, endsample, chanindx);
@@ -431,21 +436,34 @@ switch dataformat
     ft_hastoolbox('BIOSIG', 1);
     dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
     
-    
   case 'blackrock_nsx'
     % use the NPMK toolbox for the file reading
     ft_hastoolbox('NPMK', 1);
-    
     % ensure that the filename contains a full path specification,
     % otherwise the low-level function fails
-    [p,f,e] = fileparts(filename);
-    if ~isempty(p)
-      % this is OK
-    elseif isempty(p)
+    [p,~,~] = fileparts(filename);
+    if isempty(p)
       filename = which(filename);
     end
-    orig = openNSx(filename, 'duration', [begsample endsample]);
-    keyboard
+    % 2017.10.17 AB - Allowing partial load
+    chan_sel=ismember(hdr.label,deblank({hdr.orig.ElectrodesInfo.Label})); % matlab 2015a
+    %chan_sel=contains({hdr.orig.ElectrodesInfo.Label},hdr.label); %matlab 2017a
+    
+    orig = openNSx(filename, 'channels',find(chan_sel),...
+      'duration', [(begsample-1)*hdr.skipfactor+1 endsample*hdr.skipfactor],...
+      'skipfactor', hdr.skipfactor);
+    
+    d_min=[orig.ElectrodesInfo.MinDigiValue];
+    d_max=[orig.ElectrodesInfo.MaxDigiValue];
+    v_min=[orig.ElectrodesInfo.MinAnalogValue];
+    v_max=[orig.ElectrodesInfo.MaxAnalogValue];
+    
+    %calculating slope (a) and ordinate (b) of the calibration
+    b=double(v_min .* d_max - v_max .* d_min) ./ double(d_max - d_min);
+    a=double(v_max-v_min)./double(d_max-d_min);
+    
+    %apply v = a*d + b to each row of the matrix
+    dat=bsxfun(@plus,bsxfun(@times, double(orig.Data), a'),b');
     
   case {'brainvision_eeg', 'brainvision_dat', 'brainvision_seg'}
     dat = read_brainvision_eeg(filename, hdr.orig, begsample, endsample, chanindx);
@@ -1119,6 +1137,22 @@ switch dataformat
     dat       = dat(:,chanindx,:);      % select channels
     dimord    = 'trials_chans_samples'; % selection using begsample and endsample will be done later
     
+  case 'neuromag_maxfilterlog'
+    log = hdr.orig;
+    dat = [
+      log.t(:)'
+      log.e(:)'
+      log.g(:)'
+      log.v(:)'
+      log.r(:)'
+      log.d(:)'
+      ];
+    for i=1:length(log.hpi)
+      dat = cat(1, dat, log.hpi{i});
+    end
+    dat = dat(chanindx, begsample:endsample);
+    dimord = 'chans_samples';
+    
   case {'neuromag_fif' 'neuromag_mne'}
     % check that the required low-level toolbox is available
     ft_hastoolbox('mne', 1);
@@ -1169,6 +1203,16 @@ switch dataformat
     begsample = begsample - (begepoch-1)*hdr.nSamples;  % correct for the number of bytes that were skipped
     endsample = endsample - (begepoch-1)*hdr.nSamples;  % correct for the number of bytes that were skipped
     dat = dat(:, begsample:endsample);
+    
+  case 'neuroomega_mat'
+    % These are MATLAB *.mat files created by the software 'Map File
+    % Converter' from the original .mpx files recorded by NeuroOmega
+    dat=zeros(hdr.nChans,endsample - begsample + 1);
+    for i=1:hdr.nChans
+      v=double(hdr.orig.(hdr.label{i}));
+      v=v*hdr.orig.(char(strcat(hdr.label{i},'_BitResolution')));
+      dat(i,:)=v(begsample:endsample); %channels sometimes have small differences in samples
+    end
     
   case {'neurosim_ds' 'neurosim_signals'}
     [hdr, dat] = read_neurosim_signals(filename);
@@ -1371,6 +1415,21 @@ switch dataformat
       ft_hastoolbox('yokogawa', 1); % error if it cannot be added
       dat = read_yokogawa_data(filename, hdr, begsample, endsample, chanindx);
     end
+    
+  case 'blackrock_nsx'
+    % use the NPMK toolbox for the file reading
+    ft_hastoolbox('NPMK', 1);
+    
+    % ensure that the filename contains a full path specification,
+    % otherwise the low-level function fails
+    [p,f,e] = fileparts(filename);
+    if ~isempty(p)
+      % this is OK
+    elseif isempty(p)
+      filename = which(filename);
+    end
+    orig = openNSx(filename, 'duration', [begsample endsample], 'channels', chanindx);
+    dat  = double(orig.Data);
     
   otherwise
     % attempt to run dataformat as a function

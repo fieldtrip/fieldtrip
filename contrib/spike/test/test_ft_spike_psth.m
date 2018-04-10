@@ -230,10 +230,11 @@ h = ft_spike_plot_psth(cfgPlot,psthSpike)
 % sem because dof is lower there
 % show how we get nan-padding in psthSpike.trial, and how in trials with right latency we
 % have spikes
-A = [latencies squeeze(psthSpike.trial(:,2,:))];
-A = [[zeros(1,2) psthSpike.time]; A]
-pause(1)
-close
+%
+% A = [latencies squeeze(psthSpike.trial(:,2,:))];
+% A = [[zeros(1,2) psthSpike.time]; A]
+% pause(1)
+% close
 
 %% now combine the trial selection with the latency selection
 cfgPsth = [];

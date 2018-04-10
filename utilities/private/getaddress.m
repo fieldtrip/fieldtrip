@@ -41,12 +41,17 @@ if ~isempty(previous_argout) && isequal(hostname, previous_argin)
   return
 end
 
-if ~isempty(hostname)
-  address = java.net.InetAddress.getByName(hostname);
+if usejava('jvm')
+  if ~isempty(hostname)
+    address = java.net.InetAddress.getByName(hostname);
+  else
+    address = java.net.InetAddress.getLocalHost;
+  end
+  address = char(address.getHostAddress);
 else
-  address = java.net.InetAddress.getLocalHost;
+  % FIXME it would be possible to do a system call, but it would be different for linux, osx and windows
+  address = '127.0.0.1';
 end
-address = char(address.getHostAddress);
 
 % remember for subsequent calls
 previous_argin  = hostname;

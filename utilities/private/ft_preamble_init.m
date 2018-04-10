@@ -1,7 +1,8 @@
 % FT_PREAMBLE_INIT is a helper script that is used at the start of all FieldTrip main
 % functions. It checks whether the user specified at lease one input arguments (i.e.
-% the cfg) or shows the help of the calling function. It checks whether the output file
-% already exists and whether it is OK to overwrite it. It tracks the function call.
+% the cfg) or shows the help of the calling function. It merges the global defaults
+% with the cfg. It checks whether the output file already exists and whether it is OK
+% to overwrite it. It tracks the function call.
 %
 % Use as
 %   ft_preamble init
@@ -42,8 +43,22 @@ if ft_nargin==0
   msg.message     = 'This function requires one or multiple input arguments, please refer to the documentation above';
   msg.identifier  = '';
   msg.stack       = stack;
-  ft_error(msg);
+  error(msg);
 end % if nargin
+
+% check if there are fieldnames in the cfg that suggest as if the user
+% erroneously inputted a data argument
+checkdatafields = isfield(cfg, {'cfg' 'label' 'dimord' 'trialinfo' 'avg' 'powspctrm'});
+if any(checkdatafields)
+  stack = dbstack('-completenames');
+  stack = stack(3);
+  help(stack.name);
+  % throw the error as if it happened in the original function
+  msg.message     = 'It seems as if the first input argument is a FieldTrip data structure, while a cfg is expected';
+  msg.identifier  = '';
+  msg.stack       = stack;
+  error(msg);
+end
 
 % convert automatically from cell-array to structure
 if iscell(cfg)

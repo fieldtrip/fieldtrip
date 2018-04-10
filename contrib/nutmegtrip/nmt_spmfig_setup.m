@@ -196,76 +196,76 @@ end
         st.nmt.gui.timeguih(1) = st.nmt.gui.ax_ts(1);
         
         st.nmt.gui.timeguih(2) = uicontrol(fg,'Style','Text','String','Time:','BackgroundColor',[1 1 1],'HorizontalAlignment','left','Parent',st.fig,...
-            'Position',[sz(1)-335 sz(2)-5 150 25],'Visible','off');
+            'Position',[sz(1)-335 sz(2)-5 150 25],'Visible','off','FontSize',10);
 %            'Position',[offx+s*Dims(1)+4*skx offy+s*Dims(2)-75 150 25],'Visible','off');
 
         st.nmt.gui.t1 = uicontrol('Style','edit','String',num2str(0),'BackgroundColor',nmt_textboxcolor,'Parent',st.fig);
 %        set(st.nmt.gui.t1,'Position',[offx+s*Dims(1)+4*skx+100 offy+s*Dims(2)-70 80 25],...
         set(st.nmt.gui.t1,'Position',[sz(1)-300 sz(2) 80 25],...
-            'HorizontalAlignment','right','Visible','off','Callback','nmt_timeselect(''textbox'')');
+            'HorizontalAlignment','right','Visible','off','Callback','nmt_timeselect(''textbox'')','FontSize',10);
         st.nmt.gui.timeguih(3) = st.nmt.gui.t1;
  
         st.nmt.gui.timeguih(4) = uicontrol(fg,'Style','Text','String','to','BackgroundColor',[1 1 1],'HorizontalAlignment','left','Parent',st.fig,...
-                    'Position',[sz(1)-215 sz(2)-5 50 25],'Visible','off');
+                    'Position',[sz(1)-215 sz(2)-5 50 25],'Visible','off','FontSize',10);
 %                    'Position',[offx+s*Dims(1)+4*skx+185 offy+s*Dims(2)-75 50 25],'Visible','off');
         
         st.nmt.gui.t2 = uicontrol('Style','edit','String',num2str(0),'BackgroundColor',nmt_textboxcolor,'Parent',st.fig,...
             'Position',[sz(1)-200 sz(2) 80 25],...
-            'HorizontalAlignment','right','Visible','off','Callback','nmt_timeselect(''textbox'')');
+            'HorizontalAlignment','right','Visible','off','Callback','nmt_timeselect(''textbox'')','FontSize',10);
 %            'Position',[offx+s*Dims(1)+4*skx+205 offy+s*Dims(2)-70 80 25],...
 %            'HorizontalAlignment','right','Visible','off','Callback','nmt_timeselect(''textbox'')');
         st.nmt.gui.timeguih(5) = st.nmt.gui.t2;
 
         st.nmt.gui.timeguih(6) = uicontrol(fg,'Style','Text','String','s','BackgroundColor',[1 1 1],'HorizontalAlignment','left','Parent',st.fig,...
-            'Position',[sz(1)-115 sz(2)-5 50 25],'Visible','off');
+            'Position',[sz(1)-115 sz(2)-5 50 25],'Visible','off','FontSize',10);
 
         
         st.nmt.gui.animate = uicontrol('Style','pushbutton','String','Animate','BackgroundColor',nmt_textboxcolor,'Parent',st.fig,...
             'Position',[sz(1)-100 sz(2) 80 25],...
-            'HorizontalAlignment','right','Visible','off','Callback','nmt_animate');
+            'HorizontalAlignment','right','Visible','off','Callback','nmt_animate','FontSize',10);
 %             'Position',[offx+s*Dims(1)+4*skx+300 offy+s*Dims(2)-70 80 25],...
 %             'HorizontalAlignment','right','Visible','off','Callback','nmt_animate');
         st.nmt.gui.timeguih(7) = st.nmt.gui.animate;
         
         
         st.nmt.gui.freqguih(1) = uicontrol(fg,'Style','Text','String','Freq:','BackgroundColor',[1 1 1],'HorizontalAlignment','left','Parent',st.fig,...
-            'Position',[offx+s*Dims(1)+4*skx sz(2)-5 150 25],'Visible','off');
+            'Position',[offx+s*Dims(1)+4*skx-20 sz(2)-5 150 25],'Visible','off','FontSize',10);
 %            'Position',[offx+s*Dims(1)+4*skx offy+s*Dims(2)-105 150 25],'Visible','off');
         
         if(1) % popup menu for frequency selection
-           st.nmt.gui.f1 = uicontrol('Style','popupmenu','String',num2str(1),'BackgroundColor',nmt_textboxcolor,'Parent',st.fig);
+           st.nmt.gui.f1 = uicontrol('Style','popupmenu','String',num2str(1),'BackgroundColor',nmt_textboxcolor,'Parent',st.fig,'FontSize',10);
 %            set(st.nmt.gui.f1,'Position',[offx+s*Dims(1)+4*skx+100 offy+s*Dims(2)-100 80 25],...
-            set(st.nmt.gui.f1,'Position',[offx+s*Dims(1)+4*skx+35 sz(2) 50 25],...
-                'HorizontalAlignment','right','Visible','off','Callback','nmt_timeselect(''textbox'')');
+            set(st.nmt.gui.f1,'Position',[offx+s*Dims(1)+4*skx+35 sz(2) 60 25],...
+                'HorizontalAlignment','right','Visible','off','Callback','nmt_timeselect(''textbox'')','FontSize',10);
             st.nmt.gui.freqguih(2) = st.nmt.gui.f1;
             
             st.nmt.gui.freqguih(3) = uicontrol(fg,'Style','Text','String','to','BackgroundColor',[1 1 1],'HorizontalAlignment','left','Parent',st.fig,...
-                'Position',[offx+s*Dims(1)+4*skx+90 sz(2)-5 50 25],'Visible','off');
+                'Position',[offx+s*Dims(1)+4*skx+90 sz(2)-5 50 25],'Visible','off','FontSize',10);
 %                'Position',[offx+s*Dims(1)+4*skx+185 offy+s*Dims(2)-105 50 25],'Visible','off');
             
             
             st.nmt.gui.f2 = uicontrol('Style','popupmenu','String',num2str(1),'BackgroundColor',nmt_textboxcolor,'Parent',st.fig,...
-                'Position',[offx+s*Dims(1)+4*skx+105 sz(2) 50 25],...
-                'HorizontalAlignment','right','Visible','off','Callback','nmt_timeselect(''textbox'')');
+                'Position',[offx+s*Dims(1)+4*skx+105 sz(2) 60 25],...
+                'HorizontalAlignment','right','Visible','off','Callback','nmt_timeselect(''textbox'')','FontSize',10);
 %                 'Position',[offx+s*Dims(1)+4*skx+205 offy+s*Dims(2)-100 80 25],...
 %                 'HorizontalAlignment','right','Visible','off','Callback','nmt_timeselect(''textbox'')');
             st.nmt.gui.freqguih(4) = st.nmt.gui.f2;
             
             st.nmt.gui.freqguih(5) = uicontrol(fg,'Style','Text','String','Hz','BackgroundColor',[1 1 1],'HorizontalAlignment','left','Parent',st.fig,...
-                'Position',[offx+s*Dims(1)+4*skx+160 sz(2)-5 50 25],'Visible','off');
+                'Position',[offx+s*Dims(1)+4*skx+160 sz(2)-5 50 25],'Visible','off','FontSize',10);
         else % individual text boxes for frequency selection
             st.nmt.gui.f1 = uicontrol('Style','edit','String',num2str(1),'BackgroundColor',nmt_textboxcolor,'Parent',st.fig);
             set(st.nmt.gui.f1,'Position',[offx+s*Dims(1)+4*skx+100 offy+s*Dims(2)-100 80 25],...
-                'HorizontalAlignment','right','Visible','off','Callback','nmt_timeselect(''textbox'')');
+                'HorizontalAlignment','right','Visible','off','Callback','nmt_timeselect(''textbox'')','FontSize',10);
             st.nmt.gui.freqguih(2) = st.nmt.gui.f1;
             
             st.nmt.gui.freqguih(3) = uicontrol(fg,'Style','Text','String','to','BackgroundColor',[1 1 1],'HorizontalAlignment','left','Parent',st.fig,...
-                'Position',[offx+s*Dims(1)+4*skx+185 offy+s*Dims(2)-105 50 25],'Visible','off');
+                'Position',[offx+s*Dims(1)+4*skx+185 offy+s*Dims(2)-105 50 25],'Visible','off','FontSize',10);
             
             
             st.nmt.gui.f2 = uicontrol('Style','edit','String',num2str(1),'BackgroundColor',nmt_textboxcolor,'Parent',st.fig,...
                 'Position',[offx+s*Dims(1)+4*skx+205 offy+s*Dims(2)-100 80 25],...
-                'HorizontalAlignment','right','Visible','off','Callback','nmt_timeselect(''textbox'')');
+                'HorizontalAlignment','right','Visible','off','Callback','nmt_timeselect(''textbox'')','FontSize',10);
             st.nmt.gui.freqguih(4) = st.nmt.gui.f2;
         end
 
@@ -277,22 +277,22 @@ st.nmt.gui.ax_topo_pos = [offx+s*Dims(1)+4*skx offy+s*Dims(2)-700 2*s*(Dims(2)) 
 
 % add peak finder controls
 uicontrol(fg,'Style','PushButton','String','Find','BackgroundColor',nmt_textboxcolor,'Parent',st.fig,...
-    'Position',[offx+s*Dims(1)+4*skx 20 50 25],...
-    'Callback','nmt_peaksearch_helper;');
+    'Position',[offx+s*Dims(1)+4*skx 40 50 25],...
+    'Callback','nmt_peaksearch_helper;','FontSize',10);
 st.nmt.gui.peakdomain = uicontrol(fg,'Style','PopupMenu','String',{'spatiotemporal','spatial','temporal'},'BackgroundColor',nmt_textboxcolor,'HorizontalAlignment','right','Parent',st.fig,...
-    'Position',[offx+s*Dims(1)+4*skx+50 20 150 25]);
+    'Position',[offx+s*Dims(1)+4*skx+50 40 150 25],'FontSize',10);
 st.nmt.gui.peaktype = uicontrol(fg,'Style','PopupMenu','String',{'mag','max','min'},'BackgroundColor',nmt_textboxcolor,'HorizontalAlignment','right','Parent',st.fig,...
-    'Position',[offx+s*Dims(1)+4*skx+195 20 55 25]);
+    'Position',[offx+s*Dims(1)+4*skx+195 40 55 25],'FontSize',10);
 st.nmt.gui.searchradius1 = uicontrol('Style','edit','String',num2str(0),'BackgroundColor',nmt_textboxcolor,'Parent',st.fig,...
-    'Position',[offx+s*Dims(1)+4*skx+260 20 30 25],...
-    'HorizontalAlignment','right','Visible','on');
+    'Position',[offx+s*Dims(1)+4*skx+260 40 30 25],...
+    'HorizontalAlignment','right','Visible','on','FontSize',10);
 uicontrol(fg,'Style','Text','String','to','BackgroundColor',[1 1 1],'HorizontalAlignment','left','Parent',st.fig,...
-    'Position',[offx+s*Dims(1)+4*skx+295 15 30 25]);
+    'Position',[offx+s*Dims(1)+4*skx+295 35 30 25],'FontSize',10);
 st.nmt.gui.searchradius2 = uicontrol('Style','edit','String',num2str(200),'BackgroundColor',nmt_textboxcolor,'Parent',st.fig,...
-    'Position',[offx+s*Dims(1)+4*skx+310 20 30 25],...
-    'HorizontalAlignment','right','Visible','on');
+    'Position',[offx+s*Dims(1)+4*skx+310 40 30 25],...
+    'HorizontalAlignment','right','Visible','on','FontSize',10);
 uicontrol(fg,'Style','Text','String','mm from cursor','BackgroundColor',[1 1 1],'HorizontalAlignment','left','Parent',st.fig,...
-    'Position',[offx+s*Dims(1)+4*skx+350 15 150 25]);
+    'Position',[offx+s*Dims(1)+4*skx+350 35 150 25],'FontSize',10);
 
 
 
