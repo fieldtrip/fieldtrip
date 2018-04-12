@@ -1909,10 +1909,10 @@ if opt.viewresult
 end
 
 if ~isempty(tag) && ~opt.init
-  if strcmp(tag, 'ik')
+  if strcmp(tag, 'ij')
     opt.ijk([1 3])  = round(pos([1 3]));
     opt.update = [1 1 1];
-  elseif strcmp(tag, 'ij')
+  elseif strcmp(tag, 'ik')
     opt.ijk([1 2])  = round(pos([1 2]));
     opt.update = [1 1 1];
   elseif strcmp(tag, 'jk')
