@@ -564,19 +564,19 @@ switch cfg.comment
       comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, cfg.parameter, zmin, zmax);
     end
   case 'xlim'
-    comment = date;
+    comment = '';
     if ~isempty(xparam)
-      comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, xparam, xmin, xmax);
+      comment = sprintf('%0s=[%.3g %.3g]', xparam, xmin, xmax);
     end
   case 'ylim'
-    comment = date;
+    comment = '';
     if ~isempty(yparam)
-      comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, yparam, ymin, ymax);
+      comment = sprintf('%0s=[%.3g %.3g]', yparam, ymin, ymax);
     end
   case 'zlim'
-    comment = date;
+    comment = '';
     if ~isempty(yparam)
-      comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, cfg.parameter, zmin, zmax);
+      comment = sprintf('%0s=[%.3g %.3g]', cfg.parameter, zmin, zmax);
     end
   otherwise
     comment = '';
