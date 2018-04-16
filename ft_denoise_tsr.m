@@ -1,4 +1,4 @@
-function data = ft_denoise_tsr(cfg, varargin)
+function dataout = ft_denoise_tsr(cfg, varargin)
 
 % FT_DENOISE_TSR performs a regression analysis, using a (time-shifted set
 % of) reference signal(s) as independent variable. It is a generic
