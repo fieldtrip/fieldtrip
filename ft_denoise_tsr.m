@@ -79,6 +79,61 @@ for i=1:length(varargin)
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'raw');
 end
 
+cfg.nfold       = ft_getopt(cfg, 'nfold',   1);
+cfg.blocklength = ft_getopt(cfg, 'blocklength', 'trial');
+cfg.reflags     = ft_getopt(cfg, 'reflags', 0); %this needs to be known for the folding
+cfg.testtrials  = ft_getopt(cfg, 'testtrials', 'all');
+cfg.testsamples = ft_getopt(cfg, 'testsamples', 'all');
+
+if iscell(cfg.testtrials)
+  % this has precedence above nfold
+  cfg.nfold = numel(cfg.testtrials);
+end
+
+if cfg.nfold<=1
+  dataout = ft_denoise_tsr_core(cfg, varargin);
+else
+  % do a cross validation
+  if numel(varargin{1}.trial)>1 && ischar(cfg.blocklength) && isequal(cfg.blocklength, 'trial')
+    if ~iscell(cfg.testtrials)
+      % create sets of trial indices for the test data
+      ntrl  = numel(varargin{1}.trial);
+      edges = round(linspace(0,ntrl,cfg.nfold+1));
+      indx  = randperm(ntrl);
+      cfg.testtrials = cell(1,cfg.nfold);
+      for k = 1:cfg.nfold
+        cfg.testtrials{k} = indx((edges(k)+1):edges(k+1));
+      end
+    end
+    
+    testtrials = cfg.testtrials;
+    for k = 1:numel(testtrials)
+      fprintf('estimating model for fold %d/%d\n', k, numel(testtrials));
+      cfg.testtrials = testtrials{k};
+      dataout{k}     = ft_denoise_tsr_core(cfg, varargin{:});
+    end
+  elseif numel(varargin{1}.trial==1) ||(numel(varargin{1}.trial)>1 && ~ischar(cfg.blocklength))
+    % concatenate into a single trial, with sufficient nan-spacing to
+    % accommodate the shifting, and do a chunk-based folding
+    error('not yet implemented');
+  else
+    error('incorrect specification of data and cfg.blocklength');
+  end
+  
+end
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
+ft_postamble trackconfig
+ft_postamble previous data
+
+ft_postamble provenance dataout
+ft_postamble history    dataout
+ft_postamble savevar    dataout
+
+%-------------------------------------------------
+function dataout = ft_denoise_tsr_core(cfg, varargin)
+
 % set the defaults
 cfg.refchannel = ft_getopt(cfg, 'refchannel', 'MEGREF');
 cfg.channel    = ft_getopt(cfg, 'channel',    'all');
@@ -88,7 +143,6 @@ cfg.trials     = ft_getopt(cfg, 'trials',     'all', 1);
 cfg.feedback   = ft_getopt(cfg, 'feedback',   'none');
 cfg.updatesens = ft_getopt(cfg, 'updatesens', 'yes');
 cfg.perchannel = ft_getopt(cfg, 'perchannel', 'yes');
-cfg.reflags    = ft_getopt(cfg, 'reflags',    0);
 cfg.method     = ft_getopt(cfg, 'method',     'mlr');
 cfg.threshold  = ft_getopt(cfg, 'threshold',  0);
 cfg.output     = ft_getopt(cfg, 'output',     'model');
@@ -109,6 +163,30 @@ end
 tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo' 'channel'});
 data    = ft_selectdata(tmpcfg, varargin{1});
 [cfg, data] = rollback_provenance(cfg, data);
+
+% deal with the specification of testtrials/testsamples, as per the
+% instruction by the caller function, for cross-validation purposes
+if ~ischar(cfg.testtrials) && ischar(cfg.testsamples) && isequal(cfg.testsamples, 'all')
+  % subselect trials for testing
+  usetestdata   = true;
+  
+  tmpcfg        = [];
+  tmpcfg.trials = cfg.testtrials;
+  testdata      = ft_selectdata(tmpcfg, data);
+  testrefdata   = ft_selectdata(tmpcfg, refdata);
+  tmpcfg.trials = setdiff(1:numel(data.trial), cfg.testtrials);
+  data          = ft_selectdata(tmpcfg, data);
+  refdata       = ft_selectdata(tmpcfg, refdata);
+      
+elseif ~ischar(cfg.testsamples) && ischar(cfg.testtrials) && isequal(cfg.testtrials, 'all')
+  % subselect samples from a single trial for testing
+  usetestdata = true;
+elseif ischar(cfg.testtrials) && ischar(cfg.testsamples)
+  % just a single fold, use all data for training and testing
+  usetestdata = false;
+else
+  error('something wrong here');
+end
 
 % do the time shifting for the reference channel data
 ft_hastoolbox('cellfunction', 1);
@@ -193,12 +271,50 @@ if istrue(cfg.zscore)
   end
 end
 
-dataout = keepfields(data, {'cfg' 'label' 'time' 'grad' 'elec' 'opto' 'trialinfo' 'fsample'});
-switch cfg.output
-  case 'model'
-    dataout.trial = beta_ref*refdata.trial;
-  case 'residual'
-    dataout.trial = data.trial - beta_ref*refdata.trial;
+if usetestdata
+  fprintf('shifting the reference data\n');
+  testrefdata.trial = cellshift(testrefdata.trial, reflags, 2, [], 'overlap');
+  testrefdata.time  = cellshift(testdata.time,  0, 2, [abs(min(reflags)) abs(max(reflags))], 'overlap');
+  testrefdata.label = repmat(testrefdata.label,numel(reflags),1);
+  for k = 1:numel(testrefdata.label)
+    testrefdata.label{k} = sprintf('%s_shift%03d',testrefdata.label{k}, k);
+  end
+  
+  % center the data on lag 0
+  testdata.trial = cellshift(testdata.trial, 0, 2, [abs(min(reflags)) abs(max(reflags))], 'overlap');
+  testdata.time  = cellshift(testdata.time,  0, 2, [abs(min(reflags)) abs(max(reflags))], 'overlap');
+  
+  % only keep the trials that have > 0 samples
+  tmpcfg = [];
+  tmpcfg.trials = find(cellfun('size',data.trial,2)>0);
+  data    = ft_selectdata(tmpcfg, data);
+  [cfg, data] = rollback_provenance(cfg, data);
+  refdata = ft_selectdata(tmpcfg, refdata);
+  [~,refdata] = rollback_provenance(cfg, refdata);
+
+  % demean
+  fprintf('demeaning the testdata\n');
+  mu_testrefdata    = cellmean(testrefdata.trial, 2);
+  testrefdata.trial = cellvecadd(testrefdata.trial, -mu_testrefdata);
+  mu_testdata       = cellmean(testdata.trial, 2);
+  testdata.trial    = cellvecadd(testdata.trial, -mu_testdata);
+
+  dataout = keepfields(testdata, {'cfg' 'label' 'time' 'grad' 'elec' 'opto' 'trialinfo' 'fsample'});
+  switch cfg.output
+    case 'model'
+      dataout.trial = beta_ref*testrefdata.trial; 
+    case 'residual'
+      dataout.trial = testdata.trial - beta_ref*testrefdata.trial;
+  end
+
+else
+  dataout = keepfields(data, {'cfg' 'label' 'time' 'grad' 'elec' 'opto' 'trialinfo' 'fsample'});
+  switch cfg.output
+    case 'model'
+      dataout.trial = beta_ref*refdata.trial;
+    case 'residual'
+      dataout.trial = data.trial - beta_ref*refdata.trial;
+  end
 end
 
 weights.time = cfg.reflags;
@@ -210,14 +326,3 @@ end
 
 dataout.weights = weights;
 
-% do the general cleanup and bookkeeping at the end of the function
-ft_postamble debug
-ft_postamble trackconfig
-ft_postamble previous data
-
-% rename the output variable to accomodate the savevar postamble
-data = dataout;
-
-ft_postamble provenance data
-ft_postamble history    data
-ft_postamble savevar    data
