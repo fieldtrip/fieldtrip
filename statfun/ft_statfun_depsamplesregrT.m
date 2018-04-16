@@ -1,8 +1,8 @@
 function [s, cfg] = ft_statfun_depsamplesregrT(cfg, dat, design)
 
-% FT_STATFUN_DEPSAMPLESREGRT calculates dependent samples regression T-statistic 
-% on the biological data in dat (the dependent variable), using the information on 
-% the independent variable (ivar) in design.
+% FT_STATFUN_DEPSAMPLESREGRT calculates dependent samples regression T-statistic on
+% the biological data in dat (the dependent variable), using the information on the
+% independent variable (ivar) in design.
 %
 % Use this function by calling one of the high-level statistics functions as
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
@@ -10,15 +10,6 @@ function [s, cfg] = ft_statfun_depsamplesregrT(cfg, dat, design)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
 % with the following configuration option
 %   cfg.statistic = 'ft_statfun_depsamplesregrT'
-%
-% See FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
-%
-% For low-level use, the external interface of this function has to be
-%   [s,cfg] = ft_statfun_depsamplesregrT(cfg, dat, design);
-% where
-%   dat    contains the biological data, Nsamples x Nreplications
-%   design contains the independent variable (ivar) and the unit-of-observation (uvar) 
-%          factor,  Nreplications x Nvar
 %
 % Configuration options
 %   cfg.computestat    = 'yes' or 'no', calculate the statistic (default='yes')
@@ -38,8 +29,10 @@ function [s, cfg] = ft_statfun_depsamplesregrT(cfg, dat, design)
 % Design specification
 %   cfg.ivar  = row number of the design that contains the independent variable.
 %   cfg.uvar  = row number of design that contains the labels of the units-of-observation (subjects or trials)
-%               (default=2). The labels are assumed to be integers ranging from 1 to 
+%               (default=2). The labels are assumed to be integers ranging from 1 to
 %               the number of units-of-observation.
+%
+% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
 
 % Copyright (C) 2006, Eric Maris
 %
@@ -70,10 +63,10 @@ if ~isfield(cfg, 'tail'),              cfg.tail=1;                end
 
 % perform some checks on the configuration
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
-    ft_error('P-values can only be calculated if the test statistics are calculated.');
+  ft_error('P-values can only be calculated if the test statistics are calculated.');
 end
 if ~isfield(cfg,'uvar') || isempty(cfg.uvar)
-    ft_error('uvar must be specified for dependent samples statistics');
+  ft_error('uvar must be specified for dependent samples statistics');
 end
 
 if ~isempty(cfg.cvar)
@@ -86,15 +79,15 @@ end
 nunits = max(design(cfg.uvar,:));
 df = nunits - 1;
 if nunits<2
-    ft_error('The data must contain at least two units-of-observation (usually subjects).')
+  ft_error('The data must contain at least two units-of-observation (usually subjects).')
 end
 
 if strcmp(cfg.computestat,'yes')
-% compute the statistic
+  % compute the statistic
   regrweights=zeros(size(dat,1),nunits);
   for indx=1:nunits
     unitselvec=find(design(cfg.uvar,:)==indx);
-    indvar=design(cfg.ivar,unitselvec); 
+    indvar=design(cfg.ivar,unitselvec);
     if isempty(cfg.cvar)
       designmat=[ones(1,length(indvar));indvar];
     else

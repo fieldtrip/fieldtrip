@@ -1,28 +1,24 @@
 function [s, cfg] = ft_statfun_pooledT(cfg, dat, design)
 
-% FT_STATFUN_POOLEDT computes the pooled t-value over a number of
-% replications. The idea is that you compute a contrast between two
-% conditions per subject The t-values are pooled over subjects and
-% compared against the pooled pseudo-values. Since according to H0
-% the expected t-value for each subject value is zero, the difference
-% between the pooled t-value and the pseudo-value (which is set to
-% zero) is a fixed-effects statistic.
+% FT_STATFUN_POOLEDT computes the pooled t-value over a number of replications. The
+% idea is that you compute a contrast between two conditions per subject The t-values
+% are pooled over subjects and compared against the pooled pseudo-values. Since
+% according to H0 the expected t-value for each subject value is zero, the difference
+% between the pooled t-value and the pseudo-value (which is set to zero) is a
+% fixed-effects statistic.
 % 
-% The computation of the difference between pooled t-values can be
-% repeated after randomly permuting the t-values and pseudo-values
-% within the subjects. Each random permutation gives you an estimate
-% of the difference. The random permutations build up a randomization
-% distributin, against which you can compare the observed pooled
+% The computation of the difference between pooled t-values can be repeated after
+% randomly permuting the t-values and pseudo-values within the subjects. Each random
+% permutation gives you an estimate of the difference. The random permutations build
+% up a randomization distributin, against which you can compare the observed pooled
 % t-values.
 % 
-% The statistical inference based on the comparison of the observed
-% pooled t-values with the randomization distribution is not a
-% fixed-effect statistic, one or a few outlier will cause the
-% randomization distribution to broaden and result in the conclusion
-% of "not significant".
+% The statistical inference based on the comparison of the observed pooled t-values
+% with the randomization distribution is not a fixed-effect statistic, one or a few
+% outlier will cause the randomization distribution to broaden and result in the
+% conclusion of "not significant".
 % 
-% Use this function by calling one of the high-level statistics
-% functions as
+% Use this function by calling one of the high-level statistics functions as
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
 %   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
@@ -32,14 +28,7 @@ function [s, cfg] = ft_statfun_pooledT(cfg, dat, design)
 % Configuration options that are relevant for this function are
 %   cfg.ivar      = number, index into the design matrix with the independent variable
 %
-% See FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
-%
-% For low-level use, the external interface of this function has to be
-%   [s,cfg] = ft_statfun_pooledT(cfg, dat, design);
-% where
-%   dat    contains the biological data, Nsamples x Nreplications
-%          dat must contain fourier representations. 
-%   design contains the independent variable (ivar), Nreplications x Nvar
+% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
 
 % Copyright (C) 2007, Robert Oostenveld
 %

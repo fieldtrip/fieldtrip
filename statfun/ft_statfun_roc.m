@@ -1,14 +1,12 @@
 function [s, cfg] = ft_statfun_roc(cfg, dat, design)
 
-% FT_STATFUN_ROC computes the area under the curve (AUC) of the
-% Receiver Operator Characteristic (ROC). This is a measure of the
-% separability of the data divided over two conditions. The AUC can
-% be used to test statistical significance of being able to predict
-% on a single observation basis to which condition the observation
+% FT_STATFUN_ROC computes the area under the curve (AUC) of the Receiver Operator
+% Characteristic (ROC). This is a measure of the separability of the data divided
+% over two conditions. The AUC can be used to test statistical significance of being
+% able to predict on a single observation basis to which condition the observation
 % belongs.
 % 
-% Use this function by calling one of the high-level statistics
-% functions as
+% Use this function by calling one of the high-level statistics functions as
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
 %   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)

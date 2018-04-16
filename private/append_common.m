@@ -175,7 +175,7 @@ switch cfg.appenddim
     end
     
     % determine the union of all input data
-    tmpcfg = keepfields(cfg, {'tolerance', 'channel'});
+    tmpcfg = keepfields(cfg, {'tolerance', 'channel', 'showcallinfo'});
     tmpcfg.select = 'union';
     [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
     for i=1:numel(varargin)
@@ -258,7 +258,7 @@ switch cfg.appenddim
   case 'rpt'
     
     % determine the intersection of all input data
-    tmpcfg = keepfields(cfg, {'tolerance', 'channel'});
+    tmpcfg = keepfields(cfg, {'tolerance', 'channel', 'showcallinfo'});
     tmpcfg.select = 'intersect';
     [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
     for i=1:numel(varargin)

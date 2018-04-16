@@ -26,7 +26,7 @@ function [data] = ft_redefinetrial(cfg, data)
 % For selecting a specific subsection of (i.e. cut out a time window
 % of interest) you can select a time window in seconds that is common
 % in all trials
-%   cfg.toilim    = [tmin tmax] to specify a latency window in seconds
+%   cfg.toilim    = [tmin tmax] to specify a latency window in seconds, can be Nx2 vector
 %
 % Alternatively you can specify the begin and end sample in each trial
 %   cfg.begsample = single number or Nx1 vector, expressed in samples relative to the start of the input trial
@@ -153,17 +153,24 @@ if ~isempty(cfg.toilim)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % select a latency window from each trial
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
+  if numel(cfg.toilim) == 2
+    % specified as single [tstart tend] vector
+    % expand into Ntrial X 2
+    cfg.toilim = repmat(cfg.toilim(:)', Ntrial, 1);
+  end
+  
   begsample = zeros(Ntrial,1);
   endsample = zeros(Ntrial,1);
   skiptrial = false(Ntrial,1);
   for i=1:Ntrial
-    if cfg.toilim(1)>data.time{i}(end) || cfg.toilim(2)<data.time{i}(1)
+    if cfg.toilim(i,1)>data.time{i}(end) || cfg.toilim(i,2)<data.time{i}(1)
       begsample(i) = nan;
       endsample(i) = nan;
       skiptrial(i) = true;
     else
-      begsample(i) = nearest(data.time{i}, cfg.toilim(1));
-      endsample(i) = nearest(data.time{i}, cfg.toilim(2));
+      begsample(i) = nearest(data.time{i}, cfg.toilim(i,1));
+      endsample(i) = nearest(data.time{i}, cfg.toilim(i,2));
       data.trial{i} = data.trial{i}(:, begsample(i):endsample(i));
       data.time{i}  = data.time{i} (   begsample(i):endsample(i));
     end
