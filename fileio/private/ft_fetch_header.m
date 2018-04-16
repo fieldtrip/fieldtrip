@@ -59,7 +59,7 @@ hdr.nSamples    = max(trl(:,2));
 hdr.nSamplesPre = 0;
 hdr.nTrials     = 1;
 
-% retrieve the gradiometer and/or electrode information
+% retrieve the gradiometer and/or electrode and/or optode information
 if isfield(data, 'grad')
   hdr.grad = data.grad;
 elseif isfield(data, 'hdr') && isfield(data.hdr, 'grad')
@@ -69,6 +69,11 @@ if isfield(data, 'elec')
   hdr.elec = data.elec;
 elseif isfield(data, 'hdr') && isfield(data.hdr, 'elec')
   hdr.elec = data.hdr.elec;
+end
+if isfield(data, 'opto')
+  hdr.opto = data.opto;
+elseif isfield(data, 'hdr') && isfield(data.hdr, 'opto')
+  hdr.opto = data.hdr.opto;
 end
 
 % retrieve the synchronization information
