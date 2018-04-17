@@ -164,6 +164,20 @@ tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo' 'channel'});
 data    = ft_selectdata(tmpcfg, varargin{1});
 [cfg, data] = rollback_provenance(cfg, data);
 
+% demean
+fprintf('demeaning the data\n');
+mu_refdata    = cellmean(refdata.trial, 2);
+refdata.trial = cellvecadd(refdata.trial, -mu_refdata);
+mu_data       = cellmean(data.trial, 2);
+data.trial    = cellvecadd(data.trial, -mu_data);
+
+% zscore
+if istrue(cfg.zscore)
+  fprintf('zscoring the data\n');
+  [refdata.trial, std_refdata] = cellzscore(refdata.trial, 2, 0);
+  [   data.trial, std_data   ] = cellzscore(   data.trial, 2, 0);
+end
+
 % deal with the specification of testtrials/testsamples, as per the
 % instruction by the caller function, for cross-validation purposes
 if ~ischar(cfg.testtrials) && ischar(cfg.testsamples) && isequal(cfg.testsamples, 'all')
@@ -226,13 +240,6 @@ refdata.trial = cellvecadd(refdata.trial, -mu_refdata);
 mu_data       = cellmean(data.trial, 2);
 data.trial    = cellvecadd(data.trial, -mu_data);
 
-% zscore
-if istrue(cfg.zscore)
-  fprintf('zscoring the data\n');
-  [refdata.trial, std_refdata] = cellzscore(refdata.trial, 2, 0);
-  [   data.trial, std_data   ] = cellzscore(   data.trial, 2, 0);
-end
-
 % compute the covariance
 fprintf('computing the covariance\n');
 nref  = size(refdata.trial{1},1);
@@ -253,6 +260,8 @@ if istrue(cfg.perchannel)
     [E, rho(k)]   = multivariate_decomp(C(indx,indx), 1+(1:nref), 1, cfg.method, 1, cfg.threshold);
     beta_ref(k,:) = E(2:end)./E(1);
   end
+  beta_ref = (diag(rho))*beta_ref; % scale with sqrt(rho), to get the proper scaling
+  
 else
   [E, rho]  = multivariate_decomp(C, 1:nchan, nchan+(1:nref), cfg.method, 1, cfg.threshold);  
   beta_ref  = normc(E(nchan+(1:nref),:))';
@@ -318,10 +327,19 @@ else
 end
 
 weights.time = cfg.reflags;
-weights.beta = beta_ref;
 weights.rho  = rho;
 if exist('beta_data', 'var')
   weights.unmixing = beta_data;
+  weights.beta = beta_ref;
+else
+  % a per channel approach has been done, the beta weights reflect
+  % (channelxtime-lag) -> reshape
+  nref    = numel(cfg.refchannel);
+  newbeta = zeros(size(beta_ref,1),size(beta_ref,2)./nref,nref);
+  for k = 1:size(newbeta,3)
+    newbeta(:,:,k) = beta_ref(:,k:nref:end);
+  end
+  weights.beta = newbeta;
 end
 
 dataout.weights = weights;
