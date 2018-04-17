@@ -109,7 +109,7 @@ else
    E = real(E);
    D = real(D);
   else
-   [E,D] = eig(B\A);
+   [E,D] = eig(A,B);
   end
 end
 

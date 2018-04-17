@@ -239,10 +239,15 @@ nref  = size(refdata.trial{1},1);
 nchan = numel(data.label);
 
 C = nan(nchan,nchan);
-C(1:nchan,1:nchan)        = nancov(data.trial,    data.trial, 1, 2, 1);
-C(1:nchan,nchan+(1:nref)) = nancov(data.trial, refdata.trial, 1, 2, 1);
+N = nan(nchan,nchan);
+[C(1:nchan,1:nchan),        N(1:nchan,1:nchan)]        = nancov(data.trial,    data.trial, 1, 2, 1);
+[C(1:nchan,nchan+(1:nref)), N(1:nchan,nchan+(1:nref))] = nancov(data.trial, refdata.trial, 1, 2, 1);
 C(nchan+(1:nref),1:nchan) = C(1:nchan,nchan+(1:nref)).';
-C(nchan+(1:nref),nchan+(1:nref)) = nancov(refdata.trial, refdata.trial, 1, 2, 1);
+N(nchan+(1:nref),1:nchan) = N(1:nchan,nchan+(1:nref)).';
+[C(nchan+(1:nref),nchan+(1:nref)), N(nchan+(1:nref),nchan+(1:nref))] = nancov(refdata.trial, refdata.trial, 1, 2, 1);
+
+% unscale the covariance with N
+C = C.*N;
 
 % compute the regression
 if istrue(cfg.perchannel)
