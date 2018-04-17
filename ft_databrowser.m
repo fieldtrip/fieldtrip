@@ -53,6 +53,7 @@ function [cfg] = ft_databrowser(cfg, data)
 %                                 be passed to the selfun (default = 'selected')
 %   cfg.renderer                = string, 'opengl', 'zbuffer', 'painters', see MATLAB Figure Properties. If the databrowser
 %                                 crashes, you should try 'painters'.
+%   cfg.position                = location and size of the figure, specified as a vector of the form [left bottom width height].
 %
 % The following options for the scaling of the EEG, EOG, ECG, EMG and MEG channels is
 % optional and can be used to bring the absolute numbers of the different channel
@@ -663,7 +664,11 @@ end
 opt.changedchanflg = true; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
 
 % create fig
-h = figure;
+if isfield(cfg, 'position')
+    h = figure('Position', cfg.position);
+else
+    h = figure;
+end
 
 % put appdata in figure
 setappdata(h, 'opt', opt);
