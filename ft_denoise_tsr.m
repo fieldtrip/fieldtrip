@@ -91,7 +91,7 @@ if iscell(cfg.testtrials)
 end
 
 if cfg.nfold<=1
-  dataout = ft_denoise_tsr_core(cfg, varargin);
+  dataout = ft_denoise_tsr_core(cfg, varargin{:});
 else
   % do a cross validation
   if numel(varargin{1}.trial)>1 && ischar(cfg.blocklength) && isequal(cfg.blocklength, 'trial')
