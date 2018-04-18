@@ -1,11 +1,10 @@
 function [cfg, M] = ft_sourcemovie(cfg, source, source2)
 
 % FT_SOURCEMOVIE displays the source reconstruction on a cortical mesh
-% and allows the user to scroll through time with a movie. It has been
-% adapted from ft_sourcemovie 
+% and allows the user to scroll through time with a movie. 
 %
 % Use as
-%   mous_sourcemovie(cfg, source)
+%   ft_sourcemovie(cfg, source)
 % where the input source data is obtained from FT_SOURCEANALYSIS, or a 
 % a parcellated source structure (i.e. contains a brainordinate field) and 
 % cfg is a configuration structure that should contain
@@ -21,28 +20,32 @@ function [cfg, M] = ft_sourcemovie(cfg, source, source2)
 %
 % See also FT_SOURCEPLOT, FT_SOURCEINTERPOLATE, FT_SOURCEPARCELLATE
 
-% Copyright (C) 2011, Robert Oostenveld
+% Copyright (C) 2011-2015, Robert Oostenveld
+% Copyright (C) 2012-2014, Jorn Horschig
+% Copyright (C) 2018, Jan-Mathijs Schoffelen
 %
-% $Id: ft_sourcemovie.m 8384 2013-08-07 15:13:23Z roboos $
+% $Id$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the initial part deals with parsing the input options and data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-revision = '$Id: ft_sourcemovie.m 8384 2013-08-07 15:13:23Z roboos $';
-
+ft_revision = '$Id$';
 ft_nargin   = nargin;
 ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
+if ft_abort
+  return
+end
 ft_preamble debug
 ft_preamble loadvar source
 ft_preamble provenance source
 ft_preamble trackconfig
 
-% ensure that the input data is valiud for this function, this will also do
+% ensure that the input data is valid for this function, this will also do
 % backward-compatibility conversions of old data that for example was
 % read from an old *.mat file
 source = ft_checkdata(source, 'datatype', 'source', 'feedback', 'yes');
@@ -79,14 +82,14 @@ elseif nargin>2
   
   % THIS DOES NOT EXIST ANYMORE: IF PARCELLATED DATA IS IN THE INPUT, IT
   % WILL BE UNPARCELLATED AUTOMATICALLY BY FT_CHECKDATA
-  error('bogus');
+  ft_error('bogus');
 end
 if size(source.pos)~=size(fun,1)
-  error('inconsistent number of vertices in the cortical mesh');
+  ft_error('inconsistent number of vertices in the cortical mesh');
 end
 
 if ~isfield(source, 'tri')
-  error('source.tri missing, this function requires a triangulated cortical sheet as source model');
+  ft_error('source.tri missing, this function requires a triangulated cortical sheet as source model');
 end
 
 if ~isempty(cfg.maskparameter) && ischar(cfg.maskparameter)
@@ -452,17 +455,17 @@ setappdata(h, 'opt', opt);
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_quitbutton(h, eventdata)
-h = getparent(h);
+
 opt = getappdata(h, 'opt');
 opt.cleanup = 1;
 setappdata(h, 'opt', opt);
+uiresume(h);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_recordbutton(h, eventdata)
 
-h = getparent(h);
 opt = getappdata(h, 'opt');
 if strcmp(get(opt.recordbutton, 'string'), 'stop')
   opt.record = 0;
@@ -477,7 +480,7 @@ setappdata(h, 'opt', opt);
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_timer(obj, info, h)
-h = getparent(h);
+
 opt   = getappdata(h, 'opt');
 delta = opt.speed/size(opt.dat,2);
 val = get(opt.sliderx, 'value');
@@ -540,7 +543,7 @@ uiresume;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_keyboard(h, eventdata)
 
-if isempty(eventdata)
+if (isempty(eventdata) && ft_platform_supports('matlabversion', -Inf, '2014a')) || isa(eventdata, 'matlab.ui.eventdata.ActionData')
   % determine the key that corresponds to the uicontrol element that was activated
   key = get(h, 'userdata');
 else
@@ -549,9 +552,9 @@ else
 end
 % get focus back to figure
 if ~strcmp(get(h, 'type'), 'figure')
-    set(h, 'enable', 'off');
-    drawnow;
-    set(h, 'enable', 'on');
+  set(h, 'enable', 'off');
+  drawnow;
+  set(h, 'enable', 'on');
 end
   
 h = getparent(h);
@@ -719,29 +722,30 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function key = parseKeyboardEvent(eventdata)
 
-try
+%try
   key = eventdata.Key;
-catch
-  key = eventdata.Source.UserData;
+%catch
+%  key = eventdata.Source.UserData;
+%end
+
+% handle possible numpad events (different for Windows and UNIX systems)
+% NOTE: shift+numpad number does not work on UNIX, since the shift
+% modifier is always sent for numpad events
+if isunix()
+  shiftInd = match_str(eventdata.Modifier, 'shift');
+  if ~isnan(str2double(eventdata.Character)) && ~isempty(shiftInd)
+    % now we now it was a numpad keystroke (numeric character sent AND
+    % shift modifier present)
+    key = eventdata.Character;
+    eventdata.Modifier(shiftInd) = []; % strip the shift modifier
+  end
+elseif ispc()
+  if strfind(eventdata.Key, 'numpad')
+    key = eventdata.Character;
+  end
 end
 
-% % handle possible numpad events (different for Windows and UNIX systems)
-% % NOTE: shift+numpad number does not work on UNIX, since the shift
-% % modifier is always sent for numpad events
-% if isunix()
-%   shiftInd = match_str(eventdata.Modifier, 'shift');
-%   if ~isnan(str2double(eventdata.Character)) && ~isempty(shiftInd)
-%     % now we now it was a numpad keystroke (numeric character sent AND
-%     % shift modifier present)
-%     key = eventdata.Character;
-%     eventdata.Modifier(shiftInd) = []; % strip the shift modifier
-%   end
-% elseif ispc()
-%   if strfind(eventdata.Key, 'numpad')
-%     key = eventdata.Character;
-%   end
-% end
-% 
-% if ~isempty(eventdata.Modifier)
-%   key = [eventdata.Modifier{1} '+' key];
-% end
+if ~isempty(eventdata.Modifier)
+  key = [eventdata.Modifier{1} '+' key];
+end
+
