@@ -107,11 +107,26 @@ else
     end
     
     testtrials = cfg.testtrials;
+    tmp = cell(1,numel(testtrials));
     for k = 1:numel(testtrials)
       fprintf('estimating model for fold %d/%d\n', k, numel(testtrials));
       cfg.testtrials = testtrials{k};
-      dataout{k}     = ft_denoise_tsr_core(cfg, varargin{:});
+      tmp{k}     = ft_denoise_tsr_core(cfg, varargin{:});
     end
+    
+    % create output data structure
+    dataout = keepfields(tmp{1}, {'fsample' 'label'});
+    for k = 1:numel(testtrials)
+      dataout.trial(testtrials{k}) = tmp{k}.trial;
+      dataout.time(testtrials{k})  = tmp{k}.time;
+      dataout.weights{k}   = tmp{k}.weights;
+      dataout.weights{k}.trials = testtrials{k};
+      dataout.cfg.previous{k} = tmp{k}.cfg;
+      if isfield(tmp{k}, 'trialinfo')
+        dataout.trialinfo(testtrials{k},:) = tmp{k}.trialinfo;
+      end
+    end
+    
   elseif numel(varargin{1}.trial==1) ||(numel(varargin{1}.trial)>1 && ~ischar(cfg.blocklength))
     % concatenate into a single trial, with sufficient nan-spacing to
     % accommodate the shifting, and do a chunk-based folding
@@ -207,6 +222,7 @@ ft_hastoolbox('cellfunction', 1);
 
 timestep = mean(diff(data.time{1}));
 reflags = -round(cfg.reflags./timestep);
+reflabel = refdata.label; % to be used later
 % the convention is to have a positive cfg.reflags defined as a delay of the ref w.r.t. the chan
 % cellshift has an opposite convention with respect to the sign of the
 % delay, hence the minus
@@ -340,6 +356,8 @@ else
     newbeta(:,:,k) = beta_ref(:,k:nref:end);
   end
   weights.beta = newbeta;
+  weights.reflabel = reflabel;
+  weights.dimord   = 'chan_lag_refchan';
 end
 
 dataout.weights = weights;
