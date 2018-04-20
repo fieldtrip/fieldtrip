@@ -49,6 +49,7 @@ for i=1:numel(aline)
 
   if numel(tline) && any(tline(1)=='0':'9')
   % if regexp(tline, '^[0-9]')
+    tline   = strrep(tline, ' . ', ' NaN '); % replace missing values
     tmp     = sscanf(tline, '%f');
     nchan   = numel(tmp);
     current = current + 1;
