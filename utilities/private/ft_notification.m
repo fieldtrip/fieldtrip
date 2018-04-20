@@ -235,8 +235,10 @@ switch varargin{1}
     varargout{1} = getstate(s, 'last', ident);
     
   case {'clear' '-clear'}
+    default = getstate(s, 'all');
     % reset the notification system
-    s = [];
+    % but keep default state
+    s = struct('identifier','all','state',default,'timestamp',NaN);
     
   case {'query' '-query'}
     if numel(varargin)>1
