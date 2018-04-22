@@ -11,6 +11,7 @@ filename = {
   'BP2D1_2.asc'
   'ashcal.asc'
   'sub-v31_acq-l2_task-hyperlink_eyetrack.asc'
+  'example_file.asc'
   };
 
 % the hard-coded numbers below related to the size of the data were determined prior to the suggested change
