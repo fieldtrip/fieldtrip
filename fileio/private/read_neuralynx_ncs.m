@@ -46,7 +46,7 @@ end
 isMexv6 = false;
 isMexv3 = false;
 if ispc
-  % first look for Neuralynx version 6 libs (windows only)
+  % first look for Neuralynx version 6 libs
   isMexv6 = ft_hastoolbox('neuralynx_v6', 2); % let's leave warnings for debug
   if ~isMexv6
     % look for Ueli's libs as alternative
