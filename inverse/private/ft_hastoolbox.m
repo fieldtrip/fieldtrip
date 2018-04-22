@@ -143,7 +143,7 @@ url = {
   'BRAINSUITE'    'see http://brainsuite.bmap.ucla.edu/processing/additional-tools/'
   'BRAINVISA'     'see http://brainvisa.info'
   'FILEEXCHANGE'  'see http://www.mathworks.com/matlabcentral/fileexchange/'
-  'NEURALYNX_V6'  'see http://neuralynx.com/research_software/file_converters_and_utilities/ and take the version from Neuralynx (windows only)'
+  'NEURALYNX_V6'  'see http://neuralynx.com/research_software/file_converters_and_utilities/ and take the version from Neuralynx'
   'NEURALYNX_V3'  'see http://neuralynx.com/research_software/file_converters_and_utilities/ and take the version from Ueli Rutishauser'
   'NPMK'          'see https://github.com/BlackrockMicrosystems/NPMK'
   'VIDEOMEG'      'see https://github.com/andreyzhd/VideoMEG'
