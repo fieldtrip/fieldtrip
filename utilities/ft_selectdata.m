@@ -49,6 +49,7 @@ function [varargout] = ft_selectdata(varargin)
 %   cfg.keepchancmbdim = 'yes' or 'no'
 %   cfg.keepfreqdim    = 'yes' or 'no'
 %   cfg.keeptimedim    = 'yes' or 'no'
+%   cfg.avgoverpos
 
 % Copyright (C) 2012-2014, Robert Oostenveld & Jan-Mathijs Schoffelen
 %

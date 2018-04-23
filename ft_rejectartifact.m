@@ -17,7 +17,7 @@ function [cfg] = ft_rejectartifact(cfg, data)
 % with the data as obtained from FT_PREPROCESSING
 %
 % The following configuration options are supported:
-%   cfg.artfctdef.reject          = 'none', 'partial','nan', or 'complete' (default = 'complete')
+%   cfg.artfctdef.reject          = 'none', 'partial', 'complete', 'nan', or 'value' (default = 'complete')
 %   cfg.artfctdef.minaccepttim    = when using partial rejection, minimum length
 %                                   in seconds of remaining trial (default = 0.1)
 %   cfg.artfctdef.crittoilim      = when using complete rejection, reject trial only when artifacts occur within
@@ -25,6 +25,7 @@ function [cfg] = ft_rejectartifact(cfg, data)
 %                                   since trial time axes are unknown for data on disk.
 %   cfg.artfctdef.feedback        = 'yes' or 'no' (default = 'no')
 %   cfg.artfctdef.invert          = 'yes' or 'no' (default = 'no')
+%   cfg.artfctdef.value           = scalar value to replace the data in the artifact segments (default = nan)
 %   cfg.artfctdef.eog.artifact    = Nx2 matrix with artifact segments, this is added to the cfg by using FT_ARTIFACT_EOG
 %   cfg.artfctdef.jump.artifact   = Nx2 matrix with artifact segments, this is added to the cfg by using FT_ARTIFACT_JUMP
 %   cfg.artfctdef.muscle.artifact = Nx2 matrix with artifact segments, this is added to the cfg by using FT_ARTIFACT_MUSCLE
@@ -119,6 +120,7 @@ cfg.artfctdef.minaccepttim = ft_getopt(cfg.artfctdef, 'minaccepttim', 0.1);
 cfg.artfctdef.crittoilim   = ft_getopt(cfg.artfctdef, 'crittoilim', []);
 cfg.artfctdef.feedback     = ft_getopt(cfg.artfctdef, 'feedback', 'no');
 cfg.artfctdef.invert       = ft_getopt(cfg.artfctdef, 'invert', 'no');
+cfg.artfctdef.value        = ft_getopt(cfg.artfctdef, 'value', nan);
 
 % convert from old-style to new-style configuration
 if isfield(cfg,'reject')
@@ -258,8 +260,8 @@ cfg.artfctdef.type = cfg.artfctdef.type(sort(i));
 cfg.artfctdef.type = cfg.artfctdef.type(:)';
 
 % If bad parts are to be filled with nans, make sure data is available
-if strcmp(cfg.artfctdef.reject, 'nan') && ~hasdata
-  ft_error('If bad parts are to be filled with nans, input data has to be specified');
+if ~hasdata && (strcmp(cfg.artfctdef.reject, 'nan') || strcmp(cfg.artfctdef.reject, 'value'))
+  ft_error('If bad parts are to be filled with nans or another value, the input data has to be specified');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -418,12 +420,13 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % remove the trials that (partially) coincide with a rejection mark
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'complete') || strcmp(cfg.artfctdef.reject, 'nan')
+if any(strcmp(cfg.artfctdef.reject, {'partial', 'complete', 'nan', 'value'}))
   trialok = [];
   
   count_complete_reject = 0;
   count_partial_reject  = 0;
   count_nan             = 0;
+  count_value           = 0;
   count_outsidecrit     = 0;
   
   trlCompletelyRemovedInd = [];
@@ -443,6 +446,12 @@ if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'comp
       count_nan = count_nan + 1;
       trialok = [trialok; trl(trial,:)]; % Mark the trial as good as nothing will be removed
       
+    elseif all(rejecttrial) && strcmp(cfg.artfctdef.reject, 'value')
+      % the whole trial is bad, but it is requested to be replaced with a specific value
+      data.trial{trial}(:,rejecttrial) = cfg.artfctdef.value;
+      count_value = count_value + 1;
+      trialok = [trialok; trl(trial,:)]; % Mark the trial as good as nothing will be removed
+
     elseif all(rejecttrial)
       % the whole trial is bad
       count_complete_reject = count_complete_reject + 1;
@@ -491,12 +500,20 @@ if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'comp
       data.trial{trial}(:,rejecttrial) = nan;
       count_nan = count_nan + 1;
       trialok = [trialok; trl(trial,:)]; % Mark the trial as good as nothing will be removed
+   
+    elseif any(rejecttrial) && strcmp(cfg.artfctdef.reject, 'value')
+      % Some part of the trial is bad, replace bad part with specified value
+      data.trial{trial}(:,rejecttrial) = cfg.artfctdef.value;
+      count_value = count_value + 1;
+      trialok = [trialok; trl(trial,:)]; % Mark the trial as good as nothing will be removed
+
     end
   end % for each trial
   
   fprintf('rejected  %3d trials completely\n', count_complete_reject);
   fprintf('rejected  %3d trials partially\n', count_partial_reject);
   fprintf('filled parts of  %3d trials with nans\n', count_nan);
+  fprintf('filled parts of  %3d trials with the specified value\n', count_value);
   if (checkCritToi)
     fprintf('retained  %3d trials with artifacts outside critical window\n', count_outsidecrit);
   end

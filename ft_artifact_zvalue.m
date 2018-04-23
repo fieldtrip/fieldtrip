@@ -717,7 +717,7 @@ elseif isa(eventdata, 'matlab.ui.eventdata.KeyData') % only when key was pressed
     curKey = eventdata.Key;
   else
     curKey = [sprintf('%s+', eventdata.Modifier{:}) eventdata.Key];
-  end  
+  end
 elseif isfield(eventdata, 'Key')  % only when key was pressed
   curKey = eventdata.Key;
 elseif isempty(eventdata) % matlab2012b returns an empty double upon a mouse click
@@ -729,7 +729,6 @@ end
 h = getparent(h); % otherwise h is empty if isa [...].ActionData
 opt = getappdata(h, 'opt');
 
-disp(strcat('Key = ', curKey))
 switch strtrim(curKey)
   case 'leftarrow' % change trials
     opt.trlop = max(opt.trlop - 1, 1); % should not be smaller than 1
@@ -781,38 +780,38 @@ switch strtrim(curKey)
     end
     setappdata(h, 'opt', opt);
     redraw_cb(h, eventdata);
-%   case 'control+uparrow' % change channel
-%     if strcmp(opt.channel, 'artifact')
-%       [dum, indx] = max(opt.zval);
-%       sgnind      = opt.zindx(indx);
-%     else
-%       if ~isempty(opt.data)
-%         sgnind  = match_str(opt.channel, opt.data.label);
-%         selchan = match_str(opt.artcfg.channel, opt.channel);
-%       else
-%         sgnind  = match_str(opt.channel,   opt.hdr.label);
-%         selchan = match_str(opt.artcfg.channel, opt.channel);
-%       end
-%     end
-%     numchan = numel(opt.artcfg.channel);
-%     chansel = min(selchan+1, numchan);
-%     % convert numeric array into cell-array with channel labels
-%     opt.channel = tmpchan(chansel);
-%     setappdata(h, 'opt', opt);
-%     redraw_cb(h, eventdata);
-%   case 'c' % select channel
-%     select = match_str([opt.artcfg.channel;{'artifact'}], opt.channel);
-%     opt.channel = select_channel_list([opt.artcfg.channel;{'artifact'}], select);
-%     setappdata(h, 'opt', opt);
-%     redraw_cb(h, eventdata);
-%   case 'control+downarrow'
-%     tmpchan = [opt.artcfg.channel;{'artifact'}]; % append the 'artifact' channel
-%     chansel = match_str(tmpchan, opt.channel);
-%     chansel = max(chansel-1, 1);
-%     % convert numeric array into cell-array with channel labels
-%     opt.channel = tmpchan(chansel);
-%     setappdata(h, 'opt', opt);
-%     redraw_cb(h, eventdata);
+    %   case 'control+uparrow' % change channel
+    %     if strcmp(opt.channel, 'artifact')
+    %       [dum, indx] = max(opt.zval);
+    %       sgnind      = opt.zindx(indx);
+    %     else
+    %       if ~isempty(opt.data)
+    %         sgnind  = match_str(opt.channel, opt.data.label);
+    %         selchan = match_str(opt.artcfg.channel, opt.channel);
+    %       else
+    %         sgnind  = match_str(opt.channel,   opt.hdr.label);
+    %         selchan = match_str(opt.artcfg.channel, opt.channel);
+    %       end
+    %     end
+    %     numchan = numel(opt.artcfg.channel);
+    %     chansel = min(selchan+1, numchan);
+    %     % convert numeric array into cell-array with channel labels
+    %     opt.channel = tmpchan(chansel);
+    %     setappdata(h, 'opt', opt);
+    %     redraw_cb(h, eventdata);
+    %   case 'c' % select channel
+    %     select = match_str([opt.artcfg.channel;{'artifact'}], opt.channel);
+    %     opt.channel = select_channel_list([opt.artcfg.channel;{'artifact'}], select);
+    %     setappdata(h, 'opt', opt);
+    %     redraw_cb(h, eventdata);
+    %   case 'control+downarrow'
+    %     tmpchan = [opt.artcfg.channel;{'artifact'}]; % append the 'artifact' channel
+    %     chansel = match_str(tmpchan, opt.channel);
+    %     chansel = max(chansel-1, 1);
+    %     % convert numeric array into cell-array with channel labels
+    %     opt.channel = tmpchan(chansel);
+    %     setappdata(h, 'opt', opt);
+    %     redraw_cb(h, eventdata);
   case 'a'
     % select the artifact to display
     response = inputdlg(sprintf('artifact trial to display'), 'specify', 1, {num2str(opt.trlop)});
@@ -939,15 +938,18 @@ end
 if ~isempty(opt.data)
   data = ft_fetch_data(opt.data, 'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'));
 else
-  data = ft_read_data(cfg.datafile,   'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'));
+  data = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'));
 end
-%data = preproc(data, '', hdr.Fs, artcfg, [], artcfg.fltpadding, artcfg.fltpadding);
-str  = sprintf('trial %3d, channel %s', opt.trlop, hdr.label{sgnind});
+
+% data = preproc(data, '', hdr.Fs, artcfg, [], artcfg.fltpadding, artcfg.fltpadding);
+
+% the string us used as title and printed in the command window
+str = sprintf('trial %3d of %d, channel %s', trlop, size(trl,1), hdr.label{sgnind});
 fprintf('showing %s\n', str);
 
 %-----------------------------
 % plot summary in left subplot
-subplot(opt.h1);hold on;
+subplot(opt.h1); hold on;
 
 % plot as a blue line only once
 if isempty(get(opt.h1, 'children'))
@@ -1036,10 +1038,10 @@ end
 subplot(opt.h2); hold on
 if isempty(get(opt.h2, 'children'))
   % do the plotting
-  plot(xval(selpad), data(selpad), 'color', [0.5 0.5 1], 'displayname', 'line1');
-  plot(xval(sel),    data(sel),    'color', [0 0 1],     'displayname', 'line2');
-  vline(xval(  1)+(trlpadsmp-1/opt.hdr.Fs),     'color', [0 0 0],     'displayname', 'vline1');
-  vline(xval(end)-(trlpadsmp/opt.hdr.Fs),       'color', [0 0 0],     'displayname', 'vline2');
+  plot(xval(selpad), data(selpad),          'color', [0.5 0.5 1], 'displayname', 'line1');
+  plot(xval(sel),    data(sel),             'color', [0 0 1],     'displayname', 'line2');
+  vline(xval(  1)+(trlpadsmp-1/opt.hdr.Fs), 'color', [0 0 0],     'displayname', 'vline1');
+  vline(xval(end)-(trlpadsmp/opt.hdr.Fs),   'color', [0 0 0],     'displayname', 'vline2');
   data(~artval) = nan;
   plot(xval, data, 'r-', 'displayname', 'line3');
   xlabel('time(s)');
@@ -1094,8 +1096,8 @@ else
   set(findall(h3children, 'displayname', 'line2b'), 'XData', xval(sel));
   set(findall(h3children, 'displayname', 'line2b'), 'YData', zval(sel));
   zval(~artval) = nan;
-  set(findall(h3children, 'displayname', 'line3b'),  'XData', xval);
-  set(findall(h3children, 'displayname', 'line3b'),  'YData', zval);
+  set(findall(h3children, 'displayname', 'line3b'),     'XData', xval);
+  set(findall(h3children, 'displayname', 'line3b'),     'YData', zval);
   set(findall(h3children, 'displayname', 'threshline'), 'YData', [1 1].*opt.threshold);
   set(findall(h3children, 'displayname', 'threshline'), 'XData', xval([1 end]));
   abc = axis(opt.h3);

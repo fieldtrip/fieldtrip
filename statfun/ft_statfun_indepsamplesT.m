@@ -1,8 +1,8 @@
 function [s, cfg] = ft_statfun_indepsamplesT(cfg, dat, design)
 
-% FT_STATFUN_INDEPSAMPLEST calculates the independent samples T-statistic 
-% on the biological data in dat (the dependent variable), using the information on 
-% the independent variable (ivar) in design.
+% FT_STATFUN_INDEPSAMPLEST calculates the independent samples T-statistic on the
+% biological data in dat (the dependent variable), using the information on the
+% independent variable (ivar) in design.
 %
 % Use this function by calling one of the high-level statistics functions as
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
@@ -10,14 +10,6 @@ function [s, cfg] = ft_statfun_indepsamplesT(cfg, dat, design)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
 % with the following configuration option
 %   cfg.statistic = 'ft_statfun_indepsamplesT'
-%
-% See FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
-%
-% For low-level use, the external interface of this function has to be
-%   [s,cfg] = ft_statfun_indepsamplesT(cfg, dat, design);
-% where
-%   dat    contains the biological data, Nsamples x Nreplications
-%   design contains the independent variable (ivar),  Nfac x Nreplications
 %
 % Configuration options
 %   cfg.computestat    = 'yes' or 'no', calculate the statistic (default='yes')
@@ -35,8 +27,10 @@ function [s, cfg] = ft_statfun_indepsamplesT(cfg, dat, design)
 %               quantile (1-cfg.alpha) (with cfg.tail=1).
 %
 % Design specification
-%   cfg.ivar  = row number of the design that contains the labels of the conditions that must be 
+%   cfg.ivar  = row number of the design that contains the labels of the conditions that must be
 %               compared (default=1). The labels are the numbers 1 and 2.
+%
+% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
 
 % Copyright (C) 2006, Eric Maris
 %
@@ -69,26 +63,23 @@ cfg.tail           = ft_getopt(cfg, 'tail', 1);
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
   % probabilities can only be calculated if the test statistics are calculated
   cfg.computestat = 'yes';
-end;
+end
 if isfield(cfg,'uvar') && ~isempty(cfg.uvar)
-    ft_error('cfg.uvar should not exist for an independent samples statistic');
+  ft_error('cfg.uvar should not exist for an independent samples statistic');
 end
 
 % perform some checks on the design and data
-sel1 = design(cfg.ivar,:)==1;
-sel2 = design(cfg.ivar,:)==2;
-nreplc1 = sum(~isnan(dat(:,sel1)), 2);
-nreplc2 = sum(~isnan(dat(:,sel2)), 2);
-nrepl   = nreplc1 + nreplc2;
+sel1     = design(cfg.ivar,:)==1;
+sel2     = design(cfg.ivar,:)==2;
+nreplc1  = sum(~isnan(dat(:,sel1)), 2);
+nreplc2  = sum(~isnan(dat(:,sel2)), 2);
+nrepl    = nreplc1 + nreplc2;
 hasnans1 = any(nreplc1<sum(sel1));
 hasnans2 = any(nreplc2<sum(sel2));
 
-if any(nrepl<size(design,2)),
+if any(nrepl<size(design,2))
   ft_warning('Not all replications are used for the computation of the statistic.');
-end;
-%if nrepl<3
-%    ft_error('The data must contain at least three trials/subjects.');
-%end;
+end
 df = nrepl - 2;
 
 if strcmp(cfg.computestat, 'yes')
@@ -98,24 +89,26 @@ if strcmp(cfg.computestat, 'yes')
     var1 = nanvar(dat(:,sel1), 0, 2);
   else
     avg1 = mean(dat(:,sel1), 2);
-    %var1 = var(dat(:,sel1), 0, 2);
-    var1 = (sum(dat(:,sel1).^2,2)-(avg1.^2).*nreplc1)./(nreplc1-1); % this achieves the same as the line above, but faster
+    % var1 = var(dat(:,sel1), 0, 2);
+    % the following achieves the same as the line above, but faster
+    var1 = (sum(dat(:,sel1).^2,2)-(avg1.^2).*nreplc1)./(nreplc1-1);
   end
   if hasnans2
     avg2 = nanmean(dat(:,sel2), 2);
     var2 = nanvar(dat(:,sel2), 0, 2);
   else
     avg2 = mean(dat(:,sel2), 2);
-    %var2 = var(dat(:,sel2), 0, 2);
+    % var2 = var(dat(:,sel2), 0, 2);
+    % the following achieves the same as the line above, but faster
     var2 = (sum(dat(:,sel2).^2,2)-(avg2.^2).*nreplc2)./(nreplc2-1);
   end
- 
+  
   varc = (1./nreplc1 + 1./nreplc2).*((nreplc1-1).*var1 + (nreplc2-1).*var2)./df;
   
-  %in the case of non-equal triallengths, and tfrs as input-data nreplc are
-  %vectors with different values. when the triallengths are equal, and the
-  %input is a tfr, nreplc are vectors with either zeros (all trials contain nan
-  %meaning that t_ftimwin did not fit around data), or the number of trials
+  % in the case of non-equal triallengths, and tfrs as input-data nreplc are
+  % vectors with different values. when the triallengths are equal, and the
+  % input is a tfr, nreplc are vectors with either zeros (all trials contain nan
+  % meaning that t_ftimwin did not fit around data), or the number of trials
   s.stat = (avg1 - avg2)./sqrt(varc);
 end
 

@@ -1,14 +1,13 @@
 function [s, cfg] = ft_statfun_actvsblT(cfg, dat, design)
 
-% FT_STATFUN_ACTVSBLT calculates the activation-versus-baseline T-statistic
-% on the biological data in dat (the dependent variable), using the information on
-% the independent variable (ivar) in design.
+% FT_STATFUN_ACTVSBLT calculates the activation-versus-baseline T-statistic on the
+% biological data (the dependent variable), using the information on the independent
+% variable (ivar) in design.
 %
-% Note that it does not make sense to use this test statistic when
-% baseline-correction was performed by subtracting the time average of the
-% baseline period. Instead of this type of baseline-correction, one may
-% subtract the time average of the combined baseline and activation
-% period.
+% Note that it does not make sense to use this test statistic when baseline
+% correction was performed by subtracting the mean of the baseline period from the
+% whole data (for ERP data) or by dividing by the mean (for TFR data). If baseline
+% correction is desired, you should subtract the full baseline and activation period.
 %
 % Use this function by calling one of the high-level statistics functions as
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
@@ -16,15 +15,6 @@ function [s, cfg] = ft_statfun_actvsblT(cfg, dat, design)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
 % with the following configuration option
 %   cfg.statistic = 'ft_statfun_actvsblT'
-%
-% See FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
-%
-% For low-level use, the external interface of this function has to be
-%   [s,cfg] = ft_statfun_actvsblT(cfg, dat, design);
-% where
-%   dat    contains the biological data, Nsamples x Nreplications
-%   design contains the independent variable (ivar) and the unit-of-observation (uvar)
-%          factor,  Nreplications x Nvar
 %
 % Configuration options
 %   cfg.computestat    = 'yes' or 'no', calculate the statistic (default='yes')
@@ -48,6 +38,8 @@ function [s, cfg] = ft_statfun_actvsblT(cfg, dat, design)
 %   cfg.uvar  = row number of design that contains the labels of the units-of-observation (subjects or trials)
 %               (default=2). The labels are assumed to be integers ranging from 1 to
 %               the number of units-of-observation.
+%
+% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
 
 % Copyright (C) 2006, Eric Maris
 %
@@ -156,4 +148,3 @@ if strcmp(cfg.computeprob,'yes')
     s.prob = 1-tcdf(s.stat,s.df);
   end
 end
-

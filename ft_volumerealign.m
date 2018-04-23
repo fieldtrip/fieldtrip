@@ -1105,9 +1105,9 @@ if viewresult
   h2 = axes('position', [0.06+0.06+h1size(1) 0.06+0.06+h3size(2) h2size(1) h2size(2)]);
   h3 = axes('position', [0.06                0.06                h3size(1) h3size(2)]);
   
-  set(h1, 'Tag', 'ik', 'Visible', 'off', 'XAxisLocation', 'top');
+  set(h1, 'Tag', 'ij', 'Visible', 'off', 'XAxisLocation', 'top');
   set(h2, 'Tag', 'jk', 'Visible', 'off', 'YAxisLocation', 'right'); % after rotating in ft_plot_ortho this becomes top
-  set(h3, 'Tag', 'ij', 'Visible', 'off');
+  set(h3, 'Tag', 'ik', 'Visible', 'off');
   
   set(h1, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
   set(h2, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
