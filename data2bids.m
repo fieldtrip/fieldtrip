@@ -11,16 +11,15 @@ function cfg = data2bids(cfg, varargin)
 %   data2bids(cfg)
 % where cfg is a configuration structure that contains
 %   cfg.dataset           = string, filename of the data on disk
-%   cfg.events.write      = string, 'yes' or 'no' (default = 'yes')
-%   cfg.events.trl        = trial definition, see below
 %   cfg.anat.write        = string, 'yes' or 'no' (default = 'yes')
 %   cfg.anat.dicomfile    = string, filename of a matching DICOM file
 %   cfg.meg.write         = string, 'yes' or 'no' (default = 'yes')
 %   cfg.channels.write    = string, 'yes' or 'no' (default = 'yes')
 %   cfg.events.write      = string, 'yes' or 'no' (default = 'yes')
+%   cfg.events.trl        = trial definition, see below
 %
-% You can specify cfg.events.trl as a Nx3 or NxM matrix with the trial definition
-% (see FT_DEFINETRIAL) or as a MATLAB table. When specified as table, the first three
+% You can specify cfg.events.trl as a Nx3 matrix with the trial definition (see
+% FT_DEFINETRIAL) or as a MATLAB table. When specified as table, the first three
 % columns containing integer values corresponding to the begsample, endsample and
 % offset, the additional colums can be of another type and can have any name. If you
 % do not specify the trial definition, the events will be read from the dataset and
