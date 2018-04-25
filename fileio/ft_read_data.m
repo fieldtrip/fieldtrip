@@ -31,12 +31,13 @@ function [dat] = ft_read_data(filename, varargin)
 %
 % The list of supported file formats can be found in FT_READ_HEADER.
 %
-% To use an external reading function, use key-value pair: 'dataformat', FUNCTION_NAME.
-% (Function needs to be on the path, and take as input: filename, hdr, begsample, endsample, chanindx.)
+% To use an external reading function, you can specify the function name as argument
+% to 'dataformat'. The function needs to be on the path, and should take as input:
+% filename, hdr, begsample, endsample, chanindx.
 %
 % See also FT_READ_HEADER, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT
 
-% Copyright (C) 2003-2016 Robert Oostenveld
+% Copyright (C) 2003-2018 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
