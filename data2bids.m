@@ -299,7 +299,7 @@ else
 end
 
 switch typ
-  case {'nifti', 'nifti2'}
+  case {'nifti', 'nifti2', 'nifti_fsl'}
     mri = ft_read_mri(cfg.dataset);
     if ~isempty(cfg.anat.dicomfile)
       % read the header details from the matching DICOM file specified by the user
@@ -336,6 +336,7 @@ switch typ
     end
     
   otherwise
+    % assume it is electrophysiological data
     hdr = ft_read_header(cfg.headerfile);
     evt = ft_read_event(cfg.datafile, 'header', hdr);
     if ~isequal(cfg.dataset, cfg.outputfile)
@@ -368,7 +369,7 @@ events_tsv   = [];
 channels_tsv = [];
 
 switch typ
-  case {'nifti', 'nifti2', 'dicom', 'volume'}
+  case {'nifti', 'nifti2', 'nifti_fsl', 'dicom', 'volume'}
     % make the relevant selection, all json fields start with a capital letter
     fn = fieldnames(cfg);
     fn = fn(~cellfun(@isempty, regexp(fn, '[A-Z].*')));
@@ -466,7 +467,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isequal(cfg.dataset, cfg.outputfile)
   switch typ
-    case {'nifti', 'nifti2', 'dicom', 'volume'}
+    case {'nifti', 'nifti2', 'nifti_fsl', 'dicom', 'volume'}
       [p, f, x] = fileparts(cfg.outputfile);
       if ~isequal(x, '.nii')
         cfg.outputfile = fullfile(p, [f '.nii']);
@@ -489,6 +490,11 @@ end
 
 if ~isempty(anat_json) && istrue(cfg.anat.writesidecar)
   [p, f, x] = fileparts(cfg.outputfile);
+  if isequal(x, '.gz') && endsWith(f, '.nii')
+    % it is a gzip compressed nifti file
+    f = f(1:end-4);
+    x = '.nii.gz';
+  end
   filename = fullfile(p, [f '.json']);
   if isfile(filename)
     existing = read_json(filename);
