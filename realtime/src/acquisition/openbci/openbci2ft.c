@@ -366,6 +366,7 @@ int main(int argc, char *argv[]) {
   config.sample        = strdup("on");
   config.unwrap        = strdup("off");
   config.timestamp     = strdup("off");
+  config.acceleration  = strdup("on");
   config.timeref       = strdup("start");
   config.daisy         = strdup("off");
   config.verbose       = 0;
@@ -409,22 +410,22 @@ int main(int argc, char *argv[]) {
   config.label_chan20 = strdup("Sample");     /* virtual channel */
   config.label_chan21 = strdup("TimeStamp");  /* virtual channel */
 
-  config.setting_chan1  = strdup("x1060110X");
-  config.setting_chan2  = strdup("x2060110X");
-  config.setting_chan3  = strdup("x3060110X");
-  config.setting_chan4  = strdup("x4060110X");
-  config.setting_chan5  = strdup("x5060110X");
-  config.setting_chan6  = strdup("x6060110X");
-  config.setting_chan7  = strdup("x7060110X");
-  config.setting_chan8  = strdup("x8060110X");
-  config.setting_chan9  = strdup("xQ060110X");
-  config.setting_chan10 = strdup("xW060110X");
-  config.setting_chan11 = strdup("xE060110X");
-  config.setting_chan12 = strdup("xR060110X");
-  config.setting_chan13 = strdup("xT060110X");
-  config.setting_chan14 = strdup("xY060110X");
-  config.setting_chan15 = strdup("xU060110X");
-  config.setting_chan16 = strdup("xI060110X");
+  config.setting_chan1  = strdup("x1060101X");
+  config.setting_chan2  = strdup("x2060101X");
+  config.setting_chan3  = strdup("x3060101X");
+  config.setting_chan4  = strdup("x4060101X");
+  config.setting_chan5  = strdup("x5060101X");
+  config.setting_chan6  = strdup("x6060101X");
+  config.setting_chan7  = strdup("x7060101X");
+  config.setting_chan8  = strdup("x8060101X");
+  config.setting_chan9  = strdup("xQ060101X");
+  config.setting_chan10 = strdup("xW060101X");
+  config.setting_chan11 = strdup("xE060101X");
+  config.setting_chan12 = strdup("xR060101X");
+  config.setting_chan13 = strdup("xT060101X");
+  config.setting_chan14 = strdup("xY060101X");
+  config.setting_chan15 = strdup("xU060101X");
+  config.setting_chan16 = strdup("xI060101X");
 
   if (argc<2) {
     printf("%s", usage);
