@@ -1667,7 +1667,9 @@ end
 if isempty(opt.orgdata)
   dat = ft_read_data(cfg.datafile, 'header', opt.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat, 'headerformat', cfg.headerformat);
 else
-  dat = ft_fetch_data(opt.orgdata, 'header', opt.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'allowoverlap', true); % ALLOWING OVERLAPPING TRIALS
+  dat = ft_fetch_data(opt.orgdata, 'header', opt.hdr, 'begsample', begsample,...
+      'endsample', endsample, 'chanindx', chanindx, 'allowoverlap', true,... % ALLOWING OVERLAPPING TRIALS
+      'skipcheckdata', true); % skipping ft_checkdata
 end
 art = ft_fetch_data(opt.artdata, 'begsample', begsample, 'endsample', endsample);
 
@@ -1725,7 +1727,7 @@ else
   % this needs to be reconstructed if the channel selection changes
   if changedchanflg % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
     tmpcfg = [];
-    if strcmp(cfg.viewmode, 'component')
+    if strcmp(cfg.viewmode, 'component') || strcmp(cfg.viewmode, 'fastvertical')
       tmpcfg.layout  = 'vertical';
     else
       tmpcfg.layout  = cfg.viewmode;
@@ -1734,6 +1736,7 @@ else
     tmpcfg.skipcomnt = 'yes';
     tmpcfg.skipscale = 'yes';
     tmpcfg.showcallinfo = 'no';
+    tmpcfg.skipcheckdata = true;
     opt.laytime = ft_prepare_layout(tmpcfg, opt.orgdata);
   end
 end
@@ -1935,6 +1938,151 @@ elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
       setappdata(lh, 'ft_databrowser_yaxis', dat(datsel,:));
     end
   end
+  
+  % plot yticks
+  if length(chanindx)> 6
+    % plot yticks at each label in case adaptive labeling is used (cfg.plotlabels = 'some')
+    % otherwise, use the old ytick plotting based on hard-coded number of channels
+    if opt.plotLabelFlag == 2
+      if opt.plotLabelFlag == 2 && strcmp(cfg.fontunits, 'points')
+        % determine number of labels to plot by estimating overlap using current figure size
+        % the idea is that figure height in pixels roughly corresponds to the amount of letters at cfg.fontsize (points) put above each other without overlap
+        figheight = get(h, 'Position');
+        figheight = figheight(4);
+        labdiscfac = ceil(numel(chanindx) ./ (figheight ./ (cfg.fontsize+2))); % 2 added, so that labels are not too close together (i.e. overlap if font was 2 points bigger)
+      else
+        labdiscfac = 10;
+      end
+      yTick = sort(labely(mod(chanindx,labdiscfac)==0), 'ascend'); % sort is required, yticks should be increasing in value
+      yTickLabel = [];
+    else
+      if length(chanindx)>19
+        % no space for yticks
+        yTick = [];
+        yTickLabel = [];
+      elseif length(chanindx)> 6
+        % one tick per channel
+        yTick = sort([
+          opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/4)
+          opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/4)
+          ]);
+        yTickLabel = {[.25 .75] .* range(opt.vlim) + opt.vlim(1)};
+      end
+    end
+  else
+    % two ticks per channel
+    yTick = sort([
+      opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/2)
+      opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/4)
+      opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/4)
+      opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/2)
+      ]); % sort
+    yTickLabel = {[.0 .25 .75 1] .* range(opt.vlim) + opt.vlim(1)};
+  end
+  yTickLabel = repmat(yTickLabel, 1, length(chanindx));
+  set(gca, 'yTick', yTick, 'yTickLabel', yTickLabel);
+  
+elseif strcmp(cfg.viewmode, 'fastvertical')
+  % determine channel indices into data outside of loop
+  laysels = match_str(opt.laytime.label, opt.hdr.label);
+  % delete old chan labels before renewing, if they need to be renewed
+  if changedchanflg % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
+    delete(findobj(h, 'tag', 'chanlabel'));
+  end
+  
+  ntim = numel(tim);
+  % the idea here is to create two data matrices which can be plotted with
+  % one call to line() rather than calling ft_plot_vector once for every
+  % line
+  allhdat = nan(ntim, length(chanindx));
+  allvdat = nan(ntim, length(chanindx));
+  for i = 1:length(chanindx)
+    datsel = i;
+    laysel = laysels(i);
+    
+    if ~isempty(datsel) && ~isempty(laysel)
+      % only plot chanlabels when necessary
+      if changedchanflg % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
+        % determine how many labels to skip in case of 'some'
+        if opt.plotLabelFlag == 2 && strcmp(cfg.fontunits, 'points')
+          % determine number of labels to plot by estimating overlap using current figure size
+          % the idea is that figure height in pixels roughly corresponds to the amount of letters at cfg.fontsize (points) put above each other without overlap
+          figheight = get(h, 'Position');
+          figheight = figheight(4);
+          labdiscfac = ceil(numel(chanindx) ./ (figheight ./ (cfg.fontsize+6))); % 6 added, so that labels are not too close together (i.e. overlap if font was 6 points bigger)
+        else
+          labdiscfac = 10;
+        end
+        if opt.plotLabelFlag == 1 || (opt.plotLabelFlag == 2 && mod(i,labdiscfac)==0)
+          ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'chanlabel', 'HorizontalAlignment', 'right', 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits, 'linewidth', cfg.linewidth);
+          set(gca, 'FontSize', cfg.axisfontsize, 'FontUnits', cfg.axisfontunits);
+        end
+      end
+      
+      hlim = opt.hlim;
+      vlim = opt.vlim;
+      hpos = opt.hpos;
+      vpos = opt.vpos;
+      width = opt.width;
+      height = opt.height;
+      
+      hdat = tim;
+      vdat = dat(datsel, :);
+      
+      % shifting/scaling code taken from ft_plot_vector
+      % first shift the horizontal axis to zero
+      if any(hlim) ~= 0
+        hdat = hdat - (hlim(1)+hlim(2))/2;
+        % then scale to length 1
+        if (hlim(2)-hlim(1))~=0
+          hdat = hdat ./ (hlim(2)-hlim(1));
+        else
+          hdat = hdat / hlim(1);
+        end
+        % then scale to the new width
+        hdat = hdat .* width;
+      end
+      % then shift to the new horizontal position
+      hdat = hdat + hpos;
+
+      if any(vlim) ~= 0
+        % first shift the vertical axis to zero
+        vdat = vdat - (vlim(1)+vlim(2))/2;
+        % then scale to length 1
+        vdat = vdat / (vlim(2)-vlim(1));
+        % then scale to the new width
+        vdat = vdat .* height;
+      end
+      % then shift to the new vertical position
+      vdat = vdat + vpos;
+      
+      allhdat(:,i) = hdat;
+      allvdat(:,i) = vdat;
+    end
+  end
+  
+  if isfield(opt, 'lh') && ~changedchanflg
+    % simply change the data of the existing lines
+    for k = 1:numel(opt.lh)
+      set(opt.lh(k), 'xdata', allhdat(:,k), 'ydata', allvdat(:,k));
+    end
+  else
+    % channels have changed, need to add new lines
+    cla();
+    opt.lh = line(allhdat, allvdat, 'linewidth', cfg.linewidth);
+    for k = 1:numel(opt.lh)
+      set(opt.lh(k), 'color', opt.chancolors(chanindx(k),:));
+      setappdata(opt.lh(k), 'ft_databrowser_linetype', 'channel');
+      setappdata(opt.lh(k), 'ft_databrowser_label', opt.hdr.label(chanindx(k)));
+    end
+  end
+  
+  for k = 1:numel(opt.lh)
+    setappdata(opt.lh(k), 'ft_databrowser_xaxis', allhdat(:,k));
+    setappdata(opt.lh(k), 'ft_databrowser_yaxis', allvdat(:,k));
+  end
+  
+  
   
   % plot yticks
   if length(chanindx)> 6
