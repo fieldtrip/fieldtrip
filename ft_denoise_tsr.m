@@ -274,20 +274,24 @@ if istrue(cfg.perchannel)
   for k = 1:nchan
     indx = [k nchan+(1:nref)];
     [E, rho(k)]   = multivariate_decomp(C(indx,indx), 1+(1:nref), 1, cfg.method, 1, cfg.threshold);
-    beta_ref(k,:) = E(2:end)./E(1);
+    %beta_ref(k,:) = E(2:end)./E(1);
+    beta_ref(k,:) = E(2:end);%./E(1);
   end
-  beta_ref = (diag(rho))*beta_ref; % scale with sqrt(rho), to get the proper scaling
+  %beta_ref = (diag(rho))*beta_ref; % scale with sqrt(rho), to get the proper scaling
   
 else
   [E, rho]  = multivariate_decomp(C, 1:nchan, nchan+(1:nref), cfg.method, 1, cfg.threshold);  
-  beta_ref  = normc(E(nchan+(1:nref),:))';
-  beta_data = normc(E(1:nchan,:))';
+  %beta_ref  = normc(E(nchan+(1:nref),:))';
+  %beta_data = normc(E(1:nchan,:))';
+  beta_ref  = E(nchan+(1:nref),:);
+  beta_data = E(1:nchan,:);
+
 end
 
 if istrue(cfg.zscore)
   % unzscore the data
   data.trial    = cellvecmult(   data.trial, std_data);
-  refdata.trial = cellvecmult(refdata.trial, std_refdata);
+  refdata.trial = cellvecmult(refdata.trial, repmat(std_refdata, numel(cfg.reflags), 1));
   if exist('beta_data', 'var')
     beta_ref  = beta_ref*diag(std_refdata);
     beta_data = diag(std_data)*beta_data;

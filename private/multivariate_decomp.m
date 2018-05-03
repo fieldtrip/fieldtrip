@@ -1,6 +1,6 @@
 function [E, D] = multivariate_decomp(C,x,y,method,realflag,thr)
 
-% MULTIVARIATE_DECOMP does a decomposition of multivariate time series,
+% MULTIVARIATE_DECOMP does a linear decomposition of multivariate time series,
 % based on the covariance matrix.
 %
 % Use as:
@@ -12,7 +12,8 @@ function [E, D] = multivariate_decomp(C,x,y,method,realflag,thr)
 %   y = list of indices corresponding to group 2 
 %   method = 'cca', or 'pls', 'mlr', decomposition method
 %            (canonical correlation partial least squares, or multivariate
-%             linear regression).
+%             linear regression). In the case of mlr-like decompositions,
+%             the indices for x reflect the independent variable)
 %   realflag = true (default) or false. Do the operation on the real part
 %              of the matrix if the input matrix is complex-valued
 %
@@ -20,7 +21,7 @@ function [E, D] = multivariate_decomp(C,x,y,method,realflag,thr)
 % tutorial (can be found online).
 %
 % Output arguments:
-%   E = projection matrix (unnormalized). to get the orientation,
+%   E = projection matrix (not necessarily normalized). to get the orientation,
 %       do orix = E(x,1)./norm(E(x,1)), and oriy = E(y,1)./norm(E(y,1));
 %   D = diagonal matrix with eigenvalues
 
@@ -40,23 +41,22 @@ if nargin<4
   method = 'cca';
 end
 
-% if realflag
-%   C = real(C);
-% end
+A      = C;
+A(x,x) = 0; % put the auto covariances to 0, keep the cross-block covariances
+A(y,y) = 0;    
 
-A = C;
-A(x,x) = 0;
-A(y,y) = 0;
-    
 switch method
   case {'pls' 'plssvd' 'plsridge' 'plsqridge'}
+    % partial least-squares
     B = eye(numel(x)+numel(y));
   case {'cca' 'ccasvd' 'ccaridge' 'ccaqridge'}
+    % canonical correlation
     B = C;
-    B(x,y) = 0;
+    B(x,y) = 0; % put the cross-block covariances to 0, keep the auto covariances
     B(y,x) = 0;
   
   case {'mlr' 'mlrsvd' 'mlrridge' 'mlrqridge'}
+    % regression
     B = zeros(size(A));
     B(x,x) = C(x,x);
     B(y,y) = eye(numel(y));
@@ -64,6 +64,7 @@ switch method
     error('unsupported method');
 end
 
+% regularize with a ridge
 if ~isempty(strfind(method, 'ridge'))
   if ~isempty(strfind(method, 'qridge'))
     type = 'qridge';
@@ -75,6 +76,7 @@ if ~isempty(strfind(method, 'ridge'))
   B  = B+R;
 end
 
+% perform the decomposition in a svd-based subspace
 if ~isempty(strfind(method, 'svd'))
   [ux,sx,~] = svd(B(x,x));
   [uy,sy,~] = svd(B(y,y));
@@ -100,7 +102,7 @@ if ~isempty(strfind(method, 'svd'))
   B = (B+B')./2;
 end
 
-% ad hoc check for well-behavedness of the matrix
+% ad hoc check for well-behavedness of the matrix, and do the decomposition
 if cond(B)>1e8
   [E,D] = eig(pinv(B)*A);
 else
@@ -109,7 +111,7 @@ else
    E = real(E);
    D = real(D);
   else
-   [E,D] = eig(A,B);
+   [E,D] = eig(B\A);
   end
 end
 
@@ -121,6 +123,17 @@ D          = D(1:n);
 
 if ~isempty(strfind(method, 'svd'))
   E = U*E;
+end
+
+[E(x,:),norm_x] = normc(E(x,:)); % norm normalise the coefficients per block
+[E(y,:),norm_y] = normc(E(y,:));
+if ~isempty(strfind(method, 'mlr'))
+  % scale the weights for the independent variable, such that they reflect
+  % proper beta weights
+  E(x,:) = E(x,:).*D(:)'.*(norm_x./norm_y);
+  
+  % output the ssq error in D
+  D = trace(C(y,y))-(sum((E(y,:)'*C(y,x)).*E(x,:)',2).^2)./(sum((E(x,:)'*C(x,x)).*E(x,:)',2));
 end
 
 function R = ridge_matrix(x, y, type, thr)
@@ -150,3 +163,9 @@ switch type
 end
 R = R*thr;
 
+function [y, x_norm] = normc(x)
+
+% NORMC column-wise norm normalisation
+
+x_norm = sqrt(sum(x.^2));
+y      = x*diag(1./x_norm);
