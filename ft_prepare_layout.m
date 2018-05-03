@@ -139,7 +139,7 @@ hasdata = exist('data', 'var') && ~isempty(data);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~hasdata
   data = struct([]);
-else
+elseif ~ft_getopt(cfg, 'skipcheckdata', false)
   data = ft_checkdata(data);
 end
 
