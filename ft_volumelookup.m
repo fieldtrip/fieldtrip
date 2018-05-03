@@ -45,7 +45,8 @@ function [output] = ft_volumelookup(cfg, volume)
 %   cfg.maxqueryrange       = number, should be 1, 3, 5 (default = 1)
 %   cfg.querymethod         = 'sphere' searches voxels around the roi in a sphere (default)
 %                           = 'cube' searches voxels around the roi in a sphere
-%   cfg.round2nearestvoxel = 'yes' or 'no', voxel closest to point of interest is calculated (default = 'yes')
+%   cfg.round2nearestvoxel  = 'yes' or 'no', voxel closest to point of interest is calculated (default = 'yes')
+%   cfg.multioutput         = 'yes' or 'no', one output per point of interest (default = 'no')
 %
 % The label output has a field "names", a field "count" and a field "usedqueryrange".
 % To get a list of areas of the given mask you can do for instance:
@@ -110,6 +111,7 @@ end
 
 cfg.maxqueryrange      = ft_getopt(cfg,'maxqueryrange', 1);
 cfg.output             = ft_getopt(cfg,'output', []); % in future, cfg.output could be extended to support both 'label' and 'mask'
+cfg.multioutput        = ft_getopt(cfg,'multioutput', 'no');
 
 roi2mask   = 0;
 mask2label = 0;
@@ -347,45 +349,57 @@ elseif mask2label || roi2label
     if istrue(cfg.round2nearestvoxel)
       % determine location of each anatomical voxel in head coordinates
       xyz = [volume.pos ones(size(volume.pos,1),1)]'; % note that this is 4xN
-      for i=1:size(cfg.roi,1)
+      nSel = size(cfg.roi,1);
+      for i=1:nSel
         cfg.roi(i,:) = poi2voi(cfg.roi(i,:), xyz);
       end
     end % round2nearestvoxel
-    sel = find(ismember(volume.pos, cfg.roi, 'rows')==1);
+    sel = zeros(nSel, 1);
+    for i = 1:nSel
+        sel(i) = find(volume.pos(:, 1) == cfg.roi(i, 1) & volume.pos(:, 2) == cfg.roi(i, 2) & volume.pos(:, 3) == cfg.roi(i, 3));
+    end
   end
-  for iVox = 1:length(sel)
-    label = {}; 
-    for qr = 1:2:cfg.maxqueryrange
+  if strcmp(cfg.multioutput, 'yes')
+      labels = repmat(labels, nSel, 1);
+  end
+  for iVox = 1:nSel
+      label = {};
+      for qr = 1:2:cfg.maxqueryrange
+          if isempty(label)
+              label = atlas_lookup(atlas, volume.pos(sel(iVox), :), 'inputcoord', cfg.inputcoord, 'queryrange', qr, 'method', cfg.querymethod);
+              usedQR = qr;
+          end
+      end
+      
       if isempty(label)
-        label = atlas_lookup(atlas, [volume.pos(sel(iVox),1) volume.pos(sel(iVox),2) volume.pos(sel(iVox),3)], 'inputcoord', cfg.inputcoord, 'queryrange', qr, 'method', cfg.querymethod);
-        usedQR = qr;
+          label = {'no_label_found'};
+      elseif length(label) == 1
+          label = {label};
       end
-    end
-
-    if isempty(label)
-      label = {'no_label_found'};
-    elseif length(label) == 1
-      label = {label};
-    end
-    
-    ind_lab = [];
-    for iLab = 1:length(label)
-      ind_lab = find(strcmp(label{iLab}, labels.name));
-      labels.count(ind_lab) = labels.count(ind_lab)+1; % labels.count should give the number of times a label was found within a query range
-    end
-    
-%     labels.count(ind_lab) = labels.count(ind_lab) + (1/length(ind_lab));
-%     ^this gives each label a weight depending on the number of
-%     labels found within the query range. Using this method, all labels
-%     that were found will have the same number listed for labels.count,
-%     which defeats the point of the labels.count field as I understand it
-    for iFoundLab = 1:length(ind_lab)
-      if isempty(labels.usedqueryrange{ind_lab(iFoundLab)})
-        labels.usedqueryrange{ind_lab(iFoundLab)} = usedQR;
+      
+      if strcmp(cfg.multioutput, 'yes')
+          iLabOut = iVox;
       else
-        labels.usedqueryrange{ind_lab(iFoundLab)} = [labels.usedqueryrange{ind_lab(iFoundLab)} usedQR];
+          iLabOut = 1;
       end
-    end
+      ind_lab = [];
+      for iLab = 1:length(label)
+          ind_lab = find(strcmp(label{iLab}, labels(iLabOut).name));
+          labels(iLabOut).count(ind_lab) = labels(iLabOut).count(ind_lab)+1; % labels.count should give the number of times a label was found within a query range
+      end
+      
+      %     labels.count(ind_lab) = labels.count(ind_lab) + (1/length(ind_lab));
+      %     ^this gives each label a weight depending on the number of
+      %     labels found within the query range. Using this method, all labels
+      %     that were found will have the same number listed for labels.count,
+      %     which defeats the point of the labels.count field as I understand it
+      for iFoundLab = 1:length(ind_lab)
+          if isempty(labels(iLabOut).usedqueryrange{ind_lab(iFoundLab)})
+              labels(iLabOut).usedqueryrange{ind_lab(iFoundLab)} = usedQR;
+          else
+              labels(iLabOut).usedqueryrange{ind_lab(iFoundLab)} = [labels(iLabOut).usedqueryrange{ind_lab(iFoundLab)} usedQR];
+          end
+      end
   end %iVox
   
   output = labels;
