@@ -290,8 +290,9 @@ end
 
 if istrue(cfg.zscore)
   % unzscore the data
+  std_refdata   = repmat(std_refdata, numel(cfg.reflags), 1);
   data.trial    = cellvecmult(   data.trial, std_data);
-  refdata.trial = cellvecmult(refdata.trial, repmat(std_refdata, numel(cfg.reflags), 1));
+  refdata.trial = cellvecmult(refdata.trial, std_refdata);
   if exist('beta_data', 'var')
     beta_ref  = beta_ref*diag(std_refdata);
     beta_data = diag(std_data)*beta_data;
