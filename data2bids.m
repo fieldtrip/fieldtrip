@@ -72,7 +72,7 @@ function cfg = data2bids(cfg, varargin)
 % There are many more datatype specific options for the JSON files than can be listed
 % here. Please open this function in the MATLAB editor to see what those are.
 %
-% Example with a CTF dataset
+% Example with a CTF dataset on disk
 %   cfg = [];
 %   cfg.dataset                     = 'sub-01_ses-meg_task-language_meg.ds';
 %   cfg.TaskName                    = 'language';
@@ -81,16 +81,16 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
 %   data2bids(cfg)
 %
-% Example with an anatomical MRI
+% Example with an anatomical MRI on disk
 %   cfg = [];
 %   cfg.dataset                     = 'sub-01_ses-mri_T1w.nii';
 %   cfg.anat.dicomfile              = '00080_1.3.12.2.1107.5.2.43.66068.2017082413175824865636649.IMA'
-%   cfg.anat.MagneticFieldStrength  = 3;
+%   % cfg.anat.MagneticFieldStrength  = 3; % this is not needed, as it will be obtained from the DICOM file
 %   cfg.InstitutionName             = 'Radboud University';
 %   cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
 %   data2bids(cfg)
 %
-% Example with the conversion of a NeuroScan EEG dataset on disk
+% Example with a NeuroScan EEG dataset on disk that needs to be converted
 %   cfg = [];
 %   cfg.dataset                     = 'subject01.cnt';
 %   cfg.outputfile                  = 'sub-001_task-visual.vhdr';
@@ -98,7 +98,7 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
 %   data2bids(cfg)
 %
-% Example with the conversion of preprocessed data in memory
+% Example with preprocessed EEG data in memory
 %   cfg = [];
 %   cfg.dataset                     = 'subject01.cnt';
 %   cfg.bpfilter                    = 'yes';
@@ -108,10 +108,18 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.outputfile                  = 'sub-001_task-visual.vhdr';
 %   cfg.InstitutionName             = 'Radboud University';
 %   cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
-%   data2bids(cfg)
+%   data2bids(cfg, data)
 %
-% This function corresponds to version 1.1.0 of the BIDS specification.
-% See http://bids.neuroimaging.io/ for the details.
+% Example with realigned and resliced anatomical MRI data in memory
+%   cfg = [];
+%   cfg.outputfile                  = 'sub-01_ses-mri_T1w.nii';
+%   cfg.anat.MagneticFieldStrength  = 3;
+%   cfg.InstitutionName             = 'Radboud University';
+%   cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
+%   data2bids(cfg, mri)
+%
+% This function tries to correspond to version 1.1.0 of the BIDS specification.
+% See http://bids.neuroimaging.io/ for further details.
 
 % Copyright (C) 2018, Robert Oostenveld
 %
@@ -213,9 +221,28 @@ cfg.meg.SubjectArtefactDescription    = ft_getopt(cfg.meg, 'SubjectArtefactDescr
 cfg.meg.AssociatedEmptyRoom           = ft_getopt(cfg.meg, 'AssociatedEmptyRoom'         ); % OPTIONAL. Relative path in BIDS folder structure to empty-room file associated with the subject’s MEG recording. The path needs to use forward slashes instead of backward slashes (e.g. "sub-emptyroom/ses-<label>/meg/sub-emptyroom_ses-<label>_ta sk-noise_run-<label>_meg.ds").
 
 %% EEG specific fields
-cfg.eeg.SamplingFrequency             = ft_getopt(cfg.eeg, 'SamplingFrequency'           );
-cfg.eeg.PowerLineFrequency            = ft_getopt(cfg.eeg, 'PowerLineFrequency'          );
-ft_warning('EEG metadata fields need to be updated with the draft specification at http://bit.ly/bids_eeg');
+cfg.eeg.EEGSamplingFrequency          = ft_getopt(cfg.eeg, 'EEGSamplingFrequency'        ); % Sampling frequency (in Hz) of the EEG recording (e.g. 2400)
+cfg.eeg.EEGChannelCount               = ft_getopt(cfg.eeg, 'EEGChannelCount'             ); % Number of EEG channels included in the recording (e.g. 128).
+cfg.eeg.EOGChannelCount               = ft_getopt(cfg.eeg, 'EOGChannelCount'             ); % Number of EOG channels included in the recording (e.g. 2).
+cfg.eeg.ECGChannelCount               = ft_getopt(cfg.eeg, 'ECGChannelCount'             ); % Number of ECG channels included in the recording (e.g. 1).
+cfg.eeg.EMGChannelCount               = ft_getopt(cfg.eeg, 'EMGChannelCount'             ); % Number of EMG channels included in the recording (e.g. 2).
+cfg.eeg.EEGReference                  = ft_getopt(cfg.eeg, 'EEGReference'                ); % Description of the type of reference used (common", "average", "DRL", "bipolar" ).  Any specific electrode used as reference should be indicated as such in the channels.tsv file
+cfg.eeg.MiscChannelCount              = ft_getopt(cfg.eeg, 'MiscChannelCount'            ); % Number of miscellaneous analog channels for auxiliary  signals
+cfg.eeg.TriggerChannelCount           = ft_getopt(cfg.eeg, 'TriggerChannelCount'         ); % Number of channels for digital and analog triggers.
+cfg.eeg.PowerLineFrequency            = ft_getopt(cfg.eeg, 'PowerLineFrequency'          ); % Frequency (in Hz) of the power grid where the EEG is installed (i.e. 50 or 60).
+cfg.eeg.EEGPlacementScheme            = ft_getopt(cfg.eeg, 'EEGPlacementScheme'          ); % Placement scheme of the EEG electrodes. Either the name of a placement system (e.g. "10-20", “equidistant”, “geodesic”) or a list of electrode positions (e.g. "Cz", "Pz").
+cfg.eeg.CapManufacturer               = ft_getopt(cfg.eeg, 'CapManufacturer'             ); % name of the cap manufacturer
+cfg.eeg.CapModelName                  = ft_getopt(cfg.eeg, 'CapModelName'                ); % Manufacturer’s designation of the EEG cap model (e.g. “CAPML128”, “actiCAP 64Ch Standard-2”)
+cfg.eeg.HardwareFilters               = ft_getopt(cfg.eeg, 'HardwareFilters'             ); % List of hardware (amplifier) filters applied or ideally  key:value pairs of pre-applied filters and their parameter values
+cfg.eeg.SoftwareFilters               = ft_getopt(cfg.eeg, 'SoftwareFilters'             ); % List of temporal software filters applied or ideally  key:value pairs of pre-applied filters and their parameter values
+cfg.eeg.RecordingDuration             = ft_getopt(cfg.eeg, 'RecordingDuration'           ); % Length of the recording in seconds (e.g. 3600)
+cfg.eeg.RecordingType                 = ft_getopt(cfg.eeg, 'RecordingType'               ); % “continuous”, “epoched”
+cfg.eeg.EpochLength                   = ft_getopt(cfg.eeg, 'EpochLength'                 ); % Duration of individual epochs in seconds (e.g. 1). If recording was continuous, set value to Inf or leave out the field.
+cfg.eeg.DeviceSoftwareVersion         = ft_getopt(cfg.eeg, 'DeviceSoftwareVersion'       ); % Manufacturer’s designation of the acquisition software.
+cfg.eeg.SubjectArtefactDescription    = ft_getopt(cfg.eeg, 'SubjectArtefactDescription'  ); % Freeform description of the observed subject artefact and its possible cause (e.g. "Vagus Nerve Stimulator", “non-removable implant”). If this field is left empty, it will be interpreted as absence of  a source of (constantly present) artifacts.
+cfg.eeg.SimultaneousRecording         = ft_getopt(cfg.eeg, 'SimultaneousRecording'       ); % indicate over acquired modalities (keys are: fMRI, PET, MEG, NIRS)
+ft_warning('EEG metadata fields may need to be updated with the draft specification at http://bit.ly/bids_eeg');
+
 
 %% IEEG specific fields
 cfg.ieeg.SamplingFrequency            = ft_getopt(cfg.ieeg, 'SamplingFrequency'          );
@@ -327,17 +354,21 @@ switch typ
     end
     
   case 'raw'
-    % the data is not on disk but has been passed as input argument
+    % the data is not on disk, but has been passed as input argument
     hdr = ft_fetch_header(varargin{1});
     evt = ft_fetch_event(varargin{1});
     if ~isequal(cfg.dataset, cfg.outputfile)
       % the data should be converted and written to disk
-      dat = ft_fetch_data(cfg.datafile, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
+      dat = ft_fetch_data(varargin{1}, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
+    end
+    if ft_senstype(varargin{1}, 'ctf') || ft_senstype(varargin{1}, 'neuromag')
+      % use the subsequent MEG-specific handling for the JSON and TSV sidecar files
+      typ = ft_senstype(varargin{1});
     end
     
   otherwise
     % assume it is electrophysiological data
-    hdr = ft_read_header(cfg.headerfile);
+    hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false);
     evt = ft_read_event(cfg.datafile, 'header', hdr);
     if ~isequal(cfg.dataset, cfg.outputfile)
       % the data should be converted and written to disk
@@ -387,12 +418,12 @@ switch typ
     anat_json = mergeconfig(anat_json, generic_defaults);
     anat_json = mergeconfig(anat_json, anat_defaults);
     
-  case {'ctf_ds', 'ctf_meg4', 'ctf_res4'}
+  case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275', 'neuromag_fif', 'neuromag122', 'neuromag306'}
     % these MUST be present
     meg_json.SamplingFrequency          = hdr.Fs;
     % these SHOULD be present
-    meg_json.MEGChannelCount            = sum(strcmp(hdr.chantype, 'megmag') | strcmp(hdr.chantype, 'meggrad') | strcmp(hdr.chantype, 'megplanar'));
-    meg_json.MEGREFChannelCount         = sum(strcmp(hdr.chantype, 'refmag') | strcmp(hdr.chantype, 'refgrad'));
+    meg_json.MEGChannelCount            = sum(strcmp(hdr.chantype, 'megmag') | strcmp(hdr.chantype, 'meggrad') | strcmp(hdr.chantype, 'megplanar') | strcmp(hdr.chantype, 'megaxial'));
+    meg_json.MEGREFChannelCount         = sum(strcmp(hdr.chantype, 'refmag') | strcmp(hdr.chantype, 'refgrad') | strcmp(hdr.chantype, 'refplanar') | strcmp(hdr.chantype, 'ref'));
     meg_json.EEGChannelCount            = sum(strcmp(hdr.chantype, 'eeg'));
     meg_json.ECOGChannelCount           = sum(strcmp(hdr.chantype, '???'));
     meg_json.SEEGChannelCount           = sum(strcmp(hdr.chantype, '???'));
@@ -403,9 +434,21 @@ switch typ
     meg_json.TriggerChannelCount        = sum(strcmp(hdr.chantype, 'trigger'));
     meg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
     meg_json.EpochLength                = hdr.nSamples/hdr.Fs;
-    meg_json.ContinuousHeadLocalization = truefalse(any(isfield(hdr.chantype, 'headloc')));
-    meg_json.Manufacturer               = 'CTF';
-    meg_json.ManufacturersModelName     = upper(ft_senstype(hdr.grad));
+    if ft_senstype(hdr.grad, 'ctf151')
+      meg_json.ContinuousHeadLocalization = truefalse(any(isfield(hdr.chantype, 'headloc'))); % CTF specific
+      meg_json.Manufacturer             = 'CTF';
+      meg_json.ManufacturersModelName   = 'CTF-151';
+    elseif ft_senstype(hdr.grad, 'ctf275')
+      meg_json.ContinuousHeadLocalization = truefalse(any(isfield(hdr.chantype, 'headloc'))); % CTF specific
+      meg_json.Manufacturer             = 'CTF';
+      meg_json.ManufacturersModelName   = 'CTF-275';
+    elseif ft_senstype(hdr.grad, 'neuromag122')
+      meg_json.Manufacturer             = 'Elekta/Neuromag';
+      meg_json.ManufacturersModelName   = 'Neuromag-122';
+    elseif ft_senstype(hdr.grad, 'neuromag306')
+      meg_json.Manufacturer             = 'Elekta/Neuromag';
+      % meg_json.ManufacturersModelName can not be determined, since both have 306 channels
+    end
     
     % make the relevant selection, all json fields start with a capital letter
     fn = fieldnames(cfg);
@@ -457,6 +500,19 @@ switch typ
       % convert the events from the dataset into a table
       events_tsv = event2table(hdr, evt);
     end
+    
+  case 'raw'
+    ft_warning('assuming that the input data contains EEG');
+    % these MUST be present
+    eeg_json.SamplingFrequency          = hdr.Fs;
+    % these SHOULD be present
+    eeg_json.EEGChannelCount            = sum(strcmp(hdr.chantype, 'eeg'));
+    eeg_json.EOGChannelCount            = sum(strcmp(hdr.chantype, 'eog'));
+    eeg_json.ECGChannelCount            = sum(strcmp(hdr.chantype, 'ecg'));
+    eeg_json.EMGChannelCount            = sum(strcmp(hdr.chantype, 'emg'));
+    eeg_json.TriggerChannelCount        = sum(strcmp(hdr.chantype, 'trigger'));
+    eeg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
+    eeg_json.EpochLength                = hdr.nSamples/hdr.Fs;
     
   otherwise
     ft_error('not yet implemented for "%s"', typ);
