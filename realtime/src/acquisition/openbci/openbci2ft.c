@@ -182,7 +182,7 @@ static int iniHandler(void* external, const char* section, const char* name, con
 #define MATCH(s, n) strcasecmp(section, s) == 0 && strcasecmp(name, n) == 0
   if (MATCH("General", "blocksize")) {
     local->blocksize = atoi(value);
-  else if (MATCH("General", "port")) {
+  } else if (MATCH("General", "port")) {
     local->port = atoi(value);
   } else if (MATCH("General", "hostname")) {
     local->hostname = strdup(value);
