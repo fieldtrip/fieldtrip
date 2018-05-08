@@ -1773,6 +1773,7 @@ switch key
     cb_redraw(h);
     
   otherwise
+    % do nothing
     
 end % switch key
 
