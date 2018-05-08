@@ -351,11 +351,11 @@ if ~isempty(individual.mri)
 end
 
 if ~isempty(template.mri)
-  ft_plot_ortho(template.mri.anatomy, 'transform',  template.mri.transform, 'style', 'intersect', 'intersectmesh', individual.headshape, cfg.individual.mristyle{:});
+  ft_plot_ortho(template.mri.anatomy, 'transform',  template.mri.transform, 'style', 'intersect', 'intersectmesh', individual.headshape, individual.mristyle{:});
 end
 
 if ~isempty(individual.mri)
-  ft_plot_ortho(individual.mri.anatomy, 'transform',  individual.mri.transform, 'style', 'intersect', 'intersectmesh', template.headshape, cfg.template.mristyle{:});
+  ft_plot_ortho(individual.mri.anatomy, 'transform',  individual.mri.transform, 'style', 'intersect', 'intersectmesh', template.headshape, template.mristyle{:});
 end
 
 if istrue(template.axes)
