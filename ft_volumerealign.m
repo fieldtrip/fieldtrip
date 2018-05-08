@@ -394,7 +394,7 @@ switch cfg.method
         set(h, 'windowbuttondownfcn', @cb_buttonpress);
         set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
         set(h, 'windowkeypressfcn',   @cb_keyboard);
-        set(h, 'CloseRequestFcn',     @cb_cleanup);
+        set(h, 'CloseRequestFcn',     @cb_quit);
         
         % axis handles will hold the anatomical functional if present, along with labels etc.
         h1 = axes('position', [0.06                0.06+0.06+h3size(2) h1size(1) h1size(2)]);
@@ -576,7 +576,7 @@ switch cfg.method
         set(h, 'visible', 'on');
         % add callbacks
         set(h, 'windowkeypressfcn',   @cb_keyboard_surface);
-        set(h, 'CloseRequestFcn',     @cb_cleanup);
+        set(h, 'CloseRequestFcn',     @cb_quit);
         
         % create figure handles
         h1 = axes;
@@ -1098,7 +1098,7 @@ if viewresult
   set(h, 'windowbuttondownfcn', @cb_buttonpress);
   set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
   set(h, 'windowkeypressfcn',   @cb_keyboard);
-  set(h, 'CloseRequestFcn',     @cb_cleanup);
+  set(h, 'CloseRequestFcn',     @cb_quit);
   
   % axis handles will hold the anatomical functional if present, along with labels etc.
   h1 = axes('position', [0.06                0.06+0.06+h3size(2) h1size(1) h1size(2)]);
@@ -1397,7 +1397,7 @@ end
 setappdata(h, 'opt', opt);
 
 if isequal(key, 'q')
-  cb_cleanup(h);
+  cb_quit(h);
 else
   cb_redraw_surface(h);
 end
@@ -1742,7 +1742,7 @@ switch key
     
   case 'q'
     setappdata(h, 'opt', opt);
-    cb_cleanup(h);
+    cb_quit(h);
     
   case {'i' 'j' 'k' 'm' 28 29 30 31 'leftarrow' 'rightarrow' 'uparrow' 'downarrow'} % TODO FIXME use leftarrow rightarrow uparrow downarrow
     % update the view to a new position
@@ -1929,7 +1929,7 @@ uiresume
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_cleanup(h, eventdata)
+function cb_quit(h, eventdata)
 
 opt = getappdata(h, 'opt');
 if ~opt.viewresult

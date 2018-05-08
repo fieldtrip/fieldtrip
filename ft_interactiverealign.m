@@ -525,7 +525,7 @@ switch key
     
   case 'q'
     setappdata(h, 'opt', opt);
-    cb_cleanup(h);
+    cb_quit(h);
 
   otherwise
     % do nothing
