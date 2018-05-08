@@ -215,8 +215,8 @@ switch cfg.method
       'Callback', @cb_labelsbutton);
     
     % give the user instructions
-    disp('Use the mouse to click on the desired electrode positions');
-    disp('Afterwards you may have to update the electrode labels');
+    disp('Use the mouse to click on the desired position for the electrode');
+    disp('Subsequently use the mouse to click on the corresponding electrode label');
     disp('Press "r" to delete the last point add');
     disp('Press "+/-" to zoom in/out');
     disp('Press "w/a/s/d" to rotate');
@@ -244,7 +244,7 @@ switch cfg.method
     opt.mainfig       = h;
     opt.quit          = false;
     opt.init          = true;
-    opt.pos           = [0 0 0]; % middle of the scan, head coordinates (FIXME: this might mess up vertex findng, being an anchor)
+    opt.pos           = [0 0 0]; % middle of the scan, head coordinates (FIXME: this might mess up vertex finding, being an anchor)
     opt.showcrosshair = true;
     opt.showlabels    = false;
     opt.showmarkers   = true;
@@ -932,8 +932,9 @@ if isempty(eventdata)
   key = get(h, 'userdata');
 else
   % determine the key that was pressed on the keyboard
-  key = parseKeyboardEvent(eventdata);
+  key = parsekeyboardevent(eventdata);
 end
+
 % get focus back to figure
 if ~strcmp(get(h, 'type'), 'figure')
   set(h, 'enable', 'off');
@@ -950,19 +951,6 @@ tag     = get(curr_ax, 'tag');
 if isempty(key)
   % this happens if you press the apple key
   key = '';
-end
-
-if strcmp(opt.method, 'headshape')
-  % some keyboard commands apply only to the headshape method
-  
-  switch key
-    case 'v' % camlight angle reset
-      delete(findall(h,'Type','light')) % shut out the lights
-      camlight; lighting gouraud; % add a new light from the current camera position
-    otherwise
-      % do nothing
-      
-  end % switch key
 end
 
 % the following code is largely shared with FT_SOURCEPLOT
@@ -1040,7 +1028,7 @@ switch key
     cb_redraw(h);
     
     % contrast scaling
-  case {43 'shift+equal'}  % numpad +
+  case {43 'add' 'shift+equal'}  % + or numpad +
     if isempty(opt.clim)
       opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
     end
@@ -1051,7 +1039,7 @@ switch key
     setappdata(h, 'opt', opt);
     cb_redraw(h);
     
-  case {45 'shift+hyphen'} % numpad -
+  case {45 'subtract' 'hyphen' 'shift+hyphen'} % - or numpad -
     if isempty(opt.clim)
       opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
     end
@@ -1072,6 +1060,10 @@ switch key
     opt.redrawmarker = 1;
     setappdata(h, 'opt', opt);
     cb_redraw(h);
+    
+  case 'v' % camlight angle reset
+    delete(findall(h,'Type','light')) % shut out the lights
+    camlight; lighting gouraud; % add a new light from the current camera position
     
   case 3 % right mouse click
     % add point to a list
@@ -1229,33 +1221,6 @@ p = h;
 while p~=0
   h = p;
   p = get(h, 'parent');
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function key = parseKeyboardEvent(eventdata)
-
-key = eventdata.Key;
-% handle possible numpad events (different for Windows and UNIX systems)
-% NOTE: shift+numpad number does not work on UNIX, since the shift
-% modifier is always sent for numpad events
-if isunix()
-  shiftInd = match_str(eventdata.Modifier, 'shift');
-  if ~isnan(str2double(eventdata.Character)) && ~isempty(shiftInd)
-    % now we now it was a numpad keystroke (numeric character sent AND
-    % shift modifier present)
-    key = eventdata.Character;
-    eventdata.Modifier(shiftInd) = []; % strip the shift modifier
-  end
-elseif ispc()
-  if strfind(eventdata.Key, 'numpad')
-    key = eventdata.Character;d
-  end
-end
-
-if ~isempty(eventdata.Modifier)
-  key = [eventdata.Modifier{1} '+' key];
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
