@@ -17,6 +17,8 @@ function h = ft_plot_dipole(pos, ori, varargin)
 %
 % Example
 %   ft_plot_dipole([0 0 0], [1 2 3], 'color', 'r', 'alpha', 1)
+%
+% See also FT_PLOT_MESH, FT_PLOT_ORTHO
 
 % Copyright (C) 2009, Robert Oostenveld
 %
