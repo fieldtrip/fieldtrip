@@ -644,7 +644,7 @@ if isempty(key)
   key = '';
 end
 
-% the following code is largely shared with FT_SOURCEPLOT
+% the following code is largely shared by FT_SOURCEPLOT, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN, FT_MESHREALIGN, FT_ELECTRODEPLACEMENT
 switch key
   case {'' 'shift+shift' 'alt-alt' 'control+control' 'command-0'}
     % do nothing
@@ -693,8 +693,8 @@ switch key
     setappdata(h, 'opt', opt);
     cb_redraw(h);
     
+  case {43 'add' 'shift+equal'}  % + or numpad +
     % contrast scaling
-  case {43 'shift+equal'}  % numpad +
     % disable if viewresult
     if ~opt.viewresult
       if isempty(opt.clim)
@@ -708,7 +708,8 @@ switch key
       cb_redraw(h);
     end
     
-  case {45 'shift+hyphen'} % numpad -
+  case {45 'subtract' 'hyphen' 'shift+hyphen'} % - or numpad -
+    % contrast scaling
     % disable if viewresult
     if ~opt.viewresult
       if isempty(opt.clim)

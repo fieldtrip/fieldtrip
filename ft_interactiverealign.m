@@ -188,23 +188,22 @@ ft_info('Close the figure when you are done.');
 
 % open a figure
 fig = figure;
-set(gca, 'position', [0.05 0.15 0.75 0.75]);
-axis([-150 150 -150 150 -150 150]);
-
-% add the data to the figure
 set(fig, 'CloseRequestFcn',    @cb_quit);
 set(fig, 'windowkeypressfcn',  @cb_keyboard);
+set(gca, 'position', [0.05 0.15 0.75 0.75]);
+
+% add the data to the figure
 setappdata(fig, 'individual',  individual);
 setappdata(fig, 'template',    template);
 setappdata(fig, 'transform',   eye(4));
 setappdata(fig, 'cleanup',     false);
 setappdata(fig, 'coordsys',    coordsys); % can be unknown
-
 setappdata(fig, 'toggle_labels', true);
 setappdata(fig, 'toggle_axes', true);
 setappdata(fig, 'toggle_grid', true);
 
 % add the GUI elements
+axis([-150 150 -150 150 -150 150]);
 cb_creategui(gcf);
 cb_redraw(gcf);
 rotate3d on
@@ -518,15 +517,21 @@ if isempty(key)
   key = '';
 end
 
-% the following code is largely shared with FT_SOURCEPLOT
+% the following code is largely shared by FT_SOURCEPLOT, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN, FT_MESHREALIGN, FT_ELECTRODEPLACEMENT
 switch key
   case {'' 'shift+shift' 'alt-alt' 'control+control' 'command-0'}
     % do nothing
     
   case 'q'
-    setappdata(h, 'opt', opt);
     cb_quit(h);
-
+    
+  case 'v' % camlight angle reset
+    delete(findall(fig,'Type','light')) % shut out the lights
+    % add a new light from the current camera position
+    lighting gouraud
+    material shiny
+    camlight
+    
   otherwise
     % do nothing
     

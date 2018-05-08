@@ -166,13 +166,13 @@ function ft_sourceplot(cfg, functional, anatomical)
 %                        or an Nx3 or Nx1 array where N is the number of vertices
 %   cfg.edgecolor      = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
 %
-% When cfg.method = 'cloud', the functional data will be rendered as as clouds (groups of points), spheres, or 
+% When cfg.method = 'cloud', the functional data will be rendered as as clouds (groups of points), spheres, or
 % single points at each sensor position. These spheres or point clouds can either
-% be viewed in 3D or as 2D slices. The 'anatomical' input may also consist of 
+% be viewed in 3D or as 2D slices. The 'anatomical' input may also consist of
 % a single or multiple triangulated surface mesh(es) in an Nx1 cell-array
 % to be plotted with the interpolated functional data (see FT_PLOT_CLOUD)
 %
-% The following parameters apply to cfg.method='elec' 
+% The following parameters apply to cfg.method='elec'
 %   cfg.cloudtype       = 'point' plots a single point at each sensor position
 %                         'cloud' (default) plots each a group of spherically arranged points at each sensor position
 %                         'surf' plots a single spherical surface mesh at each sensor position
@@ -1248,7 +1248,7 @@ switch cfg.method
             % color + opacity into a single rgb value to speed up the rendering
             ft_plot_mesh(surf, 'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', val, 'facealpha', maskval, 'clim', [fcolmin fcolmax], 'alphalim', [opacmin opacmax], 'alphamap', cfg.opacitymap, 'colormap', cfg.funcolormap, 'maskstyle', 'colormix');
             
-        end       
+        end
       end
     end
     
@@ -1263,10 +1263,10 @@ switch cfg.method
         % use a normal MATLAB colorbar
         hc = colorbar;
         if strcmp(cfg.maskstyle, 'opacity')
-            % functional values are according to original input values
-            set(hc, 'YLim', [fcolmin fcolmax]);
+          % functional values are according to original input values
+          set(hc, 'YLim', [fcolmin fcolmax]);
         else
-            % functional values have been transformed to be scaled
+          % functional values have been transformed to be scaled
         end
       else
         ft_warning('no colorbar possible without functional data')
@@ -1710,7 +1710,7 @@ if isempty(key)
   key = '';
 end
 
-% the following code is largely shared with FT_VOLUMEREALIGN
+% the following code is largely shared by FT_SOURCEPLOT, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN, FT_MESHREALIGN, FT_ELECTRODEPLACEMENT
 switch key
   case {'' 'shift+shift' 'alt-alt' 'control+control' 'command-0'}
     % do nothing
@@ -1748,8 +1748,8 @@ switch key
     setappdata(h, 'opt', opt);
     cb_redraw(h);
     
+  case {43 'add' 'shift+equal'}  % + or numpad +
     % contrast scaling
-  case {43 'shift+equal'}  % numpad +
     if isempty(opt.clim)
       opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
     end
@@ -1760,7 +1760,8 @@ switch key
     setappdata(h, 'opt', opt);
     cb_redraw(h);
     
-  case {45 'shift+hyphen'} % numpad -
+  case {45 'subtract' 'hyphen' 'shift+hyphen'} % - or numpad -
+    % contrast scaling
     if isempty(opt.clim)
       opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
     end

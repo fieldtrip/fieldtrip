@@ -953,7 +953,7 @@ if isempty(key)
   key = '';
 end
 
-% the following code is largely shared with FT_SOURCEPLOT
+% the following code is largely shared by FT_SOURCEPLOT, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN, FT_MESHREALIGN, FT_ELECTRODEPLACEMENT
 switch key
   case {'' 'shift+shift' 'alt-alt' 'control+control' 'command-0'}
     % do nothing
@@ -1063,7 +1063,10 @@ switch key
     
   case 'v' % camlight angle reset
     delete(findall(h,'Type','light')) % shut out the lights
-    camlight; lighting gouraud; % add a new light from the current camera position
+    % add a new light from the current camera position
+    lighting gouraud
+    material shiny
+    camlight
     
   case 3 % right mouse click
     % add point to a list
