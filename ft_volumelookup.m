@@ -361,7 +361,7 @@ elseif mask2label || roi2label
   if strcmp(cfg.multioutput, 'yes')
       labels = repmat(labels, size(cfg.roi,1), 1);
   end
-  for iVox = 1:size(cfg.roi,1)
+  for iVox = 1:length(sel)
       label = {};
       for qr = 1:2:cfg.maxqueryrange
           if isempty(label)
