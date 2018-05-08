@@ -349,20 +349,19 @@ elseif mask2label || roi2label
     if istrue(cfg.round2nearestvoxel)
       % determine location of each anatomical voxel in head coordinates
       xyz = [volume.pos ones(size(volume.pos,1),1)]'; % note that this is 4xN
-      nSel = size(cfg.roi,1);
-      for i=1:nSel
+      for i=1:size(cfg.roi,1)
         cfg.roi(i,:) = poi2voi(cfg.roi(i,:), xyz);
       end
     end % round2nearestvoxel
-    sel = zeros(nSel, 1);
-    for i = 1:nSel
+    sel = zeros(size(cfg.roi,1), 1);
+    for i = 1:size(cfg.roi,1)
         sel(i) = find(volume.pos(:, 1) == cfg.roi(i, 1) & volume.pos(:, 2) == cfg.roi(i, 2) & volume.pos(:, 3) == cfg.roi(i, 3));
     end
   end
   if strcmp(cfg.multioutput, 'yes')
-      labels = repmat(labels, nSel, 1);
+      labels = repmat(labels, size(cfg.roi,1), 1);
   end
-  for iVox = 1:nSel
+  for iVox = 1:size(cfg.roi,1)
       label = {};
       for qr = 1:2:cfg.maxqueryrange
           if isempty(label)
