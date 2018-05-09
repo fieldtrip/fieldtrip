@@ -38,7 +38,8 @@ function [output] = ft_volumelookup(cfg, volume)
 %   cfg.maxqueryrange       = number, should be odd (default = 1)
 %
 % The configuration options for labels around POI:
-%   cfg.output              = 'label'
+%   cfg.output              = 'single' always outputs one label; if several POI are provided, they are considered together as describing a ROI (default)
+%                             'multiple' outputs one label per POI (e.g., choose to get labels for different electrodes)
 %   cfg.roi                 = Nx3 vector, coordinates of the POI
 %   cfg.inputcoord          = 'mni' or 'tal', coordinate system of the mri/source/stat
 %   cfg.atlas               = string, filename of atlas to use, see FT_READ_ATLAS
@@ -46,8 +47,6 @@ function [output] = ft_volumelookup(cfg, volume)
 %   cfg.querymethod         = 'sphere' searches voxels around the ROI in a sphere (default)
 %                           = 'cube' searches voxels around the ROI in a cube
 %   cfg.round2nearestvoxel  = 'yes' or 'no', voxel closest to POI is calculated (default = 'yes')
-%   cfg.multioutput         = 'no' always outputs one label; if several POI are provided, they are considered together as describing a ROI (default)
-%                             'yes' outputs one label per POI (e.g., choose to get labels for different electrodes)
 %
 % The label output has a field "names", a field "count" and a field "usedqueryrange".
 % To get a list of areas of the given mask you can do for instance:
@@ -112,12 +111,12 @@ end
 
 cfg.maxqueryrange      = ft_getopt(cfg,'maxqueryrange', 1);
 cfg.output             = ft_getopt(cfg,'output', []); % in future, cfg.output could be extended to support both 'label' and 'mask'
-cfg.multioutput        = ft_getopt(cfg,'multioutput', 'no');
+cfg = ft_checkconfig(cfg, 'renamedval', {'output', 'label', 'single'});
 
 roi2mask   = 0;
 mask2label = 0;
 roi2label = 0;
-if isfield(cfg, 'roi') && strcmp(cfg.output, 'label')
+if isfield(cfg, 'roi') && ~isempty(cfg.output)
   roi2label = 1;
 elseif isfield(cfg, 'roi')
   roi2mask = 1;
@@ -350,12 +349,8 @@ elseif mask2label || roi2label
     if istrue(cfg.round2nearestvoxel)
       % determine location of each anatomical voxel in head coordinates
       xyz = [volume.pos ones(size(volume.pos,1),1)]'; % note that this is 4xN
-<<<<<<< HEAD
       nSel = size(cfg.roi, 1);
       for i=1:nSel
-=======
-      for i=1:size(cfg.roi,1)
->>>>>>> 65c2562b78ae5e70f7d64af870841ad09c746144
         cfg.roi(i,:) = poi2voi(cfg.roi(i,:), xyz);
       end
     end % round2nearestvoxel
@@ -364,12 +359,8 @@ elseif mask2label || roi2label
         sel(i) = find(volume.pos(:, 1) == cfg.roi(i, 1) & volume.pos(:, 2) == cfg.roi(i, 2) & volume.pos(:, 3) == cfg.roi(i, 3));
     end
   end
-  if strcmp(cfg.multioutput, 'yes')
-<<<<<<< HEAD
+  if strcmp(cfg.output, 'multiple')
       labels = repmat(labels, length(sel), 1);
-=======
-      labels = repmat(labels, size(cfg.roi,1), 1);
->>>>>>> 65c2562b78ae5e70f7d64af870841ad09c746144
   end
   for iVox = 1:length(sel)
       label = {};
@@ -386,7 +377,7 @@ elseif mask2label || roi2label
           label = {label};
       end
       
-      if strcmp(cfg.multioutput, 'yes')
+      if strcmp(cfg.output, 'multiple')
           iLabOut = iVox;
       else
           iLabOut = 1;
