@@ -35,7 +35,8 @@ function [output] = ft_volumelookup(cfg, volume)
 %   cfg.inputcoord          = 'mni' or 'tal', coordinate system of the mri/source/stat
 %   cfg.atlas               = string, filename of atlas to use, see FT_READ_ATLAS
 %   cfg.maskparameter       = string, field in volume to be looked up, data in field should be logical
-%   cfg.maxqueryrange       = number, should be odd (default = 1)
+%   cfg.minqueryrange       = number, should be odd and <= to maxqueryrange (default = 1)
+%   cfg.maxqueryrange       = number, should be odd and >= to minqueryrange (default = 1)
 %
 % The configuration options for labels around POI:
 %   cfg.output              = 'single' always outputs one label; if several POI are provided, they are considered together as describing a ROI (default)
@@ -43,7 +44,8 @@ function [output] = ft_volumelookup(cfg, volume)
 %   cfg.roi                 = Nx3 vector, coordinates of the POI
 %   cfg.inputcoord          = 'mni' or 'tal', coordinate system of the mri/source/stat
 %   cfg.atlas               = string, filename of atlas to use, see FT_READ_ATLAS
-%   cfg.maxqueryrange       = number, should be 1, 3, 5 (default = 1)
+%   cfg.minqueryrange       = number, should be odd and <= to maxqueryrange (default = 1)
+%   cfg.maxqueryrange       = number, should be odd and >= to minqueryrange (default = 1)
 %   cfg.querymethod         = 'sphere' searches voxels around the ROI in a sphere (default)
 %                           = 'cube' searches voxels around the ROI in a cube
 %   cfg.round2nearestvoxel  = 'yes' or 'no', voxel closest to POI is calculated (default = 'yes')
@@ -109,6 +111,7 @@ end
 % the handling of the default cfg options is done further down
 % the checking of the input data is done further down
 
+cfg.minqueryrange      = ft_getopt(cfg,'minqueryrange', 1);
 cfg.maxqueryrange      = ft_getopt(cfg,'maxqueryrange', 1);
 cfg.output             = ft_getopt(cfg,'output', []); % in future, cfg.output could be extended to support both 'label' and 'mask'
 cfg = ft_checkconfig(cfg, 'renamedval', {'output', 'label', 'single'});
@@ -152,8 +155,12 @@ elseif mask2label || roi2label
   volume = ft_checkdata(volume, 'datatype', 'source');
   ft_checkconfig(cfg, 'required', {'atlas', 'inputcoord'});
   
-  if isempty(intersect(cfg.maxqueryrange, 1:2:cfg.maxqueryrange))
-    ft_error('incorrect query range, should be an odd number');
+  if cfg.minqueryrange > cfg.maxqueryrange
+    ft_error('maxqueryrange should be superior or equal to minqueryrange');
+  end
+  
+  if rem(cfg.minqueryrange, 2) == 0 || rem(cfg.maxqueryrange, 2) == 0
+    ft_error('incorrect query range, should be odd numbers');
   end
   
   cfg.round2nearestvoxel = ft_getopt(cfg, 'round2nearestvoxel', 'yes');
@@ -364,7 +371,7 @@ elseif mask2label || roi2label
   end
   for iVox = 1:length(sel)
       label = {};
-      for qr = 1:2:cfg.maxqueryrange
+      for qr = cfg.minqueryrange:2:cfg.maxqueryrange
           if isempty(label)
               label = atlas_lookup(atlas, volume.pos(sel(iVox), :), 'inputcoord', cfg.inputcoord, 'queryrange', qr, 'method', cfg.querymethod);
               usedQR = qr;
