@@ -32,8 +32,8 @@ end
 nx   = max(nx);
 nsmp = cellfun('size', x, dim);
 ssmp = cellfun(@sumsq,   x, repmat({dim},1,nx), 'UniformOutput', 0);
-sd   = sqrt(sum(cell2mat(ssmp), dim)./sum(nsmp));  
+sd   = sqrt(nansum(cell2mat(ssmp), dim)./nansum(nsmp));  
 
 function [s] = sumsq(x, dim)
 
-s = sum(x.^2, dim);
+s = nansum(x.^2, dim);
