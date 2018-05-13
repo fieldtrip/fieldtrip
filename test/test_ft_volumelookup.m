@@ -50,3 +50,20 @@ cfg.inputcoord = 'mni';
 cfg.roi = 'Calcarine_R'; % right V1
 mask6 = ft_volumelookup(cfg, mri);
 assert(isequal(sum(mask6(:)),1861));
+
+atlas_MNI = ft_read_atlas(atlasfilename);
+atlas_MNI.coordsys = 'mni';
+cfg = [];
+cfg.roi = [52 -9 -45; 73 -37 -8];
+cfg.atlas = atlasfilename;
+cfg.inputcoord = 'mni';
+cfg.output = 'single';
+cfg.maxqueryrange = 29;
+label_MNI = ft_volumelookup(cfg, atlas_MNI);
+assert(size(label_MNI, 1) == 1);
+cfg.output = 'label';
+label_MNI = ft_volumelookup(cfg, atlas_MNI);
+assert(size(label_MNI, 1) == 1);
+cfg.output = 'multiple';
+label_MNI = ft_volumelookup(cfg, atlas_MNI);
+assert(size(label_MNI, 1) == 2);

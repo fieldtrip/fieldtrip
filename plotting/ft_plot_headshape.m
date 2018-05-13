@@ -23,6 +23,8 @@ function hs = ft_plot_headshape(headshape,varargin)
 % Example
 %   shape = ft_read_headshape(filename);
 %   ft_plot_headshape(shape)
+%
+% See also FT_PLOT_MESH, FT_PLOT_ORTHO
 
 % Copyright (C) 2009, Cristiano Micheli
 %

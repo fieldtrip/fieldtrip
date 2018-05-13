@@ -171,7 +171,7 @@ switch cfg.method
       set(h, 'visible', 'on');
       % add callbacks
       set(h, 'windowkeypressfcn',   @cb_keyboard_surface);
-      set(h, 'CloseRequestFcn',     @cb_cleanup);
+      set(h, 'CloseRequestFcn',     @cb_quit);
       
       % create figure handles
       h1 = axes;
@@ -292,7 +292,7 @@ if isempty(eventdata)
   key = get(h, 'userdata');
 else
   % determine the key that was pressed on the keyboard
-  key = parseKeyboardEvent(eventdata);
+  key = parsekeyboardevent(eventdata);
 end
 
 % get the most recent surface position that was clicked with the mouse
@@ -325,7 +325,7 @@ end
 setappdata(h, 'opt', opt);
 
 if isequal(key, 'q')
-  cb_cleanup(h);
+  cb_quit(h);
 else
   cb_redraw_surface(h);
 end
@@ -624,7 +624,7 @@ if isempty(eventdata)
   key = get(h, 'userdata');
 else
   % determine the key that was pressed on the keyboard
-  key = parseKeyboardEvent(eventdata);
+  key = parsekeyboardevent(eventdata);
 end
 % get focus back to figure
 if ~strcmp(get(h, 'type'), 'figure')
@@ -644,7 +644,7 @@ if isempty(key)
   key = '';
 end
 
-% the following code is largely shared with FT_SOURCEPLOT
+% the following code is largely shared by FT_SOURCEPLOT, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN, FT_MESHREALIGN, FT_ELECTRODEPLACEMENT
 switch key
   case {'' 'shift+shift' 'alt-alt' 'control+control' 'command-0'}
     % do nothing
@@ -670,7 +670,7 @@ switch key
     
   case 'q'
     setappdata(h, 'opt', opt);
-    cb_cleanup(h);
+    cb_quit(h);
     
   case {'i' 'j' 'k' 'm' 28 29 30 31 'leftarrow' 'rightarrow' 'uparrow' 'downarrow'} % TODO FIXME use leftarrow rightarrow uparrow downarrow
     % update the view to a new position
@@ -693,8 +693,8 @@ switch key
     setappdata(h, 'opt', opt);
     cb_redraw(h);
     
+  case {43 'add' 'shift+equal'}  % + or numpad +
     % contrast scaling
-  case {43 'shift+equal'}  % numpad +
     % disable if viewresult
     if ~opt.viewresult
       if isempty(opt.clim)
@@ -708,7 +708,8 @@ switch key
       cb_redraw(h);
     end
     
-  case {45 'shift+hyphen'} % numpad -
+  case {45 'subtract' 'hyphen' 'shift+hyphen'} % - or numpad -
+    % contrast scaling
     % disable if viewresult
     if ~opt.viewresult
       if isempty(opt.clim)
@@ -857,7 +858,7 @@ uiresume
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_cleanup(h, eventdata)
+function cb_quit(h, eventdata)
 
 opt = getappdata(h, 'opt');
 if ~opt.viewresult
@@ -879,83 +880,3 @@ while p~=0
   p = get(h, 'parent');
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function key = parseKeyboardEvent(eventdata)
-
-key = eventdata.Key;
-
-% handle possible numpad events (different for Windows and UNIX systems)
-% NOTE: shift+numpad number does not work on UNIX, since the shift
-% modifier is always sent for numpad events
-if isunix()
-  shiftInd = match_str(eventdata.Modifier, 'shift');
-  if ~isnan(str2double(eventdata.Character)) && ~isempty(shiftInd)
-    % now we now it was a numpad keystroke (numeric character sent AND
-    % shift modifier present)
-    key = eventdata.Character;
-    eventdata.Modifier(shiftInd) = []; % strip the shift modifier
-  end
-elseif ispc()
-  if strfind(eventdata.Key, 'numpad')
-    key = eventdata.Character;
-  end
-end
-
-if ~isempty(eventdata.Modifier)
-  key = [eventdata.Modifier{1} '+' key];
-end
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_minslider(h4, eventdata)
-
-tag = get(h4, 'tag');
-newlim = get(h4, 'value');
-h = getparent(h4);
-opt = getappdata(h, 'opt');
-if isempty(tag)
-  opt.clim(1) = newlim;
-elseif strcmp(tag, 'rel')
-  opt.realignclim(1) = newlim;
-elseif strcmp(tag, 'tar')
-  opt.targetclim(1) = newlim;
-end
-if isempty(tag)
-  fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
-elseif strcmp(tag, 'rel')
-  fprintf('realigned contrast limits updated to [%.03f %.03f]\n', opt.realignclim);
-elseif strcmp(tag, 'tar')
-  fprintf('target cfontrast limits updated to [%.03f %.03f]\n', opt.targetclim);
-end
-setappdata(h, 'opt', opt);
-cb_redraw(h);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_maxslider(h5, eventdata)
-
-tag = get(h5, 'tag');
-newlim = get(h5, 'value');
-h = getparent(h5);
-opt = getappdata(h, 'opt');
-if isempty(tag)
-  opt.clim(2) = newlim;
-elseif strcmp(tag, 'rel')
-  opt.realignclim(2) = newlim;
-elseif strcmp(tag, 'tar')
-  opt.targetclim(2) = newlim;
-end
-if isempty(tag)
-  fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
-elseif strcmp(tag, 'rel')
-  fprintf('realigned contrast limits updated to [%.03f %.03f]\n', opt.realignclim);
-elseif strcmp(tag, 'tar')
-  fprintf('target contrast limits updated to [%.03f %.03f]\n', opt.targetclim);
-end
-setappdata(h, 'opt', opt);
-cb_redraw(h);
