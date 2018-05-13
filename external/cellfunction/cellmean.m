@@ -22,5 +22,5 @@ end
 
 nx   = max(nx);
 nsmp = cellfun('size', x, dim);
-ssmp = cellfun(@sum,   x, repmat({dim},1,nx), 'UniformOutput', 0);
-m    = sum(cell2mat(ssmp), dim)./sum(nsmp);  
+ssmp = cellfun(@nansum,   x, repmat({dim},1,nx), 'UniformOutput', 0);
+m    = nansum(cell2mat(ssmp), dim)./nansum(nsmp);  
