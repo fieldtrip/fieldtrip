@@ -30,7 +30,7 @@ static int thissample = 0;    /* points at the buffer */
 static int thisevent = 0;     /* points at the buffer */
 
 /* Note that there have been problems with the order of the mutexes (e.g.
- * http://bugzilla.fcdonders.nl/show_bug.cgi?id=933).
+ * http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=933).
  * I have attempted to make the order of locking consistent, but can't give
  * guarantees. A more long term solution could be:
  * - find the dependencies between modifications of volatile data (e.g. events

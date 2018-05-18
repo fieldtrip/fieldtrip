@@ -2,7 +2,7 @@ This is the FieldTrip PREPROC module. It contains functions for the
 preprocessing of EEG and MEG data, such as filtering, baseline
 correction and re-referencing.
 
-For more information please visit http://www.ru.nl/fcdonders/fieldtrip.
+For more information please visit http://www.fieldtriptoolbox.org
 
 The FieldTrip software is free but copyrighted software, distributed
 under the terms of the GNU General Public Licence as published by

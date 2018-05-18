@@ -6,7 +6,7 @@ function [argout] = mxDeserialize(argin)
 % See also MXSERIALIZE
 
 % Copyright (C) 2005, Brad Phelan         http://xtargets.com
-% Copyright (C) 2007, Robert Oostenveld   http://www.fcdonders.ru.nl
+% Copyright (C) 2007, Robert Oostenveld   http://robertoostenveld.nl
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
