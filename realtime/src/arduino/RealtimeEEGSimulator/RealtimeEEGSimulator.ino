@@ -10,7 +10,7 @@
 // The realtime signal is provided by a MMA7361 triple axis accelerometer module.
 // The connection to the “EEG acquisition” computer is through a BlueSMiRF bluetooth modem. 
 //
-// See http://fieldtrip.fcdonders.nl/development/realtime/arduino for documentation.
+// See http://www.fieldtriptoolbox.org/development/realtime/arduino for documentation.
 
 // Copyright (C) 2013, Robert Oostenveld, DCCN
 //
