@@ -315,10 +315,13 @@ else
 
 end
 
-% unzscore the data
+% Unstandardise the data/refchannels and test data/rechannels
 if istrue(cfg.standardiserefdata)
-  std_refdata   = repmat(std_refdata, numel(cfg.reflags), 1);
-  refdata.trial = cellvecmult(refdata.trial, std_refdata);
+  std_refdata       = repmat(std_refdata, numel(cfg.reflags), 1);
+  refdata.trial     = cellvecmult(refdata.trial, std_refdata);
+  if usetestdata
+    testrefdata.trial = cellvecmult(testrefdata.trial, std_refdata(1)); % no timelag dimension here, STD is scalar 
+  end
   if exist('beta_data', 'var')
     beta_ref  = beta_ref*diag(std_refdata);
   else
@@ -327,7 +330,10 @@ if istrue(cfg.standardiserefdata)
 end
 
 if istrue(cfg.standardisedata)
-data.trial    = cellvecmult(data.trial, std_data);
+data.trial     = cellvecmult(data.trial, std_data);
+if usetestdata
+    testdata.trial = cellvecmult(testdata.trial, std_data); % use STD estimated on the training data
+end
   if exist('beta_data', 'var')
     beta_data = diag(std_data)*beta_data;
   end
