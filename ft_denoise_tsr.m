@@ -20,15 +20,20 @@ function dataout = ft_denoise_tsr(cfg, varargin)
 % consistent with the output of FT_PREPROCESSING.
 %
 % The configuration should contain
-%   cfg.refchannel = the channels used as reference signal (default = 'MEGREF')
-%   cfg.channel    = the channels to be denoised (default = 'MEG')
-%   cfg.method     = option specifying the criterion for the regression,
-%                     'mvr', 'cca', 'pls', 'svd'
-%   cfg.zscore     = standardise reference data prior to the regression (default = 'no')
-%   cfg.updatesens = 'no' or 'yes' (default = 'yes')
-%   cfg.perchannel
+%   cfg.refchannel         = the channels used as reference signal (default = 'MEGREF')
+%   cfg.channel            = the channels to be denoised (default = 'MEG')
+%   cfg.method             = option specifying the criterion for the regression,
+%                            'mvr', 'cca', 'pls', 'svd'
+%   cfg.standardiserefdata = standardise reference data prior to the regression (default = 'no')
+%   cfg.stadardisedata     = string, 'no' or 'yes' (default = 'no')
+%   cfg.demeanrefdata      = string, 'no' or 'yes' (default = 'no')
+%   cfg.demeandata         = string, 'no' or 'yes' (default = 'no')
+%   cfg.updatesens         = string, 'no' or 'yes' (default = 'no')
+%   cfg.output             = string, specifies what is outputed in .trial field, 
+%                            can be 'model' or 'residual' (defaul = 'model')
+%   cfg.perchannel         = string or logical
 %   cfg.reflags
-%
+%  
 % if cfg.truncate is integer n > 1, n will be the number of singular values kept.
 % if 0 < cfg.truncate < 1, the singular value spectrum will be thresholded at the
 % fraction cfg.truncate of the explained variance.
@@ -56,6 +61,10 @@ function dataout = ft_denoise_tsr(cfg, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+% UNDOCUMENTED (perhaps to be removed)
+%   cfg.performance  = string, 'Pearson' or 'r-square' (default =
+%                      'Pearson')
 
 % these are used by the ft_preamble/ft_postamble function and scripts
 ft_revision = '$Id$';
@@ -117,11 +126,12 @@ else
     % create output data structure
     dataout = keepfields(tmp{1}, {'fsample' 'label'});
     for k = 1:numel(testtrials)
-      dataout.trial(testtrials{k}) = tmp{k}.trial;
-      dataout.time(testtrials{k})  = tmp{k}.time;
-      dataout.weights{k}   = tmp{k}.weights;
-      dataout.weights{k}.trials = testtrials{k};
-      dataout.cfg.previous{k} = tmp{k}.cfg;
+      dataout.trial(testtrials{k})   = tmp{k}.trial;
+      dataout.time(testtrials{k})    = tmp{k}.time;
+      dataout.weights{k}             = tmp{k}.weights;
+      dataout.weights{k}.trials      = testtrials{k};
+      dataout.weights{k}.performance = tmp{k}.performance;
+      dataout.cfg.previous{k}        = tmp{k}.cfg;
       if isfield(tmp{k}, 'trialinfo')
         dataout.trialinfo(testtrials{k},:) = tmp{k}.trialinfo;
       end
@@ -150,17 +160,21 @@ ft_postamble savevar    dataout
 function dataout = ft_denoise_tsr_core(cfg, varargin)
 
 % set the defaults
-cfg.refchannel = ft_getopt(cfg, 'refchannel', 'MEGREF');
-cfg.channel    = ft_getopt(cfg, 'channel',    'all');
-cfg.truncate   = ft_getopt(cfg, 'truncate',   'no');
-cfg.zscore     = ft_getopt(cfg, 'zscore',     'yes');
-cfg.trials     = ft_getopt(cfg, 'trials',     'all', 1);
-cfg.feedback   = ft_getopt(cfg, 'feedback',   'none');
-cfg.updatesens = ft_getopt(cfg, 'updatesens', 'yes');
-cfg.perchannel = ft_getopt(cfg, 'perchannel', 'yes');
-cfg.method     = ft_getopt(cfg, 'method',     'mlr');
-cfg.threshold  = ft_getopt(cfg, 'threshold',  0);
-cfg.output     = ft_getopt(cfg, 'output',     'model');
+cfg.refchannel         = ft_getopt(cfg, 'refchannel',         'MEGREF');
+cfg.channel            = ft_getopt(cfg, 'channel',            'all');
+cfg.truncate           = ft_getopt(cfg, 'truncate',           'no');
+cfg.standardiserefdata = ft_getopt(cfg, 'standardiserefdata', 'no');
+cfg.standardisedata    = ft_getopt(cfg, 'standardisedata',    'no');
+cfg.demeanrefdata      = ft_getopt(cfg, 'demeanrefdata',      'no');
+cfg.demeandata         = ft_getopt(cfg, 'demeandata',         'no');
+cfg.trials             = ft_getopt(cfg, 'trials',             'all', 1);
+cfg.feedback           = ft_getopt(cfg, 'feedback',           'none');
+cfg.updatesens         = ft_getopt(cfg, 'updatesens',         'yes');
+cfg.perchannel         = ft_getopt(cfg, 'perchannel',         'yes');
+cfg.method             = ft_getopt(cfg, 'method',             'mlr');
+cfg.threshold          = ft_getopt(cfg, 'threshold',          0);
+cfg.output             = ft_getopt(cfg, 'output',             'model');
+cfg.performance        = ft_getopt(cfg, 'performance',        'Pearson');
 
 % create a separate structure for the reference data
 tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo'});
@@ -180,17 +194,25 @@ data    = ft_selectdata(tmpcfg, varargin{1});
 [cfg, data] = rollback_provenance(cfg, data);
 
 % demean
-fprintf('demeaning the data\n');
-mu_refdata    = cellmean(refdata.trial, 2);
-refdata.trial = cellvecadd(refdata.trial, -mu_refdata);
-mu_data       = cellmean(data.trial, 2);
-data.trial    = cellvecadd(data.trial, -mu_data);
+if istrue(cfg.demeanrefdata)
+  fprintf('demeaning the reference channels\n');
+  mu_refdata    = cellmean(refdata.trial, 2);
+  refdata.trial = cellvecadd(refdata.trial, -mu_refdata);
+end
+if istrue(cfg.demeandata)
+  fprintf('demeaning the data channels\n');
+  mu_data       = cellmean(data.trial, 2);
+  data.trial    = cellvecadd(data.trial, -mu_data);
+end
 
-% zscore
-if istrue(cfg.zscore)
-  fprintf('zscoring the data\n');
+% Standardise the data
+if istrue(cfg.standardiserefdata)
+  fprintf('standardising the reference channels \n');
   [refdata.trial, std_refdata] = cellzscore(refdata.trial, 2, 0);
-  [   data.trial, std_data   ] = cellzscore(   data.trial, 2, 0);
+end
+if istrue(cfg.standardisedata)
+  fprintf('standardising the data channels \n');
+  [data.trial, std_data] = cellzscore(data.trial, 2, 0);
 end
 
 % deal with the specification of testtrials/testsamples, as per the
@@ -250,11 +272,16 @@ refdata = ft_selectdata(tmpcfg, refdata);
 [~,refdata] = rollback_provenance(cfg, refdata);
 
 % demean
-fprintf('demeaning the data\n');
-mu_refdata    = cellmean(refdata.trial, 2);
-refdata.trial = cellvecadd(refdata.trial, -mu_refdata);
-mu_data       = cellmean(data.trial, 2);
-data.trial    = cellvecadd(data.trial, -mu_data);
+if istrue(cfg.demeanrefdata)
+  fprintf('demeaning the reference channels\n');
+  mu_refdata    = cellmean(refdata.trial, 2);
+  refdata.trial = cellvecadd(refdata.trial, -mu_refdata);
+end
+if istrue(cfg.demeandata)
+  fprintf('demeaning the data channels\n');
+  mu_data       = cellmean(data.trial, 2);
+  data.trial    = cellvecadd(data.trial, -mu_data);
+end
 
 % compute the covariance
 fprintf('computing the covariance\n');
@@ -288,16 +315,21 @@ else
 
 end
 
-if istrue(cfg.zscore)
-  % unzscore the data
+% unzscore the data
+if istrue(cfg.standardiserefdata)
   std_refdata   = repmat(std_refdata, numel(cfg.reflags), 1);
-  data.trial    = cellvecmult(   data.trial, std_data);
   refdata.trial = cellvecmult(refdata.trial, std_refdata);
   if exist('beta_data', 'var')
     beta_ref  = beta_ref*diag(std_refdata);
-    beta_data = diag(std_data)*beta_data;
   else
     beta_ref = diag(std_data)*beta_ref*diag(1./std_refdata);
+  end
+end
+
+if istrue(cfg.standardisedata)
+data.trial    = cellvecmult(data.trial, std_data);
+  if exist('beta_data', 'var')
+    beta_data = diag(std_data)*beta_data;
   end
 end
 
@@ -322,29 +354,69 @@ if usetestdata
   refdata = ft_selectdata(tmpcfg, refdata);
   [~,refdata] = rollback_provenance(cfg, refdata);
 
-  % demean
   fprintf('demeaning the testdata\n');
-  mu_testrefdata    = cellmean(testrefdata.trial, 2);
-  testrefdata.trial = cellvecadd(testrefdata.trial, -mu_testrefdata);
-  mu_testdata       = cellmean(testdata.trial, 2);
-  testdata.trial    = cellvecadd(testdata.trial, -mu_testdata);
-
-  dataout = keepfields(testdata, {'cfg' 'label' 'time' 'grad' 'elec' 'opto' 'trialinfo' 'fsample'});
-  switch cfg.output
-    case 'model'
-      dataout.trial = beta_ref*testrefdata.trial; 
-    case 'residual'
-      dataout.trial = testdata.trial - beta_ref*testrefdata.trial;
+  % demean
+  if istrue(cfg.demeanrefdata) % make it contigent on refdata demeaning
+    fprintf('demeaning test reference channels\n');
+    mu_testrefdata    = cellmean(testrefdata.trial, 2);
+    testrefdata.trial = cellvecadd(testrefdata.trial, -mu_testrefdata);
+  end
+  if istrue(cfg.demeandata) % make it contigent on data demeaning
+    fprintf('demeaning test data channels\n');
+    mu_testdata    = cellmean(testdata.trial, 2);
+    testdata.trial = cellvecadd(testdata.trial, -mu_testdata);
   end
 
+  dataout   = keepfields(testdata, {'cfg' 'label' 'time' 'grad' 'elec' 'opto' 'trialinfo' 'fsample'});
+  predicted = beta_ref*testrefdata.trial;
+  
+  switch cfg.output
+    case 'model'
+      dataout.trial = predicted; 
+    case 'residual'
+      dataout.trial = testdata.trial - predicted;
+  end
+  
+  fprintf('Computing performance metric\n');
+  switch cfg.performance
+    case 'Pearson'
+      % Compute correlation coefficient per source time course (374)
+      for i = 1:size(testdata.trial{1}, 1)
+          dataout.performance(i, 1) = corr(testdata.trial{1}(i, :)', predicted{1}(i,:)', 'type', 'Pearson', 'rows', 'pairwise'); 
+      end
+    case 'r-squared'
+      % Compute performance statistics
+      tss = nansum(testdata.trial.^2, 2);                % total sum of squares, testdata are already mean subtracted in l. 330
+      rss = nansum((testdata.trial - predicted).^2, 2);  % sum of squared residual error
+      % R-squared
+      dataout.performance = (tss-rss)./tss;
+  end
+  
 else
-  dataout = keepfields(data, {'cfg' 'label' 'time' 'grad' 'elec' 'opto' 'trialinfo' 'fsample'});
+  dataout   = keepfields(data, {'cfg' 'label' 'time' 'grad' 'elec' 'opto' 'trialinfo' 'fsample'});
+  predicted = beta_ref*refdata.trial;
+  
   switch cfg.output
     case 'model'
-      dataout.trial = beta_ref*refdata.trial;
+      dataout.trial = predicted;
     case 'residual'
-      dataout.trial = data.trial - beta_ref*refdata.trial;
+      dataout.trial = data.trial - predicted;
   end
+  % Compute performance statistics
+  fprintf('Computing performance metric\n');
+  switch cfg.performance    
+    case 'Pearson'
+      for i = 1:size(data.trial{1}, 1)
+        dataout.pearson(i, 1) = corr(data.trial{1}(i, :)', predicted{1}(i,:)', 'type', 'Pearson', 'rows', 'pairwise'); 
+      end
+    case 'r-squared'
+      
+      tss = nansum(data.trial.^2, 2); % total sum of squares, testdata are already mean subtracted in l. 330
+      rss = nansum((data.trial - predicted).^2, 2);  % sum of squared residual error
+      % R-squared
+      dataout.performance = (tss-rss)./tss;
+  end
+  
 end
 
 weights.time = cfg.reflags;
