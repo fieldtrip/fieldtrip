@@ -360,19 +360,6 @@ if usetestdata
   refdata = ft_selectdata(tmpcfg, refdata);
   [~,refdata] = rollback_provenance(cfg, refdata);
 
-  fprintf('demeaning the testdata\n');
-  % demean
-  if istrue(cfg.demeanrefdata) % make it contigent on refdata demeaning
-    fprintf('demeaning test reference channels\n');
-    mu_testrefdata    = cellmean(testrefdata.trial, 2);
-    testrefdata.trial = cellvecadd(testrefdata.trial, -mu_testrefdata);
-  end
-  if istrue(cfg.demeandata) % make it contigent on data demeaning
-    fprintf('demeaning test data channels\n');
-    mu_testdata    = cellmean(testdata.trial, 2);
-    testdata.trial = cellvecadd(testdata.trial, -mu_testdata);
-  end
-
   dataout   = keepfields(testdata, {'cfg' 'label' 'time' 'grad' 'elec' 'opto' 'trialinfo' 'fsample'});
   predicted = beta_ref*testrefdata.trial;
   
@@ -413,7 +400,7 @@ else
   switch cfg.performance    
     case 'Pearson'
       for i = 1:size(data.trial{1}, 1)
-        dataout.pearson(i, 1) = corr(data.trial{1}(i, :)', predicted{1}(i,:)', 'type', 'Pearson', 'rows', 'pairwise'); 
+        dataout.performance(i, 1) = corr(data.trial{1}(i, :)', predicted{1}(i,:)', 'type', 'Pearson', 'rows', 'pairwise'); 
       end
     case 'r-squared'
       
