@@ -1,13 +1,7 @@
 function [sens] = ft_read_sens(filename, varargin)
 
-% FT_READ_SENS read sensor positions from various manufacturer specific files. The
-% following acquisition system and analysis platform file formats are currently
-% supported:
-%
-%   asa_elc besa_elp besa_pos besa_sfp yokogawa_ave yokogawa_con yokogawa_raw 4d
-%   4d_pdf 4d_m4d 4d_xyz ctf_ds ctf_res4 itab_raw itab_mhd netmeg neuromag_fif
-%   neuromag_mne neuromag_mne_elec neuromag_mne_grad polhemus_fil polhemus_pos
-%   zebris_sfp spmeeg_mat eeglab_set localite_pos matlab
+% FT_READ_SENS read sensor positions from various manufacturer specific files. See
+% further down for the list of file types that are supported.
 %
 % Use as
 %   grad = ft_read_sens(filename, ...)  % for gradiometers
@@ -15,7 +9,7 @@ function [sens] = ft_read_sens(filename, varargin)
 %
 % Additional options should be specified in key-value pairs and can be
 %   'fileformat'     = string, see the list of supported file formats (the default is determined automatically)
-%   'senstype'       = string, can be 'eeg' or 'meg', specifies which type of sensors to read from a fif file (default = 'eeg')
+%   'senstype'       = string, can be 'eeg' or 'meg', specifies which type of sensors to read from the file (default = 'eeg')
 %   'coordsys'       = string, 'head' or 'dewar' (default = 'head')
 %   'coilaccuracy'   = can be empty or a number (0, 1 or 2) to specify the accuracy (default = [])
 %
@@ -37,10 +31,18 @@ function [sens] = ft_read_sens(filename, varargin)
 %   grad.label   = cell-array of length N with the label of each of the channels
 %   grad.chanpos = Nx3 matrix with the positions of each sensor
 %
+% Files from the following acquisition systems and analysis platforms file formats
+% are supported.
+%
+%   asa_elc besa_elp besa_pos besa_sfp yokogawa_ave yokogawa_con yokogawa_raw 4d
+%   4d_pdf 4d_m4d 4d_xyz ctf_ds ctf_res4 itab_raw itab_mhd netmeg neuromag_fif
+%   neuromag_mne neuromag_mne_elec neuromag_mne_grad polhemus_fil polhemus_pos
+%   zebris_sfp spmeeg_mat eeglab_set localite_pos artiins_oxy3 matlab
+%
 % See also FT_READ_HEADER, FT_TRANSFORM_SENS, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD,
 % FT_DATATYPE_SENS
 
-% Copyright (C) 2005-2016 Robert Oostenveld
+% Copyright (C) 2005-2018 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -87,6 +89,11 @@ switch fileformat
   case 'asa_elc'
     sens = read_asa_elc(filename);
     
+  case 'artinis_oxy3'
+    ft_hastoolbox('artinis', 1);
+    hdr = read_artinis_oxy3(filename);
+    sens = hdr.opto;
+
   case 'polhemus_pos'
     sens = read_brainvision_pos(filename);
     
