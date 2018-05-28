@@ -11,7 +11,7 @@ function [Bp] = compute_B_primary(coils, dipoles, projections)
 if size(coils,2)~=3
   error('Column size of coils must be 3.')
 end
-%wo dipoles moment? TODO
+
 if size(dipoles,2)~=6
   error('Column size of dipoles must be 6.')
 end

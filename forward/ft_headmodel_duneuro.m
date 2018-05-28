@@ -72,22 +72,22 @@ solver_type     = ft_getopt(varargin, 'solver_type', 'cg');
 grid_filename   = ft_getopt(varargin, 'grid_filename');
 tensors_filename= ft_getopt(varargin, 'tensors_filename');
 conductivity    = ft_getopt(varargin, 'conductivity');
-electrodes      = ft_getopt(varargin, 'electrodes', 'closest_subentity_center');
-subentities     = ft_getopt(varargin, 'subentities', '1 2 3');
+electrodes      = ft_getopt(varargin, 'electrodes', 'closest_subentity_center'); %eeg
+subentities     = ft_getopt(varargin, 'subentities', '1 2 3'); %eeg
 forward         = ft_getopt(varargin, 'forward', 'venant');
-intorderadd     = ft_getopt(varargin, 'intorderadd', '2');
-intorderadd_lb  = ft_getopt(varargin, 'intorderadd_lb', '2');
-initialization  = ft_getopt(varargin, 'initialization', 'closest_vertex');
+intorderadd     = ft_getopt(varargin, 'intorderadd', '2'); %subtraction
+intorderadd_lb  = ft_getopt(varargin, 'intorderadd_lb', '2'); %subtraction
+initialization  = ft_getopt(varargin, 'initialization', 'closest_vertex'); %cg-venant, dg-localized subtraction
 numberOfMoments = ft_getopt(varargin, 'numberOfMoments', '3');
 referenceLength = ft_getopt(varargin, 'referenceLength', '20');
 relaxationFactor= ft_getopt(varargin, 'relaxationFactor', '1e-6');
 restrict        = ft_getopt(varargin, 'restrict', 'true');
 weightingExponent = ft_getopt(varargin, 'weightingExponent', '1');
-post_process    = ft_getopt(varargin, 'post_process', 'true');
-subtract_mean   = ft_getopt(varargin, 'subtract_mean', 'true');
+post_process    = ft_getopt(varargin, 'post_process', 'true'); %eeg, subtraction
+subtract_mean   = ft_getopt(varargin, 'subtract_mean', 'true'); %eeg
 reduction       = ft_getopt(varargin, 'reduction', '1e-10');
 intorderadd_meg = ft_getopt(varargin, 'intorderadd_meg', '0');
-mixedMoments    = ft_getopt(varargin, 'mixedMoments', 'false');
+mixedMoments    = ft_getopt(varargin, 'mixedMoments', 'false'); %venant
 meg_type        = ft_getopt(varargin, 'meg_type', 'physical');
 
 % start with an empty volume conductor
@@ -156,13 +156,13 @@ else
   end
   cfg.volume_conductor.grid.nodes = headmodel.pos';
   
-  %make sure labels start at 0
+  %make sure labels start at 0 %TODO: faster for 6C anisotropy
   utissue = sort(unique(headmodel.tissue));
   for i = 1:size(headmodel.tissue,1)
     headmodel.tissue(i,1) =  find(utissue == headmodel.tissue(i,1));
   end
   cfg.volume_conductor.tensors.labels = uint64(headmodel.tissue -1);
-  cfg.volume_conductor.tensors.conductivities = conductivity;
+  cfg.volume_conductor.tensors.tensors = conductivity;
 end
 headmodel.driver = duneuro_meeg(cfg);
 
