@@ -33,7 +33,7 @@ static int bufcnt             = 0;    /* How many buffers processed? */
 static float **databuf        = NULL; /* Internal storage for one databuffer */
 static int collect_data       = 1;    /* Really use the data? */
 static int collect_headerfile = 1;    /* Should tags be added to the headerfile? */
-static FILE *headerfile       = NULL; /* see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1792, this is a temporary file that is copied to a chunk in the buffer */
+static FILE *headerfile       = NULL; /* see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1792, this is a temporary file that is copied to a chunk in the buffer */
 
 #define HEADERFILE    "/tmp/neuromag2ft.fif"
 #define ISOTRAKFILE   "/neuro/dacq/meas_info/isotrak"

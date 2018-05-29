@@ -1063,9 +1063,13 @@ elseif filetype_check_extension(filename, '.sd') && filetype_check_header(filena
   
   % known Artinis file format
 elseif filetype_check_extension(filename, '.oxy3')
-  type = 'oxy3';
+  type = 'artinis_oxy3';
   manufacturer = 'Artinis Medical Systems';
   content = '(f)NIRS data';
+elseif isequal([f x], 'optodetemplates.xml')
+  type = 'artinis_xml';
+  manufacturer = 'Artinis Medical Systems';
+  content = '(f)NIRS optode layout';
   
   % known TETGEN file types, see http://tetgen.berlios.de/fformats.html
 elseif any(filetype_check_extension(filename, {'.node' '.poly' '.smesh' '.ele' '.face' '.edge' '.vol' '.var' '.neigh'})) && exist(fullfile(p, [f '.node']), 'file') && filetype_check_ascii(fullfile(p, [f '.node']), 100) && exist(fullfile(p, [f '.poly']), 'file')

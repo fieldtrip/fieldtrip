@@ -67,7 +67,7 @@ function [varargout] = ft_plot_vector(varargin)
 %  rgb = interp1(1:64, rgb, linspace(1,64,100));
 %  ft_plot_vector(1:100, 'color', rgb);
 %
-% See also FT_PLOT_MATRIX
+% See also FT_PLOT_MATRIX, PLOT
 
 % Copyrights (C) 2009-2013, Robert Oostenveld
 %

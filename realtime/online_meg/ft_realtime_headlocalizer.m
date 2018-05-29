@@ -19,28 +19,32 @@ function ft_realtime_headlocalizer(cfg)
 % coils at the moment of buttonpress. Distance to these marked positions then become
 % colorcoded, i.e. green, orange, or red.
 %
-%
 % Use as
 %   ft_realtime_headlocalizer(cfg)
 % with the following configuration options
 %   cfg.dataset         = string, name or location of a dataset/buffer (default = 'buffer://odin:1972')
 %   cfg.template        = string, name of a template dataset for between-session repositioning (default = [])
 %   cfg.bufferdata      = whether to start on the 'first or 'last' data that is available (default = 'last')
-%   cfg.coilfreq        = single number in Hz or list of numbers (Neuromag default = [293, 307, 314, 321, 328])
+%   cfg.xlim            = [min max], range in cm to plot (default = [-15 15])
+%   cfg.ylim            = [min max], range in cm to plot (default = [-15 15])
+%   cfg.zlim            = [min max], range in cm to plot (default is automatic)
 %   cfg.blocksize       = number, size of the blocks/chuncks that are processed (default = 1 second)
 %   cfg.accuracy_green  = distance from fiducial coordinate; green when within limits (default = 0.15 cm)
 %   cfg.accuracy_orange = orange when within limits, red when out (default = 0.3 cm)
-%   cfg.dewar           = filename or mesh, description of the dewar shape (default is loaded automatically)
-%   cfg.polhemus        = filename or mesh, description of the head shape recorded with the Polhemus (default is loaded automatically)
+%   cfg.dewar           = filename or mesh, description of the dewar shape (default is automatic)
+%   cfg.polhemus        = filename or mesh, description of the head shape recorded with the Polhemus (default is automatic)
 %   cfg.headshape       = filename or mesh, description of the head shape recorded with the Structure Sensor
-%   cfg.headmovement    = string, name or location of the .pos created by maxfilter which describes the location of the head relative to thedewar (only for elekta neuromag) (default = [])
+%
+% The following options only apply to data from the Elekta/Neuromag system
+%   cfg.headmovement    = string, name or location of the .pos file created by MaxFilter which describes the location of the head relative to the dewar
+%   cfg.coilfreq        = single number in Hz or list of numbers (default = [293, 307, 314, 321, 328])
 %
 % This method is described in Stolk A, Todorovic A, Schoffelen JM, Oostenveld R.
 % "Online and offline tools for head movement compensation in MEG."
 % Neuroimage. 2013 Mar;68:39-48. doi: 10.1016/j.neuroimage.2012.11.047.
 
-% Copyright (C) 2008-2017,  Arjen Stolk & Robert Oostenveld
-% Copyright (C) 2017,  Simon Homoelle
+% Copyright (C) 2008-2018,  Arjen Stolk & Robert Oostenveld
+% Copyright (C) 2017, Simon Homoelle
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -68,7 +72,7 @@ agreement = {
   'Neuroimage. 2013 Mar;68:39-48.'
   };
 
-if ~strcmp(questdlg(agreement,'User agreement', 'Yes', 'Cancel', 'Cancel'), 'Yes')
+if ~strcmp(questdlg(agreement, 'User agreement', 'Yes', 'Cancel', 'Cancel'), 'Yes')
   return
 end
 
@@ -82,7 +86,7 @@ cfg.accuracy_orange = ft_getopt(cfg, 'accuracy_orange',  .3); % orange when with
 cfg.template        = ft_getopt(cfg, 'template',         []); % template dataset containing the references
 cfg.blocksize       = ft_getopt(cfg, 'blocksize',         1); % in seconds
 cfg.bufferdata      = ft_getopt(cfg, 'bufferdata',   'last'); % first (replay) or last (real-time)
-cfg.coilfreq        = ft_getopt(cfg, 'coilfreq',   [293, 307, 314, 321, 328]); % Hz, Neuromag
+cfg.coilfreq        = ft_getopt(cfg, 'coilfreq',   [293, 307, 314, 321, 328]); % in Hz for Neuromag
 cfg.dewar           = ft_getopt(cfg, 'dewar',            []); % mesh of the dewar
 cfg.headshape       = ft_getopt(cfg, 'headshape',        []); % mesh of the head with the structure sensor
 cfg.polhemus        = ft_getopt(cfg, 'polhemus',         []); % mesh of the head recorded with the polhemus
@@ -106,6 +110,17 @@ count       = 0;
 % determine MEG system type
 isneuromag = ft_senstype(hdr.grad, 'neuromag');
 isctf      = ft_senstype(hdr.grad, 'ctf275');
+
+% this is needed to fit everything in the figure, note that the dewar coordinate systems differ
+if isctf
+  cfg.xlim            = ft_getopt(cfg, 'xlim', [-15 15]);
+  cfg.ylim            = ft_getopt(cfg, 'ylim', [-15 15]);
+  cfg.zlim            = ft_getopt(cfg, 'zlim', [-38 -8]);
+elseif isneuromag
+  cfg.xlim            = ft_getopt(cfg, 'xlim', [-15 15]);
+  cfg.ylim            = ft_getopt(cfg, 'ylim', [-15 15]);
+  cfg.zlim            = ft_getopt(cfg, 'zlim', [-25 15]);
+end
 
 if isempty(cfg.dewar)
   [v, p] = ft_version;
@@ -174,7 +189,7 @@ if isctf
   end
   
   % remove CTF REF sensors, for plotting purposes
-  chansel = match_str(hdr.grad.chantype,'meggrad');
+  chansel = match_str(hdr.grad.chantype, 'meggrad');
   hdr.grad.chanpos  = hdr.grad.chanpos(chansel,:);
   hdr.grad.chanori  = hdr.grad.chanori(chansel,:);
   hdr.grad.chantype = hdr.grad.chantype(chansel,:);
@@ -214,7 +229,7 @@ if isctf
 elseif isneuromag
   shape = ft_read_headshape(cfg.headerfile, 'coordsys', 'dewar', 'format', 'neuromag_fif', 'unit', 'cm');
   for i = 1:min(size(shape.pos,1),length(cfg.coilfreq)) % for as many digitized or specified coils
-    if ~isempty(strfind(shape.label{i},'hpi'))
+    if ~isempty(strfind(shape.label{i}, 'hpi'))
       dip(i).pos = shape.pos(i,:); % chan X pos, initial guess for each of the dipole/coil positions
       dip(i).mom = [0 0 0]';
     end
@@ -435,7 +450,7 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
     draw_sub(hMainFig);
     
     % viewing angle
-    if get(info.hViewMirrorButton,'Value') == 1
+    if get(info.hViewMirrorButton, 'Value') == 1
       if info.isctf
         set(gca, 'Ydir', 'reverse')
         view(45, 0)
@@ -573,7 +588,7 @@ hAxisCheckBox = uicontrol(...
 hBlocksizeMenu = uicontrol(...
   'Parent', handle,...
   'Style', 'popupmenu',...
-  'String', {'.1 second','.2 second','.5 second','1 second','1.5 second','2 seconds','5 seconds','10 seconds','30 seconds'},...
+  'String', {'.1 second', '.2 second', '.5 second', '1 second', '1.5 second', '2 seconds', '5 seconds', '10 seconds', '30 seconds'},...
   'Units', 'normalized',...
   'Position', [.6 .1925 .1 .05],...
   'FontSize', 8,...
@@ -751,14 +766,14 @@ info = guidata(handle);
 
 % compute transformation
 if info.isctf
-  M          = ft_headcoordinates([info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3)],[info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3)],[info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3)],'ctf');
+  M          = ft_headcoordinates([info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3)], [info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3)], [info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3)], 'ctf');
 elseif info.isneuromag
-  M          = ft_headcoordinates([info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3)],[info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3)],[info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3)],'neuromag');
+  M          = ft_headcoordinates([info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3)], [info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3)], [info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3)], 'neuromag');
 end
 M(1:3,1:3) = inv(M(1:3,1:3));
 M(1:3,4)   = (-M(1:3,4)'/M(1:3,1:3))';
 
-%plot the HPI mismatch
+% plot the HPI mismatch
 if get(info.hCoilCheckBox, 'Value')
   if info.isctf
     % draw nasion position
@@ -766,19 +781,19 @@ if get(info.hCoilCheckBox, 'Value')
       if abs(info.template(1,1))-info.cfg.accuracy_green < abs(info.hpi{1}(1)) && abs(info.hpi{1}(1)) < abs(info.template(1,1))+info.cfg.accuracy_green ...
           && abs(info.template(1,2))-info.cfg.accuracy_green < abs(info.hpi{1}(2)) && abs(info.hpi{1}(2)) < abs(info.template(1,2))+info.cfg.accuracy_green ...
           && abs(info.template(1,3))-info.cfg.accuracy_green < abs(info.hpi{1}(3)) && abs(info.hpi{1}(3)) < abs(info.template(1,3))+info.cfg.accuracy_green
-        plot3(info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3),'g^', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
+        plot3(info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3), 'g^', 'MarkerFaceColor', [.5 1 .5], 'MarkerSize',25)
         head1 = true;
       elseif abs(info.template(1,1))-info.cfg.accuracy_orange < abs(info.hpi{1}(1)) && abs(info.hpi{1}(1)) < abs(info.template(1,1))+info.cfg.accuracy_orange ...
           && abs(info.template(1,2))-info.cfg.accuracy_orange < abs(info.hpi{1}(2)) && abs(info.hpi{1}(2)) < abs(info.template(1,2))+info.cfg.accuracy_orange ...
           && abs(info.template(1,3))-info.cfg.accuracy_orange < abs(info.hpi{1}(3)) && abs(info.hpi{1}(3)) < abs(info.template(1,3))+info.cfg.accuracy_orange
-        plot3(info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3),'y^', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
+        plot3(info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3), 'y^', 'MarkerFaceColor', [1 .5 0], 'MarkerEdgeColor', [1 .5 0], 'MarkerSize', 25)
         head1 = false;
       else % when not in correct position
-        plot3(info.hpi{1}(1),info.hpi{1}(2), info.hpi{1}(3),'r^', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+        plot3(info.hpi{1}(1),info.hpi{1}(2), info.hpi{1}(3), 'r^', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
         head1 = false;
       end
     else
-      plot3(info.hpi{1}(1),info.hpi{1}(2), info.hpi{1}(3),'r^', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+      plot3(info.hpi{1}(1),info.hpi{1}(2), info.hpi{1}(3), 'r^', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
       head1 = false;
     end
     
@@ -787,19 +802,19 @@ if get(info.hCoilCheckBox, 'Value')
       if abs(info.template(2,1))-info.cfg.accuracy_green < abs(info.hpi{2}(1)) && abs(info.hpi{2}(1)) < abs(info.template(2,1))+info.cfg.accuracy_green ...
           && abs(info.template(2,2))-info.cfg.accuracy_green < abs(info.hpi{2}(2)) && abs(info.hpi{2}(2)) < abs(info.template(2,2))+info.cfg.accuracy_green ...
           && abs(info.template(2,3))-info.cfg.accuracy_green < abs(info.hpi{2}(3)) && abs(info.hpi{2}(3)) < abs(info.template(2,3))+info.cfg.accuracy_green
-        plot3(info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
+        plot3(info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3), 'go', 'MarkerFaceColor', [.5 1 .5], 'MarkerSize',25)
         head2 = true;
       elseif abs(info.template(2,1))-info.cfg.accuracy_orange < abs(info.hpi{2}(1)) && abs(info.hpi{2}(1)) < abs(info.template(2,1))+info.cfg.accuracy_orange ...
           && abs(info.template(2,2))-info.cfg.accuracy_orange < abs(info.hpi{2}(2)) && abs(info.hpi{2}(2)) < abs(info.template(2,2))+info.cfg.accuracy_orange ...
           && abs(info.template(2,3))-info.cfg.accuracy_orange < abs(info.hpi{2}(3)) && abs(info.hpi{2}(3)) < abs(info.template(2,3))+info.cfg.accuracy_orange
-        plot3(info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
+        plot3(info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3), 'yo', 'MarkerFaceColor', [1 .5 0], 'MarkerEdgeColor', [1 .5 0], 'MarkerSize',25)
         head2 = false;
       else % when not in correct position
-        plot3(info.hpi{2}(1),info.hpi{2}(2), info.hpi{2}(3),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+        plot3(info.hpi{2}(1),info.hpi{2}(2), info.hpi{2}(3), 'ro', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
         head2 = false;
       end
     else
-      plot3(info.hpi{2}(1),info.hpi{2}(2), info.hpi{2}(3),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+      plot3(info.hpi{2}(1),info.hpi{2}(2), info.hpi{2}(3), 'ro', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
       head2 = false;
     end
     
@@ -808,19 +823,19 @@ if get(info.hCoilCheckBox, 'Value')
       if abs(info.template(3,1))-info.cfg.accuracy_green < abs(info.hpi{3}(1)) && abs(info.hpi{3}(1)) < abs(info.template(3,1))+info.cfg.accuracy_green  ...
           && abs(info.template(3,2))-info.cfg.accuracy_green  < abs(info.hpi{3}(2)) && abs(info.hpi{3}(2)) < abs(info.template(3,2))+info.cfg.accuracy_green  ...
           && abs(info.template(3,3))-info.cfg.accuracy_green  < abs(info.hpi{3}(3)) && abs(info.hpi{3}(3)) < abs(info.template(3,3))+info.cfg.accuracy_green
-        plot3(info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
+        plot3(info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3), 'go', 'MarkerFaceColor', [.5 1 .5], 'MarkerSize',25)
         head3 = true;
       elseif abs(info.template(3,1))-info.cfg.accuracy_orange < abs(info.hpi{3}(1)) && abs(info.hpi{3}(1)) < abs(info.template(3,1))+info.cfg.accuracy_orange ...
           && abs(info.template(3,2))-info.cfg.accuracy_orange < abs(info.hpi{3}(2)) && abs(info.hpi{3}(2)) < abs(info.template(3,2))+info.cfg.accuracy_orange ...
           && abs(info.template(3,3))-info.cfg.accuracy_orange < abs(info.hpi{3}(3)) && abs(info.hpi{3}(3)) < abs(info.template(3,3))+info.cfg.accuracy_orange
-        plot3(info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
+        plot3(info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3), 'yo', 'MarkerFaceColor', [1 .5 0], 'MarkerEdgeColor', [1 .5 0], 'MarkerSize',25)
         head3 = false;
       else % when not in correct position
-        plot3(info.hpi{3}(1),info.hpi{3}(2), info.hpi{3}(3),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+        plot3(info.hpi{3}(1),info.hpi{3}(2), info.hpi{3}(3), 'ro', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
         head3 = false;
       end
     else
-      plot3(info.hpi{3}(1),info.hpi{3}(2), info.hpi{3}(3),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+      plot3(info.hpi{3}(1),info.hpi{3}(2), info.hpi{3}(3), 'ro', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
       head3 = false;
     end
   elseif info.isneuromag
@@ -829,19 +844,19 @@ if get(info.hCoilCheckBox, 'Value')
       if abs(info.template(1,1))-info.cfg.accuracy_green < abs(info.hpi{1}(1)) && abs(info.hpi{1}(1)) < abs(info.template(1,1))+info.cfg.accuracy_green ...
           && abs(info.template(1,2))-info.cfg.accuracy_green < abs(info.hpi{1}(2)) && abs(info.hpi{1}(2)) < abs(info.template(1,2))+info.cfg.accuracy_green ...
           && abs(info.template(1,3))-info.cfg.accuracy_green < abs(info.hpi{1}(3)) && abs(info.hpi{1}(3)) < abs(info.template(1,3))+info.cfg.accuracy_green
-        plot3(info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
+        plot3(info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3), 'go', 'MarkerFaceColor', [.5 1 .5], 'MarkerSize',25)
         head1 = true;
       elseif abs(info.template(1,1))-info.cfg.accuracy_orange < abs(info.hpi{1}(1)) && abs(info.hpi{1}(1)) < abs(info.template(1,1))+info.cfg.accuracy_orange ...
           && abs(info.template(1,2))-info.cfg.accuracy_orange < abs(info.hpi{1}(2)) && abs(info.hpi{1}(2)) < abs(info.template(1,2))+info.cfg.accuracy_orange ...
           && abs(info.template(1,3))-info.cfg.accuracy_orange < abs(info.hpi{1}(3)) && abs(info.hpi{1}(3)) < abs(info.template(1,3))+info.cfg.accuracy_orange
-        plot3(info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
+        plot3(info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3), 'yo', 'MarkerFaceColor', [1 .5 0], 'MarkerEdgeColor', [1 .5 0], 'MarkerSize',25)
         head1 = false;
       else % when not in correct position
-        plot3(info.hpi{1}(1),info.hpi{1}(2), info.hpi{1}(3),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+        plot3(info.hpi{1}(1),info.hpi{1}(2), info.hpi{1}(3), 'ro', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
         head1 = false;
       end
     else
-      plot3(info.hpi{1}(1),info.hpi{1}(2), info.hpi{1}(3),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+      plot3(info.hpi{1}(1),info.hpi{1}(2), info.hpi{1}(3), 'ro', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
       head1 = false;
     end
     
@@ -850,19 +865,19 @@ if get(info.hCoilCheckBox, 'Value')
       if abs(info.template(2,1))-info.cfg.accuracy_green < abs(info.hpi{2}(1)) && abs(info.hpi{2}(1)) < abs(info.template(2,1))+info.cfg.accuracy_green ...
           && abs(info.template(2,2))-info.cfg.accuracy_green < abs(info.hpi{2}(2)) && abs(info.hpi{2}(2)) < abs(info.template(2,2))+info.cfg.accuracy_green ...
           && abs(info.template(2,3))-info.cfg.accuracy_green < abs(info.hpi{2}(3)) && abs(info.hpi{2}(3)) < abs(info.template(2,3))+info.cfg.accuracy_green
-        plot3(info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3),'g^', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
+        plot3(info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3), 'g^', 'MarkerFaceColor', [.5 1 .5], 'MarkerSize', 25)
         head2 = true;
       elseif abs(info.template(2,1))-info.cfg.accuracy_orange < abs(info.hpi{2}(1)) && abs(info.hpi{2}(1)) < abs(info.template(2,1))+info.cfg.accuracy_orange ...
           && abs(info.template(2,2))-info.cfg.accuracy_orange < abs(info.hpi{2}(2)) && abs(info.hpi{2}(2)) < abs(info.template(2,2))+info.cfg.accuracy_orange ...
           && abs(info.template(2,3))-info.cfg.accuracy_orange < abs(info.hpi{2}(3)) && abs(info.hpi{2}(3)) < abs(info.template(2,3))+info.cfg.accuracy_orange
-        plot3(info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3),'y^', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
+        plot3(info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3), 'y^', 'MarkerFaceColor', [1 .5 0], 'MarkerEdgeColor', [1 .5 0], 'MarkerSize', 25)
         head2 = false;
       else % when not in correct position
-        plot3(info.hpi{2}(1),info.hpi{2}(2), info.hpi{2}(3),'r^', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+        plot3(info.hpi{2}(1),info.hpi{2}(2), info.hpi{2}(3), 'r^', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
         head2 = false;
       end
     else
-      plot3(info.hpi{2}(1),info.hpi{2}(2), info.hpi{2}(3),'r^', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+      plot3(info.hpi{2}(1),info.hpi{2}(2), info.hpi{2}(3), 'r^', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
       head2 = false;
     end
     
@@ -871,19 +886,19 @@ if get(info.hCoilCheckBox, 'Value')
       if abs(info.template(3,1))-info.cfg.accuracy_green < abs(info.hpi{3}(1)) && abs(info.hpi{3}(1)) < abs(info.template(3,1))+info.cfg.accuracy_green  ...
           && abs(info.template(3,2))-info.cfg.accuracy_green  < abs(info.hpi{3}(2)) && abs(info.hpi{3}(2)) < abs(info.template(3,2))+info.cfg.accuracy_green  ...
           && abs(info.template(3,3))-info.cfg.accuracy_green  < abs(info.hpi{3}(3)) && abs(info.hpi{3}(3)) < abs(info.template(3,3))+info.cfg.accuracy_green
-        plot3(info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
+        plot3(info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3), 'go', 'MarkerFaceColor', [.5 1 .5], 'MarkerSize', 25)
         head3 = true;
       elseif abs(info.template(3,1))-info.cfg.accuracy_orange < abs(info.hpi{3}(1)) && abs(info.hpi{3}(1)) < abs(info.template(3,1))+info.cfg.accuracy_orange ...
           && abs(info.template(3,2))-info.cfg.accuracy_orange < abs(info.hpi{3}(2)) && abs(info.hpi{3}(2)) < abs(info.template(3,2))+info.cfg.accuracy_orange ...
           && abs(info.template(3,3))-info.cfg.accuracy_orange < abs(info.hpi{3}(3)) && abs(info.hpi{3}(3)) < abs(info.template(3,3))+info.cfg.accuracy_orange
-        plot3(info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
+        plot3(info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3), 'yo', 'MarkerFaceColor', [1 .5 0], 'MarkerEdgeColor', [1 .5 0], 'MarkerSize', 25)
         head3 = false;
       else % when not in correct position
-        plot3(info.hpi{3}(1),info.hpi{3}(2), info.hpi{3}(3),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+        plot3(info.hpi{3}(1),info.hpi{3}(2), info.hpi{3}(3), 'ro', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
         head3 = false;
       end
     else
-      plot3(info.hpi{3}(1),info.hpi{3}(2), info.hpi{3}(3),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+      plot3(info.hpi{3}(1),info.hpi{3}(2), info.hpi{3}(3), 'ro', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
       head3 = false;
     end
   end
@@ -905,7 +920,7 @@ if ~isempty(info.template)
   end
 end
 
-%plot sphere model
+% plot sphere model
 if get(info.hSphereCheckBox, 'Value')
   cc = circumcenter(info.hpi);
   x_radius = sqrt((info.hpi{2}(1) - cc(1))^2 + (info.hpi{2}(2) - cc(2))^2);
@@ -923,12 +938,12 @@ if get(info.hSphereCheckBox, 'Value')
   alpha(.15)
 end
 
-%plot realistic head mdoel
+% plot realistic head mdoel
 if get(info.hRealistic, 'Value') && ~isempty(info.cfg.headshape)
   ft_plot_mesh(ft_transform_geometry(M, info.cfg.headshape))
 end
 
-%plot sensors
+% plot sensors
 if get(info.hSensorCheckBox, 'Value') && ~isempty(info.sens)
   % plot the sensors
   ft_plot_sens(info.hdr.grad, 'style', 'k.');
@@ -936,58 +951,53 @@ end
 
 % plot the HPI coil positions
 for j = 1:numel(info.hpi)
-  plot3(info.hpi{j}(1), info.hpi{j}(2), info.hpi{j}(3), 'ko', 'LineWidth', 1,'MarkerSize', 5)
+  plot3(info.hpi{j}(1), info.hpi{j}(2), info.hpi{j}(3), 'ko', 'LineWidth', 1, 'MarkerSize', 5)
 end
 
-%plot the dewar
+% plot the dewar
 if get(info.hDewarCheckBox, 'Value') && ~isempty(info.cfg.dewar)
-  ft_plot_mesh(info.cfg.dewar,'facecolor','skin','facealpha',0.6,'edgecolor','skin','edgealpha',0.6);
+  ft_plot_mesh(info.cfg.dewar, 'facecolor', [0.5 0.5 0.5], 'facealpha', 0.6, 'edgecolor', 'none');
 end
 
-%plot Polhemus
+% plot Polhemus
 if get(info.hPolhemusCheckBox, 'Value')
   if ~isempty(info.cfg.polhemus)
-    ft_plot_mesh(ft_transform_geometry(M,info.cfg.polhemus),'vertexmarker','.')
+    ft_plot_mesh(ft_transform_geometry(M,info.cfg.polhemus), 'vertexmarker', '.')
   end
 end
 
-%plot Axis
+% plot Axis
 if get(info.hAxisCheckBox, 'Value')
   if info.isctf
-    ft_plot_axes([],'coordsys','ctf','unit','cm');
+    ft_plot_axes([], 'coordsys', 'ctf', 'unit', 'cm');
   elseif info.isneuromag
-    ft_plot_axes([],'coordsys','neuromag','unit','cm');
+    ft_plot_axes([], 'coordsys', 'neuromag', 'unit', 'cm');
   end
 end
 
-% axis
 grid on
 axis on
 xlabel('x (cm)');
 ylabel('y (cm)');
 zlabel('z (cm)');
-%fix axis to avoid
-if info.isctf
-  set(gca, 'xtick', -15:2:15)
-  set(gca, 'ytick', -15:2:15)
-  set(gca, 'ztick', -40:2:-10) % note the different scaling
-  axis([-15 15 -15 15 -40 -10])
-elseif info.isneuromag
-  set(gca, 'xtick', -15:2:15)
-  set(gca, 'ytick', -15:2:15)
-  set(gca, 'ztick', -25:2:15) % note the different scaling
-  axis([-15 15 -15 15 -25 15])
-end
-axis square
 
+% place ticks at 2cm distance
+set(gca, 'xtick', info.cfg.xlim(1):2:info.cfg.xlim(2))
+set(gca, 'ytick', info.cfg.ylim(1):2:info.cfg.ylim(2))
+set(gca, 'ztick', info.cfg.zlim(1):2:info.cfg.zlim(2))
+
+% fix axis to avoid rescaling
+axis([info.cfg.xlim info.cfg.ylim info.cfg.zlim])
+axis square
 
 % put the info back
 guidata(handle, info);
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%TOP VIEW%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which handles hot keys in the current plot
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 function key_sub(handle, eventdata)
 
 % get the info
@@ -1002,7 +1012,7 @@ switch eventdata.Key
     end
     
     % write template position to text file for later re-positioning
-    template_time = [date datestr(now,'-HH-MM-SS')];
+    template_time = [date datestr(now, '-HH-MM-SS')];
     fprintf('writing to %s.txt \n', template_time);
     dlmwrite([template_time '.txt'], info.template, ' ');
     
@@ -1012,26 +1022,26 @@ switch eventdata.Key
     info.continue = false;
   case 'c'
     % display the sensors/dewar
-    if get(info.hCoilCheckBox,'Value') == 0;
+    if get(info.hCoilCheckBox, 'Value') == 0
       fprintf('displaying coils \n')
       set(info.hCoilCheckBox, 'Value', 1); % toggle on
-    elseif get(info.hCoilCheckBox,'Value') == 1;
+    elseif get(info.hCoilCheckBox, 'Value') == 1
       set(info.hCoilCheckBox, 'Value', 0); % toggle off
     end
   case 'h'
     % display the sensors/dewar
-    if get(info.hHeadCheckBox,'Value') == 0;
+    if get(info.hHeadCheckBox, 'Value') == 0
       fprintf('displaying head \n')
       set(info.hHeadCheckBox, 'Value', 1); % toggle on
-    elseif get(info.hHeadCheckBox,'Value') == 1;
+    elseif get(info.hHeadCheckBox, 'Value') == 1
       set(info.hHeadCheckBox, 'Value', 0); % toggle off
     end
   case 's'
     % display the sensors/dewar
-    if get(info.hSensorCheckBox,'Value') == 0;
+    if get(info.hSensorCheckBox, 'Value') == 0
       fprintf('displaying sensors/dewar \n')
       set(info.hSensorCheckBox, 'Value', 1); % toggle on
-    elseif get(info.hSensorCheckBox,'Value') == 1;
+    elseif get(info.hSensorCheckBox, 'Value') == 1
       set(info.hSensorCheckBox, 'Value', 0); % toggle off
     end
   otherwise
@@ -1057,7 +1067,7 @@ for j = 1:numel(info.hpi)
 end
 
 % write template position to text file for later re-positioning
-template_time = [date datestr(now,'-HH-MM-SS')];
+template_time = [date datestr(now, '-HH-MM-SS')];
 fprintf('writing to %s.txt \n', template_time);
 dlmwrite([template_time '.txt'], info.template, ' ');
 
