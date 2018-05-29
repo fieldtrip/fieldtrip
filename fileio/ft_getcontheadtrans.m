@@ -35,7 +35,7 @@ function [varargout] = ft_getcontheadtrans(cfg)
 
 % Copyright (C) 2017, Mikkel C. Vinding (mikkel.vinding@ki.se)
 %
-% Here comes the Revision tag, which is auto-updated by the version control system
+% Here comes the Revision tag, which is auto-updated by the version control system   
 % $Id$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
