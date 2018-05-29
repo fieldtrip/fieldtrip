@@ -1200,6 +1200,10 @@ elseif filetype_check_header(filename, 'RIFF', 0) && filetype_check_header(filen
   type = 'riff_wave';
   manufacturer = 'Microsoft';
   content = 'audio';
+elseif filetype_check_extension(filename, '.m4a')
+  type = 'audio_m4a';
+  manufacturer = 'Apple';
+  content = 'audio';
 elseif filetype_check_extension(filename, '.txt') && filetype_check_header(filename, 'Site')
   type = 'easycap_txt';
   manufacturer = 'Easycap';

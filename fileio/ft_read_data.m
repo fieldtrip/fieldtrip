@@ -1378,7 +1378,7 @@ switch dataformat
   case 'read_nex_data' % this is an alternative reader for nex files
     dat = read_nex_data(filename, hdr, begsample, endsample, chanindx);
     
-  case 'riff_wave'
+  case {'riff_wave', 'audio_m4a'}
     dat = audioread(filename, [begsample endsample])';
     dat = dat(chanindx,:);
     
