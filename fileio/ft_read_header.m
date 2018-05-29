@@ -2477,7 +2477,7 @@ switch headerformat
       hdr.grad = yokogawa2grad(hdr);
     end
     
-  case 'riff_wave'
+  case {'riff_wave', 'audio_m4a'}
     % prior to MATLAB R2015b this used to be done with "wavread"
     % but the audioinfo/audioread function are at least available from 2012b up
     info = audioinfo(filename);
