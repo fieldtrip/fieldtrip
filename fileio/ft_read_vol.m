@@ -15,7 +15,7 @@ function [headmodel] = ft_read_vol(filename, varargin)
 %
 % See also FT_TRANSFORM_VOL, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
-% Copyright (C) 2008-2013 Robert Oostenveld
+% Copyright (C) 2008-2018 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -50,18 +50,26 @@ switch fileformat
   case 'matlab'
     % FIXME in the future the file should contain the variable 'headmodel' instead of vol
     headmodel = loadvar(filename, 'vol');
-
+    
   case 'ctf_hdm'
     headmodel = read_ctf_hdm(filename);
-
+    
   case 'asa_vol'
     headmodel = read_asa_vol(filename);
     headmodel.type = 'asa';
-
+    
   case 'mbfys_ama'
     ama = loadama(filename);
     headmodel = ama2vol(ama);
-
+    
+  case 'neuromag_fif'
+    ft_hastoolbox('mne', 1);
+    global FIFF
+    bem = mne_read_bem_surfaces(filename);
+    headmodel.bnd.pos = bem.rr;
+    headmodel.bnd.tri = bem.tris;
+    headmodel.coordsys = fif2coordsys(lol.coord_frame);
+    
   otherwise
     ft_error('unknown fileformat for volume conductor model');
 end
@@ -69,3 +77,30 @@ end
 % this will ensure that the structure is up to date, e.g. that the type is correct and that it has units
 headmodel = ft_datatype_headmodel(headmodel);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function coordsys = fif2coordsys(coord_frame)
+ft_hastoolbox('mne', 1);
+global FIFF
+
+switch coord_frame
+  case FIFF.FIFFV_COORD_DEVICE
+    coordsys = 'device';
+  case FIFF.FIFFV_COORD_HPI
+    coordsys = 'hpi';
+  case FIFF.FIFFV_COORD_HEAD
+    coordsys = 'head';
+  case FIFF.FIFFV_COORD_MRI
+    coordsys = 'mri';
+  case FIFF.FIFFV_COORD_MRI_SLICE
+    coordsys = 'mri_slice';
+  case FIFF.FIFFV_COORD_MRI_DISPLAY
+    coordsys = 'mri_display';
+  case FIFF.FIFFV_COORD_DICOM_DEVICE
+    coordsys = 'dicom_device';
+  case FIFF.FIFFV_COORD_IMAGING_DEVICE
+    coordsys = 'imaging_device';
+  otherwise
+    error('unrecognized coord_frame')
+end
