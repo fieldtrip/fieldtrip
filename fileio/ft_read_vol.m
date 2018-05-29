@@ -62,6 +62,12 @@ switch fileformat
     ama = loadama(filename);
     headmodel = ama2vol(ama);
 
+  case 'neuromag_fif'
+    ft_hastoolbox('mne',1);
+    temp = mne_read_bem_surfaces(filename);
+    headmodel.bnd.pos = temp.rr;
+    headmodel.bnd.tri = temp.tris;
+        
   otherwise
     ft_error('unknown fileformat for volume conductor model');
 end

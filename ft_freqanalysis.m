@@ -795,7 +795,7 @@ if exist('toi', 'var')
   freq.time = toi;
 end
 if powflg
-  % correct the 0 Hz or Nyqist bin if present, scaling with a factor of 2 is only appropriate for ~0 Hz
+  % correct the 0 Hz or Nyquist bin if present, scaling with a factor of 2 is only appropriate for ~0 Hz
   if ~isempty(hasdc_nyq)
     if keeprpt>1
       powspctrm(:,:,hasdc_nyq,:) = powspctrm(:,:,hasdc_nyq,:)./2;
@@ -806,7 +806,7 @@ if powflg
   freq.powspctrm = powspctrm;
 end
 if fftflg
-  % correct the 0 Hz or Nyqist bin if present, scaling with a factor of 2 is only appropriate for ~0 Hz
+  % correct the 0 Hz or Nyquist bin if present, scaling with a factor of 2 is only appropriate for ~0 Hz
   if ~isempty(hasdc_nyq)
     if keeprpt>1
       fourierspctrm(:,:,hasdc_nyq,:) = fourierspctrm(:,:,hasdc_nyq,:)./sqrt(2);
@@ -817,7 +817,7 @@ if fftflg
   freq.fourierspctrm = fourierspctrm;
 end
 if csdflg
-  % correct the 0 Hz or Nyqist bin if present, scaling with a factor of 2 is only appropriate for ~0 Hz
+  % correct the 0 Hz or Nyquist bin if present, scaling with a factor of 2 is only appropriate for ~0 Hz
   if ~isempty(hasdc_nyq)
     if keeprpt>1
       crsspctrm(:,:,hasdc_nyq,:) = crsspctrm(:,:,hasdc_nyq,:)./2;

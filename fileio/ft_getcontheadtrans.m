@@ -126,7 +126,7 @@ end
 if strcmpi(cfg.resample, 'yes')
     cfgrs = [];
     cfgrs.resamplefs = cfg.resamplefs;
-    dat = ft_resampledata(cfg,dat);
+    dat = ft_resampledata(cfgrs,dat);
 end
 
 q = dat.trial{:};
@@ -136,7 +136,6 @@ fs = dat.fsample;
 if strcmp(cfg.returndata, 'quat')
     outdat = q;
 elseif strcmp(cfg.returndata, 'mat')        % Make transformation
-
     H = zeros(4,4,length(q));
     for i = 1:length(q)
         H(:,:,i) = quaternion(q(:,i));
