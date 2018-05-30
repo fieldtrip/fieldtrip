@@ -68,7 +68,7 @@ switch fileformat
     bem = mne_read_bem_surfaces(filename);
     headmodel.bnd.pos = bem.rr;
     headmodel.bnd.tri = bem.tris;
-    headmodel.coordsys = fif2coordsys(lol.coord_frame);
+    headmodel.coordsys = fif2coordsys(bem.coord_frame);
     
   otherwise
     ft_error('unknown fileformat for volume conductor model');
