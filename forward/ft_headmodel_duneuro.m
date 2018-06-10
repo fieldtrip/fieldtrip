@@ -162,6 +162,7 @@ else
     headmodel.tissue(i,1) =  find(utissue == headmodel.tissue(i,1));
   end
   cfg.volume_conductor.tensors.labels = uint64(headmodel.tissue -1);
+  %cfg.volume_conductor.tensors.conductivities = conductivity;
   cfg.volume_conductor.tensors.tensors = conductivity;
 end
 headmodel.driver = duneuro_meeg(cfg);
