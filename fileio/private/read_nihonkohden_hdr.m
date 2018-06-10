@@ -91,12 +91,12 @@ hdr.nSamplesPre = 0;
 
 dc = textscan(fid,'%f',hdr.nChans*hdr.nSamples,'delimiter','\n','headerlines',0);
 df = dc{1};clear dc;
-df = df.*10; % multiply by 10, don't forget to divide when reading in data!
-fprintf('converting ASCII floats to 16-bit signed ints');
+%df = df.*10; % multiply by 10, don't forget to divide when reading in data!
+%fprintf('converting ASCII floats to 16-bit signed ints');
 
 dat = reshape(df,hdr.nChans,hdr.nSamples);
-clear df;
-dat = int16(dat)./10;
+%clear df;
+%dat = int16(dat)./10;
 hdr.dat = double(dat);
 clear dat;
 

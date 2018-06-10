@@ -2,17 +2,30 @@ This is the FieldTrip REALTIME module. It contains MATLAB functions and
 compiled executables to interface various EEG, MEG, MRI and NIRS acquisition
 systems to MATLAB using the FieldTrip buffer as the interface.
 
+For more information please visit http://www.fieldtriptoolbox.org/development/realtime
+
+-------------------------------------------------------------------------------
+
 Unless otherwise stated, the software contained in this directory and in the
 subdirectories is covered by the GNU General Public Licence. Some of the
 compiled applications depend on external DLLs (i.e. the hardware drivers),
 which are not covered by the GPL and which are copyrighted by the respective
 hardware companies.
 
+-------------------------------------------------------------------------------
+Copyright (C) 2007-2011, Donders Institute for Brain, Cognition and Behaviour, The Netherlands (DCCN, DCC, DCN)
+
 The FieldTrip software is free but copyrighted software, distributed under the
 terms of the GNU General Public Licence as published by the Free Software
 Foundation (either version 2, or at your option any later version). See the
 file COPYING for more details.
 
-Copyright (C) 2007-2011, Donders Institute for Brain, Cognition and Behaviour,
-The Netherlands (DCCN, DCC, DCN)
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/
+-------------------------------------------------------------------------------
 
