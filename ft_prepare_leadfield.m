@@ -222,8 +222,9 @@ elseif ft_voltype(headmodel, 'duneuro')
   
   ft_progress('init', cfg.feedback, 'computing leadfield');
   % compute the leadfield on all grid positions inside the brain
-  grid.leadfield = ft_compute_leadfield(grid.pos(insideindx,:), sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
-  grid.leadfield = mat2cell(grid.leadfield, [size(grid.leadfield,1)], repmat(3,1,size(grid.leadfield,2)/3));
+  lf = ft_compute_leadfield(grid.pos(insideindx,:), sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
+  lf = mat2cell(lf, size(lf,1), repmat(3,1,size(lf,2)/3));
+  grid.leadfield(grid.inside) = lf;
   for i=1:length(insideindx)
     thisindx = insideindx(i);
     if isfield(cfg, 'grid') && isfield(cfg.grid, 'mom')
