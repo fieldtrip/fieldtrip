@@ -80,7 +80,6 @@ cfg = ft_checkconfig(cfg, 'required', {'dataset'});
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg, 'dataset', 'char');
-cfg = ft_checkopt(cfg, 'returndata', 'char', {'mat', 'quat'});
 
 % get the options
 fname    = ft_getopt(cfg, 'dataset');        % there is no default
@@ -89,9 +88,11 @@ fname    = ft_getopt(cfg, 'dataset');        % there is no default
 cfg.resample    = ft_getopt(cfg, 'resample',   'no');
 cfg.resamplefs  = ft_getopt(cfg, 'resamplefs',   100);
 cfg.returndata  = ft_getopt(cfg, 'returndata',   'mat');
+cfg = ft_checkopt(cfg, 'returndata', 'char', {'mat', 'quat'});
+
 
 %% Read data
-hdr = ft_read_header(fname);
+hdr = ft_read_header(fname, 'checkmaxfilter','no');
 if any(strfind(fname, 'quat'))
     quatChans = find(~cellfun(@isempty, strfind(hdr.label, 'QUAT')));
     gofChans = find(~cellfun(@isempty, strfind(hdr.label, 'QUAT007')));    
@@ -146,48 +147,6 @@ else
     error('Something has gone wrong!')
 end
 
-% 
-% % Read headpos
-% head = ft_read_headshape(fname,'coordsys','head');
-% fidOrigHead = head.fid.pos;
-% head_dev = ft_read_headshape(fname,'coordsys','dewar');
-% fidOrigDev = head_dev.fid.pos;
-% 
-% fid1 = zeros(3,length(H));
-% fid2 = zeros(3,length(H));
-% fid3 = zeros(3,length(H));
-% 
-% % Must have a way to indetify NAS LPA RPA here...       [!]
-% 
-% [Horig] = ft_headcoordinates(fidOrigHead(2,:),fidOrigHead(1,:),fidOrigHead(3,:),head_dev.coordsys);
-% 
-% tic
-% for i = 1:length(H)
-%     fid1(:,i) = ft_warp_apply(H(:,:,i),fidOrigDev(1,:)); 
-%     fid2(:,i) = ft_warp_apply(H(:,:,i),fidOrigDev(2,:)); 
-%     fid3(:,i) = ft_warp_apply(H(:,:,i),fidOrigDev(3,:)); 
-% end
-% toc
-% 
-% figure; ft_plot_headshape(head_dev); hold on
-% plot3(fid1(1,:),fid1(2,:),fid1(3,:),'xk'); hold on
-% plot3(fid2(1,:),fid2(2,:),fid2(3,:),'xk'); 
-% plot3(fid3(1,:),fid1(2,:),fid3(3,:),'xk'); hold off
-% 
-% cc = circumcenter(fid1, fid2, fid3);
-% 
-% cc_rel = [cc - repmat(cc(:,1),1,size(cc,2))]';
-%  
-% % plot translations
-% figure(); 
-% subplot(2,1,1); plot(t, cc_rel(:,1:3)*1000) % in mm
-% title('Position'); xlabel('Time (s)'); ylabel('mm');
-% 
-% % plot rotations
-% subplot(2,1,2); plot(t, cc_rel(:,4:6))
-% title('Roation'); xlabel('Time (s)'); ylabel('rad'); % [!] I think this is radians, but I am not sure
-% 
-% 
 % % do your stuff...
 % dataout = [];
 
