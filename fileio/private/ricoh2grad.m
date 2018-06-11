@@ -1,37 +1,16 @@
-function grad = yokogawa2grad_new(hdr)
+function grad = ricoh2grad(hdr)
 
-% YOKOGAWA2GRAD_NEW converts the position and weights of all coils that
-% compromise a gradiometer system into a structure that can be used
-% by FieldTrip. This implementation uses the new "yokogawa_meg_reader"
-% toolbox.
+%% RICOH2GRAD converts the position and weights of all coils that
+%% compromise a gradiometer system into a structure that can be used
+%% by FieldTrip. This implementation uses the "ricoh_meg_reader" toolbox.
+%%
+%% See also FT_READ_HEADER, CTF2GRAD, BTI2GRAD, FIF2GRAD, YOKOGAWA2GRAD_NEW
 %
-% See also FT_READ_HEADER, CTF2GRAD, BTI2GRAD, FIF2GRAD, YOKOGAWA2GRAD
-
-% Copyright (C) 2005-2012, Robert Oostenveld
-% Copyright (C) 2010, Tilmann Sander-Thoemmes
-%
-% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
-% for the documentation and details.
-%
-%    FieldTrip is free software: you can redistribute it and/or modify
-%    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 3 of the License, or
-%    (at your option) any later version.
-%
-%    FieldTrip is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
-%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%    GNU General Public License for more details.
-%
-%    You should have received a copy of the GNU General Public License
-%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
-%
-% $Id$
 
 % The following line is only a safety measure: No function of the toolbox
 % is actually called in this routine.
-if ~ft_hastoolbox('yokogawa_meg_reader')
-    ft_error('cannot determine whether Yokogawa toolbox is present');
+if ~ft_hastoolbox('ricoh_meg_reader')
+    ft_error('cannot determine whether Ricoh toolbox is present');
 end
 
 if isfield(hdr, 'label')
@@ -43,7 +22,7 @@ if isfield(hdr, 'orig')
 end
 
 % The "channel_info.channel(i)" structure contains the details of coils.
-% For the sepcifications, see Yokogawa MEG Reader Toolbox 1.5 specifications.pdf.
+% For the sepcifications, see Ricoh MEG Reader Toolbox 1.0 specifications.pdf.
 % type, type of sensor
 % data.x (in m, inner coil)
 % data.y (in m, inner coil)
@@ -57,37 +36,10 @@ end
 % data.zdir orientation of inner coil (theta in deg: angle to z-axis)
 % data.xdir orientation of inner coil (phi in deg: angle to x-axis)
 
-% for planar gradiometers
-% Note, that Yokogawa planar gradiometers contain two coils perpendicular to
-% the sphere, i.e. the planar gradiometers normal is the spheres tangential.
-% Therefore the definition of an inner coil makes sense here in contrast to
-% planar gradiometers from Neuromag, where the gradiometer normal is radial.
-% data.zdir1 orientation of inner coil (theta in deg: angle to z-axis)
-% data.xdir1 orientation of inner coil (phi in deg: angle to x-axis)
-% data.zdir2 baseline orientation from inner coil (theta in deg: angle to z-axis)
-% data.xdir2 baseline orientation from inner coil (phi in deg: angle to x-axis)
-
-%
-% The code below is not written for speed or elegance, but for readability.
-%
-
 % shorten names
 ch_info = hdr.channel_info.channel;
 type = [ch_info.type];
 handles    = definehandles;
-
-
-%% get all axial grads, planar grads, and magnetometers.
-%% reference channels without position information are excluded.
-%grad_ind = [1:hdr.channel_count];
-%isgrad   = (type==handles.AxialGradioMeter | type==handles.PlannerGradioMeter |  ...
-%    type==handles.MagnetoMeter);
-%isref = (type==handles.RefferenceAxialGradioMeter | type==handles.RefferencePlannerGradioMeter |  ...
-%    type==handles.RefferenceMagnetoMeter);
-%for i = 1: hdr.channel_count
-%    if isref(i) &&  sum( ch_info( i ).data.x^2 + ch_info( i ).data.y^2 + ch_info( i ).data.z^2 ) > 0.0, isgrad(i) = 1; end;
-%end
-
 
 % get all axial grads, planar grads, and magnetometers.
 % All reference channels are excluded even if some of them have position information.
@@ -174,12 +126,11 @@ for i = 1:grad_nr
 end
 
 % the gradiometer labels should be consistent with the channel labels in
-% read_yokogawa_header, the predefined list of channel names in ft_senslabel
+% read_ricoh_header, the predefined list of channel names in ft_senslabel
 % and with ft_channelselection:
-% but it is ONLY consistent with read_yokogawa_header as NO FIXED relation
-% between channel index and type of channel exists for Yokogawa systems.
-% Therefore all have individual label sequences: Support in ft_senslabel
-% is only partial.
+% but it is ONLY consistent with read_ricoh_header as NO FIXED relation
+% between channel index and type of channel exists for Ricoh systems.
+% Therefore all have individual label sequences: Support in ft_senslabel is only partial.
 if ~isempty(label)
     grad.label = label(grad_ind)';
 else
