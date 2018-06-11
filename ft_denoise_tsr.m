@@ -23,7 +23,7 @@ function dataout = ft_denoise_tsr(cfg, varargin)
 %   cfg.refchannel         = the channels used as reference signal (default = 'MEGREF')
 %   cfg.channel            = the channels to be denoised (default = 'MEG')
 %   cfg.method             = option specifying the criterion for the regression,
-%                            'mvr', 'cca', 'pls', 'svd'
+%                            'mlr', 'cca', 'pls', 'svd'
 %   cfg.standardiserefdata = standardise reference data prior to the regression (default = 'no')
 %   cfg.stadardisedata     = string, 'no' or 'yes' (default = 'no')
 %   cfg.demeanrefdata      = string, 'no' or 'yes' (default = 'no')
@@ -93,6 +93,11 @@ cfg.blocklength = ft_getopt(cfg, 'blocklength', 'trial');
 cfg.reflags     = ft_getopt(cfg, 'reflags', 0); %this needs to be known for the folding
 cfg.testtrials  = ft_getopt(cfg, 'testtrials', 'all');
 cfg.testsamples = ft_getopt(cfg, 'testsamples', 'all');
+cfg.refchannel  = ft_getopt(cfg, 'refchannel', '');
+
+if ~iscell(cfg.refchannel)
+  cfg.refchannel = {cfg.refchannel};
+end
 
 if iscell(cfg.testtrials)
   % this has precedence above nfold
@@ -126,11 +131,11 @@ else
     % create output data structure
     dataout = keepfields(tmp{1}, {'fsample' 'label'});
     for k = 1:numel(testtrials)
+      tmp{k}.weights.trials = testtrials{k};
+      
       dataout.trial(testtrials{k})   = tmp{k}.trial;
       dataout.time(testtrials{k})    = tmp{k}.time;
-      dataout.weights{k}             = tmp{k}.weights;
-      dataout.weights{k}.trials      = testtrials{k};
-      dataout.weights{k}.performance = tmp{k}.performance;
+      dataout.weights(k)             = tmp{k}.weights;
       dataout.cfg.previous{k}        = tmp{k}.cfg;
       if isfield(tmp{k}, 'trialinfo')
         dataout.trialinfo(testtrials{k},:) = tmp{k}.trialinfo;
@@ -360,58 +365,26 @@ if usetestdata
   refdata = ft_selectdata(tmpcfg, refdata);
   [~,refdata] = rollback_provenance(cfg, refdata);
 
-  dataout   = keepfields(testdata, {'cfg' 'label' 'time' 'grad' 'elec' 'opto' 'trialinfo' 'fsample'});
   predicted = beta_ref*testrefdata.trial;
-  
-  switch cfg.output
-    case 'model'
-      dataout.trial = predicted; 
-    case 'residual'
-      dataout.trial = testdata.trial - predicted;
-  end
-  
-  fprintf('Computing performance metric\n');
-  switch cfg.performance
-    case 'Pearson'
-      % Compute correlation coefficient per source time course (374)
-      for i = 1:size(testdata.trial{1}, 1)
-          dataout.performance(i, 1) = corr(testdata.trial{1}(i, :)', predicted{1}(i,:)', 'type', 'Pearson', 'rows', 'pairwise'); 
-      end
-    case 'r-squared'
-      % Compute performance statistics
-      tss = nansum(testdata.trial.^2, 2);                % total sum of squares, testdata are already mean subtracted in l. 330
-      rss = nansum((testdata.trial - predicted).^2, 2);  % sum of squared residual error
-      % R-squared
-      dataout.performance = (tss-rss)./tss;
-  end
-  
+  observed  = testdata.trial;
+  time      = testdata.time;
 else
-  dataout   = keepfields(data, {'cfg' 'label' 'time' 'grad' 'elec' 'opto' 'trialinfo' 'fsample'});
   predicted = beta_ref*refdata.trial;
-  
-  switch cfg.output
-    case 'model'
-      dataout.trial = predicted;
-    case 'residual'
-      dataout.trial = data.trial - predicted;
-  end
-  % Compute performance statistics
-  fprintf('Computing performance metric\n');
-  switch cfg.performance    
-    case 'Pearson'
-      for i = 1:size(data.trial{1}, 1)
-        dataout.performance(i, 1) = corr(data.trial{1}(i, :)', predicted{1}(i,:)', 'type', 'Pearson', 'rows', 'pairwise'); 
-      end
-    case 'r-squared'
-      
-      tss = nansum(data.trial.^2, 2); % total sum of squares, testdata are already mean subtracted in l. 330
-      rss = nansum((data.trial - predicted).^2, 2);  % sum of squared residual error
-      % R-squared
-      dataout.performance = (tss-rss)./tss;
-  end
-  
+  observed  = data.trial;
+  time      = data.time;
 end
 
+% create output data structure
+dataout   = keepfields(data, {'cfg' 'label' 'grad' 'elec' 'opto' 'trialinfo' 'fsample'});
+dataout.time = time;
+switch cfg.output
+  case 'model'
+    dataout.trial = predicted;
+  case 'residual'
+    dataout.trial = observed - predicted;
+end
+
+% update the weights-structure
 weights.time = cfg.reflags;
 weights.rho  = rho;
 if exist('beta_data', 'var')
@@ -428,6 +401,23 @@ else
   weights.beta = newbeta;
   weights.reflabel = reflabel;
   weights.dimord   = 'chan_lag_refchan';
+end
+
+% Compute performance statistics
+fprintf('Computing performance metric\n');
+switch cfg.performance
+  case 'Pearson'
+    for k = 1:size(observed{1}, 1)
+      tmp = nancov(cellcat(1, cellrowselect(observed,k), cellrowselect(predicted,k)), 1, 2, 1);
+      weights.performance(k,1) = tmp(1,2)./sqrt(tmp(1,1).*tmp(2,2));
+      %weights.performance(i, 1) = corr(data.trial{1}(i, :)', predicted{1}(i,:)', 'type', 'Pearson', 'rows', 'pairwise');
+    end
+  case 'r-squared'
+    
+    tss = nansum(data.trial.^2, 2); % total sum of squares, testdata are already mean subtracted in l. 330
+    rss = nansum((data.trial - predicted).^2, 2);  % sum of squared residual error
+    % R-squared
+    weights.performance = (tss-rss)./tss;
 end
 
 dataout.weights = weights;
