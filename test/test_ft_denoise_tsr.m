@@ -16,7 +16,7 @@ refdata.trial = trial;
 refdata.time  = time;
 refdata.label = {'refchan'};
 
-krn = [zeros(1,15) linspace(0,.8,5) linspace(1,0,20)];
+krn = [zeros(1,20) linspace(1,0,20)];
 for k = 1:50
   trial{k} = convn(trial{k},krn,'same');
 end
@@ -35,7 +35,7 @@ cfg.method     = 'mlr';
 % out2 = ft_denoise_tsr(cfg, data, refdata);
 
 for k = 1:numel(trial)
-  trial{k} = trial{k} + 2.*randn(1,1000);
+  trial{k} = trial{k} + 10.*ft_preproc_bandpassfilter(randn(1,1000), 1000, [8 12], [], 'firws');
 end
 data.trial = trial;
 
