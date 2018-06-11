@@ -117,8 +117,10 @@ if (isempty(grid_filename) || isempty(tensors_filename)) && (isempty(conductivit
   error('Either a filename for the grid and a filename for the conductivity or a conductivity array must be supplied')
 end
 
-if ~isempty(conductivity) && length(conductivity)<length(unique(headmodel.tissue))
-  error('Wrong conductivity information!')
+if ~isempty(conductivity)
+  if (size(conductivity,1) ~= 1 && size(conductivity,1) ~= 9)  || size(conductivity,2) ~= length(unique(headmodel.tissue))
+    error('Conductivity has wrong dimension!')
+  end
 end
 
 if ~isfield(mesh,'tissuelabel')
@@ -162,8 +164,11 @@ else
     headmodel.tissue(i,1) =  find(utissue == headmodel.tissue(i,1));
   end
   cfg.volume_conductor.tensors.labels = uint64(headmodel.tissue -1);
-  %cfg.volume_conductor.tensors.conductivities = conductivity;
-  cfg.volume_conductor.tensors.tensors = conductivity;
+  if(size(conductivity,1) == 1)
+    cfg.volume_conductor.tensors.conductivities = conductivity;
+  elseif (size(conductivity,1) == 9)
+    cfg.volume_conductor.tensors.tensors = conductivity;
+  end
 end
 
 cfg.meg.intorderadd= '0' ;
