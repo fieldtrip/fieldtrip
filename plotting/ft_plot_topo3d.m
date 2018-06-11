@@ -10,7 +10,7 @@ function ft_plot_topo3d(pos, val, varargin)
 %
 % Optional input arguments should be specified in key-value pairs and can include
 %   'contourstyle' = string, 'none', 'black', 'color' (default = 'none')
-%   'isolines'     = vector with values at which to draw isocontours, or 'auto' (default = 'auto')
+%   'isolines'     = vector with values at which to draw isocontours, scalar integer of number of linearly spaced isocontours between min and max, or 'auto' (default = 'auto')
 %   'facealpha'    = scalar, between 0 and 1 (default = 1)
 %   'refine'       = scalar, number of refinement steps for the triangulation, to get a smoother interpolation (default = 0)
 %   'unit'         = string, 'm', 'cm' or 'mm' (default = 'cm')
@@ -124,6 +124,10 @@ if ~strcmp(contourstyle, 'none')
     else
       ft_error('unsupported isolines');
     end
+  elseif isnumeric(isolines) && numel(isolines) == 1 && floor(isolines) == isolines
+      minval = min(val);
+      maxval = max(val);
+      isolines = linspace(minval,maxval,isolines);
   end % convert string to vector
   
   tri_val = val(tri);
