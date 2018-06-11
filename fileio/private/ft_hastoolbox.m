@@ -377,7 +377,9 @@ switch toolbox
     dependency = {'spm_mars_mrf'};
   case 'JSONLAB'
     dependency = {'loadjson' 'savejson'};
-  
+  case 'PLOTLY'
+    dependency = {'fig2plotly' 'savejson'};
+    
   % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
     dependency = {'ft_read_header', 'ft_read_data', 'ft_read_event', 'ft_read_sens'};
