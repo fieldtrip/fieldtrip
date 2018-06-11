@@ -165,6 +165,11 @@ else
   %cfg.volume_conductor.tensors.conductivities = conductivity;
   cfg.volume_conductor.tensors.tensors = conductivity;
 end
+
+cfg.meg.intorderadd= '0' ;
+cfg.meg.type = 'physical';
+cfg.meg.cache.enable = 'false';
+
 headmodel.driver = duneuro_meeg(cfg);
 
 headmodel.type              = 'duneuro';
