@@ -182,7 +182,7 @@ cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'coh_refdip',      'dics'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'dics_cohrefchan', 'dics'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'dics_cohrefdip',  'dics'});
 cfg = ft_checkconfig(cfg, 'forbidden',   {'parallel', 'trials'});
-cfg = ft_checkconfig(cfg, 'forbidden', {'foi', 'toi'});
+cfg = ft_checkconfig(cfg, 'forbidden',   {'foi', 'toi'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'hdmfile', 'headmodel'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'vol',     'headmodel'});
 
