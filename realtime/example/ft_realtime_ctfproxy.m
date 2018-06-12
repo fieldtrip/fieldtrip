@@ -1,7 +1,10 @@
 function ft_realtime_ctfproxy(cfg)
 
-% FT_REALTIME_CTFPROXY reads continuous data from shared memory on a CTF acquisition
-% system and writes it to a FieldTrip buffer.
+% FT_REALTIME_CTFPROXY provides a  real-time interface to the MEG data stream.
+% This application requires Acq to stream the data to shared memory, and ctf2ft_v1
+% (formerly known as AcqBuffer) to be maintaining the shared memory and to prevent
+% overruns. This MATLAB function will subsequently copy the data from shared
+% memory to a FieldTrip buffer.
 %
 % The FieldTrip buffer is a network transparent server that allows the acquisition
 % client to stream data to it. An analysis client can connect to read the data upon
