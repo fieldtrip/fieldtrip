@@ -4,6 +4,8 @@
 #define ACQ_MSGQ_SHMKEY    0x39457f73
 #define ACQ_MSGQ_SHMPROJID 12345
 #define ACQ_MSGQ_SHMPATH   "/opt/ctf/bin/Acq"
+
+// #define ACQ_BUFFER_SIZE    28160
 #define ACQ_BUFFER_SIZE    40000
 
 /*
