@@ -531,6 +531,8 @@ if istrue(checkinside)
     inside(cfg.grid.inside) = true;
     cfg.grid = removefields(cfg.grid, {'inside', 'outside'});
     cfg.grid.inside = inside;
+  elseif isfield(cfg, 'grid') && isfield(cfg.grid, 'inside') && ~islogical(cfg.grid.inside) && numel(cfg.grid.inside)==size(cfg.grid.pos,1)
+    cfg.grid.inside = logical(cfg.grid.inside);  
   end
 end % if checkinside
 
