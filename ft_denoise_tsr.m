@@ -36,7 +36,7 @@ function dataout = ft_denoise_tsr(cfg, varargin)
 %                            use in a cross-validation scheme
 %   cfg.standardiserefdata = string, 'yes' or 'no', whether or not to standardise reference data
 %                            prior to the regression (default = 'no')
-%   cfg.stadardisedata     = string, 'yes' or 'no', whether or not to standardise dependent variable
+%   cfg.standardisedata    = string, 'yes' or 'no', whether or not to standardise dependent variable
 %                            prior to the regression (default = 'no')
 %   cfg.demeanrefdata      = string, 'yes' or 'no', whether or not to make
 %                            reference data zero mean prior to the regression (default = 'no')
@@ -55,7 +55,7 @@ function dataout = ft_denoise_tsr(cfg, varargin)
 %                            field of <dataout> for the k-th fold     
 %
 % === cfg.threshold
-% if cfg.threshold is 1 x 2 integer array, cfg.threhold(1) parameter scales uniformly
+% if cfg.threshold is 1 x 2 integer array, cfg.threshold(1) parameter scales uniformly
 % in the dimension of predictor variable and cfg.threshold(2) in the space of
 % response variable
 %
