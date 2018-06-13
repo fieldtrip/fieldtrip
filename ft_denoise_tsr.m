@@ -8,8 +8,10 @@ function dataout = ft_denoise_tsr(cfg, varargin)
 %
 % Use as
 %   [dataout] = ft_denoise_tsr(cfg, data)
+% 
 % or as
 %   [dataout] = ft_denoise_tsr(cfg, data, refdata)
+%
 % where "data" is a raw data structure that was obtained with FT_PREPROCESSING. If
 % you specify the additional input "refdata", the specified reference channels for
 % the regression will be taken from this second data structure. This can be useful
@@ -19,25 +21,46 @@ function dataout = ft_denoise_tsr(cfg, varargin)
 % The output structure dataout contains the denoised data in a format that is
 % consistent with the output of FT_PREPROCESSING.
 %
-% The configuration should contain
-%   cfg.refchannel         = the channels used as reference signal (default = 'MEGREF')
-%   cfg.channel            = the channels to be denoised (default = 'MEG')
-%   cfg.method             = option specifying the criterion for the regression,
-%                            'mlr', 'cca', 'pls', 'svd'
-%   cfg.standardiserefdata = standardise reference data prior to the regression (default = 'no')
-%   cfg.stadardisedata     = string, 'no' or 'yes' (default = 'no')
-%   cfg.demeanrefdata      = string, 'no' or 'yes' (default = 'no')
-%   cfg.demeandata         = string, 'no' or 'yes' (default = 'no')
-%   cfg.updatesens         = string, 'no' or 'yes' (default = 'no')
-%   cfg.output             = string, specifies what is outputed in .trial field, 
-%                            can be 'model' or 'residual' (defaul = 'model')
-%   cfg.perchannel         = string or logical
-%   cfg.reflags
-%  
-% if cfg.truncate is integer n > 1, n will be the number of singular values kept.
-% if 0 < cfg.truncate < 1, the singular value spectrum will be thresholded at the
-% fraction cfg.truncate of the explained variance.
+% The configuration options are:
 %
+%   cfg.refchannel         = the channels used as reference signal (default = 'MEGREF'), see FT_SELECTDATA
+%   cfg.channel            = the channels to be denoised (default = 'all'), see FT_SELECTDATA 
+%   cfg.method             = string, 'mlr', 'cca', 'pls', 'svd', option specifying the criterion for the regression
+%                            (default = 'mlr')
+%   cfg.reflags            = integer array, specifying temporal lags (in msec) by which to shift refchannel
+%                            with respect to data channels
+%   cfg.trials             = integer array, trials to be used in regression, see FT_SELECTDATA
+%   cfg.testtrials         = cell array or string, trial indices to be used as test folds in a cross-validation scheme
+%                            (numel(cfg.testrials == number of folds))
+%   cfg.nfold              = scalar, indicating the number of test folds to
+%                            use in a cross-validation scheme
+%   cfg.standardiserefdata = string, 'yes' or 'no', whether or not to standardise reference data
+%                            prior to the regression (default = 'no')
+%   cfg.standardisedata    = string, 'yes' or 'no', whether or not to standardise dependent variable
+%                            prior to the regression (default = 'no')
+%   cfg.demeanrefdata      = string, 'yes' or 'no', whether or not to make
+%                            reference data zero mean prior to the regression (default = 'no')
+%   cfg.demeandata         = string, 'yes' or 'no', whether or not to make
+%                            dependent variable zero mean prior to the regression (default = 'no')
+%   cfg.threshold          = integer array, ([1 by 2] or [1 by numel(cfg.channel) + numel(cfg.reflags)]), 
+%                            regularization or shrinkage ('lambda') parameter to be loaded on the diagonal of the
+%                            penalty term (if cfg.method == 'mlrridge' or 'mlrqridge')
+%   cfg.updatesens         = string, 'yes' or 'no' (default = 'yes')
+%   cfg.perchannel         = string, 'yes' or 'no', or logical, whether or not to perform estimation of beta weights
+%                            separately per channel
+%   cfg.output             = string, 'model' or 'residual' (defaul = 'model'), 
+%                            specifies what is outputed in .trial field in <dataout> 
+%   cfg.performance        = string, 'Pearson' or 'r-squared' (default =
+%                            'Pearson'), indicating what performance metric is outputed in .weights(k).performance
+%                            field of <dataout> for the k-th fold     
+%
+% === cfg.threshold
+% if cfg.threshold is 1 x 2 integer array, cfg.threshold(1) parameter scales uniformly
+% in the dimension of predictor variable and cfg.threshold(2) in the space of
+% response variable
+%
+%
+
 % See also FT_PREPROCESSING, FT_DENOISE_SYNTHETIC, FT_DENOISE_PCA
 
 % Copyright (c) 2008-2009, Jan-Mathijs Schoffelen, CCNi Glasgow
@@ -62,9 +85,15 @@ function dataout = ft_denoise_tsr(cfg, varargin)
 %
 % $Id$
 
-% UNDOCUMENTED (perhaps to be removed)
-%   cfg.performance  = string, 'Pearson' or 'r-square' (default =
-%                      'Pearson')
+% UNDOCUMENTED OPTIONS (or possibly unused)
+% cfg.testsamples 
+% cfg.truncate   
+% cfg.trials        
+% 
+% === cfg.truncate
+% if cfg.truncate is integer n > 1, n will be the number of singular values kept.
+% if 0 < cfg.truncate < 1, the singular value spectrum will be thresholded at the
+% fraction cfg.truncate of the explained variance.
 
 % these are used by the ft_preamble/ft_postamble function and scripts
 ft_revision = '$Id$';
@@ -410,10 +439,8 @@ switch cfg.performance
     for k = 1:size(observed{1}, 1)
       tmp = nancov(cellcat(1, cellrowselect(observed,k), cellrowselect(predicted,k)), 1, 2, 1);
       weights.performance(k,1) = tmp(1,2)./sqrt(tmp(1,1).*tmp(2,2));
-      %weights.performance(i, 1) = corr(data.trial{1}(i, :)', predicted{1}(i,:)', 'type', 'Pearson', 'rows', 'pairwise');
     end
-  case 'r-squared'
-    
+  case 'r-squared' 
     tss = nansum(data.trial.^2, 2); % total sum of squares, testdata are already mean subtracted in l. 330
     rss = nansum((data.trial - predicted).^2, 2);  % sum of squared residual error
     % R-squared
