@@ -532,7 +532,7 @@ switch fileformat
       R = digitizer2meg(1:3,1:3);
       T = digitizer2meg(1:3,4);
       % Transform to MEG coordinate:
-      shape.pos = transpose( R * [[dig_pnt.x]; [dig_pnt.y]; [dig_pnt.z]] + T ).*100; % unit: cm
+      shape.pos = transpose( R * [[dig_pnt.x]; [dig_pnt.y]; [dig_pnt.z]] + repmat(T, 1, numel(dig_pnt))).*100; % unit: cm
       shape.label = transpose( deblank({dig_pnt(1:end).name}));
       % Fiducial points
       nas = find(strcmpi(shape.label, 'fidnz'));
