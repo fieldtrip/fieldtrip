@@ -1,23 +1,22 @@
-function [dataout] = ft_heartrate(cfg, datain)
+function [dataout] = ft_respiration(cfg, datain)
 
-% FT_HEARTRATE estimates the heart rate from a continuous PPG or ECG channel. It
-% returns a new data structure with a continuous representation of the heartrate in
-% beats per minute.
+% FT_RESPIRATION estimates the respiration rate from a respiration belt, temperature
+% sensor, movement sensor or from the heart rate. It returns a new data structure
+% with a continuous representation of the rate and phase.
 %
 % Use as
-%   dataout = ft_heartrate(cfg, data)
+%   dataout = ft_respiration(cfg, data)
 % where the input data is a structure as obtained from FT_PREPROCESSING.
 %
 % The configuration structure has the following options
 %   cfg.channel          = selected channel for processing, see FT_CHANNELSELECTION
-%   cfg.envelopewindow   = scalar, time in seconds
-%   cfg.threshold        = scalar, between 0 and 1 (default = 0.4)
+%   cfg.peakseparation   = scalar, time in seconds
 %   cfg.feedback         = 'yes' or 'no'
 % The input data can be preprocessed on the fly using
-%   cfg.preproc.bpfilter = 'yes' or 'no'
+%   cfg.preproc.bpfilter = 'yes' or 'no' (default = 'yes')
 %   cfg.preproc.bpfreq   = [low high], filter frequency in Hz
 %
-% See also FT_ELECTRODERMALACTIVITY, FT_HEADMOVEMENT, FT_REGRESSCONFOUND
+% See also FT_HEARTRATE, FT_ELECTRODERMALACTIVITY, FT_HEADMOVEMENT, FT_REGRESSCONFOUND
 
 % Copyright (C) 2018, Robert Oostenveld, DCCN
 %
@@ -67,25 +66,21 @@ end
 % check if the input data is valid for this function, the input data must be raw
 datain = ft_checkdata(datain, 'datatype', 'raw', 'feedback', 'yes');
 
-% ensure that users with old scripts are aware of changes
-cfg = ft_checkconfig(cfg, 'forbidden', 'medianwindow');
-
 % set the default options
 cfg.channel          = ft_getopt(cfg, 'channel', {});
-cfg.envelopewindow   = ft_getopt(cfg, 'envelopewindow', 10);  % in seconds
-cfg.threshold        = ft_getopt(cfg, 'threshold', 0.4);      % between 0 and 1
+cfg.peakseparation   = ft_getopt(cfg, 'peakseparation', 3);   % in seconds
 cfg.feedback         = ft_getopt(cfg, 'feedback', 'yes');
 cfg.preproc          = ft_getopt(cfg, 'preproc', []);
-% the expected rate is around 80 bpm, which means 80/60=1.33 Hz
+% the expected respiration rate is around 0.40 Hz
 cfg.preproc.bpfilter    = ft_getopt(cfg.preproc, 'bpfilter', 'yes');
 cfg.preproc.bpfilttype  = ft_getopt(cfg.preproc, 'bpfilttype', 'but');
 cfg.preproc.bpfiltdir   = ft_getopt(cfg.preproc, 'bpfiltdir', 'twopass');
 cfg.preproc.bpfiltord   = ft_getopt(cfg.preproc, 'bpfiltord', 2);
-cfg.preproc.bpfreq      = ft_getopt(cfg.preproc, 'bpfreq', [1/3 3] * 1.33);  % in Hz
+cfg.preproc.bpfreq      = ft_getopt(cfg.preproc, 'bpfreq', [1/3 3] * 0.40);  % in Hz
 
 % copy some of the fields over to the new data structure
 dataout = keepfields(datain, {'time', 'fsample', 'sampleinfo', 'trialinfo'});
-dataout.label = {'heartrate', 'heartbeatphase', 'heartbeatonset'};
+dataout.label = {'respirationrate', 'respirationphase', 'respirationonset'};
 dataout.trial = {};  % this is to be determined in the main code
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -97,18 +92,18 @@ assert(numel(cfg.channel)==1, 'you should specify exactly one channel');
 
 chansel = strcmp(datain.label, cfg.channel{1});
 fsample = datain.fsample;
-envelopewindow = round(cfg.envelopewindow*fsample); % in samples
+peakseparation  = round(cfg.peakseparation*fsample);  % in samples
 
 for trllop=1:numel(datain.trial)
   dat   = datain.trial{trllop}(chansel,:);
   label = datain.label(chansel);
   time  = datain.time{trllop};
   
-  [yupper,ylower] = envelope(dat, envelopewindow, 'rms');
+  [yupper,ylower] = envelope(dat, peakseparation, 'rms');
   
   if istrue(cfg.feedback)
     figure
-    subplot(4,1,1)
+    subplot(5,1,1)
     hold on
     plot(time, dat)
     plot(time, yupper, 'g');
@@ -119,13 +114,13 @@ for trllop=1:numel(datain.trial)
   end
   
   if ~isempty(cfg.preproc)
-    % apply the preprocessing to teh selected channel
+    % apply the preprocessing to the selected channel
     [dat, label, time, cfg.preproc] = preproc(dat, label, time, cfg.preproc, 0, 0);
   end
-  [yupper,ylower] = envelope(dat, envelopewindow, 'rms');
+  [yupper,ylower] = envelope(dat, peakseparation, 'peak');
   
   if istrue(cfg.feedback)
-    subplot(4,1,2)
+    subplot(5,1,2)
     hold on
     plot(time, dat)
     plot(time, yupper, 'g');
@@ -136,49 +131,58 @@ for trllop=1:numel(datain.trial)
   end
   
   dat = (dat - ylower) ./ (yupper - ylower);
-  [yupper,ylower] = envelope(dat, envelopewindow, 'rms');
-  
-  % find the sample numbers where the filtered value increases above the threshold
-  [vals, peaks] = findpeaks(dat, 'MinPeakHeight', cfg.threshold);
+  [yupper,ylower] = envelope(dat, peakseparation, 'rms');
   
   if istrue(cfg.feedback)
-    subplot(4,1,3)
+    subplot(5,1,3)
     hold on
     plot(time, dat)
     plot(time, yupper, 'g');
     plot(time, ylower, 'g');
-    plot(time(peaks), vals, 'r*');
     xlim([min(time) max(time)])
     xlabel('time (s)');
     title('locally rescaled')
   end
   
+  x = angle(hilbert(dat));
+  % apply the same preprocessing to the phase timeseries
+  y = preproc(x, label, time, cfg.preproc, 0, 0);
+  % find the downward going zero-crossings
+  onset = findzerocrossing(y, fsample/10);
+  
   % construct a continuous channel with the rate and the phase
   rate  = nan(size(dat));
   phase = nan(size(dat));
-  for i=1:length(peaks)-1
-    begsample = peaks(i);
-    endsample = peaks(i+1);
-    rate(begsample:endsample)  = 60 * fsample/(endsample-begsample); % in bpm
+  for i=1:length(onset)-1
+    begsample = onset(i);
+    endsample = onset(i+1);
+    rate(begsample:endsample)  = fsample/(endsample-begsample);
     phase(begsample:endsample) = linspace(-pi, pi, (endsample-begsample+1));
   end
-  % also construct a boolean channel with a pulse at the beat onset
+  % also construct a boolean channel with a pulse at the respiration onset
   tmp = zeros(size(dat));
-  tmp(peaks) = 1;
+  tmp(onset) = 1;
   
   % add the continuous channels to the output structure
   dataout.trial{trllop} = [rate; phase; tmp];
   
   if istrue(cfg.feedback)
-    subplot(4,1,4)
+    subplot(5,1,4)
     plot(time, rate)
-    ylim([0 160])
     xlim([min(time) max(time)])
     xlabel('time (s)');
-    ylabel('rate (bpm)');
+    ylabel('rate (Hz)');
   end
   
-  ft_info('heart rate in trial %d: mean=%.1f, min=%.1f, max=%.1f\n', trllop, nanmean(rate), nanmin(rate), nanmax(rate));
+  if istrue(cfg.feedback)
+    subplot(5,1,5)
+    plot(time, phase)
+    xlim([min(time) max(time)])
+    xlabel('time (s)');
+    ylabel('phase');
+  end
+  
+  ft_info('breathing rate in trial %d: mean=%.2f, min=%.2f, max=%.2f\n', trllop, nanmean(rate), nanmin(rate), nanmax(rate));
   
 end % for trllop
 
@@ -192,3 +196,11 @@ ft_postamble previous   datain
 ft_postamble provenance dataout
 ft_postamble history    dataout
 ft_postamble savevar    dataout
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function indx = findzerocrossing(x, n)
+bool = x(1:(end-n))>0 & x((1+n):end)<0;
+indx = find(diff([0 bool])>0);
+indx = indx + ceil(n/2);
