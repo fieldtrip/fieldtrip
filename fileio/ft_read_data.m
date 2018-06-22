@@ -696,6 +696,10 @@ switch dataformat
     % pass the header along to speed it up, it will be read on the fly in case it is empty
     dat = read_mff_data(filename, 'sample', begsample, endsample, chanindx, hdr);
 
+  case 'egi_mff_v3'
+    ft_hastoolbox('mffmatlabio', 1);
+    dat = mff_fileio_read_data(filename, 'header', hdr, 'begtrial', begtrial, 'endtrial', endtrial, 'chanindx', chanindx);      
+    
   case 'edf'
     % this reader is largely similar to the one for bdf
     % it uses a mex file for reading the 16 bit data
