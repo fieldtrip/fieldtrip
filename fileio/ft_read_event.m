@@ -810,13 +810,18 @@ switch eventformat
       end
     end
 
-  case {'egi_mff_v1' 'egi_mff'} % this is currently the default
+  case 'egi_mff_v1'
     % The following represents the code that was written by Ingrid, Robert
     % and Giovanni to get started with the EGI mff dataset format. It might
     % not support all details of the file formats.
+    %
     % An alternative implementation has been provided by EGI, this is
     % released as fieldtrip/external/egi_mff and referred further down in
     % this function as 'egi_mff_v2'.
+    %
+    % An more recent implementation has been provided by EGI and Arno Delorme, this
+    % is released as https://github.com/arnodelorme/mffmatlabio and referred further
+    % down in this function as 'egi_mff_v3'.
 
     if isempty(hdr)
       % use the corresponding code to read the header
@@ -974,7 +979,7 @@ switch eventformat
       event = rmfield(event, fn{i});
     end
     
-  case 'egi_mff_v3'
+  case {'egi_mff_v3' 'egi_mff'} % this is the default
     ft_hastoolbox('mffmatlabio', 1);
     event = mff_fileio_read_event(filename);
 

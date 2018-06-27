@@ -944,7 +944,7 @@ switch headerformat
     hdr.orig.CateNames   = CateNames;
     hdr.orig.CatLengths  = CatLengths;
 
-  case {'egi_mff_v1' 'egi_mff'} % this is currently the default
+  case 'egi_mff_v1'
     % The following represents the code that was written by Ingrid, Robert
     % and Giovanni to get started with the EGI mff dataset format. It might
     % not support all details of the file formats.
@@ -1210,7 +1210,7 @@ switch headerformat
     end
     hdr = read_mff_header(filename);
 
-  case 'egi_mff_v3'
+  case {'egi_mff_v3' 'egi_mff'} % this is the default
     ft_hastoolbox('mffmatlabio', 1);
     hdr = mff_fileio_read_header(filename);
 
