@@ -11,6 +11,7 @@ function [dataout] = ft_respiration(cfg, datain)
 % The configuration structure has the following options
 %   cfg.channel          = selected channel for processing, see FT_CHANNELSELECTION
 %   cfg.peakseparation   = scalar, time in seconds
+%   cfg.envelopewindow   = scalar, time in seconds
 %   cfg.feedback         = 'yes' or 'no'
 % The input data can be preprocessed on the fly using
 %   cfg.preproc.bpfilter = 'yes' or 'no' (default = 'yes')
@@ -68,6 +69,7 @@ datain = ft_checkdata(datain, 'datatype', 'raw', 'feedback', 'yes');
 
 % set the default options
 cfg.channel          = ft_getopt(cfg, 'channel', {});
+cfg.envelopewindow   = ft_getopt(cfg, 'envelopewindow', []);  % in seconds
 cfg.peakseparation   = ft_getopt(cfg, 'peakseparation', 3);   % in seconds
 cfg.feedback         = ft_getopt(cfg, 'feedback', 'yes');
 cfg.preproc          = ft_getopt(cfg, 'preproc', []);
@@ -92,14 +94,17 @@ assert(numel(cfg.channel)==1, 'you should specify exactly one channel');
 
 chansel = strcmp(datain.label, cfg.channel{1});
 fsample = datain.fsample;
-peakseparation  = round(cfg.peakseparation*fsample);  % in samples
 
 for trllop=1:numel(datain.trial)
   dat   = datain.trial{trllop}(chansel,:);
   label = datain.label(chansel);
   time  = datain.time{trllop};
   
-  [yupper,ylower] = envelope(dat, peakseparation, 'rms');
+  if ~isempty(cfg.peakseparation)
+    [yupper,ylower] = envelope(dat, round(cfg.peakseparation*fsample), 'peaks');
+  elseif ~isempty(cfg.envelopewindow)
+    [yupper,ylower] = envelope(dat, round(cfg.envelopewindow*fsample), 'rms');
+  end
   
   if istrue(cfg.feedback)
     figure
@@ -117,7 +122,12 @@ for trllop=1:numel(datain.trial)
     % apply the preprocessing to the selected channel
     [dat, label, time, cfg.preproc] = preproc(dat, label, time, cfg.preproc, 0, 0);
   end
-  [yupper,ylower] = envelope(dat, peakseparation, 'peak');
+  
+  if ~isempty(cfg.peakseparation)
+    [yupper,ylower] = envelope(dat, round(cfg.peakseparation*fsample), 'peaks');
+  elseif ~isempty(cfg.envelopewindow)
+    [yupper,ylower] = envelope(dat, round(cfg.envelopewindow*fsample), 'rms');
+  end
   
   if istrue(cfg.feedback)
     subplot(5,1,2)
@@ -131,7 +141,12 @@ for trllop=1:numel(datain.trial)
   end
   
   dat = (dat - ylower) ./ (yupper - ylower);
-  [yupper,ylower] = envelope(dat, peakseparation, 'rms');
+  
+  if ~isempty(cfg.peakseparation)
+    [yupper,ylower] = envelope(dat, round(cfg.peakseparation*fsample), 'peaks');
+  elseif ~isempty(cfg.envelopewindow)
+    [yupper,ylower] = envelope(dat, round(cfg.envelopewindow*fsample), 'rms');
+  end
   
   if istrue(cfg.feedback)
     subplot(5,1,3)
