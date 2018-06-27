@@ -952,6 +952,10 @@ switch headerformat
     % An alternative implementation has been provided by EGI, this is
     % released as fieldtrip/external/egi_mff and referred further down in
     % this function as 'egi_mff_v2'.
+    %
+    % An more recent implementation has been provided by EGI and Arno Delorme, this
+    % is released as https://github.com/arnodelorme/mffmatlabio and referred further
+    % down in this function as 'egi_mff_v3'.
 
     if ~usejava('jvm')
       ft_error('the xml2struct requires MATLAB to be running with the Java virtual machine (JVM)');

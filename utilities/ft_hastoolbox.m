@@ -154,6 +154,7 @@ url = {
   'CELLFUNCTION'  'see https://github.com/schoffelen/cellfunction'
   'MARS'          'see http://www.parralab.org/mars'
   'JSONLAB'       'see https://se.mathworks.com/matlabcentral/fileexchange/33381-jsonlab--a-toolbox-to-encode-decode-json-files'
+  'MFFMATLABIO'   'see https://github.com/arnodelorme/mffmatlabio'
   };
 
 if nargin<2
@@ -313,6 +314,8 @@ switch toolbox
     dependency = {'macaque71.mat', 'motif4funct_wei'};
   case 'CCA'
     dependency = {'ccabss'};
+  case 'MFFMATLABIO'
+    dependency = {'eegplugin_mffmatlabio', 'mff_getobj'};
   case 'EGI_MFF'
     dependency = {'mff_getObject', 'mff_getSummaryInfo'};
   case 'TOOLBOX_GRAPH'
