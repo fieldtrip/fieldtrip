@@ -1206,6 +1206,10 @@ switch headerformat
     end
     hdr = read_mff_header(filename);
 
+  case 'egi_mff_v3'
+    ft_hastoolbox('mffmatlabio', 1);
+    hdr = mff_fileio_read_header(filename);
+
   case 'fcdc_buffer'
     % read from a networked buffer for realtime analysis
     [host, port] = filetype_check_uri(filename);

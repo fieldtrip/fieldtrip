@@ -973,6 +973,10 @@ switch eventformat
     for i=1:length(fn)
       event = rmfield(event, fn{i});
     end
+    
+  case 'egi_mff_v3'
+    ft_hastoolbox('mffmatlabio', 1);
+    event = mff_fileio_read_event(filename);
 
   case 'smi_txt'
     if isempty(hdr)
