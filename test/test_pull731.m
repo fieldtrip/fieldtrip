@@ -46,7 +46,7 @@ headerformat = 'egi_mff_v1';
 dataformat   = 'egi_mff_v1';
 eventformat  = 'egi_mff_v1';
 
-for i=6:length(dataset)
+for i=1:length(dataset)
   try
     hdr   = ft_read_header(dataset{i}, 'headerformat', headerformat);
     dat   = ft_read_data(dataset{i},   'headerformat', headerformat, 'dataformat', dataformat);
@@ -103,7 +103,7 @@ end
 
 %% compare the v1 results to the v2 results (where possible)
 for i=1:length(dataset)
-  if isempty(v2_hdr{i})
+  if isempty(v1_hdr{i}) || isempty(v2_hdr{i})
     fprintf('not comparing v1 and v2 for dataset %d\n', i);
   else
     fprintf('comparing v1 and v2 for dataset %d\n', i);
