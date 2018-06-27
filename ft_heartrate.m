@@ -11,6 +11,7 @@ function [dataout] = ft_heartrate(cfg, datain)
 % The configuration structure has the following options
 %   cfg.channel          = selected channel for processing, see FT_CHANNELSELECTION
 %   cfg.envelopewindow   = scalar, time in seconds
+%   cfg.peakseparation   = scalar, time in seconds
 %   cfg.threshold        = scalar, between 0 and 1 (default = 0.4)
 %   cfg.feedback         = 'yes' or 'no'
 % The input data can be preprocessed on the fly using
@@ -73,6 +74,7 @@ cfg = ft_checkconfig(cfg, 'forbidden', 'medianwindow');
 % set the default options
 cfg.channel          = ft_getopt(cfg, 'channel', {});
 cfg.envelopewindow   = ft_getopt(cfg, 'envelopewindow', 10);  % in seconds
+cfg.peakseparation   = ft_getopt(cfg, 'peakseparation', []);  % in seconds
 cfg.threshold        = ft_getopt(cfg, 'threshold', 0.4);      % between 0 and 1
 cfg.feedback         = ft_getopt(cfg, 'feedback', 'yes');
 cfg.preproc          = ft_getopt(cfg, 'preproc', []);
@@ -81,7 +83,7 @@ cfg.preproc.bpfilter    = ft_getopt(cfg.preproc, 'bpfilter', 'yes');
 cfg.preproc.bpfilttype  = ft_getopt(cfg.preproc, 'bpfilttype', 'but');
 cfg.preproc.bpfiltdir   = ft_getopt(cfg.preproc, 'bpfiltdir', 'twopass');
 cfg.preproc.bpfiltord   = ft_getopt(cfg.preproc, 'bpfiltord', 2);
-cfg.preproc.bpfreq      = ft_getopt(cfg.preproc, 'bpfreq', [1/3 3] * 1.33);  % in Hz
+cfg.preproc.bpfreq      = ft_getopt(cfg.preproc, 'bpfreq', [1/3 10] * 1.33);  % in Hz
 
 % copy some of the fields over to the new data structure
 dataout = keepfields(datain, {'time', 'fsample', 'sampleinfo', 'trialinfo'});
@@ -97,14 +99,22 @@ assert(numel(cfg.channel)==1, 'you should specify exactly one channel');
 
 chansel = strcmp(datain.label, cfg.channel{1});
 fsample = datain.fsample;
-envelopewindow = round(cfg.envelopewindow*fsample); % in samples
 
 for trllop=1:numel(datain.trial)
   dat   = datain.trial{trllop}(chansel,:);
   label = datain.label(chansel);
   time  = datain.time{trllop};
   
-  [yupper,ylower] = envelope(dat, envelopewindow, 'rms');
+  if skewness(dat)<0
+    ft_notice('flipping signal polarity');
+    dat = -dat;
+  end
+  
+  if ~isempty(cfg.peakseparation)
+    [yupper,ylower] = envelope(dat, round(cfg.peakseparation*fsample), 'peaks');
+  elseif ~isempty(cfg.envelopewindow)
+    [yupper,ylower] = envelope(dat, round(cfg.envelopewindow*fsample), 'rms');
+  end
   
   if istrue(cfg.feedback)
     figure
@@ -119,10 +129,15 @@ for trllop=1:numel(datain.trial)
   end
   
   if ~isempty(cfg.preproc)
-    % apply the preprocessing to teh selected channel
+    % apply the preprocessing to the selected channel
     [dat, label, time, cfg.preproc] = preproc(dat, label, time, cfg.preproc, 0, 0);
   end
-  [yupper,ylower] = envelope(dat, envelopewindow, 'rms');
+  
+  if ~isempty(cfg.peakseparation)
+    [yupper,ylower] = envelope(dat, round(cfg.peakseparation*fsample), 'peaks');
+  elseif ~isempty(cfg.envelopewindow)
+    [yupper,ylower] = envelope(dat, round(cfg.envelopewindow*fsample), 'rms');
+  end
   
   if istrue(cfg.feedback)
     subplot(4,1,2)
@@ -136,7 +151,12 @@ for trllop=1:numel(datain.trial)
   end
   
   dat = (dat - ylower) ./ (yupper - ylower);
-  [yupper,ylower] = envelope(dat, envelopewindow, 'rms');
+  
+  if ~isempty(cfg.peakseparation)
+    [yupper,ylower] = envelope(dat, round(cfg.peakseparation*fsample), 'peaks');
+  elseif ~isempty(cfg.envelopewindow)
+    [yupper,ylower] = envelope(dat, round(cfg.envelopewindow*fsample), 'rms');
+  end
   
   % find the sample numbers where the filtered value increases above the threshold
   [vals, peaks] = findpeaks(dat, 'MinPeakHeight', cfg.threshold);
