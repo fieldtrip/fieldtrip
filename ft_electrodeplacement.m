@@ -217,9 +217,7 @@ switch cfg.method
     % give the user instructions
     disp('Use the mouse to click on the desired position for the electrode');
     disp('Subsequently use the mouse to click on the corresponding electrode label');
-    disp('Press "r" to delete the last point add');
-    disp('Press "+/-" to zoom in/out');
-    disp('Press "w/a/s/d" to rotate');
+    disp('Press "v" to update the light position');
     disp('Press "q" when you are done');
     
     % plot the faces of the 2D or 3D triangulation
