@@ -525,7 +525,7 @@ switch fileformat
         shape.fid.label = {'nas'; 'lpa'; 'rpa'; 'Marker4'; 'Marker5'};
       end
     else
-      ft_info('The input file is a third-party-exported one icluding the digitized points\n');
+      ft_info('The input file is a third-party-exported one including the digitized points\n');
       % All digitized points
       dig_pnt = hdr.orig.digitize.point;
       digitizer2meg = hdr.orig.digitize.info.digitizer2meg;
@@ -565,12 +565,20 @@ switch fileformat
   case {'yokogawa_mrk', 'yokogawa_ave', 'yokogawa_con'}
     if ft_hastoolbox('yokogawa_meg_reader')
       hdr = read_yokogawa_header_new(filename);
-
-      %% An exported file or an original one
-      isexported = hdr.orig.digitize.info.done;
-
       %% Marker-coil positions
       mrk_pnt = hdr.orig.coregist.hpi;
+
+      % markers 1-3 identical to zero: try *.mrk file
+      if ~any([mrk_pnt(:).meg_pos])
+        ft_info('Reading marker-coil positions from a .mrk file\n');
+        [p, f, x] = fileparts(filename);
+        filename = fullfile(p, [f '.mrk']);
+        if exist(filename, 'file')
+          hdr_tmp = read_yokogawa_header_new(filename);
+          mrk_pnt = hdr_tmp.orig.coregist.hpi;
+        end
+      end
+
       if any([mrk_pnt(:).meg_pos])
         mrk_pos = cat(1, mrk_pnt(1:end).meg_pos);
         mrk_label = transpose({mrk_pnt(1:end).label});
@@ -582,6 +590,9 @@ switch fileformat
         ft_error('No coil information found in the file');
       end
 
+      %% An exported file or an original one
+      isexported = hdr.orig.digitize.info.done;
+
       %% Digitized points
       if ~isexported
         ft_info('The input file is an original one: only marker-coil positions are loaded\n');
@@ -591,7 +602,7 @@ switch fileformat
           shape.fid.label = {'nas'; 'lpa'; 'rpa'; 'Marker4'; 'Marker5'};
         end
       else
-        ft_info('The input file is a third-party-exported one icluding the digitized points\n');
+        ft_info('The input file is a third-party-exported one including the digitized points\n');
         % All digitized points
         dig_pnt = hdr.orig.digitize.point;
         digitizer2meg = hdr.orig.digitize.info.digitizer2meg;
@@ -627,7 +638,8 @@ switch fileformat
       end
       % 'cm' as a unit for 'pos':
       shape.unit = 'cm';
-    else
+
+    else  % the case that "yokogawa_meg_reader" is not available
       hdr = read_yokogawa_header(filename);
       marker = hdr.orig.matching_info.marker;
       % markers 1-3 identical to zero: try *.mrk file
@@ -635,13 +647,8 @@ switch fileformat
         [p, f, x] = fileparts(filename);
         filename = fullfile(p, [f '.mrk']);
         if exist(filename, 'file')
-          if ft_hastoolbox('yokogawa_meg_reader')
-            hdr = read_yokogawa_header_new(filename);
-            marker = hdr.orig.coregist.hpi;
-          else
-            hdr = read_yokogawa_header(filename);
-            marker = hdr.orig.matching_info.marker;
-          end
+          hdr = read_yokogawa_header(filename);
+          marker = hdr.orig.matching_info.marker;
         end
       end
 
@@ -659,42 +666,42 @@ switch fileformat
       shape = ft_convert_units(shape, 'cm');
     end
 
-    case 'yokogawa_raw'
-      if ft_hastoolbox('yokogawa_meg_reader')
-        hdr = read_yokogawa_header_new(filename);
-        marker = hdr.orig.coregist.hpi;
-      else
-        hdr = read_yokogawa_header(filename);
-        marker = hdr.orig.matching_info.marker;
-      end
+  case 'yokogawa_raw'
+    if ft_hastoolbox('yokogawa_meg_reader')
+      hdr = read_yokogawa_header_new(filename);
+      marker = hdr.orig.coregist.hpi;
+    else
+      hdr = read_yokogawa_header(filename);
+      marker = hdr.orig.matching_info.marker;
+    end
 
-      % markers 1-3 identical to zero: try *.mrk file
-      if ~any([marker(:).meg_pos])
-        [p, f, x] = fileparts(filename);
-        filename = fullfile(p, [f '.mrk']);
-        if exist(filename, 'file')
-          if ft_hastoolbox('yokogawa_meg_reader')
-            hdr = read_yokogawa_header_new(filename);
-            marker = hdr.orig.coregist.hpi;
-          else
-            hdr = read_yokogawa_header(filename);
-            marker = hdr.orig.matching_info.marker;
-          end
+    % markers 1-3 identical to zero: try *.mrk file
+    if ~any([marker(:).meg_pos])
+      [p, f, x] = fileparts(filename);
+      filename = fullfile(p, [f '.mrk']);
+      if exist(filename, 'file')
+        if ft_hastoolbox('yokogawa_meg_reader')
+          hdr = read_yokogawa_header_new(filename);
+          marker = hdr.orig.coregist.hpi;
+        else
+          hdr = read_yokogawa_header(filename);
+          marker = hdr.orig.matching_info.marker;
         end
       end
+    end
 
-      % non zero markers 1-3
-      if any([marker(:).meg_pos])
-        shape.fid.pos = cat(1, marker(1:5).meg_pos);
-        sw_ind = [3 1 2];
-        shape.fid.pos(1:3,:)= shape.fid.pos(sw_ind, :);
-        shape.fid.label = {'nas'; 'lpa'; 'rpa'; 'Marker4'; 'Marker5'};
-      else
-        ft_error('no coil information found in Yokogawa file');
-      end
+    % non zero markers 1-3
+    if any([marker(:).meg_pos])
+      shape.fid.pos = cat(1, marker(1:5).meg_pos);
+      sw_ind = [3 1 2];
+      shape.fid.pos(1:3,:)= shape.fid.pos(sw_ind, :);
+      shape.fid.label = {'nas'; 'lpa'; 'rpa'; 'Marker4'; 'Marker5'};
+    else
+      ft_error('no coil information found in Yokogawa file');
+    end
 
-      % convert to the units of the grad, the desired default for yokogawa is centimeter.
-      shape = ft_convert_units(shape, 'cm');
+    % convert to the units of the grad, the desired default for yokogawa is centimeter.
+    shape = ft_convert_units(shape, 'cm');
 
 %  case {'yokogawa_mrk', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw' }
 %    if ft_hastoolbox('yokogawa_meg_reader')
