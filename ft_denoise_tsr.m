@@ -2,9 +2,12 @@ function dataout = ft_denoise_tsr(cfg, varargin)
 
 % FT_DENOISE_TSR performs a regression analysis, using a (time-shifted set
 % of) reference signal(s) as independent variable. It is a generic
-% implementation of the method described by De Cheveigne ({REF}), or can be
-% used to compute temporal-response-functions (see e.g. Lalor {REF}), or
-% spatial filters based on canonical correlation (see Desain {REF})
+% implementation of the method described by De Cheveigne 
+% (https://doi.org/10.1016/j.jneumeth.2007.06.003), or can be
+% used to compute temporal-response-functions (see e.g. Crosse 
+% (https://doi.org/10.3389/fnhum.2016.00604)), or
+% spatial filters based on canonical correlation (see Thielen
+% (https://doi.org/10.1371/journal.pone.0133797))
 %
 % Use as
 %   [dataout] = ft_denoise_tsr(cfg, data)
