@@ -4,26 +4,26 @@ function ft_standalone(varargin)
 % The compiled application can be used to execute FieldTrip data analysis
 % scripts. 
 %
-% This function can be started on the MATLAB command line as
-%   ft_standalone  script.m
-%   ft_standalone  script1.m script2.m ...
-%   ft_standalone  jobfile.mat
-% or after compilation on the Linux command line as
-%   run_fieldtrip.sh <MATLABROOT>  script.m
-%   run_fieldtrip.sh <MATLABROOT>  script1.m script2.m ...
-%   run_fieldtrip.sh <MATLABROOT>  jobfile.mat
+% This function can be started on the interactive MATLAB command line as
+%   ft_standalone script.m
+%   ft_standalone script1.m script2.m ...
+%   ft_standalone jobfile.mat
+% or after compilation on the Linux/macOS command line as
+%   fieldtrip.sh <MATLABROOT> script.m
+%   fieldtrip.sh <MATLABROOT> script1.m script2.m ...
+%   fieldtrip.sh <MATLABROOT> jobfile.mat
 %
 % It is possible to pass additional options on the MATLAB command line like
 % this on the MATLAB command line
 %   ft_standalone --option value scriptname.m
-% or on the Linux command line
+% or on the Linux/macOS command line
 %   fieldtrip.sh <MATLABROOT> --option value scriptname.m
 % The options and their values are automaticallly made available as local
 % variables in the script execution environment.
 %
 % See also FT_COMPILE_STANDALONE
 
-% Copyright (C) 2011-2015 by Robert Oostenveld
+% Copyright (C) 2011-2018 by Robert Oostenveld
 %
 % This file is part of FieldTrip.
 %
@@ -48,9 +48,9 @@ workspace = 'caller';
 if nargin==0
   % show the help for the compiled application
   fprintf('You should start the compiled FieldTrip application like this:\n');
-  fprintf('  run_fieldtrip.sh <MATLABROOT>  script.m\n');
-  fprintf('  run_fieldtrip.sh <MATLABROOT>  script1.m script2.m ...\n');
-  fprintf('  run_fieldtrip.sh <MATLABROOT>  jobfile.mat\n');
+  fprintf('  fieldtrip <MATLABROOT>  script.m\n');
+  fprintf('  fieldtrip <MATLABROOT>  script1.m script2.m ...\n');
+  fprintf('  fieldtrip <MATLABROOT>  jobfile.mat\n');
   fprintf('\n');
   return
 end
