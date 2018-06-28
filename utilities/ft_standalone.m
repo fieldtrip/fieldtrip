@@ -2,7 +2,7 @@ function ft_standalone(varargin)
 
 % FT_STANDALONE is the entry function of the compiled FieldTrip application.
 % The compiled application can be used to execute FieldTrip data analysis
-% scripts. 
+% scripts.
 %
 % This function can be started on the interactive MATLAB command line as
 %   ft_standalone script.m
@@ -56,7 +56,7 @@ if nargin==0
 end
 
 % separate the --options from the filenames
-[options, varargin] = ft_getopt(varargin{:});
+[options, varargin] = hcp_getopt(varargin{:});
 
 if any(strcmp(options(1:2:end), 'version'))
   % only show the provenance information, do not run anything
@@ -64,19 +64,19 @@ if any(strcmp(options(1:2:end), 'version'))
 end
 
 % get the general provenance information (e.g. user and hostname)
-% prov = hcp_provenance;
+prov = hcp_provenance;
 
 for i=1:length(varargin)
   fname = varargin{i};
   
   % get the specific provenance information for the script
-  % prov.script{i}.filename = fname;
-  % prov.script{i}.md5sum   = hcp_md5sum(fname);
+  prov.script{i}.filename = fname;
+  prov.script{i}.md5sum   = hcp_md5sum(fname);
   
   % The following section with "which" does not work in the compiled application
   %
   %   if isempty(which(fname))
-  '  error('The file %s cannot be found\n',fname);
+  %     error('The file %s cannot be found\n', fname);
   %   end
   %   % ensure that the script name includes the full path and extension
   %   fname = which(fname);
@@ -94,7 +94,7 @@ for i=1:length(varargin)
       S = fscanf(fid,'%c');
       fclose(fid);
       
-      % prov.script{i}.content  = sprintf('\n%s\n', S);
+      prov.script{i}.content  = sprintf('\n%s\n', S);
       
       % capture all screen output in a diary file
       diary off
@@ -204,3 +204,4 @@ end % for each of the input arguments
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function assign(key, val)
 assignin('caller', key, val);
+
