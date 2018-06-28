@@ -87,21 +87,29 @@ ft_hastoolbox('qsub', 1);
 ft_hastoolbox('engine', 1);
 
 % ensure that all desired external toolboxes are added to the path
-% excluding spm2 (leading to more than one spm on the path -> confusion in FT)
+% excluding spm2 and spm8 since they result in more than one spm on the path -> confusion in FT)
+% excluding other toolboxes that are non-trivial to include in the compiled version
 exclude = {
   '.'
   '..'
   '.svn'
+  '.git'
   'eeglab'
   'dipoli'
   'dmlt'
   'iso2mesh'
   'simbio'
   'spm2'
+  'spm8'
   'sqdproject'
   'yokogawa'
   'yokogawa_meg_reader'
+  'ricoh_meg_reader'
+  'egi_mff'     % java
+  'mffmatlabio' % java
+  'neuroscope'  % isstring
   };
+
 extd = dir([fieldtriproot,'/external']);
 extd = setdiff({extd([extd.isdir]).name}, exclude);
 for k = 1:numel(extd)

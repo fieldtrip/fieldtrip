@@ -70,8 +70,8 @@ for i=1:length(varargin)
   fname = varargin{i};
   
   % get the specific provenance information for the script
-  prov.script{i}.filename = fname;
-  prov.script{i}.md5sum   = hcp_md5sum(fname);
+  % prov.script{i}.filename = fname;
+  % prov.script{i}.md5sum   = hcp_md5sum(fname);
   
   % The following section with "which" does not work in the compiled application
   %
@@ -94,7 +94,8 @@ for i=1:length(varargin)
       S = fscanf(fid,'%c');
       fclose(fid);
       
-      prov.script{i}.content  = sprintf('\n%s\n', S);
+      % store the script content in the provenance
+      % prov.script{i}.content  = sprintf('\n%s\n', S);
       
       % capture all screen output in a diary file
       diary off
@@ -103,12 +104,12 @@ for i=1:length(varargin)
       
       try
         % ensure that subsequent scripts do not interfere with each other
-        % keep the hcp_default global variable
-        global hcp_default
-        localcopy = hcp_default;
+        % keep the ft_default global variable
+        global ft_default
+        localcopy = ft_default;
         evalin(workspace,'clear all');
-        global hcp_default
-        hcp_default = localcopy;
+        global ft_default
+        ft_default = localcopy;
         
         % make the options available as local variables
         for j=1:2:length(options)
@@ -126,19 +127,19 @@ for i=1:length(varargin)
           end
         end
         
-        % add some information about the script to the global hcp_default variable
+        % add some information about the script to the global ft_default variable
         % this will be picked up by hcp_write_provenance
-        % hcp_default.prov.script = prov.script{i};
+        % ft_default.prov.script = prov.script{i};
         
         % evaluate this script
         evalin(workspace,S);
         
         % remove the provenance information about the script
-        % hcp_default.prov.script = [];
+        % ft_default.prov.script = [];
         
       catch err
         % remove the provenance information about the script
-        % hcp_default.prov.script = [];
+        % ft_default.prov.script = [];
         
         fprintf('Execution failed: %s\n', fname);
         rethrow(err);
