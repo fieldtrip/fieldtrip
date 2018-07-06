@@ -96,8 +96,6 @@ else
   ft_error('cannot determine, whether Ricoh toolbox is present');
 end
 
-% the data structure does not contain events, but flank detection on the trigger channel might reveal them
-% this is done below for all formats
 if isempty(event)
   ft_warning('no events were detected');
 end

@@ -978,7 +978,7 @@ switch eventformat
     for i=1:length(fn)
       event = rmfield(event, fn{i});
     end
-    
+
   case {'egi_mff_v3' 'egi_mff'} % this is the default
     ft_hastoolbox('mffmatlabio', 1);
     event = mff_fileio_read_event(filename);
@@ -2003,7 +2003,7 @@ switch eventformat
   case {'ricoh_ave', 'ricoh_con'}
     % use the Ricoh MEG Reader toolbox for the file reading
     ft_hastoolbox('ricoh_meg_reader', 1);
-    % the user should be able to specify the analog threshold, but the code falls back to '1.0' as default
+    % the user should be able to specify the analog threshold, but the code falls back to '1.6' as default
     % the user should be able to specify the trigger channels
     % the user should be able to specify the flank, but the code falls back to 'up' as default
     if isempty(detectflank)
@@ -2030,21 +2030,24 @@ switch eventformat
     if ~ft_hastoolbox('yokogawa', 0);
       ft_hastoolbox('yokogawa_meg_reader', 1);
     end
-    % the user should be able to specify the analog threshold
+    % the user should be able to specify the analog threshold, but the code falls back to '1.6' as default
     % the user should be able to specify the trigger channels
-    % the user should be able to specify the flank, but the code falls back to 'auto' as default
+    % the user should be able to specify the flank, but the code falls back to 'up' as default
     if isempty(detectflank)
-      detectflank = 'auto';
+      detectflank = 'up';
+    end
+    if isempty(threshold)
+      threshold = 1.6;
     end
     event = read_yokogawa_event(filename, 'detectflank', detectflank, 'trigindx', trigindx, 'threshold', threshold);
-    
+
   case 'artinis_oxy3'
     ft_hastoolbox('artinis', 1);
     if isempty(hdr)
       hdr = read_artinis_oxy3(filename);
     end
     event = read_artinis_oxy3(filename, true);
-    
+
     if isempty(trigindx) % indx gets precedence over labels! numbers before words
       triglabel = ft_getopt(varargin, 'triglabel', 'ADC*');  % this allows subselection of AD channels to be markes as trigger channels (for Artinis *.oxy3 data)
       trigindx = find(ismember(hdr.label, ft_channelselection(triglabel, hdr.label)));
