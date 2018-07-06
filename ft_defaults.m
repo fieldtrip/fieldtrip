@@ -94,6 +94,11 @@ if ~isfield(ft_default.toolbox, 'images'), ft_default.toolbox.images  = 'compat'
 if ~isfield(ft_default.toolbox, 'stats') , ft_default.toolbox.stats   = 'compat'; end % matlab or compat
 if ~isfield(ft_default.toolbox, 'signal'), ft_default.toolbox.signal  = 'compat'; end % matlab or compat
 
+% Some people mess up their path settings and then have
+% stuff on the path that should not be there.
+% The following will issue a warning
+checkIncorrectPath();
+
 % Check whether this ft_defaults function has already been executed. Note that we
 % should not use ft_default itself directly, because the user might have set stuff
 % in that struct already prior to ft_defaults being called for the first time.
@@ -316,3 +321,18 @@ if length(list)>1
 end
 end % function checkMultipleToolbox
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function checkIncorrectPath
+
+persistent v p
+if isempty(v) || isempty(p)
+  [v, p] = ft_version;
+end
+
+incorrect = fullfile(p, 'compat', 'incorrect');
+if contains(path, incorrect)
+  ft_warning('Your path is set up incorrectly.\nYou probably used addpath(genpath(''path_to_fieldtrip'')).\nThis can lead to unexpected behaviour.\nSee http://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');
+end
+end % function checkPath
