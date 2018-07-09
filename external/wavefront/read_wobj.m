@@ -28,6 +28,7 @@ function OBJ=read_wobj(fullfilename)
 %   figure, patch(FV,'facecolor',[1 0 0]); camlight
 %
 % Function is written by D.Kroon University of Twente (June 2010)
+% Modifications by Robert Oostenveld, see https://github.com/fieldtrip/fieldtrip/pull/739
 
 verbose=true;
 
