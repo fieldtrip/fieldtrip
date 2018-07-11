@@ -1,11 +1,9 @@
 function test_bug3438
 
-
 % WALLTIME 00:20:00
-% MEM 2gb
+% MEM 5gb
 
 % TEST ft_read_headshape
-
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3438'))
 
