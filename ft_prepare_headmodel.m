@@ -262,7 +262,7 @@ switch cfg.method
       tmpcfg.tissue = cfg.tissue;
       geometry = ft_prepare_mesh(tmpcfg, data);
     else
-      ft_error('Either a segmentated MRI or data with closed triangulated mesh is required as data input for the bemcp, dipoli or openmeeg method');
+      ft_error('Either a segmented MRI or data with closed triangulated mesh is required as data input for the bemcp, dipoli or openmeeg method');
     end
     
     if strcmp(cfg.method, 'bemcp')
