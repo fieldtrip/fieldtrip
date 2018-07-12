@@ -116,7 +116,7 @@ try
   end
    
   for ii=1:length(headmodel.bnd)
-    [junk,tname] = fileparts(tempname);
+    [junk,tname] = fileparts(['/tmp/mesh' num2str(ii)]);%; fileparts(tempname);
     bndfile{ii} = [tname '.tri'];
     om_save_tri(bndfile{ii}, bndom(ii).pos, bndom(ii).tri);
   end
