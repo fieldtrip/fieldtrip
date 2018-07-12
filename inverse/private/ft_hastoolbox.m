@@ -78,7 +78,8 @@ url = {
   'MATLAB2BESA'  'see http://www.besa.de/downloads/matlab/ and get the "MATLAB to BESA Export functions"'
   'EEPROBE'    'see http://www.ant-neuro.com, or contact Maarten van der Velde'
   'YOKOGAWA'   'this is deprecated, please use YOKOGAWA_MEG_READER instead'
-  'YOKOGAWA_MEG_READER' 'see http://www.yokogawa.com/me/me-login-en.htm'
+  'YOKOGAWA_MEG_READER' 'contact Ricoh engineers'
+  'RICOH_MEG_READER' 'contact Ricoh engineers'
   'BEOWULF'    'see http://robertoostenveld.nl, or contact Robert Oostenveld'
   'MENTAT'     'see http://robertoostenveld.nl, or contact Robert Oostenveld'
   'SON2'       'see http://www.kcl.ac.uk/depsta/biomedical/cfnr/lidierth.html, or contact Malcolm Lidierth'
@@ -143,8 +144,8 @@ url = {
   'BRAINSUITE'    'see http://brainsuite.bmap.ucla.edu/processing/additional-tools/'
   'BRAINVISA'     'see http://brainvisa.info'
   'FILEEXCHANGE'  'see http://www.mathworks.com/matlabcentral/fileexchange/'
-  'NEURALYNX_V6'  'see http://neuralynx.com/research_software/file_converters_and_utilities/ and take the version from Neuralynx (windows only)'
-  'NEURALYNX_V3'  'see http://neuralynx.com/research_software/file_converters_and_utilities/ and take the version from Ueli Rutishauser'
+  'NEURALYNX_V6'  'see https://neuralynx.com/software/category/matlab-netcom-utilities/ and take the version from Neuralynx'
+  'NEURALYNX_V3'  'see http://www.urut.ch/new/serendipity/index.php?/pages/nlxtomatlab.html'
   'NPMK'          'see https://github.com/BlackrockMicrosystems/NPMK'
   'VIDEOMEG'      'see https://github.com/andreyzhd/VideoMEG'
   'WAVEFRONT'     'see http://mathworks.com/matlabcentral/fileexchange/27982-wavefront-obj-toolbox'
@@ -152,6 +153,8 @@ url = {
   'BREWERMAP'     'see https://nl.mathworks.com/matlabcentral/fileexchange/45208-colorbrewer--attractive-and-distinctive-colormaps'
   'CELLFUNCTION'  'see https://github.com/schoffelen/cellfunction'
   'MARS'          'see http://www.parralab.org/mars'
+  'JSONLAB'       'see https://se.mathworks.com/matlabcentral/fileexchange/33381-jsonlab--a-toolbox-to-encode-decode-json-files'
+  'MFFMATLABIO'   'see https://github.com/arnodelorme/mffmatlabio'
   };
 
 if nargin<2
@@ -238,7 +241,9 @@ switch toolbox
   case 'YOKOGAWA16BITBETA6'
     dependency = @()hasyokogawa('16bitBeta6');
   case 'YOKOGAWA_MEG_READER'
-    dependency = @()hasyokogawa('1.4');
+    dependency = @()hasyokogawa('1.5');
+  case 'RICOH_MEG_READER'
+    dependency = @()hasricoh('1.0');
   case 'BEOWULF'
     dependency = {'evalwulf', 'evalwulf', 'evalwulf'};
   case 'MENTAT'
@@ -309,6 +314,8 @@ switch toolbox
     dependency = {'macaque71.mat', 'motif4funct_wei'};
   case 'CCA'
     dependency = {'ccabss'};
+  case 'MFFMATLABIO'
+    dependency = {'eegplugin_mffmatlabio', 'mff_getobj'};
   case 'EGI_MFF'
     dependency = {'mff_getObject', 'mff_getSummaryInfo'};
   case 'TOOLBOX_GRAPH'
@@ -371,8 +378,12 @@ switch toolbox
     dependency = {'ghdf5read' 'ghdf5fileimport'};
   case 'MARS'
     dependency = {'spm_mars_mrf'};
+  case 'JSONLAB'
+    dependency = {'loadjson' 'savejson'};
+  case 'PLOTLY'
+    dependency = {'fig2plotly' 'savejson'};
     
-    % the following are FieldTrip modules/toolboxes
+  % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
     dependency = {'ft_read_header', 'ft_read_data', 'ft_read_event', 'ft_read_sens'};
   case 'FORWARD'
@@ -409,13 +420,13 @@ end
 
 % try to determine the path of the requested toolbox
 if autoadd>0 && ~status
-  
+
   % for core FieldTrip modules
   prefix = fileparts(which('ft_defaults'));
   if ~status
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
-  
+
   % for external FieldTrip modules
   prefix = fullfile(fileparts(which('ft_defaults')), 'external');
   if ~status
@@ -427,7 +438,7 @@ if autoadd>0 && ~status
       feval(licensefile);
     end
   end
-  
+
   % for contributed FieldTrip extensions
   prefix = fullfile(fileparts(which('ft_defaults')), 'contrib');
   if ~status
@@ -439,25 +450,25 @@ if autoadd>0 && ~status
       feval(licensefile);
     end
   end
-  
+
   % for linux computers in the Donders Centre for Cognitive Neuroimaging
   prefix = '/home/common/matlab';
   if ~status && isdir(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
-  
+
   % for windows computers in the Donders Centre for Cognitive Neuroimaging
   prefix = 'h:\common\matlab';
   if ~status && isdir(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
-  
+
   % use the MATLAB subdirectory in your homedirectory, this works on linux and mac
   prefix = fullfile(getenv('HOME'), 'matlab');
   if ~status && isdir(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
-  
+
   if ~status
     % the toolbox is not on the path and cannot be added
     sel = find(strcmp(url(:,1), toolbox));

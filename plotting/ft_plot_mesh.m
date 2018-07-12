@@ -36,7 +36,7 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %   ft_plot_mesh(mesh, 'facecolor', 'skin', 'edgecolor', 'none')
 %   camlight
 %
-% See also TRIMESH, PATCH
+% See also FT_PLOT_HEADSHAPE, FT_PLOT_VOL, TRIMESH, PATCH
 
 % Copyright (C) 2009, Cristiano Micheli
 % Copyright (C) 2009-2015, Robert Oostenveld
@@ -315,6 +315,7 @@ switch maskstyle
     bgcolor = repmat(facecolor, [numel(vertexcolor) 1]);
     rgb     = bg_rgba2rgb(bgcolor, vertexcolor, cmap, clim, facealpha, alphamapping, alphalim);
     set(hs, 'FaceVertexCData', rgb, 'facecolor', 'interp');
+    if ~isempty(clim); caxis(clim); end % set colorbar scale to match [fcolmin fcolmax]
 end
 
 if faceindex

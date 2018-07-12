@@ -90,8 +90,12 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 
 % undocumented and non-recommended option (for SPM only)
 %   cfg.style       string, '2d' or '3d' (default = '2d')
+% undocumented, because inconsistent with cfg.rotate
+%   cfg.center      = string, can be 'yes' or 'no' (default = 'no')
+%   cfg.width       = [] or number
+%   cfg.height      = [] or number
 
-% Copyright (C) 2007-2013, Robert Oostenveld
+% Copyright (C) 2007-2018, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -143,7 +147,8 @@ end
 % set default configuration options
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-cfg.rotate       = ft_getopt(cfg, 'rotate',     []); % [] => rotation is determined based on the type of sensors
+cfg.rotate       = ft_getopt(cfg, 'rotate',     []); % [] => default rotation is determined based on the type of sensors
+cfg.center       = ft_getopt(cfg, 'translate', 'no');
 cfg.style        = ft_getopt(cfg, 'style',      '2d');
 cfg.projection   = ft_getopt(cfg, 'projection', 'polar');
 cfg.layout       = ft_getopt(cfg, 'layout',     []);
@@ -169,6 +174,8 @@ cfg.headshape    = ft_getopt(cfg, 'headshape',  []); % separate form cfg.mesh
 cfg.mri          = ft_getopt(cfg, 'mri',        []);
 cfg.outline      = ft_getopt(cfg, 'outline',    []); % default is handled below
 cfg.mask         = ft_getopt(cfg, 'mask',       []); % default is handled below
+cfg.width        = ft_getopt(cfg, 'width',      []);
+cfg.height       = ft_getopt(cfg, 'height',     []);
 
 if isempty(cfg.skipscale)
   if ischar(cfg.layout) && any(strcmp(cfg.layout, {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular', '1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column', '1row', '2row', '3row', '4row', '5row', '6row', '7row', '8row', '9row'}))
@@ -177,7 +184,6 @@ if isempty(cfg.skipscale)
     cfg.skipscale = 'no';
   end
 end
-
 
 if isempty(cfg.skipcomnt)
   if ischar(cfg.layout) && any(strcmp(cfg.layout, {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular', '1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column', '1row', '2row', '3row', '4row', '5row', '6row', '7row', '8row', '9row'}))
@@ -319,7 +325,7 @@ elseif isequal(cfg.layout, 'butterfly')
   layout.height  = ones(nchan,1) * 1.0;
   layout.mask    = {};
   layout.outline = {};
- 
+  
 elseif isequal(cfg.layout, 'vertical') || isequal(cfg.layout,'horizontal')
   if hasdata && ~isempty(data)
     % look at the data to determine the overlapping channels
@@ -448,7 +454,7 @@ elseif any(strcmp(cfg.layout, {'1row', '2row', '3row', '4row', '5row', '6row', '
   
   layout.mask    = {};
   layout.outline = {};
-
+  
 elseif isequal(cfg.layout, 'ordered')
   if hasdata
     % look at the data to determine the overlapping channels
@@ -493,7 +499,7 @@ elseif isequal(cfg.layout, 'ordered')
   
   layout.mask    = {};
   layout.outline = {};
-
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % try to generate layout from other configuration options
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -582,27 +588,27 @@ elseif ischar(cfg.optofile)
   ft_info('creating layout from optode file %s\n', cfg.optofile);
   sens = ft_read_sens(cfg.optofile, 'senstype', 'nirs');
   if (hasdata)
-    layout = opto2lay(sens, data.label);
+    layout = opto2lay(sens, data.label, cfg.rotate);
   else
-    layout = opto2lay(sens, sens.label);
+    layout = opto2lay(sens, sens.label, cfg.rotate);
   end
   
 elseif ~isempty(cfg.opto) && isstruct(cfg.opto)
   ft_info('creating layout from cfg.opto\n');
   sens = cfg.opto;
   if (hasdata)
-    layout = opto2lay(sens, data.label);
+    layout = opto2lay(sens, data.label, cfg.rotate);
   else
-    layout = opto2lay(sens, sens.label);
+    layout = opto2lay(sens, sens.label, cfg.rotate);
   end
   
 elseif isfield(data, 'opto') && isstruct(data.opto)
   ft_info('creating layout from data.opto\n');
   sens = data.opto;
   if (hasdata)
-    layout = opto2lay(sens, data.label);
+    layout = opto2lay(sens, data.label, cfg.rotate);
   else
-    layout = opto2lay(sens, sens.label);
+    layout = opto2lay(sens, sens.label, cfg.rotate);
   end
   
 elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
@@ -934,6 +940,16 @@ if strcmpi(cfg.style, '2d')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% overrule the width and height when required
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if ~isempty(cfg.width)
+  layout.width(:) = cfg.width;
+end
+if ~isempty(cfg.height)
+  layout.height(:) = cfg.height;
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % check whether the outline and mask are available, create them if needed
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if (~isfield(layout, 'outline') || ~isfield(layout, 'mask')) && ~strcmpi(cfg.style, '3d')
@@ -947,12 +963,15 @@ if (~isfield(layout, 'outline') || ~isfield(layout, 'mask')) && ~strcmpi(cfg.sty
     sel = setdiff(1:length(layout.label), [ind_scale ind_comnt]); % these are excluded for scaling
     x = layout.pos(sel,1);
     y = layout.pos(sel,2);
-    % the following would work even if all electrodes are offset and not centered around zero
-    % xrange = range(x);
-    % yrange = range(y);
-    % the following prevent topography distortion in case electrodes are not evenly distributed over the whole head
-    xrange = 2*( max(max(x),abs(min(x)) ));
-    yrange = 2*( max(max(y),abs(min(y)) ));
+    if istrue(cfg.center)
+      % the following centers all electrodes around zero
+      xrange = range(x);
+      yrange = range(y);
+    else
+      % the following prevent topography distortion in case electrodes are not evenly distributed over the whole head
+      xrange = 2*( max(max(x),abs(min(x)) ));
+      yrange = 2*( max(max(y),abs(min(y)) ));
+    end
     if xrange==0
       xrange = 1;
     end
@@ -1186,7 +1205,7 @@ if isfield(sens, 'balance') && ~strcmp(sens.balance.current, 'none')
     sens.chanpos = chanposold;
   end
   % In case not all the locations have NaNs it might still be useful to plot them
-  % But perhaps it'd be better to have any(any
+  % But perhaps it'd be better to have any
 elseif any(all(isnan(sens.chanpos)))
   [sel1, sel2] = match_str(sens.label, sens.labelold);
   sens.chanpos = chanposold(sel2, :);
@@ -1328,25 +1347,46 @@ end
 % SUBFUNCTION
 % convert 2D optode positions into 2D layout
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function layout = opto2lay(opto, label)
+function layout = opto2lay(opto, label, rotatez)
+
+if isempty(rotatez)
+  rotatez = 90;
+end
+
 layout = [];
-layout.pos = [];
-layout.label = {};
-layout.width = [];
+layout.pos    = [];
+layout.label  = {};
+layout.width  = [];
 layout.height = [];
 
 [rxnames, rem] = strtok(label, {'-', ' '});
-[txnames, rem] = strtok(rem, {'-', ' '});
+[txnames, rem] = strtok(rem,   {'-', ' '});
 
 for i=1:numel(label)
   % create average positions
   rxid = ismember(opto.fiberlabel, rxnames(i));
   txid = ismember(opto.fiberlabel, txnames(i));
   layout.pos(i, :) = opto.fiberpos(rxid, :)/2 + opto.fiberpos(txid, :)/2;
-  layout.label(end+1)  = label(i);
-  layout.width(end+1)  = 1;
-  layout.height(end+1) = 1;
 end
+
+layout.label  = label;
+layout.width  = ones(numel(label),1);
+layout.height = ones(numel(label),1);
+
+% apply the rotation around the z-axis
+layout.pos = ft_warp_apply(rotate([0 0 rotatez]), layout.pos, 'homogenous');
+
+% prevent the circle-with-ears-and-nose to be added
+layout.outline = {};
+
+% construct a mask for topographic interpolation
+pos1 = layout.pos; pos1(:,1) = pos1(:,1)-layout.width;
+pos2 = layout.pos; pos2(:,1) = pos2(:,1)+layout.width;
+pos3 = layout.pos; pos3(:,2) = pos3(:,2)-layout.height;
+pos4 = layout.pos; pos4(:,2) = pos4(:,2)+layout.height;
+pos = [pos1; pos2; pos3; pos4];
+indx = convhull(pos);
+layout.mask{1} = pos(indx,:);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1362,7 +1402,7 @@ x = xy(1,:);
 y = xy(2,:);
 
 l=1;
-i=1; %filler
+i=1; % filler
 mindist = mindist/0.999; % limits the number of loops
 while (~isempty(i) && l<50)
   xdiff = repmat(x,length(x),1) - repmat(x',1,length(x));
@@ -1395,7 +1435,7 @@ xy = [x; y];
 % the viewpoint and coordsys. See also ELPROJ and COORDSYS2LABEL
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function pos = getorthoviewpos(pos, coordsys, viewpoint)
-% see also 
+% see also
 
 if size(pos,2)~=3
   ft_error('XYZ coordinates are required to obtain the orthographic projections based on a viewpoint')
@@ -1440,7 +1480,6 @@ switch coordsys
   otherwise
     ft_error('orthographic projection using coordinate system "%s" is not supported', coordsys)
 end % switch coordsys
-
 
 % extract xy
 pos      = ft_warp_apply(transmat, pos, 'homogenous');
@@ -1563,10 +1602,10 @@ for i=1:numel(outlbase)
             rotatez = 0;
         end
       end
-      braincoords = ft_warp_apply(rotate([0 0 rotatez]), braincoords, 'homogenous');      
+      braincoords = ft_warp_apply(rotate([0 0 rotatez]), braincoords, 'homogenous');
       braincoords = elproj(braincoords, cfg.projection);
     end
-      
+    
     % get outline
     k = boundary(braincoords,.8);
     outline{i} = braincoords(k,:);

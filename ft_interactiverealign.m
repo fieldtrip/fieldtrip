@@ -188,21 +188,22 @@ ft_info('Close the figure when you are done.');
 
 % open a figure
 fig = figure;
+set(fig, 'CloseRequestFcn',    @cb_quit);
+set(fig, 'windowkeypressfcn',  @cb_keyboard);
 set(gca, 'position', [0.05 0.15 0.75 0.75]);
-axis([-150 150 -150 150 -150 150]);
 
 % add the data to the figure
-set(fig, 'CloseRequestFcn', @cb_quit);
 setappdata(fig, 'individual',  individual);
 setappdata(fig, 'template',    template);
 setappdata(fig, 'transform',   eye(4));
 setappdata(fig, 'cleanup',     false);
 setappdata(fig, 'coordsys',    coordsys); % can be unknown
-
-setappdata(fig, 'toggle_axes', 1);
-setappdata(fig, 'toggle_grid', 1);
+setappdata(fig, 'toggle_labels', true);
+setappdata(fig, 'toggle_axes', true);
+setappdata(fig, 'toggle_grid', true);
 
 % add the GUI elements
+axis([-150 150 -150 150 -150 150]);
 cb_creategui(gcf);
 cb_redraw(gcf);
 rotate3d on
@@ -282,9 +283,9 @@ ft_uilayout(fig, 'tag', 'tz',      'BackgroundColor', [0.8 0.8 0.8], 'width',  C
 uicontrol('tag', 'viewpointbtn',  'parent',  fig, 'units', 'normalized', 'style', 'popup',      'string', 'top|bottom|left|right|front|back', 'value',  1, 'callback', @cb_viewpoint);
 uicontrol('tag', 'redisplaybtn',  'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'redisplay',    'value', [], 'callback', @cb_redraw);
 uicontrol('tag', 'applybtn',      'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'apply',        'value', [], 'callback', @cb_apply);
-uicontrol('tag', 'toggle labels', 'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'toggle label', 'value',  0,  'callback', @cb_redraw);
-uicontrol('tag', 'toggle axes',   'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'toggle axes',  'value',  getappdata(fig, 'toggle_axes'),  'callback', @cb_redraw);
-uicontrol('tag', 'toggle grid',   'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'toggle grid',  'value',  getappdata(fig, 'toggle_grid'),  'callback', @cb_redraw);
+uicontrol('tag', 'toggle labels', 'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'toggle label', 'value',  getappdata(fig, 'toggle_labels'), 'callback', @cb_redraw);
+uicontrol('tag', 'toggle axes',   'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'toggle axes',  'value',  getappdata(fig, 'toggle_axes'),   'callback', @cb_redraw);
+uicontrol('tag', 'toggle grid',   'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'toggle grid',  'value',  getappdata(fig, 'toggle_grid'),   'callback', @cb_redraw);
 uicontrol('tag', 'quitbtn',       'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'quit',         'value',  1,  'callback', @cb_quit);
 ft_uilayout(fig, 'tag', 'viewpointbtn',   'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-2*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
 ft_uilayout(fig, 'tag', 'redisplaybtn',   'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-4*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
@@ -328,9 +329,6 @@ H = S * T * R;
 transform = H * transform;
 
 axis vis3d; cla
-xlabel('x (mm)')
-ylabel('y (mm)')
-zlabel('z (mm)')
 
 hold on
 
@@ -352,11 +350,11 @@ if ~isempty(individual.mri)
 end
 
 if ~isempty(template.mri)
-  ft_plot_ortho(template.mri.anatomy, 'transform',  template.mri.transform, 'style', 'intersect', 'intersectmesh', individual.headshape, cfg.individual.mristyle{:});
+  ft_plot_ortho(template.mri.anatomy, 'transform',  template.mri.transform, 'style', 'intersect', 'intersectmesh', individual.headshape, individual.mristyle{:});
 end
 
 if ~isempty(individual.mri)
-  ft_plot_ortho(individual.mri.anatomy, 'transform',  individual.mri.transform, 'style', 'intersect', 'intersectmesh', template.headshape, cfg.template.mristyle{:});
+  ft_plot_ortho(individual.mri.anatomy, 'transform',  individual.mri.transform, 'style', 'intersect', 'intersectmesh', template.headshape, template.mristyle{:});
 end
 
 if istrue(template.axes)
@@ -420,6 +418,20 @@ lighting gouraud
 material shiny
 camlight
 
+if strcmp(get(h, 'tag'), 'toggle labels')
+  setappdata(fig, 'toggle_labels', ~getappdata(fig, 'toggle_labels'))
+end
+
+if getappdata(fig, 'toggle_labels')
+  xlabel('x (mm)')
+  ylabel('y (mm)')
+  zlabel('z (mm)')
+else
+  xlabel('')
+  ylabel('')
+  zlabel('')
+end
+
 if strcmp(get(h, 'tag'), 'toggle axes')
   setappdata(fig, 'toggle_axes', ~getappdata(fig, 'toggle_axes'))
 end
@@ -479,6 +491,52 @@ setappdata(fig, 'transform',  transform);
 if ~getappdata(fig, 'cleanup')
   cb_redraw(h);
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_keyboard(h, eventdata)
+
+fig = getparent(h);
+
+if isempty(eventdata)
+  % determine the key that corresponds to the uicontrol element that was activated
+  key = get(fig, 'userdata');
+else
+  % determine the key that was pressed on the keyboard
+  key = parsekeyboardevent(eventdata);
+end
+
+% get focus back to figure
+if ~strcmp(get(h, 'type'), 'figure')
+  set(h, 'enable', 'off');
+  drawnow;
+  set(h, 'enable', 'on');
+end
+
+if isempty(key)
+  % this happens if you press the apple key
+  key = '';
+end
+
+% the following code is largely shared by FT_SOURCEPLOT, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN, FT_MESHREALIGN, FT_ELECTRODEPLACEMENT
+switch key
+  case {'' 'shift+shift' 'alt-alt' 'control+control' 'command-0'}
+    % do nothing
+    
+  case 'q'
+    cb_quit(h);
+    
+  case 'v' % camlight angle reset
+    delete(findall(fig,'Type','light')) % shut out the lights
+    % add a new light from the current camera position
+    lighting gouraud
+    material shiny
+    camlight
+    
+  otherwise
+    % do nothing
+    
+end % switch key
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_viewpoint(h, eventdata)

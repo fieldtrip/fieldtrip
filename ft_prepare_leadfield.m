@@ -134,7 +134,7 @@ cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
 
 % this code expects the inside to be represented as a logical array
 cfg.grid = ft_checkconfig(cfg.grid, 'renamed',  {'pnt' 'pos'});
-cfg = ft_checkconfig(cfg, 'index2logical', 'yes');
+cfg = ft_checkconfig(cfg, 'inside2logical', 'yes');
 
 if strcmp(cfg.sel50p, 'yes') && strcmp(cfg.lbex, 'yes')
   ft_error('subspace projection with either lbex or sel50p is mutually exclusive');

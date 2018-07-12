@@ -1,9 +1,9 @@
 function [s, cfg] = ft_statfun_correlationT(cfg, dat, design)
 
-% FT_STATFUN_CORRELATIONT calculates correlation coefficient T-statistics
-% on the biological data in dat (the dependent variable), using the 
-% information on the independent variable (predictor) in design. The
-% correlation coefficients are stored in the rho field of output s.
+% FT_STATFUN_CORRELATIONT calculates correlation coefficient T-statistics on the
+% biological data in dat (the dependent variable), using the information on the
+% independent variable (predictor) in design. The correlation coefficients are stored
+% in the rho field of output s.
 %
 % Use this function by calling one of the high-level statistics functions as
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
@@ -11,14 +11,6 @@ function [s, cfg] = ft_statfun_correlationT(cfg, dat, design)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
 % with the following configuration option
 %   cfg.statistic = 'ft_statfun_correlationT'
-%
-% See FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
-%
-% For low-level use, the external interface of this function has to be
-%   [s,cfg] = ft_statfun_correlationT(cfg, dat, design);
-% where
-%   dat    contains the biological data,  Nsamples x Nreplications
-%   design contains the independent variable,  Nvar X Nreplications
 %
 % Configuration options
 %   cfg.computestat    = 'yes' or 'no', calculate the statistic (default='yes')
@@ -37,6 +29,8 @@ function [s, cfg] = ft_statfun_correlationT(cfg, dat, design)
 %
 % Design specification
 %   cfg.ivar  = row number of the design that contains the independent variable (default=1)
+%
+% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
 
 % Copyright (C) 2015, Arjen Stolk
 %
@@ -68,10 +62,10 @@ if ~isfield(cfg, 'type'),              cfg.type           = 'Pearson'; end
 
 % perform some checks on the configuration
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
-    ft_error('P-values can only be calculated if the test statistics are calculated.');
+  ft_error('P-values can only be calculated if the test statistics are calculated.');
 end
 if isfield(cfg,'uvar') && ~isempty(cfg.uvar)
-    ft_error('cfg.uvar should not exist for a correlation statistic');
+  ft_error('cfg.uvar should not exist for a correlation statistic');
 end
 
 [nsmpl,nrepl] = size(dat);
@@ -80,17 +74,17 @@ if df<1
   ft_error('Insufficient error degrees of freedom for this analysis.')
 end
 
-if strcmp(cfg.computestat,'yes') % compute the statistic    
-    % calculate the correlation coefficient between the dependent variable and the predictor
-    rho = corr(dat', design', 'type', cfg.type);
-    clear dat
-    
-    % convert correlation coefficient to t-statistic (for MCP correction): t^2 = DF*R^2 / (1-R^2)
-    tstat = rho*(sqrt(nrepl-2))./sqrt((1-rho.^2));
-    
-    s.stat = tstat; % store t values in s.stat variable for use with ft_statistics_montecarlo.m
-    s.rho = rho; % store r values in s.rho variable (these are the actual correlation coefficients)
-    clear rho tstat
+if strcmp(cfg.computestat,'yes') % compute the statistic
+  % calculate the correlation coefficient between the dependent variable and the predictor
+  rho = corr(dat', design', 'type', cfg.type);
+  clear dat
+  
+  % convert correlation coefficient to t-statistic (for MCP correction): t^2 = DF*R^2 / (1-R^2)
+  tstat = rho*(sqrt(nrepl-2))./sqrt((1-rho.^2));
+  
+  s.stat = tstat; % store t values in s.stat variable for use with ft_statistics_montecarlo.m
+  s.rho = rho; % store r values in s.rho variable (these are the actual correlation coefficients)
+  clear rho tstat
 end
 
 if strcmp(cfg.computecritval,'yes')

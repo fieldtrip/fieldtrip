@@ -1,8 +1,8 @@
 function [s, cfg] = ft_statfun_depsamplesFmultivariate(cfg, dat, design)
 
-% FT_STATFUN_DEPSAMPLESFMULTIVARIATE calculates the MANOVA dependent samples 
-% F-statistic on the biological data in dat (the dependent variable), using 
-% the information on the independent variable (ivar) in design.
+% FT_STATFUN_DEPSAMPLESFMULTIVARIATE calculates the MANOVA dependent samples
+% F-statistic on the biological data in dat (the dependent variable), using the
+% information on the independent variable (ivar) in design.
 %
 % Use this function by calling one of the high-level statistics functions as
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
@@ -10,15 +10,6 @@ function [s, cfg] = ft_statfun_depsamplesFmultivariate(cfg, dat, design)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
 % with the following configuration option
 %   cfg.statistic = 'ft_statfun_depsamplesFmultivariate'
-%
-% See FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
-%
-% For low-level use, the external interface of this function has to be
-%   [s,cfg] = ft_statfun_depsamplesFmultivariate(cfg, dat, design);
-% where
-%   dat    contains the biological data, Nsamples x Nreplications
-%   design contains the independent variable (ivar) and the unit-of-observation (uvar) 
-%          factor, Nfac x Nreplications
 %
 % Configuration options
 %   cfg.contrastcoefs  = matrix of contrast coefficients determining the
@@ -47,6 +38,8 @@ function [s, cfg] = ft_statfun_depsamplesFmultivariate(cfg, dat, design)
 %   cfg.uvar  = row number of design that contains the labels of the units-of-observation (subjects or trials)
 %               (default=2). The labels are assumed to be integers ranging from 1 to 
 %               the number of units-of-observation.
+%
+% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
 
 % Copyright (C) 2006, Eric Maris
 %
