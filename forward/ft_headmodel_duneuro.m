@@ -20,7 +20,7 @@ function headmodel = ft_headmodel_duneuro(mesh, varargin)
 % or
 %   conductivity    = vector, conductivity values for tissues
 %
-% Optional input arguments should be specified in key-value pairs and can
+% Optional input arguments within cfg.duneuro_settings can
 % include
 %   type            = string, 'fitted' (default)
 %   solver_type     = string, 'cg' (default)
@@ -66,29 +66,92 @@ function headmodel = ft_headmodel_duneuro(mesh, varargin)
 % $Id$
 
 
-% get the optional arguments and set defaults
-type            = ft_getopt(varargin, 'type', 'fitted');
-solver_type     = ft_getopt(varargin, 'solver_type', 'cg');
 grid_filename   = ft_getopt(varargin, 'grid_filename');
 tensors_filename= ft_getopt(varargin, 'tensors_filename');
 conductivity    = ft_getopt(varargin, 'conductivity');
-electrodes      = ft_getopt(varargin, 'electrodes', 'closest_subentity_center'); %eeg
-subentities     = ft_getopt(varargin, 'subentities', '1 2 3'); %eeg
-forward         = ft_getopt(varargin, 'forward', 'venant');
-intorderadd     = ft_getopt(varargin, 'intorderadd', '2'); %subtraction
-intorderadd_lb  = ft_getopt(varargin, 'intorderadd_lb', '2'); %subtraction
-initialization  = ft_getopt(varargin, 'initialization', 'closest_vertex'); %cg-venant, dg-localized subtraction
-numberOfMoments = ft_getopt(varargin, 'numberOfMoments', '3');
-referenceLength = ft_getopt(varargin, 'referenceLength', '20');
-relaxationFactor= ft_getopt(varargin, 'relaxationFactor', '1e-6');
-restrict        = ft_getopt(varargin, 'restrict', 'true');
-weightingExponent = ft_getopt(varargin, 'weightingExponent', '1');
-post_process    = ft_getopt(varargin, 'post_process', 'true'); %eeg, subtraction
-subtract_mean   = ft_getopt(varargin, 'subtract_mean', 'true'); %eeg
-reduction       = ft_getopt(varargin, 'reduction', '1e-10');
-intorderadd_meg = ft_getopt(varargin, 'intorderadd_meg', '0');
-mixedMoments    = ft_getopt(varargin, 'mixedMoments', 'false'); %venant
-meg_type        = ft_getopt(varargin, 'meg_type', 'physical');
+duneuro_settings = ft_getopt(varargin, 'duneuro_settings');
+
+% get the optional arguments and set defaults
+if(isfield(duneuro_settings, 'type')) type = duneuro_settings.type;
+else type = 'fitted';
+end
+
+if(isfield(duneuro_settings, 'solver_type')) solver_type = duneuro_settings.solver_type;
+else solver_type = 'cg';
+end
+
+if(isfield(duneuro_settings, 'electrodes')) electrodes = duneuro_settings.electrodes;
+else electrodes = 'closest_subentity_center';
+end
+
+if(isfield(duneuro_settings, 'subentities')) subentities = duneuro_settings.subentities;
+else subentities = '1 2 3';
+end
+
+if(isfield(duneuro_settings, 'forward')) forward = duneuro_settings.forward;
+else forward = 'venant';
+end
+
+if(isfield(duneuro_settings, 'intorderadd')) intorderadd = duneuro_settings.intorderadd;
+else intorderadd = '2';
+end
+
+if(isfield(duneuro_settings, 'intorderadd_lb')) intorderadd_lb = duneuro_settings.intorderadd_lb;
+else intorderadd_lb = '2';
+end
+
+if(isfield(duneuro_settings, 'initialization')) initialization = duneuro_settings.initialization;
+else initialization = 'closest_vertex';
+end
+
+if(isfield(duneuro_settings, 'numberOfMoments')) numberOfMoments = duneuro_settings.numberOfMoments;
+else numberOfMoments = '3';
+end
+
+if(isfield(duneuro_settings, 'referenceLength')) referenceLength = duneuro_settings.referenceLength;
+else referenceLength = '20';
+end
+
+if(isfield(duneuro_settings, 'relaxationFactor')) relaxationFactor = duneuro_settings.relaxationFactor;
+else relaxationFactor = '1e-6';
+end
+
+if(isfield(duneuro_settings, 'restrict')) restrict = duneuro_settings.restrict;
+else restrict = 'true';
+end
+
+if(isfield(duneuro_settings, 'weightingExponent')) weightingExponent = duneuro_settings.weightingExponent;
+else weightingExponent = '1';
+end
+
+if(isfield(duneuro_settings, 'post_process')) post_process = duneuro_settings.post_process;
+else post_process = 'true';
+end
+
+if(isfield(duneuro_settings, 'subtract_mean')) subtract_mean = duneuro_settings.subtract_mean;
+else subtract_mean = 'true';
+end
+
+if(isfield(duneuro_settings, 'reduction')) reduction = duneuro_settings.reduction;
+else reduction = '1e-10';
+end
+
+
+if(isfield(duneuro_settings, 'intorderadd_meg')) intorderadd_meg = duneuro_settings.intorderadd_meg;
+else intorderadd_meg = '0';
+end
+
+if(isfield(duneuro_settings, 'mixedMoments')) mixedMoments = duneuro_settings.mixedMoments;
+else mixedMoments = 'false';
+end
+
+if(isfield(duneuro_settings, 'meg_type')) reduction = duneuro_settings.meg_type;
+else meg_type = 'physical';
+end
+
+if(isfield(duneuro_settings, 'meg_eneablecache')) meg_eneablecache = duneuro_settings.meg_eneablecache;
+else meg_eneablecache = 'false';
+end
 
 % start with an empty volume conductor
 mesh = ft_datatype_parcellation(mesh);
@@ -140,6 +203,8 @@ cfg.type            = type;
 cfg.solver_type     = solver_type;
 cfg.meg.intorderadd = intorderadd_meg;
 cfg.meg.type        = meg_type;
+cfg.meg.cache.enable = meg_eneablecache;
+
 
 if isfield(mesh,'tet')
   cfg.element_type = 'tetrahedron';
@@ -170,10 +235,6 @@ else
     cfg.volume_conductor.tensors.tensors = conductivity;
   end
 end
-
-cfg.meg.intorderadd= '0' ;
-cfg.meg.type = 'physical';
-cfg.meg.cache.enable = 'false';
 
 headmodel.driver = duneuro_meeg(cfg);
 

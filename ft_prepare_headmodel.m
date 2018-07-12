@@ -79,28 +79,11 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 %   cfg.conductivity
 %
 % DUNEURO
-%   cfg.type              (optional)
-%   cfg.solver_type       (optional)
-%   cfg.grid_filename     Either a filename for the grid and a filename for the conductivities, or an array with the conductivities must be provided (see above).
+%   cfg.conductivity      An array with the conductivities must be provided. (see above)
+%   cfg.grid_filename     Alternatively,  a filename for the grid and a filename for the conductivities can be passed.
 %   cfg.tensors_filename  "
-%   cfg.conductivity      "
-%   cfg.electrodes        (optional)
-%   cfg.subentities       (optional)
-%   cfg.forward           (optional)
-%   cfg.initialization    (optional)
-%   cfg.intorderadd       (optional)
-%   cfg.intorderadd_lb    (optional)
-%   cfg.numberOfMoments   (optional)
-%   cfg.referenceLength   (optional)
-%   cfg.relaxationFactor  (optional)
-%   cfg.restrict          (optional)
-%   cfg.weightingExponent (optional)
-%   cfg.post_process      (optional)
-%   cfg.subtract_mean     (optional)
-%   cfg.reduction         (optional)
-%   cfg.intorderadd_meg   (optional)
-%   cfg.weightingExponent (optional)
-%   cfg.mixedMoments      (optional)
+%   cfg.duneuro_settings  (optional) Additional settings can be provided for duneuro (see http://www.duneuro.org).
+
 %
 % SINGLESHELL
 %   cfg.tissue            see above; in combination with 'seg' input; default options are 'brain' or 'scalp'
@@ -210,26 +193,9 @@ cfg.radius          = ft_getopt(cfg, 'radius');
 cfg.maxradius       = ft_getopt(cfg, 'maxradius');
 cfg.baseline        = ft_getopt(cfg, 'baseline');
 cfg.singlesphere    = ft_getopt(cfg, 'singlesphere');
-cfg.type            = ft_getopt(cfg, 'type');
-cfg.solver_type     = ft_getopt(cfg, 'solver_type');
 cfg.grid_filename   = ft_getopt(cfg, 'grid_filename');
 cfg.tensors_filename= ft_getopt(cfg, 'tensors_filename');
-cfg.electrodes      = ft_getopt(cfg, 'electrodes');
-cfg.subentities     = ft_getopt(cfg, 'subentities');
-cfg.forward         = ft_getopt(cfg, 'forward');
-cfg.initialization  = ft_getopt(cfg, 'initialization');
-cfg.intorderadd     = ft_getopt(cfg, 'intorderadd');
-cfg.intorderadd_lb  = ft_getopt(cfg, 'intorderadd_lb');
-cfg.numberOfMoments = ft_getopt(cfg, 'numberOfMoments');
-cfg.referenceLength = ft_getopt(cfg, 'referenceLength');
-cfg.relaxationFactor= ft_getopt(cfg, 'relaxationFactor');
-cfg.restrict        = ft_getopt(cfg, 'restrict');
-cfg.post_process    = ft_getopt(cfg, 'post_process');
-cfg.subtract_mean   = ft_getopt(cfg, 'subtract_mean');
-cfg.reduction       = ft_getopt(cfg, 'reduction');
-cfg.intorderadd_meg = ft_getopt(cfg, 'intorderadd_meg');
-cfg.weightingExponent = ft_getopt(cfg, 'weightingExponent');
-cfg.mixedMoments    = ft_getopt(cfg, 'mixedMoments');
+cfg.duneuro_settings= ft_getopt(cfg, 'duneuro_settings');
 cfg.tissueval       = ft_getopt(cfg, 'tissueval');      % used for simbio
 cfg.transform       = ft_getopt(cfg, 'transform');
 cfg.siunits         = ft_getopt(cfg, 'siunits', 'no');  % yes/no, convert the input and continue with SI units
@@ -476,12 +442,8 @@ switch cfg.method
     else
       error('You must provide a mesh with tetrahedral or hexahedral elements, where each element has a scalar or tensor conductivity');
     end
-    headmodel = ft_headmodel_duneuro(geometry, 'type', cfg.type, 'solver_type', cfg.solver_type, 'grid_filename', cfg.grid_filename, 'tensors_filename', cfg.tensors_filename,...
-      'conductivity', cfg.conductivity,  'electrodes', cfg.electrodes, 'subentities', cfg.subentities, 'forward', cfg.forward, 'initialization', cfg.initialization,...
-      'intorderadd', cfg.intorderadd, 'intorderadd_lb', cfg.intorderadd_lb, 'numberOfMoments', cfg.numberOfMoments, 'referenceLength', cfg.referenceLength,...
-      'relaxationFactor', cfg.relaxationFactor, 'restrict', cfg.restrict, 'weightingExponent', cfg.weightingExponent,'post_process', cfg.post_process,...
-      'subtract_mean', cfg.subtract_mean, 'reduction', cfg.reduction, 'intorderadd_meg', cfg.intorderadd_meg, 'weightingExponent', cfg.weightingExponent,...
-      'mixedMoments', cfg.mixedMoments);
+    headmodel = ft_headmodel_duneuro(geometry, 'grid_filename', cfg.grid_filename, 'tensors_filename', cfg.tensors_filename,...
+      'conductivity', cfg.conductivity, 'duneuro_settings', cfg.duneuro_settings);
     
   case {'fns'}
     if input_seg
