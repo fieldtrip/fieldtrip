@@ -1,11 +1,11 @@
 function headmodel = ft_headmodel_duneuro(mesh, varargin)
 
 % FT_HEADMODEL_DUNEURO creates a volume conduction model of the head
-% using the finite element method (FEM) for EEG. Different source models
+% using the finite element method (FEM) for EEG and MEG. Different source models
 % are implemented, including the St. Venant, the subtraction and partial
 % integration model. This function takes as input a mesh with tetrahedral
 % or hexahedral elements and corresponding conductivities and returns
-% as output a volume conduction model which can be used to compute EEG
+% as output a volume conduction model which can be used to compute EEG/MEG
 % leadfields.
 %
 % Use as
@@ -20,8 +20,9 @@ function headmodel = ft_headmodel_duneuro(mesh, varargin)
 % or
 %   conductivity    = vector, conductivity values for tissues
 %
-% Optional input arguments within cfg.duneuro_settings can
-% include
+% Optional input arguments are passed with
+%   duneuro_settings = (optional) struct, which can contain the following fields
+%
 %   type            = string, 'fitted' (default)
 %   solver_type     = string, 'cg' (default)
 %   electrodes      = string, 'closest_subentity_center' (default)
@@ -41,29 +42,7 @@ function headmodel = ft_headmodel_duneuro(mesh, varargin)
 %   intorderadd_meg = integer, e.g.'0' (default)
 %   mixedMoments    = logical, e.g. 'false' (default)
 %   meg_type        = string, e.g. 'physical' (default)
-%
-% See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
-%
-% Copyright (C) 2017, Sophie Schrader
-%
-% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
-% for the documentation and details.
-%
-%    FieldTrip is free software: you can redistribute it and/or modify
-%    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 3 of the License, or
-%    (at your option) any later version.
-%
-%    FieldTrip is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
-%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-%    GNU General Public License for more details.
-%
-%    You should have received a copy of the GNU General Public License
-%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
-
-%
-% $Id$
+%   meg_eneablecache= logical, e.g. 'false (default)
 
 
 grid_filename   = ft_getopt(varargin, 'grid_filename');
