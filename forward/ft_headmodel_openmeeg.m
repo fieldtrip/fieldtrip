@@ -96,7 +96,7 @@ headmodel.source = numboundaries;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % store the current path and change folder to the temporary one
-tmpfolder = cd;
+tmpfolder = pwd;
 bndom = headmodel.bnd;
 
 try
