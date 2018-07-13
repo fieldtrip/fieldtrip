@@ -96,7 +96,7 @@ headmodel.source = numboundaries;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % store the current path and change folder to the temporary one
-tmpfolder = cd;
+tmpfolder = pwd;
 bndom = headmodel.bnd;
 
 try
@@ -116,7 +116,7 @@ try
   end
    
   for ii=1:length(headmodel.bnd)
-    [junk,tname] = fileparts(['/tmp/mesh' num2str(ii)]);%; fileparts(tempname);
+    [junk,tname] = fileparts(tempname);
     bndfile{ii} = [tname '.tri'];
     om_save_tri(bndfile{ii}, bndom(ii).pos, bndom(ii).tri);
   end
