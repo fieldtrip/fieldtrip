@@ -134,6 +134,14 @@ for i=1:hdr.nChans
     prefix = 'ETC';
   end
   hdr.label{i} = sprintf('%s%03d', prefix, i);
+
+  % overwrite EEG-channel labels
+  if hdr.orig.channel_info.channel(i).type == handles.EegChannel
+    if ~isempty(hdr.orig.channel_info.channel(i).data.name)
+      hdr.label{i} = strcat(prefix, '_', hdr.orig.channel_info.channel(i).data.name);
+    end
+  end
+
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
