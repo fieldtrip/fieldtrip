@@ -95,11 +95,13 @@ function [rdms,mags] = run_bem_computation(r,c,dippos)
     vol_bem.type = 'openmeeg';
 
     % ft_prepare_headmodel has a bug; likely the geom file does not match
-    % the order of the layers
+    % the true order of the layers
     %cfg.conductivity = c;
     %vol_bem = ft_prepare_headmodel(cfg, bnd);
+    %
+    % though, removing the computed headmodel matrix makes it work, as a hack:
     %vol_bem = rmfield(vol_bem,'mat');
-    
+
     cfg.vol = vol_bem;
     cfg.grid.pos = dippos;
     cfg.grid.unit = 'mm';
