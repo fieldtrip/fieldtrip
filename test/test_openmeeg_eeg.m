@@ -104,7 +104,6 @@ function [rdms,mags] = run_bem_computation(r,c,dippos)
     cfg.grid.pos = dippos;
     cfg.grid.unit = 'mm';
     cfg.elec = sens;
-%    grid = ft_prepare_leadfield(cfg);
     grid = ft_prepare_leadfield(cfg);
 
     lf_openmeeg = grid.leadfield{1};
