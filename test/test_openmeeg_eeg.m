@@ -1,6 +1,7 @@
-function testOpenMEEGeeg
+function test_openmeeg_eeg
 
-% TEST testOpenMEEGeeg
+% TEST test_openmeeg_eeg
+% (previously called testOpenMEEGeeg)
 % Test the computation of an EEG leadfield with OpenMEEG
 
 % Copyright (C) 2010-2017, OpenMEEG developers
