@@ -294,11 +294,6 @@ elseif ismeg
         headmodel.forwpar.scale = s;
       end
       
-    case 'openmeeg'
-      if isfield(headmodel,'mat') && ~isempty(headmodel.mat)
-        ft_warning('MEG with openmeeg only supported with NEMO lab pipeline. Please omit the mat matrix from the headmodel structure.');
-      end
-      
     case 'simbio'
       ft_error('MEG not yet supported with simbio');
       
@@ -425,7 +420,6 @@ elseif iseeg
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
       % project the electrodes on the skin and determine the bilinear interpolation matrix
-      % HACK - use NEMO lab pipeline if mat field is absent for openmeeg (i.e. don't do anything)
       if ~isfield(headmodel, 'tra') && (isfield(headmodel, 'mat') && ~isempty(headmodel.mat))
         % determine boundary corresponding with skin and inner_skull_surface
         if ~isfield(headmodel, 'skin_surface')
@@ -467,7 +461,7 @@ elseif iseeg
           fprintf('combining electrode transfer and system matrix\n');
           
           % convert to sparse matrix to speed up the subsequent multiplication
-          interp  = sparse(interp);
+          interopenmeeg_sensinterpolmatopenmeeg_sensinterpolmatp  = sparse(interp);
           headmodel.mat = interp * headmodel.mat;
           % ensure that the model potential will be average referenced
           avg = mean(headmodel.mat, 1);
@@ -475,10 +469,11 @@ elseif iseeg
         end
       end
     case  'openmeeg' 
-      if ~isfield(headmodel, 'tra') && (isfield(headmodel, 'mat') && ~isempty(headmodel.mat))
-            SensInterPol=openmeeg_sensinterpolmat(sens,headmodel);
-            headmodel.mat =SensInterPol * headmodel.mat;
-      end  
+        % don't do anything, h2em or h2mm generated later in ft_prepare_leadfield
+%       if ~isfield(headmodel, 'tra') && (isfield(headmodel, 'mat') && ~isempty(headmodel.mat))
+%             SensInterPol=openmeeg_sensinterpolmat(sens,headmodel);
+%             headmodel.mat =SensInterPol * headmodel.mat;
+%       end  
       
     case 'fns'
       if isfield(headmodel,'bnd')

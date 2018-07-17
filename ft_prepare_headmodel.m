@@ -279,7 +279,7 @@ switch cfg.method
     elseif strcmp(cfg.method, 'dipoli')
       headmodel = ft_headmodel_dipoli(geometry, 'conductivity', cfg.conductivity, 'isolatedsource', cfg.isolatedsource);
     else
-      headmodel = ft_headmodel_openmeeg(geometry, 'conductivity', cfg.conductivity, 'isolatedsource', cfg.isolatedsource);
+      headmodel = ft_headmodel_openmeeg(geometry, 'conductivity', cfg.conductivity, 'isolatedsource', cfg.isolatedsource, 'tissue', cfg.tissue);
     end
     
   case 'concentricspheres'
@@ -351,7 +351,7 @@ switch cfg.method
           end
         end
         if isempty(geometry)
-          ft_error('please specificy cfg.tissue and pass an appropriate segmented MRI as input data')
+          ft_error('please specify cfg.tissue and pass an appropriate segmented MRI as input data')
         end
       end
     elseif input_elec
