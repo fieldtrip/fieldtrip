@@ -173,46 +173,56 @@ if ft_voltype(headmodel, 'openmeeg')
   % repeated system calls to the openmeeg executable makes it rather slow
   % calling it once is much more efficient
   fprintf('calculating leadfield for all positions at once, this may take a while...\n');
-
+  
   % find the indices of all grid points that are inside the brain
   insideindx = find(grid.inside);
   ndip       = length(insideindx);
-  ok         = false(1,ndip);
-  batchsize  = ndip;
+  batchsize  = ft_getopt(cfg,'om.batchsize',100e3);
 
-  while ~all(ok)
-    % find the first one that is not yet done
-    begdip = find(~ok, 1);
-    % define a batch of dipoles to jointly deal with
-    enddip = min((begdip+batchsize-1), ndip); % don't go beyond the end
-    batch  = begdip:enddip;
-    try
-      lf = ft_compute_leadfield(grid.pos(insideindx(batch),:), sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
-      ok(batch) = true;
-    catch
-      ok(batch) = false;
-      % the "catch me" syntax is broken on MATLAB74, this fixes it
+  if(~isfield(cfg,'om'))
+      cfg.om = [];
+  end
+  dsm          = ft_getopt(cfg.om, 'dsm'); % reuse existing DSM if provided
+  nonadaptive          = ft_getopt(cfg.om, 'nonadaptive', 'no');
+  
+  try
+      % DSM computation is computationally intensive:
+      % As it can be reused with same voxel grid (i.e. if voxels are defined in
+      % MRI coordinates rather than MEG coordinates), optionally save result.
+      % Dense voxel grids may require several gigabytes of RAM, so optionally
+      % split into smaller batches
+
+      numchunks = ceil(ndip/batchsize);
+      
+      
+      [h2sens,ds2sens] = ft_sensinterp_openmeeg(grid.pos, headmodel, sens);
+      
+      for ii = 1:numchunks
+          voxidx = ((ii-1)*batchsize + 1) : (min((ii)*batchsize,ndip));
+          [dsm] = ft_sysmat_openmeeg(grid.pos(voxidx,:), headmodel, sens, nonadaptive);
+          lfvec = ds2sens + h2sens*headmodel.mat*dsm;
+          
+          
+          sel = (3*ii-2):(3*ii);    % 1:3, 4:6, ...
+          dipindx = insideindx(voxidx);
+          
+          % apply montage, if applicable
+          if isfield(sens, 'tra')
+              lf = sens.tra * lfvec(:,sel);
+          else
+              lf = lfvec(:,sel);
+          end
+      end
+  catch
       me = lasterror;
-      if ~isempty(findstr(me.message, 'Output argument "dsm" (and maybe others) not assigned during call to'))
-        % it does not fit in memory, split the problem in two halves and try once more
-        batchsize = floor(batchsize/500);
-        continue
-      else
-        rethrow(me);
-      end % handling this particular error
-    end
-
-    % reassign the large leadfield matrix over the single grid locations
-    for i=1:length(batch)
-      sel = (3*i-2):(3*i);           % 1:3, 4:6, ...
-      dipindx = insideindx(batch(i));
-      grid.leadfield{dipindx} = lf(:,sel);
-    end
-
-    clear lf
-
-  end % while
-
+      rethrow(me);
+  end
+  
+  % lead field computation already done, but pass to ft_compute_leadfield so that
+  % any post-computation options can be applied (e.g., normalization, etc.)
+  grid.leadfield{dipindx} = ft_compute_leadfield(grid.pos(voxidx,:), sens, headmodel, 'lf', lf, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
+  clear lf
+  
 else
   % find the indices of all grid points that are inside the brain
   insideindx = find(grid.inside);
