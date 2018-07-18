@@ -294,6 +294,9 @@ elseif ismeg
         headmodel.forwpar.scale = s;
       end
       
+    case  'openmeeg' 
+        % don't do anything, h2em or h2mm generated later in ft_prepare_leadfield
+
     case 'simbio'
       ft_error('MEG not yet supported with simbio');
       
@@ -461,7 +464,7 @@ elseif iseeg
           fprintf('combining electrode transfer and system matrix\n');
           
           % convert to sparse matrix to speed up the subsequent multiplication
-          interopenmeeg_sensinterpolmatopenmeeg_sensinterpolmatp  = sparse(interp);
+          interp  = sparse(interp);
           headmodel.mat = interp * headmodel.mat;
           % ensure that the model potential will be average referenced
           avg = mean(headmodel.mat, 1);
@@ -470,10 +473,6 @@ elseif iseeg
       end
     case  'openmeeg' 
         % don't do anything, h2em or h2mm generated later in ft_prepare_leadfield
-%       if ~isfield(headmodel, 'tra') && (isfield(headmodel, 'mat') && ~isempty(headmodel.mat))
-%             SensInterPol=openmeeg_sensinterpolmat(sens,headmodel);
-%             headmodel.mat =SensInterPol * headmodel.mat;
-%       end  
       
     case 'fns'
       if isfield(headmodel,'bnd')

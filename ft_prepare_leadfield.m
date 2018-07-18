@@ -169,13 +169,14 @@ else
   end
 end
 
+% find the indices of all grid points that are inside the brain
+insideindx = find(grid.inside);
+
 if ft_voltype(headmodel, 'openmeeg')
   % repeated system calls to the openmeeg executable makes it rather slow
   % calling it once is much more efficient
   fprintf('calculating leadfield for all positions at once, this may take a while...\n');
   
-  % find the indices of all grid points that are inside the brain
-  insideindx = find(grid.inside);
   ndip       = length(insideindx);
   batchsize  = ft_getopt(cfg,'om.batchsize',100e3);
 
@@ -195,38 +196,48 @@ if ft_voltype(headmodel, 'openmeeg')
       numchunks = ceil(ndip/batchsize);
       
       
-      [h2sens,ds2sens] = ft_sensinterp_openmeeg(grid.pos, headmodel, sens);
-      
-      for ii = 1:numchunks
-          voxidx = ((ii-1)*batchsize + 1) : (min((ii)*batchsize,ndip));
-          [dsm] = ft_sysmat_openmeeg(grid.pos(voxidx,:), headmodel, sens, nonadaptive);
-          lfvec = ds2sens + h2sens*headmodel.mat*dsm;
+      [h2sens,ds2sens] = ft_sensinterp_openmeeg(grid.pos(insideindx,:), headmodel, sens);
+     
+      % use pre-existing DSM if present
+      if(~isempty(dsm))
+          lf = ds2sens + h2sens*headmodel.mat*dsm;
+      else
+          lf = zeros(size(ds2sens)); % pre-allocate Msensors x Nvoxels
           
-          
-          sel = (3*ii-2):(3*ii);    % 1:3, 4:6, ...
-          dipindx = insideindx(voxidx);
-          
-          % apply montage, if applicable
-          if isfield(sens, 'tra')
-              lf = sens.tra * lfvec(:,sel);
-          else
-              lf = lfvec(:,sel);
+          for ii = 1:numchunks
+              % select grid positions for this batch
+              diprange = [((ii-1)*batchsize + 1):(min((ii)*batchsize,ndip))];
+              % remap with 3 orientations per position
+              diprangeori = [((ii-1)*3*batchsize + 1):(min((ii)*3*batchsize,3*ndip))];
+              dsm = ft_sysmat_openmeeg(grid.pos(insideindx(diprange),:), headmodel, sens, nonadaptive);
+              lf(:,diprangeori) = ds2sens(:,diprangeori) + h2sens*headmodel.mat*dsm;
+              
+              dipindx = insideindx(diprange);
           end
       end
   catch
       me = lasterror;
       rethrow(me);
   end
+
+  % apply montage, if applicable
+  if isfield(sens, 'tra')
+      lf = sens.tra * lf;
+  end
+
   
   % lead field computation already done, but pass to ft_compute_leadfield so that
   % any post-computation options can be applied (e.g., normalization, etc.)
-  grid.leadfield{dipindx} = ft_compute_leadfield(grid.pos(voxidx,:), sens, headmodel, 'lf', lf, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
+  lf = ft_compute_leadfield(grid.pos(diprange,:), sens, headmodel, 'lf', lf, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
+  
+  % reshape result into grid.leadfield cell array
+  for i=1:ndip
+      grid.leadfield{insideindx(i)} = lf(:,3*(i-1) + [1:3]);
+  end
+  
   clear lf
   
 else
-  % find the indices of all grid points that are inside the brain
-  insideindx = find(grid.inside);
-
   ft_progress('init', cfg.feedback, 'computing leadfield');
   for i=1:length(insideindx)
     % compute the leadfield on all grid positions inside the brain

@@ -51,21 +51,19 @@ workdir = fullfile(tempdir,['ft_om_' datestr(now,'ddmmyyHHMMSSFFF')]);
 mkdir(workdir);
 
 try
-    cd(workdir)
-
     % Write the triangulations to file, named after tissue type.
     % OpenMEEG v2.3 and up internally adjusts the convention for surface
     % normals, but OpenMEEG v2.2 expects surface normals to point inwards;
     % this checks and corrects if needed
-    bndfile = strcat(headmodel.tissue,'.tri');
+    bndfile = fullfile(workdir,strcat(headmodel.tissue,'.tri'));
     for ii=1:length(bndom)
         om_save_tri(bndfile{ii}, bndom(ii).pos, bndom(ii).tri);
     end
     
-    condfile  = 'om.cond';
-    geomfile  = 'om.geom';
-    dipfile = 'dip.txt';
-    dsmfile = 'dsm'; % extension added directly in om_assemble function call below
+    condfile  = fullfile(workdir,'om.cond');
+    geomfile  = fullfile(workdir,'om.geom');
+    dipfile = fullfile(workdir,'dip.txt');
+    dsmfile = fullfile(workdir,'dsm.bin'); % extension added directly in om_assemble function call below
     
     % write conductivity and mesh files
     bndlabel = {};
@@ -89,26 +87,21 @@ try
         str = ' -DSM';
     end
 
-    [om_status, om_msg] = system([prefix 'om_assemble' str ' ' geomfile ' ' condfile ' ' dipfile ' ' dsmfile '.bin']);
+    om_status = system([prefix 'om_assemble' str ' ' geomfile ' ' condfile ' ' dipfile ' ' dsmfile]);
     
     if(om_status ~= 0) % status = 0 if successful
-        ft_error([om_msg, 'Aborting OpenMEEG pipeline due to above error.']);
+        ft_error(['Aborting OpenMEEG pipeline due to above error.']);
     end
     
-    dsm = om_load_full([dsmfile '.bin'],'binary');
-    
-    
+    dsm = om_load_full(dsmfile,'binary');
 catch
-    cd(cwd)
     rethrow(lasterror)
 end
 
 try
     rmdir(workdir,'s'); % remove workdir with intermediate files
-    cd(cwd)
 catch
     disp(lasterr);
     rmdir(workdir,'s'); % remove workdir with intermediate files
-    cd(cwd)
     ft_error('an error occurred while running OpenMEEG');
 end

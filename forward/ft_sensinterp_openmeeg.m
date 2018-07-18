@@ -55,23 +55,21 @@ workdir = fullfile(tempdir,['ft_om_' datestr(now,'ddmmyyHHMMSSFFF')]);
 mkdir(workdir);
 
 try
-    cd(workdir)
-    
     % Write the triangulations to file, named after tissue type.
     % OpenMEEG v2.3 and up internally adjusts the convention for surface
     % normals, but OpenMEEG v2.2 expects surface normals to point inwards;
     % this checks and corrects if needed
-    bndfile = strcat(headmodel.tissue,'.tri');
+    bndfile = fullfile(workdir,strcat(headmodel.tissue,'.tri'));
     for ii=1:length(bndom)
         om_save_tri(bndfile{ii}, bndom(ii).pos, bndom(ii).tri);
     end
     
-    condfile  = 'om.cond';
-    geomfile  = 'om.geom';
-    dipfile = 'dip.txt';
-    sensorposfile = 'sensorpos.txt';
-    h2sensfile = 'h2sens.bin';
-    ds2sensfile = 'ds2sens.bin';
+    condfile  = fullfile(workdir,'om.cond');
+    geomfile  = fullfile(workdir,'om.geom');
+    dipfile = fullfile(workdir,'dip.txt');
+    sensorposfile = fullfile(workdir,'sensorpos.txt');
+    h2sensfile = fullfile(workdir,'h2sens.bin');
+    ds2sensfile = fullfile(workdir,'ds2sens.bin');
     
     % write conductivity and mesh files
     bndlabel = {};
@@ -87,43 +85,43 @@ try
     pos = [kron(pos,ones(3,1)),kron(ones(ndip,1),eye(3))]; % save pos with each 3D orientation
     om_save_full(pos,dipfile,'ascii');
     
-    % write sensor coordinates to disk
+    % infer sensor type from presence of coilpos structure
+    % and write sensor coordinates to disk
     if(isfield(sens,'coilpos'))
         om_save_full([sens.coilpos,sens.coilori],sensorposfile,'ascii');
+        senstype = 'MEG';
     else
         om_save_full(sens.chanpos,sensorposfile,'ascii');
+        if(strcmp(ecog,'yes'))
+            senstype = 'iEEG';
+        else
+            senstype = 'EEG';
+        end
     end
     
-    switch ft_senstype(sens)
-        case 'eeg'
-            if(strcmp(ecog,'no')) % scalp EEG
-                [om_status, om_msg] = system([prefix 'om_assemble' ' -h2em ' geomfile ' ' condfile ' ' sensorposfile ' ' h2sensfile]);
-                h2sens = om_load_sparse(h2sensfile,'binary');
-                ds2sens = 0;
-            else % intracranial EEG
-                [om_status, om_msg] = system([prefix 'om_assemble -h2ecogm ' geomfile ' ' condfile ' ' sensorposfile ' ' h2sensfile])
-                [om_status, om_msg] = system([prefix 'om_assemble -ds2ipm ' dipfile ' ' sensorposfile ' ' ds2sensfile])
-                ds2sens = om_load_full(ds2sensfile,'binary');
-            end
-        case 'meg'
-            [om_status, om_msg] = system([prefix 'om_assemble -h2mm ' geomfile ' ' condfile ' ' sensorposfile ' ' h2sensfile])
-            [om_status, om_msg] = system([prefix 'om_assemble -ds2mm ' dipfile ' ' sensorposfile ' ' ds2sensfile])
+    switch senstype
+        case 'EEG' % scalp EEG
+            om_status = system([prefix 'om_assemble' ' -h2em ' geomfile ' ' condfile ' ' sensorposfile ' ' h2sensfile]);
+            h2sens = om_load_sparse(h2sensfile,'binary');
+            ds2sens = sparse(size(h2sens,1),3*ndip); % zero for EEG; use sparse matrix to save memory
+        case 'iEEG' % intracranial EEG
+            om_status = system([prefix 'om_assemble -h2ecogm ' geomfile ' ' condfile ' ' sensorposfile ' ' h2sensfile]);
+            om_status = system([prefix 'om_assemble -ds2ipm ' dipfile ' ' sensorposfile ' ' ds2sensfile]);
+            h2sens = om_load_full(h2sensfile,'binary'); % untested: might need om_load_sparse?
+            ds2sens = om_load_full(ds2sensfile,'binary');
+        case 'MEG'
+            om_status = system([prefix 'om_assemble -h2mm ' geomfile ' ' condfile ' ' sensorposfile ' ' h2sensfile]);
+            om_status = system([prefix 'om_assemble -ds2mm ' dipfile ' ' sensorposfile ' ' ds2sensfile]);
+            h2sens = om_load_full(h2sensfile,'binary');
             ds2sens = om_load_full(ds2sensfile,'binary');
     end
     if(om_status ~= 0) % status = 0 if successful
-        ft_error([om_msg, 'Aborting OpenMEEG pipeline due to above error.']);
+        ft_error(['Aborting OpenMEEG pipeline due to above error.']);
     end
-catch
-    cd(cwd)
-    rethrow(lasterror)
-end
-
-try
+    
     rmdir(workdir,'s'); % remove workdir with intermediate files
-    cd(cwd)
 catch
     disp(lasterr);
     rmdir(workdir,'s'); % remove workdir with intermediate files
-    cd(cwd)
     ft_error('an error occurred while running OpenMEEG');
 end

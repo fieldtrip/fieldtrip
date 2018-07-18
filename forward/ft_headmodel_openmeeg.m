@@ -119,20 +119,15 @@ headmodel.source = numboundaries;
 % this uses an implementation that was contributed by INRIA Odyssee Team
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% store the current path and change folder to the temporary one
-cwd = pwd;
-
 workdir = fullfile(tempdir,['ft_om_' datestr(now,'ddmmyyHHMMSSFFF')]);
 mkdir(workdir);
 
 try
-    cd(workdir)
-    
     % Write the triangulations to file, named after tissue type.
     % OpenMEEG v2.3 and up internally adjusts the convention for surface
     % normals, but OpenMEEG v2.2 expects surface normals to point inwards;
     % this checks and corrects if needed
-    bndfile = strcat(tissue,'.tri');
+    bndfile = fullfile(workdir,strcat(tissue,'.tri'));
     for ii=1:length(bnd)
         ok = checknormals(bnd(ii));
         if ~ok
@@ -142,7 +137,7 @@ try
             
             ok = checknormals(bndtmp);
             if(ok)
-                fprintf('flipping normals'' direction\n')
+                fprintf('flipping normals for OpenMEEG''s convention\n')
                 bnd(ii).tri = bndtmp.tri;
             else
                 % if still not ok after flip, throw a warning
@@ -158,10 +153,10 @@ try
     headmodel.bnd = bnd;
         
      
-    condfile  = 'om.cond';
-    geomfile  = 'om.geom';
-    hmfile    = 'hm.bin';
-    hminvfile = 'hminv.bin';
+    condfile  = fullfile(workdir,'om.cond');
+    geomfile  = fullfile(workdir,'om.geom');
+    hmfile    = fullfile(workdir,'hm.bin');
+    hminvfile = fullfile(workdir,'hminv.bin');
     
     % write conductivity and mesh files
     bndlabel = {};
@@ -172,20 +167,17 @@ try
     om_write_geom(geomfile,bndfile,bndlabel);
     om_write_cond(condfile,headmodel.cond,bndlabel);
     
-    [om_status, om_msg] = system([prefix 'om_assemble -HM ./' geomfile ' ./' condfile ' ./' hmfile])
+    om_status = system([prefix 'om_assemble -HM ' geomfile ' ' condfile ' ' hmfile]);
     if(om_status ~= 0) % status = 0 if successful
-        ft_error([om_msg, 'Aborting OpenMEEG pipeline due to above error.']);
+        ft_error('Aborting OpenMEEG pipeline due to above error.');
     end
     
     headmodel.mat = inv(om_load_sym(hmfile,'binary'));
 
     rmdir(workdir,'s'); % remove workdir with intermediate files
-    cd(cwd)
- 
 catch
     disp(lasterr);
     rmdir(workdir,'s'); % remove workdir with intermediate files
-    cd(cwd)
     ft_error('an error occurred while running OpenMEEG');
 end
 
@@ -208,7 +200,7 @@ w = sum(solid_angle(points, faces));
 
 if w<0 && (abs(w)-4*pi)<1000*eps
     ok = 0;
-    disp('Your surface normals are outwards oriented, flipping for OpenMEEG')
+    disp('Your surface normals are outwards oriented...')
 elseif w>0 && (abs(w)-4*pi)<1000*eps
     ok = 1;
     %   ft_warning('your normals are inwards oriented')
