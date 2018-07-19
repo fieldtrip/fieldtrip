@@ -177,14 +177,23 @@ if ft_voltype(headmodel, 'openmeeg')
   % calling it once is much more efficient
   fprintf('calculating leadfield for all positions at once, this may take a while...\n');
   
-  ndip       = length(insideindx);
-  batchsize  = ft_getopt(cfg,'om.batchsize',100e3);
-
   if(~isfield(cfg,'om'))
       cfg.om = [];
   end
-  dsm          = ft_getopt(cfg.om, 'dsm'); % reuse existing DSM if provided
-  nonadaptive          = ft_getopt(cfg.om, 'nonadaptive', 'no');
+  batchsize   = ft_getopt(cfg.om, 'batchsize',100e3); % number of voxels per DSM batch; set to e.g. 1000 if not much RAM available
+  dsm         = ft_getopt(cfg.om, 'dsm'); % reuse existing DSM if provided
+  keepdsm     = ft_getopt(cfg.om, 'keepdsm', 'no'); % option to retain DSM (no by default)
+  nonadaptive = ft_getopt(cfg.om, 'nonadaptive', 'no');
+
+  ndip       = length(insideindx);
+  numchunks = ceil(ndip/batchsize);
+  if(numchunks > 1)
+      switch(keepdsm)
+          case 'yes'
+              ft_warning('Keeping DSM output not supported when computation split into batches due to large size.')
+      end
+      keepdsm = 'no';
+  end
   
   try
       % DSM computation is computationally intensive:
@@ -193,7 +202,6 @@ if ft_voltype(headmodel, 'openmeeg')
       % Dense voxel grids may require several gigabytes of RAM, so optionally
       % split into smaller batches
 
-      numchunks = ceil(ndip/batchsize);
       
       
       [h2sens,ds2sens] = ft_sensinterp_openmeeg(grid.pos(insideindx,:), headmodel, sens);
@@ -211,6 +219,11 @@ if ft_voltype(headmodel, 'openmeeg')
               diprangeori = [((ii-1)*3*batchsize + 1):(min((ii)*3*batchsize,3*ndip))];
               dsm = ft_sysmat_openmeeg(grid.pos(insideindx(diprange),:), headmodel, sens, nonadaptive);
               lf(:,diprangeori) = ds2sens(:,diprangeori) + h2sens*headmodel.mat*dsm;
+              
+              switch(keepdsm)
+                  case 'yes'  % retain DSM in cfg if desired
+                      cfg.om.dsm = dsm;
+              end
               
               dipindx = insideindx(diprange);
           end
