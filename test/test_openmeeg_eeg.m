@@ -87,8 +87,6 @@ function [rdms,mags] = run_bem_computation(r,c,dippos)
     cfg = [];
     cfg.method = 'openmeeg';
     
-    % ft_prepare_headmodel has a bug; likely the geom file does not match
-    % the true order of the layers
     cfg.conductivity = c;
     vol_bem = ft_prepare_headmodel(cfg, bnd);
 
