@@ -18,7 +18,7 @@ function [dsm] = ft_sysmat_openmeeg(pos, headmodel, sens, NAflag)
 %
 % This link with FieldTrip is derived from the OpenMEEG project
 % with contributions from Daniel Wong and Sarang Dalal, and uses external
-% command-line executables. See http://gforge.inria.fr/projects/openmeeg
+% command-line executables. See http://openmeeg.github.io/
 %
 % Use as
 %   dsm = ft_sysmat_openmeeg(pos, headmodel, sens, nonadaptive_flag)

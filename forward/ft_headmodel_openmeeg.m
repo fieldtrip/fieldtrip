@@ -18,7 +18,7 @@ function headmodel = ft_headmodel_openmeeg(bnd, varargin)
 %
 % This link with FieldTrip is derived from the OpenMEEG project
 % with contributions from Daniel Wong and Sarang Dalal, and uses external
-% command-line executables. See http://gforge.inria.fr/projects/openmeeg
+% command-line executables. See http://openmeeg.github.io/
 %
 % Use as
 %   headmodel = ft_headmodel_openmeeg(bnd, ...)
