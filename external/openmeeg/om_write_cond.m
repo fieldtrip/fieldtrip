@@ -27,7 +27,7 @@ if cfid == -1
 end
 
 fprintf(cfid,'# Properties Description 1.0 (Conductivities)\n\n');
-fprintf(cfid,'Air         0.0\n');
+fprintf(cfid,'air         0.0\n');
 
 for k=1:ndomains
     fprintf(cfid, '%s       %f\n', names{k}, c(k));
