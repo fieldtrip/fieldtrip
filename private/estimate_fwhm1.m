@@ -16,6 +16,9 @@ if ~isfield(source, 'dim'),
   source.dim = pos2dim(source.pos);
 end
 inside  = source.inside;
+if islogical(inside)
+  inside = find(inside);
+end
 ninside = length(inside);
 
 if ~isfield(source.avg, 'filter')
@@ -164,8 +167,8 @@ end
 source.fwhm      = fwhm(:);
 source.indx      = indx(:);
 source.insideold = source.inside;
-source.inside    = find(isfinite(fwhm));
-source.outside   = setdiff((1:size(source.pos,1))', source.inside);
+source.inside    = isfinite(fwhm);
+%source.outside   = setdiff((1:size(source.pos,1))', source.inside);
 
 %in the extreme cases a is either: [2 1 1;1 2 1;1 1 2]; det(a) = 4; no correlation      = small FWHM
 %or                   a is       : [0 0 0;0 0 0;0 0 0]; det(a) = 0; perfect correlation = large FWHM

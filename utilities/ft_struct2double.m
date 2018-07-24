@@ -50,7 +50,8 @@ x = convert(x, 0, maxdepth);
 function [a] = convert(a, depth, maxdepth)
 
 if depth>maxdepth
-  ft_error('recursive depth exceeded');
+  % only convert up to the specified level
+  return
 end
 
 switch class(a)
@@ -67,21 +68,21 @@ switch class(a)
         a(j) = setfield(a(j), fn, ra);
       end
     end
-
+    
   case 'cell'
     % process all elements of the cell-array recursively
     % warning, this is a recursive call to traverse nested structures
     for i=1:length(a(:))
       a{i} = convert(a{i}, depth+1, maxdepth);
     end
-
+    
   case {'single' 'int64' 'uint64' 'int32' 'uint32' 'int16' 'uint16' 'int8' 'uint8'}
     % convert the values to double precision
     a = double(a);
-
+    
   case 'double'
     % keep as it is
-
+    
   otherwise
     % do nothing
 end

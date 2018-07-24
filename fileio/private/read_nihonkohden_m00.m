@@ -54,14 +54,14 @@ fprintf('\nWill read from %d to %d sample points: %d seconds \n',begsample,endsa
 
 dc = textscan(fid,'%f',hdr.nChans*nsmp,'delimiter','\n','headerlines',begsample-1);
 df = dc{1};clear dc;
-df = df.*mult; % multiply by 10, don't forget to divide when reading in data!
+%df = df.*mult; % multiply by 10, don't forget to divide when reading in data!
 
-fprintf('converting ASCII floats to 16-bit signed ints');
+%fprintf('converting ASCII floats to 16-bit signed ints');
 
 dat = reshape(df,hdr.nChans,nsmp);
-clear df;
-dat = int16(dat)./mult;
-dat = double(dat);
+%clear df;
+%dat = int16(dat)./mult;
+%dat = double(dat);
 % should we double it? No clue why the int16 and the multiplier.
 % Later convert data has to be multiplied to transform it into microvolts
 % nkdata.eeg=nkdata.eeg./nkdata.multiplier; (Diego)

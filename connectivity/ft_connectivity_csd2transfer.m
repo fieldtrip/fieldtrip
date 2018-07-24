@@ -1,19 +1,18 @@
 function [output] = ft_connectivity_csd2transfer(freq, varargin)
 
-% FT_CONNECTIVITY_CSD2TRANSFER computes the transfer-function from frequency
-% domain data using the Wilson-Burg algorithm. The transfer function can be
-% used for the computation of directional measures of connectivity, such as
-% granger causality, partial directed coherence, or directed transfer functions
+% FT_CONNECTIVITY_CSD2TRANSFER computes the transfer-function from frequency domain
+% data using the Wilson-Burg algorithm. The transfer function can be used for the
+% computation of directional measures of connectivity, such as Granger causality,
+% partial directed coherence, or directed transfer functions.
 %
 % Use as
-%   [output] = ft_connectivity_csd2transfer(freq, varargin)
+%   [output] = ft_connectivity_csd2transfer(freq, ...)
 %
-% Where freq is a data structure containing frequency domain data containing
-% the cross-spectral density computed between all pairs of channels, thus
-% containing a 'dimord' of 'chan_chan_freq(_time)'.
+% The input variable freq should be a FieldTrip data structure containing frequency
+% domain data containing the cross-spectral density computed between all pairs of
+% channels, thus containing a 'dimord' of 'chan_chan_freq(_time)'.
 %
-% Configurable options come in key-value pairs:
-%
+% Additional optional input arguments come as key-value pairs:
 %   numiteration = scalar value (default: 100) the number of iterations
 %   channelcmb   = Nx2 cell-array listing the channel pairs for the spectral
 %                    factorization. If not defined or empty (default), a
@@ -21,28 +20,31 @@ function [output] = ft_connectivity_csd2transfer(freq, varargin)
 %                    a multiple pairwise factorization is done.
 %   tol          = scalar value (default: 1e-18) tolerance limit truncating
 %                    the iterations
-%   sfmethod     = 'multivariate', or 'bivariate' 
+%   sfmethod     = 'multivariate', or 'bivariate'
 %   stabilityfix = false, or true. zigzag-reduction by means of tapering of the
 %                    intermediate time domain representation when computing the
 %                    plusoperator
 %
-% The code for the Wilson-Burg algorithm has been very generously provided by 
-% Dr. Mukesh Dhamala, and Prof. Mingzhou Ding and his group, and has been
-% adjusted for efficiency.
-%
-% If you use this code for studying directed interactions, please cite from
+% The code for the Wilson-Burg algorithm has been very generously provided by Dr.
+% Mukesh Dhamala, and Prof. Mingzhou Ding and his group, and has been adjusted for
+% efficiency. If you use this code for studying directed interactions, please cite
 % the following references:
-% -M.Dhamala, R.Rangarajan, M.Ding, Physical Review Letters 100, 018701 (2008)
-% -M.Dhamala, R.Rangarajan, M.Ding, Neuroimage 41, 354 (2008)
-
-% Undocumented options:
+%   - M.Dhamala, R.Rangarajan, M.Ding, Physical Review Letters 100, 018701 (2008).
+%   - M.Dhamala, R.Rangarajan, M.Ding, Neuroimage 41, 354 (2008).
 %
+% See also FT_CONNECTIVITYANALYSIS
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Undocumented options:
 %   block
 %   blockindx
 %   svd
 %   conditional
 %   init
 %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Copyright (C) 2009-2017, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
@@ -63,22 +65,20 @@ function [output] = ft_connectivity_csd2transfer(freq, varargin)
 %
 % $Id$
 
-sfmethod     = ft_getopt(varargin, 'sfmethod',     'multivariate');
-numiteration = ft_getopt(varargin, 'numiteration', 100);
-fb           = ft_getopt(varargin, 'feedback',     'none');
+sfmethod         = ft_getopt(varargin, 'sfmethod',     'multivariate');
+numiteration     = ft_getopt(varargin, 'numiteration', 100);
+fb               = ft_getopt(varargin, 'feedback',     'none');
 checkconvergence = ft_getopt(varargin, 'checkconvergence', true);
-init         = ft_getopt(varargin, 'init',         'chol');
+init             = ft_getopt(varargin, 'init',         'chol');
+channelcmb       = ft_getopt(varargin, 'channelcmb',   {});
+channeltriplet   = ft_getopt(varargin, 'channeltriplet', {});
+block            = ft_getopt(varargin, 'block',        []);
+tol              = ft_getopt(varargin, 'tol',          1e-18);
 
-channelcmb   = ft_getopt(varargin, 'channelcmb',   {});
-channeltriplet = ft_getopt(varargin, 'channeltriplet', {});
-block        = ft_getopt(varargin, 'block',        []);
-tol          = ft_getopt(varargin, 'tol',          1e-18);
-
-dosvd         = istrue(ft_getopt(varargin, 'svd',          'no'));
-doconditional = istrue(ft_getopt(varargin, 'conditional',  0));
-stabilityfix  = istrue(ft_getopt(varargin, 'stabilityfix', false));
-
-doblock       = isstruct(block) || doconditional;
+dosvd            = istrue(ft_getopt(varargin, 'svd',          'no'));
+doconditional    = istrue(ft_getopt(varargin, 'conditional',  0));
+stabilityfix     = istrue(ft_getopt(varargin, 'stabilityfix', false));
+doblock          = isstruct(block) || doconditional;
 
 if doconditional && isempty(block)
   % create the default block struct-array
@@ -97,7 +97,7 @@ if ~isfield(freq, 'crsspctrm') || ~isfield(freq, 'label')
 end
 
 hasrpt = ~isempty(strfind(freq.dimord, 'rpt'));
-if hasrpt,
+if hasrpt
   nrpt = numel(freq.cumtapcnt);
 else
   nrpt = 1;
@@ -127,7 +127,7 @@ elseif strcmp(sfmethod, 'trivariate')
   cmbindx(:,2) = i2;
   [~,i2] = match_str(channeltriplet(:,3),freq.label);
   cmbindx(:,3) = i2;
-
+  
 elseif strcmp(sfmethod, 'bivariate_conditional')
   % this method requires a non-empty channelcmb {Nx2} with a corresponding
   % channelcnd{Nx1}. The elements in channelcnd can be cell-arrays
@@ -169,16 +169,16 @@ elseif strcmp(sfmethod, 'bivariate_conditional')
     end
   end
   channeltriplet = channeltriplet(ok,:);
-%   
-%   tmp = cell(0,3);
-%   while ~isempty(channeltriplet)
-%     tmp = cat(1, tmp, channeltriplet(end,:));
-%     channeltriplet(strcmp(channeltriplet(:,1),channeltriplet{end,1})&...
-%                    strcmp(channeltriplet(:,2),channeltriplet{end,2})&...
-%                    strcmp(channeltriplet(:,3),channeltriplet{end,3}),:) = [];
-%   end
-%   channeltriplet = tmp;
-%   
+  %
+  %   tmp = cell(0,3);
+  %   while ~isempty(channeltriplet)
+  %     tmp = cat(1, tmp, channeltriplet(end,:));
+  %     channeltriplet(strcmp(channeltriplet(:,1),channeltriplet{end,1})&...
+  %                    strcmp(channeltriplet(:,2),channeltriplet{end,2})&...
+  %                    strcmp(channeltriplet(:,3),channeltriplet{end,3}),:) = [];
+  %   end
+  %   channeltriplet = tmp;
+  %
 end
 
 if ~isempty(channelcmb) && numel(freq.label)>1 && strncmp(sfmethod, 'bivariate', 9)
@@ -192,7 +192,7 @@ end
 
 if ~isempty(block)
   % sanity check 1
-  if ~isstruct(block) 
+  if ~isstruct(block)
     ft_error('block should be a struct-array');
   end
   % sanity check 2
@@ -201,15 +201,15 @@ if ~isempty(block)
   end
 end
 
-if isfield(freq, 'time'),
+if isfield(freq, 'time')
   ntim = numel(freq.time);
 else
   ntim = 1;
 end
 
 siz = size(freq.crsspctrm);
-if ntim==1,
-  siz = [siz 1]; %add dummy dimensionality for time axis
+if ntim==1
+  siz = [siz 1]; % add dummy dimensionality for time axis
 end
 
 if strcmp(sfmethod, 'bivariate')
@@ -221,7 +221,7 @@ if strcmp(sfmethod, 'bivariate')
 elseif strcmp(sfmethod, 'bivariate_conditional')
   % no text
 elseif strcmp(sfmethod, 'multivariate')
-  fprintf('computing multivariate non-parametric spectral factorization on %d channels\n', numel(freq.label));   
+  fprintf('computing multivariate non-parametric spectral factorization on %d channels\n', numel(freq.label));
 elseif strcmp(sfmethod, 'trivariate')
   fprintf('computing tripletwise non-parametric spectral factorization\n');
 else
@@ -232,7 +232,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the actual computations start here
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if strcmp(sfmethod, 'multivariate') && nrpt==1 && ~doconditional,
+if strcmp(sfmethod, 'multivariate') && nrpt==1 && ~doconditional
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % standard code
   % multivariate decomposition
@@ -245,7 +245,7 @@ if strcmp(sfmethod, 'multivariate') && nrpt==1 && ~doconditional,
   % only do decomposition once
   for m = 1:ntim
     tmp = freq.crsspctrm(:,:,:,m);
-
+    
     % do SVD to avoid zigzags due to numerical issues
     if dosvd
       dat     = sum(tmp,3);
@@ -255,13 +255,13 @@ if strcmp(sfmethod, 'multivariate') && nrpt==1 && ~doconditional,
       end
     end
     
-    if any(isnan(tmp(:))),
+    if any(isnan(tmp(:)))
       Htmp = nan;
       Ztmp = nan;
       Stmp = nan;
     else
       [Htmp, Ztmp, Stmp] = sfactorization_wilson(tmp, freq.freq, ...
-                             numiteration, tol, fb, init, checkconvergence, stabilityfix);
+        numiteration, tol, fb, init, checkconvergence, stabilityfix);
     end
     
     % undo SVD
@@ -278,12 +278,12 @@ if strcmp(sfmethod, 'multivariate') && nrpt==1 && ~doconditional,
     S(:,:,:,m) = Stmp;
   end
   
-elseif strcmp(sfmethod, 'multivariate') && nrpt==1 && doblock,
+elseif strcmp(sfmethod, 'multivariate') && nrpt==1 && doblock
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % blockwise multivariate stuff
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
-  if ntim>1,
+  if ntim>1
     ft_error('blockwise factorization of tfrs is not yet possible');
   end
   
@@ -296,7 +296,7 @@ elseif strcmp(sfmethod, 'multivariate') && nrpt==1 && doblock,
   end
   
   if doconditional
-    % multiple factorizations are needed: 
+    % multiple factorizations are needed:
     % -all blocks together
     % -all pairs of blocks (
     % -all leave-one-out blocks
@@ -355,7 +355,7 @@ elseif strcmp(sfmethod, 'multivariate') && nrpt==1 && doblock,
     end
     
     [Htmp, Ztmp, Stmp] = sfactorization_wilson(Stmp, freq.freq, ...
-                           numiteration, tol, fb, init, checkconvergence, stabilityfix);  
+      numiteration, tol, fb, init, checkconvergence, stabilityfix);
     
     % undo PCA
     if dopca
@@ -365,7 +365,7 @@ elseif strcmp(sfmethod, 'multivariate') && nrpt==1 && doblock,
       end
       Ztmp = u*Ztmp*u';
     end
-                                               
+    
     siz  = [size(Htmp) 1]; siz = [siz(1)*siz(2) siz(3:end)];
     Htmp = reshape(Htmp, siz);
     siz  = [size(Ztmp) 1]; siz = [siz(1)*siz(2) siz(3:end)];
@@ -382,7 +382,7 @@ elseif strcmp(sfmethod, 'multivariate') && nrpt==1 && doblock,
     end
     
     %concatenate
-    if k == 1,
+    if k == 1
       H = Htmp;
       Z = Ztmp;
       S = Stmp;
@@ -392,14 +392,14 @@ elseif strcmp(sfmethod, 'multivariate') && nrpt==1 && doblock,
       Z = cat(1,Z,Ztmp);
       S = cat(1,S,Stmp);
       labelcmb = cat(1,labelcmb,cmbtmp);
-    end 
+    end
   end
   
-  if strcmp(freq.dimord(1:9), 'chan_chan'),
+  if strcmp(freq.dimord(1:9), 'chan_chan')
     freq.dimord = ['chancmb_',freq.dimord(strfind(freq.dimord,'freq'):end)];
   end
   
-elseif strcmp(sfmethod, 'multivariate') && nrpt>1 && ~doblock,
+elseif strcmp(sfmethod, 'multivariate') && nrpt>1 && ~doblock
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % multiple repetitions, loop over repetitions
   % multivariate decomposition
@@ -412,15 +412,15 @@ elseif strcmp(sfmethod, 'multivariate') && nrpt>1 && ~doblock,
     for m = 1:ntim
       tmp = reshape(freq.crsspctrm(k,:,:,:,m), siz(2:end-1));
       [Htmp, Ztmp, Stmp] = sfactorization_wilson(tmp, freq.freq, ...
-                             numiteration, tol, fb, init, checkconvergence, stabilityfix);
+        numiteration, tol, fb, init, checkconvergence, stabilityfix);
       H(k,:,:,:,m) = Htmp;
       Z(k,:,:,m)   = Ztmp;
       S(k,:,:,:,m) = Stmp;
-    end 
+    end
   end
- 
+  
 elseif strcmp(sfmethod, 'multivariate') && nrpt>1 && doblock && ~doconditional
-  % error 
+  % error
   ft_error('single trial estimates and blockwise factorisation is not yet implemented');
   
 elseif strcmp(sfmethod, 'bivariate')
@@ -447,11 +447,11 @@ elseif strcmp(sfmethod, 'bivariate')
   channelcmb = channelcmb(ok,:);
   
   %do multiple 2x2 factorization efficiently
-  if ntim>1,
+  if ntim>1
     for kk = 1:ntim
       [Htmp, Ztmp, Stmp] = sfactorization_wilson2x2(freq.crsspctrm(:,:,:,kk), ...
-                             freq.freq, numiteration, tol, cmbindx, fb, init, checkconvergence, stabilityfix);
-      if kk==1,
+        freq.freq, numiteration, tol, cmbindx, fb, init, checkconvergence, stabilityfix);
+      if kk==1
         H   = Htmp;
         Z   = Ztmp;
         S   = Stmp;
@@ -477,24 +477,24 @@ elseif strcmp(sfmethod, 'bivariate')
       for k = 1:numel(begchunk)
         fprintf('computing factorization of chunck %d/%d\n', k, numel(begchunk));
         [Htmp, Ztmp, Stmp] = sfactorization_wilson2x2(freq.crsspctrm, freq.freq, ...
-                               numiteration, tol, cmbindx(begchunk(k):endchunk(k),:), fb, init, checkconvergence, stabilityfix);
-                                           
+          numiteration, tol, cmbindx(begchunk(k):endchunk(k),:), fb, init, checkconvergence, stabilityfix);
+        
         begix = (k-1)*nperchunk*4+1;
         endix = min(k*nperchunk*4, size(cmbindx,1)*4);
         H(begix:endix, :) = Htmp;
         S(begix:endix, :) = Stmp;
         Z(begix:endix, :) = Ztmp;
-                                           
+        
       end
     else
       [H, Z, S] = sfactorization_wilson2x2(freq.crsspctrm, freq.freq, ...
-                    numiteration, tol, cmbindx, fb, init, checkconvergence, stabilityfix);
+        numiteration, tol, cmbindx, fb, init, checkconvergence, stabilityfix);
     end
   end
   
   labelcmb = cell(size(cmbindx,1)*4, 2);
   for k = 1:size(cmbindx,1)
-    duplet = sprintf('%s,%s',channelcmb{k,1},channelcmb{k,2});  
+    duplet = sprintf('%s,%s',channelcmb{k,1},channelcmb{k,2});
     indx   = (k-1)*4 + (1:4);
     labelcmb{indx(1),1} = [channelcmb{k,1},'[',duplet,']'];
     labelcmb{indx(1),2} = [channelcmb{k,1},'[',duplet,']'];
@@ -558,11 +558,11 @@ elseif strcmp(sfmethod, 'trivariate')
   %FIXME remove auto-combinations and double occurrences
   
   %do multiple 3x3 factorization efficiently
-  if ntim>1,
+  if ntim>1
     for kk = 1:ntim
       [Htmp, Ztmp, Stmp] = sfactorization_wilson3x3(freq.crsspctrm(:,:,:,kk), ...
-                             freq.freq, numiteration, tol, cmbindx, fb, init, checkconvergence, stabilityfix);
-      if kk==1,
+        freq.freq, numiteration, tol, cmbindx, fb, init, checkconvergence, stabilityfix);
+      if kk==1
         H   = Htmp;
         Z   = Ztmp;
         S   = Stmp;
@@ -588,18 +588,18 @@ elseif strcmp(sfmethod, 'trivariate')
       for k = 1:numel(begchunk)
         fprintf('computing factorization of chunck %d/%d\n', k, numel(begchunk));
         [Htmp, Ztmp, Stmp] = sfactorization_wilson3x3(freq.crsspctrm, freq.freq, ...
-                               numiteration, tol, cmbindx(begchunk(k):endchunk(k),:), fb, init, checkconvergence, stabilityfix);
-                                           
+          numiteration, tol, cmbindx(begchunk(k):endchunk(k),:), fb, init, checkconvergence, stabilityfix);
+        
         begix = (k-1)*nperchunk*9+1;
         endix = min(k*nperchunk*9, size(cmbindx,1)*9);
         H(begix:endix, :) = Htmp;
         S(begix:endix, :) = Stmp;
         Z(begix:endix, :) = Ztmp;
-                                           
+        
       end
     else
       [H, Z, S] = sfactorization_wilson3x3(freq.crsspctrm, freq.freq, ...
-                    numiteration, tol, cmbindx, fb, init, checkconvergence, stabilityfix);
+        numiteration, tol, cmbindx, fb, init, checkconvergence, stabilityfix);
     end
   end
   
@@ -627,10 +627,10 @@ elseif strcmp(sfmethod, 'trivariate')
     labelcmb{indx(9),1} = [channeltriplet{k,3},'[',triplet,']'];
     labelcmb{indx(9),2} = [channeltriplet{k,3},'[',triplet,']'];
   end
-elseif strcmp(sfmethod, 'bivariate') && nrpt>1,
-  % error 
+elseif strcmp(sfmethod, 'bivariate') && nrpt>1
+  % error
   ft_error('single trial estimates and linear combination indexing is not implemented');
-
+  
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
@@ -643,7 +643,7 @@ output.noisecov  = Z;
 if strcmp(sfmethod, 'multivariate')
   output.dimord    = freq.dimord;
 else
-  if strncmp(freq.dimord, 'chan_chan', 9),
+  if strncmp(freq.dimord, 'chan_chan', 9)
     freq.dimord = ['chancmb_',freq.dimord(strfind(freq.dimord,'freq'):end)];
   end
   output.dimord    = freq.dimord;

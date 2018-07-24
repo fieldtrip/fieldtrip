@@ -23,8 +23,12 @@ function K=linKer(X,Z,dir)
 
 if ( nargin < 2 ) Z=X; end;
 if ( nargin < 3 ) dir=1; end;
-if ( dir==-1 ) % dir indicates if row or col vectors
+if ( dir==-1 ) && (ndims(X)>2 || ndims(Z)>2)% dir indicates if row or col vectors
    K=tprod(X,[-(1:ndims(X)-1) 1],Z,[-(1:ndims(Z)-1) 2],'n');
-else
+elseif ( dir==-1)
+   K=transpose(X)*Z;
+elseif ( dir==1 ) && (ndims(X)>2 || ndims(Z)>2)
    K=tprod(X,[1 -(2:ndims(X))],Z,[2 -(2:ndims(Z))],'n');
+elseif ( dir==1 )
+   K=X*transpose(Z);
 end

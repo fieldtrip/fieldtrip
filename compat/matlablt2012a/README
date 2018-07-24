@@ -1,0 +1,11 @@
+This directory contains some functions that allow FieldTrip to run
+on older MATLAB versions. These functions emulate the functionality
+that is present in the latest MATLAB version.
+
+Each of these directories is called matlabltXXXXX, where "lt" stands
+for "less than" and XXXXX is the MATLAB release. If you are using
+MATLAB release N, then you should only add the directories N+1,
+N+2, ... to your path. In general this will be done automatically
+by the ft_defaults function.
+
+See also http://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path

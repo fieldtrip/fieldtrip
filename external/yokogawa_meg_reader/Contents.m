@@ -1,5 +1,5 @@
 % Yokogawa MEG Reader toolbox for MATLAB
-% Version 1.04.01 01-Nov-2011
+% Version 1.5.1 04-June-2018
 %
 % Files
 %   getYkgwData        - Get measured data
@@ -18,6 +18,18 @@
 %------------------------------------------------------------
 %                          History
 %------------------------------------------------------------
+% R1.5.1 : 2018.06.04
+%  [ GetSqf, getYkgwData, getYkgwMriHdr ]
+%    - modify comment(fear of misinterpretation)
+%  [ getYkgwHdrDigitize ]
+%    - Removed the end of unnecessary spaces of point.name
+% R1.05.00 : 2013.05.29
+%  [ getYkgwHdrChannel, getYkgwData ]
+%    - Support third-party exported data containing Nihon-kohden EEG channels
+%    - Fix MATLAB:mir_warning_unrecognized_pragma 
+%  [ getYkgwHdrDigitize ]
+%    - Removed the end of unnecessary spaces of point.name
+%
 % R1.04.01 : 2011.11.01
 %    - License Agreement was updated.
 %
@@ -64,56 +76,4 @@
 % R1.00.00 : 2010.06.24
 %  - First release
 % 
-%-----------------------------------------------------------------------
-% License Agreement							
-%
-% Copyright (c) 2010-2011 YOKOGAWA Electric Corporation.
-% All rights reserved.
-% 
-% Yokogawa MEG Reader Toolbox is distributed subject to the following license conditions:
-% 
-% SOFTWARE LICENSE AGREEMENT*
-% Software: Yokogawa MEG Reader Toolbox
-% 
-% 1. The "software", below, refers to Yokogawa MEG Reader Toolbox (in binary form and accompanying documentation). 
-% Each licensee is addressed as "you" or "Licensee."
-% 
-% 2. The copyright holders shown above and their third-party licensors hereby grant Licensee a royalty-free nonexclusive license,
-% subject to the limitations stated herein.
-% 
-% 3. You may make a copy or copies of the software for use within your organization, if you meet the following conditions:
-% Copies must include the copyright notice and this software License Agreement in the documentation
-% and/or other materials provided with the copy.
-% 
-% 4. You may not modify a copy or copies of the software or any portion of it. 
-% 
-% 5. This software and data processed by this software may not be used for clinical and/or diagnostic purposes.
-% 
-% 6. WARRANTY DISCLAIMER. THE SOFTWARE IS SUPPLIED "AS IS" WITHOUT WARRANTY OF ANY KIND.
-% THE COPYRIGHT HOLDERS, THEIR THIRD PARTY LICENSORS, AND THEIR EMPLOYEES:
-% (1) DISCLAIM ANY WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY IMPLIED 
-% WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE OR NON-INFRINGEMENT,
-% (2) DO NOT ASSUME ANY LEGAL LIABILITY OR RESPONSIBILITY FOR THE ACCURACY,
-% COMPLETENESS, OR USEFULNESS OF THE SOFTWARE,
-% (3) DO NOT REPRESENT THAT USE OF THE SOFTWARE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS, 
-% (4) DO NOT WARRANT THAT THE SOFTWARE WILL FUNCTION UNINTERRUPTED, 
-% THAT IT IS ERROR-FREE OR THAT ANY ERRORS WILL BE CORRECTED.
-% 
-% 7. LIMITATION OF LIABILITY. IN NO EVENT WILL THE COPYRIGHT HOLDERS, THEIR THIRD PARTY LICENSORS, 
-% OR THEIR EMPLOYEES: BE LIABLE TO YOU AND/OR ANY PARTY FOR ANY DIRECT, INDIRECT, SPECIAL, 
-% INCIDENTAL OR OTHER CONSEQUENTIAL DAMAGES, OR FOR EXEMPLARY, SPECIAL, 
-% PUNITIVE OR SIMILAR DAMAGES OF ANY KIND, WHETHER BASED ON CONTRACT, 
-% STRICT LIABILITY, TORT, WARRANTY (EXPRESS OR IMPLIED), OR ANY OTHER LEGAL GROUNDS 
-% FOR ANY USE OF THIS SOFTWARE, INCLUDING WITHOUT LIMITATION, ANY LOST PROFITS, 
-% LOSS OF INCOME, BUSINESS INTERRUPTION, LOSS OF USE, LOSS OR DESTRUCTION OF PROGRAMS 
-% OR OTHER DATA, LOSS OF AVAILABILITY AND THE LIKE ON YOUR INFORMATION HANDLING SYSTEM, 
-% OR OTHERWISE, EVEN IF THE COPYRIGHT HOLDERS HAS BEEN EXPRESSLY ADVISED OF THE POSSIBILITY 
-% OF SUCH DAMAGES.
-% 
-% 8. The copyright holders reserve the right to change, or temporarily or permanently withdraw, 
-% information and/or contents contained in its own software, or to suspend or discontinue the services 
-% provided through this software at any time, without prior notice. 
-% The copyright holders shall not be held liable for damage of any kind sustained by you for any reason,
-% as a result of the copyright holders changing, or temporarily or permanently withdrawing, such information.
-% 
-% *This License Agreement is subject to change without notice.
+% Copyright (C) 2010-2018 RICOH Corporation, All Rights Reserved.

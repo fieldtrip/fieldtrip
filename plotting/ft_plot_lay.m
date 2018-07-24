@@ -33,7 +33,7 @@ function ft_plot_lay(lay, varargin)
 %   'width'       = width of the local axes
 %   'height'      = height of the local axes
 %
-% See also FT_PREPARE_LAYOUT
+% See also FT_PREPARE_LAYOUT, FT_PLOT_TOPO
 
 % Copyright (C) 2009, Robert Oostenveld
 %

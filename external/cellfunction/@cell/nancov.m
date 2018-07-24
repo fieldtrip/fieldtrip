@@ -5,7 +5,7 @@ function [c] = nancov(x, varargin)
 % [C] = NANCOV(X, Y, NORMALIZEFLAG, DIM) computes the covariance between all cells in x and y
 % 
 % X (and Y) should be linear cell-array(s) of matrices for which the size in at 
-% least one of the dimensions should be the same for all cells 
+% least one of the dimensions should be the same for all cells. 
 
 if numel(varargin)==0
   % with a single input, default parameters
@@ -51,13 +51,13 @@ if isempty(dim)
 end
 
 nx = size(x);
-if ~iscell(x) || length(nx)>2 || all(nx>1),
+if ~iscell(x) || length(nx)>2 || all(nx>1)
   error('incorrect input for nancov');
 end
 
 nx   = max(nx);
-if isempty(y),
-  n = cov(isfinite(x),[],[],0);
+if isempty(y)
+  n = cov(isfinite(x),1,[],0);
   if dim==1
     n = n*sum(scx1);
   elseif dim==2
@@ -77,14 +77,21 @@ if isempty(y),
   Mx = M;
   My = M';
 else
-  n = cov(isfinite(x), isfinite(y),[],[],0);
+  n = cov(isfinite(x), isfinite(y),1,[],0);
   if dim==1
     n = n*sum(scx1);
   elseif dim==2
     n = n*sum(scx2);
+    tmp1 = zeros(size(x{1},1),size(y{1},1));
+    tmp2 = tmp1;
+    tmp3 = tmp1;
   end
   for k = 1:nx
-    [tmp1, tmp2, tmp3] = nancovc(x{k}, y{k}, dim);
+    if all(~isfinite(x{k}(:)))||all(~isfinite(y{k}(:)))
+      tmp1(:) = 0; tmp2(:) = 0; tmp3(:) = 0;
+    else
+      [tmp1, tmp2, tmp3] = nancovc(x{k}, y{k}, dim);
+    end
     if k==1
       C  = tmp1;
       Mx = tmp2;
@@ -110,12 +117,12 @@ end
 if flag
   c = (C-(Mx.*My)./n1)./n2;
 else
-  c = C./n;
+  c = C./n2;
 end
 
 function [c,mx,my] = nancovc(x, y, dim)
 
-if nargin==2,
+if nargin==2
   dim = y;
   y   = x;
 end
@@ -129,22 +136,41 @@ finitey = isfinite(y);
 x(~finitex)=0;
 y(~finitey)=0;
 
-if dim==1,
+if dim==1
+  error('not yet supported');
   c  = x'*y;
   for k = 1:size(x,2)
     z=1;
     
   end
-elseif dim==2,
+elseif dim==2
   c = x*y';
   nx = size(x,1);
   ny = size(y,1);
   mx = zeros(nx,ny);
   my = zeros(nx,ny);
-  for k = 1:ny
-    mx(:,k) = sum(x.*double(finitey(k*ones(nx,1),:)&finitex),2);
+  
+  % check whether nans are in the columns
+  %nancolumnx = all(ismember(sum(finitex), [0 nx]));
+  %nancolumny = all(ismember(sum(finitey), [0 ny])); 
+  sx = sum(finitex);
+  sy = sum(finitey);
+  nancolumnx = all(sx==0|sx==nx);
+  nancolumny = all(sy==0|sy==ny);
+  
+  if nancolumny
+    mx = repmat(sum(x(:,finitey(1,:)),2),[1 ny]);
+  else
+    for k = 1:ny
+      mx(:,k) = sum(x(:,finitey(k,:)),2);
+    end
   end
-  for k = 1:nx
-    my(k,:) = sum(y.*double(finitey&finitex(k*ones(ny,1),:)),2)';
+  if nancolumnx
+    my = repmat(sum(y(:,finitex(1,:)),2)',[nx 1]);
+  else
+    for k = 1:nx
+      my(k,:) = sum(y(:,finitex(k,:)),2)';
+      %my(k,:) = sum(y.*double(finitey&finitex(k*ones(ny,1),:)),2)';
+    end
   end
 end

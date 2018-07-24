@@ -15,7 +15,7 @@ cfg.continuous = 'yes';
 data = ft_preprocessing(cfg);
 
 mont          = [];
-mont.tra      = -eye(151); %flip sign
+mont.tra      = -eye(151); % flip sign
 mont.labelold = ft_channelselection({'MEG'}, data.label);
 mont.labelnew = ft_channelselection({'MEG'}, data.label);
 

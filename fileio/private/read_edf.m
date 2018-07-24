@@ -164,17 +164,19 @@ if needhdr
   end
   % check validity of PhysMin and PhysMax
   if (length(EDF.PhysMin) ~= EDF.NS)
-    fprintf(2,'Warning OPENEDF: Failing Physical Minimum\n');
+    fprintf(2,'Warning OPENEDF: Failing Physical Minimum, taking Digital Minimum instead\n');
     EDF.PhysMin = EDF.DigMin;
   end
   if (length(EDF.PhysMax) ~= EDF.NS)
-    fprintf(2,'Warning OPENEDF: Failing Physical Maximum\n');
+    fprintf(2,'Warning OPENEDF: Failing Physical Maximum, taking Digital Maximum instead\n');
     EDF.PhysMax = EDF.DigMax;
   end
-  if (any(EDF.PhysMin >= EDF.PhysMax))
-    fprintf(2,'Warning OPENEDF: Physical Minimum larger than Maximum\n');
-    EDF.PhysMin = EDF.DigMin;
-    EDF.PhysMax = EDF.DigMax;
+  idx_PhysMin_ge_PhysMax = EDF.PhysMin >= EDF.PhysMax;
+  if (any(idx_PhysMin_ge_PhysMax))
+    tmplabel = cellfun(@(x) [x ' '], cellstr(EDF.Label(idx_PhysMin_ge_PhysMax,:)),'UniformOutput',false)';
+    fprintf(2,['Warning OPENEDF: Physical Minimum larger than Maximum.\nPLEASE recheck if the scaling and polarity in the following channels are still correct if used:\n' tmplabel{:} '\n']);
+    %EDF.PhysMin = EDF.DigMin;
+    %EDF.PhysMax = EDF.DigMax;
   end
   EDF.PreFilt= char(fread(EDF.FILE.FID,[80,EDF.NS],'char')');
   EDF.SPR = str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'char')'));  % samples per data record
@@ -183,9 +185,9 @@ if needhdr
   
   EDF.Cal = (EDF.PhysMax-EDF.PhysMin)./(EDF.DigMax-EDF.DigMin);
   EDF.Off = EDF.PhysMin - EDF.Cal .* EDF.DigMin;
-  tmp = find(EDF.Cal < 0);
-  EDF.Cal(tmp) = ones(size(tmp));
-  EDF.Off(tmp) = zeros(size(tmp));
+  %tmp = find(EDF.Cal < 0);
+  %EDF.Cal(tmp) = ones(size(tmp));
+  %EDF.Off(tmp) = zeros(size(tmp));
   
   EDF.Calib=[EDF.Off';(diag(EDF.Cal))];
   %EDF.Calib=sparse(diag([1; EDF.Cal]));
@@ -433,10 +435,17 @@ end
 % SUBFUNCTION for reading the 16 bit values
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function buf = readLowLevel(filename, offset, numwords)
-if offset < 2*1024^2
+is_below_2GB = offset < 2*1024^2;
+read_16bit_success = true;
+if is_below_2GB
   % use the external mex file, only works for <2GB
+  try
   buf = read_16bit(filename, offset, numwords);
-else
+  catch e
+      read_16bit_success = false;
+  end
+end
+if ~is_below_2GB || ~read_16bit_success
   % use plain matlab, thanks to Philip van der Broek
   fp = fopen(filename,'r','ieee-le');
   status = fseek(fp, offset, 'bof');
@@ -447,6 +456,6 @@ else
   fclose(fp);
   if (num<numwords)
     ft_error(['failed reading ' filename]);
+    return
   end
 end
-
