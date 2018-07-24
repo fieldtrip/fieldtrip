@@ -1,9 +1,18 @@
-function ft_defaults
+function ft_defaults(cfg)
 
 % FT_DEFAULTS (ending with "s") sets some general settings in the global variable
 % ft_default (without the "s") and takes care of the required path settings. You can
 % call this function in your startup.m script. This function is also called at the
 % begin of all FieldTrip functions.
+%
+% Use as
+%   ft_defaults
+% or
+%   ft_defaults(cfg)
+%
+% The optional input argument "cfg" lets you override the global "ft_default" 
+% options. The structure options will be merged and if the result differs from
+% the current global "ft_default" structure, then FieldTrip will be initalized again.
 %
 % The configuration defaults are stored in the global "ft_default" structure.
 % The ft_checkconfig function that is called by many FieldTrip functions will
@@ -77,6 +86,15 @@ fieldtripprefs = fullfile(prefdir, 'fieldtripprefs.mat');
 if exist(fieldtripprefs, 'file')
   prefs       = load(fieldtripprefs); % the file contains multiple fields
   ft_default  = mergeconfig(ft_default, prefs);
+end
+
+% Merge "ft_default" configuration with "cfg" and re-intialize if necessary
+if nargin > 0 && isstruct(cfg)
+    cfg = mergeconfig(cfg,ft_default);
+    if ~isequaln(cfg,ft_default)
+        initialized = false;
+        ft_default = cfg;
+    end
 end
 
 % Set the defaults in a global variable, ft_checkconfig will copy these over into the local configuration.
