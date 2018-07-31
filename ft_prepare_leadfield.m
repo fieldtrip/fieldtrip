@@ -178,66 +178,66 @@ if ft_voltype(headmodel, 'openmeeg')
   fprintf('calculating leadfield for all positions at once, this may take a while...\n');
   
   if(~isfield(cfg,'om'))
-      cfg.om = [];
+    cfg.om = [];
   end
   batchsize   = ft_getopt(cfg.om, 'batchsize',100e3); % number of voxels per DSM batch; set to e.g. 1000 if not much RAM available
   dsm         = ft_getopt(cfg.om, 'dsm'); % reuse existing DSM if provided
   keepdsm     = ft_getopt(cfg.om, 'keepdsm', 'no'); % option to retain DSM (no by default)
   nonadaptive = ft_getopt(cfg.om, 'nonadaptive', 'no');
-
+  
   ndip       = length(insideindx);
   numchunks = ceil(ndip/batchsize);
   if(numchunks > 1)
-      switch(keepdsm)
-          case 'yes'
-              ft_warning('Keeping DSM output not supported when computation split into batches due to large size.')
-      end
-      keepdsm = 'no';
+    switch(keepdsm)
+      case 'yes'
+        ft_warning('Keeping DSM output not supported when computation split into batches due to large size.')
+    end
+    keepdsm = 'no';
   end
   
   try
-      % DSM computation is computationally intensive:
-      % As it can be reused with same voxel grid (i.e. if voxels are defined in
-      % MRI coordinates rather than MEG coordinates), optionally save result.
-      % Dense voxel grids may require several gigabytes of RAM, so optionally
-      % split into smaller batches
-
+    % DSM computation is computationally intensive:
+    % As it can be reused with same voxel grid (i.e. if voxels are defined in
+    % MRI coordinates rather than MEG coordinates), optionally save result.
+    % Dense voxel grids may require several gigabytes of RAM, so optionally
+    % split into smaller batches
+    
+    
+    
+    [h2sens,ds2sens] = ft_sensinterp_openmeeg(grid.pos(insideindx,:), headmodel, sens);
+    
+    % use pre-existing DSM if present
+    if(~isempty(dsm))
+      lf = ds2sens + h2sens*headmodel.mat*dsm;
+    else
+      lf = zeros(size(ds2sens)); % pre-allocate Msensors x Nvoxels
       
-      
-      [h2sens,ds2sens] = ft_sensinterp_openmeeg(grid.pos(insideindx,:), headmodel, sens);
-     
-      % use pre-existing DSM if present
-      if(~isempty(dsm))
-          lf = ds2sens + h2sens*headmodel.mat*dsm;
-      else
-          lf = zeros(size(ds2sens)); % pre-allocate Msensors x Nvoxels
-          
-          for ii = 1:numchunks
-              % select grid positions for this batch
-              diprange = [((ii-1)*batchsize + 1):(min((ii)*batchsize,ndip))];
-              % remap with 3 orientations per position
-              diprangeori = [((ii-1)*3*batchsize + 1):(min((ii)*3*batchsize,3*ndip))];
-              dsm = ft_sysmat_openmeeg(grid.pos(insideindx(diprange),:), headmodel, sens, nonadaptive);
-              lf(:,diprangeori) = ds2sens(:,diprangeori) + h2sens*headmodel.mat*dsm;
-              
-              switch(keepdsm)
-                  case 'yes'  % retain DSM in cfg if desired
-                      cfg.om.dsm = dsm;
-              end
-              
-              dipindx = insideindx(diprange);
-          end
+      for ii = 1:numchunks
+        % select grid positions for this batch
+        diprange = [((ii-1)*batchsize + 1):(min((ii)*batchsize,ndip))];
+        % remap with 3 orientations per position
+        diprangeori = [((ii-1)*3*batchsize + 1):(min((ii)*3*batchsize,3*ndip))];
+        dsm = ft_sysmat_openmeeg(grid.pos(insideindx(diprange),:), headmodel, sens, nonadaptive);
+        lf(:,diprangeori) = ds2sens(:,diprangeori) + h2sens*headmodel.mat*dsm;
+        
+        switch(keepdsm)
+          case 'yes'  % retain DSM in cfg if desired
+            cfg.om.dsm = dsm;
+        end
+        
+        dipindx = insideindx(diprange);
       end
+    end
   catch
-      me = lasterror;
-      rethrow(me);
+    me = lasterror;
+    rethrow(me);
   end
-
+  
   % apply montage, if applicable
   if isfield(sens, 'tra')
-      lf = sens.tra * lf;
+    lf = sens.tra * lf;
   end
-
+  
   
   % lead field computation already done, but pass to ft_compute_leadfield so that
   % any post-computation options can be applied (e.g., normalization, etc.)
@@ -245,10 +245,25 @@ if ft_voltype(headmodel, 'openmeeg')
   
   % reshape result into grid.leadfield cell array
   for i=1:ndip
-      grid.leadfield{insideindx(i)} = lf(:,3*(i-1) + [1:3]);
+    grid.leadfield{insideindx(i)} = lf(:,3*(i-1) + [1:3]);
   end
   
   clear lf
+elseif ft_voltype(headmodel, 'singleshell')
+  tmp = ft_compute_leadfield(grid.pos(insideindx,:), sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
+  for i=1:length(insideindx)
+    thisindx = insideindx(i);
+    if istrue(cfg.backproject)
+      grid.leadfield{thisindx} = tmp(:,(i-1)*3+(1:3));
+    else
+      grid.leadfield{thisindx} = tmp(:,(i-1)*cfg.reducerank+(1:cfg.reducerank));
+    end
+    
+    if isfield(cfg, 'grid') && isfield(cfg.grid, 'mom')
+      % multiply with the normalized dipole moment to get the leadfield in the desired orientation
+      grid.leadfield{thisindx} = grid.leadfield{thisindx} * grid.mom(:,thisindx);
+    end
+  end
   
 else
   ft_progress('init', cfg.feedback, 'computing leadfield');
