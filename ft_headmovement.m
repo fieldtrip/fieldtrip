@@ -1,4 +1,4 @@
-function [grad] = ft_headmovement(cfg)
+function [grad, trialinfo, transform] = ft_headmovement(cfg)
 
 % FT_HEADMOVEMENT creates a representation of the CTF gradiometer definition
 % in which the headmovement in incorporated. The result can be used
@@ -11,6 +11,24 @@ function [grad] = ft_headmovement(cfg)
 %   cfg.trl          = Nx3 matrix with the trial definition, see FT_DEFINETRIAL
 %   cfg.numclusters  = number of segments with constant headposition in which to split the data (default = 12)
 %
+% optional arguments are
+%   cfg.updatesens   = 'yes' (default) or 'no'
+%   cfg.pertrial     = 'no' (default) or 'yes'
+%
+% If cfg.updatesens is specified, the output gradiometer description is
+% defined in dewar coordinates, and the specification of the coils is
+% expanded as per the centroids of the position clusters. The balancing
+% matrix is s a weighted concatenation of the original tra-matrix. If
+% cfg.updatesens is false, the output gradiometer description is the
+% original head coordinate system based grad-array. If cfg.pertrial is
+% specified, the clustering of head positions is done on the average
+% coil-position per trial. Additional output consists of a vector that
+% specifies the cluster-identity of the corresponding trial, and a set of
+% cluster-specific transformation matrices (4x4xcfg.numclusters) that can
+% be applied to the output grad-array, to obtain the sensor-description of
+% the corresponding trial.
+%
+% 
 % This method and related methods are described by Stolk et al., Online and
 % offline tools for head movement compensation in MEG. NeuroImage, 2012.
 %
@@ -58,7 +76,9 @@ cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
 
 % set the defaults
 cfg.numclusters = ft_getopt(cfg, 'numclusters', 12);
-cfg.feedback    = ft_getopt(cfg, 'feedback', 'yes');
+cfg.feedback    = ft_getopt(cfg, 'feedback',    'yes');
+cfg.updatesens  = ft_getopt(cfg, 'updatesens',  'yes');
+cfg.pertrial    = ft_getopt(cfg, 'pertrial',    'no');
 
 % read the header information
 hdr = ft_read_header(cfg.headerfile);
@@ -87,18 +107,29 @@ tmpcfg.channel      = {'HLC0011' 'HLC0012' 'HLC0013' 'HLC0021' 'HLC0022' 'HLC002
 tmpcfg.continuous   = 'yes';
 data                = ft_preprocessing(tmpcfg);
 
+if istrue(cfg.pertrial)
+  for k = 1:numel(data.trial)
+    data.trial{k} = mean(data.trial{k},2);
+    data.time{k}  = 0;
+  end
+end
 dat = cat(2, data.trial{:});
 dat = dat * ft_scalingfactor('m', grad.unit); % scale in units of the gradiometer definition
 
-[tmpdata, dum, ic] = unique(dat', 'rows');
-dat = tmpdata';
+if ~istrue(cfg.pertrial)
+  [tmpdata, ~, ic] = unique(dat', 'rows');
+  dat = tmpdata';
 
-% counthow often each position occurs
-[wdat, dum] = hist(ic, unique(ic));
+  % count how often each position occurs
+  wdat = hist(ic, unique(ic));
 
-% compute the cluster means
-[bin, cluster] = kmeans(dat', cfg.numclusters);
-
+  % compute the cluster means
+  [bin, cluster] = kmeans(dat', cfg.numclusters);
+else
+  [bin, cluster] = kmeans(dat', cfg.numclusters);
+  wdat           = ones(size(dat,2),1);
+end
+  
 % find the three channels for each fiducial
 selnas = strmatch('HLC001', data.label);
 sellpa = strmatch('HLC002', data.label);
@@ -112,8 +143,8 @@ for k = 1:length(ubin)
   numperbin(k) = sum(wdat(bin==ubin(k)));
 end
 
+hc    = read_ctf_hc([cfg.datafile(1:end-4),'hc']);  
 if istrue(cfg.feedback)
-  hc    = read_ctf_hc([cfg.datafile(1:end-4),'hc']);
   
   % plot some stuff
   figure; hold on;
@@ -136,21 +167,31 @@ for k = 1:size(transform, 3)
   transform(:,:,k) = ft_headcoordinates(nas(k,:), lpa(k,:), rpa(k,:), 'ctf');
 end
 
-npos        = size(transform, 3);
-ncoils      = size(grad.coilpos,  1);
-gradnew     = grad;
-gradnew.coilpos = zeros(size(grad.coilpos,1)*npos, size(grad.coilpos,2));
-gradnew.coilori = zeros(size(grad.coilpos,1)*npos, size(grad.coilpos,2));
-gradnew.tra = repmat(grad.tra, [1 npos]);
-for m = 1:npos
-  tmptransform                                  = transform(:,:,m);
-  gradnew.coilpos((m-1)*ncoils+1:(m*ncoils), :) = ft_warp_apply(tmptransform, grad.coilpos); % back to head coordinates
-  tmptransform(1:3, 4)                          = 0; % keep rotation only
-  gradnew.coilori((m-1)*ncoils+1:(m*ncoils), :) = ft_warp_apply(tmptransform, grad.coilori);
-  gradnew.tra(:, (m-1)*ncoils+1:(m*ncoils))     = grad.tra.*(numperbin(m)./sum(numperbin));
+if istrue(cfg.updatesens)
+  npos        = size(transform, 3);
+  ncoils      = size(grad.coilpos,  1);
+  gradnew     = grad;
+  gradnew.coilpos = zeros(size(grad.coilpos,1)*npos, size(grad.coilpos,2));
+  gradnew.coilori = zeros(size(grad.coilpos,1)*npos, size(grad.coilpos,2));
+  gradnew.tra = repmat(grad.tra, [1 npos]);
+  for m = 1:npos
+    tmptransform                                  = transform(:,:,m);
+    gradnew.coilpos((m-1)*ncoils+1:(m*ncoils), :) = ft_warp_apply(tmptransform, grad.coilpos); % back to head coordinates
+    tmptransform(1:3, 4)                          = 0; % keep rotation only
+    gradnew.coilori((m-1)*ncoils+1:(m*ncoils), :) = ft_warp_apply(tmptransform, grad.coilori);
+    gradnew.tra(:, (m-1)*ncoils+1:(m*ncoils))     = grad.tra.*(numperbin(m)./sum(numperbin));
+  end
+  
+  grad = gradnew;
+  trialinfo = [];
+else
+  M = [reshape(hc.affine,[4 3])';0 0 0 1];
+  for k = 1:size(transform,3)
+    transform(:,:,k) = M\transform(:,:,k);
+  end
+  grad      = grad_head;
+  trialinfo = bin(:)';
 end
-
-grad = gradnew;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
