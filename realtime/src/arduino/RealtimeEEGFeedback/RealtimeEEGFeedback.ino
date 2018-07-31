@@ -8,7 +8,7 @@
 // This device is based on a Arduino Mini R5 at 5V. 
 // Wireless connectivity is provided by a RFM12B module.
 //
-// http://fieldtrip.fcdonders.nl/development/realtime/arduino
+// http://www.fieldtriptoolbox.org/development/realtime/arduino
 
 // Copyright (C) 2013, Robert Oostenveld, DCCN
 //

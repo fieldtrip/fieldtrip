@@ -39,7 +39,7 @@ function [cfg] = ft_checkconfig(cfg, varargin)
 %   unused          = {'opt1', 'opt2', etc.} % list the unused options, these will be removed and a warning is issued
 %   createsubcfg    = {'subname', etc.}      % list the names of the subcfg
 %   dataset2files   = 'yes', 'no'            % converts dataset into headerfile and datafile
-%   index2logical   = 'yes', 'no'            % converts cfg.index or cfg.grid.index into logical representation
+%   inside2logical  = 'yes', 'no'            % converts cfg.inside or cfg.grid.inside into logical representation
 %   checksize       = 'yes', 'no'            % remove large fields from the cfg
 %   trackconfig     = 'on', 'off'            % start/end config tracking
 %
@@ -75,7 +75,7 @@ renamedval      = ft_getopt(varargin, 'renamedval');
 allowedval      = ft_getopt(varargin, 'allowedval');
 createsubcfg    = ft_getopt(varargin, 'createsubcfg');
 checkfilenames  = ft_getopt(varargin, 'dataset2files');
-checkinside     = ft_getopt(varargin, 'index2logical', 'off');
+checkinside     = ft_getopt(varargin, 'inside2logical', 'off');
 checksize       = ft_getopt(varargin, 'checksize', 'off');
 trackconfig     = ft_getopt(varargin, 'trackconfig');
 
@@ -516,7 +516,7 @@ if ~isempty(createsubcfg)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% checkinside, i.e. index2logical
+% checkinside, i.e. inside2logical
 %
 % Converts indexed cfg.inside/outside into logical representation if neccessary.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -531,6 +531,10 @@ if istrue(checkinside)
     inside(cfg.grid.inside) = true;
     cfg.grid = removefields(cfg.grid, {'inside', 'outside'});
     cfg.grid.inside = inside;
+  elseif isfield(cfg, 'inside') && ~islogical(cfg.inside) && numel(cfg.inside)==size(cfg.pos,1)
+    cfg.inside = logical(cfg.inside);  
+  elseif isfield(cfg, 'grid') && isfield(cfg.grid, 'inside') && ~islogical(cfg.grid.inside) && numel(cfg.grid.inside)==size(cfg.grid.pos,1)
+    cfg.grid.inside = logical(cfg.grid.inside);  
   end
 end % if checkinside
 

@@ -91,13 +91,18 @@ if ~cellflag
   return;
 else
   % operate on the individual cells
-  siz    = ones(numel(x), 10);
-  numdim = zeros(numel(x), 1);
-  for k = 1:numel(x)
-    numdim(k) = ndims(x{k});
-    siz(k,1:numdim(k)) = size(x{k});
+%   siz    = ones(numel(x), 10);
+%   numdim = zeros(numel(x), 1);
+%   for k = 1:numel(x)
+%     numdim(k) = ndims(x{k});
+%     siz(k,1:numdim(k)) = size(x{k});
+%   end
+  numdim = cellfun(@ndims, x);
+  siz    = cellfun(@size,  x, 'uniformoutput', false);
+  if all(numdim==numdim(1))
+    siz = reshape(cat(2,siz{:}),numdim(1),[])';
   end
- 
+  
   if isempty(dim) 
     if nargout<=1
       varargout{1} = siz(:,1:max(numdim));

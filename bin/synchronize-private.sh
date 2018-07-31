@@ -52,6 +52,14 @@ ARRAY+=(private/avgref.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# bg_rgba2rgb.m
+
+ARRAY=()
+ARRAY+=(plotting/private/bg_rgba2rgb.m)
+ARRAY+=(private/bg_rgba2rgb.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # bounding_mesh.m
 
 ARRAY=()
