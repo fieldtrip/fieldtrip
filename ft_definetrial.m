@@ -34,7 +34,7 @@ function [cfg] = ft_definetrial(cfg)
 % a negative offset indicates that the trial begins before the trigger.
 %
 % The trial definition "trl" can contain additional columns besides the
-% required three that represend begin, end and offset. These additional
+% required three that represent begin, end and offset. These additional
 % columns can be used by a custom trialfun to provide numeric information
 % about each trial such as trigger codes, response latencies, trial
 % type and response correctness. The additional columns of the "trl"
