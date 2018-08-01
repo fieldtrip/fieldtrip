@@ -152,7 +152,7 @@ elseif strcmp(Flreplace,'neighbour')
    % error message if periodicity of the interference frequency doesn't match the DFT length 
    n = round(floor(nsamples .* Fl./Fs) * Fs./Fl);
    if n ~= nsamples 
-       ft_error('The periodicity of the line noise frequency does not match the length of the data. Please choose a data length that allows an integer number of cycles to fit in the data (e.g. in case of 50 Hz and a sampling rate of 1000 Hz: multiples of 20 ms will work.)');
+       ft_error('Spectrum interpolation requires that the data length fits complete cycles of the powerline frequency, e.g., exact multiples of 20 ms for a 50 Hz line frequency (sampling rate of 1000 Hz).');
    end
    
    if (length(Fl) ~= length(Flwidth)) || (length(Fl) ~= length(Neighwidth))
