@@ -579,7 +579,7 @@ switch cfg.comment
       comment = sprintf('%0s=[%.3g %.3g]', cfg.parameter, zmin, zmax);
     end
   otherwise
-    comment = '';
+    comment = cfg.comment; % allow custom comments (e.g., ft_clusterplot specifies custom comments)
 end % switch comment
 
 if ~isempty(cfg.refchannel)
