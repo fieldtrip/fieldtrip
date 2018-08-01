@@ -149,6 +149,12 @@ elseif strcmp(Flreplace,'neighbour')
    Flwidth = Flwidth(:);
    Neighwidth = Neighwidth(:);
    
+   % error message if periodicity of the interference frequency doesn't match the DFT length 
+   n = round(floor(nsamples .* Fl./Fs) * Fs./Fl);
+   if n ~= nsamples 
+       ft_error('Spectrum interpolation requires that the data length fits complete cycles of the powerline frequency, e.g., exact multiples of 20 ms for a 50 Hz line frequency (sampling rate of 1000 Hz).');
+   end
+   
    if (length(Fl) ~= length(Flwidth)) || (length(Fl) ~= length(Neighwidth))
        ft_error('The number of frequencies to interpolate (cfg.dftfreq) should be the same as the number of bandwidths (cfg.dftbandwidth) and bandwidths of neighbours (cfg.neighbourwidth)');
    end
