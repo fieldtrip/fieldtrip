@@ -1543,12 +1543,12 @@ switch eventformat
     elseif isepoched
         begsample = cumsum([1 repmat(615, 29, 1)']);
         events_id = split(split(hdr.orig.epochs.event_id, ';'), ':');
-        events_label = cell2mat(events_id(:,1));
-        events_code = str2num(cell2mat(events_id(:,2)));
+        events_label = cell2mat(events_id(:, 1));
+        events_code = str2num(cell2mat(events_id(:, 2)));
         for i=1:hdr.nTrials 
-            event(end+1).type      = events_label(events_code == hdr.orig.epochs.events(i, 3), :);
+            event(end+1).type      = 'trial';
             event(end  ).sample    = begsample(i);
-            event(end  ).value     = hdr.orig.epochs.events(i, 3);
+            event(end  ).value     = events_label(events_code == hdr.orig.epochs.events(i, 3), :);
             event(end  ).offset    = -hdr.nSamplesPre;
             event(end  ).duration  = hdr.nSamples;
         end
