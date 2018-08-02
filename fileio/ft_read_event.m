@@ -1541,7 +1541,7 @@ switch eventformat
       end
 
     elseif isepoched
-        begsample = cumsum([1 repmat(615, 29, 1)']);
+        begsample = cumsum([1 repmat(hdr.nSamples, hdr.nTrials-1, 1)']);
         events_id = split(split(hdr.orig.epochs.event_id, ';'), ':');
         events_label = cell2mat(events_id(:, 1));
         events_code = str2num(cell2mat(events_id(:, 2)));
@@ -1552,8 +1552,6 @@ switch eventformat
             event(end  ).offset    = -hdr.nSamplesPre;
             event(end  ).duration  = hdr.nSamples;
         end
-        
-%       ft_error('Support for epoched *.fif data is not yet implemented.')
     end
 
     % check whether the *.fif file is accompanied by an *.eve file
