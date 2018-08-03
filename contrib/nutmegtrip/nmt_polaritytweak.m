@@ -47,7 +47,7 @@ end
 % end
 
 
-for ii=1:length(s)
+for ii=1:(size(s,1)
     source.avg.mom{inside_idx(ii)} = s(ii,:);
     source.avg.ori{inside_idx(ii)} = ori(:,ii);
 end
