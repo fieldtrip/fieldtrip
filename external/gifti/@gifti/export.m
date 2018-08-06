@@ -2,17 +2,17 @@ function s = export(this,target)
 % Export a GIfTI object into specific MATLAB struct
 % FORMAT s = export(this,target)
 % this   - GIfTI object
-% target - string describing target output [default: Matlab]
+% target - string describing target output [default: MATLAB]
 % s      - a structure containing public fields of the object
 %__________________________________________________________________________
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % Guillaume Flandin
-% $Id$
+% $Id: export.m 6401 2015-04-09 17:21:33Z guillaume $
 
 if numel(this) > 1, warning('Only handle scalar objects yet.'); end
 
-if nargin <= 1, target = 'Matlab'; end
+if nargin <= 1, target = 'MATLAB'; end
 
 switch lower(target)
     case 'matlab'
