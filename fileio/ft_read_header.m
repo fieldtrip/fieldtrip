@@ -67,7 +67,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   TMSi (*.Poly5)
 %   Mega Neurone (directory)
 %   Natus/Nicolet/Nervus (.e files)
-%   Nihon Kohden (*.m00)
+%   Nihon Kohden (*.m00, *.EEG)
 %
 % The following spike and LFP dataformats are supported
 %   Neuralynx (*.ncs, *.nse, *.nts, *.nev, *.nrd, *.dma, *.log)
@@ -2162,6 +2162,9 @@ switch headerformat
 
   case 'nihonkohden_m00'
     hdr = read_nihonkohden_hdr(filename);
+    
+  case 'nk1200'
+    hdr = read_nk1200_header(filename);
 
   case 'nimh_cortex'
     cortex = read_nimh_cortex(filename, 'epp', 'no', 'eog', 'no');

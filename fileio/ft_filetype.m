@@ -1337,6 +1337,10 @@ elseif filetype_check_extension(filename, '.m00')
   type = 'nihonkohden_m00';
   manufacturer = 'Nihon Kohden';
   content = 'continuous EEG';
+elseif filetype_check_extension(filename, '.EEG')
+  type = 'nk1200';
+  manufacturer = 'Nihon Kohden';
+  content = 'continuous EEG';
 elseif filetype_check_extension(filename, '.mgrid')
   type = 'bioimage_mgrid';
   manufacturer = 'Bioimage Suite';
