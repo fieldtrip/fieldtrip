@@ -3,7 +3,6 @@ function test_ft_topoplotCC
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_topoplotCC
 % TEST ft_topoplotCC
 
 % this function tests the ft_topoplotCC function and should display a

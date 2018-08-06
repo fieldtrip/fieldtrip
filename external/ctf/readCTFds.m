@@ -144,7 +144,14 @@ while 1
   end
   fid=fopen(meg4File,'r','ieee-be');
   if fid<=0;break;end
-  D=dir([datasetname,delim,baseName,meg4Ext]);
+  
+  % try with ending delimiter to dereference symlinks
+  D=dir([datasetname,delim,baseName,meg4Ext,delim]);
+  % if empty, try accessing the file directly
+  if isempty(D)
+    D=dir([datasetname,delim,baseName,meg4Ext]);
+  end
+  
   meg4Size=[meg4Size D.bytes];
   meg4Header=char(fread(fid,8,'uint8')');
   fclose(fid);

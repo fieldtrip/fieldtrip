@@ -1,0 +1,7 @@
+[select]
+1=chan1
+2=chan2
+3=chan3
+4=chan4
+5=chan5
+6=chan6

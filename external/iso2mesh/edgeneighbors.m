@@ -4,7 +4,7 @@ function edgenb=edgeneighbors(t,opt)
 %
 % to find neighboring triangular elements in a triangule surface
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input:
 %     t: a triangular surface element list, 3 columns of integers

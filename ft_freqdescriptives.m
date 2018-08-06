@@ -20,8 +20,8 @@ function [freq] = ft_freqdescriptives(cfg, freq)
 %   cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'),
 %                       see FT_CHANNELSELECTION for details
 %   cfg.trials        = 'all' or a selection given as a 1xN vector (default = 'all')
-%   cfg.foilim        = [fmin fmax] or 'all', to specify a subset of frequencies (default = 'all')
-%   cfg.toilim        = [tmin tmax] or 'all', to specify a subset of latencies (default = 'all')
+%   cfg.frequency     = [fmin fmax] or 'all', to specify a subset of frequencies (default = 'all')
+%   cfg.latency       = [tmin tmax] or 'all', to specify a subset of latencies (default = 'all')
 %
 % A variance estimate can only be computed if results from trials and/or
 % tapers have been kept.
@@ -45,10 +45,10 @@ function [freq] = ft_freqdescriptives(cfg, freq)
 % cfg.previous
 % cfg.version
 
-% Copyright (C) 2004-2006, Pascal Fries & Jan-Mathijs Schoffelen, F.C. Donders Centre
-% Copyright (C) 2010, Jan-Mathijs Schoffelen, F.C. Donders Centre
+% Copyright (C) 2004-2006, Pascal Fries & Jan-Mathijs Schoffelen
+% Copyright (C) 2010, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -64,18 +64,21 @@ function [freq] = ft_freqdescriptives(cfg, freq)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar freq
+ft_preamble provenance freq
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -92,19 +95,23 @@ cfg = ft_checkconfig(cfg, 'deprecated', 'combinechan');
 cfg = ft_checkconfig(cfg, 'deprecated', 'keepfourier');
 cfg = ft_checkconfig(cfg, 'deprecated', 'partchan');
 cfg = ft_checkconfig(cfg, 'deprecated', 'pseudovalue');
+cfg = ft_checkconfig(cfg, 'renamed', {'toilim' 'latency'});
+cfg = ft_checkconfig(cfg, 'renamed', {'foilim' 'frequency'});
 
 % set the defaults
-cfg.feedback   = ft_getopt(cfg, 'feedback',  'textbar');
-cfg.jackknife  = ft_getopt(cfg, 'jackknife', 'no');
-cfg.variance   = ft_getopt(cfg, 'variance',  'no');
-cfg.trials     = ft_getopt(cfg, 'trials',    'all');
-cfg.channel    = ft_getopt(cfg, 'channel',   'all');
-cfg.foilim     = ft_getopt(cfg, 'foilim',    'all');
-cfg.toilim     = ft_getopt(cfg, 'toilim',    'all');
+cfg.feedback   = ft_getopt(cfg, 'feedback',   'textbar');
+cfg.jackknife  = ft_getopt(cfg, 'jackknife',  'no');
+cfg.variance   = ft_getopt(cfg, 'variance',   'no');
+cfg.trials     = ft_getopt(cfg, 'trials',     'all', 1);
+cfg.channel    = ft_getopt(cfg, 'channel',    'all');
+cfg.frequency  = ft_getopt(cfg, 'frequency',  'all');
+cfg.latency    = ft_getopt(cfg, 'latency',    'all');
 cfg.keeptrials = ft_getopt(cfg, 'keeptrials', 'no');
 
 % check if the input data is valid for this function
-freq = ft_checkdata(freq, 'datatype', {'freq', 'freqmvar'}, 'feedback', 'yes');
+freq = ft_checkdata(freq, 'datatype', {'freq', 'freqmvar'}, 'feedback', cfg.feedback);
+% get data in the correct representation, it should only have power
+freq = ft_checkdata(freq, 'cmbrepresentation', 'sparsewithpow', 'channelcmb', {});
 
 % determine some specific details of the input data
 hasrpt   = ~isempty(strfind(freq.dimord, 'rpt')) || ~isempty(strfind(freq.dimord, 'subj'));
@@ -115,32 +122,33 @@ jckflg   = strcmp(cfg.jackknife, 'yes');
 keepflg  = strcmp(cfg.keeptrials, 'yes');
 
 % check sensibility of configuration
-if sum([varflg keepflg]>1),               error('you should specify only one of cfg.keeptrials or cfg.variance');                                             end
-if ~hasrpt && (varflg || keepflg),        error('a variance-estimate or a single trial estimate without repeated observations in the input is not possible'); end
-if ~hasrpt && ~strcmp(cfg.trials, 'all'), error('trial selection requires input data with repeated observations');                                            end
+if sum([varflg keepflg]>1),               ft_error('you should specify only one of cfg.keeptrials or cfg.variance');                                             end
+if ~hasrpt && (varflg || keepflg),        ft_error('a variance-estimate or a single trial estimate without repeated observations in the input is not possible'); end
+if ~hasrpt && ~strcmp(cfg.trials, 'all'), ft_error('trial selection requires input data with repeated observations');                                            end
 if ~varflg && jckflg,                     varflg = 1; end
 
 % select data of interest
-if            ~strcmp(cfg.foilim,  'all'), freq = ft_selectdata(freq, 'foilim', cfg.foilim); end
-if hastim, if ~strcmp(cfg.toilim,  'all'), freq = ft_selectdata(freq, 'toilim', cfg.toilim); end; end
-if hasrpt, if ~strcmp(cfg.trials,  'all'), freq = ft_selectdata(freq, 'rpt',    cfg.trials); end; end
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'latency', 'frequency', 'showcallinfo'});
+freq = ft_selectdata(tmpcfg, freq);
+% restore the provenance information
+[cfg, freq] = rollback_provenance(cfg, freq);
 
-if ~strcmp(cfg.channel, 'all'),
-  channel = ft_channelselection(cfg.channel, freq.label);
-  if isempty(channel)
-      error('no channels selected');
+if jckflg
+  % the data is 'sparsewithpow', so it contains a powspctrm and optionally a crsspctrm
+  % the checking of a 'rpt' is handled above, so it can be assumed that the 'rpt' is the
+  % first dimension
+  nrpt           = size(freq.powspctrm,1);
+  sumpowspctrm   = sum(freq.powspctrm,1);
+  freq.powspctrm = (sumpowspctrm(ones(nrpt,1),:,:,:,:) - freq.powspctrm)./(nrpt-1);
+  clear sumpowspctrm;
+  if isfield(freq, 'crsspctrm')
+    sumcrsspctrm   = sum(freq.crsspctrm,1);
+    freq.crsspctrm = (sumcrsspctrm(ones(nrpt,1),:,:,:,:) - freq.crsspctrm)./(nrpt-1);
+    clear sumcrsspctrm;
   end
-  freq    = ft_selectdata(freq, 'channel', channel);
 end
 
-% get data in the correct representation
-freq = ft_checkdata(freq, 'cmbrepresentation', 'sparsewithpow', 'channelcmb', {});
-
-if jckflg,
-  freq = ft_selectdata(freq, 'jackknife', 1);
-end
-
-if varflg,
+if varflg
   siz    = [size(freq.powspctrm) 1];
   outsum = zeros(siz(2:end));
   outssq = zeros(siz(2:end));
@@ -155,13 +163,13 @@ if varflg,
     outssq = outssq + tmp.^2;
   end
   ft_progress('close');
-  
-  if jckflg,
+
+  if jckflg
     bias = (n-1).^2;
   else
     bias = 1;
   end
-  
+
   powspctrm    = outsum./n;
   powspctrmsem = sqrt(bias.*(outssq - (outsum.^2)./n)./(n - 1)./n);
 elseif keepflg
@@ -176,7 +184,7 @@ else
   powspctrm = freq.powspctrm;
 end
 
-if hasrpt && ~keepflg,
+if hasrpt && ~keepflg
   dimtok    = tokenize(freq.dimord, '_');
   newdimord = dimtok{2};
   for k = 3:numel(dimtok)
@@ -191,12 +199,12 @@ output                = [];
 output.dimord         = newdimord;
 output.freq           = freq.freq;
 output.label          = freq.label;
-if isfield(freq, 'time'), output.time      = freq.time;      end;
-if isfield(freq, 'grad'), output.grad      = freq.grad;      end;
-if isfield(freq, 'cumtapcnt'), output.cumtapcnt = freq.cumtapcnt; end;
-if isfield(freq, 'cumsumcnt'), output.cumsumcnt = freq.cumsumcnt; end;
 output.powspctrm      = powspctrm;
-if exist('powspctrmsem', 'var'), output.powspctrmsem = powspctrmsem; end;
+if isfield(freq, 'time'),      output.time      = freq.time;      end
+if isfield(freq, 'grad'),      output.grad      = freq.grad;      end
+if isfield(freq, 'cumtapcnt'), output.cumtapcnt = freq.cumtapcnt; end
+if isfield(freq, 'cumsumcnt'), output.cumsumcnt = freq.cumsumcnt; end
+if exist('powspctrmsem', 'var'), output.powspctrmsem = powspctrmsem; end
 
 % remember the trialinfo
 if strcmp(cfg.keeptrials, 'yes') && isfield(freq, 'trialinfo')
@@ -206,12 +214,11 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble previous freq
 
 % rename the output variable to accomodate the savevar postamble
 freq = output;
 
-ft_postamble history freq
-ft_postamble savevar freq
-
+ft_postamble provenance freq
+ft_postamble history    freq
+ft_postamble savevar    freq

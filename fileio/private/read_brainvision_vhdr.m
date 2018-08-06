@@ -1,4 +1,4 @@
-function [hdr] = read_brainvision_vhdr(filename);
+function [hdr] = read_brainvision_vhdr(filename)
 
 % READ_BRAINVISION_VHDR reads the known items from the BrainVision EEG
 % header file and returns them in a structure
@@ -10,7 +10,7 @@ function [hdr] = read_brainvision_vhdr(filename);
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -47,7 +47,7 @@ if ~isempty(hdr.NumberOfChannels)
     if ~isempty(resolution)
       hdr.resolution(i) = resolution;
     else
-      warning('unknown resolution (i.e. recording units) for channel %d in %s', i, filename);
+      ft_warning('unknown resolution (i.e. recording units) for channel %d in %s', i, filename);
       hdr.resolution(i) = 1;
     end
   end
@@ -68,7 +68,7 @@ if strcmpi(hdr.DataFormat, 'binary')
   % but that might be on another location than the present working directory
   info = dir(datafile);
   if isempty(info)
-    error('cannot determine the location of the data file %s', hdr.DataFile);
+    ft_error('cannot determine the location of the data file %s', hdr.DataFile);
   end
   switch lower(hdr.BinaryFormat)
     case 'int_16';
@@ -110,7 +110,7 @@ elseif strcmpi(hdr.DataFormat, 'ascii')
 end
 
 if isinf(hdr.nSamples)
-  warning('cannot determine number of samples for this sub-fileformat');
+  ft_warning('cannot determine number of samples for this sub-fileformat');
 end
 
 % the number of trials is unkown, assume continuous data
@@ -121,3 +121,43 @@ hdr.nSamplesPre = 0;
 hdr.label      = hdr.label(:);
 hdr.reference  = hdr.reference(:);
 hdr.resolution = hdr.resolution(:);
+
+%read in impedance values
+hdr.impedances.channels=[];
+hdr.impedances.reference=[];
+hdr.impedances.ground=NaN;
+if ~isempty(hdr.NumberOfChannels)
+    chanCounter=0;
+    refCounter=0;
+    impCounter=0;
+    while chanCounter<hdr.NumberOfChannels
+        impCounter=impCounter+1;
+        chan_str  = sprintf('%d', impCounter);
+        chan_info = read_asa(filename, chan_str, '%s');
+        if isempty(chan_info)
+            chanCounter=chanCounter+1;
+        else
+            [chanName,impedances] = strtok(chan_info,':');
+            if strfind(chanName,'REF_')==1
+                refCounter=refCounter+1;
+                if ~isempty(impedances)
+                    hdr.impedances.reference(refCounter) = str2double(impedances(2:end));
+                else
+                    hdr.impedances.reference(refCounter) = NaN;
+                end
+            else
+                chanCounter=chanCounter+1;
+                if ~isempty(impedances)
+                    hdr.impedances.channels(chanCounter,1) = str2double(impedances(2:end));
+                else
+                    hdr.impedances.channels(chanCounter,1) = NaN;
+                end
+            end;
+        end;
+    end
+    impedances = read_asa(filename, 'GND:', '%s');
+    if ~isempty(impedances)
+        hdr.impedances.ground = str2double(impedances);
+    end
+end
+

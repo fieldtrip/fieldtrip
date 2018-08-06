@@ -50,6 +50,7 @@ function [h, coordsys] = ft_headcoordinates(fid1, fid2, fid3, fid4, coordsys)
 %   according to FTG conventions:             coordsys = 'ftg'
 %   according to Talairach conventions:       coordsys = 'tal'
 %   according to SPM conventions:             coordsys = 'spm'
+%   according to ACPC conventions:            coordsys = 'acpc'
 %   according to PAXINOS conventions:         coordsys = 'paxinos'
 % If coordsys is not specified, it will default to 'ctf'.
 %
@@ -59,7 +60,7 @@ function [h, coordsys] = ft_headcoordinates(fid1, fid2, fid3, fid4, coordsys)
 %   the Y-axis goes approximately towards lpa, orthogonal to X and in the plane spanned by the fiducials
 %   the Z-axis goes approximately towards the vertex, orthogonal to X and Y
 %
-% The TALAIRACH and SPM coordinate systems are defined as:
+% The TALAIRACH, SPM and ACPC coordinate systems are defined as:
 %   the origin corresponds with the anterior commissure
 %   the Y-axis is along the line from the posterior commissure to the anterior commissure
 %   the Z-axis is towards the vertex, in between the hemispheres
@@ -88,11 +89,11 @@ function [h, coordsys] = ft_headcoordinates(fid1, fid2, fid3, fid4, coordsys)
 %   the y-axis points from dorsal to ventral, i.e. from inferior to superior
 %   the z-axis passes through bregma and lambda and points from cranial to caudal, i.e. from anterior to posterior
 %
-% See also FT_ELECTRODEREALIGN, FT_VOLUMEREALIGN
+% See also FT_ELECTRODEREALIGN, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN, COORDSYS2LABEL
 
 % Copyright (C) 2003-2014 Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -122,19 +123,19 @@ elseif nargin==4 && isnumeric(fid4)
 elseif nargin==5
   % do nothing
 else
-  error('incorrect specification of input parameters');
+  ft_error('incorrect specification of input parameters');
 end
 
 if isnumeric(coordsys)
   % these are for backward compatibility, but should preferably not be used any more
-  if coordsys==0,
+  if coordsys==0
     coordsys = 'ctf';
-  elseif coordsys==1,
+  elseif coordsys==1
     coordsys = 'asa';
-  elseif coordsys==2,
+  elseif coordsys==2
     coordsys = 'ftg';
   else
-    error('if coordsys is numeric, it should assume one of the values 0/1/2');
+    ft_error('if coordsys is numeric, it should assume one of the values 0/1/2');
   end
 end
 
@@ -154,7 +155,7 @@ coordsys = lower(coordsys);
 
 % compute the origin and direction of the coordinate axes in MRI coordinates
 switch coordsys
-  case {'als_ctf' 'ctf' 'bti' '4d' 'yokogawa'}
+  case {'ctf' 'bti' '4d' 'yokogawa'}
     % rename the marker points for convenience
     nas = fid1; lpa = fid2; rpa = fid3; extrapoint = fid4; clear fid*
     origin = (lpa+rpa)/2;
@@ -164,7 +165,7 @@ switch coordsys
     dirx = dirx/norm(dirx);
     diry = diry/norm(diry);
     dirz = dirz/norm(dirz);
-  case {'als_asa' 'asa'}
+  case {'asa'}
     % rename the marker points for convenience
     nas = fid1; lpa = fid2; rpa = fid3; extrapoint = fid4; clear fid*
     dirz = cross(nas-rpa, lpa-rpa);
@@ -174,7 +175,7 @@ switch coordsys
     diry = diry/norm(diry);
     dirz = dirz/norm(dirz);
     origin = rpa + dot(nas-rpa,diry)*diry;
-  case {'ras_itab' 'itab' 'neuromag'}
+  case {'itab' 'neuromag'}
     % rename the fiducials
     nas = fid1; lpa = fid2; rpa = fid3; extrapoint = fid4; clear fid*
     dirz = cross(rpa-lpa,nas-lpa);
@@ -195,7 +196,7 @@ switch coordsys
     dirx = dirx/norm(dirx);
     diry = diry/norm(diry);
     dirz = dirz/norm(dirz);
-  case {'ras_tal' 'tal' 'spm'}
+  case {'tal' 'spm' 'acpc'}
     % rename the marker points for convenience
     ac = fid1; pc = fid2; midsagittal = fid3; extrapoint = fid4; clear fid*
     origin = ac;
@@ -217,27 +218,27 @@ switch coordsys
     diry = diry/norm(diry);
     dirz = dirz/norm(dirz);
   otherwise
-    error('unrecognized headcoordinate system "%s"', coordsys);
+    ft_error('unrecognized headcoordinate system "%s"', coordsys);
 end
 
 % use the extra point to validate that it is a right-handed coordinate system
 if ~isempty(extrapoint)
   dirq = extrapoint-origin;
   dirq = dirq/norm(dirq);
-  if any(strcmp(coordsys, {'als_ctf' 'ctf' 'bti' '4d' 'yokogawa' 'ras_itab' 'itab' 'neuromag'}))
+  if any(strcmp(coordsys, {'ctf' 'bti' '4d' 'yokogawa' 'itab' 'neuromag'}))
     phi = dirq(:)'*dirz(:);
     if sign(phi)<0
-      warning('the input coordinate system seems left-handed, flipping z-axis to keep the transformation matrix consistent');
+      ft_warning('the input coordinate system seems left-handed, flipping z-axis to keep the transformation matrix consistent');
       dirz = -dirz;
     end
-  elseif any(strcmp(coordsys, {'ras_tal' 'tal' 'spm'}))
+  elseif any(strcmp(coordsys, {'tal' 'spm' 'acpc'}))
     phi = dirq(:)'*dirx(:);
     if sign(phi)<0
-      warning('the input coordinate system seems left-handed, flipping x-axis to keep the transformation matrix consistent');
+      ft_warning('the input coordinate system seems left-handed, flipping x-axis to keep the transformation matrix consistent');
       dirx = -dirx;
     end
   else
-    warning('the extra input coordinate is not used with coordsys "%s"', coordsys);
+    ft_warning('the extra input coordinate is not used with coordsys "%s"', coordsys);
   end
 end
 

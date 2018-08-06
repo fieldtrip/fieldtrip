@@ -1,15 +1,15 @@
 function ft_realtime_pooraudioproxy(cfg)
 
-% FT_REALTIME_POORAUDIOPROXY reads continuous data from the sound card using the 
-% standard Matlab API and writes it to a FieldTrip buffer. This proxy has
-% poor timing and will produce dropped audio frames between blocks. Also
-% the Matlab documentation warns about using this API for long recordings
-% because this will fill up memory and degrade performance.
+% FT_REALTIME_POORAUDIOPROXY reads continuous data from the sound card using the
+% standard Matlab API and writes it to a FieldTrip buffer. This proxy has poor timing
+% and will produce dropped audio frames between blocks. Also the Matlab documentation
+% warns about using this API for long recordings because this will fill up memory and
+% degrade performance.
 %
-% The FieldTrip buffer is a network transparent server that allows the
-% acquisition client to stream data to it. An analysis client can connect
-% to read the data upon request. Multiple clients can connect simultaneously,
-% each analyzing a specific aspect of the data concurrently.
+% The FieldTrip buffer is a network transparent server that allows the acquisition
+% client to stream data to it. An analysis client can connect to read the data upon
+% request. Multiple clients can connect simultaneously, each analyzing a specific
+% aspect of the data concurrently.
 %
 % Use as
 %   ft_realtime_pooraudioproxy(cfg)
@@ -30,10 +30,12 @@ function ft_realtime_pooraudioproxy(cfg)
 %   cfg.debug       = show sample time and clock time (default = 'yes')
 %
 % To stop this realtime function, you have to press Ctrl-C
+%
+% See also FT_REALTIME_SIGNALPROXY, FT_REALTIME_SIGNALVIEWER
 
 % Copyright (C) 2010, Stefan Klanke & Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -69,13 +71,13 @@ if newblocksize<0.5
   newblocksize = 0.5;
 end
 if newblocksize~=cfg.blocksize
-  warning('sestting cfg.blocksize to %f', newblocksize);
+  ft_warning('sestting cfg.blocksize to %f', newblocksize);
   cfg.blocksize = newblocksize;
 end
 
 hdr = [];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% create a fieldtrip compatible header structure
+% create a FieldTrip compatible header structure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 hdr.Fs                 = cfg.fsample;								  
 hdr.nChans             = cfg.channel;					                  

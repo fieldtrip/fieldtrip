@@ -34,8 +34,8 @@ function [node,elem,face,regions]=vol2mesh(img,ix,iy,iz,opt,maxvol,dofix,method,
 %	       column is the region ID
 %	 face: output, mesh surface element list of the tetrahedral mesh
 %	       the last column denotes the boundary ID
-%    region: optional output. if opt.autoregion is set to 1, region
-%          saves the interior points for each closed surface component
+%        region: optional output. if opt.autoregion is set to 1, region
+%              saves the interior points for each closed surface component
 %
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %

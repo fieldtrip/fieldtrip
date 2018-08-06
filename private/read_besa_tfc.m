@@ -21,7 +21,7 @@ function [ChannelLabels, Time, Frequency, Data, Info] = read_besa_tfc(FILENAME)
 
 % Copyright (C) 2005, Vladimir Litvak
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -79,7 +79,7 @@ while i<1000
 end
     
 % Generate return values
-% FIXME the following statement does not work for Matlab 7.2 on XP (see mail from Stephan Bickel)
+% FIXME the following statement does not work for MATLAB 7.2 on XP (see mail from Stephan Bickel)
 Time = [TimeStartInMS:TimeIntervalInMS:(NumberTimeSamples-1)*TimeIntervalInMS+TimeStartInMS];
 Frequency = [FreqStartInHZ:FreqIntervalInHZ:(NumberFrequencies-1)*FreqIntervalInHZ+FreqStartInHZ];
 if vers == 1

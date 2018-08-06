@@ -4,7 +4,7 @@ function fnew=removeisolatedsurf(v,f,maxdiameter)
 %
 % remove disjointed surface fragment filtered by using mesh diameter
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input:
 %    v: list of nodes of the input surface

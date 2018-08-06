@@ -1,0 +1,9 @@
+This is a java implementation of the FieldTrip buffer server, see
+http://www.fieldtriptoolbox.org/development/realtime.
+
+It has been contributed by Jason Farquhar, http://www.socsci.ru.nl/jdrf. 
+
+To compile and run, you should change into this directory and type
+
+ant
+java -jar BufferServer.jar 1972

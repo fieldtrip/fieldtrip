@@ -33,7 +33,7 @@ function [B] = expand_orthogonal(A,flg,method)
 % Copyright (C) 2007, Christian Hesse
 % F.C. Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -60,24 +60,24 @@ function [B] = expand_orthogonal(A,flg,method)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % check the input arguments
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if (nargin<1) || (nargin>3), error('incorrect number of input arrguments'); end;
-if (nargin<3), method = 'svd'; end;
-if (nargin<2), flg = 0; end;
+if (nargin<1) || (nargin>3), ft_error('incorrect number of input arrguments'); end
+if (nargin<3), method = 'svd'; end
+if (nargin<2), flg = 0; end
 
 % A must be a matrix with more rows than columns containing only real numbers
 if isempty(A) || ~isnumeric(A) || ~isreal(A) || any(~isfinite(A(:))) ...
       || (ndims(A)>2) || (size(A,1)<size(A,2)) || (max(size(A))==1)
-   error('input argument ''A'' must be a real matrix with more rows than columns');
+   ft_error('input argument ''A'' must be a real matrix with more rows than columns');
 end
 
 % flg must be a logical
 if (flg~=0) && (flg~=1)
-   error('input argument ''flg'' must be either 0 (default) or 1');
+   ft_error('input argument ''flg'' must be either 0 (default) or 1');
 end
 
 % method must be a string
 if ~ischar(method)
-   error('input argument ''method'' must be a string');
+   ft_error('input argument ''method'' must be a string');
 end
 
 
@@ -86,16 +86,16 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % normalize the columns of A to unit length
 [nrows, ncols] = size(A);
-for i=1:ncols, A(:,i) = A(:,i)./norm(A(:,i),2); end;
+for i=1:ncols, A(:,i) = A(:,i)./norm(A(:,i),2); end
 % determine how many columns have to be expanded
 nxpnd = nrows-ncols;
 if (nxpnd<1)
-   warning('A is already a square matrix: orthogonal expansion not possible');
+   ft_warning('A is already a square matrix: orthogonal expansion not possible');
    if (flg==0)
-      warning('columns of input have been normalized to unit lenth for output');
+      ft_warning('columns of input have been normalized to unit lenth for output');
       B = A;
    else
-      warning('output contains orthonormal basis of the range space of input');
+      ft_warning('output contains orthonormal basis of the range space of input');
       B = orth(A);
    end
    return;
@@ -133,7 +133,7 @@ switch lower(method)
          % determine and accumulate the vector projections of the first i-1 columns
          % onto the ith column
          tmp = tmp.*0;
-         for j=1:i-1, tmp = tmp + B(:,j).*(B(:,j)'*B(:,i)); end;
+         for j=1:i-1, tmp = tmp + B(:,j).*(B(:,j)'*B(:,i)); end
          % subtract the projections
          B(:,i) = B(:,i) - tmp;
          % normalize to unit norm
@@ -142,7 +142,7 @@ switch lower(method)
       end
 
    otherwise
-      error(['unknown or unsupported method: ',method]);
+      ft_error(['unknown or unsupported method: ',method]);
 
 end % switch lower(method)
 
@@ -152,7 +152,7 @@ end % switch lower(method)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % optionally replace the first ncols columns of B with normalized columns of A
 % for output
-if (flg==0), B(:,1:ncols) = A; end;
+if (flg==0), B(:,1:ncols) = A; end
 
 
 % end of function

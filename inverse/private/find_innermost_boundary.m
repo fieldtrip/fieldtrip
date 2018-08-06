@@ -12,7 +12,7 @@ function [innermost, inside] = find_innermost_boundary(bnd)
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -41,13 +41,13 @@ end
 for i=1:ncmp
 for j=1:ncmp
   % determine for a single vertex on each surface if it is inside or outside the other surfaces
-  curpos = bnd(i).pnt(1,:); % any point on the boundary is ok
-  curpnt = bnd(j).pnt;
-  curtri = bnd(j).tri;
+  curpos1 = bnd(i).pos(1,:); % any point on the boundary is ok
+  curpos  = bnd(j).pos;
+  curtri  = bnd(j).tri;
   if i==j
     inside(i,j) = 0;
   else
-    inside(i,j) = bounding_mesh(curpos, curpnt, curtri);
+    inside(i,j) = bounding_mesh(curpos1, curpos, curtri);
   end
 end
 end

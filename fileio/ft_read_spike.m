@@ -34,7 +34,7 @@ function [spike] = ft_read_spike(filename, varargin)
 
 % Copyright (C) 2007-2011 Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -56,7 +56,7 @@ function [spike] = ft_read_spike(filename, varargin)
 filename = fetch_url(filename);
 
 if ~exist(filename,'file')
-    error('File or directory does not exist')
+    ft_error('File or directory does not exist')
 end
 
 % get the options
@@ -68,10 +68,10 @@ switch spikeformat
 
   case {'neuralynx_ncs' 'plexon_ddt'}
     % these files only contain continuous data
-    error('file does not contain spike timestamps or waveforms');
+    ft_error('file does not contain spike timestamps or waveforms');
 
   case 'matlab'
-    % plain matlab file with a single variable in it
+    % plain MATLAB file with a single variable in it
     load(filename, 'spike');
 
   case 'mclust_t'
@@ -217,9 +217,63 @@ switch spikeformat
       spike.timestamp{i} = tmp.spikew.timestamp(:,i)';
       spike.unit{i}      = tmp.spikew.unitID(:,i)';
     end
+  
+  case 'neuroscope'
+    % the information about the spikes is represented in:
+    % x.clu.y or x.res.y (containing the timing +cluster info)
+    % x.spk.y (containing the waveform info)
+    % x.fet.y (containing features: do we need this?)
+    
+    if isdir(filename),
+      tmp = dir(filename);
+      filenames = {tmp.name}';
+    end
+    
+    % read the header
+    filename_hdr = filenames{~cellfun('isempty',strfind(filenames,'.xml'))};
+    hdr          = ft_read_header(fullfile(filename,filename_hdr), 'headerformat', 'neuroscope_xml');
+    spikegroups  = hdr.orig.spikeGroups;
+    fsample      = hdr.orig.rates.wideband;
 
+    filename_clu = filenames(~cellfun('isempty',strfind(filenames,'.clu')));
+    filename_spk = filenames(~cellfun('isempty',strfind(filenames,'.spk')));
+    
+    % FIXME should we do a sanity check on whether the clu and spk actually
+    % belong together?
+    
+    c = cell(numel(filename_clu),1);
+    w = cell(numel(filename_spk),1);
+    for k = 1:numel(filename_clu)
+      c{k} = LoadSpikeTimes(fullfile(filename,filename_clu{k}), fsample);
+    end
+    for k = 1:numel(filename_spk)
+      w{k} = LoadSpikeWaveforms(fullfile(filename,filename_spk{k}),numel(spikegroups.groups{k}),spikegroups.nSamples(k));
+    end
+    
+    spike = [];
+    spike.label = cell(hdr.orig.spikeGroups.nGroups,1);
+    spike.hdr   = hdr;
+    spike.unit      = cell(1,numel(spike.label));
+    spike.waveform  = cell(1,numel(spike.label));
+    spike.timestamp = cell(1,numel(spike.label));
+    
+    for k = 1:numel(spike.label)
+      sel = find(c{k}(:,3)>1); % values >1 corresponds to individual units, 0 = noise, 1 = MUA
+      
+      % the times are defined in s, convert to original time stamps
+      timestamps = c{k}(sel,1) * hdr.orig.rates.wideband;
+      if any(abs(timestamps-round(timestamps))>1e-5),
+        ft_error('there seems to be a mismatch between the spike times and the expected integer-valued timestamps');
+      end
+      
+      spike.timestamp{k} = round(timestamps(:))';
+      spike.waveform{k}  = permute(w{k}(sel,:,:), [2 3 1]);
+      spike.unit{k}      = c{k}(sel,3)';
+      spike.label{k}     = sprintf('spikegroup%03d',k);
+    end
+     
   otherwise
-    error(['unsupported data format (' spikeformat ')']);
+    ft_error(['unsupported data format (' spikeformat ')']);
 end
 
 % add the waveform 

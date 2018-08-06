@@ -5,7 +5,7 @@ function p=internalpoint(v,aloop)
 % imperical function to find an internal point
 % of a planar polygon
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2008/04/08
 %
 % input:   

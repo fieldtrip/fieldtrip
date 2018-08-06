@@ -33,11 +33,11 @@ function data = ft_anonimizedata(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_ANALYSISPIPELINE
+% See also FT_DEFACEVOLUME, FT_DEFACEMESH, FT_ANALYSISPIPELINE
 
 % Copyright (C) 2014, Robert Oostenveld, DCCN
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %  FieldTrip is free software: you can redistribute it and/or modify
@@ -55,18 +55,21 @@ function data = ft_anonimizedata(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
-ft_defaults               % this ensures that the path is correct and that the ft_defaults global variable is available
-ft_preamble init          % this will reset warning_once and show the function help if nargin==0 and return an error
-ft_preamble provenance    % this records the time and memory usage at teh beginning of the function
-ft_preamble trackconfig   % this converts the cfg structure in a config object, which tracks the cfg options that are being used
-ft_preamble debug         % this allows for displaying or saving the function name and input arguments upon an error
-ft_preamble loadvar data  % this reads the input data in case the user specified the cfg.inputfile option
+ft_defaults
+ft_preamble init
+ft_preamble debug
+ft_preamble loadvar data
+ft_preamble provenance data
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -149,9 +152,9 @@ set(h, 'menuBar', 'none')
 mp = get(0, 'MonitorPosition');
 if size(mp,1)==1
   % there is only a single monitor, we can try to go fullscreen
-  set(h,'units','normalized','position',[0 0 1 1])
+  set(h, 'units', 'normalized', 'position', [0 0 1 1])
 else
-  set(h,'units','normalized');
+  set(h, 'units', 'normalized');
 end
 
 %% add the table to the GUI
@@ -171,12 +174,12 @@ uicontrol('tag', 'button5', 'parent', h, 'units', 'pixels', 'style', 'pushbutton
 uicontrol('tag', 'button6', 'parent', h, 'units', 'pixels', 'style', 'pushbutton', 'string', 'quit',        'userdata', 'q',  'callback', @keyboard_cb)
 
 % use manual positioning of the buttons in pixel units
-ft_uilayout(h, 'tag', 'button1', 'hpos', 20+(80+10)*0, 'vpos', 10, 'width', 80, 'height', 25);
-ft_uilayout(h, 'tag', 'button2', 'hpos', 20+(80+10)*1, 'vpos', 10, 'width', 80, 'height', 25);
-ft_uilayout(h, 'tag', 'button3', 'hpos', 20+(80+10)*2, 'vpos', 10, 'width', 80, 'height', 25);
-ft_uilayout(h, 'tag', 'button4', 'hpos', 20+(80+10)*3, 'vpos', 10, 'width', 80, 'height', 25);
-ft_uilayout(h, 'tag', 'button5', 'hpos', 20+(80+10)*4, 'vpos', 10, 'width', 80, 'height', 25);
-ft_uilayout(h, 'tag', 'button6', 'hpos', 20+(80+10)*5, 'vpos', 10, 'width', 80, 'height', 25);
+ft_uilayout(h, 'tag', 'button1', 'hpos', 20+(100+10)*0, 'vpos', 10, 'width', 100, 'height', 25);
+ft_uilayout(h, 'tag', 'button2', 'hpos', 20+(100+10)*1, 'vpos', 10, 'width', 100, 'height', 25);
+ft_uilayout(h, 'tag', 'button3', 'hpos', 20+(100+10)*2, 'vpos', 10, 'width', 100, 'height', 25);
+ft_uilayout(h, 'tag', 'button4', 'hpos', 20+(100+10)*3, 'vpos', 10, 'width', 100, 'height', 25);
+ft_uilayout(h, 'tag', 'button5', 'hpos', 20+(100+10)*4, 'vpos', 10, 'width', 100, 'height', 25);
+ft_uilayout(h, 'tag', 'button6', 'hpos', 20+(100+10)*5, 'vpos', 10, 'width', 100, 'height', 25);
 
 ft_uilayout(h, 'tag', 'button1', 'retag', 'buttongroup')
 ft_uilayout(h, 'tag', 'button1', 'retag', 'buttongroup')
@@ -219,14 +222,14 @@ while ~info.cleanup
   uiwait(h); % we only get part this point with abort or cleanup
   
   if ~ishandle(h)
-    error('aborted by user');
+    ft_error('aborted by user');
   end
   
   info = getappdata(h, 'info');
   
   if info.cleanup
     if ~all(xor(info.keep, info.remove))
-      warning('not all fields have been marked as "keep" or "remove"');
+      ft_warning('not all fields have been marked as "keep" or "remove"');
       info.cleanup = false;
     else
       delete(h);
@@ -245,12 +248,12 @@ end
 fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
 
 % deal with the output
-ft_postamble debug  % this clears the onCleanup function used for debugging in case of an error
-ft_postamble trackconfig  % this converts the config object back into a struct and can report on the unused fields
-ft_postamble provenance  % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and matlab version etc. to the output cfg
-ft_postamble previous data  % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
-ft_postamble history data  % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg
-ft_postamble savevar data  % this saves the output data structure to disk in case the user specified the cfg.outputfile option
+ft_postamble debug
+ft_postamble trackconfig
+ft_postamble previous data
+ft_postamble provenance data
+ft_postamble history data
+ft_postamble savevar data
 
 end % function
 
@@ -274,13 +277,15 @@ set(info.table, 'data', data);
 end % function
 
 function keyboard_cb(h, eventdata)
-if isempty(eventdata)
+
+if (isempty(eventdata) && ft_platform_supports('matlabversion',-Inf, '2014a')) || isa(eventdata, 'matlab.ui.eventdata.ActionData')
   % determine the key that corresponds to the uicontrol element that was activated
   key = get(h, 'userdata');
 else
   % determine the key that was pressed on the keyboard
-  key = parseKeyboardEvent(eventdata);
+  key = parsekeyboardevent(eventdata);
 end
+
 h = getparent(h);
 info = getappdata(h, 'info');
 
@@ -288,7 +293,7 @@ data = get(info.table, 'data');
 
 sel = info.keep & info.remove;
 if any(sel)
-  warning('items that were marked both as "keep" and "remove" have been cleared');
+  ft_warning('items that were marked both as "keep" and "remove" have been cleared');
   info.keep(sel) = false;
   info.remove(sel) = false;
 end
@@ -299,7 +304,8 @@ info.remove(~info.hide) = cell2mat(data(:,2));
 switch key
   case 'q'
     info.cleanup = true;
-    uiresume
+    setappdata(h, 'info', info); % store it immediately
+    uiresume                     % resume from uiwait in the main function
   case 'a'
     info.hide(info.keep)   = true;
     info.hide(info.remove) = true;

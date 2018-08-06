@@ -9,7 +9,7 @@ function [dat] = read_nex_data(filename, hdr, begsample, endsample, chanindx)
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -70,7 +70,7 @@ for sgnlop=1:length(sgn)
     % this just reads the indices of LFP starts
     ind = fread(fid,hdr.varheader(sgn(sgnlop)).cnt,'int32');
     if length(ind)>1
-      error('multiple A/D segments are not supported');
+      ft_error('multiple A/D segments are not supported');
     end
 
     % convert from timestamps to samples, expressed in the sampling frequency of the AD channels
@@ -81,9 +81,9 @@ for sgnlop=1:length(sgn)
     ch_endsample = endsample - tim;
     
     if (ch_begsample<1)
-      error(sprintf('cannot read before the begin of the recorded data (channel %d)', sgn(sgnlop)));
+      ft_error(sprintf('cannot read before the begin of the recorded data (channel %d)', sgn(sgnlop)));
     elseif (ch_endsample>hdr.varheader(sgn(sgnlop)).numsmp)
-      error(sprintf('cannot read beyond the end of the recorded data (channel %d)', sgn(sgnlop)));
+      ft_error(sprintf('cannot read beyond the end of the recorded data (channel %d)', sgn(sgnlop)));
     end
     
     % seek to the beginning of the interesting data, correct for the A/D card initialisation delay
@@ -94,7 +94,7 @@ for sgnlop=1:length(sgn)
     dat(sgnlop,:) = dum(:)' * hdr.varheader(sgn(sgnlop)).adtomv;
 
   else
-    % warning('unsupported data format for channel %s', hdr.label{sgn(sgnlop)});
+    % ft_warning('unsupported data format for channel %s', hdr.label{sgn(sgnlop)});
   end
 
 end

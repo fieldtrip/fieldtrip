@@ -12,6 +12,8 @@ timelock = ft_timelockanalysis([], data);
 
 default             = [];
 default.interactive = 'yes';
+default.axes        = 'no';
+default.baseline    = 'yes';
 cfg = mergeconfig(cfg, default);
 
 figure;

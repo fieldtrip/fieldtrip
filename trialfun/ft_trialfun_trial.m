@@ -3,11 +3,18 @@ function [trl, event] = ft_trialfun_trial(cfg)
 % FT_TRIALFUN_TRIAL creates a trial definition that corresponds to the
 % events that are returned by FT_READ_EVENT with type='trial'
 %
+% You can use this function as follows
+%   cfg           = [];   
+%   cfg.dataset   = string, containing filename or directory
+%   cfg.trialfun  = 'ft_trialfun_trial';
+%   cfg           = definetrial(cfg);
+%   data          = preprocessing(cfg);
+%
 % See also FT_DEFINETRIAL, FT_PREPROCESSING
 
 % Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

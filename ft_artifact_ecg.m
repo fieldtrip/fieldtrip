@@ -1,17 +1,24 @@
 function [cfg, artifact] = ft_artifact_ecg(cfg, data)
 
-% FT_ARTIFACT_ECG performs a peak-detection on the ECG-channel. The
-% heart activity can be observed in the MEG data as an MCG artifact.
+% FT_ARTIFACT_ECG performs a peak-detection on the ECG-channel and identifies the windows
+% around the QRS peak as artifacts. Using FT_REJECTARTIFACT you can remove these windows from
+% your data, or using FT_REMOVETEMPLATEARTIFACT you can subtract an averaged template artifact
+% from your data.
 %
 % Use as
 %   [cfg, artifact] = ft_artifact_ecg(cfg)
 % with the configuration options
-%   cfg.dataset 
-%   cfg.headerfile 
-%   cfg.datafile
+%   cfg.dataset     = string with the filename
+% or
+%   cfg.headerfile  = string with the filename
+%   cfg.datafile    = string with the filename
+% and optionally
+%   cfg.headerformat
+%   cfg.dataformat
 %
 % Alternatively you can use it as
 %   [cfg, artifact] = ft_artifact_ecg(cfg, data)
+% where the input data is a structure as obtained from FT_PREPROCESSING.
 %
 % In both cases the configuration should also contain
 %   cfg.trl        = structure that defines the data segments of interest. See FT_DEFINETRIAL
@@ -35,12 +42,13 @@ function [cfg, artifact] = ft_artifact_ecg(cfg, data)
 % file on disk. This mat files should contain only a single variable named 'data',
 % corresponding to the input structure.
 %
-% See also FT_REJECTARTIFACT, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG, FT_ARTIFACT_EOG,
-% FT_ARTIFACT_JUMP, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_ZVALUE
+% See also FT_REJECTARTIFACT, FT_REMOVETEMPLATEARTIFACT, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG,
+% FT_ARTIFACT_EOG, FT_ARTIFACT_JUMP, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_THRESHOLD,
+% FT_ARTIFACT_ZVALUE
 
 % Copyright (C) 2005-2011, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -58,7 +66,10 @@ function [cfg, artifact] = ft_artifact_ecg(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -66,8 +77,8 @@ ft_preamble init
 ft_preamble provenance
 ft_preamble loadvar data
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -76,53 +87,52 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 
 % this subfield is required
-if ~isfield(cfg,'artfctdef'),              cfg.artfctdef               = [];            end
-if ~isfield(cfg.artfctdef,'ecg'),          cfg.artfctdef.ecg           = [];            end
+if ~isfield(cfg, 'artfctdef'),              cfg.artfctdef               = [];            end
+if ~isfield(cfg.artfctdef, 'ecg'),          cfg.artfctdef.ecg           = [];            end
 
 cfg.artfctdef = ft_checkconfig(cfg.artfctdef, 'renamed',    {'blc', 'demean'});
 cfg.artfctdef = ft_checkconfig(cfg.artfctdef, 'renamed',    {'blcwindow' 'baselinewindow'});
 
 % set default rejection parameters for eog artifacts if necessary.
-if ~isfield(cfg.artfctdef.ecg,'channel'),  cfg.artfctdef.ecg.channel   = {'ECG'};       end
-if ~isfield(cfg.artfctdef.ecg,'method'),   cfg.artfctdef.ecg.method    = 'zvalue';      end
-if ~isfield(cfg.artfctdef.ecg,'cutoff'),   cfg.artfctdef.ecg.cutoff    = 3;             end
-if ~isfield(cfg.artfctdef.ecg,'padding'),  cfg.artfctdef.ecg.padding   = 0.5;           end
-if ~isfield(cfg.artfctdef.ecg,'inspect'),  cfg.artfctdef.ecg.inspect   = {'MLT' 'MRT'}; end
-if ~isfield(cfg.artfctdef.ecg,'pretim'),   cfg.artfctdef.ecg.pretim    = 0.05;          end
-if ~isfield(cfg.artfctdef.ecg,'psttim'),   cfg.artfctdef.ecg.psttim    = 0.3;           end
-if ~isfield(cfg.artfctdef.ecg,'mindist'),  cfg.artfctdef.ecg.mindist   = 0.5;           end
-if ~isfield(cfg.artfctdef.ecg,'feedback'),  cfg.artfctdef.ecg.feedback = 'yes';   end
-if ~isfield(cfg, 'headerformat'),          cfg.headerformat            = [];            end
-if ~isfield(cfg, 'dataformat'),            cfg.dataformat              = [];            end
+if ~isfield(cfg.artfctdef.ecg, 'channel'),  cfg.artfctdef.ecg.channel   = {'ECG'};       end
+if ~isfield(cfg.artfctdef.ecg, 'method'),   cfg.artfctdef.ecg.method    = 'zvalue';      end
+if ~isfield(cfg.artfctdef.ecg, 'cutoff'),   cfg.artfctdef.ecg.cutoff    = 3;             end
+if ~isfield(cfg.artfctdef.ecg, 'padding'),  cfg.artfctdef.ecg.padding   = 0.5;           end
+if ~isfield(cfg.artfctdef.ecg, 'inspect'),  cfg.artfctdef.ecg.inspect   = {'MLT' 'MRT'}; end
+if ~isfield(cfg.artfctdef.ecg, 'pretim'),   cfg.artfctdef.ecg.pretim    = 0.05;          end
+if ~isfield(cfg.artfctdef.ecg, 'psttim'),   cfg.artfctdef.ecg.psttim    = 0.3;           end
+if ~isfield(cfg.artfctdef.ecg, 'mindist'),  cfg.artfctdef.ecg.mindist   = 0.5;           end
+if ~isfield(cfg.artfctdef.ecg, 'feedback'), cfg.artfctdef.ecg.feedback = 'yes';   end
+if ~isfield(cfg, 'headerformat'),           cfg.headerformat            = [];            end
+if ~isfield(cfg, 'dataformat'),             cfg.dataformat              = [];            end
 
-if ~strcmp(cfg.artfctdef.ecg.method, 'zvalue'),
-  error('method "%s" is not applicable', cfg.artfctdef.ecg.method);
+if ~strcmp(cfg.artfctdef.ecg.method, 'zvalue')
+  ft_error('method "%s" is not applicable', cfg.artfctdef.ecg.method);
 end
 
 % the data is either passed into the function by the user or read from file with cfg.inputfile
 hasdata = exist('data', 'var');
 
 if ~hasdata
-  cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
+  cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
   cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
-  hdr = ft_read_header(cfg.headerfile,'headerformat', cfg.headerformat);
+  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
   trl = cfg.trl;
 else
-  data = ft_checkdata(data, 'hassampleinfo', 'yes');
+  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
   cfg  = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
   hdr  = ft_fetch_header(data);
-  if isfield(data, 'sampleinfo'), 
+  if isfield(data, 'sampleinfo')
     trl = data.sampleinfo;
     for k = 1:numel(data.trial)
       trl(k,3) = time2offset(data.time{k}, data.fsample);
     end
   else
-    error('the input data does not contain a valid description of the sampleinfo');
-  end  
+    ft_error('the input data does not contain a valid description of the sampleinfo');
+  end
 end
 
 artfctdef         = cfg.artfctdef.ecg;
-padsmp            = round(artfctdef.padding*hdr.Fs);
 ntrl              = size(trl,1);
 artfctdef.trl     = trl;
 artfctdef.channel = ft_channelselection(artfctdef.channel, hdr.label);
@@ -132,9 +142,9 @@ numecgsgn         = length(sgnind);
 fltpadding        = 0;
 
 if numecgsgn<1
-  error('no ECG channels selected');
+  ft_error('no ECG channels selected');
 elseif numecgsgn>1
-  error('only one ECG channel can be selected');
+  ft_error('only one ECG channel can be selected');
 end
 
 % set default cfg.continuous
@@ -148,7 +158,47 @@ end
 
 % read in the ecg-channel and do demean and squaring
 if hasdata
-  tmpcfg = [];
+  % this list originates from ft_checkconfig
+  fieldname = {
+    'reref'
+    'refchannel'
+    'implicitref'
+    'detrend'
+    'bpfiltdir'
+    'bpfilter'
+    'bpfiltord'
+    'bpfilttype'
+    'bpfreq'
+    'bsfiltdir'
+    'bsfilter'
+    'bsfiltord'
+    'bsfilttype'
+    'bsfreq'
+    'demean'
+    'baselinewindow'
+    'denoise'
+    'dftfilter'
+    'dftfreq'
+    'hpfiltdir'
+    'hpfilter'
+    'hpfiltord'
+    'hpfilttype'
+    'hpfreq'
+    'lpfiltdir'
+    'lpfilter'
+    'lpfiltord'
+    'lpfilttype'
+    'lpfreq'
+    'medianfilter'
+    'medianfiltord'
+    'hilbert'
+    'derivative'
+    'rectify'
+    'boxcar'
+    'absdiff'
+    };
+  
+  tmpcfg = keepfields(artfctdef, fieldname);
   tmpcfg.channel = artfctdef.channel;
   ecgdata = ft_preprocessing(tmpcfg, data);
   ecg     = ecgdata.trial;
@@ -178,7 +228,7 @@ for j = 1:ntrl
 end
 
 accept = strcmp(cfg.artfctdef.ecg.feedback, 'no');
-while accept == 0,
+while accept == 0
   h = figure;
   plot(trace);zoom;
   hold on;
@@ -187,8 +237,8 @@ while accept == 0,
   xlabel('samples');
   ylabel('zscore');
 
-  fprintf(['\ncurrent  ',artfctdef.method,' threshold = %1.3f'], artfctdef.cutoff);
-  response = input('\nkeep the current value (y/n) ?\n','s');
+  fprintf(['\ncurrent %s threshold = %1.3f'], artfctdef.method, artfctdef.cutoff);
+  response = input('\nkeep the current value (y/n) ?\n', 's');
   switch response
     case 'n'
       oldcutoff = artfctdef.cutoff;
@@ -197,10 +247,10 @@ while accept == 0,
       oldcutoff = artfctdef.cutoff;
       accept = 1;
     otherwise
-      warning('unrecognised response, assuming no');
+      ft_warning('unrecognised response, assuming no');
       oldcutoff = artfctdef.cutoff;
       artfctdef.cutoff = input('\nenter new value \n');
-  end;
+  end
   close
 end
 
@@ -243,7 +293,7 @@ if ~isempty(sgnind)
       ntrlok = ntrlok + 1;
     elseif hasdata
       dum = ft_fetch_data(data, 'header', hdr, 'begsample', trl(j,1), 'endsample', trl(j,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'docheck', 0);
-      if any(~isfinite(dum(:))),
+      if any(~isfinite(dum(:)))
       else
         ntrlok = ntrlok + 1;
         dat    = dat + ft_preproc_baselinecorrect(dum);
@@ -259,7 +309,7 @@ mdat = max(abs(tmp(:)));
 
 acceptpre = strcmp(cfg.artfctdef.ecg.feedback, 'no');
 acceptpst = strcmp(cfg.artfctdef.ecg.feedback, 'no');
-while acceptpre == 0 || acceptpst == 0,
+while acceptpre == 0 || acceptpst == 0
   h = figure;
   subplot(2,1,1); plot(time, dat(end, :));
   abc = axis;
@@ -273,9 +323,9 @@ while acceptpre == 0 || acceptpst == 0,
   rectangle('Position', [xpos ypos width height], 'FaceColor', 'r');
   hold on; plot(time, dat(1:end-1, :), 'b');
 
-  if acceptpre == 0,
+  if acceptpre == 0
     fprintf(['\ncurrent pre-peak interval = %1.3f'], artfctdef.pretim);
-    response = input('\nkeep the current value (y/n) ?\n','s');
+    response = input('\nkeep the current value (y/n) ?\n', 's');
     switch response
       case 'n'
         oldpretim = artfctdef.pretim;
@@ -284,13 +334,13 @@ while acceptpre == 0 || acceptpst == 0,
         oldpretim = artfctdef.pretim;
         acceptpre = 1;
       otherwise
-        warning('unrecognised response, assuming no');
+        ft_warning('unrecognised response, assuming no');
         oldpretim = artfctdef.pretim;
     end
   end
-  if acceptpst == 0 && acceptpre == 1,
+  if acceptpst == 0 && acceptpre == 1
     fprintf(['\ncurrent post-peak interval = %1.3f'], artfctdef.psttim);
-    response = input('\nkeep the current value (y/n) ?\n','s');
+    response = input('\nkeep the current value (y/n) ?\n', 's');
     switch response
       case 'n'
         oldpsttim = artfctdef.psttim;
@@ -299,7 +349,7 @@ while acceptpre == 0 || acceptpst == 0,
         oldpsttim = artfctdef.psttim;
         acceptpst = 1;
       otherwise
-        warning('unrecognised response, assuming no');
+        ft_warning('unrecognised response, assuming no');
         oldpsttim = artfctdef.psttim;
     end
   end
@@ -316,4 +366,3 @@ cfg.artfctdef.ecg.artifact = artifact;
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
 ft_postamble previous data
-

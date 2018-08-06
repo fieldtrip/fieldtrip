@@ -8,7 +8,7 @@ function event = read_serial_event(filename)
 
 % Copyright (C) 2007, Christian Hesse
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

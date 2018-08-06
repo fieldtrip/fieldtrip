@@ -3,18 +3,20 @@ function testOpenMEEGeeg
 % TEST testOpenMEEGeeg
 % Test the computation of an EEG leadfield with OpenMEEG
 
-addpath(cd) % Make sure current folder is in the path
+% Copyright (C) 2010-2017, OpenMEEG developers
+
+addpath(pwd) % Make sure current folder is in the path
 
 %% Set the position of the probe dipole
-pos = [0 0 70];
+dippos = [0 0 70];
 
 %% Set the radius and conductivities of each of the compartments
 
 % 4 Layers
-r = [85 88 92 100];
-c = [1 1/20 1/80 1];
+r = [100 92 88 85];
+c = [1 1/80 1/20 1];
 
-[rdms,mags] = run_bem_computation(r,c,pos);
+[rdms,mags] = run_bem_computation(r,c,dippos);
 
 % the following would require the installation of xunit toolbox
 % assertElementsAlmostEqual(rdms, [0.019963 0.019962 0.10754], 'absolute', 1e-3)
@@ -26,20 +28,20 @@ assert(norm(rdms-[0.019963 0.019962 0.10754])<thr)
 assert(norm(mags-[0.84467 0.84469 0.83887])<thr)
 
 % 3 Layers
-r = [88 92 100];
+r = [100 92 88];
 c = [1 1/80 1];
 
-[rdms,mags] = run_bem_computation(r,c,pos);
+[rdms,mags] = run_bem_computation(r,c,dippos);
 % assertElementsAlmostEqual(rdms, [0.064093 0.064092 0.13532], 'absolute', 1e-3)
 % assertElementsAlmostEqual(mags, [1.0498 1.0498 1.0207], 'absolute', 1e-3)
 assert(norm(rdms-[0.064093 0.064092 0.13532])<thr)
 assert(norm(mags-[1.0498 1.0498 1.0207])<thr)
 
 % 2 Layers
-r = [92 100];
-c = [1 1/4];
+r = [100 92];
+c = [1/4 1];
 
-[rdms,mags] = run_bem_computation(r,c,pos);
+[rdms,mags] = run_bem_computation(r,c,dippos);
 % assertElementsAlmostEqual(rdms, [0.15514 0.15514 0.1212], 'absolute', 1e-3)
 % assertElementsAlmostEqual(mags, [1.8211 1.8211 1.3606], 'absolute', 1e-3)
 assert(norm(rdms-[0.15514 0.15514 0.1212])<thr)
@@ -49,47 +51,59 @@ assert(norm(mags-[1.8211 1.8211 1.3606])<thr)
 r = [100];
 c = [1];
 
-[rdms,mags] = run_bem_computation(r,c,pos);
+[rdms,mags] = run_bem_computation(r,c,dippos);
 % assertElementsAlmostEqual(rdms, [0.18934 0.18931 0.0778], 'absolute', 1e-3)
 % assertElementsAlmostEqual(mags, [1.3584 1.3583 1.2138], 'absolute', 1e-3)
 assert(norm(rdms-[0.18934 0.18931 0.0778])<thr)
 assert(norm(mags-[1.3584 1.3583 1.2138])<thr)
 
 
-function [rdms,mags] = run_bem_computation(r,c,pos)
+function [rdms,mags] = run_bem_computation(r,c,dippos)
 
     %% Description of the spherical mesh
-    [pnt, tri] = icosahedron42;
-    % [pnt, tri] = icosahedron162;
-    % [pnt, tri] = icosahedron642;
+    [pos, tri] = icosahedron42;
+    % [pos, tri] = icosahedron162;
+    % [pos, tri] = icosahedron642;
 
     %% Create a set of electrodes on the outer surface
-    sens.elecpos = max(r) * pnt;
+    sens.elecpos = max(r) * pos;
     sens.label = {};
+    sens.unit = 'mm';
     nsens = size(sens.elecpos,1);
     for ii=1:nsens
         sens.label{ii} = sprintf('vertex%03d', ii);
     end
 
     %% Create a triangulated mesh, the first boundary is inside
-    vol = [];
+    bnd = [];
     for ii=1:length(r)
-        vol.bnd(ii).pnt = pnt * r(ii);
-        vol.bnd(ii).tri = tri;
+        bnd(ii).pos = pos * r(ii);
+        bnd(ii).tri = tri;
     end
     
     
     %% Compute the BEM model
-    cfg.conductivity = c;
+    cfg = [];
     cfg.method = 'openmeeg';
+    
+    % vol structure only needs these elements;
+    % ft_prepare_headmodel should *not* be used!
+    vol_bem = [];
+    vol_bem.bnd = bnd;
+    vol_bem.cond = c;
+    vol_bem.type = 'openmeeg';
 
-    vol1 = ft_prepare_bemmodel(cfg, vol);
-    vol2 = ft_prepare_headmodel(cfg, vol);
-    vol_bem = vol1;
+    % ft_prepare_headmodel has a bug; likely the geom file does not match
+    % the order of the layers
+    %cfg.conductivity = c;
+    %vol_bem = ft_prepare_headmodel(cfg, bnd);
+    %vol_bem = rmfield(vol_bem,'mat');
     
     cfg.vol = vol_bem;
-    cfg.grid.pos = pos;
+    cfg.grid.pos = dippos;
+    cfg.grid.unit = 'mm';
     cfg.elec = sens;
+%    grid = ft_prepare_leadfield(cfg);
     grid = ft_prepare_leadfield(cfg);
 
     lf_openmeeg = grid.leadfield{1};
@@ -102,7 +116,7 @@ function [rdms,mags] = run_bem_computation(r,c,pos)
     vol_sphere = [];
     vol_sphere.r = r;
     vol_sphere.cond = c;
-    lf_sphere = ft_compute_leadfield(pos, sens, vol_sphere);
+    lf_sphere = ft_compute_leadfield(dippos, sens, vol_sphere);
 
     %% Evaluate the quality of the result using RDM and MAG
     rdms = zeros(1,size(lf_openmeeg,2));

@@ -1,4 +1,4 @@
-function [vol] = yokogawa2vol(hdr);
+function [vol] = yokogawa2vol(hdr)
 
 % YOKOGAWA2VOL converts a spherical volume conductor model that can
 % be present in the header of a datafile into a structure that can
@@ -6,7 +6,7 @@ function [vol] = yokogawa2vol(hdr);
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -36,5 +36,5 @@ elseif isfield(hdr.mri_info, 'model_name') && strcmp(hdr.mri_info.model_name, 'S
   vol.r = hdr.mri_info.r;
   vol.o = [hdr.mri_info.cx hdr.mri_info.cy hdr.mri_info.cz];
 else
-  error('unsupported volume conductor model');
+  ft_error('unsupported volume conductor model');
 end

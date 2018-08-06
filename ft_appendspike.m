@@ -18,7 +18,7 @@ function [data] = ft_appendspike(cfg, varargin)
 
 % Copyright (C) 2007, Robert Osotenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -36,17 +36,20 @@ function [data] = ft_appendspike(cfg, varargin)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
+ft_preamble provenance varargin
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -62,43 +65,43 @@ if all(isspike)
     % check if the input data is valid for this function
     spike{i} = ft_checkdata(varargin{i}, 'datatype', 'spike');
   end
-  
+
   % check the validity of the channel labels
   label = {};
   for i=1:length(spike)
     label = cat(1, label, spike{i}.label(:));
   end
   if length(unique(label))~=length(label)
-    error('not all channel labels are unique');
+    ft_error('not all channel labels are unique');
   end
-  
+
   % concatenate the spikes
   data = spike{1};
   for i=2:length(spike)
     data.label     = cat(2, data.label, spike{i}.label);
-    
+
     % use a try construction in case a field is missing
     try, data.waveform  = cat(2, data.waveform, spike{i}.waveform); end
     try, data.timestamp = cat(2, data.timestamp, spike{i}.timestamp); end
     try, data.unit      = cat(2, data.unit, spike{i}.unit); end
-    
+
     % these are optional fields, so use a try construction.
     try, data.time  = cat(2,data.time,spike{i}.time);    end
-    try, data.trial = cat(2, data.trial,spike{i}.trial); end  
+    try, data.trial = cat(2, data.trial,spike{i}.trial); end
     try, data.fourierspctrm = cat(2,data.fourierspctrm,spike{i}.fourierspctrm); end
   end
-  
+
 else
   % this checks the validity of the input data and simultaneously renames it for convenience
   data  = varargin{1}; % ft_checkdata(varargin{1}, 'datatype', 'raw');
   spike = ft_appendspike([], varargin{2:end});
-  
+
   % check the validity of the channel labels
   label = cat(1, data.label(:), spike.label(:));
   if length(unique(label))~=length(label)
-    error('not all channel labels are unique');
+    ft_error('not all channel labels are unique');
   end
-  
+
   if isfield(data, 'cfg')
     trl = ft_findcfg(data.cfg, 'trl');
   else
@@ -106,23 +109,23 @@ else
   end
 
   if isempty(trl);
-    error('could not find the trial information in the continuous data');
+    ft_error('could not find the trial information in the continuous data');
   end
-  
+
   try
     FirstTimeStamp     = data.hdr.FirstTimeStamp;
     TimeStampPerSample = data.hdr.TimeStampPerSample;
   catch
-    error('could not find the timestamp information in the continuous data');
+    ft_error('could not find the timestamp information in the continuous data');
   end
-  
+
   for i=1:length(spike.label)
     % append the data with an empty channel
     data.label{end+1} = spike.label{i};
     for j=1:size(trl,1)
       data.trial{j}(end+1,:) = 0;
     end
-    
+
     % determine the corresponding sample numbers for each timestamp
     ts = spike.timestamp{i};
     % timestamps can be uint64, hence explicitely convert to double at the
@@ -131,7 +134,7 @@ else
       sample = round(double(ts-FirstTimeStamp)/TimeStampPerSample + 1);
     else
       sample = round(double(double(ts)-double(FirstTimeStamp))/TimeStampPerSample + 1);
-    end    
+    end
     fprintf('adding spike channel %s\n', spike.label{i});
     for j=1:size(trl,1)
       begsample = trl(j,1);
@@ -144,13 +147,13 @@ else
       end % for k
     end % for j
   end % for i
-  
+
 end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble previous varargin
+ft_postamble provenance data
 ft_postamble history data
 ft_postamble savevar data

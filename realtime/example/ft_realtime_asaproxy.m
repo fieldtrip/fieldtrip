@@ -1,13 +1,13 @@
 function ft_realtime_asaproxy(cfg)
 
-% FT_REALTIME_ASAPROXY reads continuous data from the ASA acquisition system
-% and writes it to a FieldTrip buffer. This function uses the
-% NeuroSDK software, which can be obtained from ANT.
+% FT_REALTIME_ASAPROXY reads continuous data from the ASA acquisition system and
+% writes it to a FieldTrip buffer. This function uses the NeuroSDK software, which
+% can be obtained from ANT.
 %
-% The FieldTrip buffer is a network transparent server that allows the
-% acquisition client to stream data to it. An analysis client can connect
-% to read the data upon request. Multiple clients can connect simultaneously,
-% each analyzing a specific aspect of the data concurrently.
+% The FieldTrip buffer is a network transparent server that allows the acquisition
+% client to stream data to it. An analysis client can connect to read the data upon
+% request. Multiple clients can connect simultaneously, each analyzing a specific
+% aspect of the data concurrently.
 %
 % Use as
 %   ft_realtime_asaproxy(cfg)
@@ -20,10 +20,12 @@ function ft_realtime_asaproxy(cfg)
 %   cfg.target.dataformat    = string, default is determined automatic
 %
 % To stop this realtime function, you have to press Ctrl-C
+%
+% See also FT_REALTIME_SIGNALPROXY, FT_REALTIME_SIGNALVIEWER
 
 % Copyright (C) 2009, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

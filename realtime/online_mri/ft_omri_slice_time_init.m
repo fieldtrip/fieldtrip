@@ -1,4 +1,4 @@
-function STM = ft_omri_slice_time_init(X0, TR, deltaT);
+function STM = ft_omri_slice_time_init(X0, TR, deltaT)
 
 % function STM = ft_omri_slice_time_init(X0, TR, deltaT);
 %
@@ -7,7 +7,7 @@ function STM = ft_omri_slice_time_init(X0, TR, deltaT);
 
 % Copyright (C) 2010, Stefan Klanke
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -25,9 +25,9 @@ function STM = ft_omri_slice_time_init(X0, TR, deltaT);
 %
 % $Id$
 
-STM.dims = size(X0)
+STM.dims = size(X0);
 if nargin == 3
-  if STM.dims(3)~=length(deltaT) | any(deltaT>TR) | any(deltaT<0) 
+  if STM.dims(3)~=length(deltaT) || any(deltaT>TR) || any(deltaT<0) 
     error 'You must pass in a correct timing description vector';
   end
 else

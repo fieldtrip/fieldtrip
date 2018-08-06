@@ -1,22 +1,19 @@
 function [h2mm, s2mm] = openmeeg_megm(pos, vol, sens)
 
-% OPENMEEG_MEGM computes the OpenMEEG H2MM and S2MM matrices
-%              i.e. the contribution to MEG from the potential and from the source
+% OPENMEEG_MEGM computes the OpenMEEG H2MM and S2MM matrices, 
+% i.e. the contribution to MEG from the potential and from the source
 %
 % Use as
 %   [h2mm,s2mm] = openmeeg_megm(vol, isolated)
 
-% Copyright (C) 2010, Emmanuel Olivi
-% INRIA Athena Project Team
+% Copyright (C) 2010-2017, OpenMEEG developers
 
-% $Id$
-% $LastChangedBy: alegra $
-% $LastChangedDate: 2010-06-24 14:49:11 +0200 (Thu, 24 Jun 2010) $
-% $Revision$
+openmeeg_license;              % show the license (only once)
+prefix = om_checkombin;        % check the installation of the binaries
 
 % store the current path and change folder to the temporary one
 tmpfolder = cd;
-om_checkombin;
+
 try
     cd(tempdir)
 
@@ -25,7 +22,7 @@ try
     for i=1:length(vol.bnd)
         [junk,tname] = fileparts(tempname);
         bndfile{i} = [tname '.tri'];
-        om_save_tri(bndfile{i}, vol.bnd(i).pnt, vol.bnd(i).tri);
+        om_save_tri(bndfile{i}, vol.bnd(i).pos, vol.bnd(i).tri);
     end
 
     % these will hold the shell script and the inverted system matrix
@@ -55,11 +52,11 @@ try
 
     % handle dipole file
     ndip = size(pos,1);
-    pos = [kron(pos,ones(3,1)) , kron(ones(ndip,1),eye(3))]; % save pos with each 3D orientation
+    pos = [kron(pos,ones(3,1)),kron(ones(ndip,1),eye(3))]; % save pos with each 3D orientation
     om_save_full(pos,dipfile,'ascii');
 
     % handle squids file
-    om_save_full([sens.chanpos,sens.chanori],sqdfile,'ascii');
+    om_save_full([sens.coilpos,sens.coilori],sqdfile,'ascii');
 
     % Exe file
     efid = fopen(exefile, 'w');
@@ -68,11 +65,11 @@ try
     if ~ispc
       fprintf(efid,'#!/usr/bin/env bash\n');
       fprintf(efid,['export OMP_NUM_THREADS=',num2str(omp_num_threads),'\n']);
-      fprintf(efid,['om_assemble -DS2MM ./',dipfile,' ./',sqdfile,' ./',s2mmfile,' 2>&1 > /dev/null\n']);
-      fprintf(efid,['om_assemble -H2MM ./',geomfile,' ./',condfile,' ./',sqdfile,' ./', h2mmfile,' 2>&1 > /dev/null\n']);
+      fprintf(efid,[prefix 'om_assemble -DS2MM ./',dipfile,' ./',sqdfile,' ./',s2mmfile,' 2>&1 > /dev/null\n']);
+      fprintf(efid,[prefix 'om_assemble -H2MM ./',geomfile,' ./',condfile,' ./',sqdfile,' ./', h2mmfile,' 2>&1 > /dev/null\n']);
     else
-      fprintf(efid,['om_assemble -DS2MM ./',dipfile,' ./',sqdfile,' ./',s2mmfile,'\n']);
-      fprintf(efid,['om_assemble -H2MM ./',geomfile,' ./',condfile,' ./',sqdfile,' ./', h2mmfile,'\n']);
+      fprintf(efid,[prefix 'om_assemble -DS2MM ./',dipfile,' ./',sqdfile,' ./',s2mmfile,'\n']);
+      fprintf(efid,[prefix 'om_assemble -H2MM ./',geomfile,' ./',condfile,' ./',sqdfile,' ./', h2mmfile,'\n']);
     end
     fclose(efid);
 
@@ -89,7 +86,7 @@ try
     disp(['Assembling OpenMEEG H2MM and S2MM matrices']);
     stopwatch = tic;
     if ispc
-        dos([exefile]);
+        dos(exefile);
     else
         dos(['./' exefile]);
     end

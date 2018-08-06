@@ -12,7 +12,7 @@ function s = char(tree)
 % Copyright (C) 2002-2011  http://www.artefact.tk/
 
 % Guillaume Flandin
-% $Id$
+% $Id: char.m 4460 2011-09-05 14:52:16Z guillaume $
 
 
 s = strcat('XMLTree object (',num2str(length(tree)),' nodes) [',getfilename(tree),']');

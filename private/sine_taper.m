@@ -6,7 +6,7 @@ function d = sine_taper(n, k)
 
 % Copyright (C) 2006, Tom Holroyd
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -25,12 +25,12 @@ function d = sine_taper(n, k)
 % $Id$
 
 if nargin < 2
-  error('usage: sine_taper(n, k)');
+  ft_error('usage: sine_taper(n, k)');
 end
 
 k = round(k * 2);
 if k <= 0 || k > n
-  error('sine_taper: k is %g, must be in (1:n)/2', k)
+  ft_error('sine_taper: k is %g, must be in (1:n)/2', k)
 end
 
 x = (1:k) .* (pi / (n + 1));

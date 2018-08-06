@@ -3,10 +3,9 @@ function test_tutorial_eventrelatedaveraging20130308
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_tutorial_eventrelatedaveraging20130308
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% this reflects  http://fieldtrip.fcdonders.nl/tutorial/eventrelatedaveraging
+% this reflects  http://www.fieldtriptoolbox.org/tutorial/eventrelatedaveraging
 % downloaded on 6 March 2013
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -34,7 +33,7 @@ function test_tutorial_eventrelatedaveraging20130308
 % 
 % To calculate the event related field / potential for the example dataset we will perform the following steps:
 % 
-% Read the data into Matlab using ft_definetrial and ft_preprocessing
+% Read the data into MATLAB using ft_definetrial and ft_preprocessing
 % Compute the average over trials using the function ft_timelockanalysis
 % Calculate the planar gradient with the functions ft_megplanar and ft_combineplanar
 % Visualize the results. You can plot the ERF/ ERP of one channel with ft_singleplotER or several channels with ft_multiplotER, or by creating a topographic plot for a specified time- interval with ft_topoplotER
@@ -48,7 +47,9 @@ function test_tutorial_eventrelatedaveraging20130308
 % 
 % Reading the FIC data
 % 
-% The ft_definetrial and ft_preprocessing functions require the original MEG dataset, which is available from ftp://ftp.fcdonders.nl/pub/fieldtrip/tutorial/Subject01.zip.
+% The ft_definetrial and ft_preprocessing functions require the original MEG dataset, which is available from ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/Subject01.zip.
+
+cd(dccnpath('/home/common/matlab/fieldtrip/data'));
 
 % find the interesting segments of data
 cfg = [];                                           % empty configuration
@@ -104,7 +105,7 @@ plot(dataFIC_LP.time{1}, dataFIC_LP.trial{1}(130,:))
 % 
 % Reading the FC data
 % 
-% The ft_definetrial and ft_preprocessing functions require the original MEG dataset, which is available from ftp://ftp.fcdonders.nl/pub/fieldtrip/tutorial/Subject01.zip.
+% The ft_definetrial and ft_preprocessing functions require the original MEG dataset, which is available from ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/Subject01.zip.
 
 % find the interesting segments of data
 cfg = [];                                           % empty configuration
@@ -134,7 +135,7 @@ dataFC_LP = ft_preprocessing(cfg);
 % save dataFC_LP dataFC_LP
 % Reading the IC data
 % 
-% The ft_definetrial and ft_preprocessing functions require the original MEG dataset, which is available from ftp://ftp.fcdonders.nl/pub/fieldtrip/tutorial/Subject01.zip.
+% The ft_definetrial and ft_preprocessing functions require the original MEG dataset, which is available from ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/Subject01.zip.
 
 % find the interesting segments of data
 cfg = [];                                           % empty configuration
@@ -165,7 +166,7 @@ dataIC_LP = ft_preprocessing(cfg);
 %  
 % Timelockanalysis
 % 
-% The function ft_timelockanalysis makes averages of all the trials in a data structure. It requires preprocessed data (see above), which is available from ftp://ftp.fcdonders.nl/pub/fieldtrip/tutorial/eventrelatedaveraging/dataFIC_LP.mat, dataFC_LP.mat and dataIC_LP.mat.
+% The function ft_timelockanalysis makes averages of all the trials in a data structure. It requires preprocessed data (see above), which is available from ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/eventrelatedaveraging/dataFIC_LP.mat, dataFC_LP.mat and dataIC_LP.mat.
 
 % load dataFIC_LP
 % load dataFC_LP
@@ -312,7 +313,7 @@ ft_topoplotER(cfg,avgFICplanarComb);
 % 
 % Finally you can make a grand average over all our four subjects with ft_timelockgrandaverage. Before calculating the grand average, the data of each subject can be realigned to standard sensor positions with ft_megrealign.
 % 
-% For more information about this type the following commands in the matlab command window.
+% For more information about this type the following commands in the MATLAB command window.
 % 
 % help ft_timelockgrandaverage
 % help ft_megrealign
@@ -323,11 +324,11 @@ ft_topoplotER(cfg,avgFICplanarComb);
 % 
 % If you are interested in a different analysis of your data that shows event related changes in the oscillatory components of the signal, you can continue with the time-frequency analysis tutorial.
 % 
-% This tutorial was last tested with version 20120501 of FieldTrip using Matlab 2009b on a 64-bit Linux platform.
+% This tutorial was last tested with version 20120501 of FieldTrip using MATLAB 2009b on a 64-bit Linux platform.
 % 
 % 
 % Logged in as: Robert Oostenveld (robert)
-% tutorial/eventrelatedaveraging.txt · Last modified: 2012/12/23 11:56 by 131.174.44.100
+% tutorial/eventrelatedaveraging.txt ? Last modified: 2012/12/23 11:56 by 131.174.44.100
 
 
 

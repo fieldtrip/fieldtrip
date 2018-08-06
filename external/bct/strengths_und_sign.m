@@ -1,4 +1,4 @@
-function [Spos Sneg vpos vneg] = strengths_und_sign(W)
+function [Spos,Sneg,vpos,vneg] = strengths_und_sign(W)
 %STRENGTHS_UND_SIGN        Strength and weight
 %
 %   [Spos Sneg] = strengths_und_sign(W);

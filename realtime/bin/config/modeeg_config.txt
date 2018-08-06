@@ -1,0 +1,37 @@
+# comments start with a hash
+; ... or with a semicolon
+; empty lines are fine as well
+
+# Write n=label to select hardware channel number n (starting from 1)
+# and attach a label to it. This will show up in the Fieldtrip buffer
+# and the GDF file.
+# Currently, there is no check for double inclusion of channels.
+# That is, if you define 1=FOO and 1=BAR, the first hardware channel
+# will show up twice, with different names.
+# Channels listed before the first [save] or [stream] line will be added
+# to both saving and streaming selections. Write [select] to enable 
+# selection for both saving and streaming.
+
+[select]
+# 1=1
+# 2=2
+# 3=3
+# 4=4
+# 5=5
+# 6=6
+
+[stream]
+1=Signal
+2=TTL
+3=BPM
+4=IBI
+5=Time
+# 6=6
+
+[save]
+# 1=1
+# 2=2
+# 3=3
+# 4=4
+# 5=5
+# 6=6

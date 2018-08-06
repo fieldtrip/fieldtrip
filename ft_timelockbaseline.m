@@ -28,7 +28,7 @@ function [timelock] = ft_timelockbaseline(cfg, timelock)
 
 % Copyright (C) 2006, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -46,18 +46,21 @@ function [timelock] = ft_timelockbaseline(cfg, timelock)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar timelock
+ft_preamble provenance timelock
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -68,6 +71,7 @@ timelock = ft_checkdata(timelock, 'datatype',...
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamed', {'blcwindow', 'baselinewindow'});
+cfg = ft_checkconfig(cfg, 'forbidden', 'baselinetype');
 
 % set the defaults
 cfg.baseline  = ft_getopt(cfg, 'baseline',  'no');
@@ -93,7 +97,7 @@ end
 % ft_timelockanalysis (i.e. in private/preproc), hence make sure that
 % they can also be used here for consistency
 if isfield(cfg, 'baseline') && (isfield(cfg, 'demean') || isfield(cfg, 'baselinewindow'))
-  error('conflicting configuration options, you should use cfg.baseline');
+  ft_error('conflicting configuration options, you should use cfg.baseline');
 elseif isfield(cfg, 'demean') && strcmp(cfg.demean, 'no')
   cfg.baseline = 'no';
   cfg = rmfield(cfg, 'demean');
@@ -113,7 +117,7 @@ if ischar(cfg.baseline)
     cfg.baseline = [-inf inf];
     % is input consistent?
   elseif strcmp(cfg.baseline, 'no')
-    warning('no baseline correction done');
+    ft_warning('no baseline correction done');
     return;
   end
 end
@@ -128,10 +132,10 @@ if ~(ischar(cfg.baseline) && strcmp(cfg.baseline, 'no'))
   % update the configuration
   cfg.baseline(1) = timelock.time(tbeg);
   cfg.baseline(2) = timelock.time(tend);
-  
+
    for k = 1:numel(cfg.parameter)
     par = cfg.parameter{k};
-  
+
     % this if-statement is just there to give more specific text output
     if isequal(par, 'trial')
       fprintf('applying baseline correction on each individual trial\n');
@@ -155,7 +159,7 @@ if ~(ischar(cfg.baseline) && strcmp(cfg.baseline, 'no'))
       elseif d == 2
         timelock.(par)(chansel,:) = ft_preproc_baselinecorrect(timelock.(par)(chansel,:), tbeg, tend);
       else
-        warning('Not doing anything -  matrices up to only three dimensions are supported');
+        ft_warning('Not doing anything - matrices up to only three dimensions are supported');
       end
 
     end
@@ -170,14 +174,22 @@ if ~(ischar(cfg.baseline) && strcmp(cfg.baseline, 'no'))
       timelock = rmfield(timelock, 'cov');
     end
    end
-  
+
 end % ~strcmp(cfg.baseline, 'no')
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Output scaffolding
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if numel(cfg.parameter)==1
+  % convert from cell-array to string
+  cfg.parameter = cfg.parameter{1};
+end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous timelock
-ft_postamble history timelock
-ft_postamble savevar timelock
-
+ft_postamble previous   timelock
+ft_postamble provenance timelock
+ft_postamble history    timelock
+ft_postamble savevar    timelock

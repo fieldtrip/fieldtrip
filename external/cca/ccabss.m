@@ -1,4 +1,4 @@
-function [y,w] = ccabss(x)
+function [y,w,r] = ccabss(x)
 % CCABSS -  Blind Source Separation by Canonical Correlation Analysis
 %
 % Y = CCABSS(X) is the BSS of X=A*S where S is a set of unknown source signals
@@ -40,6 +40,7 @@ end
 
 if nargout > 1
   w = wa;
+  r = r;
 end
 
 % ------------

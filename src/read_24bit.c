@@ -31,7 +31,7 @@
 #include <math.h>
 #include <sys/types.h>
 #include "mex.h"
-#include "matrix.h"
+#include <stdio.h>
 
 #if defined(_WIN32) || defined(_WIN64)
 #define int32_t INT32_T

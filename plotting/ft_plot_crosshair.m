@@ -1,20 +1,30 @@
-function ft_plot_crosshair(pos, varargin);
+function h = ft_plot_crosshair(pos, varargin)
 
-% FT_PLOT_CROSSHAIR plots a crosshair in two or three dimensions
+% FT_PLOT_CROSSHAIR plots a crosshair at a specified position in two [x, y] or three
+% [x, y, z] dimensions. 
 %
 % Use as
-%   ft_plot_crosshair(pos, ...)
-% where pos is the desired position of the crosshair.
+%   h = ft_plot_crosshair(pos, ...)
+% where pos is the desired position of the crosshair. The handles of the lines are
+% returned.
 %
 % Optional input arguments should be specified in key-value pairs and can include
 %   'color'    = [r g b] value or string, see PLOT
-%
+%   'parent'   = handle of the parent axes
+%   'handle'   = handle of the existing line objects to be updated
+% 
+% You can specify the handles of existing line objects which will be then updated,
+% rather than creating a new set of lines. If both parent and handle ar specified,
+% the handle option prevail.
+% 
 % Example
 %   ft_plot_crosshair([0.5 0.5], 'color', 'r')
-
-% Copyright (C) 2014, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% See also FT_PLOT_BOX, FT_PLOT_LINE, TEXT, LINE
+
+% Copyright (C) 2003-2017, Robert Oostenveld
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -32,48 +42,94 @@ function ft_plot_crosshair(pos, varargin);
 %
 % $Id$
 
-ax  = axis;
+% get the optional input arguments
+color  = ft_getopt(varargin, 'color');
+parent = ft_getopt(varargin, 'parent');
+h      = ft_getopt(varargin, 'handle');
 
-minx = ax(1);
-maxx = ax(2);
-miny = ax(3);
-maxy = ax(4);
+if ~isempty(h)
+  % the parent to the first handle is set as the current axes
+  set(gcf, 'currentaxes', get(h(1),'parent'));
+elseif ~isempty(parent)
+  % the parent is set as the current axes
+  set(gcf, 'currentaxes', parent);
+else
+  % the current axes stay as they are
+end
+
+% color management
+if ~isempty(color)
+  if ischar(color) && exist([color '.m'], 'file')
+    color = eval(color);
+  end
+  varargin = ft_setopt(varargin, 'color', color);
+end
+
+% determine the size of the figure
+border = [get(gca, 'xlim') get(gca, 'ylim') get(gca, 'zlim')];
 
 switch numel(pos)
   case 2
-    X = [minx maxx];
-    Y = pos([2 2]);
-    line(X, Y, varargin{:});
+    x = [ border(1) pos(1)
+          border(2) pos(1) ];
+    y = [ pos(2)    border(3)
+          pos(2)    border(4) ];
     
-    X = pos([1 1]);
-    Y = [miny maxy];
-    line(X, Y, varargin{:});
-    
-  case 3
-    if numel(axis)==4
-      % the figure is in 2D mode
-      [az, el] = view;
-      view([1 1 1]);
-      ax = axis;
-      view(az, el);
+    if isempty(h) && (~ishold)
+      hold on
+      h = line(x, y, varargin{:});
+      hold off
+    elseif isempty(h)
+      h = line(x, y, varargin{:});
+    else
+      set(h(1), 'xdata', x(:,1)');
+      set(h(1), 'ydata', y(:,1)');
+      set(h(2), 'xdata', x(:,2)');
+      set(h(2), 'ydata', y(:,2)');
     end
     
-    minz = ax(5);
-    maxz = ax(6);
+    if ~isempty(color)
+      set(h(1), 'color', color);
+      set(h(2), 'color', color);
+    else
+      % ensure they have the same color
+      set(h(2), 'color', get(h(1), 'color'));
+    end
     
-    X = [minx maxx];
-    Y = pos([2 2]);
-    Z = pos([3 3]);
-    line(X, Y, Z, varargin{:});
+  case 3
+    x = [ border(1) pos(1)    pos(1)
+          border(2) pos(1)    pos(1)];
+    y = [ pos(2)    border(3) pos(2)
+          pos(2)    border(4) pos(2)];
+    z = [ pos(3)    pos(3)    border(5)
+          pos(3)    pos(3)    border(6)];
     
-    X = pos([1 1]);
-    Y = [miny maxy];
-    Z = pos([3 3]);
-    line(X, Y, Z, varargin{:});
+    if isempty(h) && (~ishold)
+      hold on
+      h = line(x, y, z, varargin{:});
+      hold off
+    elseif isempty(h)
+      h = line(x, y, z, varargin{:});
+    else
+      set(h(1), 'xdata', x(:,1)');
+      set(h(1), 'ydata', y(:,1)');
+      set(h(1), 'zdata', z(:,1)');
+      set(h(2), 'xdata', x(:,2)');
+      set(h(2), 'ydata', y(:,2)');
+      set(h(2), 'zdata', z(:,2)');
+      set(h(3), 'xdata', x(:,3)');
+      set(h(3), 'ydata', y(:,3)');
+      set(h(3), 'zdata', z(:,3)');
+    end
     
-    X = pos([1 1]);
-    Y = pos([2 2]);
-    Z = [minz maxz];
-    line(X, Y, Z, varargin{:});
+    if ~isempty(color)
+      set(h(1), 'color', color);
+      set(h(2), 'color', color);
+      set(h(3), 'color', color);
+    else
+      % ensure they have the same color
+      set(h(2), 'color', get(h(1), 'color'));
+      set(h(3), 'color', get(h(1), 'color'));
+    end
     
-end
+end % switch

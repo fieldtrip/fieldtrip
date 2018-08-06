@@ -3,7 +3,6 @@ function test_ft_topoplotER
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_topoplotER
 % TEST ft_topoplotER ft_topoplotTFR ft_topoplotIC
 
 % this script tests the functionality of ft_topoplotER with respect to the 

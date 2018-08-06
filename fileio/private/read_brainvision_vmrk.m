@@ -1,4 +1,4 @@
-function [stimulus, response, segment, timezero] = read_brainvision_vmrk(filename);
+function [stimulus, response, segment, timezero] = read_brainvision_vmrk(filename)
 
 % READ_BRAINVISION_VMRK reads the markers and latencies
 % it returns the stimulus/response code and latency in ms.
@@ -14,7 +14,7 @@ function [stimulus, response, segment, timezero] = read_brainvision_vmrk(filenam
 % original M. Schulte 31.07.2003
 % modifications R. Oostenveld 14.08.2003
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -42,7 +42,7 @@ hdr=read_brainvision_vhdr([filename(1:(end-4)) 'vhdr']);
 
 fid=fopen(filename,'rt');
 if fid==-1,
-    error('cannot open marker file')
+    ft_error('cannot open marker file')
 end
 
 line=1;

@@ -1,6 +1,6 @@
-function h = wizard_gui(filename)
+function h = wizard_base(filename)
 
-% This is the low level wizard function. It evaluates the matlab content
+% This is the low level wizard function. It evaluates the MATLAB content
 % in the workspace of the calling function. To prevent overwriting
 % variables in the BASE workspace, this function should be called from a
 % wrapper function. The wrapper function whoudl pause execution untill the
@@ -8,7 +8,7 @@ function h = wizard_gui(filename)
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -107,7 +107,7 @@ elseif data.current>length(data.script)
   ui_help = uicontrol(h, 'tag', 'ui_help', 'KeyPressFcn', @cb_keyboard, 'style', 'text', 'max', 10, 'horizontalAlignment', 'left', 'FontName', '', 'backgroundColor', get(h, 'color'));
   % display the finalization text
   title = cat(2, data.file, ' - finish');
-  help = sprintf('If you click finish, the variables created by the script will be exported to the Matlab workspace\n');
+  help = sprintf('If you click finish, the variables created by the script will be exported to the MATLAB workspace\n');
   set(ui_help, 'string', help);
   set(h, 'Name', title);
 else

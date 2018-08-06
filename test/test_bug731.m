@@ -6,7 +6,7 @@ function test_bug731
 % this function checks problems encountered with the neuromag digital
 % trigger reading
 
-cfg.dataset = '/home/common/matlab/fieldtrip/data/test/bug731/test_bug731.fif';
+cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/test/bug731/test_bug731.fif');
 event       = ft_read_event(cfg.dataset);
 
 % issue confirmed -> updated bug but will wait for Alex' input before

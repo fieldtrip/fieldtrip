@@ -16,9 +16,9 @@
 %
 % See also FT_POSTAMBLE_PROVENANCE
 
-% Copyright (C) 2011-2012, Robert Oostenveld, DCCN
+% Copyright (C) 2011-2016, Robert Oostenveld, DCCN
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -44,37 +44,49 @@
 % the name of the variables are passed in the preamble field
 global ft_default
 
-if (isfield(cfg, 'trackcallinfo') && ~istrue(cfg.trackcallinfo)) 
+if (isfield(cfg, 'trackcallinfo') && ~istrue(cfg.trackcallinfo))
   % do not track the call information
   return
 end
 
-% add the user-specified cfg (before any defaults handling etc.) to the
-% callinfo
-cfg.callinfo.usercfg = cfg;
+% add the user-specified cfg (before any defaults handling etc.) to the callinfo
+% some fields are for internal use only and should not be stored
+cfg.callinfo.usercfg = removefields(cfg, ignorefields('provenance'));
 
-% compute the MD5 hash of each of the input arguments
-% temporarily remove the cfg field for getting the hash (creating a duplicate of the data, but still has the same mem ref, so no extra mem needed)
-if isequal(ft_default.preamble, {'varargin'})
-  tmpargin = varargin;
-else
-  tmpargin = cellfun(@eval, ft_default.preamble, 'UniformOutput', false);
-end
-cfg.callinfo.inputhash = cell(1,numel(tmpargin));
-for iargin = 1:numel(tmpargin)
-  tmparg = tmpargin{iargin}; % can't get number of bytes with whos unless taken out of it's cell
-  if isfield(tmparg,'cfg')
-    tmparg = rmfield(tmparg,'cfg');
+if isfield(cfg, 'trackdatainfo') && istrue(cfg.trackdatainfo)
+  % compute the MD5 hash of each of the input arguments
+  % temporarily remove the cfg field for getting the hash (creating a duplicate of the data, but still has the same mem ref, so no extra mem needed)
+  if isequal(ft_default.preamble, {'varargin'})
+    tmpargin = varargin;
   else
+    isvar = cellfun(@(x) exist(x, 'var')==1, ft_default.preamble);
+    tmpargin = cellfun(@eval, ft_default.preamble(isvar), 'UniformOutput', false);
+    tmpargin( isvar) = tmpargin;
+    tmpargin(~isvar) = {[]};
+    clear isvar
   end
-  % only calculate md5 when below 2^31 bytes (CalcMD5 can't handle larger input)
-  bytenum = whos('tmparg');
-  bytenum = bytenum.bytes;
-  if bytenum<2^31
-    cfg.callinfo.inputhash{iargin} = CalcMD5(mxSerialize(tmparg));
+  cfg.callinfo.inputhash = cell(1,numel(tmpargin));
+  for iargin = 1:numel(tmpargin)
+    tmparg = tmpargin{iargin}; % can't get number of bytes with whos unless taken out of it's cell
+    if isfield(tmparg,'cfg')
+      tmparg = rmfield(tmparg, 'cfg');
+    end
+    % only calculate md5 when below 2^31 bytes (CalcMD5 can't handle larger input)
+    bytenum = whos('tmparg');
+    bytenum = bytenum.bytes;
+    if bytenum<2^31
+      try
+        cfg.callinfo.inputhash{iargin} = ft_hash(tmparg);
+      catch
+        % the mxSerialize mex file is not available on all platforms, do not compute a hash
+        % http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2452
+      end
+    else
+      % the data is too large, do not compute a hash
+    end
   end
+  clear tmpargin iargin tmparg bytenum; % remove the extra references
 end
-clear iargin tmpargin tmparg bytenum; % remove the extra references
 
 stack = dbstack('-completenames');
 % stack(1) is this script
@@ -101,13 +113,12 @@ cfg.callinfo.calltime = clock();
 cfg.version.name = stack.file;
 clear stack
 
-% the revision number is maintained by SVN in the revision variable in the calling function
-if ~exist('revision', 'var')
+% the revision number is maintained by SVN in the ft_revision variable in the calling function
+if ~exist('ft_revision', 'var')
   cfg.version.id   = 'unknown';
 else
-  cfg.version.id   = revision;
+  cfg.version.id   = ft_revision;
 end
 
 ftohDiW7th_FuncTimer = tic();
 ftohDiW7th_FuncMem   = memtic();
-

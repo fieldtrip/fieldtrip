@@ -7,7 +7,7 @@ function vol=thickenbinvol(vol,layer)
 % this does it in 3d and only does thickening for 
 % non-zero elements (and hopefully faster)
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input:
 %     vol: a volumetric binary image

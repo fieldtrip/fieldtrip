@@ -3,7 +3,6 @@ function test_bug2354
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2354
 % TEST ft_topoplotER ft_multiplotER ft_singleplotER
 
 % example ERF data

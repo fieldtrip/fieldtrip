@@ -4,7 +4,7 @@ function [t,u,v,idx]=raytrace(p0,v0,node,face)
 %
 % perform a Havel-styled ray tracing for a triangular surface
 %
-% author: Qianqian Fang, <fangq at nmr.mgh.harvard.edu>
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input:
 %   p0: starting point coordinate of the ray

@@ -3,13 +3,12 @@ function test_bug1427
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST test_bug1427
 % TEST dataset2files ft_read_header ft_read_data
 
 % the Long64ChannelWithEvents fails because it consists of muliple segments
-% filepath = '/home/common/matlab/fieldtrip/data/test/bug1427/Long64ChannelWithEvents.mff';
+% filepath = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1427/Long64ChannelWithEvents.mff');
 
-filepath = '/home/common/matlab/fieldtrip/data/test/bug1427/NS500Sine6Hz.mff';
+filepath = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1427/NS500Sine6Hz.mff');
 
 filename = dir(filepath);
 filename = {filename(~[filename.isdir]).name};

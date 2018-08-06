@@ -1,10 +1,10 @@
 /*
-En entree : XYZva, ind_tra, XYZvb, ind_trb, weight, defl
-En sortie : Cij_cog
+  Input : XYZva, ind_tra, XYZvb, ind_trb, weight, defl
+  Output : Cij_cog
 
-weight=(sig[0]-sig[1])/((sig[2]+sig[3])*2.*pi) ;
-
+  weight = (sig[0]-sig[1])/((sig[2]+sig[3])*2.*pi) ;
 */
+
 #include <math.h>
 #include "mex.h"
 
@@ -34,8 +34,8 @@ void Cij(double C[], double XYZva[], int Nverta,
 	int i, j, u, v, w ;
 
 
-	printf("Ntria = %d\n",Ntria);
-	printf("Ntrib = %d\n",Ntrib);
+	/*printf("Ntria = %d\n",Ntria);*/
+	/*printf("Ntrib = %d\n",Ntrib);*/
 
 
 	for (i=0;i<Ntria;++i) {
@@ -141,9 +141,3 @@ void mexFunction(
 
 	mxSetPr(plhs[0],C) ;
 }
-
-
-
-
-
-

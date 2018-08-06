@@ -64,7 +64,7 @@ source2.powdimord = '{pos}_rpt_time';
 % 3D grid multiple trials time domain fixed orientation
 source3 = [];
 source3.pos = pos;
-source3.ori = zeros(npos,3) + nan; %FIXME or should this be 3xnpos?
+source3.ori = nan(npos,3); %FIXME or should this be 3xnpos?
 source3.ori(inside,:) = randn(numel(inside),3);
 for k = 1:numel(inside)
   source3.ori(inside(k),:) = source3.ori(inside(k),:)./norm(source3.ori(inside(k),:));
@@ -126,7 +126,7 @@ source5.powdimord = 'pos_rpt_time';
 source6 = [];
 source6.pos = pnt;
 source6.tri = tri;
-source6.ori = zeros(npos,3) + nan; %FIXME or should this be 3xnpos?
+source6.ori = nan(npos,3); %FIXME or should this be 3xnpos?
 source6.ori(inside,:) = randn(numel(inside),3);
 for k = 1:numel(inside)
   source6.ori(inside(k),:) = source6.ori(inside(k),:)./norm(source6.ori(inside(k),:));

@@ -7,7 +7,7 @@ function test_bug895
 % contains 'chan' in the dimord, rather than 'chancmb'
 
 % load some data
-load('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275');
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275'));
 
 % do spectral transformation
 cfg = [];
@@ -24,7 +24,6 @@ cfg.statistic = 'ft_statfun_indepsamplesZcoh';
 cfg.parameter = 'fourierspctrm';
 cfg.numrandomization = 1;
 cfg.design    = [ones(1,5) ones(1,5)*2];
-cfg.label     = freq.label;
 stat = ft_freqstatistics(cfg, freq);
 
 assert(strcmp(stat.dimord,'chancmb_freq'));

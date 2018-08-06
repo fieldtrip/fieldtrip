@@ -5,7 +5,7 @@ function eid=getintersecttri(tmppath)
 % get the IDs of self-intersecting elements from tetgen
 % call this when tetgen complains about self-intersection
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input: 
 %   tmppath: working dir, use mwpath('') in most cases

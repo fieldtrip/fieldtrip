@@ -1,4 +1,4 @@
-function [pos, mom, ampl, time] = read_asa_dip(fn);
+function [pos, mom, ampl, time] = read_asa_dip(fn)
 
 % READ_ASA_DIP reads the dipole position, moment and amplitude
 % This importer is designed for fixed-dipole models and only supports 
@@ -11,7 +11,7 @@ function [pos, mom, ampl, time] = read_asa_dip(fn);
 
 % Copyright (C) 2000, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -63,7 +63,7 @@ end
 frewind(fid1);
 
 if length(time)~=Ntim
-  error('incorrect timescale');
+  ft_error('incorrect timescale');
 end
 
 while isempty(pos)

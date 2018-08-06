@@ -12,7 +12,7 @@ function [timelock, cfg] = freq2timelock(cfg, freq)
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -34,15 +34,18 @@ if isfield(freq, 'fourierspctrm')
   fprintf('constructing real/imag data representation from single trial fourier representation\n');
   % select the complex amplitude at the frequency of interest
   cdim = dimnum(freq.dimord, 'chan');  % should be 2
-  fdim = dimnum(freq.dimord, 'freq');     % should be 3
-  fbin = nearest(freq.freq, cfg.frequency);
+  fdim = dimnum(freq.dimord, 'freq');  % should be 3
+  for i=1:numel(cfg.frequency)
+    fbin(i) = nearest(freq.freq, cfg.frequency(i));
+  end
   cfg.frequency = freq.freq(fbin);
   if cdim==2 && fdim==3
     % other dimords are not supported, since they do not occur
-    spctrm = dimindex(freq.fourierspctrm, fdim, fbin)';
+    spctrm = dimindex(freq.fourierspctrm, fdim, {fbin});
+    spctrm = permute(spctrm, [2 1 3]);
   end
   % select the desired channels in the data
-  cfg.channel = channelselection(cfg.channel, freq.label);
+  cfg.channel = ft_channelselection(cfg.channel, freq.label);
   [dum, chansel] = match_str(cfg.channel, freq.label);
   spctrm = spctrm(chansel,:);
   % concatenate the real and imaginary part
@@ -50,7 +53,7 @@ if isfield(freq, 'fourierspctrm')
 elseif isfield(freq, 'crsspctrm')
   fprintf('constructing real/imag data representation from csd matrix\n');
   % hmmm... I have no idea whether this is correct
-  cfg.channel = channelselection(cfg.channel, freq.label);
+  cfg.channel = ft_channelselection(cfg.channel, freq.label);
   % this subfunction also takes care of the channel selection
   [Cf, Cr, Pr, Ntrials, dum] = prepare_freq_matrices(cfg, freq);
   cfg.frequency = dum.frequency;
@@ -65,7 +68,7 @@ elseif isfield(freq, 'crsspctrm')
   % concatenate the real and imaginary part
   avg = [real(spctrm) imag(spctrm)];
 else
-  error('unknown representation of frequency domain data');
+  ft_error('unknown representation of frequency domain data');
 end
 
 timelock        = [];

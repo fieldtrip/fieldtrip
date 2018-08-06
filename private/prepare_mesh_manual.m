@@ -15,7 +15,7 @@ function bnd = prepare_mesh_manual(cfg, mri)
 
 % Copyrights (C) 2009, Cristiano Micheli & Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -50,7 +50,7 @@ hasmri       = nargin>1;
 
 % check the consistency of the input arguments
 if hasheadshape && hasbnd
-  error('you should not specify cfg.headshape and cfg.bnd simultaneously');
+  ft_error('you should not specify cfg.headshape and cfg.bnd simultaneously');
 end
 
 % check the consistency of the input arguments
@@ -487,7 +487,7 @@ while again
           setappdata(fig,'slicedata',slicedata);
         end
       otherwise
-        warning('invalid button (%d)', k);
+        ft_warning('invalid button (%d)', k);
     end
     
   end
@@ -930,7 +930,7 @@ return;
 function Yml = shlib_Yml(l, m, theta, phi)
 % function Yml = shlib_Yml(l, m, theta, phi)
 %
-% A matlab function that takes a given order and degree, and the matrix of
+% MATLAB function that takes a given order and degree, and the matrix of
 % theta and phi and constructs a spherical harmonic from these. The
 % analogue in the 1D case would be to give a particular frequency.
 %

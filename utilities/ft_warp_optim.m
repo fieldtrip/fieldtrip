@@ -43,7 +43,7 @@ function [result, M] = ft_warp_optim(input, target, method)
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -71,13 +71,13 @@ end
 pos1 = input;
 pos2 = target;
 
-% The ft_warp_error function might be located in the private subdirectory fo
-% fieldtrip, i.e. only available to functions in the fieldtrip toolbox.
+% The ft_warp_error function might be located in the private subdirectory of
+% FieldTrip, i.e. only available to functions in the FieldTrip toolbox.
 % The following line ensures that the function can also be found by the
 % feval that is executed by the optimalization toolbox.
 errorfun = str2func('ft_warp_error');
 
-% determine whether the Matlab Optimization toolbox is available and can be used
+% determine whether the MATLAB Optimization toolbox is available and can be used
 if ft_hastoolbox('optim')
   optimfun = @fminunc;
 else
@@ -97,13 +97,13 @@ elseif isequal(optimfun, @fminsearch)
   options  = optimset(options, 'Display', 'off');
   options  = optimset(options, 'MaxIter', 4500);
 else
-  warning('unknown optimization function "%s", using default parameters', func2str(optimfun));
+  ft_warning('unknown optimization function "%s", using default parameters', func2str(optimfun));
 end
 
 if fb; fprintf('distance = %f\n', errorfun([0 0 0 0 0 0], pos1, pos2, 'rigidbody')); end
 
 if isempty(method)
-  error('incorrect warping method specified');
+  ft_error('incorrect warping method specified');
 end
 
 % the warp is done in steps, starting simple and progressively getting more complex
@@ -119,7 +119,7 @@ level = find(strcmp(method, {
   }));
 
 if isempty(level)
-  error('incorrect warping method specified');
+  ft_error('incorrect warping method specified');
 end
 
 if level>=1

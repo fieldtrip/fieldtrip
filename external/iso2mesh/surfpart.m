@@ -4,7 +4,7 @@ function elist=surfpart(f,loopedge)
 %
 % partition a triangular surface using a closed loop defined by existing edges
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2012/02/09
 %
 % input:

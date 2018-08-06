@@ -5,7 +5,7 @@ function montage = megplanar_sincos(cfg, grad)
 
 % Copyright (C) 2004-2009, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -24,10 +24,13 @@ function montage = megplanar_sincos(cfg, grad)
 % $Id$
 
 lab   = grad.label;
+type  = grad.chantype;
+
 % ensure correct order
 % cfg.channel       = ft_channelselection(cfg.channel, lab);
 [chansel, labsel] = match_str(cfg.channel, lab);
 lab               = lab(labsel);
+type              = type(labsel);
 
 % we need to ensure that this one is in cfg.channel order - this is done in
 % ft_megplanar!
@@ -83,5 +86,7 @@ end
 % construct a montage, i.e. a simple linear projection matrix
 montage = [];
 montage.labelnew = cat(1, labelH(:), labelV(:));  % describes the rows
-montage.labelorg = lab(:)';                       % describes the columns
+montage.labelold = lab(:)';                       % describes the columns
+montage.chantypenew = repmat(type, [2 1]);
+montage.chantypeold = type;
 montage.tra      = cat(1, gradH, gradV);          % this is the linear projection matrix

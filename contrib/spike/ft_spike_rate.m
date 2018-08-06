@@ -1,13 +1,13 @@
-function [rate] = ft_spike_rate(cfg,spike)
+function [rate] = ft_spike_rate(cfg, spike)
 
 % FT_SPIKE_RATE computes the firing rate of spiketrains and their variance
 %
 % Use as
 %   [rate] = ft_spike_rate(cfg, spike)
 %
-% The input SPIKE should be organised as the spike or the (binary) raw datatype, obtained from
-% FT_SPIKE_MAKETRIALS or FT_APPENDSPIKE (in that case, conversion is done
-% within the function)
+% The input SPIKE should be organised as the spike or the (binary) raw
+% datatype, obtained from FT_SPIKE_MAKETRIALS or FT_APPENDSPIKE (in that
+% case, conversion is done within the function)
 %
 % Configurations:
 %   cfg.outputunit       = 'rate' (default) or 'spikecount'. If 'rate', we convert
@@ -40,14 +40,33 @@ function [rate] = ft_spike_rate(cfg,spike)
 
 % Copyright (C) 2010, Martin Vinck
 %
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance spike
 ft_preamble trackconfig
 
 % control input spike structure
@@ -71,7 +90,7 @@ cfg = ft_checkopt(cfg,'vartriallen', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 
 % check if the configuration inputs are valid
-cfg = ft_checkconfig(cfg, 'allowed', {'outputunit', 'spikechannel', 'trials', 'latency', 'vartriallen', 'keeptrials', 'warning'});
+cfg = ft_checkconfig(cfg, 'allowed', {'outputunit', 'spikechannel', 'trials', 'latency', 'vartriallen', 'keeptrials'});
 
 % get the spikechannels
 cfg.spikechannel = ft_channelselection(cfg.spikechannel, spike.label);
@@ -153,9 +172,9 @@ if isfield(spike, 'trialinfo'), rate.trialinfo = spike.trialinfo(cfg.trials,:); 
   
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble previous spike
-ft_postamble history rate
+ft_postamble previous   spike
+ft_postamble provenance rate
+ft_postamble history    rate
 
 
 %%%%%%%%% SUB FUNCTIONS %%%%%%%%%

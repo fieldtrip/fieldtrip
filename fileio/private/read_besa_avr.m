@@ -18,7 +18,7 @@ function [avr] = read_besa_avr(filename)
 
 % Copyright (C) 2003-2006, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -88,7 +88,7 @@ if ~ok
 end
 
 if ~ok
-  error('Could not interpret the header information.');
+  ft_error('Could not interpret the header information.');
 end
 
 % rewind to the beginning of the file, skip the header line
@@ -117,7 +117,7 @@ else
     lbl = strrep(lbl ,'EEG ', ''); % remove the channel type
     avr.label = lbl;
   else
-    warning('Could not create channels labels.');
+    ft_warning('Could not create channels labels.');
   end
 end
 

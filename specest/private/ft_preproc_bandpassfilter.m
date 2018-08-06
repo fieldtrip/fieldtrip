@@ -1,4 +1,4 @@
-function [filt] = ft_preproc_bandpassfilter(dat,Fs,Fbp,N,type,dir,instabilityfix,df,wintype,dev,plotfiltresp)
+function [filt, B, A] = ft_preproc_bandpassfilter(dat,Fs,Fbp,N,type,dir,instabilityfix,df,wintype,dev,plotfiltresp,usefftfilt)
 
 % FT_PREPROC_BANDPASSFILTER applies a band-pass filter to the data and thereby
 % removes the spectral components in the data except for the ones in the
@@ -15,9 +15,9 @@ function [filt] = ft_preproc_bandpassfilter(dat,Fs,Fbp,N,type,dir,instabilityfix
 %   type       optional filter type, can be
 %                'but' Butterworth IIR filter (default)
 %                'firws' windowed sinc FIR filter
-%                'fir' FIR filter using Matlab fir1 function
-%                'firls' FIR filter using Matlab firls function (requires Matlab Signal Processing Toolbox)
-%                'brickwall' Frequency-domain filter using Matlab FFT and iFFT function
+%                'fir' FIR filter using MATLAB fir1 function
+%                'firls' FIR filter using MATLAB firls function (requires MATLAB Signal Processing Toolbox)
+%                'brickwall' Frequency-domain filter using MATLAB FFT and iFFT function
 %   dir        optional filter direction, can be
 %                'onepass'         forward filter only
 %                'onepass-reverse' reverse filter only, i.e. backward in time
@@ -25,6 +25,7 @@ function [filt] = ft_preproc_bandpassfilter(dat,Fs,Fbp,N,type,dir,instabilityfix
 %                'twopass-reverse' zero-phase reverse and forward filter
 %                'twopass-average' average of the twopass and the twopass-reverse
 %                'onepass-zerophase' zero-phase forward filter with delay compensation (default for firws, linear-phase symmetric FIR only)
+%                'onepass-reverse-zerophase' zero-phase reverse filter with delay compensation
 %                'onepass-minphase' minimum-phase converted forward filter (non-linear!, firws only)
 %   instabilityfix optional method to deal with filter instabilities
 %                'no'       only detect and give error (default)
@@ -38,6 +39,7 @@ function [filt] = ft_preproc_bandpassfilter(dat,Fs,Fbp,N,type,dir,instabilityfix
 %                'kaiser'
 %   dev        optional max passband deviation/stopband attenuation (firws with kaiser window, default = 0.001 [0.1%, -60 dB])
 %   plotfiltresp optional, 'yes' or 'no', plot filter responses (firws, default = 'no')
+%   usefftfilt optional, 'yes' or 'no', use fftfilt instead of filter (firws, default = 'no')
 %
 % Note that a one- or two-pass filter has consequences for the
 % strength of the filter, i.e. a two-pass filter with the same filter
@@ -52,7 +54,7 @@ function [filt] = ft_preproc_bandpassfilter(dat,Fs,Fbp,N,type,dir,instabilityfix
 
 % Copyright (c) 2003-2014, Robert Oostenveld, Arjen Stolk, Andreas Widmann
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -121,6 +123,24 @@ if nargin < 11 || isempty(plotfiltresp)
   plotfiltresp = 'no';
 end
 
+% Set default filter function
+if nargin < 12 || isempty(usefftfilt)
+  usefftfilt = false;
+else
+  % convert to boolean value
+  usefftfilt = istrue(usefftfilt);
+end
+
+% Filtering does not work on integer data
+if ~isa(dat, 'double') && ~isa(dat, 'single')
+  dat = cast(dat, 'double');
+end
+
+% preprocessing fails on channels that contain NaN
+if any(isnan(dat(:)))
+  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+end
+
 % Nyquist frequency
 Fn = Fs/2;
 
@@ -136,12 +156,12 @@ switch type
 
     % Input arguments
     if length(Fbp) ~= 2
-        error('Two cutoff frequencies required.')
+        ft_error('Two cutoff frequencies required.')
     end
 
     % Filter order AND transition width set?
     if ~isempty(N) && ~isempty(df)
-        warning('firws:dfOverridesN', 'Filter order AND transition width set - transition width setting will override filter order.')
+        ft_warning('firws:dfOverridesN', 'Filter order AND transition width set - transition width setting will override filter order.')
     elseif isempty(N) && isempty(df) % Default transition width heuristic
         df = fir_df(Fbp, Fs);
     end
@@ -151,14 +171,14 @@ switch type
     isOrderLow = false;
     if ~isempty(df)
       if df > maxDf
-        error('Transition band too wide. Maximum transition width is %.2f Hz.', maxDf)
+        ft_error('Transition band too wide. Maximum transition width is %.2f Hz.', maxDf)
       end
       [N, dev] = firwsord(wintype, Fs, df, dev);
     else % Check filter order otherwise
       [df, dev] = invfirwsord(wintype, Fs, N, dev);
       if df > maxDf
         nOpt = firwsord(wintype, Fs, maxDf, dev);
-        warning('firws:filterOrderLow', 'Filter order too low. For better results a minimum filter order of %d is recommended. Effective cutoff frequency might deviate from requested cutoff frequency.', nOpt)
+        ft_warning('firws:filterOrderLow', 'Filter order too low. For better results a minimum filter order of %d is recommended. Effective cutoff frequency might deviate from requested cutoff frequency.', nOpt)
         isOrderLow = true;
       end
     end
@@ -217,10 +237,12 @@ switch type
     if N > floor( (size(dat,2) - 1) / 3)
       N=floor(size(dat,2)/3) - 1;
     end
-    [B, A] = fir1(N, [min(Fbp)/Fn max(Fbp)/Fn]);
+    B = fir1(N, [min(Fbp)/Fn max(Fbp)/Fn]);
+    A = 1;
+    
   case 'firls' % from NUTMEG's implementation
     % Deprecated: see bug 2453
-    warning('The filter type you requested is not recommended for neural signals, only proceed if you know what you are doing.')
+    ft_warning('The filter type you requested is not recommended for neural signals, only proceed if you know what you are doing.')
     if isempty(N)
       N = 3*fix(Fs / Fbp(1));
     end
@@ -245,19 +267,21 @@ switch type
     end
     z(pos1:pos2) = 1;
     A = 1;
-    B = firls(N,f,z); % requires Matlab signal processing toolbox
+    B = firls(N,f,z); % requires MATLAB signal processing toolbox
+    
   case 'brickwall'
-    ax = linspace(0, Fs, size(dat,2)); % frequency coefficients
-    fl = nearest(ax, min(Fbp))-1; % low cut-off frequency
-    fh = nearest(ax, max(Fbp))+1; % high cut-off frequency
+    ax = linspace(0, Fs, size(dat,2));  % frequency coefficients
+    fl = nearest(ax, min(Fbp))-1;       % low cut-off frequency
+    fh = nearest(ax, max(Fbp))+1;       % high cut-off frequency
     a  = 0; % suppresion rate of frequencies-not-of-interest
-    f           = fft(dat,[],2); % FFT
-    f(:,1:fl)   = a.*f(:,1:fl); % perform low cut-off
-    f(:,fh:end) = a.*f(:,fh:end); % perform high cut-off
+    f           = fft(dat,[],2);        % FFT
+    f(:,1:fl)   = a.*f(:,1:fl);         % perform low cut-off
+    f(:,fh:end) = a.*f(:,fh:end);       % perform high cut-off
     filt        = 2*real(ifft(f,[],2)); % iFFT
     return
+    
   otherwise
-    error('unsupported filter type "%s"', type);
+    ft_error('unsupported filter type "%s"', type);
 end
 
 % demean the data before filtering
@@ -265,25 +289,25 @@ meandat = mean(dat,2);
 dat = bsxfun(@minus, dat, meandat);
 
 try
-  filt = filter_with_correction(B,A,dat,dir);
+  filt = filter_with_correction(B,A,dat,dir,usefftfilt);
 catch
   switch instabilityfix
     case 'no'
       rethrow(lasterror);
     case 'reduce'
-      warning('backtrace', 'off')
-      warning('instability detected - reducing the %dth order filter to an %dth order filter', N, N-1);
-      warning('backtrace', 'on')
+      ft_warning('off','backtrace');
+      ft_warning('instability detected - reducing the %dth order filter to an %dth order filter', N, N-1);
+      ft_warning('on','backtrace');
       filt = ft_preproc_bandpassfilter(dat,Fs,Fbp,N-1,type,dir,instabilityfix);
     case 'split'
       N1 = ceil(N/2);
       N2 = floor(N/2);
-      warning('backtrace', 'off')
-      warning('instability detected - splitting the %dth order filter in a sequential %dth and a %dth order filter', N, N1, N2);
-      warning('backtrace', 'on')
-      filt1 = ft_preproc_bandpassfilter(dat  ,Fs,Fbp,N1,type,dir,instabilityfix);
-      filt  = ft_preproc_bandpassfilter(filt1,Fs,Fbp,N2,type,dir,instabilityfix);
+      ft_warning('off','backtrace');
+      ft_warning('instability detected - splitting the %dth order filter in a sequential %dth and a %dth order filter', N, N1, N2);
+      ft_warning('on','backtrace');
+      filt = ft_preproc_bandpassfilter(dat ,Fs,Fbp,N1,type,dir,instabilityfix);
+      filt = ft_preproc_bandpassfilter(filt,Fs,Fbp,N2,type,dir,instabilityfix);
     otherwise
-      error('incorrect specification of instabilityfix');
+      ft_error('incorrect specification of instabilityfix');
   end % switch
 end

@@ -54,7 +54,7 @@ for i=1:length(iz);
         pos(find(posx>length(xi) | posy>length(yi) | posx<=0|posy<=0), :)=[];
 
         if(length(pos)>0)
-            zz=floor(((zi(iz(i))-zi(1)))/dy0);
+            zz=floor(((zi(iz(i))-zi(1)))/dz0);
             for k=1:size(pos,1)
                 img(pos(k,1),pos(k,2),zz)=1;
             end

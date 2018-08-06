@@ -1,4 +1,4 @@
-function [wave,spike] = ft_spike_waveform(cfg,spike)
+function [wave, spike] = ft_spike_waveform(cfg, spike)
 
 % FT_SPIKE_WAVEFORM computes descriptive parameters on
 % waveform (mean and variance), and performs operations like realignment, outlier rejection,
@@ -27,31 +27,50 @@ function [wave,spike] = ft_spike_waveform(cfg,spike)
 %   cfg.spikechannel     = See FT_CHANNELSELECTION for details.
 %
 % Outputs:
-%  Wave.avg   = average waveform
-%  Wave.time  = time of waveform axis
-%  Wave.var   = variance of waveform
-%  Wave.dof   = number of spikes contributing to average
+%   Wave.avg   = average waveform
+%   Wave.time  = time of waveform axis
+%   Wave.var   = variance of waveform
+%   Wave.dof   = number of spikes contributing to average
 %
 % Spike structure if two outputs are desired: waveform is replaced by interpolated and
 % cleaned waveforms, removing also their associated time-stamps and data.
-%
+
 %  Copyright (C) 2012, Martin Vinck & Thilo Womelsdorf
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance spike
 ft_preamble trackconfig
 
 % ensure that the required options are present
 cfg = ft_checkconfig(cfg, 'required', {'fsample'});
 
 % support the typo in this cfg option that was present in older versions of this function
-% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1814
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1814
 cfg = ft_checkconfig(cfg, 'renamed', {'allign', 'align'});
 
 % get the default options
@@ -71,7 +90,7 @@ cfg = ft_checkopt(cfg, 'normalize','char', {'yes', 'no'});
 cfg = ft_checkopt(cfg, 'spikechannel',{'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg, 'fsample', 'double');
 
-cfg = ft_checkconfig(cfg, 'allowed', {'align', 'rejectclippedspikes', 'rejectonpeak', 'interpolate', 'normalize', 'spikechannel', 'fsample', 'warning', 'progress'});
+cfg = ft_checkconfig(cfg, 'allowed', {'align', 'rejectclippedspikes', 'rejectonpeak', 'interpolate', 'normalize', 'spikechannel', 'fsample'});
 
 spike = ft_checkdata(spike, 'datatype', 'spike', 'feedback', 'yes');
 
@@ -108,7 +127,7 @@ for iUnit = 1:nUnits
     
     % reject the ones that do not have a rising potential to the peak index
     mnOverLead = nanmean(waves,1);% do this for all four leads at the same time    
-    d = find(squeeze(nansum(diff(mnOverLead(:,1:iup,:),[],2),2)));    
+    d = squeeze(nansum(diff(mnOverLead(:,1:iup,:),[],2),2));    
     rm1 = find(d<0);
     
     % these have a later max than min: reject, this removes late peaks.
@@ -132,7 +151,7 @@ for iUnit = 1:nUnits
       df         = diff(mnOverLead);
       idx        = find(df==0)+1;
       if ~isempty(idx), 
-        if all(nanmax(mnOverLead(idx))>=mnOverLead) | all(nanmin(mnOverLead(idx))<=mnOverLead)
+        if all(nanmax(mnOverLead(idx))>=mnOverLead) || all(nanmin(mnOverLead(idx))<=mnOverLead)
           dl = [dl iWave];
         end
       end
@@ -204,9 +223,9 @@ for iUnit = 1:nUnits
   end
    
   % --- compute the average waveform here and put in a structure for the next function
-  mnWaveform(iUnit,:,:)  = mn;
-  varWaveform(iUnit,:,:) = sd.^2;
-  dofWaveform(iUnit,:,:) = dof;
+  mnWaveform(iUnit,1:nLeads,:)  = mn;
+  varWaveform(iUnit,1:nLeads,:) = sd.^2;
+  dofWaveform(iUnit,1:nLeads,:) = dof;
   if nargout==2
     spike.waveform{spikeindx} = waves;
     spike.waveformtime = time;
@@ -234,8 +253,9 @@ wave.var   = varWaveform;
 wave.label = spike.label(spikesel);
 wave.dimord = 'chan_lead_time';
 
+% do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble previous spike
-ft_postamble history spike wave
+ft_postamble previous   spike
+ft_postamble provenance wave spike
+ft_postamble history    wave spike
 

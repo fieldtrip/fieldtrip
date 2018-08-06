@@ -1,4 +1,4 @@
-function [pnt, tri] = read_off(fn);
+function [pnt, tri] = read_off(fn)
 
 % READ_OFF reads vertices and triangles from a OFF format triangulation file
 %
@@ -8,7 +8,7 @@ function [pnt, tri] = read_off(fn);
 
 % Copyright (C) 1998, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -33,7 +33,7 @@ if fid~=-1
   [s, count] = fscanf(fid, '%s\n', 1);
   if ~strcmp(s,'OFF')
     msg = sprintf('wrong file type %s', s);
-    error(msg);
+    ft_error(msg);
   end
 
   % read the number of vertex points and triangles
@@ -51,7 +51,7 @@ if fid~=-1
   fclose(fid);
 
 else
-  error('unable to open file');
+  ft_error('unable to open file');
 end
 
 

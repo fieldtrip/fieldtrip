@@ -22,19 +22,21 @@ function ft_write_cifti(filename, source, varargin)
 % FT_DATATYPE_VOLUME definition.
 %
 % Any optional input arguments should come in key-value pairs and may include
-%   'parameter'      = string, fieldname that contains the functional data
-%   'brainstructure' = string, fieldname that describes the brain structures (default = 'brainstructure')
-%   'parcellation'   = string, fieldname that describes the parcellation (default = 'parcellation')
-%   'precision'      = string, can be 'single', 'double', 'int32', etc. (default ='single')
+%   'parameter'        = string, fieldname that contains the functional data
+%   'brainstructure'   = string, fieldname that describes the brain structures (default = 'brainstructure')
+%   'parcellation'     = string, fieldname that describes the parcellation (default = 'parcellation')
+%   'precision'        = string, can be 'single', 'double', 'int32', etc. (default ='single')
+%   'writesurface'     = boolean, can be false or true (default = true)
+%   'debug'            = boolean, write a debug.xml file (default = false)
 %
 % The brainstructure refers to the global anatomical structure, such as CortexLeft, Thalamus, etc.
 % The parcellation refers to the the detailled parcellation, such as BA1, BA2, BA3, etc.
 %
 % See also FT_READ_CIFTI, FT_READ_MRI, FT_WRITE_MRI
 
-% Copyright (C) 2013-2014, Robert Oostenveld
+% Copyright (C) 2013-2015, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -56,6 +58,8 @@ parameter       = ft_getopt(varargin, 'parameter');
 brainstructure  = ft_getopt(varargin, 'brainstructure'); % the default is determined further down
 parcellation    = ft_getopt(varargin, 'parcellation');   % the default is determined further down
 precision       = ft_getopt(varargin, 'precision', 'single');
+writesurface    = ft_getopt(varargin, 'writesurface', true);
+debug            = ft_getopt(varargin, 'debug', false);
 
 if isfield(source, 'brainordinate')
   % this applies to a parcellated data representation
@@ -123,7 +127,7 @@ switch dimord
     % NIFTI_INTENT_CONNECTIVITY_PARCELLATED_SCALARS
     extension   = '.pscalar.nii';
     intent_code = 3006;
-    intent_name = 'ConnParcelScalr'; % due to length constraints of the NIfTI header field, the last ?a? is removed
+    intent_name = 'ConnParcelScalr'; % due to length constraints of the NIfTI header field, the last "a" is removed
     dat = transpose(dat);
     dimord = 'scalar_chan';
   case 'chan_chan'
@@ -134,28 +138,50 @@ switch dimord
   case 'chan_time'
     % NIFTI_INTENT_CONNECTIVITY_PARCELLATED_SERIES
     extension = '.ptseries.nii';
-    intent_code = 3000;
+    intent_code = 3004;
     intent_name = 'ConnParcelSries'; % due to length constraints of the NIfTI header field, the first "e" is removed
     dat = transpose(dat);
     dimord = 'time_chan';
   case 'chan_freq'
     % NIFTI_INTENT_CONNECTIVITY_PARCELLATED_SERIES
     extension = '.ptseries.nii';
-    intent_code = 3000;
+    intent_code = 3004;
     intent_name = 'ConnParcelSries'; % due to length constraints of the NIfTI header field, the first "e" is removed
     dat = transpose(dat);
     dimord = 'freq_chan';
     
+  case {'chan_chan_time' 'chan_chan_freq'}
+    % NIFTI_INTENT_CONNECTIVITY_PARCELLATED_PARCELLATED_SERIES
+    extension = '.pconnseries.nii';
+    intent_code = 3011;
+    intent_name = 'ConnPPSr';
+    
+  case {'pos_pos_time' 'pos_pos_freq'}
+    % this is not part of the Cifti v2 specification, but would have been NIFTI_INTENT_CONNECTIVITY_DENSE_DENSE_SERIES
+    extension = '.dconnseries.nii'; % user's choise
+    intent_code = 3000;
+    intent_name = 'ConnUnknown';
+    
   otherwise
-    error('unsupported dimord "%s"', dimord);
+    ft_error('unsupported dimord "%s"', dimord);
 end % switch
 
 % determine each of the dimensions
 dimtok = tokenize(dimord, '_');
 
-% add the extension to the filename
-[p, f] = fileparts(filename);
-filename = fullfile(p, [f extension]);
+[p, f, x] = fileparts(filename);
+if isequal(x, '.nii')
+  filename = fullfile(p, f); % strip the extension
+end
+
+[p, f, x] = fileparts(filename);
+if any(isequal(x, {'.dtseries', '.ptseries', '.dconn', '.pconn', '.dscalar', '.pscalar'}))
+  filename = fullfile(p, f); % strip the extension
+end
+
+% add the full cifti extension to the filename
+[p, f, x] = fileparts(filename);
+filename = fullfile(p, [f x extension]);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % get the description of the geometry
@@ -295,12 +321,17 @@ if any(strcmp(dimtok, 'time'))
   tree = add(tree, find(tree, 'CIFTI/Matrix'), 'element', 'MatrixIndicesMap');
   branch = find(tree, 'CIFTI/Matrix/MatrixIndicesMap');
   branch = branch(end);
+  if length(source.time)>1
+    SeriesStep = median(diff(source.time)); % this assumes evenly spaced samples
+  else
+    SeriesStep = 0;
+  end
   tree = attributes(tree, 'add', branch, 'AppliesToMatrixDimension', printwithcomma(find(strcmp(dimtok, 'time'))-1));
   tree = attributes(tree, 'add', branch, 'IndicesMapToDataType', 'CIFTI_INDEX_TYPE_SERIES');
   tree = attributes(tree, 'add', branch, 'NumberOfSeriesPoints', num2str(length(source.time)));
   tree = attributes(tree, 'add', branch, 'SeriesExponent', num2str(0));
   tree = attributes(tree, 'add', branch, 'SeriesStart', num2str(source.time(1)));
-  tree = attributes(tree, 'add', branch, 'SeriesStep', num2str(median(diff(source.time))));
+  tree = attributes(tree, 'add', branch, 'SeriesStep', num2str(SeriesStep));
   tree = attributes(tree, 'add', branch, 'SeriesUnit', 'SECOND');
 end % if time
 
@@ -310,12 +341,17 @@ if any(strcmp(dimtok, 'freq'))
   tree = add(tree, find(tree, 'CIFTI/Matrix'), 'element', 'MatrixIndicesMap');
   branch = find(tree, 'CIFTI/Matrix/MatrixIndicesMap');
   branch = branch(end);
+  if length(source.freq)>1
+    SeriesStep = median(diff(source.freq)); % this assumes evenly spaced samples
+  else
+    SeriesStep = 0;
+  end
   tree = attributes(tree, 'add', branch, 'AppliesToMatrixDimension', printwithcomma(find(strcmp(dimtok, 'freq'))-1));
   tree = attributes(tree, 'add', branch, 'IndicesMapToDataType', 'CIFTI_INDEX_TYPE_SCALARS');
   tree = attributes(tree, 'add', branch, 'NumberOfSeriesPoints', num2str(length(source.freq)));
   tree = attributes(tree, 'add', branch, 'SeriesExponent', num2str(0));
   tree = attributes(tree, 'add', branch, 'SeriesStart', num2str(source.freq(1)));
-  tree = attributes(tree, 'add', branch, 'SeriesStep', num2str(median(diff(source.freq)))); % this requires even sampling
+  tree = attributes(tree, 'add', branch, 'SeriesStep', num2str(SeriesStep));
   tree = attributes(tree, 'add', branch, 'SeriesUnit', 'HZ');
 end % if freq
 
@@ -351,7 +387,7 @@ if any(strcmp(dimtok, 'pos'))
       case 'm'
         MeterExponent = 0;
       otherwise
-        error('unsupported source.unit')
+        ft_error('unsupported source.unit')
     end % case
     
     [tree, uid] = add(tree, branch, 'element', 'Volume');
@@ -425,7 +461,7 @@ if any(strcmp(dimtok, 'chan'))
       case 'm'
         MeterExponent = 0;
       otherwise
-        error('unsupported source.unit')
+        ft_error('unsupported source.unit')
     end % case
     
     [tree, uid] = add(tree, branch, 'element', 'Volume');
@@ -436,7 +472,7 @@ if any(strcmp(dimtok, 'chan'))
   end
   
   % surfaces are described with vertex positions (pos/pnt) and triangles (tri)
-  if isfield(source, 'tri')
+  if isfield(source, 'pos') && isfield(source, 'tri')
     % there is a surface description
     
     for i=1:length(BrainStructurelabel)
@@ -604,7 +640,7 @@ switch precision
   case 'int64'
     hdr.datatype = 1024;
   otherwise
-    error('unsupported precision "%s"', precision);
+    ft_error('unsupported precision "%s"', precision);
 end
 
 switch precision
@@ -621,44 +657,33 @@ switch precision
   case 'double'
     hdr.bitpix = 8*8;
   otherwise
-    error('unsupported precision "%s"', precision);
+    ft_error('unsupported precision "%s"', precision);
 end
 
 % dim(1) represents the number of dimensions
-% for a normal nifti file, dim(2:4) are x, y, z, dim(5) is time, dim(6:8) are free to choose
-% the cifti file makes use of dim(6:8)
-switch dimord
-  case 'pos_scalar'
-    hdr.dim             = [6 1 1 1 1 size(source.pos,1)   1                    1]; % only single scalar
-  case 'scalar_pos'
-    hdr.dim             = [6 1 1 1 1 1                    size(source.pos,1)   1]; % only single scalar
-  case 'chan_scalar'
-    hdr.dim             = [6 1 1 1 1 numel(source.label)  1                    1]; % only single scalar
-  case 'scalar_chan'
-    hdr.dim             = [6 1 1 1 1 1                    numel(source.label)  1]; % only single scalar
-  case 'pos_time'
-    hdr.dim             = [6 1 1 1 1 size(source.pos,1)   length(source.time)  1];
-  case 'time_pos'
-    hdr.dim             = [6 1 1 1 1 length(source.time)  size(source.pos,1)   1];
-  case 'chan_time'
-    hdr.dim             = [6 1 1 1 1 length(source.label) length(source.time)  1];
-  case 'time_chan'
-    hdr.dim             = [6 1 1 1 1 length(source.time)  length(source.label) 1];
-  case 'pos_pos'
-    hdr.dim             = [6 1 1 1 1 size(source.pos,1)   size(source.pos,1)   1];
-  case 'chan_chan'
-    hdr.dim             = [6 1 1 1 1 length(source.label) length(source.label) 1];
-  case 'chan_chan_time'
-    hdr.dim             = [6 1 1 1 1 length(source.label) length(source.label) length(source.time)];
-  case 'pos_pos_time'
-    hdr.dim             = [6 1 1 1 1 size(source.pos,1)   size(source.pos,1)   length(source.time)];
-  case 'chan_chan_freq'
-    hdr.dim             = [6 1 1 1 1 length(source.label) length(source.label) length(source.freq)];
-  case 'pos_pos_freq'
-    hdr.dim             = [6 1 1 1 1 size(source.pos,1)   size(source.pos,1)   length(source.freq)];
-  otherwise
-    error('unsupported dimord "%s"', dimord)
-end % switch
+% for a normal nifti file, dim(2:4) are x, y, z, dim(5) is time
+% cifti makes use of dim(6:8), which are free to choose
+hdr.dim = [4+length(dimtok) 1 1 1 1 1 1 1];
+
+% the nifti specification does not allow for more than 7 dimensions to be specified
+assert(hdr.dim(1)<8);
+
+for i=1:length(dimtok)
+  switch dimtok{i}
+    case 'pos'
+      hdr.dim(5+i) = size(source.pos,1);
+    case 'chan'
+      hdr.dim(5+i) = numel(source.label);
+    case 'time'
+      hdr.dim(5+i) = numel(source.time);
+    case 'freq'
+      hdr.dim(5+i) = numel(source.freq);
+    case 'scalar'
+      hdr.dim(5+i) = 1;
+    otherwise
+      ft_error('unsupported dimord "%s"', dimord)
+  end
+end
 
 hdr.intent_p1       = 0;
 hdr.intent_p2       = 0;
@@ -699,12 +724,14 @@ fid = fopen(filename, 'wb');
 % write the header, this is 4+540 bytes
 write_nifti2_hdr(fid, hdr);
 
-try
-  % write the xml section to a temporary file for debugging
-  xmlfile = 'debug.xml';
-  tmp = fopen(xmlfile, 'w');
-  fwrite(tmp, xmldat, 'char');
-  fclose(tmp);
+if debug
+  try
+    % write the xml section to a temporary file for debugging
+    xmlfile = 'debug.xml';
+    tmp = fopen(xmlfile, 'w');
+    fwrite(tmp, xmldat, 'char');
+    fclose(tmp);
+  end
 end
 
 % write the cifti header extension
@@ -720,7 +747,7 @@ fwrite(fid, dat, precision);
 fclose(fid);
 
 % write the surfaces as gifti files
-if isfield(source, 'tri')
+if writesurface && isfield(source, 'pos') && isfield(source, 'tri')
   
   if isfield(source, brainstructure)
     % it contains information about anatomical structures, including cortical surfaces
@@ -741,7 +768,7 @@ if isfield(source, 'tri')
       [p, f, x] = fileparts(filename);
       filetok = tokenize(f, '.');
       surffile = fullfile(p, [filetok{1} '.' BrainStructurelabel{i} '.surf.gii']);
-      warning('writing %s to %s', BrainStructurelabel{i}, surffile);
+      fprintf('writing %s surface to %s\n', BrainStructurelabel{i}, surffile);
       ft_write_headshape(surffile, mesh, 'format', 'gifti');
     end
     
@@ -756,7 +783,7 @@ if isfield(source, 'tri')
     ft_write_headshape(surffile, mesh, 'format', 'gifti');
   end
   
-end % if isfield tri
+end % if writesurface and isfield tri
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

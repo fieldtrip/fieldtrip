@@ -4,7 +4,7 @@ function [condNumbers,condLabels] = read_ctf_cls(fname)
 
 % Copyright (C) 2003, Ole Jensen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -44,7 +44,7 @@ while ~isempty(S1)
   S1 =fscanf(fid,'%s',1);
 
   if readList
-    if ~isempty(S1) & ~isempty(str2num(S1(2:end)))
+    if ~isempty(S1) && ~isempty(str2num(S1(2:end)))
       k = k + 1;
       condTmp = [condTmp 1+str2num(S1(2:end))];
     else
@@ -60,7 +60,7 @@ while ~isempty(S1)
     condLabels(nCondition) = {S1} ;
   end
 
-  if strcmp(S1,'NUMBER') & strcmp(S2,'TRIAL')
+  if strcmp(S1,'NUMBER') && strcmp(S2,'TRIAL')
     if ~isempty(S1)
       readList = 1;
       k = 0;

@@ -1,14 +1,12 @@
 function [s, cfg] = ft_statfun_roc(cfg, dat, design)
 
-% FT_STATFUN_ROC computes the area under the curve (AUC) of the
-% Receiver Operator Characteristic (ROC). This is a measure of the
-% separability of the data divided over two conditions. The AUC can
-% be used to test statistical significance of being able to predict
-% on a single observation basis to which condition the observation
+% FT_STATFUN_ROC computes the area under the curve (AUC) of the Receiver Operator
+% Characteristic (ROC). This is a measure of the separability of the data divided
+% over two conditions. The AUC can be used to test statistical significance of being
+% able to predict on a single observation basis to which condition the observation
 % belongs.
 % 
-% Use this function by calling one of the high-level statistics
-% functions as
+% Use this function by calling one of the high-level statistics functions as
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
 %   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
@@ -30,7 +28,7 @@ function [s, cfg] = ft_statfun_roc(cfg, dat, design)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -58,7 +56,7 @@ end
 if isfield(cfg, 'numbins')
   % this function was completely reimplemented on 21 July 2008 by Robert Oostenveld
   % the old function had a positive bias in the AUC (i.e. the expected value was not 0.5)
-  error('the option cfg.numbins is not supported any more');
+  ft_error('the option cfg.numbins is not supported any more');
 end
 
 % start with a quick test to see whether there appear to be NaNs
@@ -137,7 +135,8 @@ for k = 1:nobs
 
 end
 
-s.stat = auc;
+% return the area under the curve as the statistic of interest
+s = struct('auc', auc);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % NUMINT computes a numerical integral of a set of sampled points using

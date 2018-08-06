@@ -1,4 +1,4 @@
-function write_neuralynx_nts(filename, nts);
+function write_neuralynx_nts(filename, nts)
 
 % WRITE_NEURALYNX_NTS writes spike timestamps to a NTS file
 %
@@ -9,7 +9,7 @@ function write_neuralynx_nts(filename, nts);
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -28,7 +28,7 @@ function write_neuralynx_nts(filename, nts);
 % $Id$
 
 if ~isa(nts.TimeStamp, 'uint64')
-  error('timestamps should be uint64');
+  ft_error('timestamps should be uint64');
 end
 
 fid  = fopen(filename, 'wb', 'ieee-le');
@@ -47,7 +47,7 @@ for i=1:length(f)
     case 'double'
       buf = [buf sprintf('-%s\t%g\r\n', f{i}, v)];
     otherwise
-      error('unknown class in writing header');
+      ft_error('unknown class in writing header');
   end
 end
 

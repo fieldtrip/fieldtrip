@@ -19,7 +19,7 @@ function [argout, optout] = qsubexec(jobid)
 % See also QSUBCELLFUN, QSUBFEVAL, QSUBGET
 
 % -----------------------------------------------------------------------
-% Copyright (C) 2011-2013, Robert Oostenveld
+% Copyright (C) 2011-2016, Robert Oostenveld
 %
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -42,10 +42,10 @@ try
   if isempty(p)
     p = pwd();
   end
-  
+
   inputfile  = fullfile(p, sprintf('%s_input.mat',   jobid));
   outputfile = fullfile(p, sprintf('%s_output.mat_', jobid));
-  
+
   stopwatch = tic;
   while (~exist(inputfile, 'file') && toc(stopwatch)<60)
     % the underlying NFS file system might be slow in updating, wait for up to 60 seconds
@@ -81,7 +81,13 @@ try
     end
   end
   
-  delete(inputfile);
+  rerunable = ft_getopt(tmp.optin, 'rerunable', 'no');
+  rerunable = istrue(rerunable);
+
+  if ~rerunable
+    % delete it as soon as possible to avoid the working directory from getting cluttered
+    delete(inputfile);
+  end
   
   argin = tmp.argin; % this includes the function name and the input arguments
   optin = tmp.optin; % this includes the path setting, the pwd, the global variables, etc.
@@ -95,6 +101,11 @@ try
     save(outputfile, 'argout', 'optout', '-v6');
   else
     save(outputfile, 'argout', 'optout', '-v7.3');
+  end
+
+  if rerunable
+    % delete it only once the result has been written to disk
+    delete(inputfile);
   end
   
   % remove the _ at the end, note that the rename command here is a private mex file

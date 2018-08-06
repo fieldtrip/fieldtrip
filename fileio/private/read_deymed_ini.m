@@ -9,7 +9,7 @@ function hdr = read_deymed_ini(filename)
 
 % Copyright (C) 2013, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -48,7 +48,7 @@ hdr.nChans    = fread(fid, [1, 1],  'int8');
 
 dummy         = fread(fid, [1, 1],  'int8'); % this is 4 in the example file
 if dummy~=4
-  warning('deviant header format detected');
+  ft_warning('deviant header format detected');
 end
 
 % A numerical comparison between a deymed dat file and a BESA-exported edf version of the

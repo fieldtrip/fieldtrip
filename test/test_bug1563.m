@@ -18,7 +18,7 @@ if nargin<2
 end
 
 if ~isequal('PCWIN64', computer)
-  warning('this bug only occurs under windows and matlab 64 bit')
+  warning('this bug only occurs under Windows and MATLAB 64 bit')
 end
 
 %% Try to reproduce
@@ -49,11 +49,8 @@ cfg.lcmv.keepfilter = 'yes';
 cfg.lcmv.fixedori   ='no'; 
 source              = ft_sourceanalysis(cfg, timelock); 
 
-if isunix
-    template = '/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii'; %template is distributed with spm
-elseif ispc
-    template = 'H:\common\matlab\fieldtrip\external\spm8\templates/T1.nii'; %template is distributed with spm
-end
+% template is distributed with spm
+template = dccnpath('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii');
 
 source.coordsys = 'mni'; % this can also be determined with ft_determine_coordsys
 

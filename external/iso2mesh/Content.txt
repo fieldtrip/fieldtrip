@@ -13,23 +13,35 @@
  inputs and outputs are similar to those defined in vol2surf; In v2s, 
  method can be set to 'cgalmesh' in addition to those allowed by vol2surf.
 
-==== function [node,elem,face]=s2m(v,f,keepratio,maxvol,method) ====
- [node,elem,face]=s2m(v,f,keepratio,maxvol)
+==== function [node,elem,face]=s2m(v,f,keepratio,maxvol,method,regions,holes) ====
+ [node,elem,face]=s2m(v,f,keepratio,maxvol,method)
+ [node,elem,face]=s2m(v,f,keepratio,maxvol,'tetgen',regions,holes)
  volumetric mesh generation from a closed surface, shortcut for surf2mesh
  inputs and outputs are similar to those defined in surf2mesh
  if method='cgalpoly', s2m will call cgals2m and keepratio should be a 
  structure (as the 'opt' input in cgals2m)
+ input default values:
+       method: if ignored, iso2mesh uses surf2mesh ('tetgen') to do the
+               tetrahedral mesh generation
+       regions,holes: if ignored, iso2mesh assumes both are empty
 
 ==== function img=s2v(node,face,div) ====
  img=s2v(node,face,div)
  shortcut for surf2vol, coverting a surface to a volumetric image
  input:
-   node: node list of the triangular surface, 3 columns for x/y/z
-   face: triangle node indices, each row is a triangle
-   div:  division number along the shortest edge of the mesh (resolution)
+	 node: node list of the triangular surface, 3 columns for x/y/z
+	 face: triangle node indices, each row is a triangle
+	 div:  division number along the shortest edge of the mesh (resolution)
               if not given, div=50
  output:
-   img: a volumetric binary image at position of ndgrid(xi,yi,zi)
+	 img: a volumetric binary image at position of ndgrid(xi,yi,zi)
+
+==== function varargout=m2v(varargin) ====
+ vol=m2v(node,face,Nxyz)
+  or
+ vol=m2v(node,face,xi,yi,zi)
+ shortcut for mesh2vol, rasterizing a teterahedral mesh to a volume using graphics
+ input/output: please see details in the help for mesh2vol
 
 ==== function newnode=sms(node,face,iter,alpha,method) ====
  newnode=sms(node,face,iter,useralpha,method)
@@ -42,81 +54,82 @@
     method: same as in smoothsurf, default is 'laplacianhc'
  output:
     newnode: output, the smoothed node coordinates
+
 === # Streamlined mesh generation ===
 
 ==== function [node,elem,face,regions]=vol2mesh(img,ix,iy,iz,opt,maxvol,dofix,method,isovalues) ====
  [node,elem,face,regions]=vol2mesh(img,ix,iy,iz,opt,maxvol,dofix,method,isovalues)
  convert a binary (or multi-valued) volume to tetrahedral mesh
  input:
-   img: a volumetric binary image
-   ix,iy,iz: subvolume selection indices in x,y,z directions
-   opt: as defined in vol2surf.m
-   maxvol: target maximum tetrahedral elem volume
+	 img: a volumetric binary image
+	 ix,iy,iz: subvolume selection indices in x,y,z directions
+	 opt: as defined in vol2surf.m
+	 maxvol: target maximum tetrahedral elem volume
                 when method='cgalmesh', maxvol can specify the target
                 for each label (subregion index) by the following syntax
                 'label1=size1:label2=size2:...'
-   dofix: 1: perform mesh validation&repair, 0: skip repairing
-   method: 'cgalsurf' or omit: use CGAL surface mesher
-     'simplify': use binsurface and then simplify
-     'cgalmesh': use CGAL 3.5 3D mesher for direct mesh generation [new]
-     generally speaking, 'cgalmesh' is the most robust path
-     if you want to product meshes from binary or multi-region
-     volumes, however, its limitations include 1) only accept 
-     uint8 volume, and 2) can not extract meshes from gray-scale
-     volumes. If ones goal is to process a gray-scale volume,
-     he/she should use the 'cgalsurf' option. 'simplify' approach
-     is not recommended unless other options has failed.
-   isovalues: a list of isovalues where the levelset is defined
+	 dofix: 1: perform mesh validation&repair, 0: skip repairing
+	 method: 'cgalsurf' or omit: use CGAL surface mesher
+		 'simplify': use binsurface and then simplify
+		 'cgalmesh': use CGAL 3.5 3D mesher for direct mesh generation [new]
+		 generally speaking, 'cgalmesh' is the most robust path
+		 if you want to product meshes from binary or multi-region
+		 volumes, however, its limitations include 1) only accept 
+		 uint8 volume, and 2) can not extract meshes from gray-scale
+		 volumes. If ones goal is to process a gray-scale volume,
+		 he/she should use the 'cgalsurf' option. 'simplify' approach
+		 is not recommended unless other options has failed.
+	 isovalues: a list of isovalues where the levelset is defined
  output:
-   node: output, node coordinates of the tetrahedral mesh
-   elem: output, element list of the tetrahedral mesh, the last 
-         column is the region ID
-   face: output, mesh surface element list of the tetrahedral mesh
-         the last column denotes the boundary ID
-    region: optional output. if opt.autoregion is set to 1, region
-          saves the interior points for each closed surface component
+	 node: output, node coordinates of the tetrahedral mesh
+	 elem: output, element list of the tetrahedral mesh, the last 
+	       column is the region ID
+	 face: output, mesh surface element list of the tetrahedral mesh
+	       the last column denotes the boundary ID
+        region: optional output. if opt.autoregion is set to 1, region
+              saves the interior points for each closed surface component
 
 ==== function [no,el,regions,holes]=vol2surf(img,ix,iy,iz,opt,dofix,method,isovalues) ====
  [no,el,regions,holes]=vol2surf(img,ix,iy,iz,opt,dofix,method,isovalues)
  converting a 3D volumetric image to surfaces
  input:
-   img: a volumetric binary image; if img is empty, vol2surf will
-        return user defined surfaces via opt.surf if it exists
-   ix,iy,iz: subvolume selection indices in x,y,z directions
-   opt: function parameters
-     if method is 'cgalsurf' or 'cgalpoly':
-       opt=a float number>1: max radius of the Delaunay sphere(element size) 
-       opt.radbound: same as above, max radius of the Delaunay sphere
-       opt.distbound: maximum deviation from the specified isosurfaces
-       opt(1,2,...).radbound: same as above, for each levelset
-     if method is 'simplify':
-       opt=a float number<1: compression rate for surf. simplification
-       opt.keepratio=a float less than 1: same as above, same for all surf.
-       opt(1,2,..).keepratio: setting compression rate for each levelset
-     opt(1,2,..).maxsurf: 1 - only use the largest disjointed surface
-        0 - use all surfaces for that levelset
+	 img: a volumetric binary image; if img is empty, vol2surf will
+	      return user defined surfaces via opt.surf if it exists
+	 ix,iy,iz: subvolume selection indices in x,y,z directions
+	 opt: function parameters
+	   if method is 'cgalsurf' or 'cgalpoly':
+	     opt=a float number>1: max radius of the Delaunay sphere(element size) 
+	     opt.radbound: same as above, max radius of the Delaunay sphere
+	     opt.distbound: maximum deviation from the specified isosurfaces
+	     opt(1,2,...).radbound: same as above, for each levelset
+	   if method is 'simplify':
+	     opt=a float number<1: compression rate for surf. simplification
+	     opt.keepratio=a float less than 1: same as above, same for all surf.
+	     opt(1,2,..).keepratio: setting compression rate for each levelset
+	   opt(1,2,..).maxsurf: 1 - only use the largest disjointed surface
+				0 - use all surfaces for that levelset
           opt(1,2,..).side: - 'upper': threshold at upper interface
                               'lower': threshold at lower interface
-     opt(1,2,..).maxnode: - the maximum number of surface node per levelset
-     opt(1,2,..).holes: user specified holes interior pt list
-     opt(1,2,..).regions: user specified regions interior pt list
-     opt(1,2,..).surf.{node,elem}: add additional surfaces
-     opt(1,2,..).{A,B}: linear transformation for each surface
-     opt.autoregion: if set to 1, vol2surf will try to determine 
+	   opt(1,2,..).maxnode: - the maximum number of surface node per levelset
+	   opt(1,2,..).holes: user specified holes interior pt list
+	   opt(1,2,..).regions: user specified regions interior pt list
+	   opt(1,2,..).surf.{node,elem}: add additional surfaces
+	   opt(1,2,..).{A,B}: linear transformation for each surface
+	   opt.autoregion: if set to 1, vol2surf will try to determine 
               the interior points for each closed surface automatically
-   dofix: 1: perform mesh validation&repair, 0: skip repairing
-   method: - if method is 'simplify', iso2mesh will first call
-       binsurface to generate a voxel-based surface mesh and then
-       use meshresample/meshcheckrepair to create a coarser mesh;
-     - if method is 'cgalsurf', iso2mesh will call the surface
-       extraction program from CGAL to make surface mesh
-     - if method is not specified, 'cgalsurf' is assumed by default
-   isovalues: a list of isovalues where the levelset is defined
+	 dofix: 1: perform mesh validation&repair, 0: skip repairing
+	 method: - if method is 'simplify', iso2mesh will first call
+		   binsurface to generate a voxel-based surface mesh and then
+		   use meshresample/meshcheckrepair to create a coarser mesh;
+		 - if method is 'cgalsurf', iso2mesh will call the surface
+		   extraction program from CGAL to make surface mesh
+		 - if method is not specified, 'cgalsurf' is assumed by default
+	 isovalues: a list of isovalues where the levelset is defined
  output: 
-   no:  list of nodes on the resulting suface mesh, 3 columns for x,y,z
-   el:  list of trianglular elements on the surface, [n1,n2,n3,region_id]
-   regions: list of interior points for all sub-region, [x,y,z]
-   holes:   list of interior points for all holes, [x,y,z]
+	 no:  list of nodes on the resulting suface mesh, 3 columns for x,y,z
+	 el:  list of trianglular elements on the surface, [n1,n2,n3,region_id]
+	 regions: list of interior points for all sub-region, [x,y,z]
+	 holes:   list of interior points for all holes, [x,y,z]
 
 ==== function [node,elem,face]=surf2mesh(v,f,p0,p1,keepratio,maxvol,regions,holes,forcebox) ====
  [node,elem,face]=surf2mesh(v,f,p0,p1,keepratio,maxvol,regions,holes,forcebox)
@@ -142,11 +155,42 @@
  img=surf2vol(node,face,xi,yi,zi)
  convert a triangular surface to a shell of voxels in a 3D image
  input:
-   node: node list of the triangular surface, 3 columns for x/y/z
-   face: triangle node indices, each row is a triangle
-   xi,yi,zi: x/y/z grid for the resulting volume
+	 node: node list of the triangular surface, 3 columns for x/y/z
+	 face: triangle node indices, each row is a triangle
+	 xi,yi,zi: x/y/z grid for the resulting volume
  output:
-   img: a volumetric binary image at position of ndgrid(xi,yi,zi)
+	 img: a volumetric binary image at position of ndgrid(xi,yi,zi)
+
+==== function [mask weight]=mesh2vol(node,elem,xi,yi,zi) ====
+ [mask weight]=mesh2vol(node,face,Nxyz)
+ [mask weight]=mesh2vol(node,face,[Nx,Ny,Nz])
+ [mask weight]=mesh2vol(node,face,xi,yi,zi,hf)
+   or
+ newval=mesh2vol(node_val,face,...)
+ fast rasterization of a 3D mesh to a volume with tetrahedron index labels
+ date for initial version: Feb 10,2014
+ input:
+      node: node coordinates, dimension N by 2 or N by 3 array
+      nodeval: a 4-column array, the first 3 columns are the node coordinates, 
+            the last column denotes the values associated with each node
+      face: a triangle surface, N by 3 or N by 4 array
+      Nx,Ny,Nxy: output image in x/y dimensions, or both
+      xi,yi: linear vectors for the output pixel center positions in x/y
+      hf: the handle of a pre-created figure window for faster rendering
+ output:
+      mask: a 3D image, the value of each pixel is the index of the
+            enclosing triangle, if the pixel is outside of the mesh, NaN
+      weight: (optional) a 3 by Nx by Ny array, where Nx/Ny are the dimensions
+            for the mask
+      newval: when the node has 4 columns, the last column represents the
+            values (color) at each node, the output newval is the rasterized
+            mesh value map over the specified grid.
+ note: This function only works for matlab
+ example:
+   [no,el]=meshgrid6(0:5,0:5,0:3);
+   mask=mesh2vol(no,el(:,1:4),0:0.1:5,0:0.1:5,0:0.1:4);
+   imagesc(mask(:,:,3))
+
 === # iso2mesh main function backend ===
 
 ==== function [node,elem]=binsurface(img,nface) ====
@@ -173,26 +217,26 @@
  convert a binary (or multi-valued) volume to tetrahedral mesh
  http://www.cgal.org/Manual/3.5/doc_html/cgal_manual/Mesh_3/Chapter_main.html
  input:
-   vol: a volumetric binary image
-   ix,iy,iz: subvolume selection indices in x,y,z directions
-   opt: parameters for CGAL mesher, if opt is a structure, then
-       opt.radbound: defines the maximum surface element size
-       opt.angbound: defines the miminum angle of a surface triangle
-       opt.distbound: defines the maximum distance between the 
-     center of the surface bounding circle and center of the 
-     element bounding sphere
-       opt.reratio:  maximum radius-edge ratio
-       if opt is a scalar, it only specifies radbound.
-   maxvol: target maximum tetrahedral elem volume
+	 vol: a volumetric binary image
+	 ix,iy,iz: subvolume selection indices in x,y,z directions
+	 opt: parameters for CGAL mesher, if opt is a structure, then
+	     opt.radbound: defines the maximum surface element size
+	     opt.angbound: defines the miminum angle of a surface triangle
+	     opt.distbound: defines the maximum distance between the 
+		 center of the surface bounding circle and center of the 
+		 element bounding sphere
+	     opt.reratio:  maximum radius-edge ratio
+	     if opt is a scalar, it only specifies radbound.
+	 maxvol: target maximum tetrahedral elem volume
  output:
-   node: output, node coordinates of the tetrahedral mesh
-   elem: output, element list of the tetrahedral mesh, the last 
-        column is the region id
-   face: output, mesh surface element list of the tetrahedral mesh
-        the last column denotes the boundary ID
-        note: each triangle will appear twice in the face list with each
-        one attaches to each side of the interface. one can remove
-        the redundant triangles by unique(face(:,1:3),'rows')
+	 node: output, node coordinates of the tetrahedral mesh
+	 elem: output, element list of the tetrahedral mesh, the last 
+	      column is the region id
+	 face: output, mesh surface element list of the tetrahedral mesh
+	      the last column denotes the boundary ID
+	      note: each triangle will appear twice in the face list with each
+		    one attaches to each side of the interface. one can remove
+		    the redundant triangles by unique(face(:,1:3),'rows')
 
 ==== function [node,elem,face]=cgals2m(v,f,opt,maxvol,varargin) ====
  [node,elem,face]=cgals2m(v,f,opt,maxvol)
@@ -200,23 +244,23 @@
  convert a triangular surface to tetrahedral mesh
  http://www.cgal.org/Manual/3.5/doc_html/cgal_manual/Mesh_3/Chapter_main.html
  input:
-   v: the node coordinate list of a surface mesh (nn x 3)
-   f: the face element list of a surface mesh (be x 3)
-   opt: parameters for CGAL mesher, if opt is a structure, then
-       opt.radbound: defines the maximum surface element size
-       opt.angbound: defines the miminum angle of a surface triangle
-       opt.distbound: defines the maximum distance between the 
-     center of the surface bounding circle and center of the 
-     element bounding sphere
-       opt.reratio:  maximum radius-edge ratio
-       if opt is a scalar, it only specifies radbound.
-   maxvol: target maximum tetrahedral elem volume
+	 v: the node coordinate list of a surface mesh (nn x 3)
+	 f: the face element list of a surface mesh (be x 3)
+	 opt: parameters for CGAL mesher, if opt is a structure, then
+	     opt.radbound: defines the maximum surface element size
+	     opt.angbound: defines the miminum angle of a surface triangle
+	     opt.distbound: defines the maximum distance between the 
+		 center of the surface bounding circle and center of the 
+		 element bounding sphere
+	     opt.reratio:  maximum radius-edge ratio
+	     if opt is a scalar, it only specifies radbound.
+	 maxvol: target maximum tetrahedral elem volume
  output:
-   node: output, node coordinates of the tetrahedral mesh
-   elem: output, element list of the tetrahedral mesh, the last 
-        column is the region id
-   face: output, mesh surface element list of the tetrahedral mesh
-        the last column denotes the boundary ID
+	 node: output, node coordinates of the tetrahedral mesh
+	 elem: output, element list of the tetrahedral mesh, the last 
+	      column is the region id
+	 face: output, mesh surface element list of the tetrahedral mesh
+	      the last column denotes the boundary ID
 
 ==== function [node,elem]=vol2restrictedtri(vol,thres,cent,brad,ang,radbound,distbound,maxnode) ====
  [node,elem]=vol2restrictedtri(vol,thres,cent,brad,ang,radbound,distbound,maxnode)
@@ -241,11 +285,40 @@
  convert a triangular surface to a shell of voxels in a 3D image
  along the z-axis
  input:
-   node: node list of the triangular surface, 3 columns for x/y/z
-   face: triangle node indices, each row is a triangle
-   xi,yi,zi: x/y/z grid for the resulting volume
+	 node: node list of the triangular surface, 3 columns for x/y/z
+	 face: triangle node indices, each row is a triangle
+	 xi,yi,zi: x/y/z grid for the resulting volume
  output:
-   img: a volumetric binary image at position of ndgrid(xi,yi,zi)
+	 img: a volumetric binary image at position of ndgrid(xi,yi,zi)
+
+==== function [mask, weight]=mesh2mask(node,face,xi,yi,hf) ====
+ [mask weight]=mesh2mask(node,face,Nxy)
+   or
+ [mask weight]=mesh2mask(node,face,[Nx,Ny])
+   or
+ [mask weight]=mesh2mask(node,face,xi,yi,hf)
+ fast rasterization of a 2D mesh to an image with triangle index labels
+ date for initial version: July 18,2013
+ input:
+      node: node coordinates, dimension N by 2 or N by 3 array
+      face: a triangle surface, N by 3 or N by 4 array
+      Nx,Ny,Nxy: output image in x/y dimensions, or both
+      xi,yi: linear vectors for the output pixel center positions in x/y
+      hf: (optional) the handle of a pre-created figure window, for faster 
+          rendering
+ output:
+      mask: a 2D image, the value of each pixel is the index of the
+            enclosing triangle, if the pixel is outside of the mesh, NaN
+      weight: (optional) a 3 by Nx by Ny array, where Nx/Ny are the dimensions for
+            the mask
+ note: This function only works in MATLAB when the DISPLAY is not 
+       disabled. The maximum size of the mask output is limited by the 
+       screen size.
+ example:
+   [no,fc]=meshgrid6(0:5,0:5);
+   [mask weight]=mesh2mask(no,fc,-1:0.1:5,0:0.1:5);
+   imagesc(mask);
+
 === # iso2mesh primitive meshing functions ===
 
 ==== function [node,face,elem]=meshabox(p0,p1,opt,nodesize) ====
@@ -341,6 +414,71 @@
          a surface mesh triangle 
    elem: (optional) integer array with dimensions of NE x 4, each row 
          represents a tetrahedron 
+
+==== function [node,elem]=meshgrid5(varargin) ====
+ [node,elem]=meshgrid5(v1,v2,v3,...)
+ mesh an ND rectangular lattice by splitting 
+ each hypercube into 5 tetrahedra
+ inspired by John D'Errico
+ URL: http://www.mathworks.com/matlabcentral/newsreader/view_thread/107191
+ input:
+    v1,v2,v3,... - numeric vectors defining the lattice in
+                   each dimension.
+                   Each vector must be of length >= 1
+ output:
+    node - factorial lattice created from (v1,v2,v3,...)
+           Each row of this array is one node in the lattice
+    elem - integer array defining simplexes as references to
+           rows of "node".
+ example:
+     [node,elem]=meshgrid5(0:5,0:6,0:4);
+     plotmesh(node,elem);
+
+==== function [node,elem]=meshgrid6(varargin) ====
+ [node,elem]=meshgrid6(v1,v2,v3,...)
+ mesh an ND rectangular lattice by splitting 
+ each hypercube into 6 tetrahedra
+ author: John D'Errico
+ URL: http://www.mathworks.com/matlabcentral/newsreader/view_thread/107191
+ input:
+    v1,v2,v3,... - numeric vectors defining the lattice in
+                   each dimension.
+                   Each vector must be of length >= 1
+ output:
+    node - factorial lattice created from (v1,v2,v3,...)
+           Each row of this array is one node in the lattice
+    elem - integer array defining simplexes as references to
+           rows of "node".
+ example:
+     [node,elem]=meshgrid6(0:5,0:6,0:4);
+     plotmesh(node,elem);
+
+==== function [node,face,centroids]=latticegrid(varargin) ====
+ [node,face,centroids]=latticegrid(xrange,yrange,zrange,...)
+ generate a 3D lattice
+ input: 
+   xrange, yrange, zrange ...: 1D vectors specifying the range of each
+         dimension of the lattice
+ output:
+   node: the vertices of the 3D lattice
+   face: the list of cell faces of the lattice, including both internal
+         and external facets. By default, face is in the form of a cell
+         array, with each row representing a face. One can use
+         cell2mat(face) to convert it to an array
+   centroids: the centroids of each lattice cell
+ example:
+    % generate a 3D lattice
+    [node,face,c0]=latticegrid([1 2 4],1:3,1:4);
+    plotmesh(node,face)
+    % mesh the 3D lattice based on the face info
+    [no,el]=surf2mesh(node,face,[],[],1,0.01,c0);
+    figure; plotmesh(no,el)
+    % mesh a 2-layer structure using a simple lattice
+    [node,face,c0]=latticegrid([0 10],[0 5],[0 3.5 4]);
+    c0(:,4)=[0.01;0.001];
+    [no,el]=surf2mesh(node,face,[],[],1,[],c0);
+    figure; plotmesh(no,el)
+
 === # Mesh decomposition and query ===
 
 ==== function facecell=finddisconnsurf(f) ====
@@ -353,7 +491,7 @@
  output:
      facecell: separated disconnected surface node indices
 
-==== function openedge=surfedge(f) ====
+==== function openedge=surfedge(f,varargin) ====
  openedge=surfedge(f)
  find the edge of an open surface or surface of a volume
  input:
@@ -371,14 +509,16 @@
 
 ==== function loops=extractloops(edges) ====
  loops=extractloops(edges)
- extract individual loops from an edge table of a loop
- collection
+ extract individual loop or polyline segment from a collection of edges
  input:   
     edges:  two column matrix recording the starting/ending 
              points of all edge segments
  output:
     loops:  output, a single vector separated by NaN, each segment
-             is a close-polygon consisted by node IDs
+             is a 3D polyline or loop consisted of node IDs
+ example:
+    edges=[1 2;2 3;1 4;3 4;7 3;1 9;5 6;6 7;10 9; 8 10;1 8;9 3;11 11;11 12];
+    loops=extractloops(edges)
 
 ==== function [conn,connnum,count]=meshconn(elem,nn) ====
  [conn,connnum,count]=meshconn(elem,nn)
@@ -572,12 +712,12 @@
    seeds: the interior points coordinates for each closed-surface
           component
 
-==== function quality=meshquality(node,elem) ====
+==== function quality=meshquality(node,elem,maxnode) ====
  quality=meshquality(node,elem)
- compute the Joe-Liu mesh quality measure of a tetrahedral mesh
+ compute the Joe-Liu mesh quality measure of an N-D mesh (N<=3)
  input:
     node:  node coordinates of the mesh (nn x 3)
-    elem:  element table of a tetrahedral mesh (ne x 4)
+    elem:  element table of an N-D mesh (ne x (N+1))
  output:
     quality: a vector of the same length as size(elem,1), with 
            each element being the Joe-Liu mesh quality metric (0-1) of 
@@ -604,15 +744,15 @@
            size(elem,1) x nchoosek(size(elem,2),2). All edges are ordered
            by looping through each element first. 
 
-==== function snorm=surfnorm(node,face,varargin) ====
- snorm=surfnorm(node,face)
+==== function snorm=surfacenorm(node,face,varargin) ====
+ snorm=surfacenorm(node,face)
     or
- snorm=surfnorm(node,face,'Normalize',0)
+ snorm=surfacenorm(node,face,'Normalize',0)
  compute the normal vectors for a triangular surface
  input:
    node: a list of node coordinates (nn x 3)
    face: a surface mesh triangle list (ne x 3)
-   opt: a list of optional parameters, currently surfnorm supports:
+   opt: a list of optional parameters, currently surfacenorm supports:
         'Normalize': [1|0] if set to 1, the normal vectors will be 
                            unitary (default)
  output:
@@ -641,6 +781,7 @@
       elist: list of triangles that is enclosed between the two
              edge-fronts
       nextfront: a new edge loop list representing the next edge-front
+
 === # Mesh processing and reparing ===
 
 ==== function [node,elem]=meshcheckrepair(node,elem,opt,varargin) ====
@@ -748,6 +889,7 @@
  output:
     newnode: the output node list, in most cases it equals node
     newface: the face list with consistent ordering
+
 === # Mesh resampling and optimization ===
 
 ==== function [node,elem]=meshresample(v,f,keepratio) ====
@@ -768,16 +910,16 @@
  free of self-intersecting element. This function is similar to 
  meshresample, but it can both downsample or upsample a mesh
  input:
-   node: list of nodes on the input suface mesh, 3 columns for x,y,z
-   face: list of trianglular elements on the surface, [n1,n2,n3,region_id]
-   opt: function parameters
-     opt.gridsize:  resolution for the voxelization of the mesh
-     opt.closesize: if there are openings, set the closing diameter
-     opt.elemsize:  the size of the element of the output surface
-     if opt is a scalar, it defines the elemsize and gridsize=opt/4
+	 node: list of nodes on the input suface mesh, 3 columns for x,y,z
+	 face: list of trianglular elements on the surface, [n1,n2,n3,region_id]
+	 opt: function parameters
+	   opt.gridsize:  resolution for the voxelization of the mesh
+	   opt.closesize: if there are openings, set the closing diameter
+	   opt.elemsize:  the size of the element of the output surface
+	   if opt is a scalar, it defines the elemsize and gridsize=opt/4
  output:
-   newno:  list of nodes on the resulting suface mesh, 3 columns for x,y,z
-   newfc:  list of trianglular elements on the surface, [n1,n2,n3,region_id]
+	 newno:  list of nodes on the resulting suface mesh, 3 columns for x,y,z
+	 newfc:  list of trianglular elements on the surface, [n1,n2,n3,region_id]
 
 ==== function p=smoothsurf(node,mask,conn,iter,useralpha,usermethod,userbeta) ====
  p=smoothsurf(node,mask,conn,iter,useralpha,usermethod,userbeta)
@@ -853,16 +995,56 @@
       face: (optional) existing tetrahedral mesh surface triangle list
       opt:  options for mesh refinement:
         if opt is a Nx3 array, opt is treated as a list of new nodes to
-          be inserted into the mesh (must be located on the surface or inside)
+          be inserted into the mesh. the new nodes must be located on the 
+          surface or inside the original mesh. external nodes are
+          discarded, unless the opt.extcmdopt is specified.
+        if opt is a vector with a length that equals to that of node,
+          it will be used to specify the desired edge-length at each node;
+          setting a node value to 0 will by-pass the refinement at this node
+        if opt is a vector with a length that equals to that of elem,
+          it will be used as the desired maximum element volume of each
+          tetrahedron; setting to 0 will by-pass the refinement of that element.
         if opt is a struct, it can have the following fields:
           opt.newnode: same as setting opt to an Nx3 array
           opt.reratio: radius-edge ratio, by default, iso2mesh uses 1.414
           opt.maxvol: maximum element volume
+          opt.sizefield: a vector specifying either the desired edge-length
+              at each node, or the maximum volume constraint within each 
+              tetrahedron, see above for details.
+          opt.extcmdopt: by default, meshrefine can only insert nodes
+              that are inside the original mesh. if one prefers to insert
+              nodes that are outside of the original mesh, one can define
+              this parameter to specify the meshing option (for tetgen)
+              for the extended domain, i.e. the convex hull including 
+              both the original and the external nodes. If not defined, 
+              '-Y' option is used by default (prevent tetgen from
+              inserting new nodes on the surface).
+          opt.extlabel: when external nodes are inserted, the new elements
+              will be assigned with an element label to group them
+              together, by default, this label is 0, unless opt.extlabel
+              is given
+          opt.extcorelabel: when external nodes are inserted, par of the 
+              new elements share the polyhedra between the inserted nodes,
+              these special elements will be marked by opt.extcorelabel, 
+              otherwise the label will be set to -1 
  outputs:
       newnode: node coordinates of the tetrahedral mesh
       newelem: element list of the tetrahedral mesh
       newface: mesh surface element list of the tetrahedral mesh 
              the last column denotes the boundary ID
+ examples:
+     [node,face,elem]=meshasphere([0 0 0],24,1,2);
+     elem(:,5)=1;
+     % inserting nodes that are inside the original mesh
+     innernodes=double([1 1 1; 2 2 2; 3 3 3]);
+     [newno,newel]=meshrefine(node,elem,innernodes);
+     all(ismember(round(innernodes*1e10)*1e-10,round(newno*1e10)*1e-10,'rows'))
+     plotmesh(newno,[],newel,'x>-3')
+     % inserting nodes that are external to the original mesh
+     extnodes=double([-5 -5 25;-5 5 25;5 5 25;5 -5 25]);
+     [newno,newel]=meshrefine(node,elem,struct('newnode',extnodes,'extcmdopt','-Y'));
+     figure;
+     plotmesh(newno,[],newel,'x>-3')
 
 ==== function [newnode,newelem]=mergesurf(node,elem,varargin) ====
  [newnode,newelem]=mergesurf(node1,elem1,node2,elem2,...)
@@ -920,6 +1102,7 @@
    figure;
    [newnode,newface]=surfboolean(node1,face1,'diff',node2,face2);
    plotmesh(newnode,newface,'x>5');
+
 === # File I/O ===
 
 ==== function saveasc(v,f,fname) ====
@@ -1052,8 +1235,8 @@
     fname: name of the medit data file
  output:
     node: node coordinates of the mesh
-    elem: list of elements of the mesh      
-    face: list of surface triangles of the mesh     
+    elem: list of elements of the mesh	    
+    face: list of surface triangles of the mesh	    
 
 ==== function [node,elem]=readoff(fname) ====
  [node,elem]=readoff(fname)
@@ -1062,13 +1245,13 @@
     fname: name of the OFF data file
  output:
     node: node coordinates of the mesh
-    elem: list of elements of the mesh      
+    elem: list of elements of the mesh	    
 
 ==== function [node,elem]=readsmf(fname) ====
  [node,elem]=readsmf(fname)
  read simple model format (SMF)
  input: 
-    fname: name of the  SMF data file
+    fname: name of the	SMF data file
  output:
     node: node coordinates of the mesh
     elem: list of elements of the mesh
@@ -1134,13 +1317,15 @@
  json=savejson(rootname,obj,'param1',value1,'param2',value2,...)
  convert a MATLAB object (cell, struct or array) into a JSON (JavaScript
  Object Notation) string
-            created on 2011/09/09
- $Id$
+ created on 2011/09/09
+ $Id: savejson.m 500 2015-09-19 17:07:03Z fangq $
  input:
-      rootname: name of the root-object, if set to '', will use variable name
-      obj: a MATLAB object (array, cell, cell array, struct, struct array)
-      filename: a string for the file name to save the output JSON data
-      opt: a struct for additional options, use [] if all use default
+      rootname: the name of the root-object, when set to '', the root name
+        is ignored, however, when opt.ForceRootName is set to 1 (see below),
+        the MATLAB variable name will be used as the root name.
+      obj: a MATLAB object (array, cell, cell array, struct, struct array).
+      filename: a string for the file name to save the output JSON data.
+      opt: a struct for additional options, ignore to use default values.
         opt can have the following fields (first in [.|.] is the default)
         opt.FileName [''|string]: a file name to save the output JSON data
         opt.FloatFormat ['%.10g'|string]: format to show each numeric element
@@ -1177,19 +1362,25 @@
         opt.NaN ['"_NaN_"'|string]: a customized regular expression pattern
                          to represent NaN
         opt.JSONP [''|string]: to generate a JSONP output (JSON with padding),
-                         for example, if opt.JSON='foo', the JSON data is
+                         for example, if opt.JSONP='foo', the JSON data is
                          wrapped inside a function call as 'foo(...);'
         opt.UnpackHex [1|0]: conver the 0x[hex code] output by loadjson 
                          back to the string form
+        opt.SaveBinary [0|1]: 1 - save the JSON file in binary mode; 0 - text mode.
+        opt.Compact [0|1]: 1- out compact JSON format (remove all newlines and tabs)
         opt can be replaced by a list of ('param',value) pairs. The param 
-        string is equivallent to a field in opt.
+        string is equivallent to a field in opt and is case sensitive.
  output:
       json: a string in the JSON format (see http://json.org)
  examples:
-      a=struct('node',[1  9  10; 2 1 1.2], 'elem',[9 1;1 2;2 3],...
-           'face',[9 01 2; 1 2 3; NaN,Inf,-Inf], 'author','FangQ');
-      savejson('mesh',a)
-      savejson('',a,'ArrayIndent',0,'FloatFormat','\t%.5g')
+      jsonmesh=struct('MeshNode',[0 0 0;1 0 0;0 1 0;1 1 0;0 0 1;1 0 1;0 1 1;1 1 1],... 
+               'MeshTetra',[1 2 4 8;1 3 4 8;1 2 6 8;1 5 6 8;1 5 7 8;1 3 7 8],...
+               'MeshTri',[1 2 4;1 2 6;1 3 4;1 3 7;1 5 6;1 5 7;...
+                          2 8 4;2 8 6;3 8 4;3 8 7;5 8 6;5 8 7],...
+               'MeshCreator','FangQ','MeshTitle','T6 Cube',...
+               'SpecialData',[nan, inf, -inf]);
+      savejson('jmesh',jsonmesh)
+      savejson('',jsonmesh,'ArrayIndent',0,'FloatFormat','\t%.5g')
  license:
      BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details
 
@@ -1198,20 +1389,147 @@
     or
  data=loadjson(fname,'param1',value1,'param2',value2,...)
  parse a JSON (JavaScript Object Notation) file or string
+ created on 2011/09/09, including previous works from 
          Nedialko Krouchev: http://www.mathworks.com/matlabcentral/fileexchange/25713
-         Fran#ﬂois Glineur: http://www.mathworks.com/matlabcentral/fileexchange/23393
+            created on 2009/11/02
+         Fran√ßois Glineur: http://www.mathworks.com/matlabcentral/fileexchange/23393
+            created on  2009/03/22
          Joel Feenstra:
          http://www.mathworks.com/matlabcentral/fileexchange/20565
- $Id$
+            created on 2008/07/03
+ $Id: loadjson.m 500 2015-09-19 17:07:03Z fangq $
  input:
       fname: input file name, if fname contains "{}" or "[]", fname
              will be interpreted as a JSON string
       opt: a struct to store parsing options, opt can be replaced by 
-           a list of ('param',value) pairs. The param string is equivallent
-           to a field in opt.
+           a list of ('param',value) pairs - the param string is equivallent
+           to a field in opt. opt can have the following 
+           fields (first in [.|.] is the default)
+           opt.SimplifyCell [0|1]: if set to 1, loadjson will call cell2mat
+                         for each element of the JSON data, and group 
+                         arrays based on the cell2mat rules.
+           opt.FastArrayParser [1|0 or integer]: if set to 1, use a
+                         speed-optimized array parser when loading an 
+                         array object. The fast array parser may 
+                         collapse block arrays into a single large
+                         array similar to rules defined in cell2mat; 0 to 
+                         use a legacy parser; if set to a larger-than-1
+                         value, this option will specify the minimum
+                         dimension to enable the fast array parser. For
+                         example, if the input is a 3D array, setting
+                         FastArrayParser to 1 will return a 3D array;
+                         setting to 2 will return a cell array of 2D
+                         arrays; setting to 3 will return to a 2D cell
+                         array of 1D vectors; setting to 4 will return a
+                         3D cell array.
+           opt.ShowProgress [0|1]: if set to 1, loadjson displays a progress bar.
  output:
       dat: a cell array, where {...} blocks are converted into cell arrays,
            and [...] are converted to arrays
+ examples:
+      dat=loadjson('{"obj":{"string":"value","array":[1,2,3]}}')
+      dat=loadjson(['examples' filesep 'example1.json'])
+      dat=loadjson(['examples' filesep 'example1.json'],'SimplifyCell',1)
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+
+==== function json=saveubjson(rootname,obj,varargin) ====
+ json=saveubjson(rootname,obj,filename)
+    or
+ json=saveubjson(rootname,obj,opt)
+ json=saveubjson(rootname,obj,'param1',value1,'param2',value2,...)
+ convert a MATLAB object (cell, struct or array) into a Universal 
+ Binary JSON (UBJSON) binary string
+ created on 2013/08/17
+ $Id: saveubjson.m 465 2015-01-25 00:46:07Z fangq $
+ input:
+      rootname: the name of the root-object, when set to '', the root name
+        is ignored, however, when opt.ForceRootName is set to 1 (see below),
+        the MATLAB variable name will be used as the root name.
+      obj: a MATLAB object (array, cell, cell array, struct, struct array)
+      filename: a string for the file name to save the output UBJSON data
+      opt: a struct for additional options, ignore to use default values.
+        opt can have the following fields (first in [.|.] is the default)
+        opt.FileName [''|string]: a file name to save the output JSON data
+        opt.ArrayToStruct[0|1]: when set to 0, saveubjson outputs 1D/2D
+                         array in JSON array format; if sets to 1, an
+                         array will be shown as a struct with fields
+                         "_ArrayType_", "_ArraySize_" and "_ArrayData_"; for
+                         sparse arrays, the non-zero elements will be
+                         saved to _ArrayData_ field in triplet-format i.e.
+                         (ix,iy,val) and "_ArrayIsSparse_" will be added
+                         with a value of 1; for a complex array, the 
+                         _ArrayData_ array will include two columns 
+                         (4 for sparse) to record the real and imaginary 
+                         parts, and also "_ArrayIsComplex_":1 is added. 
+        opt.ParseLogical [1|0]: if this is set to 1, logical array elem
+                         will use true/false rather than 1/0.
+        opt.NoRowBracket [1|0]: if this is set to 1, arrays with a single
+                         numerical element will be shown without a square
+                         bracket, unless it is the root object; if 0, square
+                         brackets are forced for any numerical arrays.
+        opt.ForceRootName [0|1]: when set to 1 and rootname is empty, saveubjson
+                         will use the name of the passed obj variable as the 
+                         root object name; if obj is an expression and 
+                         does not have a name, 'root' will be used; if this 
+                         is set to 0 and rootname is empty, the root level 
+                         will be merged down to the lower level.
+        opt.JSONP [''|string]: to generate a JSONP output (JSON with padding),
+                         for example, if opt.JSON='foo', the JSON data is
+                         wrapped inside a function call as 'foo(...);'
+        opt.UnpackHex [1|0]: conver the 0x[hex code] output by loadjson 
+                         back to the string form
+        opt can be replaced by a list of ('param',value) pairs. The param 
+        string is equivallent to a field in opt and is case sensitive.
+ output:
+      json: a binary string in the UBJSON format (see http://ubjson.org)
+ examples:
+      jsonmesh=struct('MeshNode',[0 0 0;1 0 0;0 1 0;1 1 0;0 0 1;1 0 1;0 1 1;1 1 1],... 
+               'MeshTetra',[1 2 4 8;1 3 4 8;1 2 6 8;1 5 6 8;1 5 7 8;1 3 7 8],...
+               'MeshTri',[1 2 4;1 2 6;1 3 4;1 3 7;1 5 6;1 5 7;...
+                          2 8 4;2 8 6;3 8 4;3 8 7;5 8 6;5 8 7],...
+               'MeshCreator','FangQ','MeshTitle','T6 Cube',...
+               'SpecialData',[nan, inf, -inf]);
+      saveubjson('jsonmesh',jsonmesh)
+      saveubjson('jsonmesh',jsonmesh,'meshdata.ubj')
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details
+
+==== function data = loadubjson(fname,varargin) ====
+ data=loadubjson(fname,opt)
+    or
+ data=loadubjson(fname,'param1',value1,'param2',value2,...)
+ parse a JSON (JavaScript Object Notation) file or string
+ created on 2013/08/01
+ $Id: loadubjson.m 487 2015-05-06 18:19:07Z fangq $
+ input:
+      fname: input file name, if fname contains "{}" or "[]", fname
+             will be interpreted as a UBJSON string
+      opt: a struct to store parsing options, opt can be replaced by 
+           a list of ('param',value) pairs - the param string is equivallent
+           to a field in opt. opt can have the following 
+           fields (first in [.|.] is the default)
+           opt.SimplifyCell [0|1]: if set to 1, loadubjson will call cell2mat
+                         for each element of the JSON data, and group 
+                         arrays based on the cell2mat rules.
+           opt.IntEndian [B|L]: specify the endianness of the integer fields
+                         in the UBJSON input data. B - Big-Endian format for 
+                         integers (as required in the UBJSON specification); 
+                         L - input integer fields are in Little-Endian order.
+           opt.NameIsString [0|1]: for UBJSON Specification Draft 8 or 
+                         earlier versions (JSONLab 1.0 final or earlier), 
+                         the "name" tag is treated as a string. To load 
+                         these UBJSON data, you need to manually set this 
+                         flag to 1.
+ output:
+      dat: a cell array, where {...} blocks are converted into cell arrays,
+           and [...] are converted to arrays
+ examples:
+      obj=struct('string','value','array',[1 2 3]);
+      ubjdata=saveubjson('obj',obj);
+      dat=loadubjson(ubjdata)
+      dat=loadubjson(['examples' filesep 'example1.ubj'])
+      dat=loadubjson(['examples' filesep 'example1.ubj'],'SimplifyCell',1)
  license:
      BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
 
@@ -1232,24 +1550,15 @@
            'MeshGroup': a value to group this mesh with other mesh data
            'Comment': a string as the additional note for the mesh data
 
-==== function savemphtxt(node, face, elem, filename)
- ====
+==== function savemphtxt(node, face, elem, filename) ====
  savemphtxt(node, face, elem, filename)
-
  save tetrahedron mesh to comsol file (.mphtxt)
-
  author: Donghyeon Kim (danielkim<at> gist.ac.kr)
-
  input:
-
       node: input, node list, dimension (nn,3)
-
       face: input, surface face element list with label, dimension (be,4)
-
       elem: input, tetrahedron element list with label, dimension (ne,5)
-
       filename: input, output file name
-
 
 ==== function savetetgenele(elem,fname) ====
  savetetgenele(elem,fname)
@@ -1280,6 +1589,7 @@
       elem: input, tetrahedral element list, dimension (ne,4)
       fname: output file name
       heading: optional, a descriptive string for the mesh
+
 === # Volumetric image pre-processing ===
 
 ==== function islands=bwislands(img) ====
@@ -1287,11 +1597,11 @@
  return the indices of non-zero elements in a 2D or 3D image
  grouped by connected regions in a cell array
  input:
-   img: a 2D or 3D array
+	 img: a 2D or 3D array
  output:
-   islands: a cell array, each cell records the indices 
-      of the non-zero elements in img for a connected 
-      region (or an island)
+	 islands: a cell array, each cell records the indices 
+		  of the non-zero elements in img for a connected 
+		  region (or an island)
 
 ==== function resimg=fillholes3d(img,maxgap) ====
  resimg=fillholes3d(img,maxgap)
@@ -1307,10 +1617,10 @@
  cleanimg=deislands2d(img,sizelim)
  remove isolated islands on a 2D image below speicified size limit
  input:
-  img: a 2D binary image
-  sizelim: a integer as the maximum pixel size of a isolated region
+ 	img: a 2D binary image
+ 	sizelim: a integer as the maximum pixel size of a isolated region
  output:
-  cleanimg: a binary image after removing islands below sizelim
+ 	cleanimg: a binary image after removing islands below sizelim
 
 ==== function cleanimg=deislands3d(img,sizelim) ====
  cleanimg=deislands3d(img,sizelim)
@@ -1367,17 +1677,20 @@
  output:
      vol: the volume image after the thickening
 
-==== function vol=thinbinvol(vol,layer) ====
- vol=thinbinvol(vol,layer)
+==== function vol=thinbinvol(vol,layer,nobd) ====
+ vol=thinbinvol(vol,layer,nobd)
  thinning a binary volume by a given pixel width
  this is similar to bwmorph(vol,'thin',n) except 
- this does it in 3d and only does thinning for 
+ this does it in 3d and only run thinning for 
  non-zero elements (and hopefully faster)
  input:
      vol: a volumetric binary image
      layer: number of iterations for the thickenining
+     nobd: (optional) if set to 1, boundaries will not 
+            erode. if not given, nobd=0.
  output:
-     vol: the volume image after the thickening
+     vol: the volume image after the thinning operations
+
 === # Mesh plotting ===
 
 ==== function hm=plotmesh(node,varargin) ====
@@ -1425,7 +1738,7 @@
 
 ==== function hm=plotsurf(node,face,varargin) ====
  hm=plotsurf(node,face,opt)
- plot 3D surface meshes
+ plot 3D surface meshes (2d manifold) or polylines (1d manifold)
  input: 
       node: node coordinates, dimension (nn,3); if node has a 
             4th column, it will be used to set the color at each node.
@@ -1442,6 +1755,7 @@
  example:
    h=plotsurf(node,face);
    h=plotsurf(node,face,'facecolor','r');
+   h=plotsurf(node,edges,'linestyle','-','linewidth',2,'color','r');
 
 ==== function hm=plottetra(node,elem,varargin) ====
  hm=plottetra(node,elem,opt)
@@ -1458,6 +1772,26 @@
  example:
    h=plottetra(node,elem);
    h=plottetra(node,elem,'facealpha',0.5);
+
+==== function hh=plotedges(node,edges,varargin) ====
+ hm=plotedges(node,edges,opt)
+   or
+ hm=plotedges(node,loops,opt)
+ plot a 3D polyline or close loop (1d manifold)
+ input: 
+      node: node coordinates, dimension (nn,3); if node has a 
+            4th column, it will be used to set the color at each node.
+      edges:edge list: a 2-column index array, with each row being
+            an edge connecting the two indexed node
+      loops:loops is an NaN separated integer array, with each segment
+            denoting a 3D polyline or loop represented by a list of node
+            indices
+      opt:  additional options for the plotting, see plotmesh
+ output:
+      hm: handle or handles (vector) to the plotted surfaces
+ example:
+   h=plotedges(node,[1 2 3 4 5 nan 6 7 8 9]);
+   h=plotedges(node,edges,'marker','o','linewidth',2,'color','r');
 
 ==== function [cutpos,cutvalue,facedata,elemid]=qmeshcut(elem,node,value,cutat,varargin) ====
  [cutpos,cutvalue,facedata,elemid]=qmeshcut(elem,node,value,cutat)
@@ -1498,6 +1832,7 @@
      patch('Vertices',cutpos,'Faces',facedata,'FaceVertexCData',cutvalue,'FaceColor','interp');
   % if value has a length of elem:
      patch('Vertices',cutpos,'Faces',facedata,'CData',cutvalue,'FaceColor','flat');
+
 === # Miscellaneous functions ===
 
 ==== function valnew=surfdiffuse(node,tri,val,ddt,iter,type1,opt) ====
@@ -1681,12 +2016,28 @@
       opt: a struct where opt.param1=value1, opt.param2=value2 ...
  license:
      BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+ -- this function is part of JSONlab toolbox (http://iso2mesh.sf.net/cgi-bin/index.cgi?jsonlab)
+len=length(varargin);
+opt=struct;
+if(len==0) return; end
+i=1;
+while(i<=len)
+    if(isstruct(varargin{i}))
+        opt=mergestruct(opt,varargin{i});
+    elseif(ischar(varargin{i}) && i<len)
+        opt=setfield(opt,lower(varargin{i}),varargin{i+1});
+        i=i+1;
+    else
+        error('input must be in the form of ...,''name'',value,... pairs or structs');
+    end
+    i=i+1;
+end
 
 ==== function val=jsonopt(key,default,varargin) ====
  val=jsonopt(key,default,optstruct)
  setting options based on a struct. The struct can be produced
  by varargin2struct from a list of 'param','value' pairs
- $Id$
+ $Id: loadjson.m 371 2012-06-20 12:43:06Z fangq $
  input:
       key: a string with which one look up a value from a struct
       default: if the key does not exist, return default
@@ -1695,6 +2046,17 @@
       val: if key exists, val=optstruct.key; otherwise val=default
  license:
      BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details
+ -- this function is part of JSONlab toolbox (http://iso2mesh.sf.net/cgi-bin/index.cgi?jsonlab)
+val=default;
+if(nargin<=2) return; end
+opt=varargin{1};
+if(isstruct(opt))
+    if(isfield(opt,key))
+       val=getfield(opt,key);
+    elseif(isfield(opt,lower(key)))
+       val=getfield(opt,lower(key));
+    end
+end
 
 ==== function s=mergestruct(s1,s2) ====
  s=mergestruct(s1,s2)
@@ -1703,6 +2065,53 @@
       s1,s2: a struct object, s1 and s2 can not be arrays
  output:
       s: the merged struct object. fields in s1 and s2 will be combined in s.
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+ -- this function is part of jsonlab toolbox (http://iso2mesh.sf.net/cgi-bin/index.cgi?jsonlab)
+if(~isstruct(s1) || ~isstruct(s2))
+    error('input parameters contain non-struct');
+end
+if(length(s1)>1 || length(s2)>1)
+    error('can not merge struct arrays');
+end
+fn=fieldnames(s2);
+s=s1;
+for i=1:length(fn)              
+    s=setfield(s,fn{i},getfield(s2,fn{i}));
+end
+
+==== function node=orthdisk(c0,c1,r,ndiv) ====
+ node=orthdisk(c0,c1,r,ndiv)
+ Defining a 3D disk that is orthogonal to the vector c1-c0 
+ input:
+     c0: a 1x3 vector for the origin
+     c1: a 1x3 vector to define a direction vector c1-c0
+     r: the radius of the disk that is orthogonal to c1-c0, passing through c0
+     ndiv: division count to approximate a circle by a polygon, if ignored, ndiv=20
+ output:
+     node: the 3D vertices of the disk
+
+==== function newdata=struct2jdata(data,varargin) ====
+ newdata=struct2jdata(data,opt,...)
+ convert a JData object (in the form of a struct array) into an array
+ input:
+      data: a struct array. If data contains JData keywords in the first
+            level children, these fields are parsed and regrouped into a
+            data object (arrays, trees, graphs etc) based on JData 
+            specification. The JData keywords are
+               "_ArrayType_", "_ArraySize_", "_ArrayData_"
+               "_ArrayIsSparse_", "_ArrayIsComplex_"
+      opt: (optional) a list of 'Param',value pairs for additional options 
+           The supported options include
+               'Recursive', if set to 1, will apply the conversion to 
+                            every child; 0 to disable
+ output:
+      newdata: the covnerted data if the input data does contain a JData 
+               structure; otherwise, the same as the input.
+ examples:
+      obj=struct('_ArrayType_','double','_ArraySize_',[2 3],
+                 '_ArrayIsSparse_',1 ,'_ArrayData_',null);
+      ubjdata=struct2jdata(obj);
  license:
      BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
 

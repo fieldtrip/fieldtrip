@@ -1,21 +1,17 @@
 function test_bug2372
 
-global ft_default;
-ft_default.feedback = 'no';
+% WALLTIME 00:10:00
+% MEM 2gb
 
-if ispc
-  datadir = 'H:';
-else
-  datadir = '/home';
-end
+% TEST ft_timelockgrandaverage ft_timelockanalysis
 
-load(fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'tutorial', 'eventrelatedaveraging', 'dataFC_LP.mat'));
-load(fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'tutorial', 'eventrelatedaveraging', 'dataFIC_LP.mat'));
-load(fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'tutorial', 'eventrelatedaveraging', 'dataIC_LP.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFC_LP.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFIC_LP.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataIC_LP.mat'));
 
 %% creating timelock structures with avg and trial fields
-cfg=[];
-cfg.keeptrials ='yes';
+cfg = [];
+cfg.keeptrials = 'yes';
 tlk1 = ft_timelockanalysis(cfg,dataFC_LP);
 tlk2 = ft_timelockanalysis(cfg,dataFIC_LP);
 tlk3 = ft_timelockanalysis(cfg,dataIC_LP);

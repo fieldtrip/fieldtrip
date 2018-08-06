@@ -14,7 +14,7 @@ function [source] = ft_source2sparse(source)
 
 % Copyright (C) 2004, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -35,12 +35,14 @@ function [source] = ft_source2sparse(source)
 ft_defaults
 
 if ~isfield(source, 'inside')
-  warning('no gridpoints defined inside the brain');
+  ft_warning('no gridpoints defined inside the brain');
   source.inside = [];
+elseif all(islogical(source.inside))
+  source = fixinside(source, 'index'); % in contrast to the new convention, this function still relies on an indexed inside
 end
 
 if ~isfield(source, 'outside')
-  warning('no gridpoints defined outside the brain');
+  ft_warning('no gridpoints defined outside the brain');
   source.outside = [];
 end
 
@@ -133,7 +135,7 @@ elseif strcmp(stype, 'new')
       elseif tmpsel==2,
         source.(fnames{k}) = source.(fnames{k})(:,inside,:,:,:);
       else
-        warning('not subselecting voxels, because location of pos-dimension is unexpected');
+        ft_warning('not subselecting voxels, because location of pos-dimension is unexpected');
       end
     end
   end 
@@ -153,7 +155,7 @@ try
   % get the full name of the function
   cfg.version.name = mfilename('fullpath');
 catch
-  % required for compatibility with Matlab versions prior to release 13 (6.5)
+  % required for compatibility with MATLAB versions prior to release 13 (6.5)
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end

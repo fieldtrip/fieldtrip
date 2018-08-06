@@ -1,4 +1,4 @@
-function [pnt, tri, srf] = read_bv_srf(filename);
+function [pnt, tri, srf] = read_bv_srf(filename)
 
 % READ_BV_SRF reads a triangulated surface from a BrainVoyager *.srf file
 %
@@ -8,7 +8,7 @@ function [pnt, tri, srf] = read_bv_srf(filename);
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

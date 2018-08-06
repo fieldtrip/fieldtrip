@@ -1,11 +1,11 @@
-function [varargout] = funname(varargin)
+function [varargout] = splint_gh(varargin)
 
 % SPLINT_GH implements equations (3) and (5b) of Perrin 1989
 % for simultaneous computation of multiple values
 
 % Copyright (C) 2004-2009, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

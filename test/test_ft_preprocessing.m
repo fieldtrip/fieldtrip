@@ -3,7 +3,6 @@ function test_ft_preprocessing(datainfo, writeflag, version)
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_preprocessing
 % TEST ft_preprocessing ref_datasets
 
 % writeflag determines whether the output should be saved to disk
@@ -25,15 +24,20 @@ for k = 1:numel(datainfo)
   fname = fullfile(datainfo(k).origdir,version,'raw',datainfo(k).type,['preproc_',datainfo(k).datatype]);
   load(fname);
   % these are per construction different if writeflag = 0;
-  datanew = rmfield(datanew, 'cfg');
-  data    = rmfield(data,    'cfg');
+  try, datanew = rmfield(datanew, 'cfg'); end
+  try, data    = rmfield(data,    'cfg'); end
   % these can have subtle differences eg. in hdr.orig.FID
   data.hdr     = [];
   datanew2     = datanew; 
   datanew2.hdr = [];
   
   % do the comparison with the header removed, the output argument still contains the header
-  assert(isequaln(data, datanew2));  
+  %assert(isequaln(data, datanew2));  
+  [ok,msg] = isalmostequal(data, datanew2,'reltol',eps*1e6);
+  disp(['now you are in k=' num2str(k)]);
+  if ~ok
+    error('stored and computed data not identical: %s', msg{:});
+  end
 end
 
 
@@ -84,11 +88,20 @@ cfg.trl   = [begsample(:) endsample(:) offset(:)];
 sel       = cfg.trl(:,2)<=hdr.nSamples*hdr.nTrials;
 cfg.trl   = cfg.trl(sel,:);
 
+% JM 20170220: the neuromag306 raw.fif happens to have a bunch of zeros at
+% the beginning of the file (up until ~sample 8300): this seems te be truly
+% in the data, but creates problems if the generated data-structure is used
+% downstream (e.g. in ft_sourceanalysis, with a Cf of all(zeros))), so for
+% this type of data we shift the trl matrix a bit
+if isfield(hdr, 'grad') && ft_senstype(hdr.grad, 'neuromag306')
+  cfg.trl(:,1:2) = cfg.trl(:,1:2)+10000;
+end
+
 cfg.continuous = 'yes';
 data           = ft_preprocessing(cfg);
 
 if ~strcmp(version, 'latest') && str2num(version)<20100000
-  % -- HISTORICAL --- older fieldtrip versions don't support outputfile
+  % -- HISTORICAL --- older FieldTrip versions don't support outputfile
   save(cfg.outputfile, 'data');
 end
 

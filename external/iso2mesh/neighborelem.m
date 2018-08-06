@@ -4,7 +4,7 @@ function [conn,connnum,count]=neighborelem(elem,nn);
 %
 % create node neighbor list from a mesh
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2007/11/21
 %
 % input:

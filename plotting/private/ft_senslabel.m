@@ -31,7 +31,9 @@ function label = ft_senslabel(type, varargin)
 %  'egi128'
 %  'egi256'
 %  'neuromag122'
+%  'neuromag122_planar'
 %  'neuromag306'
+%  'neuromag306_planar'
 %  'itab28'
 %  'itab153'
 %  'itab153_planar'
@@ -53,7 +55,7 @@ function label = ft_senslabel(type, varargin)
 % Copyright (C) 2007-2013, Robert Oostenveld
 % Copyright (C) 2008, Vladimir Litvak
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %  FieldTrip is free software: you can redistribute it and/or modify
@@ -72,7 +74,7 @@ function label = ft_senslabel(type, varargin)
 % $Id$
 
 % these are for speeding up subsequent calls with the same input arguments
-persistent eeg electrode ant128 btiref bti148 bti148_planar bti148_planar_combined bti248 bti248_planar bti248_planar_combined ctfref ctfheadloc ctf64 ctf151 ctf151_planar ctf151_planar_combined ctf275 ctf275_planar ctf275_planar_combined neuromag122 neuromag122_combined neuromag306 neuromag306_combined eeg1020 eeg1010 eeg1005 ext1020 biosemi64 biosemi128 biosemi256 egi32 egi64 egi128 egi256 itab28 itab153 itab153_planar itab153_planar_combined yokogawa9 yokogawa64 yokogawa64_planar yokogawa64_planar_combined yokogawa160 yokogawa160_planar yokogawa160_planar_combined yokogawa440 yokogawa440_planar yokogawa440_planar_combined
+persistent eeg electrode ant128 btiref bti148 bti148_planar bti148_planar_combined bti248 bti248_planar bti248_planar_combined ctfref ctfheadloc ctf64 ctf151 ctf151_planar ctf151_planar_combined ctf275 ctf275_planar ctf275_planar_combined neuromag122 neuromag122_combined neuromag306 neuromag306_mag neuromag306_planar neuromag306_combined eeg1020 eeg1010 eeg1005 ext1020 biosemi64 biosemi128 biosemi256 egi32 egi64 egi128 egi256 itab28 itab153 itab153_planar itab153_planar_combined yokogawa9 yokogawa64 yokogawa64_planar yokogawa64_planar_combined yokogawa160 yokogawa160_planar yokogawa160_planar_combined yokogawa440 yokogawa440_planar yokogawa440_planar_combined
 % these are for backward compatibility
 persistent neuromag122alt neuromag122alt_combined neuromag306alt neuromag306alt_combined
 
@@ -85,7 +87,7 @@ end
 output  = ft_getopt(varargin, 'output', 'normal'); % 'normal' or 'planarcombined'
 
 if ~exist(type, 'var')
-  error('the requested sensor type "%s" is not supported', type);
+  ft_error('the requested sensor type "%s" is not supported', type);
   
 elseif isempty(eval(type))
   % assign the list of channels only once, keep it as persistent variable
@@ -1623,9 +1625,10 @@ elseif isempty(eval(type))
         'MEG2632'  'MEG2633'  'MEG2631'  'MEG2632+2633'
         'MEG2642'  'MEG2643'  'MEG2641'  'MEG2642+2643'
         };
-      neuromag306_combined = label(:,4);
-      neuromag306alt_combined = label(:,4);
-      label = label(:,1:3);
+      neuromag306_mag      = label(:,1);
+      neuromag306_planar   = label(:,[1 2]);
+      neuromag306_combined = label(:,[3 4]); % magnetometers and combined channels
+      label                = label(:,1:3);
       
     case 'eeg1020'
       label = {
@@ -2901,7 +2904,8 @@ elseif isempty(eval(type))
       for i = 1:33
         label{i} = sprintf('E%d', i);
       end
-      label{end+1} = 'Cz';
+      % there might also be a reference channel, but its name is inconsistent
+      % it might be Cz, REF, VREF or 'vertex reference'
       
     case 'egi64'
       % this should be  uppercase for consistency with ft_read_header
@@ -2909,7 +2913,8 @@ elseif isempty(eval(type))
       for i = 1:65
         label{i} = sprintf('E%d', i);
       end
-      label{end+1} = 'Cz';
+      % there might also be a reference channel, but its name is inconsistent
+      % it might be Cz, REF, VREF or 'vertex reference'
       
     case 'egi128'
       % this should be  uppercase for consistency with ft_read_header
@@ -2917,7 +2922,8 @@ elseif isempty(eval(type))
       for i = 1:129
         label{i} = sprintf('E%d', i);
       end
-      label{end+1} = 'Cz';
+      % there might also be a reference channel, but its name is inconsistent
+      % it might be Cz, REF, VREF or 'vertex reference'
       
     case 'egi256'
       % this should be  uppercase for consistency with ft_read_header
@@ -2925,7 +2931,8 @@ elseif isempty(eval(type))
       for i = 1:257
         label{i} = sprintf('E%d', i);
       end
-      label{end+1} = 'Cz';
+      % there might also be a reference channel, but its name is inconsistent
+      % it might be Cz, REF, VREF or 'vertex reference'
       
     case 'itab28'
       label = {
@@ -3651,14 +3658,22 @@ elseif isempty(eval(type))
         };
       yokogawa440_planar_combined = label(:,3);
       label = label(:,1:2);
-      
+       
     case {'eeg' 'electrode'}
       % there is no default set of electrode labels for all possible EEG systems
       % but nevertheless the requested input type should not result in an error
       label = {};
       
+    case {'neuromag122_combined' 'neuromag122alt_combined'}
+      tmp   = ft_senslabel('neuromag122'); % this is required to generate the combined version
+      label = ft_senslabel(type);
+      
+    case {'neuromag306_combined' 'neuromag306alt_combined'}
+      tmp   = ft_senslabel('neuromag306'); % this is required to generate the combined version
+      label = ft_senslabel(type);
+      
     otherwise
-      error('the requested sensor type "%s" is not supported', type);
+      ft_error('the requested sensor type "%s" is not supported', type);
       
   end % switch
   
@@ -3685,6 +3700,6 @@ switch output
     label     = [planar(:,1:2) combined]; % magnetometers are in the 3rd column for neuromag306
     
   otherwise
-    error('unsupported output "%s"', output);
+    ft_error('unsupported output "%s"', output);
     
 end

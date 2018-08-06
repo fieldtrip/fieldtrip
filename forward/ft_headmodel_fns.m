@@ -1,10 +1,10 @@
-function vol = ft_headmodel_fns(seg, varargin)
+function headmodel = ft_headmodel_fns(seg, varargin)
 
 % FT_HEADMODEL_FNS creates the volume conduction structure to be used
 % in the FNS forward solver.
 %
 % Use as
-%   vol = ft_headmodel_fns(seg, ...)
+%   headmodel = ft_headmodel_fns(seg, ...)
 %
 % Optional input arguments should be specified in key-value pairs and
 % can include
@@ -14,7 +14,6 @@ function vol = ft_headmodel_fns(seg, varargin)
 %   tissue           = see fns_contable_write
 %   tissueval        = match tissues of segmentation input
 %   transform        = 4x4 transformation matrix (default eye(4))
-%   units            = string (default 'cm')
 %   sens             = sensor information (for which ft_datatype(sens,'sens')==1)
 %   deepelec         = used in the case of deep voxel solution
 %   tolerance        = scalar (default 1e-8)
@@ -31,7 +30,7 @@ function vol = ft_headmodel_fns(seg, varargin)
 
 % Copyright (C) 2011, Cristiano Micheli and Hung Dang
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -56,27 +55,23 @@ tissue       = ft_getopt(varargin, 'tissue', []);
 tissueval    = ft_getopt(varargin, 'tissueval', []);
 tissuecond   = ft_getopt(varargin, 'tissuecond', []);
 transform    = ft_getopt(varargin, 'transform', eye(4));
+unit         = ft_getopt(varargin, 'unit', 'mm');
 sens         = ft_getopt(varargin, 'sens', []);
 deepelec     = ft_getopt(varargin, 'deepelec', []); % used in the case of deep voxel solution
 tolerance    = ft_getopt(varargin, 'tolerance', 1e-8);
 
 if isempty(sens)
-  error('A set of sensors is required')
+  ft_error('A set of sensors is required')
 end
 
 if ispc
-  error('FNS only works on Linux and OSX')
-end
-
-if any(strcmp(varargin(1:2:end), 'unit')) || any(strcmp(varargin(1:2:end), 'units'))
-  % the geometrical units should be specified in the input geometry
-  error('the ''unit'' option is not supported any more');
+  ft_error('FNS only works on Linux and OS X')
 end
 
 % check the consistency between tissue values and the segmentation
 vecval = ismember(tissueval,unique(seg(:)));
 if any(vecval)==0
-  warning('Some of the tissue values are not in the segmentation')
+  ft_warning('Some of the tissue values are not in the segmentation')
 end
 
 % create the files to be written
@@ -151,17 +146,17 @@ catch ME
 end
 
 % start with an empty volume conductor
-vol = [];
-vol.tissue     = tissue;
-vol.tissueval  = tissueval;
-vol.transform  = transform;
-vol.segdim     = size(seg);
-vol.units      = units;
-vol.type       = 'fns';
-vol.transfer   = transfer;
+headmodel = [];
+headmodel.tissue     = tissue;
+headmodel.tissueval  = tissueval;
+headmodel.transform  = transform;
+headmodel.unit       = unit;
+headmodel.segdim     = size(seg);
+headmodel.type       = 'fns';
+headmodel.transfer   = transfer;
 
 if ~isempty(deepelec)
-  vol.deepelec  = deepelec;
+  headmodel.deepelec  = deepelec;
 end
 
 function cleaner(segfile,confile,elecfile,exefile,datafile)

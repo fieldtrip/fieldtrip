@@ -3,16 +3,15 @@ function inspect_qsubcellfun4
 % TEST inspect_qsubcellfun4
 
 % this test is designed for executing functions that are private to the function in which qsubcellfun is called
-% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1891
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1891
 
-p = which('ft_defaults');
-if ~isempty(p)
-  % clean up the path, only qsub and somepath
-  restoredefaultpath
-  addpath(fullfile(fileparts(p), 'qsub'));
-end
+[ftver, ftpath] = ft_version;
 
-addpath /home/common/matlab/fieldtrip/data/test/bug1891/somepath
+% clean up the path, only qsub and somepath
+restoredefaultpath
+addpath(fullfile(ftpath, 'qsub'));
+
+addpath(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1891/somepath'));
 
 a1a = mainfunction({3, 4, 5}, 'qsubcellfun');
 a1b = mainfunction({3, 4, 5}, 'qsubcellfun_nostack');

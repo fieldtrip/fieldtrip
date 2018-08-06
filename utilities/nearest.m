@@ -22,10 +22,12 @@ function [indx] = nearest(array, val, insideflag, toleranceflag)
 % return an error, but nearest(1:10, 0.99, true, true) will return 1. The
 % tolerance that is allowed is half the distance between the subsequent
 % values in the array.
+%
+% See also FIND
 
 % Copyright (C) 2002-2012, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -51,19 +53,18 @@ assert(all(~isnan(val)), 'incorrect value (NaN)');
 
 if numel(val)==2
   % interpret this as a range specification like [minval maxval]
-  % see also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1431
-  intervaltol=eps;
+  % see also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1431
+  intervaltol = eps;
   sel = find(array>=val(1) & array<=val(2));
   if isempty(sel)
-    error('The limits you selected are outside the range available in the data');
+    ft_error('The limits you selected are outside the range available in the data');
   end
-  indx(1) = sel(1);
-  indx(2) = sel(end);  
+  indx = sel([1 end]);
   if indx(1)>1 && abs(array(indx(1)-1)-val(1))<=intervaltol
-    indx(1)=indx(1)-1;
+    indx(1) = indx(1)-1;
   end
   if indx(2)<length(array) && abs(array(indx(2)+1)-val(2))<=intervaltol
-    indx(2)=indx(2)+1;
+    indx(2) = indx(2)+1;
   end
   return
 end
@@ -89,19 +90,23 @@ maxarray = max(array);
 if insideflag
   if ~toleranceflag
     if val<minarray || val>maxarray
-      error('the value %g should be within the range of the array from %g to %g', val, minarray, maxarray);
+      if numel(array)==1
+        ft_warning('the selected value %g should be within the range of the array from %g to %g', val, minarray, maxarray);
+      else
+        ft_error('the selected value %g should be within the range of the array from %g to %g', val, minarray, maxarray);
+      end
     end
   else
     if ~isequal(array, sort(array))
-      error('the input array should be sorted from small to large');
+      ft_error('the input array should be sorted from small to large');
     end
     if numel(array)<2
-      error('the input array must have multiple elements to compute the tolerance');
+      ft_error('the input array must have multiple elements to compute the tolerance');
     end
     mintolerance = (array(2)-array(1))/2;
     maxtolerance = (array(end)-array(end-1))/2;
     if val<(minarray-mintolerance) || val>(maxarray+maxtolerance)
-      error('the value %g should be within the range of the array from %g to %g with a tolerance of %g and %g on both sides', val, minarray, maxarray, mintolerance, maxtolerance);
+      ft_error('the value %g should be within the range of the array from %g to %g with a tolerance of %g and %g on both sides', val, minarray, maxarray, mintolerance, maxtolerance);
     end
   end % toleragceflag
 end % insideflag
@@ -118,30 +123,30 @@ if val>maxarray
   % return the last occurence of the largest number
   [dum, indx] = max(flipud(array));
   indx = numel(array) + 1 - indx;
-  
+
 elseif val<minarray
   % return the first occurence of the smallest number
   [dum, indx] = min(array);
-  
+
 else
   % implements a threshold to correct for errors due to numerical precision
-  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=498 and http://bugzilla.fcdonders.nl/show_bug.cgi?id=1943
-%   if maxarray==minarray
-%     precision = 1;
-%   else
-%     precision = (maxarray-minarray) / 10^6;
-%   end
-%   
-%   % return the first occurence of the nearest number
-%   [dum, indx] = min(round((abs(array(:) - val)./precision)).*precision);
+  % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=498 and http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1943
+  %   if maxarray==minarray
+  %     precision = 1;
+  %   else
+  %     precision = (maxarray-minarray) / 10^6;
+  %   end
+  %
+  %   % return the first occurence of the nearest number
+  %   [dum, indx] = min(round((abs(array(:) - val)./precision)).*precision);
 
-  % use find instead, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1943
+  % use find instead, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1943
   wassorted = true;
   if ~issorted(array)
     wassorted = false;
     [array, xidx] = sort(array);
   end
-  
+
   indx2 = find(array<=val, 1, 'last');
   indx3 = find(array>=val, 1, 'first');
   if abs(array(indx2)-val) <= abs(array(indx3)-val)
@@ -152,7 +157,7 @@ else
   if ~wassorted
     indx = xidx(indx);
   end
-  
+
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -160,7 +165,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function mbreal(a)
 if ~isreal(a)
-  error('Argument to mbreal must be real');
+  ft_error('Argument to mbreal must be real');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -168,7 +173,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function mbscalar(a)
 if ~all(size(a)==1)
-  error('Argument to mbscalar must be scalar');
+  ft_error('Argument to mbscalar must be scalar');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -176,6 +181,5 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function mbvector(a)
 if ndims(a) > 2 || (size(a, 1) > 1 && size(a, 2) > 1)
-  error('Argument to mbvector must be a vector');
+  ft_error('Argument to mbvector must be a vector');
 end
-

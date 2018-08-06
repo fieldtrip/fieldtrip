@@ -1,50 +1,65 @@
 function ft_uilayout(h, varargin)
 
-% FT_UILAYOUT is a helper function to facilitate the layout of multiple
-% usercontrol elements, use as:
-%   ft_uilayout(h, 'tag', '...', ...);
-% where h is the figure handle and 'tag' is a key specifying the elements
-% to be manipulated.
+% FT_UILAYOUT is a helper function to make a consistent graphical user interafce with
+% multiple control elements. This function will find all elements with a specific tag
+% and style, and update or position them consistently.
 %
-% In addition to MATLAB defaults (see UICONTROL), you can use the
-% following key-value pairs:
-%   'hpos'         = 'auto'      : puts elements in horizontal adjacent
-%                                  order with a fixed distance of 0.01
-%                    'align'     : adjusts the horizontal position of all
-%                                  elements to the first element
-%                    'distribute': puts elements in horizontal adjacent
-%                                  order such that they distribute evenly
-%                    scalar      : sets the horizontal position of elements
-%                                  to the specified scalar
-%   'vpos'         = 'auto'      : puts elements in vertical adjacent
-%                                  order with a fixed distance of 0.01
-%                    'align'     : adjusts the vertical position of all
-%                                  elements to the first element
-%                    'distribute': puts elements in vertical adjacent
-%                                  order such that they distribute evenly
-%                    scalar      : sets the vertical position of elements
-%                                  to the specified scalar
-%   'width'        = scalar      : sets the width of elements to the
-%                                  specified scalar
-%   'height'       = scalar      : sets the height of elements to the
-%                                  specified scalar
-%   'halign'       = 'left'      : aligns the horizontal position of
-%                                  elements to the left
-%                    'right'     : aligns the horizontal position of
-%                                  elements to the right
-%   'valign'       = 'top'       : aligns the vertical position of
-%                                  elements to the top
-%                    'bottom'    : aligns the vertical position of
-%                                  elements to the bottom
-%   'halign'       = 'left'      : aligns the horizontal position of
-%                                  elements to the left
-%                    'right'     : aligns the horizontal position of
-%                                  elements to the right
+% Use as
+%   ft_uilayout(h, 'tag', '...', 'style', '...', ...)
+% where h is the figure handle and 'tag' and 'style' are used to specifying which
+% user control elements in the figure should be selected.
+%
+% You can pass most options from UICONTROL as key-value pair, such as
+% 'BackgroundColor', 'CallBack', 'Clipping', 'Enable', 'FontAngle', 'FontName',
+% 'FontSize', 'FontUnits', 'FontWeight', 'ForegroundColor', 'HorizontalAlignment',
+% 'Max', 'Min', 'Position', 'Selected', 'String', 'Units', 'Value', 'Visible'.
+%
+% In addition to the options from UICONTROL, you can use the following key-value
+% pairs for a consistent placement of multiple GUI elements relative to each other:
+%   'hpos'         = 'auto'       puts elements in horizontal adjacent order with a fixed distance of 0.01
+%                    'align'      adjusts the horizontal position of all elements to the first element
+%                    'distribute' puts elements in horizontal adjacent order such that they distribute evenly
+%                    scalar       sets the horizontal position of elements to the specified scalar
+%   'vpos'         = 'auto'       puts elements in vertical adjacent order with a fixed distance of 0.01
+%                    'align'      adjusts the vertical position of all elements to the first element
+%                    'distribute' puts elements in vertical adjacent order such that they distribute evenly
+%                    scalar       sets the vertical position of elements to the specified scalar
+%   'width'        = scalar       sets the width of elements to the specified scalar
+%   'height'       = scalar       sets the height of elements to the specified scalar
+%   'halign'       = 'left'       aligns the horizontal position of elements to the left
+%                    'right'      aligns the horizontal position of elements to the right
+%   'valign'       = 'top'        aligns the vertical position of elements to the top
+%                    'bottom'     aligns the vertical position of elements to the bottom
+%   'halign'       = 'left'       aligns the horizontal position of elements to the left
+%                    'right'      aligns the horizontal position of elements to the right
+%   'hshift'       = scalar       shift the elements in horizontal direction
+%   'vshift'       = scalar       shift the elements in vertical direction
+%
+% Here is an example that positions a number of buttons in a 2x3 grid. It makes use
+% of regular expressions to match the tags to the rows and columns.
+%
+%   h = figure;
+%   uicontrol('style', 'pushbutton', 'string', '11', 'tag', 'row1_column1');
+%   uicontrol('style', 'pushbutton', 'string', '12', 'tag', 'row1_column2');
+%   uicontrol('style', 'pushbutton', 'string', '13', 'tag', 'row1_column3');
+%   uicontrol('style', 'pushbutton', 'string', '21', 'tag', 'row2_column1');
+%   uicontrol('style', 'pushbutton', 'string', '22', 'tag', 'row2_column2');
+%   uicontrol('style', 'pushbutton', 'string', '23', 'tag', 'row2_column3');
+%
+%   ft_uilayout(h, 'tag', '^row1', 'vpos', 100);
+%   ft_uilayout(h, 'tag', '^row2', 'vpos', 200);
+%
+%   ft_uilayout(h, 'tag', 'column1$', 'hpos', 100);
+%   ft_uilayout(h, 'tag', 'column2$', 'hpos', 200);
+%   ft_uilayout(h, 'tag', 'column3$', 'hpos', 300);
+%
+%   ft_uilayout(h, 'tag', '.*', 'BackGroundColor', [1 0 0]);
+%
 % See also UICONTROL
 
-% Copyright (C) 2009, Robert Oostenveld
+% Copyright (C) 2009-2015, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -62,19 +77,26 @@ function ft_uilayout(h, varargin)
 %
 % $Id$
 
-% these are used to make a selection of uicontrol elements
+% these are used to select the uicontrol elements that will be updated
 tag    = ft_getopt(varargin, 'tag');
 style  = ft_getopt(varargin, 'style');
 
+if any(tag=='.' | tag=='*' | tag=='?' | tag=='^' | tag=='$')
+  % use regular expressions
+  tagopt = {'-regexp'};
+else
+  tagopt = {};
+end
+
 % determine all children
 if ~isempty(tag) && ~isempty(style)
-  c = findall(h, 'tag', tag, 'style', style);
+  c = findobj(h, tagopt{:}, 'tag', tag, 'style', style);
 elseif ~isempty(tag)
-  c = findall(h, 'tag', tag);
+  c = findobj(h, tagopt{:}, 'tag', tag);
 elseif ~isempty(style)
-  c = findall(h, 'style', style);
+  c = findobj(h, 'style', style);
 else
-  c = findall(h);
+  c = findobj(h);
 end
 c = flipud(c);
 % fprintf('selected %d elements\n', numel(c));
@@ -122,8 +144,8 @@ feature = {
   'Units'
   'Value'
   'Visible'
-  'Tag'
-  'Style'
+  'Tag'   % this is used for retag
+  'Style' % this is used for restyle
   };
 
 for i=1:length(feature)
@@ -143,13 +165,17 @@ halign = ft_getopt(varargin, 'halign', 'left');
 valign = ft_getopt(varargin, 'valign', 'bottom');
 width  = ft_getopt(varargin, 'width');
 height = ft_getopt(varargin, 'height');
+hshift = ft_getopt(varargin, 'hshift');
+vshift = ft_getopt(varargin, 'vshift');
 
-if isempty(hpos) && isempty(vpos) && isempty(width) && isempty(height)
+if isempty(hpos) && isempty(vpos) && isempty(width) && isempty(height) && isempty(hshift) && isempty(vshift)
   % re-positioning of the elements is not needed
   return
 end
 
+% this will contain the horizontal position, vertical position, with and height
 pos = zeros(length(c), 4);
+
 for i=1:length(c)
   % this only works if the units are normalized
   pos(i,:) = get(c(i), 'position');
@@ -173,16 +199,11 @@ if ~isempty(hpos)
       width = width*scale;
       pos(:,3) = width;
     end
-    
     hpos = cumsum([0.01; width+0.01]);
-    
     if isequal(halign, 'right')
       hpos = 1-hpos(end) + hpos - 0.01;
     end
-    
     hpos = hpos(1:end-1);
-    
-    
   elseif isequal(hpos, 'align')
     if isequal(halign, 'right')
       hpos = pos(end,1); % the position of the last element
@@ -206,15 +227,11 @@ if ~isempty(vpos)
       height = height*scale;
       pos(:,4) = height;
     end
-    
     vpos = cumsum([0.01; height+0.01]);
-    
     if isequal(valign, 'bottom') % default
       vpos = 1-vpos(end) + vpos - 0.01;
     end
-    
     vpos = vpos(end-1:-1:1);
-    
   elseif isequal(vpos, 'align')
     if isequal('valign', 'bottom')
       vpos = pos(end,2); % the position of the last element
@@ -228,6 +245,16 @@ if ~isempty(vpos)
   end
   pos(:,2) = vpos;
 end % vpos
+
+if ~isempty(hshift)
+  % apply horizontal shift
+  pos(:,1) = pos(:,1) + hshift;
+end
+
+if ~isempty(vshift)
+  % apply vertical shift
+  pos(:,2) = pos(:,2) + vshift;
+end
 
 % assign the new/automatic position to each of the elements
 for i=1:length(c)

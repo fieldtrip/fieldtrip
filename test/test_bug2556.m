@@ -3,10 +3,9 @@ function test_bug2556
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST test_bug2556
 % TEST ft_sourceparcellate ft_checkdata
 
-ftpath = fileparts(which('ft_defaults'));
+[ftver, ftpath] = ft_version;
 filename = fullfile(ftpath, 'template', 'atlas', 'aal', 'ROI_MNI_V4.nii');
 
 aal = ft_read_atlas(filename);
@@ -48,7 +47,7 @@ cfg.parameter = 'pow';
 source3p = ft_sourceparcellate(cfg, grandavg, parcellation);
 
 % assert(isequal(source1p.pow,   source3p.pow));
-assert(identical(source1p.pow,   source3p.pow, 'reltol', 1e-8)); % there is a tiny numerical difference
+assert(isalmostequal(source1p.pow,   source3p.pow, 'reltol', 1e-8)); % there is a tiny numerical difference
 assert(isequal(source1p.label, source3p.label));
 
 

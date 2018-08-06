@@ -1,10 +1,11 @@
 function [sel1, sel2] = match_str(a, b, fullout)
 
-% MATCH_STR looks for matching labels in two listst of strings
+% MATCH_STR looks for matching labels in two lists of strings
 % and returns the indices into both the 1st and 2nd list of the matches.
 % They will be ordered according to the first input argument.
 %
-% [sel1, sel2] = match_str(strlist1, strlist2)
+% Use as
+%   [sel1, sel2] = match_str(strlist1, strlist2)
 %
 % The strings can be stored as a char matrix or as an vertical array of
 % cells, the matching is done for each row.
@@ -17,7 +18,7 @@ function [sel1, sel2] = match_str(a, b, fullout)
 
 % Copyright (C) 2000-2012, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -69,10 +70,10 @@ Nb = numel(b);
 % According to the original implementation empty numeric elements are
 % allowed, but are not returned as match. This is different to empty string
 % elements, which are returned as match.
-% See also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1808
+% See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1808
 empty_a = cellfun(@isnumeric, a) & cellfun(@isempty, a);
 empty_b = cellfun(@isnumeric, b) & cellfun(@isempty, b);
-% the following allows the unqiue function to operate normally
+% the following allows the unique function to operate normally
 a(empty_a) = {''};
 b(empty_b) = {''};
 

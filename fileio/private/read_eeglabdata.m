@@ -35,7 +35,7 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-function dat = read_eeglabdata(filename, varargin);
+function dat = read_eeglabdata(filename, varargin)
 
 if nargin < 1
   help read_eeglabdata;
@@ -71,7 +71,7 @@ if ischar(header.orig.data)
           fid = fopen(fullfile(header.orig.filepath, header.orig.data)); %
       end
 
-if fid == -1, error(['Cannot not find data file: ' header.orig.data]); end;
+if fid == -1, ft_error(['Cannot not find data file: ' header.orig.data]); end;
 
     % only read the desired trials
     if strcmpi(header.orig.data(end-2:end), 'dat')

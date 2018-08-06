@@ -60,7 +60,7 @@ for j=1:numel(s)
         end
 
       otherwise
-        error('unsuported data type in structure');
+        ft_error('unsuported data type in structure');
     end
     cmd = [cmd ', '];
   end

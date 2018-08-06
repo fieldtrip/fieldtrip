@@ -1,4 +1,4 @@
-function [VIn MIn] = partition_distance(Cx,Cy)
+function [VIn,MIn] = partition_distance(Cx,Cy)
 %PARTITION_DISTANCE     Distance between community partitions
 %
 %   This function quantifies the distance between pairs of community
@@ -25,12 +25,13 @@ function [VIn MIn] = partition_distance(Cx,Cy)
 %   Modification History:
 %   Mar 2011: Original
 
+%#ok<*ASGLU>
 
 n = numel(Cx);                                  %n
 
-[dum dum Cx]  = unique(Cx);
-[dum dum Cy]  = unique(Cy);
-[dum dum Cxy] = unique([Cx(:) Cy(:)],'rows');
+[dum,dum,Cx]  = unique(Cx);
+[dum,dum,Cy]  = unique(Cy);
+[dum,dum,Cxy] = unique([Cx(:) Cy(:)],'rows');
 
 Px  = hist(Cx,1:max(Cx))/n;                     %P(x)
 Py  = hist(Cy,1:max(Cy))/n;                     %P(y)

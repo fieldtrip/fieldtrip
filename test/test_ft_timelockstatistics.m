@@ -3,7 +3,6 @@ function test_ft_timelockstatistics
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_timelockstatistics
 % TEST ft_timelockstatistics, findcluster, clusterstat, ft_statistics_montecarlo
 
 %For the case of "chan_time"
@@ -38,7 +37,6 @@ cfg.design = [ones(1,5) ones(1,5).*2; 1:5 1:5;];
 cfg.ivar   = 1;
 cfg.uvar   = 2;
 stat = ft_timelockstatistics(cfg,timelock{:});
-
 
 % do stats - analytic
 cfg = [];

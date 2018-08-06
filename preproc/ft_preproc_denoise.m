@@ -18,7 +18,7 @@ function [dat, w] = ft_preproc_denoise(dat, refdat, hilbertflag)
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -36,8 +36,13 @@ function [dat, w] = ft_preproc_denoise(dat, refdat, hilbertflag)
 %
 % $Id$
 
-if nargin<3,
+if nargin<3
   hilbertflag = 0;
+end
+
+% preprocessing fails on channels that contain NaN
+if any(isnan(dat(:))) || any(isnan(refdat(:)))
+  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
 end
 
 n1 = size(dat,2);
@@ -50,7 +55,7 @@ refdat  = refdat-m2(:,ones(n2,1));
 tmpdat  = dat-m1(:,ones(n1,1));
 
 %do hilbert transformation
-if hilbertflag>0,
+if hilbertflag>0
   hrefdat = hilbert(refdat')';
   refdat  = [real(hrefdat);imag(hrefdat)];
 end

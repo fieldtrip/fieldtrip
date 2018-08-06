@@ -3,7 +3,6 @@ function test_bug1571
 % MEM 3gb
 % WALLTIME 00:10:00
 
-% TEST test_bug1571
 % TEST ft_preprocessing ft_preproc_dftfilter dftfilter ft_freqanalysis ft_singleplotER
 
 % Philipp Hintze wrote:
@@ -14,20 +13,14 @@ function test_bug1571
 % strong line noise. Including padding makes no difference either, therefore
 % the brackets.
 
-if ispc
-  home = 'H:';
-else
-  home = '/home';
-end
-
-dataset = fullfile(home, 'common', 'matlab', 'fieldtrip', 'data', 'test', 'bug1571', '20101230_1010.cnt');
+dataset = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1571/20101230_1010.cnt');
 
 cfg                     = [];
 cfg.channel      = {'EEG'};
-cfg.datafile       = dataset;
+cfg.datafile     = dataset;
 cfg.headerfile   = dataset;
-cfg.dataset       = dataset;
-cfg.continuous = 'yes';
+cfg.dataset      = dataset;
+cfg.continuous   = 'yes';
 
 unfilteredContinuousData  = ft_preprocessing(cfg);
 

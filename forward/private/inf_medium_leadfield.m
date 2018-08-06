@@ -1,4 +1,4 @@
-function [lf] = inf_medium_leadfield(rd, pnt, cond);
+function [lf] = inf_medium_leadfield(rd, pnt, cond)
 
 % INF_MEDIUM_LEADFIELD calculate the infinite medium leadfield
 % on positions pnt for dipole position R and conductivity cond
@@ -7,7 +7,7 @@ function [lf] = inf_medium_leadfield(rd, pnt, cond);
 
 % Copyright (C) 1998, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -35,7 +35,7 @@ elseif siz(2)==3
   rd = rd';
   rd = rd(:);
 else
-  error('incorrect specification of dipole locations');
+  ft_error('incorrect specification of dipole locations');
 end
 
 Npnt     = size(pnt,1);
@@ -51,7 +51,7 @@ for i=1:Ndipoles
   r = pnt - ones(Npnt,1) * rd((1:3) + 3*(i-1));
   R = (4*pi*cond) * (sum(r' .^2 ) .^ 1.5)';
   if any(R==0)
-    warning('dipole lies on boundary of volume model');
+    ft_warning('dipole lies on boundary of volume model');
   end
   lf(:,(1:3) + 3*(i-1)) = r ./ [R R R];
 end

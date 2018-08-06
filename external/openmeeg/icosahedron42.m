@@ -1,10 +1,10 @@
-function [pnt, tri] = icosahedron42()
+function [pos, tri] = icosahedron42()
 
 % ICOSAHEDRON42 creates a 1-fold refined icosahedron
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -20,9 +20,8 @@ function [pnt, tri] = icosahedron42()
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id$
 
-[pnt, tri] = icosahedron;
-[pnt, tri] = refine(pnt, tri);
+[pos, tri] = icosahedron;
+[pos, tri] = refine(pos, tri);
 
-pnt = pnt ./ repmat(sqrt(sum(pnt.^2,2)), 1,3);
+pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1,3);

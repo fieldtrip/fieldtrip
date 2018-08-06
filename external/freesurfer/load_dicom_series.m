@@ -16,7 +16,9 @@ function [vol, M, tmpdcminfo, mr_parms] = load_dicom_series(seriesno,dcmdir,dcmf
 %
 % Bugs: will not load multiple frames or mosaics properly.
 %
-
+% Bugfix: added feature that ensures similar structures across a dicom 
+% series by removing fields not present in the first file of the series
+% Arjen Stolk, August 2017
 
 %
 % load_dicom_series.m
@@ -82,6 +84,9 @@ for n = 1:nfiles
     if(isfield(dcminfo,'SeriesNumber'))
       if(dcminfo.SeriesNumber == seriesno)
         seriesflist = strvcat(seriesflist,pathname);
+        if(nth > 1)
+          dcminfo = checkstructsim(dcminfo, dcminfolist); % avoid dissimilar structures
+        end
         dcminfolist(nth) = dcminfo;
         dcminfo0 = dcminfo;
         nth = nth+1;
@@ -121,6 +126,21 @@ if(~isempty(ind))
   end
 else
   dcmdir = '.';
+end
+
+return;
+
+
+%---------------------------------------------------%
+function dcminfo = checkstructsim(dcminfo, dcminfolist)
+% this subfunction ensures similar structures across a dicom series by 
+% removing fields not present in the first file of the series
+% Arjen Stolk, 2017
+
+fields = fieldnames(dcminfo);
+fidx = find(ismember(fields, fieldnames(dcminfolist(1)))==0); % fields not present in dcminfolist
+if ~isempty(fidx)
+  dcminfo = rmfield(dcminfo, fields(fidx));
 end
 
 return;

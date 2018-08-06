@@ -1,14 +1,14 @@
-function [psth] = ft_spike_psth(cfg,spike)
+function [psth] = ft_spike_psth(cfg, spike)
 
 % FT_SPIKE_PSTH computes the peristimulus histogram of spiketrains.
 %
 % Use as
 %   [psth] = ft_spike_psth(cfg, spike)
 %
-% The input SPIKE should be organised as a) the spike datatype, obtained
-% from FT_SPIKE_MAKETRIALS b) the raw datatype, containing binary spike
-% trains, obtained from FT_APPENDSPIKE or FT_CHECKDATA. In this case the
-% raw datatype is converted to the spike datatype.
+% The input SPIKE should be organised as either the spike datatype,
+% obtained from FT_SPIKE_MAKETRIALS, or the raw datatype, containing binary
+% spike trains, obtained from FT_APPENDSPIKE or FT_CHECKDATA. In this case
+% the raw datatype is converted to the spike datatype.
 %
 % Configurations:
 %   cfg.binsize          =  [binsize] in sec or string. 
@@ -43,7 +43,7 @@ function [psth] = ft_spike_psth(cfg,spike)
 %                          available 'minperiod', i.e., the minimal period
 %                          all trials share, 'prestim' (all t<=0) 'poststim'
 %                          (all t>=0).
-%   cfg.keeptrials       = 'yes' or 'no' (default).
+%   cfg.keeptrials       = 'yes' or 'no' (default)
 %   cfg.trials           =  numeric or logical selection of trials (default = 'all')
 %
 % Outputs:
@@ -54,22 +54,41 @@ function [psth] = ft_spike_psth(cfg,spike)
 %     Psth.trial       = contains PSTH per unit per trial 
 %     Psth.var         = contains variance of PSTH per unit across trials
 %
-% Further processing:
-%   FT_SPIKE_PLOT_PSTH    :  plot only the PSTH, for a single neuron
+% For subsequent processing you can use
+%   FT_SPIKE_PLOT_PSTH    : plot only the PSTH, for a single neuron
 %   FT_TIMELOCKSTATISTICS : compute statistics on the PSTH
 %   FT_SPIKE_PLOT_RASTER  : plot PSTH with raster for one or more neurons
 %   FT_SPIKE_JPSTH        : compute the JPSTH
 
 %  Copyright (C) 2010-2013, Martin Vinck
 %
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance spike
 ft_preamble trackconfig
 
 % control input spike structure and convert to spike if raw structure
@@ -82,7 +101,7 @@ cfg.spikechannel = ft_getopt(cfg, 'spikechannel', 'all');
 cfg.trials       = ft_getopt(cfg, 'trials', 'all');
 cfg.latency      = ft_getopt(cfg, 'latency','maxperiod');
 cfg.vartriallen  = ft_getopt(cfg, 'vartriallen', 'yes');
-cfg.keeptrials   = ft_getopt(cfg, 'keeptrials', 'yes');
+cfg.keeptrials   = ft_getopt(cfg, 'keeptrials', 'no');
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'outputunit',   'char',  {'rate', 'spikecount'});
@@ -93,7 +112,7 @@ cfg = ft_checkopt(cfg,'trials',      {'char',  'doublevector', 'logical'});
 cfg = ft_checkopt(cfg,'vartriallen' , 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'keeptrials'  , 'char', {'yes', 'no'});
 
-cfg = ft_checkconfig(cfg, 'allowed', {'outputunit', 'binsize', 'spikechannel', 'trials', 'latency', 'vartriallen', 'keeptrials', 'warning', 'progress'});
+cfg = ft_checkconfig(cfg, 'allowed', {'outputunit', 'binsize', 'spikechannel', 'trials', 'latency', 'vartriallen', 'keeptrials'});
 
 % get the number of trials or convert to indices
 cfg        = trialselection(cfg,spike);
@@ -228,9 +247,9 @@ if isfield(spike,'trialinfo'),  psth.trialinfo  = spike.trialinfo(cfg.trials,:);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble previous spike
-ft_postamble history psth
+ft_postamble previous   spike
+ft_postamble provenance psth
+ft_postamble history    psth
 
 
 %%%%%%%%% SUB FUNCTIONS %%%%%%%%%

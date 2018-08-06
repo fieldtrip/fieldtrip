@@ -8,13 +8,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "buffer.h"
 #include <pthread.h>
+#include <time.h>  /* for clock */
+#include <sys/time.h>
+
+#include "buffer.h"
+#include "platform_includes.h"
 
 /* FIXME should these be static? */
 static header_t   *header   = NULL;
 static data_t     *data     = NULL;
 static event_t    *event    = NULL;
+
+/* these are used for fine-tuning the sample number of incoming events */
+struct timespec putdat_clock;
+struct timespec putevt_clock;
 
 static unsigned int current_max_num_sample = 0;
 
@@ -22,27 +30,26 @@ static int thissample = 0;    /* points at the buffer */
 static int thisevent = 0;     /* points at the buffer */
 
 /* Note that there have been problems with the order of the mutexes (e.g.
- * http://bugzilla.fcdonders.nl/show_bug.cgi?id=933). 
+ * http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=933).
  * I have attempted to make the order of locking consistent, but can't give
  * guarantees. A more long term solution could be:
  * - find the dependencies between modifications of volatile data (e.g. events
  * depend on header),
  * - keep locks as shortly as possible (get info, release again).
- * 
+ *
  * This could results in a global lock (robust, probably not optimal in terms
  * of speed), or a series of locks sandwiching modification code in dedicated
  * functions.
  *
  * -- Boris
-*/
+ */
+
 pthread_mutex_t mutexheader   = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutexdata     = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutexevent    = PTHREAD_MUTEX_INITIALIZER;
 
 pthread_cond_t getData_cond   = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t getData_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-#define DIE_BAD_MALLOC(ptr)   if ((ptr)==NULL) { fprintf(stderr,"Out of memory with unchecked malloc in line %d",__LINE__); exit(1); }
 
 /*****************************************************************************/
 
@@ -90,33 +97,33 @@ void init_data(void) {
 	if (verbose>0) fprintf(stderr, "init_data: creating data buffer\n");
 	if (header) {
 		unsigned int wordsize = wordsize_from_type(header->def->data_type);
-		
+
 		if (wordsize==0) {
 			fprintf(stderr, "init_data: unsupported data type (%u)\n", header->def->data_type);
 			return;
 		}
 		/* heuristic of choosing size of buffer:
-			set current_max_num_sample to MAXNUMSAMPLE if nchans <= 256
-			otherwise, allocate about MAXNUMBYTE and calculate current_max_num_sample from nchans + wordsize
-		*/
+			 set current_max_num_sample to MAXNUMSAMPLE if nchans <= 256
+			 otherwise, allocate about MAXNUMBYTE and calculate current_max_num_sample from nchans + wordsize
+		 */
 		if (header->def->nchans <= 256) {
 			current_max_num_sample = MAXNUMSAMPLE;
 		} else {
 			current_max_num_sample = MAXNUMBYTE / (wordsize * header->def->nchans);
 		}
 		data = (data_t*)malloc(sizeof(data_t));
-		
+
 		DIE_BAD_MALLOC(data);
-		
+
 		data->def = (datadef_t*)malloc(sizeof(datadef_t));
-		
+
 		DIE_BAD_MALLOC(data->def);
-		
+
 		data->def->nchans    = header->def->nchans;
 		data->def->nsamples  = current_max_num_sample;
 		data->def->data_type = header->def->data_type;
 		data->buf = malloc(header->def->nchans*current_max_num_sample*wordsize);
-		
+
 		DIE_BAD_MALLOC(data->buf);
 	}
 }
@@ -136,24 +143,24 @@ void init_event(void) {
 }
 
 
-/***************************************************************************** 
+/*****************************************************************************
  * this function handles the direct memory access to the buffer
  * and copies objects to and from memory
  *****************************************************************************/
 int dmarequest(const message_t *request, message_t **response_ptr) {
 	unsigned int offset;
 	/*
-    int blockrequest = 0;
-	*/
+		 int blockrequest = 0;
+	 */
 	int verbose = 0;
 
-    /* these are used for blocking the read requests */
-    struct timeval tp;
+	/* these are used for blocking the read requests */
+	struct timeval tp;
 	struct timespec ts;
 
 	/* use a local variable for datasel (in GET_DAT) */
 	datasel_t datasel;
-	
+
 	/* these are for typecasting */
 	headerdef_t    *headerdef;
 	datadef_t      *datadef;
@@ -163,14 +170,14 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 	/* this will hold the response */
 	message_t *response;
 	response      = (message_t*)malloc(sizeof(message_t));
-	
+
 	/* check for "out of memory" problems */
 	if (response == NULL) {
 		*response_ptr = NULL;
 		return -1;
 	}
 	response->def = (messagedef_t*)malloc(sizeof(messagedef_t));
-	
+
 	/* check for "out of memory" problems */
 	if (response->def == NULL) {
 		*response_ptr = NULL;
@@ -181,7 +188,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 	/* the response should be passed to the calling function, where it should be freed */
 	*response_ptr = response;
 
-    if (verbose>1) print_request(request->def);
+	if (verbose>1) print_request(request->def);
 
 	switch (request->def->command) {
 
@@ -221,7 +228,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 				response->def->command = PUT_OK;
 			} else {
 				/* let's at least tell the client that something's wrong */
-				response->def->command = PUT_ERR;	
+				response->def->command = PUT_ERR;
 			}
 
 			pthread_mutex_unlock(&mutexevent);
@@ -254,9 +261,9 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 				unsigned int i;
 				unsigned int wordsize = wordsize_from_type(header->def->data_type);
 				unsigned int datasize = wordsize * datadef->nsamples * datadef->nchans;
-				
+
 				response->def->command = PUT_OK;
-				
+
 				if (wordsize == 0) {
 					fprintf(stderr, "dmarequest: unsupported data type (%d)\n", datadef->data_type);
 					response->def->command = PUT_ERR;
@@ -264,12 +271,19 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 					fprintf(stderr, "dmarequest: invalid size definitions in PUT_DAT request\n");
 					response->def->command = PUT_ERR;
 				} else {
+
+					/* record the time at which the data was received */
+					if (clock_gettime(CLOCK_REALTIME, &putdat_clock) != 0) {
+						perror("clock_gettime");
+						return -1;
+					}
+
 					/* number of bytes per sample (all channels) is given by wordsize x number of channels */
 					unsigned int chansize = wordsize * data->def->nchans;
 					/* request_data points to actual data samples within the request, use char* for convenience */
 					const char *request_data = (const char *) request->buf + sizeof(datadef_t);
 					char *buffer_data = (char *)data->buf;
-					
+
 					for (i=0; i<datadef->nsamples; i++) {
 						memcpy(buffer_data+(thissample*chansize), request_data+(i*chansize), chansize);
 						header->def->nsamples++;
@@ -289,6 +303,12 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			if (verbose>1) fprintf(stderr, "dmarequest: PUT_EVT\n");
 			pthread_mutex_lock(&mutexheader);
 			pthread_mutex_lock(&mutexevent);
+
+			/* record the time at which the event was received */
+			if (clock_gettime(CLOCK_REALTIME, &putevt_clock) != 0) {
+				perror("clock_gettime");
+				return -1;
+			}
 
 			/* Give an error message if there is no header, or if the given event array is defined badly */
 			if (header==NULL || event==NULL || check_event_array(request->def->bufsize, request->buf) < 0) {
@@ -312,14 +332,14 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 					event[thisevent].def = (eventdef_t*)malloc(sizeof(eventdef_t));
 					DIE_BAD_MALLOC(event[thisevent].def);
 					memcpy(event[thisevent].def, (char*)request->buf+offset, sizeof(eventdef_t));
-					
-					/* automatically convert event->def->sample to current sample number
-						(thus this event "belongs" to the first sample of the next block from PUT_DAT)
-					*/
+
 					if (event[thisevent].def->sample == EVENT_AUTO_SAMPLE) {
-						event[thisevent].def->sample = header->def->nsamples;
+						/* automatically convert event->def->sample to current sample number */
+						/* make some fine adjustment of the assigned sample number */
+						double adjust = (putevt_clock.tv_sec - putdat_clock.tv_sec) + (double)(putevt_clock.tv_nsec - putdat_clock.tv_nsec) / 1000000000L;
+						event[thisevent].def->sample = header->def->nsamples + (int)(header->def->fsample*adjust);
 					}
-					
+
 					offset += sizeof(eventdef_t);
 					event[thisevent].buf = malloc(eventdef->bufsize);
 					DIE_BAD_MALLOC(event[thisevent].buf);
@@ -364,7 +384,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 				response->def->bufsize = 0;
 				break;
 			}
-			
+
 			pthread_mutex_lock(&mutexheader);
 			pthread_mutex_lock(&mutexdata);
 
@@ -390,36 +410,36 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 					datasel.endsample = header->def->nsamples - 1;
 				}
 			}
-			
+
 			/*
-			
+
 			// if the read should block...
 			if(blockrequest == 1)
 			{
-				// check whether data is available
-				while((datasel.begsample >= (datasel.endsample+1)) || (datasel.endsample > header->def->nsamples - 1))
-				{
-					// if not unlock all mutexes
-					pthread_mutex_unlock(&mutexdata);
-					pthread_mutex_unlock(&mutexheader);
-					
-					// wait for the condition to be signaled
-					pthread_mutex_lock(&getData_mutex);
-					gettimeofday(&tp, NULL);
-					ts.tv_sec = tp.tv_sec;
-					ts.tv_nsec = tp.tv_usec * 1000;
-					ts.tv_sec += 1;
-					pthread_cond_timedwait(&getData_cond, &getData_mutex, &ts);
-					pthread_mutex_unlock(&getData_mutex);
-					
-					// Lock the mutexes again
-					pthread_mutex_lock(&mutexheader);
-					pthread_mutex_lock(&mutexdata);
-					if(datasel.begsample == (datasel.endsample+1))
-						datasel.endsample = header->def->nsamples - 1;
-				}
+			// check whether data is available
+			while((datasel.begsample >= (datasel.endsample+1)) || (datasel.endsample > header->def->nsamples - 1))
+			{
+			// if not unlock all mutexes
+			pthread_mutex_unlock(&mutexdata);
+			pthread_mutex_unlock(&mutexheader);
+
+			// wait for the condition to be signaled
+			pthread_mutex_lock(&getData_mutex);
+			gettimeofday(&tp, NULL);
+			ts.tv_sec = tp.tv_sec;
+			ts.tv_nsec = tp.tv_usec * 1000;
+			ts.tv_sec += 1;
+			pthread_cond_timedwait(&getData_cond, &getData_mutex, &ts);
+			pthread_mutex_unlock(&getData_mutex);
+
+			// Lock the mutexes again
+			pthread_mutex_lock(&mutexheader);
+			pthread_mutex_lock(&mutexdata);
+			if(datasel.begsample == (datasel.endsample+1))
+			datasel.endsample = header->def->nsamples - 1;
 			}
-			*/
+			}
+			 */
 
 			if (verbose>1) print_headerdef(header->def);
 			if (verbose>1) print_datasel(&datasel);
@@ -454,36 +474,36 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 					response->def->version = VERSION;
 					response->def->command = GET_OK;
 					response->def->bufsize = 0;
-				
+
 					/* determine the number of samples to return */
 					n = datasel.endsample - datasel.begsample + 1;
-				
+
 					response->buf = malloc(sizeof(datadef_t) + n*data->def->nchans*wordsize);
 					if (response->buf == NULL) {
 						/* not enough space for copying data into response */
 						fprintf(stderr, "dmarequest: out of memory\n");
 						response->def->command = GET_ERR;
-					} 
+					}
 					else {
 						/* number of bytes per sample (all channels) */
 						unsigned int chansize = data->def->nchans * wordsize;
-						
+
 						/* convenience pointer to start of actual data in response */
 						char *resp_data = ((char *) response->buf) + sizeof(datadef_t);
-						
+
 						/* this is the location of begsample within the ringbuffer */
 						unsigned int start_index = 	WRAP(datasel.begsample, current_max_num_sample);
-						
+
 						/* have datadef point into the freshly allocated response buffer and directly
-							fill in the information */
+							 fill in the information */
 						datadef = (datadef_t *) response->buf;
 						datadef->nchans    = data->def->nchans;
 						datadef->data_type = data->def->data_type;
 						datadef->nsamples  = n;
 						datadef->bufsize   = n*chansize;
-					
+
 						response->def->bufsize = sizeof(datadef_t) + datadef->bufsize;
-						
+
 						if (start_index + n <= current_max_num_sample) {
 							/* we can copy everything in one go */
 							memcpy(resp_data, (char*)(data->buf) + start_index*chansize, n*chansize);
@@ -494,7 +514,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 
 							memcpy(resp_data, (char*)(data->buf) + start_index*chansize, na*chansize);
 							memcpy(resp_data + na*chansize, (char*)(data->buf), nb*chansize);
-							
+
 							/* printf("Wrapped around!\n"); */
 						}
 					}
@@ -519,7 +539,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 
 			eventsel = (eventsel_t*)malloc(sizeof(eventsel_t));
 			DIE_BAD_MALLOC(eventsel);
-						
+
 			/* determine the selection */
 			if (request->def->bufsize) {
 				/* the selection has been specified */
@@ -548,31 +568,31 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 				response->def->bufsize = 0;
 			}
 			else if (eventsel->begevent < 0 || eventsel->endevent < 0) {
-				fprintf(stderr, "dmarequest: err1\n");
+				fprintf(stderr, "dmarequest: err4\n");
 				response->def->version = VERSION;
 				response->def->command = GET_ERR;
 				response->def->bufsize = 0;
 			}
 			else if (eventsel->begevent >= header->def->nevents || eventsel->endevent >= header->def->nevents) {
-				fprintf(stderr, "dmarequest: err2\n");
+				fprintf(stderr, "dmarequest: err5\n");
 				response->def->version = VERSION;
 				response->def->command = GET_ERR;
 				response->def->bufsize = 0;
 			}
 			else if ((header->def->nevents-eventsel->begevent) > MAXNUMEVENT) {
-				fprintf(stderr, "dmarequest: err3\n");
+				fprintf(stderr, "dmarequest: err6\n");
 				response->def->version = VERSION;
 				response->def->command = GET_ERR;
 				response->def->bufsize = 0;
 			}
 			else {
 				unsigned int j,n;
-				
+
 				response->def->version = VERSION;
 				response->def->command = GET_OK;
 				response->def->bufsize = 0;
 
-                /* determine the number of events to return */
+				/* determine the number of events to return */
 				n = eventsel->endevent - eventsel->begevent + 1;
 
 				for (j=0; j<n; j++) {
@@ -632,7 +652,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			pthread_mutex_lock(&mutexevent);
 			if (header && event) {
 				unsigned int i;
-				
+
 				header->def->nevents = thisevent = 0;
 				for (i=0; i<MAXNUMEVENT; i++) {
 					FREE(event[i].def);
@@ -650,16 +670,16 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			pthread_mutex_unlock(&mutexevent);
 			pthread_mutex_unlock(&mutexheader);
 			break;
-			
+
 		case WAIT_DAT:
 			/* SK: This request means that the client wants to wait until
-					MORE than waitdef_t.threshold.nsamples samples OR 
-					MORE THAN waitdef_t.threshold.nevents events 
-						are in the buffer, BUT 
-					only for the time given in waitdef_t.milliseconds. 
-					The response is just the number of samples and events 
-					in the buffer as described by samples_events_t.
-			*/
+				 MORE than waitdef_t.threshold.nsamples samples OR
+				 MORE THAN waitdef_t.threshold.nevents events
+				 are in the buffer, BUT
+				 only for the time given in waitdef_t.milliseconds.
+				 The response is just the number of samples and events
+				 in the buffer as described by samples_events_t.
+			 */
 			response->def->version = VERSION;
 			if (header==NULL || request->def->bufsize!=sizeof(waitdef_t)) {
 				response->def->command = WAIT_ERR;
@@ -669,7 +689,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 				waitdef_t *wd = (waitdef_t *) request->buf;
 				samples_events_t *nret = malloc(sizeof(samples_events_t));
 				UINT32_T nsmp, nevt;
-				
+
 				if (nret == NULL) {
 					/* highly unlikely, but we cannot allocate a sample_event_t - return an error */
 					response->def->command = WAIT_ERR;
@@ -689,8 +709,8 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 
 				if (wd->milliseconds == 0 || nsmp > wd->threshold.nsamples || nevt > wd->threshold.nevents) {
 					/* the client doesn't want to wait, or
-					   we're already above the threshold: 
-					   return immediately */
+						 we're already above the threshold:
+						 return immediately */
 					nret->nsamples = nsmp;
 					nret->nevents = nevt;
 					break;
@@ -702,13 +722,13 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 					ts.tv_sec++;
 					ts.tv_nsec-=1000000000;
 				}
-				
+
 				/* FIXME: The getData condition variable is only triggered by incoming data, not events */
 				do {
 					pthread_mutex_lock(&getData_mutex);
 					waiterr = pthread_cond_timedwait(&getData_cond, &getData_mutex, &ts);
 					pthread_mutex_unlock(&getData_mutex);
-					
+
 					/* get current number of samples */
 					pthread_mutex_lock(&mutexheader);
 					nsmp = header->def->nsamples;
@@ -716,9 +736,10 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 					pthread_mutex_unlock(&mutexheader);
 				} while (nsmp <= wd->threshold.nsamples && nevt <= wd->threshold.nevents && waiterr==0);
 				nret->nsamples = nsmp;
-				nret->nevents = nevt;				
+				nret->nevents = nevt;
 			}
 			break;
+
 		default:
 			fprintf(stderr, "dmarequest: unknown command\n");
 	}
@@ -728,4 +749,3 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 	/* everything went fine */
 	return 0;
 }
-

@@ -21,7 +21,7 @@ function [header_array, CateNames, CatLengths, preBaseline] = read_sbin_header(f
 % Modified from EGI's readEGLY.m with permission 2008-03-31 Joseph Dien
 %
 
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -41,12 +41,12 @@ function [header_array, CateNames, CatLengths, preBaseline] = read_sbin_header(f
 
 fid=fopen([filename],'r');
 if fid==-1
-    error('wrong filename')
+    ft_error('wrong filename')
 end
 
 version     = fread(fid,1,'int32');
 if isempty(version)
-    error('ERROR:  This is not a simple binary file.  Note that NetStation does not successfully directly convert EGIS files to simple binary format.');
+    ft_error('ERROR:  This is not a simple binary file.  Note that NetStation does not successfully directly convert EGIS files to simple binary format.');
 end;
 
 %check byteorder
@@ -65,7 +65,7 @@ elseif (version > 6) && ~bitand(version,6)
     end;
     version = swapbytes(uint32(version));
 else
-    error('ERROR:  This is not a simple binary file.  Note that NetStation does not successfully directly convert EGIS files to simple binary format.');
+    ft_error('ERROR:  This is not a simple binary file.  Note that NetStation does not successfully directly convert EGIS files to simple binary format.');
 end;
 
 if bitand(version,1) == 0
@@ -76,7 +76,7 @@ end;
 
 precision = bitand(version,6);
 if precision == 0
-    error('File precision is not defined.');
+    ft_error('File precision is not defined.');
 end;
 
 %       read header...

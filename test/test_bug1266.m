@@ -6,13 +6,8 @@ function test_bug1266
 % TEST test_bug_1266
 % TEST ft_read_header ft_read_data ft_read_event read_biosig_data read_biosig_header
 
-if ispc
-  datapath = 'h:\common\matlab\fieldtrip\data\test';
-else
-  datapath = '/home/common/matlab/fieldtrip/data/test';
-end
-filename  = fullfile(datapath, 'bug1266/sample.gdf');
-filename1 = fullfile(datapath, 'bug1266/sample_1.gdf');
+filename  = fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1266/sample.gdf'));
+filename1 = fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1266/sample_1.gdf'));
 
 hdr  = ft_read_header(filename);   % this should return the combined header of all three files
 hdr1 = ft_read_header(filename1);  % this is only for one file

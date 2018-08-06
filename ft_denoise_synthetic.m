@@ -23,7 +23,7 @@ function [data] = ft_denoise_synthetic(cfg, data)
 
 % Copyright (C) 2004-2008, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -41,18 +41,21 @@ function [data] = ft_denoise_synthetic(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
+ft_preamble provenance data
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -60,7 +63,7 @@ end
 cfg = ft_checkconfig(cfg, 'required', {'gradient'});
 
 % set the defaults
-if ~isfield(cfg, 'trials'), cfg.trials = 'all'; end
+cfg.trials = ft_getopt(cfg, 'trials', 'all', 1);
 
 % store the original type of the input data
 dtype = ft_datatype(data);
@@ -71,23 +74,23 @@ data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo',
 
 % check whether it is CTF data
 if ~ft_senstype(data, 'ctf')
-  error('synthetic gradients can only be computed for CTF data');
+  ft_error('synthetic gradients can only be computed for CTF data');
 end
 
 % check whether there are reference channels in the input data
 hasref = ~isempty(ft_channelselection('MEGREF', data.label));
 if ~hasref
-  error('ft_denoise_synthetic:nohasref', 'synthetic gradients can only be computed when the input data contains reference channels');
+  ft_error('synthetic gradients can only be computed when the input data contains reference channels');
 end
 
 % select trials of interest
-if ~strcmp(cfg.trials, 'all')
-  fprintf('selecting %d trials\n', length(cfg.trials));
-  data = ft_selectdata(data, 'rpt', cfg.trials);
-end
+tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'});
+data   = ft_selectdata(tmpcfg, data);
+% restore the provenance information
+[cfg, data] = rollback_provenance(cfg, data);
 
 % remember the original channel ordering
-labelorg = data.label;
+labelold = data.label;
 
 % apply the balancing to the MEG data and to the gradiometer definition
 current = data.grad.balance.current;
@@ -96,38 +99,37 @@ desired = cfg.gradient;
 if ~strcmp(current, 'none')
   % first undo/invert the previously applied balancing
   try
-    current_montage = getfield(data.grad.balance, current);
+    current_montage = data.grad.balance.(current);
   catch
-    error('unknown balancing for input data');
+    ft_error('unknown balancing for input data');
   end
   fprintf('converting from "%s" to "none"\n', current);
   data.grad = ft_apply_montage(data.grad, current_montage, 'keepunused', 'yes', 'inverse', 'yes');
   data      = ft_apply_montage(data     , current_montage, 'keepunused', 'yes', 'inverse', 'yes');
   data.grad.balance.current = 'none';
-end % if
+end % if current
 
 if ~strcmp(desired, 'none')
   % then apply the desired balancing
   try
-    desired_montage = getfield(data.grad.balance, desired);
+    desired_montage = data.grad.balance.(desired);
   catch
-    error('unknown balancing for input data');
+    ft_error('unknown balancing for input data');
   end
   fprintf('converting from "none" to "%s"\n', desired);
   data.grad = ft_apply_montage(data.grad, desired_montage, 'keepunused', 'yes', 'balancename', desired);
   data      = ft_apply_montage(data     , desired_montage, 'keepunused', 'yes', 'balancename', desired);
-  %data.grad.balance.current = desired;
-end % if
+end % if desired
 
 % reorder the channels to stay close to the original ordering
-[selorg, selnew] = match_str(labelorg, data.label);
-if numel(selnew)==numel(labelorg)
+[selold, selnew] = match_str(labelold, data.label);
+if numel(selnew)==numel(labelold)
   for i=1:numel(data.trial)
     data.trial{i} = data.trial{i}(selnew,:);
   end
   data.label = data.label(selnew);
 else
-  warning('channel ordering might have changed');
+  ft_warning('channel ordering might have changed');
 end
 
 % convert back to input type if necessary
@@ -141,8 +143,7 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous data
-ft_postamble history data
-ft_postamble savevar data
-
+ft_postamble previous   data
+ft_postamble provenance data
+ft_postamble history    data
+ft_postamble savevar    data

@@ -24,7 +24,7 @@ function [cluster, total] = findcluster(onoff, spatdimneighbstructmat, varargin)
 
 % Copyright (C) 2004, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -46,24 +46,18 @@ spatdimlength = size(onoff, 1);
 nfreq = size(onoff, 2);
 ntime = size(onoff, 3);
 
-% ensure that spm8 (preferred) or spm2 is available, needed for spm_bwlabeln
-hasspm = ft_hastoolbox('spm8', 3) || ft_hastoolbox('spm2', 3);
-if ~hasspm
-  error('the spm_bwlabeln function from SPM is needed for clustering');
-end
-
 if length(size(spatdimneighbstructmat))~=2 || ~all(size(spatdimneighbstructmat)==spatdimlength)
-  error('invalid dimension of spatdimneighbstructmat');
+  ft_error('invalid dimension of spatdimneighbstructmat');
 end
 
 minnbchan=0;
 if length(varargin)==1
     minnbchan=varargin{1};
-end;
+end
 if length(varargin)==2
     spatdimneighbselmat=varargin{1};
     minnbchan=varargin{2};
-end;
+end
 
 if minnbchan>0
     % For every (time,frequency)-element, it is calculated how many significant
@@ -72,28 +66,32 @@ if minnbchan>0
     
     if length(varargin)==1
         selectmat = single(spatdimneighbstructmat | spatdimneighbstructmat');
-    end;
+    end
     if length(varargin)==2
         selectmat = single(spatdimneighbselmat | spatdimneighbselmat');
-    end;
+    end
     nremoved=1;
     while nremoved>0
         nsigneighb=reshape(selectmat*reshape(single(onoff),[spatdimlength (nfreq*ntime)]),[spatdimlength nfreq ntime]);
         remove=(onoff.*nsigneighb)<minnbchan;
         nremoved=length(find(remove.*onoff));
         onoff(remove)=0;
-    end;
-end;
+    end
+end
 
 % for each channel (combination), find the connected time-frequency clusters
 labelmat = zeros(size(onoff));
 total = 0;
-for spatdimlev=1:spatdimlength
-  [labelmat(spatdimlev, :, :), num] = spm_bwlabel(double(reshape(onoff(spatdimlev, :, :), nfreq, ntime)), 6); % the previous code contained a '4' for input
-  labelmat(spatdimlev, :, :) = labelmat(spatdimlev, :, :) + (labelmat(spatdimlev, :, :)~=0)*total;
-  total = total + num;
+if nfreq*ntime>1
+  for spatdimlev=1:spatdimlength
+    [labelmat(spatdimlev, :, :), num] = spm_bwlabel(double(reshape(onoff(spatdimlev, :, :), nfreq, ntime)), 6); % the previous code contained a '4' for input
+    labelmat(spatdimlev, :, :) = labelmat(spatdimlev, :, :) + (labelmat(spatdimlev, :, :)~=0)*total;
+    total = total + num;
+  end
+else
+  labelmat(onoff>0) = 1:sum(onoff(:));
+  total = sum(onoff(:));
 end
-
 % combine the time and frequency dimension for simplicity
 labelmat = reshape(labelmat, spatdimlength, nfreq*ntime);
 

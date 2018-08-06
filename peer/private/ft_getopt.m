@@ -8,25 +8,25 @@ function val = ft_getopt(opt, key, default, emptymeaningful)
 % where the input values are
 %   s               = structure or cell-array
 %   key             = string
-%   default         = any valid MATLAB data type
+%   default         = any valid MATLAB data type (optional, default = [])
 %   emptymeaningful = boolean value (optional, default = 0)
 %
-% If the key is present as field in the structure, or as key-value
-% pair in the cell-array, the corresponding value will be returned.
-% 
-% If the key is not present, ft_getopt will return an empty array.
+% If the key is present as field in the structure, or as key-value pair in the
+% cell-array, the corresponding value will be returned.
 %
-% If the key is present but has an empty value, then the emptymeaningful
-% flag specifies whether the empty value or the default value should
-% be returned. If emptymeaningful==true, then an empty array will be
-% returned. If emptymeaningful==false, then the specified default will
-% be returned.
+% If the key is not present, ft_getopt will return the default, or an empty array
+% when no default was specified.
+%
+% If the key is present but has an empty value, then the emptymeaningful flag
+% specifies whether the empty value or the default value should be returned.
+% If emptymeaningful==true, then the empty array will be returned.
+% If emptymeaningful==false, then the specified default will be returned.
 %
 % See also FT_SETOPT, FT_CHECKOPT
 
 % Copyright (C) 2011-2012, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -91,7 +91,7 @@ elseif isa(opt, 'cell')
   else
     error('multiple input arguments with the same name');
   end
-
+  
 elseif isempty(opt)
   % no options are specified, return default
   val = default;
@@ -104,4 +104,3 @@ if isempty(val) && ~isempty(default) && ~emptymeaningful
   % what the value is
   val = default;
 end
-

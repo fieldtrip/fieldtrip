@@ -16,7 +16,7 @@ function [event] = read_nmc_archive_k_event(eventfile)
 
 % Copyright (C) 2009, Roemer van der Meij
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -37,7 +37,7 @@ function [event] = read_nmc_archive_k_event(eventfile)
 
 % Checking events-file:
 if exist(eventfile,'file') ~= 2
-    error('no events.mat file found in specified directory');
+    ft_error('no events.mat file found in specified directory');
 end
 
 % Load event-file as events_old
@@ -94,5 +94,5 @@ end % ievent
 
 % Send warning if no events are found for current session
 if isempty(event)
-    warning(['no events found for session: ' sessionname ' of subject: ' subjname])
+    ft_warning(['no events found for session: ' sessionname ' of subject: ' subjname])
 end

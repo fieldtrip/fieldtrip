@@ -1,10 +1,10 @@
-function [dipout] = dipole_fit(dip, sens, vol, dat, varargin)
+function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin)
 
 % DIPOLE_FIT performs an equivalent current dipole fit with a single
 % or a small number of dipoles to explain an EEG or MEG scalp topography.
 %
 % Use as
-%   [dipout] = dipole_fit(dip, sens, vol, dat, ...)
+%   [dipout] = dipole_fit(dip, sens, headmodel, dat, ...)
 %
 % Additional input arguments should be specified as key-value pairs and can include
 %   'constr'      = Structure with constraints
@@ -27,15 +27,16 @@ function [dipout] = dipole_fit(dip, sens, vol, dat, varargin)
 %   constr.mirror     = vector, used for symmetric dipole models
 %   constr.reduce     = vector, used for symmetric dipole models
 %   constr.expand     = vector, used for symmetric dipole models
+%   constr.sequential = boolean, fit different dipoles to sequential slices of the data
 %
 % The maximum likelihood estimation implements
 %   Lutkenhoner B. "Dipole source localization by means of maximum
 %   likelihood estimation I. Theory and simulations" Electroencephalogr Clin
 %   Neurophysiol. 1998 Apr;106(4):314-21.
 
-% Copyright (C) 2003-2013, Robert Oostenveld
+% Copyright (C) 2003-2016, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -55,27 +56,27 @@ function [dipout] = dipole_fit(dip, sens, vol, dat, varargin)
 
 % It is neccessary to provide backward compatibility support for the old function call
 % in case people want to use it in conjunction with EEGLAB and the dipfit1 plugin.
-% old style: function [dipout] = dipole_fit(dip, dat, sens, vol, constr), where constr is optional
-% new style: function [dipout] = dipole_fit(dip, sens, vol, dat, varargin), where varargin is in key-value pairs
+% old style: function [dipout] = dipole_fit(dip, dat, sens, headmodel, constr), where constr is optional
+% new style: function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin), where varargin is in key-value pairs
 if nargin==4 && ~isstruct(sens) && isstruct(dat)
   % looks like old style, the order of the input arguments has to be changed
-  warning('converting from old style input\n');
-  olddat   = sens;
-  oldsens  = vol;
-  oldvol   = dat;
-  dat      = olddat;
-  sens     = oldsens;
-  vol      = oldvol;
+  ft_warning('converting from old style input\n');
+  olddat    = sens;
+  oldsens   = headmodel;
+  oldhdm    = dat;
+  dat       = olddat;
+  sens      = oldsens;
+  headmodel = oldhdm;
 elseif nargin==5  && ~isstruct(sens) && isstruct(dat)
   % looks like old style, the order of the input arguments has to be changed
   % furthermore the additional constraint has to be fixed
-  warning('converting from old style input\n');
-  olddat   = sens;
-  oldsens  = vol;
-  oldvol   = dat;
-  dat      = olddat;
-  sens     = oldsens;
-  vol      = oldvol;
+  ft_warning('converting from old style input\n');
+  olddat    = sens;
+  oldsens   = headmodel;
+  oldhdm    = dat;
+  dat       = olddat;
+  sens      = oldsens;
+  headmodel = oldhdm;
   varargin = {'constr', varargin{1}};  % convert into a  key-value pair
 else
   % looks like new style, i.e. with optional key-value arguments
@@ -103,7 +104,7 @@ constr.rigidbody  = ft_getopt(constr, 'rigidbody', false);
 constr.sequential = ft_getopt(constr, 'sequential', false);
 
 if isempty(optimfun)
-  % determine whether the Matlab Optimization toolbox is available and can be used
+  % determine whether the MATLAB Optimization toolbox is available and can be used
   if ft_hastoolbox('optim')
     optimfun = @fminunc;
   else
@@ -126,7 +127,7 @@ ismeg = ft_senstype(sens, 'meg');
 
 if ismeg && iseeg
   % this is something that I might implement in the future
-  error('simultaneous EEG and MEG not supported');
+  ft_error('simultaneous EEG and MEG not supported');
 elseif iseeg
   % ensure that the potential data is average referenced, just like the model potential
   dat = avgref(dat);
@@ -139,7 +140,7 @@ dip = fixdipole(dip);
 [param, constr] = dipolemodel2param(dip.pos, dip.mom, constr);
 
 % determine the scale
-scale = scalingfactor(sens.unit, 'cm');
+scale = ft_scalingfactor(sens.unit, 'cm');
 
 % set the parameters for the optimization function
 if isequal(optimfun, @fminunc)
@@ -157,19 +158,19 @@ elseif isequal(optimfun, @fminsearch)
     'MaxFunEvals',2*maxiter*length(param),...
     'Display',display);
 else
-  warning('unknown optimization function "%s", using default parameters', func2str(optimfun));
+  ft_warning('unknown optimization function "%s", using default parameters', func2str(optimfun));
 end
 
 % perform the optimization with either the fminsearch or fminunc function
-[param, fval, exitflag, output] = optimfun(@dipfit_error, param, options, dat, sens, vol, constr, metric, checkinside, reducerank, normalize, normalizeparam, weight);
+[param, fval, exitflag, output] = optimfun(@dipfit_error, param, options, dat, sens, headmodel, constr, metric, checkinside, reducerank, normalize, normalizeparam, weight);
 
 if exitflag==0
-  error('Maximum number of iterations exceeded before reaching the minimum, please try with another initial guess.')
+  ft_error('Maximum number of iterations exceeded before reaching the minimum, please try with another initial guess.')
 end
 
 % do the linear optimization of the dipole moment parameters
 % the error is not interesting any more, only the dipole moment is relevant
-[err, mom] = dipfit_error(param, dat, sens, vol, constr, metric, checkinside, reducerank, normalize, normalizeparam, weight);
+[err, mom] = dipfit_error(param, dat, sens, headmodel, constr, metric, checkinside, reducerank, normalize, normalizeparam, weight);
 
 % convert the non-linear parameter vector into the dipole model parameters
 [pos, ori] = param2dipolemodel(param, constr);
@@ -201,6 +202,7 @@ param = reshape(pos', 1, numel(pos));
 
 % add the orientation to the nonlinear parameters
 if constr.fixedori
+  numdip = size(pos,1);
   for i=1:numdip
     % add the orientation to the list of parameters
     [th, phi, r] = cart2sph(ori(1,i), ori(2,i), ori(3,i));
@@ -209,7 +211,7 @@ if constr.fixedori
 end
 
 if constr.symmetry && constr.rigidbody
-  error('simultaneous symmetry and rigidbody constraints are not supported')
+  ft_error('simultaneous symmetry and rigidbody constraints are not supported')
   
 elseif constr.symmetry
   % reduce the number of parameters to be fitted according to the constraints
@@ -228,7 +230,7 @@ end
 function [pos, ori] = param2dipolemodel(param, constr)
 
 if constr.symmetry && constr.rigidbody
-  error('simultaneous symmetry and rigidbody constraints are not supported')
+  ft_error('simultaneous symmetry and rigidbody constraints are not supported')
   
 elseif constr.symmetry
   param  = constr.mirror .* param(constr.expand);
@@ -262,14 +264,14 @@ end
 % DIPFIT_ERROR computes the error between measured and model data
 % and can be used for non-linear fitting of dipole position
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [err, mom] = dipfit_error(param, dat, sens, vol, constr, metric, checkinside, reducerank, normalize, normalizeparam, weight)
+function [err, mom] = dipfit_error(param, dat, sens, headmodel, constr, metric, checkinside, reducerank, normalize, normalizeparam, weight)
 
 % flush pending graphics events, ensure that fitting is interruptible
 drawnow;
 if ~isempty(get(0, 'currentfigure')) && strcmp(get(gcf, 'tag'), 'stop')
   % interrupt the fitting
   close;
-  error('USER ABORT');
+  ft_error('USER ABORT');
 end;
 
 % convert the non-linear parameter vector into the dipole model parameters
@@ -277,14 +279,14 @@ end;
 
 % check whether the dipole is inside the source compartment
 if checkinside
-  inside = ft_inside_vol(pos, vol);
+  inside = ft_inside_vol(pos, headmodel);
   if ~all(inside)
-    error('Dipole is outside the source compartment');
+    ft_error('Dipole is outside the source compartment');
   end
 end
 
 % construct the leadfield matrix for all dipoles
-lf = ft_compute_leadfield(pos, sens, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+lf = ft_compute_leadfield(pos, sens, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
 if ~isempty(ori)
   lf = lf * ori;
 end
@@ -293,7 +295,7 @@ end
 if ~isempty(weight)
   % maximum likelihood estimation using the weigth matrix
   if constr.sequential
-    error('not supported');
+    ft_error('not supported');
   else
     mom = pinv(lf'*weight*lf)*lf'*weight*dat;  % Lutkenhoner equation 5
     dif = dat - lf*mom;
@@ -305,19 +307,28 @@ if ~isempty(weight)
       denom = dat' * weight * dat;
       err   = sum(num(:)) ./ sum(denom(:)); % Lutkenhonner equation 7, except for the gof=1-rv
     case 'var' % residual variance
-      num   = dif' * weight * dif';
+      num   = dif' * weight * dif;
       err   = sum(num(:));
     otherwise
-      error('Unsupported error metric for maximum likelihood dipole fitting');
+      ft_error('Unsupported error metric for maximum likelihood dipole fitting');
   end
 else
   % ordinary least squares, this is the same as MLE with weight=eye(nchans,nchans)
   if constr.sequential
-    numdip = numel(pos)/3;
-    mom = zeros(3*numdip, numdip);
+    % the number of slices is the same as the number of dipoles
+    % each slice has a number of frames (time points) in it
+    % so the data can be nchan*ndip or nchan*(ndip*nframe)
+    numdip   = numel(pos)/3;
+    numframe = size(dat,2)/numdip;
+    
+    % do a sainty check on the number of frames, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3119
+    assert(numframe>0 && numframe==round(numframe), 'the number of frames should be a positive integer');
+    
+    mom = zeros(3*numdip, numdip*numframe);
     for i=1:numdip
-      sel = (1:3)+3*(i-1);  % 1:3 for the first dipole, 4:6 for the second dipole, ...
-      mom(sel,i) = pinv(lf(:,sel))*dat(:,i);
+      dipsel   = (1:3)        + 3*(i-1);         % 1:3 for the first dipole, 4:6 for the second dipole, ...
+      framesel = (1:numframe) + numframe*(i-1);  % 1:numframe for the first, (numframe+1):(2*numframe) for the second, ...
+      mom(dipsel,framesel) = pinv(lf(:,dipsel))*dat(:,framesel);
     end
   else
     mom = pinv(lf)*dat;
@@ -332,7 +343,7 @@ else
     case 'abs' % absolute difference
       err = sum(abs(dif));
     otherwise
-      error('Unsupported error metric for dipole fitting');
+      ft_error('Unsupported error metric for dipole fitting');
   end
 end
 

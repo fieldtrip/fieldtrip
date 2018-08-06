@@ -3,12 +3,11 @@ function test_resampledesign
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_resampledesign
 % TEST resampledesign
 
-% since the resampledesign is in a private directory, we explicitely have to cd into that directory
-[p, f, x] = fileparts(which('ft_defaults'));
-cd(fullfile(p, 'private'));
+% since the function to test is in a private directory, we explicitely have to cd into that directory
+[ftver, ftpath] = ft_version;
+cd(fullfile(ftpath, 'private'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % check that there are fac(N) permutations

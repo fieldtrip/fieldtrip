@@ -1,91 +1,113 @@
 function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 
-% FT_ARTIFACT_ZVALUE reads the interesting segments of data from file and
-% identifies artifacts by means of thresholding the z-transformed value
-% of the preprocessed raw data. Depending on the preprocessing options,
-% this method will be sensitive to EOG, muscle or jump artifacts.
-% This procedure only works on continuously recorded data.
+% FT_ARTIFACT_ZVALUE reads the interesting segments of data from file and identifies
+% artifacts by means of thresholding the z-transformed value of the preprocessed raw data.
+% Depending on the preprocessing options, this method will be sensitive to EOG, muscle or
+% jump artifacts.  This procedure only works on continuously recorded data.
 %
 % Use as
 %   [cfg, artifact] = ft_artifact_zvalue(cfg)
+% with the configuration options
+%   cfg.dataset     = string with the filename
 % or
-%   [cfg, artifact] = ft_artifact_zvalue(cfg, data)
-%
-% The output argument "artifact" is a Nx2 matrix comparable to the
-% "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
-% beginsamples of an artifact period, the second column contains the
-% endsamples of the artifactperiods.
-%
-% If you are calling FT_ARTIFACT_ZVALUE with only the configuration as first
-% input argument and the data still has to be read from file, you should
-% specify
-%   cfg.headerfile
-%   cfg.datafile
+%   cfg.headerfile  = string with the filename
+%   cfg.datafile    = string with the filename
 % and optionally
 %   cfg.headerformat
 %   cfg.dataformat
 %
-% If you are calling FT_ARTIFACT_ZVALUE with also the second input argument
-% "data", then that should contain data that was already read from file
-% a call to FT_PREPROCESSING.
-%
-% If you encounter difficulties with memory usage, you can use
-%   cfg.memory = 'low' or 'high', whether to be memory or computationally efficient, respectively (default = 'high')
+% Alternatively you can use it as
+%   [cfg, artifact] = ft_artifact_zvalue(cfg, data)
+% where the input data is a structure as obtained from FT_PREPROCESSING.
 %
 % The required configuration settings are:
-%   cfg.trl
-%   cfg.continuous
+%   cfg.trl         = structure that defines the data segments of interest. See FT_DEFINETRIAL
+%   cfg.continuous  = 'yes' or 'no' whether the file contains continuous data (default   = 'yes')
+% and
 %   cfg.artfctdef.zvalue.channel
 %   cfg.artfctdef.zvalue.cutoff
 %   cfg.artfctdef.zvalue.trlpadding
 %   cfg.artfctdef.zvalue.fltpadding
 %   cfg.artfctdef.zvalue.artpadding
 %
-% If you specify
-%   cfg.artfctdef.zvalue.interactive = 'yes', a GUI will be started and you
-%     can manually accept/reject detected artifacts, and/or change the threshold
+% If you encounter difficulties with memory usage, you can use
+%   cfg.memory = 'low' or 'high', whether to be memory or computationally efficient, respectively (default = 'high')
 %
-% If you specify
-%   cfg.artfctdef.zvalue.artfctpeak='yes', the maximum value of the artifact
-%       within its range will be found; saved into cfg.artfctdef.zvalue.peaks
-% Use also, e.g. as input to DSS option of ft_componentanalysis:
-%   cfg.artfctdef.zvalue.artfctpeakrange= [-0.25 0.25]; (in seconds), (for example)
-%       to indicate range around peak to include, saved into cfg.artfctdef.zvalue.dssartifact
-%       Default values: [0 0]
-%       Range will respect trial boundaries (i.e. be shorter if peak is near beginning or end of trial)
-%       Samples between trials will be removed; thus this won't match .sampleinfo of the data structure
+% The optional configuration settings (see below) are:
+%   cfg.artfctdef.zvalue.artfctpeak  = 'yes' or 'no'
+%   cfg.artfctdef.zvalue.interactive = 'yes' or 'no'
+%
+% If you specify artfctpeak='yes', the maximum value of the artifact within its range
+% will be found and saved into cfg.artfctdef.zvalue.peaks.
+%
+% If you specify interactive='yes', a GUI will be started and you can manually
+% accept/reject detected artifacts, and/or change the threshold. To control the
+% graphical interface via keyboard, use the following keys:
+%
+%     q                 : Stop
+%
+%     comma             : Step to the previous artifact trial
+%     a                 : Specify artifact trial to display
+%     period            : Step to the next artifact trial
+%
+%     x                 : Step 10 trials back
+%     leftarrow         : Step to the previous trial
+%     t                 : Specify trial to display
+%     rightarrow        : Step to the next trial
+%     c                 : Step 10 trials forward
+%
+%     k                 : Keep trial
+%     space             : Mark complete trial as artifact
+%     r                 : Mark part of trial as artifact
+%
+%     downarrow         : Shift the z-threshold down
+%     z                 : Specify the z-threshold
+%     uparrow           : Shift the z-threshold down
+%
+% Use also, e.g. as input to DSS option of ft_componentanalysis
+% cfg.artfctdef.zvalue.artfctpeakrange=[-0.25 0.25], for example to indicate range
+% around peak to include, saved into cfg.artfctdef.zvalue.dssartifact. The default is
+% [0 0]. Range will respect trial boundaries (i.e. be shorter if peak is near
+% beginning or end of trial). Samples between trials will be removed; thus this won't
+% match .sampleinfo of the data structure.
 %
 % Configuration settings related to the preprocessing of the data are
 %   cfg.artfctdef.zvalue.lpfilter      = 'no' or 'yes'  lowpass filter
 %   cfg.artfctdef.zvalue.hpfilter      = 'no' or 'yes'  highpass filter
 %   cfg.artfctdef.zvalue.bpfilter      = 'no' or 'yes'  bandpass filter
-%   cfg.artfctdef.zvalue.lnfilter      = 'no' or 'yes'  line noise removal using notch filter
+%   cfg.artfctdef.zvalue.bsfilter      = 'no' or 'yes'  bandstop filter for line noise removal
 %   cfg.artfctdef.zvalue.dftfilter     = 'no' or 'yes'  line noise removal using discrete fourier transform
 %   cfg.artfctdef.zvalue.medianfilter  = 'no' or 'yes'  jump preserving median filter
 %   cfg.artfctdef.zvalue.lpfreq        = lowpass  frequency in Hz
 %   cfg.artfctdef.zvalue.hpfreq        = highpass frequency in Hz
 %   cfg.artfctdef.zvalue.bpfreq        = bandpass frequency range, specified as [low high] in Hz
-%   cfg.artfctdef.zvalue.lnfreq        = line noise frequency in Hz, default 50Hz
+%   cfg.artfctdef.zvalue.bsfreq        = bandstop frequency range, specified as [low high] in Hz
 %   cfg.artfctdef.zvalue.lpfiltord     = lowpass  filter order
 %   cfg.artfctdef.zvalue.hpfiltord     = highpass filter order
 %   cfg.artfctdef.zvalue.bpfiltord     = bandpass filter order
-%   cfg.artfctdef.zvalue.lnfiltord     = line noise notch filter order
+%   cfg.artfctdef.zvalue.bsfiltord     = bandstop filter order
 %   cfg.artfctdef.zvalue.medianfiltord = length of median filter
-%   cfg.artfctdef.zvalue.lpfilttype    = digital filter type, 'but' (default) or 'fir'
-%   cfg.artfctdef.zvalue.hpfilttype    = digital filter type, 'but' (default) or 'fir'
-%   cfg.artfctdef.zvalue.bpfilttype    = digital filter type, 'but' (default) or 'fir'
+%   cfg.artfctdef.zvalue.lpfilttype    = digital filter type, 'but' (default) or 'firws' or 'fir' or 'firls'
+%   cfg.artfctdef.zvalue.hpfilttype    = digital filter type, 'but' (default) or 'firws' or 'fir' or 'firls'
+%   cfg.artfctdef.zvalue.bpfilttype    = digital filter type, 'but' (default) or 'firws' or 'fir' or 'firls'
+%   cfg.artfctdef.zvalue.bsfilttype    = digital filter type, 'but' (default) or 'firws' or 'fir' or 'firls'
 %   cfg.artfctdef.zvalue.detrend       = 'no' or 'yes'
 %   cfg.artfctdef.zvalue.demean        = 'no' or 'yes'
 %   cfg.artfctdef.zvalue.baselinewindow = [begin end] in seconds, the default is the complete trial
 %   cfg.artfctdef.zvalue.hilbert       = 'no' or 'yes'
 %   cfg.artfctdef.zvalue.rectify       = 'no' or 'yes'
 %
+% The output argument "artifact" is a Nx2 matrix comparable to the
+% "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
+% beginsamples of an artifact period, the second column contains the
+% endsamples of the artifactperiods.
+%
 % See also FT_REJECTARTIFACT, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG, FT_ARTIFACT_EOG,
 % FT_ARTIFACT_JUMP, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_ZVALUE
 
 % Copyright (C) 2003-2011, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -103,7 +125,10 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -111,8 +136,8 @@ ft_preamble init
 ft_preamble provenance
 ft_preamble loadvar data
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -148,6 +173,9 @@ end
 % set feedback
 cfg.feedback = ft_getopt(cfg, 'feedback',   'text');
 
+% clear old warnings from this stack
+ft_warning('-clear')
+
 % flag whether to compute z-value per trial or not, rationale being that if
 % there are fluctuations in the variance across trials (e.g. due to
 % position differences in MEG measurements) which don't have to do with the artifact per se,
@@ -159,30 +187,30 @@ if pertrial
   if isfield(cfg.artfctdef.zvalue, 'ntrial') && cfg.artfctdef.zvalue.ntrial>0
     pertrial = cfg.artfctdef.zvalue.ntrial;
   else
-    error('you should specify cfg.artfctdef.zvalue.ntrial, and it should be > 0');
+    ft_error('you should specify cfg.artfctdef.zvalue.ntrial, and it should be > 0');
   end
 end
 
-if nargin > 1
+% the data can be passed as input arguments or can be read from disk
+hasdata = exist('data', 'var');
+
+if ~hasdata
+  % only cfg given, read data from disk
+  cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
+  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
+  trl = cfg.trl;
+  
+else
+  % check whether the value for trlpadding makes sense
+  if cfg.artfctdef.zvalue.trlpadding > 0
+    % negative trlpadding is allowed with in-memory data
+    ft_error('you cannot use positive trlpadding with in-memory data');
+  end
   % check if the input data is valid for this function
   data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
-  % data given as input, use ft_fetch_header and ft_fetch_data in the remainder of the code
-  isfetch = 1;
+  cfg = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
   hdr = ft_fetch_header(data);
-elseif nargin == 1
-  % only cfg given
-  isfetch = 0;
-  
-  if ~isfield(cfg, 'headerfile') && isfield(cfg, 'dataset')
-    cfg = dataset2files(cfg);
-  end
-  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
-  
-  % check whether the value for trlpadding makes sense; negative trlpadding
-  % only allowed with in-memory data
-  if cfg.artfctdef.zvalue.trlpadding < 0
-    error('negative trlpadding is only allowed with in-memory data');
-  end
+  trl = data.sampleinfo;
 end
 
 % set default cfg.continuous
@@ -194,11 +222,6 @@ if ~isfield(cfg, 'continuous')
   end
 end
 
-if isfield(cfg,'trl')
-  trl = cfg.trl;
-else
-  trl = data.sampleinfo;
-end
 trlpadding    = round(cfg.artfctdef.zvalue.trlpadding*hdr.Fs);
 fltpadding    = round(cfg.artfctdef.zvalue.fltpadding*hdr.Fs);
 artpadding    = round(cfg.artfctdef.zvalue.artpadding*hdr.Fs);
@@ -206,7 +229,7 @@ trl(:,1)      = trl(:,1) - trlpadding;       % pad the trial with some samples, 
 trl(:,2)      = trl(:,2) + trlpadding;       % artifacts at the edges of the relevant trials.
 if size(trl, 2) >= 3
   trl(:,3)      = trl(:,3) - trlpadding;     % the offset can ofcourse be adjusted as well
-elseif isfetch
+elseif hasdata
   % reconstruct offset
   for tr=1:size(trl, 1)
     % account for 0 might not be in data.time
@@ -226,8 +249,8 @@ numsgn        = length(sgnind);
 thresholdsum  = strcmp(cfg.artfctdef.zvalue.cumulative, 'yes');
 
 if numsgn<1
-  error('no channels selected');
-end 
+  ft_error('no channels selected');
+end
 
 % read the data and apply preprocessing options
 sumval = zeros(numsgn, 1);
@@ -236,12 +259,12 @@ numsmp = zeros(numsgn, 1);
 ft_progress('init', cfg.feedback, ['searching for artifacts in ' num2str(numsgn) ' channels']);
 for trlop = 1:numtrl
   ft_progress(trlop/numtrl, 'searching in trial %d from %d\n', trlop, numtrl);
-      
+  
   if strcmp(cfg.memory, 'low') % store nothing in memory
-    if isfetch
-      dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'skipcheckdata', 1);
+    if hasdata
+      dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'skipcheckdata', 1);
     else
-      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'dataformat', cfg.dataformat);
+      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
     end
     dat = preproc(dat, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(dat,2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
     
@@ -259,8 +282,8 @@ for trlop = 1:numtrl
     
     if ~pertrial
       % accumulate the sum and the sum-of-squares
-      sumval = sumval + sum(dat,2);
-      sumsqr = sumsqr + sum(dat.^2,2);
+      sumval = sumval + nansum(dat,2);
+      sumsqr = sumsqr + nansum(dat.^2,2);
       numsmp = numsmp + size(dat,2);
     else
       % store per trial the sum and the sum-of-squares
@@ -269,10 +292,10 @@ for trlop = 1:numtrl
       numsmp(:,trlop) = size(dat,2);
     end
   else % store all data in memory, saves computation time
-    if isfetch
-      dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'skipcheckdata', 1);
+    if hasdata
+      dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'skipcheckdata', 1);
     else
-      dat{trlop} = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'dataformat', cfg.dataformat);
+      dat{trlop} = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
     end
     dat{trlop} = preproc(dat{trlop}, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(dat{trlop},2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
     
@@ -290,8 +313,8 @@ for trlop = 1:numtrl
     
     if ~pertrial
       % accumulate the sum and the sum-of-squares
-      sumval = sumval + sum(dat{trlop},2);
-      sumsqr = sumsqr + sum(dat{trlop}.^2,2);
+      sumval = sumval + nansum(dat{trlop},2);
+      sumsqr = sumsqr + nansum(dat{trlop}.^2,2);
       numsmp = numsmp + size(dat{trlop},2);
     else
       % store per trial the sum and the sum-of-squares
@@ -308,7 +331,7 @@ if pertrial>1
   sumsqr = ft_preproc_smooth(sumsqr, pertrial)*pertrial;
   numsmp = ft_preproc_smooth(numsmp, pertrial)*pertrial;
 end
-  
+
 % compute the average and the standard deviation
 datavg = sumval./numsmp;
 datstd = sqrt(sumsqr./numsmp - (sumval./numsmp).^2);
@@ -332,10 +355,10 @@ end
 for trlop = 1:numtrl
   if strcmp(cfg.memory, 'low') % store nothing in memory (note that we need to preproc AGAIN... *yawn*
     fprintf('.');
-    if isfetch
-      dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
+    if hasdata
+      dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'));
     else
-      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'dataformat', cfg.dataformat);
+      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
     end
     dat = preproc(dat, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(dat,2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
     zmax{trlop}  = -inf + zeros(1,size(dat,2));
@@ -383,10 +406,10 @@ end
 %  fprintf('searching channel %s ', cfg.artfctdef.zvalue.channel{sgnlop});
 %  for trlop = 1:numtrl
 %    fprintf('.');
-%    if isfetch
-%      dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind(sgnlop), 'checkboundary', strcmp(cfg.continuous,'no'));
+%    if hasdata
+%      dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind(sgnlop), 'checkboundary', strcmp(cfg.continuous, 'no'));
 %    else
-%      dat{trlop} = read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind(sgnlop), 'checkboundary', strcmp(cfg.continuous,'no'));
+%      dat{trlop} = read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind(sgnlop), 'checkboundary', strcmp(cfg.continuous, 'no'));
 %    end
 %    dat{trlop} = preproc(dat{trlop}, cfg.artfctdef.zvalue.channel(sgnlop), hdr.Fs, cfg.artfctdef.zvalue, [], fltpadding, fltpadding);
 %    % accumulate the sum and the sum-of-squares
@@ -429,7 +452,8 @@ for trlop = 1:numtrl
 end
 
 % always create figure
-h = figure;
+% keypress to enable keyboard uicontrol
+h = figure('KeyPressFcn', @keyboard_cb);
 set(h, 'visible', 'off');
 
 opt.artcfg       = cfg.artfctdef.zvalue;
@@ -456,7 +480,7 @@ else
   opt.zval = zsum;
 end
 opt.zindx = zindx;
-if nargin==1
+if ~hasdata
   opt.data = {};
 else
   opt.data = data;
@@ -478,37 +502,43 @@ if strcmp(cfg.artfctdef.zvalue.interactive, 'yes')
   artval_cb(h);
   redraw_cb(h);
   
-  % make the user interface elements for the data view
-  uicontrol('tag', 'group1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'stop', 'userdata', 'q')
-  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'downarrow')
-  uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'threshold', 'userdata', 'z')
-  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'uparrow')
-  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'shift+downarrow')
-  uicontrol('tag', 'group1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'artifact','userdata', 'a')
-  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'shift+uparrow')
-  uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'keep trial',   'userdata', 'k')
-  uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'reject part', 'userdata', 'r')
-  uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'reject full', 'userdata', 'R')
-  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<<', 'userdata', 'shift+leftarrow')
-  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'leftarrow')
-  uicontrol('tag', 'group1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'trial', 'userdata', 't')
-  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'rightarrow')
-  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>>', 'userdata', 'shift+rightarrow')
-  %uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'ctrl+uparrow')
-  %uicontrol('tag', 'group1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'channel','userdata', 'c')
-  %uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'ctrl+downarrow')
+  % make the user interface elements for the data view, the order of the elements
+  % here is from left to right and should match the order in the documentation
+  uicontrol('tag', 'width1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'stop',    'userdata', 'q');
   
-  ft_uilayout(h, 'tag', 'group1', 'width', 0.10, 'height', 0.05);
-  ft_uilayout(h, 'tag', 'group2', 'width', 0.05, 'height', 0.05);
-  ft_uilayout(h, 'tag', 'group3', 'width', 0.12, 'height', 0.05);
+  uicontrol('tag', 'width2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<',        'userdata', 'comma');
+  uicontrol('tag', 'width1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'artifact', 'userdata', 'a');
+  uicontrol('tag', 'width2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>',        'userdata', 'period');
   
-  ft_uilayout(h, 'tag', 'group1', 'style', 'pushbutton', 'callback', @keyboard_cb);
-  ft_uilayout(h, 'tag', 'group2', 'style', 'pushbutton', 'callback', @keyboard_cb);
-  ft_uilayout(h, 'tag', 'group3', 'style', 'pushbutton', 'callback', @keyboard_cb);
+  uicontrol('tag', 'width2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<<',    'userdata', 'x');
+  uicontrol('tag', 'width2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<',     'userdata', 'leftarrow');
+  uicontrol('tag', 'width1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'trial', 'userdata', 't');
+  uicontrol('tag', 'width2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>',     'userdata', 'rightarrow');
+  uicontrol('tag', 'width2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>>',    'userdata', 'c');
   
-  ft_uilayout(h, 'tag', 'group1', 'retag', 'viewui');
-  ft_uilayout(h, 'tag', 'group2', 'retag', 'viewui');
-  ft_uilayout(h, 'tag', 'group3', 'retag', 'viewui');
+  uicontrol('tag', 'width3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'keep trial',  'userdata', 'k');
+  uicontrol('tag', 'width3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'reject full', 'userdata', 'space');
+  uicontrol('tag', 'width3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'reject part', 'userdata', 'r');
+  
+  uicontrol('tag', 'width2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<',           'userdata', 'downarrow');
+  uicontrol('tag', 'width3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'threshold',   'userdata', 'z');
+  uicontrol('tag', 'width2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>',           'userdata', 'uparrow');
+  
+  %uicontrol('tag', 'width2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<',       'userdata', 'control+uparrow')
+  %uicontrol('tag', 'width1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'channel', 'userdata', 'c')
+  %uicontrol('tag', 'width2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>',       'userdata', 'control+downarrow')
+  
+  ft_uilayout(h, 'tag', 'width1', 'width', 0.10, 'height', 0.05);
+  ft_uilayout(h, 'tag', 'width2', 'width', 0.05, 'height', 0.05);
+  ft_uilayout(h, 'tag', 'width3', 'width', 0.12, 'height', 0.05);
+  
+  ft_uilayout(h, 'tag', 'width1', 'style', 'pushbutton', 'callback', @keyboard_cb);
+  ft_uilayout(h, 'tag', 'width2', 'style', 'pushbutton', 'callback', @keyboard_cb);
+  ft_uilayout(h, 'tag', 'width3', 'style', 'pushbutton', 'callback', @keyboard_cb);
+  
+  ft_uilayout(h, 'tag', 'width1', 'retag', 'viewui');
+  ft_uilayout(h, 'tag', 'width2', 'retag', 'viewui');
+  ft_uilayout(h, 'tag', 'width3', 'retag', 'viewui');
   ft_uilayout(h, 'tag', 'viewui', 'BackgroundColor', [0.8 0.8 0.8], 'hpos', 'auto', 'vpos', 0.005);
   
   while opt.quit==0
@@ -537,7 +567,7 @@ artbeg = find(diff([0 artval])== 1);
 artend = find(diff([artval 0])==-1);
 artifact = [artbeg(:) artend(:)];
 
-if strcmp(cfg.artfctdef.zvalue.artfctpeak,'yes')
+if strcmp(cfg.artfctdef.zvalue.artfctpeak, 'yes')
   cnt=1;
   shift=opt.trl(1,1)-1;
   for tt=1:opt.numtrl
@@ -588,7 +618,7 @@ opt = getappdata(h, 'opt');
 
 artval = cell(1,opt.numtrl);
 for trlop=1:opt.numtrl
-  if opt.thresholdsum,
+  if opt.thresholdsum
     % threshold the accumulated z-values
     artval{trlop} = opt.zsum{trlop}>opt.threshold;
   else
@@ -618,7 +648,7 @@ for trlop = find(opt.keep<0 & opt.trialok==1)
   % if the user specifies that the trial is not OK
   % reject the whole trial if there is no extra-threshold data,
   % otherwise use the artifact as found by the thresholding
-  if opt.thresholdsum && opt.keep(trlop)==-1,
+  if opt.thresholdsum && opt.keep(trlop)==-1
     % threshold the accumulated z-values
     artval{trlop} = opt.zsum{trlop}>opt.threshold;
   elseif opt.keep(trlop)==-1
@@ -670,31 +700,41 @@ uiresume;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 function keyboard_cb(h, eventdata)
 
-if isempty(eventdata)
-  % determine the key that corresponds to the uicontrol element that was activated
-  key = get(h, 'userdata');
+% If a mouseclick was made, use that value. If not, determine the key that
+% corresponds to the uicontrol element that was activated.
+
+if isa(eventdata, 'matlab.ui.eventdata.ActionData') % only the case when clicked with mouse
+  curKey = get(h, 'userdata');
+elseif isa(eventdata, 'matlab.ui.eventdata.KeyData') % only when key was pressed
+  if isempty(eventdata.Character) && any(strcmp(eventdata.Key, {'control', 'shift', 'alt', '0'}))
+    % only a modifier key was pressed
+    return
+  end
+  if isempty(eventdata.Modifier)
+    curKey = eventdata.Key;
+  else
+    curKey = [sprintf('%s+', eventdata.Modifier{:}) eventdata.Key];
+  end
+elseif isfield(eventdata, 'Key')  % only when key was pressed
+  curKey = eventdata.Key;
+elseif isempty(eventdata) % matlab2012b returns an empty double upon a mouse click
+  curKey = get(h, 'userdata');
 else
-  % determine the key that was pressed on the keyboard
-  key = parseKeyboardEvent(eventdata);
-end
-% get focus back to figure
-if ~strcmp(get(h, 'type'), 'figure')
-  set(h, 'enable', 'off');
-  drawnow;
-  set(h, 'enable', 'on');
+  ft_error('cannot process user input, please report this on http://bugzilla.fieldtriptoolbox.org including your MATLAB version');
 end
 
-h = getparent(h);
+h = getparent(h); % otherwise h is empty if isa [...].ActionData
 opt = getappdata(h, 'opt');
 
-switch key
+switch strtrim(curKey)
   case 'leftarrow' % change trials
     opt.trlop = max(opt.trlop - 1, 1); % should not be smaller than 1
     setappdata(h, 'opt', opt);
     redraw_cb(h, eventdata);
-  case 'shift+leftarrow'
+  case 'x'
     opt.trlop = max(opt.trlop - 10, 1); % should not be smaller than 1
     setappdata(h, 'opt', opt);
     redraw_cb(h, eventdata);
@@ -702,7 +742,7 @@ switch key
     opt.trlop = min(opt.trlop + 1, opt.numtrl); % should not be larger than the number of trials
     setappdata(h, 'opt', opt);
     redraw_cb(h, eventdata);
-  case 'shift+rightarrow'
+  case 'c'
     opt.trlop = min(opt.trlop + 10, opt.numtrl); % should not be larger than the number of trials
     setappdata(h, 'opt', opt);
     redraw_cb(h, eventdata);
@@ -724,7 +764,7 @@ switch key
     opt = getappdata(h, 'opt'); % grab the opt-structure from the handle because it has been adjusted in the callbacks
     opt.updatethreshold = false;
     setappdata(h, 'opt', opt);
-  case 'shift+uparrow' % change artifact
+  case 'period' % change artifact
     artfctindx = find(opt.trialok == 0);
     sel        = find(artfctindx>opt.trlop);
     if ~isempty(sel)
@@ -732,7 +772,7 @@ switch key
     end
     setappdata(h, 'opt', opt);
     redraw_cb(h, eventdata);
-  case 'shift+downarrow'
+  case 'comma'
     artfctindx = find(opt.trialok == 0);
     sel        = find(artfctindx<opt.trlop);
     if ~isempty(sel)
@@ -740,33 +780,38 @@ switch key
     end
     setappdata(h, 'opt', opt);
     redraw_cb(h, eventdata);
-  case 'ctrl+uparrow' % change channel
-    if strcmp(opt.channel, 'artifact')
-      [dum, indx] = max(opt.zval);
-      sgnind      = opt.zindx(indx);
-    else
-      if ~isempty(opt.data)
-        sgnind  = match_str(opt.channel, opt.data.label);
-        selchan = match_str(opt.artcfg.channel, opt.channel);
-      else
-        sgnind  = match_str(opt.channel,   opt.hdr.label);
-        selchan = match_str(opt.artcfg.channel, opt.channel);
-      end
-    end
-    numchan = numel(opt.artcfg.channel);
-    chansel = min(selchan+1, numchan);
-    % convert numeric array into cell-array with channel labels
-    opt.channel = tmpchan(chansel);
-    setappdata(h, 'opt', opt);
-    redraw_cb(h, eventdata);
-  case 'ctrl+downarrow'
-    tmpchan = [opt.artcfg.channel;{'artifact'}]; % append the 'artifact' channel
-    chansel = match_str(tmpchan, opt.channel);
-    chansel = max(chansel-1, 1);
-    % convert numeric array into cell-array with channel labels
-    opt.channel = tmpchan(chansel);
-    setappdata(h, 'opt', opt);
-    redraw_cb(h, eventdata);
+    %   case 'control+uparrow' % change channel
+    %     if strcmp(opt.channel, 'artifact')
+    %       [dum, indx] = max(opt.zval);
+    %       sgnind      = opt.zindx(indx);
+    %     else
+    %       if ~isempty(opt.data)
+    %         sgnind  = match_str(opt.channel, opt.data.label);
+    %         selchan = match_str(opt.artcfg.channel, opt.channel);
+    %       else
+    %         sgnind  = match_str(opt.channel,   opt.hdr.label);
+    %         selchan = match_str(opt.artcfg.channel, opt.channel);
+    %       end
+    %     end
+    %     numchan = numel(opt.artcfg.channel);
+    %     chansel = min(selchan+1, numchan);
+    %     % convert numeric array into cell-array with channel labels
+    %     opt.channel = tmpchan(chansel);
+    %     setappdata(h, 'opt', opt);
+    %     redraw_cb(h, eventdata);
+    %   case 'c' % select channel
+    %     select = match_str([opt.artcfg.channel;{'artifact'}], opt.channel);
+    %     opt.channel = select_channel_list([opt.artcfg.channel;{'artifact'}], select);
+    %     setappdata(h, 'opt', opt);
+    %     redraw_cb(h, eventdata);
+    %   case 'control+downarrow'
+    %     tmpchan = [opt.artcfg.channel;{'artifact'}]; % append the 'artifact' channel
+    %     chansel = match_str(tmpchan, opt.channel);
+    %     chansel = max(chansel-1, 1);
+    %     % convert numeric array into cell-array with channel labels
+    %     opt.channel = tmpchan(chansel);
+    %     setappdata(h, 'opt', opt);
+    %     redraw_cb(h, eventdata);
   case 'a'
     % select the artifact to display
     response = inputdlg(sprintf('artifact trial to display'), 'specify', 1, {num2str(opt.trlop)});
@@ -779,12 +824,6 @@ switch key
       setappdata(h, 'opt', opt);
       redraw_cb(h, eventdata);
     end
-  case 'c'
-    % select channels
-    %     select = match_str([opt.artcfg.channel;{'artifact'}], opt.channel);
-    %     opt.channel = select_channel_list([opt.artcfg.channel;{'artifact'}], select);
-    %     setappdata(h, 'opt', opt);
-    %     redraw_cb(h, eventdata);
   case 'q'
     setappdata(h, 'opt', opt);
     cleanup_cb(h);
@@ -816,7 +855,6 @@ switch key
     setappdata(h, 'opt', opt);
     artval_cb(h);
     redraw_cb(h);
-    opt = getappdata(h, 'opt');
   case 'r'
     % only of the trial contains a partial artifact
     if opt.trialok(opt.trlop) == 0
@@ -825,13 +863,11 @@ switch key
     setappdata(h, 'opt', opt);
     artval_cb(h);
     redraw_cb(h);
-    opt = getappdata(h, 'opt');
-  case 'R'
+  case 'space'
     opt.keep(opt.trlop) = -2;
     setappdata(h, 'opt', opt);
     artval_cb(h);
     redraw_cb(h);
-    opt = getappdata(h, 'opt');
   case 'control+control'
     % do nothing
   case 'shift+shift'
@@ -840,8 +876,30 @@ switch key
     % do nothing
   otherwise
     setappdata(h, 'opt', opt);
-    help_cb(h);
+    % this should be consistent with the help of the function
+    fprintf('----------------------------------------------------------------------\n');
+    fprintf('     q                 : Stop\n');
+    fprintf('\n');
+    fprintf('     comma             : Step to the previous artifact trial\n');
+    fprintf('     a                 : Specify artifact trial to display\n');
+    fprintf('     period            : Step to the next artifact trial\n');
+    fprintf('\n');
+    fprintf('     x                 : Step 10 trials back\n');
+    fprintf('     leftarrow         : Step to the previous trial\n');
+    fprintf('     t                 : Specify trial to display\n');
+    fprintf('     rightarrow        : Step to the next trial\n');
+    fprintf('     c                 : Step 10 trials forward\n');
+    fprintf('\n');
+    fprintf('     k                 : Keep trial\n');
+    fprintf('     space             : Mark complete trial as artifact\n');
+    fprintf('     r                 : Mark part of trial as artifact\n');
+    fprintf('\n');
+    fprintf('     downarrow         : Shift the z-threshold down\n');
+    fprintf('     z                 : Specify the z-threshold\n');
+    fprintf('     uparrow           : Shift the z-threshold down\n');
+    fprintf('----------------------------------------------------------------------\n');
 end
+clear curKey;
 uiresume(h);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -878,23 +936,26 @@ else
 end
 
 if ~isempty(opt.data)
-  data = ft_fetch_data(opt.data, 'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
+  data = ft_fetch_data(opt.data, 'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'));
 else
-  data = ft_read_data(cfg.datafile,   'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
+  data = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'));
 end
-%data = preproc(data, '', hdr.Fs, artcfg, [], artcfg.fltpadding, artcfg.fltpadding);
-str  = sprintf('trial %3d, channel %s', opt.trlop, hdr.label{sgnind});
+
+% data = preproc(data, '', hdr.Fs, artcfg, [], artcfg.fltpadding, artcfg.fltpadding);
+
+% the string us used as title and printed in the command window
+str = sprintf('trial %3d of %d, channel %s', trlop, size(trl,1), hdr.label{sgnind});
 fprintf('showing %s\n', str);
 
 %-----------------------------
 % plot summary in left subplot
-subplot(opt.h1);hold on;
+subplot(opt.h1); hold on;
 
 % plot as a blue line only once
 if isempty(get(opt.h1, 'children'))
   for k = 1:opt.numtrl
     xval = opt.trl(k,1):opt.trl(k,2);
-    if opt.thresholdsum,
+    if opt.thresholdsum
       yval = opt.zsum{k};
     else
       yval = opt.zmax{k};
@@ -911,7 +972,7 @@ boxhandle = findall(h1children, 'displayname', 'highlight');
 if isempty(boxhandle)
   % draw it
   xval = trl(opt.trlop,1):trl(opt.trlop,2);
-  if opt.thresholdsum,
+  if opt.thresholdsum
     yval = opt.zsum{opt.trlop};
   else
     yval = opt.zmax{opt.trlop};
@@ -920,7 +981,7 @@ if isempty(boxhandle)
 else
   % update it
   xval = trl(opt.trlop,1):trl(opt.trlop,2);
-  if opt.thresholdsum,
+  if opt.thresholdsum
     yval = opt.zsum{opt.trlop};
   else
     yval = opt.zmax{opt.trlop};
@@ -935,7 +996,7 @@ if isempty(thrhandle)
   % they have to be drawn
   for k = 1:opt.numtrl
     xval = trl(k,1):trl(k,2);
-    if opt.thresholdsum,
+    if opt.thresholdsum
       yval = opt.zsum{k};
     else
       yval = opt.zmax{k};
@@ -949,7 +1010,7 @@ elseif ~isempty(thrhandle) && opt.updatethreshold
   % they can be updated
   for k = 1:opt.numtrl
     xval = trl(k,1):trl(k,2);
-    if opt.thresholdsum,
+    if opt.thresholdsum
       yval = opt.zsum{k};
     else
       yval = opt.zmax{k};
@@ -977,10 +1038,10 @@ end
 subplot(opt.h2); hold on
 if isempty(get(opt.h2, 'children'))
   % do the plotting
-  plot(xval(selpad), data(selpad), 'color', [0.5 0.5 1], 'displayname', 'line1');
-  plot(xval(sel),    data(sel),    'color', [0 0 1],     'displayname', 'line2');
-  vline(xval(  1)+(trlpadsmp-1/opt.hdr.Fs),     'color', [0 0 0],     'displayname', 'vline1');
-  vline(xval(end)-(trlpadsmp/opt.hdr.Fs),       'color', [0 0 0],     'displayname', 'vline2');
+  plot(xval(selpad), data(selpad),          'color', [0.5 0.5 1], 'displayname', 'line1');
+  plot(xval(sel),    data(sel),             'color', [0 0 1],     'displayname', 'line2');
+  vline(xval(  1)+(trlpadsmp-1/opt.hdr.Fs), 'color', [0 0 0],     'displayname', 'vline1');
+  vline(xval(end)-(trlpadsmp/opt.hdr.Fs),   'color', [0 0 0],     'displayname', 'vline2');
   data(~artval) = nan;
   plot(xval, data, 'r-', 'displayname', 'line3');
   xlabel('time(s)');
@@ -1035,8 +1096,8 @@ else
   set(findall(h3children, 'displayname', 'line2b'), 'XData', xval(sel));
   set(findall(h3children, 'displayname', 'line2b'), 'YData', zval(sel));
   zval(~artval) = nan;
-  set(findall(h3children, 'displayname', 'line3b'),  'XData', xval);
-  set(findall(h3children, 'displayname', 'line3b'),  'YData', zval);
+  set(findall(h3children, 'displayname', 'line3b'),     'XData', xval);
+  set(findall(h3children, 'displayname', 'line3b'),     'YData', zval);
   set(findall(h3children, 'displayname', 'threshline'), 'YData', [1 1].*opt.threshold);
   set(findall(h3children, 'displayname', 'threshline'), 'XData', xval([1 end]));
   abc = axis(opt.h3);
@@ -1071,30 +1132,3 @@ while p~=0
   p = get(h, 'parent');
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function key = parseKeyboardEvent(eventdata)
-
-key = eventdata.Key;
-
-% handle possible numpad events (different for Windows and UNIX systems)
-% NOTE: shift+numpad number does not work on UNIX, since the shift
-% modifier is always sent for numpad events
-if isunix()
-  shiftInd = match_str(eventdata.Modifier, 'shift');
-  if ~isnan(str2double(eventdata.Character)) && ~isempty(shiftInd)
-    % now we now it was a numpad keystroke (numeric character sent AND
-    % shift modifier present)
-    key = eventdata.Character;
-    eventdata.Modifier(shiftInd) = []; % strip the shift modifier
-  end
-elseif ispc()
-  if strfind(eventdata.Key, 'numpad')
-    key = eventdata.Character;
-  end
-end
-
-if ~isempty(eventdata.Modifier)
-  key = [eventdata.Modifier{1} '+' key];
-end

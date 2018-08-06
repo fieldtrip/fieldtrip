@@ -11,7 +11,7 @@ function [pnt, ori, lab] = channelposition(sens)
 
 % Copyright (C) 2009-2012, Robert Oostenveld & Vladimir Litvak
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -110,7 +110,7 @@ switch ft_senstype(sens)
         dist(selrest,sum(~isinf(dist(selmode,:)))>0) = inf;
         numcoils = sum(isfinite(dist),2);
         if niter>500
-          error('Failed to extract the positions of the channels. This is most likely due to the balancing matrix being rank deficient. Please replace data.grad with the original grad-structure obtained after reading the header.');
+          ft_error('Failed to extract the positions of the channels. This is most likely due to the balancing matrix being rank deficient. Please replace data.grad with the original grad-structure obtained after reading the header.');
         end
       end
     else
@@ -165,14 +165,16 @@ switch ft_senstype(sens)
     end
     chan = unique(chan);
     % find the matching channel-duplets
-    ind = [];
-    lab = {};
+    ind = false(size(chan));
+    lab = cell(length(chan),2);
+    pnt = nan(length(chan),3);
+    ori = nan(length(chan),3);
     for i=1:length(chan)
       ch1 =  [chan{i} '_dH'];
       ch2 =  [chan{i} '_dV'];
       sel = match_str(sens.label, {ch1, ch2});
       if length(sel)==2
-        ind = [ind; i];
+        ind(i)   = true;
         lab(i,:) = {ch1, ch2};
         meanpnt1 = mean(sens.coilpos(abs(sens.tra(sel(1),:))>0.5, :), 1);
         meanpnt2 = mean(sens.coilpos(abs(sens.tra(sel(2),:))>0.5, :), 1);
@@ -330,5 +332,5 @@ lab = lab(:);
 % do a sanity check on the number of positions
 nchan = numel(sens.label);
 if length(lab)~=nchan || size(pnt,1)~=nchan || size(ori,1)~=nchan
-  warning('the positions were not determined for all channels');
+  ft_warning('the positions were not determined for all channels');
 end

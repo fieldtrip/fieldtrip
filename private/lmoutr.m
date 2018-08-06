@@ -1,4 +1,4 @@
-function [varargout] = funname(varargin)
+function [varargout] = lmoutr(varargin)
 
 % LMOUTR computes the la/mu parameters of a point projected to a triangle
 %
@@ -9,7 +9,7 @@ function [varargout] = funname(varargin)
 
 % Copyright (C) 2002-2009, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -28,7 +28,7 @@ function [varargout] = funname(varargin)
 % $Id$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% This is the Matlab implementation.
+% This is the MATLAB implementation.
 % The mex file is many times faster and therefore preferred.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function [la, mu, dist] = lmoutr(v1, v2, v3, r);
@@ -60,7 +60,7 @@ mexsrc  = [funname '.c'];
 
 try
   % try to compile the mex file on the fly
-  warning('trying to compile MEX file from %s', mexsrc);
+  ft_warning('trying to compile MEX file from %s', mexsrc);
   cd(mexdir);
   
   if ispc
@@ -77,7 +77,7 @@ try
 catch
   % compilation failed
   disp(lasterr);
-  error('could not locate MEX file for %s', mexname);
+  ft_error('could not locate MEX file for %s', mexname);
   cd(pwdir);
   success = false;
 end

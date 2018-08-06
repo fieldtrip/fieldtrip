@@ -1,4 +1,4 @@
-function [source] = loreta2fieldtrip(filename, varargin)
+function source = loreta2fieldtrip(filename, varargin)
 
 % LORETA2FIELDTRIP reads and converts a LORETA source reconstruction into a
 % FieldTrip data structure, which subsequently can be used for statistical
@@ -14,14 +14,13 @@ function [source] = loreta2fieldtrip(filename, varargin)
 % The following optional arguments are supported
 %   'timeframe'  =  integer number, which timepoint to read (default is to read all)
 %
-% See also NUTMEG2FIELDTRIP, SPASS2FIELDTRIP, FIELDTRIP2SPSS,
-% FT_SOURCEANALYSIS, FT_SOURCEPLOT
+% See also EEGLAB2FIELDTRIP, SPM2FIELDTRIP, NUTMEG2FIELDTRIP, SPASS2FIELDTRIP
 
 % This function depends on the loreta_ind.mat file
 
 % Copyright (C) 2006, Vladimir Litvak
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -39,7 +38,10 @@ function [source] = loreta2fieldtrip(filename, varargin)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -63,7 +65,7 @@ if ft_filetype(filename, 'loreta_slor') || is_txt && strcmp(filename(end-7:end-4
   %   source.xgrid =  -70:5:70;
   %   source.ygrid = -100:5:65;
   %   source.zgrid =  -45:5:70;
-  
+
   %Note2, ingie: I'm assuming that the above is where the INSIDE of the source
   % runs between, looking at the data and the Loreta-Key program, this makes
   % a lot of sense. I based the below source.transform on this.
@@ -77,7 +79,7 @@ elseif ft_filetype(filename, 'loreta_lorb')
   source.zgrid =  -41:7:71;
   source.transform = eye(4);      % FIXME the transformation matrix should be assigned properly
 else
-  error('unsupported LORETA format');
+  ft_error('unsupported LORETA format');
 end
 
 
@@ -101,9 +103,9 @@ if ~is_txt
     fseek(fid, 4*voxnumber*(timeframe-1), 'bof');
     activity = fread(fid, [voxnumber 1], 'float=>single');
   else
-    error('you can read either one timeframe, or the complete timecourse');
-  end  
-  fclose(fid);  
+    ft_error('you can read either one timeframe, or the complete timecourse');
+  end
+  fclose(fid);
 else
   % read with textfile
   activity = dlmread(filename);
@@ -113,13 +115,13 @@ else
     end
     Ntime = size(activity,2);
   else
-    error('expect column or row to be length 2394 or 6239')
+    ft_error('expect column or row to be length 2394 or 6239')
   end
   if isempty(timeframe)
   else
     % read timeframe
     activity = activity(:,timeframe);
-  end  
+  end
 end
 
 fprintf('file %s contains %d timepoints\n', filename, Ntime);
@@ -131,18 +133,15 @@ if Ntime>1
     mom{i} = activity(i,:);
   end
   mom{end+1} = []; % this one is used
-  source.avg.mom = mom(lorind);
+  source.mom = mom(lorind);
   fprintf('returning the activity at %d timepoints as dipole moments for each voxel\n', Ntime);
 else
-  % put it in source.avg.pow
+  % put it in source.mom
   activity(end+1) = nan;
   % reshuffle the activity to ensure that the ordering is correct
-  source.avg.pow  = activity(lorind);
+  source.mom  = activity(lorind);
   fprintf('returning the activity at one timepoint as a single distribution of power\n');
 end
-
-% FIXME someone should figure out how to interpret the activity
-fprintf('note that there is a discrepancy between dipole moment (amplitude) and power (amplitude squared)\n');
 
 % add the options used here to the configuration
 cfg = [];
@@ -152,4 +151,3 @@ cfg.filename  = filename;
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble callinfo
 ft_postamble history source
-

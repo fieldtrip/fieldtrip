@@ -1,28 +1,28 @@
 function [output] = ft_transform_geometry(transform, input)
 
-% FT_TRANSFORM_GEOMETRY applies a homogeneous coordinate transformation to
-% a structure with geometric information. These objects include:
-%  - volume conductor geometry, consisting of a mesh, a set of meshes, a
-%      single sphere, or multiple spheres.
-%  - gradiometer of electrode structure containing sensor positions and
-%      coil orientations (for MEG).
-%  - headshape description containing positions in 3D space.
-%  - sourcemodel description containing positions and optional orientations
-%      in 3D space.
+% FT_TRANSFORM_GEOMETRY applies a homogeneous coordinate transformation to a
+% structure with geometric information, for example a volume conduction model for the
+% head, gradiometer of electrode structure containing EEG or MEG sensor positions and
+% MEG coil orientations, a head shape or a source model.
 %
-% The units in which the transformation matrix is expressed are assumed to
-% be the same units as the units in which the geometric object is
-% expressed. Depending on the input object, the homogeneous transformation
-% matrix should be limited to a rigid-body translation plus rotation
-% (MEG-gradiometer array), or to a rigid-body translation plus rotation
-% plus a global rescaling (volume conductor geometry).
+% The units in which the transformation matrix is expressed are assumed to be the
+% same units as the units in which the geometric object is expressed. Depending on
+% the input object, the homogeneous transformation matrix should be limited to a
+% rigid-body translation plus rotation (MEG-gradiometer array), or to a rigid-body
+% translation plus rotation plus a global rescaling (volume conductor geometry).
 %
 % Use as
 %   output = ft_transform_geometry(transform, input)
+% where transform should be a 4x4 homogenous transformation matrix and the input data
+% structure can be any of the FieldTrip data structures that describes geometrical
+% data.
+%
+% See also FT_WARP_APPLY, FT_HEADCOORDINATES, FT_TRANSFORM_SENS, FT_TRANSFORM_HEADSHAPE,
+% FT_TRANSFORM_VOL
 
 % Copyright (C) 2011, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -41,56 +41,55 @@ function [output] = ft_transform_geometry(transform, input)
 % $Id: ft_transform_geometry.m$
 
 % flg rescaling check
-allowscaling = ~ft_senstype(input, 'meg'); 
+allowscaling = ~ft_senstype(input, 'meg');
 
 % determine the rotation matrix
 rotation = eye(4);
 rotation(1:3,1:3) = transform(1:3,1:3);
 
 if any(abs(transform(4,:)-[0 0 0 1])>100*eps)
-  error('invalid transformation matrix');
+  ft_error('invalid transformation matrix');
 end
 
 if ~allowscaling
   % allow for some numerical imprecision
-  if abs(det(rotation)-1)>1e-6%100*eps
-  %if abs(det(rotation)-1)>100*eps  % allow for some numerical imprecision
-    error('only a rigid body transformation without rescaling is allowed');
+  if (abs(det(rotation))-1)>1e-6
+    ft_error('only a rigid body transformation without rescaling is allowed');
   end
 end
 
 if allowscaling
   % FIXME build in a check for uniform rescaling probably do svd or so
   % FIXME insert check for nonuniform scaling, should give an error
-end 
+end
 
-tfields   = {'pos' 'pnt' 'o' 'chanpos' 'chanposorg' 'coilpos' 'elecpos', 'nas', 'lpa', 'rpa', 'zpoint'}; % apply rotation plus translation
-rfields   = {'ori' 'nrm' 'coilori'}; % only apply rotation
+tfields   = {'pos' 'pnt' 'o' 'coilpos' 'elecpos' 'optopos' 'chanpos' 'chanposold' 'nas' 'lpa' 'rpa' 'zpoint'}; % apply rotation plus translation
+rfields   = {'ori' 'nrm'     'coilori' 'elecori' 'optoori' 'chanori' 'chanoriold'                           }; % only apply rotation
 mfields   = {'transform'};           % plain matrix multiplication
 recfields = {'fid' 'bnd' 'orig'};    % recurse into these fields
 % the field 'r' is not included here, because it applies to a volume
 % conductor model, and scaling is not allowed, so r will not change.
 
-fnames    = fieldnames(input);
+fnames = fieldnames(input);
 for k = 1:numel(fnames)
-    if ~isempty(input.(fnames{k}))
-        if any(strcmp(fnames{k}, tfields))
-            input.(fnames{k}) = apply(transform, input.(fnames{k}));
-        elseif any(strcmp(fnames{k}, rfields))
-            input.(fnames{k}) = apply(rotation, input.(fnames{k}));
-        elseif any(strcmp(fnames{k}, mfields))
-            input.(fnames{k}) = transform*input.(fnames{k});
-        elseif any(strcmp(fnames{k}, recfields))
-            for j = 1:numel(input.(fnames{k}))
-                input.(fnames{k})(j) = ft_transform_geometry(transform, input.(fnames{k})(j));
-            end
-        else
-            % do nothing
-        end
+  if ~isempty(input.(fnames{k}))
+    if any(strcmp(fnames{k}, tfields))
+      input.(fnames{k}) = apply(transform, input.(fnames{k}));
+    elseif any(strcmp(fnames{k}, rfields))
+      input.(fnames{k}) = apply(rotation, input.(fnames{k}));
+    elseif any(strcmp(fnames{k}, mfields))
+      input.(fnames{k}) = transform*input.(fnames{k});
+    elseif any(strcmp(fnames{k}, recfields))
+      for j = 1:numel(input.(fnames{k}))
+        input.(fnames{k})(j) = ft_transform_geometry(transform, input.(fnames{k})(j));
+      end
+    else
+      % do nothing
     end
+  end
 end
 output = input;
-return;
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that applies the homogeneous transformation
@@ -99,4 +98,3 @@ function [new] = apply(transform, old)
 old(:,4) = 1;
 new = old * transform';
 new = new(:,1:3);
-

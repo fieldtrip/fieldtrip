@@ -4,7 +4,7 @@ function [node,elem]=readoff(fname)
 %
 % read Geomview Object File Format (OFF)
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2008/03/28
 %
 % input:

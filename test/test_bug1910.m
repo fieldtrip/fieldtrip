@@ -3,7 +3,6 @@ function test_bug1910
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1910
 % TEST ft_datatype_sens
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1910.mat'));

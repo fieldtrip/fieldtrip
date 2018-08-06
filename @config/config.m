@@ -47,9 +47,9 @@ function y = config(x, varargin)
 %   c = config('b', b)
 %   d = config('c', c)
 
-% Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
+% Copyright (C) 2012-2015, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -99,6 +99,7 @@ if nargin==1
       tmp.assign    = struct();
       tmp.reference = struct();
       tmp.original  = struct();
+      tmp.hidden    = struct(); % this contains hidden fields which are not tracked
       for i=1:length(key)
         tmp.value.(key{i})     = val{i};
         tmp.assign.(key{i})    = deepcopy(0); % ensure that a unique scalar is created for each counter
@@ -152,6 +153,7 @@ elseif nargin>1
   y.assign    = struct(assign{:});
   y.reference = struct(reference{:});
   y.original  = struct(original{:});
+  y.hidden    = struct();  % this contains hidden fields which are not tracked
   y = class(y,'config');
 
 else
@@ -161,6 +163,7 @@ else
   y.assign    = struct();
   y.reference = struct();
   y.original  = struct();
+  y.hidden    = struct(); % this contains hidden fields which are not tracked
   y = class(y,'config');
 
 end

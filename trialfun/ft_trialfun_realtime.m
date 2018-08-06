@@ -6,17 +6,16 @@ function trl = ft_trialfun_realtime(cfg)
 %
 % The configuration structure can contain the following specifications
 %   cfg.minsample  = the last sample number that was already considered (passed from rt_process)
-%   cfg.blocksize  = in seconds. In case of events, offset is
-%                    wrt the trigger.
+%   cfg.blocksize  = in seconds. In case of events, offset is with respect to the trigger.
 %   cfg.offset     = the offset wrt the 0 point. In case of no events, offset is wrt
 %                    prevSample. E.g., [-0.9 1] will read 1 second blocks with
 %                    0.9 second overlap
 %   cfg.bufferdata = {'first' 'last'}. If 'last' then only the last block of
-%                   interest is read. Otherwise, all well-defined blocks are read (default = 'first')
+%                    interest is read. Otherwise, all well-defined blocks are read (default = 'first')
 
 % Copyright (C) 2009, Marcel van Gerven
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

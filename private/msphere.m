@@ -14,9 +14,9 @@ function [pnt, tri] = msphere(N)
 % 
 % The code of this function is in the public domain and originates 
 % from the sci.math newsgroup. The full news message can be found
-% below. This Matlab implementation was made by Robert Oostenveld.
+% below. This MATLAB implementation was made by Robert Oostenveld.
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

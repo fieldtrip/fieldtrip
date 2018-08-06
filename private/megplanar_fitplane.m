@@ -8,7 +8,7 @@ function montage = megplanar_fitplane(cfg, grad)
 
 % Copyright (C) 2004-2009, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -67,7 +67,7 @@ for chan=1:Ngrad
   e = 1;
   neighbindx = find(neighbsel(chan, :));
   for neighb=neighbindx
-    vec = pnt(neighb,:) - this_o;          % vector from sensor to neighbour
+    vec = pnt(neighb,:) - this_o;               % vector from sensor to neighbour
     x(end+1) = dot(vec, this_x);                % projection along x-axis (horizontal)
     y(end+1) = dot(vec, this_y);                % projection along y-axiz (vertical)
     e(end+1) = 1;                               % required to fit the constant
@@ -95,5 +95,5 @@ end
 % construct a montage, i.e. a simple linear projection matrix
 montage = [];
 montage.labelnew = cat(1, labelH(:), labelV(:), labelC(:));   % describes the rows
-montage.labelorg = lab(:)';                                   % describes the columns
+montage.labelold = lab(:)';                                   % describes the columns
 montage.tra      = cat(1, gradH, gradV, gradC);               % this is the linear projection matrix

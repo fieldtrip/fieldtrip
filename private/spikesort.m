@@ -30,7 +30,7 @@ function [numA, numB, indA, indB] = spikesort(numA, numB, varargin)
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -55,7 +55,7 @@ fb = false;
 presort = ft_getopt(varargin, 'presort');
 
 if any(size(numA)~=size(numB))
-  error('input dimensions should be the same');
+  ft_error('input dimensions should be the same');
 end
 
 bottom      = 1;

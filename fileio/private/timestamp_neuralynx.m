@@ -5,7 +5,7 @@ function [ts] = timestamp_neuralynx(tsl, tsh)
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -24,9 +24,9 @@ function [ts] = timestamp_neuralynx(tsl, tsh)
 % $Id$
 
 if ~isa(tsl, 'uint32') && ~isa(tsl, 'int32')
-  error('invalid input');
+  ft_error('invalid input');
 elseif ~isa(tsh, 'uint32') && ~isa(tsl, 'int32')
-  error('invalid input');
+  ft_error('invalid input');
 end
 
 % convert the 32 bit low and 32 bit high timestamp into a 64 bit integer

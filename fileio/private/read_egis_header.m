@@ -18,7 +18,7 @@ function [fhdr,chdr,ename,cnames,fcom,ftext] = read_egis_header(filename)
 %
 % Modified from EGI's EGI Toolbox with permission 2007-06-28 Joseph Dien
 
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -38,7 +38,7 @@ function [fhdr,chdr,ename,cnames,fcom,ftext] = read_egis_header(filename)
 
 fh=fopen([filename],'r');
 if fh==-1
-  error('wrong filename')
+  ft_error('wrong filename')
 end
 
 %Prep file for reading
@@ -61,13 +61,13 @@ elseif fhdr(1)==67305985
     endian = 'ieee-be';
   end;
 else
-  error('This is not an EGIS average file.');
+  ft_error('This is not an EGIS average file.');
 end;
 
 fhdr(2)=fread(fh,1,'int16',endian); %HdrVer
 
 if (fhdr(2) ~= -1) && (fhdr(2) ~= 3)
-  error('This is not an EGIS average file.');
+  ft_error('This is not an EGIS average file.');
 end;
 
 fhdr(3)=fread(fh,1,'uint16',endian); %LHeader

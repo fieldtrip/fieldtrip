@@ -14,7 +14,7 @@ function [dat] = read_plexon_ddt(filename, begsample, endsample)
 
 % Copyright (C) 2005-2007, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -92,7 +92,7 @@ elseif Version==103
   dat.MaxMagnitudeMV = fread(fid,   1, 'short');
   dat.Padding        = fread(fid, 189, 'char');
 else
-  error('unsupported version of ddt file');
+  ft_error('unsupported version of ddt file');
 end
 
 % determine the number of samples by looking at the length of the datafile

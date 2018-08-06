@@ -27,15 +27,15 @@ c = [1 1/80 1];
 % c = [1];
 
 %% Description of the spherical mesh
-[pnt, tri] = icosahedron42;
-% [pnt, tri] = icosahedron162;
-% [pnt, tri] = icosahedron642;
+[pos, tri] = icosahedron42;
+% [pos, tri] = icosahedron162;
+% [pos, tri] = icosahedron642;
 
 %% Create a set of magnetometers outside the outer surface
-sens.pnt = max(r) * pnt * 1.2;
-sens.ori = pnt;
+sens.pos = max(r) * pos * 1.2;
+sens.ori = pos;
 sens.label = {};
-nsens = size(sens.pnt, 1);
+nsens = size(sens.pos, 1);
 for ii=1:nsens
     sens.label{ii} = sprintf('vertex%03d', ii);
 end
@@ -47,10 +47,10 @@ pos = [0 0 70];
 vol = [];
 vol1 = [];
 for ii=1:length(r)
-    vol.bnd(ii).pnt = pnt * r(ii);
+    vol.bnd(ii).pos = pos * r(ii);
     vol.bnd(ii).tri = tri;
     if (ii==1);
-        vol1.bnd(ii).pnt = pnt * r(ii);
+        vol1.bnd(ii).pos = pos * r(ii);
         vol1.bnd(ii).tri = tri;
     end
 end

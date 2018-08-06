@@ -6,8 +6,10 @@ function test_readcompresseddata
 % TEST inflate_file ft_read_data ft_read_header test_readcompresseddata
 
 % test these data sets
-datasets = {'/home/common/matlab/fieldtrip/data/test/original/meg/ctf151/Subject01.ds.zip'
-  '/home/common/matlab/fieldtrip/data/test/original/eeg/brainvision/MischaCompressed.zip'};
+datasets = {
+  dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151/Subject01.ds.zip')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/brainvision/MischaCompressed.zip')
+};
 
 for k = 1:numel(datasets)
   cfg = [];
@@ -17,6 +19,6 @@ for k = 1:numel(datasets)
 end
 
 % and this mri
-mri = ft_read_mri('/home/common/matlab/fieldtrip/data/test/latest/mri/dicom/dicomzipped.zip');
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/mri/dicom/dicomzipped.zip'));
 
 end

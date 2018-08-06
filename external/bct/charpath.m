@@ -1,45 +1,79 @@
-function  [lambda,efficiency,ecc,radius,diameter] = charpath(D)
+function  [lambda,efficiency,ecc,radius,diameter] = charpath(D,diagonal_dist,infinite_dist)
 %CHARPATH       Characteristic path length, global efficiency and related statistics
 %
-%   lambda = charpath(D);
-%   [lambda,efficiency] = charpath(D);
-%   [lambda,ecc,radius,diameter] = charpath(D);
+%   lambda                                  = charpath(D);
+%   lambda                                  = charpath(D);
+%   [lambda,efficiency]                     = charpath(D);
+%   [lambda,efficiency,ecc,radius,diameter] = charpath(D,diagonal_dist,infinite_dist);
 %
-%   The characteristic path length is the average shortest path length in 
-%   the network. The global efficiency is the average inverse shortest path
-%   length in the network.
+%   The network characteristic path length is the average shortest path
+%   length between all pairs of nodes in the network. The global efficiency
+%   is the average inverse shortest path length in the network. The nodal
+%   eccentricity is the maximal path length between a node and any other
+%   node in the network. The radius is the minimal eccentricity, and the
+%   diameter is the maximal eccentricity.
 %
 %   Input:      D,              distance matrix
+%               diagonal_dist   optional argument
+%                               include distances on the main diagonal
+%                                   (default: diagonal_dist=0)
+%               infinite_dist   optional argument
+%                               include infinite distances in calculation
+%                                   (default: infinite_dist=1)
 %
-%   Outputs:    lambda,         characteristic path length
-%               efficiency,     global efficiency
-%               ecc,            eccentricity (for each vertex)
-%               radius,         radius of graph
-%               diameter,       diameter of graph
+%   Outputs:    lambda,         network characteristic path length
+%               efficiency,     network global efficiency
+%               ecc,            nodal eccentricity
+%               radius,         network radius
+%               diameter,       network diameter
 %
-%   Note: Characteristic path length is calculated as the global mean of 
-%   the distance matrix D, excludings any 'Infs' but including distances on
-%   the main diagonal.
+%   Notes:
+%       The input distance matrix may be obtained with any of the distance
+%   functions, e.g. distance_bin, distance_wei.
+%       Characteristic path length is defined here as the mean shortest
+%   path length between all pairs of nodes, for consistency with common
+%   usage. Note that characteristic path length is also defined as the
+%   median of the mean shortest path length from each node to all other
+%   nodes.
+%       Infinitely long paths (i.e. paths between disconnected nodes) are
+%   included in computations by default. This behavior may be modified with
+%   via the infinite_dist argument.
 %
 %
 %   Olaf Sporns, Indiana University, 2002/2007/2008
+%   Mika Rubinov, U Cambridge, 2010/2015
 
-% Modification, 2010 (Mika Rubinov): incorporation of global efficiency
+%   Modification history
+%   2002: original (OS)
+%   2010: incorporation of global efficiency (MR)
+%   2015: exclusion of diagonal weights by default (MR)
+%   2016: inclusion of infinite distances by default (MR)
 
-% Mean of finite entries of D(G)
-lambda = sum(sum(D(D~=Inf)))/length(nonzeros(D~=Inf));
+n = size(D,1);
+if any(any(isnan(D)))
+    error('The distance matrix must not contain NaN values');
+end
+if ~exist('diagonal_dist','var') || ~diagonal_dist || isempty(diagonal_dist)
+    D(1:n+1:end) = NaN;             % set diagonal distance to NaN
+end
+if  exist('infinite_dist','var') && ~infinite_dist
+    D(isinf(D))  = NaN;             % ignore infinite path lengths
+end
 
-% Eccentricity for each vertex (note: ignore 'Inf') 
-ecc = max(D.*(D~=Inf),[],2);
+Dv = D(~isnan(D));                  % get non-NaN indices of D
 
-% Radius of graph
-radius = min(ecc);  % but what about zeros?
-
-% Diameter of graph
-diameter = max(ecc);
+% Mean of entries of D(G)
+lambda     = mean(Dv);
 
 % Efficiency: mean of inverse entries of D(G)
-n = size(D,1);
-D = 1./D;                           %invert distance
-D(1:n+1:end) = 0;                   %set diagonal to 0
-efficiency = sum(D(:))/(n*(n-1));   %compute global efficiency
+efficiency = mean(1./Dv);
+
+% Eccentricity for each vertex
+ecc        = nanmax(D,[],2);
+
+% Radius of graph
+radius     = min(ecc);
+
+% Diameter of graph
+diameter   = max(ecc);
+

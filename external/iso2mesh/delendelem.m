@@ -4,7 +4,7 @@ function elem=delendelem(elem,mask)
 %
 % delete elements whose nodes are all edge nodes
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2007/11/24
 %
 % input/output: 

@@ -11,7 +11,7 @@ function [filt] = bandpassfilter(dat,Fs,Fbp,N,type,dir)
 %   N          optional filter order, default is 4 (but) or 25 (fir)
 %   type       optional filter type, can be
 %                'but' Butterworth IIR filter (default)
-%                'fir' FIR filter using Matlab fir1 function 
+%                'fir' FIR filter using MATLAB fir1 function 
 %   dir        optional filter direction, can be
 %                'onepass'         forward filter only
 %                'onepass-reverse' reverse filter only, i.e. backward in time
@@ -25,7 +25,7 @@ function [filt] = bandpassfilter(dat,Fs,Fbp,N,type,dir)
 
 % Copyright (c) 2003, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -72,7 +72,8 @@ switch type
     if isempty(N)
       N = 25;
     end
-    [B, A] = fir1(N, [min(Fbp)/Fn max(Fbp)/Fn]);
+    B = fir1(N, [min(Fbp)/Fn max(Fbp)/Fn]);
+    A = 1;
 end
 
 % apply filter to the data

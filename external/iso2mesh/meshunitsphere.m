@@ -5,7 +5,7 @@ function [node,face,elem]=meshunitsphere(tsize,maxvol)
 % create the surface and/or volumetric mesh of a unit sphere 
 % centered at [0 0 0] and radius 1
 %
-% author: Qianqian Fang, <fangq at nmr.mgh.harvard.edu>
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input: 
 %   tsize: maximum size of the surface triangles (from 0 to 1)

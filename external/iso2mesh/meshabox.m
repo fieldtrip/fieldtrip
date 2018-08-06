@@ -4,7 +4,7 @@ function [node,face,elem]=meshabox(p0,p1,opt,nodesize)
 %
 % create the surface and tetrahedral mesh of a box geometry
 %
-% author: Qianqian Fang, <fangq at nmr.mgh.harvard.edu>
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input: 
 %   p0:  coordinates (x,y,z) for one end of the box diagnoal

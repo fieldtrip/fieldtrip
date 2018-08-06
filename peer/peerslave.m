@@ -59,7 +59,7 @@ function peerslave(varargin)
 % $Id$
 % -----------------------------------------------------------------------
 
-if matlabversion(7.8, Inf)
+if ft_platform_supports('onCleanup')
   % switch to zombie when finished or when ctrl-c gets pressed
   % the onCleanup function does not exist for older versions
   onCleanup(@peerzombie);
@@ -82,9 +82,9 @@ refuseuser  = ft_getopt(varargin, 'refuseuser', {});
 refusegroup = ft_getopt(varargin, 'refusegroup', {});
 refusehost  = ft_getopt(varargin, 'refusehost', {});
 
-if ~isempty(threads) && exist('maxNumCompThreads')
-  % this function is only available from Matlab version 7.5 (R2007b) upward
-  % and has become deprecated in Matlab version 7.9 (R2009b)
+if ~isempty(threads) && exist('maxNumCompThreads', 'file')
+  % this function is only available from MATLAB version 7.5 (R2007b) upward
+  % and has become deprecated in MATLAB version 7.9 (R2009b)
   ws = warning('off', 'MATLAB:maxNumCompThreads:Deprecated');
   maxNumCompThreads(threads);
   warning(ws);

@@ -1,4 +1,4 @@
-function [varargout] = funname(varargin)
+function [varargout] = rfbevent(varargin)
 
 % RFBEVENT sends a keyboard or mouse event to a VNC server
 %
@@ -40,7 +40,7 @@ function [varargout] = funname(varargin)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

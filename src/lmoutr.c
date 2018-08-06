@@ -1,6 +1,5 @@
 #include <math.h>
 #include "mex.h"
-#include "matrix.h"
 #include "geometry.h"
 
 void

@@ -1,10 +1,10 @@
 /*
  * (C) 2010 Stefan Klanke
  */
-#include <buffer.h>
 #include <signal.h>
 #include <string.h>
 
+#include "buffer.h"
 #include "socketserver.h"
 #include "rdadefs.h"
 #include "platform.h"
@@ -23,18 +23,21 @@ int numChannels, ftSocket = -1, goodToSend = 0;
 int samplesWritten;
 
 static char usage[] = 
-"Usage: rda2ft rdaHost rdaPort [ftHost ftPort]\n" \
-				"Calling 'rda2ft' with only the rda* arguments starts a local FieldTrip buffer on port 1972.\n" \
-				"Using '-' for the FieldTrip buffer hostname (ftHost) starts a local buffer on the given port (ftPort).\n" \
-				"The port number for the 32 bit float RDA interface is 51244\n" \
-				"Example use:\n" \
-				"   rda2ft localhost 51244 - 1972\n" \
-				;
+"\n" \
+    "Usage: rda2ft rdaHost rdaPort [ftHost ftPort]\n" \
+    "\n" \
+    "Calling 'rda2ft' with only the first two arguments starts a local buffer on port 1972.\n" \
+    "Using '-' for the buffer hostname (ftHost) starts a local buffer on the given port (ftPort).\n" \
+    "The port number for the 32 bit float RDA interface is 51244\n" \
+    "\n" \
+    "Example use:\n" \
+    "   rda2ft localhost 51244 - 1972\n" \
+    ;
 
 #ifndef PLATFORM_LINUX
 
-int strnlen(const char *s, int max) {
-		int n = 0;
+size_t strnlen(const char *s, size_t max) {
+		size_t n = 0;
 		while (n<max && *s++) {
 				++n;
 		}

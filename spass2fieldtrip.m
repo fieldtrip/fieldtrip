@@ -26,7 +26,7 @@ function [lfp, spike, stm, bhv] = spass2fieldtrip(dirname, varargin)
 %   'jeb012a02/jeb012a02.stm'
 %   'jeb012a02/jeb012a02.bhv'
 %
-% Subsequently you can analyze the data in fieldtrip, or write the spike
+% Subsequently you can analyze the data in FieldTrip, or write the spike
 % waveforms to a nex file for offline sorting using
 %   ft_write_spike('jeb012a02_ch1.nex', spike, 'dataformat', 'plexon_nex', 'chanindx', 1)
 %   ft_write_spike('jeb012a02_ch2.nex', spike, 'dataformat', 'plexon_nex', 'chanindx', 2)
@@ -38,15 +38,18 @@ function [lfp, spike, stm, bhv] = spass2fieldtrip(dirname, varargin)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble callinfo
+ft_preamble init
+ft_preamble provenance
 
-fsample_ana = ft_getopt(varargin, 'fsample_ana', 1000); 
-fsample_swa = ft_getopt(varargin, 'fsample_swa', 32000); 
+fsample_ana = ft_getopt(varargin, 'fsample_ana', 1000);
+fsample_swa = ft_getopt(varargin, 'fsample_swa', 32000);
 
 anafile = fullfile(dirname, [dirname '.ana']);
 swafile = fullfile(dirname, [dirname '.swa']);
@@ -54,11 +57,11 @@ spifile = fullfile(dirname, [dirname '.spi']);
 stmfile = fullfile(dirname, [dirname '.stm']);
 bhvfile = fullfile(dirname, [dirname '.bhv']);
 
-if ~exist(anafile, 'file'), error(sprintf('the file "%s" does not exist', anafile)); end
-if ~exist(swafile, 'file'), error(sprintf('the file "%s" does not exist', swafile)); end
-if ~exist(spifile, 'file'), error(sprintf('the file "%s" does not exist', spifile)); end
-if ~exist(stmfile, 'file'), error(sprintf('the file "%s" does not exist', stmfile)); end
-if ~exist(bhvfile, 'file'), error(sprintf('the file "%s" does not exist', bhvfile)); end
+if ~exist(anafile, 'file'), ft_error('the file "%s" does not exist', anafile); end
+if ~exist(swafile, 'file'), ft_error('the file "%s" does not exist', swafile); end
+if ~exist(spifile, 'file'), ft_error('the file "%s" does not exist', spifile); end
+if ~exist(stmfile, 'file'), ft_error('the file "%s" does not exist', stmfile); end
+if ~exist(bhvfile, 'file'), ft_error('the file "%s" does not exist', bhvfile); end
 
 % read the data
 fprintf('reading %s\n', anafile); ana = read_labview_dtlg(anafile, 'int16');
@@ -89,7 +92,7 @@ for i=1:size(ana.data,1)
   lfp.label{i,1} = sprintf('chan%d', i);
 end
 
-% the data is trial based, try to estimate teh time between subsequent
+% the data is trial based, try to estimate the time between subsequent
 % trials, or better: the time between subsequent stimuli
 isi = 10^ceil(log10(max(nsamples)+1));
 
@@ -122,7 +125,7 @@ for j=1:nchans
   end
 end
 
-% convert the spike timestamps and waveforms to a fieldtrip-compatible format
+% convert the spike timestamps and waveforms to a FieldTrip-compatible format
 for i=1:nchans
   spike.waveform{i}  = cell2mat(swa.data(i,:));
   spike.timestamp{i} = cell2mat(spi.data(i,:)')';
@@ -153,5 +156,5 @@ lfp.hdr.FirstTimeStamp = 0;
 lfp.hdr.TimeStampPerSample = fsample_swa./fsample_ana;
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble callinfo
+ft_postamble provenance lfp spike
 ft_postamble history lfp spike

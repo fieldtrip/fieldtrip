@@ -26,7 +26,7 @@ function event = ft_filter_event(event, varargin)
 
 % Copyright (C) 2007-2010 Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -84,7 +84,7 @@ testminnumber    = ~isempty(minnumber)    && isfield(event, 'number');
 testmaxnumber    = ~isempty(maxnumber)    && isfield(event, 'number');
 
 if (~isempty(minnumber) || ~isempty(maxnumber)) && ~isfield(event, 'number')
-  warning('the events are not numbered, assuming that the order corresponds to the original stream sequence');
+  ft_warning('the events are not numbered, assuming that the order corresponds to the original stream sequence');
   for i=1:length(event)
     event(i).number = i;
   end
@@ -96,7 +96,8 @@ end
 sel = true(length(event),1);
 for i=1:length(event)
   % test whether they match with the selected arrays
-  if testvalue,         sel(i) = sel(i) && any(event(i).value == value);          end
+  if testvalue && isnumeric(value),         sel(i) = sel(i) && any(event(i).value == value);               end
+  if testvalue && ischar(value),             sel(i) = sel(i) && any(strcmp(event(i).value,value));          end
   if testsample,        sel(i) = sel(i) && any(event(i).sample == sample);        end
   if testtimestamp,     sel(i) = sel(i) && any(event(i).timestamp == timestamp);  end
   if testoffset,        sel(i) = sel(i) && any(event(i).offset == offset);        end

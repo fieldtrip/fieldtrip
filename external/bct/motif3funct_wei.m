@@ -1,27 +1,50 @@
-function [I Q F]=motif3funct_wei(W)
+function [I,Q,F]=motif3funct_wei(W)
 %MOTIF3FUNCT_WEI       Intensity and coherence of functional class-3 motifs
 %
-%   [I Q F] = motif3funct_wei(W);
+%   [I,Q,F] = motif3funct_wei(W);
 %
-%   Functional motifs are subsets of connection patterns embedded within 
-%   anatomical motifs. Motif frequency is the frequency of occurrence of 
-%   motifs around a node. Motif intensity and coherence are weighted 
-%   generalizations of motif frequency. 
+%   *Structural motifs* are patterns of local connectivity in complex
+%   networks. In contrast, *functional motifs* are all possible subsets of
+%   patterns of local connectivity embedded within structural motifs. Such
+%   patterns are particularly diverse in directed networks. The motif
+%   frequency of occurrence around an individual node is known as the motif
+%   fingerprint of that node. The motif intensity and coherence are
+%   weighted generalizations of the motif frequency. The motif
+%   intensity is equivalent to the geometric mean of weights of links
+%   comprising each motif. The motif coherence is equivalent to the ratio
+%   of geometric and arithmetic means of weights of links comprising each
+%   motif.  
 %
 %   Input:      W,      weighted directed connection matrix
 %                       (all weights must be between 0 and 1)
 %
-%   Output:     I,      motif intensity matrix
-%               Q,      motif coherence matrix
-%               F,      morif frequency matrix
+%   Output:     I,      node motif intensity fingerprint
+%               Q,      node motif coherence fingerprint
+%               F,      node motif frequency fingerprint
 %
-%   Note: Average intensity and coherence are given by I./F and Q./F.
+%   Notes: 
+%       1. The function find_motif34.m outputs the motif legend.
+%       2. Average intensity and coherence are given by I./F and Q./F
+%       3. All weights must be between 0 and 1. This may be achieved using
+%          the weight_conversion.m function, as follows: 
+%          W_nrm = weight_conversion(W, 'normalize');
+%   	4. There is a source of possible confusion in motif terminology.
+%          Motifs ("structural" and "functional") are most frequently
+%          considered only in the context of anatomical brain networks
+%          (Sporns and Kötter, 2004). On the other hand, motifs are not
+%          commonly studied in undirected networks, due to the paucity of
+%          local undirected connectivity patterns.
 %
-%   Reference: Onnela et al. (2005), Phys Rev E 71:065103
+%   References: Onnela et al. (2005), Phys Rev E 71:065103
+%               Milo et al. (2002) Science 298:824-827
+%               Sporns O, Kötter R (2004) PLoS Biol 2: e369
 %
 %
-%   Mika Rubinov, UNSW, 2007-2010
+%   Mika Rubinov, UNSW/U Cambridge, 2007-2015
 
+%   Modification History:
+%   2007: Original
+%   2015: Improved documentation
 
 persistent M3 ID3 N3
 if isempty(N3)
@@ -57,8 +80,8 @@ for u=1:n-2                               	%loop u 1:n-2
             i=prod(M,2).^(1./l);            %intensity
             q=i./x;                         %coherence
 
-            [idu j]=unique(id);             %unique motif occurences
-            j=[0;j];
+            [idu,j]=unique(id);             %unique motif occurences
+            j=[0;j];                        %#ok<AGROW>
             mu=length(idu);                 %number of unique motifs
             i2=zeros(mu,1);
             q2=i2; f2=i2;

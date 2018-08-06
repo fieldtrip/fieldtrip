@@ -1,4 +1,4 @@
-function val = littleendian;
+function val = littleendian
 
 % LITTLEENDIAN returns 1 (true) on a little endian machine, e.g. with an
 % Intel or AMD, or 0 (false) otherwise
@@ -12,7 +12,7 @@ function val = littleendian;
 
 % Copyrigth (C) 2007, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

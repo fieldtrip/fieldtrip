@@ -3,10 +3,8 @@ function test_ft_redefinetrial
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_redefinetrial
-% TEST test_ft_redefinetrial
 
-load('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151');
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151'));
 
 data.trialinfo = (1:10)';
 
@@ -66,4 +64,11 @@ cfg.trl(:,1) = cfg.trl(:,1)+50;
 cfg.trl(:,3) = -50;
 data8        = ft_redefinetrial(cfg, data);
 assert(all(data8.trialinfo(:,1)==(1:10)'));
+
+% we can specify separate toilim per trial
+cfg        = [];
+cfg.toilim = repmat([0.2 0.8], numel(data.trial), 1);
+data9      = ft_redefinetrial(cfg, data);
+assert(all(data9.sampleinfo(:,1)==[61:300:2761]') && all(data9.sampleinfo(:,2)==[241:300:2941]'));
+
 

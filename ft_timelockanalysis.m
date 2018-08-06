@@ -18,7 +18,7 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 %   cfg.removemean         = 'no' or 'yes' for covariance computation (default = 'yes')
 %   cfg.vartrllength       = 0, 1 or 2 (see below)
 %
-% Depending on cfg.vartrllength, variable length trials and trials with 
+% Depending on cfg.vartrllength, variable length trials and trials with
 % differences in their time axes (so even if they are of the same length, e.g. 1
 % second snippets of data cut from a single long recording) are treated differently:
 %   0 - do not accept variable length trials [default]
@@ -69,7 +69,7 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 % Copyright (C) 2003-2006, Markus Bauer
 % Copyright (C) 2003-2006, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -87,18 +87,21 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble loadvar    data
+ft_preamble debug
+ft_preamble loadvar data
 ft_preamble provenance data
 ft_preamble trackconfig
-ft_preamble debug
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -112,15 +115,14 @@ cfg = ft_checkconfig(cfg, 'renamed',     {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'blcwindow', 'baselinewindow'});
 
 % set the defaults
-cfg.trials      = ft_getopt(cfg, 'trials',     'all');
-cfg.channel     = ft_getopt(cfg, 'channel',    'all');
+cfg.trials       = ft_getopt(cfg, 'trials',      'all', 1);
+cfg.channel      = ft_getopt(cfg, 'channel',     'all');
 cfg.keeptrials   = ft_getopt(cfg, 'keeptrials',  'no');
 cfg.covariance   = ft_getopt(cfg, 'covariance',  'no');
 cfg.removemean   = ft_getopt(cfg, 'removemean',  'yes');
 cfg.vartrllength = ft_getopt(cfg, 'vartrllength', 0);
-cfg.feedback     = ft_getopt(cfg, 'feedback', '   text');
-
-if ~isfield(cfg, 'preproc'), cfg.preproc = []; end
+cfg.feedback     = ft_getopt(cfg, 'feedback',     'text');
+cfg.preproc      = ft_getopt(cfg, 'preproc',      []);
 
 % ensure that the preproc specific options are located in the cfg.preproc substructure
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
@@ -148,6 +150,9 @@ ntrial      = length(data.trial);
 nchan       = length(data.label);   % number of channels
 numsamples  = zeros(ntrial,1);      % number of selected samples in each trial, is determined later
 
+if ntrial==0, ft_error('Number of trials selected in data is zero');   end
+if nchan==0,  ft_error('Number of channels selected in data is zero'); end
+
 % determine the duration of each trial
 begsamplatency = zeros(1,ntrial);
 endsamplatency = zeros(1,ntrial);
@@ -172,7 +177,7 @@ latency(2)   = maxperlength(2);
 switch cfg.vartrllength
   case 0
     if ~all(minperlength==maxperlength)
-      error('data has variable trial lengths, you specified not to accept that');
+      ft_error('data has variable trial lengths, you specified not to accept that');
     end
   case 1
     if all(minperlength==maxperlength)
@@ -183,12 +188,12 @@ switch cfg.vartrllength
       disp('processing and keeping variable length single trials');
     end
   otherwise
-    error('unknown value for vartrllength');
+    ft_error('unknown value for vartrllength');
 end
 
 if strcmp(cfg.covariance, 'yes')
   if ~isfield(cfg, 'covariancewindow')
-    warning('the option cfg.covariancewindow is not specified, taking all time points');
+    ft_warning('the option cfg.covariancewindow is not specified, taking all time points');
     cfg.covariancewindow = latency;
   end
   if ischar(cfg.covariancewindow)
@@ -200,18 +205,18 @@ if strcmp(cfg.covariance, 'yes')
       case 'all'
         cfg.covariancewindow = latency;
       case 'minperlength'
-        error('cfg.covariancewindow = ''minperlength'' is not supported anymore');
+        ft_error('cfg.covariancewindow = ''minperlength'' is not supported anymore');
       case 'maxperlength'
-        error('cfg.covariancewindow = ''maxperlength'' is not supported anymore');
+        ft_error('cfg.covariancewindow = ''maxperlength'' is not supported anymore');
       otherwise
-        error('unsupported specification of cfg.covariancewindow');
+        ft_error('unsupported specification of cfg.covariancewindow');
     end
   end
 end
 
 % pre-allocate some memory space for the covariance matrices
 if strcmp(cfg.covariance, 'yes')
-  covsig = zeros(ntrial, nchan, nchan); covsig(:) = nan;
+  covsig = nan(ntrial, nchan, nchan);
   numcovsigsamples = zeros(ntrial,1);
 end
 
@@ -222,7 +227,7 @@ s        = zeros(nchan, maxwin);    % this will contain the sum
 ss       = zeros(nchan, maxwin);    % this will contain the squared sum
 dof      = zeros(1, maxwin);
 if (strcmp(cfg.keeptrials,'yes'))
-  singtrial = zeros(ntrial, nchan, maxwin); singtrial(:) = nan;
+  singtrial = nan(ntrial, nchan, maxwin);
 end
 
 ft_progress('init', cfg.feedback, 'averaging trials');
@@ -230,7 +235,7 @@ ft_progress('init', cfg.feedback, 'averaging trials');
 for i=1:ntrial
   % fprintf('averaging trial %d of %d\n', i, ntrial);
   ft_progress(i/ntrial, 'averaging trial %d of %d\n', i, ntrial);
-  
+
   % determine whether the data in this trial can be used for all the requested computations
   switch cfg.vartrllength
     case 0
@@ -244,24 +249,29 @@ for i=1:ntrial
       %       elseif strcmp(cfg.covariance,'yes') && (begsamplatency(i)>cfg.covariancewindow(1) || endsamplatency(i)<cfg.covariancewindow(2))
       if strcmp(cfg.covariance,'yes') && (begsamplatency(i)>cfg.covariancewindow(1) || endsamplatency(i)<cfg.covariancewindow(2))
         usetrial = 0;
-        warning(['trial ' num2str(i) ' not used for avg computation because it was not used for covariance computation']);
+        ft_warning(['trial ' num2str(i) ' not used for avg computation because it was not used for covariance computation']);
       end
     case 2
       % include this trial if any data points are present in any of the specified windows
       % this is handled automatically by the code below
       usetrial = 1;
   end
-  
+
   if ~usetrial
     continue;
   end
-  
+
   % for average and variance
   if (begsamplatency(i) <= latency(2)) && (endsamplatency(i) >= latency(1))
     begsampl = nearest(data.time{i}, latency(1));
     endsampl = nearest(data.time{i}, latency(2));
     numsamples(i) = endsampl-begsampl+1;
     dat = data.trial{i}(:, begsampl:endsampl);
+    if isfield(data, 'sampleinfo')
+      tmpsampl = data.sampleinfo(i,1):data.sampleinfo(i,2);
+      data.sampleinfo(i,:) = tmpsampl([begsampl endsampl]);
+    end
+    
     if (latency(1)<begsamplatency(i))
       trlshift = floor((begsamplatency(i)-latency(1))*data.fsample);
     else
@@ -278,7 +288,7 @@ for i=1:ntrial
     dof(windowsel) = dof(windowsel) + 1;
     usetrial = 1; % to indicate that this trial could be used
   end
-  
+
   if strcmp(cfg.covariance, 'yes')
     begsampl = nearest(data.time{i}, cfg.covariancewindow(1));
     endsampl = nearest(data.time{i}, cfg.covariancewindow(2));
@@ -292,13 +302,13 @@ for i=1:ntrial
       covsig(i,:,:) = dat * dat';
     end
   end
-  
+
 end % for ntrial
 ft_progress('close');
 
 % compute the average
 if ~any(numsamples)
-  warning('no samples found in the specified time window, check option for vartrllength');
+  ft_warning('no samples found in the specified time window, check option for vartrllength');
 end
 avg = s ./ repmat(dof(:)', [nchan 1]);
 
@@ -309,7 +319,7 @@ avg = s ./ repmat(dof(:)', [nchan 1]);
 % var = (ss - (s.^2)./tmp1) ./ tmp2;
 dof = repmat(dof(:)', [nchan 1]);
 
-if any(dof > 1)
+if any(dof(:) > 1)
   var = (ss - (s.^2)./dof) ./ (dof-1);
 else
   var = nan(size(avg));
@@ -327,9 +337,9 @@ if strcmp(cfg.covariance, 'yes')
     end
   else
     if strcmp(cfg.removemean, 'yes')
-      covsig = squeeze(nansum(covsig, 1)) / (sum(numcovsigsamples)-ntrial);
+      covsig = shiftdim(nansum(covsig, 1)) / (sum(numcovsigsamples)-ntrial);
     else
-      covsig = squeeze(nansum(covsig, 1)) / sum(numcovsigsamples);
+      covsig = shiftdim(nansum(covsig, 1)) / sum(numcovsigsamples);
     end
   end
 end
@@ -355,22 +365,19 @@ if strcmp(cfg.covariance, 'yes')
 end
 
 % some fields from the input should be copied over in the output
-copyfield = {'grad', 'elec', 'topo', 'topolabel', 'unmixing'};
-for i=1:length(copyfield)
-  if isfield(data, copyfield{i})
-    timelock.(copyfield{i}) = data.(copyfield{i});
-  end
-end
+timelock = copyfields(data, timelock, {'grad', 'elec', 'opto', 'topo', 'topolabel', 'unmixing'});
 
 if isfield(data, 'trialinfo') && strcmp(cfg.keeptrials, 'yes')
-  % copy the trialinfo into the output, but not the sampleinfo
   timelock.trialinfo = data.trialinfo;
+end
+if isfield(data, 'sampleinfo') && strcmp(cfg.keeptrials, 'yes')
+  timelock.sampleinfo = data.sampleinfo;
 end
 
 % do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble provenance timelock
 ft_postamble history    timelock
 ft_postamble savevar    timelock
-ft_postamble debug

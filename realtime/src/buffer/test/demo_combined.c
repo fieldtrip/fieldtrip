@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
 	int rc;
 	pthread_t tid;
 
-    check_datatypes();
+  check_datatypes();
 
 	if (argc>2) {
 		sprintf(host.name, argv[1]);
@@ -37,10 +37,10 @@ int main(int argc, char *argv[]) {
 	/* start the buffer in a seperate thread */
 	rc = pthread_create(&tid, NULL, tcpserver, (void *)(&host));
 	if (rc) {
-		fprintf(stderr, "main err1: return code from pthread_create() is %d\n", rc);
+		fprintf(stderr, "Error: return code from pthread_create() is %d\n", rc);
 		exit(-1);
 	}
-    pthread_detach(tid);
+  pthread_detach(tid);
 	usleep(1000000);
 
 	/* start the acquisition */

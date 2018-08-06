@@ -17,7 +17,7 @@ function varargout = qsubget(jobid, varargin)
 % See also QSUBFEVAL, QSUBCELLFUN
 
 % -----------------------------------------------------------------------
-% Copyright (C) 2010-2014, Robert Oostenveld
+% Copyright (C) 2010-2016, Robert Oostenveld
 %
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -102,9 +102,9 @@ while ~completed && (timeout == 0 || toc(stopwatch)<timeout)
     
     % clean up all temporary files
     % delete(inputfile); % this one has already been deleted in qsubexec immediately after loading it
-    delete(outputfile);
-    delete(logout);
-    delete(logerr);
+    if exist(outputfile, 'file'), delete(outputfile); end
+    if ~isempty(dir(logout)), delete(logout); end % note the wildcard in the file name
+    if ~isempty(dir(logerr)), delete(logerr); end % note the wildcard in the file name
     
     % remove the job from the persistent list
     qsublist('del', jobid);

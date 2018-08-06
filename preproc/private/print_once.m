@@ -1,12 +1,12 @@
 function [ws warned] = print_once(varargin)
-%
+
 % PRINT_ONCE will print a message for every unique point in the
 % stacktrace only, e.g. in a for-loop a warning is thrown only once.
 %
 % Use as one of the following
 %   print_once(string)
 %   print_once(id, string)
-% Alternatively, you can use warning_once using a timeout
+% Alternatively, you can use ft_warning using a timeout
 %   print_once(string, timeout)
 %   print_once(id, string, timeout)
 % where timeout should be inf if you don't want to see the warning ever
@@ -19,11 +19,13 @@ function [ws warned] = print_once(varargin)
 %   print_once('the value is %d', 10)
 % instead you should do
 %   print_once(sprintf('the value is %d', 10))
+%
+% See also FT_WARNING
 
 % Copyright (C) 2012, Robert Oostenveld
 % Copyright (C) 2013, Robert Oostenveld, Jörn M. Horschig
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -44,7 +46,7 @@ function [ws warned] = print_once(varargin)
 global ft_default
 
 if nargin < 1
-  error('You need to specify at least a message');
+  ft_error('You need to specify at least a message');
 end
 
 warned = false;
@@ -92,7 +94,7 @@ elseif nargin==1
 end
 
 if isempty(timeout)
-  error('Timeout ill-specified');
+  ft_error('Timeout ill-specified');
 end
 
 if timeout ~= inf
@@ -170,7 +172,7 @@ name(name==',')=[];
 end % function
 
 function [fname ft_previous_warnings line] = fieldnameFromStack(ft_previous_warnings)
-% stack(1) is this function, stack(2) is warning_once
+% stack(1) is this function, stack(2) is ft_warning
 stack = dbstack('-completenames');
 if size(stack) < 3
   fname = [];

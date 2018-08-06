@@ -14,14 +14,14 @@ function [spectrum] = specest_nanfft(dat, time, varargin)
 %   basis      = precomputes set of basis functions (sines/cosines)
 %   datataype  = 0, 1, 2
 %
-% FFT SPEED NOT YET OPTIMIZED (e.g. matlab version, transpose or not)
-% FUNCTION IS RECURSIVE, SHOULD BE AVOIDED IN FAVOR OF TRANSPARANCY
+% FIXME: FFT speed not yet optimized, e.g. MATLAB version, transpose or not, ...
+% FIXME: function is recursive, should be avoided in favor of transparancy
 %
 % See also SPECEST_MTMFFT, SPECEST_CONVOL, SPECEST_HILBERT, SPECEST_MTMCONVOL, SPECEST_MVAR, SPECEST_WAVELET
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -184,7 +184,7 @@ switch datatype
     end
 
   otherwise
-    error('unsupported configuration of NaNs in the data');
+    ft_error('unsupported configuration of NaNs in the data');
 end
 
 % set output

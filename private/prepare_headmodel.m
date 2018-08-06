@@ -1,8 +1,8 @@
-function [vol, sens, cfg] = prepare_headmodel(cfg, data)
+function [headmodel, sens, cfg] = prepare_headmodel(cfg, data)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION that helps to prepare the electrodes/gradiometers and the volume
-% this is used in sourceanalysis and dipolefitting
+% SUBFUNCTION that helps to prepare the electrodes/gradiometers and the
+% volume conduction model. This is used in sourceanalysis and dipolefitting.
 %
 % This function will get the gradiometer/electrode definition using
 % FT_FETCH_SENS and the volume conductor definition using FT_FETCH_VOL
@@ -20,7 +20,7 @@ function [vol, sens, cfg] = prepare_headmodel(cfg, data)
 
 % Copyright (C) 2004-2012, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -43,20 +43,37 @@ cfg.channel  = ft_getopt(cfg, 'channel', 'all');
 cfg.order    = ft_getopt(cfg, 'order', 10);       % order of expansion for Nolte method; 10 should be enough for real applications; in simulations it makes sense to go higher
 cfg.siunits  = ft_getopt(cfg, 'siunits', 'no');   % yes/no, ensure that SI units are used consistently
 
-if nargin<2
-  data = [];
+hasdata = (nargin>1);
+
+if hasdata
+  % check if the input data is valid for this function
+  data = ft_checkdata(data);
+  % set the default for senstype depending on the data
+  if isfield(data, 'grad')
+    cfg.senstype = ft_getopt(cfg, 'senstype', 'meg');
+  elseif isfield(data, 'elec')
+    cfg.senstype = ft_getopt(cfg, 'senstype', 'eeg');
+  elseif isfield(data, 'opto')
+    cfg.senstype = ft_getopt(cfg, 'senstype', 'opto');
+  else
+    cfg.senstype = ft_getopt(cfg, 'senstype', []);
+  end
 end
 
 % get the volume conduction model
-vol = ft_fetch_vol(cfg, data);
+headmodel = ft_fetch_vol(cfg);
 
-% get the gradiometer or electrode definition
-sens = ft_fetch_sens(cfg, data);
+% get the gradiometer or electrode definition, these can be in the cfg or in the data
+if hasdata
+  sens = ft_fetch_sens(cfg, data);
+else
+  sens = ft_fetch_sens(cfg);
+end
 
 if istrue(cfg.siunits)
   % ensure that the geometrical units are in SI units
-  sens = ft_convert_units(sens, 'm', 'feedback', true);
-  vol  = ft_convert_units(vol,  'm', 'feedback', true);
+  sens       = ft_convert_units(sens,       'm', 'feedback', true);
+  headmodel  = ft_convert_units(headmodel,  'm', 'feedback', true);
   if isfield(cfg, 'grid')
     cfg.grid = ft_convert_units(cfg.grid,  'm', 'feedback', true);
   end
@@ -64,19 +81,19 @@ else
   % ensure that the geometrical units are the same
   if isfield(cfg, 'grid') && isfield(cfg.grid, 'unit')
     % convert it to the units of the source model
-    sens = ft_convert_units(sens, cfg.grid.unit, 'feedback', true);
-    vol  = ft_convert_units(vol,  cfg.grid.unit, 'feedback', true);
+    sens       = ft_convert_units(sens,       cfg.grid.unit, 'feedback', true);
+    headmodel  = ft_convert_units(headmodel,  cfg.grid.unit, 'feedback', true);
   else
     % convert it to the units of the head model
-    sens = ft_convert_units(sens, vol.unit, 'feedback', true);
+    sens = ft_convert_units(sens, headmodel.unit, 'feedback', true);
   end
 end
 
-if isfield(data, 'topolabel')
+if hasdata && isfield(data, 'topolabel')
   % the data reflects a componentanalysis, where the topographic and the
   % timecourse labels are different
   cfg.channel = ft_channelselection(cfg.channel, data.topolabel);
-elseif isfield(data, 'label')
+elseif hasdata && isfield(data, 'label')
   % In the subsequent code, the matching channels in the sensor array and
   % in the configuration will be selected. To ensure that these channels
   % are also present in the data, update the configuration to match the data.
@@ -87,11 +104,20 @@ else
 end
 
 % ensure that these are a struct, which may be required in case configuration tracking is used
-vol  = struct(vol);
-sens = struct(sens);
+% FIXME this fails for combined EEG+MEG
+% headmodel = struct(headmodel);
+% sens      = struct(sens);
 
 % the prepare_vol_sens function from the forwinv module does most of the actual work
-[vol, sens] = ft_prepare_vol_sens(vol, sens, 'channel', cfg.channel, 'order', cfg.order);
+[headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, 'channel', cfg.channel, 'order', cfg.order);
 
 % update the selected channels in the configuration
-cfg.channel = sens.label;
+if iscell(sens)
+  % this represents combined EEG, ECoG and/or MEG
+  cfg.channel = {};
+  for i=1:numel(sens)
+    cfg.channel = cat(1, cfg.channel, sens{i}.label(:));
+  end
+else
+  cfg.channel = sens.label;
+end

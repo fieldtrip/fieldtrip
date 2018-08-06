@@ -1,4 +1,4 @@
-function [s] = setsubfield(s, f, v)
+function s = setsubfield(s, f, v)
 
 % SETSUBFIELD sets the contents of the specified field to a specified value
 % just like the standard Matlab SETFIELD function, except that you can also
@@ -17,7 +17,7 @@ function [s] = setsubfield(s, f, v)
 
 % Copyright (C) 2005-2013, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -45,7 +45,7 @@ end
 %   if isempty(f)
 %     break
 %   end
-%   
+%
 % end
 %
 %s = setfield(s, t{:}, v);

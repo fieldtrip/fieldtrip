@@ -1,4 +1,4 @@
-function [Hpos Hneg] = diversity_coef_sign(W, Ci)
+function [Hpos,Hneg] = diversity_coef_sign(W, Ci)
 %DIVERSITY_COEF_SIGN     Shannon-entropy based diversity coefficient
 %
 %   [Hpos Hneg] = diversity_coef_sign(W,Ci);
@@ -14,14 +14,16 @@ function [Hpos Hneg] = diversity_coef_sign(W, Ci)
 %   Output:     Hpos,   diversity coefficient based on positive connections
 %               Hneg,   diversity coefficient based on negative connections
 %
-%   References: Shannon CE (1948) Bell Syst Tech J 27, 379–423.
+%   References: Shannon CE (1948) Bell Syst Tech J 27, 379-423.
 %               Rubinov and Sporns (2011) NeuroImage.
 %
 %
-%   2011, Mika Rubinov, UNSW
+%   2011-2012, Mika Rubinov, U Cambridge
 
 %   Modification History:
 %   Mar 2011: Original
+%   Sep 2012: Fixed treatment of nodes with no negative strength
+%             (thanks to Alex Fornito and Martin Monti)
 
 
 n = length(W);                                  %number of nodes
@@ -37,6 +39,7 @@ Hneg = entropy(-W.*(W<0));
             Snm(:,i) = sum(W_(:,Ci==i),2);
         end
         pnm = Snm ./ S(:,ones(1,m));
+        pnm(isnan(pnm)) = 0;
         pnm(~pnm) = 1;
         H = -sum(pnm.*log(pnm),2)/log(m);
     end

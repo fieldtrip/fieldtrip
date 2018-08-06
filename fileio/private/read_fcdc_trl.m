@@ -1,4 +1,4 @@
-function [trl] = read_fcdc_trl(fn);
+function [trl] = read_fcdc_trl(fn)
 
 % READ_FCDC_TRL reads trial definitions from a file
 %
@@ -24,7 +24,7 @@ function [trl] = read_fcdc_trl(fn);
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -44,7 +44,7 @@ function [trl] = read_fcdc_trl(fn);
 
 fid = fopen(fn, 'rt');
 if fid<0
-   error('could not open file');
+   ft_error('could not open file');
 end
 
 trl = [];

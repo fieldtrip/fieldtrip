@@ -34,7 +34,7 @@ function [grandavg] = ft_freqgrandaverage(cfg, varargin)
 
 % Copyright (C) 2005-2006, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -52,18 +52,21 @@ function [grandavg] = ft_freqgrandaverage(cfg, varargin)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar varargin
+ft_preamble provenance varargin
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -82,7 +85,7 @@ cfg.parameter      = ft_getopt(cfg, 'parameter',  []);
 if isempty(cfg.parameter) && isfield(varargin{1}, 'powspctrm')
     cfg.parameter = 'powspctrm';
 elseif isempty(cfg.parameter)
-    error('you should specify a valid parameter to average');
+    ft_error('you should specify a valid parameter to average');
 end
 
 if ischar(cfg.parameter)
@@ -98,10 +101,10 @@ hastap   = ~isempty(strfind(varargin{i}.dimord, 'tap'));
 
 % check whether the input data is suitable
 if hasrpt
-    error('the input data of each subject should be an average, use FT_FREQDESCRIPTIVES first');
+    ft_error('the input data of each subject should be an average, use FT_FREQDESCRIPTIVES first');
 end
 if hastap
-    error('multiple tapers in the input are not supported');
+    ft_error('multiple tapers in the input are not supported');
 end
 
 if ischar(cfg.foilim) && strcmp(cfg.foilim, 'all')
@@ -122,7 +125,7 @@ end
 
 % select the data in all inputs
 for k=1:numel(cfg.parameter)
-    
+
     % determine which channels, frequencies and latencies are available for all inputs
     for i=1:Nsubj
         cfg.channel = ft_channelselection(cfg.channel, varargin{i}.label);
@@ -137,15 +140,15 @@ for k=1:numel(cfg.parameter)
     end
     cfg.foilim = [fbeg fend];
     cfg.toilim = [tbeg tend];
-    
+
     % pick the selections
     for i=1:Nsubj
         if ~isfield(varargin{i}, cfg.parameter{k})
-            error('the field %s is not present in data structure %d', cfg.parameter{k}, i);
+            ft_error('the field %s is not present in data structure %d', cfg.parameter{k}, i);
         end
         [dum, chansel] = match_str(cfg.channel, varargin{i}.label);
         varargin{i}.label = varargin{i}.label(chansel);
-        
+
         if hasfreq
             freqsel = nearest(varargin{i}.freq, fbeg):nearest(varargin{i}.freq, fend);
             varargin{i}.freq = varargin{i}.freq(freqsel);
@@ -165,7 +168,7 @@ for k=1:numel(cfg.parameter)
             case {'rpt_chan_freq_time' 'rpttap_chan_freq_time' 'subj_chan_freq_time'}
                 varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(:,chansel,freqsel,timesel);
             otherwise
-                error('unsupported dimord');
+                ft_error('unsupported dimord');
         end
     end % for i = subject
 end % for k = parameter
@@ -179,11 +182,11 @@ end
 % give some feedback on the screen
 if strcmp(cfg.keepindividual, 'no')
     for k=1:numel(cfg.parameter)
-        fprintf('computing average %s over %d subjects\n', cfg.parameter{k}, Nsubj);
+        ft_info('computing average %s over %d subjects\n', cfg.parameter{k}, Nsubj);
     end
 else
     for k=1:numel(cfg.parameter)
-        fprintf('not computing average, but keeping individual %s for %d subjects\n', cfg.parameter{k}, Nsubj);
+        ft_info('not computing average, but keeping individual %s for %d subjects\n', cfg.parameter{k}, Nsubj);
     end
 end
 
@@ -214,10 +217,10 @@ if isfield(varargin{1}, 'labelcmb')
     grandavg.labelcmb = varargin{1}.labelcmb;
 end
 if isfield(varargin{1}, 'grad')
-    warning('discarding gradiometer information because it cannot be averaged');
+    ft_warning('discarding gradiometer information because it cannot be averaged');
 end
 if isfield(varargin{1}, 'elec')
-    warning('discarding electrode information because it cannot be averaged');
+    ft_warning('discarding electrode information because it cannot be averaged');
 end
 if strcmp(cfg.keepindividual, 'yes')
     grandavg.dimord = ['subj_',varargin{1}.dimord];
@@ -228,7 +231,7 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous varargin
-ft_postamble history grandavg
-ft_postamble savevar grandavg
+ft_postamble previous   varargin
+ft_postamble provenance grandavg
+ft_postamble history    grandavg
+ft_postamble savevar    grandavg

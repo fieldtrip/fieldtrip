@@ -21,7 +21,7 @@ function [eeg] = read_ns_eeg(filename, epoch)
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -51,7 +51,7 @@ eeg.time = linspace(eeg.xmin, eeg.xmax, eeg.npnt);
 % open the file and seek towards the place where the raw data is
 fid = fopen(filename,'r','ieee-le');
 if fid<0
-  error(['cannot open ', filename]);
+  ft_error(['cannot open ', filename]);
 end
 
 % the default is to read all epochs
@@ -74,20 +74,21 @@ elseif floor(sample_size)==4
   epoch_size = eeg.nchan*eeg.npnt*4 + 13;
 elseif floor(sample_size)>4
   % although this is not to be expected, it might be due to a very large "footer" compared to the data size
-  % Olga Sysoeva reported that this extention to the datatype detection fixed it for her (see http://bugzilla.fcdonders.nl/show_bug.cgi?id=547)
+  % Olga Sysoeva reported that this extention to the datatype detection fixed it for her (see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=547)
   datatype ='int32';
   epoch_size = eeg.nchan*eeg.npnt*4 + 13;
 end
 
 % create empty storage for the data
 data = zeros(length(epoch), eeg.nchan, eeg.npnt);
+sweep = struct();
 
 for i=1:length(epoch)
   fseek(fid, 900, 'bof');               % skip general header
   fseek(fid, 75*eeg.nchan, 'cof');          % skip channel headers
   status = fseek(fid, (epoch(i)-1)*epoch_size, 'cof');  % skip first epochs
   if status~=0
-    error('seek error while reading epoch data');
+    ft_error('seek error while reading epoch data');
   end
 
   % fprintf('reading epoch %d at offset %d\n', epoch(i), ftell(fid));
@@ -103,7 +104,7 @@ for i=1:length(epoch)
   % read raw signal
   raw = fread(fid, eeg.nchan*eeg.npnt, datatype);
   if length(raw)~=eeg.nchan*eeg.npnt
-    error('fread error while reading epoch data');
+    ft_error('fread error while reading epoch data');
   end
   data(i,:,:) = reshape(raw, [eeg.nchan, eeg.npnt]);
 

@@ -591,8 +591,8 @@ function [g,w,c] = get_gwc(VF,BP,SP,CP,sums,wc)
 if wc,
 	VC = VF;
 	for j=1:length(VF),
-		[pth,nm,xt,vr] = fileparts(deblank(VF(j).fname));
-		VC(j).fname    = fullfile(pth,['m' nm xt vr]);
+		[pth,nm,xt]    = fileparts(deblank(VF(j).fname));
+		VC(j).fname    = fullfile(pth,['m' nm xt]);
 		VC(j).descrip  = 'Bias corrected image';
 	end;
 	VC = spm_create_vol(VC);

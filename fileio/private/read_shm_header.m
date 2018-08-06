@@ -1,11 +1,11 @@
 function [hdr] = read_shm_header(filename)
 
 % READ_SHM_HEADER reads the header in real-time from shared memory
-% this is a helper function for READ_HEADER
+% this is a helper function for FT_READ_HEADER
 
 % Copyright (C) 2007-2010, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -39,7 +39,7 @@ else
   % get the name of the headerfile from shared memory
   sel = find(msgType==0);
   if isempty(sel)
-    error('could not determine header file location from shared memory');
+    ft_error('could not determine header file location from shared memory');
   end
   buf = read_ctf_shm(sel); % this includes the headerfile as string, and the trigger information from AcqBuffer
   str = char(typecast(buf(1:256), 'uint8')); % assume that the filename will not exceed 256 characters in length
@@ -65,7 +65,7 @@ if isempty(previous_header) || isempty(previous_headerfile) || ~isequal(previous
     % do online detection of triggers inside AcqBuffer
     trgchan = find(origSensType(:)'==11);
     if length(trgchan)>10
-      error('online detection of triggers in AcqBuffer only works with up to 10 trigger channels');
+      ft_error('online detection of triggers in AcqBuffer only works with up to 10 trigger channels');
     end
     % specify the channel count and the trigger channels in the setup buffer
     buf(28160-9011) = hdr.nChans;        % tell the number of actual channels
@@ -79,7 +79,7 @@ if isempty(previous_header) || isempty(previous_headerfile) || ~isequal(previous
     % write the updated setup packet, this should cause AcqBuffer to do online trigger detection
     write_ctf_shm(sel, 0, 0, 0, 0, 0, buf);
   else
-    warning('no setup in shared memory, could not enable trigger detection');
+    ft_warning('no setup in shared memory, could not enable trigger detection');
   end
 
 else

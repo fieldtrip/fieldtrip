@@ -11,13 +11,14 @@ function BC=betweenness_bin(G)
 %
 %   Output:     BC,     node betweenness centrality vector.
 %
-%   Note: Betweenness centrality may be normalised to [0,1] via BC/[(N-1)(N-2)]
+%   Note: Betweenness centrality may be normalised to the range [0,1] as
+%   BC/[(N-1)(N-2)], where N is the number of nodes in the network.
 %
 %   Reference: Kintali (2008) arXiv:0809.1906v2 [cs.DS]
-%              (generalised to directed and disconnected graphs)
+%              (generalization to directed and disconnected graphs)
 %
 %
-%   Mika Rubinov, UNSW, 2007-2010
+%   Mika Rubinov, UNSW/U Cambridge, 2007-2012
 
 
 n=length(G);                %number of nodes
@@ -46,7 +47,7 @@ diam=d-1;                  	%graph diameter
 %calculate DP
 for d=diam:-1:2
     DPd1=(((L==d).*(1+DP)./NSP)*Gt).*((L==(d-1)).*NSP);
-    DP=DP + DPd1;       %DPd1: dependencies on vertices |d-1| from source
+    DP=DP + DPd1;           %DPd1: dependencies on vertices |d-1| from source
 end
 
 BC=sum(DP,1);               %compute betweenness

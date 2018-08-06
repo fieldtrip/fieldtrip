@@ -1,4 +1,4 @@
-function volume = ft_datatype_volume(volume, varargin)
+function [volume] = ft_datatype_volume(volume, varargin)
 
 % FT_DATATYPE_VOLUME describes the FieldTrip MATLAB structure for volumetric data.
 %
@@ -29,11 +29,16 @@ function volume = ft_datatype_volume(volume, varargin)
 %   - none
 %
 % Revision history:
+%
+% (2014) The subfields in the avg and trial fields are now present in the
+% main structure, e.g. source.avg.pow is now source.pow. Furthermore, the
+% inside is always represented as logical array.
+%
 % (2012b) Ensure that the anatomy-field (if present) does not contain
 % infinite values.
 %
 % (2012) A placeholder 2012 version was created that ensured the axes
-% of the coordinate system to be right-handed. This actually never 
+% of the coordinate system to be right-handed. This actually never
 % has made it to the default version. An executive decision regarding
 % this has not been made as far as I (JM) am aware, and probably it's
 % a more principled approach to keep the handedness free, so don't mess
@@ -48,13 +53,11 @@ function volume = ft_datatype_volume(volume, varargin)
 %
 % (2003) The initial version was defined
 %
-% See also FT_DATATYPE, FT_DATATYPE_COMP, FT_DATATYPE_DIP, FT_DATATYPE_FREQ,
-% FT_DATATYPE_MVAR, FT_DATATYPE_RAW, FT_DATATYPE_SOURCE, FT_DATATYPE_SPIKE,
-% FT_DATATYPE_TIMELOCK, FT_DATATYPE_VOLUME
+% See also FT_DATATYPE, FT_DATATYPE_DIP, FT_DATATYPE_SOURCE
 
-% Copyright (C) 2011, Robert Oostenveld
+% Copyright (C) 2011-2015, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -76,7 +79,7 @@ function volume = ft_datatype_volume(volume, varargin)
 version = ft_getopt(varargin, 'version', 'latest');
 
 if strcmp(version, 'latest')
-  version = '2012b';
+  version = '2014';
 end
 
 if isempty(volume)
@@ -88,9 +91,7 @@ end
 if isfield(volume, 'xgrid'),     volume = rmfield(volume, 'xgrid');     end
 if isfield(volume, 'ygrid'),     volume = rmfield(volume, 'ygrid');     end
 if isfield(volume, 'zgrid'),     volume = rmfield(volume, 'zgrid');     end
-if isfield(volume, 'freq'),      volume = rmfield(volume, 'freq');      end
 if isfield(volume, 'frequency'), volume = rmfield(volume, 'frequency'); end
-if isfield(volume, 'time'),      volume = rmfield(volume, 'time');      end
 if isfield(volume, 'latency'),   volume = rmfield(volume, 'latency');   end
 
 if isfield(volume, 'pos')
@@ -105,6 +106,37 @@ if isfield(volume, 'pos')
 end
 
 switch version
+  case '2014'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if isfield(volume, 'dimord')
+      volume = rmfield(volume, 'dimord');
+    end
+
+    if isfield(volume, 'anatomy')
+      volume.anatomy(~isfinite(volume.anatomy)) = 0;
+    end
+
+    if isfield(volume, 'avg') && isstruct(volume.avg)
+      % move the average fields to the main structure
+      fn = fieldnames(volume.avg);
+      for i=1:length(fn)
+        volume.(fn{i}) = volume.avg.(fn{i});
+      end
+      volume = rmfield(volume, 'avg');
+    end
+
+    % ensure that it is always logical
+    volume = fixinside(volume, 'logical');
+
+    fn = getdatfield(volume);
+    for i=1:numel(fn)
+      try
+        volume.(fn{i}) = reshape(volume.(fn{i}), volume.dim);
+      catch
+        ft_warning('could not reshape "%s" to the expected dimensions', fn{i});
+      end
+    end
+
   case '2012b'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if isfield(volume, 'dimord')
@@ -114,20 +146,20 @@ switch version
     if isfield(volume, 'anatomy')
       volume.anatomy(~isfinite(volume.anatomy)) = 0;
     end
-    
+
   case '2012'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % THIS ONE DOES NOT SEEM TO HAVE EVER BEEN USED 
+    % THIS ONE DOES NOT SEEM TO HAVE EVER BEEN USED
     % HOWEVER, KEEP IT FOR DOCUMENTATION PURPOSES
-   
+
     if isfield(volume, 'dimord')
       volume = rmfield(volume, 'dimord');
     end
-    
+
     % ensure the axes system in the transformation matrix to be
     % right-handed
     volume = volumeflip(volume, 'right');
-    
+
   case '2011'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if isfield(volume, 'dimord')
@@ -147,6 +179,5 @@ switch version
 
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    error('unsupported version "%s" for volume datatype', version);
+    ft_error('unsupported version "%s" for volume datatype', version);
 end
-

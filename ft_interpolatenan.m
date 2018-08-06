@@ -1,19 +1,22 @@
 function dataout = ft_interpolatenan(cfg, datain)
 
-% FT_INTERPOLATENAN interpolates data that contains segments of nans
-% obtained by replacing artifactual data with nans using, for example, FT_REJECTARTIFACT,
-% or by redefining trials with FT_REDEFINETRIAL resulting in trials with
-% gaps.
+% FT_INTERPOLATENAN interpolates time series that contains segments of nans obtained
+% by replacing artifactual data with nans using, for example, FT_REJECTARTIFACT, or
+% by redefining trials with FT_REDEFINETRIAL resulting in trials with gaps.
 %
 % Use as
-%  outdata = ft_interpolatenan(cfg, indata) 
-% where indata is data as obtained from FT_PREPROCESSING 
-% and cfg is a configuratioun structure that should contain 
+%   outdata = ft_interpolatenan(cfg, indata)
+% where cfg is a configuration structure and the input data is obtained from FT_PREPROCESSING.
 %
-%  cfg.method      = string, interpolation method, see HELP INTERP1 (default = 'linear')
-%  cfg.prewindow   = value, length of data prior to interpolation window, in seconds (default = 1)
-%  cfg.postwindow  = value, length of data after interpolation window, in seconds (default = 1)
+% The configuration should contain
+%   cfg.method      = string, interpolation method, see HELP INTERP1 (default = 'linear')
+%   cfg.prewindow   = value, length of data prior to interpolation window, in seconds (default = 1)
+%   cfg.postwindow  = value, length of data after interpolation window, in seconds (default = 1)
+%   cfg.feedback    = string, 'no', 'text', 'textbar', 'gui' (default = 'text')
 %
+% This function only interpolates over time, not over space. If you want to
+% interpolate using spatial information, e.g. using neighbouring channels, you should
+% use FT_CHANNELREPAIR.
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
@@ -24,11 +27,11 @@ function dataout = ft_interpolatenan(cfg, datain)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_REJECTARTIFACT, FT_REDEFINETRIAL
+% See also FT_REJECTARTIFACT, FT_REDEFINETRIAL, FT_CHANNELREPAIR
 
 % Copyright (C) 2003-2011, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -50,18 +53,21 @@ function dataout = ft_interpolatenan(cfg, datain)
 % the initial part deals with parsing the input options and data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
-ft_defaults                 % this ensures that the path is correct and that the ft_defaults global variable is available
-ft_preamble init            % this will reset warning_once and show the function help if nargin==0 and return an error
-ft_preamble provenance      % this records the time and memory usage at teh beginning of the function
-ft_preamble trackconfig     % this converts the cfg structure in a config object, which tracks the cfg options that are being used
-ft_preamble debug           % this allows for displaying or saving the function name and input arguments upon an error
-ft_preamble loadvar datain  % this reads the input data in case the user specified the cfg.inputfile option
+ft_defaults
+ft_preamble init
+ft_preamble debug
+ft_preamble loadvar    datain
+ft_preamble provenance datain
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -69,62 +75,63 @@ end
 datain = ft_checkdata(datain, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
 % check if the input is valid
-cfg             = ft_checkconfig(cfg, 'allowedval',{'method','nearest','linear','spline','pchip','cubic','v5cubic'});
+cfg             = ft_checkconfig(cfg, 'allowedval', {'method', 'nearest', 'linear', 'spline', 'pchip', 'cubic', 'v5cubic'});
 cfg             = ft_checkopt(cfg, 'prewindow', 'numericscalar');
 cfg             = ft_checkopt(cfg, 'postwindow', 'numericscalar');
 
 % get the options
-method          = ft_getopt(cfg, 'method', 'linear');        % default is linear
-prewindow       = ft_getopt(cfg, 'prewindow', 1);        % default is 1 second
-postwindow      = ft_getopt(cfg, 'postwindow', 1);        % default is 1 seconds
+cfg.method      = ft_getopt(cfg, 'method',    'linear'); % default is linear
+cfg.prewindow   = ft_getopt(cfg, 'prewindow',  1);       % default is 1 second
+cfg.postwindow  = ft_getopt(cfg, 'postwindow', 1);       % default is 1 seconds
+cfg.feedback    = ft_getopt(cfg, 'feedback', 'etf');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the actual computation is done in the middle part
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-dataout = datain;
-ntrl = numel(datain.trial);
-prewindow = round(prewindow * datain.fsample); % Express window in samples
-postwindow = round(postwindow * datain.fsample); % Express window in samples
+prewindow  = round(cfg.prewindow * datain.fsample); % Express window in samples
+postwindow = round(cfg.postwindow * datain.fsample); % Express window in samples
 
-% Let users know that the interpolation will start and initialize the
-% progress indicator
-fprintf('Initializing %s interpolation of %d trials\n',method,ntrl);
-ft_progress('init', 'etf');
+% Start with a copy of the input data
+dataout = datain;
+
+% Let users know that the interpolation will start and initialize the progress indicator
+ntrl = numel(datain.trial);
+fprintf('Initializing %s interpolation of %d trials\n', cfg.method, ntrl);
+ft_progress('init',  cfg.feedback, 'Processing trial...');
 
 for i=1:ntrl
-  ft_progress(i/ntrl, 'Processing trial %d out of %d',i,ntrl);
-  nchan = size(datain.trial{i},1);
+  ft_progress(i/ntrl, 'Processing trial %d from %d', i, ntrl);
   replace = isnan(datain.trial{i}); % Find samples that have been replaced by nans
   if any(replace(:)) % Check whether any values should be interpolated
-    [idx_start_r, idx_start_c] = find(diff(replace,[],2)==1); % Determine onset of nan-chunk
-    [dum, idx_end_c] = find(diff(replace,[],2)==-1); % Determine offset of nan-chunk
-    idx_start_c = idx_start_c + 1; % correct for shift due to using diff
-
+    [idx_start_r, idx_start_c] = find(diff(replace, [], 2)==1); % Determine onset of nan-chunk
+    [dum, idx_end_c] = find(diff(replace, [], 2)==-1); % Determine offset of nan-chunk
+    idx_start_c = idx_start_c + 1; % Correct for shift due to using diff
+    
     % Loop across found nan-chunks
-    for j=1:size(idx_start_c,1)
-     sample_window = [idx_start_c(j)-prewindow:idx_start_c(j)-1 idx_end_c(j)+1:idx_end_c(j)+postwindow]; % Indices of time-points used for interpolation
-     if any(sample_window<1) || any(sample_window>size(datain.trial{i},2)) % Check whether sampling window falls within data range
-       warning_once('Sample window partially outside of data-range, using less samples');
-       sample_window(sample_window<1|sample_window>size(datain.trial{i},2))=[];
-     elseif any(isnan(datain.trial{i}(idx_start_r(j),sample_window))) % Check whether sampling window overlaps with other chunk of nans
-      error('Sample window overlaps with other chunk of nans');
-     end;
-     fill_window = idx_start_c(j):idx_end_c(j); % Indices of time-points that will be interpolated
-     fill = interp1(sample_window, datain.trial{i}(idx_start_r(j),sample_window),fill_window,method); % Interpolation
-     dataout.trial{i}(idx_start_r(j),fill_window)=fill; % Add interpolated segments to dataout
-    end;
-  end; 
-end; % i=1:ntrl
+    for j=1:size(idx_start_c, 1)
+      sample_window = [idx_start_c(j)-prewindow:idx_start_c(j)-1 idx_end_c(j)+1:idx_end_c(j)+postwindow]; % Indices of time-points used for interpolation
+      if any(sample_window<1) || any(sample_window>size(datain.trial{i}, 2)) % Check whether sampling window falls within data range
+        ft_warning('Sample window partially outside of data-range, using less samples');
+        sample_window(sample_window<1|sample_window>size(datain.trial{i}, 2))=[];
+      elseif any(isnan(datain.trial{i}(idx_start_r(j), sample_window))) % Check whether sampling window overlaps with other chunk of nans
+        ft_error('Sample window overlaps with other chunk of nans');
+      end
+      fill_window = idx_start_c(j):idx_end_c(j); % Indices of time-points that will be interpolated
+      fill = interp1(sample_window, datain.trial{i}(idx_start_r(j), sample_window), fill_window, cfg.method); % Interpolation
+      dataout.trial{i}(idx_start_r(j), fill_window)=fill; % Add interpolated segments to dataout
+    end
+  end
+end % for all trials
 ft_progress('close');
-  
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Cleanup
+% cleanup
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-ft_postamble debug            % this clears the onCleanup function used for debugging in case of an error
-ft_postamble trackconfig      % this converts the config object back into a struct and can report on the unused fields
-ft_postamble provenance       % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and matlab version etc. to the output cfg
-ft_postamble previous datain  % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
-ft_postamble history dataout  % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg
-ft_postamble savevar dataout  % this saves the output data structure to disk in case the user specified the cfg.outputfile option
+ft_postamble debug
+ft_postamble trackconfig
+ft_postamble previous   datain
+ft_postamble provenance dataout
+ft_postamble history    dataout
+ft_postamble savevar    dataout

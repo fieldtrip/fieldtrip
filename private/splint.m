@@ -1,4 +1,4 @@
-function [V2, L2, L1] = splint(elc1, V1, elc2)
+function [V2, L2, L1] = splint(elc1, V1, elc2, order, degree, lambda)
 
 % SPLINT computes the spherical spline interpolation and the surface laplacian
 % of an EEG potential distribution
@@ -13,9 +13,11 @@ function [V2, L2, L1] = splint(elc1, V1, elc2)
 %   V2      potential at electrode locations in elc2
 %   L2      laplacian of potential at electrode locations in elc2
 %   L1      laplacian of potential at electrode locations in elc1
+%   order   order of splines
+%   degree  degree of Legendre polynomials
+%   lambda  regularization parameter
 %
 % See also LAPINT, LAPINTMAT, LAPCAL
-
 % This implements
 %   F. Perrin, J. Pernier, O. Bertrand, and J. F. Echallier.
 %   Spherical splines for scalp potential and curernt density mapping.
@@ -27,7 +29,7 @@ function [V2, L2, L1] = splint(elc1, V1, elc2)
 
 % Copyright (C) 2003, Robert Oostenveld
 % 
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -48,7 +50,7 @@ function [V2, L2, L1] = splint(elc1, V1, elc2)
 N = size(elc1,1);   % number of known electrodes
 M = size(elc2,1);   % number of unknown electrodes
 T = size(V1,2);     % number of timepoints in the potential
-Z = V1;         % potential on known electrodes, can be matrix
+Z = V1;             % potential on known electrodes, can be matrix
 
 % remember the actual size of the sphere
 sphere1_scale = mean(sqrt(sum(elc1.^2,2)));
@@ -67,8 +69,8 @@ for i=1:N
 end
 
 % compute matrix G of Perrin 1989
-[gx, hx] = gh(CosEii);
-G = gx;
+[gx, hx] = gh(CosEii, order, degree);
+G = gx+eye(size(gx))*lambda; % Apply regularization as in comments in Perrin 1989
 
 % Note that the two simultaneous equations (2) of Perrin
 %   G*C + T*c0 = Z
@@ -97,8 +99,8 @@ L1 = hx * C(2:end, :);
 % undo the initial scaling of the sphere to get back to real units for the laplacian
 L1 = L1 / (sphere1_scale^2);
 
-if all(size(elc1)==size(elc2)) & all(elc1(:)==elc2(:))
-  warning('using shortcut for splint');
+if all(size(elc1)==size(elc2)) && all(elc1(:)==elc2(:))
+  ft_warning('using shortcut for splint');
   % do not recompute gx and hx
 else
   % compute cosine of angle between all known and unknown electrodes
@@ -108,8 +110,9 @@ else
       CosEji(j,i) = 1 - sum((elc2(j,:) - elc1(i,:)).^2)/2;
     end
   end
-  [gx, hx] = gh(CosEji);
+  [gx, hx] = gh(CosEji, order, degree);
 end
+
 % compute interpolated potential on all unknown electrodes by matrix multiplication
 V2 = [ones(M,1) gx] * C;
 
@@ -124,31 +127,31 @@ L2 = L2 / (sphere2_scale^2);
 % for simultaneous computation of multiple values
 % also implemented as MEX file, but without the adaptive N
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [gx, hx] = gh(x)
-M = 4;          % constant in denominator
-% N is the number of terms for series expansion
+function [gx, hx] = gh(x, M, N)
+% M = 4;          % constant in denominator, set in ft_scalpcurrentdensity
+% N is the number of terms for series expansion, set in ft_scalpcurrentdensity
 % N=9 works fine for 32 electrodes, but for 128 electrodes it should be larger
-if max(size(x))<=32
-  N = 9;
-elseif max(size(x))<=64
-  N = 14;
-elseif max(size(x))<=128
-  N = 20;
-else
-  N = 32;
-end
+% if max(size(x))<=32
+%   N = 9;
+% elseif max(size(x))<=64
+%   N = 14;
+% elseif max(size(x))<=128
+%   N = 20;
+% else
+%   N = 32;
+% end
 p  = zeros(1,N);
 gx = zeros(size(x));
 hx = zeros(size(x));
-x(find(x>1)) = 1;       % to avoid rounding off errors
-x(find(x<-1)) = -1;     % to avoid rounding off errors
-% using Matlab function to compute legendre polynomials
+x(x>1) = 1;       % to avoid rounding off errors
+x(x<-1) = -1;     % to avoid rounding off errors
+% using MATLAB function to compute legendre polynomials
 % P = zeros(size(x,1), size(x,2), N);
 % for k=1:N
 %  tmp = legendre(k,x);
 %  P(:,:,k) = squeeze(tmp(1,:,:));
 % end
-if (size(x,1)==size(x,2)) & all(all(x==x'))
+if (size(x,1)==size(x,2)) && all(all(x==x'))
   issymmetric = 1;
 else
   issymmetric = 0;

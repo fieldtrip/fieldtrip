@@ -15,7 +15,9 @@ function varargout = qsubcellfun(fname, varargin)
 %   StopOnError    = boolean (default = true)
 %   diary          = string, can be 'always', 'never', 'warning', 'error' (default = 'error')
 %   timreq         = number, the time in seconds required to run a single job
+%   timoverhead    = number in seconds, how much time to allow MATLAB to start (default = 180 seconds)
 %   memreq         = number, the memory in bytes required to run a single job
+%   memoverhead    = number in bytes, how much memory to account for MATLAB itself (default = 1024^3, i.e. 1GB)
 %   stack          = number, stack multiple jobs in a single qsub job (default = 'auto')
 %   backend        = string, can be 'torque', 'sge', 'slurm', 'lsf', 'system', 'local' (default is automatic)
 %   batchid        = string, to identify the jobs in the queue (default is user_host_pid_batch)
@@ -25,6 +27,8 @@ function varargout = qsubcellfun(fname, varargin)
 %   matlabcmd      = string, the Linux command line to start MATLAB on the compute nodes (default is automatic
 %   display        = 'yes' or 'no', whether the nodisplay option should be passed to MATLAB (default = 'no', meaning nodisplay)
 %   jvm            = 'yes' or 'no', whether the nojvm option should be passed to MATLAB (default = 'yes', meaning with jvm)
+%   rerunable      = 'yes' or 'no', whether the job can be restarted on a torque/maui/moab cluster (default = 'no')
+%   sleep          = number, time in seconds to wait between checks for job completion (default = 0.5 s)
 %
 % It is required to give an estimate of the time and memory requirements of
 % the individual jobs. The memory requirement of the MATLAB executable
@@ -69,7 +73,7 @@ function varargout = qsubcellfun(fname, varargin)
 % See also QSUBCOMPILE, QSUBFEVAL, CELLFUN, PEERCELLFUN, FEVAL, DFEVAL, DFEVALASYNC
 
 % -----------------------------------------------------------------------
-% Copyright (C) 2011-2014, Robert Oostenveld
+% Copyright (C) 2011-2016, Robert Oostenveld
 %
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -87,7 +91,7 @@ function varargout = qsubcellfun(fname, varargin)
 % $Id$
 % -----------------------------------------------------------------------
 
-if matlabversion(7.8, Inf)
+if ft_platform_supports('onCleanup')
   % switch to zombie when finished or when Ctrl-C gets pressed
   % the onCleanup function does not exist for older versions
   onCleanup(@cleanupfun);
@@ -108,6 +112,8 @@ StopOnError   = ft_getopt(optarg, 'StopOnError',   true    );
 diary         = ft_getopt(optarg, 'diary',         'error' ); % 'always', 'never', 'warning', 'error'
 timreq        = ft_getopt(optarg, 'timreq');
 memreq        = ft_getopt(optarg, 'memreq');
+timoverhead   = ft_getopt(optarg, 'timoverhead', 180);            % allow some overhead to start up the MATLAB executable
+memoverhead   = ft_getopt(optarg, 'memoverhead', 1024*1024*1024); % allow some overhead for the MATLAB executable in memory
 stack         = ft_getopt(optarg, 'stack',   'auto'); % 'auto' or a number
 compile       = ft_getopt(optarg, 'compile', 'no');   % can be 'auto', 'yes' or 'no'
 backend       = ft_getopt(optarg, 'backend', []);     % the default will be determined by qsubfeval
@@ -119,6 +125,8 @@ display       = ft_getopt(optarg, 'display', 'no');
 matlabcmd     = ft_getopt(optarg, 'matlabcmd', []);
 jvm           = ft_getopt(optarg, 'jvm', 'yes');
 whichfunction = ft_getopt(optarg, 'whichfunction');   % the complete filename to the function, including path
+rerunable     = ft_getopt(optarg, 'rerunable');       % the default is determined in qsubfeval
+sleep         = ft_getopt(optarg, 'sleep', 0.5);      % in seconds
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -169,23 +177,19 @@ numjob      = numel(varargin{1});
 
 % determine the number of MATLAB jobs to "stack" together into seperate qsub jobs
 if isequal(stack, 'auto')
-  if strcmp(compile, 'yes') || strcmp(compile, 'auto') || ~isempty(fcomp)
-    % compilation and stacking are incompatible with each other
-    % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1255
-    stack = 1;
-  elseif ~isempty(timreq)
+  if ~isempty(timreq)
     stack = floor(180/timreq);
   else
     stack = 1;
   end
 end
 
-% ensure that the stacking is not too high
+% ensure that the stacking is not higher than the number of jobs
 stack = min(stack, numjob);
 
 % give some feedback about the stacking
 if stack>1
-  fprintf('stacking %d matlab jobs in each qsub job\n', stack);
+  fprintf('stacking %d MATLAB jobs in each qsub job\n', stack);
 end
 
 % prepare some arrays that are used for bookkeeping
@@ -201,7 +205,13 @@ collecttime = inf(1, numjob);
 % it can be difficult to determine the number of output arguments
 try
   if isequal(fname, 'cellfun') || isequal(fname, @cellfun)
-    numargout = nargout(varargin{1}{1});
+    if isa(varargin{1}{1}, 'char') || isa(varargin{1}{1}, 'function_handle')
+      numargout = nargout(varargin{1}{1});
+    elseif isa(varargin{1}{1}, 'struct')
+      % the function to be executed has been compiled
+      fcomp = varargin{1}{1};
+      numargout = nargout(fcomp.fname);
+    end
   else
     numargout = nargout(fname);
   end
@@ -226,6 +236,23 @@ elseif nargout>numargout
   error('Too many output arguments.');
 end
 
+% running a compiled version in parallel takes no MATLAB licenses
+% auto compilation will be attempted if the total batch takes more than 30 minutes
+if (strcmp(compile, 'auto') && (numjob*timreq/3600)>0.5) || istrue(compile)
+  try
+    % try to compile into a stand-allone application
+    fcomp = qsubcompile(fname, 'batch', batch, 'batchid', batchid);
+  catch
+    if istrue(compile)
+      % the error that was caught is critical
+      rethrow(lasterror);
+    elseif strcmp(compile, 'auto')
+      % compilation was only optional, the caught error is not critical
+      warning(lasterr);
+    end
+  end % try-catch
+end % if compile
+
 if stack>1
   % combine multiple jobs in one, the idea is to use recursion like this
   % a = {{@plus, @plus}, {{1}, {2}}, {{3}, {4}}}
@@ -248,11 +275,16 @@ if stack>1
     optarg{end+1} = 'whichfunction';
     optarg{end+1} = whichfunction;
   end
+  if ~any(strcmpi(optarg, 'compile'))
+    optarg{end+1} = 'compile';
+    optarg{end+1} = compile;
+  end
   
   % update these settings for the recursive call
   optarg{find(strcmpi(optarg, 'timreq'))+1}        = timreq*stack;
   optarg{find(strcmpi(optarg, 'stack'))+1}         = 1;
   optarg{find(strcmpi(optarg, 'UniformOutput'))+1} = false;
+  optarg{find(strcmpi(optarg, 'compile'))+1}       = false;
   
   % FIXME the partitioning can be further perfected
   partition     = floor((0:numjob-1)/stack)+1;
@@ -260,7 +292,12 @@ if stack>1
   
   stackargin = cell(1,numargin+3); % include the fname, uniformoutput, false
   if istrue(compile)
-    stackargin{1} = repmat({fcomp}, 1, numpartition);
+    if ischar(fcomp.fname)
+      % it should contain function handles, not strings
+      stackargin{1} = repmat({str2func(fcomp.fname)}, 1, numpartition);
+    else
+      stackargin{1} = repmat({fcomp.fname}, 1, numpartition);
+    end
   else
     if ischar(fname)
       % it should contain function handles, not strings
@@ -302,23 +339,6 @@ if stack>1
   return;
 end
 
-% running a compiled version in parallel takes no MATLAB licenses
-% auto compilation will be attempted if the total batch takes more than 30 minutes
-if strcmp(compile, 'yes') || (strcmp(compile, 'auto') && (numjob*timreq/3600)>0.5)
-  try
-    % try to compile into a stand-allone applicationA
-    fcomp = qsubcompile(fname, 'batch', batch, 'batchid', batchid);
-  catch
-    if strcmp(compile, 'yes')
-      % the error that was caught is critical
-      rethrow(lasterror);
-    elseif strcmp(compile, 'auto')
-      % compilation was only optional, the caught error is not critical
-      warning(lasterr);
-    end
-  end % try-catch
-end % if compile
-
 % check the input arguments
 for i=1:numargin
   if ~isa(varargin{i}, 'cell')
@@ -339,10 +359,10 @@ for submit=1:numjob
   % submit the job
   if ~isempty(fcomp)
     % use the compiled version
-    [curjobid curputtime] = qsubfeval(fcomp, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'matlabcmd', matlabcmd, 'display', display, 'jvm', jvm, 'nargout', numargout, 'whichfunction', whichfunction);
+    [curjobid curputtime] = qsubfeval(fcomp, argin{:}, 'memreq', memreq, 'timreq', timreq, 'memoverhead', memoverhead, 'timoverhead', timoverhead, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'matlabcmd', matlabcmd, 'display', display, 'jvm', jvm, 'nargout', numargout, 'whichfunction', whichfunction, 'rerunable', rerunable);
   else
     % use the non-compiled version
-    [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'matlabcmd', matlabcmd, 'display', display, 'jvm', jvm, 'nargout', numargout, 'whichfunction', whichfunction);
+    [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'memoverhead', memoverhead, 'timoverhead', timoverhead, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'matlabcmd', matlabcmd, 'display', display, 'jvm', jvm, 'nargout', numargout, 'whichfunction', whichfunction, 'rerunable', rerunable);
   end
   
   % fprintf('submitted job %d\n', submit);
@@ -386,7 +406,7 @@ while (~all(collected))
     end  % if
   end % for
   
-  pausejava(0.1);
+  pausejava(sleep);
 end % while
 
 % ensure the output to have the same size/dimensions as the input

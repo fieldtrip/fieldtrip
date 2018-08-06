@@ -1,13 +1,12 @@
 function test_tutorial_timefrequencyanalysis20130308
 
 % MEM 1500mb
-% WALLTIME 00:10:00
+% WALLTIME 00:20:00
 
-% TEST test_tutorial_timefrequencyanalysis20130308
 % TEST ft_freqanalysis ft_preprocessing ft_multiplotTFR ft_singleplotTFR
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% this reflects  http://fieldtrip.fcdonders.nl/tutorial/timefrequencyanalysis
+% this reflects  http://www.fieldtriptoolbox.org/tutorial/timefrequencyanalysis
 % downloaded on 6 March 2013
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -38,7 +37,7 @@ function test_tutorial_timefrequencyanalysis20130308
 % 
 % To calculate the time-frequency analysis for the example dataset we will perform the following steps:
 % 
-% Read the data into Matlab using ft_definetrial and ft_preprocessing
+% Read the data into MATLAB using ft_definetrial and ft_preprocessing
 % Compute the power values for each frequency bin and each time bin using the function ft_freqanalysis
 % Visualize the results. This can be done by creating time-frequency plots for one (ft_singleplotTFR) or several channels (ft_multiplotTFR), or by creating a topographic plot for a specified time- and frequency interval (ft_topoplotTFR).
 % 
@@ -56,7 +55,7 @@ function test_tutorial_timefrequencyanalysis20130308
 % 
 % Reading the FIC data
 % 
-% Ft_definetrial and ft_preprocessing require the original MEG dataset, which is available from ftp://ftp.fcdonders.nl/pub/fieldtrip/tutorial/Subject01.zip.
+% Ft_definetrial and ft_preprocessing require the original MEG dataset, which is available from ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/Subject01.zip.
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data'));
 
@@ -91,7 +90,7 @@ dataFIC = ft_preprocessing(cfg);
 % 
 % We will here describe how to calculate time frequency representations using Hanning tapers. When choosing for a fixed window length procedure the frequency resolution is defined according to the length of the time window (delta T). The frequency resolution (delta f in figure 1) = 1/length of time window in sec (delta T in figure 1). Thus a 500 ms time window results in a 2 Hz frequency resolution (1/0.5 sec= 2 Hz) meaning that power can be calculated for 2 Hz, 4 Hz, 6 Hz etc. An integer number of cycles must fit in the time window.
 % 
-% ft_Freqanalysis requires preprocessed data (see above), which is available from ftp://ftp.fcdonders.nl/pub/fieldtrip/tutorial/timefrequencyanalysis/dataFIC.mat.
+% ft_Freqanalysis requires preprocessed data (see above), which is available from ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/timefrequencyanalysis/dataFIC.mat.
 % 
 % load dataFIC
 % In the following example a time window with length 500 ms is applied.
@@ -349,7 +348,7 @@ ft_multiplotTFR(cfg, TFRwave)
 % 
 % After having finished this tutorial on time-frequency analysis, you can continue with the beamformer source reconstruction tutorial if you are interested in the source-localization of the power changes or the cluster-based permutation tests on time-frequency data tutorial if you are interested how to do statistics on the time-frequency representations.
 % 
-% This tutorial was last tested with version 20120612 of FieldTrip by Jan-Mathijs, using Matlab 2011b on a 64-bit MacOS platform.
+% This tutorial was last tested with version 20120612 of FieldTrip by Jan-Mathijs, using MATLAB 2011b on a 64-bit MacOS platform.
 % 
 % 
 % 1) , 4) Tallon-Baudry and Bertrand (1999) Oscillatory gamma activity in humans and its role in object representation. Trends Cogn Sci. 3(4):151-162

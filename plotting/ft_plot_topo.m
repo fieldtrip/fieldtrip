@@ -14,11 +14,11 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 %   'isolines'      = vector with values for isocontour lines (default = [])
 %   'interplim'    = string, 'electrodes' or 'mask' (default = 'electrodes')
 %   'interpmethod'  = string, 'nearest', 'linear', 'natural', 'cubic' or 'v4' (default = 'v4')
-%   'style'         = can be 'surf', 'iso', 'isofill', 'surfiso', 'imsat', 'imsatiso'
+%   'style'         = can be 'surf', 'iso', 'isofill', 'surfiso', 'imsat', 'imsatiso', 'colormix'
 %   'clim'          = [min max], limits for color scaling
 %   'shading'       = string, 'none', 'flat', 'interp' (default = 'flat')
 %   'parent'        = handle which is set as the parent for all plots
-%   'tag'           = string, the name this vector gets. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
+%   'tag'           = string, the name assigned to the object. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
 %
 % It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
 %   'hpos'          = horizontal position of the lower left corner of the local axes
@@ -27,10 +27,12 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 %   'height'        = height of the local axes
 %   'hlim'          = horizontal scaling limits within the local axes
 %   'vlim'          = vertical scaling limits within the local axes
+%
+% See also FT_PLOT_TOPO3D, FT_PLOT_LAY, FT_TOPOPLOTER, FT_TOPOPLOTTFR
 
 % Copyrights (C) 2009-2013, Giovanni Piantoni, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -62,7 +64,7 @@ gridscale     = ft_getopt(varargin, 'gridscale',    67); % 67 in original
 shading       = ft_getopt(varargin, 'shading',      'flat');
 interplim     = ft_getopt(varargin, 'interplim',    'electrodes');
 interpmethod  = ft_getopt(varargin, 'interpmethod', 'v4');
-style         = ft_getopt(varargin, 'style',        'surfiso'); % can be 'surf', 'iso', 'isofill', 'surfiso', 'imsat', 'imsatiso'
+style         = ft_getopt(varargin, 'style',        'surfiso'); % can be 'surf', 'iso', 'isofill', 'surfiso', 'imsat', 'imsatiso', 'colormix'
 tag           = ft_getopt(varargin, 'tag',          '');
 isolines      = ft_getopt(varargin, 'isolines');
 datmask       = ft_getopt(varargin, 'datmask');
@@ -73,7 +75,7 @@ parent        = ft_getopt(varargin, 'parent', []);
 
 % check for nans in the data, they can be still left incase people want to mask non channels.
 if any(isnan(dat))
-  warning('the data passed to ft_plot_topo contains NaNs, these channels will be removed from the data to prevent interpolation errors, but will remain in the mask');
+  ft_warning('the data passed to ft_plot_topo contains NaNs, these channels will be removed from the data to prevent interpolation errors, but will remain in the mask');
   flagNaN = true;
 else
   flagNaN = false;
@@ -90,7 +92,7 @@ end
 % so we need to compute the right scaling factor
 % create a matrix with all coordinates
 % from positions, mask, and outline
-allCoords = [chanX chanY];
+allCoords = [chanX(:) chanY(:)];
 if ~isempty(mask)
   for k = 1:numel(mask)
     allCoords = [allCoords; mask{k}];
@@ -128,10 +130,10 @@ chanYorg = chanY;
 chanX = chanX(:) * xScaling + hpos;
 chanY = chanY(:) * yScaling + vpos;
 
-if strcmp(interplim, 'electrodes'),
+if strcmp(interplim, 'electrodes')
   hlim = [min(chanX) max(chanX)];
   vlim = [min(chanY) max(chanY)];
-elseif strcmp(interplim, 'mask') && ~isempty(mask),
+elseif (strcmp(interplim, 'mask') || strcmp(interplim, 'mask_individual')) && ~isempty(mask),
   hlim = [inf -inf];
   vlim = [inf -inf];
   for i=1:length(mask)
@@ -161,14 +163,14 @@ if isequal(current_argin, previous_argin)
   maskimage = previous_maskimage;
 elseif ~isempty(mask)
   % convert the mask into a binary image
-  maskimage = false(gridscale);
+  maskimage = zeros(gridscale);%false(gridscale);
   %hlim      = [min(chanX) max(chanX)];
   %vlim      = [min(chanY) max(chanY)];
   xi        = linspace(hlim(1), hlim(2), gridscale);   % x-axis for interpolation (row vector)
   yi        = linspace(vlim(1), vlim(2), gridscale);   % y-axis for interpolation (row vector)
   [Xi, Yi]   = meshgrid(xi', yi);
   if ~isempty(newpoints) && (hpos == 0 || vpos == 0)
-    warning('Some points fall outside the outline, please consider using another layout')
+    ft_warning('Some points fall outside the outline, please consider using another layout')
     % FIXME: I am not sure about it, to be tested!
     %     tmp = [mask{1};newpoints];
     %     indx = convhull(tmp(:, 1), tmp(:, 2));
@@ -180,7 +182,7 @@ elseif ~isempty(mask)
     mask{i}(:, 1) = mask{i}(:, 1)*xScaling+hpos;
     mask{i}(:, 2) = mask{i}(:, 2)*yScaling+vpos;
     mask{i}(end+1, :) = mask{i}(1, :);                   % force them to be closed
-    maskimage(inside_contour([Xi(:) Yi(:)], mask{i})) = true;
+    maskimage(inside_contour([Xi(:) Yi(:)], mask{i})) = i;%true;
   end
   
 else
@@ -214,15 +216,36 @@ chanY = double(chanY);
 %interpolate data
 xi         = linspace(hlim(1), hlim(2), gridscale);       % x-axis for interpolation (row vector)
 yi         = linspace(vlim(1), vlim(2), gridscale);       % y-axis for interpolation (row vector)
-[Xi, Yi, Zi] = griddata(chanX', chanY, dat, xi', yi, interpmethod); % interpolate the topographic data
+
+if ~ft_platform_supports('griddata-vector-input')
+  % in GNU Octave, griddata does not support vector
+  % positions; make a grid to get the locations in vector form
+  [xi,yi]=meshgrid(xi,yi);
+  xi=xi';
+end
+
+if ~isempty(maskimage) && strcmp(interplim, 'mask_individual')
+  % do the interpolation for each set of electrodes within a mask, useful
+  % for ECoG data with multiple grids, to avoid cross talk
+  Zi = zeros(size(maskimage));
+  for i=1:max(maskimage(:))
+    chansel = inside_contour([chanX chanY], mask{i});
+    [Xi, Yi, tmpZi]  = griddata(chanX(chansel)', chanY(chansel), dat(chansel), xi', yi, interpmethod);
+    Zi(maskimage==i) = tmpZi(maskimage==i);
+  end
+else
+  [Xi, Yi, Zi] = griddata(chanX', chanY, dat, xi', yi, interpmethod); % interpolate the topographic data
+end
 
 if ~isempty(maskimage)
+  % make boolean  
+  maskimage      = maskimage~=0;
   % apply mask to the data to hide parts of the interpolated data (outside the circle) and channels that were specified to be masked
   % this combines the input options mask and maskdat
   Zi(~maskimage) = NaN;
 end
 
-% The topography should be plotted prior to the isolines to ensure that it is exported correctly, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2496
+% The topography should be plotted prior to the isolines to ensure that it is exported correctly, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2496
 if strcmp(style, 'surf') || strcmp(style, 'surfiso')
   
   deltax = xi(2)-xi(1); % length of grid entry
@@ -243,33 +266,42 @@ if strcmp(style, 'surf') || strcmp(style, 'surfiso')
   
 elseif strcmp(style, 'imsat') || strcmp(style, 'imsatiso')
   % Plot the surface in an alternate style (using imagesc and saturation masking) so that it can be nicely saved to a vectorized format
-  
-  % set mask and check for clim
+ 
+  % set mask and cdat, and check for clim
   if isempty(clim)
-    error('clim is required for style = ''imsat'' or style = ''imsatiso''')
+    ft_error('clim is required for style = ''imsat'' or style = ''imsatiso''')
   end
-  satmask = maskimage;
   
-  % below code is shared with ft_plot_matrix
-  tmpcdat = Zi;
+  cmap    = get(gcf, 'colormap');
+  rgbcdat = cdat2rgb(Zi, cmap, clim, maskimage);
   
-  % Transform cdat-values to have a 0-64 range, dependent on clim
-  % (think of it as the data having an exact range of min=clim(1) to max=(clim2), convert this range to 0-64)
-  tmpcdat = (tmpcdat + -clim(1)) * (64 / (-clim(1) + clim(2)));
-  %tmpcdat = (tmpcdat + -min(min(tmpcdat))) * (64 / max(max((tmpcdat + -min(min(tmpcdat))))))
-  
-  % Make sure NaNs are plotted as white pixels, even when using non-integer mask values
-  satmask(isnan(tmpcdat)) = 0;
-  tmpcdat(isnan(tmpcdat)) = 32;
-  % ind->rgb->hsv ||change saturation values||  hsv->rgb ->  plot
-  rgbcdat = ind2rgb(uint8(floor(tmpcdat)), colormap);
-  hsvcdat = rgb2hsv(rgbcdat);
-  hsvcdat(:, :, 2) = hsvcdat(:, :, 2) .* satmask;
-  hsvcdat(:, :, 2) = hsvcdat(:, :, 2);
-  rgbcdatsat = hsv2rgb(hsvcdat);
-  h = imagesc(xi, yi, rgbcdatsat, clim);
+  h = imagesc(xi, yi, rgbcdat, clim);
   set(h, 'tag', tag);
+
+elseif strcmp(style, 'colormix')
+  % Plot the surface in an alternate style (using imagesc and saturation masking) so that it can be nicely saved to a vectorized format
+ 
+  % set mask and cdat, and check for clim
+  if isempty(clim)
+    error('clim is required for style = ''colormix''')
+  end
   
+  if ~isempty(datmask)
+    % use maskimagetmp in combination with maskimage, maskimagetmp is
+    % scaled between 0 and 1
+    maskimagetmp = maskimagetmp./max(maskimagetmp(:));
+    Zmask        = double(maskimage);
+    Zmask(Zmask>0) = maskimagetmp(Zmask>0);
+  else
+    Zmask        = double(maskimage);
+  end
+  
+  cmap    = get(gcf, 'colormap');
+  rgbcdat = bg_rgba2rgb([1 1 1], Zi, cmap, clim, Zmask, 'rampup', [0 1]);
+      
+  h = imagesc(xi, yi, rgbcdat, clim);
+  set(h,'tag',tag);
+      
 end
 
 % Plot the outline of the head, ears and nose

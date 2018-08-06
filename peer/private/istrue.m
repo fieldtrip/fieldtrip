@@ -1,11 +1,11 @@
 function y = istrue(x)
 
-% ISTRUE ensures that a true/false input argument like "yes", "true"
-% or "on" is converted into a boolean
+% ISTRUE converts an input argument like "yes/no", "true/false" or "on/off" into a
+% boolean. If the input is boolean, then it will remain like that.
 
 % Copyright (C) 2009-2012, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

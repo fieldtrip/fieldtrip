@@ -54,7 +54,7 @@ while ~isempty(Q)
          color(v) = gray;
          distance(v) = distance(u)+1;
          branch(v) = u;
-         Q = [Q v];
+         Q = [Q v];                                             %#ok<AGROW>
       end;
    end;
    Q = Q(2:length(Q));

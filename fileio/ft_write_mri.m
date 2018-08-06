@@ -4,29 +4,28 @@ function [V] = ft_write_mri(filename, dat, varargin)
 % MRI to a file.
 %
 % Use as
-%   V = ft_write_mri(filename, dat, ...)
+%   ft_write_mri(filename, img, ...)
+% where img represents the 3-D array with image values.
 %
-% The specified filename can already contain the filename extention,
-% but that is not required since it will be added automatically.
+% The specified filename can already contain the filename extention, but that is not
+% required since it will be added automatically.
 %
 % Additional options should be specified in key-value pairs and can be
-%   'spmversion'     spmversion to be used (in case data needs to be
-%                      written in analyze format
-%   'dataformat'     string, see below
-%   'transform'      transformation matrix, specifying the transformation
-%                      from voxel coordinates to head coordinates
+%   'dataformat'   = string, see below
+%   'transform'    = transformation matrix, specifying the transformation from voxel coordinates to head coordinates
+%   'spmversion'   = version of SPM to be used, in case data needs to be written in analyze format
 %
 % The supported dataformats are
-%   analyze
-%   nifti
-%   vista
-%   mgz   (freesurfer)
+%   'analyze'
+%   'nifti'
+%   'vista'
+%   'mgz'   (freesurfer)
 %
 % See also FT_READ_MRI, FT_WRITE_DATA, FT_WRITE_HEADSHAPE
 
 % Copyright (C) 2011-2012, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -49,14 +48,16 @@ transform     = ft_getopt(varargin, 'transform', eye(4));
 spmversion    = ft_getopt(varargin, 'spmversion', 'SPM8');
 dataformat    = ft_getopt(varargin, 'dataformat'); % FIXME this is inconsistent with ft_read_mri, which uses 'format'
 
+if isstruct(dat) && isfield(dat, 'anatomy') && isequal(transform, eye(4))
+  % this is an anatomical MRI as returned by FT_READ_MRI
+  transform = dat.transform;
+  dat       = dat.anatomy;
+end
+
 if isempty(dataformat)
   % only do the autodetection if the format was not specified
   dataformat = ft_filetype(filename);
 end
-
-% if strcmp(dataformat, 'nifti') && strcmp(spmversion, 'SPM2')
-%   error('nifti can only be written by SPM5 or later');
-% end
 
 if nargout>0
   % start with an empty output argument, it will only be returned by the SPM formats
@@ -64,23 +65,22 @@ if nargout>0
 end
 
 switch dataformat
-  
   case {'analyze_img' 'analyze_hdr' 'analyze' 'nifti_spm'}
     % analyze data, using SPM
     V = volumewrite_spm(filename, dat, transform, spmversion);
     
   case {'freesurfer_mgz' 'mgz' 'mgh'}
-    % mgz-volume using freesurfer
+    % mgz data, using Freesurfer
     ft_hastoolbox('freesurfer', 1);
     
-    % in matlab the transformation matrix assumes the voxel indices to be 1-based
+    % in MATLAB the transformation matrix assumes the voxel indices to be 1-based
     % freesurfer assumes the voxel indices to be 0-based
     transform = vox2ras_1to0(transform);
     save_mgh(dat, filename, transform);
     
   case {'nifti'}
-    ft_hastoolbox('freesurfer', 1);
     % nifti data, using Freesurfer
+    ft_hastoolbox('freesurfer', 1);
     
     datatype = class(dat);
     switch(datatype)
@@ -97,7 +97,7 @@ switch dataformat
       case 'logical'
         datatype = 'uchar';
       otherwise
-        error('unsupported datatype to write to Nifti');
+        ft_error('unsupported datatype to write to Nifti');
     end
     
     ndims = numel(size(dat));
@@ -123,5 +123,5 @@ switch dataformat
     write_vista_vol(size(dat), dat, filename);
     
   otherwise
-    error('unsupported data format');
+    ft_error('unsupported format "%s"', dataformat);
 end % switch dataformat

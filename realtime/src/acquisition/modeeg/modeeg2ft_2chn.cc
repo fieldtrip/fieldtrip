@@ -1,15 +1,20 @@
-/* ModularEEG acqusition tool to stream data to a FieldTrip buffer,
-  and write data to one or multiple GDF files (if you ever reach the size limit...).
-  (C) 2010 S. Klanke
+/*
+   ModularEEG acqusition tool to stream data to a FieldTrip buffer,
+   and write data to one or multiple GDF files (if you ever reach the size limit...).
+
+   (C) 2010 S. Klanke
  */
+
 #include <stdio.h>
-#include <FtBuffer.h>
-#include <socketserver.h>
 #include <pthread.h>
+
+#include <socketserver.h>
+#include <serial.h>
+
+#include <FtBuffer.h>
 #include <LocalPipe.h>
 #include <GdfWriter.h>
 #include <ConsoleInput.h>
-#include <serial.h>
 
 #define NUM_HW_CHAN 6
 #define FSAMPLE     256
@@ -55,7 +60,7 @@ int readSyncBytes(SerialPort *SP) {
 				if (nr<0) {
 						fprintf(stderr, "Error when reading from serial port - exiting\n");
 						return 1;
-				} 
+				}
 
 				if (nr==0) {
 						printf(".");
@@ -186,7 +191,7 @@ int main(int argc, char *argv[]) {
 						if (!strcasecmp(lastDotPos, ".gdf")) {
 								*lastDotPos = 0;
 						}
-				}		
+				}
 				strcpy(curFilename, baseFilename);
 				strcat(curFilename, ".gdf");
 				if (!gdfWriter->createAndWriteHeader(curFilename)) {
@@ -306,7 +311,7 @@ int main(int argc, char *argv[]) {
 										fprintf(stderr, "Got synchronization bytes - re-starting acquisition\n");
 										continue;
 								} else {
-										fprintf(stderr, "Could not read synchronization bytes - exiting.\n");				
+										fprintf(stderr, "Could not read synchronization bytes - exiting.\n");
 										break;
 								}
 								numTimeouts = 0;
@@ -387,7 +392,7 @@ int main(int argc, char *argv[]) {
 
 								if (++rbIntWritePos == rbIntSize) rbIntWritePos = 0;
 						}
-						threadpipe.write(sizeof(int), static_cast<void *>(&rbIntWritePos)); 
+						threadpipe.write(sizeof(int), static_cast<void *>(&rbIntWritePos));
 				}
 
 				// streaming stuff
@@ -423,7 +428,7 @@ int main(int argc, char *argv[]) {
 				}
 		}
 
-cleanup:	
+cleanup:
 		if (gdfWriter != NULL) {
 				int quitValue = -1;
 				threadpipe.write(sizeof(int), &quitValue);

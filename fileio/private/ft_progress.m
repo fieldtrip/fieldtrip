@@ -1,10 +1,9 @@
 function ft_progress(varargin)
 
-% FT_PROGRESS shows a graphical or non-graphical progress indication similar
-% to the standard Matlab WAITBAR function, but with the extra option of
-% printing it in the command window as a plain text string or as a rotating
-% dial. Alternatively, you can also specify it not to give feedback on the
-% progress.
+% FT_PROGRESS shows a graphical or non-graphical progress indication similar to the
+% standard WAITBAR function, but with the extra option of printing it in the command
+% window as a plain text string or as a rotating dial. Alternatively, you can also
+% specify it not to give feedback on the progress.
 %
 % Prior to the for-loop, you should call either
 %   ft_progress('init', 'none',    'Please wait...')
@@ -28,10 +27,12 @@ function ft_progress(varargin)
 %      pause(0.1);
 %    end
 %    ft_progress('close')
+%
+% See also WAITBAR
 
 % Copyright (C) 2004-2008, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -49,7 +50,7 @@ function ft_progress(varargin)
 %
 % $Id$
 
-global ft_default;
+global ft_default
 
 persistent p        % the previous value of the progress
 persistent c        % counter for the number of updates that is done
@@ -66,14 +67,18 @@ persistent lastArgin % the last varargin, this is used when ft_progress('close')
                      % but the previous invocation was not processed (due
                      % to the restriction in the number of updates to once
                      % every 100ms)
-persistent closing;
+persistent closing
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if nargin>1 && ischar(varargin{1}) && strcmp(varargin{1}, 'init')
-  a = 0;
-  p = 0;
-  h = 0;
-  c = 0;
+  % reset these to the defaults
+  a  = 0;
+  h  = 0;
+  p  = 0;
+  t  = 'none';
+  s  = '';
+  t0 = [];
+  p0 = [];
   strlen = 0;
   tprev = tic();
   lastArgin = [];
@@ -99,7 +104,7 @@ if nargin>1 && ischar(varargin{1}) && strcmp(varargin{1}, 'init')
     else
       h = waitbar(0, 'Please wait');
     end
-  case {'text', 'textnl', 'textcr'}
+  case {'text', 'textnl', 'textcr', 'dial'}
     if ~isempty(s)
       % print the title to the screen and go to the next line
       fprintf('%s\n', s)
@@ -267,7 +272,7 @@ else
       strlen = strlentmp - strlen;
     end
 
-% the following options are unused in fieldtrip (as of April 17 2012), and seem
+% the following options are unused in FieldTrip (as of April 17 2012), and seem
 % semantically incompatible with the implementation of the \b-ing, so I
 % think removal is appropriate.
 %

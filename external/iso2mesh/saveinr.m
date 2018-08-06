@@ -4,7 +4,7 @@ function saveinr(vol,fname)
 %
 % save a surface mesh to INR Format
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2009/01/04
 %
 % input:

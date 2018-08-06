@@ -4,7 +4,7 @@ function cleanimg=deislands3d(img,sizelim)
 %
 % remove isolated islands for 3D image (for each slice)
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input:
 %      img: a 3D volumetric image

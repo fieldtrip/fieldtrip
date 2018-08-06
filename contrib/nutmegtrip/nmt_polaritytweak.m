@@ -1,0 +1,24 @@
+function source = nmt_polaritytweak(cfg,source);
+
+inside_idx = find(source.inside);
+
+s = cell2mat(source.avg.mom(inside_idx));
+ori = cell2mat(source.avg.ori(inside_idx));
+
+if(isfield(cfg,'toilim'))
+    tsel = dsearchn(source.time',cfg.toilim');
+    tsel = tsel(1):tsel(2);
+else
+    [~,tsel]=max(max(abs(s)));
+end
+
+% flip based on polarity of voxel with maximum power in desired time window
+[~,b]=max(nmt_rownorm(s(:,tsel)));
+flipper=sparse(diag(sign(s(b,tsel)*s(:,tsel)'))); 
+s = flipper*s;
+ori = ori*flipper; 
+
+for ii=1:size(s,1)
+    source.avg.mom{inside_idx(ii)} = s(ii,:);
+    source.avg.ori{inside_idx(ii)} = ori(:,ii);
+end

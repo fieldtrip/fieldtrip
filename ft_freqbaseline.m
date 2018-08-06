@@ -6,8 +6,10 @@ function [freq] = ft_freqbaseline(cfg, freq)
 %    [freq] = ft_freqbaseline(cfg, freq)
 % where the freq data comes from FT_FREQANALYSIS and the configuration
 % should contain
-%   cfg.baseline     = [begin end] (default = 'no')
-%   cfg.baselinetype = 'absolute', 'relchange', 'relative', or 'db' (default = 'absolute')
+%   cfg.baseline     = [begin end] (default = 'no'), alternatively an
+%                      Nfreq x 2 matrix can be specified, that provides
+%                      frequency specific baseline windows.
+%   cfg.baselinetype = 'absolute', 'relative', 'relchange', 'normchange' or 'db' (default = 'absolute')
 %   cfg.parameter    = field for which to apply baseline normalization, or
 %                      cell array of strings to specify multiple fields to normalize
 %                      (default = 'powspctrm')
@@ -23,7 +25,7 @@ function [freq] = ft_freqbaseline(cfg, freq)
 % Copyright (C) 2005-2006, Robert Oostenveld
 % Copyright (C) 2011, Eelke Spaak
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -41,24 +43,26 @@ function [freq] = ft_freqbaseline(cfg, freq)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar freq
+ft_preamble provenance freq
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
 % check if the input data is valid for this function
-freq = ft_checkdata(freq, 'datatype',...
-  {'freq+comp', 'freq'}, 'feedback', 'yes');
+freq = ft_checkdata(freq, 'datatype', {'freq+comp', 'freq'}, 'feedback', 'yes');
 
 % update configuration fieldnames
 cfg              = ft_checkconfig(cfg, 'renamed', {'param', 'parameter'});
@@ -69,8 +73,8 @@ cfg.baselinetype =  ft_getopt(cfg, 'baselinetype', 'absolute');
 cfg.parameter    =  ft_getopt(cfg, 'parameter', 'powspctrm');
 
 % check validity of input options
-cfg =               ft_checkopt(cfg, 'baseline', {'char', 'doublevector'});
-cfg =               ft_checkopt(cfg, 'baselinetype', 'char', {'absolute', 'relative', 'relchange','db', 'vssum'});
+cfg =               ft_checkopt(cfg, 'baseline', {'char', 'doublevector', 'doublematrix'});
+cfg =               ft_checkopt(cfg, 'baselinetype', 'char', {'absolute', 'relative', 'relchange', 'normchange', 'db', 'vssum'});
 cfg =               ft_checkopt(cfg, 'parameter', {'char', 'charcell'});
 
 % make sure cfg.parameter is a cell array of strings
@@ -80,7 +84,7 @@ end
 
 % is input consistent?
 if ischar(cfg.baseline) && strcmp(cfg.baseline, 'no') && ~isempty(cfg.baselinetype)
-  warning('no baseline correction done');
+  ft_warning('no baseline correction done');
 end
 
 % process possible yes/no value of cfg.baseline
@@ -92,9 +96,19 @@ elseif ischar(cfg.baseline) && strcmp(cfg.baseline, 'no')
   return
 end
 
+% allow for baseline to be nfreq x 2
+if size(cfg.baseline,1)==numel(freq.freq) && size(cfg.baseline,2)==2
+  % this is ok
+elseif numel(cfg.baseline)==2
+  % this is also ok
+  cfg.baseline = cfg.baseline(:)'; % ensure row vector
+else
+  ft_error('cfg.baseline should either be a string, a 1x2 vector, or an Nfreqx2 matrix');
+end
+
 % check if the field of interest is present in the data
 if (~all(isfield(freq, cfg.parameter)))
-  error('cfg.parameter should be a string or cell array of strings referring to (a) field(s) in the freq input structure')
+  ft_error('cfg.parameter should be a string or cell array of strings referring to (a) field(s) in the freq input structure')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -102,28 +116,23 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % initialize output structure
-freqOut        = [];
-freqOut.label  = freq.label;
-freqOut.freq   = freq.freq;
-freqOut.dimord = freq.dimord;
-freqOut.time   = freq.time;
-
+freqOut = keepfields(freq, {'label' 'freq' 'dimord' 'time'});
 freqOut = copyfields(freq, freqOut,...
-  {'grad', 'elec', 'trialinfo','topo', 'topolabel', 'unmixing'});
+  {'grad', 'elec', 'trialinfo', 'topo', 'topolabel', 'unmixing'});
 
 % loop over all fields that should be normalized
 for k = 1:numel(cfg.parameter)
   par = cfg.parameter{k};
-  
+
   if strcmp(freq.dimord, 'chan_freq_time')
-    
+
     freqOut.(par) = ...
       performNormalization(freq.time, freq.(par), cfg.baseline, cfg.baselinetype);
-    
+
   elseif strcmp(freq.dimord, 'rpt_chan_freq_time') || strcmp(freq.dimord, 'chan_chan_freq_time') || strcmp(freq.dimord, 'subj_chan_freq_time')
-    
+
     freqOut.(par) = zeros(size(freq.(par)));
-    
+
     % loop over trials, perform normalization per trial
     for l = 1:size(freq.(par), 1)
       tfdata = freq.(par)(l,:,:,:);
@@ -132,9 +141,9 @@ for k = 1:numel(cfg.parameter)
       freqOut.(par)(l,:,:,:) = ...
         performNormalization(freq.time, tfdata, cfg.baseline, cfg.baselinetype);
     end
-    
+
   else
-    error('unsupported data dimensions: %s', freq.dimord);
+    ft_error('unsupported data dimensions: %s', freq.dimord);
   end
 
 end
@@ -143,32 +152,48 @@ end
 % Output scaffolding
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+if numel(cfg.parameter)==1
+  % convert from cell-array to string
+  cfg.parameter = cfg.parameter{1};
+end
+
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous freq
+ft_postamble previous   freq
 
 % rename the output variable to accomodate the savevar postamble
 freq = freqOut;
 
-ft_postamble history freq
-ft_postamble savevar freq
+ft_postamble provenance freq
+ft_postamble history    freq
+ft_postamble savevar    freq
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that actually performs the normalization on an arbitrary quantity
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = performNormalization(timeVec, data, baseline, baselinetype)
 
-baselineTimes = (timeVec >= baseline(1) & timeVec <= baseline(2));
+baselineTimes = false(size(baseline,1),numel(timeVec));
+for k = 1:size(baseline,1)
+  baselineTimes(k,:) = (timeVec >= baseline(k,1) & timeVec <= baseline(k,2));
+end
 
-if length(size(data)) ~= 3,
-  error('time-frequency matrix should have three dimensions (chan,freq,time)');
+if length(size(data)) ~= 3
+  ft_error('time-frequency matrix should have three dimensions (chan,freq,time)');
 end
 
 % compute mean of time/frequency quantity in the baseline interval,
 % ignoring NaNs, and replicate this over time dimension
-meanVals = repmat(nanmean(data(:,:,baselineTimes), 3), [1 1 size(data, 3)]);
+if size(baselineTimes,1)==size(data,2)
+  % do frequency specific baseline
+  meanVals = nan+zeros(size(data));
+  for k = 1:size(baselineTimes,1)
+    meanVals(:,k,:) = repmat(nanmean(data(:,k,baselineTimes(k,:)), 3), [1 1 size(data, 3)]);
+  end
+else
+  meanVals = repmat(nanmean(data(:,:,baselineTimes), 3), [1 1 size(data, 3)]);
+end
 
 if (strcmp(baselinetype, 'absolute'))
   data = data - meanVals;
@@ -176,11 +201,10 @@ elseif (strcmp(baselinetype, 'relative'))
   data = data ./ meanVals;
 elseif (strcmp(baselinetype, 'relchange'))
   data = (data - meanVals) ./ meanVals;
-elseif (strcmp(baselinetype, 'vssum'))
+elseif (strcmp(baselinetype, 'normchange')) || (strcmp(baselinetype, 'vssum'))
   data = (data - meanVals) ./ (data + meanVals);
 elseif (strcmp(baselinetype, 'db'))
   data = 10*log10(data ./ meanVals);
 else
-  error('unsupported method for baseline normalization: %s', baselinetype);
+  ft_error('unsupported method for baseline normalization: %s', baselinetype);
 end
-

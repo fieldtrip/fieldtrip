@@ -21,6 +21,6 @@ delete(fnb);
 status = isequal(mata, matb);
 
 % the following is too sensitive
-% md5a = CalcMD5(fna);
-% md5b = CalcMD5(fnb);
+% md5a = ft_hash(fna);
+% md5b = ft_hash(fnb);
 % status = isequal(md5a, md5b);

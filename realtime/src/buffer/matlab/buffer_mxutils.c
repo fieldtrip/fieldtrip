@@ -10,7 +10,7 @@
 #include "buffer_mxutils.h"
 
 /* Like the normal fieldtrip append, but using mxMalloc and mxRealloc. This gives automatic
-   cleanup after mxErrMsgTxt calls etc. If you free the memory yourself, use mxFree !
+   cleanup after mexErrMsgTxt calls etc. If you free the memory yourself, use mxFree !
 */
 unsigned int ft_mx_append(void **buf, unsigned int size, const void *addbuf, unsigned int addsize) {
 	if (((  *buf != NULL) && (   size == 0)) || 

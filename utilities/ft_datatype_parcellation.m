@@ -1,4 +1,4 @@
-function parcellation = ft_datatype_parcellation(parcellation, varargin)
+function [parcellation] = ft_datatype_parcellation(parcellation, varargin)
 
 % FT_DATATYPE_PARCELLATION describes the FieldTrip MATLAB structure for parcellated
 % cortex-based data and atlases. A parcellation can either be indexed or probabilistic
@@ -60,7 +60,7 @@ function parcellation = ft_datatype_parcellation(parcellation, varargin)
 
 % Copyright (C) 2012, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -98,115 +98,80 @@ end
 
 switch parcelversion
   case '2012'
-    
+
     if isfield(parcellation, 'pnt')
       parcellation.pos = parcellation.pnt;
       parcellation = rmfield(parcellation, 'pnt');
     end
-    
+
     % convert the inside/outside fields, they should be logical rather than an index
     if isfield(parcellation, 'inside')
-      if all(parcellation.inside==0 | parcellation.inside==1)
-        % this is ok
-      else
-        tmp = false(size(parcellation.pos,1),1);
-        tmp(parcellation.inside) = true;
-        parcellation.inside = tmp;
-      end
+      parcellation = fixinside(parcellation, 'logical');
     end
-    
-    if isfield(parcellation, 'outside')
-      parcellation = rmfield(parcellation, 'outside');
-    end
-    
-    
+
     dim = size(parcellation.pos,1);
-    
+
     % make a list of fields that represent a parcellation
     fn = fieldnames(parcellation);
+    fn = setdiff(fn, 'inside'); % exclude the inside field from any conversions
     sel = false(size(fn));
     for i=1:numel(fn)
       sel(i) = isnumeric(parcellation.(fn{i})) && numel(parcellation.(fn{i}))==dim;
     end
     % only consider numeric fields of the correct size
     fn = fn(sel);
-    
+
     % determine whether the style of the input fields is probabilistic or indexed
     [indexed, probabilistic] = determine_segmentationstyle(parcellation, fn, dim);
-    
-    if any(probabilistic) && any(indexed)
-      warning('cannot work with a mixed representation, removing tissue probability maps');
-      sel = find(probabilistic);
-      parcellation       = rmfield(parcellation, fn(sel));
-      probabilistic(sel) = false;
-    end
-    
-    if any(probabilistic)
-      fn = fn(probabilistic);
-      probabilistic = true; indexed = false;
-    elseif any(indexed)
-      fn = fn(indexed);
-      indexed = true; probabilistic = false;
-    end
-    
-    if ~any(probabilistic) && ~any(indexed)  % allow for tissue labels of elements
-        for i = 1:length(fn)
-            fname = fn{i};
-            switch fname
-                case 'tri'
-                    dim = size(parcellation.tri,1);
-                case 'hex'
-                    dim = size(parcellation.hex,1);
-                case 'tet'
-                    dim = size(parcellation.tet,1);
-            end
+
+    % ignore the fields that do not contain a parcellation
+    sel = indexed | probabilistic;
+    fn            = fn(sel);
+    indexed       = indexed(sel);
+    probabilistic = probabilistic(sel);
+
+    if ~any(probabilistic) && ~any(indexed)
+      % rather than being described with a tissue label for each vertex
+      % it can also be described with a tissue label for each surface or volme element
+      for i = 1:length(fn)
+        fname = fn{i};
+        switch fname
+          case 'tri'
+            dim = size(parcellation.tri,1);
+          case 'hex'
+            dim = size(parcellation.hex,1);
+          case 'tet'
+            dim = size(parcellation.tet,1);
         end
-        [indexed, probabilistic] = determine_segmentationstyle(parcellation, fn, dim);
-        
-        if any(probabilistic) && any(indexed)
-            warning('cannot work with a mixed representation, removing tissue probability maps');
-            sel = find(probabilistic);
-            parcellation       = rmfield(parcellation, fn(sel));
-            probabilistic(sel) = false;
-        end
-        
-        if any(probabilistic)
-            fn = fn(probabilistic);
-            probabilistic = true; indexed = false;
-        elseif any(indexed)
-            fn = fn(indexed);
-            indexed = true; probabilistic = false;
-        end
+      end
+      [indexed, probabilistic] = determine_segmentationstyle(parcellation, fn, dim);
     end
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % ensure that the parcellation is internally consistent
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
-    if probabilistic
-      parcellation = fixsegmentation(parcellation, fn, 'probabilistic');
-    elseif indexed
-      parcellation = fixsegmentation(parcellation, fn, 'indexed');
+
+    if any(probabilistic)
+      parcellation = fixsegmentation(parcellation, fn(probabilistic), 'probabilistic');
     end
-    
+
+    if any(indexed)
+      parcellation = fixsegmentation(parcellation, fn(indexed), 'indexed');
+    end
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % convert the parcellation to the desired style
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
-    if probabilistic && strcmp(parcellationstyle, 'indexed')
-      parcellation  = convert_segmentationstyle(parcellation, fn, [dim 1], 'indexed');
-      indexed       = true;
-      probabilistic = false;
-      clear fn % to avoid any potential confusion
-    elseif indexed && strcmp(parcellationstyle, 'probabilistic')
-      parcellation  = convert_segmentationstyle(parcellation, fn, [dim 1], 'probabilistic');
-      probabilistic = true;
-      indexed       = false;
-      clear fn % to avoid any potential confusion
-    end % converting between probabilistic and indexed
-    
+
+    if strcmp(parcellationstyle, 'indexed') && any(probabilistic)
+      parcellation  = convert_segmentationstyle(parcellation, fn(probabilistic), [dim 1], 'indexed');
+    elseif strcmp(parcellationstyle, 'probabilistic') && any(indexed)
+      parcellation  = convert_segmentationstyle(parcellation, fn(indexed), [dim 1], 'probabilistic');
+    end % converting converting to desired style
+
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    error('unsupported version "%s" for parcellation datatype', parcelversion);
+    ft_error('unsupported version "%s" for parcellation datatype', parcelversion);
 end
 
 % the parcellation is a speciat type of volume structure, so ensure that it also fulfills the requirements for that
@@ -216,4 +181,3 @@ parcellation = ft_datatype_source(parcellation, 'version', sourceversion);
 % the fields that are specific for the parcellation and add them later again.
 % At this moment ft_datatype_volume nicely passes all fields, so there is no
 % special handling of the parcellation fields needed.
-

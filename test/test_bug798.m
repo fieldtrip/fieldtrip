@@ -3,18 +3,17 @@ function test_bug798
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug798
 % TEST ft_freqstatistics ft_selectdata ft_datatype_freq ft_appendfreq
 
 % note that this bug is related to bug 921
 
-cd /home/common/matlab/fieldtrip/data/test/bug798
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug798'));
 load t2_subj1.mat
 load t2_subj1_null
 load t2_subj2
 load t2_subj2_null
 
-% the following gave an error on 6 July 2011, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=798
+% the following gave an error on 6 July 2011, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=798
 a = ft_checkdata(t2_subj1, 'datatype', 'freq');
 
 % after changing the ft_datatype and ft_checkdata the following also works

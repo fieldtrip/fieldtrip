@@ -1,4 +1,4 @@
-function [tanu, tanv] = calctangent(RDip);
+function [tanu, tanv] = calctangent(RDip)
 
 %% Based on calcrads.m, only difference is that RDip is alread
 %% with respect to the sphere origin in calctangent.m
@@ -9,7 +9,7 @@ y=RDip(2);
 z=RDip(3);
 r=sqrt(x*x+y*y+z*z);
 
-if (x==0) & (y==0)
+if (x==0) && (y==0)
   tanu(1)=1.0; tanu(2)=0; tanu(3)=0;
   tanv(1)=0; tanv(2)=1.0; tanv(3)=0;
 else
@@ -23,6 +23,6 @@ else
   tanv(1)= RZXY * X2Y2/r;
   tanv(2)= (z*y*y + r*x*x) * X2Y2/r;
   tanv(3)= -y/r;
-end;  
+end
 
-  
+

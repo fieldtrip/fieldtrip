@@ -1,13 +1,12 @@
 function ft_write_data(filename, dat, varargin)
 
-% FT_WRITE_DATA exports electrophysiological data such as EEG to a file.
-% The input data is assumed to be scaled in microVolt.
+% FT_WRITE_DATA exports electrophysiological data such as EEG to a file. 
 %
 % Use as
 %   ft_write_data(filename, dat, ...)
 %
-% The specified filename can already contain the filename extension,
-% but that is not required since it will be added automatically.
+% The specified filename can contain the filename extension. If it has no filename
+% extension not, it will be added automatically.
 %
 % Additional options should be specified in key-value pairs and can be
 %   'header'         header structure that describes the data, see FT_READ_HEADER
@@ -28,11 +27,13 @@ function ft_write_data(filename, dat, varargin)
 %   fcdc_buffer
 %   matlab
 %
+% For EEG data formats, the input data is assumed to be scaled in microvolt.
+%
 % See also FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, FT_WRITE_EVENT
 
 % Copyright (C) 2007-2014, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -59,7 +60,7 @@ end
 
 % get the options
 append        = ft_getopt(varargin, 'append', false);
-nbits         = ft_getopt(varargin, 'nbits'); % for riff_wave
+nbits         = ft_getopt(varargin, 'nbits', 16); % for riff_wave
 chanindx      = ft_getopt(varargin, 'chanindx');
 hdr           = ft_getopt(varargin, 'header');
 evt           = ft_getopt(varargin, 'event');
@@ -192,13 +193,13 @@ switch dataformat
       catch
         if ~isempty(strfind(lasterr, 'Buffer size N must be an integer-valued scalar double.'))
           % this happens if the MATLAB75/toolbox/signal/signal/buffer
-          % function is used instead of the fieldtrip buffer
-          error('the FieldTrip buffer mex file was not found on your path, it should be in fieldtrip/fileio/private');
+          % function is used instead of the FieldTrip buffer
+          ft_error('the FieldTrip buffer mex file was not found on your path, it should be in fieldtrip/fileio/private');
           
         elseif ~isempty(strfind(lasterr, 'failed to create socket')) && (strcmp(host, 'localhost') || strcmp(host, '127.0.0.1'))
           
           % start a local instance of the TCP server
-          warning('starting fieldtrip buffer on %s:%d', host, port);
+          ft_warning('starting FieldTrip buffer on %s:%d', host, port);
           buffer('tcpserver', 'init', host, port);
           pause(1);
           
@@ -256,7 +257,7 @@ switch dataformat
     % combination of *.eeg and *.vhdr file
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if append
-      error('appending data is not yet supported for this data format');
+      ft_error('appending data is not yet supported for this data format');
     end
     
     if nchans~=hdr.nChans && length(chanindx)==nchans
@@ -274,30 +275,58 @@ switch dataformat
   case 'fcdc_matbin'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % multiplexed data in a *.bin file (ieee-le, 64 bit floating point values),
-    % accompanied by a matlab V6 file containing the header
+    % accompanied by a MATLAB V6 file containing the header
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if append
-      error('appending data is not yet supported for this data format');
-    end
-    
     [path, file, ext] = fileparts(filename);
     headerfile = fullfile(path, [file '.mat']);
     datafile   = fullfile(path, [file '.bin']);
-    if nchans~=hdr.nChans && length(chanindx)==nchans
-      % assume that the header corresponds to the original multichannel
-      % file and that the data represents a subset of channels
-      hdr.label     = hdr.label(chanindx);
-      hdr.nChans    = length(chanindx);
+    
+    if append && exist(headerfile, 'file') && exist(datafile, 'file')
+      % read the existing header and perform a sanity check
+      old = load(headerfile);
+      assert(old.hdr.nChans==size(dat,1));
+      
+      % update the existing header
+      hdr          = old.hdr;
+      hdr.nSamples = hdr.nSamples + nsamples;
+      
+      % there are no new events
+      if isfield(old, 'event')
+        event = old.event;
+      else
+        event = [];
+      end
+      
+      save(headerfile, 'hdr', 'event', '-v6');
+
+      % update the data file
+      [fid,message] = fopen(datafile,'ab','ieee-le');
+      fwrite(fid, dat, hdr.precision);
+      fclose(fid);
+      
+    else
+      hdr.nSamples = nsamples;
+      hdr.nTrials  = 1;
+      if nchans~=hdr.nChans && length(chanindx)==nchans
+        % assume that the header corresponds to the original multichannel
+        % file and that the data represents a subset of channels
+        hdr.label     = hdr.label(chanindx);
+        hdr.nChans    = length(chanindx);
+      end
+      if ~isfield(hdr, 'precision')
+        hdr.precision = 'double';
+      end
+      % there are no events
+      event = [];
+      % write the header file
+      save(headerfile, 'hdr', 'event', '-v6');
+      
+      % write the data file
+      [fid,message] = fopen(datafile,'wb','ieee-le');
+      fwrite(fid, dat, hdr.precision);
+      fclose(fid);
     end
-    if ~isfield(hdr, 'precision')
-      hdr.precision = 'double';
-    end
-    % write the header file
-    save(headerfile, 'hdr', '-v6');
-    % write the data file
-    [fid,message] = fopen(datafile,'wb','ieee-le');
-    fwrite(fid, dat, hdr.precision);
-    fclose(fid);
+    
     
   case 'fcdc_mysql'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -323,7 +352,7 @@ switch dataformat
         try
           s.msg = mxSerialize(hdr);
         catch
-          warning(lasterr);
+          ft_warning(lasterr);
         end
         db_insert('fieldtrip.header', s);
       end
@@ -348,7 +377,7 @@ switch dataformat
           try
             s.data = mxSerialize(reshape(dat(i,:,:), dim(2:end)));
           catch
-            warning(lasterr);
+            ft_warning(lasterr);
           end
           % insert the structure into the database
           db_insert('fieldtrip.data', s);
@@ -356,33 +385,40 @@ switch dataformat
       end
       
     else
-      error('you should specify either the header or the data when writing to a MySQL database');
+      ft_error('you should specify either the header or the data when writing to a MySQL database');
     end
     
   case 'matlab'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % plain matlab file
+    % plain MATLAB file
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     [path, file, ext] = fileparts(filename);
     filename = fullfile(path, [file '.mat']);
     if      append &&  exist(filename, 'file')
-      % read the previous header and data from matlab file
+      % read the previous header and data from MATLAB file
       prev = load(filename);
       if ~isempty(hdr) && ~isequal(hdr, prev.hdr)
-        error('inconsistent header');
+        ft_error('inconsistent header');
       else
-        % append the new data to that from the matlab file
+        % append the new data to that from the MATLAB file
         dat = cat(2, prev.dat, dat);
       end
     elseif  append && ~exist(filename, 'file')
       % file does not yet exist, which is not a problem
     elseif ~append &&  exist(filename, 'file')
-      warning('deleting existing file ''%s''', filename);
+      ft_warning('deleting existing file ''%s''', filename);
       delete(filename);
     elseif ~append && ~exist(filename, 'file')
       % file does not yet exist, which is not a problem
     end
     save(filename, 'dat', 'hdr');
+  
+  case 'mff'  
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % MFF files using Phillips plugin
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    ft_hastoolbox('mffmatlabio', 1);
+    mff_fileio_write(filename, hdr, dat, evt);
     
   case 'neuralynx_sdma'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -468,7 +504,7 @@ switch dataformat
           case 'uint32'
             buf = uint32(buf);
           otherwise
-            error('unsupported format conversion');
+            ft_error('unsupported format conversion');
         end
       end
       
@@ -489,7 +525,7 @@ switch dataformat
     %     outside the range [-1,+1] are clipped
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if append
-      error('appending data is not yet supported for this data format');
+      ft_error('appending data is not yet supported for this data format');
     end
     
     if nchans~=hdr.nChans && length(chanindx)==nchans
@@ -499,22 +535,22 @@ switch dataformat
       hdr.nChans = length(chanindx);
     end
     if nchans~=1
-      error('this format only supports single channel continuous data');
+      ft_error('this format only supports single channel continuous data');
     end
-    wavwrite(dat, hdr.Fs, nbits, filename);
+    audiowrite(filename, dat, hdr.Fs, 'BitsPerSample', nbits);
     
   case 'plexon_nex'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % single or mulitple channel Plexon NEX file
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if append
-      error('appending data is not yet supported for this data format');
+      ft_error('appending data is not yet supported for this data format');
     end
     
     [path, file] = fileparts(filename);
     filename = fullfile(path, [file, '.nex']);
     if nchans~=1
-      error('only supported for single-channel data');
+      ft_error('only supported for single-channel data');
     end
     % construct a NEX structure with  the required parts of the header
     nex.hdr.VarHeader.Type       = 5; % continuous
@@ -524,7 +560,7 @@ switch dataformat
       nex.hdr.FileHeader.Frequency = hdr.Fs * hdr.TimeStampPerSample;
       nex.var.ts = hdr.FirstTimeStamp;
     else
-      warning('no timestamp information available');
+      ft_warning('no timestamp information available');
       nex.hdr.FileHeader.Frequency  = nan;
       nex.var.ts = nan;
     end
@@ -543,11 +579,11 @@ switch dataformat
     % single channel Neuralynx NCS file
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if append
-      error('appending data is not yet supported for this data format');
+      ft_error('appending data is not yet supported for this data format');
     end
     
     if nchans>1
-      error('only supported for single-channel data');
+      ft_error('only supported for single-channel data');
     end
     
     [path, file, ext] = fileparts(filename);
@@ -564,7 +600,7 @@ switch dataformat
       ADCHANNEL  = -1;            % unknown
       LABEL      = hdr.label{1};  % single channel
     else
-      error('cannot determine channel label');
+      ft_error('cannot determine channel label');
     end
     
     FSAMPLE    = hdr.Fs;
@@ -617,7 +653,7 @@ switch dataformat
     % multiple channel GDF file
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if append
-      error('appending data is not yet supported for this data format');
+      ft_error('appending data is not yet supported for this data format');
     end
     if ~isempty(chanindx)
       % assume that the header corresponds to the original multichannel
@@ -632,7 +668,7 @@ switch dataformat
     % multiple channel European Data Format file
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if append
-      error('appending data is not yet supported for this data format');
+      ft_error('appending data is not yet supported for this data format');
     end
     if ~isempty(chanindx)
       % assume that the header corresponds to the original multichannel
@@ -643,5 +679,5 @@ switch dataformat
     write_edf(filename, hdr, dat);
     
   otherwise
-    error('unsupported data format');
+    ft_error('unsupported data format');
 end % switch dataformat

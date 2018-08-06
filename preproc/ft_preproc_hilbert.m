@@ -25,7 +25,7 @@ function [dat] = ft_preproc_hilbert(dat, option)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -46,6 +46,11 @@ function [dat] = ft_preproc_hilbert(dat, option)
 % set the defaults if option is not specified
 if nargin<2 || isempty(option)
   option = 'abs';
+end
+
+% preprocessing fails on channels that contain NaN
+if any(isnan(dat(:)))
+  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
 end
 
 % use the non-conjugate transpose to be sure
@@ -70,5 +75,5 @@ switch option
     case 'unwrap_angle'
         dat = unwrap(angle(dat./abs(dat)),[],2);
     otherwise
-        error('incorrect specification of the optional input argument');
+        ft_error('incorrect specification of the optional input argument');
 end

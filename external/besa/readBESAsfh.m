@@ -12,6 +12,8 @@ function sfh = readBESAsfh(filename, chantype)
 %         be stored in sfh. All other sensors will be ignored.
 %         Options: 'all' - default value
 %                  'fiducial' - only fiducials will be taken into account
+%                  'hpi' - only head position indicators will be taken into
+%                  account
 %                  'eeg' - only eeg sensors will be taken into account
 %
 % Return:
@@ -112,6 +114,9 @@ if(IsReadingOK == 1 && DataLevel == 1)
             case 'Meg'
                 % MEG sensor
                 strType = 'meg';                
+            case 'HPI'
+                % Head position indicator
+                strType = 'hpi';
             otherwise
                 strType = 'unknown';
         end
@@ -130,6 +135,7 @@ if(IsReadingOK == 1 && DataLevel == 1)
             sfh.SurfacePointsLabels{NumStoredPts} = tmp{1};
             sfh.SurfacePointsCoordinates(NumStoredPts, :) = ...
                 str2double(tmp(2:end));
+            sfh.SurfacePointsTypes{NumStoredPts} = strType;
         end
 
     end

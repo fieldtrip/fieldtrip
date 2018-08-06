@@ -5,7 +5,7 @@ function [grid] = mollify(cfg, grid)
 
 % Copyright (c) 2006, Jan-Mathijs Schoffelen & Robert Oostenveld, F.C. Donders Centre
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -37,7 +37,7 @@ Nchans   = size(grid.leadfield{grid.inside(1)}, 1);
 Ncomp    = size(grid.leadfield{grid.inside(1)}, 2);
 
 if isempty(cfg.sphereradius)
-  error('cfg.sphereradius should be specified');
+  ft_error('cfg.sphereradius should be specified');
 end
 % the distance only has to be computed to voxels inside the brain
 pos  = grid.pos(grid.inside,:);

@@ -1,4 +1,4 @@
-function [ama] = loadama(filename);
+function [ama] = loadama(filename)
 
 % LOADAMA read an inverted A-matrix and associated geometry information
 % from an ama file that was written by Tom Oostendorp's DIPOLI
@@ -10,7 +10,7 @@ function [ama] = loadama(filename);
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -32,7 +32,7 @@ fid = fopen(filename, 'rb', 'ieee-le');
 
 version = fread(fid, 1, 'int');
 if version~=10
-  error(sprintf('%s is either not an inverted A matrix, or one of an old version', filename));
+  ft_error(sprintf('%s is either not an inverted A matrix, or one of an old version', filename));
 end
 
 mode = fread(fid, 1, 'int');
@@ -46,23 +46,23 @@ nrow   = 0;
 geo  = [];
 for i=1:ngeo
   geo(i).name    = char(fread(fid, [1 80], 'uchar'));
-  geo(i).npnt    = fread(fid, 1, 'int');
-  geo(i).pnt     = fread(fid, [3 geo(i).npnt], 'float')';
+  geo(i).npos    = fread(fid, 1, 'int');
+  geo(i).pos     = fread(fid, [3 geo(i).npos], 'float')';
   geo(i).ntri    = fread(fid, 1, 'int');
   geo(i).tri     = fread(fid, [3 geo(i).ntri], 'int')' + 1;  % Matlab indexing starts at 1
   geo(i).sigmam  = fread(fid, 1, 'float');
   geo(i).sigmap  = fread(fid, 1, 'float');
   geo(i).geocon  = fread(fid, ngeo, 'int');
   geo(i).deflat  = fread(fid, ngeo, 'float');
-  totpnt = totpnt + geo(i).npnt;
+  totpnt = totpnt + geo(i).npos;
   tottri = tottri + geo(i).ntri;
 end
 
 % read the electrodes
 if mode~=1
   elec.name    = char(fread(fid, [1 80], 'uchar'));
-  elec.npnt    = fread(fid, 1, 'int');
-  for i=1:(elec.npnt+1)
+  elec.npos    = fread(fid, 1, 'int');
+  for i=1:(elec.npos+1)
     elec.el(i).tri  = fread(fid, 1, 'int') + 1; % Matlab indexing starts at 1
     elec.el(i).la   = fread(fid, 1, 'float');
     elec.el(i).mu   = fread(fid, 1, 'float');
@@ -72,14 +72,14 @@ if mode~=1
   end
   elec.vertex  = fread(fid, 1, 'int');
   elec.surface = fread(fid, 1, 'int');
-  nrow = nrow + elec.npnt;
+  nrow = nrow + elec.npos;
 else
   elec = [];
 end
 
 % read the gradiometers
 if mode~=0
-  error('gradiometers not yet implemented');
+  ft_error('gradiometers not yet implemented');
 else
   grad = [];
 end
@@ -91,7 +91,7 @@ bi = fread(fid, [totpnt nrow], 'float')';
 iso_sur    = fread(fid, 1, 'int') + 1;  % Matlab indexing starts at 1
 inner_only = fread(fid, 1, 'int');
 if iso_sur~=0
-  iso_totpnt = geo(iso_sur).npnt;
+  iso_totpnt = geo(iso_sur).npos;
   iso_b      = fread(fid, [iso_totpnt iso_totpnt], 'float')';
 else
   iso_b = [];

@@ -3,7 +3,6 @@ function test_tutorial_connectivity20130308
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_tutorial_connectivity20130308
 
 % Simulated data with directed connections
 % We will first simulate some data with a known connectivity structure built in. This way we know what to expect in terms of connectivity. To simulate data we use ft_connectivitysimulation. We will use an order 2 multivariate autoregressive model. The necessary ingredients are a set of NxN coefficient matrices, one matrix for each time lag. These coefficients need to be stored in the cfg.param field. Next to the coefficients we have to specify the NxN covariance matrix of the innovation noise. This matrix needs to be stored in the cfg.noisecov field. The model we are going to use to simulate the data is as follows:
@@ -72,7 +71,7 @@ mdata       = ft_mvaranalysis(cfg, data);
 %     fsampleorig: 200
 %             cfg: [1x1 struct]
 %             
-% The resulting variable mdata contains a description of the data in terms of a multivariate autoregressive model. For each time-lag up to the model order (which is 5 in this case), a 3×3 matrix of coefficients is outputted. The noisecov-field contains covariance matrix of the model's residuals.
+% The resulting variable mdata contains a description of the data in terms of a multivariate autoregressive model. For each time-lag up to the model order (which is 5 in this case), a 33 matrix of coefficients is outputted. The noisecov-field contains covariance matrix of the model's residuals.
 % 
 % Exercise 1
 % Compare the parameters specified for the simulation with the estimated coefficients and discuss.
@@ -147,7 +146,7 @@ cfg.zlim      = [0 1];
 ft_connectivityplot(cfg, granger);
 
 
-% Instead of plotting it with ft_connectivityplot, you can use the following low-level Matlab plotting code which gives a better understanding of the numerical representation of the results.
+% Instead of plotting it with ft_connectivityplot, you can use the following low-level MATLAB plotting code which gives a better understanding of the numerical representation of the results.
 % 
 figure
 for row=1:3
@@ -273,7 +272,7 @@ cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/connectivity'));
 load source
 
 [maxval, maxindx] = max(source.avg.coh);
-maxpos = source.pos(maxindx,:)
+maxpos = source.pos(maxindx,:);
 
 % maxpos = 
 %     4 -3 12
@@ -357,7 +356,7 @@ for i=1:length(data.trial)
   virtualchanneldata.trial{i} = u(:,1)' * beamformer * data.trial{i}(chansel,:);
 end
 % Rather than using a sourcemodel in the beamformer that consists of all three (x, y, z) directions, you can also have the beamformer compute the filter for only the optimal source orientation. This is implemented using the cfg.lcmv.fixedori='yes' option.
-% Recompute the spatial filter for the optimal source orientation and using that spatial filter (a 1×151 vector) recompute the time-series.
+% Recompute the spatial filter for the optimal source orientation and using that spatial filter (a 1151 vector) recompute the time-series.
 % 
 % Investigate and describe the difference between the two time-series. What is the difference between the two dipole orientations?
 % 
@@ -420,4 +419,4 @@ ylabel('coherence')
 % Summary and further reading
 % This tutorial demonstrates how to compute connectivity measures between two time series. If you want to learn how to make a distributed representation of connectivity throughout the whole brain, you may want to continue with the corticomuscular coherence tutorial.
 % 
-% This tutorial was last tested by Robert with revision 6026 of FieldTrip (~20120611) on a 64-bit Mac OS X machine using Matlab 2011b.
+% This tutorial was last tested by Robert with revision 6026 of FieldTrip (~20120611) on a 64-bit Mac OS X machine using MATLAB 2011b.

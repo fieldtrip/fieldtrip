@@ -23,7 +23,7 @@ function p = randstatprob(randobs, realobs, tail, correctm)
 
 % Copyright (C) 2004-2005, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -53,7 +53,7 @@ Nvox = size(randobs,1);
 Nrnd = size(randobs,2);
 Nobs = size(realobs,2);
 if size(realobs,1)~=Nvox
-  error('dimensions of input arguments does not match');
+  ft_error('dimensions of input arguments does not match');
 end
 
 p = zeros(size(realobs));
@@ -89,7 +89,7 @@ for i=1:Nobs
         p(:,i) = sum(randobs <= repmat(realobs(:,i),1,Nrnd), 2)./Nrnd;
 
       otherwise
-        error('incorrect specification of tail');
+        ft_error('incorrect specification of tail');
     end
   elseif correctm==1
     % apply multiple comparison correction using the maximum statistic
@@ -107,7 +107,7 @@ for i=1:Nobs
         p(:,i) = sum(repmat(mindist,Nvox,1) <= repmat(realobs(:,i),1,Nrnd), 2)./Nrnd;
 
       otherwise
-        error('incorrect specification of tail');
+        ft_error('incorrect specification of tail');
     end
   end
 end

@@ -1,7 +1,7 @@
-function [spike] = ft_spike_select(cfg,spike)
+function [spike] = ft_spike_select(cfg, spike)
 
 % FT_SPIKE_SELECT selects subsets of spikes, channels and trials from a
-% spike structure
+% spike structure.
 %
 % Use as
 %   [spike] = ft_spike_select(cfg, spike)
@@ -22,16 +22,35 @@ function [spike] = ft_spike_select(cfg,spike)
 % Outputs:
 %   Spike structure with selections
 
-%  Copyright (C) 2012, Martin Vinck
+% Copyright (C) 2012, Martin Vinck
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance spike
 ft_preamble trackconfig
 
 % control input spike structure
@@ -75,7 +94,7 @@ if ~doAll
 end
 
 % select the desired trials
-if ~isfield(spike,'trial') | ~isfield(spike,'trialtime') | ~isfield(spike,'time')
+if ~isfield(spike,'trial') || ~isfield(spike,'trialtime') || ~isfield(spike,'time')
   if ~doAllTrials
     warning('spike structure does not contain trial, time or trialtime field, cannot select trials');
   end
@@ -134,9 +153,9 @@ end
     
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble previous spike
-ft_postamble history spike
+ft_postamble previous   spike
+ft_postamble provenance spike
+ft_postamble history    spike
 
 
 %%%%%%%%% SUB FUNCTIONS %%%%%%%%%

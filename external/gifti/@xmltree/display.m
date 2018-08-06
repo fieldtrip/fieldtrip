@@ -11,7 +11,7 @@ function display(tree)
 % Copyright (C) 2002-2011  http://www.artefact.tk/
 
 % Guillaume Flandin
-% $Id$
+% $Id: display.m 4460 2011-09-05 14:52:16Z guillaume $
 
 disp(' ');
 disp([inputname(1),' = ']);

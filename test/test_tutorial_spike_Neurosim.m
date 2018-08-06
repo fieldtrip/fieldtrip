@@ -5,7 +5,7 @@ function test_tutorial_spike_Neurosim
 
 % TEST test_tutorial_spike_sim
 % performs all the operations mentioned int the spike tutorial
-% (http://fieldtrip.fcdonders.nl/tutorial/spike), but only plots figures
+% (http://www.fieldtriptoolbox.org/tutorial/spike), but only plots figures
 % that are called by external functions (e.g. ft_spike_plot_isireturn).
 % 
 % This corresponds to the tutorial around 25 Sept 2012
@@ -20,7 +20,7 @@ function test_tutorial_spike_Neurosim
 % TEST ft_spike_isi ft_spike_plot_isireturn ft_spike_psth ft_spikedensity
 % TEST ft_spike_plot_raster ft_spike_xcorr
 
-spike2 = ft_read_spike('/home/common/matlab/fieldtrip/data/test/original/neurosim/spikes'); % should be the folder containing 'signals' and 'spikes'; or the spikes file directly
+spike2 = ft_read_spike(dccnpath('/home/common/matlab/fieldtrip/data/test/original/neurosim/spikes')); % should be the folder containing 'signals' and 'spikes'; or the spikes file directly
 
 
 cfg              = [];
@@ -57,13 +57,17 @@ spike = ft_spike_select(cfg, spike2);
 
 cfg          = []; 
 cfg.trialdef.triallength = 0.5; %duration in seconds (can also be 1 or Inf)
-cfg.datafile = '/home/common/matlab/fieldtrip/data/test/original/neurosim/spikes'; %should be the directory containing both 'spikes' and 'signals'
+cfg.datafile = dccnpath('/home/common/matlab/fieldtrip/data/test/original/neurosim/spikes'); %should be the directory containing both 'spikes' and 'signals'
 cfg.trialfun = 'ft_trialfun_general';
 cfg = ft_definetrial(cfg);
 
 
 cfg.trlunit='samples'; %ft_trialfun_general gives us samles, not timestamps
 cfg.hdr = spike.hdr; %using 'samples' requires the header information.
+
+% the ft_spike functions use pedantic cfg checking, so remove the trialdef
+% field which is illegal here
+cfg = rmfield(cfg, 'trialdef');
 spikeTrials = ft_spike_maketrials(cfg,spike); 
 
 
@@ -110,21 +114,22 @@ cfg.spikechannel = spikeTrials.label([1 2]);
 cfg.latency      = [-1 3];
 cfg.errorbars    = 'std'; % plot with the standard deviation
 cfg.interactive  = 'no'; % toggle off interactive mode
-figure, ft_spike_plot_raster(cfg,spikeTrials, psth); 
+figure, ft_spike_plot_raster(cfg, spikeTrials, psth); 
 
 
 cfg         = [];
 cfg.latency = [0 0.4]; 
 cfg.timwin  = [-0.025 0.025];
 cfg.fsample = 1000; % sample at 1000 hz
-sdf = ft_spikedensity(cfg,spikeTrials);
+sdf = ft_spikedensity(cfg, spikeTrials);
+
 cfg              = [];
 cfg.topplotfunc  = 'line'; % plot as a line plot
 cfg.spikechannel = spikeTrials.label([1 2]); % can also select one unit here
 cfg.latency      = [-1 3];
 cfg.errorbars    = 'std'; % plot with standard deviation
 cfg.interactive  = 'no'; % toggle off interactive mode
-figure, ft_spike_plot_raster(cfg,spikeTrials, sdf) 
+figure, ft_spike_plot_raster(cfg, spikeTrials, sdf) 
 
 
  
@@ -134,13 +139,16 @@ spike = ft_spike_select(cfg, spike2);
  
 cfg          = []; 
 cfg.trialdef.triallength = 0.5; %duration in seconds (can also be 1 or Inf)
-cfg.datafile = '/home/common/matlab/fieldtrip/data/test/original/neurosim/spikes'; %should be the directory containing both 'spikes' and 'signals'
+cfg.datafile = dccnpath('/home/common/matlab/fieldtrip/data/test/original/neurosim/spikes'); %should be the directory containing both 'spikes' and 'signals'
 cfg.trialfun = 'ft_trialfun_general';
 cfg = ft_definetrial(cfg);
 
 
 cfg.trlunit='samples'; %ft_trialfun_general gives us samles, not timestamps
 cfg.hdr = ft_read_header(cfg.datafile);
+% the ft_spike functions use pedantic cfg checking, so remove the trialdef
+% field which is illegal here
+cfg = rmfield(cfg, 'trialdef');
 spikeTrials = ft_spike_maketrials(cfg,spike); 
 
 cfg             = [];

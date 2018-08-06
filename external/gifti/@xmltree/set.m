@@ -14,7 +14,7 @@ function tree = set(tree,uid, parameter, value)
 % Copyright (C) 2002-2011  http://www.artefact.tk/
 
 % Guillaume Flandin
-% $Id$
+% $Id: set.m 4460 2011-09-05 14:52:16Z guillaume $
 
 
 %error(nargchk(4,4,nargin));

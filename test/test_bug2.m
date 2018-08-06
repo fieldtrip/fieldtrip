@@ -3,10 +3,9 @@ function test_bug2
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2
 % TEST ft_freqanalysis ft_megplanar 
 
-load /home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFC_LP.mat
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFC_LP.mat'));
 
 cfg = [];
 cfg.trials = 1:5;

@@ -1,12 +1,12 @@
 function test_1297
 
-% MEM 2gb
-% WALLTIME 00:15:00
+% MEM 2500mb
+% WALLTIME 00:30:00
 
 % TEST test_1297
 % TEST ft_volumesegment
 
-mri_nom = ft_read_mri('/home/common/matlab/fieldtrip/data/test/bug1297/orig-nomask.mgz');
+mri_nom = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1297/orig-nomask.mgz'));
 
 mri_nom.coordsys = 'spm'; % this can also be determined with ft_determine_coordsys
 

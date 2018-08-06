@@ -3,13 +3,10 @@ function test_bug1775
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST test_bug1775
 % TEST ft_sourceparcellate ft_checkdata ft_datatype_source ft_datatype_volume ft_datatype_parcellation ft_datatype_segmentation
 
 %% create a set of sensors
-
 [pnt, tri] = icosahedron162;
-
 pnt = pnt .* 10; % convert to cm
 sel = find(pnt(:,3)>0);
 
@@ -21,7 +18,7 @@ for i=1:length(sel)
   grad.label{i} = sprintf('magnetometer%d', i);
 end
 grad.unit = 'cm';
-grad.type = 'magnetometer';
+grad.type = 'meg';
 
 grad = ft_datatype_sens(grad);
 
@@ -39,7 +36,7 @@ vol = ft_datatype_headmodel(vol);
 cfg = [];
 cfg.grad            = grad;
 cfg.vol             = vol;
-cfg.grid.resolution = 1;
+cfg.grid.resolution = 2; % cm
 cfg.channel         = 'all';
 grid = ft_prepare_leadfield(cfg);
 
@@ -100,6 +97,7 @@ source1p = ft_sourceparcellate(cfg, source1, parcellation);
 source2p = ft_sourceparcellate(cfg, source2, parcellation);
 
 %% construct a more complex source structure
+% note that this increases memory requirements
 source3 = [];
 source3.pos       = source2.pos;
 source3.freq      = 1:5;
@@ -110,6 +108,7 @@ cfg = [];
 source3p = ft_sourceparcellate(cfg, source3, parcellation);
 
 %%
+% this increases memory requirements even more
 source4 = [];
 source4.pos       = source2.pos;
 source4.freq      = 1:5;
@@ -124,11 +123,10 @@ source4p = ft_sourceparcellate(cfg, source4, parcellation);
 source5 = [];
 source5.pos       = source2.pos;
 source5.inside    = source2.inside;
-source5.outside   = source2.outside;
 source5.freq      = 1:2;
 source5.coh       = cell(size(source2.pos,1), size(source2.pos,1));
-for i=source2.inside(:)'
-  for j=source2.inside(:)'
+for i=find(source2.inside)'
+  for j=find(source2.inside)'
     source5.coh{i,j} = randn(3, 2);
   end
 end
@@ -146,7 +144,6 @@ source5p = ft_sourceparcellate(cfg, source5, parcellation);
 source6 = [];
 source6.pos       = source2.pos;
 source6.inside    = source2.inside;
-source6.outside   = source2.outside;
 source6.time      = 1:20;
 source6.mom       = randn(size(source2.pos,1),20);
 source6.momdimord = 'pos_time';

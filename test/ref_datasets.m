@@ -12,11 +12,7 @@ function datasets = ref_datasets
 %   TYPE = eeg, meg, lfp
 %   DATATYPE = for example ctf64, ctf151, ctf275
 
-if isunix
-  origdir = '/home/common/matlab/fieldtrip/data/test/';
-elseif ispc
-  origdir = fullfile('H:', 'common', 'matlab', 'fieldtrip', 'data', 'test');
-end
+origdir = dccnpath('/home/common/matlab/fieldtrip/data/test/');
 
 datasets = [];
 
@@ -63,7 +59,7 @@ datasets(end).nummeg    = nan;
 datasets(end).numeog    = nan;
 datasets(end).numecg    = nan;
 datasets(end).numemg    = nan;
-datasets(end).senstype  = 'ext1020';% type=ft_senstype(data.label)
+datasets(end).senstype  = 'ext1020';% type = ft_senstype(data.label)
 
 datasets(end+1).origdir = origdir; 
 datasets(end).type      = 'eeg';
@@ -74,7 +70,7 @@ datasets(end).nummeg    = nan;
 datasets(end).numeog    = nan;
 datasets(end).numecg    = nan;
 datasets(end).numemg    = nan;
-datasets(end).senstype  = 'ext1020';% type=ft_senstype(data.label)
+datasets(end).senstype  = 'ext1020';% type = ft_senstype(data.label)
 
 % meg dataformats
 datasets(end+1).origdir = origdir; 
@@ -108,7 +104,7 @@ datasets(end).nummeg    = 248;
 datasets(end).numeog    = nan;
 datasets(end).numecg    = nan;
 datasets(end).numemg    = nan;
-datasets(end).senstype  = 'bti248grad';%type=ft_senstype(data.label)
+datasets(end).senstype  = 'bti248grad';% type = ft_senstype(data.label)
 
 datasets(end+1).origdir = origdir; 
 datasets(end).type      = 'meg';
@@ -148,7 +144,7 @@ datasets(end+1).origdir = origdir;
 datasets(end).type      = 'meg';
 datasets(end).datatype  = 'ctf64';
 datasets(end).filename  = 'Wat123r1raw.ds';
-datasets(end).dataformat= 'ctf_old';
+datasets(end).dataformat = 'ctf_old';
 datasets(end).numeeg    = nan;
 datasets(end).nummeg    = 64;
 datasets(end).numeog    = nan;
@@ -208,7 +204,7 @@ datasets(end).filename  = 'raw.fif';
 datasets(end).numeeg    = 2;
 datasets(end).nummeg    = 306;
 datasets(end).nummegmag = 102;
-datasets(end).nummeggrad= 204;
+datasets(end).nummeggrad = 204;
 datasets(end).numeog    = nan;
 datasets(end).numecg    = nan;
 datasets(end).numemg    = nan;
@@ -221,7 +217,7 @@ datasets(end).filename  = 'Continuous1.con';
 datasets(end).numeeg    = nan;
 datasets(end).nummeg    = 160;
 datasets(end).nummegmag = nan;
-datasets(end).nummeggrad= 160;
+datasets(end).nummeggrad = 160;
 datasets(end).numeog    = nan;
 datasets(end).numecg    = nan;
 datasets(end).numemg    = nan;
@@ -240,7 +236,7 @@ datasets(end).numemg    = nan;
 datasets(end).senstype  = 'unknown';
 
 % first trial has lot's of NaNs in raw data
-% datasets(end+1).origdir= origdir; 
+% datasets(end+1).origdir = origdir; 
 % datasets(end).type     = 'lfp';
 % datasets(end).datatype = 'plexon';
 % datasets(end).filename = 'p213parall.nex';

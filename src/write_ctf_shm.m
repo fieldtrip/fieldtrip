@@ -1,4 +1,4 @@
-function [varargout] = funname(varargin)
+function [varargout] = write_ctf_shm(varargin)
 
 % WRITE_CTF_SHM writes metainformation and data as a packet to shared memory.
 % This function can be used for real-time processing of data while it is
@@ -11,7 +11,7 @@ function [varargout] = funname(varargin)
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

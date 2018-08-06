@@ -30,7 +30,7 @@ function ft_realtime_downsample(cfg)
 % Copyright (C) 2008, Robert Oostenveld
 % Copyright (C) 2010, Stefan Klanke
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -88,7 +88,7 @@ if ~isfield(cfg, 'cutoff')
 else
   cutoff = cfg.cutoff / (0.5*hdr.Fs);
   if cutoff >= 1
-    error('Cutoff frequency too high');
+    ft_error('Cutoff frequency too high');
   end
 end
 [B,A] = butter(cfg.order, cutoff, 'low');
@@ -98,7 +98,7 @@ cfg.channel = ft_channelselection(cfg.channel, hdr.label);
 chanindx    = match_str(hdr.label, cfg.channel);
 nchan       = length(chanindx);
 if nchan==0
-  error('no channels were selected');
+  ft_error('no channels were selected');
 end
 
 minblocksmp = round(cfg.minblocksize*hdr.Fs);

@@ -4,7 +4,7 @@ small blocks and copied to a FieldTrip buffer, where MATLAB or another program
 can access it.
 
 Most of the source code in this directory is 
-Copyright (C) 2009-2011, Donders Institute for Brain, Behaviour and Cognition
+Copyright (C) 2009-2015, Donders Institute for Brain, Behaviour and Cognition
 Copyright (C) 2007-2009, F.C.  Donders Centre for Cognitive Neuroimaging
 
 Since the software in this directory relies on proprietary interfaces and

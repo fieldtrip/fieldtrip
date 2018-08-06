@@ -1,4 +1,4 @@
-function dat = read_egis_data(filename, hdr, begtrial, endtrial, chanindx);
+function dat = read_egis_data(filename, hdr, begtrial, endtrial, chanindx)
 
 % READ_EGIS_DATA reads the data from an EGI EGIS format file
 %
@@ -6,7 +6,7 @@ function dat = read_egis_data(filename, hdr, begtrial, endtrial, chanindx);
 %   dat = read_egis_data(filename, hdr, begtrial, endtrial, chanindx);
 % where
 %   filename       name of the input file
-%   hdr            header structure, see READ_HEADER
+%   hdr            header structure, see FT_READ_HEADER
 %   begtrial       first trial to read, mutually exclusive with begsample+endsample
 %   endtrial       last trial to read,  mutually exclusive with begsample+endsample
 %   chanindx       list with channel indices to read
@@ -21,7 +21,7 @@ function dat = read_egis_data(filename, hdr, begtrial, endtrial, chanindx);
 %
 % Modified from EGI's EGI Toolbox with permission 2007-06-28 Joseph Dien
 
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -41,7 +41,7 @@ function dat = read_egis_data(filename, hdr, begtrial, endtrial, chanindx);
 
 fh=fopen([filename],'r');
 if fh==-1
-    error('wrong filename')
+    ft_error('wrong filename')
 end
 fclose(fh);
 
@@ -62,7 +62,7 @@ elseif fhdr(1)==67305985
         endian = 'ieee-be';
     end;
 else
-    error('This is not an EGIS average file.');
+    ft_error('This is not an EGIS average file.');
 end;
 
 if fhdr(2) == -1
@@ -70,7 +70,7 @@ if fhdr(2) == -1
 elseif fhdr(2) == 3
     fileType = 'ses';
 else
-    error('This is not an EGIS file.');
+    ft_error('This is not an EGIS file.');
 end;
 
 dat=zeros(hdr.nChans,hdr.nSamples,endtrial-begtrial+1);

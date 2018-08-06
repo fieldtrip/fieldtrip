@@ -9,13 +9,13 @@ function [dat,beta,x] = ft_preproc_polyremoval(dat, order, begsample, endsample,
 %   order      the order of the polynomial
 %   begsample  index of the begin sample for the estimate of the polynomial
 %   endsample  index of the end sample for the estimate of the polynomial
-%   flag       optional boolean to specify whether the first order basis 
+%   flag       optional boolean to specify whether the first order basis
 %              vector will zscored prior to computing higher order basis
 %              vectors from the first-order basis vector (and the beta
 %              weights). This is to avoid numerical problems with the
 %              inversion of the covariance when the polynomial is of high
 %              order/number of samples is large
-% 
+%
 % If begsample and endsample are not specified, it will use the whole
 % window to estimate the polynomial.
 %
@@ -29,7 +29,7 @@ function [dat,beta,x] = ft_preproc_polyremoval(dat, order, begsample, endsample,
 
 % Copyright (C) 2008-2014, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -58,6 +58,38 @@ if nargin<5 || isempty(order)
   flag = 0;
 end
 
+% This does not work on integer data
+typ = class(dat);
+if ~isa(dat, 'double') && ~isa(dat, 'single')
+  dat = cast(dat, 'double');
+end
+
+usesamples = false(1,size(dat,2));
+usesamples(begsample:endsample) = true;
+
+% preprocessing fails on channels that contain NaN
+if any(isnan(dat(:)))
+  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+  
+  datnans = isnan(dat);
+  
+  % if a nan occurs, it's for all time points
+  check1  = all(ismember(sum(datnans,1),[0 size(dat,1)]));
+  
+  % if a channel has nans, it's for all samples
+  check2  = all(ismember(sum(datnans,2),[0 size(dat,2)])); 
+  
+  if ~(check1 || check2)
+    usesamples = repmat(usesamples, [size(dat,1) 1]);
+    usesamples = usesamples & ~isnan(dat);
+  elseif check1
+    usesamples(sum(datnans,1)==size(dat,1)) = false; % switch the nan samples off, they are not to be used for the regression
+  end
+else
+  check1 = true;
+  check2 = true;
+end
+
 % construct a "time" axis
 nsamples = size(dat,2);
 basis    = (1:nsamples)-1;
@@ -71,10 +103,23 @@ for i = 0:order
   x(i+1,:) = basis.^(i);
 end
 
-% estimate the contribution of the basis functions
-% beta = dat(:,begsample:endsample)/x(:,begsample:endsample); <-this leads to numerical issues, even in simple examples
-invxcov = inv(x(:,begsample:endsample)*x(:,begsample:endsample)');
-beta    = dat(:,begsample:endsample)*x(:,begsample:endsample)'*invxcov;
+if ~(check1 || check2)
+  % loop across rows
+  beta    = zeros(size(dat,1),size(x,1));
+  for k = 1:size(dat,1)
+    invxcov   = inv(x(:,usesamples(k,:))*x(:,usesamples(k,:))');
+    beta(k,:) = dat(k,usesamples(k,:))*x(:,usesamples(k,:))'*invxcov;
+  end
+else
+  
+  % estimate the contribution of the basis functions
+  % beta = dat(:,begsample:endsample)/x(:,begsample:endsample); <-this leads to numerical issues, even in simple examples
+  invxcov = pinv(x(:,usesamples)*x(:,usesamples)');
+  beta    = dat(:,usesamples)*x(:,usesamples)'*invxcov;
+end
 
 % remove the estimated basis functions
 dat = dat - beta*x;
+
+% convert back to the original input type
+dat = cast(dat, typ);

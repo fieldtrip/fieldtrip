@@ -1,0 +1,90 @@
+;###########################################################
+[General]
+;###########################################################
+; settings that apply to all channels
+
+hostname     = -                            ; for the fieldtrip buffer, using '-' starts a local buffer on the given port
+port         = 1972                         ; for the fieldtrip buffer
+verbose      = 0
+serial       = /dev/tty.usbserial-DN0094FY  ; serial device name, for example COM3: on windows
+blocksize    = 10                           ; in samples, sampling rate is 250 Hz
+reset        = on                           ; perform soft reset, can be on or off
+datalog      = off                          ; can be off, 14sec, 5min, 15min, 30min, 1hr, 2hr, 4hr, 12hr, 24hr
+testsignal   = off                          ; can be off, gnd, dc, 1xSlow, 1xFast, 2xSlow, 2xFast
+sample       = on                           ; add sample channel, can be on or off
+unwrap       = on                           ; unwrap the sample channel, can be on or off
+timestamp    = on                           ; add timestamp channel, can be on or off
+timeref      = boot                         ; can be epoch, boot or start
+acceleration = on                           ; include acceleration channels in the output, can be on or off
+daisy        = off                          ; should be on for 16 channels, off for 8 channels
+
+;###########################################################
+[ChannelEnable]
+;###########################################################
+; whether the received data is send to FieldTrip buffer, can be on or off
+
+chan1  = on
+chan2  = on
+chan3  = on
+chan4  = on
+chan5  = on
+chan6  = on
+chan7  = on
+chan8  = on
+; the following settings only apply if the daisy board is connected
+chan9  = on
+chan10 = on
+chan11 = on
+chan12 = on
+chan13 = on
+chan14 = on
+chan15 = on
+chan16 = on
+
+;###########################################################
+[ChannelLabel]
+;###########################################################
+; string with the channel label
+
+chan1  = 1P-1N
+chan2  = 2P-2N
+chan3  = 3P-3N
+chan4  = 4P-4N
+chan5  = 5P-5N
+chan6  = 6P-6N
+chan7  = 7P-7N
+chan8  = 8P-8N
+; the following settings only apply if the daisy board is connected
+chan9  = 9P-9N
+chan10 = 10P-10N
+chan11 = 11P-11N
+chan12 = 12P-12N
+chan13 = 13P-13N
+chan14 = 14P-14N
+chan15 = 15P-15N
+chan16 = 16P-16N
+
+;###########################################################
+[ChannelSetting]
+;###########################################################
+; see https://github.com/OpenBCI/Docs/blob/master/software/01-OpenBCI_SDK.md for OpenBCI command details
+; x (CHANNEL, POWER_DOWN, GAIN_SET, INPUT_TYPE_SET, BIAS_SET, SRB2_SET, SRB1_SET) X
+; z (CHANNEL, PCHAN, NCHAN) Z
+
+chan1  = x1060000X
+chan2  = x2060000X
+chan3  = x3060000X
+chan4  = x4060000X
+chan5  = x5060000X
+chan6  = x6060000X
+chan7  = x7060000X
+chan8  = x8060000X
+; the following settings only apply if the daisy board is connected
+chan9  = x9060000X
+chan10 = xa060000X
+chan11 = xb060000X
+chan12 = xc060000X
+chan13 = xd060000X
+chan14 = xe060000X
+chan15 = xf060000X
+chan16 = xg060000X

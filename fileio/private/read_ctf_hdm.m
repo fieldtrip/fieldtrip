@@ -1,4 +1,4 @@
-function [vol] = read_ctf_hdm(filename);
+function [vol] = read_ctf_hdm(filename)
 
 % READ_CTF_HDM reads the head volume conductor model from a *.hdm file
 %
@@ -6,7 +6,7 @@ function [vol] = read_ctf_hdm(filename);
 
 % Copyright (C) 2003, Robert Oostenveld
 % 
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -50,7 +50,7 @@ elseif isfield(ascii, 'MEG_Sphere')
   vol.o(2) = ascii.MEG_Sphere.ORIGIN_Y;
   vol.o(3) = ascii.MEG_Sphere.ORIGIN_Z;
 else
-  error('no headmodel information found');
+  ft_error('no headmodel information found');
 end
 
 % add the fiducials, these are in raw MRI coordinates

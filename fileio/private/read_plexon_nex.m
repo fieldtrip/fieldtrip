@@ -25,7 +25,7 @@ function [varargout] = read_plexon_nex(filename, varargin)
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -67,7 +67,7 @@ if isempty(hdr)
   % sizeof(NexVarHeader) = 208
   hdr.FileHeader = NexFileHeader(fid);
   if hdr.FileHeader.NumVars<1
-    error('no channels present in file');
+    ft_error('no channels present in file');
   end
   hdr.VarHeader = NexVarHeader(fid, hdr.FileHeader.NumVars);
 end
@@ -102,14 +102,14 @@ for i=1:length(channel)
 
     case 4
       % Population vector
-      error('population vectors are not supported');
+      ft_error('population vectors are not supported');
 
     case 5
       % Continuously recorded variables
       buf.ts   = fread(fid, [1 vh.Count], 'int32=>int32');
       buf.indx = fread(fid, [1 vh.Count], 'int32=>int32');
       if vh.Count>1 && (begsample~=1 || endsample~=inf)
-        error('reading selected samples from multiple AD segments is not supported');
+        ft_error('reading selected samples from multiple AD segments is not supported');
       end
       if ~tsonly
         numsample = min(endsample - begsample + 1, vh.NPointsWave);
@@ -130,7 +130,7 @@ for i=1:length(channel)
       end
 
     otherwise
-      error('incorrect channel type');
+      ft_error('incorrect channel type');
   end % switch channel type
 
   % return the data of this channel
@@ -144,7 +144,7 @@ fclose(fid);
 return
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function hdr = NexFileHeader(fid);
+function hdr = NexFileHeader(fid)
 hdr.NexFileHeader  = fread(fid,4,'uint8=>char')';    % string NEX1
 hdr.Version        = fread(fid,1,'int32');
 hdr.Comment        = fread(fid,256,'uint8=>char')';
@@ -156,7 +156,7 @@ hdr.NextFileHeader = fread(fid,1,'int32');          % position of the next file 
 Padding = fread(fid,256,'uint8=>char')';             % future expansion
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function hdr = NexVarHeader(fid, numvar);
+function hdr = NexVarHeader(fid, numvar)
 for varlop=1:numvar
   hdr(varlop).Type         = fread(fid,1,'int32');        % 0 - neuron, 1 event, 2- interval, 3 - waveform, 4 - pop. vector, 5 - continuously recorded
   hdr(varlop).Version      = fread(fid,1,'int32');        % 100

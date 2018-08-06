@@ -11,7 +11,7 @@ function write_brainvision_eeg(filename, hdr, dat, event)
 
 % Copyright (C) 2007-2014, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -43,7 +43,7 @@ else
 end
 
 if hdr.nChans~=nchan
-  error('number of channels in in header does not match with the data');
+  ft_error('number of channels in in header does not match with the data');
 end
 
 % this is the only supported data format
@@ -67,7 +67,7 @@ datafile_without_path   = [f '.eeg'];
 % open the data file and write the binary data
 fid = fopen(datafile, 'wb', 'ieee-le');
 if length(size(dat))>2
-  warning('writing segmented data as if it were continuous');
+  ft_warning('writing segmented data as if it were continuous');
   for i=1:ntrl
     fwrite(fid, squeeze(dat(i,:,:)), 'float32');
   end
@@ -91,7 +91,7 @@ fprintf(fid, 'DataFormat=%s\r\n',        hdr.DataFormat);
 fprintf(fid, 'DataOrientation=%s\r\n',   hdr.DataOrientation);
 fprintf(fid, 'NumberOfChannels=%d\r\n',  hdr.nChans);
 % Sampling interval in microseconds
-fprintf(fid, 'SamplingInterval=%d\r\n',  round(1e6/hdr.Fs));
+fprintf(fid, 'SamplingInterval=%d\r\n',  1e6/hdr.Fs);
 fprintf(fid, '\r\n');
 fprintf(fid, '[Binary Infos]\r\n');
 fprintf(fid, 'BinaryFormat=%s\r\n',      hdr.BinaryFormat);

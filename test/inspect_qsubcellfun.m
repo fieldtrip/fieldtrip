@@ -7,14 +7,14 @@ function inspect_qsubcellfun
 % TEST qsubcellfun qsubfeval qsubget
 
 if isempty(which('qsubcellfun'))
-  [p, f, x] = fileparts(which('ft_defaults'));
-  addpath(fullfile(p, 'qsub'));
+  [ftver, ftpath] = ft_version;
+  addpath(fullfile(ftpath, 'qsub'));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% this test script is based on http://fieldtrip.fcdonders.nl/tutorial/distributedcomputing
+% this test script is based on http://www.fieldtriptoolbox.org/tutorial/distributedcomputing
 
-cd /home/common/matlab/fieldtrip/data
+cd(dccnpath('/home/common/matlab/fieldtrip/data'));
 timreq = 20*60;
 memreq = 2*1024^3;
 

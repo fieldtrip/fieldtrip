@@ -14,7 +14,7 @@ function [inside] = bounding_mesh(pos, pnt, tri)
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -30,12 +30,11 @@ function [inside] = bounding_mesh(pos, pnt, tri)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id$
 
 % this can be used for printing detailled user feedback
 fb = false;
 
-% this is a work-around for http://bugzilla.fcdonders.nl/show_bug.cgi?id=2369
+% this is a work-around for http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2369
 pos = double(pos);
 pnt = double(pnt);
 tri = double(tri);

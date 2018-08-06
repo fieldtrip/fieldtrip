@@ -6,9 +6,9 @@ function [argout] = mxSerialize(argin)
 % See also MXDESERIALIZE
 
 % Copyright (C) 2005, Brad Phelan         http://xtargets.com
-% Copyright (C) 2007, Robert Oostenveld   http://www.fcdonders.ru.nl
+% Copyright (C) 2007, Robert Oostenveld   http://robertoostenveld.nl
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -26,12 +26,12 @@ function [argout] = mxSerialize(argin)
 %
 % $Id$
 
-if verLessThan('matlab', '8.3')
+if ft_platform_supports('libmx_c_interface') % older than 2014a
   % use the original implementation of the mex file
   argout = mxSerialize_c(argin);
 else
   % use the C++ implementation of the mex file
-  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2452
+  % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2452
   argout = mxSerialize_cpp(argin);
 end
 

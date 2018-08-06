@@ -3,7 +3,6 @@ function test_bug893
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug893
 % TEST ft_freqstatistics statfun_indepsamplesZcoh
 
 % function to confirm the bug and to test the fix.
@@ -24,7 +23,6 @@ cfg.parameter = 'fourierspctrm';
 cfg.statistic = 'ft_statfun_indepsamplesZcoh';
 cfg.method    = 'montecarlo';
 cfg.numrandomization = 1;
-cfg.label     = freq.label;
 stat          = ft_freqstatistics(cfg, freq);
 
 % running this prior to the fix confirms the bug

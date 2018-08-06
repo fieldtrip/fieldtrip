@@ -1,4 +1,4 @@
-function stat = ft_statistics_crossvalidate(cfg, dat, design)
+function [stat, cfg] = ft_statistics_crossvalidate(cfg, dat, design)
 
 % FT_STATISTICS_CROSSVALIDATE performs cross-validation using a prespecified
 % multivariate analysis given by cfg.mva
@@ -20,10 +20,11 @@ function stat = ft_statistics_crossvalidate(cfg, dat, design)
 %   stat.statistic    = the statistics to report
 %   stat.model        = the models associated with this multivariate analysis
 %
+% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS, FT_SOURCESTATISTICS
 
-% Copyright (c) 2007-2011, Marcel van Gerven, F.C. Donders Centre
+% Copyright (c) 2007-2011, F.C. Donders Centre, Marcel van Gerven
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -41,61 +42,93 @@ function stat = ft_statistics_crossvalidate(cfg, dat, design)
 %
 % $Id$
 
-% specify classification procedure
-  
-if ~isfield(cfg,'mva')
-  cfg.mva = dml.analysis({ ...
-    dml.standardizer('verbose',true) ...
-    dml.svm('verbose',true) ...
-    });
-else
-  if ~isa(cfg.mva,'dml.analysis')
-    cfg.mva = dml.analysis(cfg.mva);
-  end
-end
+% do a sanity check on the input data
+assert(isnumeric(dat),    'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
+assert(isnumeric(design), 'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 
-if ~isfield(cfg,'statistic'),
-  cfg.statistic = {'accuracy' 'binomial'};
-end
+cfg.mva       = ft_getopt(cfg, 'mva');
+cfg.statistic = ft_getopt(cfg, 'statistic', {'accuracy', 'binomial'});
+cfg.nfolds    = ft_getopt(cfg, 'nfolds',   5);
+cfg.resample  = ft_getopt(cfg, 'resample', false);
 
-if ~isfield(cfg,'nfolds'), cfg.nfolds = 5; end
-if ~isfield(cfg,'resample'), cfg.resample = false; end
+% specify classification procedure or ensure it's the correct object
+if isempty(cfg.mva)
+  cfg.mva = dml.analysis({ dml.standardizer('verbose',true) ...
+                           dml.svm('verbose',true)});
+elseif ~isa(cfg.mva,'dml.analysis')
+  cfg.mva = dml.analysis(cfg.mva);
+end
 
 cv = dml.crossvalidator('mva', cfg.mva, 'type', 'nfold', 'folds', cfg.nfolds,...
   'resample', cfg.resample, 'compact', true, 'verbose', true);
 
 if any(isinf(dat(:)))
-  warning('Inf encountered; replacing by zeros');
+  ft_warning('Inf encountered; replacing by zeros');
   dat(isinf(dat(:))) = 0;
 end
 
 if any(isnan(dat(:)))
-  warning('Nan encountered; replacing by zeros');
+  ft_warning('Nan encountered; replacing by zeros');
   dat(isnan(dat(:))) = 0;
 end
 
-% perform everything!
+% perform everything
 cv = cv.train(dat',design');
 
-% the statistic of interest
+% extract the statistic of interest
 s = cv.statistic(cfg.statistic);
 for i=1:length(cfg.statistic)
  stat.statistic.(cfg.statistic{i}) = s{i};
 end
 
 % get the model averaged over folds
-stat.model = cv.model; 
+stat.model = cv.model;
 
 fn = fieldnames(stat.model{1});
-for i=1:length(stat.model)
+if any(ismember(fn,  {'weights', 'primal'})),
+  selfn = find(ismember(fn, {'weights', 'primal'}));
   
-  for k=1:length(fn)
-    if numel(stat.model{i}.(fn{k}))==prod(cfg.dim)
-      stat.model{i}.(fn{k}) = squeeze(reshape(stat.model{i}.(fn{k}),cfg.dim));
+  % the mean subtraction is needed only once, but speeds up the covariance
+  % computation
+  dat = bsxfun(@minus, dat, nanmean(dat,2)); 
+  dat_transp = dat.';
+  for j=1:numel(selfn)
+    % create the 'encoding' matrix from the weights, as per Haufe 2014.
+    %covdat = cov(dat');
+    for i=1:length(stat.model)
+      i
+      W = stat.model{i}.(fn{selfn});
+      
+      sW   = size(W);
+      sdat = size(dat);
+      if sW(2)==sdat(1) && sW(1)~=sdat(1)
+        W = transpose(W);
+      end
+      
+      M    = dat'*W;
+      covM = cov(M);
+      WcovM = (W/covM)./(size(dat,2)-1); % with the correction term for the covariance computation
+      
+      %stat.model{i}.(sprintf('%sinv',fn{selfn})) = covdat*W/covM;
+      stat.model{i}.(sprintf('%sinv',fn{selfn})) = dat*(dat_transp*WcovM);
+      
     end
   end
-     
 end
-  
+fn = fieldnames(stat.model{1}); % update the fieldnames, because some might have been added
+
+fn = fieldnames(stat.model{1}); % may now also contain weightsinv
+for i=1:length(stat.model)
+  for k=1:length(fn)
+    if numel(stat.model{i}.(fn{k}))==prod(cfg.dim)
+      stat.model{i}.(fn{k}) = reshape(stat.model{i}.(fn{k}),cfg.dim);
+    end
+  end
+
+end
+
 % required
 stat.trial = [];
+
+% add some stuff to the cfg
+cfg.cv = cv;

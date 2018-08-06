@@ -4,7 +4,7 @@ function plane=surfplane(node,face)
 %
 % plane equation coefficients for each face in a surface
 %
-% author: Qianqian Fang, <fangq at nmr.mgh.harvard.edu>
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input:
 %   node: a list of node coordinates (nn x 3)

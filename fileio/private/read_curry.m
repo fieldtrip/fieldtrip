@@ -11,7 +11,7 @@ function s = read_curry(filename)
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -32,7 +32,7 @@ function s = read_curry(filename)
 
 fid = fopen(filename, 'rt');
 if fid<0
-  error(sprintf('could not open file: %s', filename));
+  ft_error(sprintf('could not open file: %s', filename));
 end
 
 s    = [];
@@ -55,7 +55,7 @@ while ~feof(fid)
       % read the next line
       line = fgetl(fid);
       % process the data in the line
-      if strcmp(blocktype, 'START') & ~isempty(strfind(line, '='))
+      if strcmp(blocktype, 'START') && ~isempty(strfind(line, '='))
         % the line looks like "lhs = rhs"
         [lhs, rhs] = strtok(line, '=');
         lhs = strtrim(lhs);
@@ -74,8 +74,8 @@ while ~feof(fid)
         % FIXME
       end
 
-      if isnumeric(line) | feof(fid)
-        error('unexpected end of file');
+      if isnumeric(line) || feof(fid)
+        ft_error('unexpected end of file');
       end
 
     end % while ~END

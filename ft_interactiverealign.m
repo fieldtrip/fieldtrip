@@ -1,35 +1,44 @@
-function cfg = ft_interactiverealign(cfg)
+function [cfg] = ft_interactiverealign(cfg)
 
-% FT_INTERACTIVEREALIGN interactively rotates, scales and translates
-% electrode positions to template electrode positions or towards
-% the head surface.
+% FT_INTERACTIVEREALIGN allows the user to interactively translate, rotate and scale an
+% individual geometrical object to a template geometrical object. It can for example be used
+% to align EEG electrodes to a model of the scalp surface.
 %
 % Use as
 %   [cfg] = ft_interactiverealign(cfg)
 %
-% The configuration structure should contain the individuals geometrical
-% objects that have to be realigned as
-%  cfg.individual.vol
-%  cfg.individual.elec
-%  cfg.individual.grad
-%  cfg.individual.headshape
-%  cfg.individual.headshapestyle = 'vertex'  (default), 'surface' or 'both'
-%  cfg.individual.volstyle       = 'edge'    (default), 'surface' or 'both'
+% The configuration structure should contain the individuals geometrical object that
+% has to be realigned
+%   cfg.individual.elec           = structure
+%   cfg.individual.grad           = structure
+%   cfg.individual.headmodel      = structure, see FT_PREPARE_HEADMODEL
+%   cfg.individual.headshape      = structure, see FT_READ_HEADSHAPE
+%   cfg.individual.mri            = structure, see FT_READ_MRI
+% You can specify the style with which the objects are displayed using
+%   cfg.individual.headmodelstyle = 'vertex', 'edge', 'surface' or 'both' (default = 'edge')
+%   cfg.individual.headshapestyle = 'vertex', 'edge', 'surface' or 'both' (default = 'vertex')
 %
-% The configuration structure should also contain the geometrical
-% objects of a template that serves as target
-%  cfg.template.vol
-%  cfg.template.elec
-%  cfg.template.grad
-%  cfg.template.headshape
-%  cfg.template.headshapestyle   = 'surface' (default), 'vertex' or 'both'
-%  cfg.individual.volstyle       = 'surface' (default), 'edge'   or 'both'
+% The configuration structure should also contain the geometrical object of a
+% template that serves as target
+%   cfg.template.axes           = string, 'yes' or 'no (default = 'no')
+%   cfg.template.elec           = structure
+%   cfg.template.grad           = structure
+%   cfg.template.headmodel      = structure, see FT_PREPARE_HEADMODEL
+%   cfg.template.headshape      = structure, see FT_READ_HEADSHAPE
+%   cfg.template.mri            = structure, see FT_READ_MRI
+% You can specify the style with which the objects are displayed using
+%   cfg.template.headmodelstyle = 'vertex', 'edge', 'surface' or 'both' (default = 'edge')
+%   cfg.template.headshapestyle = 'vertex', 'edge', 'surface' or 'both' (default = 'vertex')
 %
-% See also FT_VOLUMEREALIGN, FT_ELECTRODEREALIGN, FT_READ_SENS, FT_READ_VOL, FT_READ_HEADSHAPE
+% You can specify one or multiple individual objects which will all be realigned and
+% one or multiple template objects.
+%
+% See also FT_VOLUMEREALIGN, FT_ELECTRODEREALIGN, FT_DETERMINE_COORDSYS,
+% FT_READ_SENS, FT_READ_VOL, FT_READ_HEADSHAPE
 
 % Copyright (C) 2008, Vladimir Litvak
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -47,84 +56,169 @@ function cfg = ft_interactiverealign(cfg)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
+ft_preamble debug
 ft_preamble provenance
 ft_preamble trackconfig
-ft_preamble debug
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', {'individual', 'template'});
+cfg.individual = ft_checkconfig(cfg.individual, 'renamed', {'vol', 'headmodel'});
+cfg.individual = ft_checkconfig(cfg.individual, 'renamed', {'volstyle', 'headmodelstyle'});
+cfg.template   = ft_checkconfig(cfg.template, 'renamed', {'vol', 'headmodel'});
+cfg.template   = ft_checkconfig(cfg.template, 'renamed', {'volstyle', 'headmodelstyle'});
 
 cfg.individual.elec           = ft_getopt(cfg.individual, 'elec', []);
+cfg.individual.elecstyle      = ft_getopt(cfg.individual, 'elecstyle', {}); % key-value pairs
 cfg.individual.grad           = ft_getopt(cfg.individual, 'grad', []);
+cfg.individual.gradstyle      = ft_getopt(cfg.individual, 'gradstyle', {}); % key-value pairs
 cfg.individual.headshape      = ft_getopt(cfg.individual, 'headshape', []);
-cfg.individual.headshapestyle = ft_getopt(cfg.individual, 'headshapestyle', 'vertex');
-cfg.individual.vol            = ft_getopt(cfg.individual, 'vol', []);
-cfg.individual.volstyle       = ft_getopt(cfg.individual, 'volstyle', 'edge');
+if ~isempty(cfg.individual.headshape) && isfield(cfg.individual.headshape, 'tri')
+  cfg.individual.headshapestyle = ft_getopt(cfg.individual, 'headshapestyle', 'surface');
+else
+  cfg.individual.headshapestyle = ft_getopt(cfg.individual, 'headshapestyle', 'vertex');
+end
+cfg.individual.headmodel      = ft_getopt(cfg.individual, 'headmodel', []);
+cfg.individual.headmodelstyle = ft_getopt(cfg.individual, 'headmodelstyle', 'edge');
 cfg.individual.mri            = ft_getopt(cfg.individual, 'mri', []);
-cfg.individual.mristyle       = ft_getopt(cfg.individual, 'mristyle', 'intersect');
+cfg.individual.mristyle       = ft_getopt(cfg.individual, 'mristyle', {});
 
-cfg.template.elec           = ft_getopt(cfg.template, 'elec', []);
-cfg.template.grad           = ft_getopt(cfg.template, 'grad', []);
-cfg.template.headshape      = ft_getopt(cfg.template, 'headshape', []);
-cfg.template.headshapestyle = ft_getopt(cfg.template, 'headshapestyle', 'vertex');
-cfg.template.vol            = ft_getopt(cfg.template, 'vol', []);
-cfg.template.volstyle       = ft_getopt(cfg.template, 'volstyle', 'edge');
-cfg.template.mri            = ft_getopt(cfg.template, 'mri', []);
-cfg.template.mristyle       = ft_getopt(cfg.template, 'mristyle', 'intersect');
+cfg.template.axes             = ft_getopt(cfg.template, 'axes', 'no');
+cfg.template.elec             = ft_getopt(cfg.template, 'elec', []);
+cfg.template.elecstyle        = ft_getopt(cfg.template, 'elecstyle', {}); % key-value pairs
+cfg.template.grad             = ft_getopt(cfg.template, 'grad', []);
+cfg.template.gradstyle        = ft_getopt(cfg.template, 'gradstyle', {}); % key-value pairs
+cfg.template.headshape        = ft_getopt(cfg.template, 'headshape', []);
+if ~isempty(cfg.template.headshape) && isfield(cfg.template.headshape, 'tri')
+  cfg.template.headshapestyle   = ft_getopt(cfg.template, 'headshapestyle', 'surface');
+else
+  cfg.template.headshapestyle   = ft_getopt(cfg.template, 'headshapestyle', 'vertex');
+end
+cfg.template.headmodel        = ft_getopt(cfg.template, 'headmodel', []);
+cfg.template.headmodelstyle   = ft_getopt(cfg.template, 'headmodelstyle', 'edge');
+cfg.template.mri              = ft_getopt(cfg.template, 'mri', []);
+cfg.template.mristyle         = ft_getopt(cfg.template, 'mristyle', {});
+
+% convert the string that describes the style to a cell-array
+cfg.template.headshapestyle   = updatestyle(cfg.template.headshapestyle);
+cfg.individual.headshapestyle = updatestyle(cfg.individual.headshapestyle);
+cfg.template.headmodelstyle   = updatestyle(cfg.template.headmodelstyle);
+cfg.individual.headmodelstyle = updatestyle(cfg.individual.headmodelstyle);
 
 template   = struct(cfg.template);
 individual = struct(cfg.individual);
 
+% ensure that they are consistent with the latest FieldTrip version
+if ~isempty(template.elec)
+  template.elec = ft_datatype_sens(template.elec);
+end
+if ~isempty(individual.elec)
+  individual.elec = ft_datatype_sens(individual.elec);
+end
+if ~isempty(template.headshape)
+  template.headshape = fixpos(template.headshape);
+end
+if ~isempty(individual.headshape)
+  individual.headshape = fixpos(individual.headshape);
+end
+
 % convert the coordinates of all geometrical objects into mm
-fn = {'elec', 'grad', 'headshape', 'vol', 'mri'};
+fn = {'elec', 'grad', 'headshape', 'headmodel', 'mri'};
+hasindividual = false(size(fn));
+originalunit = cell(size(fn));
 for i=1:length(fn)
-  if ~isempty(cfg.individual.(fn{i}))
-    cfg.individual.(fn{i}) = ft_convert_units(cfg.individual.(fn{i}), 'mm');
+  if ~isempty(individual.(fn{i}))
+    hasindividual(i) = true;
+    individual.(fn{i}) = ft_determine_units(individual.(fn{i})); % ensure that it has units
+    originalunit{i} = individual.(fn{i}).unit;
+    individual.(fn{i}) = ft_convert_units(individual.(fn{i}), 'mm'); % ensure that the units are all in mm
   end
 end
+hastemplate = false(size(fn));
 for i=1:length(fn)
-  if ~isempty(cfg.template.(fn{i}))
-    cfg.template.(fn{i}) = ft_convert_units(cfg.template.(fn{i}), 'mm');
+  if ~isempty(template.(fn{i}))
+    template.(fn{i}) = ft_determine_units(template.(fn{i})); % ensure that it has units
+    hastemplate(i) = true;
+    template.(fn{i}) = ft_convert_units(template.(fn{i}), 'mm'); % ensure that the units are all in mm
   end
 end
 
+% determine the coordinate system of the template objects
+coordsys = [];
+for i=1:length(fn)
+  if ~isempty(template.(fn{i}))
+    if isfield(template.(fn{i}), 'coordsys')
+      if isempty(coordsys)
+        % remember the first coordinate system
+        coordsys = template.(fn{i}).coordsys;
+      end
+      % ensure that all template objects have the same coordinate system as the first one
+      assert(isequal(coordsys, template.(fn{i}).coordsys));
+    end
+  end
+end
+
+% ensure that the headshape surface is triangulated
 if ~isempty(template.headshape)
   if ~isfield(template.headshape, 'tri') || isempty(template.headshape.tri)
-    template.headshape.tri = projecttri(template.headshape.pnt);
+    template.headshape.tri = projecttri(template.headshape.pos);
   end
 end
 
-if ~isempty(individual.headshape) && isfield(individual.headshape, 'pnt') && ~isempty(individual.headshape.pnt)
+if ~isempty(individual.headshape)
   if ~isfield(individual.headshape, 'tri') || isempty(individual.headshape.tri)
-    individual.headshape.tri = projecttri(individual.headshape.pnt);
+    individual.headshape.tri = projecttri(individual.headshape.pos);
   end
 end
+
+ft_info('Use the mouse to rotate the geometry, and click "redisplay" to update the light.');
+ft_info('Close the figure when you are done.');
 
 % open a figure
 fig = figure;
+set(fig, 'CloseRequestFcn',    @cb_quit);
+set(fig, 'windowkeypressfcn',  @cb_keyboard);
 set(gca, 'position', [0.05 0.15 0.75 0.75]);
 
 % add the data to the figure
-set(fig, 'CloseRequestFcn', @cb_quit);
 setappdata(fig, 'individual',  individual);
 setappdata(fig, 'template',    template);
 setappdata(fig, 'transform',   eye(4));
 setappdata(fig, 'cleanup',     false);
+setappdata(fig, 'coordsys',    coordsys); % can be unknown
+setappdata(fig, 'toggle_labels', true);
+setappdata(fig, 'toggle_axes', true);
+setappdata(fig, 'toggle_grid', true);
 
 % add the GUI elements
-cb_creategui(gca);
-cb_redraw(gca);
+axis([-150 150 -150 150 -150 150]);
+cb_creategui(gcf);
+cb_redraw(gcf);
 rotate3d on
+
+if isempty(coordsys) || strcmp(coordsys, 'unknown')
+  ft_notice('the template coordinate system is unknown, selecting the viewpoint is not possible');
+  ft_uilayout(gcf, 'tag', 'viewpointbtn', 'Visible', 'off');
+else
+  [labelx, labely, labelz] = coordsys2label(coordsys, 2, 0);
+  ft_notice('the template coordinate system is "%s"', coordsys);
+  ft_info('the positive X-axis is pointing to %s', labelx);
+  ft_info('the positive Y-axis is pointing to %s', labely);
+  ft_info('the positive Z-axis is pointing to %s', labelz);
+end
+
 cleanup = false;
 while ~cleanup
   uiwait(fig);
@@ -186,24 +280,26 @@ ft_uilayout(fig, 'tag', 'ty',      'BackgroundColor', [0.8 0.8 0.8], 'width',  C
 ft_uilayout(fig, 'tag', 'tz',      'BackgroundColor', [0.8 0.8 0.8], 'width',  CONTROL_WIDTH,   'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+5*CONTROL_WIDTH, 'vpos',  CONTROL_VOFFSET-1*CONTROL_HEIGHT);
 
 % control buttons
-uicontrol('tag', 'viewbtn',   'parent',  fig, 'units', 'normalized', 'style', 'popup', 'string', 'top|bottom|left|right|front|back', 'value',  1, 'callback', @cb_view);
-uicontrol('tag', 'redisplaybtn', 'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'redisplay', 'value', [], 'callback', @cb_redraw);
-uicontrol('tag', 'applybtn',  'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'apply',    'value', [], 'callback', @cb_apply);
-uicontrol('tag', 'toggle labels', 'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'toggle label', 'value',  0,  'callback', @cb_redraw);
-uicontrol('tag', 'toggle axes', 'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'toggle axes', 'value',  0,  'callback', @cb_redraw);
-uicontrol('tag', 'quitbtn',   'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'quit',     'value',  1,  'callback', @cb_quit);
-ft_uilayout(fig, 'tag', 'viewbtn',   'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-2*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
-ft_uilayout(fig, 'tag', 'redisplaybtn', 'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-3*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
-ft_uilayout(fig, 'tag', 'applybtn',  'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-4*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
-ft_uilayout(fig, 'tag', 'toggle labels', 'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-5*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
-ft_uilayout(fig, 'tag', 'toggle axes', 'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-6*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
-ft_uilayout(fig, 'tag', 'quitbtn',   'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-7*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
+uicontrol('tag', 'viewpointbtn',  'parent',  fig, 'units', 'normalized', 'style', 'popup',      'string', 'top|bottom|left|right|front|back', 'value',  1, 'callback', @cb_viewpoint);
+uicontrol('tag', 'redisplaybtn',  'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'redisplay',    'value', [], 'callback', @cb_redraw);
+uicontrol('tag', 'applybtn',      'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'apply',        'value', [], 'callback', @cb_apply);
+uicontrol('tag', 'toggle labels', 'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'toggle label', 'value',  getappdata(fig, 'toggle_labels'), 'callback', @cb_redraw);
+uicontrol('tag', 'toggle axes',   'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'toggle axes',  'value',  getappdata(fig, 'toggle_axes'),   'callback', @cb_redraw);
+uicontrol('tag', 'toggle grid',   'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'toggle grid',  'value',  getappdata(fig, 'toggle_grid'),   'callback', @cb_redraw);
+uicontrol('tag', 'quitbtn',       'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'quit',         'value',  1,  'callback', @cb_quit);
+ft_uilayout(fig, 'tag', 'viewpointbtn',   'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-2*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
+ft_uilayout(fig, 'tag', 'redisplaybtn',   'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-4*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
+ft_uilayout(fig, 'tag', 'applybtn',       'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-5*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
+ft_uilayout(fig, 'tag', 'toggle labels',  'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-6*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
+ft_uilayout(fig, 'tag', 'toggle axes',    'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-7*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
+ft_uilayout(fig, 'tag', 'toggle grid',    'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-8*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
+ft_uilayout(fig, 'tag', 'quitbtn',        'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-9*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
 
 % alpha ui (somehow not implemented, facealpha is fixed at 0.7
 uicontrol('tag', 'alphaui', 'parent',  fig, 'units', 'normalized', 'style', 'text', 'string', 'alpha', 'value', [], 'callback', []);
-uicontrol('tag', 'alpha', 'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', '0.6', 'value', [], 'callback', @cb_redraw);
-ft_uilayout(fig, 'tag', 'alphaui', 'BackgroundColor', [0.8 0.8 0.8], 'width',  3*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-8*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
-ft_uilayout(fig, 'tag', 'alpha', 'BackgroundColor', [0.8 0.8 0.8], 'width',  3*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-8*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+3*CONTROL_WIDTH);
+uicontrol('tag', 'alpha',   'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', '0.6', 'value', [], 'callback', @cb_redraw);
+ft_uilayout(fig, 'tag', 'alphaui',  'BackgroundColor', [0.8 0.8 0.8], 'width',  3*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-3*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
+ft_uilayout(fig, 'tag', 'alpha',    'BackgroundColor', [0.8 0.8 0.8], 'width',  3*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-3*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+3*CONTROL_WIDTH);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_redraw(h, eventdata, handles)
@@ -212,6 +308,7 @@ fig        = getparent(h);
 individual = getappdata(fig, 'individual');
 template   = getappdata(fig, 'template');
 transform  = getappdata(fig, 'transform');
+coordsys   = getappdata(fig, 'coordsys');
 
 % get the transformation details
 rx = str2double(get(findobj(fig, 'tag', 'rx'), 'string'));
@@ -232,154 +329,124 @@ H = S * T * R;
 transform = H * transform;
 
 axis vis3d; cla
-xlabel('x')
-ylabel('y')
-zlabel('z')
 
 hold on
 
 % the "individual" struct is a local copy, so it is safe to change it here
-if ~isempty(individual.vol)
-  individual.vol = ft_transform_vol(transform, individual.vol);
+if ~isempty(individual.headmodel)
+  individual.headmodel = ft_transform_geometry(transform, individual.headmodel);
 end
 if ~isempty(individual.elec)
-  individual.elec = ft_transform_sens(transform, individual.elec);
+  individual.elec = ft_transform_geometry(transform, individual.elec);
 end
 if ~isempty(individual.grad)
-  individual.grad = ft_transform_sens(transform, individual.grad);
+  individual.grad = ft_transform_geometry(transform, individual.grad);
 end
 if ~isempty(individual.headshape)
-  individual.headshape = ft_transform_headshape(transform, individual.headshape);
+  individual.headshape = ft_transform_geometry(transform, individual.headshape);
 end
 if ~isempty(individual.mri)
-  individual.mri.transform = transform * individual.mri.transform;
+  individual.mri = ft_transform_geometry(transform, individual.mri);
 end
 
 if ~isempty(template.mri)
-  if strcmp(template.mristyle, 'intersect')
-    ft_plot_ortho(template.mri.anatomy, 'transform',  template.mri.transform, 'style', 'intersect', 'intersectmesh',  individual.headshape);
-  elseif strcmp(template.mristyle, 'montage')
-    ft_plot_montage(template.mri.anatomy, 'transform',  template.mri.transform, 'style', 'intersect', 'intersectmesh',  individual.headshape);
-  end
+  ft_plot_ortho(template.mri.anatomy, 'transform',  template.mri.transform, 'style', 'intersect', 'intersectmesh', individual.headshape, individual.mristyle{:});
 end
 
 if ~isempty(individual.mri)
-  if strcmp(individual.mristyle, 'intersect')
-    ft_plot_ortho(individual.mri.anatomy, 'transform',  individual.mri.transform, 'style', 'intersect', 'intersectmesh',  template.headshape);
-  elseif strcmp(individual.mristyle, 'montage')
-    ft_plot_montage(individual.mri.anatomy, 'transform',  individual.mri.transform, 'style', 'intersect', 'intersectmesh',  template.headshape);
-  end
+  ft_plot_ortho(individual.mri.anatomy, 'transform',  individual.mri.transform, 'style', 'intersect', 'intersectmesh', template.headshape, template.mristyle{:});
+end
+
+if istrue(template.axes)
+  ft_plot_axes([], 'unit', 'mm', 'coordsys', coordsys);
 end
 
 if ~isempty(template.elec)
-  % FIXME use ft_plot_sens
   if isfield(template.elec, 'line')
     tmpbnd = [];
-    tmpbnd.pnt = template.elec.chanpos;
+    tmpbnd.pos = template.elec.chanpos;
     tmpbnd.tri = template.elec.line;
-    ft_plot_mesh(tmpbnd,'vertexcolor', 'b', 'facecolor', 'none', 'edgecolor', 'b', 'vertexsize',10)
+    ft_plot_mesh(tmpbnd, 'vertexcolor', 'b', 'facecolor', 'none', 'edgecolor', 'b', 'vertexsize', 10)
   else
-    ft_plot_mesh(template.elec.chanpos,'vertexcolor', 'b', 'vertexsize',10);
+    ft_plot_sens(template.elec, template.elecstyle{:});
   end
 end
 
 if ~isempty(individual.elec)
-  % FIXME use ft_plot_sens
   if isfield(individual.elec, 'line')
     tmpbnd = [];
-    tmpbnd.pnt = individual.elec.chanpos;
+    tmpbnd.pos = individual.elec.chanpos;
     tmpbnd.tri = individual.elec.line;
-    ft_plot_mesh(tmpbnd,'vertexcolor', 'r', 'facecolor', 'none', 'edgecolor', 'r', 'vertexsize',10)
+    ft_plot_mesh(tmpbnd, 'vertexcolor', 'r', 'facecolor', 'none', 'edgecolor', 'r', 'vertexsize', 10)
   else
-    ft_plot_mesh(individual.elec.chanpos,'vertexcolor', 'r', 'vertexsize',10);
+    ft_plot_sens(individual.elec, individual.elecstyle{:});
   end
 end
 
 if ~isempty(template.grad)
-  % FIXME use ft_plot_sens
-  ft_plot_mesh(template.grad.chanpos,'vertexcolor', 'b', 'vertexsize',10);
-  % FIXME also plot lines?
+  ft_plot_sens(template.grad, template.gradstyle{:});
 end
 
 if ~isempty(individual.grad)
-  % FIXME use ft_plot_sens
-  ft_plot_mesh(individual.grad.chanpos,'vertexcolor', 'r', 'vertexsize',10);
-  % FIXME also plot lines?
+  ft_plot_sens(individual.grad, individual.gradstyle{:});
 end
 
-if ~isempty(template.vol)
-  % FIXME this only works for boundary element models
-  for i = 1:numel(template.vol.bnd)
-    if strcmp(template.volstyle, 'edge') || strcmp(template.volstyle, 'both')
-      ft_plot_mesh(template.vol.bnd(i), 'facecolor', 'none', 'vertexcolor', 'b')
-    end
-    if strcmp(template.volstyle, 'surface') || ft_plot_mesh(template.vol.bnd(i), 'facecolor', 'b', 'edgecolor', 'none')
-      lighting gouraud
-      material shiny
-      camlight
-    end
+% FIXME this only works for boundary element models
+if isstruct(template.headmodel) && isfield(template.headmodel, 'bnd')
+  for i = 1:numel(template.headmodel.bnd)
+    ft_plot_mesh(template.headmodel.bnd(i), template.headmodelstyle{:});
   end
 end
 
-if ~isempty(individual.vol)
-  % FIXME this only works for boundary element models
-  for i = 1:numel(individual.vol.bnd)
-    if strcmp(individual.volstyle, 'edge') || strcmp(individual.volstyle, 'both')
-      ft_plot_mesh(individual.vol.bnd(i), 'facecolor', 'none', 'vertexcolor', 'r')
-    end
-    if strcmp(individual.volstyle, 'surface') || strcmp(individual.volstyle, 'both')
-      ft_plot_mesh(individual.vol.bnd(i), 'facecolor', 'r', 'edgecolor', 'none')
-      lighting gouraud
-      material shiny
-      camlight
-    end
+% FIXME this only works for boundary element models
+if isstruct(individual.headmodel) && isfield(individual.headmodel, 'bnd')
+  for i = 1:numel(individual.headmodel.bnd)
+    ft_plot_mesh(individual.headmodel.bnd(i), individual.headmodelstyle{:});
   end
 end
 
-if ~isempty(template.headshape)
-  if isfield(template.headshape, 'pnt') && ~isempty(template.headshape.pnt)
-    if strcmp(template.headshapestyle, 'surface') || strcmp(template.headshapestyle, 'both')
-      ft_plot_mesh(template.headshape,'facecolor', 'b', 'edgecolor', 'none')
-      lighting gouraud
-      material shiny
-      camlight
-      alpha(str2double(get(findobj(fig, 'tag', 'alpha'), 'string')));
-    end
-    
-    if strcmp(template.headshapestyle, 'vertex') || strcmp(template.headshapestyle, 'both')
-      ft_plot_mesh(template.headshape.pnt,'vertexcolor', 'b')
-    end
-  end
-  if isfield(template.headshape, 'fid') && ~isempty(template.headshape.fid.pnt)
-    ft_plot_mesh(template.headshape.fid.pnt,'vertexcolor', 'b', 'vertexsize',20)
-  end
+if isstruct(template.headshape) && isfield(template.headshape, 'pos') && ~isempty(template.headshape.pos)
+  ft_plot_headshape(template.headshape, template.headshapestyle{:});
 end
 
-if ~isempty(individual.headshape)
-  if isfield(individual.headshape, 'pnt') && ~isempty(individual.headshape.pnt)
-    if strcmp(individual.headshapestyle, 'surface') || strcmp(individual.headshapestyle, 'both')
-      ft_plot_mesh(individual.headshape,'facecolor', 'r', 'edgecolor', 'none')
-      lighting gouraud
-      material shiny
-      camlight
-      alpha(str2double(get(findobj(fig, 'tag', 'alpha'), 'string')));
-    end
-    
-    if strcmp(individual.headshapestyle, 'vertex') || strcmp(individual.headshapestyle, 'both')
-      ft_plot_mesh(individual.headshape.pnt,'vertexcolor', 'r')
-    end
-  end
-  if isfield(individual.headshape, 'fid') && ~isempty(individual.headshape.fid.pnt)
-    ft_plot_mesh(individual.headshape.fid.pnt,'vertexcolor', 'r', 'vertexsize',20)
-  end
+if isstruct(individual.headshape) && isfield(individual.headshape, 'pos') && ~isempty(individual.headshape.pos)
+  ft_plot_headshape(individual.headshape, individual.headshapestyle{:})
 end
 
-if get(findobj(fig, 'tag', 'toggle axes'), 'value')
+alpha(str2double(get(findobj(fig, 'tag', 'alpha'), 'string')));
+lighting gouraud
+material shiny
+camlight
+
+if strcmp(get(h, 'tag'), 'toggle labels')
+  setappdata(fig, 'toggle_labels', ~getappdata(fig, 'toggle_labels'))
+end
+
+if getappdata(fig, 'toggle_labels')
+  xlabel('x (mm)')
+  ylabel('y (mm)')
+  zlabel('z (mm)')
+else
+  xlabel('')
+  ylabel('')
+  zlabel('')
+end
+
+if strcmp(get(h, 'tag'), 'toggle axes')
+  setappdata(fig, 'toggle_axes', ~getappdata(fig, 'toggle_axes'))
+end
+
+if getappdata(fig, 'toggle_axes')
   axis on
 else
   axis off
 end
-if get(findobj(fig, 'tag', 'toggle grid'), 'value')
+
+if strcmp(get(h, 'tag'), 'toggle grid')
+  setappdata(fig, 'toggle_grid', ~getappdata(fig, 'toggle_grid'))
+end
+
+if getappdata(fig, 'toggle_grid')
   grid on
 else
   grid off
@@ -426,25 +493,63 @@ if ~getappdata(fig, 'cleanup')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_view(h, eventdata)
+function cb_keyboard(h, eventdata)
 
-val = get(h, 'value');
-switch val
-  case 1
-    view([90 90]);
-  case 2
-    view([90 -90]);
-  case 3
-    view([-90 0]);
-  case 4
-    view([90 0]);
-  case 5
-    view([-180 0]);
-  case 6
-    view([0 0]);
+fig = getparent(h);
+
+if isempty(eventdata)
+  % determine the key that corresponds to the uicontrol element that was activated
+  key = get(fig, 'userdata');
+else
+  % determine the key that was pressed on the keyboard
+  key = parsekeyboardevent(eventdata);
+end
+
+% get focus back to figure
+if ~strcmp(get(h, 'type'), 'figure')
+  set(h, 'enable', 'off');
+  drawnow;
+  set(h, 'enable', 'on');
+end
+
+if isempty(key)
+  % this happens if you press the apple key
+  key = '';
+end
+
+% the following code is largely shared by FT_SOURCEPLOT, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN, FT_MESHREALIGN, FT_ELECTRODEPLACEMENT
+switch key
+  case {'' 'shift+shift' 'alt-alt' 'control+control' 'command-0'}
+    % do nothing
+    
+  case 'q'
+    cb_quit(h);
+    
+  case 'v' % camlight angle reset
+    delete(findall(fig,'Type','light')) % shut out the lights
+    % add a new light from the current camera position
+    lighting gouraud
+    material shiny
+    camlight
     
   otherwise
-end
+    % do nothing
+    
+end % switch key
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_viewpoint(h, eventdata)
+
+fig       = getparent(h);
+coordsys  = getappdata(fig, 'coordsys');
+
+% get the index of the option that was selected
+val = get(h, 'value');
+
+viewpoint = {'top', 'bottom', 'left', 'right', 'front', 'back'};
+setviewpoint(gca, coordsys, viewpoint{val});
+
 uiresume;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -465,3 +570,20 @@ while p~=0
   h = p;
   p = get(h, 'parent');
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function style = updatestyle(style)
+if ischar(style)
+  switch style
+    case 'vertex'
+      style = {'vertexcolor', 'k', 'edgecolor', 'none', 'facecolor', 'none'};
+    case 'edge'
+      style = {'vertexcolor', 'none', 'edgecolor', 'k', 'facecolor', 'none'};
+    case 'surface'
+      style = {'vertexcolor', 'none', 'edgecolor', 'none', 'facecolor', 'skin'};
+    case 'both'
+      style = {'vertexcolor', 'none', 'edgecolor', 'k', 'facecolor', 'skin'};
+    otherwise
+      ft_error('unsupported style "%s"', style);
+  end % switch
+end % if

@@ -6,7 +6,7 @@
 % 
 %  Writes channel data (newData) in newData to an MFF file. NewData is a 2-D
 %  matrix of size Nchans*Nsamples as described at
-%  http://fieldtrip.fcdonders.nl/reference/ft_read_data.
+%  http://www.fieldtriptoolbox.org/reference/ft_read_data.
 % 
 %  If dstMFFPath is empty, or the same as srcMFFPath, then the data gets
 %  overwritten, otherwise, the srcMFFPath is copied to dstMFFPath, and the

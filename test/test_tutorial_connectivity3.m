@@ -3,32 +3,21 @@ function test_tutorial_connectivity3(datadir)
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_tutorial_connectivity3
 % TEST ft_timelockanalysis ft_sourceanalysis ft_connectivityanalysis ft_prepare_sourcemodel headsurface
 
 % This is the third section of the connectivity tutorial, which
 % starts with the CMC dataset, extracts a virtual channel and performs
 % connectivity analysis on the virtual channel time series.
 
-global ft_default;
-ft_default.feedback = 'no';
-ft_default.checkconfig = 'loose';
-
-% this is where the data should be located
 if nargin==0
-  if ispc
-    datadir = 'H:';
-  else
-    datadir = '/home';
-  end
-  
-  datadir = fullfile(datadir,'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'tutorial', 'connectivity');
+  % this is where the data should be located
+  datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/connectivity');
 end
+
 load(fullfile(datadir, 'source.mat'));
 
-
 [maxval, maxindx] = max(source.avg.coh);
-maxpos = source.pos(maxindx,:)
+maxpos = source.pos(maxindx,:);
 
 load(fullfile(datadir,'data.mat'));
 

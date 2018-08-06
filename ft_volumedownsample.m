@@ -15,7 +15,7 @@ function [downsample] = ft_volumedownsample(cfg, source)
 %   cfg.parameter  = string, data field to downsample (default = 'all')
 %   cfg.smooth     = 'no' or the FWHM of the gaussian kernel in voxels (default = 'no')
 %   cfg.keepinside = 'yes' or 'no', keep the inside/outside labeling (default = 'yes')
-%   cfg.spmversion = string, 'spm2' or 'spm8' (default = 'spm8')
+%   cfg.spmversion = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -29,7 +29,7 @@ function [downsample] = ft_volumedownsample(cfg, source)
 
 % Copyright (C) 2004-2014, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -47,18 +47,21 @@ function [downsample] = ft_volumedownsample(cfg, source)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar source
+ft_preamble provenance source
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -68,15 +71,16 @@ source = ft_checkdata(source, 'datatype', 'volume', 'feedback', 'no');
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'unused',  {'voxelcoord'});
 
-if ~isfield(cfg, 'spmversion'), cfg.spmversion = 'spm8'; end
-if ~isfield(cfg, 'downsample'), cfg.downsample = 1;      end
-if ~isfield(cfg, 'keepinside'), cfg.keepinside = 'yes';  end
-if ~isfield(cfg, 'parameter'),  cfg.parameter = 'all';   end
-if ~isfield(cfg, 'smooth'),     cfg.smooth = 'no';       end
+% set the defaults
+cfg.spmversion = ft_getopt(cfg, 'spmversion', 'spm8');
+cfg.downsample = ft_getopt(cfg, 'downsample',  1);
+cfg.keepinside = ft_getopt(cfg, 'keepinside', 'yes');
+cfg.parameter  = ft_getopt(cfg, 'parameter',  'all');
+cfg.smooth     = ft_getopt(cfg, 'smooth',     'no');
 
 if strcmp(cfg.keepinside, 'yes')
   % add inside to the list of parameters
-  if ~iscell(cfg.parameter),
+  if ~iscell(cfg.parameter)
     cfg.parameter = {cfg.parameter 'inside'};
   else
     cfg.parameter(end+1) = {'inside'};
@@ -104,7 +108,7 @@ downsample.xgrid     = xsel;
 downsample.ygrid     = ysel;
 downsample.zgrid     = zsel;
 downsample.dim = [length(xsel) length(ysel) length(zsel)];
-if length(source.dim)>3,
+if length(source.dim)>3
   downsample.dim = [downsample.dim source.dim(4:end)];
 end
 
@@ -112,22 +116,17 @@ end
 downsample = grid2transform(downsample);
 
 % smooth functional parameters, excluding anatomy and inside
-if isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no'),
-  % check that SPM is on the path, try to add the preferred version
-  if strcmpi(cfg.spmversion, 'spm2'),
-    ft_hastoolbox('SPM2',1);
-  elseif strcmpi(cfg.spmversion, 'spm8'),
-    ft_hastoolbox('SPM8',1);
-  end
-  
+if isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no')
+  % check that the preferred SPM version is on the path
+  ft_hastoolbox(cfg.spmversion, 1);
+
   for j = 1:length(cfg.parameter)
     if strcmp(cfg.parameter{j}, 'inside')
       fprintf('not smoothing %s\n', cfg.parameter{j});
     elseif strcmp(cfg.parameter{j}, 'anatomy')
       fprintf('not smoothing %s\n', cfg.parameter{j});
     else
-      fprintf('smoothing %s with a kernel of %d voxels\n', cfg.parameter{j}, cfg.smooth);
-      tmp = volumesmooth(getsubfield(source, cfg.parameter{j}));
+      tmp = volumesmooth(getsubfield(source, cfg.parameter{j}), cfg.smooth, cfg.parameter{j});
       setsubfield(source, cfg.parameter{j}, tmp);
     end
   end
@@ -150,7 +149,7 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous source
-ft_postamble history downsample
-ft_postamble savevar downsample
+ft_postamble previous   source
+ft_postamble provenance downsample
+ft_postamble history    downsample
+ft_postamble savevar    downsample

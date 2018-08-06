@@ -4,7 +4,7 @@ function [node,elem]=vol2restrictedtri(vol,thres,cent,brad,ang,radbound,distboun
 %
 % surface mesh extraction using CGAL mesher
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2009/01/06
 %
 % input:
@@ -49,7 +49,7 @@ if(~isempty(getvarfrom({'caller','base'},'ISO2MESH_INITSIZE')))
 end
 
 system([' "' mcpath('cgalsurf') exesuff '" "' mwpath('pre_extract.inr') ...
-    '" ' sprintf('%f %f %f %f %f %f %f %f %d ',thres,cent,brad,ang,radbound,distbound,maxnode) ...
+    '" ' sprintf('%.16f %.16f %.16f %.16f %.16f %.16f %.16f %.16f %d ',thres,cent,brad,ang,radbound,distbound,maxnode) ...
     ' "' mwpath('post_extract.off') '" ' sprintf('%.0f %d',randseed,initnum)]);
 [node,elem]=readoff(mwpath('post_extract.off'));
 

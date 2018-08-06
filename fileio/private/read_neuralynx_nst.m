@@ -8,7 +8,7 @@ function [nst] = read_neuralynx_nst(filename, begrecord, endrecord)
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -62,9 +62,9 @@ NRecords   = floor((ftell(fid) - headersize)/recordsize);
 if begrecord==0 && endrecord==0
   % only read the header  
 elseif begrecord<1
-  error('cannot read before the first record');
+  ft_error('cannot read before the first record');
 elseif begrecord>NRecords
-  error('cannot read beyond the last record')
+  ft_error('cannot read beyond the last record')
 elseif endrecord>NRecords
   endrecord = NRecords;
 end
@@ -84,7 +84,7 @@ if begrecord>=1 && endrecord>=begrecord
   % rewind to the first record to be read
   status = fseek(fid, headersize + (begrecord-1)*recordsize, 'bof');
   if status~=0
-    error('cannot jump to the requested record');
+    ft_error('cannot jump to the requested record');
   end
 
   numrecord    = (endrecord-begrecord+1);

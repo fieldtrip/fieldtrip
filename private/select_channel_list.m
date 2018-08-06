@@ -17,7 +17,7 @@ function [select] = select_channel_list(label, select, titlestr)
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -42,7 +42,7 @@ end
 pos      = get(0,'DefaultFigurePosition');
 pos(3:4) = [290 300];
 dlg      = dialog('Name', titlestr, 'Position', pos);
-axis off % explicitly turn of axis, sometimes an axis system appears
+set(gca, 'Visible', 'off'); % explicitly turn the axis off, as it sometimes appears
 
 select            = select(:)';     % ensure that it is a row array
 userdata.label    = label;
@@ -81,14 +81,14 @@ set(findobj(h, 'tag', 'lbunsel'), 'string', userdata.label(userdata.unselect));
 % set the active element in the select listbox, based on the previous active element
 tmp = min(get(findobj(h, 'tag', 'lbsel'), 'value'));
 tmp = min(tmp, length(get(findobj(h, 'tag', 'lbsel'), 'string')));
-if isempty(tmp) | tmp==0
+if isempty(tmp) || tmp==0
   tmp = 1;
 end
 set(findobj(h, 'tag', 'lbsel'  ), 'value', tmp);
 % set the active element in the unselect listbox, based on the previous active element
 tmp = min(get(findobj(h, 'tag', 'lbunsel'), 'value'));
 tmp = min(tmp, length(get(findobj(h, 'tag', 'lbunsel'), 'string')));
-if isempty(tmp) | tmp==0
+if isempty(tmp) || tmp==0
   tmp = 1;
 end
 set(findobj(h, 'tag', 'lbunsel'  ), 'value', tmp);

@@ -1,4 +1,4 @@
-function [indx] = labelcmb2indx(labelcmb, label)
+function [indx, label, blockindx, blocklabel] = labelcmb2indx(labelcmb, label)
 
 % LABELCMB2INDX computes an array with indices, corresponding to the order
 % in a list of labels, for an Nx2 list of label combinations
@@ -28,7 +28,7 @@ function [indx] = labelcmb2indx(labelcmb, label)
 
 % Copyright (C) 2009-2010 Donders Institute, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -46,6 +46,29 @@ function [indx] = labelcmb2indx(labelcmb, label)
 %
 % $Id$
 
+% check whether the labelcmb contains any square brackets, indicative of
+% blockwise decompositions
+if all(~cellfun('isempty',strfind(labelcmb(:),'[')))
+  tmp = strfind(labelcmb, '[');
+  tmplabelcmb = labelcmb;
+  tmpblock    = labelcmb;
+  for k = 1:numel(tmplabelcmb)
+    tmplabelcmb{k} = labelcmb{k}(         1:(tmp{k}-1));
+    tmpblock{k}    = labelcmb{k}((tmp{k}+1):(end-1));
+  end
+  blocklabel = cell(0,1);
+  tmp = tmpblock;
+  while ~isempty(tmp)
+    blocklabel{end+1, 1} = tmp{1};
+    tmp = tmp(~strcmp(tmp(:,1),blocklabel{end}),:);
+  end
+  [indx,      label]      = labelcmb2indx(tmplabelcmb, unique(tmplabelcmb(:)));
+  [blockindx, blocklabel] = labelcmb2indx(tmpblock,    blocklabel);
+  blockindx = blockindx(:,1);
+  return;
+end
+
+
 if nargin==1,
   label = unique(labelcmb(:));
 end
@@ -56,18 +79,13 @@ indx = zeros(ncmb,2);
 
 nchan    = numel(label);
 for k = 1:nchan
-  %sel1 = strcmp(label{k}, labelcmb(:,1));
-  %sel2 = strcmp(label{k}, labelcmb(:,2));
   sel = strcmp(label{k}, labelcmb);
   if nargin==1,
-    %autoindx = find(sel1 & sel2);
     autoindx = find(sel(:,1) & sel(:,2), 1, 'first');
-    if isempty(autoindx), error('the required autocombination is not found in the input'); end
+    if isempty(autoindx), ft_error('the required autocombination is not found in the input'); end
   else
     autoindx = k;
   end
-  %indx(sel1,1) = autoindx;
-  %indx(sel2,2) = autoindx;
   indx(sel(:,1),1) = autoindx;
   indx(sel(:,2),2) = autoindx;
 end

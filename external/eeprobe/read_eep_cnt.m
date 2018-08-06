@@ -39,10 +39,7 @@ function [eeg] = read_eep_cnt(fn);
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-% $Log: read_eep_cnt.m,v $
-% Revision 1.2  2005/06/08 08:16:37  mvelde
-% converted files to unix format
-%
+% $Log: not supported by cvs2svn $
 % Revision 1.1  2004/11/19 14:55:38  jwiskerke
 % Added files for use with matlab
 %
@@ -58,7 +55,7 @@ function [eeg] = read_eep_cnt(fn);
 % Revision 1.1.1.1  2003/03/11 15:24:51  roberto
 % updated help and copyrights
 %
-% ANT Software BV, The Netherlands, www.ant-software.nl / info@ant-software.nl
+% ANT Software BV, The Netherlands, www.ant-neuro.com / info@ant-neuro.com
 %
 
 error('could not locate mex file');

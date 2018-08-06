@@ -30,7 +30,7 @@ function forwpar=meg_ini(vc,center,order,sens,refs,gradlocs,weights)
 
 % Copyright (C) 2003, Guido Nolte
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -74,7 +74,7 @@ elseif nargin==7;
   end
   
 else
-  error('you must provide 4,5 or 7 arguments');
+  ft_error('you must provide 4,5 or 7 arguments');
 end
 
 return % main function
@@ -94,9 +94,9 @@ bt=leadsphere_all(x1',x2',n2');
 n1rep=reshape(repmat(n1',1,nchan),3,ndip,nchan);
 b=dotproduct(n1rep,bt);
 ctc=gradbas'*gradbas;
-warning('OFF', 'MATLAB:nearlySingularMatrix');
+warning('off', 'MATLAB:nearlySingularMatrix');
 coeffs=inv(ctc)*gradbas'*b;
-warning('ON', 'MATLAB:nearlySingularMatrix');
+warning('on', 'MATLAB:nearlySingularMatrix');
 return
 
 function field=getfield(source,device,coeffs,center,order)

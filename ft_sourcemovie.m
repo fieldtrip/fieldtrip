@@ -1,12 +1,13 @@
 function [cfg, M] = ft_sourcemovie(cfg, source, source2)
 
 % FT_SOURCEMOVIE displays the source reconstruction on a cortical mesh
-% and allows the user to scroll through time with a movie
+% and allows the user to scroll through time with a movie. 
 %
 % Use as
 %   ft_sourcemovie(cfg, source)
-% where the input source data is obtained from FT_SOURCEANALYSIS and cfg is
-% a configuratioun structure that should contain
+% where the input source data is obtained from FT_SOURCEANALYSIS, or a 
+% a parcellated source structure (i.e. contains a brainordinate field) and 
+% cfg is a configuration structure that should contain
 %
 %  cfg.funparameter    = string, functional parameter that is color coded (default = 'avg.pow')
 %  cfg.maskparameter   = string, functional parameter that is used for opacity (default = [])
@@ -17,12 +18,11 @@ function [cfg, M] = ft_sourcemovie(cfg, source, source2)
 % file on disk. This mat files should contain only a single variable named 'data',
 % corresponding to the input structure.
 %
-% See also FT_SOURCEPLOT, FT_SOURCEINTERPOLATE
+% See also FT_SOURCEPLOT, FT_SOURCEINTERPOLATE, FT_SOURCEPARCELLATE
 
-% Undocumented options: 
-%   cfg.parcellation
-
-% Copyright (C) 2011, Robert Oostenveld
+% Copyright (C) 2011-2015, Robert Oostenveld
+% Copyright (C) 2012-2014, Jorn Horschig
+% Copyright (C) 2018, Jan-Mathijs Schoffelen
 %
 % $Id$
 
@@ -30,102 +30,82 @@ function [cfg, M] = ft_sourcemovie(cfg, source, source2)
 % the initial part deals with parsing the input options and data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-revision = '$Id$';
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
-ft_preamble debug
-ft_preamble loadvar source
-
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+if ft_abort
   return
 end
+ft_preamble debug
+ft_preamble loadvar source
+ft_preamble provenance source
+ft_preamble trackconfig
 
-% check if the input data is valid for this function
+% ensure that the input data is valid for this function, this will also do
+% backward-compatibility conversions of old data that for example was
+% read from an old *.mat file
 source = ft_checkdata(source, 'datatype', 'source', 'feedback', 'yes');
 
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam',    'funparameter'});
-cfg = ft_checkconfig(cfg, 'renamed',	 {'parameter', 'funparameter'});
-cfg = ft_checkconfig(cfg, 'renamed',	 {'mask',      'maskparameter'});
-
-% these are not needed any more, once the source structure has a proper dimord
-% cfg = ft_checkconfig(cfg, 'deprecated', 'xparam');
-% cfg = ft_checkconfig(cfg, 'deprecated', 'yparam');
-
 % get the options
-xlim          = ft_getopt(cfg, 'xlim');
-ylim          = ft_getopt(cfg, 'ylim');
-zlim          = ft_getopt(cfg, 'zlim');
-olim          = ft_getopt(cfg, 'alim');                           % don't use alim as variable name
-xparam        = ft_getopt(cfg, 'xparam', 'time');                 % use time as default
-yparam        = ft_getopt(cfg, 'yparam');                         % default is dealt with below
-funparameter  = ft_getopt(cfg, 'funparameter', 'avg.pow');        % use power as default
-maskparameter = ft_getopt(cfg, 'maskparameter');
-parcellation  = ft_getopt(cfg, 'parcellation');
+xlim          = ft_getopt(cfg, 'time');
+ylim          = ft_getopt(cfg, 'frequency');
+zlim          = ft_getopt(cfg, 'funcolorlim');
+olim          = ft_getopt(cfg, 'opacitylim');                     % don't use alim as variable name
+cfg.xparam    = ft_getopt(cfg, 'xparam', 'time');                 % use time as default
+cfg.yparam    = ft_getopt(cfg, 'yparam');                         % default is dealt with below
+cfg.funparameter  = ft_getopt(cfg, 'funparameter', 'avg.pow');        % use power as default
+cfg.funcolormap   = ft_getopt(cfg, 'funcolormap',  'jet');
+cfg.maskparameter = ft_getopt(cfg, 'maskparameter');
 
-if isempty(yparam) && isfield(source, 'freq')
+if isempty(cfg.yparam) && isfield(source, 'freq')
   % the default is freq (if present)
-  yparam = 'freq';
+  cfg.yparam = 'freq';
 end
-
-% update the configuration
-cfg.funparameter  = funparameter;
-cfg.maskparameter = maskparameter;
-cfg.xparam        = xparam;
-cfg.yparam        = yparam;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the actual computation is done in the middle part
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if nargin==2
-  fun = getsubfield(source, funparameter); % might be avg.pow
-elseif nargin>2 && isfield(source2, 'pos'), 
-  fun  = getsubfield(source, funparameter); % might be avg.pow
-  fun2 = getsubfield(source2, funparameter); 
+  fun = getsubfield(source, cfg.funparameter); % might be avg.pow
+elseif nargin>2 && isfield(source2, 'pos')
+  % in this case two conditions of data seem to have been inputted
+  fun  = getsubfield(source, cfg.funparameter); % might be avg.pow
+  fun2 = getsubfield(source2, cfg.funparameter); 
 elseif nargin>2
   % assume the first data argument to be a parcellation, and the second a
   % parcellated structure
-  tmp = getsubfield(source2, funparameter);
-  fun = zeros(size(source.pos, 1), size(tmp, 2));
-  parcels      = source.(parcellation);
-  parcelslabel = source.([parcellation,'label']);
-  for k = 1:numel(source2.label)
-    sel = match_str(source.([parcellation,'label']), source2.label{k});
-    if ~isempty(sel)
-      sel = source.(parcellation)==sel;
-      fun(sel,:) = repmat(tmp(k,:), [sum(sel) 1]);
-    end
-  end
-  source.(xparam) = source2.(xparam);
+  
+  % THIS DOES NOT EXIST ANYMORE: IF PARCELLATED DATA IS IN THE INPUT, IT
+  % WILL BE UNPARCELLATED AUTOMATICALLY BY FT_CHECKDATA
+  ft_error('bogus');
 end
 if size(source.pos)~=size(fun,1)
-  error('inconsistent number of vertices in the cortical mesh');
+  ft_error('inconsistent number of vertices in the cortical mesh');
 end
 
 if ~isfield(source, 'tri')
-  error('source.tri missing, this function requires a triangulated cortical sheet as source model');
+  ft_error('source.tri missing, this function requires a triangulated cortical sheet as source model');
 end
 
-if ~isempty(maskparameter) && ischar(maskparameter)
-  mask = double(getsubfield(source, maskparameter));
+if ~isempty(cfg.maskparameter) && ischar(cfg.maskparameter)
+  mask = double(getsubfield(source, cfg.maskparameter));
 else
   mask = 0.5*ones(size(fun));
 end
 
-xparam = source.(xparam);
+xparam = source.(cfg.xparam);
 if length(xparam)~=size(fun,2)
   error('inconsistent size of "%s" compared to "%s"', cfg.funparameter, cfg.xparam);
 end
 
-if ~isempty(yparam)
-  yparam = source.(yparam);
-  if length(yparam)~=size(fun,3)
+if ~isempty(cfg.yparam)
+  yparam = source.(cfg.yparam);
+  if length(cfg.yparam)~=size(fun,3)
     error('inconsistent size of "%s" compared to "%s"', cfg.funparameter, cfg.yparam);
   end
 end
@@ -140,7 +120,7 @@ xend = nearest(xparam, xlim(2));
 % update the configuration
 cfg.xlim = xparam([xbeg xend]);
 
-if ~isempty(yparam)
+if ~isempty(cfg.yparam)
   if isempty(ylim)
     ylim(1) = min(yparam);
     ylim(2) = max(yparam);
@@ -148,7 +128,7 @@ if ~isempty(yparam)
   ybeg = nearest(yparam, ylim(1));
   yend = nearest(yparam, ylim(2));
   % update the configuration
-  cfg.ylim = xparam([ybeg yend]);
+  cfg.ylim = yparam([ybeg yend]);
   hasyparam = true;
 else
   % this allows us not to worry about the yparam any more
@@ -163,7 +143,7 @@ end
 xparam  = xparam(xbeg:xend);
 yparam  = yparam(ybeg:yend);
 fun     = fun(:,xbeg:xend,ybeg:yend);
-if nargin>2 && isfield(source2, 'pos'), 
+if exist('fun2', 'var')
   fun2 = fun2(:,xbeg:xend,ybeg:yend); 
 end
 mask    = mask(:,xbeg:xend,ybeg:yend);
@@ -173,7 +153,7 @@ if isempty(zlim)
   zlim(1) = min(fun(:));
   zlim(2) = max(fun(:));
   % update the configuration
-  cfg.zlim = zlim;
+  cfg.funcolorlim = zlim;
 end
 
 if isempty(olim)
@@ -184,7 +164,7 @@ if isempty(olim)
     olim(2) = 1;
   end
   % update the configuration
-  %cfg.alim = olim;
+  cfg.opacitylim = olim;
 end
 
 % collect the data and the options to be used in the figure
@@ -194,7 +174,7 @@ opt.yparam  = yparam;
 opt.xval    = 0;
 opt.yval    = 0;
 opt.dat     = fun;
-opt.mask    = abs(mask);
+opt.mask    = mask;
 opt.pos     = source.pos;
 opt.tri     = source.tri;
 opt.vindx   = source.inside(:);
@@ -203,8 +183,11 @@ opt.record  = 0;
 opt.threshold = 0;
 opt.frame   = 0;
 opt.cleanup = false;
-if exist('parcels',      'var'), opt.parcellation      = parcels; end
-if exist('parcelslabel', 'var'), opt.parcellationlabel = parcelslabel; end
+if isfield(source, 'parcellation')
+  opt.parcellation = source.parcellation;
+  opt.parcellationlabel = source.parcellationlabel;
+end
+
 
 % add functional data of optional third input to the opt structure
 % FIXME here we should first check whether the meshes correspond!
@@ -213,12 +196,12 @@ if nargin>2 && isfield(source2, 'pos')
 end
 
 % get a handle to a figure
-h  = gcf;
+h  = figure;
 set(h, 'color', [1 1 1]);
 set(h, 'toolbar', 'figure');
 set(h, 'visible', 'on');
 set(h, 'CloseRequestFcn', @cb_quitbutton);
-set(h, 'position', [100 200 700 500]);
+set(h, 'position', [100 50 1000 600]);
 set(h, 'windowbuttondownfcn', @cb_getposition); 
 
 % get timer object
@@ -231,79 +214,71 @@ playbutton   = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutto
 recordbutton = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'record', 'userdata', 'r');
 quitbutton   = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'quit',   'userdata', 'q');
 
-thrmin   = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'downarrow');
-thr      = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'threshold', 'userdata', 't');
-thrplus  = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'uparrow');
-spdmin   = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'shift+downarrow');
-spd      = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'speed','userdata', 's');
-spdplus  = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'shift+uparrow');
-clim       = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'colorlim', 'userdata', 'z');
-climminmin = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '-', 'userdata', 'leftarrow');
-climmaxmin = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '+', 'userdata', 'shift+leftarrow');
-climminplus = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '-', 'userdata', 'rightarrow');
-climmaxplus = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '+', 'userdata', 'shift+rightarrow');
-sliderx  = uicontrol('parent', h, 'units', 'normalized', 'style', 'slider',     'string', sprintf('%s = ', cfg.xparam));
-stringx  = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
-slidery  = uicontrol('parent', h, 'units', 'normalized', 'style', 'slider',     'string', sprintf('%s = ', cfg.yparam));
-stringy  = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
-stringz  = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
-stringp  = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
+thrminmin    = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '-', 'userdata', 'downarrow');
+thrminplus   = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '+', 'userdata', 'shift+downarrow');
+thr          = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'threshold', 'userdata', 't');
+thrplusmin   = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '-', 'userdata', 'shift+uparrow');
+thrplusplus  = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '+', 'userdata', 'uparrow');
 
-set(cambutton,    'position', [0.095 0.28 0.09 0.05], 'callback', @cb_keyboard);
-set(quitbutton,   'position', [0.005 0.28 0.09 0.05], 'callback', @cb_keyboard);
-set(playbutton,   'position', [0.005 0.22 0.09 0.05], 'callback', @cb_keyboard);
-set(recordbutton, 'position', [0.095 0.22 0.09 0.05], 'callback', @cb_keyboard);
-set(thrmin,       'position', [0.005 0.16 0.03 0.05], 'callback', @cb_keyboard);
-set(thr,          'position', [0.035 0.16 0.12 0.05], 'callback', @cb_keyboard);
-set(thrplus,      'position', [0.155 0.16 0.03 0.05], 'callback', @cb_keyboard);
+spdmin       = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'shift+downarrow');
+spd          = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'speed','userdata', 's');
+spdplus      = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'shift+uparrow');
+climminmin   = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '-', 'userdata', 'leftarrow');
+climminplus  = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '+', 'userdata', 'shift+leftarrow');
+clim         = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'colorlim', 'userdata', 'z');
+climplusmin  = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '-', 'userdata', 'shift+rightarrow');
+climplusplus = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '+', 'userdata', 'rightarrow');
+sliderx      = uicontrol('parent', h, 'units', 'normalized', 'style', 'slider',     'string', sprintf('%s = ', cfg.xparam));
+stringx      = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
+slidery      = uicontrol('parent', h, 'units', 'normalized', 'style', 'slider',     'string', sprintf('%s = ', cfg.yparam));
+stringy      = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
+stringz      = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
+
+set(cambutton,    'position', [0.095 0.28  0.09 0.05 ], 'callback', @cb_keyboard);
+set(quitbutton,   'position', [0.005 0.28  0.09 0.05 ], 'callback', @cb_keyboard);
+set(playbutton,   'position', [0.005 0.22  0.09 0.05 ], 'callback', @cb_keyboard);
+set(recordbutton, 'position', [0.095 0.22  0.09 0.05 ], 'callback', @cb_keyboard);
+set(thrminmin,    'position', [0.005 0.16  0.03 0.025], 'callback', @cb_keyboard);
+set(thrminplus,   'position', [0.005 0.185 0.03 0.025], 'callback', @cb_keyboard);
+set(thr,          'position', [0.035 0.16  0.12 0.05 ], 'callback', @cb_keyboard);
+set(thrplusmin,   'position', [0.155 0.16  0.03 0.025], 'callback', @cb_keyboard);
+set(thrplusplus,  'position', [0.155 0.185 0.03 0.025], 'callback', @cb_keyboard);
 set(climminmin,   'position', [0.005 0.10  0.03 0.025], 'callback', @cb_keyboard);
-set(climmaxmin,   'position', [0.005 0.125 0.03 0.025], 'callback', @cb_keyboard);
-set(clim,         'position', [0.035 0.10 0.12 0.05], 'callback', @cb_keyboard);
-set(climminplus,  'position', [0.155 0.10  0.03 0.025], 'callback', @cb_keyboard);
-set(climmaxplus,  'position', [0.155 0.125 0.03 0.025], 'callback', @cb_keyboard);
-set(spdmin,       'position', [0.005 0.04 0.03 0.05], 'callback', @cb_keyboard);
-set(spd,          'position', [0.035 0.04 0.12 0.05], 'callback', @cb_keyboard);
-set(spdplus,      'position', [0.155 0.04 0.03 0.05], 'callback', @cb_keyboard);
-set(sliderx,      'position', [0.01 0.4 0.26 0.03], 'callback',  @cb_slider);%[0.200 0.04  0.78 0.03], 'callback', @cb_slider);
-set(slidery,      'position', [0.200 0.005 0.78 0.03], 'callback', @cb_slider);
-set(stringx,      'position', [0.800 0.93 0.18 0.03]);
-set(stringy,      'position', [0.800 0.90 0.18 0.03]);
-set(stringz,      'position', [0.650 0.96 0.33 0.03]);
-set(stringp,      'position', [0.650 0.87 0.33 0.03]);
+set(climminplus,  'position', [0.005 0.125 0.03 0.025], 'callback', @cb_keyboard);
+set(clim,         'position', [0.035 0.10  0.12 0.05 ], 'callback', @cb_keyboard);
+set(climplusmin,  'position', [0.155 0.10  0.03 0.025], 'callback', @cb_keyboard);
+set(climplusplus, 'position', [0.155 0.125 0.03 0.025], 'callback', @cb_keyboard);
+set(spdmin,       'position', [0.005 0.04  0.03 0.05 ], 'callback', @cb_keyboard);
+set(spd,          'position', [0.035 0.04  0.12 0.05 ], 'callback', @cb_keyboard);
+set(spdplus,      'position', [0.155 0.04  0.03 0.05 ], 'callback', @cb_keyboard);
+set(sliderx,      'position', [0.02  0.35  0.38 0.03 ], 'callback', @cb_slider);
+set(slidery,      'position', [0.200 0.005 0.78 0.03 ], 'callback', @cb_slider);
+set(stringx,      'position', [0.750 0.90  0.18 0.03 ]);
+set(stringy,      'position', [0.750 0.85  0.18 0.03 ]);
+set(stringz,      'position', [0.60  0.95  0.33 0.03 ]);
 
 set(stringx, 'string', sprintf('%s = ', cfg.xparam));
 set(stringy, 'string', sprintf('%s = ', cfg.yparam));
-set(stringz, 'string', sprintf('position = '));
-set(stringp, 'string', sprintf('parcel = '));
+set(stringz, 'string', sprintf('location = '));
 set(stringx, 'horizontalalignment', 'right', 'backgroundcolor', [1 1 1]);
 set(stringy, 'horizontalalignment', 'right', 'backgroundcolor', [1 1 1]);
 set(stringz, 'horizontalalignment', 'right', 'backgroundcolor', [1 1 1]);
-set(stringp, 'horizontalalignment', 'right', 'backgroundcolor', [1 1 1]);
 
 % create axes object to contain the mesh
 hx = axes;
 set(hx, 'position', [0.4 0.08 0.6 0.8]);
 set(hx, 'tag', 'mesh');
-if isfield(source, 'sulc')
-  vdat = source.sulc;
-  vdat = vdat-min(vdat);
-  vdat = vdat./max(vdat);
-  vdat = 0.1+0.3.*repmat(round(1-vdat),[1 3]);
-  hs1 = ft_plot_mesh(source, 'edgecolor', 'none', 'vertexcolor', vdat);
-else
-  hs1 = ft_plot_mesh(source, 'edgecolor', 'none', 'facecolor', [0.5 0.5 0.5]);
-end
+hs = ft_plot_mesh(source, 'edgecolor', 'none', 'facecolor', [0.5 0.5 0.5], 'vertexcolor', 0.*opt.dat(:,1,1), 'facealpha', 0.*opt.mask(:,1,1), 'clim', [0 1], 'alphalim', [0 1], 'alphamap', 'rampup', 'colormap', cfg.funcolormap, 'maskstyle', 'colormix');
+            
 lighting gouraud
-hs = ft_plot_mesh(source, 'edgecolor', 'none', 'vertexcolor', 0*opt.dat(:,1,1));%, 'facealpha', 0*opt.mask(:,1,1));
-lighting gouraud
+material dull
 cam1 = camlight('left');
 cam2 = camlight('right');
-caxis(cfg.zlim);
-%alim(cfg.alim);
+caxis(cfg.funcolorlim);
 
 % create axis object to contain a time course
 hy = axes;
-set(hy, 'position', [0.02 0.5 0.3 0.35]);
+set(hy, 'position', [0.02 0.45 0.38 0.5]);
 set(hy, 'yaxislocation', 'right');
 
 if ~hasyparam
@@ -311,6 +286,9 @@ if ~hasyparam
   abc = axis;
   axis([opt.xparam(1) opt.xparam(end) abc(3:4)]);
   vline = plot(opt.xparam(1)*[1 1], abc(3:4), 'r');
+  hline1 = plot(opt.xparam([1 end]), [0 0], 'k');
+  hline2 = plot(opt.xparam([1 end]), [0 0], 'k');
+  
   
   if nargin>2 && isfield(source2, 'pos')
     tline2 = plot(opt.xparam, mean(opt.dat2(opt.vindx,:)), 'r'); hold on;
@@ -327,33 +305,28 @@ opt.hs  = hs; % handle to the mesh
 opt.hx  = hx; % handle to the axes containing the mesh
 opt.hy  = hy; % handle to the axes containing the timecourse
 opt.cam = [cam1 cam2]; % handles to the light objects
-opt.vline = vline; % handle to the line in the ERF plot
+opt.vline = vline; % handle to the vertical line in the ERF plot
 opt.tline = tline; % handle to the ERF
-if nargin>2 && isfield(source2, 'pos'), 
+if nargin>2 && isfield(source2, 'pos')
   opt.tline2 = tline2; 
 end
+opt.hline1 = hline1; % handle for the horizontal line for upper threshold
+opt.hline2 = hline2; % handle for hte horizontal line for lower threshold
 opt.playbutton   = playbutton; % handle to the playbutton
 opt.recordbutton = recordbutton; % handle to the recordbutton
 opt.quitbutton   = quitbutton; % handle to the quitbutton
+opt.threshold    = [0 0];
 
-%opt.p   = p;
 opt.t   = t;
-%opt.hx  = hx;
-%opt.hy  = hy;
 opt.sliderx  = sliderx;
 opt.slidery  = slidery;
 opt.stringx  = stringx;
 opt.stringy  = stringy;
 opt.stringz  = stringz;
-opt.stringp  = stringp;
 
 if ~hasyparam
   set(opt.slidery, 'visible', 'off');
   set(opt.stringy, 'visible', 'off');
-end
-
-if ~exist('parcels', 'var')
-  set(opt.stringp, 'visible', 'off');
 end
 
 setappdata(h, 'opt', opt);
@@ -371,23 +344,30 @@ end
 delete(h);
 
 % do the general cleanup and bookkeeping at the end of the function
+% do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble callinfo
 ft_postamble previous source
+ft_postamble provenance
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_slider(h, eventdata)
 
-persistent previous_valx previous_valy previous_vindx
+persistent previous_valx previous_valy previous_vindx previous_clim previous_thr
 
 if isempty(previous_valx)
   previous_valx = 0;
 end
 if isempty(previous_valy)
   previous_valy = 0;
+end
+if isempty(previous_clim)
+  previous_clim = [0 1];
+end
+if isempty(previous_thr)
+  previous_thr = [0 0];
 end
 
 h    = getparent(h);
@@ -403,24 +383,29 @@ valy = min(valy, size(opt.dat,3));
 valy = max(valy, 1);
 
 mask = squeeze(opt.mask(:,valx,valy));
-mask(opt.dat(:,valx,valy)<opt.threshold) = 0;
 
 % update stuff
-if previous_valx~=valx || previous_valy~=valy
+if previous_valx~=valx || previous_valy~=valy || ~isequal(previous_clim, opt.cfg.funcolorlim) || ~isequal(previous_thr, opt.threshold)
   % update strings
   set(opt.stringx, 'string', sprintf('%s = %3.3f\n', opt.cfg.xparam, opt.xparam(valx)));
   set(opt.stringy, 'string', sprintf('%s = %3.3f\n', opt.cfg.yparam, opt.yparam(valy)));
   
+  dat = opt.dat(:,valx,valy);
+  mask(dat>opt.threshold(1)&dat<opt.threshold(2)) = 0;
+  
+  % convert the color-data + opacity into rgb for robust rendering
+  bgcolor = repmat([0.5 0.5 0.5], [numel(mask) 1]);
+  rgb     = bg_rgba2rgb(bgcolor, dat, opt.cfg.funcolormap, opt.cfg.funcolorlim, mask, 'rampup', opt.cfg.opacitylim); 
+  
   % update data in mesh
-  set(opt.hs, 'FaceVertexCData',     squeeze(opt.dat(:,valx,valy)));
-  set(opt.hs, 'FaceVertexAlphaData', mask);
-
+  set(opt.hs, 'FaceVertexCData', rgb, 'facecolor', 'interp');
+  
   set(opt.vline, 'xdata', [1 1]*opt.xparam(valx));
 end
 
 % update ERF-plot
-set(opt.hy,    'ylim',   opt.cfg.zlim);
-set(opt.vline, 'ydata',  opt.cfg.zlim);
+set(opt.hy,    'ylim',   opt.cfg.funcolorlim);
+set(opt.vline, 'ydata',  opt.cfg.funcolorlim);
 if ~(numel(previous_vindx)==numel(opt.vindx) && all(previous_vindx==opt.vindx))
   tmp = mean(opt.dat(opt.vindx,:,valy),1);
   set(opt.tline, 'ydata', tmp);
@@ -433,9 +418,10 @@ if ~(numel(previous_vindx)==numel(opt.vindx) && all(previous_vindx==opt.vindx))
   end
   
   set(opt.hy,    'yaxislocation', 'right');
-  set(opt.stringz, 'string', sprintf('position = [%2.1f, %2.1f, %2.1f]', opt.pos(opt.vindx,:)));
-  if isfield(opt, 'parcellation'),
-    set(opt.stringp, 'string', sprintf('parcel = %s', opt.parcellationlabel{opt.parcellation(opt.vindx)}));
+  if isfield(opt, 'parcellation')
+    set(opt.stringz, 'string', sprintf('location = %s', opt.parcellationlabel{opt.parcellation(opt.vindx)}));
+  else
+    set(opt.stringz, 'string', sprintf('location = [%2.1f, %2.1f, %2.1f]', opt.pos(opt.vindx,:)));
   end
 end
 
@@ -473,6 +459,7 @@ function cb_quitbutton(h, eventdata)
 opt = getappdata(h, 'opt');
 opt.cleanup = 1;
 setappdata(h, 'opt', opt);
+uiresume(h);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -542,9 +529,10 @@ elseif strcmp(get(get(h, 'currentaxes'), 'tag'), 'mesh')
   [ipos, d] = intersect_line(opt.pos, opt.tri, pos(1,:), pos(2,:));
   [md, ix]  = min(abs(d));
   
-  dpos      = opt.pos - ipos(ix*ones(size(opt.pos,1),1),:);
-  opt.vindx = nearest(sum(dpos.^2,2),0);
-  
+  if ~isempty(ix)
+    dpos      = opt.pos - ipos(ix*ones(size(opt.pos,1),1),:);
+    opt.vindx = nearest(sum(dpos.^2,2),0);
+  end
 end
 setappdata(h, 'opt', opt);
 cb_slider(h);
@@ -555,18 +543,18 @@ uiresume;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_keyboard(h, eventdata)
 
-if isempty(eventdata)
+if (isempty(eventdata) && ft_platform_supports('matlabversion', -Inf, '2014a')) || isa(eventdata, 'matlab.ui.eventdata.ActionData')
   % determine the key that corresponds to the uicontrol element that was activated
   key = get(h, 'userdata');
 else
   % determine the key that was pressed on the keyboard
-  key = parseKeyboardEvent(eventdata);
+  key = parsekeyboardevent(eventdata);
 end
 % get focus back to figure
 if ~strcmp(get(h, 'type'), 'figure')
-    set(h, 'enable', 'off');
-    drawnow;
-    set(h, 'enable', 'on');
+  set(h, 'enable', 'off');
+  drawnow;
+  set(h, 'enable', 'on');
 end
   
 h = getparent(h);
@@ -574,44 +562,98 @@ opt = getappdata(h, 'opt');
 
 switch key
   case 'leftarrow' % change colorlim
-    opt.cfg.zlim(1) = opt.cfg.zlim(1)-0.1*abs(opt.cfg.zlim(1));
+    cval = opt.cfg.funcolorlim(1);
+    if cval<0
+      cval = cval.*1.1;
+    else
+      cval = cval./1.1;
+    end
+    opt.cfg.funcolorlim(1) = cval;
     setappdata(h, 'opt', opt);
-    caxis(opt.cfg.zlim);
-    set(opt.hx, 'Clim', opt.cfg.zlim);
-    
-  case 'shift+leftarrow' % change colorlim
-    opt.cfg.zlim(1) = opt.cfg.zlim(1)+0.1*abs(opt.cfg.zlim(1));
+    cb_slider(h);
+    set(opt.hx, 'Clim', opt.cfg.funcolorlim);
+  case 'rightarrow' % change colorlim
+    cval = opt.cfg.funcolorlim(2);
+    if cval<0
+      cval = cval.*1.1;
+    else
+      cval = cval./1.1;
+    end
+    opt.cfg.funcolorlim(2) = cval;
     setappdata(h, 'opt', opt);
-    caxis(opt.cfg.zlim);
-    set(opt.hx, 'Clim', opt.cfg.zlim);
-  
-  case 'rightarrow'
-    opt.cfg.zlim(2) = opt.cfg.zlim(2)-0.1*abs(opt.cfg.zlim(2));
+    cb_slider(h);
+    set(opt.hx, 'Clim', opt.cfg.funcolorlim);
+  case 'shift+leftarrow'
+    cval = opt.cfg.funcolorlim(1);
+    if cval<0
+      cval = cval./1.1;
+    else
+      cval = cval.*1.1;
+    end
+    opt.cfg.funcolorlim(1) = cval;
     setappdata(h, 'opt', opt);
-    caxis(opt.cfg.zlim);
-    set(opt.hx, 'Clim', opt.cfg.zlim);
-    
+    cb_slider(h);
+    set(opt.hx, 'Clim', opt.cfg.funcolorlim);
   case 'shift+rightarrow'
-    opt.cfg.zlim(2) = opt.cfg.zlim(2)+0.1*abs(opt.cfg.zlim(2));
+    cval = opt.cfg.funcolorlim(2);
+    if cval<0
+      cval = cval./1.1;
+    else
+      cval = cval.*1.1;
+    end
+    opt.cfg.funcolorlim(2) = cval;
     setappdata(h, 'opt', opt);
-    caxis(opt.cfg.zlim);
-    set(opt.hx, 'Clim', opt.cfg.zlim);
-  
+    cb_slider(h);
+    set(opt.hx, 'Clim', opt.cfg.funcolorlim);
   case 'uparrow' % enhance threshold
-    opt.threshold = opt.threshold+0.01.*max(opt.dat(:));
+    thrval = opt.threshold(2);
+    if thrval==0 && opt.cfg.funcolorlim(2)>0
+      opt.threshold(2) = opt.cfg.funcolorlim(2).*0.1;
+    elseif thrval==0
+      opt.threshold(2) = max(opt.dat(:)).*0.1;
+    else
+      opt.threshold(2) = thrval.*1.1;
+    end
     setappdata(h, 'opt', opt);
+    cb_slider(h);
+    set(opt.hline1, 'YData', [1 1].*opt.threshold(2));
+  case 'shift+uparrow' % enhance threshold
+    thrval = opt.threshold(2);
+    if thrval>0
+      opt.threshold(2) = thrval.*0.9;
+    end
+    setappdata(h, 'opt', opt);
+    cb_slider(h);
+    set(opt.hline1, 'YData', [1 1].*opt.threshold(2));
   case 'downarrow' % lower threshold
-    opt.threshold = opt.threshold-0.01.*max(opt.dat(:));
+    thrval = opt.threshold(1);
+    if thrval==0 && opt.cfg.funcolorlim(1)<0
+      opt.threshold(1) = opt.cfg.funcolorlim(1).*0.1;
+    elseif thrval==0
+      opt.threshold(1) = min(opt.dat(:)).*0.1;
+    else
+      opt.threshold(1) = thrval.*1.1;
+    end
     setappdata(h, 'opt', opt);
-  case 'shift+uparrow' % change speed
+    cb_slider(h);
+    set(opt.hline2, 'YData', [1 1].*opt.threshold(1));
+  case 'shift+downarrow' % lower threshold
+    thrval = opt.threshold(1);
+    if thrval<0
+      opt.threshold(1) = thrval.*0.9;
+    end
+    setappdata(h, 'opt', opt);
+    cb_slider(h);
+    set(opt.hline2, 'YData', [1 1].*opt.threshold(1));
+  case 'ctrl+uparrow' % change speed
     opt.speed = opt.speed*sqrt(2);
     setappdata(h, 'opt', opt);
-  case 'shift+downarrow'
+  case 'ctrl+downarrow'
     opt.speed = opt.speed/sqrt(2);
     opt.speed = max(opt.speed, 1); % should not be smaller than 1
     setappdata(h, 'opt', opt);
-  case 'ctrl+uparrow' % change channel
-  case 'C' % update camera position
+  case 'ctrl+rightarrow' % change channel
+  case 'C' % update camera position1.373e-14
     camlight(opt.cam(1), 'left');
     camlight(opt.cam(2), 'right');
   case 'p'
@@ -631,18 +673,26 @@ switch key
     % select the threshold
     response = inputdlg('threshold', 'specify', 1, {num2str(opt.threshold)});
     if ~isempty(response)
-      opt.threshold = str2double(response);
-      setappdata(h, 'opt', opt);
+      tok = tokenize(response{1}, ' ');
+      tok(cellfun(@isempty,tok)) = [];
+      for k = 1:numel(tok)
+        opt.threshold(1,k) = str2double(tok{k});
+      end
+      setappdata(h, 'opt', opt);      
     end
+    set(opt.hline1, 'YData', [1 1].*opt.threshold(2));
+    set(opt.hline2, 'YData', [1 1].*opt.threshold(1));
   case 'z'
     % select the colorlim
-    response = inputdlg('colorlim', 'specify', 1, {[num2str(opt.cfg.zlim(1)),' ',num2str(opt.cfg.zlim(2))]});
+    response = inputdlg('colorlim', 'specify', 1, {num2str(opt.cfg.funcolorlim)});
     if ~isempty(response)
-      [tok1, tok2] = strtok(response, ' ');
-      opt.cfg.zlim(1) = str2double(deblank(tok1));
-      opt.cfg.zlim(2) = str2double(deblank(tok2));
-      set(opt.hx, 'Clim', opt.cfg.zlim);
+      tok = tokenize(response{1}, ' ');
+      tok(cellfun(@isempty,tok)) = [];
+      for k = 1:2
+        opt.cfg.funcolorlim(1,k) = str2double(tok{k});
+      end
       setappdata(h, 'opt', opt);
+      cb_slider(h);
     end
   case 'control+control'
     % do nothing
@@ -652,7 +702,7 @@ switch key
     % do nothing
   otherwise
     setappdata(h, 'opt', opt);
-    cb_help(h);
+    %cb_help(h);
 end
 cb_slider(h);
 uiresume(h);
@@ -667,30 +717,3 @@ while p~=0
   p = get(h, 'parent');
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function key = parseKeyboardEvent(eventdata)
-
-key = eventdata.Key;
-
-% handle possible numpad events (different for Windows and UNIX systems)
-% NOTE: shift+numpad number does not work on UNIX, since the shift
-% modifier is always sent for numpad events
-if isunix()
-  shiftInd = match_str(eventdata.Modifier, 'shift');
-  if ~isnan(str2double(eventdata.Character)) && ~isempty(shiftInd)
-    % now we now it was a numpad keystroke (numeric character sent AND
-    % shift modifier present)
-    key = eventdata.Character;
-    eventdata.Modifier(shiftInd) = []; % strip the shift modifier
-  end
-elseif ispc()
-  if strfind(eventdata.Key, 'numpad')
-    key = eventdata.Character;
-  end
-end
-
-if ~isempty(eventdata.Modifier)
-  key = [eventdata.Modifier{1} '+' key];
-end

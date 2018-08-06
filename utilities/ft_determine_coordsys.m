@@ -16,6 +16,7 @@ function [data] = ft_determine_coordsys(data, varargin)
 % and can include
 %   interactive  = string, 'yes' or 'no' (default = 'yes')
 %   axisscale    = scaling factor for the reference axes and sphere (default = 1)
+%   clim         = lower and upper anatomical MRI limits (default = [0 1])
 %
 % This function wil pop up a figure that allows you to check whether the
 % alignment of the object relative to the coordinate system axes is correct
@@ -25,11 +26,13 @@ function [data] = ft_determine_coordsys(data, varargin)
 % coordinate system, you should press the corresponding keyboard button.
 %
 % Recognized and supported coordinate systems include: ctf, 4d, bti, itab,
-% neuromag, spm, mni, als, ras.
+% neuromag, spm, mni, tal, acpc, als, ras, paxinos.
 %
 % See also FT_VOLUMEREALIGN, FT_VOLUMERESLICE
 
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% Copyright (C) 2015, Jan-Mathijs Schoffelen
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -49,103 +52,36 @@ function [data] = ft_determine_coordsys(data, varargin)
 
 dointeractive = ft_getopt(varargin, 'interactive', 'yes');
 axisscale     = ft_getopt(varargin, 'axisscale', 1); % this is used to scale the axmax and rbol
+clim          = ft_getopt(varargin, 'clim', [0 1]); % this is used to scale the orthoplot
 
-data  = ft_checkdata(data);
+data  = ft_checkdata(data, 'hasunit', 'yes');
 dtype = ft_datatype(data);
-data  = ft_convert_units(data);
-unit  = data.unit;
 
 % the high-level data structures are detected with ft_datatype, but there are
 % also some low-level data structures that need to be supproted here
 if strcmp(dtype, 'unknown')
-  if isfield(data, 'fid') || (isfield(data, 'tri') && isfield(data, 'pnt'))
+  if isfield(data, 'fid') || (isfield(data, 'tri') && isfield(data, 'pos'))
     dtype = 'headshape';
-  elseif isfield(data, 'tet') && isfield(data, 'pnt')
+  elseif isfield(data, 'hex') && isfield(data, 'pos')
+    dtype = 'mesh';
+  elseif isfield(data, 'tet') && isfield(data, 'pos')
     dtype = 'mesh';
   elseif ~strcmp(ft_voltype(data), 'unknown')
     dtype = 'headmodel';
   elseif ~strcmp(ft_senstype(data), 'unknown')
     dtype = 'sens';
   end
+elseif strcmp(dtype, 'mesh+label')
+  % we don't care about the labels here
+  dtype = 'mesh';
 end
-
-% determine the size of the "unit" sphere in the origin and the length of the axes
-switch unit
-  case 'mm'
-    axmax = 150;
-    rbol  = 5;
-  case 'cm'
-    axmax = 15;
-    rbol  = 0.5;
-  case 'm'
-    axmax = 0.15;
-    rbol  = 0.005;
-  otherwise
-    error('unknown units (%s)', unit);
-end
-
-% this is useful if the anatomy is from a non-human primate or rodent
-axmax = axisscale*axmax;
-rbol  = axisscale*rbol;
-
-fprintf('The axes are %g %s long in each direction\n', axmax, unit);
-fprintf('The diameter of the sphere at the origin is %g %s\n', 2*rbol, unit);
 
 if isfield(data, 'coordsys') && ~isempty(data.coordsys)
-  label = cell(3,1);
-  if length(data.coordsys)==3 && length(intersect(data.coordsys, 'rlasif'))==3
-    for i=1:3
-      switch data.coordsys(i)
-        case 'l'
-          label{i} = 'the left';
-        case 'r'
-          label{i} = 'the right';
-        case 'i'
-          label{i} = 'inferior';
-        case 's'
-          label{i} = 'superior';
-        case 'a'
-          label{i} = 'anterior';
-        case 'p'
-          label{i} = 'posterior';
-        otherwise
-          error('incorrect letter in the coordsys');
-      end % switch
-    end % for each of the three axes
-  elseif strcmpi(data.coordsys, 'itab') || strcmpi(data.coordsys, 'neuromag')
-    label{1} = 'the right';
-    label{2} = 'anterior';
-    label{3} = 'superior';
-  elseif strcmpi(data.coordsys, 'ctf') || strcmpi(data.coordsys, '4d') || strcmpi(data.coordsys, 'bti')
-    label{1} = 'anterior';
-    label{2} = 'the left';
-    label{3} = 'superior';
-  elseif strcmpi(data.coordsys, 'tal') || strcmpi(data.coordsys, 'mni') || strcmpi(data.coordsys, 'spm')
-    label{1} = 'the right';
-    label{2} = 'anterior';
-    label{3} = 'superior';
-  elseif strcmpi(data.coordsys, 'paxinos')
-    label{1} = 'the right';
-    label{2} = 'superior';
-    label{3} = 'posterior';
-  elseif strcmpi(data.coordsys, 'unknown')
-    label{1} = 'unknown';
-    label{2} = 'unknown';
-    label{3} = 'unknown';
-  else
-    error('unsupported coordsys');
-  end
-  
-  fprintf('The positive x-axis is pointing towards %s\n', label{1});
-  fprintf('The positive y-axis is pointing towards %s\n', label{2});
-  fprintf('The positive z-axis is pointing towards %s\n', label{3});
-end
-
-% create the labels that are to be plotted along the axes
-if isfield(data, 'coordsys')
-  [labelx, labely, labelz] = xyz2label(data.coordsys);
-else
-  [labelx, labely, labelz] = xyz2label('unknown');
+  % print the interpretation of the coordinate system
+  [labelx, labely, labelz] = coordsys2label(data.coordsys, 2, 0);
+  fprintf('The positive x-axis is pointing towards %s\n', labelx);
+  fprintf('The positive y-axis is pointing towards %s\n', labely);
+  fprintf('The positive z-axis is pointing towards %s\n', labelz);
 end
 
 % plot the geometrical object
@@ -174,11 +110,11 @@ switch dtype
         end
       end
     end
-    
+
     if isempty(funparam)
-      error('don''t know which volumetric parameter to plot');
+      ft_error('don''t know which volumetric parameter to plot');
     end
-    
+
     % the volumetric data needs to be interpolated onto three orthogonal planes
     % determine a resolution that is close to, or identical to the original resolution
     [corner_vox, corner_head] = cornerpoints(data.dim, data.transform);
@@ -186,8 +122,13 @@ switch dtype
     diagonal_vox  = norm(range(corner_vox));
     resolution    = diagonal_head/diagonal_vox; % this is in units of "data.unit"
     
+    % scale funparam between 0 and 1
+    dmin = min(funparam(:));
+    dmax = max(funparam(:));
+    funparam  = (funparam-dmin)./(dmax-dmin);
+    
     clear ft_plot_slice
-    ft_plot_ortho(funparam, 'transform', data.transform, 'resolution', resolution, 'style', 'intersect');
+    ft_plot_ortho(funparam, 'transform', data.transform, 'unit', data.unit, 'resolution', resolution, 'style', 'intersect', 'clim', clim);
     axis vis3d
     view([110 36]);
     
@@ -199,35 +140,35 @@ switch dtype
       ft_plot_mesh(data, 'edgecolor','none', 'facecolor', [0.6 0.8 0.6], 'facealpha', 0.6);
     end
     camlight;
-    
+
   case 'dip'
     ft_plot_mesh(data, 'edgecolor','none', 'facecolor', 'none');
     camlight;
-    
+
   case 'headshape'
     ft_plot_headshape(data);
     camlight;
-    
-  case 'mesh'
+
+  case {'mesh', 'source+mesh'}
     ft_plot_mesh(data);
     camlight;
-    
+
   case 'headmodel'
     ft_plot_vol(data);
     camlight;
-    
+
   case {'grad' 'elec' 'sens'}
-    ft_plot_sens(data);
+    ft_plot_sens(data, 'label', 'label');
     camlight;
-    
+
   case {'raw', 'timelock', 'freq', 'mvar', 'freqmvar', 'comp'}
     % the data may contain a gradiometer or electrode definition
     if isfield(data, 'grad')
       ft_plot_sens(data.grad);
     elseif isfield(data, 'elec')
-      ft_plot_sens(data.elec);
+      ft_plot_sens(data.elec, 'label', 'label');
     end
-    
+
   case 'unknown'
 end % switch dtype{k}
 
@@ -237,47 +178,11 @@ if isfield(data, 'tri')
   lighting gouraud
 end
 
-% get the xyz-axes
-xdat  = [-axmax 0 0; axmax 0 0];
-ydat  = [0 -axmax 0; 0 axmax 0];
-zdat  = [0 0 -axmax; 0 0 axmax];
+% plot the 3-D axes, labels, and sphere at the origin
+ft_plot_axes(data, 'axisscale', axisscale);
 
-% get the xyz-axes dotted
-xdatdot = (-axmax:(axmax/15):axmax);
-xdatdot = xdatdot(1:floor(numel(xdatdot)/2)*2);
-xdatdot = reshape(xdatdot, [2 numel(xdatdot)/2]);
-n       = size(xdatdot,2);
-ydatdot = [zeros(2,n) xdatdot zeros(2,n)];
-zdatdot = [zeros(2,2*n) xdatdot];
-xdatdot = [xdatdot zeros(2,2*n)];
+if istrue(dointeractive)
 
-% plot axes
-hl = line(xdat, ydat, zdat);
-set(hl(1), 'linewidth', 1, 'color', 'r');
-set(hl(2), 'linewidth', 1, 'color', 'g');
-set(hl(3), 'linewidth', 1, 'color', 'b');
-hld = line(xdatdot, ydatdot, zdatdot);
-for k = 1:n
-  set(hld(k    ), 'linewidth', 3, 'color', 'r');
-  set(hld(k+n*1), 'linewidth', 3, 'color', 'g');
-  set(hld(k+n*2), 'linewidth', 3, 'color', 'b');
-end
-
-% create the ball at the origin
-[O.pnt, O.tri] = icosahedron42;
-O.pnt = O.pnt.*rbol;
-ft_plot_mesh(O, 'edgecolor', 'none');
-
-% add the labels to the axis
-text(xdat(1,1),ydat(1,1),zdat(1,1),labelx{1},'color','y','fontsize',15,'linewidth',2);
-text(xdat(1,2),ydat(1,2),zdat(1,2),labely{1},'color','y','fontsize',15,'linewidth',2);
-text(xdat(1,3),ydat(1,3),zdat(1,3),labelz{1},'color','y','fontsize',15,'linewidth',2);
-text(xdat(2,1),ydat(2,1),zdat(2,1),labelx{2},'color','y','fontsize',15,'linewidth',2);
-text(xdat(2,2),ydat(2,2),zdat(2,2),labely{2},'color','y','fontsize',15,'linewidth',2);
-text(xdat(2,3),ydat(2,3),zdat(2,3),labelz{2},'color','y','fontsize',15,'linewidth',2);
-
-if istrue(dointeractive),
-  
   if ~isfield(data, 'coordsys') || isempty(data.coordsys)
     % default is yes
     value = smartinput('Do you want to change the anatomical labels for the axes [Y, n]? ', 'y');
@@ -285,11 +190,11 @@ if istrue(dointeractive),
     % default is no
     value = smartinput('Do you want to change the anatomical labels for the axes [y, N]? ', 'n');
   end
-  
+
   if strcmpi(value, 'n')
     return
   end
-  
+
   % interactively determine orientation
   orientation = '   ';
   while ~any(strcmp(orientation(1), {'r', 'l', 'a', 'p', 's', 'i'}))
@@ -301,56 +206,23 @@ if istrue(dointeractive),
   while ~any(strcmp(orientation(3), {'r', 'l', 'a', 'p', 's', 'i'}))
     orientation(3) = smartinput('What is the anatomical label for the positive Z-axis [r, l, a, p, s, i]? ', '');
   end
-  
+
   % interactively determine origin
   origin = ' ';
   while ~any(strcmp(origin, {'a', 'i', 'n'}))
     origin = input('Is the origin of the coordinate system at the a(nterior commissure), i(nterauricular), n(ot a landmark)? ', 's');
   end
-  
+
   if origin=='a' && strcmp(orientation, 'ras')
-    coordsys = 'spm';
+    coordsys = 'acpc'; % also used for spm, mni, tal
   elseif origin=='i' && strcmp(orientation, 'als')
-    coordsys = 'ctf';
+    coordsys = 'ctf'; % also used for 4d, bti
   elseif origin=='i' && strcmp(orientation, 'ras')
     coordsys = 'neuromag'; % also used for itab
   else
     % just use the orientation
     coordsys = orientation;
   end
-  
+
   data.coordsys = coordsys;
 end % if interactive
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION to go from aplrsi to better interpretable format
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [labelx, labely, labelz] = xyz2label(str)
-
-if ~isempty(str) && ~strcmp(str, 'unknown')
-  % the first part is important for the orientations
-  % the second part optionally contains information on the origin
-  strx = tokenize(str, '_');
-  
-  switch lower(strx{1})
-    case {'ras' 'itab' 'neuromag' 'spm' 'mni'}
-      labelx = {'-X (left)'      '+X (right)'   };
-      labely = {'-Y (posterior)' '+Y (anterior)'};
-      labelz = {'-Z (inferior)'  '+Z (superior)'};
-    case {'als' 'ctf' '4d', 'bti'}
-      labelx = {'-X (posterior)' '+X (anterior)'};
-      labely = {'-Y (right)'     '+Y (left)'};
-      labelz = {'-Z (inferior)'  '+Z (superior)'};
-    case {'paxinos'}
-      labelx = {'-X (left)'      '+X (right)'};
-      labely = {'-Y (inferior)'  '+Y (superior)'};
-      labelz = {'-Z (anterior)'  '+Z (posterior)'};
-    otherwise
-      error('unknown coordsys');
-  end
-  
-else
-  labelx = {'-X (unknown)' '+X (unknown)'};
-  labely = {'-Y (unknown)' '+Y (unknown)'};
-  labelz = {'-Z (unknown)' '+Z (unknown)'};
-end

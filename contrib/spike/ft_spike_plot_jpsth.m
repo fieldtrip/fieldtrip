@@ -33,16 +33,36 @@ function [cfg] = ft_spike_plot_jpsth(cfg, jpsth)
 % See also FT_SPIKE_JPSTH, FT_SPIKE_PSTH
 
 % FIXME: extend the windowing functions a bit
+
 % Copyright (C) 2010, Martin Vinck
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance jpsth
 ft_preamble trackconfig
 
 % get the default options
@@ -67,7 +87,7 @@ cfg = ft_checkopt(cfg,'window','char', {'no', 'gausswin', 'boxcar'});
 cfg = ft_checkopt(cfg,'winlen', 'double');
 cfg = ft_checkopt(cfg,'gaussvar', 'double');
 
-cfg = ft_checkconfig(cfg, 'allowed', {'channelcmb', 'psth', 'latency', 'colorbar', 'colormap', 'interpolate', 'window', 'winlen', 'gaussvar', 'warning', 'progress'});
+cfg = ft_checkconfig(cfg, 'allowed', {'channelcmb', 'psth', 'latency', 'colorbar', 'colormap', 'interpolate', 'window', 'winlen', 'gaussvar'});
 
 % determine the corresponding indices of the requested channel combinations
 cfg.channelcmb = ft_channelcombination(cfg.channelcmb, jpsth.label);
@@ -301,8 +321,8 @@ set(pan,'ActionPostCallback',{@mypostcallback,ax,cfg.latency,psthLim});
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
 ft_postamble previous jpsth
+ft_postamble provenance
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

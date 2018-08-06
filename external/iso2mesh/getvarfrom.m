@@ -4,7 +4,7 @@ function p=getvarfrom(ws,name)
 %
 % get variable value by name from specified work-space
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input:
 %    ws: name of the work-space, for example, 'base'

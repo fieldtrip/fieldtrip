@@ -61,27 +61,26 @@ function [cfg movement] = ft_detect_movement(cfg, data)
 % the initial part deals with parsing the input options and data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
+ft_defaults
+ft_preamble init
+ft_preamble debug
+ft_preamble loadvar data
+ft_preamble provenance data
+ft_preamble trackconfig
 
-% the ft_preamble function works by calling a number of scripts from
-% fieldtrip/utility/private that are able to modify the local workspace
-
-ft_defaults                 % this ensures that the path is correct and that the ft_defaults global variable is available
-ft_preamble init            % this will reset warning_once and show the function help if nargin==0 and return an error
-ft_preamble provenance      % this records the time and memory usage at teh beginning of the function
-ft_preamble trackconfig     % this converts the cfg structure in a config object, which tracks the cfg options that are being used
-ft_preamble debug           % this allows for displaying or saving the function name and input arguments upon an error
-ft_preamble loadvar data    % this reads the input data in case the user specified the cfg.inputfile option
-
-% ensure that the input data is valid for this function, this will also do 
-% backward-compatibility conversions of old data that for example was 
+% ensure that the input data is valid for this function, this will also do
+% backward-compatibility conversions of old data that for example was
 % read from an old *.mat file
-data = ft_checkdata(data, 'datatype', {'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes', 'hasoffset', 'yes');
+data = ft_checkdata(data, 'datatype', {'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
-if isfield(data,'fsample');
-  fsample = getsubfield(data,'fsample');
+if isfield(data, 'fsample');
+  fsample = getsubfield(data, 'fsample');
 else
   fsample = 1./(mean(diff(data.time{1})));
 end
@@ -92,24 +91,24 @@ cfg.feedback = ft_getopt(cfg, 'feedback', 'yes');
 
 % set the defaults for the various microsaccade detection methods
 switch cfg.method
-  case 'velocity2D' 
+  case 'velocity2D'
     % Engbert R, Kliegl R (2003) Microsaccades uncover the orientation of
     % covert attention. Vision Res 43:1035-1045.
     kernel = [1 1 0 -1 -1].*(fsample/6); % this is equivalent to Engbert et al (2003) Vis Res, eqn. (1)
     if ~isfield(cfg.velocity2D, 'kernel'),   cfg.velocity2D.kernel  = kernel; end
-    if ~isfield(cfg.velocity2D, 'demean'),   cfg.velocity2D.demean  = 'yes';  end    
+    if ~isfield(cfg.velocity2D, 'demean'),   cfg.velocity2D.demean  = 'yes';  end
     if ~isfield(cfg.velocity2D, 'mindur'),   cfg.velocity2D.mindur  =  3;     end % minimum microsaccade duration in samples
     if ~isfield(cfg.velocity2D, 'velthres'), cfg.velocity2D.velthres = 6;     end
   case 'clustering'
-    error('not implemented yet');
+    ft_error('not implemented yet');
     % Otero-Millan J, Castro JLA, Macknik SL, Martinez-Conde S (2014)
     % Unsupervised clustering method to detect microsaccades. J Vis 14.
   otherwise
-    error('unsupported option for cfg.method');
+    ft_error('unsupported option for cfg.method');
 end
 
 % select channels and trials of interest, by default this will select all channels and trials
-tmpcfg = keepfields(cfg, {'trials', 'channel'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
 data = ft_selectdata(tmpcfg, data);
 [cfg, data] = rollback_provenance(cfg, data);
 
@@ -129,23 +128,23 @@ for i=1:ntrial
 
   dat = data.trial{i};
   time = data.time{i};
-  
+
   ndatsample = size(dat,2);
-  
+
   switch cfg.method
-    case 'velocity2D' 
-    
+    case 'velocity2D'
+
       % demean horizontal and vertical time courses
-      if strcmp(cfg.velocity2D.demean,'yes');
+      if strcmp(cfg.velocity2D.demean, 'yes');
         dat = ft_preproc_polyremoval(dat, 0, 1, ndatsample);
       end
-      
+
       %% eye velocity computation
       % deal with padding
       n = size(cfg.velocity2D.kernel,2);
       pad = ceil(n/2);
       dat = ft_preproc_padding(dat, 'localmean', pad);
-      
+
       % convolution. See Engbert et al (2003) Vis Res, eqn. (1)
       if n<100
         % heuristic: for large kernel the convolution is faster when done along
@@ -157,18 +156,18 @@ for i=1:ntrial
       end
       % cut the eges
       vel = ft_preproc_padding(vel, 'remove', pad);
-      
+
       %% microsaccade detection
       % compute velocity thresholds as in Engbert et al (2003) Vis Res, eqn. (2)
-      medianstd = sqrt( median(vel.^2,2) - (median(vel,2)).^2 ); 
-      
+      medianstd = sqrt( median(vel.^2,2) - (median(vel,2)).^2 );
+
       % Engbert et al (2003) Vis Res, eqn. (3)
       radius = cfg.velocity2D.velthres*medianstd;
-      
+
       % compute test criterion: ellipse equation
       test = sum((vel./radius(:,ones(1,ndatsample))).^2,1);
       sacsmp = find(test>1);% microsaccade's indexing
-      
+
       %% determine microsaccades per trial
       % first find eye movements of n-consecutive time points
       j = find(diff(sacsmp)==1);
@@ -176,17 +175,17 @@ for i=1:ntrial
       com = intersect(j,j+1);
       cut = ~ismember(j1,com);
       sacidx = reshape(j1(cut),2,[]);
-      
+
       for k=1:size(sacidx,2);
         duration = sacidx(1,k):sacidx(2,k);
         if size(duration,2) >= cfg.velocity2D.mindur;
           % finding peak velocity by Pitagoras
           begtrl = sacsmp(duration(1,1));
           endtrl = sacsmp(duration(1,end));
-          
+
           [peakvel smptrl] = max(sqrt(sum(vel(:,begtrl:endtrl).^2,1)));
           veltrl = sacsmp(duration(1,smptrl));% peak velocity microsaccade sample -> important for spike conversion
-          
+
           trlsmp = data.sampleinfo(i,1):data.sampleinfo(i,2);
           begsample = trlsmp(1, begtrl); % begining microsaccade sample
           endsample = trlsmp(1, endtrl); % end microsaccade sample
@@ -201,9 +200,7 @@ for i=1:ntrial
 end
 ft_progress('close');
 
-ft_postamble debug            % this clears the onCleanup function used for debugging in case of an error
-ft_postamble trackconfig      % this converts the config object back into a struct and can report on the unused fields
-ft_postamble provenance       % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and matlab version etc. to the output cfg
-ft_postamble previous data    % this copies the data.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
-ft_postamble history eye      % this adds the local cfg structure to the output data structure, i.e. eye.cfg = cfg
-ft_postamble savevar eye      % this saves the output data structure to disk in case the user specified the cfg.outputfile option
+ft_postamble trackconfig
+ft_postamble provenance
+ft_postamble debug
+ft_postamble previous data

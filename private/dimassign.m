@@ -17,7 +17,7 @@ function M=dimassign(A,dim,idx,B)
 
 % Copyright (C) 2005, Geerten Kramer
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -38,23 +38,23 @@ function M=dimassign(A,dim,idx,B)
 if(~iscell(idx))
     if(~any(size(dim)==1)||~any(size(idx)==1)||ndims(dim)>2||ndims(idx)>2||...
         length(dim)~=length(idx))
-        error('dim and idx must be both scalars oor both must have the same length');
-    end;
+        ft_error('dim and idx must be both scalars oor both must have the same length');
+    end
     dummi=[];
     for(i=1:length(idx))
         dummi{i}=idx(i);
-    end;
+    end
     idx=dummi;
     clear dummi;
-end;
+end
 if(~any(size(dim)==1)||~any(size(idx)==1)||ndims(dim)>2||ndims(idx)>2||...
     length(dim)~=length(idx))
-    error('dim and idx must be both scalars or both must have the same length');
-end;
+    ft_error('dim and idx must be both scalars or both must have the same length');
+end
 
 if(~isequal(unique(dim),sort(dim)))
-    error('dim must be unique, every dimention can be addressed only once');
-end;
+    ft_error('dim must be unique, every dimention can be addressed only once');
+end
 
 Na=ndims(A);
 for(i=1:max([max(dim),Na]))
@@ -63,11 +63,11 @@ for(i=1:max([max(dim),Na]))
         C{i}=':';
     else
         C{i}=idx{ref};
-    end;
-end;
+    end
+end
 M=A;        
 try
     M(C{:})=B;
 catch
-    error('Subscripted assignment dimension mismatch.');
-end;
+    ft_error('Subscripted assignment dimension mismatch.');
+end

@@ -1,4 +1,4 @@
-function [Ppos Pneg]=participation_coef_sign(W,Ci)
+function [Ppos,Pneg]=participation_coef_sign(W,Ci)
 %PARTICIPATION_COEF_SIGN     Participation coefficient
 %
 %   [Ppos Pneg] = participation_coef_sign(W,Ci);
@@ -22,6 +22,9 @@ function [Ppos Pneg]=participation_coef_sign(W,Ci)
 
 %   Modification History:
 %   Mar 2011: Original
+%   Sep 2012: Fixed treatment of nodes with no negative strength
+%             (thanks to Alex Fornito and Martin Monti)
+
 
 n=length(W);                                %number of vertices
 
@@ -38,6 +41,7 @@ Pneg = pcoef(-W.*(W<0));
         end
 
         P = ones(n,1) - Sc2./(S.^2);
+        P(isnan(P)) = 0;
         P(~P) = 0;                            %p_ind=0 if no (out)neighbors
     end
 end

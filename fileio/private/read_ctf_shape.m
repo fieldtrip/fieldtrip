@@ -1,4 +1,4 @@
-function [shape] = read_ctf_shape(filename);
+function [shape] = read_ctf_shape(filename)
 
 % READ_CTF_SHAPE reads headshape points and header information
 % from a CTF *.shape teh accompanying *.shape_info file.
@@ -9,7 +9,7 @@ function [shape] = read_ctf_shape(filename);
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -30,12 +30,12 @@ function [shape] = read_ctf_shape(filename);
 shape = read_ctf_ascii([filename '_info']);
 
 if ~strcmp(shape.MRI_Info.COORDINATES, 'HEAD')
-  warning('points on head shape are NOT in headcoordinates')
+  ft_warning('points on head shape are NOT in headcoordinates')
 end
 
 fid = fopen(filename, 'rt');
 num = fscanf(fid, '%d', 1);
-shape.pnt = fscanf(fid, '%f', inf);
-shape.pnt = reshape(shape.pnt, [3 num])';
+shape.pos = fscanf(fid, '%f', inf);
+shape.pos = reshape(shape.pos, [3 num])';
 fclose(fid);
 

@@ -1,4 +1,4 @@
-function write_stl(filename, pnt, tri, nrm);
+function write_stl(filename, pnt, tri, nrm)
 
 % WRITE_STL writes a triangulation to an ascii *.stl file, which is a file
 % format native to the stereolithography CAD software created by 3D Systems.
@@ -11,7 +11,7 @@ function write_stl(filename, pnt, tri, nrm);
   
 % Copyright (C) 2006, Robert Oostenveld
 % 
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

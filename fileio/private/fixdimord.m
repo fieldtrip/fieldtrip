@@ -22,12 +22,13 @@ function [data] = fixdimord(data)
 %  'rpttap'
 %  'pos'
 %  'ori'
+%  'rgb'
 %  'comp'
 %  'voxel'
 
-% Copyright (C) 2009-2010, Robert Oostenveld, Jan-Mathijs Schoffelen
+% Copyright (C) 2009-2014, Robert Oostenveld, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -49,7 +50,7 @@ function [data] = fixdimord(data)
 %
 % if any(ft_datatype(data, {'source', 'volume'})) && isfield(data, 'dimord') && ~keepsourcedimord
 %   % the old source data representation does not have a dimord, whereas the new source data representation does have a dimord
-%   warning(sprintf('removing dimord "%s" from source representation data', data.dimord));
+%   ft_warning(sprintf('removing dimord "%s" from source representation data', data.dimord));
 %   data = rmfield(data, 'dimord');
 %   return
 % else
@@ -67,24 +68,17 @@ if ~isfield(data, 'dimord')
   elseif ft_datatype(data, 'volume')
     % it is volume data, which does not have a dimord -> this is ok
     return
+  elseif ft_datatype(data, 'source') || ft_datatype(data, 'parcellation')
+    % it is old-style source data -> this is ok
+    return
   else
+    % find the XXXdimord fields
     fn = fieldnames(data);
     sel = true(size(fn));
     for i=1:length(fn)
       sel(i) = ~isempty(strfind(fn{i}, 'dimord'));
     end
     df = fn(sel);
-    
-    if isempty(df)
-      if ft_datatype(data, 'source') || ft_datatype(data, 'parcellation')
-        % it is old-style source data -> this is ok
-        % ft_checkdata will convert it to new-style
-        return
-      else
-        error('the data does not contain a dimord, but it also does not resemble raw or component data');
-      end
-    end
-    
     % use this function recursively on the XXXdimord fields
     for i=1:length(df)
       data.dimord = data.(df{i});
@@ -95,7 +89,7 @@ if ~isfield(data, 'dimord')
     % after the recursive call it should be ok
     return
   end
-end
+end % if no dimord
 
 if strcmp(data.dimord, 'voxel')
   % this means that it is position
@@ -141,9 +135,12 @@ for i=1:length(dimtok)
     case {'ori'}
       % don't change, it is ok
       
+    case {'rgb'}
+      % don't change, it is ok
+      
     case {'voxel' 'vox' 'repl' 'wcond'}
-      % these are used in some fieldtrip functions, but are not considered standard
-      warning_once('unexpected dimord "%s"', data.dimord);
+      % these are used in some FieldTrip functions, but are not considered standard
+      ft_warning('unexpected dimord "%s"', data.dimord);
       
     case {'pos'}
       % this is for source data on a 3-d grid, a cortical sheet, or unstructured positions
@@ -151,12 +148,12 @@ for i=1:length(dimtok)
     case {'{pos}' '{pos}_rpt' '{pos}_rpttap'}
       % this is for source data on a 3-d grid, a cortical sheet, or unstructured positions
       % the data itself is represented in a cell-array, e.g. source.mom or source.leadfield
-
+      
     case {'{pos_pos}'}
       % this is for bivariate source data on a 3-d grid, a cortical sheet, or unstructured positions
       
     otherwise
-      error(sprintf('unexpected dimord "%s"', data.dimord));
+      ft_error('unexpected dimord "%s"', data.dimord);
       
   end % switch dimtok
 end % for length dimtok
@@ -213,4 +210,3 @@ data.dimord = dimtok{1};
 for i=2:length(dimtok)
   data.dimord = [data.dimord '_' dimtok{i}];
 end
-

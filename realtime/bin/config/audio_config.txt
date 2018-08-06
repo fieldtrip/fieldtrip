@@ -1,0 +1,7 @@
+[select]
+1=Left
+2=Right
+
+downsample 4
+bandwidth 4000
+bworder 4

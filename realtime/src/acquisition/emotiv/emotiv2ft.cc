@@ -1,9 +1,19 @@
 #include <iostream>
 #include <fstream>
-#include <conio.h>
 #include <sstream>
-#include <windows.h>
 #include <map>
+
+#ifdef PLATFORM_WIN32
+    #include <windows.h>
+    void dosleep(unsigned milliseconds) {
+        Sleep(milliseconds);
+    }
+#else
+    #include <unistd.h>
+    void dosleep(unsigned milliseconds) {
+        usleep(milliseconds * 1000); // takes microseconds
+    }
+#endif
 
 #include <OnlineDataManager.h>
 #include <ConsoleInput.h>
@@ -112,7 +122,7 @@ void acquisition(const char *configFile, unsigned int fSample) {
 			sampleCounter += nSamplesTaken;
 			printf("Wrote %2i samples (%i total)\n", nSamplesTaken, sampleCounter);
 		}
-		Sleep(10);
+		dosleep(10);
 	}
 	EE_DataFree(hData);
 }

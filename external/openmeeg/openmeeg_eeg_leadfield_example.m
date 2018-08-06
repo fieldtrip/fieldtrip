@@ -28,12 +28,12 @@ c = [1 1/80 1];
 % c = [1];
 
 %% Description of the spherical mesh
-[pnt, tri] = icosahedron42;
-% [pnt, tri] = icosahedron162;
-% [pnt, tri] = icosahedron642;
+[pos, tri] = icosahedron42;
+% [pos, tri] = icosahedron162;
+% [pos, tri] = icosahedron642;
 
 %% Create a set of electrodes on the outer surface
-sens.elecpos = max(r) * pnt;
+sens.elecpos = max(r) * pos;
 sens.label = {};
 nsens = size(sens.elecpos,1);
 for ii=1:nsens
@@ -41,15 +41,14 @@ for ii=1:nsens
 end
 
 %% Set the position of the probe dipole
-pos = [0 0 70];
+dip_pos = [0 0 70];
 
 %% Create a BEM volume conduction model
 vol = [];
 for ii=1:length(r)
-    vol.bnd(ii).pnt = pnt * r(ii);
+    vol.bnd(ii).pos = pos * r(ii);
     vol.bnd(ii).tri = fliplr(tri); % pointing inwards!!!
 end
-vol.cond = c;
 
 %% Compute the BEM
 
@@ -60,17 +59,18 @@ vol.cond = c;
 
 cfg=[];
 cfg.method = 'openmeeg';
+cfg.conductivity = c;
 vol = ft_prepare_headmodel(cfg, vol);
 
-cfg.vol = vol;
-cfg.grid.pos = pos;
+cfg.headmodel = vol;
+cfg.grid.pos = dip_pos;
 cfg.elec = sens;
 grid = ft_prepare_leadfield(cfg);
 
 lf_openmeeg = grid.leadfield{1};
 
 %% Plot result
-bnd = struct('pnt', pnt, 'tri', tri);
+bnd = struct('pos', pos, 'tri', tri);
 figure; ft_plot_mesh(bnd, 'vertexcolor', lf_openmeeg(:,1))
 figure; ft_plot_mesh(bnd, 'vertexcolor', lf_openmeeg(:,2))
 figure; ft_plot_mesh(bnd, 'vertexcolor', lf_openmeeg(:,3))
@@ -78,9 +78,9 @@ figure; ft_plot_mesh(bnd, 'vertexcolor', lf_openmeeg(:,3))
 %% Compute the analytic leadfield
 
 vol_sphere.r = r;
-vol_sphere.c = c;
+vol_sphere.cond = c;
 
-lf_sphere = ft_compute_leadfield(pos, sens, vol_sphere);
+lf_sphere = ft_compute_leadfield(dip_pos, sens, vol_sphere);
 
 %% Evaluate the quality of the result using RDM and MAG
 rdms = zeros(1,size(lf_openmeeg,2));

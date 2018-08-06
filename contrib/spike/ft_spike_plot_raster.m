@@ -43,14 +43,33 @@ function [cfg] = ft_spike_plot_raster(cfg, spike, timelock)
 
 % Copyright (C) 2010-2013, Martin Vinck
 %
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance spike timelock
 ft_preamble trackconfig
 
 % check if input spike structure is indeed a spike structure
@@ -84,13 +103,12 @@ cfg = ft_checkopt(cfg,'trialborders', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'plotselection', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'interactive', 'char', {'yes', 'no'});
 
-cfg = ft_checkconfig(cfg, 'allowed', {'spikechannel', 'latency', 'trials', 'linewidth', 'cmapneurons',...
- 'spikelength', 'topplotsize', 'topplotfunc', 'errorbars', 'trialborders', 'plotselection', 'interactive', 'warning', 'progress'});
+cfg = ft_checkconfig(cfg, 'allowed', {'spikechannel', 'latency', 'trials', 'linewidth', 'cmapneurons', 'spikelength', 'topplotsize', 'topplotfunc', 'errorbars', 'trialborders', 'plotselection', 'interactive'});
 
 % check if a third input is present, and check if it's a timelock structure
 if nargin==3
   doTopData = true;
-  timelock  = ft_checkdata(timelock,'datatype', 'timelock', 'feedback', 'yes');
+  timelock  = ft_checkdata(timelock, 'datatype', 'timelock', 'hastrials', 'no', 'feedback', 'yes');
   if isfield(timelock,'cfg') && isfield(timelock.cfg, 'latency')
     cfg.latency = timelock.cfg.latency; 
   end
@@ -114,7 +132,7 @@ elseif islogical(cfg.trials)
 end
 cfg.trials = sort(cfg.trials(:));
 
-if max(cfg.trials)>nTrialsOrig, 
+if max(cfg.trials)>nTrialsOrig
   error('maximum trial number in cfg.trials should not exceed length of spike.trial')
 end
 if isempty(cfg.trials), errors('No trials were selected in cfg.trials'); end
@@ -171,12 +189,12 @@ for iUnit = 1:nUnits
 end
 
 % some error checks on spike length
-if (cfg.spikelength<=0 || cfg.spikelength>1), 
+if (cfg.spikelength<=0 || cfg.spikelength>1)
   error('cfg.spikelength should be a single number >0 and <=1. 1 row (1 trial) = 1'); 
 end
 
 % some error checks on the size of the top figure
-if (cfg.topplotsize<=0 || cfg.topplotsize>1), 
+if (cfg.topplotsize<=0 || cfg.topplotsize>1)
   error('cfg.topplotsize should be a single number >0 and <=1. 0.7 = 70%'); 
 end
 
@@ -324,7 +342,7 @@ if doTopData
     if ~strcmp(cfg.errorbars,'no')
       
       % check if the right error information is there
-      if ~isfield(timelock,'var')  || ~isfield(timelock,'dof'), 
+      if ~isfield(timelock, 'var') || ~isfield(timelock, 'dof') 
         error('timelock should contain field .var and .dof for errorbars'); 
       end
       
@@ -427,8 +445,8 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
 ft_postamble previous spike
+ft_postamble provenance
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

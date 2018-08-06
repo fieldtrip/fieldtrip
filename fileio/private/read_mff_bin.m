@@ -10,7 +10,7 @@ function [output] = read_mff_bin(filename, begblock, endblock, chanindx)
 fid = fopen(filename,'r');
 
 if fid == -1
-  error('wrong filename') % could not find signal(n)
+  ft_error('wrong filename') % could not find signal(n)
 end
 
 needhdr = (nargin==1);

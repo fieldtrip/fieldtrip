@@ -1,11 +1,11 @@
-function [vol] = ft_read_vol(filename, varargin)
+function [headmodel] = ft_read_vol(filename, varargin)
 
 % FT_READ_VOL reads a volume conduction model from various manufacturer
 % specific files. Currently supported are ASA, CTF, Neuromag, MBFYS
 % and Matlab.
 %
 % Use as
-%   vol = ft_read_vol(filename, ...)
+%   headmodel = ft_read_vol(filename, ...)
 %
 % Additional options should be specified in key-value pairs and can be
 %   'fileformat'   string
@@ -15,9 +15,9 @@ function [vol] = ft_read_vol(filename, varargin)
 %
 % See also FT_TRANSFORM_VOL, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
-% Copyright (C) 2008-2013 Robert Oostenveld
+% Copyright (C) 2008-2018 Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -40,7 +40,7 @@ filename = fetch_url(filename);
 
 % test whether the file exists
 if ~exist(filename)
-  error(sprintf('file ''%s'' does not exist', filename));
+  ft_error('file ''%s'' does not exist', filename);
 end
 
 % get the options
@@ -48,27 +48,59 @@ fileformat = ft_getopt(varargin, 'fileformat', ft_filetype(filename));
 
 switch fileformat
   case 'matlab'
-    matfile = filename;   % this solves a problem with the matlab compiler v3
-    ws = warning('off', 'MATLAB:load:variableNotFound');
-    tmp = load(matfile, 'vol');
-    warning(ws);
-    vol = getfield(tmp, 'vol');
-
+    % FIXME in the future the file should contain the variable 'headmodel' instead of vol
+    headmodel = loadvar(filename, 'vol');
+    
   case 'ctf_hdm'
-    vol = read_ctf_hdm(filename);
-
+    headmodel = read_ctf_hdm(filename);
+    
   case 'asa_vol'
-    vol = read_asa_vol(filename);
-    vol.type = 'asa';
-
+    headmodel = read_asa_vol(filename);
+    headmodel.type = 'asa';
+    
   case 'mbfys_ama'
     ama = loadama(filename);
-    vol = ama2vol(ama);
-
+    headmodel = ama2vol(ama);
+    
+  case 'neuromag_fif'
+    ft_hastoolbox('mne', 1);
+    global FIFF
+    bem = mne_read_bem_surfaces(filename);
+    headmodel.bnd.pos = bem.rr;
+    headmodel.bnd.tri = bem.tris;
+    headmodel.coordsys = fif2coordsys(bem.coord_frame);
+    
   otherwise
-    error('unknown fileformat for volume conductor model');
+    ft_error('unknown fileformat for volume conductor model');
 end
 
 % this will ensure that the structure is up to date, e.g. that the type is correct and that it has units
-vol = ft_datatype_headmodel(vol);
+headmodel = ft_datatype_headmodel(headmodel);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function coordsys = fif2coordsys(coord_frame)
+ft_hastoolbox('mne', 1);
+global FIFF
+
+switch coord_frame
+  case FIFF.FIFFV_COORD_DEVICE
+    coordsys = 'device';
+  case FIFF.FIFFV_COORD_HPI
+    coordsys = 'hpi';
+  case FIFF.FIFFV_COORD_HEAD
+    coordsys = 'head';
+  case FIFF.FIFFV_COORD_MRI
+    coordsys = 'mri';
+  case FIFF.FIFFV_COORD_MRI_SLICE
+    coordsys = 'mri_slice';
+  case FIFF.FIFFV_COORD_MRI_DISPLAY
+    coordsys = 'mri_display';
+  case FIFF.FIFFV_COORD_DICOM_DEVICE
+    coordsys = 'dicom_device';
+  case FIFF.FIFFV_COORD_IMAGING_DEVICE
+    coordsys = 'imaging_device';
+  otherwise
+    error('unrecognized coord_frame')
+end

@@ -3,7 +3,6 @@ function test_bug2277
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2277
 % TEST ft_preprocessing ft_preproc_padding preproc
 
 ntime = 50;

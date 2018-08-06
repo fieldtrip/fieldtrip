@@ -79,7 +79,16 @@ elseif strcmp(image.Imagetype,'Minimum Norm')
   fgetl(fp);
   h = fgetl(fp); image.DataFile = h(21:end);
   h = fgetl(fp); image.Condition = h(21:end);
-  fgetl(fp);
+  h = fgetl(fp);
+  if(~isempty(h))
+  
+      image.DataType = h(21:end);
+      h = fgetl(fp); image.Method = h(21:end);
+      fgetl(fp); % Empty line
+      
+  end
+  if(strcmp(image.Method,'Surface Minimum Norm'))
+      
   h = fgetl(fp); image.DepthWeighting = h(21:end);
   h = fgetl(fp); image.SpTmpWeighting = h(21:end);
   h = fgetl(fp); image.SpTmpWeightingType = h(21:end);
@@ -88,6 +97,16 @@ elseif strcmp(image.Imagetype,'Minimum Norm')
   h = fgetl(fp); image.NoiseWeighting = h(21:end);
   h = fgetl(fp); image.NoiseScaleFactor = str2num(h(21:end));
   h = fgetl(fp); image.SelMeanNoise = h(21:end);
+  
+  elseif(strcmp(image.Method,'Cortical LORETA'))
+      
+      h = fgetl(fp); image.DepthWeighting = h(25:end);
+      h = fgetl(fp); image.RegularizationType = h(25:end);
+      h = fgetl(fp); image.RegularizationValue = h(25:end);
+      h = fgetl(fp); image.LaplacianType = h(25:end);
+      
+  end
+  
   fgetl(fp);
   h = fgetl(fp); image.Locations = str2num(h(21:end));
   h = fgetl(fp); image.TimeSamples = str2num(h(21:end));

@@ -18,6 +18,8 @@ function [R] = randomizer_bin_und(R,alpha)
 %
 %   Jonathan Power, WUSTL. 3/1/10.
 
+%#ok<*ASGLU>
+
 % make binary
 R=ceil(R);
 
@@ -32,7 +34,7 @@ if ~isequal(R,R.')
 end
 
 % find how many edges are possible in the network
-[a b]=size(R);
+[a,b]=size(R);
 numpossibleedges=((a*a)-a)/2;
 
 % excise the diagonal and replace it with 9999
@@ -43,7 +45,7 @@ R=R+(eye(size(R,1)).*9999);
 % if there are more edges than non-edges we invert the matrix to reduce
 % computation time, then revert at the end of the script
 inverted=0;
-[i j]=find(triu(R,1));
+[i,j]=find(triu(R,1)); 
 K=size(i,1);
 if K>(numpossibleedges/2)
     inverted=1;
@@ -53,7 +55,7 @@ if K>(numpossibleedges/2)
 end
 
 % find edges
-[i j]=find(triu(R,1));
+[i,j]=find(triu(R,1));
 K=size(i,1);
 
 % exclude fully connected nodes. will replace later
@@ -65,7 +67,7 @@ if ~isempty(fullnode)
 end
 
 % find the edges
-[i j]=find(triu(R,1));
+[i,j]=find(triu(R,1));
 K=size(i,1);
 
 if (isempty(K) || K==(numpossibleedges) || (K==numpossibleedges-1))
@@ -86,7 +88,7 @@ else
             iintersect=intersect(alliholes,alljholes);            
             
             % find which of these nodes are connected
-            [ii jj]=find(R(iintersect,iintersect)==1);         
+            [ii,jj]=find(R(iintersect,iintersect)==1);         
 
             % if there an edge to switch
             if ~isempty(ii)

@@ -1,9 +1,10 @@
-function [nrm] = normals(pnt, tri, opt);
+function [nrm] = normals(pos, tri, opt)
 
 % NORMALS compute the surface normals of a triangular mesh
 % for each triangle or for each vertex
 %
-% [nrm] = normals(pnt, tri, opt)
+% Use as
+%   nrm = normals(pos, tri, opt)
 % where opt is either 'vertex' or 'triangle'
 
 % Copyright (C) 2002-2007, Robert Oostenveld
@@ -18,32 +19,32 @@ else
   error('invalid optional argument');
 end
 
-npnt = size(pnt,1);
+npos = size(pos,1);
 ntri = size(tri,1);
 
 % shift to center
-pnt(:,1) = pnt(:,1)-mean(pnt(:,1),1);
-pnt(:,2) = pnt(:,2)-mean(pnt(:,2),1);
-pnt(:,3) = pnt(:,3)-mean(pnt(:,3),1);
+pos(:,1) = pos(:,1)-mean(pos(:,1),1);
+pos(:,2) = pos(:,2)-mean(pos(:,2),1);
+pos(:,3) = pos(:,3)-mean(pos(:,3),1);
 
 % compute triangle normals
 nrm_tri = zeros(ntri, 3);
 for i=1:ntri
-  v2 = pnt(tri(i,2),:) - pnt(tri(i,1),:);
-  v3 = pnt(tri(i,3),:) - pnt(tri(i,1),:);
+  v2 = pos(tri(i,2),:) - pos(tri(i,1),:);
+  v3 = pos(tri(i,3),:) - pos(tri(i,1),:);
   nrm_tri(i,:) = cross(v2, v3);
 end
 
 if strcmp(opt, 'vertex')
   % compute vertex normals
-  nrm_pnt = zeros(npnt, 3);
+  nrm_pos = zeros(npos, 3);
   for i=1:ntri
-    nrm_pnt(tri(i,1),:) = nrm_pnt(tri(i,1),:) + nrm_tri(i,:);
-    nrm_pnt(tri(i,2),:) = nrm_pnt(tri(i,2),:) + nrm_tri(i,:);
-    nrm_pnt(tri(i,3),:) = nrm_pnt(tri(i,3),:) + nrm_tri(i,:);
+    nrm_pos(tri(i,1),:) = nrm_pos(tri(i,1),:) + nrm_tri(i,:);
+    nrm_pos(tri(i,2),:) = nrm_pos(tri(i,2),:) + nrm_tri(i,:);
+    nrm_pos(tri(i,3),:) = nrm_pos(tri(i,3),:) + nrm_tri(i,:);
   end
   % normalise the direction vectors to have length one
-  nrm = nrm_pnt ./ (sqrt(sum(nrm_pnt.^2, 2)) * ones(1,3));
+  nrm = nrm_pos ./ (sqrt(sum(nrm_pos.^2, 2)) * ones(1,3));
 else
   % normalise the direction vectors to have length one
   nrm = nrm_tri ./ (sqrt(sum(nrm_tri.^2, 2)) * ones(1,3));

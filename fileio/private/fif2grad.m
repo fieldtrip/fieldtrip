@@ -12,7 +12,7 @@ function grad = fif2grad(filename)
 
 % Copyright (C) 2004, Joachim Gross
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 % FieldTrip is free software: you can redistribute it and/or modify
@@ -63,10 +63,10 @@ try
       kCoil = kCoil+1;
       grad.label{k} = deblank(s(k,:));
     else
-      error('unknown sensor type');
+      ft_error('unknown sensor type');
     end
   end
 catch
-  warning('gradiometer information could not be extracted from file, returning an empty grad structure');
+  ft_warning('gradiometer information could not be extracted from file, returning an empty grad structure');
   return;
 end

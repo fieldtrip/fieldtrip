@@ -9,14 +9,13 @@ function [vol] = openmeeg(vol, isolated)
 %  FieldTrip convention pointing outwards (with respect to the mesh center),
 %  whereas OpenMEEG binaries expect them to be poiting inwards.
 
+% Copyright (C) 2010-2017, OpenMEEG developers
 
-% Copyright (C) 2009, Alexandre Gramfort
-% INRIA Odyssee Project Team
-% $Id$
-warning('OPENMEEG is deprecated, please use FT_PREPARE_HEADMODEL with cfg.method = ''bem_openmeeg'' instead.')
+warning('OPENMEEG is deprecated, please use FT_PREPARE_HEADMODEL with cfg.method = ''openmeeg'' instead.')
 
-openmeeg_license
-om_checkombin;
+openmeeg_license;              % show the license (only once)
+prefix = om_checkombin;        % check the installation of the binaries
+
 sprintf('%s','Calculating BEM model...please wait');
 
 skin   = find_outermost_boundary(vol.bnd);
@@ -60,7 +59,7 @@ try
   for ii=1:length(vol.bnd)
     [junk,tname] = fileparts(tempname);
     bndfile{ii} = [tname '.tri'];
-    om_save_tri(bndfile{ii}, bndom(ii).pnt, bndom(ii).tri);
+    om_save_tri(bndfile{ii}, bndom(ii).pos, bndom(ii).tri);
   end
   
   % these will hold the shell script and the inverted system matrix
@@ -90,11 +89,11 @@ try
   if ~ispc
     fprintf(efid,'#!/usr/bin/env bash\n');
     fprintf(efid,['export OMP_NUM_THREADS=',num2str(omp_num_threads),'\n']);
-    fprintf(efid,['om_assemble -HM ./' geomfile ' ./' condfile ' ./' hmfile ' 2>&1 > /dev/null\n']);
-    fprintf(efid,['om_minverser ./' hmfile ' ./' hminvfile ' 2>&1 > /dev/null\n']);
+    fprintf(efid,[prefix 'om_assemble -HM ./' geomfile ' ./' condfile ' ./' hmfile ' 2>&1 > /dev/null\n']);
+    fprintf(efid,[prefix 'om_minverser ./' hmfile ' ./' hminvfile ' 2>&1 > /dev/null\n']);
   else
-    fprintf(efid,['om_assemble -HM ./' geomfile ' ./' condfile ' ./' hmfile '\n']);
-    fprintf(efid,['om_minverser ./' hmfile ' ./' hminvfile '\n']);
+    fprintf(efid,[prefix 'om_assemble -HM ./' geomfile ' ./' condfile ' ./' hmfile '\n']);
+    fprintf(efid,[prefix 'om_minverser ./' hmfile ' ./' hminvfile '\n']);
   end
   
   fclose(efid);
@@ -110,7 +109,7 @@ end
 try
   % execute OpenMEEG and read the resulting file
   if ispc
-    dos([exefile]);
+    dos(exefile);
   elseif ismac
     dos(['./' exefile]);
   else % assumes linux by default
@@ -147,15 +146,15 @@ return
 
 function ok = checknormals(bnd)
 ok = 0;
-pnt = bnd.pnt;
+pos = bnd.pos;
 tri = bnd.tri;
 % translate to the center
-org = mean(pnt,1);
-pnt(:,1) = pnt(:,1) - org(1);
-pnt(:,2) = pnt(:,2) - org(2);
-pnt(:,3) = pnt(:,3) - org(3);
+org = mean(pos,1);
+pos(:,1) = pos(:,1) - org(1);
+pos(:,2) = pos(:,2) - org(2);
+pos(:,3) = pos(:,3) - org(3);
 
-w = sum(solid_angle(pnt, tri));
+w = sum(solid_angle(pos, tri));
 
 if w<0 && (abs(w)-4*pi)<1000*eps
   % FIXME: this method is rigorous only for star shaped surfaces

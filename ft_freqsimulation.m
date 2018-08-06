@@ -8,22 +8,23 @@ function [data] = ft_freqsimulation(cfg)
 % Use as
 %   [data] = ft_freqsimulation(cfg)
 %
-% The configuration options include
-%   cfg.method      = The methods are explained in more detail below, but they can be
+% The configuration options can include
+%   cfg.method     = The methods are explained in more detail below, but they can be
 %                     'superimposed'    simply add the contribution of the different frequencies
 %                     'broadband'       create a single broadband signal component
 %                     'phalow_amphigh'  phase of low freq correlated with amplitude of high freq
 %                     'amplow_amphigh'  amplitude of low freq correlated with amplithude of high freq
 %                     'phalow_freqhigh' phase of low freq correlated with frequency of high signal
 %                     'asymmetric'      single signal component with asymmetric positive/negative deflections
-%   cfg.output      = which channels should be in the output data, can be 'mixed' or 'all' (default = 'all')
+%   cfg.output     = which channels should be in the output data, can be 'mixed' or 'all' (default = 'all')
+%   cfg.randomseed = 'yes' or a number or vector with the seed value (default = 'yes')
 %
 % The number of trials and the time axes of the trials can be specified by
-%   cfg.fsample     = simulated sample frequency
-%   cfg.trllen      = length of simulated trials in seconds
-%   cfg.numtrl      = number of simulated trials
+%   cfg.fsample    = simulated sample frequency
+%   cfg.trllen     = length of simulated trials in seconds
+%   cfg.numtrl     = number of simulated trials
 % or by
-%   cfg.time        = cell-array with one time axis per trial (i.e. from another dataset)
+%   cfg.time       = cell-array with one time axis per trial, which are for example obtained from an existing dataset
 %
 % For each of the methods default parameters are configured to generate
 % example data, including noise. To get full control over the generated
@@ -128,12 +129,12 @@ function [data] = ft_freqsimulation(cfg)
 %     3rd channel: asymmetric signal
 %     4th channel: noise
 %
-% See also FT_FREQANALYSIS, FT_FREQDESCRIPTIVES, FT_FREQINTERPOLATION,
-% FT_MULTIPLOTTFR, FT_TOPOPLOTTFR, FT_SINGLEPLOTTFR
+% See also FT_FREQANALYSIS, FT_TIMELOCKSIMULATION, FT_DIPOLESIMULATION,
+% FT_CONNECTIVITYSIMULATION
 
-% Copyright (C) 2007-2008, Ingrid Nieuwenhuis & Robert Oostenveld, F.C. Donders Centre
+% Copyright (C) 2007-2008, Ingrid Nieuwenhuis & Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -151,17 +152,21 @@ function [data] = ft_freqsimulation(cfg)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
+ft_preamble provenance
+ft_preamble randomseed
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -185,7 +190,7 @@ else
   cfg.numtrl = length(cfg.time);
 end
 
-if strcmp(cfg.method,'superimposed')
+if strcmp(cfg.method, 'superimposed')
   if ~isfield(cfg, 's1'),           cfg.s1 = [];                          end
   if ~isfield(cfg.s1, 'freq'),      cfg.s1.freq  = 10;                    end
   if ~isfield(cfg.s1, 'phase'),     cfg.s1.phase = 0;                     end
@@ -200,7 +205,7 @@ if strcmp(cfg.method,'superimposed')
   if ~isfield(cfg.s3, 'ampl'),      cfg.s3.ampl  = 0;                     end
 end
 
-if strcmp(cfg.method,'broadband')
+if strcmp(cfg.method, 'broadband')
   if ~isfield(cfg, 'n1'),           cfg.n1 = [];                          end
   if ~isfield(cfg.n1, 'ampl'),      cfg.n1.ampl  = 1;                     end
   if ~isfield(cfg.n1, 'bpfreq'),    cfg.n1.bpfreq  = [30 50];             end
@@ -209,7 +214,7 @@ if strcmp(cfg.method,'broadband')
   if ~isfield(cfg.n2, 'bpfreq'),    cfg.n2.bpfreq  = [80 120];            end
 end
 
-if strcmp(cfg.method,'phalow_amphigh')
+if strcmp(cfg.method, 'phalow_amphigh')
   if ~isfield(cfg, 's1'),           cfg.s1 = [];                          end
   if ~isfield(cfg.s1, 'freq'),      cfg.s1.freq = 3;                      end
   if ~isfield(cfg.s1, 'phase'),     cfg.s1.phase = -1*pi;                 end
@@ -224,7 +229,7 @@ if strcmp(cfg.method,'phalow_amphigh')
   if ~isfield(cfg.s3, 'ampl'),      cfg.s3.ampl = cfg.s1.ampl;            end
 end
 
-if strcmp(cfg.method,'amplow_amphigh')
+if strcmp(cfg.method, 'amplow_amphigh')
   if ~isfield(cfg, 's1'),           cfg.s1 = [];                          end
   if ~isfield(cfg.s1, 'freq'),      cfg.s1.freq = 6;                      end
   if ~isfield(cfg.s1, 'phase'),     cfg.s1.phase = 0;                     end
@@ -243,7 +248,7 @@ if strcmp(cfg.method,'amplow_amphigh')
   if ~isfield(cfg.s3, 'ampl'),      cfg.s3.ampl = cfg.s4.ampl;            end
 end
 
-if strcmp(cfg.method,'phalow_freqhigh')
+if strcmp(cfg.method, 'phalow_freqhigh')
   if ~isfield(cfg, 's1'),           cfg.s1 = [];                          end
   if ~isfield(cfg.s1, 'freq'),      cfg.s1.freq = 20;                     end
   if ~isfield(cfg.s1, 'phase'),     cfg.s1.phase = 0;                     end
@@ -254,7 +259,7 @@ if strcmp(cfg.method,'phalow_freqhigh')
   if ~isfield(cfg.s2, 'ampl'),      cfg.s2.ampl = pi;                     end
 end
 
-if strcmp(cfg.method,'asymmetric')
+if strcmp(cfg.method, 'asymmetric')
   if ~isfield(cfg, 's1'),           cfg.s1 = [];                          end
   if ~isfield(cfg.s1, 'freq'),      cfg.s1.freq = 6;                      end
   if ~isfield(cfg.s1, 'phase'),     cfg.s1.phase = 0;                     end
@@ -266,7 +271,6 @@ end
 if ~isfield(cfg, 'noise'),         cfg.noise = [];                        end
 if ~isfield(cfg.noise, 'ampl'),    cfg.noise.ampl = 1;                    end
 
-
 if ~isempty(cfg.time)
   % use the user-supplied time vectors
   timevec = cfg.time;
@@ -277,9 +281,14 @@ else
   end
 end
 
+% give the user some feedback
+ft_info('simulating data using %s method', cfg.method);
+ft_debug('using %f as samping frequency', cfg.fsample);
+ft_debug('using %d trials of %f seconds long', cfg.numtrl, cfg.trllen);
+
 
 %%%%%%% SUPERIMPOSED, SIMPLY ADD THE SIGNALS %%%%%%%%%
-if strcmp(cfg.method,'superimposed')
+if strcmp(cfg.method, 'superimposed')
   
   % make data
   for iTr = 1 : length(timevec)
@@ -294,7 +303,7 @@ if strcmp(cfg.method,'superimposed')
     mix   = s1 + s2 + s3 + noise;
     
     data.trial{iTr}(1,:) = mix;
-    if strcmp(cfg.output,'all')
+    if strcmp(cfg.output, 'all')
       data.trial{iTr}(2,:) = s1;
       data.trial{iTr}(3,:) = s2;
       data.trial{iTr}(4,:) = s3;
@@ -304,7 +313,7 @@ if strcmp(cfg.method,'superimposed')
   end % for iTr
   
   data.label{1} = 'mix';
-  if strcmp(cfg.output,'all')
+  if strcmp(cfg.output, 'all')
     data.label{2} = 's1';
     data.label{3} = 's2';
     data.label{4} = 's3';
@@ -313,7 +322,7 @@ if strcmp(cfg.method,'superimposed')
   data.fsample = cfg.fsample;
   
   %%%%%%% SUPERIMPOSED BROADBAND SIGNAL %%%%%%%%%
-elseif strcmp(cfg.method,'broadband')
+elseif strcmp(cfg.method, 'broadband')
   
   % make data
   for iTr = 1 : length(timevec)
@@ -323,7 +332,7 @@ elseif strcmp(cfg.method,'broadband')
     mix   = n1 + n2 + noise;
     
     data.trial{iTr}(1,:) = mix;
-    if strcmp(cfg.output,'all')
+    if strcmp(cfg.output, 'all')
       data.trial{iTr}(2,:) = n1;
       data.trial{iTr}(3,:) = n2;
       data.trial{iTr}(4,:) = noise;
@@ -332,7 +341,7 @@ elseif strcmp(cfg.method,'broadband')
   end % for iTr
   
   data.label{1} = 'mix';
-  if strcmp(cfg.output,'all')
+  if strcmp(cfg.output, 'all')
     data.label{2} = 'n1';
     data.label{3} = 'n2';
     data.label{4} = 'noise';
@@ -340,20 +349,20 @@ elseif strcmp(cfg.method,'broadband')
   data.fsample = cfg.fsample;
   
   %%%%%%% PHASE TO AMPLITUDE CORRELATION %%%%%%%%%
-elseif strcmp(cfg.method,'phalow_amphigh')
+elseif strcmp(cfg.method, 'phalow_amphigh')
   
   % sanity checks
   if cfg.s2.freq < cfg.s1.freq
-    error('with method is phalow_amphigh freq s2 should be higher than freq s1')
+    ft_error('with method is phalow_amphigh freq s2 should be higher than freq s1')
   end
   if cfg.s2.freq > cfg.fsample/2
-    error('you cannot have a frequency higher than the sample frequency/2')
+    ft_error('you cannot have a frequency higher than the sample frequency/2')
   end
   if cfg.s3.freq ~= 0 || cfg.s3.phase ~= 0
-    warning('for method phalow_amphigh s3 is DC and therefore expect freq and phase to be zero but they are not')
+    ft_warning('for method phalow_amphigh s3 is DC and therefore expect freq and phase to be zero but they are not')
   end
   if cfg.s3.ampl < cfg.s1.ampl
-    warning('expect amplitude s3 (=DC) not to be smaller than amplitude s1 (=low frequency)')
+    ft_warning('expect amplitude s3 (=DC) not to be smaller than amplitude s1 (=low frequency)')
   end
   
   % make data
@@ -369,7 +378,7 @@ elseif strcmp(cfg.method,'phalow_amphigh')
     mix = ((AM + DC) .* high) + noise;
     
     data.trial{iTr}(1,:) = mix;
-    if strcmp(cfg.output,'all')
+    if strcmp(cfg.output, 'all')
       data.trial{iTr}(2,:) = AM;
       data.trial{iTr}(3,:) = high;
       data.trial{iTr}(4,:) = DC;
@@ -379,7 +388,7 @@ elseif strcmp(cfg.method,'phalow_amphigh')
   end % for iTr
   
   data.label{1} = 'mix';
-  if strcmp(cfg.output,'all')
+  if strcmp(cfg.output, 'all')
     data.label{2} = 's1 (AM)';
     data.label{3} = 's2 (high)';
     data.label{4} = 's3 (DC)';
@@ -388,20 +397,20 @@ elseif strcmp(cfg.method,'phalow_amphigh')
   data.fsample = cfg.fsample;
   
   %%%%%%% POWER TO POWER CORRELATION %%%%%%%%%
-elseif strcmp(cfg.method,'amplow_amphigh')
+elseif strcmp(cfg.method, 'amplow_amphigh')
   
   % sanity checks
   if cfg.s2.freq < cfg.s1.freq || cfg.s1.freq < cfg.s4.freq
-    error('with method is powlow_powhigh freq s4 < s1 < s2')
+    ft_error('with method is powlow_powhigh freq s4 < s1 < s2')
   end
   if cfg.s2.freq > cfg.fsample/2
-    error('you cannot have a frequency higher than the sample frequency/2')
+    ft_error('you cannot have a frequency higher than the sample frequency/2')
   end
   if cfg.s3.freq ~= 0 || cfg.s3.phase ~= 0
-    warning('for method powlow_powhigh s3 is DC and therefore expect freq and phase to be zero but they are not')
+    ft_warning('for method powlow_powhigh s3 is DC and therefore expect freq and phase to be zero but they are not')
   end
   if cfg.s3.ampl < cfg.s4.ampl
-    warning('expect amplitude s3 (=DC) not to be smaller than amplitude s4 (= AM frequency)')
+    ft_warning('expect amplitude s3 (=DC) not to be smaller than amplitude s4 (= AM frequency)')
   end
   
   % make data
@@ -421,7 +430,7 @@ elseif strcmp(cfg.method,'amplow_amphigh')
     mix     = lowmix + highmix + noise;
     
     data.trial{iTr}(1,:) = mix;
-    if strcmp(cfg.output,'all')
+    if strcmp(cfg.output, 'all')
       data.trial{iTr}(2,:) = low;
       data.trial{iTr}(3,:) = high;
       data.trial{iTr}(4,:) = DC;
@@ -434,7 +443,7 @@ elseif strcmp(cfg.method,'amplow_amphigh')
   end % for iTr
   
   data.label{1} = 'mix';
-  if strcmp(cfg.output,'all')
+  if strcmp(cfg.output, 'all')
     data.label{2} = 's1 (low)';
     data.label{3} = 's2 (high)';
     data.label{4} = 's3 (DC)';
@@ -446,11 +455,11 @@ elseif strcmp(cfg.method,'amplow_amphigh')
   data.fsample = cfg.fsample;
   
   %%%%%%% PHASE TO FREQUENCY CORRELATION %%%%%%%%%
-elseif strcmp(cfg.method,'phalow_freqhigh')
+elseif strcmp(cfg.method, 'phalow_freqhigh')
   
   % sanity checks
   if cfg.s1.freq > cfg.fsample/2 || cfg.s2.freq > cfg.fsample/2
-    error('you cannot have a frequency higher than the sample frequency/2')
+    ft_error('you cannot have a frequency higher than the sample frequency/2')
   end
   
   % make data
@@ -467,7 +476,7 @@ elseif strcmp(cfg.method,'phalow_freqhigh')
     mix           = cfg.s1.ampl .* cos(inst_pha) + noise;
     
     data.trial{iTr}(1,:) = mix;
-    if strcmp(cfg.output,'all')
+    if strcmp(cfg.output, 'all')
       data.trial{iTr}(2,:) = s1;
       data.trial{iTr}(3,:) = s2;
       data.trial{iTr}(4,:) = noise;
@@ -479,7 +488,7 @@ elseif strcmp(cfg.method,'phalow_freqhigh')
   end % for iTr
   
   data.label{1} = 'mix';
-  if strcmp(cfg.output,'all')
+  if strcmp(cfg.output, 'all')
     data.label{2} = 's1';
     data.label{3} = 's2';
     data.label{4} = 'noise';
@@ -490,7 +499,7 @@ elseif strcmp(cfg.method,'phalow_freqhigh')
   data.fsample = cfg.fsample;
   
   %%%%%%% ASYMETRIC POSITIVE AND NEGATIVE PEAKS %%%%%%%%%
-elseif strcmp(cfg.method,'asymmetric')
+elseif strcmp(cfg.method, 'asymmetric')
   
   % make data
   for iTr = 1 : length(timevec)
@@ -506,7 +515,7 @@ elseif strcmp(cfg.method,'asymmetric')
     mix   = s2 + noise;
     
     data.trial{iTr}(1,:) = mix;
-    if strcmp(cfg.output,'all')
+    if strcmp(cfg.output, 'all')
       data.trial{iTr}(2,:) = s1;
       data.trial{iTr}(3,:) = s2;
       data.trial{iTr}(4,:) = noise;
@@ -515,7 +524,7 @@ elseif strcmp(cfg.method,'asymmetric')
   end % for iTr
   
   data.label{1} = 'mix';
-  if strcmp(cfg.output,'all')
+  if strcmp(cfg.output, 'all')
     data.label{2} = 's1';
     data.label{3} = 's2';
     data.label{4} = 'noise';
@@ -523,12 +532,13 @@ elseif strcmp(cfg.method,'asymmetric')
   data.fsample = cfg.fsample;
   
 else
-  error('unknown method specified')
+  ft_error('unknown method specified')
 end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble history data
-ft_postamble savevar data
+ft_postamble randomseed
+ft_postamble provenance data
+ft_postamble history    data
+ft_postamble savevar    data

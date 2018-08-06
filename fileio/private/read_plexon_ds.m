@@ -12,7 +12,7 @@ function [dat] = read_plexon_ds(dirname, hdr, begsample, endsample, chanindx)
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -59,9 +59,9 @@ if needhdr
   ftype = ftype(ftype>0);
 
   if isempty(fname)
-    error('the directory contains no supported files');
+    ft_error('the directory contains no supported files');
   elseif any(ftype~=1)
-    error('only nex files are supported in a plexon dataset directory');
+    ft_error('only nex files are supported in a plexon dataset directory');
   end
 
   for i=1:length(fname)
@@ -70,17 +70,17 @@ if needhdr
       case 1
         orig(i) = read_plexon_nex(fname{i});
       case 'plexon_plx'
-        error('plx files are not supported in plexon dataset directory');
+        ft_error('plx files are not supported in plexon dataset directory');
       case 'plexon_ddt'
-        error('ddt files are not supported in plexon dataset directory');
+        ft_error('ddt files are not supported in plexon dataset directory');
       otherwise
-        error('unsupported file in plexon dataset directory');
+        ft_error('unsupported file in plexon dataset directory');
     end
   end
 
   for i=1:length(fname)
     if length(orig(i).VarHeader)>1
-      error('multiple channels in a single NEX file not supported');
+      ft_error('multiple channels in a single NEX file not supported');
     else
       % combine the information from the different files in a single header
       label{i}        = deblank(orig(i).VarHeader.Name);
@@ -95,27 +95,27 @@ if needhdr
   end
 
   if any(Type~=5)
-    error('not all channels contain continuous data');
+    ft_error('not all channels contain continuous data');
   end
 
   if any(WFrequency~=WFrequency(1))
-    warning('not all channels have the same sampling rate');
+    ft_warning('not all channels have the same sampling rate');
   end
 
   if any(Frequency~=Frequency(1))
-    warning('not all channels have the same timestamp rate');
+    ft_warning('not all channels have the same timestamp rate');
   end
 
   if any(Beg~=Beg(1))
-    warning('not all channels start at the same time');
+    ft_warning('not all channels start at the same time');
   end
 
   if any(End~=End(1))
-    warning('not all channels end at the same time');
+    ft_warning('not all channels end at the same time');
   end
 
   if any(NPointsWave~=NPointsWave(1))
-    warning('not all channels have the same number of samples');
+    ft_warning('not all channels have the same number of samples');
   end
 
   % construct the header that applies to all channels combined
@@ -164,11 +164,11 @@ else
         nex = read_plexon_nex(thisfile, 'header', hdr.orig(thischan), 'channel', 1, 'begsample', begsample, 'endsample', endsample); % always read the first and only channel
         dat(i,:) = nex.dat;
       case 'plexon_plx'
-        error('plx files are not supported in plexon dataset directory');
+        ft_error('plx files are not supported in plexon dataset directory');
       case 'plexon_ddt'
-        error('ddt files are not supported in plexon dataset directory');
+        ft_error('ddt files are not supported in plexon dataset directory');
       otherwise
-        error('unsupported file in plexon dataset directory');
+        ft_error('unsupported file in plexon dataset directory');
     end
   end
 end

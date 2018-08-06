@@ -20,9 +20,10 @@ function [data] = ft_rejectcomponent(cfg, comp, data)
 % this option of including data as input, if you wish to use the output
 % data.grad in further computation, for example for leadfield computation.
 %
-% The configuration should contain
-%   cfg.component = list of components to remove, e.g. [1 4 7]
-%   cfg.demean    = 'no' or 'yes', whether to demean the input data (default = 'yes')
+% The configuration structure can contain
+%   cfg.component  = list of components to remove, e.g. [1 4 7] or see FT_CHANNELSELECTION
+%   cfg.demean     = 'no' or 'yes', whether to demean the input data (default = 'yes')
+%   cfg.updatesens = 'no' or 'yes' (default = 'yes')
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -36,7 +37,7 @@ function [data] = ft_rejectcomponent(cfg, comp, data)
 
 % Copyright (C) 2005-2014, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -54,79 +55,90 @@ function [data] = ft_rejectcomponent(cfg, comp, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar comp data
+ft_preamble provenance comp data
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
-% set defaults
-cfg.component  = ft_getopt(cfg, 'component',  []);
-cfg.demean     = ft_getopt(cfg, 'demean',    'yes');
-cfg.feedback   = ft_getopt(cfg, 'feedback',  'text');
+% set the defaults
+cfg.component       = ft_getopt(cfg, 'component',  []);
+cfg.demean          = ft_getopt(cfg, 'demean',     'yes');
+cfg.feedback        = ft_getopt(cfg, 'feedback',   'text');
+cfg.updatesens      = ft_getopt(cfg, 'updatesens', 'yes');
 
 % the data can be passed as input arguments or can be read from disk
-nargin = 1;
-nargin = nargin + exist('comp', 'var');
-nargin = nargin + exist('data', 'var');
+hascomp = exist('comp', 'var');
+hasdata = exist('data', 'var');
 
-if nargin==3
+if hascomp && hasdata
   % check if the input data is valid for this function
+  istlck  = ft_datatype(data, 'timelock');  % this will be temporary converted into raw
   data    = ft_checkdata(data, 'datatype', 'raw');
   comp    = ft_checkdata(comp, 'datatype', 'comp');
   label   = data.label;
   nchans  = length(data.label);
   ncomps  = length(comp.label);
-  hasdata = 1;
-elseif nargin==2
+elseif hascomp
   % check if the input data is valid for this function
+  istlck  = ft_datatype(comp, 'timelock');  % this will be temporary converted into raw
   comp    = ft_checkdata(comp, 'datatype', 'raw+comp');
   label   = comp.topolabel;
   ncomps  = length(comp.label);
-  hasdata = 0;
 else
-  error('incorrect number of input arguments');
+  ft_error('incorrect number of input arguments');
 end
 
-if min(cfg.component)<1
-  error('you cannot remove components that are not present in the data');
+% cfg.component can be indicated by number or by label
+cfg.component = ft_channelselection(cfg.component, comp.label);
+reject = match_str(comp.label, cfg.component);
+
+if isempty(reject)
+  ft_warning('no components were selected for rejection');
 end
 
-if max(cfg.component)>ncomps
-  error('you cannot remove components that are not present in the data');
+if min(reject)<1
+  ft_error('you cannot remove components that are not present in the data');
 end
 
-if nargin==3 && strcmp(cfg.demean, 'yes')
+if max(reject)>ncomps
+  ft_error('you cannot remove components that are not present in the data');
+end
+
+if hasdata && strcmp(cfg.demean, 'yes')
   % optionally perform baseline correction on each trial
-  fprintf('baseline correcting data \n');
+  ft_info('baseline correcting data \n');
   for trial=1:numel(data.trial)
     data.trial{trial} = ft_preproc_baselinecorrect(data.trial{trial});
   end
 end
 
 % set the rejected component amplitudes to zero
-fprintf('removing %d components\n', length(cfg.component));
-if ~hasdata,
-  fprintf('keeping %d components\n',  ncomps-length(cfg.component));
+ft_info('removing %d components\n', length(reject));
+if ~hasdata
+  ft_info('keeping %d components\n',  ncomps-length(reject));
 else
-  fprintf('keeping %d components\n',  nchans-length(cfg.component));
+  ft_info('keeping %d components\n',  nchans-length(reject));
 end
 
 % create a projection matrix by subtracting the subspace spanned by the
 % topographies of the to-be-removed components from identity
 [seldat, selcomp] = match_str(label, comp.topolabel);
 
-if length(seldat)~=length(label) && nargin==3,
-  warning('the subspace projection is not guaranteed to be correct for non-orthogonal components');
+if hasdata && length(seldat)~=length(label)
+  ft_warning('the subspace projection is not guaranteed to be correct for non-orthogonal components');
 end
 
 if hasdata
@@ -137,88 +149,103 @@ if hasdata
   % when comp contains non-orthogonal (=ica) topographies, and contains a complete decomposition
   
   montage     = [];
-  montage.tra = eye(length(selcomp)) - mixing(:, cfg.component)*unmixing(cfg.component, :);
+  montage.tra = eye(length(selcomp)) - mixing(:, reject)*unmixing(reject, :);
   % we are going from data to components, and back again
-  montage.labelorg = comp.topolabel(selcomp);
+  montage.labelold = comp.topolabel(selcomp);
   montage.labelnew = comp.topolabel(selcomp);
   
   keepunused = 'yes'; % keep the original data which are not present in the mixing provided
+  bname = 'reject';
   
 else
   mixing = comp.topo(selcomp, :);
-  mixing(:, cfg.component) = 0;
+  mixing(:, reject) = 0;
   
   montage     = [];
   montage.tra = mixing;
   % we are going from components to data
-  montage.labelorg = comp.label;
+  montage.labelold = comp.label;
   montage.labelnew = comp.topolabel(selcomp);
   
   keepunused = 'no'; % don't need to keep the original rejected components
-  
-  % create data structure
-  data         = [];
-  data.trial   = comp.trial;
-  data.time    = comp.time;
-  data.label   = comp.label;
-  data.fsample = comp.fsample;
-  if isfield(comp, 'grad'),       data.grad       = comp.grad;       end
-  if isfield(comp, 'elec'),       data.elec       = comp.elec;       end
-  if isfield(comp, 'trialinfo'),  data.trialinfo  = comp.trialinfo;  end
-  if isfield(comp, 'sampleinfo'), data.sampleinfo = comp.sampleinfo; end
+  bname = 'invcomp';
+
+  % create the initial data structure, remove all component details
+  data = keepfields(comp, {'trial', 'time', 'label', 'fsample', 'grad', 'elec', 'opto', 'trialinfo', 'sampleinfo'});
 end % if hasdata
 
-% apply the montage to the data and to the sensor description
-data = ft_apply_montage(data, montage, 'keepunused', keepunused, 'feedback', cfg.feedback);
+% apply the linear projection to the data
+data = ft_apply_montage(data, montage, 'keepunused', keepunused, 'feedback', cfg.feedback, 'showcallinfo', cfg.showcallinfo);
 
-if isfield(data, 'grad') || (isfield(data, 'elec') && isfield(data.elec, 'tra')),
-  if isfield(data, 'grad')
-    sensfield = 'grad';
-  else
-    sensfield = 'elec';
-  end
-  % keepunused = 'yes' is required to get back e.g. reference or otherwise
-  % unused sensors in the sensor description. the unused components need to
-  % be removed in a second step
-  sens = ft_apply_montage(data.(sensfield), montage, 'keepunused', 'yes', 'balancename', 'invcomp', 'feedback', cfg.feedback);
-  
-  % there could have been sequential subspace projections, so the
-  % invcomp-field may have been renamed into invcompX. If this it the case,
-  % take the one with the highest suffix
-  invcompfield = 'invcomp';
-  if ~isfield(sens.balance, 'invcomp')
-    for k = 10:-1:1
-      if isfield(sens.balance, ['invcomp',num2str(k)])
-        invcompfield = [invcompfield,num2str(k)];
-        break;
+if isfield(data, 'grad')
+  sensfield = 'grad';
+elseif isfield(data, 'elec')
+  sensfield = 'elec';
+elseif isfield(data, 'opto')
+  sensfield = 'opto';
+else
+  sensfield = [];
+end
+
+% apply the linear projection also to the sensor description
+if ~isempty(sensfield)
+  if  strcmp(cfg.updatesens, 'yes')
+    ft_info('also applying the backprojection matrix to the %s structure\n', sensfield);
+
+    % the balance field is needed to keep the sequence of linear projections
+    if ~isfield(data.(sensfield), 'balance')
+      data.(sensfield).balance.current = 'none';
+    end
+    
+    % keepunused = 'yes' is required to get back e.g. reference or otherwise
+    % unused sensors in the sensor description. the unused components need to
+    % be removed in a second step
+    sens = ft_apply_montage(data.(sensfield), montage, 'keepunused', 'yes', 'balancename', bname, 'feedback', cfg.feedback);
+    
+    % remove the unused channels from the grad/elec/opto
+    [junk, remove]    = match_str(comp.label, sens.label);
+    sens.tra(remove,:) = [];
+    sens.label(remove) = [];
+    sens.chanpos(remove,:) = [];
+    if isfield(sens, 'chanori')
+      sens.chanori(remove,:) = [];
+    end
+    
+    % there could have been sequential subspace projections, so the
+    % invcomp-field may have been renamed into invcompX. If this it the case,
+    % take the one with the highest suffix
+    invcompfield = bname;
+    if  ~isfield(sens.balance, invcompfield)
+      for k = 10:-1:1
+        if isfield(sens.balance, [bname num2str(k)])
+          invcompfield = [invcompfield num2str(k)];
+          break;
+        end
       end
     end
+    
+    % remove the unused components from the balancing
+    [junk, remove]    = match_str(comp.label, sens.balance.(invcompfield).labelnew);
+    sens.balance.(invcompfield).tra(remove, :)   = [];
+    sens.balance.(invcompfield).labelnew(remove) = [];
+    data.(sensfield)  = sens;
+    
+  else
+    ft_info('not applying the backprojection matrix to the %s structure\n', sensfield);
+    % simply copy it over
+    comp.(sensfield) = data.(sensfield);
   end
-  
-  % remove the unused channels from the grad/elec
-  [junk, remove]    = match_str(comp.label, sens.label);
-  sens.tra(remove,:) = [];
-  sens.label(remove) = [];
-  sens.chanpos(remove,:) = [];
-  if isfield(sens, 'chanori')
-    sens.chanori(remove,:) = [];
-  end
-  
-  % remove the unused components from the balancing and from the tra
-  [junk, remove]    = match_str(comp.label, sens.balance.(invcompfield).labelnew);
-  sens.balance.(invcompfield).tra(remove, :)   = [];
-  sens.balance.(invcompfield).labelnew(remove) = [];
-  data.(sensfield)  = sens;
+end % if sensfield
+
+if istlck
+  % convert the raw structure back into a timelock structure
+  data = ft_checkdata(data, 'datatype', 'timelock');
 end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-if nargin==2
-  ft_postamble previous comp
-elseif nargin==3
-  ft_postamble previous comp data
-end
-ft_postamble history data
-ft_postamble savevar data
+ft_postamble previous   comp data
+ft_postamble provenance data
+ft_postamble history    data
+ft_postamble savevar    data

@@ -1,26 +1,26 @@
 function [timelock] = ft_appendtimelock(cfg, varargin)
 
-% FT_APPENDTIMELOCK concatenates multiple timelock (ERP/ERF) data
-% structures that have been processed seperately. If the input data
-% structures contain different channels, it will be concatenated along the
-% channel direction. If the channels are identical in the input data
-% structures, the data will be concatenated along the repetition dimension.
+% FT_APPENDTIMELOCK concatenates multiple timelock (ERP/ERF) data structures that
+% have been processed seperately. If the input data structures contain different
+% channels, it will be concatenated along the channel direction. If the channels are
+% identical in the input data structures, the data will be concatenated along the
+% repetition dimension.
 %
 % Use as
 %   combined = ft_appendtimelock(cfg, timelock1, timelock2, ...)
 %
 % The configuration can optionally contain
-%   cfg.appenddim = String. The dimension to concatenate over (default:
-%                   'auto').
-%                   'chan' and 'rpt' possible (even if averaged data)
-%   cfg.channel   = Nx1 cell-array with selection of channels (default = 'all'),
-%                   see FT_CHANNELSELECTION for details
+%   cfg.appenddim  = string, the dimension to concatenate over which to append,
+%                    this can be 'chan' and 'rpt' (default is automatic)
+%   cfg.tolerance  = scalar, tolerance to determine how different the time axes
+%                    are allowed to still be considered compatible (default = 1e-5)
 %
-% See also FT_TIMELOCKANALYSIS, FT_APPENDDATA, FT_APPENDFREQ, FT_APPENDSOURCE
+% See also FT_TIMELOCKANALYSIS, FT_DATATYPE_TIMELOCK, FT_APPENDDATA, FT_APPENDFREQ,
+% FT_APPENDSOURCE, FT_APPENDSENS
 
-% Copyright (C) 2011, Robert Oostenveld
+% Copyright (C) 2011-2017, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -38,203 +38,81 @@ function [timelock] = ft_appendtimelock(cfg, varargin)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
+ft_preamble debug
 ft_preamble loadvar    varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
-ft_preamble debug
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
-  varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'timelock', 'feedback', 'yes', 'hassampleinfo', 'ifmakessense');
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'timelock', 'timelock+comp'}, 'feedback', 'yes', 'hassampleinfo', 'no');
 end
 
 % set the defaults
-cfg.channel   = ft_getopt(cfg, 'channel', 'all');
-cfg.appenddim = ft_getopt(cfg, 'appenddim', 'auto');
+cfg.channel    = ft_getopt(cfg, 'channel', 'all');
+cfg.parameter  = ft_getopt(cfg, 'parameter', []);
+cfg.appenddim  = ft_getopt(cfg, 'appenddim', []);
 cfg.tolerance  = ft_getopt(cfg, 'tolerance',  1e-5);
+cfg.appendsens = ft_getopt(cfg, 'appendsens', 'no');
 
-Ndata = length(varargin);
-% ensure that all inputs are sufficiently consistent
-if ~checktime(varargin{:}, 'identical', cfg.tolerance);
-  error('this function requires identical time axes for all input structures');
+if isempty(cfg.appenddim) || strcmp(cfg.appenddim, 'auto')
+  if checkchan(varargin{:}, 'identical') && checktime(varargin{:}, 'identical', cfg.tolerance)
+    cfg.appenddim = 'rpt';
+  elseif checktime(varargin{:}, 'identical', cfg.tolerance) && ~checkchan(varargin{:}, 'unique')
+    cfg.appenddim = 'rpt';
+  elseif checkchan(varargin{:}, 'unique')
+    cfg.appenddim = 'chan';
+  elseif checktime(varargin{:}, 'unique', cfg.tolerance)
+    cfg.appenddim = 'time';
+  else
+    ft_error('cfg.appenddim should be specified');
+  end
+end
+ft_info('concatenating over the "%s" dimension\n', cfg.appenddim);
+
+if isempty(cfg.parameter)
+  fn = fieldnames(varargin{1});
+  for i=2:numel(varargin)
+    fn = intersect(fn, fieldnames(varargin{i}));
+  end
+  cfg.parameter = setdiff(fn, ignorefields('appendtimelock'));
+elseif ischar(cfg.parameter)
+  cfg.parameter = {cfg.parameter};
+end
+assert(~isempty(cfg.parameter), 'cfg.parameter should be specified');
+
+if any(strcmp(cfg.parameter, 'avg')) && any(strcmp(cfg.parameter, 'trial'))
+  ft_warning('appending the individual trials, not the averages');
+  % also prevent var and dof from being appended
+  cfg.parameter = setdiff(cfg.parameter, {'avg', 'var', 'dof'}); 
 end
 
-dimord = cell(1,Ndata);
-for i=1:Ndata
-  dimord{i} = varargin{i}.dimord;
-end
-dimordmatch = all(strcmp(dimord{1}, dimord));
-if ~dimordmatch
-  error('the dimords of the input data structures are not equal');
-end
+% use a low-level function that is shared with the other ft_appendxxx functions
+timelock = append_common(cfg, varargin{:});
 
-% determine over which dimension to append if not user-specified
-switch cfg.appenddim
-  case 'auto'
-    [boolval, list] = checkchan(varargin{:}, 'unique');
-    if boolval
-      cfg.appenddim='chan';
-    else
-      cfg.appenddim='rpt';
-    end
-end
-
-% start with the initial output structure
-timelock        = [];
-timelock.time   = varargin{1}.time;
-ntime           = length(timelock.time);
-
-
-switch cfg.appenddim
-  case 'chan'
-    for i=2:length(varargin) % check if any channels in common
-      if ~isempty(ft_channelselection(varargin{1}.label,varargin{i}.label))
-        error('Cannot concatenate over channels since some channels are in common');
-      end
-    end
-    % no channels in common; append over channels
-    nchan = zeros(size(varargin));
-    for i=1:length(varargin)
-      nchan(i) = length(varargin{i}.label);
-    end
-    chansel = cumsum([1 nchan]);
-    timelock.label = cell(0,1);
-    
-    hascov        = isfield(varargin{1}, 'cov') && numel(size(varargin{1}.cov))==3;
-    if hascov, warning('Concatenating over channels does not allow for keeping covariance information'); end
-    
-    if isfield(varargin{1}, 'trial')
-      timelock.dimord = 'rpt_chan_time';
-      
-      % these don't make sense when concatenating the avg
-      hastrialinfo  = isfield(varargin{1}, 'triainfo');
-      hassampleinfo = isfield(varargin{1}, 'sampleinfo');
-      
-      ntrial = size(varargin{1}.trial,1);
-      
-      
-      timelock.trial = zeros(ntrial, sum(nchan), ntime);
-      if hastrialinfo,  timelock.trialinfo = varargin{1}.trialinfo; end
-      if hassampleinfo, timelock.sampleinfo = varargin{1}.sampleinfo; end
-      
-      for i=1:length(varargin)
-        % copy the desired data into the output structure
-        begchan = chansel(i);
-        endchan = chansel(i+1)-1;
-        timelock.trial(:,begchan:endchan,:) = varargin{i}.trial;
-        timelock.label = [timelock.label; varargin{i}.label(:)];
-      end % for varargin
-      timelock.avg = permute(mean(timelock.trial,1),[2 3 1]);
-      timelock.var = permute(var(timelock.trial,0,1),[2 3 1]);
-      timelock.dimord = 'rpt_chan_time';
-      
-    else
-      
-      
-      timelock.avg = zeros(sum(nchan), ntime);
-      
-      for i=1:length(varargin)
-        % copy the desired data into the output structure
-        begchan = chansel(i);
-        endchan = chansel(i+1)-1;
-        timelock.avg(begchan:endchan,:) = varargin{i}.avg;
-        timelock.var(begchan:endchan,:) = varargin{i}.var;
-        timelock.dof(begchan:endchan,:) = varargin{i}.dof;
-        timelock.label = [timelock.label; varargin{i}.label(:)];
-      end % for varargin
-      
-      % keep grad?  Should be ok for different channels of same dataset
-      timelock.grad=varargin{1}.grad;
-      timelock.dimord = 'chan_time';
-    end
-    
-    
-  case 'rpt' % append over trial or dataset dimension
-    % select the channels that are in every dataset
-    for i = 1:Ndata
-      cfg.channel = ft_channelselection(cfg.channel, varargin{i}.label);
-    end
-    timelock.label  = cfg.channel;
-    
-    nchan  = length(timelock.label);
-    if nchan<1
-      error('No channels in common');
-    end
-    
-    hascov        = isfield(varargin{1}, 'cov') && numel(size(varargin{1}.cov))==3;
-    for m = 1:Ndata
-      [a,b] = match_str(timelock.label, varargin{m}.label);
-      if ~all(a==b)
-        if isfield(varargin{m},'trial')
-          varargin{m}.trial = reorderdim(varargin{m}.trial, 2, b);
-        else % .avg and .var will be recomputed anyway if .trial exists
-          varargin{m}.avg = reorderdim(varargin{m}.avg, 1, b);
-          if isfield(varargin{m}, 'var')
-            varargin{m}.var = reorderdim(varargin{m}.var, 1, b);
-          end
-        end
-      end
-    end
-    
-    if isfield(varargin{1}, 'trial')
-      % these don't make sense when concatenating the avg
-      hastrialinfo  = isfield(varargin{1}, 'triainfo');
-      hassampleinfo = isfield(varargin{1}, 'sampleinfo');
-      
-      ntrial = zeros(size(varargin));
-      for i=1:length(varargin)
-        ntrial(i) = size(varargin{i}.trial, 1);
-      end
-      trialsel = cumsum([1 ntrial]);
-      
-      timelock.trial = zeros(sum(ntrial), nchan, ntime);
-      if hastrialinfo,  timelock.trialinfo = zeros(sum(ntrial), size(varargin{1}.trialinfo,2)); end
-      if hassampleinfo, timelock.sampleinfo = zeros(sum(ntrial), size(varargin{1}.sampleinfo,2)); end
-      if hascov, timelock.cov = zeros(sum(ntrial), nchan, nchan); end
-      
-      for i=1:length(varargin)
-        % copy the desired data into the output structure
-        begtrial = trialsel(i);
-        endtrial = trialsel(i+1)-1;
-        chansel = match_str(cfg.channel, varargin{i}.label);
-        timelock.trial(begtrial:endtrial,:,:) = varargin{i}.trial(:,chansel,:);
-        if hastrialinfo,  timelock.trialinfo(begtrial:endtrial,:)   = varargin{i}.trialinfo(:,:); end
-        if hassampleinfo, timelock.sampleinfo(begtrial:endtrial,:)  = varargin{i}.sampleinfo(:,:); end
-        if hascov,        timelock.cov(begtrial:endtrial,:,:)       = varargin{i}.cov(:,chansel,chansel); end
-      end % for varargin
-      timelock.avg = permute(mean(timelock.trial,1),[2 3 1]);
-      timelock.var = permute(var(timelock.trial,0,1),[2 3 1]);
-      
-    elseif isfield(varargin{1}, 'avg')
-      
-      ntrial = numel(varargin);
-      timelock.trial = zeros(ntrial, nchan, ntime);
-      if hascov, timelock.cov = zeros(sum(ntrial),nchan,nchan); end
-      
-      for i=1:length(varargin)
-        % copy the desired data into the output structure
-        chansel = match_str(cfg.channel, varargin{i}.label);
-        timelock.trial(i,:,:) = varargin{i}.avg(chansel,:);
-        if hascov, timelock.cov(i,:,:) = varargin{i}.cov(chansel,chansel); end
-      end % for varargin
-    end
-    timelock.dimord = 'rpt_chan_time';
+if isfield(timelock, 'avg') && ~isfield(timelock, 'trial')
+  ft_warning('renaming the appended averages to "trial"');
+  timelock.trial = timelock.avg;
+  timelock = rmfield(timelock, 'avg');
 end
 
 % do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous   varargin
 ft_postamble provenance timelock
 ft_postamble history    timelock
 ft_postamble savevar    timelock
-ft_postamble debug

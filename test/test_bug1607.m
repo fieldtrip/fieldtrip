@@ -3,7 +3,6 @@ function test_bug1607
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1607
 % TEST ft_channelrepair ft_topoplotER
 
 % During preprocessing I lost some channels which I got back through
@@ -22,19 +21,12 @@ function test_bug1607
 % instead of
 %     nERPdata_nD_left{isubject}.avg(loc,:) = ERPdata_nD_left{isubject}.avg(:,:);     % realign data to ref channel order
 
-
-
-if ispc
-  homedir = 'H:';
-elseif isunix
-  homedir = '/home';
-end
-
 ERPdata_nD_left = [];
 reference_labels = [];
-%load(fullfile(homedir, 'common', 'matlab', 'fieldtrip', 'data', 'test', 'bug1607', '06_control_ICA_clean.mat'));
-load(fullfile(homedir, 'common', 'matlab', 'fieldtrip', 'data', 'test', 'bug1607', 'ERPdata.mat'));
-load(fullfile(homedir, 'common', 'matlab', 'fieldtrip', 'data', 'test', 'bug1607', 'reference.mat'));
+
+%load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1607/06_control_ICA_clean.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1607/ERPdata.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1607/reference.mat'));
 
 % reference_labels = ICA_clean.label;
 

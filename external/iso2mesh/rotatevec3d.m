@@ -4,7 +4,7 @@ function newpt=rotatevec3d(pt,v1,u1,p0)
 %
 % rotate 3D points from one Cartesian coordinate system to another
 %
-% author: Qianqian Fang, <fangq at nmr.mgh.harvard.edu>
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input: 
 %   pt: 3D points defined in a standard Cartesian system where a unitary

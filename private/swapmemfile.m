@@ -20,7 +20,7 @@ function [data] = swapmemfile(data)
 
 % Copyright (C) 2004, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -55,7 +55,7 @@ elseif isempty(file) && (~ischar(data) || ~filetype(data, 'matlab'))
   % data is already present in memory, and does not originate from a file
   % do nothing
 elseif isempty(file) && ischar(data) && ft_filetype(data, 'matlab')
-  % data is not present in memory but should be read from a Matlab file
+  % data is not present in memory but should be read from a MATLAB file
   % remember the filename from which the data originates
   file = data;
   fprintf('swapping %s into memory\n', file);
@@ -63,11 +63,11 @@ elseif isempty(file) && ischar(data) && ft_filetype(data, 'matlab')
   % select the variable of interest, discard the rest
   str = fieldnames(data);
   if length(str)==1
-    % select the single variable that is inside the Matlab file
+    % select the single variable that is inside the MATLAB file
     data = getfield(data, str{1});
   else
-    error('Matlab file should contain only one variable');
+    ft_error('Matlab file should contain only one variable');
   end
 else
-  error('Unknown combination of input variable and file history');
+  ft_error('Unknown combination of input variable and file history');
 end

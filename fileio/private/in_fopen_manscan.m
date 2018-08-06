@@ -29,7 +29,7 @@ function sFile = in_fopen_manscan(DataFile)
 MbiFile = strrep(DataFile, '.mb2', '.mbi');
 % If doesn't exist: error
 if ~exist(MbiFile, 'file')
-    error('Cannot open file: missing text file .mbi');
+    ft_error('Cannot open file: missing text file .mbi');
 end
 % Initialize header
 iEpoch = 1;
@@ -164,7 +164,7 @@ else
         
         % Check if all the epochs have the same channel list
         if (iEpoch > 1) && ~isequal(hdr.epoch(iEpoch).ChannelOrder, hdr.epoch(1).ChannelOrder)
-            error('Channel list must remain constant across epochs.');
+            ft_error('Channel list must remain constant across epochs.');
         end
     end
     % Extract global min/max for time and samples indices

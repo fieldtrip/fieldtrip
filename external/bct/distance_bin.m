@@ -1,4 +1,4 @@
-function D=distance_bin(G)
+function D=distance_bin(A)
 %DISTANCE_BIN       Distance matrix
 %
 %   D = distance_bin(A);
@@ -19,20 +19,27 @@ function D=distance_bin(G)
 %   Algorithm: Algebraic shortest paths.
 %
 %
-%   Mika Rubinov, UNSW, 2007-2010.
+%   Mika Rubinov, U Cambridge
+%   Jonathan Clayden, UCL
+%   2007-2013
 
+% Modification history:
+% 2007: Original (MR)
+% 2013: Bug fix, enforce zero distance for self-connections (JC)
 
-D=eye(length(G));
-n=1;
-nPATH=G;                        %n-path matrix
-L=(nPATH~=0);                   %shortest n-path matrix
+A=double(A~=0);                 %binarize and convert to double format
 
-while find(L,1);
-    D=D+n.*L;
-    n=n+1;
-    nPATH=nPATH*G;
-    L=(nPATH~=0).*(D==0);
+l=1;                            %path length
+Lpath=A;                        %matrix of paths l
+D=A;                            %distance matrix
+
+Idx=true;
+while any(Idx(:))
+    l=l+1;
+    Lpath=Lpath*A;
+    Idx=(Lpath~=0)&(D==0);
+    D(Idx)=l;
 end
 
-D(~D)=inf;                      %disconnected nodes are assigned d=inf;
-D=D-eye(length(G));
+D(~D)=inf;                      %assign inf to disconnected nodes
+D(1:length(A)+1:end)=0;         %clear diagonal

@@ -10,7 +10,7 @@ function [src] = read_besa_src(filename)
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -55,7 +55,7 @@ src.vol = zeros(nx, ny, nz);
 
 for i=1:nz
   % search up to the next slice
-  while isempty(strmatch(sprintf('Z: %d', i-1), line)), line = fgetl(fid); check_feof(fid, filename); end;
+  while isempty(strmatch(sprintf('Z: %d', i-1), line)), line = fgetl(fid); check_feof(fid, filename); end
   % read all the values for this slice
   buf = fscanf(fid, '%f', [nx ny]);
   src.vol(:,:,i) = buf;
@@ -66,6 +66,6 @@ fclose(fid);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function check_feof(fid, filename)
 if feof(fid)
-  error(sprintf('could not read all information from file ''%s''', filename));
+  ft_error('could not read all information from file ''%s''', filename);
 end
 

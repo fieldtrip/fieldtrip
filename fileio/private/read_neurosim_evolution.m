@@ -14,7 +14,7 @@ function [hdr, dat] = read_neurosim_evolution(filename, varargin)
 
 % Copyright (C) 2012 Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -115,7 +115,7 @@ if Vonly
     end
 end
 
-% convert the header into fieldtrip style
+% convert the header into FieldTrip style
 hdr.label       = label(:);
 hdr.nChans      = length(label);
 hdr.nSamplesPre = 0;

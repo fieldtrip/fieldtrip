@@ -1,6 +1,7 @@
 function [cfg] = ft_movieplotTFR(cfg, data)
 
-% FT_MOVIEPLOTTFR makes a movie of a time frequency representation of power or coherence 
+% FT_MOVIEPLOTTFR makes a movie of the time-frequency representation of power or
+% coherence.
 %
 % Use as
 %   ft_movieplotTFR(cfg, data)
@@ -20,6 +21,9 @@ function [cfg] = ft_movieplotTFR(cfg, data)
 %   cfg.movietime    = number, movie frames are all frequencies at the fixed time movietime (default = []);
 %   cfg.layout       = specification of the layout, see below
 %   cfg.interactive  = 'no' or 'yes', make it interactive
+%   cfg.baseline     = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
+%   cfg.baselinetype = 'absolute' or 'relative' (default = 'absolute')
+%   cfg.colorbar     = 'yes', 'no' (default = 'no')
 %
 % the layout defines how the channels are arranged. you can specify the
 % layout in a variety of ways:
@@ -38,40 +42,45 @@ function [cfg] = ft_movieplotTFR(cfg, data)
 % if you specify this option the input data will be read from a *.mat
 % file on disk. this mat files should contain only a single variable named 'data',
 % corresponding to the input structure.
+%
+% See also FT_MULTIPLOTTFR, FT_TOPOPLOTTFR, FT_SINGLEPLOTTFR, FT_MOVIEPLOTER, FT_SOURCEMOVIE
 
 % Copyright (c) 2009, Ingrid Nieuwenhuis
-% Copyright (c) 2011, jan-Mathijs Schoffelen, Robert Oostenveld, Cristiano Micheli
+% Copyright (c) 2011, Jan-Mathijs Schoffelen, Robert Oostenveld, Cristiano Micheli
 %
-% this file is part of fieldtrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
-%    fieldtrip is free software: you can redistribute it and/or modify
-%    it under the terms of the gnu general public license as published by
-%    the free software foundation, either version 3 of the license, or
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
 %    (at your option) any later version.
 %
-%    fieldtrip is distributed in the hope that it will be useful,
-%    but without any warranty; without even the implied warranty of
-%    merchantability or fitness for a particular purpose.  see the
-%    gnu general public license for more details.
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
 %
-%    you should have received a copy of the gnu general public license
-%    along with fieldtrip. if not, see <http://www.gnu.org/licenses/>.
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $id: ft_movieploter.m 4354 2011-10-05 15:06:02z crimic $
+% $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
+ft_preamble provenance data
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -96,6 +105,8 @@ cfg.framesfile    = ft_getopt(cfg, 'framesfile',   []);
 cfg.moviefreq     = ft_getopt(cfg, 'moviefreq', []);
 cfg.movietime     = ft_getopt(cfg, 'movietime', []);
 cfg.movierpt      = ft_getopt(cfg, 'movierpt', 1);
+cfg.baseline      = ft_getopt(cfg, 'baseline', 'no');
+cfg.colorbar      = ft_getopt(cfg, 'colorbar', 'no');
 cfg.interactive   = ft_getopt(cfg, 'interactive', 'yes');
 dointeractive     = istrue(cfg.interactive);
 
@@ -105,7 +116,14 @@ if isfield(data, 'freq')
 end
 
 % read or create the layout that will be used for plotting:
-layout = ft_prepare_layout(cfg);
+layout = ft_prepare_layout(cfg, data);
+
+% apply optional baseline correction
+if ~strcmp(cfg.baseline, 'no')
+  tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'parameter', 'showcallinfo'});
+  data = ft_freqbaseline(tmpcfg, data);
+  [cfg, data] = rollback_provenance(cfg, data);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the actual computation is done in the middle part
@@ -122,17 +140,17 @@ end
 if isfield(data,'dimord')
   if strcmp(data.dimord,'chan_freq_time')
     if length(xvalues)~=size(parameter,3)
-      error('inconsistent size of "%s" compared to "%s"', cfg.parameter, xparam);
+      ft_error('inconsistent size of "%s" compared to "%s"', cfg.parameter, xparam);
     end
     if length(yvalues)~=size(parameter,2)
-      error('inconsistent size of "%s" compared to "%s"', cfg.parameter, yparam);
+      ft_error('inconsistent size of "%s" compared to "%s"', cfg.parameter, yparam);
     end
   elseif strcmp(data.dimord,'chan_time')
     if length(xvalues)~=size(parameter,2)
-      error('inconsistent size of "%s" compared to "%s"', cfg.parameter, xparam);
-    end    
+      ft_error('inconsistent size of "%s" compared to "%s"', cfg.parameter, xparam);
+    end
   else
-    error('input data is incompatible')
+    ft_error('input data is incompatible')
   end
 end
 
@@ -169,18 +187,17 @@ else
   hasyparam = false;
 end
 
-
 % select the channels in the data that match with the layout:
 [seldat, sellay] = match_str(data.label, layout.label);
 if isempty(seldat)
-  error('labels in data and labels in layout do not match');
+  ft_error('labels in data and labels in layout do not match');
 end
 
 % make a subselection of the data
 xvalues = xvalues(xbeg:xend);
 yvalues = yvalues(ybeg:yend);
 if all(isnan(yvalues))
-  parameter = parameter(seldat, xbeg:xend);  
+  parameter = parameter(seldat, xbeg:xend);
 else
   parameter = parameter(seldat, ybeg:yend, xbeg:xend);
 end
@@ -214,7 +231,7 @@ pos = get(gcf, 'position');
 set(h, 'toolbar', 'figure');
 
 if dointeractive
-  
+
   % add the gui elements for changing the speed
   p = uicontrol('style', 'text');
   set(p, 'position', [20 75 50 20]);
@@ -227,7 +244,7 @@ if dointeractive
   set(button_faster, 'position', [100 75 20 20]);
   set(button_faster, 'string', '+')
   set(button_faster, 'callback', @cb_speed);
-  
+
   % add the gui elements for changing the color limits
   p = uicontrol('style', 'text');
   set(p, 'position', [20 100 50 20]);
@@ -240,54 +257,55 @@ if dointeractive
   set(button_faster, 'position', [100 100 20 20]);
   set(button_faster, 'string', '+')
   set(button_faster, 'callback', @cb_zlim);
-  
+
   sx = uicontrol('style', 'slider');
   set(sx, 'position', [20 5 pos(3)-160 20]);
   % note that "sx" is needed further down
-  
+
   sy = uicontrol('style', 'slider');
   set(sy, 'position', [20 30 pos(3)-160 20]);
   % note that "sy" is needed further down
-  
+
   p = uicontrol('style', 'pushbutton');
   set(p, 'position', [20 50 50 20]);
   set(p, 'string', 'play')
   % note that "p" is needed further down
-  
+
   hx = uicontrol('style', 'text');
   set(hx, 'position', [pos(3)-140 5 120 20]);
   set(hx, 'string', sprintf('%s = ', xparam));
   set(hx, 'horizontalalignment', 'left');
-  
+
   hy = uicontrol('style', 'text');
   set(hy, 'position', [pos(3)-140 30 120 20]);
   set(hy, 'string', sprintf('%s = ', yparam));
   set(hy, 'horizontalalignment', 'left');
-  
+
   if ~hasyparam
     set(hy, 'visible', 'off')
     set(sy, 'visible', 'off')
   end
-  
+
   t = timer;
   set(t, 'timerfcn', {@cb_timer, h}, 'period', 0.1, 'executionmode', 'fixedspacing');
-  
+
   % collect the data and the options to be used in the figure
-  opt.lay   = layout;
-  opt.chanx = chanx;
-  opt.chany = chany;
+  opt.lay      = layout;
+  opt.chanx    = chanx;
+  opt.chany    = chany;
   opt.xvalues  = xvalues; % freq
   opt.yvalues  = yvalues; % time
-  opt.xparam = xparam;
-  opt.yparam = yparam;
-  opt.dat   = parameter;
-  opt.zlim  = cfg.zlim;
-  opt.speed = 1;
-  opt.cfg   = cfg;
-  opt.sx    = sx; % slider freq
-  opt.sy    = sy; % slider time
-  opt.p     = p;
-  opt.t     = t;
+  opt.xparam   = xparam;
+  opt.yparam   = yparam;
+  opt.dat      = parameter;
+  opt.zlim     = cfg.zlim;
+  opt.speed    = 1;
+  opt.cfg      = cfg;
+  opt.sx       = sx; % slider freq
+  opt.sy       = sy; % slider time
+  opt.p        = p;
+  opt.t        = t;
+  opt.colorbar = istrue(cfg.colorbar);
   if ~hasyparam
     opt.timdim = 2;
   else
@@ -296,28 +314,31 @@ if dointeractive
   [dum, hs] = ft_plot_topo(chanx, chany, zeros(numel(chanx),1), 'mask', layout.mask, 'outline', layout.outline, 'interpmethod', 'v4', 'interplim', 'mask');
   caxis(cfg.zlim);
   axis off;
-  
+  if opt.colorbar
+    colorbar
+  end
+
   % add sum stuff at a higher level for quicker access in the callback
   % routine
   opt.xdata   = get(hs, 'xdata');
   opt.ydata   = get(hs, 'ydata');
   opt.nanmask = get(hs, 'cdata');
-  
+
   % add the handle to the mesh
   opt.hs  = hs;
-  
+
   % add the text-handle to the guidata
   opt.hx  = hx;
   opt.hy  = hy;
-  
+
   guidata(h, opt);
-  
+
   % from now it is safe to hand over the control to the callback function
   set(sx, 'callback', @cb_slider);
   set(sy, 'callback', @cb_slider);
   % from now it is safe to hand over the control to the callback function
   set(p, 'callback', @cb_playbutton);
-  
+
 else
   % non interactive mode
   [tmp, hs] = ft_plot_topo(chanx, chany, zeros(numel(chanx),1), 'mask', layout.mask, 'outline', layout.outline, 'interpmethod', 'v4');
@@ -327,54 +348,55 @@ else
   xdata   = get(hs, 'xdata');
   ydata   = get(hs, 'ydata');
   nanmask = get(hs, 'cdata');
-  
+
   % frequency/time selection
-  if exist('yparam', 'var') && any(~isnan(yvalues)) 
+  if exist('yparam', 'var') && any(~isnan(yvalues))
     if ~isempty(cfg.movietime)
       indx = cfg.movietime;
       for iFrame = 1:floor(size(parameter, 2)/cfg.samperframe)
         indy = ((iFrame-1)*cfg.samperframe+1):iFrame*cfg.samperframe;
-        datavector = squeeze(mean(parameter(:, indy,indx), 2));
+        datavector = reshape(mean(parameter(:, indy,indx), 2), [size(parameter,1) 1]);
         datamatrix = griddata(chanx, chany, datavector, xdata, ydata, 'v4');
         set(hs, 'cdata',  datamatrix + nanmask);
         F(iFrame) = getframe;
-      end 
+      end
     elseif ~isempty(cfg.moviefreq)
       indy = cfg.moviefreq;
       for iFrame = 1:floor(size(parameter, 3)/cfg.samperframe)
         indx = ((iFrame-1)*cfg.samperframe+1):iFrame*cfg.samperframe;
-        datavector = squeeze(mean(parameter(:, indy,indx), 3));
+        datavector = reshape(mean(parameter(:, indy,indx), 3), [size(parameter,1) 1]);
         datamatrix = griddata(chanx, chany, datavector, xdata, ydata, 'v4');
         set(hs, 'cdata',  datamatrix + nanmask);
         F(iFrame) = getframe;
-      end      
+      end
     else
-      error('Either moviefreq or movietime should contain a bin number')
+      ft_error('Either moviefreq or movietime should contain a bin number')
     end
   else
     for iFrame = 1:floor(size(parameter, 2)/cfg.samperframe)
       indx = ((iFrame-1)*cfg.samperframe+1):iFrame*cfg.samperframe;
-      datavector = mean(parameter(:, indx), 2);    
+      datavector = mean(parameter(:, indx), 2);
       datamatrix = griddata(chanx, chany, datavector, xdata, ydata, 'v4');
       set(hs, 'cdata',  datamatrix + nanmask);
       F(iFrame) = getframe;
     end
   end
-   
+
   % save movie
   if ~isempty(cfg.framesfile)
     save(cfg.framesfile, 'F');
   end
   % play movie
   movie(F, cfg.movierpt, cfg.framespersec);
-  
+
 end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous data
+ft_postamble previous   data
+ft_postamble provenance data
+ft_postamble history    data
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -407,7 +429,7 @@ if length(size(opt.dat))>2
 else
   set(opt.hx, 'string', sprintf('%s = %f\n', opt.xparam, opt.xvalues(valx)));
   % update data, interpolate and render
-  datamatrix = griddata(opt.chanx, opt.chany, opt.dat(:,valx), opt.xdata, opt.ydata, 'v4');  
+  datamatrix = griddata(opt.chanx, opt.chany, opt.dat(:,valx), opt.xdata, opt.ydata, 'v4');
 end
 set(opt.hs, 'cdata',  datamatrix + opt.nanmask);
 
@@ -444,7 +466,7 @@ if val+delta>2
   val = get(opt.sx, 'value');
 end
 if val>1
-  val = val-1; 
+  val = val-1;
 end
 set(opt.sx, 'value', val);
 cb_slider(h);

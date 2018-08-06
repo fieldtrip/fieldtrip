@@ -1,17 +1,16 @@
 function editor(tree)
 %XMLTREE/EDITOR A Graphical User Interface for an XML tree
-%  EDITOR(TREE) opens a new Matlab figure displaying the xmltree
-%  object TREE.
+%  EDITOR(TREE) opens a new figure displaying the xmltree object TREE.
 %  H = EDITOR(TREE) also returns the figure handle H.
 %
 %  This is a beta version of <xmltree/view> successor
 %
 %  See also XMLTREE
 %__________________________________________________________________________
-% Copyright (C) 2002-2011  http://www.artefact.tk/
+% Copyright (C) 2002-2015  http://www.artefact.tk/
 
 % Guillaume Flandin
-% $Id$
+% $Id: editor.m 6480 2015-06-13 01:08:30Z guillaume $
 
 
 %error(nargchk(1,1,nargin));
@@ -71,7 +70,7 @@ uicontrol('Style', 'listbox', ...
     'Tag', 'xmllistbox');
 
 %- Right box
-uicontrol('Style', 'list', ...
+uicontrol('Style', 'listbox', ...
     'HorizontalAlignment','left', ...
     'Units','Normalized', ...
     'Visible','on',...
@@ -202,7 +201,7 @@ function doModify(fig,evd,h)
     pos     = get(handles.xmllistbox,'value');
     uid     = uidList(pos);
     contents = children(tree,uid);
-    if length(contents) > 0 & ...
+    if length(contents) > 0 && ...
        strcmp(get(tree,contents(1),'type'),'chardata')
         str = get(tree,contents(1),'value');
         prompt = {'Name :','New value:'};
@@ -316,7 +315,7 @@ function doList(fig,evd,h)
     %- Single mouse click
     if strcmp(get(h,'SelectionType'),'normal')
         contents = children(tree, uid);
-        if length(contents) > 0 & ...
+        if length(contents) > 0 && ...
            strcmp(get(tree,contents(1),'type'),'chardata')
             str = get(tree,contents(1),'value');
             set(handles.addbutton,'Enable','off');
@@ -360,7 +359,7 @@ function doUpdate(fig,evd,h)
 
 function [batchString, uidList] = doUpdateR(tree, uid, o)
     if nargin < 2, uid = root(tree); end
-    if nargin < 3 | o == 0
+    if nargin < 3 || o == 0
         o = 0;
         sep = ' ';
     else
@@ -374,7 +373,7 @@ function [batchString, uidList] = doUpdateR(tree, uid, o)
     uidList         = [get(tree,uid,'uid')];
     haselementchild = 0;
     contents        = get(tree, uid, 'contents');
-    if isfield(tree, uid, 'show') & get(tree, uid, 'show') == 1
+    if isfield(tree, uid, 'show') && get(tree, uid, 'show') == 1
         for i=1:length(contents)
             if strcmp(get(tree,contents(i),'type'),'element')
                 [subbatchString, subuidList] = doUpdateR(tree,contents(i),o+1);

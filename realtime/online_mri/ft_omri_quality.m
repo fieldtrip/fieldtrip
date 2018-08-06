@@ -19,7 +19,7 @@ function ft_omri_quality(cfg)
 
 % Copyright (C) 2010, Stefan Klanke
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -119,7 +119,7 @@ while 1
   % Ok, we got the header, try to make sense out of it
   S = ft_omri_info_from_header(hdr);
   if isempty(S)
-    warning('No protocol information found!')
+    ft_warning('No protocol information found!')
     % restart loop
     pause(0.5);
     continue;
@@ -173,7 +173,7 @@ while 1
       % read data from buffer (only the last scan)
       dat = ft_read_data(cfg.input, 'header', hdr, 'begsample', index, 'endsample', index);
     catch
-      warning('Problems reading data - going back to poll operation...');
+      ft_warning('Problems reading data - going back to poll operation...');
       continue;
     end
     

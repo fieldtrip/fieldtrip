@@ -19,7 +19,7 @@ function [bp, x] = binomialprob(pobs, alpha, subjratio)
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -80,9 +80,9 @@ elseif ~isthresh &&  isalpha
   % threshold the single subject probability maps at the alpha level
   x = sum(pobs<=alpha, 2);
 elseif ~isthresh && ~isalpha
-  error('can only determine alpha automatically from thresholded statistical maps');
+  ft_error('can only determine alpha automatically from thresholded statistical maps');
 end
 
-% this uses Matlab stats toolbox
+% this uses MATLAB stats toolbox
 bp = 1 - binocdf(x, N, p);
 

@@ -19,7 +19,7 @@ function  [CIJ] = maketoeplitzCIJ(N,K,s)
 %
 % Olaf Sporns, Indiana University, 2005/2007
 
-profile = normpdf([1:N-1],0.5,s);
+profile = normpdf(1:N-1,0.5,s);
 template = toeplitz([0 profile],[0 profile]);
 template = template.*(K./sum(sum(template)));
 CIJ = zeros(N);

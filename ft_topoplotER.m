@@ -14,16 +14,11 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 % produced by FT_CONNECTIVITYANALYSIS.  Also, the output to FT_FREQSTATISTICS
 % and FT_TIMELOCKSTATISTICS can be visualised.
 %
-% The configuration can have the following parameters:
-%   cfg.parameter          = field that contains the data to be plotted as color
-%                           'avg', 'powspctrm' or 'cohspctrm' (default depends on data.dimord)
-%   cfg.maskparameter      = field in the data to be used for masking of
-%                            data. Values between 0 and 1, 0 = transparent
-%   cfg.xlim               = selection boundaries over first dimension in data (e.g., time)
-%                            'maxmin' or [xmin xmax] (default = 'maxmin')
-%   cfg.ylim               = selection boundaries over second dimension in data (e.g., freq)
-%                            'maxmin' or [xmin xmax] (default = 'maxmin')
-%   cfg.zlim               = plotting limits for color dimension, 'maxmin', 'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
+% The configuration can have the following parameters
+%   cfg.parameter          = field that contains the data to be plotted as color, for example 'avg', 'powspctrm' or 'cohspctrm' (default is automatic)
+%   cfg.maskparameter      = field in the data to be used for masking of data. It should have alues between 0 and 1, where 0 corresponds to transparent.
+%   cfg.xlim               = limit for 1st dimension in data (e.g., time), can be 'maxmin' or [xmin xmax] (default = 'maxmin')
+%   cfg.zlim               = limits for color dimension, 'maxmin', 'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
 %   cfg.channel            = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.refchannel         = name of reference channel for visualising connectivity, can be 'gui'
 %   cfg.baseline           = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
@@ -35,13 +30,13 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %   cfg.markercolor        = channel marker color (default = [0 0 0] (black))
 %   cfg.markersize         = channel marker size (default = 2)
 %   cfg.markerfontsize     = font size of channel labels (default = 8 pt)
-%   cfg.highlight          = 'on', 'labels', 'numbers', 'off'
+%   cfg.highlight          = 'off', 'on', 'labels', 'numbers'
 %   cfg.highlightchannel   =  Nx1 cell-array with selection of channels, or vector containing channel indices see FT_CHANNELSELECTION
 %   cfg.highlightsymbol    = highlight marker symbol (default = 'o')
 %   cfg.highlightcolor     = highlight marker color (default = [0 0 0] (black))
 %   cfg.highlightsize      = highlight marker size (default = 6)
 %   cfg.highlightfontsize  = highlight marker size (default = 8)
-%   cfg.hotkeys            = enables hotkeys (up/down arrows) for dynamic colorbar adjustment
+%   cfg.hotkeys            = enables hotkeys (pageup/pagedown/m) for dynamic zoom and translation (ctrl+) of the color limits
 %   cfg.colorbar           = 'yes'
 %                            'no' (default)
 %                            'North'              inside plot box near top
@@ -64,8 +59,8 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %                            'blank' only the head shape
 %   cfg.gridscale          = scaling grid size (default = 67)
 %                            determines resolution of figure
-%   cfg.shading            = 'flat' 'interp' (default = 'flat')
-%   cfg.comment            = string 'no' 'auto' or 'xlim' (default = 'auto')
+%   cfg.shading            = 'flat' or 'interp' (default = 'flat')
+%   cfg.comment            = 'no', 'auto' or 'xlim' (default = 'auto')
 %                            'auto': date, xparam and zparam limits are printed
 %                            'xlim': only xparam limits are printed
 %   cfg.commentpos         = string or two numbers, position of comment (default 'leftbottom')
@@ -120,12 +115,28 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 % See also FT_SINGLEPLOTER, FT_MULTIPLOTER, FT_SINGLEPLOTTFR, FT_MULTIPLOTTFR,
 % FT_TOPOPLOTTFR, FT_PREPARE_LAYOUT
 
-% Undocumented local options:
+% Undocumented options:
+%
+% It is possible to use multiple highlight-selections (e.g.: multiple
+% statistical clusters of channels) To do this, all the content of
+% the highlight-options (including cfg.highlight) should be placed
+% in a cell-array (even if the normal content was already in a
+% cell-array). Specific marker settings (e.g. color, size) are defaulted
+% when not present.
+%
+% Example (3 selections):
+% cfg.highlight          = {'labels', 'labels', 'numbers'}
+% cfg.highlightchannel   = {{'MZF03','MZC01','MRT54'}, [1:5], 'C*'}
+% cfg.highlightsymbol    = {'o',[],'+'}        % the empty option will be defaulted
+% cfg.highlightcolor     = {'r',[0 0 1]};      % the missing option will be defaulted
+% cfg.highlightsize      = [];                 % will be set to default, as will the missing cfg.highlightfontsize
+%
+% Other options:
 % cfg.labeloffset (offset of labels to their marker, default = 0.005)
 
-% Copyright (C) 2005-2011, F.C. Donders Centre
+% Copyright (C) 2005-2017, F.C. Donders Centre
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -143,34 +154,59 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %
 % $Id$
 
-revision = '$Id$';
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% DEVELOPERS NOTE: This code is organized in a similar fashion for multiplot/singleplot/topoplot 
+% and for ER/TFR and should remain consistent over those 6 functions.
+% Section 1: general cfg handling that is independent from the data
+% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
+% Section 3: cfg handling that depends on the data
+% Section 4: actual plotting
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Section 1: general cfg handling that is independent from the data
+
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble loadvar    varargin
+ft_preamble debug
+ft_preamble loadvar varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
-ft_preamble debug
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
 % make sure figure window titles are labeled appropriately, pass this onto the actual
-% plotting function if we don't specify this, the window will be called
-% 'ft_topoplotTFR', which is confusing to the user
+% plotting function. if we don't specify this, the window will be called
+% 'ft_topoplotER', which is confusing to the user
 cfg.funcname = mfilename;
-if nargin > 1 && ~isfield(cfg, 'dataname')
-  cfg.dataname = {inputname(2)};
-  for k = 3:nargin
-    cfg.dataname{end+1} = inputname(k);
+if nargin>1
+  if ~isfield(cfg, 'dataname')
+    cfg.dataname = [];
+    for k = 2:nargin
+      if isstruct(varargin{k-1})
+        if ~isempty(inputname(k))
+          cfg.dataname{k-1} = inputname(k);
+        else
+          cfg.dataname{k-1} = ['data' num2str(k-1,'%02d')];
+        end
+      end
+    end
   end
+else  % data provided through cfg.inputfile
+  cfg.dataname = cfg.inputfile;
 end
 
 % prepare the layout, this should be done only once
-cfg.layout = ft_prepare_layout(cfg, varargin{1});
+tmpcfg     = removefields(cfg, 'inputfile');
+cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
 
 % call the common function that is shared between ft_topoplotER and ft_topoplotTFR
 cfg = topoplot_common(cfg, varargin{:});
@@ -179,10 +215,10 @@ cfg = topoplot_common(cfg, varargin{:});
 cfg = removefields(cfg, 'funcname');
 
 % do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous varargin
 ft_postamble provenance
-ft_postamble debug
 
 if ~nargout
   clear cfg

@@ -5,8 +5,8 @@ function [] = om_save_tri(filename,points,faces,nrmls)
 %   SYNTAX
 %       [] = OM_SAVE_TRI(FILENAME,POINTS,FACES,NORMALS)
 %
-%   Created by Alexandre Gramfort on 2008-03-09.
-%   Copyright (c) 2007 Alexandre Gramfort. All rights reserved.
+
+% Copyright (C) 2010-2017, OpenMEEG developers
 
 if nargin<4 || isempty(nrmls)
     nrmls = om_normals(points,faces);

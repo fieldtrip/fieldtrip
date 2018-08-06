@@ -11,7 +11,7 @@ function cfg = dataset2files(cfg)
 
 % Copyright (C) 2004, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -46,7 +46,7 @@ if ~isempty(cfg.dataset)
     if d==0
       [f, p] = uigetfile;
       if f==0
-        error('You should select a dataset file or directory');
+        ft_error('You should select a dataset file or directory');
       else
         d = fullfile(p, f);
       end

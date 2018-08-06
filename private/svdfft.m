@@ -1,4 +1,4 @@
-function [x, ut] = svdfft(f, n, trltapcnt)
+function [x, ut, ori, sin_val] = svdfft(f, n, trltapcnt)
 
 % SVDFFT computes a rotated FFT matrix, using the real part of the
 % cross-spectral density matrix. This rotation ensures that the phase
@@ -14,7 +14,7 @@ function [x, ut] = svdfft(f, n, trltapcnt)
 
 % Copyright (C) 2005-2007, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -68,4 +68,5 @@ end
 
 ut = u';      % this rotates the data in the direction of the maximum power
 x  = ut * f;  % apply the rotation on the data
-
+sin_val = diag(s);
+ori = u(:,1);

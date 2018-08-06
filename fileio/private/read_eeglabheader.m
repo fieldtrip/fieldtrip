@@ -50,7 +50,7 @@ header.nTrials     = EEG.trials;
 try
   header.label       = { EEG.chanlocs.labels }';
 catch
-  warning('creating default channel names');
+  ft_warning('creating default channel names');
   for i=1:header.nChans
     header.label{i} = sprintf('chan%03d', i);
   end
@@ -60,9 +60,9 @@ for i = 1:length( EEG.chanlocs )
     if isfield(EEG.chanlocs(i), 'X') && ~isempty(EEG.chanlocs(i).X)
         header.elec.label{ind, 1} = EEG.chanlocs(i).labels;
         % this channel has a position
-        header.elec.pnt(ind,1) = EEG.chanlocs(i).X;
-        header.elec.pnt(ind,2) = EEG.chanlocs(i).Y;
-        header.elec.pnt(ind,3) = EEG.chanlocs(i).Z;
+        header.elec.elecpos(ind,1) = EEG.chanlocs(i).X;
+        header.elec.elecpos(ind,2) = EEG.chanlocs(i).Y;
+        header.elec.elecpos(ind,3) = EEG.chanlocs(i).Z;
         ind = ind+1;
     end;
 end;

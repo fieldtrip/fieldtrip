@@ -1,29 +1,16 @@
 function test_tutorial_sensor_analysis(datadir)
 
 % MEM 2500mb
-% WALLTIME 00:10:00
+% WALLTIME 00:25:00
 
 % TEST test_tutorial_sensor_overview
 % TEST ft_redefinetrial ft_freqanalysis ft_timelockanalysis ft_appenddata ft_prepare_neighbours ft_megplanar ft_combineplanar ft_multiplotER ft_multiplotTFR ft_connectivityanalysis
 
-% disable verbose output
-global ft_default;
-ft_default.feedback = 'no';
-% don't convert the cfg into a config object, as that fails in r8540 due to a subsref error
-ft_default.trackconfig = 'no';
-
 if nargin==0
-  if ispc
-    datadir = 'H:';
-  else
-    datadir = '/home';
-  end
-  
-  load(fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'tutorial', 'sensor_analysis', 'subjectK.mat'));
-  
-else
-  load(fullfile(datadir, 'subjectK.mat'));
+  datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis');
 end
+
+load(fullfile(datadir, 'subjectK.mat'));
 
 %% show a trial
 

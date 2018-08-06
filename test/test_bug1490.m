@@ -3,11 +3,10 @@ function test_bug1490
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1490
 % TEST ft_read_header ft_read_data loadcnt
 
-datadir       = '/home/common/matlab/fieldtrip/data/test/bug1490';
-referencefile = '/home/common/matlab/fieldtrip/data/test/bug1490.mat';
+datadir       = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1490');
+referencefile = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1490.mat');
 
 filelist = {
   '0500.cnt'
@@ -32,7 +31,7 @@ hdr = {};
 dat = {};
 
 for i=1:length(filelist)
-filename = fullfile(datadir, filelist{i})
+filename = fullfile(datadir, filelist{i});
 
 % read the header and the first 5 seconds of the data
 hdr{i} = ft_read_header(filename);

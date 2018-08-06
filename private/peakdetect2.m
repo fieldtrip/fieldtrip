@@ -11,7 +11,7 @@ function [p, v] = peakdetect2(dat, val, mindist)
 
 % Copyright (C) 2000, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -45,7 +45,7 @@ while sect<=length(d)
     p = [p i(sect)];
   else
     s = [];
-    while ~jump(sect) & sect<length(d)
+    while ~jump(sect) && sect<length(d)
       s = [s sect];
       sect = sect + 1;
     end

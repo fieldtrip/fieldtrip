@@ -3,20 +3,10 @@ function test_tutorial_beamformer20131122
 % MEM 10gb
 % WALLTIME 02:30:00
 
-% TEST test_tutorial_beamformer20131122
 % TEST ft_sourceanalysis ft_prepare_leadfield
 
-% this test script represents the MATLAB code from http://fieldtrip.fcdonders.nl/tutorial/beamformer
+% this test script represents the MATLAB code from http://www.fieldtriptoolbox.org/tutorial/beamformer
 % as downloaded from the wiki on 22 November 2013
-
-global ft_default
-ft_default = [];
-
-if ispc
-  dccnpath = @(filename) strrep(strrep(filename,'/home','H:'),'/','\');
-else
-  dccnpath = @(filename) strrep(strrep(filename,'H:','/home'),'\','/');
-end
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data'));
 

@@ -11,7 +11,7 @@ function [dat] = ft_fetch_data(data, varargin)
 % Copyright (C) 2009-2013, Jan-Mathijs Schoffelen, Robert Oostenveld
 % Copyright (C) 2008, Esther Meeuwissen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -48,7 +48,7 @@ if isempty(hdr)
 end
 
 if isempty(begsample) || isempty(endsample)
-  error('begsample and endsample must be specified');
+  ft_error('begsample and endsample must be specified');
 end
 
 if isempty(chanindx)
@@ -59,14 +59,14 @@ end
 if isfield(data, 'sampleinfo')
   trl = data.sampleinfo;
 else
-  error('data does not contain a consistent trial definition, fetching data is not possible');
+  ft_error('data does not contain a consistent trial definition, fetching data is not possible');
 end
 trlnum = length(data.trial);
 
 % start with the output data being all NaN
 dat = nan(numel(chanindx), endsample-begsample+1);
 
-if trlnum>1,
+if trlnum>1
   % original implementation, used when the input data has multiple trials
   
   trllen = zeros(trlnum,1);
@@ -76,15 +76,15 @@ if trlnum>1,
   
   % check whether data.trial is consistent with trl
   if size(trl,1)~=length(data.trial)
-    error('trial definition is not internally consistent')
+    ft_error('trial definition is not internally consistent')
   elseif any(trllen~=(trl(:,2)-trl(:,1)+1))
-    error('trial definition is not internally consistent')
+    ft_error('trial definition is not internally consistent')
   end
   
   minchan = min(chanindx);
   maxchan = max(chanindx);
   if minchan<1 || maxchan>hdr.nChans
-    error('selected channels are not present in the data')
+    ft_error('selected channels are not present in the data')
   end
   
   % these are for bookkeeping
@@ -114,34 +114,41 @@ if trlnum>1,
   % samplenum(count>1) = NaN;
   
   % make a subselection for the desired samples
-  count     = count    (begsample:endsample);
-  trialnum  = trialnum (begsample:endsample);
-  samplenum = samplenum(begsample:endsample);
+  if begsample<1
+    count     = count    (1:endsample);
+    trialnum  = trialnum (1:endsample);
+    samplenum = samplenum(1:endsample);
+  else
+    count     = count    (begsample:endsample);
+    trialnum  = trialnum (begsample:endsample);
+    samplenum = samplenum(begsample:endsample);
+  end
   
   % check if all samples are present and are not present twice or more
   if any(count>1)
     if ~allowoverlap
-      % error('some of the requested samples occur twice in the data');
+      % ft_error('some of the requested samples occur twice in the data');
       % this  can be considered OK if the overlap has exactly identical values
       sel = find(count>1); % must be row vector
       for smplop=sel
         % find in which trials the sample occurs
-        seltrl = find(smplop>=trl(:,1) & smplop<=trl(:,2));  % which trials
-        selsmp = smplop - trl(seltrl,1) + 1;                 % which sample in each of the trials
+        seltrl = find(smplop>=trl(:,1) + 1 - begsample & ... 
+                      smplop<=trl(:,2) + 1 - begsample);  % which trials, requires the adjustment with begsample, if different from 1, JM 20180116
+        selsmp = smplop - trl(seltrl,1) + begsample; % which sample in each of the trials, requires the adjustment with begsample, rather than 1
         for i=2:length(seltrl)
           % compare all occurences to the first one
           if ~all(data.trial{seltrl(i)}(:,selsmp(i)) == data.trial{seltrl(1)}(:,selsmp(1)))
-            error('some of the requested samples occur twice in the data and have conflicting values');
+            ft_error('some of the requested samples occur twice in the data and have conflicting values');
           end
         end
       end
     else
-      warning('samples present in multiple trials, using only the last occurence of each sample')
+      ft_warning('samples present in multiple trials, using only the last occurence of each sample')
     end
   end
   
   %   if any(count==0)
-  %     warning('not all requested samples are present in the data, filling with NaNs');
+  %     ft_warning('not all requested samples are present in the data, filling with NaNs');
   %   end
   
   % construct the output data array
@@ -161,7 +168,7 @@ if trlnum>1,
   utrl = unique(trialnum);
   utrl(~isfinite(utrl)) = 0;
   utrl(utrl==0) = [];
-  if length(utrl)==1,
+  if length(utrl)==1
     ok   = trialnum==utrl;
     smps = samplenum(ok);
     dat(:,ok) = data.trial{utrl}(chanindx,smps);
@@ -179,24 +186,33 @@ else
   % get the indices
   begindx  = begsample - trl(1) + 1;
   endindx  = endsample - trl(1) + 1;
-  
+  if endindx<=0 || begindx>size(data.trial{1},2)
+    % requested data samples outside the data present
+    return;
+  end
+
   tmptrl = trl([1 2]) - [trl(1) trl(1)]+1; % ignore offset in case it's present
   
   datbegindx = max(1,                     trl(1)-begsample+1);
   datendindx = min(endsample-begsample+1, trl(2)-begsample+1);
   
   %   if begsample<trl(1) || endsample>trl(2)
-  %     warning('not all requested samples are present in the data, filling with NaNs');
+  %     ft_warning('not all requested samples are present in the data, filling with NaNs');
   %   end
   
   if begsample >= trl(1) && begsample <= trl(2)
+    % the begin sample can be found in the available data
     if endsample >= trl(1) && endsample <= trl(2)
       dat(:,datbegindx:datendindx) = data.trial{1}(chanindx,begindx:endindx);
     else
       dat(:, datbegindx:datendindx) = data.trial{1}(chanindx,begindx:tmptrl(2));
     end
   elseif endsample >= trl(1) && endsample <= trl(2)
+    % the end sample can be found in the available data
     dat(:, datbegindx:datendindx) = data.trial{1}(chanindx,tmptrl(1):endindx);
+  else
+    % neither the begin, nor the end sample are in the available data
+    dat(:, datbegindx:datendindx) = data.trial{1}(chanindx,tmptrl(1):tmptrl(2));
   end
   
 end % if trlnum is multiple or one

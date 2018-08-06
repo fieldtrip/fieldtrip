@@ -20,7 +20,7 @@ function [grandavg] = ft_timelockgrandaverage(cfg, varargin)
 %                        parameter to average. default is set to
 %                        'avg', if it is present in the data.
 %
-% If cfg.method = 'across', an plain average is performed, i.e. the
+% If cfg.method = 'across', a plain average is performed, i.e. the
 % requested parameter in each input argument is weighted equally in the
 % average. This is useful when averaging across subjects. The
 % variance-field will contain the variance across the parameter of
@@ -46,7 +46,7 @@ function [grandavg] = ft_timelockgrandaverage(cfg, varargin)
 % Copyright (C) 2003-2006, Jens Schwarzbach
 % Copyright (C) 2013, Burkhard Maess
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -64,18 +64,21 @@ function [grandavg] = ft_timelockgrandaverage(cfg, varargin)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar varargin
+ft_preamble provenance varargin
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -86,18 +89,18 @@ end
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
-  varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'timelock', 'feedback', 'no');
-  if isfield(varargin{i},'trial') && isfield(varargin{i},'avg');% see bug2372 (dieloz)
+  if isfield(varargin{i},'trial') && isfield(varargin{i},'avg') % see bug2372 (dieloz)
     varargin{i} = rmfield(varargin{i},'trial');
-    warning('depreciating trial field: using the avg to compute the grand average');
-    if strcmp(varargin{i}.dimord,'rpt_chan_time');
+    ft_warning('depreciating trial field: using the avg to compute the grand average');
+    if strcmp(varargin{i}.dimord,'rpt_chan_time')
       varargin{i}.dimord = 'chan_time';
     end
   else
-    if isfield(varargin{i},'trial') ~isfield(varargin{i},'avg');
-      error(['dataset ' num2str(i) ' does not contain avg field: see ft_timelockanalysis']);
+    if isfield(varargin{i},'trial') && ~isfield(varargin{i},'avg')
+      ft_error('input dataset %d does not contain avg field: see ft_timelockanalysis', i);
     end
   end
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'timelock', 'feedback', 'no');
 end
 
 % set the defaults
@@ -115,8 +118,8 @@ if iscell(cfg.parameter)
   cfg.parameter = cfg.parameter{1};
 end
 
-if strcmp(cfg.parameter,'trial');
-  error('not supporting averaging over the repetition dimension');
+if strcmp(cfg.parameter,'trial')
+  ft_error('not supporting averaging over the repetition dimension');
 end
 
 Nsubj    = length(varargin);
@@ -132,55 +135,14 @@ else
   tend = cfg.latency(2);
 end
 
-% select the data in all inputs
-% determine which channels, and latencies are available for all inputs
-for i=1:Nsubj
-  cfg.channel = ft_channelselection(cfg.channel, varargin{i}.label);
-  if hastime
-    tbeg = max(tbeg, varargin{i}.time(1  ));
-    tend = min(tend, varargin{i}.time(end));
-  end
-end
-cfg.latency = [tbeg tend];
-
-% pick the selections
-for i=1:Nsubj
-  if ~isfield(varargin{i}, cfg.parameter)
-    error('the field %s is not present in data structure %d', cfg.parameter, i);
-  end
-  [dum, chansel] = match_str(cfg.channel, varargin{i}.label);
-  varargin{i}.label = varargin{i}.label(chansel);
-  
-  if hastime
-    timesel = nearest(varargin{i}.time, cfg.latency(1)):nearest(varargin{i}.time, cfg.latency(2));
-    varargin{i}.time = varargin{i}.time(timesel);
-  end
-  
-  if hasdof
-    timesel = nearest(varargin{i}.time, cfg.latency(1)):nearest(varargin{i}.time, cfg.latency(2));
-    varargin{i}.dof = varargin{i}.dof(chansel,timesel);
-  end
-  
-  % select the overlapping samples in the data matrix
-  switch dimord
-    case 'chan'
-      varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)(chansel);
-    case 'chan_time'
-      varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)(chansel,timesel);
-    case {'rpt_chan' 'subj_chan'}
-      varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)(chansel);
-      varargin{i}.dimord = 'chan';
-    case {'rpt_chan_time' 'subj_chan_time'}
-      varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)(:,chansel,timesel);
-      varargin{i}.dimord = 'rpt_chan_time';
-    otherwise
-      error('unsupported dimord');
-  end
-end % for i = subject
+% ensure that the data in all inputs has the same channels, time-axis, etc.
+tmpcfg = keepfields(cfg, {'parameter', 'channel', 'latency', 'showcallinfo'});
+[varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
+% restore the provenance information
+[cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 
 % determine the size of the data to be averaged
-% dim = cell(1,numel(cfg.parameter));
-dim{1} = size(varargin{1}.(cfg.parameter));
+datsiz = size(varargin{1}.(cfg.parameter));
 
 % give some feedback on the screen
 if strcmp(cfg.keepindividual, 'no')
@@ -194,22 +156,22 @@ else
 end
 
 % allocate memory to hold the data and collect it
-avgmat = zeros([Nsubj, dim{1}]);
+avgmat = zeros([Nsubj, datsiz]);
 
 if strcmp(cfg.keepindividual, 'yes')
   for s=1:Nsubj
     avgmat(s, :, :) = varargin{s}.(cfg.parameter);
   end
-  grandavg.individual = avgmat;         % Nsubj x Nchan x Nsamples
-
+  grandavg.individual = avgmat; % Nsubj x Nchan x Nsamples
+  
 else % ~strcmp(cfg.keepindividual, 'yes')
-  avgdof  = ones([Nsubj, dim{1}]);
-  avgvar  = zeros([Nsubj, dim{1}]);
+  avgdof  = ones([Nsubj, datsiz]);
+  avgvar  = zeros([Nsubj, datsiz]);
   for s=1:Nsubj
     switch cfg.method
       case 'across'
         avgmat(s, :, :, :) = varargin{s}.(cfg.parameter);
-        avgvar(s, :, :, :) = varargin{s}.(cfg.parameter) .^2;     % preparing the computation of the variance
+        avgvar(s, :, :, :) = varargin{s}.(cfg.parameter) .^2; % preparing the computation of the variance
       case 'within'
         avgmat(s, :, :, :) = varargin{s}.(cfg.parameter).*varargin{s}.dof;
         avgdof(s, :, :, :) = varargin{s}.dof;
@@ -217,20 +179,20 @@ else % ~strcmp(cfg.keepindividual, 'yes')
           avgvar(s, :, :, :) = (varargin{s}.(cfg.parameter).^2).*varargin{s}.dof;
           % avgvar(s, :, :, :) = varargin{s}.var .* (varargin{s}.dof-1); % reversing the last div in ft_timelockanalysis
         else
-          avgvar(s, :, :, :) = zeros([dim{1}]); % shall we remove the .var field from the structure under these conditions ?
+          avgvar(s, :, :, :) = zeros(datsiz); % shall we remove the .var field from the structure under these conditions ?
         end
       otherwise
-        error('unsupported value for cfg.method')
+        ft_error('unsupported value for cfg.method')
     end % switch
   end
   % average across subject dimension
-  ResultDOF      = reshape(sum(avgdof, 1), dim{1});
-  grandavg.avg   = reshape(sum(avgmat, 1), dim{1})./ResultDOF; % computes both means (plain and weighted)
+  ResultDOF      = reshape(sum(avgdof, 1), datsiz);
+  grandavg.avg   = reshape(sum(avgmat, 1), datsiz)./ResultDOF; % computes both means (plain and weighted)
   % Nchan x Nsamples, skips the singleton
   % if strcmp(cfg.method, 'across')
-  ResultVar      = reshape(sum(avgvar,1), dim{1})-reshape(sum(avgmat,1), dim{1}).^2./ResultDOF;
+  ResultVar      = reshape(sum(avgvar,1), datsiz)-reshape(sum(avgmat,1), datsiz).^2./ResultDOF;
   % else  % cfg.method = 'within'
-    % ResultVar      = squeeze(sum(avgvar,1)); % subtraction of means was done for each block already
+  % ResultVar      = reshape(sum(avgvar, 1), datsiz); % subtraction of means was done for each block already
   % end
   switch cfg.normalizevar
     case 'N-1'
@@ -253,35 +215,41 @@ if isfield(varargin{1}, 'labelcmb')
   grandavg.labelcmb = varargin{1}.labelcmb;
 end
 
-if strcmp(cfg.method, 'across')
-  if isfield(varargin{1}, 'grad') % positions are different between subjects
-    warning('discarding gradiometer information because it cannot be averaged');
-  end
-  if isfield(varargin{1}, 'elec') % positions are different between subjects
-    warning('discarding electrode information because it cannot be averaged');
-  end
-else  % cfg.method = 'within'
-  % misses the test for all equal grad fields (should be the case for
-  % averaging across blocks, if all block data is corrected for head
-  % position changes
-  if isfield(varargin{1}, 'grad')
-    grandavg.grad = varargin{1}.grad;
-  end
-  if isfield(varargin{1}, 'elec')
-    grandavg.elec = varargin{1}.elec;
-  end
+switch cfg.method
   
+  case 'across'
+    if isfield(varargin{1}, 'grad') % positions are different between subjects
+      ft_warning('discarding gradiometer information because it cannot be averaged');
+    end
+    if isfield(varargin{1}, 'elec') % positions are different between subjects
+      ft_warning('discarding electrode information because it cannot be averaged');
+    end
+    
+  case 'within'
+    % misses the test for all equal grad fields (should be the case for
+    % averaging across blocks, if all block data is corrected for head
+    % position changes
+    if isfield(varargin{1}, 'grad')
+      grandavg.grad = varargin{1}.grad;
+    end
+    if isfield(varargin{1}, 'elec')
+      grandavg.elec = varargin{1}.elec;
+    end
+    
+  otherwise
+    ft_error('unsupported method "%s"', cfg.method);
 end
+
 if strcmp(cfg.keepindividual, 'yes')
   grandavg.dimord = ['subj_',varargin{1}.dimord];
-elseif strcmp(cfg.keepindividual, 'no')
+else
   grandavg.dimord = varargin{1}.dimord;
 end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous varargin
-ft_postamble history grandavg
-ft_postamble savevar grandavg
+ft_postamble previous   varargin
+ft_postamble provenance grandavg
+ft_postamble history    grandavg
+ft_postamble savevar    grandavg

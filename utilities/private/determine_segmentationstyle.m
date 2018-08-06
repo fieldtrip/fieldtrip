@@ -17,6 +17,9 @@ for i=1:numel(fn)
   elseif strcmp(fn{i}, 'anatomy') || strcmp(fn{i}, 'posclusterslabelmat') || strcmp(fn{i}, 'negclusterslabelmat'),
     % these should not be interpreted as segmentation, also not when it is a uint8 or uint16 representation
     continue
+  elseif iscell(segmentation.(fn{i}))
+    % this should not be interpreted as segmentation
+    continue
   else
     if isfield(segmentation, [fn{i} 'label'])
       % the xxxlabel field exists, which only makes sense for an indexed representation
@@ -32,8 +35,8 @@ for i=1:numel(fn)
         tmp = tmp(~sel);  % remove NaN values
       end
       clear sel
-      probabilistic(i) =  islogical(tmp) || all(tmp>=-0.001 & tmp<=1.001); % allow some roundoff error
-      indexed(i)       = ~islogical(tmp) && all(abs(tmp - round(tmp))<1000*eps);
+      probabilistic(i) =  islogical(tmp) || all(tmp>=-0.001   & tmp<=1.001); % allow some roundoff error
+      indexed(i)       = ~islogical(tmp) && all(tmp>=-0.001) && all(abs(tmp - round(tmp))<1000*eps);
       
       if probabilistic(i) && indexed(i)
         % the xxxlabel does not exist, so treat it as a probabilistic representation

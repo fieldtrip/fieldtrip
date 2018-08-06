@@ -6,7 +6,7 @@ function [major,minor,patchnum,extra]=iso2meshver
 %
 % get the version number of iso2mesh toolbox
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % output:
 %    if you ask for a single output:
@@ -23,7 +23,7 @@ function [major,minor,patchnum,extra]=iso2meshver
 major=1;
 minor=5;
 patchnum=0;
-extra='$Rev::     $';
+extra='$Rev:: 500 $';
 extra=regexprep(extra,'[\s$:]', '');
 
 iso2meshvstr=sprintf('%d.%d.%d',major,minor,patchnum);

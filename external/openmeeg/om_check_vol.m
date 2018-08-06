@@ -5,15 +5,10 @@ function status = om_check_vol(vol)
 %   returns 1 if there is a problem with geometry
 %   else returns 0
 %
-% Copyright (C) 2010, Alexandre Gramfort, INRIA
+% Copyright (C) 2010-2017, OpenMEEG developers
 
-% $Id$
-% $LastChangedBy: alegra $
-% $LastChangedDate: 2010-09-06 13:58:49 +0200 (Mon, 06 Sep 2010) $
-% $Revision$
-
-openmeeg_license
-om_checkombin;
+openmeeg_license;              % show the license (only once)
+prefix = om_checkombin;        % check the installation of the binaries
 
 % the first compartment should be the skin, the last the source
 % flip the order of the compartments if necessary
@@ -42,7 +37,7 @@ try
     for ii=1:length(vol.bnd)
         [junk,tname] = fileparts(tempname);
         bndfile{ii} = [tname '.tri'];
-        om_save_tri(bndfile{ii}, vol.bnd(ii).pnt, vol.bnd(ii).tri);
+        om_save_tri(bndfile{ii}, vol.bnd(ii).pos, vol.bnd(ii).tri);
     end
 
     % these will hold the shell script and the inverted system matrix
@@ -60,7 +55,7 @@ try
     om_write_geom(geomfile,bndfile);
 
     % Exe file
-    status = system(['om_check_geom -g ',geomfile]);
+    status = system([prefix 'om_check_geom -g ' geomfile]);
     cleaner(vol,bndfile,geomfile)
     cd(tmpfolder)
 catch

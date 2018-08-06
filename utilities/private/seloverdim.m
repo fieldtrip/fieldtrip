@@ -31,9 +31,9 @@ for k = 1:numel(fn)
 end
 
 % if sum(~cellfun('isempty', seldimnum))<1
-%   error('the "%s" dimension is not present in the data', seldim)
+%   ft_error('the "%s" dimension is not present in the data', seldim)
 % elseif any(cellfun(@numel, seldimnum)>1)
-%   error('cannot select over multiple dimensions at the same time')
+%   ft_error('cannot select over multiple dimensions at the same time')
 % end
 
 [reduceddim, fntmp] = dimlength(data);
@@ -97,7 +97,7 @@ for i = 1:numel(param)
           case 9
             tmp{j} = tmp{j}(:,:,:,:,:,:,:,:,sel);
           otherwise
-            error('the number of dimensions is too high');
+            ft_error('the number of dimensions is too high');
         end
         tmp{j} = reshape(tmp{j}, reduceddim{i});
         
@@ -107,7 +107,7 @@ for i = 1:numel(param)
         elseif all(seldimnum{i}==[2 3])
           tmp{j} = tmp{j}(:,sel,sel,:,:,:,:,:,:,:);      
         else
-          error('selection of 2 dimensions simultaneously only works for [1 2] or [2 3] at present'); 
+          ft_error('selection of 2 dimensions simultaneously only works for [1 2] or [2 3] at present'); 
         end
         tmp{j} = reshape(tmp{j}, reduceddim{i});
       end
@@ -163,5 +163,5 @@ switch seldim
     data.inside = data.inside(sel);
     data      = fixinside(data, 'index');
   otherwise
-    error('unknown dimension "%s"', seldim);
+    ft_error('unknown dimension "%s"', seldim);
 end

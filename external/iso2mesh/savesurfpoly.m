@@ -4,7 +4,7 @@ function savesurfpoly(v,f,holelist,regionlist,p0,p1,fname,forcebox)
 %
 % save a set of surfaces into poly format (for tetgen)
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2007/11/21
 %
 % input:
@@ -56,7 +56,9 @@ if(~isempty(edges))
     newloops=[];
     for i=1:segnum
        if(seg(i+1)-(seg(i)+1)==0) continue; end
-       newloops=[newloops nan bbxflatsegment(node,loops(seg(i)+1:seg(i+1)-1))];
+       oneloop=loops(seg(i)+1:seg(i+1)-1);
+       if(oneloop(1)==oneloop(end)) oneloop(end)=[]; end
+       newloops=[newloops nan bbxflatsegment(node,oneloop)];
     end
     loops=[newloops nan];
 
@@ -108,13 +110,17 @@ node=[(0:size(node,1)-1)',node];
 
 fp=fopen(fname,'wt');
 fprintf(fp,'#node list\n%d 3 0 0\n',length(node));
-fprintf(fp,'%d %f %f %f\n',node');
+fprintf(fp,'%d %.16f %.16f %.16f\n',node');
 
 if(~iscell(f))
     fprintf(fp,'#facet list\n%d 1\n',length(f)+bbxnum);
-    elem=[3*ones(length(f),1),f-1,ones(length(f),1)];
+    elem=[3*ones(length(f),1),f-1];
     if(~isempty(elem))
-	fprintf(fp,'1 0\n%d %d %d %d %d\n',elem');
+        if(exist('faceid','var') && length(faceid)==size(elem,1))
+            fprintf(fp,'1 0 %d\n%d %d %d %d\n',[faceid(:) elem]');
+        else
+            fprintf(fp,'1 0\n%d %d %d %d\n',elem');
+        end
     end
 else % if the surface is recorded as a cell array
     totalplc=0;
@@ -158,9 +164,9 @@ else % if the surface is recorded as a cell array
             end
             for j=1:length(holeid)
                 if(j==length(holeid))
-                    fprintf(fp,'%d %f %f %f\n',j,mean(node(plc(holeid(j)+1:end),2:4)));
+                    fprintf(fp,'%d %.16f %.16f %.16f\n',j,mean(node(plc(holeid(j)+1:end),2:4)));
                 else
-                    fprintf(fp,'%d %f %f %f\n',j,mean(node(plc(holeid(j)+1:holeid(j+1)-1),2:4)));
+                    fprintf(fp,'%d %.16f %.16f %.16f\n',j,mean(node(plc(holeid(j)+1:holeid(j+1)-1),2:4)));
                 end
             end
          else
@@ -192,7 +198,7 @@ if(dobbx|~isempty(edges))
             for k=1:length(endid)
                 j=endid(k);
                 subloop=loops(seg(j)+1:seg(j+1)-1);
-                fprintf(fp,'%d %f %f %f\n',k,internalpoint(v,subloop)); %mean(v(subloop,:)));
+                fprintf(fp,'%d %.16f %.16f %.16f\n',k,internalpoint(v,subloop)); %mean(v(subloop,:)));
             end
         end
     end
@@ -201,7 +207,7 @@ end
 if(size(holelist,1))
         fprintf(fp,'#hole list\n%d\n',size(holelist,1));
         for i=1:size(holelist,1)
-                fprintf(fp,'%d %f %f %f\n', i, holelist(i,:));
+                fprintf(fp,'%d %.16f %.16f %.16f\n', i, holelist(i,:));
         end
 else
 	fprintf(fp,'#hole list\n0\n');
@@ -209,9 +215,15 @@ end
 
 if(size(regionlist,1))
 	fprintf(fp,'#region list\n%d\n',size(regionlist,1));
-	for i=1:size(regionlist,1)
-		fprintf(fp,'%d %f %f %f %d\n', i, regionlist(i,:),i);
-	end
+    if(size(regionlist,2)==3)
+	  for i=1:size(regionlist,1)
+		fprintf(fp,'%d %.16f %.16f %.16f %d\n', i, regionlist(i,:),i);
+      end
+    elseif(size(regionlist,2)==4)
+	  for i=1:size(regionlist,1)
+		fprintf(fp,'%d %.16f %.16f %.16f %d %.16f\n', i, regionlist(i,1:3),i,regionlist(i,4));
+      end
+    end
 end
 fclose(fp);
 
@@ -221,6 +233,6 @@ if(~isempty(nodesize))
 	end
 	fid=fopen(regexprep(fname,'\.poly$','.mtr'),'wt');
 	fprintf(fid,'%d 1\n',size(nodesize,1));
-	fprintf(fid,'%f\n',nodesize);
+	fprintf(fid,'%.16f\n',nodesize);
 	fclose(fid);
 end

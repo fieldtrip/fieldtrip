@@ -20,7 +20,7 @@ function lf = eeg_leadfield1(R, elc, vol)
 
 % Copyright (C) 2002, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -48,13 +48,13 @@ vol.cond = vol.cond(indx);
 % check whether the electrode ly on the sphere, allowing 0.5% tolerance
 dist = sqrt(sum(elc.^2,2));
 if any(abs(dist-vol.r)>vol.r*0.005)
-  warning('electrodes do not ly on sphere surface -> using projection')
+  ft_warning('electrodes do not ly on sphere surface -> using projection')
 end
 elc = vol.r * elc ./ [dist dist dist];
 
 % check whether the dipole is inside the brain [disabled for EEGLAB]
 % if sqrt(sum(R.^2))>=vol.r
-%   error('dipole is outside the brain compartment');
+%   ft_error('dipole is outside the brain compartment');
 % end
 
 c0 = norm(R);

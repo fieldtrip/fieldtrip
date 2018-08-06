@@ -3,10 +3,9 @@ function test_bug2377
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2377
 % TEST ft_datatype_sens ft_compute_leadfield
 
-load('/home/common/matlab/fieldtrip/data/test/bug2377/eeg_lf_scaling.mat');
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2377/eeg_lf_scaling.mat'));
 
 sens = rmfield(sens, 'tra');
 
@@ -45,10 +44,10 @@ colorbar
 
 %%  check the relative amplitudes
 
-n1 = norm(lf1)
-n2 = norm(lf2) % 1e6  times n1
-n3 = norm(lf3) % 1e-9 times n1
-n4 = norm(lf4) % 1e-3 times n1
+n1 = norm(lf1);
+n2 = norm(lf2) % 1e6  times n1;
+n3 = norm(lf3) % 1e-9 times n1;
+n4 = norm(lf4) % 1e-3 times n1;
 
 assert(abs(n2/n1-1e6)/1e6   < 100*eps); 
 assert(abs(n3/n1-1e-9)/1e-9 < 100*eps); 

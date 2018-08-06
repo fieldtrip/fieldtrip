@@ -5,7 +5,7 @@ function [f maxsize]=maxsurf(facecell,node)
 % return the surface with the maximum element number or  
 % total area from a cell arry of surfaces
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input:
 %    facecell: a cell array, each element is a face array

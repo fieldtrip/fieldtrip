@@ -3,19 +3,19 @@ function test_bug2096
 % MEM 4000mb
 % WALLTIME 00:20:00
 
-% TEST test_bug2096
 % TEST ft_sourcewrite ft_read_cifti ft_write_cifti
 
-% /home/common/matlab/fieldtrip/data/test
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2096'));
+% needed for the dccnpath function, since we will change directory later on
+addpath(fileparts(mfilename('fullpath')));
 
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2096'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % general purpose tests
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear all; close all
 
-%% 
+%%
 source = [];
 source.dim    = [11 12 13];
 [X Y Z]       = ndgrid(1:source.dim(1), 1:source.dim(2), 1:source.dim(3));
@@ -30,18 +30,18 @@ source.dimord = 'pos';
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'pow';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.pow';
 ft_sourcewrite(cfg, source);
 
-source1 = ft_read_cifti('test_bug2096.pow.dscalar.nii')
+source1 = ft_read_cifti('test_bug2096.pow.dscalar.nii');
 
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'pow';
-cfg.filename  = 'test_bug2096b';
+cfg.filename  = 'test_bug2096b.pow';
 ft_sourcewrite(cfg, source1);
 
-source2 = ft_read_cifti('test_bug2096b.pow.dscalar.nii')
+source2 = ft_read_cifti('test_bug2096b.pow.dscalar.nii');
 
 % assert(isequal(source , source1)); % source1 has more details
 % assert(isequal(source1, source2)); % numerical differences
@@ -65,7 +65,7 @@ cfg.parameter = 'pow';
 cfg.filename  = 'test_bug2096';
 ft_sourcewrite(cfg, source);
 
-source1 = ft_read_cifti('test_bug2096.pow.dscalar.nii')
+source1 = ft_read_cifti('test_bug2096.pow.dscalar.nii');
 
 cfg = [];
 cfg.filetype  = 'cifti';
@@ -73,7 +73,7 @@ cfg.parameter = 'pow';
 cfg.filename  = 'test_bug2096b';
 ft_sourcewrite(cfg, source1);
 
-source2 = ft_read_cifti('test_bug2096b.pow.dscalar.nii')
+source2 = ft_read_cifti('test_bug2096b.pow.dscalar.nii');
 
 % assert(isequal(source , source1));
 % assert(isequal(source1, source2));
@@ -91,7 +91,7 @@ source.dimord  = 'pos_pos';
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'imagcoh';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.imagcoh';
 ft_sourcewrite(cfg, source);
 
 source1 = ft_read_cifti('test_bug2096.imagcoh.dconn.nii');
@@ -99,10 +99,10 @@ source1 = ft_read_cifti('test_bug2096.imagcoh.dconn.nii');
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'imagcoh';
-cfg.filename  = 'test_bug2096b';
+cfg.filename  = 'test_bug2096b.imagcoh';
 ft_sourcewrite(cfg, source1);
 
-source2 = ft_read_cifti('test_bug2096b.imagcoh.dconn.nii')
+source2 = ft_read_cifti('test_bug2096b.imagcoh.dconn.nii');
 
 % assert(isequal(source , source1));
 % assert(isequal(source2, source1));
@@ -121,14 +121,18 @@ source.dimord = 'pos_time';
 cfg = [];
 cfg.filetype = 'cifti';
 cfg.parameter = 'timeseries';
-cfg.filename = 'test_bug2096';
+cfg.filename = 'test_bug2096.timeseries';
 cfg.precision = 'single';
 ft_sourcewrite(cfg, source);
 
 source1 = ft_read_cifti('test_bug2096.timeseries.dtseries.nii');
 
 %%
-parcellation = ft_read_atlas(dccnpath('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii'));
+try
+  parcellation = ft_read_atlas(dccnpath('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii'));
+catch
+  parcellation = ft_read_atlas(fullfile(getenv('HOME'), '/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii'));
+end
 source = ft_checkdata(parcellation, 'datatype', 'source');
 source = removefields(source, {'tissue', 'tissuelabel'});
 source.pow = randn(prod(parcellation.dim), 1);
@@ -142,18 +146,18 @@ ft_sourceplot(cfg, source);
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'pow';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.pow';
 ft_sourcewrite(cfg, source);
 
-source1 = ft_read_cifti('test_bug2096.pow.dscalar.nii')
+source1 = ft_read_cifti('test_bug2096.pow.dscalar.nii');
 
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'pow';
-cfg.filename  = 'test_bug2096b';
+cfg.filename  = 'test_bug2096b.pow';
 ft_sourcewrite(cfg, source1);
 
-source2 = ft_read_cifti('test_bug2096b.pow.dscalar.nii')
+source2 = ft_read_cifti('test_bug2096b.pow.dscalar.nii');
 
 cfg = [];
 cfg.parameter = 'pow';
@@ -170,18 +174,18 @@ cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'pow';
 cfg.parcellation = 'tissue';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.pow';
 ft_sourcewrite(cfg, sourcep);
 
-sourcep1 = ft_read_cifti('test_bug2096.pow.pscalar.nii')
+sourcep1 = ft_read_cifti('test_bug2096.pow.pscalar.nii');
 
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'pow';
-cfg.filename  = 'test_bug2096b';
+cfg.filename  = 'test_bug2096b.pow';
 ft_sourcewrite(cfg, sourcep1);
 
-sourcep2 = ft_read_cifti('test_bug2096b.pow.pscalar.nii')
+sourcep2 = ft_read_cifti('test_bug2096b.pow.pscalar.nii');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % specific tests for dscalar, dtseries, dconn
@@ -205,10 +209,10 @@ source.dimord = 'pos';
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'activity';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.activity';
 ft_sourcewrite(cfg, source);
 
-source1 = ft_read_cifti('test_bug2096.activity.dscalar.nii')
+source1 = ft_read_cifti('test_bug2096.activity.dscalar.nii');
 ft_plot_mesh(source1, 'vertexcolor', source1.activity(:,1), 'edgecolor', 'none')
 
 %% test the dtsetries output
@@ -231,10 +235,10 @@ source.dimord = 'pos_time';
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'timeseries';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.timeseries';
 ft_sourcewrite(cfg, source);
 
-source1 = ft_read_cifti('test_bug2096.timeseries.dtseries.nii')
+source1 = ft_read_cifti('test_bug2096.timeseries.dtseries.nii');
 ft_plot_mesh(source1, 'vertexcolor', source1.timeseries(:,1), 'edgecolor', 'none')
 
 %% test the dconn output
@@ -253,10 +257,10 @@ source.dimord = 'pos_pos';
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'imagcoh';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.imagcoh';
 ft_sourcewrite(cfg, source);
 
-source1 = ft_read_cifti('test_bug2096.imagcoh.dconn.nii')
+source1 = ft_read_cifti('test_bug2096.imagcoh.dconn.nii');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % specific tests for pscalar, ptseries, pconn
@@ -286,10 +290,10 @@ ft_plot_mesh(source.brainordinate, 'vertexcolor', source.brainordinate.parcellat
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'activity';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.activity';
 ft_sourcewrite(cfg, source);
 
-source1 = ft_read_cifti('test_bug2096.activity.pscalar.nii')
+source1 = ft_read_cifti('test_bug2096.activity.pscalar.nii');
 
 figure
 ft_plot_mesh(source1.brainordinate, 'vertexcolor', source1.brainordinate.parcellation(:), 'edgecolor', 'none')
@@ -320,10 +324,10 @@ ft_plot_mesh(source.brainordinate, 'vertexcolor', source.brainordinate.parcellat
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'timeseries';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.timeseries';
 ft_sourcewrite(cfg, source);
 
-source1 = ft_read_cifti('test_bug2096.timeseries.ptseries.nii')
+source1 = ft_read_cifti('test_bug2096.timeseries.ptseries.nii');
 
 figure
 ft_plot_mesh(source1.brainordinate, 'vertexcolor', source1.brainordinate.parcellation, 'edgecolor', 'none')
@@ -350,10 +354,10 @@ ft_plot_mesh(source.brainordinate, 'vertexcolor', source.brainordinate.parcellat
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'imagcoh';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.imagcoh';
 ft_sourcewrite(cfg, source);
 
-source1 = ft_read_cifti('test_bug2096.imagcoh.pconn.nii')
+source1 = ft_read_cifti('test_bug2096.imagcoh.pconn.nii');
 
 figure
 ft_plot_mesh(source1.brainordinate, 'vertexcolor', source1.brainordinate.parcellation, 'edgecolor', 'none')
@@ -399,11 +403,14 @@ filename = {
   '177746.thickness.32k_fs_LR.dscalar.nii'
   };
 
+% the ones starting with x177746 have been confirmed by inspecting the XML section of the files
+% the files contain <MapName>177746_aparc</MapName>
+% the x in front is needed to make it a valid fieldname and results from "fixname"
 datafield = {
   'arealdistortion'
-  'aparc'
-  'ba'
-  'aparc_a2009s'
+  'x177746_aparc'
+  'x177746_ba'
+  'x177746_aparc_a2009s'
   'myelinmap'
   'corrthickness'
   'myelinmap_bc'

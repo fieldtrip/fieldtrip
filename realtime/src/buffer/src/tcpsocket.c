@@ -18,10 +18,9 @@
   #include <poll.h>
 #endif
 
-#define THREADSLEEP 1000000  /* in microseconds */
-#define POLLSLEEP   100      /* in microseconds */
-#define MERGE_THRESHOLD      4096    /* TODO: optimize this value? Maybe look at MTU size */
-#define DIE_BAD_MALLOC(ptr)   if ((ptr)==NULL) { fprintf(stderr,"Out of memory in line %d",__LINE__); exit(1); }
+#define THREADSLEEP      1000000  /* in microseconds */
+#define POLLSLEEP        100      /* in microseconds */
+#define MERGE_THRESHOLD  4096     /* TODO: optimize this value? Maybe look at MTU size */
 
 typedef struct {
         void *message;
@@ -52,7 +51,6 @@ void cleanup_tcpsocket(void *arg) {
 void *tcpsocket(void *arg) {
 	int n;
 	int status = 0, verbose = 0;
-	int oldcancelstate, oldcanceltype;
 
 #ifdef ENABLE_POLLING
 	struct pollfd fds;
@@ -120,7 +118,7 @@ void *tcpsocket(void *arg) {
 #endif
 
 		if ((n = bufread(client, request->def, sizeof(messagedef_t))) != sizeof(messagedef_t)) {
-			if (verbose>0) fprintf(stderr, "tcpsocket: packet size = %d, should be %d\n", n, sizeof(messagedef_t));
+			if (verbose>0) fprintf(stderr, "tcpsocket: packet size = %d, should be %lu\n", n, sizeof(messagedef_t));
 			goto cleanup;
 		}
 		
@@ -186,11 +184,11 @@ void *tcpsocket(void *arg) {
 			FREE(merged);
 		} else {
 			if ((n = bufwrite(client, response->def, sizeof(messagedef_t)))!=sizeof(messagedef_t)) {
-				if (verbose>0) fprintf(stderr, "tcpsocket: write size = %d, should be %d\n", n, sizeof(messagedef_t));
+				if (verbose>0) fprintf(stderr, "tcpsocket: write size = %d, should be %lu\n", n, sizeof(messagedef_t));
 				goto cleanup;
 			}
 			if ((n = bufwrite(client, response->buf, respBufSize))!=respBufSize) {
-				if (verbose>0) fprintf(stderr, "tcpsocket: write size = %d, should be %d\n", n, respBufSize);
+				if (verbose>0) fprintf(stderr, "tcpsocket: write size = %d, should be %u\n", n, respBufSize);
 				goto cleanup;
 			}
 		}

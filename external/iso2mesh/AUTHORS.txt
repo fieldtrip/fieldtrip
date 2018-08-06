@@ -1,13 +1,12 @@
-The author of "iso2mesh" toolbox is Qianqian Fang. Qianqian
-is currently an Assistant Professor at Massachusetts General Hospital, 
-Harvard Medical School.
+The author of "Iso2mesh" toolbox is Qianqian Fang. 
+Qianqian is currently an Assistant Professor at the
+Department of Bioengineering of Northeastern University.
 
-Address: Martinos Center for Biomedical Imaging, 
-         Massachusetts General Hospital, 
-         Harvard Medical School
-         Bldg 149, 13th St, Charlestown, MA 02129, USA
+Address: Dept. of Bioengineering
+         Northeastern University
+         360 Huntington Ave, Boston, MA 02115
 URL: http://nmr.mgh.harvard.edu/~fangq/
-Email: <fangq at nmr.mgh.harvard.edu> or <fangqq at gmail.com>
+Email: <q.fang at neu.edu> or <fangqq at gmail.com>
 
 
 Other people had also contributed to this toolbox, they include

@@ -4,7 +4,7 @@ function [a,b,c,d]=getplanefrom3pt(plane)
 % 
 % define a plane equation ax+by+cz+d=0 from three 3D points
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input: 
 %    plane: a 3x3 matrix with each row specifying a 3D point (x,y,z)

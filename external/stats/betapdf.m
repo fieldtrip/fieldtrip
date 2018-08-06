@@ -57,26 +57,26 @@ function pdf = betapdf (x, a, b)
   if (isscalar (a) && isscalar (b))
     pdf(k) = exp ((a - 1) * log (x(k))...
                   + (b - 1) * log (1 - x(k))...
-                  + lgamma (a + b) - lgamma (a) - lgamma (b));
+                  + gammaln (a + b) - gammaln (a) - gammaln (b));
   else
     pdf(k) = exp ((a(k) - 1) .* log (x(k))...
                   + (b(k) - 1) .* log (1 - x(k))...
-                  + lgamma (a(k) + b(k)) - lgamma (a(k)) - lgamma (b(k)));
+                  + gammaln (a(k) + b(k)) - gammaln (a(k)) - gammaln (b(k)));
   end
 
   % Most important special cases when the density is finite.
   k = (x == 0) & (a == 1) & (b > 0) & (b ~= 1);
   if (isscalar (a) && isscalar (b))
-    pdf(k) = exp (lgamma (a + b) - lgamma (a) - lgamma (b));
+    pdf(k) = exp (gammaln (a + b) - gammaln (a) - gammaln (b));
   else
-    pdf(k) = exp (lgamma (a(k) + b(k)) - lgamma (a(k)) - lgamma (b(k)));
+    pdf(k) = exp (gammaln (a(k) + b(k)) - gammaln (a(k)) - gammaln (b(k)));
   end
 
   k = (x == 1) & (b == 1) & (a > 0) & (a ~= 1);
   if (isscalar (a) && isscalar (b))
-    pdf(k) = exp (lgamma (a + b) - lgamma (a) - lgamma (b));
+    pdf(k) = exp (gammaln (a + b) - gammaln (a) - gammaln (b));
   else
-    pdf(k) = exp (lgamma (a(k) + b(k)) - lgamma (a(k)) - lgamma (b(k)));
+    pdf(k) = exp (gammaln (a(k) + b(k)) - gammaln (a(k)) - gammaln (b(k)));
   end
 
   k = (x >= 0) & (x <= 1) & (a == 1) & (b == 1);

@@ -5,7 +5,7 @@ function dip = fixdipole(dip)
 
 % Copyright (C) 2009, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -29,15 +29,15 @@ if n==3
   % the input representation is Nx3, which is what we want
 elseif m==3
   % it is possible to translate it into a Nx3 unambiguously
-  warning('input dipole positions should be specified as Nx3 matrix');
+  ft_warning('input dipole positions should be specified as Nx3 matrix');
   dip.pos = dip.pos';
 elseif m==1
   % it is possible to translate it into a Nx3 unambiguously
-  warning('input dipole positions should be specified as Nx3 matrix');
+  ft_warning('input dipole positions should be specified as Nx3 matrix');
   dip.pos = reshape(dip.pos, 3, n/3)';
 else
   % it is not clear how to convert to a Nx3 matrix
-  error('input dipole positions should be specified as Nx3 matrix');
+  ft_error('input dipole positions should be specified as Nx3 matrix');
 end
 
 if isfield(dip, 'mom')

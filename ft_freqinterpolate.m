@@ -23,7 +23,7 @@ function [freq] = ft_freqinterpolate(cfg, freq)
 
 % Copyright (C) 2009, Aldemar Torres Valderama
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -41,27 +41,31 @@ function [freq] = ft_freqinterpolate(cfg, freq)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar freq
+ft_preamble provenance freq
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
 % check if the input data is valid for this function
 freq = ft_checkdata(freq, 'datatype', 'freq', 'feedback', 'yes');
 
-% set the default values
-if ~isfield(cfg, 'method'),     cfg.method = 'nan';                     end
-if ~isfield(cfg, 'foilim'),     cfg.foilim = [49 51; 99 101; 149 151];  end
+% set the defaults
+cfg.method = ft_getopt(cfg, 'method', 'nan');
+cfg.foilim = ft_getopt(cfg, 'foilim', [49 51; 99 101; 149 151]);
+
 
 for i = 1:size(cfg.foilim,1)
   % determine the exact frequency bins to interpolate
@@ -70,7 +74,7 @@ for i = 1:size(cfg.foilim,1)
   % update the configuration
   cfg.foilim(i,1) = freq.freq(peakbeg);
   cfg.foilim(i,2) = freq.freq(peakend);
-  
+
   if strcmp(cfg.method, 'nan')
     switch freq.dimord
       case 'chan_freq'
@@ -82,21 +86,21 @@ for i = 1:size(cfg.foilim,1)
       case 'rpt_chan_freq_time'
         freq.powspctrm(:,:,peakbeg:peakend,:) = nan;
       otherwise
-        error('unsupported dimord');
+        ft_error('unsupported dimord');
     end % switch
-    
+
   elseif strcmp(cfg.method, 'linear')
-    error('not yet implemented');
-    
+    ft_error('not yet implemented');
+
   else
-    error('unsupported method');
+    ft_error('unsupported method');
   end
 end % for each frequency range
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous freq
-ft_postamble history freq
-ft_postamble savevar freq
+ft_postamble previous   freq
+ft_postamble provenance freq
+ft_postamble history    freq
+ft_postamble savevar    freq

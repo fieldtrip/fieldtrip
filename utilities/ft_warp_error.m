@@ -4,11 +4,11 @@ function [dist] = ft_warp_error(M, input, target, varargin)
 % and can be used as the goalfunction in a 3D warping minimalisation
 %
 % Use as
-%   [dist] = ft_warp_error(M, input, target, 'method')
+%   dist = ft_warp_error(M, input, target, 'method')
 %
-% It returns the mean Euclidian distance (residu) when attempting to
-% transform the input towards the target using transformation M
-% and using the specified warping method.
+% It returns the mean Euclidian distance (i.e. the residual) for an interative
+% optimalization to transform the input towards the target using the
+% transformation M with the specified warping method.
 %
 % See also FT_WARP_OPTIM, FT_WARP_APPLY
 
@@ -28,7 +28,7 @@ function [dist] = ft_warp_error(M, input, target, varargin)
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -54,19 +54,19 @@ end
 if isstruct(target)
   % project points onto target surface and compute distance between points and surface
   % this is done here in one step, but can also be done in seperate steps (see example code below)
-  el = project_elec(input, target.pnt, target.tri);
+  el = project_elec(input, target.pos, target.tri);
   dist = mean(el(:,4));
   % the following example code is more elaborate, and can be used for detailled testing
   if 0
-    Npnt = size(input,1);
-    prj = zeros(Npnt, 3);
+    Npos = size(input,1);
+    prj = zeros(Npos, 3);
     % step 1: project each input point onto the triangulated surface
-    el = project_elec(input, target.pnt, target.tri);
+    el = project_elec(input, target.pos, target.tri);
     % step 2: compute the projected point on the triangulated surface
-    for i=1:Npnt
-      v1 = target.pnt(target.tri(el(i,1),1),:); % position of vertex 1
-      v2 = target.pnt(target.tri(el(i,1),2),:); % position of vertex 2
-      v3 = target.pnt(target.tri(el(i,1),3),:); % position of vertex 3
+    for i=1:Npos
+      v1 = target.pos(target.tri(el(i,1),1),:); % position of vertex 1
+      v2 = target.pos(target.tri(el(i,1),2),:); % position of vertex 2
+      v3 = target.pos(target.tri(el(i,1),3),:); % position of vertex 3
       prj(i,:) = routlm(v1, v2, v3, el(i,2), el(i,3));
     end
     % step 3: compute the distance
@@ -78,4 +78,3 @@ else
   dif    = input - target;
   dist   = mean(sqrt(sum(dif' .^2)));
 end
-

@@ -34,7 +34,7 @@ function ft_write_event(filename, event, varargin)
 
 % Copyright (C) 2007-2010 Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -98,7 +98,7 @@ switch eventformat
       buffer('flush_evt', [], host, port);  % flush event
     end
 
-	% the MEX file now can handle various Matlab types directly and respects the fields
+	% the MEX file now can handle various MATLAB types directly and respects the fields
 	% sample, offset, duration
 	%   -- these must all be numeric and non-empty (only first element is of interest)
 	% type, value
@@ -153,7 +153,7 @@ switch eventformat
       fifo = filetype_check_uri(filename);
       
       if ~exist(fifo,'file')
-          warning('the FIFO %s does not exist; attempting to create it', fifo);          
+          ft_warning('the FIFO %s does not exist; attempting to create it', fifo);          
           system(sprintf('mkfifo -m 0666 %s',fifo));          
       end
 
@@ -165,11 +165,11 @@ switch eventformat
           msg = mxSerialize(event(i));
           num = fwrite(fid, msg, 'uint8');
         catch
-          warning(lasterr);
+          ft_warning(lasterr);
         end
 
         if num~=length(msg)
-          error('problem writing to FIFO %s', fifo);
+          ft_error('problem writing to FIFO %s', fifo);
         end
       end
       fclose(fid);
@@ -197,7 +197,7 @@ switch eventformat
                     pnet(con,'printf','\n');
                 end
 %            catch             
-%                warning(lasterr);
+%                ft_warning(lasterr);
             end
             
             pnet(con,'close');
@@ -224,7 +224,7 @@ switch eventformat
                 end
 
             catch
-              warning(lasterr);
+              ft_warning(lasterr);
             end
             pnet(udp,'close');
         end
@@ -234,7 +234,7 @@ switch eventformat
         % assume that it is a file. Since the file probably does not yet
         % exist, determine its type by only looking at the extension
         if filetype_check_extension(filename, '.mat')
-            % write the events to a matlab file
+            % write the events to a MATLAB file
             if exist(filename,'file') && strcmp(append, 'yes')
                 try
                     tmp = load(filename, 'event');
@@ -260,6 +260,6 @@ switch eventformat
                 save(filename, 'event', '-v6');
             end
         else
-            error('unsupported file type')
+            ft_error('unsupported file type')
         end
 end

@@ -1,4 +1,4 @@
-function [outim]=ft_sliceinterp(cfg, ininterp)
+function [outim] = ft_sliceinterp(cfg, ininterp)
 
 % FT_SLICEINTERP plots a 2D-montage of source reconstruction and anatomical MRI
 % after these have been interpolated onto the same grid.
@@ -22,7 +22,7 @@ function [outim]=ft_sliceinterp(cfg, ininterp)
 % cfg.maskclipmin   value or 'auto' (clipping of mask data)
 % cfg.maskclipmax   value or 'auto' (clipping of mask data)
 % cfg.maskclipsym   'yes' or 'no' (default) symmetrical clipping
-% cfg.maskmap       opacitymap for source overlay 
+% cfg.maskmap       opacitymap for source overlay
 %                   (default is linspace(0,1,128))
 % cfg.maskcolmin    mask value mapped to the lowest opacity, i.e.
 %                   completely transparent (default ='auto')
@@ -37,12 +37,12 @@ function [outim]=ft_sliceinterp(cfg, ininterp)
 % cfg.rotate        number of ccw 90 deg slice rotations (default = 0)
 % cfg.title         optional title (default is '')
 % cfg.whitebg       'yes' or 'no' (default = 'yes')
-% cfg.flipdim       flip data along the sliced dimension, 'yes' or 'no' 
-%                   (default = 'no') 
+% cfg.flipdim       flip data along the sliced dimension, 'yes' or 'no'
+%                   (default = 'no')
 % cfg.marker        [Nx3] array defining N marker positions to display
 % cfg.markersize    radius of markers (default = 5);
 % cfg.markercolor   [1x3] marker color in RGB (default = [1 1 1], i.e. white)
-% cfg.interactive   'yes' or 'no' (default), interactive coordinates 
+% cfg.interactive   'yes' or 'no' (default), interactive coordinates
 %                   and source values
 %
 % if cfg.alpha is set to 'adaptive' the opacity of the source overlay
@@ -53,39 +53,39 @@ function [outim]=ft_sliceinterp(cfg, ininterp)
 % space is automatically restricted to the evaluated source-space
 %
 % if cfg.colmin and/or cfg.colmax are set to 'auto' the colormap is mapped
-% to source values the following way: if source values are either all 
-% positive or all negative the colormap is mapped to from 
-% min(source) to max(source). If source values are negative and positive 
-% the colormap is symmetrical mapped around 0 from -max(abs(source)) to 
+% to source values the following way: if source values are either all
+% positive or all negative the colormap is mapped to from
+% min(source) to max(source). If source values are negative and positive
+% the colormap is symmetrical mapped around 0 from -max(abs(source)) to
 % +max(abs(source)).
 %
 % If cfg.maskparameter specifies a parameter to be used as an opacity mask
 % cfg.alpha is not used. Instead the mask values are maped to an opacitymap
 % that can be specified using cfg.maskmap. The mapping onto that
-% opacitymap is controlled as for the functional data using the 
+% opacitymap is controlled as for the functional data using the
 % corresponding clipping and min/max options.
 %
 % if cfg.whitebg is set to 'yes' the function estimates the head volume and
 % displays a white background outside the head, which can save a lot of black
 % printer toner.
 %
-% if cfg.interactive is set to 'yes' a button will be displayed for 
-% interactive data evaluation and coordinate reading. After clicking the 
-% button named 'coords' you can click on any position in the slice montage. 
-% After clicking these coordinates and their source value are displayed in 
-% a text box below the button. The coordinates correspond to indeces in the 
+% if cfg.interactive is set to 'yes' a button will be displayed for
+% interactive data evaluation and coordinate reading. After clicking the
+% button named 'coords' you can click on any position in the slice montage.
+% After clicking these coordinates and their source value are displayed in
+% a text box below the button. The coordinates correspond to indeces in the
 % input data array:
-% 
+%
 %   f = interp.source(coord_1,coord_2,coord_3)
-% 
-% The coordinates are not affected by any transformations used for displaying 
+%
+% The coordinates are not affected by any transformations used for displaying
 % the data such as cfg.dim, cfg.rotate,cfg.flipdim or cfg.resample.
 %
 % See also FT_SOURCEANALYSIS, FT_VOLUMERESLICE
 
-% Copyright (C) 2004, Markus Siegel, markus.siegel@fcdonders.kun.nl
+% Copyright (C) 2004, Markus Siegel
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -103,18 +103,21 @@ function [outim]=ft_sliceinterp(cfg, ininterp)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar ininterp
+ft_preamble provenance ininterp
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -167,14 +170,14 @@ try, cfg.maskparameter = cfg.maskparameter{1}; end
 if isfield(ininterp,'anatomy');
   interp.anatomy = reshape(ininterp.anatomy, ininterp.dim);
 else
-  error('no anatomical data supplied');
+  ft_error('no anatomical data supplied');
 end
 
 % check functional data
 if ~isempty(cfg.funparameter)
   interp.source = double(reshape(getsubfield(ininterp, cfg.funparameter), ininterp.dim));
 else
-  error('no functional data supplied');
+  ft_error('no functional data supplied');
 end
 
 % check mask data
@@ -213,7 +216,7 @@ if ~isempty(cfg.marker)
   fprintf('placing markers ...');
   [x,y,z] = ndgrid([1:size(interp.anatomy,1)],[1:size(interp.anatomy,2)],[1:size(interp.anatomy,3)]);
   for imarker = 1:size(cfg.marker,1)
-    marker(find(sqrt((x-cfg.marker(imarker,1)).^2 + (y-cfg.marker(imarker,2)).^2 + (z-cfg.marker(imarker,3)).^2)<=cfg.markersize)) = 1;
+    marker(find(sqrt((x-cfg.marker(iarker,1)).^2 + (y-cfg.marker(imarker,2)).^2 + (z-cfg.marker(imarker,3)).^2)<=cfg.markersize)) = 1;
   end
   fprintf('done\n');
 end
@@ -261,7 +264,7 @@ if ~ischar(cfg.clipmin)
     interp.source(find(interp.source<cfg.clipmin)) = nan;
   case 'yes'
     interp.source(find(abs(interp.source)<cfg.clipmin)) = nan;
-  end    
+  end
   fprintf('done\n');
 end
 if ~ischar(cfg.clipmax)
@@ -284,7 +287,7 @@ if maskdat
       interp.mask(find(interp.mask<cfg.maskclipmin)) = nan;
     case 'yes'
       interp.mask(find(abs(interp.mask)<cfg.maskclipmin)) = nan;
-    end    
+    end
     fprintf('done\n');
   end
   if ~ischar(cfg.maskclipmax)
@@ -309,7 +312,7 @@ else
   if sign(fmin)==sign(fmax)
     fcolmin = fmin;
   else
-    fcolmin = -max(abs([fmin,fmax])); 
+    fcolmin = -max(abs([fmin,fmax]));
   end
 end
 if ~ischar(cfg.colmax)
@@ -318,7 +321,7 @@ else
   if sign(fmin)==sign(fmax)
     fcolmax = fmax;
   else
-    fcolmax = max(abs([fmin,fmax])); 
+    fcolmax = max(abs([fmin,fmax]));
   end
 end
 interp.source = (interp.source-fcolmin)./(fcolmax-fcolmin);
@@ -341,7 +344,7 @@ if maskdat
     if sign(fmin)==sign(fmax)
       mcolmin = fmin;
     else
-      mcolmin = -max(abs([fmin,fmax])); 
+      mcolmin = -max(abs([fmin,fmax]));
     end
   end
   if ~ischar(cfg.maskcolmax)
@@ -350,7 +353,7 @@ if maskdat
     if sign(fmin)==sign(fmax)
       mcolmax = fmax;
     else
-      mcolmax = max(abs([fmin,fmax])); 
+      mcolmax = max(abs([fmin,fmax]));
     end
   end
   interp.mask = (interp.mask-mcolmin)./(mcolmax-mcolmin);
@@ -383,12 +386,15 @@ if mod(cfg.rotate,2)
 end
 out = zeros(nvox1,nvox2,3,cfg.nslices);
 for islice = 1:cfg.nslices
-  dummy1 = squeeze(interp.anatomy(indslice(islice),1:cfg.resample:end,1:cfg.resample:end));
-  dummy2 = squeeze(interp.source(indslice(islice),1:cfg.resample:end,1:cfg.resample:end));
-  indmarker = find(squeeze(marker(indslice(islice),1:cfg.resample:end,1:cfg.resample:end)));
+  sel1 = 1:cfg.resample:size(interp.anatomy,2);
+  sel2 = 1:cfg.resample:size(interp.anatomy,3);
+  
+  dummy1 = reshape(interp.anatomy(indslice(islice),sel1,sel2), [numel(sel1) numel(sel2)]);
+  dummy2 = reshape(interp.source(indslice(islice),sel1,sel2),  [numel(sel1) numel(sel2)]);
+  indmarker = find(reshape(marker(indslice(islice),sel1,sel2), [numel(sel1) numel(sel2)]));
   indsource = find(~isnan(dummy2));
   if maskdat
-    dummymask = squeeze(interp.mask(indslice(islice),1:cfg.resample:end,1:cfg.resample:end));
+    dummymask = reshape(interp.mask(indslice(islice),sel1,sel2), [numel(sel1) numel(sel2)]);
     indsource = find(~isnan(dummy2) & ~isnan(dummymask));
   end
   for icol = 1:3
@@ -417,12 +423,12 @@ for islice = 1:cfg.nslices
     dummy3(indmarker) = cfg.markercolor(icol);
     out(:,:,icol,islice) = rot90(dummy3,cfg.rotate);
   end
-  if strcmp(cfg.whitebg,'yes')    
+  if strcmp(cfg.whitebg,'yes')
     bgmask = zeros(nvox1,nvox2);
     bgmask(find(conv2(mean(out(:,:,:,islice),3),ones(round((nvox1+nvox2)/8))/(round((nvox1+nvox2)/8).^2),'same')<0.1)) = 1;
     for icol = 1:3
       out(:,:,icol,islice) = bgmask.*ones(nvox1,nvox2) + (1-bgmask).* out(:,:,icol,islice);
-    end    
+    end
   end
 end
 fprintf('done\n');
@@ -465,6 +471,7 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
+ft_postamble history ininterp
 ft_postamble provenance
 
 
@@ -477,14 +484,14 @@ data = guidata(gcf);
 co(2,1) = round(mod(yi,size(data.out,1)));
 co(3,1) = round(mod(xi,size(data.out,2)));
 switch mod(data.cfg.rotate,4)
-case 1,
+case 1
   t1 = co(2);
   co(2) = co(3);
   co(3) = data.sin(3)-t1;
-case 2,
+case 2
   co(2) = data.sin(2)-co(2);
   co(3) = data.sin(3)-co(3);
-case 3,
+case 3
   t1 = co(3);
   co(3) = co(2);
   co(2) = data.sin(2)-t1;
@@ -507,23 +514,23 @@ for ishift = 1:data.cfg.dim-1
 end
 set(data.hcoords,'String',sprintf('1: %d\n2: %d\n3: %d\nf: %0.4f',co(1),co(2),co(3),data.source(co(1),co(2),co(3))));
 
-function [h,nrows,ncols] = slicemon(a) % display the montage w/o image_toolbox 
+function [h,nrows,ncols] = slicemon(a) % display the montage w/o image_toolbox
 siz = [size(a,1) size(a,2) size(a,4)];
 nn = sqrt(prod(siz))/siz(2);
 mm = siz(3)/nn;
-if (ceil(nn)-nn) < (ceil(mm)-mm),
+if (ceil(nn)-nn) < (ceil(mm)-mm)
   nn = ceil(nn); mm = ceil(siz(3)/nn);
 else
   mm = ceil(mm); nn = ceil(siz(3)/mm);
 end
-b = a(1,1); 
-b(1,1) = 0; 
+b = a(1,1);
+b(1,1) = 0;
 b = repmat(b, [mm*siz(1), nn*siz(2), size(a,3), 1]);
 rows = 1:siz(1); cols = 1:siz(2);
-for i=0:mm-1,
-  for j=0:nn-1,
+for i=0:mm-1
+  for j=0:nn-1
     k = j+i*nn+1;
-    if k<=siz(3),
+    if k<=siz(3)
       b(rows+i*siz(1),cols+j*siz(2),:) = a(:,:,:,k);
     end
   end

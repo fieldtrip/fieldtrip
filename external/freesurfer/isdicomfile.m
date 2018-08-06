@@ -18,7 +18,7 @@ function [res, dcminfo] = isdicomfile(fname)
 %    $Date: 2011/03/02 00:04:12 $
 %    $Revision$
 %
-% Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
+% Copyright ?? 2011 The General Hospital Corporation (Boston, MA) "MGH"
 %
 % Terms and conditions for use, reproduction, distribution and contribution
 % are found in the 'FreeSurfer Software License Agreement' contained
@@ -31,22 +31,22 @@ function [res, dcminfo] = isdicomfile(fname)
 
 
 try
+  %%%%%%% This requires the MATLAB image processing toolbox %%%%%%%%
   dcminfo = dicominfo(fname);
   res = 1;
 catch
+  %%%%%%% This was Anders original code, does not always work %%%%%%%%
+  fid = fopen(fname,'r');
+  if fid < 0
+    res = 0;
+  else
+    stat = fseek(fid,128,'bof'); % move to DICM string
+    tmp = char(fread(fid,4,'uchar')');%'
+    res = strcmp(tmp,'DICM');
+    fclose(fid);
+  end
   dcminfo = [];
-  res = 0;
 end
 
 return;
 
-%%%%%%% This was Anders original code, does not always work %%%%%%%%
-fid = fopen(fname,'r');
-if fid < 0
-  res = 0;
-else
-  stat = fseek(fid,128,'bof'); % move to DICM string
-  tmp = char(fread(fid,4,'uchar')');%'
-  res = strcmp(tmp,'DICM');
-  fclose(fid);
-end

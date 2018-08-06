@@ -4,10 +4,11 @@
 %   >> data = fir_filterdcpadded(b, a, data, causal);
 %
 % Inputs:
-%   b         - vector of filter coefficients
-%   a         - 1
-%   data      - raw data (times x chans)
-%   causal    - boolean perform causal filtering {default 0}
+%   b             - vector of filter coefficients
+%   a             - 1
+%   data          - raw data (times x chans)
+%   causal        - boolean perform causal filtering {default 0}
+%   usefftfilt    - boolean use fftfilt instead of filter
 %
 % Outputs:
 %   data      - smoothed data
@@ -38,26 +39,29 @@
 %
 % $Id$
 
-function [ data ] = fir_filterdcpadded(b, a, data, causal)
+function [ data ] = fir_filterdcpadded(b, a, data, causal, usefftfilt)
 
 % Defaults
+if nargin < 4 || isempty(usefftfilt)
+    usefftfilt = 0;
+end
 if nargin < 3 || isempty(causal)
     causal = 0;
 end
 
 % Check arguments
 if nargin < 2
-    error('Not enough input arguments.');
+    ft_error('Not enough input arguments.');
 end
 
 % Is FIR?
 if ~isscalar(a) || a ~= 1
-    error('Not a FIR filter. onepass-zerophase and onepass-minphase filtering is available for FIR filters only.')
+    ft_error('Not a FIR filter. onepass-zerophase and onepass-minphase filtering is available for FIR filters only.')
 end
 
 % Group delay
 if mod(length(b), 2) ~= 1
-    error('Filter order is not even.');
+    ft_error('Filter order is not even.');
 end
 groupDelay = (length(b) - 1) / 2;
 
@@ -65,7 +69,7 @@ groupDelay = (length(b) - 1) / 2;
 isSym = all(b(1:groupDelay) == b(end:-1:groupDelay + 2));
 isAntisym = all([b(1:groupDelay) == -b(end:-1:groupDelay + 2) b(groupDelay + 1) == 0]);
 if causal == 0 && ~(isSym || isAntisym)
-    error('Filter is not anti-/symmetric. For onepass-zerophase filtering the filter must be anti-/symmetric.')
+    ft_error('Filter is not anti-/symmetric. For onepass-zerophase filtering the filter must be anti-/symmetric.')
 end
 
 % Padding
@@ -79,7 +83,12 @@ end
 
 % Filter data (with double precision)
 isSingle = isa(data, 'single');
-data = filter(double(b), 1, double([startPad; data; endPad])); % Pad and filter with double precision
+
+if usefftfilt
+    data = fftfilt(double(b), double([startPad; data; endPad]));
+else
+    data = filter(double(b), 1, double([startPad; data; endPad])); % Pad and filter with double precision
+end
 
 % Convert to single
 if isSingle

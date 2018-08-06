@@ -1,5 +1,7 @@
-function write_gdf(filename, hdr, data);
+function write_gdf(filename, hdr, data)
+
 % WRITE_GDF(filename, header, data)
+%
 % Writes a GDF file from the given header (only label, Fs, nChans are of interest)
 % and the data (unmodified). Digital and physical limits are derived from the data
 % via min and max operators. The GDF file will contain N records of 1 sample each,
@@ -7,7 +9,7 @@ function write_gdf(filename, hdr, data);
   
 % Copyright (C) 2010, Stefan Klanke
 % 
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -75,6 +77,12 @@ end
 % will be terrible for appending data...
 digMin = double(min(data,[],2));
 digMax = double(max(data,[],2));
+
+% adjust the the digital min/max a bit, otherwise the biosig reading code
+% will return NaNs for the most extreme values
+digMin = digMin - 1e5.*eps(digMin);
+digMax = digMax + 1e5.*eps(digMax);
+
 physMin = digMin;
 physMax = digMax;
 

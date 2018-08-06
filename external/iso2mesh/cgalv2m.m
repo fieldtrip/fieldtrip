@@ -99,3 +99,6 @@ fprintf(1,'node number:\t%d\ntriangles:\t%d\ntetrahedra:\t%d\nregions:\t%d\n',..
     size(node,1),size(face,1),size(elem,1),length(unique(elem(:,end))));
 fprintf(1,'surface and volume meshes complete\n');
 
+if(size(node,1)>0)
+    [node,elem,face]=sortmesh(node(1,:),node,elem,1:4,face,1:3);
+end

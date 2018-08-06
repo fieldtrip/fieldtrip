@@ -4,7 +4,7 @@ function mask=flatsegment(node,edge)
 %
 % decompose edge loops into flat segments alone arbitrary planes of the bounding box
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2008/04/08
 %
 % this code is fragile: it can not handle curves with many co-linear

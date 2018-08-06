@@ -12,7 +12,7 @@ function [file] = read_bti_ascii(filename)
 
 % Copyright (C) 2004, Robert Oostenveld
 % 
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -32,14 +32,14 @@ function [file] = read_bti_ascii(filename)
 
 fid = fopen(filename, 'r');
 if fid==-1
-  error(sprintf('could not open file %s', filename));
+  ft_error(sprintf('could not open file %s', filename));
 end
 
 line = '';
 while ischar(line)
-  line = cleanline(fgetl(fid))
+  line = cleanline(fgetl(fid));
   
-  if isempty(line) | line==-1 | isempty(findstr(line, ':'))
+  if isempty(line) || line==-1 || isempty(findstr(line, ':'))
     continue
   end
   
@@ -65,7 +65,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function line = cleanline(line)
-if isempty(line) | line==-1
+if isempty(line) || line==-1
   return
 end
 comment = findstr(line, '//');

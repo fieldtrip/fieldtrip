@@ -30,7 +30,7 @@ function [H] = rotate(f)
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -49,7 +49,7 @@ function [H] = rotate(f)
 % $Id$
 
 if numel(f)~=3
-  error('incorrect input vector');
+  ft_error('incorrect input vector');
 end
 
 % convert degrees to radians
@@ -94,7 +94,7 @@ H = [
 if 0
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The following code can be used to construct the combined rotation matrix
-% for either xyz or zyx ordering (using the Matlab symbolic math toolbox)
+% for either xyz or zyx ordering (using the MATLAB symbolic math toolbox)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   syms sX sY sZ cX cY cZ
   % this is for only rotating around x

@@ -5,9 +5,9 @@ function val=jsonopt(key,default,varargin)
 % setting options based on a struct. The struct can be produced
 % by varargin2struct from a list of 'param','value' pairs
 %
-% authors:Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
-% $Id$
+% $Id: loadjson.m 371 2012-06-20 12:43:06Z fangq $
 %
 % input:
 %      key: a string with which one look up a value from a struct
@@ -20,13 +20,16 @@ function val=jsonopt(key,default,varargin)
 % license:
 %     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details
 %
-% -- this function is part of jsonlab toolbox (http://iso2mesh.sf.net/cgi-bin/index.cgi?jsonlab)
+% -- this function is part of JSONlab toolbox (http://iso2mesh.sf.net/cgi-bin/index.cgi?jsonlab)
 % 
 
 val=default;
 if(nargin<=2) return; end
 opt=varargin{1};
-if(isstruct(opt) && isfield(opt,key))
-    val=getfield(opt,key);
+if(isstruct(opt))
+    if(isfield(opt,key))
+       val=getfield(opt,key);
+    elseif(isfield(opt,lower(key)))
+       val=getfield(opt,lower(key));
+    end
 end
-

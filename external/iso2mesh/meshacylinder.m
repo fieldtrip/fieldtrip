@@ -6,7 +6,7 @@ function [node,face,elem]=meshacylinder(c0,c1,r,tsize,maxvol,ndiv)
 %
 % create the surface and (optionally) tetrahedral mesh of a 3D cylinder
 %
-% author: Qianqian Fang, <fangq at nmr.mgh.harvard.edu>
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input: 
 %   c0, c1:  cylinder axis end points

@@ -1,34 +1,20 @@
 function [chansel, trlsel, cfg] = rejectvisual_channel(cfg, data)
 
-% SUBFUNCTION for rejectvisual
+% SUBFUNCTION for ft_rejectvisual
 
-% Copyright (C) 2006, Robert Oostenveld
-%
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
-% for the documentation and details.
-%
-%    FieldTrip is free software: you can redistribute it and/or modify
-%    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 3 of the License, or
-%    (at your option) any later version.
-%
-%    FieldTrip is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
-%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%    GNU General Public License for more details.
-%
-%    You should have received a copy of the GNU General Public License
-%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
-%
-% $Id$
+% determine the initial selection of trials
+ntrl = length(data.trial);
+if isequal(cfg.trials, 'all') % support specification like 'all'
+  cfg.trials = 1:ntrl;
+end
+trlsel = false(1,ntrl);
+trlsel(cfg.trials) = true;
 
-% determine the initial selection of trials and channels
+% determine the initial selection of channels
 nchan = length(data.label);
-ntrl  = length(data.trial);
-cfg.channel = ft_channelselection(cfg.channel, data.label);
-trlsel  = logical(ones(1,ntrl));
-chansel = logical(zeros(1,nchan));
-chansel(match_str(data.label, cfg.channel)) = 1;
+cfg.channel = ft_channelselection(cfg.channel, data.label); % support specification like 'all'
+chansel = false(1,nchan);
+chansel(match_str(data.label, cfg.channel)) = true;
 
 % compute the sampling frequency from the first two timepoints
 fsample = 1/mean(diff(data.time{1}));
