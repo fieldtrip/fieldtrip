@@ -36,9 +36,9 @@ function [dat] = read_nk1200_data(filename, hdr, begsample, endsample, chanindx)
 if nargin<5
   chanrange{1} = [1 hdr.nChans]; % all channels
 else
-  if all(find([diff(chanindx) Inf])>1) % if chanindx is consecutively numbered
+  if isempty(find(diff(chanindx)~=1)) % if chanindx is consecutively numbered
     chanrange{1} = [chanindx(1) chanindx(end)];
-  else % otherwise loop separately per chanindx entry
+  else % otherwise loop around the chanindx entries
     chanrange = cell(numel(chanindx), 1);
     for c = 1:numel(chanindx)
       chanrange{c} = [chanindx(c) chanindx(c)];
