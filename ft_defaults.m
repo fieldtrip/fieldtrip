@@ -1,22 +1,13 @@
-function ft_defaults(cfg)
+function ft_defaults
 
 % FT_DEFAULTS (ending with "s") sets some general settings in the global variable
 % ft_default (without the "s") and takes care of the required path settings. You can
 % call this function in your startup.m script. This function is also called at the
 % begin of all FieldTrip functions.
 %
-% Use as
-%   ft_defaults
-% or
-%   ft_defaults(cfg)
-%
-% The optional input argument "cfg" lets you override the global "ft_default" 
-% options. The structure options will be merged and if the result differs from
-% the current global "ft_default" structure, then FieldTrip will be initalized again.
-%
-% The configuration defaults are stored in the global "ft_default" structure.
-% The ft_checkconfig function that is called by many FieldTrip functions will
-% merge this global ft_default structure with the cfg ctructure that you pass to
+% The global configuration defaults are stored in the global "ft_default" structure.
+% The ft_checkconfig function that is called by many FieldTrip functions will merge
+% these global configuration defaults with the cfg ctructure that you pass to 
 % the FieldTrip function that you are calling.
 %
 % The global options and their default values are
@@ -33,6 +24,12 @@ function ft_defaults(cfg)
 %   ft_default.toolbox.signal    = string, can be 'compat' or 'matlab' (default = 'compat')
 %   ft_default.toolbox.stats     = string, can be 'compat' or 'matlab' (default = 'compat')
 %   ft_default.toolbox.images    = string, can be 'compat' or 'matlab' (default = 'compat')
+%
+% If you want to overrule these default settings, you can add something like this in your startup.m script
+%   ft_defaults 
+%   global ft_default
+%   ft_default.option1 = value1
+%   ft_default.option2 = value2
 %
 % The toolbox option for signal, stats and images allows you to specify whether you
 % want to use a compatible drop-in to be used for these MathWorks toolboxes, or the
@@ -65,6 +62,7 @@ function ft_defaults(cfg)
 % $Id$
 
 global ft_default
+
 persistent initialized
 persistent checkpath
 
@@ -81,20 +79,11 @@ if ~exist('ft_warning', 'file')
   ft_warning = @warning;
 end
 
-% locate the file that contains the persistent FieldTrip preferences
+% locate the file with the persistent FieldTrip preferences
 fieldtripprefs = fullfile(prefdir, 'fieldtripprefs.mat');
 if exist(fieldtripprefs, 'file')
   prefs       = load(fieldtripprefs); % the file contains multiple fields
   ft_default  = mergeconfig(ft_default, prefs);
-end
-
-% Merge "ft_default" configuration with "cfg" and re-intialize if necessary
-if nargin > 0 && isstruct(cfg)
-    cfg = mergeconfig(cfg,ft_default);
-    if ~isequaln(cfg,ft_default)
-        initialized = false;
-        ft_default = cfg;
-    end
 end
 
 % Set the defaults in a global variable, ft_checkconfig will copy these over into the local configuration.
