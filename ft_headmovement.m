@@ -1,4 +1,4 @@
-function [grad, trialinfo, transform] = ft_headmovement(cfg)
+function [grad, grad_orig, grad_avg, trialinfo] = ft_headmovement(cfg)
 
 % FT_HEADMOVEMENT creates a representation of the CTF gradiometer definition
 % in which the headmovement in incorporated. The result can be used
@@ -13,28 +13,32 @@ function [grad, trialinfo, transform] = ft_headmovement(cfg)
 %
 % optional arguments are
 %   cfg.updatesens   = 'yes' (default) or 'no'
+%   cfg.avgovertrial = 'no' (default) or 'yes'
 %   cfg.pertrial     = 'no' (default) or 'yes'
 %
-% If cfg.updatesens is specified, the output gradiometer description is
-% defined in dewar coordinates, and the specification of the coils is
-% expanded as per the centroids of the position clusters. The balancing
-% matrix is s a weighted concatenation of the original tra-matrix. If
-% cfg.updatesens is false, the output gradiometer description is the
-% original head coordinate system based grad-array. If cfg.pertrial is
-% specified, the clustering of head positions is done on the average
-% coil-position per trial. Additional output consists of a vector that
-% specifies the cluster-identity of the corresponding trial, and a set of
-% cluster-specific transformation matrices (4x4xcfg.numclusters) that can
-% be applied to the output grad-array, to obtain the sensor-description of
-% the corresponding trial.
+% If cfg.updatesens is specified, the output grad-structure has a 
+% specification of the coils expanded as per the centroids of the position
+% clusters. The balancing matrix is s a weighted concatenation of the
+% original tra-matrix. If cfg.updatesens is false, the output grad is a
+% struct-array with coil and sensor positions as per the clusters'
+% centroids. If cfg.avgovertrial is specified, the clustering of head
+% positions is done on the average headcoil-position per trial.
 %
-% 
-% This method and related methods are described by Stolk et al., Online and
+% Additional outputs are:
+%   grad_orig = head coordinate system based grad-structure, as stored in
+%                 the data directory
+%   grad_avg  = head coordinate system based grad-structure, based on the 
+%                 average head position as extracted from the HCL coils.
+%   trialinfo = a vector ntrlx1, mapping between the grad struct-array, and
+%                 the trials in cfg.trl
+%
+% The updatesens method and related methods are described by Stolk et al., Online and
 % offline tools for head movement compensation in MEG. NeuroImage, 2012.
 %
 % See also FT_REGRESSCONFOUND FT_REALTIME_HEADLOCALIZER
 
 % Copyright (C) 2008-2017, Jan-Mathijs Schoffelen, Robert Oostenveld
+% Copyright (C) 2018, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -75,26 +79,33 @@ end
 cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
 
 % set the defaults
-cfg.numclusters = ft_getopt(cfg, 'numclusters', 12);
-cfg.feedback    = ft_getopt(cfg, 'feedback',    'yes');
-cfg.updatesens  = ft_getopt(cfg, 'updatesens',  'yes');
-cfg.pertrial    = ft_getopt(cfg, 'pertrial',    'no');
+cfg.numclusters  = ft_getopt(cfg, 'numclusters', 12);
+cfg.feedback     = ft_getopt(cfg, 'feedback',    'yes');
+cfg.updatesens   = ft_getopt(cfg, 'updatesens',  'yes');
+cfg.pertrial     = ft_getopt(cfg, 'pertrial',    'no');
+cfg.avgovertrial = ft_getopt(cfg, 'avgovertrial', 'no');
+
+% updatesens and pertrial are mutually exclusive
+if istrue(cfg.pertrial) && istrue(cfg.updatesens)
+  error('the ''pertrial'' and ''updatesens'' options are mutually exclusive');
+end
+
+% pertrial takes precendence on the clustering
+if istrue(cfg.pertrial) && ~isempty(cfg.numclusters)
+  cfg.numclusters = [];
+end
 
 % read the header information
 hdr = ft_read_header(cfg.headerfile);
 assert(numel(intersect(hdr.label, {'HLC0011' 'HLC0012' 'HLC0013' 'HLC0021' 'HLC0022' 'HLC0023' 'HLC0031' 'HLC0032' 'HLC0033'}))==9, 'the data does not contain the expected head localizer channels');
 
-% work with gradiometers in dewar coordinates, since HLCs are also
-% in dewar coords. at present I did not find the nas, lpa, rpa channels,
-% which according to ctf's documentation should contain the positions
-% of these channels directly (HDAC channels). FIXME
 grad_head    = ctf2grad(hdr.orig, 0);
-grad_dewar   = ctf2grad(hdr.orig, 1);
 grad_head    = ft_datatype_sens(grad_head);  % ensure up-to-date sensor description (Oct 2011)
+grad_dewar   = ctf2grad(hdr.orig, 1);
 grad_dewar   = ft_datatype_sens(grad_dewar); % ensure up-to-date sensor description (Oct 2011)
 
-grad         = grad_dewar;        % we want to work with dewar coordinates, ...
-grad.chanpos = grad_head.chanpos; % except the chanpos, which should remain in head coordinates
+grad = grad_dewar; % we want to work with dewar coordinates, ...
+grad.chanpos = grad_head.chanpos;
 
 % read HLC-channels
 % HLC0011 HLC0012 HLC0013 x, y, z coordinates of nasion-coil in m.
@@ -107,45 +118,59 @@ tmpcfg.channel      = {'HLC0011' 'HLC0012' 'HLC0013' 'HLC0021' 'HLC0022' 'HLC002
 tmpcfg.continuous   = 'yes';
 data                = ft_preprocessing(tmpcfg);
 
-if istrue(cfg.pertrial)
+if istrue(cfg.avgovertrial)
+  dat  = zeros(numel(data.label), numel(data.trial));
+  wdat = zeros(1, size(dat,2));
   for k = 1:numel(data.trial)
-    data.trial{k} = mean(data.trial{k},2);
-    data.time{k}  = 0;
+    dat(:,k)  = mean(data.trial{k},2);
+    wdat(:,k) = numel(data.time{k});
   end
-end
-dat = cat(2, data.trial{:});
-dat = dat * ft_scalingfactor('m', grad.unit); % scale in units of the gradiometer definition
-
-if ~istrue(cfg.pertrial)
+else
+  dat = cat(2, data.trial{:});
+  
   [tmpdata, ~, ic] = unique(dat', 'rows');
   dat = tmpdata';
 
   % count how often each position occurs
   wdat = hist(ic, unique(ic));
+end
+dat = dat * ft_scalingfactor('m', grad.unit); % scale in units of the gradiometer definition, which is cm
 
+if ~isempty(cfg.numclusters)
+  
   % compute the cluster means
   [bin, cluster] = kmeans(dat', cfg.numclusters);
 else
-  [bin, cluster] = kmeans(dat', cfg.numclusters);
-  wdat           = ones(size(dat,2),1);
+  bin     = 1:size(dat,2);
+  cluster = dat';
 end
   
 % find the three channels for each fiducial
-selnas = strmatch('HLC001', data.label);
-sellpa = strmatch('HLC002', data.label);
-selrpa = strmatch('HLC003', data.label);
+selnas = match_str(data.label,{'HLC0011';'HLC0012';'HLC0013'});
+sellpa = match_str(data.label,{'HLC0021';'HLC0022';'HLC0023'});
+selrpa = match_str(data.label,{'HLC0031';'HLC0032';'HLC0033'});
 
 ubin   = unique(bin);
+nas    = zeros(numel(ubin),3);
+lpa    = zeros(numel(ubin),3);
+rpa    = zeros(numel(ubin),3);
+numperbin = zeros(numel(ubin),1);
 for k = 1:length(ubin)
   nas(k, :) = cluster(k, selnas);
   lpa(k, :) = cluster(k, sellpa);
   rpa(k, :) = cluster(k, selrpa);
   numperbin(k) = sum(wdat(bin==ubin(k)));
 end
+cluster_avg = sum(diag(numperbin)*cluster)./sum(numperbin);
+nas_avg     = cluster_avg(:, selnas);
+lpa_avg     = cluster_avg(:, sellpa);
+rpa_avg     = cluster_avg(:, selrpa);
 
-hc    = read_ctf_hc([cfg.datafile(1:end-4),'hc']);  
+
+hc = read_ctf_hc([cfg.datafile(1:end-4),'hc']);
+dewar2head_orig = hc.homogenous;
+
 if istrue(cfg.feedback)
-  
   % plot some stuff
   figure; hold on;
   title(sprintf('%s coordinates (%s)', grad_dewar.coordsys, grad_dewar.unit));
@@ -158,24 +183,25 @@ if istrue(cfg.feedback)
   plot3(hc.dewar.lpa(1), hc.dewar.lpa(2), hc.dewar.lpa(3), 'ro');
   plot3(hc.dewar.rpa(1), hc.dewar.rpa(2), hc.dewar.rpa(3), 'ro');
   axis vis3d; axis off
-  
 end
 
 % compute transformation matrix from dewar to head coordinates
-transform = zeros(4, 4, size(nas,1));
-for k = 1:size(transform, 3)
-  transform(:,:,k) = ft_headcoordinates(nas(k,:), lpa(k,:), rpa(k,:), 'ctf');
+dewar2head = zeros(4, 4, size(nas,1));
+for k = 1:size(dewar2head, 3)
+  dewar2head(:,:,k) = ft_headcoordinates(nas(k,:), lpa(k,:), rpa(k,:), 'ctf');
 end
+dewar2head_avg = ft_headcoordinates(nas_avg, lpa_avg, rpa_avg, 'ctf');
+
 
 if istrue(cfg.updatesens)
-  npos        = size(transform, 3);
+  npos        = size(dewar2head, 3);
   ncoils      = size(grad.coilpos,  1);
   gradnew     = grad;
   gradnew.coilpos = zeros(size(grad.coilpos,1)*npos, size(grad.coilpos,2));
   gradnew.coilori = zeros(size(grad.coilpos,1)*npos, size(grad.coilpos,2));
   gradnew.tra = repmat(grad.tra, [1 npos]);
   for m = 1:npos
-    tmptransform                                  = transform(:,:,m);
+    tmptransform                                  = dewar2head(:,:,m);
     gradnew.coilpos((m-1)*ncoils+1:(m*ncoils), :) = ft_warp_apply(tmptransform, grad.coilpos); % back to head coordinates
     tmptransform(1:3, 4)                          = 0; % keep rotation only
     gradnew.coilori((m-1)*ncoils+1:(m*ncoils), :) = ft_warp_apply(tmptransform, grad.coilori);
@@ -183,15 +209,16 @@ if istrue(cfg.updatesens)
   end
   
   grad = gradnew;
-  trialinfo = [];
+  trialinfo = ones(numel(data.trial),1);
 else
-  M = [reshape(hc.affine,[4 3])';0 0 0 1];
-  for k = 1:size(transform,3)
-    transform(:,:,k) = M\transform(:,:,k);
+  npos = size(dewar2head, 3);
+  for k = 1:npos
+    grad(k) = ft_transform_geometry(dewar2head(:,:,k), grad_dewar);
   end
-  grad      = grad_head;
-  trialinfo = bin(:)';
+  trialinfo = bin(:);
 end
+grad_orig = ft_transform_geometry(dewar2head_orig, grad_dewar);
+grad_avg  = ft_transform_geometry(dewar2head_avg,  grad_dewar);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
