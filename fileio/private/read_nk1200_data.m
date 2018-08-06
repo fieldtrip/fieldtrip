@@ -59,7 +59,7 @@ num = [];
 dat = [];
 for e = 1:hdr.nTrials
   for c = 1:numel(chanrange)
-    tmp = in_fread_nk(sFile, fopen(filename), e, [begsample endsample], chanrange{c});
+    tmp = in_fread_nk(sFile, fopen(filename), e, [begsample-1 endsample-1], chanrange{c}); % NK1200 samples starts at 0
     num = [num; tmp]; clear tmp % stack channels
   end
   dat = [dat num]; clear num % append epochs/trials
