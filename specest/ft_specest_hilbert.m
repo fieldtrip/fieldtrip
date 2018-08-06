@@ -67,8 +67,8 @@ if isempty(fbopt)
 end
 
 % edge artifacts from filters are only exactly defined for FIR filters
-if edgeartnan && ~any(strcmp(filttype,{'firws','fir','firls'}))
-  error('edge artifacts are only exactly defined, and can only be replaced by NaNs, for FIR filters')
+if edgeartnan && ~any(strcmp(filttype, {'firws','fir','firls'}))
+  ft_error('edge artifacts are only exactly defined, and can only be replaced by NaNs, for FIR filters')
 end
 
 % Set n's
