@@ -1110,7 +1110,7 @@ switch dataformat
     dat = dat(chanindx,begsample:endsample);
     
   case 'nk1200'
-    dat = read_nk1200_data(filename, hdr, begsample, endsample, chanindx);
+    dat = read_brainstorm_data(filename, hdr, begsample, endsample, chanindx);
     
   case 'ns_avg'
     % NeuroScan average data

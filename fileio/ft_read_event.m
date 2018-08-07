@@ -1902,7 +1902,8 @@ switch eventformat
     end
     
   case 'nk1200'  
-    event = read_nk1200_event(filename);
+    ft_hastoolbox('brainstorm', 1);
+    event = read_brainstorm_event(filename);
 
   case 'nimh_cortex'
     if isempty(hdr)

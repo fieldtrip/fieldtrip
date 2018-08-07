@@ -2164,7 +2164,8 @@ switch headerformat
     hdr = read_nihonkohden_hdr(filename);
     
   case 'nk1200'
-    hdr = read_nk1200_header(filename);
+    ft_hastoolbox('brainstorm', 1);
+    hdr = read_brainstorm_header(filename);
 
   case 'nimh_cortex'
     cortex = read_nimh_cortex(filename, 'epp', 'no', 'eog', 'no');
