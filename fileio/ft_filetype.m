@@ -1337,6 +1337,13 @@ elseif filetype_check_extension(filename, '.m00')
   type = 'nihonkohden_m00';
   manufacturer = 'Nihon Kohden';
   content = 'continuous EEG';
+elseif filetype_check_extension(filename, '.EEG') && (exist([filename(1:(end-4)) '.11D'], 'file') || exist([filename(1:(end-4)) '.21E'], 'file') ...
+    || exist([filename(1:(end-4)) '.BFT'], 'file') || exist([filename(1:(end-4)) '.CMT'], 'file') || exist([filename(1:(end-4)) '.CN3'], 'file') ...
+    || exist([filename(1:(end-4)) '.EGF'], 'file') || exist([filename(1:(end-4)) '.EVT'], 'file') || exist([filename(1:(end-4)) '.LOG'], 'file') ...
+    || exist([filename(1:(end-4)) '.pnt'], 'file') || exist([filename(1:(end-4)) '.reg'], 'file'))
+  type = 'nihonkohden_eeg';
+  manufacturer = 'Nihon Kohden';
+  content = 'continuous EEG';
 elseif filetype_check_extension(filename, '.mgrid')
   type = 'bioimage_mgrid';
   manufacturer = 'Bioimage Suite';

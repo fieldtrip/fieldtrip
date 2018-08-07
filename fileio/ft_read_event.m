@@ -1900,6 +1900,10 @@ switch eventformat
       event(end  ).sample = offset(j) + begsample - 1;        % assign the sample at which the trigger has gone down
       event(end  ).value  = value;                            % assign the trigger value just _before_ going down
     end
+    
+  case 'nihonkohden_eeg'  
+    ft_hastoolbox('brainstorm', 1);
+    event = read_brainstorm_event(filename);
 
   case 'nimh_cortex'
     if isempty(hdr)
