@@ -14,7 +14,7 @@ end
 
 % flip based on polarity of voxel with maximum power in desired time window
 [~,b]=max(nmt_rownorm(s(:,tsel)));
-flipper=sparse(diag(sign(s(b,tsel)*s(:,tsel)'))); 
+flipper=sign(s(b,tsel)*s(:,tsel)').*speye(size(s,1)); 
 s = flipper*s;
 ori = ori*flipper; 
 
