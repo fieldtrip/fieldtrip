@@ -2163,7 +2163,7 @@ switch headerformat
   case 'nihonkohden_m00'
     hdr = read_nihonkohden_hdr(filename);
     
-  case 'nk1200'
+  case 'nihonkohden_eeg'
     ft_hastoolbox('brainstorm', 1);
     hdr = read_brainstorm_header(filename);
 

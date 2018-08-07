@@ -1109,7 +1109,7 @@ switch dataformat
     end
     dat = dat(chanindx,begsample:endsample);
     
-  case 'nk1200'
+  case 'nihonkohden_eeg'
     dat = read_brainstorm_data(filename, hdr, begsample, endsample, chanindx);
     
   case 'ns_avg'

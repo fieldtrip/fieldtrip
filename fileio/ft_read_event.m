@@ -1901,7 +1901,7 @@ switch eventformat
       event(end  ).value  = value;                            % assign the trigger value just _before_ going down
     end
     
-  case 'nk1200'  
+  case 'nihonkohden_eeg'  
     ft_hastoolbox('brainstorm', 1);
     event = read_brainstorm_event(filename);
 
