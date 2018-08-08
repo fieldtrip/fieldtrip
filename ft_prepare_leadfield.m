@@ -47,6 +47,22 @@ function [grid, cfg] = ft_prepare_leadfield(cfg, data)
 %                         whether the lower rank leadfield is projected back onto the original
 %                         linear subspace, or not.
 %
+% Depending on the type of headmodel, some additional options may be
+% specified. 
+%
+% For OPENMEEG based headmodels:
+%   cfg.om.batchsize = scalar (default 100e3), number of voxels per DSM batch. 
+%                       Set to e.g. 1000 if not much RAM available
+%   cfg.om.dsm       = 'no'/'yes', reuse existing DSM if provided
+%   cfg.om.keepdsm   = 'no'/'yes', option to retain DSM (no by default)
+%   cfg.om.nonadaptive = 'no'/'yes'
+%  
+% For SINGLESHELL based headmodels:
+%   cfg.om.batchsize = scalar (default 1), but can be 'all'. Number of
+%                       dipoles for which the leadfield is computed in a 
+%                       single call to the low-level code. Trades off
+%                       memory efficiency for speed.
+%
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % If you specify this option the input data will be read from a *.mat
@@ -188,11 +204,10 @@ if ft_voltype(headmodel, 'openmeeg')
   ndip       = length(insideindx);
   numchunks  = ceil(ndip/batchsize);
   if(numchunks > 1)
-    switch(keepdsm)
-      case 'yes'
-        ft_warning('Keeping DSM output not supported when computation split into batches due to large size.')
+    if istrue(keepdsm)
+      ft_warning('Keeping DSM output not supported when computation split into batches due to large size.')
     end
-    keepdsm = 'no';
+    keepdsm = false;
   end
   
   try
@@ -218,9 +233,9 @@ if ft_voltype(headmodel, 'openmeeg')
         dsm = ft_sysmat_openmeeg(grid.pos(insideindx(diprange),:), headmodel, sens, nonadaptive);
         lf(:,diprangeori) = ds2sens(:,diprangeori) + h2sens*headmodel.mat*dsm;
         
-        switch(keepdsm)
-          case 'yes'  % retain DSM in cfg if desired
-            cfg.om.dsm = dsm;
+        if istrue(keepdsm)
+          % retain DSM in cfg if desired
+          cfg.om.dsm = dsm;
         end
         
         dipindx = insideindx(diprange);
