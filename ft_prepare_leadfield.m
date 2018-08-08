@@ -51,14 +51,14 @@ function [grid, cfg] = ft_prepare_leadfield(cfg, data)
 % specified. 
 %
 % For OPENMEEG based headmodels:
-%   cfg.om.batchsize = scalar (default 100e3), number of voxels per DSM batch. 
+%   cfg.openmeeg.batchsize = scalar (default 100e3), number of voxels per DSM batch. 
 %                       Set to e.g. 1000 if not much RAM available
-%   cfg.om.dsm       = 'no'/'yes', reuse existing DSM if provided
-%   cfg.om.keepdsm   = 'no'/'yes', option to retain DSM (no by default)
-%   cfg.om.nonadaptive = 'no'/'yes'
+%   cfg.openmeeg.dsm       = 'no'/'yes', reuse existing DSM if provided
+%   cfg.openmeeg.keepdsm   = 'no'/'yes', option to retain DSM (no by default)
+%   cfg.openmeeg.nonadaptive = 'no'/'yes'
 %  
 % For SINGLESHELL based headmodels:
-%   cfg.om.batchsize = scalar (default 1), but can be 'all'. Number of
+%   cfg.singleshell.batchsize = scalar (default 1), but can be 'all'. Number of
 %                       dipoles for which the leadfield is computed in a 
 %                       single call to the low-level code. Trades off
 %                       memory efficiency for speed.
@@ -131,6 +131,7 @@ end
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed', {'hdmfile', 'headmodel'});
 cfg = ft_checkconfig(cfg, 'renamed', {'vol',     'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed', {'om',      'openmeeg'});
 
 % set the defaults
 cfg.normalize      = ft_getopt(cfg, 'normalize',      'no');
@@ -193,13 +194,13 @@ if ft_voltype(headmodel, 'openmeeg')
   % calling it once is much more efficient
   fprintf('calculating leadfield for all positions at once, this may take a while...\n');
   
-  if(~isfield(cfg,'om'))
-    cfg.om = [];
+  if(~isfield(cfg,'openmeeg'))
+    cfg.openmeeg = [];
   end
-  batchsize   = ft_getopt(cfg.om, 'batchsize',100e3); % number of voxels per DSM batch; set to e.g. 1000 if not much RAM available
-  dsm         = ft_getopt(cfg.om, 'dsm'); % reuse existing DSM if provided
-  keepdsm     = ft_getopt(cfg.om, 'keepdsm', 'no'); % option to retain DSM (no by default)
-  nonadaptive = ft_getopt(cfg.om, 'nonadaptive', 'no');
+  batchsize   = ft_getopt(cfg.openmeeg, 'batchsize',100e3); % number of voxels per DSM batch; set to e.g. 1000 if not much RAM available
+  dsm         = ft_getopt(cfg.openmeeg, 'dsm'); % reuse existing DSM if provided
+  keepdsm     = ft_getopt(cfg.openmeeg, 'keepdsm', 'no'); % option to retain DSM (no by default)
+  nonadaptive = ft_getopt(cfg.openmeeg, 'nonadaptive', 'no');
   
   ndip       = length(insideindx);
   numchunks  = ceil(ndip/batchsize);
@@ -235,7 +236,7 @@ if ft_voltype(headmodel, 'openmeeg')
         
         if istrue(keepdsm)
           % retain DSM in cfg if desired
-          cfg.om.dsm = dsm;
+          cfg.openmeeg.dsm = dsm;
         end
         
         dipindx = insideindx(diprange);
