@@ -186,7 +186,7 @@ if ft_voltype(headmodel, 'openmeeg')
   nonadaptive = ft_getopt(cfg.om, 'nonadaptive', 'no');
   
   ndip       = length(insideindx);
-  numchunks = ceil(ndip/batchsize);
+  numchunks  = ceil(ndip/batchsize);
   if(numchunks > 1)
     switch(keepdsm)
       case 'yes'
@@ -202,8 +202,6 @@ if ft_voltype(headmodel, 'openmeeg')
     % Dense voxel grids may require several gigabytes of RAM, so optionally
     % split into smaller batches
     
-    
-    
     [h2sens,ds2sens] = ft_sensinterp_openmeeg(grid.pos(insideindx,:), headmodel, sens);
     
     % use pre-existing DSM if present
@@ -214,7 +212,7 @@ if ft_voltype(headmodel, 'openmeeg')
       
       for ii = 1:numchunks
         % select grid positions for this batch
-        diprange = [((ii-1)*batchsize + 1):(min((ii)*batchsize,ndip))];
+        diprange = (((ii-1)*batchsize + 1):(min((ii)*batchsize,ndip)));
         % remap with 3 orientations per position
         diprangeori = [((ii-1)*3*batchsize + 1):(min((ii)*3*batchsize,3*ndip))];
         dsm = ft_sysmat_openmeeg(grid.pos(insideindx(diprange),:), headmodel, sens, nonadaptive);
@@ -237,8 +235,7 @@ if ft_voltype(headmodel, 'openmeeg')
   if isfield(sens, 'tra')
     lf = sens.tra * lf;
   end
-  
-  
+ 
   % lead field computation already done, but pass to ft_compute_leadfield so that
   % any post-computation options can be applied (e.g., normalization, etc.)
   lf = ft_compute_leadfield(grid.pos(diprange,:), sens, headmodel, 'lf', lf, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
@@ -247,23 +244,39 @@ if ft_voltype(headmodel, 'openmeeg')
   for i=1:ndip
     grid.leadfield{insideindx(i)} = lf(:,3*(i-1) + [1:3]);
   end
-  
   clear lf
+  
 elseif ft_voltype(headmodel, 'singleshell')
-  tmp = ft_compute_leadfield(grid.pos(insideindx,:), sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
-  for i=1:length(insideindx)
-    thisindx = insideindx(i);
-    if istrue(cfg.backproject)
-      grid.leadfield{thisindx} = tmp(:,(i-1)*3+(1:3));
-    else
-      grid.leadfield{thisindx} = tmp(:,(i-1)*cfg.reducerank+(1:cfg.reducerank));
-    end
-    
-    if isfield(cfg, 'grid') && isfield(cfg.grid, 'mom')
-      % multiply with the normalized dipole moment to get the leadfield in the desired orientation
-      grid.leadfield{thisindx} = grid.leadfield{thisindx} * grid.mom(:,thisindx);
+  cfg.singleshell = ft_getopt(cfg, 'singleshell', []);
+  batchsize       = ft_getopt(cfg.singleshell, 'batchsize', 1);
+  if ischar(batchsize) && strcmp(batchsize, 'all')
+    batchsize = length(insideindx);
+  end
+  
+  dippos     = grid.pos(insideindx,:);
+  ndip       = length(insideindx);
+  numchunks  = ceil(ndip/batchsize);
+  
+  ft_progress('init', cfg.feedback, 'computing leadfield');
+  for k = 1:numchunks
+    ft_progress(k/numchunks, 'computing leadfield %d/%d\n', k, numchunks);
+    diprange = (((k-1)*batchsize + 1):(min(k*batchsize,ndip)));
+    tmp      = ft_compute_leadfield(dippos(diprange,:), sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
+    for i=1:length(diprange)
+      thisindx = insideindx(diprange(i));
+      if istrue(cfg.backproject)
+        grid.leadfield{thisindx} = tmp(:,(i-1)*3+(1:3));
+      else
+        grid.leadfield{thisindx} = tmp(:,(i-1)*cfg.reducerank+(1:cfg.reducerank));
+      end
+      
+      if isfield(cfg, 'grid') && isfield(cfg.grid, 'mom')
+        % multiply with the normalized dipole moment to get the leadfield in the desired orientation
+        grid.leadfield{thisindx} = grid.leadfield{thisindx} * grid.mom(:,thisindx);
+      end
     end
   end
+  ft_progress('close');
   
 else
   ft_progress('init', cfg.feedback, 'computing leadfield');
