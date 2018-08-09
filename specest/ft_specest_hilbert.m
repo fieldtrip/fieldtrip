@@ -13,16 +13,17 @@ function [spectrum,freqoi,timeoi] = ft_specest_hilbert(dat, time, varargin)
 %   timeoi    = vector of timebins in spectrum
 %
 % Optional arguments should be specified in key-value pairs and can include
-%   timeoi    = vector, containing time points of interest (in seconds)
-%   freqoi    = vector, containing frequencies (in Hz)
-%   pad       = number, indicating time-length of data to be padded out to in seconds (split over pre/post; used for spectral interpolation, NOT filtering)
-%   padtype   = string, indicating type of padding to be used (see ft_preproc_padding, default: zero)
-%   width     = number or vector, width of band-pass surrounding each element of freqoi
-%   filttype  = string, filter type, 'but' or 'fir' or 'firls'
-%   filtorder = number or vector, filter order
-%   filtdir   = string, filter direction,  'twopass', 'onepass' or 'onepass-reverse' 
-%   verbose   = output progress to console (0 or 1, default 1)
-%   polyorder = number, the order of the polynomial to fitted to and removed from the data prior to the fourier transform (default = 0 -> remove DC-component)
+%   timeoi     = vector, containing time points of interest (in seconds)
+%   freqoi     = vector, containing frequencies (in Hz)
+%   pad        = number, indicating time-length of data to be padded out to in seconds (split over pre/post; used for spectral interpolation, NOT filtering)
+%   padtype    = string, indicating type of padding to be used (see ft_preproc_padding, default: zero)
+%   width      = number or vector, width of band-pass surrounding each element of freqoi
+%   filttype   = string, filter type, 'but', 'firws', 'fir', 'firls'
+%   filtorder  = number or vector, filter order
+%   filtdir    = string, filter direction, 'onepass', 'onepass-reverse', 'twopass', 'twopass-reverse', 'twopass-average', 'onepass-zerophase', 'onepass-reverse-zerophase', 'onepass-minphase'
+%   verbose    = output progress to console (0 or 1, default 1)
+%   polyorder  = number, the order of the polynomial to fitted to and removed from the data prior to the fourier transform (default = 0 -> remove DC-component)
+%   edgeartnan = 0 (default) or 1, replace edge artifacts due to filtering with NaNs (only applicable for filttype = 'fir'/'firls'/'firws')
 %
 % See also FT_FREQANALYSIS, FT_SPECEST_MTMFFT, FT_SPECEST_TFR, FT_SPECEST_MTMCONVOL, FT_SPECEST_WAVELET
 
@@ -47,21 +48,27 @@ function [spectrum,freqoi,timeoi] = ft_specest_hilbert(dat, time, varargin)
 % $Id$
 
 % get the optional input arguments
-freqoi    = ft_getopt(varargin, 'freqoi');
-timeoi    = ft_getopt(varargin, 'timeoi', 'all');
-width     = ft_getopt(varargin, 'width', 1);
-filttype  = ft_getopt(varargin, 'filttype');    if isempty(filttype),  ft_error('you need to specify filter type'),         end
-filtorder = ft_getopt(varargin, 'filtorder');   if isempty(filtorder), ft_error('you need to specify filter order'),        end
-filtdir   = ft_getopt(varargin, 'filtdir');     if isempty(filtdir),   ft_error('you need to specify filter direction'),    end
-pad       = ft_getopt(varargin, 'pad');
-padtype   = ft_getopt(varargin, 'padtype', 'zero');
-polyorder = ft_getopt(varargin, 'polyorder', 0);
-fbopt     = ft_getopt(varargin, 'feedback');
-verbose   = ft_getopt(varargin, 'verbose', true);
+freqoi     = ft_getopt(varargin, 'freqoi');
+timeoi     = ft_getopt(varargin, 'timeoi', 'all');
+width      = ft_getopt(varargin, 'width', 1);
+filttype   = ft_getopt(varargin, 'filttype');    if isempty(filttype),  ft_error('you need to specify filter type'),         end
+filtorder  = ft_getopt(varargin, 'filtorder');   if isempty(filtorder), ft_error('you need to specify filter order'),        end
+filtdir    = ft_getopt(varargin, 'filtdir');     if isempty(filtdir),   ft_error('you need to specify filter direction'),    end
+pad        = ft_getopt(varargin, 'pad');
+padtype    = ft_getopt(varargin, 'padtype', 'zero');
+polyorder  = ft_getopt(varargin, 'polyorder', 0);
+fbopt      = ft_getopt(varargin, 'feedback');
+verbose    = ft_getopt(varargin, 'verbose', true);
+edgeartnan = ft_getopt(varargin, 'edgeartnan', false);
 
 if isempty(fbopt)
   fbopt.i = 1;
   fbopt.n = 1;
+end
+
+% edge artifacts from filters are only exactly defined for FIR filters
+if edgeartnan && ~any(strcmp(filttype, {'firws','fir','firls'}))
+  ft_error('edge artifacts are only exactly defined, and can only be replaced by NaNs, for FIR filters')
 end
 
 % Set n's
@@ -80,6 +87,7 @@ end
 % Determine fsample and set total time-length of data
 fsample = 1./mean(diff(time));
 dattime = ndatsample / fsample; % total time in seconds of input data
+
 
 % Zero padding
 if round(pad * fsample) < ndatsample
@@ -126,7 +134,6 @@ if isnumeric(timeoiinput)
   end
 end
 
-
 % expand width to array if constant width
 if numel(width) == 1
   width = ones(1,nfreqoi) * width;
@@ -137,7 +144,6 @@ if numel(filtorder) == 1
   filtorder = ones(1,nfreqoi) * filtorder;
 end
 
-
 % create filter frequencies and check validity
 filtfreq = [];
 invalidind = [];
@@ -146,8 +152,8 @@ for ifreqoi = 1:nfreqoi
   if all((sign(tmpfreq) == 1))
     filtfreq(end+1,:) = tmpfreq;
   else
-      invalidind = [invalidind ifreqoi];
-      ft_warning(sprintf('frequency %.2f Hz cannot be estimated with resolution %.2f Hz', freqoi(ifreqoi), width(ifreqoi)));
+    invalidind = [invalidind ifreqoi];
+    ft_warning(sprintf('frequency %.2f Hz cannot be estimated with resolution %.2f Hz', freqoi(ifreqoi), width(ifreqoi)));
   end
 end
 
@@ -167,10 +173,42 @@ for ifreqoi = 1:nfreqoi
   end
   
   % filter
-  flt = ft_preproc_bandpassfilter(dat, fsample, filtfreq(ifreqoi,:), filtorder(ifreqoi), filttype, filtdir); 
+  flt = ft_preproc_bandpassfilter(dat, fsample, filtfreq(ifreqoi,:), filtorder(ifreqoi), filttype, filtdir);
   
-  % transform and insert
+  % transform
   dum = transpose(hilbert(transpose(ft_preproc_padding(flt, padtype, prepad, postpad))));
-  spectrum(:,ifreqoi,:) = dum(:,timeboi+prepad);
+  
+  if ~edgeartnan % do not replace edge artifacts by NaNs (or keep them as NaNs)
+    % select output using timeboi
+    spectrum(:,ifreqoi,:) = dum(:,timeboi+prepad);
+    
+  else % replace edge artifacts by NaNs(i.e. keep them as NaNs
+    
+    % determine samples to be NaN in output
+    % for fir/firws the filter order is always even, so an equal amount of NaNs on either
+    % side, but for firls it obtuse in the code. To be safe, ceil(ord/2) is used for NaNing purpose
+    % when applicable
+    switch filtdir
+      case {'onepass','onepass-minphase'} % artifact is at the start as long as full order
+        edgeartind = 1:filtorder(ifreqoi); % the low level filtering functions enforce the order to be smaller than the data length
+      case 'onepass-reverse' % artifact is at the end as long as full order
+        edgeartind = (ndatsample-filtorder(ifreqoi)+1):ndatsample;
+      case {'twopass', 'twopass-reverse', 'twopass-average'} % artifact is at the start and end as long as full order
+        edgeartind = [1:filtorder(ifreqoi) (ndatsample-filtorder(ifreqoi)+1):ndatsample];
+      case {'onepass-zerophase','onepass-reverse-zerophase'} % artifact is at the start and end as long as half order
+        halforder = ceil(filtorder(ifreqoi)/2);
+        edgeartind = [1:halforder (ndatsample-halforder+1):ndatsample];
+    end
+    
+    % select output using timeboi and ignore those bins that are part of the edge artifacts (i.e. identically as to specest_mtmconvol)
+    reqtimeboi = setdiff(timeboi,edgeartind);
+    spectrum(:,ifreqoi,reqtimeboi) = dum(:,reqtimeboi+prepad);
+  end  
 end
+
+
+
+
+
+
 

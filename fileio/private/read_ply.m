@@ -11,7 +11,7 @@ function [vert, face] = read_ply(fn)
 %
 % See also WRITE_PLY, WRITE_VTK, READ_VTK
 
-% Copyright (C) 2013, Robert Oostenveld
+% Copyright (C) 2013-2018, Robert Oostenveld
 %
 % $Id$
 
@@ -61,9 +61,11 @@ if fid~=-1
   end
   line = readline(fid);
   
-  if ~strcmp(line, 'property list uchar int vertex_index') && ~strcmp(line, 'property list uchar int vertex_indices')
-    % the wikipedia documentation specifies vertex_index, but the OPTOCAT files
-    % have vertex_indices
+  if ~strcmp(line, 'property list uchar int vertex_index')    && ...
+      ~strcmp(line, 'property list uchar int vertex_indices') && ...
+      ~strcmp(line, 'property list uchar uint vertex_index')  && ...
+      ~strcmp(line, 'property list uchar uint vertex_indices')
+    % the wikipedia documentation specifies vertex_index, but the OPTOCAT files have vertex_indices
     
     % it would not be very difficult to enhance the reader here with another
     % representation of the faces, i.e. something else than "uchar int"
@@ -72,7 +74,7 @@ if fid~=-1
   end
   line = readline(fid);
   
-  while ~strcmp(line, 'end_header');
+  while ~strcmp(line, 'end_header')
     line = readline(fid);
   end
   
@@ -204,7 +206,7 @@ end % function read_ply
 function line = readline(fid)
 % read the next line from the ascii header, skip all comment lines
 line = fgetl(fid);
-while strncmp(line, 'comment', 7);
+while strncmp(line, 'comment', 7)
   line = fgetl(fid);
 end
 end % function readline

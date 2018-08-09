@@ -570,14 +570,18 @@ switch dataformat
     end
     dimord = 'chans_samples_trials';
     
-  case {'egi_mff_v1' 'egi_mff'} % this is currently the default
-    
+  case 'egi_mff_v1'
     % The following represents the code that was written by Ingrid, Robert
     % and Giovanni to get started with the EGI mff dataset format. It might
     % not support all details of the file formats.
+    %
     % An alternative implementation has been provided by EGI, this is
     % released as fieldtrip/external/egi_mff and referred further down in
     % this function as 'egi_mff_v2'.
+    %
+    % An more recent implementation has been provided by EGI and Arno Delorme, this
+    % is released as https://github.com/arnodelorme/mffmatlabio and referred further
+    % down in this function as 'egi_mff_v3'.
     
     % check if requested data contains multiple epochs and not segmented. If so, give error
     if isfield(hdr.orig.xml,'epochs') && length(hdr.orig.xml.epochs) > 1
@@ -695,6 +699,10 @@ switch dataformat
     end
     % pass the header along to speed it up, it will be read on the fly in case it is empty
     dat = read_mff_data(filename, 'sample', begsample, endsample, chanindx, hdr);
+    
+  case {'egi_mff_v3' 'egi_mff'} % this is the default
+    ft_hastoolbox('mffmatlabio', 1);
+    dat = mff_fileio_read_data(filename, 'header', hdr, 'begtrial', begtrial, 'endtrial', endtrial, 'chanindx', chanindx);
     
   case 'edf'
     % this reader is largely similar to the one for bdf
@@ -1101,6 +1109,9 @@ switch dataformat
     end
     dat = dat(chanindx,begsample:endsample);
     
+  case 'nihonkohden_eeg'
+    dat = read_brainstorm_data(filename, hdr, begsample, endsample, chanindx);
+    
   case 'ns_avg'
     % NeuroScan average data
     orig = read_ns_avg(filename);
@@ -1377,6 +1388,11 @@ switch dataformat
     
   case 'read_nex_data' % this is an alternative reader for nex files
     dat = read_nex_data(filename, hdr, begsample, endsample, chanindx);
+    
+  case {'ricoh_ave', 'ricoh_con'}
+    % use the Ricoh MEG Reader toolbox for the file reading
+    ft_hastoolbox('ricoh_meg_reader', 1);
+    dat = read_ricoh_data(filename, hdr, begsample, endsample, chanindx);
     
   case {'riff_wave', 'audio_m4a'}
     dat = audioread(filename, [begsample endsample])';

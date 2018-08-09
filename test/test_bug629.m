@@ -12,5 +12,5 @@ datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/bug629');
 cd(datadir);
 dataset = 'pilot05_test 20110120 1433.mff';
 
-hdr   = ft_read_header(dataset);
-event = ft_read_event(dataset);
+hdr   = ft_read_header(dataset, 'headerformat', 'egi_mff_v1');
+event = ft_read_event(dataset, 'eventformat', 'egi_mff_v1');

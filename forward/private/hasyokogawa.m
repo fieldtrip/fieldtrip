@@ -7,7 +7,7 @@ function [version] = hasyokogawa(desired)
 % Use as
 %   string  = hasyokogawa;
 % which returns a string describing the toolbox version, e.g. "12bitBeta3",
-% "16bitBeta3", or "16bitBeta6" for preliminary versions, or '1.4' for the
+% "16bitBeta3", or "16bitBeta6" for preliminary versions, or '1.5' for the
 % official Yokogawa MEG Reader Toolbox. An empty string is returned if the toolbox
 % is not installed. The string "unknown" is returned if it is installed but
 % the version is unknown.
@@ -43,9 +43,9 @@ ws = warning('off', 'MATLAB:pfileOlderThanMfile');
 
 % there are a few versions of the old preliminary implementation, such as
 % 12bitBeta3, 16bitBeta3 and 16bitBeta6. In 2011 a completely new
-% implementation was officially released, which contains functions with
-% other names. At the time of writing this, the new implementation is
-% version 1.4.
+% implementation was officially released, which contains functions with other names.
+% At the time of writing this [2018.06.08],
+% the new implementation, Yokogawa MEG Reader, is version 1.5, in which EEG data are supported.
 
 if exist('getYkgwVersion', 'file')
   res = getYkgwVersion();

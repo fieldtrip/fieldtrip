@@ -96,7 +96,7 @@ switch fileformat
 
   case 'polhemus_pos'
     sens = read_brainvision_pos(filename);
-    
+
   case 'besa_elp'
     ft_error('unknown fileformat for electrodes or gradiometers');
     % the code below does not yet work
@@ -111,7 +111,7 @@ switch fileformat
     r  = ones(size(el));
     [x, y, z] = sph2cart(az, el, r);
     sens.chanpos = [x y z];
-    
+
   case 'besa_pos'
     tmp = importdata(filename);
     if ~isnumeric(tmp)
@@ -152,7 +152,7 @@ switch fileformat
         sens.label{i} = sprintf('%03d', i);
       end
     end
-    
+
   case 'besa_sfh'
     sfh = readBESAsfh(filename);
     sens.label   = sfh.SurfacePointsLabels(:);
@@ -165,16 +165,16 @@ switch fileformat
     end
     sens.label   = sens.label(sel);
     sens.elecpos = sens.elecpos(sel,:);
-    
+
   case 'besa_sfp'
     [lab, pos] = read_besa_sfp(filename);
     sens.label   = lab;
     sens.elecpos = pos;
-    
+
   case 'bioimage_mgrid'
     sens = read_bioimage_mgrid(filename);
-    
-  case {'ctf_ds', 'ctf_res4', 'ctf_old', 'neuromag_fif', 'neuromag_mne', '4d', '4d_pdf', '4d_m4d', '4d_xyz', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'itab_raw' 'itab_mhd', 'netmeg'}
+
+  case {'ctf_ds', 'ctf_res4', 'ctf_old', 'neuromag_fif', 'neuromag_mne', '4d', '4d_pdf', '4d_m4d', '4d_xyz', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'ricoh_ave', 'ricoh_con', 'itab_raw' 'itab_mhd', 'netmeg'}
     % gradiometer information is always stored in the header of the MEG dataset, hence uses the standard fieldtrip/fileio ft_read_header function
     hdr = ft_read_header(filename, 'headerformat', fileformat, 'coordsys', coordsys, 'coilaccuracy', coilaccuracy);
     % sometimes there can also be electrode position information in the header
@@ -199,7 +199,7 @@ switch fileformat
     else
       ft_error('neither electrode nor gradiometer information is present');
     end
-    
+
   case 'fcdc_buffer'
     % the online header should have a binary blob with the sensor information
     hdr = ft_read_header(filename, 'headerformat', fileformat);
@@ -222,19 +222,19 @@ switch fileformat
       otherwise
         ft_error('incorrect specification of senstype');
     end
-    
+
   case 'neuromag_mne_grad'
     % the file can contain both, force reading the gradiometer info
     % note that this functionality overlaps with senstype=eeg/meg
     hdr = ft_read_header(filename, 'headerformat', 'neuromag_mne', 'coordsys', coordsys, 'coilaccuracy', coilaccuracy);
     sens = hdr.grad;
-    
+
   case 'neuromag_mne_elec'
     % the file can contain both, force reading the electrode info
     % note that this functionality overlaps with senstype=eeg/meg
     hdr = ft_read_header(filename, 'headerformat', 'neuromag_mne', 'coordsys', coordsys, 'coilaccuracy', coilaccuracy);
     sens = hdr.elec;
-    
+
   case {'spmeeg_mat', 'eeglab_set'}
     % this is for EEG formats where electrode positions can be stored with the data
     hdr = ft_read_header(filename, 'coordsys', coordsys, 'coilaccuracy', coilaccuracy);
@@ -245,7 +245,7 @@ switch fileformat
     else
       ft_error('no electrodes or gradiometers found in the file')
     end
-    
+
   case 'polhemus_fil'
     % these are created at the FIL in London with a polhemus tracker
     [sens.fid.pnt, sens.pnt, sens.fid.label] = read_polhemus_fil(filename, 0);
@@ -254,7 +254,7 @@ switch fileformat
     for i=1:size(sens.pnt, 1)
       sens.label{i} = sprintf('%03d', i);
     end
-    
+
   case 'matlab'
     % MATLAB files can contain all sensor arrays
     matfile = filename;   % this solves a problem with the MATLAB compiler v3
@@ -267,14 +267,14 @@ switch fileformat
       % read whatever variable is in the file, this will error if the file contains multiple variables
       sens = loadvar(matfile);
     end
-    
+
   case 'zebris_sfp'
     % these are created by a Zebris tracker, at CRC in Liege at least.
     [sens.fid.pnt, sens.chanpos, sens.fid.label, sens.label] = read_zebris(filename, 0);
     % convert to columns
     sens.label = sens.label(:);
     sens.fid.label = sens.fid.label(:);
-    
+
   case '4d_el_ascii'
     fid = fopen(filename, 'rt');
     c = textscan(fid, '%s%s%f%f%f');
@@ -305,53 +305,53 @@ switch fileformat
       sens.fid.label  = l(sel);
       sens.fid.pnt    = [x(sel) y(sel) z(sel)];
     end
-    
+
   case {'localite_pos','localite_ins'}
     if ~usejava('jvm') % Using xml2struct requires java
       fid = fopen(filename);
-      
+
       % Read marker-file and store contents in cells of strings
       tmp = textscan(fid,'%s');
-      
+
       fclose(fid);
-      
+
       % Search for cells that contain coordinates
       selx = strncmp('data0',tmp{1},5);
       sely = strncmp('data1',tmp{1},5);
       selz = strncmp('data2',tmp{1},5);
       sellab = strncmp('description',tmp{1},5);
-      
+
       % Extract cells that contain coordinates
       xtemp  = tmp{1}(selx);
       ytemp  = tmp{1}(sely);
       ztemp  = tmp{1}(selz);
       labtemp = tmp{1}(sellab);
-      
+
       % Determine which channels are set. In localite channels that are not set
       % automatically receive coordinates [0, 0, 0] and should therefore
       % be discarded.
       settemp = tmp{1}(strncmp('set',tmp{1},3));
       selset = strncmp('set="f',settemp,6);
-      
+
       % Remove channels that are not set
       xtemp(selset) = [];
       ytemp(selset) = [];
       ztemp(selset) = [];
       labtemp(selset) = [];
-      
+
       % Convert cells that contain coordinates from string to double
       x = [];
       y = [];
       z = [];
       lbl = [];
-      
+
       for i=1:numel(xtemp)
         x(i,1) = str2double(xtemp{i}(8:end-1));
         y(i,1) = str2double(ytemp{i}(8:end-1));
         z(i,1) = str2double(ztemp{i}(8:end-3));
         lbl{i,1} = labtemp{i}(14:end-1);
       end
-      
+
       % Create and fill sens structure
       sens = [];
       sens.elecpos = [x y z];
@@ -359,9 +359,9 @@ switch fileformat
       sens.label = lbl;
     else
       tmp = xml2struct(filename);
-      
+
       sens = [];
-      
+
       % Loop through structure obtained from xml-file and store
       % coordinate information into sens structure of channels that are
       % set.
@@ -373,16 +373,16 @@ switch fileformat
           sens.label{i} = tmp(i).Marker.description;
         end
       end
-      
+
       sens.chanpos = sens.elecpos;
     end
-    
+
   case 'easycap_txt'
     % Read the file and store all contents in cells of strings
     fid = fopen(filename);
     tmp = textscan(fid,'%s%s%s%s');
     fclose(fid);
-    
+
     sens = [];
     if all(cellfun(@isempty, tmp{4}))
       % it contains theta and phi
@@ -406,7 +406,7 @@ switch fileformat
       sens.elecpos = [x y z];
       sens.chanpos = [x y z];
     end
-    
+
   case 'neuromag_iso'
     ft_hastoolbox('mne', 1);
     FIFF = fiff_define_constants();
@@ -424,7 +424,7 @@ switch fileformat
       coordsys(i)       = tag.data.coord_frame;
     end
     fclose(fid);
-    
+
     if all(coordsys==FIFF.FIFFV_COORD_DEVICE)
       sens.coordsys = 'device';
     elseif all(coordsys==FIFF.FIFFV_COORD_ISOTRAK)
@@ -436,12 +436,12 @@ switch fileformat
     else
       sens.coordsys = 'unknown';
     end
-    
+
     ft_warning('creating fake channel names for neuromag_iso');
     for i=1:size(sens.chanpos,1)
       sens.label{i} = sprintf('%d', i);
     end
-    
+
   case 'neuromag_cal'
     dat = cell(1,14);
     [dat{:}] = textread(filename, '%s%f%f%f%f%f%f%f%f%f%f%f%f%f');
@@ -456,7 +456,7 @@ switch fileformat
     % it would be possible to use coil_def.dat to construct the coil positions
     sens.label = label;
     sens.chanpos = [x y z];
-    
+
   otherwise
     ft_error('unknown fileformat for electrodes or gradiometers');
 end % switch fileformat

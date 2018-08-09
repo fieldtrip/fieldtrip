@@ -5,15 +5,16 @@ function ft_defaults
 % call this function in your startup.m script. This function is also called at the
 % begin of all FieldTrip functions.
 %
-% The configuration defaults are stored in the global "ft_default" structure.
-% The ft_checkconfig function that is called by many FieldTrip functions will
-% merge this global ft_default structure with the cfg ctructure that you pass to
+% The global configuration defaults are stored in the global "ft_default" structure.
+% The ft_checkconfig function that is called by many FieldTrip functions will merge
+% these global configuration defaults with the cfg ctructure that you pass to 
 % the FieldTrip function that you are calling.
 %
 % The global options and their default values are
-%   ft_default.showcallinfo      = string, can be 'yes' or 'no' (default = 'yes')
 %   ft_default.checkconfig       = string, can be 'pedantic', 'loose', 'silent' (default = 'loose')
+%   ft_default.checkpath         = string, can be 'pedantic', 'once', 'no' (default = 'pedantic')
 %   ft_default.checksize         = number in bytes, can be inf (default = 1e5)
+%   ft_default.showcallinfo      = string, can be 'yes' or 'no' (default = 'yes')
 %   ft_default.trackconfig       = string, can be 'cleanup', 'report', 'off' (default = 'off')
 %   ft_default.trackusage        = false, or string with salt for one-way encryption of identifying information (by default this is enabled and an automatic salt is created)
 %   ft_default.trackdatainfo     = string, can be 'yes' or 'no' (default = 'no')
@@ -23,6 +24,12 @@ function ft_defaults
 %   ft_default.toolbox.signal    = string, can be 'compat' or 'matlab' (default = 'compat')
 %   ft_default.toolbox.stats     = string, can be 'compat' or 'matlab' (default = 'compat')
 %   ft_default.toolbox.images    = string, can be 'compat' or 'matlab' (default = 'compat')
+%
+% If you want to overrule these default settings, you can add something like this in your startup.m script
+%   ft_defaults 
+%   global ft_default
+%   ft_default.option1 = value1
+%   ft_default.option2 = value2
 %
 % The toolbox option for signal, stats and images allows you to specify whether you
 % want to use a compatible drop-in to be used for these MathWorks toolboxes, or the
@@ -34,7 +41,7 @@ function ft_defaults
 % undocumented options
 %   ft_default.siunits        = 'yes' or 'no'
 
-% Copyright (C) 2009-2016, Robert Oostenveld
+% Copyright (C) 2009-2018, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -55,10 +62,16 @@ function ft_defaults
 % $Id$
 
 global ft_default
+
 persistent initialized
+persistent checkpath
 
 if isempty(initialized)
   initialized = false;
+end
+
+if isempty(checkpath)
+  checkpath = false;
 end
 
 % ft_warning is located in fieldtrip/utilities, which may not be on the path yet
@@ -66,7 +79,7 @@ if ~exist('ft_warning', 'file')
   ft_warning = @warning;
 end
 
-% locate the file that contains the persistent FieldTrip preferences
+% locate the file with the persistent FieldTrip preferences
 fieldtripprefs = fullfile(prefdir, 'fieldtripprefs.mat');
 if exist(fieldtripprefs, 'file')
   prefs       = load(fieldtripprefs); % the file contains multiple fields
@@ -77,11 +90,12 @@ end
 % NOTE ft_getopt might not be available on the path at this moment and can therefore not yet be used.
 % NOTE all options here should be explicitly listed as allowed in ft_checkconfig
 
-if ~isfield(ft_default, 'trackconfig'),       ft_default.trackconfig    = 'off';    end % cleanup, report, off
-if ~isfield(ft_default, 'checkconfig'),       ft_default.checkconfig    = 'loose';  end % pedantic, loose, silent
-if ~isfield(ft_default, 'checksize'),         ft_default.checksize      = 1e5;      end % number in bytes, can be inf
-if ~isfield(ft_default, 'showcallinfo'),      ft_default.showcallinfo   = 'yes';    end % yes or no, this is used in ft_pre/postamble_provenance
-if ~isfield(ft_default, 'debug'),             ft_default.debug          = 'no';     end % no, save, saveonerror, display, displayonerror, this is used in ft_pre/postamble_debug
+if ~isfield(ft_default, 'trackconfig'),       ft_default.trackconfig    = 'off';      end % cleanup, report, off
+if ~isfield(ft_default, 'checkconfig'),       ft_default.checkconfig    = 'loose';    end % pedantic, loose, silent
+if ~isfield(ft_default, 'checkpath'),         ft_default.checkpath      = 'pedantic'; end % pedantic, once, no
+if ~isfield(ft_default, 'checksize'),         ft_default.checksize      = 1e5;        end % number in bytes, can be inf
+if ~isfield(ft_default, 'showcallinfo'),      ft_default.showcallinfo   = 'yes';      end % yes or no, this is used in ft_pre/postamble_provenance
+if ~isfield(ft_default, 'debug'),             ft_default.debug          = 'no';       end % no, save, saveonerror, display, displayonerror, this is used in ft_pre/postamble_debug
 if ~isfield(ft_default, 'outputfilepresent'), ft_default.outputfilepresent = 'overwrite'; end % can be keep, overwrite, error
 
 % These options allow to disable parts of the provenance
@@ -93,6 +107,22 @@ if ~isfield(ft_default, 'toolbox'), ft_default.toolbox  = []; end
 if ~isfield(ft_default.toolbox, 'images'), ft_default.toolbox.images  = 'compat'; end % matlab or compat
 if ~isfield(ft_default.toolbox, 'stats') , ft_default.toolbox.stats   = 'compat'; end % matlab or compat
 if ~isfield(ft_default.toolbox, 'signal'), ft_default.toolbox.signal  = 'compat'; end % matlab or compat
+
+% Some people mess up their path settings and then have stuff on the path that should not be there.
+% The following will issue a warning
+switch ft_default.checkpath
+  case 'pedantic'
+    % check every time
+    checkIncorrectPath();
+  case 'once'
+    % check only once
+    if ~checkpath
+      checkIncorrectPath();
+      checkpath = true;
+    end
+  case 'no'
+    % do not check
+end % case
 
 % Check whether this ft_defaults function has already been executed. Note that we
 % should not use ft_default itself directly, because the user might have set stuff
@@ -118,8 +148,7 @@ if ~isdeployed
     addpath(fullfile(fileparts(which('ft_defaults')), 'utilities'));
   end
   
-  % Some people mess up their path settings and then have
-  % different versions of certain toolboxes on the path.
+  % Some people mess up their path settings and then have different versions of certain toolboxes on the path.
   % The following will issue a warning
   checkMultipleToolbox('FieldTrip',           'ft_defaults.m');
   checkMultipleToolbox('spm',                 'spm.m');
@@ -316,3 +345,13 @@ if length(list)>1
 end
 end % function checkMultipleToolbox
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function checkIncorrectPath
+p = fileparts(mfilename('fullpath'));
+incorrect = fullfile(p, 'compat', 'incorrect');
+if ~isempty(strfind(path, incorrect))
+  ft_warning('Your path is set up incorrectly. You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behaviour. See http://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');
+end
+end % function checkIncorrectPath

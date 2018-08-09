@@ -4,12 +4,16 @@
 #define ACQ_MSGQ_SHMKEY    0x39457f73
 #define ACQ_MSGQ_SHMPROJID 12345
 #define ACQ_MSGQ_SHMPATH   "/opt/ctf/bin/Acq"
-#define ACQ_BUFFER_SIZE    40000
+
+#define ACQ_BUFFER_SIZE    28160 // this is needed for all other software versions
+// #define ACQ_BUFFER_SIZE 40000 // this is needed for software version 6.1.5-el6_7.x86_64-20160720-3344 
 
 /*
- * The ACQ_BUFFER_SIZE should be set to 28160 for older acquisition software and to 40000
- * for newer (beta) versions of the acquisition software from approximately 2016 onwards.
- * See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3185
+ * See also 
+ *   http://www.fieldtriptoolbox.org/development/realtime/ctf#different_software_versions
+ *   http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3185
+ *   https://github.com/fieldtrip/fieldtrip/issues/699
+ *   https://github.com/fieldtrip/fieldtrip/issues/724
  */
 
 typedef enum {
