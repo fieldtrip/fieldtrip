@@ -1,4 +1,4 @@
-function [grad, grad_orig, grad_avg, trialinfo] = ft_headmovement(cfg)
+function [varargout] = ft_headmovement(cfg)
 
 % FT_HEADMOVEMENT creates a representation of the CTF gradiometer definition
 % in which the headmovement in incorporated. The result can be used
@@ -9,7 +9,7 @@ function [grad, grad_orig, grad_avg, trialinfo] = ft_headmovement(cfg)
 % where the configuration should contain
 %   cfg.dataset      = string with the filename
 %   cfg.trl          = Nx3 matrix with the trial definition, see FT_DEFINETRIAL
-%   cfg.numclusters  = number of segments with constant headposition in which to split the data (default = 12)
+%   cfg.numclusters  = number of segments with constant headposition in which to split the data (default = 10)
 %
 % optional arguments are
 %   cfg.updatesens   = 'yes' (default) or 'no'
@@ -76,26 +76,22 @@ if ft_abort
 end
 
 % check if the input cfg is valid for this function
+% FIXME: consider allowing a data structure as input.
 cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
 
 % set the defaults
-cfg.numclusters  = ft_getopt(cfg, 'numclusters', 12);
+cfg.method       = ft_getopt(cfg, 'method', 'updatesens'); % 'pertrial', 'pertrial_cluster', 'avgoverrpt', 'cluster'
+cfg.numclusters  = ft_getopt(cfg, 'numclusters', 10);
 cfg.feedback     = ft_getopt(cfg, 'feedback',    'yes');
-cfg.updatesens   = ft_getopt(cfg, 'updatesens',  'yes');
-cfg.pertrial     = ft_getopt(cfg, 'pertrial',    'no');
-cfg.avgovertrial = ft_getopt(cfg, 'avgovertrial', 'no');
 
-% updatesens and pertrial are mutually exclusive
-if istrue(cfg.pertrial) && istrue(cfg.updatesens)
-  error('the ''pertrial'' and ''updatesens'' options are mutually exclusive');
+if isequal(cfg.method,'updatesens') || isequal(cfg.method, 'pertrial_cluster') || isequal(cfg.method, 'cluster')
+  dokmeans = true;
+else
+  dokmeans = false;
 end
 
-% pertrial takes precendence on the clustering
-if istrue(cfg.pertrial) && ~isempty(cfg.numclusters)
-  cfg.numclusters = [];
-end
-
-% read the header information
+% read the header information and check whether it's a CTF dataset with HLC
+% information.
 hdr = ft_read_header(cfg.headerfile);
 assert(numel(intersect(hdr.label, {'HLC0011' 'HLC0012' 'HLC0013' 'HLC0021' 'HLC0022' 'HLC0023' 'HLC0031' 'HLC0032' 'HLC0033'}))==9, 'the data does not contain the expected head localizer channels');
 
@@ -111,38 +107,77 @@ grad.chanpos = grad_head.chanpos;
 % HLC0011 HLC0012 HLC0013 x, y, z coordinates of nasion-coil in m.
 % HLC0021 HLC0022 HLC0023 x, y, z coordinates of lpa-coil in m.
 % HLC0031 HLC0032 HLC0033 x, y, z coordinates of rpa-coil in m.
+if ~isfield(cfg, 'trl')
+  cfg.trl = [1 hdr.nTrials.*hdr.nSamples 0];
+end
 tmpcfg              = [];
 tmpcfg.dataset      = cfg.dataset;
 tmpcfg.trl          = cfg.trl;
 tmpcfg.channel      = {'HLC0011' 'HLC0012' 'HLC0013' 'HLC0021' 'HLC0022' 'HLC0023' 'HLC0031' 'HLC0032' 'HLC0033'};
 tmpcfg.continuous   = 'yes';
 data                = ft_preprocessing(tmpcfg);
+wdat                = cellfun('size', data.time, 2);
 
-if istrue(cfg.avgovertrial)
-  dat  = zeros(numel(data.label), numel(data.trial));
-  wdat = zeros(1, size(dat,2));
-  for k = 1:numel(data.trial)
-    dat(:,k)  = mean(data.trial{k},2);
-    wdat(:,k) = numel(data.time{k});
-  end
-else
-  dat = cat(2, data.trial{:});
+trial_index = cell(1,numel(data.trial));
+for k = 1:numel(data.trial)
+  % it sometimes happens that data are numerically 0, which causes problems
+  % downstream, replace with nans
+  data.trial{k}(:,sum(data.trial{k}==0)==9) = nan;
   
+  % create a bookkeeping cell-array, indexing the trial-indx
+  trial_index{k} = k.*ones(1,numel(data.time{k}));
+end
+
+% average across time if needed
+if isequal(cfg.method, 'pertrial') || isequal(cfg.method, 'avgoverrpt') || isequal(cfg.method, 'pertrial_cluster')
+  tmpcfg              = [];
+  tmpcfg.avgovertime  = 'yes';
+  tmpcfg.nanmean      = 'yes';
+  data_timeavg        = ft_selectdata(tmpcfg, data);
+  
+  % concatenate across trials and scale the units
+  dat = cat(2, data_timeavg.trial{:});
+else
+  % concatenate across trials and scale the units
+  dat = cat(2, data.trial{:});
+end
+dat = dat * ft_scalingfactor('m', grad.unit); % scale in units of the gradiometer definition, which is probably cm
+
+trl_idx = cat(2, trial_index{:});
+
+% average across trials if needed
+if isequal(cfg.method, 'avgoverrpt')
+  dat = sum(dat*diag(wdat), 2)./sum(wdat);
+end
+
+% update the data if clustering is to be performed on non-time averaged data
+if isequal(cfg.method, 'updatesens') || isequal(cfg.method, 'cluster') 
   [tmpdata, ~, ic] = unique(dat', 'rows');
   dat = tmpdata';
 
   % count how often each position occurs
-  wdat = hist(ic, unique(ic));
+  wdat = hist(ic, unique(ic));  
 end
-dat = dat * ft_scalingfactor('m', grad.unit); % scale in units of the gradiometer definition, which is cm
 
-if ~isempty(cfg.numclusters)
-  
+% perform the clustering if needed
+if dokmeans
   % compute the cluster means
-  [bin, cluster] = kmeans(dat', cfg.numclusters);
+  dat_orig   = dat';
+  [bin, dat] = kmeans(dat', cfg.numclusters, 'EmptyAction', 'drop');
+  
+  % create a cell-array 1xnrpt with time specific indices of cluster id
+  cluster_id = cell(1,numel(data.trial));
+  for k = 1:numel(data.trial)
+    cluster_id{k} = nan+zeros(1,numel(data.time{k}));
+    for m = 1:size(dat,1)
+      tmpdat = ic(trl_idx==k);
+      cluster_id{k}(ismember(tmpdat, find(bin==m))) = m;
+    end
+  end
+  
 else
-  bin     = 1:size(dat,2);
-  cluster = dat';
+  bin = 1:size(dat,2);
+  dat = dat';
 end
   
 % find the three channels for each fiducial
@@ -150,26 +185,19 @@ selnas = match_str(data.label,{'HLC0011';'HLC0012';'HLC0013'});
 sellpa = match_str(data.label,{'HLC0021';'HLC0022';'HLC0023'});
 selrpa = match_str(data.label,{'HLC0031';'HLC0032';'HLC0033'});
 
-ubin   = unique(bin);
+ubin   = unique(bin(isfinite(bin)));
 nas    = zeros(numel(ubin),3);
 lpa    = zeros(numel(ubin),3);
 rpa    = zeros(numel(ubin),3);
 numperbin = zeros(numel(ubin),1);
 for k = 1:length(ubin)
-  nas(k, :) = cluster(k, selnas);
-  lpa(k, :) = cluster(k, sellpa);
-  rpa(k, :) = cluster(k, selrpa);
+  nas(k, :) = dat(k, selnas);
+  lpa(k, :) = dat(k, sellpa);
+  rpa(k, :) = dat(k, selrpa);
   numperbin(k) = sum(wdat(bin==ubin(k)));
 end
-cluster_avg = sum(diag(numperbin)*cluster)./sum(numperbin);
-nas_avg     = cluster_avg(:, selnas);
-lpa_avg     = cluster_avg(:, sellpa);
-rpa_avg     = cluster_avg(:, selrpa);
-
 
 hc = read_ctf_hc([cfg.datafile(1:end-4),'hc']);
-dewar2head_orig = hc.homogenous;
-
 if istrue(cfg.feedback)
   % plot some stuff
   figure; hold on;
@@ -190,10 +218,8 @@ dewar2head = zeros(4, 4, size(nas,1));
 for k = 1:size(dewar2head, 3)
   dewar2head(:,:,k) = ft_headcoordinates(nas(k,:), lpa(k,:), rpa(k,:), 'ctf');
 end
-dewar2head_avg = ft_headcoordinates(nas_avg, lpa_avg, rpa_avg, 'ctf');
 
-
-if istrue(cfg.updatesens)
+if isequal(cfg.method, 'updatesens')
   npos        = size(dewar2head, 3);
   ncoils      = size(grad.coilpos,  1);
   gradnew     = grad;
@@ -207,20 +233,46 @@ if istrue(cfg.updatesens)
     gradnew.coilori((m-1)*ncoils+1:(m*ncoils), :) = ft_warp_apply(tmptransform, grad.coilori);
     gradnew.tra(:, (m-1)*ncoils+1:(m*ncoils))     = grad.tra.*(numperbin(m)./sum(numperbin));
   end
-  
   grad = gradnew;
-  trialinfo = ones(numel(data.trial),1);
 else
   npos = size(dewar2head, 3);
   for k = 1:npos
     grad(k) = ft_transform_geometry(dewar2head(:,:,k), grad_dewar);
   end
-  trialinfo = bin(:);
 end
-grad_orig = ft_transform_geometry(dewar2head_orig, grad_dewar);
-grad_avg  = ft_transform_geometry(dewar2head_avg,  grad_dewar);
 
+switch cfg.method
+  case 'cluster'
+    varargout = cell(1,numel(grad));
+    tmpdata       = data;
+    tmpdata.trial = cluster_id;
+    tmpdata.label = {'cluster_id'};
+    data          = ft_appenddata([],data,tmpdata);
+    for k = 1:numel(grad)
+      
+      tmpcfg = [];
+      tmpcfg.artfctdef.bpfilter = 'no';
+      tmpcfg.artfctdef.threshold.channel   = {'cluster_id'};
+      tmpcfg.artfctdef.threshold.min       = 0.9+k-1;
+      tmpcfg.artfctdef.threshold.max       = 1.1+k-1;
+      tmpcfg = ft_artifact_threshold(tmpcfg, tmpdata);
+      artifacts = tmpcfg.artfctdef.threshold.artifact;
+      
+      tmpcfg = [];
+      tmpcfg.artfctdef.reject = 'partial';
+      tmpcfg.artfctdef.threshold.artifact = artifacts;
+      tmpdata_clus = ft_rejectartifact(tmpcfg, data);
+      tmpdata_clus.grad = grad(k);
+      
+      varargout{k} = tmpdata_clus;
+    end
+  case {'avgoverrpt' 'updatesens'}
+    data.grad    = grad;
+    varargout{1} = data;
+end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
+ft_postamble previous data  % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
+ft_postamble history varargout  % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg
