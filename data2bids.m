@@ -23,13 +23,13 @@ function cfg = data2bids(cfg, varargin)
 % The configuration structure should contains
 %   cfg.dataset               = string, filename of the input data
 %   cfg.outputfile            = string, optional filename for the output data, see below
-%   cfg.anat.writesidecar     = string, 'yes' or 'no' (default = 'yes')
+%   cfg.anat.writesidecar     = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
 %   cfg.anat.dicomfile        = string, filename of a matching DICOM file
-%   cfg.meg.writesidecar      = string, 'yes' or 'no' (default = 'yes')
-%   cfg.eeg.writesidecar      = string, 'yes' or 'no' (default = 'yes')
-%   cfg.ieeg.writesidecar     = string, 'yes' or 'no' (default = 'yes')
-%   cfg.channels.writesidecar = string, 'yes' or 'no' (default = 'yes')
-%   cfg.events.writesidecar   = string, 'yes' or 'no' (default = 'yes')
+%   cfg.meg.writesidecar      = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
+%   cfg.eeg.writesidecar      = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
+%   cfg.ieeg.writesidecar     = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
+%   cfg.channels.writesidecar = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
+%   cfg.events.writesidecar   = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
 %   cfg.events.trl            = trial definition, see below
 %
 % If you specify cfg.dataset without cfg.outputfile, this function will only
@@ -567,7 +567,7 @@ if ~isempty(anat_json)
   switch cfg.anat.writesidecar
     case 'yes'
       if ~isempty(existing)
-        ft_error('existing file ''%s'' is not empty', filename);
+        ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
       else
         write_json(filename, anat_json);
       end
@@ -593,7 +593,7 @@ if ~isempty(meg_json)
   switch cfg.meg.writesidecar
     case 'yes'
       if ~isempty(existing)
-        ft_error('existing file ''%s'' is not empty', filename);
+        ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
       else
         write_json(filename, meg_json);
       end
@@ -619,7 +619,7 @@ if ~isempty(eeg_json)
   switch cfg.eeg.writesidecar
     case 'yes'
       if ~isempty(existing)
-        ft_error('existing file ''%s'' is not empty', filename);
+        ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
       else
         write_json(filename, eeg_json);
       end
@@ -645,7 +645,7 @@ if ~isempty(ieeg_json)
   switch cfg.ieeg.writesidecar
     case 'yes'
       if ~isempty(existing)
-        ft_error('existing file ''%s'' is not empty', filename);
+        ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
       else
         write_json(filename, ieeg_json);
       end
@@ -671,7 +671,7 @@ if ~isempty(channels_tsv)
   switch cfg.channels.writesidecar
     case 'yes'
       if ~isempty(existing)
-        ft_error('existing file ''%s'' is not empty', filename);
+        ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
       else
         write_tsv(filename, channels_tsv);
       end
@@ -700,7 +700,7 @@ if ~isempty(events_tsv)
   switch cfg.events.writesidecar
     case 'yes'
       if ~isempty(existing)
-        ft_error('existing file ''%s'' is not empty', filename);
+        ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
       else
         write_tsv(filename, events_tsv);
       end
