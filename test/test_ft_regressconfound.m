@@ -115,3 +115,42 @@ assert(isfield(source2_out, 'pow'));
 assert(~isfield(source2_out, 'beta'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+source3 = [];
+source3.pos = randn(100,3);
+source3.inside = true(100,1);
+source3.pow = randn(100,25);
+source3.dimord = 'pos_rpt';
+
+cfg = [];
+cfg.confound = randn(25,2);
+cfg.normalize = 'no';
+source3_out = ft_regressconfound(cfg, source3);
+
+betas = cfg.confound \ transpose(source3.pow);
+desired = transpose(transpose(source3.pow) - cfg.confound * betas);
+
+assert(isequal(source3_out.pow, desired));
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+source4 = [];
+source4.pos = randn(100,3);
+source4.inside = true(100,1);
+source4.pow = randn(100,25,10);
+source4.time = 1:10;
+source4.dimord = 'pos_rpt_time';
+
+cfg = [];
+cfg.confound = randn(25,2);
+cfg.normalize = 'no';
+source4_out = ft_regressconfound(cfg, source4);
+
+assert(isequal(size(source4_out.pow), size(source4.pow)));
+for t = 1:10
+  betas = cfg.confound \ transpose(source4.pow(:,:,t));
+  desired = transpose(transpose(source4.pow(:,:,t)) - cfg.confound * betas);
+  assert(isequal(source4_out.pow(:,:,t), desired));
+end
+
+
