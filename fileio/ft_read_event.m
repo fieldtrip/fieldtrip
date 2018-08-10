@@ -1548,8 +1548,9 @@ switch eventformat
         for i=1:hdr.nTrials 
             event(end+1).type      = 'trial';
             event(end  ).sample    = begsample(i);
-            event(end  ).value     = events_label(events_code == hdr.orig.epochs.events(i, 3), :);
+            event(end  ).value     = hdr.orig.epochs.events(i, 3);
             event(end  ).offset    = -hdr.nSamplesPre;
+            event(end  ).label     = events_label(events_code == hdr.orig.epochs.events(i, 3), :); % is not used in further functions
             event(end  ).duration  = hdr.nSamples;
         end
     end
