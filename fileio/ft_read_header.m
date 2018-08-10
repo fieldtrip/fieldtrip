@@ -67,7 +67,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   TMSi (*.Poly5)
 %   Mega Neurone (directory)
 %   Natus/Nicolet/Nervus (.e files)
-%   Nihon Kohden (*.m00)
+%   Nihon Kohden (*.m00, *.EEG)
 %
 % The following spike and LFP dataformats are supported
 %   Neuralynx (*.ncs, *.nse, *.nts, *.nev, *.nrd, *.dma, *.log)
@@ -2162,6 +2162,10 @@ switch headerformat
 
   case 'nihonkohden_m00'
     hdr = read_nihonkohden_hdr(filename);
+    
+  case 'nihonkohden_eeg'
+    ft_hastoolbox('brainstorm', 1);
+    hdr = read_brainstorm_header(filename);
 
   case 'nimh_cortex'
     cortex = read_nimh_cortex(filename, 'epp', 'no', 'eog', 'no');
@@ -2248,7 +2252,7 @@ switch headerformat
     hdr.nTrials     = 1; % continuous data
     hdr.label       = {tmp.hdr.entityinfo(tmp.list.analog(tmp.analog.contcount~=0)).EntityLabel}; %%% contains non-unique chans?
     hdr.orig        = tmp; % remember the original header
-    
+
   case 'artinis_oxy3'
     ft_hastoolbox('artinis', 1);
     hdr = read_artinis_oxy3(filename);
@@ -2370,6 +2374,14 @@ switch headerformat
     % add a gradiometer structure for forward and inverse modelling
     hdr.grad = ricoh2grad(hdr);
     hdr.chantype = ft_chantype(hdr.label);
+    unk = find(strcmp('unknown', hdr.chantype));
+    %  Warning message:
+    if ~isempty(unk)
+      label_unk = hdr.label(unk);
+      no_unk = num2cell(unk);
+      C = [label_unk(:), no_unk(:)] .';
+      ft_warning(['Unknown channel types: (label, no) =' repmat('( %s, %d ) ', 1, length(unk) ) '\n'], C{:})
+    end
 
   case 'smi_txt'
     smi = read_smi_txt(filename);
@@ -2485,13 +2497,22 @@ switch headerformat
       hdr = read_yokogawa_header_new(filename);
       % add a gradiometer structure for forward and inverse modelling
       hdr.grad = yokogawa2grad_new(hdr);
+      hdr.chantype = ft_chantype(hdr.label);
+      unk = find(strcmp('unknown', hdr.chantype));
+      %  Warning message:
+      if ~isempty(unk)
+        label_unk = hdr.label(unk);
+        no_unk = num2cell(unk);
+        C = [label_unk(:), no_unk(:)] .';
+        ft_warning(['Unknown channel types: (label, no) =' repmat('( %s, %d ) ', 1, length(unk) ) '\n'], C{:})
+      end
     else
       ft_hastoolbox('yokogawa', 1); % try it with the old version of the toolbox
       hdr = read_yokogawa_header(filename);
       % add a gradiometer structure for forward and inverse modelling
       hdr.grad = yokogawa2grad(hdr);
     end
-    
+
   case {'riff_wave', 'audio_m4a'}
     % prior to MATLAB R2015b this used to be done with "wavread"
     % but the audioinfo/audioread function are at least available from 2012b up

@@ -213,7 +213,23 @@ switch senstype
     labelmeg      = datachannel(megind);
     labelmegmag   = datachannel(megmag);
     labelmeggrad  = datachannel(megax | megpl);
-    labeleeg  = datachannel(strncmp('EEG', datachannel, length('EEG')));
+    %%
+%    labeleeg  = datachannel(strncmp('EEG', datachannel, length('EEG')));
+    eeg_A = myregexp('^A[^G]*[0-9hzZ]$', datachannel);
+    eeg_P = myregexp('^P[^G]*[0-9hzZ]$', datachannel);
+    eeg_T = myregexp('^T[^R]*[0-9hzZ]$', datachannel);
+    eeg_E = myregexp('^E$', datachannel);
+    eeg_Z = myregexp('^[zZ]$', datachannel);
+    eeg_M = myregexp('^M[0-9]$', datachannel);
+    eeg_O = myregexp('^[BCFION]\w*[0-9hzZ]$', datachannel);
+    eeg_EEG = myregexp('^EEG[0-9][0-9][0-9]$', datachannel);
+    eegind = logical( eeg_A + eeg_P + eeg_T + eeg_E + eeg_Z + eeg_M + eeg_O + eeg_EEG );
+    clear eeg_A eeg_P eeg_T eeg_E eeg_Z eeg_M eeg_O eeg_EEG
+    labeleeg      = datachannel(eegind);
+    %%
+    labeleog    = [ labeleog(:); datachannel(myregexp('^EO[0-9]$', datachannel)) ];  % add 'EO'
+    %%
+    labelecg    = [ labelecg(:); datachannel(myregexp('^X[0-9]$', datachannel)) ];  % add 'X'
 
   case {'ctf64'}
     labelml     = datachannel(~cellfun(@isempty, regexp(datachannel, '^SL')));    % left    MEG channels
