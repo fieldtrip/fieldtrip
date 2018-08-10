@@ -131,6 +131,10 @@ tmpcfg.trl          = cfg.trl;
 tmpcfg.channel      = {'HLC0011' 'HLC0012' 'HLC0013' 'HLC0021' 'HLC0022' 'HLC0023' 'HLC0031' 'HLC0032' 'HLC0033'};
 tmpcfg.continuous   = 'yes';
 data                = ft_preprocessing(tmpcfg);
+data                = removefields(data, 'elec'); % this slows down a great
+                        % rendering the persistent variable trick useless.
+                        % we don't need the elec anyway
+
 wdat                = cellfun('size', data.time, 2); % weights for weighted average
 
 trial_index = cell(1,numel(data.trial));
@@ -304,6 +308,9 @@ switch cfg.method
       tmpcfg        = [];
       tmpcfg.trials = find(bin==k);
       tmpdata_clus  = ft_selectdata(tmpcfg, data);
+      %tmpcfg.previous = tmpdata_clus.cfg;
+      
+      %tmpdata_clus.cfg  = tmpcfg;
       tmpdata_clus.grad = grad(k);
       
       varargout{k} = tmpdata_clus;
@@ -313,5 +320,5 @@ end
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
-ft_postamble previous data  % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
-ft_postamble history varargout  % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg
+ft_postamble previous varargout{:}  % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
+ft_postamble history varargout{:}  % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg
