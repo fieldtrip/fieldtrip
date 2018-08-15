@@ -151,7 +151,7 @@ leadfield     = permute(reshape(cat(2,dip.leadfield{:}),Nchan,Nori,Ndip),[1 3 2]
 
 % use existing filters, or compute them
 if ~isfield(dip, 'filter')
-  filt = mkfilt_eloreta_v2(leadfield, lambda);
+  filt = mkfilt_eloreta(leadfield, lambda);
   for i=1:size(dip.pos,1)
     dip.filter{i,1} = squeeze(filt(:,i,:))';
   end
