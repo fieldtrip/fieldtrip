@@ -458,6 +458,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(forward/private/fitsphere.m)
+ARRAY+=(plotting/private/fitsphere.m)
 ARRAY+=(private/fitsphere.m)
 sync ${ARRAY[*]}
 
