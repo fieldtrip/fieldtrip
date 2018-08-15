@@ -5,11 +5,11 @@ function [pnt, ori, lab] = channelposition(sens)
 %
 % Use as
 %   [pos, ori, lab] = channelposition(sens)
-% where sens is an electrode or gradiometer array.
+% where sens is an electrode,  gradiometer or optode array.
 %
 % See also FT_DATATYPE_SENS
 
-% Copyright (C) 2009-2012, Robert Oostenveld & Vladimir Litvak
+% Copyright (C) 2009-2018, Robert Oostenveld & Vladimir Litvak
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -313,7 +313,7 @@ switch ft_senstype(sens)
     
 end % switch senstype
 
-n   = size(lab,2);
+n = size(lab,2);
 % this is to fix the planar layouts, which cannot be plotted anyway
 if n>1 && size(lab, 1)>1 % this is to prevent confusion when lab happens to be a row array
   pnt = repmat(pnt, n, 1);
