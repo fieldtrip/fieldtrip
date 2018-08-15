@@ -427,6 +427,7 @@ elseif iseeg
         % load here so any post-processing options (e.g. normalization) may
         % be applied
         lf = ft_getopt(varargin, 'lf');
+
     case 'metufem'
       p3 = zeros(Ndipoles * 3, 6);
       for i = 1:Ndipoles
