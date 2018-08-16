@@ -1091,7 +1091,7 @@ switch eventformat
     end
 
   case 'fcdc_buffer_offline'
-    if isdir(filename)
+    if isfolder(filename)
       path = filename;
     else
       [path, file, ext] = fileparts(filename);
@@ -1324,7 +1324,7 @@ switch eventformat
       hdr = ft_read_header(filename);
     end
     % determine the DAP files that compromise this dataset
-    if isdir(filename)
+    if isfolder(filename)
       ls = dir(filename);
       dapfile = {};
       for i=1:length(ls)
