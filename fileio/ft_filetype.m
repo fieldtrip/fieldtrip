@@ -1348,6 +1348,10 @@ elseif filetype_check_extension(filename, '.mgrid')
   type = 'bioimage_mgrid';
   manufacturer = 'Bioimage Suite';
   content = 'electrode positions';
+elseif filetype_check_extension(filename, '.log') && filetype_check_header(filename, 'Scenario')
+  type = 'presentation_log';
+  manufacturer = 'NBS Presentation';
+  content = 'events';
 end
 
 
