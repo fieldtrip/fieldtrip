@@ -56,6 +56,8 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %                        'nonlin5'         apply a 5th order non-linear warp
 %                        'dykstra2012'     non-linear wrap only for headshape method, useful for projecting ECoG onto cortex hull
 %                        'fsaverage'       surface-based realignment with the freesurfer fsaverage brain
+%                        'fsinflated'      realignment of electrodes to patient's inflated brain
+%                        patients
 %   cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
 %                        see  FT_CHANNELSELECTION for details
 %   cfg.keepchannel    = string, 'yes' or 'no' (default = 'no')
@@ -407,6 +409,8 @@ elseif strcmp(cfg.method, 'headshape')
     norm.elecpos = warp_hermes2010(cfg, elec, headshape);
   elseif strcmp(cfg.warp, 'fsaverage')
     norm.elecpos = warp_fsaverage(cfg, elec);
+  elseif strcmp(cfg.warp, 'fsinflated')
+    norm.elecpos = warp_fsinflated(cfg, elec); 
   else
     fprintf('warping electrodes to skin surface... '); % the newline comes later
     [norm.elecpos, norm.m] = ft_warp_optim(elec.elecpos, headshape, cfg.warp);
@@ -616,7 +620,7 @@ end % if method
 % electrode labels by their case-sensitive original values
 switch cfg.method
   case {'template', 'headshape'}
-    if strcmpi(cfg.warp, 'dykstra2012') || strcmpi(cfg.warp, 'hermes2010') || strcmpi(cfg.warp, 'fsaverage')
+    if strcmpi(cfg.warp, 'dykstra2012') || strcmpi(cfg.warp, 'hermes2010') || strcmpi(cfg.warp, 'fsaverage') || strcmpi(cfg.warp, 'fsinflated')
       elec_realigned = norm;
       elec_realigned.label = label_original;
     else
