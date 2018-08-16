@@ -10,7 +10,7 @@
 // Ethernet is provided by a WIZnet W5100 network module. 
 // Wireless connectivity is provided by a RFM12B module.
 //
-// See http://fieldtrip.fcdonders.nl/development/realtime/arduino for documentation.
+// See http://www.fieldtriptoolbox.org/development/realtime/arduino for documentation.
 
 // Copyright (C) 2013, Robert Oostenveld, DCCN
 //

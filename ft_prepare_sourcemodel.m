@@ -149,7 +149,7 @@ if isfield(cfg, 'grid')
     cfg.grid.template = ft_checkconfig(cfg.grid.template, 'renamed',  {'pnt' 'pos'});
   end
 end
-cfg = ft_checkconfig(cfg, 'index2logical', 'yes');
+cfg = ft_checkconfig(cfg, 'inside2logical', 'yes');
 
 if ~isfield(cfg, 'headmodel') && nargin>1
   % put it in the configuration structure

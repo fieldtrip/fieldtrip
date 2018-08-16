@@ -8,6 +8,7 @@ external/iso2mesh/sample
 .DS_Store
 *.mex
 *.gch
+utilities/buildtimestamp.m
 
 realtime/bin/maci64/demo_combined
 realtime/bin/maci64/demo_event

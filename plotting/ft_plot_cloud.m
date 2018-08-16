@@ -230,6 +230,11 @@ if ~isempty(meshplot)
         edgealpha(m) = edgealpha(1);
       end
     end
+    if numel(vertexcolor) < numel(meshplot)
+      for m = numel(vertexcolor)+1:nmesh
+        vertexcolor(m) = vertexcolor(1);
+      end
+    end
   end
 end
 

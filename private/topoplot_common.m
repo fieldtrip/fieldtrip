@@ -39,6 +39,8 @@ cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'cohrefchannel' 'refchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'zparam', 'parameter'});
 
+cfg.newfigure = ft_getopt(cfg, 'newfigure', 'yes');
+
 Ndata = numel(varargin);
 if isnumeric(varargin{end})
   % the call with multiple inputs is done by ft_topoplotIC and recursively by ft_topoplotER/TFR itself
@@ -52,12 +54,16 @@ end
 % the call with multiple inputs is done by ft_topoplotIC and recursively by ft_topoplotER/TFR itself
 % the last input argument points to the specific data to be plotted
 if Ndata>1 && ~isnumeric(varargin{end})
+  
   for k=1:Ndata
     
-    if k>1
+    if k>1 && istrue(cfg.newfigure)
       % create a new figure for the additional input arguments
       % ensure that the new figure appears at the same position
       figure('Position', get(gcf, 'Position'), 'Visible', get(gcf, 'Visible'));
+    end
+    if ~istrue(cfg.newfigure)
+      subplot(floor(sqrt(Ndata)), ceil(sqrt(Ndata)), k);
     end
     
     % the indexing is necessary if ft_topoplotER/TFR is called from
@@ -564,22 +570,22 @@ switch cfg.comment
       comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, cfg.parameter, zmin, zmax);
     end
   case 'xlim'
-    comment = date;
+    comment = '';
     if ~isempty(xparam)
-      comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, xparam, xmin, xmax);
+      comment = sprintf('%0s=[%.3g %.3g]', xparam, xmin, xmax);
     end
   case 'ylim'
-    comment = date;
+    comment = '';
     if ~isempty(yparam)
-      comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, yparam, ymin, ymax);
+      comment = sprintf('%0s=[%.3g %.3g]', yparam, ymin, ymax);
     end
   case 'zlim'
-    comment = date;
+    comment = '';
     if ~isempty(yparam)
-      comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, cfg.parameter, zmin, zmax);
+      comment = sprintf('%0s=[%.3g %.3g]', cfg.parameter, zmin, zmax);
     end
   otherwise
-    comment = '';
+    comment = cfg.comment; % allow custom comments (e.g., ft_clusterplot specifies custom comments)
 end % switch comment
 
 if ~isempty(cfg.refchannel)

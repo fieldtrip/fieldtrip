@@ -235,7 +235,7 @@ switch cfg.method
             for j=1:nhf
               P = squeeze(pac(i,j,:))/ nansum(pac(i,j,:));  % normalized distribution
               % KL distance
-              mi(i,j) = nansum(P.* (log(P)-log2(Q)))/log(nbin);
+              mi(i,j) = nansum(P.* log2(P./Q))./log2(nbin);
             end
           end
           crsspctrm(k,n,:,:) = mi;
@@ -257,7 +257,7 @@ switch cfg.method
           for j=1:nhf
             P = squeeze(pac(i,j,:))/ nansum(pac(i,j,:));  % normalized distribution
             % KL distance
-            mi(i,j) = nansum(P.* (log(P)-log2(Q)))/log(nbin);
+            mi(i,j) = nansum(P.* log2(P./Q))./log2(nbin);
           end
         end
         crsspctrm(k,:,:) = mi;

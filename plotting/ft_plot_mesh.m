@@ -36,7 +36,7 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %   ft_plot_mesh(mesh, 'facecolor', 'skin', 'edgecolor', 'none')
 %   camlight
 %
-% See also TRIMESH, PATCH
+% See also FT_PLOT_HEADSHAPE, FT_PLOT_VOL, TRIMESH, PATCH
 
 % Copyright (C) 2009, Cristiano Micheli
 % Copyright (C) 2009-2015, Robert Oostenveld

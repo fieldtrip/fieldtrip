@@ -167,22 +167,26 @@ switch method
       for k = 1:nblock
         for m = (k+1):nblock
           indx  = [powindx{k}(:);powindx{m}(:)];
+          indx  = cat(1,indx,setdiff((1:size(Z,2))',indx));
           n1    = numel(powindx{k});
           n2    = numel(powindx{m});
-          ntot  = n1+n2;
+          ntot  = numel(indx);
           indx1 = 1:n1;
-          indx2 = (n1+1):ntot;
+          indx1_  = (1:ntot)'; indx1_(indx1) = [];
+          indx2   = n1+(1:n2);
+          indx12_ = (1:ntot)'; indx12_([indx1(:);indx2(:)]) = []; 
           
           for kk = 1:n
             tmpZ = reshape(Z(kk,indx,indx), [ntot ntot]);
             
-            % projection matrix for block2 -> block1
-            P1 = [eye(n1)                                zeros(n1,n2);
-              -tmpZ(indx2,indx1)/tmpZ(indx1,indx1)     eye(n2)];
+            % projection matrix for therest+block2 -> block1
+            P1 = [eye(n1)                                zeros(n1,ntot-n1);
+              -tmpZ(indx1_,indx1)/tmpZ(indx1,indx1)      eye(ntot-n1)];
             
-            % projection matrix for block1 -> block2
-            P2 = [  eye(n1)    -tmpZ(indx1,indx2)/tmpZ(indx2,indx2);
-              zeros(n2,n1) eye(n2)];
+            % projection matrix for therest+block1 -> block2
+            P2 = [  eye(n1)    -tmpZ(indx1,indx2)/tmpZ(indx2,indx2) zeros(n1,ntot-n1-n2);
+                  zeros(n2,n1)   eye(n2) zeros(n2, ntot-n1-n2);
+                  zeros(ntot-n1-n2,n1) -tmpZ(indx12_,indx2)/tmpZ(indx2,indx2) eye(ntot-n1-n2)];
             
             % invert only once
             for jj = 1:nfreq

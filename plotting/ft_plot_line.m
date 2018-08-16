@@ -20,7 +20,7 @@ function h = ft_plot_line(X, Y, varargin)
 %   'hlim'            = horizontal scaling limits within the local axes
 %   'vlim'            = vertical scaling limits within the local axes
 %
-% See also FT_PLOT_BOX
+% See also FT_PLOT_BOX, FT_PLOT_CROSSHAIR
 
 % Copyrights (C) 2009-2011, Robert Oostenveld
 %

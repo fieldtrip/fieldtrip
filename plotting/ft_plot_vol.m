@@ -24,7 +24,7 @@ function ft_plot_vol(headmodel, varargin)
 %   headmodel.o = [0 0 40];
 %   figure, ft_plot_vol(headmodel)
 %
-% See also FT_PREPARE_HEADMODEL FT_PLOT_MESH
+% See also FT_PREPARE_HEADMODEL, FT_PLOT_MESH, FT_PLOT_SENS
 
 % Copyright (C) 2009, Cristiano Micheli
 %
