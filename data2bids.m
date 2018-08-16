@@ -21,16 +21,17 @@ function cfg = data2bids(cfg, varargin)
 % disk, or to write a preprocessed electrophysiological dataset to disk.
 %
 % The configuration structure should contains
-%   cfg.dataset               = string, filename of the input data
-%   cfg.outputfile            = string, optional filename for the output data, see below
-%   cfg.anat.writesidecar     = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
-%   cfg.anat.dicomfile        = string, filename of a matching DICOM file
-%   cfg.meg.writesidecar      = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
-%   cfg.eeg.writesidecar      = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
-%   cfg.ieeg.writesidecar     = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
-%   cfg.channels.writesidecar = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
-%   cfg.events.writesidecar   = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
-%   cfg.events.trl            = trial definition, see below
+%   cfg.dataset                 = string, filename of the input data
+%   cfg.outputfile              = string, optional filename for the output data, see below
+%   cfg.mri.writesidecar        = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
+%   cfg.mri.dicomfile           = string, filename of a matching DICOM file
+%   cfg.meg.writesidecar        = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
+%   cfg.eeg.writesidecar        = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
+%   cfg.ieeg.writesidecar       = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
+%   cfg.channels.writesidecar   = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
+%   cfg.events.writesidecar     = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
+%   cfg.events.trl              = trial definition, see below
+%   cfg.coordystem.writesidecar = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
 %
 % If you specify cfg.dataset without cfg.outputfile, this function will only
 % construct and write the appropriate sidecar files matching the header details that
@@ -42,9 +43,9 @@ function cfg = data2bids(cfg, varargin)
 % Note that in principle you can also convert MEG data to BrainVision, but that is
 % not recommended.
 %
-% You can specify cfg.anat.dicomfile in combination with a NIFTI anatomical MRI. This
-% will cause the detailled header information with MR scanner ans sequence details to
-% be read from the DICOM file and used to fill in the details of the JSON file.
+% You can specify cfg.mri.dicomfile in combination with a NIFTI file. This will
+% cause the detailled header information with MR scanner and sequence details to be
+% read from the DICOM file and used to fill in the details of the JSON file.
 %
 % You can specify cfg.events.trl as a Nx3 matrix with the trial definition (see
 % FT_DEFINETRIAL) or as a MATLAB table. When specified as table, the first three
@@ -84,8 +85,8 @@ function cfg = data2bids(cfg, varargin)
 % Example with an anatomical MRI on disk
 %   cfg = [];
 %   cfg.dataset                     = 'sub-01_ses-mri_T1w.nii';
-%   cfg.anat.dicomfile              = '00080_1.3.12.2.1107.5.2.43.66068.2017082413175824865636649.IMA'
-%   % cfg.anat.MagneticFieldStrength  = 3; % this is not needed, as it will be obtained from the DICOM file
+%   cfg.mri.dicomfile               = '00080_1.3.12.2.1107.5.2.43.66068.2017082413175824865636649.IMA'
+%   cfg.mri.MagneticFieldStrength   = 3; % this is not needed, as it will be obtained from the DICOM file
 %   cfg.InstitutionName             = 'Radboud University';
 %   cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
 %   data2bids(cfg)
@@ -93,7 +94,7 @@ function cfg = data2bids(cfg, varargin)
 % Example with a NeuroScan EEG dataset on disk that needs to be converted
 %   cfg = [];
 %   cfg.dataset                     = 'subject01.cnt';
-%   cfg.outputfile                  = 'sub-001_task-visual.vhdr';
+%   cfg.outputfile                  = 'sub-001_task-visual_eeg.vhdr';
 %   cfg.InstitutionName             = 'Radboud University';
 %   cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
 %   data2bids(cfg)
@@ -105,7 +106,7 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.bpfreq                      = [0.1 40];
 %   data = ft_preprocessing(cfg);
 %   cfg = [];
-%   cfg.outputfile                  = 'sub-001_task-visual.vhdr';
+%   cfg.outputfile                  = 'sub-001_task-visual_eeg.vhdr';
 %   cfg.InstitutionName             = 'Radboud University';
 %   cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
 %   data2bids(cfg, data)
@@ -113,7 +114,7 @@ function cfg = data2bids(cfg, varargin)
 % Example with realigned and resliced anatomical MRI data in memory
 %   cfg = [];
 %   cfg.outputfile                  = 'sub-01_ses-mri_T1w.nii';
-%   cfg.anat.MagneticFieldStrength  = 3;
+%   cfg.mri.MagneticFieldStrength   = 3;
 %   cfg.InstitutionName             = 'Radboud University';
 %   cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
 %   data2bids(cfg, mri)
@@ -156,13 +157,16 @@ if ft_abort
   return
 end
 
+% ensure backward compatibility
+cfg = ft_checkconfig(cfg, 'renamed', {'anat', 'mri'});
+
 % get the options and set the defaults
 cfg.dataset               = ft_getopt(cfg, 'dataset');
 cfg.outputfile            = ft_getopt(cfg, 'outputfile', cfg.dataset); % default is the same as the input dataset
 
-cfg.anat                  = ft_getopt(cfg, 'anat');
-cfg.anat.writesidecar     = ft_getopt(cfg.anat, 'writesidecar', 'yes');
-cfg.anat.dicomfile        = ft_getopt(cfg.anat, 'dicomfile');  % get the details from one of the original DICOM files
+cfg.mri                  = ft_getopt(cfg, 'mri');
+cfg.mri.writesidecar     = ft_getopt(cfg.mri, 'writesidecar', 'yes');
+cfg.mri.dicomfile        = ft_getopt(cfg.mri, 'dicomfile');  % get the details from one of the original DICOM files
 
 cfg.meg                   = ft_getopt(cfg, 'meg');
 cfg.meg.writesidecar      = ft_getopt(cfg.meg, 'writesidecar', 'yes');
@@ -179,6 +183,9 @@ cfg.channels.writesidecar = ft_getopt(cfg.channels, 'writesidecar', 'yes');
 cfg.events                = ft_getopt(cfg, 'events');
 cfg.events.writesidecar   = ft_getopt(cfg.events, 'writesidecar', 'yes');
 cfg.events.trl            = ft_getopt(cfg.events, 'trl');  % this can contain the trial definition as Nx3 array or as table
+
+cfg.coordsystem              = ft_getopt(cfg, 'coordsystem');
+cfg.coordsystem.writesidecar = ft_getopt(cfg.coordsystem, 'writesidecar', 'yes');
 
 %% Generic fields for all data types
 cfg.TaskName                          = ft_getopt(cfg, 'TaskName'                    ); % REQUIRED. Name of the task (for resting state use the "rest" prefix). Different Tasks SHOULD NOT have the same name. The Task label is derived from this field by removing all non alphanumeric ([a-zA-Z0-9]) characters.
@@ -249,52 +256,74 @@ cfg.ieeg.PowerLineFrequency           = ft_getopt(cfg.ieeg, 'PowerLineFrequency'
 ft_warning('iEEG metadata fields need to be updated with the draft specification at http://bit.ly/bids_ieeg');
 
 %% MR Scanner Hardware
-cfg.anat.MagneticFieldStrength         = ft_getopt(cfg.anat, 'MagneticFieldStrength'          ); % Nominal field strength of MR magnet in Tesla. Corresponds to DICOM Tag 0018,0087 "Magnetic Field Strength" .
-cfg.anat.StationName                   = ft_getopt(cfg.anat, 'StationName'                    ); % Institution defined name of the machine that produced the composite instances. Corresponds to DICOM Tag 0008, 1010 "Station Name"
-cfg.anat.HardcopyDeviceSoftwareVersion = ft_getopt(cfg.anat, 'HardcopyDeviceSoftwareVersion'  ); % (Deprecated) Manufacturer's designation of the software of the device that created this Hardcopy Image (the printer). Corresponds to DICOM Tag 0018, 101A "Hardcopy Device Software Version".
-cfg.anat.ReceiveCoilName               = ft_getopt(cfg.anat, 'ReceiveCoilName'                ); % Information describing the receiver coil. Corresponds to DICOM Tag 0018, 1250 "Receive Coil Name", although not all vendors populate that DICOM Tag, in which case this field can be derived from an appropriate private DICOM field.
-cfg.anat.ReceiveCoilActiveElements     = ft_getopt(cfg.anat, 'ReceiveCoilActiveElements'      ); % Information describing the active/selected elements of the receiver coil.  This doesn't correspond to a tag in the DICOM ontology. The vendor-defined terminology for active coil elements can go in this field. As an example, for Siemens, coil channels are typically not activated/selected individually, but rather  in pre-defined selectable "groups" of individual channels, and the list of the  "groups" of elements that are active/selected in any given scan populates  the "Coil String" entry in Siemen's private DICOM fields (e.g., "HEA;HEP" for the Siemens standard 32 ch coil when both the anterior and posterior groups are activated). This is a flexible field that can be used as most appropriate for a given vendor and coil to define the "active" coil elements. Since individual scans can sometimes not have the intended coil elements selected, it is preferable for this field to be populated directly from the DICOM for each individual scan, so that it can be used as a mechanism for checking that a given scan was collected with the intended coil elements selected.
-cfg.anat.GradientSetType               = ft_getopt(cfg.anat, 'GradientSetType'                ); % It should be possible to infer the gradient coil from the scanner model. If not,e.g. because of a custom upgrade or use of a gradient insert set, then the specifications of the actual gradient coil should be reported independently.
-cfg.anat.MRTransmitCoilSequence        = ft_getopt(cfg.anat, 'MRTransmitCoilSequence'         ); % This is a relevant field if a non-standard transmit coil is used. Corresponds to DICOM Tag 0018, 9049 "MR Transmit Coil Sequence".
-cfg.anat.MatrixCoilMode                = ft_getopt(cfg.anat, 'MatrixCoilMode'                 ); % (If used) A method for reducing the number of independent channels by combining in analog the signals from multiple coil elements. There are typically different default modes when using un-accelerated or accelerated (e.g. GRAPPA, SENSE) imaging.
-cfg.anat.CoilCombinationMethod         = ft_getopt(cfg.anat, 'CoilCombinationMethod'          ); % Almost all fMRI studies using phased-array coils use root-sum-of-squares (rSOS) combination, but other methods exist. The image reconstruction is changed by the coil combination method (as for the matrix coil mode above), so anything non-standard should be reported.
+cfg.mri.MagneticFieldStrength         = ft_getopt(cfg.mri, 'MagneticFieldStrength'          ); % Nominal field strength of MR magnet in Tesla. Corresponds to DICOM Tag 0018,0087 "Magnetic Field Strength" .
+cfg.mri.StationName                   = ft_getopt(cfg.mri, 'StationName'                    ); % Institution defined name of the machine that produced the composite instances. Corresponds to DICOM Tag 0008, 1010 "Station Name"
+cfg.mri.HardcopyDeviceSoftwareVersion = ft_getopt(cfg.mri, 'HardcopyDeviceSoftwareVersion'  ); % (Deprecated) Manufacturer's designation of the software of the device that created this Hardcopy Image (the printer). Corresponds to DICOM Tag 0018, 101A "Hardcopy Device Software Version".
+cfg.mri.ReceiveCoilName               = ft_getopt(cfg.mri, 'ReceiveCoilName'                ); % Information describing the receiver coil. Corresponds to DICOM Tag 0018, 1250 "Receive Coil Name", although not all vendors populate that DICOM Tag, in which case this field can be derived from an appropriate private DICOM field.
+cfg.mri.ReceiveCoilActiveElements     = ft_getopt(cfg.mri, 'ReceiveCoilActiveElements'      ); % Information describing the active/selected elements of the receiver coil.  This doesn't correspond to a tag in the DICOM ontology. The vendor-defined terminology for active coil elements can go in this field. As an example, for Siemens, coil channels are typically not activated/selected individually, but rather  in pre-defined selectable "groups" of individual channels, and the list of the  "groups" of elements that are active/selected in any given scan populates  the "Coil String" entry in Siemen's private DICOM fields (e.g., "HEA;HEP" for the Siemens standard 32 ch coil when both the anterior and posterior groups are activated). This is a flexible field that can be used as most appropriate for a given vendor and coil to define the "active" coil elements. Since individual scans can sometimes not have the intended coil elements selected, it is preferable for this field to be populated directly from the DICOM for each individual scan, so that it can be used as a mechanism for checking that a given scan was collected with the intended coil elements selected.
+cfg.mri.GradientSetType               = ft_getopt(cfg.mri, 'GradientSetType'                ); % It should be possible to infer the gradient coil from the scanner model. If not,e.g. because of a custom upgrade or use of a gradient insert set, then the specifications of the actual gradient coil should be reported independently.
+cfg.mri.MRTransmitCoilSequence        = ft_getopt(cfg.mri, 'MRTransmitCoilSequence'         ); % This is a relevant field if a non-standard transmit coil is used. Corresponds to DICOM Tag 0018, 9049 "MR Transmit Coil Sequence".
+cfg.mri.MatrixCoilMode                = ft_getopt(cfg.mri, 'MatrixCoilMode'                 ); % (If used) A method for reducing the number of independent channels by combining in analog the signals from multiple coil elements. There are typically different default modes when using un-accelerated or accelerated (e.g. GRAPPA, SENSE) imaging.
+cfg.mri.CoilCombinationMethod         = ft_getopt(cfg.mri, 'CoilCombinationMethod'          ); % Almost all fMRI studies using phased-array coils use root-sum-of-squares (rSOS) combination, but other methods exist. The image reconstruction is changed by the coil combination method (as for the matrix coil mode above), so anything non-standard should be reported.
 
 %% MR Sequence Specifics
-cfg.anat.PulseSequenceType             = ft_getopt(cfg.anat, 'PulseSequenceType'              ); % A general description of the pulse sequence used for the scan (i.e. MPRAGE, Gradient Echo EPI, Spin Echo EPI, Multiband gradient echo EPI).
-cfg.anat.ScanningSequence              = ft_getopt(cfg.anat, 'ScanningSequence'               ); % Description of the type of data acquired. Corresponds to DICOM Tag 0018, 0020 "Sequence Sequence".
-cfg.anat.SequenceVariant               = ft_getopt(cfg.anat, 'SequenceVariant'                ); % Variant of the ScanningSequence. Corresponds to DICOM Tag 0018, 0021 "Sequence Variant".
-cfg.anat.ScanOptions                   = ft_getopt(cfg.anat, 'ScanOptions'                    ); % Parameters of ScanningSequence. Corresponds to DICOM Tag 0018, 0022 "Scan Options".
-cfg.anat.SequenceName                  = ft_getopt(cfg.anat, 'SequenceName'                   ); % Manufacturer's designation of the sequence name. Corresponds to DICOM Tag 0018, 0024 "Sequence Name".
-cfg.anat.PulseSequenceDetails          = ft_getopt(cfg.anat, 'PulseSequenceDetails'           ); % Information beyond pulse sequence type that identifies the specific pulse sequence used (i.e. "Standard Siemens Sequence distributed with the VB17 software," "Siemens WIP ### version #.##," or "Sequence written by X using a version compiled on MM/DD/YYYY").
-cfg.anat.NonlinearGradientCorrection   = ft_getopt(cfg.anat, 'NonlinearGradientCorrection'    ); % Boolean stating if the image saved  has been corrected for gradient nonlinearities by the scanner sequence.
+cfg.mri.PulseSequenceType             = ft_getopt(cfg.mri, 'PulseSequenceType'              ); % A general description of the pulse sequence used for the scan (i.e. MPRAGE, Gradient Echo EPI, Spin Echo EPI, Multiband gradient echo EPI).
+cfg.mri.ScanningSequence              = ft_getopt(cfg.mri, 'ScanningSequence'               ); % Description of the type of data acquired. Corresponds to DICOM Tag 0018, 0020 "Sequence Sequence".
+cfg.mri.SequenceVariant               = ft_getopt(cfg.mri, 'SequenceVariant'                ); % Variant of the ScanningSequence. Corresponds to DICOM Tag 0018, 0021 "Sequence Variant".
+cfg.mri.ScanOptions                   = ft_getopt(cfg.mri, 'ScanOptions'                    ); % Parameters of ScanningSequence. Corresponds to DICOM Tag 0018, 0022 "Scan Options".
+cfg.mri.SequenceName                  = ft_getopt(cfg.mri, 'SequenceName'                   ); % Manufacturer's designation of the sequence name. Corresponds to DICOM Tag 0018, 0024 "Sequence Name".
+cfg.mri.PulseSequenceDetails          = ft_getopt(cfg.mri, 'PulseSequenceDetails'           ); % Information beyond pulse sequence type that identifies the specific pulse sequence used (i.e. "Standard Siemens Sequence distributed with the VB17 software," "Siemens WIP ### version #.##," or "Sequence written by X using a version compiled on MM/DD/YYYY").
+cfg.mri.NonlinearGradientCorrection   = ft_getopt(cfg.mri, 'NonlinearGradientCorrection'    ); % Boolean stating if the image saved  has been corrected for gradient nonlinearities by the scanner sequence.
 
 %% MR In-Plane Spatial Encoding
-cfg.anat.NumberShots                   = ft_getopt(cfg.anat, 'NumberShots'                    ); % The number of RF excitations need to reconstruct a slice or volume. Please mind that  this is not the same as Echo Train Length which denotes the number of lines of k-space collected after an excitation.
-cfg.anat.ParallelReductionFactorInPlan = ft_getopt(cfg.anat, 'ParallelReductionFactorInPlane' ); % The parallel imaging (e.g, GRAPPA) factor. Use the denominator of the fraction of k-space encoded for each slice. For example, 2 means half of k-space is encoded. Corresponds to DICOM Tag 0018, 9069 "Parallel Reduction Factor In-plane".
-cfg.anat.ParallelAcquisitionTechnique  = ft_getopt(cfg.anat, 'ParallelAcquisitionTechnique'   ); % The type of parallel imaging used (e.g. GRAPPA, SENSE). Corresponds to DICOM Tag 0018, 9078 "Parallel Acquisition Technique".
-cfg.anat.PartialFourier                = ft_getopt(cfg.anat, 'PartialFourier'                 ); % The fraction of partial Fourier information collected. Corresponds to DICOM Tag 0018, 9081 "Partial Fourier".
-cfg.anat.PartialFourierDirection       = ft_getopt(cfg.anat, 'PartialFourierDirection'        ); % The direction where only partial Fourier information was collected. Corresponds to DICOM Tag 0018, 9036 "Partial Fourier Direction".
-cfg.anat.PhaseEncodingDirection        = ft_getopt(cfg.anat, 'PhaseEncodingDirection'         ); % Possible values = [];                     % "i", "j", "k", "i-", "j-", "k-". The letters "i", "j", "k" correspond to the first, second and third axis of the data in the NIFTI file. The polarity of the phase encoding is assumed to go from zero index to maximum index unless "-" sign is present (then the order is reversed - starting from the highest index instead of zero). PhaseEncodingDirection is defined as the direction along which phase is was modulated which may result in visible distortions. Note that this is not the same as the DICOM term InPlanePhaseEncodingDirection which can have "ROW" or "COL" values. This parameter is REQUIRED if corresponding fieldmap data is present or when using multiple runs with different phase encoding directions (which can be later used for field inhomogeneity correction).
-cfg.anat.EffectiveEchoSpacing          = ft_getopt(cfg.anat, 'EffectiveEchoSpacing'           ); % The "effective" sampling interval, specified in seconds, between lines in the phase-encoding direction, defined based on the size of the reconstructed image in the phase direction.  It is frequently, but incorrectly, referred to as  "dwell time" (see DwellTime parameter below for actual dwell time).  It is  required for unwarping distortions using field maps. Note that beyond just in-plane acceleration, a variety of other manipulations to the phase encoding need to be accounted for properly, including partial fourier, phase oversampling, phase resolution, phase field-of-view and interpolation. This parameter is REQUIRED if corresponding fieldmap data is present.
-cfg.anat.TotalReadoutTime              = ft_getopt(cfg.anat, 'TotalReadoutTime'               ); % This is actually the "effective" total readout time , defined as the readout duration, specified in seconds, that would have generated data with the given level of distortion.  It is NOT the actual, physical duration of the readout train.  If EffectiveEchoSpacing has been properly computed, it is just EffectiveEchoSpacing * (ReconMatrixPE - 1). . This parameter is REQUIRED if corresponding "field/distortion" maps acquired with opposing phase encoding directions are present  (see 8.9.4).
-cfg.anat.WaterFatShift                 = ft_getopt(cfg.anat, 'WaterFatShift'                  ); % in pixels, is defined as the displacement of the water signal with respect to fat signal in the image. Water-fat shift (WFS) is expressed in number of pixels (e.g. 3 pixels). The WFS is directly related to the bandwidth per pixel in readout direction, and also to the effective echo spacing.
-cfg.anat.EchoTrainLength               = ft_getopt(cfg.anat, 'EchoTrainLength'                ); % number of EPI echoes to acquire one slice. In Siemens, this parameter is the "EPI Factor". Number of lines in k-space acquired per excitation per image.  Corresponds to In GE scanners it corresponds to the DICOM tag (0018,0091) for GE and Siemens; . In Philips, it corresponds to the tag (0019,10d9) for Philips.
+cfg.mri.NumberShots                   = ft_getopt(cfg.mri, 'NumberShots'                    ); % The number of RF excitations need to reconstruct a slice or volume. Please mind that  this is not the same as Echo Train Length which denotes the number of lines of k-space collected after an excitation.
+cfg.mri.ParallelReductionFactorInPlan = ft_getopt(cfg.mri, 'ParallelReductionFactorInPlane' ); % The parallel imaging (e.g, GRAPPA) factor. Use the denominator of the fraction of k-space encoded for each slice. For example, 2 means half of k-space is encoded. Corresponds to DICOM Tag 0018, 9069 "Parallel Reduction Factor In-plane".
+cfg.mri.ParallelAcquisitionTechnique  = ft_getopt(cfg.mri, 'ParallelAcquisitionTechnique'   ); % The type of parallel imaging used (e.g. GRAPPA, SENSE). Corresponds to DICOM Tag 0018, 9078 "Parallel Acquisition Technique".
+cfg.mri.PartialFourier                = ft_getopt(cfg.mri, 'PartialFourier'                 ); % The fraction of partial Fourier information collected. Corresponds to DICOM Tag 0018, 9081 "Partial Fourier".
+cfg.mri.PartialFourierDirection       = ft_getopt(cfg.mri, 'PartialFourierDirection'        ); % The direction where only partial Fourier information was collected. Corresponds to DICOM Tag 0018, 9036 "Partial Fourier Direction".
+cfg.mri.PhaseEncodingDirection        = ft_getopt(cfg.mri, 'PhaseEncodingDirection'         ); % Possible values = [];                     % "i", "j", "k", "i-", "j-", "k-". The letters "i", "j", "k" correspond to the first, second and third axis of the data in the NIFTI file. The polarity of the phase encoding is assumed to go from zero index to maximum index unless "-" sign is present (then the order is reversed - starting from the highest index instead of zero). PhaseEncodingDirection is defined as the direction along which phase is was modulated which may result in visible distortions. Note that this is not the same as the DICOM term InPlanePhaseEncodingDirection which can have "ROW" or "COL" values. This parameter is REQUIRED if corresponding fieldmap data is present or when using multiple runs with different phase encoding directions (which can be later used for field inhomogeneity correction).
+cfg.mri.EffectiveEchoSpacing          = ft_getopt(cfg.mri, 'EffectiveEchoSpacing'           ); % The "effective" sampling interval, specified in seconds, between lines in the phase-encoding direction, defined based on the size of the reconstructed image in the phase direction.  It is frequently, but incorrectly, referred to as  "dwell time" (see DwellTime parameter below for actual dwell time).  It is  required for unwarping distortions using field maps. Note that beyond just in-plane acceleration, a variety of other manipulations to the phase encoding need to be accounted for properly, including partial fourier, phase oversampling, phase resolution, phase field-of-view and interpolation. This parameter is REQUIRED if corresponding fieldmap data is present.
+cfg.mri.TotalReadoutTime              = ft_getopt(cfg.mri, 'TotalReadoutTime'               ); % This is actually the "effective" total readout time , defined as the readout duration, specified in seconds, that would have generated data with the given level of distortion.  It is NOT the actual, physical duration of the readout train.  If EffectiveEchoSpacing has been properly computed, it is just EffectiveEchoSpacing * (ReconMatrixPE - 1). . This parameter is REQUIRED if corresponding "field/distortion" maps acquired with opposing phase encoding directions are present  (see 8.9.4).
+cfg.mri.WaterFatShift                 = ft_getopt(cfg.mri, 'WaterFatShift'                  ); % in pixels, is defined as the displacement of the water signal with respect to fat signal in the image. Water-fat shift (WFS) is expressed in number of pixels (e.g. 3 pixels). The WFS is directly related to the bandwidth per pixel in readout direction, and also to the effective echo spacing.
+cfg.mri.EchoTrainLength               = ft_getopt(cfg.mri, 'EchoTrainLength'                ); % number of EPI echoes to acquire one slice. In Siemens, this parameter is the "EPI Factor". Number of lines in k-space acquired per excitation per image.  Corresponds to In GE scanners it corresponds to the DICOM tag (0018,0091) for GE and Siemens; . In Philips, it corresponds to the tag (0019,10d9) for Philips.
 
 %% MR Timing Parameters
-cfg.anat.EchoTime                      = ft_getopt(cfg.anat, 'EchoTime'                       ); % The echo time (TE) for the acquisition, specified in seconds. This parameter is REQUIRED if corresponding fieldmap data is present or the data comes from a multi echo sequence. Corresponds to DICOM Tag 0018, 0081 "Echo Time"  (please note that the DICOM term is in milliseconds not seconds).
-cfg.anat.InversionTime                 = ft_getopt(cfg.anat, 'InversionTime'                  ); % The inversion time (TI) for the acquisition, specified in seconds. Inversion time is the time after the middle of inverting RF pulse to middle of excitation pulse to detect the amount of longitudinal magnetization. Corresponds to DICOM Tag 0018, 0082 "Inversion Time"  (please note that the DICOM term is in milliseconds not seconds).
-cfg.anat.SliceTiming                   = ft_getopt(cfg.anat, 'SliceTiming'                    ); % The time at which each slice was acquired within each volume (frame) of  the acquisition.  Slice timing is not slice order -- rather, it  is a list of times (in JSON format) containing the time (in seconds) of each slice acquisition in relation to the beginning of volume acquisition.  The list goes through the slices along the slice axis in the slice encoding dimension (see below). Note that to ensure the proper interpretation of the SliceTiming field, it is important to check if the (optional) SliceEncodingDirection exists. In particular,  if SliceEncodingDirection is negative, the entries in SliceTiming are defined in reverse order with respect to the slice axis (i.e., the final entry in the SliceTiming list is the time of acquisition of slice 0). This parameter is REQUIRED for sparse sequences that do not have the DelayTime field set. In addition without this parameter slice time correction will not be possible.
-cfg.anat.SliceEncodingDirection        = ft_getopt(cfg.anat, 'SliceEncodingDirection'         ); % Possible values = [];                     % "i", "j", "k", "i-", "j-", "k-" (the axis of the NIfTI data along which slices were acquired, and the direction in which SliceTiming is  defined with respect to). "i", "j", "k" identifiers correspond to the first, second and third axis of the data in the NIfTI file. A "-" sign indicates that the contents of SliceTiming are defined in reverse order -- that is, the first entry corresponds to the slice with the largest index, and the final entry corresponds to slice index zero. When present ,the axis defined by SliceEncodingDirection  needs to be consistent with the "slice_dim" field in the NIfTI header. When absent, the entries in SliceTiming must be in the order of increasing slice index as defined by the NIfTI header.
-cfg.anat.DwellTime                     = ft_getopt(cfg.anat, 'DwellTime'                      ); %  Actual dwell time (in seconds) of the receiver per point in the readout direction, including any oversampling.  For Siemens, this corresponds to DICOM field (0019,1018) (in ns).   This value is necessary for the (optional) readout distortion correction of anatomicals in the HCP Pipelines.  It also usefully provides a handle on the readout bandwidth, which isn't captured in the other metadata tags.  Not to be confused with "EffectiveEchoSpacing", and the frequent mislabeling of echo spacing (which is spacing in the phase encoding direction) as "dwell time" (which is spacing in the readout direction).
+cfg.mri.EchoTime                      = ft_getopt(cfg.mri, 'EchoTime'                       ); % The echo time (TE) for the acquisition, specified in seconds. This parameter is REQUIRED if corresponding fieldmap data is present or the data comes from a multi echo sequence. Corresponds to DICOM Tag 0018, 0081 "Echo Time"  (please note that the DICOM term is in milliseconds not seconds).
+cfg.mri.InversionTime                 = ft_getopt(cfg.mri, 'InversionTime'                  ); % The inversion time (TI) for the acquisition, specified in seconds. Inversion time is the time after the middle of inverting RF pulse to middle of excitation pulse to detect the amount of longitudinal magnetization. Corresponds to DICOM Tag 0018, 0082 "Inversion Time"  (please note that the DICOM term is in milliseconds not seconds).
+cfg.mri.SliceTiming                   = ft_getopt(cfg.mri, 'SliceTiming'                    ); % The time at which each slice was acquired within each volume (frame) of  the acquisition.  Slice timing is not slice order -- rather, it  is a list of times (in JSON format) containing the time (in seconds) of each slice acquisition in relation to the beginning of volume acquisition.  The list goes through the slices along the slice axis in the slice encoding dimension (see below). Note that to ensure the proper interpretation of the SliceTiming field, it is important to check if the (optional) SliceEncodingDirection exists. In particular,  if SliceEncodingDirection is negative, the entries in SliceTiming are defined in reverse order with respect to the slice axis (i.e., the final entry in the SliceTiming list is the time of acquisition of slice 0). This parameter is REQUIRED for sparse sequences that do not have the DelayTime field set. In addition without this parameter slice time correction will not be possible.
+cfg.mri.SliceEncodingDirection        = ft_getopt(cfg.mri, 'SliceEncodingDirection'         ); % Possible values = [];                     % "i", "j", "k", "i-", "j-", "k-" (the axis of the NIfTI data along which slices were acquired, and the direction in which SliceTiming is  defined with respect to). "i", "j", "k" identifiers correspond to the first, second and third axis of the data in the NIfTI file. A "-" sign indicates that the contents of SliceTiming are defined in reverse order -- that is, the first entry corresponds to the slice with the largest index, and the final entry corresponds to slice index zero. When present ,the axis defined by SliceEncodingDirection  needs to be consistent with the "slice_dim" field in the NIfTI header. When absent, the entries in SliceTiming must be in the order of increasing slice index as defined by the NIfTI header.
+cfg.mri.DwellTime                     = ft_getopt(cfg.mri, 'DwellTime'                      ); %  Actual dwell time (in seconds) of the receiver per point in the readout direction, including any oversampling.  For Siemens, this corresponds to DICOM field (0019,1018) (in ns).   This value is necessary for the (optional) readout distortion correction of anatomicals in the HCP Pipelines.  It also usefully provides a handle on the readout bandwidth, which isn't captured in the other metadata tags.  Not to be confused with "EffectiveEchoSpacing", and the frequent mislabeling of echo spacing (which is spacing in the phase encoding direction) as "dwell time" (which is spacing in the readout direction).
 
 %% MR RF & Contrast
-cfg.anat.FlipAngle                     = ft_getopt(cfg.anat, 'FlipAngle'                      ); % Flip angle for the acquisition, specified in degrees. Corresponds to = [];                     % DICOM Tag 0018, 1314 "Flip Angle".
+cfg.mri.FlipAngle                     = ft_getopt(cfg.mri, 'FlipAngle'                      ); % Flip angle for the acquisition, specified in degrees. Corresponds to = [];                     % DICOM Tag 0018, 1314 "Flip Angle".
 
 %% MR Slice Acceleration
-cfg.anat.MultibandAccelerationFactor   = ft_getopt(cfg.anat, 'MultibandAccelerationFactor'    ); % The multiband factor, for multiband acquisitions.
+cfg.mri.MultibandAccelerationFactor   = ft_getopt(cfg.mri, 'MultibandAccelerationFactor'    ); % The multiband factor, for multiband acquisitions.
 
-%% Anatomical landmarks, useful for multimodaltimodal co-registration with MEG, (S)EEG, TMS,etc
-cfg.anat.AnatomicalLandmarkCoordinates = ft_getopt(cfg.anat, 'AnatomicalLandmarkCoordinates'  ); % Key:value pairs of any number of additional anatomical landmarks and their coordinates in voxel units (where first voxel has index 0,0,0) relative to the associated anatomical MRI, (e.g. {"AC" = []; % [127,119,149], "PC" = []; % [128,93,141], "IH" = []; % [131,114,206]}, or {"NAS" = []; % [127,213,139], "LPA" = []; % [52,113,96], "RPA" = []; % [202,113,91]}).
+%% Anatomical landmarks, useful for multimodaltimodal co-registration with MEG, (S)HeadCoil, TMS,etc
+cfg.mri.AnatomicalLandmarkCoordinates = ft_getopt(cfg.mri, 'AnatomicalLandmarkCoordinates'  ); % Key:value pairs of any number of additional anatomical landmarks and their coordinates in voxel units (where first voxel has index 0,0,0) relative to the associated anatomical MRI, (e.g. {"AC" = []; % [127,119,149], "PC" = []; % [128,93,141], "IH" = []; % [131,114,206]}, or {"NAS" = []; % [127,213,139], "LPA" = []; % [52,113,96], "RPA" = []; % [202,113,91]}).
+
+%% information specific for the coordsystem.json file
+cfg.coordsystem.MEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystem');
+cfg.coordsystem.MEGCoordinateUnits                              = ft_getopt(cfg.coordsystem, 'MEGCoordinateUnits');
+cfg.coordsystem.MEGCoordinateSystemDescription                  = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystemDescription'); 
+cfg.coordsystem.EEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'EEGCoordinateSystem');
+cfg.coordsystem.EEGCoordinateUnits                              = ft_getopt(cfg.coordsystem, 'EEGCoordinateUnits');
+cfg.coordsystem.EEGCoordinateSystemDescription                  = ft_getopt(cfg.coordsystem, 'EEGCoordinateSystemDescription'); 
+cfg.coordsystem.HeadCoilCoordinates                             = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinateSystem');
+cfg.coordsystem.HeadCoilCoordinateSystem                        = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinates');
+cfg.coordsystem.HeadCoilCoordinateUnits                         = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinateUnits');
+cfg.coordsystem.HeadCoilCoordinateSystemDescription             = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinateSystemDescription'); 
+cfg.coordsystem.DigitizedHeadPoints                             = ft_getopt(cfg.coordsystem, 'DigitizedHeadPoints');
+cfg.coordsystem.DigitizedHeadPointsCoordinateSystem             = ft_getopt(cfg.coordsystem, 'DigitizedHeadPointsCoordinateSystem');
+cfg.coordsystem.DigitizedHeadPointsCoordinateUnits              = ft_getopt(cfg.coordsystem, 'DigitizedHeadPointsCoordinateUnits');
+cfg.coordsystem.DigitizedHeadPointsCoordinateSystemDescription  = ft_getopt(cfg.coordsystem, 'DigitizedHeadPointsCoordinateSystemDescription'); 
+cfg.coordsystem.IntendedFor                                     = ft_getopt(cfg.coordsystem, 'IntendedFor');
+cfg.coordsystem.AnatomicalLandmarkCoordinates                   = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinates');
+cfg.coordsystem.AnatomicalLandmarkCoordinateSystem              = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinateSystem');
+cfg.coordsystem.AnatomicalLandmarkCoordinateUnits               = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinateUnits');
+cfg.coordsystem.AnatomicalLandmarkCoordinateSystemDescription   = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinateSystemDescription');
+cfg.coordsystem.FiducialsDescription                            = ft_getopt(cfg.coordsystem, 'FiducialsDescription');
 
 %% columns in the channels.tsv
 cfg.channels.name               = ft_getopt(cfg.channels, 'name'               , nan);  % REQUIRED. Channel name (e.g., MRT012, MEG023)
@@ -327,9 +356,9 @@ end
 switch typ
   case {'nifti', 'nifti2', 'nifti_fsl'}
     mri = ft_read_mri(cfg.dataset);
-    if ~isempty(cfg.anat.dicomfile)
+    if ~isempty(cfg.mri.dicomfile)
       % read the header details from the matching DICOM file specified by the user
-      dcm = dicominfo(cfg.anat.dicomfile);
+      dcm = dicominfo(cfg.mri.dicomfile);
     else
       dcm = [];
     end
@@ -341,9 +370,9 @@ switch typ
   case 'volume'
     % the data is not on disk but has been passed as input argument
     mri = varargin{1};
-    if ~isempty(cfg.anat.dicomfile)
+    if ~isempty(cfg.mri.dicomfile)
       % read the header details from the dicom matching file that was specified by the user
-      dcm = dicominfo(cfg.anat.dicomfile);
+      dcm = dicominfo(cfg.mri.dicomfile);
     elseif isfield(mri, 'hdr') && numel(mri.hdr)>1
       % it looks like an MRI read in using FT_READ_MRI using the FreeSurfer code
       % take the DICOM details from the first slice
@@ -391,12 +420,13 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % start with empty metadata descriptions
-anat_json    = [];
-meg_json     = [];
-eeg_json     = [];
-ieeg_json    = [];
-events_tsv   = [];
-channels_tsv = [];
+mri_json     = [];
+meg_json      = [];
+eeg_json      = [];
+ieeg_json     = [];
+events_tsv    = [];
+channels_tsv  = [];
+coordsys_json = [];
 
 % make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg);
@@ -404,9 +434,9 @@ fn = fn(~cellfun(@isempty, regexp(fn, '[A-Z].*')));
 generic_defaults = keepfields(cfg, fn);
 
 % make the relevant selection, all json fields start with a capital letter
-fn = fieldnames(cfg.anat);
+fn = fieldnames(cfg.mri);
 fn = fn(~cellfun(@isempty, regexp(fn, '[A-Z].*')));
-anat_defaults = keepfields(cfg.anat, fn);
+mri_defaults = keepfields(cfg.mri, fn);
 
 % make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg.meg);
@@ -426,12 +456,12 @@ ieeg_defaults = keepfields(cfg.ieeg, fn);
 switch typ
   case {'nifti', 'nifti2', 'nifti_fsl', 'dicom', 'volume'}
     % quite some information can be obtained from the header
-    anat_json = keepfields(dcm, fn);
+    mri_json = keepfields(dcm, fn);
     
     % merge the information from the defaults with the information obtained from the data
     % in case fields appear in both, the first input overrules the second
-    anat_json = mergeconfig(anat_json, anat_defaults);
-    anat_json = mergeconfig(anat_json, generic_defaults);
+    mri_json = mergeconfig(mri_json, mri_defaults);
+    mri_json = mergeconfig(mri_json, generic_defaults);
     
   case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275', 'neuromag_fif', 'neuromag122', 'neuromag306'}
     % these MUST be present
@@ -450,11 +480,11 @@ switch typ
     meg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
     meg_json.EpochLength                = hdr.nSamples/hdr.Fs;
     if ft_senstype(hdr.grad, 'ctf151')
-      meg_json.ContinuousHeadLocalization = truefalse(any(strcmp(hdr.chantype, 'headloc'))); % CTF specific
+      meg_json.ContinuousHeadLocalization = any(strcmp(hdr.chantype, 'headloc')); % CTF specific
       meg_json.Manufacturer             = 'CTF';
       meg_json.ManufacturersModelName   = 'CTF-151';
     elseif ft_senstype(hdr.grad, 'ctf275')
-      meg_json.ContinuousHeadLocalization = truefalse(any(strcmp(hdr.chantype, 'headloc'))); % CTF specific
+      meg_json.ContinuousHeadLocalization = any(strcmp(hdr.chantype, 'headloc')); % CTF specific
       meg_json.Manufacturer             = 'CTF';
       meg_json.ManufacturersModelName   = 'CTF-275';
     elseif ft_senstype(hdr.grad, 'neuromag122')
@@ -463,6 +493,22 @@ switch typ
     elseif ft_senstype(hdr.grad, 'neuromag306')
       meg_json.Manufacturer             = 'Elekta/Neuromag';
       % meg_json.ManufacturersModelName can not be determined, since both have 306 channels
+    end
+    
+    if ft_senstype(hdr.grad, 'ctf')
+      % coordinate system for MEG sensors
+      coordsys_json.MEGCoordinateSystem            = 'CTF';
+      coordsys_json.MEGCoordinateUnits             = 'cm';
+      coordsys_json.MEGCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
+      % coordinate system for head localization coils
+      label = cellstr(hdr.orig.hc.names);
+      position = hdr.orig.hc.head;
+      for i=1:numel(label)
+        coordsys_json.HeadCoilCoordinates.(fixname(label{i})) = position(:,i)';
+      end
+      coordsys_json.HeadCoilCoordinateSystem            = 'CTF';
+      coordsys_json.HeadCoilCoordinateUnits             = 'cm';
+      coordsys_json.HeadCoilCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
     end
     
     % merge the information from the defaults with the information obtained from the data
@@ -525,6 +571,12 @@ switch typ
     ft_error('not yet implemented for "%s"', typ);
 end
 
+% remove fields that have an empty value
+if ~isempty(mri_json), mri_json = remove_empty(mri_json); end
+if ~isempty(meg_json), meg_json = remove_empty(meg_json); end
+if ~isempty(eeg_json), eeg_json = remove_empty(eeg_json); end
+if ~isempty(ieeg_json), ieeg_json = remove_empty(ieeg_json); end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % write the data to the output file
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -551,7 +603,7 @@ end
 % write the metadata to the json and tsv files
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ~isempty(anat_json)
+if ~isempty(mri_json)
   [p, f, x] = fileparts(cfg.outputfile);
   if isequal(x, '.gz') && endsWith(f, '.nii')
     % it is a gzip compressed nifti file
@@ -560,25 +612,25 @@ if ~isempty(anat_json)
   end
   filename = fullfile(p, [f '.json']);
   if isfile(filename)
-    existing = read_json(filename);
+    existing = remove_empty(read_json(filename));
   else
     existing = [];
   end
-  switch cfg.anat.writesidecar
+  switch cfg.mri.writesidecar
     case 'yes'
       if ~isempty(existing)
         ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
       else
-        write_json(filename, anat_json);
+        write_json(filename, mri_json);
       end
     case 'replace'
-      write_json(filename, anat_json);
+      write_json(filename, mri_json);
     case 'merge'
-      write_json(filename, mergeconfig(existing, anat_json))
+      write_json(filename, mergeconfig(mri_json, existing))
     case 'no'
       % do nothing
     otherwise
-      ft_error('incorrect option for cfg.anat.writesidecar');
+      ft_error('incorrect option for cfg.mri.writesidecar');
   end % switch
 end
 
@@ -586,7 +638,7 @@ if ~isempty(meg_json)
   [p, f, x] = fileparts(cfg.outputfile);
   filename = fullfile(p, [f '.json']);
   if isfile(filename)
-    existing = read_json(filename);
+    existing = remove_empty(read_json(filename));
   else
     existing = [];
   end
@@ -600,7 +652,7 @@ if ~isempty(meg_json)
     case 'replace'
       write_json(filename, meg_json);
     case 'merge'
-      write_json(filename, mergeconfig(existing, meg_json))
+      write_json(filename, mergeconfig(meg_json, existing))
     case 'no'
       % do nothing
     otherwise
@@ -612,7 +664,7 @@ if ~isempty(eeg_json)
   [p, f, x] = fileparts(cfg.outputfile);
   filename = fullfile(p, [f '.json']);
   if isfile(filename)
-    existing = read_json(filename);
+    existing = remove_empty(read_json(filename));
   else
     existing = [];
   end
@@ -626,7 +678,7 @@ if ~isempty(eeg_json)
     case 'replace'
       write_json(filename, eeg_json);
     case 'merge'
-      write_json(filename, mergeconfig(existing, eeg_json))
+      write_json(filename, mergeconfig(eeg_json, existing))
     case 'no'
       % do nothing
     otherwise
@@ -638,7 +690,7 @@ if ~isempty(ieeg_json)
   [p, f, x] = fileparts(cfg.outputfile);
   filename = fullfile(p, [f '.json']);
   if isfile(filename)
-    existing = read_json(filename);
+    existing = remove_empty(read_json(filename));
   else
     existing = [];
   end
@@ -652,7 +704,7 @@ if ~isempty(ieeg_json)
     case 'replace'
       write_json(filename, ieeg_json);
     case 'merge'
-      write_json(filename, mergeconfig(existing, ieeg_json))
+      write_json(filename, mergeconfig(ieeg_json, existing))
     case 'no'
       % do nothing
     otherwise
@@ -660,8 +712,37 @@ if ~isempty(ieeg_json)
   end % switch
 end
 
+if ~isempty(coordsys_json)
+  [p, f, x] = fileparts(cfg.outputfile);
+  f = removedatatype(f); % remove _bold, _meg, etc.
+  f = removetask(f);     % remove _task-something
+  filename = fullfile(p, [f '_coordsystem.json']);
+  if isfile(filename)
+    existing = read_json(filename);
+  else
+    existing = [];
+  end
+  switch cfg.coordsystem.writesidecar
+    case 'yes'
+      if ~isempty(existing)
+        ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
+      else
+        write_json(filename, coordsys_json);
+      end
+    case 'replace'
+      write_json(filename, coordsys_json);
+    case 'merge'
+      write_json(filename, mergeconfig(coordsys_json, existing))
+    case 'no'
+      % do nothing
+    otherwise
+      ft_error('incorrect option for cfg.coordsystem.writesidecar');
+  end % switch
+end
+
 if ~isempty(channels_tsv)
   [p, f, x] = fileparts(cfg.outputfile);
+  f = removedatatype(f); % remove _bold, _meg, etc.
   filename = fullfile(p, [f '_channels.tsv']);
   if isfile(filename)
     existing = read_tsv(filename);
@@ -691,6 +772,7 @@ end
 
 if ~isempty(events_tsv)
   [p, f, x] = fileparts(cfg.outputfile);
+  f = removedatatype(f); % remove _bold, _meg, etc.
   filename = fullfile(p, [f '_events.tsv']);
   if isfile(filename)
     existing = read_tsv(filename);
@@ -724,6 +806,29 @@ if ~ft_nargout
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function f = removedatatype(f)
+typ = {'_T1w', '_T2w', '_dwi', '_bold', '_meg', '_eeg', '_ieeg'};
+for i=1:numel(typ)
+  if endsWith(f, typ{i})
+    f = f(1:end-length(typ{i}));
+    return
+  end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function f = removetask(f)
+part = regexp(f, '_task-[a-zA-Z0-9]*', 'split');
+if ~isempty(part{2})
+  f = [part{1} part{2}];
+else
+  f = part{1};
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION convert event structure into table
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function tab = event2table(hdr, evt)
@@ -733,13 +838,13 @@ else
   for i=1:numel(evt)
     % normalize missing values
     if isempty(evt(i).sample)
-      evt(i).sample = nan;
+      evt(i).sample = NaN;
     end
     if isempty(evt(i).duration)
-      evt(i).duration = nan;
+      evt(i).duration = NaN;
     end
     if isempty(evt(i).value)
-      evt(i).value = nan;
+      evt(i).value = NaN;
     end
   end
   onset       = (([evt.sample]-1)/hdr.Fs)';   % in seconds
@@ -763,13 +868,24 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function tsv = read_tsv(filename)
 ft_info('reading %s\n', filename);
-tsv = readtable(filename, 'Delimiter', 'tab', 'FileType', 'text', 'ReadVariableNames', true);
+tsv = readtable(filename, 'Delimiter', 'tab', 'FileType', 'text', 'TreatAsEmpty', 'n/a', 'ReadVariableNames', true);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function write_tsv(filename, tsv)
 ft_info('writing %s\n', filename);
+fn = tsv.Properties.VariableNames;
+for i=1:numel(fn)
+  val = [tsv.(fn{i})];
+  if isnumeric(val) && any(isnan(val))
+    % replace the numeric value NaN with the string 'n/a'
+    sel = isnan(val);
+    val = num2cell(val);
+    val(sel) = {'n/a'};
+    tsv.(fn{i}) = val;
+  end
+end
 writetable(tsv, filename, 'Delimiter', 'tab', 'FileType', 'text');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -777,14 +893,8 @@ writetable(tsv, filename, 'Delimiter', 'tab', 'FileType', 'text');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function json = read_json(filename)
 ft_info('reading %s\n', filename);
-if ft_hastoolbox('jsonlab', 3)
-  json = loadjson(filename);
-else
-  fid = fopen(filename, 'r');
-  str = fread(fid, [1 inf], 'char=>char');
-  fclose(fid);
-  json = jsondecode(str);
-end
+ft_hastoolbox('jsonlab', 1);
+json = loadjson(filename);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -792,24 +902,13 @@ end
 function write_json(filename, json)
 json = remove_empty(json);
 ft_info('writing %s\n', filename);
-if ft_hastoolbox('jsonlab', 3)
-  savejson('', json, filename);
-else
-  str = jsonencode(json);
-  fid = fopen(filename, 'w');
-  fwrite(fid, str);
-  fclose(fid);
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function str = truefalse(bool)
-if bool
-  str = 'true';
-else
-  str = 'false';
-end
+ft_hastoolbox('jsonlab', 1);
+% write nan as 'n/a'
+% write bollean as True/False
+str = savejson('', json, 'NaN', 'n/a', 'ParseLogical', true);
+fid = fopen(filename, 'w');
+fwrite(fid, str);
+fclose(fid);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
