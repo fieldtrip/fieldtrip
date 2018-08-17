@@ -25,7 +25,7 @@ if length(ft_channelselection('MEG', hdr.label))~=160
   error('did not select all MEG channels');
 end
 
-if length(ft_channelselection('EEG', hdr.label))~=65
+if length(ft_channelselection('eeg', hdr.label))~=42
   error('did not select all EEG channels');
 end
 
