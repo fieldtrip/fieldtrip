@@ -55,9 +55,8 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %                        'nonlin4'         apply a 4th order non-linear warp
 %                        'nonlin5'         apply a 5th order non-linear warp
 %                        'dykstra2012'     non-linear wrap only for headshape method, useful for projecting ECoG onto cortex hull
-%                        'fsaverage'       surface-based realignment with the freesurfer fsaverage brain
-%                        'fsinflated'      realignment of electrodes to patient's inflated brain
-%                        patients
+%                        'fsaverage'       surface-based realignment with FreeSurfer fsaverage brain
+%                        'fsinflated'      surface-based realignment with FreeSurfer individual subject inflated brain
 %   cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
 %                        see  FT_CHANNELSELECTION for details
 %   cfg.keepchannel    = string, 'yes' or 'no' (default = 'no')
