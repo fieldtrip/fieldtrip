@@ -39,6 +39,9 @@ line = line(~sel);
 
 header1 = find(startsWith(line, 'Subject'));
 header2 = find(startsWith(line, 'Event'));
+if isempty(header2)
+  header2 = length(line)+1;
+end
 
 part1 = line((header1+1):(header2-1));
 part2 = line((header2+1):(end));
@@ -51,18 +54,35 @@ end
 Values = cell(length(part1), length(VariableNames));
 for i=1:length(part1)
   val = tokenize(part1{i}, sprintf('\t'));
-  val((end+1):length(VariableNames)) = {nan};
+  val((end+1):length(VariableNames)) = {''};
   Values(i,:) = val;
 end
 
 table1 = cell2table(Values);
-table1.Properties.VariableNames = uniquelabels(VariableNames);
+VariableNames = uniquelabels(VariableNames);
+table1.Properties.VariableNames = VariableNames;
 
 % where possible convert columns from string into numeric values
 for i=1:numel(VariableNames)
-  numeric = cellfun(@str2double, table1.(VariableNames{i}));
+  numeric = table1.(VariableNames{i});
+  empty   = cellfun(@isempty, numeric);
+  numeric(empty) = {'0'}; % this will be replaced with nan later on
+  numeric = cellfun(@str2double, numeric);
   if ~any(isnan(numeric))
+    numeric(empty) = nan;
     table1.(VariableNames{i}) = numeric;
+  end
+end
+
+pause  = find(strcmp(table1.event_type, 'Pause'));
+resume = find(strcmp(table1.event_type, 'Resume'));
+assert(numel(pause)==numel(resume));
+if ~isempty(pause)
+  ft_notice('%d pause events detected', numel(pause));
+  for i=1:length(pause)
+    sel = (pause(i)+1):length(table1.time);
+    ft_notice('adding %.1f seconds of pause to the time of %d subsequent events', table1.duration(pause(i))/1e4, length(sel));
+    table1.time(sel) = table1.time(sel) + table1.duration(pause(i));
   end
 end
 
@@ -71,8 +91,8 @@ type      = table1.event_type;
 value     = table1.code;
 sample    = num2cell(nan(numevent, 1));
 timestamp = num2cell(table1.time);
+duration  = num2cell(table1.duration);
 offset    = cell(numevent, 1);
-duration  = cell(numevent, 1);
 
 event = struct('type', type, 'value', value, 'sample', sample, 'timestamp', timestamp, 'offset', offset, 'duration', duration);
 
