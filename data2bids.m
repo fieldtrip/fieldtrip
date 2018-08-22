@@ -1088,10 +1088,18 @@ fn = tsv.Properties.VariableNames;
 for i=1:numel(fn)
   val = [tsv.(fn{i})];
   if isnumeric(val) && any(isnan(val))
-    % replace the numeric value NaN with the string 'n/a'
     sel = isnan(val);
     val = num2cell(val);
     val(sel) = {'n/a'};
+    % replace the numeric value NaN with the string 'n/a'
+    tsv.(fn{i}) = val;
+  elseif iscell(val)
+    for j=1:numel(val)
+      if isnan(val{j})
+        val{j} = 'n/a';
+      end
+    end
+    % replace the numeric value NaN with the string 'n/a'
     tsv.(fn{i}) = val;
   end
 end
