@@ -168,29 +168,29 @@ cfg = ft_checkconfig(cfg, 'renamed', {'anat', 'mri'});
 % get the options and set the defaults
 cfg.dataset               = ft_getopt(cfg, 'dataset');
 cfg.feedback              = ft_getopt(cfg, 'feedback', 'yes');
-cfg.outputfile            = ft_getopt(cfg, 'outputfile', cfg.dataset); % default is the same as the input dataset
-cfg.presentationfile      = ft_getopt(cfg, 'presentationfile', []);
+cfg.outputfile            = ft_getopt(cfg, 'outputfile', cfg.dataset);      % default is the same as the input dataset
+cfg.presentationfile      = ft_getopt(cfg, 'presentationfile', []);         % full path to the NBS presentation log file, it will be read and parsed using FT_READ_EVENT
 
 cfg.mri                   = ft_getopt(cfg, 'mri');
-cfg.mri.deface            = ft_getopt(cfg.mri, 'deface', 'no');
-cfg.mri.writesidecar      = ft_getopt(cfg.mri, 'writesidecar', 'yes');
-cfg.mri.dicomfile         = ft_getopt(cfg.mri, 'dicomfile');  % get the details from one of the original DICOM files
+cfg.mri.deface            = ft_getopt(cfg.mri, 'deface', 'no');             % deface the anatomical MRI
+cfg.mri.dicomfile         = ft_getopt(cfg.mri, 'dicomfile');                % get the details from one of the original DICOM files
+cfg.mri.writesidecar      = ft_getopt(cfg.mri, 'writesidecar', 'yes');      % whether to write the sidecar file
 
 cfg.meg                   = ft_getopt(cfg, 'meg');
-cfg.meg.writesidecar      = ft_getopt(cfg.meg, 'writesidecar', 'yes');
+cfg.meg.writesidecar      = ft_getopt(cfg.meg, 'writesidecar', 'yes');      % whether to write the sidecar file
 
 cfg.eeg                   = ft_getopt(cfg, 'eeg');
-cfg.eeg.writesidecar      = ft_getopt(cfg.eeg, 'writesidecar', 'yes');
+cfg.eeg.writesidecar      = ft_getopt(cfg.eeg, 'writesidecar', 'yes');      % whether to write the sidecar file
 
 cfg.ieeg                  = ft_getopt(cfg, 'ieeg');
-cfg.ieeg.writesidecar     = ft_getopt(cfg.ieeg, 'writesidecar', 'yes');
+cfg.ieeg.writesidecar     = ft_getopt(cfg.ieeg, 'writesidecar', 'yes');     % whether to write the sidecar file
 
 cfg.channels              = ft_getopt(cfg, 'channels');
-cfg.channels.writesidecar = ft_getopt(cfg.channels, 'writesidecar', 'yes');
+cfg.channels.writesidecar = ft_getopt(cfg.channels, 'writesidecar', 'yes'); % whether to write the sidecar file
 
 cfg.events                = ft_getopt(cfg, 'events');
-cfg.events.writesidecar   = ft_getopt(cfg.events, 'writesidecar', 'yes');
-cfg.events.trl            = ft_getopt(cfg.events, 'trl');  % this can contain the trial definition as Nx3 array or as table
+cfg.events.trl            = ft_getopt(cfg.events, 'trl');                   % this can contain the trial definition as Nx3 array or as table
+cfg.events.writesidecar   = ft_getopt(cfg.events, 'writesidecar', 'yes');   % whether to write the sidecar file
 
 cfg.coordsystem              = ft_getopt(cfg, 'coordsystem');
 cfg.coordsystem.writesidecar = ft_getopt(cfg.coordsystem, 'writesidecar', 'yes');
@@ -208,6 +208,28 @@ cfg.SoftwareVersions                  = ft_getopt(cfg, 'SoftwareVersions'       
 cfg.InstitutionName                   = ft_getopt(cfg, 'InstitutionName'             ); % OPTIONAL. The name of the institution in charge of the equipment that produced the composite instances.
 cfg.InstitutionAddress                = ft_getopt(cfg, 'InstitutionAddress'          ); % OPTIONAL. The address of the institution in charge of the equipment that produced the composite instances.
 cfg.InstitutionalDepartmentName       = ft_getopt(cfg, 'InstitutionalDepartmentName' ); % The department in the institution in charge of the equipment that produced the composite instances. Corresponds to DICOM Tag 0008, 1040 "Institutional Department Name".
+
+%% information for the coordsystem.json file for MEG, EEG and iEEG
+cfg.coordsystem.MEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystem'                            ); % REQUIRED. Defines the coordinate system for the MEG sensors. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in [MEGCoordinateSystemDescription].
+cfg.coordsystem.MEGCoordinateUnits                              = ft_getopt(cfg.coordsystem, 'MEGCoordinateUnits'                             ); % REQUIRED. Units of the coordinates of MEGCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
+cfg.coordsystem.MEGCoordinateSystemDescription                  = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystemDescription'                 ); % OPTIONAL. Freeform text description or link to document describing the MEG coordinate system system in detail.
+cfg.coordsystem.EEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'EEGCoordinateSystem'                            ); % OPTIONAL. Describes how the coordinates of the EEG sensors are to be interpreted.
+cfg.coordsystem.EEGCoordinateUnits                              = ft_getopt(cfg.coordsystem, 'EEGCoordinateUnits'                             ); % OPTIONAL. Units of the coordinates of EEGCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
+cfg.coordsystem.EEGCoordinateSystemDescription                  = ft_getopt(cfg.coordsystem, 'EEGCoordinateSystemDescription'                 ); % OPTIONAL. Freeform text description or link to document describing the EEG coordinate system system in detail.
+cfg.coordsystem.HeadCoilCoordinates                             = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinateSystem'                       ); % OPTIONAL. Key:value pairs describing head localization coil labels and their coordinates, interpreted following the HeadCoilCoordinateSystem, e.g., {"NAS": [12.7,21.3,13.9], "LPA": [5.2,11.3,9.6], "RPA": [20.2,11.3,9.1]}. Note that coils are not always placed at locations that have a known anatomical name (e.g. for Elekta, Yokogawa systems); in that case generic labels can be used (e.g. {"coil1": [122,213,123], "coil2": [67,123,86], "coil3": [219,110,81]} ).
+cfg.coordsystem.HeadCoilCoordinateSystem                        = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinates'                            ); % OPTIONAL. Defines the coordinate system for the coils. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in HeadCoilCoordinateSystemDescription.
+cfg.coordsystem.HeadCoilCoordinateUnits                         = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinateUnits'                        ); % OPTIONAL. Units of the coordinates of HeadCoilCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
+cfg.coordsystem.HeadCoilCoordinateSystemDescription             = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinateSystemDescription'            ); % OPTIONAL. Freeform text description or link to document describing the Head Coil coordinate system system in detail.
+cfg.coordsystem.DigitizedHeadPoints                             = ft_getopt(cfg.coordsystem, 'DigitizedHeadPoints'                            ); % OPTIONAL. Relative path to the file containing the locations of digitized head points collected during the session (e.g., "sub-01_headshape.pos"). RECOMMENDED for all MEG systems, especially for CTF and 4D/BTi. For Elekta/Neuromag the head points will be stored in the fif file.
+cfg.coordsystem.DigitizedHeadPointsCoordinateSystem             = ft_getopt(cfg.coordsystem, 'DigitizedHeadPointsCoordinateSystem'            ); % OPTIONAL. Defines the coordinate system for the digitized head points. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in DigitizedHeadPointsCoordinateSystemDescription.
+cfg.coordsystem.DigitizedHeadPointsCoordinateUnits              = ft_getopt(cfg.coordsystem, 'DigitizedHeadPointsCoordinateUnits'             ); % OPTIONAL. Units of the coordinates of DigitizedHeadPointsCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
+cfg.coordsystem.DigitizedHeadPointsCoordinateSystemDescription  = ft_getopt(cfg.coordsystem, 'DigitizedHeadPointsCoordinateSystemDescription' ); % OPTIONAL. Freeform text description or link to document describing the Digitized head Points coordinate system system in detail.
+cfg.coordsystem.IntendedFor                                     = ft_getopt(cfg.coordsystem, 'IntendedFor'                                    ); % OPTIONAL. Path or list of path relative to the subject subfolder pointing to the structural MRI, possibly of different types if a list is specified, to be used with the MEG recording. The path(s) need(s) to use forward slashes instead of backward slashes (e.g. "ses-<label>/anat/sub-01_T1w.nii.gz").
+cfg.coordsystem.AnatomicalLandmarkCoordinates                   = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinates'                  ); % OPTIONAL. Key:value pairs of the labels and 3-D digitized locations of anatomical landmarks, interpreted following the AnatomicalLandmarkCoordinateSystem, e.g., {"NAS": [12.7,21.3,13.9], "LPA": [5.2,11.3,9.6], "RPA": [20.2,11.3,9.1]}.
+cfg.coordsystem.AnatomicalLandmarkCoordinateSystem              = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinateSystem'             ); % OPTIONAL. Defines the coordinate system for the anatomical landmarks. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in AnatomicalLandmarkCoordinateSystemDescripti on.
+cfg.coordsystem.AnatomicalLandmarkCoordinateUnits               = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinateUnits'              ); % OPTIONAL. Units of the coordinates of AnatomicalLandmarkCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
+cfg.coordsystem.AnatomicalLandmarkCoordinateSystemDescription   = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinateSystemDescription'  ); % OPTIONAL. Freeform text description or link to document describing the Head Coil coordinate system system in detail.
+cfg.coordsystem.FiducialsDescription                            = ft_getopt(cfg.coordsystem, 'FiducialsDescription'                           ); % OPTIONAL. A freeform text field documenting the anatomical landmarks that were used and how the head localization coils were placed relative to these. This field can describe, for instance, whether the true anatomical locations of the left and right pre-auricular points were used and digitized, or rather whether they were defined as the intersection between the tragus and the helix (the entry of the ear canal), or any other anatomical description of selected points in the vicinity of the ears.
 
 %% MEG specific fields
 cfg.meg.SamplingFrequency             = ft_getopt(cfg.meg, 'SamplingFrequency'           ); % REQUIRED. Sampling frequency (in Hz) of all the data in the recording, regardless of their type (e.g., 2400)
@@ -300,7 +322,7 @@ cfg.mri.EchoTime                      = ft_getopt(cfg.mri, 'EchoTime'           
 cfg.mri.InversionTime                 = ft_getopt(cfg.mri, 'InversionTime'                  ); % The inversion time (TI) for the acquisition, specified in seconds. Inversion time is the time after the middle of inverting RF pulse to middle of excitation pulse to detect the amount of longitudinal magnetization. Corresponds to DICOM Tag 0018, 0082 "Inversion Time"  (please note that the DICOM term is in milliseconds not seconds).
 cfg.mri.SliceTiming                   = ft_getopt(cfg.mri, 'SliceTiming'                    ); % The time at which each slice was acquired within each volume (frame) of  the acquisition.  Slice timing is not slice order -- rather, it  is a list of times (in JSON format) containing the time (in seconds) of each slice acquisition in relation to the beginning of volume acquisition.  The list goes through the slices along the slice axis in the slice encoding dimension (see below). Note that to ensure the proper interpretation of the SliceTiming field, it is important to check if the (optional) SliceEncodingDirection exists. In particular,  if SliceEncodingDirection is negative, the entries in SliceTiming are defined in reverse order with respect to the slice axis (i.e., the final entry in the SliceTiming list is the time of acquisition of slice 0). This parameter is REQUIRED for sparse sequences that do not have the DelayTime field set. In addition without this parameter slice time correction will not be possible.
 cfg.mri.SliceEncodingDirection        = ft_getopt(cfg.mri, 'SliceEncodingDirection'         ); % Possible values = [];                     % "i", "j", "k", "i-", "j-", "k-" (the axis of the NIfTI data along which slices were acquired, and the direction in which SliceTiming is  defined with respect to). "i", "j", "k" identifiers correspond to the first, second and third axis of the data in the NIfTI file. A "-" sign indicates that the contents of SliceTiming are defined in reverse order -- that is, the first entry corresponds to the slice with the largest index, and the final entry corresponds to slice index zero. When present ,the axis defined by SliceEncodingDirection  needs to be consistent with the "slice_dim" field in the NIfTI header. When absent, the entries in SliceTiming must be in the order of increasing slice index as defined by the NIfTI header.
-cfg.mri.DwellTime                     = ft_getopt(cfg.mri, 'DwellTime'                      ); %  Actual dwell time (in seconds) of the receiver per point in the readout direction, including any oversampling.  For Siemens, this corresponds to DICOM field (0019,1018) (in ns).   This value is necessary for the (optional) readout distortion correction of anatomicals in the HCP Pipelines.  It also usefully provides a handle on the readout bandwidth, which isn't captured in the other metadata tags.  Not to be confused with "EffectiveEchoSpacing", and the frequent mislabeling of echo spacing (which is spacing in the phase encoding direction) as "dwell time" (which is spacing in the readout direction).
+cfg.mri.DwellTime                     = ft_getopt(cfg.mri, 'DwellTime'                      ); % Actual dwell time (in seconds) of the receiver per point in the readout direction, including any oversampling.  For Siemens, this corresponds to DICOM field (0019,1018) (in ns).   This value is necessary for the (optional) readout distortion correction of anatomicals in the HCP Pipelines.  It also usefully provides a handle on the readout bandwidth, which isn't captured in the other metadata tags.  Not to be confused with "EffectiveEchoSpacing", and the frequent mislabeling of echo spacing (which is spacing in the phase encoding direction) as "dwell time" (which is spacing in the readout direction).
 
 %% MR RF & Contrast
 cfg.mri.FlipAngle                     = ft_getopt(cfg.mri, 'FlipAngle'                      ); % Flip angle for the acquisition, specified in degrees. Corresponds to = [];                     % DICOM Tag 0018, 1314 "Flip Angle".
@@ -310,28 +332,6 @@ cfg.mri.MultibandAccelerationFactor   = ft_getopt(cfg.mri, 'MultibandAcceleratio
 
 %% Anatomical landmarks, useful for multimodaltimodal co-registration with MEG, (S)HeadCoil, TMS,etc
 cfg.mri.AnatomicalLandmarkCoordinates = ft_getopt(cfg.mri, 'AnatomicalLandmarkCoordinates'  ); % Key:value pairs of any number of additional anatomical landmarks and their coordinates in voxel units (where first voxel has index 0,0,0) relative to the associated anatomical MRI, (e.g. {"AC" = []; % [127,119,149], "PC" = []; % [128,93,141], "IH" = []; % [131,114,206]}, or {"NAS" = []; % [127,213,139], "LPA" = []; % [52,113,96], "RPA" = []; % [202,113,91]}).
-
-%% information specific for the coordsystem.json file
-cfg.coordsystem.MEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystem');
-cfg.coordsystem.MEGCoordinateUnits                              = ft_getopt(cfg.coordsystem, 'MEGCoordinateUnits');
-cfg.coordsystem.MEGCoordinateSystemDescription                  = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystemDescription');
-cfg.coordsystem.EEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'EEGCoordinateSystem');
-cfg.coordsystem.EEGCoordinateUnits                              = ft_getopt(cfg.coordsystem, 'EEGCoordinateUnits');
-cfg.coordsystem.EEGCoordinateSystemDescription                  = ft_getopt(cfg.coordsystem, 'EEGCoordinateSystemDescription');
-cfg.coordsystem.HeadCoilCoordinates                             = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinateSystem');
-cfg.coordsystem.HeadCoilCoordinateSystem                        = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinates');
-cfg.coordsystem.HeadCoilCoordinateUnits                         = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinateUnits');
-cfg.coordsystem.HeadCoilCoordinateSystemDescription             = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinateSystemDescription');
-cfg.coordsystem.DigitizedHeadPoints                             = ft_getopt(cfg.coordsystem, 'DigitizedHeadPoints');
-cfg.coordsystem.DigitizedHeadPointsCoordinateSystem             = ft_getopt(cfg.coordsystem, 'DigitizedHeadPointsCoordinateSystem');
-cfg.coordsystem.DigitizedHeadPointsCoordinateUnits              = ft_getopt(cfg.coordsystem, 'DigitizedHeadPointsCoordinateUnits');
-cfg.coordsystem.DigitizedHeadPointsCoordinateSystemDescription  = ft_getopt(cfg.coordsystem, 'DigitizedHeadPointsCoordinateSystemDescription');
-cfg.coordsystem.IntendedFor                                     = ft_getopt(cfg.coordsystem, 'IntendedFor');
-cfg.coordsystem.AnatomicalLandmarkCoordinates                   = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinates');
-cfg.coordsystem.AnatomicalLandmarkCoordinateSystem              = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinateSystem');
-cfg.coordsystem.AnatomicalLandmarkCoordinateUnits               = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinateUnits');
-cfg.coordsystem.AnatomicalLandmarkCoordinateSystemDescription   = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinateSystemDescription');
-cfg.coordsystem.FiducialsDescription                            = ft_getopt(cfg.coordsystem, 'FiducialsDescription');
 
 %% columns in the channels.tsv
 cfg.channels.name               = ft_getopt(cfg.channels, 'name'               , nan);  % REQUIRED. Channel name (e.g., MRT012, MEG023)
@@ -440,12 +440,17 @@ eeg_json      = [];
 ieeg_json     = [];
 events_tsv    = [];
 channels_tsv  = [];
-coordsys_json = [];
+coordsystem_json = [];
 
 % make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg);
 fn = fn(~cellfun(@isempty, regexp(fn, '[A-Z].*')));
 generic_defaults = keepfields(cfg, fn);
+
+% make the relevant selection, all json fields start with a capital letter
+fn = fieldnames(cfg.coordsystem);
+fn = fn(~cellfun(@isempty, regexp(fn, '[A-Z].*')));
+coordsystem_defaults = keepfields(cfg.coordsystem, fn);
 
 % make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg.mri);
@@ -498,33 +503,36 @@ switch typ
         volume(i).sample = i;
       end
       
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % the following code is largely shared between the MEG and MRI section
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
       % predict the sample number from the timestamp
-      model  = polyfit([selpres.timestamp], [volume.sample], 1);
-      sample = polyval(model, [selpres.timestamp]);
+      model     = polyfit([selpres.timestamp], [volume.sample], 1);
+      estimated = polyval(model, [selpres.timestamp]);
       
       if istrue(cfg.feedback)
-        figure
+        figure('name', cfg.dataset);
         subplot(2,1,1)
         hold on
-        plot([selpres.timestamp], [volume.sample], 'b.')
-        plot([selpres.timestamp], sample, 'ro')
-        xlabel('presentation timestamps')
+        % presentation timestamps are expressed in units of 0.1 miliseconds
+        plot([selpres.timestamp]/1e4, [volume.sample], 'b.')
+        plot([selpres.timestamp]/1e4, estimated, 'ro')
+        xlabel('presentation time (s)')
         ylabel('MR volumes')
         legend({'observed', 'predicted'})
         
         subplot(2,1,2)
-        plot([selpres.timestamp], ([volume.sample]-sample)/hdr.Fs, 'g.')
-        xlabel('presentation timestamps')
+        plot([selpres.timestamp]/1e4, ([volume.sample]-estimated)/hdr.Fs, 'g.')
+        xlabel('presentation time (s)')
         ylabel('difference (s)')
       end
       
-      % estimate the time in seconds of each presentation event
-      sample = polyval(model, [presentation.timestamp]);
-      sample = round(1000*sample)/1000; % round to three decimals
-      for i=1:numel(sample)
-        presentation(i).sample = sample(i);
+      % estimate the time in seconds of all presentation events
+      estimated = polyval(model, [presentation.timestamp]);
+      estimated = round(1000*estimated)/1000; % round to three decimals
+      for i=1:numel(estimated)
+        presentation(i).sample = estimated(i);
       end
       % convert the event structure to a TSV table
       presentation_tsv = event2table(hdr, presentation);
@@ -572,26 +580,36 @@ switch typ
       % meg_json.ManufacturersModelName can not be determined, since both have 306 channels
     end
     
-    if ft_senstype(hdr.grad, 'ctf')
-      % coordinate system for MEG sensors
-      coordsys_json.MEGCoordinateSystem            = 'CTF';
-      coordsys_json.MEGCoordinateUnits             = 'cm';
-      coordsys_json.MEGCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
-      % coordinate system for head localization coils
-      label = cellstr(hdr.orig.hc.names);
-      position = hdr.orig.hc.head;
-      for i=1:numel(label)
-        coordsys_json.HeadCoilCoordinates.(fixname(label{i})) = position(:,i)';
-      end
-      coordsys_json.HeadCoilCoordinateSystem            = 'CTF';
-      coordsys_json.HeadCoilCoordinateUnits             = 'cm';
-      coordsys_json.HeadCoilCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
-    end
-    
     % merge the information from the defaults with the information obtained from the data
     % in case fields appear in both, the first input overrules the second
     meg_json = mergeconfig(meg_json, meg_defaults);
     meg_json = mergeconfig(meg_json, generic_defaults);
+    
+    if ft_senstype(hdr.grad, 'ctf')
+      % coordinate system for MEG sensors
+      coordsystem_json.MEGCoordinateSystem            = 'CTF';
+      coordsystem_json.MEGCoordinateUnits             = 'cm';
+      coordsystem_json.MEGCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
+      
+      % coordinate system for head localization coils
+      coordsystem_json.HeadCoilCoordinates                 = []; % see below
+      coordsystem_json.HeadCoilCoordinateSystem            = 'CTF';
+      coordsystem_json.HeadCoilCoordinateUnits             = 'cm';
+      coordsystem_json.HeadCoilCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
+      if isempty(coordsystem_json.HeadCoilCoordinates)
+        % get the positions from the dataset header
+        label = cellstr(hdr.orig.hc.names);
+        position = hdr.orig.hc.head;
+        for i=1:numel(label)
+          coordsystem_json.HeadCoilCoordinates.(fixname(label{i})) = position(:,i)';
+        end
+      end
+      % merge the information from the defaults with the information obtained from the data
+      % in case fields appear in both, the first input overrules the second
+      coordsystem_json = mergeconfig(coordsystem_defaults, coordsystem_json); % FIXME the order of precedence is different here
+    else
+      ft_warning('coordsystem handling not yet supported for %s', ft_senstype(hdr.grad));
+    end
     
     % MEG data should also have a channels.tsv file
     name                = mergevector(hdr.label(:),    cfg.channels.name);
@@ -633,41 +651,46 @@ switch typ
     if ~isempty(presentation) && ~isempty(trigger)
       % align the events from the presentation log file with the triggers
       
-      seltrig = find(select_event(trigger,      cfg.trigger.eventtype,      cfg.trigger.eventvalue));
-      selpres = find(select_event(presentation, cfg.presentation.eventtype, cfg.presentation.eventvalue));
+      % select the correspopnding triggers and events in the presentation file
+      seltrig = select_event(trigger,      cfg.trigger.eventtype,      cfg.trigger.eventvalue);
+      selpres = select_event(presentation, cfg.presentation.eventtype, cfg.presentation.eventvalue);
+      seltrig = trigger(seltrig);
+      selpres = presentation(selpres);
       
       if length(seltrig)~=length(selpres)
         ft_error('inconsistent number: %d triggers, %d presentation events', length(seltrig), length(selpres));
       end
       
-      seltrig = trigger(seltrig);
-      selpres = presentation(selpres);
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      % the following code is largely shared between the MEG and MRI section
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
-      % predict the sample number from the timestamp
-      model  = polyfit([selpres.timestamp], [seltrig.sample], 1);
-      sample = polyval(model, [selpres.timestamp]);
+      % predict the presentation sample number from the presentation timestamp
+      model     = polyfit([selpres.timestamp], [seltrig.sample], 1);
+      estimated = polyval(model, [selpres.timestamp]);
       
       if istrue(cfg.feedback)
-        figure
+        figure('name', cfg.dataset);
         subplot(2,1,1)
         hold on
-        plot([selpres.timestamp], [seltrig.sample], 'b.')
-        plot([selpres.timestamp], sample, 'ro')
-        xlabel('presentation timestamps')
+        % presentation timestamps are expressed in units of 0.1 miliseconds
+        plot([selpres.timestamp]/1e4, [seltrig.sample], 'b.')
+        plot([selpres.timestamp]/1e4, estimated, 'ro')
+        xlabel('presentation time (s)')
         ylabel('trigger samples')
         legend({'observed', 'predicted'})
         
         subplot(2,1,2)
-        plot([selpres.timestamp], ([seltrig.sample]-sample)/hdr.Fs, 'g.')
-        xlabel('presentation timestamps')
+        plot([selpres.timestamp]/1e4, ([seltrig.sample]-estimated)/hdr.Fs, 'g.')
+        xlabel('presentation time (s)')
         ylabel('difference (s)')
       end
       
-      % estimate the sample number and time in seconds of each presentation event
-      sample = polyval(model, [presentation.timestamp]);
-      sample = round(sample);
-      for i=1:numel(sample)
-        presentation(i).sample = sample(i);
+      % estimate the sample number and time in seconds of all presentation events
+      estimated = polyval(model, [presentation.timestamp]);
+      estimated = round(estimated); % round to the nearest sample
+      for i=1:numel(estimated)
+        presentation(i).sample = estimated(i);
       end
       % convert the event structure to a TSV table
       presentation_tsv = event2table(hdr, presentation);
@@ -745,7 +768,11 @@ end
 
 if ~isempty(mri_json)
   filename = corresponding_json(cfg.outputfile);
-  existing = remove_empty(read_json(filename));
+  if isfile(filename)
+    existing = remove_empty(read_json(filename));
+  else
+    existing = [];
+  end
   switch cfg.mri.writesidecar
     case 'yes'
       if ~isempty(existing)
@@ -766,7 +793,11 @@ end
 
 if ~isempty(meg_json)
   filename = corresponding_json(cfg.outputfile);
-  existing = remove_empty(read_json(filename));
+  if isfile(filename)
+    existing = remove_empty(read_json(filename));
+  else
+    existing = [];
+  end
   switch cfg.meg.writesidecar
     case 'yes'
       if ~isempty(existing)
@@ -787,7 +818,12 @@ end
 
 if ~isempty(eeg_json)
   filename = corresponding_json(cfg.outputfile);
-  existing = remove_empty(read_json(filename));
+  if isfile(filename)
+    existing = remove_empty(read_json(filename));
+  else
+    existing = [];
+  end
+  
   switch cfg.eeg.writesidecar
     case 'yes'
       if ~isempty(existing)
@@ -808,7 +844,11 @@ end
 
 if ~isempty(ieeg_json)
   filename = corresponding_json(cfg.outputfile);
-  existing = remove_empty(read_json(filename));
+  if isfile(filename)
+    existing = remove_empty(read_json(filename));
+  else
+    existing = [];
+  end
   switch cfg.ieeg.writesidecar
     case 'yes'
       if ~isempty(existing)
@@ -827,7 +867,7 @@ if ~isempty(ieeg_json)
   end % switch
 end
 
-if ~isempty(coordsys_json)
+if ~isempty(coordsystem_json)
   [p, f, x] = fileparts(cfg.outputfile);
   f = remove_datatype(f); % remove _bold, _meg, etc.
   f = remove_task(f);     % remove _task-something
@@ -842,12 +882,12 @@ if ~isempty(coordsys_json)
       if ~isempty(existing)
         ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
       else
-        write_json(filename, coordsys_json);
+        write_json(filename, coordsystem_json);
       end
     case 'replace'
-      write_json(filename, coordsys_json);
+      write_json(filename, coordsystem_json);
     case 'merge'
-      write_json(filename, mergeconfig(coordsys_json, existing))
+      write_json(filename, mergeconfig(coordsystem_json, existing))
     case 'no'
       % do nothing
     otherwise
