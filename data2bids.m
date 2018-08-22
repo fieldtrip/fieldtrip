@@ -58,6 +58,15 @@ function cfg = data2bids(cfg, varargin)
 % offset, the additional colums can be of another type and can have any name. If you
 % do not specify the definition of trials, the events will be read from the dataset.
 %
+% You can specify cfg.presentationfile with a NBS presentation log file, which will
+% be aligned with the data based on triggers (MEG/EEG/iEEG) or on volumes (fMRI). You
+% should also specify
+%   cfg.trigger.eventtype       = string (default = [])
+%   cfg.trigger.eventvalue      = string or number
+%   cfg.presentation.eventtype  = string (default = [])
+%   cfg.presentation.eventvalue = string or number
+% to indicate how triggers or volumes match the presentation events.
+%
 % General BIDS options that apply to all data types are
 %   cfg.TaskName                    = string
 %   cfg.InstitutionName             = string
@@ -164,33 +173,40 @@ end
 
 % ensure backward compatibility
 cfg = ft_checkconfig(cfg, 'renamed', {'anat', 'mri'});
+cfg = ft_checkconfig(cfg, 'forbidden', 'deface');       % should be cfg.mri.deface
 
 % get the options and set the defaults
-cfg.dataset               = ft_getopt(cfg, 'dataset');
-cfg.feedback              = ft_getopt(cfg, 'feedback', 'yes');
-cfg.outputfile            = ft_getopt(cfg, 'outputfile', cfg.dataset);      % default is the same as the input dataset
-cfg.presentationfile      = ft_getopt(cfg, 'presentationfile', []);         % full path to the NBS presentation log file, it will be read and parsed using FT_READ_EVENT
+cfg.dataset                 = ft_getopt(cfg, 'dataset');
+cfg.feedback                = ft_getopt(cfg, 'feedback', 'yes');
+cfg.outputfile              = ft_getopt(cfg, 'outputfile', cfg.dataset);      % default is the same as the input dataset
+cfg.presentationfile        = ft_getopt(cfg, 'presentationfile');             % full path to the NBS presentation log file, it will be read and parsed using FT_READ_EVENT
+cfg.presentation            = ft_getopt(cfg, 'presentation');
+cfg.presentation.eventtype  = ft_getopt(cfg.presentation, 'eventtype');
+cfg.presentation.eventvalue = ft_getopt(cfg.presentation, 'eventvalue');
+cfg.trigger                 = ft_getopt(cfg, 'trigger');
+cfg.trigger.eventtype       = ft_getopt(cfg.trigger, 'eventtype');
+cfg.trigger.eventvalue      = ft_getopt(cfg.trigger, 'eventvalue');
 
-cfg.mri                   = ft_getopt(cfg, 'mri');
-cfg.mri.deface            = ft_getopt(cfg.mri, 'deface', 'no');             % deface the anatomical MRI
-cfg.mri.dicomfile         = ft_getopt(cfg.mri, 'dicomfile');                % get the details from one of the original DICOM files
-cfg.mri.writesidecar      = ft_getopt(cfg.mri, 'writesidecar', 'yes');      % whether to write the sidecar file
+cfg.mri                     = ft_getopt(cfg, 'mri');
+cfg.mri.deface              = ft_getopt(cfg.mri, 'deface', 'no');             % deface the anatomical MRI
+cfg.mri.dicomfile           = ft_getopt(cfg.mri, 'dicomfile');                % get the details from one of the original DICOM files
+cfg.mri.writesidecar        = ft_getopt(cfg.mri, 'writesidecar', 'yes');      % whether to write the sidecar file
 
-cfg.meg                   = ft_getopt(cfg, 'meg');
-cfg.meg.writesidecar      = ft_getopt(cfg.meg, 'writesidecar', 'yes');      % whether to write the sidecar file
+cfg.meg                     = ft_getopt(cfg, 'meg');
+cfg.meg.writesidecar        = ft_getopt(cfg.meg, 'writesidecar', 'yes');      % whether to write the sidecar file
 
-cfg.eeg                   = ft_getopt(cfg, 'eeg');
-cfg.eeg.writesidecar      = ft_getopt(cfg.eeg, 'writesidecar', 'yes');      % whether to write the sidecar file
+cfg.eeg                     = ft_getopt(cfg, 'eeg');
+cfg.eeg.writesidecar        = ft_getopt(cfg.eeg, 'writesidecar', 'yes');      % whether to write the sidecar file
 
-cfg.ieeg                  = ft_getopt(cfg, 'ieeg');
-cfg.ieeg.writesidecar     = ft_getopt(cfg.ieeg, 'writesidecar', 'yes');     % whether to write the sidecar file
+cfg.ieeg                    = ft_getopt(cfg, 'ieeg');
+cfg.ieeg.writesidecar       = ft_getopt(cfg.ieeg, 'writesidecar', 'yes');     % whether to write the sidecar file
 
-cfg.channels              = ft_getopt(cfg, 'channels');
-cfg.channels.writesidecar = ft_getopt(cfg.channels, 'writesidecar', 'yes'); % whether to write the sidecar file
+cfg.channels                = ft_getopt(cfg, 'channels');
+cfg.channels.writesidecar   = ft_getopt(cfg.channels, 'writesidecar', 'yes'); % whether to write the sidecar file
 
-cfg.events                = ft_getopt(cfg, 'events');
-cfg.events.trl            = ft_getopt(cfg.events, 'trl');                   % this can contain the trial definition as Nx3 array or as table
-cfg.events.writesidecar   = ft_getopt(cfg.events, 'writesidecar', 'yes');   % whether to write the sidecar file
+cfg.events                  = ft_getopt(cfg, 'events');
+cfg.events.trl              = ft_getopt(cfg.events, 'trl');                   % this can contain the trial definition as Nx3 array or as table
+cfg.events.writesidecar     = ft_getopt(cfg.events, 'writesidecar', 'yes');   % whether to write the sidecar file
 
 cfg.coordsystem              = ft_getopt(cfg, 'coordsystem');
 cfg.coordsystem.writesidecar = ft_getopt(cfg.coordsystem, 'writesidecar', 'yes');
@@ -479,8 +495,8 @@ switch typ
     
     % merge the information from the defaults with the information obtained from the data
     % in case fields appear in both, the first input overrules the second
-    mri_json = mergeconfig(mri_json, mri_defaults);
-    mri_json = mergeconfig(mri_json, generic_defaults);
+    mri_json = mergeconfig(mri_json, mri_defaults, false);
+    mri_json = mergeconfig(mri_json, generic_defaults, false);
     
     if ~isempty(presentation)
       % align the events from the presentation log file with volumes
@@ -488,19 +504,41 @@ switch typ
       
       % merge the information with the json sidecar file
       % in case fields appear in both, the first input overrules the second
-      tmp = mergeconfig(remove_empty(mri_json), remove_empty(read_json(corresponding_json(cfg.outputfile))));
+      tmp = mergeconfig(mri_json, read_json(corresponding_json(cfg.outputfile)), false);
       assert(~isempty(tmp.RepetitionTime), 'you must specify cfg.mri.RepetitionTime');
+      
+      % create a header structure for the fMRI timeseries
       hdr.Fs = 1/tmp.RepetitionTime;
+      hdr.nSamples = mri.dim(4);
+      
+      % create a event structure with one event for each fMRI volume
+      volume = [];
+      for i=1:hdr.nSamples
+        volume(i).type   = 'volume';
+        volume(i).sample = i;
+      end
       
       % find the presentation events corresponding to each volume
       selpres = select_event(presentation, cfg.presentation.eventtype, cfg.presentation.eventvalue);
       selpres = presentation(selpres);
       
-      % create a dummy event structure for all MRI volumes, just like FT_READ_EVENT would return
-      volume = [];
-      for i=1:numel(selpres)
-        volume(i).type   = 'volume';
-        volume(i).sample = i;
+      ft_info('%d volumes, %d presentation events', length(volume), length(selpres));
+      if length(volume)>length(selpres)
+        % this happens when the scanner keeps running while presentation has already been stopped
+        n = length(volume)-length(selpres);
+        ft_warning('discarding last %d volumes for realignment of events', n);
+        volume = volume(1:end-n);
+      elseif length(selpres)>length(volume)
+        % this happens when DICOM volumes that are represented in the
+        % presentation log have been deleted from disk
+        switch cfg.presentation.skip
+          case 'first'
+            ft_warning('discarding first %d presentation events for realignment of events', n);
+          case 'last'
+            ft_warning('discarding last %d presentation events for realignment of events', n);
+          case 'none'
+            ft_error('not enough volumes to match the presentation events');
+        end % case
       end
       
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -512,7 +550,8 @@ switch typ
       estimated = polyval(model, [selpres.timestamp]);
       
       if istrue(cfg.feedback)
-        figure('name', cfg.dataset);
+        [p, f, x] = fileparts(cfg.dataset);
+        figure('name', f);
         subplot(2,1,1)
         hold on
         % presentation timestamps are expressed in units of 0.1 miliseconds
@@ -582,8 +621,8 @@ switch typ
     
     % merge the information from the defaults with the information obtained from the data
     % in case fields appear in both, the first input overrules the second
-    meg_json = mergeconfig(meg_json, meg_defaults);
-    meg_json = mergeconfig(meg_json, generic_defaults);
+    meg_json = mergeconfig(meg_json, meg_defaults, false);
+    meg_json = mergeconfig(meg_json, generic_defaults, false);
     
     if ft_senstype(hdr.grad, 'ctf')
       % coordinate system for MEG sensors
@@ -606,7 +645,7 @@ switch typ
       end
       % merge the information from the defaults with the information obtained from the data
       % in case fields appear in both, the first input overrules the second
-      coordsystem_json = mergeconfig(coordsystem_defaults, coordsystem_json); % FIXME the order of precedence is different here
+      coordsystem_json = mergeconfig(coordsystem_defaults, coordsystem_json, false); % FIXME the order of precedence is different here
     else
       ft_warning('coordsystem handling not yet supported for %s', ft_senstype(hdr.grad));
     end
@@ -670,7 +709,8 @@ switch typ
       estimated = polyval(model, [selpres.timestamp]);
       
       if istrue(cfg.feedback)
-        figure('name', cfg.dataset);
+        [p, f, x] = fileparts(cfg.dataset);
+        figure('name', f);
         subplot(2,1,1)
         hold on
         % presentation timestamps are expressed in units of 0.1 miliseconds
@@ -728,10 +768,10 @@ switch typ
 end
 
 % remove fields that have an empty value
-if ~isempty(mri_json),  mri_json  = remove_empty(mri_json); end
-if ~isempty(meg_json),  meg_json  = remove_empty(meg_json); end
-if ~isempty(eeg_json),  eeg_json  = remove_empty(eeg_json); end
-if ~isempty(ieeg_json), ieeg_json = remove_empty(ieeg_json); end
+mri_json  = remove_empty(mri_json);
+meg_json  = remove_empty(meg_json);
+eeg_json  = remove_empty(eeg_json);
+ieeg_json = remove_empty(ieeg_json);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % write the data to the output file
@@ -746,9 +786,23 @@ if ~isequal(cfg.dataset, cfg.outputfile) || istrue(cfg.mri.deface)
       if istrue(cfg.mri.deface)
         % deface the anatomical MRI
         ft_info('defacing anatomical MRI');
+        if istrue(cfg.feedback)
+          tmpcfg = [];
+          tmpcfg.figurename = sprintf('ORIGINAL - %s', f);
+          tmpcfg.showcallinfo = 'no';
+          tmpcfg.colorbar = 'no';
+          ft_sourceplot(tmpcfg, mri);
+        end
         tmpcfg = [];
         tmpcfg.method = 'spm';
         mri = ft_defacevolume(tmpcfg, mri);
+        if istrue(cfg.feedback)
+          tmpcfg = [];
+          tmpcfg.figurename = sprintf('DEFACED - %s', f);
+          tmpcfg.showcallinfo = 'no';
+          tmpcfg.colorbar = 'no';
+          ft_sourceplot(tmpcfg, mri);
+        end
       end
       ft_info('writing %s\n', cfg.outputfile);
       ft_write_mri(cfg.outputfile, mri, 'dataformat', 'nifti');
@@ -769,7 +823,7 @@ end
 if ~isempty(mri_json)
   filename = corresponding_json(cfg.outputfile);
   if isfile(filename)
-    existing = remove_empty(read_json(filename));
+    existing = read_json(filename);
   else
     existing = [];
   end
@@ -783,7 +837,7 @@ if ~isempty(mri_json)
     case 'replace'
       write_json(filename, mri_json);
     case 'merge'
-      write_json(filename, mergeconfig(mri_json, existing))
+      write_json(filename, mergeconfig(mri_json, existing, false))
     case 'no'
       % do nothing
     otherwise
@@ -794,7 +848,7 @@ end
 if ~isempty(meg_json)
   filename = corresponding_json(cfg.outputfile);
   if isfile(filename)
-    existing = remove_empty(read_json(filename));
+    existing = read_json(filename);
   else
     existing = [];
   end
@@ -808,7 +862,7 @@ if ~isempty(meg_json)
     case 'replace'
       write_json(filename, meg_json);
     case 'merge'
-      write_json(filename, mergeconfig(meg_json, existing));
+      write_json(filename, mergeconfig(meg_json, existing, false));
     case 'no'
       % do nothing
     otherwise
@@ -819,7 +873,7 @@ end
 if ~isempty(eeg_json)
   filename = corresponding_json(cfg.outputfile);
   if isfile(filename)
-    existing = remove_empty(read_json(filename));
+    existing = read_json(filename);
   else
     existing = [];
   end
@@ -834,7 +888,7 @@ if ~isempty(eeg_json)
     case 'replace'
       write_json(filename, eeg_json);
     case 'merge'
-      write_json(filename, mergeconfig(eeg_json, existing));
+      write_json(filename, mergeconfig(eeg_json, existing, false));
     case 'no'
       % do nothing
     otherwise
@@ -845,7 +899,7 @@ end
 if ~isempty(ieeg_json)
   filename = corresponding_json(cfg.outputfile);
   if isfile(filename)
-    existing = remove_empty(read_json(filename));
+    existing = read_json(filename);
   else
     existing = [];
   end
@@ -859,7 +913,7 @@ if ~isempty(ieeg_json)
     case 'replace'
       write_json(filename, ieeg_json);
     case 'merge'
-      write_json(filename, mergeconfig(ieeg_json, existing));
+      write_json(filename, mergeconfig(ieeg_json, existing, false));
     case 'no'
       % do nothing
     otherwise
@@ -887,7 +941,7 @@ if ~isempty(coordsystem_json)
     case 'replace'
       write_json(filename, coordsystem_json);
     case 'merge'
-      write_json(filename, mergeconfig(coordsystem_json, existing))
+      write_json(filename, mergeconfig(coordsystem_json, existing, false))
     case 'no'
       % do nothing
     otherwise
@@ -1056,26 +1110,15 @@ json = loadjson(filename);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function write_json(filename, json)
 json = remove_empty(json);
+json = sort_fields(json);
 ft_info('writing %s\n', filename);
 ft_hastoolbox('jsonlab', 1);
 % write nan as 'n/a'
-% write bollean as True/False
+% write boolean as True/False
 str = savejson('', json, 'NaN', 'n/a', 'ParseLogical', true);
 fid = fopen(filename, 'w');
 fwrite(fid, str);
 fclose(fid);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function s = remove_empty(s)
-if isempty(s)
-  return
-else
-  fn = fieldnames(s);
-  fn = fn(structfun(@isempty, s));
-  s = removefields(s, fn);
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -1149,4 +1192,26 @@ elseif isnumeric(x) && iscell(y) && all(cellfun(@isnumeric, y))
   end
 else
   s = false;
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function s = remove_empty(s)
+if isempty(s)
+  return
+else
+  fn = fieldnames(s);
+  fn = fn(structfun(@isempty, s));
+  s = removefields(s, fn);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function y = sort_fields(x)
+fn = fieldnames(x);
+fn = sort(fn);
+for i=1:numel(fn)
+  y.(fn{i}) = x.(fn{i});
 end
