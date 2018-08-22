@@ -519,7 +519,7 @@ switch typ
         plot([selpres.timestamp]/1e4, [volume.sample], 'b.')
         plot([selpres.timestamp]/1e4, estimated, 'ro')
         xlabel('presentation time (s)')
-        ylabel('MR volumes')
+        ylabel('MRI volumes')
         legend({'observed', 'predicted'})
         
         subplot(2,1,2)
@@ -677,7 +677,7 @@ switch typ
         plot([selpres.timestamp]/1e4, [seltrig.sample], 'b.')
         plot([selpres.timestamp]/1e4, estimated, 'ro')
         xlabel('presentation time (s)')
-        ylabel('trigger samples')
+        ylabel('MEG samples')
         legend({'observed', 'predicted'})
         
         subplot(2,1,2)
