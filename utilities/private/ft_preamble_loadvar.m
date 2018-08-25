@@ -44,40 +44,40 @@ if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
   % the input data should be read from file
   if (ft_nargin>1)
     ft_error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    if isfield(cfg, 'inputlock') && ~isempty(cfg.inputlock)
-      mutexlock(cfg.inputlock);
-    end
-    
-    if isequal(ft_default.preamble, {'varargin'}) && ~iscell(cfg.inputfile)
-      % this should be a cell-array, oterwise it cannot be assigned to varargin
-      cfg.inputfile = {cfg.inputfile};
-    end
-    
-    if iscell(cfg.inputfile)
-      if isequal(ft_default.preamble, {'varargin'})
-        % read multiple inputs and copy them into varargin
-        tmp = {};
-        for i=1:length(cfg.inputfile)
-          tmp{i} = loadvar(cfg.inputfile{i}, 'data');
-        end % for
-        assign('varargin', tmp);
-        clear i tmp
-      else
-        % ft_default.preamble is a cell-array containing the variable names
-        for i=1:length(cfg.inputfile)
-          assign(ft_default.preamble{i}, loadvar(cfg.inputfile{i}, ft_default.preamble{i}));
-        end % for
-        clear i
-      end
+  end
+
+  if isfield(cfg, 'inputlock') && ~isempty(cfg.inputlock)
+    mutexlock(cfg.inputlock);
+  end
+  
+  if isequal(ft_default.preamble, {'varargin'}) && ~iscell(cfg.inputfile)
+    % this should be a cell-array, oterwise it cannot be assigned to varargin
+    cfg.inputfile = {cfg.inputfile};
+  end
+  
+  if iscell(cfg.inputfile)
+    if isequal(ft_default.preamble, {'varargin'})
+      % read multiple inputs and copy them into varargin
+      tmp = {};
+      for i=1:length(cfg.inputfile)
+        tmp{i} = loadvar(cfg.inputfile{i}, 'data');
+      end % for
+      assign('varargin', tmp);
+      clear i tmp
     else
-      % ft_default.preamble{1} contains the variable name
-      assign(ft_default.preamble{1}, loadvar(cfg.inputfile, ft_default.preamble{1}));
+      % ft_default.preamble is a cell-array containing the variable names
+      for i=1:length(cfg.inputfile)
+        assign(ft_default.preamble{i}, loadvar(cfg.inputfile{i}, ft_default.preamble{i}));
+      end % for
+      clear i
     end
-    
-    if isfield(cfg, 'inputlock') && ~isempty(cfg.inputlock)
-      mutexunlock(cfg.inputlock);
-    end
+  else
+    % ft_default.preamble{1} contains the name of the only variable
+    assign(ft_default.preamble{1}, loadvar(cfg.inputfile, ft_default.preamble{1}));
+  end
+  
+  if isfield(cfg, 'inputlock') && ~isempty(cfg.inputlock)
+    mutexunlock(cfg.inputlock);
   end
   
 end % if inputfile
