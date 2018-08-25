@@ -104,9 +104,6 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 assert(isnumeric(dat),    'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 assert(isnumeric(design), 'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 
-% deal with the user specified random seed
-ft_preamble randomseed
-
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed',     {'factor',           'ivar'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'unitfactor',       'uvar'});
@@ -497,9 +494,5 @@ for i=1:length(fn)
   end
 end
 
-% deal with the potential user specified randomseed
-ft_postamble randomseed
-
 warning(ws); % revert to original state
-
 
