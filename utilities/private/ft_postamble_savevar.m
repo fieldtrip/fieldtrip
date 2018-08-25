@@ -37,9 +37,30 @@ if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
   if isfield(cfg, 'outputlock') && ~isempty(cfg.outputlock)
     mutexlock(cfg.outputlock);
   end
-  
-  % ft_default.postamble{1} contains the name of the variable
-  savevar(cfg.outputfile, ft_default.postamble{1}, eval(ft_default.postamble{1}));
+
+  if isequal(ft_default.postamble, {'varargout'}) && ~iscell(cfg.outputfile)
+    % this should be a cell-array, oterwise it cannot be matched with varargout
+    cfg.outputfile = {cfg.outputfile};
+  end
+
+  if iscell(cfg.outputfile)
+    if isequal(ft_default.postamble, {'varargout'})
+      % the output is in varargout
+      for i=1:length(cfg.outputfile)
+        savevar(cfg.outputfile{i}, 'data', varargout{i});
+      end % for
+      clear i
+    else
+      % ft_default.postamble is a cell-array containing the variable names
+      for i=1:length(cfg.outputfile)
+        savevar(cfg.outputfile, ft_default.postamble{i}, eval(ft_default.postamble{i}));
+      end % for
+      clear i
+    end
+  else
+    % ft_default.postamble{1} contains the name of the only variable
+    savevar(cfg.outputfile, ft_default.postamble{1}, eval(ft_default.postamble{1}));
+  end
   
   if isfield(cfg, 'outputlock') && ~isempty(cfg.outputlock)
     mutexunlock(cfg.outputlock);
@@ -50,3 +71,4 @@ if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
     clear(ft_default.postamble{1});
   end
 end
+
