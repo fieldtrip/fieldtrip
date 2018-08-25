@@ -7,7 +7,7 @@
 % Use as
 %   ft_preamble init
 %
-% See also FT_TRACKUSAGE
+% See also FT_PREAMBLE, FT_POSTAMBLE, FT_TRACKUSAGE
 
 % Copyright (C) 2011-2016, Robert Oostenveld, DCCN
 %

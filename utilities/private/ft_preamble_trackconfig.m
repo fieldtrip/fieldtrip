@@ -7,7 +7,7 @@
 %   ... regular code goes here ...
 %   ft_postamble trackconfig
 %
-% See also FT_POSTAMBLE_TRACKCONFIG
+% See also FT_PREAMBLE, FT_POSTAMBLE, FT_POSTAMBLE_TRACKCONFIG
 
 % Copyright (C) 2011-2012, Robert Oostenveld, DCCN
 %

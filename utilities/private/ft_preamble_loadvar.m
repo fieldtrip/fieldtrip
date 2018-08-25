@@ -11,7 +11,7 @@
 %   ft_preamble loadvar source mri
 %   ft_preamble loadvar varargin
 %
-% See also FT_POSTAMBLE_SAVEVAR, FT_PREAMBLE_PROVENANCE
+% See also FT_PREAMBLE, FT_POSTAMBLE, FT_POSTAMBLE_SAVEVAR, FT_PREAMBLE_PROVENANCE
 
 % Copyright (C) 2011-2012, Robert Oostenveld, DCCN
 %

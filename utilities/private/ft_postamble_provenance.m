@@ -1,8 +1,9 @@
 % FT_POSTAMBLE_PROVENANCE is a helper script that reports the time and memory used by
-% the calling function and that stores this information together with user name,
-% MATLAB version and other provenance information in the output cfg structure. This
-% script is to be used together with FT_PREAMBLE_PROVENANCE, which records the time
-% and memory at the start of the function.
+% the calling function and that stores this information together with user name, MATLAB
+% version and other provenance information in the cfg structure. This script is to be
+% used together with FT_PREAMBLE_PROVENANCE, which records the time and memory at the
+% start of the function. The cfg can be stored in the output variable using
+% FT_POSTAMBLE_HISTORY.
 %
 % FieldTrip also attempts to uniquely identify the input and the output data. The
 % code that deals with tracking the input data structures is found in
@@ -14,7 +15,7 @@
 %   .... regular code goes here ...
 %   ft_postamble provenance
 %
-% See also FT_PREAMBLE_PROVENANCE
+% See also FT_PREAMBLE, FT_POSTAMBLE, FT_PREAMBLE_PROVENANCE
 
 % Copyright (C) 2011-2016, Robert Oostenveld, DCCN
 %

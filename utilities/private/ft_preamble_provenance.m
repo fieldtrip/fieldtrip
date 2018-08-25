@@ -14,7 +14,7 @@
 %   .... regular code goes here ...
 %   ft_postamble provenance
 %
-% See also FT_POSTAMBLE_PROVENANCE
+% See also FT_PREAMBLE, FT_POSTAMBLE, FT_POSTAMBLE_PROVENANCE
 
 % Copyright (C) 2011-2016, Robert Oostenveld, DCCN
 %

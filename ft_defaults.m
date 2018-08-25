@@ -131,6 +131,12 @@ if initialized && exist('ft_hastoolbox', 'file')
   return;
 end
 
+if isfield(ft_default, 'hastoolbox')
+  prevhastoolbox = ft_default.hastoolbox;
+else
+  prevhastoolbox = {};
+end
+
 % Ensure that the path containing ft_defaults is on the path.
 % This allows people to do "cd path_to_fieldtrip; ft_defaults"
 ftPath = fileparts(mfilename('fullpath')); % get the full path to this function, strip away 'ft_defaults'
@@ -311,6 +317,9 @@ if ~isdeployed
   end
   
 end
+
+% the toolboxes added by this function should not be removed by FT_POSTAMBLE_HASTOOLBOX
+ft_default.hastoolbox = prevhastoolbox;
 
 % track the usage of this function, this only happens once at startup
 ft_trackusage('startup');

@@ -98,6 +98,7 @@ switch purpose
       'notification'
       'debug'
       'progress'
+      'hastoolbox'
       };
     
     
@@ -125,6 +126,7 @@ switch purpose
       'notification'
       'debug'
       'previous'
+      'hastoolbox'
       };
     
   case 'checksize'
@@ -137,6 +139,7 @@ switch purpose
       'artifact'
       'artfctdef'
       'previous'
+      'hastoolbox'
       };
     
   case 'makessense'
