@@ -9,7 +9,7 @@ function val = ft_getopt(opt, key, default, emptymeaningful)
 %   s               = structure or cell-array
 %   key             = string
 %   default         = any valid MATLAB data type (optional, default = [])
-%   emptymeaningful = boolean value (optional, default = 0)
+%   emptymeaningful = boolean value (optional, default = false)
 %
 % If the key is present as field in the structure, or as key-value pair in the
 % cell-array, the corresponding value will be returned.
@@ -49,7 +49,7 @@ if nargin<3
 end
 
 if nargin < 4
-  emptymeaningful = 0;
+  emptymeaningful = false;
 end
 
 if isa(opt, 'struct') || isa(opt, 'config')
