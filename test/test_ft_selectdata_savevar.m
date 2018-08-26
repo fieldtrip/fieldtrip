@@ -1,4 +1,4 @@
-function test_ft_selectdata_savevar
+% function test_ft_selectdata_savevar
 
 % WALLTIME 00:10:00
 % MEM 2gb
@@ -14,7 +14,7 @@ timelock1.cfg = 'initial 1'; % note that this is a string rather than a struct
 
 timelock2 = [];
 timelock2.label = {'2' '3', '4'};
-timelock2.time  = 2:6
+timelock2.time  = 2:6;
 timelock2.dimord = 'chan_time';
 timelock2.avg = randn(3,5);
 timelock2.cfg = 'initial 2'; % note that this is a string rather than a struct
@@ -31,8 +31,8 @@ cfg.outputfile = {filename1, filename2};
 %%
 
 % initial sanity check: it should return the intersection, i.e. 2 channels and 4 timepoints
-assert(numel(timelock1sel.channel)==2);
-assert(numel(timelock2sel.channel)==2);
+assert(numel(timelock1sel.label)==2);
+assert(numel(timelock2sel.label)==2);
 assert(numel(timelock1sel.time)==4);
 assert(numel(timelock2sel.time)==4);
 
@@ -45,12 +45,12 @@ assert(isfield(timelock1sel.cfg, 'previous') && isequal(timelock1sel.cfg.previou
 assert(isfield(timelock2sel.cfg, 'previous') && isequal(timelock2sel.cfg.previous, 'initial 2'));
 
 % check the savevar postamble
-assert(exist(filename1));
-assert(exist(filename2));
+assert(exist(filename1, 'file')~=0);
+assert(exist(filename2, 'file')~=0);
 tmp1 = load(filename1);
 tmp2 = load(filename2);
 delete(filename1);
 delete(filename2);
-assert(isequal(tmp1, timelock1sel));
-assert(isequal(tmp2, timelock2sel));
+assert(isequal(tmp1.data, timelock1sel));
+assert(isequal(tmp2.data, timelock2sel));
 
