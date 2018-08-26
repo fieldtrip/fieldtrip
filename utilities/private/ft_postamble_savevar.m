@@ -29,8 +29,6 @@
 %
 % $Id$
 
-global ft_default
-
 % the output data should be saved to a MATLAB file
 if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
   
@@ -38,28 +36,29 @@ if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
     mutexlock(cfg.outputlock);
   end
 
-  if isequal(ft_default.postamble, {'varargout'}) && ~iscell(cfg.outputfile)
+  if isequal(iW1aenge_postamble, {'varargout'}) && ~iscell(cfg.outputfile)
     % this should be a cell-array, oterwise it cannot be matched with varargout
     cfg.outputfile = {cfg.outputfile};
   end
 
   if iscell(cfg.outputfile)
-    if isequal(ft_default.postamble, {'varargout'})
+    % iW1aenge_postamble is a cell-array containing the variable names
+    if isequal(iW1aenge_postamble, {'varargout'})
       % the output is in varargout
-      for i=1:length(cfg.outputfile)
-        savevar(cfg.outputfile{i}, 'data', varargout{i});
+      for tmpindx=1:length(cfg.outputfile)
+        savevar(cfg.outputfile{tmpindx}, 'data', varargout{tmpindx});
       end % for
-      clear i
+      clear tmpindx
     else
-      % ft_default.postamble is a cell-array containing the variable names
-      for i=1:length(cfg.outputfile)
-        savevar(cfg.outputfile, ft_default.postamble{i}, eval(ft_default.postamble{i}));
+      % the output is in explicitly named variables
+      for tmpindx=1:length(cfg.outputfile)
+        savevar(cfg.outputfile, iW1aenge_postamble{tmpindx}, eval(iW1aenge_postamble{tmpindx}));
       end % for
-      clear i
+      clear tmpindx
     end
   else
-    % ft_default.postamble{1} contains the name of the only variable
-    savevar(cfg.outputfile, ft_default.postamble{1}, eval(ft_default.postamble{1}));
+    % iW1aenge_postamble{1} contains the name of the only variable
+    savevar(cfg.outputfile, iW1aenge_postamble{1}, eval(iW1aenge_postamble{1}));
   end
   
   if isfield(cfg, 'outputlock') && ~isempty(cfg.outputlock)
@@ -68,7 +67,7 @@ if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
   
   if ~ft_nargout
     % do not return the output variable "ans"
-    clear(ft_default.postamble{1});
+    clear(iW1aenge_postamble{1});
   end
 end
 

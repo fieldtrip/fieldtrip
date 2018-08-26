@@ -45,11 +45,10 @@ function ft_postamble(cmd, varargin)
 %#function ft_postamble_history
 %#function ft_postamble_savevar
 %#function ft_postamble_randomseed
-
-global ft_default
+%#function ft_postamble_hastoolbox
 
 % this is a trick to pass the input arguments into the ft_postamble_xxx script
-ft_default.postamble = varargin;
+assignin('caller', 'iW1aenge_postamble', varargin);
 
 full_cmd=['ft_postamble_' cmd];
 cmd_exists=false;
@@ -85,7 +84,3 @@ end
 
 evalin('caller', full_cmd);
 
-if isfield(ft_default, 'postamble')
-  % the postamble field should not remain in the ft_default structure
-  ft_default = rmfield(ft_default, 'postamble');
-end
