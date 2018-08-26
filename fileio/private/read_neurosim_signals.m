@@ -25,7 +25,7 @@ function [hdr, dat] = read_neurosim_signals(filename)
 %
 % $Id$
 
-if isdir(filename)
+if isfolder(filename)
   filename = fullfile(filename, 'signals');
 end
 
