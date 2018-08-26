@@ -78,10 +78,10 @@ ft_nargout  = nargout;
 
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
+ft_preamble trackconfig
 ft_preamble loadvar varargin
+ft_preamble provenance varargin
 
 % determine the characteristics of the input data
 dtype = ft_datatype(varargin{1});
@@ -453,27 +453,17 @@ varargout = varargin;
 
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble previous varargin
+ft_postamble provenance varargout
 ft_postamble history varargout
 ft_postamble savevar varargout
-
-% note that the cfg.previous thingy does not work with the postamble,
-% because the postamble puts the cfgs of all input arguments in the (first)
-% output argument's xxx.cfg
-for k = 1:numel(varargout)
-  varargout{k}.cfg          = cfg;
-  if isfield(varargin{k}, 'cfg')
-    varargout{k}.cfg.previous = varargin{k}.cfg;
-  end
-end
 
 if nargout>numel(varargout)
   % also return the input cfg with the combined selection over all input data structures
   varargout{end+1} = cfg;
 end
 
-end % main function ft_selectdata
+end % function ft_selectdata
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS
