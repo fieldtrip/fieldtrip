@@ -1,4 +1,4 @@
-function timelock = ft_timelocksimulation(cfg)
+function [timelock] = ft_timelocksimulation(cfg)
 
 % FT_TIMELOCKSIMULATION computes a simulated signal that resembles an
 % event-related potential or field
