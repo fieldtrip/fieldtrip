@@ -551,7 +551,7 @@ switch typ
       
       if istrue(cfg.feedback)
         [p, f, x] = fileparts(cfg.dataset);
-        figure('name', f);
+        figure('name', ['PRESENTATION - ' f]);
         subplot(2,1,1)
         hold on
         % presentation timestamps are expressed in units of 0.1 miliseconds
@@ -710,7 +710,7 @@ switch typ
       
       if istrue(cfg.feedback)
         [p, f, x] = fileparts(cfg.dataset);
-        figure('name', f);
+        figure('name', ['PRESENTATION - ' f]);
         subplot(2,1,1)
         hold on
         % presentation timestamps are expressed in units of 0.1 miliseconds
@@ -795,6 +795,15 @@ if ~isequal(cfg.dataset, cfg.outputfile) || istrue(cfg.mri.deface)
         end
         tmpcfg = [];
         tmpcfg.method = 'spm';
+        if ~isfield(mri, 'coordsys')
+          % try to determine it from the BIDS filename
+          coordsys = get_token(cfg.outputfile, 'space');
+          if ~isempty(coordsys)
+            mri.coordsys = coordsys;
+          else
+            mri.coordsys = 'unknown';
+          end
+        end
         mri = ft_defacevolume(tmpcfg, mri);
         if istrue(cfg.feedback)
           tmpcfg = [];
@@ -821,7 +830,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ~isempty(mri_json)
-  filename = corresponding_json(cfg.outputfile);
+  filename = corresponding_json(cfg.outputfile);ls 
   if isfile(filename)
     existing = read_json(filename);
   else
@@ -923,8 +932,8 @@ end
 
 if ~isempty(coordsystem_json)
   [p, f, x] = fileparts(cfg.outputfile);
-  f = remove_datatype(f); % remove _bold, _meg, etc.
-  f = remove_task(f);     % remove _task-something
+  f = remove_token(f, 'datatype'); % remove _bold, _meg, etc.
+  f = remove_token(f, 'task');     % remove _task-something
   filename = fullfile(p, [f '_coordsystem.json']);
   if isfile(filename)
     existing = read_json(filename);
@@ -1017,11 +1026,14 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function f = remove_datatype(f)
-typ = {'_T1w', '_T2w', '_dwi', '_bold', '_meg', '_eeg', '_ieeg'};
-for i=1:numel(typ)
-  if endsWith(f, typ{i})
-    f = f(1:end-length(typ{i}));
+function val = get_token(f, tok)
+% ensure that it is only the filename
+[p, f, x] = fileparts(f);
+pieces = tokenize(f, '_');
+val = '';
+for i=1:numel(pieces)
+  if startsWith([pieces{i} '-'], tok)
+    val = pieces{i}((numel(tok)+2):end);
     return
   end
 end
@@ -1029,13 +1041,25 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function f = remove_task(f)
-part = regexp(f, '_task-[a-zA-Z0-9]*', 'split');
-if ~isempty(part{2})
-  f = [part{1} part{2}];
-else
-  f = part{1};
-end
+function f = remove_token(f, tok)
+switch tok
+  case 'datatype'
+    typ = {'_T1w', '_T2w', '_dwi', '_bold', '_meg', '_eeg', '_ieeg'};
+    for i=1:numel(typ)
+      if endsWith(f, typ{i})
+        f = f(1:end-length(typ{i}));
+        return
+      end
+    end
+  otherwise
+    part = regexp(f, sprintf('_%s-[a-zA-Z0-9]*', tok), 'split');
+    if ~isempty(part{2})
+      f = [part{1} part{2}];
+    else
+      f = part{1};
+    end
+end % switch
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION convert event structure into table
