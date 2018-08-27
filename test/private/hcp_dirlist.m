@@ -8,7 +8,7 @@ if nargin<2
   recursive = true;
 end
 
-if ~isdir(basedir)
+if ~isfolder(basedir)
   error('directory "%s" does not exist', basedir)
 end
 
