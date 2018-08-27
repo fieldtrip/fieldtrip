@@ -97,23 +97,23 @@ if nargin>1 && ~strcmpi(target, obj.coordsys)
     case 'acpc'
       switch obj.coordsys
         case {'ctf' 'bti' '4d'}
-          fprintf('Converting the coordinate system from %s to %s\n', obj.coordsys, target);
+          fprintf('converting the coordinate system from %s to %s\n', obj.coordsys, target);
           if hastemplate
             obj = align_ctf2acpc(obj, opt, template);
           else
             obj = align_ctf2acpc(obj, opt);
           end
         case {'itab' 'neuromag'}
-          fprintf('Converting the coordinate system from %s to %s\n', obj.coordsys, target);
+          fprintf('converting the coordinate system from %s to %s\n', obj.coordsys, target);
           if hastemplate
             obj = align_neuromag2acpc(obj, opt, template);
           else
             obj = align_neuromag2acpc(obj, opt);
           end
         otherwise
+          ft_warning('conversion from %s to %s is not supported', obj.coordsys, target);
       end % switch obj.coordsys
     otherwise
-      ft_error('conversion from %s to %s is not yet supported', obj.coordsys, target);
+      ft_error('conversion from %s to %s is not supported', obj.coordsys, target);
   end % switch target
 end
-
