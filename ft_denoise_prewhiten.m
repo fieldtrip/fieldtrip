@@ -5,7 +5,7 @@ function [dataout] = ft_denoise_prewhiten(cfg, datain, noise)
 % all channels are expressed in singnal-to-noise units, causing
 % different channel types to be comparable. This ensures equal
 % weithing in source estimation on data with different channel types.
-% 
+%
 % Use as
 %   dataout = ft_denoise_prewhiten(cfg, datain, noise)
 % where the datain is the original data from FT_PREPROCESSING, where
@@ -14,7 +14,7 @@ function [dataout] = ft_denoise_prewhiten(cfg, datain, noise)
 %
 % The configuration structure can contain
 %   cfg.channel     = cell-array, see FT_CHANNELSELECTION (default = 'all')
-%   cfg.mixed       = 'yes' or 'no', use the mixed off-diagonal elements from the covariance (default = 'no') 
+%   cfg.mixed       = 'yes' or 'no', use the mixed off-diagonal elements from the covariance (default = 'no')
 %
 % See also FT_DENOISE_SYNTHETIC, FT_DENOISE_PCA
 
@@ -43,12 +43,12 @@ ft_revision = '$Id$';
 ft_nargin   = nargin;
 ft_nargout  = nargout;
 
-ft_defaults                  
-ft_preamble init             
-ft_preamble debug            
+ft_defaults
+ft_preamble init
+ft_preamble debug
 ft_preamble loadvar    datain
 ft_preamble provenance datain
-ft_preamble trackconfig      
+ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -152,10 +152,10 @@ if iselec
   dataout.elec = ft_apply_montage(datain.elec, projectelec, 'balancename', 'prewhiten');
 end
 
-ft_postamble debug              
-ft_postamble trackconfig        
-ft_postamble previous   datain  
-ft_postamble provenance dataout 
-ft_postamble history    dataout 
-ft_postamble savevar    dataout 
+ft_postamble debug
+ft_postamble trackconfig
+ft_postamble previous   datain
+ft_postamble provenance dataout
+ft_postamble history    dataout
+ft_postamble savevar    dataout
 
