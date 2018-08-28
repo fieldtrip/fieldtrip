@@ -36,11 +36,28 @@ if isempty(skipcheckdata) || skipcheckdata ~= 1
 end
 
 % get the options
-hdr          = ft_getopt(varargin, 'header');
-begsample    = ft_getopt(varargin, 'begsample');
-endsample    = ft_getopt(varargin, 'endsample');
-chanindx     = ft_getopt(varargin, 'chanindx');
-allowoverlap = ft_getopt(varargin, 'allowoverlap', false);
+if true
+  p = inputParser;
+  p.KeepUnmatched = true;
+  addOptional(p, 'header', []);
+  addOptional(p, 'begsample', []);
+  addOptional(p, 'endsample', []);
+  addOptional(p, 'chanindx', []);
+  addOptional(p, 'allowoverlap', []);
+  parse(p,varargin{:});
+  hdr           = p.Results.header;
+  begsample     = p.Results.begsample;
+  endsample     = p.Results.endsample;
+  chanindx      = p.Results.chanindx;
+  allowoverlap  = p.Results.allowoverlap;
+else
+  hdr          = ft_getopt(varargin, 'header');
+  begsample    = ft_getopt(varargin, 'begsample');
+  endsample    = ft_getopt(varargin, 'endsample');
+  chanindx     = ft_getopt(varargin, 'chanindx');
+  allowoverlap = ft_getopt(varargin, 'allowoverlap', false);
+end
+
 allowoverlap = istrue(allowoverlap);
 
 if isempty(hdr)

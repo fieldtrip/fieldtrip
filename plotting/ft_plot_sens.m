@@ -295,7 +295,12 @@ end % if istrue(individual)
 if isempty(ori)
   % determine the orientation by fitting a sphere to the positions
   % this should be reasonable for scalp electrodes or optodes with complete coverage
-  center = fitsphere(pos);
+  try
+    tmp = pos(~any(isnan(pos), 2),:); % remove rows that contain a nan
+    center = fitsphere(tmp);
+  catch
+    center = [nan nan nan];
+  end
   for i=1:size(pos,1)
     ori(i,:) = pos(i,:) - center;
     ori(i,:) = ori(i,:)/norm(ori(i,:));

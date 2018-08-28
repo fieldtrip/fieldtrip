@@ -66,7 +66,7 @@ while kont==0;
         end
     reldef=(norm(reshape(W,[],1)-reshape(Wold,[],1))/norm(reshape(Wold,[],1)));
     disp(reldef)
-    if kk>20 | reldef< .000001 ; kont=1;end;
+    if kk>20 || reldef< .000001 ; kont=1;end;
 end
 %disp(kk)
 

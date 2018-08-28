@@ -453,19 +453,19 @@ if autoadd>0 && ~status
 
   % for linux computers in the Donders Centre for Cognitive Neuroimaging
   prefix = '/home/common/matlab';
-  if ~status && isdir(prefix)
+  if ~status && isfolder(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
 
   % for windows computers in the Donders Centre for Cognitive Neuroimaging
   prefix = 'h:\common\matlab';
-  if ~status && isdir(prefix)
+  if ~status && isfolder(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
 
   % use the MATLAB subdirectory in your homedirectory, this works on linux and mac
   prefix = fullfile(getenv('HOME'), 'matlab');
-  if ~status && isdir(prefix)
+  if ~status && isfolder(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
 
