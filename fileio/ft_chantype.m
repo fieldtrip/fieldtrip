@@ -24,7 +24,7 @@ function chantype = ft_chantype(input, desired)
 % desired type and "false" for the ones that do not match.
 %
 % The specification of the channel types depends on the acquisition system,
-% for example the ctf275 system includes the following tyoe of channels:
+% for example the ctf275 system includes the following type of channels:
 % meggrad, refmag, refgrad, adc, trigger, eeg, headloc, headloc_gof.
 %
 % See also FT_READ_HEADER, FT_SENSTYPE, FT_CHANUNIT
