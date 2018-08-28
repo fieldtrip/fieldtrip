@@ -14,7 +14,7 @@ function [dataout] = ft_denoise_prewhiten(cfg, datain, noise)
 %
 % The configuration structure can contain
 %   cfg.channel     = cell-array, see FT_CHANNELSELECTION (default = 'all')
-%   cfg.mixed       = 'yes' or 'no', use the mixed off-diagonal elements from the covariance (default = 'no')
+%   cfg.split       = cell-array of channel types between which covariance is split, it can also be 'all' or 'no'
 %
 % See also FT_DENOISE_SYNTHETIC, FT_DENOISE_PCA
 
@@ -100,14 +100,19 @@ end
 [datsel, noisesel] = match_str(datain.label, noise.label);
 noisecov = noise.cov(noisesel,noisesel);
 
-if ~istrue(cfg.mixed)
-  % zero out the off-diagonal elements for the different channel types
+if isequal(cfg.split, 'no')
+  chantype = {};
+elseif isequal(cfg.split, 'all')
   chantype = unique(datain.chantype);
-  for i=1:numel(chantype)
-    sel = strcmp(datain.chantype, chantype{i});
-    noisecov(sel,~sel) = 0;
-    noisecov(~sel,sel) = 0;
-  end
+else
+  chantype = cfg.split;
+end
+
+% zero out the off-diagonal elements for the specified channel types
+for i=1:numel(chantype)
+  sel = strcmp(datain.chantype, chantype{i});
+  noisecov(sel,~sel) = 0;
+  noisecov(~sel,sel) = 0;
 end
 
 prewhiten = [];
@@ -123,33 +128,13 @@ prewhiten.chanunitnew = repmat({'snr', size(datain.chantype));
 dataout = ft_apply_montage(datain, prewhiten);
 
 if isgrad
-  % the gradiometer structure needs to be updated to ensure that the forward model remains consistent
-  projectgrad          = prewhiten;
-  % select the MEG channels
-  sel = ismember(datain.chantype, datain.grad.chantype);
-  projectgrad.tra         = projectgrad.tra(sel,sel);
-  projectgrad.labelold    = projectgrad.labelold(sel);
-  projectgrad.labelnew    = projectgrad.labelnew(sel);
-  projectgrad.chantypeold = projectgrad.chantypeold(sel);
-  projectgrad.chantypenew = projectgrad.chantypenew(sel);
-  projectgrad.chanunitold = projectgrad.chanunitold(sel);
-  projectgrad.chanunitnew = projectgrad.chanunitnew(sel);
-  dataout.grad = ft_apply_montage(datain.grad, projectgrad, 'balancename', 'prewhiten');
+  % the gradiometer structure needs to be updated to ensure that the forward model remains consistent with the data
+  dataout.grad = ft_apply_montage(datain.grad, prewhiten, 'balancename', 'prewhiten');
 end
 
 if iselec
   % the electrode structure needs to be updated to ensure that the forward model remains consistent
-  projectelec          = prewhiten;
-  % select the EEG channels
-  sel = ismember(datain.chantype, datain.elec.chantype);
-  projectelec.tra         = projectelec.tra(sel,sel);
-  projectelec.labelold    = projectelec.labelold(sel);
-  projectelec.labelnew    = projectelec.labelnew(sel);
-  projectelec.chantypeold = projectelec.chantypeold(sel);
-  projectelec.chantypenew = projectelec.chantypenew(sel);
-  projectelec.chanunitold = projectelec.chanunitold(sel);
-  projectelec.chanunitnew = projectelec.chanunitnew(sel);
-  dataout.elec = ft_apply_montage(datain.elec, projectelec, 'balancename', 'prewhiten');
+  dataout.elec = ft_apply_montage(datain.elec, prewhiten, 'balancename', 'prewhiten');
 end
 
 ft_postamble debug
