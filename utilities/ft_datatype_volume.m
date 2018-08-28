@@ -108,6 +108,16 @@ end
 switch version
   case '2014'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if isfield(volume, 'coordsys')
+      % ensure that it is in lower case
+      volume.coordsys = lower(volume.coordsys);
+    end
+    
+    if isfield(volume, 'unit')
+      % ensure that it is in lower case
+      volume.unit = lower(volume.unit);
+    end
+    
     if isfield(volume, 'dimord')
       volume = rmfield(volume, 'dimord');
     end

@@ -91,10 +91,35 @@ switch cfg.method
   case 'spm'
     % this requires SPM12 on the path
     ft_hastoolbox('spm12', 1);
+    
+    % defacing relies on coregistration, which relies on the MRI being reasonably aligned for SPM
+    mri = ft_checkdata(mri, 'hascoordsys', 'yes');
+    
+    % remember the original transformation matrix and coordinate system
+    original = [];
+    original.transform = mri.transform;
+    original.coordsys  = mri.coordsys;
+    mri = ft_convert_coordsys(mri, 'acpc');
+    
     filename1 = {[tempname '.nii']};
     ft_write_mri(filename1{1}, mri, 'dataformat', 'nifti');
+    
+    % % apply a least squares pre-alignment step in order to make spm_deface more robust
+    % % this could be done conditional on the modality/contrast, which is part of the BIDS filename
+    % template = spm_vol(fullfile(spm('Dir'),'canonical','avg152PD.nii'));
+    % template = spm_vol(fullfile(spm('Dir'),'canonical','avg152T1.nii'));
+    % template = spm_vol(fullfile(spm('Dir'),'canonical','avg152T2.nii'));
+    % filevol = spm_vol(filename1{1});
+    % M = spm_affreg(template, filevol);
+    % spm_get_space(filename1{1}, M * filevol.mat);
+    
     filename2 = spm_deface(filename1);
     mri = ft_read_mri(filename2{1});
+    
+    % put the original transformation matrix and coordinate system back
+    mri.transform = original.transform;
+    mri.coordsys = original.coordsys;
+    
     % clean up the temporary files
     delete(filename1{1});
     delete(filename2{1});
