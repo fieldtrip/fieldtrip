@@ -270,7 +270,7 @@ switch cfg.method
     weightppc = 1;
     if hasjack, ft_error('to compute wppc, data should be in rpt format'); end
   case {'plm'}
-    data = ft_checkdata(data, 'datatype' 'raw');
+    data = ft_checkdata(data, 'datatype', 'raw');
     inparam = 'trial';
     outparam = 'plm';
   
