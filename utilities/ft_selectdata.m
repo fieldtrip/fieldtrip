@@ -174,8 +174,8 @@ for i=2:length(varargin)
   % only consider fields that are present in all inputs
   datfield = intersect(datfield, fieldnames(varargin{i}));
 end
-datfield  = setdiff(datfield, {'label' 'labelcmb'}); % these fields will be used for selection, but are not treated as data fields
-datfield  = setdiff(datfield, {'dim'});              % not used for selection, also not treated as data field
+datfield  = setdiff(datfield, {'label' 'labelcmb'});  % these fields will be used for selection, but are not treated as data fields
+datfield  = setdiff(datfield, {'dim'});               % not used for selection, also not treated as data field
 xtrafield = {'cfg' 'hdr' 'fsample' 'fsampleorig' 'grad' 'elec' 'opto' 'transform' 'unit' 'topolabel'}; % these fields will not be touched in any way by the code
 datfield  = setdiff(datfield, xtrafield);
 orgdim1   = datfield(~cellfun(@isempty, regexp(datfield, 'label$')) & cellfun(@isempty, regexp(datfield, '^csd'))); % xxxlabel, with the exception of csdlabel
