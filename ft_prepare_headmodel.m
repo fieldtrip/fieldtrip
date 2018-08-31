@@ -146,7 +146,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble trackconfig
-ft_preamble provenance
+ft_preamble provenance data
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort

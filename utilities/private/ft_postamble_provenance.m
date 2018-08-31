@@ -36,19 +36,10 @@
 %
 % $Id$
 
-% the name of the variables are passed in the preamble field
-global ft_default
-
 if isfield(cfg, 'trackcallinfo') && ~istrue(cfg.trackcallinfo)
   % do not track the call information
   return
 end
-
-stack = dbstack('-completenames');
-% stack(1) is this script
-% stack(2) is the calling ft_postamble function
-% stack(3) is the main FieldTrip function that we are interested in
-stack = stack(3);
 
 % the proctime, procmem and calltime rely on three cryptical variables that were
 % created and added to the function workspace by the ft_preamble_callinfo script.
@@ -78,10 +69,10 @@ clear stack
 if isfield(cfg, 'trackdatainfo') && istrue(cfg.trackdatainfo)
   % compute the MD5 hash of each of the output arguments
   % temporarily remove the cfg field for getting the hash (creating a duplicate of the data, but still has the same mem ref, so no extra mem needed)
-  if isequal(ft_default.postamble, {'varargin'})
+  if isequal(iW1aenge_postamble, {'varargin'})
     tmpargout = varargout;
   else
-    tmpargout = cellfun(@eval, ft_default.postamble, 'UniformOutput', false);
+    tmpargout = cellfun(@eval, iW1aenge_postamble, 'UniformOutput', false);
   end
   cfg.callinfo.outputhash = cell(1,numel(tmpargout));
   for iargout = 1:numel(tmpargout)
