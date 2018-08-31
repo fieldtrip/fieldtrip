@@ -740,7 +740,7 @@ end
 if isdata
   % the input was replaced by one of hdr, grad, elec, opto
   [sel1, sel2] = match_str(origlabel, input.label);
-  origtype = repmat({'unknown'}, size(sel1));
+  origtype = repmat({'unknown'}, size(origlabel));
   origtype(sel1) = chantype(sel2);
   % the hdr, grad, elec or opto structure might have a different set of channels
   chantype = origtype;
