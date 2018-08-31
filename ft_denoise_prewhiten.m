@@ -16,6 +16,11 @@ function [dataout] = ft_denoise_prewhiten(cfg, datain, noise)
 %   cfg.channel     = cell-array, see FT_CHANNELSELECTION (default = 'all')
 %   cfg.split       = cell-array of channel types between which covariance is split, it can also be 'all' or 'no'
 %
+% The channel selection relates to the channels that are pre-whitened
+% using the noise covariance. All channels present in the input data
+% structure will be present in the output, including trigger and
+% other auxiliary channels.
+%
 % See also FT_DENOISE_SYNTHETIC, FT_DENOISE_PCA
 
 % Copyright (C) 2018, Robert Oostenveld
@@ -57,12 +62,12 @@ if ft_abort
 end
 
 % get the defaults
-cfg.channel = ft_getopt(cfg, 'channel', 'all');
+cfg.channel = ft_getopt(cfg, 'channel', {'MEG', 'EEG'});
 cfg.mixed   = ft_getopt(cfg, 'channel', 'all');
 
 % ensure that the input data is correct
-datain = ft_checkdata(datain, 'datatype', 'raw', 'isnirs', 'no');
-noise  = ft_checkdata(noise, 'datatype', 'timelock');
+datain = ft_checkdata(datain, 'datatype', 'raw', 'haschantype', 'yes', 'haschanunit', 'yes');
+noise  = ft_checkdata(noise, 'datatype', 'timelock', 'haschantype', 'yes', 'haschanunit', 'yes');
 
 if ~isfield(noise, 'cov')
   ft_error('noise covariance is not present');
@@ -75,57 +80,36 @@ if haselec && hasgrad && istrue(cfg.mixed)
   ft_error('mixed covariance prewhitening is not supported for combined EEG/MEG');
 end
 
-% get the intersection
-cfg.channel = ft_channelselection(cfg.channel) datain.label);
-cfg.channel = ft_channelselection(cfg.channel) noise.label);
-
-% select the overlapping channels
-tmpcfg = keepfields(cfg, 'channel');
-datain = ft_selectdata(tmpcfg, datain);
-[~, datain] = rollback_provenance(cfg, datain);
+% select the channels for prewhitening from the noise covariance
 noise = ft_selectdata(tmpcfg, noise);
 [~, noise] = rollback_provenance(cfg, noise);
-
-% do a sanity check on the channel types
-chantype = unique(datain.chantype);
-for i=1:numel(chantype)
-  sel = strcmp(datain.chantype, chantype{i});
-  tmp = datain.chanunit(sel);
-  if ~all(strcmp(tmp, tmp{1});
-    ft_warning('not all %s channels have the same units', chantype{i});
-  end
-end
-
-% make the channels of the noise covariance consistent with the data
-[datsel, noisesel] = match_str(datain.label, noise.label);
-noisecov = noise.cov(noisesel,noisesel);
 
 if isequal(cfg.split, 'no')
   chantype = {};
 elseif isequal(cfg.split, 'all')
-  chantype = unique(datain.chantype);
+  chantype = unique(noise.chantype);
 else
   chantype = cfg.split;
 end
 
 % zero out the off-diagonal elements for the specified channel types
 for i=1:numel(chantype)
-  sel = strcmp(datain.chantype, chantype{i});
-  noisecov(sel,~sel) = 0;
-  noisecov(~sel,sel) = 0;
+  sel = strcmp(noise.chantype, chantype{i});
+  noise.cov(sel,~sel) = 0;
+  noise.cov(~sel,sel) = 0;
 end
 
 prewhiten = [];
-prewhiten.tra = inv(noisecov); % FIXME add regularization
-prewhiten.labelold = datain.label;
-prewhiten.labelnew = datain.label;
-prewhiten.chantypeold = datain.chantype;
-prewhiten.chantypenew = datain.chantype;
-prewhiten.chanunitold = datain.chanunit;
-prewhiten.chanunitnew = repmat({'snr', size(datain.chantype));
+prewhiten.tra = sqrtm(inv(noise.cov)); % FIXME add regularization
+prewhiten.labelold = noise.label;
+prewhiten.labelnew = noise.label;
+prewhiten.chantypeold = noise.chantype;
+prewhiten.chantypenew = noise.chantype;
+prewhiten.chanunitold = noise.chanunit;
+prewhiten.chanunitnew = repmat({'snr'}, size(noise.chantype));
 
 % apply the projection to the data
-dataout = ft_apply_montage(datain, prewhiten);
+dataout = ft_apply_montage(datain, prewhiten, 'keepunused', 'yes');
 
 if isgrad
   % the gradiometer structure needs to be updated to ensure that the forward model remains consistent with the data
