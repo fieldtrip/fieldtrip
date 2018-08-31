@@ -336,7 +336,7 @@ switch sensshape
       end
     else
       % the style is not specified, use facecolor for the marker
-      hs = plot3(pos(:,1), pos(:,2), pos(:,3), 'Marker', marker, 'MarkerSize', sensize, 'Color', facecolor, 'Linestyle', 'none');
+      hs = scatter3(pos(:,1), pos(:,2), pos(:,3), sensize.^2, facecolor, marker);
     end
     
   case 'circle'
