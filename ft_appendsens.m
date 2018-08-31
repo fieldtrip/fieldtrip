@@ -195,9 +195,9 @@ if haselecpos
       tmp(:, idx) = sum(sens.tra(chanidx, find(idx==elecidx2)),2); % find and take sum over duplicates
     end
     sens.tra = tmp;
-    % check for expected size and non-empty rows or columns
+    % check for expected size and non-empty rows
     if ~isequal(size(sens.tra,1), size(sens.chanpos,1)) || ~isequal(size(sens.tra,2), size(sens.elecpos,1)) ...
-        || any(any(sens.tra,1)==0) || any(any(sens.tra,2)==0)
+        || any(any(sens.tra,2)==0) % all channels need to be linked to their origins
       fprintf('removing inconsistent tra matrix\n')
       sens = rmfield(sens, 'tra');
     end
@@ -217,9 +217,9 @@ if hasoptopos
       tmp(:, idx) = sum(sens.tra(chanidx, find(idx==optoidx2)),2); % find and take sum over duplicates
     end
     sens.tra = tmp;
-    % check for expected size and non-empty rows or columns
+    % check for expected size and non-empty rows
     if ~isequal(size(sens.tra,1), size(sens.chanpos,1)) || ~isequal(size(sens.tra,2), size(sens.optopos,1)) ...
-        || any(any(sens.tra,1)==0) || any(any(sens.tra,2)==0)
+        || any(any(sens.tra,2)==0) % all channels need to be linked to their origins
       fprintf('removing inconsistent tra matrix\n')
       sens = rmfield(sens, 'tra');
     end
@@ -239,9 +239,9 @@ if hascoilpos
       tmp(:, idx) = sum(sens.tra(chanidx, find(idx==coilidx2)),2); % find and take sum over duplicates
     end
     sens.tra = tmp;
-    % check for expected size and non-empty rows or columns
+    % check for expected size and non-empty rows
     if ~isequal(size(sens.tra,1), size(sens.chanpos,1)) || ~isequal(size(sens.tra,2), size(sens.coilpos,1)) ...
-        || any(any(sens.tra,1)==0) || any(any(sens.tra,2)==0)
+        || any(any(sens.tra,2)==0) % all channels need to be linked to their origins
       fprintf('removing inconsistent tra matrix\n')
       sens = rmfield(sens, 'tra');
     end
