@@ -23,6 +23,8 @@ function [data] = ft_checkdata(data, varargin)
 %   isnirs             = yes, no
 %   hasunit            = yes, no
 %   hascoordsys        = yes, no
+%   haschantype        = yes, no
+%   haschanunit        = yes, no
 %   hassampleinfo      = yes, no, ifmakessense (applies to raw and timelock data)
 %   hascumtapcnt       = yes, no (only applies to freq data)
 %   hasdim             = yes, no
@@ -103,6 +105,8 @@ inside               = ft_getopt(varargin, 'inside'); % can be 'logical' or 'ind
 hastrials            = ft_getopt(varargin, 'hastrials');
 hasunit              = ft_getopt(varargin, 'hasunit', 'no');
 hascoordsys          = ft_getopt(varargin, 'hascoordsys', 'no');
+haschantype          = ft_getopt(varargin, 'haschantype', 'no');
+haschanunit          = ft_getopt(varargin, 'haschanunit', 'no');
 hassampleinfo        = ft_getopt(varargin, 'hassampleinfo', 'ifmakessense');
 hasdim               = ft_getopt(varargin, 'hasdim');
 hascumtapcnt         = ft_getopt(varargin, 'hascumtapcnt');
@@ -635,6 +639,14 @@ end % if hasunit
 if istrue(hascoordsys) && ~isfield(data, 'coordsys')
   data = ft_determine_coordsys(data);
 end % if hascoordsys
+
+if istrue(haschantype) && ~isfield(data, 'chantype')
+  data.chantype = ft_chantype(data);
+end % if haschantype
+
+if istrue(haschanunit) && ~isfield(data, 'chanunit')
+  data.chanunit = ft_chanunit(data);
+end % if haschanunit
 
 if isequal(hastrials, 'yes')
   hasrpt = isfield(data, 'trial');
