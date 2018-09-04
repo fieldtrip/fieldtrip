@@ -1,4 +1,4 @@
-function [data, mri, grid] = nutmeg2fieldtrip(cfg,fileorstruct)
+function [data, mri, grid] = nutmeg2fieldtrip(cfg, fileorstruct)
 
 % NUTMEG2FIELDTRIP converts from NUTMEG either a sensor data structure
 % ('nuts') to a valid FieldTrip 'raw' structure (plus 'grid' and 'mri' if

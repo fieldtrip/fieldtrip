@@ -190,7 +190,7 @@ if isempty(cfg.toi) && isempty(cfg.t_ftimwin)
 elseif ~isempty(cfg.toi) && ~isempty(cfg.t_ftimwin)
   % do sliding window approach
   for k = 1:numel(cfg.toi)
-		latency(k,:) = cfg.toi + cfg.t_ftimwin.*[-0.5 0.5-1./data.fsample];
+		latency(k,:) = cfg.toi(k) + cfg.t_ftimwin.*[-0.5 0.5-1./data.fsample];
 	end
 else
   ft_error('cfg should contain both cfg.toi and cfg.t_ftimwin');

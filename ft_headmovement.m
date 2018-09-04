@@ -320,5 +320,7 @@ end
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
-ft_postamble previous varargout{:}  % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
-ft_postamble history varargout{:}  % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg
+ft_postamble previous varargout
+ft_postamble history varargout
+ft_postamble savevar varargout
+
