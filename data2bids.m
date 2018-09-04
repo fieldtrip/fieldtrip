@@ -65,6 +65,7 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.trigger.eventvalue      = string or number
 %   cfg.presentation.eventtype  = string (default = [])
 %   cfg.presentation.eventvalue = string or number
+%   cfg.presentation.skip       = 'last'/'first'/'none'
 % to indicate how triggers or volumes match the presentation events.
 %
 % General BIDS options that apply to all data types are
@@ -183,6 +184,7 @@ cfg.presentationfile        = ft_getopt(cfg, 'presentationfile');             % 
 cfg.presentation            = ft_getopt(cfg, 'presentation');
 cfg.presentation.eventtype  = ft_getopt(cfg.presentation, 'eventtype');
 cfg.presentation.eventvalue = ft_getopt(cfg.presentation, 'eventvalue');
+cfg.presentation.skip       = ft_getopt(cfg.presentation, 'skip',  'last'); % this is a sensible default for fMRI, for MEG one should probably do 'none'
 cfg.trigger                 = ft_getopt(cfg, 'trigger');
 cfg.trigger.eventtype       = ft_getopt(cfg.trigger, 'eventtype');
 cfg.trigger.eventvalue      = ft_getopt(cfg.trigger, 'eventvalue');
@@ -534,8 +536,10 @@ switch typ
         switch cfg.presentation.skip
           case 'first'
             ft_warning('discarding first %d presentation events for realignment of events', n);
+            selpres = selpres((n+1):end);
           case 'last'
             ft_warning('discarding last %d presentation events for realignment of events', n);
+            selpres = selpres(1:end-n);
           case 'none'
             ft_error('not enough volumes to match the presentation events');
         end % case
@@ -696,8 +700,30 @@ switch typ
       seltrig = trigger(seltrig);
       selpres = presentation(selpres);
       
-      if length(seltrig)~=length(selpres)
+      %if length(seltrig)~=length(selpres)
+      %  ft_error('inconsistent number: %d triggers, %d presentation events', length(seltrig), length(selpres));
+      %end
+      
+      ft_info('%d triggers, %d presentation events', length(seltrig), length(selpres));
+      if length(seltrig)>length(selpres)
+        % don't know how to solve this
         ft_error('inconsistent number: %d triggers, %d presentation events', length(seltrig), length(selpres));
+      elseif length(selpres)>length(seltrig)
+        n = length(selpres)-length(seltrig);
+        % this could happen when due to acquisition problems
+        % there is more than one *.ds directory. If this is 
+        % a known case, cfg.presentation.skip can be used. note
+        % that this only works, if there are two ds-datasets (not more)
+        switch cfg.presentation.skip
+          case 'first'
+            ft_warning('discarding first %d presentation events for realignment of events', n);
+            selpres = selpres((n+1):end);
+          case 'last'
+            ft_warning('discarding last %d presentation events for realignment of events', n);
+            selpres = selpres(1:end-n);
+          case 'none'
+            ft_error('not enough volumes to match the presentation events');
+        end % case
       end
       
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
