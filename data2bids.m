@@ -960,7 +960,7 @@ end
 
 if ~isempty(channels_tsv)
   [p, f, x] = fileparts(cfg.outputfile);
-  f = remove_datatype(f); % remove _bold, _meg, etc.
+  f = remove_token(f, 'datatype'); % remove _bold, _meg, etc.
   filename = fullfile(p, [f '_channels.tsv']);
   if isfile(filename)
     existing = read_tsv(filename);
@@ -990,7 +990,7 @@ end
 
 if ~isempty(events_tsv)
   [p, f, x] = fileparts(cfg.outputfile);
-  f = remove_datatype(f); % remove _bold, _meg, etc.
+  f = remove_token(f, 'datatype'); % remove _bold, _meg, etc.
   filename = fullfile(p, [f '_events.tsv']);
   if isfile(filename)
     existing = read_tsv(filename);
@@ -1202,28 +1202,6 @@ if ~isempty(eventvalue)
   for i=1:numel(event)
     sel(i) = sel(i) && ismatch(event(i).value, eventvalue);
   end
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION returns true if x is a member of array y, regardless of the class of x and y
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function s = ismatch(x, y)
-if isempty(x) || isempty(y)
-  s = false;
-elseif ischar(x) && ischar(y)
-  s = strcmp(x, y);
-elseif isnumeric(x) && isnumeric(y)
-  s = ismember(x, y);
-elseif ischar(x) && iscell(y)
-  y = y(strcmp(class(x), cellfun(@class, y, 'UniformOutput', false)));
-  s = ismember(x, y);
-elseif isnumeric(x) && iscell(y) && all(cellfun(@isnumeric, y))
-  s = false;
-  for i=1:numel(y)
-    s = s || ismember(x, y{i});
-  end
-else
-  s = false;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

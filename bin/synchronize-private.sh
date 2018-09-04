@@ -1334,11 +1334,27 @@ ARRAY+=(private/isalmostequal.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# isfile.m
+
+ARRAY=()
+ARRAY+=(compat/matlablt2017b/isfile.m)
+ARRAY+=(compat/octave/isfile.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # isfolder.m
 
 ARRAY=()
 ARRAY+=(compat/matlablt2017b/isfolder.m)
 ARRAY+=(compat/octave/isfolder.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# ismatch.m
+
+ARRAY=()
+ARRAY+=(private/ismatch.m)
+ARRAY+=(trialfun/private/ismatch.m)
 sync ${ARRAY[*]}
 
 ################################################################################
