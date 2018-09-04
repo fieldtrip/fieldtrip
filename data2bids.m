@@ -960,7 +960,7 @@ end
 
 if ~isempty(channels_tsv)
   [p, f, x] = fileparts(cfg.outputfile);
-  f = remove_datatype(f); % remove _bold, _meg, etc.
+  f = remove_token(f, 'datatype'); % remove _bold, _meg, etc.
   filename = fullfile(p, [f '_channels.tsv']);
   if isfile(filename)
     existing = read_tsv(filename);
@@ -990,7 +990,7 @@ end
 
 if ~isempty(events_tsv)
   [p, f, x] = fileparts(cfg.outputfile);
-  f = remove_datatype(f); % remove _bold, _meg, etc.
+  f = remove_token(f, 'datatype'); % remove _bold, _meg, etc.
   filename = fullfile(p, [f '_events.tsv']);
   if isfile(filename)
     existing = read_tsv(filename);
