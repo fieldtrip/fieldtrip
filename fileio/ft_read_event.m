@@ -2145,7 +2145,8 @@ switch eventformat
     % in case using an external read function was desired, this is where it is executed
     % if it fails, the regular unsupported warning message is thrown
     try
-      event = feval(eventformat, filename);
+      hdr = feval(eventformat, filename);
+      event = feval(eventformat, filename, hdr);
     catch
       ft_warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format (%s)', eventformat);
       event = [];
