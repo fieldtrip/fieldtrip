@@ -131,10 +131,10 @@ if initialized && exist('ft_hastoolbox', 'file')
   return;
 end
 
-if isfield(ft_default, 'hastoolbox')
-  prevhastoolbox = ft_default.hastoolbox;
+if isfield(ft_default, 'toolbox') && isfield(ft_default.toolbox, 'cleanup')
+  prevcleanup = ft_default.toolbox.cleanup;
 else
-  prevhastoolbox = {};
+  prevcleanup = {};
 end
 
 % Ensure that the path containing ft_defaults is on the path.
@@ -319,7 +319,7 @@ if ~isdeployed
 end
 
 % the toolboxes added by this function should not be removed by FT_POSTAMBLE_HASTOOLBOX
-ft_default.hastoolbox = prevhastoolbox;
+ft_default.toolbox.cleanup = prevcleanup;
 
 % track the usage of this function, this only happens once at startup
 ft_trackusage('startup');

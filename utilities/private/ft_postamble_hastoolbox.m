@@ -7,13 +7,35 @@
 %
 % See also FT_PREAMBLE, FT_POSTAMBLE, FT_HASTOOLBOX
 
+% Copyright (C) 2018, Robert Oostenveld, DCCN
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
+
 global ft_default
 
-if ~isempty(ft_default) && isfield(ft_default, 'hastoolbox')
- for i=1:numel(ft_default.hastoolbox)
-    ft_info('removing %s from path', ft_default.hastoolbox{i});
-    rmpath(genpath(ft_default.hastoolbox{i}));
+if ~isempty(ft_default) && isfield(ft_default, 'toolbox') && isfield(ft_default.toolbox, 'cleanup')
+  while ~isempty(ft_default.toolbox.cleanup)
+    toolbox = ft_default.toolbox.cleanup{end};
+    ft_warning('off','backtrace');
+    ft_warning('removing %s toolbox from your MATLAB path', toolbox);
+    ft_warning('on','backtrace');
+    rmpath(genpath(toolbox));
+    ft_default.toolbox.cleanup = ft_default.toolbox.cleanup(1:end-1);
   end
-  ft_default = rmfield(ft_default, 'hastoolbox');
 end
-

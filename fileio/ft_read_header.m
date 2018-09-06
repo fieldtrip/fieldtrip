@@ -2547,8 +2547,8 @@ switch headerformat
     % attempt to run headerformat as a function
     % in case using an external read function was desired, this is where it is executed
     % if it fails, the regular unsupported error message is thrown
-    try
       hdr = feval(headerformat,filename);
+    try
     catch
       if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
         hdr = read_biosig_header(filename);
