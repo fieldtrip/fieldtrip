@@ -61,11 +61,10 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - VSM-Medtech/CTF
 %  - Yokogawa & Ricoh
 %  - nifti, gifti
-%  - Nicolet *.e (currently from Natus, formerly Carefusion, Viasys and
-%                 Taugagreining. Also known as Oxford/Teca/Medelec Valor
-%                 - Nervus)
+%  - Nicolet *.e (currently from Natus, formerly Carefusion, Viasys and Taugagreining. Also known as Oxford/Teca/Medelec Valor Nervus)
+%  - Biopac *.acq
 
-% Copyright (C) 2003-2013 Robert Oostenveld
+% Copyright (C) 2003-2018 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -1352,6 +1351,10 @@ elseif filetype_check_extension(filename, '.log') && filetype_check_header(filen
   type = 'presentation_log';
   manufacturer = 'NBS Presentation';
   content = 'events';
+elseif filetype_check_extension(filename, '.acq')
+  type = 'biopac_acq';
+  manufacturer = 'Biopac';
+  content = 'physiological signals';
 end
 
 
