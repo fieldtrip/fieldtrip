@@ -61,11 +61,10 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - VSM-Medtech/CTF
 %  - Yokogawa & Ricoh
 %  - nifti, gifti
-%  - Nicolet *.e (currently from Natus, formerly Carefusion, Viasys and
-%                 Taugagreining. Also known as Oxford/Teca/Medelec Valor
-%                 - Nervus)
+%  - Nicolet *.e (currently from Natus, formerly Carefusion, Viasys and Taugagreining. Also known as Oxford/Teca/Medelec Valor Nervus)
+%  - Biopac *.acq
 
-% Copyright (C) 2003-2013 Robert Oostenveld
+% Copyright (C) 2003-2018 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -154,7 +153,7 @@ if isempty(filename)
 end
 
 % the parts of the filename are used further down
-if isdir(filename)
+if isfolder(filename)
   [p, f, x] = fileparts(filename);
   p = filename;  % the full path to the directory name
   d = f;         % the last part of the directory name
@@ -165,7 +164,7 @@ else
 end
 
 % prevent this test if the filename resembles an URI, i.e. like "scheme://"
-if isempty(strfind(filename , '://')) && isdir(filename)
+if ~contains(filename , '://') && isfolder(filename)
   % the directory listing is needed below
   ls = dir(filename);
   % remove the parent directory and the directory itself from the list
@@ -233,11 +232,11 @@ elseif filetype_check_uri(filename, 'empty')
   content      = '/dev/null';
 
   % known CTF file types
-elseif isdir(filename) && filetype_check_extension(filename, '.ds') && exist(fullfile(filename, [f '.res4']), 'file')
+elseif isfolder(filename) && filetype_check_extension(filename, '.ds') && exist(fullfile(filename, [f '.res4']), 'file')
   type = 'ctf_ds';
   manufacturer = 'CTF';
   content = 'MEG dataset';
-elseif isdir(filename) && ~isempty(dir(fullfile(filename, '*.res4'))) && ~isempty(dir(fullfile(filename, '*.meg4')))
+elseif isfolder(filename) && ~isempty(dir(fullfile(filename, '*.res4'))) && ~isempty(dir(fullfile(filename, '*.meg4')))
   type = 'ctf_ds';
   manufacturer = 'CTF';
   content = 'MEG dataset';
@@ -385,19 +384,19 @@ elseif filetype_check_extension(filename, '.hsp')
   manufacturer = 'Yokogawa';
 
   % Neurosim files; this has to go before the 4D detection
-elseif ~isdir(filename) && (strcmp(f,'spikes') || filetype_check_header(filename,'#  Spike information'))
+elseif ~isfolder(filename) && (strcmp(f,'spikes') || filetype_check_header(filename,'#  Spike information'))
   type = 'neurosim_spikes';
   manufacturer = 'Jan van der Eerden (DCCN)';
   content = 'simulated spikes';
-elseif ~isdir(filename) && (strcmp(f,'evolution') || filetype_check_header(filename,'#  Voltages'))
+elseif ~isfolder(filename) && (strcmp(f,'evolution') || filetype_check_header(filename,'#  Voltages'))
   type = 'neurosim_evolution';
   manufacturer = 'Jan van der Eerden (DCCN)';
   content = 'simulated membrane voltages and currents';
-elseif ~isdir(filename) && (strcmp(f,'signals') || filetype_check_header(filename,'#  Internal',2))
+elseif ~isfolder(filename) && (strcmp(f,'signals') || filetype_check_header(filename,'#  Internal',2))
   type = 'neurosim_signals';
   manufacturer = 'Jan van der Eerden (DCCN)';
   content = 'simulated network signals';
-elseif isdir(filename) && exist(fullfile(filename, 'signals'), 'file') && exist(fullfile(filename, 'spikes'), 'file')
+elseif isfolder(filename) && exist(fullfile(filename, 'signals'), 'file') && exist(fullfile(filename, 'spikes'), 'file')
   type = 'neurosim_ds';
   manufacturer = 'Jan van der Eerden (DCCN)';
   content = 'simulated spikes and continuous signals';
@@ -423,7 +422,7 @@ elseif isequal(f, 'hs_file') % the filename is "hs_file"
   type = '4d_hs';
   manufacturer = '4D/BTI';
   content = 'head shape';
-elseif length(filename)>=4 && ~isempty(strfind(filename,',rf'))
+elseif length(filename)>=4 && contains(filename,',rf')
   type = '4d';
   manufacturer = '4D/BTi';
   content = '';
@@ -653,51 +652,51 @@ elseif filetype_check_extension(filename, '.nrd') % see also above, since Cheeta
   type = 'neuralynx_dma';
   manufacturer = 'Neuralynx';
   content = 'raw aplifier data directly from DMA';
-elseif isdir(filename) && (any(filetype_check_extension({ls.name}, '.nev')) || any(filetype_check_extension({ls.name}, '.Nev')))
+elseif isfolder(filename) && (any(filetype_check_extension({ls.name}, '.nev')) || any(filetype_check_extension({ls.name}, '.Nev')))
   % a regular Neuralynx dataset directory that contains an event file
   type = 'neuralynx_ds';
   manufacturer = 'Neuralynx';
   content = 'dataset';
-elseif isdir(filename) && most(filetype_check_extension({ls.name}, '.ncs'))
+elseif isfolder(filename) && most(filetype_check_extension({ls.name}, '.ncs'))
   % a directory containing continuously sampled channels in Neuralynx format
   type = 'neuralynx_ds';
   manufacturer = 'Neuralynx';
   content = 'continuously sampled channels';
-elseif isdir(filename) && most(filetype_check_extension({ls.name}, '.nse'))
+elseif isfolder(filename) && most(filetype_check_extension({ls.name}, '.nse'))
   % a directory containing spike waveforms in Neuralynx format
   type = 'neuralynx_ds';
   manufacturer = 'Neuralynx';
   content = 'spike waveforms';
-elseif isdir(filename) && most(filetype_check_extension({ls.name}, '.nte'))
+elseif isfolder(filename) && most(filetype_check_extension({ls.name}, '.nte'))
   % a directory containing spike timestamps in Neuralynx format
   type = 'neuralynx_ds';
   manufacturer = 'Neuralynx';
   content = 'spike timestamps';
-elseif isdir(filename) && most(filetype_check_extension({ls.name}, '.ntt'))
+elseif isfolder(filename) && most(filetype_check_extension({ls.name}, '.ntt'))
   % a directory containing tetrode recordings in Neuralynx format
   type = 'neuralynx_ds';
   manufacturer = 'Neuralynx';
   content = 'tetrode recordings ';
 
-elseif isdir(p) && exist(fullfile(p, 'header'), 'file') && exist(fullfile(p, 'samples'), 'file') && exist(fullfile(p, 'events'), 'file')
+elseif isfolder(p) && exist(fullfile(p, 'header'), 'file') && exist(fullfile(p, 'samples'), 'file') && exist(fullfile(p, 'events'), 'file')
   type = 'fcdc_buffer_offline';
   manufacturer = 'Donders Centre for Cognitive Neuroimaging';
   content = 'FieldTrip buffer offline dataset';
 
-elseif isdir(filename) && exist(fullfile(filename, 'info.xml'), 'file') && exist(fullfile(filename, 'signal1.bin'), 'file')
+elseif isfolder(filename) && exist(fullfile(filename, 'info.xml'), 'file') && exist(fullfile(filename, 'signal1.bin'), 'file')
   % this is an OS X package directory representing a complete EEG dataset
   % it contains a Content file, multiple xml files and one or more signalN.bin files
   type = 'egi_mff';
   manufacturer = 'Electrical Geodesics Incorporated';
   content = 'raw EEG data';
-elseif ~isdir(filename) && isdir(p) && exist(fullfile(p, 'info.xml'), 'file') && exist(fullfile(p, 'signal1.bin'), 'file')
+elseif ~isfolder(filename) && isfolder(p) && exist(fullfile(p, 'info.xml'), 'file') && exist(fullfile(p, 'signal1.bin'), 'file')
   % the file that the user specified is one of the files in an mff package directory
   type = 'egi_mff';
   manufacturer = 'Electrical Geodesics Incorporated';
   content = 'raw EEG data';
 
   % these are formally not Neuralynx file formats, but at the FCDC we use them together with Neuralynx
-elseif isdir(filename) && filetype_check_neuralynx_cds(filename)
+elseif isfolder(filename) && filetype_check_neuralynx_cds(filename)
   % a downsampled Neuralynx DMA file can be split into three separate lfp/mua/spike directories
   % treat them as one combined dataset
   type = 'neuralynx_cds';
@@ -719,12 +718,12 @@ elseif filetype_check_extension(filename, '.bin') && filetype_check_header(filen
   type = 'neuralynx_bin';
   manufacturer = 'Donders Centre for Cognitive Neuroimaging';
   content = 'single channel continuous data';
-elseif isdir(filename) && any(filetype_check_extension({ls.name}, '.ttl')) && any(filetype_check_extension({ls.name}, '.tsl')) && any(filetype_check_extension({ls.name}, '.tsh'))
+elseif isfolder(filename) && any(filetype_check_extension({ls.name}, '.ttl')) && any(filetype_check_extension({ls.name}, '.tsl')) && any(filetype_check_extension({ls.name}, '.tsh'))
   % a directory containing the split channels from a DMA logfile
   type = 'neuralynx_sdma';
   manufacturer = 'Donders Centre for Cognitive Neuroimaging';
   content = 'split DMA log file';
-elseif isdir(filename) && filetype_check_extension(filename, '.sdma')
+elseif isfolder(filename) && filetype_check_extension(filename, '.sdma')
   % a directory containing the split channels from a DMA logfile
   type = 'neuralynx_sdma';
   manufacturer = 'Donders Centre for Cognitive Neuroimaging';
@@ -742,7 +741,7 @@ elseif filetype_check_extension(filename, '.plx')  && filetype_check_header(file
 elseif filetype_check_extension(filename, '.ddt')
   type = 'plexon_ddt';
   manufacturer = 'Plexon';
-elseif isdir(filename) && most(filetype_check_extension({ls.name}, '.nex')) && most(filetype_check_header({ls.name}, 'NEX1'))
+elseif isfolder(filename) && most(filetype_check_extension({ls.name}, '.nex')) && most(filetype_check_header({ls.name}, 'NEX1'))
   % a directory containing multiple plexon NEX files
   type = 'plexon_ds';
   manufacturer = 'Plexon';
@@ -827,7 +826,7 @@ elseif filetype_check_extension(filename, '.dap') && filetype_check_header(filen
   type = 'mpi_dap';
   manufacturer = 'MPI Frankfurt';
   content = 'electrophysiological data';
-elseif isdir(filename) && ~isempty(cell2mat(regexp({ls.name}, '.dap$')))
+elseif isfolder(filename) && ~isempty(cell2mat(regexp({ls.name}, '.dap$')))
   type = 'mpi_ds';
   manufacturer = 'MPI Frankfurt';
   content = 'electrophysiological data';
@@ -1259,22 +1258,22 @@ elseif filetype_check_extension(filename, '.border') && filetype_check_header(fi
 elseif filetype_check_extension(filename, '.spec') && (filetype_check_header(filename, '<?xml') || filetype_check_header(filename, 'BeginHeader'))
   type = 'caret_spec';
   manufacturer = 'Caret and ConnectomeWB';
-elseif filetype_check_extension(filename, '.gii') && ~isempty(strfind(filename, '.coord.')) && filetype_check_header(filename, '<?xml')
+elseif filetype_check_extension(filename, '.gii') && contains(filename, '.coord.') && filetype_check_header(filename, '<?xml')
   type = 'caret_coord';
   manufacturer = 'Caret and ConnectomeWB';
-elseif filetype_check_extension(filename, '.gii') && ~isempty(strfind(filename, '.topo.')) && filetype_check_header(filename, '<?xml')
+elseif filetype_check_extension(filename, '.gii') && contains(filename, '.topo.') && filetype_check_header(filename, '<?xml')
   type = 'caret_topo';
   manufacturer = 'Caret and ConnectomeWB';
-elseif filetype_check_extension(filename, '.gii') && ~isempty(strfind(filename, '.surf.')) && filetype_check_header(filename, '<?xml')
+elseif filetype_check_extension(filename, '.gii') && contains(filename, '.surf.') && filetype_check_header(filename, '<?xml')
   type = 'caret_surf';
   manufacturer = 'Caret and ConnectomeWB';
-elseif filetype_check_extension(filename, '.gii') && ~isempty(strfind(filename, '.label.')) && filetype_check_header(filename, '<?xml')
+elseif filetype_check_extension(filename, '.gii') && contains(filename, '.label.') && filetype_check_header(filename, '<?xml')
   type = 'caret_label';
   manufacturer = 'Caret and ConnectomeWB';
-elseif filetype_check_extension(filename, '.gii') && ~isempty(strfind(filename, '.func.')) && filetype_check_header(filename, '<?xml')
+elseif filetype_check_extension(filename, '.gii') && contains(filename, '.func.') && filetype_check_header(filename, '<?xml')
   type = 'caret_func';
   manufacturer = 'Caret and ConnectomeWB';
-elseif filetype_check_extension(filename, '.gii') && ~isempty(strfind(filename, '.shape.')) && filetype_check_header(filename, '<?xml')
+elseif filetype_check_extension(filename, '.gii') && contains(filename, '.shape.') && filetype_check_header(filename, '<?xml')
   type = 'caret_shape';
   manufacturer = 'Caret and ConnectomeWB';
 elseif filetype_check_extension(filename, '.gii') && filetype_check_header(filename, '<?xml')
@@ -1321,11 +1320,11 @@ elseif filetype_check_extension(filename, '.ah5')
   type = 'AnyWave';
   manufacturer = 'AnyWave, http://meg.univ-amu.fr/wiki/AnyWave';
   content = 'MEG/SEEG/EEG data';
-elseif (isdir(filename) && exist(fullfile(p, [d '.EEG.Poly5']), 'file')) || filetype_check_extension(filename, '.Poly5')
+elseif (isfolder(filename) && exist(fullfile(p, [d '.EEG.Poly5']), 'file')) || filetype_check_extension(filename, '.Poly5')
   type = 'tmsi_poly5';
   manufacturer = 'TMSi PolyBench';
   content = 'EEG';
-elseif (isdir(filename) && exist(fullfile(filename, 'DataSetSession.xml'), 'file') && exist(fullfile(filename, 'DataSetProtocol.xml'), 'file'))
+elseif (isfolder(filename) && exist(fullfile(filename, 'DataSetSession.xml'), 'file') && exist(fullfile(filename, 'DataSetProtocol.xml'), 'file'))
   type = 'mega_neurone';
   manufacturer = 'Mega - http://www.megaemg.com';
   content = 'EEG';
@@ -1348,6 +1347,14 @@ elseif filetype_check_extension(filename, '.mgrid')
   type = 'bioimage_mgrid';
   manufacturer = 'Bioimage Suite';
   content = 'electrode positions';
+elseif filetype_check_extension(filename, '.log') && filetype_check_header(filename, 'Scenario')
+  type = 'presentation_log';
+  manufacturer = 'NBS Presentation';
+  content = 'events';
+elseif filetype_check_extension(filename, '.acq')
+  type = 'biopac_acq';
+  manufacturer = 'Biopac';
+  content = 'physiological signals';
 end
 
 

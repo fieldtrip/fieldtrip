@@ -29,9 +29,6 @@
 %
 % $Id$
 
-% otherwise the empty field would end up in the output cfg
-global ft_default
-
 % most FieldTrip functions should allow for configuration tracking, except for
 % the functions that take a cfg as input and return a cfg as output
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');

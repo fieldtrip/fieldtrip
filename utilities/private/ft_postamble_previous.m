@@ -28,14 +28,12 @@
 %
 % $Id$
 
-global ft_default
-
 % remember the cfg history of the input data structures
 cfg.previous = {};
 cnt = 0;
-for tmpindx=1:length(ft_default.postamble)
-  if exist(ft_default.postamble{tmpindx}, 'var')
-    tmpvar = eval(ft_default.postamble{tmpindx});
+for tmpindx=1:length(iW1aenge_postamble)
+  if exist(iW1aenge_postamble{tmpindx}, 'var')
+    tmpvar = eval(iW1aenge_postamble{tmpindx});
   else
     tmpvar = [];
   end
@@ -65,3 +63,4 @@ if length(cfg.previous)==1
   % replace the cell-array by the single struct
   cfg.previous = cfg.previous{1};
 end
+

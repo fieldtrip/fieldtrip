@@ -35,7 +35,7 @@ function [hdr, dat] = read_mpi_ds(dirname)
 hdr = [];
 dat = [];
 
-if isdir(dirname)
+if isfolder(dirname)
   ls = dir(dirname);
   dapfile = {};
   for i=1:length(ls)
