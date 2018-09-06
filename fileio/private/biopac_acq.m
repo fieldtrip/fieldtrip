@@ -28,13 +28,18 @@ function varargout = biopac_acq(filename, hdr, begsample, endsample, chanindx)
 %
 % $Id$
 
-persistent acq previous_filename
+persistent acq previous_fullname
 
-if isempty(previous_filename) || ~isequal(filename, previous_filename)
+% use the full filename including path to distinguish between similarly named files in different directories
+fullname = which(filename);
+
+if isempty(previous_fullname) || ~isequal(fullname, previous_fullname)
+  % remember the full filename including path
+  previous_fullname = fullname;
+  
   % add fieldtrip/external/fileexchange to the path
   ft_hastoolbox('fileexchange', 1);
   
-  previous_filename = filename;
   % read the header and data
   acq = load_acq(filename, false);
 else
