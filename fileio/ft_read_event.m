@@ -427,9 +427,10 @@ switch eventformat
     
   case 'AnyWave'
     event = read_ah5_markers(hdr, filename);
+    
   case 'brainvision_vmrk'
     fid=fopen(filename,'rt');
-    if fid==-1,
+    if fid==-1
       ft_error('cannot open BrainVision marker file')
     end
     line = [];
@@ -592,7 +593,7 @@ switch eventformat
     
   case 'dataq_wdq'
     if isempty(hdr)
-      hdr     = ft_read_header(filename, 'headerformat', 'dataq_wdq');
+      hdr = ft_read_header(filename, 'headerformat', 'dataq_wdq');
     end
     trigger  = read_wdq_data(filename, hdr.orig, 'lowbits');
     [ix, iy] = find(trigger>1); %it seems as if the value of 1 is meaningless
@@ -2145,8 +2146,8 @@ switch eventformat
     % in case using an external read function was desired, this is where it is executed
     % if it fails, the regular unsupported warning message is thrown
     try
-      hdr = feval(eventformat, filename);
       event = feval(eventformat, filename, hdr);
+      
     catch
       ft_warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format (%s)', eventformat);
       event = [];

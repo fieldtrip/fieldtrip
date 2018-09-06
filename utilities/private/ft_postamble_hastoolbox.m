@@ -1,15 +1,13 @@
-% FT_PREAMBLE_TRACKCONFIG is a helper script that calls ft_checkconfig to switch the
-% (optional) configuration tracking on. This should be used together with
-% FT_POSTAMBLE_TRACKCONFIG.
+% FT_POSTAMBLE_HASTOOLBOX is executed at the end of each FieldTrip
+% function to remove other toolboxes that have been added automatically
+% by FT_HASTOOLBOX during execution of the specific function.
 %
 % Use as
-%   ft_preamble trackconfig
-%   ... regular code goes here ...
-%   ft_postamble trackconfig
+%   ft_postamble hastoolbox
 %
-% See also FT_PREAMBLE, FT_POSTAMBLE, FT_POSTAMBLE_TRACKCONFIG
+% See also FT_PREAMBLE, FT_POSTAMBLE, FT_HASTOOLBOX
 
-% Copyright (C) 2011-2012, Robert Oostenveld, DCCN
+% Copyright (C) 2018, Robert Oostenveld, DCCN
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -29,6 +27,15 @@
 %
 % $Id$
 
-% most FieldTrip functions should allow for configuration tracking, except for
-% the functions that take a cfg as input and return a cfg as output
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+global ft_default
+
+if ~isempty(ft_default) && isfield(ft_default, 'toolbox') && isfield(ft_default.toolbox, 'cleanup')
+  while ~isempty(ft_default.toolbox.cleanup)
+    toolbox = ft_default.toolbox.cleanup{end};
+    ft_warning('off','backtrace');
+    ft_warning('removing %s toolbox from your MATLAB path', toolbox);
+    ft_warning('on','backtrace');
+    rmpath(genpath(toolbox));
+    ft_default.toolbox.cleanup = ft_default.toolbox.cleanup(1:end-1);
+  end
+end

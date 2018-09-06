@@ -31,9 +31,10 @@ function varargout = biopac_acq(filename, hdr, begsample, endsample, chanindx)
 persistent acq previous_filename
 
 if isempty(previous_filename) || ~isequal(filename, previous_filename)
-  previous_filename = filename;
   % add fieldtrip/external/fileexchange to the path
   ft_hastoolbox('fileexchange', 1);
+  
+  previous_filename = filename;
   % read the header and data
   acq = load_acq(filename, false);
 else

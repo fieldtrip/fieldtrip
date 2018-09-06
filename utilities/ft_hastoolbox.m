@@ -52,7 +52,7 @@ function [status] = ft_hastoolbox(toolbox, autoadd, silent)
 
 if isdeployed
   % it is not possible to check the presence of functions or change the path in a compiled application
-  status = 1;
+  status = true;
   return
 end
 
@@ -501,9 +501,10 @@ end
 % helper function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function status = myaddpath(toolbox, silent)
+global ft_default
 if isdeployed
   ft_warning('cannot change path settings for %s in a compiled application', toolbox);
-  status = 1;
+  status = true;
 elseif exist(toolbox, 'dir')
   if ~silent
     ft_warning('off','backtrace');
@@ -511,16 +512,22 @@ elseif exist(toolbox, 'dir')
     ft_warning('on','backtrace');
   end
   if any(~cellfun(@isempty, regexp(toolbox, {'spm2', 'spm5', 'spm8', 'spm12'})))
-    % SPM needs to be added with the subdirectories
+    % SPM needs to be added with all its subdirectories
     addpath(genpath(toolbox));
   else
     addpath(toolbox);
   end
-  status = 1;
+  % remember the toolbox that was just added to the path, it will be cleaned up by FT_POSTAMBLE_HASTOOLBOX
+  if ~isfield(ft_default, 'toolbox') || ~isfield(ft_default.toolbox, 'cleanup')
+    ft_default.toolbox.cleanup = {};
+  end
+  ft_default.toolbox.cleanup{end+1} = toolbox;
+  status = true;
 elseif (~isempty(regexp(toolbox, 'spm2$', 'once')) || ~isempty(regexp(toolbox, 'spm5$', 'once')) || ~isempty(regexp(toolbox, 'spm8$', 'once')) || ~isempty(regexp(toolbox, 'spm12$', 'once'))) && exist([toolbox 'b'], 'dir')
+  % the final release version of SPM is not available, add the beta version instead
   status = myaddpath([toolbox 'b'], silent);
 else
-  status = 0;
+  status = false;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
