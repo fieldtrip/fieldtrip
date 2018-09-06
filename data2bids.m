@@ -188,6 +188,7 @@ cfg.presentation.skip       = ft_getopt(cfg.presentation, 'skip',  'last'); % th
 cfg.trigger                 = ft_getopt(cfg, 'trigger');
 cfg.trigger.eventtype       = ft_getopt(cfg.trigger, 'eventtype');
 cfg.trigger.eventvalue      = ft_getopt(cfg.trigger, 'eventvalue');
+cfg.trigger.event           = ft_getopt(cfg.trigger, 'event');
 
 cfg.mri                     = ft_getopt(cfg, 'mri');
 cfg.mri.deface              = ft_getopt(cfg.mri, 'deface', 'no');             % deface the anatomical MRI
@@ -410,7 +411,12 @@ switch typ
   case 'raw'
     % the data is not on disk, but has been passed as input argument
     hdr = ft_fetch_header(varargin{1});
-    trigger = ft_fetch_event(varargin{1});
+    if isempty(cfg.trigger.event)
+      trigger = ft_fetch_event(varargin{1});
+    else
+      % use the triggers as specified in the cfg
+      trigger = cfg.trigger.event;
+    end
     if ~isequal(cfg.dataset, cfg.outputfile)
       % the data should be converted and written to disk
       dat = ft_fetch_data(varargin{1}, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
@@ -423,7 +429,12 @@ switch typ
   otherwise
     % assume it is electrophysiological data, it can be either MEG, EEG or iEEG
     hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false);
-    trigger = ft_read_event(cfg.datafile, 'header', hdr);
+    if isempty(cfg.trigger.event)
+      trigger = ft_read_event(cfg.datafile, 'header', hdr);
+    else
+      % use the triggers as specified in the cfg
+      trigger = cfg.trigger.event;
+    end
     if ~isequal(cfg.dataset, cfg.outputfile)
       % the data should be converted and written to disk
       dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
@@ -722,7 +733,7 @@ switch typ
             ft_warning('discarding last %d presentation events for realignment of events', n);
             selpres = selpres(1:end-n);
           case 'none'
-            ft_error('not enough volumes to match the presentation events');
+            ft_error('not enough triggers to match the presentation events');
         end % case
       end
       
@@ -960,6 +971,9 @@ if ~isempty(coordsystem_json)
   [p, f, x] = fileparts(cfg.outputfile);
   f = remove_token(f, 'datatype'); % remove _bold, _meg, etc.
   f = remove_token(f, 'task');     % remove _task-something
+  f = remove_token(f, 'run');      % remove _run-something
+  f = remove_token(f, 'acq');      % remove _acq-something
+  f = remove_token(f, 'proc');     % remove _proc-something
   filename = fullfile(p, [f '_coordsystem.json']);
   if isfile(filename)
     existing = read_json(filename);
@@ -1079,7 +1093,7 @@ switch tok
     end
   otherwise
     part = regexp(f, sprintf('_%s-[a-zA-Z0-9]*', tok), 'split');
-    if ~isempty(part{2})
+    if numel(part)>1 && ~isempty(part{2})
       f = [part{1} part{2}];
     else
       f = part{1};
