@@ -283,6 +283,9 @@ function hdr = per_chan_data(fid, file_version)
       unused = fread(fid, 5, 'double')';		% 112 + 40
       hdr.var_sample_divider = fread(fid, 1, 'int16')'; % 152 + 2
 
+      % FIX according to comments on fileexchange
+      hdr.var_sample_divider = 1;
+
    else
 
    hdr.plot_mode = fread(fid, 1, 'int16')';		% 112 + 2
