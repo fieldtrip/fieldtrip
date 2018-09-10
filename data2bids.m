@@ -458,6 +458,72 @@ switch typ
       events_tsv = event2table(hdr, evt);
     end
     
+  case 'eeglab_set'
+    % these MUST be present
+    eeg_json.SamplingFrequency          = hdr.Fs;
+    % these SHOULD be present
+    eeg_json.EEGChannelCount            = sum(strcmp(hdr.chantype, 'eeg'));
+    eeg_json.ECOGChannelCount           = sum(strcmp(hdr.chantype, '???'));
+    eeg_json.SEEGChannelCount           = sum(strcmp(hdr.chantype, '???'));
+    eeg_json.EOGChannelCount            = sum(strcmp(hdr.chantype, 'eog'));
+    eeg_json.ECGChannelCount            = sum(strcmp(hdr.chantype, 'ecg'));
+    eeg_json.EMGChannelCount            = sum(strcmp(hdr.chantype, 'emg'));
+    eeg_json.MiscChannelCount           = sum(strcmp(hdr.chantype, 'misc'));
+    eeg_json.TriggerChannelCount        = sum(strcmp(hdr.chantype, 'trigger'));
+    eeg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
+    eeg_json.EpochLength                = hdr.nSamples/hdr.Fs;
+    
+    % make the relevant selection, all json fields start with a capital letter
+    fn = fieldnames(cfg);
+    fn = fn(~cellfun(@isempty, regexp(fn, '[A-Z].*')));
+    generic_defaults = keepfields(cfg, fn);
+    
+    % make the relevant selection, all json fields start with a capital letter
+    fn = fieldnames(cfg.meg);
+    fn = fn(~cellfun(@isempty, regexp(fn, '[A-Z].*')));
+    meg_defaults = keepfields(cfg.meg, fn);
+    
+    % merge the information from the defaults with the information obtained from the data
+    eeg_json = mergeconfig(eeg_json, generic_defaults);
+    eeg_json = mergeconfig(eeg_json, meg_defaults);
+    
+    % MEG data should also have a channels.tsv file
+    name                = mergevector(hdr.label(:),    cfg.channels.name);
+    type                = mergevector(hdr.chantype(:), cfg.channels.type);
+    units               = mergevector(hdr.chanunit(:), cfg.channels.units);
+    sampling_frequency  = mergevector(repmat(hdr.Fs, hdr.nChans, 1), cfg.channels.sampling_frequency);
+    % construct a table with the corresponding columns
+    % FIXME there are more columns that should be added
+    channels_tsv = table(name, type, units, sampling_frequency);
+    
+    % MEG data should also have an events.tsv file
+    if istable(cfg.events.trl)
+      % check that the column names are valid
+      assert(stcmp(cfg.events.trl.Properties.VariableNames{1}, 'begsample'));
+      assert(stcmp(cfg.events.trl.Properties.VariableNames{2}, 'endsample'));
+      assert(stcmp(cfg.events.trl.Properties.VariableNames{3}, 'offset'));
+      % use the events table as it is
+      events_tsv = cfg.events.trl;
+    elseif ~isempty(cfg.events.trl)
+      % convert the trl matrix to an events table
+      begsample = cfg.events.trl(:,1);
+      endsample = cfg.events.trl(:,2);
+      offset    = cfg.events.trl(:,3); % FIXME this is not used
+      if any(offset~=0)
+        ft_warning('the offset in the trl matrix is ignored');
+      end
+      if size(trl,2)>3
+        ft_warning('additional columns in the trl matrix are ignored');
+      end
+      % convert to the required fields
+      onset     = (begsample-1)/hdr.Fs;
+      duration  = (endsample-begsample+1)/hdr.Fs;
+      events_tsv = table(onset, duration);
+    else
+      % convert the events from the dataset into a table
+      events_tsv = event2table(hdr, evt);
+    end
+    
   otherwise
     ft_error('not yet implemented for "%s"', typ);
 end
