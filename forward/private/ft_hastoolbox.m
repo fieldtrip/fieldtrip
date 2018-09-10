@@ -637,3 +637,11 @@ w = which(function_name);
 
 % must be in path and not a variable
 status = ~isempty(w) && ~isequal(w, 'variable');
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ISFOLDER is needed for versions prior to 2017b
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function tf = isfolder(dirpath)
+tf = exist(dirpath,'dir') == 7;
+
