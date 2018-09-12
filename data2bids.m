@@ -583,27 +583,6 @@ if need_eeg_json
   eeg_json = mergeconfig(eeg_json, generic_defaults, false);
 end % if need_eeg_json
 
-%% need_channels_tsv
-if need_channels_tsv
-  % ensure that all channels have the correct details
-  fn = {'name' 'type' 'units' 'description' 'sampling_frequency' 'low_cutoff' 'high_cutoff' 'notch' 'software_filters' 'status' 'status_description'};
-  for i=1:numel(fn)
-    if numel(cfg.channels.(fn{i}))==1
-      cfg.channels.(fn{i}) = repmat(cfg.channels.(fn{i}), hdr.nChans, 1);
-    end
-  end
-  
-  % EEG and MEG data should also have a channels.tsv file
-  name                = mergevector(hdr.label(:),    cfg.channels.name);
-  type                = mergevector(hdr.chantype(:), cfg.channels.type);
-  units               = mergevector(hdr.chanunit(:), cfg.channels.units);
-  sampling_frequency  = mergevector(repmat(hdr.Fs, hdr.nChans, 1), cfg.channels.sampling_frequency);
-  
-  % construct a table with the corresponding columns
-  % FIXME there are more columns that should be added
-  channels_tsv = table(name, type, units, sampling_frequency);
-end
-
 %% need_coordsystem_json
 if need_coordsystem_json
   if ft_senstype(hdr.grad, 'ctf')
@@ -632,6 +611,27 @@ if need_coordsystem_json
     ft_warning('coordsystem handling not yet supported for %s', ft_senstype(hdr.grad));
   end
 end % if need_coordsystem_json
+
+%% need_channels_tsv
+if need_channels_tsv
+  % ensure that all channels have the correct details
+  fn = {'name' 'type' 'units' 'description' 'sampling_frequency' 'low_cutoff' 'high_cutoff' 'notch' 'software_filters' 'status' 'status_description'};
+  for i=1:numel(fn)
+    if numel(cfg.channels.(fn{i}))==1
+      cfg.channels.(fn{i}) = repmat(cfg.channels.(fn{i}), hdr.nChans, 1);
+    end
+  end
+  
+  % EEG and MEG data should also have a channels.tsv file
+  name                = mergevector(hdr.label(:),    cfg.channels.name);
+  type                = mergevector(hdr.chantype(:), cfg.channels.type);
+  units               = mergevector(hdr.chanunit(:), cfg.channels.units);
+  sampling_frequency  = mergevector(repmat(hdr.Fs, hdr.nChans, 1), cfg.channels.sampling_frequency);
+  
+  % construct a table with the corresponding columns
+  % FIXME there are more columns that should be added
+  channels_tsv = table(name, type, units, sampling_frequency);
+end
 
 %% need_events_tsv
 if need_events_tsv
@@ -860,7 +860,7 @@ eeg_json  = remove_empty(eeg_json);
 ieeg_json = remove_empty(ieeg_json);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% write the data to the output file
+%% write the data to the output file
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isequal(cfg.dataset, cfg.outputfile) || istrue(cfg.mri.deface)
   switch typ
@@ -912,7 +912,7 @@ if ~isequal(cfg.dataset, cfg.outputfile) || istrue(cfg.mri.deface)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% write the metadata to the json and tsv files
+%% write the metadata to the json and tsv files
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ~isempty(mri_json)
@@ -972,7 +972,6 @@ if ~isempty(eeg_json)
   else
     existing = [];
   end
-  
   switch cfg.eeg.writesidecar
     case 'yes'
       if ~isempty(existing)
