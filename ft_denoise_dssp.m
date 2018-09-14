@@ -63,7 +63,7 @@ if islogical(grid.inside)
 else
   inside = grid.inside;
 end
-for k = 1:inside(:)'
+for k = inside(:)'
   grid.leadfield{k} = grid.leadfield{k}(indx2,:);
 end
 
@@ -146,7 +146,7 @@ U(:,:)           = U(:,iorder);
 % ylabel('relative magnitude')
 
 if isempty(Nspace)
-  ttext = 'enter the dimension: ';
+  ttext = 'enter the spatial dimension: ';
   Nspace    = input(ttext);
 end
 
