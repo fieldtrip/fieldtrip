@@ -41,6 +41,28 @@ function tf = ft_platform_supports(what,varargin)
 %
 % See also FT_VERSION, VERSION, VER, VERLESSTHAN
 
+% Copyright (C) 2006, Robert Oostenveld
+% Copyright (C) 2010, Eelke Spaak
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+% FieldTrip is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+%
+% FieldTrip is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+% GNU General Public License for more details.
+%
+% You should have received a copy of the GNU General Public License
+% along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
+
+
 if ~ischar(what)
   error('first argument must be a string');
 end
@@ -48,6 +70,9 @@ end
 switch what
   case 'matlabversion'
     tf = is_matlab() && matlabversion(varargin{:});
+
+  case 'octaveversion'
+    tf = is_octave() && octaveversion(varargin{:});
     
   case 'exists-in-private-directory'
     tf = is_matlab();
@@ -206,11 +231,31 @@ tf = true;
 
 end % function
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [inInterval] = matlabversion(min, max)
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [inInterval] = octaveversion(min, max)
+% the version does not change, making it persistent speeds up the subsequent calls
+persistent curVer
+
+if nargin<2
+  max = min;
+end
+
+if isempty(curVer)
+  curVer = OCTAVE_VERSION;
+end
+
+% perform comparison with respect to version number
+[major, minor] = parseMatlabVersion(curVer);
+[minMajor, minMinor] = parseMatlabVersion(min);
+[maxMajor, maxMinor] = parseMatlabVersion(max);
+
+inInterval = orderedComparison(minMajor, minMinor, maxMajor, maxMinor, major, minor);
+
+end % function
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % MATLABVERSION checks if the current MATLAB version is within the interval
 % specified by min and max.
 %
@@ -229,27 +274,8 @@ function [inInterval] = matlabversion(min, max)
 % etc.
 %
 % See also VERSION, VER, VERLESSTHAN
-
-% Copyright (C) 2006, Robert Oostenveld
-% Copyright (C) 2010, Eelke Spaak
-%
-% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
-% for the documentation and details.
-%
-% FieldTrip is free software: you can redistribute it and/or modify
-% it under the terms of the GNU General Public License as published by
-% the Free Software Foundation, either version 3 of the License, or
-% (at your option) any later version.
-%
-% FieldTrip is distributed in the hope that it will be useful,
-% but WITHOUT ANY WARRANTY; without even the implied warranty of
-% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-% GNU General Public License for more details.
-%
-% You should have received a copy of the GNU General Public License
-% along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
-%
-% $Id$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [inInterval] = matlabversion(min, max)
 
 % the version does not change, making it persistent speeds up the subsequent calls
 persistent curVer
@@ -311,8 +337,8 @@ elseif (isnumeric(ver))
   minor = int8((ver - floor(ver)) * 10);
 else % ver is string (e.g. '7.10'), parse accordingly
   [major, rest] = strtok(ver, '.');
-  major = str2num(major);
-  minor = str2num(strtok(rest, '.'));
+  major = str2double(major);
+  minor = str2double(strtok(rest, '.'));
 end
 end % function
 

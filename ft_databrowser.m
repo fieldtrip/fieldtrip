@@ -837,13 +837,18 @@ if nargout
   % add the update event to the output cfg
   cfg.event = opt.event;
   
-  % do the general cleanup and bookkeeping at the end of the function
-  ft_postamble debug
-  ft_postamble trackconfig
-  ft_postamble previous data
-  ft_postamble provenance
-  
 end % if nargout
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
+ft_postamble trackconfig
+ft_postamble previous data
+ft_postamble provenance
+ft_postamble hastoolbox
+
+if ~nargout
+  clear cfg
+end
 
 end % main function
 

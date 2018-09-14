@@ -5,11 +5,11 @@ function [pnt, ori, lab] = channelposition(sens)
 %
 % Use as
 %   [pos, ori, lab] = channelposition(sens)
-% where sens is an electrode or gradiometer array.
+% where sens is an electrode,  gradiometer or optode array.
 %
 % See also FT_DATATYPE_SENS
 
-% Copyright (C) 2009-2012, Robert Oostenveld & Vladimir Litvak
+% Copyright (C) 2009-2018, Robert Oostenveld & Vladimir Litvak
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -49,6 +49,8 @@ if     ~isfield(sens, 'coilori') && isfield(sens, 'coilpos')
   sens.coilori = nan(size(sens.coilpos));
 elseif ~isfield(sens, 'coilori') && isfield(sens, 'elecpos')
   sens.coilori = nan(size(sens.elecpos));
+elseif ~isfield(sens, 'coilori') && isfield(sens, 'optopos')
+  sens.coilori = nan(size(sens.optopos));
 end
 
 switch ft_senstype(sens)
@@ -261,6 +263,8 @@ switch ft_senstype(sens)
       nelec = size(sens.elecpos,1); % these are the electrodes
     elseif isfield(sens, 'coilpos')
       ncoil = size(sens.coilpos,1); % these are the coils
+    elseif isfield(sens, 'optopos')
+      nopto = size(sens.optopos,1); % these are the optodes
     end
     
     if ~isfield(sens, 'tra') && isfield(sens, 'elecpos') && nchan==nelec
@@ -286,11 +290,18 @@ switch ft_senstype(sens)
       pnt = sens.coilpos;
       ori = sens.coilori;
       lab = sens.label;
+
+    elseif ~isfield(sens, 'tra') && isfield(sens, 'optopos') && nchan==nopto
+      % there is one optode per channel, which means that the channel position is identical to the coil position
+      pnt = sens.optopos;
+      ori = nan(size(pnt));
+      lab = sens.label;
       
     elseif isfield(sens, 'tra')
       % each channel depends on multiple sensors (electrodes or coils), compute a weighted position for the channel
       % for MEG gradiometer channels this means that the position is in between the two coils
       % for bipolar EEG channels this means that the position is in between the two electrodes
+      % for NIRS channels this means that the position is in between the transmit and receive optode
       pnt = nan(nchan,3);
       ori = nan(nchan,3);
       if isfield(sens, 'coilpos')
@@ -306,14 +317,18 @@ switch ft_senstype(sens)
           weight = weight ./ sum(weight);
           pnt(i,:) = weight * sens.elecpos;
         end
+      elseif isfield(sens, 'optopos')
+        for i=1:nchan
+          weight = abs(sens.tra(i,:));
+          weight = weight ./ sum(weight);
+          pnt(i,:) = weight * sens.optopos;
+        end
       end
       lab = sens.label;
-      
     end
-    
 end % switch senstype
 
-n   = size(lab,2);
+n = size(lab,2);
 % this is to fix the planar layouts, which cannot be plotted anyway
 if n>1 && size(lab, 1)>1 % this is to prevent confusion when lab happens to be a row array
   pnt = repmat(pnt, n, 1);

@@ -149,17 +149,17 @@ elseif haselecfile
   display('reading electrodes from file ''%s''\n', cfg.elecfile);
   sens = ft_read_sens(cfg.elecfile);
   % only keep positions and labels in case of EEG electrodes
-  sens = keepfields(sens, {'elecpos', 'chanpos', 'unit', 'coordsys', 'label'});
+  sens = keepfields(sens, {'elecpos', 'chanpos', 'unit', 'coordsys', 'label','tra'});
 elseif hascfgelec
   display('using electrodes specified in the configuration\n');
   sens = cfg.elec;
   % only keep positions and labels in case of EEG electrodes
-  sens = keepfields(sens, {'elecpos', 'chanpos', 'unit', 'coordsys', 'label'});
+  sens = keepfields(sens, {'elecpos', 'chanpos', 'unit', 'coordsys', 'label','tra'});
 elseif hasdataelec
   display('using electrodes specified in the data\n');
   sens = data.elec;
   % only keep positions and labels in case of EEG electrodes
-  sens = keepfields(sens, {'elecpos', 'chanpos', 'unit', 'coordsys', 'label'});
+  sens = keepfields(sens, {'elecpos', 'chanpos', 'unit', 'coordsys', 'label','tra'});
   
 elseif hasoptofile
   display('reading optodes from file ''%s''\n', cfg.optofile);

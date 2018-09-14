@@ -38,11 +38,11 @@ names = markfile(i);
 i = strmatch('NUMBER OF SAMPLES:', markfile, 'exact') + 1;
 nsamples = str2num(char(markfile(i)));
 
-for i = 1:length(nsamples)
-  if nsamples(i) == 0
-    ft_warning('marker %s in %s has zero samples', names{i}, folder);
-  end
-end
+% for i = 1:length(nsamples)
+%   if nsamples(i) == 0
+%     ft_warning('marker %s in %s has zero samples', names{i}, folder);
+%   end
+% end
 
 % Get the samples.  Each is trial and time in seconds.
 j = strmatch('LIST OF SAMPLES:', markfile, 'exact') + 2;
@@ -57,4 +57,3 @@ end
 
 marker = struct('number_markers', {nmarkers}, 'number_samples', {nsamples}, ...
   'marker_names', {names}, 'trial_times', {marks});
-

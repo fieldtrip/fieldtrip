@@ -1,0 +1,112 @@
+# Makefile default variables
+#
+# Copyright (C) 1991-2014 Wellcome Trust Centre for Neuroimaging
+#
+# $Id: Makefile.var 6099 2014-07-11 12:21:35Z guillaume $
+#
+###############################################################################
+#
+# This file defines variables used in Makefile and has been tested under 
+# Linux, Windows and MacOS.
+# 
+# If you have to tweak this file to compile the SPM MEX-files for your 
+# platform, please send the details to <fil.spm@ucl.ac.uk> so they can be 
+# included here. 
+#
+# You can find some more help online on the SPM wikibook:
+#  * Linux:
+#      http://en.wikibooks.org/wiki/SPM/Installation_on_Linux
+#      http://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Linux 
+#  * Windows:
+#      http://en.wikibooks.org/wiki/SPM/Installation_on_Windows
+#      http://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Windows
+#      MinGW: http://www.mingw.org/
+#  * MacOS:
+#      http://en.wikibooks.org/wiki/SPM/Installation_on_Mac_OS_(Intel)
+#      http://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)
+#
+###############################################################################
+
+SHELL          = /bin/sh
+MAKE           = make
+MEXBIN         = mex
+MEXOPTS        = -O -largeArrayDims
+MEXEND         = 
+MOSUF          = o # mex output object suffix
+UNAME          = uname
+AR             = ar rcs
+COPY           = cp -f
+DEL            = rm -f
+MOVE           = mv -f
+TAR            = tar
+ZIP            = gzip -f
+
+ifndef SUF
+  ifndef PLATFORM
+    PLATFORM   = $(shell $(UNAME))
+  endif
+  ##### Linux #####
+  ifeq (Linux,$(PLATFORM))
+    HARDWARE   = $(shell $(UNAME) -m)
+    ifeq (i386,$(HARDWARE))
+      SUF      = mexglx
+    endif
+    ifeq (i686,$(HARDWARE))
+      SUF      = mexglx
+    endif
+    ifeq (x86_64,$(HARDWARE))
+      SUF      = mexa64
+    endif
+    ifndef SUF
+      $(error Unknowm platform $(PLATFORM)-$(HARDWARE))
+    endif
+  endif
+  ##### MacOS #####
+  ifeq (Darwin,$(PLATFORM))
+    HARDWARE   = $(shell $(UNAME) -p)
+    ifeq (i386,$(HARDWARE))
+      SUF      = mexmaci64
+    endif
+    ifndef SUF
+      $(error Unknowm platform $(PLATFORM)-$(HARDWARE))
+    endif
+  endif
+  ##### Windows #####
+  ifeq (MINGW32,$(word 1,$(subst _, ,$(PLATFORM))))
+    override PLATFORM = windows
+  endif
+  ifeq (windows,$(PLATFORM))
+    ifeq (x86,$(PROCESSOR_ARCHITECTURE))
+      SUF      = mexw32
+    else
+      SUF      = mexw64
+    endif
+    MEXBIN     = cmd /c "mex.bat
+    MEXOPTS   += -DSPM_WIN32
+    MEXEND     = "
+    MOSUF      = obj
+    AR         = lib.exe /out:
+  endif
+  #### Octave ####
+  ifeq (octave,$(PLATFORM))
+    MEXBIN     = mkoctfile
+    MEXOPTS    = --mex
+    SUF        = mex
+    override PLATFORM = $(shell $(UNAME))
+  endif
+  ifndef SUF
+    $(error Unknowm platform $(PLATFORM))
+  endif
+endif
+
+MEX            = $(MEXBIN) $(MEXOPTS)
+
+MATLABROOT     = $(realpath $(shell which $(firstword $(MEXBIN))))
+
+define verb
+	@ echo "_____________________________________________________________"
+	@ echo ""
+	@ echo "        " $(1)
+	@ echo "_____________________________________________________________"
+	@ echo ""
+endef
