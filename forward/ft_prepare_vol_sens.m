@@ -17,7 +17,6 @@ function [headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, varargin)
 %
 % Additional options should be specified in key-value pairs and can be
 %   'channel'    cell-array with strings (default = 'all')
-%   'order'      number, for single shell "Nolte" model (default = 10)
 %
 % The detailed behaviour of this function depends on whether the input
 % consists of EEG or MEG and furthermoree depends on the type of volume
@@ -69,7 +68,6 @@ end
 % get the optional input arguments
 % fileformat = ft_getopt(varargin, 'fileformat');
 channel = ft_getopt(varargin, 'channel', sens.label);   % cell-array with channel labels, default is all
-order   = ft_getopt(varargin, 'order', 10);             % order of expansion for Nolte method; 10 should be enough for real applications; in simulations it makes sense to go higher
 
 % ensure that the sensor description is up-to-date (Aug 2011)
 sens = ft_datatype_sens(sens);
@@ -285,7 +283,14 @@ elseif ismeg
       end
       
       % estimate center and radius
-      [center,radius] = fitsphere(headmodel.bnd.pos);
+      [center, radius] = fitsphere(headmodel.bnd.pos);
+
+      % order of spherical spherical harmonics, for 'real' realistic volume conductors order=10 is o.k
+      if isfield(headmodel, 'order')
+        order = headmodel.order;
+      else
+        order = 10;
+      end
       
       % initialize the forward calculation (only if  coils are available)
       if size(sens.coilpos,1)>0 && ~isfield(headmodel, 'forwpar')
