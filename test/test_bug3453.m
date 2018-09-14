@@ -31,6 +31,8 @@ end
 elec.chanpos = elec.elecpos;
 elec.tra = eye(40);
 
+dippos = [0 0 0.08];
+
 %%
 
 cfg = [];
@@ -45,15 +47,25 @@ vol2 = ft_prepare_headmodel(cfg); % should be same as default
 cfg.order = 5;
 vol3 = ft_prepare_headmodel(cfg); % very inaccurate
 
-%%
+%% using high-level code
 
-dippos = [0 0 0.08];
+cfg = [];
+cfg.grid.pos = dippos;
+cfg.grid.unit = 'm';
+cfg.elec = elec;
+cfg.headmodel = vol1;
+lf1 = ft_prepare_leadfield(cfg);
+cfg.headmodel = vol2;
+lf2 = ft_prepare_leadfield(cfg);
+cfg.headmodel = vol3;
+lf3 = ft_prepare_leadfield(cfg);
 
+%% slightly lower level code
+
+% note that I am skipping ft_prepare_vol_sens, which would not make a difference here
 lf1 = ft_compute_leadfield(dippos, elec, vol1);
 lf2 = ft_compute_leadfield(dippos, elec, vol2);
 lf3 = ft_compute_leadfield(dippos, elec, vol3); % should be inaccurate
 
 assert( isequal(lf1, lf2));
 assert(~isequal(lf1, lf3));
-
-

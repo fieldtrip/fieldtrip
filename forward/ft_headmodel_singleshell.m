@@ -18,9 +18,12 @@ function headmodel = ft_headmodel_singleshell(mesh, varargin)
 % Use as
 %   headmodel = ft_headmodel_singleshell(mesh, ...)
 %
+% Optional input arguments should be specified in key-value pairs and can include
+%   order        = number of iterations in series expansion (default = 10)
+%
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
-% Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
+% Copyright (C) 2012-2018, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -41,7 +44,7 @@ function headmodel = ft_headmodel_singleshell(mesh, varargin)
 % $Id$
 
 % order of spherical spherical harmonics
-order = ft_getopt(varargin, 'order');
+order = ft_getopt(varargin, 'order', 10);
 
 if isnumeric(mesh) && size(mesh,2)==3
   % assume that it is a Nx3 array with vertices

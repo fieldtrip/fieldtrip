@@ -18,11 +18,10 @@ function headmodel = ft_headmodel_concentricspheres(mesh, varargin)
 % Use as
 %   headmodel = ft_headmodel_concentricspheres(mesh, ...)
 %
-% Optional input arguments should be specified in key-value pairs and can
-% include
+% Optional input arguments should be specified in key-value pairs and can include
 %   conductivity = vector with the conductivity of each compartment
 %   fitind       = vector with indices of the surfaces to use in fitting the center of the spheres
-%   order        = number of iterations in series expansion (default = 60);
+%   order        = number of iterations in series expansion (default = 60)
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
