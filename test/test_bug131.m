@@ -40,14 +40,14 @@ grid.outside = [];
 
 % create leadfield with single sphere
 cfg = [];
-cfg.vol = vol;
+cfg.headmodel = vol;
 cfg.grid = grid;
 cfg.grad = grad;
 grid1 = ft_prepare_leadfield(cfg);
 
 % create leadfield with singleshell
 cfg = [];
-cfg.vol = vol2;
+cfg.headmodel = vol2;
 cfg.grid = grid;
 cfg.grad = grad;
 grid2 = ft_prepare_leadfield(cfg);
