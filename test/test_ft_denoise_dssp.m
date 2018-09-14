@@ -19,3 +19,12 @@ dataout = ft_denoise_dssp(cfg, data);
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/pull800/data_lowsnr.mat'));
 dataout2 = ft_denoise_dssp(cfg, data);
+
+cfg = [];
+cfg.method = 'mtmconvol';
+cfg.foi = 0:2:20;
+cfg.toi = data.time{1}(1:15:end);
+cfg.t_ftimwin = ones(1,numel(cfg.foi))./2;
+cfg.tapsmofrq = ones(1,numel(cfg.foi)).*2;
+freq = ft_freqanalysis(cfg, data);
+freq2 = ft_freqanalysis(cfg, dataout2);
