@@ -41,6 +41,7 @@ cfg.dssp.n_intersect = ft_getopt(cfg.dssp, 'n_intersect', 0.99); % dimensionalit
 
 % check the input data
 datain = ft_checkdata(datain, 'datatype', {'raw' 'timelock'}); % freq?
+% FIXME  tlck not yet supported
 
 % select channels and trials of interest, by default this will select all channels and trials
 tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
