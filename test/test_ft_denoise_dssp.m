@@ -17,6 +17,8 @@ cfg.dssp.n_in    = 30;
 cfg.dssp.n_out   = 30;
 dataout = ft_denoise_dssp(cfg, data);
 
+% the lowsnr data, has multiple trials, in which the 'blip' of activity has
+% a slightly different latency each trial.
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/pull800/data_lowsnr.mat'));
 dataout2 = ft_denoise_dssp(cfg, data);
 
