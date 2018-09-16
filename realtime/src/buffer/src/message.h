@@ -95,6 +95,10 @@ typedef uint64_t UINT64_T;
 #define WAIT_OK    (UINT16_T)0x0404 /* decimal 1027 */
 #define WAIT_ERR   (UINT16_T)0x0405 /* decimal 1028 */
 
+#define PUT_HDR_NORESPONSE (UINT16_T)0x0501 /* decimal 1281 */
+#define PUT_DAT_NORESPONSE (UINT16_T)0x0502 /* decimal 1282 */
+#define PUT_EVT_NORESPONSE (UINT16_T)0x0503 /* decimal 1283 */
+
 /* these are used in the data_t and event_t structure */
 #define DATATYPE_CHAR    (UINT32_T)0
 #define DATATYPE_UINT8   (UINT32_T)1
