@@ -2140,13 +2140,24 @@ switch eventformat
       event(k).duration  = 1;
       event(k).offset    = [];
     end
+  case 'biopac_acq'
+    % this one has an implementation that I guess is intended
+    % to work according to the 'otherwise' case, yet it requires
+    % a two-pass through the function, needing a header
+    try
+      hdr   = feval(eventformat, filename);
+      event = feval(eventformat, filename, hdr);
+    catch
+      ft_warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format (%s)', eventformat);
+      event = [];
+    end
     
   otherwise
     % attempt to run eventformat as a function
     % in case using an external read function was desired, this is where it is executed
     % if it fails, the regular unsupported warning message is thrown
     try
-      event = feval(eventformat, filename, hdr);
+      event = feval(eventformat, filename);
       
     catch
       ft_warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format (%s)', eventformat);
