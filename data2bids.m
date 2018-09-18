@@ -646,6 +646,11 @@ if need_events_tsv
     
     if isempty(presentation)
       ft_warning('cfg.presentationfile not specified, cannot determine events')
+      
+      onset    = [];
+      duration = [];
+      events_tsv = table(onset, duration);
+      
     else
       % align the events from the presentation log file with the MR volumes
       % this requires one event per volume in the presentation file
