@@ -1417,6 +1417,10 @@ switch dataformat
   case 'videomeg_vid'
     dat = read_videomeg_vid(filename, hdr, begsample, endsample);
     dat = dat(chanindx,:);
+
+  case 'video'
+    dat = read_video(filename, hdr, begsample, endsample);
+    dat = dat(chanindx,:);
     
   case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw'}
     % the data can be read with three toolboxes: Yokogawa MEG Reader, Maryland sqdread,
