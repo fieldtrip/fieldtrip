@@ -30,7 +30,7 @@ function out = read_video(filename, varargin)
 % $Id$
 
 needhdr = numel(varargin)==0;
-needdat = numel(varargin)==3;
+needdat = numel(varargin)>0;
 
 video = VideoReader(filename);
 
@@ -74,21 +74,41 @@ elseif needdat
   endsample = varargin{3};
   nsamples  = endsample - begsample + 1;
   
+  if nargin>3
+    chanindx = varargin{4};
+    chanindx = chanindx(:); % ensure it to be a column
+  else
+    chanindx = [];
+  end
+  
   % read the first frame to determine the type (probably uint8)
   f = readFrame(video);
-  dat = repmat(f(:), 1, nsamples);
-  
-  % we cannot skip frames when reading
-  for frame=2:endsample
-    f = readFrame(video);
-    dat(:,frame) = f(:);
-  end
-  dat = dat(:, begsample:endsample);
   
   % give some information, but not too often
   ft_info timeout 60
   ft_info once
   ft_info('the original size of individual video frames is [%d %d %d]', size(f));
+  
+  if ~isempty(chanindx)
+    f = f(chanindx);
+  else
+    f = f(:); % ensure it to be a column
+  end
+  
+  % allocate enough memory for all frames
+  dat = repmat(f, 1, nsamples);
+  
+  % we cannot skip frames when reading
+  for frame=2:endsample
+    f = readFrame(video);
+    if ~isempty(chanindx)
+      f = f(chanindx);
+    else
+      f = f(:); % ensure it to be a column
+    end
+    dat(:,frame) = f;
+  end
+  dat = dat(:, begsample:endsample);
   
   % return the data as output
   out = dat;
