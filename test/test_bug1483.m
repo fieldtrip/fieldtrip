@@ -21,12 +21,15 @@ freq.label     = {'chan1';'chan2'};
 freq.freq      = [1 2 3];
 freq.cumtapcnt = ones(5,1);
 
-% old style
-dataold1 = ft_selectdata(data, 'rpt', 2:4);
-dataold2 = ft_selectdata(data, 'channel', data.label(1));
+% old style -> this does not work anymore because ft_selectdata in its old
+% implementation has been moved to compat/obsolete, and currently the input
+% data checking is so strict, that a non cfg-like data structure causes a
+% crash
+%dataold1 = ft_selectdata(data, 'rpt', 2:4);
+%dataold2 = ft_selectdata(data, 'channel', data.label(1));
 
-freqold1 = ft_selectdata(freq, 'rpt', 2:4);
-freqold2 = ft_selectdata(freq, 'channel', freq.label(1));
+%freqold1 = ft_selectdata(freq, 'rpt', 2:4);
+%freqold2 = ft_selectdata(freq, 'channel', freq.label(1));
 
 
 % new style
