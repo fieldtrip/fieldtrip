@@ -235,7 +235,10 @@ cfgf.method    = 'mtmfft';
 cfgf.output    = 'fourier';
 cfgf.tapsmofrq = 2;
 freq           = ft_freqanalysis(cfgf, data);
-freqsub        = ft_selectdata(freq, 'foilim', freq.freq(2:end));
+
+tmpcfg = [];
+tmpcfg.frequency = freq.freq([2 end]);
+freqsub        = ft_selectdata(tmpcfg, freq);
 
 % connectivityanalysis
 cfgc           = [];
