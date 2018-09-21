@@ -1,12 +1,37 @@
 function [dataout] = ft_denoise_dssp(cfg, datain)
 
-% FT_DENOISE_DSSP 
+% FT_DENOISE_DSSP implements a dual signal subspace projection algorithm
+% to suppress interference outside a predefined source region of
+% interest. It is based on: Sekihara et al. J. Neural Eng. 2016 13(3), and
+% Sekihara et al. J. Neural Eng. 2018 15(3). 
 %
 % Use as 
 %   dataout = ft_denoise_dssp(cfg, datain)
 % where cfg is a configuration structure that contains
-%   cfg.grid     = structure, source model with precomputed leadfields (see FT_PREPARE_LEADFIELD)
-%   cfg.order    = integer, order of the source space
+%   cfg.grid     = structure, source model with precomputed leadfields (see
+%                    FT_PREPARE_LEADFIELD)
+%   cfg.dssp     = structure, containing the parameters that determine the
+%                  behavior of the algorithm.
+%                    cfg.dssp.n_space = 'all', or scalar. Number of
+%                                       dimensions for the initial spatial
+%                                       projection.
+%                    cfg.dssp.n_in    = 'all', or scalar. Number of
+%                                       dimensions of the subspace describing
+%                                       the field inside the ROI
+%                    cfg.dssp.n_out   = 'all', or scalar. Number of 
+%                                       dimensions of the subspace describing
+%                                       the field outside the ROI 
+%                    cfg.dssp.n_intersect = scalar (default = 0.9). Number  
+%                                       of dimensions (if value is an 
+%                                       integer>=1), or threshold for the 
+%                                       included eigenvalues (if value<1),
+%                                       determining the dimensionality of 
+%                                       the intersection.
+% 
+%   cfg.channel  = Nx1 cell-array with selection of channels (default = 'all'),
+%                       see FT_CHANNELSELECTION for details
+%   cfg.trials      = 'all' or a selection given as a 1xN vector (default = 'all')
+
 %
 % See also FT_DENOISE_PCA, FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR
 
@@ -34,10 +59,11 @@ cfg.trials       = ft_getopt(cfg, 'trials',  'all', 1);
 cfg.channel      = ft_getopt(cfg, 'channel', 'all');
 cfg.grid         = ft_getopt(cfg, 'grid');
 cfg.dssp         = ft_getopt(cfg, 'dssp');         % sub-structure to hold the parameters
-cfg.dssp.n_space = ft_getopt(cfg.dssp, 'n_space'); % number of spatial components to retain from the Gram matrix
-cfg.dssp.n_in    = ft_getopt(cfg.dssp, 'n_in');    % dimensionality of the Bin subspace to be used for the computation of the intersection
-cfg.dssp.n_out   = ft_getopt(cfg.dssp, 'n_out');   % dimensionality of the Bout subspace to be used for the computation of the intersection
-cfg.dssp.n_intersect = ft_getopt(cfg.dssp, 'n_intersect', 0.99); % dimensionality of the intersection
+cfg.dssp.n_space = ft_getopt(cfg.dssp, 'n_space', 'all'); % number of spatial components to retain from the Gram matrix
+cfg.dssp.n_in    = ft_getopt(cfg.dssp, 'n_in', 'all');    % dimensionality of the Bin subspace to be used for the computation of the intersection
+cfg.dssp.n_out   = ft_getopt(cfg.dssp, 'n_out', 'all');   % dimensionality of the Bout subspace to be used for the computation of the intersection
+cfg.dssp.n_intersect = ft_getopt(cfg.dssp, 'n_intersect', 0.9); % dimensionality of the intersection
+cfg.output       = ft_getopt(cfg, 'output', 'original');
 
 % check the input data
 datain = ft_checkdata(datain, 'datatype', {'raw' 'timelock'}); % freq?
@@ -89,8 +115,17 @@ cfg.dssp.n_intersect    = N;
 nsmp  = cellfun(@numel, datain.time);
 csmp  = cumsum([0 nsmp]);
 trial = cell(size(datain.trial));
-for k = 1:numel(datain.trial)
-  trial{k} = datain.trial{k} - datAe*Ae((csmp(k)+1):csmp(k+1),:)';  
+switch cfg.output
+  case 'original'
+    for k = 1:numel(datain.trial)
+      trial{k} = datain.trial{k} - datAe*Ae((csmp(k)+1):csmp(k+1),:)';  
+    end
+  case 'complement'
+    for k = 1:numel(datain.trial)
+      trial{k} = datAe*Ae((csmp(k)+1):csmp(k+1),:)';  
+    end
+  otherwise
+    ft_error(sprintf('cfg.output = ''%s'' is not implemented',cfg.output));
 end
 
 % create the output argument
@@ -137,18 +172,16 @@ Sspace  = abs(diag(S));
 Sspace           = -Sspace;
 U(:,:)           = U(:,iorder);
 
-% ev_max = length(eig_el);
-% figure(61)
-% semilogy(1:ev_max,eig_el,'-o');
-% axis([1, ev_max, 0, eig_el(1)*1.1]);
-% title('eigen value spectrum of the gram matrix')
-% xlabel('order of eigenvalues')
-% ylabel('relative magnitude')
-
 if isempty(Nspace)
   ttext = 'enter the spatial dimension: ';
   Nspace    = input(ttext);
+elseif ischar(Nspace) && isequal(Nspace, 'interactive')
+  figure, plot(log10(Sspace),'-o');
+  Nspace = input('enter spatial dimension of the ROI subspace: ');
+elseif ischar(Nspace) && isequal(Nspace, 'all')
+  Nspace = find(Sspace./Sspace(1)>1e5*eps, 1, 'last');
 end
+fprintf('Using %d spatial dimensions\n', Nspace);
 
 % spatial subspace projector
 Us   = U(:,1:Nspace);  
@@ -198,6 +231,28 @@ function [Ae, Nee, Sout, Sin, S] = CSP01(Bin, Bout, Nin, Nout, Nee)
 Sout = diag(Sout);
 Sin  = diag(Sin);
 
+if isempty(Nout)
+  ttext = 'enter the spatial dimension for the outside field: ';
+  Nout  = input(ttext);
+elseif ischar(Nout) && isequal(Nout, 'interactive')
+  figure, plot(Sout,'-o');
+  Nout = input('enter dimension of the outside field: ');
+elseif ischar(Nout) && isequal(Nout, 'all')
+  Nout = find(Sout./Sout(1)>1e5*eps, 1, 'last');
+end
+fprintf('Using %d spatial dimensions for the outside field\n', Nout);
+
+if isempty(Nin)
+  ttext = 'enter the spatial dimension for the inside field: ';
+  Nin  = input(ttext);
+elseif ischar(Nin) && isequal(Nin, 'interactive')
+  figure, plot(log10(Sin),'-o');
+  Nin = input('enter dimension of the inside field: ');
+elseif ischar(Nin) && isequal(Nin, 'all')
+  Nin = find(Sin./Sin(1)>1e5*eps, 1, 'last');
+end
+fprintf('Using %d spatial dimensions for the inside field\n', Nin);
+
 Qout = Vout(:,1:Nout);
 Qin  = Vin(:, 1:Nin);
 
@@ -214,6 +269,8 @@ elseif Nee<1
   Nee = find(S>Nee,1,'last');
   if isempty(Nee), Nee = 1; end
 end
+fprintf('Using %d dimensions for the interaction\n', Nee);
+
 Ae   = Qin*U;
 Ae   = Ae(:,1:Nee);
 %AeAe = Ae*Ae';
