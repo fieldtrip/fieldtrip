@@ -13,7 +13,8 @@ tsv  = table2struct(tsv);
 % event_type, event_value
 
 event = tsv;
-event = copyfields(tsv, event, {'type' 'value' 'sample' 'offset' 'duration'});
+%event = struct([]);
+%event = copyfields(tsv, event, {'type' 'value' 'sample' 'offset' 'duration'});
 if ~isempty(event)
   if ~isfield(event, 'type')
     try,
