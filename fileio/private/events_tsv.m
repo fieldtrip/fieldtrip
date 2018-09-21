@@ -12,7 +12,7 @@ tsv  = table2struct(tsv);
 % a BIDS event table contains
 % event_type, event_value
 
-event = struct([]);
+event = tsv;
 event = copyfields(tsv, event, {'type' 'value' 'sample' 'offset' 'duration'});
 if ~isempty(event)
   if ~isfield(event, 'type')
