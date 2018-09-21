@@ -286,7 +286,7 @@ switch cfg.method
   case 'concentricspheres'
     cfg.fitind = ft_getopt(cfg, 'fitind');
     cfg.order  = ft_getopt(cfg, 'order');
-
+    
     % the low-level functions needs surface points, triangles are not needed
     if input_mesh || input_pos
       geometry = data;
@@ -329,7 +329,7 @@ switch cfg.method
   case {'localspheres' 'singlesphere' 'singleshell'}
     cfg.grad = ft_getopt(cfg, 'grad');           % used for localspheres
     
-    % these three methods all require a set of surface points
+    % these three methods all require a single set of surface points
     if input_mesh || input_pos
       geometry = data;
     elseif input_seg
@@ -346,12 +346,24 @@ switch cfg.method
           try
             tmpcfg.tissue = 'brain';
             geometry = ft_prepare_mesh(tmpcfg, data);
+          catch
+            me = lasterror;
+            if isequal(me.identifier, 'MATLAB:mex:ErrInvalidMEXFile')
+              % SPM8 mex file issues are common on macOS, these should not remain invisible
+              rethrow(me);
+            end
           end
         end
         if isempty(geometry)
           try
             tmpcfg.tissue = 'scalp';
             geometry = ft_prepare_mesh(tmpcfg, data);
+          catch
+            me = lasterror;
+            if isequal(me.identifier, 'MATLAB:mex:ErrInvalidMEXFile')
+              % SPM8 mex file issues are common on macOS, these should not remain invisible
+              rethrow(me);
+            end
           end
         end
         if isempty(geometry)
