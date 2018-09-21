@@ -1355,6 +1355,11 @@ elseif filetype_check_extension(filename, '.acq')
   type = 'biopac_acq';
   manufacturer = 'Biopac';
   content = 'physiological signals';
+elseif contains(filename, '_events.tsv')
+  % this could be a BIDS-compatible events file
+  type = 'events_tsv';
+  manufacturer = 'BIDS';
+  content = 'events';
 end
 
 
