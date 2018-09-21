@@ -82,11 +82,11 @@ if ft_abort
   return
 end
 
-% get the defaults
+% set the defaults
 cfg.keepsampleinfo = ft_getopt(cfg, 'keepsampleinfo', 'ifmakessense');
 
 try
-  % although not 100% robust, this might result in some users becoming aware of the issue of overlapping trials
+  % although not 100% robust, this could make some users becoming aware of the issue of overlapping trials
   for i=1:numel(varargin)
     dataset{i}       = ft_findcfg(varargin{i}.cfg, 'dataset');
     hassampleinfo(i) = isfield(varargin{i}, 'sampleinfo');
@@ -97,7 +97,7 @@ try
   end
 end % try
 
-% check if the input data is valid for this function
+% ensure that the input data is valid for this function
 for i=1:length(varargin)
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'raw', 'raw+comp'}, 'feedback', 'no', 'hassampleinfo', cfg.keepsampleinfo);
 end

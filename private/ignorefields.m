@@ -15,6 +15,7 @@ switch purpose
       'grad'
       'elec'
       'opto'
+      'fsample'
       'trialinfo'  % this is dealt with explicitly
       'sampleinfo' % this is dealt with explicitly
       };
