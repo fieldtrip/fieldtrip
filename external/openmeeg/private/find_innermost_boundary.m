@@ -11,6 +11,24 @@ function [innermost, inside] = find_innermost_boundary(bnd)
 %   bnd(i).tri  triangles of boundary i (matrix of size Mx3)
 
 % Copyright (C) 2003, Robert Oostenveld
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 ncmp = length(bnd);
 
@@ -23,13 +41,13 @@ end
 for i=1:ncmp
 for j=1:ncmp
   % determine for a single vertex on each surface if it is inside or outside the other surfaces
-  curpos = bnd(i).pos(1,:); % any point on the boundary is ok
-  curpnt = bnd(j).pos;
-  curtri = bnd(j).tri;
+  curpos1 = bnd(i).pos(1,:); % any point on the boundary is ok
+  curpos  = bnd(j).pos;
+  curtri  = bnd(j).tri;
   if i==j
     inside(i,j) = 0;
   else
-    inside(i,j) = bounding_mesh(curpos, curpnt, curtri);
+    inside(i,j) = bounding_mesh(curpos1, curpos, curtri);
   end
 end
 end
