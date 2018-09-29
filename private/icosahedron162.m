@@ -1,6 +1,12 @@
 function [pos, tri] = icosahedron162()
 
-% ICOSAHEDRON162 creates a 2-fold refined icosahedron
+% ICOSAHEDRON162 creates a 2-fold refined icosahedron with the vertices on a unit
+% sphere
+%
+% Use as
+%   [pos, tri] = icosahedron162;
+%
+% See also ICOSAHEDRON
 
 % Copyright (C) 2003, Robert Oostenveld
 %
@@ -20,9 +26,6 @@ function [pos, tri] = icosahedron162()
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
+% $Id$
 
-[pos, tri] = icosahedron;
-[pos, tri] = refine(pos, tri);
-[pos, tri] = refine(pos, tri);
-
-pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1,3);
+[pos, tri] = icosahedron(2);
