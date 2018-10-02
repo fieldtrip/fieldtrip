@@ -193,6 +193,7 @@ end % for numtrl
 tmpcfg = [];
 tmpcfg.keeptrials = 'yes';
 timelock = ft_timelockanalysis(tmpcfg, data);
+% restore the provenance information
 [cfg, timelock] = rollback_provenance(cfg, timelock);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
