@@ -56,13 +56,13 @@ if ft_abort
 end
 
 % the actual work is done by FT_DEFACEVOLUME
-previous = cfg.showcallinfo;
 tmpcfg = cfg;
 tmpcfg.showcallinfo = 'no';
 mesh = ft_defacevolume(tmpcfg, mesh);
-% restore provenance information
+% restore provenance information and put back cfg.callinfo
+tmpcallinfo = cfg.showcallinfo;
 [cfg, mesh] = rollback_provenance(cfg, mesh);
-cfg.showcallinfo = previous;
+cfg.showcallinfo = tmpcallinfo;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

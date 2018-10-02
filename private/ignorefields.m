@@ -86,18 +86,21 @@ switch purpose
   case {'provenance', 'history'}
     ignore = {
       % these should not be included in the provenance or history
+      'callinfo'
       'checkconfig'
       'checksize'
-      'trackconfig'
-      'trackusage'
-      'trackdatainfo'
-      'trackcallinfo'
-      'showcallinfo'
-      'warning'
-      'notification'
       'debug'
-      'progress'
       'hastoolbox'
+      'notification'
+      'previous'
+      'progress'
+      'showcallinfo'
+      'trackcallinfo'
+      'trackconfig'
+      'trackdatainfo'
+      'trackusage'
+      'version'
+      'warning'
       };
     
     

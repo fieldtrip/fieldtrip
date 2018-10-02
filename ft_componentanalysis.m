@@ -281,7 +281,6 @@ end
 % select trials of interest
 tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
 data   = ft_selectdata(tmpcfg, data);
-
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
 

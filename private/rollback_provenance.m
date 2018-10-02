@@ -63,21 +63,10 @@ for i=1:(nargin-1)
   % only work on the fields that are explicitly present in the cfg
   fn = intersect(fn0, fn1);
   
+  ignorefields
+  
   % ignore the provenance fields themselves
-  fn = setdiff(fn, { ...
-    'trackconfig'
-    'checkconfig'
-    'checksize'
-    'trackusage'
-    'trackdatainfo'
-    'trackcallinfo'
-    'showcallinfo'
-    'callinfo'
-    'version'
-    'warning'
-    'debug'
-    'previous'
-    });
+  fn = setdiff(fn, ignorefields('provenance'));
   
   for j=1:length(fn)
     cfg.(fn{j}) = varargin{i}.cfg.(fn{j});
