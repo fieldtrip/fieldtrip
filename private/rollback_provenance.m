@@ -63,8 +63,6 @@ for i=1:(nargin-1)
   % only work on the fields that are explicitly present in the cfg
   fn = intersect(fn0, fn1);
   
-  ignorefields
-  
   % ignore the provenance fields themselves
   fn = setdiff(fn, ignorefields('provenance'));
   
