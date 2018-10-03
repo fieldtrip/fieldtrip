@@ -82,18 +82,15 @@ switch purpose
       'toolbox'
       };
     
-    
-  case {'provenance', 'history'}
+  case {'rollback'}
     ignore = {
-      % these should not be included in the provenance or history
+      % these should not be updated in rollback_provenance
       'callinfo'
       'checkconfig'
       'checksize'
       'debug'
-      'hastoolbox'
       'notification'
       'previous'
-      'progress'
       'showcallinfo'
       'trackcallinfo'
       'trackconfig'
@@ -103,6 +100,20 @@ switch purpose
       'warning'
       };
     
+  case {'provenance', 'history'}
+    ignore = {
+      % these should not be included in the provenance or history
+      'checkconfig'
+      'checksize'
+      'debug'
+      'notification'
+      'showcallinfo'
+      'trackcallinfo'
+      'trackconfig'
+      'trackdatainfo'
+      'trackusage'
+      'warning'
+      };
     
   case 'trackconfig'
     ignore = {
