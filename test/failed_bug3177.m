@@ -1,6 +1,6 @@
 function failed_bug3177
 
-% WALLTIME 0:20:00
+% WALLTIME 00:20:00
 % MEM 3gb
 
 % TEST test_bug3177
