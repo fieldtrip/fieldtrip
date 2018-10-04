@@ -49,22 +49,22 @@ function forwpar=meg_ini(vc,center,order,sens,refs,gradlocs,weights)
 % $Id$
 
 if nargin==4
-  if order>0;
+  if order>0
     coeff_sens=getcoeffs(sens,vc,center,order);
     forwpar=struct('device_sens',sens,'coeff_sens',coeff_sens,'center',center,'order',order);
   else
     forwpar=struct('device_sens',sens,'center',center,'order',order);
   end
 elseif nargin==5
-  if order>0;
+  if order>0
     coeff_sens=getcoeffs(sens,vc,center,order);
     coeff_refs=getcoeffs(refs,vc,center,order);
     forwpar=struct('device_sens',sens,'device_ref',refs,'coeff_sens',coeff_sens,'coeff_ref',coeff_refs,'center',center,'order',order);
   else
     forwpar=struct('device_sens',sens,'device_ref',refs,'center',center,'order',order);
   end
-elseif nargin==7;
-  if order>0;
+elseif nargin==7
+  if order>0
     coeff_sens=getcoeffs(sens,vc,center,order);
     coeff_refs=getcoeffs(refs,vc,center,order);
     coeff_weights=getcoeffs(gradlocs,vc,center,order);

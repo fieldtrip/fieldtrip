@@ -15,6 +15,7 @@ switch purpose
       'grad'
       'elec'
       'opto'
+      'fsample'
       'trialinfo'  % this is dealt with explicitly
       'sampleinfo' % this is dealt with explicitly
       };
@@ -81,24 +82,38 @@ switch purpose
       'toolbox'
       };
     
+  case {'rollback'}
+    ignore = {
+      % these should not be updated in rollback_provenance
+      'callinfo'
+      'checkconfig'
+      'checksize'
+      'debug'
+      'notification'
+      'previous'
+      'showcallinfo'
+      'trackcallinfo'
+      'trackconfig'
+      'trackdatainfo'
+      'trackusage'
+      'version'
+      'warning'
+      };
     
   case {'provenance', 'history'}
     ignore = {
       % these should not be included in the provenance or history
       'checkconfig'
       'checksize'
-      'trackconfig'
-      'trackusage'
-      'trackdatainfo'
-      'trackcallinfo'
-      'showcallinfo'
-      'warning'
-      'notification'
       'debug'
-      'progress'
-      'hastoolbox'
+      'notification'
+      'showcallinfo'
+      'trackcallinfo'
+      'trackconfig'
+      'trackdatainfo'
+      'trackusage'
+      'warning'
       };
-    
     
   case 'trackconfig'
     ignore = {

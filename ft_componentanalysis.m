@@ -4,7 +4,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 % spatio-temporal decompositions of EEG or MEG data. This function computes
 % the topography and timecourses of the components. The output of this
 % function can be further analyzed with FT_TIMELOCKANALYSIS or
-% FT_FREQNANALYSIS.
+% FT_FREQANALYSIS.
 %
 % Use as
 %   [comp] = ft_componentanalysis(cfg, data)
@@ -281,7 +281,6 @@ end
 % select trials of interest
 tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
 data   = ft_selectdata(tmpcfg, data);
-
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
 

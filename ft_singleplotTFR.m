@@ -224,7 +224,6 @@ tmpchannel  = cfg.channel;
 [cfg, data] = rollback_provenance(cfg, data);
 cfg.channel = tmpchannel;
 
-
 if isfield(tmpvar, cfg.maskparameter) && ~isfield(data, cfg.maskparameter)
   % the mask parameter is not present after ft_selectdata, because it is
   % not included in all input arguments. Make the same selection and copy
