@@ -277,7 +277,7 @@ cfg.meg.SubjectArtefactDescription    = ft_getopt(cfg.meg, 'SubjectArtefactDescr
 cfg.meg.AssociatedEmptyRoom           = ft_getopt(cfg.meg, 'AssociatedEmptyRoom'         ); % OPTIONAL. Relative path in BIDS folder structure to empty-room file associated with the subject's MEG recording. The path needs to use forward slashes instead of backward slashes (e.g. "sub-emptyroom/ses-<label>/meg/sub-emptyroom_ses-<label>_ta sk-noise_run-<label>_meg.ds").
 
 %% EEG specific fields
-cfg.eeg.EEGSamplingFrequency          = ft_getopt(cfg.eeg, 'EEGSamplingFrequency'        ); % Sampling frequency (in Hz) of the EEG recording (e.g. 2400)
+cfg.eeg.SamplingFrequency             = ft_getopt(cfg.eeg, 'SamplingFrequency'        ); % Sampling frequency (in Hz) of the EEG recording (e.g. 2400)
 cfg.eeg.EEGChannelCount               = ft_getopt(cfg.eeg, 'EEGChannelCount'             ); % Number of EEG channels included in the recording (e.g. 128).
 cfg.eeg.EOGChannelCount               = ft_getopt(cfg.eeg, 'EOGChannelCount'             ); % Number of EOG channels included in the recording (e.g. 2).
 cfg.eeg.ECGChannelCount               = ft_getopt(cfg.eeg, 'ECGChannelCount'             ); % Number of ECG channels included in the recording (e.g. 1).
@@ -298,8 +298,34 @@ cfg.eeg.DeviceSoftwareVersion         = ft_getopt(cfg.eeg, 'DeviceSoftwareVersio
 cfg.eeg.SubjectArtefactDescription    = ft_getopt(cfg.eeg, 'SubjectArtefactDescription'  ); % Freeform description of the observed subject artefact and its possible cause (e.g. "Vagus Nerve Stimulator", "non-removable implant"). If this field is left empty, it will be interpreted as absence of  a source of (constantly present) artifacts.
 cfg.eeg.SimultaneousRecording         = ft_getopt(cfg.eeg, 'SimultaneousRecording'       ); % indicate over acquired modalities (keys are: fMRI, PET, MEG, NIRS)
 
-%% IEEG specific fields
-ft_warning('iEEG metadata fields need to be updated with the draft specification at http://bit.ly/bids_ieeg');
+%% iEEG specific fields
+cfg.ieeg.SamplingFrequency               = ft_getopt(cfg, 'SamplingFrequency'              ); % REQUIRED. Sampling frequency (in Hz) of all the iEEG channels in the recording (e.g., 2400). All other channels should have frequency specified as well in the channels.tsv file.
+cfg.ieeg.PowerLineFrequency              = ft_getopt(cfg, 'PowerLineFrequency'             ); % REQUIRED. Frequency (in Hz) of the power grid where the iEEG recording was done (i.e. 50 or 60)
+cfg.ieeg.HardwareFilters                 = ft_getopt(cfg, 'HardwareFilters'                ); % REQUIRED. List of hardware (amplifier) filters applied with  key:value pairs of filter parameters and their values.
+cfg.ieeg.SoftwareFilters                 = ft_getopt(cfg, 'SoftwareFilters'                ); % REQUIRED. List of temporal software filters applied or ideally  key:value pairs of pre-applied filters and their parameter values. (n/a if none).
+cfg.ieeg.Manufacturer                    = ft_getopt(cfg, 'Manufacturer'                   ); % RECOMMENDED. Manufacturer of the amplifier system  (e.g. "TDT, Blackrock")
+cfg.ieeg.ManufacturersModelName          = ft_getopt(cfg, 'ManufacturersModelName'         ); % RECOMMENDED. Manufacturer’s designation of the iEEG amplifier model.
+cfg.ieeg.ECOGChannelCount                = ft_getopt(cfg, 'ECOGChannelCount'               ); % RECOMMENDED. Number of iEEG surface channels included in the recording (e.g. 120)
+cfg.ieeg.SEEGChannelCount                = ft_getopt(cfg, 'SEEGChannelCount'               ); % RECOMMENDED. Number of iEEG depth channels included in the recording (e.g. 8)
+cfg.ieeg.EEGChannelCount                 = ft_getopt(cfg, 'EEGChannelCount'                ); % RECOMMENDED. Number of scalp EEG channels recorded simultaneously (e.g. 21)
+cfg.ieeg.EOGChannelCount                 = ft_getopt(cfg, 'EOGChannelCount'                ); % RECOMMENDED. Number of EOG channels
+cfg.ieeg.ECGChannelCount                 = ft_getopt(cfg, 'ECGChannelCount'                ); % RECOMMENDED. Number of ECG channels
+cfg.ieeg.EMGChannelCount                 = ft_getopt(cfg, 'EMGChannelCount'                ); % RECOMMENDED. Number of EMG channels
+cfg.ieeg.MiscChannelCount                = ft_getopt(cfg, 'MiscChannelCount'               ); % RECOMMENDED. Number of miscellaneous analog channels for auxiliary  signals
+cfg.ieeg.TriggerChannelCount             = ft_getopt(cfg, 'TriggerChannelCount'            ); % RECOMMENDED. Number of channels for digital (TTL bit level) triggers
+cfg.ieeg.RecordingDuration               = ft_getopt(cfg, 'RecordingDuration'              ); % RECOMMENDED. Length of the recording in seconds (e.g. 3600)
+cfg.ieeg.RecordingType                   = ft_getopt(cfg, 'RecordingType'                  ); % RECOMMENDED. Defines whether the recording is  “continuous” or  “epoched”; this latter limited to time windows about events of interest (e.g., stimulus presentations, subject responses etc.)
+cfg.ieeg.EpochLength                     = ft_getopt(cfg, 'EpochLength'                    ); % RECOMMENDED. Duration of individual epochs in seconds (e.g. 1) in case of epoched data
+cfg.ieeg.SubjectArtefactDescription      = ft_getopt(cfg, 'SubjectArtefactDescription'     ); % RECOMMENDED. Freeform description of the observed subject artefact and its possible cause (e.g. “door open”, ”nurse walked into room at 2 min”, ”seizure at 10 min”). If this field is left empty, it will be interpreted as absence of artifacts.
+cfg.ieeg.SoftwareVersions                = ft_getopt(cfg, 'SoftwareVersions'               ); % RECOMMENDED. Manufacturer’s designation of the acquisition software.
+cfg.ieeg.iEEGReference                   = ft_getopt(cfg, 'iEEGReference'                  ); % REQUIRED. General description of the reference scheme used and (when applicable) of location of the reference electrode in the raw recordings (e.g. "left mastoid”, “bipolar”, “T01” for electrode with name T01, “intracranial electrode on top of a grid, not included with data”, “upside down electrode”). If different channels have a different reference, this field should have a general description and the channel specific reference should be defined in the _channels.tsv file.
+cfg.ieeg.ElectrodeManufacturer           = ft_getopt(cfg, 'ElectrodeManufacturer'          ); % RECOMMENDED. can be used if all electrodes are of the same manufacturer (e.g. AD-TECH, DIXI). If electrodes of different manufacturers are used, please use the corresponding table in the _electrodes.tsv file.
+cfg.ieeg.ElectrodeManufacturersModelName = ft_getopt(cfg, 'ElectrodeManufacturersModelName'); % RECOMMENDED. If different electrode types are used, please use the corresponding table in the _electrodes.tsv file.
+cfg.ieeg.iEEGGround                      = ft_getopt(cfg, 'iEEGGround'                     ); % RECOMMENDED. Description  of the location of the ground electrode (“placed on right mastoid (M2)”).
+cfg.ieeg.iEEGPlacementScheme             = ft_getopt(cfg, 'iEEGPlacementScheme'            ); % RECOMMENDED. Freeform description of the placement of the iEEG electrodes. Left/right/bilateral/depth/surface (e.g. “left frontal grid and bilateral hippocampal depth” or “surface strip and STN depth” or “clinical indication bitemporal, bilateral temporal strips and left grid”).
+cfg.ieeg.iEEGElectrodeGroups             = ft_getopt(cfg, 'iEEGElectrodeGroups'            ); % RECOMMENDED. Field to describe the way electrodes are grouped into strips, grids or depth probes e.g. {'grid1': "10x8 grid on left temporal pole", 'strip2': "1x8 electrode strip on xxx"}.
+cfg.ieeg.ElectricalStimulation           = ft_getopt(cfg, 'ElectricalStimulation'          ); % OPTIONAL. Boolean field to specify if electrical stimulation was done during the recording (options are “true” or “false”). Parameters for event-like stimulation should be specified in the _events.tsv file (see example underneath).
+cfg.ieeg.ElectricalStimulationParameters = ft_getopt(cfg, 'ElectricalStimulationParameters'); % OPTIONAL. Free form description of stimulation parameters, such as frequency, shape etc. Specific onsets can be specified in the _events.tsv file. Specific shapes can be described here in freeform text.
 
 %% MR Scanner Hardware
 cfg.mri.MagneticFieldStrength         = ft_getopt(cfg.mri, 'MagneticFieldStrength'          ); % Nominal field strength of MR magnet in Tesla. Corresponds to DICOM Tag 0018,0087 "Magnetic Field Strength" .
@@ -400,7 +426,7 @@ switch typ
     need_mri_json = true;
     
   case 'volume'
-    % the data is not on disk but has been passed as input argument
+    % the input data structure represents imaging data
     mri = varargin{1};
     if ~isempty(cfg.mri.dicomfile)
       % read the header details from the dicom matching file that was specified by the user
@@ -415,7 +441,7 @@ switch typ
     need_mri_json = true;
     
   case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275', 'neuromag_fif', 'neuromag122', 'neuromag306'}
-    % it is MEG data from disk
+    % it is MEG data from disk and in a supported format
     hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false);
     if isempty(cfg.trigger.event)
       trigger = ft_read_event(cfg.datafile, 'header', hdr);
@@ -430,7 +456,7 @@ switch typ
     need_meg_json = true;
     
   case {'brainvision_vhdr', 'edf', 'eeglab_set'}
-    % it is EEG data from disk
+    % it is EEG data from disk and in a supported format
     hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false);
     if isempty(cfg.trigger.event)
       trigger = ft_read_event(cfg.datafile, 'header', hdr);
@@ -445,26 +471,42 @@ switch typ
     need_eeg_json = true;
     
   case 'raw'
-    % the input represents raw electrophysiology data, which will be written in BrainVision format
-    ft_warning('assuming that the input data represents EEG');
+    % the input data structure represents raw electrophysiology data, which will be written in BrainVision format
+    ft_warning('assuming that the input data structure represents EEG');
     need_eeg_json = true;
     
     % the data is not on disk, but has been passed as input argument
+    % it should be written to disk in a supported file format
     hdr = ft_fetch_header(varargin{1});
+    dat = ft_fetch_data(varargin{1}, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
+    
     if isempty(cfg.trigger.event)
       trigger = ft_fetch_event(varargin{1});
     else
       % use the triggers as specified in the cfg
       trigger = cfg.trigger.event;
     end
-    if ~isequal(cfg.dataset, cfg.outputfile)
-      % the data should be converted and written to disk
-      dat = ft_fetch_data(varargin{1}, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
-    end
     if ft_senstype(varargin{1}, 'ctf') || ft_senstype(varargin{1}, 'neuromag')
       % use the subsequent MEG-specific handling for the JSON and TSV sidecar files
       typ = ft_senstype(varargin{1});
     end
+    
+  otherwise
+    % it is EEG data from disk but not in a supported format
+    ft_warning('assuming that the dataset represents EEG');
+    assert(~isempty(cfg.outputfile) && ~isequal(cfg.dataset, cfg.outputfile), 'unsupported dataset format for BIDS, you should specify cfg.outputfile');
+    
+    % it will be written to disk in BrainVision format
+    hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false);
+    dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
+    
+    if isempty(cfg.trigger.event)
+      trigger = ft_read_event(cfg.datafile, 'header', hdr);
+    else
+      % use the triggers as specified in the cfg
+      trigger = cfg.trigger.event;
+    end
+    need_eeg_json = true;
     
 end % switch typ
 
@@ -1173,11 +1215,11 @@ else
       trigger(i).value = NaN;
     end
   end
-  onset       = (([trigger.sample]-1)/hdr.Fs)';   % in seconds
-  duration    = ([trigger.duration]/hdr.Fs)';     % in seconds
-  sample      = ([trigger.sample])';              % in samples, the first sample of the file is 1
-  event_type  = {trigger.type}';
-  event_value = {trigger.value}';
+  onset        = (([trigger.sample]-1)/hdr.Fs)';   % in seconds
+  duration     = ([trigger.duration]/hdr.Fs)';     % in seconds
+  event_sample = ([trigger.sample])';              % in samples, the first sample of the file is 1
+  event_type   = {trigger.type}';
+  event_value  = {trigger.value}';
   if all(cellfun(@isnumeric, event_type))
     % this can be an array of strings or values
     event_type = cell2mat(event_type);
@@ -1186,7 +1228,7 @@ else
     % this can be an array of strings or values
     event_value = cell2mat(event_value);
   end
-  tab = table(onset, duration, sample, event_type, event_value);
+  tab = table(onset, duration, event_sample, event_type, event_value);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

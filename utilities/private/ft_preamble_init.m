@@ -108,7 +108,7 @@ if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
         case 'error'
           ft_error('output file %s is already present', chiL7fee_outputfile{i});
         otherwise
-          ft_error('invalid option for cfg.chiL7fee_outputfile{i}present');
+          ft_error('invalid option for cfg.outputfilepresent');
       end % case
     end
   end % for each of the output files
