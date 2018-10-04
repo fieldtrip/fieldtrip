@@ -200,13 +200,12 @@ end
 if ~isUnstructuredAna && cfg.downsample~=1
   % downsample the anatomical volume
   tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo'});
-  orgcfg.parameter = cfg.parameter;
   tmpcfg.parameter = 'anatomy';
   anatomical = ft_volumedownsample(tmpcfg, anatomical);
-  % restore the provenance information
+  % restore the provenance information and put back cfg.parameter
+  tmpparameter = cfg.parameter;
   [cfg, anatomical] = rollback_provenance(cfg, anatomical);
-  % restore the original parameter, it should not be 'anatomy'
-  cfg.parameter = orgcfg.parameter;
+  cfg.parameter = tmpparameter;
 end
 
 % collect the functional volumes that should be converted

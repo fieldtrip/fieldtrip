@@ -43,7 +43,7 @@ if true
   addOptional(p, 'begsample', []);
   addOptional(p, 'endsample', []);
   addOptional(p, 'chanindx', []);
-  addOptional(p, 'allowoverlap', []);
+  addOptional(p, 'allowoverlap', false);
   parse(p,varargin{:});
   hdr           = p.Results.header;
   begsample     = p.Results.begsample;
