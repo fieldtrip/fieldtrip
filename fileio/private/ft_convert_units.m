@@ -46,9 +46,6 @@ function [obj] = ft_convert_units(obj, target, varargin)
 %   2) determine the requested scaling factor to obtain the output units
 %   3) try to apply the scaling to the known geometrical elements in the input object
 
-% ensure the correct number of input and output arguments
-% narginchk(2,inf); % see below
-nargoutchk(0,1);
 
 % the "target" input argument has been made required in Aug 2017
 % prior to that it was also possible to use this function to estimate units
