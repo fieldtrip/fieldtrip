@@ -885,9 +885,9 @@ if need_events_tsv
       
       % the events from the the presentation log file should be merged with the triggers
       % trigger values are often numeric, whereas presentation event values are often strings
-      if isnumeric(events_tsv.event_value) && ~isnumeric(presentation_tsv.event_value)
+      if isnumeric(events_tsv.value) && ~isnumeric(presentation_tsv.value)
         % convert them, otherwise the concatenation fails
-        events_tsv.event_value = num2cell(events_tsv.event_value);
+        events_tsv.value = num2cell(events_tsv.value);
       end
       % concatenate them
       events_tsv = [events_tsv; presentation_tsv];
@@ -1217,18 +1217,18 @@ else
   end
   onset        = (([trigger.sample]-1)/hdr.Fs)';   % in seconds
   duration     = ([trigger.duration]/hdr.Fs)';     % in seconds
-  event_sample = ([trigger.sample])';              % in samples, the first sample of the file is 1
-  event_type   = {trigger.type}';
-  event_value  = {trigger.value}';
-  if all(cellfun(@isnumeric, event_type))
+  sample       = ([trigger.sample])';              % in samples, the first sample of the file is 1
+  type         = {trigger.type}';
+  value        = {trigger.value}';
+  if all(cellfun(@isnumeric, type))
     % this can be an array of strings or values
-    event_type = cell2mat(event_type);
+    type = cell2mat(type);
   end
-  if all(cellfun(@isnumeric, event_value))
+  if all(cellfun(@isnumeric, value))
     % this can be an array of strings or values
-    event_value = cell2mat(event_value);
+    value = cell2mat(value);
   end
-  tab = table(onset, duration, event_sample, event_type, event_value);
+  tab = table(onset, duration, sample, type, value);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1271,6 +1271,7 @@ function json = read_json(filename)
 ft_info('reading %s\n', filename);
 ft_hastoolbox('jsonlab', 1);
 json = loadjson(filename);
+json = ft_struct2char(json); % convert strings into char-arrays
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -1278,6 +1279,7 @@ json = loadjson(filename);
 function write_json(filename, json)
 json = remove_empty(json);
 json = sort_fields(json);
+json = ft_struct2char(json); % convert strings into char-arrays
 ft_info('writing %s\n', filename);
 ft_hastoolbox('jsonlab', 1);
 % write nan as 'n/a'
