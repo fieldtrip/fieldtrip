@@ -53,19 +53,19 @@ MAXCHANS = 1024;
 if nargin < 1
     help topo2sph;
     return;
-end;
-if nargin > 1 && ~isstr(eloc_angles)
+end
+if nargin > 1 && ~ischar(eloc_angles)
 	if nargin > 2
 		unshrink = method;
-	end;
+    end
 	method = eloc_angles;
 else
 	method = 2;
-end;
+end
 
 if isstr(eloc_locs)
 	fid = fopen(eloc_locs);
-	if fid<1,
+	if fid<1
 	    fprintf('topo2sph()^G: cannot open eloc_loc file (%s)\n',eloc_locs)
 	    return
 	end
@@ -75,19 +75,19 @@ if isstr(eloc_locs)
 else
     E = eloc_locs;
     E = [ ones(size(E,1),1) E ];
-end;
+end
     
-if nargin > 1 & isstr(eloc_angles)
-	if exist(eloc_angles)==2,
+if nargin > 1 && ischar(eloc_angles)
+	if exist(eloc_angles)==2
 	   fprintf('topo2sph: eloc_angles file (%s) already exists and will be erased.\n',eloc_angles);
 	end
 
 	fid = fopen(eloc_angles,'a');
-	if fid<1,
+	if fid<1
 	    fprintf('topo2sph()^G: cannot open eloc_angles file (%s)\n',eloc_angles)
 	    return
 	end
-end;
+end
 
 if method == 2
 	t = E(:,2); % theta
@@ -111,16 +111,16 @@ else
 		else
 			c(e) = 180*r;
 		end
-	end;
+    end
 	t = t';
 	r = r';
-end;
+end
 
 for e=1:size(E,1)
-   if nargin > 1 & isstr(eloc_angles)
+   if nargin > 1 && ischar(eloc_angles)
         chan = E(e,4:7);
         fprintf('%d	%g	%g	%s\n',E(e,1),c(e),h(e),chan);
         fprintf(fid,'%d	%g	%g	%s\n',E(e,1),c(e),h(e),chan);
-   end;     
+   end 
 end
 

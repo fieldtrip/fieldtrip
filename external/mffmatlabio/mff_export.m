@@ -28,7 +28,7 @@
 function mff_export(EEG, outputFile)
 
 matVer = ver('MATLAB');
-if datenum(matVer.Date) < 735595
+if exist('OCTAVE_VERSION', 'builtin') == 0 && datenum(matVer.Date) < 735595
     error('This version of Matlab is too old. Use version 2014a or later');
 end
 

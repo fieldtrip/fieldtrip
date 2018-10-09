@@ -28,29 +28,22 @@ function mff_exportcoordinates(EEG, mffFile)
 p = fileparts(which('mff_importsignal.m'));
 warning('off', 'MATLAB:Java:DuplicateClass');
 javaaddpath(fullfile(p, 'MFF-1.2.2-jar-with-dependencies.jar'));
-import com.egi.services.mff.api.MFFFactory;
-import com.egi.services.mff.api.MFFResourceType;
-import com.egi.services.mff.api.LocalMFFFactoryDelegate;
-import com.egi.services.mff.utility.ResourceUnmarshalException;
-import com.egi.services.mff.api.SensorLayout;
-import com.egi.services.mff.api.Sensor;
-import com.egi.services.mff.api.Key;
-import com.egi.services.mff.api.Neighbor;
-import java.util.ArrayList;
 warning('on', 'MATLAB:Java:DuplicateClass');
+
+% rotate back (need all the channels)
+EEG=pop_chanedit(EEG, 'forcelocs',[],'nosedir','-Y');
 
 % remove PNS channels
 if ~isempty(EEG.chanlocs) && isfield(EEG.chanlocs, 'type')
     allTypes = { EEG.chanlocs.type };
     allTypes = cellfun(@(x)num2str(x), allTypes, 'uniformoutput', false);
-    pnsChans = strmatch('PNS', allTypes, 'exact')';
+    pnsChans = strmatch('pns', lower(allTypes), 'exact')';
     EEG.chanlocs(pnsChans) = [];
 end
 
 if isempty(EEG.chanlocs) || ~isfield(EEG.chanlocs(1), 'X') || isempty(EEG.chanlocs(1).X)
     return;
 end
-EEG=pop_chanedit(EEG, 'forcelocs',[],'nosedir','-Y');
 [~, ~, chanlocs]= eeg_checkchanlocs( EEG.chanlocs, EEG.chaninfo);
 
 % create a factory
@@ -74,7 +67,14 @@ coordinateObj = mfffactory.openResourceAtURI(coordinatefilename, coordinatetype)
 layoutObj = javaObject('com.egi.services.mff.api.SensorLayout');
 layoutObj.setName('Exported from EEGLAB');
 
-jList = java.util.ArrayList;
+jList = javaObject('java.util.ArrayList');
+
+% average radius is 10 in sherical coordiantes
+if ~isempty(chanlocs(1).X)
+    averageRadius = mean( [ EEG.chanlocs.sph_radius ]);
+    if abs(averageRadius -10) < 2, averageRadius = 10; end
+end
+
 for iSensor = 1:length(chanlocs)
     sensorObj = javaObject('com.egi.services.mff.api.Sensor');
     
@@ -84,9 +84,11 @@ for iSensor = 1:length(chanlocs)
     else
         sensorObj.setName(chanlocs(iSensor).labels);
     end
-    sensorObj.setX(chanlocs(iSensor).X);
-    sensorObj.setY(chanlocs(iSensor).Y);
-    sensorObj.setZ(chanlocs(iSensor).Z);
+    if ~isempty(chanlocs(iSensor).X)
+        sensorObj.setX(chanlocs(iSensor).X*10/averageRadius); % assumes 0,0,0 at the center of the head
+        sensorObj.setY(chanlocs(iSensor).Y*10/averageRadius);
+        sensorObj.setZ(chanlocs(iSensor).Z*10/averageRadius);
+    end
     if isfield(chanlocs, 'identifier') && ~isempty(chanlocs(iSensor).identifier) && (chanlocs(iSensor).identifier ~= 0)
         sensorObj.setIdentifier(chanlocs(iSensor).identifier);
     end

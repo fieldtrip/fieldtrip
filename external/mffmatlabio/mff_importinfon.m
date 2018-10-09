@@ -30,15 +30,6 @@ function infoN = mff_importinfo(mffFile)
 p = fileparts(which('mff_importsignal.m'));
 warning('off', 'MATLAB:Java:DuplicateClass');
 javaaddpath(fullfile(p, 'MFF-1.2.2-jar-with-dependencies.jar'));
-import com.egi.services.mff.api.MFFFactory;
-import com.egi.services.mff.api.MFFResourceType;
-import com.egi.services.mff.api.LocalMFFFactoryDelegate;
-import com.egi.services.mff.utility.ResourceUnmarshalException;
-import com.egi.services.mff.api.Signal;
-import com.egi.services.mff.api.SignalBlock;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
 warning('on', 'MATLAB:Java:DuplicateClass');
 
 mfffactorydelegate = javaObject('com.egi.services.mff.api.LocalMFFFactoryDelegate');

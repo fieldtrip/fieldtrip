@@ -42,14 +42,3 @@ end
 
 dat = header.orig.data;
 
-% Select portion of data below: the issue is that the same has to be done
-% for events.
-%
-%     currentPointer = 1;
-%     for iSeg = 1:length(dat) % cell array
-%         nSampleSegment = length(dat{iSeg});
-%         sampleIndices = [currentPointer:currentPointer+nSampleSegment-1];
-%         sampleIndices = sampleIndices( sampleIndices >= begsample & sampleIndices <= endsample);
-%         dat{iSeg} = dat{iSeg}(chanindx,sampleIndices-currentPointer+1);
-%         currentPointer = currentPointer+nSampleSegment;
-%     end
