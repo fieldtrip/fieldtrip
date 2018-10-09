@@ -185,6 +185,9 @@ switch class(val)
   case 'char'
     str = ['''' val ''''];
     
+  case 'string'
+    str = sprintf('''%s''', val);
+    
   case {'single' 'double' 'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64' 'logical'}
     str = printmat(val);
     
