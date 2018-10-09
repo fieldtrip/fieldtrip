@@ -1,23 +1,14 @@
-function [x] = ft_struct2double(x, maxdepth)
+function [x] = ft_struct2char(x, maxdepth)
 
-% FT_STRUCT2DOUBLE converts all single precision numeric data in a structure
-% into double precision. It will also convert plain matrices and
-% cell-arrays.
+% FT_STRUCT2CHAR converts all string elements in a structure
+% into char-arrays.
 %
 % Use as
-%   x = ft_struct2double(x)
+%   x = ft_struct2char(x)
 %
-% Starting from MATLAB 7.0, you can use single precision data in your
-% computations, i.e. you do not have to convert back to double precision.
-%
-% MATLAB version 6.5 and older only support single precision for storing
-% data in memory or on disk, but do not allow computations on single
-% precision data. Therefore you should converted your data from single to
-% double precision after reading from file.
-%
-% See also FT_STRUCT2SINGLE, FT_STRUCT2CHAR, FT_STRUCT2STRING
+% See also FT_STRUCT2STRING, FT_STRUCT2SINGLE, FT_STRUCT2DOUBLE
 
-% Copyright (C) 2005-2014, Robert Oostenveld
+% Copyright (C) 2018, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -76,11 +67,11 @@ switch class(a)
       a{i} = convert(a{i}, depth+1, maxdepth);
     end
     
-  case {'single' 'int64' 'uint64' 'int32' 'uint32' 'int16' 'uint16' 'int8' 'uint8'}
-    % convert the values to double precision
-    a = double(a);
+  case 'string'
+    % convert the string into a char-array
+    a = char(a);
     
-  case 'double'
+  case 'char'
     % keep as it is
     
   otherwise

@@ -155,6 +155,7 @@ url = {
   'MARS'          'see http://www.parralab.org/mars'
   'JSONLAB'       'see https://se.mathworks.com/matlabcentral/fileexchange/33381-jsonlab--a-toolbox-to-encode-decode-json-files'
   'MFFMATLABIO'   'see https://github.com/arnodelorme/mffmatlabio'
+  'JSONIO'        'see https://github.com/gllmflndn/JSONio'
   };
 
 if nargin<2
@@ -382,6 +383,8 @@ switch toolbox
     dependency = {'loadjson' 'savejson'};
   case 'PLOTLY'
     dependency = {'fig2plotly' 'savejson'};
+  case 'JSONIO'
+    dependency = {'jsonread', 'jsonwrite', 'jsonread.mexa64'};
     
     % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
