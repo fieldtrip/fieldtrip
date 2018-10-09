@@ -55,10 +55,10 @@ if EEG.trials == 1
     if ~isempty(EEG.event) && isfield(EEG.event, 'type') && isstr(EEG.event(1).type)
         boundaryEvent = strmatch( 'boundary', { EEG.event.type }, 'exact');
         samples       = [ EEG.event(boundaryEvent).latency ];
-        durations     = [ EEG.event(boundaryEvent).duration ];
     end
     samples = [ 0 samples EEG.pnts ];
-    if ~isempty(durations)
+    if isfield(EEG.event, 'duration')
+        durations = [ EEG.event(boundaryEvent).duration ];
         durations = cumsum(durations);
         durations = [0 durations durations(end) ];
     else

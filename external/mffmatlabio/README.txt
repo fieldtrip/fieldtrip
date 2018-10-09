@@ -37,6 +37,10 @@ Known limitations to the Philips MFF import/export plugin
 
 Revision history
 ----------------
+Version 2.01
+- Allow eegplugin_mffmatlabio to return version number
+- Remove call in mff_import that was assuming EEGLAB was present
+
 Version 2.00
 - Octave compatibility
 - Fix issue with boundary latency when importing file mff version 0

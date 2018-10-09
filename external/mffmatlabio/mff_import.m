@@ -338,4 +338,3 @@ data = EEG.data;
 event = EEG.event;
 chanlocs = EEG.chanlocs;
 mff = EEG.etc;
-EEG= eeg_checkset(EEG);
