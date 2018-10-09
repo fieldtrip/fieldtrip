@@ -70,10 +70,11 @@
 function versionstr = eegplugin_mffmatlabio(fig, trystrs, catchstrs)
 
     %global EEG
-    versionstr = '2.00';
+    versionstr = '2.01';
     if nargin < 3
-        error('eegplugin_mffmatlabio requires 3 arguments');
-    end;
+        disp('eegplugin_mffmatlabio requires 3 arguments');
+        return
+    end
     
     % add amica folder to path
     % -----------------------
