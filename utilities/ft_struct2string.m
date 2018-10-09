@@ -68,11 +68,11 @@ switch class(a)
     end
     
   case 'string'
-    % convert the string into a char-array
-    a = char(a);
+    % keep as it is
     
   case 'char'
-    % keep as it is
+    % convert the char-array into a string
+    a = string(a);
     
   otherwise
     % do nothing
