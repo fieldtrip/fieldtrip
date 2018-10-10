@@ -254,11 +254,11 @@ for i=1:size(dip.pos,1)
   
   if fixedori
     switch(weightnorm)
-      case {'unitnoisegain','nai'};
+      case {'unitnoisegain','nai'}
         % optimal orientation calculation for unit-noise gain beamformer,
         % (also applies to similar NAI), based on equation 4.47 from Sekihara & Nagarajan (2008)
         [vv, dd] = eig(pinv(lf' * invCy_squared *lf)*(lf' * invCy *lf));
-        [~,maxeig]=max(diag(dd));
+        [dum,maxeig]=max(diag(dd));
         eta = vv(:,maxeig);
         lf  = lf * eta;
         if ~isempty(subspace), lforig = lforig * eta; end

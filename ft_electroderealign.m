@@ -694,7 +694,7 @@ end
 
 if istrue(cfg.keepchannel)
   % append the channels that are not realigned
-  [~, idx] = setdiff(elec_original.label, elec_realigned.label);
+  [dum, idx] = setdiff(elec_original.label, elec_realigned.label);
   idx = sort(idx);
   elec_realigned.label = [elec_realigned.label; elec_original.label(idx)];
   elec_realigned.elecpos = [elec_realigned.elecpos; elec_original.elecpos(idx,:)];

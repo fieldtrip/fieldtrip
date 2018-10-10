@@ -98,7 +98,7 @@ lf = cat(2, grid.leadfield{:});
 G  = lf*lf';
 
 dat     = cat(2,datain.trial{:});
-[~, Ae, N, Nspace, Sout, Sin, Sspace, S] = dssp(dat, G, cfg.dssp.n_in, cfg.dssp.n_out, cfg.dssp.n_space, cfg.dssp.n_intersect);
+[dum, Ae, N, Nspace, Sout, Sin, Sspace, S] = dssp(dat, G, cfg.dssp.n_in, cfg.dssp.n_out, cfg.dssp.n_space, cfg.dssp.n_intersect);
 datAe   = dat*Ae; % the projection is a right multiplication
 % with a matrix (eye(size(Ae,1))-Ae*Ae'), since Ae*Ae' can become quite 
 % sizeable, it's computed slightly differently here.
@@ -226,8 +226,8 @@ function [Ae, Nee, Sout, Sin, S] = CSP01(Bin, Bout, Nin, Nout, Nee)
 % -------------------------------------------------------------
 %
 
-[~,Sout,Vout] = svd(Bout,'econ');
-[~,Sin, Vin]  = svd(Bin, 'econ');
+[dum,Sout,Vout] = svd(Bout,'econ');
+[dum,Sin, Vin]  = svd(Bin, 'econ');
 Sout = diag(Sout);
 Sin  = diag(Sin);
 
@@ -256,9 +256,9 @@ fprintf('Using %d spatial dimensions for the inside field\n', Nin);
 Qout = Vout(:,1:Nout);
 Qin  = Vin(:, 1:Nin);
 
-C       = Qin'*Qout;
-[U,S,~] = svd(C);
-S       = diag(S);
+C     = Qin'*Qout;
+[U,S] = svd(C);
+S     = diag(S);
 if (ischar(Nee) && strcmp(Nee, 'auto'))
   ft_error('automatic determination of intersection dimension is not supported');
 elseif ischar(Nee) && strcmp(Nee, 'interactive')

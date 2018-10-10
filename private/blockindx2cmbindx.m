@@ -69,8 +69,8 @@ for k = 1:numel(uz)
   
   z_label{k} = tok(:); % the label of the channels that participate in a block
   
-  [~,i2x] = match_str(y(tmp,1), z_label{k});
-  [~,i2y] = match_str(y(tmp,2), z_label{k});
+  [dum,i2x] = match_str(y(tmp,1), z_label{k});
+  [dum,i2y] = match_str(y(tmp,2), z_label{k});
   
   if sqrt(sum(tmp))~=numel(tok)
     error('incomplete data');
@@ -115,7 +115,7 @@ for k = 1:numel(block)
       break;
     end
   end
-  [~, i2]    = match_str(b_label{k}, z_label{indx});
+  [dum, i2]    = match_str(b_label{k}, z_label{indx});
   cmbindx{k} = reshape(z_block{indx}(i2,i2),[],1);
   n{k}       = b_n{k};%(i2);
 end

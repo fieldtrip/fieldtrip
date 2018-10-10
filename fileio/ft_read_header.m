@@ -441,10 +441,10 @@ switch headerformat
     ft_hastoolbox('NPMK', 1);
     % ensure that the filename contains a full path specification,
     % otherwise the low-level function fails
-    [p,n,~] = fileparts(filename);
+    [p,n] = fileparts(filename);
     if isempty(p)
       filename = which(filename);
-      [p,n,~] = fileparts(filename);
+      [p,n] = fileparts(filename);
     end
     
     NEV = openNEV(filename,'noread','nosave');
@@ -472,7 +472,7 @@ switch headerformat
     ft_hastoolbox('NPMK', 1);
     % ensure that the filename contains a full path specification,
     % otherwise the low-level function fails
-    [p, ~, ~] = fileparts(filename);
+    p = fileparts(filename);
     if isempty(p)
       filename = which(filename);
     end

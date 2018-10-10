@@ -438,7 +438,7 @@ switch cfg.method
     % do the rest of the icasso related processing
     sR = icassoCluster(sR, 'strategy', 'AL', 'simfcn', 'abscorr', 's2d', 'sim2dis', 'L',cfg.numcomponent);
     sR = icassoProjection(sR, 'cca', 's2d', 'sqrtsim2dis', 'epochs', 75);
-    [Iq, mixing, unmixing, ~, index2centrotypes] = icassoResult(sR,cfg.numcomponent);
+    [Iq, mixing, unmixing, dum, index2centrotypes] = icassoResult(sR,cfg.numcomponent);
     
     % this step is done, because in icassoResult mixing is determined to be
     % pinv(unmixing), which yields strange results. Better take it from the
