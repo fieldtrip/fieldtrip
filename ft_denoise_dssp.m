@@ -256,9 +256,9 @@ fprintf('Using %d spatial dimensions for the inside field\n', Nin);
 Qout = Vout(:,1:Nout);
 Qin  = Vin(:, 1:Nin);
 
-C       = Qin'*Qout;
-[U,S,~] = svd(C);
-S       = diag(S);
+C     = Qin'*Qout;
+[U,S] = svd(C);
+S     = diag(S);
 if (ischar(Nee) && strcmp(Nee, 'auto'))
   ft_error('automatic determination of intersection dimension is not supported');
 elseif ischar(Nee) && strcmp(Nee, 'interactive')
