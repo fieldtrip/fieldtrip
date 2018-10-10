@@ -178,7 +178,7 @@ sel = strcmp(cfg.parameter, 'anatomy');
 if ~any(sel)
   cfg.parameter = [{'anatomy'} cfg.parameter];
 else
-  [~, indx] = sort(sel);
+  [dum, indx] = sort(sel);
   cfg.parameter = cfg.parameter(fliplr(indx));
 end
 

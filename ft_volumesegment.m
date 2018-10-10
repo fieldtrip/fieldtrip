@@ -685,7 +685,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
 
       % output: gray, white, csf
     elseif any(strcmp(outp, 'gray')) || any(strcmp(outp, 'white')) || any(strcmp(outp, 'csf'))
-      [~, tissuetype] = max(cat(4, segmented.csf, segmented.gray, segmented.white), [], 4);
+      [dum, tissuetype] = max(cat(4, segmented.csf, segmented.gray, segmented.white), [], 4);
       clear dummy
       if any(strcmp(outp, 'white'))
         segmented.white = (tissuetype == 3) & brainmask;
