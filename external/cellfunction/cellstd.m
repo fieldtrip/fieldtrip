@@ -30,7 +30,7 @@ if flag,
 end
 
 nx   = max(nx);
-nsmp = cellfun('size', x, dim);
+nsmp = cellfun(@nansum, isfinite(x), repmat({dim},1,nx), 'UniformOutput', 0);
 ssmp = cellfun(@sumsq,   x, repmat({dim},1,nx), 'UniformOutput', 0);
 sd   = sqrt(nansum(cell2mat(ssmp), dim)./nansum(nsmp));  
 
