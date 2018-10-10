@@ -21,6 +21,6 @@ if nargin==1,
 end
 
 nx   = max(nx);
-nsmp = cellfun('size', x, dim);
-ssmp = cellfun(@nansum,   x, repmat({dim},1,nx), 'UniformOutput', 0);
+nsmp = cellfun(@nansum, isfinite(x), repmat({dim},1,nx), 'UniformOutput', 0);
+ssmp = cellfun(@nansum,          x,  repmat({dim},1,nx), 'UniformOutput', 0);
 m    = nansum(cell2mat(ssmp), dim)./nansum(nsmp);  
