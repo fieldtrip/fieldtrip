@@ -122,10 +122,26 @@ end
 
 cfg.nfold       = ft_getopt(cfg, 'nfold',   1);
 cfg.blocklength = ft_getopt(cfg, 'blocklength', 'trial');
-cfg.reflags     = ft_getopt(cfg, 'reflags', 0); %this needs to be known for the folding
-cfg.testtrials  = ft_getopt(cfg, 'testtrials', 'all');
+cfg.testtrials  = ft_getopt(cfg, 'testtrials',  'all');
 cfg.testsamples = ft_getopt(cfg, 'testsamples', 'all');
 cfg.refchannel  = ft_getopt(cfg, 'refchannel', '');
+cfg.reflags     = ft_getopt(cfg, 'reflags',    0); %this needs to be known for the folding
+
+% set the rest of the defaults
+cfg.channel            = ft_getopt(cfg, 'channel',            'all');
+cfg.truncate           = ft_getopt(cfg, 'truncate',           'no');
+cfg.standardiserefdata = ft_getopt(cfg, 'standardiserefdata', 'no');
+cfg.standardisedata    = ft_getopt(cfg, 'standardisedata',    'no');
+cfg.demeanrefdata      = ft_getopt(cfg, 'demeanrefdata',      'no');
+cfg.demeandata         = ft_getopt(cfg, 'demeandata',         'no');
+cfg.trials             = ft_getopt(cfg, 'trials',             'all', 1);
+cfg.feedback           = ft_getopt(cfg, 'feedback',           'none');
+cfg.updatesens         = ft_getopt(cfg, 'updatesens',         'yes');
+cfg.perchannel         = ft_getopt(cfg, 'perchannel',         'yes');
+cfg.method             = ft_getopt(cfg, 'method',             'mlr');
+cfg.threshold          = ft_getopt(cfg, 'threshold',          0);
+cfg.output             = ft_getopt(cfg, 'output',             'model');
+cfg.performance        = ft_getopt(cfg, 'performance',        'Pearson');
 
 if ~iscell(cfg.refchannel)
   cfg.refchannel = {cfg.refchannel};
@@ -187,7 +203,7 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble previous data
+ft_postamble previous varargin
 
 ft_postamble provenance dataout
 ft_postamble history    dataout
@@ -195,23 +211,6 @@ ft_postamble savevar    dataout
 
 %-------------------------------------------------
 function dataout = ft_denoise_tsr_core(cfg, varargin)
-
-% set the defaults
-cfg.refchannel         = ft_getopt(cfg, 'refchannel',         'MEGREF');
-cfg.channel            = ft_getopt(cfg, 'channel',            'all');
-cfg.truncate           = ft_getopt(cfg, 'truncate',           'no');
-cfg.standardiserefdata = ft_getopt(cfg, 'standardiserefdata', 'no');
-cfg.standardisedata    = ft_getopt(cfg, 'standardisedata',    'no');
-cfg.demeanrefdata      = ft_getopt(cfg, 'demeanrefdata',      'no');
-cfg.demeandata         = ft_getopt(cfg, 'demeandata',         'no');
-cfg.trials             = ft_getopt(cfg, 'trials',             'all', 1);
-cfg.feedback           = ft_getopt(cfg, 'feedback',           'none');
-cfg.updatesens         = ft_getopt(cfg, 'updatesens',         'yes');
-cfg.perchannel         = ft_getopt(cfg, 'perchannel',         'yes');
-cfg.method             = ft_getopt(cfg, 'method',             'mlr');
-cfg.threshold          = ft_getopt(cfg, 'threshold',          0);
-cfg.output             = ft_getopt(cfg, 'output',             'model');
-cfg.performance        = ft_getopt(cfg, 'performance',        'Pearson');
 
 % create a separate structure for the reference data
 tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo'});
@@ -360,7 +359,7 @@ if istrue(cfg.standardiserefdata)
     testrefdata.trial = cellvecmult(testrefdata.trial, std_refdata(1)); % no timelag dimension here, STD is scalar 
   end
   if exist('beta_data', 'var')
-    beta_ref  = beta_ref*diag(std_refdata);
+    beta_ref  = beta_ref'*diag(std_refdata);
   else
     beta_ref = diag(std_data)*beta_ref*diag(1./std_refdata);
   end
@@ -444,8 +443,8 @@ switch cfg.performance
       weights.performance(k,1) = tmp(1,2)./sqrt(tmp(1,1).*tmp(2,2));
     end
   case 'r-squared' 
-    tss = nansum(data.trial.^2, 2); % total sum of squares, testdata are already mean subtracted in l. 330
-    rss = nansum((data.trial - predicted).^2, 2);  % sum of squared residual error
+    tss = nansum(observed.^2, 2); % total sum of squares, testdata are already mean subtracted in l. 330
+    rss = nansum((observed - predicted).^2, 2);  % sum of squared residual error
     % R-squared
     weights.performance = (tss-rss)./tss;
 end
