@@ -229,28 +229,6 @@ tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo' 'channel'});
 data    = ft_selectdata(tmpcfg, varargin{1});
 [cfg, data] = rollback_provenance(cfg, data);
 
-% demean
-if istrue(cfg.demeanrefdata)
-  fprintf('demeaning the reference channels\n');
-  mu_refdata    = cellmean(refdata.trial, 2);
-  refdata.trial = cellvecadd(refdata.trial, -mu_refdata);
-end
-if istrue(cfg.demeandata)
-  fprintf('demeaning the data channels\n');
-  mu_data       = cellmean(data.trial, 2);
-  data.trial    = cellvecadd(data.trial, -mu_data);
-end
-
-% Standardise the data
-if istrue(cfg.standardiserefdata)
-  fprintf('standardising the reference channels \n');
-  [refdata.trial, std_refdata] = cellzscore(refdata.trial, 2, 0);
-end
-if istrue(cfg.standardisedata)
-  fprintf('standardising the data channels \n');
-  [data.trial, std_data] = cellzscore(data.trial, 2, 0);
-end
-
 % deal with the specification of testtrials/testsamples, as per the
 % instruction by the caller function, for cross-validation purposes
 if ~ischar(cfg.testtrials) && ischar(cfg.testsamples) && isequal(cfg.testsamples, 'all')
@@ -275,11 +253,41 @@ else
   error('something wrong here');
 end
 
+% demean
+if istrue(cfg.demeanrefdata)
+  fprintf('demeaning the reference channels\n');
+  mu_refdata    = cellmean(refdata.trial, 2);
+  refdata.trial = cellvecadd(refdata.trial, -mu_refdata);
+  if usetestdata
+    mu_testrefdata    = cellmean(testrefdata.trial, 2);
+    testrefdata.trial = cellvecadd(testrefdata.trial, -mu_testrefdata); 
+  end
+end
+if istrue(cfg.demeandata)
+  fprintf('demeaning the data channels\n');
+  mu_data       = cellmean(data.trial, 2);
+  data.trial    = cellvecadd(data.trial, -mu_data);
+  if usetestdata
+    mu_testdata    = cellmean(testdata.trial, 2);
+    testdata.trial = cellvecadd(testdata.trial, -mu_testdata); 
+  end
+end
+
+% standardise the data
+if istrue(cfg.standardiserefdata)
+  fprintf('standardising the reference channels \n');
+  [refdata.trial, std_refdata] = cellzscore(refdata.trial, 2, 0);
+end
+if istrue(cfg.standardisedata)
+  fprintf('standardising the data channels \n');
+  [data.trial, std_data] = cellzscore(data.trial, 2, 0);
+end
+
 % do the time shifting for the reference channel data
 ft_hastoolbox('cellfunction', 1);
 
 timestep = mean(diff(data.time{1}));
-reflags = -round(cfg.reflags./timestep);
+reflags  = -round(cfg.reflags./timestep);
 reflabel = refdata.label; % to be used later
 % the convention is to have a positive cfg.reflags defined as a delay of the ref w.r.t. the chan
 % cellshift has an opposite convention with respect to the sign of the
@@ -289,7 +297,7 @@ if ~any(reflags==0)
 end
 fprintf('shifting the reference data\n');
 refdata.trial = cellshift(refdata.trial, reflags, 2, [], 'overlap');
-refdata.time  = cellshift(data.time,  0, 2, [abs(min(reflags)) abs(max(reflags))], 'overlap');
+refdata.time  = cellshift(data.time, 0, 2, [abs(min(reflags)) abs(max(reflags))], 'overlap');
 refdata.label = repmat(refdata.label,numel(reflags),1);
 for k = 1:numel(refdata.label)
   refdata.label{k} = sprintf('%s_shift%03d',refdata.label{k}, k);
@@ -300,21 +308,21 @@ data.trial = cellshift(data.trial, 0, 2, [abs(min(reflags)) abs(max(reflags))], 
 data.time  = cellshift(data.time,  0, 2, [abs(min(reflags)) abs(max(reflags))], 'overlap');
 
 % only keep the trials that have > 0 samples
-tmpcfg = [];
+tmpcfg        = [];
 tmpcfg.trials = find(cellfun('size',data.trial,2)>0);
-data    = ft_selectdata(tmpcfg, data);
-[cfg, data] = rollback_provenance(cfg, data);
-refdata = ft_selectdata(tmpcfg, refdata);
-[~,refdata] = rollback_provenance(cfg, refdata);
+data          = ft_selectdata(tmpcfg, data);
+[cfg, data]   = rollback_provenance(cfg, data);
+refdata       = ft_selectdata(tmpcfg, refdata);
+[~,refdata]   = rollback_provenance(cfg, refdata);
 
-% demean
+% demean again, just to be sure
 if istrue(cfg.demeanrefdata)
   fprintf('demeaning the reference channels\n');
   mu_refdata    = cellmean(refdata.trial, 2);
   refdata.trial = cellvecadd(refdata.trial, -mu_refdata);
 end
 if istrue(cfg.demeandata)
-  fprintf('demeaning the data channels\n');
+  fprintf('demeaning the data channels\n'); % the edges have been chopped off
   mu_data       = cellmean(data.trial, 2);
   data.trial    = cellvecadd(data.trial, -mu_data);
 end
@@ -348,16 +356,12 @@ else
   %beta_data = normc(E(1:nchan,:))';
   beta_ref  = E(nchan+(1:nref),:);
   beta_data = E(1:nchan,:);
-
 end
 
-% Unstandardise the data/refchannels and test data/rechannels
+% Unstandardise the data/refchannels and test data/refchannels
 if istrue(cfg.standardiserefdata)
   std_refdata       = repmat(std_refdata, numel(cfg.reflags), 1);
   refdata.trial     = cellvecmult(refdata.trial, std_refdata);
-  if usetestdata
-    testrefdata.trial = cellvecmult(testrefdata.trial, std_refdata(1)); % no timelag dimension here, STD is scalar 
-  end
   if exist('beta_data', 'var')
     beta_ref  = beta_ref'*diag(std_refdata);
   else
@@ -366,17 +370,14 @@ if istrue(cfg.standardiserefdata)
 end
 
 if istrue(cfg.standardisedata)
-data.trial     = cellvecmult(data.trial, std_data);
-if usetestdata
-    testdata.trial = cellvecmult(testdata.trial, std_data); % use STD estimated on the training data
-end
+  data.trial     = cellvecmult(data.trial, std_data);
   if exist('beta_data', 'var')
     beta_data = diag(std_data)*beta_data;
   end
 end
 
 if usetestdata
-  fprintf('shifting the reference data\n');
+  fprintf('shifting the reference data for the test data\n');
   testrefdata.trial = cellshift(testrefdata.trial, reflags, 2, [], 'overlap');
   testrefdata.time  = cellshift(testdata.time,  0, 2, [abs(min(reflags)) abs(max(reflags))], 'overlap');
   testrefdata.label = repmat(testrefdata.label,numel(reflags),1);
@@ -388,13 +389,25 @@ if usetestdata
   testdata.trial = cellshift(testdata.trial, 0, 2, [abs(min(reflags)) abs(max(reflags))], 'overlap');
   testdata.time  = cellshift(testdata.time,  0, 2, [abs(min(reflags)) abs(max(reflags))], 'overlap');
   
+  % demean again, just to be sure
+  if istrue(cfg.demeanrefdata)
+    fprintf('demeaning the reference channels\n');
+    mu_testrefdata    = cellmean(testrefdata.trial, 2);
+    testrefdata.trial = cellvecadd(testrefdata.trial, -mu_testrefdata);
+  end
+  if istrue(cfg.demeandata)
+    fprintf('demeaning the data channels\n'); % the edges have been chopped off
+    mu_testdata       = cellmean(testdata.trial, 2);
+    testdata.trial    = cellvecadd(testdata.trial, -mu_testdata);
+  end
+
   % only keep the trials that have > 0 samples
   tmpcfg = [];
-  tmpcfg.trials = find(cellfun('size',data.trial,2)>0);
-  data    = ft_selectdata(tmpcfg, data);
-  [cfg, data] = rollback_provenance(cfg, data);
-  refdata = ft_selectdata(tmpcfg, refdata);
-  [~,refdata] = rollback_provenance(cfg, refdata);
+  tmpcfg.trials = find(cellfun('size',testdata.trial,2)>0);
+  testdata     = ft_selectdata(tmpcfg, testdata);
+  [~, testdata] = rollback_provenance(cfg, testdata);
+  testrefdata = ft_selectdata(tmpcfg, testrefdata);
+  [~,testrefdata] = rollback_provenance(cfg, testrefdata);
 
   predicted = beta_ref*testrefdata.trial;
   observed  = testdata.trial;
