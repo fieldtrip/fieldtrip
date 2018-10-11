@@ -51,7 +51,7 @@ if iscell(filename)
   for i=1:length(filename)
     val(i) = filetype_check_header(filename{i}, head, offset);
   end
-elseif isdir(filename)
+elseif isfolder(filename)
   % a directory cannot have a header
   val = false;
 elseif ~exist(filename, 'file')

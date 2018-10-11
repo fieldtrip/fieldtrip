@@ -40,11 +40,6 @@ end
 p = fileparts(which('mff_importsignal.m'));
 warning('off', 'MATLAB:Java:DuplicateClass');
 javaaddpath(fullfile(p, 'MFF-1.2.2-jar-with-dependencies.jar'));
-import com.egi.services.mff.api.*;
-import com.egi.services.mff.utility.*;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
 warning('on', 'MATLAB:Java:DuplicateClass');
 
 % Create a factory.
@@ -137,16 +132,16 @@ for iFile = 1:length(binfilenames)
                             % first signal block of the signal file.
                             if ~isempty(block.optionalHeader)
                                 
-                                buffer = typecast(block.optionalHeader,'UINT8');
+                                buffer = typecast(block.optionalHeader,'uint8');
                                 
                                 % Get the optional headers information. Please refer to the
                                 % Meta File Format(MFF)documentation for more information about
                                 % Signal files and the optional header.
                                 
-                                tmpType      = typecast(buffer(1:4),'INT32');
-                                numBlocks    = typecast(buffer(5:12),'INT64');
-                                totalSamples = typecast(buffer(13:20),'INT64');
-                                numSignals   = typecast(buffer(21:24),'INT32');
+                                tmpType      = typecast(buffer(1:4),'int32');
+                                numBlocks    = typecast(buffer(5:12),'int64');
+                                totalSamples = typecast(buffer(13:20),'int64');
+                                numSignals   = typecast(buffer(21:24),'int32');
                                 
                                 fprintf('Optional Header type: %d\n',tmpType);
                                 fprintf('Optional Header number of blocks total: %d\n',numBlocks);

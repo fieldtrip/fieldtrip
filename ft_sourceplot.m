@@ -128,7 +128,8 @@ function ft_sourceplot(cfg, functional, anatomical)
 %                       'auto', full range of data
 %                       [min max], coordinates of first and last slice in voxels
 %   cfg.slicedim      = dimension to slice 1 (x-axis) 2(y-axis) 3(z-axis) (default = 3)
-%   cfg.title         = string, title of the figure window
+%   cfg.title         = string, title of the plot
+%   cfg.figurename    = string, title of the figure window
 %
 % When cfg.method='surface', the functional data will be rendered onto a cortical mesh
 % (can be an inflated mesh). If the input source data contains a tri-field (i.e. a
@@ -280,7 +281,8 @@ cfg.funparameter  = ft_getopt(cfg, 'funparameter',  []);
 cfg.maskparameter = ft_getopt(cfg, 'maskparameter', []);
 cfg.maskstyle     = ft_getopt(cfg, 'maskstyle',     'opacity');
 cfg.downsample    = ft_getopt(cfg, 'downsample',    1);
-cfg.title         = ft_getopt(cfg, 'title',         '');
+cfg.title         = ft_getopt(cfg, 'title',         []);
+cfg.figurename    = ft_getopt(cfg, 'figurename',    []);
 cfg.atlas         = ft_getopt(cfg, 'atlas',         []);
 cfg.marker        = ft_getopt(cfg, 'marker',        []);
 cfg.markersize    = ft_getopt(cfg, 'markersize',    5);
@@ -705,7 +707,12 @@ end
 h = figure('visible', cfg.visible);
 set(h, 'color', [1 1 1]);
 set(h, 'renderer', cfg.renderer);
+if ~isempty(cfg.figurename)
+  % this appears as the name of the window
+  set(h, 'name', cfg.figurename);
+end
 if ~isempty(cfg.title)
+  % this appears above the axes
   title(cfg.title);
 end
 

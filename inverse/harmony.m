@@ -167,7 +167,7 @@ lc           = ft_getopt(varargin, 'filter_bs');
 %% Create brain harmonics matrix
 
 % Mesh harmonics
-[~,H,d] = ct_mesh_spectrum(dip,num_harm,num_comp);
+[dum,H,d] = ct_mesh_spectrum(dip,num_harm,num_comp);
 
 % Elimination of pathological zeroth frequencies and concatenating
 % harmonics numbers

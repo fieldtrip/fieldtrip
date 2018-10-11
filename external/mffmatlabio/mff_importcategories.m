@@ -1,10 +1,11 @@
 % mff_importcategories - import information from MFF 'categories.xml' file
 %
 % Usage:
-%   cat = mff_exportcategories(mffFile);
+%   cat = mff_exportcategories(mffFile, version);
 %
 % Inputs:
 %  mffFile - filename/foldername for the MFF file
+%  vesion  - file version (optional - default is 3)
 %
 % Output:
 %  cat - Matlab structure containing informations contained in the MFF file.
@@ -24,22 +25,22 @@
 % You should have received a copy of the GNU General Public License
 % along with mffmatlabio.  If not, see <https://www.gnu.org/licenses/>.
 
-function cat = mff_importcategories(mffFile)
+function cat = mff_importcategories(mffFile, version)
 
 cat = [];
 p = fileparts(which('mff_importsignal.m'));
 warning('off', 'MATLAB:Java:DuplicateClass');
 javaaddpath(fullfile(p, 'MFF-1.2.2-jar-with-dependencies.jar'));
-import com.egi.services.mff.api.MFFFactory;
-import com.egi.services.mff.api.MFFResourceType;
-import com.egi.services.mff.api.LocalMFFFactoryDelegate;
-import com.egi.services.mff.utility.ResourceUnmarshalException;
-import com.egi.services.mff.api.Signal;
-import com.egi.services.mff.api.SignalBlock;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
 warning('on', 'MATLAB:Java:DuplicateClass');
+
+if nargin < 2
+    version = 3;
+end
+if version == 0
+    divider = 1000;
+else
+    divider = 1;
+end
 
 % Create a factory.
 mfffactorydelegate = javaObject('com.egi.services.mff.api.LocalMFFFactoryDelegate');
@@ -69,10 +70,10 @@ if ~isempty(catsResource)
                     segment = segments.get(iSeg-1);
                     cat(iCat).trials(iSeg).name = char(segment.getName());
                     cat(iCat).trials(iSeg).status = char(segment.getStatus());
-                    cat(iCat).trials(iSeg).begintime = segment.getBeginTime();
-                    cat(iCat).trials(iSeg).endtime = segment.getEndTime();
-                    cat(iCat).trials(iSeg).eventbegin = segment.getEventBegin();
-                    cat(iCat).trials(iSeg).eventend = segment.getEventEnd();
+                    cat(iCat).trials(iSeg).begintime = segment.getBeginTime()/divider;
+                    cat(iCat).trials(iSeg).endtime = segment.getEndTime()/divider;
+                    cat(iCat).trials(iSeg).eventbegin = segment.getEventBegin()/divider;
+                    cat(iCat).trials(iSeg).eventend = segment.getEventEnd()/divider;
                     
                     if segment.getClockStartTimePresent()
                         cat(iCat).trials(iSeg).clockstarttime = char(segment.getClockStartTime());

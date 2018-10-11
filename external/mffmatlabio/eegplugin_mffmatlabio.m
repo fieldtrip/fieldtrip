@@ -70,10 +70,11 @@
 function versionstr = eegplugin_mffmatlabio(fig, trystrs, catchstrs)
 
     %global EEG
-    versionstr = '0.96';
+    versionstr = '2.01';
     if nargin < 3
-        error('eegplugin_mffmatlabio requires 3 arguments');
-    end;
+        disp('eegplugin_mffmatlabio requires 3 arguments');
+        return
+    end
     
     % add amica folder to path
     % -----------------------
@@ -93,7 +94,7 @@ function versionstr = eegplugin_mffmatlabio(fig, trystrs, catchstrs)
     comload    = [  trystrs.no_check '[EEG, LASTCOM] = pop_mffimport;' catchstrs.store_and_hist ];
     comwrite   = [  trystrs.no_check 'LASTCOM = pop_mffexport(EEG);' catchstrs.store_and_hist ];
     
-    % create menus
+    % create menus (CHANGING THESE MENUS AFFECTS THE MAIN eeglab.m FUNCTION)
     % ------------
     submenu = uimenu( menui, 'Label', 'Import Philips .mff file', 'separator', 'on', 'CallBack', comload);
-    submenu = uimenu( menue, 'Label', 'Export Philips .mff file', 'CallBack', comwrite);
+    submenu = uimenu( menue, 'Label', 'Export Philips .mff file', 'separator', 'on', 'CallBack', comwrite);

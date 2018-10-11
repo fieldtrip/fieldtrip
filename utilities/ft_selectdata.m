@@ -1,4 +1,4 @@
-function [varargout] = ft_selectdata(varargin)
+function [varargout] = ft_selectdata(cfg, varargin)
 
 % FT_SELECTDATA makes a selection in the input data along specific data
 % dimensions, such as channels, time, frequency, trials, etc. It can also
@@ -71,30 +71,17 @@ function [varargout] = ft_selectdata(varargin)
 %
 % $Id$
 
-if nargin==1 || (nargin>2 && ischar(varargin{end-1})) || (isstruct(varargin{1}) && ~ft_datatype(varargin{1}, 'unknown'))
-  % this is the OLD calling style, like this
-  %   data = ft_selectdata(data, 'key1', value1, 'key2', value2, ...)
-  % or with multiple input data structures like this
-  %   data = ft_selectdata(data1, data2, 'key1', value1, 'key2', value2, ...)
-  [varargout{1:nargout}] = ft_selectdata_old(varargin{:});
-  return
-end
-
-% reorganize the input arguments
-cfg = varargin{1};
-varargin = varargin(2:end);
-
 % these are used by the ft_preamble/ft_postamble function and scripts
 ft_revision = '$Id$';
 ft_nargin   = nargin;
 ft_nargout  = nargout;
 
-ft_defaults                   % this ensures that the path is correct and that the ft_defaults global variable is available
-ft_preamble init              % this will reset ft_warning and show the function help if nargin==0 and return an error
-ft_preamble provenance        % this records the time and memory usage at teh beginning of the function
-ft_preamble trackconfig       % this converts the cfg structure in a config object, which tracks the cfg options that are being used
-ft_preamble debug             % this allows for displaying or saving the function name and input arguments upon an error
-ft_preamble loadvar varargin  % this reads the input data in case the user specified the cfg.inputfile option
+ft_defaults
+ft_preamble init
+ft_preamble debug
+ft_preamble trackconfig
+ft_preamble loadvar varargin
+ft_preamble provenance varargin
 
 % determine the characteristics of the input data
 dtype = ft_datatype(varargin{1});
@@ -300,14 +287,14 @@ if hastime,    [seltime,    cfg] = getselection_time   (cfg, varargin{:}, cfg.to
 keepfield = datfield;
 
 for i=1:numel(varargin)
-  
+
   for j=1:numel(datfield)
     dimtok = tokenize(dimord{j}, '_');
-    
+
     % the rpt selection should only work with a single data argument
     % in case tapers were kept, selrpt~=selrpttap, otherwise selrpt==selrpttap
     [selrpt{i}, dum, rptdim{i}, selrpttap{i}] = getselection_rpt(cfg, varargin{i}, dimord{j});
-    
+
     % check for the presence of each dimension in each datafield
     fieldhasspike   = ismember('spike',   dimtok);
     fieldhaspos     = ismember('pos',     dimtok) || ismember('{pos}', dimtok);
@@ -317,9 +304,9 @@ for i=1:numel(varargin)
     fieldhasfreq    = ismember('freq',    dimtok);
     fieldhasrpt     = ismember('rpt',     dimtok) | ismember('subj', dimtok) | ismember('{rpt}', dimtok);
     fieldhasrpttap  = ismember('rpttap',  dimtok);
-    
+
     % cfg.latency is used to select individual spikes, not to select from a continuously sampled time axis
-    
+
     if fieldhasspike,   varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, find(strcmp(dimtok,'spike')),             selspike{i},   false,           'intersect', average); end
     if fieldhaspos,     varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, find(ismember(dimtok, {'pos', '{pos}'})), selpos{i},     avgoverpos,      cfg.select, average);  end
     if fieldhaschan,    varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, find(ismember(dimtok,{'chan' '{chan}'})), selchan{i},    avgoverchan,     cfg.select, average);  end
@@ -328,39 +315,39 @@ for i=1:numel(varargin)
     if fieldhasfreq,    varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, find(strcmp(dimtok,'freq')),              selfreq{i},    avgoverfreq,     cfg.select, average);  end
     if fieldhasrpt,     varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, rptdim{i},                                selrpt{i},     avgoverrpt,      'intersect', average); end
     if fieldhasrpttap,  varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, rptdim{i},                                selrpttap{i},  avgoverrpt,      'intersect', average); end
-    
+
     % update the fields that should be kept in the structure as a whole
     % and update the dimord for this specific datfield
     keepdim = true(size(dimtok));
-    
+
     if avgoverchan && ~keepchandim
       keepdim(strcmp(dimtok, 'chan')) = false;
       keepfield = setdiff(keepfield, 'label');
     else
       keepfield = [keepfield 'label'];
     end
-    
+
     if avgoverchancmb && ~keepchancmbdim
       keepdim(strcmp(dimtok, 'chancmb')) = false;
       keepfield = setdiff(keepfield, 'labelcmb');
     else
       keepfield = [keepfield 'labelcmb'];
     end
-    
+
     if avgoverfreq && ~keepfreqdim
       keepdim(strcmp(dimtok, 'freq')) = false;
       keepfield = setdiff(keepfield, 'freq');
     else
       keepfield = [keepfield 'freq'];
     end
-    
+
     if avgovertime && ~keeptimedim
       keepdim(strcmp(dimtok, 'time')) = false;
       keepfield = setdiff(keepfield, 'time');
     else
       keepfield = [keepfield 'time'];
     end
-    
+
     if avgoverpos && ~keepposdim
       keepdim(strcmp(dimtok, 'pos'))   = false;
       keepdim(strcmp(dimtok, '{pos}')) = false;
@@ -371,13 +358,13 @@ for i=1:numel(varargin)
     else
       keepfield = [keepfield {'pos' '{pos}' 'dim'}];
     end
-    
+
     if avgoverrpt && ~keeprptdim
       keepdim(strcmp(dimtok, 'rpt'))    = false;
       keepdim(strcmp(dimtok, 'rpttap')) = false;
       keepdim(strcmp(dimtok, 'subj'))   = false;
     end
-    
+
     % update the sampleinfo, if possible, and needed
     if strcmp(datfield{j}, 'sampleinfo') && ~isequal(cfg.latency, 'all')
       if iscell(seltime{i}) && numel(seltime{i})==size(varargin{i}.sampleinfo,1)
@@ -390,15 +377,15 @@ for i=1:numel(varargin)
         varargin{i}.sampleinfo = varargin{i}.sampleinfo(:,[1 1]) - 1 + repmat(seltime{i}([1 end]),nrpt,1);
       end
     end
-  
+
     varargin{i}.(datfield{j}) = squeezedim(varargin{i}.(datfield{j}), ~keepdim);
-    
+
   end % for datfield
-  
+
   % also update the fields that describe the dimensions, time/freq/pos have been dealt with as data
   if haschan,    varargin{i} = makeselection_chan   (varargin{i}, selchan{i}, avgoverchan); end % update the label field
   if haschancmb, varargin{i} = makeselection_chancmb(varargin{i}, selchancmb{i}, avgoverchancmb); end % update the labelcmb field
-  
+
 end % for varargin
 
 if strcmp(cfg.select, 'union')
@@ -432,7 +419,7 @@ end
 % restore the original dimord fields in the data
 for i=1:length(orgdim1)
   dimtok = tokenize(orgdim2{i}, '_');
-  
+
   % using a setdiff may result in double occurrences of chan and pos to
   % disappear, so this causes problems as per bug 2962
   % if ~keeprptdim, dimtok = setdiff(dimtok, {'rpt' 'rpttap' 'subj'}); end
@@ -445,7 +432,7 @@ for i=1:length(orgdim1)
   if ~keepchandim, dimtok = dimtok(~ismember(dimtok, {'chan'})); end
   if ~keepfreqdim, dimtok = dimtok(~ismember(dimtok, {'freq'})); end
   if ~keeptimedim, dimtok = dimtok(~ismember(dimtok, {'time'})); end
-  
+
   dimord = sprintf('%s_', dimtok{:});
   dimord = dimord(1:end-1); % remove the trailing _
   for j=1:length(varargin)
@@ -464,30 +451,19 @@ end
 
 varargout = varargin;
 
-ft_postamble debug              % this clears the onCleanup function used for debugging in case of an error
-ft_postamble trackconfig        % this converts the config object back into a struct and can report on the unused fields
-ft_postamble provenance         % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and MATLAB version etc. to the output cfg
-ft_postamble previous varargin  % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
-ft_postamble history varargout  % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg
-
-% note that the cfg.previous thingy does not work with the postamble,
-% because the postamble puts the cfgs of all input arguments in the (first)
-% output argument's xxx.cfg
-for k = 1:numel(varargout)
-  varargout{k}.cfg          = cfg;
-  if isfield(varargin{k}, 'cfg')
-    varargout{k}.cfg.previous = varargin{k}.cfg;
-  end
-end
-
-% ft_postamble savevar varargout  % this saves the output data structure to disk in case the user specified the cfg.outputfile option
+ft_postamble debug
+ft_postamble trackconfig
+ft_postamble previous varargin
+ft_postamble provenance varargout
+ft_postamble history varargout
+ft_postamble savevar varargout
 
 if nargout>numel(varargout)
   % also return the input cfg with the combined selection over all input data structures
   varargout{end+1} = cfg;
 end
 
-end % main function ft_selectdata
+end % function ft_selectdata
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS
@@ -537,7 +513,7 @@ switch selmode
           data.(datfield){j} = cellmatselect(data.(datfield){j}, seldim-1, selindx{j}, numel(dimtok)==1);
         end
       end
-      
+
     else
       % there is a single selection in a single vector
       if ~isempty(selindx) && all(isnan(selindx))
@@ -546,11 +522,11 @@ switch selmode
         data.(datfield) = cellmatselect(data.(datfield), seldim, selindx, numel(dimtok)==1);
       end
     end
-    
+
     if avgoverdim
       data.(datfield) = cellmatmean(data.(datfield), seldim, average);
     end
-    
+
   case 'union'
     if ~isempty(selindx) && all(isnan(selindx))
       % no selection needs to be made
@@ -577,7 +553,7 @@ switch selmode
           ft_error('unsupported dimension (%d) for making a selection for %s', seldim, datfield);
       end
     end
-    
+
     if avgoverdim
       data.(datfield) = average(data.(datfield), seldim);
     end
@@ -755,9 +731,9 @@ if ~isfield(cfg, 'channelcmb')
     % the nan return value specifies that no selection was specified
     chancmbindx{k} = nan;
   end
-  
+
 else
-  
+
   switch selmode
     case 'intersect'
       for k=1:ndata
@@ -767,35 +743,35 @@ else
           cfg.channelcmb = ft_channelcombination(cfg.channelcmb, varargin{k}.label);
         end
       end
-      
+
       ncfgcmb = size(cfg.channelcmb,1);
       cfgcmb  = cell(ncfgcmb, 1);
       for i=1:ncfgcmb
         cfgcmb{i} = sprintf('%s&%s', cfg.channelcmb{i,1}, cfg.channelcmb{i,2});
       end
-      
+
       for k=1:ndata
         ndatcmb = size(varargin{k}.labelcmb,1);
         datcmb = cell(ndatcmb, 1);
         for i=1:ndatcmb
           datcmb{i} = sprintf('%s&%s', varargin{k}.labelcmb{i,1}, varargin{k}.labelcmb{i,2});
         end
-        
+
         % return the order according to the (joint) configuration, not according to the (individual) data
         % FIXME this should adhere to the general code guidelines, where
         % the order returned will be according to the first data argument!
         [dum, chancmbindx{k}] = match_str(cfgcmb, datcmb);
       end
-      
+
     case 'union'
       % FIXME this is not yet implemented
       ft_error('union of channel combination is not yet supported');
-      
+
     otherwise
       ft_error('invalid value for cfg.select');
   end % switch
-  
-  
+
+
 end
 
 end % function getselection_chancmb
@@ -954,7 +930,7 @@ if isempty(cfg.latency)
     % this signifies that all time bins are deselected and should be removed
     timeindx{k} = [];
   end
-  
+
 elseif numel(cfg.latency)==1
   % this single value should be within the time axis of each input data structure
   if numel(alltimevec)>1
@@ -963,11 +939,11 @@ elseif numel(cfg.latency)==1
     tbin = nearest(alltimevec, cfg.latency, true, false); % don't consider tolerance
   end
   cfg.latency = alltimevec(tbin);
-  
+
   for k = 1:ndata
     timeindx{k} = indx(tbin, k);
   end
-  
+
 elseif numel(cfg.latency)==2
   % the [min max] range can be specifed with +inf or -inf, but should
   % at least partially overlap with the time axis of the input data
@@ -979,14 +955,14 @@ elseif numel(cfg.latency)==2
   tbeg = nearest(alltimevec, cfg.latency(1), false, false);
   tend = nearest(alltimevec, cfg.latency(2), false, false);
   cfg.latency = alltimevec([tbeg tend]);
-  
+
   for k = 1:numel(alltimecell)
     timeindx{k} = indx(tbeg:tend, k);
   end
-  
+
 elseif size(cfg.latency,2)==2
   % this may be used for specification of the computation, not for data selection
-  
+
 else
   ft_error('incorrect specification of cfg.latency');
 end
@@ -1030,7 +1006,7 @@ freqaxis = zeros(1,0);
 for k = 1:ndata
   % the nan return value specifies that no selection was specified
   freqindx{k} = nan;
-  
+
   % update the axis along which the frequencies are defined
   freqaxis = union(freqaxis, round(varargin{k}.freq(:)/tol)*tol);
 end
@@ -1072,7 +1048,7 @@ if isfield(cfg, 'frequency')
       ft_error('incorrect specification of cfg.frequency');
     end
   end
-  
+
   % deal with numeric selection
   if isempty(cfg.frequency)
     for k = 1:ndata
@@ -1080,7 +1056,7 @@ if isfield(cfg, 'frequency')
       % this signifies that all frequency bins are deselected and should be removed
       freqindx{k} = [];
     end
-    
+
   elseif numel(cfg.frequency)==1
     % this single value should be within the frequency axis of each input data structure
     if numel(freqaxis)>1
@@ -1089,11 +1065,11 @@ if isfield(cfg, 'frequency')
       fbin = nearest(freqaxis, cfg.frequency, true, false); % don't consider tolerance
     end
     cfg.frequency = freqaxis(fbin);
-    
+
     for k = 1:ndata
       freqindx{k} = indx(fbin,k);
     end
-    
+
   elseif numel(cfg.frequency)==2
     % the [min max] range can be specifed with +inf or -inf, but should
     % at least partially overlap with the freq axis of the input data
@@ -1105,14 +1081,14 @@ if isfield(cfg, 'frequency')
     fbeg = nearest(freqaxis, cfg.frequency(1), false, false);
     fend = nearest(freqaxis, cfg.frequency(2), false, false);
     cfg.frequency = freqaxis([fbeg fend]);
-    
+
     for k = 1:ndata
       freqindx{k} = indx(fbeg:fend,k);
     end
-    
+
   elseif size(cfg.frequency,2)==2
     % this may be used for specification of the computation, not for data selection
-    
+
   else
     ft_error('incorrect specification of cfg.frequency');
   end
@@ -1141,25 +1117,25 @@ rptdim = find(strcmp(dimtok, '{rpt}') | strcmp(dimtok, 'rpt') | strcmp(dimtok, '
 if isequal(cfg.trials, 'all')
   rptindx    = nan; % the nan return value specifies that no selection was specified
   rpttapindx = nan; % the nan return value specifies that no selection was specified
-  
+
 elseif isempty(rptdim)
   % FIXME should [] not mean that none of the trials is to be selected?
   rptindx    = nan; % the nan return value specifies that no selection was specified
   rpttapindx = nan; % the nan return value specifies that no selection was specified
-  
+
 else
   rptindx = ft_getopt(cfg, 'trials');
-  
+
   if islogical(rptindx)
     % convert from booleans to indices
     rptindx = find(rptindx);
   end
-  
+
   rptindx = unique(sort(rptindx));
-  
+
   if strcmp(dimtok{rptdim}, 'rpttap') && isfield(data, 'cumtapcnt')
     % there are tapers in the data
-    
+
     % determine for each taper to which trial it belongs
     nrpt = size(data.cumtapcnt, 1);
     taper = zeros(nrpt, 1);
@@ -1170,7 +1146,7 @@ else
       taper(begtapcnt(i):endtapcnt(i)) = i;
     end
     rpttapindx = find(ismember(taper, rptindx));
-    
+
   else
     % there are no tapers in the data
     rpttapindx = rptindx;

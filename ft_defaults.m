@@ -7,7 +7,7 @@ function ft_defaults
 %
 % The global configuration defaults are stored in the global "ft_default" structure.
 % The ft_checkconfig function that is called by many FieldTrip functions will merge
-% these global configuration defaults with the cfg ctructure that you pass to 
+% these global configuration defaults with the cfg ctructure that you pass to
 % the FieldTrip function that you are calling.
 %
 % The global options and their default values are
@@ -26,7 +26,7 @@ function ft_defaults
 %   ft_default.toolbox.images    = string, can be 'compat' or 'matlab' (default = 'compat')
 %
 % If you want to overrule these default settings, you can add something like this in your startup.m script
-%   ft_defaults 
+%   ft_defaults
 %   global ft_default
 %   ft_default.option1 = value1
 %   ft_default.option2 = value2
@@ -131,6 +131,12 @@ if initialized && exist('ft_hastoolbox', 'file')
   return;
 end
 
+if isfield(ft_default, 'toolbox') && isfield(ft_default.toolbox, 'cleanup')
+  prevcleanup = ft_default.toolbox.cleanup;
+else
+  prevcleanup = {};
+end
+
 % Ensure that the path containing ft_defaults is on the path.
 % This allows people to do "cd path_to_fieldtrip; ft_defaults"
 ftPath = fileparts(mfilename('fullpath')); % get the full path to this function, strip away 'ft_defaults'
@@ -233,6 +239,8 @@ if ~isdeployed
     if ft_platform_supports('matlabversion', -inf, '2019b'), ft_hastoolbox('compat/matlablt2020a', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2020a'), ft_hastoolbox('compat/matlablt2020b', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2020b'), ft_hastoolbox('compat/matlablt2021a', 3, 1); end
+    % this deals with compatibility with all OCTAVE versions
+    if ft_platform_supports('octaveversion', -inf, +inf),    ft_hastoolbox('compat/octave', 3, 1); end
   end
   
   try
@@ -310,6 +318,9 @@ if ~isdeployed
   
 end
 
+% the toolboxes added by this function should not be removed by FT_POSTAMBLE_HASTOOLBOX
+ft_default.toolbox.cleanup = prevcleanup;
+
 % track the usage of this function, this only happens once at startup
 ft_trackusage('startup');
 
@@ -317,6 +328,7 @@ ft_trackusage('startup');
 initialized = true;
 
 end % function ft_default
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

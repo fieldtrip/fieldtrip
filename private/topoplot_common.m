@@ -39,6 +39,8 @@ cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'cohrefchannel' 'refchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'zparam', 'parameter'});
 
+cfg.newfigure = ft_getopt(cfg, 'newfigure', 'yes');
+
 Ndata = numel(varargin);
 if isnumeric(varargin{end})
   % the call with multiple inputs is done by ft_topoplotIC and recursively by ft_topoplotER/TFR itself
@@ -52,12 +54,16 @@ end
 % the call with multiple inputs is done by ft_topoplotIC and recursively by ft_topoplotER/TFR itself
 % the last input argument points to the specific data to be plotted
 if Ndata>1 && ~isnumeric(varargin{end})
+  
   for k=1:Ndata
     
-    if k>1
+    if k>1 && istrue(cfg.newfigure)
       % create a new figure for the additional input arguments
       % ensure that the new figure appears at the same position
       figure('Position', get(gcf, 'Position'), 'Visible', get(gcf, 'Visible'));
+    end
+    if ~istrue(cfg.newfigure)
+      subplot(floor(sqrt(Ndata)), ceil(sqrt(Ndata)), k);
     end
     
     % the indexing is necessary if ft_topoplotER/TFR is called from

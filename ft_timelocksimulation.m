@@ -1,4 +1,4 @@
-function timelock = ft_timelocksimulation(cfg)
+function [timelock] = ft_timelocksimulation(cfg)
 
 % FT_TIMELOCKSIMULATION computes a simulated signal that resembles an
 % event-related potential or field
@@ -193,6 +193,7 @@ end % for numtrl
 tmpcfg = [];
 tmpcfg.keeptrials = 'yes';
 timelock = ft_timelockanalysis(tmpcfg, data);
+% restore the provenance information
 [cfg, timelock] = rollback_provenance(cfg, timelock);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

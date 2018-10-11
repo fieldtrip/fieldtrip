@@ -1,6 +1,6 @@
-function A=mkfilt_eloreta_v2(L,regu)
+function [A,Wout]=mkfilt_eloreta(L,regu,W);
 % makes spatial filter according to eLoreta 
-% usage  A=mkfilt_eloreta_v2(L); or  A=mkfilt_eloreta_v2(L,regu);
+% usage  A=mkfilt_eloreta(L); or  A=mkfilt_eloreta(L,regu);
 %
 % input L:  NxMxP leadfield tensor for N channels, M voxels, and 
 %           P dipole directions. Typically P=3. (If you do MEG for 
@@ -16,10 +16,10 @@ function A=mkfilt_eloreta_v2(L,regu)
 % 
 % code implemented by Guido Nolte
 % please cite
-% ?R.D. Pascual-Marqui: Discrete, 3D distributed, linear imaging methods of electric neuronal activity. Part 1: exact, zero
-% error localization. arXiv:0710.3341 [math-ph], 2007-October-17, http://arxiv.org/pdf/0710.3341 ?
+% “R.D. Pascual-Marqui: Discrete, 3D distributed, linear imaging methods of electric neuronal activity. Part 1: exact, zero
+% error localization. arXiv:0710.3341 [math-ph], 2007-October-17, http://arxiv.org/pdf/0710.3341 ”
 
-if nargin<2; regu=.05; end
+if nargin<2;regu=.05;end
 
 [nchan ng ndum]=size(L);
 LL=zeros(nchan,ndum,ng);
@@ -29,7 +29,10 @@ end
 LL=reshape(LL,nchan,ndum*ng);
 
 u0=eye(nchan);
+if nargin<3
 W=reshape(repmat(eye(ndum),1,ng),ndum,ndum,ng);
+end
+
 Winv=zeros(ndum,ndum,ng);
 winvkt=zeros(ng*ndum,nchan);
 kont=0;
@@ -53,15 +56,17 @@ while kont==0;
         
         [ux,sx,vx]=svd(kwinvkt);
         %disp(sx(1,1)/alpha)
-        
         Wold=W;
         for i=1:ng;
         Lloc=squeeze(L(:,i,:));
-        W(:,:,i)=sqrtm(Lloc'*M*Lloc);
+        % Wold=W;
+        Mb=Lloc'*M*Lloc;
+        Mb=Mb+eye(ndum)*trace(Mb)/10^10;
+        W(:,:,i)=sqrtm(Mb);
         end
     reldef=(norm(reshape(W,[],1)-reshape(Wold,[],1))/norm(reshape(Wold,[],1)));
     disp(reldef)
-    if kk>20 || reldef< .000001 ; kont=1; end;
+    if kk>20 || reldef< .000001 ; kont=1;end;
 end
 %disp(kk)
 
@@ -72,4 +77,5 @@ ktm=LL'*M;
  for i=1:ng;
      A(:,i,:)=(Winv(:,:,i)*ktm(ndum*(i-1)+1:ndum*i,:))';
  end
+ Wout=W;
 return
