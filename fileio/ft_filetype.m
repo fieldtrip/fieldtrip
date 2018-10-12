@@ -677,7 +677,11 @@ elseif isfolder(filename) && most(filetype_check_extension({ls.name}, '.ntt'))
   type = 'neuralynx_ds';
   manufacturer = 'Neuralynx';
   content = 'tetrode recordings ';
-
+  
+elseif filetype_check_extension(filename, '.mat') && contains(filename, 'times_')
+  type = 'wave_clus';
+  manufacturer = 'Department of Engineering, University of Leicester, UK';
+  content = 'sorted spikes';  
 elseif isfolder(p) && exist(fullfile(p, 'header'), 'file') && exist(fullfile(p, 'samples'), 'file') && exist(fullfile(p, 'events'), 'file')
   type = 'fcdc_buffer_offline';
   manufacturer = 'Donders Centre for Cognitive Neuroimaging';
