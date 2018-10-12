@@ -87,6 +87,25 @@ switch spikeformat
     spike.waveform  = {};   % this is unknown
     spike.unit      = {};   % this is unknown
     spike.hdr       = H;
+  
+  case 'wave_clus'
+    load(filename); % load the mat file
+    clusters = sort(unique(cluster_class(:,1))); % detected clusters (0 constitutes the rejected cluster)
+    clusters(clusters==0) = []; % remove rejected cluster
+    nclust = numel(clusters);
+    t = tokenize(filename, ['_', '.']); % extract channel name
+    spike.label     = cell(1,nclust);
+    spike.unit      = cell(1,nclust);
+    spike.waveform  = cell(1,nclust);
+    spike.timestamp = cell(1,nclust);
+    spike.hdr       = par;
+    for cl = 1:nclust
+      unit_idx                  = cluster_class(:,1)==cl;
+      spike.label{cl}           = [t{2} '-' num2str(cl)];
+      spike.timestamp{cl}       = cluster_class(unit_idx,2)';
+      spike.waveform{cl}(1,:,:) = spikes(unit_idx,:)';
+      spike.unit{cl}            = cluster_class(unit_idx,1)';
+    end
     
   case 'neuralynx_nse'
     % single channel file, read all records
