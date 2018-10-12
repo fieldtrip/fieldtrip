@@ -222,7 +222,7 @@ else
   fprintf('selecting reference channel data from the first data input argument\n');
   refdata = ft_selectdata(tmpcfg, varargin{1});
 end
-[~, refdata] = rollback_provenance(cfg, refdata);  
+[dum, refdata] = rollback_provenance(cfg, refdata);  
 
 % keep the requested channels from the data
 tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo' 'channel'});
@@ -313,7 +313,7 @@ tmpcfg.trials = find(cellfun('size',data.trial,2)>0);
 data          = ft_selectdata(tmpcfg, data);
 [cfg, data]   = rollback_provenance(cfg, data);
 refdata       = ft_selectdata(tmpcfg, refdata);
-[~,refdata]   = rollback_provenance(cfg, refdata);
+[dum,refdata] = rollback_provenance(cfg, refdata);
 
 % demean again, just to be sure
 if istrue(cfg.demeanrefdata)
@@ -405,9 +405,9 @@ if usetestdata
   tmpcfg = [];
   tmpcfg.trials = find(cellfun('size',testdata.trial,2)>0);
   testdata     = ft_selectdata(tmpcfg, testdata);
-  [~, testdata] = rollback_provenance(cfg, testdata);
+  [dum,testdata] = rollback_provenance(cfg, testdata);
   testrefdata = ft_selectdata(tmpcfg, testrefdata);
-  [~,testrefdata] = rollback_provenance(cfg, testrefdata);
+  [dum,testrefdata] = rollback_provenance(cfg, testrefdata);
 
   predicted = beta_ref*testrefdata.trial;
   observed  = testdata.trial;

@@ -82,9 +82,9 @@ x1 = pos*u(:, 2);
 x2 = pos*u(:, 1);
 
 % detemine the indices of three reference sensors that are close to the three principal axes
-[~, ind1] = min(x1);
-[~, ind2] = max(x1);
-[~, ind3] = max(abs(x2 - mean(x2([ind1 ind2]))));
+[dum, ind1] = min(x1);
+[dum, ind2] = max(x1);
+[dum, ind3] = max(abs(x2 - mean(x2([ind1 ind2]))));
 
 % compute the mean of the three reference sensors for the principal axes
 mean1 = [0 0 0];
@@ -215,7 +215,7 @@ switch nfid
             c = 100;
     end
     
-    [~, ind] = unique(round(c*afiducials.pos/tolerance), 'rows');
+    [dum, ind] = unique(round(c*afiducials.pos/tolerance), 'rows');
     
     afiducials.pos = afiducials.pos(ind, :);
     

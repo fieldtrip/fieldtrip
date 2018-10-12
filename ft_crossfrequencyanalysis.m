@@ -352,7 +352,7 @@ pacdata = zeros(size(LFsigtemp,1),size(HFsigtemp,1),nbin);
 
 Ang  = angle(LFsigtemp);
 Amp  = abs(HFsigtemp);
-[~,bin] = histc(Ang, linspace(-pi,pi,nbin));  % binned low frequency phase
+[dum,bin] = histc(Ang, linspace(-pi,pi,nbin));  % binned low frequency phase
 binamp = zeros (size(HFsigtemp,1),nbin);      % binned amplitude
 
 for i = 1:size(Ang,1)
