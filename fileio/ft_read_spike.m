@@ -90,8 +90,8 @@ switch spikeformat
   
   case 'wave_clus'
     load(filename); % load the mat file
-    clusters = sort(unique(cluster_class(:,1))); % detected clusters (0 constitutes the rejected cluster)
-    clusters(clusters==0) = []; % remove rejected cluster
+    clusters = sort(unique(cluster_class(:,1))); % detected clusters
+    clusters(clusters==0) = []; % remove rejected cluster (indexed by zeros)
     nclust = numel(clusters);
     t = tokenize(filename, ['_', '.']); % extract channel name
     spike.label     = cell(1,nclust);
