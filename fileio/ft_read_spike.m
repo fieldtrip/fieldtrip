@@ -21,6 +21,7 @@ function [spike] = ft_read_spike(filename, varargin)
 %   'plexon_plx'
 %   'neuroshare'
 %   'neurosim_spikes'
+%   'wave_clus'
 %
 % The output spike structure usually contains
 %   spike.label     = 1xNchans cell-array, with channel labels
@@ -32,7 +33,7 @@ function [spike] = ft_read_spike(filename, varargin)
 %
 % See also FT_DATATYPE_SPIKE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT
 
-% Copyright (C) 2007-2011 Robert Oostenveld
+% Copyright (C) 2007-2018 Robert Oostenveld, Arjen Stolk
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -106,6 +107,7 @@ switch spikeformat
       spike.waveform{cl}(1,:,:) = spikes(unit_idx,:)';
       spike.unit{cl}            = cluster_class(unit_idx,1)';
     end
+    fprintf('note that wave_clus timestamps are typically expressed in millisec and not in samples\n')
     
   case 'neuralynx_nse'
     % single channel file, read all records
