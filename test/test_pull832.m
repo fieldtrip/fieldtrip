@@ -7,7 +7,7 @@ function test_pull832
 
 %%
 
-% cd(dccnpath('/home/common/matlab/fieldtrip/data/test/pull832'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/pull832'));
 
 %%
 
@@ -92,18 +92,24 @@ figure
 plot([lf0, lf0_old]);
 hold on
 plot(lf0-lf0_old, 'k');
+
 relvar = (norm(lf0-lf0_old) ./ norm(lf0))^2
+assert(relvar<0.03);
 
 figure
 plot([lf1, lf1_old]);
 hold on
 plot(lf1-lf1_old, 'k');
+
 relvar = (norm(lf1-lf1_old) ./ norm(lf1))^2
+assert(relvar<0.03);
 
 figure
 plot([lf2, lf2_old]);
 hold on
 plot(lf2-lf2_old, 'k');
+
 relvar = (norm(lf2-lf2_old) ./ norm(lf2))^2
+assert(relvar<0.03);
 
 
