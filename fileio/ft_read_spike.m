@@ -90,11 +90,12 @@ switch spikeformat
     spike.hdr       = H;
   
   case 'wave_clus'
-    load(filename); % load the mat file
+    load(filename, 'cluster_class', 'spikes', 'par'); % load the mat file
     clusters = sort(unique(cluster_class(:,1))); % detected clusters
     clusters(clusters==0) = []; % remove rejected cluster (indexed by zeros)
     nclust = numel(clusters);
-    t = tokenize(filename, ['_', '.']); % extract channel name
+    [p, f, x] = fileparts(filename);
+    t = tokenize(f, '_'); % extract channel name
     spike.label     = cell(1,nclust);
     spike.unit      = cell(1,nclust);
     spike.waveform  = cell(1,nclust);
