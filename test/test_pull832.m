@@ -112,4 +112,13 @@ plot(lf2-lf2_old, 'k');
 relvar = (norm(lf2-lf2_old) ./ norm(lf2))^2
 assert(relvar<0.03);
 
+%%
+
+pla1 = (0:101)*3 + 1;
+pla2 = (0:101)*3 + 2;
+pla = [pla1 pla2];
+mag = (0:101)*3 + 3;
+
+relvar = (norm(lf0(mag)-lf0_old(mag)) ./ norm(lf0(mag)))^2
+relvar = (norm(lf0(pla)-lf0_old(pla)) ./ norm(lf0(pla)))^2
 
