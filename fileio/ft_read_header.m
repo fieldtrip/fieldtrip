@@ -738,6 +738,18 @@ switch headerformat
     % read the header information from shared memory
     hdr = read_shm_header(filename);
     
+    
+  case {'curry_dat', 'curry_cdt'}
+    orig            = load_curry_data_file(filename);
+    hdr             = [];
+    hdr.Fs          = orig.fFrequency;
+    hdr.nChans      = orig.nChannels;
+    hdr.nSamples    = orig.nSamples;
+    hdr.nSamplesPre = sum(orig.time<0);
+    hdr.nTrials     = orig.nTrials;
+    hdr.label       = orig.labels(:);
+    hdr.orig        = orig;
+    
   case 'dataq_wdq'
     orig            = read_wdq_header(filename);
     hdr             = [];

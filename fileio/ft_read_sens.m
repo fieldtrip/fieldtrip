@@ -200,6 +200,15 @@ switch fileformat
       ft_error('neither electrode nor gradiometer information is present');
     end
 
+  case {'curry_dat', 'curry_cdt'}  
+    
+    hdr = ft_read_header(filename);
+    
+    if ~isempty(hdr.orig.sensorpos)
+      sens.elecpos = hdr.orig.sensorpos';
+      sens.label   = hdr.label(1:size(sens.elecpos, 1));
+    end  
+    
   case 'fcdc_buffer'
     % the online header should have a binary blob with the sensor information
     hdr = ft_read_header(filename, 'headerformat', fileformat);

@@ -957,7 +957,19 @@ elseif filetype_check_extension(filename, '.dig')
   type = 'curry_dig';
   manufacturer = 'Curry';
   content = 'digitizer file';
-
+elseif filetype_check_extension(filename, '.cdt')
+  type = 'curry_cdt';
+  manufacturer = 'Curry';
+  content = 'Curry8 data file';
+elseif filetype_check_extension(filename, '.cef')
+  type = 'curry_cef';
+  manufacturer = 'Curry';
+  content = 'Curry event file';
+elseif filetype_check_extension(filename, '.dpa')
+  type = 'curry_dpa';
+  manufacturer = 'Curry';
+  content = 'Curry8 sensor file';
+  
 elseif filetype_check_extension(filename, '.txt') && filetype_check_header(filename, '#Study')
   type = 'imotions_txt';
   manufacturer = 'iMotions';
