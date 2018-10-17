@@ -3,6 +3,7 @@ function [orig, data] = load_curry_data_file(datafile)
 [PathName, FileName, Extension] = fileparts(datafile);
 
 FileName = [FileName, Extension];
+PathName = [PathName filesep]; % add the / or \
 
 % loads Curry dat/dap/rs3 files into MATLAB and displays their waveforms
 %{
