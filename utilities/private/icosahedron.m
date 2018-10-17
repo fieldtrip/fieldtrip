@@ -72,6 +72,7 @@ if nargin>0
   for i=1:n
     [pos, tri] = refine(pos, tri);
     % scale all vertices to the unit sphere
-    pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1,3);
+    pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1, 3);
   end
 end
+
