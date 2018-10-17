@@ -11,7 +11,7 @@ cd(dccnpath('/home/common/matlab/fieldtrip/data/test/pull832'));
 
 %%
 
-filename = 'sub-01-ses-meg-meg-sub-01_ses-meg_task-facerecognition_run-01_meg.fif';
+filename = 'sub-01_ses-meg_task-facerecognition_run-01_meg.fif';
 
 hdrx = ft_read_header(filename, 'coilaccuracy', []);
 hdr0 = ft_read_header(filename, 'coilaccuracy', 0);
