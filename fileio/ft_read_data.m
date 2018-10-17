@@ -530,6 +530,13 @@ switch dataformat
   case 'ced_spike6mat'
     dat = read_spike6mat_data(filename, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx);
     
+  case {'curry_dat', 'curry_cdt'} 
+    [orig, dat] = load_curry_data_file(datafile);
+    if orig.nMultiplex
+        dat = dat';
+    end
+    dat = dat(chanindx, begsample:endsample);
+    
   case {'deymed_ini' 'deymed_dat'}
     % the data is stored in a binary *.dat file
     if isempty(hdr)
