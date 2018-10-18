@@ -627,7 +627,7 @@ switch cfg.method
       try
         % convert the vector with fitted parameters into a 4x4 homogenous transformation
         % apply the transformation to the original complete set of sensors
-        elec_realigned = ft_transform_sens(feval(cfg.warp, norm.m), elec_original);
+        elec_realigned = ft_transform_geometry(feval(cfg.warp, norm.m), elec_original);
       catch
         % the previous section will fail for nonlinear transformations
         elec_realigned.label = label_original;
@@ -642,7 +642,7 @@ switch cfg.method
   case  {'fiducial' 'interactive'}
     % the transformation is a 4x4 homogenous matrix
     % apply the transformation to the original complete set of sensors
-    elec_realigned = ft_transform_sens(norm.m, elec_original);
+    elec_realigned = ft_transform_geometry(norm.m, elec_original);
     % remember the transformation
     elec_realigned.homogeneous = norm.m;
     

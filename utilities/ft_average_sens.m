@@ -126,14 +126,14 @@ tra = ft_headcoordinates(mean1, mean2, mean3);
 if ismeg
   % just realign the MEG coils
   tra1  = ft_headcoordinates(sens(1).chanpos(ind1, :), sens(1).chanpos(ind2, :), sens(1).chanpos(ind3, :));
-  asens = ft_transform_sens(tra\tra1, sens(1));
+  asens = ft_transform_geometry(tra\tra1, sens(1));
   
 elseif iseeg
   % also average sensor locations
   pos = zeros(size(sens(1).chanpos));
   for i=1:nsens
     tra1  = ft_headcoordinates(sens(i).chanpos(ind1, :), sens(i).chanpos(ind2, :), sens(i).chanpos(ind3, :));
-    csens = ft_transform_sens(tra\tra1, sens(i));
+    csens = ft_transform_geometry(tra\tra1, sens(i));
     
     if toplot && iseeg
       plot3(csens.chanpos(:, 1), csens.chanpos(:, 2), csens.chanpos(:, 3), '.', 'Color', [0.5 0.5 0.5]);
@@ -166,7 +166,7 @@ switch nfid
     
   case 1
     tra1  = ft_headcoordinates(sens(1).chanpos(ind1, :), sens(1).chanpos(ind2, :), sens(1).chanpos(ind3, :));
-    afiducials = ft_transform_headshape(tra\tra1, fiducials);
+    afiducials = ft_transform_geometry(tra\tra1, fiducials);
     
   case nsens    
     hspos = [];
@@ -189,7 +189,7 @@ switch nfid
       
       tra1 = ft_headcoordinates(sens(i).chanpos(ind1, :), sens(i).chanpos(ind2, :), sens(i).chanpos(ind3, :));
       
-      cfiducials = ft_transform_headshape(tra1, fiducials(i));
+      cfiducials = ft_transform_geometry(tra1, fiducials(i));
       
       fidpos = fidpos + weights(i).*cfiducials.fid.pos;
       
@@ -198,8 +198,7 @@ switch nfid
     
     cfiducials.pos = hspos;
     cfiducials.fid.pos = fidpos;
-    afiducials = ft_transform_headshape(inv(tra), cfiducials);
-    
+    afiducials = ft_transform_geometry(inv(tra), cfiducials);
     afiducials = ft_determine_units(afiducials);
     
     % remove redundant headshape points (3 cm precision)
