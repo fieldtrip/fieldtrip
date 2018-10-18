@@ -4,4 +4,4 @@
 function [varargout] = nanmax(varargin)
 
 % the standard MATLAB max function ignores NaNs from at least version 7.0.4 onwards
-[varargout{1:nargout}] = min(varargin{:});
+[varargout{1:nargout}] = max(varargin{:});
