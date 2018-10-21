@@ -150,7 +150,7 @@ cfg.output     = ft_getopt(cfg, 'output',     'parameters');
 if ~any(strcmp(cfg.channel, 'all')) && isfield(cfg, 'channelcmb')
   ft_warning('cfg.channelcmb defined, overriding cfg.channel setting and computing over bivariate pairs');
 else
-	% select trials of interest
+  % select trials of interest
   tmpcfg = [];
   tmpcfg.channel = cfg.channel;
   data = ft_selectdata(tmpcfg, data);
@@ -174,24 +174,24 @@ end
 
 if isempty(cfg.toi) && isempty(cfg.t_ftimwin)
   % fit model to entire data segment
-	
-	% check whether this is allowed
-	nsmp = cellfun('size', data.trial, 2);
-	if all(nsmp==nsmp(1))
-		oktoolbox = {'bsmart' 'biosig'};
-	else
-		oktoolbox = 'biosig'; % bsmart does not work with variable trials
-	end
-	
-	if ~ismember(cfg.method, oktoolbox)
-		error('fitting the mvar-model is not possible with the ''%s'' toolbox',cfg.method);
-	end
-	latency = [-inf inf];
+  
+  % check whether this is allowed
+  nsmp = cellfun('size', data.trial, 2);
+  if all(nsmp==nsmp(1))
+    oktoolbox = {'bsmart' 'biosig'};
+  else
+    oktoolbox = 'biosig'; % bsmart does not work with variable trials
+  end
+  
+  if ~ismember(cfg.method, oktoolbox)
+    error('fitting the mvar-model is not possible with the ''%s'' toolbox',cfg.method);
+  end
+  latency = [-inf inf];
 elseif ~isempty(cfg.toi) && ~isempty(cfg.t_ftimwin)
   % do sliding window approach
   for k = 1:numel(cfg.toi)
-		latency(k,:) = cfg.toi + cfg.t_ftimwin.*[-0.5 0.5-1./data.fsample];
-	end
+    latency(k,:) = cfg.toi(k) + cfg.t_ftimwin.*[-0.5 0.5] + [0 -1./data.fsample];
+  end
 else
   ft_error('cfg should contain both cfg.toi and cfg.t_ftimwin');
 end
@@ -207,7 +207,6 @@ dounivariate = istrue(cfg. univariate);
 if ~keeptap, ft_error('not keeping tapers is not possible yet'); end
 if dojack && keeprpt, ft_error('you cannot simultaneously keep trials and do jackknifing'); end
 
-tfwin    = round(data.fsample.*cfg.t_ftimwin);
 ntrl     = length(data.trial);
 ntoi     = size(latency, 1);
 
@@ -215,7 +214,7 @@ if ~dobvar
   chanindx = match_str(data.label, cfg.channel);
   nchan    = length(chanindx);
   label    = data.label(chanindx);
-
+  
   ncmb     = nchan*nchan;
   cmbindx1 = repmat(chanindx(:),  [1 nchan]);
   cmbindx2 = repmat(chanindx(:)', [nchan 1]);
@@ -226,15 +225,15 @@ else
   for k = 1:size(cmbindx,1)
     [tmp, cmbindx(k,:)] = match_str(cfg.channelcmb(k,:)', data.label);
   end
-
-
+  
+  
   nchan    = 2;
   label    = data.label(cmbindx);
-
+  
   ncmb     = nchan*nchan;
   labelcmb = cell(0,2);
   cmb      = cfg.channelcmb;
-
+  
   for k = 1:size(cmbindx,1)
     labelcmb{end+1,1} = [cmb{k,1},'[',cmb{k,1},cmb{k,2},']'];
     labelcmb{end  ,2} = [cmb{k,1},'[',cmb{k,1},cmb{k,2},']'];
@@ -247,6 +246,7 @@ else
   end
 end
 
+tfwin   = round(cfg.t_ftimwin.*data.fsample);
 %---think whether this makes sense at all
 if strcmp(cfg.taper, 'dpss')
   % create a sequence of DPSS (Slepian) tapers
@@ -261,6 +261,7 @@ else
   tap = tap./norm(tap);
 end
 ntap = size(tap,1);
+
 
 %---preprocess data if necessary -> changed 20150224, JM does not think
 %this step is necessary: it creates problems downstream if the time axes of
@@ -283,7 +284,7 @@ end
 %---ensemble mean subtraction
 if strcmp(cfg.ems, 'yes')
   % to be implemented
-	error('ensemble mean subtraction is not yet implemented here');
+  error('ensemble mean subtraction is not yet implemented here');
 end
 
 %---zscore
@@ -305,7 +306,7 @@ if dozscore
   end
   datavg = sumval./numsmp;
   datstd = sqrt(sumsqr./numsmp - (sumval./numsmp).^2);
-
+  
   data.trial = data.trial(trlindx);
   data.time  = data.time(trlindx);
   ntrl       = length(trlindx);
@@ -334,10 +335,10 @@ elseif dobvar
   coeffs   = zeros(1, 2*nchan,  size(cmbindx,1), cfg.order, ntoi, ntap);
   noisecov = zeros(1, 2*nchan,  size(cmbindx,1),            ntoi, ntap);
 elseif dounivariate && (keeprpt || dojack)
-	error('doing univariate model fits in combination with multiple replicates is not yet possible');
+  error('doing univariate model fits in combination with multiple replicates is not yet possible');
 elseif dounivariate
-	coeffs   = zeros(1, nchan, cfg.order, ntoi, ntap);
-	noisecov = zeros(1, nchan,            ntoi, ntap);
+  coeffs   = zeros(1, nchan, cfg.order, ntoi, ntap);
+  noisecov = zeros(1, nchan,            ntoi, ntap);
 elseif (keeprpt || dojack)
   coeffs   = zeros(length(data.trial), nchan, nchan, cfg.order, ntoi, ntap);
   noisecov = zeros(length(data.trial), nchan, nchan,            ntoi, ntap);
@@ -350,26 +351,43 @@ end
 ft_progress('init', cfg.feedback, 'computing AR-model');
 for j = 1:ntoi
   
-	if ~isequal(latency(j,:),[-inf inf])
-	  ft_progress(j/ntoi, 'processing timewindow %d from %d\n', j, ntoi);
+  if ~isequal(latency(j,:),[-inf inf])
+    ft_progress(j/ntoi, 'processing timewindow %d from %d\n', j, ntoi);
     tmpcfg = [];
-	  tmpcfg.toilim = latency(j,:); 
-	  tmpdata = ft_redefinetrial(tmpcfg, data);
-	else
-		tmpdata = data;
-	end
-	
-	tmpnsmp = cellfun('size', tmpdata.trial, 2);
-	if ntoi>1 && strcmp(cfg.method, 'bsmart')
-		% ensure all segments to be of equal length
-	  if ~all(tmpnsmp==tmpnsmp(1))
-			error('the epochs are of unequal length, possibly due to numerical time axis issues, or due to partial artifacts, use cfg.method=''biosig''');
-		end
-		ix         = find(tmpnsmp==mode(tmpnsmp), 1, 'first');    
-  	cfg.toi(j) = mean(tmpdata.time{ix}([1 end]))+0.5./data.fsample; %FIXME think about this
-	end
-	
-	
+    tmpcfg.toilim = latency(j,:);
+    tmpdata = ft_redefinetrial(tmpcfg, data);
+  else
+    tmpdata = data;
+  end
+  
+  tmpnsmp = cellfun('size', tmpdata.trial, 2);
+  tfwin   = tmpnsmp(1);
+  %---think whether this makes sense at all
+  if strcmp(cfg.taper, 'dpss')
+    % create a sequence of DPSS (Slepian) tapers
+    % ensure that the input arguments are double precision
+    tap = double_dpss(tfwin,tfwin*(cfg.tapsmofrq./tmpdata.fsample))';
+    tap = tap(1,:); %only use first 'zero-order' taper
+  elseif strcmp(cfg.taper, 'sine')
+    tap = sine_taper(tfwin, tfwin*(cfg.tapsmofrq./tmpdata.fsample))';
+    tap = tap(1,:);
+  else
+    tap = window(cfg.taper, tfwin)';
+    tap = tap./norm(tap);
+  end
+  ntap = size(tap,1);
+
+  
+  if ntoi>1 && strcmp(cfg.method, 'bsmart')
+    % ensure all segments to be of equal length
+    if ~all(tmpnsmp==tmpnsmp(1))
+      error('the epochs are of unequal length, possibly due to numerical time axis issues, or due to partial artifacts, use cfg.method=''biosig''');
+    end
+    ix         = find(tmpnsmp==mode(tmpnsmp), 1, 'first');
+    cfg.toi(j) = mean(tmpdata.time{ix}([1 end]))+0.5./data.fsample; %FIXME think about this
+  end
+  
+  
   %---create cell-array indexing which original trials should go into each replicate
   rpt  = {};
   nrpt = numel(tmpdata.trial);
@@ -386,102 +404,102 @@ for j = 1:ntoi
     rpt{1} = 1:numel(tmpdata.trial);
     nrpt   = 1;
   end
-	
-	for rlop = 1:nrpt
-		
-		if dobvar % bvar
-			for m = 1:ntap
-				%---construct data-matrix
-				for k = 1:size(cmbindx,1)
-					dat = catnan(tmpdata.trial, cmbindx(k,:), rpt{rlop}, tap(m,:), nnans, dobvar);
-					
-					%---estimate autoregressive model
-					switch cfg.method
-						case 'biosig'
-							[ar, rc, pe] = mvar(dat', cfg.order, cfg.mvarmethod);
-							
-							%---compute noise covariance
-							tmpnoisecov     = pe(:,nchan*cfg.order+1:nchan*(cfg.order+1));
-						case 'bsmart'
-							[ar, tmpnoisecov] = armorf(dat, numel(rpt{rlop}), size(tmpdata.trial{1},2), cfg.order);
-							ar = -ar; %convention is swapped sign with respect to biosig
-							%FIXME check which is which: X(t) = A1*X(t-1) + ... + An*X(t-n) + E
-							%the other is then X(t) + A1*X(t-1) + ... + An*X(t-n) = E
-					end
-					coeffs(rlop,:,k,:,j,m) = reshape(ar, [nchan*2 cfg.order]);
-					
-					%---rescale noisecov if necessary
-					if dozscore, % FIX ME for bvar
-						noisecov(rlop,:,k,:,j,m) = diag(datstd)*tmpnoisecov*diag(datstd);
-					else
-						noisecov(rlop,:,k,j,m) = reshape(tmpnoisecov,[1 4]);
-					end
-					dof(rlop,:,j) = numel(rpt{rlop});
-				end
-			end
-		else % mvar
-			for m = 1:ntap
-				%---construct data-matrix
-				dat = catnan(tmpdata.trial, chanindx, rpt{rlop}, tap(m,:), nnans, dobvar);
-				
-				%---estimate autoregressive model
-				if dounivariate
-				  
-					%---loop across the channels
-					for p = 1:size(dat,1)
-						
-						switch cfg.method
-							case 'biosig'
-								[ar, rc, pe] = mvar(dat(p,:)', cfg.order, cfg.mvarmethod);
-								
-								%---compute noise covariance
-								tmpnoisecov     = pe(:,cfg.order+1:(cfg.order+1));
-							case 'bsmart'
-								[ar, tmpnoisecov] = armorf(dat(p,:), numel(rpt{rlop}), size(tmpdata.trial{1},2), cfg.order);
-								ar = -ar; %convention is swapped sign with respect to biosig
-								%FIXME check which is which: X(t) = A1*X(t-1) + ... + An*X(t-n) + E
-								%the other is then X(t) + A1*X(t-1) + ... + An*X(t-n) = E
-						end
-						coeffs(rlop,p,:,j,m) = reshape(ar, [1 cfg.order]);
-						
-						%---rescale noisecov if necessary
-						if dozscore
-							noisecov(rlop,p,j,m) = diag(datstd)*tmpnoisecov*diag(datstd);
-						else
-							noisecov(rlop,p,j,m) = tmpnoisecov;
-						end
-						dof(rlop,:,j) = numel(rpt{rlop});
-					end
-					
-				else
-					switch cfg.method
-						case 'biosig'
-							[ar, rc, pe] = mvar(dat', cfg.order, cfg.mvarmethod);
-							
-							%---compute noise covariance
-							tmpnoisecov     = pe(:,nchan*cfg.order+1:nchan*(cfg.order+1));
-						case 'bsmart'
-							[ar, tmpnoisecov] = armorf(dat, numel(rpt{rlop}), size(tmpdata.trial{1},2), cfg.order);
-							ar = -ar; %convention is swapped sign with respect to biosig
-							%FIXME check which is which: X(t) = A1*X(t-1) + ... + An*X(t-n) + E
-							%the other is then X(t) + A1*X(t-1) + ... + An*X(t-n) = E
-					end
-					coeffs(rlop,:,:,:,j,m) = reshape(ar, [nchan nchan cfg.order]);
-					
-					%---rescale noisecov if necessary
-					if dozscore
-						noisecov(rlop,:,:,j,m) = diag(datstd)*tmpnoisecov*diag(datstd);
-					else
-						noisecov(rlop,:,:,j,m) = tmpnoisecov;
-					end
-					dof(rlop,:,j) = numel(rpt{rlop});
-				end %---dounivariate
-				
-			end %---tapers
-		end
-		
-	end %---replicates
-	
+  
+  for rlop = 1:nrpt
+    
+    if dobvar % bvar
+      for m = 1:ntap
+        %---construct data-matrix
+        for k = 1:size(cmbindx,1)
+          dat = catnan(tmpdata.trial, cmbindx(k,:), rpt{rlop}, tap(m,:), nnans, dobvar);
+          
+          %---estimate autoregressive model
+          switch cfg.method
+            case 'biosig'
+              [ar, rc, pe] = mvar(dat', cfg.order, cfg.mvarmethod);
+              
+              %---compute noise covariance
+              tmpnoisecov     = pe(:,nchan*cfg.order+1:nchan*(cfg.order+1));
+            case 'bsmart'
+              [ar, tmpnoisecov] = armorf(dat, numel(rpt{rlop}), size(tmpdata.trial{1},2), cfg.order);
+              ar = -ar; %convention is swapped sign with respect to biosig
+              %FIXME check which is which: X(t) = A1*X(t-1) + ... + An*X(t-n) + E
+              %the other is then X(t) + A1*X(t-1) + ... + An*X(t-n) = E
+          end
+          coeffs(rlop,:,k,:,j,m) = reshape(ar, [nchan*2 cfg.order]);
+          
+          %---rescale noisecov if necessary
+          if dozscore, % FIX ME for bvar
+            noisecov(rlop,:,k,:,j,m) = diag(datstd)*tmpnoisecov*diag(datstd);
+          else
+            noisecov(rlop,:,k,j,m) = reshape(tmpnoisecov,[1 4]);
+          end
+          dof(rlop,:,j) = numel(rpt{rlop});
+        end
+      end
+    else % mvar
+      for m = 1:ntap
+        %---construct data-matrix
+        dat = catnan(tmpdata.trial, chanindx, rpt{rlop}, tap(m,:), nnans, dobvar);
+        
+        %---estimate autoregressive model
+        if dounivariate
+          
+          %---loop across the channels
+          for p = 1:size(dat,1)
+            
+            switch cfg.method
+              case 'biosig'
+                [ar, rc, pe] = mvar(dat(p,:)', cfg.order, cfg.mvarmethod);
+                
+                %---compute noise covariance
+                tmpnoisecov     = pe(:,cfg.order+1:(cfg.order+1));
+              case 'bsmart'
+                [ar, tmpnoisecov] = armorf(dat(p,:), numel(rpt{rlop}), size(tmpdata.trial{1},2), cfg.order);
+                ar = -ar; %convention is swapped sign with respect to biosig
+                %FIXME check which is which: X(t) = A1*X(t-1) + ... + An*X(t-n) + E
+                %the other is then X(t) + A1*X(t-1) + ... + An*X(t-n) = E
+            end
+            coeffs(rlop,p,:,j,m) = reshape(ar, [1 cfg.order]);
+            
+            %---rescale noisecov if necessary
+            if dozscore
+              noisecov(rlop,p,j,m) = diag(datstd)*tmpnoisecov*diag(datstd);
+            else
+              noisecov(rlop,p,j,m) = tmpnoisecov;
+            end
+            dof(rlop,:,j) = numel(rpt{rlop});
+          end
+          
+        else
+          switch cfg.method
+            case 'biosig'
+              [ar, rc, pe] = mvar(dat', cfg.order, cfg.mvarmethod);
+              
+              %---compute noise covariance
+              tmpnoisecov     = pe(:,nchan*cfg.order+1:nchan*(cfg.order+1));
+            case 'bsmart'
+              [ar, tmpnoisecov] = armorf(dat, numel(rpt{rlop}), size(tmpdata.trial{1},2), cfg.order);
+              ar = -ar; %convention is swapped sign with respect to biosig
+              %FIXME check which is which: X(t) = A1*X(t-1) + ... + An*X(t-n) + E
+              %the other is then X(t) + A1*X(t-1) + ... + An*X(t-n) = E
+          end
+          coeffs(rlop,:,:,:,j,m) = reshape(ar, [nchan nchan cfg.order]);
+          
+          %---rescale noisecov if necessary
+          if dozscore
+            noisecov(rlop,:,:,j,m) = diag(datstd)*tmpnoisecov*diag(datstd);
+          else
+            noisecov(rlop,:,:,j,m) = tmpnoisecov;
+          end
+          dof(rlop,:,j) = numel(rpt{rlop});
+        end %---dounivariate
+        
+      end %---tapers
+    end
+    
+  end %---replicates
+  
 end %---tois
 ft_progress('close');
 
@@ -509,11 +527,11 @@ elseif dobvar
   noisecov = reshape(noisecov, [siz(2) * siz(3) siz(4)]);
   mvardata.labelcmb = labelcmb;
 elseif dounivariate
-	mvardata.dimord = 'chan_lag';
+  mvardata.dimord = 'chan_lag';
   mvardata.label  = label;
-	siz             = [size(coeffs) 1];
-	coeffs          = reshape(coeffs, siz(2:end));
-	siz    = [size(noisecov) 1];
+  siz             = [size(coeffs) 1];
+  coeffs          = reshape(coeffs, siz(2:end));
+  siz    = [size(noisecov) 1];
   if ~all(siz==1)
     noisecov = reshape(noisecov, siz(2:end));
   end
@@ -528,46 +546,46 @@ end
 mvardata.fsampleorig = data.fsample;
 
 switch cfg.output
-	case 'parameters'
-		% no output requested, do not re-compile time-series data
-		
-	case {'model' 'residual'}
-		if keeprpt || dojack
-			error('reconstruction of the residuals with keeprpt or dojack is not yet implemented');
-		end
-		
-		dataout = keepfields(data, {'hdr','grad','fsample','trialinfo','label','cfg'});
-		trial   = cell(1,numel(data.trial));
-		time    = cell(1,numel(data.time));
-		for k = 1:numel(data.trial)
-			if strcmp(cfg.output, 'model')
-				trial{k} = zeros(size(data.trial{k},1), size(data.trial{k},2)-cfg.order);
-			else
-			  trial{k} = data.trial{k}(:, (cfg.order+1):end);
-			end
-		  time{k}  = data.time{k}((cfg.order+1):end);
-			for m = 1:cfg.order
-				if dounivariate
-					P = diag(mvardata.coeffs(:,m));
-				else
-					P = mvardata.coeffs(:,:,m);
-				end
-				
-				if strcmp(cfg.output, 'residual')
-					P = -P;
-				end
-				
-				trial{k} = trial{k} + P * data.trial{k}(:,(cfg.order+1-m):(end-m));
-			end
-		end
-		dataout.trial = trial;
-		dataout.time  = time;
+  case 'parameters'
+    % no output requested, do not re-compile time-series data
+    
+  case {'model' 'residual'}
+    if keeprpt || dojack
+      error('reconstruction of the residuals with keeprpt or dojack is not yet implemented');
+    end
+    
+    dataout = keepfields(data, {'hdr','grad','fsample','trialinfo','label','cfg'});
+    trial   = cell(1,numel(data.trial));
+    time    = cell(1,numel(data.time));
+    for k = 1:numel(data.trial)
+      if strcmp(cfg.output, 'model')
+        trial{k} = zeros(size(data.trial{k},1), size(data.trial{k},2)-cfg.order);
+      else
+        trial{k} = data.trial{k}(:, (cfg.order+1):end);
+      end
+      time{k}  = data.time{k}((cfg.order+1):end);
+      for m = 1:cfg.order
+        if dounivariate
+          P = diag(mvardata.coeffs(:,m));
+        else
+          P = mvardata.coeffs(:,:,m);
+        end
+        
+        if strcmp(cfg.output, 'residual')
+          P = -P;
+        end
+        
+        trial{k} = trial{k} + P * data.trial{k}(:,(cfg.order+1-m):(end-m));
+      end
+    end
+    dataout.trial = trial;
+    dataout.time  = time;
     
     cfg.coeffs   = mvardata.coeffs;
-    cfg.noisecov = mvardata.noisecov; 
+    cfg.noisecov = mvardata.noisecov;
     mvardata     = dataout; clear dataout;
-	otherwise
-		error('output ''%s'' is not supported', cfg.output);
+  otherwise
+    error('output ''%s'' is not supported', cfg.output);
 end
 
 % do the general cleanup and bookkeeping at the end of the function
@@ -600,14 +618,14 @@ for k = 1:nrpt
     endsmp = sumsmp(k+1) + (k-1)*nnans;
   end
   if ~dobvar && isempty(taper)
-		datamatrix(:,begsmp:endsmp) = datacells{trials(k)}(chanindx,:);
-	elseif ~dobvar && ~isempty(taper)
-		% FIXME this will crash with variable data length and fixed length
-		% taper
+    datamatrix(:,begsmp:endsmp) = datacells{trials(k)}(chanindx,:);
+  elseif ~dobvar && ~isempty(taper)
+    % FIXME this will crash with variable data length and fixed length
+    % taper
     datamatrix(:,begsmp:endsmp) = datacells{trials(k)}(chanindx,:).*taper(ones(nchan,1),:);
-	elseif dobvar && isempty(taper)
-		datamatrix(:,begsmp:endsmp) = datacells{trials(k)}(chanindx',:);
-	elseif dobvar && ~isempty(taper)
+  elseif dobvar && isempty(taper)
+    datamatrix(:,begsmp:endsmp) = datacells{trials(k)}(chanindx',:);
+  elseif dobvar && ~isempty(taper)
     datamatrix(:,begsmp:endsmp) = datacells{trials(k)}(chanindx',:).*taper(ones(nchan,1),:);
   end
 end

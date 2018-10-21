@@ -64,12 +64,12 @@ surf_smooth  = [tempname() '_pial_smooth'];
 
 cmd = sprintf('mris_fill -c -r %d %s %s', resolution, headshape, ...
   surf_filled);
-system(cmd);
+system(['source $FREESURFER_HOME/SetUpFreeSurfer.sh; ' cmd]);
 
 make_outer_surface(surf_filled, outer_surface_sphere, surf_outer)
 
 cmd = sprintf('mris_smooth -nw -n %d %s %s', smooth_steps, surf_outer, ...
   surf_smooth);
-system(cmd);
+system(['source $FREESURFER_HOME/SetUpFreeSurfer.sh; ' cmd]);
 
 headshape = ft_read_headshape(surf_smooth);

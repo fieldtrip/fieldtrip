@@ -16,6 +16,9 @@ function test_bug2221
 %  - ft_multiplotER: if input data contains not entirely overlapping time
 %  axes, use selectdata for getting the union and plotting should then work
 
+% as of september 2019, ft_selectdata_new/old have become obsolete, and the
+% explicit call of ft_selectdata_new has been replaced by a call to
+% ft_selectdata
 
 % create some data first
 freq1 = [];
@@ -32,12 +35,12 @@ freq2.freq  = (5:12);
 freq2.time  = (3:14);
 
 cfg                  = [];
-cfg.selmode          = 'intersect';
-[freq1out, freq2out] = ft_selectdata_new(cfg,freq1,freq2);
+cfg.select           = 'intersect';
+[freq1out, freq2out] = ft_selectdata(cfg,freq1,freq2);
 assert(isequal(rmfield(freq1out, {'cfg','powspctrm'}),rmfield(freq2out, {'cfg','powspctrm'})));
 
-cfg.selmode          = 'union';
-[freq1out, freq2out] = ft_selectdata_new(cfg,freq1,freq2);
+cfg.select        = 'union';
+[freq1out, freq2out] = ft_selectdata(cfg,freq1,freq2);
 
 %%%%%%%%%%%
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2221.mat');
@@ -46,7 +49,7 @@ load(filename);
 data1 = data_S10_cond1;
 data2 = data_S10_cond2;
 cfg = [];
-cfg.selmode = 'intersect';
+cfg.select  = 'intersect';
 
 [data1out, data2out] = ft_selectdata(cfg, data1, data2);
 

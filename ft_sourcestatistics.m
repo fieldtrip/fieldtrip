@@ -76,6 +76,7 @@ ft_preamble debug
 ft_preamble loadvar varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
+ft_preamble randomseed
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -245,6 +246,7 @@ cfg = removefields(cfg, {'dimord', 'tri', 'dim', 'origdim', 'inside', 'originsid
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
+ft_postamble randomseed
 ft_postamble trackconfig
 ft_postamble previous   varargin
 ft_postamble provenance stat

@@ -412,6 +412,13 @@ switch dataformat
       % file does not yet exist, which is not a problem
     end
     save(filename, 'dat', 'hdr');
+  
+  case 'mff'  
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % MFF files using Phillips plugin
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    ft_hastoolbox('mffmatlabio', 1);
+    mff_fileio_write(filename, hdr, dat, evt);
     
   case 'neuralynx_sdma'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -464,7 +471,7 @@ switch dataformat
       filename{i} = fullfile(dirname, [file '.' hdr.label{i} '.bin']);
     end
     
-    if ~isdir(dirname)
+    if ~isfolder(dirname)
       mkdir(dirname);
     end
     

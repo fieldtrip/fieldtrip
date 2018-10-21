@@ -3,48 +3,23 @@ visualising data and interacting with it. These functions form the
 building blocks for the FieldTrip data plotting functions and graphical
 user interfaces.
 
-For more information please visit http://www.ru.nl/neuroimaging/fieldtrip.
+For more information please visit http://www.fieldtriptoolbox.org/module/plotting
 
-The FieldTrip software is free but copyrighted software, distributed
-under the terms of the GNU General Public Licence as published by
-the Free Software Foundation (either version 2, or at your option
-any later version). See the file COPYING for more details.
-
+-------------------------------------------------------------------------------
 Copyright (C) 2009, Donders Institute for Brain, Cognition and Behaviour, The Netherlands (DCCN)
 Copyright (C) 2009, Netherlands Institute for Neuroscience (NIN)
 
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-Function overview
-=================
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-The following functions are used for displaying data in 2-D
-  ft_plot_box.m
-  ft_plot_lay.m
-  ft_plot_line.m
-  ft_plot_text.m
-  ft_plot_topo.m
-  ft_plot_vector.m
-  ft_plot_matrix.m
-  ft_plot_montage.m
-  ft_plot_ortho.m (can also be used for 3-D display)
-  ft_plot_slice.m (can also be used for 3-D display)
-
-The following functions are used for displaying data in 3-D
-  ft_plot_dipole.m
-  ft_plot_headshape.m
-  ft_plot_topo3d.m
-  ft_plot_vol.m
-  ft_plot_mesh.m
-  ft_plot_sens.m
-
-The following functions are used for graphical user interaction
-  ft_uilayout.m
-  ft_select_box.m
-  ft_select_channel.m
-  ft_select_circle.m
-  ft_select_contour.m
-  ft_select_point.m
-  ft_select_point3d.m
-  ft_select_range.m
-  ft_select_voxel.m
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/
+-------------------------------------------------------------------------------
 

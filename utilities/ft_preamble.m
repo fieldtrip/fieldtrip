@@ -45,10 +45,8 @@ function ft_preamble(cmd, varargin)
 %#function ft_preamble_loadvar
 %#function ft_preamble_randomseed
 
-global ft_default
-
 % this is a trick to pass the input arguments into the ft_preamble_xxx script
-ft_default.preamble = varargin;
+assignin('caller', 'iW1aenge_preamble', varargin);
 
 full_cmd=['ft_preamble_' cmd];
 cmd_exists=false;
@@ -84,7 +82,3 @@ end
 
 evalin('caller', full_cmd);
 
-if isfield(ft_default, 'preamble')
-  % the preamble field should not remain in the ft_default structure
-  ft_default = rmfield(ft_default, 'preamble');
-end

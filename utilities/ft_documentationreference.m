@@ -98,7 +98,10 @@ f21 = {f21.name}';
 f22 = dir(fullfile(ftpath, 'realtime', 'online_mri', '*.m'));
 f22 = {f22.name}';
 
-funname = cat(1, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22);
+f23 = dir(fullfile(ftpath, 'external', 'artinis', 'ft_nirs_*.m'));
+f23 = {f23.name}';
+
+funname = cat(1, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23);
 
 for i=1:length(funname)
   [p, funname{i}, x] = fileparts(funname{i});

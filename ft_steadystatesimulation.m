@@ -1,4 +1,4 @@
-function data = ft_steadystatesimulation(cfg)
+function [data] = ft_steadystatesimulation(cfg)
 
 % FT_STEADYSTATESIMULATION creates a simulated EEG/MEG dataset. This function
 % allows to simulate the effect of several independent stimulus trains. These can

@@ -16,8 +16,8 @@ function [event] = ft_read_event(filename, varargin)
 %   'detectflank'    string, can be 'bit', 'up', 'down', 'both', 'peak', 'trough' or 'auto' (default is system specific)
 %   'chanindx'       list with channel indices in case of different sampling frequencies (only for EDF)
 %   'trigshift'      integer, number of samples to shift from flank to detect trigger value (default = 0)
-%   'trigindx'       list with channel numbers for the trigger detection, only for Yokogawa (default is automatic)
-%   'triglabel'      list of channel labels for the trigger detection (default is all ADC* channels for Artinis oxy3-files)
+%   'trigindx'       list with channel numbers for the trigger detection, only for Yokogawa & Ricoh (default is automatic)
+%   'triglabel'      list of channel labels for the trigger detection (default is all ADC* channels for Artinis *.oxy3 files
 %   'threshold'      threshold for analog trigger channels (default is system specific)
 %   'blocking'       wait for the selected number of events (default = 'no')
 %   'timeout'        amount of time in seconds to wait when blocking (default = 5)
@@ -143,7 +143,7 @@ filename = fetch_url(filename);
 hdr              = ft_getopt(varargin, 'header');
 detectflank      = ft_getopt(varargin, 'detectflank', 'up', true);   % note that emptymeaningful=true
 trigshift        = ft_getopt(varargin, 'trigshift');                 % default is assigned in subfunction
-trigindx         = ft_getopt(varargin, 'trigindx');                  % this allows to override the automatic trigger channel detection (e.g., useful for Yokogawa)
+trigindx         = ft_getopt(varargin, 'trigindx');                  % this allows to override the automatic trigger channel detection (e.g., useful for Yokogawa & Ricoh)
 headerformat     = ft_getopt(varargin, 'headerformat');
 dataformat       = ft_getopt(varargin, 'dataformat');
 threshold        = ft_getopt(varargin, 'threshold');                 % this is used for analog channels
@@ -427,9 +427,10 @@ switch eventformat
     
   case 'AnyWave'
     event = read_ah5_markers(hdr, filename);
+    
   case 'brainvision_vmrk'
     fid=fopen(filename,'rt');
-    if fid==-1,
+    if fid==-1
       ft_error('cannot open BrainVision marker file')
     end
     line = [];
@@ -589,10 +590,23 @@ switch eventformat
     % contact Robert Oostenveld if you are interested in real-time acquisition on the CTF system
     % read the events from shared memory
     event = read_shm_event(filename, varargin{:});
+        
+  case {'curry_dat', 'curry_cdt'}  
+    if isempty(hdr)
+      hdr = ft_read_header(filename);
+    end
+    event = [];
+    for i=1:size(hdr.orig.events, 2)
+        event(i).type     = 'trigger';
+        event(i).value    = hdr.orig.events(2, i);
+        event(i).sample   = hdr.orig.events(1, i);
+        event(i).offset   = hdr.orig.events(3, i)-hdr.orig.events(1, i);
+        event(i).duration = hdr.orig.events(4, i)-hdr.orig.events(1, i);
+    end
     
   case 'dataq_wdq'
     if isempty(hdr)
-      hdr     = ft_read_header(filename, 'headerformat', 'dataq_wdq');
+      hdr = ft_read_header(filename, 'headerformat', 'dataq_wdq');
     end
     trigger  = read_wdq_data(filename, hdr.orig, 'lowbits');
     [ix, iy] = find(trigger>1); %it seems as if the value of 1 is meaningless
@@ -810,13 +824,18 @@ switch eventformat
       end
     end
     
-  case {'egi_mff_v1' 'egi_mff'} % this is currently the default
+  case 'egi_mff_v1'
     % The following represents the code that was written by Ingrid, Robert
     % and Giovanni to get started with the EGI mff dataset format. It might
     % not support all details of the file formats.
+    %
     % An alternative implementation has been provided by EGI, this is
     % released as fieldtrip/external/egi_mff and referred further down in
     % this function as 'egi_mff_v2'.
+    %
+    % An more recent implementation has been provided by EGI and Arno Delorme, this
+    % is released as https://github.com/arnodelorme/mffmatlabio and referred further
+    % down in this function as 'egi_mff_v3'.
     
     if isempty(hdr)
       % use the corresponding code to read the header
@@ -974,6 +993,10 @@ switch eventformat
       event = rmfield(event, fn{i});
     end
     
+  case {'egi_mff_v3' 'egi_mff'} % this is the default
+    ft_hastoolbox('mffmatlabio', 1);
+    event = mff_fileio_read_event(filename);
+    
   case 'smi_txt'
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -1082,7 +1105,7 @@ switch eventformat
     end
     
   case 'fcdc_buffer_offline'
-    if isdir(filename)
+    if isfolder(filename)
       path = filename;
     else
       [path, file, ext] = fileparts(filename);
@@ -1315,7 +1338,7 @@ switch eventformat
       hdr = ft_read_header(filename);
     end
     % determine the DAP files that compromise this dataset
-    if isdir(filename)
+    if isfolder(filename)
       ls = dir(filename);
       dapfile = {};
       for i=1:length(ls)
@@ -1532,7 +1555,17 @@ switch eventformat
       end
       
     elseif isepoched
-      ft_error('Support for epoched *.fif data is not yet implemented.')
+      begsample = cumsum([1 repmat(hdr.nSamples, hdr.nTrials-1, 1)']);
+      events_id = split(split(hdr.orig.epochs.event_id, ';'), ':');
+      events_label = cell2mat(events_id(:, 1));
+      events_code = str2num(cell2mat(events_id(:, 2)));
+      for i=1:hdr.nTrials
+        event(end+1).type      = 'trial';
+        event(end  ).sample    = begsample(i);
+        event(end  ).value     = events_label(events_code == hdr.orig.epochs.events(i, 3), :);
+        event(end  ).offset    = -hdr.nSamplesPre;
+        event(end  ).duration  = hdr.nSamples;
+      end
     end
     
     % check whether the *.fif file is accompanied by an *.eve file
@@ -1722,11 +1755,11 @@ switch eventformat
     hdr = ft_read_header(filename, 'headerformat', eventformat, 'chantype', 'chaninfo');
     
     fields_orig=who(hdr.orig); %getting digital event channels
-    fields_orig=fields_orig(startsWith(fields_orig,'CDIG_IN')); %compat/matlablt2016b/startsWidth.m     
+    fields_orig=fields_orig(startsWith(fields_orig,'CDIG_IN')); %compat/matlablt2016b/startsWidth.m
     
     rx=regexp(fields_orig,'^CDIG_IN_{1}(\d+)[a-zA-Z_]*','tokens');
     dig_channels=unique(cellfun(@(x) str2num(x{1}), [rx{:}]));
-   
+    
     event.type=[]; event.sample=[]; event.value=[];
     if ~ismember(detectflank,{'up','down','both'})
       ft_error('incorrect specification of ''detectflank''');
@@ -1752,7 +1785,7 @@ switch eventformat
           event(end  ).sample = data(j);
         end
       end
-    end  
+    end
     
   case 'neuroshare' % NOTE: still under development
     % check that the required neuroshare toolbox is available
@@ -1882,6 +1915,10 @@ switch eventformat
       event(end  ).value  = value;                            % assign the trigger value just _before_ going down
     end
     
+  case 'nihonkohden_eeg'
+    ft_hastoolbox('brainstorm', 1);
+    event = read_brainstorm_event(filename);
+    
   case 'nimh_cortex'
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -1991,6 +2028,20 @@ switch eventformat
   case 'plexon_nex'
     event = read_nex_event(filename);
     
+  case {'ricoh_ave', 'ricoh_con'}
+    % use the Ricoh MEG Reader toolbox for the file reading
+    ft_hastoolbox('ricoh_meg_reader', 1);
+    % the user should be able to specify the analog threshold, but the code falls back to '1.6' as default
+    % the user should be able to specify the trigger channels
+    % the user should be able to specify the flank, but the code falls back to 'up' as default
+    if isempty(detectflank)
+      detectflank = 'up';
+    end
+    if isempty(threshold)
+      threshold = 1.6;
+    end
+    event = read_ricoh_event(filename, 'detectflank', detectflank, 'trigindx', trigindx, 'threshold', threshold);
+    
   case 'tmsi_poly5'
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -2007,24 +2058,26 @@ switch eventformat
     if ~ft_hastoolbox('yokogawa', 0);
       ft_hastoolbox('yokogawa_meg_reader', 1);
     end
-    % the user should be able to specify the analog threshold
+    % the user should be able to specify the analog threshold, but the code falls back to '1.6' as default
     % the user should be able to specify the trigger channels
-    % the user should be able to specify the flank, but the code falls back to 'auto' as default
+    % the user should be able to specify the flank, but the code falls back to 'up' as default
     if isempty(detectflank)
-      detectflank = 'auto';
+      detectflank = 'up';
+    end
+    if isempty(threshold)
+      threshold = 1.6;
     end
     event = read_yokogawa_event(filename, 'detectflank', detectflank, 'trigindx', trigindx, 'threshold', threshold);
     
-  case 'oxy3'
+  case 'artinis_oxy3'
     ft_hastoolbox('artinis', 1);
-    
-    event = read_artinis_oxy3(filename, true);
     if isempty(hdr)
       hdr = read_artinis_oxy3(filename);
     end
+    event = read_artinis_oxy3(filename, true);
     
     if isempty(trigindx) % indx gets precedence over labels! numbers before words
-      triglabel = ft_getopt(varargin, 'triglabel', 'ADC*');  % this allows subselection of AD channels to be markes as trigger channels (for Artinis oxy3 data)
+      triglabel = ft_getopt(varargin, 'triglabel', 'ADC*');  % this allows subselection of AD channels to be markes as trigger channels (for Artinis *.oxy3 data)
       trigindx = find(ismember(hdr.label, ft_channelselection(triglabel, hdr.label)));
     end
     
@@ -2059,7 +2112,7 @@ switch eventformat
       hdr = ft_read_header(filename);
     end
     event = read_spmeeg_event(filename, 'header', hdr);
-  
+    
   case {'blackrock_nev', 'blackrock_nsx'}
     % use the NPMK toolbox for the file reading
     ft_hastoolbox('NPMK', 1);
@@ -2071,34 +2124,45 @@ switch eventformat
       % this is OK
     elseif isempty(p)
       filename = which(filename);
-		end
-		
-    % 'noread' prevents reading of the spike waveforms 
+    end
+    
+    % 'noread' prevents reading of the spike waveforms
     % 'nosave' prevents the automatic conversion of
     % the .nev file as a .mat file
     orig = openNEV(filename, 'noread', 'nosave')
-
+    
     if orig.MetaTags.SampleRes ~= 30000
-      error('sampling rate is different from 30 kHz') 
+      error('sampling rate is different from 30 kHz')
       % FIXME: why would this be a problem?
     end
-
+    
     fs             = orig.MetaTags.SampleRes; % sampling rate
     timestamps     = orig.Data.SerialDigitalIO.TimeStamp;
     eventCodeTimes = double(timestamps)./double(fs); % express in seconds
     eventCodes     = double(orig.Data.SerialDigitalIO.UnparsedData);
-		
-    % probably not necessary for all but we often have pins up    
+    
+    % probably not necessary for all but we often have pins up
     % FIXME: what is the consequence for the values if the pins were not 'up'?
-    % Should this be solved more generically? E.g. with an option? 
+    % Should this be solved more generically? E.g. with an option?
     eventCodes2= eventCodes-min(eventCodes)+1;
     
     for k=1:numel(eventCodes2)
       event(k).type      = 'trigger';
-      event(k).sample    = eventCodeTimes(k);      
-      event(k).value     = eventCodes2(k); 
+      event(k).sample    = eventCodeTimes(k);
+      event(k).value     = eventCodes2(k);
       event(k).duration  = 1;
       event(k).offset    = [];
+    end
+  case 'biopac_acq'
+    % this one has an implementation that I guess is intended
+    % to work according to the 'otherwise' case, yet it requires
+    % a two-pass through the function, needing a header
+    try
+      hdr   = feval(eventformat, filename);
+      event = feval(eventformat, filename, hdr);
+    catch
+      ft_warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format (%s)', eventformat);
+      event = [];
     end
     
   otherwise
@@ -2106,7 +2170,8 @@ switch eventformat
     % in case using an external read function was desired, this is where it is executed
     % if it fails, the regular unsupported warning message is thrown
     try
-      event = feval(eventformat,filename);
+      event = feval(eventformat, filename);
+      
     catch
       ft_warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format (%s)', eventformat);
       event = [];

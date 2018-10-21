@@ -15,7 +15,7 @@ function [x] = ft_struct2single(x, maxdepth)
 % precision data. After reading a single precision structure from file, you
 % can convert it back with FT_STRUCT2DOUBLE.
 %
-% See also FT_STRUCT2DOUBLE
+% See also FT_STRUCT2DOUBLE, FT_STRUCT2CHAR, FT_STRUCT2STRING
 
 % Copyright (C) 2005-2014, Robert Oostenveld
 %

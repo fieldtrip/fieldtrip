@@ -65,7 +65,7 @@ else
   ft_hastoolbox('spm12', 1);
 
   fprintf('creating the deformation field and writing it to a temporary file\n');
-  [bb, ~] = spm_get_bbox(P.image(1));
+  bb = spm_get_bbox(P.image(1));
   
   fname  = [tempname,'.nii'];
   V      = nifti;

@@ -128,7 +128,8 @@ function ft_sourceplot(cfg, functional, anatomical)
 %                       'auto', full range of data
 %                       [min max], coordinates of first and last slice in voxels
 %   cfg.slicedim      = dimension to slice 1 (x-axis) 2(y-axis) 3(z-axis) (default = 3)
-%   cfg.title         = string, title of the figure window
+%   cfg.title         = string, title of the plot
+%   cfg.figurename    = string, title of the figure window
 %
 % When cfg.method='surface', the functional data will be rendered onto a cortical mesh
 % (can be an inflated mesh). If the input source data contains a tri-field (i.e. a
@@ -166,13 +167,13 @@ function ft_sourceplot(cfg, functional, anatomical)
 %                        or an Nx3 or Nx1 array where N is the number of vertices
 %   cfg.edgecolor      = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
 %
-% When cfg.method = 'cloud', the functional data will be rendered as as clouds (groups of points), spheres, or 
+% When cfg.method = 'cloud', the functional data will be rendered as as clouds (groups of points), spheres, or
 % single points at each sensor position. These spheres or point clouds can either
-% be viewed in 3D or as 2D slices. The 'anatomical' input may also consist of 
+% be viewed in 3D or as 2D slices. The 'anatomical' input may also consist of
 % a single or multiple triangulated surface mesh(es) in an Nx1 cell-array
 % to be plotted with the interpolated functional data (see FT_PLOT_CLOUD)
 %
-% The following parameters apply to cfg.method='elec' 
+% The following parameters apply to cfg.method='elec'
 %   cfg.cloudtype       = 'point' plots a single point at each sensor position
 %                         'cloud' (default) plots each a group of spherically arranged points at each sensor position
 %                         'surf' plots a single spherical surface mesh at each sensor position
@@ -280,7 +281,8 @@ cfg.funparameter  = ft_getopt(cfg, 'funparameter',  []);
 cfg.maskparameter = ft_getopt(cfg, 'maskparameter', []);
 cfg.maskstyle     = ft_getopt(cfg, 'maskstyle',     'opacity');
 cfg.downsample    = ft_getopt(cfg, 'downsample',    1);
-cfg.title         = ft_getopt(cfg, 'title',         '');
+cfg.title         = ft_getopt(cfg, 'title',         []);
+cfg.figurename    = ft_getopt(cfg, 'figurename',    []);
 cfg.atlas         = ft_getopt(cfg, 'atlas',         []);
 cfg.marker        = ft_getopt(cfg, 'marker',        []);
 cfg.markersize    = ft_getopt(cfg, 'markersize',    5);
@@ -705,7 +707,12 @@ end
 h = figure('visible', cfg.visible);
 set(h, 'color', [1 1 1]);
 set(h, 'renderer', cfg.renderer);
+if ~isempty(cfg.figurename)
+  % this appears as the name of the window
+  set(h, 'name', cfg.figurename);
+end
 if ~isempty(cfg.title)
+  % this appears above the axes
   title(cfg.title);
 end
 
@@ -1013,7 +1020,7 @@ switch cfg.method
     set(h, 'windowbuttondownfcn', @cb_buttonpress);
     set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
     set(h, 'windowkeypressfcn',   @cb_keyboard);
-    set(h, 'CloseRequestFcn',     @cb_cleanup);
+    set(h, 'CloseRequestFcn',     @cb_quit);
     
     % ensure that this is done in interactive mode
     set(h, 'renderer', cfg.renderer);
@@ -1248,7 +1255,7 @@ switch cfg.method
             % color + opacity into a single rgb value to speed up the rendering
             ft_plot_mesh(surf, 'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', val, 'facealpha', maskval, 'clim', [fcolmin fcolmax], 'alphalim', [opacmin opacmax], 'alphamap', cfg.opacitymap, 'colormap', cfg.funcolormap, 'maskstyle', 'colormix');
             
-        end       
+        end
       end
     end
     
@@ -1263,10 +1270,10 @@ switch cfg.method
         % use a normal MATLAB colorbar
         hc = colorbar;
         if strcmp(cfg.maskstyle, 'opacity')
-            % functional values are according to original input values
-            set(hc, 'YLim', [fcolmin fcolmax]);
+          % functional values are according to original input values
+          set(hc, 'YLim', [fcolmin fcolmax]);
         else
-            % functional values have been transformed to be scaled
+          % functional values have been transformed to be scaled
         end
       else
         ft_warning('no colorbar possible without functional data')
@@ -1689,8 +1696,9 @@ if isempty(eventdata)
   key = get(h, 'userdata');
 else
   % determine the key that was pressed on the keyboard
-  key = parseKeyboardEvent(eventdata);
+  key = parsekeyboardevent(eventdata);
 end
+
 % get focus back to figure
 if ~strcmp(get(h, 'type'), 'figure')
   set(h, 'enable', 'off');
@@ -1709,7 +1717,7 @@ if isempty(key)
   key = '';
 end
 
-% the following code is largely shared with FT_VOLUMEREALIGN
+% the following code is largely shared by FT_SOURCEPLOT, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN, FT_MESHREALIGN, FT_ELECTRODEPLACEMENT
 switch key
   case {'' 'shift+shift' 'alt-alt' 'control+control' 'command-0'}
     % do nothing
@@ -1725,7 +1733,7 @@ switch key
     
   case 'q'
     setappdata(h, 'opt', opt);
-    cb_cleanup(h);
+    cb_quit(h);
     
   case {'i' 'j' 'k' 'm' 28 29 30 31 'leftarrow' 'rightarrow' 'uparrow' 'downarrow'} % TODO FIXME use leftarrow rightarrow uparrow downarrow
     % update the view to a new position
@@ -1747,8 +1755,8 @@ switch key
     setappdata(h, 'opt', opt);
     cb_redraw(h);
     
+  case {43 'add' 'shift+equal'}  % + or numpad +
     % contrast scaling
-  case {43 'shift+equal'}  % numpad +
     if isempty(opt.clim)
       opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
     end
@@ -1759,7 +1767,8 @@ switch key
     setappdata(h, 'opt', opt);
     cb_redraw(h);
     
-  case {45 'shift+hyphen'} % numpad -
+  case {45 'subtract' 'hyphen' 'shift+hyphen'} % - or numpad -
+    % contrast scaling
     if isempty(opt.clim)
       opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
     end
@@ -1771,6 +1780,7 @@ switch key
     cb_redraw(h);
     
   otherwise
+    % do nothing
     
 end % switch key
 
@@ -1854,7 +1864,7 @@ setappdata(h, 'opt', opt);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_cleanup(h, eventdata)
+function cb_quit(h, eventdata)
 
 % opt = getappdata(h, 'opt');
 % opt.quit = true;
@@ -1872,30 +1882,3 @@ while p~=0
   p = get(h, 'parent');
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function key = parseKeyboardEvent(eventdata)
-
-key = eventdata.Key;
-
-% handle possible numpad events (different for Windows and UNIX systems)
-% NOTE: shift+numpad number does not work on UNIX, since the shift
-% modifier is always sent for numpad events
-if isunix()
-  shiftInd = match_str(eventdata.Modifier, 'shift');
-  if ~isnan(str2double(eventdata.Character)) && ~isempty(shiftInd)
-    % now we now it was a numpad keystroke (numeric character sent AND
-    % shift modifier present)
-    key = eventdata.Character;
-    eventdata.Modifier(shiftInd) = []; % strip the shift modifier
-  end
-elseif ispc()
-  if strfind(eventdata.Key, 'numpad')
-    key = eventdata.Character;
-  end
-end
-
-if ~isempty(eventdata.Modifier)
-  key = [eventdata.Modifier{1} '+' key];
-end

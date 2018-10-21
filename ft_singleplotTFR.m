@@ -105,7 +105,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble debug
-ft_preamble provenance
+ft_preamble provenance data
 ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
@@ -223,7 +223,6 @@ tmpvar = data;
 tmpchannel  = cfg.channel;
 [cfg, data] = rollback_provenance(cfg, data);
 cfg.channel = tmpchannel;
-
 
 if isfield(tmpvar, cfg.maskparameter) && ~isfield(data, cfg.maskparameter)
   % the mask parameter is not present after ft_selectdata, because it is

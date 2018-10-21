@@ -15,7 +15,7 @@ function [source] = ft_appendsource(cfg, varargin)
 % Use as
 %   combined = ft_appendsource(cfg, source1, source2, ...)
 %
-% See also FT_SOURCEANALYSIS, FT_DATATYPE_SOURCE, FT_APPENDDATA, T_APPENDTIMELOCK,
+% See also FT_SOURCEANALYSIS, FT_DATATYPE_SOURCE, FT_APPENDDATA, FT_APPENDTIMELOCK,
 % FT_APPENDFREQ
 
 % Copyright (C) 2011, Robert Oostenveld

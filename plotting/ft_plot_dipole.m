@@ -5,20 +5,23 @@ function h = ft_plot_dipole(pos, ori, varargin)
 %
 % Use as
 %   ft_plot_dipole(pos, mom, ...)
-% where pos and mom are the dipole mosition and moment. 
+% where pos and mom are the dipole mosition and moment.
 %
 % Optional input arguments should be specified in key-value pairs and can include
-%   'diameter' = number indicating sphere diameter (default = 'auto')
-%   'length'   = number indicating length of the stick (default = 'auto')
-%   'color'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r' (default = 'r')
-%   'unit'     = 'm', 'cm' or 'mm', used for automatic scaling (default = 'cm')
-%   'scale'    = scale the dipole with the amplitude, can be 'none',  'both', 'diameter', 'length' (default = 'none')
-%   'alpha'    = alpha value of the plotted dipole
+%   'diameter'  = number indicating sphere diameter (default = 'auto')
+%   'length'    = number indicating length of the stick (default = 'auto')
+%   'thickness' = number indicating thickness of the stick (default = 'auto')
+%   'color'     = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r' (default = 'r')
+%   'unit'      = 'm', 'cm' or 'mm', used for automatic scaling (default = 'cm')
+%   'scale'     = scale the dipole with the amplitude, can be 'none',  'both', 'diameter', 'length' (default = 'none')
+%   'alpha'     = alpha value of the plotted dipole
 %
 % Example
 %   ft_plot_dipole([0 0 0], [1 2 3], 'color', 'r', 'alpha', 1)
+%
+% See also FT_PLOT_MESH, FT_PLOT_ORTHO
 
-% Copyright (C) 2009, Robert Oostenveld
+% Copyright (C) 2009-2018, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -41,12 +44,13 @@ function h = ft_plot_dipole(pos, ori, varargin)
 ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
-amplitudescale = ft_getopt(varargin, 'scale',    'none');
-color          = ft_getopt(varargin, 'color',    'r'); % can also be a RGB triplet
-diameter       = ft_getopt(varargin, 'diameter', 'auto');
-length         = ft_getopt(varargin, 'length',   'auto');
-unit           = ft_getopt(varargin, 'unit',     'cm');
-alpha          = ft_getopt(varargin, 'alpha',     1);
+amplitudescale = ft_getopt(varargin, 'scale',     'none');
+color          = ft_getopt(varargin, 'color',     'r'); % can also be a RGB triplet
+diameter       = ft_getopt(varargin, 'diameter',  'auto');
+length         = ft_getopt(varargin, 'length',    'auto');
+thickness      = ft_getopt(varargin, 'thickness', 'auto');
+unit           = ft_getopt(varargin, 'unit',      'cm');
+alpha          = ft_getopt(varargin, 'alpha',      1);
 
 % for backward compatibility, this can be changed into an error at the end of 2016
 units = ft_getopt(varargin, 'units');
@@ -55,7 +59,7 @@ if ~isempty(units)
   unit = units;
   clear units
 end
-  
+
 if isequal(diameter, 'auto')
   % the default is a 5 mm sphere
   switch unit
@@ -71,7 +75,7 @@ if isequal(diameter, 'auto')
 end
 
 if isequal(length, 'auto')
-  % the default is a 15 mm stick
+  % the default is a 15 mm long stick
   switch unit
     case 'm'
       length = 0.015;
@@ -82,6 +86,11 @@ if isequal(length, 'auto')
     otherwise
       ft_error('unsupported unit');
   end
+end
+
+if isequal(thickness, 'auto')
+  % the default is 1/3 of the sphere diameter
+  thickness = diameter/3;
 end
 
 % dipole position should be Nx3
@@ -112,22 +121,24 @@ for i=1:size(pos,1)
   
   % scale the dipole diameter and length with its amplitude
   if strcmp(amplitudescale, 'length') || strcmp(amplitudescale, 'both')
-    this_length = length*amplitude;
+    this_length    = length*amplitude;
   else
-    this_length = length;
+    this_length    = length;
   end
   if strcmp(amplitudescale, 'diameter') || strcmp(amplitudescale, 'both')
-    this_diameter = diameter*amplitude;
+    this_diameter  = diameter*amplitude;
+    this_thickness = thickness*amplitude;
   else
-    this_diameter = diameter;
+    this_diameter  = diameter;
+    this_thickness = thickness;
   end
   
   % start with a unit sphere and cylinder
   sphere  = unitsphere;
   stick   = unitcylinder;
   sphere.pos = ft_warp_apply(scale([0.5 0.5 0.5]), sphere.pos, 'homogeneous'); % the diameter should be 1
-  stick.pos = ft_warp_apply(scale([0.5 0.5 0.5]), stick.pos, 'homogeneous'); % the length should be 1
-  stick.pos = ft_warp_apply(translate([0 0 0.5]), stick.pos, 'homogeneous'); % it should start in the origin
+  stick.pos  = ft_warp_apply(scale([0.5 0.5 0.5]), stick.pos, 'homogeneous');  % the length and thickness should be 1
+  stick.pos  = ft_warp_apply(translate([0 0 0.5]), stick.pos, 'homogeneous');  % it should start in the origin
   
   % scale the sphere
   sx = this_diameter;
@@ -142,8 +153,8 @@ for i=1:size(pos,1)
   sphere.pos = ft_warp_apply(translate([tx ty tz]), sphere.pos, 'homogeneous');
   
   % scale the stick
-  sx = this_diameter/3;
-  sy = this_diameter/3;
+  sx = this_thickness;
+  sy = this_thickness;
   sz = this_length;
   stick.pos = ft_warp_apply(scale([sx sy sz]),     stick.pos, 'homogeneous');
   

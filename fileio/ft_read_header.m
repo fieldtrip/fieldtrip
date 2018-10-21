@@ -47,6 +47,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   Neuromag - Elekta (*.fif)
 %   BTi - 4D Neuroimaging (*.m4d, *.pdf, *.xyz)
 %   Yokogawa (*.ave, *.con, *.raw)
+%   Ricoh (*.ave, *.con)
 %   NetMEG (*.nc)
 %   ITAB - Chieti (*.mhd)
 %   Tristan Babysquid (*.fif)
@@ -66,7 +67,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   TMSi (*.Poly5)
 %   Mega Neurone (directory)
 %   Natus/Nicolet/Nervus (.e files)
-%   Nihon Kohden (*.m00)
+%   Nihon Kohden (*.m00, *.EEG)
 %
 % The following spike and LFP dataformats are supported
 %   Neuralynx (*.ncs, *.nse, *.nts, *.nev, *.nrd, *.dma, *.log)
@@ -437,19 +438,19 @@ switch headerformat
     % read header for nsX file associated with NEV file
     % use ft_read_event to read event information in .nev file
     
-    ft_hastoolbox('NPMK', 1);   
+    ft_hastoolbox('NPMK', 1);
     % ensure that the filename contains a full path specification,
     % otherwise the low-level function fails
-    [p,n,~] = fileparts(filename);
+    [p,n] = fileparts(filename);
     if isempty(p)
       filename = which(filename);
-      [p,n,~] = fileparts(filename);
+      [p,n] = fileparts(filename);
     end
-		
+    
     NEV = openNEV(filename,'noread','nosave');
     
     %searching for associated nsX file in same folder
-    files=dir(strcat(fullfile(p,n),'.ns*')); 
+    files=dir(strcat(fullfile(p,n),'.ns*'));
     if isempty(files)
       ft_error('no .ns* file associated to %s in %s',n,p);
     end
@@ -471,7 +472,7 @@ switch headerformat
     ft_hastoolbox('NPMK', 1);
     % ensure that the filename contains a full path specification,
     % otherwise the low-level function fails
-    [p, ~, ~] = fileparts(filename);
+    p = fileparts(filename);
     if isempty(p)
       filename = which(filename);
     end
@@ -737,6 +738,18 @@ switch headerformat
     % read the header information from shared memory
     hdr = read_shm_header(filename);
     
+    
+  case {'curry_dat', 'curry_cdt'}
+    orig            = load_curry_data_file(filename);
+    hdr             = [];
+    hdr.Fs          = orig.fFrequency;
+    hdr.nChans      = orig.nChannels;
+    hdr.nSamples    = orig.nSamples;
+    hdr.nSamplesPre = sum(orig.time<0);
+    hdr.nTrials     = orig.nTrials;
+    hdr.label       = orig.labels(:);
+    hdr.orig        = orig;
+    
   case 'dataq_wdq'
     orig            = read_wdq_header(filename);
     hdr             = [];
@@ -943,7 +956,7 @@ switch headerformat
     hdr.orig.CateNames   = CateNames;
     hdr.orig.CatLengths  = CatLengths;
     
-  case {'egi_mff_v1' 'egi_mff'} % this is currently the default
+  case 'egi_mff_v1'
     % The following represents the code that was written by Ingrid, Robert
     % and Giovanni to get started with the EGI mff dataset format. It might
     % not support all details of the file formats.
@@ -951,6 +964,10 @@ switch headerformat
     % An alternative implementation has been provided by EGI, this is
     % released as fieldtrip/external/egi_mff and referred further down in
     % this function as 'egi_mff_v2'.
+    %
+    % An more recent implementation has been provided by EGI and Arno Delorme, this
+    % is released as https://github.com/arnodelorme/mffmatlabio and referred further
+    % down in this function as 'egi_mff_v3'.
     
     if ~usejava('jvm')
       ft_error('the xml2struct requires MATLAB to be running with the Java virtual machine (JVM)');
@@ -1204,6 +1221,10 @@ switch headerformat
       filename = fullfile(pwd, filename);
     end
     hdr = read_mff_header(filename);
+    
+  case {'egi_mff_v3' 'egi_mff'} % this is the default
+    ft_hastoolbox('mffmatlabio', 1);
+    hdr = mff_fileio_read_header(filename);
     
   case 'fcdc_buffer'
     % read from a networked buffer for realtime analysis
@@ -2154,6 +2175,10 @@ switch headerformat
   case 'nihonkohden_m00'
     hdr = read_nihonkohden_hdr(filename);
     
+  case 'nihonkohden_eeg'
+    ft_hastoolbox('brainstorm', 1);
+    hdr = read_brainstorm_header(filename);
+    
   case 'nimh_cortex'
     cortex = read_nimh_cortex(filename, 'epp', 'no', 'eog', 'no');
     % look at the first trial to determine whether it contains data in the EPP and EOG channels
@@ -2240,7 +2265,7 @@ switch headerformat
     hdr.label       = {tmp.hdr.entityinfo(tmp.list.analog(tmp.analog.contcount~=0)).EntityLabel}; %%% contains non-unique chans?
     hdr.orig        = tmp; % remember the original header
     
-  case 'oxy3'
+  case 'artinis_oxy3'
     ft_hastoolbox('artinis', 1);
     hdr = read_artinis_oxy3(filename);
     
@@ -2355,6 +2380,20 @@ switch headerformat
     hdr.label = hdr.label(:);
     hdr.nChans = length(hdr.label);
     
+  case {'ricoh_ave', 'ricoh_con', 'ricoh_mrk'}
+    % header can be read with Ricoh MEG Reader
+    hdr = read_ricoh_header(filename);
+    % add a gradiometer structure for forward and inverse modelling
+    hdr.grad = ricoh2grad(hdr);
+    hdr.chantype = ft_chantype(hdr.label);
+    unk = find(strcmp('unknown', hdr.chantype));
+    %  Warning message:
+    if ~isempty(unk)
+      label_unk = hdr.label(unk);
+      no_unk = num2cell(unk);
+      C = [label_unk(:), no_unk(:)] .';
+      ft_warning(['Unknown channel types: (label, no) =' repmat('( %s, %d ) ', 1, length(unk) ) '\n'], C{:})
+    end
     
   case 'smi_txt'
     smi = read_smi_txt(filename);
@@ -2470,6 +2509,15 @@ switch headerformat
       hdr = read_yokogawa_header_new(filename);
       % add a gradiometer structure for forward and inverse modelling
       hdr.grad = yokogawa2grad_new(hdr);
+      hdr.chantype = ft_chantype(hdr.label);
+      unk = find(strcmp('unknown', hdr.chantype));
+      %  Warning message:
+      if ~isempty(unk)
+        label_unk = hdr.label(unk);
+        no_unk = num2cell(unk);
+        C = [label_unk(:), no_unk(:)] .';
+        ft_warning(['Unknown channel types: (label, no) =' repmat('( %s, %d ) ', 1, length(unk) ) '\n'], C{:})
+      end
     else
       ft_hastoolbox('yokogawa', 1); % try it with the old version of the toolbox
       hdr = read_yokogawa_header(filename);
@@ -2477,7 +2525,7 @@ switch headerformat
       hdr.grad = yokogawa2grad(hdr);
     end
     
-  case 'riff_wave'
+  case {'riff_wave', 'audio_m4a'}
     % prior to MATLAB R2015b this used to be done with "wavread"
     % but the audioinfo/audioread function are at least available from 2012b up
     info = audioinfo(filename);
@@ -2505,6 +2553,10 @@ switch headerformat
     
   case 'videomeg_vid'
     hdr = read_videomeg_vid(filename);
+    checkUniqueLabels = false;
+    
+  case 'video'
+    hdr = read_video(filename);
     checkUniqueLabels = false;
     
   otherwise

@@ -77,6 +77,8 @@ elseif strcmp(dtype, 'mesh+label')
 end
 
 if isfield(data, 'coordsys') && ~isempty(data.coordsys)
+  % ensure that it is in lower case
+  data.coordsys = lower(data.coordsys);
   % print the interpretation of the coordinate system
   [labelx, labely, labelz] = coordsys2label(data.coordsys, 2, 0);
   fprintf('The positive x-axis is pointing towards %s\n', labelx);

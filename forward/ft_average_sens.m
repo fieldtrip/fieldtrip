@@ -46,7 +46,8 @@ nsens  = numel(sens);
 for i=1:nsens
   newsens(i) = ft_datatype_sens(sens(i));
 end
-sens = newsens; clear newsens
+sens = newsens;
+clear newsens;
 
 fiducials = fixpos(fiducials);
 
@@ -74,16 +75,16 @@ else
 end
 
 pos = detrend(sens(1).chanpos, 'constant');
-[u s v]= svd(pos'*pos);
+[u, s, v]= svd(pos'*pos);
 
 % starting with the second PC works a little better (e.g. on BTi)
 x1 = pos*u(:, 2);
 x2 = pos*u(:, 1);
 
 % detemine the indices of three reference sensors that are close to the three principal axes
-[m ind1] = min(x1);
-[m ind2] = max(x1);
-[m ind3] = max(abs(x2 - mean(x2([ind1 ind2]))));
+[dum, ind1] = min(x1);
+[dum, ind2] = max(x1);
+[dum, ind3] = max(abs(x2 - mean(x2([ind1 ind2]))));
 
 % compute the mean of the three reference sensors for the principal axes
 mean1 = [0 0 0];
@@ -206,15 +207,15 @@ switch nfid
     switch afiducials.unit
         case 'mm'
             c = 0.1;
-        case 'cm';
+        case 'cm'
             c = 1;
-        case 'dm';
+        case 'dm'
             c = 10;
         case 'm'
             c = 100;
     end
     
-    [upos, ind] = unique(round(c*afiducials.pos/tolerance), 'rows');
+    [dum, ind] = unique(round(c*afiducials.pos/tolerance), 'rows');
     
     afiducials.pos = afiducials.pos(ind, :);
     

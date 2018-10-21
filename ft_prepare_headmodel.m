@@ -64,6 +64,7 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 %
 % CONCENTRICSPHERES
 %   cfg.tissue            see above; in combination with 'seg' input
+%   cfg.order             (optional)
 %   cfg.fitind            (optional)
 %
 % LOCALSPHERES
@@ -79,6 +80,7 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 %
 % SINGLESHELL
 %   cfg.tissue            see above; in combination with 'seg' input; default options are 'brain' or 'scalp'
+%   cfg.order             (optional)
 %
 % SINGLESPHERE
 %   cfg.tissue            see above; in combination with 'seg' input; default options are 'brain' or 'scalp'; must be only 1 value
@@ -117,7 +119,7 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 
 % Copyright (C) 2011, Cristiano Micheli
 % Copyright (C) 2011-2012, Jan-Mathijs Schoffelen, Robert Oostenveld
-% Copyright (C) 2013, Robert Oostenveld, Johanna Zumer
+% Copyright (C) 2013-2018, Robert Oostenveld, Johanna Zumer
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -146,7 +148,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble trackconfig
-ft_preamble provenance
+ft_preamble provenance data
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -177,7 +179,6 @@ cfg.threshold       = ft_getopt(cfg, 'threshold');
 % other options
 cfg.numvertices     = ft_getopt(cfg, 'numvertices', 3000);
 cfg.isolatedsource  = ft_getopt(cfg, 'isolatedsource'); % used for dipoli and openmeeg
-cfg.fitind          = ft_getopt(cfg, 'fitind');         % used for concentricspheres
 cfg.point           = ft_getopt(cfg, 'point');          % used for halfspace
 cfg.submethod       = ft_getopt(cfg, 'submethod');      % used for halfspace
 cfg.feedback        = ft_getopt(cfg, 'feedback');
@@ -262,7 +263,7 @@ switch cfg.method
       tmpcfg.tissue = cfg.tissue;
       geometry = ft_prepare_mesh(tmpcfg, data);
     else
-      ft_error('Either a segmentated MRI or data with closed triangulated mesh is required as data input for the bemcp, dipoli or openmeeg method');
+      ft_error('Either a segmented MRI or data with closed triangulated mesh is required as data input for the bemcp, dipoli or openmeeg method');
     end
     
     if strcmp(cfg.method, 'bemcp')
@@ -279,10 +280,13 @@ switch cfg.method
     elseif strcmp(cfg.method, 'dipoli')
       headmodel = ft_headmodel_dipoli(geometry, 'conductivity', cfg.conductivity, 'isolatedsource', cfg.isolatedsource);
     else
-      headmodel = ft_headmodel_openmeeg(geometry, 'conductivity', cfg.conductivity, 'isolatedsource', cfg.isolatedsource);
+      headmodel = ft_headmodel_openmeeg(geometry, 'conductivity', cfg.conductivity, 'isolatedsource', cfg.isolatedsource, 'tissue', cfg.tissue);
     end
     
   case 'concentricspheres'
+    cfg.fitind = ft_getopt(cfg, 'fitind');
+    cfg.order  = ft_getopt(cfg, 'order');
+    
     % the low-level functions needs surface points, triangles are not needed
     if input_mesh || input_pos
       geometry = data;
@@ -304,7 +308,7 @@ switch cfg.method
       ft_error('You must give a mesh, segmented MRI, sensor data type, or cfg.headshape');
     end
     
-    headmodel = ft_headmodel_concentricspheres(geometry, 'conductivity', cfg.conductivity, 'fitind', cfg.fitind);
+    headmodel = ft_headmodel_concentricspheres(geometry, 'conductivity', cfg.conductivity, 'fitind', cfg.fitind, 'order', cfg.order);
     
   case 'halfspace'
     if input_mesh || input_pos
@@ -325,7 +329,7 @@ switch cfg.method
   case {'localspheres' 'singlesphere' 'singleshell'}
     cfg.grad = ft_getopt(cfg, 'grad');           % used for localspheres
     
-    % these three methods all require a set of surface points
+    % these three methods all require a single set of surface points
     if input_mesh || input_pos
       geometry = data;
     elseif input_seg
@@ -342,16 +346,28 @@ switch cfg.method
           try
             tmpcfg.tissue = 'brain';
             geometry = ft_prepare_mesh(tmpcfg, data);
+          catch
+            me = lasterror;
+            if isequal(me.identifier, 'MATLAB:mex:ErrInvalidMEXFile')
+              % SPM8 mex file issues are common on macOS, these should not remain invisible
+              rethrow(me);
+            end
           end
         end
         if isempty(geometry)
           try
             tmpcfg.tissue = 'scalp';
             geometry = ft_prepare_mesh(tmpcfg, data);
+          catch
+            me = lasterror;
+            if isequal(me.identifier, 'MATLAB:mex:ErrInvalidMEXFile')
+              % SPM8 mex file issues are common on macOS, these should not remain invisible
+              rethrow(me);
+            end
           end
         end
         if isempty(geometry)
-          ft_error('please specificy cfg.tissue and pass an appropriate segmented MRI as input data')
+          ft_error('please specify cfg.tissue and pass an appropriate segmented MRI as input data')
         end
       end
     elseif input_elec
@@ -387,6 +403,7 @@ switch cfg.method
           % construct the volume conduction model
           headmodel = ft_headmodel_singlesphere(geometry, 'conductivity', cfg.conductivity);
         end % headmodel
+        
       case 'localspheres'
         if ~isempty(cfg.headmodel)
           % read the volume conduction model from a CTF *.hdm file
@@ -408,14 +425,19 @@ switch cfg.method
           end
           headmodel = ft_headmodel_localspheres(geometry, cfg.grad, 'feedback', cfg.feedback, 'radius', cfg.radius, 'maxradius', cfg.maxradius, 'baseline', cfg.baseline, 'singlesphere', cfg.singlesphere);
         end % headmodel
+        
       case 'singleshell'
+        cfg.order  = ft_getopt(cfg, 'order');
         if ~isfield(geometry, 'tri')
           tmpcfg = [];
           tmpcfg.headshape = geometry;
           geometry = ft_prepare_mesh(tmpcfg);
         end
-        headmodel = ft_headmodel_singleshell(geometry);
-    end
+        headmodel = ft_headmodel_singleshell(geometry, 'order', cfg.order);
+        
+      otherwise
+        ft_error('unsupported method %s', cfg.method);
+    end % switch method
     
   case {'simbio'}
     if input_elec || isfield(data, 'pos') || input_mesh

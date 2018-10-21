@@ -11,6 +11,9 @@ function mri = ft_defacevolume(cfg, mri)
 %   mri = ft_defacevolume(cfg, mri)
 %
 % The configuration can contain the following options
+%   cfg.method     = 'box', 'spm' (default = 'box')
+%
+% If you specify the box method, the following options apply
 %   cfg.translate  = initial position of the center of the box (default = [0 0 0])
 %   cfg.scale      = initial size of the box along each dimension (default is automatic)
 %   cfg.translate  = initial rotation of the box (default = [0 0 0])
@@ -23,9 +26,12 @@ function mri = ft_defacevolume(cfg, mri)
 % specify a certain amount of smoothing (in voxels FWHM), the selected area will
 % be replaced by a smoothed version of the data.
 %
+% The spm method does not have any options, it uses SPM_DEFACE from the
+% SPM12 toolbox.
+%
 % See also FT_ANONIMIZEDATA, FT_DEFACEMESH, FT_ANALYSISPIPELINE, FT_SOURCEPLOT
 
-% Copyright (C) 2015-2016, Robert Oostenveld
+% Copyright (C) 2015-2018, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -64,6 +70,7 @@ if ft_abort
 end
 
 % set the defaults
+cfg.method    = ft_getopt(cfg, 'method', 'box');
 cfg.rotate    = ft_getopt(cfg, 'rotate', [0 0 0]);
 cfg.scale     = ft_getopt(cfg, 'scale'); % the automatic default is determined further down
 cfg.translate = ft_getopt(cfg, 'translate', [0 0 0]);
@@ -80,216 +87,255 @@ if ismri
   mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
 end
 
-% determine the size of the "unit" sphere in the origin and the length of the axes
-switch mri.unit
-  case 'mm'
-    axmax = 150;
-    rbol  = 5;
-  case 'cm'
-    axmax = 15;
-    rbol  = 0.5;
-  case 'm'
-    axmax = 0.15;
-    rbol  = 0.005;
-  otherwise
-    ft_error('unknown units (%s)', unit);
+switch cfg.method
+  case 'spm'
+    % this requires SPM12 on the path
+    ft_hastoolbox('spm12', 1);
+    
+    % defacing relies on coregistration, which relies on the MRI being reasonably aligned for SPM
+    mri = ft_checkdata(mri, 'hascoordsys', 'yes');
+    
+    % remember the original transformation matrix and coordinate system
+    original = [];
+    original.transform = mri.transform;
+    original.coordsys  = mri.coordsys;
+    mri = ft_convert_coordsys(mri, 'acpc');
+    
+    filename1 = {[tempname '.nii']};
+    ft_write_mri(filename1{1}, mri, 'dataformat', 'nifti');
+    
+    % % apply a least squares pre-alignment step in order to make spm_deface more robust
+    % % this could be done conditional on the modality/contrast, which is part of the BIDS filename
+    % template = spm_vol(fullfile(spm('Dir'),'canonical','avg152PD.nii'));
+    % template = spm_vol(fullfile(spm('Dir'),'canonical','avg152T1.nii'));
+    % template = spm_vol(fullfile(spm('Dir'),'canonical','avg152T2.nii'));
+    % filevol = spm_vol(filename1{1});
+    % M = spm_affreg(template, filevol);
+    % spm_get_space(filename1{1}, M * filevol.mat);
+    
+    filename2 = spm_deface(filename1);
+    mri = ft_read_mri(filename2{1});
+    
+    % put the original transformation matrix and coordinate system back
+    mri.transform = original.transform;
+    mri.coordsys = original.coordsys;
+    
+    % clean up the temporary files
+    delete(filename1{1});
+    delete(filename2{1});
+    
+  case 'box'
+    % determine the size of the "unit" sphere in the origin and the length of the axes
+    switch mri.unit
+      case 'mm'
+        axmax = 150;
+        rbol  = 5;
+      case 'cm'
+        axmax = 15;
+        rbol  = 0.5;
+      case 'm'
+        axmax = 0.15;
+        rbol  = 0.005;
+      otherwise
+        ft_error('unknown units (%s)', unit);
+    end
+    
+    figHandle = figure;
+    set(figHandle, 'CloseRequestFcn', @cb_close);
+    
+    % clear persistent variables to ensure fresh figure
+    clear ft_plot_slice
+    
+    if ismri
+      % the volumetric data needs to be interpolated onto three orthogonal planes
+      % determine a resolution that is close to, or identical to the original resolution
+      [corner_vox, corner_head] = cornerpoints(mri.dim, mri.transform);
+      diagonal_head = norm(range(corner_head));
+      diagonal_vox  = norm(range(corner_vox));
+      resolution    = diagonal_head/diagonal_vox; % this is in units of "mri.unit"
+      
+      % create a contrast enhanced version of the anatomy
+      mri.anatomy = double(mri.anatomy);
+      dum = unique(mri.anatomy(:));
+      clim(1) = dum(round(0.05*numel(dum)));
+      clim(2) = dum(round(0.95*numel(dum)));
+      anatomy = (mri.anatomy-clim(1))/(clim(2)-clim(1));
+      
+      ft_plot_ortho(anatomy, 'transform', mri.transform, 'unit', mri.unit, 'resolution', resolution, 'style', 'intersect');
+    elseif ismesh
+      if isfield(mri, 'hex')
+        ft_plot_mesh(mri, 'surfaceonly', 'yes');
+      else
+        ft_plot_mesh(mri);
+      end
+    end
+    
+    axis vis3d
+    view([110 36]);
+    
+    % shift the axes to the left
+    ax = get(gca, 'position');
+    ax(1) = 0;
+    set(gca, 'position', ax);
+    
+    % get the xyz-axes
+    xdat  = [-axmax 0 0; axmax 0 0];
+    ydat  = [0 -axmax 0; 0 axmax 0];
+    zdat  = [0 0 -axmax; 0 0 axmax];
+    
+    % get the xyz-axes dotted
+    xdatdot = (-axmax:(axmax/15):axmax);
+    xdatdot = xdatdot(1:floor(numel(xdatdot)/2)*2);
+    xdatdot = reshape(xdatdot, [2 numel(xdatdot)/2]);
+    n       = size(xdatdot,2);
+    ydatdot = [zeros(2,n) xdatdot zeros(2,n)];
+    zdatdot = [zeros(2,2*n) xdatdot];
+    xdatdot = [xdatdot zeros(2,2*n)];
+    
+    % plot axes
+    hl = line(xdat, ydat, zdat);
+    set(hl(1), 'linewidth', 1, 'color', 'r');
+    set(hl(2), 'linewidth', 1, 'color', 'g');
+    set(hl(3), 'linewidth', 1, 'color', 'b');
+    hld = line(xdatdot, ydatdot, zdatdot);
+    for k = 1:n
+      set(hld(k    ), 'linewidth', 3, 'color', 'r');
+      set(hld(k+n*1), 'linewidth', 3, 'color', 'g');
+      set(hld(k+n*2), 'linewidth', 3, 'color', 'b');
+    end
+    
+    if isempty(cfg.scale)
+      cfg.scale = [axmax axmax axmax]/2;
+    end
+    
+    guidata(figHandle, cfg);
+    
+    % add the GUI elements
+    cb_creategui(gca);
+    cb_redraw(gca);
+    
+    uiwait(figHandle);
+    cfg = guidata(figHandle);
+    delete(figHandle);
+    drawnow
+    fprintf('keeping all voxels from MRI that are %s the box\n', cfg.selection)
+    
+    % the order of application is scale, rotate, translate
+    S = cfg.S;
+    R = cfg.R;
+    T = cfg.T;
+    
+    if ismri
+      % it is possible to convert the box to headcoordinates, but it is more efficient the other way around
+      [X, Y, Z] = ndgrid(1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3));
+      voxpos = ft_warp_apply(mri.transform, [X(:) Y(:) Z(:)]);  % voxel positions in head coordinates
+      voxpos = ft_warp_apply(inv(T*R*S), voxpos);               % voxel positions in box coordinates
+      
+      remove = ...
+        voxpos(:,1) > -0.5 & ...
+        voxpos(:,1) < +0.5 & ...
+        voxpos(:,2) > -0.5 & ...
+        voxpos(:,2) < +0.5 & ...
+        voxpos(:,3) > -0.5 & ...
+        voxpos(:,3) < +0.5;
+      
+    elseif ismesh || issource
+      meshpos = ft_warp_apply(inv(T*R*S), mri.pos);               % mesh vertex positions in box coordinates
+      
+      remove = ...
+        meshpos(:,1) > -0.5 & ...
+        meshpos(:,1) < +0.5 & ...
+        meshpos(:,2) > -0.5 & ...
+        meshpos(:,2) < +0.5 & ...
+        meshpos(:,3) > -0.5 & ...
+        meshpos(:,3) < +0.5;
+    end
+    
+    if strcmp(cfg.selection, 'inside')
+      % invert the selection, i.e. keep the voxels inside the box
+      remove = ~remove;
+    end
+    
+    if ismri
+      if istrue(cfg.keepbrain)
+        tmpcfg = [];
+        tmpcfg.output = {'brain'};
+        seg = ft_volumesegment(tmpcfg, mri);
+        fprintf('keeping voxels in brain segmentation\n');
+        % keep the tissue of the brain
+        remove(seg.brain) = 0;
+        clear seg
+      end
+      
+      if istrue(cfg.feedback)
+        tmpmri = keepfields(mri, {'anatomy', 'transform', 'coordsys', 'units', 'dim'});
+        tmpmri.remove = remove;
+        tmpcfg = [];
+        tmpcfg.funparameter = 'remove';
+        ft_sourceplot(tmpcfg, tmpmri);
+      end
+      
+      if isequal(cfg.smooth, 'no')
+        fprintf('zero-filling %.0f%% of the volume\n', 100*mean(remove));
+        mri.anatomy(remove) = 0;
+      else
+        tmp = mri.anatomy;
+        tmp = (1 + 0.5.*randn(size(tmp))).*tmp; % add 50% noise to each voxel
+        tmp = volumesmooth(tmp, cfg.smooth, 'anatomy');
+        fprintf('smoothing %.0f%% of the volume\n', 100*mean(remove));
+        mri.anatomy(remove) = tmp(remove);
+      end
+      
+    elseif ismesh
+      % determine all fields that might need to be defaced
+      fn = setdiff(fieldnames(mri), ignorefields('deface'));
+      dimord = cell(size(fn));
+      for i=1:numel(fn)
+        dimord{i} = getdimord(mri, fn{i});
+      end
+      % this applies to headshapes and meshes in general
+      fprintf('keeping %d and removing %d vertices in the mesh\n', sum(remove==0), sum(remove==1));
+      if isfield(mri, 'tri')
+        [mri.pos, mri.tri] = remove_vertices(mri.pos, mri.tri, remove);
+      elseif isfield(mri, 'tet')
+        [mri.pos, mri.tet] = remove_vertices(mri.pos, mri.tet, remove);
+      elseif isfield(mri, 'hex')
+        [mri.pos, mri.hex] = remove_vertices(mri.pos, mri.hex, remove);
+      else
+        mri.pos = mri.pos(~remove,1:3);
+      end
+      for i=1:numel(fn)
+        dimtok = tokenize(dimord{i}, '_');
+        % do some sanity checks
+        if any(strcmp(dimtok, '{pos}'))
+          ft_error('not supported');
+        end
+        if numel(dimtok)>5
+          ft_error('too many dimensions');
+        end
+        % remove the same positions from each matching dimension
+        if numel(dimtok)>0 && strcmp(dimtok{1}, 'pos')
+          mri.(fn{i}) = mri.(fn{i})(~remove,:,:,:,:);
+        end
+        if numel(dimtok)>1 && strcmp(dimtok{2}, 'pos')
+          mri.(fn{i}) = mri.(fn{i})(:,~remove,:,:,:);
+        end
+        if numel(dimtok)>2 && strcmp(dimtok{3}, 'pos')
+          mri.(fn{i}) = mri.(fn{i})(:,:,~remove,:,:);
+        end
+        if numel(dimtok)>3 && strcmp(dimtok{4}, 'pos')
+          mri.(fn{i}) = mri.(fn{i})(:,:,:,~remove,:);
+        end
+        if numel(dimtok)>4 && strcmp(dimtok{5}, 'pos')
+          mri.(fn{i}) = mri.(fn{i})(:,:,:,:,~remove);
+        end
+      end % for fn
+      mri = removefields(mri, {'dim', 'transform'}); % these fields don't apply any more
+    end % ismesh
+    
+    % remove the temporary fields from the configuration, keep the rest for provenance
+    cfg = removefields(cfg, {'R', 'S', 'T'});
 end
-
-figHandle = figure;
-set(figHandle, 'CloseRequestFcn', @cb_close);
-
-% clear persistent variables to ensure fresh figure
-clear ft_plot_slice
-
-if ismri
-  % the volumetric data needs to be interpolated onto three orthogonal planes
-  % determine a resolution that is close to, or identical to the original resolution
-  [corner_vox, corner_head] = cornerpoints(mri.dim, mri.transform);
-  diagonal_head = norm(range(corner_head));
-  diagonal_vox  = norm(range(corner_vox));
-  resolution    = diagonal_head/diagonal_vox; % this is in units of "mri.unit"
-  
-  % create a contrast enhanced version of the anatomy
-  mri.anatomy = double(mri.anatomy);
-  dum = unique(mri.anatomy(:));
-  clim(1) = dum(round(0.05*numel(dum)));
-  clim(2) = dum(round(0.95*numel(dum)));
-  anatomy = (mri.anatomy-clim(1))/(clim(2)-clim(1));
-  
-  ft_plot_ortho(anatomy, 'transform', mri.transform, 'unit', mri.unit, 'resolution', resolution, 'style', 'intersect');
-elseif ismesh
-  if isfield(mri, 'hex')  
-    ft_plot_mesh(mri, 'surfaceonly', 'yes');
-  else
-    ft_plot_mesh(mri);
-  end  
-end
-
-axis vis3d
-view([110 36]);
-
-% shift the axes to the left
-ax = get(gca, 'position');
-ax(1) = 0;
-set(gca, 'position', ax);
-
-% get the xyz-axes
-xdat  = [-axmax 0 0; axmax 0 0];
-ydat  = [0 -axmax 0; 0 axmax 0];
-zdat  = [0 0 -axmax; 0 0 axmax];
-
-% get the xyz-axes dotted
-xdatdot = (-axmax:(axmax/15):axmax);
-xdatdot = xdatdot(1:floor(numel(xdatdot)/2)*2);
-xdatdot = reshape(xdatdot, [2 numel(xdatdot)/2]);
-n       = size(xdatdot,2);
-ydatdot = [zeros(2,n) xdatdot zeros(2,n)];
-zdatdot = [zeros(2,2*n) xdatdot];
-xdatdot = [xdatdot zeros(2,2*n)];
-
-% plot axes
-hl = line(xdat, ydat, zdat);
-set(hl(1), 'linewidth', 1, 'color', 'r');
-set(hl(2), 'linewidth', 1, 'color', 'g');
-set(hl(3), 'linewidth', 1, 'color', 'b');
-hld = line(xdatdot, ydatdot, zdatdot);
-for k = 1:n
-  set(hld(k    ), 'linewidth', 3, 'color', 'r');
-  set(hld(k+n*1), 'linewidth', 3, 'color', 'g');
-  set(hld(k+n*2), 'linewidth', 3, 'color', 'b');
-end
-
-if isempty(cfg.scale)
-  cfg.scale = [axmax axmax axmax]/2;
-end
-
-guidata(figHandle, cfg);
-
-% add the GUI elements
-cb_creategui(gca);
-cb_redraw(gca);
-
-uiwait(figHandle);
-cfg = guidata(figHandle);
-delete(figHandle);
-drawnow
-fprintf('keeping all voxels from MRI that are %s the box\n', cfg.selection)
-
-% the order of application is scale, rotate, translate
-S = cfg.S;
-R = cfg.R;
-T = cfg.T;
-
-if ismri
-  % it is possible to convert the box to headcoordinates, but it is more efficient the other way around
-  [X, Y, Z] = ndgrid(1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3));
-  voxpos = ft_warp_apply(mri.transform, [X(:) Y(:) Z(:)]);  % voxel positions in head coordinates
-  voxpos = ft_warp_apply(inv(T*R*S), voxpos);               % voxel positions in box coordinates
-  
-  remove = ...
-    voxpos(:,1) > -0.5 & ...
-    voxpos(:,1) < +0.5 & ...
-    voxpos(:,2) > -0.5 & ...
-    voxpos(:,2) < +0.5 & ...
-    voxpos(:,3) > -0.5 & ...
-    voxpos(:,3) < +0.5;
-  
-elseif ismesh || issource
-  meshpos = ft_warp_apply(inv(T*R*S), mri.pos);               % mesh vertex positions in box coordinates
-  
-  remove = ...
-    meshpos(:,1) > -0.5 & ...
-    meshpos(:,1) < +0.5 & ...
-    meshpos(:,2) > -0.5 & ...
-    meshpos(:,2) < +0.5 & ...
-    meshpos(:,3) > -0.5 & ...
-    meshpos(:,3) < +0.5;
-end
-
-if strcmp(cfg.selection, 'inside')
-  % invert the selection, i.e. keep the voxels inside the box
-  remove = ~remove;
-end
-
-if ismri
-  if istrue(cfg.keepbrain)
-    tmpcfg = [];
-    tmpcfg.output = {'brain'};
-    seg = ft_volumesegment(tmpcfg, mri);
-    fprintf('keeping voxels in brain segmentation\n');
-    % keep the tissue of the brain
-    remove(seg.brain) = 0;
-    clear seg
-  end
-  
-  if istrue(cfg.feedback)
-    tmpmri = keepfields(mri, {'anatomy', 'transform', 'coordsys', 'units', 'dim'});
-    tmpmri.remove = remove;
-    tmpcfg = [];
-    tmpcfg.funparameter = 'remove';
-    ft_sourceplot(tmpcfg, tmpmri);
-  end
-  
-  if isequal(cfg.smooth, 'no')
-    fprintf('zero-filling %.0f%% of the volume\n', 100*mean(remove));
-    mri.anatomy(remove) = 0;
-  else
-    tmp = mri.anatomy;
-    tmp = (1 + 0.5.*randn(size(tmp))).*tmp; % add 50% noise to each voxel
-    tmp = volumesmooth(tmp, cfg.smooth, 'anatomy');
-    fprintf('smoothing %.0f%% of the volume\n', 100*mean(remove));
-    mri.anatomy(remove) = tmp(remove);
-  end
-  
-elseif ismesh
-  % determine all fields that might need to be defaced
-  fn = setdiff(fieldnames(mri), ignorefields('deface'));
-  dimord = cell(size(fn));
-  for i=1:numel(fn)
-    dimord{i} = getdimord(mri, fn{i});
-  end
-  % this applies to headshapes and meshes in general
-  fprintf('keeping %d and removing %d vertices in the mesh\n', sum(remove==0), sum(remove==1));
-  if isfield(mri, 'tri')
-    [mri.pos, mri.tri] = remove_vertices(mri.pos, mri.tri, remove);
-  elseif isfield(mri, 'tet')
-    [mri.pos, mri.tet] = remove_vertices(mri.pos, mri.tet, remove);
-  elseif isfield(mri, 'hex')
-    [mri.pos, mri.hex] = remove_vertices(mri.pos, mri.hex, remove);
-  else
-    mri.pos = mri.pos(~remove,1:3);
-  end
-  for i=1:numel(fn)
-    dimtok = tokenize(dimord{i}, '_');
-    % do some sanity checks
-    if any(strcmp(dimtok, '{pos}'))
-      ft_error('not supported');
-    end
-    if numel(dimtok)>5
-      ft_error('too many dimensions');
-    end
-    % remove the same positions from each matching dimension
-    if numel(dimtok)>0 && strcmp(dimtok{1}, 'pos')
-      mri.(fn{i}) = mri.(fn{i})(~remove,:,:,:,:);
-    end
-    if numel(dimtok)>1 && strcmp(dimtok{2}, 'pos')
-      mri.(fn{i}) = mri.(fn{i})(:,~remove,:,:,:);
-    end
-    if numel(dimtok)>2 && strcmp(dimtok{3}, 'pos')
-      mri.(fn{i}) = mri.(fn{i})(:,:,~remove,:,:);
-    end
-    if numel(dimtok)>3 && strcmp(dimtok{4}, 'pos')
-      mri.(fn{i}) = mri.(fn{i})(:,:,:,~remove,:);
-    end
-    if numel(dimtok)>4 && strcmp(dimtok{5}, 'pos')
-      mri.(fn{i}) = mri.(fn{i})(:,:,:,:,~remove);
-    end
-  end % for fn
-  mri = removefields(mri, {'dim', 'transform'}); % these fields don't apply any more
-end % ismesh
-
-% remove the temporary fields from the configuration, keep the rest for provenance
-cfg = removefields(cfg, {'R', 'S', 'T'});
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

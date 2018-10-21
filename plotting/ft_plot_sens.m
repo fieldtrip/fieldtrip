@@ -24,10 +24,12 @@ function hs = ft_plot_sens(sens, varargin)
 %   'coilsize'        = diameter or edge length of the coils (default is automatic)
 % The following options apply to EEG electrodes
 %   'elec'            = true/false, plot each individual electrode (default = false)
+%   'orientation'     = true/false, plot a line for the orientation of each electrode (default = false)
 %   'elecshape'       = 'point', 'circle', 'square', or 'sphere' (default is automatic)
 %   'elecsize'        = diameter of the electrodes (default is automatic)
 % The following options apply to NIRS optodes
 %   'opto'            = true/false, plot each individual optode (default = false)
+%   'orientation'     = true/false, plot a line for the orientation of each optode (default = false)
 %   'optoshape'       = 'point', 'circle', 'square', or 'sphere' (default is automatic)
 %   'optosize'        = diameter of the optodes (default is automatic)
 %
@@ -47,7 +49,7 @@ function hs = ft_plot_sens(sens, varargin)
 %   figure; ft_plot_sens(sens, 'coilshape', 'circle', 'coil', true, 'chantype', 'meggrad')
 %   figure; ft_plot_sens(sens, 'coilshape', 'circle', 'coil', false, 'orientation', true)
 %
-% See also FT_READ_SENS, FT_DATATYPE_SENS, FT_PLOT_HEADSHAPE, FT_PREPARE_VOL_SENS
+% See also FT_READ_SENS, FT_PLOT_HEADSHAPE, FT_PLOT_VOL
 
 % Copyright (C) 2009-2016, Robert Oostenveld
 %
@@ -254,47 +256,21 @@ if ~holdflag
   hold on
 end
 
-if istrue(orientation)
-  if istrue(individual)
-    if isfield(sens, 'coilori')
-      pos = sens.coilpos;
-      ori = sens.coilori;
-    elseif isfield(sens, 'elecori')
-      pos = sens.elecpos;
-      ori = sens.elecori;
-    else
-      pos = [];
-      ori = [];
-    end
-  else
-    if isfield(sens, 'chanori')
-      pos = sens.chanpos;
-      ori = sens.chanori;
-    else
-      pos = [];
-      ori = [];
-    end
-  end
-  scale = ft_scalingfactor('mm', sens.unit)*20; % draw a line segment of 20 mm
-  for i=1:size(pos,1)
-    x = [pos(i,1) pos(i,1)+ori(i,1)*scale];
-    y = [pos(i,2) pos(i,2)+ori(i,2)*scale];
-    z = [pos(i,3) pos(i,3)+ori(i,3)*scale];
-    line(x, y, z)
-  end
-end
-
 if istrue(individual)
-  % simply get the position of all individual coils or electrodes
+  % get the position of all individual coils, electrodes or optodes
   if isfield(sens, 'coilpos')
     pos = sens.coilpos;
   elseif isfield(sens, 'elecpos')
     pos = sens.elecpos;
+  elseif isfield(sens, 'optopos')
+    pos = sens.optopos;
   end
   if isfield(sens, 'coilori')
     ori = sens.coilori;
   elseif isfield(sens, 'elecori')
     ori = sens.elecori;
+  elseif isfield(sens, 'optoori')
+    ori = sens.optoori;
   else
     ori = [];
   end
@@ -316,6 +292,31 @@ else
   
 end % if istrue(individual)
 
+if isempty(ori)
+  % determine the orientation by fitting a sphere to the positions
+  % this should be reasonable for scalp electrodes or optodes with complete coverage
+  try
+    tmp = pos(~any(isnan(pos), 2),:); % remove rows that contain a nan
+    center = fitsphere(tmp);
+  catch
+    center = [nan nan nan];
+  end
+  for i=1:size(pos,1)
+    ori(i,:) = pos(i,:) - center;
+    ori(i,:) = ori(i,:)/norm(ori(i,:));
+  end
+end
+
+if istrue(orientation)
+  scale = ft_scalingfactor('mm', sens.unit)*20; % draw a line segment of 20 mm
+  for i=1:size(pos,1)
+    x = [pos(i,1) pos(i,1)+ori(i,1)*scale];
+    y = [pos(i,2) pos(i,2)+ori(i,2)*scale];
+    z = [pos(i,3) pos(i,3)+ori(i,3)*scale];
+    line(x, y, z)
+  end
+end
+
 switch sensshape
   case 'point'
     if ~isempty(style)
@@ -335,7 +336,7 @@ switch sensshape
       end
     else
       % the style is not specified, use facecolor for the marker
-      hs = plot3(pos(:,1), pos(:,2), pos(:,3), 'Marker', marker, 'MarkerSize', sensize, 'Color', facecolor, 'Linestyle', 'none');
+      hs = scatter3(pos(:,1), pos(:,2), pos(:,3), sensize.^2, facecolor, marker);
     end
     
   case 'circle'

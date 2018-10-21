@@ -1,7 +1,8 @@
 function str = printstruct(name, val)
 
-% PRINTSTRUCT converts a MATLAB structure into a multi-line string that can be
-% interpreted by MATLAB, resulting in the original structure.
+% PRINTSTRUCT converts a MATLAB structure into a multiple-line string that, when
+% evaluated by MATLAB, results in the original structure. It also works for most
+% other standard MATLAB classes, such as numbers, vectors, matrices, and cell-arrays.
 %
 % Use as
 %   str = printstruct(val)
@@ -23,7 +24,7 @@ function str = printstruct(name, val)
 %
 % See also DISP
 
-% Copyright (C) 2006-2013, Robert Oostenveld
+% Copyright (C) 2006-2018, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -49,46 +50,48 @@ if nargin==1
 end
 
 if isa(val, 'config')
-  % this is FieldTrip specific: the @config object resembles a structure but tracks the
-  % access to each field.  In this case it is to be treated as a normal structure.
+  % This is FieldTrip specific: the @config object resembles a structure but tracks
+  % the access to each field. In this case it is to be treated as a normal structure.
   val = struct(val);
 end
 
-% note here that because we don't know the final size of the string,
-% iteratively appending is actually faster than creating a cell array and
-% subsequently doing a cat(2, strings{:}) (also sprintf() is slow)
+% Note that because we don't know the final size of the string, iteratively appending
+% is actually faster than creating a cell array and subsequently doing a cat(2,
+% strings{:}). Note also that sprintf() is slow.
 str = '';
 
-% note further that in the string concatenations I use the numerical value
-% of a newline (\n), which is 10
+% Note further that in the string concatenations I use the numerical value
+% of a newline (\n), which is 10.
 
 if numel(val) == 0
   if iscell(val)
     str = [name ' = {};' 10];
-  else
+  elseif isnumeric(val)
     str = [name ' = [];' 10];
   end
+  
 elseif isstruct(val)
   if numel(val)>1
+    % print it as a struct-array
     str = cell(size(val));
     for i=1:numel(val)
       str{i} = printstruct(sprintf('%s(%d)', name, i), val(i));
     end
     str = cat(2, str{:});
     return
-  else
+  elseif numel(val)==1
     % print it as a named structure
     fn = fieldnames(val);
     for i=1:length(fn)
       fv = val.(fn{i});
       switch class(fv)
-        case 'char'
+        case {'char' 'string'}
           line = printstr([name '.' fn{i}], fv);
         case {'single' 'double' 'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64' 'logical'}
           if ismatrix(fv)
             line = [name '.' fn{i} ' = ' printmat(fv) ';' 10];
           else
-            line = '''FIXME: printing multidimensional arrays is not supported''';
+            line = '''ERROR: multidimensional arrays are not supported''';
           end
         case 'cell'
           line = printcell([name '.' fn{i}], fv);
@@ -105,12 +108,17 @@ elseif isstruct(val)
       else
         str = [str line];
       end
+    end % for fieldnames
+    if isempty(fn)
+      % print it as an empty structure
+      str = [name ' = struct();'];
     end
   end
+  
 elseif ~isstruct(val)
   % print it as a named variable
   switch class(val)
-    case 'char'
+    case {'char' 'string'}
       str = printstr(name, val);
     case {'double' 'single' 'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64' 'logical'}
       str = [name ' = ' printmat(val)];
@@ -119,6 +127,16 @@ elseif ~isstruct(val)
     otherwise
       ft_error('unsupported');
   end
+end
+
+if isempty(name)
+  % remove the ' = ' part from the string
+  str = str(4:end);
+end
+
+if str(end)==10
+  % remove the last newline
+  str = str(1:end-1);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -175,7 +193,7 @@ elseif ismatrix(val)
   str = strrep(str, ';', [';' 10]);
 else
   ft_warning('multidimensional arrays are not supported');
-  str = '''FIXME: printing multidimensional arrays is not supported''';
+  str = '''ERROR: multidimensional arrays are not supported''';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -184,6 +202,10 @@ function str = printval(val)
 switch class(val)
   case 'char'
     str = ['''' val ''''];
+    
+  case 'string'
+    % these use " in the declaration rather than '
+    str = ['"' char(val) '"'];
     
   case {'single' 'double' 'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64' 'logical'}
     str = printmat(val);
@@ -202,5 +224,5 @@ switch class(val)
     
   otherwise
     ft_warning('cannot print unknown object at this level');
-    str = '''FIXME: printing unknown objects is not supported''';
+    str = '''ERROR: cannot print unknown object at this level''';
 end

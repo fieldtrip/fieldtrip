@@ -5,7 +5,7 @@ function testOpenMEEGeeg
 
 % Copyright (C) 2010-2017, OpenMEEG developers
 
-addpath(cd) % Make sure current folder is in the path
+addpath(pwd) % Make sure current folder is in the path
 
 %% Set the position of the probe dipole
 dippos = [0 0 70];
@@ -13,8 +13,8 @@ dippos = [0 0 70];
 %% Set the radius and conductivities of each of the compartments
 
 % 4 Layers
-r = [85 88 92 100];
-c = [1 1/20 1/80 1];
+r = [100 92 88 85];
+c = [1 1/80 1/20 1];
 
 [rdms,mags] = run_bem_computation(r,c,dippos);
 
@@ -28,7 +28,7 @@ assert(norm(rdms-[0.019963 0.019962 0.10754])<thr)
 assert(norm(mags-[0.84467 0.84469 0.83887])<thr)
 
 % 3 Layers
-r = [88 92 100];
+r = [100 92 88];
 c = [1 1/80 1];
 
 [rdms,mags] = run_bem_computation(r,c,dippos);
@@ -38,8 +38,8 @@ assert(norm(rdms-[0.064093 0.064092 0.13532])<thr)
 assert(norm(mags-[1.0498 1.0498 1.0207])<thr)
 
 % 2 Layers
-r = [92 100];
-c = [1 1/4];
+r = [100 92];
+c = [1/4 1];
 
 [rdms,mags] = run_bem_computation(r,c,dippos);
 % assertElementsAlmostEqual(rdms, [0.15514 0.15514 0.1212], 'absolute', 1e-3)
@@ -75,24 +75,35 @@ function [rdms,mags] = run_bem_computation(r,c,dippos)
     end
 
     %% Create a triangulated mesh, the first boundary is inside
-    vol = [];
+    bnd = [];
     for ii=1:length(r)
-        vol.bnd(ii).pos = pos * r(ii);
-        vol.bnd(ii).tri = tri;
+        bnd(ii).pos = pos * r(ii);
+        bnd(ii).tri = tri;
     end
     
     
     %% Compute the BEM model
     cfg = [];
-    cfg.conductivity = c;
     cfg.method = 'openmeeg';
-
-    vol_bem = ft_prepare_headmodel(cfg, vol);
     
-    cfg.headmodel = vol_bem;
+    % vol structure only needs these elements;
+    % ft_prepare_headmodel should *not* be used!
+    vol_bem = [];
+    vol_bem.bnd = bnd;
+    vol_bem.cond = c;
+    vol_bem.type = 'openmeeg';
+
+    % ft_prepare_headmodel has a bug; likely the geom file does not match
+    % the order of the layers
+    %cfg.conductivity = c;
+    %vol_bem = ft_prepare_headmodel(cfg, bnd);
+    %vol_bem = rmfield(vol_bem,'mat');
+    
+    cfg.vol = vol_bem;
     cfg.grid.pos = dippos;
     cfg.grid.unit = 'mm';
     cfg.elec = sens;
+%    grid = ft_prepare_leadfield(cfg);
     grid = ft_prepare_leadfield(cfg);
 
     lf_openmeeg = grid.leadfield{1};

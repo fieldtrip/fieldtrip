@@ -8,12 +8,12 @@ neuromag2ft or by a different computer in the network.
 
 Then, the user can read from this server using any tools he/she
 wants. For more information on how to read from a Fieldtrip buffer
-server, please check http://fieldtrip.fcdonders.nl/tutorial/realtime
+server, please check http://www.fieldtriptoolbox.org/tutorial/realtime
 and
 http://www.bci2000.org/wiki/index.php/Programming_Tutorial:Working_with_the_FieldTrip_buffer.
 
 More information about neuromag2ft can be found at
-http://fieldtrip.fcdonders.nl/development/realtime/neuromag
+http://www.fieldtriptoolbox.org/development/realtime/neuromag
 
 == Running the neuromag2ft ==
 

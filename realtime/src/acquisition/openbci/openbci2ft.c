@@ -21,7 +21,7 @@
 #include "timestamp.h"
 
 #define OPENBCI_BUFLEN    33
-#define OPENBCI_CALIB1    (4.5   / (24 * (2^23-1))) /* in uV, for 24x gain */
+#define OPENBCI_CALIB1    (4.5   / (24 * (2^23-1))) /* in uV, assuming 24x gain */
 #define OPENBCI_CALIB2    (0.002 / (2^4))           /* in mG */
 
 int keepRunning = 1;
@@ -180,10 +180,10 @@ static int iniHandler(void* external, const char* section, const char* name, con
   configuration *local = (configuration*)external;
 
 #define MATCH(s, n) strcasecmp(section, s) == 0 && strcasecmp(name, n) == 0
-  if (MATCH("General", "port")) {
-    local->port = atoi(value);
-  } else if (MATCH("General", "blocksize")) {
+  if (MATCH("General", "blocksize")) {
     local->blocksize = atoi(value);
+  } else if (MATCH("General", "port")) {
+    local->port = atoi(value);
   } else if (MATCH("General", "hostname")) {
     local->hostname = strdup(value);
   } else if (MATCH("General", "serial")) {
@@ -462,10 +462,11 @@ int main(int argc, char *argv[]) {
 
   if (ISTRUE(config.daisy)) {
     fsample = 125;
+    /* have the user specify for all channels whether they are on or off */
   }
   else {
     fsample = 250;
-    /* the default setting is on, switch channels 9-16 off */
+    /* the default setting for all channels is on, switch channels 9-16 off */
     config.enable_chan9  = strdup("off");
     config.enable_chan10 = strdup("off");
     config.enable_chan11 = strdup("off");
@@ -941,7 +942,7 @@ int main(int argc, char *argv[]) {
       if (buf[32]!=0xC0)
         continue;
 
-      /* these two flags are both off if there is no daisy board */
+      /* these two booleans are both false if there is no daisy board */
       char lower = (ISTRUE(config.daisy) && (buf[1] % 2 == 1)); /* odd samples are for the lower 8 channels */
       char upper = (ISTRUE(config.daisy) && (buf[1] % 2 == 0)); /* even samples are for the upper 8 channels from the daisy board */
 
@@ -1016,7 +1017,7 @@ int main(int argc, char *argv[]) {
         /* virtual channel with sample numbers */
         if (ISTRUE (config.sample)) {
           if (ISTRUE (config.unwrap)) {
-            thissample += (buf[1] < prevsample ? 255 + buf[1]-prevsample : buf[1]-prevsample);
+            thissample += (buf[1] < prevsample ? 256 + buf[1]-prevsample : buf[1]-prevsample);
             prevsample  = buf[1];
           }
           else {

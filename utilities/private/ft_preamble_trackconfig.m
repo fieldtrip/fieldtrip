@@ -7,7 +7,7 @@
 %   ... regular code goes here ...
 %   ft_postamble trackconfig
 %
-% See also FT_POSTAMBLE_TRACKCONFIG
+% See also FT_PREAMBLE, FT_POSTAMBLE, FT_POSTAMBLE_TRACKCONFIG
 
 % Copyright (C) 2011-2012, Robert Oostenveld, DCCN
 %
@@ -28,9 +28,6 @@
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
-% otherwise the empty field would end up in the output cfg
-global ft_default
 
 % most FieldTrip functions should allow for configuration tracking, except for
 % the functions that take a cfg as input and return a cfg as output
