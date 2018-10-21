@@ -1,6 +1,7 @@
 #include <time.h>
 
 #ifdef PLATFORM_OSX
+#ifndef __CLOCK_AVAILABILITY
 
 /*
  * OS X did not have clock_gettime for a long time, whereas in the most recent
@@ -12,8 +13,6 @@
  *
  * See also https://github.com/zeromq/libzmq/issues/2175 where this is discussed.
  */
-
-#ifdef not(__CLOCK_AVAILABILITY)
 
 #define CLOCK_REALTIME 0
 
