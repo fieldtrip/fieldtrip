@@ -193,6 +193,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 	switch (request->def->command) {
 
 		case PUT_HDR:
+		case PUT_HDR_NORESPONSE:
 			if (verbose>1) fprintf(stderr, "dmarequest: PUT_HDR\n");
 			pthread_mutex_lock(&mutexheader);
 			pthread_mutex_lock(&mutexdata);
@@ -237,6 +238,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			break;
 
 		case PUT_DAT:
+		case PUT_DAT_NORESPONSE:
 			if (verbose>1) fprintf(stderr, "dmarequest: PUT_DAT\n");
 			pthread_mutex_lock(&mutexheader);
 			pthread_mutex_lock(&mutexdata);
@@ -300,6 +302,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			break;
 
 		case PUT_EVT:
+		case PUT_EVT_NORESPONSE:
 			if (verbose>1) fprintf(stderr, "dmarequest: PUT_EVT\n");
 			pthread_mutex_lock(&mutexheader);
 			pthread_mutex_lock(&mutexevent);
