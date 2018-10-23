@@ -33,18 +33,18 @@ PUT_HDR_NORESPONSE = 0x0501
 PUT_DAT_NORESPONSE = 0x0502
 PUT_EVT_NORESPONSE = 0x0503
 
-DATATYPE_CHAR       = 0
-DATATYPE_UINT8      = 1
-DATATYPE_UINT16     = 2
-DATATYPE_UINT32     = 3
-DATATYPE_UINT64     = 4
-DATATYPE_INT8       = 5
-DATATYPE_INT16      = 6
-DATATYPE_INT32      = 7
-DATATYPE_INT64      = 8
-DATATYPE_FLOAT32    = 9
-DATATYPE_FLOAT64    = 10
-DATATYPE_UNKNOWN    = 0xFFFFFFFF
+DATATYPE_CHAR    = 0
+DATATYPE_UINT8   = 1
+DATATYPE_UINT16  = 2
+DATATYPE_UINT32  = 3
+DATATYPE_UINT64  = 4
+DATATYPE_INT8    = 5
+DATATYPE_INT16   = 6
+DATATYPE_INT32   = 7
+DATATYPE_INT64   = 8
+DATATYPE_FLOAT32 = 9
+DATATYPE_FLOAT64 = 10
+DATATYPE_UNKNOWN = 0xFFFFFFFF
 
 CHUNK_UNSPECIFIED        = 0
 CHUNK_CHANNEL_NAMES      = 1
@@ -329,7 +329,7 @@ class Client:
         return H
 
     def putHeader(self, nChannels, fSample, dataType, labels=None,
-                  chunks=None):
+                  chunks=None, reponse=True):
         haveLabels = False
         extras = ''
 
@@ -359,14 +359,21 @@ class Client:
 
         sizeChunks = len(extras)
 
+        if reponse:
+            command = PUT_HDR
+        else:
+            command = PUT_HDR_NORESPONSE
+
         hdef = struct.pack('IIIfII', nChannels, 0, 0,
                            fSample, dataType, sizeChunks)
-        request = struct.pack('HHI', VERSION, PUT_HDR,
+        request = struct.pack('HHI', VERSION, command,
                               sizeChunks + len(hdef)) + hdef + extras
         self.sendRaw(request)
-        (status, bufsize, resp_buf) = self.receiveResponse()
-        if status != PUT_OK:
-            raise IOError('Header could not be written')
+
+        if reponse:
+            (status, bufsize, resp_buf) = self.receiveResponse()
+            if status != PUT_OK:
+                raise IOError('Header could not be written')
 
     def getData(self, index=None):
         """
@@ -443,7 +450,7 @@ class Client:
 
         return E
 
-    def putEvents(self, E):
+    def putEvents(self, E, reponse=True):
         """
         putEvents(E) -- writes a single or multiple events, depending on
         whether an 'Event' object, or a list of 'Event' objects is
@@ -460,13 +467,19 @@ class Client:
                 buf = buf + e.serialize()
                 num = num + 1
 
-        self.sendRequest(PUT_EVT, buf)
-        (status, bufsize, resp_buf) = self.receiveResponse()
+        if reponse:
+            command = PUT_EVT
+        else:
+            command = PUT_EVT_NORESPONSE
 
-        if status != PUT_OK:
-            raise IOError('Events could not be written.')
+        self.sendRequest(command, buf)
 
-    def putData(self, D):
+        if reponse:
+            (status, bufsize, resp_buf) = self.receiveResponse()
+            if status != PUT_OK:
+                raise IOError('Events could not be written.')
+
+    def putData(self, D, response=True):
         """
         putData(D) -- writes samples that must be given as a NUMPY array,
         samples x channels. The type of the samples (D) and the number of
@@ -485,13 +498,19 @@ class Client:
 
         dataBufSize = len(dataBuf)
 
-        request = struct.pack('HHI', VERSION, PUT_DAT, 16 + dataBufSize)
+        if reponse:
+            command = PUT_DAT
+        else:
+            command = PUT_DAT_NORESPONSE
+
+        request = struct.pack('HHI', VERSION, command, 16 + dataBufSize)
         dataDef = struct.pack('IIII', nChan, nSamp, dataType, dataBufSize)
         self.sendRaw(request + dataDef + dataBuf)
 
-        (status, bufsize, resp_buf) = self.receiveResponse()
-        if status != PUT_OK:
-            raise IOError('Samples could not be written.')
+        if response:
+            (status, bufsize, resp_buf) = self.receiveResponse()
+            if status != PUT_OK:
+                raise IOError('Samples could not be written.')
 
     def poll(self):
 
