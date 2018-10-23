@@ -90,11 +90,11 @@ end
 % old data structures may use latency/frequency instead of time/freq. It is
 % unclear when these were introduced and removed again, but they were never
 % used by any FieldTrip function itself
-if isfield(source, 'frequency'),
+if isfield(source, 'frequency')
   source.freq = source.frequency;
   source      = rmfield(source, 'frequency');
 end
-if isfield(source, 'latency'),
+if isfield(source, 'latency')
   source.time = source.latency;
   source      = rmfield(source, 'latency');
 end
