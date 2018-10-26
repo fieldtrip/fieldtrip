@@ -50,16 +50,23 @@ v = [cc(1,:)', cc(2,:)', cc(3,:)'];
 vx = [zeros(1,N)', cc(2,:)', cc(3,:)']; % on the x-axis
 vy = [cc(1,:)', zeros(1,N)', cc(3,:)']; % on the y-axis
 vz = [cc(1,:)', cc(2,:)', zeros(1,N)']; % on the z-axis
- 
-for j = 1:N
-  % find the angles of two vectors opposing the axes
-  thetax(j) = acos(dot(v(j,:),vx(j,:))/(norm(v(j,:))*norm(vx(j,:))));
-  thetay(j) = acos(dot(v(j,:),vy(j,:))/(norm(v(j,:))*norm(vy(j,:))));
-  thetaz(j) = acos(dot(v(j,:),vz(j,:))/(norm(v(j,:))*norm(vz(j,:))));
- 
-  % convert to degrees
-  cc(4,j) = (thetax(j) * (180/pi));
-  cc(5,j) = (thetay(j) * (180/pi));
-  cc(6,j) = (thetaz(j) * (180/pi));
-end
+
+% for j = 1:N
+%   % find the angles of two vectors opposing the axes
+%   thetax = acos(dot(v(j,:),vx(j,:))/(norm(v(j,:))*norm(vx(j,:))));
+%   thetay = acos(dot(v(j,:),vy(j,:))/(norm(v(j,:))*norm(vy(j,:))));
+%   thetaz = acos(dot(v(j,:),vz(j,:))/(norm(v(j,:))*norm(vz(j,:))));
+%  
+%   % convert to degrees
+%   cc(4,j) = (thetax * (180/pi));
+%   cc(5,j) = (thetay * (180/pi));
+%   cc(6,j) = (thetaz * (180/pi));
+% end
+
+thetax = acos(sum(v.*vx,2)./sqrt(sum(v.^2,2).*sum(vx.^2,2)));
+thetay = acos(sum(v.*vy,2)./sqrt(sum(v.^2,2).*sum(vy.^2,2)));
+thetaz = acos(sum(v.*vz,2)./sqrt(sum(v.^2,2).*sum(vz.^2,2)));
+cc(4,:) = thetax' .* (180/pi);
+cc(5,:) = thetay' .* (180/pi);
+cc(6,:) = thetaz' .* (180/pi);
 
