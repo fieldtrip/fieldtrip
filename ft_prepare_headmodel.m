@@ -258,9 +258,7 @@ switch cfg.method
     if isfield(data, 'pos') && isfield(data, 'tri')
       geometry = data;
     elseif isfield(data, 'transform') && isfield(data, 'dim')
-      tmpcfg = [];
-      tmpcfg.numvertices = cfg.numvertices;
-      tmpcfg.tissue = cfg.tissue;
+      tmpcfg   = keepfields(cfg, {'numvertices', 'tissue', 'spmverion'});
       geometry = ft_prepare_mesh(tmpcfg, data);
     else
       ft_error('Either a segmented MRI or data with closed triangulated mesh is required as data input for the bemcp, dipoli or openmeeg method');
@@ -291,9 +289,7 @@ switch cfg.method
     if input_mesh || input_pos
       geometry = data;
     elseif input_seg
-      tmpcfg = [];
-      tmpcfg.numvertices = cfg.numvertices;
-      tmpcfg.tissue = cfg.tissue;
+      tmpcfg   = keepfields(cfg, {'numvertices', 'tissue', 'spmverion'});
       geometry = ft_prepare_mesh(tmpcfg, data);
     elseif input_elec
       geometry.pos = data.chanpos;
@@ -333,8 +329,7 @@ switch cfg.method
     if input_mesh || input_pos
       geometry = data;
     elseif input_seg
-      tmpcfg = [];
-      tmpcfg.numvertices = cfg.numvertices;
+      tmpcfg = keepfields(cfg, {'numvertices' 'spmversion'});
       if ~isempty(cfg.tissue)
         % extract the specified surface
         tmpcfg.tissue = cfg.tissue;
