@@ -677,7 +677,11 @@ elseif isfolder(filename) && most(filetype_check_extension({ls.name}, '.ntt'))
   type = 'neuralynx_ds';
   manufacturer = 'Neuralynx';
   content = 'tetrode recordings ';
-
+  
+elseif filetype_check_extension(filename, '.mat') && contains(filename, 'times_')
+  type = 'wave_clus';
+  manufacturer = 'Department of Engineering, University of Leicester, UK';
+  content = 'sorted spikes';  
 elseif isfolder(p) && exist(fullfile(p, 'header'), 'file') && exist(fullfile(p, 'samples'), 'file') && exist(fullfile(p, 'events'), 'file')
   type = 'fcdc_buffer_offline';
   manufacturer = 'Donders Centre for Cognitive Neuroimaging';
@@ -953,7 +957,19 @@ elseif filetype_check_extension(filename, '.dig')
   type = 'curry_dig';
   manufacturer = 'Curry';
   content = 'digitizer file';
-
+elseif filetype_check_extension(filename, '.cdt')
+  type = 'curry_cdt';
+  manufacturer = 'Curry';
+  content = 'Curry8 data file';
+elseif filetype_check_extension(filename, '.cef')
+  type = 'curry_cef';
+  manufacturer = 'Curry';
+  content = 'Curry event file';
+elseif filetype_check_extension(filename, '.dpa')
+  type = 'curry_dpa';
+  manufacturer = 'Curry';
+  content = 'Curry8 sensor file';
+  
 elseif filetype_check_extension(filename, '.txt') && filetype_check_header(filename, '#Study')
   type = 'imotions_txt';
   manufacturer = 'iMotions';

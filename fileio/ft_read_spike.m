@@ -21,6 +21,7 @@ function [spike] = ft_read_spike(filename, varargin)
 %   'plexon_plx'
 %   'neuroshare'
 %   'neurosim_spikes'
+%   'wave_clus'
 %
 % The output spike structure usually contains
 %   spike.label     = 1xNchans cell-array, with channel labels
@@ -32,7 +33,7 @@ function [spike] = ft_read_spike(filename, varargin)
 %
 % See also FT_DATATYPE_SPIKE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT
 
-% Copyright (C) 2007-2011 Robert Oostenveld
+% Copyright (C) 2007-2018 Robert Oostenveld, Arjen Stolk
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -87,6 +88,27 @@ switch spikeformat
     spike.waveform  = {};   % this is unknown
     spike.unit      = {};   % this is unknown
     spike.hdr       = H;
+  
+  case 'wave_clus'
+    load(filename, 'cluster_class', 'spikes', 'par'); % load the mat file
+    clusters = sort(unique(cluster_class(:,1))); % detected clusters
+    clusters(clusters==0) = []; % remove rejected cluster (indexed by zeros)
+    nclust = numel(clusters);
+    [p, f, x] = fileparts(filename);
+    t = tokenize(f, '_'); % extract channel name
+    spike.label     = cell(1,nclust);
+    spike.unit      = cell(1,nclust);
+    spike.waveform  = cell(1,nclust);
+    spike.timestamp = cell(1,nclust);
+    spike.hdr       = par;
+    for cl = 1:nclust
+      unit_idx                  = cluster_class(:,1)==cl;
+      spike.label{cl}           = [t{2} '-' num2str(cl)];
+      spike.timestamp{cl}       = cluster_class(unit_idx,2)';
+      spike.waveform{cl}(1,:,:) = spikes(unit_idx,:)';
+      spike.unit{cl}            = cluster_class(unit_idx,1)';
+    end
+    fprintf('note that wave_clus timestamps are typically expressed in millisec and not in samples\n')
     
   case 'neuralynx_nse'
     % single channel file, read all records

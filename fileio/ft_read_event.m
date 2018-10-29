@@ -590,6 +590,19 @@ switch eventformat
     % contact Robert Oostenveld if you are interested in real-time acquisition on the CTF system
     % read the events from shared memory
     event = read_shm_event(filename, varargin{:});
+        
+  case {'curry_dat', 'curry_cdt'}  
+    if isempty(hdr)
+      hdr = ft_read_header(filename);
+    end
+    event = [];
+    for i=1:size(hdr.orig.events, 2)
+        event(i).type     = 'trigger';
+        event(i).value    = hdr.orig.events(2, i);
+        event(i).sample   = hdr.orig.events(1, i);
+        event(i).offset   = hdr.orig.events(3, i)-hdr.orig.events(1, i);
+        event(i).duration = hdr.orig.events(4, i)-hdr.orig.events(1, i);
+    end
     
   case 'dataq_wdq'
     if isempty(hdr)

@@ -223,7 +223,7 @@ void *tcpserver(void *arg) {
       }
 
       /* place the socket back in blocking mode, this is needed for tcpsocket  */
-#if defined(PLATFORM_WIN32) || defined(PLATFORM_WIN64) 
+#if defined(PLATFORM_WIN32) || defined(PLATFORM_WIN64)
       enable = 0;
       ioctlsocket(c, FIONBIO, &enable);
 #else

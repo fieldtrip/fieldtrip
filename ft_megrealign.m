@@ -282,7 +282,7 @@ for i=1:Ntrials
     else
       %M    = rigidbodyJM(hmdat(:,1))
       M    = ft_headcoordinates(hmdat(1:3,1),hmdat(4:6,1),hmdat(7:9,1));
-      grad = ft_transform_sens(M, data.grad);
+      grad = ft_transform_geometry(M, data.grad);
     end
 
     volcfg.grad = grad;
