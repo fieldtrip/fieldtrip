@@ -32,7 +32,7 @@ function [coord_inf] = warp_fsinflated(cfg, elec)
 
 subj_pial = ft_read_headshape(cfg.headshape);
 [PATHSTR, NAME] = fileparts(cfg.headshape); % lh or rh
-if ~exist([PATHSTR filesep NAME '.inflated'],'file');
+if ~exist([PATHSTR filesep NAME '.inflated'],'file')
   ft_error([PATHSTR filesep NAME filesep 'inflated cannot be found'])
 end
 subj_inflated = ft_read_headshape([PATHSTR filesep NAME '.inflated']);
@@ -40,7 +40,7 @@ subj_inflated = ft_read_headshape([PATHSTR filesep NAME '.inflated']);
 for e = 1:numel(elec.label)
   % subject space (3D surface): electrode pos -> pial vertex index
   dist = sqrt(sum(((subj_pial.pos - repmat(elec.elecpos(e,:), size(subj_pial.pos,1), 1)).^2),2));
-  [~, minidx] = min(dist);
+  [dum, minidx] = min(dist);
   
   % template space (3D surface): pial/inflated vertex index -> inflated brain pos
   coord_inf(e,:) = subj_inflated.pos(minidx,:);

@@ -5,6 +5,8 @@
 %   ft_postamble previous inputvar
 %   ft_postamble previous inputvar1 inputvar2
 %   ft_postamble previous varargin
+%
+% See also FT_PREAMBLE, FT_POSTAMBLE
 
 % Copyright (C) 2011-2012, Robert Oostenveld, DCCN
 %

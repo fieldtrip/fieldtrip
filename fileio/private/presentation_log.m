@@ -91,7 +91,7 @@ type      = table1.event_type;
 value     = table1.code;
 sample    = num2cell(nan(numevent, 1));
 timestamp = num2cell(table1.time);
-duration  = num2cell(table1.duration);
+duration  = cell(numevent, 1); % num2cell(table1.duration); % don't put the duration values in, because the units are non-defined
 offset    = cell(numevent, 1);
 
 event = struct('type', type, 'value', value, 'sample', sample, 'timestamp', timestamp, 'offset', offset, 'duration', duration);

@@ -28,7 +28,7 @@ function timeValOut = mff_decodetime(timeVal)
 
     % remove GMT part
     microSec     = 0.0000000000115251168608665466308593750000000;
-    timeValOut   = datenum(timeVal, 'yyyy-mm-ddTHH:MM:SS.FFF') + str2double(timeVal(24:26))*microSec;
+    timeValOut   = datenum(timeVal(1:23), 'yyyy-mm-ddTHH:MM:SS.FFF') + str2double(timeVal(24:26))*microSec;
 
 %     indDash = find(timeVal == '-');
 %     if indDash(end) > 10 else indDash = length(timeVal)+1; end;

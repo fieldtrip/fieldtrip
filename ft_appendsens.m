@@ -148,14 +148,14 @@ end
 
 % concatenate the main fields and remove duplicates
 sens.label = cat(1,label{:});
-[~, labidx] = unique(sens.label, 'stable');
+[dum, labidx] = unique(sens.label, 'stable');
 if ~isequal(numel(labidx), numel(sens.label))
   fprintf('removing duplicate labels\n')
   sens.label = sens.label(labidx);
 end
 
 sens.chanpos = cat(1,chanpos{:});
-[~, chanidx] = unique(sens.chanpos, 'rows', 'stable');
+[dum, chanidx] = unique(sens.chanpos, 'rows', 'stable');
 if ~isequal(numel(chanidx), size(sens.chanpos,1))
   fprintf('removing duplicate channels\n')
   sens.chanpos = sens.chanpos(chanidx,:);
@@ -184,7 +184,7 @@ end
 
 if haselecpos
   sens.elecpos = cat(1,elecpos{:});
-  [~, elecidx, elecidx2] = unique(sens.elecpos, 'rows', 'stable');
+  [dum, elecidx, elecidx2] = unique(sens.elecpos, 'rows', 'stable');
   if ~isequal(numel(elecidx), size(sens.elecpos,1))
     fprintf('removing duplicate electrodes\n')
     sens.elecpos = sens.elecpos(elecidx,:);
@@ -206,7 +206,7 @@ end
 
 if hasoptopos
   sens.optopos = cat(1,optopos{:});
-  [~, optoidx, optoidx2] = unique(sens.optopos, 'rows', 'stable');
+  [dum, optoidx, optoidx2] = unique(sens.optopos, 'rows', 'stable');
   if ~isequal(numel(optoidx), size(sens.optopos,1))
     fprintf('removing duplicate optodes\n')
     sens.optopos = sens.optopos(optoidx,:);
@@ -228,7 +228,7 @@ end
 
 if hascoilpos
   sens.coilpos = cat(1,coilpos{:});
-  [~, coilidx, coilidx2] = unique(sens.coilpos, 'rows', 'stable');
+  [dum, coilidx, coilidx2] = unique(sens.coilpos, 'rows', 'stable');
   if ~isequal(numel(coilidx), size(sens.coilpos,1))
     fprintf('removing duplicate coils\n')
     sens.coilpos = sens.coilpos(coilidx,:);

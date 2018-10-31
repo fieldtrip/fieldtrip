@@ -103,7 +103,7 @@ else
     0 0 1 -10
     0 0 0 1
     ];
-  elec_aligned2 = ft_transform_sens(transform, elec_aligned);
+  elec_aligned2 = ft_transform_geometry(transform, elec_aligned);
 end
 
 %%%%%%%%%

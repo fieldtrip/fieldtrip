@@ -427,9 +427,10 @@ switch eventformat
     
   case 'AnyWave'
     event = read_ah5_markers(hdr, filename);
+    
   case 'brainvision_vmrk'
     fid=fopen(filename,'rt');
-    if fid==-1,
+    if fid==-1
       ft_error('cannot open BrainVision marker file')
     end
     line = [];
@@ -589,10 +590,23 @@ switch eventformat
     % contact Robert Oostenveld if you are interested in real-time acquisition on the CTF system
     % read the events from shared memory
     event = read_shm_event(filename, varargin{:});
+        
+  case {'curry_dat', 'curry_cdt'}  
+    if isempty(hdr)
+      hdr = ft_read_header(filename);
+    end
+    event = [];
+    for i=1:size(hdr.orig.events, 2)
+        event(i).type     = 'trigger';
+        event(i).value    = hdr.orig.events(2, i);
+        event(i).sample   = hdr.orig.events(1, i);
+        event(i).offset   = hdr.orig.events(3, i)-hdr.orig.events(1, i);
+        event(i).duration = hdr.orig.events(4, i)-hdr.orig.events(1, i);
+    end
     
   case 'dataq_wdq'
     if isempty(hdr)
-      hdr     = ft_read_header(filename, 'headerformat', 'dataq_wdq');
+      hdr = ft_read_header(filename, 'headerformat', 'dataq_wdq');
     end
     trigger  = read_wdq_data(filename, hdr.orig, 'lowbits');
     [ix, iy] = find(trigger>1); %it seems as if the value of 1 is meaningless
@@ -2139,6 +2153,17 @@ switch eventformat
       event(k).duration  = 1;
       event(k).offset    = [];
     end
+  case 'biopac_acq'
+    % this one has an implementation that I guess is intended
+    % to work according to the 'otherwise' case, yet it requires
+    % a two-pass through the function, needing a header
+    try
+      hdr   = feval(eventformat, filename);
+      event = feval(eventformat, filename, hdr);
+    catch
+      ft_warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format (%s)', eventformat);
+      event = [];
+    end
     
   otherwise
     % attempt to run eventformat as a function
@@ -2146,6 +2171,7 @@ switch eventformat
     % if it fails, the regular unsupported warning message is thrown
     try
       event = feval(eventformat, filename);
+      
     catch
       ft_warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format (%s)', eventformat);
       event = [];

@@ -65,6 +65,7 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.trigger.eventvalue      = string or number
 %   cfg.presentation.eventtype  = string (default = [])
 %   cfg.presentation.eventvalue = string or number
+%   cfg.presentation.skip       = 'last'/'first'/'none'
 % to indicate how triggers or volumes match the presentation events.
 %
 % General BIDS options that apply to all data types are
@@ -183,9 +184,11 @@ cfg.presentationfile        = ft_getopt(cfg, 'presentationfile');             % 
 cfg.presentation            = ft_getopt(cfg, 'presentation');
 cfg.presentation.eventtype  = ft_getopt(cfg.presentation, 'eventtype');
 cfg.presentation.eventvalue = ft_getopt(cfg.presentation, 'eventvalue');
+cfg.presentation.skip       = ft_getopt(cfg.presentation, 'skip',  'last'); % this is a sensible default for fMRI, for MEG one should probably do 'none'
 cfg.trigger                 = ft_getopt(cfg, 'trigger');
 cfg.trigger.eventtype       = ft_getopt(cfg.trigger, 'eventtype');
 cfg.trigger.eventvalue      = ft_getopt(cfg.trigger, 'eventvalue');
+cfg.trigger.event           = ft_getopt(cfg.trigger, 'event');
 
 cfg.mri                     = ft_getopt(cfg, 'mri');
 cfg.mri.deface              = ft_getopt(cfg.mri, 'deface', 'no');             % deface the anatomical MRI
@@ -274,7 +277,7 @@ cfg.meg.SubjectArtefactDescription    = ft_getopt(cfg.meg, 'SubjectArtefactDescr
 cfg.meg.AssociatedEmptyRoom           = ft_getopt(cfg.meg, 'AssociatedEmptyRoom'         ); % OPTIONAL. Relative path in BIDS folder structure to empty-room file associated with the subject's MEG recording. The path needs to use forward slashes instead of backward slashes (e.g. "sub-emptyroom/ses-<label>/meg/sub-emptyroom_ses-<label>_ta sk-noise_run-<label>_meg.ds").
 
 %% EEG specific fields
-cfg.eeg.EEGSamplingFrequency          = ft_getopt(cfg.eeg, 'EEGSamplingFrequency'        ); % Sampling frequency (in Hz) of the EEG recording (e.g. 2400)
+cfg.eeg.SamplingFrequency             = ft_getopt(cfg.eeg, 'SamplingFrequency'        ); % Sampling frequency (in Hz) of the EEG recording (e.g. 2400)
 cfg.eeg.EEGChannelCount               = ft_getopt(cfg.eeg, 'EEGChannelCount'             ); % Number of EEG channels included in the recording (e.g. 128).
 cfg.eeg.EOGChannelCount               = ft_getopt(cfg.eeg, 'EOGChannelCount'             ); % Number of EOG channels included in the recording (e.g. 2).
 cfg.eeg.ECGChannelCount               = ft_getopt(cfg.eeg, 'ECGChannelCount'             ); % Number of ECG channels included in the recording (e.g. 1).
@@ -294,12 +297,35 @@ cfg.eeg.EpochLength                   = ft_getopt(cfg.eeg, 'EpochLength'        
 cfg.eeg.DeviceSoftwareVersion         = ft_getopt(cfg.eeg, 'DeviceSoftwareVersion'       ); % Manufacturer's designation of the acquisition software.
 cfg.eeg.SubjectArtefactDescription    = ft_getopt(cfg.eeg, 'SubjectArtefactDescription'  ); % Freeform description of the observed subject artefact and its possible cause (e.g. "Vagus Nerve Stimulator", "non-removable implant"). If this field is left empty, it will be interpreted as absence of  a source of (constantly present) artifacts.
 cfg.eeg.SimultaneousRecording         = ft_getopt(cfg.eeg, 'SimultaneousRecording'       ); % indicate over acquired modalities (keys are: fMRI, PET, MEG, NIRS)
-ft_warning('EEG metadata fields may need to be updated with the draft specification at http://bit.ly/bids_eeg');
 
-%% IEEG specific fields
-cfg.ieeg.SamplingFrequency            = ft_getopt(cfg.ieeg, 'SamplingFrequency'          );
-cfg.ieeg.PowerLineFrequency           = ft_getopt(cfg.ieeg, 'PowerLineFrequency'         );
-ft_warning('iEEG metadata fields need to be updated with the draft specification at http://bit.ly/bids_ieeg');
+%% iEEG specific fields
+cfg.ieeg.SamplingFrequency               = ft_getopt(cfg, 'SamplingFrequency'              ); % REQUIRED. Sampling frequency (in Hz) of all the iEEG channels in the recording (e.g., 2400). All other channels should have frequency specified as well in the channels.tsv file.
+cfg.ieeg.PowerLineFrequency              = ft_getopt(cfg, 'PowerLineFrequency'             ); % REQUIRED. Frequency (in Hz) of the power grid where the iEEG recording was done (i.e. 50 or 60)
+cfg.ieeg.HardwareFilters                 = ft_getopt(cfg, 'HardwareFilters'                ); % REQUIRED. List of hardware (amplifier) filters applied with  key:value pairs of filter parameters and their values.
+cfg.ieeg.SoftwareFilters                 = ft_getopt(cfg, 'SoftwareFilters'                ); % REQUIRED. List of temporal software filters applied or ideally  key:value pairs of pre-applied filters and their parameter values. (n/a if none).
+cfg.ieeg.Manufacturer                    = ft_getopt(cfg, 'Manufacturer'                   ); % RECOMMENDED. Manufacturer of the amplifier system  (e.g. "TDT, Blackrock")
+cfg.ieeg.ManufacturersModelName          = ft_getopt(cfg, 'ManufacturersModelName'         ); % RECOMMENDED. Manufacturer’s designation of the iEEG amplifier model.
+cfg.ieeg.ECOGChannelCount                = ft_getopt(cfg, 'ECOGChannelCount'               ); % RECOMMENDED. Number of iEEG surface channels included in the recording (e.g. 120)
+cfg.ieeg.SEEGChannelCount                = ft_getopt(cfg, 'SEEGChannelCount'               ); % RECOMMENDED. Number of iEEG depth channels included in the recording (e.g. 8)
+cfg.ieeg.EEGChannelCount                 = ft_getopt(cfg, 'EEGChannelCount'                ); % RECOMMENDED. Number of scalp EEG channels recorded simultaneously (e.g. 21)
+cfg.ieeg.EOGChannelCount                 = ft_getopt(cfg, 'EOGChannelCount'                ); % RECOMMENDED. Number of EOG channels
+cfg.ieeg.ECGChannelCount                 = ft_getopt(cfg, 'ECGChannelCount'                ); % RECOMMENDED. Number of ECG channels
+cfg.ieeg.EMGChannelCount                 = ft_getopt(cfg, 'EMGChannelCount'                ); % RECOMMENDED. Number of EMG channels
+cfg.ieeg.MiscChannelCount                = ft_getopt(cfg, 'MiscChannelCount'               ); % RECOMMENDED. Number of miscellaneous analog channels for auxiliary  signals
+cfg.ieeg.TriggerChannelCount             = ft_getopt(cfg, 'TriggerChannelCount'            ); % RECOMMENDED. Number of channels for digital (TTL bit level) triggers
+cfg.ieeg.RecordingDuration               = ft_getopt(cfg, 'RecordingDuration'              ); % RECOMMENDED. Length of the recording in seconds (e.g. 3600)
+cfg.ieeg.RecordingType                   = ft_getopt(cfg, 'RecordingType'                  ); % RECOMMENDED. Defines whether the recording is  “continuous” or  “epoched”; this latter limited to time windows about events of interest (e.g., stimulus presentations, subject responses etc.)
+cfg.ieeg.EpochLength                     = ft_getopt(cfg, 'EpochLength'                    ); % RECOMMENDED. Duration of individual epochs in seconds (e.g. 1) in case of epoched data
+cfg.ieeg.SubjectArtefactDescription      = ft_getopt(cfg, 'SubjectArtefactDescription'     ); % RECOMMENDED. Freeform description of the observed subject artefact and its possible cause (e.g. “door open”, ”nurse walked into room at 2 min”, ”seizure at 10 min”). If this field is left empty, it will be interpreted as absence of artifacts.
+cfg.ieeg.SoftwareVersions                = ft_getopt(cfg, 'SoftwareVersions'               ); % RECOMMENDED. Manufacturer’s designation of the acquisition software.
+cfg.ieeg.iEEGReference                   = ft_getopt(cfg, 'iEEGReference'                  ); % REQUIRED. General description of the reference scheme used and (when applicable) of location of the reference electrode in the raw recordings (e.g. "left mastoid”, “bipolar”, “T01” for electrode with name T01, “intracranial electrode on top of a grid, not included with data”, “upside down electrode”). If different channels have a different reference, this field should have a general description and the channel specific reference should be defined in the _channels.tsv file.
+cfg.ieeg.ElectrodeManufacturer           = ft_getopt(cfg, 'ElectrodeManufacturer'          ); % RECOMMENDED. can be used if all electrodes are of the same manufacturer (e.g. AD-TECH, DIXI). If electrodes of different manufacturers are used, please use the corresponding table in the _electrodes.tsv file.
+cfg.ieeg.ElectrodeManufacturersModelName = ft_getopt(cfg, 'ElectrodeManufacturersModelName'); % RECOMMENDED. If different electrode types are used, please use the corresponding table in the _electrodes.tsv file.
+cfg.ieeg.iEEGGround                      = ft_getopt(cfg, 'iEEGGround'                     ); % RECOMMENDED. Description  of the location of the ground electrode (“placed on right mastoid (M2)”).
+cfg.ieeg.iEEGPlacementScheme             = ft_getopt(cfg, 'iEEGPlacementScheme'            ); % RECOMMENDED. Freeform description of the placement of the iEEG electrodes. Left/right/bilateral/depth/surface (e.g. “left frontal grid and bilateral hippocampal depth” or “surface strip and STN depth” or “clinical indication bitemporal, bilateral temporal strips and left grid”).
+cfg.ieeg.iEEGElectrodeGroups             = ft_getopt(cfg, 'iEEGElectrodeGroups'            ); % RECOMMENDED. Field to describe the way electrodes are grouped into strips, grids or depth probes e.g. {'grid1': "10x8 grid on left temporal pole", 'strip2': "1x8 electrode strip on xxx"}.
+cfg.ieeg.ElectricalStimulation           = ft_getopt(cfg, 'ElectricalStimulation'          ); % OPTIONAL. Boolean field to specify if electrical stimulation was done during the recording (options are “true” or “false”). Parameters for event-like stimulation should be specified in the _events.tsv file (see example underneath).
+cfg.ieeg.ElectricalStimulationParameters = ft_getopt(cfg, 'ElectricalStimulationParameters'); % OPTIONAL. Free form description of stimulation parameters, such as frequency, shape etc. Specific onsets can be specified in the _events.tsv file. Specific shapes can be described here in freeform text.
 
 %% MR Scanner Hardware
 cfg.mri.MagneticFieldStrength         = ft_getopt(cfg.mri, 'MagneticFieldStrength'          ); % Nominal field strength of MR magnet in Tesla. Corresponds to DICOM Tag 0018,0087 "Magnetic Field Strength" .
@@ -377,6 +403,12 @@ else
   typ = ft_filetype(cfg.headerfile);
 end
 
+% determine the sidecar files that are required
+need_mri_json         = false;
+need_meg_json         = false;
+need_eeg_json         = false;
+need_ieeg_json        = false;
+
 switch typ
   case {'nifti', 'nifti2', 'nifti_fsl'}
     mri = ft_read_mri(cfg.dataset);
@@ -386,13 +418,15 @@ switch typ
     else
       dcm = [];
     end
+    need_mri_json = true;
     
   case 'dicom'
     mri = ft_read_mri(cfg.dataset);
     dcm = dicominfo(cfg.dataset);
+    need_mri_json = true;
     
   case 'volume'
-    % the data is not on disk but has been passed as input argument
+    % the input data structure represents imaging data
     mri = varargin{1};
     if ~isempty(cfg.mri.dicomfile)
       % read the header details from the dicom matching file that was specified by the user
@@ -404,14 +438,53 @@ switch typ
     else
       dcm = [];
     end
+    need_mri_json = true;
     
-  case 'raw'
-    % the data is not on disk, but has been passed as input argument
-    hdr = ft_fetch_header(varargin{1});
-    trigger = ft_fetch_event(varargin{1});
+  case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275', 'neuromag_fif', 'neuromag122', 'neuromag306'}
+    % it is MEG data from disk and in a supported format
+    hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false);
+    if isempty(cfg.trigger.event)
+      trigger = ft_read_event(cfg.datafile, 'header', hdr);
+    else
+      % use the triggers as specified in the cfg
+      trigger = cfg.trigger.event;
+    end
     if ~isequal(cfg.dataset, cfg.outputfile)
       % the data should be converted and written to disk
-      dat = ft_fetch_data(varargin{1}, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
+      dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
+    end
+    need_meg_json = true;
+    
+  case {'brainvision_vhdr', 'edf', 'eeglab_set'}
+    % it is EEG data from disk and in a supported format
+    hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false);
+    if isempty(cfg.trigger.event)
+      trigger = ft_read_event(cfg.datafile, 'header', hdr);
+    else
+      % use the triggers as specified in the cfg
+      trigger = cfg.trigger.event;
+    end
+    if ~isequal(cfg.dataset, cfg.outputfile)
+      % the data should be converted and written to disk
+      dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
+    end
+    need_eeg_json = true;
+    
+  case 'raw'
+    % the input data structure represents raw electrophysiology data, which will be written in BrainVision format
+    ft_warning('assuming that the input data structure represents EEG');
+    need_eeg_json = true;
+    
+    % the data is not on disk, but has been passed as input argument
+    % it should be written to disk in a supported file format
+    hdr = ft_fetch_header(varargin{1});
+    dat = ft_fetch_data(varargin{1}, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
+    
+    if isempty(cfg.trigger.event)
+      trigger = ft_fetch_event(varargin{1});
+    else
+      % use the triggers as specified in the cfg
+      trigger = cfg.trigger.event;
     end
     if ft_senstype(varargin{1}, 'ctf') || ft_senstype(varargin{1}, 'neuromag')
       % use the subsequent MEG-specific handling for the JSON and TSV sidecar files
@@ -419,34 +492,30 @@ switch typ
     end
     
   otherwise
-    % assume it is electrophysiological data, it can be either MEG, EEG or iEEG
+    % it is EEG data from disk but not in a supported format
+    ft_warning('assuming that the dataset represents EEG');
+    assert(~isempty(cfg.outputfile) && ~isequal(cfg.dataset, cfg.outputfile), 'unsupported dataset format for BIDS, you should specify cfg.outputfile');
+    
+    % it will be written to disk in BrainVision format
     hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false);
-    trigger = ft_read_event(cfg.datafile, 'header', hdr);
-    if ~isequal(cfg.dataset, cfg.outputfile)
-      % the data should be converted and written to disk
-      dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
+    dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
+    
+    if isempty(cfg.trigger.event)
+      trigger = ft_read_event(cfg.datafile, 'header', hdr);
+    else
+      % use the triggers as specified in the cfg
+      trigger = cfg.trigger.event;
     end
+    need_eeg_json = true;
     
 end % switch typ
 
-% in case of functional data ensure that all channels have the correct details
-if exist('hdr', 'var')
-  fn = {'name' 'type' 'units' 'description' 'sampling_frequency' 'low_cutoff' 'high_cutoff' 'notch' 'software_filters' 'status' 'status_description'};
-  for i=1:numel(fn)
-    if numel(cfg.channels.(fn{i}))==1
-      cfg.channels.(fn{i}) = repmat(cfg.channels.(fn{i}), hdr.nChans, 1);
-    end
-  end
-end
-
-if ~isempty(cfg.presentationfile)
-  presentation = ft_read_event(cfg.presentationfile);
-else
-  presentation = [];
-end
+need_events_tsv       = need_meg_json || need_eeg_json || need_ieeg_json || (need_mri_json && contains(cfg.outputfile, 'task'));
+need_channels_tsv     = need_meg_json || need_eeg_json || need_ieeg_json;
+need_coordsystem_json = need_meg_json; % FIXME also needed when EEG and iEEG electrodes are present
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% construct the json and tsv files
+%% get the defaults and user-specified settings for each possible sidecar file
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % start with empty metadata descriptions
@@ -464,11 +533,6 @@ fn = fn(~cellfun(@isempty, regexp(fn, '[A-Z].*')));
 generic_defaults = keepfields(cfg, fn);
 
 % make the relevant selection, all json fields start with a capital letter
-fn = fieldnames(cfg.coordsystem);
-fn = fn(~cellfun(@isempty, regexp(fn, '[A-Z].*')));
-coordsystem_defaults = keepfields(cfg.coordsystem, fn);
-
-% make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg.mri);
 fn = fn(~cellfun(@isempty, regexp(fn, '[A-Z].*')));
 mri_defaults = keepfields(cfg.mri, fn);
@@ -484,30 +548,161 @@ fn = fn(~cellfun(@isempty, regexp(fn, '[A-Z].*')));
 eeg_defaults = keepfields(cfg.eeg, fn);
 
 % make the relevant selection, all json fields start with a capital letter
-fn = fieldnames(cfg.ieeg);
+fn = fieldnames(cfg.coordsystem);
 fn = fn(~cellfun(@isempty, regexp(fn, '[A-Z].*')));
-ieeg_defaults = keepfields(cfg.ieeg, fn);
+coordsystem_defaults = keepfields(cfg.coordsystem, fn);
 
-switch typ
-  case {'nifti', 'nifti2', 'nifti_fsl', 'dicom', 'volume'}
-    % quite some information can be obtained from the header
-    mri_json = keepfields(dcm, fn);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% construct the json and tsv files
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% need_mri_json
+if need_mri_json
+  % get the available information from the DICOM header
+  mri_json = keepfields(dcm, fn);
+  % merge the information from the defaults with the information obtained from the data
+  % in case fields appear in both, the first input overrules the second
+  mri_json = mergeconfig(mri_json, mri_defaults, false);
+  mri_json = mergeconfig(mri_json, generic_defaults, false);
+end % if need_mri_json
+
+%% need_meg_json
+if need_meg_json
+  % these MUST be present
+  meg_json.SamplingFrequency          = hdr.Fs;
+  % these SHOULD be present
+  meg_json.MEGChannelCount            = sum(strcmp(hdr.chantype, 'megmag') | strcmp(hdr.chantype, 'meggrad') | strcmp(hdr.chantype, 'megplanar') | strcmp(hdr.chantype, 'megaxial'));
+  meg_json.MEGREFChannelCount         = sum(strcmp(hdr.chantype, 'refmag') | strcmp(hdr.chantype, 'refgrad') | strcmp(hdr.chantype, 'refplanar') | strcmp(hdr.chantype, 'ref'));
+  meg_json.EEGChannelCount            = sum(strcmp(hdr.chantype, 'eeg'));
+  meg_json.ECOGChannelCount           = sum(strcmp(hdr.chantype, '???')); % FIXME
+  meg_json.SEEGChannelCount           = sum(strcmp(hdr.chantype, '???')); % FIXME
+  meg_json.EOGChannelCount            = sum(strcmp(hdr.chantype, 'eog'));
+  meg_json.ECGChannelCount            = sum(strcmp(hdr.chantype, 'ecg'));
+  meg_json.EMGChannelCount            = sum(strcmp(hdr.chantype, 'emg'));
+  meg_json.MiscChannelCount           = sum(strcmp(hdr.chantype, 'misc'));
+  meg_json.TriggerChannelCount        = sum(strcmp(hdr.chantype, 'trigger'));
+  meg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
+  meg_json.EpochLength                = hdr.nSamples/hdr.Fs;
+  if ft_senstype(hdr.grad, 'ctf151')
+    meg_json.ContinuousHeadLocalization = any(strcmp(hdr.chantype, 'headloc')); % CTF specific
+    meg_json.Manufacturer             = 'CTF';
+    meg_json.ManufacturersModelName   = 'CTF-151';
+  elseif ft_senstype(hdr.grad, 'ctf275')
+    meg_json.ContinuousHeadLocalization = any(strcmp(hdr.chantype, 'headloc')); % CTF specific
+    meg_json.Manufacturer             = 'CTF';
+    meg_json.ManufacturersModelName   = 'CTF-275';
+  elseif ft_senstype(hdr.grad, 'neuromag122')
+    meg_json.Manufacturer             = 'Elekta/Neuromag';
+    meg_json.ManufacturersModelName   = 'Neuromag-122';
+  elseif ft_senstype(hdr.grad, 'neuromag306')
+    meg_json.Manufacturer             = 'Elekta/Neuromag';
+    % meg_json.ManufacturersModelName can not be determined, since both have 306 channels
+  end
+  
+  % merge the information from the defaults with the information obtained from the data
+  % in case fields appear in both, the first input overrules the second
+  meg_json = mergeconfig(meg_json, meg_defaults, false);
+  meg_json = mergeconfig(meg_json, generic_defaults, false);
+end % if need_meg_json
+
+%% need_eeg_json
+if need_eeg_json
+  % these MUST be present
+  eeg_json.SamplingFrequency          = hdr.Fs;
+  % these SHOULD be present
+  eeg_json.EEGChannelCount            = sum(strcmp(hdr.chantype, 'eeg'));
+  eeg_json.EOGChannelCount            = sum(strcmp(hdr.chantype, 'eog'));
+  eeg_json.ECGChannelCount            = sum(strcmp(hdr.chantype, 'ecg'));
+  eeg_json.EMGChannelCount            = sum(strcmp(hdr.chantype, 'emg'));
+  eeg_json.TriggerChannelCount        = sum(strcmp(hdr.chantype, 'trigger'));
+  eeg_json.MiscChannelCount           = sum(strcmp(hdr.chantype, 'misc') | strcmp(hdr.chantype, 'unknown'));
+  eeg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
+  eeg_json.EpochLength                = hdr.nSamples/hdr.Fs;
+  
+  % merge the information from the defaults with the information obtained from the data
+  % in case fields appear in both, the first input overrules the second
+  eeg_json = mergeconfig(eeg_json, eeg_defaults, false);
+  eeg_json = mergeconfig(eeg_json, generic_defaults, false);
+end % if need_eeg_json
+
+%% need_coordsystem_json
+if need_coordsystem_json
+  if ft_senstype(hdr.grad, 'ctf')
+    % coordinate system for MEG sensors
+    coordsystem_json.MEGCoordinateSystem            = 'CTF';
+    coordsystem_json.MEGCoordinateUnits             = 'cm';
+    coordsystem_json.MEGCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
     
+    % coordinate system for head localization coils
+    coordsystem_json.HeadCoilCoordinates                 = []; % see below
+    coordsystem_json.HeadCoilCoordinateSystem            = 'CTF';
+    coordsystem_json.HeadCoilCoordinateUnits             = 'cm';
+    coordsystem_json.HeadCoilCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
+    if isempty(coordsystem_json.HeadCoilCoordinates)
+      % get the positions from the dataset header
+      label = cellstr(hdr.orig.hc.names);
+      position = hdr.orig.hc.head;
+      for i=1:numel(label)
+        coordsystem_json.HeadCoilCoordinates.(fixname(label{i})) = position(:,i)';
+      end
+    end
     % merge the information from the defaults with the information obtained from the data
     % in case fields appear in both, the first input overrules the second
-    mri_json = mergeconfig(mri_json, mri_defaults, false);
-    mri_json = mergeconfig(mri_json, generic_defaults, false);
+    coordsystem_json = mergeconfig(coordsystem_defaults, coordsystem_json, false); % FIXME the order of precedence is different here
+  else
+    ft_warning('coordsystem handling not yet supported for %s', ft_senstype(hdr.grad));
+  end
+end % if need_coordsystem_json
+
+%% need_channels_tsv
+if need_channels_tsv
+  % ensure that all channels have the correct details
+  fn = {'name' 'type' 'units' 'description' 'sampling_frequency' 'low_cutoff' 'high_cutoff' 'notch' 'software_filters' 'status' 'status_description'};
+  for i=1:numel(fn)
+    if numel(cfg.channels.(fn{i}))==1
+      cfg.channels.(fn{i}) = repmat(cfg.channels.(fn{i}), hdr.nChans, 1);
+    end
+  end
+  
+  % EEG and MEG data should also have a channels.tsv file
+  name                = mergevector(hdr.label(:),    cfg.channels.name);
+  type                = mergevector(hdr.chantype(:), cfg.channels.type);
+  units               = mergevector(hdr.chanunit(:), cfg.channels.units);
+  sampling_frequency  = mergevector(repmat(hdr.Fs, hdr.nChans, 1), cfg.channels.sampling_frequency);
+  
+  % construct a table with the corresponding columns
+  % FIXME there are more columns that should be added
+  channels_tsv = table(name, type, units, sampling_frequency);
+end
+
+%% need_events_tsv
+if need_events_tsv
+  % read the presentation file that may accompany the functional data
+  if ~isempty(cfg.presentationfile)
+    presentation = ft_read_event(cfg.presentationfile);
+  else
+    presentation = [];
+  end
+  
+  if need_mri_json
     
-    if ~isempty(presentation)
-      % align the events from the presentation log file with volumes
-      assert(contains(cfg.outputfile, 'func'), 'presentation log file is only supported for task data');
+    if isempty(presentation)
+      ft_warning('cfg.presentationfile not specified, cannot determine events')
+      
+      onset    = [];
+      duration = [];
+      events_tsv = table(onset, duration);
+      
+    else
+      % align the events from the presentation log file with the MR volumes
+      % this requires one event per volume in the presentation file
       
       % merge the information with the json sidecar file
       % in case fields appear in both, the first input overrules the second
       tmp = mergeconfig(mri_json, read_json(corresponding_json(cfg.outputfile)), false);
       assert(~isempty(tmp.RepetitionTime), 'you must specify cfg.mri.RepetitionTime');
       
-      % create a header structure for the fMRI timeseries
+      % create a header structure that represents the fMRI timeseries
       hdr.Fs = 1/tmp.RepetitionTime;
       hdr.nSamples = mri.dim(4);
       
@@ -534,8 +729,10 @@ switch typ
         switch cfg.presentation.skip
           case 'first'
             ft_warning('discarding first %d presentation events for realignment of events', n);
+            selpres = selpres((n+1):end);
           case 'last'
             ft_warning('discarding last %d presentation events for realignment of events', n);
+            selpres = selpres(1:end-n);
           case 'none'
             ft_error('not enough volumes to match the presentation events');
         end % case
@@ -587,79 +784,9 @@ switch typ
       events_tsv = sortrows(events_tsv, 'onset');
     end
     
-  case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275', 'neuromag_fif', 'neuromag122', 'neuromag306'}
-    % these MUST be present
-    meg_json.SamplingFrequency          = hdr.Fs;
-    % these SHOULD be present
-    meg_json.MEGChannelCount            = sum(strcmp(hdr.chantype, 'megmag') | strcmp(hdr.chantype, 'meggrad') | strcmp(hdr.chantype, 'megplanar') | strcmp(hdr.chantype, 'megaxial'));
-    meg_json.MEGREFChannelCount         = sum(strcmp(hdr.chantype, 'refmag') | strcmp(hdr.chantype, 'refgrad') | strcmp(hdr.chantype, 'refplanar') | strcmp(hdr.chantype, 'ref'));
-    meg_json.EEGChannelCount            = sum(strcmp(hdr.chantype, 'eeg'));
-    meg_json.ECOGChannelCount           = sum(strcmp(hdr.chantype, '???')); % FIXME
-    meg_json.SEEGChannelCount           = sum(strcmp(hdr.chantype, '???')); % FIXME
-    meg_json.EOGChannelCount            = sum(strcmp(hdr.chantype, 'eog'));
-    meg_json.ECGChannelCount            = sum(strcmp(hdr.chantype, 'ecg'));
-    meg_json.EMGChannelCount            = sum(strcmp(hdr.chantype, 'emg'));
-    meg_json.MiscChannelCount           = sum(strcmp(hdr.chantype, 'misc'));
-    meg_json.TriggerChannelCount        = sum(strcmp(hdr.chantype, 'trigger'));
-    meg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-    meg_json.EpochLength                = hdr.nSamples/hdr.Fs;
-    if ft_senstype(hdr.grad, 'ctf151')
-      meg_json.ContinuousHeadLocalization = any(strcmp(hdr.chantype, 'headloc')); % CTF specific
-      meg_json.Manufacturer             = 'CTF';
-      meg_json.ManufacturersModelName   = 'CTF-151';
-    elseif ft_senstype(hdr.grad, 'ctf275')
-      meg_json.ContinuousHeadLocalization = any(strcmp(hdr.chantype, 'headloc')); % CTF specific
-      meg_json.Manufacturer             = 'CTF';
-      meg_json.ManufacturersModelName   = 'CTF-275';
-    elseif ft_senstype(hdr.grad, 'neuromag122')
-      meg_json.Manufacturer             = 'Elekta/Neuromag';
-      meg_json.ManufacturersModelName   = 'Neuromag-122';
-    elseif ft_senstype(hdr.grad, 'neuromag306')
-      meg_json.Manufacturer             = 'Elekta/Neuromag';
-      % meg_json.ManufacturersModelName can not be determined, since both have 306 channels
-    end
+  elseif need_meg_json || need_eeg_json || need_ieeg_json
+    % merge the events from the trigger channel with those from the (optional) presentation file
     
-    % merge the information from the defaults with the information obtained from the data
-    % in case fields appear in both, the first input overrules the second
-    meg_json = mergeconfig(meg_json, meg_defaults, false);
-    meg_json = mergeconfig(meg_json, generic_defaults, false);
-    
-    if ft_senstype(hdr.grad, 'ctf')
-      % coordinate system for MEG sensors
-      coordsystem_json.MEGCoordinateSystem            = 'CTF';
-      coordsystem_json.MEGCoordinateUnits             = 'cm';
-      coordsystem_json.MEGCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
-      
-      % coordinate system for head localization coils
-      coordsystem_json.HeadCoilCoordinates                 = []; % see below
-      coordsystem_json.HeadCoilCoordinateSystem            = 'CTF';
-      coordsystem_json.HeadCoilCoordinateUnits             = 'cm';
-      coordsystem_json.HeadCoilCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
-      if isempty(coordsystem_json.HeadCoilCoordinates)
-        % get the positions from the dataset header
-        label = cellstr(hdr.orig.hc.names);
-        position = hdr.orig.hc.head;
-        for i=1:numel(label)
-          coordsystem_json.HeadCoilCoordinates.(fixname(label{i})) = position(:,i)';
-        end
-      end
-      % merge the information from the defaults with the information obtained from the data
-      % in case fields appear in both, the first input overrules the second
-      coordsystem_json = mergeconfig(coordsystem_defaults, coordsystem_json, false); % FIXME the order of precedence is different here
-    else
-      ft_warning('coordsystem handling not yet supported for %s', ft_senstype(hdr.grad));
-    end
-    
-    % MEG data should also have a channels.tsv file
-    name                = mergevector(hdr.label(:),    cfg.channels.name);
-    type                = mergevector(hdr.chantype(:), cfg.channels.type);
-    units               = mergevector(hdr.chanunit(:), cfg.channels.units);
-    sampling_frequency  = mergevector(repmat(hdr.Fs, hdr.nChans, 1), cfg.channels.sampling_frequency);
-    % construct a table with the corresponding columns
-    % FIXME there are more columns that should be added
-    channels_tsv = table(name, type, units, sampling_frequency);
-    
-    % MEG data should also have an events.tsv file
     if istable(cfg.events.trl)
       % check that the column names are valid
       assert(stcmp(cfg.events.trl.Properties.VariableNames{1}, 'begsample'));
@@ -696,8 +823,29 @@ switch typ
       seltrig = trigger(seltrig);
       selpres = presentation(selpres);
       
-      if length(seltrig)~=length(selpres)
+      %if length(seltrig)~=length(selpres)
+      %  ft_error('inconsistent number: %d triggers, %d presentation events', length(seltrig), length(selpres));
+      %end
+      
+      ft_info('%d triggers, %d presentation events', length(seltrig), length(selpres));
+      if length(seltrig)>length(selpres)
+        % don't know how to solve this
         ft_error('inconsistent number: %d triggers, %d presentation events', length(seltrig), length(selpres));
+      elseif length(selpres)>length(seltrig)
+        n = length(selpres)-length(seltrig);
+        % This could happen when due to acquisition problems there is more than one
+        % *.ds directory. If this is a known case, cfg.presentation.skip can be used.
+        % Note that this only works, if there are two ds-datasets (not more).
+        switch cfg.presentation.skip
+          case 'first'
+            ft_warning('discarding first %d presentation events for realignment of events', n);
+            selpres = selpres((n+1):end);
+          case 'last'
+            ft_warning('discarding last %d presentation events for realignment of events', n);
+            selpres = selpres(1:end-n);
+          case 'none'
+            ft_error('not enough triggers to match the presentation events');
+        end % case
       end
       
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -717,7 +865,7 @@ switch typ
         plot([selpres.timestamp]/1e4, [seltrig.sample], 'b.')
         plot([selpres.timestamp]/1e4, estimated, 'ro')
         xlabel('presentation time (s)')
-        ylabel('MEG samples')
+        ylabel('data samples')
         legend({'observed', 'predicted'})
         
         subplot(2,1,2)
@@ -735,37 +883,22 @@ switch typ
       % convert the event structure to a TSV table
       presentation_tsv = event2table(hdr, presentation);
       
-      % for MEG the events from the the presentation log file should be merged with the triggers
+      % the events from the the presentation log file should be merged with the triggers
       % trigger values are often numeric, whereas presentation event values are often strings
-      if isnumeric(events_tsv.event_value) && ~isnumeric(presentation_tsv.event_value)
+      if isnumeric(events_tsv.value) && ~isnumeric(presentation_tsv.value)
         % convert them, otherwise the concatenation fails
-        events_tsv.event_value = num2cell(events_tsv.event_value);
+        events_tsv.value = num2cell(events_tsv.value);
       end
       % concatenate them
       events_tsv = [events_tsv; presentation_tsv];
-      % sort the events ascending on the onset
-      events_tsv = sortrows(events_tsv, 'onset');
       
       clear presentation_tsv selpres seltrig
     end
-    
-  case 'raw'
-    % raw electrophysiology data will be written in BrainVision format
-    ft_warning('assuming that the input data contains EEG');
-    % these MUST be present
-    eeg_json.SamplingFrequency          = hdr.Fs;
-    % these SHOULD be present
-    eeg_json.EEGChannelCount            = sum(strcmp(hdr.chantype, 'eeg'));
-    eeg_json.EOGChannelCount            = sum(strcmp(hdr.chantype, 'eog'));
-    eeg_json.ECGChannelCount            = sum(strcmp(hdr.chantype, 'ecg'));
-    eeg_json.EMGChannelCount            = sum(strcmp(hdr.chantype, 'emg'));
-    eeg_json.TriggerChannelCount        = sum(strcmp(hdr.chantype, 'trigger'));
-    eeg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-    eeg_json.EpochLength                = hdr.nSamples/hdr.Fs;
-    
-  otherwise
-    ft_error('not yet implemented for "%s"', typ);
-end
+  end
+  
+  % sort the events ascending on the onset
+  events_tsv = sortrows(events_tsv, 'onset');
+end % if need_events
 
 % remove fields that have an empty value
 mri_json  = remove_empty(mri_json);
@@ -774,7 +907,7 @@ eeg_json  = remove_empty(eeg_json);
 ieeg_json = remove_empty(ieeg_json);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% write the data to the output file
+%% write the data to the output file
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isequal(cfg.dataset, cfg.outputfile) || istrue(cfg.mri.deface)
   switch typ
@@ -826,11 +959,11 @@ if ~isequal(cfg.dataset, cfg.outputfile) || istrue(cfg.mri.deface)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% write the metadata to the json and tsv files
+%% write the metadata to the json and tsv files
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ~isempty(mri_json)
-  filename = corresponding_json(cfg.outputfile);ls 
+  filename = corresponding_json(cfg.outputfile);ls
   if isfile(filename)
     existing = read_json(filename);
   else
@@ -886,7 +1019,6 @@ if ~isempty(eeg_json)
   else
     existing = [];
   end
-  
   switch cfg.eeg.writesidecar
     case 'yes'
       if ~isempty(existing)
@@ -934,6 +1066,9 @@ if ~isempty(coordsystem_json)
   [p, f, x] = fileparts(cfg.outputfile);
   f = remove_token(f, 'datatype'); % remove _bold, _meg, etc.
   f = remove_token(f, 'task');     % remove _task-something
+  f = remove_token(f, 'run');      % remove _run-something
+  f = remove_token(f, 'acq');      % remove _acq-something
+  f = remove_token(f, 'proc');     % remove _proc-something
   filename = fullfile(p, [f '_coordsystem.json']);
   if isfile(filename)
     existing = read_json(filename);
@@ -1053,7 +1188,7 @@ switch tok
     end
   otherwise
     part = regexp(f, sprintf('_%s-[a-zA-Z0-9]*', tok), 'split');
-    if ~isempty(part{2})
+    if numel(part)>1 && ~isempty(part{2})
       f = [part{1} part{2}];
     else
       f = part{1};
@@ -1080,20 +1215,20 @@ else
       trigger(i).value = NaN;
     end
   end
-  onset       = (([trigger.sample]-1)/hdr.Fs)';   % in seconds
-  duration    = ([trigger.duration]/hdr.Fs)';     % in seconds
-  sample      = ([trigger.sample])';              % in samples, the first sample of the file is 1
-  event_type  = {trigger.type}';
-  event_value = {trigger.value}';
-  if all(cellfun(@isnumeric, event_type))
+  onset        = (([trigger.sample]-1)/hdr.Fs)';   % in seconds
+  duration     = ([trigger.duration]/hdr.Fs)';     % in seconds
+  sample       = ([trigger.sample])';              % in samples, the first sample of the file is 1
+  type         = {trigger.type}';
+  value        = {trigger.value}';
+  if all(cellfun(@isnumeric, type))
     % this can be an array of strings or values
-    event_type = cell2mat(event_type);
+    type = cell2mat(type);
   end
-  if all(cellfun(@isnumeric, event_value))
+  if all(cellfun(@isnumeric, value))
     % this can be an array of strings or values
-    event_value = cell2mat(event_value);
+    value = cell2mat(value);
   end
-  tab = table(onset, duration, sample, event_type, event_value);
+  tab = table(onset, duration, sample, type, value);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1136,6 +1271,7 @@ function json = read_json(filename)
 ft_info('reading %s\n', filename);
 ft_hastoolbox('jsonlab', 1);
 json = loadjson(filename);
+json = ft_struct2char(json); % convert strings into char-arrays
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -1143,6 +1279,7 @@ json = loadjson(filename);
 function write_json(filename, json)
 json = remove_empty(json);
 json = sort_fields(json);
+json = ft_struct2char(json); % convert strings into char-arrays
 ft_info('writing %s\n', filename);
 ft_hastoolbox('jsonlab', 1);
 % write nan as 'n/a'

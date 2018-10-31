@@ -193,7 +193,7 @@ if (verbose>0)
  * WRITE HEADER
  * returns 0 on success
  *******************************************************************************/
-int write_header(int server, UINT32_T datatype, unsigned int nchans, float fsample) {
+int write_header(int server, uint32_t datatype, uint32_t nchans, float fsample) {
 	int status = 0, verbose = 0;
 
 	/* these are used in the communication and represent statefull information */
@@ -244,7 +244,7 @@ int write_header(int server, UINT32_T datatype, unsigned int nchans, float fsamp
  * WRITE DATA
  * returns 0 on success
  *******************************************************************************/
-int write_data(int server, UINT32_T datatype, unsigned int nchans, unsigned int nsamples, void *buffer) {
+int write_data(int server, uint32_t datatype, uint32_t nchans, uint32_t nsamples, void *buffer) {
 	int status = 0, verbose = 0;
 
 	/* these are used in the communication and represent statefull information */
@@ -294,7 +294,7 @@ int write_data(int server, UINT32_T datatype, unsigned int nchans, unsigned int 
  * READ HEADER
  * returns 0 on success
  *******************************************************************************/
-int read_header(int server, UINT32_T *datatype, unsigned int *nchans, float *fsample, unsigned int *nsamples, unsigned int *nevents) {
+int read_header(int server, uint32_t *datatype, uint32_t *nchans, float *fsample, uint32_t *nsamples, uint32_t *nevents) {
 	int status = 0, verbose = 0;
 
 	/* these are used in the communication and represent statefull information */
@@ -355,7 +355,7 @@ int read_header(int server, UINT32_T *datatype, unsigned int *nchans, float *fsa
  * READ DATA
  * returns 0 on success
  *******************************************************************************/
-int read_data(int server, unsigned int begsample, unsigned int endsample, void *buffer) {
+int read_data(int server, uint32_t begsample, uint32_t endsample, void *buffer) {
 	int status = 0, verbose = 0;
 
 	/* these are used in the communication and represent statefull information */
@@ -418,7 +418,7 @@ int read_data(int server, unsigned int begsample, unsigned int endsample, void *
  * WAIT FOR DATA
  * returns 0 on success
  *******************************************************************************/
-int wait_data(int server, unsigned int nsamples, unsigned int nevents, unsigned int milliseconds){
+int wait_data(int server, uint32_t nsamples, uint32_t nevents, uint32_t milliseconds){
 	int status = 0, verbose = 0;
 
 	/* these are used in the communication and represent statefull information */

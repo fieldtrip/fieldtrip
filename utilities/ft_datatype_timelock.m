@@ -154,6 +154,9 @@ switch version
       timelock = rmfield(timelock, 'trialinfo');
     end
     
+    % this field can be present in raw data, but is not desired in timelock data
+    timelock = removefields(timelock, {'fsample'});
+    
   case '2011v2'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % ensure that the sensor structures are up to date
@@ -167,7 +170,7 @@ switch version
       timelock.opto = ft_datatype_sens(timelock.opto);
     end
     
-    % these fields can be present in raw data, but not desired in timelock data
+    % these fields can be present in raw data, but are not desired in timelock data
     timelock = removefields(timelock, {'sampleinfo', 'fsample'});
     
   case '2003'

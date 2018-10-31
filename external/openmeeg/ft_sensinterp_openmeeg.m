@@ -1,6 +1,6 @@
-function [dsm] = ft_sysmat_openmeeg(pos, headmodel, sens, NAflag)
+function [h2sens, ds2sens] = ft_sensinterp_openmeeg(pos, headmodel, sens)
 
-% FT_SYSMAT_OPENMEEG creates a volume conduction model of the
+% FT_SENSINTERP_OPENMEEG creates a volume conduction model of the
 % head using the boundary element method (BEM). This function takes
 % as input the triangulated surfaces that describe the boundaries and
 % returns as output a volume conduction model which can be used to
@@ -21,10 +21,14 @@ function [dsm] = ft_sysmat_openmeeg(pos, headmodel, sens, NAflag)
 % command-line executables. See http://openmeeg.github.io/
 %
 % Use as
-%   dsm = ft_sysmat_openmeeg(pos, headmodel, sens, nonadaptive_flag)
+%   headmodel = ft_headmodel_openmeeg(mesh, ...)
 %
+% Optional input arguments should be specified in key-value pairs and can
+% include
+%   conductivity     = vector, conductivity of each compartment
+%   tissue           = tissue labels for each compartment
 %
-% See also FT_HEADMODEL_OPENMEEG, FT_SENSINTERP_OPENMEEG, FT_PREPARE_LEADFIELD
+% See also FT_HEADMODEL_OPENMEEG, FT_SYSMAT_OPENMEEG, FT_PREPARE_LEADFIELD
 
 %$Id$
 
@@ -33,7 +37,7 @@ openmeeg_license;              % show the license (only once)
 prefix = om_checkombin;        % check the installation of the binaries
 if(~ispc) % if Linux/Mac, set number of threads
     omp_num_threads = feature('numCores');
-    prefix = ['export OMP_NUM_THREADS=' num2str(omp_num_threads) ';' prefix];
+    prefix = ['export OMP_NUM_THREADS=' num2str(omp_num_threads) ' && ' prefix];
 end
 
 ecog = ft_getopt(headmodel,'ecog','no');
@@ -63,42 +67,58 @@ try
     condfile  = fullfile(workdir,'om.cond');
     geomfile  = fullfile(workdir,'om.geom');
     dipfile = fullfile(workdir,'dip.txt');
-    dsmfile = fullfile(workdir,'dsm.bin'); % extension added directly in om_assemble function call below
+    sensorposfile = fullfile(workdir,'sensorpos.txt');
+    h2sensfile = fullfile(workdir,'h2sens.bin');
+    ds2sensfile = fullfile(workdir,'ds2sens.bin');
     
     % write conductivity and mesh files
     bndlabel = {};
-    for i=1:length(bndom);
-        [~,bndlabel{i}] = fileparts(bndfile{i});
+    for i=1:length(bndom)
+        [dum,bndlabel{i}] = fileparts(bndfile{i});
     end
     
     om_write_geom(geomfile,bndfile,bndlabel);
     om_write_cond(condfile,headmodel.cond,bndlabel);
-
+    
     % handle dipole file
     ndip = size(pos,1);
     pos = [kron(pos,ones(3,1)),kron(ones(ndip,1),eye(3))]; % save pos with each 3D orientation
     om_save_full(pos,dipfile,'ascii');
-        
-    omp_num_threads = feature('numCores');
     
-    if(strcmp(NAflag,'yes'))
-        str = ' -DSMNA';
+    % infer sensor type from presence of coilpos structure
+    % and write sensor coordinates to disk
+    if(isfield(sens,'coilpos'))
+        om_save_full([sens.coilpos,sens.coilori],sensorposfile,'ascii');
+        senstype = 'MEG';
     else
-        str = ' -DSM';
+        om_save_full(sens.chanpos,sensorposfile,'ascii');
+        if(strcmp(ecog,'yes'))
+            senstype = 'iEEG';
+        else
+            senstype = 'EEG';
+        end
     end
-
-    om_status = system([prefix 'om_assemble' str ' ' geomfile ' ' condfile ' ' dipfile ' ' dsmfile]);
     
+    switch senstype
+        case 'EEG' % scalp EEG
+            om_status = system([prefix 'om_assemble' ' -h2em ' geomfile ' ' condfile ' ' sensorposfile ' ' h2sensfile]);
+            h2sens = om_load_sparse(h2sensfile,'binary');
+            ds2sens = sparse(size(h2sens,1),3*ndip); % zero for EEG; use sparse matrix to save memory
+        case 'iEEG' % intracranial EEG
+            om_status = system([prefix 'om_assemble -h2ecogm ' geomfile ' ' condfile ' ' sensorposfile ' ' h2sensfile]);
+            om_status = system([prefix 'om_assemble -ds2ipm ' dipfile ' ' sensorposfile ' ' ds2sensfile]);
+            h2sens = om_load_full(h2sensfile,'binary'); % untested: might need om_load_sparse?
+            ds2sens = om_load_full(ds2sensfile,'binary');
+        case 'MEG'
+            om_status = system([prefix 'om_assemble -h2mm ' geomfile ' ' condfile ' ' sensorposfile ' ' h2sensfile]);
+            om_status = system([prefix 'om_assemble -ds2mm ' dipfile ' ' sensorposfile ' ' ds2sensfile]);
+            h2sens = om_load_full(h2sensfile,'binary');
+            ds2sens = om_load_full(ds2sensfile,'binary');
+    end
     if(om_status ~= 0) % status = 0 if successful
         ft_error(['Aborting OpenMEEG pipeline due to above error.']);
     end
     
-    dsm = om_load_full(dsmfile,'binary');
-catch
-    rethrow(lasterror)
-end
-
-try
     rmdir(workdir,'s'); % remove workdir with intermediate files
 catch
     disp(lasterr);

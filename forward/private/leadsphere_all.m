@@ -56,8 +56,8 @@ function out=leadsphere_all(xloc,sensorloc,sensorori)
 % Here begins JMS' adjustment to Guido's implementation, which is much more
 % memory friendly with large numbers of dipoles. Essentially, it does not
 % work with massively repmatted sensorloc and xloc matrices
-[~,nsens] = size(sensorloc); %n=3 m=? 
-[~, ndip] = size(xloc);
+[dum,nsens] = size(sensorloc); %n=3 m=?
+[dum, ndip] = size(xloc);
 
 r2   = repmat(sqrt(sum(sensorloc.^2)), ndip, 1);
 veca = reshape(repmat(sensorloc,ndip,1),3,ndip,nsens)-reshape(repmat(xloc,1,nsens),3,ndip,nsens);

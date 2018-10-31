@@ -142,6 +142,7 @@ cfg.layout = ft_prepare_layout(tmpcfg, tmpcomp);
 clear tmpcomp;
 
 % don't show the callinfo for each separate component
+tmpshowcallinfo = cfg.showcallinfo;
 cfg.showcallinfo = 'no';
 
 % create temporary variable to prevent overwriting the selected components
@@ -194,7 +195,7 @@ end
 cfg = removefields(cfg, 'funcname');
 
 % show the callinfo for all components together
-cfg.showcallinfo = 'yes';
+cfg.showcallinfo = tmpshowcallinfo;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

@@ -171,8 +171,11 @@ if nargin==2
     cfg.channel      = ft_channelselection(cfg.channel, data.label);  
     if ~all(ismember(cfg.channel,eegchannel)), warning('some of the selected eeg channels appear spike channels'); end    
   end    
-  data_spk = ft_selectdata(data,'channel', cfg.spikechannel);
-  data     = ft_selectdata(data,'channel', cfg.channel); % leave only LFP
+  tmpcfg = [];
+  tmpcfg.channel = cfg.spikechannel;
+  data_spk = ft_selectdata(tmpcfg, data);
+  tmpcfg.channel = cfg.channel;
+  data     = ft_selectdata(tmpcfg, data); % leave only LFP
   spike    = ft_checkdata(data_spk,'datatype', 'spike');
   clear data_spk % remove the continuous data
 else

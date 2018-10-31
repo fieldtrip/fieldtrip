@@ -17,7 +17,7 @@ function [spike] = ft_datatype_spike(spike, varargin)
 % The fields of the SPIKE structure that contain the specific information
 % per spike depends on the available information. A relevant distinction
 % can be made between the representation of raw spikes that are not related
-% to the temporal strucutre of the experimental design (i.e trials), and
+% to the temporal structure of the experimental design (i.e trials), and
 % the data representation in which the spikes are related to the trial.
 %
 % For a continuous recording the SPIKE structure must contain a cell-array
@@ -35,7 +35,7 @@ function [spike] = ft_datatype_spike(spike, varargin)
 % If the data has been organised to reflect the temporal structure of the
 % experiment (i.e. the trials), the SPIKE structure should contain a
 % cell-array with the spike times relative to an experimental trigger. The
-% FT_SPIKE_REDEFINETRIAL function can be used to reorganise the SPIKE
+% FT_SPIKE_MAKETRIALS function can be used to reorganise the SPIKE
 % structure such that the spike times are expressed relative to a trigger
 % instead of relative to the acquisition devices internal timestamp clock.
 % The time field then contains only those spikes that ocurred within one of

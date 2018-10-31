@@ -7,7 +7,7 @@
 %   ft_postamble savevar data
 %   ft_postamble savevar source mri
 %
-% See also FT_PREAMBLE_LOADVAR
+% See also FT_PREAMBLE, FT_POSTAMBLE, FT_PREAMBLE_LOADVAR
 
 % Copyright (C) 2011-2012, Robert Oostenveld, DCCN
 %

@@ -185,8 +185,9 @@ switch fileformat
     end
     
   case 'stl'
-    nrm = normals(bnd.pnt, bnd.tri, 'triangle');
-    write_stl(filename, bnd.pnt, bnd.tri, nrm);
+    %nrm = normals(bnd.pnt, bnd.tri, 'triangle');
+    %write_stl(filename, bnd.pnt, bnd.tri, nrm);
+    stlwrite(filename, bnd.tri, bnd.pnt);
     
   case 'gifti'
     ft_hastoolbox('gifti', 1);

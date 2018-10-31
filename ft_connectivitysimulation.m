@@ -620,11 +620,11 @@ function z = firws_filter(N, Fs, Fbp)
 
 switch numel(Fbp)
   case 1
-    [~, B, ~] = ft_preproc_lowpassfilter(randn(1,N), Fs, Fbp, [], 'firws', 'onepass-minphase');
+    [dum, B] = ft_preproc_lowpassfilter(randn(1,N), Fs, Fbp, [], 'firws', 'onepass-minphase');
     z  = fft(B, N);
 
   case 2
-    [~, B, ~] = ft_preproc_bandpassfilter(randn(1,N), Fs, Fbp, [], 'firws', 'onepass-minphase');
+    [dum, B] = ft_preproc_bandpassfilter(randn(1,N), Fs, Fbp, [], 'firws', 'onepass-minphase');
     z  = fft(B, N);
   
 end
