@@ -179,7 +179,7 @@ if isfield(obj, 'initial') && ~strcmp(target, 'mm')
 end
 
 if isfield(obj, 'params') && ~strcmp(target, 'mm')
-  ft_warning('Removing field "initial" because potential transformations of normalised volumes only work if geometrical values are expressed in "mm"');
+  ft_warning('Removing field "params" because potential transformations of normalised volumes only work if geometrical values are expressed in "mm"');
   obj = rmfield(obj, 'params');
 end
 
