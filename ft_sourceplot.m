@@ -657,7 +657,7 @@ if hasfun && ~hasmsk && isfield(functional, 'inside')
   opacmax = 1;
   % make intelligent mask
   if isequal(cfg.method, 'surface')
-    msk(functional.inside) = 1;
+    msk(functional.inside&isfinite(functional.(cfg.funparameter))) = 1;
   else
     if hasana
       msk(functional.inside) = 0.5; % so anatomy is visible
