@@ -18,7 +18,6 @@ dat2 = dat0; dat2(nan2) = nan;
 dat3 = dat0; dat3(nan3) = nan;
 
 warning('');          % clear previous warnings
-ft_warning('-clear'); % clear previous warnings
 
 %%
 

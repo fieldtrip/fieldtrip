@@ -989,7 +989,7 @@ switch headerformat
     end
     
     % get hdr info from xml files
-    ws = warning('off', 'MATLAB:REGEXP:deprecated'); % due to some small code xml2struct
+    ws = ft_warning('off', 'MATLAB:REGEXP:deprecated'); % due to some small code xml2struct
     xmlfiles = dir( fullfile(filename, '*.xml'));
     disp('reading xml files to obtain header info...')
     for i = 1:numel(xmlfiles)
@@ -1001,7 +1001,7 @@ switch headerformat
         orig.xml.(fieldname) = xml2struct(filename_xml);
       end
     end
-    warning(ws); % revert the warning state
+    ft_warning(ws); % revert the warning state
     
     % epochs.xml seems the most common version, but epoch.xml might also
     % occur, so use only one name
