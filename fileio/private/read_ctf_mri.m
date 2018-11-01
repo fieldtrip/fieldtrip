@@ -111,7 +111,7 @@ hdr.transformMatrix = fread(fid,[4 4],'float')'; % transformation matrix head->M
 fseek(fid, 1028, 'bof');
 
 % turn all warnings back on
-warning(ws);
+ft_warning(ws);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % READ THE IMAGE DATA

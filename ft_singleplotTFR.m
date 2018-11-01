@@ -336,10 +336,10 @@ if ~isempty(cfg.maskparameter)
     maskmatrix(~maskmatrix) = cfg.maskalpha;
   elseif isnumeric(maskmatrix)
     if strcmp(cfg.maskstyle, 'outline')
-      error('Outline masking with a numeric cfg.maskparameter is not supported. Please use a logical mask instead.')
+      ft_error('Outline masking with a numeric cfg.maskparameter is not supported. Please use a logical mask instead.')
     end
     if cfg.maskalpha ~= 1
-      warning(sprintf('Using field "%s" for masking, cfg.maskalpha is ignored.', cfg.maskparameter))
+      ft_warning('Using field "%s" for masking, cfg.maskalpha is ignored.', cfg.maskparameter)
     end
     % scale mask between 0 and 1
     minval = min(maskmatrix(:));

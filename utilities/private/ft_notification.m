@@ -166,8 +166,10 @@ end
 switch varargin{1}
   case 'on'
     if numel(varargin)>1
-      % switch a specific item on
       msgId = varargin{2};
+      % return the message state of this specific one
+      varargout{1} = getreturnstate(s, msgId);
+      % switch this specific item on
       s = setstate(s, msgId, 'on');
       if strcmp(msgId, 'backtrace')
         defaultbacktrace = false;
@@ -175,19 +177,19 @@ switch varargin{1}
       if strcmp(msgId, 'verbose')
         defaultverbose = false;
       end
-      % return the message state of all
-      varargout{1} = getreturnstate(s, msgId);
     else
-      % switch all on
-      s = setstate(s, 'all', 'on');
       % return the message state of all
       varargout{1} = getreturnstate(s);
+      % switch all on
+      s = setstate(s, 'all', 'on');
     end
     
   case 'off'
     if numel(varargin)>1
-      % switch a specific item off
       msgId = varargin{2};
+      % return the message state of this specific one
+      varargout{1} = getreturnstate(s, msgId);
+      % switch this specific item on
       s = setstate(s, msgId, 'off');
       if strcmp(msgId, 'backtrace')
         defaultbacktrace = false;
@@ -195,27 +197,25 @@ switch varargin{1}
       if strcmp(msgId, 'verbose')
         defaultverbose = false;
       end
-      % return the specific message state
-      varargout{1} = getreturnstate(s, msgId);
     else
-      % switch all off
-      s = setstate(s, 'all', 'off');
       % return the message state of all
       varargout{1} = getreturnstate(s);
+      % switch all off
+      s = setstate(s, 'all', 'off');
     end
     
   case 'once'
     if numel(varargin)>1
-      % switch a specific item to once
       msgId = varargin{2};
-      s = setstate(s, msgId, 'once');
       % return the specific message state
       varargout{1} = getreturnstate(s, msgId);
+      % switch a specific item to once
+      s = setstate(s, msgId, 'once');
     else
-      % switch all to once
-      s = setstate(s, 'all', 'once');
       % return the message state of all
       varargout{1} = getreturnstate(s);
+      % switch all to once
+      s = setstate(s, 'all', 'once');
     end
     
   case 'timeout'

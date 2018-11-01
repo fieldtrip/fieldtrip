@@ -71,7 +71,7 @@ function hs = ft_plot_sens(sens, varargin)
 %
 % $Id$
 
-ws = warning('on', 'MATLAB:divideByZero');
+ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % ensure that the sensor description is up-to-date
 sens = ft_datatype_sens(sens);
@@ -418,7 +418,7 @@ if ~holdflag
   hold off
 end
 
-warning(ws); % revert to original state
+ft_warning(ws); % revert to original state
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION all optional inputs are passed to ft_plot_mesh
