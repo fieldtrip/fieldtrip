@@ -87,13 +87,55 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 	/* the response should be passed to the calling function, where it should be freed */
 	*response_ptr = response;
 
-	if (verbose>1) print_request(request->def);
+	if (verbose>1) {
+		print_request(request->def);
+		switch (request->def->command) {
+			case PUT_HDR:
+				fprintf(stderr, "dmarequest: PUT_HDR\n");
+				break;
+			case PUT_HDR_NORESPONSE:
+				fprintf(stderr, "dmarequest: PUT_HDR_NOREPONSE\n");
+				break;
+			case PUT_DAT:
+				fprintf(stderr, "dmarequest: PUT_DAT\n");
+				break;
+			case PUT_DAT_NORESPONSE:
+				fprintf(stderr, "dmarequest: PUT_DAT_NOREPONSE\n");
+				break;
+			case PUT_EVT:
+				fprintf(stderr, "dmarequest: PUT_EVT\n");
+				break;
+			case PUT_EVT_NORESPONSE:
+				fprintf(stderr, "dmarequest: PUT_EVT_NOREPONSE\n");
+				break;
+			case GET_HDR:
+				fprintf(stderr, "dmarequest: GET_HDR\n");
+				break;
+			case GET_DAT:
+				fprintf(stderr, "dmarequest: GET_DAT\n");
+				break;
+			case GET_EVT:
+				fprintf(stderr, "dmarequest: GET_EVT\n");
+				break;
+			case FLUSH_HDR:
+				fprintf(stderr, "dmarequest: FLUSH_HDR\n");
+				break;
+			case FLUSH_DAT:
+				fprintf(stderr, "dmarequest: FLUSH_DAT\n");
+				break;
+			case FLUSH_EVT:
+				fprintf(stderr, "dmarequest: FLUSH_EVT\n");
+				break;
+			case WAIT_DAT:
+				fprintf(stderr, "dmarequest: WAIT_DAT\n");
+				break;
+		}
+	}
 
 	switch (request->def->command) {
 
 		case PUT_HDR:
 		case PUT_HDR_NORESPONSE:
-			if (verbose>1) fprintf(stderr, "dmarequest: PUT_HDR\n");
 			pthread_mutex_lock(&mutexheader);
 			pthread_mutex_lock(&mutexdata);
 			pthread_mutex_lock(&mutexevent);
@@ -138,7 +180,6 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 
 		case PUT_DAT:
 		case PUT_DAT_NORESPONSE:
-			if (verbose>1) fprintf(stderr, "dmarequest: PUT_DAT\n");
 			pthread_mutex_lock(&mutexheader);
 			pthread_mutex_lock(&mutexdata);
 
@@ -202,7 +243,6 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 
 		case PUT_EVT:
 		case PUT_EVT_NORESPONSE:
-			if (verbose>1) fprintf(stderr, "dmarequest: PUT_EVT\n");
 			pthread_mutex_lock(&mutexheader);
 			pthread_mutex_lock(&mutexevent);
 
@@ -259,7 +299,6 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			break;
 
 		case GET_HDR:
-			if (verbose>1) fprintf(stderr, "dmarequest: GET_HDR\n");
 			if (header==NULL) {
 				response->def->version = VERSION;
 				response->def->command = GET_ERR;
@@ -279,7 +318,6 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			break;
 
 		case GET_DAT:
-			if (verbose>1) fprintf(stderr, "dmarequest: GET_DAT\n");
 			if (header==NULL || data==NULL) {
 				response->def->version = VERSION;
 				response->def->command = GET_ERR;
@@ -428,7 +466,6 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			break;
 
 		case GET_EVT:
-			if (verbose>1) fprintf(stderr, "dmarequest: GET_EVT\n");
 			if (header==NULL || event==NULL || header->def->nevents==0) {
 				response->def->version = VERSION;
 				response->def->command = GET_ERR;
@@ -643,7 +680,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			break;
 
 		default:
-			fprintf(stderr, "dmarequest: unknown command\n");
+			fprintf(stderr, "dmarequest: unknown command %d\n", request->def->command);
 	}
 
 	if (verbose>0) fprintf(stderr, "dmarequest: thissample = %u, thisevent = %u\n", thissample, thisevent);
