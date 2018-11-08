@@ -5,8 +5,8 @@
  *
  */
 
-#ifndef __SOCKETSERVER_H
-#define __SOCKETSERVER_H
+#ifndef SOCKETSERVER_H
+#define SOCKETSERVER_H
 
 #include <pthread.h>
 #include "buffer.h"

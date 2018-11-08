@@ -8,6 +8,9 @@
 #ifndef EXTERN_H
 #define EXTERN_H
 
+#include <pthread.h>
+
+#include "platform_includes.h"
 #include "buffer.h"
 
 extern pthread_mutex_t mutexstatus;

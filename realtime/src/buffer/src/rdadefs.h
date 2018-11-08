@@ -6,8 +6,8 @@
  *
  */
 
-#ifndef __RDADEFS_H
-#define __RDADEFS_H
+#ifndef RDADEFS_H
+#define RDADEFS_H
 
 #include "message.h"        /* for the integer datytypes */
  

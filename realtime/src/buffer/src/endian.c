@@ -5,7 +5,7 @@
  *
  */
 
-#include "buffer.h"
+#include "endian.h"
 
 void endian_swap16(unsigned int numel, void *data) {
 	unsigned int n;

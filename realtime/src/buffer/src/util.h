@@ -3,6 +3,19 @@
  * Donders Institute for Brain, Cognition and Behaviour; Radboud University; NL
  */
 
+#ifndef UTIL_H
+#define UTIL_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>       /* for strerror */
+#include <time.h>
+#include <sys/time.h>
+#include <pthread.h>
+
+#include "buffer.h"
+#include "extern.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -20,3 +33,4 @@ int check_event_array(unsigned int size, const void *buf);
 }
 #endif
 
+#endif

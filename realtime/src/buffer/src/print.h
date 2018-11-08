@@ -4,7 +4,13 @@
  *
  */
 
- #include "message.h"
+#ifndef PRINT_H
+#define PRINT_H
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "message.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,4 +28,6 @@ void print_buf(void *, int);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

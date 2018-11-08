@@ -16,8 +16,7 @@
  *
  */
 
-#include "buffer.h"
-#include <pthread.h>
+#include "extern.h"
 
 pthread_mutex_t mutexstatus = PTHREAD_MUTEX_INITIALIZER;
 int tcpserverStatus = 0;

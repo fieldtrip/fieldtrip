@@ -1,5 +1,6 @@
+#include "platform_includes.h"
+#include "buffer.h"
 #include "extern.h"
-
 
 void init_data(void) {
 	int verbose = 0;

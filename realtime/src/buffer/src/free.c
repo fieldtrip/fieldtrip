@@ -1,5 +1,4 @@
-#include "extern.h"
-
+#include "free.h"
 
 void free_header() {
 	int verbose = 0;

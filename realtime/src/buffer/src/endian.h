@@ -3,6 +3,15 @@
  * Donders Institute for Brain, Cognition and Behaviour; Radboud University; NL
  */
 
+#ifndef ENDIAN_H_
+#define ENDIAN_H_
+
+#include <stdint.h>
+
+#include "platform_includes.h"
+#include "buffer.h"
+#include "message.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -16,4 +25,6 @@ int endian_swap_from_native(UINT16_T orgCommand, message_t *msg);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

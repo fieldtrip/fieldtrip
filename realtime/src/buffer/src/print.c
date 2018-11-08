@@ -5,10 +5,7 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "message.h"
+#include "print.h"
 
 void print_request(messagedef_t *request) {
 	fprintf(stderr, "request.version = 0x%04x\n", request->version);
