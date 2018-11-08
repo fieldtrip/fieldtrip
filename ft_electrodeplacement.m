@@ -28,6 +28,10 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 % "Oostenveld R, Praamstra P. The five percent electrode system for high-resolution
 % EEG and ERP measurements. Clin Neurophysiol. 2001 Apr;112(4):713-9" for details.
 %
+% SHAFT - This is for placing electrodes along a linear sEEG shaft. The tip of the
+% shaft, another point along the shaft and the distance between the electrodes should
+% be specified. The number of electrodes that is placed is determined from cfg.channel.
+%
 % Use as
 %   [elec] = ft_electrodeplacement(cfg, ct)
 %   [elec] = ft_electrodeplacement(cfg, ct, mri, ..)
@@ -40,8 +44,9 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 %                        'volume'          interactively locate electrodes on three orthogonal slices of a volumetric MRI or CT scan
 %                        'headshape'       interactively locate electrodes on a head surface
 %                        '1020'            automatically locate electrodes on a head surface according to the 10-20 system
+%                        'shaft'           automatically locate electrodes along a linear sEEG shaft
 %
-% The following options apply to the mri method
+% The following options apply to the 'volume' method
 %   cfg.parameter      = string, field in data (default = 'anatomy' if present in data)
 %   cfg.channel        = Nx1 cell-array with selection of channels (default = {'1' '2' ...})
 %   cfg.elec           = struct containing previously placed electrodes (this overwrites cfg.channel)
@@ -54,12 +59,17 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 %                        'weighted'        place electrodes at center-of-mass
 %   cfg.magradius      = number representing the radius for the cfg.magtype based search (default = 3)
 %
-% The following options apply to the 1020 method
+% The following options apply to the '1020' method
 %   cfg.fiducial.nas   = 1x3 vector with coordinates
 %   cfg.fiducial.ini   = 1x3 vector with coordinates
 %   cfg.fiducial.lpa   = 1x3 vector with coordinates
 %   cfg.fiducial.rpa   = 1x3 vector with coordinates
 %   cfg.feedback       = string, can be 'yes' or 'no' for detailled feedback (default = 'yes')
+%
+% The following options apply to the 'shaft' method
+%   cfg.shaft.tip      = 1x3 position of the electrode at the tip of the shaft
+%   cfg.shaft.along    = 1x3 position along the shaft
+%   cfg.shaft.distance = scalar, distance between electrodes
 %
 % See also FT_ELECTRODEREALIGN, FT_VOLUMEREALIGN, FT_VOLUMESEGMENT, FT_PREPARE_MESH
 
@@ -107,7 +117,7 @@ cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'mri', 'volume'});
 
 % set the defaults
-cfg.method        = ft_getopt(cfg, 'method');                  % volume, headshape, 1020
+cfg.method        = ft_getopt(cfg, 'method');                  % volume, headshape, 1020, shaft
 cfg.feedback      = ft_getopt(cfg, 'feedback',         'yes');
 cfg.parameter     = ft_getopt(cfg, 'parameter',    'anatomy');
 cfg.channel       = ft_getopt(cfg, 'channel',             []); % default will be determined further down {'1', '2', ...}
@@ -178,8 +188,20 @@ if isempty(cfg.elec) && isempty(cfg.channel) % create electrode labels on-the-fl
   end
 end
 
-% draw the user-interfaces
+% this is where the different methods are implemented
 switch cfg.method
+  case 'shaft'
+    pos = cfg.shaft.tip;
+    ori = cfg.shaft.along - cfg.shaft.tip;
+    ori = ori/norm(ori);
+    
+    elec = [];
+    elec.label = cfg.channel;
+    for i=1:numel(elec.label)
+      elec.elecpos(i,:) = pos + (i-1) * ori * cfg.shaft.distance;
+    end
+    
+    
   case 'headshape'
     
     % start building the figure
