@@ -1473,12 +1473,12 @@ switch key
     response = inputdlg('vertical scale, [ymin ymax], ''maxabs'' or ''maxmin''', 'specify', 1, {['[ ' num2str(cfg.ylim) ' ]']});
     if ~isempty(response)
       if strcmp(response, 'maxmin')
-        minval = min(dat(:));
-        maxval = max(dat(:));
+        minval = min(opt.curdata.trial{1}(:));
+        maxval = max(opt.curdata.trial{1}(:));
         cfg.ylim = [minval maxval];
       elseif strcmp(response, 'maxabs')
-        minval = min(dat(:));
-        maxval = max(dat(:));
+        minval = min(opt.curdata.trial{1}(:));
+        maxval = max(opt.curdata.trial{1}(:));
         cfg.ylim = [-max(abs([minval maxval])) max(abs([minval maxval]))];
       else
         % convert to string and add brackets, just to ensure that str2num will work
