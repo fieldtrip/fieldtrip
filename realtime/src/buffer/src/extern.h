@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2008, Robert Oostenveld & Christian Hesse
  * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
@@ -24,5 +24,13 @@ extern int threadcount;
 
 extern pthread_mutex_t mutexappendcount;
 extern int appendcount;
+
+extern int thissample;
+extern int thisevent;
+extern unsigned int current_max_num_sample;
+
+extern header_t *header;
+extern data_t     *data;
+extern event_t   *event;
 
 #endif

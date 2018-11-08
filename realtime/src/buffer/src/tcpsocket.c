@@ -27,7 +27,7 @@ typedef struct {
   int fd;
 } threadlocal_t;
 
-void cleanup_tcpsocket(void *arg) {
+void tcpsocket_cleanup(void *arg) {
   threadlocal_t *threadlocal;
   threadlocal = (threadlocal_t *)arg;
   if (threadlocal && threadlocal->message) {
@@ -47,7 +47,9 @@ void cleanup_tcpsocket(void *arg) {
   pthread_mutex_unlock(&mutexthreadcount);
 }
 
-/* this function deals with the incoming client request */
+/***********************************************************************
+ * this function is started by tcpserver when a connection is made by a client
+ ***********************************************************************/
 void *tcpsocket(void *arg) {
   int n;
   int status = 0, verbose = 0, noresponse = 0;
@@ -70,7 +72,7 @@ void *tcpsocket(void *arg) {
   /* this will be closed at cleanup */
   threadlocal.fd = client;
 
-  pthread_cleanup_push(cleanup_tcpsocket, &threadlocal);
+  pthread_cleanup_push(tcpsocket_cleanup, &threadlocal);
 
   /* this is for debugging */
   pthread_mutex_lock(&mutexsocketcount);
@@ -124,8 +126,8 @@ void *tcpsocket(void *arg) {
 
     if (request->def->version==VERSION_OE) {
       swap = 1;
-      ft_swap16(2, &request->def->version); /* version + command */
-      ft_swap32(1, &request->def->bufsize);
+      endian_swap16(2, &request->def->version); /* version + command */
+      endian_swap32(1, &request->def->bufsize);
       reqCommand = request->def->command;
     }
 
@@ -143,7 +145,7 @@ void *tcpsocket(void *arg) {
       }
     }
 
-    if (swap && request->def->bufsize > 0) ft_swap_buf_to_native(reqCommand, request->def->bufsize, request->buf);
+    if (swap && request->def->bufsize > 0) endian_swap_buf_to_native(reqCommand, request->def->bufsize, request->buf);
 
     if (verbose>1) print_request(request->def);
     if (verbose>1) print_buf(request->buf, request->def->bufsize);
@@ -160,7 +162,7 @@ void *tcpsocket(void *arg) {
     if (verbose>1) print_buf(request->buf, request->def->bufsize);
 
     respBufSize = response->def->bufsize;
-    if (swap) ft_swap_from_native(reqCommand, response);
+    if (swap) endian_swap_from_native(reqCommand, response);
 
     /* check whether a response is requested */
     switch (request->def->command) {

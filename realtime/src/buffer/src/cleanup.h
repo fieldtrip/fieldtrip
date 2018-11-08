@@ -14,8 +14,8 @@ void cleanup_data(void **arg);
 void cleanup_event(void **arg);
 void cleanup_buf(void **arg);
 void cleanup_socket(int *);
+void cleanup_tcpsocket(void *arg);
 
 #ifdef __cplusplus
 }
 #endif
-

@@ -839,7 +839,7 @@ protected:
     FtBufferResponse resp;		/**< Receives responses from the buffer server */
     FtEventList eventList;		/**< Used for writing events to the buffer server, is flushed after each handleBlock() */
     FtSampleBlock *sampleBlock;	/**< Used for writing data to the buffer server */
-    ft_buffer_server_t *ftServer;	/**< Handles the server sockets and background threads in case an own server is spawned */
+    socketserver_server_t *ftServer;	/**< Handles the server sockets and background threads in case an own server is spawned */
 
     SignalConfiguration signalConf;	/**< Maintains the channel selection for streaming and saving, as well as a few other parameters */
 

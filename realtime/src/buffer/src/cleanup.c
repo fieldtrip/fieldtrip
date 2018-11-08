@@ -7,6 +7,8 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <pthread.h>
+
 #include "buffer.h"
 
 /* this is used for debugging */
@@ -72,4 +74,3 @@ void cleanup_buf(void **arg) {
 	}
 	return;
 }
-

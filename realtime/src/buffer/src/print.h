@@ -10,7 +10,7 @@
 extern "C" {
 #endif
 
-/* definition of functions for printing the content of various structures, see printstruct.c */
+/* definition of functions for printing the content of various structures, see print.c */
 void print_request(messagedef_t *);
 void print_response(messagedef_t *);
 void print_headerdef(headerdef_t *);

@@ -11,7 +11,6 @@
  *
  */
 
-
 #ifdef PLATFORM_WINDOWS
 #ifndef COMPILER_MINGW
 
@@ -57,4 +56,3 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
 
 #endif
 #endif
-

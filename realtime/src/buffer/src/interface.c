@@ -10,7 +10,7 @@
 
 #include "buffer.h"
 #include "message.h"
-#include "printstruct.h"
+#include "print.h"
 
 /*******************************************************************************
  * START THE BUFFER IN A SEPARATE THREAD

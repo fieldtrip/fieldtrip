@@ -39,6 +39,7 @@
 #elif defined(PLATFORM_WINDOWS)
 #include <Windows.h>
 #include <Winbase.h>
+#include <stdio.h>
 
 #define CLOCK_BOOTTIME 1
 #define CLOCK_REALTIME 2
@@ -57,8 +58,8 @@ int clock_gettime(int unused, struct timespec *spec)      //C-file part
 
 #endif
 
-#include <stdio.h>
-#include "timestamp.h"
+#define TIMESTAMP_REF_BOOT  1
+#define TIMESTAMP_REF_EPOCH 2
 
 void get_monotonic_time(struct timespec *ts, int timestamp_ref){
 #if defined(PLATFORM_OSX)

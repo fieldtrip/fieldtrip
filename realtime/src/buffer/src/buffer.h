@@ -16,11 +16,11 @@
 #include "message.h"
 
 #include "cleanup.h"
-#include "endianutil.h"
+#include "endian.h"
 #include "interface.h"
 #include "message.h"
-#include "printstruct.h"
-#include "swapbytes.h"
+#include "print.h"
+#include "swap.h"
 #include "util.h"
 
 #ifndef POLLRDNORM

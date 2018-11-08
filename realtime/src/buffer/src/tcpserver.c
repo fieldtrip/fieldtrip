@@ -24,7 +24,7 @@ typedef struct {
   int fd;
 } threadlocal_t;
 
-void cleanup_tcpserver(void *arg) {
+void tcpserver_cleanup(void *arg) {
   threadlocal_t *threadlocal;
   threadlocal = (threadlocal_t *)arg;
   if (threadlocal && threadlocal->fd>0) {
@@ -76,7 +76,7 @@ void *tcpserver(void *arg) {
   if (verbose>0) fprintf(stderr, "tcpserver: host.name =  %s\n", host->name);
   if (verbose>0) fprintf(stderr, "tcpserver: host.port =  %d\n", host->port);
 
-  pthread_cleanup_push(cleanup_tcpserver, &threadlocal);
+  pthread_cleanup_push(tcpserver_cleanup, &threadlocal);
 
   /* the status contains the thread id when running, or zero when not running */
   pthread_mutex_lock(&mutexstatus);
