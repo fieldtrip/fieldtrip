@@ -896,6 +896,12 @@ for k = 1:numel(alltimecell)
   indx(ix,k) = iy;
 end
 
+if iscell(varargin{1}.time)
+  % if the input data arguments are of type 'raw', temporarily set the
+  % selmode to union, otherwise the potentially different length trials
+  % will be truncated to the shorted epoch, prior to latency selection. 
+  selmode = 'union'; 
+end
 switch selmode
   case 'intersect'
     sel        = sum(isfinite(indx),2)==numel(alltimecell);
@@ -958,6 +964,12 @@ elseif numel(cfg.latency)==2
 
   for k = 1:numel(alltimecell)
     timeindx{k} = indx(tbeg:tend, k);
+    % if the input data arguments are of type 'raw', the non-finite values
+    % need to be removed from the individual cells to ensure correct
+    % behavior
+    if iscell(varargin{1}.time)
+      timeindx{k} = timeindx{k}(isfinite(timeindx{k}));
+    end
   end
 
 elseif size(cfg.latency,2)==2
@@ -968,9 +980,15 @@ else
 end
 
 for k = 1:numel(alltimecell)
-  if isequal(timeindx{k}(:)', 1:length(alltimecell{k}))
-    % no actual selection is needed for this data structure
-    timeindx{k} = nan;
+  if ~iscell(varargin{1}.time)
+    if isequal(timeindx{k}(:)', 1:length(alltimecell{k}))
+      % no actual selection is needed for this data structure
+      timeindx{k} = nan;
+    end
+  else
+    % if the input data arguments are of type 'raw', they need to be
+    % handled differently, because the individual trials can be of
+    % different length
   end
 end
 
