@@ -33,7 +33,13 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 % be specified. If the shaft is not straight but curved, you should specify multiple
 % (at least two) points along the saft, i.e. specify cfg.shaft.along=Nx3 for N
 % points. The number of electrodes that is placed is determined from cfg.channel.
-
+%
+% GRID - This is for placing electrodes on a regular MxN ECoG grid. Each of the four
+% cornerpoints of the grid must be specified, along with the dimensions of the grid.
+% Following piecewise linear placement of the electrodes on the grid, you can use
+% FT_ELECTRODEREALIGN with cfg.method='project' to project them to the curved brain
+% surface.
+%
 % Use as
 %   [elec] = ft_electrodeplacement(cfg, ct)
 %   [elec] = ft_electrodeplacement(cfg, ct, mri, ..)
@@ -229,13 +235,125 @@ switch cfg.method
         dist = (i-1) * cfg.shaft.distance;
         elec.elecpos(i,:) = cfg.shaft.tip + fnval(cv, dist)';
       end
-      
     end
     
+  case 'grid'
+    % The four cornerpoints specified by the user will not exactly be a rectangle,
+    % but will have in plane distortion and out-of-plane twist.
     
+    % Each cornerpoint with the two edges to its direct neighbours describes a parallellogram.
+    % We compute the position of each electrode according to this parallellogram
+    % and then compute the weighted average based on distance to the cornerpoints.
+    
+    % The cornerpoints are specified like this
+    %
+    %     1     2
+    %     3     4
+    
+    % parallellogram starting in corner 1
+    dir12 = cfg.grid.corner2-cfg.grid.corner1; dir12 = dir12/norm(dir12);
+    dir13 = cfg.grid.corner3-cfg.grid.corner1; dir13 = dir13/norm(dir13);
+    
+    % parallellogram starting in corner 2
+    dir21 = cfg.grid.corner1-cfg.grid.corner2; dir21 = dir21/norm(dir21);
+    dir24 = cfg.grid.corner4-cfg.grid.corner2; dir24 = dir24/norm(dir24);
+    
+    % parallellogram starting in corner 3
+    dir31 = cfg.grid.corner1-cfg.grid.corner3; dir31 = dir31/norm(dir31);
+    dir34 = cfg.grid.corner4-cfg.grid.corner3; dir34 = dir34/norm(dir34);
+    
+    % parallellogram starting in corner 4
+    dir42 = cfg.grid.corner2-cfg.grid.corner4; dir42 = dir42/norm(dir42);
+    dir43 = cfg.grid.corner3-cfg.grid.corner4; dir43 = dir43/norm(dir43);
+    
+    % assuming a 3x4 grid, the electrodes will be placed like this
+    %
+    %    1  2  3  4
+    %    5  6  7  8
+    %    9 10 11 12
+    
+    % specify the number of electrodes in the vertical and horizontal direction
+    nv = cfg.grid.dim(1);
+    nh = cfg.grid.dim(2);
+    
+    % determine the inter-electrode distance in the vertical and horizontal direction
+    dv = (norm(cfg.grid.corner3-cfg.grid.corner1)/(nv-1) + norm(cfg.grid.corner4-cfg.grid.corner2)/(nv-1))/2;
+    dh = (norm(cfg.grid.corner2-cfg.grid.corner1)/(nh-1) + norm(cfg.grid.corner4-cfg.grid.corner3)/(nh-1))/2;
+    
+    ft_notice('electrode spacing along 1st dimension is %f', dv);
+    ft_notice('electrode spacing along 2nd dimension is %f', dh);
+    
+    % scale the
+    dir12 = dir12*dh;
+    dir13 = dir13*dv;
+    dir21 = dir21*dh;
+    dir24 = dir24*dv;
+    dir31 = dir31*dv;
+    dir34 = dir34*dh;
+    dir42 = dir42*dv;
+    dir43 = dir43*dh;
+    
+    if isempty(cfg.channel)
+      ft_notice('using automatic channel labels');
+      cfg.channel = arrayfun(@num2str, 1:(nh*nv), 'UniformOutput', false);
+    else
+      assert(numel(cfg.channel)==nh*nv, 'mismatch between cfg.grid.dim and cfg.channel');
+    end
+    
+    pos1 = nan(nh*nv,3);
+    pos2 = nan(nh*nv,3);
+    pos3 = nan(nh*nv,3);
+    pos4 = nan(nh*nv,3);
+    
+    % determine the position of each electrode according to each parallellogram
+    k = 1;
+    for i=1:nv
+      for j=1:nh
+        pos1(k,:) = ( i-1)*dir13 + ( j-1)*dir12 + cfg.grid.corner1;
+        pos2(k,:) = ( i-1)*dir24 + (nh-j)*dir21 + cfg.grid.corner2;
+        pos3(k,:) = (nv-i)*dir31 + ( j-1)*dir34 + cfg.grid.corner3;
+        pos4(k,:) = (nv-i)*dir42 + (nh-j)*dir43 + cfg.grid.corner4;
+        k = k+1;
+      end % horizontal
+    end % vertical
+    
+    d1 = nan(nh*nv,1);
+    d2 = nan(nh*nv,1);
+    d3 = nan(nh*nv,1);
+    d4 = nan(nh*nv,1);
+    
+    % determine the schematic distance (i.e. counted in steps) to each corner
+    k = 1;
+    for i=1:nv
+      for j=1:nh
+        d1(k) = norm([( i-1)*dv ( j-1)*dh]);
+        d2(k) = norm([( i-1)*dv (nh-j)*dh]);
+        d3(k) = norm([(nv-i)*dv ( j-1)*dh]);
+        d4(k) = norm([(nv-i)*dv (nh-j)*dh]);
+        k = k+1;
+      end % horizontal
+    end % vertical
+    
+    % the weight is relative to the range, which is 0.5 times the dimagonal distance
+    range = sqrt(((nv-1)*dv)^2 + ((nh-1)*dh)^2) / 2;
+    % compute the weights from the distance
+    d1 = 10.^(-d1/range);
+    d2 = 10.^(-d2/range);
+    d3 = 10.^(-d3/range);
+    d4 = 10.^(-d4/range);
+    % normalize the weights
+    dd = (d1 + d2 + d3 + d4);
+    d1 = d1 ./ dd;
+    d2 = d2 ./ dd;
+    d3 = d3 ./ dd;
+    d4 = d4 ./ dd;
+    
+    % compute the weighted position
+    elec = [];
+    elec.label = cfg.channel;
+    elec.elecpos = [d1 d1 d1].*pos1 + [d2 d2 d2].*pos2 + [d3 d3 d3].*pos3 + [d4 d4 d4].*pos4;
     
   case 'headshape'
-    
     % start building the figure
     h = figure(...
       'Name', mfilename,...
