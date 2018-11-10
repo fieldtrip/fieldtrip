@@ -30,8 +30,10 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 %
 % SHAFT - This is for placing electrodes along a linear sEEG shaft. The tip of the
 % shaft, another point along the shaft and the distance between the electrodes should
-% be specified. The number of electrodes that is placed is determined from cfg.channel.
-%
+% be specified. If the shaft is not straight but curved, you should specify multiple
+% (at least two) points along the saft, i.e. specify cfg.shaft.along=Nx3 for N
+% points. The number of electrodes that is placed is determined from cfg.channel.
+
 % Use as
 %   [elec] = ft_electrodeplacement(cfg, ct)
 %   [elec] = ft_electrodeplacement(cfg, ct, mri, ..)
@@ -45,6 +47,7 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 %                        'headshape'       interactively locate electrodes on a head surface
 %                        '1020'            automatically locate electrodes on a head surface according to the 10-20 system
 %                        'shaft'           automatically locate electrodes along a linear sEEG shaft
+%                        'grid'            automatically locate electrodes on a MxN ECoG grid
 %
 % The following options apply to the 'volume' method
 %   cfg.parameter      = string, field in data (default = 'anatomy' if present in data)
@@ -68,8 +71,14 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 %
 % The following options apply to the 'shaft' method
 %   cfg.shaft.tip      = 1x3 position of the electrode at the tip of the shaft
-%   cfg.shaft.along    = 1x3 position along the shaft
+%   cfg.shaft.along    = 1x3 or Nx3 positions along the shaft
 %   cfg.shaft.distance = scalar, distance between electrodes
+%
+% The following options apply to the 'grid' method
+%   cfg.grid.corner1   = 1x3 position of the upper left corner point
+%   cfg.grid.corner2   = 1x3 position of the upper right corner point
+%   cfg.grid.corner3   = 1x3 position of the lower left corner point
+%   cfg.grid.corner4   = 1x3 position of the lower right corner point
 %
 % See also FT_ELECTRODEREALIGN, FT_VOLUMEREALIGN, FT_VOLUMESEGMENT, FT_PREPARE_MESH
 
@@ -190,16 +199,39 @@ end
 
 % this is where the different methods are implemented
 switch cfg.method
+  
   case 'shaft'
-    pos = cfg.shaft.tip;
-    ori = cfg.shaft.along - cfg.shaft.tip;
-    ori = ori/norm(ori);
-    
-    elec = [];
-    elec.label = cfg.channel;
-    for i=1:numel(elec.label)
-      elec.elecpos(i,:) = pos + (i-1) * ori * cfg.shaft.distance;
+    if size(cfg.shaft.along,1)==1
+      % two points are specified, use a simple linear method
+      pos = cfg.shaft.tip;
+      ori = cfg.shaft.along - cfg.shaft.tip;
+      ori = ori/norm(ori);
+      
+      elec = [];
+      elec.label = cfg.channel;
+      for i=1:numel(elec.label)
+        elec.elecpos(i,:) = pos + (i-1) * ori * cfg.shaft.distance;
+      end
+      
+    else
+      % more than two points are specified, use a spline
+      pos = [
+        cfg.shaft.tip
+        cfg.shaft.along
+        ];
+      dist = sqrt(sum(diff(pos,1,1).^2, 2)); % distance between subsequent positions
+      dist = [0; cumsum(dist)];              % cumulative distance from the tip
+      cv = csapi(dist', pos');               % spline that goes through all positions
+      
+      elec = [];
+      elec.label = cfg.channel;
+      for i=1:numel(elec.label)
+        dist = (i-1) * cfg.shaft.distance;
+        elec.elecpos(i,:) = cfg.shaft.tip + fnval(cv, dist)';
+      end
+      
     end
+    
     
     
   case 'headshape'
