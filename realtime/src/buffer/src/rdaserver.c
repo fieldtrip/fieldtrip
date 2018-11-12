@@ -5,7 +5,11 @@
  *
  */
 
-#include "rdaserver.h"
+#include <sched.h>
+#include <fcntl.h>
+#include <errno.h>
+
+#include <rdaserver.h>
 
 const UINT8_T _rda_guid[16]={
 	0x8E,0x45,0x58,0x43,0x96,0xC9,0x86,0x4C,0xAF,0x4A,0x98,0xBB,0xF6,0xC9,0x14,0x50
@@ -158,8 +162,8 @@ rda_buffer_item_t *rda_aux_get_hdr_prep_start(int ft_buffer, headerdef_t *hdr) {
 
 	if (_i_am_big_endian_) {
 		/* take care of hdr.nSize, hdr.nType, nChannels */
-		endian_swap32(3, &(R->hdr.nSize));
-		endian_swap64(1, &(R->dSamplingInterval));
+		ft_swap32(3, &(R->hdr.nSize));
+		ft_swap64(1, &(R->dSamplingInterval));
 	}
 
 	/* R+1 points to first byte after header info */
@@ -172,7 +176,7 @@ rda_buffer_item_t *rda_aux_get_hdr_prep_start(int ft_buffer, headerdef_t *hdr) {
 	}
 	/* swap byte order if necessary */
 	if (_i_am_big_endian_) {
-		endian_swap64(hdr->nchans, dRes);
+		ft_swap64(hdr->nchans, dRes);
 	}
 
 	/* Let 'str' point to first byte after the resolution values */
@@ -375,7 +379,7 @@ rda_buffer_item_t *rda_aux_get_samples_and_markers(int ft_buffer, const samples_
 		R->nMarkers = numEvt;
 		if (_i_am_big_endian_) {
 			/* take care of hdr.nSize, hdr.nType, nBlocks, nPoints, nMarkers */
-			endian_swap32(5, &(R->hdr.nSize));
+			ft_swap32(5, &(R->hdr.nSize));
 		}
 	}
 
@@ -401,7 +405,7 @@ rda_buffer_item_t *rda_aux_get_samples_and_markers(int ft_buffer, const samples_
 			}
 		} else {
 			rda_aux_convert_to_float(numTotal, dataDest, ddef->data_type, dataSrc);
-			if (_i_am_big_endian_) endian_swap32(numTotal, dataDest);
+			if (_i_am_big_endian_) ft_swap32(numTotal, dataDest);
 		}
 	}
 
@@ -456,7 +460,7 @@ rda_buffer_item_t *rda_aux_get_samples_and_markers(int ft_buffer, const samples_
 
 			if (_i_am_big_endian_) {
 				/* convert the 4 int32's in the marker definition */
-				endian_swap32(4, (void *) marker);
+				ft_swap32(4, (void *) marker);
 			}
 		}
 	}

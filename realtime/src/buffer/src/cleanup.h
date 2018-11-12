@@ -3,12 +3,6 @@
  * Donders Institute for Brain, Cognition and Behaviour; Radboud University; NL
  */
 
-#ifndef CLEANUP_H
-#define CLEANUP_H
-
-#include "platform_includes.h"
-#include "buffer.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -20,10 +14,8 @@ void cleanup_data(void **arg);
 void cleanup_event(void **arg);
 void cleanup_buf(void **arg);
 void cleanup_socket(int *);
-void cleanup_tcpsocket(void *arg);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif

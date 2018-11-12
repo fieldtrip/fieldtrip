@@ -9,8 +9,7 @@
 #include <time.h>
 #include <fcntl.h>
 #include <errno.h>
-
-#include "socketserver.h"
+#include <socketserver.h>
 
 /************************************************************************
  * This function deals with the incoming client requests in a loop until
@@ -35,16 +34,16 @@
  * Depending on the nature of the request, we might skip states 1 and 3.
  * This is the case if there is no "buf" attached to the message, or if
  * an outgoing message can be merged in to a single packet.
- *
+ * 
  * The actual processing of the message happens before moving to state 2
- * and consists of
+ * and consists of 
  *   1) possibly swapping the message to native endianness
  *   2) calling dmarequest or the user-supplied callback function
  *   3) possibly swapping back to remote endianness
  ************************************************************************/
 void *_buffer_socket_func(void *arg) {
 	SOCKET sock;
-	socketserver_server_t *SC;
+	ft_buffer_server_t *SC;
 	int mergePackets;
 	messagedef_t reqdef;
 	message_t request;
@@ -53,24 +52,24 @@ void *_buffer_socket_func(void *arg) {
 	int bytesDone, bytesTotal;
 	char mergeBuffer[MERGE_THRESHOLD];
 	char *curPtr;	/* points at buffer that needs to be filled or written out */
-	int swap = 0;
+	int swap = 0;	
 	int canRead, canWrite;
 	UINT16_T reqCommand;
 	UINT32_T respBufSize;
 	fd_set readSet, writeSet;
 
 	if (arg==NULL) return NULL;
-
+		
 	/* copy over necessary variables and free the given structure */
-	SC 			 = ((socketserver_socket_t *) arg)->server;
-	sock 		 = ((socketserver_socket_t *) arg)->clientSocket;
-	mergePackets = ((socketserver_socket_t *) arg)->mergePackets;
+	SC 			 = ((ft_buffer_socket_t *) arg)->server;
+	sock 		 = ((ft_buffer_socket_t *) arg)->clientSocket;
+	mergePackets = ((ft_buffer_socket_t *) arg)->mergePackets;
 	free(arg);
-
+	
 	if (SC->verbosity > 0) {
 		printf("Started new client thread with packet merging = %i\n", mergePackets);
 	}
-
+	
     pthread_mutex_lock(&SC->lock);
     SC->numClients++;
     pthread_mutex_unlock(&SC->lock);
@@ -84,7 +83,7 @@ void *_buffer_socket_func(void *arg) {
 	while (SC->keepRunning) {
 		int sel, res, n;
 		struct timeval tv = {0, 10000}; /* 10ms */
-
+	
 		FD_ZERO(&readSet);
 		FD_ZERO(&writeSet);
 		if (state < 2) {
@@ -100,7 +99,7 @@ void *_buffer_socket_func(void *arg) {
 		}
 		canRead = FD_ISSET(sock, &readSet);
 		canWrite = FD_ISSET(sock, &writeSet);
-
+		
 		if (canRead) {
 			n = recv(sock, curPtr + bytesDone, bytesTotal - bytesDone, 0);
 			if (n<=0) {
@@ -112,14 +111,14 @@ void *_buffer_socket_func(void *arg) {
 			}
 			bytesDone+=n;
 			if (bytesDone<bytesTotal) continue;
-
+			
 			if (state == 0) {
 				/* we've read the request.def completely */
 				if (reqdef.version==VERSION_OE) {
 					swap = 1;
-					endian_swap16(2, &reqdef.version); /* version + command */
-					endian_swap32(1, &reqdef.bufsize);
-					reqCommand = reqdef.command;
+					ft_swap16(2, &reqdef.version); /* version + command */
+					ft_swap32(1, &reqdef.bufsize);
+					reqCommand = reqdef.command;		
 				}
 				if (reqdef.version!=VERSION) {
 					fprintf(stderr,"Incorrect version requested - closing socket.\n");
@@ -136,15 +135,15 @@ void *_buffer_socket_func(void *arg) {
 					bytesTotal = reqdef.bufsize;
 					state = 1;
 					continue;
-				}
+				} 
 			} else {
-				/* Reaching this point means that the state=1, and that we've
-				   read request.buf completely, so swap the endianness if
+				/* Reaching this point means that the state=1, and that we've 
+				   read request.buf completely, so swap the endianness if 
 				   necessary, and then move on to handling the request.
-				*/
-				if (swap) endian_swap_buf_to_native(reqCommand, reqdef.bufsize, request.buf);
+				*/	
+				if (swap) ft_swap_buf_to_native(reqCommand, reqdef.bufsize, request.buf);
 			}
-
+			
 			/* Request has been read completely, now deal with it */
 			if (SC->callback != NULL) {
 				/* User supplied a callback function in ft_start_buffer_server */
@@ -161,7 +160,7 @@ void *_buffer_socket_func(void *arg) {
 					break;
 				}
 			}
-
+			
 			/* Ok, the request has been handled, results are in response.
 			   We can free the memory pointed to by request.buf ...
 			*/
@@ -169,14 +168,14 @@ void *_buffer_socket_func(void *arg) {
 				free(request.buf);
 				request.buf = NULL;
 			}
-
+			
 			/* ... swap the response to the remote endianness, if necessary ... */
 			respBufSize = response->def->bufsize;
-			if (swap) endian_swap_from_native(reqCommand, response);
-
+			if (swap) ft_swap_from_native(reqCommand, response);
+		
 			/* ... and then start writing back the response. To reduce latency,
-			   we try to merge response->def and response->buf if they are small,
-			   so we can send it in one go over TCP. To fit the merged packet into
+			   we try to merge response->def and response->buf if they are small, 
+			   so we can send it in one go over TCP. To fit the merged packet into 
 			   our state machine logic, we apply a trick and jump to state=3 directly,
 			   where "curPtr" points to the merged packet.
 			   Otherwise, we move to state=2, transmit response->def, move to state=3,
@@ -185,7 +184,7 @@ void *_buffer_socket_func(void *arg) {
 			if (mergePackets && respBufSize > 0 && respBufSize + sizeof(messagedef_t) <= MERGE_THRESHOLD) {
 				memcpy(mergeBuffer, response->def, sizeof(messagedef_t));
 				memcpy(mergeBuffer + sizeof(messagedef_t), response->buf, respBufSize);
-
+				
 				curPtr = mergeBuffer;
 				bytesDone = 0;
 				bytesTotal = respBufSize + sizeof(messagedef_t);
@@ -198,7 +197,7 @@ void *_buffer_socket_func(void *arg) {
 			}
 			canWrite = 1;
 		}
-
+		
 		if (state >= 2 && canWrite) {
 			n = send(sock, curPtr + bytesDone, bytesTotal - bytesDone, 0);
 			if (n<=0) {
@@ -228,11 +227,11 @@ void *_buffer_socket_func(void *arg) {
 			bytesTotal = sizeof(messagedef_t);
 		}
 	}
-
+	
     pthread_mutex_lock(&SC->lock);
     SC->numClients--;
     pthread_mutex_unlock(&SC->lock);
-
+	
 	closesocket(sock);
 	if (request.buf!=NULL) free(request.buf);
     if (response!=NULL) {
@@ -240,7 +239,7 @@ void *_buffer_socket_func(void *arg) {
 		if (response->def!=NULL) free(response->def);
 		free(response);
 	}
-
+	
 	return NULL;
 }
 
@@ -251,57 +250,57 @@ void *_buffer_socket_func(void *arg) {
  * if a connection is made by a client, it starts _buffer_socket_func
  ***********************************************************************/
 void *_buffer_server_func(void *arg) {
-	socketserver_server_t *SC = (socketserver_server_t *) arg;
+	ft_buffer_server_t *SC = (ft_buffer_server_t *) arg;
 	int n;
-
+	
 	if (SC == NULL) {
 		fprintf(stderr, "FieldTrip buffer server thread started with invalid argument\n");
 		return NULL;
 	}
-
-
+	
+	
 	while (SC->keepRunning) {
 		SOCKET c;
 		fd_set readSet;
 		int sel, rc, merge;
 		pthread_t tid;
-		socketserver_socket_t *CC;
+		ft_buffer_socket_t *CC;
 		struct timeval tv = {0,10000};	/* 10 ms for select timeout */
 
 		FD_ZERO(&readSet);
 		FD_SET(SC->serverSocket, &readSet);
 
 		sel = select((int) SC->serverSocket + 1, &readSet, NULL, NULL, &tv);
-
+		
 		if (sel == 0) continue;
-
+		
 		/* The following code portion looks weird because of the preprocessor
 			defines splitting an if/else clause, but it's just what we want:
 			On Windows, there is no if/else clause, and the second (TCP) bit
 			is always called. On POSIX systems, we branch depending on whether
 			the server runs a local domain socket or TCP socket.
 		*/
-#ifndef WIN32
+#ifndef WIN32		
 		if (SC->isUnixDomain) {
 			struct sockaddr_un sa;
 			socklen_t size_sa = sizeof(sa);
-
+			
 			c = accept(SC->serverSocket, (struct sockaddr *)&sa, &size_sa);
-
+			
 			if (c == INVALID_SOCKET) {
 				perror("buffer_server, accept");
 				continue;
 			}
 			/* never merge packets for (local) UNIX sockets */
 			merge = 0;
-		} else
-#endif
+		} else 
+#endif		
 		{
 			struct sockaddr_in sa;
 			socklen_t size_sa = sizeof(sa);
-
+			
 			c = accept(SC->serverSocket, (struct sockaddr *)&sa, &size_sa);
-
+			
 			if (c == INVALID_SOCKET) {
 				perror("buffer_server, accept");
 				continue;
@@ -309,18 +308,18 @@ void *_buffer_server_func(void *arg) {
 			/* enable packet merging only if it's not localhost */
 			merge = (sa.sin_addr.s_addr == htonl(INADDR_LOOPBACK)) ? 0 : 1;
 		}
-
-		CC = (socketserver_socket_t *) malloc(sizeof(socketserver_socket_t));
+		
+		CC = (ft_buffer_socket_t *) malloc(sizeof(ft_buffer_socket_t));
 		if (CC==NULL) {
 			fprintf(stderr, "Out of memory\n");
 			closesocket(c);
 			continue;
 		}
-
+		
 		CC->server = SC;
 		CC->clientSocket = c;
 		CC->mergePackets = merge;
-
+		
 		rc = pthread_create(&tid, NULL, _buffer_socket_func, CC);
 		if (rc) {
 			fprintf(stderr, "tcpserver: return code from pthread_create() is %d\n", rc);
@@ -339,14 +338,14 @@ void *_buffer_server_func(void *arg) {
 }
 
 
-socketserver_server_t *ft_start_buffer_server(int port, const char *name, ft_request_callback_t callback, void *user_data) {
-	socketserver_server_t *SC;
+ft_buffer_server_t *ft_start_buffer_server(int port, const char *name, ft_request_callback_t callback, void *user_data) {
+	ft_buffer_server_t *SC;
 	int optval;
 	SOCKET s = INVALID_SOCKET;
-
-	SC = (socketserver_server_t *) malloc(sizeof(socketserver_server_t));
+	
+	SC = (ft_buffer_server_t *) malloc(sizeof(ft_buffer_server_t));
 	if (SC==NULL) return NULL;
-
+	
 	SC->callback = callback;
 	SC->user_data = user_data;
 
@@ -410,7 +409,7 @@ socketserver_server_t *ft_start_buffer_server(int port, const char *name, ft_req
 		}
 		SC->isUnixDomain = 0;
 	}
-
+	
 	/* place the socket in non-blocking mode, required to do thread cancelation */
 #ifdef WIN32
 	{
@@ -430,25 +429,25 @@ socketserver_server_t *ft_start_buffer_server(int port, const char *name, ft_req
 		perror("ft_start_buffer_server, listen");
 		goto cleanup;
 	}
-
+		
 	/* set some control variables */
 	SC->numClients = 0;
 	SC->keepRunning = 1;
 	SC->serverSocket = s;
 	SC->verbosity = 10; /* TODO: specify proper values */
-
+	
 	/* create the mutex */
 	if (pthread_mutex_init(&SC->lock, NULL) != 0) {
 		fprintf(stderr,"start_tcp_server: mutex could not be initialised\n");
 		goto cleanup;
 	}
-
+	
 	/* create thread with default attributes */
 	if (pthread_create(&SC->threadID, NULL, _buffer_server_func, SC) == 0) {
 		/* everything went fine - thread should be running now */
 		return SC;
-	}
-
+	}	
+	
 	fprintf(stderr,"start_tcp_server: could not spawn thread\n");
 	pthread_mutex_destroy(&SC->lock);
 
@@ -463,11 +462,11 @@ cleanup:
 		closesocket(s);
 	}
 	return NULL;
-}
+}		
 
-void ft_stop_buffer_server(socketserver_server_t *S) {
+void ft_stop_buffer_server(ft_buffer_server_t *S) {
 	if (S==NULL) return;
-
+	
 	S->keepRunning = 0;
 	pthread_join(S->threadID, NULL);
 	pthread_detach(S->threadID);

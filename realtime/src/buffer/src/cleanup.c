@@ -5,7 +5,9 @@
  *
  */
 
-#include "cleanup.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include "buffer.h"
 
 /* this is used for debugging */
 int verbose = 0; /* FIXME: make static. */
@@ -70,3 +72,4 @@ void cleanup_buf(void **arg) {
 	}
 	return;
 }
+
