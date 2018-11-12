@@ -4,7 +4,13 @@
  *
  */
 
-#include "interface.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+
+#include "buffer.h"
+#include "message.h"
+#include "printstruct.h"
 
 /*******************************************************************************
  * START THE BUFFER IN A SEPARATE THREAD

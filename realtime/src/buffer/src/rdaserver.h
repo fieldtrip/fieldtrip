@@ -5,14 +5,10 @@
  *
  */
 
-#ifndef RDASERVER_H
-#define RDASERVER_H
+#ifndef __RDASERVER_H
+#define __RDASERVER_H
 
 #include <pthread.h>
-#include <sched.h>
-#include <fcntl.h>
-#include <errno.h>
-
 #include "platform.h"
 #include "buffer.h"
 #include "rdadefs.h"

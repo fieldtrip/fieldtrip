@@ -5,7 +5,10 @@
  *
  */
 
-#include "print.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "message.h"
 
 void print_request(messagedef_t *request) {
 	fprintf(stderr, "request.version = 0x%04x\n", request->version);
@@ -13,13 +16,11 @@ void print_request(messagedef_t *request) {
 	fprintf(stderr, "request.bufsize = %u\n",     request->bufsize);
 }
 
-
 void print_response(messagedef_t *response) {
 	fprintf(stderr, "response.version = 0x%04x\n", response->version);
 	fprintf(stderr, "response.command = 0x%04x\n", response->command);
 	fprintf(stderr, "response.bufsize = %u\n",     response->bufsize);
 }
-
 
 void print_headerdef(headerdef_t *headerdef) {
 	if (headerdef==NULL)
@@ -34,7 +35,6 @@ void print_headerdef(headerdef_t *headerdef) {
 	}
 }
 
-
 void print_datadef(datadef_t *datadef) {
 	if (datadef==NULL)
 		fprintf(stderr, "datadef==NULL\n");
@@ -45,7 +45,6 @@ void print_datadef(datadef_t *datadef) {
 		fprintf(stderr, "datadef.bufsize   = %u\n", datadef->bufsize);
 	}
 }
-
 
 void print_eventdef(eventdef_t *eventdef) {
 	if (eventdef==NULL)
@@ -62,18 +61,15 @@ void print_eventdef(eventdef_t *eventdef) {
 	}
 }
 
-
 void print_datasel(datasel_t *datasel) {
 	fprintf(stderr, "datasel.begsample  = %u\n", datasel->begsample);
 	fprintf(stderr, "datasel.endsample  = %u\n", datasel->endsample);
 }
 
-
 void print_eventsel(eventsel_t *eventsel) {
 	fprintf(stderr, "eventsel.begevent  = %u\n", eventsel->begevent);
 	fprintf(stderr, "eventsel.endevent  = %u\n", eventsel->endevent);
 }
-
 
 void print_buf(void *buf, int bufsize) {
 	int i;

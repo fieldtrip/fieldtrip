@@ -14,11 +14,20 @@
 
 #include "buffer.h"
 #include "platform_includes.h"
-#include "extern.h"
+
+/* FIXME should these be static? */
+static header_t   *header   = NULL;
+static data_t     *data     = NULL;
+static event_t    *event    = NULL;
 
 /* these are used for fine-tuning the sample number of incoming events */
 struct timespec putdat_clock;
 struct timespec putevt_clock;
+
+static unsigned int current_max_num_sample = 0;
+
+static int thissample = 0;    /* points at the buffer */
+static int thisevent = 0;     /* points at the buffer */
 
 /* Note that there have been problems with the order of the mutexes (e.g.
  * http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=933).
@@ -41,6 +50,98 @@ pthread_mutex_t mutexevent    = PTHREAD_MUTEX_INITIALIZER;
 
 pthread_cond_t getData_cond   = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t getData_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+/*****************************************************************************/
+
+void free_header() {
+	int verbose = 0;
+	if (verbose>0) fprintf(stderr, "free_header: freeing header buffer\n");
+	if (header) {
+		FREE(header->def);
+		FREE(header->buf);
+		FREE(header);
+	}
+}
+
+void free_data() {
+	int verbose = 0;
+	if (verbose>0) fprintf(stderr, "free_data: freeing data buffer\n");
+	if (data) {
+		FREE(data->def);
+		FREE(data->buf);
+		FREE(data);
+	}
+	thissample = 0;
+	if (header) header->def->nsamples = 0;
+}
+
+void free_event() {
+	int verbose = 0;
+	int i;
+	if (verbose>0) fprintf(stderr, "free_event: freeing event buffer\n");
+	if (event) {
+		for (i=0; i<MAXNUMEVENT; i++) {
+			FREE(event[i].def);
+			FREE(event[i].buf);
+		}
+		FREE(event);
+	}
+	thisevent = 0;
+	if (header) header->def->nevents = 0;
+}
+
+/*****************************************************************************/
+
+void init_data(void) {
+	int verbose = 0;
+	if (verbose>0) fprintf(stderr, "init_data: creating data buffer\n");
+	if (header) {
+		unsigned int wordsize = wordsize_from_type(header->def->data_type);
+
+		if (wordsize==0) {
+			fprintf(stderr, "init_data: unsupported data type (%u)\n", header->def->data_type);
+			return;
+		}
+		/* heuristic of choosing size of buffer:
+			 set current_max_num_sample to MAXNUMSAMPLE if nchans <= 256
+			 otherwise, allocate about MAXNUMBYTE and calculate current_max_num_sample from nchans + wordsize
+		 */
+		if (header->def->nchans <= 256) {
+			current_max_num_sample = MAXNUMSAMPLE;
+		} else {
+			current_max_num_sample = MAXNUMBYTE / (wordsize * header->def->nchans);
+		}
+		data = (data_t*)malloc(sizeof(data_t));
+
+		DIE_BAD_MALLOC(data);
+
+		data->def = (datadef_t*)malloc(sizeof(datadef_t));
+
+		DIE_BAD_MALLOC(data->def);
+
+		data->def->nchans    = header->def->nchans;
+		data->def->nsamples  = current_max_num_sample;
+		data->def->data_type = header->def->data_type;
+		data->buf = malloc(header->def->nchans*current_max_num_sample*wordsize);
+
+		DIE_BAD_MALLOC(data->buf);
+	}
+}
+
+void init_event(void) {
+	int verbose = 0;
+	int i;
+	if (verbose>0) fprintf(stderr, "init_event: creating event buffer\n");
+	if (header) {
+		event = (event_t*)malloc(MAXNUMEVENT*sizeof(event_t));
+		DIE_BAD_MALLOC(event);
+		for (i=0; i<MAXNUMEVENT; i++) {
+			event[i].def = NULL;
+			event[i].buf = NULL;
+		}
+	}
+}
+
 
 /*****************************************************************************
  * this function handles the direct memory access to the buffer
@@ -87,55 +188,13 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 	/* the response should be passed to the calling function, where it should be freed */
 	*response_ptr = response;
 
-	if (verbose>1) {
-		print_request(request->def);
-		switch (request->def->command) {
-			case PUT_HDR:
-				fprintf(stderr, "dmarequest: PUT_HDR\n");
-				break;
-			case PUT_HDR_NORESPONSE:
-				fprintf(stderr, "dmarequest: PUT_HDR_NOREPONSE\n");
-				break;
-			case PUT_DAT:
-				fprintf(stderr, "dmarequest: PUT_DAT\n");
-				break;
-			case PUT_DAT_NORESPONSE:
-				fprintf(stderr, "dmarequest: PUT_DAT_NOREPONSE\n");
-				break;
-			case PUT_EVT:
-				fprintf(stderr, "dmarequest: PUT_EVT\n");
-				break;
-			case PUT_EVT_NORESPONSE:
-				fprintf(stderr, "dmarequest: PUT_EVT_NOREPONSE\n");
-				break;
-			case GET_HDR:
-				fprintf(stderr, "dmarequest: GET_HDR\n");
-				break;
-			case GET_DAT:
-				fprintf(stderr, "dmarequest: GET_DAT\n");
-				break;
-			case GET_EVT:
-				fprintf(stderr, "dmarequest: GET_EVT\n");
-				break;
-			case FLUSH_HDR:
-				fprintf(stderr, "dmarequest: FLUSH_HDR\n");
-				break;
-			case FLUSH_DAT:
-				fprintf(stderr, "dmarequest: FLUSH_DAT\n");
-				break;
-			case FLUSH_EVT:
-				fprintf(stderr, "dmarequest: FLUSH_EVT\n");
-				break;
-			case WAIT_DAT:
-				fprintf(stderr, "dmarequest: WAIT_DAT\n");
-				break;
-		}
-	}
+	if (verbose>1) print_request(request->def);
 
 	switch (request->def->command) {
 
 		case PUT_HDR:
 		case PUT_HDR_NORESPONSE:
+			if (verbose>1) fprintf(stderr, "dmarequest: PUT_HDR\n");
 			pthread_mutex_lock(&mutexheader);
 			pthread_mutex_lock(&mutexdata);
 			pthread_mutex_lock(&mutexevent);
@@ -180,6 +239,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 
 		case PUT_DAT:
 		case PUT_DAT_NORESPONSE:
+			if (verbose>1) fprintf(stderr, "dmarequest: PUT_DAT\n");
 			pthread_mutex_lock(&mutexheader);
 			pthread_mutex_lock(&mutexdata);
 
@@ -243,6 +303,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 
 		case PUT_EVT:
 		case PUT_EVT_NORESPONSE:
+			if (verbose>1) fprintf(stderr, "dmarequest: PUT_EVT\n");
 			pthread_mutex_lock(&mutexheader);
 			pthread_mutex_lock(&mutexevent);
 
@@ -299,6 +360,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			break;
 
 		case GET_HDR:
+			if (verbose>1) fprintf(stderr, "dmarequest: GET_HDR\n");
 			if (header==NULL) {
 				response->def->version = VERSION;
 				response->def->command = GET_ERR;
@@ -318,6 +380,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			break;
 
 		case GET_DAT:
+			if (verbose>1) fprintf(stderr, "dmarequest: GET_DAT\n");
 			if (header==NULL || data==NULL) {
 				response->def->version = VERSION;
 				response->def->command = GET_ERR;
@@ -466,6 +529,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			break;
 
 		case GET_EVT:
+			if (verbose>1) fprintf(stderr, "dmarequest: GET_EVT\n");
 			if (header==NULL || event==NULL || header->def->nevents==0) {
 				response->def->version = VERSION;
 				response->def->command = GET_ERR;
@@ -680,7 +744,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			break;
 
 		default:
-			fprintf(stderr, "dmarequest: unknown command %d\n", request->def->command);
+			fprintf(stderr, "dmarequest: unknown command\n");
 	}
 
 	if (verbose>0) fprintf(stderr, "dmarequest: thissample = %u, thisevent = %u\n", thissample, thisevent);

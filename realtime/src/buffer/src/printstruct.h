@@ -4,19 +4,13 @@
  *
  */
 
-#ifndef PRINT_H
-#define PRINT_H
-
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "message.h"
+ #include "message.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* definition of functions for printing the content of various structures, see print.c */
+/* definition of functions for printing the content of various structures, see printstruct.c */
 void print_request(messagedef_t *);
 void print_response(messagedef_t *);
 void print_headerdef(headerdef_t *);
@@ -28,6 +22,4 @@ void print_buf(void *, int);
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif

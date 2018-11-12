@@ -1,3 +1,5 @@
+#include "compiler.h"
+#include "platform.h"
 #include "platform_includes.h"
 
 #ifdef PLATFORM_OSX

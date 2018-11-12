@@ -5,7 +5,17 @@
  *
  */
 
-#include "util.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>       /* for strerror */
+
+#include <time.h>
+#include <sys/time.h>
+
+#include <pthread.h>
+
+#include "buffer.h"
+#include "extern.h"
 
 unsigned int bufread(int s, void *buf, unsigned int numel) {
 		unsigned int numcall = 0, numread = 0, verbose = 0;
