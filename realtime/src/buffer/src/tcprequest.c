@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include "buffer.h"
 
-#define MERGE_THRESHOLD 4096 /* TODO: optimize this value? Maybe look at MTU size */
+#define MERGE_THRESHOLD 1500 /* this is the MTU size of most interfaces */
 
 /*******************************************************************************
  * communicate with the buffer through TCP
