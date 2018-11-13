@@ -25,7 +25,7 @@ function [headmodel, cfg] = ft_prepare_concentricspheres(cfg)
 %
 % $Id$
 
-warning('FT_PREPARE_CONCENTRICSPHERES is deprecated, please use FT_PREPARE_HEADMODEL with cfg.method = ''concentricspheres'' instead.')
+ft_warning('FT_PREPARE_CONCENTRICSPHERES is deprecated, please use FT_PREPARE_HEADMODEL with cfg.method = ''concentricspheres'' instead.')
 
 % these are used by the ft_preamble/ft_postamble function and scripts
 ft_revision = '$Id$';

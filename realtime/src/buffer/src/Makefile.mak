@@ -20,10 +20,10 @@ LIBFLAGS = /MACHINE:X86
 
 all: libbuffer.lib
 
-libbuffer.lib: tcpserver.obj tcpsocket.obj tcprequest.obj clientrequest.obj dmarequest.obj cleanup.obj util.obj printstruct.obj swapbytes.obj extern.obj endianutil.obj  socketserver.obj
+libbuffer.lib: tcpserver.obj tcpsocket.obj tcprequest.obj clientrequest.obj dmarequest.obj cleanup.obj util.obj print.obj swap.obj extern.obj endian.obj  socketserver.obj
 	lib $(LIBFLAGS) /OUT:libbuffer.lib $**
 	
-%.obj: %.c buffer.h message.h swapbytes.h socket_includes.h unix_includes.h
+%.obj: %.c buffer.h message.h swap.h socket_includes.h unix_includes.h
 	$(CC) /c $(CFLAGS) $*.c
 
 clean:

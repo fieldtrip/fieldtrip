@@ -3,8 +3,8 @@ function [coord_snapped] = warp_dykstra2012(cfg, elec, surf)
 % WARP_DYKSTRA2012 projects the ECoG grid / strip onto a cortex hull
 % using the algorithm described in Dykstra et al. (2012,
 % Neuroimage) in which the distance from original positions and the
-% deformation of the grid are minimized. This function relies on MATLAB's 
-% optimization toolbox. To align ECoG electrodes to the pial surface, you 
+% deformation of the grid are minimized. This function relies on MATLAB's
+% optimization toolbox. To align ECoG electrodes to the pial surface, you
 % first need to compute the cortex hull with FT_PREPARE_MESH.
 %
 % See also FT_ELECTRODEREALIGN, FT_PREPARE_MESH, WARP_HERMES2010
@@ -73,7 +73,7 @@ if strcmp(cfg.pairmethod, 'label') % FIXME: it were cleaner if this were housed 
   pos_ordered = [];
   labels_ordered = {};
   elec.cutout = []; % index of electrodes that appear to be cut out
-  dowarn = 0;
+  dowarn = false;
   for e = 1:elec.maxdigit
     labels_ordered{e} = [elec.ElecStr num2str(e)];
     if ~isempty(match_str(labels, num2str(e)))
@@ -81,7 +81,7 @@ if strcmp(cfg.pairmethod, 'label') % FIXME: it were cleaner if this were housed 
     else
       elec.cutout(end+1) = e;
       pos_ordered(e, :) = NaN(1,3);
-      dowarn = 1;
+      dowarn = true;
     end
   end
   if dowarn
@@ -220,15 +220,15 @@ if strcmp(method, 'label')
   fprintf('creating electrode pairs based on electrode labels\n');
   GridDim = determine_griddim(elec);
   if GridDim(1)*GridDim(2) ~= elec.maxdigit
-    warning('the product of the dimensions does not equal the maximum digit in the electrode labels, so if incorrect, use cfg.pairmethod = ''pos'' instead\n');
+    ft_warning('the product of the dimensions does not equal the maximum digit in the electrode labels, so if incorrect, use cfg.pairmethod = ''pos'' instead\n');
   elseif any(GridDim(:)==1) % if not because of strips, this could happen in case of missing electrodes
-    warning('if this not a strip, there may be electrodes missing, so if incorrect, use cfg.pairmethod = ''pos'' instead\n');
+    ft_warning('if this not a strip, there may be electrodes missing, so if incorrect, use cfg.pairmethod = ''pos'' instead\n');
   end
   
   % create pairs based on dimensions
   diagonal = 1;
   pairs = [];
-  for e = 1:GridDim(1)*GridDim(2)   
+  for e = 1:GridDim(1)*GridDim(2)
     if isequal(mod(e,GridDim(2)), 1) % begin of each elec array
       pairs(end+1,:) = [e e+1]; % following elec
       pairs(end+1,:) = [e e-GridDim(2)]; % adjacent preceding elec
@@ -260,7 +260,7 @@ if strcmp(method, 'label')
   end
   pairs( pairs(:,2)<1 | pairs(:,2)>GridDim(1)*GridDim(2) ,:) = []; % out of bounds
   pairs = unique(sort(pairs,2),'rows'); % unique pairs
- 
+  
 elseif strcmp(method, 'pos')
   
   % KNN_PAIRS compute pairs of neighbors of the grid

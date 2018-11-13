@@ -41,7 +41,7 @@ function h = ft_plot_dipole(pos, ori, varargin)
 %
 % $Id$
 
-ws = warning('on', 'MATLAB:divideByZero');
+ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 amplitudescale = ft_getopt(varargin, 'scale',     'none');
@@ -193,4 +193,4 @@ if ~nargout
   clear h
 end
 
-warning(ws); %revert to original state
+ft_warning(ws); %revert to original state

@@ -658,6 +658,9 @@ if hasfun && ~hasmsk && isfield(functional, 'inside')
   % make intelligent mask
   if isequal(cfg.method, 'surface')
     msk(functional.inside&isfinite(functional.(cfg.funparameter))) = 1;
+    if any(functional.inside&~isfinite(functional.(cfg.funparameter)))
+      ft_warning('functional data contains %d NaNs labeled as inside', sum(functional.inside&~isfinite(functional.(cfg.funparameter))));
+    end    
   else
     if hasana
       msk(functional.inside) = 0.5; % so anatomy is visible
