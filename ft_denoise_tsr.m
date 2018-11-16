@@ -456,7 +456,8 @@ switch cfg.performance
       weights.performance(k,1) = tmp(1,2)./sqrt(tmp(1,1).*tmp(2,2));
     end
   case 'r-squared' 
-    tss = nansum(observed.^2, 2); % total sum of squares, testdata are already mean subtracted in l. 330
+    tss = nansum((observed.*isfinite(predicted)).^2, 2); % total sum of squares, 
+    % use only the samples where both predicted and observed are non-nan, testdata are already mean subtracted in l. 330
     rss = nansum((observed - predicted).^2, 2);  % sum of squared residual error
     % R-squared
     weights.performance = (tss-rss)./tss;
