@@ -1,12 +1,12 @@
-function data = ft_anonimizedata(cfg, data)
+function data = ft_anonymizedata(cfg, data)
 
-% FT_ANONIMIZEDATA clears the value of potentially identifying fields in
+% FT_ANONYMIZEDATA clears the value of potentially identifying fields in
 % the data and in the provenance information, i.e., it updates the data and
 % the configuration structure and history that is maintained by FieldTrip
 % in the cfg field.
 %
 % Use as
-%   output = ft_anonimizedata(cfg, data)
+%   output = ft_anonymizedata(cfg, data)
 % where data is any FieldTrip data structure and cfg is a configuration
 % structure that should contain
 %   cfg.keepnumeric = 'yes' or 'no', keep numeric fields (default = 'yes')
@@ -241,7 +241,7 @@ end
 fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
 name = info.name(info.remove);
 for i=1:length(name)
-  str = sprintf('%s = ''removed by ft_anonimizedata'';', name{i});
+  str = sprintf('%s = ''removed by ft_anonymizedata'';', name{i});
   disp(str);
   eval(str);
 end

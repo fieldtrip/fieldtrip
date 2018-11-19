@@ -15,7 +15,7 @@ function mesh = ft_defacemesh(cfg, mesh)
 %   cfg.translate  = initial rotation of the box (default = [0 0 0])
 %   cfg.selection  = which voxels to keep, can be 'inside' or 'outside' (default = 'outside')
 %
-% See also FT_ANONIMIZEDATA, FT_DEFACEVCOLUME, FT_ANALYSISPIPELINE, FT_PLOT_MESH
+% See also FT_ANONYMIZEDATA, FT_DEFACEVCOLUME, FT_ANALYSISPIPELINE, FT_PLOT_MESH
 
 % Copyright (C) 2015-2016, Robert Oostenveld
 %

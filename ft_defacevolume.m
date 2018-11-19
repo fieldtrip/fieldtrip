@@ -29,7 +29,7 @@ function mri = ft_defacevolume(cfg, mri)
 % The spm method does not have any options, it uses SPM_DEFACE from the
 % SPM12 toolbox.
 %
-% See also FT_ANONIMIZEDATA, FT_DEFACEMESH, FT_ANALYSISPIPELINE, FT_SOURCEPLOT
+% See also FT_ANONYMIZEDATA, FT_DEFACEMESH, FT_ANALYSISPIPELINE, FT_SOURCEPLOT
 
 % Copyright (C) 2015-2018, Robert Oostenveld
 %
