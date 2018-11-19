@@ -237,7 +237,7 @@ if computecov
     numsmp = sum(datsmp(1,:));
     if istrue(cfg.removemean)
       dat  = ft_preproc_baselinecorrect(dat);
-      smp = max(numsmp-1,1);
+      numsmp = max(numsmp-1,1);
     end
     dat(~datsmp)  = 0;
 
