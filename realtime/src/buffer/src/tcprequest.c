@@ -9,7 +9,13 @@
 #include <stdlib.h>
 #include "buffer.h"
 
-#define MERGE_THRESHOLD 4096 /* TODO: optimize this value? Maybe look at MTU size */
+#define MERGE_THRESHOLD 1460
+
+/*
+  The default MTU is 1500 for most network interfaces. Adding 26 bytes for the Ethernet header
+  results in a frame size of 1526. For TCP there is also a Maximum Segment Size (MSS),
+  which is 1460 after subtracting 20 bytes for the IPv4 and TCP header.
+*/
 
 /*******************************************************************************
  * communicate with the buffer through TCP
