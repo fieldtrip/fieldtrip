@@ -204,12 +204,11 @@ end
 % collect the results
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-timelock = keepfields(data, {'time' 'grad', 'elec', 'opto', 'topo', 'topolabel', 'unmixing'});
+timelock = keepfields(data, {'time' 'grad', 'elec', 'opto', 'topo', 'topolabel', 'unmixing', 'label'});
 if ~keeptrials
   timelock.avg        = avg;
   timelock.var        = var;
   timelock.dof        = dof;
-  timelock.label      = data.label(:);
   timelock.dimord     = 'chan_time';
 else
   timelock        = copyfields(data, timelock, {'trial' 'sampleinfo', 'trialinfo'});
