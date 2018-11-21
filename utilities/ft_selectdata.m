@@ -24,7 +24,7 @@ function [varargout] = ft_selectdata(cfg, varargin)
 %   cfg.avgoverchancmb = string, can be 'yes' or 'no' (default = 'no')
 %
 % For data with a time dimension you can specify
-%   cfg.latency     = scalar or string, can be 'all', 'prestim', 'poststim', or [beg end], specify time range in seconds
+%   cfg.latency     = scalar or string, can be 'all', 'minperiod', 'maxperiod', 'prestim', 'poststim', or [beg end], specify time range in seconds
 %   cfg.avgovertime = string, can be 'yes' or 'no' (default = 'no')
 %   cfg.nanmean     = string, can be 'yes' or 'no' (default = 'no')
 %
