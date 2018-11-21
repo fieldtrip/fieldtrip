@@ -8,10 +8,10 @@ function test_ft_timelockanalysis(datainfo, writeflag, version)
 % writeflag determines whether the output should be saved to disk
 % version determines the output directory
 
-if nargin<1
+if nargin<1 || isempty(datainfo)
   datainfo = ref_datasets;
 end
-if nargin<2
+if nargin<2 || isempty(writeflag)
   writeflag = 0;
 end
 if nargin<3
