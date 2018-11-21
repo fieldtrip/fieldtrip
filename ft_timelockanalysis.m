@@ -12,22 +12,13 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 %   cfg.channel            = Nx1 cell-array with selection of channels (default = 'all'),
 %                            see FT_CHANNELSELECTION for details
 %   cfg.trials             = 'all' or a selection given as a 1xN vector (default = 'all')
+%   cfg.latency            = [begin end] in seconds, or 'all', 'minperiod', 'maxperiod',
+%                            'prestim', 'poststim' (default = 'all')
 %   cfg.covariance         = 'no' or 'yes' (default = 'no')
-%   cfg.covariancewindow   = 'prestim', 'poststim', 'all' or [begin end] (default = 'all')
+%   cfg.covariancewindow   = [begin end] in seconds, or 'all', 'minperiod', 'maxperiod',
+%                            'prestim', 'poststim' (default = 'all')
 %   cfg.keeptrials         = 'yes' or 'no', return individual trials or average (default = 'no')
 %   cfg.removemean         = 'no' or 'yes' for covariance computation (default = 'yes')
-%   cfg.vartrllength       = 0, 1 or 2 (see below)
-%
-% Depending on cfg.vartrllength, variable length trials and trials with
-% differences in their time axes (so even if they are of the same length, e.g. 1
-% second snippets of data cut from a single long recording) are treated differently:
-%   0 - do not accept variable length trials [default]
-%   1 - accept variable length trials, but only take those trials in which
-%       data is present in both the average and the covariance window
-%   2 - accept variable length trials, use all available trials
-%       the available samples in every trial will be used for the
-%       average and covariance computation. Missing values are replaced
-%       by NaN and are not included in the computation.
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -60,11 +51,11 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 % cfg.preproc
 %
 % Deprecated options:
-% cfg.latency
 % cfg.blcovariance
 % cfg.blcovariancewindow
 % cfg.normalizevar
 % cfg.normalizecov
+% cfg.vartrllength
 
 % Copyright (C) 2018, Jan-Mathijs Schoffelen
 % Copyright (C) 2003-2006, Markus Bauer
@@ -112,10 +103,11 @@ data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'h
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'forbidden',  {'normalizecov', 'normalizevar'});
 cfg = ft_checkconfig(cfg, 'forbidden',  {'latency', 'blcovariance', 'blcovariancewindow'});
-cfg = ft_checkconfig(cfg, 'renamed',     {'blc', 'demean'});
-cfg = ft_checkconfig(cfg, 'renamed',     {'blcwindow', 'baselinewindow'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'blc', 'demean'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'blcwindow', 'baselinewindow'});
 
 % set the defaults
+cfg.latency      = ft_getopt(cfg, 'latency',     'all');
 cfg.trials       = ft_getopt(cfg, 'trials',      'all', 1);
 cfg.channel      = ft_getopt(cfg, 'channel',     'all');
 cfg.keeptrials   = ft_getopt(cfg, 'keeptrials',  'no');
@@ -132,13 +124,6 @@ computecov = istrue(cfg.covariance);
 
 % ensure that the preproc specific options are located in the cfg.preproc substructure
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
-
-% select trials and channels of interest
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'latency'});
-data   = ft_selectdata(tmpcfg, data);
-% restore the provenance information
-[cfg, data] = rollback_provenance(cfg, data);
-
 if ~isempty(cfg.preproc)
   % preprocess the data, i.e. apply filtering, baselinecorrection, etc.
   fprintf('applying preprocessing options\n');
@@ -149,75 +134,16 @@ if ~isempty(cfg.preproc)
   [cfg.preproc, data] = rollback_provenance(cfg.preproc, data);
 end
 
-% convert to a timelock structure with trials kept and NaNs for missing
-% data points
-data = ft_checkdata(data, 'datatype', 'timelock');
-
-% check whether trial type (vartrllength) matches the user-specified type
-if ~ismember(cfg.vartrllength, [0 1 2])
-  ft_error('unknown value for vartrllength');
-elseif cfg.vartrllength==0 && any(~isfinite(data.trial(:)))
-  ft_error('data has variable trial lengths, you specified not to accept that');
-elseif cfg.vartrllength==1 && all(isfinite(data.trial(:)))
-  disp('data is of type fixed length !');
-elseif cfg.vartrllength==2 && keeptrials
-  disp('processing and keeping variable length single trials');
-end
-
-% to accommodate old behavior, only use trials that are completely filled
-% with data
-if cfg.vartrllength==1
-  usetrial = false(size(data.trial),1);
-  for k = 1:size(data.trial,1)
-    usetrial(k,1) = all(isfinite(reshape(data.trial(k,:,:),[],1)));
-  end
-  fprintf('removing %d trials that contain NaNs\n', size(data.trial,1)-sum(usetrial));
-  tmpcfg        = [];
-  tmpcfg.trials = find(usetrial);
-  data          = ft_selectdata(tmpcfg, data);% restore the provenance information
-  [cfg, data]   = rollback_provenance(cfg, data);
-end
-
-[nrpt, nchan, nsmp] = size(data.trial);
-if ~keeptrials
-  avg = reshape(nanmean(data.trial,1),       [nchan nsmp]);
-  dof = reshape(sum(isfinite(data.trial),1), [nchan nsmp]);
-  var = reshape(nanvar(data.trial,0,1),      [nchan nsmp]);
-else
-  % nothing required here
-end  
-
 % compute the covariance matrix, if requested
 if computecov
-  if ischar(cfg.covariancewindow)
-    switch cfg.covariancewindow
-      case 'prestim'
-        cfg.covariancewindow = [-inf 0];
-      case 'poststim'
-        cfg.covariancewindow = [0 inf];
-      case 'all'
-        cfg.covariancewindow = data.time([1 end]);
-      otherwise
-        ft_error('unsupported specification of cfg.covariancewindow');
-    end
-  end
-  
-  tmpcfg         = [];
+  tmpcfg = keepfields(cfg, {'trials', 'channel'});
   tmpcfg.latency = cfg.covariancewindow;
-  tmpdata        = ft_selectdata(tmpcfg, data);
+  datacov = ft_selectdata(tmpcfg, data);
+  % restore the provenance information
+  [~, datacov] = rollback_provenance(cfg, datacov); % not sure what to do here
+  datacov      = ft_checkdata(datacov, 'datatype', 'timelock');
   
-  if cfg.vartrllength==1
-    % a second round of trial selection is needed here to accommodate old
-    % behavior
-    usetrial = false(nrpt,1);
-    for k = 1:nrpt
-      usetrial(k,1) = all(isfinite(reshape(tmpdata.trial(k,:,:),[],1)));
-    end
-    fprintf('removing %d trials that contain NaNs for the covariance computation\n', nrpt-sum(usetrial));
-    tmpcfg        = [];
-    tmpcfg.trials = find(usetrial);
-    tmpdata       = ft_selectdata(tmpcfg, tmpdata);
-  end
+  [nrpt, nchan, nsmp] = size(datacov.trial);
   
   % pre-allocate memory space for the covariance matrices
   if keeptrials
@@ -229,7 +155,7 @@ if computecov
   
   % compute the covariance per trial
   for k = 1:nrpt
-    dat    = reshape(tmpdata.trial(k,:,:), [nchan nsmp]);
+    dat    = reshape(datacov.trial(k,:,:), [nchan nsmp]);
     datsmp = isfinite(dat);
     if ~all(ismember(sum(datsmp), [0 nchan]))
       ft_error('channel specific NaNs are not supported for covariance computation');
@@ -254,6 +180,25 @@ if computecov
     covsig = covsig./allsmp;
   end
 end
+
+% select trials and channels of interest
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'latency'});
+data   = ft_selectdata(tmpcfg, data);
+% restore the provenance information
+[cfg, data] = rollback_provenance(cfg, data);
+
+% convert to a timelock structure with trials kept and NaNs for missing
+% data points
+data = ft_checkdata(data, 'datatype', 'timelock');
+
+[nrpt, nchan, nsmp] = size(data.trial);
+if ~keeptrials
+  avg = reshape(nanmean(data.trial,1),       [nchan nsmp]);
+  dof = reshape(sum(isfinite(data.trial),1), [nchan nsmp]);
+  var = reshape(nanvar(data.trial,0,1),      [nchan nsmp]);
+else
+  % nothing required here
+end  
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % collect the results
