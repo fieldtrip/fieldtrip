@@ -157,7 +157,7 @@ if computecov
   for k = 1:nrpt
     dat    = reshape(datacov.trial(k,:,:), [nchan nsmp]);
     datsmp = isfinite(dat);
-    if ~all(ismember(sum(datsmp), [0 nchan]))
+    if ~all(ismember(sum(datsmp,1), [0 nchan]))
       ft_error('channel specific NaNs are not supported for covariance computation');
     end
     numsmp = sum(datsmp(1,:));
@@ -188,23 +188,36 @@ data   = ft_selectdata(tmpcfg, data);
 [cfg, data] = rollback_provenance(cfg, data);
 
 % convert to a timelock structure with trials kept and NaNs for missing
-% data points
-data = ft_checkdata(data, 'datatype', 'timelock');
+% data points, when there's only a single trial in the input data
+% structure, this leads to an 'avg' field, rather than a 'trial' field
+data = ft_checkdata(data, 'datatype', {'timelock+comp' 'timelock'});
 
-[nrpt, nchan, nsmp] = size(data.trial);
-if ~keeptrials
+if ~keeptrials && isfield(data, 'trial')
+  [nrpt, nchan, nsmp] = size(data.trial);
   avg = reshape(nanmean(data.trial,1),       [nchan nsmp]);
   dof = reshape(sum(isfinite(data.trial),1), [nchan nsmp]);
   var = reshape(nanvar(data.trial,0,1),      [nchan nsmp]);
-else
+elseif ~keeptrials && ~isfield(data, 'trial')
+  avg = data.avg;
+  var = nan(size(data.avg));
+  dof = double(isfinite(data.avg));
+elseif keeptrials && isfield(data, 'trial')
   % nothing required here
+elseif keeptrials && ~isfield(data, 'trial')
+  % don't know whether this is a use case
+  data.trial = shiftdim(data.avg, -1);
 end  
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % collect the results
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-timelock = keepfields(data, {'time' 'grad', 'elec', 'opto', 'topo', 'topolabel', 'unmixing', 'label'});
+
+
+
+
+
+timelock = keepfields(data, {'time' 'grad', 'elec', 'opto', 'topo', 'topodimord', 'topolabel', 'unmixing', 'unmixingdimord', 'label'});
 if ~keeptrials
   timelock.avg        = avg;
   timelock.var        = var;

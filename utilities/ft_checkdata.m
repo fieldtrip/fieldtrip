@@ -1486,7 +1486,7 @@ if ntrial==1
   tlck.avg    = data.trial{1};
   tlck.label  = data.label;
   tlck.dimord = 'chan_time';
-  tlck        = copyfields(data, tlck, {'grad', 'elec', 'opto', 'cfg', 'trialinfo', 'topo', 'unmixing', 'topolabel'});
+  tlck        = copyfields(data, tlck, {'grad', 'elec', 'opto', 'cfg', 'trialinfo', 'topo', 'topodimord', 'topolabel', 'unmixing', 'unmixingdimord'});
   
 else
   % the code below tries to construct a general time-axis where samples of all trials can fall on
@@ -1494,7 +1494,7 @@ else
   begtime = min(cellfun(@min, data.time));
   endtime = max(cellfun(@max, data.time));
   % find 'common' sampling rate
-  fsample = 1./mean(cellfun(@mean, cellfun(@diff,data.time, 'uniformoutput', false)));
+  fsample = 1./nanmean(cellfun(@mean, cellfun(@diff,data.time, 'uniformoutput', false)));
   % estimate number of samples
   nsmp = round((endtime-begtime)*fsample) + 1; % numerical round-off issues should be dealt with by this round, as they will/should never cause an extra sample to appear
   % construct general time-axis
@@ -1516,7 +1516,7 @@ else
   tlck.time    = time;
   tlck.dimord  = 'rpt_chan_time';
   tlck.label   = data.label;
-  tlck         = copyfields(data, tlck, {'grad', 'elec', 'opto', 'cfg', 'trialinfo', 'topo', 'unmixing', 'topolabel'});
+  tlck         = copyfields(data, tlck, {'grad', 'elec', 'opto', 'cfg', 'trialinfo', 'sampleinfo', 'topo', 'topodimord', 'topolabel', 'unmixing', 'unmixingdimord'});
 end
 
 
