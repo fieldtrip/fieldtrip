@@ -10,11 +10,12 @@ function ft_write_data(filename, dat, varargin)
 %
 % Additional options should be specified in key-value pairs and can be
 %   'header'         header structure that describes the data, see FT_READ_HEADER
+%   'event'          event structure that corresponds to the data, see FT_READ_EVENT
+%   'chanindx'       1xN array, for selecting a subset of channels from header and data
 %   'dataformat'     string, see below
 %   'append'         boolean, not supported for all formats
-%   'chanindx'       1xN array
 %
-% The supported dataformats are
+% The supported dataformats for writing are
 %   edf
 %   gdf
 %   brainvision_eeg
