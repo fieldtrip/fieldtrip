@@ -143,7 +143,16 @@ if computecov
   [~, datacov] = rollback_provenance(cfg, datacov); % not sure what to do here
   datacov      = ft_checkdata(datacov, 'datatype', 'timelock');
   
-  [nrpt, nchan, nsmp] = size(datacov.trial);
+  if isfield(datacov, 'trial')
+    [nrpt, nchan, nsmp] = size(datacov.trial);
+  else
+    % if the data structure has only a single trial
+    nrpt = 1;
+    [nchan, nsmp] = size(datacov.avg);
+    datacov.trial = shiftdim(datacov.avg, -1);
+    datacov       = rmfield(datacov, 'avg');
+    datacov.dimord = 'rpt_chan_time';
+  end
   
   % pre-allocate memory space for the covariance matrices
   if keeptrials
