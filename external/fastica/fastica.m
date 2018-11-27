@@ -9,7 +9,7 @@ function [Out1, Out2, Out3] = fastica(mixedsig, varargin)
 %
 % FastICA for Matlab 7.x and 6.x
 % Version 2.5, October 19 2005
-% Copyright (c) Hugo Gï¿½vert, Jarmo Hurri, Jaakko Sï¿½relï¿½, and Aapo Hyvï¿½rinen.
+% Copyright (c) Hugo Gävert, Jarmo Hurri, Jaakko Särelä, and Aapo Hyvärinen.
 %
 % FASTICA(mixedsig) estimates the independent components from given
 % multidimensional signals. Each row of matrix mixedsig is one
@@ -233,12 +233,8 @@ end
 % Remove the mean and check the data
 
 [mixedsig, mixedmean] = remmean(mixedsig);
-if ~iscell(mixedsig)
-  [Dim, NumOfSampl] = size(mixedsig);
-else
-  Dim = size(mixedsig{1},1);
-  NumOfSampl = sum(size2(mixedsig,2,1));
-end
+
+[Dim, NumOfSampl] = size(mixedsig);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Default values for optional parameters
@@ -463,11 +459,8 @@ if only > 2
   % The dimension of the data may have been reduced during PCA calculations.
   % The original dimension is calculated from the data by default, and the
   % number of IC is by default set to equal that dimension.
-  if ~iscell(whitesig)
-    Dim = size(whitesig, 1);
-  else
-    Dim = size(whitesig{1}, 1);
-  end
+  
+  Dim = size(whitesig, 1);
   
   % The number of IC's must be less or equal to the dimension of data
   if numOfIC > Dim

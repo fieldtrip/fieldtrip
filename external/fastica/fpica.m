@@ -62,13 +62,7 @@ end
 % Default values
 
 if nargin < 3, error('Not enough arguments!'); end
-if ~iscell(X)
-  [vectorSize, numSamples] = size(X);
-else
-  vectorSize = size(X{1},1);
-  numSamples = sum(size2(X,2));
-end
-
+[vectorSize, numSamples] = size(X);
 if nargin < 20, s_verbose = 'on'; end
 if nargin < 19, displayInterval = 1; end
 if nargin < 18, displayMode = 'on'; end
@@ -176,24 +170,24 @@ end
 
 finetuningEnabled = 1;
 switch lower(finetune)
-  case 'pow3'
-    gFine = 10 + 1;
-  case 'tanh'
-    gFine = 20 + 1;
-  case {'gaus', 'gauss'}
-    gFine = 30 + 1;
-  case 'skew'
-    gFine = 40 + 1;
-  case 'off'
-    if myy ~= 1
-      gFine = gOrig;
-    else 
-      gFine = gOrig + 1;
-    end
-    finetuningEnabled = 0;
-  otherwise
-    error(sprintf('Illegal value [ %s ] for parameter: ''finetune''\n', ...
-		  finetune));
+ case 'pow3'
+  gFine = 10 + 1;
+ case 'tanh'
+  gFine = 20 + 1;
+ case {'gaus', 'gauss'}
+  gFine = 30 + 1;
+ case 'skew'
+  gFine = 40 + 1;
+ case 'off'
+  if myy ~= 1
+    gFine = gOrig;
+  else 
+    gFine = gOrig + 1;
+  end
+  finetuningEnabled = 0;
+ otherwise
+  error(sprintf('Illegal value [ %s ] for parameter: ''finetune''\n', ...
+		finetune));
 end
 
 if b_verbose & finetuningEnabled
@@ -201,17 +195,17 @@ if b_verbose & finetuningEnabled
 end
 
 switch lower(stabilization)
-  case 'on'
+ case 'on'
+  stabilizationEnabled = 1;
+ case 'off'
+  if myy ~= 1
     stabilizationEnabled = 1;
-  case 'off'
-    if myy ~= 1
-      stabilizationEnabled = 1;
-    else
-      stabilizationEnabled = 0;
-    end
-  otherwise
-    error(sprintf('Illegal value [ %s ] for parameter: ''stabilization''\n', ...
-		  stabilization)); 
+  else
+    stabilizationEnabled = 0;
+  end
+ otherwise
+  error(sprintf('Illegal value [ %s ] for parameter: ''stabilization''\n', ...
+		stabilization)); 
 end
 
 if b_verbose & stabilizationEnabled
@@ -447,47 +441,47 @@ if approachMode == 1,
     
     switch usedNlinearity
       % pow3
-      case 10
-        B = (X * (( X' * B) .^ 3)) / numSamples - 3 * B;
-      case 11
-        % optimoitu - epsilonin kokoisia eroja
-        % tï¿½mï¿½ on optimoitu koodi, katso vanha koodi esim.
-        % aikaisemmista versioista kuten 2.0 beta3
-        Y = X' * B;
-        Gpow3 = Y .^ 3;
-        Beta = sum(Y .* Gpow3);
-        D = diag(1 ./ (Beta - 3 * numSamples));
-        B = B + myy * B * (Y' * Gpow3 - diag(Beta)) * D;
-      case 12
-        Xsub=X(:, getSamples(numSamples, sampleSize));
-        B = (Xsub * (( Xsub' * B) .^ 3)) / size(Xsub,2) - 3 * B;
-      case 13
-        % Optimoitu
-        Ysub=X(:, getSamples(numSamples, sampleSize))' * B;
-        Gpow3 = Ysub .^ 3;
-        Beta = sum(Ysub .* Gpow3);
-        D = diag(1 ./ (Beta - 3 * size(Ysub', 2)));
-        B = B + myy * B * (Ysub' * Gpow3 - diag(Beta)) * D;
+     case 10
+      B = (X * (( X' * B) .^ 3)) / numSamples - 3 * B;
+     case 11
+      % optimoitu - epsilonin kokoisia eroja
+      % tämä on optimoitu koodi, katso vanha koodi esim.
+      % aikaisemmista versioista kuten 2.0 beta3
+      Y = X' * B;
+      Gpow3 = Y .^ 3;
+      Beta = sum(Y .* Gpow3);
+      D = diag(1 ./ (Beta - 3 * numSamples));
+      B = B + myy * B * (Y' * Gpow3 - diag(Beta)) * D;
+     case 12
+      Xsub=X(:, getSamples(numSamples, sampleSize));
+      B = (Xsub * (( Xsub' * B) .^ 3)) / size(Xsub,2) - 3 * B;
+     case 13
+      % Optimoitu
+      Ysub=X(:, getSamples(numSamples, sampleSize))' * B;
+      Gpow3 = Ysub .^ 3;
+      Beta = sum(Ysub .* Gpow3);
+      D = diag(1 ./ (Beta - 3 * size(Ysub', 2)));
+      B = B + myy * B * (Ysub' * Gpow3 - diag(Beta)) * D;
       
       % tanh
-      case 20
-        hypTan = tanh(a1 * X' * B);
-        B = X * hypTan / numSamples - ...
-	          ones(size(B,1),1) * sum(1 - hypTan .^ 2) .* B / numSamples * ...
-	          a1;
-      case 21
-        % optimoitu - epsilonin kokoisia 
-        Y = X' * B;
-        hypTan = tanh(a1 * Y);
-        Beta = sum(Y .* hypTan);
-        D = diag(1 ./ (Beta - a1 * sum(1 - hypTan .^ 2)));
-        B = B + myy * B * (Y' * hypTan - diag(Beta)) * D;
-      case 22
-        Xsub=X(:, getSamples(numSamples, sampleSize));
-        hypTan = tanh(a1 * Xsub' * B);
-        B = Xsub * hypTan / size(Xsub, 2) - ...
-	          ones(size(B,1),1) * sum(1 - hypTan .^ 2) .* B / size(Xsub, 2) * a1;
-      case 23
+     case 20
+      hypTan = tanh(a1 * X' * B);
+      B = X * hypTan / numSamples - ...
+	  ones(size(B,1),1) * sum(1 - hypTan .^ 2) .* B / numSamples * ...
+	  a1;
+     case 21
+      % optimoitu - epsilonin kokoisia 
+      Y = X' * B;
+      hypTan = tanh(a1 * Y);
+      Beta = sum(Y .* hypTan);
+      D = diag(1 ./ (Beta - a1 * sum(1 - hypTan .^ 2)));
+      B = B + myy * B * (Y' * hypTan - diag(Beta)) * D;
+     case 22
+      Xsub=X(:, getSamples(numSamples, sampleSize));
+      hypTan = tanh(a1 * Xsub' * B);
+      B = Xsub * hypTan / size(Xsub, 2) - ...
+	  ones(size(B,1),1) * sum(1 - hypTan .^ 2) .* B / size(Xsub, 2) * a1;
+     case 23
       % Optimoitu
       Y = X(:, getSamples(numSamples, sampleSize))' * B;
       hypTan = tanh(a1 * Y);
@@ -764,34 +758,30 @@ if approachMode == 2
       wOld = w;
       
       switch usedNlinearity
-	      % pow3
-        case 10
-	        w = (X * ((X' * w) .^ 3)) / numSamples - 3 * w;
-        case 11
-	        EXGpow3 = (X * ((X' * w) .^ 3)) / numSamples;
-	        Beta = w' * EXGpow3;
-	        w = w - myy * (EXGpow3 - Beta * w) / (3 - Beta);
-        case 12
-	        Xsub=X(:,getSamples(numSamples, sampleSize));
-	        w = (Xsub * ((Xsub' * w) .^ 3)) / size(Xsub, 2) - 3 * w;
-        case 13
-	        Xsub=X(:,getSamples(numSamples, sampleSize));
-	        EXGpow3 = (Xsub * ((Xsub' * w) .^ 3)) / size(Xsub, 2);
-	        Beta = w' * EXGpow3;
-	        w = w - myy * (EXGpow3 - Beta * w) / (3 - Beta);
-	      % tanh
-        case 20
-          % #########################################################################
-          % Riccardo Navarra "Mod" 10 Feb 2010 (*)          (r.navarra@itab.unich.it)
-          % Rewritten matrix product to speed up on multicore CPU (fpica.m)
-          % #########################################################################
-	        if ~iscell(X)
-            hypTan = tanh(a1 * (X' * w));
-            w = (X * hypTan - a1 * sum(1 - hypTan .^ 2)' * w) / numSamples;
-          else
-            hypTan = tanh( (w'*X) *a1);
-            w = ( sum(cellvecmult(X,hypTan),2) - a1 * sum(1 - hypTan.^2, 2) *w) / numSamples;
-          end
+	% pow3
+       case 10
+	w = (X * ((X' * w) .^ 3)) / numSamples - 3 * w;
+       case 11
+	EXGpow3 = (X * ((X' * w) .^ 3)) / numSamples;
+	Beta = w' * EXGpow3;
+	w = w - myy * (EXGpow3 - Beta * w) / (3 - Beta);
+       case 12
+	Xsub=X(:,getSamples(numSamples, sampleSize));
+	w = (Xsub * ((Xsub' * w) .^ 3)) / size(Xsub, 2) - 3 * w;
+       case 13
+	Xsub=X(:,getSamples(numSamples, sampleSize));
+	EXGpow3 = (Xsub * ((Xsub' * w) .^ 3)) / size(Xsub, 2);
+	Beta = w' * EXGpow3;
+	w = w - myy * (EXGpow3 - Beta * w) / (3 - Beta);
+	% tanh
+       case 20
+    % #########################################################################
+    % Riccardo Navarra "Mod" 10 Feb 2010 (*)          (r.navarra@itab.unich.it)
+    % Rewritten matrix product to speed up on multicore CPU (fpica.m)
+    % #########################################################################
+	hypTan = tanh(a1 * (X' * w));
+    % #########################################################################
+	w = (X * hypTan - a1 * sum(1 - hypTan .^ 2)' * w) / numSamples;
        case 21
 	hypTan = tanh(a1 * X' * w);
 	Beta = w' * X * hypTan;

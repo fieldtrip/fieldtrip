@@ -73,12 +73,7 @@ switch lower(s_interactive)
 		s_interactive));
 end
 
-if ~iscell(vectors)
-  oldDimension = size (vectors, 1);
-else
-  oldDimension = size (vectors{1}, 1);
-end
-
+oldDimension = size (vectors, 1);
 if ~(b_interactive)
   if lastEig < 1 | lastEig > oldDimension
     error(sprintf('Illegal value [ %d ] for parameter: ''lastEig''\n', lastEig));
@@ -94,11 +89,7 @@ end
 
 % Calculate the covariance matrix.
 if b_verbose, fprintf ('Calculating covariance...\n'); end
-if ~iscell(vectors)
-  covarianceMatrix = cov(vectors', 1);
-else
-  covarianceMatrix = cov(vectors, 1, 2);
-end
+covarianceMatrix = cov(vectors', 1);
 
 % Calculate the eigenvalues and eigenvectors of covariance
 % matrix.
