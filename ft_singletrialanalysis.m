@@ -1,6 +1,6 @@
 function [dataout] = ft_singletrialanalysis(cfg, data)
 
-% FT_SINGLETRIALANALYSIS computes a single-trial estimate of the event-
+% FT_SINGLETRIALANALYSIS computes a model of single trial event-
 % related activity
 %
 % Use as
@@ -8,7 +8,7 @@ function [dataout] = ft_singletrialanalysis(cfg, data)
 % where data is single-channel raw data as obtained by FT_PREPROCESSING
 % and cfg is a configuration structure according to
 %
-%  cfg.method  = different methods of estimating event-related activity
+%  cfg.method  = method for estimating event-related activity
 %                 'aseo', analysis of single-trial ERP and ongoing
 %                         activity (according to Xu et al, 2009)
 %                 'gbve', graph-based variability estimation
