@@ -244,6 +244,7 @@ ARRAY+=(preproc/private/defaultId.m)
 ARRAY+=(private/defaultId.m)
 ARRAY+=(specest/private/defaultId.m)
 ARRAY+=(statfun/private/defaultId.m)
+ARRAY+=(test/private/defaultId.m)
 ARRAY+=(trialfun/private/defaultId.m)
 ARRAY+=(utilities/private/defaultId.m)
 sync ${ARRAY[*]}
