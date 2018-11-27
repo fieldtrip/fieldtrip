@@ -210,7 +210,7 @@ else
   checkmaxfilter = ft_getopt(varargin, 'checkmaxfilter', true);
   
   if isempty(cache)
-    if any(strcmp(headerformat, {'bci2000_dat', 'eyelink_asc', 'gtec_mat', 'gtec_hdf5', 'mega_neurone', 'smi_txt', 'biosig'}))
+    if any(strcmp(headerformat, {'bci2000_dat', 'eyelink_asc', 'gtec_mat', 'gtec_hdf5', 'mega_neurone', 'nihonkohden_m00', 'smi_txt', 'biosig'}))
       cache = true;
     else
       cache = false;
@@ -2173,7 +2173,15 @@ switch headerformat
     hdr = read_neurosim_spikes(filename, headerOnly);
     
   case 'nihonkohden_m00'
-    hdr = read_nihonkohden_hdr(filename);
+    % this is an ASCII file format which is rather inefficient to read
+    if cache
+      % read it once and store the data along with the header
+      [hdr, dat] = read_nihonkohden_m00(filename);
+      hdr.orig.dat = dat;
+    else
+      % read only the header
+      hdr = read_nihonkohden_m00(filename);
+    end
     
   case 'nihonkohden_eeg'
     ft_hastoolbox('brainstorm', 1);
@@ -2666,7 +2674,7 @@ end
 if cache && exist(headerfile, 'file')
   % put the header in the cache
   cacheheader = hdr;
-  % update the header details (including time stampp, size and name)
+  % update the header details (including time stamp, size and name)
   cacheheader.details = dir(headerfile);
   % fprintf('added header to cache\n');
 end
