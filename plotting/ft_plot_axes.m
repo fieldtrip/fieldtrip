@@ -62,6 +62,7 @@ if ~isempty(object) && ~isempty(unit)
   object = ft_convert_units(object, unit);
 elseif ~isempty(object) &&  isempty(unit)
   % take the units from the object
+  object = ft_determine_units(object);
   unit = object.unit;
 elseif  isempty(object) && ~isempty(unit)
   % there is no object, but the units have been specified

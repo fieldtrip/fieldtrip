@@ -5,7 +5,9 @@ function [data] = ft_appenddata(cfg, varargin)
 %
 % Use as
 %   data = ft_appenddata(cfg, data1, data2, data3, ...)
-% where the configuration can be empty.
+%
+% The following configuration options are supported:
+%   cfg.keepsampleinfo  = 'yes', 'no', 'ifmakessense' (default = 'ifmakessense')
 %
 % If the input datasets all have the same channels, the trials will be concatenated.
 % This is useful for example if you have different experimental conditions, which,
@@ -18,6 +20,11 @@ function [data] = ft_appenddata(cfg, varargin)
 % channels will be concatenated within each trial. This is useful for example if the
 % data that you want to analyze contains both MEG and EMG channels which require
 % different preprocessing options.
+%
+% If you concatenate trials and the data originates from the same original datafile,
+% the sampleinfo is consistent and you can specify cfg.keepsampleinfo='yes'. If the
+% data originates from different datafiles, the sampleinfo is inconsistent and does
+% not point to the same recording, hence you should specify cfg.keepsampleinfo='no'.
 %
 % Occasionally, the data needs to be concatenated in the trial dimension while
 % there's a slight discrepancy in the channels in the input data (e.g. missing
@@ -34,7 +41,7 @@ function [data] = ft_appenddata(cfg, varargin)
 % cell array for this particular function.
 %
 % See also FT_PREPROCESSING, FT_DATAYPE_RAW, FT_APPENDTIMELOCK, FT_APPENDFREQ,
-% FT_APPENDSENS, FT_APPENDSOURCE
+% FT_APPENDSOURCE, FT_APPENDSENS
 
 % Copyright (C) 2005-2008, Robert Oostenveld
 % Copyright (C) 2009-2011, Jan-Mathijs Schoffelen
@@ -75,10 +82,24 @@ if ft_abort
   return
 end
 
-% check if the input data is valid for this function
+% set the defaults
+cfg.keepsampleinfo = ft_getopt(cfg, 'keepsampleinfo', 'ifmakessense');
+
+try
+  % although not 100% robust, this could make some users becoming aware of the issue of overlapping trials
+  for i=1:numel(varargin)
+    dataset{i}       = ft_findcfg(varargin{i}.cfg, 'dataset');
+    hassampleinfo(i) = isfield(varargin{i}, 'sampleinfo');
+  end
+  if ~all(strcmp(dataset, dataset{1})) && ~strcmp(cfg.keepsampleinfo, 'no')
+    ft_warning('the data originates from different recordings on disk');
+    ft_warning('please consider specifying cfg.keepsampleinfo=''no''')
+  end
+end % try
+
+% ensure that the input data is valid for this function
 for i=1:length(varargin)
-  % FIXME: raw+comp is not always dealt with correctly
-  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'raw', 'raw+comp'}, 'feedback', 'no');
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'raw', 'raw+comp'}, 'feedback', 'no', 'hassampleinfo', cfg.keepsampleinfo);
 end
 
 % set the defaults

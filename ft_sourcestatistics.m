@@ -76,19 +76,12 @@ ft_preamble debug
 ft_preamble loadvar varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
+ft_preamble randomseed
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   return
 end
-
-
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'required',    {'method', 'design'});
-cfg = ft_checkconfig(cfg, 'renamed',     {'approach',   'method'});
-
-
-%%%%%%%%%
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required',    {'method', 'design'});
@@ -119,7 +112,7 @@ for i=1:length(varargin)
 end
 
 % ensure that the data in all inputs has the same channels, time-axis, etc.
-tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'latency', 'avgovertime', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'latency', 'avgovertime', 'avgoverpos', 'showcallinfo'});
 [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
 % restore the provenance information
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
@@ -148,7 +141,7 @@ if isfield(varargin{1}, 'dim')
   end
 end
 
-if isfield(varargin{1}, 'inside'), 
+if isfield(varargin{1}, 'inside')
   cfg.inside = varargin{1}.inside;
 else
   cfg.inside = true(size(varargin{1}.pos,1),1);
@@ -158,7 +151,6 @@ end
 % when there are multiple values per grid position
 cfg.originside = cfg.inside;
 cfg.inside     = repmat(cfg.inside, prod(cfg.dim)./numel(cfg.inside), 1);
-
 
 if numel(cfg.dim)==1
   cfg.dim(2) = 1;  % add a trailing singleton dimensions
@@ -193,13 +185,13 @@ end
 
 design = cfg.design;
 
-% determine the function handle to the intermediate-level statistics function
-if exist(['ft_statistics_' cfg.method], 'file')
-  statmethod = str2func(['ft_statistics_' cfg.method]);
-else
+% fetch function handle to the intermediate-level statistics function
+statmethod = ft_getuserfun(cfg.method, 'statistics');
+if isempty(statmethod)
   ft_error('could not find the corresponding function for cfg.method="%s"\n', cfg.method);
+else
+  fprintf('using "%s" for the statistical testing\n', func2str(statmethod));
 end
-fprintf('using "%s" for the statistical testing\n', func2str(statmethod));
 
 % check that the design completely describes the data
 if size(dat,2) ~= size(cfg.design,2)
@@ -236,7 +228,7 @@ for i=1:length(fn)
     tmp = nan+zeros(numel(cfg.inside),1);
     tmp(cfg.inside) = stat.(fn{i});
     stat.(fn{i})    = tmp;
-  end  
+  end
   if numel(stat.(fn{i}))==prod(datsiz)
     % reformat into the same dimensions as the input data
     stat.(fn{i}) = reshape(stat.(fn{i}), [datsiz 1]);
@@ -250,10 +242,11 @@ stat.dimord = cfg.dimord;
 stat = copyfields(varargin{1}, stat, {'freq', 'time', 'pos', 'dim', 'transform', 'tri', 'inside'});
 
 % these were only present to inform the low-level functions
-cfg = removefields(cfg, {'dim', 'dimord', 'tri', 'inside'});
+cfg = removefields(cfg, {'dimord', 'tri', 'dim', 'origdim', 'inside', 'originside'});
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
+ft_postamble randomseed
 ft_postamble trackconfig
 ft_postamble previous   varargin
 ft_postamble provenance stat

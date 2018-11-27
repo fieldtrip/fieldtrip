@@ -63,7 +63,7 @@ ftpath = ftpath(1:end-10); % strip away '/utilities' where this function is loca
 
 if isempty(issvn)
   % are we dealing with an SVN working copy of FieldTrip?
-  issvn = isdir(fullfile(ftpath, '.svn'));
+  issvn = isfolder(fullfile(ftpath, '.svn'));
 end
 
 if isempty(isgit)
@@ -147,6 +147,10 @@ else
   ftver = a.Version;
   
 end % if issvn, isgit or otherwise
+
+if strcmp(command, 'clean') && strcmp(ftver, 'unknown')
+  ftver = 'no';
+end
 
 if nargout==0
   fprintf('\nThis is FieldTrip, %s %s.\n\n', command, ftver);

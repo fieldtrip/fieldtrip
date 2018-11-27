@@ -30,7 +30,7 @@ function ft_sourceplot(cfg, functional, anatomical)
 %                       'surface',    plots the data on a 3D brain surface
 %                       'glassbrain', plots a max-projection through the brain
 %                       'vertex',     plots the grid points or vertices scaled according to the functional value
-%                       'cloud',      plot the data as point clouds scaled according to the functional value
+%                       'cloud',      plot the data as clouds, spheres, or points scaled according to the functional value
 %
 %
 %   cfg.anaparameter  = string, field in data with the anatomical data (default = 'anatomy' if present in data)
@@ -128,7 +128,8 @@ function ft_sourceplot(cfg, functional, anatomical)
 %                       'auto', full range of data
 %                       [min max], coordinates of first and last slice in voxels
 %   cfg.slicedim      = dimension to slice 1 (x-axis) 2(y-axis) 3(z-axis) (default = 3)
-%   cfg.title         = string, title of the figure window
+%   cfg.title         = string, title of the plot
+%   cfg.figurename    = string, title of the figure window
 %
 % When cfg.method='surface', the functional data will be rendered onto a cortical mesh
 % (can be an inflated mesh). If the input source data contains a tri-field (i.e. a
@@ -166,13 +167,16 @@ function ft_sourceplot(cfg, functional, anatomical)
 %                        or an Nx3 or Nx1 array where N is the number of vertices
 %   cfg.edgecolor      = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
 %
-% When cfg.method = 'cloud', the functional data will be rendered as
-% point clouds around the sensor positions. These point clouds can either
-% be viewed in 3D or as 2D slices. The 'anatomical' input may also consist of 
+% When cfg.method = 'cloud', the functional data will be rendered as as clouds (groups of points), spheres, or
+% single points at each sensor position. These spheres or point clouds can either
+% be viewed in 3D or as 2D slices. The 'anatomical' input may also consist of
 % a single or multiple triangulated surface mesh(es) in an Nx1 cell-array
 % to be plotted with the interpolated functional data (see FT_PLOT_CLOUD)
 %
-% The following parameters apply to cfg.method='cloud' 
+% The following parameters apply to cfg.method='elec'
+%   cfg.cloudtype       = 'point' plots a single point at each sensor position
+%                         'cloud' (default) plots each a group of spherically arranged points at each sensor position
+%                         'surf' plots a single spherical surface mesh at each sensor position
 %   cfg.radius          = scalar, maximum radius of cloud (default = 4)
 %   cfg.colorgrad       = 'white' or a scalar (e.g. 1), degree to which color of points in cloud
 %                         changes from its center
@@ -277,7 +281,8 @@ cfg.funparameter  = ft_getopt(cfg, 'funparameter',  []);
 cfg.maskparameter = ft_getopt(cfg, 'maskparameter', []);
 cfg.maskstyle     = ft_getopt(cfg, 'maskstyle',     'opacity');
 cfg.downsample    = ft_getopt(cfg, 'downsample',    1);
-cfg.title         = ft_getopt(cfg, 'title',         '');
+cfg.title         = ft_getopt(cfg, 'title',         []);
+cfg.figurename    = ft_getopt(cfg, 'figurename',    []);
 cfg.atlas         = ft_getopt(cfg, 'atlas',         []);
 cfg.marker        = ft_getopt(cfg, 'marker',        []);
 cfg.markersize    = ft_getopt(cfg, 'markersize',    5);
@@ -652,7 +657,10 @@ if hasfun && ~hasmsk && isfield(functional, 'inside')
   opacmax = 1;
   % make intelligent mask
   if isequal(cfg.method, 'surface')
-    msk(functional.inside) = 1;
+    msk(functional.inside&isfinite(functional.(cfg.funparameter))) = 1;
+    if any(functional.inside&~isfinite(functional.(cfg.funparameter)))
+      ft_warning('functional data contains %d NaNs labeled as inside', sum(functional.inside&~isfinite(functional.(cfg.funparameter))));
+    end    
   else
     if hasana
       msk(functional.inside) = 0.5; % so anatomy is visible
@@ -702,7 +710,12 @@ end
 h = figure('visible', cfg.visible);
 set(h, 'color', [1 1 1]);
 set(h, 'renderer', cfg.renderer);
+if ~isempty(cfg.figurename)
+  % this appears as the name of the window
+  set(h, 'name', cfg.figurename);
+end
 if ~isempty(cfg.title)
+  % this appears above the axes
   title(cfg.title);
 end
 
@@ -1010,7 +1023,7 @@ switch cfg.method
     set(h, 'windowbuttondownfcn', @cb_buttonpress);
     set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
     set(h, 'windowkeypressfcn',   @cb_keyboard);
-    set(h, 'CloseRequestFcn',     @cb_cleanup);
+    set(h, 'CloseRequestFcn',     @cb_quit);
     
     % ensure that this is done in interactive mode
     set(h, 'renderer', cfg.renderer);
@@ -1245,7 +1258,7 @@ switch cfg.method
             % color + opacity into a single rgb value to speed up the rendering
             ft_plot_mesh(surf, 'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', val, 'facealpha', maskval, 'clim', [fcolmin fcolmax], 'alphalim', [opacmin opacmax], 'alphamap', cfg.opacitymap, 'colormap', cfg.funcolormap, 'maskstyle', 'colormix');
             
-        end       
+        end
       end
     end
     
@@ -1260,12 +1273,10 @@ switch cfg.method
         % use a normal MATLAB colorbar
         hc = colorbar;
         if strcmp(cfg.maskstyle, 'opacity')
-            % functional values are according to original input values
-            set(hc, 'YLim', [fcolmin fcolmax]);
+          % functional values are according to original input values
+          set(hc, 'YLim', [fcolmin fcolmax]);
         else
-            % functional values have been transformed to be scaled
-            set(hc,'ticks',(0:0.1:1));
-            set(hc,'ticklabels',round(100*linspace(fcolmin,fcolmax,numel(get(hc,'ticks'))'))./100);
+          % functional values have been transformed to be scaled
         end
       else
         ft_warning('no colorbar possible without functional data')
@@ -1349,6 +1360,7 @@ switch cfg.method
     % some defaults depend on the geometrical units
     scale = ft_scalingfactor('mm', functional.unit);
     % set the defaults for method=cloud
+    cfg.cloudtype          = ft_getopt(cfg, 'cloudtype', 'cloud');
     cfg.radius             = ft_getopt(cfg, 'radius', 4*scale);
     cfg.rmin               = ft_getopt(cfg, 'rmin', 1*scale);
     cfg.scalerad           = ft_getopt(cfg, 'scalerad', 'yes');
@@ -1356,8 +1368,8 @@ switch cfg.method
     cfg.ptdensity          = ft_getopt(cfg, 'ptdensity', 20);
     cfg.ptgradient         = ft_getopt(cfg, 'ptgradient', .5);
     cfg.colorgrad          = ft_getopt(cfg, 'colorgrad', 'white');
+    cfg.marker             = ft_getopt(cfg, 'marker', '.');
     cfg.slice              = ft_getopt(cfg, 'slice', 'none');
-    cfg.slicetype          = ft_getopt(cfg, 'slicetype', 'point');
     cfg.ori                = ft_getopt(cfg, 'ori', 'y');
     cfg.slicepos           = ft_getopt(cfg, 'slicepos', 'auto');
     cfg.nslices            = ft_getopt(cfg, 'nslices', 1);
@@ -1371,6 +1383,7 @@ switch cfg.method
     cfg.edgecolor          = ft_getopt(cfg, 'edgecolor', 'none');
     cfg.facealpha          = ft_getopt(cfg, 'facealpha', 1);
     cfg.edgealpha          = ft_getopt(cfg, 'edgealpha', 0);
+    cfg.vertexcolor        = ft_getopt(cfg, 'vertexcolor', 'curv'); % curvature-dependent mix of cortex_light and cortex_dark
     if ~hasanatomical; anatomical = {}; end
     
     if isUnstructuredFun
@@ -1391,12 +1404,13 @@ switch cfg.method
       'radius', cfg.radius, 'rmin', cfg.rmin, 'scalerad', cfg.scalerad, ...
       'ptsize', cfg.ptsize, 'ptdensity', cfg.ptdensity, 'ptgradient', cfg.ptgradient,...
       'colorgrad', cfg.colorgrad, 'colormap', cfg.funcolormap, 'clim', [fcolmin fcolmax], ...
-      'unit', functional.unit, 'slice', cfg.slice, 'slicetype', cfg.slicetype, ...
+      'unit', functional.unit, 'slice', cfg.slice, 'cloudtype', cfg.cloudtype, ...
       'ori', cfg.ori, 'slicepos', cfg.slicepos, 'nslices', cfg.nslices, 'minspace', cfg.minspace,...
       'intersectcolor', cfg.intersectcolor, 'intersectlinestyle', cfg.intersectlinestyle, ...
       'intersectlinewidth', cfg.intersectlinewidth, 'ncirc', cfg.ncirc, ...
       'scalealpha', cfg.scalealpha, 'facecolor', cfg.facecolor, 'edgecolor', cfg.edgecolor,...
-      'facealpha', cfg.facealpha, 'edgealpha', cfg.edgealpha);
+      'facealpha', cfg.facealpha, 'edgealpha', cfg.edgealpha, 'marker', cfg.marker,...
+      'vertexcolor', cfg.vertexcolor);
     
     if istrue(cfg.colorbar)
       if ~strcmp(cfg.slice, '2d')
@@ -1685,8 +1699,9 @@ if isempty(eventdata)
   key = get(h, 'userdata');
 else
   % determine the key that was pressed on the keyboard
-  key = parseKeyboardEvent(eventdata);
+  key = parsekeyboardevent(eventdata);
 end
+
 % get focus back to figure
 if ~strcmp(get(h, 'type'), 'figure')
   set(h, 'enable', 'off');
@@ -1705,7 +1720,7 @@ if isempty(key)
   key = '';
 end
 
-% the following code is largely shared with FT_VOLUMEREALIGN
+% the following code is largely shared by FT_SOURCEPLOT, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN, FT_MESHREALIGN, FT_ELECTRODEPLACEMENT
 switch key
   case {'' 'shift+shift' 'alt-alt' 'control+control' 'command-0'}
     % do nothing
@@ -1721,7 +1736,7 @@ switch key
     
   case 'q'
     setappdata(h, 'opt', opt);
-    cb_cleanup(h);
+    cb_quit(h);
     
   case {'i' 'j' 'k' 'm' 28 29 30 31 'leftarrow' 'rightarrow' 'uparrow' 'downarrow'} % TODO FIXME use leftarrow rightarrow uparrow downarrow
     % update the view to a new position
@@ -1743,8 +1758,8 @@ switch key
     setappdata(h, 'opt', opt);
     cb_redraw(h);
     
+  case {43 'add' 'shift+equal'}  % + or numpad +
     % contrast scaling
-  case {43 'shift+equal'}  % numpad +
     if isempty(opt.clim)
       opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
     end
@@ -1755,7 +1770,8 @@ switch key
     setappdata(h, 'opt', opt);
     cb_redraw(h);
     
-  case {45 'shift+hyphen'} % numpad -
+  case {45 'subtract' 'hyphen' 'shift+hyphen'} % - or numpad -
+    % contrast scaling
     if isempty(opt.clim)
       opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
     end
@@ -1767,6 +1783,7 @@ switch key
     cb_redraw(h);
     
   otherwise
+    % do nothing
     
 end % switch key
 
@@ -1850,7 +1867,7 @@ setappdata(h, 'opt', opt);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_cleanup(h, eventdata)
+function cb_quit(h, eventdata)
 
 % opt = getappdata(h, 'opt');
 % opt.quit = true;
@@ -1868,30 +1885,3 @@ while p~=0
   p = get(h, 'parent');
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function key = parseKeyboardEvent(eventdata)
-
-key = eventdata.Key;
-
-% handle possible numpad events (different for Windows and UNIX systems)
-% NOTE: shift+numpad number does not work on UNIX, since the shift
-% modifier is always sent for numpad events
-if isunix()
-  shiftInd = match_str(eventdata.Modifier, 'shift');
-  if ~isnan(str2double(eventdata.Character)) && ~isempty(shiftInd)
-    % now we now it was a numpad keystroke (numeric character sent AND
-    % shift modifier present)
-    key = eventdata.Character;
-    eventdata.Modifier(shiftInd) = []; % strip the shift modifier
-  end
-elseif ispc()
-  if strfind(eventdata.Key, 'numpad')
-    key = eventdata.Character;
-  end
-end
-
-if ~isempty(eventdata.Modifier)
-  key = [eventdata.Modifier{1} '+' key];
-end

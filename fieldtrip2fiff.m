@@ -308,7 +308,12 @@ for i1 = 1:numel(ev_type)
   for i2 = 1:numel(ev_value)
     i_type = strcmp({event.type}, ev_type{i1});
     i_value = strcmp(event_value, ev_value{i2});
-    marker = i1 * 10 + i2;
+    % if events are numeric & there's only one event type keep original code:
+    if ~isempty(str2num(ev_value{i2})) && numel(ev_type) == 1
+        marker = str2num(ev_value{i2});
+    else
+      marker = i1 * 10 + i2;
+    end
     
     if any(i_type & i_value)
       eve(i_type & i_value, 1) = [event(i_type & i_value).sample];
@@ -320,9 +325,13 @@ end
 
 % report event coding
 newev = unique(eve(:,3));
-fprintf('EVENTS have been coded as:\n')
-for i = 1:numel(newev)
-  i_type = floor(newev(i)/10);
-  i_value = mod(newev(i), 10);
-  fprintf('type: %s, value %s -> % 3d\n', ev_type{i_type}, ev_value{i_value}, newev(i))
+if all(cellfun(@isnumeric, {event.value})) && numel(ev_type) == 1
+    fprintf('EVENT codes remain the same.\n')
+else
+  fprintf('EVENTS have been coded as:\n')
+  for i = 1:numel(newev)
+    i_type = floor(newev(i)/10);
+    i_value = mod(newev(i), 10);
+    fprintf('type: %s, value %s -> % 3d\n', ev_type{i_type}, ev_value{i_value}, newev(i))
+  end
 end

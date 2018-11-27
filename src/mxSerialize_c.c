@@ -5,7 +5,7 @@
  * down a comms channel to be reconstructed at the other end.
  *
  * Copyright (C) 2005, Brad Phelan         http://xtargets.com
- * Copyright (C) 2007, Robert Oostenveld   http://www.fcdonders.ru.nl
+ * Copyright (C) 2007, Robert Oostenveld   http://robertoostenveld.nl
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

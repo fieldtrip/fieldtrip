@@ -46,7 +46,7 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 % To include the channel dimension for clustering, you should specify
 %   cfg.neighbours       = neighbourhood structure, see FT_PREPARE_NEIGHBOURS
 % If you specify an empty neighbourhood structure, clustering will only be done
-% in frequency and time (if available) and not over neighbouring channels.
+% over frequency and/or time and not over neighbouring channels.
 %
 % The statistic that is computed for each sample in each random reshuffling
 % of the data is specified as
@@ -100,8 +100,9 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 %
 % $Id$
 
-% deal with the user specified random seed
-ft_preamble randomseed
+% do a sanity check on the input data
+assert(isnumeric(dat),    'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
+assert(isnumeric(design), 'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed',     {'factor',           'ivar'});
@@ -131,7 +132,7 @@ cfg.correcttail  = ft_getopt(cfg, 'correcttail',  'no');
 cfg.precondition = ft_getopt(cfg, 'precondition', []);
 
 % explicit check for option 'yes' in cfg.correctail.
-if strcmp(cfg.correcttail,'yes')
+if strcmp(cfg.correcttail, 'yes')
   ft_error('cfg.correcttail = ''yes'' is not allowed, use either ''prob'', ''alpha'' or ''no''')
 end
 
@@ -215,7 +216,7 @@ resample = resampledesign(cfg, design);
 Nrand = size(resample,1);
 
 % most of the statfuns result in this warning, which is not interesting
-ws = warning('off', 'MATLAB:warn_r14_stucture_assignment');
+ws = ft_warning('off', 'MATLAB:warn_r14_stucture_assignment');
 
 if strcmp(cfg.correctm, 'cluster')
   % determine the critical value for cluster thresholding
@@ -276,7 +277,7 @@ end
 if isstruct(statobs)
   % remember all details for later reference, continue to work with the statistic
   statfull = statobs;
-  statobs  = getfield(statfull, 'stat');
+  statobs  = statobs.stat;
 else
   % remember the statistic for later reference, continue to work with the statistic
   statfull.stat = statobs;
@@ -493,9 +494,5 @@ for i=1:length(fn)
   end
 end
 
-% deal with the potential user specified randomseed
-ft_postamble randomseed
-
-warning(ws); % revert to original state
-
+ft_warning(ws); % revert to original state
 

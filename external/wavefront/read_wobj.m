@@ -28,6 +28,7 @@ function OBJ=read_wobj(fullfilename)
 %   figure, patch(FV,'facecolor',[1 0 0]); camlight
 %
 % Function is written by D.Kroon University of Twente (June 2010)
+% Modifications by Robert Oostenveld, see https://github.com/fieldtrip/fieldtrip/pull/739
 
 verbose=true;
 
@@ -56,7 +57,7 @@ no=0;
 
 % Loop through the Wavefront object file
 for iline=1:length(ftype)
-    if(mod(iline,10000)==0),
+    if(mod(iline,10000)==0)
         if(verbose),disp(['Lines processed : ' num2str(iline)]); end
     end
     
@@ -83,11 +84,18 @@ for iline=1:length(ftype)
                 if(mod(nv,10000)==1), vertices(nv+1:nv+10001,1:3)=0; end
                 % Add to vertices list X Y Z
                 vertices(nv,1:3)=data;
-            else
+            elseif(length(data)==4)
                 % Reserve block of memory
                 if(mod(nv,10000)==1), vertices(nv+1:nv+10001,1:4)=0; end
                 % Add to vertices list X Y Z W
                 vertices(nv,1:4)=data;
+            elseif(length(data)==6)
+                % Reserve block of memory
+                if(mod(nv,10000)==1), vertices(nv+1:nv+10001,1:6)=0; end
+                % Add to vertices list X Y Z R G B
+                vertices(nv,1:6)=data;
+            else
+              error('unexpected length of data');
             end
         case('vp')
             % Specifies a point in the parameter space of curve or surface
@@ -102,11 +110,13 @@ for iline=1:length(ftype)
                 if(mod(nvp,10000)==1), vertices_point(nvp+1:nvp+10001,1:2)=0; end
                 % Add to vertices point list U V
                 vertices_point(nvp,1:2)=data;
-            else
+            elseif(length(data)==3)
                 % Reserve block of memory
                 if(mod(nvp,10000)==1), vertices_point(nvp+1:nvp+10001,1:3)=0; end
                 % Add to vertices point list U V W
                 vertices_point(nvp,1:3)=data;
+            else
+              error('unexpected length of data');
             end
         case('vn')
             % A normal vector
@@ -127,17 +137,19 @@ for iline=1:length(ftype)
                 if(mod(nvt,10000)==1), vertices_texture(nvt+1:nvt+10001,1:2)=0; end
                 % Add to vertices texture list U V
                 vertices_texture(nvt,1:2)=data;
-            else
+            elseif(length(data)==3)
                 % Reserve block of memory
                 if(mod(nvt,10000)==1), vertices_texture(nvt+1:nvt+10001,1:3)=0; end
                 % Add to vertices texture list U V W
                 vertices_texture(nvt,1:3)=data;
+            else
+              error('unexpected length of data');
             end
         case('l')
             no=no+1; if(mod(no,10000)==1), objects(no+10001).data=0; end
             array_vertices=[];
             array_texture=[];
-            for i=1:length(data),
+            for i=1:length(data)
                 switch class(data)
                     case 'cell'
                         tvals=str2double(stringsplit(data{i},'/'));
@@ -149,7 +161,7 @@ for iline=1:length(ftype)
                 val=tvals(1);
                 if(val<0), val=val+1+nv; end
                 array_vertices(i)=val;
-                if(length(tvals)>1),
+                if(length(tvals)>1)
                     val=tvals(2);
                     if(val<0), val=val+1+nvt; end
                     array_texture(i)=val;
@@ -163,7 +175,7 @@ for iline=1:length(ftype)
             array_vertices=[];
             array_texture=[];
             array_normal=[];
-            for i=1:length(data);
+            for i=1:length(data)
                 switch class(data)
                     case 'cell'
                         tvals=str2double(stringsplit(data{i},'/'));
@@ -176,14 +188,14 @@ for iline=1:length(ftype)
                 
                 if(val<0), val=val+1+nv; end
                 array_vertices(i)=val;
-                if(length(tvals)>1),
+                if(length(tvals)>1)
                     if(isfinite(tvals(2)))
                         val=tvals(2);
                         if(val<0), val=val+1+nvt; end
                         array_texture(i)=val;
                     end
                 end
-                if(length(tvals)>2),
+                if(length(tvals)>2)
                     val=tvals(3);
                     if(val<0), val=val+1+nvn; end
                     array_normal(i)=val;
@@ -198,7 +210,7 @@ for iline=1:length(ftype)
             objects(no).data.vertices=array_vertices(findex);
             if(~isempty(array_texture)),objects(no).data.texture=array_texture(findex); end
             if(~isempty(array_normal)),objects(no).data.normal=array_normal(findex); end
-            for i=1:length(array_vertices)-3;
+            for i=1:length(array_vertices)-3
                 no=no+1; if(mod(no,10000)==1), objects(no+10001).data=0; end
                 findex=[1 2+i 3+i];
                 findex(findex>length(array_vertices))=findex(findex>length(array_vertices))-length(array_vertices);
@@ -359,8 +371,8 @@ fdata(jline+1:end)=[];
 
 function b=removeemptycells(a)
 j=0; b={};
-for i=1:length(a);
-    if(~isempty(a{i})),j=j+1; b{j}=a{i}; end;
+for i=1:length(a)
+    if(~isempty(a{i})),j=j+1; b{j}=a{i}; end
 end
 
 function  objects=readmtl(filename_mtl,verbose)

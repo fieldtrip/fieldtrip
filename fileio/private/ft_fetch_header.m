@@ -45,12 +45,24 @@ else
 end
 
 % fill in hdr.nChans
-hdr.nChans = length(data.label);
+hdr.nChans = numel(data.label);
 
-% fill in hdr.label
-hdr.label = data.label;
+% fill in the channel labels
+hdr.label = data.label(:);
 
-% fill in hdr.Fs (sample frequency)
+% fill in the channel type and units
+if isfield(data, 'hdr') && isfield(data.hdr, 'chantype')
+  hdr.chantype = data.hdr.chantype;
+else
+  hdr.chantype = repmat({'unknown'}, hdr.nChans, 1);
+end
+if isfield(data, 'hdr') && isfield(data.hdr, 'chanunit')
+  hdr.chanunit = data.hdr.chanunit;
+else
+  hdr.chanunit = repmat({'unknown'}, hdr.nChans, 1);
+end
+
+% fill in sample frequency
 hdr.Fs = data.fsample;
 
 % determine hdr.nSamples, hdr.nSamplesPre, hdr.nTrials
@@ -59,7 +71,7 @@ hdr.nSamples    = max(trl(:,2));
 hdr.nSamplesPre = 0;
 hdr.nTrials     = 1;
 
-% retrieve the gradiometer and/or electrode information
+% retrieve the gradiometer and/or electrode and/or optode information
 if isfield(data, 'grad')
   hdr.grad = data.grad;
 elseif isfield(data, 'hdr') && isfield(data.hdr, 'grad')
@@ -70,6 +82,11 @@ if isfield(data, 'elec')
 elseif isfield(data, 'hdr') && isfield(data.hdr, 'elec')
   hdr.elec = data.hdr.elec;
 end
+if isfield(data, 'opto')
+  hdr.opto = data.opto;
+elseif isfield(data, 'hdr') && isfield(data.hdr, 'opto')
+  hdr.opto = data.hdr.opto;
+end
 
 % retrieve the synchronization information
 if isfield(data, 'hdr') && isfield(data.hdr, 'FirstTimeStamp')
@@ -78,3 +95,4 @@ end
 if isfield(data, 'hdr') && isfield(data.hdr, 'TimeStampPerSample')
   hdr.TimeStampPerSample = data.hdr.TimeStampPerSample;
 end
+

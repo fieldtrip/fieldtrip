@@ -23,11 +23,11 @@ extern "C" {
 int start_server(int port);
 int open_connection(const char *hostname, int port);
 int close_connection(int s);
-int read_header(int server, uint32_t *datatype, unsigned int *nchans, float *fsample, unsigned int *nsamples, unsigned int *nevents);
-int read_data(int server, unsigned int begsample, unsigned int endsample, void *buffer);
-int write_header(int server, uint32_t datatype, unsigned int nchans, float fsample);
-int write_data(int server, uint32_t datatype, unsigned int nchans, unsigned int nsamples, void *buffer);
-int wait_data(int server, unsigned int nsamples, unsigned int nevents, unsigned int milliseconds);
+int read_header(int server, uint32_t *datatype, uint32_t *nchans, float *fsample, uint32_t *nsamples, uint32_t *nevents);
+int read_data(int server, uint32_t begsample, uint32_t endsample, void *buffer);
+int write_header(int server, uint32_t datatype, uint32_t nchans, float fsample);
+int write_data(int server, uint32_t datatype, uint32_t nchans, uint32_t nsamples, void *buffer);
+int wait_data(int server, uint32_t nsamples, uint32_t nevents, uint32_t milliseconds);
 
 #ifdef __cplusplus
 }

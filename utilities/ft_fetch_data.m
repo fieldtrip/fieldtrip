@@ -36,11 +36,28 @@ if isempty(skipcheckdata) || skipcheckdata ~= 1
 end
 
 % get the options
-hdr          = ft_getopt(varargin, 'header');
-begsample    = ft_getopt(varargin, 'begsample');
-endsample    = ft_getopt(varargin, 'endsample');
-chanindx     = ft_getopt(varargin, 'chanindx');
-allowoverlap = ft_getopt(varargin, 'allowoverlap', false);
+if true
+  p = inputParser;
+  p.KeepUnmatched = true;
+  addOptional(p, 'header', []);
+  addOptional(p, 'begsample', []);
+  addOptional(p, 'endsample', []);
+  addOptional(p, 'chanindx', []);
+  addOptional(p, 'allowoverlap', false);
+  parse(p,varargin{:});
+  hdr           = p.Results.header;
+  begsample     = p.Results.begsample;
+  endsample     = p.Results.endsample;
+  chanindx      = p.Results.chanindx;
+  allowoverlap  = p.Results.allowoverlap;
+else
+  hdr          = ft_getopt(varargin, 'header');
+  begsample    = ft_getopt(varargin, 'begsample');
+  endsample    = ft_getopt(varargin, 'endsample');
+  chanindx     = ft_getopt(varargin, 'chanindx');
+  allowoverlap = ft_getopt(varargin, 'allowoverlap', false);
+end
+
 allowoverlap = istrue(allowoverlap);
 
 if isempty(hdr)
@@ -132,11 +149,13 @@ if trlnum>1
       sel = find(count>1); % must be row vector
       for smplop=sel
         % find in which trials the sample occurs
-        seltrl = find(smplop>=trl(:,1) & smplop<=trl(:,2));  % which trials
-        selsmp = smplop - trl(seltrl,1) + 1;                 % which sample in each of the trials
+        seltrl = find(smplop>=trl(:,1) + 1 - begsample & ... 
+                      smplop<=trl(:,2) + 1 - begsample);  % which trials, requires the adjustment with begsample, if different from 1, JM 20180116
+        selsmp = smplop - trl(seltrl,1) + begsample; % which sample in each of the trials, requires the adjustment with begsample, rather than 1
         for i=2:length(seltrl)
           % compare all occurences to the first one
-          if ~all(data.trial{seltrl(i)}(:,selsmp(i)) == data.trial{seltrl(1)}(:,selsmp(1)))
+          % consider also mutual occurring NaNs as equal values
+          if ~all(isequaln(data.trial{seltrl(i)}(:,selsmp(i)), data.trial{seltrl(1)}(:,selsmp(1))))
             ft_error('some of the requested samples occur twice in the data and have conflicting values');
           end
         end

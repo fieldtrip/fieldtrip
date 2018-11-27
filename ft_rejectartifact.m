@@ -1,14 +1,14 @@
 function [cfg] = ft_rejectartifact(cfg, data)
 
 % FT_REJECTARTIFACT removes data segments containing artifacts. It returns a
-% configuration structure with a modified trial definition which can be
-% used for preprocessing of only the clean data.
+% configuration structure with a modified trial definition which can be used for
+% preprocessing of only the clean data.
 %
-% You should start by detecting the artifacts in the data using the
-% function FT_ARTIFACT_xxx where xxx is the type of artifact. Subsequently
-% FT_REJECTARTIFACT looks at the detected artifacts and removes them from
-% the trial definition or from the data. In case you wish to replace bad
-% parts by nans, you have to specify data as an input parameter.
+% You should start by detecting the artifacts in the data using the function
+% FT_ARTIFACT_xxx where xxx is the type of artifact. Subsequently FT_REJECTARTIFACT
+% looks at the detected artifacts and removes them from the trial definition or from
+% the data. In case you wish to replace bad parts by nans, you have to specify data
+% as an input parameter.
 %
 % Use as
 %   cfg = ft_rejectartifact(cfg)
@@ -17,27 +17,29 @@ function [cfg] = ft_rejectartifact(cfg, data)
 % with the data as obtained from FT_PREPROCESSING
 %
 % The following configuration options are supported:
-%   cfg.artfctdef.reject          = 'none', 'partial','nan', or 'complete' (default = 'complete')
+%   cfg.artfctdef.reject          = 'none', 'partial', 'complete', 'nan', or 'value' (default = 'complete')
 %   cfg.artfctdef.minaccepttim    = when using partial rejection, minimum length
 %                                   in seconds of remaining trial (default = 0.1)
-%   cfg.artfctdef.crittoilim      = when using complete rejection, reject
-%                                   trial only when artifacts occur within
-%                                   this time window (default = whole trial)
-%                                   (only works with in-memory data, since trial time axes are unknown for data on disk)
+%   cfg.artfctdef.crittoilim      = when using complete rejection, reject trial only when artifacts occur within
+%                                   this time window (default = whole trial). This only works with in-memory data,
+%                                   since trial time axes are unknown for data on disk.
 %   cfg.artfctdef.feedback        = 'yes' or 'no' (default = 'no')
+%   cfg.artfctdef.invert          = 'yes' or 'no' (default = 'no')
+%   cfg.artfctdef.value           = scalar value to replace the data in the artifact segments (default = nan)
 %   cfg.artfctdef.eog.artifact    = Nx2 matrix with artifact segments, this is added to the cfg by using FT_ARTIFACT_EOG
 %   cfg.artfctdef.jump.artifact   = Nx2 matrix with artifact segments, this is added to the cfg by using FT_ARTIFACT_JUMP
 %   cfg.artfctdef.muscle.artifact = Nx2 matrix with artifact segments, this is added to the cfg by using FT_ARTIFACT_MUSCLE
 %   cfg.artfctdef.zvalue.artifact = Nx2 matrix with artifact segments, this is added to the cfg by using FT_ARTIFACT_ZVALUE
-%   cfg.artfctdef.xxx.artifact    = Nx2 matrix with artifact segments, this should be added by your own artifact detection function
+%   cfg.artfctdef.visual.artifact = Nx2 matrix with artifact segments, this is added to the cfg by using FT_DATABROWSER
+%   cfg.artfctdef.xxx.artifact    = Nx2 matrix with artifact segments, this could be added by your own artifact detection function
 %
-% A trial that contains an artifact can be rejected completely or
-% partially. In case of partial rejection, a minimum length of the
-% resulting sub-trials can be specified.
+% A trial that contains an artifact can be rejected completely or partially. In case
+% of partial rejection, a minimum length of the resulting sub-trials can be
+% specified using minaccepttim.
 %
 % Output:
-%   If cfg is used as the only input parameter, a cfg with a new trl is the output.
-%   If cfg and data are both input parameters, a new raw data structure with only the clean data segments is the output.
+%   If cfg is used as the only input parameter, the output is a cfg structure with an updated trl.
+%   If cfg and data are both input parameters, the output is an updated raw data structure with only the clean data segments.
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -45,8 +47,8 @@ function [cfg] = ft_rejectartifact(cfg, data)
 % file on disk. This mat files should contain only a single variable named 'data',
 % corresponding to the input structure.
 %
-% See also FT_ARTIFACT_EOG, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_JUMP, FT_ARTIFACT_MANUAL,
-% FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG
+% See also FT_ARTIFACT_EOG, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_JUMP, FT_ARTIFACT_THRESHOLD,
+% FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG, FT_DATABROWSER, FT_REJECTVISUAL
 
 % Undocumented local options:
 % cfg.headerfile
@@ -63,7 +65,7 @@ function [cfg] = ft_rejectartifact(cfg, data)
 % cfg.artfctdef.writerej = filename of rejection file
 % cfg.artfctdef.type    = cell-array with strings, e.g. {'eog', 'muscle' 'jump'}
 
-% Copyright (C) 2003-2007, Robert Oostenveld
+% Copyright (C) 2003-2018, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -111,12 +113,14 @@ end
 cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
 
 % set the defaults
-if ~isfield(cfg, 'artfctdef'),              cfg.artfctdef        = [];         end
-if ~isfield(cfg.artfctdef,'type'),          cfg.artfctdef.type   = {};         end
-if ~isfield(cfg.artfctdef,'reject'),        cfg.artfctdef.reject = 'complete'; end
-if ~isfield(cfg.artfctdef,'minaccepttim'),  cfg.artfctdef.minaccepttim = 0.1;  end
-if ~isfield(cfg.artfctdef,'crittoilim'),    cfg.artfctdef.crittoilim = [];     end
-if ~isfield(cfg.artfctdef,'feedback'),      cfg.artfctdef.feedback = 'no';     end
+cfg.artfctdef              = ft_getopt(cfg, 'artfctdef');
+cfg.artfctdef.type         = ft_getopt(cfg.artfctdef, 'type', {});
+cfg.artfctdef.reject       = ft_getopt(cfg.artfctdef, 'reject', 'complete');
+cfg.artfctdef.minaccepttim = ft_getopt(cfg.artfctdef, 'minaccepttim', 0.1);
+cfg.artfctdef.crittoilim   = ft_getopt(cfg.artfctdef, 'crittoilim', []);
+cfg.artfctdef.feedback     = ft_getopt(cfg.artfctdef, 'feedback', 'no');
+cfg.artfctdef.invert       = ft_getopt(cfg.artfctdef, 'invert', 'no');
+cfg.artfctdef.value        = ft_getopt(cfg.artfctdef, 'value', nan);
 
 % convert from old-style to new-style configuration
 if isfield(cfg,'reject')
@@ -256,8 +260,8 @@ cfg.artfctdef.type = cfg.artfctdef.type(sort(i));
 cfg.artfctdef.type = cfg.artfctdef.type(:)';
 
 % If bad parts are to be filled with nans, make sure data is available
-if strcmp(cfg.artfctdef.reject, 'nan') && ~hasdata
-  ft_error('If bad parts are to be filled with nans, input data has to be specified');
+if ~hasdata && (strcmp(cfg.artfctdef.reject, 'nan') || strcmp(cfg.artfctdef.reject, 'value'))
+  ft_error('If bad parts are to be filled with nans or another value, the input data has to be specified');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -290,6 +294,7 @@ for i=1:length(dum)
     fprintf('detected %3d %s artifacts\n', num, dum{i});
   end
 end
+
 % update the configuration to reflect the artifacts types that were scanned
 cfg.artfctdef.type = dum(sel);
 
@@ -382,8 +387,14 @@ if strcmp(cfg.artfctdef.feedback, 'yes')
   legend({'defined trials', cfg.artfctdef.type{:}});
 end % feedback
 
-% convert to logical, NOTE: this is required for the following code
+% convert to logical, this is required for the subsequent code
 rejectall = (rejectall~=0);
+
+% invert the artifact selection
+if istrue(cfg.artfctdef.invert)
+  fprintf('inverting selection of clean/artifactual data\n');
+  rejectall = ~rejectall;
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % write the rejection to an EEP format file
@@ -409,12 +420,13 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % remove the trials that (partially) coincide with a rejection mark
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'complete') || strcmp(cfg.artfctdef.reject, 'nan')
+if any(strcmp(cfg.artfctdef.reject, {'partial', 'complete', 'nan', 'value'}))
   trialok = [];
   
   count_complete_reject = 0;
   count_partial_reject  = 0;
   count_nan             = 0;
+  count_value           = 0;
   count_outsidecrit     = 0;
   
   trlCompletelyRemovedInd = [];
@@ -427,13 +439,19 @@ if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'comp
     if all(not(rejecttrial))
       % the whole trial is good
       trialok = [trialok; trl(trial,:)];
-
+      
     elseif all(rejecttrial) && strcmp(cfg.artfctdef.reject, 'nan')
       % the whole trial is bad, but it is requested to be replaced with nans
       data.trial{trial}(:,rejecttrial) = nan;
       count_nan = count_nan + 1;
       trialok = [trialok; trl(trial,:)]; % Mark the trial as good as nothing will be removed
-    
+      
+    elseif all(rejecttrial) && strcmp(cfg.artfctdef.reject, 'value')
+      % the whole trial is bad, but it is requested to be replaced with a specific value
+      data.trial{trial}(:,rejecttrial) = cfg.artfctdef.value;
+      count_value = count_value + 1;
+      trialok = [trialok; trl(trial,:)]; % Mark the trial as good as nothing will be removed
+
     elseif all(rejecttrial)
       % the whole trial is bad
       count_complete_reject = count_complete_reject + 1;
@@ -482,12 +500,20 @@ if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'comp
       data.trial{trial}(:,rejecttrial) = nan;
       count_nan = count_nan + 1;
       trialok = [trialok; trl(trial,:)]; % Mark the trial as good as nothing will be removed
+   
+    elseif any(rejecttrial) && strcmp(cfg.artfctdef.reject, 'value')
+      % Some part of the trial is bad, replace bad part with specified value
+      data.trial{trial}(:,rejecttrial) = cfg.artfctdef.value;
+      count_value = count_value + 1;
+      trialok = [trialok; trl(trial,:)]; % Mark the trial as good as nothing will be removed
+
     end
   end % for each trial
   
   fprintf('rejected  %3d trials completely\n', count_complete_reject);
   fprintf('rejected  %3d trials partially\n', count_partial_reject);
   fprintf('filled parts of  %3d trials with nans\n', count_nan);
+  fprintf('filled parts of  %3d trials with the specified value\n', count_value);
   if (checkCritToi)
     fprintf('retained  %3d trials with artifacts outside critical window\n', count_outsidecrit);
   end

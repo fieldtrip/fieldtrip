@@ -174,12 +174,12 @@ for i=1:length(channel)
   if length(channel{i}) < 1
     continue;
   end
-  
+
   if strcmp((channel{i}(1)), '-')
     % skip channels to be excluded
     continue;
   end
-  
+
   rexp = sprintf('%s%s%s', '^', regexptranslate('wildcard',channel{i}), '$');
   lreg = ~cellfun(@isempty, regexp(datachannel, rexp));
   if any(lreg)
@@ -202,7 +202,7 @@ labelmegplanar = [];
 labeleeg       = [];
 
 switch senstype
-  
+
   case {'yokogawa', 'yokogawa160', 'yokogawa160_planar', 'yokogawa64', 'yokogawa64_planar', 'yokogawa440', 'yokogawa440_planar'}
     % Yokogawa axial gradiometers channels start with AG, hardware planar gradiometer
     % channels start with PG, magnetometers start with M
@@ -213,7 +213,24 @@ switch senstype
     labelmeg      = datachannel(megind);
     labelmegmag   = datachannel(megmag);
     labelmeggrad  = datachannel(megax | megpl);
-    
+    %%
+%    labeleeg  = datachannel(strncmp('EEG', datachannel, length('EEG')));
+    eeg_A = myregexp('^A[^G]*[0-9hzZ]$', datachannel);
+    eeg_P = myregexp('^P[^G]*[0-9hzZ]$', datachannel);
+    eeg_T = myregexp('^T[^R]*[0-9hzZ]$', datachannel);
+    eeg_E = myregexp('^E$', datachannel);
+    eeg_Z = myregexp('^[zZ]$', datachannel);
+    eeg_M = myregexp('^M[0-9]$', datachannel);
+    eeg_O = myregexp('^[BCFION]\w*[0-9hzZ]$', datachannel);
+    eeg_EEG = myregexp('^EEG[0-9][0-9][0-9]$', datachannel);
+    eegind = logical( eeg_A + eeg_P + eeg_T + eeg_E + eeg_Z + eeg_M + eeg_O + eeg_EEG );
+    clear eeg_A eeg_P eeg_T eeg_E eeg_Z eeg_M eeg_O eeg_EEG
+    labeleeg      = datachannel(eegind);
+    %%
+    labeleog    = [ labeleog(:); datachannel(myregexp('^EO[0-9]$', datachannel)) ];  % add 'EO'
+    %%
+    labelecg    = [ labelecg(:); datachannel(myregexp('^X[0-9]$', datachannel)) ];  % add 'X'
+
   case {'ctf64'}
     labelml     = datachannel(~cellfun(@isempty, regexp(datachannel, '^SL')));    % left    MEG channels
     labelmr     = datachannel(~cellfun(@isempty, regexp(datachannel, '^SR')));    % right   MEG channels
@@ -223,7 +240,7 @@ switch senstype
       datachannel(strncmp('P'  , datachannel, 1));
       datachannel(strncmp('Q'  , datachannel, 1));
       datachannel(strncmp('R'  , datachannel, length('G'  )))];
-    
+
   case {'ctf', 'ctf275', 'ctf151', 'ctf275_planar', 'ctf151_planar'}
     % all CTF MEG channels start with "M"
     % all CTF reference channels start with B, G, P, Q or R
@@ -235,7 +252,7 @@ switch senstype
       datachannel(strncmp('Q'  , datachannel, 1));
       datachannel(strncmp('R'  , datachannel, length('G'  )))];
     labeleeg  = datachannel(strncmp('EEG', datachannel, length('EEG')));
-    
+
     % Not sure whether this should be here or outside the switch or
     % whether these specifications should be supported for systems
     % other than CTF.
@@ -256,11 +273,11 @@ switch senstype
     labelmzf  = datachannel(strncmp('MZF', datachannel, length('MZF')));
     labelmzo  = datachannel(strncmp('MZO', datachannel, length('MZO')));
     labelmzp  = datachannel(strncmp('MZP', datachannel, length('MZP')));
-    
+
   case {'bti', 'bti248', 'bti248grad', 'bti148', 'bti248_planar', 'bti148_planar'}
     % all 4D-BTi MEG channels start with "A"
     % all 4D-BTi reference channels start with M or G
-    
+
     labelmeg     = datachannel(myregexp('^A[0-9]+$', datachannel));
     labelmegref  = [datachannel(myregexp('^M[CLR][xyz][aA]*$', datachannel)); datachannel(myregexp('^G[xyz][xyz]A$', datachannel)); datachannel(myregexp('^M[xyz][aA]*$', datachannel))];
     labelmegrefa = datachannel(~cellfun(@isempty,strfind(datachannel, 'a')));
@@ -269,13 +286,13 @@ switch senstype
     labelmegrefl = datachannel(strncmp('ML', datachannel, 2));
     labelmegrefr = datachannel(strncmp('MR', datachannel, 2));
     labelmegrefm = datachannel(myregexp('^M[xyz][aA]*$', datachannel));
-    
+
   case {'neuromag122' 'neuromag122alt', 'neuromag122_combined'}
     % all neuromag MEG channels start with MEG
     % all neuromag EEG channels start with EEG
     labelmeg = datachannel(strncmp('MEG', datachannel, length('MEG')));
     labeleeg = datachannel(strncmp('EEG', datachannel, length('EEG')));
-    
+
   case {'neuromag306' 'neuromag306alt', 'neuromag306_combined'}
     % all neuromag MEG channels start with MEG
     % all neuromag EEG channels start with EEG
@@ -283,27 +300,27 @@ switch senstype
     % all neuromag306 magnetometers follow pattern MEG*1
     labelmeg = datachannel(strncmp('MEG', datachannel, length('MEG')));
     labeleeg = datachannel(strncmp('EEG', datachannel, length('EEG')));
-    
+
     labelmeggrad   = labelmeg(~cellfun(@isempty, regexp(labelmeg, '^MEG.*[23]$')));
     labelmegmag    = labelmeg(~cellfun(@isempty, regexp(labelmeg, '^MEG.*1$')));
     labelmegplanar = labelmeggrad;
-    
+
   case {'ant128', 'biosemi64', 'biosemi128', 'biosemi256', 'egi32', 'egi64', 'egi128', 'egi256', 'eeg1020', 'eeg1010', 'eeg1005', 'ext1020'}
     if ~ft_senstype(datachannel, 'unknown')
       % use an external helper function to define the list with EEG channel names
       labeleeg = ft_senslabel(ft_senstype(datachannel));
     end
-    
+
   case {'itab153' 'itab28' 'itab28_old'}
     % all itab MEG channels start with MAG
     labelmeg = datachannel(strncmp('MAG', datachannel, length('MAG')));
-    
+
   otherwise
     if ~isempty(datachantype)
       labelmeg = datachannel(strncmp('meg', datachantype, 3));
       labeleeg = datachannel(strncmp('eeg', datachantype, 3));
     end
-    
+
 end % switch ft_senstype
 
 % figure out if there are bad channels or channel groups that should be excluded

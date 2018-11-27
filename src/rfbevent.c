@@ -21,7 +21,7 @@
  * or http://people.redhat.com/twaugh/rfbplaymacro
  *
  * Copyright (C) 2000, 2001, 2002, 2003  Tim Waugh <twaugh@redhat.com>
- * Copyright (C) 2007 Robert Oostenveld <r.oostenveld@fcdonders.ru.nl>
+ * Copyright (C) 2007 Robert Oostenveld <r.oostenveld@donders.ru.nl>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

@@ -77,6 +77,11 @@ end
 
 % Print some information to user
 if b_verbose
-  fprintf ('Check: covariance differs from identity by [ %g ].\n', ...
-    max (max (abs (cov (newVectors', 1) - eye (size (newVectors, 1))))));
+  if ~iscell(newVectors)
+    fprintf ('Check: covariance differs from identity by [ %g ].\n', ...
+      max (max (abs (cov (newVectors', 1) - eye (size (newVectors, 1))))));
+  else
+    fprintf ('Check: covariance differs from identity by [ %g ].\n', ...
+      max (max (abs (cov (newVectors, 1, 2) - eye (size (newVectors{1}, 1))))));
+  end
 end

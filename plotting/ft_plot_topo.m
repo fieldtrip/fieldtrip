@@ -28,7 +28,7 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 %   'hlim'          = horizontal scaling limits within the local axes
 %   'vlim'          = vertical scaling limits within the local axes
 %
-% See also FT_PLOT_TOPO3D, FT_TOPOPLOTER, FT_TOPOPLOTTFR
+% See also FT_PLOT_TOPO3D, FT_PLOT_LAY, FT_TOPOPLOTER, FT_TOPOPLOTTFR
 
 % Copyrights (C) 2009-2013, Giovanni Piantoni, Robert Oostenveld
 %
@@ -53,7 +53,7 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 % these are for speeding up the plotting on subsequent calls
 persistent previous_argin previous_maskimage
 
-ws = warning('on', 'MATLAB:divideByZero');
+ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 hpos          = ft_getopt(varargin, 'hpos',         0);
@@ -345,4 +345,4 @@ if ~holdflag
   hold off
 end
 
-warning(ws); % revert to original state
+ft_warning(ws); % revert to original state

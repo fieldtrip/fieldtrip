@@ -42,13 +42,14 @@ aline = fread(fid, inf, 'char=>char');          % returns a single long string
 fclose(fid);
 
 aline(aline==uint8(sprintf('\r'))) = [];        % remove cariage return
-aline = tokenize(aline, uint8(sprintf('\n')));  % split on newline
+aline = tokenize(aline, uint8(newline));        % split on newline
 
 for i=1:numel(aline)
   tline = aline{i};
 
   if numel(tline) && any(tline(1)=='0':'9')
   % if regexp(tline, '^[0-9]')
+    tline   = strrep(tline, ' . ', ' NaN '); % replace missing values
     tmp     = sscanf(tline, '%f');
     nchan   = numel(tmp);
     current = current + 1;

@@ -5,7 +5,7 @@
 
 % TEST read_neuromag_maxfilterlog
 
-% cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3369'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3369'));
 
 file0 = 'tactile_stim_raw.fif_tsss_mc.log';
 file1 = 'tactile_stim_raw-1.fif_tsss_mc.log';	

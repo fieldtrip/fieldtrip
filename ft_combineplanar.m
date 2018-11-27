@@ -180,7 +180,7 @@ if isfreq
             dum = permute(dum, [2 3 1]);
             dum = reshape(dum, [2 Ntim*Nrpt]);
             timbin = ~isnan(dum(1,:));
-            [loading, ~,  ori, sin_val] = svdfft(dum(:,timbin),2,data.cumtapcnt);
+            [loading, dum,  ori, sin_val] = svdfft(dum(:,timbin),2,data.cumtapcnt);
             dum2   = loading(1,:);
             dum(1,timbin) = dum2;
             dum = reshape(dum(1,:),[Ntim Nrpt]);
@@ -246,7 +246,7 @@ elseif (israw || istimelock)
           tmpdat(:, (Csmp(m)+1):Csmp(m+1)) = data.trial{m}([sel_dH(k) sel_dV(k)],:);
         end
         if strcmp(cfg.method, 'abssvd')||strcmp(cfg.method, 'svd')
-          [loading, ~,  ori, sin_val] = svdfft(tmpdat,2);
+          [loading, dum,  ori, sin_val] = svdfft(tmpdat,2);
           data.ori{k} = ori; % to change into a cell
           data.eta{k} = sin_val(1)/sum(sin_val(2:end)); % to change into a cell
           if strcmp(cfg.method, 'abssvd')

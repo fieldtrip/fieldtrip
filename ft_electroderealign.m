@@ -55,7 +55,8 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %                        'nonlin4'         apply a 4th order non-linear warp
 %                        'nonlin5'         apply a 5th order non-linear warp
 %                        'dykstra2012'     non-linear wrap only for headshape method, useful for projecting ECoG onto cortex hull
-%                        'fsaverage'       surface-based realignment with the freesurfer fsaverage brain
+%                        'fsaverage'       surface-based realignment with FreeSurfer fsaverage brain
+%                        'fsinflated'      surface-based realignment with FreeSurfer individual subject inflated brain
 %   cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
 %                        see  FT_CHANNELSELECTION for details
 %   cfg.keepchannel    = string, 'yes' or 'no' (default = 'no')
@@ -90,12 +91,11 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %                        points
 %
 % If you want to align ECoG electrodes to the pial surface, you first need to compute
-% the cortex hull with FT_PREPARE_MESH. dykstra2012 uses algorithm described in
-% Dykstra et al. (2012, Neuroimage) in which electrodes are projected onto pial
-% surface while minimizing the displacement of the electrodes from original location
-% and maintaining the grid shape. It relies on the optimization toolbox.
+% the cortex hull with FT_PREPARE_MESH. Then use either the algorithm described in 
+% Dykstra et al. (2012, Neuroimage) or in Hermes et al. (2010, J Neurosci methods) to
+% snap the electrodes back to the cortical hull, e.g.
 %   cfg.method         = 'headshape'
-%   cfg.warp           = 'dykstra2012'
+%   cfg.warp           = 'dykstra2012', or 'hermes2010'
 %   cfg.headshape      = a filename containing headshape, a structure containing a
 %                        single triangulated boundary, or a Nx3 matrix with surface
 %                        points
@@ -114,7 +114,7 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 % rather than surface_pial_left.mat.
 %   cfg.method         = 'headshape'
 %   cfg.warp           = 'fsaverage'
-%   cfg.headshape      = string, filename containing headshape (e.g. <path to freesurfer/surf/lh.pial>)
+%   cfg.headshape      = string, filename containing subject headshape (e.g. <path to freesurfer/surf/lh.pial>)
 %   cfg.fshome         = string, path to freesurfer
 %
 % See also FT_READ_SENS, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN,
@@ -404,31 +404,12 @@ elseif strcmp(cfg.method, 'headshape')
   norm.label = elec.label;
   if strcmp(cfg.warp, 'dykstra2012')
     norm.elecpos = warp_dykstra2012(cfg, elec, headshape);
+  elseif strcmp(cfg.warp, 'hermes2010')
+    norm.elecpos = warp_hermes2010(cfg, elec, headshape);
   elseif strcmp(cfg.warp, 'fsaverage')
-    subj_pial = ft_read_headshape(cfg.headshape);
-    [PATHSTR, NAME] = fileparts(cfg.headshape); % lh or rh
-    subj_reg = ft_read_headshape([PATHSTR filesep NAME '.sphere.reg']);
-    if ~isdir([cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf'])
-      ft_error(['freesurfer dir ' cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf cannot be found'])
-    end
-    fsavg_pial = ft_read_headshape([cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf' filesep NAME '.pial']);
-    fsavg_reg = ft_read_headshape([cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf' filesep NAME '.sphere.reg']);
-    
-    for e = 1:numel(elec.label)
-      % subject space (3D surface): electrode pos -> vertex index
-      dist = sqrt(sum(((subj_pial.pos - repmat(elec.elecpos(e,:), size(subj_pial.pos,1), 1)).^2),2));
-      [~, minidx] = min(dist);
-      
-      % intersubject space (2D sphere): vertex index -> vertex pos -> template vertex index
-      dist2 = sqrt(sum(((fsavg_reg.pos - repmat(subj_reg.pos(minidx,:), size(fsavg_reg.pos,1), 1)).^2),2));
-      [~, minidx2] = min(dist2);
-      clear minidx
-      
-      % template space (3D surface): template vertex index -> template electrode pos
-      norm.elecpos(e,:) = fsavg_pial.pos(minidx2,:);
-      clear minidx2
-    end
-    clear subj_pial subj_reg fsavg_pial fsavg_reg
+    norm.elecpos = warp_fsaverage(cfg, elec);
+  elseif strcmp(cfg.warp, 'fsinflated')
+    norm.elecpos = warp_fsinflated(cfg, elec); 
   else
     fprintf('warping electrodes to skin surface... '); % the newline comes later
     [norm.elecpos, norm.m] = ft_warp_optim(elec.elecpos, headshape, cfg.warp);
@@ -638,7 +619,7 @@ end % if method
 % electrode labels by their case-sensitive original values
 switch cfg.method
   case {'template', 'headshape'}
-    if strcmpi(cfg.warp, 'dykstra2012') || strcmpi(cfg.warp, 'fsaverage')
+    if strcmpi(cfg.warp, 'dykstra2012') || strcmpi(cfg.warp, 'hermes2010') || strcmpi(cfg.warp, 'fsaverage') || strcmpi(cfg.warp, 'fsinflated')
       elec_realigned = norm;
       elec_realigned.label = label_original;
     else
@@ -646,7 +627,7 @@ switch cfg.method
       try
         % convert the vector with fitted parameters into a 4x4 homogenous transformation
         % apply the transformation to the original complete set of sensors
-        elec_realigned = ft_transform_sens(feval(cfg.warp, norm.m), elec_original);
+        elec_realigned = ft_transform_geometry(feval(cfg.warp, norm.m), elec_original);
       catch
         % the previous section will fail for nonlinear transformations
         elec_realigned.label = label_original;
@@ -661,7 +642,7 @@ switch cfg.method
   case  {'fiducial' 'interactive'}
     % the transformation is a 4x4 homogenous matrix
     % apply the transformation to the original complete set of sensors
-    elec_realigned = ft_transform_sens(norm.m, elec_original);
+    elec_realigned = ft_transform_geometry(norm.m, elec_original);
     % remember the transformation
     elec_realigned.homogeneous = norm.m;
     
@@ -690,7 +671,7 @@ switch cfg.method
       elec_realigned.coordsys = headshape.coordsys;
     end
     if isfield(elec_original, 'coordsys')
-      if strcmp(cfg.warp, 'dykstra2012') % this warp simply moves the electrodes in the same coordinate space
+      if strcmp(cfg.warp, 'dykstra2012') || strcmp(cfg.warp, 'hermes2010')  % this warp simply moves the electrodes in the same coordinate space
         elec_realigned.coordsys = elec_original.coordsys;
       elseif strcmp(cfg.warp, 'fsaverage')
         elec_realigned.coordsys = 'fsaverage';
@@ -713,7 +694,7 @@ end
 
 if istrue(cfg.keepchannel)
   % append the channels that are not realigned
-  [~, idx] = setdiff(elec_original.label, elec_realigned.label);
+  [dum, idx] = setdiff(elec_original.label, elec_realigned.label);
   idx = sort(idx);
   elec_realigned.label = [elec_realigned.label; elec_original.label(idx)];
   elec_realigned.elecpos = [elec_realigned.elecpos; elec_original.elecpos(idx,:)];
@@ -721,16 +702,20 @@ end
 
 % channel positions are identical to the electrode positions (this was checked at the start)
 elec_realigned.chanpos = elec_realigned.elecpos;
+elec_realigned.tra = eye(numel(elec_realigned.label));
 
-% copy over unit, chantype, and chanunit information in case this was not already done
+% copy over unit, chantype, chanunit, and tra information in case this was not already done
 if ~isfield(elec_realigned, 'unit') && isfield(elec_original, 'unit')
   elec_realigned.unit = elec_original.unit;
 end
 if ~isfield(elec_realigned, 'chantype') && isfield(elec_original, 'chantype')
-  elec_realigned.chantype = elec_original.chantype;
+  idx = match_str(elec_original.label, elec_realigned.label);
+  elec_realigned.chantype = elec_original.chantype(idx);
 end
 if ~isfield(elec_realigned, 'chanunit') && isfield(elec_original, 'chanunit')
   elec_realigned.chanunit = elec_original.chanunit;
+  idx = match_str(elec_original.label, elec_realigned.label);
+  elec_realigned.chanunit = elec_original.chanunit(idx);
 end
 
 % update it to the latest version

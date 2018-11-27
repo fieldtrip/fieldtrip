@@ -178,7 +178,7 @@ sel = strcmp(cfg.parameter, 'anatomy');
 if ~any(sel)
   cfg.parameter = [{'anatomy'} cfg.parameter];
 else
-  [~, indx] = sort(sel);
+  [dum, indx] = sort(sel);
   cfg.parameter = cfg.parameter(fliplr(indx));
 end
 
@@ -272,7 +272,7 @@ if ~isfield(cfg, 'spmparams')
     
     % this writes the 'deformation field'
     fprintf('writing the deformation field to file\n');
-    [bb, ~] = spm_get_bbox(opts.tpm.V(1));
+    bb        = spm_get_bbox(opts.tpm.V(1));
     spm_preproc_write8(params, zeros(6,4), [0 0], [0 1], 1, 1, bb, cfg.downsample);
     
     oldparams = false;
@@ -292,7 +292,7 @@ else
     
     % this writes the 'deformation field'
     fprintf('writing the deformation field to file\n');
-    [bb, ~] = spm_get_bbox(params.tpm(1));
+    bb = spm_get_bbox(params.tpm(1));
     spm_preproc_write8(params, zeros(6,4), [0 0], [0 1], 1, 1, bb, cfg.downsample);
   end
 end
@@ -362,9 +362,9 @@ end
 if strcmp(cfg.keepintermediate, 'no')
   % remove the intermediate files
   for k = 1:length(Vout)
-    [p, f, ~] = fileparts(VF(k).fname);
+    [p, f] = fileparts(VF(k).fname);
     delete(fullfile(p, [f, '.*']));
-    [p, f, ~] = fileparts(Vout(k).fname);
+    [p, f] = fileparts(Vout(k).fname);
     delete(fullfile(p, [f, '.*']));
   end
 end
@@ -380,7 +380,7 @@ cfg.spmparams = params;
 cfg.final     = final;
 
 % restore the previous warning state
-warning(ws);
+ft_warning(ws);
 
 ft_postamble previous   mri
 ft_postamble provenance normalised

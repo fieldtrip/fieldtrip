@@ -5,7 +5,7 @@ function data = append_common(cfg, varargin)
 % The general bookkeeping and the correct specification of the cfg
 % should be taken care of by the calling function.
 %
-% See FT_APPENDDATA, T_APPENDTIMELOCK, FT_APPENDFREQ
+% See FT_APPENDDATA, FT_APPENDTIMELOCK, FT_APPENDFREQ
 
 % Copyright (C) 2017, Robert Oostenveld
 %
@@ -145,6 +145,13 @@ switch cfg.appenddim
             data.(cfg.parameter{i})(:,chansel,:) = varargin{j}.(cfg.parameter{i})(:,chansel,:);
           end
           
+        case {'rpt_chan_freq_time' 'rpttap_chan_freq_time' 'subj_chan_freq_time'}
+          data.(cfg.parameter{i}) = nan(dimsiz);
+          for j=1:numel(varargin)
+            chansel = match_str(varargin{j}.label, oldlabel{j});
+            data.(cfg.parameter{i})(:,chansel,:,:) = varargin{j}.(cfg.parameter{i})(:,chansel,:,:);
+          end
+          
         otherwise
           % do not concatenate this field
       end % switch
@@ -168,7 +175,7 @@ switch cfg.appenddim
     end
     
     % determine the union of all input data
-    tmpcfg = keepfields(cfg, {'tolerance', 'channel'});
+    tmpcfg = keepfields(cfg, {'tolerance', 'channel', 'showcallinfo'});
     tmpcfg.select = 'union';
     [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
     for i=1:numel(varargin)
@@ -251,7 +258,7 @@ switch cfg.appenddim
   case 'rpt'
     
     % determine the intersection of all input data
-    tmpcfg = keepfields(cfg, {'tolerance', 'channel'});
+    tmpcfg = keepfields(cfg, {'tolerance', 'channel', 'showcallinfo'});
     tmpcfg.select = 'intersect';
     [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
     for i=1:numel(varargin)

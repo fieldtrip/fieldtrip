@@ -144,7 +144,7 @@ endTrialLatency = spike.trialtime(cfg.trials,2);
 % select the latencies
 if strcmp(cfg.latency,'minperiod')
   cfg.latency = [max(begTrialLatency) min(endTrialLatency)];
-elseif strcmp(cfg.latency,'maxperiod')
+elseif strcmp(cfg.latency,'maxperiod') || strcmp(cfg.latency,'all')
   cfg.latency = [min(begTrialLatency) max(endTrialLatency)];
 elseif strcmp(cfg.latency,'prestim')
   cfg.latency = [min(begTrialLatency) 0];

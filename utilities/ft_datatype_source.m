@@ -31,10 +31,6 @@ function [source] = ft_datatype_source(source, varargin)
 % Obsoleted fields:
 %   - xgrid, ygrid, zgrid, transform, latency, frequency
 %
-% Historical fields:
-%   - avg, cfg, cumtapcnt, df, dim, freq, frequency, inside, method,
-%   outside, pos, time, trial, vol, see bug2513
-%
 % Revision history:
 %
 % (2014) The subfields in the avg and trial fields are now present in the
@@ -94,11 +90,11 @@ end
 % old data structures may use latency/frequency instead of time/freq. It is
 % unclear when these were introduced and removed again, but they were never
 % used by any FieldTrip function itself
-if isfield(source, 'frequency'),
+if isfield(source, 'frequency')
   source.freq = source.frequency;
   source      = rmfield(source, 'frequency');
 end
-if isfield(source, 'latency'),
+if isfield(source, 'latency')
   source.time = source.latency;
   source      = rmfield(source, 'latency');
 end

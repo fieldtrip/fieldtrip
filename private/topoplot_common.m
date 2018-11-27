@@ -39,6 +39,8 @@ cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'cohrefchannel' 'refchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'zparam', 'parameter'});
 
+cfg.newfigure = ft_getopt(cfg, 'newfigure', 'yes');
+
 Ndata = numel(varargin);
 if isnumeric(varargin{end})
   % the call with multiple inputs is done by ft_topoplotIC and recursively by ft_topoplotER/TFR itself
@@ -52,12 +54,16 @@ end
 % the call with multiple inputs is done by ft_topoplotIC and recursively by ft_topoplotER/TFR itself
 % the last input argument points to the specific data to be plotted
 if Ndata>1 && ~isnumeric(varargin{end})
+  
   for k=1:Ndata
     
-    if k>1
+    if k>1 && istrue(cfg.newfigure)
       % create a new figure for the additional input arguments
       % ensure that the new figure appears at the same position
       figure('Position', get(gcf, 'Position'), 'Visible', get(gcf, 'Visible'));
+    end
+    if ~istrue(cfg.newfigure)
+      subplot(floor(sqrt(Ndata)), ceil(sqrt(Ndata)), k);
     end
     
     % the indexing is necessary if ft_topoplotER/TFR is called from
@@ -564,22 +570,22 @@ switch cfg.comment
       comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, cfg.parameter, zmin, zmax);
     end
   case 'xlim'
-    comment = date;
+    comment = '';
     if ~isempty(xparam)
-      comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, xparam, xmin, xmax);
+      comment = sprintf('%0s=[%.3g %.3g]', xparam, xmin, xmax);
     end
   case 'ylim'
-    comment = date;
+    comment = '';
     if ~isempty(yparam)
-      comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, yparam, ymin, ymax);
+      comment = sprintf('%0s=[%.3g %.3g]', yparam, ymin, ymax);
     end
   case 'zlim'
-    comment = date;
+    comment = '';
     if ~isempty(yparam)
-      comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, cfg.parameter, zmin, zmax);
+      comment = sprintf('%0s=[%.3g %.3g]', cfg.parameter, zmin, zmax);
     end
   otherwise
-    comment = '';
+    comment = cfg.comment; % allow custom comments (e.g., ft_clusterplot specifies custom comments)
 end % switch comment
 
 if ~isempty(cfg.refchannel)
@@ -778,10 +784,12 @@ end
 % Write comment
 if ~strcmp(cfg.comment, 'no')
   if strcmp(cfg.commentpos, 'title')
-    title(comment, 'FontSize', cfg.fontsize);
+    comment_handle = title(comment, 'FontSize', cfg.fontsize);
   else
-    ft_plot_text(x_comment, y_comment, comment, 'FontSize', cfg.fontsize, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 'FontWeight', cfg.fontweight);
+    comment_handle = ft_plot_text(x_comment, y_comment, comment, 'FontSize', cfg.fontsize, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 'FontWeight', cfg.fontweight);
   end
+else
+  comment_handle = [];
 end
 
 % Set colour axis
@@ -840,6 +848,7 @@ if strcmp(cfg.interactive, 'yes')
   info.(ident).label       = cfg.layout.label;
   info.(ident).dataname    = dataname;
   info.(ident).cfg         = cfg;
+  info.(ident).commenth    = comment_handle;
   if ~isfield(info.(ident),'datvarargin')
     info.(ident).datvarargin = varargin(1:Ndata); % add all datasets to figure
   end
@@ -923,25 +932,41 @@ end
 % SUBFUNCTION which handles hot keys in the current plot
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function key_sub(handle, eventdata, varargin)
+ident       = get(gca, 'tag');
+info        = guidata(gcf);
+
 climits = caxis;
 incr_c  = abs(climits(2) - climits(1)) /10;
 
+newz = climits;
 if length(eventdata.Modifier) == 1 && strcmp(eventdata.Modifier{:}, 'control')
   % TRANSLATE by 10%
   switch eventdata.Key
     case 'pageup'
-      caxis([climits(1)+incr_c climits(2)+incr_c]);
+      newz = [climits(1)+incr_c climits(2)+incr_c];
     case 'pagedown'
-      caxis([climits(1)-incr_c climits(2)-incr_c]);
+      newz = [climits(1)-incr_c climits(2)-incr_c];
   end % switch
 else
   % ZOOM by 10%
   switch eventdata.Key
     case 'pageup'
-      caxis([climits(1)-incr_c climits(2)+incr_c]);
+      newz = [climits(1)-incr_c climits(2)+incr_c];
     case 'pagedown'
-      caxis([climits(1)+incr_c climits(2)-incr_c]);
+      newz = [climits(1)+incr_c climits(2)-incr_c];
     case 'm'
-      caxis([varargin{1} varargin{2}]);
+      newz = [varargin{1} varargin{2}];
   end % switch
 end % if
+
+% update the color axis
+caxis(newz);
+
+if ~isempty(ident) && isfield(info.(ident), 'commenth') && ~isempty(info.(ident).commenth)
+  commentstr = get(info.(ident).commenth, 'string');
+  sel        = contains(commentstr, info.(ident).cfg.parameter);
+  if any(sel)
+    commentstr{sel} = sprintf('%0s=[%.3g %.3g]', info.(ident).cfg.parameter, newz(1), newz(2));
+    set(info.(ident).commenth, 'string', commentstr);
+  end
+end

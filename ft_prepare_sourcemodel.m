@@ -115,7 +115,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble debug
-ft_preamble provenance
+ft_preamble provenance headmodel sens
 ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
@@ -149,7 +149,7 @@ if isfield(cfg, 'grid')
     cfg.grid.template = ft_checkconfig(cfg.grid.template, 'renamed',  {'pnt' 'pos'});
   end
 end
-cfg = ft_checkconfig(cfg, 'index2logical', 'yes');
+cfg = ft_checkconfig(cfg, 'inside2logical', 'yes');
 
 if ~isfield(cfg, 'headmodel') && nargin>1
   % put it in the configuration structure

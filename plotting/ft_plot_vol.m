@@ -16,6 +16,7 @@ function ft_plot_vol(headmodel, varargin)
 %   'edgealpha'    = transparency, between 0 and 1 (default = 1)
 %   'surfaceonly'  = true or false, plot only the outer surface of a hexahedral or tetrahedral mesh (default = false)
 %   'unit'         = string, convert to the specified geometrical units (default = [])
+%   'grad'         = gradiometer array, used in combination with local spheres model
 %
 % Example
 %   headmodel   = [];
@@ -23,7 +24,7 @@ function ft_plot_vol(headmodel, varargin)
 %   headmodel.o = [0 0 40];
 %   figure, ft_plot_vol(headmodel)
 %
-% See also FT_PREPARE_HEADMODEL FT_PLOT_MESH
+% See also FT_PREPARE_HEADMODEL, FT_PLOT_MESH, FT_PLOT_SENS
 
 % Copyright (C) 2009, Cristiano Micheli
 %
@@ -45,7 +46,7 @@ function ft_plot_vol(headmodel, varargin)
 %
 % $Id$
 
-ws = warning('on', 'MATLAB:divideByZero');
+ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % ensure that the volume conduction model description is up-to-date (Dec 2012)
 headmodel = ft_datatype_headmodel(headmodel);
@@ -60,9 +61,13 @@ edgecolor   = ft_getopt(varargin, 'edgecolor'); % the default for this is set be
 facealpha   = ft_getopt(varargin, 'facealpha', 1);
 surfaceonly = ft_getopt(varargin, 'surfaceonly');
 unit        = ft_getopt(varargin, 'unit');
+grad        = ft_getopt(varargin, 'grad');
 
 if ~isempty(unit)
   headmodel = ft_convert_units(headmodel, unit);
+  if ~isempty(grad)
+    grad = ft_convert_units(grad, unit);
+  end
 end
 
 faceindex   = istrue(faceindex);   % yes=view the face number
@@ -87,12 +92,19 @@ switch ft_voltype(headmodel)
     end
     
   case 'localspheres'
-    bnd = repmat(struct(), numel(headmodel.label));
-    for i=1:numel(headmodel.label)
-      bnd(i).pos(:,1) = pos(:,1)*headmodel.r(i) + headmodel.o(i,1);
-      bnd(i).pos(:,2) = pos(:,2)*headmodel.r(i) + headmodel.o(i,2);
-      bnd(i).pos(:,3) = pos(:,3)*headmodel.r(i) + headmodel.o(i,3);
-      bnd(i).tri = tri;
+    if ~isempty(grad)
+      ft_notice('estimating point on head surface for each gradiometer');
+      [headmodel, grad] = ft_prepare_vol_sens(headmodel, grad);
+      [bnd.pos, bnd.tri] = headsurface(headmodel, grad);
+    else
+      ft_notice('plotting sphere for each gradiometer');
+      bnd = repmat(struct(), numel(headmodel.label));
+      for i=1:numel(headmodel.label)
+        bnd(i).pos(:,1) = pos(:,1)*headmodel.r(i) + headmodel.o(i,1);
+        bnd(i).pos(:,2) = pos(:,2)*headmodel.r(i) + headmodel.o(i,2);
+        bnd(i).pos(:,3) = pos(:,3)*headmodel.r(i) + headmodel.o(i,3);
+        bnd(i).tri = tri;
+      end
     end
     if isempty(edgecolor)
       edgecolor = 'none';
@@ -145,4 +157,4 @@ for i=1:length(bnd)
 end
 
 % revert to original state
-warning(ws);
+ft_warning(ws);

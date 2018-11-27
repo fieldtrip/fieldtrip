@@ -7,11 +7,11 @@ function test_bug798
 
 % note that this bug is related to bug 921
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug798'));
-load t2_subj1.mat
-load t2_subj1_null
-load t2_subj2
-load t2_subj2_null
+datadir = (dccnpath('/home/common/matlab/fieldtrip/data/test/bug798'));
+load(fullfile(datadir,'t2_subj1.mat'));
+load(fullfile(datadir,'t2_subj1_null'));
+load(fullfile(datadir,'t2_subj2'));
+load(fullfile(datadir,'t2_subj2_null'));
 
 % the following gave an error on 6 July 2011, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=798
 a = ft_checkdata(t2_subj1, 'datatype', 'freq');
@@ -28,7 +28,7 @@ cfg.tail = 0;
 cfg.alpha = 0.025;
 cfg.correctm = 'cluster';
 cfg1 = [];
-cfg1.gradfile = 'ctf275.mat';
+cfg1.gradfile = fullfile(datadir,'ctf275.mat');
 cfg1.method = 'triangulation';
 cfg1.feedback = 'yes';
 cfg.neighbours = ft_prepare_neighbours(cfg1, t2_subj1);
@@ -47,8 +47,12 @@ assert(all(size(stat.prob)==[274 1]));
 
 % the bug reduces to
 data = ft_checkdata(t2_subj1, 'datatype', 'freq');
-data = ft_selectdata(data, 'channel', 'all',   'avgoverchan', 'no');
-data = ft_selectdata(data, 'foilim',  [-inf inf], 'avgoverfreq', 'no');
+
+tmpcfg = [];
+tmpcfg.avgoverchan = 'no';
+tmpcfg.frequency = [-inf inf];
+tmpcfg.avgoverfreq = 'no';
+data = ft_selectdata(tmpcfg, data);
 % which is due to ft_checkdata inserting a nan in the fake frequency axis
 % fixed by roboos on 1 September 2011
 assert(all(size(data.powspctrm)==[274 1]));
@@ -59,8 +63,6 @@ argin{2} = ft_checkdata(t2_subj1_null, 'datatype', 'freq');
 argin{3} = ft_checkdata(t2_subj2, 'datatype', 'freq');
 argin{4} = ft_checkdata(t2_subj2_null, 'datatype', 'freq');
 % and
-data = ft_selectdata(argin{:}, 'param', 'powspctrm');
-assert(strcmp(data.dimord, 'rpt_chan_freq'));
 
 % but this should now work
 cfg = [];

@@ -15,8 +15,14 @@ switch purpose
       'grad'
       'elec'
       'opto'
+      'fsample'
       'trialinfo'  % this is dealt with explicitly
       'sampleinfo' % this is dealt with explicitly
+      'topo'
+      'topolabel'
+      'topodimord'
+      'unmixing'
+      'unmixingdimord'
       };
     
   case 'appendfreq'
@@ -63,7 +69,6 @@ switch purpose
   case 'allowed'
     ignore = {
       % some fields that are always allowed to be present in the configuration
-      'postamble'
       'trackconfig'
       'checkconfig'
       'checksize'
@@ -82,24 +87,38 @@ switch purpose
       'toolbox'
       };
     
+  case {'rollback'}
+    ignore = {
+      % these should not be updated in rollback_provenance
+      'callinfo'
+      'checkconfig'
+      'checksize'
+      'debug'
+      'notification'
+      'previous'
+      'showcallinfo'
+      'trackcallinfo'
+      'trackconfig'
+      'trackdatainfo'
+      'trackusage'
+      'version'
+      'warning'
+      };
     
   case {'provenance', 'history'}
     ignore = {
       % these should not be included in the provenance or history
-      'postamble'
       'checkconfig'
       'checksize'
-      'trackconfig'
-      'trackusage'
-      'trackdatainfo'
-      'trackcallinfo'
-      'showcallinfo'
-      'warning'
-      'notification'
       'debug'
-      'progress'
+      'notification'
+      'showcallinfo'
+      'trackcallinfo'
+      'trackconfig'
+      'trackdatainfo'
+      'trackusage'
+      'warning'
       };
-    
     
   case 'trackconfig'
     ignore = {
@@ -111,7 +130,6 @@ switch purpose
       'artifact'
       'artfctdef'
       % these fields are for internal usage only
-      'postamble'
       'checkconfig'
       'checksize'
       'trackconfig'
@@ -125,6 +143,7 @@ switch purpose
       'notification'
       'debug'
       'previous'
+      'hastoolbox'
       };
     
   case 'checksize'
@@ -137,6 +156,24 @@ switch purpose
       'artifact'
       'artfctdef'
       'previous'
+      'hastoolbox'
+      };
+    
+  case 'makessense'
+    ignore = {
+      % these fields should not be used to check whether the trialinfo and sampleinfo make sense
+      'label'
+      'time'
+      'freq'
+      'hdr'
+      'fsample'
+      'dimord'
+      'trialinfo'
+      'sampleinfo'
+      'grad'
+      'elec'
+      'opto'
+      'cfg'
       };
     
   otherwise

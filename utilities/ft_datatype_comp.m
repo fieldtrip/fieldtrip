@@ -68,8 +68,8 @@ function [comp] = ft_datatype_comp(comp, varargin)
 
 % get the optional input arguments, which should be specified as key-value pairs
 version       = ft_getopt(varargin, 'version', 'latest');
-hassampleinfo = ft_getopt(varargin, 'hassampleinfo', []); % the default is determined in ft_datatype_raw
-hastrialinfo  = ft_getopt(varargin, 'hastrialinfo', []);  % the default is determined in ft_datatype_raw
+hassampleinfo = ft_getopt(varargin, 'hassampleinfo', []); % the default is determined elsewhere
+hastrialinfo  = ft_getopt(varargin, 'hastrialinfo', []);  % the default is determined elsewhere
 
 if strcmp(version, 'latest')
   version         = '2014';

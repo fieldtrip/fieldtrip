@@ -63,7 +63,8 @@ ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
-TARGETS = $(patsubst %, $(BINDIR)/ctf_%$(SUFFIX), AcqBuffer acq2ft acq2ftx fake_meg check_shm acq2ftx_fake acq2ft_fake)
+#TARGETS = $(patsubst %, $(BINDIR)/ctf_%$(SUFFIX), AcqBuffer acq2ft acq2ftx fake_meg check_shm acq2ftx_fake acq2ft_fake)
+TARGETS = $(patsubst %, $(BINDIR)/%$(SUFFIX), ctf2ft_v1 ctf2ft_v2 ctf2ft_v3 ctf2ft_v2_fake ctf2ft_v3_fake ctf_simulate ctf_check)
 
 ##############################################################################
 all: $(TARGETS)
@@ -71,10 +72,10 @@ all: $(TARGETS)
 %.o: %.c
 	$(CC) $(INCPATH) $(CFLAGS) -c $<
 
-$(BINDIR)/ctf_%$(SUFFIX): %.o
+$(BINDIR)/%$(SUFFIX): %.o
 	$(CC) -o $@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
-$(BINDIR)/acq2ftx$(SUFFIX): LDLIBS += -lm
+$(BINDIR)/ctf2ft_v3$(SUFFIX): LDLIBS += -lm
 
 %_fake.o: %.c
 	$(CC) $^ $(CFLAGS) $(INCPATH) -DFAKE_MEG -c -o $@

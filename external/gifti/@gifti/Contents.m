@@ -8,21 +8,21 @@
 % This MATLAB class is part of SPM:
 %                  http://www.fil.ion.ucl.ac.uk/spm/
 %
-% It relies on external MATLAB code:
+% It relies on external libraries:
 %   Base64, by Peter J. Acklam:
 %      http://home.online.no/~pjacklam/
-%   dzip, by Michael Kleder:
-%      http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=8899
+%   miniz, by Rich Geldreich:
+%      http://code.google.com/p/miniz/
 %   XMLTree, by Guillaume Flandin:
 %      http://www.artefact.tk/software/matlab/xml/
 %__________________________________________________________________________
-% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
+% Copyright (C) 2008-2015 Wellcome Trust Centre for Neuroimaging
 
 % Guillaume Flandin
-% $Id$
+% $Id: Contents.m 6404 2015-04-13 14:29:53Z guillaume $
 
 % GIfTI file format for MATLAB (The Mathworks, Inc.).
-% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
+% Copyright (C) 2008-2015 Wellcome Trust Centre for Neuroimaging
 %
 % This program is free software; you can redistribute it and/or
 % modify it under the terms of the GNU General Public License

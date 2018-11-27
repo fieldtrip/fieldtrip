@@ -1,4 +1,4 @@
-function [c] = cellnancov(x, varargin)
+ function [c] = cellnancov(x, varargin)
 
 % [C] = CELLNANCOV(X, NORMALIZEFLAG, DIM) computes the covariance, across all cells in x along 
 %        the dimension dim, accounting for NaNs
@@ -115,7 +115,7 @@ end
 
 function [c,mx,my] = nancovc(x, y, dim)
 
-if nargin==2,
+if nargin==2
   % only a single data matrix is provided
   dim = y;
   if islogical(x), x = double(x); end
@@ -123,11 +123,11 @@ if nargin==2,
   notfinitex    = ~isfinite(x);
   x(notfinitex) = 0;
 
-  if dim==1,
+  if dim==1
     c  = x'*x;
     for k = 1:size(x,2)
     end
-  elseif dim==2,
+  elseif dim==2
     c  = x*x';
     nx = size(x,1);
     mx = repmat(sum(x,2),[1 nx]);
@@ -147,11 +147,11 @@ else
   x(notfinitex) = 0;
   y(notfinitey) = 0;
 
-  if dim==1,
+  if dim==1
     c  = x'*y;
     for k = 1:size(x,2)
     end
-  elseif dim==2,
+  elseif dim==2
     c = x*y';
     nx = size(x,1);
     ny = size(y,1);

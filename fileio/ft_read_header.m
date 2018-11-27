@@ -47,6 +47,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   Neuromag - Elekta (*.fif)
 %   BTi - 4D Neuroimaging (*.m4d, *.pdf, *.xyz)
 %   Yokogawa (*.ave, *.con, *.raw)
+%   Ricoh (*.ave, *.con)
 %   NetMEG (*.nc)
 %   ITAB - Chieti (*.mhd)
 %   Tristan Babysquid (*.fif)
@@ -66,7 +67,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   TMSi (*.Poly5)
 %   Mega Neurone (directory)
 %   Natus/Nicolet/Nervus (.e files)
-%   Nihon Kohden (*.m00)
+%   Nihon Kohden (*.m00, *.EEG)
 %
 % The following spike and LFP dataformats are supported
 %   Neuralynx (*.ncs, *.nse, *.nts, *.nev, *.nrd, *.dma, *.log)
@@ -199,7 +200,7 @@ if realtime
 else
   % check whether the file or directory exists
   if  ~exist(filename, 'file')
-    ft_error('FILEIO:InvalidFileName', 'file or directory ''%s'' does not exist', filename);
+    ft_error('file or directory ''%s'' does not exist', filename);
   end
   
   checkUniqueLabels = true;
@@ -209,7 +210,7 @@ else
   checkmaxfilter = ft_getopt(varargin, 'checkmaxfilter', true);
   
   if isempty(cache)
-    if any(strcmp(headerformat, {'bci2000_dat', 'eyelink_asc', 'gtec_mat', 'gtec_hdf5', 'mega_neurone', 'smi_txt', 'biosig'}))
+    if any(strcmp(headerformat, {'bci2000_dat', 'eyelink_asc', 'gtec_mat', 'gtec_hdf5', 'mega_neurone', 'nihonkohden_m00', 'smi_txt', 'biosig'}))
       cache = true;
     else
       cache = false;
@@ -434,22 +435,53 @@ switch headerformat
     fclose(orig.Head.FILE.FID);
     
   case 'blackrock_nev'
-    ft_error('this still needs some work');
+    % read header for nsX file associated with NEV file
+    % use ft_read_event to read event information in .nev file
+    
+    ft_hastoolbox('NPMK', 1);
+    % ensure that the filename contains a full path specification,
+    % otherwise the low-level function fails
+    [p,n] = fileparts(filename);
+    if isempty(p)
+      filename = which(filename);
+      [p,n] = fileparts(filename);
+    end
+    
+    NEV = openNEV(filename,'noread','nosave');
+    
+    %searching for associated nsX file in same folder
+    files=dir(strcat(fullfile(p,n),'.ns*'));
+    if isempty(files)
+      ft_error('no .ns* file associated to %s in %s',n,p);
+    end
+    
+    %searching for nsX file with same sampling freq that NEV
+    for i=1:numel(files)
+      nsX_hdr = ft_read_header(fullfile(p,files(i).name),'chantype',chantype);
+      if nsX_hdr.Fs == NEV.MetaTags.SampleRes
+        hdr = nsX_hdr;
+        break
+      end
+    end
+    
+    if isempty(hdr)
+      ft_error('no .ns* file with same sampling frequency as %s (%i)',n,NEV.MetaTags.SampleRes);
+    end
     
   case 'blackrock_nsx'
     ft_hastoolbox('NPMK', 1);
     % ensure that the filename contains a full path specification,
     % otherwise the low-level function fails
-    [p, ~, ~] = fileparts(filename);
+    p = fileparts(filename);
     if isempty(p)
       filename = which(filename);
     end
     
     orig = openNSx(filename, 'noread');
     channelstype=regexp({orig.ElectrodesInfo.Label},'[a-z]\w+','match');
-    chaninfo=table([orig.ElectrodesInfo.ElectrodeID]',...
+    chaninfo=table({orig.ElectrodesInfo.ElectrodeID}',...
       transpose(deblank({orig.ElectrodesInfo.Label})),[channelstype{1,:}]',...
-      [orig.ElectrodesInfo.ConnectorBank]',[orig.ElectrodesInfo.ConnectorPin]',...
+      {orig.ElectrodesInfo.ConnectorBank}',{orig.ElectrodesInfo.ConnectorPin}',...
       transpose(deblank({orig.ElectrodesInfo.AnalogUnits})),...
       'VariableNames',{'id' 'label' 'chantype' 'bank' 'pin' 'unit'});
     
@@ -706,6 +738,18 @@ switch headerformat
     % read the header information from shared memory
     hdr = read_shm_header(filename);
     
+    
+  case {'curry_dat', 'curry_cdt'}
+    orig            = load_curry_data_file(filename);
+    hdr             = [];
+    hdr.Fs          = orig.fFrequency;
+    hdr.nChans      = orig.nChannels;
+    hdr.nSamples    = orig.nSamples;
+    hdr.nSamplesPre = sum(orig.time<0);
+    hdr.nTrials     = orig.nTrials;
+    hdr.label       = orig.labels(:);
+    hdr.orig        = orig;
+    
   case 'dataq_wdq'
     orig            = read_wdq_header(filename);
     hdr             = [];
@@ -912,7 +956,7 @@ switch headerformat
     hdr.orig.CateNames   = CateNames;
     hdr.orig.CatLengths  = CatLengths;
     
-  case {'egi_mff_v1' 'egi_mff'} % this is currently the default
+  case 'egi_mff_v1'
     % The following represents the code that was written by Ingrid, Robert
     % and Giovanni to get started with the EGI mff dataset format. It might
     % not support all details of the file formats.
@@ -920,6 +964,10 @@ switch headerformat
     % An alternative implementation has been provided by EGI, this is
     % released as fieldtrip/external/egi_mff and referred further down in
     % this function as 'egi_mff_v2'.
+    %
+    % An more recent implementation has been provided by EGI and Arno Delorme, this
+    % is released as https://github.com/arnodelorme/mffmatlabio and referred further
+    % down in this function as 'egi_mff_v3'.
     
     if ~usejava('jvm')
       ft_error('the xml2struct requires MATLAB to be running with the Java virtual machine (JVM)');
@@ -941,7 +989,7 @@ switch headerformat
     end
     
     % get hdr info from xml files
-    ws = warning('off', 'MATLAB:REGEXP:deprecated'); % due to some small code xml2struct
+    ws = ft_warning('off', 'MATLAB:REGEXP:deprecated'); % due to some small code xml2struct
     xmlfiles = dir( fullfile(filename, '*.xml'));
     disp('reading xml files to obtain header info...')
     for i = 1:numel(xmlfiles)
@@ -953,7 +1001,7 @@ switch headerformat
         orig.xml.(fieldname) = xml2struct(filename_xml);
       end
     end
-    warning(ws); % revert the warning state
+    ft_warning(ws); % revert the warning state
     
     % epochs.xml seems the most common version, but epoch.xml might also
     % occur, so use only one name
@@ -1173,6 +1221,10 @@ switch headerformat
       filename = fullfile(pwd, filename);
     end
     hdr = read_mff_header(filename);
+    
+  case {'egi_mff_v3' 'egi_mff'} % this is the default
+    ft_hastoolbox('mffmatlabio', 1);
+    hdr = mff_fileio_read_header(filename);
     
   case 'fcdc_buffer'
     % read from a networked buffer for realtime analysis
@@ -1755,7 +1807,18 @@ switch headerformat
   case 'nexstim_nxe'
     hdr = read_nexstim_nxe(filename);
     
+  case 'neuromag_headpos'
+    % neuromag headposition file created with maxfilter, the position varies over time
+    orig = read_neuromag_headpos(filename);
+    hdr.Fs          = 1/(orig.data(1,2)-orig.data(1,1));
+    hdr.nChans      = size(orig.data,1);
+    hdr.nSamples    = size(orig.data,2);
+    hdr.nSamplesPre = 0;   % convert from ms to samples
+    hdr.nTrials     = 1;
+    hdr.label       = orig.colheaders;
+    
   case 'neuromag_maxfilterlog'
+    % neuromag log file created with maxfilter
     log = read_neuromag_maxfilterlog(filename);
     hdr = [];
     hdr.label = {'t' 'e' 'g' 'v' 'r' 'd'};
@@ -2110,7 +2173,19 @@ switch headerformat
     hdr = read_neurosim_spikes(filename, headerOnly);
     
   case 'nihonkohden_m00'
-    hdr = read_nihonkohden_hdr(filename);
+    % this is an ASCII file format which is rather inefficient to read
+    if cache
+      % read it once and store the data along with the header
+      [hdr, dat] = read_nihonkohden_m00(filename);
+      hdr.orig.dat = dat;
+    else
+      % read only the header
+      hdr = read_nihonkohden_m00(filename);
+    end
+    
+  case 'nihonkohden_eeg'
+    ft_hastoolbox('brainstorm', 1);
+    hdr = read_brainstorm_header(filename);
     
   case 'nimh_cortex'
     cortex = read_nimh_cortex(filename, 'epp', 'no', 'eog', 'no');
@@ -2198,7 +2273,7 @@ switch headerformat
     hdr.label       = {tmp.hdr.entityinfo(tmp.list.analog(tmp.analog.contcount~=0)).EntityLabel}; %%% contains non-unique chans?
     hdr.orig        = tmp; % remember the original header
     
-  case 'oxy3'
+  case 'artinis_oxy3'
     ft_hastoolbox('artinis', 1);
     hdr = read_artinis_oxy3(filename);
     
@@ -2313,6 +2388,20 @@ switch headerformat
     hdr.label = hdr.label(:);
     hdr.nChans = length(hdr.label);
     
+  case {'ricoh_ave', 'ricoh_con', 'ricoh_mrk'}
+    % header can be read with Ricoh MEG Reader
+    hdr = read_ricoh_header(filename);
+    % add a gradiometer structure for forward and inverse modelling
+    hdr.grad = ricoh2grad(hdr);
+    hdr.chantype = ft_chantype(hdr.label);
+    unk = find(strcmp('unknown', hdr.chantype));
+    %  Warning message:
+    if ~isempty(unk)
+      label_unk = hdr.label(unk);
+      no_unk = num2cell(unk);
+      C = [label_unk(:), no_unk(:)] .';
+      ft_warning(['Unknown channel types: (label, no) =' repmat('( %s, %d ) ', 1, length(unk) ) '\n'], C{:})
+    end
     
   case 'smi_txt'
     smi = read_smi_txt(filename);
@@ -2428,6 +2517,15 @@ switch headerformat
       hdr = read_yokogawa_header_new(filename);
       % add a gradiometer structure for forward and inverse modelling
       hdr.grad = yokogawa2grad_new(hdr);
+      hdr.chantype = ft_chantype(hdr.label);
+      unk = find(strcmp('unknown', hdr.chantype));
+      %  Warning message:
+      if ~isempty(unk)
+        label_unk = hdr.label(unk);
+        no_unk = num2cell(unk);
+        C = [label_unk(:), no_unk(:)] .';
+        ft_warning(['Unknown channel types: (label, no) =' repmat('( %s, %d ) ', 1, length(unk) ) '\n'], C{:})
+      end
     else
       ft_hastoolbox('yokogawa', 1); % try it with the old version of the toolbox
       hdr = read_yokogawa_header(filename);
@@ -2435,7 +2533,7 @@ switch headerformat
       hdr.grad = yokogawa2grad(hdr);
     end
     
-  case 'riff_wave'
+  case {'riff_wave', 'audio_m4a'}
     % prior to MATLAB R2015b this used to be done with "wavread"
     % but the audioinfo/audioread function are at least available from 2012b up
     info = audioinfo(filename);
@@ -2463,6 +2561,10 @@ switch headerformat
     
   case 'videomeg_vid'
     hdr = read_videomeg_vid(filename);
+    checkUniqueLabels = false;
+    
+  case 'video'
+    hdr = read_video(filename);
     checkUniqueLabels = false;
     
   otherwise
@@ -2572,7 +2674,7 @@ end
 if cache && exist(headerfile, 'file')
   % put the header in the cache
   cacheheader = hdr;
-  % update the header details (including time stampp, size and name)
+  % update the header details (including time stamp, size and name)
   cacheheader.details = dir(headerfile);
   % fprintf('added header to cache\n');
 end

@@ -115,7 +115,7 @@ function [elec_realigned] = ft_sensorrealign(cfg, elec_original)
 % DEPRECATED by roboos on 11 November 2015
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1830
 % support for this functionality can be removed mid 2016
-warning('FT_SENSORREALIGN is deprecated, please use FT_ELECTRODEREALIGN instead.')
+ft_warning('FT_SENSORREALIGN is deprecated, please use FT_ELECTRODEREALIGN instead.')
 
 % these are used by the ft_preamble/ft_postamble function and scripts
 ft_revision = '$Id$';

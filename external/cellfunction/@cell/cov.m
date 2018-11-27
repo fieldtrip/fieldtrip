@@ -48,14 +48,14 @@ if isempty(dim)
 end
 
 nx = size(x);
-if ~iscell(x) || length(nx)>2 || all(nx>1),
+if ~iscell(x) || length(nx)>2 || all(nx>1)
   error('incorrect input for cellcov');
 end
 
 nx   = max(nx);
 nsmp = cellfun('size', x, dim);
 n    = sum(nsmp);
-if isempty(y),  
+if isempty(y)  
   for k = 1:nx
     [tmp1, tmp2] = covc(x{k}, dim);
     if k==1
@@ -96,12 +96,12 @@ end
 if flag
   c = (C-(Mx(:)*My(:)')./n1)./n2;
 else
-  c = C./n;
+  c = C./n2;
 end
 
 function [c,mx,my] = covc(x, y, dim)
 
-if nargin==2,
+if nargin==2
   dim = y;
   y   = x;
 end
@@ -109,9 +109,9 @@ end
 if islogical(x), x = double(x); end
 if islogical(y), y = double(y); end
 
-if dim==1,
+if dim==1
   c  = x'*y;
-elseif dim==2,
+elseif dim==2
   c = x*y';
 end
 

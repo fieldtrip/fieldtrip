@@ -156,7 +156,6 @@ iselec   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'e
 isnirs   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'transceiver');
 islabel  = isa(input, 'cell')    && ~isempty(input) && isa(input{1}, 'char');
 haslabel    = isa(input, 'struct')  && isfield(input, 'label');
-haschantype = isa(input, 'struct')  && isfield(input, 'chantype');
 
 if ~(isdata || isheader || isgrad || iselec || isnirs || islabel || haslabel) && isfield(input, 'hdr')
   input    = input.hdr;
@@ -228,6 +227,7 @@ else
   sens = [];
 end
 
+haschantype = isfield(sens, 'chantype');
 
 if isfield(sens, 'type')
   % preferably the structure specifies its own type
