@@ -6,13 +6,18 @@ function matlab2markdown(infile,outfile,varargin)
 % italic or monospace are converted.
 %
 % Use as
-%   matlab2markdown(infile, outfile)
+%   matlab2markdown(infile, outfile, ...)
 %
 % If no outfile is specified, it will write it to a .md file with the same name as
 % the infile. In case the file exists, it will be written with a numeric suffix.
 %
 % The best is to provide the full filepath, otherwise it will look for the file within
 % the current path.
+%
+% Optional input arguments can be specified as key-value pairs and can include
+%   imagestyle = 'none|inline|jekyll'
+%   pageheader = 'none|jekyll'
+%   ...
 %
 % See also MARKDOWN2MATLAB
 
@@ -34,8 +39,23 @@ function matlab2markdown(infile,outfile,varargin)
 % along with megconnectome.  If not, see <http://www.gnu.org/licenses/>.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% You can use https://regexr.com to test/debug regular expressions
+% The following links are useful during development
+% https://regexr.com
+% https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if nargin>2 && ismember(outfile, {'imagestyle', 'pageheader', 'pagelayout', 'pagetitle', 'pagetags'})
+  varargin = [outfile varargin];
+  outfile = [];
+end
+
+% parse the optional input arguments
+% val = ft_getopt(varargin, 'key', default);
+imagestyle = ft_getopt(varargin, 'imagestyle', 'inline');
+pageheader = ft_getopt(varargin, 'pageheader', 'none');
+pagelayout = ft_getopt(varargin, 'pagelayout', 'default');
+pagetitle  = ft_getopt(varargin, 'pagetitle', '');
+pagetags   = ft_getopt(varargin, 'pagetags', '');
 
 % check input
 [inpath, inname, inext] = fileparts(infile);
@@ -44,7 +64,7 @@ if ~strcmp(inext,'.m')
   error('please specify a MATLAB file')
 end
 
-if nargin < 2
+if nargin < 2 || isempty(outfile)
   outfile = infile;
 end
 
@@ -71,14 +91,30 @@ outfile = fullfile(outpath,[outname,outext]);
 infid = fopen(infile,'r');
 outfid = fopen(outfile,'w');
 
-index = 0;
+if strcmp(pageheader, 'jekyll')
+  % print a Jekyll header at the top of the page, like this
+  % ---
+  % title: Tutorial on EEG analysis
+  % layout: default
+  % tags: eeg, tutorial
+  % ---
+  fprintf(outfid, '---\n');
+  fprintf(outfid, 'title: %s\n', pagetitle);
+  fprintf(outfid, 'layout: %s\n', pagelayout);
+  fprintf(outfid, 'tags: %s\n', pagetags);
+  fprintf(outfid, '---\n');
+end
+
+index = 0;            % this keeps count of the items in an ordered list
+linenumber = 0;       % keep track of the line number
 
 while ~feof(infid)
   
-  % reset the index, unless otherwise specified
+  % reset the index, unless explicitly specified
   reset_index = true;
   
   line = fgetl(infid);
+  linenumber = linenumber + 1;
   if ~ischar(line), break, end
   
   if isempty(line)
@@ -120,11 +156,25 @@ while ~feof(infid)
     remainder = reformat(line((endIndex+1):end));
     fprintf(outfid, '%s\n', remainder);
     
+  elseif match(line, '^print.*png')
+    % figure, print the code
+    fprintf(outfid, '    %s\n', line);
+    [startIndex,endIndex] = regexp(line, '[!-~]*.png$');
+    image = line(startIndex:endIndex);
+    [~, f] = fileparts(image);
+    if strcmp(imagestyle, 'inline')
+      % include a default MarkDown inline image
+      fprintf(outfid, '![%s](%s)\n', f, image);
+    elseif strcmp(imagestyle, 'jekyll')
+      % include an image as a Jekyll include
+      fprintf(outfid, '{%% include image %s %%}\n', image);
+    end
+    
   elseif ~match(line, '^%')
     % normal code
     fprintf(outfid, '    %s\n', line);
     
-  end
+  end % if the line matches some pattern
   
   if reset_index
     index = 0;
@@ -161,7 +211,7 @@ end
 
 function str = formatitalic(str)
 % the format is actually the same
-[startIndex,endIndex] = regexp(str, '_[a-z]*_');
+[startIndex,endIndex] = regexp(str, '_[a-zA-Z0-9]*_');
 for i=1:length(startIndex)
   part1 = str(1:startIndex(i)-1);
   part2 = str(startIndex(i):endIndex(i));
@@ -173,13 +223,13 @@ function str = formatunderline(str)
 % this is not supported in the conversion from MATLAB live scripts to normal MATLAB code.
 
 function str = formatmonospace(str)
-[startIndex,endIndex] = regexp(str, '\|[a-z]*\|');
+[startIndex,endIndex] = regexp(str, '\|[a-zA-Z0-9]*\|');
 for i=1:length(startIndex)
   part1 = str(1:startIndex(i)-1);
   part2 = str(startIndex(i):endIndex(i));
   part3 = str((endIndex(i)+1):end);
-  str = [part1 '```' part2(2:end-1) '```' part3];
+  str = [part1 '`' part2(2:end-1) '`' part3];
   % correct the subsequent indices
-  startIndex(i+1:end) = startIndex(i+1:end)+4;
-  endIndex(i+1:end) = endIndex(i+1:end)+4;
+  startIndex(i+1:end) = startIndex(i+1:end);
+  endIndex(i+1:end) = endIndex(i+1:end);
 end
