@@ -6,7 +6,7 @@ function test_bug3435
 % TEST prepare_mesh_tetrahedral.m
 
 
-mri = ft_read_mri([],'/home/common/matlab/fieldtrip/template/anatomy/single_subj_T1.nii');
+mri = ft_read_mri('/home/common/matlab/fieldtrip/template/anatomy/single_subj_T1.nii');
 
 cfg = [];
 mri.coordsys = 'ras';
