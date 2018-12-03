@@ -216,7 +216,7 @@ M_con = sparse([ts.tri(1,:)';ts.tri(1,:)';ts.tri(2,:)';ts.tri(3,:)';ts.tri(2,:)'
   [ts.tri(2,:)';ts.tri(3,:)';ts.tri(1,:)';ts.tri(1,:)';ts.tri(3,:)';ts.tri(2,:)'], ...
   ones(ts.nr(2)*6,1),ts.nr(1),ts.nr(1));
 
-kpb   = .1;                       % Cutt-off frequency
+kpb   = .00001;                       % Cutt-off frequency
 lam   = .5; mu = lam/(lam*kpb-1); % Parameters for elasticity.
 XYZmm = ts.XYZmm;
 
