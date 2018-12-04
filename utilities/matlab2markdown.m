@@ -56,6 +56,7 @@ pageheader = ft_getopt(varargin, 'pageheader', 'none');
 pagelayout = ft_getopt(varargin, 'pagelayout', 'default');
 pagetitle  = ft_getopt(varargin, 'pagetitle', '');
 pagetags   = ft_getopt(varargin, 'pagetags', '');
+monospacehelp = ft_getopt(varargin, 'monospacehelp', false); % convert the help in monospace format
 
 % check input
 [inpath, inname, inext] = fileparts(infile);
@@ -105,6 +106,7 @@ if strcmp(pageheader, 'jekyll')
   fprintf(outfid, '---\n');
 end
 
+state = 'unknown';    % keeps track of multi-line formatting decisions
 index = 0;            % this keeps count of the items in an ordered list
 linenumber = 0;       % keep track of the line number
 
@@ -112,12 +114,37 @@ while ~feof(infid)
   
   % reset the index, unless explicitly specified
   reset_index = true;
-  
+  % reset the state, unless explicitly specified
+  reset_state = true;
+
   line = fgetl(infid);
   linenumber = linenumber + 1;
   if ~ischar(line), break, end
-  
-  if isempty(line)
+
+  if monospacehelp
+    if match(line, '^%') && strcmp(state, 'unknown')
+      % the help has started
+      state = 'help';
+      reset_state = false;
+      fprintf(outfid, '```\n');  % start of code block
+      fprintf(outfid, '%s\n', formathelp(line));
+    elseif match(line, '^%') && strcmp(state, 'help')
+      % the help is continuing
+      state = 'help';
+      reset_state = false;
+      fprintf(outfid, '%s\n', formathelp(line));
+    elseif ~match(line, '^%') && strcmp(state, 'help')
+      % the help has ended
+      fprintf(outfid, '```\n'); % end of code block
+      state = 'ignore';
+      reset_state = false;
+    elseif strcmp(state, 'ignore')
+      % ignore this line
+      state = 'ignore';
+      reset_state = false;
+    end
+
+  elseif isempty(line)
     % keep the complete line as it is
     fprintf(outfid, '%s\n', line);
     
@@ -180,6 +207,10 @@ while ~feof(infid)
     index = 0;
   end
   
+  if reset_state
+    state = 'unknown';
+  end
+  
 end % while not feof
 
 fclose(infid);
@@ -196,6 +227,10 @@ str = formatbold(str);
 str = formatitalic(str);
 str = formatunderline(str);
 str = formatmonospace(str);
+
+function str = formathelp(str)
+% remove the first %
+str = str(2:end);
 
 function str = formatbold(str)
 [startIndex,endIndex] = regexp(str, '\*[a-zA-Z0-9]*\*');
