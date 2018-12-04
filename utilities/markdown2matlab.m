@@ -89,7 +89,7 @@ linenumber = 0;       % keep track of the line number
 
 while ~feof(infid)
   
-  % the state will be reset unless explicitly specified
+  % reset the state, unless explicitly specified
   reset_state = true;
   
   line = fgetl(infid);
