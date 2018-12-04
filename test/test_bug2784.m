@@ -1,6 +1,6 @@
 function test_bug2784
 
-% MEM 150mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % TEST ft_mvaranalysis

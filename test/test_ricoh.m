@@ -1,7 +1,7 @@
 function test_ricoh
 
+% MEM 6gb
 % WALLTIME 01:00:00
-% MEM 4gb
 
 % TEST hasricoh isricohmegfile read_ricoh_data read_ricoh_event read_ricoh_header ricoh2grad
 

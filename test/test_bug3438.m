@@ -1,7 +1,7 @@
 function test_bug3438
 
+% MEM 7gb
 % WALLTIME 00:20:00
-% MEM 5gb
 
 % TEST ft_read_headshape
 

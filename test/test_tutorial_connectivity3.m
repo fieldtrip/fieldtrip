@@ -1,6 +1,6 @@
 function test_tutorial_connectivity3(datadir)
 
-% MEM 1500mb
+% MEM 3gb
 % WALLTIME 00:10:00
 
 % TEST ft_timelockanalysis ft_sourceanalysis ft_connectivityanalysis ft_prepare_sourcemodel headsurface

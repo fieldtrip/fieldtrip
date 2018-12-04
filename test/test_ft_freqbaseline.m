@@ -1,6 +1,6 @@
 function test_ft_freqbaseline
 
-% MEM 200mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % TEST test_ft_freqbaseline 
