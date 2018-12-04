@@ -1,6 +1,6 @@
 function test_bug1816
 
-% MEM 1500mb
+% MEM 3gb
 % WALLTIME 00:10:00
 
 % test the ft_volumesegment function used for segmentation with FSL BET and FAST

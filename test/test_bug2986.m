@@ -1,7 +1,7 @@
 function test_bug2986
 
+% MEM 3gb
 % WALLTIME 00:20:00
-% MEM 1500mb
 
 % TEST ft_volumerealign ft_volumereslice
 
