@@ -12,7 +12,8 @@ function headshape = prepare_mesh_cortexhull(cfg)
 %                     FreeSurfer recon-all ('/path/to/surf/lh.pial')
 %   cfg.resolution   = (optional, default: 1) resolution of the volume
 %                     delimited by headshape being floodfilled by mris_fill
-%   cfg.fshome       = FreeSurfer folder location (default: '/Applications/freesurfer')
+%   cfg.fshome       = FreeSurfer folder location 
+%                     (default: '/Applications/freesurfer')
 %   cfg.outer_surface_sphere = (optional, default: 40) diameter of the sphere
 %                     used by make_outer_surface to close the sulci using
 %                     morphological operations.
