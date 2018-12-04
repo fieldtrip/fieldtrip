@@ -271,6 +271,7 @@ ft_topoplotER(cfg,avgFIC);
 cfg                 = [];
 cfg.feedback        = 'yes';
 cfg.method          = 'template';
+cfg.senstype        = 'meg';
 cfg.neighbours      = ft_prepare_neighbours(cfg, avgFIC);
 
 cfg.planarmethod    = 'sincos';
