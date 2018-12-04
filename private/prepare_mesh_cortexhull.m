@@ -1,10 +1,10 @@
 function headshape = prepare_mesh_cortexhull(cfg)
 
-% PREPARE_MESH_CORTEXHULL creates a mesh representing the cortex hull, i.e. the
-% smoothed envelope around the pial surface created by FreeSurfer.
+% PREPARE_MESH_CORTEXHULL creates a mesh representing the cortex hull, i.e. 
+% the smoothed envelope around the pial surface created by FreeSurfer
 %
-% This function relies on FreeSurfer's command line functions and
-% 'make_outer_surface' in the FreeSurfer/matlab folder
+% This function relies on FreeSurfer's command line and matlab functions, 
+% and the iso2mesh toolbox
 %
 % Configuration options:
 %   cfg.method       = 'cortexhull'
@@ -13,15 +13,17 @@ function headshape = prepare_mesh_cortexhull(cfg)
 %   cfg.resolution   = (optional, default: 1) resolution of the volume
 %                     delimited by headshape being floodfilled by mris_fill
 %   cfg.fshome       = FreeSurfer folder location (default: '/Applications/freesurfer')
-%   cfg.outer_surface_sphere = (optional, default: 15) diameter of the sphere
+%   cfg.outer_surface_sphere = (optional, default: 40) diameter of the sphere
 %                     used by make_outer_surface to close the sulci using
 %                     morphological operations.
-%   cfg.smooth_steps = (optional, default: 60) number of smoothing iterations
-%                     performed by mris_smooth
+%   cfg.smooth_steps = (optional) number of (shrinking) smoothing
+%                     iterations (default: 5)
+%   cfg.laplace_steps = (optional) number of (non-shrinking) smoothing
+%                     iterations (default: 200)
 %
 % See also FT_PREPARE_MESH
 
-% Copyright (C) 2012-2016, Gio Piantoni, Andrew Dykstra, Arjen Stolk
+% Copyright (C) 2012-2018, Gio Piantoni, Andrew Dykstra, Arjen Stolk
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -45,9 +47,10 @@ disp('Please cite: Dykstra et al. 2012 Neuroimage PMID: 22155045')
 
 % get the default options
 resolution           = ft_getopt(cfg, 'resolution', 1);
-outer_surface_sphere = ft_getopt(cfg, 'outer_surface_sphere', 15);
-smooth_steps         = ft_getopt(cfg, 'smooth_steps', 60);
-headshape            = ft_getopt(cfg, 'headshape');
+outer_surface_sphere = ft_getopt(cfg, 'outer_surface_sphere', 40); % default was 15
+smooth_steps         = ft_getopt(cfg, 'smooth_steps', 5); % default was 60
+laplace_steps        = ft_getopt(cfg, 'laplace_steps', 200);
+surf                 = ft_getopt(cfg, 'headshape');
 fshome               = ft_getopt(cfg, 'fshome', '/Applications/freesurfer');
 
 % add the FreeSurfer environment 
@@ -62,14 +65,22 @@ surf_filled  = [tempname() '_pial.filled.mgz'];
 surf_outer   = [tempname() '_pial_outer'];
 surf_smooth  = [tempname() '_pial_smooth'];
 
-cmd = sprintf('mris_fill -c -r %d %s %s', resolution, headshape, ...
+% fill the mesh
+cmd = sprintf('mris_fill -c -r %d %s %s', resolution, surf, ...
   surf_filled);
 system(['source $FREESURFER_HOME/SetUpFreeSurfer.sh; ' cmd]);
 
+% make outer surface
 make_outer_surface(surf_filled, outer_surface_sphere, surf_outer)
 
+% smooth using mris_smooth (shrinking)
 cmd = sprintf('mris_smooth -nw -n %d %s %s', smooth_steps, surf_outer, ...
   surf_smooth);
-system(['source $FREESURFER_HOME/SetUpFreeSurfer.sh; ' cmd]);
-
+system(['source $FREESURFER_HOME/SetUpFreeSurfer.sh; ' cmd]); 
 headshape = ft_read_headshape(surf_smooth);
+
+% smooth using iso2mesh (non-shrinking)
+ft_hastoolbox('iso2mesh',1);
+fprintf('non-shrinking smoothing for %d iterations\n', laplace_steps)
+conn = meshconn(headshape.tri, size(headshape.pos,1)); % determine neighbors
+headshape.pos = smoothsurf(headshape.pos, [], conn, laplace_steps, 0, 'laplacianhc', .2);
