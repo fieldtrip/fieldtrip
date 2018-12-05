@@ -1,30 +1,28 @@
 function headshape = prepare_mesh_cortexhull(cfg)
 
-% PREPARE_MESH_CORTEXHULL creates a mesh representing the cortex hull, i.e. 
+% PREPARE_MESH_CORTEXHULL creates a mesh representing the cortex hull, i.e.
 % the smoothed envelope around the pial surface created by FreeSurfer
 %
-% This function relies on FreeSurfer's command line and matlab functions, 
-% and the iso2mesh toolbox
+% This function relies on the FreeSurfer and iso2mesh software packages
 %
 % Configuration options:
-%   cfg.method       = 'cortexhull'
 %   cfg.headshape    = a filename containing the pial surface computed by
-%                     FreeSurfer recon-all ('/path/to/surf/lh.pial')
+%                      FreeSurfer recon-all ('/path/to/surf/lh.pial')
+%   cfg.fshome       = FreeSurfer folder location
+%                      (default: '/Applications/freesurfer')
 %   cfg.resolution   = (optional, default: 1) resolution of the volume
-%                     delimited by headshape being floodfilled by mris_fill
-%   cfg.fshome       = FreeSurfer folder location 
-%                     (default: '/Applications/freesurfer')
-%   cfg.outer_surface_sphere = (optional, default: 40) diameter of the sphere
-%                     used by make_outer_surface to close the sulci using
-%                     morphological operations.
+%                      delimited by headshape being floodfilled by mris_fill
+%   cfg.outer_surface_sphere = (optional, default: 15) diameter of the sphere
+%                      used by make_outer_surface to close the sulci using
+%                      morphological operations.
 %   cfg.smooth_steps = (optional) number of (shrinking) smoothing
-%                     iterations (default: 5)
-%   cfg.laplace_steps = (optional) number of (non-shrinking) smoothing
-%                     iterations (default: 200)
+%                      iterations (default: 60)
+%   cfg.laplace_steps = (optional) number of additional (non-shrinking)
+%                      smoothing iterations (default: 0)
 %
 % See also FT_PREPARE_MESH
 
-% Copyright (C) 2012-2018, Gio Piantoni, Andrew Dykstra, Arjen Stolk
+% Copyright (C) 2012-2018, Arjen Stolk, Gio Piantoni, Andrew Dykstra
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -44,17 +42,17 @@ function headshape = prepare_mesh_cortexhull(cfg)
 %
 % $Id$
 
-disp('Please cite: Dykstra et al. 2012 Neuroimage PMID: 22155045')
 
 % get the default options
+surf                 = ft_getopt(cfg, 'headshape');
+fshome               = ft_getopt(cfg, 'fshome', '/Applications/freesurfer');
 resolution           = ft_getopt(cfg, 'resolution', 1);
 outer_surface_sphere = ft_getopt(cfg, 'outer_surface_sphere', 15);
 smooth_steps         = ft_getopt(cfg, 'smooth_steps', 60);
+correcthull          = ft_getopt(cfg, 'correcthull', true);
 laplace_steps        = ft_getopt(cfg, 'laplace_steps', 0);
-surf                 = ft_getopt(cfg, 'headshape');
-fshome               = ft_getopt(cfg, 'fshome', '/Applications/freesurfer');
 
-% add the FreeSurfer environment 
+% add the FreeSurfer environment
 fprintf('adding the FreeSurfer environment\n')
 addpath([fshome '/matlab']); % where make_outer_surface is located
 setenv('FREESURFER_HOME', fshome);
@@ -62,29 +60,47 @@ PATH = getenv('PATH');
 setenv('PATH', [PATH ':' fshome '/bin']); % where mris_fill is located
 
 % temporary files
-surf_filled  = [tempname() '_pial.filled.mgz'];
-surf_outer   = [tempname() '_pial_outer'];
-surf_smooth  = [tempname() '_pial_smooth'];
+surf_filled   = [tempname() '_pial.filled.mgz'];
+surf_outer    = [tempname() '_pial_outer'];
+surf_smooth   = [tempname() '_pial_smooth'];
 
 % fill the mesh
-cmd = sprintf('mris_fill -c -r %d %s %s', resolution, surf, ...
-  surf_filled);
+cmd = sprintf('mris_fill -c -r %d %s %s', resolution, surf, surf_filled);
 system(['source $FREESURFER_HOME/SetUpFreeSurfer.sh; ' cmd]);
 
 % make outer surface
 make_outer_surface(surf_filled, outer_surface_sphere, surf_outer)
 
-% smooth using mris_smooth (this shrinks the mesh)
-cmd = sprintf('mris_smooth -nw -n %d %s %s', smooth_steps, surf_outer, ...
- surf_smooth);
-system(['source $FREESURFER_HOME/SetUpFreeSurfer.sh; ' cmd]); 
+% smooth using mris_smooth (this shrinks the mesh a bit)
+cmd = sprintf('mris_smooth -nw -n %d %s %s', smooth_steps, surf_outer, surf_smooth);
+system(['source $FREESURFER_HOME/SetUpFreeSurfer.sh; ' cmd]);
 
 % expand the mesh using mris_expand (to compensate for shrinkage if needed)
-expansion = 1; % in mm
-cmd = sprintf('mris_expand %s %d %s', surf_smooth, expansion, ...
- surf_smooth);
-system(['source $FREESURFER_HOME/SetUpFreeSurfer.sh; ' cmd]); 
-headshape = ft_read_headshape(surf_smooth);
+if correcthull
+  % quantify hull shrinkage
+  surf_nosmooth = [tempname() '_pial_nosmooth'];
+  cmd = sprintf('mris_smooth -nw -n %d %s %s', 0, surf_outer, ...
+    surf_nosmooth);
+  system(['source $FREESURFER_HOME/SetUpFreeSurfer.sh; ' cmd]); % FIXME: maybe one iter?
+  smooth = ft_read_headshape(surf_smooth);
+  nosmooth = ft_read_headshape(surf_nosmooth);
+  center = mean(nosmooth.pos,1); % FIXME: alternatively used boundary_mesh here to quantify shrinkage
+  dist_s = sqrt( (smooth.pos(:,1)-center(:,1)).^2 + (smooth.pos(:,2)-center(:,2)).^2 + (smooth.pos(:,3)-center(:,3)).^2 );
+  dist_ns = sqrt( (nosmooth.pos(:,1)-center(:,1)).^2 + (nosmooth.pos(:,2)-center(:,2)).^2 + (nosmooth.pos(:,3)-center(:,3)).^2 );
+  idx = dist_ns>dist_s; % find nodes extending past the smooth hull
+  % correct for shrinkage if needed
+  if any(idx)
+    expansion = zeros(size(smooth.pos,1),1);
+    expansion(idx) = sqrt( (nosmooth.pos(idx,1)-smooth.pos(idx,1)).^2 + (nosmooth.pos(idx,2)-smooth.pos(idx,2)).^2 + (nosmooth.pos(idx,3)-smooth.pos(idx,3)).^2 );
+    write_curv([fileparts(tempname()) filesep 'expansion'], expansion, size(smooth.tri,1));
+    surf_smooth2  = [tempname() '_pial_smooth2'];
+    cmd = sprintf('mris_expand -thickness -thickness_name %s %s %d %s', [fileparts(tempname()) filesep 'expansion'], surf_smooth, -1.0, surf_smooth2);
+    system(['source $FREESURFER_HOME/SetUpFreeSurfer.sh; ' cmd]);
+    headshape = ft_read_headshape(surf_smooth2); % FIXME: this output is expanded at undesired locations
+  else
+    fprintf('no hull correction needed\n');
+  end
+end
 
 % smooth using iso2mesh (non-shrinking)
 if laplace_steps >= 1
