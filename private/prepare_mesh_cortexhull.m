@@ -48,9 +48,9 @@ disp('Please cite: Dykstra et al. 2012 Neuroimage PMID: 22155045')
 
 % get the default options
 resolution           = ft_getopt(cfg, 'resolution', 1);
-outer_surface_sphere = ft_getopt(cfg, 'outer_surface_sphere', 40); % default was 15
-smooth_steps         = ft_getopt(cfg, 'smooth_steps', 5); % default was 60
-laplace_steps        = ft_getopt(cfg, 'laplace_steps', 200);
+outer_surface_sphere = ft_getopt(cfg, 'outer_surface_sphere', 15);
+smooth_steps         = ft_getopt(cfg, 'smooth_steps', 60);
+laplace_steps        = ft_getopt(cfg, 'laplace_steps', 0);
 surf                 = ft_getopt(cfg, 'headshape');
 fshome               = ft_getopt(cfg, 'fshome', '/Applications/freesurfer');
 
@@ -74,14 +74,22 @@ system(['source $FREESURFER_HOME/SetUpFreeSurfer.sh; ' cmd]);
 % make outer surface
 make_outer_surface(surf_filled, outer_surface_sphere, surf_outer)
 
-% smooth using mris_smooth (shrinking)
+% smooth using mris_smooth (this shrinks the mesh)
 cmd = sprintf('mris_smooth -nw -n %d %s %s', smooth_steps, surf_outer, ...
-  surf_smooth);
+ surf_smooth);
+system(['source $FREESURFER_HOME/SetUpFreeSurfer.sh; ' cmd]); 
+
+% expand the mesh using mris_expand (to compensate for shrinkage if needed)
+expansion = 1; % in mm
+cmd = sprintf('mris_expand %s %d %s', surf_smooth, expansion, ...
+ surf_smooth);
 system(['source $FREESURFER_HOME/SetUpFreeSurfer.sh; ' cmd]); 
 headshape = ft_read_headshape(surf_smooth);
 
 % smooth using iso2mesh (non-shrinking)
-ft_hastoolbox('iso2mesh',1);
-fprintf('non-shrinking smoothing for %d iterations\n', laplace_steps)
-conn = meshconn(headshape.tri, size(headshape.pos,1)); % determine neighbors
-headshape.pos = smoothsurf(headshape.pos, [], conn, laplace_steps, 0, 'laplacianhc', .2);
+if laplace_steps >= 1
+  ft_hastoolbox('iso2mesh',1);
+  fprintf('non-shrinking smoothing for %d iterations\n', laplace_steps)
+  conn = meshconn(headshape.tri, size(headshape.pos,1)); % determine neighbors
+  headshape.pos = smoothsurf(headshape.pos, [], conn, laplace_steps, 0, 'laplacianhc', .2);
+end
