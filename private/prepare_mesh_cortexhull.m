@@ -20,7 +20,7 @@ function headshape = prepare_mesh_cortexhull(cfg)
 %   cfg.expansion_mm = amount in mm used to globally expand hull, applies
 %                      when cfg.fixshrinkage = 'yes' (default: 'auto')
 %   cfg.laplace_steps = number of alternative (non-shrinking) smoothing
-%                      iterations (default: 0)
+%                      iterations (default: 0, recommended: 1000 when used alone)
 %
 % See also FT_PREPARE_MESH
 
