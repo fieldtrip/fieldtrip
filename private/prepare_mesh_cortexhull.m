@@ -84,7 +84,7 @@ if correcthull
   system(['source $FREESURFER_HOME/SetUpFreeSurfer.sh; ' cmd]); % FIXME: maybe one iter?
   smooth = ft_read_headshape(surf_smooth);
   nosmooth = ft_read_headshape(surf_nosmooth);
-  center = mean(nosmooth.pos,1); % FIXME: alternatively used boundary_mesh here to quantify shrinkage
+  center = mean(nosmooth.pos,1); % FIXME: alternatively used boundary_mesh here to quantify shrinkage (problem is that orig mesh has more vertices)
   dist_s = sqrt( (smooth.pos(:,1)-center(:,1)).^2 + (smooth.pos(:,2)-center(:,2)).^2 + (smooth.pos(:,3)-center(:,3)).^2 );
   dist_ns = sqrt( (nosmooth.pos(:,1)-center(:,1)).^2 + (nosmooth.pos(:,2)-center(:,2)).^2 + (nosmooth.pos(:,3)-center(:,3)).^2 );
   idx = dist_ns>dist_s; % find nodes extending past the smooth hull
