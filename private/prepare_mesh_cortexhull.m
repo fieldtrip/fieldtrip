@@ -17,6 +17,8 @@ function headshape = prepare_mesh_cortexhull(cfg)
 %   cfg.smooth_steps = number of standard smoothing iterations (default: 60)
 %   cfg.fixshrinkage = reduce possible shrinkage due to standard smoothing
 %                      (default: 'no')
+%   cfg.expansion_mm = amount in mm used to globally expand hull, applies
+%                      when cfg.fixshrinkage = 'yes' (default: 'auto')
 %   cfg.laplace_steps = number of alternative (non-shrinking) smoothing
 %                      iterations (default: 0)
 %
@@ -48,8 +50,9 @@ surf                 = ft_getopt(cfg, 'headshape');
 fshome               = ft_getopt(cfg, 'fshome', '/Applications/freesurfer');
 resolution           = ft_getopt(cfg, 'resolution', 1);
 outer_surface_sphere = ft_getopt(cfg, 'outer_surface_sphere', 15);
-smooth_steps         = ft_getopt(cfg, 'smooth_steps', 60); % default was 60 prior to Laplace-based
+smooth_steps         = ft_getopt(cfg, 'smooth_steps', 60);
 fixshrinkage         = ft_getopt(cfg, 'fixshrinkage', 'no');
+expansion_mm         = ft_getopt(cfg, 'expansion_mm', 'auto'); % applies when fixshrinkage is 'yes'
 laplace_steps        = ft_getopt(cfg, 'laplace_steps', 0);
 
 % add the FreeSurfer environment
@@ -92,7 +95,12 @@ if strcmp(fixshrinkage, 'yes')
       expansion(idx(p)) = min(sqrt( (headshape.pos(idx(p),1)-pial.pos(:,1)).^2 + ...
         (headshape.pos(idx(p),2)-pial.pos(:,2)).^2 + (headshape.pos(idx(p),3)-pial.pos(:,3)).^2 ));
     end
-    cmd = sprintf('mris_expand %s %d %s', surf_smooth, mean(expansion(idx)), surf_expanded); % global expansion by mean outside distance
+    if strcmp(expansion_mm, 'auto')
+      expansion_mm = mean(expansion(idx)); % mean outside distance
+    else
+      expansion_mm = cfg.expansion_mm;
+    end
+    cmd = sprintf('mris_expand %s %d %s', surf_smooth, expansion_mm, surf_expanded); % global expansion
     system(['source $FREESURFER_HOME/SetUpFreeSurfer.sh; ' cmd]);
     headshape = ft_read_headshape(surf_expanded);
     %     % fix shrinkage locally - FIXME: output showing expansion at unexpected locations
