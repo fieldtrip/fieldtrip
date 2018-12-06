@@ -181,7 +181,7 @@ data   = ft_selectdata(selcfg, data);
 [cfg, data] = rollback_provenance(cfg, data);
 
 % apply scaling to the selected channel types to equate the absolute numbers (i.e. fT and uV)
-% make a seperate copy to prevent the original data from being scaled
+% make a separate copy to prevent the original data from being scaled
 tmpdata = data;
 scaled  = false;
 if ~isempty(cfg.eegscale)

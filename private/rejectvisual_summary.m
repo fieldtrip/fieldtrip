@@ -521,7 +521,7 @@ uiresume;
 % end
 % if all(trls==0)
 %   % use visual selection
-%   update_log(info.output_box, sprintf('make visual selection of trials to be plotted seperately...'));
+%   update_log(info.output_box, sprintf('make visual selection of trials to be plotted separately...'));
 %   [x, y] = select2d;
 %   maxpertrl  = max(info.origlevel, [], 1);
 %   toggle = find(1:ntrl>=x(1) & ...

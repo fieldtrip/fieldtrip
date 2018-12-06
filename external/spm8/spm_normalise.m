@@ -306,7 +306,7 @@ for iter=1:nits,
 end;
 
 % Values of the 3D-DCT - for some bizarre reason, this needs to be done
-% as two seperate statements in Matlab 6.5...
+% as two separate statements in Matlab 6.5...
 %-----------------------------------------------------------------------
 Tr = reshape(T(1:s1),[k 3]);
 drawnow;

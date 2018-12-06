@@ -30,7 +30,7 @@ if ~isempty(setxor(fieldnames(s),{'headername','headertext','body'}))
     error('Illegal struct s, expected s.headername, s.headertext, s.body');
 end
 
-% if more than 1 element, parse each of them seperately and put them in a
+% if more than 1 element, parse each of them separately and put them in a
 % cell.
 scount=numel(s);
 if scount>1

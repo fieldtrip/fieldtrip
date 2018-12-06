@@ -84,7 +84,7 @@ namespace tia
 *
 * The TiAServer represents the main entry point for using the TiA library.
 * TiA consists out of a separation between meta information transmitted via xml
-* and a seperated data stream devlivering raw data.
+* and a separated data stream devlivering raw data.
 *
 * It provides an interface to set this meta data and transmit acquired data using
 * TiA data packets.
