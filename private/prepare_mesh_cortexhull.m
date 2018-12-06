@@ -15,10 +15,10 @@ function headshape = prepare_mesh_cortexhull(cfg)
 %   cfg.outer_surface_sphere = diameter of the sphere used by make_outer_surface
 %                      to close the sulci using morphological operations (default: 15)
 %   cfg.smooth_steps = number of standard smoothing iterations (default: 0)
-%   cfg.laplace_steps = number of alternative (non-shrinking) smoothing
+%   cfg.laplace_steps = number of Laplacian (non-shrinking) smoothing
 %                      iterations (default: 2000)
 %   cfg.fixshrinkage = reduce possible shrinkage due to smoothing (default: 'yes')
-%   cfg.expansion_mm = amount in mm used to globally expand hull, applies
+%   cfg.expansion_mm = amount in mm with which the hull is re-expanded, applies
 %                      when cfg.fixshrinkage = 'yes' (default: 'auto')
 %
 % See also FT_PREPARE_MESH
@@ -50,7 +50,7 @@ fshome               = ft_getopt(cfg, 'fshome', '/Applications/freesurfer');
 resolution           = ft_getopt(cfg, 'resolution', 1);
 outer_surface_sphere = ft_getopt(cfg, 'outer_surface_sphere', 15);
 smooth_steps         = ft_getopt(cfg, 'smooth_steps', 0); % previous default was 60
-laplace_steps        = ft_getopt(cfg, 'laplace_steps', 2000); % this replace smoothing using mris_smooth
+laplace_steps        = ft_getopt(cfg, 'laplace_steps', 2000); % replaces smoothing using mris_smooth
 fixshrinkage         = ft_getopt(cfg, 'fixshrinkage', 'yes');
 expansion_mm         = ft_getopt(cfg, 'expansion_mm', 'auto'); % applies when fixshrinkage is 'yes'
 
@@ -73,7 +73,7 @@ system(['source $FREESURFER_HOME/SetUpFreeSurfer.sh; ' cmd]);
 % make outer surface by closing the gaps (modified)
 make_outer_surface(surf_filled, outer_surface_sphere, surf_outer)
 
-% smooth the surface using FreeSurfer's mris_smooth
+% smooth the surface using FreeSurfer's mris_smooth (not applied by default)
 cmd = sprintf('mris_smooth -nw -n %d %s %s', smooth_steps, surf_outer, surf_smooth);
 system(['source $FREESURFER_HOME/SetUpFreeSurfer.sh; ' cmd]);
 headshape = ft_read_headshape(surf_smooth);
