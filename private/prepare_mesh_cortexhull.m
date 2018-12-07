@@ -17,7 +17,7 @@ function headshape = prepare_mesh_cortexhull(cfg)
 %   cfg.smooth_steps = number of standard smoothing iterations (default: 0)
 %   cfg.laplace_steps = number of Laplacian (non-shrinking) smoothing
 %                      iterations (default: 2000)
-%   cfg.fixshrinkage = reduce possible shrinkage due to smoothing (default: 'yes')
+%   cfg.fixshrinkage = reduce possible shrinkage due to smoothing (default: 'no')
 %   cfg.expansion_mm = amount in mm with which the hull is re-expanded, applies
 %                      when cfg.fixshrinkage = 'yes' (default: 'auto')
 %
@@ -51,7 +51,7 @@ resolution           = ft_getopt(cfg, 'resolution', 1);
 outer_surface_sphere = ft_getopt(cfg, 'outer_surface_sphere', 15);
 smooth_steps         = ft_getopt(cfg, 'smooth_steps', 0); % previous default was 60
 laplace_steps        = ft_getopt(cfg, 'laplace_steps', 2000); % replaces smoothing using mris_smooth
-fixshrinkage         = ft_getopt(cfg, 'fixshrinkage', 'yes');
+fixshrinkage         = ft_getopt(cfg, 'fixshrinkage', 'no');
 expansion_mm         = ft_getopt(cfg, 'expansion_mm', 'auto'); % applies when fixshrinkage is 'yes'
 
 % add the FreeSurfer environment
@@ -86,7 +86,8 @@ if laplace_steps >= 1
   headshape.pos = smoothsurf(headshape.pos, [], conn, laplace_steps, 0, 'laplacianhc', .2);
 end
 
-% fix shrinkage if needed
+% fix shrinkage if needed 
+% FIXME: might be too generous of a hull and ideally involves local rather than global expansion
 if strcmp(fixshrinkage, 'yes')
   try
     pial = ft_read_headshape(cfg.headshape);
