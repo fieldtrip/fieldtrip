@@ -40,7 +40,8 @@ end
 
 state = [];
 
-if isempty(setseed) || strcmp(setseed, 'yes')
+if isempty(setseed) || (ischar(setseed) && strcmp(setseed, 'yes'))
+
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % save out rand state for later use
   
