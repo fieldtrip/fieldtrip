@@ -52,7 +52,7 @@ function hs = ft_plot_sens(sens, varargin)
 %
 % See also FT_READ_SENS, FT_PLOT_HEADSHAPE, FT_PLOT_VOL
 
-% Copyright (C) 2009-2016, Robert Oostenveld
+% Copyright (C) 2009-2018, Robert Oostenveld, Arjen Stolk
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -417,7 +417,7 @@ switch sensshape
       Fn = Fn * (1/sqrt(sum(Fn.^2,2))); % normalize
       ori(i,:) = Fn;
       
-      % create disc perpendicular to the hull
+      % create disc aligned to the headshape (ideally, a hull)
       [X,Y,Z] = cylinder2([senssize/2 senssize/2],[ori(i,1) ori(i,2) ori(i,3)], 100);
       X(1,:) = X(1,:)+pos(i,1); Y(1,:) = Y(1,:)+pos(i,2); Z(1,:) = Z(1,:)+pos(i,3);
       t = (senssize/2)/10; % add thickness (outward), X(2,1)-X(1,1) etc.
