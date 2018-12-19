@@ -258,7 +258,7 @@ switch dataformat
       end % if data larger than chuncksize
     end
     
-  case 'brainvision_eeg'
+  case {'brainvision_eeg', 'brainvision_vhdr'}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % combination of *.eeg and *.vhdr file
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
