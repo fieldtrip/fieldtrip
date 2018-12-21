@@ -18,6 +18,11 @@ switch purpose
       'fsample'
       'trialinfo'  % this is dealt with explicitly
       'sampleinfo' % this is dealt with explicitly
+      'topo'
+      'topolabel'
+      'topodimord'
+      'unmixing'
+      'unmixingdimord'
       };
     
   case 'appendfreq'

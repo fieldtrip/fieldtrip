@@ -24,7 +24,7 @@ function [varargout] = ft_selectdata(cfg, varargin)
 %   cfg.avgoverchancmb = string, can be 'yes' or 'no' (default = 'no')
 %
 % For data with a time dimension you can specify
-%   cfg.latency     = scalar or string, can be 'all', 'prestim', 'poststim', or [beg end], specify time range in seconds
+%   cfg.latency     = scalar or string, can be 'all', 'minperiod', 'maxperiod', 'prestim', 'poststim', or [beg end], specify time range in seconds
 %   cfg.avgovertime = string, can be 'yes' or 'no' (default = 'no')
 %   cfg.nanmean     = string, can be 'yes' or 'no' (default = 'no')
 %
@@ -896,11 +896,14 @@ for k = 1:numel(alltimecell)
   indx(ix,k) = iy;
 end
 
-if iscell(varargin{1}.time)
+if iscell(varargin{1}.time) && ischar(cfg.latency)&& ~strcmp(cfg.latency, 'minperiod')
   % if the input data arguments are of type 'raw', temporarily set the
   % selmode to union, otherwise the potentially different length trials
   % will be truncated to the shorted epoch, prior to latency selection. 
   selmode = 'union'; 
+elseif ischar(cfg.latency) && strcmp(cfg.latency, 'minperiod')
+  % enforce intersect
+  selmode = 'intersect';
 end
 switch selmode
   case 'intersect'
@@ -918,12 +921,15 @@ end
 % convert a string selection into a numeric selection
 if ischar(cfg.latency)
   switch cfg.latency
-    case {'all' 'maxperlen'}
+    case {'all' 'maxperlen' 'maxperiod'}
       cfg.latency = [min(alltimevec) max(alltimevec)];
     case 'prestim'
       cfg.latency = [min(alltimevec) 0];
     case 'poststim'
       cfg.latency = [0 max(alltimevec)];
+    case 'minperiod'
+      % the time vector has been pruned above
+      cfg.latency = [min(alltimevec) max(alltimevec)];
     otherwise
       ft_error('incorrect specification of cfg.latency');
   end % switch

@@ -1877,41 +1877,35 @@ switch eventformat
     event = read_nexstim_event(filename);
     
   case 'nihonkohden_m00'
-    % in the data I tested the triggers are marked as DC offsets (deactivation of the DC channel)
-    begsample = 1;
+    % FIXME why is the flank detection not done using the generic read_trigger function?
+
+    event = [];
     if isempty(hdr)
-      hdr = read_nihonkohden_hdr(filename);
+      hdr = ft_read_header(filename);
     end
     
-    if isfield(hdr, 'dat')
-      % this is inefficient, since it keeps the complete data in memory
-      % but it does speed up subsequent read operations without the user
-      % having to care about it
-      dat = hdr.dat;
-    else
-      dat = read_nihonkohden_m00(filename, begsample, hdr.nSamples);
-    end
-    
-    % read the trigger channel and do flank detection
-    event_chan = {'DC09','DC10','DC11','DC12'};
-    
+    % in the data I tested the triggers are marked as DC offsets (deactivation of the DC channel)
+    event_chan = {'DC09', 'DC10', 'DC11', 'DC12'};
     trgindx = match_str(hdr.label, event_chan);
-    trig = dat(trgindx,:);
-    clear dat;
-    begsample = 1;
+
+    if isempty(trgindx)
+      return
+    end
+    
+    % read the trigger channels
+    trig = ft_read_data(filename, 'header', hdr, 'chanindx', trgindx);
     
     % marking offset trigger latencies
-    %     onlat  = (diff([trig(:,1) trig],1,2)>0);
+    % onlat = (diff([trig(:,1) trig],1,2)>0);
     offlat = (diff([trig trig(:,1)],1,2)<0);
     
-    %     onset  = find(sum(double(onlat), 1)>0);
+    % onset = find(sum(double(onlat), 1)>0);
     offset = find(sum(double(offlat),1)>0);
     
-    event = [];
-    for j=1:size(offset,2);
+    for j=1:size(offset,2)
       value = bin2dec(num2str(flipud(offlat(:,offset(j)))')); % flipup is needed to code bin2dec properly: DC09 = +1, DC10 = +2, DC11 = +4, DC12 = +8
       event(end+1).type   = 'down_flank';                     % distinguish between up and down flank
-      event(end  ).sample = offset(j) + begsample - 1;        % assign the sample at which the trigger has gone down
+      event(end  ).sample = offset(j);                        % assign the sample at which the trigger has gone down
       event(end  ).value  = value;                            % assign the trigger value just _before_ going down
     end
     
@@ -2153,6 +2147,7 @@ switch eventformat
       event(k).duration  = 1;
       event(k).offset    = [];
     end
+    
   case 'biopac_acq'
     % this one has an implementation that I guess is intended
     % to work according to the 'otherwise' case, yet it requires

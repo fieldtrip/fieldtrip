@@ -948,6 +948,7 @@ if ~isequal(cfg.dataset, cfg.outputfile) || istrue(cfg.mri.deface)
       end
       ft_info('writing %s\n', cfg.outputfile);
       ft_write_mri(cfg.outputfile, mri, 'dataformat', 'nifti');
+
     otherwise
       [p, f, x] = fileparts(cfg.outputfile);
       if ~isequal(x, '.vhdr')
@@ -1315,6 +1316,9 @@ for i=1:numel(x)
   end
   if iscell(x) && isnumeric(y) && isempty(x{i}) && ~isnan(y{i})
     x{i} = y(i);
+  end
+  if iscell(x) && iscell(y) && isequal(x{i}, 'unknown') && ~isequal(y{i}, 'unknown')
+    x{i} = y{i};
   end
 end
 

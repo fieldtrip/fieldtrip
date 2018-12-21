@@ -28,7 +28,7 @@ function [data] = ft_determine_coordsys(data, varargin)
 % Recognized and supported coordinate systems include: ctf, 4d, bti, itab,
 % neuromag, spm, mni, tal, acpc, als, ras, paxinos.
 %
-% See also FT_VOLUMEREALIGN, FT_VOLUMERESLICE
+% See also FT_VOLUMEREALIGN, FT_VOLUMERESLICE, FT_PLOT_ORTHO, FT_PLOT_AXES
 
 % Copyright (C) 2015, Jan-Mathijs Schoffelen
 %

@@ -15,7 +15,7 @@ case.  Only "double" sparse matrices are supported.
 
 SSMULT appears in MATLAB 7.6 and later, but that version of MATLAB does not
 pass the transpose/conjugate flags to ssmult.  Instead, (A*B)' (for example) is
-computed by multiplying A*B with ssmult, followed by a seperate
+computed by multiplying A*B with ssmult, followed by a separate
 conjugate-transpose operation in MATLAB.  This can cause performance
 degradation, particularly when computing x'*y when x and y are large sparse
 column vectors.

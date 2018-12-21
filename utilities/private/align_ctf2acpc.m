@@ -8,15 +8,18 @@ function [mri] = align_ctf2acpc(mri, opt, template)
 %   mri = align_ctf2acpc(mri)
 %   mri = align_ctf2acpc(mri, opt)
 %   mri = align_ctf2acpc(mri, opt, template)
-% where the first argument is a FieldTrip MRI-structure, and the second optional
+%
+% The first input argument is a FieldTrip MRI-structure, and the second optional
 % argument specifies how the registration is to be done:
-%   opt = 0: only an approximate coregistration
-%   opt = 1: an approximate coregistration, followed by spm_affreg
-%   opt = 2 (default): an approximate coregistration, followed by spm_normalise
+%   method = 0: only an approximate coregistration
+%   method = 1: an approximate coregistration, followed by spm_affreg
+%   method = 2: an approximate coregistration, followed by spm_normalise (default)
 %
 % When opt = 1 or 2, an optional template filename can be specified, which denotes
-% the filename of the target volume. This option is required when running in deployed
+% the filename of the target volume. This is required when running in deployed
 % mode.
+%
+% See also ALIGN_NEUROMAG2ACPC, ALIGN_FSAVERAGE2MNI
 
 if nargin<2
   opt = 2;

@@ -252,11 +252,15 @@ switch fileformat
   case 'ctf_shape'
     orig = read_ctf_shape(filename);
     shape.pos = orig.pos;
-    shape.fid.label = {'NASION', 'LEFT_EAR', 'RIGHT_EAR'};
-    shape.fid.pos = zeros(0,3); % start with an empty array
-    for i = 1:numel(shape.fid.label)
-      shape.fid.pos = cat(1, shape.fid.pos, getfield(orig.MRI_Info, shape.fid.label{i}));
-    end
+    
+    % The file also contains fiducial information, but those are in MRI voxels and 
+    % inconsistent with the headshape itself.
+    % 
+    % shape.fid.label = {'NASION', 'LEFT_EAR', 'RIGHT_EAR'};
+    % shape.fid.pos = zeros(0,3); % start with an empty array
+    % for i = 1:numel(shape.fid.label)
+    %   shape.fid.pos = cat(1, shape.fid.pos, getfield(orig.MRI_Info, shape.fid.label{i}));
+    % end
     
   case {'4d_xyz', '4d_m4d', '4d_hs', '4d', '4d_pdf'}
     [p, f, x] = fileparts(filename);
