@@ -34,7 +34,7 @@ function GridDim = determine_griddim(elec)
 
 digits = regexp(elec.label, '\d+', 'match');
 maxdigit = 1;
-for l=1:numel(digits)
+for l = 1:numel(digits)
   ElecStrs{l,1} = regexprep(elec.label{l}, '\d+(?:_(?=\d))?', ''); % without electrode numbers
   labels{l,1} = digits{l}{1}; % use first found digit
   if str2num(digits{l}{1}) > maxdigit
@@ -47,8 +47,9 @@ ElecStr = cell2mat(unique(ElecStrs));
 % the labels
 cutout = []; % index of electrodes that appear to be cut out
 dowarn = 0;
-for e = 1:maxdigit;
-  if isempty(match_str(labels, num2str(e)))
+for e = 1:maxdigit
+  if ~isempty(match_str(labels, num2str(e))) ... % in case labels are 1, 2, 3 etc.
+      && ~isempty(match_str(labels, num2str(e, ['%0' num2str(numel(labels{e})) 'd']))) % in case labels are 001, 002, 003 etc.
     cutout(end+1) = e;
     dowarn = 1;
   end
@@ -69,7 +70,7 @@ end
 
 if labels_out_of_order
   pos_ordered = NaN(maxdigit,3);
-  for e = 1:maxdigit;
+  for e = 1:maxdigit
     if ~isempty(match_str(labels, num2str(e)))
       pos_ordered(e, :) = elec.elecpos(match_str(labels, num2str(e)),:);
     end
@@ -78,7 +79,7 @@ if labels_out_of_order
 end
 
 d_bwelec = [];
-for e = 1:size(elec.elecpos,1)-1;
+for e = 1:size(elec.elecpos,1)-1
   d_bwelec(e) = sqrt(sum((elec.elecpos(e+1,:)-elec.elecpos(e,:)).^2));
 end
 
