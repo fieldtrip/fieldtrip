@@ -189,9 +189,9 @@ elseif strcmp(method, 'label') % alternative method
     if ~isempty(match_str(labels, num2str(e))) % in case labels are 1, 2, 3 etc.
       labels_ordered{e,1} = [elec.ElecStr num2str(e)];
       pos_ordered(e, :) = elec.elecpos(match_str(labels, num2str(e)),:);
-    elseif ~isempty(match_str(labels, num2str(e, ['%0' num2str(numel(labels{e})) 'd']))) % in case labels are 001, 002, 003 etc.
-      labels_ordered{e,1} = [elec.ElecStr num2str(e, ['%0' num2str(numel(labels{e})) 'd'])];
-      pos_ordered(e, :) = elec.elecpos(match_str(labels, num2str(e, ['%0' num2str(numel(labels{e})) 'd'])),:);
+    elseif ~isempty(match_str(labels, num2str(e, ['%0' num2str(numel(labels{1})) 'd']))) % in case labels are 001, 002, 003 etc.
+      labels_ordered{e,1} = [elec.ElecStr num2str(e, ['%0' num2str(numel(labels{1})) 'd'])];
+      pos_ordered(e, :) = elec.elecpos(match_str(labels, num2str(e, ['%0' num2str(numel(labels{1})) 'd'])),:);
     else
       elec.cutout(end+1) = e;
       labels_ordered{e,1} = [elec.ElecStr num2str(e)];

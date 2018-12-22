@@ -49,7 +49,7 @@ cutout = []; % index of electrodes that appear to be cut out
 dowarn = 0;
 for e = 1:maxdigit
   if ~isempty(match_str(labels, num2str(e))) ... % in case labels are 1, 2, 3 etc.
-      && ~isempty(match_str(labels, num2str(e, ['%0' num2str(numel(labels{e})) 'd']))) % in case labels are 001, 002, 003 etc.
+      && ~isempty(match_str(labels, num2str(e, ['%0' num2str(numel(labels{1})) 'd']))) % in case labels are 001, 002, 003 etc.
     cutout(end+1) = e;
     dowarn = 1;
   end
