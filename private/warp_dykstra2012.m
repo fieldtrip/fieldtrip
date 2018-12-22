@@ -194,7 +194,7 @@ elseif strcmp(method, 'label') % alternative method
       pos_ordered(e, :) = elec.elecpos(match_str(labels, num2str(e, ['%0' num2str(numel(labels{1})) 'd'])),:);
     else
       elec.cutout(end+1) = e;
-      labels_ordered{e,1} = [elec.ElecStr num2str(e)];
+      labels_ordered{e,1} = [num2str(e)];
       pos_ordered(e, :) = NaN(1,3);
       dowarn = true;
     end
@@ -254,9 +254,9 @@ elseif strcmp(method, 'label') % alternative method
   % pairs list to reflect these removals
   elec.elecpos(elec.cutout, :) = [];
   for c = length(elec.cutout):-1:1 % for each of the cutout electrodes, starting with the highest numbered one
-    % find pairs that refered to elec.cutout(c) and remove them
+    % find pairs that referred to elec.cutout(c) and remove them
     for n = size(pairs, 1):-1:1 % for each of the rows in pairs, starting with the highest
-      if any(intersect(pairs(n, :), elec.cutout(c)))
+      if any(intersect(pairs(n, [1 2]), elec.cutout(c)))
         pairs(n, :) = [];
       end
     end
@@ -268,7 +268,7 @@ elseif strcmp(method, 'label') % alternative method
   % remove any pairs that reference an electrode higher than the number of
   % electrodes in elec.elecpos
   for n = size(pairs, 1):-1:1 % for each of the rows in pairs, starting with the highest
-    if any(pairs(n, :) > size(elec.elecpos, 1))
+    if any(pairs(n, [1 2]) > size(elec.elecpos, 1))
       pairs(n, :) = [];
     end
   end
