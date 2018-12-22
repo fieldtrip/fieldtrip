@@ -53,8 +53,8 @@ cfg.feedback      = ft_getopt(cfg, 'feedback', 'no');
 
 % undocumented local options
 cfg.pairmethod    = ft_getopt(cfg, 'pairmethod', 'pos'); % eletrode pairing based on electrode 'pos' or 'label' (for computing deformation energy)
-cfg.isotropy      = ft_getopt(cfg, 'isotropy',  false);  % promote isotropic inter-electrode distances (support for pairmethod 'label' only)
-cfg.deformweight  = ft_getopt(cfg, 'deformweight',  1);  % weight of deformation relative to shift energy cost (a lower value results in more grid flexibility)
+cfg.isodistance   = ft_getopt(cfg, 'isodistance',   []); % enforce isotropic inter-electrode distances (support for pairmethod 'label' only)
+cfg.deformweight  = ft_getopt(cfg, 'deformweight',   1); % weight of deformation relative to shift energy cost (a lower value results in more grid flexibility)
 
 % compute pairs of neighbors
 [pairs, elec] = create_elecpairs(elec, cfg.pairmethod);
@@ -64,7 +64,7 @@ coord0 = elec.elecpos;
 coord = elec.elecpos;
 
 % anonymous function handles
-efun = @(coord_snapped) energy_electrodesnap(coord_snapped, coord, pairs, cfg.isotropy, cfg.deformweight);
+efun = @(coord_snapped) energy_electrodesnap(coord_snapped, coord, pairs, cfg.isodistance, cfg.deformweight);
 cfun = @(coord_snapped) dist_to_surface(coord_snapped, surf);
 
 % options
@@ -115,7 +115,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function energy = energy_electrodesnap(coord, coord_orig, pairs, isotropy, deformweight) % (minimized) energy function
+function energy = energy_electrodesnap(coord, coord_orig, pairs, isodistance, deformweight) % (minimized) energy function
 % ENERGY_ELECTRODESNAP compute energy to be minimized, based on deformation
 % and distance of the electrodes from original distance
 
@@ -125,9 +125,9 @@ energy_eshift = sum((coord - coord_orig).^2, 2);
 % energy needed to deform grid shape
 dist = sqrt(sum((coord(pairs(:, 1), :) - coord(pairs(:, 2), :)).^2, 2));
 dist_orig = sqrt(sum((coord_orig(pairs(:, 1), :) - coord_orig(pairs(:, 2), :)).^2, 2));
-if isotropy % promote isotropic inter-electrode distances
-  dist_orig(pairs(:,3)==1) = mean(dist(pairs(:,3)==1)); % adjacent electrodes
-  dist_orig(pairs(:,3)==2) = mean(dist(pairs(:,3)==2)); % diagonal electrodes
+if ~isempty(isodistance) % enforce isotropic inter-electrode distances
+  dist_orig(pairs(:,3)==1) = isodistance; % adjacent electrodes
+  dist_orig(pairs(:,3)==2) = sqrt(isodistance^2+isodistance^2); % diagonal electrodes
 end
 energy_deform = (dist - dist_orig).^2;
 
@@ -262,7 +262,7 @@ elseif strcmp(method, 'label') % alternative method
     end
     
     % subtract 1 from all the numbers in pairs that are higher than elec.cutout(c)
-    pairs(find(pairs > elec.cutout(c))) = pairs(find(pairs > elec.cutout(c)))-1;
+    pairs(find(pairs(:,[1 2]) > elec.cutout(c))) = pairs(find(pairs(:,[1 2]) > elec.cutout(c)))-1;
   end
   
   % remove any pairs that reference an electrode higher than the number of
