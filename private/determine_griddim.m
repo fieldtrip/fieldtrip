@@ -9,7 +9,6 @@ function GridDim = determine_griddim(elec)
 %   where elec is a structure that contains an elecpos field and a label field
 %   and GridDim(1) = number of rows and GridDim(2) = number of columns
 %   
-%
 % See also FT_ELECTRODEREALIGN
 
 % Copyright (C) 2017, Arjen Stolk, Sandon Griffin
