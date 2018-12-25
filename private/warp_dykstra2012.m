@@ -88,29 +88,15 @@ else
   options = optimset(options, 'Display', 'final');
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Energy Minimization
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % run minimization: efun (shift + deform energy) is minimized; cfun (surface distance) is a nonlinear constraint
 coord_snapped = fmincon(efun, coord0, [], [], [], [], [], [], cfun, options);
 
+% return the order of the coordinates to its original order (before they
+  % were ordered sequentially in create_elecpairs)
 if strcmp(cfg.pairmethod, 'label')
-  % return the order of the coordinates to its original order (before they
-  % were ordered sequentially)
-  
-  % first add back NaN's for the cutout electrodes
-  tmp = coord_snapped;
-  for c = 1:numel(elec.cutout)
-    if elec.cutout(c) < elec.maxdigit
-      tmp(elec.cutout(c)+1:end+1, :) = tmp(elec.cutout(c):end, :);
-      tmp(elec.cutout(c), :) = NaN(1,3);
-    end
-  end
-  
-  for n = 1:size(coord_snapped, 1)
-    coord_snapped(n, :) = tmp(str2num(cell2mat(elec.ElecLab(n))),:);
-  end
+  coord_snapped = coord_snapped(elec.order,:);
 end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -166,36 +152,41 @@ if strcmp(method, 'pos') % original method
 elseif strcmp(method, 'label') % alternative method
   
   fprintf('creating electrode pairs based on electrode labels\n');
-  % determine if any electrodes are missing and
-  % re-order electrode positions based on numbers in the label and replace
-  % missing numbers with electrodes at position [NaN NaN NaN]
+  % determine electrode range and order
   digits = regexp(elec.label, '\d+', 'match');
   elec.maxdigit = 1;
+  elec.mindigit = Inf;
   for l=1:numel(digits)
     ElecStrs{l,1} = regexprep(elec.label{l}, '\d+(?:_(?=\d))?', ''); % without electrode numbers
-    labels{l,1} = digits{l}{1}; % use first found digit
+    elec.ElecLab{l,1} = digits{l}{1}; % use first found digit
     if str2num(digits{l}{1}) > elec.maxdigit
       elec.maxdigit = str2num(digits{l}{1});
     end
+    if str2num(digits{l}{1}) < elec.mindigit
+      elec.mindigit = str2num(digits{l}{1});
+    end
   end
   elec.ElecStr = cell2mat(unique(ElecStrs));
-  elec.ElecLab = labels;
   
+  % determine if any electrodes appear to be misordered or cut out of this grid
+  elec.order = [];
   pos_ordered = [];
   labels_ordered = {};
   elec.cutout = []; % index of electrodes that appear to be cut out
   dowarn = false;
-  for e = 1:elec.maxdigit
-    if ~isempty(match_str(labels, num2str(e))) % in case labels are 1, 2, 3 etc.
-      labels_ordered{e,1} = [elec.ElecStr num2str(e)];
-      pos_ordered(e, :) = elec.elecpos(match_str(labels, num2str(e)),:);
-    elseif ~isempty(match_str(labels, num2str(e, ['%0' num2str(numel(labels{1})) 'd']))) % in case labels are 001, 002, 003 etc.
-      labels_ordered{e,1} = [elec.ElecStr num2str(e, ['%0' num2str(numel(labels{1})) 'd'])];
-      pos_ordered(e, :) = elec.elecpos(match_str(labels, num2str(e, ['%0' num2str(numel(labels{1})) 'd'])),:);
+  for e = elec.mindigit:elec.maxdigit
+    if ~isempty(match_str(elec.ElecLab, num2str(e))) % in case labels are 1, 2, 3 etc.
+      elec.order(end+1) = match_str(elec.ElecLab, num2str(e));
+      labels_ordered{end+1,1} = [elec.ElecStr num2str(e)];
+      pos_ordered(end+1, :) = elec.elecpos(match_str(elec.ElecLab, num2str(e)),:);
+    elseif ~isempty(match_str(elec.ElecLab, num2str(e, ['%0' num2str(numel(elec.ElecLab{1})) 'd']))) % in case labels are 001, 002, 003 etc.
+      elec.order(end+1) = match_str(elec.ElecLab, num2str(e, ['%0' num2str(numel(elec.ElecLab{1})) 'd']));
+      labels_ordered{end+1,1} = [elec.ElecStr num2str(e, ['%0' num2str(numel(elec.ElecLab{1})) 'd'])];
+      pos_ordered(end+1, :) = elec.elecpos(match_str(elec.ElecLab, num2str(e, ['%0' num2str(numel(elec.ElecLab{1})) 'd'])),:);
     else
-      elec.cutout(end+1) = e;
-      labels_ordered{e,1} = [num2str(e)];
-      pos_ordered(e, :) = NaN(1,3);
+      elec.cutout(end+1) = e-elec.mindigit+1;
+      labels_ordered{end+1,1} = num2str(e);
+      pos_ordered(end+1, :) = NaN(1,3); % replace missing numbers with electrodes at position [NaN NaN NaN]
       dowarn = true;
     end
   end
@@ -207,7 +198,7 @@ elseif strcmp(method, 'label') % alternative method
   
   % determine grid dimensions (1st dim: number of arrays, 2nd dim: number of elecs in an array)
   GridDim = determine_griddim(elec);
-  if GridDim(1)*GridDim(2) ~= elec.maxdigit
+  if GridDim(1)*GridDim(2) ~= elec.maxdigit-elec.mindigit+1
     ft_warning('the product of the dimensions does not equal the maximum digit in the electrode labels, so if incorrect, use cfg.pairmethod = ''pos'' instead\n');
   elseif any(GridDim(:)==1) % if not because of strips, this could happen in case of missing electrodes
     ft_warning('if this not a strip, there may be electrodes missing, so if incorrect, use cfg.pairmethod = ''pos'' instead\n');
