@@ -88,27 +88,15 @@ else
   options = optimset(options, 'Display', 'final');
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Energy Minimization
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % run minimization: efun (shift + deform energy) is minimized; cfun (surface distance) is a nonlinear constraint
 coord_snapped = fmincon(efun, coord0, [], [], [], [], [], [], cfun, options);
 
-if strcmp(cfg.pairmethod, 'label')
-  % return the order of the coordinates to its original order (before they
+% return the order of the coordinates to its original order (before they
   % were ordered sequentially in create_elecpairs)
-  
-  % first add back NaN's for the cutout electrodes
-  tmp = coord_snapped;
-  for c = 1:numel(elec.cutout)
-    if elec.cutout(c) < elec.maxdigit
-      tmp(elec.cutout(c)+1:end+1, :) = tmp(elec.cutout(c):end, :);
-      tmp(elec.cutout(c), :) = NaN(1,3);
-    end
-  end
-  
-  coord_snapped = tmp(elec.order,:);
+if strcmp(cfg.pairmethod, 'label')
+  coord_snapped = coord_snapped(elec.order,:);
 end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -196,9 +184,8 @@ elseif strcmp(method, 'label') % alternative method
       labels_ordered{end+1,1} = [elec.ElecStr num2str(e, ['%0' num2str(numel(elec.ElecLab{1})) 'd'])];
       pos_ordered(end+1, :) = elec.elecpos(match_str(elec.ElecLab, num2str(e, ['%0' num2str(numel(elec.ElecLab{1})) 'd'])),:);
     else
-      elec.order(end+1) = e;
-      elec.cutout(end+1) = e;
-      labels_ordered{end+1,1} = [num2str(e)];
+      elec.cutout(end+1) = e-elec.mindigit+1;
+      labels_ordered{end+1,1} = num2str(e);
       pos_ordered(end+1, :) = NaN(1,3); % replace missing numbers with electrodes at position [NaN NaN NaN]
       dowarn = true;
     end

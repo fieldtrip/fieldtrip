@@ -11,7 +11,7 @@ function GridDim = determine_griddim(elec)
 %   
 % See also FT_ELECTRODEREALIGN
 
-% Copyright (C) 2017, Arjen Stolk, Sandon Griffin
+% Copyright (C) 2017-2018, Arjen Stolk, Sandon Griffin
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -30,7 +30,6 @@ function GridDim = determine_griddim(elec)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
 
 % determine electrode range
 digits = regexp(elec.label, '\d+', 'match');
