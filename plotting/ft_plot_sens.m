@@ -382,7 +382,7 @@ switch sensshape
   case 'disc'
     
     if isempty(headshape)
-      ft_error('cannot plot electrodes as discs without a headshape to align them to')
+      ft_error('cannot plot electrodes as discs without a headshape to align them with')
     end
     
     npoints = 25; % points on the headshape used for estimating the local norm
@@ -417,7 +417,7 @@ switch sensshape
       Fn = Fn * (1/sqrt(sum(Fn.^2,2))); % normalize
       ori(i,:) = Fn;
       
-      % create disc aligned to the headshape (ideally, a hull)
+      % create disc aligned with the headshape (ideally, a hull)
       [X,Y,Z] = cylinder2([senssize/2 senssize/2],[ori(i,1) ori(i,2) ori(i,3)], 100);
       X(1,:) = X(1,:)+pos(i,1); Y(1,:) = Y(1,:)+pos(i,2); Z(1,:) = Z(1,:)+pos(i,3);
       t = (senssize/2)/10; % add thickness (outward), X(2,1)-X(1,1) etc.
