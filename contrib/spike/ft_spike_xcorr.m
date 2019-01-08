@@ -3,7 +3,7 @@ function [stat] = ft_spike_xcorr(cfg, spike)
 % FT_SPIKE_XCORR computes the cross-correlation histogram and shift predictor.
 %
 % Use as
-%   [stat] = ft_spike_xcorr(cfg,data)
+%   [stat] = ft_spike_xcorr(cfg, data)
 %
 % The input SPIKE should be organised as the spike or the raw datatype, obtained from
 % FT_SPIKE_MAKETRIALS or FT_PREPROCESSING (in that case, conversion is done
@@ -15,7 +15,7 @@ function [stat] = ft_spike_xcorr(cfg, spike)
 %                          cross-correlation function in sec (default = 0.1 sec).
 %   cfg.debias           = 'yes' (default) or 'no'. If 'yes', we scale the
 %                          cross-correlogram by M/(M-abs(lags)), where M = 2*N -1 with N
-%                          the length of the data segment. 
+%                          the length of the data segment.
 %   cfg.method           = 'xcorr' or 'shiftpredictor'. If 'shiftpredictor'
 %                           we do not compute the normal cross-correlation
 %                           but shuffle the subsequent trials.
@@ -43,30 +43,27 @@ function [stat] = ft_spike_xcorr(cfg, spike)
 %   cfg.trials           = numeric selection of trials (default = 'all')
 %   cfg.keeptrials       = 'yes' or 'no' (default)
 %
-% A peak at a negative lag for stat.xcorr(chan1,chan2,:) means that chan1 is
-% leading chan2. Thus, a negative lag represents a spike in the second
-% dimension of stat.xcorr before the channel in the third dimension of
-% stat.stat.
+% A peak at a negative lag for stat.xcorr(chan1,chan2,:) means that chan1 is leading
+% chan2. Thus, a negative lag represents a spike in the second dimension of
+% stat.xcorr before the channel in the third dimension of stat.stat.
 %
-% Variable trial length is controlled by the option cfg.vartriallen. If
-% cfg.vartriallen = 'yes', all trials are selected that have a minimum
-% overlap with the latency window of cfg.maxlag. However, the shift
-% predictor calculation demands that following trials have the same amount
-% of data, otherwise, it does not control for rate non-stationarities. If
-% cfg.vartriallen = 'yes', all trials should fall in the latency window,
-% otherwise we do not compute the shift predictor.
+% Variable trial length is controlled by the option cfg.vartriallen. If it is
+% specified as cfg.vartriallen='yes', all trials are selected that have a minimum
+% overlap with the latency window of cfg.maxlag. However, the shift predictor
+% calculation demands that following trials have the same amount of data, otherwise,
+% it does not control for rate non-stationarities. If cfg.vartriallen = 'yes', all
+% trials should fall in the latency window, otherwise we do not compute the shift
+% predictor.
 %
 % Output:
-%    stat.xcorr            = nchans-by-nchans-by-(2*nlags+1) cross correlation histogram
-%   or 
-%    stat.shiftpredictor   = nchans-by-nchans-by-(2*nlags+1) shift predictor.
-%  both with dimord 'chan_chan_time'
+%    stat.xcorr            = nchans-by-nchans-by-(2*nlags+1) cross correlation histogram with dimord 'chan_chan_time'
+%   or
+%    stat.shiftpredictor   = nchans-by-nchans-by-(2*nlags+1) shift predictor with dimord 'chan_chan_time'
+% and
 %    stat.lags             = (2*nlags + 1) vector with lags in seconds.
-%
-%    stat.trial            = ntrials-by-nchans-by-nchans-by-(2*nlags + 1) with single
-%                            trials and dimord 'rpt_chan_chan_time';
+%    stat.trial            = ntrials-by-nchans-by-nchans-by-(2*nlags + 1) with single trials and dimord 'rpt_chan_chan_time'
 %    stat.label            = corresponding labels to channels in stat.xcorr
-%    stat.cfg              = configurations used in this function.
+%    stat.cfg              = configurations used in this function
 
 % Copyright (C) 2010-2012, Martin Vinck
 %
@@ -100,23 +97,23 @@ ft_preamble provenance spike
 ft_preamble trackconfig
 
 % check input spike structure
-spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
+spike = ft_checkdata(spike, 'datatype', 'spike', 'feedback', 'yes');
 
 % get the default options
-cfg.trials         = ft_getopt(cfg,'trials', 'all');
-cfg.latency        = ft_getopt(cfg,'latency','maxperiod');
-cfg.keeptrials     = ft_getopt(cfg,'keeptrials', 'no');
-cfg.method         = ft_getopt(cfg,'method', 'xcorr');
-cfg.channelcmb     = ft_getopt(cfg,'channelcmb', 'all');
-cfg.vartriallen    = ft_getopt(cfg,'vartriallen', 'yes');
-cfg.debias         = ft_getopt(cfg,'debias', 'yes');
-cfg.maxlag         = ft_getopt(cfg,'maxlag', 0.01);
-cfg.binsize        = ft_getopt(cfg,'binsize', 0.001);
-cfg.outputunit     = ft_getopt(cfg,'outputunit', 'proportion');
+cfg.trials         = ft_getopt(cfg, 'trials', 'all');
+cfg.latency        = ft_getopt(cfg, 'latency','maxperiod');
+cfg.keeptrials     = ft_getopt(cfg, 'keeptrials', 'no');
+cfg.method         = ft_getopt(cfg, 'method', 'xcorr');
+cfg.channelcmb     = ft_getopt(cfg, 'channelcmb', 'all');
+cfg.vartriallen    = ft_getopt(cfg, 'vartriallen', 'yes');
+cfg.debias         = ft_getopt(cfg, 'debias', 'yes');
+cfg.maxlag         = ft_getopt(cfg, 'maxlag', 0.01);
+cfg.binsize        = ft_getopt(cfg, 'binsize', 0.001);
+cfg.outputunit     = ft_getopt(cfg, 'outputunit', 'proportion');
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg, 'latency', {'char', 'ascendingdoublebivector'});
-cfg = ft_checkopt(cfg, 'trials', {'char', 'doublevector', 'logical'}); 
+cfg = ft_checkopt(cfg, 'trials', {'char', 'doublevector', 'logical'});
 cfg = ft_checkopt(cfg, 'keeptrials', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg, 'method', 'char', {'xcorr', 'shiftpredictor'});
 cfg = ft_checkopt(cfg, 'channelcmb', {'char', 'cell'});
@@ -146,7 +143,7 @@ if isempty(chansel), error('No channel was selected'); end
 nTrials = size(spike.trialtime,1);
 if  strcmp(cfg.trials,'all')
   cfg.trials = 1:nTrials;
-elseif islogical(cfg.trials)
+elseif islogical(cfg.trials) || all(cfg.trials==0 | cfg.trials==1)
   cfg.trials = find(cfg.trials);
 end
 cfg.trials = sort(cfg.trials(:));
@@ -214,10 +211,10 @@ nTrials   = length(cfg.trials); % only now reset nTrials
 
 % preallocate the sum and the single trials and the shift predictor
 keepTrials   = strcmp(cfg.keeptrials,'yes');
-s     = zeros(nChans,nChans,2*nLags); 
+s     = zeros(nChans,nChans,2*nLags);
 if keepTrials
   warning('storing single trials for cross correlation is memory expensive, please check');
-  singleTrials = zeros(nTrials,nChans,nChans,2*nLags);    
+  singleTrials = zeros(nTrials,nChans,nChans,2*nLags);
 end
 
 if strcmp(cfg.method,'shiftpredictor'), singleTrials(1,:,:,:) = NaN; end
@@ -225,7 +222,7 @@ if strcmp(cfg.method,'shiftpredictor'), singleTrials(1,:,:,:) = NaN; end
 if ((cfg.latency(2)-cfg.latency(1))/cfg.maxlag)<2.5
   warning('selected latency will cause highly variable xcorr at borders');
 end
-doMex = 1;
+
 ft_progress('init', 'text',     'Please wait...');
 for iTrial = 1:nTrials
   origTrial = cfg.trials(iTrial);
@@ -237,7 +234,7 @@ for iTrial = 1:nTrials
     inTrial1 = spike.trial{indx(1)}==origTrial;
     inTrial2 = spike.trial{indx(2)}==origTrial;
     inWindow1 = spike.time{indx(1)}>=cfg.latency(1) &  spike.time{indx(1)}<=cfg.latency(2);
-    inWindow2 = spike.time{indx(2)}>=cfg.latency(1) &  spike.time{indx(2)}<=cfg.latency(2);    
+    inWindow2 = spike.time{indx(2)}>=cfg.latency(1) &  spike.time{indx(2)}<=cfg.latency(2);
     ts1 = sort(spike.time{indx(1)}(inTrial1(:) & inWindow1(:)));
     ts2 = sort(spike.time{indx(2)}(inTrial2(:) & inWindow2(:)));
     
@@ -265,7 +262,7 @@ for iTrial = 1:nTrials
           % sum the xcorr
           s(indx(1),indx(2),:) = s(indx(1),indx(2),:) + shiftdim(x(:),-2);
           s(indx(2),indx(1),:) = s(indx(2),indx(1),:) + shiftdim(flipud(x(:)),-2);
-
+          
           % store individual trials if requested
           if keepTrials
             singleTrials(iTrial,indx(1),indx(2),:) = shiftdim(x(:),-3);
@@ -279,10 +276,10 @@ for iTrial = 1:nTrials
           ts1_old      = sort(spike.time{indx(1)}(inTrial1_old(:) & inWindow1(:)));
           inTrial2_old = spike.trial{indx(2)}==cfg.trials(iTrial-1);
           ts2_old      = sort(spike.time{indx(2)}(inTrial2_old(:) & inWindow2(:)));
-
+          
           % compute both combinations
           for k = 1:2
-
+            
             % take chan from this and previous channel
             if k==1
               A = ts1;
@@ -291,12 +288,12 @@ for iTrial = 1:nTrials
               A = ts1_old;
               B = ts2;
             end
-            if ~isempty(A) && ~isempty(B),
+            if ~isempty(A) && ~isempty(B)
               if indx(1)<=indx(2)
-                 [x]   = spike_crossx_matlab(A(:),B(:),cfg.binsize,nLags*2+1);
+                [x]   = spike_crossx_matlab(A(:),B(:),cfg.binsize,nLags*2+1);
               else
-                 [x]   = spike_crossx_matlab(B(:),A(:),cfg.binsize,nLags*2+1);
-              end              
+                [x]   = spike_crossx_matlab(B(:),A(:),cfg.binsize,nLags*2+1);
+              end
               % remove the center peaks from the auto-correlogram
               if indx(1)==indx(2), x(nLags:nLags+1) = 0; end
               
@@ -307,14 +304,14 @@ for iTrial = 1:nTrials
                 sc = (T./(T-abs(lags(:))));
                 sc = length(sc)*sc./sum(sc);
                 x  = x(:).*sc(:);
-              end                     
+              end
               % compute the sum
               s(indx(1),indx(2),:) =  s(indx(1),indx(2),:) + shiftdim(x(:),-2);
               s(indx(2),indx(1),:) =  s(indx(2),indx(1),:) + shiftdim(flipud(x(:)),-2);
               if keepTrials
-                 singleTrials(iTrial,indx(1),indx(2),:) = shiftdim(x(:)/2,-3);
-                 singleTrials(iTrial,indx(2),indx(1),:) = shiftdim(flipud(x(:))/2,-3);
-              end              
+                singleTrials(iTrial,indx(1),indx(2),:) = shiftdim(x(:)/2,-3);
+                singleTrials(iTrial,indx(2),indx(1),:) = shiftdim(flipud(x(:))/2,-3);
+              end
             end
           end
         end
@@ -322,30 +319,30 @@ for iTrial = 1:nTrials
   end % combinations
 end % trial loop
 ft_progress('close')
-% multiply the shift sum by a factor so it has the same scale as raw 
+% multiply the shift sum by a factor so it has the same scale as raw
 dofShiftPred = 2*(nTrials-1);
 if doShiftPredictor, s = s*nTrials/dofShiftPred; end
 switch cfg.outputunit
   case 'proportion'
     sm = repmat(nansum(s,3),[1 1 nLags*2]);
-    s = s./sm;        
+    s = s./sm;
     if keepTrials
       singleTrials       = singleTrials./repmat(shiftdim(sm,-1),[nTrials 1 1 1]);
-    end            
+    end
   case 'center'
-      center   = repmat(s(:,:,nLags+1),[1 1 nLags*2]);
-      s        = s./center;
-      if keepTrials
-        singleTrials       = singleTrials./repmat(shiftdim(center,-1),[nTrials 1 1 1]);
-      end            
+    center   = repmat(s(:,:,nLags+1),[1 1 nLags*2]);
+    s        = s./center;
+    if keepTrials
+      singleTrials       = singleTrials./repmat(shiftdim(center,-1),[nTrials 1 1 1]);
+    end
 end
 
 % return the results
 stat.(cfg.method)      = s;
 lags = (-nLags:nLags)*cfg.binsize;
-lags = (lags(2:end)+lags(1:end-1))/2;             
+lags = (lags(2:end)+lags(1:end-1))/2;
 stat.time              = lags;
-stat.dimord            = 'chan_chan_time'; 
+stat.dimord            = 'chan_chan_time';
 if keepTrials
   stat.trial   = singleTrials;
   stat.dimord  = 'trial_chan_chan_time';
@@ -370,12 +367,12 @@ minLag = - binsize * (nbins-1) / 2;
 j = 0:nbins-1;
 B = minLag + j * binsize;
 tX(tX<(tY(1)+minLag) | tX>(tY(end)-minLag))   = [];
-if isempty(tX), 
+if isempty(tX)
   C = zeros(1,length(B)-1);
   return;
 end
 tY(tY>(tX(end)-minLag) | tY<(tX(1)+minLag)) = [];
-if isempty(tY), 
+if isempty(tY)
   C = zeros(1,length(B)-1);
   return;
 end
@@ -387,8 +384,8 @@ if (nX*nY)<2*10^7  % allow matrix to grow to about 150 MB, should always work
   D = D(:);
   D(abs(D)>abs(minLag)) = [];
   [C] = histc(D,B);
-  C(end) = [];  
-else  
+  C(end) = [];
+else
   % break it down in pieces such that nX*nY<2*10*7
   k   = 2;
   nXs = round(nX/k);
@@ -399,7 +396,7 @@ else
   
   % get the indices
   steps = round(nX/k);
-  begs = [1:steps:steps*k];
+  begs = 1:steps:steps*k;
   ends = begs+(steps-1);
   rm   = begs>nX;
   begs(rm) = [];
@@ -407,17 +404,16 @@ else
   ends(end) = nX;
   nSteps    = length(begs);
   
-  D = [];
   C = zeros(1,length(B));
   for iStep = 1:nSteps
     d = log(exp(-tX(begs(iStep):ends(iStep)))*exp(tY(:)'));
     d = d(:);
     d(abs(d)>abs(minLag)) = [];
-    C = C + histc(d,B)';    
+    C = C + histc(d,B)';
   end
   C(end) = [];
 end
 
 if isempty(C)
-    C = zeros(1,length(B)-1);
+  C = zeros(1,length(B)-1);
 end
