@@ -127,7 +127,7 @@ nTrialsOrig = size(spike.trialtime,1);
 nTrialsShown = nTrialsOrig;
 if  strcmp(cfg.trials,'all')
   cfg.trials = 1:nTrialsOrig;
-elseif islogical(cfg.trials)
+elseif islogical(cfg.trials) || all(cfg.trials==0 | cfg.trials==1)
   cfg.trials = find(cfg.trials);
 end
 cfg.trials = sort(cfg.trials(:));
