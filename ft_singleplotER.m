@@ -434,11 +434,11 @@ hold on
 yval = mean(datamatrix, 2); % over channels
 yval = reshape(yval, size(yval,1), size(yval,3));
 mask = squeeze(mean(maskmatrix, 1)); % over channels
-
-ft_plot_vector(xval, yval, 'style', cfg.linestyle{i}, 'color', graphcolor, ...
+for i=1:Ndata
+ft_plot_vector(xval, yval(i,:), 'style', cfg.linestyle{i}, 'color', graphcolor(i), ...
   'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, ...
   'hlim', [xmin xmax], 'vlim', [ymin ymax]);
-
+end
 colorLabels = [];
 if Ndata > 1
   for i=1:Ndata
