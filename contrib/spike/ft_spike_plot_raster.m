@@ -109,9 +109,6 @@ cfg = ft_checkconfig(cfg, 'allowed', {'spikechannel', 'latency', 'trials', 'line
 if nargin==3
   doTopData = true;
   timelock  = ft_checkdata(timelock, 'datatype', 'timelock', 'hastrials', 'no', 'feedback', 'yes');
-  if isfield(timelock,'cfg') && isfield(timelock.cfg, 'latency')
-    cfg.latency = timelock.cfg.latency; 
-  end
 else
   doTopData = false;
 end
