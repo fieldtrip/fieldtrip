@@ -162,6 +162,7 @@ cfg.maskparameter   = ft_getopt(cfg, 'maskparameter',  []);
 cfg.linestyle       = ft_getopt(cfg, 'linestyle',     '-');
 cfg.linewidth       = ft_getopt(cfg, 'linewidth',      0.5);
 cfg.maskstyle       = ft_getopt(cfg, 'maskstyle',     'box');
+cfg.maskfacealpha   = ft_getopt(cfg, 'maskfacealpha', 1);
 cfg.channel         = ft_getopt(cfg, 'channel',       'all');
 cfg.title           = ft_getopt(cfg, 'title',          []);
 cfg.directionality  = ft_getopt(cfg, 'directionality', []);
@@ -437,7 +438,7 @@ mask = squeeze(mean(maskmatrix, 1)); % over channels
 for i=1:Ndata
 ft_plot_vector(xval, yval(i,:), 'style', cfg.linestyle{i}, 'color', graphcolor(i), ...
   'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, ...
-  'hlim', [xmin xmax], 'vlim', [ymin ymax]);
+  'hlim', [xmin xmax], 'vlim', [ymin ymax],'maskfacealpha', cfg.maskfacealpha);
 end
 colorLabels = [];
 if Ndata > 1

@@ -189,6 +189,7 @@ cfg.maskparameter  = ft_getopt(cfg, 'maskparameter');
 cfg.linestyle      = ft_getopt(cfg, 'linestyle', '-');
 cfg.linewidth      = ft_getopt(cfg, 'linewidth', 0.5);
 cfg.maskstyle      = ft_getopt(cfg, 'maskstyle', 'box');
+cfg.maskfacealpha  = ft_getopt(cfg, 'maskfacealpha', 1);
 cfg.channel        = ft_getopt(cfg, 'channel', 'all');
 cfg.directionality = ft_getopt(cfg, 'directionality', '');
 cfg.figurename     = ft_getopt(cfg, 'figurename');
@@ -475,7 +476,7 @@ for m=1:length(selchan)
   % Clip out of bounds y values:
   yval(yval > ymax) = ymax;
   yval(yval < ymin) = ymin;
-  ft_plot_vector(xval, yval, 'width', chanWidth(m), 'height', chanHeight(m), 'hpos', chanX(m), 'vpos', chanY(m), 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'color', graphcolor(i), 'style', cfg.linestyle{i}, 'linewidth', cfg.linewidth, 'axis', cfg.axes, 'highlight', mask, 'highlightstyle', cfg.maskstyle);
+  ft_plot_vector(xval, yval, 'width', chanWidth(m), 'height', chanHeight(m), 'hpos', chanX(m), 'vpos', chanY(m), 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'color', graphcolor(i), 'style', cfg.linestyle{i}, 'linewidth', cfg.linewidth, 'axis', cfg.axes, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'maskfacealpha', cfg.maskfacealpha);
   end
 end % for number of channels
 
