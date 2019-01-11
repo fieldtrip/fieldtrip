@@ -19,6 +19,7 @@ function [varargout] = ft_plot_vector(varargin)
 %   'style'           = see MATLAB standard line properties
 %   'tag'             = string, the name assigned to the object. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
 %   'box'             = draw a box around the local axes, can be 'yes' or 'no'
+%   'facealpha'       = transparency value between 0 and 1
 %
 % The line color can be specified in a variety of ways
 %   - as a string with one character per line that you want to plot. Supported colors are teh same as in PLOT, i.e. 'bgrcmykw'.
@@ -132,7 +133,7 @@ fontsize        = ft_getopt(varargin, 'fontsize',   get(0, 'defaulttextfontsize'
 fontname        = ft_getopt(varargin, 'fontname',   get(0, 'defaulttextfontname'));
 fontweight      = ft_getopt(varargin, 'fontweight', get(0, 'defaulttextfontweight'));
 fontunits       = ft_getopt(varargin, 'fontunits',  get(0, 'defaulttextfontunits'));
-maskfacealpha   = ft_getopt(varargin, 'maskfacealpha', 1);
+facealpha       = ft_getopt(varargin, 'facealpha', 1);
 
 % if any(size(vdat)==1)
 %   % ensure that it is a column vector
@@ -286,7 +287,7 @@ switch highlightstyle
     for i=1:length(begsample)
       begx = hdat(begsample(i));
       endx = hdat(endsample(i));
-      ft_plot_box([begx endx vpos-height/2 vpos+height/2], 'facecolor', [.6 .6 .6], 'edgecolor', 'none', 'parent', parent, 'facealpha', maskfacealpha);
+      ft_plot_box([begx endx vpos-height/2 vpos+height/2], 'facecolor', [.6 .6 .6], 'edgecolor', 'none', 'parent', parent, 'facealpha', facealpha);
     end
     
   case 'thickness'

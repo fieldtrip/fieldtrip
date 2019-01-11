@@ -20,6 +20,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %                       (not possible for mean over multiple channels, or when input contains multiple subjects
 %                       or trials)
 %   cfg.maskstyle     = style used for masking of data, 'box', 'thickness' or 'saturation' (default = 'box')
+%   cfg.maskfacealpha = mask transparency value between 0 and 1
 %   cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.ylim          = 'maxmin', 'maxabs', 'zeromax', 'minzero', or [ymin ymax] (default = 'maxmin')
 %   cfg.channel       = nx1 cell-array with selection of channels (default = 'all')

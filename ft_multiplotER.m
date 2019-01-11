@@ -20,6 +20,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %   cfg.parameter     = field to be plotted on y-axis, for example 'avg', 'powspctrm' or 'cohspctrm' (default is automatic)
 %   cfg.maskparameter = field in the first dataset to be used for marking significant data
 %   cfg.maskstyle     = style used for masking of data, 'box', 'thickness' or 'saturation' (default = 'box')
+%   cfg.maskfacealpha = mask transparency value between 0 and 1
 %   cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.ylim          = 'maxmin', 'maxabs', 'zeromax', 'minzero', or [ymin ymax] (default = 'maxmin')
 %   cfg.gradscale     = number, scaling to apply to the MEG gradiometer channels prior to display
