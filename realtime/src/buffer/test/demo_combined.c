@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
 		host.port = DEFAULT_PORT;
 	}
 
-	/* start the buffer in a seperate thread */
+	/* start the buffer in a separate thread */
 	rc = pthread_create(&tid, NULL, tcpserver, (void *)(&host));
 	if (rc) {
 		fprintf(stderr, "Error: return code from pthread_create() is %d\n", rc);

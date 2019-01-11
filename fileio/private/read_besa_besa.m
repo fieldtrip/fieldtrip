@@ -246,7 +246,7 @@ if(fseek(fid,double(bdat_offset),'bof') == -1) % double() because Windows can't 
 end
 
 % Read BDAT tag and offset
-[~,ofst_BDAT] = read_tag_offset_pair(fid,'BDAT');
+[dum,ofst_BDAT] = read_tag_offset_pair(fid,'BDAT');
 
 % Check that file is not shorter than expected
 if(file_length < (ftell(fid)+ofst_BDAT))
@@ -274,7 +274,7 @@ read_tag_offset_pair(fid,'DATS');
 n_samples = fread(fid,1,'*uint32');
 
 % Read DATA tag and offset
-[~,data_block_length] = read_tag_offset_pair(fid,'DATA');
+[dum,data_block_length] = read_tag_offset_pair(fid,'DATA');
 data_block_offset = double(ftell(fid));
 
 % Read data
@@ -858,7 +858,7 @@ file_length = ftell(fid);
 fseek(fid,0,'bof');
 
 %% Header Block
-[~,ofst_BCF1] = read_tag_offset_pair(fid,'BCF1');
+[dum,ofst_BCF1] = read_tag_offset_pair(fid,'BCF1');
 
 % Read data in header block
 while ~feof(fid) && ftell(fid) < (8+ofst_BCF1) % 8 for header tag ('BCF1') and header offset (uint32)
@@ -1061,7 +1061,7 @@ end
 tags.offsets(end+1) = tags.next_BTAG_ofst;
 
 % Read BTAG tag and offset
-[~,tag_block_length] = read_tag_offset_pair(fid,'BTAG');
+[dum,tag_block_length] = read_tag_offset_pair(fid,'BTAG');
 
 % Untagged offset to next BTAG section
 tags.next_BTAG_ofst = fread(fid,1,'*int64');
@@ -1115,7 +1115,7 @@ end
 file_info.offsets(end+1) = file_info.next_BFMI_ofst;
 
 % Read BFMI tag and offset
-[~,fileinfo_block_length] = read_tag_offset_pair(fid,'BFMI');
+[dum,fileinfo_block_length] = read_tag_offset_pair(fid,'BFMI');
 
 % Untagged offset to next BFMI section
 file_info.next_BFMI_ofst = fread(fid,1,'*int64');
@@ -1382,7 +1382,7 @@ end
 channel_info.offsets(end+1) = channel_info.next_BCAL_ofst;
 
 % Read BCAL tag and offset
-[~,channel_block_length] = read_tag_offset_pair(fid,'BCAL');
+[dum,channel_block_length] = read_tag_offset_pair(fid,'BCAL');
 
 % Untagged offset to next BCAL section
 channel_info.next_BCAL_ofst = fread(fid,1,'*int64');
@@ -1596,14 +1596,14 @@ if(fseek(fid,BEVT_offset,'bof') == -1)
 end
 
 % Read BEVT tag and offset
-[~,event_block_length] = read_tag_offset_pair(fid,'BEVT');
+[dum,event_block_length] = read_tag_offset_pair(fid,'BEVT');
 
 % Read LIST tag and offset but don't save anything
 read_tag_offset_pair(fid,'LIST');
 
 % Now inside of LIST block
 % Read HEAD tag - Assuming that it is first tag in LIST block
-[~,head_length] = read_tag_offset_pair(fid,'HEAD');
+[dum,head_length] = read_tag_offset_pair(fid,'HEAD');
 head_offset = ftell(fid);
 % Read data in header block
 while ~feof(fid) && ftell(fid) < (head_offset+head_length)

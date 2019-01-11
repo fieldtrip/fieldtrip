@@ -33,7 +33,7 @@ function [sts] = ft_spiketriggeredspectrum_convol(cfg, data, spike)
 %                           multi-tapering. Note that 4 Hz smoothing means
 %                           plus-minus 4 Hz, i.e. a 8 Hz smoothing box.
 %     cfg.foi             = vector 1 x numfoi, frequencies of interest
-%     cfg.taper           = 'dpss', 'hanning' or many others, see WINDOW (default = 'dpss')
+%     cfg.taper           = 'dpss', 'hanning' or many others, see WINDOW (default = 'hanning')
 %     cfg.t_ftimwin       = vector 1 x numfoi, length of time window (in
 %     seconds)
 %     cfg.taperopt        =  parameter that goes in WINDOW function (only
@@ -171,8 +171,11 @@ if nargin==2
     cfg.channel      = ft_channelselection(cfg.channel, data.label);  
     if ~all(ismember(cfg.channel,eegchannel)), warning('some of the selected eeg channels appear spike channels'); end    
   end    
-  data_spk = ft_selectdata(data,'channel', cfg.spikechannel);
-  data     = ft_selectdata(data,'channel', cfg.channel); % leave only LFP
+  tmpcfg = [];
+  tmpcfg.channel = cfg.spikechannel;
+  data_spk = ft_selectdata(tmpcfg, data);
+  tmpcfg.channel = cfg.channel;
+  data     = ft_selectdata(tmpcfg, data); % leave only LFP
   spike    = ft_checkdata(data_spk,'datatype', 'spike');
   clear data_spk % remove the continuous data
 else

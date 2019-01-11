@@ -1,7 +1,7 @@
 function test_bug2734
 
+% MEM 2gb
 % WALLTIME 00:10:00
-% MEM 150mb
 
 % TEST ft_read_cifti
 

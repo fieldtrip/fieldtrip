@@ -5,9 +5,9 @@ function ft_defaults
 % call this function in your startup.m script. This function is also called at the
 % begin of all FieldTrip functions.
 %
-% The configuration defaults are stored in the global "ft_default" structure.
-% The ft_checkconfig function that is called by many FieldTrip functions will
-% merge this global ft_default structure with the cfg ctructure that you pass to
+% The global configuration defaults are stored in the global "ft_default" structure.
+% The ft_checkconfig function that is called by many FieldTrip functions will merge
+% these global configuration defaults with the cfg ctructure that you pass to
 % the FieldTrip function that you are calling.
 %
 % The global options and their default values are
@@ -24,6 +24,12 @@ function ft_defaults
 %   ft_default.toolbox.signal    = string, can be 'compat' or 'matlab' (default = 'compat')
 %   ft_default.toolbox.stats     = string, can be 'compat' or 'matlab' (default = 'compat')
 %   ft_default.toolbox.images    = string, can be 'compat' or 'matlab' (default = 'compat')
+%
+% If you want to overrule these default settings, you can add something like this in your startup.m script
+%   ft_defaults
+%   global ft_default
+%   ft_default.option1 = value1
+%   ft_default.option2 = value2
 %
 % The toolbox option for signal, stats and images allows you to specify whether you
 % want to use a compatible drop-in to be used for these MathWorks toolboxes, or the
@@ -56,6 +62,7 @@ function ft_defaults
 % $Id$
 
 global ft_default
+
 persistent initialized
 persistent checkpath
 
@@ -72,7 +79,7 @@ if ~exist('ft_warning', 'file')
   ft_warning = @warning;
 end
 
-% locate the file that contains the persistent FieldTrip preferences
+% locate the file with the persistent FieldTrip preferences
 fieldtripprefs = fullfile(prefdir, 'fieldtripprefs.mat');
 if exist(fieldtripprefs, 'file')
   prefs       = load(fieldtripprefs); % the file contains multiple fields
@@ -122,6 +129,12 @@ end % case
 % in that struct already prior to ft_defaults being called for the first time.
 if initialized && exist('ft_hastoolbox', 'file')
   return;
+end
+
+if isfield(ft_default, 'toolbox') && isfield(ft_default.toolbox, 'cleanup')
+  prevcleanup = ft_default.toolbox.cleanup;
+else
+  prevcleanup = {};
 end
 
 % Ensure that the path containing ft_defaults is on the path.
@@ -226,6 +239,8 @@ if ~isdeployed
     if ft_platform_supports('matlabversion', -inf, '2019b'), ft_hastoolbox('compat/matlablt2020a', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2020a'), ft_hastoolbox('compat/matlablt2020b', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2020b'), ft_hastoolbox('compat/matlablt2021a', 3, 1); end
+    % this deals with compatibility with all OCTAVE versions
+    if ft_platform_supports('octaveversion', -inf, +inf),    ft_hastoolbox('compat/octave', 3, 1); end
   end
   
   try
@@ -303,6 +318,9 @@ if ~isdeployed
   
 end
 
+% the toolboxes added by this function should not be removed by FT_POSTAMBLE_HASTOOLBOX
+ft_default.toolbox.cleanup = prevcleanup;
+
 % track the usage of this function, this only happens once at startup
 ft_trackusage('startup');
 
@@ -310,6 +328,7 @@ ft_trackusage('startup');
 initialized = true;
 
 end % function ft_default
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

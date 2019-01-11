@@ -269,7 +269,7 @@ void *tcpserver(void *arg) {
 						}
 #endif
 
-						/* deal with the incoming connection on the TCP socket in a seperate thread */
+						/* deal with the incoming connection on the TCP socket in a separate thread */
 						/* rc = pthread_create(&tid, &attr, tcpsocket, (void *)c); */
 						rc = pthread_create(&tid, NULL, tcpsocket, (void *)c);
 

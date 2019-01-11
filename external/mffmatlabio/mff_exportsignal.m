@@ -30,7 +30,7 @@ function mff_exportsignal(EEG, mffFile)
 if ~isempty(EEG.chanlocs) && isfield(EEG.chanlocs, 'type')
     allTypes = { EEG.chanlocs.type };
     allTypes = cellfun(@(x)num2str(x), allTypes, 'uniformoutput', false);
-    pnsChans = strmatch('PNS', allTypes, 'exact')';
+    pnsChans = strmatch('pns', lower(allTypes), 'exact')';
 else
     pnsChans = [];
 end
@@ -38,12 +38,6 @@ end
 p = fileparts(which('mff_importsignal.m'));
 warning('off', 'MATLAB:Java:DuplicateClass');
 javaaddpath(fullfile(p, 'MFF-1.2.2-jar-with-dependencies.jar'));
-import com.egi.services.mff.api.*;
-import com.egi.services.mff.utility.*;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.util.ArrayList;
 warning('on', 'MATLAB:Java:DuplicateClass');
 
 % Create a factory.
@@ -75,7 +69,7 @@ for iFile = 1:length(binfilename)
     end
 
     signalResource = mfffactory.openResourceAtURI(binfilename{iFile}, signalresourcetype);
-    jList = java.util.ArrayList;
+    jList = javaObject('java.util.ArrayList');
     if round(EEG.srate) ~= EEG.srate
         fprintf('Warning: sampling frequency need to be rounded from %1.2f to %1.0f\n', EEG.srate, round(EEG.srate));
     end
@@ -122,8 +116,9 @@ for iFile = 1:length(binfilename)
             newBlock.signalFrequency = int32(ones(nChans, 1)*round(EEG.srate)); % int32
 
             data = single(EEG.data(chanRange{iFile}, samples(iSample-1)+1:samples(iSample)))';
-            newBlock.data = typecast(data(:), 'int8'); % LITTLE ENDIAN HERE - BIG ENDIAN MIGHT BE A PROBLEM
-
+            if ~isempty(data)
+                newBlock.data = typecast(data(:), 'int8'); % LITTLE ENDIAN HERE - BIG ENDIAN MIGHT BE A PROBLEM
+            end
             jList.add(newBlock);
         end
         signalResource.setNumberOfBlocks(length(samples)-1);

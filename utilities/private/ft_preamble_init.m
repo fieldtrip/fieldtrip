@@ -7,7 +7,7 @@
 % Use as
 %   ft_preamble init
 %
-% See also FT_TRACKUSAGE
+% See also FT_PREAMBLE, FT_POSTAMBLE, FT_TRACKUSAGE
 
 % Copyright (C) 2011-2016, Robert Oostenveld, DCCN
 %
@@ -67,52 +67,59 @@ end
 
 % this script requires some options that can be user-specified, but otherwise are obtained from ft_default
 % merge the default options into the configuration, except the preamble field which is used for passing arguments
-cfg = mergeconfig(cfg, rmfield(ft_default, 'preamble'));
+cfg = mergeconfig(cfg, ft_default);
 
 % determine whether function execution should be aborted or continued
 if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
   assert(any(strcmp(fieldnames(cfg), 'outputfilepresent')), 'cfg.outputfilepresent is a required option, please see FT_DEFAULTS');
   % check whether the output file already exists
-  [p, f, x] = fileparts(cfg.outputfile);
-  if isempty(p)
-    % the relative path was speciield
-    outputfile = fullfile(pwd, cfg.outputfile);
+  if ischar(cfg.outputfile)
+    chiL7fee_outputfile = {cfg.outputfile};
   else
-    % the absolute path was specified
-    outputfile = cfg.outputfile;
+    chiL7fee_outputfile = cfg.outputfile;
   end
-  if ~exist(outputfile, 'file')
-    ft_abort = false;
-  else
-    % the output file exists, determine how to deal with it
-    switch cfg.outputfilepresent
-      case 'keep'
-        if ft_nargout>0
-          % continue executing the parent function
-          ft_warning('output file %s is already present, but you also requested an output argument: continuing function execution', cfg.outputfile);
+  for i=1:numel(chiL7fee_outputfile)
+    [p, f, x] = fileparts(chiL7fee_outputfile{i});
+    if isempty(p)
+      % the relative path was speciield
+      chiL7fee_outputfile{i} = fullfile(pwd, chiL7fee_outputfile{i});
+    else
+      % the absolute path was specified
+      chiL7fee_outputfile{i} = chiL7fee_outputfile{i};
+    end
+    if ~exist(chiL7fee_outputfile{i}, 'file')
+      ft_abort = false;
+    else
+      % the output file exists, determine how to deal with it
+      switch cfg.outputfilepresent
+        case 'keep'
+          if ft_nargout>0
+            % continue executing the parent function
+            ft_warning('output file %s is already present, but you also requested an output argument: continuing function execution', chiL7fee_outputfile{i});
+            ft_abort = false;
+          else
+            % stop executing the parent function
+            ft_warning('output file %s is already present: aborting function execution', chiL7fee_outputfile{i});
+            ft_abort = true;
+          end
+        case 'overwrite'
+          ft_warning('output file %s is already present: it will be overwritten', chiL7fee_outputfile{i});
           ft_abort = false;
-        else
-          % stop executing the parent function
-          ft_warning('output file %s is already present: aborting function execution', cfg.outputfile);
-          ft_abort = true;
-        end
-      case 'overwrite'
-        ft_warning('output file %s is already present: it will be overwritten', cfg.outputfile);
-        ft_abort = false;
-      case 'error'
-        ft_error('output file %s is already present', cfg.outputfile);
-      otherwise
-        ft_error('invalid option for cfg.outputfilepresent');
-    end % case
-  end
+        case 'error'
+          ft_error('output file %s is already present', chiL7fee_outputfile{i});
+        otherwise
+          ft_error('invalid option for cfg.outputfilepresent');
+      end % case
+    end
+  end % for each of the output files
 else
   % there is no reason to abort execution
   ft_abort = false;
-end % if outputfile
+end % if chiL7fee_outputfile{i}
 
 if false
   % this is currently generating too much data and therefore disabled
-  if isfield(ft_default, 'trackusage') && ~(isequal(ft_default.trackusage, false) || isequal(ft_default.trackusage, 'no') || isequal(ft_default.trackusage, 'off'))
+  if isfield(cfg, 'trackusage') && ~(isequal(cfg.trackusage, false) || isequal(cfg.trackusage, 'no') || isequal(cfg.trackusage, 'off'))
     % track the usage of the calling function
     stack = dbstack('-completenames');
     % stack(1) is this script

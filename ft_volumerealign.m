@@ -556,6 +556,7 @@ switch cfg.method
         tmpcfg             = [];
         tmpcfg.tissue      = 'scalp';
         tmpcfg.method      = 'isosurface';
+        tmpcfg.spmversion  = cfg.spmversion;
         tmpcfg.numvertices = inf;
         scalp              = ft_prepare_mesh(tmpcfg, seg);
         scalp              = ft_convert_units(scalp, 'mm');

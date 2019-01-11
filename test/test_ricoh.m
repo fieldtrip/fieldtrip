@@ -1,7 +1,7 @@
 function test_ricoh
 
+% MEM 6gb
 % WALLTIME 01:00:00
-% MEM 4gb
 
 % TEST hasricoh isricohmegfile read_ricoh_data read_ricoh_event read_ricoh_header ricoh2grad
 
@@ -25,7 +25,7 @@ if length(ft_channelselection('MEG', hdr.label))~=160
   error('did not select all MEG channels');
 end
 
-if length(ft_channelselection('EEG*', hdr.label))~=65
+if length(ft_channelselection('eeg', hdr.label))~=42
   error('did not select all EEG channels');
 end
 

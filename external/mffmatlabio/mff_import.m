@@ -63,16 +63,24 @@
 
 function [EEG, data, events, chanlocs, mff] = mff_import(mffFile)
 
-matVer = ver('MATLAB');
-if datenum(matVer.Date) < 735595 % Matlab 2014a
-    error('This version of Matlab is too old. Use version 2014a or later');
-end
+%matVer = ver('MATLAB');
+%if datenum(matVer.Date) < 735595 % Matlab 2014a
+%    error('This version of Matlab is too old. Use version 2014a or later');
+%end
 
 if nargin < 1 
     help mff_import;
     return;
 end
-    
+
+% add full path if possible
+mffPath = fileparts(mffFile);
+if isempty(mffPath)
+    mffFile = fullfile(pwd, mffFile);
+else
+    disp('Make sure you call this function with the full MFF ressource path name ******');
+end
+
 % import data
 [floatData, allDataSize, srate, nchans] = mff_importsignal(mffFile);
 
@@ -130,11 +138,6 @@ EEG.etc.subject    = subject;
 if iscell(EEG.ref)
     EEG.ref = sprintf('%s ', EEG.ref{:});
 end
-if exist('pop_chanedit', 'file')
-    EEG=pop_chanedit(EEG, 'forcelocs',[],'nosedir','+Y');
-else
-    EEG.chaninfo.nosedir = '+Y';
-end
 EEG.urchanlocs = EEG.chanlocs;
 pnschans                = mff_importpnsset(mffFile);
 if length(pnschans) ~= npns && ~(length(pnschans) == size(EEG.data,1) && isempty(EEG.chanlocs))
@@ -143,6 +146,7 @@ end
 if ~isempty(EEG.chanlocs)
     if exist('eeg_checkchanlocs.m', 'file')
         EEG = eeg_checkchanlocs(EEG); % put fiducials in chanfinfo
+        nChannels = length(EEG.chanlocs);
     end
 end
 if ~isempty(pnschans)
@@ -151,16 +155,21 @@ if ~isempty(pnschans)
         EEG.chanlocs = pnschans;
     else
         if isempty(EEG.chanlocs)
-            for iChan = 1:nChannels-npns
-                EEG.chanlocs(iChan).labels = [ 'E' num2str(iChan) ];
-                EEG.chanlocs(iChan).type   = 'EEG';
+            for iChan = 1:nChannels
+                EEG.chanlocs(end+1).labels = [ 'E' num2str(iChan) ];
+                EEG.chanlocs(end  ).type   = 'EEG';
             end
         end
         for iChan = 1:npns
-            EEG.chanlocs(nChannels-npns+iChan).labels = pnschans(iChan).labels;
-            EEG.chanlocs(nChannels-npns+iChan).type   = pnschans(iChan).type;
+            EEG.chanlocs(end+1).labels = pnschans(iChan).labels;
+            EEG.chanlocs(end  ).type   = pnschans(iChan).type;
         end
     end
+end
+if exist('pop_chanedit', 'file')
+    EEG=pop_chanedit(EEG, 'forcelocs',[],'nosedir','+Y');
+else
+    EEG.chaninfo.nosedir = '+Y';
 end
 
 EEG.etc.recordingtime = begtime;
@@ -173,10 +182,10 @@ end
 %mff_exportevents(EEG.event, 'test', EEG.etc.recordingtime, EEG.etc.timezone, EEG.srate);
 
 % import continuous or epoch data
-cont = mff_importepochs(mffFile);
+cont = mff_importepochs(mffFile, info.version);
 
 % import continuous or epoch data
-cat = mff_importcategories(mffFile);
+cat = mff_importcategories(mffFile, info.version);
 
 % calculate epoch length
 allEpochLen = [ [cont.endtime] - [cont.begintime] ];
@@ -289,10 +298,9 @@ else
             sampleCalculated = ((cont(iBound).begintime-discontinuities)/1000000)*EEG.srate;
             sampleBlock      = blockSamples(cont(iBound).firstblock); % this assumes block of size 1
             if abs(sampleCalculated-sampleBlock) > 1e-10
-                fprintf('Warning: segment discontinuity (%d samples missing - pause in the recording or bug?)\n', iBound, sampleCalculated-sampleBlock);
+                fprintf('Warning: segment discontinuity (%d samples missing - pause in the recording or bug?)\n', sampleCalculated-sampleBlock);
             end
-            EEG.event(end).latency  = cont(iBound).begintime/1000000*EEG.srate; % absolute time allow resorting events later
-            
+            EEG.event(end).latency  = (cont(iBound).begintime)/1000000*EEG.srate; % absolute time allow resorting events later
 %            EEG.event(end).latency  = sampleCalculated;
         end
     end

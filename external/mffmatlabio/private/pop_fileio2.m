@@ -43,11 +43,11 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-function [EEG, command] = pop_fileio(filename, varargin); 
+function [EEG, command] = pop_fileio(filename, varargin)
 EEG = [];
 command = '';
 
-if exist('plugin_askinstall.m') && ~plugin_askinstall('Fileio', 'ft_read_data'), return; end;
+if ~plugin_askinstall('Fileio', 'ft_read_data'), return; end
 
 alldata = [];
 event   = [];
@@ -59,13 +59,13 @@ if nargin < 1
     if strcmpi(ButtonName, 'file')
         [filename, filepath] = uigetfile('*.*', 'Choose a file or header file -- pop_fileio()'); 
         drawnow;
-        if filename(1) == 0 return; end;
+        if filename(1) == 0 return; end
         filename = fullfile(filepath, filename);
     else
         filename = uigetdir('*.*', 'Choose a folder -- pop_fileio()'); 
         drawnow;
-        if filename(1) == 0 return; end;
-    end;
+        if filename(1) == 0 return; end
+    end
     
     % open file to get infos
     % ----------------------
@@ -87,7 +87,7 @@ if nargin < 1
     valueFormat = 1;
     if strcmpi(filename(end-2:end), 'mff')
         valueFormat = 48;
-    end;
+    end
     uilist   = { { 'style' 'text' 'String' 'Channel list (defaut all):' } ...
                  { 'style' 'edit' 'string' '' } ...
                  { 'style' 'text' 'String' [ 'Data range (in sample points) (default all [1 ' int2str(dat.nSamples) '])' ] } ...
@@ -98,7 +98,7 @@ if nargin < 1
         uilist{end+1} = { 'style' 'text' 'String' [ 'Trial range (default all [1 ' int2str(dat.nTrials) '])' ] };
         uilist{end+1} = { 'style' 'edit' 'string' '' };
         geom = { geom{:} [3 1.5] };
-    end;
+    end
     uilist   = { uilist{:} ...
                  { 'style' 'text' 'String' 'Data format' } ...
                  { 'style' 'popupmenu' 'string' formats 'value' valueFormat 'listboxtop' valueFormat } ...
@@ -106,17 +106,17 @@ if nargin < 1
     geom = { geom{:}  [3 1.5] [1] };
     
     result = inputgui( geom, uilist, 'pophelp(''pop_fileio'')', 'Load data using FILE-IO -- pop_fileio()');
-    if length(result) == 0 return; end;
+    if length(result) == 0 return; end
     if dat.nTrials <= 1
         result = { result{1:2} [] result{3:end} };
     end
     options = {};
-    if length(result) == 3, result = { result{1:2} '' result{3}}; end;
-    if ~isempty(result{1}), options = { options{:} 'channels' eval( [ '[' result{1} ']' ] ) }; end;
-    if ~isempty(result{2}), options = { options{:} 'samples'  eval( [ '[' result{2} ']' ] ) }; end;
-    if ~isempty(result{3}), options = { options{:} 'trials'   eval( [ '[' result{3} ']' ] ) }; end;
-    if ~isempty(result{4}), options = { options{:} 'dataformat' formats{result{4}} }; end;
-    if result{5}, options = { options{:} 'memorymapped' fastif(result{5}, 'on', 'off') }; end;
+    if length(result) == 3, result = { result{1:2} '' result{3}}; end
+    if ~isempty(result{1}), options = { options{:} 'channels' eval( [ '[' result{1} ']' ] ) }; end
+    if ~isempty(result{2}), options = { options{:} 'samples'  eval( [ '[' result{2} ']' ] ) }; end
+    if ~isempty(result{3}), options = { options{:} 'trials'   eval( [ '[' result{3} ']' ] ) }; end
+    if ~isempty(result{4}), options = { options{:} 'dataformat' formats{result{4}} }; end
+    if result{5}, options = { options{:} 'memorymapped' fastif(result{5}, 'on', 'off') }; end
 else
     if ~isstruct(filename)
         dat = ft_read_header(filename);
@@ -161,11 +161,11 @@ if strcmpi(filext,'.fif')
         end  
     end
 end
-if ~isempty(g.samples ), dataopts = { dataopts{:} 'begsample', g.samples(1), 'endsample', g.samples(2)}; end;
-if ~isempty(g.trials  ), dataopts = { dataopts{:} 'begtrial', g.trials(1), 'endtrial', g.trials(2)}; end;
-if ~strcmpi(g.dataformat, 'auto'), dataopts = { dataopts{:} 'dataformat' g.dataformat }; end;
+if ~isempty(g.samples ), dataopts = { dataopts{:} 'begsample', g.samples(1), 'endsample', g.samples(2)}; end
+if ~isempty(g.trials  ), dataopts = { dataopts{:} 'begtrial', g.trials(1), 'endtrial', g.trials(2)}; end
+if ~strcmpi(g.dataformat, 'auto'), dataopts = { dataopts{:} 'dataformat' g.dataformat }; end
 if strcmpi(g.memorymapped, 'off') || ~isempty(alldata)
-    if ~isempty(g.channels), dataopts = { dataopts{:} 'chanindx', g.channels }; end;
+    if ~isempty(g.channels), dataopts = { dataopts{:} 'chanindx', g.channels }; end
     if isempty(alldata)
         alldata = ft_read_data(filename, 'header', dat, dataopts{:});
     end
@@ -173,15 +173,15 @@ else
     % read memory mapped file
     g.datadims = [ dat.nChans dat.nSamples dat.nTrials ];
     disp('Importing as memory mapped array, this may take a while...');
-    if isempty(g.channels), g.channels = [1:g.datadims(1)]; end;
-    if ~isempty(g.samples ), g.datadims(2) = g.samples(2) - g.samples(1); end;
-    if ~isempty(g.trials  ), g.datadims(3) = g.trials(2)  - g.trials(1); end;
+    if isempty(g.channels), g.channels = [1:g.datadims(1)]; end
+    if ~isempty(g.samples ), g.datadims(2) = g.samples(2) - g.samples(1); end
+    if ~isempty(g.trials  ), g.datadims(3) = g.trials(2)  - g.trials(1); end
     g.datadims(1) = length(g.channels);
     alldata = mmo([], g.datadims);
     for ic = 1:length(g.channels)
         alldata(ic,:,:) = ft_read_data(filename, 'header', dat, dataopts{:}, 'chanindx', g.channels(ic));
-    end;
-end;
+    end
+end
 
 % convert to seconds for sread
 % ----------------------------
@@ -201,10 +201,14 @@ if isfield(dat, 'label') && ~isempty(dat.label)
     %If more formats, add them below
     try
         if isfield(dat,'elec')
-            eegchanindx = find(ft_chantype(dat, 'eeg'));
+            eegchanindx = find(ft_chantype(dat, 'eeg') | ft_chantype(dat, 'pns') );
             if ~isempty(eegchanindx)
                 for ichan = 1:length(eegchanindx)
-                    EEG = pop_chanedit(EEG,'changefield',{eegchanindx(ichan) 'X' dat.elec.chanpos(ichan,1) 'Y' dat.elec.chanpos(ichan,2) 'Z' dat.elec.chanpos(ichan,3) 'type' 'EEG'});
+                    chanType = 'EEG';
+                    if isfield(dat, 'chantype') && ~isempty(dat.chantype)
+                        chanType = dat.chantype{ichan};
+                    end
+                    EEG = pop_chanedit(EEG,'changefield',{eegchanindx(ichan) 'X' dat.elec.chanpos(ichan,1) 'Y' dat.elec.chanpos(ichan,2) 'Z' dat.elec.chanpos(ichan,3) 'type' chanType});
                 end
                 EEG.chanlocs   = convertlocs(EEG.chanlocs,'cart2all');
                 EEG.urchanlocs = EEG.chanlocs;
@@ -232,7 +236,7 @@ end
 if ~isempty(event)
     subsample = 0;
     
-    if ~isempty(g.samples), subsample = g.samples(1); end;
+    if ~isempty(g.samples), subsample = g.samples(1); end
     
     EEG.event = event;
     for index = 1:length(event)
@@ -243,8 +247,8 @@ if ~isempty(event)
         EEG.event(index).duration = event(index).duration;
         if EEG.trials > 1
             EEG.event(index).epoch = ceil(EEG.event(index).latency/EEG.pnts);        
-        end;
-    end;
+        end
+    end
     EEG.event = rmfield(EEG.event, 'sample');
     EEG.event = rmfield(EEG.event, 'value');
     EEG.event = rmfield(EEG.event, 'offset');

@@ -1,7 +1,7 @@
 function [cfg] = ft_spikesplitting(cfg)
 
 % FT_SPIKESPLITTING reads a single Neuralynx DMA log file and writes each
-% individual channel to a seperate file.
+% individual channel to a separate file.
 %
 % Use as
 %   [cfg] = ft_spikesplitting(cfg)
@@ -140,7 +140,7 @@ s = s - 60*m - 60*60*h;
 fprintf('duration of selection %02dh:%02dm:%02ds\n', h, m, s);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% split the DMA file into seperate channels
+% split the DMA file into separate channels
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~ft_filetype(cfg.dataset, 'neuralynx_dma')
   error('unsupported data format for DMA splitting');

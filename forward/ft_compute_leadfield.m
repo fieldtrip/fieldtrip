@@ -427,6 +427,7 @@ elseif iseeg
         % load here so any post-processing options (e.g. normalization) may
         % be applied
         lf = ft_getopt(varargin, 'lf');
+
     case 'metufem'
       p3 = zeros(Ndipoles * 3, 6);
       for i = 1:Ndipoles
@@ -524,7 +525,7 @@ if reducerank<size(lf,2)
       lf(:, (3*ii-2):(3*ii)) = u * s * v';
     else
       % if not backprojected, the new leadfield has a different dimension
-      if ii==1,
+      if ii==1
         newlf    = zeros(size(lf,1), Ndipoles*reducerank);
         origrank = size(lf,2)./Ndipoles;
       end
@@ -532,7 +533,7 @@ if reducerank<size(lf,2)
     end
   end
   
-  if ~istrue(backproject),
+  if ~istrue(backproject)
     lf = newlf;
   end
   clear newlf;

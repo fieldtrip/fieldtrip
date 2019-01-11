@@ -255,11 +255,11 @@ for trlop = 1:numtrl
       for i=1:numel(begsample)
         seg = dat(begsample(i):endsample(i)); % get the segment of data
         if all(seg>=artfctdef.max) || strcmp(direction, 'up')
-          [~, indx] = max(seg);
-          offset(i) = 1 - indx; % relative to the start of the segment, 0 is the first sample, -1 is the 2nd, etc.
+          [dum, indx] = max(seg);
+          offset(i)   = 1 - indx; % relative to the start of the segment, 0 is the first sample, -1 is the 2nd, etc.
         elseif all(seg<=artfctdef.min) || strcmp(direction, 'down')
-          [~, indx] = min(seg);
-          offset(i) = 1 - indx; % relative to the start of the segment, 0 is the first sample, -1 is the 2nd, etc.
+          [dum, indx] = min(seg);
+          offset(i)   = 1 - indx; % relative to the start of the segment, 0 is the first sample, -1 is the 2nd, etc.
         end % if up or down
       end % for each artifact in this trial
     end % if single channel

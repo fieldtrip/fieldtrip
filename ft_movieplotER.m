@@ -15,7 +15,7 @@ function [cfg] = ft_movieplotER(cfg, data)
 %   cfg.framespersec = number, frames per second (default = 5)
 %   cfg.framesfile   = [], no file saved, or 'string', filename of saved frames.mat (default = []);
 %   cfg.layout       = specification of the layout, see below
-%   cfg.baseline     = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
+%   cfg.baseline     = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE
 %   cfg.baselinetype = 'absolute' or 'relative' (default = 'absolute')
 %   cfg.colorbar     = 'yes', 'no' (default = 'no')
 %
@@ -68,7 +68,7 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
+ft_preamble provenance data
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -88,13 +88,12 @@ if ~strcmp(cfg.baseline, 'no')
   tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'parameter', 'showcallinfo'});
   data = ft_timelockbaseline(tmpcfg, data);
   [cfg, data] = rollback_provenance(cfg, data);
-  % prevent the baseline correction from happening in ft_movieplotTFR
-  cfg = removefields(cfg, {'baseline', 'baselinetype'});
 end
 
-cfg = ft_movieplotTFR(cfg, data);
+% prevent the baseline correction from happening in ft_movieplotTFR
+tmpcfg = removefields(cfg, {'baseline', 'baselinetype'});
+tmpcfg = ft_movieplotTFR(tmpcfg, data);
 
 % do the general cleanup and bookkeeping at the end of the function
-% this will replace the ft_movieplotTFR callinfo with that of ft_movieplotER
 ft_postamble provenance
 ft_postamble previous data

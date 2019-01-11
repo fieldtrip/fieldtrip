@@ -5,7 +5,7 @@ function data = append_common(cfg, varargin)
 % The general bookkeeping and the correct specification of the cfg
 % should be taken care of by the calling function.
 %
-% See FT_APPENDDATA, T_APPENDTIMELOCK, FT_APPENDFREQ
+% See FT_APPENDDATA, FT_APPENDTIMELOCK, FT_APPENDFREQ
 
 % Copyright (C) 2017, Robert Oostenveld
 %

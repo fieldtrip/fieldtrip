@@ -18,7 +18,6 @@ data.cfg = 'this is the cfg';
 cfg = [];
 cfg.trl = [10 20 0];
 data2 = ft_redefinetrial(cfg, data);
-isfield(data2, 'cfg')
 
 cfg = [];
 cfg.begsample = 10;
