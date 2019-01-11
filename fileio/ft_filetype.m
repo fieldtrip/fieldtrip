@@ -1083,7 +1083,10 @@ elseif filetype_check_extension(filename, '.oxy3')
   type = 'artinis_oxy3';
   manufacturer = 'Artinis Medical Systems';
   content = '(f)NIRS data';
-  
+elseif filetype_check_extension(filename, '.oxyproj')
+  type = 'artinis_oxyproj';
+  manufacturer = 'Artinis Medical Systems';
+  content = '(f)NIRS project file';  
 elseif isequal([f x], 'optodetemplates.xml')
   type = 'artinis_xml';
   manufacturer = 'Artinis Medical Systems';
