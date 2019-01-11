@@ -7,9 +7,10 @@ function data_rcs = ft_nirs_referencechannelsubtraction(cfg, datain)
 % where indata is nirs data and cfg is a configuration structure that should contain
 %
 %  cfg.shortdistance = scalar, below which distance a channel is regarded
-%                      as short in cm (default = 3)
+%                      as short in cm (default = 1.5)
 %  cfg.closedistance = scalar, defines the maximal distance between a
-%                      shallow and a short channel in cm (default = 15)
+%                      shallow and a short channel in cm (default = 15).
+%                      NOT APPLIED CURRENTLY!
 %  cfg.method        = string, 'regstat2', 'QR' or 'OLS' (default = 'QR')
 %  cfg.verbose       = boolean, whether text output is desired (default =
 %                      false)
@@ -105,7 +106,7 @@ end
 datain = ft_checkdata(datain, 'datatype', 'raw', 'senstype', 'nirs');
 
 % get the options
-cfg.shortdistance = ft_getopt(cfg, 'shortdistance', 3);
+cfg.shortdistance = ft_getopt(cfg, 'shortdistance', 1.5);
 cfg.closedistance = ft_getopt(cfg, 'closedistance', 15);
 cfg.method        = ft_getopt(cfg, 'method', 'QR');
 cfg.verbose       = ft_getopt(cfg, 'verbose', false);
