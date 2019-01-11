@@ -132,6 +132,7 @@ fontsize        = ft_getopt(varargin, 'fontsize',   get(0, 'defaulttextfontsize'
 fontname        = ft_getopt(varargin, 'fontname',   get(0, 'defaulttextfontname'));
 fontweight      = ft_getopt(varargin, 'fontweight', get(0, 'defaulttextfontweight'));
 fontunits       = ft_getopt(varargin, 'fontunits',  get(0, 'defaulttextfontunits'));
+facealpha       = ft_getopt(varargin, 'facealpha', 1);
 
 % if any(size(vdat)==1)
 %   % ensure that it is a column vector
@@ -285,7 +286,7 @@ switch highlightstyle
     for i=1:length(begsample)
       begx = hdat(begsample(i));
       endx = hdat(endsample(i));
-      ft_plot_box([begx endx vpos-height/2 vpos+height/2], 'facecolor', [.6 .6 .6], 'edgecolor', 'none', 'parent', parent);
+      ft_plot_box([begx endx vpos-height/2 vpos+height/2], 'facecolor', [.6 .6 .6], 'edgecolor', 'none', 'parent', parent, 'facealpha', facealpha);
     end
     
   case 'thickness'
