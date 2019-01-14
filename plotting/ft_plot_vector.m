@@ -290,7 +290,7 @@ switch highlightstyle
     for i=1:length(begsample)
       begx = hdat(begsample(i));
       endx = hdat(endsample(i));
-      ft_plot_box([begx endx vpos-height/2 vpos+height/2], 'facecolor', facecolor, , 'facealpha', facealpha, 'edgecolor', 'none', 'parent', parent);
+      ft_plot_box([begx endx vpos-height/2 vpos+height/2], 'facecolor', facecolor, 'facealpha', facealpha, 'edgecolor', 'none', 'parent', parent);
     end
     
   case 'thickness'
