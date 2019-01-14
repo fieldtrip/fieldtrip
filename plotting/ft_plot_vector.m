@@ -13,13 +13,14 @@ function [varargout] = ft_plot_vector(varargin)
 %   'highlight'       = a logical vector of size Y, where 1 means that the corresponding values in Y are highlighted (according to the highlightstyle)
 %   'highlightstyle'  = can be 'box', 'thickness', 'saturation', 'difference' (default='box')
 %   'color'           = see MATLAB standard line properties and see below
+%   'facecolor'       = color for the highlighted box (default = [0.6 0.6 0.6])
+%   'facealpha'       = transparency for the highlighted box, between 0 and 1 (default = 1)
 %   'linewidth'       = see MATLAB standard line properties
 %   'markersize'      = see MATLAB standard line properties
 %   'markerfacecolor' = see MATLAB standard line properties
 %   'style'           = see MATLAB standard line properties
 %   'tag'             = string, the name assigned to the object. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
 %   'box'             = draw a box around the local axes, can be 'yes' or 'no'
-%   'facealpha'       = transparency value between 0 and 1
 %
 % The line color can be specified in a variety of ways
 %   - as a string with one character per line that you want to plot. Supported colors are teh same as in PLOT, i.e. 'bgrcmykw'.
@@ -133,6 +134,8 @@ fontsize        = ft_getopt(varargin, 'fontsize',   get(0, 'defaulttextfontsize'
 fontname        = ft_getopt(varargin, 'fontname',   get(0, 'defaulttextfontname'));
 fontweight      = ft_getopt(varargin, 'fontweight', get(0, 'defaulttextfontweight'));
 fontunits       = ft_getopt(varargin, 'fontunits',  get(0, 'defaulttextfontunits'));
+% FIXME these are now only used for the highlighted box, but shoudl also be used for the difference 
+facecolor       = ft_getopt(varargin, 'facecolor', [0.6 0.6 0.6]);
 facealpha       = ft_getopt(varargin, 'facealpha', 1);
 
 % if any(size(vdat)==1)
@@ -287,7 +290,7 @@ switch highlightstyle
     for i=1:length(begsample)
       begx = hdat(begsample(i));
       endx = hdat(endsample(i));
-      ft_plot_box([begx endx vpos-height/2 vpos+height/2], 'facecolor', [.6 .6 .6], 'edgecolor', 'none', 'parent', parent, 'facealpha', facealpha);
+      ft_plot_box([begx endx vpos-height/2 vpos+height/2], 'facecolor', facecolor, , 'facealpha', facealpha, 'edgecolor', 'none', 'parent', parent);
     end
     
   case 'thickness'
@@ -362,7 +365,7 @@ switch highlightstyle
     for i=1:length(begsample)
       X = [hdatbeg(1,begsample(i)) hdat(1,begsample(i):endsample(i)) hdatend(1,endsample(i)) hdatend(1,endsample(i)) hdat(1,endsample(i):-1:begsample(i)) hdatbeg(1,begsample(i))];
       Y = [vdatbeg(1,begsample(i)) vdat(1,begsample(i):endsample(i)) vdatend(1,endsample(i)) vdatend(2,endsample(i)) vdat(2,endsample(i):-1:begsample(i)) vdatbeg(2,begsample(i))];
-      h = patch(X, Y, [.6 .6 .6]);
+      h = patch(X, Y, [.6 .6 .6]); % FIXME this should also use ... 'facecolor', facecolor, , 'facealpha', facealpha
       set(h, 'linestyle', 'no');
       if ~isempty(parent)
         set(h, 'Parent', parent);
