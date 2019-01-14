@@ -439,7 +439,7 @@ mask = squeeze(mean(maskmatrix, 1)); % over channels
 for i=1:Ndata
 ft_plot_vector(xval, yval(i,:), 'style', cfg.linestyle{i}, 'color', graphcolor(i), ...
   'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, ...
-  'hlim', [xmin xmax], 'vlim', [ymin ymax],'facealpha', cfg.maskfacealpha);
+  'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
 end
 colorLabels = [];
 if Ndata > 1
