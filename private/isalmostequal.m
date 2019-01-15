@@ -27,7 +27,7 @@ if nargin==3
   % for backward compatibility
   depth = varargin{1};
 else
-  depth = ft_getopt(varargin, 'depth')
+  depth = ft_getopt(varargin, 'depth');
   if isempty(depth)
     % set the default
     depth = inf;

@@ -33,7 +33,7 @@ function [sts] = ft_spiketriggeredspectrum_convol(cfg, data, spike)
 %                           multi-tapering. Note that 4 Hz smoothing means
 %                           plus-minus 4 Hz, i.e. a 8 Hz smoothing box.
 %     cfg.foi             = vector 1 x numfoi, frequencies of interest
-%     cfg.taper           = 'dpss', 'hanning' or many others, see WINDOW (default = 'dpss')
+%     cfg.taper           = 'dpss', 'hanning' or many others, see WINDOW (default = 'hanning')
 %     cfg.t_ftimwin       = vector 1 x numfoi, length of time window (in
 %     seconds)
 %     cfg.taperopt        =  parameter that goes in WINDOW function (only

@@ -380,7 +380,7 @@ cfg.spmparams = params;
 cfg.final     = final;
 
 % restore the previous warning state
-warning(ws);
+ft_warning(ws);
 
 ft_postamble previous   mri
 ft_postamble provenance normalised

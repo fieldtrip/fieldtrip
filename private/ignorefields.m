@@ -18,6 +18,11 @@ switch purpose
       'fsample'
       'trialinfo'  % this is dealt with explicitly
       'sampleinfo' % this is dealt with explicitly
+      'topo'
+      'topolabel'
+      'topodimord'
+      'unmixing'
+      'unmixingdimord'
       };
     
   case 'appendfreq'
@@ -64,22 +69,24 @@ switch purpose
   case 'allowed'
     ignore = {
       % some fields that are always allowed to be present in the configuration
-      'trackconfig'
-      'checkconfig'
-      'checksize'
-      'trackusage'
-      'trackdatainfo'
-      'trackcallinfo'
-      'showcallinfo'
       'callinfo'
-      'version'
-      'warning'
-      'notification'
+      'checkconfig'
+      'checkpath'
+      'checksize'
       'debug'
+      'notification'
+      'outputfilepresent'
       'previous'
       'progress'
-      'outputfilepresent'
+      'showcallinfo'
+      'spmversion'
       'toolbox'
+      'trackcallinfo'
+      'trackconfig'
+      'trackdatainfo'
+      'trackusage'
+      'version'
+      'warning'
       };
     
   case {'rollback'}

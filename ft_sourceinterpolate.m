@@ -287,7 +287,7 @@ if isUnstructuredFun && isUnstructuredAna && isfield(anatomical, 'orig') && isfi
 
 elseif isUnstructuredFun && isUnstructuredAna
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % functional data defined on a point cloud/mesh, anatomy on a volume
+  % functional data defined on a point cloud/mesh, anatomy on a point cloud/mesh
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   % set default interpmethod for this situation
@@ -342,9 +342,9 @@ elseif isUnstructuredFun && isUnstructuredAna
 
 elseif isUnstructuredFun && ~isUnstructuredAna
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % functional data defined on a point cloud/mesh, anatomy on a point cloud/mesh
+  % functional data defined on a point cloud/mesh, anatomy on a volume
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+  
   % set default interpmethod for this situation
   cfg.interpmethod = ft_getopt(cfg, 'interpmethod', 'nearest');
   cfg.sphereradius = ft_getopt(cfg, 'sphereradius', 0.5);

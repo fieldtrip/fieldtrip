@@ -126,38 +126,85 @@ hdr.resolution = hdr.resolution(:);
 hdr.impedances.channels=[];
 hdr.impedances.reference=[];
 hdr.impedances.ground=NaN;
-if ~isempty(hdr.NumberOfChannels)
-    chanCounter=0;
-    refCounter=0;
-    impCounter=0;
-    while chanCounter<hdr.NumberOfChannels
-        impCounter=impCounter+1;
-        chan_str  = sprintf('%d', impCounter);
-        chan_info = read_asa(filename, chan_str, '%s');
-        if isempty(chan_info)
-            chanCounter=chanCounter+1;
-        else
-            [chanName,impedances] = strtok(chan_info,':');
-            if strfind(chanName,'REF_')==1
-                refCounter=refCounter+1;
-                if ~isempty(impedances)
-                    hdr.impedances.reference(refCounter) = str2double(impedances(2:end));
-                else
-                    hdr.impedances.reference(refCounter) = NaN;
-                end
-            else
-                chanCounter=chanCounter+1;
-                if ~isempty(impedances)
-                    hdr.impedances.channels(chanCounter,1) = str2double(impedances(2:end));
-                else
-                    hdr.impedances.channels(chanCounter,1) = NaN;
-                end
+hdr.impedances.refChan=[];
+
+fid = fopen(filename, 'rt');
+if fid~=-1
+    while ~feof(fid)
+        tline = fgetl(fid);
+        if (length(tline) >= 9) && strcmp(tline(1:9),'Impedance')
+            chanCounter=0;
+            refCounter=0;
+            impCounter=0;
+            while chanCounter<hdr.NumberOfChannels && ~feof(fid)
+                chan_info = fgetl(fid);
+                if ~isempty(chan_info)
+                    impCounter=impCounter+1;
+                    [chanName,impedances] = strtok(chan_info,':');
+                    spaceList=strfind(chanName,' ');
+                    if ~isempty(spaceList)
+                        chanName=chanName(spaceList(end)+1:end);
+                    end;
+                    if strfind(chanName,'REF_')==1 %for situation where there is more than one reference
+                        refCounter=refCounter+1;
+                        hdr.impedances.refChan(refCounter)=impCounter;
+                        if ~isempty(impedances)
+                            hdr.impedances.reference(refCounter) = str2double(impedances(2:end));
+                        else
+                            hdr.impedances.reference(refCounter) = NaN;
+                        end
+                    elseif strcmpi(chanName,'ref') %single reference
+                        refCounter=refCounter+1;
+                        hdr.impedances.refChan(refCounter)=impCounter;
+                        if ~isempty(impedances)
+                            hdr.impedances.reference(refCounter) = str2double(impedances(2:end));
+                        else
+                            hdr.impedances.reference(refCounter) = NaN;
+                        end
+                    else
+                        chanCounter=chanCounter+1;
+                        if ~isempty(impedances)
+                            hdr.impedances.channels(chanCounter,1) = str2double(impedances(2:end));
+                        else
+                            hdr.impedances.channels(chanCounter,1) = NaN;
+                        end
+                    end;
+                end;
+            end
+            if ~feof(fid)
+                tline='';
+                while ~feof(fid) && isempty(tline)
+                    tline = fgetl(fid);
+                end;
+                if ~isempty(tline)
+                    if strcmp(tline(1:4),'Ref:')
+                        refCounter=refCounter+1;
+                        [chanName,impedances] = strtok(tline,':');
+                        if ~isempty(impedances)
+                            hdr.impedances.reference(refCounter) = str2double(impedances(2:end));
+                        else
+                            hdr.impedances.reference(refCounter) = NaN;
+                        end
+                    end
+                    if strcmpi(tline(1:4),'gnd:')
+                        [chanName,impedances] = strtok(tline,':');
+                        hdr.impedances.ground = str2double(impedances(2:end));
+                    end
+                end;
+            end;
+            if ~feof(fid)
+                tline='';
+                while ~feof(fid) && isempty(tline)
+                    tline = fgetl(fid);
+                end;
+                if ~isempty(tline)
+                    if strcmpi(tline(1:4),'gnd:')
+                        [chanName,impedances] = strtok(tline,':');
+                        hdr.impedances.ground = str2double(impedances(2:end));
+                    end
+                end;
             end;
         end;
-    end
-    impedances = read_asa(filename, 'GND:', '%s');
-    if ~isempty(impedances)
-        hdr.impedances.ground = str2double(impedances);
-    end
-end
-
+    end;
+    fclose(fid);
+end;

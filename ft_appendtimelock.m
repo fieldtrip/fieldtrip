@@ -1,7 +1,7 @@
 function [timelock] = ft_appendtimelock(cfg, varargin)
 
 % FT_APPENDTIMELOCK concatenates multiple timelock (ERP/ERF) data structures that
-% have been processed seperately. If the input data structures contain different
+% have been processed separately. If the input data structures contain different
 % channels, it will be concatenated along the channel direction. If the channels are
 % identical in the input data structures, the data will be concatenated along the
 % repetition dimension.

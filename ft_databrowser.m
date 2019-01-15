@@ -210,6 +210,7 @@ cfg.linewidth       = ft_getopt(cfg, 'linewidth', 0.5);
 cfg.verticalpadding = ft_getopt(cfg, 'verticalpadding', 'auto');
 cfg.artifactalpha   = ft_getopt(cfg, 'artifactalpha', 0.2);          % for the opacity of marked artifacts
 cfg.allowoverlap    = ft_getopt(cfg, 'allowoverlap', 'no');          % for ft_fetch_data
+cfg.contournum      = ft_getopt(cfg, 'contournum', 0);               % topoplot contour lines
 
 if ~isfield(cfg, 'viewmode')
   % butterfly, vertical, component
@@ -1473,12 +1474,12 @@ switch key
     response = inputdlg('vertical scale, [ymin ymax], ''maxabs'' or ''maxmin''', 'specify', 1, {['[ ' num2str(cfg.ylim) ' ]']});
     if ~isempty(response)
       if strcmp(response, 'maxmin')
-        minval = min(dat(:));
-        maxval = max(dat(:));
+        minval = min(opt.curdata.trial{1}(:));
+        maxval = max(opt.curdata.trial{1}(:));
         cfg.ylim = [minval maxval];
       elseif strcmp(response, 'maxabs')
-        minval = min(dat(:));
-        maxval = max(dat(:));
+        minval = min(opt.curdata.trial{1}(:));
+        maxval = max(opt.curdata.trial{1}(:));
         cfg.ylim = [-max(abs([minval maxval])) max(abs([minval maxval]))];
       else
         % convert to string and add brackets, just to ensure that str2num will work
@@ -2086,7 +2087,7 @@ if strcmp(cfg.viewmode, 'component')
       % laychan is the actual topo layout, in pixel units for .mat files
       % laytopo is a vertical layout determining where to plot each topo, with one entry per component
       
-      ft_plot_topo(chanx, chany, chanz, 'mask', laychan.mask, 'interplim', 'mask', 'outline', laychan.outline, 'tag', 'topography', 'hpos', laytopo.pos(laysel,1)-laytopo.width(laysel)/2, 'vpos', laytopo.pos(laysel,2)-laytopo.height(laysel)/2, 'width', laytopo.width(laysel), 'height', laytopo.height(laysel), 'gridscale', 45);
+      ft_plot_topo(chanx, chany, chanz, 'mask', laychan.mask, 'interplim', 'mask', 'outline', laychan.outline, 'tag', 'topography', 'hpos', laytopo.pos(laysel,1)-laytopo.width(laysel)/2, 'vpos', laytopo.pos(laysel,2)-laytopo.height(laysel)/2, 'width', laytopo.width(laysel), 'height', laytopo.height(laysel), 'gridscale', 45, 'isolines', cfg.contournum);
       
       %axis equal
       %drawnow

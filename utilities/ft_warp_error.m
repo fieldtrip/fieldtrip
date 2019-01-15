@@ -53,7 +53,7 @@ end
 
 if isstruct(target)
   % project points onto target surface and compute distance between points and surface
-  % this is done here in one step, but can also be done in seperate steps (see example code below)
+  % this is done here in one step, but can also be done in separate steps (see example code below)
   el = project_elec(input, target.pos, target.tri);
   dist = mean(el(:,4));
   % the following example code is more elaborate, and can be used for detailled testing

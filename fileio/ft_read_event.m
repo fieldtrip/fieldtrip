@@ -849,7 +849,7 @@ switch eventformat
     end
     
     % get event info from xml files
-    ws = warning('off', 'MATLAB:REGEXP:deprecated') % due to some small code xml2struct
+    ws = ft_warning('off', 'MATLAB:REGEXP:deprecated'); % due to some small code xml2struct
     xmlfiles = dir( fullfile(filename, '*.xml'));
     disp('reading xml files to obtain event info... This might take a while if many events/triggers are present')
     if isempty(xmlfiles)
@@ -864,7 +864,7 @@ switch eventformat
         xml.(fieldname) = xml2struct(filename_xml);
       end
     end
-    warning(ws); % revert the warning state
+    ft_warning(ws); % revert the warning state
     
     % construct info needed for FieldTrip Event
     eventNames = fieldnames(xml);
@@ -975,8 +975,36 @@ switch eventformat
     end
     
   case 'egi_mff_v2'
-    % ensure that the EGI toolbox is on the path
-    ft_hastoolbox('egi_mff', 1);
+    % ensure that the EGI_MFF_V2 toolbox is on the path
+    ft_hastoolbox('egi_mff_v2', 1);
+
+    %%%%%%%%%%%%%%%%%%%%%%
+    %workaround for MATLAB bug resulting in global variables being cleared
+    globalTemp=cell(0);
+    globalList=whos('global');
+    varList=whos;
+    for i=1:length(globalList)
+      eval(['global ' globalList(i).name ';']);
+      eval(['globalTemp{end+1}=' globalList(i).name ';']);
+    end
+    %%%%%%%%%%%%%%%%%%%%%%
+    
+    % ensure that the JVM is running and the jar file is on the path
+    mff_setup;
+    
+    %%%%%%%%%%%%%%%%%%%%%%
+    %workaround for MATLAB bug resulting in global variables being cleared
+    varNames={varList.name};
+    for i=1:length(globalList)
+      eval(['global ' globalList(i).name ';']);
+      eval([globalList(i).name '=globalTemp{i};']);
+      if ~any(strcmp(globalList(i).name,varNames)) %was global variable originally out of scope?
+        eval(['clear ' globalList(i).name ';']); %clears link to global variable without affecting it
+      end
+    end
+    clear globalTemp globalList varNames varList;
+    %%%%%%%%%%%%%%%%%%%%%%
+
     if isunix && filename(1)~=filesep
       % add the full path to the dataset directory
       filename = fullfile(pwd, filename);
@@ -984,6 +1012,7 @@ switch eventformat
       % add the full path, including drive letter
       filename = fullfile(pwd, filename);
     end
+
     % pass the header along to speed it up, it will be read on the fly in case it is empty
     event = read_mff_event(filename, hdr);
     % clean up the fields in the event structure
@@ -1877,41 +1906,35 @@ switch eventformat
     event = read_nexstim_event(filename);
     
   case 'nihonkohden_m00'
-    % in the data I tested the triggers are marked as DC offsets (deactivation of the DC channel)
-    begsample = 1;
+    % FIXME why is the flank detection not done using the generic read_trigger function?
+
+    event = [];
     if isempty(hdr)
-      hdr = read_nihonkohden_hdr(filename);
+      hdr = ft_read_header(filename);
     end
     
-    if isfield(hdr, 'dat')
-      % this is inefficient, since it keeps the complete data in memory
-      % but it does speed up subsequent read operations without the user
-      % having to care about it
-      dat = hdr.dat;
-    else
-      dat = read_nihonkohden_m00(filename, begsample, hdr.nSamples);
-    end
-    
-    % read the trigger channel and do flank detection
-    event_chan = {'DC09','DC10','DC11','DC12'};
-    
+    % in the data I tested the triggers are marked as DC offsets (deactivation of the DC channel)
+    event_chan = {'DC09', 'DC10', 'DC11', 'DC12'};
     trgindx = match_str(hdr.label, event_chan);
-    trig = dat(trgindx,:);
-    clear dat;
-    begsample = 1;
+
+    if isempty(trgindx)
+      return
+    end
+    
+    % read the trigger channels
+    trig = ft_read_data(filename, 'header', hdr, 'chanindx', trgindx);
     
     % marking offset trigger latencies
-    %     onlat  = (diff([trig(:,1) trig],1,2)>0);
+    % onlat = (diff([trig(:,1) trig],1,2)>0);
     offlat = (diff([trig trig(:,1)],1,2)<0);
     
-    %     onset  = find(sum(double(onlat), 1)>0);
+    % onset = find(sum(double(onlat), 1)>0);
     offset = find(sum(double(offlat),1)>0);
     
-    event = [];
-    for j=1:size(offset,2);
+    for j=1:size(offset,2)
       value = bin2dec(num2str(flipud(offlat(:,offset(j)))')); % flipup is needed to code bin2dec properly: DC09 = +1, DC10 = +2, DC11 = +4, DC12 = +8
       event(end+1).type   = 'down_flank';                     % distinguish between up and down flank
-      event(end  ).sample = offset(j) + begsample - 1;        % assign the sample at which the trigger has gone down
+      event(end  ).sample = offset(j);                        % assign the sample at which the trigger has gone down
       event(end  ).value  = value;                            % assign the trigger value just _before_ going down
     end
     
@@ -2153,6 +2176,7 @@ switch eventformat
       event(k).duration  = 1;
       event(k).offset    = [];
     end
+    
   case 'biopac_acq'
     % this one has an implementation that I guess is intended
     % to work according to the 'otherwise' case, yet it requires
