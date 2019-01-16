@@ -41,6 +41,9 @@ function [scd] = ft_scalpcurrentdensity(cfg, data)
 % The hjorth method requires the following
 %   cfg.neighbours   = neighbourhood structure, see FT_PREPARE_NEIGHBOURS
 %
+% The spline method requires the following
+%   cfg.badchannel      = cell-array, see FT_CHANNELSELECTION for details
+%
 % Note that the skin conductivity, electrode dimensions and the potential
 % all have to be expressed in the same SI units, otherwise the units of
 % the SCD values are not scaled correctly. The spatial distribution still
@@ -116,10 +119,11 @@ if ft_abort
 end
 
 % set the defaults
-cfg.method       = ft_getopt(cfg, 'method',       'spline');
-cfg.conductivity = ft_getopt(cfg, 'conductivity', 0.33); % in S/m
-cfg.trials       = ft_getopt(cfg, 'trials',       'all', 1);
-cfg.feedback     = ft_getopt(cfg, 'feedback',     'text');
+cfg.method          = ft_getopt(cfg, 'method',       'spline');
+cfg.conductivity    = ft_getopt(cfg, 'conductivity', 0.33); % in S/m
+cfg.trials          = ft_getopt(cfg, 'trials',       'all', 1);
+cfg.feedback        = ft_getopt(cfg, 'feedback',     'text');
+cfg.badchannel      = ft_getopt(cfg, 'badchannel',     {});
 
 switch cfg.method
   case 'hjorth'
@@ -160,17 +164,10 @@ data   = ft_selectdata(tmpcfg, data);
 % get the electrode positions
 tmpcfg = cfg;
 tmpcfg.senstype = 'EEG';
-
 elec = ft_fetch_sens(tmpcfg, data);
 
-% remove all junk fields from the electrode array
-tmp  = elec;
-elec = [];
-elec.chanpos = tmp.chanpos;
-if isfield(tmp, 'elecpos')
-  elec.elecpos = tmp.elecpos;
-end
-elec.label   = tmp.label;
+% detect if any channels with only NaN
+cfg.badchannel = detectChannelNaN(cfg,data);
 
 % find matching electrode positions and channels in the data
 [dataindx, elecindx] = match_str(data.label, elec.label);
@@ -182,25 +179,40 @@ for trlop=1:Ntrials
   data.trial{trlop} = data.trial{trlop}(dataindx,:);
 end
 
+% remove all junk fields from the electrode array
+tmp  = elec;
+elec = [];
+goodChan = setdiff(data.label,cfg.badchannel);
+goodChanidx = ismember(tmp.label, goodChan);
+goodchanpos = tmp.chanpos(goodChanidx,:);
+allchanpos = tmp.chanpos;
+elec.chanpos = tmp.chanpos; % or just goodchanpos later
+if isfield(tmp, 'elecpos')
+  elec.elecpos = tmp.elecpos;
+end
+elec.label   = tmp.label;
+
 % compute SCD for each trial
 if strcmp(cfg.method, 'spline')
-
   ft_progress('init', cfg.feedback, 'computing SCD for trial...')
   for trlop=1:Ntrials
-    % do not compute interpolation, but only one value at [0 0 1]
-    % this also gives L1, the laplacian of the original data in which we
-    % are interested here
-
-    ft_progress(trlop/Ntrials, 'computing SCD for trial %d of %d', trlop, Ntrials);
-    [V2, L2, L1] = splint(elec.chanpos, data.trial{trlop}, [0 0 1], cfg.order, cfg.degree, cfg.lambda);
-    scd.trial{trlop} = L1;
+      % do compute interpolation
+      ft_progress(trlop/Ntrials, 'computing SCD for trial %d of %d', trlop, Ntrials);
+      % Give data at goodchanpos as input, estimate data at allchanpos (output is L2)
+      if ~isempty(cfg.badchannel) % if any bad channels to interpolate: compute scd for all channels
+          [V2, L2, L1] = splint(goodchanpos, data.trial{trlop}(goodChanidx,:), allchanpos, cfg.order, cfg.degree, cfg.lambda);
+          scd.trial{trlop} = L2;
+      else % if all channels good: just compute scd for input channels, specify arbitrary single channel to-be-dicarded for interpolation
+          [V2, L2, L1] = splint(goodchanpos, data.trial{trlop}(goodChanidx,:), [0 0 1], cfg.order, cfg.degree, cfg.lambda);
+          scd.trial{trlop} = L1;
+      end
   end
-
   ft_progress('close');
 
 elseif strcmp(cfg.method, 'finite')
   % the finite difference approach requires a triangulation
-  prj = elproj(elec.chanpos);
+  prj = elproj(goodchanpos);
+  %% 
   tri = delaunay(prj(:,1), prj(:,2));
   % the new electrode montage only needs to be computed once for all trials
   montage.tra = lapcal(elec.chanpos, tri);
