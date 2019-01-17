@@ -152,7 +152,7 @@ end
 
 % NEW:
 % check if any channel contains only NaNs; if so treat it as a bad channel:
-cfg.badchannel = detectChannelNaN(cfg,data);
+cfg.badchannel = detectchannelnan(cfg,data);
 
 % get selection of channels that are missing and/or bad
 cfg.missingchannel = cat(1, cfg.missingchannel(:), cfg.badchannel);

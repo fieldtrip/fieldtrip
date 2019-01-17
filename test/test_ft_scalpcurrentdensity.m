@@ -1,74 +1,110 @@
 function test_ft_scalpcurrentdensity
 
-% MEM 7500mb
-% WALLTIME 00:10:00
+% MEM 1000mb
+% WALLTIME 00:01:00
 
-% TEST ft_sourceinterpolate ft_sourceplot
+% TEST ft_scalpcurrentdensity ft_fetch_sens
 
-clear all
-close all
-addpath /project/3017042.02/fieldtrip;
-ft_defaults;
-%% All methods, with and without bad channels
-
-% Generate some data
-% data = [];
-% data.trial{1} = randn(3,100);
-% data.trial{2} = randn(3,100);
-% data.time{1}  = (0:99)./100;
-% data.time{2}  = (0:99)./100;
-% data.label    = {'chan1';'chan2';'chan3'};
-
-% cfg.elec.label = data_eeg.label;
-% cfg.elec.elecpos = [1 1 1; 2 2 2; 3 3 3];
-% cfg.elec.chanpos = [1 1 1; 2 2 2; 3 3 3];
-
-% Load data 
-load('/project/3017042.02/Log/EEG/postICA/MRIpav_001_postIC.mat');
-load('/project/3017042.02/Log/EEG/EEG_electrode_pos/posLabels.mat');
-elec = ft_read_sens('/project/3017042.02/Log/EEG/EEG_electrode_pos/MRIpav_001_001.pos');
-
-% Duplicate data
-baddata = data;
-% Manipulate channel 1 to NaNs:
-baddata.trial{1}(1,1) = NaN; % trial 1, channel 1, sample 1
-
-% Loop over methods:
-methods  = {'finite', 'spline'}; %, 'hjorth'}; % hjorth method needs neighbours
-for i = 1:length(methods)
-    cfg = [];
-    cfg.method = string(methods(i));
-    cfg.elec = elec;
-    cfg.elec.label(1:67) =  posLabels; % overwrite to have channel labels (e.g. FPz) instead of numbers
-    % Select channels also contained in data.label:
-%     [dataindx, elecindx] = match_str(data.label, cfg.elec.label);
-%     cfg.elec.chanpos = cfg.elec.chanpos(elecindx,:);
-%     cfg.elec.chantype = cfg.elec.chantype(elecindx);
-%     cfg.elec.chanunit = cfg.elec.chanunit(elecindx);
-%     cfg.elec.elecpos = cfg.elec.elecpos(elecindx,:);
-%     cfg.elec.label = cfg.elec.label(elecindx);  
-    % Select neigbours for hjorth method:
-%     tmpcfg = [];
-%     tmpcfg.method = 'distance';
-%     tmpcfg.neighbourdist = 1; % ???
-%     tmpcfg.layout = 1; % ???
-%     tmpcfg.channels = 'chan1'; % ???
-%     % OR:
-%     tmpcfg.elec = cfg.elec;
-%     cfg.neighbours = ft_prepare_neighbours(tmpcfg, data);
-
-    % a) Data without bad channels:
-    fprintf('>>> START: Try out method %s without bad channels\n',string(methods(i)))
-    scd = ft_scalpcurrentdensity(cfg,data);
-    % b) Data with bad channels:
-    fprintf('>>> START: Try out method %s with bad channels\n',string(methods(i)))
-    scd = ft_scalpcurrentdensity(cfg,baddata);
-    % any assertions to check that scd isn't just rubbish?
-    if(sum(cellfun(@(C) any(isnan(C(:))), scd.trial))==0)
-        fprintf('>>> No NaNs in output found, so all good\n')
-    else
-        fprintf('>>> NaNs found in output \n')        
-    end
+%% load data
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2685/bug2685.mat'));
+% 128 channels, 1 trial with 2001 time bins
+%% Plot ERP of unfiltered data
+figure;
+plot(ERP_standard.avg')
+title('ERP on unfiltered data');
+axis([0 size(ERP_standard.avg,2) min(ERP_standard.avg(:)) max(ERP_standard.avg(:))])
+%% 1a) Test method spline in absence of bad channels
+gooddata            = ERP_standard;
+cfg                 = [];
+cfg.method          = 'spline';
+cfg.elec            = gooddata.elec;
+goodscd   = ft_scalpcurrentdensity(cfg, gooddata);
+% Plot scd:
+figure;
+plot(goodscd.avg')
+title('ERP on scd without bad channels');
+axis([0 size(goodscd.avg,2) min(goodscd.avg(:)) max(goodscd.avg(:))])
+%% 1b) Test method spline in presence of bad channels
+baddata             = ERP_standard;
+baddata.avg(1:2,1) = NaN; % set first sample of first half of channels to NaN
+cfg                 = [];
+cfg.method          = 'spline';
+cfg.elec            = baddata.elec;
+badscd   = ft_scalpcurrentdensity(cfg, baddata);
+% Plot scd:
+figure;
+plot(badscd.avg')
+title('ERP on scd with bad channels');
+%axis([0 size(badscd.avg,2) min(badscd.avg(:)) max(badscd.avg(:))])
+axis([0 size(goodscd.avg,2) min(goodscd.avg(:)) max(goodscd.avg(:))])
+% Compare difference between scd with and without bad channels:
+diffscd = goodscd.avg - badscd.avg;
+if mean(abs(diffscd(:))) > 1e-08 % even with 50% of channels missing, this threshold should not be crossed
+    error('scd with and without bad channels strongly differs');
 end
-
-%END
+%% 1c) Test method spline with constant offset
+offsetdata          = ERP_standard;
+offsetdata.avg      = gooddata.avg+1000; % add constant offset of 1000 V
+cfg                 = [];
+cfg.method          = 'spline';
+cfg.elec            = offsetdata.elec;
+offsetscd   = ft_scalpcurrentdensity(cfg, offsetdata);
+% Plot scd:
+figure;
+plot(offsetscd.avg')
+title('ERP on scd with offset');
+%axis([0 size(offsetscd.avg,2) min(offsetscd.avg(:)) max(offsetscd.avg(:))])
+axis([0 size(goodscd.avg,2) min(goodscd.avg(:)) max(goodscd.avg(:))])
+% Compare difference between scd with and without offset:
+diffscd = goodscd.avg - offsetscd.avg;
+if mean(abs(diffscd(:))) > 1e-15
+    error('scd with and without offset strongly differs');
+end
+%% 1d) Test method spline with channels shuffled
+shuffledata         = ERP_standard;
+randidx             = randperm(length(shuffledata.label));
+[~,unidx]           = sort(randidx); % unshuffle
+shuffledata.avg     = shuffledata.avg(randidx,:);
+shuffledata.var     = shuffledata.var(randidx,:);
+shuffledata.dof     = shuffledata.dof(randidx,:);
+shuffledata.label   = shuffledata.label(randidx);
+shuffledata.elec.chanpos   = shuffledata.elec.chanpos(randidx,:);
+shuffledata.elec.elecpos   = shuffledata.elec.elecpos(randidx,:);
+shuffledata.elec.label     = shuffledata.elec.label(randidx);
+shuffledata.cfg.channel    = shuffledata.cfg.channel(randidx);
+cfg                 = [];
+cfg.method          = 'spline';
+cfg.elec            = shuffledata.elec;
+shufflescd   = ft_scalpcurrentdensity(cfg, shuffledata);
+% Plot scd:
+figure;
+plot(shufflescd.avg(unidx,:)')
+title('ERP on scd with channels shuffled');
+%axis([0 size(shuffledata.avg,2) min(shuffledata.avg(:)) max(shuffledata.avg(:))])
+axis([0 size(goodscd.avg,2) min(goodscd.avg(:)) max(goodscd.avg(:))])
+% Compare difference between scd with and without channels shuffled:
+diffscd = goodscd.avg - shufflescd.avg(unidx,:);
+if mean(abs(diffscd(:))) > 1e-19 % only floating point errors expected
+    error('scd with and without shuffling of channels strongly differs');
+end
+%% 2a) Test method finite in absence of bad channels
+gooddata            = ERP_standard;
+cfg                 = [];
+cfg.method          = 'finite';
+cfg.elec            = ERP_standard.elec;
+scd   = ft_scalpcurrentdensity(cfg, gooddata);
+%% 2b) Test method finite in presence of bad channels
+try
+    failed = true;
+    baddata             = ERP_standard;
+    cfg                 = [];
+    cfg.method          = 'finite';
+    cfg.elec            = ERP_standard.elec;
+    scd   = ft_scalpcurrentdensity(cfg, baddata); % should fail on data with channels containing NaNs
+    failed = false;
+end
+if failed
+    fprintf('method finite correctly throws error in presence of bad channels\n')
+else
+    error('Method finite should throw error if some channels bad, but does not\n')
+end
