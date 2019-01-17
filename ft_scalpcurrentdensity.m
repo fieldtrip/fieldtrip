@@ -210,8 +210,11 @@ if strcmp(cfg.method, 'spline')
   ft_progress('close');
 
 elseif strcmp(cfg.method, 'finite')
+    if ~is.empty(cfg.badchannel)
+        % error
+    end
   % the finite difference approach requires a triangulation
-  prj = elproj(goodchanpos);
+  prj = elproj(elec.chanpos);
   %% 
   tri = delaunay(prj(:,1), prj(:,2));
   % the new electrode montage only needs to be computed once for all trials

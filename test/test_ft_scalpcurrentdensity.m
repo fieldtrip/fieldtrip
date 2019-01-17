@@ -39,14 +39,14 @@ for i = 1:length(methods)
     cfg = [];
     cfg.method = string(methods(i));
     cfg.elec = elec;
-    cfg.elec.label =  posLabels; % overwrite to have channel labels (e.g. FPz) instead of numbers
+    cfg.elec.label(1:67) =  posLabels; % overwrite to have channel labels (e.g. FPz) instead of numbers
     % Select channels also contained in data.label:
-    [dataindx, elecindx] = match_str(data.label, cfg.elec.label);
-    cfg.elec.chanpos = cfg.elec.chanpos(elecindx,:);
-    cfg.elec.chantype = cfg.elec.chantype(elecindx);
-    cfg.elec.chanunit = cfg.elec.chanunit(elecindx);
-    cfg.elec.elecpos = cfg.elec.elecpos(elecindx,:);
-    cfg.elec.label = cfg.elec.label(elecindx);  
+%     [dataindx, elecindx] = match_str(data.label, cfg.elec.label);
+%     cfg.elec.chanpos = cfg.elec.chanpos(elecindx,:);
+%     cfg.elec.chantype = cfg.elec.chantype(elecindx);
+%     cfg.elec.chanunit = cfg.elec.chanunit(elecindx);
+%     cfg.elec.elecpos = cfg.elec.elecpos(elecindx,:);
+%     cfg.elec.label = cfg.elec.label(elecindx);  
     % Select neigbours for hjorth method:
 %     tmpcfg = [];
 %     tmpcfg.method = 'distance';
@@ -66,6 +66,8 @@ for i = 1:length(methods)
     % any assertions to check that scd isn't just rubbish?
     if(sum(cellfun(@(C) any(isnan(C(:))), scd.trial))==0)
         fprintf('>>> No NaNs in output found, so all good\n')
+    else
+        fprintf('>>> NaNs found in output \n')        
     end
 end
 
