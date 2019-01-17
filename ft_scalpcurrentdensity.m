@@ -199,7 +199,7 @@ if strcmp(cfg.method, 'spline')
       % do compute interpolation
       ft_progress(trlop/Ntrials, 'computing SCD for trial %d of %d', trlop, Ntrials);
       if ~isempty(cfg.badchannel) % if any bad channels to interpolate: compute scd for all channels
-          fprintf('computing scd also add locations of bad channels');
+          fprintf('computing scd also at locations of bad channels');
           [V2, L2, L1] = splint(goodchanpos, data.trial{trlop}(goodChanidx,:), allchanpos, cfg.order, cfg.degree, cfg.lambda);
           scd.trial{trlop} = L2;
       else % if all channels good: just compute scd for input channels, specify arbitrary single channel to-be-discarded for interpolation (saves >50% computation time)
@@ -210,7 +210,7 @@ if strcmp(cfg.method, 'spline')
   ft_progress('close');
 
 elseif strcmp(cfg.method, 'finite')
-  if ~isempty(cfg.badchannel) % if any bad channels to interpolate: compute scd for all channels
+  if ~isempty(cfg.badchannel) % error in presence of bad channels
       error('method finite called in presence of bad channels');
   end
   % the finite difference approach requires a triangulation
@@ -226,7 +226,7 @@ elseif strcmp(cfg.method, 'finite')
   elec = ft_apply_montage(elec, montage);
 
 elseif strcmp(cfg.method, 'hjorth')
-  if ~isempty(cfg.badchannel) % if any bad channels to interpolate: compute scd for all channels
+  if ~isempty(cfg.badchannel) % error in presence of bad channels
       error('method hjorth called in presence of bad channels');
   end
   % convert the neighbourhood structure into a montage
