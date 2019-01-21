@@ -409,7 +409,9 @@ elseif strcmp(cfg.method, 'headshape')
   elseif strcmp(cfg.warp, 'fsaverage')
     norm.elecpos = warp_fsaverage(cfg, elec);
   elseif strcmp(cfg.warp, 'fsinflated')
-    norm.elecpos = warp_fsinflated(cfg, elec); 
+    norm.elecpos = warp_fsinflated(cfg, elec);
+  elseif strcmp(cfg.warp, 'fsaverage_sym')
+    norm.elecpos = warp_fsaverage_sym(cfg, elec); 
   else
     fprintf('warping electrodes to skin surface... '); % the newline comes later
     [norm.elecpos, norm.m] = ft_warp_optim(elec.elecpos, headshape, cfg.warp);
@@ -619,7 +621,8 @@ end % if method
 % electrode labels by their case-sensitive original values
 switch cfg.method
   case {'template', 'headshape'}
-    if strcmpi(cfg.warp, 'dykstra2012') || strcmpi(cfg.warp, 'hermes2010') || strcmpi(cfg.warp, 'fsaverage') || strcmpi(cfg.warp, 'fsinflated')
+    if strcmpi(cfg.warp, 'dykstra2012') || strcmpi(cfg.warp, 'hermes2010') || ...
+        strcmpi(cfg.warp, 'fsaverage') || strcmpi(cfg.warp, 'fsinflated') || strcmpi(cfg.warp, 'fsaverage_sym')
       elec_realigned = norm;
       elec_realigned.label = label_original;
     else

@@ -1,6 +1,6 @@
-function [coord_norm] = warp_fsaverage(cfg, elec)
+function [coord_norm] = warp_fsaverage_sym(cfg, elec)
 
-% WARP_FSAVERAGE maps electrodes onto FreeSurfer's fsaverage brain.
+% WARP_FSAVERAGE_SYM maps electrodes onto FreeSurfer's fsaverage brain.
 % This surface-based registration technique solely considers the curvature
 % patterns of the cortex and thus can be used for the spatial normalization
 % of electrodes located on or near the cortical surface. To perform
@@ -40,8 +40,8 @@ subj_reg = ft_read_headshape([PATHSTR filesep NAME '.sphere.reg']);
 if ~isfolder([cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf'])
   ft_error(['freesurfer dir ' cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf cannot be found'])
 end
-fsavg_pial = ft_read_headshape([cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf' filesep NAME '.pial']);
-fsavg_reg = ft_read_headshape([cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf' filesep NAME '.sphere.reg']);
+fsavg_pial = ft_read_headshape([cfg.fshome filesep 'subjects' filesep 'fsaverage_sym' filesep 'surf' filesep 'lh.pial']);
+fsavg_reg = ft_read_headshape([cfg.fshome filesep 'subjects' filesep 'fsaverage_sym' filesep 'surf' filesep 'lh.sphere']);
 
 for e = 1:numel(elec.label)
   % subject space (3D surface): electrode pos -> vertex index
