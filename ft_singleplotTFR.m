@@ -24,7 +24,7 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 %   cfg.ylim           = 'maxmin' or [ymin ymax] (default = 'maxmin')
 %   cfg.zlim           = plotting limits for color dimension, 'maxmin', 'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
 %   cfg.baseline       = 'yes', 'no' or [time1 time2] (default = 'no'), see FT_FREQBASELINE
-%   cfg.baselinetype   = 'absolute', 'relative', 'relchange' or 'db' (default = 'absolute')
+%   cfg.baselinetype   = 'absolute', 'relative', 'relchange', 'normchange', 'db' or 'zscore' (default = 'absolute')
 %   cfg.trials         = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
 %                        see FT_CHANNELSELECTION for details
