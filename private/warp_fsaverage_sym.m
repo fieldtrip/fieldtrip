@@ -3,9 +3,9 @@ function [coord_norm] = warp_fsaverage_sym(cfg, elec)
 % WARP_FSAVERAGE_SYM maps left or right hemisphere electrodes onto 
 % FreeSurfer's fsaverage_sym's left hemisphere. To perform this mapping, 
 % you first need to have processed the subject's MRI with FreeSurfer's 
-% recon-all functionality and additionaly registered the subject's resulting 
-% surfaces to freesurfer fsaverage_sym template as described at
-% https://surfer.nmr.mgh.harvard.edu/fswiki/Xhemi
+% recon-all functionality and additionaly have registered the subject's resulting 
+% surfaces to freesurfer fsaverage_sym template using surfreg as described 
+% in section 1.2 of https://surfer.nmr.mgh.harvard.edu/fswiki/Xhemi
 %
 % The configuration must contain the following options
 %   cfg.headshape      = string, filename containing subject headshape
@@ -39,7 +39,7 @@ subj_pial = ft_read_headshape(cfg.headshape);
 if strcmp(NAME, 'lh')
   subj_reg = ft_read_headshape([PATHSTR filesep 'lh.fsaverage_sym.sphere.reg']);
 elseif strcmp(NAME, 'rh')
-  subj_reg = ft_read_headshape([PATHSTR(1:strfind(PATHSTR, [filesep 'surf'])-1) filesep 'xhemi' filesep 'surf' filesep 'lh.fsaverage_sym.sphere.reg']); % FIXME pathstr wont work
+  subj_reg = ft_read_headshape([PATHSTR(1:strfind(PATHSTR, [filesep 'surf'])-1) filesep 'xhemi' filesep 'surf' filesep 'lh.fsaverage_sym.sphere.reg']);
 end
 if ~isfolder([cfg.fshome filesep 'subjects' filesep 'fsaverage_sym']) || ~isfolder([PATHSTR(1:strfind(PATHSTR, [filesep 'surf'])-1) filesep 'xhemi'])
   ft_error(['fsaverage_sym and/or xhemi folders cannot be found'])
