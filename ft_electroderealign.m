@@ -623,7 +623,7 @@ end % if method
 switch cfg.method
   case {'template', 'headshape'}
     if strcmpi(cfg.warp, 'dykstra2012') || strcmpi(cfg.warp, 'hermes2010') || ...
-        strcmpi(cfg.warp, 'fsaverage') || strcmpi(cfg.warp, 'fsinflated') || strcmpi(cfg.warp, 'fsaverage_sym')
+        strcmpi(cfg.warp, 'fsaverage') || strcmpi(cfg.warp, 'fsaverage_sym') || strcmpi(cfg.warp, 'fsinflated')
       elec_realigned = norm;
       elec_realigned.label = label_original;
     else
@@ -679,6 +679,8 @@ switch cfg.method
         elec_realigned.coordsys = elec_original.coordsys;
       elseif strcmp(cfg.warp, 'fsaverage')
         elec_realigned.coordsys = 'fsaverage';
+      elseif strcmp(cfg.warp, 'fsaverage_sym')
+        elec_realigned.coordsys = 'fsaverage_sym';
       end
     end
   case 'fiducial'
