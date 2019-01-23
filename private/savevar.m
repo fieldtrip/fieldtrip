@@ -1,6 +1,8 @@
 function savevar(filename, varname, value)
 
 % SAVEVAR is a helper function for cfg.outputfile
+%
+% See also LOADVAR
 
 % Copyright (C) 2010, Robert Oostenveld
 %
@@ -9,7 +11,7 @@ function savevar(filename, varname, value)
 assert(ischar(filename), 'file name should be a string');
 assert(ischar(varname), 'variable name should be a string');
 
-fprintf('writing ''%s'' to file ''%s''\n', varname, filename);
+ft_info('writing ''%s'' to file ''%s''\n', varname, filename);
 
 eval(sprintf('%s = value;', varname));
 
