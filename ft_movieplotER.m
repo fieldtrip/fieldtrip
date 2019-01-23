@@ -97,3 +97,5 @@ tmpcfg = ft_movieplotTFR(tmpcfg, data);
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
 ft_postamble previous data
+ft_postamble savefig
+
