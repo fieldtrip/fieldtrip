@@ -458,7 +458,8 @@ ft_postamble provenance varargout
 ft_postamble history varargout
 ft_postamble savevar varargout
 
-if nargout>numel(varargout)
+% the varargout variable can be cleared when written to outputfile
+if exist('varargout', 'var') && ft_nargout>numel(varargout)
   % also return the input cfg with the combined selection over all input data structures
   varargout{end+1} = cfg;
 end
