@@ -99,7 +99,7 @@ hdr.headOrigin_axial = hmOrigin(3);
 %fread(fid,204,'char'); % unused, padding to 1028 bytes
 
 % revert to previous warning state
-warning(ws);
+ft_warning(ws);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % READ THE IMAGE DATA

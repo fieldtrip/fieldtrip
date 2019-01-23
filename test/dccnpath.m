@@ -1,18 +1,17 @@
 function file = dccnpath(filename)
 
-% DCCNPATH updates the full path specificaion to a file for all files
-% on DCCN home central storage.
+% DCCNPATH updates the path in the filename of a test file located on DCCN central
+% storage. It helps to read test file from Linux, Windows or macOS computers in the
+% DCCN.
 %
 % Use as
 %  filename = dccnpath(filename)
 %
-% The function assumes that on a Windows machine the DCCN home network
-% drive is mapped to H:. The function basically converts between H:\ and
-% /home and uses the appropriate file seperator depending on the operating
-% system.
+% The function assumes that on a Windows machine the DCCN home network drive is
+% mapped to the H: drive on Windows, or that it is mounted on /Volume/home for macOS.
 %
-% An in-place implementation of this function can be realized with an
-% anonymous function like this:
+% Similar functionality as this function could be realized with an anonymous function
+% like this:
 %
 % if ispc
 %   dccnpath = @(filename) strrep(strrep(filename,'/home','H:'),'/','\');
@@ -20,7 +19,7 @@ function file = dccnpath(filename)
 %   dccnpath = @(filename) strrep(strrep(filename,'H:','/home'),'\','/');
 % end
 
-% Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
+% Copyright (C) 2012-2019, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -51,7 +50,8 @@ end
 [p, f, x] = fileparts(file);
 
 alternative1 = [f x];
-alternative2 = strrep(filename, '/home/common/matlab/fieldtrip/data/test', '/Volumes/128GB/bug');
+alternative2 = strrep(filename, '/home/common/matlab/fieldtrip', '/Volumes/home/common/matlab/fieldtrip');
+alternative3 = strrep(filename, '/home/common/matlab/fieldtrip', '/Volumes/128GB/data/test');
 
 if ~exist(file, 'file') && exist(alternative1, 'file')
   warning('using local copy %s instead of %s', alternative1, file);
@@ -59,5 +59,8 @@ if ~exist(file, 'file') && exist(alternative1, 'file')
 elseif ~exist(file, 'file') && exist(alternative2, 'file')
   warning('using local copy %s instead of %s', alternative2, file);
   file = alternative2;
+elseif ~exist(file, 'file') && exist(alternative3, 'file')
+  warning('using local copy %s instead of %s', alternative3, file);
+  file = alternative3;
 end
 

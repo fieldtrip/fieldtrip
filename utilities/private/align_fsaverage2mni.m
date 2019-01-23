@@ -12,6 +12,8 @@ function [mri] = align_fsaverage2mni(mri)
 % with mni       we mean MNI152, i.e. the template used in SPM
 %
 % See http://freesurfer.net/fswiki/CoordinateSystems
+%
+% See also ALIGN_CTF2ACPC, ALIGN_NEUROMAG2ACPC
 
 fsaverage2mni = [
    0.9975   -0.0073    0.0176   -0.0429

@@ -156,7 +156,7 @@ if strcmp(cfg.method, 'template')
   end
   load(cfg.template);
   fprintf('Successfully loaded neighbour structure from %s\n', cfg.template);
-
+  
 else
   % get the the grad or elec if not present in the data
   if hasdata
@@ -243,7 +243,7 @@ neighbours = neighbours(neighb_idx);
 k = 0;
 for i=1:length(neighbours)
   if isempty(neighbours(i).neighblabel)
-    ft_warning('FIELDTRIP:NoNeighboursFound', 'no neighbours found for %s\n', neighbours(i).label);
+    ft_warning('no neighbours found for %s\n', neighbours(i).label);
     % JMH: I removed this in Feb 2013 - this is handled above now
     % note however that in case of using a template, this function behaves
     % differently now (neighbourschans can still be channels not in
@@ -255,18 +255,19 @@ for i=1:length(neighbours)
 end
 
 if k==0
-  ft_error('No neighbours were found!');
+  ft_error('No neighbours were found');
 end
 
 fprintf('there are on average %.1f neighbours per channel\n', k/length(neighbours));
 
 if strcmp(cfg.feedback, 'yes')
   % give some graphical feedback
-  cfg.neighbours = neighbours;
+  tmpcfg = keepfields(cfg, {'grad', 'elec', 'opto', 'gradfile', 'elecfile', 'optofile', 'layout', 'senstype'});
+  tmpcfg.neighbours = neighbours;
   if hasdata
-    ft_neighbourplot(cfg, data);
+    ft_neighbourplot(tmpcfg, data);
   else
-    ft_neighbourplot(cfg);
+    ft_neighbourplot(tmpcfg);
   end
 end
 

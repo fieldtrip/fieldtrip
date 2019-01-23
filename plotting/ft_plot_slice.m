@@ -403,7 +403,7 @@ elseif domask
   switch maskstyle
     case 'opacity'
       if dobackground
-        warning('specifying maskstyle = ''opacity'' causes the supplied background image not to be used');
+        ft_warning('specifying maskstyle = ''opacity'' causes the supplied background image not to be used');
       end
       if isempty(h)
         % create surface object

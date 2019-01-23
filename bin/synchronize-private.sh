@@ -244,6 +244,7 @@ ARRAY+=(preproc/private/defaultId.m)
 ARRAY+=(private/defaultId.m)
 ARRAY+=(specest/private/defaultId.m)
 ARRAY+=(statfun/private/defaultId.m)
+ARRAY+=(test/private/defaultId.m)
 ARRAY+=(trialfun/private/defaultId.m)
 ARRAY+=(utilities/private/defaultId.m)
 sync ${ARRAY[*]}
@@ -420,6 +421,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(external/dipoli/private/find_innermost_boundary.m)
+ARRAY+=(external/openmeeg/private/find_innermost_boundary.m)
 ARRAY+=(forward/private/find_innermost_boundary.m)
 ARRAY+=(inverse/private/find_innermost_boundary.m)
 ARRAY+=(private/find_innermost_boundary.m)
@@ -439,6 +441,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(external/dipoli/private/find_outermost_boundary.m)
+ARRAY+=(external/openmeeg/private/find_outermost_boundary.m)
 ARRAY+=(fileio/private/find_outermost_boundary.m)
 ARRAY+=(forward/private/find_outermost_boundary.m)
 ARRAY+=(private/find_outermost_boundary.m)
@@ -1334,11 +1337,27 @@ ARRAY+=(private/isalmostequal.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# isfile.m
+
+ARRAY=()
+ARRAY+=(compat/matlablt2017b/isfile.m)
+ARRAY+=(compat/octave/isfile.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # isfolder.m
 
 ARRAY=()
 ARRAY+=(compat/matlablt2017b/isfolder.m)
 ARRAY+=(compat/octave/isfolder.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# ismatch.m
+
+ARRAY=()
+ARRAY+=(private/ismatch.m)
+ARRAY+=(trialfun/private/ismatch.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -2299,6 +2318,7 @@ sync ${ARRAY[*]}
 # normals.m
 
 ARRAY=()
+ARRAY+=(fileio/private/normals.m)
 ARRAY+=(forward/private/normals.m)
 ARRAY+=(private/normals.m)
 ARRAY+=(test/private/normals.m)
@@ -2803,6 +2823,7 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(external/openmeeg/private/refine.m)
 ARRAY+=(plotting/private/refine.m)
+ARRAY+=(fileio/private/refine.m)
 ARRAY+=(private/refine.m)
 ARRAY+=(test/private/refine.m)
 ARRAY+=(utilities/private/refine.m)

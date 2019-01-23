@@ -59,7 +59,7 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %
 % $Id$
 
-ws = warning('on', 'MATLAB:divideByZero');
+ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % rename pnt into pos
 mesh = fixpos(mesh);
@@ -464,4 +464,4 @@ if ~holdflag
   hold off
 end
 
-warning(ws); % revert to original state
+ft_warning(ws); % revert to original state

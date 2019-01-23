@@ -7,7 +7,7 @@ function ft_defaults
 %
 % The global configuration defaults are stored in the global "ft_default" structure.
 % The ft_checkconfig function that is called by many FieldTrip functions will merge
-% these global configuration defaults with the cfg ctructure that you pass to 
+% these global configuration defaults with the cfg ctructure that you pass to
 % the FieldTrip function that you are calling.
 %
 % The global options and their default values are
@@ -26,7 +26,7 @@ function ft_defaults
 %   ft_default.toolbox.images    = string, can be 'compat' or 'matlab' (default = 'compat')
 %
 % If you want to overrule these default settings, you can add something like this in your startup.m script
-%   ft_defaults 
+%   ft_defaults
 %   global ft_default
 %   ft_default.option1 = value1
 %   ft_default.option2 = value2
@@ -129,6 +129,12 @@ end % case
 % in that struct already prior to ft_defaults being called for the first time.
 if initialized && exist('ft_hastoolbox', 'file')
   return;
+end
+
+if isfield(ft_default, 'toolbox') && isfield(ft_default.toolbox, 'cleanup')
+  prevcleanup = ft_default.toolbox.cleanup;
+else
+  prevcleanup = {};
 end
 
 % Ensure that the path containing ft_defaults is on the path.
@@ -312,6 +318,9 @@ if ~isdeployed
   
 end
 
+% the toolboxes added by this function should not be removed by FT_POSTAMBLE_HASTOOLBOX
+ft_default.toolbox.cleanup = prevcleanup;
+
 % track the usage of this function, this only happens once at startup
 ft_trackusage('startup');
 
@@ -319,6 +328,7 @@ ft_trackusage('startup');
 initialized = true;
 
 end % function ft_default
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

@@ -41,7 +41,7 @@ function [sens] = ft_fetch_sens(cfg, data)
 %    (at your option) any later version.
 %
 %    FieldTrip is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    but WITHOUT ANY WARRANTY; without evft_neighbourploten the implied warranty of
 %    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 %    GNU General Public License for more details.
 %
@@ -82,7 +82,7 @@ iscfgsens   = isfield(cfg, 'pnt')  || isfield(cfg, 'chanpos');
 isdatasens  = isfield(data, 'pnt') || isfield(data, 'chanpos');
 
 if isempty(cfg.senstype) && ((hasgradfile || hascfggrad || hasdatagrad) + (haselecfile || hascfgelec || hasdataelec) + (hasoptofile || hascfgopto || hasdataopto))>1
-  ft_error('Cannot determine which sensor information you need. Specify cfg.senstype as ''meg'', ''eeg'' or ''nirs''');
+  ft_error('Cannot determine which sensors you want to work on. Specify cfg.senstype as ''meg'', ''eeg'' or ''nirs''');
   
 elseif ~isempty(cfg.senstype)
   if iscell(cfg.senstype)

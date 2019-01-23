@@ -30,6 +30,7 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %     'granger',   granger causality, support for freq and freqmvar data
 %     'pdc',       partial directed coherence, support for freq and
 %                  freqmvar data
+%     'plm',       phase-linearity measurement FIXME
 %     'plv',       phase-locking value, support for freq and freqmvar data
 %     'powcorr',   power correlation, support for freq and source data
 %     'powcorr_ortho', power correlation with single trial
@@ -65,9 +66,10 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %     '-logabs', support for method 'coh', 'csd', 'plv'
 %   cfg.removemean  = 'yes' (default), or 'no', support for method
 %     'powcorr' and 'amplcorr'.
-%   cfg.bandwidth   = scalar, (default = Rayleigh frequency), needed for
-%			'psi', half-bandwidth of the integration across frequencies (in Hz)
-%
+%   cfg.bandwidth   = scalar, needed for 
+%                      'psi', half-bandwidth of the integration across frequencies (in Hz), default is Rayleigh frequency
+%                      'plm', half-bandwidth of the integration window
+%      
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
@@ -267,6 +269,13 @@ switch cfg.method
     outparam = 'wppcspctrm';
     weightppc = 1;
     if hasjack, ft_error('to compute wppc, data should be in rpt format'); end
+  case {'plm'}
+    data = ft_checkdata(data, 'datatype', 'raw');
+    inparam = 'trial';
+    outparam = 'plm';
+  
+    cfg.bandwidth = ft_getopt(cfg, 'bandwidth', 0.5);
+ 
   case {'plv'}
     data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'});
     inparam = 'crsspctrm';
@@ -935,6 +944,14 @@ switch cfg.method
     % directionality index
     ft_error('method %s is not yet implemented', cfg.method);
     
+  case 'plm'
+    % phase linearity measurement
+    optarg = {'bandwidth' cfg.bandwidth};
+    datout = ft_connectivity(plm, optarg{:});    
+    varout = [];
+
+    outdimord = 'chan_chan';
+
   otherwise
     ft_error('unknown method %s', cfg.method);
     

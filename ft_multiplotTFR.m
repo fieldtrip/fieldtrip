@@ -31,7 +31,7 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 %   cfg.channel          = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.refchannel       = name of reference channel for visualising connectivity, can be 'gui'
 %   cfg.baseline         = 'yes', 'no' or [time1 time2] (default = 'no'), see FT_FREQBASELINE
-%   cfg.baselinetype     = 'absolute', 'relative', 'relchange' or 'db' (default = 'absolute')
+%   cfg.baselinetype     = 'absolute', 'relative', 'relchange', 'normchange', 'db' or 'zscore' (default = 'absolute')
 %   cfg.trials           = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.box              = 'yes', 'no' (default = 'no' if maskparameter given default = 'yes')
 %                          Draw a box around each graph
@@ -412,7 +412,7 @@ if ~isempty(cfg.maskparameter)
       error('Outline masking with a numeric cfg.maskparameter is not supported. Please use a logical mask instead.')
     end
     if cfg.maskalpha ~= 1
-      warning(sprintf('Using field "%s" for masking, cfg.maskalpha is ignored.', cfg.maskparameter))
+      ft_warning('Using field "%s" for masking, cfg.maskalpha is ignored.', cfg.maskparameter)
     end
     % scale mask between 0 and 1
     minval = min(maskmatrix(:));

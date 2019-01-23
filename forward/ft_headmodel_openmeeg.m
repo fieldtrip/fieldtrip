@@ -160,8 +160,8 @@ try
     
     % write conductivity and mesh files
     bndlabel = {};
-    for i=1:length(bnd);
-        [~,bndlabel{i}] = fileparts(bndfile{i});
+    for i=1:length(bnd)
+        [dum,bndlabel{i}] = fileparts(bndfile{i});
     end
 
     om_write_geom(geomfile,bndfile,bndlabel);

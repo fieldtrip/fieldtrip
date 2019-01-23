@@ -49,7 +49,7 @@ function [data] = ft_megplanar(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_COMBINEPLANAR, FT_NEIGHBOURSELECTION
+% See also FT_COMBINEPLANAR, FT_PREPARE_NEIGHBOURS
 
 % Copyright (C) 2004, Robert Oostenveld
 %

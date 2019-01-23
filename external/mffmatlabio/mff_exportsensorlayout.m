@@ -38,7 +38,7 @@ if length(matStruct.sensors) ~= length(EEG.chanlocs)
         currenChans = 1:size(EEG.data,1);
     else
         % find EEG channels and convert them
-        eegChans = cellfun(@(x)isequal(x, 'EEG'), {chanlocs.type});
+        eegChans = cellfun(@(x)isequal(lower(x), 'eeg'), {chanlocs.type});
         try
             currenChans = cellfun(@(x)str2num(x(2:end)), {chanlocs(eegChans).labels});
         catch
@@ -60,14 +60,6 @@ end
 p = fileparts(which('mff_importsignal.m'));
 warning('off', 'MATLAB:Java:DuplicateClass');
 javaaddpath(fullfile(p, 'MFF-1.2.2-jar-with-dependencies.jar'));
-import com.egi.services.mff.api.MFFFactory;
-import com.egi.services.mff.api.MFFResourceType;
-import com.egi.services.mff.api.LocalMFFFactoryDelegate;
-import com.egi.services.mff.utility.ResourceUnmarshalException;
-import com.egi.services.mff.api.SensorLayout;
-import com.egi.services.mff.api.Sensor;
-import com.egi.services.mff.api.Key;
-import com.egi.services.mff.api.Neighbor;
 warning('on', 'MATLAB:Java:DuplicateClass');
 
 % Create an MFFFactory object.

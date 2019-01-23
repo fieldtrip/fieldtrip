@@ -4,7 +4,7 @@ function [dataout] = ft_denoise_prewhiten(cfg, datain, noise)
 % using the inverse noise covariance matrix. The consequence is that
 % all channels are expressed in singnal-to-noise units, causing
 % different channel types to be comparable. This ensures equal
-% weithing in source estimation on data with different channel types.
+% weighting in source estimation on data with different channel types.
 %
 % Use as
 %   dataout = ft_denoise_prewhiten(cfg, datain, noise)
@@ -62,12 +62,24 @@ if ft_abort
 end
 
 % get the defaults
-cfg.channel = ft_getopt(cfg, 'channel', {'MEG', 'EEG'});
-cfg.mixed   = ft_getopt(cfg, 'channel', 'all');
+cfg.channel = ft_getopt(cfg, 'channel', 'all');
+cfg.split   = ft_getopt(cfg, 'split',   'all');
 
-% ensure that the input data is correct
-datain = ft_checkdata(datain, 'datatype', 'raw', 'haschantype', 'yes', 'haschanunit', 'yes');
+% ensure that the input data is correct, the next line is needed for a
+% attempt correct detection of the data chanunit (with a hdr-field it fails
+% for meggrad data)
+if isfield(datain, 'hdr'), datain = rmfield(datain, 'hdr'); end
+datain = ft_checkdata(datain, 'datatype', 'raw', 'haschantype', 'yes', 'haschanunit', 'yes'); 
 noise  = ft_checkdata(noise, 'datatype', 'timelock', 'haschantype', 'yes', 'haschanunit', 'yes');
+
+% select channels and trials of interest, by default this will select all channels and trials
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
+datain = ft_selectdata(tmpcfg, datain);
+noise  = ft_selectdata(tmpcfg, noise);
+
+% restore the provenance information
+[cfg, datain] = rollback_provenance(cfg, datain);
+[cfg, noise]  = rollback_provenance(cfg, noise);
 
 if ~isfield(noise, 'cov')
   ft_error('noise covariance is not present');
@@ -76,13 +88,9 @@ end
 % determine whether it is EEG and/or MEG data
 haselec = isfield(datain, 'elec');
 hasgrad = isfield(datain, 'grad');
-if haselec && hasgrad && istrue(cfg.mixed)
-  ft_error('mixed covariance prewhitening is not supported for combined EEG/MEG');
-end
-
-% select the channels for prewhitening from the noise covariance
-noise = ft_selectdata(tmpcfg, noise);
-[~, noise] = rollback_provenance(cfg, noise);
+% if haselec && hasgrad
+%   ft_error('mixed covariance prewhitening is not supported for combined EEG/MEG');
+% end
 
 if isequal(cfg.split, 'no')
   chantype = {};
@@ -111,12 +119,12 @@ prewhiten.chanunitnew = repmat({'snr'}, size(noise.chantype));
 % apply the projection to the data
 dataout = ft_apply_montage(datain, prewhiten, 'keepunused', 'yes');
 
-if isgrad
+if hasgrad
   % the gradiometer structure needs to be updated to ensure that the forward model remains consistent with the data
   dataout.grad = ft_apply_montage(datain.grad, prewhiten, 'balancename', 'prewhiten');
 end
 
-if iselec
+if haselec
   % the electrode structure needs to be updated to ensure that the forward model remains consistent
   dataout.elec = ft_apply_montage(datain.elec, prewhiten, 'balancename', 'prewhiten');
 end

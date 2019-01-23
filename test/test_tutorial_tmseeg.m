@@ -46,7 +46,7 @@ data_tms_avg = ft_timelockanalysis(cfg, data_tms_raw);
 % clear data_tms_raw to save memory
 clear data_tms_raw
 
-% plot all in seperate window
+% plot all in separate window
 for i=1:numel(data_tms_avg.label) % Loop through all channels
   figure;
   plot(data_tms_avg.time, data_tms_avg.avg(i,:)); % Plot all data

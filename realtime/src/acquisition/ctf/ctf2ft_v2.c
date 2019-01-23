@@ -11,7 +11,7 @@
  * next slot in those cases, such that Acq finds a perfectly valid slot for the next
  * data packet.
  *
- * Using a socket pair, a seperate thread is notified of the incoming data packets,
+ * Using a socket pair, a separate thread is notified of the incoming data packets,
  * which are then being pulled out of the internal ringbuffer, analysed for triggers,
  * and then written to a local or remote FieldTrip buffer (samples + events).
  * 

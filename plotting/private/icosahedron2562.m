@@ -1,6 +1,12 @@
-function [pnt, tri] = icosahedron2562()
+function [pos, tri] = icosahedron2562()
 
-% ICOSAHEDRON2562 creates a 4-fold refined icosahedron
+% ICOSAHEDRON2562 creates a 4-fold refined icosahedron with the vertices on a unit
+% sphere
+%
+% Use as
+%   [pos, tri] = icosahedron2562;
+%
+% See also ICOSAHEDRON
 
 % Copyright (C) 2003, Robert Oostenveld
 %
@@ -22,10 +28,4 @@ function [pnt, tri] = icosahedron2562()
 %
 % $Id$
 
-[pnt, tri] = icosahedron;
-[pnt, tri] = refine(pnt, tri);
-[pnt, tri] = refine(pnt, tri);
-[pnt, tri] = refine(pnt, tri);
-[pnt, tri] = refine(pnt, tri);
-
-pnt = pnt ./ repmat(sqrt(sum(pnt.^2,2)), 1,3);
+[pos, tri] = icosahedron(4);

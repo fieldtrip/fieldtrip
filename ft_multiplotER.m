@@ -20,6 +20,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %   cfg.parameter     = field to be plotted on y-axis, for example 'avg', 'powspctrm' or 'cohspctrm' (default is automatic)
 %   cfg.maskparameter = field in the first dataset to be used for marking significant data
 %   cfg.maskstyle     = style used for masking of data, 'box', 'thickness' or 'saturation' (default = 'box')
+%   cfg.maskfacealpha = mask transparency value between 0 and 1
 %   cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.ylim          = 'maxmin', 'maxabs', 'zeromax', 'minzero', or [ymin ymax] (default = 'maxmin')
 %   cfg.gradscale     = number, scaling to apply to the MEG gradiometer channels prior to display
@@ -189,6 +190,7 @@ cfg.maskparameter  = ft_getopt(cfg, 'maskparameter');
 cfg.linestyle      = ft_getopt(cfg, 'linestyle', '-');
 cfg.linewidth      = ft_getopt(cfg, 'linewidth', 0.5);
 cfg.maskstyle      = ft_getopt(cfg, 'maskstyle', 'box');
+cfg.maskfacealpha  = ft_getopt(cfg, 'maskfacealpha', 1);
 cfg.channel        = ft_getopt(cfg, 'channel', 'all');
 cfg.directionality = ft_getopt(cfg, 'directionality', '');
 cfg.figurename     = ft_getopt(cfg, 'figurename');
@@ -469,13 +471,14 @@ hold on
 % Plot the data
 for m=1:length(selchan)
   mask = maskmatrix(m, :);
-  yval = squeeze(datamatrix(:,m,:));
+  for i=1:Ndata
+  yval = squeeze(datamatrix(i,m,:));
   
   % Clip out of bounds y values:
   yval(yval > ymax) = ymax;
   yval(yval < ymin) = ymin;
-  
-  ft_plot_vector(xval, yval, 'width', chanWidth(m), 'height', chanHeight(m), 'hpos', chanX(m), 'vpos', chanY(m), 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'color', graphcolor, 'style', cfg.linestyle{i}, 'linewidth', cfg.linewidth, 'axis', cfg.axes, 'highlight', mask, 'highlightstyle', cfg.maskstyle);
+  ft_plot_vector(xval, yval, 'width', chanWidth(m), 'height', chanHeight(m), 'hpos', chanX(m), 'vpos', chanY(m), 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'color', graphcolor(i), 'style', cfg.linestyle{i}, 'linewidth', cfg.linewidth, 'axis', cfg.axes, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'facealpha', cfg.maskfacealpha);
+  end
 end % for number of channels
 
 % plot the layout, labels and outline

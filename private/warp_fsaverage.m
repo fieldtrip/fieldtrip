@@ -46,11 +46,11 @@ fsavg_reg = ft_read_headshape([cfg.fshome filesep 'subjects' filesep 'fsaverage'
 for e = 1:numel(elec.label)
   % subject space (3D surface): electrode pos -> vertex index
   dist = sqrt(sum(((subj_pial.pos - repmat(elec.elecpos(e,:), size(subj_pial.pos,1), 1)).^2),2));
-  [~, minidx] = min(dist);
+  [dum, minidx] = min(dist);
   
   % intersubject space (2D sphere): vertex index -> vertex pos -> template vertex index
   dist2 = sqrt(sum(((fsavg_reg.pos - repmat(subj_reg.pos(minidx,:), size(fsavg_reg.pos,1), 1)).^2),2));
-  [~, minidx2] = min(dist2);
+  [dum, minidx2] = min(dist2);
   clear minidx
   
   % template space (3D surface): template vertex index -> template electrode pos

@@ -28,7 +28,7 @@ function [data] = ft_determine_coordsys(data, varargin)
 % Recognized and supported coordinate systems include: ctf, 4d, bti, itab,
 % neuromag, spm, mni, tal, acpc, als, ras, paxinos.
 %
-% See also FT_VOLUMEREALIGN, FT_VOLUMERESLICE
+% See also FT_VOLUMEREALIGN, FT_VOLUMERESLICE, FT_PLOT_ORTHO, FT_PLOT_AXES
 
 % Copyright (C) 2015, Jan-Mathijs Schoffelen
 %
@@ -77,6 +77,8 @@ elseif strcmp(dtype, 'mesh+label')
 end
 
 if isfield(data, 'coordsys') && ~isempty(data.coordsys)
+  % ensure that it is in lower case
+  data.coordsys = lower(data.coordsys);
   % print the interpretation of the coordinate system
   [labelx, labely, labelz] = coordsys2label(data.coordsys, 2, 0);
   fprintf('The positive x-axis is pointing towards %s\n', labelx);

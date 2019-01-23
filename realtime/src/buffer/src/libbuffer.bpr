@@ -5,7 +5,7 @@
     <VERSION value="BCB.06.00"/>
     <PROJECT value="libbuffer.lib"/>
     <OBJFILES value="cleanup.obj clientrequest.obj property.obj tcprequest.obj tcpserver.obj 
-      tcpsocket.obj util.obj dmarequest.obj swapbytes.obj printstruct.obj 
+      tcpsocket.obj util.obj dmarequest.obj swap.obj print.obj 
       win32\gettimeofday.obj"/>
     <RESFILES value=""/>
     <DEFFILE value=""/>
@@ -50,8 +50,8 @@
       <FILE FILENAME="tcpsocket.c" FORMNAME="" UNITNAME="tcpsocket.c" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="util.c" FORMNAME="" UNITNAME="util.c" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="dmarequest.c" FORMNAME="" UNITNAME="dmarequest.c" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
-      <FILE FILENAME="swapbytes.c" FORMNAME="" UNITNAME="swapbytes.c" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
-      <FILE FILENAME="printstruct.c" FORMNAME="" UNITNAME="printstruct.c" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="swap.c" FORMNAME="" UNITNAME="swap.c" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="print.c" FORMNAME="" UNITNAME="print.c" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="win32\gettimeofday.c" FORMNAME="" UNITNAME="gettimeofday" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
   </FILELIST>
   <BUILDTOOLS>

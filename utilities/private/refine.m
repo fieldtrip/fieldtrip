@@ -1,12 +1,12 @@
-function [pntr, trir, texr] = refine(pnt, tri, method, varargin)
+function [posr, trir, texr] = refine(pos, tri, method, varargin)
 
 % REFINE a 3D surface that is described by a triangulation
 %
 % Use as
-%   [pnt, tri]          = refine(pnt, tri)
-%   [pnt, tri]          = refine(pnt, tri, 'banks')
-%   [pnt, tri, texture] = refine(pnt, tri, 'banks', texture)
-%   [pnt, tri]          = refine(pnt, tri, 'updown', numtri)
+%   [pos, tri]          = refine(pos, tri)
+%   [pos, tri]          = refine(pos, tri, 'banks')
+%   [pos, tri, texture] = refine(pos, tri, 'banks', texture)
+%   [pos, tri]          = refine(pos, tri, 'updown', numtri)
 %
 % If no method is specified, the default is to refine the mesh globally by bisecting
 % each edge according to the algorithm described in Banks, 1983.
@@ -65,7 +65,7 @@ end
 switch lower(method)
   case 'banks'
     if ~isempty(texture)
-      npnt   = size(pnt,1);
+      npnt   = size(pos,1);
       ntri   = size(tri,1);
       ntex   = size(texture,1);
       
@@ -73,9 +73,9 @@ switch lower(method)
       
       insert = spalloc(3*npnt,3*npnt,3*ntri);
       trir  = zeros(4*ntri,3);      % allocate memory for the new triangles
-      pntr  = zeros(npnt+3*ntri,3); % allocate memory for the maximum number of new vertices
+      posr  = zeros(npnt+3*ntri,3); % allocate memory for the maximum number of new vertices
       texr  = zeros(ntex+3*ntri,2);
-      pntr(1:npnt,:) = pnt;         % insert the original vertices
+      posr(1:npnt,:) = pos;         % insert the original vertices
       texr(1:ntex,:) = texture;
       current = npnt;
       
@@ -83,7 +83,7 @@ switch lower(method)
         
         if ~insert(tri(i,1),tri(i,2))
           current = current + 1;
-          pntr(current,:) = (pnt(tri(i,1),:) + pnt(tri(i,2),:))/2;
+          posr(current,:) = (pos(tri(i,1),:) + pos(tri(i,2),:))/2;
           texr(current,:) = (texture(tri(i,1),:) + texture(tri(i,2),:))/2;
           insert(tri(i,1),tri(i,2)) = current;
           insert(tri(i,2),tri(i,1)) = current;
@@ -94,7 +94,7 @@ switch lower(method)
         
         if ~insert(tri(i,2),tri(i,3))
           current = current + 1;
-          pntr(current,:) = (pnt(tri(i,2),:) + pnt(tri(i,3),:))/2;
+          posr(current,:) = (pos(tri(i,2),:) + pos(tri(i,3),:))/2;
           texr(current,:) = (texture(tri(i,2),:) + texture(tri(i,3),:))/2;
           insert(tri(i,2),tri(i,3)) = current;
           insert(tri(i,3),tri(i,2)) = current;
@@ -105,7 +105,7 @@ switch lower(method)
         
         if ~insert(tri(i,3),tri(i,1))
           current = current + 1;
-          pntr(current,:) = (pnt(tri(i,3),:) + pnt(tri(i,1),:))/2;
+          posr(current,:) = (pos(tri(i,3),:) + pos(tri(i,1),:))/2;
           texr(current,:) = (texture(tri(i,3),:) + texture(tri(i,1),:))/2;
           insert(tri(i,3),tri(i,1)) = current;
           insert(tri(i,1),tri(i,3)) = current;
@@ -121,26 +121,26 @@ switch lower(method)
         trir(4*(i-1)+4, :) = [v12 v23 v31];
         
       end
-      pntr = pntr(1:current, :);
+      posr = posr(1:current, :);
       texr = texr(1:current, :);
       
     else
       % there is no texture
       
-      npnt   = size(pnt,1);
+      npnt   = size(pos,1);
       ntri   = size(tri,1);
       insert = spalloc(3*npnt,3*npnt,3*ntri);
       
       trir  = zeros(4*ntri,3);      % allocate memory for the new triangles
-      pntr  = zeros(npnt+3*ntri,3); % allocate memory for the maximum number of new vertices
-      pntr(1:npnt,:) = pnt;         % insert the original vertices
+      posr  = zeros(npnt+3*ntri,3); % allocate memory for the maximum number of new vertices
+      posr(1:npnt,:) = pos;         % insert the original vertices
       current = npnt;
       
       for i=1:ntri
         
         if ~insert(tri(i,1),tri(i,2))
           current = current + 1;
-          pntr(current,:) = (pnt(tri(i,1),:) + pnt(tri(i,2),:))/2;
+          posr(current,:) = (pos(tri(i,1),:) + pos(tri(i,2),:))/2;
           insert(tri(i,1),tri(i,2)) = current;
           insert(tri(i,2),tri(i,1)) = current;
           v12 = current;
@@ -150,7 +150,7 @@ switch lower(method)
         
         if ~insert(tri(i,2),tri(i,3))
           current = current + 1;
-          pntr(current,:) = (pnt(tri(i,2),:) + pnt(tri(i,3),:))/2;
+          posr(current,:) = (pos(tri(i,2),:) + pos(tri(i,3),:))/2;
           insert(tri(i,2),tri(i,3)) = current;
           insert(tri(i,3),tri(i,2)) = current;
           v23 = current;
@@ -160,7 +160,7 @@ switch lower(method)
         
         if ~insert(tri(i,3),tri(i,1))
           current = current + 1;
-          pntr(current,:) = (pnt(tri(i,3),:) + pnt(tri(i,1),:))/2;
+          posr(current,:) = (pos(tri(i,3),:) + pos(tri(i,1),:))/2;
           insert(tri(i,3),tri(i,1)) = current;
           insert(tri(i,1),tri(i,3)) = current;
           v31 = current;
@@ -175,18 +175,18 @@ switch lower(method)
         trir(4*(i-1)+4, :) = [v12 v23 v31];
       end
       % remove the space for the vertices that was not used
-      pntr = pntr(1:current, :);
+      posr = posr(1:current, :);
     end
     
   case 'updown'
     ntri = size(tri,1);
     while ntri<numtri
       % increase the number of triangles by a factor of 4
-      [pnt, tri] = refine(pnt, tri, 'banks');
+      [pos, tri] = refine(pos, tri, 'banks');
       ntri = size(tri,1);
     end
     % reduce number of triangles using MATLAB function
-    [trir, pntr] = reducepatch(tri, pnt, numtri);
+    [trir, posr] = reducepatch(tri, pos, numtri);
     
   otherwise
     ft_error('unsupported method "%s"', method);

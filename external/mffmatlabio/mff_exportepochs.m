@@ -28,16 +28,6 @@ function mff_exportepochs(EEG, mffFile)
 p = fileparts(which('mff_importsignal.m'));
 warning('off', 'MATLAB:Java:DuplicateClass');
 javaaddpath(fullfile(p, 'MFF-1.2.2-jar-with-dependencies.jar'));
-import com.egi.services.mff.api.MFFFactory;
-import com.egi.services.mff.api.MFFResourceType;
-import com.egi.services.mff.api.LocalMFFFactoryDelegate;
-import com.egi.services.mff.utility.ResourceUnmarshalException;
-import com.egi.services.mff.api.Signal;
-import com.egi.services.mff.api.SignalBlock;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.util.ArrayList;
 warning('on', 'MATLAB:Java:DuplicateClass');
 
 % Create a factory.
@@ -47,7 +37,7 @@ mfffactory = javaObject('com.egi.services.mff.api.MFFFactory', mfffactorydelegat
 %% create Segment to load time
 epochsRType = javaObject('com.egi.services.mff.api.MFFResourceType', javaMethod('valueOf', 'com.egi.services.mff.api.MFFResourceType$MFFResourceTypes', 'kMFF_RT_Epochs'));
 catURI = [ mffFile filesep 'epochs.xml' ];
-jList = java.util.ArrayList;
+jList = javaObject('java.util.ArrayList');
 if mfffactory.createResourceAtURI(catURI, epochsRType)
     fprintf('Epochs.xml file created successfully\n');
 else
@@ -65,10 +55,10 @@ if EEG.trials == 1
     if ~isempty(EEG.event) && isfield(EEG.event, 'type') && isstr(EEG.event(1).type)
         boundaryEvent = strmatch( 'boundary', { EEG.event.type }, 'exact');
         samples       = [ EEG.event(boundaryEvent).latency ];
-        durations     = [ EEG.event(boundaryEvent).duration ];
     end
     samples = [ 0 samples EEG.pnts ];
-    if ~isempty(durations)
+    if isfield(EEG.event, 'duration')
+        durations = [ EEG.event(boundaryEvent).duration ];
         durations = cumsum(durations);
         durations = [0 durations durations(end) ];
     else

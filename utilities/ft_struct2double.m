@@ -15,7 +15,7 @@ function [x] = ft_struct2double(x, maxdepth)
 % precision data. Therefore you should converted your data from single to
 % double precision after reading from file.
 %
-% See also FT_STRUCT2SINGLE
+% See also FT_STRUCT2SINGLE, FT_STRUCT2CHAR, FT_STRUCT2STRING
 
 % Copyright (C) 2005-2014, Robert Oostenveld
 %

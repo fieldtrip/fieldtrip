@@ -79,17 +79,20 @@ Y = [cnt1(:,2) cnt2(:,2)];
 Z = [cnt1(:,3) cnt2(:,3)];
 
 if nargout>3
-  % also output the two meshes on either side of the plane
+  % also output the two meshes on either side of the plane, prune the
+  % vertices to only contain closed triangles
   indx1 = find(side==1);
   pnt1  = pnt(indx1,:);
   sel1  = sum(ismember(tri, indx1), 2)==3;
   tri1  = tri(sel1,:);
+  pnt1  = pnt(unique(tri1(:)),:); 
   tri1  = tri_reindex(tri1);
   
   indx2 = find(side==-1);
   pnt2  = pnt(indx2,:);
   sel2  = sum(ismember(tri, indx2), 2)==3;
   tri2  = tri(sel2,:);
+  pnt2  = pnt(unique(tri2(:)),:);
   tri2  = tri_reindex(tri2);
 end
 

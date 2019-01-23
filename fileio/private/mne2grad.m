@@ -133,7 +133,7 @@ if ~isempty(coilaccuracy)
     R = H;
     T(1:3,1:3) = 0; % remove the rotation, keep the translation
     R(1:3,4)   = 0; % remove the translation, keep the rotation
-    ori = ft_warp_apply(H, ori);
+    ori = ft_warp_apply(R, ori); % only apply the rotation
     for j=1:thisdef.num_points
       grad.coilpos(k,:) = pos(j,:);
       grad.coilori(k,:) = ori(j,:);

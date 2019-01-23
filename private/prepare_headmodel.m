@@ -38,9 +38,10 @@ function [headmodel, sens, cfg] = prepare_headmodel(cfg, data)
 %
 % $Id$
 
+cfg = ft_checkconfig(cfg, 'forbidden', 'order');
+
 % set the defaults
 cfg.channel  = ft_getopt(cfg, 'channel', 'all');
-cfg.order    = ft_getopt(cfg, 'order', 10);       % order of expansion for Nolte method; 10 should be enough for real applications; in simulations it makes sense to go higher
 cfg.siunits  = ft_getopt(cfg, 'siunits', 'no');   % yes/no, ensure that SI units are used consistently
 
 hasdata = (nargin>1);
@@ -109,7 +110,7 @@ end
 % sens      = struct(sens);
 
 % the prepare_vol_sens function from the forwinv module does most of the actual work
-[headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, 'channel', cfg.channel, 'order', cfg.order);
+[headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, 'channel', cfg.channel);
 
 % update the selected channels in the configuration
 if iscell(sens)

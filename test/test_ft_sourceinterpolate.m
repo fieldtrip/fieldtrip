@@ -233,6 +233,10 @@ ft_sourceplot(cfg, interp2d_sfr2vol);
 
 [sphere_lo.pnt, sphere_lo.tri] = icosahedron162;
 [sphere_hi.pnt, sphere_hi.tri] = icosahedron642;
+% Ensure that the first 162 vertices are on exactly identical positions. Without this
+% line there would be differences of around 1e-15 due to numerical errors, causing
+% the smudge interpolation to fail.
+sphere_lo.pnt = sphere_hi.pnt(1:162,:); 
 
 source0d_sphere_lo = [];
 source0d_sphere_lo.pos = sphere_lo.pnt;

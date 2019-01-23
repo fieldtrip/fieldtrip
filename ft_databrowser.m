@@ -26,33 +26,24 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.zlim                    = color scaling to apply to component topographies, 'minmax', 'maxabs' (default = 'maxmin')
 %   cfg.blocksize               = duration in seconds for cutting the data up
 %   cfg.trl                     = structure that defines the data segments of interest, only applicable for trial-based data
-%   cfg.continuous              = 'yes' or 'no' whether the data should be interpreted as continuous or trial-based
+%   cfg.continuous              = 'yes' or 'no', whether the data should be interpreted as continuous or trial-based
+%   cfg.allowoverlap            = 'yes' or 'no', whether data that is overlapping in multiple trials is allowed (default = 'no')
 %   cfg.channel                 = cell-array with channel labels, see FT_CHANNELSELECTION
-%   cfg.channelclamped          = cell-array with channel labels, that (when using the 'vertical' viewmode) will always be
-%                                 shown at the bottom. This is useful for showing ECG/EOG channels along with the other channels
-%   cfg.plotlabels              = 'yes' (default), 'no', 'some'; whether to plot channel labels in vertical
-%                                 viewmode ('some' plots one in every ten labels; useful when plotting a
-%                                 large number of channels at a time)
+%   cfg.channelclamped          = cell-array with channel labels, that (when using the 'vertical' viewmode) will always be shown at the bottom. This is useful for showing ECG/EOG channels along with the other channels
+%   cfg.plotlabels              = 'yes', 'no' or 'some', whether to plot channel labels in vertical viewmode. The option 'some' plots one label for every ten channels, which is useful if there are many channels. (default = 'yes')
 %   cfg.ploteventlabels         = 'type=value', 'colorvalue' (default = 'type=value');
 %   cfg.plotevents              = 'no' or 'yes', whether to plot event markers. (default is 'yes')
 %   cfg.viewmode                = string, 'butterfly', 'vertical', 'component' for visualizing ICA/PCA components (default is 'butterfly')
 %   cfg.artfctdef.xxx.artifact  = Nx2 matrix with artifact segments see FT_ARTIFACT_xxx functions
 %   cfg.selectfeature           = string, name of feature to be selected/added (default = 'visual')
 %   cfg.selectmode              = 'markartifact', 'markpeakevent', 'marktroughevent' (default = 'markartifact')
-%   cfg.colorgroups             = 'sequential' 'allblack' 'labelcharx' (x = xth character in label), 'chantype' or
-%                                  vector with length(data/hdr.label) defining groups (default = 'sequential')
+%   cfg.colorgroups             = 'sequential' 'allblack' 'labelcharx' (x = xth character in label), 'chantype' or vector with length(data/hdr.label) defining groups (default = 'sequential')
 %   cfg.channelcolormap         = COLORMAP (default = customized lines map with 15 colors)
-%   cfg.verticalpadding         = number or 'auto', padding to be added to top and bottom of plot to avoid channels largely
-%                                 dissappearing when viewmode = 'vertical'/'component'  (default = 'auto'). The padding is
-%                                 expressed as a proportion of the total height added to the top and bottom. The setting 'auto'
-%                                 determines the padding depending on the number of channels that are being plotted.
-%   cfg.selfun                  = string, name of function that is evaluated using the right-click context menu. The selected
-%                                 data and cfg.selcfg are passed on to this function.
+%   cfg.verticalpadding         = number or 'auto', padding to be added to top and bottom of plot to avoid channels largely dissappearing when viewmode = 'vertical'/'component'  (default = 'auto'). The padding is expressed as a proportion of the total height added to the top and bottom. The setting 'auto' determines the padding depending on the number of channels that are being plotted.
+%   cfg.selfun                  = string, name of function that is evaluated using the right-click context menu. The selected data and cfg.selcfg are passed on to this function.
 %   cfg.selcfg                  = configuration options for function in cfg.selfun
-%   cfg.seldat                  = 'selected' or 'all', specifies whether only the currently selected or all channels will
-%                                 be passed to the selfun (default = 'selected')
-%   cfg.renderer                = string, 'opengl', 'zbuffer', 'painters', see MATLAB Figure Properties. If the databrowser
-%                                 crashes, you should try 'painters'.
+%   cfg.seldat                  = 'selected' or 'all', specifies whether only the currently selected or all channels will be passed to the selfun (default = 'selected')
+%   cfg.renderer                = string, 'opengl', 'zbuffer', 'painters', see MATLAB Figure Properties. If this function crashes, you should try 'painters'.
 %   cfg.position                = location and size of the figure, specified as a vector of the form [left bottom width height].
 %
 % The following options for the scaling of the EEG, EOG, ECG, EMG and MEG channels is
@@ -69,8 +60,7 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.mychanscale             = number, scaling to apply to the channels specified in cfg.mychan
 %   cfg.mychan                  = Nx1 cell-array with selection of channels
 %   cfg.chanscale               = Nx1 vector with scaling factors, one per channel specified in cfg.channel
-%   cfg.compscale               = string, 'global' or 'local', defines whether the colormap for the topographic scaling is
-%                                 applied per topography or on all visualized components (default 'global')
+%   cfg.compscale               = string, 'global' or 'local', defines whether the colormap for the topographic scaling is applied per topography or on all visualized components (default 'global')
 %
 % You can specify preprocessing options that are to be applied to the  data prior to
 % display. Most options from FT_PREPROCESSING are supported. They should be specified
@@ -219,6 +209,8 @@ cfg.axisfontunits   = ft_getopt(cfg, 'axisfontunits', 'points');     % inches, c
 cfg.linewidth       = ft_getopt(cfg, 'linewidth', 0.5);
 cfg.verticalpadding = ft_getopt(cfg, 'verticalpadding', 'auto');
 cfg.artifactalpha   = ft_getopt(cfg, 'artifactalpha', 0.2);          % for the opacity of marked artifacts
+cfg.allowoverlap    = ft_getopt(cfg, 'allowoverlap', 'no');          % for ft_fetch_data
+cfg.contournum      = ft_getopt(cfg, 'contournum', 0);               % topoplot contour lines
 
 if ~isfield(cfg, 'viewmode')
   % butterfly, vertical, component
@@ -665,9 +657,9 @@ opt.changedchanflg = true; % trigger for redrawing channel labels and preparing 
 
 % create fig
 if isfield(cfg, 'position')
-    h = figure('Position', cfg.position);
+  h = figure('Position', cfg.position);
 else
-    h = figure;
+  h = figure;
 end
 
 % put appdata in figure
@@ -837,13 +829,18 @@ if nargout
   % add the update event to the output cfg
   cfg.event = opt.event;
   
-  % do the general cleanup and bookkeeping at the end of the function
-  ft_postamble debug
-  ft_postamble trackconfig
-  ft_postamble previous data
-  ft_postamble provenance
-  
 end % if nargout
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
+ft_postamble trackconfig
+ft_postamble previous data
+ft_postamble provenance
+ft_postamble hastoolbox
+
+if ~nargout
+  clear cfg
+end
 
 end % main function
 
@@ -1477,12 +1474,12 @@ switch key
     response = inputdlg('vertical scale, [ymin ymax], ''maxabs'' or ''maxmin''', 'specify', 1, {['[ ' num2str(cfg.ylim) ' ]']});
     if ~isempty(response)
       if strcmp(response, 'maxmin')
-        minval = min(dat(:));
-        maxval = max(dat(:));
+        minval = min(opt.curdata.trial{1}(:));
+        maxval = max(opt.curdata.trial{1}(:));
         cfg.ylim = [minval maxval];
       elseif strcmp(response, 'maxabs')
-        minval = min(dat(:));
-        maxval = max(dat(:));
+        minval = min(opt.curdata.trial{1}(:));
+        maxval = max(opt.curdata.trial{1}(:));
         cfg.ylim = [-max(abs([minval maxval])) max(abs([minval maxval]))];
       else
         % convert to string and add brackets, just to ensure that str2num will work
@@ -1666,9 +1663,9 @@ else
 end
 
 if isempty(opt.orgdata)
-  dat = ft_read_data(cfg.datafile, 'header', opt.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat, 'headerformat', cfg.headerformat);
+  dat = ft_read_data(cfg.datafile, 'header', opt.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', ~istrue(cfg.continuous), 'dataformat', cfg.dataformat, 'headerformat', cfg.headerformat);
 else
-  dat = ft_fetch_data(opt.orgdata, 'header', opt.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'allowoverlap', true); % ALLOWING OVERLAPPING TRIALS
+  dat = ft_fetch_data(opt.orgdata, 'header', opt.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'allowoverlap', istrue(cfg.allowoverlap));
 end
 art = ft_fetch_data(opt.artdata, 'begsample', begsample, 'endsample', endsample);
 
@@ -2090,7 +2087,7 @@ if strcmp(cfg.viewmode, 'component')
       % laychan is the actual topo layout, in pixel units for .mat files
       % laytopo is a vertical layout determining where to plot each topo, with one entry per component
       
-      ft_plot_topo(chanx, chany, chanz, 'mask', laychan.mask, 'interplim', 'mask', 'outline', laychan.outline, 'tag', 'topography', 'hpos', laytopo.pos(laysel,1)-laytopo.width(laysel)/2, 'vpos', laytopo.pos(laysel,2)-laytopo.height(laysel)/2, 'width', laytopo.width(laysel), 'height', laytopo.height(laysel), 'gridscale', 45);
+      ft_plot_topo(chanx, chany, chanz, 'mask', laychan.mask, 'interplim', 'mask', 'outline', laychan.outline, 'tag', 'topography', 'hpos', laytopo.pos(laysel,1)-laytopo.width(laysel)/2, 'vpos', laytopo.pos(laysel,2)-laytopo.height(laysel)/2, 'width', laytopo.width(laysel), 'height', laytopo.height(laysel), 'gridscale', 45, 'isolines', cfg.contournum);
       
       %axis equal
       %drawnow

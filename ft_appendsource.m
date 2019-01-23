@@ -1,7 +1,7 @@
 function [source] = ft_appendsource(cfg, varargin)
 
 % FT_APPENDSOURCE concatenates multiple volumetric source reconstruction data
-% structures that have been processed seperately.
+% structures that have been processed separately.
 %
 % If the source reconstructions were computed for different ROIs or different slabs
 % of a regular 3D grid (as indicated by the source positions), the data will be
@@ -15,7 +15,7 @@ function [source] = ft_appendsource(cfg, varargin)
 % Use as
 %   combined = ft_appendsource(cfg, source1, source2, ...)
 %
-% See also FT_SOURCEANALYSIS, FT_DATATYPE_SOURCE, FT_APPENDDATA, T_APPENDTIMELOCK,
+% See also FT_SOURCEANALYSIS, FT_DATATYPE_SOURCE, FT_APPENDDATA, FT_APPENDTIMELOCK,
 % FT_APPENDFREQ
 
 % Copyright (C) 2011, Robert Oostenveld
@@ -99,13 +99,13 @@ switch cfg.appenddim
       % we need to check whether the other dimensions are the same.
       % if not, consider some tolerance.
       boolval1 = checkpos(varargin{:}, 'identical');
-      if isfield(varargin{1}, 'freq'),
+      if isfield(varargin{1}, 'freq')
         boolval2 = checkfreq(varargin{:}, 'identical', tol);
       else
         boolval2 = true;
       end
 
-      if isfield(varargin{1}, 'time'),
+      if isfield(varargin{1}, 'time')
         boolval3 = checktime(varargin{:}, 'identical', tol);
         if boolval1 && boolval2 && boolval3
           % each of the input datasets contains a single repetition (perhaps an average), these can be concatenated
@@ -150,13 +150,13 @@ switch cfg.appenddim
     % here we need to check whether the other dimensions are the same. if
     % not, consider some tolerance.
     boolval1 = checkpos(varargin{:}, 'identical', tol);
-    if isfield(varargin{1}, 'freq'),
+    if isfield(varargin{1}, 'freq')
       boolval2 = checkfreq(varargin{:}, 'identical', tol);
     else
       boolval2 = true;
     end
 
-    if isfield(varargin{1}, 'time'),
+    if isfield(varargin{1}, 'time')
       boolval3 = checktime(varargin{:}, 'identical', tol);
     else
       boolval3 = true;
@@ -189,17 +189,17 @@ switch cfg.appenddim
       hascumtapcnt = [];
       hastrialinfo = [];
       for i=1:Ndata
-        if isfield(varargin{i}, 'cumsumcnt');
+        if isfield(varargin{i}, 'cumsumcnt')
           hascumsumcnt(end+1) = 1;
         else
           hascumsumcnt(end+1) = 0;
         end
-        if isfield(varargin{i}, 'cumtapcnt');
+        if isfield(varargin{i}, 'cumtapcnt')
           hascumtapcnt(end+1) = 1;
         else
           hascumtapcnt(end+1) = 0;
         end
-        if isfield(varargin{i}, 'trialinfo');
+        if isfield(varargin{i}, 'trialinfo')
           hastrialinfo(end+1) = 1;
         else
           hastrialinfo(end+1) = 0;
@@ -212,45 +212,45 @@ switch cfg.appenddim
       else
         source.freq=varargin{1}.freq;
       end
-      if ~sum(hascumsumcnt)==0 && ~(sum(hascumsumcnt)==Ndata);
+      if ~sum(hascumsumcnt)==0 && ~(sum(hascumsumcnt)==Ndata)
         ft_error('the cumsumcnt fields of the input data structures are not equal');
       else
         iscumsumcnt=unique(hascumsumcnt);
       end
-      if ~sum(hascumtapcnt)==0 && ~(sum(hascumtapcnt)==Ndata);
+      if ~sum(hascumtapcnt)==0 && ~(sum(hascumtapcnt)==Ndata)
         ft_error('the cumtapcnt fields of the input data structures are not equal');
       else
         iscumtapcnt=unique(hascumtapcnt);
       end
-      if ~sum(hastrialinfo)==0 && ~(sum(hastrialinfo)==Ndata);
+      if ~sum(hastrialinfo)==0 && ~(sum(hastrialinfo)==Ndata)
         ft_error('the trialinfo fields of the input data structures are not equal');
       else
         istrialinfo=unique(hastrialinfo);
       end
 
       % concatenating fields
-      for i=1:Ndata;
-        if iscumsumcnt;
+      for i=1:Ndata
+        if iscumsumcnt
           cumsumcnt{i}=varargin{i}.cumsumcnt;
         end
-        if iscumtapcnt;
+        if iscumtapcnt
           cumtapcnt{i}=varargin{i}.cumtapcnt;
         end
-        if istrialinfo;
+        if istrialinfo
           trialinfo{i}=varargin{i}.trialinfo;
         end
       end
 
       % fill in the rest of the descriptive fields
-      if iscumsumcnt;
+      if iscumsumcnt
         source.cumsumcnt = cat(catdim,cumsumcnt{:});
         clear cumsumcnt;
       end
-      if iscumtapcnt;
+      if iscumtapcnt
         source.cumtapcnt = cat(catdim,cumtapcnt{:});
         clear cumtapcnt;
       end
-      if istrialinfo;
+      if istrialinfo
         source.trialinfo = cat(catdim,trialinfo{:});
         clear trialinfo;
       end
@@ -298,7 +298,7 @@ for m = 1:Ndata
 
 end
 
-if catdim==0,
+if catdim==0
   ndim    = length(size(tmp{1}));
   source.(param) = permute(cat(ndim+1,tmp{:}),[ndim+1 1:ndim]);
 else
