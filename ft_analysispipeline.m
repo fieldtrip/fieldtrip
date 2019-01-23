@@ -682,7 +682,7 @@ function pipeline2htmlfile(cfg, pipeline)
 filename = fullfile(p, [f '.html']);
 
 % skip the data-like fields and the fields that probably were not added by the user himself
-skipfields = {'previous', 'grid', 'headmodel', 'event', 'warning', 'progress', 'trackconfig', 'checkconfig', 'checksize', 'showcallinfo', 'debug', 'outputfilepresent', 'trackcallinfo', 'trackdatainfo', 'trackusage'};
+skipfields = ignorefields('html');
 
 fprintf('exporting HTML file to ''%s''\n', filename);
 

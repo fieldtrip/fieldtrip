@@ -178,6 +178,26 @@ switch purpose
       'cfg'
       };
     
+  case 'html'
+    % when generating a html-formatted pipeline, ignore data-like fields and fields that probably were not added by the user himself
+    ignore = {
+      'previous'
+      'grid'
+      'headmodel'
+      'event'
+      'warning'
+      'progress'
+      'trackconfig'
+      'checkconfig'
+      'checksize'
+      'showcallinfo'
+      'debug'
+      'outputfilepresent'
+      'trackcallinfo'
+      'trackdatainfo'
+      'trackusage'
+      };
+    
   otherwise
     ft_error('invalid purpose');
 end % switch purpose
