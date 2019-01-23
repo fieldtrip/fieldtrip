@@ -13,7 +13,7 @@
 %
 % See also FT_PREAMBLE, FT_POSTAMBLE, FT_POSTAMBLE_SAVEVAR, FT_PREAMBLE_PROVENANCE
 
-% Copyright (C) 2011-2012, Robert Oostenveld, DCCN
+% Copyright (C) 2011-2019, Robert Oostenveld, DCCN
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -36,13 +36,34 @@
 % use an anonymous function
 assign = @(var, val) assignin('caller', var, val);
 
-if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
-
+if (isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)) || (isfield(cfg, 'reproducescript') && ~isempty(cfg.reproducescript))
+   
   % the input data should be read from file
-  if (ft_nargin>1)
+  
+  if ft_nargin>1 && isfield(cfg, 'reproducescript') && ~isempty(cfg.reproducescript)
+    % write the input data to an input file, this complements the script that is being constructed
+    % the first input argument is the cfg, the subsequent ones contain input data
+    
+    if isequal(iW1aenge_preamble, {'varargin'})
+      cfg.inputfile = {};
+      iW1aenge_now = datestr(now, 30);
+      for i=1:(ft_nargin-1)
+        cfg.inputfile{i} = sprintf('%s_input_%s_%d', iW1aenge_now, iW1aenge_preamble{i}, i);
+        savevar(cfg.inputfile{i}, iW1aenge_preamble{i}, varargin{i});
+      end
+    else
+      cfg.inputfile = {};
+      iW1aenge_now = datestr(now, 30);
+      for i=1:(ft_nargin-1)
+        cfg.inputfile{i} = sprintf('%s_input_%s', iW1aenge_now, iW1aenge_preamble{i});
+        savevar(cfg.inputfile{i}, iW1aenge_preamble{i}, eval(iW1aenge_preamble{i}));
+      end
+    end
+    
+  elseif ft_nargin>1
     ft_error('cfg.inputfile should not be used in conjunction with giving input data to this function');
   end
-
+  
   if isfield(cfg, 'inputlock') && ~isempty(cfg.inputlock)
     mutexlock(cfg.inputlock);
   end

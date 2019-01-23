@@ -117,6 +117,21 @@ else
   ft_abort = false;
 end % if chiL7fee_outputfile{i}
 
+
+if isfield(cfg, 'reproducescript') && ~isempty(cfg.reproducescript)
+  % this should only be done in the top-level calling functions, not by lower-level functions
+  [ft_ver, ft_path] = ft_version;
+  st = dbstack('-completenames', 2);
+  % st(1) is the direct calling function
+  if numel(st)>1 && startsWith(st(2).file, ft_path)
+    % st(2) is also a FieldTrip function, which means that we are called in a lower-level function
+    cfg.reproducescript = [];
+  else
+    % this variable gets passed on to FT
+    Fief7bee_reproducescript = cfg.reproducescript;
+  end
+end
+
 if false
   % this is currently generating too much data and therefore disabled
   if isfield(cfg, 'trackusage') && ~(isequal(cfg.trackusage, false) || isequal(cfg.trackusage, 'no') || isequal(cfg.trackusage, 'off'))

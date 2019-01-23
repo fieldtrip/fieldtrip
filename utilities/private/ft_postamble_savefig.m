@@ -29,20 +29,33 @@
 %
 % $Id$
 
-if exist('Fief7bee_rewritescript', 'var')
-  cfg.rewritescript = Fief7bee_rewritescript;
+if exist('Fief7bee_reproducescript', 'var')
+  cfg.reproducescript = Fief7bee_reproducescript;
 end
 
 % the output data should be saved to a MATLAB file
-if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || (isfield(cfg, 'rewritescript') && ~isempty(cfg.rewritescript))
+if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || (isfield(cfg, 'reproducescript') && ~isempty(cfg.reproducescript))
   
   if isfield(cfg, 'outputlock') && ~isempty(cfg.outputlock)
     mutexlock(cfg.outputlock);
   end
   
-  if isfield(cfg, 'rewritescript') && ~isempty(cfg.rewritescript)
+  % WARNING: the following code is shared between ft_preamble_savefig and ft_preamble_savevar
+  if isfield(cfg, 'reproducescript') && ~isempty(cfg.reproducescript)
     iW1aenge_now = datestr(now, 30);
     cfg.outputfile = sprintf('%s_output.fig', iW1aenge_now);
+    
+    % write the script that reproduces the analysis
+    iW1aenge_cfg = removefields(cfg.callinfo.usercfg, ignorefields('reproducescript'));
+    iW1aenge_cfg = copyfields(cfg, iW1aenge_cfg, {'outputfile'});
+    iW1aenge_cfg = printstruct('cfg', iW1aenge_cfg);
+    iW1aenge_fid = fopen(cfg.reproducescript, 'a+');
+    fprintf(iW1aenge_fid, "%%%%\n\n");
+    fprintf(iW1aenge_fid, "cfg = [];\n");
+    fprintf(iW1aenge_fid, "%s\n", iW1aenge_cfg);
+    iW1aenge_st = dbstack(2);
+    fprintf(iW1aenge_fid, '%s(cfg);\n\n', iW1aenge_st(1).name);
+    fclose(iW1aenge_fid);
   end
   
   if isequal(iW1aenge_postamble, {'varargout'}) && ~iscell(cfg.outputfile)
