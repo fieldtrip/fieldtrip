@@ -71,9 +71,7 @@ elseif m <= n
     kappa = input('Specify the number of dimensions at which the eigenvalue spectrum will be truncated: ');
     if isempty(kappa)
       kappa = m;
-    end
-  end
-    
+    end    
   elseif isempty(kappa) && isempty(tolerance)
     % put the tolerance for the pinv to its default 
     tolerance = 10 * max(m,n) * max(s) * eps;
@@ -81,8 +79,37 @@ elseif m <= n
   
   if ~isempty(kappa)
     % use kappa
+    usekappa = true;
+    usetolerance = false;
   elseif ~isempty(tolerance)
+    usetolerance = true; % needed for winsorization
+    usekappa = false;
     kappa = sum(s > tolerance);
+  end
+  
+  if kappa==0
+    Ainv = zeros(size(A'),class(A));
+    return;
+  end
+  
+  switch method
+    case 'inv'
+      Ainv = inv(A);
+    case 'pinv'
+      S    = diag(ones(kappa,1)./s(1:kappa));
+      Ainv = V(:,1:kappa)*S*U(:,1:kappa)';
+    case 'winsorize'
+      % replace all singular values < the kappa'th singular by the kappa'th
+      % singular value
+      if usekappa
+        s(kappa:end) = s(kappa);
+      elseif usetolerance
+        s(s<tolerance) = tolerance;
+      end
+      S    = diag(1./s);
+      Ainv = V*S*U';
+    otherwise 
+      ft_error('Unsupported method for matrix inversion');
   end
   
   if feedback
@@ -96,20 +123,5 @@ elseif m <= n
     plot(kappa.*[1 1], abc([3 4]), 'r');
   end
   
-  if kappa==0
-    Ainv = zeros(size(A'),class(A));
-    return;
-  end
-  
-  switch method
-    case 'inv'
-      Ainv = inv(A);
-    case 'pinv'
-      s    = diag(ones(kappa,1)./s(1:kappa));
-      Ainv = V(:,1:kappa)*s*U(:,1:kappa)';
-    case 'winsorize'
-    otherwise 
-      ft_error('Unsupported method for matrix inversion');
-  end
   
 end
