@@ -15,15 +15,22 @@ function [dataout] = ft_denoise_prewhiten(cfg, datain, noise)
 % The configuration structure can contain
 %   cfg.channel     = cell-array, see FT_CHANNELSELECTION (default = 'all')
 %   cfg.split       = cell-array of channel types between which covariance is split, it can also be 'all' or 'no'
+%   cfg.lambda      = scalar, or string
+%   cfg.kappa       = scalar
+%   cfg.tolerance   = scalar
 %
 % The channel selection relates to the channels that are pre-whitened
-% using the noise covariance. All channels present in the input data
-% structure will be present in the output, including trigger and
+% using the same selection of channels in the noise covariance.
+% All channels present in the input data structure will be present in the
+% output, including trigger and
 % other auxiliary channels.
 %
-% See also FT_DENOISE_SYNTHETIC, FT_DENOISE_PCA
+% The lambda/kappa/tolerance values relate to how the inverse of the noise
+% covariance is computed by FT_INV
+%
+% See also FT_DENOISE_SYNTHETIC, FT_DENOISE_PCA FT_INV
 
-% Copyright (C) 2018, Robert Oostenveld
+% Copyright (C) 2018-2019, Robert Oostenveld and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -64,12 +71,17 @@ end
 % get the defaults
 cfg.channel = ft_getopt(cfg, 'channel', 'all');
 cfg.split   = ft_getopt(cfg, 'split',   'all');
+cfg.lambda  = ft_getopt(cfg, 'lambda',  0);
+cfg.kappa   = ft_getopt(cfg, 'kappa',   []);
+cfg.tol     = ft_getopt(cfg, 'tol',     []);
+
 
 % ensure that the input data is correct, the next line is needed for a
 % attempt correct detection of the data chanunit (with a hdr-field it fails
 % for meggrad data)
 if isfield(datain, 'hdr'), datain = rmfield(datain, 'hdr'); end
-datain = ft_checkdata(datain, 'datatype', 'raw', 'haschantype', 'yes', 'haschanunit', 'yes'); 
+
+datain = ft_checkdata(datain, 'datatype', {'raw' 'timelock'}, 'haschantype', 'yes', 'haschanunit', 'yes'); 
 noise  = ft_checkdata(noise, 'datatype', 'timelock', 'haschantype', 'yes', 'haschanunit', 'yes');
 
 % select channels and trials of interest, by default this will select all channels and trials
@@ -107,8 +119,14 @@ for i=1:numel(chantype)
   noise.cov(~sel,sel) = 0;
 end
 
+% invert the noise covariance matrix
+invnoise = ft_inv(noise.cov, 'lambda', cfg.lambda, 'kappa', cfg.kappa, 'tolerance', cfg.tol);
+[U,S,V]  = svd(invnoise,'econ');
+%sel = (rank(invnoise)+1):size(invnoise,1);
+%S(sel,sel) = 0;
+
 prewhiten             = [];
-prewhiten.tra         = sqrtm(ft_inv(noise.cov)); % FIXME add regularization
+prewhiten.tra         = U*sqrt(S)*U';
 prewhiten.labelold    = noise.label;
 prewhiten.labelnew    = noise.label;
 prewhiten.chantypeold = noise.chantype;
