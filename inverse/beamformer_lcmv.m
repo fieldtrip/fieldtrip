@@ -156,7 +156,7 @@ rankCy = rank(Cy);
 if ~isempty(lambda) && ischar(lambda) && lambda(end)=='%'
   ratio = sscanf(lambda, '%f%%');
   ratio = ratio/100;
-  tmplambda = ratio * trace(Cf)/size(Cf,1);
+  tmplambda = ratio * trace(Cy)/size(Cy,1);
 elseif ~isempty(lambda)
   tmplambda = lambda;
 else
