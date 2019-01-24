@@ -1,19 +1,36 @@
 function Ainv = ft_inv(A, varargin)
 
-% FT_INV computes a regularized inverse of a matrix.
+% FT_INV computes a (regularized) inverse of a matrix.
 %
 % Use as 
 %  Ainv = ft_inv(A, ...)
 % where optional additional arguments should be defined as key-value pairs.
 %
-% method    = 'pinv', 'inv', or 'winsorize'
-% tolerance = scalar, blabla
-% kappa     = scalar integer
-% lambda    = scalar, or string 
-% feedback  = boolean
+% method    = 'pinv', 'inv', or 'winsorize', the default method is pinv,
+%               which results in a Moore-Penrose pseudoinverse, clipping
+%               the number of singular values according to tolerance/kappa
+%               (see below) before reassembling the inverse. If the method
+%               specified is 'inv', a normal inv() is computed. If the
+%               method specified is 'winsorize' the singular values s are
+%               clipped according to tolerance/kappa, but the original
+%               number of singular values is used for reassembling the
+%               inverse.
+% tolerance = scalar, reflects the fraction of the largest singular value
+%               at which the singular value spectrum will be clipped. The
+%               default value is 10*eps*max(size(A))
+% kappa     = scalar integer, reflects the ordinal singular value at which
+%               the singular value will be clipped.
+% lambda    = scalar, or string (expressed as a percentage), specifying the
+%               regularization parameter for diagonal loading. Lambda 
+%               specified as a percentage will be converted into a
+%               percentage of the average of trace(A).
+% feedback  = boolean, false or true, to show the singular value spectrum
+%               with the clipping level used.
+% interactive = boolean, false or true, to manually specify a value for
+%               kappa.
 %
 % kappa and tolerance are mutually exclusive, in case both are specified,
-% tolerance takes precedence
+% tolerance takes precedence.
 
 method    = ft_getopt(varargin, 'method', 'pinv');
 tolerance = ft_getopt(varargin, 'tolerance', []);
@@ -73,8 +90,8 @@ elseif m <= n
       kappa = m;
     end    
   elseif isempty(kappa) && isempty(tolerance)
-    % put the tolerance for the pinv to its default 
-    tolerance = 10 * max(m,n) * max(s) * eps;
+    % put the tolerance for the pinv to its (increased by R.O.) default 
+    tolerance = 10 * max(m,n) * eps;
   end
   
   if ~isempty(kappa)
@@ -84,7 +101,7 @@ elseif m <= n
   elseif ~isempty(tolerance)
     usetolerance = true; % needed for winsorization
     usekappa = false;
-    kappa = sum(s > tolerance);
+    kappa = sum(s./s(1) > tolerance);
   end
   
   if kappa==0
@@ -102,7 +119,7 @@ elseif m <= n
       % replace all singular values < the kappa'th singular by the kappa'th
       % singular value
       if usekappa
-        s(kappa:end) = s(kappa);
+        s = max(s,s(kappa));
       elseif usetolerance
         s(s<tolerance) = tolerance;
       end
