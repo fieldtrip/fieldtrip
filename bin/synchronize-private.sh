@@ -867,6 +867,14 @@ ARRAY+=(inverse/private/ft_inside_vol.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# ft_inv.m
+
+ARRAY=()
+ARRAY+=(private/ft_inv.m)
+ARRAY+=(inverse/private/ft_inv.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # ft_notification.m, should be consistent with ft_warning
 
 ARRAY=()
