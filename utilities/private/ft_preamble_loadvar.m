@@ -36,26 +36,25 @@
 % use an anonymous function
 assign = @(var, val) assignin('caller', var, val);
 
-if (isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)) || (isfield(cfg, 'reproducescript') && ~isempty(cfg.reproducescript))
-   
+if (isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)) || exist('Fief7bee_reproducescript', 'var')
   % the input data should be read from file
   
-  if ft_nargin>1 && isfield(cfg, 'reproducescript') && ~isempty(cfg.reproducescript)
-    % write the input data to an input file, this complements the script that is being constructed
-    % the first input argument is the cfg, the subsequent ones contain input data
+  if exist('Fief7bee_reproducescript', 'var')
+    % the script, input and output files are written to a directory
     
+    % write the function input variables to a MATLAB file
     if isequal(iW1aenge_preamble, {'varargin'})
       cfg.inputfile = {};
       iW1aenge_now = datestr(now, 30);
       for i=1:(ft_nargin-1)
-        cfg.inputfile{i} = sprintf('%s_input_%s_%d', iW1aenge_now, iW1aenge_preamble{i}, i);
+        cfg.inputfile{i} = fullfile(Fief7bee_reproducescript, sprintf('%s_input_%s_%d', iW1aenge_now, iW1aenge_preamble{i}, i));
         savevar(cfg.inputfile{i}, iW1aenge_preamble{i}, varargin{i});
       end
     else
       cfg.inputfile = {};
       iW1aenge_now = datestr(now, 30);
       for i=1:(ft_nargin-1)
-        cfg.inputfile{i} = sprintf('%s_input_%s', iW1aenge_now, iW1aenge_preamble{i});
+        cfg.inputfile{i} = fullfile(Fief7bee_reproducescript, sprintf('%s_input_%s', iW1aenge_now, iW1aenge_preamble{i}));
         savevar(cfg.inputfile{i}, iW1aenge_preamble{i}, eval(iW1aenge_preamble{i}));
       end
     end
@@ -99,3 +98,4 @@ if (isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)) || (isfield(cfg, 'repr
   end
   
 end % if inputfile
+
