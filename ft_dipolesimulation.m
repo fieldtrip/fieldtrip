@@ -200,9 +200,9 @@ ft_progress('init', cfg.feedback, 'computing simulated data');
 for trial=1:Ntrials
   ft_progress(trial/Ntrials, 'computing simulated data for trial %d\n', trial);
   if numel(cfg.chanunit) == numel(cfg.channel)
-      lf = ft_compute_leadfield(dippos{trial}, sens, headmodel, 'dipoleunit', cfg.dipoleunit, 'chanunit', cfg.chanunit);
+    lf = ft_compute_leadfield(dippos{trial}, sens, headmodel, 'dipoleunit', cfg.dipoleunit, 'chanunit', cfg.chanunit);
   else
-      lf = ft_compute_leadfield(dippos{trial}, sens, headmodel);
+    lf = ft_compute_leadfield(dippos{trial}, sens, headmodel);
   end
   nsamples = size(dipsignal{trial},2);
   nchannels = size(lf,1);
