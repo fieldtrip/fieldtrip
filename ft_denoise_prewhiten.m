@@ -122,8 +122,6 @@ end
 % invert the noise covariance matrix
 invnoise = ft_inv(noise.cov, 'lambda', cfg.lambda, 'kappa', cfg.kappa, 'tolerance', cfg.tol);
 [U,S,V]  = svd(invnoise,'econ');
-%sel = (rank(invnoise)+1):size(invnoise,1);
-%S(sel,sel) = 0;
 
 prewhiten             = [];
 prewhiten.tra         = U*sqrt(S)*U';
