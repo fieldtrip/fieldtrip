@@ -107,10 +107,10 @@ for i=1:numel(chantype)
   noise.cov(~sel,sel) = 0;
 end
 
-prewhiten = [];
-prewhiten.tra = sqrtm(inv(noise.cov)); % FIXME add regularization
-prewhiten.labelold = noise.label;
-prewhiten.labelnew = noise.label;
+prewhiten             = [];
+prewhiten.tra         = sqrtm(ft_inv(noise.cov)); % FIXME add regularization
+prewhiten.labelold    = noise.label;
+prewhiten.labelnew    = noise.label;
 prewhiten.chantypeold = noise.chantype;
 prewhiten.chantypenew = noise.chantype;
 prewhiten.chanunitold = noise.chanunit;
