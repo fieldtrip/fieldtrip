@@ -38,14 +38,8 @@ function source = loreta2fieldtrip(filename, varargin)
 %
 % $Id$
 
-% these are used by the ft_preamble/ft_postamble function and scripts
-ft_revision = '$Id$';
-ft_nargin   = nargin;
-ft_nargout  = nargout;
-
 % do the general setup of the function
 ft_defaults
-ft_preamble callinfo
 
 is_txt = ft_filetype(filename, 'ascii_txt'); %FIXME text file only implemented for slor, don't know what text files look for for old loreta
 
@@ -147,7 +141,3 @@ end
 cfg = [];
 cfg.timeframe = timeframe;
 cfg.filename  = filename;
-
-% do the general cleanup and bookkeeping at the end of the function
-ft_postamble callinfo
-ft_postamble history source

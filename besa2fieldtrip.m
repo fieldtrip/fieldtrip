@@ -44,15 +44,6 @@ function data = besa2fieldtrip(input)
 %
 % $Id$
 
-% these are used by the ft_preamble/ft_postamble function and scripts
-ft_revision = '$Id$';
-ft_nargin   = nargin;
-ft_nargout  = nargout;
-
-% do the general setup of the function
-ft_defaults
-ft_preamble callinfo
-
 if isstruct(input) && numel(input)>1
   % use a recursive call to convert multiple inputs
   data = cell(size(input));
@@ -381,10 +372,6 @@ elseif isstruct(input) && ~isfield(input, 'datafile')
 elseif ischar(input)
   cfg.filename = input;
 end
-
-% do the general cleanup and bookkeeping at the end of the function
-ft_postamble callinfo
-ft_postamble history data
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
