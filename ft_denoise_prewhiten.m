@@ -82,7 +82,7 @@ cfg.tol     = ft_getopt(cfg, 'tol',     []);
 if isfield(datain, 'hdr'), datain = rmfield(datain, 'hdr'); end
 
 datain = ft_checkdata(datain, 'datatype', {'raw' 'timelock'}, 'haschantype', 'yes', 'haschanunit', 'yes'); 
-noise  = ft_checkdata(noise, 'datatype', 'timelock', 'haschantype', 'yes', 'haschanunit', 'yes');
+noise  = ft_checkdata(noise,  'datatype',         'timelock', 'haschantype', 'yes', 'haschanunit', 'yes');
 
 % select channels and trials of interest, by default this will select all channels and trials
 tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});

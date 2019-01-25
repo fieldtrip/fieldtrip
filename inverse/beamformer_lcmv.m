@@ -22,6 +22,8 @@ function [dipout] = beamformer_lcmv(dip, grad, headmodel, dat, Cy, varargin)
 %
 % Additional options should be specified in key-value pairs and can be
 %  'lambda'           = regularisation parameter
+%  'kappa'            = parameter for covariance matrix inversion
+%  'tol'              = parameter for covariance matrix inversion
 %  'powmethod'        = can be 'trace' or 'lambda1'
 %  'feedback'         = give ft_progress indication, can be 'text', 'gui' or 'none' (default)
 %  'fixedori'         = use fixed or free orientation,                   can be 'yes' or 'no'
@@ -82,6 +84,8 @@ keepleadfield  = ft_getopt(varargin, 'keepleadfield', 'no');
 keepcov        = ft_getopt(varargin, 'keepcov', 'no');
 keepmom        = ft_getopt(varargin, 'keepmom', 'yes');
 lambda         = ft_getopt(varargin, 'lambda', 0);
+kappa          = ft_getopt(varargin, 'kappa',  []);
+tol            = ft_getopt(varargin, 'tol',    []);
 projectnoise   = ft_getopt(varargin, 'projectnoise', 'yes');
 projectmom     = ft_getopt(varargin, 'projectmom', 'no');
 fixedori       = ft_getopt(varargin, 'fixedori', 'no');
@@ -201,11 +205,11 @@ elseif ~isempty(subspace)
     Cy    = subspace*Cy*subspace'; 
     % here the subspace can be different from the singular vectors of Cy, so we
     % have to do the sandwiching as opposed to line 216
-    invCy = ft_inv(Cy, 'lambda', lambda);
+    invCy = ft_inv(Cy, 'lambda', lambda, 'kappa', kappa, 'tolerance', tol);
     dat   = subspace*dat;
   end
 else
-  invCy = ft_inv(Cy, 'lambda', lambda);
+  invCy = ft_inv(Cy, 'lambda', lambda, 'kappa', kappa, 'tolerance', tol);
 end
 
 % compute the square of invCy, which might be needed
