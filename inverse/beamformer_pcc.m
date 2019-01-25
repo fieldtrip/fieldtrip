@@ -79,6 +79,8 @@ keepfilter     = ft_getopt(varargin, 'keepfilter',    'no');
 keepleadfield  = ft_getopt(varargin, 'keepleadfield', 'no');
 keepmom        = ft_getopt(varargin, 'keepmom',       'yes');
 lambda         = ft_getopt(varargin, 'lambda',        0);
+kappa          = ft_getopt(varargin, 'kappa',  []);
+tol            = ft_getopt(varargin, 'tol',    []);
 projectnoise   = ft_getopt(varargin, 'projectnoise',  'yes');
 realfilter     = ft_getopt(varargin, 'realfilter',    'yes');
 fixedori       = ft_getopt(varargin, 'fixedori',      'no');
@@ -181,11 +183,11 @@ end
 
 if realfilter
   % construct the filter only on the real part of the CSD matrix, i.e. filter is real
-  invCmeg = ft_inv(real(Cmeg), 'lambda', lambda);
+  invCmeg = ft_inv(real(Cmeg), 'lambda', lambda, 'kappa', kappa, 'tolerance', tol);
 else
   % construct the filter on the complex CSD matrix, i.e. filter contains imaginary component as well
   % this results in a phase rotation of the channel data if the filter is applied to the data
-  invCmeg = ft_inv(Cmeg, 'lambda', lambda);
+  invCmeg = ft_inv(Cmeg, 'lambda', lambda, 'kappa', kappa, 'tolerance', tol);
 end
 
 % start the scanning with the proper metric
