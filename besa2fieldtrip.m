@@ -362,18 +362,6 @@ elseif ischar(input)
 end % isstruct || ischar
 
 
-% construct and add a configuration to the output
-cfg = [];
-
-if isstruct(input) && isfield(input, 'datafile')
-  cfg.filename = input.datafile;
-elseif isstruct(input) && ~isfield(input, 'datafile')
-  cfg.filename = 'Unknown';
-elseif ischar(input)
-  cfg.filename = input;
-end
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that fixes the channel labels, should be a cell-array
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -136,8 +136,3 @@ else
   source.mom  = activity(lorind);
   fprintf('returning the activity at one timepoint as a single distribution of power\n');
 end
-
-% add the options used here to the configuration
-cfg = [];
-cfg.timeframe = timeframe;
-cfg.filename  = filename;

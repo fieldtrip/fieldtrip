@@ -126,9 +126,6 @@ end
 stm = stm.data{1}(:);
 bhv = bhv.data{1}(:);
 
-% store some additional information in the cfg structure
-cfg = [];
-
 % remember where the lfp trials are on the imaginary continuous timeaxis,
 % this links both the LFP and the spike timestamps to a common continuous
 % timeaxis
@@ -139,7 +136,6 @@ for i=1:ntrials
   offset    = 0;
   trl(i,:) = [begsample endsample offset];
 end
-cfg.trl = trl;
 
 % store the header information
 lfp.hdr.FirstTimeStamp = 0;
