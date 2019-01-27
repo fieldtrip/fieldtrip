@@ -36,7 +36,7 @@ function Ainv = ft_inv(A, varargin)
 % tolerance takes precedence. Tolerance and kappa don't have an effect for
 % the methods 'moorepenrose' and 'vanilla'
 
-% Copyright (C) 2019, DCCN, The FieldTrip team
+% Copyright (C) 2019, DCCN, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -63,6 +63,7 @@ interactive = istrue(ft_getopt(varargin, 'interactive', false));
 
 [m, n] = size(A);
 if m==0 || n==0
+  % handle an empty input matrix
   Ainv = A';
   return;
 end
@@ -73,7 +74,7 @@ if n < m
   return;
 end
 
-% first deal with the lambda argument and regularize
+% translate the lambda argument
 if ischar(lambda) && lambda(end)=='%'
   ratio  = sscanf(lambda, '%f%%');
   ratio  = ratio/100;
