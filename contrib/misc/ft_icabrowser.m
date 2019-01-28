@@ -71,8 +71,8 @@ var_time = (1:(size(var_data,2)))/comp.fsample;
 % only do the fft on a subset of trials, saves time
 fft_data = cat(2,comp.trial{1:5:end});
 % preallocate rejected components
-rej_comp = zeros(size(comp.label,1),1);
-rej_comp(reject) = 1;
+rej_comp = false(size(comp.label,1),1);
+rej_comp(reject) = true;
 
 numOfPlots = 4;                                                             % number of subplots per page
 page = 1;                                                                   % number of current page
@@ -309,11 +309,11 @@ end
       if (rej_comp(compNum-3) == 0)
         set(rej1,'Backgroundcolor','r');
         set(rej1,'String', 'Reject');
-        rej_comp(compNum-3)=1;
+        rej_comp(compNum-3) = true;
       else
         set(rej1,'Backgroundcolor','g');
         set(rej1,'String', 'Keep');
-        rej_comp(compNum-3)=0;
+        rej_comp(compNum-3) = false;
       end
     end
 
@@ -322,11 +322,11 @@ end
       if (rej_comp(compNum-2) == 0)
         set(rej2,'Backgroundcolor','r');
         set(rej2,'String', 'Reject');
-        rej_comp(compNum-2)=1;
+        rej_comp(compNum-2) = true;
       else
         set(rej2,'Backgroundcolor','g');
         set(rej2,'String', 'Keep');
-        rej_comp(compNum-2)=0;
+        rej_comp(compNum-2) = false;
       end
     end
     function rej_callback3()
@@ -334,11 +334,11 @@ end
       if (rej_comp(compNum-1) == 0)
         set(rej3,'Backgroundcolor','r');
         set(rej3,'String', 'Reject');
-        rej_comp(compNum-1)=1;
+        rej_comp(compNum-1) = true;
       else
         set(rej3,'Backgroundcolor','g');
         set(rej3,'String', 'Keep');
-        rej_comp(compNum-1)=0;
+        rej_comp(compNum-1) = false;
       end
     end
     function rej_callback4()
@@ -346,11 +346,11 @@ end
       if (rej_comp(compNum-0) == 0)
         set(rej4,'Backgroundcolor','r');
         set(rej4,'String', 'Reject');
-        rej_comp(compNum-0)=1;
+        rej_comp(compNum-0) = true;
       else
         set(rej4,'Backgroundcolor','g');
         set(rej4,'String', 'Keep');
-        rej_comp(compNum-0)=0;
+        rej_comp(compNum-0) = false;
       end
     end
 
