@@ -319,7 +319,7 @@ switch maskstyle
     if ~isempty(clim); caxis(clim); end % set colorbar scale to match [fcolmin fcolmax]
 end
 
-if numel(boundary)>1
+if numel(boundary)>1 && any(boundary)
     connmat = triangle2connectivity(tri);
     indxmask = find(boundary);
     clustercnt = 0;
@@ -361,7 +361,8 @@ if numel(boundary)>1
                 boundpnt = [boundpnt;pos(v,:) + (pos(v,:) - pos(outneigh,:))*boundary(v)];
             end
         end
-        %sort points 
+        %sort points simply ignoring 3rd dimension, better would be
+        %projection to 2D, but might still fail
         c = mean(boundpnt',2);
         d = bsxfun(@minus, boundpnt',c);
         th = atan2(d(2,:),d(1,:));
