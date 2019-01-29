@@ -101,6 +101,7 @@ alphalim     = ft_getopt(varargin, 'alphalim');
 alphamapping = ft_getopt(varargin, 'alphamap', 'rampup');
 cmap         = ft_getopt(varargin, 'colormap');
 maskstyle    = ft_getopt(varargin, 'maskstyle', 'opacity');
+boundary     = ft_getopt(varargin, 'boundary', false);
 
 haspos   = isfield(mesh, 'pos');  % vertices
 hastri   = isfield(mesh, 'tri');  % triangles   as a Mx3 matrix with vertex indices
@@ -318,6 +319,55 @@ switch maskstyle
     if ~isempty(clim); caxis(clim); end % set colorbar scale to match [fcolmin fcolmax]
 end
 
+if numel(boundary)>1
+    connmat = triangle2connectivity(tri);
+    indxmask = find(boundary);
+    clustercnt = 0;
+    cluster = zeros(size(boundary));
+    % Extract clusters from mask
+    for i = 1:length(indxmask)
+        v = indxmask(i);
+        if cluster(v)==0
+            clustercnt = clustercnt +1;
+            cluster(v) = clustercnt;
+            new = find(connmat(v,:));
+            new(boundary(new)==0) = [];
+            neigh = [];
+            %add neighbours of neighbours until there are none left
+            while ~all(ismember(new,neigh))
+                neigh = [neigh unique(new)];
+                new = [];
+                for l = 1:length(neigh)
+                    new = [new find(connmat(neigh(l),:))];
+                end
+                new(boundary(new)==0) = [];
+            end
+            cluster(neigh) = clustercnt;
+        end
+    end
+    
+    boundpnt = [];
+    %(for each cluster) find "boundary" vertices
+    for cl = 1:max(unique(cluster))
+        indxmask = find(cluster==cl);
+        % by checking for each in-mask vertex, whether any neighbour has mask value
+        for i = 1:length(indxmask)
+            v = indxmask(i);
+            neigh = find(connmat(v,:));
+            outneigh = neigh(boundary(neigh)==0);
+            if ~isempty(outneigh)
+                % For each outer vertex
+                % Compute new point that lies in between inner and outer vertex
+                boundpnt = [boundpnt;pos(v,:) + (pos(v,:) - pos(outneigh,:))*boundary(v)];
+            end
+        end
+        % Draw line through new boundary points.
+        hold on;
+        plot3(boundpnt(:,1),boundpnt(:,2),boundpnt(:,3),'b')
+    end
+end
+
+
 if faceindex
   % plot the triangle indices (numbers) at each face
   for face_indx=1:size(tri,1)
@@ -452,6 +502,7 @@ if vertexindex
     hs = [hs; h];
   end
 end
+
 
 axis off
 axis vis3d
