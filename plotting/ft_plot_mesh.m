@@ -328,42 +328,54 @@ if numel(boundary)>1
     for i = 1:length(indxmask)
         v = indxmask(i);
         if cluster(v)==0
+            % For each vertex if not yet assigned to cluster do so
             clustercnt = clustercnt +1;
             cluster(v) = clustercnt;
             new = find(connmat(v,:));
             new(boundary(new)==0) = [];
             neigh = [];
-            %add neighbours of neighbours until there are none left
+            %add neighbours of neighbours until all neighbouring vertices are assigned
             while ~all(ismember(new,neigh))
                 neigh = [neigh unique(new)];
                 new = [];
-                for l = 1:length(neigh)
-                    new = [new find(connmat(neigh(l),:))];
-                end
+                [~, idx, ~]=find(connmat(neigh,:));
+                new = [new idx'];
                 new(boundary(new)==0) = [];
             end
             cluster(neigh) = clustercnt;
         end
     end
+    hold on
     
-    boundpnt = [];
-    %(for each cluster) find "boundary" vertices
     for cl = 1:max(unique(cluster))
+       %(for each cluster) find "boundary" vertices
         indxmask = find(cluster==cl);
-        % by checking for each in-mask vertex, whether any neighbour has mask value
+        boundpnt = []; 
         for i = 1:length(indxmask)
             v = indxmask(i);
             neigh = find(connmat(v,:));
             outneigh = neigh(boundary(neigh)==0);
-            if ~isempty(outneigh)
-                % For each outer vertex
+            if ~isempty(outneigh) && length(outneigh)> 2
+                % For each boundary vertex
                 % Compute new point that lies in between inner and outer vertex
                 boundpnt = [boundpnt;pos(v,:) + (pos(v,:) - pos(outneigh,:))*boundary(v)];
             end
         end
-        % Draw line through new boundary points.
-        hold on;
-        plot3(boundpnt(:,1),boundpnt(:,2),boundpnt(:,3),'b')
+        %sort points 
+        c = mean(boundpnt',2);
+        d = bsxfun(@minus, boundpnt',c);
+        th = atan2(d(2,:),d(1,:));
+        [~,si] = sort(th);
+        boundpnt = boundpnt(si,:);
+        clear c d th si
+        
+        % Plot line on top
+        hold on; 
+        %plot3(boundpnt(:,1),boundpnt(:,2),boundpnt(:,3),'b')
+        p = patch(boundpnt(:,1)',boundpnt(:,2)',boundpnt(:,3)', nan(1,size(boundpnt,1)));
+        set(p,'EdgeColor','b');
+        set(p,'LineWidth',2);
+        set(p,'LineStyle','-');
     end
 end
 
