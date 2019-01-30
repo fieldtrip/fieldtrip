@@ -357,8 +357,9 @@ if numel(boundary)>1 && any(boundary)
             outneigh = neigh(boundary(neigh)==0);
             if ~isempty(outneigh) && length(outneigh)> 2
                 % For each boundary vertex
-                % Compute new point that lies in between inner and outer vertex
-                boundpnt = [boundpnt;pos(v,:) + (pos(v,:) - pos(outneigh,:))*boundary(v)];
+                % Compute new point that lies in between inner and outer
+                % vertex
+                boundpnt = [boundpnt;pos(v,:) - (pos(v,:) - pos(outneigh,:))*boundary(v)];              
             end
         end
         %sort points simply ignoring 3rd dimension, better would be
