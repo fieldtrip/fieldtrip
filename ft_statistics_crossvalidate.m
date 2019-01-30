@@ -50,6 +50,9 @@ cfg.mva       = ft_getopt(cfg, 'mva');
 cfg.statistic = ft_getopt(cfg, 'statistic', {'accuracy', 'binomial'});
 cfg.nfolds    = ft_getopt(cfg, 'nfolds',   5);
 cfg.resample  = ft_getopt(cfg, 'resample', false);
+cfg.cv        = ft_getopt(cfg, 'cv', []);
+cfg.cv.type   = ft_getopt(cfg.cv, 'type', 'nfold');
+
 
 % specify classification procedure or ensure it's the correct object
 if isempty(cfg.mva)
@@ -59,8 +62,11 @@ elseif ~isa(cfg.mva,'dml.analysis')
   cfg.mva = dml.analysis(cfg.mva);
 end
 
-cv = dml.crossvalidator('mva', cfg.mva, 'type', 'nfold', 'folds', cfg.nfolds,...
-  'resample', cfg.resample, 'compact', true, 'verbose', true);
+cv_options = {'mva', cfg.mva, 'type', cfg.cv.type, 'resample', cfg.resample, 'compact', true, 'verbose', true};
+if strcmp(cfg.cv.type, 'nfold')
+  cv_options = cat(2, cv_options, {'folds', cfg.nfolds});
+end
+cv = dml.crossvalidator(cv_options{:});
 
 if any(isinf(dat(:)))
   ft_warning('Inf encountered; replacing by zeros');
