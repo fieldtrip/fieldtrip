@@ -103,7 +103,7 @@ view(az,el);
 while ~done
   k = waitforbuttonpress;
   currkey=get(gcf,'CurrentKey');
-    if k==0 && strcmp(get(gcf,'SelectionType'), 'extend')
+    if k==0 && strcmp(get(gcf,'SelectionType'), 'extend') % 'extend' for middle button, 'alt' for the right button
         [p, v, ~, ~, ~] = sk_select3d(h);
         % a new point was selected
         if nearest
@@ -118,7 +118,7 @@ while ~done
         end
         set(gcf,'SelectionType','normal');
     elseif k==1 && (strcmp(currkey, 'q') || strcmp(currkey, 'r') || strcmp(currkey, '+') || strcmp(currkey, '-') || strcmp(currkey, 'w')|| strcmp(currkey, 'a') || strcmp(currkey, 's')|| strcmp(currkey, 'd'))% You also want to use strcmp here.
-        key = get(gcf,'CurrentCharacter'); % which key was pressed (if any)?
+        key = get(gcf,'CurrentCharacter'); % which key was pressed ?
         if strcmp(key, 'q')
             % finished selecting points
             done = true;
