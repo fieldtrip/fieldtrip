@@ -346,11 +346,14 @@ if numel(boundary)>1 && any(boundary)
         end
     end
     hold on
-    
+    % get flatmap info
+    flatmap = ft_getopt(varargin, 'flatmap', []);
+    pnt = flatmap.pnt;
     for cl = 1:max(unique(cluster))
        %(for each cluster) find "boundary" vertices
         indxmask = find(cluster==cl);
         boundpnt = []; 
+        boundpnt_flat = [];
         for i = 1:length(indxmask)
             v = indxmask(i);
             neigh = find(connmat(v,:));
@@ -359,13 +362,14 @@ if numel(boundary)>1 && any(boundary)
                 % For each boundary vertex
                 % Compute new point that lies in between inner and outer
                 % vertex
-                boundpnt = [boundpnt;pos(v,:) - (pos(v,:) - pos(outneigh,:))*boundary(v)];              
+                boundpnt = [boundpnt;pos(v,:) - (pos(v,:) - pos(outneigh,:))*boundary(v)]; 
+                % use flatmap for later sorting
+                boundpnt_flat = [boundpnt_flat;pnt(v,:) - (pnt(v,:) - pnt(outneigh,:))*boundary(v)]; 
             end
         end
-        %sort points simply ignoring 3rd dimension, better would be
-        %projection to 2D, but might still fail
-        c = mean(boundpnt',2);
-        d = bsxfun(@minus, boundpnt',c);
+        %sort points based on flatmap geometry
+        c = mean(boundpnt_flat',2);
+        d = bsxfun(@minus, boundpnt_flat',c);
         th = atan2(d(2,:),d(1,:));
         [~,si] = sort(th);
         boundpnt = boundpnt(si,:);
