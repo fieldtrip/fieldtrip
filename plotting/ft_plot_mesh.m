@@ -320,71 +320,48 @@ switch maskstyle
 end
 
 if numel(boundary)>1 && any(boundary)
-    connmat = triangle2connectivity(tri);
-    indxmask = find(boundary);
-    clustercnt = 0;
-    cluster = zeros(size(boundary));
-    % Extract clusters from mask
-    for i = 1:length(indxmask)
-        v = indxmask(i);
-        if cluster(v)==0
-            % For each vertex if not yet assigned to cluster do so
-            clustercnt = clustercnt +1;
-            cluster(v) = clustercnt;
-            new = find(connmat(v,:));
-            new(boundary(new)==0) = [];
-            neigh = [];
-            %add neighbours of neighbours until all neighbouring vertices are assigned
-            while ~all(ismember(new,neigh))
-                neigh = [neigh unique(new)];
-                new = [];
-                [~, idx, ~]=find(connmat(neigh,:));
-                new = [new idx'];
-                new(boundary(new)==0) = [];
-            end
-            cluster(neigh) = clustercnt;
-        end
-    end
-    hold on
-    % get flatmap info
-    flatmap = ft_getopt(varargin, 'flatmap', []);
-    pnt = flatmap.pnt;
-    for cl = 1:max(unique(cluster))
-       %(for each cluster) find "boundary" vertices
-        indxmask = find(cluster==cl);
-        boundpnt = []; 
-        boundpnt_flat = [];
+    cfg = [];
+    cfg.connectivity = triangle2connectivity(tri);
+    cfg.minnbchan = 0;
+    channeighbstructmat = full(ft_getopt(cfg, 'connectivity', false));
+    posclusobs = findcluster(boundary,channeighbstructmat,cfg.minnbchan);
+    
+    for cl = 1:max(unique(posclusobs))
+    % For each cluster
+        indxmask = find(posclusobs==cl);
+        outbnd = [];
         for i = 1:length(indxmask)
-            v = indxmask(i);
-            neigh = find(connmat(v,:));
-            outneigh = neigh(boundary(neigh)==0);
-            if ~isempty(outneigh) && length(outneigh)> 2
-                % For each boundary vertex
-                % Compute new point that lies in between inner and outer
-                % vertex
-                boundpnt = [boundpnt;pos(v,:) - (pos(v,:) - pos(outneigh,:))*boundary(v)]; 
-                % use flatmap for later sorting
-                boundpnt_flat = [boundpnt_flat;pnt(v,:) - (pnt(v,:) - pnt(outneigh,:))*boundary(v)]; 
+        %For each vertex in mask
+            [row,~]  = find(tri == (indxmask(i))); %find neighbours
+            neigh = tri(row,:);
+            neigh = unique(neigh(:));
+            outbnd = [outbnd neigh(boundary(neigh)==0)'];
+            outbnd(outbnd==indxmask(i)) = []; 
+         end %find all "outer" neighbours to this cluster
+        outbnd = unique(outbnd);
+      
+        indx1 = any(ismember(tri,outbnd)');% outer vertex connections
+        indx2 = any(ismember(tri,indxmask)'); % inner vertex connections
+        indxnew = find(indx1 & indx2);
+        allpos = [];
+        alledges = [];
+        for  i = 1:length(indxnew)
+            indx = ismember(tri(indxnew(i),:),indxmask);
+            newpos = pos(tri(indxnew(i),indx),:) - ((pos(tri(indxnew(i),indx),:) - pos(tri(indxnew(i),~indx),:))*0.5);
+            p(i) = patch(newpos(:,1),newpos(:,2),newpos(:,3),NaN);
+            allpos = [allpos; newpos];
+            if mod(i,2) == 1
+                alledges = [alledges; i i+1]; 
             end
         end
-        %sort points based on flatmap geometry
-        c = mean(boundpnt_flat',2);
-        d = bsxfun(@minus, boundpnt_flat',c);
-        th = atan2(d(2,:),d(1,:));
-        [~,si] = sort(th);
-        boundpnt = boundpnt(si,:);
-        clear c d th si
-        
-        % Plot line on top
-        hold on; 
-        %plot3(boundpnt(:,1),boundpnt(:,2),boundpnt(:,3),'b')
-        p = patch(boundpnt(:,1)',boundpnt(:,2)',boundpnt(:,3)', nan(1,size(boundpnt,1)));
-        set(p,'EdgeColor','b');
-        set(p,'LineWidth',2);
-        set(p,'LineStyle','-');
+        %p = patch('Faces', alledges,'Vertices',allpos,'EdgeColor','g')
+        % first collecting all new points and edges does not work
+
+        set(p(:),'EdgeColor','k');
+        set(p(:),'LineStyle','-');
+        set(p(:),'LineWidth',2);
     end
 end
-
 
 if faceindex
   % plot the triangle indices (numbers) at each face
