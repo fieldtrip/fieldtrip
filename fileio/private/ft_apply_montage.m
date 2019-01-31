@@ -342,8 +342,10 @@ if isfield(input, 'labelold') && isfield(input, 'labelnew')
   inputtype = 'montage';
 elseif isfield(input, 'tra')
   inputtype = 'sens';
-elseif isfield(input, 'trial')
+elseif ft_datatype(input, 'raw')
   inputtype = 'raw';
+elseif ft_datatype(input, 'timelock')
+  inputtype = 'timelock';
 elseif isfield(input, 'fourierspctrm')
   inputtype = 'freq';
 else
@@ -502,7 +504,7 @@ switch inputtype
     
   case 'timelock'
     % apply the montage to averaged data
-    timelock = removefields(input, {'var'});
+    timelock = input;
     clear input
     
     fn = {'avg', 'trial', 'individual', 'cov'};
@@ -518,17 +520,27 @@ switch inputtype
             ntime  = siz(3);
             output = zeros(nrpt, size(montage.tra,1), ntime);
             for i=1:nrpt
-              output(i,:,:) = montage.tra * timelock.(fn{i})(i,:,:);
+              output(i,:,:) = montage.tra * reshape(timelock.(fn{i})(i,:,:), [nchan ntime]);
             end
             timelock.(fn{i}) = output; % replace the original field
           case 'chan_chan'
             timelock.(fn{i}) = montage.tra * timelock.(fn{i}) * montage.tra';
+          case 'rpt_chan_chan'
+            siz    = getdimsiz(timelock, fn{i});
+            nrpt   = siz(1);
+            nchan  = siz(2);
+            output = zeros(nrpt, size(montage.tra,1), size(montage.tra,1));
+            for i=1:nrpt
+              output(i,:,:) = montage.tra * reshape(timelock.(fn{i})(i,:,:), [nchan nchan]);
+            end
+            timelock.(fn{i}) = output; % replace the original field
           otherwise
             ft_error('unsupported dimord for %s', fn{i});
         end % switch
       end % if
     end % for
-
+    input = timelock;
+    
   case 'freq'
     % apply the montage to the spectrally decomposed data
     freq = input;
