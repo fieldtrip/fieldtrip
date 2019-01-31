@@ -1796,8 +1796,22 @@ switch fileformat
         bnd.pos    = pos;
         bnd.tri    = tri;
         reindex    = true;
+      % xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        case 'neuromag_fif'
+            src = ft_read_headshape(filenamemesh, 'format', 'mne_source');
+            pos = src.pos;
+            tri = src.tri;
+
+            if min(tri(:))==0 && max(tri(:))==size(pos,1)-1
+                tri = tri+1;
+            end
+            
+            bnd.pos    = pos;
+            bnd.tri    = tri;
+            reindex    = true;
+      % xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
       otherwise
-        ft_error('unsupported fileformat for surface mesh');
+%         ft_error('unsupported fileformat for surface mesh');
     end
     
     % check the number of vertices
