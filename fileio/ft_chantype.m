@@ -249,7 +249,9 @@ elseif ft_senstype(input, 'neuromag306') && isgrad
   % there should be 204 planar gradiometers and 102 axial magnetometers
   if isfield(input, 'tra')
     tmp = sum(abs(input.tra),2);
-    sel = (tmp==median(tmp));
+    tmp = round(tmp-median(tmp));
+    sel = tmp==median(tmp);
+    
     chantype(sel) = {'megplanar'};
     sel = (tmp~=median(tmp));
     chantype(sel) = {'megmag'};

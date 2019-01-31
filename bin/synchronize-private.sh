@@ -867,6 +867,14 @@ ARRAY+=(inverse/private/ft_inside_vol.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# ft_inv.m
+
+ARRAY=()
+ARRAY+=(private/ft_inv.m)
+ARRAY+=(inverse/private/ft_inv.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # ft_notification.m, should be consistent with ft_warning
 
 ARRAY=()
@@ -1023,6 +1031,7 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(contrib/nutmegtrip/private/getdimord.m)
 ARRAY+=(fileio/private/getdimord.m)
+ARRAY+=(forward/private/getdimord.m)
 ARRAY+=(private/getdimord.m)
 ARRAY+=(test/private/getdimord.m)
 ARRAY+=(utilities/private/getdimord.m)
@@ -1034,6 +1043,7 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(contrib/nutmegtrip/private/getdimsiz.m)
 ARRAY+=(fileio/private/getdimsiz.m)
+ARRAY+=(forward/private/getdimsiz.m)
 ARRAY+=(private/getdimsiz.m)
 ARRAY+=(test/private/getdimsiz.m)
 ARRAY+=(utilities/private/getdimsiz.m)

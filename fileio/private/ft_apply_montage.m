@@ -502,7 +502,7 @@ switch inputtype
     
   case 'timelock'
     % apply the montage to averaged data
-    timelock = input;
+    timelock = removefields(input, {'var'});
     clear input
     
     fn = {'avg', 'trial', 'individual', 'cov'};
