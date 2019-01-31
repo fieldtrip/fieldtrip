@@ -36,6 +36,12 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %   ft_plot_mesh(mesh, 'facecolor', 'skin', 'edgecolor', 'none')
 %   camlight
 %
+% You can plot an additional contour around specified areas using
+%   'contour'           = inside of contour per vertex, either 0 or 1
+%   'contourcolor'      = string, color specification
+%   'contourlinestyle'  = string, line specification 
+%   'contourlinewidth'  = number
+%
 % See also FT_PLOT_HEADSHAPE, FT_PLOT_VOL, TRIMESH, PATCH
 
 % Copyright (C) 2009, Cristiano Micheli
@@ -479,7 +485,6 @@ if vertexindex
     hs = [hs; h];
   end
 end
-
 
 axis off
 axis vis3d
