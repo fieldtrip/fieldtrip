@@ -344,21 +344,28 @@ if numel(boundary)>1 && any(boundary)
         indx2 = any(ismember(tri,indxmask)'); % inner vertex connections
         indxnew = find(indx1 & indx2);
         allpos = [];
-        alledges = [];
+        cnt = 1;
         for  i = 1:length(indxnew)
             indx = ismember(tri(indxnew(i),:),indxmask);
             newpos = pos(tri(indxnew(i),indx),:) - ((pos(tri(indxnew(i),indx),:) - pos(tri(indxnew(i),~indx),:))*0.5);
             p(i) = patch(newpos(:,1),newpos(:,2),newpos(:,3),NaN);
-            allpos = [allpos; newpos];
-            if mod(i,2) == 1
-                alledges = [alledges; i i+1]; 
+            %{
+            if i == 1, allpos = [allpos; newpos]; alledges = [1 2];end
+            [q,idx] = ismember(allpos,newpos,'rows');
+            n = size(allpos,1);
+            if sum(q) == 1
+                newpos(idx(q),:) = [];
+                alledges = [alledges; find(q) n+1];
+                allpos = [allpos; newpos];
+            elseif sum(q) == 0
+                alledges = [alledges; n+1 n+2];
+                allpos = [allpos; newpos];
             end
+            %}
         end
-        %p = patch('Faces', alledges,'Vertices',allpos,'EdgeColor','g')
-        % first collecting all new points and edges does not work
-
-        set(p(:),'EdgeColor','k');
-        set(p(:),'LineStyle','-');
+        %p = patch('Faces', alledges,'Vertices',allpos);
+        %set(p(:),'EdgeColor','k');
+        %set(p(:),'LineStyle','-');
         set(p(:),'LineWidth',2);
     end
 end
