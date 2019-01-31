@@ -180,4 +180,3 @@ if feedback
     plot(kappa.*[1 1], abc([3 4]), 'r');
   end
 end
-
