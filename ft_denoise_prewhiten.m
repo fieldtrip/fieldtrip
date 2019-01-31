@@ -74,7 +74,7 @@ cfg.split   = ft_getopt(cfg, 'split',   'all');
 cfg.lambda  = ft_getopt(cfg, 'lambda',  0);
 cfg.kappa   = ft_getopt(cfg, 'kappa',   []);
 cfg.tol     = ft_getopt(cfg, 'tol',     []);
-
+cfg.invmethod = ft_getopt(cfg, 'invmethod', 'tikhonov');
 
 % ensure that the input data is correct, the next line is needed for a
 % attempt correct detection of the data chanunit (with a hdr-field it fails
