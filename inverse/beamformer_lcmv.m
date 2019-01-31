@@ -86,6 +86,7 @@ keepmom        = ft_getopt(varargin, 'keepmom', 'yes');
 lambda         = ft_getopt(varargin, 'lambda', 0);
 kappa          = ft_getopt(varargin, 'kappa',  []);
 tol            = ft_getopt(varargin, 'tol',    []);
+invmethod      = ft_getopt(varargin, 'invmethod',    []);
 projectnoise   = ft_getopt(varargin, 'projectnoise', 'yes');
 projectmom     = ft_getopt(varargin, 'projectmom', 'no');
 fixedori       = ft_getopt(varargin, 'fixedori', 'no');
@@ -205,11 +206,11 @@ elseif ~isempty(subspace)
     Cy    = subspace*Cy*subspace'; 
     % here the subspace can be different from the singular vectors of Cy, so we
     % have to do the sandwiching as opposed to line 216
-    invCy = ft_inv(Cy, 'lambda', lambda, 'kappa', kappa, 'tolerance', tol);
+    invCy = ft_inv(Cy, 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
     dat   = subspace*dat;
   end
 else
-  invCy = ft_inv(Cy, 'lambda', lambda, 'kappa', kappa, 'tolerance', tol);
+  invCy = ft_inv(Cy, 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
 end
 
 % compute the square of invCy, which might be needed
@@ -242,7 +243,7 @@ for i=1:size(dip.pos,1)
     % the data and the covariance become voxel dependent due to the projection
     dat   =      dip.subspace{i} * dat_pre_subspace;
     Cy    =      dip.subspace{i} *  Cy_pre_subspace * dip.subspace{i}';
-    invCy = ft_inv(dip.subspace{i} * Cy_pre_subspace * dip.subspace{i}', 'lambda', lambda);
+    invCy = ft_inv(dip.subspace{i} * Cy_pre_subspace * dip.subspace{i}', 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
   elseif ~isempty(subspace)
     % do subspace projection of the forward model only
     lforig = lf;

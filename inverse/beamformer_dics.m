@@ -91,6 +91,7 @@ keepleadfield  = ft_getopt(varargin, 'keepleadfield', 'no');
 lambda         = ft_getopt(varargin, 'lambda', 0);
 kappa          = ft_getopt(varargin, 'kappa',  []);
 tol            = ft_getopt(varargin, 'tol',    []);
+invmethod      = ft_getopt(varargin, 'invmethod',    []);
 projectnoise   = ft_getopt(varargin, 'projectnoise', 'yes');
 fixedori       = ft_getopt(varargin, 'fixedori', 'no');
 
@@ -221,9 +222,9 @@ end
 if strcmp(realfilter, 'yes')
   % the filter is computed using only the leadfield and the inverse covariance or CSD matrix
   % therefore using the real-valued part of the CSD matrix here ensures a real-valued filter
-  invCf = ft_inv(real(Cf), 'lambda', lambda, 'kappa', kappa, 'tolerance', tol);
+  invCf = ft_inv(real(Cf), 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
 else
-  invCf = ft_inv(Cf, 'lambda', lambda, 'kappa', kappa, 'tolerance', tol);
+  invCf = ft_inv(Cf, 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
 end
 
 if hassubspace
@@ -271,9 +272,9 @@ elseif ~isempty(subspace)
     % the singular vectors of Cy, so we have to do the sandwiching as opposed
     % to line 216
     if strcmp(realfilter, 'yes')
-      invCf = ft_inv(real(Cf), 'lambda', lambda, 'kappa', kappa, 'tolerance', tol);
+      invCf = ft_inv(real(Cf), 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
     else
-      invCf = ft_inv(Cf, 'lambda', lambda, 'kappa', kappa, 'tolerance', tol);
+      invCf = ft_inv(Cf, 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
     end
     
     if strcmp(submethod, 'dics_refchan')
