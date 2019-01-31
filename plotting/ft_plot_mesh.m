@@ -101,7 +101,12 @@ alphalim     = ft_getopt(varargin, 'alphalim');
 alphamapping = ft_getopt(varargin, 'alphamap', 'rampup');
 cmap         = ft_getopt(varargin, 'colormap');
 maskstyle    = ft_getopt(varargin, 'maskstyle', 'opacity');
-boundary     = ft_getopt(varargin, 'boundary', false);
+contour      = ft_getopt(varargin, 'contour', false);
+
+contourcolor      = ft_getopt(varargin, 'contourcolor', 'k');
+contourlinewidth  = ft_getopt(varargin, 'contourlinewidth', 3);
+contourlinestyle  = ft_getopt(varargin, 'contourlinestyle');
+
 
 haspos   = isfield(mesh, 'pos');  % vertices
 hastri   = isfield(mesh, 'tri');  % triangles   as a Mx3 matrix with vertex indices
@@ -319,54 +324,24 @@ switch maskstyle
     if ~isempty(clim); caxis(clim); end % set colorbar scale to match [fcolmin fcolmax]
 end
 
-if numel(boundary)>1 && any(boundary)
-    cfg = [];
-    cfg.connectivity = triangle2connectivity(tri);
-    cfg.minnbchan = 0;
+if numel(contour)>1 && any(contour)
+    cfg                 = [];
+    cfg.connectivity    = triangle2connectivity(tri);
     channeighbstructmat = full(ft_getopt(cfg, 'connectivity', false));
-    posclusobs = findcluster(boundary,channeighbstructmat,cfg.minnbchan);
     
-    for cl = 1:max(unique(posclusobs))
-    % For each cluster
-        indxmask = find(posclusobs==cl);
-        outbnd = [];
-        for i = 1:length(indxmask)
-        %For each vertex in mask
-            [row,~]  = find(tri == (indxmask(i))); %find neighbours
-            neigh = tri(row,:);
-            neigh = unique(neigh(:));
-            outbnd = [outbnd neigh(boundary(neigh)==0)'];
-            outbnd(outbnd==indxmask(i)) = []; 
-         end %find all "outer" neighbours to this cluster
-        outbnd = unique(outbnd);
-      
-        indx1 = any(ismember(tri,outbnd)');% outer vertex connections
-        indx2 = any(ismember(tri,indxmask)'); % inner vertex connections
-        indxnew = find(indx1 & indx2);
-        allpos = [];
-        cnt = 1;
-        for  i = 1:length(indxnew)
-            indx = ismember(tri(indxnew(i),:),indxmask);
-            newpos = pos(tri(indxnew(i),indx),:) - ((pos(tri(indxnew(i),indx),:) - pos(tri(indxnew(i),~indx),:))*0.5);
-            p(i) = patch(newpos(:,1),newpos(:,2),newpos(:,3),NaN);
-            %{
-            if i == 1, allpos = [allpos; newpos]; alledges = [1 2];end
-            [q,idx] = ismember(allpos,newpos,'rows');
-            n = size(allpos,1);
-            if sum(q) == 1
-                newpos(idx(q),:) = [];
-                alledges = [alledges; find(q) n+1];
-                allpos = [allpos; newpos];
-            elseif sum(q) == 0
-                alledges = [alledges; n+1 n+2];
-                allpos = [allpos; newpos];
-            end
-            %}
+    posclusobs = findcluster(contour,channeighbstructmat,0);%minnbchan=0
+    
+    for cl = 1:max(posclusobs)
+        idxcl = find(posclusobs==cl);
+        [xbnd, ybnd, zbnd] = extract_contour(pos,tri,idxcl,contour);
+        
+        % draw each individual line segment of the intersection
+        for i = 1:length(xbnd)
+            p(i) = patch(xbnd(i,:)', ybnd(i,:)', zbnd(i,:)',NaN);
         end
-        %p = patch('Faces', alledges,'Vertices',allpos);
-        %set(p(:),'EdgeColor','k');
-        %set(p(:),'LineStyle','-');
-        set(p(:),'LineWidth',2);
+        if ~isempty(contourcolor),     set(p(:), 'EdgeColor', contourcolor); end
+        if ~isempty(contourlinewidth), set(p(:), 'LineWidth', contourlinewidth); end
+        if ~isempty(contourlinestyle), set(p(:), 'LineStyle', contourlinestyle); end
     end
 end
 
