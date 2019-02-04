@@ -147,6 +147,14 @@ ARRAY+=(utilities/private/channelposition.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# combineClusters.m
+
+ARRAY=()
+ARRAY+=(private/combineClusters.m)
+ARRAY+=(plotting/private/combineClusters.m)
+sync ${ARRAY[*]} 
+
+################################################################################
 # combineClusters.mexa64
 
 ARRAY=()
@@ -415,6 +423,14 @@ ARRAY=()
 ARRAY+=(preproc/private/filter_with_correction.m)
 ARRAY+=(specest/private/filter_with_correction.m)
 sync ${ARRAY[*]}
+
+################################################################################
+# findcluster.m
+
+ARRAY=()
+ARRAY+=(private/findcluster.m)
+ARRAY+=(plotting/private/findcluster.m)
+sync ${ARRAY[*]} 
 
 ################################################################################
 # find_innermost_boundary.m
@@ -3430,6 +3446,15 @@ ARRAY+=(plotting/private/translate.m)
 ARRAY+=(private/translate.m)
 ARRAY+=(utilities/private/translate.m)
 sync ${ARRAY[*]}
+
+################################################################################
+# triangle2connectivity.m
+
+ARRAY=()
+ARRAY+=(private/triangle2connectivity.m)
+ARRAY+=(plotting/private/triangle2connectivity.m)
+sync ${ARRAY[*]}
+
 
 ################################################################################
 # triangle4pt.m
