@@ -333,9 +333,9 @@ end
 if numel(contour)>1 && any(contour)
     cfg                 = [];
     cfg.connectivity    = triangle2connectivity(tri);
-    channeighbstructmat = full(ft_getopt(cfg, 'connectivity', false));
+    neighcmb            = full(ft_getopt(cfg, 'connectivity', false));
     
-    posclusobs = findcluster(contour,channeighbstructmat,0);%minnbchan=0
+    posclusobs = findcluster(contour,neighcmb,0);%minnbchan=0
     
     for cl = 1:max(posclusobs)
         idxcl = find(posclusobs==cl);
