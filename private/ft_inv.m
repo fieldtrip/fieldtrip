@@ -21,16 +21,15 @@ function Ainv = ft_inv(A, varargin)
 %               to lambda.
 % kappa     = scalar integer, reflects the ordinal singular value at which
 %               the singular value spectrum will be fixed. A value <=0 will
-%               result in an all-zeros output matrix.
+%               result in an all-zeros output matrix. Can be 'interactive'
 % lambda    = scalar, or string (expressed as a percentage), specifying the
 %               regularization parameter for Tikhonov regularization in the svd method,
 %               or the replacement value for winsorization. Lambda
 %               specified as a percentage, e.g. '5%' will be converted into
-%               a percentage of the average of trace(A).
+%               a percentage of the average of trace(A). Can be
+%               'interactive'.
 % feedback  = boolean, false or true, to visualize the singular value spectrum
 %               with the truncation level used.
-% interactive = boolean, false or true, to manually specify a value for
-%               kappa.
 %
 % Kappa doesn't have an effect for the methods 'moorepenrose' and 'vanilla'.  
 
@@ -99,6 +98,13 @@ if needlambda
     ratio  = sscanf(lambda, '%f%%');
     ratio  = ratio/100;
     lambda = ratio * trace(A)./m;
+  elseif ischar(lambda) && strcmp(lambda, 'interactive')
+    figure; plot(1:m, log10(s),'o-');
+    lambda = input('Specify a lambda value for regularization: ');
+    if isempty(lambda)
+      lambda = 0;
+    end
+    close
   end
   
   if lambda~=0 && m~=n
@@ -109,22 +115,23 @@ if needlambda
 end
 
 if needkappa
-  if isempty(kappa)
-    % check whether the interacive mode is requested
-    if interactive
-      figure; plot(1:m, log10(s),'o-');
-      kappa = input('Specify the number of dimensions at which the singular value spectrum will be truncated: ');
-      if isempty(kappa)
-        kappa = m;
-      end
-    else
-      % The default tolerance here is higher than the one used in MATLAB's
-      % pinv, with a factor of 10. This was done by Robert Oostenveld in 2004,
-      % to avoid numerical tolerance issues in the MATLAB version that was
-      % used back then
-      tolerance = 10 * max(m,n) * eps;
-      kappa     = sum(s./s(1) > tolerance);
+  if ischar(kappa) && strcmp(kappa, 'interactive')
+    figure; plot(1:m, log10(s),'o-');
+    kappa = input('Specify the number of dimensions at which the singular value spectrum will be truncated: ');
+    if isempty(kappa)
+      kappa = m;
     end
+    close
+  elseif isempty(kappa)
+    % Mimic 'pinv' like behavior, using a truncation based on a numeric
+    % tolerance cutoff.
+    % The default tolerance here is higher than the one used in MATLAB's
+    % pinv, with a factor of 10. This was done by Robert Oostenveld in 2004,
+    % to avoid numerical tolerance issues in the MATLAB version that was
+    % used back then
+    tolerance = 10 * max(m,n) * eps;
+    kappa     = sum(s./s(1) > tolerance);
+    
   end
   
   % do a sanity check on the estimated kappa
