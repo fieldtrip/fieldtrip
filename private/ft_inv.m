@@ -113,7 +113,7 @@ if needkappa
     % check whether the interacive mode is requested
     if interactive
       figure; plot(1:m, log10(s),'o-');
-      kappa = input('Specify the number of dimensions at which the eigenvalue spectrum will be truncated: ');
+      kappa = input('Specify the number of dimensions at which the singular value spectrum will be truncated: ');
       if isempty(kappa)
         kappa = m;
       end
@@ -139,7 +139,7 @@ switch method
   case 'vanilla'
     Ainv = inv(A);
   case 'svd'
-    S    = diag(s(1:kappa)./(s(1:kappa).^2+lambda));
+    S    = diag(1./(s(1:kappa)+lambda));
     Ainv = V(:,1:kappa)*S*U(:,1:kappa)';
   case 'moorepenrose'
     Ainv = A'/(A*A');
@@ -157,9 +157,6 @@ if feedback
   plot(1:m, log10(s),'o-');
   ylabel('singular values (log10)');
   abc = axis;
-  if ~isempty(tolerance)
-    plot([0 m], log10(tolerance).*[1 1], 'k');
-  end
   if ~isempty(kappa)
     plot(kappa.*[1 1], abc([3 4]), 'r');
   end
