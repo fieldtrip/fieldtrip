@@ -548,7 +548,7 @@ switch inputtype
     
     switch getdimord(freq, 'fourierspctrm')
       case 'rpttap_chan_freq'
-        siz    = getdimsiz(freq, 'fourierspctrm');
+        siz    = [getdimsiz(freq, 'fourierspctrm') 1];
         nrpt   = siz(1);
         nchan  = siz(2);
         nfreq  = siz(3);
