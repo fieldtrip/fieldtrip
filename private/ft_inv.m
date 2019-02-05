@@ -6,29 +6,25 @@ function Ainv = ft_inv(A, varargin)
 %  Ainv = ft_inv(A, ...)
 % where optional additional arguments should be defined as key-value pairs.
 %
-% method    = 'tikhonov', 'svd', 'vanilla', 'moorepenrose', or 'winsorize',
-%               the default method is 'tikhonov', and the matrix is regularized
-%               with a weighted identity matrix before inversion, using the 
-%               MATLAB pinv() function, using the lambda parameter.
-%              'svd' results in a pseudoinverse
-%               based on a truncated svd, fixing the number of singular values
-%               according to tolerance/kappa (see below) before reassembling
-%               the inverse. If the method specified is 'vanilla', a normal 
+% method    = 'svd', 'vanilla', 'moorepenrose', or 'winsorize',
+%               the default method is 'svd', and the matrix is regularized
+%               with a weighted identity matrix before inversion, using  
+%               a truncated svd, fixing the number of singular values
+%               according to kappa (see below) before reassembling
+%               the inverse. A non-zero lambda can be specified for
+%               regularization. If the method specified is 'vanilla', a normal 
 %               inv() is computed. If the method specified is 'moorepenrose',
 %               a Moore-Penrose pseudoinverse is computed. If the method 
-%               specified is 'winsorize', a truncated svd is computed, based
-%               on the kappa/tolerance parameters, but in addition the 
-%               singular values < lambda are replaced by the value according
+%               specified is 'winsorize', an svd based inverse is computed, based
+%               on the original singular values up to the kappa'th, but in addition the 
+%               the remaining singular values lambda are replaced by the value according
 %               to lambda.
-% tolerance = scalar, reflects the fraction of the largest singular value
-%               at which the singular value spectrum will be truncated. The
-%               default value is 10*eps*max(size(A))
 % kappa     = scalar integer, reflects the ordinal singular value at which
 %               the singular value spectrum will be fixed. A value <=0 will
 %               result in an all-zeros output matrix.
 % lambda    = scalar, or string (expressed as a percentage), specifying the
-%               regularization parameter for Tikhonov regularization, or 
-%               the replacement value for winsorization. Lambda
+%               regularization parameter for Tikhonov regularization in the svd method,
+%               or the replacement value for winsorization. Lambda
 %               specified as a percentage, e.g. '5%' will be converted into
 %               a percentage of the average of trace(A).
 % feedback  = boolean, false or true, to visualize the singular value spectrum
@@ -36,9 +32,7 @@ function Ainv = ft_inv(A, varargin)
 % interactive = boolean, false or true, to manually specify a value for
 %               kappa.
 %
-% kappa and tolerance are mutually exclusive, in case both are specified,
-% tolerance takes precedence. Tolerance and kappa don't have an effect for
-% the methods 'moorepenrose', 'tikhonov', 'vanilla' and 'winsorize'.  
+% Kappa doesn't have an effect for the methods 'moorepenrose' and 'vanilla'.  
 
 % Copyright (C) 2019, DCCN, Jan-Mathijs Schoffelen
 %
@@ -58,8 +52,7 @@ function Ainv = ft_inv(A, varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 
-method    = ft_getopt(varargin, 'method',    'tikhonov');
-tolerance = ft_getopt(varargin, 'tolerance', []);
+method    = ft_getopt(varargin, 'method',    'svd');
 kappa     = ft_getopt(varargin, 'kappa',     []);
 lambda    = ft_getopt(varargin, 'lambda',    0);
 feedback  = istrue(ft_getopt(varargin, 'feedback', false));
@@ -94,7 +87,6 @@ needlambda = false;
 switch method
   case 'svd'
     needkappa = true;
-  case 'tikhonov'
     needlambda = true;
   case 'winsorize'
     needlambda = true;
@@ -109,15 +101,15 @@ if needlambda
     lambda = ratio * trace(A)./m;
   end
   
-  if lambda~=0 && m~=n && strcmp(method, 'tikhonov')
-    ft_error('with tikhonov regularization, the input matrix should be square');
+  if lambda~=0 && m~=n
+    ft_error('with lambda regularization, the input matrix should be square');
   elseif lambda<0
     ft_error('a negative value for lambda is not allowed');
   end
 end
 
 if needkappa
-  if isempty(kappa) && isempty(tolerance)
+  if isempty(kappa)
     % check whether the interacive mode is requested
     if interactive
       figure; plot(1:m, log10(s),'o-');
@@ -133,11 +125,6 @@ if needkappa
       tolerance = 10 * max(m,n) * eps;
       kappa     = sum(s./s(1) > tolerance);
     end
-  elseif ~isempty(kappa) &&  isempty(tolerance)
-  elseif  isempty(kappa) && ~isempty(tolerance)
-    kappa = sum(s./s(1) > tolerance);
-  elseif ~isempty(kappa) && ~isempty(tolerance)
-    ft_warning('both a kappa value and tolerance value are defined, using the kappa value for truncation');
   end
   
   % do a sanity check on the estimated kappa
@@ -152,13 +139,10 @@ switch method
   case 'vanilla'
     Ainv = inv(A);
   case 'svd'
-    S    = diag(ones(kappa,1)./s(1:kappa));
+    S    = diag(s(1:kappa)./(s(1:kappa).^2+lambda));
     Ainv = V(:,1:kappa)*S*U(:,1:kappa)';
   case 'moorepenrose'
     Ainv = A'/(A*A');
-  case 'tikhonov'
-    % this is the way that fieldtrip handled covariance inversion.
-    Ainv = pinv(A+eye(size(A,1)).*lambda, 10 * max(m,n) * s(1) * eps);
   case 'winsorize'
     % replace all singular values < lambda by lambda, and truncate
     s(s./s(1) < lambda) = lambda;
