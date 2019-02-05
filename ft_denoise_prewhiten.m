@@ -81,8 +81,27 @@ cfg.invmethod = ft_getopt(cfg, 'invmethod', 'tikhonov');
 % for meggrad data)
 if isfield(datain, 'hdr'), datain = rmfield(datain, 'hdr'); end
 
-datain = ft_checkdata(datain, 'datatype', {'raw' 'timelock'}, 'haschantype', 'yes', 'haschanunit', 'yes'); 
-noise  = ft_checkdata(noise,  'datatype',         'timelock', 'haschantype', 'yes', 'haschanunit', 'yes');
+datain = ft_checkdata(datain, 'datatype', {'raw' 'timelock' 'freq'}, 'haschantype', 'yes', 'haschanunit', 'yes'); 
+noise  = ft_checkdata(noise,  'datatype', {      'timelock' 'freq'}, 'haschantype', 'yes', 'haschanunit', 'yes');
+
+dtype_datain = ft_datatype(datain);
+
+% check for allowed input combinations
+switch dtype_datain
+  case 'raw'
+    assert(ft_datatype(noise, 'timelock'), 'noise data should be of datatype ''timelock''');
+  case 'timelock'
+    assert(ft_datatype(noise, 'timelock'), 'noise data should be of datatype ''timelock''');
+  case 'freq'
+    if ft_datatype(noise, 'freq')
+      % this is only allowed if both structures have the same singleton
+      % frequency
+      assert(numel(noise.freq==1) && numel(datain.freq==1) && isequal(noise.freq,datain.freq), ...
+        'with both datain and noise of datatype ''freq'', only singleton and equal frequency bins are allowed');
+    elseif ft_datatype(noise, 'timelock')
+      % this is OK
+    end
+end
 
 % select channels and trials of interest, by default this will select all channels and trials
 tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
@@ -93,8 +112,18 @@ noise  = ft_selectdata(tmpcfg, noise);
 [cfg, datain] = rollback_provenance(cfg, datain);
 [cfg, noise]  = rollback_provenance(cfg, noise);
 
-if ~isfield(noise, 'cov')
-  ft_error('noise covariance is not present');
+if ft_datatype(noise, 'timelock')
+  if ~isfield(noise, 'cov')
+    ft_error('noise covariance is not present');
+  else
+    noisecov = noise.cov;
+  end
+elseif ft_datatype(noise, 'freq') 
+  if ~isfield(noise, 'crsspctrm')
+    ft_error('noise cross-spectrum is not present');
+  else
+    noisecov = real(noise.crsspctrm);
+  end
 end
 
 % determine whether it is EEG and/or MEG data
@@ -115,12 +144,12 @@ end
 % zero out the off-diagonal elements for the specified channel types
 for i=1:numel(chantype)
   sel = strcmp(noise.chantype, chantype{i});
-  noise.cov(sel,~sel) = 0;
-  noise.cov(~sel,sel) = 0;
+  noisecov(sel,~sel) = 0;
+  noisecov(~sel,sel) = 0;
 end
 
 % invert the noise covariance matrix
-invnoise = ft_inv(noise.cov, 'lambda', cfg.lambda, 'kappa', cfg.kappa, 'tolerance', cfg.tol);
+invnoise = ft_inv(noisecov, 'lambda', cfg.lambda, 'kappa', cfg.kappa, 'tolerance', cfg.tol, 'method', cfg.invmethod);
 [U,S,V]  = svd(invnoise,'econ');
 
 prewhiten             = [];
