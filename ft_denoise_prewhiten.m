@@ -17,7 +17,6 @@ function [dataout] = ft_denoise_prewhiten(cfg, datain, noise)
 %   cfg.split       = cell-array of channel types between which covariance is split, it can also be 'all' or 'no'
 %   cfg.lambda      = scalar, or string
 %   cfg.kappa       = scalar
-%   cfg.tolerance   = scalar
 %
 % The channel selection relates to the channels that are pre-whitened
 % using the same selection of channels in the noise covariance.
