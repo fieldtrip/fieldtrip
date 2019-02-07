@@ -354,6 +354,7 @@ switch fileformat
     end
     
   case 'caret_spec'
+    [p, f, e] = fileparts(filename);
     [spec, headerinfo] = read_caret_spec(filename);
     fn = fieldnames(spec);
     
@@ -363,10 +364,10 @@ switch fileformat
     topofiles  = {};
     for k = 1:numel(fn)
       if ~isempty(strfind(fn{k}, 'topo'))
-        topofiles = cat(1,topofiles, spec.(fn{k}));
+        topofiles = cat(1,topofiles, fullfile(p,spec.(fn{k})));
       end
       if ~isempty(strfind(fn{k}, 'coord'))
-        coordfiles = cat(1,coordfiles, spec.(fn{k}));
+        coordfiles = cat(1,coordfiles, fullfile(p,spec.(fn{k})));
       end
     end
     if isempty(surface)
