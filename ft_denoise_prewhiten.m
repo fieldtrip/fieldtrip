@@ -27,7 +27,7 @@ function [dataout] = ft_denoise_prewhiten(cfg, datain, noise)
 % The lambda/kappa/tolerance values relate to how the inverse of the noise
 % covariance is computed by FT_INV
 %
-% See also FT_DENOISE_SYNTHETIC, FT_DENOISE_PCA FT_INV
+% See also FT_DENOISE_SYNTHETIC, FT_DENOISE_PCA, FT_INV
 
 % Copyright (C) 2018-2019, Robert Oostenveld and Jan-Mathijs Schoffelen
 %
