@@ -143,6 +143,8 @@ if isfield(obj, 'tra') && isfield(obj, 'chanunit')
       % assume that it is T or V, don't do anything
     elseif strcmp(obj.chanunit{i}, 'unknown')
       % assume that it is T or V, don't do anything
+    elseif strcmp(obj.chanunit{i}, 'snr')
+      %
     else
       ft_error('unexpected units %s', obj.chanunit{i});
     end

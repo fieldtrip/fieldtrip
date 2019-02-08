@@ -24,7 +24,7 @@ function chantype = ft_chantype(input, desired)
 % desired type and "false" for the ones that do not match.
 %
 % The specification of the channel types depends on the acquisition system,
-% for example the ctf275 system includes the following tyoe of channels:
+% for example the ctf275 system includes the following type of channels:
 % meggrad, refmag, refgrad, adc, trigger, eeg, headloc, headloc_gof.
 %
 % See also FT_READ_HEADER, FT_SENSTYPE, FT_CHANUNIT
@@ -249,7 +249,9 @@ elseif ft_senstype(input, 'neuromag306') && isgrad
   % there should be 204 planar gradiometers and 102 axial magnetometers
   if isfield(input, 'tra')
     tmp = sum(abs(input.tra),2);
-    sel = (tmp==median(tmp));
+    tmp = round(tmp-median(tmp));
+    sel = tmp==median(tmp);
+    
     chantype(sel) = {'megplanar'};
     sel = (tmp~=median(tmp));
     chantype(sel) = {'megmag'};
@@ -740,7 +742,7 @@ end
 if isdata
   % the input was replaced by one of hdr, grad, elec, opto
   [sel1, sel2] = match_str(origlabel, input.label);
-  origtype = repmat({'unknown'}, size(sel1));
+  origtype = repmat({'unknown'}, size(origlabel));
   origtype(sel1) = chantype(sel2);
   % the hdr, grad, elec or opto structure might have a different set of channels
   chantype = origtype;

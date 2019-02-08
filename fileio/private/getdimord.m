@@ -471,6 +471,11 @@ switch field
       dimord = 'freq';
     end
     
+  case {'chantype', 'chanunit'}
+    if numel(data.(field))==nchan
+      dimord = 'chan';
+    end
+    
   otherwise
     if isfield(data, 'dim') && isequal(datsiz, data.dim)
       dimord = 'dim1_dim2_dim3';
