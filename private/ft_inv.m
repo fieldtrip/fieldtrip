@@ -5,8 +5,7 @@ function Y = ft_inv(X, varargin)
 % Use as
 %  Y = ft_inv(X, ...)
 %
-% Additional input arguments can be specified as key-value pairs, supported
-% optional arguments are:
+% Additional options should be specified in key-value pairs and can be
 %   method    = string, method for inversion and regularization (see below).
 %               The default method is 'lavrentiev'.
 %   lambda    = scalar value, or string (expressed as a percentage), specifying 
