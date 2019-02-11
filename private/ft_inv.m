@@ -5,22 +5,22 @@ function Y = ft_inv(X, varargin)
 % Use as
 %  Y = ft_inv(X, ...)
 %
-% Additional input arguments can be specified as key-value pairs, supported
-% optional arguments are:
-%   method      = string, method for inversion and regularization (see below). 
-%                 The default is 'lavrentiev'.
-%   tolerance   = scalar, reflects the fraction of the largest singular value
-%                 at which the singular value spectrum will be truncated.
-%                 The default is 10*eps*max(size(X)).
-%   kappa       = scalar integer, reflects the ordinal singular value at which
-%                 the singular value spectrum will be truncated.
-%   lambda      = scalar, or string (expressed as a percentage), specifying the
-%                 regularization parameter for Tikhonov regularization, or
-%                 the replacement value for winsorization. Lambda
-%                 specified as a percentage, e.g. '5%' will be converted into
-%                 a percentage of the average of trace(X).
-%   feedback    = boolean, false or true, to visualize the singular value spectrum
-%                 with the truncation level used.
+% Additional options should be specified in key-value pairs and can be
+%   method    = string, method for inversion and regularization (see below).
+%               The default method is 'lavrentiev'.
+%   lambda    = scalar value, or string (expressed as a percentage), specifying 
+%               the regularization parameter for Lavrentiev or Tikhonov 
+%               regularization, or the replacement value for winsorization. 
+%               When lambda is specified as a string containing a percentage, 
+%               e.g. '5%', it will be computed as the percentage of the average 
+%               eigenvalue.
+%   kappa     = scalar integer, reflects the ordinal singular value at which
+%               the singular value spectrum will be truncated.
+%   tolerance = scalar, reflects the fraction of the largest singular value
+%               at which the singular value spectrum will be truncated.
+%               The default is 10*eps*max(size(X)).
+%   feedback  = boolean, to visualize the singular value spectrum with the 
+%               lambda regularization and kappa truncation.
 %
 % The supported methods are:
 %
@@ -47,8 +47,10 @@ function Y = ft_inv(X, varargin)
 % the value according to lambda.
 %
 % Both for the lambda and the kappa option you can specify 'interactive' to pop up an
-% interactive display of the singular value spectrum. The kappa and tolerance options
-% are mutually exclusive, in case both are specified, tolerance takes precedence.
+% interactive display of the singular value spectrum that allows you to click in the figure. 
+%
+% Rather than specifying kappa, you can also specify the tolerance as the ratio of
+% the largest eigenvalue at which eigenvalues will be truncated.
 %
 % See also INV, PINV, CONDEST, RANK
 
@@ -106,7 +108,7 @@ switch method
     ft_error('unsupported method "%s"', method);
 end
 
-if needlambda || needkappa
+if needlambda || needkappa || feedback
   % perform an svd, this is used to determine the default parameters and for most inverse methods
   [U,S,V] = svd(X,0);
   if m > 1
@@ -128,8 +130,16 @@ if needlambda
     ratio  = ratio/100;
     lambda = ratio * mean(s);
   elseif ischar(lambda) && strcmp(lambda, 'interactive')
-    figure; semilogy(1:m, s,'o-');
-    lambda = input('Please specify lambda: ');
+    figure
+    semilogy(1:m, s,'o-');
+    title('Please specify lambda by clicking in the figure');
+    fprintf('Please specify lambda by clicking in the figure\n');
+    [x,lambda] = ginput(1);
+    % compute the difference between the vertical position that was clicked and the corresponding eigenvalue
+    lambda = lambda - s(round(x));
+    if lambda<0
+      lambda = 0;
+    end
     if isempty(lambda)
       lambda = 0;
     end
@@ -146,9 +156,15 @@ end
 
 if needkappa
   if ischar(kappa) && strcmp(kappa, 'interactive')
-    figure; semilogy(1:m, s,'o-');
-    kappa = input('Please specify kappa: ');
-    if isempty(kappa)
+    figure
+    semilogy(1:m, s,'o-');
+    title('Please specify kappa by clicking in the figure');
+    fprintf('Please specify kappa by clicking in the figure.');
+    [kappa,~] = ginput(1);
+    if kappa<0
+      kappa = 0;
+    end
+    if isempty(kappa) || kappa>m
       kappa = m;
     end
   end
@@ -176,9 +192,10 @@ end
 % provide initial feedback
 
 if feedback
-  figure; hold on
   % plot the initial singular values
+  figure
   semilogy(1:m, s, 'o-');
+  hold on
   ylabel('singular values');
 end
 
