@@ -134,9 +134,12 @@ else
   chantype = repmat({'unknown'}, numchan, 1);
 end
 
-if ft_senstype(input, 'unknown')
-  % don't bother doing all subsequent checks to determine the chantype of sensor array
-
+if ~any(strcmp(chantype, 'unknown'))
+  % all channels are known, don't bother doing any further heuristics
+  
+elseif ft_senstype(input, 'unknown')
+  % don't bother doing subsequent checks to determine the chantype
+  
 elseif isheader && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74'))
   % channames-KI is the channel kind, 1=meg, 202=eog, 2=eeg, 3=trigger (I am not sure, but have inferred this from a single test file)
   % chaninfo-TY is the Coil chantype (0=magnetometer, 1=planar gradiometer)
@@ -248,13 +251,11 @@ elseif ft_senstype(input, 'neuromag122')
 elseif ft_senstype(input, 'neuromag306') && isgrad
   % there should be 204 planar gradiometers and 102 axial magnetometers
   if isfield(input, 'tra')
-    tmp = sum(abs(input.tra),2);
-    tmp = round(tmp-median(tmp));
-    sel = tmp==median(tmp);
-    
-    chantype(sel) = {'megplanar'};
-    sel = (tmp~=median(tmp));
+    tmp = sum(abs(input.tra)>0,2);
+    sel = (tmp==1);
     chantype(sel) = {'megmag'};
+    sel = (tmp==2);
+    chantype(sel) = {'megplanar'};
   end
 
 elseif ft_senstype(input, 'neuromag306') && islabel
