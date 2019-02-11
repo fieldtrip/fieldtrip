@@ -1,10 +1,11 @@
 function [input] = ft_apply_montage(input, montage, varargin)
 
-% FT_APPLY_MONTAGE changes the montage of an electrode or gradiometer array. A
-% montage can be used for EEG rereferencing, MEG synthetic gradients, MEG
-% planar gradients or unmixing using ICA. This function applies the montage
-% to the input EEG or MEG sensor array, which can subsequently be used for
-% forward computation and source reconstruction of the data.
+% FT_APPLY_MONTAGE changes the montage (i.e. linear combination) of a set of
+% electrode or gradiometer channels. A montage can be used for EEG rereferencing, MEG
+% synthetic gradients, MEG planar gradients or unmixing using ICA. This function not
+% only applies the montage to the EEG or MEG data, but also applies the montage to
+% the input EEG or MEG sensor array, which can subsequently be used for forward
+% computation and source reconstruction of the data.
 %
 % Use as
 %   [sens]    = ft_apply_montage(sens,     montage,  ...)
@@ -34,12 +35,12 @@ function [input] = ft_apply_montage(input, montage, varargin)
 %   montage.chanunitnew = Mx1 cell-array
 %
 % Additional options should be specified in key-value pairs and can be
-%   'keepunused'    string, 'yes' or 'no' (default = 'no')
-%   'inverse'       string, 'yes' or 'no' (default = 'no')
-%   'balancename'   string, name of the montage (default = '')
-%   'feedback'      string, see FT_PROGRESS (default = 'text')
-%   'warning'       boolean, whether to show warnings (default = true)
-%   'showcallinfo'  string, 'yes' or 'no' (default = 'no')
+%   'keepunused'    = string, 'yes' or 'no' (default = 'no')
+%   'inverse'       = string, 'yes' or 'no' (default = 'no')
+%   'balancename'   = string, name of the montage (default = '')
+%   'feedback'      = string, see FT_PROGRESS (default = 'text')
+%   'warning'       = boolean, whether to show warnings (default = true)
+%   'showcallinfo'  = string, 'yes' or 'no' (default = 'no')
 %
 % If the first input is a montage, then the second input montage will be
 % applied to the first. In effect, the output montage will first do
@@ -519,8 +520,8 @@ switch inputtype
             nchan  = siz(2);
             ntime  = siz(3);
             output = zeros(nrpt, size(montage.tra,1), ntime);
-            for i=1:nrpt
-              output(i,:,:) = montage.tra * reshape(timelock.(fn{i})(i,:,:), [nchan ntime]);
+            for rptlop=1:nrpt
+              output(rptlop,:,:) = montage.tra * reshape(timelock.(fn{i})(rptlop,:,:), [nchan ntime]);
             end
             timelock.(fn{i}) = output; % replace the original field
           case 'chan_chan'
@@ -530,8 +531,8 @@ switch inputtype
             nrpt   = siz(1);
             nchan  = siz(2);
             output = zeros(nrpt, size(montage.tra,1), size(montage.tra,1));
-            for i=1:nrpt
-              output(i,:,:) = montage.tra * reshape(timelock.(fn{i})(i,:,:), [nchan nchan]);
+            for rptlop=1:nrpt
+              output(rptlop,:,:) = montage.tra * reshape(timelock.(fn{i})(rptlop,:,:), [nchan nchan]);
             end
             timelock.(fn{i}) = output; % replace the original field
           otherwise
@@ -539,8 +540,15 @@ switch inputtype
         end % switch
       end % if
     end % for
-    input = timelock;
+
+    timelock.label    = montage.labelnew;
+    timelock.chantype = montage.chantypenew;
+    timelock.chanunit = montage.chanunitnew;
     
+    % rename the output variable
+    input = timelock;
+    clear timelock
+
   case 'freq'
     % apply the montage to the spectrally decomposed data
     freq = input;
