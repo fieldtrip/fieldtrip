@@ -161,7 +161,10 @@ if needkappa
     title('Please specify kappa by clicking in the figure');
     fprintf('Please specify kappa by clicking in the figure.');
     [kappa,~] = ginput(1);
-    if isempty(kappa)
+    if kappa<0
+      kappa = 0;
+    end
+    if isempty(kappa) || kappa>m
       kappa = m;
     end
   end
