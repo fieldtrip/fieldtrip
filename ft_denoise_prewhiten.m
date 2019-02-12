@@ -157,8 +157,7 @@ prewhiten.chanunitold = noise.chanunit;
 prewhiten.chanunitnew = repmat({'snr'}, size(noise.chantype));
 
 % apply the projection to the data
-datain = removefields(datain, {'grad', 'elec', 'opto'});
-dataout = ft_apply_montage(datain, prewhiten, 'keepunused', 'yes');
+dataout = ft_apply_montage(removefields(datain, {'grad', 'elec', 'opto'}), prewhiten, 'keepunused', 'yes');
 
 if hasgrad
   % the gradiometer structure needs to be updated to ensure that the forward model remains consistent with the data
