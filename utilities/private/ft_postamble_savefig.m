@@ -47,9 +47,15 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
   end
   
   if ~isempty(cfg.outputfile)
-    % save the current figure to a MATLAB .fig file
-    ft_info('writing output figure to file ''%s''\n', cfg.outputfile);
+    % save the current figure to a MATLAB .fig and to a .png file
+    [Fief7bee_p, Fief7bee_f, Fief7bee_x] = fileparts(cfg.outputfile);
+    Fief7bee_outputfile = fullfile(Fief7bee_p, [Fief7bee_f, '.fig']);
+    ft_info('writing output figure to file ''%s''\n', Fief7bee_outputfile);
     savefig(gcf, cfg.outputfile, 'compact')
+    Fief7bee_outputfile = fullfile(Fief7bee_p, [Fief7bee_f, '.png']);
+    ft_info('writing screenshot to file ''%s''\n', Fief7bee_outputfile);
+    set(gcf, 'PaperOrientation', 'portrait');
+    print(Fief7bee_outputfile, '-dpng');
   end
   
   if isfield(cfg, 'outputlock') && ~isempty(cfg.outputlock)
