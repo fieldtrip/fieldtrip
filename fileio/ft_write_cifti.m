@@ -769,7 +769,13 @@ if writesurface && isfield(source, 'pos') && isfield(source, 'tri')
       filetok = tokenize(f, '.');
       surffile = fullfile(p, [filetok{1} '.' BrainStructurelabel{i} '.surf.gii']);
       fprintf('writing %s surface to %s\n', BrainStructurelabel{i}, surffile);
-      ft_write_headshape(surffile, mesh, 'format', 'gifti');
+      
+      % also add metadata to gifti, which avoids wb_view to ask for it
+      % interactively upon opening the file
+      metadata.name = 'AnatomicalStructurePrimary';
+      metadata.value = uppercase2lowercase(BrainStructurelabel{i});
+      
+      ft_write_headshape(surffile, mesh, 'format', 'gifti', 'metadata', metadata);
     end
     
   else
@@ -817,6 +823,13 @@ while length(s)<n
   s = [' ' s];
 end
 
+function s = uppercase2lowercase(s)
+sel = [0 strfind(s,'_') numel(s)+1];
+sout = '';
+for m = 1:numel(sel)-1
+  sout = [sout, s(sel(m)+1) lower(s((sel(m)+2):(sel(m+1)-1)))];
+end
+s = sout;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION from roboos/matlab/triangle
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
