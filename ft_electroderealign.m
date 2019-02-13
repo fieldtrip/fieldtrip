@@ -55,8 +55,9 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %                        'nonlin4'         apply a 4th order non-linear warp
 %                        'nonlin5'         apply a 5th order non-linear warp
 %                        'dykstra2012'     non-linear wrap only for headshape method, useful for projecting ECoG onto cortex hull
-%                        'fsaverage'       surface-based realignment with FreeSurfer fsaverage brain
-%                        'fsinflated'      surface-based realignment with FreeSurfer individual subject inflated brain
+%                        'fsaverage'       surface-based realignment with FreeSurfer fsaverage brain (left->left or right->right)
+%                        'fsaverage_sym'   surface-based realignment with FreeSurfer fsaverage_sym left hemisphere (left->left or right->left)
+%                        'fsinflated'      surface-based realignment with FreeSurfer individual subject inflated brain (left->left or right->right)
 %   cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
 %                        see  FT_CHANNELSELECTION for details
 %   cfg.keepchannel    = string, 'yes' or 'no' (default = 'no')
@@ -408,8 +409,10 @@ elseif strcmp(cfg.method, 'headshape')
     norm.elecpos = warp_hermes2010(cfg, elec, headshape);
   elseif strcmp(cfg.warp, 'fsaverage')
     norm.elecpos = warp_fsaverage(cfg, elec);
+  elseif strcmp(cfg.warp, 'fsaverage_sym')
+    norm.elecpos = warp_fsaverage_sym(cfg, elec);
   elseif strcmp(cfg.warp, 'fsinflated')
-    norm.elecpos = warp_fsinflated(cfg, elec); 
+    norm.elecpos = warp_fsinflated(cfg, elec);
   else
     fprintf('warping electrodes to skin surface... '); % the newline comes later
     [norm.elecpos, norm.m] = ft_warp_optim(elec.elecpos, headshape, cfg.warp);
@@ -619,7 +622,8 @@ end % if method
 % electrode labels by their case-sensitive original values
 switch cfg.method
   case {'template', 'headshape'}
-    if strcmpi(cfg.warp, 'dykstra2012') || strcmpi(cfg.warp, 'hermes2010') || strcmpi(cfg.warp, 'fsaverage') || strcmpi(cfg.warp, 'fsinflated')
+    if strcmpi(cfg.warp, 'dykstra2012') || strcmpi(cfg.warp, 'hermes2010') || ...
+        strcmpi(cfg.warp, 'fsaverage') || strcmpi(cfg.warp, 'fsaverage_sym') || strcmpi(cfg.warp, 'fsinflated')
       elec_realigned = norm;
       elec_realigned.label = label_original;
     else
@@ -675,6 +679,8 @@ switch cfg.method
         elec_realigned.coordsys = elec_original.coordsys;
       elseif strcmp(cfg.warp, 'fsaverage')
         elec_realigned.coordsys = 'fsaverage';
+      elseif strcmp(cfg.warp, 'fsaverage_sym')
+        elec_realigned.coordsys = 'fsaverage_sym';
       end
     end
   case 'fiducial'
