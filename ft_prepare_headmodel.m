@@ -294,12 +294,10 @@ switch cfg.method
     elseif input_elec
       geometry.pos = data.chanpos;
       geometry.unit = data.unit;
-    elseif ~isempty(cfg.headshape) && isnumeric(cfg.headshape)
-      geometry.pos = cfg.headshape;
-    elseif ~isempty(cfg.headshape) && isstruct(cfg.headshape)
-      geometry = cfg.headshape;
     elseif ~isempty(cfg.headshape) && ischar(cfg.headshape)
       geometry = ft_read_headshape(cfg.headshape);
+    elseif ~isempty(cfg.headshape) 
+      geometry = fixpos(cfg.headshape);
     else
       ft_error('You must give a mesh, segmented MRI, sensor data type, or cfg.headshape');
     end
@@ -368,11 +366,30 @@ switch cfg.method
     elseif input_elec
       geometry.pos = data.chanpos;
       geometry.unit = data.unit;
-    elseif ~isempty(cfg.headshape) && isnumeric(cfg.headshape)
-      geometry.pos = cfg.headshape;
-    elseif ~isempty(cfg.headshape) && isstruct(cfg.headshape)
+    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'hex')
+      cfg.headshape = fixpos(cfg.headshape);
+      fprintf('extracting surface from hexahedral mesh\n');
+      headshape = mesh2edge(cfg.headshape);
+      geometry = poly2tri(headshape);
+    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'tet')
+      cfg.headshape = fixpos(cfg.headshape);
+      fprintf('extracting surface from tetrahedral mesh\n');
+      geometry = mesh2edge(cfg.headshape);
+    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'tri')
+      cfg.headshape = fixpos(cfg.headshape);
       geometry = cfg.headshape;
-    elseif ~isempty(cfg.headshape) && ischar(cfg.headshape)
+    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pos')
+      cfg.headshape = fixpos(cfg.headshape);
+      geometry = cfg.headshape;
+    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
+      cfg.headshape = fixpos(cfg.headshape);
+      geometry = cfg.headshape;
+    elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
+      % use the headshape points specified in the configuration
+      cfg.headshape = fixpos(cfg.headshape);
+      geometry = cfg.headshape;
+    elseif ischar(cfg.headshape)
+      % read the headshape from file
       geometry = ft_read_headshape(cfg.headshape);
     elseif ~isempty(cfg.headmodel)
       % the CTF *.hdm file will be read further down
