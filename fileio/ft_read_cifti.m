@@ -733,6 +733,10 @@ if readdata
       Ntime = size(voxdata,3);
       dat = nan(Ngreynodes,Ngreynodes,Ntime);
       dat(greynodeIndex(dataIndex),greynodeIndex(dataIndex),:) = voxdata;
+    case {'pos_pos_freq' 'chan_chan_freq'}
+      Ntime = size(voxdata,3);
+      dat = nan(Ngreynodes,Ngreynodes,Ntime);
+      dat(greynodeIndex(dataIndex),greynodeIndex(dataIndex),:) = voxdata;
       
       % the following representations need to be transposed to be consistent with FieldTrip
     case 'time_pos'
@@ -745,16 +749,38 @@ if readdata
       dat = nan(Ngreynodes,Ntime);
       dat(greynodeIndex(dataIndex),:) = transpose(voxdata);
       source.dimord = 'chan_time';
-    case 'time_pos_pos'
-      Ntime = size(voxdata,1);
-      dat = nan(Ngreynodes,Ngreynodes,Ntime);
+    
+    case 'freq_pos_pos'
+      Nfreq = size(voxdata,1);
+      dat = nan(Ngreynodes,Ngreynodes,Nfreq);
       dat(greynodeIndex(dataIndex),greynodeIndex(dataIndex),:) = permute(voxdata, [2 3 1]);
-      source.dimord = 'pos_pos_time';
-    case 'time_chan_chan'
-      Ntime = size(voxdata,1);
-      dat = nan(Ngreynodes,Ngreynodes,Ntime);
+      source.dimord = 'pos_pos_freq';
+    case 'freq_chan_chan'
+      Nfreq = size(voxdata,1);
+      dat = nan(Ngreynodes,Ngreynodes,Nfreq);
       dat(greynodeIndex(dataIndex),greynodeIndex(dataIndex),:) = permute(voxdata, [2 3 1]);
-      source.dimord = 'chan_chan_time';
+      source.dimord = 'chan_chan_freq';
+      case 'freq_pos'
+      Nfreq = size(voxdata,1);
+      dat = nan(Ngreynodes,Nfreq);
+      dat(greynodeIndex(dataIndex),:) = transpose(voxdata);
+      source.dimord = 'pos_freq';
+    case 'freq_chan'
+      Nfreq = size(voxdata,1);
+      dat = nan(Ngreynodes,Nfreq);
+      dat(greynodeIndex(dataIndex),:) = transpose(voxdata);
+      source.dimord = 'chan_freq';
+    case 'freq_pos_pos'
+      Nfreq = size(voxdata,1);
+      dat = nan(Ngreynodes,Ngreynodes,Nfreq);
+      dat(greynodeIndex(dataIndex),greynodeIndex(dataIndex),:) = permute(voxdata, [2 3 1]);
+      source.dimord = 'pos_pos_freq';
+    case 'freq_chan_chan'
+      Nfreq = size(voxdata,1);
+      dat = nan(Ngreynodes,Ngreynodes,Nfreq);
+      dat(greynodeIndex(dataIndex),greynodeIndex(dataIndex),:) = permute(voxdata, [2 3 1]);
+      source.dimord = 'chan_chan_freq';
+      
       
     otherwise
       ft_error('unsupported dimord %s', source.dimord);
