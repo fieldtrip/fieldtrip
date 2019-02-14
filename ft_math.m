@@ -1,4 +1,4 @@
-function data = ft_math(cfg, varargin)
+function [data] = ft_math(cfg, varargin)
 
 % FT_MATH performs mathematical operations on FieldTrip data structures,
 % such as addition, subtraction, division, etc.

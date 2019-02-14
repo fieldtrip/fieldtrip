@@ -1,4 +1,4 @@
-function data = ft_removetemplateartifact(cfg, data, template)
+function [data] = ft_removetemplateartifact(cfg, data, template)
 
 % FT_REMOVETEMPLATEARTIFACT removes an artifact from preprocessed data by template
 % subtraction. The template can for example be formed by averaging an ECG-triggered
