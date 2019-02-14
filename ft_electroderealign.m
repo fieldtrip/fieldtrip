@@ -300,21 +300,29 @@ if useheadshape
   elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'tri')
     cfg.headshape = fixpos(cfg.headshape);
     headshape = cfg.headshape;
+  elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pos')
+    cfg.headshape = fixpos(cfg.headshape);
+    headshape = cfg.headshape;
+  elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
+    cfg.headshape = fixpos(cfg.headshape);
+    headshape = cfg.headshape;
   elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
     % use the headshape points specified in the configuration
-    headshape.pos = cfg.headshape;
+    cfg.headshape = fixpos(cfg.headshape);
+    headshape = cfg.headshape;
   elseif ischar(cfg.headshape)
     % read the headshape from file
     headshape = ft_read_headshape(cfg.headshape);
   else
     ft_error('cfg.headshape is not specified correctly')
   end
+  % ensure that the units are consistent with the electrodes
+  headshape = ft_convert_units(headshape, elec.unit); 
   if ~isfield(headshape, 'tri') && ~isfield(headshape, 'poly')
     % generate a closed triangulation from the surface points
     headshape.pos = unique(headshape.pos, 'rows');
     headshape.tri = projecttri(headshape.pos);
   end
-  headshape = ft_convert_units(headshape, elec.unit); % ensure that the units are consistent with the electrodes
 end
 
 % convert all labels to lower case for string comparisons
