@@ -749,17 +749,16 @@ if readdata
       dat = nan(Ngreynodes,Ntime);
       dat(greynodeIndex(dataIndex),:) = transpose(voxdata);
       source.dimord = 'chan_time';
-    
-    case 'freq_pos_pos'
-      Nfreq = size(voxdata,1);
-      dat = nan(Ngreynodes,Ngreynodes,Nfreq);
+    case 'time_pos_pos'
+      Ntime = size(voxdata,1);
+      dat = nan(Ngreynodes,Ngreynodes,Ntime);
       dat(greynodeIndex(dataIndex),greynodeIndex(dataIndex),:) = permute(voxdata, [2 3 1]);
-      source.dimord = 'pos_pos_freq';
-    case 'freq_chan_chan'
-      Nfreq = size(voxdata,1);
-      dat = nan(Ngreynodes,Ngreynodes,Nfreq);
+      source.dimord = 'pos_pos_time';
+    case 'time_chan_chan'
+      Ntime = size(voxdata,1);
+      dat = nan(Ngreynodes,Ngreynodes,Ntime);
       dat(greynodeIndex(dataIndex),greynodeIndex(dataIndex),:) = permute(voxdata, [2 3 1]);
-      source.dimord = 'chan_chan_freq';
+      source.dimord = 'chan_chan_time';
       case 'freq_pos'
       Nfreq = size(voxdata,1);
       dat = nan(Ngreynodes,Nfreq);
