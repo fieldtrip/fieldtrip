@@ -47,8 +47,8 @@ if (isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)) || exist('Fief7bee_rep
       cfg.inputfile = {};
       iW1aenge_now = datestr(now, 30);
       for i=1:(ft_nargin-1)
-        cfg.inputfile{i} = fullfile(Fief7bee_reproducescript, sprintf('%s_input_%s_%d', iW1aenge_now, iW1aenge_preamble{i}, i));
-        savevar(cfg.inputfile{i}, iW1aenge_preamble{i}, varargin{i});
+        cfg.inputfile{i} = fullfile(Fief7bee_reproducescript, sprintf('%s_input_varargin_%d', iW1aenge_now, i));
+        savevar(cfg.inputfile{i}, 'data', varargin{i});
       end
     else
       cfg.inputfile = {};
