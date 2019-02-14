@@ -41,11 +41,11 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
     % write the function output variable(s) to a MATLAB file
     iW1aenge_now = datestr(now, 30);
     cfg.outputfile = {};
-    for i=1:(ft_nargout)
+    for i=1:numel(iW1aenge_postamble)
       cfg.outputfile{i} = fullfile(Fief7bee_reproducescript, sprintf('%s_output_%s', iW1aenge_now, iW1aenge_postamble{i}));
     end
-    % write a snippet of MATLAB code with the configuration and function call
-    reproducescript(fullfile(Fief7bee_reproducescript, 'script.m'), cfg)
+    % write a snippet of MATLAB code with the user-specified configuration and function call
+    reproducescript(fullfile(Fief7bee_reproducescript, 'script.m'), cfg, isempty(iW1aenge_postamble))
   else
     cfg.outputfile = {};
   end

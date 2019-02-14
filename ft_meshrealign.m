@@ -1,4 +1,4 @@
-function mesh_realigned = ft_meshrealign(cfg, mesh)
+function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 
 % FT_MESHREALIGN rotates, translates and optionally scales electrode positions. The
 % different methods are described in detail below.

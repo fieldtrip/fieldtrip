@@ -1,11 +1,11 @@
-function mri_unbias = ft_volumebiascorrect(cfg, mri)
+function [mri_unbias] = ft_volumebiascorrect(cfg, mri)
 
 % FT_VOLUMEBIASCORRECT corrects the image inhomogeneity bias in an anatomical MRI
 %
 % Use as
 %   mri_unbias = ft_volumebiascorrect(cfg, mri)
-% where the input mri should be a single anatomical volume that was for example read with
-% FT_READ_MRI. 
+% where the input mri should be a single anatomical volume organised in a structure
+% as obtained from the FT_READ_MRI function
 %
 % The configuration structure can contain
 %   cfg.spmversion     = string, 'spm8', 'spm12' (default = 'spm8')
@@ -14,6 +14,26 @@ function mri_unbias = ft_volumebiascorrect(cfg, mri)
 %                        more information.
 %
 % See also FT_VOLUMEREALIGN FT_VOLUMESEGMENT FT_VOLUMENORMALISE
+
+% Copyright (C) 2017, Jan-Mathijs Schoffelen
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 ft_revision = '$Id$';
 ft_nargin = nargin;

@@ -1,4 +1,4 @@
-function source = loreta2fieldtrip(filename, varargin)
+function [source] = loreta2fieldtrip(filename, varargin)
 
 % LORETA2FIELDTRIP reads and converts a LORETA source reconstruction into a
 % FieldTrip data structure, which subsequently can be used for statistical
