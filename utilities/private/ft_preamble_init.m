@@ -132,6 +132,8 @@ if isfield(cfg, 'reproducescript') && ~isempty(cfg.reproducescript)
     % this variable is used in loadvar, savevar and savefig
     Fief7bee_reproducescript = cfg.reproducescript;
     cfg = rmfield(cfg, 'reproducescript');
+    % remember the user-specified configuration at the start of the FieldTrip function
+    Fief7bee_cfg = cfg;
     % pause one second to ensure that subsequent file names (which contain the time stamp) are unique
     pause(1);
   end

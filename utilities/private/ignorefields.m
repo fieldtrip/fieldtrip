@@ -114,6 +114,7 @@ switch purpose
       'checksize'
       'debug'
       'notification'
+      'reproducescript'
       'showcallinfo'
       'trackcallinfo'
       'trackconfig'

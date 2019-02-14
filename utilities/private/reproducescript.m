@@ -1,4 +1,4 @@
-function reproducescript(filename, cfg)
+function reproducescript(filename, cfg, outputcfg)
 
 % This is a helper function to create a script that reproduces the analysis. It
 % appends the configuration and the function call to a MATLAB script.
@@ -23,7 +23,12 @@ function reproducescript(filename, cfg)
 %
 % $Id$
 
-tmpcfg = removefields(cfg.callinfo.usercfg, ignorefields('reproducescript'));
+if isfield(cfg, 'callinfo') && isfield(cfg.callinfo, 'usercfg')
+  tmpcfg = removefields(cfg.callinfo.usercfg, ignorefields('reproducescript'));
+else
+  tmpcfg = removefields(cfg, ignorefields('reproducescript'));
+end
+
 tmpcfg = copyfields(cfg, tmpcfg, {'inputfile', 'outputfile'});
 tmpcfg = printstruct('cfg', tmpcfg);
 
@@ -36,6 +41,12 @@ fprintf(fid, "cfg = [];\n");
 fprintf(fid, "%s\n", tmpcfg);
 
 st = dbstack(2);
-fprintf(fid, '%s(cfg);\n\n', st(2).name);
+
+if outputcfg
+  % this is for ft_definetrial, ft_artifact_zvalue, etc.
+  fprintf(fid, 'cfg = %s(cfg);\n\n', st(2).name);
+else
+  fprintf(fid, '%s(cfg);\n\n', st(2).name);
+end
 
 fclose(fid);
