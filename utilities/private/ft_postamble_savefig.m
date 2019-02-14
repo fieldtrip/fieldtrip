@@ -7,9 +7,9 @@
 %   ft_postamble savevar data
 %   ft_postamble savevar source mri
 %
-% See also FT_PREAMBLE, FT_POSTAMBLE, FT_POSTAMBLE_SAVEFIG
+% See also FT_PREAMBLE, FT_POSTAMBLE, FT_POSTAMBLE_SAVEVAR
 
-% Copyright (C) 2011-2019, Robert Oostenveld, DCCN
+% Copyright (C) 2019, Robert Oostenveld, DCCN
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -29,7 +29,6 @@
 %
 % $Id$
 
-
 % the output data should be saved to a MATLAB file
 if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_reproducescript', 'var')
   
@@ -38,50 +37,29 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
   end
   
   if exist('Fief7bee_reproducescript', 'var')
-    % write the function output variable(s) to a MATLAB file
+    % write the output figure to a MATLAB file
     iW1aenge_now = datestr(now, 30);
-    cfg.outputfile = {};
-    for i=1:(ft_nargout)
-      cfg.outputfile{i} = fullfile(Fief7bee_reproducescript, sprintf('%s_output_%s', iW1aenge_now, iW1aenge_postamble{i}));
-    end
+    cfg.outputfile = fullfile(Fief7bee_reproducescript, sprintf('%s_output', iW1aenge_now));
     % write a snippet of MATLAB code with the configuration and function call
     reproducescript(fullfile(Fief7bee_reproducescript, 'script.m'), cfg)
   else
-    cfg.outputfile = {};
+    cfg.outputfile = [];
   end
   
-  if isequal(iW1aenge_postamble, {'varargout'}) && ~iscell(cfg.outputfile)
-    % this should be a cell-array, oterwise it cannot be matched with varargout
-    cfg.outputfile = {cfg.outputfile};
-  end
-  
-  if iscell(cfg.outputfile)
-    % iW1aenge_postamble is a cell-array containing the variable names
-    if isequal(iW1aenge_postamble, {'varargout'})
-      % the output is in varargout
-      for tmpindx=1:length(cfg.outputfile)
-        savevar(cfg.outputfile{tmpindx}, 'data', varargout{tmpindx});
-      end % for
-      clear tmpindx
-    else
-      % the output is in explicitly named variables
-      for tmpindx=1:length(cfg.outputfile)
-        savevar(cfg.outputfile{tmpindx}, iW1aenge_postamble{tmpindx}, eval(iW1aenge_postamble{tmpindx}));
-      end % for
-      clear tmpindx
-    end
-  else
-    % iW1aenge_postamble{1} contains the name of the only variable
-    savevar(cfg.outputfile, iW1aenge_postamble{1}, eval(iW1aenge_postamble{1}));
+  if ~isempty(cfg.outputfile)
+    % save the current figure to a MATLAB .fig and to a .png file
+    [Fief7bee_p, Fief7bee_f, Fief7bee_x] = fileparts(cfg.outputfile);
+    Fief7bee_outputfile = fullfile(Fief7bee_p, [Fief7bee_f, '.fig']);
+    ft_info('writing output figure to file ''%s''\n', Fief7bee_outputfile);
+    savefig(gcf, cfg.outputfile, 'compact')
+    Fief7bee_outputfile = fullfile(Fief7bee_p, [Fief7bee_f, '.png']);
+    ft_info('writing screenshot to file ''%s''\n', Fief7bee_outputfile);
+    set(gcf, 'PaperOrientation', 'portrait');
+    print(Fief7bee_outputfile, '-dpng');
   end
   
   if isfield(cfg, 'outputlock') && ~isempty(cfg.outputlock)
     mutexunlock(cfg.outputlock);
   end
   
-  if ~ft_nargout
-    % do not return the output variable "ans"
-    clear(iW1aenge_postamble{1});
-  end
 end
-

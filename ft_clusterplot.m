@@ -460,6 +460,7 @@ ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous stat
 ft_postamble provenance
+ft_postamble savefig
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

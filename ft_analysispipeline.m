@@ -681,9 +681,6 @@ function pipeline2htmlfile(cfg, pipeline)
 [p, f, x] = fileparts(cfg.filename);
 filename = fullfile(p, [f '.html']);
 
-% skip the data-like fields and the fields that probably were not added by the user himself
-skipfields = {'previous', 'grid', 'headmodel', 'event', 'warning', 'progress', 'trackconfig', 'checkconfig', 'checksize', 'showcallinfo', 'debug', 'outputfilepresent', 'trackcallinfo', 'trackdatainfo', 'trackusage'};
-
 fprintf('exporting HTML file to ''%s''\n', filename);
 
 html = '';
@@ -695,14 +692,14 @@ for k = 1:numel(pipeline)
   ft_progress(k/numel(pipeline), 'serialising cfg-structure %d from %d', k, numel(pipeline));
   
   % strip away the cfg.previous fields, and all data-like fields
-  tmpcfg = removefields(pipeline(k).cfg, skipfields);
+  tmpcfg = removefields(pipeline(k).cfg, ignorefields('html'));
   
   usercfg = [];
   
   % record the usercfg and proctime if present
   if isfield(tmpcfg, 'callinfo')
     if isfield(tmpcfg.callinfo, 'usercfg')
-      usercfg = removefields(tmpcfg.callinfo.usercfg, skipfields);
+      usercfg = removefields(tmpcfg.callinfo.usercfg, ignorefields('html'));
       
       % avoid processing usercfg twice
       tmpcfg.callinfo = rmfield(tmpcfg.callinfo, 'usercfg');

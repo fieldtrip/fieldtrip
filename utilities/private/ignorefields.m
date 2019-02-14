@@ -122,6 +122,30 @@ switch purpose
       'warning'
       };
     
+  case {'reproducescript'}
+    ignore = {
+      % these should not be included in the output script
+      'checkconfig'
+      'checksize'
+      'debug'
+      'notification'
+      'showcallinfo'
+      'trackcallinfo'
+      'trackconfig'
+      'trackdatainfo'
+      'trackusage'
+      'warning'
+      'reproducescript'
+      'checkpath'
+      'toolbox'
+      'progress'
+      'outputfilepresent'
+      'grid'
+      'grad'
+      'elec'
+      'opto'
+      };
+
   case 'trackconfig'
     ignore = {
       % these fields from the user should be ignored
@@ -176,6 +200,26 @@ switch purpose
       'elec'
       'opto'
       'cfg'
+      };
+    
+  case 'html'
+    % when generating a html-formatted pipeline, ignore data-like fields and fields that probably were not added by the user himself
+    ignore = {
+      'previous'
+      'grid'
+      'headmodel'
+      'event'
+      'warning'
+      'progress'
+      'trackconfig'
+      'checkconfig'
+      'checksize'
+      'showcallinfo'
+      'debug'
+      'outputfilepresent'
+      'trackcallinfo'
+      'trackdatainfo'
+      'trackusage'
       };
     
   otherwise
