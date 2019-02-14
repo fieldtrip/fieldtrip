@@ -468,7 +468,7 @@ for i=1:length(MatrixIndicesMap)
         case 'SECOND'
           dimord(MatrixIndicesMap(i).AppliesToMatrixDimension+1) = {'time'};
           Cifti.time = (((1:MatrixIndicesMap(i).NumberOfSeriesPoints)-1) * MatrixIndicesMap(i).SeriesStep + MatrixIndicesMap(i).SeriesStart) * 10^MatrixIndicesMap(i).SeriesExponent;
-        case 'HZ'
+        case 'HERTZ'
           dimord(MatrixIndicesMap(i).AppliesToMatrixDimension+1) = {'freq'};
           Cifti.freq = (((1:MatrixIndicesMap(i).NumberOfSeriesPoints)-1) * MatrixIndicesMap(i).SeriesStep + MatrixIndicesMap(i).SeriesStart) * 10^MatrixIndicesMap(i).SeriesExponent;
           % case 'METER'
