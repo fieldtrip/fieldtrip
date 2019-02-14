@@ -18,7 +18,7 @@ function [cfg, movement] = ft_detect_movement(cfg, data)
 % CLUSTERING - detects movements according to "Otero-Millan et al., (2014) J Vis 14".
 %
 % Use as
-%   movement = ft_detect_movement(cfg, data)
+%   [cfg, movement] = ft_detect_movement(cfg, data)
 % where the input data should be organised in a structure as obtained from the
 % FT_PREPROCESSING function.
 %
