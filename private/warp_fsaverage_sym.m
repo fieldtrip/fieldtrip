@@ -1,20 +1,20 @@
-function [coord_norm] = warp_fsaverage(cfg, elec)
+function [coord_norm] = warp_fsaverage_sym(cfg, elec)
 
-% WARP_FSAVERAGE maps electrodes onto FreeSurfer's fsaverage brain.
-% This surface-based registration technique solely considers the curvature
-% patterns of the cortex and thus can be used for the spatial normalization
-% of electrodes located on or near the cortical surface. To perform
-% surface-based normalization, you first need to process the subject's MRI
-% with FreeSurfer's recon-all functionality.
+% WARP_FSAVERAGE_SYM maps left or right hemisphere electrodes onto 
+% FreeSurfer's fsaverage_sym's left hemisphere. To perform this mapping, 
+% you first need to have processed the subject's MRI with FreeSurfer's 
+% recon-all functionality and additionaly have registered the subject's resulting 
+% surfaces to freesurfer fsaverage_sym template using surfreg as described 
+% in section 1.2 of https://surfer.nmr.mgh.harvard.edu/fswiki/Xhemi
 %
 % The configuration must contain the following options
-%   cfg.headshape      = string, filename containing subject headshape 
+%   cfg.headshape      = string, filename containing subject headshape
 %                      (e.g. <path to freesurfer/surf/lh.pial>)
 %   cfg.fshome         = string, path to freesurfer
 %
-% See also FT_ELECTRODEREALIGN, FT_PREPARE_MESH
+% See also FT_ELECTRODEREALIGN, WARP_FSAVERAGE
 
-% Copyright (C) 2017, Arjen Stolk
+% Copyright (C) 2019, Arjen Stolk
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -36,12 +36,16 @@ function [coord_norm] = warp_fsaverage(cfg, elec)
 
 subj_pial = ft_read_headshape(cfg.headshape);
 [PATHSTR, NAME] = fileparts(cfg.headshape); % lh or rh
-subj_reg = ft_read_headshape([PATHSTR filesep NAME '.sphere.reg']);
-if ~isfolder([cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf'])
-  ft_error(['freesurfer dir ' cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf cannot be found'])
+if strcmp(NAME, 'lh')
+  subj_reg = ft_read_headshape([PATHSTR filesep 'lh.fsaverage_sym.sphere.reg']);
+elseif strcmp(NAME, 'rh')
+  subj_reg = ft_read_headshape([PATHSTR(1:strfind(PATHSTR, [filesep 'surf'])-1) filesep 'xhemi' filesep 'surf' filesep 'lh.fsaverage_sym.sphere.reg']);
 end
-fsavg_pial = ft_read_headshape([cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf' filesep NAME '.pial']);
-fsavg_reg = ft_read_headshape([cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf' filesep NAME '.sphere.reg']);
+if ~isfolder([cfg.fshome filesep 'subjects' filesep 'fsaverage_sym']) || ~isfolder([PATHSTR(1:strfind(PATHSTR, [filesep 'surf'])-1) filesep 'xhemi'])
+  ft_error(['fsaverage_sym and/or xhemi folders cannot be found'])
+end
+fsavg_pial = ft_read_headshape([cfg.fshome filesep 'subjects' filesep 'fsaverage_sym' filesep 'surf' filesep 'lh.pial']);
+fsavg_reg = ft_read_headshape([cfg.fshome filesep 'subjects' filesep 'fsaverage_sym' filesep 'surf' filesep 'lh.sphere.reg']); % always map onto the left hemi
 
 for e = 1:numel(elec.label)
   % subject space (3D surface): electrode pos -> vertex index

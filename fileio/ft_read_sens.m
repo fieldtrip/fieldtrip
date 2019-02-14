@@ -37,7 +37,7 @@ function [sens] = ft_read_sens(filename, varargin)
 %   asa_elc besa_elp besa_pos besa_sfp yokogawa_ave yokogawa_con yokogawa_raw 4d
 %   4d_pdf 4d_m4d 4d_xyz ctf_ds ctf_res4 itab_raw itab_mhd netmeg neuromag_fif
 %   neuromag_mne neuromag_mne_elec neuromag_mne_grad polhemus_fil polhemus_pos
-%   zebris_sfp spmeeg_mat eeglab_set localite_pos artiins_oxy3 matlab
+%   zebris_sfp spmeeg_mat eeglab_set localite_pos artinis_oxy3 artinis_oxyproj matlab
 %
 % See also FT_READ_HEADER, FT_TRANSFORM_SENS, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD,
 % FT_DATATYPE_SENS
@@ -91,7 +91,12 @@ switch fileformat
     
   case 'artinis_oxy3'
     ft_hastoolbox('artinis', 1);
-    hdr = read_artinis_oxy3(filename);
+    hdr = read_oxy3_header(filename, true);    
+    sens = hdr.opto;
+    
+  case 'artinis_oxyproj'
+    ft_hastoolbox('artinis', 1);
+    hdr = read_oxyproj_header(filename); 
     sens = hdr.opto;
 
   case 'polhemus_pos'
