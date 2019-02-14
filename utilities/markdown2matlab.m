@@ -96,6 +96,9 @@ while ~feof(infid)
   linenumber = linenumber + 1;
   if ~ischar(line), break, end
   
+  % replace each tab by two spaces
+  line = strrep(line, sprintf('\t'), '  ');
+  
   if match(line, '^---$') && linenumber==1
     state = 'jekyllheader';
     reset_state = false;
