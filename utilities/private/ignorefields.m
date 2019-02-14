@@ -130,6 +130,8 @@ switch purpose
       'checksize'
       'debug'
       'notification'
+      'callinfo'
+      'version'
       'showcallinfo'
       'trackcallinfo'
       'trackconfig'
@@ -145,6 +147,7 @@ switch purpose
       'grad'
       'elec'
       'opto'
+      'event'
       };
 
   case 'trackconfig'
