@@ -1,7 +1,7 @@
 function fittemplate = prepare_mesh_fittemplate(cfg,template)
 
-% PREPARE_MESH_FITTEMPLATE creates a mesh representing the cortex hull, i.e. the
-% smoothed envelope around the pial surface created by FreeSurfer.
+% PREPARE_MESH_FITTEMPLATE creates a individualized template on the basis
+% of surface information
 %
 % This function relies on cpd toolbox found in the external/cpd folder
 %
@@ -11,7 +11,7 @@ function fittemplate = prepare_mesh_fittemplate(cfg,template)
 %
 % See also FT_PREPARE_MESH
 
-% Copyright (C) 2019, Simon Homölle
+% Copyright (C) 2019, Simon Homoelle
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -34,26 +34,40 @@ function fittemplate = prepare_mesh_fittemplate(cfg,template)
 % ensure that the input is consistent with what this function expects
 
 % add toolbox cpd
-ft_hastoolbox('cpd',1); %% has to be edited
+ft_hastoolbox('cpd'); %% has to be edited
 
 %
-top_strio = cfg.headshape.pos;
+headshape = cfg.headshape.pos;
 %% determine outer most layer
-i = find_outermost_boundary(template.bnd);
-top_template = template.bnd(i).pos;
+index = find_outermost_boundary(template.bnd);
+top_template = template.bnd(index).pos;
 %% Fit top part
 
 % affine register
 opt.corresp = 0;
 opt.method  = 'affine';
 opt.normalize = 1;
-opt.max_it = 100;
+opt.max_it = 10;
 opt.fgt=1;
 opt.tol = 10e-12;
 opt.outliers=0.0;
-[M,~] = cpd_register(top_strio,top_template, opt);
+[transform,~] = cpd_register(headshape,top_template, opt);
 
-%%removing irrelevant stuff
+% create 4x4 transformation Matrix
+M(1:3,1:3)                       = transform.R;
+M(1:3,4)                         = transform.t;
 
-%%warping
+%removing structures that became obsolete with changing geometry
+fittemplate = template;
+if isfield(template,'mat')
+    fittemplate = rmfield(fittemplate,'mat');
+end    
+if isfield(template,'type')
+    fittemplate = rmfield(fittemplate,'type');
+end    
+
+% warping
+for i = 1:length(template.bnd)
+fittemplate.bnd(i).pos = ft_warp_apply(M,fittemplate.bnd(i).pos);
+end
 
