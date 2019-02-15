@@ -8,7 +8,7 @@ function test_bug1407
 % the following are from the fieldtrip/external/egi directory
 % TEST read_mff_header read_mff_data read_mff_event mff_getEEGFilename mff_getSummaryInfo mff_getObject mff_micros2Sample
 
-ft_hastoolbox('egi_mff', 1);
+ft_hastoolbox('egi_mff_v2', 1);
 
 datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1407');
 
