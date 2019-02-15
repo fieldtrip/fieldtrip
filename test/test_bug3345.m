@@ -1,7 +1,7 @@
 function test_bug3345
 
+% MEM 3GB
 % WALLTIME 00:20:00
-% MEM 2GB
 
 % TEST ft_multiplotER ft_singleplotER ft_topoplotER ft_multiplotTFR ft_singleplotTFR ft_topoplotTFR topolot_common bivariate_common chanscale_common
 

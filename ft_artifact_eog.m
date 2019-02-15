@@ -1,7 +1,7 @@
 function [cfg, artifact] = ft_artifact_eog(cfg, data)
 
-% FT_ARTIFACT_EOG reads the data segments of interest from file and
-% identifies EOG artifacts.
+% FT_ARTIFACT_EOG reads the data segments of interest from file and identifies EOG
+% artifacts.
 %
 % Use as
 %   [cfg, artifact] = ft_artifact_eog(cfg)
@@ -83,6 +83,7 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
+
 % ft_preamble provenance is not needed because just a call to ft_artifact_zvalue
 % ft_preamble loadvar data is not needed because ft_artifact_zvalue will do this
 

@@ -64,8 +64,12 @@ if isempty(hdr)
   hdr = ft_fetch_header(data);
 end
 
-if isempty(begsample) || isempty(endsample)
-  ft_error('begsample and endsample must be specified');
+if isempty(begsample)
+  begsample = min(data.sampleinfo(:,1));
+end
+
+if isempty(endsample)
+  endsample = max(data.sampleinfo(:,2));
 end
 
 if isempty(chanindx)

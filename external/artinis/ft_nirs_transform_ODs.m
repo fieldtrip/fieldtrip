@@ -163,7 +163,7 @@ computeHHb  = any(ismember(target, 'HHb'));
 computeO2Hb = any(ismember(target, 'O2Hb'));
 
 % cfg-handling is done inside here
-[montage, cfg] = ft_prepare_ODtransformation(cfg, data);
+[montage, cfg] = ft_nirs_prepare_ODtransformation(cfg, data);
 
 % save montage in the cfg
 cfg.montage = montage;

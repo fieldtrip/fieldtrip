@@ -29,6 +29,7 @@ cfg.dataset = file2;
 data2 = ft_preprocessing(cfg);
 
 cfg = [];
+cfg.keepsampleinfo = 'no'; % the sampleinfo of the three does not match
 data = ft_appenddata(cfg, data0, data1, data2);
 
 %%

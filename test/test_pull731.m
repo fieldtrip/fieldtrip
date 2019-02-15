@@ -1,6 +1,6 @@
 function test_pull731
 
-% MEM 7gb
+% MEM 12gb
 % WALLTIME 01:00:00
 
 % TEST ft_read_header ft_read_data ft_read_event

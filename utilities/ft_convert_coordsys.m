@@ -1,4 +1,4 @@
-function [obj] = ft_convert_coordsys(obj, target, opt, template)
+function [obj] = ft_convert_coordsys(obj, target, method, template)
 
 % FT_CONVERT_COORDSYS changes the coordinate system of the input object to
 % the specified coordinate system. The coordinate system of the input
@@ -9,13 +9,13 @@ function [obj] = ft_convert_coordsys(obj, target, opt, template)
 %   [object] = ft_convert_coordsys(object)
 % to only determine the coordinate system, or
 %   [object] = ft_convert_coordsys(object, target)
-%   [object] = ft_convert_coordsys(object, target, opt)
-%   [object] = ft_convert_coordsys(object, target, opt, template)
+%   [object] = ft_convert_coordsys(object, target, method)
+%   [object] = ft_convert_coordsys(object, target, method, template)
 % to determine and convert the coordinate system.
 %
-% The optional input argument opt determines the behavior when converting
-% to the spm coordinate system, and pertains to the functional behaviour of
-% the private functions: align_ctf2acpc and align_neuromag2acpc.
+% With the optional method input argument you can determine whether to use
+% SPM for an affine or non-linear transformation. This option is passed on
+% to the private functions: align_ctf2acpc and align_neuromag2acpc.
 %
 % The following input objects are supported
 %   anatomical mri, see FT_READ_MRI
@@ -76,10 +76,10 @@ end
 % set default behavior to use an approximate alignment, followed by a call
 % to spm_normalise for a better quality alignment
 if nargin<3
-  opt = 2;
+  method = 2;
 end
 
-if isdeployed && (opt==1 || opt==2)
+if isdeployed && (method==1 || method==2)
   needtemplate = true;
 else
   needtemplate = false;
@@ -99,17 +99,20 @@ if nargin>1 && ~strcmpi(target, obj.coordsys)
         case {'ctf' 'bti' '4d'}
           fprintf('converting the coordinate system from %s to %s\n', obj.coordsys, target);
           if hastemplate
-            obj = align_ctf2acpc(obj, opt, template);
+            obj = align_ctf2acpc(obj, method, template);
           else
-            obj = align_ctf2acpc(obj, opt);
+            obj = align_ctf2acpc(obj, method);
           end
         case {'itab' 'neuromag'}
           fprintf('converting the coordinate system from %s to %s\n', obj.coordsys, target);
           if hastemplate
-            obj = align_neuromag2acpc(obj, opt, template);
+            obj = align_neuromag2acpc(obj, method, template);
           else
-            obj = align_neuromag2acpc(obj, opt);
+            obj = align_neuromag2acpc(obj, method);
           end
+        case {'mni', 'fsaverage'}
+          fprintf('not converting the coordinate system from %s to %s, these are similar enough\n', obj.coordsys, target);
+          % these are close enough to ACPC, so nothing needs to be done
         otherwise
           ft_warning('conversion from %s to %s is not supported', obj.coordsys, target);
       end % switch obj.coordsys

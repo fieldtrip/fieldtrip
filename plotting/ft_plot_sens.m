@@ -25,8 +25,9 @@ function hs = ft_plot_sens(sens, varargin)
 % The following options apply to EEG electrodes
 %   'elec'            = true/false, plot each individual electrode (default = false)
 %   'orientation'     = true/false, plot a line for the orientation of each electrode (default = false)
-%   'elecshape'       = 'point', 'circle', 'square', or 'sphere' (default is automatic)
+%   'elecshape'       = 'point', 'circle', 'square', 'sphere', or 'disc' (default is automatic)
 %   'elecsize'        = diameter of the electrodes (default is automatic)
+%   'headshape'       = headshape, required for elecshape 'disc'
 % The following options apply to NIRS optodes
 %   'opto'            = true/false, plot each individual optode (default = false)
 %   'orientation'     = true/false, plot a line for the orientation of each optode (default = false)
@@ -51,7 +52,7 @@ function hs = ft_plot_sens(sens, varargin)
 %
 % See also FT_READ_SENS, FT_PLOT_HEADSHAPE, FT_PLOT_VOL
 
-% Copyright (C) 2009-2016, Robert Oostenveld
+% Copyright (C) 2009-2018, Robert Oostenveld, Arjen Stolk
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -96,6 +97,7 @@ coilsize        = ft_getopt(varargin, 'coilsize');  % default depends on the inp
 elec            = ft_getopt(varargin, 'elec', false);
 elecshape       = ft_getopt(varargin, 'elecshape'); % default depends on the input, see below
 elecsize        = ft_getopt(varargin, 'elecsize');  % default depends on the input, see below
+headshape       = ft_getopt(varargin, 'headshape', []); % for elecshape 'disc'
 % this is for NIRS optode arrays
 opto            = ft_getopt(varargin, 'opto', false);
 optoshape       = ft_getopt(varargin, 'optoshape'); % default depends on the input, see below
@@ -105,21 +107,21 @@ optosize        = ft_getopt(varargin, 'optosize');  % default depends on the inp
 if     ft_senstype(sens, 'eeg')
   individual = elec;
   sensshape  = elecshape;
-  sensize    = elecsize;
+  senssize   = elecsize;
 elseif ft_senstype(sens, 'meg')
   individual = coil;
   sensshape  = coilshape;
-  sensize    = coilsize;
+  senssize   = coilsize;
 elseif ft_senstype(sens, 'nirs')
   % this has not been tested
   individual = opto;
   sensshape  = optoshape;
-  sensize    = optosize;
+  senssize   = optosize;
 else
   ft_warning('unknown sensor array description');
   individual = false;
   sensshape  = [];
-  sensize    = [];
+  senssize   = [];
 end
 
 % this is simply passed to plot3
@@ -127,7 +129,7 @@ style           = ft_getopt(varargin, 'style');
 marker          = ft_getopt(varargin, 'marker', '.');
 
 % this is simply passed to ft_plot_mesh
-if strcmp(sensshape, 'sphere')
+if strcmp(sensshape, 'sphere') || strcmp(sensshape, 'disc')
   edgecolor     = ft_getopt(varargin, 'edgecolor', 'none');
 else
   edgecolor     = ft_getopt(varargin, 'edgecolor', 'k');
@@ -149,9 +151,9 @@ end
 
 if ~isempty(ft_getopt(varargin, 'coildiameter'))
   % for backward compatibility, added on 6 July 2016
-  % the sensize is the diameter for a circle, or the edge length for a square
+  % the senssize is the diameter for a circle, or the edge length for a square
   ft_warning('the coildiameter option is deprecated, please use "coilsize" instead')
-  sensize = ft_getopt(varargin, 'coildiameter');
+  senssize = ft_getopt(varargin, 'coildiameter');
 end
 
 if ~isempty(unit)
@@ -173,27 +175,27 @@ if isempty(sensshape)
   end
 end
 
-if isempty(sensize)
+if isempty(senssize)
   switch ft_senstype(sens)
     case 'neuromag306'
-      sensize = 30; % FIXME this is only an estimate
+      senssize = 30; % FIXME this is only an estimate
     case 'neuromag122'
-      sensize = 35; % FIXME this is only an estimate
+      senssize = 35; % FIXME this is only an estimate
     case 'ctf151'
-      sensize = 15; % FIXME this is only an estimate
+      senssize = 15; % FIXME this is only an estimate
     case 'ctf275'
-      sensize = 15; % FIXME this is only an estimate
+      senssize = 15; % FIXME this is only an estimate
     otherwise
-      if strcmp(sensshape, 'sphere')
-        sensize = 4; % assuming spheres are used for intracranial electrodes, diameter is about 4mm
+      if strcmp(sensshape, 'sphere') || strcmp(sensshape, 'disc')
+        senssize = 4; % assuming spheres are used for intracranial electrodes, diameter is about 4mm
       elseif strcmp(sensshape, 'point')
-        sensize = 30;
+        senssize = 30;
       else
-        sensize = 10;
+        senssize = 10;
       end
   end
   % convert from mm to the units of the sensor array
-  sensize = sensize/ft_scalingfactor(sens.unit, 'mm');
+  senssize = senssize/ft_scalingfactor(sens.unit, 'mm');
 end
 
 % color management
@@ -202,7 +204,7 @@ if isempty(facecolor) % set default color depending on shape
     facecolor = 'k';
   elseif strcmp(sensshape, 'circle') || strcmp(sensshape, 'square')
     facecolor = 'none';
-  elseif strcmp(sensshape, 'sphere')
+  elseif strcmp(sensshape, 'sphere') || strcmp(sensshape, 'disc')
     facecolor = 'b';
   end
 end
@@ -329,18 +331,18 @@ switch sensshape
       end
       if any(specified)
         % the marker shape is specified in the style option
-        hs = plot3(pos(:,1), pos(:,2), pos(:,3), style, 'MarkerSize', sensize);
+        hs = plot3(pos(:,1), pos(:,2), pos(:,3), style, 'MarkerSize', senssize);
       else
         % the marker shape is not specified in the style option, use the marker option instead and assume that the style option represents the color
-        hs = plot3(pos(:,1), pos(:,2), pos(:,3), 'Marker', marker, 'MarkerSize', sensize, 'Color', style, 'Linestyle', 'none');
+        hs = plot3(pos(:,1), pos(:,2), pos(:,3), 'Marker', marker, 'MarkerSize', senssize, 'Color', style, 'Linestyle', 'none');
       end
     else
       % the style is not specified, use facecolor for the marker
-      hs = scatter3(pos(:,1), pos(:,2), pos(:,3), sensize.^2, facecolor, marker);
+      hs = scatter3(pos(:,1), pos(:,2), pos(:,3), senssize.^2, facecolor, marker);
     end
     
   case 'circle'
-    plotcoil(pos, ori, [], sensize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
+    plotcoil(pos, ori, [], senssize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
 
   case 'square'
     % determine the rotation-around-the-axis of each sensor
@@ -366,15 +368,63 @@ switch sensshape
       chandir = [];
     end
     
-    plotcoil(pos, ori, chandir, sensize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
+    plotcoil(pos, ori, chandir, senssize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
 
   case 'sphere'
     [xsp, ysp, zsp] = sphere(100);
-    rsp = sensize/2; % convert coilsensize from diameter to radius
+    rsp = senssize/2; % convert coilsenssize from diameter to radius
     hold on
     for i=1:size(pos,1)
       hs = surf(rsp*xsp+pos(i,1), rsp*ysp+pos(i,2), rsp*zsp+pos(i,3));
       set(hs, 'EdgeColor', edgecolor, 'FaceColor', facecolor, 'EdgeAlpha', edgealpha, 'FaceAlpha', facealpha);
+    end
+    
+  case 'disc'
+    
+    if isempty(headshape)
+      ft_error('cannot plot electrodes as discs without a headshape to align them to')
+    end
+    
+    npoints = 25; % points on the headshape used for estimating the local norm
+    for i=1:size(pos,1)
+      
+      % calculate local norm vectors
+      d = sqrt( (pos(i,1)-headshape.pos(:,1)).^2 + ...
+        (pos(i,2)-headshape.pos(:,2)).^2 + (pos(i,3)-headshape.pos(:,3)).^2 );
+      [ds, idx] = sort(d);
+      x = headshape.pos(idx(1:npoints),1); 
+      y = headshape.pos(idx(1:npoints),2); 
+      z = headshape.pos(idx(1:npoints),3);
+      ptCloud = pointCloud([x y z]);
+      normals = pcnormals(ptCloud);
+      u = normals(:,1); 
+      v = normals(:,2); 
+      w = normals(:,3);
+      
+      % flip the normal vector if it is not pointing toward the center
+      C = mean(headshape.pos,1); % headshape center
+      for k = 1:numel(x)
+        p1 = C - [x(k),y(k),z(k)];
+        p2 = [u(k),v(k),w(k)];
+        angle = atan2(norm(cross(p1,p2)),p1*p2');
+        if angle > pi/2 || angle < -pi/2
+          u(k) = -u(k);
+          v(k) = -v(k);
+          w(k) = -w(k);
+        end
+      end
+      Fn = nanmean([u v w],1);
+      Fn = Fn * (1/sqrt(sum(Fn.^2,2))); % normalize
+      ori(i,:) = Fn;
+      
+      % create disc aligned to the headshape (ideally, a hull)
+      [X,Y,Z] = cylinder2([senssize/2 senssize/2],[ori(i,1) ori(i,2) ori(i,3)], 100);
+      X(1,:) = X(1,:)+pos(i,1); Y(1,:) = Y(1,:)+pos(i,2); Z(1,:) = Z(1,:)+pos(i,3);
+      t = (senssize/2)/10; % add thickness (outward), X(2,1)-X(1,1) etc.
+      X(2,:) = X(1,:)-t*ori(i,1); Y(2,:) = Y(1,:)-t*ori(i,2); Z(2,:) = Z(1,:)-t*ori(i,3);
+      hold on; mesh(X,Y,Z, 'facecolor', facecolor, 'edgecolor', edgecolor, 'lineStyle','none'); % draw cylinder
+      hold on; fill3(X(1,:),Y(1,:),Z(1,:), facecolor, 'lineStyle','none'); % fill sides
+      hold on; fill3(X(2,:),Y(2,:),Z(2,:), facecolor, 'lineStyle','none');  
     end
     
   otherwise

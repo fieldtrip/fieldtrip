@@ -18,6 +18,11 @@ switch purpose
       'fsample'
       'trialinfo'  % this is dealt with explicitly
       'sampleinfo' % this is dealt with explicitly
+      'topo'
+      'topolabel'
+      'topodimord'
+      'unmixing'
+      'unmixingdimord'
       };
     
   case 'appendfreq'
@@ -64,22 +69,24 @@ switch purpose
   case 'allowed'
     ignore = {
       % some fields that are always allowed to be present in the configuration
-      'trackconfig'
-      'checkconfig'
-      'checksize'
-      'trackusage'
-      'trackdatainfo'
-      'trackcallinfo'
-      'showcallinfo'
       'callinfo'
-      'version'
-      'warning'
-      'notification'
+      'checkconfig'
+      'checkpath'
+      'checksize'
       'debug'
+      'notification'
+      'outputfilepresent'
       'previous'
       'progress'
-      'outputfilepresent'
+      'showcallinfo'
+      'spmversion'
       'toolbox'
+      'trackcallinfo'
+      'trackconfig'
+      'trackdatainfo'
+      'trackusage'
+      'version'
+      'warning'
       };
     
   case {'rollback'}
@@ -107,6 +114,7 @@ switch purpose
       'checksize'
       'debug'
       'notification'
+      'reproducescript'
       'showcallinfo'
       'trackcallinfo'
       'trackconfig'
@@ -115,6 +123,33 @@ switch purpose
       'warning'
       };
     
+  case {'reproducescript'}
+    ignore = {
+      % these should not be included in the output script
+      'checkconfig'
+      'checksize'
+      'debug'
+      'notification'
+      'callinfo'
+      'version'
+      'showcallinfo'
+      'trackcallinfo'
+      'trackconfig'
+      'trackdatainfo'
+      'trackusage'
+      'warning'
+      'reproducescript'
+      'checkpath'
+      'toolbox'
+      'progress'
+      'outputfilepresent'
+      'grid'
+      'grad'
+      'elec'
+      'opto'
+      'event'
+      };
+
   case 'trackconfig'
     ignore = {
       % these fields from the user should be ignored
@@ -169,6 +204,26 @@ switch purpose
       'elec'
       'opto'
       'cfg'
+      };
+    
+  case 'html'
+    % when generating a html-formatted pipeline, ignore data-like fields and fields that probably were not added by the user himself
+    ignore = {
+      'previous'
+      'grid'
+      'headmodel'
+      'event'
+      'warning'
+      'progress'
+      'trackconfig'
+      'checkconfig'
+      'checksize'
+      'showcallinfo'
+      'debug'
+      'outputfilepresent'
+      'trackcallinfo'
+      'trackdatainfo'
+      'trackusage'
       };
     
   otherwise

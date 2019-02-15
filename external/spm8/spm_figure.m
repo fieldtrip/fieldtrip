@@ -135,7 +135,7 @@ function varargout=spm_figure(varargin)
 %     If none found, uses CurrentFigure if avaliable.
 % If objects 'Tag'ed 'NextPage' and 'PrevPage' are found, then the
 % pages are shown and printed in order. In breif, pages are held as
-% seperate axes, with ony one 'Visible' at any one time. The handles of
+% separate axes, with ony one 'Visible' at any one time. The handles of
 % the "page" axes are stored in the 'UserData' of the 'NextPage'
 % object, while the 'PrevPage' object holds the current page number.
 % See spm_help('!Disp') for details on setting up paging axes.

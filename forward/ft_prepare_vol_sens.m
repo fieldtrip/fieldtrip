@@ -500,7 +500,22 @@ elseif iseeg
         sens.elecpos(j,:) = bnd.pos(i,:);
       end
       
-      headmodel.transfer = sb_transfer(headmodel,sens);
+      if (isfield(headmodel,'transfer') && isfield(headmodel,'elec'))
+          if all(ismember(sens.label,headmodel.elec.label))
+              [sensmember, senslocation] = ismember(sens.label,headmodel.elec.label);
+              if (norm(sens.elecpos - headmodel.elec.elecpos(senslocation,:))<1e-8)
+                  headmodel.transfer = headmodel.transfer(senslocation,:);
+                  headmodel.elec = sens;
+              else
+                  ft_error('Electrode positions do not fit to the given transfer matrix!');
+              end
+          else
+              ft_error('Transfer matrix does not fit the given set of electrodes!');
+          end
+      else
+          headmodel.transfer = sb_transfer(headmodel,sens);
+          headmodel.elec = sens;
+      end
       
     case 'interpolate'
       % this is to allow moving leadfield files

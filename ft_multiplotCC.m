@@ -150,4 +150,5 @@ ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble history    data
 ft_postamble provenance
+ft_postamble savefig
 

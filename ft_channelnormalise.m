@@ -77,24 +77,19 @@ cfg.method    = ft_getopt(cfg, 'method', 'perchannel'); % or acrosschannel
 dodemean      = istrue(cfg.demean);
 doperchannel  = strcmp(cfg.method, 'perchannel');
 
-% select channels and trials of interest, by default this will select all channels and trials
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
-data = ft_selectdata(tmpcfg, data);
-% restore the provenance information
-[cfg, data] = rollback_provenance(cfg, data);
-
 % store original datatype
 dtype = ft_datatype(data);
 
 % check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
-% select trials of interest
-tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'});
-data   = ft_selectdata(tmpcfg, data);
-% restore the provenance information
-[cfg, data] = rollback_provenance(cfg, data);
-
+if ~strcmp(cfg.channel, 'all') || ~strcmp(cfg.trials, 'all')
+  % select channels and trials of interest
+  tmpcfg = keepfields(cfg, {'channel', 'trials', 'showcallinfo'});
+  data   = ft_selectdata(tmpcfg, data);
+  % restore the provenance information
+  [cfg, data] = rollback_provenance(cfg, data);
+end
 % initialise some variables
 nchan  = numel(data.label);
 ntrl   = numel(data.trial);

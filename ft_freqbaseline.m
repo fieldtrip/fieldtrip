@@ -9,7 +9,7 @@ function [freq] = ft_freqbaseline(cfg, freq)
 %   cfg.baseline     = [begin end] (default = 'no'), alternatively an
 %                      Nfreq x 2 matrix can be specified, that provides
 %                      frequency specific baseline windows.
-%   cfg.baselinetype = 'absolute', 'relative', 'relchange', 'normchange' or 'db' (default = 'absolute')
+%   cfg.baselinetype = 'absolute', 'relative', 'relchange', 'normchange', 'db' or 'zscore' (default = 'absolute')
 %   cfg.parameter    = field for which to apply baseline normalization, or
 %                      cell array of strings to specify multiple fields to normalize
 %                      (default = 'powspctrm')
@@ -205,6 +205,8 @@ elseif (strcmp(baselinetype, 'normchange')) || (strcmp(baselinetype, 'vssum'))
   data = (data - meanVals) ./ (data + meanVals);
 elseif (strcmp(baselinetype, 'db'))
   data = 10*log10(data ./ meanVals);
+elseif (strcmp(baselinetype,'zscore'))
+    data=(data-meanVals)./stdVals;
 else
   ft_error('unsupported method for baseline normalization: %s', baselinetype);
 end

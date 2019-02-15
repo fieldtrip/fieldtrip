@@ -126,7 +126,7 @@ url = {
   'SQDPROJECT'    'see http://www.isr.umd.edu/Labs/CSSL/simonlab'
   'BCT'           'see http://www.brain-connectivity-toolbox.net/'
   'CCA'           'see http://www.imt.liu.se/~magnus/cca or contact Magnus Borga'
-  'EGI_MFF'       'see http://www.egi.com/ or contact either Phan Luu or Colin Davey at EGI'
+  'EGI_MFF_V2'    'see http://www.egi.com/ or contact either Phan Luu or Colin Davey at EGI'
   'TOOLBOX_GRAPH' 'see http://www.mathworks.com/matlabcentral/fileexchange/5355-toolbox-graph or contact Gabriel Peyre'
   'NETCDF'        'see http://www.mathworks.com/matlabcentral/fileexchange/15177'
   'MYSQL'         'see http://www.mathworks.com/matlabcentral/fileexchange/8663-mysql-database-connector'

@@ -49,7 +49,7 @@ function [data] = ft_megplanar(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_COMBINEPLANAR, FT_NEIGHBOURSELECTION
+% See also FT_COMBINEPLANAR, FT_PREPARE_NEIGHBOURS
 
 % Copyright (C) 2004, Robert Oostenveld
 %
@@ -91,17 +91,10 @@ end
 
 % store the original input representation of the data, this is used later on to convert it back
 isfreq = ft_datatype(data, 'freq');
-israw  = ft_datatype(data, 'raw');
 istlck = ft_datatype(data, 'timelock');  % this will be temporary converted into raw
 
 % check if the input data is valid for this function, this converts the data if needed
 data = ft_checkdata(data, 'datatype', {'raw' 'freq'}, 'feedback', 'yes', 'hassampleinfo', 'yes', 'ismeg', 'yes', 'senstype', {'ctf151', 'ctf275', 'bti148', 'bti248', 'itab153', 'yokogawa160', 'yokogawa64'});
-
-if istlck
-  % the timelocked data has just been converted to a raw representation
-  % and will be converted back to timelocked at the end of this function
-  israw = true;
-end
 
 if isfreq
   if ~isfield(data, 'fourierspctrm'), ft_error('freq data should contain Fourier spectra'); end
@@ -354,7 +347,6 @@ end
 if istlck
   % convert the raw structure back into a timelock structure
   interp = ft_checkdata(interp, 'datatype', 'timelock');
-  israw  = false;
 end
 
 % copy the trial specific information into the output

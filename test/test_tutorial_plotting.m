@@ -234,7 +234,7 @@ figure; ft_plot_lay(cfg.layout);
 % has two planar gradiometers and one axial magnetometer at each sensor location.
 % You do not want to plot those on top of each other. Hence the Neuromag layout
 % files contain two (for the old 122 channel system) or three (for the recent
-% 306 channel systems) seperate subplots for each channel location. Those two
+% 306 channel systems) separate subplots for each channel location. Those two
 % (or three) subplots hold the data for the two planar gradients and for the magnetometer
 % signal.
 

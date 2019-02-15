@@ -24,6 +24,7 @@ function ft_defaults
 %   ft_default.toolbox.signal    = string, can be 'compat' or 'matlab' (default = 'compat')
 %   ft_default.toolbox.stats     = string, can be 'compat' or 'matlab' (default = 'compat')
 %   ft_default.toolbox.images    = string, can be 'compat' or 'matlab' (default = 'compat')
+%   ft_default.reproducescript   = string, directory to which the script and intermediate data are written (default = [])
 %
 % If you want to overrule these default settings, you can add something like this in your startup.m script
 %   ft_defaults
