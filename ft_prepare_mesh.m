@@ -180,6 +180,9 @@ switch cfg.method
     
   case 'cortexhull'
     bnd = prepare_mesh_cortexhull(cfg);
+  
+  case 'fittemplate'
+    bnd = prepare_mesh_fittemplate(cfg,mri);  
     
   otherwise
     ft_error('unsupported cfg.method')
