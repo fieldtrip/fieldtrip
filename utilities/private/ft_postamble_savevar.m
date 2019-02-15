@@ -29,7 +29,6 @@
 %
 % $Id$
 
-
 % the output data should be saved to a MATLAB file
 if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_reproducescript', 'var')
   
@@ -46,7 +45,10 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
     end
     % write a snippet of MATLAB code with the user-specified configuration and function call
     reproducescript(fullfile(Fief7bee_reproducescript, 'script.m'), cfg, isempty(iW1aenge_postamble))
+  elseif (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile))
+    % keep the output file as it is
   else
+    % don't write to an output file
     cfg.outputfile = {};
   end
   
