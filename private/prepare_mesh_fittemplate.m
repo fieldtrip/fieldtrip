@@ -41,6 +41,7 @@ headshape = cfg.headshape.pos;
 %% determine outer most layer
 index = find_outermost_boundary(template.bnd);
 top_template = template.bnd(index).pos;
+
 %% Fit top part
 
 % affine register
@@ -50,10 +51,11 @@ opt.normalize = 1;
 opt.max_it = 100;
 opt.fgt=1;
 opt.tol = 10e-12;
-opt.outliers=0.0;
+opt.outliers= 0;
 [transform,~] = cpd_register(headshape,top_template, opt);
 
 % create 4x4 transformation Matrix
+M = eye(4);
 M(1:3,1:3)                       = transform.R;
 M(1:3,4)                         = transform.t;
 
@@ -68,6 +70,8 @@ end
 
 % warping
 for i = 1:length(template.bnd)
-fittemplate.bnd(i).pos = ft_warp_apply(M,fittemplate.bnd(i).pos);
+fittemplate.bnd(i).pos = ft_warp_apply(M,fittemplate.bnd(i).pos,'homogenous');
 end
+
+fittemplate.transform = M;
 
