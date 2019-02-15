@@ -243,7 +243,7 @@ chanunit = chanunit(:);
 if isdata
   % the input was replaced by one of hdr, grad, elec, opto
   [sel1, sel2] = match_str(origlabel, input.label);
-  origunit = repmat({'unknown'}, size(sel1));
+  origunit = repmat({'unknown'}, size(origlabel));
   origunit(sel1) = chanunit(sel2);
   % the hdr, grad, elec or opto structure might have a different set of channels
   chanunit = origunit;

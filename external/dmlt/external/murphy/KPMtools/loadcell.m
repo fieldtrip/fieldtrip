@@ -53,7 +53,7 @@ function [lc,dflag,dattype]=loadcell(fname,delim,exclusions,options);
 %   will count twice, and all data will be kept as a string.
 %
 %   Note: in space-separated data 'single' would generally be omitted,
-%   wheras in comma-seperated data it would be included.
+%   wheras in comma-separated data it would be included.
 %  
 %   Note the exclusion characters will remain in the final data, and any data
 %   contained within or containing exclusion characters will not be 

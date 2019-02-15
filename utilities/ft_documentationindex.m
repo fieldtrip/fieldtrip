@@ -32,20 +32,35 @@ ft_defaults
 
 [ftver, ftpath] = ft_version;
 
-f1 = dir(fullfile(ftpath, 'ft_*.m'));
-f1 = {f1.name}';
+subdir = {
+  '.'
+  'contrib/misc'
+  'contrib/nutmegtrip'
+  'contrib/spike'
+  'realtime/online_eeg'
+  'realtime/online_meg'
+  'realtime/online_mri'
+  };
 
-funname = f1;
+funname = {};
 
-for i=1:length(funname)
-  [p, funname{i}, x] = fileparts(funname{i});
+% find all functions that should be included in the reference documentation
+for i=1:length(subdir)
+  f = dir(fullfile(ftpath, subdir{i}, 'ft_*.m'));
+  f = {f.name}';
+  funname = cat(1, funname, f);
+end
+
+for j=1:length(funname)
+  [p, f, x] = fileparts(funname{j});
+  funname{j} = f;
 end
 
 ncfg  = 0;
 index = {};
 
 for j=1:length(funname)
-  str = help(funname{j})
+  str = help(funname{j});
   str = tokenize(str, 10);
 
   % compact the help description
@@ -120,7 +135,7 @@ end
 
 % add links to reference doc
 for i=1:size(index,1)
-  index{i,1} = sprintf('[[reference:%s]]', index{i,1});
+  index{i,1} = sprintf('[%s](/reference/%s)', index{i,1}, index{i,1});
 end
 
 index = sortrows(index(:,[2 3 1]));
@@ -150,11 +165,18 @@ fprintf('merged %d cfg options\n', count);
 
 fid = fopen(filename, 'wb');
 currletter = char(96);
-fprintf(fid, '====== Index of configuration options ======\n\n');
-fprintf(fid, 'A detailed description of each function is available in the [[:reference|reference documentation]].\n\n');
-fprintf(fid, 'This index to the reference documentation is automatically generated from the MATLAB code every day. Therefore you should not edit this page manually, since your changes would be overwritten automatically. If you want to suggest corrections to the documentation, please send them by email to the mailing list or to one of the main developers (see [[:contact]]).\n\n');
+
+fprintf(fid, '---\n');
+fprintf(fid, 'title: Index of all configuration options\n');
+fprintf(fid, 'layout: default\n');
+fprintf(fid, '---\n');
+fprintf(fid, '\n');
+fprintf(fid, '# Index of all configuration options \n');
+fprintf(fid, '\n');
+fprintf(fid, 'A detailed description of each function is available in the [reference documentation](/reference).\n');
+fprintf(fid, '\n');
+
 for i=1:size(index,1)
-  fprintf('%s -- %s -- %s\n', index{i,2}, index{i,3}, index{i,1});
   if isempty(index{i,1})
     continue;
   elseif length(index{i,2})<5
@@ -163,14 +185,14 @@ for i=1:size(index,1)
   thisletter = index{i,2}(5);
   while currletter<thisletter
     currletter = currletter + 1;
-    fprintf(fid, '===== %s =====\n\n', upper(char(currletter)));
+    fprintf(fid, '## %s \n\n', upper(char(currletter)));
   end
-  fprintf(fid, '** %s ** // %s //\\\\\n', index{i,2}, index{i,1});
+  fprintf(fid, '** %s ** - %s  \n', index{i,2}, index{i,1});
 
   % do postprocessing to make sure we don't mess up dokuwiki layout
   % '' is a markup instruction for dokuwiki so escape by replacing it
   % with %%''%%
-  index{i,3} = strrep(index{i,3},'''''','%%''''%%');
+  % index{i,3} = strrep(index{i,3},'''''','%%''''%%');
 
   fprintf(fid, '%s\n\n', index{i,3});
 end

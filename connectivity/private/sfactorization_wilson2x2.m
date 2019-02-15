@@ -225,7 +225,7 @@ gamp(nfreq+1:end,:) = 0;
 % stabilityfix proposed by Martin Vinck
 if stabilityfix
   w = tukeywin(nfreq*2, 0.5);
-  gamp(1:nfreq,:) = gamp(1:nfreq,:).*repmat(w(nfreq+1:end),[1 nchan^2]);
+  gamp(1:nfreq,:) = gamp(1:nfreq,:).*repmat(w(nfreq+1:end),[1 size(gamp,2)]);
 else
   % nothing to be done here  
 end

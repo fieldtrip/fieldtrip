@@ -1,7 +1,7 @@
 function test_bug1482
 
 % WALLTIME 00:10:00
-% MEM1gb
+% MEM 1gb
 
 %%
 % the first section is a test script that Robert wrote
@@ -133,7 +133,7 @@ cfg.updatesens         = 'yes';
 reref_eeg_implref = ft_preprocessing(cfg, data_eeg);
 
 assert(isequal(numel(reref_eeg_implref.label),3))       % 3 common averaged rereferenced channels
-assert(isequal(numel(reref_eeg_implref.elec.label),3))  % as per https://github.com/fieldtrip/fieldtrip/pull/415#issuecomment-299952415 
+assert(isequal(numel(reref_eeg_implref.elec.label),3))  % as per https://github.com/fieldtrip/fieldtrip/pull/415#issuecomment-299952415
 assert(isequal(reref_eeg_implref.elec.chanpos, reref_eeg_implref.elec.elecpos)) % original chanpos
 
 %% data without elec

@@ -150,7 +150,7 @@ void exitFun(void)
 		return;
 }
 
-/* this function will be started as a seperate thread */
+/* this function will be started as a separate thread */
 void engineThread(void *argin)
 {
 		Engine         *ep = NULL;

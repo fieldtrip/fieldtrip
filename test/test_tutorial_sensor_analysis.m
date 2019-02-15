@@ -1,6 +1,6 @@
 function test_tutorial_sensor_analysis(datadir)
 
-% MEM 2500mb
+% MEM 4gb
 % WALLTIME 00:25:00
 
 % TEST test_tutorial_sensor_overview

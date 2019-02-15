@@ -324,7 +324,7 @@ switch field
       dimord = 'pos_freq_time';
     end
     
-  case {'pow' 'noise' 'rv'}
+  case {'pow' 'noise' 'rv' 'nai'}
     if isequal(datsiz, [npos ntime])
       dimord = 'pos_time';
     elseif isequal(datsiz, [npos nfreq])
@@ -469,6 +469,11 @@ switch field
   case {'freq'}
     if isvector(data.(field)) && isequal(datsiz, [1 nfreq])
       dimord = 'freq';
+    end
+    
+  case {'chantype', 'chanunit'}
+    if numel(data.(field))==nchan
+      dimord = 'chan';
     end
     
   otherwise

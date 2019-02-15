@@ -262,7 +262,7 @@ fprintf('there are on average %.1f neighbours per channel\n', k/length(neighbour
 
 if strcmp(cfg.feedback, 'yes')
   % give some graphical feedback
-  tmpcfg = keepfields(cfg, {'grad', 'elec', 'opto', 'gradfile', 'elecfile', 'optofile', 'layout'});
+  tmpcfg = keepfields(cfg, {'grad', 'elec', 'opto', 'gradfile', 'elecfile', 'optofile', 'layout', 'senstype'});
   tmpcfg.neighbours = neighbours;
   if hasdata
     ft_neighbourplot(tmpcfg, data);

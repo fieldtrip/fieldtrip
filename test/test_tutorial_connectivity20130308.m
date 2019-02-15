@@ -1,6 +1,6 @@
 function test_tutorial_connectivity20130308
 
-% MEM 1500mb
+% MEM 3gb
 % WALLTIME 00:10:00
 
 

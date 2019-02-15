@@ -38,16 +38,6 @@ function [lfp, spike, stm, bhv] = spass2fieldtrip(dirname, varargin)
 %
 % $Id$
 
-% these are used by the ft_preamble/ft_postamble function and scripts
-ft_revision = '$Id$';
-ft_nargin   = nargin;
-ft_nargout  = nargout;
-
-% do the general setup of the function
-ft_defaults
-ft_preamble init
-ft_preamble provenance
-
 fsample_ana = ft_getopt(varargin, 'fsample_ana', 1000);
 fsample_swa = ft_getopt(varargin, 'fsample_swa', 32000);
 
@@ -136,9 +126,6 @@ end
 stm = stm.data{1}(:);
 bhv = bhv.data{1}(:);
 
-% store some additional information in the cfg structure
-cfg = [];
-
 % remember where the lfp trials are on the imaginary continuous timeaxis,
 % this links both the LFP and the spike timestamps to a common continuous
 % timeaxis
@@ -149,12 +136,7 @@ for i=1:ntrials
   offset    = 0;
   trl(i,:) = [begsample endsample offset];
 end
-cfg.trl = trl;
 
 % store the header information
 lfp.hdr.FirstTimeStamp = 0;
 lfp.hdr.TimeStampPerSample = fsample_swa./fsample_ana;
-
-% do the general cleanup and bookkeeping at the end of the function
-ft_postamble provenance lfp spike
-ft_postamble history lfp spike

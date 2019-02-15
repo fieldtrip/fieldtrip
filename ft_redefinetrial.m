@@ -225,8 +225,10 @@ elseif ~isempty(cfg.begsample) || ~isempty(cfg.endsample)
   
   % also correct the sampleinfo
   if isfield(data, 'sampleinfo')
-    data.sampleinfo(:, 1) = data.sampleinfo(:, 1) + begsample - 1;
-    data.sampleinfo(:, 2) = data.sampleinfo(:, 1) + endsample - begsample;
+    sampleinfo = data.sampleinfo;
+    data.sampleinfo = [];
+    data.sampleinfo(:, 1) = sampleinfo(:, 1) + begsample - 1;
+    data.sampleinfo(:, 2) = sampleinfo(:, 1) + endsample - begsample;
   end
   
 elseif ~isempty(cfg.trl)

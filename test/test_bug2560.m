@@ -1,7 +1,7 @@
 function test_bug2560
 
+% MEM 2gb
 % WALLTIME 00:15:00
-% MEM 300mb
 
 % TEST ft_sourceplot
 % TEST ft_plot_slice
