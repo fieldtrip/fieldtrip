@@ -150,8 +150,7 @@ if ~isempty(cfg.missingchannel) && strcmp(cfg.method, 'weighted')
   ft_warning('Reconstructing missing channels using the weighted neighbour approach is not recommended!');
 end
 
-% NEW:
-% check if any channel contains only NaNs; if so treat it as a bad channel:
+% check if any channel contains only NaNs; if so treat it as a bad channel
 cfg.badchannel = detectchannelnan(cfg,data);
 
 % get selection of channels that are missing and/or bad
