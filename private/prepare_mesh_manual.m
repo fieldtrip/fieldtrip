@@ -66,19 +66,35 @@ end
 if hasheadshape
   if ~isempty(cfg.headshape)
     % get the surface describing the head shape
-    if isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
-      % use the headshape surface specified in the configuration
+    if isstruct(cfg.headshape) && isfield(cfg.headshape, 'hex')
+      cfg.headshape = fixpos(cfg.headshape);
+      fprintf('extracting surface from hexahedral mesh\n');
+      headshape = mesh2edge(cfg.headshape);
+      headshape = poly2tri(headshape);
+    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'tet')
+      cfg.headshape = fixpos(cfg.headshape);
+      fprintf('extracting surface from tetrahedral mesh\n');
+      headshape = mesh2edge(cfg.headshape);
+    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'tri')
+      cfg.headshape = fixpos(cfg.headshape);
+      headshape = cfg.headshape;
+    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pos')
+      cfg.headshape = fixpos(cfg.headshape);
+      headshape = cfg.headshape;
+    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
+      cfg.headshape = fixpos(cfg.headshape);
       headshape = cfg.headshape;
     elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
       % use the headshape points specified in the configuration
-      headshape.pnt = cfg.headshape;
+      cfg.headshape = fixpos(cfg.headshape);
+      headshape = cfg.headshape;
     elseif ischar(cfg.headshape)
       % read the headshape from file
-      headshape = read_headshape(cfg.headshape);
+      headshape = ft_read_headshape(cfg.headshape);
     else
       headshape = [];
     end
-    if ~isfield(headshape, 'tri')
+    if ~isfield(headshape, 'tri') || ~isfield(headshape, 'poly')
       for i=1:length(headshape)
         % generate a closed triangulation from the surface points
         headshape(i).pnt = unique(headshape(i).pnt, 'rows');
