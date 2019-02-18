@@ -203,24 +203,25 @@ if strcmp(cfg.method, 'spline')
   for trlop=1:Ntrials
       % do compute interpolation
       ft_progress(trlop/Ntrials, 'computing SCD for trial %d of %d', trlop, Ntrials);
-      if ~isempty(cfg.badchannel) % if any bad channels to interpolate: compute scd for all channels
-          fprintf('computing scd also at locations of bad channels');
-          [V2, L2, L1] = splint(goodchanpos, data.trial{trlop}(goodchanidx,:), allchanpos, cfg.order, cfg.degree, cfg.lambda);
-          scd.trial{trlop} = L2;
-      else % if all channels good: just compute scd for input channels, specify arbitrary single channel to-be-discarded for interpolation (saves >50% computation time)
-          [V2, L2, L1] = splint(goodchanpos, data.trial{trlop}(goodchanidx,:), [0 0 1], cfg.order, cfg.degree, cfg.lambda);
-          scd.trial{trlop} = L1;
+      if ~isempty(cfg.badchannel) 
+        % compute scd for all channels, also for the bad ones
+        fprintf('computing scd also at locations of bad channels');
+        [V2, L2, L1] = splint(goodchanpos, data.trial{trlop}(goodchanidx,:), allchanpos, cfg.order, cfg.degree, cfg.lambda);
+        scd.trial{trlop} = L2;
+      else 
+        % just compute scd for input channels, specify arbitrary single channel to-be-discarded for interpolation to save >50% computation time
+        [V2, L2, L1] = splint(goodchanpos, data.trial{trlop}(goodchanidx,:), [0 0 1], cfg.order, cfg.degree, cfg.lambda);
+        scd.trial{trlop} = L1;
       end
   end
   ft_progress('close');
 
 elseif strcmp(cfg.method, 'finite')
-  if ~isempty(cfg.badchannel) % error in presence of bad channels
-      error('method finite called in presence of bad channels');
+  if ~isempty(cfg.badchannel)
+    ft_error('the method "%s" does not support the specification of bad channels', cfg.method);
   end
   % the finite difference approach requires a triangulation
   prj = elproj(allchanpos);
-  %% 
   tri = delaunay(prj(:,1), prj(:,2));
   % the new electrode montage only needs to be computed once for all trials
   montage.tra = lapcal(allchanpos, tri);
@@ -231,8 +232,8 @@ elseif strcmp(cfg.method, 'finite')
   elec = ft_apply_montage(elec, montage);
 
 elseif strcmp(cfg.method, 'hjorth')
-  if ~isempty(cfg.badchannel) % error in presence of bad channels
-      error('method hjorth called in presence of bad channels');
+  if ~isempty(cfg.badchannel)
+    ft_error('the method "%s" does not support the specification of bad channels', cfg.method);
   end
   % convert the neighbourhood structure into a montage
   labelnew = {};
@@ -259,7 +260,7 @@ elseif strcmp(cfg.method, 'hjorth')
   elec = ft_apply_montage(elec, montage);
 
 else
-  ft_error('unknown method for SCD computation');
+  ft_error('unknown method "%s"', cfg.method);
 end
 
 if strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'finite')
