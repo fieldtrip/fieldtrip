@@ -188,10 +188,10 @@ end
 tmp  = elec;
 elec = [];
 % select channel positions where potential is known
-goodChan = setdiff(data.label,cfg.badchannel);
-goodChanidx = ismember(tmp.label, goodChan);
-goodchanpos = tmp.chanpos(goodChanidx,:);
-allchanpos = tmp.chanpos;
+goodchan    = setdiff(data.label,cfg.badchannel);
+goodchanidx = ismember(tmp.label, goodchan);
+goodchanpos = tmp.chanpos(goodchanidx,:);
+allchanpos  = tmp.chanpos;
 if isfield(tmp, 'elecpos')
   elec.elecpos = tmp.elecpos;
 end
@@ -205,10 +205,10 @@ if strcmp(cfg.method, 'spline')
       ft_progress(trlop/Ntrials, 'computing SCD for trial %d of %d', trlop, Ntrials);
       if ~isempty(cfg.badchannel) % if any bad channels to interpolate: compute scd for all channels
           fprintf('computing scd also at locations of bad channels');
-          [V2, L2, L1] = splint(goodchanpos, data.trial{trlop}(goodChanidx,:), allchanpos, cfg.order, cfg.degree, cfg.lambda);
+          [V2, L2, L1] = splint(goodchanpos, data.trial{trlop}(goodchanidx,:), allchanpos, cfg.order, cfg.degree, cfg.lambda);
           scd.trial{trlop} = L2;
       else % if all channels good: just compute scd for input channels, specify arbitrary single channel to-be-discarded for interpolation (saves >50% computation time)
-          [V2, L2, L1] = splint(goodchanpos, data.trial{trlop}(goodChanidx,:), [0 0 1], cfg.order, cfg.degree, cfg.lambda);
+          [V2, L2, L1] = splint(goodchanpos, data.trial{trlop}(goodchanidx,:), [0 0 1], cfg.order, cfg.degree, cfg.lambda);
           scd.trial{trlop} = L1;
       end
   end
