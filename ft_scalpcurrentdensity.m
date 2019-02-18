@@ -162,8 +162,8 @@ data   = ft_selectdata(tmpcfg, data);
 [cfg, data] = rollback_provenance(cfg, data);
 
 if isempty(cfg.badchannel)
-  % check if any channel contains only NaNs; if so treat it as a bad channel
-  cfg.badchannel = detectchannelnan(cfg,data);
+  % check if the first sample of the first trial contains NaNs; if so treat it as a bad channel
+  cfg.badchannels = ft_channelselection(find(isnan(data.trial{1}(:,1))), data.label);
   if ~isempty(cfg.badchannel)
     ft_info('detected channel %s as bad\n', cfg.badchannel);
   end
