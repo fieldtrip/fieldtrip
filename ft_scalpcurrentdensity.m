@@ -41,8 +41,8 @@ function [scd] = ft_scalpcurrentdensity(cfg, data)
 % The hjorth method requires the following
 %   cfg.neighbours   = neighbourhood structure, see FT_PREPARE_NEIGHBOURS
 %
-% The spline method requires the following
-%   cfg.badchannel      = cell-array, see FT_CHANNELSELECTION for details (default empty)
+% For the spline method you can specify the following
+%   cfg.badchannel      = cell-array, see FT_CHANNELSELECTION for details (default = [])
 %
 % Note that the skin conductivity, electrode dimensions and the potential
 % all have to be expressed in the same SI units, otherwise the units of
