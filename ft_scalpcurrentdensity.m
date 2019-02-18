@@ -161,13 +161,18 @@ data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
 
+if isempty(cfg.badchannel)
+  % check if any channel contains only NaNs; if so treat it as a bad channel
+  cfg.badchannel = detectchannelnan(cfg,data);
+  if ~isempty(cfg.badchannel)
+    ft_info('detected channel %s as bad\n', cfg.badchannel);
+  end
+end
+
 % get the electrode positions
 tmpcfg = cfg;
 tmpcfg.senstype = 'EEG';
 elec = ft_fetch_sens(tmpcfg, data);
-
-% detect if any channels with only NaN
-cfg.badchannel = detectchannelnan(cfg,data);
 
 % find matching electrode positions and channels in the data
 [dataindx, elecindx] = match_str(data.label, elec.label);
