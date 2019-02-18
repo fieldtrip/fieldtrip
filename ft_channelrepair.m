@@ -115,6 +115,14 @@ data = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
 
+if isempty(cfg.badchannel)
+  % check if any channel contains only NaNs; if so treat it as a bad channel
+  cfg.badchannel = detectchannelnan(cfg,data);
+  if ~isempty(cfg.badchannel)
+    ft_info('detected channel %s as bad\n', cfg.badchannel);
+  end
+end
+
 if strcmp(cfg.method, 'nan')
   % this does not require the spatial information of the channels
   sens = [];
@@ -149,9 +157,6 @@ end
 if ~isempty(cfg.missingchannel) && strcmp(cfg.method, 'weighted')
   ft_warning('Reconstructing missing channels using the weighted neighbour approach is not recommended!');
 end
-
-% check if any channel contains only NaNs; if so treat it as a bad channel
-cfg.badchannel = detectchannelnan(cfg,data);
 
 % get selection of channels that are missing and/or bad
 cfg.missingchannel = cat(1, cfg.missingchannel(:), cfg.badchannel);
