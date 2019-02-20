@@ -351,7 +351,7 @@ for i=1:numel(pipeline)
       cfg = rmfield(cfg, 'previous');
     end
     % use a helper function to remove uninteresting fields
-    cfg = removefields(cfg, ignorefields('pipeline'), 'recursive', 'yes');
+    cfg = removefields(cfg, ignorefields('pipeline'), 'recursive', true);
     % use a helper function to remove too large fields
     cfg.checksize = 3000;
     cfg = ft_checkconfig(cfg, 'checksize', 'yes');
