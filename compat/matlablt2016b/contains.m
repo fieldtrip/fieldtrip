@@ -7,7 +7,9 @@ function [varargout] = contains(varargin)
 % This is a compatibility function that should only be added to the path on
 % MATLAB versions prior to 2016b.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % see https://github.com/fieldtrip/fieldtrip/issues/899
+
 if exist(mfilename, 'builtin') || strncmp(mfilename('fullpath'), matlabroot, length(matlabroot))
   % remove this directory from the path
   p = fileparts(mfilename('fullpath'));
@@ -28,6 +30,9 @@ elseif nargin==3
 elseif nargin==4
   [s, pattern, str, boolean] = deal(varargin{1:4});
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% this is where the actual replacement code starts
 
 if ~ischar(s) && ~iscellstr(s)
   error('the input should be either a char-array or a cell-array with chars');
@@ -57,5 +62,7 @@ end
 
 tf = ~cellfun(@isempty, strfind(s, pattern));
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % deal with the output arguments
+
 varargout = {tf};
