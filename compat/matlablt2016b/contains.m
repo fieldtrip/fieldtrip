@@ -13,7 +13,7 @@ function [varargout] = contains(varargin)
 if exist(mfilename, 'builtin') || strncmp(mfilename('fullpath'), matlabroot, length(matlabroot))
   % remove this directory from the path
   p = fileparts(mfilename('fullpath'));
-  ft_warning('removing incorrect directory %s from your path', p)
+  ft_warning('removing %s from your path, see http://bit.ly/2SPPjUS', p);
   rmpath(p);
   % call the original MATLAB function
   [varargout{1:nargout}] = builtin(mfilename, varargin{:});
