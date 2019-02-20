@@ -7,6 +7,15 @@ function tf = contains(s, pattern, str, boolean)
 % This is a compatibility function that should only be added to the path on
 % MATLAB versions prior to 2016b.
 
+% see https://github.com/fieldtrip/fieldtrip/issues/899
+if exist(mfilename, 'builtin')
+  [p, f, x] = fileparts(mfilename('fullpath'));
+  ft_warning('removing incorrect directory %s from your path', p)
+  rmpath(p);
+  tf = builtin('contains', s, pattern, str, boolean);
+  return
+end
+
 if ~ischar(s) && ~iscellstr(s)
   error('the input should be either a char-array or a cell-array with chars');
 end
@@ -29,8 +38,8 @@ if ~iscellstr(s)
 end
 
 if boolean
- s       = lower(s);
- pattern = lower(pattern);
+  s       = lower(s);
+  pattern = lower(pattern);
 end
 
 tf = ~cellfun(@isempty, strfind(s, pattern));
