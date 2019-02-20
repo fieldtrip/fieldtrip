@@ -117,9 +117,9 @@ data = ft_selectdata(tmpcfg, data);
 
 if isempty(cfg.badchannel)
   % check if the first sample of the first trial contains NaNs; if so treat it as a bad channel
-  cfg.badchannels = ft_channelselection(find(isnan(data.trial{1}(:,1))), data.label);
+  cfg.badchannel = ft_channelselection(find(isnan(data.trial{1}(:,1))), data.label);
   if ~isempty(cfg.badchannel)
-    ft_info('detected channel %s as bad\n', cfg.badchannel);
+    ft_info('detected channel %s as bad\n', cfg.badchannel{:});
   end
 end
 
