@@ -132,7 +132,7 @@ switch cfg.method
     cfg.lambda  = ft_getopt(cfg, 'lambda', 1e-5);
     cfg.order   = ft_getopt(cfg, 'order', 4);
     cfg.degree  = ft_getopt(cfg, 'degree', []);
-
+    
     if isempty(cfg.degree) % determines degree of Legendre polynomials bases on number of electrodes
       nchan = numel(data.label);
       if nchan<=32
@@ -153,69 +153,57 @@ end
 dtype = ft_datatype(data);
 
 % check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes','ismeg',[]);
-
-% select trials of interest
-tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'});
-data   = ft_selectdata(tmpcfg, data);
-% restore the provenance information
-[cfg, data] = rollback_provenance(cfg, data);
-
-if isempty(cfg.badchannel)
-  % check if the first sample of the first trial contains NaNs; if so treat it as a bad channel
-  cfg.badchannels = ft_channelselection(find(isnan(data.trial{1}(:,1))), data.label);
-  if ~isempty(cfg.badchannel)
-    ft_info('detected channel %s as bad\n', cfg.badchannel);
-  end
-end
+data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'ismeg', []);
 
 % get the electrode positions
 tmpcfg = cfg;
 tmpcfg.senstype = 'EEG';
 elec = ft_fetch_sens(tmpcfg, data);
 
-% find matching electrode positions and channels in the data
-[dataindx, elecindx] = match_str(data.label, elec.label);
-data.label   = data.label(dataindx);
-elec.label   = elec.label(elecindx);
-elec.chanpos = elec.chanpos(elecindx, :);
-Ntrials = length(data.trial);
-for trlop=1:Ntrials
-  data.trial{trlop} = data.trial{trlop}(dataindx,:);
+% select channels and trials of interest
+tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'});
+tmpcfg.channel = elec.label;
+data = ft_selectdata(tmpcfg, data);
+% restore the provenance information
+[cfg, data] = rollback_provenance(cfg, data);
+
+Ntrials = numel(data.trial);
+
+if isempty(cfg.badchannel)
+  % check if the first sample of the first trial contains NaNs; if so treat it as a bad channel
+  cfg.badchannel = ft_channelselection(find(isnan(data.trial{1}(:,1))), data.label);
+  if ~isempty(cfg.badchannel)
+    ft_info('detected channel %s as bad\n', cfg.badchannel{:});
+  end
 end
 
-% remove all junk fields from the electrode array
-tmp  = elec;
-elec = [];
-% select channel positions where potential is known
-goodchan    = setdiff(data.label,cfg.badchannel);
-goodchanidx = ismember(tmp.label, goodchan);
-goodchanpos = tmp.chanpos(goodchanidx,:);
-allchanpos  = tmp.chanpos;
-if isfield(tmp, 'elecpos')
-  elec.elecpos = tmp.elecpos;
-end
-elec.label   = tmp.label;
+% match the order of the data channels with the channel positions, order them according to the data
+[datindx, elecindx] = match_str(data.label, elec.label);
+[goodindx, tmp]     = match_str(data.label, setdiff(data.label, cfg.badchannel));
+
+allchanpos = elec.chanpos(elecindx,:);    % the position of all channels, ordered according to the data
+goodchanpos = allchanpos(goodindx,:);     % the position of good channels
+anychanpos  = [0 0 1];                    % random channel, will be used in case there are no bad channels
 
 % compute SCD for each trial
 if strcmp(cfg.method, 'spline')
   ft_progress('init', cfg.feedback, 'computing SCD for trial...')
   for trlop=1:Ntrials
-      % do compute interpolation
-      ft_progress(trlop/Ntrials, 'computing SCD for trial %d of %d', trlop, Ntrials);
-      if ~isempty(cfg.badchannel) 
-        % compute scd for all channels, also for the bad ones
-        fprintf('computing scd also at locations of bad channels');
-        [V2, L2, L1] = splint(goodchanpos, data.trial{trlop}(goodchanidx,:), allchanpos, cfg.order, cfg.degree, cfg.lambda);
-        scd.trial{trlop} = L2;
-      else 
-        % just compute scd for input channels, specify arbitrary single channel to-be-discarded for interpolation to save >50% computation time
-        [V2, L2, L1] = splint(goodchanpos, data.trial{trlop}(goodchanidx,:), [0 0 1], cfg.order, cfg.degree, cfg.lambda);
-        scd.trial{trlop} = L1;
-      end
+    % do compute interpolation
+    ft_progress(trlop/Ntrials, 'computing SCD for trial %d of %d', trlop, Ntrials);
+    if ~isempty(cfg.badchannel)
+      % compute scd for all channels, also for the bad ones
+      fprintf('computing scd also at locations of bad channels');
+      [V2, L2, L1] = splint(goodchanpos, data.trial{trlop}(goodindx,:), allchanpos, cfg.order, cfg.degree, cfg.lambda);
+      scd.trial{trlop} = L2;
+    else
+      % just compute scd for input channels, specify arbitrary channel to-be-discarded for interpolation to save computation time
+      [V2, L2, L1] = splint(goodchanpos, data.trial{trlop}(goodindx,:), anychanpos, cfg.order, cfg.degree, cfg.lambda);
+      scd.trial{trlop} = L1;
+    end
   end
   ft_progress('close');
-
+  
 elseif strcmp(cfg.method, 'finite')
   if ~isempty(cfg.badchannel)
     ft_error('the method "%s" does not support the specification of bad channels', cfg.method);
@@ -230,7 +218,7 @@ elseif strcmp(cfg.method, 'finite')
   % apply the montage to the data, also update the electrode definition
   scd  = ft_apply_montage(data, montage);
   elec = ft_apply_montage(elec, montage);
-
+  
 elseif strcmp(cfg.method, 'hjorth')
   if ~isempty(cfg.badchannel)
     ft_error('the method "%s" does not support the specification of bad channels', cfg.method);
@@ -258,7 +246,7 @@ elseif strcmp(cfg.method, 'hjorth')
   % apply the montage to the data, also update the electrode definition
   scd  = ft_apply_montage(data, montage);
   elec = ft_apply_montage(elec, montage);
-
+  
 else
   ft_error('unknown method "%s"', cfg.method);
 end
