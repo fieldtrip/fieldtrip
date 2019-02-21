@@ -54,7 +54,7 @@ function [lf] = ft_compute_leadfield(dippos, sens, headmodel, varargin)
 %
 % The supported forward solutions for EEG are
 %   infinite homogenous medium
-%   infinite halfspace with homogenous medium
+%   infinite halfspace homogenous medium
 %   single sphere
 %   multiple concentric spheres (up to 4 spheres)
 %   leadfield interpolation using a precomputed grid
