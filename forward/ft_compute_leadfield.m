@@ -45,6 +45,7 @@ function [lf] = ft_compute_leadfield(dippos, sens, headmodel, varargin)
 % electrodes.
 %
 % The supported forward solutions for MEG are
+%   infinite homogenous medium
 %   single sphere (Cuffin and Cohen, 1977)
 %   multiple spheres with one sphere per channel (Huang et al, 1999)
 %   realistic single shell using superposition of basis functions (Nolte, 2003)
@@ -52,6 +53,8 @@ function [lf] = ft_compute_leadfield(dippos, sens, headmodel, varargin)
 %   boundary element method (BEM)
 %
 % The supported forward solutions for EEG are
+%   infinite homogenous medium
+%   infinite halfspace homogenous medium
 %   single sphere
 %   multiple concentric spheres (up to 4 spheres)
 %   leadfield interpolation using a precomputed grid
