@@ -1,7 +1,7 @@
 function test_pull929
 
 % MEM 1000mb
-% WALLTIME 00:01:00
+% WALLTIME 00:10:00
 
 % TEST ft_scalpcurrentdensity ft_fetch_sens
 
