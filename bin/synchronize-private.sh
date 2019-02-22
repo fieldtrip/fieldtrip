@@ -2346,6 +2346,7 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(fileio/private/normals.m)
 ARRAY+=(forward/private/normals.m)
+ARRAY+=(plotting/private/normals.m)
 ARRAY+=(private/normals.m)
 ARRAY+=(test/private/normals.m)
 sync ${ARRAY[*]}
@@ -3405,6 +3406,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(forward/private/surfaceorientation.m)
+ARRAY+=(plotting/private/surfaceorientation.m)
 ARRAY+=(private/surfaceorientation.m)
 sync ${ARRAY[*]}
 

@@ -1,12 +1,14 @@
-function [tri] = projecttri(pnt, method)
+function [tri] = projecttri(pos, method)
 
 % PROJECTTRI makes a closed triangulation of a list of vertices by
 % projecting them onto a unit sphere and subsequently by constructing
 % a convex hull triangulation.
 %
 % Use as
-%   [tri] = projecttri(pnt, method)
-% The optional method argument can be 'convhull' (default) or 'delaunay'.
+%   [tri] = projecttri(pos, method)
+% where method is either 'convhull' (default) or 'delaunay'.
+%
+% See also NORMALS, PCNORMALS
 
 % Copyright (C) 2006, Robert Oostenveld
 %
@@ -29,35 +31,41 @@ function [tri] = projecttri(pnt, method)
 % $Id$
 
 if nargin<2
-  if rank(pnt)==1
+  if rank(pos)==1
     ft_error('points are lying on a line, cannot make triangulation');
-  elseif rank(pnt)==2
+  elseif rank(pos)==2
     method = 'delaunay';
-  elseif rank(pnt)==2
+  else
     method = 'convhull';
   end
 end
 
 switch method
   case 'convhull'
-    ori = (min(pnt) + max(pnt))./2;
-    pnt(:,1) = pnt(:,1) - ori(1);
-    pnt(:,2) = pnt(:,2) - ori(2);
-    pnt(:,3) = pnt(:,3) - ori(3);
-    nrm = sqrt(sum(pnt.^2, 2));
-    pnt(:,1) = pnt(:,1)./nrm;
-    pnt(:,2) = pnt(:,2)./nrm;
-    pnt(:,3) = pnt(:,3)./nrm;
-    tri = convhulln(pnt);
+    ori = (min(pos) + max(pos))./2;
+    pos(:,1) = pos(:,1) - ori(1);
+    pos(:,2) = pos(:,2) - ori(2);
+    pos(:,3) = pos(:,3) - ori(3);
+    nrm = sqrt(sum(pos.^2, 2));
+    pos(:,1) = pos(:,1)./nrm;
+    pos(:,2) = pos(:,2)./nrm;
+    pos(:,3) = pos(:,3)./nrm;
+    tri = convhulln(pos);
+    if surfaceorientation(pos, tri)<0
+      % make the surface outward oriented
+      tri = fliplr(tri);
+    end
+
   case 'delaunay'
-    if all(pnt(:,3)==0)
+    if all(pos(:,3)==0)
       % this can happen with simulated electrode grids
-      prj = pnt(:,1:2);
+      prj = pos(:,1:2);
     else
       % make a 2D triangulation of the projected points using delaunay
-      prj = elproj(pnt);
+      prj = elproj(pos);
     end
     tri = delaunay(prj(:,1), prj(:,2));
+
   otherwise
     ft_error('unsupported method');
 end
