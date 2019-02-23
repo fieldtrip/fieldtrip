@@ -45,6 +45,14 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %                           Note that searchlight and timextime cannot be
 %                           run simultaneously (at least one option needs
 %                           to be set to 'no').
+%   cfg.std               = 'yes' or 'no'. In cross-validation, since the statistic is
+%                           calculated for each test set separately and
+%                           then averaged, there is some variability. if
+%                           std is 'yes', the standard deviation of the
+%                           statistics is calculated across repeats and
+%                           then averaged across folds. It is returned in
+%                           as stat.statistic as e.g.
+%                           stat.statistic.accuracy_std
 %
 % .balance      - for imbalanced data with a minority and a majority class.
 %                 'oversample' oversamples the minority class
@@ -155,6 +163,7 @@ y = cfg.design;
 mvcfg = keepfields(cfg, {'balance','replace','normalise', ...
                          'cv','k','repeat','p','stratify',...
                          'classifier','param','size','nb'});
+mvcfg.metric          = ft_getopt(cfg, 'std', 'no');
 mvcfg.metric          = ft_getopt(cfg, 'statistic','acc');
 mvcfg.feedback        = ft_getopt(cfg, 'feedback','yes');
 
@@ -196,19 +205,19 @@ end
 %% Call MVPA-Light 
 if strcmp(cfg.searchlight, 'yes')
     % --- searchlight analysis ---
-    perf = mv_searchlight(mvcfg, dat, y);
+    [perf, result] = mv_searchlight(mvcfg, dat, y);
     
 elseif strcmp(cfg.timextime, 'yes')
     % --- time x time generalisation ---
-    perf = mv_classify_timextime(mvcfg, dat, y);
+    [perf, result] = mv_classify_timextime(mvcfg, dat, y);
     
 elseif data_is_3D
     % --- classification across time ---
-    perf = mv_classify_across_time(mvcfg, dat, y);
+    [perf, result] = mv_classify_across_time(mvcfg, dat, y);
 
 else
     % --- data has no time dimension, perform only cross-validation ---
-    perf = mv_crossvalidate(mvcfg, dat, y);
+    [perf, result] = mv_crossvalidate(mvcfg, dat, y);
 end
 
 %% setup stat struct
@@ -217,4 +226,7 @@ if ~iscell(cfg.statistic), cfg.statistic = {cfg.statistic}; end
 if ~iscell(perf), perf = {perf}; end
 for mm=1:numel(perf) 
     stat.statistic.(cfg.statistic{mm}) = perf{mm};
+    if strcmp(cfg.std, 'yes')
+        stat.statistic.([cfg.statistic{mm} '_std']) = result.perf_std{mm};
+    end
 end
