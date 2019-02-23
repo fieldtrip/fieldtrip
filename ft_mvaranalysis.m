@@ -31,7 +31,7 @@ function [mvardata] = ft_mvaranalysis(cfg, data)
 %                     which a bivariate model will be fit (overrides
 %                     cfg.channel)
 %   cfg.keeptrials = 'no' (default) or 'yes' specifies whether the coefficients
-%                     are estimated for each trial seperately, or on the
+%                     are estimated for each trial separately, or on the
 %                     concatenated data
 %   cfg.jackknife  = 'no' (default) or 'yes' specifies whether the coefficients
 %                     are estimated for all leave-one-out sets of trials

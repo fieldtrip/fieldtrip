@@ -175,7 +175,7 @@ end
 numargin    = numel(varargin);
 numjob      = numel(varargin{1});
 
-% determine the number of MATLAB jobs to "stack" together into seperate qsub jobs
+% determine the number of MATLAB jobs to "stack" together into separate qsub jobs
 if isequal(stack, 'auto')
   if ~isempty(timreq)
     stack = floor(180/timreq);

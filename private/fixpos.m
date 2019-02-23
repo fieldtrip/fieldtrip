@@ -13,6 +13,11 @@ if isa(mesh, 'delaunayTriangulation')
   ft_warning(ws);
 end
 
+if isnumeric(mesh) && size(mesh,2)==3
+  % convert set of points into a mesh structure
+  mesh = struct('pos', mesh);
+end
+
 if ~isa(mesh, 'struct')
   return;
 end

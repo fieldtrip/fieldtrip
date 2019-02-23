@@ -1,4 +1,4 @@
-function source = loreta2fieldtrip(filename, varargin)
+function [source] = loreta2fieldtrip(filename, varargin)
 
 % LORETA2FIELDTRIP reads and converts a LORETA source reconstruction into a
 % FieldTrip data structure, which subsequently can be used for statistical
@@ -38,14 +38,8 @@ function source = loreta2fieldtrip(filename, varargin)
 %
 % $Id$
 
-% these are used by the ft_preamble/ft_postamble function and scripts
-ft_revision = '$Id$';
-ft_nargin   = nargin;
-ft_nargout  = nargout;
-
 % do the general setup of the function
 ft_defaults
-ft_preamble callinfo
 
 is_txt = ft_filetype(filename, 'ascii_txt'); %FIXME text file only implemented for slor, don't know what text files look for for old loreta
 
@@ -142,12 +136,3 @@ else
   source.mom  = activity(lorind);
   fprintf('returning the activity at one timepoint as a single distribution of power\n');
 end
-
-% add the options used here to the configuration
-cfg = [];
-cfg.timeframe = timeframe;
-cfg.filename  = filename;
-
-% do the general cleanup and bookkeeping at the end of the function
-ft_postamble callinfo
-ft_postamble history source

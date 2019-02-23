@@ -1,4 +1,4 @@
-function dataout = ft_examplefunction(cfg, datain)
+function [dataout] = ft_examplefunction(cfg, datain)
 
 % FT_EXAMPLEFUNCTION demonstrates to new developers how a FieldTrip function should look like
 %

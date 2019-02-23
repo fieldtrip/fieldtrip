@@ -1,6 +1,7 @@
 function inspect_ft_electrodeplacement
 
 %%
+% do some prepatations
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri');
 mri = ft_read_mri(filename);
@@ -106,6 +107,7 @@ label = {
   };
 
 %%
+% manual clicking of electrodes on on anatomical MRI
 
 cfg = [];
 cfg.method = 'volume';
@@ -113,6 +115,7 @@ cfg.channel = label;
 elec1 = ft_electrodeplacement(cfg, mri);
 
 %%
+% manual clicking of electrodes on scalp surface
 
 cfg = [];
 cfg.method = 'headshape';
@@ -121,6 +124,7 @@ elec2 = ft_electrodeplacement(cfg, headshape);
 
 
 %%
+% demonstrate placement of 10-20 electrodes on scalp surface
 
 fid = [
   117.9935   -2.5456   -1.5713
@@ -137,3 +141,63 @@ cfg.fiducial.rpa   = fid(2,:);
 cfg.method = '1020';
 
 elec3 = ft_electrodeplacement(cfg, headshape);
+
+%%
+% demonstrate automatic placement of sEEG electrodes along shaft
+
+% 10 electrodes placed at 5 mm distance span a total distance of 45 mm
+
+cfg = [];
+cfg.method = 'shaft';
+cfg.channel = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '10'};
+cfg.shaft.distance = 5;
+cfg.shaft.tip   = [0 0  0]; % at the tip, i.e. deep
+cfg.shaft.along = [0 0 45]; % at the end, i.e. superficial
+
+elec0 = ft_electrodeplacement(cfg);
+
+cfg.shaft.along = [
+  8 0 22 % bend it a little bit halfway
+  0 0 45 % at the end, but see below
+  ];
+elec1 = ft_electrodeplacement(cfg);
+
+% note that the 10th electrodes along the curved shaft does not end up on the
+% straight shaft, because the distance is compuled along the curve
+
+figure
+ft_plot_sens(elec0, 'elecshape', 'sphere', 'elecsize', 0.5, 'facecolor', 'b')
+ft_plot_sens(elec1, 'elecshape', 'sphere', 'elecsize', 0.5, 'facecolor', 'r')
+
+grid on
+view(3)
+cameratoolbar
+
+%%
+% demonstrate automatic placement of ECoG electrodes based on grid corners
+
+% construct a 10x10 grid with approximately 5 mm spacing, which makes it 45x45 mm large
+
+cfg = [];
+cfg.method = 'grid';
+cfg.grid.dim = [10 10];
+cfg.grid.corner1 = [ 0 45 0];
+cfg.grid.corner2 = [45 45 0];
+cfg.grid.corner3 = [ 0  0 0];
+cfg.grid.corner4 = [45  0 5]; % add some curvature by lifting corner 4 up
+elec1 = ft_electrodeplacement(cfg);
+
+elec0 = [];
+elec0.elecpos(1,:) = cfg.grid.corner1;
+elec0.elecpos(2,:) = cfg.grid.corner2;
+elec0.elecpos(3,:) = cfg.grid.corner3;
+elec0.elecpos(4,:) = cfg.grid.corner4;
+elec0.label = {'1', '2', '3', '4'};
+
+figure
+ft_plot_sens(elec0, 'elecshape', 'sphere', 'elecsize', 0.7, 'facecolor', 'r')
+ft_plot_sens(elec1, 'elecshape', 'sphere', 'elecsize', 0.5, 'facecolor', 'b')
+
+grid on
+view(3)
+cameratoolbar

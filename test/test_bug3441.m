@@ -1,6 +1,6 @@
 function test_bug3441
 
-% MEM 2gb
+% MEM 3gb
 % WALLTIME 00:20:00
 
 % TEST loadcnt

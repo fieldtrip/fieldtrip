@@ -64,8 +64,12 @@ if isempty(hdr)
   hdr = ft_fetch_header(data);
 end
 
-if isempty(begsample) || isempty(endsample)
-  ft_error('begsample and endsample must be specified');
+if isempty(begsample)
+  begsample = min(data.sampleinfo(:,1));
+end
+
+if isempty(endsample)
+  endsample = max(data.sampleinfo(:,2));
 end
 
 if isempty(chanindx)
@@ -154,7 +158,8 @@ if trlnum>1
         selsmp = smplop - trl(seltrl,1) + begsample; % which sample in each of the trials, requires the adjustment with begsample, rather than 1
         for i=2:length(seltrl)
           % compare all occurences to the first one
-          if ~all(data.trial{seltrl(i)}(:,selsmp(i)) == data.trial{seltrl(1)}(:,selsmp(1)))
+          % consider also mutual occurring NaNs as equal values
+          if ~all(isequaln(data.trial{seltrl(i)}(:,selsmp(i)), data.trial{seltrl(1)}(:,selsmp(1))))
             ft_error('some of the requested samples occur twice in the data and have conflicting values');
           end
         end

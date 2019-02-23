@@ -78,7 +78,7 @@ if datatype==0
   % no basis functions are needed, because the standard FFT routine will be used
 
 elseif datatype~=0 && isempty(basis)
-  % create a seperate set of basis functions for the cosine and sine
+  % create a separate set of basis functions for the cosine and sine
   basis_c = zeros(k, nsample);
   basis_s = zeros(k, nsample);
 

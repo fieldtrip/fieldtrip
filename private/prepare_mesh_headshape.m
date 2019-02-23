@@ -45,15 +45,28 @@ if isa(cfg.headshape, 'config')
 end
 
 % get the surface describing the head shape
-if isstruct(cfg.headshape) && isfield(cfg.headshape, 'pos')
-  % use the headshape surface specified in the configuration
+if isstruct(cfg.headshape) && isfield(cfg.headshape, 'hex')
+  cfg.headshape = fixpos(cfg.headshape);
+  fprintf('extracting surface from hexahedral mesh\n');
+  headshape = mesh2edge(cfg.headshape);
+  headshape = poly2tri(headshape);
+elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'tet')
+  cfg.headshape = fixpos(cfg.headshape);
+  fprintf('extracting surface from tetrahedral mesh\n');
+  headshape = mesh2edge(cfg.headshape);
+elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'tri')
+  cfg.headshape = fixpos(cfg.headshape);
+  headshape = cfg.headshape;
+elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pos')
+  cfg.headshape = fixpos(cfg.headshape);
   headshape = cfg.headshape;
 elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
-  % use the headshape surface specified in the configuration
-  headshape = fixpos(cfg.headshape);
+  cfg.headshape = fixpos(cfg.headshape);
+  headshape = cfg.headshape;
 elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
   % use the headshape points specified in the configuration
-  headshape.pos = cfg.headshape;
+  cfg.headshape = fixpos(cfg.headshape);
+  headshape = cfg.headshape;
 elseif ischar(cfg.headshape)
   % read the headshape from file
   headshape = ft_read_headshape(cfg.headshape);
@@ -216,8 +229,8 @@ M_con = sparse([ts.tri(1,:)';ts.tri(1,:)';ts.tri(2,:)';ts.tri(3,:)';ts.tri(2,:)'
   [ts.tri(2,:)';ts.tri(3,:)';ts.tri(1,:)';ts.tri(1,:)';ts.tri(3,:)';ts.tri(2,:)'], ...
   ones(ts.nr(2)*6,1),ts.nr(1),ts.nr(1));
 
-kpb   = .1;                       % Cutt-off frequency
-lam   = .5; mu = lam/(lam*kpb-1); % Parameters for elasticity.
+kpb   = .1;                       % Cutt-off frequency (default: .1)
+lam   = .5; mu = lam/(lam*kpb-1); % Parameters for elasticity. (default: .5)
 XYZmm = ts.XYZmm;
 
 % smoothing iterations

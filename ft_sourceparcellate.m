@@ -1,4 +1,4 @@
-function parcel = ft_sourceparcellate(cfg, source, parcellation)
+function [parcel] = ft_sourceparcellate(cfg, source, parcellation)
 
 % FT_SOURCEPARCELLATE combines the source-reconstruction parameters over the parcels, for
 % example by averaging all the values in the anatomically or functionally labeled parcel.

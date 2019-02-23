@@ -49,7 +49,7 @@ function [data] = ft_megplanar(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_COMBINEPLANAR, FT_NEIGHBOURSELECTION
+% See also FT_COMBINEPLANAR, FT_PREPARE_NEIGHBOURS
 
 % Copyright (C) 2004, Robert Oostenveld
 %
@@ -91,17 +91,10 @@ end
 
 % store the original input representation of the data, this is used later on to convert it back
 isfreq = ft_datatype(data, 'freq');
-israw  = ft_datatype(data, 'raw');
 istlck = ft_datatype(data, 'timelock');  % this will be temporary converted into raw
 
 % check if the input data is valid for this function, this converts the data if needed
 data = ft_checkdata(data, 'datatype', {'raw' 'freq'}, 'feedback', 'yes', 'hassampleinfo', 'yes', 'ismeg', 'yes', 'senstype', {'ctf151', 'ctf275', 'bti148', 'bti248', 'itab153', 'yokogawa160', 'yokogawa64'});
-
-if istlck
-  % the timelocked data has just been converted to a raw representation
-  % and will be converted back to timelocked at the end of this function
-  israw = true;
-end
 
 if isfreq
   if ~isfield(data, 'fourierspctrm'), ft_error('freq data should contain Fourier spectra'); end
@@ -175,23 +168,36 @@ if strcmp(cfg.planarmethod, 'sourceproject')
     pos = headsurface(headmodel, axial.grad, 'surface', 'cortex', 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);
   else
     % get the surface describing the head shape
-    if isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
-      % use the headshape surface specified in the configuration
+    if isstruct(cfg.headshape) && isfield(cfg.headshape, 'hex')
+      cfg.headshape = fixpos(cfg.headshape);
+      fprintf('extracting surface from hexahedral mesh\n');
+      headshape = mesh2edge(cfg.headshape);
+      headshape = poly2tri(headshape);
+    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'tet')
+      cfg.headshape = fixpos(cfg.headshape);
+      fprintf('extracting surface from tetrahedral mesh\n');
+      headshape = mesh2edge(cfg.headshape);
+    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'tri')
+      cfg.headshape = fixpos(cfg.headshape);
+      headshape = cfg.headshape;
+    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pos')
+      cfg.headshape = fixpos(cfg.headshape);
+      headshape = cfg.headshape;
+    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
+      cfg.headshape = fixpos(cfg.headshape);
       headshape = cfg.headshape;
     elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
       % use the headshape points specified in the configuration
-      headshape.pos = cfg.headshape;
+      cfg.headshape = fixpos(cfg.headshape);
+      headshape = cfg.headshape;
     elseif ischar(cfg.headshape)
       % read the headshape from file
       headshape = ft_read_headshape(cfg.headshape);
     else
       ft_error('cfg.headshape is not specified correctly')
     end
-    if ~isfield(headshape, 'tri')
-      % generate a closed triangulation from the surface points
-      headshape.pos = unique(headshape.pos, 'rows');
-      headshape.tri = projecttri(headshape.pos);
-    end
+    % ensure that it has units units are consistent with the gradiometers
+    headshape = ft_convert_units(headshape, axial.grad.unit);
     % construct from the head surface
     pos = headsurface([], [], 'headshape', headshape, 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);
   end
@@ -354,7 +360,6 @@ end
 if istlck
   % convert the raw structure back into a timelock structure
   interp = ft_checkdata(interp, 'datatype', 'timelock');
-  israw  = false;
 end
 
 % copy the trial specific information into the output

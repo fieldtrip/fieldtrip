@@ -4,7 +4,7 @@ function [lf] = eeg_halfspace_medium_leadfield(rd, elc, vol)
 % on positions pnt for a dipole at position rd and conductivity cond
 % The halfspace solution requires a plane dividing a conductive zone of
 % conductivity cond, from a non coductive zone (cond = 0)
-%       
+%
 % [lf] = halfspace_medium_leadfield(rd, elc, cond)
 
 % Copyright (C) 2011, Cristiano Micheli and Robert Oostenveld
@@ -27,6 +27,12 @@ function [lf] = eeg_halfspace_medium_leadfield(rd, elc, vol)
 %
 % $Id$
 
+if isfield(vol, 'pos')
+  % this is for forward/backward compatibility
+  vol.pnt = vol.pos;
+  vol = rmfield(vol, 'pos');
+end
+
 siz = size(rd);
 if any(siz==1)
   % positions are specified as a single vector
@@ -48,39 +54,23 @@ for i=1:Ndipoles
   % this is the position of dipole "i"
   dip1 = rd((1:3) + 3*(i-1));
   
-  % distances electrodes - dipole
-  r1 = elc - ones(Nelc,1) * dip1;
-  
-  % Method of mirror dipoles:
-  % Defines the position of mirror dipoles being symmetric to the plane
+  % find the position of a mirror dipole symmetric to the plane
   dip2 = get_mirror_pos(dip1,vol);
   
-  % distances electrodes - mirror dipole
-  r2 = elc - ones(Nelc,1) * dip2;
+  % compute the potential of the original and the mirror dipole
+  lf1 = inf_medium_leadfield(dip1, elc, vol.cond);
+  lf2 = inf_medium_leadfield(dip2, elc, vol.cond);
   
-  % denominator
-  R1 =  (4*pi*vol.cond) * (sum(r1' .^2 ) .^ 1.5)';
-  % denominator, mirror term
-  R2 = -(4*pi*vol.cond) * (sum(r2' .^2 ) .^ 1.5)';
+  % the z-direction of the mirror dipole should be swapped
+  lf2(:,3) = -lf2(:,3);
   
-  % condition of dipoles falling in the non conductive halfspace    
-  invacuum = acos(dot(vol.ori,(dip1-vol.pnt)./norm(dip1-vol.pnt))) < pi/2;
+  % take the sum
+  lf = lf1 + lf2;
   
-  if invacuum
-    ft_warning('dipole lies on the vacuum side of the plane');
-    lf(:,(1:3) + 3*(i-1)) = NaN(Nelc,3);
-  elseif any(R1)==0
-    ft_warning('dipole coincides with one of the electrodes');
-    lf(:,(1:3) + 3*(i-1)) = NaN(Nelc,3);
-  else
-    lf(:,(1:3) + 3*(i-1)) = (r1 ./ [R1 R1 R1]) + (r2 ./ [R2 R2 R2]);
-  end
 end
 
 function P2 = get_mirror_pos(P1,vol)
 % calculates the position of a point symmetric to pnt with respect to a plane
-
-P2 = [];
 
 % define the plane
 pnt = vol.pnt;
@@ -92,18 +82,18 @@ if abs(dot(P1-pnt,ori))<eps
 else
   % define the plane in parametric form
   % define a non colinear vector vc with respect to the plane normal
-  vc = [1 0 0];    
+  vc = [1 0 0];
   if abs(cross(ori, vc, 2))<eps
-      vc = [0 1 0];
+    vc = [0 1 0];
   end
   % define plane's direction vectors
   v1 = cross(ori, vc, 2);  v1 = v1/norm(v1);
   v2 = cross(pnt, ori, 2); v2 = v2/norm(v2);
   plane = [pnt v1 v2];
- 
+  
   % distance plane-point P1
   d = abs(dot(ori, plane(:,1:3)-P1(:,1:3), 2));
-
+  
   % symmetric point
   P2 = P1 + 2*d*ori;
 end

@@ -1,6 +1,6 @@
 function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 
-% FT_PLOT_ORTHO plots 3 orthographic cuts through a 3-D volume and interpolates if needed
+% FT_PLOT_ORTHO plots 3 orthographic slices through a 3-D volume and interpolates if needed
 %
 % Use as
 %   ft_plot_ortho(dat, ...)
@@ -18,12 +18,10 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 % The following options are supported and passed on to FT_PLOT_SLICE
 %   'clim'                = [min max], lower and upper color limits
 %   'transform'           = 4x4 homogeneous transformation matrix specifying the mapping from voxel space to the coordinate system in which the data are plotted
-%   'location'            = 1x3 vector specifying a point on the plane which will be plotted the coordinates are expressed in the coordinate system in which the data will be plotted. location defines the origin of the plane
+%   'location'            = 1x3 vector specifying the intersection point at which the three slices will be plotted. The coordinates should be expressed in the coordinate system of the data. 
 %   'datmask'             = 3D-matrix with the same size as the matrix dat, serving as opacitymap if the second input argument to the function contains a matrix, this will be used as the mask
 %   'maskstyle'           = string, 'opacity' or 'colormix', defines the rendering
-%   'background'          = needed when maskstyle is 'colormix', 3D-matrix with
-%                           the same size as the data matrix, serving as
-%                           grayscale image that provides the background
+%   'background'          = needed when maskstyle is 'colormix', 3D-matrix with the same size as the data matrix, serving as grayscale image that provides the background
 %   'interpmethod'        = string specifying the method for the interpolation, see INTERPN (default = 'nearest')
 %   'colormap'            = string, see COLORMAP
 %   'unit'                = string, can be 'm', 'cm' or 'mm (default is automatic)

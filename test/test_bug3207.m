@@ -1,7 +1,7 @@
 function test_bug3207
 
+% MEM 16gb
 % WALLTIME 00:20:00
-% MEM 12gb
 
 % TEST ft_read_event read_edf
 

@@ -1,9 +1,9 @@
 function [cfg, artifact] = ft_artifact_ecg(cfg, data)
 
-% FT_ARTIFACT_ECG performs a peak-detection on the ECG-channel and identifies the windows
-% around the QRS peak as artifacts. Using FT_REJECTARTIFACT you can remove these windows from
-% your data, or using FT_REMOVETEMPLATEARTIFACT you can subtract an averaged template artifact
-% from your data.
+% FT_ARTIFACT_ECG performs a peak-detection on the ECG-channel and identifies the
+% windows around the QRS peak as artifacts. Using FT_REJECTARTIFACT you can remove
+% these windows from your data, or using FT_REMOVETEMPLATEARTIFACT you can subtract
+% an averaged template artifact from your data.
 %
 % Use as
 %   [cfg, artifact] = ft_artifact_ecg(cfg)
@@ -149,11 +149,11 @@ end
 
 % set default cfg.continuous
 if ~isfield(cfg, 'continuous')
-    if hdr.nTrials==1
-      cfg.continuous = 'yes';
-    else
-      cfg.continuous = 'no';
-    end
+  if hdr.nTrials==1
+    cfg.continuous = 'yes';
+  else
+    cfg.continuous = 'no';
+  end
 end
 
 % read in the ecg-channel and do demean and squaring
@@ -236,7 +236,7 @@ while accept == 0
   hold off;
   xlabel('samples');
   ylabel('zscore');
-
+  
   fprintf(['\ncurrent %s threshold = %1.3f'], artfctdef.method, artfctdef.cutoff);
   response = input('\nkeep the current value (y/n) ?\n', 's');
   switch response
@@ -322,7 +322,7 @@ while acceptpre == 0 || acceptpst == 0
   height = 2.1*mdat;
   rectangle('Position', [xpos ypos width height], 'FaceColor', 'r');
   hold on; plot(time, dat(1:end-1, :), 'b');
-
+  
   if acceptpre == 0
     fprintf(['\ncurrent pre-peak interval = %1.3f'], artfctdef.pretim);
     response = input('\nkeep the current value (y/n) ?\n', 's');
@@ -366,3 +366,4 @@ cfg.artfctdef.ecg.artifact = artifact;
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
 ft_postamble previous data
+ft_postamble savevar

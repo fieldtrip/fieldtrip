@@ -51,7 +51,7 @@ function ft_volumewrite(cfg, volume)
 % file on disk. This mat files should contain only a single variable named 'data',
 % corresponding to the input structure.
 %
-% See also FT_SOURCEANALYSIS, FT_SOURCESTATISTICS, FT_SOURCEINTERPOLATE
+% See also FT_SOURCEANALYSIS, FT_SOURCESTATISTICS, FT_SOURCEINTERPOLATE, FT_WRITE_MRI
 
 % Undocumented local options:
 % cfg.parameter

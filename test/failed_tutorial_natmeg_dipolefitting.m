@@ -504,7 +504,7 @@ timelock_eeg_dev = ft_timelockanalysis(cfg, data_eeg_reref);
 clear data_eeg_reref
 
 cfg = [];
-cfg.layout = 'neuromag306eeg1005_natmeg.lay';
+cfg.layout = 'natmeg_customized_eeg1005.lay';
 ft_multiplotER(cfg, timelock_eeg_std, timelock_eeg_dev);
 
 cfg = [];
@@ -513,7 +513,7 @@ cfg.operation = 'x1 - x2';
 timelock_eeg_dif = ft_math(cfg, timelock_eeg_dev, timelock_eeg_std);
 
 cfg = [];
-cfg.layout = 'neuromag306eeg1005_natmeg.lay';
+cfg.layout = 'natmeg_customized_eeg1005.lay';
 ft_multiplotER(cfg, timelock_eeg_dif);
 
 cfg = [];

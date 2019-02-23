@@ -48,7 +48,7 @@ for e = 1:numel(elec.label)
   dist = sqrt(sum(((subj_pial.pos - repmat(elec.elecpos(e,:), size(subj_pial.pos,1), 1)).^2),2));
   [dum, minidx] = min(dist);
   
-  % intersubject space (2D sphere): vertex index -> vertex pos -> template vertex index
+  % intersubject space (3D sphere): vertex index -> vertex pos -> template vertex index
   dist2 = sqrt(sum(((fsavg_reg.pos - repmat(subj_reg.pos(minidx,:), size(fsavg_reg.pos,1), 1)).^2),2));
   [dum, minidx2] = min(dist2);
   clear minidx

@@ -1,7 +1,7 @@
 function test_prepare_freq_matrices
 
+% MEM 2gb
 % WALLTIME 00:10:00
-% MEM 1000mb
 
 % TEST prepare_freq_matrices ft_sourceanalysis
 

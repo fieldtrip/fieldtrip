@@ -224,7 +224,7 @@ if false
   % skip the interactive section
   cfg               = [];
   cfg.metric        = 'zvalue';
-  cfg.layout        = 'neuromag306eeg1005_natmeg.lay';
+  cfg.layout        = 'natmeg_customized_eeg1005.lay';
   data_EEG_clean    = ft_rejectvisual(cfg,data_EEG);
 else
   % simply copy the data over
@@ -251,7 +251,7 @@ ERP_diff = ft_math(cfg, ERP_oddball, ERP_standard);
 
 cfg          = [];
 cfg.fontsize = 6;
-cfg.layout   = 'neuromag306eeg1005_natmeg.lay';
+cfg.layout   = 'natmeg_customized_eeg1005.lay';
 cfg.ylim     = [-3e-6 3e-6];
 cfg.xlim     = [-0.2 0.6];
 
@@ -261,7 +261,7 @@ ft_multiplotER(cfg, ERP_standard, ERP_oddball, ERP_diff);
 cfg            = [];
 cfg.showlabels = 'yes';
 cfg.fontsize   = 6;
-cfg.layout     = 'neuromag306eeg1005_natmeg.lay';
+cfg.layout     = 'natmeg_customized_eeg1005.lay';
 cfg.xlim       = [-0.2 0.6];
 cfg.ylim       = [-8e-6 8e-6];
 cfg.channel    = 'EEG020';
@@ -272,7 +272,7 @@ legend({'Standard';'Oddball';'Difference'});
 
 % Topo
 cfg                 = [];
-cfg.layout          = 'neuromag306eeg1005_natmeg.lay';
+cfg.layout          = 'natmeg_customized_eeg1005.lay';
 cfg.zlim            = [-3e-6 3e-6];
 cfg.xlim            = [0.08 0.15];
 cfg.style           = 'straight';
@@ -305,7 +305,7 @@ scd_ERP_oddball     = ft_scalpcurrentdensity(cfg, ERP_oddball);
 scd_ERP_diff        = ft_scalpcurrentdensity(cfg, ERP_diff);
 
 cfg                 = [];
-cfg.layout          = 'neuromag306eeg1005_natmeg.lay'; % name will change
+cfg.layout          = 'natmeg_customized_eeg1005.lay'; % name will change
 cfg.zlim            = 'maxabs';
 cfg.xlim            = [0.08 0.15];
 cfg.style           = 'straight';

@@ -30,6 +30,7 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   cfg.opto        = structure with optode structure definition, or
 %   cfg.optofile    = filename containing optode structure definition
 %   cfg.rotate      = number, rotation around the z-axis in degrees (default = [], which means automatic)
+%   cfg.center      = string, center and scale the electrodes in the sphere that represents the head, can be 'yes' or 'no' (default = 'no')
 %   cfg.projection  = string, 2D projection method can be 'stereographic', 'orthographic', 'polar' or 'gnomic' (default = 'polar')
 %                     When 'orthographic', cfg.viewpoint can be used to indicate to specificy projection (keep empty for legacy projection)
 %   cfg.viewpoint   = string indicating the view point that is used for orthographic projection of 3-D sensor
@@ -91,7 +92,6 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 % undocumented and non-recommended option (for SPM only)
 %   cfg.style       string, '2d' or '3d' (default = '2d')
 % undocumented, because inconsistent with cfg.rotate
-%   cfg.center      = string, can be 'yes' or 'no' (default = 'no')
 %   cfg.width       = [] or number
 %   cfg.height      = [] or number
 
@@ -148,7 +148,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 cfg.rotate       = ft_getopt(cfg, 'rotate',     []); % [] => default rotation is determined based on the type of sensors
-cfg.center       = ft_getopt(cfg, 'translate', 'no');
+cfg.center       = ft_getopt(cfg, 'center',     'no');
 cfg.style        = ft_getopt(cfg, 'style',      '2d');
 cfg.projection   = ft_getopt(cfg, 'projection', 'polar');
 cfg.layout       = ft_getopt(cfg, 'layout',     []);

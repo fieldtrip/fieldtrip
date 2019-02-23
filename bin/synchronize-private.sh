@@ -147,6 +147,14 @@ ARRAY+=(utilities/private/channelposition.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# combineClusters.m
+
+ARRAY=()
+ARRAY+=(private/combineClusters.m)
+ARRAY+=(plotting/private/combineClusters.m)
+sync ${ARRAY[*]} 
+
+################################################################################
 # combineClusters.mexa64
 
 ARRAY=()
@@ -244,6 +252,7 @@ ARRAY+=(preproc/private/defaultId.m)
 ARRAY+=(private/defaultId.m)
 ARRAY+=(specest/private/defaultId.m)
 ARRAY+=(statfun/private/defaultId.m)
+ARRAY+=(test/private/defaultId.m)
 ARRAY+=(trialfun/private/defaultId.m)
 ARRAY+=(utilities/private/defaultId.m)
 sync ${ARRAY[*]}
@@ -414,6 +423,14 @@ ARRAY=()
 ARRAY+=(preproc/private/filter_with_correction.m)
 ARRAY+=(specest/private/filter_with_correction.m)
 sync ${ARRAY[*]}
+
+################################################################################
+# findcluster.m
+
+ARRAY=()
+ARRAY+=(private/findcluster.m)
+ARRAY+=(plotting/private/findcluster.m)
+sync ${ARRAY[*]} 
 
 ################################################################################
 # find_innermost_boundary.m
@@ -866,6 +883,14 @@ ARRAY+=(inverse/private/ft_inside_vol.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# ft_inv.m
+
+ARRAY=()
+ARRAY+=(private/ft_inv.m)
+ARRAY+=(inverse/private/ft_inv.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # ft_notification.m, should be consistent with ft_warning
 
 ARRAY=()
@@ -1022,6 +1047,7 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(contrib/nutmegtrip/private/getdimord.m)
 ARRAY+=(fileio/private/getdimord.m)
+ARRAY+=(forward/private/getdimord.m)
 ARRAY+=(private/getdimord.m)
 ARRAY+=(test/private/getdimord.m)
 ARRAY+=(utilities/private/getdimord.m)
@@ -1033,6 +1059,7 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(contrib/nutmegtrip/private/getdimsiz.m)
 ARRAY+=(fileio/private/getdimsiz.m)
+ARRAY+=(forward/private/getdimsiz.m)
 ARRAY+=(private/getdimsiz.m)
 ARRAY+=(test/private/getdimsiz.m)
 ARRAY+=(utilities/private/getdimsiz.m)
@@ -3419,6 +3446,15 @@ ARRAY+=(plotting/private/translate.m)
 ARRAY+=(private/translate.m)
 ARRAY+=(utilities/private/translate.m)
 sync ${ARRAY[*]}
+
+################################################################################
+# triangle2connectivity.m
+
+ARRAY=()
+ARRAY+=(private/triangle2connectivity.m)
+ARRAY+=(plotting/private/triangle2connectivity.m)
+sync ${ARRAY[*]}
+
 
 ################################################################################
 # triangle4pt.m

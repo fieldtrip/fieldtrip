@@ -20,6 +20,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %                       (not possible for mean over multiple channels, or when input contains multiple subjects
 %                       or trials)
 %   cfg.maskstyle     = style used for masking of data, 'box', 'thickness' or 'saturation' (default = 'box')
+%   cfg.maskfacealpha = mask transparency value between 0 and 1
 %   cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.ylim          = 'maxmin', 'maxabs', 'zeromax', 'minzero', or [ymin ymax] (default = 'maxmin')
 %   cfg.channel       = nx1 cell-array with selection of channels (default = 'all')
@@ -162,6 +163,7 @@ cfg.maskparameter   = ft_getopt(cfg, 'maskparameter',  []);
 cfg.linestyle       = ft_getopt(cfg, 'linestyle',     '-');
 cfg.linewidth       = ft_getopt(cfg, 'linewidth',      0.5);
 cfg.maskstyle       = ft_getopt(cfg, 'maskstyle',     'box');
+cfg.maskfacealpha   = ft_getopt(cfg, 'maskfacealpha', 1);
 cfg.channel         = ft_getopt(cfg, 'channel',       'all');
 cfg.title           = ft_getopt(cfg, 'title',          []);
 cfg.directionality  = ft_getopt(cfg, 'directionality', []);
@@ -435,9 +437,15 @@ yval = mean(datamatrix, 2); % over channels
 yval = reshape(yval, size(yval,1), size(yval,3));
 mask = squeeze(mean(maskmatrix, 1)); % over channels
 
-ft_plot_vector(xval, yval, 'style', cfg.linestyle{i}, 'color', graphcolor, ...
-  'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, ...
-  'hlim', [xmin xmax], 'vlim', [ymin ymax]);
+if strcmp(cfg.maskstyle, 'difference')
+  % combine the conditions in a single plot, highlight the difference
+  ft_plot_vector(xval, yval, 'style', cfg.linestyle{i}, 'color', graphcolor(i), 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
+else
+  % loop over the conditions, plot them on top of each other
+  for i=1:Ndata
+    ft_plot_vector(xval, yval(i,:), 'style', cfg.linestyle{i}, 'color', graphcolor(i), 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
+  end
+end
 
 colorLabels = [];
 if Ndata > 1
@@ -543,6 +551,7 @@ ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous varargin
 ft_postamble provenance
+ft_postamble savefig
 
 if ~nargout
   % don't return anything

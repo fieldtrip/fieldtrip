@@ -29,7 +29,13 @@ function [tri] = projecttri(pnt, method)
 % $Id$
 
 if nargin<2
-  method = 'convhull';
+  if rank(pnt)==1
+    ft_error('points are lying on a line, cannot make triangulation');
+  elseif rank(pnt)==2
+    method = 'delaunay';
+  elseif rank(pnt)==2
+    method = 'convhull';
+  end
 end
 
 switch method
@@ -44,8 +50,13 @@ switch method
     pnt(:,3) = pnt(:,3)./nrm;
     tri = convhulln(pnt);
   case 'delaunay'
-    % make a 2d triangulation of the projected points using delaunay
-    prj = elproj(pnt);
+    if all(pnt(:,3)==0)
+      % this can happen with simulated electrode grids
+      prj = pnt(:,1:2);
+    else
+      % make a 2D triangulation of the projected points using delaunay
+      prj = elproj(pnt);
+    end
     tri = delaunay(prj(:,1), prj(:,2));
   otherwise
     ft_error('unsupported method');

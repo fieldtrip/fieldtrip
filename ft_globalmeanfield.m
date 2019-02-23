@@ -1,4 +1,4 @@
-function dataout = ft_globalmeanfield(cfg, datain)
+function [dataout] = ft_globalmeanfield(cfg, datain)
 
 % FT_GLOBALMEANFIELD calculates global mean field amplitude or power of input data
 %

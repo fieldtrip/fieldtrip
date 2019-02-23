@@ -337,7 +337,7 @@ end % if time
 
 if any(strcmp(dimtok, 'freq'))
   % construct the MatrixIndicesMap for the frequency axis in the data
-  % NumberOfSeriesPoints="2" SeriesExponent="0" SeriesStart="0.0000000000" SeriesStep="1.0000000000" SeriesUnit="HZ"
+  % NumberOfSeriesPoints="2" SeriesExponent="0" SeriesStart="0.0000000000" SeriesStep="1.0000000000" SeriesUnit="HERTZ"
   tree = add(tree, find(tree, 'CIFTI/Matrix'), 'element', 'MatrixIndicesMap');
   branch = find(tree, 'CIFTI/Matrix/MatrixIndicesMap');
   branch = branch(end);
@@ -347,12 +347,12 @@ if any(strcmp(dimtok, 'freq'))
     SeriesStep = 0;
   end
   tree = attributes(tree, 'add', branch, 'AppliesToMatrixDimension', printwithcomma(find(strcmp(dimtok, 'freq'))-1));
-  tree = attributes(tree, 'add', branch, 'IndicesMapToDataType', 'CIFTI_INDEX_TYPE_SCALARS');
+  tree = attributes(tree, 'add', branch, 'IndicesMapToDataType', 'CIFTI_INDEX_TYPE_SERIES');
   tree = attributes(tree, 'add', branch, 'NumberOfSeriesPoints', num2str(length(source.freq)));
   tree = attributes(tree, 'add', branch, 'SeriesExponent', num2str(0));
   tree = attributes(tree, 'add', branch, 'SeriesStart', num2str(source.freq(1)));
   tree = attributes(tree, 'add', branch, 'SeriesStep', num2str(SeriesStep));
-  tree = attributes(tree, 'add', branch, 'SeriesUnit', 'HZ');
+  tree = attributes(tree, 'add', branch, 'SeriesUnit', 'HERTZ');
 end % if freq
 
 if any(strcmp(dimtok, 'scalar'))
@@ -769,7 +769,13 @@ if writesurface && isfield(source, 'pos') && isfield(source, 'tri')
       filetok = tokenize(f, '.');
       surffile = fullfile(p, [filetok{1} '.' BrainStructurelabel{i} '.surf.gii']);
       fprintf('writing %s surface to %s\n', BrainStructurelabel{i}, surffile);
-      ft_write_headshape(surffile, mesh, 'format', 'gifti');
+      
+      % also add metadata to gifti, which avoids wb_view to ask for it
+      % interactively upon opening the file
+      metadata.name = 'AnatomicalStructurePrimary';
+      metadata.value = uppercase2lowercase(BrainStructurelabel{i});
+      
+      ft_write_headshape(surffile, mesh, 'format', 'gifti', 'metadata', metadata);
     end
     
   else
@@ -817,6 +823,13 @@ while length(s)<n
   s = [' ' s];
 end
 
+function s = uppercase2lowercase(s)
+sel = [0 strfind(s,'_') numel(s)+1];
+sout = '';
+for m = 1:numel(sel)-1
+  sout = [sout, s(sel(m)+1) lower(s((sel(m)+2):(sel(m+1)-1)))];
+end
+s = sout;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION from roboos/matlab/triangle
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

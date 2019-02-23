@@ -192,7 +192,11 @@ classdef crossvalidator
           obj.folds = size(Y,1);
           if strcmp(obj.type,'bloo')
             nclasses = max(Y);
-            obj.folds = obj.folds/nclasses;
+            for k = 1:nclasses
+              N(k,1) = sum(Y==k);
+            end
+            obj.folds = min(N);
+            %obj.folds = obj.folds/nclasses;
           end
         end
         obj.type = 'nfold';
