@@ -1,9 +1,10 @@
-function [lf] = inf_medium_leadfield(rd, pnt, cond)
+function [lf] = inf_medium_leadfield(dippos, elc, vol)
 
-% INF_MEDIUM_LEADFIELD calculate the infinite medium leadfield
-% on positions pnt for dipole position R and conductivity cond
-%       
-% [lf] = inf_medium_leadfield(R, pnt, cond)
+% INF_MEDIUM_LEADFIELD calculate the infinite medium leadfield on electrode positions
+% elc for a dipole at dippos and with the conductivity cond.
+%
+% Use as
+%   [lf] = inf_medium_leadfield(R, elc, vol)
 
 % Copyright (C) 1998, Robert Oostenveld
 %
@@ -25,34 +26,35 @@ function [lf] = inf_medium_leadfield(rd, pnt, cond)
 %
 % $Id$
 
-siz = size(rd);
+siz = size(dippos);
 if any(siz==1)
   % positions are specified as a single vector
   Ndipoles = prod(siz)/3;
+  dippos = dippos(:)'; % ensure that it is a row vector
 elseif siz(2)==3
   % positions are specified as a Nx3 matrix -> reformat to a single vector
   Ndipoles = siz(1);
-  rd = rd';
-  rd = rd(:);
+  dippos = dippos';
+  dippos = dippos(:)'; % ensure that it is a row vector
 else
   ft_error('incorrect specification of dipole locations');
 end
 
-Npnt     = size(pnt,1);
-lf       = zeros(Npnt,3*Ndipoles);
-s1       = size(rd);
+cond     = vol.cond;
+Nelc     = size(elc,1);
+lf       = zeros(Nelc,3*Ndipoles);
+s1       = size(dippos);
 
 if s1(1)>s1(2)
   % make sure that the dipole position is a row-vector
-  rd = rd';
+  dippos = dippos';
 end
 
 for i=1:Ndipoles
-  r = pnt - ones(Npnt,1) * rd((1:3) + 3*(i-1));
+  r = elc - ones(Nelc,1) * dippos((1:3) + 3*(i-1));
   R = (4*pi*cond) * (sum(r' .^2 ) .^ 1.5)';
   if any(R==0)
-    ft_warning('dipole lies on boundary of volume model');
+    ft_warning('dipole collides with one of the electrodes');
   end
   lf(:,(1:3) + 3*(i-1)) = r ./ [R R R];
 end
-
