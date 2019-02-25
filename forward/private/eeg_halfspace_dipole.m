@@ -1,11 +1,11 @@
-function [lf] = eeg_halfspace_medium_leadfield(rd, elc, vol)
+function [lf] = eeg_halfspace_dipole(dippos, elc, vol)
 
-% HALFSPACE_MEDIUM_LEADFIELD calculate the halfspace medium leadfield
-% on positions pnt for a dipole at position rd and conductivity cond
-% The halfspace solution requires a plane dividing a conductive zone of
-% conductivity cond, from a non coductive zone (cond = 0)
+% EEG_HALFSPACE_DIPOLE calculate the leadfield on electrode positions elc
+% for a dipole at position dippos. The halfspace solution requires a plane dividing a
+% conductive zone (cond > 0), from a non-coductive zone (cond = 0).
 %
-% [lf] = halfspace_medium_leadfield(rd, elc, cond)
+% Use as
+%   [lf] = eeg_halfspace_dipole(dippos, elc, vol)
 
 % Copyright (C) 2011, Cristiano Micheli and Robert Oostenveld
 %
@@ -33,16 +33,16 @@ if isfield(vol, 'pos')
   vol = rmfield(vol, 'pos');
 end
 
-siz = size(rd);
+siz = size(dippos);
 if any(siz==1)
   % positions are specified as a single vector
   Ndipoles = prod(siz)/3;
-  rd = rd(:)'; % ensure that it is a row vector
+  dippos = dippos(:)'; % ensure that it is a row vector
 elseif siz(2)==3
   % positions are specified as a Nx3 matrix -> reformat to a single vector
   Ndipoles = siz(1);
-  rd = rd';
-  rd = rd(:)'; % ensure that it is a row vector
+  dippos = dippos';
+  dippos = dippos(:)'; % ensure that it is a row vector
 else
   ft_error('incorrect specification of dipole locations');
 end
@@ -52,22 +52,25 @@ lf       = zeros(Nelc,3*Ndipoles);
 
 for i=1:Ndipoles
   % this is the position of dipole "i"
-  dip1 = rd((1:3) + 3*(i-1));
+  dip1 = dippos((1:3) + 3*(i-1));
   
   % find the position of a mirror dipole symmetric to the plane
-  dip2 = get_mirror_pos(dip1,vol);
+  dip2 = get_mirror_pos(dip1, vol);
   
   % compute the potential of the original and the mirror dipole
-  lf1 = inf_medium_leadfield(dip1, elc, vol.cond);
-  lf2 = inf_medium_leadfield(dip2, elc, vol.cond);
+  lf1 = eeg_infinite_dipole(dip1, elc, vol);
+  lf2 = eeg_infinite_dipole(dip2, elc, vol);
   
   % the z-direction of the mirror dipole should be swapped
   lf2(:,3) = -lf2(:,3);
   
-  % take the sum
+  % take the sum of the two dipoles
   lf = lf1 + lf2;
-  
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function P2 = get_mirror_pos(P1,vol)
 % calculates the position of a point symmetric to pnt with respect to a plane
