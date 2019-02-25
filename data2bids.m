@@ -896,8 +896,10 @@ if need_events_tsv
     end
   end
   
-  % sort the events ascending on the onset
-  events_tsv = sortrows(events_tsv, 'onset');
+  if ~isempty(events_tsv)
+      % sort the events ascending on the onset
+      events_tsv = sortrows(events_tsv, 'onset');
+  end
 end % if need_events
 
 % remove fields that have an empty value
