@@ -1,5 +1,0 @@
-Unpack the CPD distribution archive.
-Add 'CPD' directory with all subdirectories to the Matlab path.
-Run cpd_make (in Matlab) to mex-compile some essential files.
-
-See the README file for further details.

@@ -1,13 +1,9 @@
-function fittemplate = prepare_mesh_fittemplate(cfg,template)
+function M = prepare_mesh_fittemplate(headshape,template)
 
-% PREPARE_MESH_FITTEMPLATE creates a individualized template on the basis
-% of surface information
+% PREPARE_MESH_FITTEMPLATE computes an affine transformation matrix between 2 point clouds 
 %
 % This function relies on cpd toolbox found in the external/cpd folder
 %
-% Configuration options:
-%   cfg.method       = 'fittemplate'
-%   cfg.headshape    =
 %
 % See also FT_PREPARE_MESH
 
@@ -36,42 +32,39 @@ function fittemplate = prepare_mesh_fittemplate(cfg,template)
 % add toolbox cpd
 ft_hastoolbox('cpd'); %% has to be edited
 
-%
-headshape = cfg.headshape.pos;
-%% determine outer most layer
-index = find_outermost_boundary(template.bnd);
-top_template = template.bnd(index).pos;
 
-%% Fit top part
+% prepare control points
+axis_limits = determine_border(template,headshape);
+res = 10;
+[X, Y, Z]  = ndgrid(linspace(axis_limits(1,1),axis_limits(1,2),res), linspace(axis_limits(2,1),axis_limits(2,2),res), linspace(axis_limits(3,1),axis_limits(3,2),res));
+ctrl_pts   = [X(:) Y(:) Z(:)];
 
-% affine register
-opt.corresp = 0;
-opt.method  = 'affine';
-opt.normalize = 1;
-opt.max_it = 100;
-opt.fgt=1;
-opt.tol = 10e-12;
-opt.outliers= 0;
-[transform,~] = cpd_register(headshape,top_template, opt);
 
-% create 4x4 transformation Matrix
-M = eye(4);
-M(1:3,1:3)                       = transform.R;
-M(1:3,4)                         = transform.t;
+config.model        = template;
+config.scene        = headshape;
+config.ctrl_pts     = ctrl_pts;
+config.init_param   = zeros(size(ctrl_pts));
+config.init_sigma   = 0.5;
+config.anneal_rate  = 0.97;
+config.outliers     = 0.5;
+config.lambda       = 1;
+config.beta         = 1;
+config.max_iter     = 50;
+config.max_em_iter  = 5;
+config.tol          = 1e-18;
+config.emtol        = 1e-15;
+config.motion       = 'tps';
+%config.init_param = zeros(25,2);
 
-%removing structures that became obsolete with changing geometry
-fittemplate = template;
-if isfield(template,'mat')
-    fittemplate = rmfield(fittemplate,'mat');
-end    
-if isfield(template,'type')
-    fittemplate = rmfield(fittemplate,'type');
-end    
+[param,model] = gmmreg_cpd(config);
+ft_plot_mesh(headshape)
+ft_plot_mesh(model,'vertexcolor','red')
+% the affine transformation can be found in the beginning of param
 
-% warping
-for i = 1:length(template.bnd)
-fittemplate.bnd(i).pos = ft_warp_apply(M,fittemplate.bnd(i).pos,'homogenous');
+syms a b c d e f g h k l m n
+
+eqn = template(1:12,:)*[a b c; d e f;g h k] == model(1:12,:) + repmat([l m n],12,1); 
+M = solve(eqn, [a b c d e f g h k l m n]);
+
+
 end
-
-fittemplate.transform = M;
-
