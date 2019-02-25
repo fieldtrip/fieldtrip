@@ -1,11 +1,11 @@
-function [lf] = eeg_halfspace_medium_leadfield(dippos, elc, vol)
+function [lf] = eeg_halfspace_dipole(dippos, elc, vol)
 
-% EEG_HALFSPACE_MEDIUM_LEADFIELD calculate the leadfield on electrode positions elc
+% EEG_HALFSPACE_DIPOLE calculate the leadfield on electrode positions elc
 % for a dipole at position dippos. The halfspace solution requires a plane dividing a
 % conductive zone (cond > 0), from a non-coductive zone (cond = 0).
 %
 % Use as
-%   [lf] = eeg_halfspace_medium_leadfield(dippos, elc, vol)
+%   [lf] = eeg_halfspace_dipole(dippos, elc, vol)
 
 % Copyright (C) 2011, Cristiano Micheli and Robert Oostenveld
 %
@@ -58,8 +58,8 @@ for i=1:Ndipoles
   dip2 = get_mirror_pos(dip1, vol);
   
   % compute the potential of the original and the mirror dipole
-  lf1 = inf_medium_leadfield(dip1, elc, vol);
-  lf2 = inf_medium_leadfield(dip2, elc, vol);
+  lf1 = eeg_infinite_dipole(dip1, elc, vol);
+  lf2 = eeg_infinite_dipole(dip2, elc, vol);
   
   % the z-direction of the mirror dipole should be swapped
   lf2(:,3) = -lf2(:,3);

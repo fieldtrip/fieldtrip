@@ -1,10 +1,10 @@
-function [lf] = inf_medium_leadfield(dippos, elc, vol)
+function [lf] = eeg_infinite_dipole(dippos, elc, vol)
 
-% INF_MEDIUM_LEADFIELD calculate the infinite medium leadfield on electrode positions
+% EEG_INFINITE_DIPOLE calculate the infinite medium leadfield on electrode positions
 % elc for a dipole at dippos and with the conductivity cond.
 %
 % Use as
-%   [lf] = inf_medium_leadfield(R, elc, vol)
+%   [lf] = eeg_infinite_dipole(R, elc, vol)
 
 % Copyright (C) 1998, Robert Oostenveld
 %
