@@ -243,12 +243,14 @@ switch purpose
       'elec'
       'opto'
       'transform'
+      'dim'
       'unit'
+      'coordsys'
       'topolabel'
       'posclusters'
       'negclusters'
       };
-    
+
   otherwise
     ft_error('invalid purpose');
 end % switch purpose
