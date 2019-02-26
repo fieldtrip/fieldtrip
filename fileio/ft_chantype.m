@@ -508,7 +508,7 @@ elseif ft_senstype(input, 'yokogawa') && isheader
     sel = myregexp('^PG[0-9][0-9][0-9]$', label);
     chantype(sel) = {'megplanar'};
     sel = myregexp('^RM[0-9][0-9][0-9]$', label);
-    chantype(sel) = {'refmag'};
+    chantype(sel) = {'ed'};
     sel = myregexp('^RAG[0-9][0-9][0-9]$', label);
     chantype(sel) = {'refgrad'};
     sel = myregexp('^RPG[0-9][0-9][0-9]$', label);
