@@ -728,8 +728,8 @@ switch dataformat
     end
     
     % only change these after checking channel types and units
-    chantype = fixades(hdr.chantype);
-    dattype  = fixades(dattype);
+    chantype = adestype(hdr.chantype);
+    dattype  = adestype(dattype);
     
     % ensure that all channels have the right scaling
     for i=1:size(dat,1)
@@ -765,7 +765,7 @@ end % switch dataformat
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function type = fixades(type)
+function type = adestype(type)
 for i=1:numel(type)
   switch lower(type{i})
     case 'meggrad'
