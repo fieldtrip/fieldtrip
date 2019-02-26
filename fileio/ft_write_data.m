@@ -730,22 +730,26 @@ switch dataformat
     % only change these after checking channel types and units
     chantype = fixades(hdr.chantype);
     dattype  = fixades(dattype);
-   
+    
     % ensure that all channels have the right scaling
     for i=1:size(dat,1)
       switch chantype{i}
         case 'MEG'
           dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'pT');
+        case 'Reference'
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'pT');
         case 'GRAD'
-          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'pT/cm');
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'pT/m');
         case 'EEG'
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'uV');
+        case 'SEEG'
           dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'uV');
         case 'EMG'
           dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'uV');
         case 'ECG'
           dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'uV');
         otherwise
-          % FIXME not sure what scaling to apply
+          % FIXME I am not sure what scaling to apply
       end
     end
     
@@ -774,6 +778,8 @@ for i=1:numel(type)
       type{i} = 'Reference';
     case 'eeg'
       type{i} = 'EEG';
+    case {'seeg' 'ecog' 'ieeg'}
+      type{i} = 'SEEG'; % all intracranial channels
     case 'ecg'
       type{i} = 'ECG';
     case 'emg'
