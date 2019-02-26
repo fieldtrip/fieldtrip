@@ -13,7 +13,7 @@ function [cfg] = ft_neighbourplot(cfg, data)
 %   cfg.verbose       = string, 'yes' or 'no', whether the function will print feedback text in the command window
 %   cfg.neighbours    = neighbourhood structure, see FT_PREPARE_NEIGHBOURS (optional)
 %   cfg.visible       = string, 'on' or 'off', whether figure will be visible (default = 'on')
-%   cfg.enableedit    = string, 'yes' or 'no', allows the user to flexibly add or remove edges between vertices (default = 'no')
+%   cfg.enableedit    = string, 'yes' or 'no', allows you to interactively add or remove edges between vertices (default = 'no')
 %                       
 % and either one of the following options
 %   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
@@ -29,7 +29,7 @@ function [cfg] = ft_neighbourplot(cfg, data)
 %   data.grad     = structure with MEG gradiometer positions
 % If cfg.neighbours is empty, no neighbouring sensors are assumed.
 %
-% Use cfg.enableedit to create or extend your own neighbourtemplate
+% Use cfg.enableedit to interactively add or remove edges in your own neighbour structure.
 %
 % See also FT_PREPARE_NEIGHBOURS, FT_PREPARE_LAYOUT
 

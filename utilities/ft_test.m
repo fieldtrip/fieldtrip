@@ -1,7 +1,7 @@
 function ft_test(varargin)
 
 % FT_TEST performs selected FieldTrip test scripts or reports on previous test
-% results from the dashboard.
+% results from the dashboard database.
 %
 % Use as
 %   ft_test run             ...
@@ -9,9 +9,9 @@ function ft_test(varargin)
 %   ft_test report          ...
 %   ft_test compare         ...
 %
-% ========= Running tests =========
+% ========= Running simple tests scripts =========
 %
-% To execute a test and submit the results to the database, you would do
+% To execute a test and submit the results to the dashboard database, you would do
 %   ft_test run
 % to run all test functions, or
 %   ft_test run test_bug46
@@ -33,7 +33,7 @@ function ft_test(varargin)
 % To execute tests using MOxUNit, you would do
 %   ft_test moxunit_run
 %
-% This feature is currently experimental, but should support the same 
+% This feature is still experimental, but should support the same 
 % options as ft_test run (see above), and in addition:
 %   xmloutput         = string, filename for JUnit-like XML file with test
 %                       results (used for shippable CI).

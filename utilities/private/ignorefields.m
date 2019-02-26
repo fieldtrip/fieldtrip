@@ -23,6 +23,8 @@ switch purpose
       'topodimord'
       'unmixing'
       'unmixingdimord'
+      'posclusters'
+      'negclusters'
       };
     
   case 'appendfreq'
@@ -39,6 +41,8 @@ switch purpose
       'sampleinfo' % this is dealt with explicitly
       'cumsumcnt'  % this is dealt with explicitly
       'cumtapcnt'  % this is dealt with explicitly
+      'posclusters'
+      'negclusters'
       };
     
   case 'deface'
@@ -149,7 +153,7 @@ switch purpose
       'opto'
       'event'
       };
-
+    
   case 'trackconfig'
     ignore = {
       % these fields from the user should be ignored
@@ -204,6 +208,8 @@ switch purpose
       'elec'
       'opto'
       'cfg'
+      'posclusters'
+      'negclusters'
       };
     
   case 'html'
@@ -226,6 +232,25 @@ switch purpose
       'trackusage'
       };
     
+  case 'selectdata'
+    % these fields do not contain data and should be excluded
+    ignore = {
+      'cfg'
+      'hdr'
+      'fsample'
+      'fsampleorig'
+      'grad'
+      'elec'
+      'opto'
+      'transform'
+      'dim'
+      'unit'
+      'coordsys'
+      'topolabel'
+      'posclusters'
+      'negclusters'
+      };
+
   otherwise
     ft_error('invalid purpose');
 end % switch purpose
