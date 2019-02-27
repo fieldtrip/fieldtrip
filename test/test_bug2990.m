@@ -10,20 +10,19 @@ load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2990/4roboos_part1'));
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2990/4roboos_part2'));
 % the cfg contains cfg.mri, which is more or less the mri_realigned (but more accurately coregistered than the sloppy ones in part1)
+% the cfg also contains cfg.grid
 
 cfg.checkconfig = 'loose';
 
 cfg1 = cfg;
 cfg1.mri = mri_realigned;
-grid1 = ft_prepare_sourcemodel(cfg);
+grid1 = ft_prepare_sourcemodel(cfg1);
 
 cfg2 = cfg;
 cfg2.mri = mri_realigned_resliced;
-grid2 = ft_prepare_sourcemodel(cfg);
+grid2 = ft_prepare_sourcemodel(cfg2);
 
-assert(all(abs(grid1.pos(:)-grid2.pos(:))<0.001));
-
-figure; ft_plot_mesh(cfg.sourcemodel.template.pos(cfg.sourcemodel.template.inside,:))
+figure; ft_plot_mesh(cfg.grid.template.pos(cfg.grid.template.inside,:))
 figure; ft_plot_mesh(grid1.pos(grid1.inside,:))
 figure; ft_plot_mesh(grid2.pos(grid2.inside,:))
 
