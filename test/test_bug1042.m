@@ -4,7 +4,7 @@ function test_bug1042
 % WALLTIME 00:45:00
 
 % TEST test_bug1042 test_bug686
-% TEST ft_convert_units ft_prepare_headmodel ft_compute_leadfield ft_prepare_sourcemodel ft_headmodel_openmeeg headsurface
+% TEST ft_convert_units ft_prepare_headmodel ft_compute_leadfield ft_prepare_sourcemodel ft_headmodel_openmeeg
 
 % create sensors in cm
 [pnt, tri] = icosahedron162;
@@ -206,7 +206,7 @@ for k = 1:numel(conductivity)
       cfg.elec = eval(sprintf('elec_%s', units{j}));
       cfg.sourcemodel.pos = dippos{j};
       grid = ft_prepare_leadfield(cfg);
-      eeg_leadfield{i,j,k} = sourcemodel.leadfield{1};
+      eeg_leadfield{i,j,k} = grid.leadfield{1};
     end
   end
 end
@@ -221,7 +221,7 @@ for k = 1:numel(conductivity)
       cfg.grad = eval(sprintf('grad_%s', units{j}));
       cfg.sourcemodel.pos = dippos{j};
       grid = ft_prepare_leadfield(cfg);
-      meg_leadfield{i,j,k} = sourcemodel.leadfield{1};
+      meg_leadfield{i,j,k} = grid.leadfield{1};
     end
   end
 end
