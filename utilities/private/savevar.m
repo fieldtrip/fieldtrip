@@ -17,8 +17,7 @@ eval(sprintf('%s = value;', varname));
 
 s = whos(varname);
 
-% if variable < ~500 MB, store it in old (uncompressed) format, which is
-% faster
+% if variable < ~500 MB, store it in old (uncompressed) format, which is faster
 if (s.bytes < 500000000)
   save(filename, varname, '-v6');
 else

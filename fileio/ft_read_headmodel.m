@@ -39,7 +39,7 @@ function [headmodel] = ft_read_headmodel(filename, varargin)
 filename = fetch_url(filename);
 
 % test whether the file exists
-if ~exist(filename)
+if ~exist(filename, 'file')
   ft_error('file ''%s'' does not exist', filename);
 end
 
@@ -48,8 +48,7 @@ fileformat = ft_getopt(varargin, 'fileformat', ft_filetype(filename));
 
 switch fileformat
   case 'matlab'
-    % FIXME in the future the file should contain the variable 'headmodel' instead of vol
-    headmodel = loadvar(filename, 'vol');
+    headmodel = loadvar(filename, 'headmodel');
 
   case 'ctf_hdm'
     headmodel = read_ctf_hdm(filename);

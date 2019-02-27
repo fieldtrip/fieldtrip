@@ -1,4 +1,4 @@
-function [headmodel] = ft_fetch_headmodel(cfg, data)
+function [headmodel] = ft_fetch_headmodel(cfg)
 
 % FT_FETCH_HEADMODEL mimics the behaviour of FT_READ_HEADMODEL, but for a FieldTrip
 % configuration instead of a file on disk.
@@ -6,9 +6,9 @@ function [headmodel] = ft_fetch_headmodel(cfg, data)
 % Use as
 %   [headmodel] = ft_fetch_headmodel(cfg)
 % where you should specify the volume conductor model with
-%   cfg.headmodel     = structure with volume conduction model or string with filename
+%   cfg.headmodel = structure with volume conduction model or filename, see FT_DATATYPE_HEADMODEL
 %
-% See also FT_READ_HEADMODEL, FT_FETCH_DATA
+% See also FT_READ_HEADMODEL, FT_DATATYPE_HEADMODEL, FT_FETCH_SENS, FT_FETCH_DATA
 
 % Copyright (C) 2011, J?rn M. Horschig
 %
@@ -31,7 +31,7 @@ function [headmodel] = ft_fetch_headmodel(cfg, data)
 % $Id$
 
 % check input arguments
-if nargin > 1 
+if nargin > 1
   ft_error('something is wrong');
 end
 
@@ -41,7 +41,7 @@ if isfield(cfg, 'headmodel') && ischar(cfg.headmodel)
   headmodel = ft_read_headmodel(cfg.headmodel);
 elseif isfield(cfg, 'headmodel') && (isstruct(cfg.headmodel) || isa(cfg.headmodel, 'config'))
   headmodel = cfg.headmodel;
-elseif isfield(cfg, 'headmodel') && iscell(cfg.headmodel) 
+elseif isfield(cfg, 'headmodel') && iscell(cfg.headmodel)
   % this might represent combined EEG, ECoG and/or MEG
   headmodel = cfg.headmodel;
 else

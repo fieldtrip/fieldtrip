@@ -5,7 +5,7 @@ function ignore = ignorefields(purpose)
 % size-checking, etc.
 
 switch purpose
-
+  
   case 'appendtimelock'
     ignore = {
       'cfg'
@@ -26,7 +26,7 @@ switch purpose
       'posclusters'
       'negclusters'
       };
-
+    
   case 'appendfreq'
     ignore = {
       'cfg'
@@ -44,7 +44,7 @@ switch purpose
       'posclusters'
       'negclusters'
       };
-
+    
   case 'deface'
     ignore = {
       % some fields should be dealt with explicitly
@@ -60,7 +60,7 @@ switch purpose
       'fid'
       'cfg'
       };
-
+    
   case 'pipeline'
     ignore = {
       % some fields that are always allowed to be present in the configuration
@@ -69,7 +69,7 @@ switch purpose
       'cfg'
       'previous'
       };
-
+    
   case 'allowed'
     ignore = {
       % some fields that are always allowed to be present in the configuration
@@ -92,7 +92,7 @@ switch purpose
       'version'
       'warning'
       };
-
+    
   case {'rollback'}
     ignore = {
       % these should not be updated in rollback_provenance
@@ -110,7 +110,7 @@ switch purpose
       'version'
       'warning'
       };
-
+    
   case {'provenance', 'history'}
     ignore = {
       % these should not be included in the provenance or history
@@ -126,7 +126,7 @@ switch purpose
       'trackusage'
       'warning'
       };
-
+    
   case {'reproducescript'}
     ignore = {
       % these should not be included in the output script
@@ -147,13 +147,8 @@ switch purpose
       'toolbox'
       'progress'
       'outputfilepresent'
-      'sourcemodel'
-      'grad'
-      'elec'
-      'opto'
-      'event'
       };
-
+    
   case 'trackconfig'
     ignore = {
       % these fields from the user should be ignored
@@ -179,7 +174,7 @@ switch purpose
       'previous'
       'hastoolbox'
       };
-
+    
   case 'checksize'
     ignore = {
       % the size of these fields should not be checked
@@ -192,7 +187,7 @@ switch purpose
       'previous'
       'hastoolbox'
       };
-
+    
   case 'makessense'
     ignore = {
       % these fields should not be used to check whether the trialinfo and sampleinfo make sense
@@ -211,10 +206,10 @@ switch purpose
       'posclusters'
       'negclusters'
       };
-
+    
   case 'html'
-    % when generating a html-formatted pipeline, ignore data-like fields and fields that probably were not added by the user himself
     ignore = {
+      % when generating a html-formatted pipeline, ignore data-like fields and fields that probably were not added by the user himself
       'previous'
       'sourcemodel'
       'headmodel'
@@ -231,10 +226,10 @@ switch purpose
       'trackdatainfo'
       'trackusage'
       };
-
+    
   case 'selectdata'
-    % these fields do not contain data and should be excluded
     ignore = {
+      % these fields do not contain data and should be excluded
       'cfg'
       'hdr'
       'fsample'
@@ -250,7 +245,20 @@ switch purpose
       'posclusters'
       'negclusters'
       };
-
+    
+  case 'recursesize'
+    ignore = {
+      % these fields should not recursively be checked on their size
+      'layout'
+      'event'
+      'headshape'
+      'headmodel'
+      'sourcemodel'
+      'grad'
+      'elec'
+      'event'
+      };
+    
   otherwise
     ft_error('invalid purpose');
 end % switch purpose

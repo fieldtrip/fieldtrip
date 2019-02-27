@@ -739,13 +739,9 @@ end
 function [cfg] = checksizefun(cfg, max_size)
 
 % first check the total size of the cfg
-s = whos('cfg');
-if (s.bytes <= max_size)
+if (varsize(cfg) <= max_size)
   return;
 end
-
-% these fields should not be handled recursively
-norecursion = {'event', 'headmodel', 'sourcemodel', 'leadfield'};
 
 fieldsorig = fieldnames(cfg);
 for i=1:numel(fieldsorig)
@@ -763,18 +759,15 @@ for i=1:numel(fieldsorig)
         end
       end
 
-    elseif isstruct(cfg(k).(fieldsorig{i})) && ~any(strcmp(fieldsorig{i}, norecursion))
+    elseif isstruct(cfg(k).(fieldsorig{i})) && ~any(strcmp(fieldsorig{i}, ignorefields('recursesize')))
       % run recursively on a struct field
       cfg(k).(fieldsorig{i}) = checksizefun(cfg(k).(fieldsorig{i}), max_size);
 
     else
       % determine the size of the field and remove it if too large
-      temp = cfg(k).(fieldsorig{i});
-      s = whos('temp');
-      if s.bytes>max_size
+      if varsize(cfg(k).(fieldsorig{i}))>max_size
         cfg(k).(fieldsorig{i}) = 'empty - this was cleared by checkconfig';
       end
-      clear temp
 
     end
   end % for numel(cfg)
