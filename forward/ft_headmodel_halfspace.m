@@ -9,9 +9,9 @@ function headmodel = ft_headmodel_halfspace(mesh, Pc, varargin)
 % Use as
 %    headmodel = ft_headmodel_halfspace(mesh, Pc, ...)
 % where
-%   mesh.pos = Nx3 vector specifying N points through which a plane is fitted 
-%   Pc       = 1x3 vector specifying the spatial position of a point lying in the conductive halfspace 
-%              (this determines the plane normal's direction)
+%   mesh.pos = Nx3 vector specifying N points through which a plane is fitted
+%   Pc       = 1x3 vector specifying the spatial position of a single point that
+%              is lying in the conductive halfspace
 %
 % Additional optional arguments should be specified as key-value pairs and can include
 %   'sourcemodel'  = string, 'monopole' or 'dipole' (default = 'dipole')
@@ -40,7 +40,7 @@ function headmodel = ft_headmodel_halfspace(mesh, Pc, varargin)
 % $Id$
 
 model = ft_getopt(varargin, 'sourcemodel', 'dipole');
-cond  = ft_getopt(varargin, 'conductivity'); 
+cond  = ft_getopt(varargin, 'conductivity');
 
 if isempty(cond)
   ft_warning('Conductivity was not specified, using 1');
@@ -74,9 +74,9 @@ headmodel.ori   = N(:)'; % a unit vector pointing towards the air
 headmodel.ori   = headmodel.ori/norm(headmodel.ori);
 
 if strcmpi(model,'dipole')
-  headmodel.type  = 'halfspace';    
+  headmodel.type  = 'halfspace';
 elseif strcmpi(model,'monopole')
-  headmodel.type  = 'halfspace_monopole';    
+  headmodel.type  = 'halfspace_monopole';
 else
   ft_error('unknow method')
 end
@@ -87,5 +87,3 @@ P = mean(X,1);  % the plane is spanned by this point and by a normal vector
 X = bsxfun(@minus,X,P);
 [u, s, v] = svd(X, 0);
 N = v(:,3); % orientation of the plane, can be in either direction
-
-

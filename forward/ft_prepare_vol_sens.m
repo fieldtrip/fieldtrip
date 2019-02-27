@@ -8,15 +8,16 @@ function [headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, varargin)
 % Use as
 %   [headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, ...)
 % with input arguments
-%   headmodel  structure with volume conductor definition
-%   sens       structure with gradiometer or electrode definition
+%   headmodel = structure with volume conductor definition
+%   sens      = structure with gradiometer or electrode definition
 %
 % The headmodel structure represents a volume conductor model of the head,
-% its contents depend on the type of model. The sens structure represents a
-% sensor array, i.e. EEG electrodes or MEG gradiometers.
+% its contents depend on the type of model. It is described in more detail
+% in FT_DATATYPE_HEADMODEL. The sens structure represents a electrode or
+% gradiometer array. It is described in more detail in FT_DATATYPE_SENS.
 %
 % Additional options should be specified in key-value pairs and can be
-%   'channel'    cell-array with strings (default = 'all')
+%   'channel'  = cell-array with strings (default = 'all')
 %
 % The detailed behaviour of this function depends on whether the input
 % consists of EEG or MEG and furthermoree depends on the type of volume
@@ -34,8 +35,7 @@ function [headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, varargin)
 % order returned by this function corresponds to the order in the 'channel'
 % option, or if not specified, to the order in the input sensor array.
 %
-% See also FT_COMPUTE_LEADFIELD, FT_READ_HEADMODEL, FT_READ_SENS, FT_TRANSFORM_VOL,
-% FT_TRANSFORM_SENS
+% See also FT_COMPUTE_LEADFIELD, FT_READ_HEADMODEL, FT_READ_SENS
 
 % Copyright (C) 2004-2015, Robert Oostenveld
 %

@@ -90,7 +90,7 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 %
 % BESA
 %   cfg.headmodel         (required) string, filename of precomputed FEM leadfield
-%   cfg.elecfile          (required) string, filename of electrode configuration for the FEM leadfield
+%   cfg.elec              (required) structure with electrode positions or filename, see FT_READ_SENS
 %   cfg.outputfile        (required) string, filename prefix for the output files
 %
 % FNS
@@ -242,8 +242,8 @@ switch cfg.method
     headmodel = ft_headmodel_interpolate(cfg.outputfile, sens, data, 'smooth', cfg.smooth);
 
   case 'besa'
-    % the cfg.headmodel? points to the filename of the FEM solution that was computed
-    % in BESA, cfg.elecfile should point to the corresponding electrode specification
+    % cfg.headmodel points to the filename of the FEM solution that was computed in BESA
+    % cfg.elec points to the filename of the corresponding electrode specification
     sens = ft_fetch_sens(cfg, data);
     headmodel = ft_headmodel_interpolate(cfg.outputfile, sens, cfg.headmodel, 'smooth', cfg.smooth);
 
@@ -433,7 +433,7 @@ switch cfg.method
           % construct the volume conduction model
           cfg.grad = ft_getopt(cfg, 'grad');
           if isempty(cfg.grad)
-            ft_error('for cfg.method = %s, you need to supply a cfg.grad structure', cfg.method);
+            ft_error('for cfg.method = %s, you must also supply cfg.grad', cfg.method);
           end
           headmodel = ft_headmodel_localspheres(geometry, cfg.grad, 'feedback', cfg.feedback, 'radius', cfg.radius, 'maxradius', cfg.maxradius, 'baseline', cfg.baseline, 'singlesphere', cfg.singlesphere);
         end % headmodel
@@ -455,7 +455,7 @@ switch cfg.method
     if input_elec || isfield(data, 'pos') || input_mesh
       geometry = data; % more serious checks of validity of the mesh occur inside ft_headmodel_simbio
     else
-      ft_error('You must provide a mesh with tetrahedral or hexahedral elements, where each element has a scalar or tensor conductivity');
+      ft_error('you must provide a mesh with tetrahedral or hexahedral elements, where each element has a scalar or tensor conductivity');
     end
     headmodel = ft_headmodel_simbio(geometry, 'conductivity', cfg.conductivity);
 

@@ -20,8 +20,7 @@ function [scd] = ft_scalpcurrentdensity(cfg, data)
 %   cfg.method       = 'finite' for finite-difference method or
 %                      'spline' for spherical spline method
 %                      'hjorth' for Hjorth approximation method
-%   cfg.elecfile     = string, file containing the electrode definition
-%   cfg.elec         = structure with electrode definition
+%   cfg.elec         = structure with electrode positions or filename, see FT_READ_SENS
 %   cfg.trials       = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.feedback     = string, 'no', 'text', 'textbar', 'gui' (default = 'text')
 %
@@ -132,7 +131,7 @@ switch cfg.method
     cfg.lambda  = ft_getopt(cfg, 'lambda', 1e-5);
     cfg.order   = ft_getopt(cfg, 'order', 4);
     cfg.degree  = ft_getopt(cfg, 'degree', []);
-    
+
     if isempty(cfg.degree) % determines degree of Legendre polynomials bases on number of electrodes
       nchan = numel(data.label);
       if nchan<=32
@@ -203,7 +202,7 @@ if strcmp(cfg.method, 'spline')
     end
   end
   ft_progress('close');
-  
+
 elseif strcmp(cfg.method, 'finite')
   if ~isempty(cfg.badchannel)
     ft_error('the method "%s" does not support the specification of bad channels', cfg.method);
@@ -218,7 +217,7 @@ elseif strcmp(cfg.method, 'finite')
   % apply the montage to the data, also update the electrode definition
   scd  = ft_apply_montage(data, montage);
   elec = ft_apply_montage(elec, montage);
-  
+
 elseif strcmp(cfg.method, 'hjorth')
   if ~isempty(cfg.badchannel)
     ft_error('the method "%s" does not support the specification of bad channels', cfg.method);
@@ -246,7 +245,7 @@ elseif strcmp(cfg.method, 'hjorth')
   % apply the montage to the data, also update the electrode definition
   scd  = ft_apply_montage(data, montage);
   elec = ft_apply_montage(elec, montage);
-  
+
 else
   ft_error('unknown method "%s"', cfg.method);
 end

@@ -13,7 +13,7 @@ function [headmodel] = ft_read_headmodel(filename, varargin)
 % The volume conduction model is represented as a structure with fields
 % that depend on the type of model.
 %
-% See also FT_TRANSFORM_VOL, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
+% See also FT_DATATYPE_HEADMODEL, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
 % Copyright (C) 2008-2018 Robert Oostenveld
 %
@@ -50,18 +50,18 @@ switch fileformat
   case 'matlab'
     % FIXME in the future the file should contain the variable 'headmodel' instead of vol
     headmodel = loadvar(filename, 'vol');
-    
+
   case 'ctf_hdm'
     headmodel = read_ctf_hdm(filename);
-    
+
   case 'asa_vol'
     headmodel = read_asa_vol(filename);
     headmodel.type = 'asa';
-    
+
   case 'mbfys_ama'
     ama = loadama(filename);
     headmodel = ama2headmodel(ama);
-    
+
   case 'neuromag_fif'
     ft_hastoolbox('mne', 1);
     global FIFF
@@ -69,7 +69,7 @@ switch fileformat
     headmodel.bnd.pos = bem.rr;
     headmodel.bnd.tri = bem.tris;
     headmodel.coordsys = fif2coordsys(bem.coord_frame);
-    
+
   otherwise
     ft_error('unknown fileformat for volume conductor model');
 end

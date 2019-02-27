@@ -42,7 +42,6 @@ function [montage, cfg] = ft_nirs_prepare_ODtransformation(cfg, data)
 %
 % The NIRS positions can be present in the data or can be specified as
 %   cfg.opto          = structure with optode positions, see FT_DATATYPE_SENS
-%   cfg.optofile      = name of file containing the optode positions, see FT_READ_SENS
 %
 % cfg.siunits  = ft_getopt(cfg, 'siunits', 'no');   % yes/no, ensure that SI units are used consistently
 %
