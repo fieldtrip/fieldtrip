@@ -1,9 +1,9 @@
-function [vol] = ama2vol(ama)
+function [vol] = ama2headmodel(ama)
 
-% AMA2VOL
+% ama2headmodel
 %
 % Use as
-%   vol = ama2vol(ama)
+%   vol = ama2headmodel(ama)
 
 % Copyright (C) 2008, Robert Oostenveld
 %

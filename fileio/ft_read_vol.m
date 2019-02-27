@@ -60,7 +60,7 @@ switch fileformat
     
   case 'mbfys_ama'
     ama = loadama(filename);
-    headmodel = ama2vol(ama);
+    headmodel = ama2headmodel(ama);
     
   case 'neuromag_fif'
     ft_hastoolbox('mne', 1);

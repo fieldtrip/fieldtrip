@@ -27,12 +27,12 @@ ARRAY+=(forward/private/add_mex_source.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# ama2vol.m
+# ama2headmodel.m
 
 ARRAY=()
-ARRAY+=(external/dipoli/ama2vol.m)
-ARRAY+=(fileio/private/ama2vol.m)
-ARRAY+=(forward/private/ama2vol.m)
+ARRAY+=(external/dipoli/ama2headmodel.m)
+ARRAY+=(fileio/private/ama2headmodel.m)
+ARRAY+=(forward/private/ama2headmodel.m)
 sync ${ARRAY[*]}
 
 ################################################################################

@@ -1,6 +1,6 @@
-function [vol] = yokogawa2vol(hdr)
+function [vol] = yokogawa2headmodel(hdr)
 
-% YOKOGAWA2VOL converts a spherical volume conductor model that can
+% YOKOGAWA2HEADMODEL converts a spherical volume conductor model that can
 % be present in the header of a datafile into a structure that can
 % be used by FieldTrip.
 
@@ -30,7 +30,7 @@ hdr = hdr.orig; % use the original Yokogawa header, not the FieldTrip header
 if ft_hastoolbox('yokogawa_meg_reader') && (hdr.coregist.model.type == 1)
   % single sphere volume conduction model
   vol.r = hdr.coregist.model.radius;
-  vol.o = [hdr.coregist.model.cx hdr.coregist.model.cy hdr.coregist.model.cz]; 
+  vol.o = [hdr.coregist.model.cx hdr.coregist.model.cy hdr.coregist.model.cz];
 elseif isfield(hdr.mri_info, 'model_name') && strcmp(hdr.mri_info.model_name, 'SphericalModel')
   % single sphere volume conduction model
   vol.r = hdr.mri_info.r;
