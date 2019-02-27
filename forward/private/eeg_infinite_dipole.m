@@ -5,6 +5,8 @@ function [lf] = eeg_infinite_dipole(dippos, elc, vol)
 %
 % Use as
 %   [lf] = eeg_infinite_dipole(R, elc, vol)
+%
+% See also EEG_INFINITE_MONOPOLE, EEG_HALFSPACE_DIPOLE, EEG_HALFSPACE_MONOPOLE
 
 % Copyright (C) 1998, Robert Oostenveld
 %
@@ -25,6 +27,11 @@ function [lf] = eeg_infinite_dipole(dippos, elc, vol)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+if ~isstruct(vol)
+  % it only represents the conductivity, make a structure out of it
+  vol = struct('cond', vol);
+end
 
 siz = size(dippos);
 if any(siz==1)

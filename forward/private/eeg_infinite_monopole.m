@@ -7,6 +7,8 @@ function [lf] = eeg_infinite_monopole(monpos, elc, vol)
 %
 % Implemented from Malmivuo J, Plonsey R, Bioelectromagnetism (1993)
 % http://www.bem.fi/book/08/08.htm
+%
+% See also EEG_INFINITE_DIPOLE, EEG_HALFSPACE_DIPOLE, EEG_HALFSPACE_MONOPOLE
 
 % Copyright (C) 2011, Cristiano Micheli
 % Copyright (C) 2019, Robert Oostenveld
@@ -28,6 +30,11 @@ function [lf] = eeg_infinite_monopole(monpos, elc, vol)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+if ~isstruct(vol)
+  % it only represents the conductivity, make a structure out of it
+  vol = struct('cond', vol);
+end
 
 siz = size(monpos);
 if any(siz==1)

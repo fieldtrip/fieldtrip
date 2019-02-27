@@ -89,7 +89,7 @@ switch ft_voltype(vol)
       pos = [pos; vol.bnd(i).pos];
     end
     % dipoli incorporates the conductivity into the system matrix
-    lf = inf_medium_leadfield(dippos, pos, 1);
+    lf = eeg_infinite_dipole(dippos, pos, 1);
     
   case 'asa'
     % the system matrix was computed using ASA from www.ant-neuro.com
@@ -99,7 +99,7 @@ switch ft_voltype(vol)
       pos = [pos; vol.bnd(i).pos];
     end
     % assume that isolated potential approach was used
-    lf = inf_medium_leadfield(dippos, pos, cond);
+    lf = eeg_infinite_dipole(dippos, pos, cond);
     
   case 'bemcp'
     % the system matrix was computed using code from Christopher Phillips
@@ -108,7 +108,7 @@ switch ft_voltype(vol)
     % loop over boundaries and compute the leadfield for each
     for i=1:ncmp
       co = (cond(i)+cond(i+1))/2 ;
-      lf{i} = inf_medium_leadfield(dippos, vol.bnd(i).pos, co);
+      lf{i} = eeg_infinite_dipole(dippos, vol.bnd(i).pos, co);
     end
     % concatenate the leadfields
     lf = cat(1, lf{:});
