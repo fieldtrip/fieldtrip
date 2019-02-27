@@ -182,11 +182,11 @@ switch cfg.method
   case 'cortexhull'
     bnd = prepare_mesh_cortexhull(cfg);
   
-  case 'fittemplate'
-  
-    M   = prepare_mesh_fittemplate(cfg.headshape.pos,cfg.template.pos);      
-    mri = ft_transform_geometry(M,mri);
-
+  case 'fittemplate'  
+    M   = prepare_mesh_fittemplate(cfg.headshape.pos,cfg.template.pos);
+    orig.mri = mri;
+    orig = ft_transform_geometry(M,orig);
+    bnd = orig.mri;
     
   otherwise
     ft_error('unsupported cfg.method')

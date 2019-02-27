@@ -30,41 +30,19 @@ function M = prepare_mesh_fittemplate(headshape,template)
 % ensure that the input is consistent with what this function expects
 
 % add toolbox cpd
-ft_hastoolbox('cpd'); %% has to be edited
+ft_hastoolbox('cpd',2);
 
+opt.corresp = 0;
+opt.method  = 'affine';
+opt.max_it = 100;
+opt.fgt=0;
+opt.tol = 10e-12;
+opt.outliers=0.0;
+opt.outliers= 0;
+[transform,~] = cpd_register(headshape,template, opt);
 
-% prepare control points
-axis_limits = determine_border(template,headshape);
-res = 10;
-[X, Y, Z]  = ndgrid(linspace(axis_limits(1,1),axis_limits(1,2),res), linspace(axis_limits(2,1),axis_limits(2,2),res), linspace(axis_limits(3,1),axis_limits(3,2),res));
-ctrl_pts   = [X(:) Y(:) Z(:)];
-
-
-config.model        = template;
-config.scene        = headshape;
-config.ctrl_pts     = ctrl_pts;
-config.init_param   = zeros(size(ctrl_pts));
-config.init_sigma   = 0.5;
-config.anneal_rate  = 0.97;
-config.outliers     = 0.5;
-config.lambda       = 1;
-config.beta         = 1;
-config.max_iter     = 50;
-config.max_em_iter  = 5;
-config.tol          = 1e-18;
-config.emtol        = 1e-15;
-config.motion       = 'tps';
-%config.init_param = zeros(25,2);
-
-[param,model] = gmmreg_cpd(config);
-ft_plot_mesh(headshape)
-ft_plot_mesh(model,'vertexcolor','red')
-% the affine transformation can be found in the beginning of param
-
-syms a b c d e f g h k l m n
-
-eqn = template(1:12,:)*[a b c; d e f;g h k] == model(1:12,:) + repmat([l m n],12,1); 
-M = solve(eqn, [a b c d e f g h k l m n]);
-
+M = eye(4,4);
+M(1:3,1:3) = transform.R;
+M(1:3,4)   = transform.t;
 
 end

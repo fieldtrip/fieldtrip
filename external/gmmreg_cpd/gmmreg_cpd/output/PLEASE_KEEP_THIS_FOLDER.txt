@@ -1,3 +1,0 @@
-Please keep this folder since the current program will
-not create a folder when it tries to write the output
-data (transformed model, parameter files, etc.)
