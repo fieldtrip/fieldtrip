@@ -1,10 +1,10 @@
-function [inside] = ft_inside_vol(dippos, headmodel, varargin)
+function [inside] = ft_inside_headmodel(dippos, headmodel, varargin)
 
-% FT_INSIDE_VOL locates dipole locations inside/outside the source
+% FT_INSIDE_HEADMODEL locates dipole locations inside/outside the source
 % compartment of a volume conductor model.
 %
 % Use as
-%   [inside] = ft_inside_vol(dippos, headmodel, ...)
+%   [inside] = ft_inside_headmodel(dippos, headmodel, ...)
 %
 % The input should be
 %   dippos      = Nx3 matrix with dipole positions
@@ -47,7 +47,7 @@ headmodel = fixpos(headmodel);
 
 % determine the type of volume conduction model
 switch ft_voltype(headmodel)
-  
+
   case {'singlesphere' 'concentricspheres'}
     if ~isfield(headmodel, 'source')
       % locate the innermost compartment and remember it
@@ -62,7 +62,7 @@ switch ft_voltype(headmodel)
     distance = sqrt(sum(tmp.^2, 2))-headmodel.r(headmodel.source);
     % positive if outside, negative if inside
     inside   = distance<0;
-    
+
   case 'localspheres'
     if ~isempty(headshape) && ~isempty(grad)
       % use the specified headshape to construct the bounding triangulation
@@ -89,12 +89,12 @@ switch ft_voltype(headmodel)
       end
       inside = inside>0;
     end
-    
+
   case {'infinite' 'infinite_monopole'}
     % an empty headmodel in combination with gradiometers indicates a magnetic dipole
     % in an infinite vacuum, i.e. all dipoles can be considered to be inside
     inside = true(1,size(dippos,1));
-    
+
   case {'halfspace', 'halfspace_monopole'}
     inside = false(1,size(dippos,1));
     for i = 1:size(dippos,1)
@@ -102,7 +102,7 @@ switch ft_voltype(headmodel)
       % condition of dipoles/monopoles falling in the non conductive halfspace
       inside(i) = acos(dot(headmodel.ori,(pol-headmodel.pos)./norm(pol-headmodel.pos))) >= pi/2;
     end
-    
+
   case 'slab_monopole'
     inside = false(1,size(dippos,1));
     for i=1:size(dippos,1)
@@ -113,12 +113,12 @@ switch ft_voltype(headmodel)
       instrip2  = acos(dot(headmodel.ori2,(pol-headmodel.pos2)./norm(pol-headmodel.pos2))) > pi/2;
       inside(i) = instrip1 & instrip2;
     end
-    
+
   case {'bem', 'dipoli', 'bemcp', 'openmeeg', 'asa', 'singleshell', 'neuromag'}
     % this is a model with a realistic shape described by a triangulated boundary
     [pos, tri] = headsurface(headmodel, [], 'inwardshift', inwardshift, 'surface', 'brain');
     inside = bounding_mesh(dippos, pos, tri);
-    
+
   case {'simbio'}
     % this is a model with hexaheders or tetraheders
     if isfield(headmodel, 'tet')
@@ -126,12 +126,12 @@ switch ft_voltype(headmodel)
       headmodel.hex = headmodel.tet;
       headmodel = rmfield(headmodel, 'tet');
     end
-    
+
     % determine the size of the relevant elements
     numhex = size(headmodel.hex,1);
     numpos = size(headmodel.pos,1);
     numdip = size(dippos,1);
-    
+
     % FIXME we have to rethink which tissue types should be flagged as inside
     tissue = intersect({'gray', 'white', 'csf', 'brain'}, headmodel.tissuelabel);
 
@@ -141,14 +141,14 @@ switch ft_voltype(headmodel)
       fprintf('selecting dipole positions inside the ''%s'' tissue\n', tissue{i});
       insidehex = insidehex | (headmodel.tissue == find(strcmp(headmodel.tissuelabel, tissue{i})));
     end
-    
+
     % prune the mesh, i.e. only retain hexaheders labeled as brain
     fprintf('pruning headmodel volume elements from %d to %d (%d%%)\n', numhex, sum(insidehex), round(100*sum(insidehex)/numhex));
     headmodel.hex    = headmodel.hex(insidehex,:);
-    headmodel.tissue = headmodel.tissue(insidehex); 
+    headmodel.tissue = headmodel.tissue(insidehex);
     numhex = sum(insidehex);
     clear insidehex
-    
+
     % determine all vertices that are part of a hexaheder
     insidepos = false(numpos,1);
     insidepos(headmodel.hex) = true;
@@ -167,7 +167,7 @@ switch ft_voltype(headmodel)
     j = headmodel.hex;
     s = ones(size(i));
     hex2pos = sparse(i(:),j(:),s(:),numhex,numpos);
-    
+
     % determine the bounding box
     minpos = min(headmodel.pos,[],1);
     maxpos = max(headmodel.pos,[],1);
@@ -175,7 +175,7 @@ switch ft_voltype(headmodel)
     fprintf('pruning dipole positions from %d to %d (%d%%)\n', numdip, sum(insidedip), round(100*sum(insidedip)/numdip));
     insidedip  = find( insidedip);
     dippos = dippos(insidedip,:);
-    
+
     % find the nearest vertex for each of the dipoles
     dsearchn(headmodel.pos, dippos(1,:)); % call it once to precompile
     stopwatch = tic;
@@ -183,11 +183,11 @@ switch ft_voltype(headmodel)
     t = toc(stopwatch);
     fprintf('determining inside points, this takes about %d seconds\n', round(numdip*t));
     posindx = dsearchn(headmodel.pos, dippos);
-    
+
     % The following code is only guaranteed to work with convex elements. Regular
     % hexahedra and tetrahedra are convex, and the adapted hexahedra we can use with
     % SIMBIO have to be convex as well.
-    
+
     inside = false(1, numdip);
     % for each dipole determine whether it is inside one of the neighbouring hexaheders
     % this will be the case for all vertices that are inside the middle, but not at the edges
@@ -204,7 +204,7 @@ switch ft_voltype(headmodel)
         end % if
       end % for each hexaheder
     end % for each of the dipole positions
-    
+
   otherwise
     ft_error('unrecognized volume conductor model');
 end

@@ -710,7 +710,7 @@ end
 % determine the dipole locations that are inside the source compartment of the
 % volume conduction model, i.e. inside the brain
 if ~isfield(grid, 'inside')
-  grid.inside = ft_inside_vol(grid.pos, headmodel, 'grad', sens, 'headshape', cfg.headshape, 'inwardshift', cfg.inwardshift); % this returns a boolean vector
+  grid.inside = ft_inside_headmodel(grid.pos, headmodel, 'grad', sens, 'headshape', cfg.headshape, 'inwardshift', cfg.inwardshift); % this returns a boolean vector
 end
 
 if strcmp(cfg.grid.tight, 'yes')

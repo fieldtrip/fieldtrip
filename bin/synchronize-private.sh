@@ -12,7 +12,7 @@ function sync {
 # find the latest file from the list and copies it to all other files
 latest=`ls -t $* | head -n1`
 for file in $*; do
-if [ $file != $latest ] ; then 
+if [ $file != $latest ] ; then
 cp $latest $file
 fi
 done
@@ -152,7 +152,7 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(private/combineClusters.m)
 ARRAY+=(plotting/private/combineClusters.m)
-sync ${ARRAY[*]} 
+sync ${ARRAY[*]}
 
 ################################################################################
 # combineClusters.mexa64
@@ -430,7 +430,7 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(private/findcluster.m)
 ARRAY+=(plotting/private/findcluster.m)
-sync ${ARRAY[*]} 
+sync ${ARRAY[*]}
 
 ################################################################################
 # find_innermost_boundary.m
@@ -875,11 +875,11 @@ ARRAY+=(utilities/ft_headcoordinates.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# ft_inside_vol.m
+# ft_inside_headmodel.m
 
 ARRAY=()
-ARRAY+=(forward/ft_inside_vol.m)
-ARRAY+=(inverse/private/ft_inside_vol.m)
+ARRAY+=(forward/ft_inside_headmodel.m)
+ARRAY+=(inverse/private/ft_inside_headmodel.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -980,13 +980,13 @@ ARRAY+=(plotting/private/ft_senstype.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# ft_voltype.m
+# ft_headmodeltype.m
 
 ARRAY=()
-ARRAY+=(fileio/private/ft_voltype.m)
-ARRAY+=(forward/ft_voltype.m)
-ARRAY+=(inverse/private/ft_voltype.m)
-ARRAY+=(plotting/private/ft_voltype.m)
+ARRAY+=(fileio/private/ft_headmodeltype.m)
+ARRAY+=(forward/ft_headmodeltype.m)
+ARRAY+=(inverse/private/ft_headmodeltype.m)
+ARRAY+=(plotting/private/ft_headmodeltype.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -3572,4 +3572,3 @@ ARRAY=()
 ARRAY+=(fileio/private/write_ctf_shm.mexglx)
 ARRAY+=(src/write_ctf_shm.mexglx)
 sync ${ARRAY[*]}
-
