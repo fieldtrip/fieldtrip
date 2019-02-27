@@ -28,7 +28,7 @@ cfg.grid.zgrid = scale*[-20:1:20];
 cfg.grid.unit = CMMM;
 cfg.grid.tight = 'yes';
 cfg.inwardshift = -scale*0;
-cfg.vol = vol;
+cfg.headmodel = vol;
 template_grid = ft_prepare_sourcemodel(cfg);
 
 assert(strcmp(vol.unit, CMMM));
@@ -51,7 +51,7 @@ ft_plot_mesh(elecs.elecpos,'vertexcolor',[1 .3 .3]);
 
 data = [];
 cfg.grid = template_grid;
-cfg.vol = vol;
+cfg.headmodel = vol;
 cfg.elec = elecs;
 cfg.unit = CMMM; % this is confusing in case it is different from cfg.grid.unit
 [grid] = ft_prepare_leadfield(cfg, data);
@@ -64,7 +64,7 @@ grid = ft_convert_units(grid, CMMM); %% does not really functional!!
 % not put the dipole on a position that will not be covered by a grid
 % location later
 cfg = [];
-cfg.vol = vol;
+cfg.headmodel = vol;
 cfg.elec = elecs;
 cfg.dip.pos = scale*[
   3 -3 6 % dipole 1
@@ -94,7 +94,7 @@ cfg.method = METHOD;
 cfg.grid = grid;
 
 
-cfg.vol = vol;
+cfg.headmodel = vol;
 cfg.elec = elecs;
 cfg.snr = 10;
 source = ft_sourceanalysis(cfg, timelock);

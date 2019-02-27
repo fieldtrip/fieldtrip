@@ -45,7 +45,7 @@ vol.r = 8;
 %prepare leadfields and grid
 cfg                 = [];
 cfg.grid.resolution = 1.5;
-cfg.vol             = vol;
+cfg.headmodel       = vol;
 cfg.grad            = grad;
 grid                = ft_prepare_leadfield(cfg);
 
@@ -112,4 +112,4 @@ cfgc = [];
 cfgc.method = 'coh';
 cfgc.refindx = 1:numel(spccs.inside);
 scoh  = ft_connectivityanalysis(cfgc, spccs);
-scohf = source2full(scoh); 
+scohf = source2full(scoh);

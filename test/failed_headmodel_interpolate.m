@@ -68,7 +68,7 @@ volA.r = 10;
 volA.o = [0 0 0];
 
 cfg      = [];
-cfg.vol = volA;
+cfg.headmodel = volA;
 cfg.elec = elec1;
 cfg.grid.resolution = 1;
 leadfield = ft_prepare_leadfield(cfg);

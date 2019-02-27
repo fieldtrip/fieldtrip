@@ -59,7 +59,7 @@ vol = ft_prepare_headmodel(cfg, segmentedmri);
 
 cfg                 = [];
 cfg.grad            = freqPost.grad;
-cfg.vol             = vol;
+cfg.headmodel       = vol;
 cfg.reducerank      = 2;
 cfg.channel         = {'MEG','-MLP31', '-MLO12'};
 cfg.grid.resolution = 1;   % use a 3-D grid with a 1 cm resolution
@@ -70,7 +70,7 @@ cfg              = [];
 cfg.method       = 'dics';
 cfg.frequency    = 18;
 cfg.grid         = grid;
-cfg.vol          = vol;
+cfg.headmodel    = vol;
 cfg.dics.projectnoise = 'yes';
 cfg.dics.lambda       = 0;
 
@@ -121,7 +121,7 @@ cfg              = [];
 cfg.method       = 'dics';
 cfg.frequency    = 18;
 cfg.grid         = grid;
-cfg.vol          = vol;
+cfg.headmodel    = vol;
 cfg.dics.projectnoise = 'yes';
 cfg.dics.lambda       = '5%';
 cfg.dics.keepfilter   = 'yes';

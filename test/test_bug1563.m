@@ -42,7 +42,7 @@ grid.zgrid = 'auto';
 
 % compute filter
 cfg                 = [];
-cfg.vol             = vol;
+cfg.headmodel       = vol;
 cfg.grid            = grid;
 cfg.method          = 'lcmv';
 cfg.lcmv.keepfilter = 'yes';

@@ -21,50 +21,50 @@ rundata = {};
 for run=1 % the original uses 1:6, but that takes too long and too much storage
   trialdef = fullfile(datadir, sprintf('Sub%02d', subj), 'MEEG', 'Trials', sprintf('run_%02d_trldef.txt', run));
   dataset  = fullfile(datadir, sprintf('Sub%02d', subj), 'MEEG', sprintf('run_%02d_sss.fif', run));
-  
+
   [begsample, endsample, offset, trialtype] = textread(trialdef, '%d%d%d%s');
-  
+
   trialcode = nan(size(trialtype));
   trialcode(strcmp(trialtype, 'Famous'))      = 1;
   trialcode(strcmp(trialtype, 'Unfamiliar'))  = 2;
   trialcode(strcmp(trialtype, 'Scrambled'))   = 3;
-  
+
   % construct the trial definition matrix, usually done with FT_DEFINETRIAL
   trl = [begsample(:) endsample(:) offset(:) trialcode(:)];
-  
+
   cfg         = [];
   cfg.dataset = dataset;
   cfg.trl     = trl;
-  
+
   % MEG specific settings
   cfg.channel = 'MEG';
   cfg.demean  = 'yes';
   data_meg = ft_preprocessing(cfg);
-  
+
   % EEG specific settings
   cfg.channel    = 'EEG';
   cfg.demean     = 'yes';
   cfg.reref      = 'yes';
   cfg.refchannel = 'all'; % average reference
   data_eeg = ft_preprocessing(cfg);
-  
+
   % settings for all other channels
   cfg.channel = {'all', '-MEG', '-EEG'};
   cfg.demean  = 'no';
   cfg.reref   = 'no';
   data_other = ft_preprocessing(cfg);
-  
+
   cfg = [];
   cfg.resamplefs = 300;
   data_meg   = ft_resampledata(cfg, data_meg);
   data_eeg   = ft_resampledata(cfg, data_eeg);
   data_other = ft_resampledata(cfg, data_other);
-  
+
   %% append the different channel sets into a single structure
-  
+
   rundata{run} = ft_appenddata(cfg, data_meg, data_eeg, data_other);
   clear data_meg data_eeg data_other
-  
+
 end % for each run
 
 
@@ -449,7 +449,7 @@ cfg = [];
 cfg.grid.resolution = 7;
 % cfg.inwardshift = -7; % allow dipoles 10mm outside the brain, this improves interpolation at the edges
 cfg.grid.unit = 'mm';
-cfg.vol  = vol;  % from FT
+cfg.headmodel = vol;  % from FT
 cfg.grad = sens; % from FT
 cfg.senstype = 'meg';
 cfg.normalize = 'yes';
@@ -461,7 +461,7 @@ grid = ft_prepare_leadfield(cfg, wavelet);
 %% perform whole-brain source reconstruction
 
 cfg = [];
-cfg.vol       = vol;  % from FT
+cfg.headmodel = vol;  % from FT
 cfg.grad      = sens; % from FT
 cfg.senstype  = 'meg';
 cfg.grid      = grid;
@@ -572,7 +572,7 @@ cfg = [];
 cfg.grid.pos = pos;
 cfg.grid.unit = 'mm';
 % cfg.grid = grid;
-cfg.vol  = vol;
+cfg.headmodel = vol;
 cfg.grad = sens;
 cfg.senstype = 'meg';
 cfg.method = 'lcmv';
@@ -682,7 +682,7 @@ ft_sourceplot(cfg, mri_realigned);
 %%
 
 cfg             = [];
-cfg.vol         = vol;
+cfg.headmodel   = vol;
 cfg.grad        = sens;
 cfg.senstype    = 'meg';
 cfg.method      = 'lcmv';
@@ -809,7 +809,7 @@ cfg = [];
 cfg.grid.resolution = 7;
 % cfg.inwardshift = -7; % allow dipoles 10mm outside the brain, this improves interpolation at the edges
 cfg.grid.unit = 'mm';
-cfg.vol       = vol;  % from FT
+cfg.headmodel = vol;  % from FT
 cfg.grad      = sens; % from FT
 cfg.senstype  = 'meg';
 cfg.normalize = 'yes';
@@ -821,7 +821,7 @@ grid = ft_prepare_leadfield(cfg, freq);
 %%
 
 cfg           = [];
-cfg.vol       = vol;  % from FT
+cfg.headmodel = vol;  % from FT
 cfg.grad      = sens; % from FT
 cfg.senstype  = 'meg';
 cfg.grid      = grid;
@@ -922,4 +922,3 @@ prefix = sprintf('/tmp/Sub%02d', subj);
 cfg           = [];
 cfg.filename  = [prefix '_source_difint.html'];
 ft_analysispipeline(cfg, source_difint);
-

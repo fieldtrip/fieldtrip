@@ -57,7 +57,7 @@ vol = ft_prepare_headmodel(cfg, segmentedmri);
 %% Prepare leadfield
 cfg                 = [];
 cfg.grad            = freqPre.grad;
-cfg.vol             = vol;
+cfg.headmodel       = vol;
 cfg.reducerank      = 2;
 cfg.channel         = {'MEG','-MLP31', '-MLO12'};
 cfg.grid.resolution = 1;   % use a 3-D grid with a 1 cm resolution
@@ -70,7 +70,7 @@ cfg.frequency    = 18;
 cfg.method       = 'dics';
 cfg.projectnoise = 'yes';
 cfg.grid         = grid;
-cfg.vol          = vol;
+cfg.headmodel    = vol;
 cfg.lambda       = 0;
 
 sourcePre  = ft_sourceanalysis(cfg, freqPre );

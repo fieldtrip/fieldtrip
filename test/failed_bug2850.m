@@ -13,7 +13,7 @@ vol.o = [0 0 4];
 vol.unit = 'cm';
 
 cfg = [];
-cfg.vol = vol;
+cfg.headmodel = vol;
 cfg.grad = avgFIC.grad;
 cfg.grid.resolution = 1;
 cfg.grid.unit = 'cm';
@@ -24,13 +24,13 @@ grid = ft_prepare_sourcemodel(cfg);
 grid.pos = grid.pos + 0.01*randn(size(grid.pos));
 
 cfg = [];
-cfg.vol = vol;
+cfg.headmodel = vol;
 cfg.grid = grid;
 cfg.channel = 'MEG';
 grid = ft_prepare_leadfield(cfg, avgFIC);
 
 cfg = [];
-cfg.vol = vol;
+cfg.headmodel = vol;
 cfg.grid = grid;
 cfg.method = 'eloreta';
 cfg.eloreta.keepleadfield = 'yes';

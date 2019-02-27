@@ -34,7 +34,7 @@ vol = ft_prepare_singleshell(cfg, segmentedmri);
 
 cfg                 = [];
 cfg.grad            = freqFIC.grad;
-cfg.vol             = vol;
+cfg.headmodel       = vol;
 cfg.reducerank      = 2;
 cfg.normalize       = 'yes';
 cfg.channel         = {'MEG','-MLP31', '-MLO12'};

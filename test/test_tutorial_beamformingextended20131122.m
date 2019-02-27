@@ -90,7 +90,7 @@ freq_exp.cumsumcnt = freq_cmb.cumsumcnt(cfg.trials);
 
 cfg             = [];
 cfg.grid        = sourcemodel;
-cfg.vol         = hdm;
+cfg.headmodel   = hdm;
 cfg.channel     = {'MEG'};
 cfg.grad        = freq_cmb.grad;
 sourcemodel_lf  = ft_prepare_leadfield(cfg, freq_cmb);
@@ -101,7 +101,7 @@ cfg.grad              = freq_cmb.grad;
 cfg.method            = 'dics';
 cfg.keeptrials        = 'yes';
 cfg.grid              = sourcemodel_lf;
-cfg.vol               = hdm;
+cfg.headmodel         = hdm;
 cfg.keeptrials        = 'yes';
 cfg.dics.lambda       = '5%';
 cfg.dics.keepfilter   = 'yes';
@@ -159,7 +159,7 @@ cfg                 = [];
 cfg.method          = 'dics';
 cfg.refchan         = 'EMGlft';
 cfg.frequency       = 20;
-cfg.vol             = hdm;
+cfg.headmodel       = hdm;
 cfg.grid            = sourcemodel;
 source_coh_lft      = ft_sourceanalysis(cfg, freq_csd);
 

@@ -65,8 +65,8 @@ cfg = [];
 cfg.method = 'mne';
 cfg.rawtrial = 'yes';
 cfg.frequency = 18;
-cfg.grid   = mesh;
-cfg.vol    = vol;
+cfg.grid = mesh;
+cfg.headmodel = vol;
 cfg.lambda = 0.001;
 source_freq_mne = ft_sourceanalysis(cfg, freq);
 
@@ -75,8 +75,8 @@ source_freq_mne = ft_sourceanalysis(cfg, freq);
 cfg = [];
 cfg.method = 'rv';
 cfg.frequency = 18;
-cfg.grid   = mesh;
-cfg.vol    = vol;
+cfg.grid = mesh;
+cfg.headmodel = vol;
 cfg.lambda = 0.001;
 source_freq_rv = ft_sourceanalysis(cfg, freq);
 

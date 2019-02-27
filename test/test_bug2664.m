@@ -25,7 +25,7 @@ cfg.method = 'mne';
 % field 'topo'." )
 cfg.elec = [];
 cfg.grid = [];
-cfg.vol = [];
+cfg.headmodel = [];
 cfg.hdmfile = [];
 
 cfg.rawtrial = 'yes';

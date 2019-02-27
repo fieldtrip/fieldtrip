@@ -37,7 +37,7 @@ cf_data = ft_checkdata(cf_data,'cmbrepresentation','sparsewithpow'); % restore p
 cfg                             = [];
 cfg.method                      = 'dics';
 cfg.grid                        = sourceModelGrid;
-cfg.vol                         = sourceModelVol;
+cfg.headmodel                   = sourceModelVol;
 cfg.frequency                   = foi;
 cfg.keeptrials                  = 'yes';
 cfg.(cfg.method).keepfilter     = 'yes';
@@ -54,7 +54,7 @@ cfg.method                      = 'pcc';
 
 cfg.grid                        = sourceModelGrid;
 cfg.grid.filter                 = sf_data.avg.filter;
-cfg.vol                         = sourceModelVol;
+cfg.headmodel                   = sourceModelVol;
 cfg.frequency                   = foi;
 
 cfg.keeptrials                  = 'yes';

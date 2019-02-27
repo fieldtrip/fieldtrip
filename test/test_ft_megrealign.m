@@ -41,7 +41,7 @@ for k = 1:numel(datainfo)
   cfg.template{2} = data2.grad;
   cfg.template{3} = data3.grad;
   cfg.inwardshift = 1;
-  cfg.vol         = vol;
+  cfg.headmodel   = vol;
   
   interp = ft_megrealign(cfg, data);
   interp2 = ft_megrealign(cfg, data2);

@@ -109,7 +109,7 @@ end
 %%%%%%%%%
 
 cfg = [];
-cfg.vol = vol;
+cfg.headmodel = vol;
 cfg.grid.resolution = 10;
 cfg.elec = elec_aligned2;
 cfg.grid.unit = 'mm';

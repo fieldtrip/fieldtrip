@@ -546,30 +546,30 @@ megvol_localspheres = ft_prepare_headmodel(cfg, bndpnt);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Without normalization
 cfg = [];
-cfg.vol  = eegvol_singlesphere;
+cfg.headmodel = eegvol_singlesphere;
 cfg.elec = elec;
 cfg.grid.pos = pos;
 grid = ft_prepare_leadfield(cfg);
 cfg = [];
-cfg.vol  = eegvol_bem_openmeeg;
+cfg.headmodel = eegvol_bem_openmeeg;
 cfg.elec = elec;
 cfg.grid.pos = pos;
 grid = ft_prepare_leadfield(cfg);
 cfg = [];
-cfg.vol  = eegvol_bem_dipoli;
+cfg.headmodel = eegvol_bem_dipoli;
 cfg.elec = elec;
 cfg.grid.pos = pos;
 grid = ft_prepare_leadfield(cfg);
 
 % With normalization
 cfg = [];
-cfg.vol  = eegvol_singlesphere;
+cfg.headmodel = eegvol_singlesphere;
 cfg.elec = elec;
 cfg.grid.pos = pos;
 cfg.normalize = 'yes';
 grid = ft_prepare_leadfield(cfg);
 cfg = [];
-cfg.vol  = eegvol_bem_openmeeg;
+cfg.headmodel = eegvol_bem_openmeeg;
 cfg.elec = elec;
 cfg.grid.pos = pos;
 cfg.normalize = 'yes';
@@ -582,20 +582,20 @@ if (abs(norm(lf,'fro')-1)>eps)
 end
 
 cfg = [];
-cfg.vol  = eegvol_bem_dipoli;
+cfg.headmodel = eegvol_bem_dipoli;
 cfg.elec = elec;
 cfg.grid.pos = pos;
 cfg.normalize = 'yes';
 grid = ft_prepare_leadfield(cfg);
 % With a different normalization
 cfg = [];
-cfg.vol  = eegvol_singlesphere;
+cfg.headmodel = eegvol_singlesphere;
 cfg.elec = elec;
 cfg.grid.pos = pos;
 cfg.normalize = 'column';
 grid = ft_prepare_leadfield(cfg);
 cfg = [];
-cfg.vol  = eegvol_bem_openmeeg;
+cfg.headmodel = eegvol_bem_openmeeg;
 cfg.elec = elec;
 cfg.grid.pos = pos;
 cfg.normalize = 'column';
@@ -608,7 +608,7 @@ if (norm(lf(:,1),'fro')-1>eps)
 end
 
 cfg = [];
-cfg.vol  = eegvol_bem_dipoli;
+cfg.headmodel = eegvol_bem_dipoli;
 cfg.elec = elec;
 cfg.grid.pos = pos;
 cfg.normalize = 'column';
@@ -619,25 +619,25 @@ grid = ft_prepare_leadfield(cfg);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Without normalization
 cfg = [];
-cfg.vol  = eegvol_singlesphere;
+cfg.headmodel = eegvol_singlesphere;
 cfg.grad = grad;
 cfg.grid.pos = pos;
 grid = ft_prepare_leadfield(cfg);
 cfg = [];
-cfg.vol  = megvol_localspheres;
+cfg.headmodel = megvol_localspheres;
 cfg.grad = grad;
 cfg.grid.pos = pos;
 grid = ft_prepare_leadfield(cfg);
 
 % With normalization
 cfg = [];
-cfg.vol  = eegvol_singlesphere;
+cfg.headmodel = eegvol_singlesphere;
 cfg.grad = grad;
 cfg.grid.pos = pos;
 cfg.normalize = 'yes';
 grid = ft_prepare_leadfield(cfg);
 cfg = [];
-cfg.vol  = megvol_localspheres;
+cfg.headmodel = megvol_localspheres;
 cfg.grad = grad;
 cfg.grid.pos = pos;
 cfg.normalize = 'yes';
@@ -645,13 +645,13 @@ grid = ft_prepare_leadfield(cfg);
 
 % With a different normalization
 cfg = [];
-cfg.vol  = eegvol_singlesphere;
+cfg.headmodel = eegvol_singlesphere;
 cfg.grad = grad;
 cfg.grid.pos = pos;
 cfg.normalize = 'column';
 grid = ft_prepare_leadfield(cfg);
 cfg = [];
-cfg.vol  = megvol_localspheres;
+cfg.headmodel = megvol_localspheres;
 cfg.grad = grad;
 cfg.grid.pos = pos;
 cfg.normalize = 'column';

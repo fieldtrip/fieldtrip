@@ -86,7 +86,7 @@ for ii = 1:length(cfg.grid.leadfield)
     cfg.grid.leadfield{ii} = lf(:,(1:3) + (ii - 1) * 3);
 end
 cfg.mne.snr = 1;
-cfg.vol = vol;
+cfg.headmodel = vol;
 cfg.grad = sens;
 source = ft_sourceanalysis(cfg, data);
 

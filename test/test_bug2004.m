@@ -32,7 +32,7 @@ load(filename);
 % recompute source level pcc data
 cfg                             = [];
 cfg.frequency                   = fdata.freq;
-cfg.vol                         = sourceVol;
+cfg.headmodel                   = sourceVol;
 cfg.grid                        = leadfieldModel;
 cfg.grid.filter                 = spatialFilters.avg.filter;
 cfg.keeptrials                  = 'no';

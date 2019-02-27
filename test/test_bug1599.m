@@ -38,7 +38,7 @@ grid.zgrid = 'auto';
 
 % compute filter
 cfg                 = [];
-cfg.vol             = vol;
+cfg.headmodel       = vol;
 cfg.grid            = grid;
 cfg.method          = 'lcmv';
 cfg.lcmv.keepfilter = 'yes';
@@ -46,7 +46,7 @@ cfg.lcmv.fixedori   ='no';
 filter              = ft_sourceanalysis(cfg, timelock); 
 
 cfg               = [];
-cfg.vol           = vol;
+cfg.headmodel     = vol;
 cfg.grid          = grid;
 cfg.method        = 'lcmv';
 % cfg.rawtrial      = 'yes';

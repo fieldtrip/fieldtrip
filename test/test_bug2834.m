@@ -29,7 +29,7 @@ cfg.channelcmb = [tmp(tril(ones(149),-1)>0) tmp2(tril(ones(149),-1)>0)];
 freq3 = ft_selectdata(cfg, freq);
 
 cfg = [];
-cfg.vol = vol;
+cfg.headmodel = vol;
 cfg.grid.resolution = 1;
 cfg.method = 'dics';
 cfg.frequency = 14;
