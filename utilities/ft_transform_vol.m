@@ -1,4 +1,4 @@
-function varargout = ft_transform_headshape(varargin)
+function varargout = ft_transform_vol(varargin)
 
 % This function is a backward compatibility wrapper for existing MATLAB scripts
 % that call a function that is not part of the FieldTrip toolbox any more.
