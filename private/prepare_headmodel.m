@@ -4,13 +4,13 @@ function [headmodel, sens, cfg] = prepare_headmodel(cfg, data)
 % SUBFUNCTION that helps to prepare the electrodes/gradiometers and the
 % volume conduction model. This is used in sourceanalysis and dipolefitting.
 %
-% This function will get the gradiometer/electrode definition using
-% FT_FETCH_SENS and the volume conductor definition using FT_FETCH_HEADMODEL
+% This function will get the gradiometer/electrode definition and the volume
+% conductor definition.
 %
 % Subsequently it will remove the gradiometers/electrodes that are not
 % present in the data. Finally it with attach the gradiometers to a
 % multi-sphere head model (if supplied) or attach the electrodes to
-% a BEM head model.
+% the skin surface of a BEM head model.
 %
 % This function will return the electrodes/gradiometers in an order that is
 % consistent with the order in cfg.channel, or in case that is empty in the
@@ -62,7 +62,12 @@ if hasdata
 end
 
 % get the volume conduction model
-headmodel = ft_fetch_headmodel(cfg);
+if ischar(cfg.headmodel)
+  headmodel = ft_read_headmodel(cfg.headmodel);
+else
+  % ensure that the volume conduction model is up-to-date
+  headmodel = ft_datatype_headmodel(cfg.headmodel);
+end
 
 % get the gradiometer or electrode definition, these can be in the cfg or in the data
 if hasdata

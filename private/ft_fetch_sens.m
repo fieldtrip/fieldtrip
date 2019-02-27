@@ -24,8 +24,7 @@ function [sens] = ft_fetch_sens(cfg, data)
 % When the sensors are not specified in the configuration, this function will
 % fetch the grad, elec or opto field from the data.
 %
-% See also FT_READ_SENS, FT_DATATYPE_SENS, FT_FETCH_HEADMODEL, FT_FETCH_DATA,
-% FT_PREPARE_LAYOUT
+% See also FT_READ_SENS, FT_DATATYPE_SENS, FT_FETCH_DATA, FT_PREPARE_LAYOUT
 
 % Copyright (C) 2011-2016, Jorn M. Horschig
 %
@@ -83,7 +82,7 @@ isdatasens  = isfield(data, 'pnt') || isfield(data, 'chanpos');
 
 if isempty(cfg.senstype) && ((hasgradfile || hascfggrad || hasdatagrad) + (haselecfile || hascfgelec || hasdataelec) + (hasoptofile || hascfgopto || hasdataopto))>1
   ft_error('Cannot determine which sensors you want to work on. Specify cfg.senstype as ''meg'', ''eeg'' or ''nirs''');
-  
+
 elseif ~isempty(cfg.senstype)
   if iscell(cfg.senstype)
     % this represents combined EEG and MEG sensors, where each modality has its own sensor definition
@@ -95,7 +94,7 @@ elseif ~isempty(cfg.senstype)
       sens{i} = ft_fetch_sens(tmpcfg, data);
     end
     return
-    
+
   else
     switch lower(cfg.senstype)
       case 'meg'
@@ -144,7 +143,7 @@ elseif hascfggrad
 elseif hasdatagrad
   display('using gradiometers specified in the data\n');
   sens = data.grad;
-  
+
 elseif haselecfile
   display('reading electrodes from file ''%s''\n', cfg.elec);
   sens = ft_read_sens(cfg.elec, 'senstype', 'eeg');
@@ -160,7 +159,7 @@ elseif hasdataelec
   sens = data.elec;
   % only keep positions and labels in case of EEG electrodes
   sens = keepfields(sens, {'elecpos', 'chanpos', 'unit', 'coordsys', 'label','tra'});
-  
+
 elseif hasoptofile
   display('reading optodes from file ''%s''\n', cfg.opto);
   sens = ft_read_sens(cfg.opto, 'senstype', 'nirs');
@@ -176,29 +175,29 @@ elseif hasdataopto
   sens = data.opto;
   % only keep known fields in case of NIRS optodes
   sens = keepfields(sens, {'optopos', 'optotype', 'chanpos', 'unit', 'coordsys', 'label', 'transceiver', 'wavelength', 'transmits', 'laserstrength'});
-  
+
 elseif haslayout
   display('Using the 2-D layout to determine the sensor position\n');
   lay = ft_prepare_layout(cfg);
-  
+
   % remove the COMNT and SCALE labels
   sel = ~ismember(lay.label, {'COMNT' 'SCALE'});
-  
+
   sens = [];
   sens.label = lay.label(sel);
   sens.chanpos = lay.pos(sel,:);
   sens.chanpos(:,3) = 0;
-  
+
 elseif iscfgsens
   % could be a sensor description
   display('The configuration input might already be a sensor description.\n');
   sens = cfg;
-  
+
 elseif isdatasens
   % could be a sensor description
   display('The data input might already be a sensor description.\n');
   sens = data;
-  
+
 else
   ft_error('no electrodes, gradiometers or optodes specified.');
 end
