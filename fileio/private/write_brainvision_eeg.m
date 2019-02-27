@@ -5,7 +5,7 @@ function write_brainvision_eeg(filename, hdr, dat, event)
 % multiplexed and stored in ieee-le float32 format.
 %
 % Use as
-%   write_brainvision_eeg(filename, hdr, dat)
+%   write_brainvision_eeg(filename, hdr, dat, evt)
 %
 % See also READ_BRAINVISION_EEG, READ_BRAINVISION_VHDR, READ_BRAINVISION_VMRK
 
@@ -121,14 +121,14 @@ fprintf(fid, '; Commas in type or description text are coded as "\1".\n');
 for i=1:length(event)
   type  = event(i).type;          % type is always a string
   descr = event(i).value;         % value can be empty, string or numeric
-  if isempty(descr),
+  if isempty(descr)
     descr = '';
   elseif isnumeric(descr)
     descr = num2str(descr);
   end
   pos = num2str(event(i).sample); % sample is always numeric, hence convert to string
   siz = event(i).duration;        % duration can be empty or numeric
-  if isempty(siz),
+  if isempty(siz)
     siz = '1';
   else
     siz = num2str(siz);

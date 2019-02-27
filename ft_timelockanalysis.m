@@ -226,11 +226,6 @@ end
 % collect the results
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-
-
-
-
 timelock = keepfields(data, {'time' 'grad', 'elec', 'opto', 'topo', 'topodimord', 'topolabel', 'unmixing', 'unmixingdimord', 'label'});
 if ~keeptrials
   timelock.avg        = avg;

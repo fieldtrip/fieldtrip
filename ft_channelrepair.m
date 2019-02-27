@@ -115,6 +115,14 @@ data = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
 
+if isempty(cfg.badchannel)
+  % check if the first sample of the first trial contains NaNs; if so treat it as a bad channel
+  cfg.badchannel = ft_channelselection(find(isnan(data.trial{1}(:,1))), data.label);
+  if ~isempty(cfg.badchannel)
+    ft_info('detected channel %s as bad\n', cfg.badchannel{:});
+  end
+end
+
 if strcmp(cfg.method, 'nan')
   % this does not require the spatial information of the channels
   sens = [];
@@ -144,6 +152,10 @@ end
 if ismeg && ~any(strcmp(ft_senstype(sens), {'ctf151', 'ctf275', 'bti148', 'bti248', 'babysquid74'}))
   % MEG systems with only magnetometers or axial gradiometers are easy, planar systems are not
   ft_warning('be careful when using "%s" - mixing of sensor types (e.g. magnetometers and gradiometers) can lead to wrong data. Check your neighbour-structure thoroughly', ft_senstype(sens));
+end
+
+if ~isempty(cfg.missingchannel) && strcmp(cfg.method, 'weighted')
+  ft_warning('Reconstructing missing channels using the weighted neighbour approach is not recommended!');
 end
 
 % get selection of channels that are missing and/or bad

@@ -45,6 +45,7 @@ function [lf] = ft_compute_leadfield(dippos, sens, headmodel, varargin)
 % electrodes.
 %
 % The supported forward solutions for MEG are
+%   infinite homogenous medium
 %   single sphere (Cuffin and Cohen, 1977)
 %   multiple spheres with one sphere per channel (Huang et al, 1999)
 %   realistic single shell using superposition of basis functions (Nolte, 2003)
@@ -52,6 +53,8 @@ function [lf] = ft_compute_leadfield(dippos, sens, headmodel, varargin)
 %   boundary element method (BEM)
 %
 % The supported forward solutions for EEG are
+%   infinite homogenous medium
+%   infinite halfspace homogenous medium
 %   single sphere
 %   multiple concentric spheres (up to 4 spheres)
 %   leadfield interpolation using a precomputed grid
@@ -428,6 +431,26 @@ elseif iseeg
         % be applied
         lf = ft_getopt(varargin, 'lf');
 
+    case {'infinite_currentdipole' 'infinite'}
+      lf = eeg_infinite_dipole(dippos, sens.elecpos, headmodel);
+      
+    case 'halfspace'
+      lf = eeg_halfspace_dipole(dippos, sens.elecpos, headmodel);
+      
+    case 'infinite_monopole'
+      lf = eeg_infinite_monopole(dippos, sens.elecpos, headmodel);
+      
+    case 'halfspace_monopole'
+      lf = eeg_halfspace_monopole(dippos, sens.elecpos, headmodel);
+      
+    case 'slab_monopole'
+      lf = eeg_slab_monopole(dippos, sens.elecpos, headmodel);
+      
+    case 'simbio'
+      ft_hastoolbox('simbio', 1);
+      % note that the electrode information is contained in the headmodel (thanks to ft_prepare_vol_sens)
+      lf = leadfield_simbio(dippos, headmodel);
+      
     case 'metufem'
       p3 = zeros(Ndipoles * 3, 6);
       for i = 1:Ndipoles
@@ -444,27 +467,6 @@ elseif iseeg
         p3((3*i - 2) : (3 * i), 4:6) = [1 0 0; 0 1 0; 0 0 1];
       end
       [lf, session] = bem_solve_lfm_eeg(session, p3);
-      
-    case {'infinite_currentdipole' 'infinite'}
-      % FIXME the conductivity of the medium is not known
-      lf = inf_medium_leadfield(dippos, sens.elecpos, 1);
-      
-    case 'halfspace'
-      lf = eeg_halfspace_medium_leadfield(dippos, sens.elecpos, headmodel);
-      
-    case 'infinite_monopole'
-      lf = eeg_infinite_monopole(dippos, sens.elecpos, headmodel);
-      
-    case 'halfspace_monopole'
-      lf = eeg_halfspace_monopole(dippos, sens.elecpos, headmodel);
-      
-    case 'slab_monopole'
-      lf = eeg_slab_monopole(dippos, sens.elecpos, headmodel);
-      
-    case 'simbio'
-      ft_hastoolbox('simbio', 1);
-      % note that the electrode information is contained in the headmodel (thanks to ft_prepare_vol_sens)
-      lf = leadfield_simbio(dippos, headmodel);
       
     case 'fns'
       % note that the electrode information is contained in the headmodel

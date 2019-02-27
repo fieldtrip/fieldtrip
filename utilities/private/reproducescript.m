@@ -36,9 +36,9 @@ ft_info('writing script to file ''%s''\n', filename);
 
 fid = fopen(filename, 'a+');
 
-fprintf(fid, "%%%%\n\n");
-fprintf(fid, "cfg = [];\n");
-fprintf(fid, "%s\n", tmpcfg);
+fprintf(fid, '%%%%\n\n');
+fprintf(fid, 'cfg = [];\n');
+fprintf(fid, '%s\n', tmpcfg);
 
 st = dbstack(2);
 

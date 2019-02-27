@@ -1,11 +1,10 @@
-% FT_POSTAMBLE_SAVEVAR is a helper script that optionally saves the output
-% FieldTrip data structures to a *.mat file on disk. This is useful for
+% FT_POSTAMBLE_SAVEFIG is a helper script that optionally saves the output
+% MATLAB figure to a *.fig and to a *.png file on disk. This is useful for
 % batching and for distributed processing. This makes use of the
 % cfg.outputfile variable.
 %
 % Use as
-%   ft_postamble savevar data
-%   ft_postamble savevar source mri
+%   ft_postamble savefig
 %
 % See also FT_PREAMBLE, FT_POSTAMBLE, FT_POSTAMBLE_SAVEVAR
 
@@ -41,7 +40,7 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
     iW1aenge_now = datestr(now, 30);
     cfg.outputfile = fullfile(Fief7bee_reproducescript, sprintf('%s_output', iW1aenge_now));
     % write a snippet of MATLAB code with the configuration and function call
-    reproducescript(fullfile(Fief7bee_reproducescript, 'script.m'), cfg)
+    reproducescript(fullfile(Fief7bee_reproducescript, 'script.m'), cfg, false)
   else
     cfg.outputfile = [];
   end
