@@ -335,7 +335,7 @@ if numel(contour)>1 && any(contour)
     cfg.connectivity    = triangle2connectivity(tri);
     neighcmb            = full(ft_getopt(cfg, 'connectivity', false));
     
-    posclusobs = findcluster(contour,neighcmb,0);%minnbchan=0
+    posclusobs = findcluster(contour,neighcmb,0); %minnbchan=0
     
     for cl = 1:max(posclusobs)
         idxcl = find(posclusobs==cl);

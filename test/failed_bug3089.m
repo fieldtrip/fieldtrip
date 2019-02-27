@@ -299,7 +299,7 @@ dipoles_all = {dipole_mag, dipole_grad, dipole_eeg, dipole_mag_grad};
 
 close all
 colours = {'r', 'g', 'b', 'k', 'm', 'c'};
-ft_plot_axes(headmodel_meg);%, 'edgecolor', 'none', 'facealpha', 0.5);
+ft_plot_axes(headmodel_meg); %, 'edgecolor', 'none', 'facealpha', 0.5);
 hold on
 for i = 1:length(dipoles_all)
   ft_plot_dipole(dipoles_all{i}.dip.pos, reshape(dipoles_all{i}.dip.mom, [3 2]), 'unit', 'm', 'color', colours{i})

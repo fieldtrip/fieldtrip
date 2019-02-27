@@ -1103,14 +1103,14 @@ end % if freq or timelock or comp data
 % clean up and collect the results
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-source = copyfields(grid, source, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label'});%, 'filter'});
+source = copyfields(grid, source, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label'}); %, 'filter'});
 
 if exist('dip', 'var')
   % the fields in the dip structure might be more recent than those in the grid structure
-  source = copyfields(dip, source, {'pos', 'inside', 'leadfield', 'leadfielddimord', 'label'});%, 'filter'});
+  source = copyfields(dip, source, {'pos', 'inside', 'leadfield', 'leadfielddimord', 'label'}); %, 'filter'});
   
   % prevent duplication of these fields when copying the content of dip into source.avg or source.trial
-  dip    = removefields(dip,       {'pos', 'inside', 'leadfield', 'leadfielddimord', 'label'});%, 'filter'});
+  dip    = removefields(dip,       {'pos', 'inside', 'leadfield', 'leadfielddimord', 'label'}); %, 'filter'});
   
   if istrue(cfg.(cfg.method).keepfilter) && isfield(dip(1), 'filter')
     for k = 1:numel(dip)

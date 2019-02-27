@@ -177,7 +177,7 @@ for iter=1:min(opts.maxIter,2e6);  % stop some matlab versions complaining about
          grid on;
       end
    end;
-   ostep=inf;step=tstep;%max(tstep,abs(1e-6/dtdJ)); % prev step size is first guess!
+   ostep=inf;step=tstep; %max(tstep,abs(1e-6/dtdJ)); % prev step size is first guess!
    odtdJ=dtdJ; % one step before is same as current
    wK0 = wK;
    dK  = (d(1:end-1)'*K+d(1:end-1)'.*ridge')./muEig; % N.B. v'*M is 50% faster than M*v'!!!
@@ -186,7 +186,7 @@ for iter=1:min(opts.maxIter,2e6);  % stop some matlab versions complaining about
    % wb = wb + step*d;
    % Kd(1:end-1) = (d(1:end-1)'*K+d(1:end-1)'.*ridge')./muEig; % N.B. v'*M is 50% faster than M*v'!!!
    % Kd(end)     = bPC*d(end);
-   %Kd = [;bPC*d(end)];%cache, so don't comp dJ
+   %Kd = [;bPC*d(end)]; %cache, so don't comp dJ
    dtdJ0=abs(dtdJ); % initial gradient, for Wolfe 2 convergence test
    for j=1:opts.maxLineSrch;
       neval=neval+1;
@@ -274,7 +274,7 @@ for iter=1:min(opts.maxIter,2e6);  % stop some matlab versions complaining about
    if ( iter==1 )     madJ=abs(oJ-J); dJ0=max(abs(madJ),eps); r02=r2;
    elseif( iter<5 )   dJ0=max(dJ0,abs(oJ-J)); r02=max(r02,r2); % conv if smaller than best single step
    end
-   madJ=madJ*(1-opts.marate)+abs(oJ-J)*(opts.marate);%move-ave objective grad est
+   madJ=madJ*(1-opts.marate)+abs(oJ-J)*(opts.marate); %move-ave objective grad est
    if ( r2<=opts.tol || ... % small gradient + numerical precision
         r2< r02*opts.tol0 || ... % Wolfe condn 2, gradient enough smaller
         neval > opts.maxEval || ... % abs(odtdJ-dtdJ) < eps || ... % numerical resolution

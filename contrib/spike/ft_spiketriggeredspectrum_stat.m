@@ -437,7 +437,7 @@ P = exp(-Z).*...
 function [resLen] = resultantlength(angles)
 
 n = sum(~isnan(angles),1);
-resLen = abs(nansum(angles,1))./n;%calculate the circular variance
+resLen = abs(nansum(angles,1))./n; %calculate the circular variance
 
 function [y] = ppc(crss)
 

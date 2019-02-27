@@ -507,8 +507,8 @@ fclose(fid);
 %end read config file
 
 header.header_data.FileDescriptor = 0; %no obvious field to take this from
-header.header_data.Events         = 1;%no obvious field to take this from
-header.header_data.EventCodes     = 0;%no obvious field to take this from
+header.header_data.Events         = 1; %no obvious field to take this from
+header.header_data.EventCodes     = 0; %no obvious field to take this from
 
 if isfield(header, 'channel_data'),
   header.ChannelGain        = double([header.config.channel_data([header.channel_data.chan_no]).gain]');

@@ -118,7 +118,7 @@ if ~ismember('verbose', {s.identifier})
   switch level
     case 'warning'
       defaultverbose = true;
-      t = warning('query', 'verbose');% get the default state
+      t = warning('query', 'verbose'); % get the default state
       s = setstate(s, 'verbose', t.state);
     otherwise
       s = setstate(s, 'verbose', 'off');

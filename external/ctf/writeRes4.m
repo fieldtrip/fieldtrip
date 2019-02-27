@@ -42,7 +42,7 @@ fwrite(fid_res4,[0 0],'uint8');                    % 2 bytes
 fwrite(fid_res4,[0 0],'uint8');                    % 2 bytes padding
 fwrite(fid_res4,[res4.trigger_mode 0],'int16');    % 2*2
 fwrite(fid_res4,res4.accept_reject_Flag,'int32');  % 4 CTFBoolean
-fwrite(fid_res4,[res4.run_time_display 0],'int16');% 2*2
+fwrite(fid_res4,[res4.run_time_display 0],'int16'); % 2*2
 
 fwrite(fid_res4,res4.zero_Head_Flag,'int32');      % 4 CTFBoolean
 fwrite(fid_res4,res4.artifact_mode,'int32');       % 4 CTFBoolean

@@ -68,7 +68,7 @@ if isnumeric(cfg.patchsvd) && ~isfield(grid, 'patchindx'),
     else
       n(dipindx) = cfg.patchsvdnum;
     end
-    lfall{i} = U(:,1:n(dipindx));%*S(1:n(dipindx),1:n(dipindx)); %klopt dit?
+    lfall{i} = U(:,1:n(dipindx)); %*S(1:n(dipindx),1:n(dipindx)); %klopt dit?
     nghbr{i} = sel;
     coeff{i} = V(1:n(dipindx), :);
   end
@@ -99,7 +99,7 @@ elseif isnumeric(cfg.patchsvd) && isfield(grid, 'patchindx'),
     else
       n(dipindx) = min(cfg.patchsvdnum, size(lfr,2));
     end
-    lfall{i} = U(:,1:n(dipindx));%*S(1:n(dipindx),1:n(dipindx)); %klopt dit?
+    lfall{i} = U(:,1:n(dipindx)); %*S(1:n(dipindx),1:n(dipindx)); %klopt dit?
     nghbr{i} = sel;
     coeff{i} = V(1:n(dipindx), :);
     sv{i}    = s;
@@ -117,7 +117,7 @@ elseif strcmp(cfg.patchsvd, 'all'),
   else
     n = cfg.patchsvdnum;
   end
-  lfall{1} = U(:,1:n);%*S(1:n(dipindx),1:n(dipindx)); %klopt dit?
+  lfall{1} = U(:,1:n); %*S(1:n(dipindx),1:n(dipindx)); %klopt dit?
   nghbr{1} = grid.inside;
   coeff{1} = V(1:n, :);
  

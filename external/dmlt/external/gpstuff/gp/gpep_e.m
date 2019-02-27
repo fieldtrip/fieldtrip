@@ -1291,7 +1291,7 @@ function [e, edata, eprior, tautilde, nutilde, L, La2, b, muvec_i, sigm2vec_i, l
                   % parallel-EP
                   % approximate cavity parameters
                   Ann = sum((P*R').^2,2);
-                  mf = sum(bsxfun(@times,Phi,gamma'),2);%phi'*gamma;
+                  mf = sum(bsxfun(@times,Phi,gamma'),2); %phi'*gamma;
                   tau = 1./Ann-tautilde;
                   nu = 1./Ann.*mf-nutilde;
                   muvec_i=nu./tau;

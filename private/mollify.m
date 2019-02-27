@@ -68,7 +68,7 @@ for k=1:Ninside
   % compute the squared distance from this dipole to each other dipole
   distsq = full(distmat(:,k).^2);
   % gaussianize the kernel
-  kernel = exp(-distsq./(2.*(sigma^2)));%CHECK THIS
+  kernel = exp(-distsq./(2.*(sigma^2))); %CHECK THIS
   % put everything outside the sphereradius to zero, except the point itself
   kernel(find(distsq==0)) = 0;
   kernel(k) = 1; 

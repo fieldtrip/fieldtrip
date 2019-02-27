@@ -97,7 +97,7 @@ if isfield(cfg, 'xparam')
 end
 
 % read or create the layout that will be used for plotting
-lay = ft_prepare_layout(cfg);%, varargin{1});
+lay = ft_prepare_layout(cfg); %, varargin{1});
 cfg.layout = lay;
 ft_plot_lay(lay, 'box', false,'label','no','point','no');
 

@@ -146,7 +146,7 @@ end
 
 jsonp=jsonopt('JSONP','',opt);
 if(~isempty(jsonp))
-    json=sprintf('%s(%s);%s',jsonp,json,nl);
+    json=sprintf('%s(%s); %s',jsonp,json,nl);
 end
 
 % save to a file if FileName is set, suggested by Patrick Rapin

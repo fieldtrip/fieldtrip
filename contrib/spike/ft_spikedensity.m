@@ -284,7 +284,7 @@ for iTrial = 1:nTrials
     end
     
     % pad with nans if there's variable trial length
-    dofsel = ~isnan(y);%true(1,length(y));
+    dofsel = ~isnan(y); %true(1,length(y));
     if strcmp(cfg.vartriallen,'yes')
       padLeft  = zeros(1, samplesShift(iTrial));
       padRight = zeros(1,(maxNumSamples - nSamples - samplesShift(iTrial)));
