@@ -42,8 +42,8 @@ function t = chanhandle(varargin)
 
 % initialize the fields of the object to default values
 t.handle.ChannelNumber             = 0; % hardware channel number (0-191)
-t.handle.Sensitivity               = [];% Sensitivity Gain/Offset
-t.handle.SensorInfo                = [];% type,position,size,etc. of sensor
+t.handle.Sensitivity               = []; % Sensitivity Gain/Offset
+t.handle.SensorInfo                = []; % type,position,size,etc. of sensor
 
 % Define class definition
 t = class(t,'chanhandle');

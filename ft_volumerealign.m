@@ -687,7 +687,7 @@ switch cfg.method
     
     tmpcfg             = [];
     tmpcfg.tissue      = 'scalp';
-    tmpcfg.method      = 'projectmesh';%'isosurface';
+    tmpcfg.method      = 'projectmesh'; %'isosurface';
     tmpcfg.spmversion  = cfg.spmversion;
     tmpcfg.numvertices = 20000;
     scalp              = ft_prepare_mesh(tmpcfg, seg);

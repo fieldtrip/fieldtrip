@@ -59,7 +59,7 @@ datasets(end).nummeg    = nan;
 datasets(end).numeog    = nan;
 datasets(end).numecg    = nan;
 datasets(end).numemg    = nan;
-datasets(end).senstype  = 'ext1020';% type = ft_senstype(data.label)
+datasets(end).senstype  = 'ext1020'; % type = ft_senstype(data.label)
 
 datasets(end+1).origdir = origdir; 
 datasets(end).type      = 'eeg';
@@ -70,7 +70,7 @@ datasets(end).nummeg    = nan;
 datasets(end).numeog    = nan;
 datasets(end).numecg    = nan;
 datasets(end).numemg    = nan;
-datasets(end).senstype  = 'ext1020';% type = ft_senstype(data.label)
+datasets(end).senstype  = 'ext1020'; % type = ft_senstype(data.label)
 
 % meg dataformats
 datasets(end+1).origdir = origdir; 
@@ -104,7 +104,7 @@ datasets(end).nummeg    = 248;
 datasets(end).numeog    = nan;
 datasets(end).numecg    = nan;
 datasets(end).numemg    = nan;
-datasets(end).senstype  = 'bti248grad';% type = ft_senstype(data.label)
+datasets(end).senstype  = 'bti248grad'; % type = ft_senstype(data.label)
 
 datasets(end+1).origdir = origdir; 
 datasets(end).type      = 'meg';

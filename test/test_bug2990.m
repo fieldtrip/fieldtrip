@@ -21,11 +21,11 @@ grid2 = ft_prepare_sourcemodel(cfg);
 
 assert(all(abs(grid1.pos(:)-grid2.pos(:))<0.001));
 
-figure; ft_plot_mesh(cfg.grid.template.pos(cfg.grid.template.inside,:))
+figure; ft_plot_mesh(cfg.sourcemodel.template.pos(cfg.sourcemodel.template.inside,:))
 figure; ft_plot_mesh(grid1.pos(grid1.inside,:))
 figure; ft_plot_mesh(grid2.pos(grid2.inside,:))
 
-% cfg.grid.template.pos(1,:)
+% cfg.sourcemodel.template.pos(1,:)
 % ans =
 %     -8   -11    -7
 %

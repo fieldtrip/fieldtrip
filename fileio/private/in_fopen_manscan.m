@@ -131,7 +131,7 @@ end
 
 %% ===== CREATE BRAINSTORM SFILE STRUCTURE =====
 % Initialize returned file structure
-sFile = [];%db_template('sfile');
+sFile = []; %db_template('sfile');
 % Add information read from header
 sFile.byteorder  = 'l';
 sFile.filename   = DataFile;

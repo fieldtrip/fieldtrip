@@ -50,7 +50,7 @@ function hs = ft_plot_sens(sens, varargin)
 %   figure; ft_plot_sens(sens, 'coilshape', 'circle', 'coil', true, 'chantype', 'meggrad')
 %   figure; ft_plot_sens(sens, 'coilshape', 'circle', 'coil', false, 'orientation', true)
 %
-% See also FT_READ_SENS, FT_PLOT_HEADSHAPE, FT_PLOT_VOL
+% See also FT_READ_SENS, FT_PLOT_HEADSHAPE, FT_PLOT_HEADMODEL
 
 % Copyright (C) 2009-2018, Robert Oostenveld, Arjen Stolk
 %

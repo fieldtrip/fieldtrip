@@ -1,14 +1,14 @@
-function [headmodel] = ft_fetch_vol(cfg, data)
+function [headmodel] = ft_fetch_headmodel(cfg, data)
 
-% FT_FETCH_VOL mimics the behaviour of FT_READ_VOL, but for a FieldTrip
+% FT_FETCH_HEADMODEL mimics the behaviour of FT_READ_HEADMODEL, but for a FieldTrip
 % configuration instead of a file on disk.
 %
 % Use as
-%   [headmodel] = ft_fetch_vol(cfg)
+%   [headmodel] = ft_fetch_headmodel(cfg)
 % where you should specify the volume conductor model with
 %   cfg.headmodel     = structure with volume conduction model or string with filename
 %
-% See also FT_READ_VOL, FT_FETCH_DATA
+% See also FT_READ_HEADMODEL, FT_FETCH_DATA
 
 % Copyright (C) 2011, J?rn M. Horschig
 %
@@ -38,7 +38,7 @@ end
 % get the headmodel definition/volume conduction model
 if isfield(cfg, 'headmodel') && ischar(cfg.headmodel)
   fprintf('reading headmodel from file ''%s''\n', cfg.headmodel);
-  headmodel = ft_read_vol(cfg.headmodel);
+  headmodel = ft_read_headmodel(cfg.headmodel);
 elseif isfield(cfg, 'headmodel') && (isstruct(cfg.headmodel) || isa(cfg.headmodel, 'config'))
   headmodel = cfg.headmodel;
 elseif isfield(cfg, 'headmodel') && iscell(cfg.headmodel) 

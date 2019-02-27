@@ -346,7 +346,7 @@ if istrue(cfg.perchannel)
     indx = [k nchan+(1:nref)];
     [E, rho(k)]   = multivariate_decomp(C(indx,indx), 1+(1:nref), 1, cfg.method, 1, cfg.threshold);
     %beta_ref(k,:) = E(2:end)./E(1);
-    beta_ref(k,:) = E(2:end);%./E(1);
+    beta_ref(k,:) = E(2:end); %./E(1);
   end
   %beta_ref = (diag(rho))*beta_ref; % scale with sqrt(rho), to get the proper scaling
   

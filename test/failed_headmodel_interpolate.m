@@ -68,9 +68,9 @@ volA.r = 10;
 volA.o = [0 0 0];
 
 cfg      = [];
-cfg.vol = volA;
+cfg.headmodel = volA;
 cfg.elec = elec1;
-cfg.grid.resolution = 1;
+cfg.sourcemodel.resolution = 1;
 leadfield = ft_prepare_leadfield(cfg);
 
 % remember one position
@@ -84,7 +84,7 @@ filename = fullfile(tempname, 'leadfield');
 ft_headmodel_interpolate(filename, elec1, leadfield, 'smooth', false);
 
 % the next day you would start by reading it from disk
-volB = ft_read_vol([filename '.mat']); % this is a mat file containing the "vol" structure
+volB = ft_read_headmodel([filename '.mat']); % this is a mat file containing the "vol" structure
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% use the same electrodes

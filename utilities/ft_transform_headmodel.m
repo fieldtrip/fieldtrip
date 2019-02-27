@@ -1,14 +1,16 @@
-function [inside, outside] = find_inside_vol(pos, vol)
+function [headmodel] = ft_transform_vol(transform, headmodel)
 
-% FIND_INSIDE_VOL locates dipole locations inside/outside the source
-% compartment of a volume conductor model.
-% 
-% [inside, outside] = find_inside_vol(pos, vol)
+% FT_TRANSFORM_VOL applies a homogenous coordinate transformation to
+% a structure with an EEG or MEG colume conduction model. The homogenous
+% transformation matrix should be limited to a rigid-body translation
+% plus rotation and a global rescaling.
 %
-% This function is obsolete and its use in other functions should be replaced 
-% by inside_vol
+% Use as
+%   headmodel = ft_transform_vol(transform, headmodel)
+%
+% See also FT_READ_HEADMODEL, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD, FT_TRANSFORM_GEOMETRY
 
-% Copyright (C) 2003-2007, Robert Oostenveld
+% Copyright (C) 2008, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -28,8 +30,4 @@ function [inside, outside] = find_inside_vol(pos, vol)
 %
 % $Id$
 
-warning('find_inside_vol is obsolete and will be removed, please use ft_inside_vol');
-inside  = ft_inside_vol(pos, vol);
-% replace boolean vector with indexing vectors
-outside = find(~inside);
-inside  = find(inside);
+headmodel = ft_transform_geometry(transform, headmodel);

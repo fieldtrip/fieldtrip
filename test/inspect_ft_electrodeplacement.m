@@ -179,19 +179,19 @@ cameratoolbar
 % construct a 10x10 grid with approximately 5 mm spacing, which makes it 45x45 mm large
 
 cfg = [];
-cfg.method = 'grid';
-cfg.grid.dim = [10 10];
-cfg.grid.corner1 = [ 0 45 0];
-cfg.grid.corner2 = [45 45 0];
-cfg.grid.corner3 = [ 0  0 0];
-cfg.grid.corner4 = [45  0 5]; % add some curvature by lifting corner 4 up
+cfg.method = 'sourcemodel';
+cfg.sourcemodel.dim = [10 10];
+cfg.sourcemodel.corner1 = [ 0 45 0];
+cfg.sourcemodel.corner2 = [45 45 0];
+cfg.sourcemodel.corner3 = [ 0  0 0];
+cfg.sourcemodel.corner4 = [45  0 5]; % add some curvature by lifting corner 4 up
 elec1 = ft_electrodeplacement(cfg);
 
 elec0 = [];
-elec0.elecpos(1,:) = cfg.grid.corner1;
-elec0.elecpos(2,:) = cfg.grid.corner2;
-elec0.elecpos(3,:) = cfg.grid.corner3;
-elec0.elecpos(4,:) = cfg.grid.corner4;
+elec0.elecpos(1,:) = cfg.sourcemodel.corner1;
+elec0.elecpos(2,:) = cfg.sourcemodel.corner2;
+elec0.elecpos(3,:) = cfg.sourcemodel.corner3;
+elec0.elecpos(4,:) = cfg.sourcemodel.corner4;
 elec0.label = {'1', '2', '3', '4'};
 
 figure

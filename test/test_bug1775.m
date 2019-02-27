@@ -35,16 +35,16 @@ vol = ft_datatype_headmodel(vol);
 
 cfg = [];
 cfg.grad            = grad;
-cfg.vol             = vol;
-cfg.grid.resolution = 2; % cm
+cfg.headmodel       = vol;
+cfg.sourcemodel.resolution = 2; % cm
 cfg.channel         = 'all';
 grid = ft_prepare_leadfield(cfg);
 
 %% create an anatomical parcellation
 parcellation = [];
-parcellation.pos        = grid.pos;
-parcellation.unit       = grid.unit;
-parcellation.type       = zeros(size(grid.pos,1),1);
+parcellation.pos        = sourcemodel.pos;
+parcellation.unit       = sourcemodel.unit;
+parcellation.type       = zeros(size(sourcemodel.pos,1),1);
 parcellation.typelabel  = {};
 height = [3 4 5 6 7 8 9];
 for i=1:length(height)
@@ -56,8 +56,8 @@ parcellation.cfg = 'manual'; % to check whether the provenance is correct
 
 %% create simulated data
 cfg = [];
-cfg.grad    = grad;
-cfg.vol     = vol;
+cfg.grad = grad;
+cfg.headmodel = vol;
 cfg.dip.pos = [0 0 4];
 data = ft_dipolesimulation(cfg);
 
@@ -76,17 +76,17 @@ cfg.toi     = data.time{1};
 freq2 = ft_freqanalysis(cfg, data);
 
 cfg = [];
-cfg.grad    = grad;
-cfg.vol     = vol;
-cfg.grid    = grid;
-cfg.method  = 'lcmv';
+cfg.grad      = grad;
+cfg.headmodel = vol;
+cfg.sourcemodel      = grid;
+cfg.method    = 'lcmv';
 source1 = ft_sourceanalysis(cfg, timelock);
 
 cfg = [];
-cfg.grad    = grad;
-cfg.vol     = vol;
-cfg.grid    = grid;
-cfg.method  = 'mne';
+cfg.grad       = grad;
+cfg.headmodel  = vol;
+cfg.sourcemodel       = grid;
+cfg.method     = 'mne';
 cfg.mne.lambda = 0;
 source2 = ft_sourceanalysis(cfg, timelock);
 
@@ -157,4 +157,3 @@ cfg.method = 'max';
 source6p = ft_sourceparcellate(cfg, source6, parcellation);
 cfg.method = 'eig';
 source6p = ft_sourceparcellate(cfg, source6, parcellation);
-

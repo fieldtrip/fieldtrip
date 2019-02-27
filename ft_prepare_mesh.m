@@ -62,7 +62,7 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %   bnd = ft_prepare_mesh(cfg, headmodel)
 % but more consistent would be to specify a volume conduction model with
 %   cfg.headmodel     = structure with volume conduction model, see FT_PREPARE_HEADMODEL
-%   cfg.headshape     = name of file containing the volume conduction model, see FT_READ_VOL
+%   cfg.headshape     = name of file containing the volume conduction model, see FT_READ_HEADMODEL
 %
 % Undocumented options, I have no clue why they exist
 %   cfg.method = {'singlesphere' 'concentricspheres' 'localspheres'}

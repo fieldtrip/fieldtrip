@@ -55,7 +55,7 @@ if ~isfield(cfg, 'method'),         cfg.method = 'dipoli';                   end
 
 % start with an empty volume conductor
 try
-  hdm = ft_fetch_vol(cfg);
+  hdm = ft_fetch_headmodel(cfg);
   headmodel.bnd = hdm.bnd;
   if isfield(hdm, 'cond')
     % also copy the conductivities

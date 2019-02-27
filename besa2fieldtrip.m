@@ -107,7 +107,7 @@ if isstruct(input)
     data.dim      = [nx ny nz];
     % Array with all possible positions (x,y,z)
     data.pos      = WritePosArray(xTemp,yTemp,zTemp,nx,ny,nz);
-    data.inside   = 1:prod(data.dim);%as in Fieldtrip - not correct
+    data.inside   = 1:prod(data.dim); %as in Fieldtrip - not correct
     data.outside  = [];
 
     %--------------------Source Waveform--------------------------------------%

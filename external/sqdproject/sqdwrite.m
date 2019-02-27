@@ -76,7 +76,7 @@ function [err,info] = sqdwrite(source,destination,varargin)
 %   size(newdata)                   % Make sure data is provided for all channels
 %                                   % Here size(data) = (500 x 192) ie (NumSamples x NumChannels)
 %   existingsqdfile = 'new.sqd';    % The existing sqd-file
-%   templatesqdfile= existingsqdfile;% Since file already exists, it can act as its own template
+%   templatesqdfile= existingsqdfile; % Since file already exists, it can act as its own template
 %   sqdwrite(templatesqdfile,existingsqdfile,...
 %       'Action','Append','Data',newdata); % Append to file
 %   % To check if the append has worked, read data from the new.sqd using sqdread and plot
@@ -93,7 +93,7 @@ function [err,info] = sqdwrite(source,destination,varargin)
 %   size(newdata)                   % Make sure data is provided for all specified channels
 %                                   % Here size(data) = (500 x 1) ie (NumSamples x NumChannels)
 %   existingsqdfile = 'new.sqd';    % The existing sqd-file
-%   templatesqdfile= existingsqdfile;% Since file already exists, it can act as its own template
+%   templatesqdfile= existingsqdfile; % Since file already exists, it can act as its own template
 %   sqdwrite(templatesqdfile,existingsqdfile,...
 %       'Action','Overwrite','Channels',N,...
 %       'Samples',[S1 SN],'Data',newdata); % Overwrite

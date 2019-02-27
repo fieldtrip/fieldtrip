@@ -21,7 +21,7 @@ figure,ft_plot_mesh(bnd,'facecolor','g')
 figure,ft_plot_mesh(bnd,'facecolor','none')
 
 
-figure,ft_plot_vol(vol,'faceindex','yes')
-figure,ft_plot_vol(vol,'faceindex','none')
-figure,ft_plot_vol(vol,'facecolor','g')
-figure,ft_plot_vol(vol,'facecolor','none')
+figure,ft_plot_headmodel(vol,'faceindex','yes')
+figure,ft_plot_headmodel(vol,'faceindex','none')
+figure,ft_plot_headmodel(vol,'facecolor','g')
+figure,ft_plot_headmodel(vol,'facecolor','none')

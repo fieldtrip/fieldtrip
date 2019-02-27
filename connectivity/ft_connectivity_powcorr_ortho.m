@@ -84,7 +84,7 @@ tra = sparse(ix,jx,sx,sum(tapvec),numel(tapvec));
 powmom = (abs(mom).^2)*tra; % need only once
 powmom = standardise(log10(powmom), 2);
 
-c = zeros(n, numel(refindx));%;*2);
+c = zeros(n, numel(refindx)); %;*2);
 N = ones(n,1);
 %warning off;
 for k = 1:numel(refindx)

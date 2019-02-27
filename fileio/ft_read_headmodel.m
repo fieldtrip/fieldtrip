@@ -1,11 +1,11 @@
-function [headmodel] = ft_read_vol(filename, varargin)
+function [headmodel] = ft_read_headmodel(filename, varargin)
 
-% FT_READ_VOL reads a volume conduction model from various manufacturer
+% FT_READ_HEADMODEL reads a volume conduction model from various manufacturer
 % specific files. Currently supported are ASA, CTF, Neuromag, MBFYS
 % and Matlab.
 %
 % Use as
-%   headmodel = ft_read_vol(filename, ...)
+%   headmodel = ft_read_headmodel(filename, ...)
 %
 % Additional options should be specified in key-value pairs and can be
 %   'fileformat'   string
@@ -60,7 +60,7 @@ switch fileformat
     
   case 'mbfys_ama'
     ama = loadama(filename);
-    headmodel = ama2vol(ama);
+    headmodel = ama2headmodel(ama);
     
   case 'neuromag_fif'
     ft_hastoolbox('mne', 1);

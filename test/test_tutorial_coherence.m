@@ -210,8 +210,8 @@ cfg.refchan   = 'EMGlft';
 cfg.frequency = 18;
 cfg.headmodel = 'SubjectCMC.hdm';
 cfg.inwardshift     = 1;
-cfg.grid.resolution = 1;
-cfg.grid.unit       = 'cm';
+cfg.sourcemodel.resolution = 1;
+cfg.sourcemodel.unit       = 'cm';
 source        = ft_sourceanalysis(cfg, freq);
 
 mri = ft_read_mri('SubjectCMC.mri');

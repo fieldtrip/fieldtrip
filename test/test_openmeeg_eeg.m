@@ -91,12 +91,12 @@ assert(norm(mags-[1.3584 1.3583 1.2138])<thr)
     vol_bem = ft_prepare_headmodel(cfg, bnd);
     
     cfg.headmodel = vol_bem;
-    cfg.grid.pos = dippos;
-    cfg.grid.unit = 'mm';
+    cfg.sourcemodel.pos = dippos;
+    cfg.sourcemodel.unit = 'mm';
     cfg.elec = sens;
     [grid,cfg] = ft_prepare_leadfield(cfg);
     
-    lf_openmeeg = grid.leadfield{1};
+    lf_openmeeg = sourcemodel.leadfield{1};
     
     % Rq : ft_compute_leadfield centers the forward fields by default
     % (average reference)

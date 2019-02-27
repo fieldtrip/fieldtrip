@@ -278,7 +278,7 @@ maxpos = source.pos(maxindx,:);
 %     4 -3 12
 % The cortical position is expressed in individual subject head-coordinates and in centimeter. Relative to the center of the head (in between the ears) the position is 4 cm towards the nose, -3 towards the left side (i.e., 3 cm towards the right!) and 12 cm towards the vertex.
 % 
-% The ft_sourceanalysis methods are usually applied to the whole brain using a regular 3-D grid or using a triangulated cortical sheet. You can also just specify the location of a single or multiple points of interest with cfg.grid.pos and the LCMV beamformer will simply be performed at the location of interest.
+% The ft_sourceanalysis methods are usually applied to the whole brain using a regular 3-D grid or using a triangulated cortical sheet. You can also just specify the location of a single or multiple points of interest with cfg.sourcemodel.pos and the LCMV beamformer will simply be performed at the location of interest.
 % 
 % The LCMV beamformer spatial filter for the location of interest will pass the activity at that location with unit-gain, while optimally suppressing all other noise and other source contributions to the MEG data. The LCMV implementation in FieldTrip requires the data covariance matrix to be computed with ft_timelockanalysis.
 % 
@@ -297,7 +297,7 @@ timelock              = ft_timelockanalysis(cfg, data);
 cfg             = [];
 cfg.method      = 'lcmv';
 cfg.hdmfile     = 'SubjectCMC.hdm';
-cfg.grid.pos    = maxpos;
+cfg.sourcemodel.pos    = maxpos;
 cfg.keepfilter  = 'yes';
 source          = ft_sourceanalysis(cfg, timelock);
 % The source reconstruction contains the estimated power and the source-level time-series of the averaged ERF, but here we are not interested in those. The cfg.keepfilter option results in the spatial filter being kept in the output source structure. That spatial can be used to reconstruct the single-trial time series as a virtual channel by multiplying it with the original MEG data.

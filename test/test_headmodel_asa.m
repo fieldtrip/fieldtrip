@@ -16,7 +16,7 @@ elcfile = dccnpath('/home/common/matlab/fieldtrip/template/electrode/standard_10
 
 vol = ft_headmodel_asa(hdmfile);
 figure
-ft_plot_vol(vol, 'facecolor', 'none')
+ft_plot_headmodel(vol, 'facecolor', 'none')
 
 if true
   % read some standard electrode positions

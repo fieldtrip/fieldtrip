@@ -142,13 +142,13 @@ end
 
 %% FSL parameters
 
-%cfg.fsl.version='/opt/fsl_4.1/bin/';% write the fsl version that you are using. The version I use is 4.1
+%cfg.fsl.version='/opt/fsl_4.1/bin/'; % write the fsl version that you are using. The version I use is 4.1
 
 cfg.fsl.path='/opt/fsl_4.1/bin';
 %cfg.fsl.path='/opt/fsl_4.1/bin'; % should be tested if it works with different versions of FSL
-cfg.fsl.T2cost='mutualinfo';% mutualinfo,corratio,normcorr,normmi,leastsq
+cfg.fsl.T2cost='mutualinfo'; % mutualinfo,corratio,normcorr,normmi,leastsq
 cfg.fsl.T2dof='6';
-%cfg.fsl.T2interp='spline';%trilinear,nearestneighbour,sinc,spline
+%cfg.fsl.T2interp='spline'; %trilinear,nearestneighbour,sinc,spline
 cfg.fsl.T2interp='sinc';
 
 cfg.fsl.DTIcost='mutualinfo';
