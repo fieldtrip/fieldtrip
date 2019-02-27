@@ -1,4 +1,4 @@
-function headmodel = ft_headmodel_interpolate(filename, sens, grid, varargin)
+function headmodel = ft_headmodel_interpolate(filename, sens, sourcemodel, varargin)
 
 % FT_HEADMODEL_INTERPOLATE describes a volume conduction model of the head in which
 % subsequent leadfield computations can be performed using a simple interpolation
@@ -63,10 +63,10 @@ filename = fullfile(p, f);
 % PART ONE (optional), read the pre-computed besa leadfield
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ischar(grid)
+if ischar(sourcemodel)
   % the input is a filename that points to a BESA precomputed leadfield
-  filename = grid;
-  clear grid
+  filename = sourcemodel;
+  clear sourcemodel
   
   % this requires the BESA functions
   ft_hastoolbox('besa', 1);
@@ -79,7 +79,7 @@ if ischar(grid)
   lftfile = fullfile(p, [f, '.lft']);
   locfile = fullfile(p, [f, '.loc']);
   
-  % Read source space grid nodes
+  % Read source positions
   [ssg, IdxNeighbour] = readBESAloc(locfile);
   fprintf('Number of nodes: %i\n', size(ssg, 1));
   fprintf('Number of neighbours/node: %i\n', size(IdxNeighbour, 1));
@@ -137,7 +137,7 @@ if ischar(grid)
   [lftdim, lft] = readBESAlft(lftfile);
   
   assert(lftdim(1)==length(sens.label), 'inconsistent number of electrodes');
-  assert(lftdim(2)==length(insideindx), 'inconsistent number of grid positions');
+  assert(lftdim(2)==length(insideindx), 'inconsistent number of source positions');
   assert(lftdim(3)==3, 'unexpected number of leadfield columns');
   assert(isequal(sourcemodel.unit, sens.unit), 'inconsistent geometrical units');
   
@@ -148,7 +148,7 @@ if ischar(grid)
   end
   
   fprintf('finished import of BESA leadfield file\n');
-end % process the BESA file, grid is now compatible with FT_PREPARE_LEADFIELD
+end % process the BESA file, sourcemodel is now compatible with FT_PREPARE_LEADFIELD
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PART TWO: write the leadfield to a set of nifti files
@@ -176,7 +176,7 @@ if isfield(sourcemodel, 'leadfield')
   headmodel.filename  = cell(size(sens.label));
   
   if isfield(sourcemodel, 'unit')
-    % get the units from the dipole grid
+    % get the units from the sourcemodel
     headmodel.unit = sourcemodel.unit;
   else
     % estimate the units
