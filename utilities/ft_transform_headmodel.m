@@ -1,6 +1,6 @@
-function [headmodel] = ft_transform_vol(transform, headmodel)
+function [headmodel] = ft_transform_headmodel(transform, headmodel)
 
-% FT_TRANSFORM_VOL applies a homogenous coordinate transformation to
+% FT_TRANSFORM_HEADMODEL applies a homogenous coordinate transformation to
 % a structure with an EEG or MEG colume conduction model. The homogenous
 % transformation matrix should be limited to a rigid-body translation
 % plus rotation and a global rescaling.

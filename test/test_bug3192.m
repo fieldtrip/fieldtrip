@@ -16,7 +16,7 @@ figure, ft_plot_mesh(grid, 'vertexcolor', 'blue', 'facecolor', 'brain', 'edgecol
 % different colors for each vertex
 c = [];
 temp = {'r','b'};
-for iPos=1:length(sourcemodel.pos), c = [c temp{mod(iPos,2)+1}]; end
+for iPos=1:length(grid.pos), c = [c temp{mod(iPos,2)+1}]; end
 figure, ft_plot_mesh(grid, 'vertexcolor', c)
 
 figure, ft_plot_box([-1 1 2 3], 'facecolor', 'brain')

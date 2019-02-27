@@ -246,8 +246,8 @@ end
 tmpcfg            = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'showcallinfo'});
 tmpcfg.headmodel  = volold;
 tmpcfg.grad       = data.grad;
-% create the dipole grid on which the data will be projected
-grid = ft_prepare_sourcemodel(tmpcfg);
+% create the source positions on which the data will be projected
+sourcemodel = ft_prepare_sourcemodel(tmpcfg);
 pos = sourcemodel.pos;
 
 % sometimes some of the dipole positions are nan, due to problems with the headsurface triangulation
@@ -335,7 +335,7 @@ if strcmp(cfg.feedback, 'yes')
   Y = [pos1(:,2) pos2(:,2)]';
   Z = [pos1(:,3) pos2(:,3)]';
 
-  % show figure with old an new helmets, volume model and dipole grid
+  % show figure with old an new helmets, volume model and source positions
   figure
   hold on
   ft_plot_headmodel(volold);
