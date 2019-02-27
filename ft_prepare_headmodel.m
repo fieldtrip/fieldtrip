@@ -473,7 +473,7 @@ switch cfg.method
 end % switch method
 
 % ensure that the geometrical units are specified
-if ~ft_voltype(headmodel, 'infinite')
+if ~ft_headmodeltype(headmodel, 'infinite')
   headmodel = ft_determine_units(headmodel);
 end
 

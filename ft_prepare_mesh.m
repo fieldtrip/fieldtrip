@@ -121,8 +121,8 @@ cfg.spmversion  = ft_getopt(cfg, 'spmversion', 'spm8');
 % Translate the input options in the appropriate default for cfg.method
 if isfield(cfg, 'headshape') && ~isempty(cfg.headshape)
   cfg.method = ft_getopt(cfg, 'method', 'headshape');
-elseif hasdata && ~strcmp(ft_voltype(mri), 'unknown')
-  cfg.method = ft_getopt(cfg, 'method', ft_voltype(mri));
+elseif hasdata && ~strcmp(ft_headmodeltype(mri), 'unknown')
+  cfg.method = ft_getopt(cfg, 'method', ft_headmodeltype(mri));
 elseif hasdata
   cfg.method = ft_getopt(cfg, 'method', 'projectmesh');
 else

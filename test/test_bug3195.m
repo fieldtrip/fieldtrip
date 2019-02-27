@@ -9,7 +9,7 @@ cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3195'));
 load('template_FEM.mat')
 load('sourcemodel.mat')
 
-% the system matrix has not been computed yet, hence ft_voltype fails
+% the system matrix has not been computed yet, hence ft_headmodeltype fails
 template_FEM.type = 'simbio';
 
 %%

@@ -197,7 +197,7 @@ end
 % find the indices of all sourcemodel points that are inside the brain
 insideindx = find(sourcemodel.inside);
 
-if ft_voltype(headmodel, 'openmeeg')
+if ft_headmodeltype(headmodel, 'openmeeg')
   % repeated system calls to the openmeeg executable makes it rather slow
   % calling it once is much more efficient
   fprintf('calculating leadfield for all positions at once, this may take a while...\n');
@@ -270,7 +270,7 @@ if ft_voltype(headmodel, 'openmeeg')
   end
   clear lf
 
-elseif ft_voltype(headmodel, 'singleshell')
+elseif ft_headmodeltype(headmodel, 'singleshell')
   cfg.singleshell = ft_getopt(cfg, 'singleshell', []);
   batchsize       = ft_getopt(cfg.singleshell, 'batchsize', 1);
   if ischar(batchsize) && strcmp(batchsize, 'all')

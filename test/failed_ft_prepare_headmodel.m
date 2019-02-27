@@ -46,21 +46,21 @@ hdmfile  = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.hdm');
 
 csvol.o = [0, 0,0];
 csvol.r = [10 50 60];
-assert(ft_voltype(csvol, 'concentricspheres'))
+assert(ft_headmodeltype(csvol, 'concentricspheres'))
 cfg = [];
 cfg.numvertices = 1000;
 csbnd = ft_prepare_mesh(cfg, csvol);
 
 ssvol.o = [0, 0,0];
 ssvol.r = 60;
-assert(ft_voltype(ssvol, 'singlesphere'))
+assert(ft_headmodeltype(ssvol, 'singlesphere'))
 cfg = [];
 cfg.numvertices = 1000;
 ssbnd = ft_prepare_mesh(cfg, ssvol);
 
 cs4vol.o = [0, 0,0];
 cs4vol.r = [10 30 50 60];
-assert(ft_voltype(cs4vol, 'concentricspheres'))
+assert(ft_headmodeltype(cs4vol, 'concentricspheres'))
 cfg = [];
 cfg.numvertices = 1000;
 cs4bnd = ft_prepare_mesh(cfg, cs4vol);

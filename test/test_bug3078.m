@@ -46,7 +46,7 @@ freq2 = ft_freqanalysis(cfg, data);
 
 headmodel.o = [0 0 0];
 headmodel.r = 8;
-headmodel.type = ft_voltype(headmodel);
+headmodel.type = ft_headmodeltype(headmodel);
 headmodel   = ft_datatype_headmodel(headmodel);
 
 cfg = [];

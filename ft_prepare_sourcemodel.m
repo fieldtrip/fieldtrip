@@ -322,14 +322,14 @@ if basedonresolution
       pos = cat(1, headmodel.bnd(:).pnt);
     elseif isfield(headmodel, 'pos')
       pos = headmodel.pos;
-    elseif ft_voltype(headmodel, 'localspheres')
+    elseif ft_headmodeltype(headmodel, 'localspheres')
       pos = headsurface(headmodel, sens);
-    elseif ft_voltype(headmodel, 'singlesphere')
+    elseif ft_headmodeltype(headmodel, 'singlesphere')
       pos = [
         headmodel.o - headmodel.r
         headmodel.o + headmodel.r
         ];
-    elseif ft_voltype(headmodel, 'concentricspheres')
+    elseif ft_headmodeltype(headmodel, 'concentricspheres')
       pos = [
         headmodel.o - max(headmodel.r)
         headmodel.o + max(headmodel.r)
@@ -678,7 +678,7 @@ end
 sourcemodel = ft_convert_units(sourcemodel, cfg.sourcemodel.unit);
 
 if strcmp(cfg.spherify, 'yes')
-  if ~ft_voltype(headmodel, 'singlesphere') && ~ft_voltype(headmodel, 'concentricspheres')
+  if ~ft_headmodeltype(headmodel, 'singlesphere') && ~ft_headmodeltype(headmodel, 'concentricspheres')
     ft_error('this only works for spherical volume conduction models');
   end
   % deform the cortex so that it fits in a unit sphere

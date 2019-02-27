@@ -1,11 +1,11 @@
-function [type] = ft_voltype(headmodel, desired)
+function [type] = ft_headmodeltype(headmodel, desired)
 
-% FT_VOLTYPE determines the type of volume conduction model of the head
+% FT_HEADMODELTYPE determines the type of volume conduction model of the head
 %
 % Use as
-%   [type] = ft_voltype(headmodel)
+%   [type] = ft_headmodeltype(headmodel)
 % to get a string describing the type, or
-%   [flag] = ft_voltype(headmodel, desired)
+%   [flag] = ft_headmodeltype(headmodel, desired)
 % to get a boolean value.
 %
 % For EEG the following volume conduction models are recognized
@@ -65,7 +65,7 @@ if iscell(headmodel)
     desired = cell(size(headmodel)); % empty elements
   end
   for i=1:numel(headmodel)
-    type{i} = ft_voltype(headmodel{i}, desired{i});
+    type{i} = ft_headmodeltype(headmodel{i}, desired{i});
   end
   return
 end
@@ -82,42 +82,42 @@ if isequal(current_argin, previous_argin)
   return
 end
 
-if isfield(headmodel, 'type') && ~(ft_datatype(headmodel, 'grad') || ft_datatype(headmodel, 'sens')) % grad and sens also contain .type fields 
+if isfield(headmodel, 'type') && ~(ft_datatype(headmodel, 'grad') || ft_datatype(headmodel, 'sens')) % grad and sens also contain .type fields
   % preferably the structure specifies its own type
   type = headmodel.type;
-  
+
 elseif isfield(headmodel, 'r') && numel(headmodel.r)==1 && ~isfield(headmodel, 'label')
   type = 'singlesphere';
-  
+
 elseif isfield(headmodel, 'r') && isfield(headmodel, 'o') && isfield(headmodel, 'label')
   % this is before the spheres have been assigned to the coils
   % and every sphere is still associated with a channel
   type = 'localspheres';
-  
+
 elseif isfield(headmodel, 'r') && isfield(headmodel, 'o') && size(headmodel.r,1)==size(headmodel.o,1) && size(headmodel.r,1)>4
   % this is after the spheres have been assigned to the coils
   % note that this one is easy to confuse with the concentric one
   type = 'localspheres';
-  
+
 elseif isfield(headmodel, 'r') && numel(headmodel.r)>=2 && ~isfield(headmodel, 'label')
   type = 'concentricspheres';
-  
+
 elseif isfield(headmodel, 'bnd') && isfield(headmodel, 'mat')
   type = 'bem'; % it could be dipoli, asa, bemcp or openmeeg
-  
+
 elseif isfield(headmodel, 'bnd') && isfield(headmodel, 'forwpar')
   type = 'singleshell';
-  
+
 elseif isfield(headmodel, 'bnd') && numel(headmodel.bnd)==1
-  type = 'singleshell'; 
-  
+  type = 'singleshell';
+
 elseif isempty(headmodel) || (isstruct(headmodel) && isequal(fieldnames(headmodel), {'unit'}))
   % it is empty, or only contains a specification of geometrical units
   type = 'infinite';
-  
+
 else
   type = 'unknown';
-  
+
 end % if isfield(headmodel, 'type')
 
 if ~isempty(desired)
@@ -135,5 +135,3 @@ end % determine the correspondence to the desired type
 current_argout  = {type};
 previous_argin  = current_argin;
 previous_argout = current_argout;
-
-return % voltype main()

@@ -252,7 +252,7 @@ end
 if isempty(cfg.reducerank)
   if ft_senstype(sens, 'eeg')
     cfg.reducerank = 'no';    % for EEG
-  elseif ft_senstype(sens, 'meg') && ft_voltype(headmodel, 'infinite')
+  elseif ft_senstype(sens, 'meg') && ft_headmodeltype(headmodel, 'infinite')
     cfg.reducerank = 'no';    % for MEG with a magnetic dipole, e.g. a HPI coil
   elseif ft_senstype(sens, 'meg')
     cfg.reducerank = 'yes';   % for MEG with a current dipole in a volume conductor

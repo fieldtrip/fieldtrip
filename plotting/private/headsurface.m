@@ -121,7 +121,7 @@ elseif ~isempty(headmodel) && isfield(headmodel, 'r') && length(headmodel.r)<5
   pos(:,3) = pos(:,3) + origin(3);
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif ft_voltype(headmodel, 'localspheres')
+elseif ft_headmodeltype(headmodel, 'localspheres')
   % local spheres MEG model, this also requires a gradiometer structure
   grad = sens;
   if ~isfield(grad, 'tra') || ~isfield(grad, 'coilpos')
@@ -156,7 +156,7 @@ elseif ft_voltype(headmodel, 'localspheres')
   tri = projecttri(pos);
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif ft_voltype(headmodel, 'bem') ||  ft_voltype(headmodel, 'singleshell')
+elseif ft_headmodeltype(headmodel, 'bem') ||  ft_headmodeltype(headmodel, 'singleshell')
   % volume conduction model with triangulated boundaries
   switch surface
     case 'skin'

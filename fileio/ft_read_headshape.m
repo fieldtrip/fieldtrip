@@ -1201,7 +1201,7 @@ switch fileformat
       % and treat the skin surface as headshape
       try
         headmodel = ft_read_headmodel(filename);
-        if ~ft_voltype(headmodel, 'bem')
+        if ~ft_headmodeltype(headmodel, 'bem')
           ft_error('skin surface can only be extracted from boundary element model');
         else
           if ~isfield(headmodel, 'skin')

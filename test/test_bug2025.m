@@ -6,7 +6,7 @@ function test_bug2025
 % TEST ft_plot_headmodel ft_compute_leadfield
 
 vol = [];
-assert(ft_voltype(vol, 'infinite'))
+assert(ft_headmodeltype(vol, 'infinite'))
 
 vol.type = 'infinite';
 

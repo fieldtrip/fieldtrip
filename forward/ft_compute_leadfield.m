@@ -132,7 +132,7 @@ ismeg = ft_senstype(sens, 'meg');
 if isempty(reducerank)
   if iseeg
     reducerank = 'no';    % for EEG
-  elseif ismeg && ft_voltype(headmodel, 'infinite')
+  elseif ismeg && ft_headmodeltype(headmodel, 'infinite')
     reducerank = 'no';    % for MEG with a magnetic dipole, e.g. a HPI coil
   else
     reducerank = 'yes';   % for MEG with a current dipole in a volume conductor
@@ -158,7 +158,7 @@ elseif ~ismeg && ~iseeg
   ft_error('the input does not look like EEG, nor like MEG');
 
 elseif ismeg
-  switch ft_voltype(headmodel)
+  switch ft_headmodeltype(headmodel)
 
     case 'singlesphere'
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -322,10 +322,10 @@ elseif ismeg
 
     otherwise
       ft_error('unsupported volume conductor model for MEG');
-  end % switch voltype for MEG
+  end % switch type for MEG
 
 elseif iseeg
-  switch ft_voltype(headmodel)
+  switch ft_headmodeltype(headmodel)
 
     case 'multisphere'
       % Based on the approximation of the potential due to a single dipole in
@@ -484,7 +484,7 @@ elseif iseeg
     otherwise
       ft_error('unsupported volume conductor model for EEG');
 
-  end % switch voltype for EEG
+  end % switch type for EEG
 
   % the forward model potential is computed on the electrodes relative to
   % an unknown reference, not on the channels. Therefore the data has to be

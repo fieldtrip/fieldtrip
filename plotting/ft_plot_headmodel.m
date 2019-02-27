@@ -77,7 +77,7 @@ vertexindex = istrue(vertexindex); % yes=view the vertex number
 [pos, tri] = icosahedron2562;
 
 % prepare a single or multiple triangulated boundaries
-switch ft_voltype(headmodel)
+switch ft_headmodeltype(headmodel)
   case {'singlesphere' 'concentricspheres'}
     headmodel.r = sort(headmodel.r);
     bnd = repmat(struct(), numel(headmodel.r));
@@ -90,7 +90,7 @@ switch ft_voltype(headmodel)
     if isempty(edgecolor)
       edgecolor = 'none';
     end
-    
+
   case 'localspheres'
     if ~isempty(grad)
       ft_notice('estimating point on head surface for each gradiometer');
@@ -109,39 +109,39 @@ switch ft_voltype(headmodel)
     if isempty(edgecolor)
       edgecolor = 'none';
     end
-    
+
   case {'bem', 'dipoli', 'asa', 'bemcp', 'singleshell' 'openmeeg'}
     % these already contain one or multiple triangulated surfaces for the boundaries
     bnd = headmodel.bnd;
-    
+
   case 'simbio'
     % the ft_plot_mesh function below wants the SIMBIO tetrahedral or hexahedral mesh
     bnd = headmodel;
-    
+
     % only plot the outer surface of the volume
     surfaceonly = true;
-    
+
   case 'interpolate'
     xgrid = 1:headmodel.dim(1);
     ygrid = 1:headmodel.dim(2);
     zgrid = 1:headmodel.dim(3);
     [x, y, z] = ndgrid(xgrid, ygrid, zgrid);
     gridpos = ft_warp_apply(headmodel.transform, [x(:) y(:) z(:)]);
-    
+
     % plot the dipole positions that are inside
     plot3(gridpos(headmodel.inside, 1), gridpos(headmodel.inside, 2), gridpos(headmodel.inside, 3), 'k.');
-    
+
     % there is no boundary to be displayed
     bnd = [];
-    
+
   case {'infinite' 'infinite_monopole' 'infinite_currentdipole' 'infinite_magneticdipole'}
     ft_warning('there is nothing to plot for an infinite volume conductor')
-    
+
     % there is no boundary to be displayed
     bnd = [];
-    
+
   otherwise
-    ft_error('unsupported voltype')
+    ft_error('unsupported headmodel type')
 end
 
 % all models except for the spherical ones

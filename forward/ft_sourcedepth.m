@@ -38,7 +38,7 @@ function [depth] = ft_sourcedepth(dippos, headmodel)
 headmodel = ft_datatype_headmodel(headmodel);
 
 % determine the type of volume conduction model
-switch ft_voltype(headmodel)
+switch ft_headmodeltype(headmodel)
 
 % single-sphere or multiple concentric spheres
 case {'singlesphere', 'concentricspheres'}

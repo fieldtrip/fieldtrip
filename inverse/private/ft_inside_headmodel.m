@@ -46,7 +46,7 @@ inwardshift = ft_getopt(varargin, 'inwardshift');
 headmodel = fixpos(headmodel);
 
 % determine the type of volume conduction model
-switch ft_voltype(headmodel)
+switch ft_headmodeltype(headmodel)
 
   case {'singlesphere' 'concentricspheres'}
     if ~isfield(headmodel, 'source')
