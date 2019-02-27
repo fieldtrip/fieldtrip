@@ -4,7 +4,7 @@ function test_tutorial_beamformingextended
 % WALLTIME 00:30:00
 
 % TEST test_beamforming_extended
-% TEST ft_read_mri ft_redefinetrial ft_freqanalysis ft_volumesegment ft_appenddata ft_selectdata ft_prepare_singleshell ft_sourceanalysis ft_prepare_leadfield ft_prepare_headmodel ft_prepare_sourcemodel ft_plot_vol ft_plot_sens ft_plot_mesh ft_sourceinterpolate ft_sourceplot
+% TEST ft_read_mri ft_redefinetrial ft_freqanalysis ft_volumesegment ft_appenddata ft_selectdata ft_prepare_singleshell ft_sourceanalysis ft_prepare_leadfield ft_prepare_headmodel ft_prepare_sourcemodel ft_plot_headmodel ft_plot_sens ft_plot_mesh ft_sourceinterpolate ft_sourceplot
 
 datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis');
 mridir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended');
@@ -96,7 +96,7 @@ hold on;
 % note that when calling different plotting routines, all objects that we plot
 % need to be in the same unit and coordinate space, here, we need to transform
 % the head model to 'cm'
-ft_plot_vol(ft_convert_units(hdm, freq_cmb.grad.unit), 'edgecolor', 'none');
+ft_plot_headmodel(ft_convert_units(hdm, freq_cmb.grad.unit), 'edgecolor', 'none');
 alpha 0.4;
 ft_plot_mesh(sourcemodel.pos(sourcemodel.inside,:));
 ft_plot_sens(freq_cmb.grad);

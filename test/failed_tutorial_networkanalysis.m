@@ -138,7 +138,7 @@ load sourcemodel_4k
 figure;
 
 % make the headmodel surface transparent
-ft_plot_vol(hdm, 'edgecolor', 'none');
+ft_plot_headmodel(hdm, 'edgecolor', 'none');
 alpha 0.4           
 
 % add the source model positions and sensors

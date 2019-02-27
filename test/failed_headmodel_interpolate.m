@@ -84,7 +84,7 @@ filename = fullfile(tempname, 'leadfield');
 ft_headmodel_interpolate(filename, elec1, leadfield, 'smooth', false);
 
 % the next day you would start by reading it from disk
-volB = ft_read_vol([filename '.mat']); % this is a mat file containing the "vol" structure
+volB = ft_read_headmodel([filename '.mat']); % this is a mat file containing the "vol" structure
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% use the same electrodes

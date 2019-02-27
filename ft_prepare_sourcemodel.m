@@ -267,7 +267,7 @@ grid = [];
 
 % get the volume conduction model
 try
-  headmodel = ft_fetch_vol(cfg);
+  headmodel = ft_fetch_headmodel(cfg);
 catch
   headmodel = [];
 end

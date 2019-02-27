@@ -27,7 +27,7 @@ function [type] = ft_voltype(headmodel, desired)
 %   infinite           magnetic dipole in an infinite vacuum
 %   interpolate        interpolate the potential based on pre-computed leadfields
 %
-% See also FT_COMPUTE_LEADFIELD, FT_READ_VOL, FT_HEADMODEL_BEMCP,
+% See also FT_COMPUTE_LEADFIELD, FT_READ_HEADMODEL, FT_HEADMODEL_BEMCP,
 % FT_HEADMODEL_ASA, FT_HEADMODEL_DIPOLI, FT_HEADMODEL_SIMBIO,
 % FT_HEADMODEL_FNS, FT_HEADMODEL_HALFSPACE, FT_HEADMODEL_INFINITE,
 % FT_HEADMODEL_OPENMEEG, FT_HEADMODEL_SINGLESPHERE,

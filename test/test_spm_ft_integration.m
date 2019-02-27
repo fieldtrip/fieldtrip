@@ -55,7 +55,7 @@ cfg.method = 'concentricspheres';
 vol  = ft_prepare_headmodel(cfg);
 
 clf
-ft_plot_vol(vol, 'edgecolor', [0 0 0], 'facealpha', 0);
+ft_plot_headmodel(vol, 'edgecolor', [0 0 0], 'facealpha', 0);
 hold on
 ft_plot_sens(elec, 'style', '*b');
 clf
@@ -85,7 +85,7 @@ cfg.showcallinfo = 'no';
 vol = ft_prepare_headmodel(cfg, vol);
 
 clf
-ft_plot_vol(vol, 'edgecolor', [0 0 0], 'facealpha', 0);
+ft_plot_headmodel(vol, 'edgecolor', [0 0 0], 'facealpha', 0);
 hold on
 ft_plot_sens(elec, 'style', '*b');
 clf
@@ -105,7 +105,7 @@ cfg.method                 = 'nolte';
 vol                        = ft_prepare_headmodel(cfg);
 
 clf
-ft_plot_vol(vol, 'edgecolor', [0 0 0], 'facealpha', 0);
+ft_plot_headmodel(vol, 'edgecolor', [0 0 0], 'facealpha', 0);
 hold on
 ft_plot_sens(grad, 'style', '*b');
 clf
@@ -124,7 +124,7 @@ cfg.method                 = 'localspheres';
 vol  = ft_prepare_headmodel(cfg);
 
 clf
-ft_plot_vol(vol, 'edgecolor', [0 0 0], 'facealpha', 0);
+ft_plot_headmodel(vol, 'edgecolor', [0 0 0], 'facealpha', 0);
 hold on
 ft_plot_sens(grad, 'style', '*b');
 clf
@@ -141,7 +141,7 @@ vol.type = 'singleshell';
 vol = ft_convert_units(vol, 'mm');
 
 clf
-ft_plot_vol(vol, 'edgecolor', [0 0 0], 'facealpha', 0);
+ft_plot_headmodel(vol, 'edgecolor', [0 0 0], 'facealpha', 0);
 hold on
 ft_plot_sens(grad, 'style', '*b');
 clf

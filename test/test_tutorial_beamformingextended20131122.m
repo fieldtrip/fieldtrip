@@ -45,7 +45,7 @@ sourcemodel        = ft_prepare_sourcemodel(cfg);
 hdm_cm = ft_convert_units(hdm, 'cm');
 
 figure; hold on     % plot all objects in one figure
-ft_plot_vol(hdm_cm, 'edgecolor', 'none')
+ft_plot_headmodel(hdm_cm, 'edgecolor', 'none')
 alpha 0.4           % make the surface transparent
 ft_plot_mesh(sourcemodel.pos(sourcemodel.inside,:));
 ft_plot_sens(data_combined.grad);

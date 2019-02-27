@@ -3,7 +3,7 @@ function test_bug3192
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST ft_plot_mesh, ft_plot_box, ft_plot_vol, ft_plot_dipole, ft_plot_headshape
+% TEST ft_plot_mesh, ft_plot_box, ft_plot_headmodel, ft_plot_dipole, ft_plot_headshape
 
 % one color for all vertex
 cfg = [];
@@ -28,7 +28,7 @@ elecs.label = {'1' '2' '3' '4'};
 figure, ft_plot_sens(elecs, 'edgecolor', 'red')
 
 load(dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_singleshell.mat'))
-figure, ft_plot_vol(vol, 'edgecolor', 'blue', 'vertexcolor', 'red', 'facecolor', 'brain')
+figure, ft_plot_headmodel(vol, 'edgecolor', 'blue', 'vertexcolor', 'red', 'facecolor', 'brain')
 
 vol.pos = [23 42 -31; 69 52 1; 61 67 26; 52 65 45];
 figure, ft_plot_headshape(vol, 'edgecolor', 'blue', 'vertexcolor', 'red', 'facecolor', 'brain')

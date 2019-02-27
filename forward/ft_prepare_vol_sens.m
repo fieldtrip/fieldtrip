@@ -34,7 +34,7 @@ function [headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, varargin)
 % order returned by this function corresponds to the order in the 'channel'
 % option, or if not specified, to the order in the input sensor array.
 %
-% See also FT_COMPUTE_LEADFIELD, FT_READ_VOL, FT_READ_SENS, FT_TRANSFORM_VOL,
+% See also FT_COMPUTE_LEADFIELD, FT_READ_HEADMODEL, FT_READ_SENS, FT_TRANSFORM_VOL,
 % FT_TRANSFORM_SENS
 
 % Copyright (C) 2004-2015, Robert Oostenveld
@@ -75,7 +75,7 @@ sens = ft_datatype_sens(sens);
 % this is to support volumes saved in mat-files, particularly interpolated
 if ischar(headmodel)
   vpath     = fileparts(headmodel);   % remember the path to the file
-  headmodel = ft_read_vol(headmodel); % replace the filename with the content of the file
+  headmodel = ft_read_headmodel(headmodel); % replace the filename with the content of the file
 end
 
 % ensure that the volume conduction description is up-to-date (Jul 2012)

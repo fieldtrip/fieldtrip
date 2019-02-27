@@ -337,7 +337,7 @@ if strcmp(cfg.feedback, 'yes')
   % show figure with old an new helmets, volume model and dipole grid
   figure
   hold on
-  ft_plot_vol(volold);
+  ft_plot_headmodel(volold);
   plot3(grid.pos(:,1),grid.pos(:,2),grid.pos(:,3),'b.');
   plot3(pos1(:,1), pos1(:,2), pos1(:,3), 'r.') % original positions
   plot3(pos2(:,1), pos2(:,2), pos2(:,3), 'g.') % template positions

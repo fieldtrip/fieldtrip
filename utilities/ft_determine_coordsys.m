@@ -156,7 +156,7 @@ switch dtype
     camlight;
 
   case 'headmodel'
-    ft_plot_vol(data);
+    ft_plot_headmodel(data);
     camlight;
 
   case {'grad' 'elec' 'sens'}

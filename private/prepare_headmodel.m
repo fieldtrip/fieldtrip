@@ -5,7 +5,7 @@ function [headmodel, sens, cfg] = prepare_headmodel(cfg, data)
 % volume conduction model. This is used in sourceanalysis and dipolefitting.
 %
 % This function will get the gradiometer/electrode definition using
-% FT_FETCH_SENS and the volume conductor definition using FT_FETCH_VOL
+% FT_FETCH_SENS and the volume conductor definition using FT_FETCH_HEADMODEL
 %
 % Subsequently it will remove the gradiometers/electrodes that are not
 % present in the data. Finally it with attach the gradiometers to a
@@ -62,7 +62,7 @@ if hasdata
 end
 
 % get the volume conduction model
-headmodel = ft_fetch_vol(cfg);
+headmodel = ft_fetch_headmodel(cfg);
 
 % get the gradiometer or electrode definition, these can be in the cfg or in the data
 if hasdata

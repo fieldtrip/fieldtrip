@@ -56,7 +56,7 @@ mesh.pnt = 5*mesh.pnt - repmat([ 0 3 -1.5],size(mesh.pnt,1),1) ;
 
 % load vol                                       % volume conduction model
 figure;hold on;
-ft_plot_vol(vol, 'facecolor', 'none');alpha 0.5;
+ft_plot_headmodel(vol, 'facecolor', 'none');alpha 0.5;
 ft_plot_mesh(mesh, 'edgecolor', 'none'); camlight
 ft_plot_sens(dataFIC.grad, 'style', '*b');
 

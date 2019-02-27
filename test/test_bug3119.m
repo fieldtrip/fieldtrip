@@ -36,7 +36,7 @@ seg.scalp = scalp; clear scalp;
 seg.skull = skull; clear skull;
 seg = rmfield(seg,'seg');
 
-vol = ft_read_vol(fullfile(ftdir,'template','headmodel','standard_bem.mat'));
+vol = ft_read_headmodel(fullfile(ftdir,'template','headmodel','standard_bem.mat'));
 
 %%
 figure;
@@ -64,7 +64,7 @@ elec.label = label;
 figure;
 hold on
 ft_plot_sens(elec, 'style', 'ob','label','label');
-ft_plot_vol(vol, 'facealpha', 0.5, 'edgecolor', 'none'); % "lighting phong" does not work with opacity
+ft_plot_headmodel(vol, 'facealpha', 0.5, 'edgecolor', 'none'); % "lighting phong" does not work with opacity
 material dull;
 camlight;
 

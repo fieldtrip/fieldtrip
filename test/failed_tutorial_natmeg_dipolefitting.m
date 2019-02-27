@@ -124,7 +124,7 @@ hold on
 ft_plot_headshape(shape);
 ft_plot_sens(grad, 'style', 'ob');
 ft_plot_sens(elec, 'style', 'og');
-ft_plot_vol(headmodel_meg, 'facealpha', 0.5, 'edgecolor', 'none'); % "lighting phong" does not work with opacity
+ft_plot_headmodel(headmodel_meg, 'facealpha', 0.5, 'edgecolor', 'none'); % "lighting phong" does not work with opacity
 material dull
 camlight
 

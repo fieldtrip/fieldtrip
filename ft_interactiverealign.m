@@ -34,7 +34,7 @@ function [cfg] = ft_interactiverealign(cfg)
 % one or multiple template objects.
 %
 % See also FT_VOLUMEREALIGN, FT_ELECTRODEREALIGN, FT_DETERMINE_COORDSYS,
-% FT_READ_SENS, FT_READ_VOL, FT_READ_HEADSHAPE
+% FT_READ_SENS, FT_READ_HEADMODEL, FT_READ_HEADSHAPE
 
 % Copyright (C) 2008, Vladimir Litvak
 %

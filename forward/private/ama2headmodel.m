@@ -1,14 +1,11 @@
-function [headmodel] = ft_transform_vol(transform, headmodel)
-
-% FT_TRANSFORM_VOL applies a homogenous coordinate transformation to
-% a structure with an EEG or MEG colume conduction model. The homogenous
-% transformation matrix should be limited to a rigid-body translation
-% plus rotation and a global rescaling.
+function [headmodel] = ama2headmodel(ama)
+  
+% AMA2HEADMODEL converts a dipoli structure with boundary geometries
+% and a boundary element method transfer matrix to a volume conduction
+% model.
 %
 % Use as
-%   headmodel = ft_transform_vol(transform, headmodel)
-%
-% See also FT_READ_VOL, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD, FT_TRANSFORM_GEOMETRY
+%   headmodel = ama2headmodel(ama)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
@@ -30,4 +27,17 @@ function [headmodel] = ft_transform_vol(transform, headmodel)
 %
 % $Id$
 
-headmodel = ft_transform_geometry(transform, headmodel);
+headmodel = [];
+ngeo = length(ama.geo);
+for i=1:ngeo
+  headmodel.bnd(i).pos = ama.geo(i).pos;
+  headmodel.bnd(i).tri = ama.geo(i).tri;
+  headmodel.cond(i) = ama.geo(i).sigmam;
+end
+headmodel.mat = ama.bi;
+npos = size(headmodel.mat,2);
+if size(headmodel.mat,1)<npos
+  headmodel.mat(npos, npos) = 0; % it should be a square matrix
+end
+headmodel.mat  = headmodel.mat;
+headmodel.type = 'dipoli';

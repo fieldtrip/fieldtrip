@@ -401,7 +401,7 @@ switch cfg.method
       case 'singlesphere'
         if ~isempty(cfg.headmodel)
           % read the volume conduction model from a CTF *.hdm file
-          tmp = ft_read_vol(cfg.headmodel);
+          tmp = ft_read_headmodel(cfg.headmodel);
           try
             % the single sphere is contained in the "orig" field
             headmodel = [];
@@ -419,7 +419,7 @@ switch cfg.method
       case 'localspheres'
         if ~isempty(cfg.headmodel)
           % read the volume conduction model from a CTF *.hdm file
-          tmp = ft_read_vol(cfg.headmodel);
+          tmp = ft_read_headmodel(cfg.headmodel);
           try
             headmodel = [];
             headmodel.label = tmp.label;

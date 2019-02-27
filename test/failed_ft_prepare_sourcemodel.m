@@ -4,7 +4,7 @@ function failed_ft_prepare_sourcemodel
 % WALLTIME 00:10:00
 
 % TEST test_ft_prepare_sourcemodel
-% TEST ft_prepare_sourcemodel ft_read_sens ft_read_vol 
+% TEST ft_prepare_sourcemodel ft_read_sens ft_read_headmodel 
 
 % function to test ft_prepare_sourcemodel given configuration options (cfg), 
 % a single sphere volume condution model (vol), and gradiometer information
@@ -18,7 +18,7 @@ success = true;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % load single sphere volume conduction model
-vol = ft_read_vol(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/vol/Subject01vol_singlesphere.mat'), 'vol');
+vol = ft_read_headmodel(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/vol/Subject01vol_singlesphere.mat'), 'vol');
 
 % load gradiometer information of an exemplary subject
 grad_standard = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf275.mat'));

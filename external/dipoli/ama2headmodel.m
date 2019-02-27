@@ -1,7 +1,8 @@
 function [headmodel] = ama2headmodel(ama)
-
-% AMA2HEADMODEL converts a dipoli structure with boundary geometries and a BEM
-% transfer matrix to a volume conduction model.
+  
+% AMA2HEADMODEL converts a dipoli structure with boundary geometries
+% and a boundary element method transfer matrix to a volume conduction
+% model.
 %
 % Use as
 %   headmodel = ama2headmodel(ama)

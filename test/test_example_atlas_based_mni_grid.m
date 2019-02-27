@@ -28,7 +28,7 @@ template_grid = ft_convert_units(template_grid,'cm');
 figure;
 hold on
 ft_plot_mesh(template_grid.pos(template_grid.inside,:));
-ft_plot_vol(vol,  'facecolor', 'cortex', 'edgecolor', 'none');
+ft_plot_headmodel(vol,  'facecolor', 'cortex', 'edgecolor', 'none');
 ft_plot_axes(vol);
 alpha 0.5
 camlight
@@ -77,7 +77,7 @@ sourcemodel = ft_convert_units(sourcemodel, 'm');
 
 figure
 hold on
-ft_plot_vol(hdm,  'facecolor', 'cortex', 'edgecolor', 'none');
+ft_plot_headmodel(hdm,  'facecolor', 'cortex', 'edgecolor', 'none');
 ft_plot_axes(hdm);
 alpha 0.4  % make the surface transparent
 ft_plot_mesh(sourcemodel.pos(sourcemodel.inside,:));

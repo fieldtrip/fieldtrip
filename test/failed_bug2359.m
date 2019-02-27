@@ -83,7 +83,7 @@ gridsphere = ft_prepare_sourcemodel(cfg);
 assert(isempty(gridsphere.outside));
 
 figure
-ft_plot_vol(vol, 'edgecolor', 'none', 'facecolor', 'skin', 'facealpha', 0.5);
+ft_plot_headmodel(vol, 'edgecolor', 'none', 'facecolor', 'skin', 'facealpha', 0.5);
 ft_plot_mesh(gridsphere)
 
 %% this is a weird modification, I am just curious to see how it works
@@ -101,7 +101,7 @@ cfg.spherify = 'yes';
 gridsphere = ft_prepare_sourcemodel(cfg);
 
 figure
-ft_plot_vol(vol, 'edgecolor', 'none', 'facecolor', 'skin', 'facealpha', 0.5);
+ft_plot_headmodel(vol, 'edgecolor', 'none', 'facecolor', 'skin', 'facealpha', 0.5);
 ft_plot_mesh(gridsphere)
 
 

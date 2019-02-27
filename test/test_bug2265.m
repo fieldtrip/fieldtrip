@@ -38,7 +38,7 @@ assert(strcmp(template_grid.unit, CMMM));
 %% make a figure with the template head model and dipole grid
 figure
 hold on
-ft_plot_vol(vol, 'facecolor', 'cortex', 'edgecolor', 'none');alpha 0.5;
+ft_plot_headmodel(vol, 'facecolor', 'cortex', 'edgecolor', 'none');alpha 0.5;
 camlight;
 ft_plot_mesh(template_grid.pos(template_grid.inside,:));
 

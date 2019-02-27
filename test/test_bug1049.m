@@ -9,7 +9,7 @@ function failed_bug1049
 
 % get volume conductor model
 volname = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151/Subject01.ds/default.hdm');
-vol     = ft_read_vol(volname);
+vol     = ft_read_headmodel(volname);
 
 % get data + sensor info
 dataname = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat');

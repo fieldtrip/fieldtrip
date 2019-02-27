@@ -16,7 +16,7 @@ for i = 1:31
 end
 
 elec      = ft_read_sens('standard_1020.elc');
-headmodel = ft_read_vol('standard_bem.mat');
+headmodel = ft_read_headmodel('standard_bem.mat');
 
 timelock_data.label = elec.label(1:31);
 

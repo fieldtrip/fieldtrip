@@ -361,17 +361,17 @@ vol = ft_prepare_headmodel(cfg, brain);
 ft_determine_coordsys(mri_realigned, 'interactive', 'no')
 hold on; % add the subsequent objects to the same figure
 ft_plot_headshape(headshape);
-ft_plot_vol(ft_convert_units(vol, 'mm'));
+ft_plot_headmodel(ft_convert_units(vol, 'mm'));
 
 figure
 hold on; % add the subsequent objects to the same figure
 ft_plot_headshape(headshape);
 ft_plot_sens(ft_convert_units(sens, 'mm'), 'coil', 'yes', 'coildiameter', 10);
-ft_plot_vol(ft_convert_units(vol, 'mm'));
+ft_plot_headmodel(ft_convert_units(vol, 'mm'));
 
 % figure
-% ft_plot_vol(ft_convert_units(vol,  'mm'), 'facecolor', 'r'); % FT
-% ft_plot_vol(ft_convert_units(vol1, 'mm'), 'facecolor', 'g'); % SPM
+% ft_plot_headmodel(ft_convert_units(vol,  'mm'), 'facecolor', 'r'); % FT
+% ft_plot_headmodel(ft_convert_units(vol1, 'mm'), 'facecolor', 'g'); % SPM
 % alpha 0.5
 
 
