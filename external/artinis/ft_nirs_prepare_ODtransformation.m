@@ -50,7 +50,7 @@ function [montage, cfg] = ft_nirs_prepare_ODtransformation(cfg, data)
 
 % You are using the FieldTrip NIRS toolbox developed and maintained by
 % Artinis Medical Systems (http://www.artinis.com). For more information
-% on FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% on FieldTrip, see http://www.fieldtriptoolbox.org
 %
 % This work is licensed under a Creative Commons Attribution-ShareAlike 4.0
 % International License. To view a copy of this license, visit
