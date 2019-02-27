@@ -11,6 +11,8 @@ load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2990/4roboos_part1'));
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2990/4roboos_part2'));
 % the cfg contains cfg.mri, which is more or less the mri_realigned (but more accurately coregistered than the sloppy ones in part1)
 
+cfg.checkconfig = 'loose';
+
 cfg1 = cfg;
 cfg1.mri = mri_realigned;
 grid1 = ft_prepare_sourcemodel(cfg);

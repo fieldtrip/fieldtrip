@@ -79,8 +79,8 @@ datain = ft_selectdata(tmpcfg, datain);
 [cfg, datain] = rollback_provenance(cfg, datain);
 
 % match the input data's channels with the labels in the leadfield
-grid = cfg.sourcemodel;
-if ~isfield(grid, 'leadfield')
+sourcemodel = cfg.sourcemodel;
+if ~isfield(sourcemodel, 'leadfield')
   ft_error('cfg.sourcemodel needs to contain leadfields');
 end
 [indx1, indx2] = match_str(datain.label, sourcemodel.label);

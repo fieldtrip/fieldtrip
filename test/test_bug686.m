@@ -231,10 +231,10 @@ for i=1:length(eegvol)
     cfg             = [];
     cfg.headmodel   = eval(sprintf('%s_%s', eegvol{i}, units{j}));
     cfg.elec        = eval(sprintf('elec_%s', units{j}));
-    cfg.sourcemodel.pos    = pos{j};
-    cfg.sourceunits = units{j};
+    cfg.sourcemodel.pos = pos{j};
+    cfg.sourcemodel.unit = units{j};
     grid = ft_prepare_leadfield(cfg);
-    eeg_leadfield{i,j} = sourcemodel.leadfield{1};
+    eeg_leadfield{i,j} = grid.leadfield{1};
   end
 end
 
@@ -245,10 +245,10 @@ for i=1:length(megvol)
     cfg             = [];
     cfg.headmodel   = eval(sprintf('%s_%s', megvol{i}, units{j}));
     cfg.grad        = eval(sprintf('grad_%s', units{j}));
-    cfg.sourcemodel.pos    = pos{j};
-    cfg.sourceunits = units{j};
+    cfg.sourcemodel.pos = pos{j};
+    cfg.sourcemodel.unit = units{j};
     grid = ft_prepare_leadfield(cfg);
-    meg_leadfield{i,j} = sourcemodel.leadfield{1};
+    meg_leadfield{i,j} = grid.leadfield{1};
   end
 end
 

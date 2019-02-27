@@ -123,7 +123,7 @@ if ischar(grid)
     assert(norm(head(insideindx,:)-ssg)/norm(ssg)<1e-9); % there is a little bit rounding off error
   end
   
-  grid           = [];
+  sourcemodel           = [];
   sourcemodel.dim       = dim;
   sourcemodel.transform = transform;
   sourcemodel.inside    = false(prod(dim),1);
@@ -131,7 +131,7 @@ if ischar(grid)
   sourcemodel.leadfield = cell(dim);
   
   % ensure that it has geometrical units (probably mm)
-  grid = ft_determine_units(grid);
+  sourcemodel = ft_determine_units(sourcemodel);
   
   % Read leadfield, all channels, all locations, 3 orientations
   [lftdim, lft] = readBESAlft(lftfile);
@@ -154,12 +154,12 @@ end % process the BESA file, grid is now compatible with FT_PREPARE_LEADFIELD
 % PART TWO: write the leadfield to a set of nifti files
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if isfield(grid, 'leadfield')
+if isfield(sourcemodel, 'leadfield')
   % the input pre-computed leadfields reflect the output of FT_PREPARE_LEADFIELD
   % which should be reorganized into channel-specific volumes and stored to disk as nifti files
   
   % ensure that it is represented as 3-D volume
-  grid = ft_checkdata(grid, 'datatype', 'volume');
+  sourcemodel = ft_checkdata(sourcemodel, 'datatype', 'volume');
   
   nchan = length(sens.label);
   if size(sourcemodel.leadfield{insideindx(1)},1)~=nchan
@@ -175,7 +175,7 @@ if isfield(grid, 'leadfield')
   headmodel.sens      = sens;
   headmodel.filename  = cell(size(sens.label));
   
-  if isfield(grid, 'unit')
+  if isfield(sourcemodel, 'unit')
     % get the units from the dipole grid
     headmodel.unit = sourcemodel.unit;
   else
@@ -247,12 +247,12 @@ if isfield(grid, 'leadfield')
   fprintf('writing volume conduction model metadata to %s\n', filename)
   save(filename, 'headmodel');
   
-elseif isfield(grid, 'filename')
+elseif isfield(sourcemodel, 'filename')
   % the input pre-computed leadfields reflect the output of FT_HEADMODEL_INTERPOLATE,
   % which should be re-interpolated on the channel level and then stored to disk as nifti files
   ft_hastoolbox('spm8up', 1);
   
-  inputvol = grid;
+  inputvol = sourcemodel;
   
   if ~isfield(sens, 'tra')
     sens.tra = eye(length(sens.label));

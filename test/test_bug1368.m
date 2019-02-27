@@ -576,7 +576,7 @@ cfg.normalize = 'yes';
 grid = ft_prepare_leadfield(cfg);
 
 % check correctness of OM normalization
-lf = sourcemodel.leadfield{sourcemodel.inside(1)};
+lf = grid.leadfield{grid.inside(1)};
 if (abs(norm(lf,'fro')-1)>eps)
   error('test not passed for vector norm')
 end
@@ -602,7 +602,7 @@ cfg.normalize = 'column';
 grid = ft_prepare_leadfield(cfg);
 
 % check correctness of OM normalization
-lf = sourcemodel.leadfield{sourcemodel.inside(1)};
+lf = grid.leadfield{grid.inside(1)};
 if (norm(lf(:,1),'fro')-1>eps)
   error('test not passed for column norm')
 end

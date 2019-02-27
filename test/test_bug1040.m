@@ -42,7 +42,7 @@ if ~success
 end
 
 % check whether there are potential dipoles inside the brain
-success     = success && ~isempty(sourcemodel.inside);
+success     = success && ~isempty(grid.inside);
 if ~success
   error('ft_prepare_sourcemodel was not able to determine the inside brain');
 end
@@ -64,7 +64,7 @@ if ~success
 end
 
 % check whether there are potential dipoles inside the brain
-success     = success && ~isempty(sourcemodel.inside);
+success     = success && ~isempty(grid.inside);
 if ~success
   error('ft_prepare_sourcemodel was not able to determine the inside brain using extended gradiometer information');
 end
