@@ -173,7 +173,7 @@ else
   cfg.reducerank = ft_getopt(cfg, 'reducerank', 2);
 end
 
-% construct the dipole sourcemodel according to the configuration
+% construct the sourcemodel for which the leadfield will be computed
 tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'showcallinfo'});
 tmpcfg.headmodel = headmodel;
 if ft_senstype(sens, 'eeg')
@@ -181,7 +181,6 @@ if ft_senstype(sens, 'eeg')
 elseif ft_senstype(sens, 'meg')
   tmpcfg.grad = sens;
 end
-% construct the dipole sourcemodel for which the leadfield will be computed
 sourcemodel = ft_prepare_sourcemodel(tmpcfg);
 
 % check whether units are equal (NOTE: this was previously not required,
@@ -354,3 +353,4 @@ ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble provenance sourcemodel
 ft_postamble history    sourcemodel
+ft_postamble savevar    sourcemodel
