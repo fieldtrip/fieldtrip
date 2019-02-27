@@ -328,7 +328,7 @@ if ~isempty(createsubcfg)
           'absdiff'
           };
 
-      case 'grid'
+      case 'sourcemodel'
         fieldname = {
           'xgrid'
           'ygrid'
