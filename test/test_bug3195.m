@@ -20,7 +20,7 @@ sel = sel(1:1000);
 
 cfg = [];
 cfg.headmodel = template_FEM;
-cfg.grid.pos = sourcemodel.pos(sel,:);
+cfg.sourcemodel.pos = sourcemodel.pos(sel,:);
 sourcemodel1 = ft_prepare_sourcemodel(cfg);
 
 figure
@@ -31,7 +31,7 @@ ft_plot_mesh(sourcemodel1.pos(sourcemodel1.inside,:))
 
 cfg = [];
 cfg.headmodel = template_FEM;
-cfg.grid.resolution = 20;
+cfg.sourcemodel.resolution = 20;
 sourcemodel2 = ft_prepare_sourcemodel(cfg);
 
 figure

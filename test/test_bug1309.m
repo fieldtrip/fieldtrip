@@ -27,8 +27,8 @@ cfg.numdipoles = 1;
 
 % the grid resolution remains the same, regardless of the electrode and headmodel units
 % the output source model units should be consistent with the ones specified here (and not with elec or headmodel)
-cfg.grid.resolution = 3;
-cfg.grid.unit = 'cm';
+cfg.sourcemodel.resolution = 3;
+cfg.sourcemodel.unit = 'cm';
 
 elecunit      = {'mm', 'cm', 'm', 'inch'};
 headmodelunit = {'mm', 'cm', 'm', 'feet'};

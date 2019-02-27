@@ -34,7 +34,7 @@ grad2.type = 'meg'; % this makes ft_senstype much faster
 
 cfg = [];
 cfg.headmodel = vol;
-cfg.grid.resolution = 4;
+cfg.sourcemodel.resolution = 4;
 cfg.channel = 'all';
 
 cfg.grad = grad1;

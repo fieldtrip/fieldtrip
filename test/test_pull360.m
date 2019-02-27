@@ -8,6 +8,6 @@ mri.transform	= [-1,0,0,95.7;0,1,0,-122.5;0,0,1,-132.5;0,0,0,1]; % this will req
 
 cfg                         = [];
 cfg.mri                     = mri;
-cfg.grid.resolution         = 10;       % in mm
-cfg.grid.unit               = 'mm';
+cfg.sourcemodel.resolution         = 10;       % in mm
+cfg.sourcemodel.unit               = 'mm';
 ft_prepare_sourcemodel(cfg);

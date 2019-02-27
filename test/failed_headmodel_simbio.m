@@ -98,7 +98,7 @@ pos = [zeros(size(zp)) zeros(size(zp)) zp];
 % Define the corresponding spatial grid 
 cfg = [];
 cfg.inwardshift = 5; % otherwise some sourcepoints will be on boundary or really close to it
-cfg.grid.pos    = pos;
+cfg.sourcemodel.pos    = pos;
 cfg.headmodel = volcs;
 cfg.sens = sens;
 gridp = ft_prepare_sourcemodel(cfg);
@@ -106,14 +106,14 @@ gridp = ft_prepare_sourcemodel(cfg);
 cfg=[];
 cfg.headmodel = vol_hex;
 cfg.elec = sens;
-cfg.grid = gridp;
+cfg.sourcemodel = gridp;
 lf_hex  = ft_prepare_leadfield(cfg);
 clear vol_hex;
 
 cfg=[];
 cfg.headmodel = volcs;
 cfg.elec = sens;
-cfg.grid = gridp;
+cfg.sourcemodel = gridp;
 lf_cc  = ft_prepare_leadfield(cfg);
 
 grid1 = lf_cc;

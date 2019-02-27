@@ -11,7 +11,7 @@ load(dccnpath('/home/common/matlab/fieldtrip/data/test/pull800/data.mat'));
 tmp = load(dccnpath('/home/common/matlab/fieldtrip/data/test/pull800/grid.mat'));
 
 cfg = [];
-cfg.grid = tmp.grid;
+cfg.sourcemodel = tmp.grid;
 cfg.dssp.n_space = 30;
 cfg.dssp.n_in    = 30;
 cfg.dssp.n_out   = 30;

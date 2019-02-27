@@ -29,28 +29,28 @@ vol = ft_prepare_headmodel(cfg, iskull);
 
 cfg = [];
 cfg.headmodel = vol;
-cfg.grid = cortex;    % this is in mm
-cfg.inwardshift = 0;  % this should be expressed in the units consistent with cfg.grid.unit
+cfg.sourcemodel = cortex;    % this is in mm
+cfg.inwardshift = 0;  % this should be expressed in the units consistent with cfg.sourcemodel.unit
 cfg.moveinward = 0;
 gridorig = ft_prepare_sourcemodel(cfg);
 
 cfg = [];
 cfg.headmodel = vol;
-cfg.grid = cortex;      % this is in mm
+cfg.sourcemodel = cortex;      % this is in mm
 cfg.inwardshift = -5;  % outward shifted
 cfg.moveinward = 0;
 gridoutward = ft_prepare_sourcemodel(cfg);
 
 cfg = [];
 cfg.headmodel = vol;
-cfg.grid = cortex;    % this is in mm
+cfg.sourcemodel = cortex;    % this is in mm
 cfg.inwardshift = 5; % inward shifted
 cfg.moveinward = 0;
 gridinward = ft_prepare_sourcemodel(cfg);
 
 cfg = [];
 cfg.headmodel = vol;
-cfg.grid = cortex;    % this is in mm
+cfg.sourcemodel = cortex;    % this is in mm
 cfg.inwardshift = 0;  % keep this at the original place
 cfg.moveinward = 5;  % dipoles moved inwards
 gridcorrect = ft_prepare_sourcemodel(cfg);
@@ -76,7 +76,7 @@ vol = ft_prepare_headmodel(cfg, mesh);
 
 cfg = [];
 cfg.headmodel = vol;
-cfg.grid = cortex;    % this is in mm
+cfg.sourcemodel = cortex;    % this is in mm
 cfg.spherify = 'yes';
 gridsphere = ft_prepare_sourcemodel(cfg);
 
@@ -94,9 +94,9 @@ vol = ft_prepare_headmodel(cfg, iskull);
 
 cfg = [];
 cfg.headmodel = vol;
-cfg.grid.xgrid = -200:10:200;    % this is in mm
-cfg.grid.ygrid = -200:10:200;    % this is in mm
-cfg.grid.zgrid =  -50:10:150;    % this is in mm
+cfg.sourcemodel.xgrid = -200:10:200;    % this is in mm
+cfg.sourcemodel.ygrid = -200:10:200;    % this is in mm
+cfg.sourcemodel.zgrid =  -50:10:150;    % this is in mm
 cfg.spherify = 'yes';
 gridsphere = ft_prepare_sourcemodel(cfg);
 

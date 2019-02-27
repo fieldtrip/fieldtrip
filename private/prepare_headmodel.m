@@ -75,15 +75,15 @@ if istrue(cfg.siunits)
   % ensure that the geometrical units are in SI units
   sens       = ft_convert_units(sens,       'm', 'feedback', true);
   headmodel  = ft_convert_units(headmodel,  'm', 'feedback', true);
-  if isfield(cfg, 'grid')
-    cfg.grid = ft_convert_units(cfg.grid,  'm', 'feedback', true);
+  if isfield(cfg, 'sourcemodel')
+    cfg.sourcemodel = ft_convert_units(cfg.sourcemodel,  'm', 'feedback', true);
   end
 else
   % ensure that the geometrical units are the same
-  if isfield(cfg, 'grid') && isfield(cfg.grid, 'unit')
+  if isfield(cfg, 'sourcemodel') && isfield(cfg.sourcemodel, 'unit')
     % convert it to the units of the source model
-    sens       = ft_convert_units(sens,       cfg.grid.unit, 'feedback', true);
-    headmodel  = ft_convert_units(headmodel,  cfg.grid.unit, 'feedback', true);
+    sens       = ft_convert_units(sens,       cfg.sourcemodel.unit, 'feedback', true);
+    headmodel  = ft_convert_units(headmodel,  cfg.sourcemodel.unit, 'feedback', true);
   else
     % convert it to the units of the head model
     sens = ft_convert_units(sens, headmodel.unit, 'feedback', true);

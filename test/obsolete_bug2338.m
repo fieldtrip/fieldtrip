@@ -50,7 +50,7 @@ mesh2.bnd = mesh2.bnd(order);
 vol2 = ft_prepare_bemmodel(cfg, mesh2);
 
 cfg = [];
-cfg.grid.pos = [0 0 70];
+cfg.sourcemodel.pos = [0 0 70];
 cfg.elec = elec;
 cfg.headmodel = vol1;
 lf1 = ft_prepare_leadfield(cfg);
@@ -80,7 +80,7 @@ mesh2.bnd = mesh2.bnd(order);
 vol2 = ft_prepare_headmodel(cfg, mesh2);
 
 cfg = [];
-cfg.grid.pos = [0 0 70];
+cfg.sourcemodel.pos = [0 0 70];
 cfg.elec = elec;
 cfg.headmodel = vol1;
 lf1 = ft_prepare_leadfield(cfg);

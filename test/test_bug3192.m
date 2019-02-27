@@ -7,16 +7,16 @@ function test_bug3192
 
 % one color for all vertex
 cfg = [];
-cfg.grid.xgrid  = -20:5:20;
-cfg.grid.ygrid  = -20:5:20;
-cfg.grid.zgrid  = -20:5:20;
+cfg.sourcemodel.xgrid  = -20:5:20;
+cfg.sourcemodel.ygrid  = -20:5:20;
+cfg.sourcemodel.zgrid  = -20:5:20;
 grid  = ft_prepare_sourcemodel(cfg);
 figure, ft_plot_mesh(grid, 'vertexcolor', 'blue', 'facecolor', 'brain', 'edgecolor', 'skull')
 
 % different colors for each vertex
 c = [];
 temp = {'r','b'};
-for iPos=1:length(grid.pos), c = [c temp{mod(iPos,2)+1}]; end
+for iPos=1:length(sourcemodel.pos), c = [c temp{mod(iPos,2)+1}]; end
 figure, ft_plot_mesh(grid, 'vertexcolor', c)
 
 figure, ft_plot_box([-1 1 2 3], 'facecolor', 'brain')

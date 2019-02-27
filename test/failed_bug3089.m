@@ -157,8 +157,8 @@ cfg.latency         = 0.100;
 cfg.numdipoles      = 2;
 cfg.symmetry        = 'x';
 cfg.gridsearch      = 'yes';
-cfg.grid.unit       = 'm';
-cfg.grid.resolution = 0.02;
+cfg.sourcemodel.unit       = 'm';
+cfg.sourcemodel.resolution = 0.02;
 
 cfg.senstype        = 'MEG';
 cfg.headmodel       = headmodel_meg;
@@ -182,8 +182,8 @@ cfg.latency         = 0.100;
 cfg.numdipoles      = 2;
 cfg.symmetry        = 'x';
 cfg.gridsearch      = 'yes';
-cfg.grid.unit       = 'm';
-cfg.grid.resolution = 0.02;
+cfg.sourcemodel.unit       = 'm';
+cfg.sourcemodel.resolution = 0.02;
 
 cfg.channel = {'MEGMAG'};
 timelock_sel = ft_selectdata(cfg, timelock_cov); % this selects channels from the covariance
@@ -215,8 +215,8 @@ cfg.numdipoles      = 2;
 cfg.latency         = 0.100;
 cfg.symmetry        = 'x';
 cfg.gridsearch      = 'yes';
-cfg.grid.unit       = 'm';
-cfg.grid.resolution = 0.02;
+cfg.sourcemodel.unit       = 'm';
+cfg.sourcemodel.resolution = 0.02;
 
 cov_mag  = zeros(306);
 for i=1:3:306

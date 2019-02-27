@@ -24,7 +24,7 @@ cfg.method = 'mne';
 % error we are testing for is a different one ("Reference to non-existent
 % field 'topo'." )
 cfg.elec = [];
-cfg.grid = [];
+cfg.sourcemodel = [];
 cfg.headmodel = [];
 cfg.hdmfile = [];
 

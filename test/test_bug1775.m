@@ -36,15 +36,15 @@ vol = ft_datatype_headmodel(vol);
 cfg = [];
 cfg.grad            = grad;
 cfg.headmodel       = vol;
-cfg.grid.resolution = 2; % cm
+cfg.sourcemodel.resolution = 2; % cm
 cfg.channel         = 'all';
 grid = ft_prepare_leadfield(cfg);
 
 %% create an anatomical parcellation
 parcellation = [];
-parcellation.pos        = grid.pos;
-parcellation.unit       = grid.unit;
-parcellation.type       = zeros(size(grid.pos,1),1);
+parcellation.pos        = sourcemodel.pos;
+parcellation.unit       = sourcemodel.unit;
+parcellation.type       = zeros(size(sourcemodel.pos,1),1);
 parcellation.typelabel  = {};
 height = [3 4 5 6 7 8 9];
 for i=1:length(height)
@@ -78,14 +78,14 @@ freq2 = ft_freqanalysis(cfg, data);
 cfg = [];
 cfg.grad      = grad;
 cfg.headmodel = vol;
-cfg.grid      = grid;
+cfg.sourcemodel      = grid;
 cfg.method    = 'lcmv';
 source1 = ft_sourceanalysis(cfg, timelock);
 
 cfg = [];
 cfg.grad       = grad;
 cfg.headmodel  = vol;
-cfg.grid       = grid;
+cfg.sourcemodel       = grid;
 cfg.method     = 'mne';
 cfg.mne.lambda = 0;
 source2 = ft_sourceanalysis(cfg, timelock);

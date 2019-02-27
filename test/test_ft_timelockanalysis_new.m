@@ -373,13 +373,13 @@ if 0
     cfg.headmodel=vol;
     cfg.reducerank = 2;
     cfg.grad=tlock.grad;
-    cfg.grid.resolution=1;
+    cfg.sourcemodel.resolution=1;
     cfg.channel={'MEG','-MLP31','-MLO12'};
     grid=ft_prepare_leadfield(cfg);
     cfg=[];
     cfg.method='lcmv';
     cfg.projectnoise='yes';
-    cfg.grid=grid;
+    cfg.sourcemodel=grid;
     cfg.headmodel=vol;
     source=ft_sourceanalysis(cfg,tlock);
 

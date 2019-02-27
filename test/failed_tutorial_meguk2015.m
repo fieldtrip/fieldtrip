@@ -446,9 +446,9 @@ ft_multiplotTFR(cfg, wavelet)
 %%
 
 cfg = [];
-cfg.grid.resolution = 7;
+cfg.sourcemodel.resolution = 7;
 % cfg.inwardshift = -7; % allow dipoles 10mm outside the brain, this improves interpolation at the edges
-cfg.grid.unit = 'mm';
+cfg.sourcemodel.unit = 'mm';
 cfg.headmodel = vol;  % from FT
 cfg.grad = sens; % from FT
 cfg.senstype = 'meg';
@@ -464,7 +464,7 @@ cfg = [];
 cfg.headmodel = vol;  % from FT
 cfg.grad      = sens; % from FT
 cfg.senstype  = 'meg';
-cfg.grid      = grid;
+cfg.sourcemodel      = grid;
 cfg.method    = 'dics';
 
 cfg.frequency = [14 18];
@@ -569,9 +569,9 @@ ft_multiplotER(cfg, timelock2);
 pos = [21 -64 30];
 
 cfg = [];
-cfg.grid.pos = pos;
-cfg.grid.unit = 'mm';
-% cfg.grid = grid;
+cfg.sourcemodel.pos = pos;
+cfg.sourcemodel.unit = 'mm';
+% cfg.sourcemodel = grid;
 cfg.headmodel = vol;
 cfg.grad = sens;
 cfg.senstype = 'meg';
@@ -688,11 +688,11 @@ cfg.senstype    = 'meg';
 cfg.method      = 'lcmv';
 cfg.lcmv.keepfilter = 'yes';
 cfg.lcmv.projectmom = 'yes';
-cfg.grid.unit   = 'mm';
-cfg.grid.pos    = pos1;
+cfg.sourcemodel.unit   = 'mm';
+cfg.sourcemodel.pos    = pos1;
 source1 = ft_sourceanalysis(cfg, timelock2);
 
-cfg.grid.pos = pos2;
+cfg.sourcemodel.pos = pos2;
 source2 = ft_sourceanalysis(cfg, timelock2);
 
 
@@ -806,9 +806,9 @@ freq = ft_freqanalysis(cfg, data_fix);
 %%
 
 cfg = [];
-cfg.grid.resolution = 7;
+cfg.sourcemodel.resolution = 7;
 % cfg.inwardshift = -7; % allow dipoles 10mm outside the brain, this improves interpolation at the edges
-cfg.grid.unit = 'mm';
+cfg.sourcemodel.unit = 'mm';
 cfg.headmodel = vol;  % from FT
 cfg.grad      = sens; % from FT
 cfg.senstype  = 'meg';
@@ -824,7 +824,7 @@ cfg           = [];
 cfg.headmodel = vol;  % from FT
 cfg.grad      = sens; % from FT
 cfg.senstype  = 'meg';
-cfg.grid      = grid;
+cfg.sourcemodel      = grid;
 cfg.method    = 'pcc';
 cfg.pcc.fixedori = 'yes';
 cfg.latency   = [0.140 0.160];
@@ -843,7 +843,7 @@ ylabel('imag');
 pos = [21 -64 30];
 
 % compute the nearest grid location
-dif = grid.pos;
+dif = sourcemodel.pos;
 dif(:,1) = dif(:,1)-pos(1);
 dif(:,2) = dif(:,2)-pos(2);
 dif(:,3) = dif(:,3)-pos(3);

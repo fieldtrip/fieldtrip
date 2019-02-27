@@ -106,17 +106,17 @@ freq       = ft_freqanalysis(cfg, ft_appenddata([], data1, data2));
 cfg = [];
 cfg.headmodel = vol;
 cfg.grad = grad;
-cfg.grid.resolution = 0.01;
+cfg.sourcemodel.resolution = 0.01;
 cfg.channel = 'MEG';
 sourcemodel_grid = ft_prepare_leadfield(cfg);
 
 [pnt,tri] = icosahedron642;
-cfg.grid  = struct('pos',pnt.*0.06,'tri',tri,'unit','m');
+cfg.sourcemodel  = struct('pos',pnt.*0.06,'tri',tri,'unit','m');
 sourcemodel_mesh = ft_prepare_leadfield(cfg);
 
 cfg = [];
 cfg.headmodel = vol;
-cfg.grid = sourcemodel_grid;
+cfg.sourcemodel = sourcemodel_grid;
 cfg.method = 'dics';
 cfg.dics.projectnoise = 'yes';
 cfg.dics.lambda = '10%';
@@ -126,7 +126,7 @@ cfg.frequency = 10;
 cfg.latency` = 0.25;
 source_grid = ft_sourceanalysis(cfg, freq);
 
-cfg.grid.filter = source_grid.avg.filter;
+cfg.sourcemodel.filter = source_grid.avg.filter;
 source1avg = ft_sourceanalysis(cfg, freq1);
 source2avg = ft_sourceanalysis(cfg, freq2);
 
@@ -135,10 +135,10 @@ source1         = ft_sourceanalysis(cfg, freq1);
 source2         = ft_sourceanalysis(cfg, freq2);
 
 cfg.rawtrial    = 'no';
-cfg.grid        = sourcemodel_mesh;
+cfg.sourcemodel        = sourcemodel_mesh;
 source_mesh     = ft_sourceanalysis(cfg, freq);
 
-cfg.grid.filter = source_mesh.avg.filter;
+cfg.sourcemodel.filter = source_mesh.avg.filter;
 source1avg_mesh = ft_sourceanalysis(cfg, freq1);
 source2avg_mesh = ft_sourceanalysis(cfg, freq2);
 

@@ -112,11 +112,12 @@ if ft_abort
 end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed',     {'plot3d',      'feedback'});
-cfg = ft_checkconfig(cfg, 'renamedval',  {'headshape',   'headmodel', []});
-cfg = ft_checkconfig(cfg, 'required',    {'inwardshift', 'template'});
-cfg = ft_checkconfig(cfg, 'renamed',     {'hdmfile',     'headmodel'});
-cfg = ft_checkconfig(cfg, 'renamed',     {'vol',         'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'plot3d',      'feedback'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'headshape',   'headmodel', []});
+cfg = ft_checkconfig(cfg, 'required',   {'inwardshift', 'template'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'hdmfile',     'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'vol',         'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'grid',        'sourcemodel'});
 
 % set the default configuration
 cfg.headshape  = ft_getopt(cfg, 'headshape', []);
@@ -138,9 +139,9 @@ data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo',
 pertrial = all(ismember({'nasX';'nasY';'nasZ';'lpaX';'lpaY';'lpaZ';'rpaX';'rpaY';'rpaZ'}, data.label));
 
 % put the low-level options pertaining to the dipole grid in their own field
-cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.grid.tight by the subsequent createsubcfg
-cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.grid.unit by the subsequent createsubcfg
-cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
+cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.sourcemodel.unit by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'createsubcfg',  {'sourcemodel'});
 
 if isstruct(cfg.template)
   % this should be a cell-array
@@ -242,12 +243,12 @@ else
 end
 
 % copy all options that are potentially used in ft_prepare_sourcemodel
-tmpcfg            = keepfields(cfg, {'grid', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'showcallinfo'});
+tmpcfg            = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'showcallinfo'});
 tmpcfg.headmodel  = volold;
 tmpcfg.grad       = data.grad;
 % create the dipole grid on which the data will be projected
 grid = ft_prepare_sourcemodel(tmpcfg);
-pos = grid.pos;
+pos = sourcemodel.pos;
 
 % sometimes some of the dipole positions are nan, due to problems with the headsurface triangulation
 % remove them to prevent problems with the forward computation
@@ -338,7 +339,7 @@ if strcmp(cfg.feedback, 'yes')
   figure
   hold on
   ft_plot_headmodel(volold);
-  plot3(grid.pos(:,1),grid.pos(:,2),grid.pos(:,3),'b.');
+  plot3(sourcemodel.pos(:,1),sourcemodel.pos(:,2),sourcemodel.pos(:,3),'b.');
   plot3(pos1(:,1), pos1(:,2), pos1(:,3), 'r.') % original positions
   plot3(pos2(:,1), pos2(:,2), pos2(:,3), 'g.') % template positions
   line(X,Y,Z, 'color', 'black');

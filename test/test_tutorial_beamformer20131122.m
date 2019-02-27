@@ -62,14 +62,14 @@ cfg.grad            = freqPost.grad;
 cfg.headmodel       = vol;
 cfg.reducerank      = 2;
 cfg.channel         = {'MEG','-MLP31', '-MLO12'};
-cfg.grid.resolution = 1;   % use a 3-D grid with a 1 cm resolution
-cfg.grid.unit       = 'cm';
+cfg.sourcemodel.resolution = 1;   % use a 3-D grid with a 1 cm resolution
+cfg.sourcemodel.unit       = 'cm';
 [grid] = ft_prepare_leadfield(cfg);
 
 cfg              = [];
 cfg.method       = 'dics';
 cfg.frequency    = 18;
-cfg.grid         = grid;
+cfg.sourcemodel         = grid;
 cfg.headmodel    = vol;
 cfg.dics.projectnoise = 'yes';
 cfg.dics.lambda       = 0;
@@ -120,7 +120,7 @@ freqAll = ft_freqanalysis(cfg, dataAll);
 cfg              = [];
 cfg.method       = 'dics';
 cfg.frequency    = 18;
-cfg.grid         = grid;
+cfg.sourcemodel         = grid;
 cfg.headmodel    = vol;
 cfg.dics.projectnoise = 'yes';
 cfg.dics.lambda       = '5%';
@@ -128,7 +128,7 @@ cfg.dics.keepfilter   = 'yes';
 cfg.dics.realfilter   = 'yes';
 sourceAll = ft_sourceanalysis(cfg, freqAll);
 
-cfg.grid.filter = sourceAll.avg.filter;
+cfg.sourcemodel.filter = sourceAll.avg.filter;
 sourcePre_con  = ft_sourceanalysis(cfg, freqPre );
 sourcePost_con = ft_sourceanalysis(cfg, freqPost);
 

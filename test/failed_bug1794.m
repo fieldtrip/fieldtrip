@@ -11,38 +11,38 @@ load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/dataFI
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri'))
 
 cfg = [];
-cfg.grid.resolution = 1;
+cfg.sourcemodel.resolution = 1;
 cfg.mri = segmentedmri;
 grid = ft_prepare_sourcemodel(cfg);
 
 cfg = [];
-cfg.grid = grid;
+cfg.sourcemodel = grid;
 cfg.headmodel = vol;
 cfg.channel = dataFIC.label;
 cfg.grad = dataFIC.grad;
 
 cfgmm = cfg;
-cfgmm.grid = ft_convert_units(cfg.grid,'mm');
+cfgmm.grid = ft_convert_units(cfg.sourcemodel,'mm');
 cfgmm.headmodel = ft_convert_units(cfg.headmodel,'mm');
 cfgmm.grad = ft_convert_units(cfg.grad,'mm');
 
 cfgcm = cfg;
-cfgcm.grid = ft_convert_units(cfg.grid,'cm');
+cfgcm.grid = ft_convert_units(cfg.sourcemodel,'cm');
 cfgcm.headmodel = ft_convert_units(cfg.headmodel,'cm');
 cfgcm.grad = ft_convert_units(cfg.grad,'cm');
 
 cfgmix1 = cfg;
-cfgmix1.grid = ft_convert_units(cfg.grid,'cm');
+cfgmix1.grid = ft_convert_units(cfg.sourcemodel,'cm');
 cfgmix1.headmodel = ft_convert_units(cfg.headmodel,'mm');
 cfgmix1.grad = ft_convert_units(cfg.grad,'mm');
 
 cfgmix2 = cfg;
-cfgmix2.grid = ft_convert_units(cfg.grid,'mm');
+cfgmix2.grid = ft_convert_units(cfg.sourcemodel,'mm');
 cfgmix2.headmodel = ft_convert_units(cfg.headmodel,'cm');
 cfgmix2.grad = ft_convert_units(cfg.grad,'cm');
 
 cfgmix3 = cfg;
-cfgmix3.grid = ft_convert_units(cfg.grid,'mm');
+cfgmix3.grid = ft_convert_units(cfg.sourcemodel,'mm');
 cfgmix3.headmodel = ft_convert_units(cfg.headmodel,'mm');
 cfgmix3.grad = ft_convert_units(cfg.grad,'cm');
 
@@ -77,27 +77,27 @@ return
 
 load bug1794cfg
 cfgmm = cfg;
-cfgmm.grid = ft_convert_units(cfg.grid,'mm');
+cfgmm.grid = ft_convert_units(cfg.sourcemodel,'mm');
 cfgmm.headmodel = ft_convert_units(cfg.headmodel,'mm');
 cfgmm.grad = ft_convert_units(cfg.grad,'mm');
 
 cfgcm = cfg;
-cfgcm.grid = ft_convert_units(cfg.grid,'cm');
+cfgcm.grid = ft_convert_units(cfg.sourcemodel,'cm');
 cfgcm.headmodel = ft_convert_units(cfg.headmodel,'cm');
 cfgcm.grad = ft_convert_units(cfg.grad,'cm');
 
 cfgmix1 = cfg;
-cfgmix1.grid = ft_convert_units(cfg.grid,'cm');
+cfgmix1.grid = ft_convert_units(cfg.sourcemodel,'cm');
 cfgmix1.headmodel = ft_convert_units(cfg.headmodel,'mm');
 cfgmix1.grad = ft_convert_units(cfg.grad,'mm');
 
 cfgmix2 = cfg;
-cfgmix2.grid = ft_convert_units(cfg.grid,'mm');
+cfgmix2.grid = ft_convert_units(cfg.sourcemodel,'mm');
 cfgmix2.headmodel = ft_convert_units(cfg.headmodel,'cm');
 cfgmix2.grad = ft_convert_units(cfg.grad,'cm');
 
 cfgmix3 = cfg;
-cfgmix3.grid = ft_convert_units(cfg.grid,'mm');
+cfgmix3.grid = ft_convert_units(cfg.sourcemodel,'mm');
 cfgmix3.headmodel = ft_convert_units(cfg.headmodel,'mm');
 cfgmix3.grad = ft_convert_units(cfg.grad,'cm');
 
@@ -153,7 +153,7 @@ assert(isequaln(rmfield(gridLFmix3,'cfg'),rmfield(gridLFcmcur,'cfg')))
 % % restoredefaultpath;
 % % % Here Add fieltrip-20121025 directory
 % % ft_defaults;
-% % cfg.grid = ft_convert_units(cfg.grid,'cm');
+% % cfg.sourcemodel = ft_convert_units(cfg.sourcemodel,'cm');
 % % cfg.headmodel = ft_convert_units(cfg.headmodel,'cm');
 % % cfg.grad = ft_convert_units(cfg.grad,'cm');
 % % gridLFnew =  ft_prepare_leadfield(cfg);

@@ -19,8 +19,8 @@ cfg.inwardshift = 0;
 cfg.grad = grad;
 cfg.headmodel = vol;
 cfg.channel = ft_channelselection('MEG', grad.label);
-cfg.grid.resolution = 5;
-cfg.grid.unit = 'cm';
+cfg.sourcemodel.resolution = 5;
+cfg.sourcemodel.unit = 'cm';
 
 grid = ft_prepare_leadfield(cfg);
 
@@ -31,7 +31,7 @@ grid;
 
 % the grid is in cm, which corresponds to the units of the grad, not the vol
 % with a 5 cm grid, you can fit 12 sources in the head
-assert(sum(grid.inside)==12, 'expected 12 sources inside the volume conductor');
+assert(sum(sourcemodel.inside)==12, 'expected 12 sources inside the volume conductor');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % use ft_prepare_sourcemodel instead of ft_prepare_leadfield to speed it up
@@ -47,7 +47,7 @@ cfg.inwardshift = 0;
 cfg.grad = grad_mm;
 cfg.headmodel = vol_mm;
 cfg.channel = ft_channelselection('MEG', grad.label);
-cfg.grid.resolution = 5; % this is now in mm
+cfg.sourcemodel.resolution = 5; % this is now in mm
 grid_mm = ft_prepare_sourcemodel(cfg);
 cfg.sourceunits = 'cm'; 
 grid_mm2 = ft_prepare_sourcemodel(cfg);
@@ -66,7 +66,7 @@ cfg.inwardshift = 0;
 cfg.grad = grad_cm;
 cfg.headmodel = vol_cm;
 cfg.channel = ft_channelselection('MEG', grad.label);
-cfg.grid.resolution = 5;  % this is now in mm
+cfg.sourcemodel.resolution = 5;  % this is now in mm
 grid_cm = ft_prepare_sourcemodel(cfg);
 cfg.sourceunits = 'mm'; 
 grid_cm2 = ft_prepare_sourcemodel(cfg);
@@ -85,7 +85,7 @@ cfg.inwardshift = 0;
 cfg.grad = grad_m;
 cfg.headmodel = vol_m;
 cfg.channel = ft_channelselection('MEG', grad.label);
-cfg.grid.resolution = 5; % this is now in m
+cfg.sourcemodel.resolution = 5; % this is now in m
 grid_m = ft_prepare_sourcemodel(cfg);
 cfg.sourceunits = 'cm'; 
 grid_m2 = ft_prepare_sourcemodel(cfg);

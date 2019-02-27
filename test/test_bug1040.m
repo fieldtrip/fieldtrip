@@ -31,7 +31,7 @@ success = true;
 % create config options
 cfg                 = [];
 cfg.symmetry        = [];
-cfg.grid.resolution = 2;
+cfg.sourcemodel.resolution = 2;
 
 [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, grad_standard);
 
@@ -42,7 +42,7 @@ if ~success
 end
 
 % check whether there are potential dipoles inside the brain
-success     = success && ~isempty(grid.inside);
+success     = success && ~isempty(sourcemodel.inside);
 if ~success
   error('ft_prepare_sourcemodel was not able to determine the inside brain');
 end
@@ -53,7 +53,7 @@ end
 % create config options
 cfg                 = [];
 cfg.symmetry        = [];
-cfg.grid.resolution = 2;
+cfg.sourcemodel.resolution = 2;
 
 [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, grad_extended);
 
@@ -64,7 +64,7 @@ if ~success
 end
 
 % check whether there are potential dipoles inside the brain
-success     = success && ~isempty(grid.inside);
+success     = success && ~isempty(sourcemodel.inside);
 if ~success
   error('ft_prepare_sourcemodel was not able to determine the inside brain using extended gradiometer information');
 end

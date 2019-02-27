@@ -204,9 +204,9 @@ for k = 1:numel(conductivity)
       cfg = [];
       cfg.headmodel = eval(sprintf('%s_%s(%d)', eegvol{i}, units{j}, k));
       cfg.elec = eval(sprintf('elec_%s', units{j}));
-      cfg.grid.pos = dippos{j};
+      cfg.sourcemodel.pos = dippos{j};
       grid = ft_prepare_leadfield(cfg);
-      eeg_leadfield{i,j,k} = grid.leadfield{1};
+      eeg_leadfield{i,j,k} = sourcemodel.leadfield{1};
     end
   end
 end
@@ -219,9 +219,9 @@ for k = 1:numel(conductivity)
       cfg = [];
       cfg.headmodel = eval(sprintf('%s_%s(%d)', megvol{i}, units{j}, k));
       cfg.grad = eval(sprintf('grad_%s', units{j}));
-      cfg.grid.pos = dippos{j};
+      cfg.sourcemodel.pos = dippos{j};
       grid = ft_prepare_leadfield(cfg);
-      meg_leadfield{i,j,k} = grid.leadfield{1};
+      meg_leadfield{i,j,k} = sourcemodel.leadfield{1};
     end
   end
 end

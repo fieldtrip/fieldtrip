@@ -27,7 +27,7 @@ load standard_sourcemodel3d10mm
 load standard_singleshell
 
 cfg = [];
-cfg.grid = sourcemodel;
+cfg.sourcemodel = sourcemodel;
 cfg.headmodel = vol;
 
 cfg.grad = rej1.grad;

@@ -60,8 +60,8 @@ cfg.grad            = freqPre.grad;
 cfg.headmodel       = vol;
 cfg.reducerank      = 2;
 cfg.channel         = {'MEG','-MLP31', '-MLO12'};
-cfg.grid.resolution = 1;   % use a 3-D grid with a 1 cm resolution
-cfg.grid.unit = 'cm';
+cfg.sourcemodel.resolution = 1;   % use a 3-D grid with a 1 cm resolution
+cfg.sourcemodel.unit = 'cm';
 [grid] = ft_prepare_leadfield(cfg);
 
 %% Source analysis
@@ -69,7 +69,7 @@ cfg              = [];
 cfg.frequency    = 18;
 cfg.method       = 'dics';
 cfg.projectnoise = 'yes';
-cfg.grid         = grid;
+cfg.sourcemodel         = grid;
 cfg.headmodel    = vol;
 cfg.lambda       = 0;
 

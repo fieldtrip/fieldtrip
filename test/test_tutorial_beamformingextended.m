@@ -84,9 +84,9 @@ hdm = ft_prepare_headmodel(cfg, segmentedmri);
 
 template = load(fullfile(templatedir, 'standard_sourcemodel3d8mm'));
 % inverse-warp the subject specific grid to the template grid cfg = [];
-cfg.grid.warpmni   = 'yes';
-cfg.grid.template  = template.sourcemodel;
-cfg.grid.nonlinear = 'yes'; % use non-linear normalization
+cfg.sourcemodel.warpmni   = 'yes';
+cfg.sourcemodel.template  = template.sourcemodel;
+cfg.sourcemodel.nonlinear = 'yes'; % use non-linear normalization
 cfg.mri            = mri;
 sourcemodel        = ft_prepare_sourcemodel(cfg);
 
@@ -102,7 +102,7 @@ ft_plot_mesh(sourcemodel.pos(sourcemodel.inside,:));
 ft_plot_sens(freq_cmb.grad);
 
 cfg         = [];
-cfg.grid    = sourcemodel;
+cfg.sourcemodel    = sourcemodel;
 cfg.headmodel = hdm;
 cfg.channel = {'MEG'};
 cfg.grad    = freq_cmb.grad;
@@ -115,7 +115,7 @@ cfg.frequency         = freq_cmb.freq;
 cfg.grad              = freq_cmb.grad;
 cfg.method            = 'dics';
 cfg.keeptrials        = 'yes';
-cfg.grid              = sourcemodel_lf;
+cfg.sourcemodel              = sourcemodel_lf;
 cfg.headmodel         = hdm;
 cfg.keeptrials        = 'yes';
 cfg.dics.lambda       = '5%';
@@ -125,7 +125,7 @@ cfg.dics.realfilter   = 'yes';
 source  = ft_sourceanalysis(cfg, freq_cmb);
 
 % beam pre- and poststim by using the common filter
-cfg.grid.filter   = source.avg.filter;
+cfg.sourcemodel.filter   = source.avg.filter;
 source_bsl  = ft_sourceanalysis(cfg, freq_bsl);
 source_exp  = ft_sourceanalysis(cfg, freq_exp);
 
@@ -188,7 +188,7 @@ cfg.method          = 'dics';
 cfg.refchan         = 'EMGlft';
 cfg.frequency       = 20;
 cfg.headmodel       = hdm;
-cfg.grid            = sourcemodel;
+cfg.sourcemodel            = sourcemodel;
 source_coh_lft      = ft_sourceanalysis(cfg, freq_csd);
 
 source_coh_lft.pos = template.sourcemodel.pos;

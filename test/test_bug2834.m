@@ -30,7 +30,7 @@ freq3 = ft_selectdata(cfg, freq);
 
 cfg = [];
 cfg.headmodel = vol;
-cfg.grid.resolution = 1;
+cfg.sourcemodel.resolution = 1;
 cfg.method = 'dics';
 cfg.frequency = 14;
 cfg.latency   = 0.5;

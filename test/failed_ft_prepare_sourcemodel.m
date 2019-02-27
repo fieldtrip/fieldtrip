@@ -33,7 +33,7 @@ grad_extended = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/l
 % create config options
 cfg                 = [];
 cfg.symmetry        = [];
-cfg.grid.resolution = 2;
+cfg.sourcemodel.resolution = 2;
 
 [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, grad_standard);
 
@@ -44,14 +44,14 @@ if ~success
 end
 
 % check whether there are potential dipoles inside the brain
-success     = success && ~isempty(grid.inside);
+success     = success && ~isempty(sourcemodel.inside);
 if ~success
   error('ft_prepare_sourcemodel was not able to determine the inside brain');
 end
 
 % check whether the inside field is constrained to the positions inside the
 % volume conductor model
-success = success && numel(grid.inside)~=size(grid.pos,1);
+success = success && numel(sourcemodel.inside)~=size(sourcemodel.pos,1);
 if ~success
   error('ft_prepare_sourcemodel was not able to constrain the inside positions');
 end
@@ -62,7 +62,7 @@ end
 % create config options
 cfg                 = [];
 cfg.symmetry        = [];
-cfg.grid.resolution = 2;
+cfg.sourcemodel.resolution = 2;
 
 [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, grad_extended);
 
@@ -73,7 +73,7 @@ if ~success
 end
 
 % check whether there are potential dipoles inside the brain
-success     = success && ~isempty(grid.inside);
+success     = success && ~isempty(sourcemodel.inside);
 if ~success
   error('ft_prepare_sourcemodel was not able to determine the inside brain using extended gradiometer information');
 end

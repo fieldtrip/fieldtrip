@@ -22,11 +22,11 @@ vol = ft_convert_units(vol, CMMM); % Convert the vol to cm, or mm
 % the source units are in cm
 % the negative inwardshift means an outward shift of the brain surface for inside/outside detection
 cfg = [];
-cfg.grid.xgrid = scale*[-20:1:20];
-cfg.grid.ygrid = scale*[-20:1:20];
-cfg.grid.zgrid = scale*[-20:1:20];
-cfg.grid.unit = CMMM;
-cfg.grid.tight = 'yes';
+cfg.sourcemodel.xgrid = scale*[-20:1:20];
+cfg.sourcemodel.ygrid = scale*[-20:1:20];
+cfg.sourcemodel.zgrid = scale*[-20:1:20];
+cfg.sourcemodel.unit = CMMM;
+cfg.sourcemodel.tight = 'yes';
 cfg.inwardshift = -scale*0;
 cfg.headmodel = vol;
 template_grid = ft_prepare_sourcemodel(cfg);
@@ -50,10 +50,10 @@ ft_plot_mesh(elecs.elecpos,'vertexcolor',[1 .3 .3]);
 
 
 data = [];
-cfg.grid = template_grid;
+cfg.sourcemodel = template_grid;
 cfg.headmodel = vol;
 cfg.elec = elecs;
-cfg.unit = CMMM; % this is confusing in case it is different from cfg.grid.unit
+cfg.unit = CMMM; % this is confusing in case it is different from cfg.sourcemodel.unit
 [grid] = ft_prepare_leadfield(cfg, data);
 
 grid = ft_convert_units(grid, CMMM); %% does not really functional!!
@@ -91,7 +91,7 @@ timelock = ft_timelockanalysis(cfg, data);
 cfg = [];
 METHOD = 'lcmv'; % 'lcmv' 'rv' 'mne'
 cfg.method = METHOD;
-cfg.grid = grid;
+cfg.sourcemodel = grid;
 
 
 cfg.headmodel = vol;
