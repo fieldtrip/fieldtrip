@@ -6,6 +6,8 @@ function [lf] = eeg_halfspace_monopole(monpos, elc, vol)
 %
 % Use as
 %   [lf] = eeg_halfspace_monopole(monpos, elc, vol)
+%
+% See also EEG_INFINITE_DIPOLE, EEG_INFINITE_MONOPOLE, EEG_HALFSPACE_DIPOLE
 
 % Copyright (C) 2011, Cristiano Micheli
 % Copyright (C) 2019, Robert Oostenveld

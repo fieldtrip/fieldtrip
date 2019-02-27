@@ -6,6 +6,8 @@ function [lf] = eeg_halfspace_dipole(dippos, elc, vol)
 %
 % Use as
 %   [lf] = eeg_halfspace_dipole(dippos, elc, vol)
+%
+% See also EEG_INFINITE_DIPOLE, EEG_INFINITE_MONOPOLE, EEG_HALFSPACE_MONOPOLE
 
 % Copyright (C) 2011, Cristiano Micheli and Robert Oostenveld
 %
