@@ -583,7 +583,7 @@ fttoolboxpath = fullfile(fttrunkpath, lower(toolbox_name));
 needle=[pathsep fttoolboxpath pathsep];
 haystack = [pathsep path() pathsep];
 
-status = ~isempty(findstr(needle, haystack));
+status = ~isempty(strfind(haystack, needle));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function
