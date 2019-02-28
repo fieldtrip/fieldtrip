@@ -71,7 +71,7 @@ end
 
 % testing a work-in-progress version is not supported
 if istrue(assertclean)
-  % assert(istrue(ft_version('clean')), 'this requires all local changes to be committed');
+  assert(istrue(ft_version('clean')), 'this requires all local changes to be committed');
 end
 
 %% determine the list of functions to test
