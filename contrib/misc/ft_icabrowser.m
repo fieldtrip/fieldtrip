@@ -168,7 +168,7 @@ while err == 0 % KEEP GOING UNTIL THERE IS AN ERROR
     Fs = comp.fsample;
     N = floor(size(fft_data,2));
     xdft = fft(fft_data(compNum,:));
-    xdft = xdft(1:N/2+1);
+    xdft = xdft(1:floor(N/2)+1);
     psdx = (1/(Fs*N)).*abs(xdft).^2;
     psdx(2:end-1) = 2*psdx(2:end-1);
 
