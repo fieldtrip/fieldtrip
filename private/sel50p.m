@@ -8,8 +8,8 @@ function [grid] = sel50p(cfg, grid, sens)
 % set the defaults
 if ~isfield(cfg, 'feedback'),   cfg.feedback = 'text';     end
 
-Ninside  = length(grid.inside);
-Nchans   = size(grid.leadfield{grid.inside(1)}, 1);
+Ninside  = length(sourcemodel.inside);
+Nchans   = size(sourcemodel.leadfield{sourcemodel.inside(1)}, 1);
 
 if isfield(sens, 'tra')
   % there is a transformation matrix for magnetometers fo gradiometers
@@ -30,10 +30,10 @@ e = sparse(eye(Nchans));
 progress('init', cfg.feedback, 'computing channel selection');
 for dipindx=1:Ninside
   % renumber the loop-index variable to make it easier to print the progress bar
-  i = grid.inside(dipindx);
+  i = sourcemodel.inside(dipindx);
   
   % compute the distance from this dipole to each sensor
-  dist = sqrt(sum((pnt-repmat(grid.pos(i,:), [Nchans 1])).^2, 2));
+  dist = sqrt(sum((pnt-repmat(sourcemodel.pos(i,:), [Nchans 1])).^2, 2));
   
   % define the channels of interest for this dipole
   [dum, indx] = sort(dist);
@@ -42,11 +42,11 @@ for dipindx=1:Ninside
   progress(dipindx/Ninside, 'computing channel selection %d/%d, Nsel=%d\n', dipindx, Ninside, Nsel);
   
   % make a slelection matrix for the 50% nearest-by channels
-  grid.subspace{grid.inside(dipindx)} = e(sel,:);
+  grid.subspace{sourcemodel.inside(dipindx)} = e(sel,:);
 end
 progress('close');
 
 % fill the positions outside the brain with NaNs
-for dipindx=grid.outside(:)'
+for dipindx=sourcemodel.outside(:)'
   grid.subspace{dipindx} = nan;
 end

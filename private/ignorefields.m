@@ -147,11 +147,6 @@ switch purpose
       'toolbox'
       'progress'
       'outputfilepresent'
-      'grid'
-      'grad'
-      'elec'
-      'opto'
-      'event'
       };
     
   case 'trackconfig'
@@ -213,10 +208,10 @@ switch purpose
       };
     
   case 'html'
-    % when generating a html-formatted pipeline, ignore data-like fields and fields that probably were not added by the user himself
     ignore = {
+      % when generating a html-formatted pipeline, ignore data-like fields and fields that probably were not added by the user himself
       'previous'
-      'grid'
+      'sourcemodel'
       'headmodel'
       'event'
       'warning'
@@ -233,8 +228,8 @@ switch purpose
       };
     
   case 'selectdata'
-    % these fields do not contain data and should be excluded
     ignore = {
+      % these fields do not contain data and should be excluded
       'cfg'
       'hdr'
       'fsample'
@@ -250,7 +245,20 @@ switch purpose
       'posclusters'
       'negclusters'
       };
-
+    
+  case 'recursesize'
+    ignore = {
+      % these fields should not recursively be checked on their size
+      'layout'
+      'event'
+      'headshape'
+      'headmodel'
+      'sourcemodel'
+      'grad'
+      'elec'
+      'event'
+      };
+    
   otherwise
     ft_error('invalid purpose');
 end % switch purpose

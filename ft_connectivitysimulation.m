@@ -333,7 +333,7 @@ switch cfg.method
     oneoverf = oneoverf./oneoverf(1);
     %oneoverf(1) = 0;
     %z = firws_filter(5.*fs, fs, Nyq./1.01);
-    %z = z(1:numel(foi));%.*exp(-1i.*pi.*foi.*rand(1)./100);
+    %z = z(1:numel(foi)); %.*exp(-1i.*pi.*foi.*rand(1)./100);
     %oneoverf = z.*oneoverf;
     
     % convert into indices
@@ -375,7 +375,7 @@ switch cfg.method
     for k = 1:nsignal
       if all(isfinite(squeeze(fband(k,k,:))))      
         z = firws_filter((1/fstep).*fs, fs, [fband(k,k,1) fband(k,k,2)]);
-        z = z(1:numel(foi));%.*exp(-1i.*pi.*foi.*rand(1)./100); 
+        z = z(1:numel(foi)); %.*exp(-1i.*pi.*foi.*rand(1)./100); 
         z = z.*ampl(k,k);
         
         plateau = nearest(foi,fband(k,k,1)):nearest(foi,fband(k,k,2));

@@ -55,7 +55,7 @@ mesh.pnt = 5*mesh.pnt - repmat([ 0 3 -1.5],size(mesh.pnt,1),1) ;
 % load vol                                       % volume conduction model
 figure;
 hold on;
-ft_plot_vol(vol, 'facecolor', 'none');alpha 0.5;
+ft_plot_headmodel(vol, 'facecolor', 'none');alpha 0.5;
 ft_plot_mesh(mesh, 'edgecolor', 'none'); camlight
 ft_plot_sens(dataFIC.grad, 'style', '*b');
 
@@ -65,8 +65,8 @@ cfg = [];
 cfg.method = 'mne';
 cfg.rawtrial = 'yes';
 cfg.frequency = 18;
-cfg.grid   = mesh;
-cfg.vol    = vol;
+cfg.sourcemodel = mesh;
+cfg.headmodel = vol;
 cfg.lambda = 0.001;
 source_freq_mne = ft_sourceanalysis(cfg, freq);
 
@@ -75,8 +75,8 @@ source_freq_mne = ft_sourceanalysis(cfg, freq);
 cfg = [];
 cfg.method = 'rv';
 cfg.frequency = 18;
-cfg.grid   = mesh;
-cfg.vol    = vol;
+cfg.sourcemodel = mesh;
+cfg.headmodel = vol;
 cfg.lambda = 0.001;
 source_freq_rv = ft_sourceanalysis(cfg, freq);
 

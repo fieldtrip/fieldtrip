@@ -9,24 +9,25 @@ function [cfg] = ft_neighbourplot(cfg, data)
 % or as
 %   ft_neighbourplot(cfg, data)
 %
-% where the configuration can contain
+% Where the configuration can contain
 %   cfg.verbose       = string, 'yes' or 'no', whether the function will print feedback text in the command window
 %   cfg.neighbours    = neighbourhood structure, see FT_PREPARE_NEIGHBOURS (optional)
 %   cfg.visible       = string, 'on' or 'off', whether figure will be visible (default = 'on')
 %   cfg.enableedit    = string, 'yes' or 'no', allows you to interactively add or remove edges between vertices (default = 'no')
-%                       
+%
 % and either one of the following options
 %   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
-%   cfg.elec          = structure with electrode definition
-%   cfg.grad          = structure with gradiometer definition
-%   cfg.elecfile      = filename containing electrode definition
-%   cfg.gradfile      = filename containing gradiometer definition
+%   cfg.elec          = structure with electrode positions or filename, see FT_READ_SENS
+%   cfg.grad          = structure with gradiometer definition or filename, see FT_READ_SENS
+%   cfg.opto          = structure with gradiometer definition or filename, see FT_READ_SENS
 %
 % If cfg.neighbours is not defined, this function will call
 % FT_PREPARE_NEIGHBOURS to determine the channel neighbours. The
 % following data fields may also be used by FT_PREPARE_NEIGHBOURS
-%   data.elec     = structure with EEG electrode positions
-%   data.grad     = structure with MEG gradiometer positions
+%   data.elec         = structure with electrode positions
+%   data.grad         = structure with gradiometer definition
+%   data.opto         = structure with optode definition
+%
 % If cfg.neighbours is empty, no neighbouring sensors are assumed.
 %
 % Use cfg.enableedit to interactively add or remove edges in your own neighbour structure.
@@ -77,6 +78,11 @@ if hasdata
   data = ft_checkdata(data);
 end
 
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'renamed', {'elecfile', 'elec'});
+cfg = ft_checkconfig(cfg, 'renamed', {'gradfile', 'grad'});
+cfg = ft_checkconfig(cfg, 'renamed', {'optofile', 'opto'});
+
 % set the defaults
 cfg.enableedit = ft_getopt(cfg, 'enableedit', 'no');
 cfg.visible    = ft_getopt(cfg, 'visible', 'on');
@@ -101,6 +107,7 @@ if hasdata
 else
   sens = ft_fetch_sens(cfg);
 end
+
 % insert sensors that are not in neighbourhood structure
 if isempty(cfg.neighbours)
   nsel = 1:numel(sens.label);

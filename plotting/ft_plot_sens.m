@@ -50,7 +50,7 @@ function hs = ft_plot_sens(sens, varargin)
 %   figure; ft_plot_sens(sens, 'coilshape', 'circle', 'coil', true, 'chantype', 'meggrad')
 %   figure; ft_plot_sens(sens, 'coilshape', 'circle', 'coil', false, 'orientation', true)
 %
-% See also FT_READ_SENS, FT_PLOT_HEADSHAPE, FT_PLOT_VOL
+% See also FT_READ_SENS, FT_PLOT_HEADSHAPE, FT_PLOT_HEADMODEL
 
 % Copyright (C) 2009-2018, Robert Oostenveld, Arjen Stolk
 %
@@ -295,21 +295,23 @@ else
 end % if istrue(individual)
 
 if isempty(ori) && ~isempty(pos)
-  % determine the orientation by making a triangulation of the sensors
-  % this should be reasonable for scalp electrodes or optodes with complete coverage
-  tri = projecttri(pos);
-  ori = normals(pos, tri);
-  % this is an alternative implementation, which works by fitting a sphere to the sensors
-  %   try
-  %     tmp = pos(~any(isnan(pos), 2),:); % remove rows that contain a nan
-  %     center = fitsphere(tmp);
-  %   catch
-  %     center = [nan nan nan];
-  %   end
-  %   for i=1:size(pos,1)
-  %     ori(i,:) = pos(i,:) - center;
-  %     ori(i,:) = ori(i,:)/norm(ori(i,:));
-  %   end
+  if ~any(isnan(pos(:)))
+    % determine orientations based on surface triangulation
+    tri = projecttri(pos);
+    ori = normals(pos, tri);
+  else
+    % determine orientations by fitting a sphere to the sensors
+    try
+      tmp = pos(~any(isnan(pos), 2),:); % remove rows that contain a nan
+      center = fitsphere(tmp);
+    catch
+      center = [nan nan nan];
+    end
+    for i=1:size(pos,1)
+      ori(i,:) = pos(i,:) - center;
+      ori(i,:) = ori(i,:)/norm(ori(i,:));
+    end
+  end
 end
 
 if istrue(orientation)

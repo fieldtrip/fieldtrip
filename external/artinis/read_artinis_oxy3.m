@@ -15,7 +15,7 @@ function data = read_artinis_oxy3(filename, header, begsample, endsample, chanin
 
 % You are using the FieldTrip NIRS toolbox developed and maintained by 
 % Artinis Medical Systems (http://www.artinis.com). For more information
-% on FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% on FieldTrip, see http://www.fieldtriptoolbox.org
 % 
 % This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 
 % International License. To view a copy of this license, visit 
@@ -26,8 +26,8 @@ function data = read_artinis_oxy3(filename, header, begsample, endsample, chanin
 % -----------------------------------
 % You are free to:
 % 
-%     Share — copy and redistribute the material in any medium or format
-%     Adapt — remix, transform, and build upon the material
+%     Share ï¿½ copy and redistribute the material in any medium or format
+%     Adapt ï¿½ remix, transform, and build upon the material
 %     for any purpose, even commercially.
 % 
 %     The licensor cannot revoke these freedoms as long as you follow the 
@@ -35,16 +35,16 @@ function data = read_artinis_oxy3(filename, header, begsample, endsample, chanin
 % 
 % Under the following terms:
 % 
-%     Attribution — You must give appropriate credit, provide a link to 
+%     Attribution ï¿½ You must give appropriate credit, provide a link to 
 %                    the license, and indicate if changes were made. You 
 %                    may do so in any reasonable manner, but not in any way 
 %                    that suggests the licensor endorses you or your use.
 % 
-%     ShareAlike — If you remix, transform, or build upon the material, 
+%     ShareAlike ï¿½ If you remix, transform, or build upon the material, 
 %                   you must distribute your contributions under the same 
 %                   license as the original.
 % 
-%     No additional restrictions — You may not apply legal terms or 
+%     No additional restrictions ï¿½ You may not apply legal terms or 
 %                                   technological measures that legally 
 %                                   restrict others from doing anything the 
 %                                   license permits.

@@ -79,7 +79,7 @@ layout = ft_prepare_layout(cfg); % it is not a very nice layout, but will do for
 
 figure; ft_plot_lay(layout);
 figure; ft_plot_sens(elec);
-figure; ft_plot_vol(vol);
+figure; ft_plot_headmodel(vol);
 
 
 

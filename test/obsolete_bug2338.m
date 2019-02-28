@@ -50,11 +50,11 @@ mesh2.bnd = mesh2.bnd(order);
 vol2 = ft_prepare_bemmodel(cfg, mesh2);
 
 cfg = [];
-cfg.grid.pos = [0 0 70];
+cfg.sourcemodel.pos = [0 0 70];
 cfg.elec = elec;
-cfg.vol = vol1;
+cfg.headmodel = vol1;
 lf1 = ft_prepare_leadfield(cfg);
-cfg.vol = vol2;
+cfg.headmodel = vol2;
 lf2 = ft_prepare_leadfield(cfg);
 
 assert(isalmostequal(lf1.leadfield{1}, lf2.leadfield{1}, 'reltol', 1e-6));
@@ -80,11 +80,11 @@ mesh2.bnd = mesh2.bnd(order);
 vol2 = ft_prepare_headmodel(cfg, mesh2);
 
 cfg = [];
-cfg.grid.pos = [0 0 70];
+cfg.sourcemodel.pos = [0 0 70];
 cfg.elec = elec;
-cfg.vol = vol1;
+cfg.headmodel = vol1;
 lf1 = ft_prepare_leadfield(cfg);
-cfg.vol = vol2;
+cfg.headmodel = vol2;
 lf2 = ft_prepare_leadfield(cfg);
 
 assert(isalmostequal(lf1.leadfield{1}, lf2.leadfield{1}, 'reltol', 1e-6));

@@ -125,7 +125,7 @@ try
   if ~ispc
     fprintf(efid,'#!/usr/bin/env bash\n');
     fprintf(efid,['elecsfwd1 -img ' segfile ' -electrodes ./' elecfile ' -data ./', ...
-      datafile ' -contable ./' confile ' -TOL ' num2str(tolerance) ' \n']);%2>&1 > /dev/null
+      datafile ' -contable ./' confile ' -TOL ' num2str(tolerance) ' \n']); %2>&1 > /dev/null
   end
   fclose(efid);
   

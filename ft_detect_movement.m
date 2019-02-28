@@ -174,7 +174,7 @@ for i=1:ntrial
       
       % compute test criterion: ellipse equation
       test = sum((vel./radius(:,ones(1,nsample))).^2,1);
-      sacsmp = find(test>1);% microsaccade's indexing
+      sacsmp = find(test>1); % microsaccade's indexing
       
       %% determine microsaccades per trial
       % first find eye movements of n-consecutive time points
@@ -192,7 +192,7 @@ for i=1:ntrial
           endtrl = sacsmp(duration(1,end));
           
           [peakvel, smptrl] = max(sqrt(sum(vel(:,begtrl:endtrl).^2,1)));
-          veltrl = sacsmp(duration(1,smptrl));% peak velocity microsaccade sample -> important for spike conversion
+          veltrl = sacsmp(duration(1,smptrl)); % peak velocity microsaccade sample -> important for spike conversion
           
           trlsmp = data.sampleinfo(i,1):data.sampleinfo(i,2);
           begsample = trlsmp(1, begtrl); % begining microsaccade sample

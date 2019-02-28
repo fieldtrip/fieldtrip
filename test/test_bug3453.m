@@ -50,8 +50,8 @@ vol3 = ft_prepare_headmodel(cfg); % very inaccurate
 %% using high-level code
 
 cfg = [];
-cfg.grid.pos = dippos;
-cfg.grid.unit = 'm';
+cfg.sourcemodel.pos = dippos;
+cfg.sourcemodel.unit = 'm';
 cfg.elec = elec;
 cfg.headmodel = vol1;
 lf1 = ft_prepare_leadfield(cfg);

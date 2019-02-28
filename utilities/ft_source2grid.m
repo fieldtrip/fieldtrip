@@ -36,19 +36,19 @@ ft_defaults
 grid = keepfields(source, {'pos', 'tri', 'inside', 'outside', 'xgrid', 'ygrid', 'zgrid', 'dim'});
 
 if ~isfield(grid, 'dim') && isfield(grid, 'xgrid') && isfield(grid, 'ygrid') && isfield(grid, 'zgrid')
-  grid.dim = [length(grid.xgrid) length(grid.ygrid) length(grid.zgrid)];
+  sourcemodel.dim = [length(sourcemodel.xgrid) length(sourcemodel.ygrid) length(sourcemodel.zgrid)];
 end
 
 if issubfield(source, 'filter')
-  grid.filter = source.filter;
+  sourcemodel.filter = source.filter;
 elseif issubfield(source, 'avg.filter')
-  grid.filter = source.avg.filter;
+  sourcemodel.filter = source.avg.filter;
 elseif issubfield(source, 'trial.filter')
   ft_error('single trial filters are not supported here');
 end
 
 if issubfield(source, 'leadfield')
-  grid.leadfield = source.leadfield;
+  sourcemodel.leadfield = source.leadfield;
 elseif issubfield(source, 'avg.leadfield')
-  grid.leadfield = source.avg.leadfield;
+  sourcemodel.leadfield = source.avg.leadfield;
 end

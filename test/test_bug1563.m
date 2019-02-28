@@ -36,14 +36,14 @@ vol.type = 'singlesphere';
 
 grid = [];
 grid.resolution = 2.5;
-grid.xgrid = 'auto';
-grid.ygrid = 'auto';
-grid.zgrid = 'auto';
+sourcemodel.xgrid = 'auto';
+sourcemodel.ygrid = 'auto';
+sourcemodel.zgrid = 'auto';
 
 % compute filter
 cfg                 = [];
-cfg.vol             = vol;
-cfg.grid            = grid;
+cfg.headmodel       = vol;
+cfg.sourcemodel            = grid;
 cfg.method          = 'lcmv';
 cfg.lcmv.keepfilter = 'yes';
 cfg.lcmv.fixedori   ='no'; 
