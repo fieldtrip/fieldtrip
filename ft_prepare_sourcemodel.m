@@ -1,4 +1,4 @@
-function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg, headmodel, sens)
+function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 
 % FT_PREPARE_SOURCEMODEL constructs a source model, for example a 3D grid or a
 % cortical sheet. The source model that can be used for source reconstruction,
@@ -145,6 +145,7 @@ cfg.spherify          = ft_getopt(cfg, 'spherify', 'no');
 cfg.headshape         = ft_getopt(cfg, 'headshape');
 cfg.symmetry          = ft_getopt(cfg, 'symmetry');
 cfg.spmversion        = ft_getopt(cfg, 'spmversion', 'spm8');
+cfg.headmodel         = ft_getopt(cfg, 'headmodel');
 cfg.sourcemodel       = ft_getopt(cfg, 'sourcemodel');
 cfg.sourcemodel.unit  = ft_getopt(cfg.sourcemodel, 'unit', 'auto');
 
@@ -155,19 +156,6 @@ if isfield(cfg, 'sourcemodel')
 end
 if isfield(cfg, 'template')
   cfg.template = ft_checkconfig(cfg.template, 'renamed',  {'pnt' 'pos'});
-end
-
-
-if ~isfield(cfg, 'headmodel') && nargin>1
-  % put it in the configuration structure
-  % this is for backward compatibility, 13 Januari 2011
-  cfg.headmodel = headmodel;
-end
-
-if ~isfield(cfg, 'grad') && ~isfield(cfg, 'elec') && nargin>2
-  % put it in the configuration structure
-  % this is for backward compatibility, 13 Januari 2011
-  cfg.grad = sens;
 end
 
 if isfield(cfg, 'resolution') && isfield(cfg, 'xgrid') && ~ischar(cfg.xgrid)
@@ -182,13 +170,13 @@ end
 
 % the source model can be constructed in a number of ways
 basedongrid       = isfield(cfg, 'xgrid') && ~ischar(cfg.xgrid);                              % regular 3D grid with explicit specification
-basedonpos        = isfield(cfg.sourcemodel, 'pos');                                                                  % using user-supplied positions, which can be regular or irregular
-basedonshape      = ~isempty(cfg.headshape);                                                                          % surface mesh based on inward shifted head surface from external file
+basedonpos        = isfield(cfg.sourcemodel, 'pos');                                          % using user-supplied positions, which can be regular or irregular
+basedonshape      = ~isempty(cfg.headshape);                                                  % surface mesh based on inward shifted head surface from external file
 basedonmri        = isfield(cfg, 'mri') && ~(isfield(cfg, 'warpmni') && istrue(cfg.warpmni)); % regular 3D grid, based on segmented MRI, restricted to gray matter
 basedonmni        = isfield(cfg, 'mri') &&  (isfield(cfg, 'warpmni') && istrue(cfg.warpmni)); % regular 3D grid, based on warped MNI template
-basedonvol        = false;                                                                                            % surface mesh based on inward shifted brain surface from volume conductor
+basedonvol        = false;                                                                    % surface mesh based on inward shifted brain surface from volume conductor
 basedoncortex     = isfield(cfg, 'headshape') && (iscell(cfg.headshape) || any(ft_filetype(cfg.headshape, {'neuromag_fif', 'freesurfer_triangle_binary', 'caret_surf', 'gifti'}))); % cortical sheet from external software such as Caret or FreeSurfer, can also be two separate hemispheres
-basedonresolution = isfield(cfg, 'resolution') && ~basedonmri && ~basedonmni;                             % regular 3D grid with specification of the resolution
+basedonresolution = isfield(cfg, 'resolution') && ~basedonmri && ~basedonmni;                 % regular 3D grid with specification of the resolution
 
 if basedonshape && basedoncortex
   % treating it as cortical sheet has preference
@@ -273,9 +261,11 @@ end
 sourcemodel = [];
 
 % get the volume conduction model
-try
-  headmodel = ft_fetch_headmodel(cfg);
-catch
+if isstruct(cfg.headmodel)
+  headmodel = cfg.headmodel;
+elseif ischar(cfg.headmodel)
+  headmodel = ft_read_headmodel(cfg.headmodel);
+else
   headmodel = [];
 end
 
@@ -606,17 +596,18 @@ if basedonvol
 end
 
 if basedonmni
-  if ~isfield(cfg.sourcemodel, 'template') && ~isfield(cfg.sourcemodel, 'resolution')
+  if ~isfield(cfg, 'template') && ~isfield(cfg, 'resolution')
     ft_error('you either need to specify the filename of a template grid in cfg.template, or a resolution in cfg.resolution');
-  elseif isfield(cfg.sourcemodel, 'template')
+  elseif isfield(cfg, 'template')
     % let the template filename prevail
     fname = cfg.template;
-  elseif isfield(cfg.sourcemodel, 'resolution') && cfg.resolution==round(cfg.resolution)
-    % use one of the templates that are in Fieldtrip, this requires a
-    % resolution
-    fname = ['standard_sourcemodel3d',num2str(cfg.resolution),'mm.mat'];
-  elseif isfield(cfg.sourcemodel, 'resolution') && cfg.resolution~=round(cfg.resolution)
-    fname = ['standard_sourcemodel3d',num2str(floor(cfg.resolution)),'point',num2str(10*(cfg.resolution-floor(cfg.resolution))),'mm.mat'];
+  elseif isfield(cfg, 'resolution')
+    % use one of the templates that are in Fieldtrip, this requires a resolution
+    if isequal(cfg.resolution, round(cfg.resolution))
+      fname = sprintf('standard_sourcemodel3d%dmm.mat', cfg.resolution);
+    else
+      fname = sprintf('standard_sourcemodel3d%dpoint%dmm.mat', floor(cfg.resolution), round(10*(cfg.resolution-floor(cfg.resolution))));
+    end
   end
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -652,8 +643,8 @@ if basedonmni
   % spatial normalisation of mri and construction of subject specific sourcemodel positions
   tmpcfg           = keepfields(cfg, {'spmversion', 'spmmethod'});
   tmpcfg.nonlinear = cfg.nonlinear;
-  if isfield(cfg.sourcemodel, 'templatemri')
-    tmpcfg.template = cfg.sourcemodel.templatemri;
+  if isfield(cfg, 'templatemri')
+    tmpcfg.template = cfg.templatemri;
   end
   normalise = ft_volumenormalise(tmpcfg, mri);
   

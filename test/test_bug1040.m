@@ -32,8 +32,10 @@ success = true;
 cfg                 = [];
 cfg.symmetry        = [];
 cfg.sourcemodel.resolution = 2;
+cfg.headmodel = vol;
+cfg.grad = grad_standard;
 
-[grid, cfg] = ft_prepare_sourcemodel(cfg, vol, grad_standard);
+[grid, cfg] = ft_prepare_sourcemodel(cfg);
 
 % check whether a grid could be computed
 success     = success && ~isempty(grid);
@@ -54,8 +56,10 @@ end
 cfg                 = [];
 cfg.symmetry        = [];
 cfg.sourcemodel.resolution = 2;
+cfg.headmodel = vol;
+cfg.grad = grad_extended;
 
-[grid, cfg] = ft_prepare_sourcemodel(cfg, vol, grad_extended);
+[grid, cfg] = ft_prepare_sourcemodel(cfg);
 
 % check whether a grid could be computed
 success     = success && ~isempty(grid);
