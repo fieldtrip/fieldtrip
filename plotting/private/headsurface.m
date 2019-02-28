@@ -83,21 +83,18 @@ if ~isempty(headshape)
     headshape = fixpos(headshape);
   elseif isnumeric(headshape) && size(headshape,2)==3
     % use the headshape points specified in the configuration
-    headshape.pos = headshape;
+    headshape = struct('pos', headshape);
   elseif ischar(headshape)
     % read the headshape from file
     headshape = ft_read_headshape(headshape);
   end
   if ~isfield(headshape, 'tri')
-    for i=1:length(headshape)
+    for i=1:numel(headshape)
       % generate a closed triangulation from the surface points
       headshape(i).pos = unique(headshape(i).pos, 'rows');
       headshape(i).tri = projecttri(headshape(i).pos);
     end
   end
-  
-  % FIXME usually a headshape only describes a single surface boundaries, but there are cases
-  % that multiple surfaces are included, e.g. skin_surface, outer_skull_surface, inner_skull_surface
   
   % the headshape should be specified as a surface structure with pos and tri
   pos = headshape.pos;
