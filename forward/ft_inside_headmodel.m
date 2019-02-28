@@ -114,7 +114,7 @@ switch ft_headmodeltype(headmodel)
       inside(i) = instrip1 & instrip2;
     end
 
-  case {'bem', 'dipoli', 'bemcp', 'openmeeg', 'asa', 'singleshell', 'neuromag'}
+  case {'bem', 'dipoli', 'bemcp', 'openmeeg', 'asa', 'singleshell', 'neuromag', 'nolte'}
     % this is a model with a realistic shape described by a triangulated boundary
     [pos, tri] = headsurface(headmodel, [], 'inwardshift', inwardshift, 'surface', 'brain');
     inside = bounding_mesh(dippos, pos, tri);

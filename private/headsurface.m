@@ -38,6 +38,8 @@ function [pos, tri] = headsurface(headmodel, sens, varargin)
 %
 % $Id$
 
+% FIXME perhaps ft_fetch_headshape or ft_prepare_headshape would be a better name for this function
+
 if nargin<1
   headmodel = [];
 end
@@ -63,6 +65,40 @@ npos          = ft_getopt(varargin, 'npos');                % number of vertices
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(headshape)
+  % get the surface describing the head shape
+  if isstruct(headshape) && isfield(headshape, 'hex')
+    headshape = fixpos(headshape);
+    fprintf('extracting surface from hexahedral mesh\n');
+    headshape = mesh2edge(headshape);
+    headshape = poly2tri(headshape);
+  elseif isstruct(headshape) && isfield(headshape, 'tet')
+    headshape = fixpos(headshape);
+    fprintf('extracting surface from tetrahedral mesh\n');
+    headshape = mesh2edge(headshape);
+  elseif isstruct(headshape) && isfield(headshape, 'tri')
+    headshape = fixpos(headshape);
+  elseif isstruct(headshape) && isfield(headshape, 'pos')
+    headshape = fixpos(headshape);
+  elseif isstruct(headshape) && isfield(headshape, 'pnt')
+    headshape = fixpos(headshape);
+  elseif isnumeric(headshape) && size(headshape,2)==3
+    % use the headshape points specified in the configuration
+    headshape.pos = headshape;
+  elseif ischar(headshape)
+    % read the headshape from file
+    headshape = ft_read_headshape(headshape);
+  end
+  if ~isfield(headshape, 'tri')
+    for i=1:length(headshape)
+      % generate a closed triangulation from the surface points
+      headshape(i).pos = unique(headshape(i).pos, 'rows');
+      headshape(i).tri = projecttri(headshape(i).pos);
+    end
+  end
+  
+  % FIXME usually a headshape only describes a single surface boundaries, but there are cases
+  % that multiple surfaces are included, e.g. skin_surface, outer_skull_surface, inner_skull_surface
+  
   % the headshape should be specified as a surface structure with pos and tri
   pos = headshape.pos;
   tri = headshape.tri;

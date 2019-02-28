@@ -151,7 +151,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% set the state according to the input
 
-if numel(varargin)==1 && isstruct(varargin{1})
+if numel(varargin)==1 && (isstruct(varargin{1}) || isempty(varargin{1}))
   for i=1:numel(varargin{1})
     s = setstate(s, varargin{1}(i).identifier, varargin{1}(i).state);
   end

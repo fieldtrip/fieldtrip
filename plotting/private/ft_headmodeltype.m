@@ -85,6 +85,9 @@ end
 if isfield(headmodel, 'type') && ~(ft_datatype(headmodel, 'grad') || ft_datatype(headmodel, 'sens')) % grad and sens also contain .type fields
   % preferably the structure specifies its own type
   type = headmodel.type;
+  if strcmp(type, 'nolte')
+    type = 'singleshell';
+  end
 
 elseif isfield(headmodel, 'r') && numel(headmodel.r)==1 && ~isfield(headmodel, 'label')
   type = 'singlesphere';

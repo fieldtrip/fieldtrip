@@ -287,41 +287,10 @@ end
 
 if useheadshape
   % get the surface describing the head shape
-  if isstruct(cfg.headshape) && isfield(cfg.headshape, 'hex')
-    cfg.headshape = fixpos(cfg.headshape);
-    fprintf('extracting surface from hexahedral mesh\n');
-    headshape = mesh2edge(cfg.headshape);
-    headshape = poly2tri(headshape);
-  elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'tet')
-    cfg.headshape = fixpos(cfg.headshape);
-    fprintf('extracting surface from tetrahedral mesh\n');
-    headshape = mesh2edge(cfg.headshape);
-  elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'tri')
-    cfg.headshape = fixpos(cfg.headshape);
-    headshape = cfg.headshape;
-  elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pos')
-    cfg.headshape = fixpos(cfg.headshape);
-    headshape = cfg.headshape;
-  elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
-    cfg.headshape = fixpos(cfg.headshape);
-    headshape = cfg.headshape;
-  elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
-    % use the headshape points specified in the configuration
-    cfg.headshape = fixpos(cfg.headshape);
-    headshape = cfg.headshape;
-  elseif ischar(cfg.headshape)
-    % read the headshape from file
-    headshape = ft_read_headshape(cfg.headshape);
-  else
-    ft_error('cfg.headshape is not specified correctly')
-  end
+  [headshape.pos, headshape.tri] = headsurface([], [], 'headshape', cfg.headshape);
+  
   % ensure that the units are consistent with the electrodes
   headshape = ft_convert_units(headshape, elec.unit);
-  if ~isfield(headshape, 'tri') && ~isfield(headshape, 'poly')
-    % generate a closed triangulation from the surface points
-    headshape.pos = unique(headshape.pos, 'rows');
-    headshape.tri = projecttri(headshape.pos);
-  end
 end
 
 % convert all labels to lower case for string comparisons

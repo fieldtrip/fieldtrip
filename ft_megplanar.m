@@ -167,55 +167,22 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   % definition that only contains the gradiometers that are present in the data.
   [headmodel, axial.grad, cfg] = prepare_headmodel(cfg, data);
 
+  % copy all options that are potentially used in FT_PREPARE_SOURCEMODEL
+  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo'});
+  tmpcfg.headmodel = headmodel;
+  tmpcfg.grad      = axial.grad;
   % determine the dipole layer that represents the surface of the brain
-  if isempty(cfg.headshape)
-    % construct from the inner layer of the volume conduction model
-    pos = headsurface(headmodel, axial.grad, 'surface', 'cortex', 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);
-  else
-    % get the surface describing the head shape
-    if isstruct(cfg.headshape) && isfield(cfg.headshape, 'hex')
-      cfg.headshape = fixpos(cfg.headshape);
-      fprintf('extracting surface from hexahedral mesh\n');
-      headshape = mesh2edge(cfg.headshape);
-      headshape = poly2tri(headshape);
-    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'tet')
-      cfg.headshape = fixpos(cfg.headshape);
-      fprintf('extracting surface from tetrahedral mesh\n');
-      headshape = mesh2edge(cfg.headshape);
-    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'tri')
-      cfg.headshape = fixpos(cfg.headshape);
-      headshape = cfg.headshape;
-    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pos')
-      cfg.headshape = fixpos(cfg.headshape);
-      headshape = cfg.headshape;
-    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
-      cfg.headshape = fixpos(cfg.headshape);
-      headshape = cfg.headshape;
-    elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
-      % use the headshape points specified in the configuration
-      cfg.headshape = fixpos(cfg.headshape);
-      headshape = cfg.headshape;
-    elseif ischar(cfg.headshape)
-      % read the headshape from file
-      headshape = ft_read_headshape(cfg.headshape);
-    else
-      ft_error('cfg.headshape is not specified correctly')
-    end
-    % ensure that it has units units are consistent with the gradiometers
-    headshape = ft_convert_units(headshape, axial.grad.unit);
-    % construct from the head surface
-    pos = headsurface([], [], 'headshape', headshape, 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);
-  end
+  sourcemodel = ft_prepare_sourcemodel(tmpcfg);
 
   % compute the forward model for the axial gradiometers
-  fprintf('computing forward model for %d dipoles\n', size(pos,1));
-  lfold = ft_compute_leadfield(pos, axial.grad, headmodel);
+  fprintf('computing forward model for %d dipoles\n', size(sourcemodel.pos,1));
+  lfold = ft_compute_leadfield(sourcemodel.pos, axial.grad, headmodel);
 
   % construct the planar gradient definition and compute its forward model
   % this will not work for a localspheres model, compute_leadfield will catch
   % the error
   planar.grad = constructplanargrad([], axial.grad);
-  lfnew = ft_compute_leadfield(pos, planar.grad, headmodel);
+  lfnew = ft_compute_leadfield(sourcemodel.pos, planar.grad, headmodel);
 
   % compute the interpolation matrix
   transform = lfnew * prunedinv(lfold, cfg.pruneratio);
