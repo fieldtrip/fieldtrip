@@ -28,7 +28,8 @@ function [data] = ft_megrealign(cfg, data)
 %   cfg.headmodel   = structure, see FT_PREPARE_HEADMODEL
 %
 % A source model (i.e. a superficial layer with distributed sources) can be
-% constructed from a headshape file, or from the volume conduction model
+% constructed from a headshape file, or from inner surface of the volume conduction
+% model using FT_PREPARE_SOIURCEMODEL using the following options
 %   cfg.spheremesh  = number of dipoles in the source layer (default = 642)
 %   cfg.inwardshift = depth of the source layer relative to the headshape
 %                     surface or volume conduction model (no default
@@ -141,7 +142,11 @@ pertrial = all(ismember({'nasX';'nasY';'nasZ';'lpaX';'lpaY';'lpaZ';'rpaX';'rpaY'
 % put the low-level options pertaining to the dipole grid in their own field
 cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
 cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.sourcemodel.unit by the subsequent createsubcfg
-cfg = ft_checkconfig(cfg, 'createsubcfg',  {'sourcemodel'});
+
+% put the low-level options pertaining to the sourcemodel in their own field
+cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
+% move some fields from cfg.sourcemodel back to the top-level configuration
+cfg = ft_checkconfig(cfg, 'createtopcfg', {'sourcemodel'});
 
 if isstruct(cfg.template)
   % this should be a cell-array
@@ -243,9 +248,9 @@ else
 end
 
 % copy all options that are potentially used in ft_prepare_sourcemodel
-tmpcfg            = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'showcallinfo'});
-tmpcfg.headmodel  = volold;
-tmpcfg.grad       = data.grad;
+tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo'});
+tmpcfg.headmodel = volold;
+tmpcfg.grad      = data.grad;
 % create the source positions on which the data will be projected
 sourcemodel = ft_prepare_sourcemodel(tmpcfg);
 pos = sourcemodel.pos;

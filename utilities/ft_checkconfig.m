@@ -38,6 +38,7 @@ function [cfg] = ft_checkconfig(cfg, varargin)
 %   deprecated      = {'opt1', 'opt2', etc.} % list the deprecated options
 %   unused          = {'opt1', 'opt2', etc.} % list the unused options, these will be removed and a warning is issued
 %   createsubcfg    = {'subname', etc.}      % list the names of the subcfg
+%   createtopcfg    = {'subname', etc.}      % list the names of the subcfg
 %   dataset2files   = 'yes', 'no'            % converts dataset into headerfile and datafile
 %   inside2logical  = 'yes', 'no'            % converts cfg.inside or cfg.sourcemodel.inside into logical representation
 %   checksize       = 'yes', 'no'            % remove large fields from the cfg
@@ -74,6 +75,7 @@ forbidden       = ft_getopt(varargin, 'forbidden');
 renamedval      = ft_getopt(varargin, 'renamedval');
 allowedval      = ft_getopt(varargin, 'allowedval');
 createsubcfg    = ft_getopt(varargin, 'createsubcfg');
+createtopcfg    = ft_getopt(varargin, 'createtopcfg');
 checkfilenames  = ft_getopt(varargin, 'dataset2files');
 checkinside     = ft_getopt(varargin, 'inside2logical', 'off');
 checksize       = ft_getopt(varargin, 'checksize', 'off');
@@ -101,6 +103,7 @@ if ischar(deprecated),   deprecated   = {deprecated};    end
 if ischar(unused),       unused       = {unused};        end
 if ischar(forbidden),    forbidden    = {forbidden};     end
 if ischar(createsubcfg), createsubcfg = {createsubcfg};  end
+if ischar(createtopcfg), createtopcfg = {createtopcfg};  end
 
 if isfield(cfg, 'checkconfig')
   silent   = strcmp(cfg.checkconfig, 'silent');
@@ -266,13 +269,71 @@ if isfield(cfg, 'montage') && isstruct(cfg.montage)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% createtopcfg
+%
+% This collects the optional arguments for some of the low-level
+% functions and moves them from the separate substructure to the top level. 
+%
+% This is to ensure backward compatibility of end-user scripts, FieldTrip functions
+% and documentation that use an obsolete nested configuration where a flat 
+% configuration should be used.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if ~isempty(createtopcfg)
+  for j=1:length(createtopcfg)
+    subname = createtopcfg{j};
+
+    if isfield(cfg, subname)
+      % get the options that are already specified in the substructure
+      subcfg = cfg.(subname);
+    else
+      % start with an empty substructure
+      subcfg = [];
+    end
+    
+    % move all relevant options from the substructure to the top
+    switch subname
+      case 'sourcemodel'
+        fieldname = {
+          'xgrid'
+          'ygrid'
+          'zgrid'
+          'resolution'
+          'tight'
+          'warpmni'
+          'template'
+          };
+    end % switch subname
+    
+    for i=1:length(fieldname)
+      if ~isfield(cfg, fieldname{i}) && isfield(subcfg, fieldname{i})
+
+        if silent
+          % don't mention it
+        elseif loose
+          ft_warning('The field cfg.%s.%s is deprecated, pleae use cfg.%s\n', subname, fieldname{i}, fieldname{i});
+        elseif pedantic
+          ft_error('The field cfg.%s.%s is not longer supported, please use cfg.%s\n', subname, fieldname{i}, fieldname{i});
+        end
+
+        cfg = setfield(cfg, fieldname{i}, getfield(subcfg, fieldname{i}));  % set it in the top configuration
+        subcfg = rmfield(subcfg, fieldname{i});                             % remove it from the sub configuration
+      end
+    end
+
+    % copy the substructure back into the main configuration structure
+    cfg = setfield(cfg, subname, subcfg);
+  end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % createsubcfg
 %
 % This collects the optional arguments for some of the low-level
-% functions and puts them in a separate substructure. This function is to
-% ensure backward compatibility of end-user scripts, FieldTrip functions
-% and documentation that do not use the nested detailled configuration
-% but that use a flat configuration.
+% functions and puts them in a separate substructure. 
+%
+% This is to ensure backward compatibility of end-user scripts, FieldTrip functions
+% and documentation that do not use the nested detailled configuration but that use a
+% flat configuration.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(createsubcfg)
   for j=1:length(createsubcfg)
@@ -286,7 +347,7 @@ if ~isempty(createsubcfg)
       subcfg = [];
     end
 
-    % add all other relevant options to the substructure
+    % move all relevant options to the substructure
     switch subname
       case 'preproc'
         fieldname = {
@@ -330,10 +391,6 @@ if ~isempty(createsubcfg)
 
       case 'sourcemodel'
         fieldname = {
-          'xgrid'
-          'ygrid'
-          'zgrid'
-          'resolution'
           'unit'
           'filter'
           'leadfield'
@@ -341,7 +398,6 @@ if ~isempty(createsubcfg)
           'outside'
           'pos'
           'dim'
-          'tight'
           };
 
       case 'dics'

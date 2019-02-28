@@ -27,25 +27,24 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 % methods are for time domain data. ELORETA can be used both for time, frequency and
 % time-frequency domain data.
 %
-% The source model to use in the reconstruction should be specified as
-%   cfg.sourcemodel            = structure, see FT_PREPARE_SOURCEMODEL or FT_PREPARE_LEADFIELD
-% The positions of the dipoles can be specified as a regular 3-D
-% grid that is aligned with the axes of the head coordinate system
-%   cfg.sourcemodel.xgrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
-%   cfg.sourcemodel.ygrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
-%   cfg.sourcemodel.zgrid      = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
-%   cfg.sourcemodel.resolution = number (e.g. 1 cm) for automatic grid generation
-%   cfg.sourcemodel.inside     = N*1 vector with boolean value whether grid point is inside brain (optional)
-%   cfg.sourcemodel.dim        = [Nx Ny Nz] vector with dimensions in case of 3-D grid (optional)
+% The complete grid with dipole positions and optionally precomputed leadfields is
+% constructed using FT_PREPARE_SOURCEMODEL. It can be specified as as a regular 3-D
+% grid that is aligned with the axes of the head coordinate system using
+%   cfg.xgrid               = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
+%   cfg.ygrid               = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
+%   cfg.zgrid               = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
+%   cfg.resolution          = number (e.g. 1 cm) for automatic grid generation
 % If the source model destribes a triangulated cortical sheet, it is described as
-%   cfg.sourcemodel.pos        = N*3 matrix with the vertex positions of the cortical sheet
-%   cfg.sourcemodel.tri        = M*3 matrix that describes the triangles connecting the vertices
+%   cfg.sourcemodel.pos     = N*3 matrix with the vertex positions of the cortical sheet
+%   cfg.sourcemodel.tri     = M*3 matrix that describes the triangles connecting the vertices
 % Alternatively the position of a few dipoles at locations of interest can be
-% specified, for example obtained from an anatomical or functional MRI
-%   cfg.sourcemodel.pos        = N*3 matrix with position of each source
+% user-specified, for example obtained from an anatomical or functional MRI
+%   cfg.sourcemodel.pos     = N*3 matrix with position of each source
+%   cfg.sourcemodel.inside  = N*1 vector with boolean value whether grid point is inside brain (optional)
+%   cfg.sourcemodel.dim     = [Nx Ny Nz] vector with dimensions in case of 3-D grid (optional)
 %
 % Besides the source positions, you may also include previously computed
-% spatial filters and/or leadfields like this
+% spatial filters and/or leadfields using
 %   cfg.sourcemodel.filter
 %   cfg.sourcemodel.leadfield
 %
@@ -232,7 +231,11 @@ cfg = ft_checkconfig(cfg, 'createsubcfg',  cfg.method);
 % put the low-level options pertaining to the dipole grid in their own field
 cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'});  % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
 cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.sourcemodel.unit  by the subsequent createsubcfg
-cfg = ft_checkconfig(cfg, 'createsubcfg', 'sourcemodel');
+
+% put the low-level options pertaining to the sourcemodel in their own field
+cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
+% move some fields from cfg.sourcemodel back to the top-level configuration
+cfg = ft_checkconfig(cfg, 'createtopcfg', {'sourcemodel'});
 
 cfg.(cfg.method).keepfilter    = ft_getopt(cfg.(cfg.method), 'keepfilter',    'no');
 cfg.(cfg.method).keepcsd       = ft_getopt(cfg.(cfg.method), 'keepcsd',       'no');
@@ -385,7 +388,7 @@ else
   % only prepare the source positions, the leadfield will be computed on the fly if not present
 
   % copy all options that are potentially used in ft_prepare_sourcemodel
-  tmpcfg           = keepfields(cfg, {'sourcemodel' 'mri' 'headshape' 'symmetry' 'smooth' 'threshold' 'spheremesh' 'inwardshift', 'showcallinfo'});
+  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo'});
   tmpcfg.headmodel = headmodel;
   if ft_senstype(sens, 'eeg')
     tmpcfg.elec = sens;
