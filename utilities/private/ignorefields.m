@@ -257,6 +257,8 @@ switch purpose
       'grad'
       'elec'
       'event'
+      'mri'
+      'neighbours'
       };
     
   otherwise
