@@ -45,7 +45,15 @@ if isa(cfg.headshape, 'config')
 end
 
 % get the surface describing the head shape
-[headshape.pos, headshape.tri] = headsurface([], [], 'headshape', cfg.headshape);
+if isstruct(cfg.headshape) && numel(cfg.headshape)>1
+  % this applies for multilayer BEM models and concentric sphere models
+  headshape = [];
+  for i=1:numel(cfg.headshape)
+    [headshape(i).pos, headshape(i).tri] = headsurface([], [], 'headshape', cfg.headshape(i));
+  end
+else
+  [headshape.pos, headshape.tri] = headsurface([], [], 'headshape', cfg.headshape);
+end
 
 if ~isempty(cfg.numvertices) && ~strcmp(cfg.numvertices, 'same')
   for i=1:numel(headshape)
