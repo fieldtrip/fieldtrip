@@ -27,15 +27,17 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %                    'svm'          Support Vector Machine (SVM) with L2-regularisation
 %                    'ensemble'     Ensemble of classifiers. Any of the other
 %                                   classifiers can be used as a learner.
+%                    'kernel_fda'   Kernel Fisher Discriminant Analysis
+%   cfg.metric            = string, performance metric. Possible metrics:
+%                           accuracy auc tval dval confusion precision 
+%                           recall f1  
+%   See https://github.com/treder/MVPA-Light for an overview of all
+%   classifiers and metrics.
+%
 %   cfg.param             = struct, structure with hyperparameters for the 
 %                           classifier
-%   cfg.statistic         = string, performance statistic (called 'metric' 
-%                           within MVPA-Light). Possible statistics are:
-%                           'accuracy'
-%                           'auc'
-%
 %   cfg.searchlight       = 'yes' or 'no', performs searchlight analysis
-%                           (default 'no')
+%                           (default 'no'). More information see below
 %   cfg.timextime         = 'yes' or 'no', performs time x time
 %                           generalisation. In other words, the classifier
 %                           is trained at each time point and tested at
@@ -45,14 +47,14 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %                           Note that searchlight and timextime cannot be
 %                           run simultaneously (at least one option needs
 %                           to be set to 'no').
-%   cfg.std               = 'yes' or 'no'. In cross-validation, since the statistic is
+%   cfg.std               = 'yes' or 'no'. In cross-validation, since the metric is
 %                           calculated for each test set separately and
 %                           then averaged, there is some variability. if
 %                           std is 'yes', the standard deviation of the
-%                           statistics is calculated across repeats and
+%                           metrics is calculated across repeats and
 %                           then averaged across folds. It is returned in
-%                           as stat.statistic as e.g.
-%                           stat.statistic.accuracy_std
+%                           as stat.metric as e.g.
+%                           stat.metric.accuracy_std
 %
 % .balance      - for imbalanced data with a minority and a majority class.
 %                 'oversample' oversamples the minority class
@@ -102,7 +104,12 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 % for each classifier at github.com/treder/MVPA-Light/tree/master/classifier
 % If a hyperparameter is not specified, default values are used.
 %
-% additional SEARCHLIGHT ANALYSIS parameters:
+% SEARCHLIGHT ANALYSIS:
+% Classification using a feature searchlight approach can highlight which
+% feature(s) are informative. To this end, classification is performed on 
+% each feature separately. However, neighbouring features can enter the 
+% classification together when a matrix of size [features x features]
+% specifying the neighbours is provided. Additional parameters:
 % .nb          - [features x features] matrix specifying which features
 %                are neighbours of each other.
 %                          - EITHER - 
@@ -131,14 +138,16 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %                        according to the distance matrix
 %                     2+: the 2 closest neighbours etc.
 %
-% TIME x TIME GENERALISATION:
-% -- TODO: how to specifiy the second dataset --
+% -- TODO: for time x time generalisation, in MVPA light we can use two
+% different datasets (one for training the classifier, the other one for
+% testing). This could be realised eg using extra fields in cfg such as
+% cfg.X2 for dataset 2 and cfg.design2 for the second design matrix
 %
 % Returns:
-%   stat.statistic    = the statistics to report
-
-
-%   stat.model        = the models associated with this multivariate analysis
+%   stat        = struct with results. the .metric field contains the
+%                   requested metrics
+% 
+% (c) matthias treder
 
 % do a sanity check on the input data
 assert(isnumeric(dat),    'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
@@ -154,37 +163,20 @@ if data_is_3D
     dat = reshape(dat, size(dat,1), cfg.dim(1), cfg.dim(2));
 end
 
-% check if the input cfg is valid for this function
-% cfg = ft_checkconfig(cfg, 'renamed',  {'hyperparameter', 'hyperparam'});
-
 y = cfg.design;
 
 %% build up config struct for MVPA-Light
 mvcfg = keepfields(cfg, {'balance','replace','normalise', ...
                          'cv','k','repeat','p','stratify',...
                          'classifier','param','size','nb'});
-mvcfg.metric          = ft_getopt(cfg, 'std', 'no');
-mvcfg.metric          = ft_getopt(cfg, 'statistic','acc');
+
+mvcfg.metric          = ft_getopt(cfg, 'metric','accuracy');
 mvcfg.feedback        = ft_getopt(cfg, 'feedback','yes');
 
 % cfg: set defaults
 cfg.searchlight     = ft_getopt(cfg, 'searchlight','no');
 cfg.timextime       = ft_getopt(cfg, 'timextime','no');
-
-% % cfg: set defaults
-% mvcfg.classifier      = ft_getopt(cfg, 'classifier','lda');
-% mvcfg.param           = ft_getopt(cfg, 'param', []);
-% mvcfg.metric          = ft_getopt(cfg, 'statistic','acc');
-% mvcfg.feedback        = ft_getopt(cfg, 'feedback','yes');
-% mvcfg.searchlight     = ft_getopt(cfg, 'searchlight','no');
-% mvcfg.timextime       = ft_getopt(cfg, 'timextime','no');
-% 
-% % set cross-validation defaults
-% mvcfg.cv              = ft_getopt(cfg, 'cv','kfold');
-% mvcfg.k               = ft_getopt(cfg, 'k', 5);
-% mvcfg.repeat          = ft_getopt(cfg, 'repeat', 5);
-% mvcfg.p               = ft_getopt(cfg, 'p', 0.1);
-% mvcfg.stratify        = ft_getopt(cfg, 'stratify', 1);
+cfg.std             = ft_getopt(cfg, 'std', 'no');
 
 % translate parameter value into MVPA-Light notation [0 or 1]
 if ischar(mvcfg.feedback)
@@ -192,7 +184,7 @@ if ischar(mvcfg.feedback)
 end
 
 %% perform sanity checks on parameters
-if strcmp(cfg.timextime,'yes') && strcmp(cfg.searchligh,'yes')
+if strcmp(cfg.timextime,'yes') && strcmp(cfg.searchlight,'yes')
     ft_error('you should not set timextime = ''yes'' and searchlight = ''yes'' simultaneously')
 end
 
@@ -222,11 +214,18 @@ end
 
 %% setup stat struct
 stat = [];
-if ~iscell(cfg.statistic), cfg.statistic = {cfg.statistic}; end
+if ~iscell(mvcfg.metric), mvcfg.metric = {mvcfg.metric}; end
 if ~iscell(perf), perf = {perf}; end
-for mm=1:numel(perf) 
-    stat.statistic.(cfg.statistic{mm}) = perf{mm};
+for mm=1:numel(perf)
+    
+    % Performance metric
+    stat.metric.(mvcfg.metric{mm}) = perf{mm};
+    
+    % Std of performance if required
     if strcmp(cfg.std, 'yes')
-        stat.statistic.([cfg.statistic{mm} '_std']) = result.perf_std{mm};
+        stat.metric.([mvcfg.metric{mm} '_std']) = result.perf_std{mm};
     end
 end
+
+% return the MVPA-Light result struct as well
+stat.mvpa_result = result;
