@@ -326,6 +326,10 @@ ft_postamble previous freq
 ft_postamble provenance
 ft_postamble savefig
 
+if ~ft_nargout
+  % don't return anything
+  clear cfg
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION for plotting arrows, see also fieldtrip/private/arrow

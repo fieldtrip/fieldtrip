@@ -593,12 +593,13 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
+
 ft_postamble trackconfig
 ft_postamble previous varargin
 ft_postamble provenance
 ft_postamble savefig
 
-if ~nargout
+if ~ft_nargout
   % don't return anything
   clear cfg
 end
