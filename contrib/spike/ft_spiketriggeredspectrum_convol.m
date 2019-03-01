@@ -480,7 +480,7 @@ for iTaper = 1:nTapers
     sinwav  = taper(iTaper,:).*sin(2*pi*(findx-1)*indN/numsmp);
     wavelet = complex(coswav(:), sinwav(:));       
     fftRamp = sum(xKern.*coswav) + 1i*sum(xKern.*sinwav); % fft of ramp with dx/ds = 1 * taper 
-    fftDC   = sum(ones(1,timwinSamples).*coswav) + 1i*sum(ones(1,timwinSamples).*sinwav);% fft of unit direct current * taper
+    fftDC   = sum(ones(1,timwinSamples).*coswav) + 1i*sum(ones(1,timwinSamples).*sinwav); % fft of unit direct current * taper
     spctrm  = spctrm + (conv_fftbased(dat(:),wavelet) - (beta0*fftDC + beta1.*fftRamp))/(numsmp/2);           
                        % fft                       % mean            %linear ramp      % make magnitude invariant to window length                             
 end

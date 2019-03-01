@@ -32,7 +32,7 @@ timelock              = ft_timelockanalysis(cfg, data);
 cfg             = [];
 cfg.method      = 'lcmv';
 cfg.hdmfile     = fullfile(datadir,'SubjectCMC.hdm');
-cfg.grid.pos    = maxpos;
+cfg.sourcemodel.pos    = maxpos;
 cfg.keepfilter  = 'yes';
 source          = ft_sourceanalysis(cfg, timelock);
 

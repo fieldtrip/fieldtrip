@@ -12,7 +12,7 @@ function sync {
 # find the latest file from the list and copies it to all other files
 latest=`ls -t $* | head -n1`
 for file in $*; do
-if [ $file != $latest ] ; then 
+if [ $file != $latest ] ; then
 cp $latest $file
 fi
 done
@@ -27,12 +27,12 @@ ARRAY+=(forward/private/add_mex_source.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# ama2vol.m
+# ama2headmodel.m
 
 ARRAY=()
-ARRAY+=(external/dipoli/ama2vol.m)
-ARRAY+=(fileio/private/ama2vol.m)
-ARRAY+=(forward/private/ama2vol.m)
+ARRAY+=(external/dipoli/ama2headmodel.m)
+ARRAY+=(fileio/private/ama2headmodel.m)
+ARRAY+=(forward/private/ama2headmodel.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -152,7 +152,7 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(private/combineClusters.m)
 ARRAY+=(plotting/private/combineClusters.m)
-sync ${ARRAY[*]} 
+sync ${ARRAY[*]}
 
 ################################################################################
 # combineClusters.mexa64
@@ -430,7 +430,7 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(private/findcluster.m)
 ARRAY+=(plotting/private/findcluster.m)
-sync ${ARRAY[*]} 
+sync ${ARRAY[*]}
 
 ################################################################################
 # find_innermost_boundary.m
@@ -875,11 +875,11 @@ ARRAY+=(utilities/ft_headcoordinates.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# ft_inside_vol.m
+# ft_inside_headmodel.m
 
 ARRAY=()
-ARRAY+=(forward/ft_inside_vol.m)
-ARRAY+=(inverse/private/ft_inside_vol.m)
+ARRAY+=(forward/ft_inside_headmodel.m)
+ARRAY+=(inverse/private/ft_inside_headmodel.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -980,13 +980,13 @@ ARRAY+=(plotting/private/ft_senstype.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# ft_voltype.m
+# ft_headmodeltype.m
 
 ARRAY=()
-ARRAY+=(fileio/private/ft_voltype.m)
-ARRAY+=(forward/ft_voltype.m)
-ARRAY+=(inverse/private/ft_voltype.m)
-ARRAY+=(plotting/private/ft_voltype.m)
+ARRAY+=(fileio/private/ft_headmodeltype.m)
+ARRAY+=(forward/ft_headmodeltype.m)
+ARRAY+=(inverse/private/ft_headmodeltype.m)
+ARRAY+=(plotting/private/ft_headmodeltype.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -2346,6 +2346,7 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(fileio/private/normals.m)
 ARRAY+=(forward/private/normals.m)
+ARRAY+=(plotting/private/normals.m)
 ARRAY+=(private/normals.m)
 ARRAY+=(test/private/normals.m)
 sync ${ARRAY[*]}
@@ -3287,6 +3288,7 @@ ARRAY+=(external/openmeeg/private/solid_angle.m)
 ARRAY+=(fileio/private/solid_angle.m)
 ARRAY+=(forward/private/solid_angle.m)
 ARRAY+=(inverse/private/solid_angle.m)
+ARRAY+=(plotting/private/solid_angle.m)
 ARRAY+=(private/solid_angle.m)
 ARRAY+=(src/solid_angle.m)
 sync ${ARRAY[*]}
@@ -3300,6 +3302,7 @@ ARRAY+=(external/openmeeg/private/solid_angle.mexa64)
 ARRAY+=(fileio/private/solid_angle.mexa64)
 ARRAY+=(forward/private/solid_angle.mexa64)
 ARRAY+=(inverse/private/solid_angle.mexa64)
+ARRAY+=(plotting/private/solid_angle.mexa64)
 ARRAY+=(private/solid_angle.mexa64)
 ARRAY+=(src/solid_angle.mexa64)
 sync ${ARRAY[*]}
@@ -3312,6 +3315,7 @@ ARRAY+=(external/dipoli/private/solid_angle.mexglx)
 ARRAY+=(external/openmeeg/private/solid_angle.mexglx)
 ARRAY+=(forward/private/solid_angle.mexglx)
 ARRAY+=(inverse/private/solid_angle.mexglx)
+ARRAY+=(plotting/private/solid_angle.mexglx)
 ARRAY+=(private/solid_angle.mexglx)
 ARRAY+=(src/solid_angle.mexglx)
 sync ${ARRAY[*]}
@@ -3324,6 +3328,7 @@ ARRAY+=(external/dipoli/private/solid_angle.mexmac)
 ARRAY+=(external/openmeeg/private/solid_angle.mexmac)
 ARRAY+=(forward/private/solid_angle.mexmac)
 ARRAY+=(inverse/private/solid_angle.mexmac)
+ARRAY+=(plotting/private/solid_angle.mexmac)
 ARRAY+=(private/solid_angle.mexmac)
 ARRAY+=(src/solid_angle.mexmac)
 sync ${ARRAY[*]}
@@ -3336,6 +3341,7 @@ ARRAY+=(external/dipoli/private/solid_angle.mexmaci)
 ARRAY+=(external/openmeeg/private/solid_angle.mexmaci)
 ARRAY+=(forward/private/solid_angle.mexmaci)
 ARRAY+=(inverse/private/solid_angle.mexmaci)
+ARRAY+=(plotting/private/solid_angle.mexmaci)
 ARRAY+=(private/solid_angle.mexmaci)
 ARRAY+=(src/solid_angle.mexmaci)
 sync ${ARRAY[*]}
@@ -3348,6 +3354,7 @@ ARRAY+=(external/dipoli/private/solid_angle.mexmaci64)
 ARRAY+=(external/openmeeg/private/solid_angle.mexmaci64)
 ARRAY+=(forward/private/solid_angle.mexmaci64)
 ARRAY+=(inverse/private/solid_angle.mexmaci64)
+ARRAY+=(plotting/private/solid_angle.mexmaci64)
 ARRAY+=(private/solid_angle.mexmaci64)
 ARRAY+=(src/solid_angle.mexmaci64)
 sync ${ARRAY[*]}
@@ -3360,6 +3367,7 @@ ARRAY+=(external/dipoli/private/solid_angle.mexw32)
 ARRAY+=(external/openmeeg/private/solid_angle.mexw32)
 ARRAY+=(forward/private/solid_angle.mexw32)
 ARRAY+=(inverse/private/solid_angle.mexw32)
+ARRAY+=(plotting/private/solid_angle.mexw32)
 ARRAY+=(private/solid_angle.mexw32)
 ARRAY+=(src/solid_angle.mexw32)
 sync ${ARRAY[*]}
@@ -3372,6 +3380,7 @@ ARRAY+=(external/dipoli/private/solid_angle.mexw64)
 ARRAY+=(external/openmeeg/private/solid_angle.mexw64)
 ARRAY+=(forward/private/solid_angle.mexw64)
 ARRAY+=(inverse/private/solid_angle.mexw64)
+ARRAY+=(plotting/private/solid_angle.mexw64)
 ARRAY+=(private/solid_angle.mexw64)
 ARRAY+=(src/solid_angle.mexw64)
 sync ${ARRAY[*]}
@@ -3405,6 +3414,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(forward/private/surfaceorientation.m)
+ARRAY+=(plotting/private/surfaceorientation.m)
 ARRAY+=(private/surfaceorientation.m)
 sync ${ARRAY[*]}
 
@@ -3570,4 +3580,3 @@ ARRAY=()
 ARRAY+=(fileio/private/write_ctf_shm.mexglx)
 ARRAY+=(src/write_ctf_shm.mexglx)
 sync ${ARRAY[*]}
-

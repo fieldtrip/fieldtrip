@@ -34,12 +34,12 @@ vol = ft_prepare_singleshell(cfg, segmentedmri);
 
 cfg                 = [];
 cfg.grad            = freqFIC.grad;
-cfg.vol             = vol;
+cfg.headmodel       = vol;
 cfg.reducerank      = 2;
 cfg.normalize       = 'yes';
 cfg.channel         = {'MEG','-MLP31', '-MLO12'};
-cfg.grid.resolution = 1; % use a 3-D grid with a 1 cm resolution
-cfg.grid.unit       = 'cm';
+cfg.sourcemodel.resolution = 1; % use a 3-D grid with a 1 cm resolution
+cfg.sourcemodel.unit       = 'cm';
 grid                = ft_prepare_leadfield(cfg);
 
 %% do the source reconstruction

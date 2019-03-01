@@ -1,11 +1,15 @@
-function [vol] = ama2vol(ama)
+function [d] = dist(x)
 
-% AMA2VOL
+% DIST computes the euclidian distance between the columns of the input matrix
 %
 % Use as
-%   vol = ama2vol(ama)
+%   [d] = dist(x)
+% where x is for example Nx3 for points in 3D space.
+%
+% This function serves as a replacement for the dist function in the Neural
+% Networks toolbox.
 
-% Copyright (C) 2008, Robert Oostenveld
+% Copyright (C) 2005, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -25,18 +29,12 @@ function [vol] = ama2vol(ama)
 %
 % $Id$
 
-vol  = [];
-ngeo = length(ama.geo);
-for i=1:ngeo
-  vol.bnd(i).pos = ama.geo(i).pos;
-  vol.bnd(i).tri = ama.geo(i).tri;
-  vol.cond(i) = ama.geo(i).sigmam;
+n = size(x,2);
+d = zeros(n,n);
+for i=1:n
+  for j=(i+1):n
+    d(i,j) = sqrt(sum((x(:,i)-x(:,j)).^2));
+    d(j,i) = d(i,j);
+  end
 end
-vol.mat = ama.bi;
-npos = size(vol.mat,2);
-if size(vol.mat,1)<npos
-  vol.mat(npos, npos) = 0;    % it should be a square matrix
-end
-vol.mat  = vol.mat;
-vol.type = 'dipoli';
 

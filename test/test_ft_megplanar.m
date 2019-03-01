@@ -43,7 +43,7 @@ for k = 1:numel(datainfo)
   % ensure units in the gradiometer array and volume conductor to be equal
   vol = ft_convert_units(vol, data.grad.unit);
   cfg.planarmethod = 'sourceproject';
-  cfg.vol = vol;
+  cfg.headmodel = vol;
   data5 = ft_megplanar(cfg, data);
   
 %   % subtract mean

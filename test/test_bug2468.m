@@ -25,9 +25,9 @@ sd             = ft_sourcedescriptives(cfg, sdata);
 % recompute source level pcc data
 cfg                             = [];
 cfg.frequency                   = fdata.freq;
-cfg.vol                         = sourceVol;
-cfg.grid                        = leadfieldModel;
-cfg.grid.filter                 = spatialFilters.avg.filter;
+cfg.headmodel                   = sourceVol;
+cfg.sourcemodel                        = leadfieldModel;
+cfg.sourcemodel.filter                 = spatialFilters.avg.filter;
 cfg.keeptrials                  = 'no';
 cfg.method                      = 'pcc';
 cfg.(cfg.method).keepfilter     = 'yes';

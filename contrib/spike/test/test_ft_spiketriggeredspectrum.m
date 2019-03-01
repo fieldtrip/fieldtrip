@@ -38,7 +38,7 @@ for iTrial = 1:NTRIALS
     % in cycles
     phase = rho(iTrial);
     nSpikes = 2/isi; % 95 spikes per trials
-    spikeSteps = ones(1,nSpikes)*isi;% + 2*rand(1,nSpikes)
+    spikeSteps = ones(1,nSpikes)*isi; % + 2*rand(1,nSpikes)
     spikeTim = 0 + cumsum(spikeSteps) + phase*isi;
     % find the number of samples
     spikesamples = round(spikeTim/(1/data.fsample))+1; 
@@ -183,7 +183,7 @@ for iTrial = 1:NTRIALS
     % in cycles
     phase = rho(iTrial);
     nSpikes = 2/isi; % 95 spikes per trials
-    spikeSteps = ones(1,nSpikes)*isi;% + 2*rand(1,nSpikes)
+    spikeSteps = ones(1,nSpikes)*isi; % + 2*rand(1,nSpikes)
     spikeTim = 0 + cumsum(spikeSteps) + phase*isi;
     % find the number of samples
     spikesamples = round(spikeTim/(1/data.fsample))+1; 
@@ -328,7 +328,7 @@ for iTrial = 1:NTRIALS
     % in cycles
     phase = rho(iTrial);
     nSpikes = 2/isi; % 95 spikes per trials
-    spikeSteps = ones(1,nSpikes)*isi;% + 2*rand(1,nSpikes)
+    spikeSteps = ones(1,nSpikes)*isi; % + 2*rand(1,nSpikes)
     spikeTim = 0 + cumsum(spikeSteps) + phase*isi;
     % find the number of samples
     spikesamples = round(spikeTim/(1/data.fsample))+1; 

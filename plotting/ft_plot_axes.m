@@ -20,7 +20,7 @@ function ft_plot_axes(object, varargin)
 %   'fontname'     =
 %   'fontweight'   =
 %
-% See also FT_PLOT_SENS, FT_PLOT_MESH, FT_PLOT_ORTHO, FT_PLOT_HEADSHAPE, FT_PLOT_DIPOLE, FT_PLOT_VOL
+% See also FT_PLOT_SENS, FT_PLOT_MESH, FT_PLOT_ORTHO, FT_PLOT_HEADSHAPE, FT_PLOT_DIPOLE, FT_PLOT_HEADMODEL
 
 % Copyright (C) 2015, Jan-Mathijs Schoffelen
 %

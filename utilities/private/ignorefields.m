@@ -23,6 +23,8 @@ switch purpose
       'topodimord'
       'unmixing'
       'unmixingdimord'
+      'posclusters'
+      'negclusters'
       };
     
   case 'appendfreq'
@@ -39,6 +41,8 @@ switch purpose
       'sampleinfo' % this is dealt with explicitly
       'cumsumcnt'  % this is dealt with explicitly
       'cumtapcnt'  % this is dealt with explicitly
+      'posclusters'
+      'negclusters'
       };
     
   case 'deface'
@@ -143,13 +147,8 @@ switch purpose
       'toolbox'
       'progress'
       'outputfilepresent'
-      'grid'
-      'grad'
-      'elec'
-      'opto'
-      'event'
       };
-
+    
   case 'trackconfig'
     ignore = {
       % these fields from the user should be ignored
@@ -204,13 +203,15 @@ switch purpose
       'elec'
       'opto'
       'cfg'
+      'posclusters'
+      'negclusters'
       };
     
   case 'html'
-    % when generating a html-formatted pipeline, ignore data-like fields and fields that probably were not added by the user himself
     ignore = {
+      % when generating a html-formatted pipeline, ignore data-like fields and fields that probably were not added by the user himself
       'previous'
-      'grid'
+      'sourcemodel'
       'headmodel'
       'event'
       'warning'
@@ -224,6 +225,40 @@ switch purpose
       'trackcallinfo'
       'trackdatainfo'
       'trackusage'
+      };
+    
+  case 'selectdata'
+    ignore = {
+      % these fields do not contain data and should be excluded
+      'cfg'
+      'hdr'
+      'fsample'
+      'fsampleorig'
+      'grad'
+      'elec'
+      'opto'
+      'transform'
+      'dim'
+      'unit'
+      'coordsys'
+      'topolabel'
+      'posclusters'
+      'negclusters'
+      };
+    
+  case 'recursesize'
+    ignore = {
+      % these fields should not recursively be checked on their size
+      'layout'
+      'event'
+      'headshape'
+      'headmodel'
+      'sourcemodel'
+      'grad'
+      'elec'
+      'event'
+      'mri'
+      'neighbours'
       };
     
   otherwise

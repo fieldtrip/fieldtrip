@@ -11,7 +11,7 @@ function [asens, afiducials] = ft_average_sens(sens, varargin)
 %   'weights'    a vector of weights (will be normalized to sum==1)
 %   'fiducials'  optional structure array of headshapes
 %
-% See also FT_READ_SENS, FT_PREPARE_VOL_SENS, FT_TRANSFORM_SENS
+% See also FT_READ_SENS, FT_DATATYPE_SENS, FT_PREPARE_VOL_SENS
 
 % Copyright (C) 2008-2011, Robert Oostenveld & Vladimir Litvak
 %
@@ -103,17 +103,17 @@ for i=1:nsens
   if ~isequal(sens(i).label(:), sens(1).label(:))
     ft_error('all sensor arrays should have the same sensors for averaging');
   end
-  
+
   % add them to the sum, to compute the mean location of each ref sensor
   mean1 = mean1 + weights(i).*sens(i).chanpos(ind1, :);
   mean2 = mean2 + weights(i).*sens(i).chanpos(ind2, :);
   mean3 = mean3 + weights(i).*sens(i).chanpos(ind3, :);
-  
+
   if istra
     % include the weighted averaged linear matrix that combines coils/electrodes into channels
     asens.tra = asens.tra + weights(i).*sens(i).tra;
   end
-  
+
   if toplot && ismeg
     plot3(sens(i).chanpos(:, 1), sens(i).chanpos(:, 2), sens(i).chanpos(:, 3), '.', 'Color', [0.5 0.5 0.5]);
     hold on
@@ -127,25 +127,25 @@ if ismeg
   % just realign the MEG coils
   tra1  = ft_headcoordinates(sens(1).chanpos(ind1, :), sens(1).chanpos(ind2, :), sens(1).chanpos(ind3, :));
   asens = ft_transform_geometry(tra\tra1, sens(1));
-  
+
 elseif iseeg
   % also average sensor locations
   pos = zeros(size(sens(1).chanpos));
   for i=1:nsens
     tra1  = ft_headcoordinates(sens(i).chanpos(ind1, :), sens(i).chanpos(ind2, :), sens(i).chanpos(ind3, :));
     csens = ft_transform_geometry(tra\tra1, sens(i));
-    
+
     if toplot && iseeg
       plot3(csens.chanpos(:, 1), csens.chanpos(:, 2), csens.chanpos(:, 3), '.', 'Color', [0.5 0.5 0.5]);
       hold on
     end
-    
+
     pos = pos + weights(i).*csens.chanpos;
   end % for nsens
-  
+
   csens.chanpos = pos;
   asens     = csens;
-  
+
 else
   ft_error('unsupported sensor type');
 end
@@ -163,44 +163,44 @@ switch nfid
   case 0
     % do nothing
     afiducials = [];
-    
+
   case 1
     tra1  = ft_headcoordinates(sens(1).chanpos(ind1, :), sens(1).chanpos(ind2, :), sens(1).chanpos(ind3, :));
     afiducials = ft_transform_geometry(tra\tra1, fiducials);
-    
-  case nsens    
+
+  case nsens
     hspos = [];
-      
+
     for i=1:nsens
       hs = strmatch('headshape', fiducials(i).fid.label);
-      fiducials(i).fid.label(hs)  = [];      
-      
+      fiducials(i).fid.label(hs)  = [];
+
       fiducials(i).pos = [fiducials(i).pos; fiducials(i).fid.pos(hs, :)];
-      
-      fiducials(i).fid.pos(hs, :) = [];      
-      
+
+      fiducials(i).fid.pos(hs, :) = [];
+
       if i == 1
           fidpos = zeros(size(fiducials(1).fid.pos));
       end
-      
+
       if ~isequal(fiducials(i).fid.label, fiducials(1).fid.label)
         ft_error('all fiducials should have the same labels for averaging');
       end
-      
+
       tra1 = ft_headcoordinates(sens(i).chanpos(ind1, :), sens(i).chanpos(ind2, :), sens(i).chanpos(ind3, :));
-      
+
       cfiducials = ft_transform_geometry(tra1, fiducials(i));
-      
+
       fidpos = fidpos + weights(i).*cfiducials.fid.pos;
-      
+
       hspos = [hspos; cfiducials.pos];
     end
-    
+
     cfiducials.pos = hspos;
     cfiducials.fid.pos = fidpos;
     afiducials = ft_transform_geometry(inv(tra), cfiducials);
     afiducials = ft_determine_units(afiducials);
-    
+
     % remove redundant headshape points (3 cm precision)
     tolerance = 3;
     switch afiducials.unit
@@ -213,11 +213,11 @@ switch nfid
         case 'm'
             c = 100;
     end
-    
+
     [dum, ind] = unique(round(c*afiducials.pos/tolerance), 'rows');
-    
+
     afiducials.pos = afiducials.pos(ind, :);
-    
+
   otherwise
     ft_error('there should be either one set of fiducials or a set per sensor array');
 end % switch nfid

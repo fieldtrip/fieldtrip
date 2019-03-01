@@ -514,8 +514,8 @@ elec.type = 'eeg';
 
 cfg=[];
 %  cfg.reducerank  = 2;
-cfg.vol = vol;
-cfg.grid.pos = [0 0 .5];
+cfg.headmodel = vol;
+cfg.sourcemodel.pos = [0 0 .5];
 cfg.elec = elec;
 lf  = ft_prepare_leadfield(cfg); % use the defaults
 cfg.reducerank  = 1;

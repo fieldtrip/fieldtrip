@@ -21,7 +21,7 @@ function im_hdr = GE_readHeaderImage(fid, byte_align)
 im_hdr = struct('im_suid', fread(fid,4,'uchar')); %Suite id for this image
 im_hdr = setfield(im_hdr, 'im_uniq', fread(fid,1,'int16'));            %The Make-Unique Flag
 im_hdr = setfield(im_hdr, 'im_diskid', fread(fid,1,'uchar'));          %Disk ID for this Image
-fseek(fid, 1, 0);% 16-bit alignment
+fseek(fid, 1, 0); % 16-bit alignment
 im_hdr = setfield(im_hdr, 'im_exno', fread(fid,1,'uint16'));            %Exam number for this image
 im_hdr = setfield(im_hdr, 'im_seno', fread(fid,1,'int16'));            %Series Number for this image
 im_hdr = setfield(im_hdr, 'im_no', fread(fid,1,'int16'));              %Image Number

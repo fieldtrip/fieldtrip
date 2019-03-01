@@ -7,7 +7,7 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 % assign an electrode label to the current crosshair location by clicking on a label
 % in the eletrode list. You can undo the selection by clicking on the same label
 % again. The electrode labels shown in the list can be prespecified using cfg.channel
-% when calling ft_electrodeplacement. The zoom slider allows zooming in at the
+% when calling ft_electrodeplacement. The zoom slider allows zoomi/ng in at the
 % location of the crosshair. The intensity sliders allow thresholding the image's low
 % and high values. The magnet feature transports the crosshair to the nearest peak
 % intensity voxel, within a certain voxel radius of the selected location. The labels
@@ -273,8 +273,8 @@ switch cfg.method
     %    9 10 11 12
     
     % specify the number of electrodes in the vertical and horizontal direction
-    nv = cfg.grid.dim(1);
-    nh = cfg.grid.dim(2);
+    nv = cfg.sourcemodel.dim(1);
+    nh = cfg.sourcemodel.dim(2);
     
     % determine the inter-electrode distance in the vertical and horizontal direction
     dv = (norm(cfg.grid.corner3-cfg.grid.corner1)/(nv-1) + norm(cfg.grid.corner4-cfg.grid.corner2)/(nv-1))/2;
@@ -297,7 +297,7 @@ switch cfg.method
       ft_notice('using automatic channel labels');
       cfg.channel = arrayfun(@num2str, 1:(nh*nv), 'UniformOutput', false);
     else
-      assert(numel(cfg.channel)==nh*nv, 'mismatch between cfg.grid.dim and cfg.channel');
+      assert(numel(cfg.channel)==nh*nv, 'mismatch between cfg.sourcemodel.dim and cfg.channel');
     end
     
     pos1 = nan(nh*nv,3);

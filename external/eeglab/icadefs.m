@@ -107,9 +107,9 @@ if lowscreendepth
 else % if full color screen
     BACKCOLOR           = [.93 .96 1];    % EEGLAB Background figure color 
     BACKEEGLABCOLOR     = [.66 .76 1];    % EEGLAB main window background
-    GUIBUTTONCOLOR      = BACKEEGLABCOLOR;% Buttons colors in figures
+    GUIBUTTONCOLOR      = BACKEEGLABCOLOR; % Buttons colors in figures
     GUIPOPBUTTONCOLOR   = BACKCOLOR;      % Buttons colors in GUI windows
-    GUIBACKCOLOR        = BACKEEGLABCOLOR;% EEGLAB GUI background color <---------
+    GUIBACKCOLOR        = BACKEEGLABCOLOR; % EEGLAB GUI background color <---------
     GUITEXTCOLOR        = [0 0 0.4];      % GUI foreground color for text
     PLUGINMENUCOLOR     = [.5 0 .5];      % plugin menu color
 end;

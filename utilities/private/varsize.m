@@ -1,14 +1,11 @@
-function [inside, outside] = find_inside_vol(pos, vol)
+function [b] = varsize(x)
 
-% FIND_INSIDE_VOL locates dipole locations inside/outside the source
-% compartment of a volume conductor model.
-% 
-% [inside, outside] = find_inside_vol(pos, vol)
+% VARSIZE returns the size of a variable in bytes. It can be used on any MATLAB
+% variable, including structures and cell arrays.
 %
-% This function is obsolete and its use in other functions should be replaced 
-% by inside_vol
+% See also WHOS
 
-% Copyright (C) 2003-2007, Robert Oostenveld
+% Copyright (C) 2019, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -28,8 +25,5 @@ function [inside, outside] = find_inside_vol(pos, vol)
 %
 % $Id$
 
-warning('find_inside_vol is obsolete and will be removed, please use ft_inside_vol');
-inside  = ft_inside_vol(pos, vol);
-% replace boolean vector with indexing vectors
-outside = find(~inside);
-inside  = find(inside);
+w = whos('x');
+b = w.bytes;

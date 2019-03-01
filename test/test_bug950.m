@@ -22,9 +22,9 @@ template.chanpos(:,3) = template.chanpos(:,3)+1;
 template.coilpos(:,3) = template.coilpos(:,3)+1;
 
 cfg = [];
-cfg.template{1} = template;
-cfg.inwardshift = 1;
-cfg.vol.o    = [0 0 4];
-cfg.vol.r    = 8;
-cfg.vol.unit = 'cm';
+cfg.template{1}    = template;
+cfg.inwardshift    = 1;
+cfg.headmodel.o    = [0 0 4];
+cfg.headmodel.r    = 8;
+cfg.headmodel.unit = 'cm';
 data2 = ft_megrealign(cfg, data);

@@ -31,7 +31,7 @@ function status = makessense(data, field)
 nrpt = nan;
 nsmp = nan;
 
-% it should not only check trial and avg, but also other possible data fields
+% it should check all possible data fields that are well-behaved
 datfield = setdiff(fieldnames(data), ignorefields('makessense'));
 
 for i=1:numel(datfield)

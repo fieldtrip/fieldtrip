@@ -33,8 +33,8 @@ grad2.type = 'meg'; % this makes ft_senstype much faster
 %% determine the time to compute some leadfields
 
 cfg = [];
-cfg.vol = vol;
-cfg.grid.resolution = 4;
+cfg.headmodel = vol;
+cfg.sourcemodel.resolution = 4;
 cfg.channel = 'all';
 
 cfg.grad = grad1;

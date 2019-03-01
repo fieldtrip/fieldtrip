@@ -46,11 +46,11 @@ freq2 = ft_freqanalysis(cfg, data);
 
 headmodel.o = [0 0 0];
 headmodel.r = 8;
-headmodel.type = ft_voltype(headmodel);
+headmodel.type = ft_headmodeltype(headmodel);
 headmodel   = ft_datatype_headmodel(headmodel);
 
 cfg = [];
-cfg.grid.resolution = 2;
+cfg.sourcemodel.resolution = 2;
 cfg.headmodel = headmodel;
 cfg.grad      = data.grad;
 sourcemodel   = ft_prepare_sourcemodel(cfg);
@@ -58,7 +58,7 @@ sourcemodel   = ft_prepare_sourcemodel(cfg);
 % compute the leadfields with a grad in the cfg, returns order as in the
 % grad.label
 cfg           = [];
-cfg.grid      = sourcemodel;
+cfg.sourcemodel      = sourcemodel;
 cfg.headmodel = headmodel;
 cfg.grad      = data.grad;
 sourcemodel_lf1 = ft_prepare_leadfield(cfg);
@@ -72,7 +72,7 @@ cfg = [];
 cfg.method = 'dics';
 cfg.frequency = 20;
 cfg.headmodel = headmodel;
-cfg.grid      = sourcemodel;
+cfg.sourcemodel      = sourcemodel;
 cfg.dics.keepfilter    = 'yes';
 cfg.dics.realfilter    = 'yes';
 source1 = ft_sourceanalysis(cfg, freq1);
@@ -94,12 +94,12 @@ cfg = [];
 cfg.method = 'dics';
 cfg.frequency = 20;
 cfg.headmodel = headmodel;
-cfg.grid      = sourcemodel_lf1;
+cfg.sourcemodel      = sourcemodel_lf1;
 cfg.dics.keepleadfield = 'yes';
 cfg.dics.keepfilter    = 'yes';
 cfg.dics.realfilter    = 'yes';
 source1 = ft_sourceanalysis(cfg, freq1);
-cfg.grid      = sourcemodel_lf2;
+cfg.sourcemodel      = sourcemodel_lf2;
 source2 = ft_sourceanalysis(cfg, freq1);
 
 firstinside         = find(source1.inside,1,'first');
@@ -117,12 +117,12 @@ cfg = [];
 cfg.method = 'dics';
 cfg.frequency = 20;
 cfg.headmodel = headmodel;
-cfg.grid      = sourcemodel;
+cfg.sourcemodel      = sourcemodel;
 cfg.dics.keepfilter    = 'yes';
 cfg.dics.realfilter    = 'yes';
 source1 = ft_sourceanalysis(cfg, freq1);
 cfg.keepleadfield = 'yes';
 source2 = ft_sourceanalysis(cfg, freq1);
-cfg.grid      = sourcemodel_lf1;
+cfg.sourcemodel      = sourcemodel_lf1;
 source3 = ft_sourceanalysis(cfg, freq1);
 

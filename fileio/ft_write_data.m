@@ -18,6 +18,7 @@ function ft_write_data(filename, dat, varargin)
 % The supported dataformats for writing are
 %   edf
 %   gdf
+%   anywave_ades
 %   brainvision_eeg
 %   neuralynx_ncs
 %   neuralynx_sdma
@@ -197,12 +198,12 @@ switch dataformat
         buffer('put_hdr', packet, host, port);
         
       catch
-        if ~isempty(strfind(lasterr, 'Buffer size N must be an integer-valued scalar double.'))
+        if contains(lasterr, 'Buffer size N must be an integer-valued scalar double.')
           % this happens if the MATLAB75/toolbox/signal/signal/buffer
           % function is used instead of the FieldTrip buffer
           ft_error('the FieldTrip buffer mex file was not found on your path, it should be in fieldtrip/fileio/private');
           
-        elseif ~isempty(strfind(lasterr, 'failed to create socket')) && (strcmp(host, 'localhost') || strcmp(host, '127.0.0.1'))
+        elseif contains(lasterr, 'failed to create socket') && (strcmp(host, 'localhost') || strcmp(host, '127.0.0.1'))
           
           % start a local instance of the TCP server
           ft_warning('starting FieldTrip buffer on %s:%d', host, port);
@@ -252,7 +253,7 @@ switch dataformat
         packet.nchans    = size(dat,1);
         packet.nsamples  = size(dat,2);
         packet.data_type = find(strcmp(type, class(dat))) - 1; % zero-offset
-        packet.bufsize   = numel(dat) * wordsize{find(strcmp(type, class(dat)))};
+        packet.bufsize   = numel(dat) * wordsize{strcmp(type, class(dat))};
         packet.buf       = dat;
         buffer('put_dat', packet, host, port);
       end % if data larger than chuncksize
@@ -700,6 +701,94 @@ switch dataformat
     end
     write_edf(filename, hdr, dat);
     
+  case 'anywave_ades'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % see http://meg.univ-amu.fr/wiki/AnyWave:ADES
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if append
+      ft_error('appending data is not yet supported for this data format');
+    end
+    if ~isempty(chanindx)
+      % assume that the header corresponds to the original multichannel
+      % file and that the data represents a subset of channels
+      hdr.label     = hdr.label(chanindx);
+      hdr.chantype  = hdr.chantype(chanindx);
+      hdr.chanunit  = hdr.chanunit(chanindx);
+      hdr.nChans    = length(chanindx);
+    end
+    
+    dattype = unique(hdr.chantype);
+    datunit = cell(size(dattype));
+    for i=1:numel(dattype)
+      unit = hdr.chanunit(strcmp(hdr.chantype, dattype{i}));
+      if ~all(strcmp(unit, unit{1}))
+        ft_error('channels of the same type with different units are not supported');
+      end
+      datunit{i} = unit{1};
+    end
+    
+    % only change these after checking channel types and units
+    chantype = adestype(hdr.chantype);
+    dattype  = adestype(dattype);
+    
+    % ensure that all channels have the right scaling
+    for i=1:size(dat,1)
+      switch chantype{i}
+        case 'MEG'
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'pT');
+        case 'Reference'
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'pT');
+        case 'GRAD'
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'pT/m');
+        case 'EEG'
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'uV');
+        case 'SEEG'
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'uV');
+        case 'EMG'
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'uV');
+        case 'ECG'
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'uV');
+        otherwise
+          % FIXME I am not sure what scaling to apply
+      end
+    end
+    
+    [p, f, x] = fileparts(filename);
+    filename = fullfile(p, f); % without extension
+    mat2ades(dat, filename, hdr.Fs, hdr.label, chantype, dattype, datunit);
+    
   otherwise
     ft_error('unsupported data format');
 end % switch dataformat
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function type = adestype(type)
+for i=1:numel(type)
+  switch lower(type{i})
+    case 'meggrad'
+      type{i} = 'MEG'; % this is for CTF and BTi/4D
+    case 'megmag'
+      type{i} = 'MEG'; % this is for Neuromag and BTi/4D
+    case 'megplanar'
+      type{i} = 'GRAD'; % this is for Neuromag
+    case {'refmag' 'refgrad'}
+      type{i} = 'Reference';
+    case 'eeg'
+      type{i} = 'EEG';
+    case {'seeg' 'ecog' 'ieeg'}
+      type{i} = 'SEEG'; % all intracranial channels
+    case 'ecg'
+      type{i} = 'ECG';
+    case 'emg'
+      type{i} = 'EMG';
+    case 'trigger'
+      type{i} = 'Trigger';
+    case 'source'
+      type{i} = 'Source'; % virtual channel
+    otherwise
+      type{i} = 'Other';
+  end
+end

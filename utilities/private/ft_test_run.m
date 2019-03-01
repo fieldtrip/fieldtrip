@@ -78,6 +78,7 @@ end
 if ~isempty(varargin) && exist(varargin{1}, 'file')
   functionlist = varargin;
 else
+  addpath(fullfile(ftpath, 'test'));
   d = dir(fullfile(ftpath, 'test', 'test_*.m'));
   functionlist = {d.name}';
   for i=1:numel(functionlist)

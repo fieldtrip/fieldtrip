@@ -63,7 +63,7 @@ vol1.cond = c(1);
 cfg.method = 'openmeeg';
 vol = ft_prepare_bemmodel(cfg, vol);
 
-cfg.vol = vol;
+cfg.headmodel = vol;
 cfg.grid.pos = pos;
 cfg.grad = sens;
 cfg.reducerank = 'no';
@@ -77,7 +77,7 @@ cfg.grid.pos = pos;
 cfg.grad = sens;
 vol1.type = 'singleshell';
 [vol1,sens] = ft_prepare_vol_sens(vol1, sens);
-cfg.vol = vol1;
+cfg.headmodel = vol1;
 cfg.reducerank = 'no';
 grid = ft_prepare_leadfield(cfg);
 lf_singleshell = grid.leadfield{1};

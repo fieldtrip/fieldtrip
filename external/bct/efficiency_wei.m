@@ -88,7 +88,7 @@ for u=1:n_
         W1_(:,V)=0;                             %no in-edges as already shortest
         for v=V
             T=find(W1_(v,:));                   %neighbours of shortest nodes
-            D(u,T)=min([D(u,T);D(u,v)+W1_(v,T)]);%smallest of old/new path lengths
+            D(u,T)=min([D(u,T);D(u,v)+W1_(v,T)]); %smallest of old/new path lengths
         end
         
         minD=min(D(u,S));
