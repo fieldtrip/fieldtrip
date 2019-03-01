@@ -223,6 +223,12 @@ end % if montage
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble previous data
+ft_postamble provenance
 ft_postamble savefig
+
+if ~ft_nargout
+  % don't return anything
+  clear cfg
+end
+

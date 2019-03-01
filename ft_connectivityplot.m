@@ -52,6 +52,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble debug
+ft_preamble loadvar varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
 
@@ -337,4 +338,9 @@ ft_postamble trackconfig
 ft_postamble previous varargin
 ft_postamble provenance
 ft_postamble savefig
+
+if ~ft_nargout
+  % don't return anything
+  clear cfg
+end
 

@@ -221,6 +221,8 @@ ft_postamble previous varargin
 ft_postamble provenance
 ft_postamble savefig
 
-if ~nargout
+if ~ft_nargout
+  % don't return anything
   clear cfg
 end
+

@@ -57,10 +57,10 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
     
     % write a snippet of MATLAB code with the user-specified configuration and function call
     reproducescript(fullfile(Fief7bee_reproducescript, 'script.m'), cfg, isempty(iW1aenge_postamble))
-
+    
   elseif (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile))
     % keep the output file as it is
-  
+    
   else
     % don't write to an output file
     cfg.outputfile = {};
@@ -71,6 +71,7 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
     cfg.outputfile = {cfg.outputfile};
   end
   
+  % save the output data structures to a MATLAB .mat file
   if iscell(cfg.outputfile)
     % iW1aenge_postamble is a cell-array containing the variable names
     if isequal(iW1aenge_postamble, {'varargout'})
@@ -100,5 +101,3 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
     clear(iW1aenge_postamble{1});
   end
 end
-
-

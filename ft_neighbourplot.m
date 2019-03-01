@@ -61,7 +61,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble debug
-ft_preamble loadvar    data
+ft_preamble loadvar data
 ft_preamble provenance data
 ft_preamble trackconfig
 
@@ -231,6 +231,11 @@ ft_postamble previous data
 ft_postamble provenance
 ft_postamble savefig
 
+if ~ft_nargout
+  % don't return anything
+  clear cfg
+end
+
 end % main function
 
 
@@ -382,7 +387,7 @@ else
 end
 
 set(gcf, 'UserData', userdata);
-end
+end % subfunction
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -393,7 +398,7 @@ h   = getparent(h);
 userdata.quit = true;
 set(h, 'UserData', userdata);
 uiresume
-end
+end % subfunction
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -404,4 +409,4 @@ while p~=0
   h = p;
   p = get(h, 'parent');
 end
-end
+end % subfunction
