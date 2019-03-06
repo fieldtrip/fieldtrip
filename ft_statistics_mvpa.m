@@ -168,7 +168,7 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %
 % $Id$
 
-
+ft_hastoolbox('mvpa_light', 1);
 % do a sanity check on the input data
 assert(isnumeric(dat),    'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 assert(isnumeric(design), 'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
