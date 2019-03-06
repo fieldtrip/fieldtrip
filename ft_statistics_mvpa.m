@@ -56,7 +56,7 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %                           as stat.metric as e.g.
 %                           stat.metric.accuracy_std
 %
-% .balance      - for imbalanced data with a minority and a majority class.
+%  cfg.balance      - for imbalanced data with a minority and a majority class.
 %                 'oversample' oversamples the minority class
 %                 'undersample' undersamples the minority class
 %                 such that both classes have the same number of samples
@@ -68,13 +68,13 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %                 concurrent over/undersampling (oversampling of the
 %                 smaller class, undersampling of the larger class) is not
 %                 supported at the moment
-% .replace      - if balance is set to 'oversample' or 'undersample',
+%  cfg.replace      - if balance is set to 'oversample' or 'undersample',
 %                 replace deteremines whether data is drawn with
 %                 replacement (default 1)
-% .normalise    - normalises the data across samples, for each time point 
+%  cfg.normalise    - normalises the data across samples, for each time point 
 %                 and each feature separately, using 'zscore' or 'demean' 
 %                 (default 'zscore'). Set to 'none' or [] to avoid normalisation.
-% .feedback     - print feedback on the console (default 1)
+%  cfg.feedback     - print feedback on the console (default 1)
 %
 % To obtain a realistic estimate of classification performance,
 % cross-validation is used. It is controlled by the following parameters:
@@ -110,7 +110,7 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 % each feature separately. However, neighbouring features can enter the 
 % classification together when a matrix of size [features x features]
 % specifying the neighbours is provided. Additional parameters:
-% .nb          - [features x features] matrix specifying which features
+% cfg.nb       - [features x features] matrix specifying which features
 %                are neighbours of each other.
 %                          - EITHER - 
 %                a GRAPH consisting of 0's and 1's. A 1 in the 
@@ -121,7 +121,7 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %                If no matrix is provided, every feature is only neighbour
 %                to itself and classification is performed for each feature 
 %                separately.
-% .size        - if a nb matrix is provided, size defines the 
+% cfg.size     - if a nb matrix is provided, size defines the 
 %                size of the 'neighbourhood' of a feature.
 %                if nb is a graph, it gives the number of steps taken 
 %                     through the nb matrix to find neighbours:
