@@ -3,8 +3,8 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 % FT_STATISTICS_MVPA performs multivariate pattern classification 
 % on the data. If the data has not been averaged over time, classification
 % is performed separately for every time point. Additionally, searchlight
-% analysis can be performed (classification for each channel/voxel
-% separately), or time x time generalisation.
+% analysis (classification for each channel/voxel
+% separately) or time x time generalisation can be performed.
 %
 % This function should not be called directly, instead
 % you should call the function that is associated with the type of
@@ -19,76 +19,76 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 % FT_FREQGRANDAVERAGE or FT_SOURCEGRANDAVERAGE respectively.
 %
 % The configuration can contain
-%   cfg.classifier        = string, classifier to use
-%                    'lda'          Regularised linear discriminant analysis
-%                                   (LDA) (for two classes)
-%                    'multiclass_lda' LDA for more than two classes
-%                    'logreg'       Logistic regression with L2-regularisation
-%                    'svm'          Support Vector Machine (SVM) with L2-regularisation
-%                    'ensemble'     Ensemble of classifiers. Any of the other
-%                                   classifiers can be used as a learner.
-%                    'kernel_fda'   Kernel Fisher Discriminant Analysis
-%   cfg.metric            = string, performance metric. Possible metrics:
-%                           accuracy auc tval dval confusion precision 
-%                           recall f1  
+%   cfg.classifier      = 'lda'          Regularised linear discriminant analysis
+%                                        (LDA) (for two classes)
+%                         'multiclass_lda' LDA for more than two classes
+%                         'logreg'       Logistic regression
+%                         'svm'          Support Vector Machine (SVM)
+%                         'ensemble'     Ensemble of classifiers. Any of the other
+%                                        classifiers can be used as a learner.
+%                         'kernel_fda'   Kernel Fisher Discriminant Analysis
+%   cfg.metric          = string, performance metric. Possible metrics:
+%                         accuracy auc tval dval confusion precision 
+%                         recall f1  
 %   See https://github.com/treder/MVPA-Light for an overview of all
 %   classifiers and metrics.
 %
-%   cfg.param             = struct, structure with hyperparameters for the 
-%                           classifier
-%   cfg.searchlight       = 'yes' or 'no', performs searchlight analysis
-%                           (default 'no'). More information see below
-%   cfg.timextime         = 'yes' or 'no', performs time x time
-%                           generalisation. In other words, the classifier
-%                           is trained at each time point and tested at
-%                           every time point. The result is a time x time
-%                           matrix of classification performance.
-%                           (default 'no')
-%                           Note that searchlight and timextime cannot be
-%                           run simultaneously (at least one option needs
-%                           to be set to 'no').
-%   cfg.std               = 'yes' or 'no'. In cross-validation, since the metric is
-%                           calculated for each test set separately and
-%                           then averaged, there is some variability. if
-%                           std is 'yes', the standard deviation of the
-%                           metrics is calculated across repeats and
-%                           then averaged across folds. It is returned in
-%                           as stat.metric as e.g.
-%                           stat.metric.accuracy_std
+%   cfg.param           = struct, structure with hyperparameters for the 
+%                         classifier (see HYPERPARAMETERS below)
+%   cfg.searchlight     = 'yes' or 'no', performs searchlight analysis
+%                         (default 'no'). More information see below
+%   cfg.timextime       = 'yes' or 'no', performs time x time
+%                         generalisation. In other words, the classifier
+%                         is trained at each time point and tested at
+%                         every time point. The result is a time x time
+%                         matrix of classification performance.
+%                         (default 'no')
+%                         Note that searchlight and timextime cannot be
+%                         run simultaneously (at least one option needs
+%                         to be set to 'no').
+%   cfg.std             = 'yes' or 'no'. In cross-validation, since the metric is
+%                         calculated for each test set separately and
+%                         then averaged, there is some variability. if
+%                         std is 'yes', the standard deviation of the
+%                         metrics is calculated across repeats and
+%                         then averaged across folds. It is returned in
+%                         as stat.metric as e.g.
+%                         stat.metric.accuracy_std
 %
-%  cfg.balance      - for imbalanced data with a minority and a majority class.
-%                 'oversample' oversamples the minority class
-%                 'undersample' undersamples the minority class
-%                 such that both classes have the same number of samples
-%                 (default 'none'). Note that for we undersample at the
-%                 level of the repeats, whereas we oversample within each
-%                 training set (for an explanation see mv_balance_classes).
-%                 You can also give an integer number for undersampling.
-%                 The samples will be reduced to this number. Note that
-%                 concurrent over/undersampling (oversampling of the
-%                 smaller class, undersampling of the larger class) is not
-%                 supported at the moment
-%  cfg.replace      - if balance is set to 'oversample' or 'undersample',
-%                 replace deteremines whether data is drawn with
-%                 replacement (default 1)
-%  cfg.normalise    - normalises the data across samples, for each time point 
-%                 and each feature separately, using 'zscore' or 'demean' 
-%                 (default 'zscore'). Set to 'none' or [] to avoid normalisation.
-%  cfg.feedback     - print feedback on the console (default 1)
+%  cfg.balance          = string, for imbalanced data that does not have
+%                         the same number of instances in each class
+%                         'oversample'     oversamples the minority classes
+%                         'undersample'    undersamples the minority classes
+%                         such that all classes have the same number of
+%                         instances. Note that undersampling is at the
+%                         level of the repeats, whereas we oversampling occurs within each
+%                         training set (for an explanation see mv_balance_classes).
+%                         You can also give an integer number for undersampling.
+%                         The samples will be reduced to this number. Note that
+%                         concurrent over/undersampling (oversampling of the
+%                         smaller class, undersampling of the larger class) is not
+%                         supported at the moment
+%  cfg.replace          = bool, if balance is set to 'oversample' or 'undersample',
+%                         replace determines whether data is drawn with
+%                         replacement (default 1)
+%  cfg.normalise        = string, normalises the data across samples, for each time point 
+%                         and each feature separately, using 'zscore' or 'demean' 
+%                         (default 'zscore'). Set to 'none' or [] to avoid normalisation.
+%  cfg.feedback         = 'yes' or 'no', whether or not to print feedback on the console (default 'yes')
 %
 % To obtain a realistic estimate of classification performance,
 % cross-validation is used. It is controlled by the following parameters:
-%   cfg.cv              cross-validation type, either 'kfold', 'leaveout' 
-%                       or 'holdout'. If 'none', no cross-validation is
-%                       used and the classifier is tested on the training
-%                       set. (default 'kfold')
-%   cfg.k               number of folds in k-fold cross-validation (default 5)
-%   cfg.repeat          number of times the cross-validation is repeated 
-%                       with new randomly assigned folds (default 5)
-%   cfg.p               if cfg.cv is 'holdout', p is the fraction of test 
-%                       samples (default 0.1)
-%   cfg.stratify        if 1, the class proportions are approximately 
-%                       preserved in each test fold (default 1)
+%   cfg.cv              = string, cross-validation type, either 'kfold', 'leaveout' 
+%                         or 'holdout'. If 'none', no cross-validation is
+%                         used and the classifier is tested on the training
+%                         set. (default 'kfold')
+%   cfg.k               = number of folds in k-fold cross-validation (default 5)
+%   cfg.repeat          = number of times the cross-validation is repeated 
+%                         with new randomly assigned folds (default 5)
+%   cfg.p               = if cfg.cv is 'holdout', p is the fraction of test 
+%                         samples (default 0.1)
+%   cfg.stratify        = if 1, the class proportions are approximately 
+%                         preserved in each test fold (default 1)
 %
 %
 % More information about each classifier is found in the documentation of
@@ -169,6 +169,7 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 % $Id$
 
 ft_hastoolbox('mvpa_light', 1);
+
 % do a sanity check on the input data
 assert(isnumeric(dat),    'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 assert(isnumeric(design), 'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
