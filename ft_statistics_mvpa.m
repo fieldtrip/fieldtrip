@@ -1,6 +1,6 @@
 function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 
-% FT_STATISTICS_MVPA performs multivariate pattern classification 
+% FT_STATISTICS_MVPA performs multivariate pattern classification
 % on the data. If the data has not been averaged over time, classification
 % is performed separately for every time point. Additionally, searchlight
 % analysis (classification for each channel/voxel
@@ -19,22 +19,6 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 % FT_FREQGRANDAVERAGE or FT_SOURCEGRANDAVERAGE respectively.
 %
 % The configuration can contain
-%   cfg.classifier      = 'lda'          Regularised linear discriminant analysis
-%                                        (LDA) (for two classes)
-%                         'multiclass_lda' LDA for more than two classes
-%                         'logreg'       Logistic regression
-%                         'svm'          Support Vector Machine (SVM)
-%                         'ensemble'     Ensemble of classifiers. Any of the other
-%                                        classifiers can be used as a learner.
-%                         'kernel_fda'   Kernel Fisher Discriminant Analysis
-%   cfg.metric          = string, performance metric. Possible metrics:
-%                         accuracy auc tval dval confusion precision 
-%                         recall f1  
-%   See https://github.com/treder/MVPA-Light for an overview of all
-%   classifiers and metrics.
-%
-%   cfg.param           = struct, structure with hyperparameters for the 
-%                         classifier (see HYPERPARAMETERS below)
 %   cfg.searchlight     = 'yes' or 'no', performs searchlight analysis
 %                         (default 'no'). More information see below
 %   cfg.timextime       = 'yes' or 'no', performs time x time
@@ -46,16 +30,30 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %                         Note that searchlight and timextime cannot be
 %                         run simultaneously (at least one option needs
 %                         to be set to 'no').
-%   cfg.std             = 'yes' or 'no'. In cross-validation, since the metric is
-%                         calculated for each test set separately and
-%                         then averaged, there is some variability. if
-%                         std is 'yes', the standard deviation of the
-%                         metrics is calculated across repeats and
-%                         then averaged across folds. It is returned in
-%                         as stat.metric as e.g.
-%                         stat.metric.accuracy_std
+%   cfg.mvpa            = structure that contains detailed options for the
+%                         MVPA procedure. See
+%                         https://github.com/treder/MVPA-Light for more
+%                         details.
 %
-%  cfg.balance          = string, for imbalanced data that does not have
+%   
+%   cfg.mvpa.classifier      = 'lda'          Regularised linear discriminant analysis
+%                                        (LDA) (for two classes)
+%                         'multiclass_lda' LDA for more than two classes
+%                         'logreg'       Logistic regression
+%                         'svm'          Support Vector Machine (SVM)
+%                         'ensemble'     Ensemble of classifiers. Any of the other
+%                                        classifiers can be used as a learner.
+%                         'kernel_fda'   Kernel Fisher Discriminant Analysis
+%   cfg.mvpa.metric          = string, performance metric. Possible metrics:
+%                         accuracy auc tval dval confusion precision
+%                         recall f1
+%   See https://github.com/treder/MVPA-Light for an overview of all
+%   classifiers and metrics.
+%
+%   cfg.mvpa.param           = struct, structure with hyperparameters for the
+%                         classifier (see HYPERPARAMETERS below)
+%
+%   cfg.mvpa.balance         = string, for imbalanced data that does not have
 %                         the same number of instances in each class
 %                         'oversample'     oversamples the minority classes
 %                         'undersample'    undersamples the minority classes
@@ -68,26 +66,26 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %                         concurrent over/undersampling (oversampling of the
 %                         smaller class, undersampling of the larger class) is not
 %                         supported at the moment
-%  cfg.replace          = bool, if balance is set to 'oversample' or 'undersample',
+%  cfg.mvpa.replace          = bool, if balance is set to 'oversample' or 'undersample',
 %                         replace determines whether data is drawn with
 %                         replacement (default 1)
-%  cfg.normalise        = string, normalises the data across samples, for each time point 
-%                         and each feature separately, using 'zscore' or 'demean' 
+%  cfg.mvpa.normalise        = string, normalises the data across samples, for each time point
+%                         and each feature separately, using 'zscore' or 'demean'
 %                         (default 'zscore'). Set to 'none' or [] to avoid normalisation.
-%  cfg.feedback         = 'yes' or 'no', whether or not to print feedback on the console (default 'yes')
+%  cfg.mvpa.feedback         = 'yes' or 'no', whether or not to print feedback on the console (default 'yes')
 %
 % To obtain a realistic estimate of classification performance,
 % cross-validation is used. It is controlled by the following parameters:
-%   cfg.cv              = string, cross-validation type, either 'kfold', 'leaveout' 
+%   cfg.mvpa.cv              = string, cross-validation type, either 'kfold', 'leaveout'
 %                         or 'holdout'. If 'none', no cross-validation is
 %                         used and the classifier is tested on the training
 %                         set. (default 'kfold')
-%   cfg.k               = number of folds in k-fold cross-validation (default 5)
-%   cfg.repeat          = number of times the cross-validation is repeated 
+%   cfg.mvpa.k               = number of folds in k-fold cross-validation (default 5)
+%   cfg.mvpa.repeat          = number of times the cross-validation is repeated
 %                         with new randomly assigned folds (default 5)
-%   cfg.p               = if cfg.cv is 'holdout', p is the fraction of test 
+%   cfg.mvpa.p               = if cfg.cv is 'holdout', p is the fraction of test
 %                         samples (default 0.1)
-%   cfg.stratify        = if 1, the class proportions are approximately 
+%   cfg.mvpa.stratify        = if 1, the class proportions are approximately
 %                         preserved in each test fold (default 1)
 %
 %
@@ -95,7 +93,7 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 % MVPA-Light (github.com/treder/MVPA-Light/).
 %
 % HYPERPARAMETERS:
-% Each classifier comes with its own set of hyperparameters, such as 
+% Each classifier comes with its own set of hyperparameters, such as
 % regularisation parameters and the kernel. Hyperparameters can be set
 % using the cfg.param substruct. For instance, in LDA, cfg.param.lambda =
 % 'auto' sets the lambda regularisation parameter.
@@ -106,24 +104,24 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %
 % SEARCHLIGHT ANALYSIS:
 % Classification using a feature searchlight approach can highlight which
-% feature(s) are informative. To this end, classification is performed on 
-% each feature separately. However, neighbouring features can enter the 
+% feature(s) are informative. To this end, classification is performed on
+% each feature separately. However, neighbouring features can enter the
 % classification together when a matrix of size [features x features]
 % specifying the neighbours is provided. Additional parameters:
-% cfg.nb       - [features x features] matrix specifying which features
+% cfg.mvpa.nb       - [features x features] matrix specifying which features
 %                are neighbours of each other.
-%                          - EITHER - 
-%                a GRAPH consisting of 0's and 1's. A 1 in the 
-%                (i,j)-th element signifies that feature i and feature j 
+%                          - EITHER -
+%                a GRAPH consisting of 0's and 1's. A 1 in the
+%                (i,j)-th element signifies that feature i and feature j
 %                are neighbours, and a 0 means they are not neighbours
 %                            - OR -
 %                a DISTANCE MATRIX, where larger values mean larger distance.
 %                If no matrix is provided, every feature is only neighbour
-%                to itself and classification is performed for each feature 
+%                to itself and classification is performed for each feature
 %                separately.
-% cfg.size     - if a nb matrix is provided, size defines the 
+% cfg.mvpa.size     - if a nb matrix is provided, size defines the
 %                size of the 'neighbourhood' of a feature.
-%                if nb is a graph, it gives the number of steps taken 
+%                if nb is a graph, it gives the number of steps taken
 %                     through the nb matrix to find neighbours:
 %                     0: only the feature itself is considered (no neighbours)
 %                     1: the feature and its immediate neighbours
@@ -134,7 +132,7 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %                if nb is a distance matrix, size defines the number of
 %                     neighbouring features that enter the classification
 %                     0: only the feature itself is considered (no neighbours)
-%                     1: the feature and its first closest neighbour 
+%                     1: the feature and its first closest neighbour
 %                        according to the distance matrix
 %                     2+: the 2 closest neighbours etc.
 %
@@ -146,7 +144,7 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 % Returns:
 %   stat        = struct with results. the .metric field contains the
 %                   requested metrics
-% 
+%
 
 % Copyright (C) 2019, Matthias Treder
 %
@@ -174,78 +172,65 @@ ft_hastoolbox('mvpa_light', 1);
 assert(isnumeric(dat),    'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 assert(isnumeric(design), 'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 
+% cfg: set defaults
+cfg.searchlight     = ft_getopt(cfg, 'searchlight', 'no');
+cfg.timextime       = ft_getopt(cfg, 'timextime',   'no');
+cfg.mvpa            = ft_getopt(cfg, 'mvpa',        []);
+cfg.mvpa.metric     = ft_getopt(cfg.mvpa, 'metric',   'accuracy');
+cfg.mvpa.feedback   = istrue(ft_getopt(cfg.mvpa, 'feedback', true)); % this converts 'yes'/'no' into boolean
+
 % flip dimensions such that the number of trials comes first
 dat = dat';
 
-% if cfg.dim has two entries which are non-singleton then the data has been 
+% if cfg.dim has two entries which are non-singleton then the data has been
 % 3D before. We must reshape it from 2D to 3D to run it in MVPA-Light
 data_is_3D = (numel(cfg.dim) > 1 && all(cfg.dim > 1));  % checks whether data was 3D before being reshaped
 if data_is_3D
-    dat = reshape(dat, size(dat,1), cfg.dim(1), cfg.dim(2));
+  dat = reshape(dat, size(dat,1), cfg.dim(1), cfg.dim(2));
 end
 
-y = cfg.design;
-
-%% build up config struct for MVPA-Light
-mvcfg = keepfields(cfg, {'balance','replace','normalise', ...
-                         'cv','k','repeat','p','stratify',...
-                         'classifier','param','size','nb'});
-
-mvcfg.metric          = ft_getopt(cfg, 'metric','accuracy');
-mvcfg.feedback        = ft_getopt(cfg, 'feedback','yes');
-
-% cfg: set defaults
-cfg.searchlight     = ft_getopt(cfg, 'searchlight','no');
-cfg.timextime       = ft_getopt(cfg, 'timextime','no');
-cfg.std             = ft_getopt(cfg, 'std', 'no');
-
-% translate parameter value into MVPA-Light notation [0 or 1]
-if ischar(mvcfg.feedback)
-    mvcfg.feedback = strcmp(mvcfg.feedback,'yes');
-end
+y = design;
 
 %% perform sanity checks on parameters
-if strcmp(cfg.timextime,'yes') && strcmp(cfg.searchlight,'yes')
-    ft_error('you should not set timextime = ''yes'' and searchlight = ''yes'' simultaneously')
+if istrue(cfg.timextime) && istrue(cfg.searchlight)
+  ft_error('you should not set timextime = ''yes'' and searchlight = ''yes'' simultaneously')
 end
 
 % timextime = 'yes' but data is not 3D we should change timextime to 'no'
-if strcmp(cfg.timextime,'yes') && ~data_is_3D 
-    ft_warning('timextime = ''yes'' but data has no time dimension, setting timextime = ''no''');
-    cfg.timextime = 'no';
+if istrue(cfg.timextime) && ~data_is_3D
+  ft_warning('timextime = ''yes'' but data has no time dimension, setting timextime = ''no''');
+  cfg.timextime = 'no';
 end
 
-%% Call MVPA-Light 
+%% Call MVPA-Light
 if strcmp(cfg.searchlight, 'yes')
-    % --- searchlight analysis ---
-    [perf, result] = mv_searchlight(mvcfg, dat, y);
-    
+  % --- searchlight analysis ---
+  [perf, result] = mv_searchlight(cfg.mvpa, dat, y);
+  
 elseif strcmp(cfg.timextime, 'yes')
-    % --- time x time generalisation ---
-    [perf, result] = mv_classify_timextime(mvcfg, dat, y);
-    
+  % --- time x time generalisation ---
+  [perf, result] = mv_classify_timextime(cfg.mvpa, dat, y);
+  
 elseif data_is_3D
-    % --- classification across time ---
-    [perf, result] = mv_classify_across_time(mvcfg, dat, y);
-
+  % --- classification across time ---
+  [perf, result] = mv_classify_across_time(cfg.mvpa, dat, y);
+  
 else
-    % --- data has no time dimension, perform only cross-validation ---
-    [perf, result] = mv_crossvalidate(mvcfg, dat, y);
+  % --- data has no time dimension, perform only cross-validation ---
+  [perf, result] = mv_crossvalidate(cfg.mvpa, dat, y);
 end
 
 %% setup stat struct
 stat = [];
-if ~iscell(mvcfg.metric), mvcfg.metric = {mvcfg.metric}; end
-if ~iscell(perf), perf = {perf}; end
+if ~iscell(cfg.mvpa.metric), cfg.mvpa.metric = {cfg.mvpa.metric}; end
+if ~iscell(perf),            perf         = {perf};               end
 for mm=1:numel(perf)
-    
-    % Performance metric
-    stat.metric.(mvcfg.metric{mm}) = perf{mm};
-    
-    % Std of performance if required
-    if strcmp(cfg.std, 'yes')
-        stat.metric.([mvcfg.metric{mm} '_std']) = result.perf_std{mm};
-    end
+  
+  % Performance metric
+  stat.metric.(cfg.mvpa.metric{mm}) = perf{mm};
+  
+  % Std of performance
+  stat.metric.([cfg.mvpa.metric{mm} '_std']) = result.perf_std{mm};
 end
 
 % return the MVPA-Light result struct as well
