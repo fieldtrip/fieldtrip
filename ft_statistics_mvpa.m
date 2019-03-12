@@ -224,14 +224,17 @@ end
 stat = [];
 if ~iscell(cfg.mvpa.metric), cfg.mvpa.metric = {cfg.mvpa.metric}; end
 if ~iscell(perf),            perf            = {perf};            end
-if ~iscell(result.perf_std), result.perf_std = {result.perf_std}; end
 for mm=1:numel(perf)
   
   % Performance metric
   stat.metric.(cfg.mvpa.metric{mm}) = perf{mm};
   
   % Std of performance
-  stat.metric.([cfg.mvpa.metric{mm} '_std']) = result.perf_std{mm};
+  if iscell(result.perf_std)
+    stat.metric.([cfg.mvpa.metric{mm} '_std']) = result.perf_std{mm};
+  else
+    stat.metric.([cfg.mvpa.metric{mm} '_std']) = result.perf_std;
+  end
 end
 
 % return the MVPA-Light result struct as well
