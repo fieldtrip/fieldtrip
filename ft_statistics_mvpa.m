@@ -202,22 +202,53 @@ if istrue(cfg.timextime) && ~data_is_3D
   cfg.timextime = 'no';
 end
 
+label = [];
+dim   = [];
+dimord = [];
+
 %% Call MVPA-Light
 if strcmp(cfg.searchlight, 'yes')
   % --- searchlight analysis ---
   [perf, result] = mv_searchlight(cfg.mvpa, dat, y);
   
+  % this preserves any spatial dimension, so no adjustment is done to a
+  % channel list, if present
+  if isfield(cfg, 'channel')
+    label = cfg.channel;
+  end
+  
+  if isfield(cfg, 'dim')
+    dim = cfg.dim;
+  end
+  
 elseif strcmp(cfg.timextime, 'yes')
   % --- time x time generalisation ---
   [perf, result] = mv_classify_timextime(cfg.mvpa, dat, y);
+  
+  % this does note preserve any spatial dimension, so label should be
+  % adjusted
+  label = squeezelabel(label, cfg);
+  dim   = squeezedim(dim, cfg);
+  dimord = 'time_time';
   
 elseif data_is_3D
   % --- classification across time ---
   [perf, result] = mv_classify_across_time(cfg.mvpa, dat, y);
   
+  % this does note preserve any spatial dimension, so label should be
+  % adjusted
+  label = squeezelabel(label, cfg);
+  dim   = squeezedim(dim, cfg);
+  
 else
   % --- data has no time dimension, perform only cross-validation ---
   [perf, result] = mv_crossvalidate(cfg.mvpa, dat, y);
+  
+  % this does note preserve any spatial dimension, so label should be
+  % adjusted
+  label = squeezelabel(label, cfg);
+  dim   = squeezedim(dim, cfg);
+  
 end
 
 %% setup stat struct
@@ -227,15 +258,41 @@ if ~iscell(perf),            perf            = {perf};            end
 for mm=1:numel(perf)
   
   % Performance metric
-  stat.metric.(cfg.mvpa.metric{mm}) = perf{mm};
+  stat.(cfg.mvpa.metric{mm}) = perf{mm};
   
   % Std of performance
   if iscell(result.perf_std)
-    stat.metric.([cfg.mvpa.metric{mm} '_std']) = result.perf_std{mm};
+    stat.([cfg.mvpa.metric{mm} '_std']) = result.perf_std{mm};
   else
-    stat.metric.([cfg.mvpa.metric{mm} '_std']) = result.perf_std;
+    stat.([cfg.mvpa.metric{mm} '_std']) = result.perf_std;
   end
 end
 
 % return the MVPA-Light result struct as well
-stat.mvpa_result = result;
+stat.mvpa = result;
+
+if ~isempty(label)
+  stat.label = label;
+end
+
+if ~isempty(dim)
+  stat.dim = dim;
+end
+
+if ~isempty(dimord)
+  stat.dimord = dimord;
+end
+
+function label = squeezelabel(label, cfg)
+
+if isfield(cfg, 'channel')
+  label = sprintf('combined(%s)', sprintf('%s',cfg.channel{:}));
+end 
+
+function dim = squeezedim(dim, cfg)
+
+if isfield(cfg, 'dim')
+  dim = cfg.dim;
+  dim(1) = 1;
+end
+
