@@ -223,7 +223,8 @@ end
 %% setup stat struct
 stat = [];
 if ~iscell(cfg.mvpa.metric), cfg.mvpa.metric = {cfg.mvpa.metric}; end
-if ~iscell(perf),            perf         = {perf};               end
+if ~iscell(perf),            perf            = {perf};            end
+if ~iscell(result.perf_std), result.perf_std = {result.perf_std}; end
 for mm=1:numel(perf)
   
   % Performance metric
