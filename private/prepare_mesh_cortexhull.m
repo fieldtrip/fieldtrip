@@ -14,12 +14,18 @@ function headshape = prepare_mesh_cortexhull(cfg)
 %                      floodfilled by mris_fill (default: 1)
 %   cfg.outer_surface_sphere = diameter of the sphere used by make_outer_surface
 %                      to close the sulci using morphological operations (default: 15)
-%   cfg.smooth_steps = number of standard smoothing iterations (default: 0)
+%   cfg.smooth_steps = number of standard smoothing iterations (default: 60)
 %   cfg.laplace_steps = number of Laplacian (non-shrinking) smoothing
-%                      iterations (default: 2000)
+%                      iterations (default: 0)
 %   cfg.fixshrinkage = reduce possible shrinkage due to smoothing (default: 'no')
 %   cfg.expansion_mm = amount in mm with which the hull is re-expanded, applies
 %                      when cfg.fixshrinkage = 'yes' (default: 'auto')
+%
+% In case the default smoothing operation using FreeSurfer does not produce 
+% satisfactory results, it is recommended to try the (slower) functionality 
+% from iso2mesh, by specifying:
+%    cfg.smooth_steps = 0;
+%    cfg.laplace_steps = 2000;
 %
 % See also FT_PREPARE_MESH
 
@@ -49,8 +55,8 @@ surf                 = ft_getopt(cfg, 'headshape');
 fshome               = ft_getopt(cfg, 'fshome', '/Applications/freesurfer');
 resolution           = ft_getopt(cfg, 'resolution', 1);
 outer_surface_sphere = ft_getopt(cfg, 'outer_surface_sphere', 15);
-smooth_steps         = ft_getopt(cfg, 'smooth_steps', 0); % previous default was 60
-laplace_steps        = ft_getopt(cfg, 'laplace_steps', 2000); % replaces smoothing using mris_smooth
+smooth_steps         = ft_getopt(cfg, 'smooth_steps', 60);
+laplace_steps        = ft_getopt(cfg, 'laplace_steps', 0); % replaces smoothing using mris_smooth
 fixshrinkage         = ft_getopt(cfg, 'fixshrinkage', 'no');
 expansion_mm         = ft_getopt(cfg, 'expansion_mm', 'auto'); % applies when fixshrinkage is 'yes'
 
