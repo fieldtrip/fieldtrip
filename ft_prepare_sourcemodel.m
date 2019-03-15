@@ -493,7 +493,7 @@ if basedonmri
   inside              = getinside(pos2mri, head);                                     % use helper subfunction
   
   sourcemodel.pos     = pos2head/scale;                                               % convert to source units
-  sourcemodel.dim     = [length(xgrid) length(ygrid) length(.zgrid)];
+  sourcemodel.dim     = [length(xgrid) length(ygrid) length(zgrid)];
   sourcemodel.inside  = inside(:);
   sourcemodel.unit    = cfg.sourcemodel.unit;
   
