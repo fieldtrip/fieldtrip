@@ -360,16 +360,16 @@ if basedonresolution
   end
   
   if ischar(cfg.xgrid) && strcmp(cfg.xgrid, 'auto')
-    sourcemodel.xgrid = minpos(1):cfg.resolution:maxpos(1);
+    xgrid = minpos(1):cfg.resolution:maxpos(1);
   end
   if ischar(cfg.ygrid) && strcmp(cfg.ygrid, 'auto')
-    sourcemodel.ygrid = minpos(2):cfg.resolution:maxpos(2);
+    ygrid = minpos(2):cfg.resolution:maxpos(2);
   end
   if ischar(cfg.zgrid) && strcmp(cfg.zgrid, 'auto')
-    sourcemodel.zgrid = minpos(3):cfg.resolution:maxpos(3);
+    zgrid = minpos(3):cfg.resolution:maxpos(3);
   end
-  sourcemodel.dim   = [length(sourcemodel.xgrid) length(sourcemodel.ygrid) length(sourcemodel.zgrid)];
-  [X, Y, Z]  = ndgrid(sourcemodel.xgrid, sourcemodel.ygrid, sourcemodel.zgrid);
+  sourcemodel.dim   = [length(xgrid) length(ygrid) length(zgrid)];
+  [X, Y, Z]  = ndgrid(xgrid, ygrid, zgrid);
   sourcemodel.pos   = [X(:) Y(:) Z(:)];
   sourcemodel.unit  = cfg.sourcemodel.unit;
   fprintf('initial 3D grid dimensions are [%d %d %d]\n', sourcemodel.dim(1), sourcemodel.dim(2), sourcemodel.dim(3));
@@ -380,11 +380,8 @@ if basedongrid
   % a detailed xgrid/ygrid/zgrid has been specified, the other details
   % still need to be determined
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  sourcemodel.xgrid = cfg.xgrid;
-  sourcemodel.ygrid = cfg.ygrid;
-  sourcemodel.zgrid = cfg.zgrid;
-  sourcemodel.dim   = [length(sourcemodel.xgrid) length(sourcemodel.ygrid) length(sourcemodel.zgrid)];
-  [X, Y, Z]  = ndgrid(sourcemodel.xgrid, sourcemodel.ygrid, sourcemodel.zgrid);
+  sourcemodel.dim   = [length(cfg.xgrid) length(cfg.ygrid) length(cfg.zgrid)];
+  [X, Y, Z]  = ndgrid(cfg.xgrid, cfg.ygrid, cfg.zgrid);
   sourcemodel.pos   = [X(:) Y(:) Z(:)];
   sourcemodel.unit  = cfg.sourcemodel.unit;
 end
@@ -496,10 +493,7 @@ if basedonmri
   inside              = getinside(pos2mri, head);                                     % use helper subfunction
   
   sourcemodel.pos     = pos2head/scale;                                               % convert to source units
-  sourcemodel.xgrid   = xgrid/scale;                                                  % convert to source units
-  sourcemodel.ygrid   = ygrid/scale;                                                  % convert to source units
-  sourcemodel.zgrid   = zgrid/scale;                                                  % convert to source units
-  sourcemodel.dim     = [length(sourcemodel.xgrid) length(sourcemodel.ygrid) length(sourcemodel.zgrid)];
+  sourcemodel.dim     = [length(xgrid) length(ygrid) length(.zgrid)];
   sourcemodel.inside  = inside(:);
   sourcemodel.unit    = cfg.sourcemodel.unit;
   
@@ -683,32 +677,22 @@ end
 if strcmp(cfg.tight, 'yes')
   fprintf('%d dipoles inside, %d dipoles outside brain\n', sum(sourcemodel.inside), sum(~sourcemodel.inside));
   fprintf('making tight grid\n');
-  xmin = min(sourcemodel.pos(sourcemodel.inside,1));
-  ymin = min(sourcemodel.pos(sourcemodel.inside,2));
-  zmin = min(sourcemodel.pos(sourcemodel.inside,3));
-  xmax = max(sourcemodel.pos(sourcemodel.inside,1));
-  ymax = max(sourcemodel.pos(sourcemodel.inside,2));
-  zmax = max(sourcemodel.pos(sourcemodel.inside,3));
-  xmin_indx = find(sourcemodel.xgrid==xmin);
-  ymin_indx = find(sourcemodel.ygrid==ymin);
-  zmin_indx = find(sourcemodel.zgrid==zmin);
-  xmax_indx = find(sourcemodel.xgrid==xmax);
-  ymax_indx = find(sourcemodel.ygrid==ymax);
-  zmax_indx = find(sourcemodel.zgrid==zmax);
-  sel =       (sourcemodel.pos(:,1)>=xmin & sourcemodel.pos(:,1)<=xmax); % select all grid positions inside the tight box
-  sel = sel & (sourcemodel.pos(:,2)>=ymin & sourcemodel.pos(:,2)<=ymax); % select all grid positions inside the tight box
-  sel = sel & (sourcemodel.pos(:,3)>=zmin & sourcemodel.pos(:,3)<=zmax); % select all grid positions inside the tight box
+  boolvol = reshape(sourcemodel.inside, sourcemodel.dim);
+  xsel    = squeeze(sum(sum(boolvol),3),2);
+  ysel    = squeeze(sum(sum(boolvol),3),1);
+  zsel    = squeeze(sum(sum(boolvol),2),1);
+  boolvol(xsel,ysel,zsel) = true; % update the volume to contain the to-be-selected entries
+  sel     = boolvol(:);
+  
   % update the grid locations that are marked as inside the brain
   sourcemodel.pos   = sourcemodel.pos(sel,:);
+  sourcemodel.dim   = [sum(xsel) sum(ysel) sum(zsel)];
+  
   % update the boolean fields, this requires the original dim
   fn = booleanfields(sourcemodel);
   for i=1:numel(fn)
     sourcemodel.(fn{i}) = sourcemodel.(fn{i})(sel);
   end
-  sourcemodel.xgrid   = sourcemodel.xgrid(xmin_indx:xmax_indx);
-  sourcemodel.ygrid   = sourcemodel.ygrid(ymin_indx:ymax_indx);
-  sourcemodel.zgrid   = sourcemodel.zgrid(zmin_indx:zmax_indx);
-  sourcemodel.dim     = [length(sourcemodel.xgrid) length(sourcemodel.ygrid) length(sourcemodel.zgrid)];
 end
 fprintf('%d dipoles inside, %d dipoles outside brain\n', sum(sourcemodel.inside), sum(~sourcemodel.inside));
 
