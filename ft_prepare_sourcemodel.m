@@ -678,9 +678,9 @@ if strcmp(cfg.tight, 'yes')
   fprintf('%d dipoles inside, %d dipoles outside brain\n', sum(sourcemodel.inside), sum(~sourcemodel.inside));
   fprintf('making tight grid\n');
   boolvol = reshape(sourcemodel.inside, sourcemodel.dim);
-  xsel    = squeeze(sum(sum(boolvol),3),2);
-  ysel    = squeeze(sum(sum(boolvol),3),1);
-  zsel    = squeeze(sum(sum(boolvol),2),1);
+  xsel    = squeeze(sum(sum(boolvol,3),2))>0;
+  ysel    = squeeze(sum(sum(boolvol,3),1))>0;
+  zsel    = squeeze(sum(sum(boolvol,2),1))>0;
   boolvol(xsel,ysel,zsel) = true; % update the volume to contain the to-be-selected entries
   sel     = boolvol(:);
   
