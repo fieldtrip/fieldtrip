@@ -684,15 +684,16 @@ if strcmp(cfg.tight, 'yes')
   boolvol(xsel,ysel,zsel) = true; % update the volume to contain the to-be-selected entries
   sel     = boolvol(:);
   
-  % update the grid locations that are marked as inside the brain
-  sourcemodel.pos   = sourcemodel.pos(sel,:);
-  sourcemodel.dim   = [sum(xsel) sum(ysel) sum(zsel)];
-  
   % update the boolean fields, this requires the original dim
   fn = booleanfields(sourcemodel);
   for i=1:numel(fn)
     sourcemodel.(fn{i}) = sourcemodel.(fn{i})(sel);
   end
+  
+  % update the grid locations that are marked as inside the brain
+  sourcemodel.pos   = sourcemodel.pos(sel,:);
+  sourcemodel.dim   = [sum(xsel) sum(ysel) sum(zsel)];
+  
 end
 fprintf('%d dipoles inside, %d dipoles outside brain\n', sum(sourcemodel.inside), sum(~sourcemodel.inside));
 
