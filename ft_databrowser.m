@@ -311,7 +311,7 @@ if hasdata
     end
   else
     if strcmp(cfg.continuous, 'yes') && (numel(data.trial) > 1)
-      ft_warning('interpreting trial-based data as continous, time-axis is no longer appropriate. t(0) now corresponds to the first sample of the first trial, and t(end) to the last sample of the last trial')
+      ft_warning('interpreting trial-based data as continuous, time-axis is no longer appropriate. t(0) now corresponds to the first sample of the first trial, and t(end) to the last sample of the last trial')
     end
   end
 
@@ -386,7 +386,7 @@ if cfg.blocksize<round(10*1/hdr.Fs)
 end
 
 
-% FIXME make a check for the consistency of cfg.continous, cfg.blocksize, cfg.trl and the data header
+% FIXME make a check for the consistency of cfg.continuous, cfg.blocksize, cfg.trl and the data header
 
 if Nchans == 0
   ft_error('no channels to display');
@@ -636,7 +636,7 @@ opt.chanindx    = [];         % this is used to check whether the component topo
 opt.eventtypes  = eventtypes;
 opt.eventtypescolors = [0 0 0; 1 0 0; 0 0 1; 0 1 0; 1 0 1; 0.5 0.5 0.5; 0 1 1; 1 1 0];
 opt.eventtypecolorlabels = {'black', 'red', 'blue', 'green', 'cyan', 'grey', 'light blue', 'yellow'};
-opt.nanpaddata  = []; % this is used to allow horizontal scaling to be constant (when looking at last segment continous data, or when looking at segmented/zoomed-out non-continous data)
+opt.nanpaddata  = []; % this is used to allow horizontal scaling to be constant (when looking at last segment continuous data, or when looking at segmented/zoomed-out non-continuous data)
 opt.trllock     = []; % this is used when zooming into trial based data
 
 % save original layout when viewmode = component

@@ -58,7 +58,7 @@ function [cfg] = ft_definetrial(cfg)
 % If you specify cfg.trialdef.eventtype  = '?' a list with the events in your
 % data file will be displayed on screen.
 %
-% If you want to read all data from a continous file in a single or in
+% If you want to read all data from a continuous file in a single or in
 % multiple segments, TRIALFUN_GENERAL understands the following options
 %    cfg.trialdef.triallength = duration in seconds (can also be 1 or Inf)
 %    cfg.trialdef.ntrials     = number of trials (can also be 1 or Inf)
