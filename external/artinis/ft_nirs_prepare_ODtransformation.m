@@ -5,7 +5,7 @@ function [montage, cfg] = ft_nirs_prepare_ODtransformation(cfg, data)
 % oxygenated hemoglobin.
 %
 % Use as
-%   [montage] = ft_prepare_ODtransformation(cfg, data);
+%   [montage] = ft_prepare_ODtransformation(cfg, data)
 %
 % It is neccessary to input the data on which you want to perform the
 % inverse computations, since that data generally contain the optode

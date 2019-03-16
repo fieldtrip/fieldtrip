@@ -7,9 +7,9 @@ function [sens] = ft_appendsens(cfg, varargin)
 %   combined = ft_appendsens(cfg, sens1, sens2, ...)
 %
 % A call to FT_APPENDSENS results in the label, pos and ori fields to be
-% concatenated, and the tra matrix to be merged. Any duplicates will be removed.
-% The labelold and chanposold fields are kept under the condition that they
-% are identical across the inputs.
+% concatenated, and the tra matrix to be merged. Any duplicate electrodes
+% will be removed. The labelold and chanposold fields are kept under the
+% condition that they are identical across the inputs.
 %
 % See also FT_ELECTRODEPLACEMENT, FT_ELECTRODEREALIGN, FT_DATAYPE_SENS,
 % FT_APPENDDATA, FT_APPENDTIMELOCK, FT_APPENDFREQ, FT_APPENDSOURCE
@@ -108,7 +108,7 @@ for i=1:length(varargin)
   if isfield(varargin{i}, 'chanpos')
     chanpos{i} = varargin{i}.chanpos;
   end
-  
+
   % some the following fields are likely present in a sens structure
   if isfield(varargin{i}, 'elecpos') % EEG
     elecpos{i} = varargin{i}.elecpos;
@@ -134,7 +134,7 @@ for i=1:length(varargin)
     tra{i} = varargin{i}.tra;
     hastra = 1;
   end
-  
+
   % the following fields might be present in a sens structure
   if isfield(varargin{i}, 'labelold')
     labelold{i} = varargin{i}.labelold(:); % ensure column orientation

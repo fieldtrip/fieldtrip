@@ -13,9 +13,9 @@ function cfg = data2bids(cfg, varargin)
 % or as
 %   data2bids(cfg, data)
 %
-% The first input argument "cfg" is the configuration structure, which contains the
+% The first input argument 'cfg' is the configuration structure, which contains the
 % details for the (meta)data and which specifies the sidecar files you want to write.
-% The optional "data" argument corresponds to preprocessed raw data according to
+% The optional 'data' argument corresponds to preprocessed raw data according to
 % FT_DATAYPE_RAW or an anatomical MRI according to FT_DATAYPE_VOLUME. The optional
 % data argument allows you to write a preprocessed and realigned anatomical MRI to
 % disk, or to write a preprocessed electrophysiological dataset to disk.

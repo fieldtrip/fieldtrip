@@ -10,9 +10,9 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 % sand are expressed in world coordinates.
 %
 % Use as
+%   bnd = ft_prepare_mesh(cfg)
 %   bnd = ft_prepare_mesh(cfg, mri)
 %   bnd = ft_prepare_mesh(cfg, seg)
-%   bnd = ft_prepare_mesh(cfg)  # for cortexhull
 %
 % Configuration options:
 %   cfg.method      = string, can be 'interactive', 'projectmesh', 'iso2mesh', 'isosurface',
@@ -26,7 +26,7 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %   cfg.headshape   = a filename containing headshape, a Nx3 matrix with surface
 %                     points, or a structure with a single or multiple boundaries
 %
-% For method 'cortexhull' you should specify
+% For method 'cortexhull' you should not give input data, but specify
 %   cfg.headshape   = sting, filename containing the pial surface computed by freesurfer recon-all
 %
 % To facilitate data-handling and distributed computing you can use

@@ -12,8 +12,14 @@ function [cfg] = ft_definetrial(cfg)
 % where the configuration structure should contain
 %   cfg.trialdef   = structure with details of trial definition, see below
 %   cfg.trialfun   = string with function name, see below (default = 'ft_trialfun_general')
-% and also
-%   cfg.dataset    = pathname to dataset from which to read the events
+% and furthermore
+%   cfg.dataset     = string with the filename
+% or
+%   cfg.headerfile  = string with the filename
+%   cfg.datafile    = string with the filename
+% and optionally
+%   cfg.headerformat
+%   cfg.dataformat
 %
 % A call to FT_DEFINETRIAL results in the trial definition "trl" being
 % added to the output configuration structure. The trials are defined

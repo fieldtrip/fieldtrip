@@ -7,7 +7,7 @@ function [dataout] = ft_denoise_prewhiten(cfg, datain, noise)
 %
 % Use as
 %   dataout = ft_denoise_prewhiten(cfg, datain, noise)
-% where the datain is the original data from FT_PREPROCESSING, where
+% where the datain is the original data from FT_PREPROCESSING and
 % noise should contain the estimated noise covariance from
 % FT_TIMELOCKANALYSIS.
 %
@@ -180,4 +180,3 @@ ft_postamble previous   datain
 ft_postamble provenance dataout
 ft_postamble history    dataout
 ft_postamble savevar    dataout
-
