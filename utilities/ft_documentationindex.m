@@ -37,6 +37,8 @@ subdir = {
   'contrib/misc'
   'contrib/nutmegtrip'
   'contrib/spike'
+  'external/artinis'
+  'realtime/example'
   'realtime/online_eeg'
   'realtime/online_meg'
   'realtime/online_mri'
