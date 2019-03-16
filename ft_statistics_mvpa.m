@@ -106,35 +106,34 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 % Classification using a feature searchlight approach can highlight which
 % feature(s) are informative. To this end, classification is performed on
 % each feature separately. However, neighbouring features can enter the
-% classification together when a matrix of size [features x features]
-% specifying the neighbours is provided. Additional parameters:
-% cfg.mvpa.nb       - [features x features] matrix specifying which features
-%                are neighbours of each other.
-%                          - EITHER -
-%                a GRAPH consisting of 0's and 1's. A 1 in the
-%                (i,j)-th element signifies that feature i and feature j
-%                are neighbours, and a 0 means they are not neighbours
-%                            - OR -
-%                a DISTANCE MATRIX, where larger values mean larger distance.
-%                If no matrix is provided, every feature is only neighbour
-%                to itself and classification is performed for each feature
-%                separately.
-% cfg.mvpa.size     - if a nb matrix is provided, size defines the
-%                size of the 'neighbourhood' of a feature.
-%                if nb is a graph, it gives the number of steps taken
-%                     through the nb matrix to find neighbours:
-%                     0: only the feature itself is considered (no neighbours)
-%                     1: the feature and its immediate neighbours
-%                     2: the feature, its neighbours, and its neighbours'
-%                     neighbours
-%                     3+: neighbours of neighbours of neighbours etc
-%                     (default 1)
-%                if nb is a distance matrix, size defines the number of
-%                     neighbouring features that enter the classification
-%                     0: only the feature itself is considered (no neighbours)
-%                     1: the feature and its first closest neighbour
-%                        according to the distance matrix
-%                     2+: the 2 closest neighbours etc.
+% classification together when specified. Optional parameters:
+%
+% cfg.mvpa.neighbours   = neighbourhood structure, see FT_PREPARE_NEIGHBOURS
+%                         Alternatively, a [features x features] matrix specifying
+%                         which features are neighbours of each other. This
+%                         matrix can be either
+%                         a GRAPH consisting of 0's and 1's. A 1 in the
+%                         (i,j)-th element signifies that feature i and feature j
+%                         are neighbours, and a 0 means they are not neighbours
+%                         or a DISTANCE MATRIX, where larger values mean larger distance.
+%                         If no matrix is provided, every feature is only neighbour
+%                         to itself and classification is performed for each feature
+%                         separately.
+% cfg.mvpa.size         = size of the 'neighbourhood' of a feature.
+%                         number of steps taken through the neighbourhood
+%                         to include neighbours
+%                         0: only the feature itself is considered (no neighbours)
+%                         1: the feature and its immediate neighbours
+%                         2: the feature, its neighbours, and its neighbours'
+%                         neighbours
+%                         3+: neighbours of neighbours of neighbours etc
+%                         (default 1)
+%                         if cfg.neighbours is a distance matrix, size defines the number of
+%                         neighbouring features that enter the classification
+%                         0: only the feature itself is considered (no neighbours)
+%                         1: the feature and its first closest neighbour
+%                            according to the distance matrix
+%                         2+: the 2 closest neighbours etc.
 %
 % -- TODO: for time x time generalisation, in MVPA light we can use two
 % different datasets (one for training the classifier, the other one for
@@ -178,6 +177,7 @@ cfg.timextime       = ft_getopt(cfg, 'timextime',   'no');
 cfg.mvpa            = ft_getopt(cfg, 'mvpa',        []);
 cfg.mvpa.metric     = ft_getopt(cfg.mvpa, 'metric',   'accuracy');
 cfg.mvpa.feedback   = istrue(ft_getopt(cfg.mvpa, 'feedback', true)); % this converts 'yes'/'no' into boolean
+cfg.mvpa.neighbours = ft_getopt(cfg.mvpa, 'neighbours', []);
 
 % flip dimensions such that the number of trials comes first
 dat = dat';
@@ -209,6 +209,9 @@ dimord = [];
 %% Call MVPA-Light
 if strcmp(cfg.searchlight, 'yes')
   % --- searchlight analysis ---
+  if isstruct(cfg.mvpa.neighbours)
+    cfg.mvpa.neighbours = channelconnectivity(struct('neighbours',cfg.mvpa.neighbours, 'channel', {cfg.channel}));
+  end
   [perf, result] = mv_searchlight(cfg.mvpa, dat, y);
   
   % this preserves any spatial dimension, so no adjustment is done to a
