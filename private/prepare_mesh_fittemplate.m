@@ -27,18 +27,17 @@ function M = prepare_mesh_fittemplate(headshape,template)
 %
 % $Id$
 
-% ensure that the input is consistent with what this function expects
-
 % add toolbox cpd
-ft_hastoolbox('cpd',2);
+ft_hastoolbox('cpd', 2);
 
+%
 opt.corresp = 0;
 opt.method  = 'affine';
 opt.max_it = 100;
-opt.fgt=0;
+opt.fgt = 0;
 opt.tol = 10e-12;
-opt.outliers=0.0;
-opt.outliers= 0;
+opt.outliers = 0.0;
+opt.outliers = 0;
 [transform,~] = cpd_register(headshape,template, opt);
 
 M = eye(4,4);

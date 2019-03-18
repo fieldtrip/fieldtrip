@@ -390,7 +390,7 @@ switch toolbox
   case 'JSONIO'
     dependency = {'jsonread', 'jsonwrite', 'jsonread.mexa64'};
   case 'CPD' 
-    dependency = {'cpd'};
+    dependency = {'cpd', 'cpd_affine', 'cpd_P'};
     
     % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
