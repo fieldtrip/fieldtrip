@@ -273,15 +273,16 @@ end
 
 % apply baseline correction
 if ~strcmp(cfg.baseline, 'no')
+  tmpcfg = removefields(cfg, {'inputfile', 'reproducescript'});
   for i=1:Ndata
     % keep mask-parameter if it is set
     if ~isempty(cfg.maskparameter)
       tempmask = varargin{i}.(cfg.maskparameter);
     end
     if strcmp(dtype, 'timelock') && strcmp(xparam, 'time')
-      varargin{i} = ft_timelockbaseline(cfg, varargin{i});
+      varargin{i} = ft_timelockbaseline(tmpcfg, varargin{i});
     elseif strcmp(dtype, 'freq') && strcmp(xparam, 'time')
-      varargin{i} = ft_freqbaseline(cfg, varargin{i});
+      varargin{i} = ft_freqbaseline(tmpcfg, varargin{i});
     elseif strcmp(dtype, 'freq') && strcmp(xparam, 'freq')
       ft_error('baseline correction is not supported for spectra without a time dimension');
     else
