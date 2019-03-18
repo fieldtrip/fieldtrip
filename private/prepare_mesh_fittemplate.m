@@ -2,7 +2,7 @@ function M = prepare_mesh_fittemplate(headshape,template)
 
 % PREPARE_MESH_FITTEMPLATE computes an affine transformation matrix between 2 point clouds 
 %
-% This function relies on cpd toolbox found in the external/cpd folder
+% This function relies on cpd toolbox from  Myronenko, see https://sites.google.com/site/myronenko/research/cpd
 %
 %
 % See also FT_PREPARE_MESH
