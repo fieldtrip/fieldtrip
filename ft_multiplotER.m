@@ -391,7 +391,7 @@ end
 %% Section 3: select the data to be plotted and determine min/max range
 
 % Read or create the layout that will be used for plotting
-tmpcfg = removefields(cfg, 'inputfile'); % ensure the inputfile field not to exist
+tmpcfg = keepfields(cfg, {'layout', 'elec', 'grad', 'opto', 'showcallinfo'});
 cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
 
 % Take the subselection of channels that is contained in the layout, this is the same in all datasets
