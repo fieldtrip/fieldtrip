@@ -66,7 +66,7 @@ if strcmp(dtype, 'unknown')
     dtype = 'mesh';
   elseif isfield(data, 'tet') && isfield(data, 'pos')
     dtype = 'mesh';
-  elseif ~strcmp(ft_voltype(data), 'unknown')
+  elseif ~strcmp(ft_headmodeltype(data), 'unknown')
     dtype = 'headmodel';
   elseif ~strcmp(ft_senstype(data), 'unknown')
     dtype = 'sens';
@@ -156,7 +156,7 @@ switch dtype
     camlight;
 
   case 'headmodel'
-    ft_plot_vol(data);
+    ft_plot_headmodel(data);
     camlight;
 
   case {'grad' 'elec' 'sens'}

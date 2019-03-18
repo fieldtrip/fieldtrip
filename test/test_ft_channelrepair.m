@@ -108,7 +108,7 @@ data_eeg_repaired_spline = ft_channelrepair(cfg,data_eeg_juggled);
 
 cfg = [];
 cfg.channel = {'19','20','24','25','26'};
-cfg.continous = 'no';
+cfg.continuous = 'no';
 ft_databrowser(cfg, data_eeg_repaired_spline);
 
 % treat as a missing channel

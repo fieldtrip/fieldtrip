@@ -54,7 +54,7 @@ i1 = round(n * (x(1) - rng(1)) / (rng(2) - rng(1)));
 i2 = round(n * (x(2) - rng(1)) / (rng(2) - rng(1)));
 grays = repmat(gray, i2-i1+1, 1);
 
-nbs = round((s(1)-rng(1))/(x(1)-rng(1))*(i1-1));%saturated blue
+nbs = round((s(1)-rng(1))/(x(1)-rng(1))*(i1-1)); %saturated blue
 nblue = i1-1-max(nbs,1); 
 nb3 = ceil(nblue/3);
 nb2 = nblue - 2*nb3;
@@ -65,7 +65,7 @@ blues = [linspace(blue1(1), blue1(1), nbs)' linspace(blue1(2), blue1(2), nbs)' l
          linspace(blue3(1), gray(1),  nb3)' linspace(blue3(2), gray(2),  nb3)' linspace(blue3(3), gray(3),  nb3)'];
      
 
-nrs = round((rng(2)-s(2))/(rng(2)-x(2))*(n-i2));%saturated red
+nrs = round((rng(2)-s(2))/(rng(2)-x(2))*(n-i2)); %saturated red
 nred = n-i2-max(nrs,1);
 nr3 = floor(nred/3);
 nr2 = floor(nred/3);

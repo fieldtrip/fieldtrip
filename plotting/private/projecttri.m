@@ -31,12 +31,16 @@ function [tri] = projecttri(pos, method)
 % $Id$
 
 if nargin<2
-  if rank(pos)==1
-    ft_error('points are lying on a line, cannot make triangulation');
-  elseif rank(pos)==2
-    method = 'delaunay';
-  else
-    method = 'convhull';
+  r = rank(pos);
+  switch r
+    case 1
+      ft_warning('points are lying on a line, cannot make triangulation');
+      tri = zeros(0,3);
+      return
+    case 2
+      method = 'delaunay';
+    otherwise
+      method = 'convhull';
   end
 end
 

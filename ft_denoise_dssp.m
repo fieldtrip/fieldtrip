@@ -3,35 +3,25 @@ function [dataout] = ft_denoise_dssp(cfg, datain)
 % FT_DENOISE_DSSP implements a dual signal subspace projection algorithm
 % to suppress interference outside a predefined source region of
 % interest. It is based on: Sekihara et al. J. Neural Eng. 2016 13(3), and
-% Sekihara et al. J. Neural Eng. 2018 15(3). 
+% Sekihara et al. J. Neural Eng. 2018 15(3).
 %
-% Use as 
+% Use as
 %   dataout = ft_denoise_dssp(cfg, datain)
 % where cfg is a configuration structure that contains
-%   cfg.grid     = structure, source model with precomputed leadfields (see
-%                    FT_PREPARE_LEADFIELD)
-%   cfg.dssp     = structure, containing the parameters that determine the
-%                  behavior of the algorithm.
-%                    cfg.dssp.n_space = 'all', or scalar. Number of
-%                                       dimensions for the initial spatial
-%                                       projection.
-%                    cfg.dssp.n_in    = 'all', or scalar. Number of
-%                                       dimensions of the subspace describing
-%                                       the field inside the ROI
-%                    cfg.dssp.n_out   = 'all', or scalar. Number of 
-%                                       dimensions of the subspace describing
-%                                       the field outside the ROI 
-%                    cfg.dssp.n_intersect = scalar (default = 0.9). Number  
-%                                       of dimensions (if value is an 
-%                                       integer>=1), or threshold for the 
-%                                       included eigenvalues (if value<1),
-%                                       determining the dimensionality of 
-%                                       the intersection.
-% 
-%   cfg.channel  = Nx1 cell-array with selection of channels (default = 'all'),
-%                       see FT_CHANNELSELECTION for details
-%   cfg.trials      = 'all' or a selection given as a 1xN vector (default = 'all')
-
+%   cfg.channel          = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
+%   cfg.trials           = 'all' or a selection given as a 1xN vector (default = 'all')
+%   cfg.sourcemodel      = structure, source model with precomputed leadfields, see FT_PREPARE_LEADFIELD
+%   cfg.dssp             = structure with parameters that determine the behavior of the algorithm
+%   cfg.dssp.n_space     = 'all', or scalar. Number of dimensions for the
+%                          initial spatial projection.
+%   cfg.dssp.n_in        = 'all', or scalar. Number of dimensions of the
+%                          subspace describing the field inside the ROI.
+%   cfg.dssp.n_out       = 'all', or scalar. Number of dimensions of the
+%                          subspace describing the field outside the ROI.
+%   cfg.dssp.n_intersect = scalar (default = 0.9). Number of dimensions (if
+%                          value is an integer>=1), or threshold for the
+%                          included eigenvalues (if value<1), determining
+%                          the dimensionality of the intersection.
 %
 % See also FT_DENOISE_PCA, FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR
 
@@ -46,7 +36,7 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar    datain
 ft_preamble provenance datain
-ft_preamble trackconfig      
+ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -54,20 +44,23 @@ if ft_abort
   return
 end
 
+% check the input data
+datain = ft_checkdata(datain, 'datatype', {'raw'}); % FIXME how about timelock and freq?
+
+cfg = ft_checkconfig(cfg, 'renamed', {'hdmfile', 'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed', {'vol',     'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed', {'grid',    'sourcemodel'});
+
 % get the options
 cfg.trials       = ft_getopt(cfg, 'trials',  'all', 1);
 cfg.channel      = ft_getopt(cfg, 'channel', 'all');
-cfg.grid         = ft_getopt(cfg, 'grid');
+cfg.sourcemodel  = ft_getopt(cfg, 'sourcemodel');
 cfg.dssp         = ft_getopt(cfg, 'dssp');         % sub-structure to hold the parameters
 cfg.dssp.n_space = ft_getopt(cfg.dssp, 'n_space', 'all'); % number of spatial components to retain from the Gram matrix
 cfg.dssp.n_in    = ft_getopt(cfg.dssp, 'n_in', 'all');    % dimensionality of the Bin subspace to be used for the computation of the intersection
 cfg.dssp.n_out   = ft_getopt(cfg.dssp, 'n_out', 'all');   % dimensionality of the Bout subspace to be used for the computation of the intersection
 cfg.dssp.n_intersect = ft_getopt(cfg.dssp, 'n_intersect', 0.9); % dimensionality of the intersection
 cfg.output       = ft_getopt(cfg, 'output', 'original');
-
-% check the input data
-datain = ft_checkdata(datain, 'datatype', {'raw' 'timelock'}); % freq?
-% FIXME  tlck not yet supported
 
 % select channels and trials of interest, by default this will select all channels and trials
 tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
@@ -76,31 +69,31 @@ datain = ft_selectdata(tmpcfg, datain);
 [cfg, datain] = rollback_provenance(cfg, datain);
 
 % match the input data's channels with the labels in the leadfield
-grid = cfg.grid;
-if ~isfield(grid, 'leadfield')
-  ft_error('cfg.grid needs to contain leadfields');
+sourcemodel = cfg.sourcemodel;
+if ~isfield(sourcemodel, 'leadfield')
+  ft_error('cfg.sourcemodel needs to contain leadfields');
 end
-[indx1, indx2] = match_str(datain.label, grid.label);
+[indx1, indx2] = match_str(datain.label, sourcemodel.label);
 if ~isequal(indx1(:),(1:numel(datain.label))')
   ft_error('unsupported mismatch between data channels and leadfields');
 end
-if islogical(grid.inside)
-  inside = find(grid.inside);
+if islogical(sourcemodel.inside)
+  inside = find(sourcemodel.inside);
 else
-  inside = grid.inside;
+  inside = sourcemodel.inside;
 end
 for k = inside(:)'
-  grid.leadfield{k} = grid.leadfield{k}(indx2,:);
+  sourcemodel.leadfield{k} = sourcemodel.leadfield{k}(indx2,:);
 end
 
 % compute the Gram-matrix of the supplied forward model
-lf = cat(2, grid.leadfield{:});
+lf = cat(2, sourcemodel.leadfield{:});
 G  = lf*lf';
 
 dat     = cat(2,datain.trial{:});
 [dum, Ae, N, Nspace, Sout, Sin, Sspace, S] = dssp(dat, G, cfg.dssp.n_in, cfg.dssp.n_out, cfg.dssp.n_space, cfg.dssp.n_intersect);
 datAe   = dat*Ae; % the projection is a right multiplication
-% with a matrix (eye(size(Ae,1))-Ae*Ae'), since Ae*Ae' can become quite 
+% with a matrix (eye(size(Ae,1))-Ae*Ae'), since Ae*Ae' can become quite
 % sizeable, it's computed slightly differently here.
 
 % put some diagnostic information in the output cfg.
@@ -118,11 +111,11 @@ trial = cell(size(datain.trial));
 switch cfg.output
   case 'original'
     for k = 1:numel(datain.trial)
-      trial{k} = datain.trial{k} - datAe*Ae((csmp(k)+1):csmp(k+1),:)';  
+      trial{k} = datain.trial{k} - datAe*Ae((csmp(k)+1):csmp(k+1),:)';
     end
   case 'complement'
     for k = 1:numel(datain.trial)
-      trial{k} = datAe*Ae((csmp(k)+1):csmp(k+1),:)';  
+      trial{k} = datAe*Ae((csmp(k)+1):csmp(k+1),:)';
     end
   otherwise
     ft_error(sprintf('cfg.output = ''%s'' is not implemented',cfg.output));
@@ -132,12 +125,12 @@ end
 dataout       = keepfields(datain, {'label','time','fsample','trialinfo','sampleinfo','grad', 'elec', 'opto'}); % grad can be kept and does not need to be balanced, since the cleaned data is a mixture over time, not space.
 dataout.trial = trial;
 
-ft_postamble debug              
-ft_postamble trackconfig        
-ft_postamble previous   datain  
-ft_postamble provenance dataout 
-ft_postamble history    dataout 
-ft_postamble savevar    dataout 
+ft_postamble debug
+ft_postamble trackconfig
+ft_postamble previous   datain
+ft_postamble provenance dataout
+ft_postamble history    dataout
+ft_postamble savevar    dataout
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % subfunctions for the computation of the projection matrix
@@ -153,7 +146,7 @@ function [Bclean, Ae, Nee, Nspace, Sout, Sin, Sspace, S] = dssp(B, G, Nin, Nout,
 % recom_Nspace: recommended value for the dimension of the pseudo-signal subspace
 % outputs
 % Bclean(Nc,Nt): cleaned sensor data
-% Nee: dimension of the intersection 
+% Nee: dimension of the intersection
 % Nspace: dimension of the pseudo-signal subspace
 %  ------------------------------------------------------------
 %  programmed by K. Sekihara,  Signal Analysis Inc.
@@ -184,7 +177,7 @@ end
 fprintf('Using %d spatial dimensions\n', Nspace);
 
 % spatial subspace projector
-Us   = U(:,1:Nspace);  
+Us   = U(:,1:Nspace);
 USUS = Us*Us';
 
 % Bin and Bout creations
@@ -204,7 +197,7 @@ function [Ae, Nee, Sout, Sin, S] = CSP01(Bin, Bout, Nin, Nout, Nee)
 % interference rejection by removing the common temporal subspace of the two subspaces
 % K. Sekihara,  March 28, 2012
 % Golub and Van Loan, Matrix computations, The Johns Hopkins University Press, 1996
-% 
+%
 %  Nc: number of channels
 %  Nt: number of time points
 % inputs
@@ -215,9 +208,9 @@ function [Ae, Nee, Sout, Sin, S] = CSP01(Bin, Bout, Nin, Nout, Nee)
 %  Nin: dimension of the signal plus interference subspace
 %  Nee: dimension of the intersection of the two subspaces
 % outputs
-% Ae = matrix from which the projector onto the intersection can 
+% Ae = matrix from which the projector onto the intersection can
 %      be obtained:
-% AeAe: projector onto the intersection, which is equal to the 
+% AeAe: projector onto the intersection, which is equal to the
 %       interference subspace.
 % Nee: dimension of the intersection
 %  ------------------------------------------------------------

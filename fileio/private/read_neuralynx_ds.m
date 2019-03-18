@@ -166,7 +166,7 @@ if needhdr
   hdr.nSamplesPre    = 0;                           % it is continuous
 
   if ~isempty(ftype_ncs)
-    % these elements are only relevant for continously sampled channels
+    % these elements are only relevant for continuously sampled channels
     hdr.nSamples           = NRecords(1) * 512;
     hdr.FirstTimeStamp     = FirstTimeStamp(1);
     hdr.LastTimeStamp      = LastTimeStamp(1);
@@ -180,9 +180,9 @@ if needhdr
   dat = hdr;
 
 else
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % read the data of the selected channels (i.e. files)
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   if nargin<5
     % select all channels
     chanindx = 1:length(hdr.label);
@@ -225,4 +225,3 @@ else
     end % switch ft_filetype
   end % for nchan
 end % reading data
-

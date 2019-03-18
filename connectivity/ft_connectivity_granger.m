@@ -107,7 +107,7 @@ switch method
               outssq(jj,ii,:,:) = outssq(jj,ii,:,:) + (log(numer./denom)).^2;
             end
           end
-          outsum(ii,ii,:,:) = 0;%self-granger set to zero
+          outsum(ii,ii,:,:) = 0; %self-granger set to zero
         end
       end
       
@@ -193,7 +193,7 @@ switch method
               % post multiply transfer matrix with the inverse of the projection matrix
               % this is equivalent to time domain pre multiplication with P
               Sj = reshape(S(kk,indx,indx,jj), [ntot ntot]);
-              Zj = tmpZ;%(:,:);
+              Zj = tmpZ; %(:,:);
               H1 = reshape(H(kk,indx,indx,jj), [ntot ntot])/P1;
               H2 = reshape(H(kk,indx,indx,jj), [ntot ntot])/P2;
               num1 = abs(det(Sj(indx1,indx1))); % numerical round off leads to tiny imaginary components
@@ -312,7 +312,7 @@ switch method
               outssq(jj,ii,:,:) = outssq(jj,ii,:,:) + reshape((log(numer./denom)).^2, [1 1 siz(4:end)]);
             end
           end
-          outsum(ii,ii,:,:) = 0;%self-granger set to zero
+          outsum(ii,ii,:,:) = 0; %self-granger set to zero
         end
       end
     elseif ~issquare && isempty(powindx)
@@ -375,7 +375,7 @@ switch method
               outssq(jj,ii,:,:) = outssq(jj,ii,:,:) + reshape((log(numer./denom)).^2, [1 1 siz(4:end)]);
             end
           end
-          outsum(ii,ii,:,:) = 0;%self-granger set to zero
+          outsum(ii,ii,:,:) = 0; %self-granger set to zero
         end
       end
     elseif ~issquare && isempty(powindx)

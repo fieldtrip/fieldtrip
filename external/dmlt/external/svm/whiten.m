@@ -54,7 +54,7 @@ N    = prod(sz(accDims));
 idx1 = -(1:ndims(X)); idx1(dim)=[1 1+(2:numel(dim))]; % skip for OP dim
 idx2 = -(1:ndims(X)); idx2(dim)=[2 1+(2:numel(dim))]; % skip for OP dim   
 if ( isreal(X) ) % work with complex inputs
-   XX = tprod(X,idx1,[],idx2,'n');%[szX(dim(1)) szX(dim(1)) x szX(dim(2:end))]
+   XX = tprod(X,idx1,[],idx2,'n'); %[szX(dim(1)) szX(dim(1)) x szX(dim(2:end))]
 else
    XX = tprod(real(X),idx1,[],idx2,'n') + tprod(imag(X),idx1,[],idx2,'n');
 end
@@ -114,7 +114,7 @@ for dd=1:size(Sigma(:,:,:),3); % for each dir
    if( alpha>=0 ) % regularise the covariance
      Ddd = alpha*Ddd + (1-alpha)*mean(Ddd); % absolute factor to add
    elseif ( alpha<0 ) % percentage of spectrum to use
-     %s = exp(log(Ddd(1))*(1+alpha)+(-alpha)*log(Ddd(end)));%1-s(round(numel(s)*alpha))./sum(s); % strength is % to leave
+     %s = exp(log(Ddd(1))*(1+alpha)+(-alpha)*log(Ddd(end))); %1-s(round(numel(s)*alpha))./sum(s); % strength is % to leave
      t = Ddd(round(-alpha*numel(Ddd))); % strength we want
      Ddd = (Ddd + t)*sum(Ddd)./(sum(Ddd)+t);
    end

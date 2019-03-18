@@ -66,6 +66,8 @@ str = '';
 if numel(val) == 0
   if iscell(val)
     str = [name ' = {};' 10];
+  elseif isstruct(val)
+    str = [name ' = [];' 10];
   elseif isnumeric(val)
     str = [name ' = [];' 10];
   end

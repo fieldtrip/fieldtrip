@@ -1,12 +1,12 @@
-function [data, mri, grid] = nutmeg2fieldtrip(cfg, fileorstruct)
+function [data, mri, sourcemodel] = nutmeg2fieldtrip(cfg, fileorstruct)
 
 % NUTMEG2FIELDTRIP converts from NUTMEG either a sensor data structure
-% ('nuts') to a valid FieldTrip 'raw' structure (plus 'grid' and 'mri' if
-% available), OR a source structure 'beam' to a valid FieldTrip source
-% structure
+% ('nuts') to a valid FieldTrip 'raw' structure (plus 'sourcemodel' and
+% 'mri' if available), OR a source structure ('beam') to a valid FieldTrip
+% source structure.
 %
 % Use as
-%    [data, mri, grid] = nutmeg2fieldtrip(cfg, fileorstruct)
+%    [data, mri, sourcemodel] = nutmeg2fieldtrip(cfg, fileorstruct)
 %
 % Input:
 %      cfg
@@ -21,12 +21,13 @@ function [data, mri, grid] = nutmeg2fieldtrip(cfg, fileorstruct)
 %
 % Output: depending on input, one of options
 %         1) If nuts sensor structure input, then 'data' will be 'raw' and
-%            optionally 'grid' if Lp present, or 'mri' if individual MRI present
+%            optionally 'sourcemodel' if Lp present, or 'mri' if individual MRI present
 %         2) If beam source structure input, then 'data' will be 'source'
 %            (May be an array of source structures (source{1} etc))
-%            'grid' and 'mri' may be output as well if present in beam structure
+%            'sourcemodel' and 'mri' may be output as well if present in beam structure
 %
-% See alo FT_DATATYPE_SOURCE, LORETA2FIELDTRIP, SPASS2FIELDTRIP, FIELDTRIP2SPSS
+% See alo FT_DATATYPE_RAW, FT_DATATYPE_SOURCE, LORETA2FIELDTRIP, SPASS2FIELDTRIP,
+% FIELDTRIP2SPSS
 
 % Copyright (C) 2011, Johanna Zumer
 %
@@ -101,18 +102,18 @@ else
 end
 
 if isfield(structin,'voxels')
-  grid.pos=0.1*structin.voxels; % NM in CTF mm, FT in cm
-  grid.unit='cm';
-  grid.inside=1:size(structin.voxels,1);
-  grid.outside=[];
+  sourcemodel.pos=0.1*structin.voxels; % NM in CTF mm, FT in cm
+  sourcemodel.unit='cm';
+  sourcemodel.inside=1:size(structin.voxels,1);
+  sourcemodel.outside=[];
 end
 if isfield(structin,'Lp')
   for kk=1:size(structin.Lp,3)
-    grid.leadfield{kk}=structin.Lp(:,:,kk);
+    sourcemodel.leadfield{kk}=structin.Lp(:,:,kk);
   end
 end
 if isfield(structin,'W')
-  grid.filter=structin.W;
+  sourcemodel.filter=structin.W;
 end
 
 if nutsorbeam==1
@@ -245,4 +246,4 @@ ft_postamble provenance
 % save the output cfg in all three output data structures
 ft_postamble history    data
 ft_postamble history    mri
-ft_postamble history    grid
+ft_postamble history    sourcemodel

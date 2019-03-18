@@ -1,6 +1,6 @@
 function [dat] = read_nexstim_nxe(filename, begsample, endsample, chanindx)
 
-% READ_NEXSTIM_NXE reads specified samples from a NXE continous datafile
+% READ_NEXSTIM_NXE reads specified samples from a NXE continuous datafile
 %
 % Use as
 %   [hdr] = read_nexstim_nxe(filename)
@@ -155,4 +155,3 @@ else
 
     dat = data(chanindx,:);
 end
-

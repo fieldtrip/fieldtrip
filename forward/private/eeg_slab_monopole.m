@@ -84,7 +84,7 @@ for i=1:Npoles
     ft_warning('a pole coincides with one of the electrodes');
     lf(:,i) = NaN(Nelc,1);
   else
-    lf(:,i) = (1 ./ R1) + (1 ./ R2) + (1 ./ R3);% + (1 ./ R4);
+    lf(:,i) = (1 ./ R1) + (1 ./ R2) + (1 ./ R3); % + (1 ./ R4);
   end
 end
 

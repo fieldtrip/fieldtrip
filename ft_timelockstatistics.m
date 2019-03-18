@@ -190,6 +190,18 @@ if ~isstruct(stat)
   stat = struct('prob', stat);
 end
 
+
+% overrule the 'datsiz' if stat has a (possibly updated) dim field
+if isfield(stat, 'dim')
+  datsiz = stat.dim;
+  stat = rmfield(stat, 'dim');
+end
+
+% describe the dimensions of the output data
+if ~isfield(stat, 'dimord')
+  stat.dimord = cfg.dimord;
+end
+
 % the statistical output contains multiple elements, e.g. F-value, beta-weights and probability
 fn = fieldnames(stat);
 
@@ -200,11 +212,13 @@ for i=1:length(fn)
   end
 end
 
-% describe the dimensions of the output data
-stat.dimord = cfg.dimord;
+% copy the descripive fields into the output, but only if these are not
+% present (and possibly updated by the statmethod-function
+fieldstobecopied = {'time' 'label' 'elec', 'grad', 'opto'};
+if isfield(stat, 'time'),  fieldstobecopied = fieldstobecopied(~ismember(fieldstobecopied, 'time'));  end
+if isfield(stat, 'label'), fieldstobecopied = fieldstobecopied(~ismember(fieldstobecopied, 'label')); end
 
-% copy the descripive fields into the output
-stat = copyfields(varargin{1}, stat, {'time', 'label', 'elec', 'grad', 'opto'});
+stat = copyfields(varargin{1}, stat, fieldstobecopied);
 
 % these were only present to inform the low-level functions
 cfg = removefields(cfg, {'dim', 'dimord'});

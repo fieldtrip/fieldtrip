@@ -19,11 +19,11 @@ function data = ft_anonymizedata(cfg, data)
 % value of each provenance element, and whether it should be kept or
 % removed. Furthermore, it has a number of buttons:
 %   - sort        specify which column is used for sorting
-%   - apply       apply the current selection of "keep" and "remove" and hide the corresponding rows
-%   - keep all    toggle all visibe rows to "keep"
-%   - remove all  toggle all visibe rows to "keep"
-%   - clear all   clear all visibe rows, i.e. neither "keep" nor "remove"
-%   - quit        apply the current selection of "keep" and "remove" and exit
+%   - apply       apply the current selection of 'keep' and 'remove' and hide the corresponding rows
+%   - keep all    toggle all visibe rows to 'keep'
+%   - remove all  toggle all visibe rows to 'keep'
+%   - clear all   clear all visibe rows, i.e. neither 'keep' nor 'remove'
+%   - quit        apply the current selection of 'keep' and 'remove' and exit
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile  = ...
@@ -218,15 +218,15 @@ redraw_cb(h);
 resize_cb(h);
 
 while ~info.cleanup
-  
+
   uiwait(h); % we only get part this point with abort or cleanup
-  
+
   if ~ishandle(h)
     ft_error('aborted by user');
   end
-  
+
   info = getappdata(h, 'info');
-  
+
   if info.cleanup
     if ~all(xor(info.keep, info.remove))
       ft_warning('not all fields have been marked as "keep" or "remove"');

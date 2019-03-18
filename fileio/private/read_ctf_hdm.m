@@ -63,3 +63,8 @@ end
 % add the units in which the volume conductor is defined
 vol.unit = 'cm';
 
+% add a dummy value for the conductivity, it does not matter anyway
+vol.cond = 1;
+
+
+

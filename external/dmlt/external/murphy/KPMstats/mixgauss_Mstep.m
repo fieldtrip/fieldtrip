@@ -53,7 +53,7 @@ if ~isempty(clamped_mean)
   mu = clamped_mean;
 else
   % eqn 6
-  %mu = Y ./ repmat(w(:)', [Ysz 1]);% Y may have a funny size
+  %mu = Y ./ repmat(w(:)', [Ysz 1]); % Y may have a funny size
   mu = zeros(Ysz, Q);
   for i=1:Q
     mu(:,i) = Y(:,i) / w(i);

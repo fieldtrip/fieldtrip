@@ -161,8 +161,8 @@ if usefsample
   ntr = length(data.trial);
   
   ft_progress('init', cfg.feedback, 'resampling data');
-  [fsorig, fsres] = rat(cfg.origfs./cfg.resamplefs);%account for non-integer fs
-  cfg.resamplefs  = cfg.origfs.*(fsres./fsorig);%get new fs exact
+  [fsorig, fsres] = rat(cfg.origfs./cfg.resamplefs); %account for non-integer fs
+  cfg.resamplefs  = cfg.origfs.*(fsres./fsorig); %get new fs exact
   
   % make sure that the resampled time axes are aligned (this is to avoid
   % rounding errors in the time axes). this procedure relies on the

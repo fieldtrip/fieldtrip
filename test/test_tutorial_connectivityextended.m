@@ -111,9 +111,9 @@ tlock                 = ft_timelockanalysis(cfg, data_cmb);
 cfg              = [];
 cfg.method       = 'lcmv';
 cfg.headmodel    = hdm;
-cfg.grid.pos     = sourcemodel.pos([maxcohindx maxpowindx], :);
-cfg.grid.inside  = true(2,1);
-cfg.grid.unit    = sourcemodel.unit;
+cfg.sourcemodel.pos     = sourcemodel.pos([maxcohindx maxpowindx], :);
+cfg.sourcemodel.inside  = true(2,1);
+cfg.sourcemodel.unit    = sourcemodel.unit;
 cfg.lcmv.keepfilter = 'yes';
 source_idx       = ft_sourceanalysis(cfg, tlock);
 

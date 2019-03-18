@@ -72,17 +72,17 @@ end
 if index==0 %global estimate of principal direction most orthogonal to array
   [v,d]=eig(cov(elec.elecpos)); %all vecs
   nm=v(:,find(diag(d)==min(diag(d)))); %vec we want
-  nm=nm*sign(nm(1)*mean(elec.elecpos(:,1)));%check for left or rigth brain, invert nm if needed
+  nm=nm*sign(nm(1)*mean(elec.elecpos(:,1))); %check for left or rigth brain, invert nm if needed
 end
 
 out_ind=zeros(size(elec.elecpos,1),1);
 for k=1:size(elec.elecpos,1)
   %sub array?
   if index>0, % get principal direction most orthogonal to sub-array
-    [y,ind]=sort(Eucl_dist(elec.elecpos,elec.elecpos(k,:)'),'ascend');%select closest for sub-array
+    [y,ind]=sort(Eucl_dist(elec.elecpos,elec.elecpos(k,:)'),'ascend'); %select closest for sub-array
     [v,d]=eig(cov(elec.elecpos(ind(1:index),:))); %all vecs
     nm=v(:,find(diag(d)==min(diag(d)))); %vec we want
-    nm=nm*sign(nm(1)*mean(elec.elecpos(:,1)));%check for left or right brain, invert nm if needed
+    nm=nm*sign(nm(1)*mean(elec.elecpos(:,1))); %check for left or right brain, invert nm if needed
   end
   %
   npls=[surf.pos(:,1)-elec.elecpos(k,1) surf.pos(:,2)-elec.elecpos(k,2) surf.pos(:,3)-elec.elecpos(k,3)]; %x,y,z lengths

@@ -459,6 +459,12 @@ ft_postamble previous stat
 ft_postamble provenance
 ft_postamble savefig
 
+if ~ft_nargout
+  % don't return anything
+  clear cfg
+end
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

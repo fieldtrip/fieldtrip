@@ -220,13 +220,14 @@ cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
 cfg = removefields(cfg, 'funcname');
 
 % do the general cleanup and bookkeeping at the end of the function
-% this will replace the ft_topoplotTFR callinfo with that of ft_topoplotER
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous varargin
 ft_postamble provenance
 ft_postamble savefig
 
-if ~nargout
+if ~ft_nargout
+  % don't return anything
   clear cfg
 end
+

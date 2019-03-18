@@ -124,7 +124,7 @@ hold on
 ft_plot_headshape(shape);
 ft_plot_sens(grad, 'style', 'ob');
 ft_plot_sens(elec, 'style', 'og');
-ft_plot_vol(headmodel_meg, 'facealpha', 0.5, 'edgecolor', 'none'); % "lighting phong" does not work with opacity
+ft_plot_headmodel(headmodel_meg, 'facealpha', 0.5, 'edgecolor', 'none'); % "lighting phong" does not work with opacity
 material dull
 camlight
 
@@ -200,10 +200,10 @@ cfg = [];
 cfg.latency = [0.080 0.110];
 cfg.numdipoles = 2;
 cfg.symmetry = 'x';
-cfg.grid.resolution = 1;
-cfg.grid.unit = 'cm';
+cfg.sourcemodel.resolution = 1;
+cfg.sourcemodel.unit = 'cm';
 cfg.gridsearch = 'yes';
-cfg.vol = headmodel_meg;
+cfg.headmodel = headmodel_meg;
 cfg.senstype = 'meg';
 cfg.channel = {'MEG*2', 'MEG*3'};
 source_planar = ft_dipolefitting(cfg, timelock_all);
@@ -236,7 +236,7 @@ cfg.numdipoles = 2;
 cfg.symmetry = [];
 cfg.gridsearch = 'no';
 cfg.dip.pos = source_planar.dip.pos;
-cfg.vol = headmodel_meg;
+cfg.headmodel = headmodel_meg;
 cfg.channel = {'MEG*2', 'MEG*3'};
 cfg.senstype = 'meg';
 source_planar_nosym = ft_dipolefitting(cfg, timelock_all);
@@ -263,7 +263,7 @@ cfg.symmetry = [];
 cfg.nonlinear = 'no';  % use a fixed position
 cfg.gridsearch = 'no';
 cfg.dip.pos = source_planar.dip.pos;
-cfg.vol = headmodel_meg;
+cfg.headmodel = headmodel_meg;
 cfg.channel = {'MEG*2', 'MEG*3'};
 cfg.senstype = 'meg';
 source_all = ft_dipolefitting(cfg, timelock_all); % estimate the amplitude and orientation
@@ -299,7 +299,7 @@ cfg.numdipoles = 2;
 cfg.symmetry = 'x';
 cfg.gridsearch = 'no';
 cfg.dip.pos = source_planar.dip.pos;
-cfg.vol = headmodel_meg;
+cfg.headmodel = headmodel_meg;
 cfg.channel = {'MEG*2', 'MEG*3'};
 cfg.senstype = 'meg';
 cfg.latency = [0.080 0.100];
@@ -334,7 +334,7 @@ cfg.latency = [0.070 0.140];
 cfg.numdipoles = 2;
 cfg.gridsearch = 'no';
 cfg.dip.pos = source_planar.dip.pos;
-cfg.vol = headmodel_meg;
+cfg.headmodel = headmodel_meg;
 cfg.channel = {'MEG*2', 'MEG*3'};
 cfg.senstype = 'meg';
 source = ft_dipolefitting(cfg, timelock_std);
@@ -520,10 +520,10 @@ cfg = [];
 cfg.latency = [0.080 0.110];
 cfg.numdipoles = 2;
 cfg.symmetry = 'x';
-cfg.grid.resolution = 1;
-cfg.grid.unit = 'cm';
+cfg.sourcemodel.resolution = 1;
+cfg.sourcemodel.unit = 'cm';
 cfg.gridsearch = 'yes';
-cfg.vol = headmodel_eeg;
+cfg.headmodel = headmodel_eeg;
 cfg.senstype = 'eeg';
 cfg.channel = 'all';
 source_eeg = ft_dipolefitting(cfg, timelock_eeg_all);
@@ -560,7 +560,7 @@ cfg.numdipoles = 2;
 cfg.dip.pos = source_eeg.dip.pos;
 cfg.gridsearch = 'no';
 cfg.nonlinear = 'yes';
-cfg.vol = headmodel_eeg;
+cfg.headmodel = headmodel_eeg;
 cfg.senstype = 'eeg';
 cfg.channel = 'all';
 source_eeg2 = ft_dipolefitting(cfg, timelock_eeg_all);
