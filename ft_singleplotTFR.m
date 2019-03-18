@@ -200,11 +200,12 @@ end
 
 % Apply baseline correction:
 if ~strcmp(cfg.baseline, 'no')
+  tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'baselinewindow', 'demean', 'parameter', 'channel'});
   % keep mask-parameter if it is set
   if ~isempty(cfg.maskparameter)
     tempmask = data.(cfg.maskparameter);
   end
-  data = ft_freqbaseline(cfg, data);
+  data = ft_freqbaseline(tmpcfg, data);
   % put mask-parameter back if it is set
   if ~isempty(cfg.maskparameter)
     data.(cfg.maskparameter) = tempmask;
