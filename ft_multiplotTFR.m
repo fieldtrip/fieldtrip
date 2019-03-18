@@ -269,11 +269,12 @@ end
 
 % Apply baseline correction:
 if ~strcmp(cfg.baseline, 'no')
+  tmpcfg = removefields(cfg, {'inputfile', 'reproducescript'});
   % keep mask-parameter if it is set
   if ~isempty(cfg.maskparameter)
     tempmask = data.(cfg.maskparameter);
   end
-  data = ft_freqbaseline(cfg, data);
+  data = ft_freqbaseline(tmpcfg, data);
   % put mask-parameter back if it is set
   if ~isempty(cfg.maskparameter)
     data.(cfg.maskparameter) = tempmask;
@@ -338,7 +339,7 @@ data = chanscale_common(tmpcfg, data);
 %% Section 3: select the data to be plotted and determine min/max range
 
 % Read or create the layout that will be used for plotting
-tmpcfg = removefields(cfg, 'inputfile'); % ensure the inputfile field not to exist
+tmpcfg = keepfields(cfg, {'layout', 'elec', 'grad', 'opto', 'showcallinfo'});
 cfg.layout = ft_prepare_layout(tmpcfg, data);
 
 % Take the subselection of channels that is contained in the layout, this is the same in all datasets
