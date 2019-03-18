@@ -202,7 +202,10 @@ ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous comp
 ft_postamble provenance
+ft_postamble savefig
 
-if ~nargout
+if ~ft_nargout
+  % don't return anything
   clear cfg
 end
+

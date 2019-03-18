@@ -44,8 +44,8 @@ vol.r = 8;
 
 %prepare leadfields and grid
 cfg                 = [];
-cfg.grid.resolution = 1.5;
-cfg.vol             = vol;
+cfg.sourcemodel.resolution = 1.5;
+cfg.headmodel       = vol;
 cfg.grad            = grad;
 grid                = ft_prepare_leadfield(cfg);
 
@@ -89,7 +89,7 @@ cfgsd            = [];
 cfgsd.projectmom = 'yes';
 sd               = ft_sourcedescriptives(cfgsd, source);
 
-cfgs.grid.filter = sd.avg.filter;
+cfgs.sourcemodel.filter = sd.avg.filter;
 cfgs.method      = 'pcc';
 cfgs.keepmom     = 'yes';
 
@@ -101,7 +101,7 @@ end
 
 for k = 1:numel(source.inside)
   kk = source.inside(k);
-  cfgs.grid.leadfield{kk} = sd.leadfield{kk}*sd.avg.ori{kk};
+  cfgs.sourcemodel.leadfield{kk} = sd.leadfield{kk}*sd.avg.ori{kk};
 end
 spccold = ft_sourceanalysis(cfgs, freq);
 spccnew = ft_checkdata(spccold, 'sourcerepresentation', 'new');

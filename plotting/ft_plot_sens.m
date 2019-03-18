@@ -50,7 +50,7 @@ function hs = ft_plot_sens(sens, varargin)
 %   figure; ft_plot_sens(sens, 'coilshape', 'circle', 'coil', true, 'chantype', 'meggrad')
 %   figure; ft_plot_sens(sens, 'coilshape', 'circle', 'coil', false, 'orientation', true)
 %
-% See also FT_READ_SENS, FT_PLOT_HEADSHAPE, FT_PLOT_VOL
+% See also FT_READ_SENS, FT_PLOT_HEADSHAPE, FT_PLOT_HEADMODEL
 
 % Copyright (C) 2009-2018, Robert Oostenveld, Arjen Stolk
 %
@@ -294,18 +294,23 @@ else
   
 end % if istrue(individual)
 
-if isempty(ori)
-  % determine the orientation by fitting a sphere to the positions
-  % this should be reasonable for scalp electrodes or optodes with complete coverage
-  try
-    tmp = pos(~any(isnan(pos), 2),:); % remove rows that contain a nan
-    center = fitsphere(tmp);
-  catch
-    center = [nan nan nan];
-  end
-  for i=1:size(pos,1)
-    ori(i,:) = pos(i,:) - center;
-    ori(i,:) = ori(i,:)/norm(ori(i,:));
+if isempty(ori) && ~isempty(pos)
+  if ~any(isnan(pos(:)))
+    % determine orientations based on surface triangulation
+    tri = projecttri(pos);
+    ori = normals(pos, tri);
+  else
+    % determine orientations by fitting a sphere to the sensors
+    try
+      tmp = pos(~any(isnan(pos), 2),:); % remove rows that contain a nan
+      center = fitsphere(tmp);
+    catch
+      center = [nan nan nan];
+    end
+    for i=1:size(pos,1)
+      ori(i,:) = pos(i,:) - center;
+      ori(i,:) = ori(i,:)/norm(ori(i,:));
+    end
   end
 end
 
@@ -338,6 +343,7 @@ switch sensshape
       end
     else
       % the style is not specified, use facecolor for the marker
+      % if the marker is '.' it will show points that do not depend on the size, in all other cases (e.g. 'o') the size is relevant
       hs = scatter3(pos(:,1), pos(:,2), pos(:,3), senssize.^2, facecolor, marker);
     end
     
@@ -380,7 +386,6 @@ switch sensshape
     end
     
   case 'disc'
-    
     if isempty(headshape)
       ft_error('cannot plot electrodes as discs without a headshape to align them to')
     end
@@ -396,10 +401,10 @@ switch sensshape
       y = headshape.pos(idx(1:npoints),2); 
       z = headshape.pos(idx(1:npoints),3);
       ptCloud = pointCloud([x y z]);
-      normals = pcnormals(ptCloud);
-      u = normals(:,1); 
-      v = normals(:,2); 
-      w = normals(:,3);
+      nrm = pcnormals(ptCloud);
+      u = nrm(:,1); 
+      v = nrm(:,2); 
+      w = nrm(:,3);
       
       % flip the normal vector if it is not pointing toward the center
       C = mean(headshape.pos,1); % headshape center
@@ -432,6 +437,21 @@ switch sensshape
 end % switch
 
 if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
+  
+  % determine the amount of offset for the labels
+  if strcmp(sensshape, 'point')
+    % determine the median of the distance to the nearest neighbour
+    sensdist = triu(dist(sens.chanpos'),1);
+    sensdist(sensdist==0) = Inf;
+    sensdist = min(sensdist,[], 2);
+    sensdist = median(sensdist);
+    % the offset is based on distance between sensors
+    offset = 0.5 * sensdist;
+  else
+    % the offset is based on size of the sensors
+    offset = 1.5 * senssize;
+  end
+  
   for i=1:length(sens.label)
     switch label
       case {'on', 'yes'}
@@ -443,17 +463,10 @@ if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
       otherwise
         ft_error('unsupported value for option ''label''');
     end % switch
-    if isfield(sens, 'chanori')
-      % shift the labels along the channel orientation, which is presumably orthogonal to the scalp
-      ori = sens.chanori(i,:);
-    else
-      % shift the labels away from the origin of the coordinate system
-      ori = sens.chanpos(i,:) / norm(sens.chanpos(i,:));
-    end
-    % shift the label 5 mm
-    x = sens.chanpos(i,1) + 5 * ft_scalingfactor('mm', sens.unit) * ori(1);
-    y = sens.chanpos(i,2) + 5 * ft_scalingfactor('mm', sens.unit) * ori(2);
-    z = sens.chanpos(i,3) + 5 * ft_scalingfactor('mm', sens.unit) * ori(3);
+    % shift the label with a certain offset
+    x = sens.chanpos(i,1) + offset * ori(i,1);
+    y = sens.chanpos(i,2) + offset * ori(i,2);
+    z = sens.chanpos(i,3) + offset * ori(i,3);
     text(x, y, z, str, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight, 'horizontalalignment', 'center', 'verticalalignment', 'middle');
   end % for each channel
 end % if label

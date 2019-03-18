@@ -41,9 +41,6 @@ global obj
 
 mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'}, 'hasunit', 'yes');
 
-bnd.pnt = [];
-bnd.tri = [];
-
 hasheadshape = isfield(cfg, 'headshape');
 hasbnd       = isfield(cfg, 'bnd');  % FIXME why is this in cfg?
 hasmri       = nargin>1;
@@ -63,40 +60,20 @@ else
   mri.anatomy = double(mri.anatomy);
 end
 
+% start with an empty boundary
+bnd.pnt = [];
+bnd.tri = [];
+
 if hasheadshape
   if ~isempty(cfg.headshape)
-    % get the surface describing the head shape
-    if isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
-      % use the headshape surface specified in the configuration
-      headshape = cfg.headshape;
-    elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
-      % use the headshape points specified in the configuration
-      headshape.pnt = cfg.headshape;
-    elseif ischar(cfg.headshape)
-      % read the headshape from file
-      headshape = read_headshape(cfg.headshape);
-    else
-      headshape = [];
-    end
-    if ~isfield(headshape, 'tri')
-      for i=1:length(headshape)
-        % generate a closed triangulation from the surface points
-        headshape(i).pnt = unique(headshape(i).pnt, 'rows');
-        headshape(i).tri = projecttri(headshape(i).pnt);
-      end
-    end
     % start with the headshape
-    bnd = headshape;
+    [bnd.pos, bnd.tri] = headsurface([], [], 'headshape', cfg.headshape);
   end
 elseif hasbnd
   if ~isempty(cfg.bnd)
     % start with the prespecified boundaries
     bnd = cfg.bnd;
   end
-else
-  % start with an empty boundary if not specified
-  bnd.pnt = [];
-  bnd.tri = [];
 end
 
 % creating the GUI

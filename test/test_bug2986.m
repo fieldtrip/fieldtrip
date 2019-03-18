@@ -66,14 +66,14 @@ hdm3   = ft_prepare_headmodel(cfg, seg_align3);
 
 % now plot
 figure; hold on
-ft_plot_vol(ft_convert_units(hdm, 'cm'),'edgecolor','none','facecolor','w');
+ft_plot_headmodel(ft_convert_units(hdm, 'cm'),'edgecolor','none','facecolor','w');
 ft_plot_headshape(shape);
 
 figure; hold on
-ft_plot_vol(ft_convert_units(hdm2, 'cm'),'edgecolor','none','facecolor','w');
+ft_plot_headmodel(ft_convert_units(hdm2, 'cm'),'edgecolor','none','facecolor','w');
 ft_plot_headshape(shape);
 
 figure; hold on
-ft_plot_vol(ft_convert_units(hdm3, 'cm'),'edgecolor','none','facecolor','w');
+ft_plot_headmodel(ft_convert_units(hdm3, 'cm'),'edgecolor','none','facecolor','w');
 ft_plot_headshape(shape);
 

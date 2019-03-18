@@ -89,7 +89,7 @@ assert(n1/n0 > 0.99);
 
 figure
 ft_plot_dipole(dip, [1 0 0], 'unit', 'm');
-ft_plot_vol(vol1);
+ft_plot_headmodel(vol1);
 ft_plot_sens(grad, 'coildiameter', 0.01); % 10 mm
 ft_plot_topo3d(grad.chanpos, lf1(:,1));
 alpha 0.5
@@ -140,7 +140,7 @@ assert(n1/n0 > 0.9);
 
 figure
 ft_plot_dipole(dip, [1 0 0], 'unit', 'm');
-ft_plot_vol(vol1);
+ft_plot_headmodel(vol1);
 ft_plot_sens(grad, 'coildiameter', 0.01); % 10 mm
 ft_plot_topo3d(grad.chanpos, lf1(:,1));
 alpha 0.5
@@ -213,7 +213,7 @@ assert(abs(n3/n0-1)<0.05);
 
 figure
 ft_plot_dipole(dip, [1 0 0], 'unit', 'm');
-ft_plot_vol(vol3);
+ft_plot_headmodel(vol3);
 ft_plot_sens(grad, 'coilsize', 0.01); % 10 mm
 ft_plot_topo3d(grad.chanpos, lf3(:,1));
 alpha 0.5

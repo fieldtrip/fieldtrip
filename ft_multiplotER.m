@@ -292,7 +292,7 @@ else
   assert(~isempty(cfg.trials), 'empty specification of cfg.trials for data with repetitions');
 end
 
-% parse cfg.channel 
+% parse cfg.channel
 if isfield(cfg, 'channel') && isfield(varargin{1}, 'label')
   cfg.channel = ft_channelselection(cfg.channel, varargin{1}.label);
 elseif isfield(cfg, 'channel') && isfield(varargin{1}, 'labelcmb')
@@ -471,13 +471,22 @@ hold on
 % Plot the data
 for m=1:length(selchan)
   mask = maskmatrix(m, :);
-  for i=1:Ndata
-  yval = squeeze(datamatrix(i,m,:));
-  
-  % Clip out of bounds y values:
-  yval(yval > ymax) = ymax;
-  yval(yval < ymin) = ymin;
-  ft_plot_vector(xval, yval, 'width', chanWidth(m), 'height', chanHeight(m), 'hpos', chanX(m), 'vpos', chanY(m), 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'color', graphcolor(i), 'style', cfg.linestyle{i}, 'linewidth', cfg.linewidth, 'axis', cfg.axes, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'facealpha', cfg.maskfacealpha);
+  if strcmp(cfg.maskstyle, 'difference')
+    % combine the conditions in a single plot, highlight the difference
+    yval = squeeze(datamatrix(:,m,:));
+    % Clip out of bounds y values:
+    yval(yval > ymax) = ymax;
+    yval(yval < ymin) = ymin;
+    ft_plot_vector(xval, yval, 'width', chanWidth(m), 'height', chanHeight(m), 'hpos', chanX(m), 'vpos', chanY(m), 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'color', graphcolor(i), 'style', cfg.linestyle{i}, 'linewidth', cfg.linewidth, 'axis', cfg.axes, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'facealpha', cfg.maskfacealpha);
+  else
+    % loop over the conditions, plot them on top of each other
+    for i=1:Ndata
+      yval = squeeze(datamatrix(i,m,:));
+      % Clip out of bounds y values:
+      yval(yval > ymax) = ymax;
+      yval(yval < ymin) = ymin;
+      ft_plot_vector(xval, yval, 'width', chanWidth(m), 'height', chanHeight(m), 'hpos', chanX(m), 'vpos', chanY(m), 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'color', graphcolor(i), 'style', cfg.linestyle{i}, 'linewidth', cfg.linewidth, 'axis', cfg.axes, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'facealpha', cfg.maskfacealpha);
+    end
   end
 end % for number of channels
 
@@ -587,8 +596,9 @@ ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous varargin
 ft_postamble provenance
+ft_postamble savefig
 
-if ~nargout 
+if ~ft_nargout
   % don't return anything
   clear cfg
 end

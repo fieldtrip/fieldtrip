@@ -436,11 +436,17 @@ hold on
 yval = mean(datamatrix, 2); % over channels
 yval = reshape(yval, size(yval,1), size(yval,3));
 mask = squeeze(mean(maskmatrix, 1)); % over channels
-for i=1:Ndata
-ft_plot_vector(xval, yval(i,:), 'style', cfg.linestyle{i}, 'color', graphcolor(i), ...
-  'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, ...
-  'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
+
+if strcmp(cfg.maskstyle, 'difference')
+  % combine the conditions in a single plot, highlight the difference
+  ft_plot_vector(xval, yval, 'style', cfg.linestyle{i}, 'color', graphcolor(i), 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
+else
+  % loop over the conditions, plot them on top of each other
+  for i=1:Ndata
+    ft_plot_vector(xval, yval(i,:), 'style', cfg.linestyle{i}, 'color', graphcolor(i), 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
+  end
 end
+
 colorLabels = [];
 if Ndata > 1
   for i=1:Ndata
@@ -545,8 +551,9 @@ ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous varargin
 ft_postamble provenance
+ft_postamble savefig
 
-if ~nargout
+if ~ft_nargout
   % don't return anything
   clear cfg
 end

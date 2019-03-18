@@ -155,7 +155,7 @@ for ll = 1:length(volnames)
   vol = eval(volnames(ll).name);
   
   cfg = [];
-  cfg.grid = sourcemodel;
+  cfg.sourcemodel = sourcemodel;
   cfg.elec = elec;
   cfg.headmodel = vol;
   

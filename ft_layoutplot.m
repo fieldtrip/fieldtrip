@@ -24,10 +24,9 @@ function [cfg] = ft_layoutplot(cfg, data)
 %   cfg.layout      = filename containg the layout
 %   cfg.rotate      = number, rotation around the z-axis in degrees (default = [], which means automatic)
 %   cfg.projection  = string, 2D projection method can be 'stereographic', 'ortographic', 'polar', 'gnomic' or 'inverse' (default = 'orthographic')
-%   cfg.elec        = structure with electrode definition
-%   cfg.grad        = structure with gradiometer definition
-%   cfg.elecfile    = filename containing electrode definition
-%   cfg.gradfile    = filename containing gradiometer definition
+%   cfg.elec        = structure with electrode positions or filename, see FT_READ_SENS
+%   cfg.grad        = structure with gradiometer definition or filename, see FT_READ_SENS
+%   cfg.opto        = structure with optode definition or filename, see FT_READ_SENS
 %   cfg.output      = filename to which the layout will be written (default = [])
 %   cfg.montage     = 'no' or a montage structure (default = 'no')
 %   cfg.image       = filename, use an image to construct a layout (e.g. usefull for ECoG grids)
@@ -101,6 +100,11 @@ if hasdata
   data = ft_checkdata(data);
 end
 
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'renamed', {'elecfile', 'elec'});
+cfg = ft_checkconfig(cfg, 'renamed', {'gradfile', 'grad'});
+cfg = ft_checkconfig(cfg, 'renamed', {'optofile', 'opto'});
+
 % set the defaults
 cfg.visible = ft_getopt(cfg, 'visible', 'yes');
 cfg.box     = ft_getopt(cfg, 'box', 'yes');
@@ -163,9 +167,9 @@ if isfield(cfg, 'image') && ~isempty(cfg.image)
   fprintf('reading background image from %s\n', cfg.image);
   img = imread(cfg.image);
   img = flipdim(img, 1); % in combination with "axis xy"
-  
+
   bw = 1;
-  
+
   if bw
     % convert to greyscale image
     img = mean(img, 3);
@@ -204,11 +208,11 @@ if isfield(cfg, 'montage') && ~isempty(cfg.montage)
       % one of the channels in the bipolar pair does not seem to be in the layout
       continue
     end
-    
+
     begpos = lay.pos(begindx,:);
     endpos = lay.pos(endindx,:);
     arrow(begpos, endpos, 'Length', 5)
-    
+
   end % for all re-referenced channels
 end % if montage
 
@@ -219,5 +223,12 @@ end % if montage
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble previous data
+ft_postamble provenance
+ft_postamble savefig
+
+if ~ft_nargout
+  % don't return anything
+  clear cfg
+end
+

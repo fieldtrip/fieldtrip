@@ -48,7 +48,7 @@ if ( lambda>0 ) Gss = Gss+lambda*eye(size(Gss)); end
 
 % Compute the mapping to the polynomial coefficients space % [nSrc+1 x nSrc+1]
 % N.B. this can be numerically unstable so use the PINV to solve..
-muGss=1;%median(diag(Gss)); % used to improve condition number when inverting. Probably uncessary
+muGss=1; %median(diag(Gss)); % used to improve condition number when inverting. Probably uncessary
 %C = [      Gss            muGss*ones(size(Gss,1),1)];
 C = [      Gss            muGss*ones(size(Gss,1),1);...
       muGss*ones(1,size(Gss,2))       0];
@@ -58,7 +58,7 @@ iC = pinv(C);
 if ( strcmp(lower(type),'spline') )
   W = [Gds ones(size(Gds,1),1).*muGss]*iC(:,1:end-1); % [nDest x nSrc]
 elseif (strcmp(lower(type),'slap'))
-  W = Hds*iC(1:end-1,1:end-1);%(:,1:end-1); % [nDest x nSrc]
+  W = Hds*iC(1:end-1,1:end-1); %(:,1:end-1); % [nDest x nSrc]
 end
 return;
 %--------------------------------------------------------------------------
@@ -80,7 +80,7 @@ for i=1:numel(cosEE);
       G(i) = G(i) + tmp;                     % update function estimate, spline interp     
       H(i) = H(i) + (n*n+n)*tmp;             % update function estimate, SLAP
       dG   = (abs(oGi-G(i))+dG)/2; dH=(abs(oHi-H(i))+dH)/2; % moving ave gradient est for convergence
-      %fprintf('%d) dG =%g \t dH = %g\n',n,dG,dH);%abs(oGi-G(i)),abs(oHi-H(i)));
+      %fprintf('%d) dG =%g \t dH = %g\n',n,dG,dH); %abs(oGi-G(i)),abs(oHi-H(i)));
       if ( dG<tol && dH<tol ) break; end           % stop when tol reached
    end
 end

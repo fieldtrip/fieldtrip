@@ -5,6 +5,6 @@ function test_bug2959
 
 % TEST ft_sourceanalysis
 
-load(fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test'),'bug2959.mat')); 
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2959.mat')); 
 
 source = ft_sourceanalysis(cfg, freq);

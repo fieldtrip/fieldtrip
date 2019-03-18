@@ -13,9 +13,9 @@ function cfg = data2bids(cfg, varargin)
 % or as
 %   data2bids(cfg, data)
 %
-% The first input argument "cfg" is the configuration structure, which contains the
+% The first input argument 'cfg' is the configuration structure, which contains the
 % details for the (meta)data and which specifies the sidecar files you want to write.
-% The optional "data" argument corresponds to preprocessed raw data according to
+% The optional 'data' argument corresponds to preprocessed raw data according to
 % FT_DATAYPE_RAW or an anatomical MRI according to FT_DATAYPE_VOLUME. The optional
 % data argument allows you to write a preprocessed and realigned anatomical MRI to
 % disk, or to write a preprocessed electrophysiological dataset to disk.
@@ -23,6 +23,7 @@ function cfg = data2bids(cfg, varargin)
 % The configuration structure should contains
 %   cfg.dataset                 = string, filename of the input data
 %   cfg.outputfile              = string, optional filename for the output data, see below
+%   cfg.keepnative              = string, 'yes' or 'no' (default = 'no')
 %   cfg.presentationfile        = string, optional filename for the presentation log file, see below
 %   cfg.mri.deface              = string, 'yes' or 'no' (default = 'no')
 %   cfg.mri.writesidecar        = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
@@ -40,10 +41,10 @@ function cfg = data2bids(cfg, varargin)
 % it will get from the dataset.
 %
 % If you also specify cfg.outputfile, this function will furthermore read the data
-% from the input dataset and (if needed) convert and write it to the output file. The
-% output format is NIFTI for anatomical MRIs, and BrainVision for EEG and iEEG. Note
-% that in principle you can also convert MEG data to BrainVision, but that is not
-% recommended.
+% from the input dataset and (if cfg.keepnative is no), convert and write
+% it to the output file. The output format is NIFTI for anatomical MRIs,
+% and BrainVision for EEG and iEEG. Note that in principle you can also
+% convert MEG data to BrainVision, but that is not recommended.
 %
 % You can specify cfg.presentationfile for a NBS Presentation log file that
 % is to be used to construct the events.tsv file for task data.
@@ -180,6 +181,7 @@ cfg = ft_checkconfig(cfg, 'forbidden', 'deface');       % should be cfg.mri.defa
 cfg.dataset                 = ft_getopt(cfg, 'dataset');
 cfg.feedback                = ft_getopt(cfg, 'feedback', 'yes');
 cfg.outputfile              = ft_getopt(cfg, 'outputfile', cfg.dataset);      % default is the same as the input dataset
+cfg.keepnative              = ft_getopt(cfg, 'keepnative', 'no');             % default is convert to vhdr
 cfg.presentationfile        = ft_getopt(cfg, 'presentationfile');             % full path to the NBS presentation log file, it will be read and parsed using FT_READ_EVENT
 cfg.presentation            = ft_getopt(cfg, 'presentation');
 cfg.presentation.eventtype  = ft_getopt(cfg.presentation, 'eventtype');
@@ -896,8 +898,10 @@ if need_events_tsv
     end
   end
   
-  % sort the events ascending on the onset
-  events_tsv = sortrows(events_tsv, 'onset');
+  if ~isempty(events_tsv)
+      % sort the events ascending on the onset
+      events_tsv = sortrows(events_tsv, 'onset');
+  end
 end % if need_events
 
 % remove fields that have an empty value
@@ -950,12 +954,22 @@ if ~isequal(cfg.dataset, cfg.outputfile) || istrue(cfg.mri.deface)
       ft_write_mri(cfg.outputfile, mri, 'dataformat', 'nifti');
 
     otherwise
-      [p, f, x] = fileparts(cfg.outputfile);
-      if ~isequal(x, '.vhdr')
-        cfg.outputfile = fullfile(p, [f '.vhdr']);
+      if not(istrue(cfg.keepnative))
+        [p, f, x] = fileparts(cfg.outputfile);
+        if ~isequal(x, '.vhdr')
+          cfg.outputfile = fullfile(p, [f '.vhdr']);
+        end
+        ft_info('writing %s\n', cfg.outputfile);
+        ft_write_data(cfg.outputfile, dat, 'dataformat', 'brainvision_eeg', 'header', hdr, 'event', trigger);
+      else
+        [~, ~, xin] = fileparts(cfg.dataset);
+        [~, ~, xout] = fileparts(cfg.outputfile);
+        if strcmp(xin,xout)
+          copyfile(cfg.dataset,cfg.outputfile);
+        else
+          ft_error('input and output filename extension don''t match. Cannot use keepnative.');
+        end
       end
-      ft_info('writing %s\n', cfg.outputfile);
-      ft_write_data(cfg.outputfile, dat, 'dataformat', 'brainvision_eeg', 'header', hdr, 'event', trigger);
   end
 end
 

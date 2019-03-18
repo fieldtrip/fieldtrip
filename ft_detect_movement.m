@@ -1,47 +1,39 @@
-function [cfg movement] = ft_detect_movement(cfg, data)
+function [cfg, movement] = ft_detect_movement(cfg, data)
 
-% FT_SACCADE_DETECTION performs micro/saccade detection on time series data
-% over multiple trials
+% FT_SACCADE_DETECTION performs detection of movements such as saccades and
+% microsaccades, but also joystick movements, from time series data over multiple
+% trials. Different methods for detecting movements are implemented, which are
+% described in detail below:
 %
-% Use as
-%   movement = ft_detect_movement(cfg, data)
-%
-% The input data should be organised in a structure as obtained from the
-% FT_PREPROCESSING function. The configuration depends on the type of
-% computation that you want to perform.
-%
-% The configuration should contain:
-%  cfg.method   = different methods of detecting different movement types
-%                'velocity2D', Micro/saccade detection based on Engbert R,
-%                   Kliegl R (2003) Vision Res 43:1035-1045. The method
-%                   computes thresholds based on velocity changes from
-%                   eyetracker data (horizontal and vertical components).
-%                'clustering', Micro/saccade detection based on
-%                   Otero-Millan et al., (2014) J Vis 14 (not implemented
-%                   yet)
-%   cfg.channel = Nx1 cell-array with selection of channels, see
-%                 FT_CHANNELSELECTION for details, (default = 'all')
-%   cfg.trials  = 'all' or a selection given as a 1xN vector (default = 'all')
-%
-% METHOD SPECIFIC OPTIONS AND DESCRIPTIONS
-%
-%  VELOCITY2D
-%   VELOCITY2D detects micro/saccades using a two-dimensional (2D) velocity
-%   space velocity. The vertical and the horizontal eyetracker time series
-%   (one eye) are transformed into velocities and microsaccades are
-%   indentified as "outlier" eye movements that exceed a given velocity and
-%   duration threshold.
+% VELOCITY2D - detects micro/saccades using a two-dimensional (2D) velocity according
+% to "Engbert R, Kliegl R (2003) Vision Res 43:1035-1045". The vertical and the
+% horizontal eyetracker time series (for one eye) are transformed into velocities and
+% microsaccades are indentified as "outlier" eye movements that exceed a given
+% threshold for velocity and duration. This method has the additional options
 %     cfg.velocity2D.kernel   = vector 1 x nsamples, kernel to compute velocity (default = [1 1 0 -1 -1].*(data.fsample/6);
 %     cfg.velocity2D.demean   = 'no' or 'yes', whether to apply centering correction (default = 'yes')
 %     cfg.velocity2D.mindur   = minimum microsaccade durantion in samples (default = 3);
 %     cfg.velocity2D.velthres = threshold for velocity outlier detection (default = 6);
 %
-% The output argument "movement" is a Nx3 matrix. The first and second
-% columns specify the begining and end samples of a movement period
-% (saccade, joystic...), and the third column contains the peak
-% velocity/acceleration movement. This last thrid column will allow to
-% convert movements into spike data representation, making the spike
-% toolbox functions compatible (not implemented yet).
+% CLUSTERING - detects movements according to "Otero-Millan et al., (2014) J Vis 14".
+%
+% Use as
+%   [cfg, movement] = ft_detect_movement(cfg, data)
+% where the input data should be organised in a structure as obtained from the
+% FT_PREPROCESSING function.
+%
+% The configuration can contain the following options
+%   cfg.method  = string representing the method for movement detection
+%                 'velocity2D' detects microsaccades using the 2D velocity
+%                 'clustering' use unsupervised clustering method to detect microsaccades
+%   cfg.channel = Nx1 cell-array with selection of channels, see FT_CHANNELSELECTION for details, (default = 'all')
+%   cfg.trials  = 'all' or a selection given as a 1xN vector (default = 'all')
+%
+% The output argument "movement" is a Nx3 matrix. The first and second columns
+% specify the begining and end samples of a movement period (saccade, joystick, ...),
+% and the third column contains the peak velocity/acceleration movement. The thrid
+% column allows to convert movements into spike data representation, making it
+% compatible with the spike toolbox functions.
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -51,11 +43,29 @@ function [cfg movement] = ft_detect_movement(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_PLOT_MOVEMENT (not implemented yet)
+% See also FT_DATABROWSER, FT_DATATYPE_SPIKE
 
-% Copyright (C) 2014, Diego Lozano-Soldevilla, Robert Oostenveld
+% Copyright (C) 2014, Diego Lozano-Soldevilla
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+% FIXME the help mentioned the
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the initial part deals with parsing the input options and data
@@ -79,7 +89,7 @@ ft_preamble trackconfig
 % read from an old *.mat file
 data = ft_checkdata(data, 'datatype', {'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
-if isfield(data, 'fsample');
+if isfield(data, 'fsample')
   fsample = getsubfield(data, 'fsample');
 else
   fsample = 1./(mean(diff(data.time{1})));
@@ -125,26 +135,24 @@ ft_progress('init', cfg.feedback, 'processing trials');
 % do all the computations
 for i=1:ntrial
   ft_progress(i/ntrial, 'finding microsaccades trial %d of %d\n', i, ntrial);
-
+  
   dat = data.trial{i};
-  time = data.time{i};
-
-  ndatsample = size(dat,2);
-
+  nsample = size(dat,2);
+  
   switch cfg.method
     case 'velocity2D'
-
+      
       % demean horizontal and vertical time courses
-      if strcmp(cfg.velocity2D.demean, 'yes');
-        dat = ft_preproc_polyremoval(dat, 0, 1, ndatsample);
+      if strcmp(cfg.velocity2D.demean, 'yes')
+        dat = ft_preproc_polyremoval(dat, 0, 1, nsample);
       end
-
+      
       %% eye velocity computation
       % deal with padding
       n = size(cfg.velocity2D.kernel,2);
       pad = ceil(n/2);
       dat = ft_preproc_padding(dat, 'localmean', pad);
-
+      
       % convolution. See Engbert et al (2003) Vis Res, eqn. (1)
       if n<100
         % heuristic: for large kernel the convolution is faster when done along
@@ -156,18 +164,18 @@ for i=1:ntrial
       end
       % cut the eges
       vel = ft_preproc_padding(vel, 'remove', pad);
-
+      
       %% microsaccade detection
       % compute velocity thresholds as in Engbert et al (2003) Vis Res, eqn. (2)
       medianstd = sqrt( median(vel.^2,2) - (median(vel,2)).^2 );
-
+      
       % Engbert et al (2003) Vis Res, eqn. (3)
       radius = cfg.velocity2D.velthres*medianstd;
-
+      
       % compute test criterion: ellipse equation
-      test = sum((vel./radius(:,ones(1,ndatsample))).^2,1);
-      sacsmp = find(test>1);% microsaccade's indexing
-
+      test = sum((vel./radius(:,ones(1,nsample))).^2,1);
+      sacsmp = find(test>1); % microsaccade's indexing
+      
       %% determine microsaccades per trial
       % first find eye movements of n-consecutive time points
       j = find(diff(sacsmp)==1);
@@ -175,17 +183,17 @@ for i=1:ntrial
       com = intersect(j,j+1);
       cut = ~ismember(j1,com);
       sacidx = reshape(j1(cut),2,[]);
-
-      for k=1:size(sacidx,2);
+      
+      for k=1:size(sacidx,2)
         duration = sacidx(1,k):sacidx(2,k);
-        if size(duration,2) >= cfg.velocity2D.mindur;
+        if size(duration,2) >= cfg.velocity2D.mindur
           % finding peak velocity by Pitagoras
           begtrl = sacsmp(duration(1,1));
           endtrl = sacsmp(duration(1,end));
-
-          [peakvel smptrl] = max(sqrt(sum(vel(:,begtrl:endtrl).^2,1)));
-          veltrl = sacsmp(duration(1,smptrl));% peak velocity microsaccade sample -> important for spike conversion
-
+          
+          [peakvel, smptrl] = max(sqrt(sum(vel(:,begtrl:endtrl).^2,1)));
+          veltrl = sacsmp(duration(1,smptrl)); % peak velocity microsaccade sample -> important for spike conversion
+          
           trlsmp = data.sampleinfo(i,1):data.sampleinfo(i,2);
           begsample = trlsmp(1, begtrl); % begining microsaccade sample
           endsample = trlsmp(1, endtrl); % end microsaccade sample
@@ -193,9 +201,9 @@ for i=1:ntrial
           movement(end+1,:) = [begsample endsample velsample];
         end
       end
-
-    case 'clustering';
-      %not implemented yet
+      
+    case 'clustering'
+      % not implemented yet
   end
 end
 ft_progress('close');

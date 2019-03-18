@@ -25,17 +25,15 @@ figure; imagesc(rej2.grad.tra - rej1.grad.tra); caxis([-1 1])
 
 load standard_sourcemodel3d10mm
 load standard_singleshell
-cfg=[];
-cfg.grid=sourcemodel;
-cfg.vol=vol;
 
-cfg.grad=rej1.grad;
+cfg = [];
+cfg.sourcemodel = sourcemodel;
+cfg.headmodel = vol;
+
+cfg.grad = rej1.grad;
 grid1 = ft_prepare_leadfield(cfg, rej1);
 
-cfg.grad=rej2.grad;
+cfg.grad = rej2.grad;
 grid2 = ft_prepare_leadfield(cfg, rej2);
 
 assert(~isequaln(grid1.leadfield,grid2.leadfield))
-
-
-

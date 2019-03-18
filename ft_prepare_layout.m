@@ -23,13 +23,11 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   cfg.layout      = filename containg the input layout (*.mat or *.lay file), this can also be a layout
 %                     structure, which is simply returned as-is (see below for details)
 %   cfg.output      = filename (ending in .mat or .lay) to which the layout will be written (default = [])
-%   cfg.elec        = structure with electrode definition, or
-%   cfg.elecfile    = filename containing electrode definition
-%   cfg.grad        = structure with gradiometer definition, or
-%   cfg.gradfile    = filename containing gradiometer definition
-%   cfg.opto        = structure with optode structure definition, or
-%   cfg.optofile    = filename containing optode structure definition
+%   cfg.elec        = structure with electrode positions or filename, see FT_READ_SENS
+%   cfg.grad        = structure with gradiometer definition or filename, see FT_READ_SENS
+%   cfg.opto        = sstructure with optode definition or filename, see FT_READ_SENS
 %   cfg.rotate      = number, rotation around the z-axis in degrees (default = [], which means automatic)
+%   cfg.center      = string, center and scale the electrodes in the sphere that represents the head, can be 'yes' or 'no' (default = 'no')
 %   cfg.projection  = string, 2D projection method can be 'stereographic', 'orthographic', 'polar' or 'gnomic' (default = 'polar')
 %                     When 'orthographic', cfg.viewpoint can be used to indicate to specificy projection (keep empty for legacy projection)
 %   cfg.viewpoint   = string indicating the view point that is used for orthographic projection of 3-D sensor
@@ -67,7 +65,7 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 % Alternatively the layout can be constructed from either one of these in the input data structure:
 %   data.elec     = structure with electrode positions
 %   data.grad     = structure with gradiometer definition
-%   data.opto     = structure with optode structure definition
+%   data.opto     = structure with optode definition
 %
 % Alternatively you can specify the following systematic layouts which will be
 % generated for all channels present in the data. Note that these layouts are only
@@ -91,7 +89,6 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 % undocumented and non-recommended option (for SPM only)
 %   cfg.style       string, '2d' or '3d' (default = '2d')
 % undocumented, because inconsistent with cfg.rotate
-%   cfg.center      = string, can be 'yes' or 'no' (default = 'no')
 %   cfg.width       = [] or number
 %   cfg.height      = [] or number
 
@@ -137,27 +134,31 @@ hasdata = exist('data', 'var') && ~isempty(data);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % basic check/initialization of input arguments
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 if ~hasdata
   data = struct([]);
 else
+  % check if the input data is valid for this function
   data = ft_checkdata(data);
 end
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'renamed', {'elecfile', 'elec'});
+cfg = ft_checkconfig(cfg, 'renamed', {'gradfile', 'grad'});
+cfg = ft_checkconfig(cfg, 'renamed', {'optofile', 'opto'});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % set default configuration options
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 cfg.rotate       = ft_getopt(cfg, 'rotate',     []); % [] => default rotation is determined based on the type of sensors
-cfg.center       = ft_getopt(cfg, 'translate', 'no');
+cfg.center       = ft_getopt(cfg, 'center',     'no');
 cfg.style        = ft_getopt(cfg, 'style',      '2d');
 cfg.projection   = ft_getopt(cfg, 'projection', 'polar');
 cfg.layout       = ft_getopt(cfg, 'layout',     []);
 cfg.grad         = ft_getopt(cfg, 'grad',       []);
 cfg.elec         = ft_getopt(cfg, 'elec',       []);
 cfg.opto         = ft_getopt(cfg, 'opto',       []);
-cfg.gradfile     = ft_getopt(cfg, 'gradfile',   []);
-cfg.elecfile     = ft_getopt(cfg, 'elecfile',   []);
-cfg.optofile     = ft_getopt(cfg, 'optofile',   []);
 cfg.output       = ft_getopt(cfg, 'output',     []);
 cfg.feedback     = ft_getopt(cfg, 'feedback',   'no');
 cfg.montage      = ft_getopt(cfg, 'montage',    'no');
@@ -554,14 +555,14 @@ elseif ischar(cfg.layout)
     layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   end
   
-elseif ischar(cfg.gradfile)
-  ft_info('creating layout from gradiometer file %s\n', cfg.gradfile);
-  sens = ft_read_sens(cfg.gradfile, 'senstype', 'meg');
-  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
-  
-elseif ~isempty(cfg.grad) && isstruct(cfg.grad)
-  ft_info('creating layout from cfg.grad\n');
-  sens = ft_datatype_sens(cfg.grad);
+elseif ~isempty(cfg.grad)
+  if isstruct(cfg.grad)
+    ft_info('creating layout from cfg.grad\n');
+    sens = ft_datatype_sens(cfg.grad);
+  else
+    ft_info('creating layout from gradiometer file %s\n', cfg.grad);
+    sens = ft_read_sens(cfg.grad, 'senstype', 'meg');
+  end
   layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   
 elseif isfield(data, 'grad') && isstruct(data.grad)
@@ -569,14 +570,14 @@ elseif isfield(data, 'grad') && isstruct(data.grad)
   sens = ft_datatype_sens(data.grad);
   layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   
-elseif ischar(cfg.elecfile)
-  ft_info('creating layout from electrode file %s\n', cfg.elecfile);
-  sens = ft_read_sens(cfg.elecfile, 'senstype', 'eeg');
-  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
-  
-elseif ~isempty(cfg.elec) && isstruct(cfg.elec)
-  ft_info('creating layout from cfg.elec\n');
-  sens = ft_datatype_sens(cfg.elec);
+elseif ~isempty(cfg.elec)
+  if isstruct(cfg.elec)
+    ft_info('creating layout from cfg.elec\n');
+    sens = ft_datatype_sens(cfg.elec);
+  else
+    ft_info('creating layout from electrode file %s\n', cfg.elec);
+    sens = ft_read_sens(cfg.elec, 'senstype', 'eeg');
+  end
   layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   
 elseif isfield(data, 'elec') && isstruct(data.elec)
@@ -584,18 +585,14 @@ elseif isfield(data, 'elec') && isstruct(data.elec)
   sens = ft_datatype_sens(data.elec);
   layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   
-elseif ischar(cfg.optofile)
-  ft_info('creating layout from optode file %s\n', cfg.optofile);
-  sens = ft_read_sens(cfg.optofile, 'senstype', 'nirs');
-  if (hasdata)
-    layout = opto2lay(sens, data.label, cfg.rotate);
+elseif ~isempty(cfg.opto)
+  if isstruct(cfg.opto)
+    ft_info('creating layout from cfg.opto\n');
+    sens = ft_datatype_sens(cfg.opto);
   else
-    layout = opto2lay(sens, sens.label, cfg.rotate);
+    ft_info('creating layout from optode file %s\n', cfg.opto);
+    sens = ft_read_sens(cfg.opto, 'senstype', 'nirs');
   end
-  
-elseif ~isempty(cfg.opto) && isstruct(cfg.opto)
-  ft_info('creating layout from cfg.opto\n');
-  sens = cfg.opto;
   if (hasdata)
     layout = opto2lay(sens, data.label, cfg.rotate);
   else
@@ -604,7 +601,7 @@ elseif ~isempty(cfg.opto) && isstruct(cfg.opto)
   
 elseif isfield(data, 'opto') && isstruct(data.opto)
   ft_info('creating layout from data.opto\n');
-  sens = data.opto;
+  sens = ft_datatype_sens(data.opto);
   if (hasdata)
     layout = opto2lay(sens, data.label, cfg.rotate);
   else
@@ -1133,6 +1130,8 @@ end
 ft_postamble provenance
 ft_postamble previous data
 ft_postamble history layout
+ft_postamble savevar layout
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

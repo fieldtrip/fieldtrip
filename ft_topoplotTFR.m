@@ -112,6 +112,7 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
+%   cfg.inputfile   =  ...
 % If you specify this option the input data will be read from a *.mat
 % file on disk. This mat files should contain only a single variable named 'data',
 % corresponding to the input structure. For this particular function, the input should be
@@ -219,12 +220,14 @@ cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
 cfg = removefields(cfg, 'funcname');
 
 % do the general cleanup and bookkeeping at the end of the function
-% this will replace the ft_topoplotTFR callinfo with that of ft_topoplotER
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous varargin
 ft_postamble provenance
+ft_postamble savefig
 
-if ~nargout
+if ~ft_nargout
+  % don't return anything
   clear cfg
 end
+

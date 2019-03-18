@@ -28,7 +28,7 @@ vol.o = [0 0 0];
 % not put the dipole on a position that will not be covered by a grid
 % location later
 cfg = [];
-cfg.vol = vol;
+cfg.headmodel = vol;
 cfg.grad = grad;
 cfg.dip.pos = [0 0 4];    % you can vary the location, here the dipole is along the z-axis
 cfg.dip.mom = [1 0 0]';   % the dipole points along the x-axis
@@ -44,7 +44,7 @@ timelock = ft_timelockanalysis(cfg, data);
 
 % do the beamformer source reconstuction on a 1 cm grid
 cfg = [];
-cfg.vol = vol;
+cfg.headmodel = vol;
 cfg.grad = grad;
 cfg.grad.unit='cm'; %error otherwise
 cfg.resolution = 1;

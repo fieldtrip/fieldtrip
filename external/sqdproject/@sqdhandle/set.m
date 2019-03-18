@@ -16,7 +16,7 @@ otherwise
         error('Property and values must be given as pairs');
     end;
     inargs = varargin;              % List o input arguments
-    taglist = fieldnames(struct(t));% Fields of objects
+    taglist = fieldnames(struct(t)); % Fields of objects
     while length(inargs)>=2
         prop = inargs{1};           % One property at a time
         val  = inargs{2};
@@ -25,7 +25,7 @@ otherwise
         if ~isempty(tagindx)        % If main field of object
             eval(['t.' taglist{tagindx} ' = val;']);
             if strcmpi(taglist{tagindx},'FileName')  % If new sqd-file
-                t = readsqdinfo(t,get(t,'FileName'));% update all fields
+                t = readsqdinfo(t,get(t,'FileName')); % update all fields
             end;
         else
             patinfolist = fieldnames(t.PatientInfo); % fields of patient info

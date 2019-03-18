@@ -9,27 +9,28 @@ function [cfg] = ft_neighbourplot(cfg, data)
 % or as
 %   ft_neighbourplot(cfg, data)
 %
-% where the configuration can contain
+% Where the configuration can contain
 %   cfg.verbose       = string, 'yes' or 'no', whether the function will print feedback text in the command window
 %   cfg.neighbours    = neighbourhood structure, see FT_PREPARE_NEIGHBOURS (optional)
 %   cfg.visible       = string, 'on' or 'off', whether figure will be visible (default = 'on')
-%   cfg.enableedit    = string, 'yes' or 'no', allows the user to flexibly add or remove edges between vertices (default = 'no')
-%                       
+%   cfg.enableedit    = string, 'yes' or 'no', allows you to interactively add or remove edges between vertices (default = 'no')
+%
 % and either one of the following options
 %   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
-%   cfg.elec          = structure with electrode definition
-%   cfg.grad          = structure with gradiometer definition
-%   cfg.elecfile      = filename containing electrode definition
-%   cfg.gradfile      = filename containing gradiometer definition
+%   cfg.elec          = structure with electrode positions or filename, see FT_READ_SENS
+%   cfg.grad          = structure with gradiometer definition or filename, see FT_READ_SENS
+%   cfg.opto          = structure with gradiometer definition or filename, see FT_READ_SENS
 %
 % If cfg.neighbours is not defined, this function will call
 % FT_PREPARE_NEIGHBOURS to determine the channel neighbours. The
 % following data fields may also be used by FT_PREPARE_NEIGHBOURS
-%   data.elec     = structure with EEG electrode positions
-%   data.grad     = structure with MEG gradiometer positions
+%   data.elec         = structure with electrode positions
+%   data.grad         = structure with gradiometer definition
+%   data.opto         = structure with optode definition
+%
 % If cfg.neighbours is empty, no neighbouring sensors are assumed.
 %
-% Use cfg.enableedit to create or extend your own neighbourtemplate
+% Use cfg.enableedit to interactively add or remove edges in your own neighbour structure.
 %
 % See also FT_PREPARE_NEIGHBOURS, FT_PREPARE_LAYOUT
 
@@ -60,7 +61,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble debug
-ft_preamble loadvar    data
+ft_preamble loadvar data
 ft_preamble provenance data
 ft_preamble trackconfig
 
@@ -76,6 +77,11 @@ if hasdata
   % check if the input data is valid for this function
   data = ft_checkdata(data);
 end
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'renamed', {'elecfile', 'elec'});
+cfg = ft_checkconfig(cfg, 'renamed', {'gradfile', 'grad'});
+cfg = ft_checkconfig(cfg, 'renamed', {'optofile', 'opto'});
 
 % set the defaults
 cfg.enableedit = ft_getopt(cfg, 'enableedit', 'no');
@@ -101,6 +107,7 @@ if hasdata
 else
   sens = ft_fetch_sens(cfg);
 end
+
 % insert sensors that are not in neighbourhood structure
 if isempty(cfg.neighbours)
   nsel = 1:numel(sens.label);
@@ -222,6 +229,12 @@ ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous data
 ft_postamble provenance
+ft_postamble savefig
+
+if ~ft_nargout
+  % don't return anything
+  clear cfg
+end
 
 end % main function
 
@@ -374,7 +387,7 @@ else
 end
 
 set(gcf, 'UserData', userdata);
-end
+end % subfunction
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -385,7 +398,7 @@ h   = getparent(h);
 userdata.quit = true;
 set(h, 'UserData', userdata);
 uiresume
-end
+end % subfunction
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -396,4 +409,4 @@ while p~=0
   h = p;
   p = get(h, 'parent');
 end
-end
+end % subfunction

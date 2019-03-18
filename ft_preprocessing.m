@@ -556,7 +556,7 @@ else
             ft_error('unsupported requested direction of padding');
         end
         
-        if strcmp(cfg.padtype, 'data');
+        if strcmp(cfg.padtype, 'data')
           begsample  = cfg.trl(i,1) - begpadding;
           endsample  = cfg.trl(i,2) + endpadding;
         else

@@ -45,6 +45,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble debug
+ft_preamble loadvar data
 ft_preamble provenance data
 ft_preamble trackconfig
 
@@ -97,7 +98,7 @@ if isfield(cfg, 'xparam')
 end
 
 % read or create the layout that will be used for plotting
-lay = ft_prepare_layout(cfg);%, varargin{1});
+lay = ft_prepare_layout(cfg); %, varargin{1});
 cfg.layout = lay;
 ft_plot_lay(lay, 'box', false,'label','no','point','no');
 
@@ -147,7 +148,12 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble previous   data
-ft_postamble history    data
+ft_postamble previous data
 ft_postamble provenance
+ft_postamble savefig
+
+if ~ft_nargout
+  % don't return anything
+  clear cfg
+end
 

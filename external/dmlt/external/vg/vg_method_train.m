@@ -104,7 +104,7 @@ gamma_max=eps_gamma*gamma_min;
 gamma_all =linspace(gamma_min,gamma_max,n_gamma);
 
 % initial step size of mean field update
-eta0=1;%e-2;
+eta0=1; %e-2;
 % initial step size for change in w in dual.m
 eta_w0=0.02;
 

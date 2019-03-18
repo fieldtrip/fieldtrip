@@ -7,7 +7,8 @@ function [data] = ft_combineplanar(cfg, data)
 %
 % Use as
 %   [data] = ft_combineplanar(cfg, data)
-% where data contains an averaged planar gradient ERF or single-trial/averaged TFR.
+% where data contains an averaged planar-gradient ERF or single-trial or
+% averaged TFRs.
 %
 % The configuration can contain
 %   cfg.method         = 'sum', 'svd', 'abssvd', or 'complex' (default = 'sum')
@@ -142,7 +143,7 @@ if strcmp(cfg.demean, 'yes')
 end
 
 if isfreq
-  
+
   switch cfg.method
     case 'sum'
       if isfield(data, 'powspctrm')
@@ -187,7 +188,7 @@ if isfreq
             fourier(:,j,k,:) = transpose(dum);
             data.ori{k} = ori; % to change into a cell
             data.eta{k} = sin_val(1)/sum(sin_val(2:end)); % to change into a cell
-            
+
             %for m = 1:Ntim
             %  dum                     = data.fourierspctrm(:,[sel_dH(j) sel_dV(j)],fbin(k),m);
             %  timbin                  = find(~isnan(dum(:,1)));
@@ -207,13 +208,13 @@ if isfreq
     otherwise
       ft_error('cfg.method = ''%s'' is not supported for frequency data', cfg.method);
   end % switch method
-  
+
 elseif (israw || istimelock)
   if istimelock
     % convert timelock to raw
     data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
   end
-  
+
   switch cfg.method
     case 'sum'
       Nrpt = length(data.trial);
@@ -223,7 +224,7 @@ elseif (israw || istimelock)
         data.trial{k} = [combined; other];
       end
       data.label = cat(1, lab_comb(:), lab_other(:));
-      
+
     case 'complex'
       Nrpt = length(data.trial);
       for k = 1:Nrpt
@@ -232,7 +233,7 @@ elseif (israw || istimelock)
         data.trial{k} = [combined; other];
       end
       data.label = cat(1, lab_comb(:), lab_other(:));
-      
+
     case {'svd' 'abssvd'}
       Nrpt = length(data.trial);
       Nsgn = length(sel_dH);
@@ -267,16 +268,16 @@ elseif (israw || istimelock)
       end
       data.trial = trial;
       data.label = cat(1, lab_comb(:), lab_other(:));
-      
+
     otherwise
       ft_error('cfg.method = ''%s'' is not supported for timelocked or raw data', cfg.method);
   end % switch method
-  
+
   if istimelock
     % convert raw to timelock
     data = ft_checkdata(data, 'datatype', 'timelock', 'feedback', 'yes');
   end
-  
+
 else
   ft_error('unsupported input data');
 end % which ft_datatype
@@ -288,12 +289,12 @@ if strcmp(cfg.updatesens, 'yes') && isfield(data, 'grad')
   % update the grad and only retain the channel related info
   [sel_dH, sel_comb] = match_str(data.grad.label, planar(:,1));  % indices of the horizontal channels
   [sel_dV          ] = match_str(data.grad.label, planar(:,2));  % indices of the vertical   channels
-  
+
   % find the other channels that are present in the data
   sel_other = setdiff(1:length(data.grad.label), [sel_dH(:)' sel_dV(:)']);
   lab_other = data.grad.label(sel_other);
   lab_comb  = planar(sel_comb,end);
-  
+
   % compute the average position
   newpos   = [
     (data.grad.chanpos(sel_dH,:)+data.grad.chanpos(sel_dV,:))/2
@@ -316,7 +317,7 @@ if strcmp(cfg.updatesens, 'yes') && isfield(data, 'grad')
     repmat({'unknown'}, numel(sel_comb), 1) % combined planar
     data.grad.chanunit(sel_other(:))        % keep the known channel details
     ];
-  
+
   newgrad.chanpos  = newpos;
   newgrad.chanori  = newori;
   newgrad.label    = newlabel;
@@ -324,7 +325,7 @@ if strcmp(cfg.updatesens, 'yes') && isfield(data, 'grad')
   newgrad.chanunit = newunit;
   newgrad.unit     = data.grad.unit;
   newgrad.type     = [data.grad.type '_combined'];
-  
+
   % remember the original channel position details
   if isfield(data.grad, 'chanposold')
     newgrad = copyfields(data.grad, newgrad, {'chanposold', 'chanoriold', 'labelold', 'chantypeold', 'chanunitold'});
@@ -335,7 +336,7 @@ if strcmp(cfg.updatesens, 'yes') && isfield(data, 'grad')
     newgrad.chantypeold  = data.grad.chantype;
     newgrad.chanunitold  = data.grad.chanunit;
   end
-  
+
   % replace it with the updated gradiometer description
   data.grad = newgrad;
 end

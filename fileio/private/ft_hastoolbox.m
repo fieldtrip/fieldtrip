@@ -156,6 +156,7 @@ url = {
   'JSONLAB'       'see https://se.mathworks.com/matlabcentral/fileexchange/33381-jsonlab--a-toolbox-to-encode-decode-json-files'
   'MFFMATLABIO'   'see https://github.com/arnodelorme/mffmatlabio'
   'JSONIO'        'see https://github.com/gllmflndn/JSONio'
+  'MVPA_LIGHT'    'see https://github.com/treder/MVPA-Light'
   };
 
 if nargin<2
@@ -215,6 +216,8 @@ switch toolbox
     dependency = {'rawdata', 'channames'};
   case 'MEG-CALC'
     dependency = {'megmodel', 'megfield', 'megtrans'};
+  case 'MVPA_LIGHT'
+    dependency = {'mv_crossvalidate','train_lda'};
   case 'BIOSIG'
     dependency = {'sopen', 'sread'};
   case 'EEG'
@@ -583,7 +586,7 @@ fttoolboxpath = fullfile(fttrunkpath, lower(toolbox_name));
 needle=[pathsep fttoolboxpath pathsep];
 haystack = [pathsep path() pathsep];
 
-status = ~isempty(findstr(needle, haystack));
+status = ~isempty(strfind(haystack, needle));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function

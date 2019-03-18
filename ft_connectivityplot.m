@@ -6,12 +6,12 @@ function [cfg] = ft_connectivityplot(cfg, varargin)
 %
 % Use as
 %   ft_connectivityplot(cfg, data)
+% where the first input argument is a configuration structure (see below)
+% and the input data is a structure obtained from  FT_CONNECTIVITYANALYSIS
+% using a frequency-domain connectivity metric. Consequently the input data
+% should have a dimord of 'chan_chan_freq', or 'chan_chan_freq_time'.
 %
-% The input data is a structure containing the output to FT_CONNECTIVITYANALYSIS
-% using a frequency domain metric of connectivity. Consequently the input
-% data should have a dimord of 'chan_chan_freq', or 'chan_chan_freq_time'.
-%
-% The cfg can have the following options:
+% The configuration can have the following options
 %   cfg.parameter   = string, the functional parameter to be plotted (default = 'cohspctrm')
 %   cfg.xlim        = selection boundaries over first dimension in data (e.g., freq)
 %                     'maxmin' or [xmin xmax] (default = 'maxmin')
@@ -52,6 +52,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble debug
+ft_preamble loadvar varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
 
@@ -82,7 +83,7 @@ for k = 1:Ndata
   if ischar(cfg.parameter)
     cfg.parameter = repmat({cfg.parameter}, [1 Ndata]);
   end
-  
+
   % check whether all requested parameters are the same. If not, rename
   % this, because otherwise a call to ft_selectdata (below) won't work
   if ~all(strcmp(cfg.parameter,cfg.parameter{1}))
@@ -97,7 +98,7 @@ for k = 1:Ndata
   else
     % don't worry
   end
-  
+
   % check if the input data is valid for this function
   varargin{k} = ft_checkdata(varargin{k}, 'datatype', {'timelock', 'freq'});
   dtype{k}    = ft_datatype(varargin{k});
@@ -112,7 +113,7 @@ for k = 1:Ndata
     otherwise
       ft_error('the data should have a dimord of %s or %s', 'chan_chan_freq', 'chancmb_freq');
   end
-  
+
   % this is needed for correct treatment of graphcolor later on
   if nargin>1
     if ~isempty(inputname(k+1))
@@ -219,16 +220,16 @@ if Ndata>1
   end
   ft_connectivityplot(tmpcfg, data);
   tmpcfg = cfg;
-   
+
   if ischar(cfg.graphcolor),        colorLabels = [iname{2} '=' tmpcfg.graphcolor(1) '\n'];
   elseif isnumeric(cfg.graphcolor), colorLabels = [iname{2} '=' num2str(tmpcfg.graphcolor(1, :)) '\n'];
   end
-    
+
   for k = 2:Ndata
     if ischar(cfg.graphcolor),     tmpcfg.graphcolor = tmpcfg.graphcolor(2:end);
     else isnumeric(cfg.graphcolor),tmpcfg.graphcolor = tmpcfg.graphcolor(2:end,:);
     end
-    
+
     tmpcfg.holdfig = 1;
     if ischar(cfg.parameter)
       % do nothing
@@ -236,12 +237,12 @@ if Ndata>1
       tmpcfg.parameter = cfg.parameter{k};
     end
     ft_connectivityplot(tmpcfg, varargin{k});
-    
+
     if ischar(cfg.graphcolor);        colorLabels = [colorLabels iname{k+1} '=' tmpcfg.graphcolor(1) '\n'];
     elseif isnumeric(cfg.graphcolor); colorLabels = [colorLabels iname{k+1} '=' num2str(tmpcfg.graphcolor(1, :)) '\n'];
     end
   end
-  
+
   ft_plot_text(0.5, (numel(varargin{k}.label)+1).*1.2-0.5, sprintf(colorLabels), 'horizontalalignment', 'right');
 
   return;
@@ -260,7 +261,7 @@ if hasfreq && hastime
   tmpcfg.frequency = cfg.ylim;
 elseif hasfreq
   tmpcfg.frequency = cfg.xlim;
-elseif hastime 
+elseif hastime
   tmpcfg.latency   = cfg.xlim;
 end
 data             = ft_selectdata(tmpcfg, data);
@@ -336,3 +337,9 @@ ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous varargin
 ft_postamble provenance
+ft_postamble savefig
+
+if ~ft_nargout
+  % don't return anything
+  clear cfg
+end

@@ -96,15 +96,15 @@ for trllop=1:numel(datain.trial)
   dat   = datain.trial{trllop}(chansel,:);
   label = datain.label(chansel);
   time  = datain.time{trllop};
-  
+
   if ~isempty(cfg.preproc)
     % apply the preprocessing to the selected channel
     [dat, label, time, cfg.preproc] = preproc(dat, label, time, cfg.preproc, 0, 0);
   end
-  
+
   tonic  = ft_preproc_medianfilter(dat, medianwindow);
   phasic = dat - tonic;
-  
+
   if istrue(cfg.feedback)
     figure
     subplot(3,1,1)
@@ -117,7 +117,7 @@ for trllop=1:numel(datain.trial)
     plot(time, phasic)
     title('phasic')
   end
-  
+
   dataout.trial{trllop} = [tonic; phasic];
 end % for trllop
 

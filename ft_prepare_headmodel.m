@@ -14,11 +14,11 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 % subsequent computations are efficient and fast.
 %
 % Use as
-%   headmodel = ft_prepare_headmodel(cfg)       or
-%   headmodel = ft_prepare_headmodel(cfg, mesh) with the output of FT_PREPARE_MESH or FT_READ_HEADSHAPE
-%   headmodel = ft_prepare_headmodel(cfg, seg)  with the output of FT_VOLUMESEGMENT
-%   headmodel = ft_prepare_headmodel(cfg, elec) with the output of FT_READ_SENS
-%   headmodel = ft_prepare_headmodel(cfg, grid) with the output of FT_PREPARE_LEADFIELD
+%   headmodel = ft_prepare_headmodel(cfg)               or
+%   headmodel = ft_prepare_headmodel(cfg, mesh)         with the output of FT_PREPARE_MESH or FT_READ_HEADSHAPE
+%   headmodel = ft_prepare_headmodel(cfg, seg)          with the output of FT_VOLUMESEGMENT
+%   headmodel = ft_prepare_headmodel(cfg, elec)         with the output of FT_READ_SENS
+%   headmodel = ft_prepare_headmodel(cfg, sourcemodel)  with the output of FT_PREPARE_LEADFIELD
 %
 % In general the input to this function is a geometrical description of the
 % shape of the head and a description of the electrical conductivity. The
@@ -90,7 +90,7 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 %
 % BESA
 %   cfg.headmodel         (required) string, filename of precomputed FEM leadfield
-%   cfg.elecfile          (required) string, filename of electrode configuration for the FEM leadfield
+%   cfg.elec              (required) structure with electrode positions or filename, see FT_READ_SENS
 %   cfg.outputfile        (required) string, filename prefix for the output files
 %
 % FNS
@@ -110,7 +110,7 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 % low-level function which is called FT_HEADMODEL_XXX where XXX is the method
 % of choise.
 %
-% See also FT_PREPARE_SOURCEMODEL, FT_PREPARE_LEADFIELD, FT_PREPARE_MESH,
+% See also FT_PREPARE_MESH, FT_PREPARE_SOURCEMODEL, FT_PREPARE_LEADFIELD,
 % FT_HEADMODEL_BEMCP, FT_HEADMODEL_ASA, FT_HEADMODEL_DIPOLI,
 % FT_HEADMODEL_SIMBIO, FT_HEADMODEL_FNS, FT_HEADMODEL_HALFSPACE,
 % FT_HEADMODEL_INFINITE, FT_HEADMODEL_OPENMEEG, FT_HEADMODEL_SINGLESPHERE,
@@ -234,25 +234,25 @@ input_pos   = ~input_mesh && isfield(data, 'pos'); % surface points without tria
 
 % the construction of the volume conductor model is performed below
 switch cfg.method
-  
+
   case 'interpolate'
     % the "data" here represents the output of FT_PREPARE_LEADFIELD, i.e. a regular dipole
     % grid with pre-computed leadfields
     sens = ft_fetch_sens(cfg, data);
     headmodel = ft_headmodel_interpolate(cfg.outputfile, sens, data, 'smooth', cfg.smooth);
-    
+
   case 'besa'
-    % the cfg.headmodel? points to the filename of the FEM solution that was computed
-    % in BESA, cfg.elecfile should point to the corresponding electrode specification
+    % cfg.headmodel points to the filename of the FEM solution that was computed in BESA
+    % cfg.elec points to the filename of the corresponding electrode specification
     sens = ft_fetch_sens(cfg, data);
     headmodel = ft_headmodel_interpolate(cfg.outputfile, sens, cfg.headmodel, 'smooth', cfg.smooth);
-    
+
   case 'asa'
     if ~ft_filetype(cfg.headmodel, 'asa_vol')
       ft_error('You must supply a valid cfg.headmodel for use with ASA headmodel')
     end
     headmodel = ft_headmodel_asa(cfg.headmodel);
-    
+
   case {'bemcp' 'dipoli' 'openmeeg'}
     % the low-level functions all need a mesh
     if isfield(data, 'pos') && isfield(data, 'tri')
@@ -263,7 +263,7 @@ switch cfg.method
     else
       ft_error('Either a segmented MRI or data with closed triangulated mesh is required as data input for the bemcp, dipoli or openmeeg method');
     end
-    
+
     if strcmp(cfg.method, 'bemcp')
       headmodel = ft_headmodel_bemcp(geometry, 'conductivity', cfg.conductivity);
       if any(isnan(headmodel.mat(:)))
@@ -280,11 +280,11 @@ switch cfg.method
     else
       headmodel = ft_headmodel_openmeeg(geometry, 'conductivity', cfg.conductivity, 'isolatedsource', cfg.isolatedsource, 'tissue', cfg.tissue);
     end
-    
+
   case 'concentricspheres'
     cfg.fitind = ft_getopt(cfg, 'fitind');
     cfg.order  = ft_getopt(cfg, 'order');
-    
+
     % the low-level functions needs surface points, triangles are not needed
     if input_mesh || input_pos
       geometry = data;
@@ -294,18 +294,16 @@ switch cfg.method
     elseif input_elec
       geometry.pos = data.chanpos;
       geometry.unit = data.unit;
-    elseif ~isempty(cfg.headshape) && isnumeric(cfg.headshape)
-      geometry.pos = cfg.headshape;
-    elseif ~isempty(cfg.headshape) && isstruct(cfg.headshape)
-      geometry = cfg.headshape;
     elseif ~isempty(cfg.headshape) && ischar(cfg.headshape)
       geometry = ft_read_headshape(cfg.headshape);
+    elseif ~isempty(cfg.headshape)
+      geometry = fixpos(cfg.headshape);
     else
       ft_error('You must give a mesh, segmented MRI, sensor data type, or cfg.headshape');
     end
-    
+
     headmodel = ft_headmodel_concentricspheres(geometry, 'conductivity', cfg.conductivity, 'fitind', cfg.fitind, 'order', cfg.order);
-    
+
   case 'halfspace'
     if input_mesh || input_pos
       geometry = data;
@@ -315,16 +313,16 @@ switch cfg.method
     if isempty(cfg.point)
       ft_error('cfg.point is required for halfspace method');
     end
-    
+
     headmodel = ft_headmodel_halfspace(geometry, cfg.point, 'conductivity', cfg.conductivity, 'sourcemodel', cfg.submethod);
-    
+
   case 'infinite'
     % this takes no input arguments
     headmodel = ft_headmodel_infinite();
-    
+
   case {'localspheres' 'singlesphere' 'singleshell'}
     cfg.grad = ft_getopt(cfg, 'grad');           % used for localspheres
-    
+
     % these three methods all require a single set of surface points
     if input_mesh || input_pos
       geometry = data;
@@ -368,23 +366,20 @@ switch cfg.method
     elseif input_elec
       geometry.pos = data.chanpos;
       geometry.unit = data.unit;
-    elseif ~isempty(cfg.headshape) && isnumeric(cfg.headshape)
-      geometry.pos = cfg.headshape;
-    elseif ~isempty(cfg.headshape) && isstruct(cfg.headshape)
-      geometry = cfg.headshape;
-    elseif ~isempty(cfg.headshape) && ischar(cfg.headshape)
-      geometry = ft_read_headshape(cfg.headshape);
+    elseif ~isempty(cfg.headshape)
+      % get the surface describing the head shape
+      [geometry.pos, geometry.tri] = headsurface([], [], 'headshape', cfg.headshape);
     elseif ~isempty(cfg.headmodel)
       % the CTF *.hdm file will be read further down
     else
       ft_error('this requires a mesh, set of surface points or a segmented mri');
     end
-    
+
     switch cfg.method
       case 'singlesphere'
         if ~isempty(cfg.headmodel)
           % read the volume conduction model from a CTF *.hdm file
-          tmp = ft_read_vol(cfg.headmodel);
+          tmp = ft_read_headmodel(cfg.headmodel);
           try
             % the single sphere is contained in the "orig" field
             headmodel = [];
@@ -398,11 +393,11 @@ switch cfg.method
           % construct the volume conduction model
           headmodel = ft_headmodel_singlesphere(geometry, 'conductivity', cfg.conductivity);
         end % headmodel
-        
+
       case 'localspheres'
         if ~isempty(cfg.headmodel)
           % read the volume conduction model from a CTF *.hdm file
-          tmp = ft_read_vol(cfg.headmodel);
+          tmp = ft_read_headmodel(cfg.headmodel);
           try
             headmodel = [];
             headmodel.label = tmp.label;
@@ -416,11 +411,11 @@ switch cfg.method
           % construct the volume conduction model
           cfg.grad = ft_getopt(cfg, 'grad');
           if isempty(cfg.grad)
-            ft_error('for cfg.method = %s, you need to supply a cfg.grad structure', cfg.method);
+            ft_error('for cfg.method = %s, you must also supply cfg.grad', cfg.method);
           end
           headmodel = ft_headmodel_localspheres(geometry, cfg.grad, 'feedback', cfg.feedback, 'radius', cfg.radius, 'maxradius', cfg.maxradius, 'baseline', cfg.baseline, 'singlesphere', cfg.singlesphere);
         end % headmodel
-        
+
       case 'singleshell'
         cfg.order  = ft_getopt(cfg, 'order');
         if ~isfield(geometry, 'tri')
@@ -429,19 +424,19 @@ switch cfg.method
           geometry = ft_prepare_mesh(tmpcfg);
         end
         headmodel = ft_headmodel_singleshell(geometry, 'order', cfg.order);
-        
+
       otherwise
         ft_error('unsupported method %s', cfg.method);
     end % switch method
-    
+
   case {'simbio'}
     if input_elec || isfield(data, 'pos') || input_mesh
       geometry = data; % more serious checks of validity of the mesh occur inside ft_headmodel_simbio
     else
-      ft_error('You must provide a mesh with tetrahedral or hexahedral elements, where each element has a scalar or tensor conductivity');
+      ft_error('you must provide a mesh with tetrahedral or hexahedral elements, where each element has a scalar or tensor conductivity');
     end
     headmodel = ft_headmodel_simbio(geometry, 'conductivity', cfg.conductivity);
-    
+
   case {'fns'}
     if input_seg
       data = ft_datatype_segmentation(data, 'segmentationstyle', 'indexed');
@@ -450,13 +445,13 @@ switch cfg.method
     end
     sens = ft_fetch_sens(cfg, data);
     headmodel = ft_headmodel_fns(data.seg, 'tissue', cfg.tissue, 'tissueval', cfg.tissueval, 'tissuecond', cfg.conductivity, 'sens', sens, 'transform', cfg.transform);
-    
+
   otherwise
     ft_error('unsupported method "%s"', cfg.method);
 end % switch method
 
 % ensure that the geometrical units are specified
-if ~ft_voltype(headmodel, 'infinite')
+if ~ft_headmodeltype(headmodel, 'infinite')
   headmodel = ft_determine_units(headmodel);
 end
 

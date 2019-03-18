@@ -53,7 +53,7 @@ vol.r = 12;
 vol.o = [0 0 4];
 
 cfg = [];
-cfg.vol = vol;
+cfg.headmodel = vol;
 cfg.inwardshift = 0;
 cfg.template = ctf275_sens;
 data_r = ft_megrealign(cfg, data);

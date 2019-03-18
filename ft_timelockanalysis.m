@@ -102,7 +102,7 @@ data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'h
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'forbidden',  {'normalizecov', 'normalizevar'});
-cfg = ft_checkconfig(cfg, 'forbidden',  {'latency', 'blcovariance', 'blcovariancewindow'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'blcovariance', 'blcovariancewindow'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'blcwindow', 'baselinewindow'});
 
@@ -225,11 +225,6 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % collect the results
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-
-
 
 timelock = keepfields(data, {'time' 'grad', 'elec', 'opto', 'topo', 'topodimord', 'topolabel', 'unmixing', 'unmixingdimord', 'label'});
 if ~keeptrials

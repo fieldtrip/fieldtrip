@@ -102,6 +102,7 @@ end
 
 cfg = ft_checkconfig(cfg, 'renamed', {'hdmfile', 'headmodel'});
 cfg = ft_checkconfig(cfg, 'renamed', {'vol',     'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed', {'grid',    'sourcemodel'});
 
 % set the default configuration
 cfg.channel      = ft_getopt(cfg, 'channel',      'MEG');
@@ -127,9 +128,13 @@ end
 
 
 % put the low-level options pertaining to the dipole grid in their own field
-cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.grid.tight by the subsequent createsubcfg
-cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.grid.unit by the subsequent createsubcfg
-cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
+cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.sourcemodel.unit by the subsequent createsubcfg
+
+% put the low-level options pertaining to the sourcemodel in their own field
+cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
+% move some fields from cfg.sourcemodel back to the top-level configuration
+cfg = ft_checkconfig(cfg, 'createtopcfg', {'sourcemodel'});
 
 % select trials of interest
 tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
@@ -162,42 +167,22 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   % definition that only contains the gradiometers that are present in the data.
   [headmodel, axial.grad, cfg] = prepare_headmodel(cfg, data);
 
+  % copy all options that are potentially used in FT_PREPARE_SOURCEMODEL
+  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo'});
+  tmpcfg.headmodel = headmodel;
+  tmpcfg.grad      = axial.grad;
   % determine the dipole layer that represents the surface of the brain
-  if isempty(cfg.headshape)
-    % construct from the inner layer of the volume conduction model
-    pos = headsurface(headmodel, axial.grad, 'surface', 'cortex', 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);
-  else
-    % get the surface describing the head shape
-    if isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
-      % use the headshape surface specified in the configuration
-      headshape = cfg.headshape;
-    elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
-      % use the headshape points specified in the configuration
-      headshape.pos = cfg.headshape;
-    elseif ischar(cfg.headshape)
-      % read the headshape from file
-      headshape = ft_read_headshape(cfg.headshape);
-    else
-      ft_error('cfg.headshape is not specified correctly')
-    end
-    if ~isfield(headshape, 'tri')
-      % generate a closed triangulation from the surface points
-      headshape.pos = unique(headshape.pos, 'rows');
-      headshape.tri = projecttri(headshape.pos);
-    end
-    % construct from the head surface
-    pos = headsurface([], [], 'headshape', headshape, 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);
-  end
+  sourcemodel = ft_prepare_sourcemodel(tmpcfg);
 
   % compute the forward model for the axial gradiometers
-  fprintf('computing forward model for %d dipoles\n', size(pos,1));
-  lfold = ft_compute_leadfield(pos, axial.grad, headmodel);
+  fprintf('computing forward model for %d dipoles\n', size(sourcemodel.pos,1));
+  lfold = ft_compute_leadfield(sourcemodel.pos, axial.grad, headmodel);
 
   % construct the planar gradient definition and compute its forward model
   % this will not work for a localspheres model, compute_leadfield will catch
   % the error
   planar.grad = constructplanargrad([], axial.grad);
-  lfnew = ft_compute_leadfield(pos, planar.grad, headmodel);
+  lfnew = ft_compute_leadfield(sourcemodel.pos, planar.grad, headmodel);
 
   % compute the interpolation matrix
   transform = lfnew * prunedinv(lfold, cfg.pruneratio);
@@ -209,7 +194,7 @@ if strcmp(cfg.planarmethod, 'sourceproject')
 
   % apply the linear transformation to the data
   interp  = ft_apply_montage(data, planarmontage, 'keepunused', 'yes');
-  
+
   % also apply the linear transformation to the gradiometer definition
   interp.grad = ft_apply_montage(data.grad, planarmontage, 'balancename', 'planar', 'keepunused', 'yes');
 
