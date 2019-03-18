@@ -1,4 +1,4 @@
-function test_bug3453
+function test_bug3473
 
 % WALLTIME 00:10:00
 % MEM 2gb
@@ -37,4 +37,3 @@ fitted          = ft_prepare_mesh(cfg, template.bnd);
 cfg = [];
 cfg.method = 'bemcp';
 headmodel_bem = ft_prepare_headmodel(cfg, fitted);
-
