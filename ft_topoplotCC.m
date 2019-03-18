@@ -93,7 +93,8 @@ cfg.arrowlength = ft_getopt(cfg, 'arrowlength', 0.8); % relative to the complete
 cfg.linestyle   = ft_getopt(cfg, 'linestyle',   []);
 cfg.colormap    = ft_getopt(cfg, 'colormap',    colormap);
 
-lay = ft_prepare_layout(cfg, freq);
+tmpcfg = keepfields(cfg, {'layout', 'elec', 'grad', 'opto', 'showcallinfo'});
+lay = ft_prepare_layout(tmpcfg, freq);
 
 beglabel = freq.labelcmb(:,1);
 endlabel = freq.labelcmb(:,2);
