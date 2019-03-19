@@ -134,7 +134,7 @@ if isfield(cfg, 'reproducescript') && ~isempty(cfg.reproducescript)
     % mutually exclusive
     if (isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)) || ...
        (isfield(cfg, 'outputfile') && ~isemty(cfg.outputfile))
-      error('cfg.reproducescript cannot be used together with a user-specified cfg.inputfile or cfg.outputfile');
+      ft_error('cfg.reproducescript cannot be used together with a user-specified cfg.inputfile or cfg.outputfile');
     end
     % this variable is used in loadvar, savevar and savefig
     Fief7bee_reproducescript = cfg.reproducescript;
