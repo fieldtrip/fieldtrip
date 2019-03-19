@@ -49,14 +49,7 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
     % note that this is here, rather than in the (seemingly more logical)
     % ft_preamble_loadvar, because this code depends on cfg.callinfo (which
     % is only present at postamble stage)
-    fn = ignorefields('recursesize');
-    for i=1:numel(fn)
-      if isfield(cfg.callinfo.usercfg, fn{i}) && isstruct((cfg.callinfo.usercfg.(fn{i})))
-        Fief7bee_outputfile = make_or_fetch_inputfile(Fief7bee_reproducescript,...
-          sprintf('%s_input_%s.mat', iW1aenge_now, fn{i}), fn{i}, cfg.callinfo.usercfg.(fn{i}));
-        cfg.callinfo.usercfg.(fn{i})  = Fief7bee_outputfile;
-      end
-    end
+    cfg = save_large_cfg_fields(cfg, Fief7bee_reproducescript, iW1aenge_now);
     
     % write a snippet of MATLAB code with the user-specified configuration and function call
     reproducescript(fullfile(Fief7bee_reproducescript, 'script.m'), cfg, isempty(iW1aenge_postamble));
