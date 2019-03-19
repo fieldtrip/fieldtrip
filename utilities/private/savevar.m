@@ -42,4 +42,5 @@ if nargin > 3 && ~isempty(hashfile)
   hashes.(hashkey) = ft_hash(value);
   % save back into the hashfile
   save(hashfile, '-struct', 'hashes');
+  ft_info('writing data hash for ''%s'' to file ''%s''\n', varname, hashfile);
 end
