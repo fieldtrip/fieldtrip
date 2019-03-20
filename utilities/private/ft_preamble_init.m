@@ -129,6 +129,13 @@ if isfield(cfg, 'reproducescript') && ~isempty(cfg.reproducescript)
     if ~isfolder(cfg.reproducescript)
       mkdir(cfg.reproducescript);
     end
+    % user-specified cfg.inputfile or cfg.outputfile are not compatible
+    % with cfg.reproducescript functionality, throw error to make them
+    % mutually exclusive
+    if (isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)) || ...
+       (isfield(cfg, 'outputfile') && ~isemty(cfg.outputfile))
+      ft_error('cfg.reproducescript cannot be used together with a user-specified cfg.inputfile or cfg.outputfile');
+    end
     % this variable is used in loadvar, savevar and savefig
     Fief7bee_reproducescript = cfg.reproducescript;
     cfg = rmfield(cfg, 'reproducescript');
