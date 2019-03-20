@@ -39,7 +39,7 @@ assign = @(var, val) assignin('caller', var, val);
 if (isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)) || exist('Fief7bee_reproducescript', 'var')
   % the input data should be read from file
   
-  if ft_nargin>1 && exist('Fief7bee_reproducescript', 'var')
+  if exist('Fief7bee_reproducescript', 'var')
     % the script, input and output files are written to a directory
     
     % write the function input variables to a MATLAB file
