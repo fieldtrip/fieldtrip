@@ -48,7 +48,7 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
     cfg = save_large_cfg_fields(cfg, Fief7bee_reproducescript, iW1aenge_now);
     
     % write a snippet of MATLAB code with the user-specified configuration and function call
-    reproducescript(fullfile(Fief7bee_reproducescript, 'script.m'), cfg, isempty(iW1aenge_postamble));
+    reproducescript(fullfile(Fief7bee_reproducescript, 'script.m'), cfg, false);
     
   elseif (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile))
     % keep the output file as it is
