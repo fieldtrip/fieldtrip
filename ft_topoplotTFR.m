@@ -210,7 +210,7 @@ else  % data provided through cfg.inputfile
 end
 
 % prepare the layout, this should be done only once
-tmpcfg     = removefields(cfg, {'inputfile', 'style'});
+tmpcfg = keepfields(cfg, {'layout', 'elec', 'grad', 'opto', 'showcallinfo'});
 cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
 
 % call the common function that is shared between ft_topoplotER and ft_topoplotTFR
