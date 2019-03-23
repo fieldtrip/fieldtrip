@@ -32,12 +32,14 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %                     When 'orthographic', cfg.viewpoint can be used to indicate to specificy projection (keep empty for legacy projection)
 %   cfg.viewpoint   = string indicating the view point that is used for orthographic projection of 3-D sensor
 %                     positions to the 2-D plane. The possible viewpoints are
-%                     'left'      - left  sagittal view,    L=anterior, R=posterior, top=top, bottom=bottom
-%                     'right'     - right sagittal view,    L=posterior, R=anterior, top=top, bottom=bottom
-%                     'inferior'  - inferior axial view,    L=R, R=L, top=anterior, bottom=posterior
-%                     'superior'  - superior axial view,    L=L, R=R, top=anterior, bottom=posterior
-%                     'anterior'  - anterior  coronal view, L=R, R=L, top=top, bottom=bottom
-%                     'posterior' - posterior coronal view, L=L, R=R, top=top, bottom=bottom
+%                     'left'      - left  sagittal view,     L=anterior, R=posterior, top=top, bottom=bottom
+%                     'right'     - right sagittal view,     L=posterior, R=anterior, top=top, bottom=bottom
+%                     'topleft'   - view from the top top,   L=anterior, R=posterior, top=top, bottom=bottom
+%                     'topright'  - view from the top right, L=posterior, R=anterior, top=top, bottom=bottom
+%                     'inferior'  - inferior axial view,     L=R, R=L, top=anterior, bottom=posterior
+%                     'superior'  - superior axial view,     L=L, R=R, top=anterior, bottom=posterior
+%                     'anterior'  - anterior  coronal view,  L=R, R=L, top=top, bottom=bottom
+%                     'posterior' - posterior coronal view,  L=L, R=R, top=top, bottom=bottom
 %                     'auto'      - automatic guess of the most optimal of the above
 %                      tip: use cfg.viewpoint = 'auto' per iEEG electrode grid/strip/depth for more accurate results
 %                      tip: to obtain an overview of all iEEG electrodes, choose superior/inferior, use cfg.headshape/mri, and plot using FT_LAYOUTPLOT with cfg.box/mask = 'no'
@@ -1448,6 +1450,10 @@ switch coordsys
         transmat = viewmtx(-90, 0);
       case 'right'
         transmat = viewmtx(90, 0);
+      case 'topleft'
+        transmat = viewmtx(-90, 45);
+      case 'topright'
+        transmat = viewmtx(90, 45);
       case 'superior'
         transmat = viewmtx(0, 90);
       case 'inferior'
@@ -1465,6 +1471,10 @@ switch coordsys
         transmat = viewmtx(180, 0);
       case 'right'
         transmat = viewmtx(0, 0);
+      case 'topleft'
+        transmat = viewmtx(180, 45);
+      case 'topright'
+        transmat = viewmtx(0, 45);
       case 'superior'
         transmat = viewmtx(-90, 90);
       case 'inferior'
