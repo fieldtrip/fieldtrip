@@ -38,10 +38,7 @@ function [file] = read_ctf_ascii(filename)
 %
 % $Id$
 
-fid = fopen(filename, 'r');
-if fid==-1
-  ft_error(sprintf('could not open file %s', filename));
-end
+fid = fopen_or_error(filename, 'r');
 
 line = '';
 while ischar(line)

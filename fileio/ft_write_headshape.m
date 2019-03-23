@@ -87,7 +87,7 @@ end
 
 switch fileformat
   case 'mne_pos'
-    fid = fopen(filename, 'wt');
+    fid = fopen_or_error(filename, 'wt');
     % convert to milimeter
     bnd = ft_convert_units(bnd, 'mm');
     n=size(bnd.pnt,1);
@@ -102,7 +102,7 @@ switch fileformat
     fclose(fid);
     
   case 'mne_tri'
-    fid = fopen(filename, 'wt');
+    fid = fopen_or_error(filename, 'wt');
     % convert to milimeter
     bnd = ft_convert_units(bnd, 'mm');
     n=size(bnd.pnt,1);

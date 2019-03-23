@@ -71,7 +71,7 @@ end
 buf((end+1):16384) = 0;
 
 % open the file and write the header
-fid  = fopen(filename, 'wb', 'ieee-le');
+fid  = fopen_or_error(filename, 'wb', 'ieee-le');
 fwrite(fid, buf);
 
 % The format of a continuous sampled record is

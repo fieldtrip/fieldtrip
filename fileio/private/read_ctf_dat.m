@@ -30,10 +30,7 @@ function [meg] = read_ctf_dat(filename)
 %
 % $Id$
 
-fid = fopen(filename, 'r');
-if fid==-1
-  ft_error(sprintf('could not open file %s', filename));
-end
+fid = fopen_or_error(filename, 'r');
 
 % read the sample number
 line = fgetl(fid);

@@ -64,7 +64,7 @@ if exist(file),
     if verbose,
         fprintf('...reading %s Analyze format',machine);
     end
-    fid = fopen(file,'r',machine);
+    fid = fopen_or_error(file,'r',machine);
     avw.hdr = read_header(fid,verbose);
     avw.fileprefix = fileprefix;
     fclose(fid);
@@ -77,7 +77,7 @@ if exist(file),
         case 'ieee-be', machine = 'ieee-le';
         end
         if verbose, fprintf('...reading %s Analyze format',machine); end
-        fid = fopen(file,'r',machine);
+        fid = fopen_or_error(file,'r',machine);
         avw.hdr = read_header(fid,verbose);
         avw.fileprefix = fileprefix;
         fclose(fid);

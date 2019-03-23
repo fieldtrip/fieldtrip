@@ -42,10 +42,7 @@ function [trl] = read_fcdc_trl(fn)
 %
 % $Id$
 
-fid = fopen(fn, 'rt');
-if fid<0
-   ft_error('could not open file');
-end
+fid = fopen_or_error(fn, 'rt');
 
 trl = [];
 while ~feof(fid)

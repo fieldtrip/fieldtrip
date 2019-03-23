@@ -307,7 +307,7 @@ switch dataformat
       save(headerfile, 'hdr', 'event', '-v6');
       
       % update the data file
-      [fid,message] = fopen(datafile,'ab','ieee-le');
+      fid = fopen_or_error(datafile,'ab','ieee-le');
       fwrite(fid, dat, hdr.precision);
       fclose(fid);
       
@@ -329,7 +329,7 @@ switch dataformat
       save(headerfile, 'hdr', 'event', '-v6');
       
       % write the data file
-      [fid,message] = fopen(datafile,'wb','ieee-le');
+      fid = fopen_or_error(datafile,'wb','ieee-le');
       fwrite(fid, dat, hdr.precision);
       fclose(fid);
     end
@@ -487,13 +487,13 @@ switch dataformat
     for j=1:hdr.nChans
       
       if append==false
-        fid(j) = fopen(filename{j}, 'wb', 'ieee-le');   % open the file
-        magic = format{j};                              % this used to be the channel name
-        magic((end+1):8) = 0;                           % pad with zeros
-        magic(8) = downscale(j);                        % number of bits to shift
-        fwrite(fid(j), magic(1:8));                     % write the 8-byte file header
+        fid(j) = fopen_or_error(filename{j}, 'wb', 'ieee-le'); % open the file
+        magic = format{j};                               % this used to be the channel name
+        magic((end+1):8) = 0;                            % pad with zeros
+        magic(8) = downscale(j);                         % number of bits to shift
+        fwrite(fid(j), magic(1:8));                      % write the 8-byte file header
       else
-        fid(j) = fopen(filename{j}, 'ab', 'ieee-le');   % open the file for appending
+        fid(j) = fopen_or_error(filename{j}, 'ab', 'ieee-le');    % open the file for appending
       end % if append
       
       % convert the data into the correct class

@@ -38,7 +38,7 @@ hdr.epoch(iEpoch).Channel = [];
 hdr.Events = [];
 curBlock = '';
 % Read file line by line
-fid = fopen(MbiFile,'r');
+fid = fopen_or_error(MbiFile,'r');
 while(1)
     % Reached the end of the file: exit the loop
     if feof(fid)

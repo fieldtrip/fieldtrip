@@ -31,10 +31,7 @@ if ~strcmp(x, '.m4d')
   filename = [filename '.m4d'];
 end
 
-fid = fopen(filename, 'r');
-if fid==-1
-  ft_error(sprintf('could not open file %s', filename));
-end
+fid = fopen_or_error(filename, 'r');
 
 % start with an empty header structure
 msi = struct;

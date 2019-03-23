@@ -131,8 +131,7 @@ header.orig.channel_info.orig_channel_states = header.orig.channel_info.channel_
 header.orig.channel_info.channel_states = header.orig.channel_info.channel_states(chanindx);
 
 %% Open file
-[fid,msg] = fopen(filename,'r');
-assert(fid~=-1,'ReadBesaMatlab:ErrorOpeningFile',msg);
+fid = fopen_or_error(filename,'r');
 
 % Get length of file
 fseek(fid,0,'eof');
@@ -849,8 +848,7 @@ function [header] = read_besa_besa_header(fname)
 % READ_BESA_BESA_HEADER reads header information from a BESA fileheader and skips data
 
 %% Open file
-[fid,msg] = fopen(fname,'r');
-assert(fid~=-1,'ReadBesaMatlab:ErrorOpeningFile',msg);
+fid = fopen_or_error(fname,'r');
 
 % Get length of file
 fseek(fid,0,'eof');

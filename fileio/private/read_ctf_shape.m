@@ -33,7 +33,7 @@ if ~strcmp(shape.MRI_Info.COORDINATES, 'HEAD')
   ft_warning('points on head shape are NOT in headcoordinates')
 end
 
-fid = fopen(filename, 'rt');
+fid = fopen_or_error(filename, 'rt');
 num = fscanf(fid, '%d', 1);
 shape.pos = fscanf(fid, '%f', inf);
 shape.pos = reshape(shape.pos, [3 num])';

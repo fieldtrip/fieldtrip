@@ -7,10 +7,7 @@ function output = read_micromed_trc(filename, begsample, endsample)
 %--------------------------------------------------------------------------
 
 % ---------------- Opening File------------------
-fid=fopen(filename,'rb');
-if fid==-1
-  ft_error('Can''t open *.trc file')
-end
+fid=fopen_or_error(filename,'rb');
 
 %------------------reading patient & recording info----------
 fseek(fid,64,-1);

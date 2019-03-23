@@ -72,7 +72,7 @@ end
 dat = zeros(length(channelsel),(endsample-begsample+1));
 for ichan = 1:length(channelsel)
     channelfile = [sessionpath channelext{ichan}];
-    datafid = fopen(channelfile,'r','l');
+    datafid = fopen_or_error(channelfile,'r','l');
     fseek(datafid,(hdr.nBytes*(begsample-1)),'bof');
     dat(ichan,:) = fread(datafid,(endsample-begsample+1),hdr.dataformat)';
     fclose(datafid);

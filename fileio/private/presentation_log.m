@@ -25,7 +25,7 @@ function event = presentation_log(filename)
 %
 % $Id$
 
-fid = fopen(filename, 'rt');
+fid = fopen_or_error(filename, 'rt');
 
 line = {};
 while ~feof(fid)

@@ -16,7 +16,7 @@ function mat2ades(dat, fileName, Fs, chanlabel, chanunit, dattype, datunit)
 %% generate the ADES file
 adesFile = [fileName '.ades'];
 
-fid = fopen(adesFile, 'wt');
+fid = fopen_or_error(adesFile, 'wt');
 
 fprintf(fid, '#ADES header file\r\n');
 fprintf(fid, 'samplingRate = %d\r\n', Fs);
@@ -36,7 +36,7 @@ fclose(fid);
 
 datFile = [fileName '.dat'];
 
-fad = fopen(datFile, 'wb');
+fad = fopen_or_error(datFile, 'wb');
 fwrite(fad, dat, 'float32', 'l');
 fclose(fad);
 end

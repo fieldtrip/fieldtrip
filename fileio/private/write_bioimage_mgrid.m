@@ -56,7 +56,7 @@ for g = 1:ngrids % grid loop
 end
 
 % open and write ascii-file line by line
-fid = fopen(filename, 'wt'); % open ascii-file
+fid = fopen_or_error(filename, 'wt'); % open ascii-file
 
 % file header
 fprintf(fid, '#vtkpxElectrodeMultiGridSource File\n');

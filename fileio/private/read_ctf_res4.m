@@ -41,12 +41,10 @@ function [hdr] = read_ctf_res4(fname)
 % read header information
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-fid = fopen(fname,'r','ieee-be');
-
-% Check if header file exist
-if fid == -1
-  errMsg = strcat('Could not open header file:',fname);
-  ft_error(errMsg);
+try
+  fid = fopen_or_error(fname,'r','ieee-be');
+catch err
+  ft_error('Cound not open header file: %s', err.message);
 end
 
 % First 8 bytes contain filetype, check is fileformat is correct.

@@ -40,10 +40,7 @@ timezero=[];
 % read the header belonging to this marker file
 hdr=read_brainvision_vhdr([filename(1:(end-4)) 'vhdr']);
 
-fid=fopen(filename,'rt');
-if fid==-1,
-    ft_error('cannot open marker file')
-end
+fid=fopen_or_error(filename,'rt');
 
 line=1;
 while line~=-1,

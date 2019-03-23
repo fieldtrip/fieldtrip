@@ -82,7 +82,7 @@ end
 % Extra is user-defined data.
 % TTLValue is the value sent to the computer on a parallel input port.
 
-fid = fopen(filename, 'rb', 'ieee-le');
+fid = fopen_or_error(filename, 'rb', 'ieee-le');
 
 headersize = 16384;
 offset     = headersize;
