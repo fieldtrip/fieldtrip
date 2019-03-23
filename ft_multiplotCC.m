@@ -101,7 +101,7 @@ end
 tmpcfg = keepfields(cfg, {'layout', 'elec', 'grad', 'opto', 'showcallinfo'});
 lay = ft_prepare_layout(tmpcfg); %, varargin{1});
 cfg.layout = lay;
-ft_plot_lay(lay, 'box', false,'label','no','point','no');
+ft_plot_layout(lay, 'box', false,'label','no','point','no');
 
 %[chNum,X,Y,Width,Height,Lbl] = textread(cfg.layout,'%f %f %f %f %f %s');
 X = lay.pos(:,1);

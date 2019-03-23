@@ -483,7 +483,7 @@ for k=1:length(selchan)
 end % plot channels
 
 % plot the layout, labels and outline
-ft_plot_lay(cfg.layout, 'box', istrue(cfg.box), 'label', istrue(cfg.showlabels), 'outline', istrue(cfg.showoutline), 'point', 'no', 'mask', 'no', 'fontsize', cfg.fontsize, 'labelyoffset', 1.4*median(cfg.layout.height/2), 'labelalignh', 'center', 'chanindx', find(~ismember(cfg.layout.label, {'COMNT', 'SCALE'})) );
+ft_plot_layout(cfg.layout, 'box', istrue(cfg.box), 'label', istrue(cfg.showlabels), 'outline', istrue(cfg.showoutline), 'point', 'no', 'mask', 'no', 'fontsize', cfg.fontsize, 'labelyoffset', 1.4*median(cfg.layout.height/2), 'labelalignh', 'center', 'chanindx', find(~ismember(cfg.layout.label, {'COMNT', 'SCALE'})) );
 
 % show colormap
 if isfield(cfg, 'colormap')

@@ -166,7 +166,7 @@ if ~isempty(colorparam)
 end
 
 if strcmp(cfg.newfigure, 'yes')
-  ft_plot_lay(lay, 'label', 'no', 'box', 'off');
+  ft_plot_layout(lay, 'label', 'no', 'box', 'off');
 end % if newfigure
 
 % fix the limits for the axis

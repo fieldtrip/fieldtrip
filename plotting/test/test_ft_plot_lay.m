@@ -4,7 +4,7 @@ function test_ft_plot_lay
 % WALLTIME 00:10:00
 
 % TEST test_ft_plot_lay
-% TEST ft_plot_lay
+% TEST ft_plot_layout
 
 % the following layout is CTF151.lay after being passed through printstruct
 lay.pos = [
@@ -632,6 +632,6 @@ lay.mask = { [ 0.5 0 ; 0.499013 0.0313953 ; 0.496057 0.0626666 ; 0.491144 0.0936
 
 
 figure
-ft_plot_lay(lay);
+ft_plot_layout(lay);
 
 
