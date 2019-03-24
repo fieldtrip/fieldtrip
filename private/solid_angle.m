@@ -86,24 +86,36 @@ function [varargout] = solid_angle(varargin)
 pwdir = pwd;
 
 % determine the name and full path of this function
-funname = mfilename('fullpath');
-mexsrc  = [funname '.c'];
-[mexdir, mexname] = fileparts(funname);
+funfile = mfilename('fullpath');
+[mexdir, mexname] = fileparts(funfile);
 
 try
   % try to compile the mex file on the fly
-  ft_warning('trying to compile MEX file from %s', mexsrc);
+  funname = mfilename;
+  mexsrc  = ['../src/' funname '.c'];
+  mexsrc_abs = [mexdir '/' mexsrc];
+  ft_warning('trying to compile MEX file from %s', mexsrc_abs);
+
   cd(mexdir);
 
-  if ispc
-    mex -I. -c ../../src/geometry.c
-    mex -I. -c solid_angle.c ; mex solid_angle.c solid_angle.obj geometry.obj
-  else
-    mex -I. -c ../../src/geometry.c
-    mex -I. -c ../../src/solid_angle.c 
-    mex -o solid_angle solid_angle.o geometry.o
-  end
+  obj_deps = {'geometry'};
 
+  keyboard
+  for i = 1:numel(obj_deps)
+    mex('-I.', '-c', ['../src/' obj_deps{i} '.c']);
+  end
+  mex('-I.', '-c', mexsrc);
+  if ispc
+    obj_extn = '.obj';
+  else
+    obj_extn = '.o';
+  end
+  obj_files = strcat(obj_deps, obj_extn);
+  mex('-output', funname, [funname '.o'], obj_files{:});
+  for i = 1:numel(obj_files)
+    delete(obj_files{i});
+  end
+  
   cd(pwdir);
   success = true;
 
