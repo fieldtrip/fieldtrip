@@ -113,6 +113,9 @@ tmpcfg = keepfields(cfg, {'latency', 'avgovertime', 'channel', 'avgoverchan', 'p
 if strcmp(cfg.correctm, 'cluster') && length(varargin{1}.label)>1
   % this is required for clustering with multiple channels
   ft_checkconfig(cfg, 'required', 'neighbours');
+  if ischar(cfg.neighbours) && strcmp(ft_filetype(cfg.neighbours), 'matlab')
+    cfg.neighbours = loadvar(cfg.neighbours);
+  end
 end
 
 dimord = getdimord(varargin{1}, cfg.parameter);

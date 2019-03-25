@@ -121,11 +121,14 @@ if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   cfg.headshape = struct(cfg.headshape);
 end
 
-if isfield(cfg, 'neighbours') && isa(cfg.neighbours, 'config')
-  % convert the nested config-object back into a normal structure
-  cfg.neighbours = struct(cfg.neighbours);
+if isfield(cfg, 'neighbours')
+  if ischar(cfg.neighbours) && strcmp(ft_filetype(cfg.neighbours), 'matlab')
+    cfg.neighbours = loadvar(cfg.neighbours);
+  elseif isa(cfg.neighbours, 'config')
+    % convert the nested config-object back into a normal structure
+    cfg.neighbours = struct(cfg.neighbours);
+  end
 end
-
 
 % put the low-level options pertaining to the dipole grid in their own field
 cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
