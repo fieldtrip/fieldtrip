@@ -5,6 +5,8 @@
 #if defined(__cplusplus) && defined(MATRIX_DLL_EXPORT_SYM)
     #define EXTERN_C extern
     namespace matrix{ namespace detail{ namespace noninlined{ namespace mx_array_api{
+#else
+    #define EXTERN_C
 #endif
  
 EXTERN_C mxArray* mxSerialize(mxArray const *);
