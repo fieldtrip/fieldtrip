@@ -159,6 +159,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(private/combineClusters.mexa64)
+ARRAY+=(plotting/private/combineClusters.mexa64)
 ARRAY+=(src/combineClusters.mexa64)
 sync ${ARRAY[*]}
 
@@ -167,6 +168,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(private/combineClusters.mexw32)
+ARRAY+=(plotting/private/combineClusters.mexw32)
 ARRAY+=(src/combineClusters.mexw32)
 sync ${ARRAY[*]}
 
@@ -175,6 +177,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(private/combineClusters.mexw64)
+ARRAY+=(plotting/private/combineClusters.mexw64)
 ARRAY+=(src/combineClusters.mexw64)
 sync ${ARRAY[*]}
 
