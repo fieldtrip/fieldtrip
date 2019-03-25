@@ -133,7 +133,7 @@ if isfield(cfg, 'reproducescript') && ~isempty(cfg.reproducescript)
     % with cfg.reproducescript functionality, throw error to make them
     % mutually exclusive
     if (isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)) || ...
-       (isfield(cfg, 'outputfile') && ~isemty(cfg.outputfile))
+       (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile))
       ft_error('cfg.reproducescript cannot be used together with a user-specified cfg.inputfile or cfg.outputfile');
     end
     % this variable is used in loadvar, savevar and savefig
