@@ -9,13 +9,15 @@
 ################################################################################
 
 function sync {
-# find the latest file from the list and copies it to all other files
-latest=`ls -t $* | head -n1`
-for file in $*; do
-if [ $file != $latest ] ; then
-cp $latest $file
-fi
-done
+  # find the latest file from the list and copies it to all other files
+  latest=`ls -t $* 2>/dev/null | head -n1`
+  for file in $*; do
+    if [ -n "$latest" ]; then
+      if [ "$file" != "$latest" ] ; then
+        cp "$latest" "$file"
+      fi
+    fi
+  done
 }
 
 ################################################################################
