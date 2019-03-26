@@ -191,7 +191,7 @@ if ~strcmp(filename, datafile) && ~any(strcmp(dataformat, {'ctf_ds', 'ctf_old', 
   dataformat = ft_filetype(filename);   % update the filetype
 end
 
-% for backward compatibility, default is to check when it is not continous
+% for backward compatibility, default is to check when it is not continuous
 if isempty(checkboundary)
   checkboundary = ~ft_getopt(varargin, 'continuous');
 end

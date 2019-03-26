@@ -89,11 +89,12 @@ cfg.newfigure  = ft_getopt(cfg, 'newfigure',  'yes');
 cfg.arrowhead  = ft_getopt(cfg, 'arrowhead', 'none'); % none, stop, start, both
 cfg.arrowsize  = ft_getopt(cfg, 'arrowsize', nan);    % length of the arrow head, should be in in figure units, i.e. the same units as the layout
 cfg.arrowoffset = ft_getopt(cfg, 'arrowoffset', nan); % absolute, should be in figure units, i.e. the same units as the layout
-cfg.arrowlength = ft_getopt(cfg, 'arrowlength', 0.8);% relative to the complete line
+cfg.arrowlength = ft_getopt(cfg, 'arrowlength', 0.8); % relative to the complete line
 cfg.linestyle   = ft_getopt(cfg, 'linestyle',   []);
 cfg.colormap    = ft_getopt(cfg, 'colormap',    colormap);
 
-lay = ft_prepare_layout(cfg, freq);
+tmpcfg = keepfields(cfg, {'layout', 'elec', 'grad', 'opto', 'showcallinfo'});
+lay = ft_prepare_layout(tmpcfg, freq);
 
 beglabel = freq.labelcmb(:,1);
 endlabel = freq.labelcmb(:,2);
@@ -326,6 +327,10 @@ ft_postamble previous freq
 ft_postamble provenance
 ft_postamble savefig
 
+if ~ft_nargout
+  % don't return anything
+  clear cfg
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION for plotting arrows, see also fieldtrip/private/arrow

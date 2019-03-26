@@ -301,15 +301,16 @@ end
 
 % Apply baseline correction
 if ~strcmp(cfg.baseline, 'no')
+  tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'baselinewindow', 'demean', 'parameter', 'channel'});
   for i=1:Ndata
     % keep mask-parameter if it is set
     if ~isempty(cfg.maskparameter)
       tempmask = varargin{i}.(cfg.maskparameter);
     end
     if strcmp(dtype, 'timelock') && strcmp(xparam, 'time')
-      varargin{i} = ft_timelockbaseline(cfg, varargin{i});
+      varargin{i} = ft_timelockbaseline(tmpcfg, varargin{i});
     elseif strcmp(dtype, 'freq') && strcmp(xparam, 'time')
-      varargin{i} = ft_freqbaseline(cfg, varargin{i});
+      varargin{i} = ft_freqbaseline(tmpcfg, varargin{i});
     elseif strcmp(dtype, 'freq') && strcmp(xparam, 'freq')
       ft_error('Baseline correction is not supported for spectra without a time dimension');
     else
@@ -391,7 +392,7 @@ end
 %% Section 3: select the data to be plotted and determine min/max range
 
 % Read or create the layout that will be used for plotting
-tmpcfg = removefields(cfg, 'inputfile'); % ensure the inputfile field not to exist
+tmpcfg = keepfields(cfg, {'layout', 'elec', 'grad', 'opto', 'showcallinfo'});
 cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
 
 % Take the subselection of channels that is contained in the layout, this is the same in all datasets
@@ -598,7 +599,7 @@ ft_postamble previous varargin
 ft_postamble provenance
 ft_postamble savefig
 
-if ~nargout
+if ~ft_nargout
   % don't return anything
   clear cfg
 end

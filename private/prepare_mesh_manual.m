@@ -41,9 +41,6 @@ global obj
 
 mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'}, 'hasunit', 'yes');
 
-bnd.pnt = [];
-bnd.tri = [];
-
 hasheadshape = isfield(cfg, 'headshape');
 hasbnd       = isfield(cfg, 'bnd');  % FIXME why is this in cfg?
 hasmri       = nargin>1;
@@ -63,56 +60,20 @@ else
   mri.anatomy = double(mri.anatomy);
 end
 
+% start with an empty boundary
+bnd.pnt = [];
+bnd.tri = [];
+
 if hasheadshape
   if ~isempty(cfg.headshape)
-    % get the surface describing the head shape
-    if isstruct(cfg.headshape) && isfield(cfg.headshape, 'hex')
-      cfg.headshape = fixpos(cfg.headshape);
-      fprintf('extracting surface from hexahedral mesh\n');
-      headshape = mesh2edge(cfg.headshape);
-      headshape = poly2tri(headshape);
-    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'tet')
-      cfg.headshape = fixpos(cfg.headshape);
-      fprintf('extracting surface from tetrahedral mesh\n');
-      headshape = mesh2edge(cfg.headshape);
-    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'tri')
-      cfg.headshape = fixpos(cfg.headshape);
-      headshape = cfg.headshape;
-    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pos')
-      cfg.headshape = fixpos(cfg.headshape);
-      headshape = cfg.headshape;
-    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
-      cfg.headshape = fixpos(cfg.headshape);
-      headshape = cfg.headshape;
-    elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
-      % use the headshape points specified in the configuration
-      cfg.headshape = fixpos(cfg.headshape);
-      headshape = cfg.headshape;
-    elseif ischar(cfg.headshape)
-      % read the headshape from file
-      headshape = ft_read_headshape(cfg.headshape);
-    else
-      headshape = [];
-    end
-    if ~isfield(headshape, 'tri') || ~isfield(headshape, 'poly')
-      for i=1:length(headshape)
-        % generate a closed triangulation from the surface points
-        headshape(i).pnt = unique(headshape(i).pnt, 'rows');
-        headshape(i).tri = projecttri(headshape(i).pnt);
-      end
-    end
     % start with the headshape
-    bnd = headshape;
+    [bnd.pos, bnd.tri] = headsurface([], [], 'headshape', cfg.headshape);
   end
 elseif hasbnd
   if ~isempty(cfg.bnd)
     % start with the prespecified boundaries
     bnd = cfg.bnd;
   end
-else
-  % start with an empty boundary if not specified
-  bnd.pnt = [];
-  bnd.tri = [];
 end
 
 % creating the GUI

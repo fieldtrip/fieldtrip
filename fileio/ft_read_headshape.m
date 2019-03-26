@@ -57,7 +57,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'brainvisa_mesh'
 %   'brainsuite_dfs'
 %
-% See also FT_READ_VOL, FT_READ_SENS, FT_READ_ATLAS, FT_WRITE_HEADSHAPE
+% See also FT_READ_HEADMODEL, FT_READ_SENS, FT_READ_ATLAS, FT_WRITE_HEADSHAPE
 
 % Copyright (C) 2008-2017 Robert Oostenveld
 %
@@ -1200,8 +1200,8 @@ switch fileformat
       % try reading it as volume conductor
       % and treat the skin surface as headshape
       try
-        headmodel = ft_read_vol(filename);
-        if ~ft_voltype(headmodel, 'bem')
+        headmodel = ft_read_headmodel(filename);
+        if ~ft_headmodeltype(headmodel, 'bem')
           ft_error('skin surface can only be extracted from boundary element model');
         else
           if ~isfield(headmodel, 'skin')

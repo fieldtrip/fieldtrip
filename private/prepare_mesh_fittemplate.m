@@ -1,14 +1,13 @@
-function [inside, outside] = find_inside_vol(pos, vol)
+function M = prepare_mesh_fittemplate(headshape,template)
 
-% FIND_INSIDE_VOL locates dipole locations inside/outside the source
-% compartment of a volume conductor model.
-% 
-% [inside, outside] = find_inside_vol(pos, vol)
+% PREPARE_MESH_FITTEMPLATE computes an affine transformation matrix between 2 point clouds 
 %
-% This function is obsolete and its use in other functions should be replaced 
-% by inside_vol
+% This function relies on cpd toolbox from  Myronenko, see https://sites.google.com/site/myronenko/research/cpd
+%
+%
+% See also FT_PREPARE_MESH
 
-% Copyright (C) 2003-2007, Robert Oostenveld
+% Copyright (C) 2019, Simon Homoelle
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -28,8 +27,21 @@ function [inside, outside] = find_inside_vol(pos, vol)
 %
 % $Id$
 
-warning('find_inside_vol is obsolete and will be removed, please use ft_inside_vol');
-inside  = ft_inside_vol(pos, vol);
-% replace boolean vector with indexing vectors
-outside = find(~inside);
-inside  = find(inside);
+% add toolbox cpd
+ft_hastoolbox('cpd', 2);
+
+%
+opt.corresp = 0;
+opt.method  = 'affine';
+opt.max_it = 100;
+opt.fgt = 0;
+opt.tol = 10e-12;
+opt.outliers = 0.0;
+opt.outliers = 0;
+[transform,~] = cpd_register(headshape,template, opt);
+
+M = eye(4,4);
+M(1:3,1:3) = transform.R;
+M(1:3,4)   = transform.t;
+
+end

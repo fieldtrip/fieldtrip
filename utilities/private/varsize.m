@@ -1,11 +1,11 @@
-function [vol] = ama2vol(ama)
+function [b] = varsize(x)
 
-% AMA2VOL
+% VARSIZE returns the size of a variable in bytes. It can be used on any MATLAB
+% variable, including structures and cell arrays.
 %
-% Use as
-%   vol = ama2vol(ama)
+% See also WHOS
 
-% Copyright (C) 2008, Robert Oostenveld
+% Copyright (C) 2019, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -25,18 +25,5 @@ function [vol] = ama2vol(ama)
 %
 % $Id$
 
-vol  = [];
-ngeo = length(ama.geo);
-for i=1:ngeo
-  vol.bnd(i).pos = ama.geo(i).pos;
-  vol.bnd(i).tri = ama.geo(i).tri;
-  vol.cond(i) = ama.geo(i).sigmam;
-end
-vol.mat = ama.bi;
-npos = size(vol.mat,2);
-if size(vol.mat,1)<npos
-  vol.mat(npos, npos) = 0;    % it should be a square matrix
-end
-vol.mat  = vol.mat;
-vol.type = 'dipoli';
-
+w = whos('x');
+b = w.bytes;

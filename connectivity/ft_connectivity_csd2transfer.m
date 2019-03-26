@@ -217,7 +217,7 @@ if strcmp(sfmethod, 'bivariate')
   list2 = char(channelcmb(:,2)); siz2 = size(list2,2);
   ix    = 1:min(siz1,siz2);
   npair = sum(sum(list1(:,ix)~=list2(:,ix),2)~=0);
-  fprintf('computing pairwise non-parametric spectral factorization on %d channel pairs\n', npair);%size(channelcmb,1) - numel(unique(channelcmb(:))));
+  fprintf('computing pairwise non-parametric spectral factorization on %d channel pairs\n', npair); %size(channelcmb,1) - numel(unique(channelcmb(:))));
 elseif strcmp(sfmethod, 'bivariate_conditional')
   % no text
 elseif strcmp(sfmethod, 'multivariate')

@@ -38,15 +38,32 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
   if exist('Fief7bee_reproducescript', 'var')
     % write the output figure to a MATLAB file
     iW1aenge_now = datestr(now, 30);
-    cfg.outputfile = fullfile(Fief7bee_reproducescript, sprintf('%s_output', iW1aenge_now));
-    % write a snippet of MATLAB code with the configuration and function call
+    cfg.outputfile = fullfile(Fief7bee_reproducescript, sprintf('%s_output', iW1aenge_now)); % the file extension is added later
+    
+    % write the large configuration fields to a MATLAB file
+    % this applies to layout, event, sourcemodel, headmodel, grad, etc.
+    fn = ignorefields('recursesize');
+    for i=1:numel(fn)
+      if isfield(cfg.callinfo.usercfg, fn{i}) && isstruct(cfg.callinfo.usercfg.(fn{i})) && varsize(cfg.callinfo.usercfg.(fn{i}))>1e3
+        Fief7bee_outputfile = fullfile(Fief7bee_reproducescript, sprintf('%s_input_%s.mat', iW1aenge_now, fn{i}));
+        savevar(Fief7bee_outputfile, fn{i}, cfg.callinfo.usercfg.(fn{i}));
+        cfg.callinfo.usercfg.(fn{i}) = Fief7bee_outputfile;
+      end
+    end
+    
+    % write a snippet of MATLAB code with the user-specified configuration and function call
     reproducescript(fullfile(Fief7bee_reproducescript, 'script.m'), cfg, false)
+    
+  elseif (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile))
+    % keep the output file as it is
+    
   else
-    cfg.outputfile = [];
+    % don't write to an output file
+    cfg.outputfile = {};
   end
   
+  % save the current figure to a MATLAB .fig and to a .png file
   if ~isempty(cfg.outputfile)
-    % save the current figure to a MATLAB .fig and to a .png file
     [Fief7bee_p, Fief7bee_f, Fief7bee_x] = fileparts(cfg.outputfile);
     Fief7bee_outputfile = fullfile(Fief7bee_p, [Fief7bee_f, '.fig']);
     ft_info('writing output figure to file ''%s''\n', Fief7bee_outputfile);
@@ -62,3 +79,4 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
   end
   
 end
+

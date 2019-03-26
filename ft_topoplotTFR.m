@@ -210,7 +210,7 @@ else  % data provided through cfg.inputfile
 end
 
 % prepare the layout, this should be done only once
-tmpcfg     = removefields(cfg, {'inputfile', 'style'});
+tmpcfg = keepfields(cfg, {'layout', 'elec', 'grad', 'opto', 'showcallinfo'});
 cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
 
 % call the common function that is shared between ft_topoplotER and ft_topoplotTFR
@@ -220,13 +220,14 @@ cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
 cfg = removefields(cfg, 'funcname');
 
 % do the general cleanup and bookkeeping at the end of the function
-% this will replace the ft_topoplotTFR callinfo with that of ft_topoplotER
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous varargin
 ft_postamble provenance
 ft_postamble savefig
 
-if ~nargout
+if ~ft_nargout
+  % don't return anything
   clear cfg
 end
+

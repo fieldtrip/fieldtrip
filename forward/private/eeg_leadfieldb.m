@@ -70,7 +70,7 @@ elseif size(vol.mat,1)==nskin
   % the output leadfield corresponds to the number skin vertices
 elseif size(vol.mat,1)==nall
   % the output leadfield corresponds to the total number of vertices
-elseif strcmp(ft_voltype(vol), 'openmeeg')
+elseif strcmp(ft_headmodeltype(vol), 'openmeeg')
   % this is handled differently, although at the moment I don't know why
 else
   ft_error('unexpected size of system matrix')
@@ -80,7 +80,7 @@ end
 cond = vol.cond(vol.source);
 
 % compute the infinite medium potential on all vertices
-switch ft_voltype(vol)
+switch ft_headmodeltype(vol)
   case 'dipoli'
     % the system matrix was computed using Thom Oostendorp's DIPOLI
     % concatenate the vertices of all compartment boundaries in a single Nx3 matrix
@@ -114,10 +114,10 @@ switch ft_voltype(vol)
     lf = cat(1, lf{:});
     
   otherwise
-    ft_error('unsupported type of volume conductor (%s)\n', ft_voltype(vol));
-end % switch ft_voltype
+    ft_error('unsupported type of volume conductor (%s)\n', ft_headmodeltype(vol));
+end % switch ft_headmodeltype
 
-if isfield(vol, 'mat') && ~ft_voltype(vol, 'openmeeg')
+if isfield(vol, 'mat') && ~ft_headmodeltype(vol, 'openmeeg')
   % compute the bounded medium potential on all vertices
   % this may include the bilinear interpolation from vertices towards electrodes
   lf = vol.mat * lf;

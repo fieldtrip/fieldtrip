@@ -136,7 +136,7 @@ end
 cfg.interactive = 'no';
 
 % prepare the layout, this should be done only once
-tmpcfg     = removefields(cfg, 'inputfile');
+tmpcfg = keepfields(cfg, {'layout', 'elec', 'grad', 'opto', 'showcallinfo'});
 tmpcomp.label = comp.topolabel; % the input to ft_prepare_layout needs at least a data.label field
 cfg.layout = ft_prepare_layout(tmpcfg, tmpcomp);
 clear tmpcomp;
@@ -204,6 +204,8 @@ ft_postamble previous comp
 ft_postamble provenance
 ft_postamble savefig
 
-if ~nargout
+if ~ft_nargout
+  % don't return anything
   clear cfg
 end
+

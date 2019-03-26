@@ -181,7 +181,7 @@ switch fileformat
     %labels
     atlas.tissuelabel = cell(1,246);
     fid = fopen(labelfile, 'rt');
-    lab  = fgetl(fid);%lab='Brainnetome Atlas'
+    lab  = fgetl(fid); %lab='Brainnetome Atlas'
     for label_i=1:246
         atlas.tissuelabel{1,label_i}=fgetl(fid);
     end

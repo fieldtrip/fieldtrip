@@ -1439,6 +1439,11 @@ ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
 uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
 uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
 
+if ~ft_nargout
+  % don't return anything
+  clear cfg
+end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -1545,6 +1550,7 @@ if opt.hasatlas
     lab = 'NA';
     %fprintf('atlas labels: not found\n');
   else
+    lab = unique(lab);
     tmp = sprintf('%s', strrep(lab{1}, '_', ' '));
     for i=2:length(lab)
       tmp = [tmp sprintf(', %s', strrep(lab{i}, '_', ' '))];

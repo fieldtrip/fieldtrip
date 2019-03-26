@@ -91,10 +91,10 @@ cfg = ft_checkconfig(cfg, 'deprecated',  {'transform'}); % please use ft_math in
 
 % set the defaults
 cfg.transform        = ft_getopt(cfg, 'transform',        []);
-cfg.projectmom       = ft_getopt(cfg, 'projectmom',       'no');% if yes -> svdfft
+cfg.projectmom       = ft_getopt(cfg, 'projectmom',       'no'); % if yes -> svdfft
 cfg.numcomp          = ft_getopt(cfg, 'numcomp',          1);
-cfg.powmethod        = ft_getopt(cfg, 'powmethod',        []);% see below
-cfg.cohmethod        = ft_getopt(cfg, 'cohmethod',        []);% see below
+cfg.powmethod        = ft_getopt(cfg, 'powmethod',        []); % see below
+cfg.cohmethod        = ft_getopt(cfg, 'cohmethod',        []); % see below
 cfg.feedback         = ft_getopt(cfg, 'feedback',         'textbar');
 cfg.supmethod        = ft_getopt(cfg, 'supmethod',        'none');
 cfg.resolutionmatrix = ft_getopt(cfg, 'resolutionmatrix', 'no');
@@ -163,7 +163,7 @@ if strcmp(cfg.projectmom, 'yes')
     ft_error('unsupported powmethod in combination with projectmom');
   end
   if isempty(cfg.cohmethod)
-    cfg.cohmethod = 'regular';% set the default
+    cfg.cohmethod = 'regular'; % set the default
   elseif ~strcmp(cfg.cohmethod, 'regular')
     ft_error('unsupported cohmethod in combination with projectmom');
   end
@@ -869,7 +869,7 @@ if strcmp(source.method, 'jackknife') || strcmp(source.method, 'bootstrap') || s
 
   % determine the (original) number of trials in the data
   if strcmp(source.method, 'bootstrap') %VERANDERD ER ZAT GEEN .RESAMPLE IN SOURCE
-    Ntrials = size(source.trial,2);% WAS size(source.resample, 2);
+    Ntrials = size(source.trial,2); % WAS size(source.resample, 2);
   else
     Ntrials = length(source.trial);
   end

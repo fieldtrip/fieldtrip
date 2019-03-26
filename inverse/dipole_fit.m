@@ -279,7 +279,7 @@ end;
 
 % check whether the dipole is inside the source compartment
 if checkinside
-  inside = ft_inside_vol(pos, headmodel);
+  inside = ft_inside_headmodel(pos, headmodel);
   if ~all(inside)
     ft_error('Dipole is outside the source compartment');
   end

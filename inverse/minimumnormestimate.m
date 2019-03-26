@@ -88,7 +88,7 @@ end
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfield(dip, 'inside')
-  dip.inside = ft_inside_vol(dip.pos, headmodel);
+  dip.inside = ft_inside_headmodel(dip.pos, headmodel);
 end
 
 if any(dip.inside>1)

@@ -116,7 +116,8 @@ if isfield(data, 'freq')
 end
 
 % read or create the layout that will be used for plotting:
-layout = ft_prepare_layout(cfg, data);
+tmpcfg = keepfields(cfg, {'layout', 'elec', 'grad', 'opto', 'showcallinfo'});
+layout = ft_prepare_layout(tmpcfg, data);
 
 % apply optional baseline correction
 if ~strcmp(cfg.baseline, 'no')
@@ -395,9 +396,13 @@ end
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous   data
-ft_postamble provenance data
-ft_postamble history    data
+ft_postamble provenance
 ft_postamble savefig
+
+if ~ft_nargout
+  % don't return anything
+  clear cfg
+end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

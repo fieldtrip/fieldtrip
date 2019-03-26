@@ -10,13 +10,13 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 % sand are expressed in world coordinates.
 %
 % Use as
+%   bnd = ft_prepare_mesh(cfg)
 %   bnd = ft_prepare_mesh(cfg, mri)
 %   bnd = ft_prepare_mesh(cfg, seg)
-%   bnd = ft_prepare_mesh(cfg)  # for cortexhull
 %
 % Configuration options:
 %   cfg.method      = string, can be 'interactive', 'projectmesh', 'iso2mesh', 'isosurface',
-%                     'headshape', 'hexahedral', 'tetrahedral', 'cortexhull'
+%                     'headshape', 'hexahedral', 'tetrahedral','cortexhull', 'fittemplate'
 %   cfg.tissue      = cell-array with tissue types or numeric vector with integer values
 %   cfg.numvertices = numeric vector, should have same number of elements as cfg.tissue
 %   cfg.downsample  = integer number (default = 1, i.e. no downsampling), see FT_VOLUMEDOWNSAMPLE
@@ -26,7 +26,7 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %   cfg.headshape   = a filename containing headshape, a Nx3 matrix with surface
 %                     points, or a structure with a single or multiple boundaries
 %
-% For method 'cortexhull' you should specify
+% For method 'cortexhull' you should not give input data, but specify
 %   cfg.headshape   = sting, filename containing the pial surface computed by freesurfer recon-all
 %
 % To facilitate data-handling and distributed computing you can use
@@ -62,7 +62,7 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %   bnd = ft_prepare_mesh(cfg, headmodel)
 % but more consistent would be to specify a volume conduction model with
 %   cfg.headmodel     = structure with volume conduction model, see FT_PREPARE_HEADMODEL
-%   cfg.headshape     = name of file containing the volume conduction model, see FT_READ_VOL
+%   cfg.headshape     = name of file containing the volume conduction model, see FT_READ_HEADMODEL
 %
 % Undocumented options, I have no clue why they exist
 %   cfg.method = {'singlesphere' 'concentricspheres' 'localspheres'}
@@ -121,8 +121,8 @@ cfg.spmversion  = ft_getopt(cfg, 'spmversion', 'spm8');
 % Translate the input options in the appropriate default for cfg.method
 if isfield(cfg, 'headshape') && ~isempty(cfg.headshape)
   cfg.method = ft_getopt(cfg, 'method', 'headshape');
-elseif hasdata && ~strcmp(ft_voltype(mri), 'unknown')
-  cfg.method = ft_getopt(cfg, 'method', ft_voltype(mri));
+elseif hasdata && ~strcmp(ft_headmodeltype(mri), 'unknown')
+  cfg.method = ft_getopt(cfg, 'method', ft_headmodeltype(mri));
 elseif hasdata
   cfg.method = ft_getopt(cfg, 'method', 'projectmesh');
 else
@@ -144,26 +144,26 @@ switch cfg.method
     % this makes sense with a non-segmented MRI as input
     % call the corresponding helper function
     bnd = prepare_mesh_manual(cfg, mri);
-    
+
   case {'projectmesh', 'iso2mesh', 'isosurface'}
     % this makes sense with a segmented MRI as input
     % call the corresponding helper function
     bnd = prepare_mesh_segmentation(cfg, mri);
-    
+
   case 'headshape'
     % call the corresponding helper function
     bnd = prepare_mesh_headshape(cfg);
-    
+
   case 'hexahedral'
     % the MRI is assumed to contain a segmentation
     % call the corresponding helper function
     bnd = prepare_mesh_hexahedral(cfg, mri);
-    
+
   case 'tetrahedral'
     % the MRI is assumed to contain a segmentation
     % call the corresponding helper function
     bnd = prepare_mesh_tetrahedral(cfg, mri);
-    
+
   case {'singlesphere' 'concentricspheres' 'localspheres'}
     % FIXME for localspheres it should be replaced by an outline of the head, see private/headsurface
     fprintf('triangulating the sphere in the volume conductor\n');
@@ -177,9 +177,15 @@ switch cfg.method
       bnd(i).pos(:,3) = pos(:,3)*headmodel.r(i) + headmodel.o(3);
       bnd(i).tri = tri;
     end
-    
+
   case 'cortexhull'
     bnd = prepare_mesh_cortexhull(cfg);
+  
+  case 'fittemplate'  
+    M   = prepare_mesh_fittemplate(cfg.headshape.pos,cfg.template.pos);
+    orig.mri = mri;
+    orig = ft_transform_geometry(M,orig);
+    bnd = orig.mri;
     
   otherwise
     ft_error('unsupported cfg.method')

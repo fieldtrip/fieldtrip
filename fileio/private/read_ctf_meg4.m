@@ -1,8 +1,8 @@
 function [meg] = read_ctf_meg4(fname, hdr, begsample, endsample, chanindx)
 
-% READ_CTF_MEG4 reads specified samples from a CTF continous datafile
+% READ_CTF_MEG4 reads specified samples from a CTF continuous datafile
 % It neglects all trial boundaries as if the data was acquired in
-% non-continous mode.
+% non-continuous mode.
 %
 % Use as
 %   [meg] = read_ctf_meg4(filename, hdr, begsample, endsample, chanindx)
