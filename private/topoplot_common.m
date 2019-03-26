@@ -177,6 +177,8 @@ cfg.channel           = ft_getopt(cfg, 'channel',          'all');
 cfg.refchannel        = ft_getopt(cfg, 'refchannel',        []);
 cfg.figurename        = ft_getopt(cfg, 'figurename',        []);
 cfg.interpolatenan    = ft_getopt(cfg, 'interpolatenan',   'yes');
+cfg.commentpos        = ft_getopt(cfg, 'commentpos',       'layout');
+cfg.scalepos          = ft_getopt(cfg, 'scalepos',         'layout');
 
 % the user can either specify a single group of channels for highlighting
 % which are all to be plotted in the same style, or multiple groups with a
