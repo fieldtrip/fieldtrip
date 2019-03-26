@@ -61,7 +61,7 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 %                            'auto': date, xparam, yparam and parameter limits are printed
 %                            'xlim': only xparam limits are printed
 %                            'ylim': only yparam limits are printed
-%   cfg.commentpos         = string or two numbers, position of comment (default 'leftbottom')
+%   cfg.commentpos         = string or two numbers, position of the comment (default = 'leftbottom')
 %                            'lefttop' 'leftbottom' 'middletop' 'middlebottom' 'righttop' 'rightbottom'
 %                            'title' to place comment as title
 %                            'layout' to place comment as specified for COMNT in layout
@@ -210,7 +210,7 @@ else  % data provided through cfg.inputfile
 end
 
 % prepare the layout, this should be done only once
-tmpcfg = keepfields(cfg, {'layout', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
 cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
 
 % call the common function that is shared between ft_topoplotER and ft_topoplotTFR
