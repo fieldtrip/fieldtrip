@@ -1095,8 +1095,17 @@ if skipcomnt || ~isequal(cfg.commentpos, 'layout')
   layout.height(sel) = [];
 end
 
-if ~skipcomnt && ~any(strcmp('COMNT', layout.label)) && ~strcmpi(cfg.style, '3d')
-  % add a placeholder for the comment in the desired location
+if skipscale || ~isequal(cfg.scalepos, 'layout')
+  % remove the scale entry
+  sel = find(strcmp('SCALE', layout.label));
+  layout.label(sel)  = [];
+  layout.pos(sel,:)  = [];
+  layout.width(sel)  = [];
+  layout.height(sel) = [];
+end
+
+if ~skipcomnt || ~skipscale
+  % this is used for the placement of the comment and scale
   pos = layout.pos;
   if isfield(layout, 'outline')
     pos = cat(1, pos, layout.outline{:});
@@ -1107,6 +1116,13 @@ if ~skipcomnt && ~any(strcmp('COMNT', layout.label)) && ~strcmpi(cfg.style, '3d'
   width  = mean(layout.width);
   height = mean(layout.height);
   middle = @(x) min(x) + (max(x)-min(x))/2;
+end
+
+if ~skipcomnt && ~any(strcmp('COMNT', layout.label)) && ~strcmpi(cfg.style, '3d')
+  % add a placeholder for the comment in the desired location
+  if strcmp(cfg.commentpos, 'layout')
+    cfg.commentpos = 'leftbottom'; % set the default position
+  end
   if strcmp(cfg.commentpos, 'lefttop')
     layout.pos(end+1,:) = [min(pos(:,1))-width/2 max(pos(:,2))+height/2];
   elseif strcmp(cfg.commentpos, 'leftbottom')
@@ -1121,33 +1137,19 @@ if ~skipcomnt && ~any(strcmp('COMNT', layout.label)) && ~strcmpi(cfg.style, '3d'
     layout.pos(end+1,:) = [max(pos(:,1))+width/2 min(pos(:,2))-height/2];
   elseif isnumeric(cfg.commentpos)
     layout.pos(end+1,:) = cfg.commentpos;
+  else
+    ft_error('invalid specification of cfg.commentpos');
   end
   layout.label{end+1}  = 'COMNT';
   layout.width(end+1)  = width;
   layout.height(end+1) = height;
 end
 
-if skipscale || ~isequal(cfg.scalepos, 'layout')
-  % remove the scale entry
-  sel = find(strcmp('SCALE', layout.label));
-  layout.label(sel)  = [];
-  layout.pos(sel,:)  = [];
-  layout.width(sel)  = [];
-  layout.height(sel) = [];
-end
-
 if ~skipscale && ~any(strcmp('SCALE', layout.label)) && ~strcmpi(cfg.style, '3d')
   % add a placeholder for the scale in the desired location
-  pos = layout.pos;
-  if isfield(layout, 'outline')
-    pos = cat(1, pos, layout.outline{:});
+  if strcmp(cfg.scalepos, 'layout')
+    cfg.scalepos = 'rightbottom'; % set the default position
   end
-  if isfield(layout, 'mask')
-    pos = cat(1, pos, layout.mask{:});
-  end
-  width  = mean(layout.width);
-  height = mean(layout.height);
-  middle = @(x) min(x) + (max(x)-min(x))/2;
   if strcmp(cfg.scalepos, 'lefttop')
     layout.pos(end+1,:) = [min(pos(:,1))-width/2 max(pos(:,2))+height/2];
   elseif strcmp(cfg.scalepos, 'leftbottom')
@@ -1162,6 +1164,8 @@ if ~skipscale && ~any(strcmp('SCALE', layout.label)) && ~strcmpi(cfg.style, '3d'
     layout.pos(end+1,:) = [max(pos(:,1))+width/2 min(pos(:,2))-height/2];
   elseif isnumeric(cfg.scalepos)
     layout.pos(end+1,:) = cfg.scalepos;
+  else
+    ft_error('invalid specification of cfg.scalepos');
   end
   layout.label{end+1}  = 'SCALE';
   layout.width(end+1)  = width;
