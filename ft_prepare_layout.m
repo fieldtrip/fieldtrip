@@ -192,6 +192,8 @@ cfg.outline      = ft_getopt(cfg, 'outline',    []); % default is handled below
 cfg.mask         = ft_getopt(cfg, 'mask',       []); % default is handled below
 cfg.width        = ft_getopt(cfg, 'width',      []);
 cfg.height       = ft_getopt(cfg, 'height',     []);
+cfg.commentpos   = ft_getopt(cfg, 'commentpos', 'layout');
+cfg.scalepos     = ft_getopt(cfg, 'scalepos',   'layout');
 
 if isempty(cfg.skipscale)
   if ischar(cfg.layout) && any(strcmp(cfg.layout, {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular'}))
@@ -1084,21 +1086,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % add axes positions for comments and scale information if required
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~any(strcmp('COMNT', layout.label)) && ~strcmpi(cfg.style, '3d') && ~skipcomnt
-  % add a placeholder for the comment in the upper left corner
-  layout.label{end+1}  = 'COMNT';
-  layout.width(end+1)  = mean(layout.width);
-  layout.height(end+1) = mean(layout.height);
-  XY = layout.pos;
-  if isfield(layout, 'outline')
-    XY = cat(1, XY, layout.outline{:});
-  end
-  if isfield(layout, 'mask')
-    XY = cat(1, XY, layout.mask{:});
-  end
-  layout.pos(end+1,:)  = [min(XY(:,1)) min(XY(:,2))];
-elseif any(strcmp('COMNT', layout.label)) && skipcomnt
-  % remove the scale entry
+if skipcomnt || ~isequal(cfg.commentpos, 'layout')
+  % remove the comnt entry
   sel = find(strcmp('COMNT', layout.label));
   layout.label(sel)  = [];
   layout.pos(sel,:)  = [];
@@ -1106,20 +1095,39 @@ elseif any(strcmp('COMNT', layout.label)) && skipcomnt
   layout.height(sel) = [];
 end
 
-if ~any(strcmp('SCALE', layout.label)) && ~strcmpi(cfg.style, '3d') && ~skipscale
-  % add a placeholder for the scale in the upper right corner
-  layout.label{end+1}  = 'SCALE';
-  layout.width(end+1)  = mean(layout.width);
-  layout.height(end+1) = mean(layout.height);
-  XY = layout.pos;
+if ~skipcomnt && ~any(strcmp('COMNT', layout.label)) && ~strcmpi(cfg.style, '3d')
+  % add a placeholder for the comment in the desired location
+  pos = layout.pos;
   if isfield(layout, 'outline')
-    XY = cat(1, XY, layout.outline{:});
+    pos = cat(1, pos, layout.outline{:});
   end
   if isfield(layout, 'mask')
-    XY = cat(1, XY, layout.mask{:});
+    pos = cat(1, pos, layout.mask{:});
   end
-  layout.pos(end+1,:)  = [max(XY(:,1)) min(XY(:,2))];
-elseif any(strcmp('SCALE', layout.label)) && skipscale
+  width  = mean(layout.width);
+  height = mean(layout.height);
+  middle = @(x) min(x) + (max(x)-min(x))/2;
+  if strcmp(cfg.commentpos, 'lefttop')
+    layout.pos(end+1,:) = [min(pos(:,1))-width/2 max(pos(:,2))+height/2];
+  elseif strcmp(cfg.commentpos, 'leftbottom')
+    layout.pos(end+1,:) = [min(pos(:,1))-width/2 min(pos(:,2))-height/2];
+  elseif strcmp(cfg.commentpos, 'middletop')
+    layout.pos(end+1,:) = [middle(pos(:,1)) max(pos(:,2))+height/2];
+  elseif strcmp(cfg.commentpos, 'middlebottom')
+    layout.pos(end+1,:) = [middle(pos(:,1)) min(pos(:,2))-height/2];
+  elseif strcmp(cfg.commentpos, 'righttop')
+    layout.pos(end+1,:) = [max(pos(:,1))+width/2 max(pos(:,2))+height/2];
+  elseif strcmp(cfg.commentpos, 'rightbottom')
+    layout.pos(end+1,:) = [max(pos(:,1))+width/2 min(pos(:,2))-height/2];
+  elseif isnumeric(cfg.commentpos)
+    layout.pos(end+1,:) = cfg.commentpos;
+  end
+  layout.label{end+1}  = 'COMNT';
+  layout.width(end+1)  = width;
+  layout.height(end+1) = height;
+end
+
+if skipscale || ~isequal(cfg.scalepos, 'layout')
   % remove the scale entry
   sel = find(strcmp('SCALE', layout.label));
   layout.label(sel)  = [];
@@ -1128,11 +1136,45 @@ elseif any(strcmp('SCALE', layout.label)) && skipscale
   layout.height(sel) = [];
 end
 
+if ~skipscale && ~any(strcmp('SCALE', layout.label)) && ~strcmpi(cfg.style, '3d')
+  % add a placeholder for the scale in the desired location
+  pos = layout.pos;
+  if isfield(layout, 'outline')
+    pos = cat(1, pos, layout.outline{:});
+  end
+  if isfield(layout, 'mask')
+    pos = cat(1, pos, layout.mask{:});
+  end
+  width  = mean(layout.width);
+  height = mean(layout.height);
+  middle = @(x) min(x) + (max(x)-min(x))/2;
+  if strcmp(cfg.scalepos, 'lefttop')
+    layout.pos(end+1,:) = [min(pos(:,1))-width/2 max(pos(:,2))+height/2];
+  elseif strcmp(cfg.scalepos, 'leftbottom')
+    layout.pos(end+1,:) = [min(pos(:,1))-width/2 min(pos(:,2))-height/2];
+  elseif strcmp(cfg.scalepos, 'middletop')
+    layout.pos(end+1,:) = [middle(pos(:,1)) max(pos(:,2))+height/2];
+  elseif strcmp(cfg.scalepos, 'middlebottom')
+    layout.pos(end+1,:) = [middle(pos(:,1)) min(pos(:,2))-height/2];
+  elseif strcmp(cfg.scalepos, 'righttop')
+    layout.pos(end+1,:) = [max(pos(:,1))+width/2 max(pos(:,2))+height/2];
+  elseif strcmp(cfg.scalepos, 'rightbottom')
+    layout.pos(end+1,:) = [max(pos(:,1))+width/2 min(pos(:,2))-height/2];
+  elseif isnumeric(cfg.scalepos)
+    layout.pos(end+1,:) = cfg.scalepos;
+  end
+  layout.label{end+1}  = 'SCALE';
+  layout.width(end+1)  = width;
+  layout.height(end+1) = height;
+end
+
 % these should be represented in a column vector (see bug 1909 -roevdmei)
-layout.label  = layout.label(:);
+layout.label = layout.label(:);
 % the width and height are not present in a 3D layout as used in SPM
-if isfield(layout, 'width'),  layout.width  = layout.width(:);  end
-if isfield(layout, 'height'), layout.height = layout.height(:); end
+if ~strcmpi(cfg.style, '3d')
+  layout.width  = layout.width(:);
+  layout.height = layout.height(:);
+end
 
 % to plot the layout for debugging, you can use this code snippet
 if strcmp(cfg.feedback, 'yes') && ~strcmpi(cfg.style, '3d')
@@ -1713,3 +1755,4 @@ for i=1:numel(outlbase)
   end
   
 end % for numel(outlbase)
+

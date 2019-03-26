@@ -13,7 +13,7 @@ function ft_plot_layout(layout, varargin)
 %   'label'       = yes/no
 %   'labeloffset' = offset of label from point (default = 0)
 %   'labelrotate' = scalar, vector with rotation angle (in degrees) per label (default = 0)
-%   'labelalignh' = string, or cell-array specifying the horizontal alignment of the text (default = 'left')
+%   'labelalignh' = string, or cell-array specifying the horizontal alignment of the text (default = 'center')
 %   'labelalignv' = string, or cell-array specifying the vertical alignment of the text (default = 'middle')
 %   'mask'        = yes/no
 %   'outline'     = yes/no
@@ -87,7 +87,7 @@ interpreter  = ft_getopt(varargin, 'interpreter', 'tex');
 
 % some stuff related to some refined label plotting
 labelrotate   = ft_getopt(varargin, 'labelrotate',  0);
-labelalignh   = ft_getopt(varargin, 'labelalignh',  'left');
+labelalignh   = ft_getopt(varargin, 'labelalignh',  'center');
 labelalignv   = ft_getopt(varargin, 'labelalignv',  'middle');
 labelcolor    = ft_getopt(varargin, 'labelcolor', 'k');
 

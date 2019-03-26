@@ -17,7 +17,7 @@ function [cfg] = ft_clusterplot(cfg, stat)
 %   cfg.saveaspng                 = string, filename of the output figures (default = 'no')
 %   cfg.visible                   = string, 'on' or 'off' whether figure will be visible (default = 'on')
 %
-% You can also specify all cfg options that apply to FT_TOPOPLOTER or FT_TOPOPLOTTFR,
+% You can also specify most configyration options that apply to FT_TOPOPLOTER or FT_TOPOPLOTTFR,
 % except for cfg.xlim, any of the highlight options, cfg.comment and cfg.commentpos.
 %
 % To facilitate data-handling and distributed computing you can use
@@ -115,7 +115,7 @@ end
 % get the options that are specific for topoplotting
 cfgtopo = keepfields(cfg, {'parameter', 'marker', 'markersymbol', 'markercolor', 'markersize', 'markerfontsize', 'style', 'gridscale', 'interplimits', 'interpolation', 'contournum', 'colorbar', 'shading', 'zlim'});
 % prepare the layout, this only has to be done once
-tmpcfg = keepfields(cfg, {'layout', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
 cfgtopo.layout = ft_prepare_layout(tmpcfg, stat);
 cfgtopo.showcallinfo = 'no';
 cfgtopo.feedback = 'no';
