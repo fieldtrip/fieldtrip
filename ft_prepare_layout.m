@@ -78,6 +78,19 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   cfg.layout = 'butterfly'  will give you a layout with all channels on top of each other
 %   cfg.layout = 'circular'   will distribute the channels on a circle
 %
+% For an sEEG shaft the option cfg.layout='vertical' or 'horizontal' is useful. In
+% this case you can also specify the direction of the shaft as going from left-to-right,
+% top-to-bottom, etc.
+%   cfg.direction = string, can be any of 'LR', 'RL' (for horizontal), 'TB', 'BT' (for vertical)
+%
+% For an ECoG grid the option cfg.layout='ordered' is useful. In this case you can
+% also specify the number of rows and/or columns and hwo the channels increment over
+% the grid (e.g. first left-to-right, then top-to-bottom). You can check the channel 
+% order of your grid using FT_LAYOUTPLOT.
+%   cfg.rows      = number of rows (default is automatic)
+%   cfg.columns   = number of columns (default is automatic)
+%   cfg.direction = string, can be any of 'LRTB', 'RLTB', 'LRBT', 'RLBT', 'TBLR', 'TBRL', 'BTLR', 'BTRL' (default = 'LRTB')
+%
 % The output layout structure will contain the following fields
 %   layout.label   = Nx1 cell-array with channel labels
 %   layout.pos     = Nx2 matrix with channel positions
@@ -181,7 +194,7 @@ cfg.width        = ft_getopt(cfg, 'width',      []);
 cfg.height       = ft_getopt(cfg, 'height',     []);
 
 if isempty(cfg.skipscale)
-  if ischar(cfg.layout) && any(strcmp(cfg.layout, {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular', '1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column', '1row', '2row', '3row', '4row', '5row', '6row', '7row', '8row', '9row'}))
+  if ischar(cfg.layout) && any(strcmp(cfg.layout, {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular'}))
     cfg.skipscale = 'yes';
   else
     cfg.skipscale = 'no';
@@ -189,7 +202,7 @@ if isempty(cfg.skipscale)
 end
 
 if isempty(cfg.skipcomnt)
-  if ischar(cfg.layout) && any(strcmp(cfg.layout, {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular', '1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column', '1row', '2row', '3row', '4row', '5row', '6row', '7row', '8row', '9row'}))
+  if ischar(cfg.layout) && any(strcmp(cfg.layout, {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular'}))
     cfg.skipcomnt = 'yes';
   else
     cfg.skipcomnt = 'no';
@@ -237,6 +250,14 @@ if hasdata && isfield(data, 'label')
   cfg.channel = ft_channelselection(cfg.channel, data.label);
 elseif hasdata && isfield(data, 'labelcmb')
   cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
+end
+
+if ischar(cfg.layout) && strcmp(cfg.layout, 'vertical')
+  cfg.direction = ft_getopt(cfg, 'direction', 'TB'); % default is top-to-bottom
+elseif ischar(cfg.layout) && strcmp(cfg.layout, 'horizontal')
+  cfg.direction = ft_getopt(cfg, 'direction', 'LR'); % default is left-to-right
+elseif ischar(cfg.layout) && strcmp(cfg.layout, 'ordered')
+  cfg.direction = ft_getopt(cfg, 'direction', 'LRTB'); % default is left-to-right, then top-to-bottom
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -329,7 +350,7 @@ elseif isequal(cfg.layout, 'butterfly')
   layout.mask    = {};
   layout.outline = {};
   
-elseif isequal(cfg.layout, 'vertical') || isequal(cfg.layout,'horizontal')
+elseif isequal(cfg.layout, 'vertical') || isequal(cfg.layout, 'horizontal')
   if hasdata && ~isempty(data)
     % look at the data to determine the overlapping channels
     originalorder = cfg.channel;
@@ -340,11 +361,11 @@ elseif isequal(cfg.layout, 'vertical') || isequal(cfg.layout,'horizontal')
       % re-order them according to the cfg specified by the user
       cfg.channel  = cfg.channel(sel2);
     end
-    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
+    assert(iscell(cfg.channel), 'cfg.channel should be a cell-array of strings');
     nchan        = length(cfg.channel);
     layout.label = cfg.channel;
   else
-    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
+    assert(iscell(cfg.channel), 'cfg.channel should be a cell-array of strings');
     nchan        = length(cfg.channel);
     layout.label = cfg.channel;
   end
@@ -352,12 +373,26 @@ elseif isequal(cfg.layout, 'vertical') || isequal(cfg.layout,'horizontal')
     switch cfg.layout
       case 'vertical'
         x = 0.5;
-        y = 1-i/(nchan+1+2);
+        switch upper(cfg.direction)
+          case 'TB'
+            y = 1-i/(nchan+1+2);
+          case 'BT'
+            y = 0+i/(nchan+1+2);
+          otherwise
+            ft_error('invalid direction "%s" for "%s"', cfg.direction, cfg.layout);
+        end
         layout.pos   (i,:) = [x y];
         layout.width (i,1) = 0.9;
         layout.height(i,1) = 0.9 * 1/(nchan+1+2);
       case 'horizontal'
-        x = i/(nchan+1+2);
+        switch upper(cfg.direction)
+          case 'LR'
+            x = 0+i/(nchan+1+2);
+          case 'RL'
+            x = 1-i/(nchan+1+2);
+          otherwise
+            ft_error('invalid direction "%s" for "%s"', cfg.direction, cfg.layout);
+        end
         y = 0.5;
         layout.pos   (i,:) = [x y];
         layout.width (i,1) = 0.9 * 1/(nchan+1+2);
@@ -369,93 +404,22 @@ elseif isequal(cfg.layout, 'vertical') || isequal(cfg.layout,'horizontal')
       layout.label{i}   = 'COMNT';
     end
   end
-  layout.mask    = {};
-  layout.outline = {};
   
-elseif any(strcmp(cfg.layout, {'1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column'}))
-  % it can be 2column, 3column, etcetera
-  % note that this code (in combination with the code further down) fails for 1column
-  if hasdata && ~isempty(data)
-    % look at the data to determine the overlapping channels
-    originalorder = cfg.channel;
-    cfg.channel = ft_channelselection(cfg.channel, data.label);
-    if iscell(originalorder) && length(originalorder)==length(cfg.channel)
-      % try to keep the order identical to that specified in the configuration
-      [sel1, sel2] = match_str(originalorder, cfg.channel);
-      % re-order them according to the cfg specified by the user
-      cfg.channel  = cfg.channel(sel2);
-    end
-    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
-    nchan        = length(cfg.channel);
-    layout.label = cfg.channel;
-  else
-    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
-    nchan        = length(cfg.channel);
-    layout.label = cfg.channel;
-  end
+  % make the mask, this should exclude the SCALE and COMNT positions
+  % determine the bounding box and add a little space around it
+  space = min(mean(layout.width), mean(layout.height))/3;
+  xmin = min(layout.pos(1:end-2,1) - 0.5*layout.width(1:end-2)  - space);
+  xmax = max(layout.pos(1:end-2,1) + 0.5*layout.width(1:end-2)  + space);
+  ymin = min(layout.pos(1:end-2,2) - 0.5*layout.height(1:end-2) - space);
+  ymax = max(layout.pos(1:end-2,2) + 0.5*layout.height(1:end-2) + space);
   
-  ncol = find(strcmp(cfg.layout, {'1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column'}));
-  nrow = ceil(nchan/ncol);
-  
-  k = 0;
-  for i=1:ncol
-    for j=1:nrow
-      k = k+1;
-      if k>nchan
-        continue
-      end
-      x = i/ncol - 1/(ncol*2);
-      y = 1-j/(nrow+1);
-      layout.pos   (k,:) = [x y];
-      layout.width (k,1) = 0.85/ncol;
-      layout.height(k,1) = 0.9 * 1/(nrow+1);
-    end
-  end
-  
-  layout.mask    = {};
-  layout.outline = {};
-  
-elseif any(strcmp(cfg.layout, {'1row', '2row', '3row', '4row', '5row', '6row', '7row', '8row', '9row'}))
-  % it can be 2row, 3row, etcetera
-  % note that this code (in combination with the code further down) fails for 1row
-  if hasdata && ~isempty(data)
-    % look at the data to determine the overlapping channels
-    originalorder = cfg.channel;
-    cfg.channel = ft_channelselection(cfg.channel, data.label);
-    if iscell(originalorder) && length(originalorder)==length(cfg.channel)
-      % try to keep the order identical to that specified in the configuration
-      [sel1, sel2] = match_str(originalorder, cfg.channel);
-      % re-order them according to the cfg specified by the user
-      cfg.channel  = cfg.channel(sel2);
-    end
-    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
-    nchan        = length(cfg.channel);
-    layout.label = cfg.channel;
-  else
-    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
-    nchan        = length(cfg.channel);
-    layout.label = cfg.channel;
-  end
-  
-  nrow = find(strcmp(cfg.layout, {'1row', '2row', '3row', '4row', '5row', '6row', '7row', '8row', '9row'}));
-  ncol = ceil(nchan/nrow);
-  
-  k = 0;
-  for i=1:nrow
-    for j=1:ncol
-      k = k+1;
-      if k>nchan
-        continue
-      end
-      x = j/(ncol+1);
-      y = 1/(nrow*2) - i/nrow;
-      layout.pos   (k,:) = [x y];
-      layout.width (k,1) = 0.85/ncol;
-      layout.height(k,1) = 0.9 * 1/(nrow+1);
-    end
-  end
-  
-  layout.mask    = {};
+  layout.mask = {[
+    xmin ymax
+    xmax ymax
+    xmax ymin
+    xmin ymin
+    xmin ymax
+    ]};
   layout.outline = {};
   
 elseif isequal(cfg.layout, 'ordered')
@@ -470,37 +434,105 @@ elseif isequal(cfg.layout, 'ordered')
     nchan        = length(cfg.channel);
     layout.label = cfg.channel;
   end
-  ncol = ceil(sqrt(nchan))+1;
-  nrow = ceil(sqrt(nchan))+1;
-  k = 0;
-  for i=1:nrow
-    for j=1:ncol
-      k = k+1;
-      if k<=nchan
-        x = (j-1)/ncol;
-        y = (nrow-i-1)/nrow;
-        layout.pos(k,:)    = [x y];
-        layout.width(k,1)  = 0.8 * 1/ncol;
-        layout.height(k,1) = 0.8 * 1/nrow;
-      end
-    end
+  
+  % the user can specify the number of columns and rows
+  if isfield(cfg, 'columns') && ~isempty(cfg.columns)
+    ncol = ft_getopt(cfg, 'columns');
+  else
+    ncol = nan; % wil be determined further down
+  end
+  if isfield(cfg, 'rows') && ~isempty(cfg.rows)
+    nrow = ft_getopt(cfg, 'rows');
+  else
+    nrow = nan; % wil be determined further down
+  end
+  if isnan(ncol) && isnan(nrow)
+    % the default is a more-or-less square arrangement
+    ncol = ceil(sqrt(nchan))+1;
+    nrow = ceil(sqrt(nchan))+1;
+  elseif isnan(ncol)
+    ncol = ceil(nchan/nrow);
+  elseif isnan(nrow)
+    nrow = ceil(nchan/ncol);
   end
   
+  switch upper(cfg.direction)
+    case 'LRTB'
+      [Y, X] = ndgrid(1:nrow, 1:ncol);
+      Y = flipud(Y);
+      X = X';
+      Y = Y';
+    case 'RLTB'
+      [Y, X] = ndgrid(1:nrow, 1:ncol);
+      X = fliplr(X);
+      Y = flipud(Y);
+      X = X';
+      Y = Y';
+    case 'LRBT'
+      [Y, X] = ndgrid(1:nrow, 1:ncol);
+      X = X';
+      Y = Y';
+    case 'RLBT'
+      [Y, X] = ndgrid(1:nrow, 1:ncol);
+      X = fliplr(X);
+      X = X';
+      Y = Y';
+    case 'TBLR'
+      [Y, X] = ndgrid(1:nrow, 1:ncol);
+      Y = flipud(Y);
+    case 'TBRL'
+      [Y, X] = ndgrid(1:nrow, 1:ncol);
+      X = fliplr(X);
+      Y = flipud(Y);
+    case 'BTLR'
+      [Y, X] = ndgrid(1:nrow, 1:ncol);
+    case 'BTRL'
+      [Y, X] = ndgrid(1:nrow, 1:ncol);
+      X = fliplr(X);
+    otherwise
+      ft_error('invalid direction "%s" for "%s"', cfg.direction, cfg.layout);
+  end
+  
+  Y = (Y-1)/nrow;
+  X = (X-1)/ncol;
+  layout.pos = [X(:) Y(:)];
+  layout.pos = layout.pos(1:nchan,:);
+  
+  layout.width  = ones(nchan,1) * 0.8 * 1/ncol;
+  layout.height = ones(nchan,1) * 0.8 * 1/nrow;
+
+  x = max(layout.pos(:,1)) - 0/ncol;
+  y = min(layout.pos(:,2)) - 1/nrow;
+  scalepos = [x y];
+  x = min(layout.pos(:,1)) - 0/ncol;
+  y = min(layout.pos(:,2)) - 1/nrow;
+  comntpos = [x y];
+
   layout.label{end+1}  = 'SCALE';
   layout.width(end+1)  = 0.8 * 1/ncol;
   layout.height(end+1) = 0.8 * 1/nrow;
-  x = (ncol-2)/ncol;
-  y = 0/nrow;
-  layout.pos(end+1,:) = [x y];
+  layout.pos(end+1,:) = scalepos;
   
   layout.label{end+1}  = 'COMNT';
   layout.width(end+1)  = 0.8 * 1/ncol;
   layout.height(end+1) = 0.8 * 1/nrow;
-  x = (ncol-1)/ncol;
-  y = 0/nrow;
-  layout.pos(end+1,:) = [x y];
+  layout.pos(end+1,:) = comntpos;
   
-  layout.mask    = {};
+  % make the mask, this should exclude the SCALE and COMNT positions
+  % determine the bounding box and add a little space around it
+  space = min(mean(layout.width), mean(layout.height))/3;
+  xmin = min(layout.pos(1:end-2,1) - 0.5*layout.width(1:end-2)  - space);
+  xmax = max(layout.pos(1:end-2,1) + 0.5*layout.width(1:end-2)  + space);
+  ymin = min(layout.pos(1:end-2,2) - 0.5*layout.height(1:end-2) - space);
+  ymax = max(layout.pos(1:end-2,2) + 0.5*layout.height(1:end-2) + space);
+  
+  layout.mask = {[
+    xmin ymax
+    xmax ymax
+    xmax ymin
+    xmin ymin
+    xmin ymax
+    ]};
   layout.outline = {};
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

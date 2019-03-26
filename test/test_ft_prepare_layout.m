@@ -329,3 +329,63 @@ for i=1:numel(style)
   layout = ft_prepare_layout(cfg);
   figure; ft_plot_layout(layout); title(style{i})
 end
+
+%% test the ordered/horizontal/vertical layouts for iEEG
+
+clear all
+close all
+
+nchan = 10;
+ntime = 1000;
+data = [];
+for i=1:nchan
+  data.label{i} = num2str(i);
+end
+data.avg = rand(nchan, ntime);
+data.time = (1:ntime)/ntime;
+
+direction = {'TB', 'BT'};
+for i=1:numel(direction)
+  cfg = [];
+  cfg.channel = data.label;
+  cfg.layout = 'vertical';
+  cfg.direction = direction{i};
+  layout = ft_prepare_layout(cfg);
+  figure; ft_plot_layout(layout); title(direction{i})
+end
+
+direction = {'LR', 'RL'};
+for i=1:numel(direction)
+  cfg = [];
+  cfg.channel = data.label;
+  cfg.layout = 'horizontal';
+  cfg.direction = direction{i};
+  layout = ft_prepare_layout(cfg);
+  figure; ft_plot_layout(layout); title(direction{i})
+end
+
+%%
+
+nchan = 24; % 4x6 or 6x4 or 3x8 or 8x3
+ntime = 1000;
+data = [];
+for i=1:nchan
+  data.label{i} = num2str(i);
+end
+data.avg = rand(nchan, ntime);
+data.time = (1:ntime)/ntime;
+
+direction = {'LRTB' 'RLTB' 'LRBT' 'RLBT' 'TBLR' 'TBRL' 'BTLR' 'BTRL'};
+for i=1:numel(direction)
+  cfg = [];
+  cfg.channel = data.label;
+  cfg.skipscale = 'no';
+  cfg.skipcomnt = 'no';
+  cfg.layout = 'ordered';
+  cfg.direction = direction{i};
+  cfg.rows = 3;
+  layout = ft_prepare_layout(cfg);
+  figure; ft_plot_layout(layout); title(direction{i})
+end
+
+
