@@ -98,7 +98,7 @@ if isfield(cfg, 'xparam')
 end
 
 % read or create the layout that will be used for plotting
-tmpcfg = keepfields(cfg, {'layout', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
 lay = ft_prepare_layout(tmpcfg); %, varargin{1});
 cfg.layout = lay;
 ft_plot_layout(lay, 'box', false,'label','no','point','no');

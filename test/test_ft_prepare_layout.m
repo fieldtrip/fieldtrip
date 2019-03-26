@@ -320,7 +320,7 @@ close all
 
 elec = ft_read_sens('easycap-M10.txt');
 
-style = {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular', '1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column', '1row', '2row', '3row', '4row', '5row', '6row', '7row', '8row', '9row'};
+style = {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular'};
 
 for i=1:numel(style)
   cfg = [];

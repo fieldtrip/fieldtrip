@@ -1104,7 +1104,7 @@ if skipscale || ~isequal(cfg.scalepos, 'layout')
   layout.height(sel) = [];
 end
 
-if ~skipcomnt || ~skipscale
+if (~skipcomnt || ~skipscale) && ~strcmpi(cfg.style, '3d')
   % this is used for the placement of the comment and scale
   pos = layout.pos;
   if isfield(layout, 'outline')

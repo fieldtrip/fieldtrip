@@ -155,7 +155,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 % $Id$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% DEVELOPERS NOTE: This code is organized in a similar fashion for multiplot/singleplot/topoplot 
+% DEVELOPERS NOTE: This code is organized in a similar fashion for multiplot/singleplot/topoplot
 % and for ER/TFR and should remain consistent over those 6 functions.
 % Section 1: general cfg handling that is independent from the data
 % Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
@@ -205,7 +205,7 @@ else  % data provided through cfg.inputfile
 end
 
 % prepare the layout, this should be done only once
-tmpcfg = keepfields(cfg, {'layout', 'commentpos' ,'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'})
 cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
 
 % call the common function that is shared between ft_topoplotER and ft_topoplotTFR
@@ -225,4 +225,3 @@ if ~ft_nargout
   % don't return anything
   clear cfg
 end
-
