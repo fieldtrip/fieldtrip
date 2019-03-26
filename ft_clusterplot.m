@@ -17,7 +17,7 @@ function [cfg] = ft_clusterplot(cfg, stat)
 %   cfg.saveaspng                 = string, filename of the output figures (default = 'no')
 %   cfg.visible                   = string, 'on' or 'off' whether figure will be visible (default = 'on')
 %
-% You can also specify most configyration options that apply to FT_TOPOPLOTER or FT_TOPOPLOTTFR,
+% You can also specify most configuration options that apply to FT_TOPOPLOTER or FT_TOPOPLOTTFR,
 % except for cfg.xlim, any of the highlight options, cfg.comment and cfg.commentpos.
 %
 % To facilitate data-handling and distributed computing you can use
