@@ -198,6 +198,8 @@ cfg.maskparameter  = ft_getopt(cfg, 'maskparameter');
 cfg.maskstyle      = ft_getopt(cfg, 'maskstyle', 'opacity');
 cfg.directionality = ft_getopt(cfg, 'directionality', '');
 cfg.figurename     = ft_getopt(cfg, 'figurename');
+cfg.commentpos     = ft_getopt(cfg, 'commentpos', 'layout');
+cfg.scalepos       = ft_getopt(cfg, 'scalepos', 'layout');
 
 if ~isfield(cfg, 'box')
   if ~isempty(cfg.maskparameter)
