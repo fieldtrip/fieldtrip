@@ -93,7 +93,7 @@ cfg.arrowlength = ft_getopt(cfg, 'arrowlength', 0.8); % relative to the complete
 cfg.linestyle   = ft_getopt(cfg, 'linestyle',   []);
 cfg.colormap    = ft_getopt(cfg, 'colormap',    colormap);
 
-tmpcfg = keepfields(cfg, {'layout', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
 lay = ft_prepare_layout(tmpcfg, freq);
 
 beglabel = freq.labelcmb(:,1);
@@ -166,7 +166,7 @@ if ~isempty(colorparam)
 end
 
 if strcmp(cfg.newfigure, 'yes')
-  ft_plot_lay(lay, 'label', 'no', 'box', 'off');
+  ft_plot_layout(lay, 'label', 'no', 'box', 'off');
 end % if newfigure
 
 % fix the limits for the axis

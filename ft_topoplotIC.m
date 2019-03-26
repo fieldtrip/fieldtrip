@@ -136,7 +136,7 @@ end
 cfg.interactive = 'no';
 
 % prepare the layout, this should be done only once
-tmpcfg = keepfields(cfg, {'layout', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
 tmpcomp.label = comp.topolabel; % the input to ft_prepare_layout needs at least a data.label field
 cfg.layout = ft_prepare_layout(tmpcfg, tmpcomp);
 clear tmpcomp;

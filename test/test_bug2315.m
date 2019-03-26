@@ -7,10 +7,15 @@ function test_bug2315
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/dataFIC.mat'));
 
+%%
+
 cfg = [];
-cfg.viewmode = '3column';
+cfg.viewmode = 'ordered';
+cfg.columns = 5;
 cfg.channel = 1:15;
 ft_databrowser(cfg, dataFIC)
+
+%%
 
 cfg = [];
 cfg.viewmode = 'CTF151';

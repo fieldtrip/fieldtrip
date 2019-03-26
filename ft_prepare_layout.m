@@ -32,12 +32,14 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %                     When 'orthographic', cfg.viewpoint can be used to indicate to specificy projection (keep empty for legacy projection)
 %   cfg.viewpoint   = string indicating the view point that is used for orthographic projection of 3-D sensor
 %                     positions to the 2-D plane. The possible viewpoints are
-%                     'left'      - left  sagittal view,    L=anterior, R=posterior, top=top, bottom=bottom
-%                     'right'     - right sagittal view,    L=posterior, R=anterior, top=top, bottom=bottom
-%                     'inferior'  - inferior axial view,    L=R, R=L, top=anterior, bottom=posterior
-%                     'superior'  - superior axial view,    L=L, R=R, top=anterior, bottom=posterior
-%                     'anterior'  - anterior  coronal view, L=R, R=L, top=top, bottom=bottom
-%                     'posterior' - posterior coronal view, L=L, R=R, top=top, bottom=bottom
+%                     'left'      - left  sagittal view,     L=anterior, R=posterior, top=top, bottom=bottom
+%                     'right'     - right sagittal view,     L=posterior, R=anterior, top=top, bottom=bottom
+%                     'topleft'   - view from the top top,   L=anterior, R=posterior, top=top, bottom=bottom
+%                     'topright'  - view from the top right, L=posterior, R=anterior, top=top, bottom=bottom
+%                     'inferior'  - inferior axial view,     L=R, R=L, top=anterior, bottom=posterior
+%                     'superior'  - superior axial view,     L=L, R=R, top=anterior, bottom=posterior
+%                     'anterior'  - anterior  coronal view,  L=R, R=L, top=top, bottom=bottom
+%                     'posterior' - posterior coronal view,  L=L, R=R, top=top, bottom=bottom
 %                     'auto'      - automatic guess of the most optimal of the above
 %                      tip: use cfg.viewpoint = 'auto' per iEEG electrode grid/strip/depth for more accurate results
 %                      tip: to obtain an overview of all iEEG electrodes, choose superior/inferior, use cfg.headshape/mri, and plot using FT_LAYOUTPLOT with cfg.box/mask = 'no'
@@ -76,6 +78,19 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   cfg.layout = 'butterfly'  will give you a layout with all channels on top of each other
 %   cfg.layout = 'circular'   will distribute the channels on a circle
 %
+% For an sEEG shaft the option cfg.layout='vertical' or 'horizontal' is useful. In
+% this case you can also specify the direction of the shaft as going from left-to-right,
+% top-to-bottom, etc.
+%   cfg.direction = string, can be any of 'LR', 'RL' (for horizontal), 'TB', 'BT' (for vertical)
+%
+% For an ECoG grid the option cfg.layout='ordered' is useful. In this case you can
+% also specify the number of rows and/or columns and hwo the channels increment over
+% the grid (e.g. first left-to-right, then top-to-bottom). You can check the channel 
+% order of your grid using FT_LAYOUTPLOT.
+%   cfg.rows      = number of rows (default is automatic)
+%   cfg.columns   = number of columns (default is automatic)
+%   cfg.direction = string, can be any of 'LRTB', 'RLTB', 'LRBT', 'RLBT', 'TBLR', 'TBRL', 'BTLR', 'BTRL' (default = 'LRTB')
+%
 % The output layout structure will contain the following fields
 %   layout.label   = Nx1 cell-array with channel labels
 %   layout.pos     = Nx2 matrix with channel positions
@@ -84,7 +99,7 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   layout.mask    = optional cell-array with line segments that determine the area for topographic interpolation
 %   layout.outline = optional cell-array with line segments that represent the head, nose, ears, sulci or other anatomical features
 %
-% See also FT_TOPOPLOTER, FT_TOPOPLOTTFR, FT_MULTIPLOTER, FT_MULTIPLOTTFR, FT_PLOT_LAY
+% See also FT_TOPOPLOTER, FT_TOPOPLOTTFR, FT_MULTIPLOTER, FT_MULTIPLOTTFR, FT_PLOT_LAYOUT
 
 % undocumented and non-recommended option (for SPM only)
 %   cfg.style       string, '2d' or '3d' (default = '2d')
@@ -177,9 +192,11 @@ cfg.outline      = ft_getopt(cfg, 'outline',    []); % default is handled below
 cfg.mask         = ft_getopt(cfg, 'mask',       []); % default is handled below
 cfg.width        = ft_getopt(cfg, 'width',      []);
 cfg.height       = ft_getopt(cfg, 'height',     []);
+cfg.commentpos   = ft_getopt(cfg, 'commentpos', 'layout');
+cfg.scalepos     = ft_getopt(cfg, 'scalepos',   'layout');
 
 if isempty(cfg.skipscale)
-  if ischar(cfg.layout) && any(strcmp(cfg.layout, {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular', '1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column', '1row', '2row', '3row', '4row', '5row', '6row', '7row', '8row', '9row'}))
+  if ischar(cfg.layout) && any(strcmp(cfg.layout, {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular'}))
     cfg.skipscale = 'yes';
   else
     cfg.skipscale = 'no';
@@ -187,7 +204,7 @@ if isempty(cfg.skipscale)
 end
 
 if isempty(cfg.skipcomnt)
-  if ischar(cfg.layout) && any(strcmp(cfg.layout, {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular', '1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column', '1row', '2row', '3row', '4row', '5row', '6row', '7row', '8row', '9row'}))
+  if ischar(cfg.layout) && any(strcmp(cfg.layout, {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular'}))
     cfg.skipcomnt = 'yes';
   else
     cfg.skipcomnt = 'no';
@@ -235,6 +252,14 @@ if hasdata && isfield(data, 'label')
   cfg.channel = ft_channelselection(cfg.channel, data.label);
 elseif hasdata && isfield(data, 'labelcmb')
   cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
+end
+
+if ischar(cfg.layout) && strcmp(cfg.layout, 'vertical')
+  cfg.direction = ft_getopt(cfg, 'direction', 'TB'); % default is top-to-bottom
+elseif ischar(cfg.layout) && strcmp(cfg.layout, 'horizontal')
+  cfg.direction = ft_getopt(cfg, 'direction', 'LR'); % default is left-to-right
+elseif ischar(cfg.layout) && strcmp(cfg.layout, 'ordered')
+  cfg.direction = ft_getopt(cfg, 'direction', 'LRTB'); % default is left-to-right, then top-to-bottom
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -327,7 +352,7 @@ elseif isequal(cfg.layout, 'butterfly')
   layout.mask    = {};
   layout.outline = {};
   
-elseif isequal(cfg.layout, 'vertical') || isequal(cfg.layout,'horizontal')
+elseif isequal(cfg.layout, 'vertical') || isequal(cfg.layout, 'horizontal')
   if hasdata && ~isempty(data)
     % look at the data to determine the overlapping channels
     originalorder = cfg.channel;
@@ -338,11 +363,11 @@ elseif isequal(cfg.layout, 'vertical') || isequal(cfg.layout,'horizontal')
       % re-order them according to the cfg specified by the user
       cfg.channel  = cfg.channel(sel2);
     end
-    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
+    assert(iscell(cfg.channel), 'cfg.channel should be a cell-array of strings');
     nchan        = length(cfg.channel);
     layout.label = cfg.channel;
   else
-    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
+    assert(iscell(cfg.channel), 'cfg.channel should be a cell-array of strings');
     nchan        = length(cfg.channel);
     layout.label = cfg.channel;
   end
@@ -350,12 +375,26 @@ elseif isequal(cfg.layout, 'vertical') || isequal(cfg.layout,'horizontal')
     switch cfg.layout
       case 'vertical'
         x = 0.5;
-        y = 1-i/(nchan+1+2);
+        switch upper(cfg.direction)
+          case 'TB'
+            y = 1-i/(nchan+1+2);
+          case 'BT'
+            y = 0+i/(nchan+1+2);
+          otherwise
+            ft_error('invalid direction "%s" for "%s"', cfg.direction, cfg.layout);
+        end
         layout.pos   (i,:) = [x y];
         layout.width (i,1) = 0.9;
         layout.height(i,1) = 0.9 * 1/(nchan+1+2);
       case 'horizontal'
-        x = i/(nchan+1+2);
+        switch upper(cfg.direction)
+          case 'LR'
+            x = 0+i/(nchan+1+2);
+          case 'RL'
+            x = 1-i/(nchan+1+2);
+          otherwise
+            ft_error('invalid direction "%s" for "%s"', cfg.direction, cfg.layout);
+        end
         y = 0.5;
         layout.pos   (i,:) = [x y];
         layout.width (i,1) = 0.9 * 1/(nchan+1+2);
@@ -367,93 +406,22 @@ elseif isequal(cfg.layout, 'vertical') || isequal(cfg.layout,'horizontal')
       layout.label{i}   = 'COMNT';
     end
   end
-  layout.mask    = {};
-  layout.outline = {};
   
-elseif any(strcmp(cfg.layout, {'1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column'}))
-  % it can be 2column, 3column, etcetera
-  % note that this code (in combination with the code further down) fails for 1column
-  if hasdata && ~isempty(data)
-    % look at the data to determine the overlapping channels
-    originalorder = cfg.channel;
-    cfg.channel = ft_channelselection(cfg.channel, data.label);
-    if iscell(originalorder) && length(originalorder)==length(cfg.channel)
-      % try to keep the order identical to that specified in the configuration
-      [sel1, sel2] = match_str(originalorder, cfg.channel);
-      % re-order them according to the cfg specified by the user
-      cfg.channel  = cfg.channel(sel2);
-    end
-    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
-    nchan        = length(cfg.channel);
-    layout.label = cfg.channel;
-  else
-    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
-    nchan        = length(cfg.channel);
-    layout.label = cfg.channel;
-  end
+  % make the mask, this should exclude the SCALE and COMNT positions
+  % determine the bounding box and add a little space around it
+  space = min(mean(layout.width), mean(layout.height))/3;
+  xmin = min(layout.pos(1:end-2,1) - 0.5*layout.width(1:end-2)  - space);
+  xmax = max(layout.pos(1:end-2,1) + 0.5*layout.width(1:end-2)  + space);
+  ymin = min(layout.pos(1:end-2,2) - 0.5*layout.height(1:end-2) - space);
+  ymax = max(layout.pos(1:end-2,2) + 0.5*layout.height(1:end-2) + space);
   
-  ncol = find(strcmp(cfg.layout, {'1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column'}));
-  nrow = ceil(nchan/ncol);
-  
-  k = 0;
-  for i=1:ncol
-    for j=1:nrow
-      k = k+1;
-      if k>nchan
-        continue
-      end
-      x = i/ncol - 1/(ncol*2);
-      y = 1-j/(nrow+1);
-      layout.pos   (k,:) = [x y];
-      layout.width (k,1) = 0.85/ncol;
-      layout.height(k,1) = 0.9 * 1/(nrow+1);
-    end
-  end
-  
-  layout.mask    = {};
-  layout.outline = {};
-  
-elseif any(strcmp(cfg.layout, {'1row', '2row', '3row', '4row', '5row', '6row', '7row', '8row', '9row'}))
-  % it can be 2row, 3row, etcetera
-  % note that this code (in combination with the code further down) fails for 1row
-  if hasdata && ~isempty(data)
-    % look at the data to determine the overlapping channels
-    originalorder = cfg.channel;
-    cfg.channel = ft_channelselection(cfg.channel, data.label);
-    if iscell(originalorder) && length(originalorder)==length(cfg.channel)
-      % try to keep the order identical to that specified in the configuration
-      [sel1, sel2] = match_str(originalorder, cfg.channel);
-      % re-order them according to the cfg specified by the user
-      cfg.channel  = cfg.channel(sel2);
-    end
-    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
-    nchan        = length(cfg.channel);
-    layout.label = cfg.channel;
-  else
-    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
-    nchan        = length(cfg.channel);
-    layout.label = cfg.channel;
-  end
-  
-  nrow = find(strcmp(cfg.layout, {'1row', '2row', '3row', '4row', '5row', '6row', '7row', '8row', '9row'}));
-  ncol = ceil(nchan/nrow);
-  
-  k = 0;
-  for i=1:nrow
-    for j=1:ncol
-      k = k+1;
-      if k>nchan
-        continue
-      end
-      x = j/(ncol+1);
-      y = 1/(nrow*2) - i/nrow;
-      layout.pos   (k,:) = [x y];
-      layout.width (k,1) = 0.85/ncol;
-      layout.height(k,1) = 0.9 * 1/(nrow+1);
-    end
-  end
-  
-  layout.mask    = {};
+  layout.mask = {[
+    xmin ymax
+    xmax ymax
+    xmax ymin
+    xmin ymin
+    xmin ymax
+    ]};
   layout.outline = {};
   
 elseif isequal(cfg.layout, 'ordered')
@@ -468,37 +436,105 @@ elseif isequal(cfg.layout, 'ordered')
     nchan        = length(cfg.channel);
     layout.label = cfg.channel;
   end
-  ncol = ceil(sqrt(nchan))+1;
-  nrow = ceil(sqrt(nchan))+1;
-  k = 0;
-  for i=1:nrow
-    for j=1:ncol
-      k = k+1;
-      if k<=nchan
-        x = (j-1)/ncol;
-        y = (nrow-i-1)/nrow;
-        layout.pos(k,:)    = [x y];
-        layout.width(k,1)  = 0.8 * 1/ncol;
-        layout.height(k,1) = 0.8 * 1/nrow;
-      end
-    end
+  
+  % the user can specify the number of columns and rows
+  if isfield(cfg, 'columns') && ~isempty(cfg.columns)
+    ncol = ft_getopt(cfg, 'columns');
+  else
+    ncol = nan; % wil be determined further down
+  end
+  if isfield(cfg, 'rows') && ~isempty(cfg.rows)
+    nrow = ft_getopt(cfg, 'rows');
+  else
+    nrow = nan; % wil be determined further down
+  end
+  if isnan(ncol) && isnan(nrow)
+    % the default is a more-or-less square arrangement
+    ncol = ceil(sqrt(nchan))+1;
+    nrow = ceil(sqrt(nchan))+1;
+  elseif isnan(ncol)
+    ncol = ceil(nchan/nrow);
+  elseif isnan(nrow)
+    nrow = ceil(nchan/ncol);
   end
   
+  switch upper(cfg.direction)
+    case 'LRTB'
+      [Y, X] = ndgrid(1:nrow, 1:ncol);
+      Y = flipud(Y);
+      X = X';
+      Y = Y';
+    case 'RLTB'
+      [Y, X] = ndgrid(1:nrow, 1:ncol);
+      X = fliplr(X);
+      Y = flipud(Y);
+      X = X';
+      Y = Y';
+    case 'LRBT'
+      [Y, X] = ndgrid(1:nrow, 1:ncol);
+      X = X';
+      Y = Y';
+    case 'RLBT'
+      [Y, X] = ndgrid(1:nrow, 1:ncol);
+      X = fliplr(X);
+      X = X';
+      Y = Y';
+    case 'TBLR'
+      [Y, X] = ndgrid(1:nrow, 1:ncol);
+      Y = flipud(Y);
+    case 'TBRL'
+      [Y, X] = ndgrid(1:nrow, 1:ncol);
+      X = fliplr(X);
+      Y = flipud(Y);
+    case 'BTLR'
+      [Y, X] = ndgrid(1:nrow, 1:ncol);
+    case 'BTRL'
+      [Y, X] = ndgrid(1:nrow, 1:ncol);
+      X = fliplr(X);
+    otherwise
+      ft_error('invalid direction "%s" for "%s"', cfg.direction, cfg.layout);
+  end
+  
+  Y = (Y-1)/nrow;
+  X = (X-1)/ncol;
+  layout.pos = [X(:) Y(:)];
+  layout.pos = layout.pos(1:nchan,:);
+  
+  layout.width  = ones(nchan,1) * 0.8 * 1/ncol;
+  layout.height = ones(nchan,1) * 0.8 * 1/nrow;
+
+  x = max(layout.pos(:,1)) - 0/ncol;
+  y = min(layout.pos(:,2)) - 1/nrow;
+  scalepos = [x y];
+  x = min(layout.pos(:,1)) - 0/ncol;
+  y = min(layout.pos(:,2)) - 1/nrow;
+  comntpos = [x y];
+
   layout.label{end+1}  = 'SCALE';
   layout.width(end+1)  = 0.8 * 1/ncol;
   layout.height(end+1) = 0.8 * 1/nrow;
-  x = (ncol-2)/ncol;
-  y = 0/nrow;
-  layout.pos(end+1,:) = [x y];
+  layout.pos(end+1,:) = scalepos;
   
   layout.label{end+1}  = 'COMNT';
   layout.width(end+1)  = 0.8 * 1/ncol;
   layout.height(end+1) = 0.8 * 1/nrow;
-  x = (ncol-1)/ncol;
-  y = 0/nrow;
-  layout.pos(end+1,:) = [x y];
+  layout.pos(end+1,:) = comntpos;
   
-  layout.mask    = {};
+  % make the mask, this should exclude the SCALE and COMNT positions
+  % determine the bounding box and add a little space around it
+  space = min(mean(layout.width), mean(layout.height))/3;
+  xmin = min(layout.pos(1:end-2,1) - 0.5*layout.width(1:end-2)  - space);
+  xmax = max(layout.pos(1:end-2,1) + 0.5*layout.width(1:end-2)  + space);
+  ymin = min(layout.pos(1:end-2,2) - 0.5*layout.height(1:end-2) - space);
+  ymax = max(layout.pos(1:end-2,2) + 0.5*layout.height(1:end-2) + space);
+  
+  layout.mask = {[
+    xmin ymax
+    xmax ymax
+    xmax ymin
+    xmin ymin
+    xmin ymax
+    ]};
   layout.outline = {};
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1050,21 +1086,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % add axes positions for comments and scale information if required
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~any(strcmp('COMNT', layout.label)) && ~strcmpi(cfg.style, '3d') && ~skipcomnt
-  % add a placeholder for the comment in the upper left corner
-  layout.label{end+1}  = 'COMNT';
-  layout.width(end+1)  = mean(layout.width);
-  layout.height(end+1) = mean(layout.height);
-  XY = layout.pos;
-  if isfield(layout, 'outline')
-    XY = cat(1, XY, layout.outline{:});
-  end
-  if isfield(layout, 'mask')
-    XY = cat(1, XY, layout.mask{:});
-  end
-  layout.pos(end+1,:)  = [min(XY(:,1)) min(XY(:,2))];
-elseif any(strcmp('COMNT', layout.label)) && skipcomnt
-  % remove the scale entry
+if skipcomnt || ~isequal(cfg.commentpos, 'layout')
+  % remove the comnt entry
   sel = find(strcmp('COMNT', layout.label));
   layout.label(sel)  = [];
   layout.pos(sel,:)  = [];
@@ -1072,20 +1095,7 @@ elseif any(strcmp('COMNT', layout.label)) && skipcomnt
   layout.height(sel) = [];
 end
 
-if ~any(strcmp('SCALE', layout.label)) && ~strcmpi(cfg.style, '3d') && ~skipscale
-  % add a placeholder for the scale in the upper right corner
-  layout.label{end+1}  = 'SCALE';
-  layout.width(end+1)  = mean(layout.width);
-  layout.height(end+1) = mean(layout.height);
-  XY = layout.pos;
-  if isfield(layout, 'outline')
-    XY = cat(1, XY, layout.outline{:});
-  end
-  if isfield(layout, 'mask')
-    XY = cat(1, XY, layout.mask{:});
-  end
-  layout.pos(end+1,:)  = [max(XY(:,1)) min(XY(:,2))];
-elseif any(strcmp('SCALE', layout.label)) && skipscale
+if skipscale || ~isequal(cfg.scalepos, 'layout')
   % remove the scale entry
   sel = find(strcmp('SCALE', layout.label));
   layout.label(sel)  = [];
@@ -1094,17 +1104,87 @@ elseif any(strcmp('SCALE', layout.label)) && skipscale
   layout.height(sel) = [];
 end
 
+if (~skipcomnt || ~skipscale) && ~strcmpi(cfg.style, '3d')
+  % this is used for the placement of the comment and scale
+  pos = layout.pos;
+  if isfield(layout, 'outline')
+    pos = cat(1, pos, layout.outline{:});
+  end
+  if isfield(layout, 'mask')
+    pos = cat(1, pos, layout.mask{:});
+  end
+  width  = mean(layout.width);
+  height = mean(layout.height);
+  middle = @(x) min(x) + (max(x)-min(x))/2;
+end
+
+if ~skipcomnt && ~any(strcmp('COMNT', layout.label)) && ~strcmpi(cfg.style, '3d') && ~isequal(cfg.commentpos, 'title')
+  % add a placeholder for the comment in the desired location
+  if strcmp(cfg.commentpos, 'layout')
+    cfg.commentpos = 'leftbottom'; % set the default position
+  end
+  if strcmp(cfg.commentpos, 'lefttop')
+    layout.pos(end+1,:) = [min(pos(:,1))-width/2 max(pos(:,2))+height/2];
+  elseif strcmp(cfg.commentpos, 'leftbottom')
+    layout.pos(end+1,:) = [min(pos(:,1))-width/2 min(pos(:,2))-height/2];
+  elseif strcmp(cfg.commentpos, 'middletop')
+    layout.pos(end+1,:) = [middle(pos(:,1)) max(pos(:,2))+height/2];
+  elseif strcmp(cfg.commentpos, 'middlebottom')
+    layout.pos(end+1,:) = [middle(pos(:,1)) min(pos(:,2))-height/2];
+  elseif strcmp(cfg.commentpos, 'righttop')
+    layout.pos(end+1,:) = [max(pos(:,1))+width/2 max(pos(:,2))+height/2];
+  elseif strcmp(cfg.commentpos, 'rightbottom')
+    layout.pos(end+1,:) = [max(pos(:,1))+width/2 min(pos(:,2))-height/2];
+  elseif isnumeric(cfg.commentpos)
+    layout.pos(end+1,:) = cfg.commentpos;
+  else
+    ft_error('invalid specification of cfg.commentpos');
+  end
+  layout.label{end+1}  = 'COMNT';
+  layout.width(end+1)  = width;
+  layout.height(end+1) = height;
+end
+
+if ~skipscale && ~any(strcmp('SCALE', layout.label)) && ~strcmpi(cfg.style, '3d')
+  % add a placeholder for the scale in the desired location
+  if strcmp(cfg.scalepos, 'layout')
+    cfg.scalepos = 'rightbottom'; % set the default position
+  end
+  if strcmp(cfg.scalepos, 'lefttop')
+    layout.pos(end+1,:) = [min(pos(:,1))-width/2 max(pos(:,2))+height/2];
+  elseif strcmp(cfg.scalepos, 'leftbottom')
+    layout.pos(end+1,:) = [min(pos(:,1))-width/2 min(pos(:,2))-height/2];
+  elseif strcmp(cfg.scalepos, 'middletop')
+    layout.pos(end+1,:) = [middle(pos(:,1)) max(pos(:,2))+height/2];
+  elseif strcmp(cfg.scalepos, 'middlebottom')
+    layout.pos(end+1,:) = [middle(pos(:,1)) min(pos(:,2))-height/2];
+  elseif strcmp(cfg.scalepos, 'righttop')
+    layout.pos(end+1,:) = [max(pos(:,1))+width/2 max(pos(:,2))+height/2];
+  elseif strcmp(cfg.scalepos, 'rightbottom')
+    layout.pos(end+1,:) = [max(pos(:,1))+width/2 min(pos(:,2))-height/2];
+  elseif isnumeric(cfg.scalepos)
+    layout.pos(end+1,:) = cfg.scalepos;
+  else
+    ft_error('invalid specification of cfg.scalepos');
+  end
+  layout.label{end+1}  = 'SCALE';
+  layout.width(end+1)  = width;
+  layout.height(end+1) = height;
+end
+
 % these should be represented in a column vector (see bug 1909 -roevdmei)
-layout.label  = layout.label(:);
+layout.label = layout.label(:);
 % the width and height are not present in a 3D layout as used in SPM
-if isfield(layout, 'width'),  layout.width  = layout.width(:);  end
-if isfield(layout, 'height'), layout.height = layout.height(:); end
+if ~strcmpi(cfg.style, '3d')
+  layout.width  = layout.width(:);
+  layout.height = layout.height(:);
+end
 
 % to plot the layout for debugging, you can use this code snippet
 if strcmp(cfg.feedback, 'yes') && ~strcmpi(cfg.style, '3d')
   tmpcfg = [];
   tmpcfg.layout = layout;
-  ft_layoutplot(tmpcfg); % FIXME this should use ft_plot_lay
+  ft_layoutplot(tmpcfg); % FIXME this should use ft_plot_layout
 end
 
 % to write the layout to a .mat or text file, you can use this code snippet
@@ -1448,6 +1528,10 @@ switch coordsys
         transmat = viewmtx(-90, 0);
       case 'right'
         transmat = viewmtx(90, 0);
+      case 'topleft'
+        transmat = viewmtx(-90, 45);
+      case 'topright'
+        transmat = viewmtx(90, 45);
       case 'superior'
         transmat = viewmtx(0, 90);
       case 'inferior'
@@ -1465,6 +1549,10 @@ switch coordsys
         transmat = viewmtx(180, 0);
       case 'right'
         transmat = viewmtx(0, 0);
+      case 'topleft'
+        transmat = viewmtx(180, 45);
+      case 'topright'
+        transmat = viewmtx(0, 45);
       case 'superior'
         transmat = viewmtx(-90, 90);
       case 'inferior'
@@ -1671,3 +1759,4 @@ for i=1:numel(outlbase)
   end
   
 end % for numel(outlbase)
+

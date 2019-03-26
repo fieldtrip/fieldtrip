@@ -392,7 +392,7 @@ end
 %% Section 3: select the data to be plotted and determine min/max range
 
 % Read or create the layout that will be used for plotting
-tmpcfg = keepfields(cfg, {'layout', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
 cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
 
 % Take the subselection of channels that is contained in the layout, this is the same in all datasets
@@ -492,7 +492,7 @@ for m=1:length(selchan)
 end % for number of channels
 
 % plot the layout, labels and outline
-ft_plot_lay(cfg.layout, 'box', istrue(cfg.box), 'label', istrue(cfg.showlabels), 'outline', istrue(cfg.showoutline), 'point', 'no', 'mask', 'no', 'fontsize', cfg.fontsize, 'labelyoffset', 1.4*median(cfg.layout.height/2), 'labelalignh', 'center', 'chanindx', find(~ismember(cfg.layout.label, {'COMNT', 'SCALE'})) );
+ft_plot_layout(cfg.layout, 'box', istrue(cfg.box), 'label', istrue(cfg.showlabels), 'outline', istrue(cfg.showoutline), 'point', 'no', 'mask', 'no', 'fontsize', cfg.fontsize, 'labelyoffset', 1.4*median(cfg.layout.height/2), 'labelalignh', 'center', 'chanindx', find(~ismember(cfg.layout.label, {'COMNT', 'SCALE'})) );
 
 % write comment
 if istrue(cfg.showcomment)

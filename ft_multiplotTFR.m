@@ -198,6 +198,8 @@ cfg.maskparameter  = ft_getopt(cfg, 'maskparameter');
 cfg.maskstyle      = ft_getopt(cfg, 'maskstyle', 'opacity');
 cfg.directionality = ft_getopt(cfg, 'directionality', '');
 cfg.figurename     = ft_getopt(cfg, 'figurename');
+cfg.commentpos     = ft_getopt(cfg, 'commentpos', 'layout');
+cfg.scalepos       = ft_getopt(cfg, 'scalepos', 'layout');
 
 if ~isfield(cfg, 'box')
   if ~isempty(cfg.maskparameter)
@@ -339,7 +341,7 @@ data = chanscale_common(tmpcfg, data);
 %% Section 3: select the data to be plotted and determine min/max range
 
 % Read or create the layout that will be used for plotting
-tmpcfg = keepfields(cfg, {'layout', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
 cfg.layout = ft_prepare_layout(tmpcfg, data);
 
 % Take the subselection of channels that is contained in the layout, this is the same in all datasets
@@ -483,7 +485,7 @@ for k=1:length(selchan)
 end % plot channels
 
 % plot the layout, labels and outline
-ft_plot_lay(cfg.layout, 'box', istrue(cfg.box), 'label', istrue(cfg.showlabels), 'outline', istrue(cfg.showoutline), 'point', 'no', 'mask', 'no', 'fontsize', cfg.fontsize, 'labelyoffset', 1.4*median(cfg.layout.height/2), 'labelalignh', 'center', 'chanindx', find(~ismember(cfg.layout.label, {'COMNT', 'SCALE'})) );
+ft_plot_layout(cfg.layout, 'box', istrue(cfg.box), 'label', istrue(cfg.showlabels), 'outline', istrue(cfg.showoutline), 'point', 'no', 'mask', 'no', 'fontsize', cfg.fontsize, 'labelyoffset', 1.4*median(cfg.layout.height/2), 'labelalignh', 'center', 'chanindx', find(~ismember(cfg.layout.label, {'COMNT', 'SCALE'})) );
 
 % show colormap
 if isfield(cfg, 'colormap')
@@ -491,22 +493,30 @@ if isfield(cfg, 'colormap')
   set(gcf, 'colormap', cfg.colormap);
 end
 
-% show comment
-comment_handle = [];
-if istrue(cfg.showcomment)
-  k = find(strcmp('COMNT', cfg.layout.label));
-  if ~isempty(k)
-    limittext = cfg.limittext;
-    if ~strcmp(limittext, 'default')
-      comment = limittext;
-    else
-      comment = cfg.comment;
-      comment = sprintf('%0s\nxlim=[%.3g %.3g]', comment, xmin, xmax);
-      comment = sprintf('%0s\nylim=[%.3g %.3g]', comment, ymin, ymax);
-      comment = sprintf('%0s\nzlim=[%.3g %.3g]', comment, zmin, zmax);
-    end
-    comment_handle = ft_plot_text(cfg.layout.pos(k, 1), cfg.layout.pos(k, 2), sprintf(comment), 'FontSize', cfg.fontsize, 'FontWeight', cfg.fontweight);
+% Construct comment
+if ~strcmp(cfg.comment, 'no')
+  if ~strcmp(cfg.limittext, 'default')
+    comment = cfg.limittext;
+  else
+    comment = cfg.comment;
+    comment = sprintf('%0s\nxlim=[%.3g %.3g]', comment, xmin, xmax);
+    comment = sprintf('%0s\nylim=[%.3g %.3g]', comment, ymin, ymax);
+    comment = sprintf('%0s\nzlim=[%.3g %.3g]', comment, zmin, zmax);
   end
+end
+
+% Write comment
+if strcmp(cfg.comment, 'no')
+  comment_handle = [];
+elseif strcmp(cfg.commentpos, 'title')
+  comment_handle = title(comment, 'FontSize', cfg.fontsize);
+elseif ~isempty(strcmp(cfg.layout.label, 'COMNT'))
+  x_comment = cfg.layout.pos(strcmp(cfg.layout.label, 'COMNT'), 1);
+  y_comment = cfg.layout.pos(strcmp(cfg.layout.label, 'COMNT'), 2);
+  % 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom',
+  comment_handle = ft_plot_text(x_comment, y_comment, comment, 'FontSize', cfg.fontsize, 'FontWeight', cfg.fontweight);
+else
+  comment_handle = [];
 end
 
 % show scale
