@@ -1118,7 +1118,7 @@ if ~skipcomnt || ~skipscale
   middle = @(x) min(x) + (max(x)-min(x))/2;
 end
 
-if ~skipcomnt && ~any(strcmp('COMNT', layout.label)) && ~strcmpi(cfg.style, '3d')
+if ~skipcomnt && ~any(strcmp('COMNT', layout.label)) && ~strcmpi(cfg.style, '3d') && ~isequal(cfg.commentpos, 'title')
   % add a placeholder for the comment in the desired location
   if strcmp(cfg.commentpos, 'layout')
     cfg.commentpos = 'leftbottom'; % set the default position
