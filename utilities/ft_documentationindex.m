@@ -168,7 +168,6 @@ currletter = char(96);
 
 fprintf(fid, '---\n');
 fprintf(fid, 'title: Index of all configuration options\n');
-fprintf(fid, 'layout: default\n');
 fprintf(fid, '---\n');
 fprintf(fid, '\n');
 fprintf(fid, '# Index of all configuration options \n');
@@ -187,7 +186,7 @@ for i=1:size(index,1)
     currletter = currletter + 1;
     fprintf(fid, '## %s \n\n', upper(char(currletter)));
   end
-  fprintf(fid, '** %s ** - %s  \n', index{i,2}, index{i,1});
+  fprintf(fid, '**%s** - %s  \n', index{i,2}, index{i,1});
 
   % do postprocessing to make sure we don't mess up dokuwiki layout
   % '' is a markup instruction for dokuwiki so escape by replacing it

@@ -76,5 +76,5 @@ end
 for i=1:length(infile)
   [p, f, x] = fileparts(infile{i});
   outfile = fullfile(outdir, [f '.md']);
-  matlab2markdown(infile{i}, outfile, 'monospacehelp', true, 'pageheader', 'jekyll', 'pagelayout', 'default', 'pagetitle', f);
+  matlab2markdown(infile{i}, outfile, 'monospacehelp', true, 'pageheader', 'jekyll', 'pagetitle', f);
 end
