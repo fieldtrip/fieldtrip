@@ -200,6 +200,9 @@ end
 insideindx = find(sourcemodel.inside);
 
 if ft_headmodeltype(headmodel, 'openmeeg')
+  
+  ft_hastoolbox('openmeeg', 1);  % add to path (if not yet on path)
+  
   % repeated system calls to the openmeeg executable makes it rather slow
   % calling it once is much more efficient
   fprintf('calculating leadfield for all positions at once, this may take a while...\n');
