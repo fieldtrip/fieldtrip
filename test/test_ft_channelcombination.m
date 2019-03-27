@@ -57,7 +57,7 @@ function [collect] = ft_channelcombination_old(channelcmb, datachannel, includea
 % channel labels. Channels that are not present in the raw datafile
 % are automatically removed from the channel list.
 %
-% Please note that the default behaviour is to exclude symetric
+% Please note that the default behavior is to exclude symetric
 % pairs and auto-combinations.
 %
 % See also FT_CHANNELSELECTION

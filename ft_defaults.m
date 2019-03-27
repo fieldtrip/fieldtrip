@@ -354,7 +354,7 @@ if length(list)>1
       ft_warning('one version of %s is found here: %s', toolbox, list{i});
     end
   end
-  ft_warning('You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behaviour. See http://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');
+  ft_warning('You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behavior. See http://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');
 end
 end % function checkMultipleToolbox
 
@@ -365,6 +365,6 @@ function checkIncorrectPath
 p = fileparts(mfilename('fullpath'));
 incorrect = fullfile(p, 'compat', 'incorrect');
 if ~isempty(strfind(path, incorrect))
-  ft_warning('Your path is set up incorrectly. You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behaviour. See http://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');
+  ft_warning('Your path is set up incorrectly. You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behavior. See http://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');
 end
 end % function checkIncorrectPath

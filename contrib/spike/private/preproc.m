@@ -411,7 +411,7 @@ else
     end
     % kernel = ones(1,numsmp) ./ numsmp;
     % dat    = convn(dat, kernel, 'same');
-    dat = ft_preproc_smooth(dat, numsmp); % better edge behaviour
+    dat = ft_preproc_smooth(dat, numsmp); % better edge behavior
   end
   if isnumeric(cfg.conv)
     kernel = (cfg.conv(:)'./sum(cfg.conv));

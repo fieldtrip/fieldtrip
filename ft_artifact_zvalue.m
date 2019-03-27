@@ -925,7 +925,7 @@ trlpadsmp = round(artcfg.trlpadding*hdr.Fs);
 channel   = opt.channel;
 
 % determine the channel with the highest z-value to be displayed
-% this is default behaviour but can be overruled in the gui
+% this is default behavior but can be overruled in the gui
 if strcmp(channel, 'artifact')
   [dum, indx] = max(zval);
   sgnind      = zindx(indx);
