@@ -81,7 +81,7 @@ for i=1:numel(functionname)
 end % for each of the features
 
 % convert the struct-array to a table
-table = struct2table(summary);
+table = struct2tablestrs(summary);
 fprintf('%s\n', table{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
