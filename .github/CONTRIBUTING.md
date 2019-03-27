@@ -17,9 +17,14 @@ Summary:
 
 * 2 space indents; indent using spaces and not tabs
 * No spaces between function name and opening parenthesis of argument list
+* One space after the comma that separates function arguments
+* Vertically align code with spaces in case it improves readability
 
 ### Prose style
 
-* No Oxford commas
-* British English spellings
+Please see <http://www.fieldtriptoolbox.org/development/guideline/documentation/> for a detailed documentation style guide.
+
+Summary:
+
+* American English spelling
 
