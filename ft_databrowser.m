@@ -1689,7 +1689,7 @@ opt.curdata.sampleinfo = [begsample endsample];
 clear lab tim dat
 
 fn = fieldnames(cfg);
-tmpcfg = keepfields(cfg, fn(contains(fn, 'scale') | contains(fn, 'mychan')));
+tmpcfg = keepfields(cfg, fn(contains(fn, 'scale') | contains(fn, 'mychan') |  contains(fn, 'channel')));
 tmpcfg.parameter = 'trial';
 opt.curdata = chanscale_common(tmpcfg, opt.curdata);
 
