@@ -43,7 +43,7 @@ function [sts] = ft_spiketriggeredspectrum_fft(cfg, data, spike)
 %
 % This function uses a NaN-aware spectral estimation technique, which will default to the
 % standard Matlab FFT routine if no NaNs are present. The fft_along_rows subfunction below
-% demonstrates the expected function behaviour.
+% demonstrates the expected function behavior.
 %
 % See FT_SPIKETRIGGEREDINTERPOLATION to remove segments of LFP around spikes.
 % See FT_SPIKETRIGGEREDSPECTRUM_CONVOL for an alternative implementation based

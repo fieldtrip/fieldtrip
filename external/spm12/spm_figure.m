@@ -99,7 +99,7 @@ function varargout=spm_figure(varargin)
 %
 % FORMAT spm_figure('Focus',F)
 % Set figure F as the current figure and give it the focus (which depending
-% on Operating System / Window Manager behaviour might restore or raise the
+% on Operating System / Window Manager behavior might restore or raise the
 % figure). This is equivalent to the usual figure(F) command, but in many
 % cases spm_figure('Select',F) will be a more appropriate alternative.
 %

@@ -184,12 +184,12 @@ if basedonshape && basedoncortex
 end
 
 if basedongrid && basedonpos
-  % fall back to default behaviour, in which the pos overrides the grid
+  % fall back to default behavior, in which the pos overrides the grid
   basedongrid = false;
 end
 
 if ~any([basedonresolution basedongrid basedonpos basedonshape basedonmri basedoncortex basedonmni]) && ~isempty(cfg.headmodel)
-  % fall back to default behaviour, which is to create a surface grid (e.g. used in FT_MEGREALIGN)
+  % fall back to default behavior, which is to create a surface grid (e.g. used in FT_MEGREALIGN)
   basedonvol = true;
 end
 

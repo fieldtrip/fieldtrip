@@ -28,7 +28,7 @@ data           = ft_preprocessing(cfg);
 % now subselect no trials
 cfg        = [];
 cfg.trials = [];
-datax      = ft_preprocessing(cfg, data); % this reproduces the behaviour
+datax      = ft_preprocessing(cfg, data); % this reproduces the behavior
 
 % after adjusting selectdata
 datay      = ft_preprocessing(cfg, data);
