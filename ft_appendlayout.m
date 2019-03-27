@@ -126,7 +126,7 @@ switch cfg.direction
   case 'horizontal'
     if isempty(cfg.distance)
       % determine the distance between layouts
-      distance = median(width)/2;
+      distance = mean(width);
     else
       % use the specified distance
       distance = cfg.distance;
@@ -164,7 +164,7 @@ switch cfg.direction
   case 'vertical'
     if isempty(cfg.distance)
       % determine the distance between layouts
-      distance = median(height)/2;
+      distance = mean(height);
     else
       % use the specified distance
       distance = cfg.distance;

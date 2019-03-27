@@ -7,7 +7,7 @@ function test_ft_prepare_layout
 
 %%
 % Most of the test cases require visual inspection of the results. Nevertheless, it is useful to run them in a test batch.
-% The test cases taht require manual interaction should not run in batch mode.
+% The test cases that require manual interaction should not run in batch mode.
 interactive = false;
 
 % this corresponds to the ftp directory
