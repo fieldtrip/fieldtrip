@@ -5,20 +5,13 @@ function test_bug3473
 
 %TEST ft_prepare_mesh 
 
-filename = '/home/common/matlab/fieldtrip/data/ftp/tutorial/epilepsy/case1/ctf_data/case1.pos';
+filename = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/epilepsy/case1/ctf_data/case1.pos');
 
 polhemus = ft_read_headshape(filename);
 polhemus = ft_convert_units(polhemus,'mm');
 
 template = ft_read_vol('standard_bem.mat');
 template = ft_convert_units(template,'mm');
-
-cfg = [];
-cfg.template.headshape      = polhemus;
-cfg.checksize               = inf;
-cfg.individual.headmodel    = template;
-cfg                         = ft_interactiverealign(cfg);
-template                    = ft_transform_geometry(cfg.m,template);
 
 defaced_template                = template;
 cfg                             = [];
