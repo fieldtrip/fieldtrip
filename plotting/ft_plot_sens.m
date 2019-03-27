@@ -184,7 +184,7 @@ if isempty(senssize)
     case 'ctf151'
       senssize = 15; % FIXME this is only an estimate
     case 'ctf275'
-      senssize = 15; % FIXME this is only an estimate
+      senssize = 18;
     otherwise
       if strcmp(sensshape, 'sphere') || strcmp(sensshape, 'disc')
         senssize = 4; % assuming spheres are used for intracranial electrodes, diameter is about 4mm
