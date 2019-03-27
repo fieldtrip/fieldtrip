@@ -1,4 +1,4 @@
-function ft_test(varargin)
+function out = ft_test(varargin)
 
 % FT_TEST performs selected FieldTrip test scripts or reports on previous test
 % results from the dashboard database.
@@ -98,6 +98,12 @@ function ft_test(varargin)
 switch (varargin{1})
   case 'run'
     ft_test_run(varargin{:});
+  case 'inventorize'
+    if nargout == 0
+      ft_test_run('run', varargin{2:end}, 'inventorize', 'yes');
+    else
+      out = ft_test_run('run', varargin{2:end}, 'inventorize', 'yes');
+    end
   case 'moxunit_run'
     ft_test_moxunit_run(varargin{:});
   case 'report'

@@ -1,4 +1,4 @@
-function passed = ft_test_run(varargin)
+function out = ft_test_run(varargin)
 
 % FT_TEST_RUN
 
@@ -27,7 +27,8 @@ command = varargin{1};
 assert(isequal(command, 'run'));
 varargin = varargin(2:end);
 
-optbeg = find(ismember(varargin, {'dependency', 'dccnpath', 'maxmem', 'maxwalltime', 'upload', 'assertclean'}));
+optbeg = find(ismember(varargin, {'dependency', 'dccnpath', 'maxmem', 'maxwalltime', ...
+  'upload', 'assertclean', 'inventorize'}));
 if ~isempty(optbeg)
   optarg   = varargin(optbeg:end);
   varargin = varargin(1:optbeg-1);
@@ -45,6 +46,7 @@ maxmem      = ft_getopt(optarg, 'maxmem', inf);
 maxwalltime = ft_getopt(optarg, 'maxwalltime', inf);
 upload      = ft_getopt(optarg, 'upload', 'yes');
 assertclean = ft_getopt(optarg, 'assertclean', 'yes');
+inventorize = ft_getopt(optarg, 'inventorize', 'no');
 
 if ischar(dependency)
   % this should be a cell-array
@@ -92,6 +94,15 @@ for i=1:numel(functionlist)
   filelist{i} = which(functionlist{i});
 end
 
+if istrue(inventorize)
+  if nargout == 0
+    fprintf('considering %d test functions for execution:\n', numel(filelist));
+    fprintf('%s\n', strjoin(strcat({'  '}, filelist), '\n'));
+  else
+    out.files = filelist;
+  end
+  return
+end
 fprintf('considering %d test functions for execution\n', numel(filelist));
 
 %% make a subselection based on the filters
@@ -196,6 +207,8 @@ for i=1:numel(functionlist)
   result.passed           = passed;
   result.runtime          = runtime;
   result.functionname     = functionlist{i};
+  
+  out = passed;
   
   if istrue(upload)
     try
