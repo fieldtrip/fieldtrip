@@ -80,18 +80,18 @@ freq = ft_checkdata(freq, 'cmbrepresentation', 'sparse');
 cfg = ft_checkconfig(cfg, 'required', {'foi', 'layout'});
 
 % set the defaults
-cfg.feedback   = ft_getopt(cfg, 'feedback',   'text');
-cfg.alphaparam = ft_getopt(cfg, 'alphaparam', []);
-cfg.widthparam = ft_getopt(cfg, 'widthparam', []);
-cfg.colorparam = ft_getopt(cfg, 'colorparam', 'cohspctrm');
-cfg.newfigure  = ft_getopt(cfg, 'newfigure',  'yes');
-
-cfg.arrowhead  = ft_getopt(cfg, 'arrowhead', 'none'); % none, stop, start, both
-cfg.arrowsize  = ft_getopt(cfg, 'arrowsize', nan);    % length of the arrow head, should be in in figure units, i.e. the same units as the layout
-cfg.arrowoffset = ft_getopt(cfg, 'arrowoffset', nan); % absolute, should be in figure units, i.e. the same units as the layout
-cfg.arrowlength = ft_getopt(cfg, 'arrowlength', 0.8); % relative to the complete line
+cfg.feedback    = ft_getopt(cfg, 'feedback',    'text');
+cfg.alphaparam  = ft_getopt(cfg, 'alphaparam',  []);
+cfg.widthparam  = ft_getopt(cfg, 'widthparam',  []);
+cfg.colorparam  = ft_getopt(cfg, 'colorparam',  'cohspctrm');
+cfg.newfigure   = ft_getopt(cfg, 'newfigure',   'yes');
+cfg.arrowhead   = ft_getopt(cfg, 'arrowhead',   'none');  % none, stop, start, both
+cfg.arrowsize   = ft_getopt(cfg, 'arrowsize',   nan);     % length of the arrow head, should be in in figure units, i.e. the same units as the layout
+cfg.arrowoffset = ft_getopt(cfg, 'arrowoffset', nan);     % absolute, should be in figure units, i.e. the same units as the layout
+cfg.arrowlength = ft_getopt(cfg, 'arrowlength', 0.8);     % relative to the complete line
 cfg.linestyle   = ft_getopt(cfg, 'linestyle',   []);
 cfg.colormap    = ft_getopt(cfg, 'colormap',    colormap);
+cfg.renderer    = ft_getopt(cfg, 'renderer',    []);      % let MATLAB decide on the default
 
 tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
 lay = ft_prepare_layout(tmpcfg, freq);
