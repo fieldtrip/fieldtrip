@@ -124,6 +124,7 @@ comp = ft_checkdata(comp, 'datatype', 'comp');
 % set the config defaults
 cfg.title     = ft_getopt(cfg, 'title', 'auto');
 cfg.parameter = ft_getopt(cfg, 'parameter', 'topo'); % needed in topoplot_common
+cfg.renderer  = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', 'component');
@@ -196,6 +197,21 @@ cfg = removefields(cfg, 'funcname');
 
 % show the callinfo for all components together
 cfg.showcallinfo = tmpshowcallinfo;
+
+% set the figure window title
+funcname = mfilename();
+if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
+else
+  dataname = inputname(2);
+end
+set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), funcname, join_str(', ',dataname)));
+set(gcf, 'NumberTitle', 'off');
+
+% set renderer if specified
+if ~isempty(cfg.renderer)
+  set(gcf, 'renderer', cfg.renderer)
+end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

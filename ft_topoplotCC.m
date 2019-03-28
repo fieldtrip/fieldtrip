@@ -128,16 +128,6 @@ end
 hold on
 axis equal
 
-% set the figure window title
-funcname = mfilename();
-if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
-  dataname = cfg.inputfile;
-else
-  dataname = inputname(2);
-end
-set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), funcname, join_str(', ',dataname)));
-set(gcf, 'NumberTitle', 'off');
-
 if isnan(cfg.arrowsize)
   % use the size of the figure to estimate a decent number
   siz = axis;
@@ -152,13 +142,12 @@ if isnan(cfg.arrowoffset)
   ft_warning('using an arrowoffset of %f', cfg.arrowoffset);
 end
 
-rgb  = cfg.colormap;
+rgb = cfg.colormap;
 if ~isempty(colorparam)
   cmin = min(colorparam(:));
   cmax = max(colorparam(:));
 
-  % this line creates a sorting vector that cause the most extreme valued
-  % arrows to be plotted last
+  % this line creates a sorting vector that cause the most extreme valued arrows to be plotted last
   [srt, srtidx] = sort(abs(colorparam));
 
   colorparam = (colorparam - cmin)./(cmax-cmin);
@@ -167,16 +156,16 @@ end
 
 if strcmp(cfg.newfigure, 'yes')
   ft_plot_layout(lay, 'label', 'no', 'box', 'off');
-end % if newfigure
+end
 
 % fix the limits for the axis
 axis(axis);
 
-ft_progress('init', cfg.feedback, 'plotting connections...');
-
 if ~exist('srtidx', 'var')
   srtidx = 1:ncmb;
 end
+
+ft_progress('init', cfg.feedback, 'plotting connections...');
 
 for i=srtidx(:)'
 
@@ -310,12 +299,26 @@ for i=srtidx(:)'
           ft_error('unsupported linestyle specified');
       end
 
-    end
+    end % if empty linestyle
+  end 
+end % for srtindx
 
-
-  end
-end
 ft_progress('close');
+
+% set the figure window title
+funcname = mfilename();
+if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
+else
+  dataname = inputname(2);
+end
+set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), funcname, join_str(', ',dataname)));
+set(gcf, 'NumberTitle', 'off');
+
+% set renderer if specified
+if ~isempty(cfg.renderer)
+  set(gcf, 'renderer', cfg.renderer)
+end
 
 % improve the fit in the axis
 axis tight

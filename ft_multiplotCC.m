@@ -64,6 +64,7 @@ cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam'});
 % set the defaults
 cfg.xlim      = ft_getopt(cfg, 'xlim', 'all');
 cfg.parameter = ft_getopt(cfg, 'parameter', 'avg.icohspctrm');
+cfg.renderer  = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 
 if strcmp(cfg.parameter, 'avg.icohspctrm') && ~issubfield(data, 'avg.icohspctrm')
   data.avg.icohspctrm = abs(imag(data.avg.cohspctrm));
@@ -144,6 +145,21 @@ for k=1:length(chNum) - 2
     ft_topoplotTFR(config, data);
     drawnow
   end
+end
+
+% set the figure window title
+funcname = mfilename();
+if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
+else
+  dataname = inputname(2);
+end
+set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), funcname, join_str(', ',dataname)));
+set(gcf, 'NumberTitle', 'off');
+
+% set renderer if specified
+if ~isempty(cfg.renderer)
+  set(gcf, 'renderer', cfg.renderer)
 end
 
 % do the general cleanup and bookkeeping at the end of the function

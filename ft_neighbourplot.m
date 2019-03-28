@@ -86,6 +86,7 @@ cfg = ft_checkconfig(cfg, 'renamed', {'optofile', 'opto'});
 % set the defaults
 cfg.enableedit = ft_getopt(cfg, 'enableedit', 'no');
 cfg.visible    = ft_getopt(cfg, 'visible', 'on');
+cfg.renderer   = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 
 if isfield(cfg, 'neighbours')
   cfg.neighbours = cfg.neighbours;
@@ -194,7 +195,8 @@ for i=1:length(cfg.neighbours)
     ft_error('Channel coordinates are too high dimensional');
   end
 end
-hold off;
+
+hold off
 title('[Click on a sensor to see its label]');
 
 % store what is needed in UserData of figure
@@ -218,11 +220,27 @@ if istrue(cfg.enableedit)
   hf = getparent(hf);
   delete(hf);
 end
-% in any case remove SCALE and COMNT
+
+% remove SCALE and COMNT
 desired = ft_channelselection({'all', '-SCALE', '-COMNT'}, {cfg.neighbours.label});
 
 neighb_idx = ismember({cfg.neighbours.label}, desired);
 cfg.neighbours = cfg.neighbours(neighb_idx);
+
+% set the figure window title
+funcname = mfilename();
+if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
+else
+  dataname = inputname(2);
+end
+set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), funcname, join_str(', ',dataname)));
+set(gcf, 'NumberTitle', 'off');
+
+% set renderer if specified
+if ~isempty(cfg.renderer)
+  set(gcf, 'renderer', cfg.renderer)
+end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

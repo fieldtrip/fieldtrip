@@ -85,6 +85,7 @@ data = ft_checkdata(data, 'datatype', 'timelock');
 cfg.parameter   = ft_getopt(cfg, 'parameter', 'avg');
 cfg.interactive = ft_getopt(cfg, 'interactive', 'yes');
 cfg.baseline    = ft_getopt(cfg, 'baseline', 'no');
+cfg.renderer    = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 
 % apply optional baseline correction
 if ~strcmp(cfg.baseline, 'no')
@@ -96,6 +97,16 @@ end
 % prevent the baseline correction from happening in ft_movieplotTFR
 tmpcfg = removefields(cfg, {'baseline', 'baselinetype'});
 tmpcfg = ft_movieplotTFR(tmpcfg, data);
+
+% set the figure window title
+funcname = mfilename();
+if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
+else
+  dataname = inputname(2);
+end
+set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), funcname, join_str(', ',dataname)));
+set(gcf, 'NumberTitle', 'off');
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

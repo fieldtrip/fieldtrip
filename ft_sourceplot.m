@@ -1426,6 +1426,16 @@ switch cfg.method
     ft_error('unsupported method "%s"', cfg.method);
 end
 
+% set the figure window title
+funcname = mfilename();
+if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
+else
+  dataname = inputname(2);
+end
+set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), funcname, join_str(', ',dataname)));
+set(gcf, 'NumberTitle', 'off');
+
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
@@ -1435,7 +1445,6 @@ ft_postamble savefig
 
 % add a menu to the figure, the subplots are well-controlled in this case
 menu_fieldtrip(gcf, cfg, true);
-
 
 if ~ft_nargout
   % don't return anything

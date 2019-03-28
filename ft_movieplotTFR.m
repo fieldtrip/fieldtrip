@@ -94,20 +94,21 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'zparam', 'parameter'});
 cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
 
 % set the defaults
-cfg.xlim          = ft_getopt(cfg, 'xlim', 'maxmin');
-cfg.ylim          = ft_getopt(cfg, 'ylim', 'maxmin');
-cfg.zlim          = ft_getopt(cfg, 'zlim', 'maxmin');
-cfg.parameter     = ft_getopt(cfg, 'parameter', 'powspctrm'); % use power as default
-cfg.inputfile     = ft_getopt(cfg, 'inputfile',    []);
-cfg.samperframe   = ft_getopt(cfg, 'samperframe',  1);
-cfg.framespersec  = ft_getopt(cfg, 'framespersec', 5);
-cfg.framesfile    = ft_getopt(cfg, 'framesfile',   []);
-cfg.moviefreq     = ft_getopt(cfg, 'moviefreq', []);
-cfg.movietime     = ft_getopt(cfg, 'movietime', []);
-cfg.movierpt      = ft_getopt(cfg, 'movierpt', 1);
-cfg.baseline      = ft_getopt(cfg, 'baseline', 'no');
-cfg.colorbar      = ft_getopt(cfg, 'colorbar', 'no');
-cfg.interactive   = ft_getopt(cfg, 'interactive', 'yes');
+cfg.xlim          = ft_getopt(cfg, 'xlim',          'maxmin');
+cfg.ylim          = ft_getopt(cfg, 'ylim',          'maxmin');
+cfg.zlim          = ft_getopt(cfg, 'zlim',          'maxmin');
+cfg.parameter     = ft_getopt(cfg, 'parameter',     'powspctrm'); % use power as default
+cfg.inputfile     = ft_getopt(cfg, 'inputfile',     []);
+cfg.samperframe   = ft_getopt(cfg, 'samperframe',   1);
+cfg.framespersec  = ft_getopt(cfg, 'framespersec',  5);
+cfg.framesfile    = ft_getopt(cfg, 'framesfile',    []);
+cfg.moviefreq     = ft_getopt(cfg, 'moviefreq',     []);
+cfg.movietime     = ft_getopt(cfg, 'movietime',     []);
+cfg.movierpt      = ft_getopt(cfg, 'movierpt',      1);
+cfg.baseline      = ft_getopt(cfg, 'baseline',      'no');
+cfg.colorbar      = ft_getopt(cfg, 'colorbar',      'no');
+cfg.renderer      = ft_getopt(cfg, 'renderer',      []); % let MATLAB decide on the default
+cfg.interactive   = ft_getopt(cfg, 'interactive',   'yes');
 dointeractive     = istrue(cfg.interactive);
 
 xparam = 'time';
@@ -390,6 +391,21 @@ else
   % play movie
   movie(F, cfg.movierpt, cfg.framespersec);
 
+end % if dointeractive
+
+% set the figure window title
+funcname = mfilename();
+if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
+else
+  dataname = inputname(2);
+end
+set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), funcname, join_str(', ',dataname)));
+set(gcf, 'NumberTitle', 'off');
+
+% set renderer if specified
+if ~isempty(cfg.renderer)
+  set(gcf, 'renderer', cfg.renderer)
 end
 
 % do the general cleanup and bookkeeping at the end of the function

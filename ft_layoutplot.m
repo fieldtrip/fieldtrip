@@ -106,9 +106,11 @@ cfg = ft_checkconfig(cfg, 'renamed', {'gradfile', 'grad'});
 cfg = ft_checkconfig(cfg, 'renamed', {'optofile', 'opto'});
 
 % set the defaults
-cfg.visible = ft_getopt(cfg, 'visible', 'yes');
-cfg.box     = ft_getopt(cfg, 'box', 'yes');
-cfg.mask    = ft_getopt(cfg, 'mask', 'yes');
+cfg.visible  = ft_getopt(cfg, 'visible', 'yes');
+cfg.box      = ft_getopt(cfg, 'box', 'yes');
+cfg.mask     = ft_getopt(cfg, 'mask', 'yes');
+cfg.renderer = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % extract/generate layout information
@@ -215,6 +217,11 @@ if isfield(cfg, 'montage') && ~isempty(cfg.montage)
     
   end % for all re-referenced channels
 end % if montage
+
+% set renderer if specified
+if ~isempty(cfg.renderer)
+  set(gcf, 'renderer', cfg.renderer)
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % deal with the output

@@ -106,6 +106,7 @@ cfg.saveaspng               = ft_getopt(cfg, 'saveaspng',               'no');
 cfg.subplotsize             = ft_getopt(cfg, 'subplotsize',             [3 5]);
 cfg.feedback                = ft_getopt(cfg, 'feedback',                'text');
 cfg.visible                 = ft_getopt(cfg, 'visible',                 'on');
+cfg.renderer                = ft_getopt(cfg, 'renderer',                []); % let MATLAB decide on the default
 
 % error if cfg.highlightseries is not a cell, for possible confusion with cfg-options
 if ~iscell(cfg.highlightseries)
@@ -452,6 +453,21 @@ ft_progress('close');
 
 % return to previous warning settings
 ft_warning(ws);
+
+% set the figure window title
+funcname = mfilename();
+if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
+else
+  dataname = inputname(2);
+end
+set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), funcname, join_str(', ',dataname)));
+set(gcf, 'NumberTitle', 'off');
+
+% set renderer if specified
+if ~isempty(cfg.renderer)
+  set(gcf, 'renderer', cfg.renderer)
+end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

@@ -158,7 +158,7 @@ cfg.fontsize        = ft_getopt(cfg, 'fontsize',       8);
 cfg.graphcolor      = ft_getopt(cfg, 'graphcolor',    'brgkywrgbkywrgbkywrgbkyw');
 cfg.hotkeys         = ft_getopt(cfg, 'hotkeys',       'yes');
 cfg.interactive     = ft_getopt(cfg, 'interactive',   'yes');
-cfg.renderer        = ft_getopt(cfg, 'renderer',       []);
+cfg.renderer        = ft_getopt(cfg, 'renderer',       []); % let MATLAB decide on the default
 cfg.maskparameter   = ft_getopt(cfg, 'maskparameter',  []);
 cfg.linestyle       = ft_getopt(cfg, 'linestyle',     '-');
 cfg.linewidth       = ft_getopt(cfg, 'linewidth',      0.5);
@@ -516,14 +516,7 @@ if isempty(get(gcf, 'Name'))
   end
 end
 
-% set renderer if specified
-if ~isempty(cfg.renderer)
-  set(gcf, 'renderer', cfg.renderer)
-end
-
-hold off
-
-% Make the figure interactive
+% make the figure interactive
 if strcmp(cfg.interactive, 'yes')
   % add the cfg/data/channel information to the figure under identifier linked to this axis
   ident                  = ['axh' num2str(round(sum(clock.*1e6)))]; % unique identifier for this axis
@@ -537,6 +530,13 @@ if strcmp(cfg.interactive, 'yes')
   set(gcf, 'windowbuttondownfcn',   {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttondownfcn'});
   set(gcf, 'windowbuttonmotionfcn', {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttonmotionfcn'});
 end
+
+% set renderer if specified
+if ~isempty(cfg.renderer)
+  set(gcf, 'renderer', cfg.renderer)
+end
+
+hold off
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
