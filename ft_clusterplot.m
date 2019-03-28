@@ -454,14 +454,23 @@ ft_progress('close');
 % return to previous warning settings
 ft_warning(ws);
 
-% set the figure window title
-funcname = mfilename();
-if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+% this is needed for the figure title
+if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
+  dataname = cfg.dataname;
+elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
   dataname = cfg.inputfile;
+elseif nargin>1
+  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
 else
-  dataname = inputname(2);
+  dataname = {};
 end
-set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), funcname, join_str(', ',dataname)));
+
+% set the figure window title
+if ~isempty(dataname)
+  set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
+else
+  set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
+end
 set(gcf, 'NumberTitle', 'off');
 
 % set renderer if specified

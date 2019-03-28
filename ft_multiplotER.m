@@ -223,23 +223,15 @@ if Ndata>1
 end
 
 % this is needed for the figure title and correct labeling of graphcolor later on
-if nargin>1
-  if isfield(cfg, 'dataname')
-    dataname = cfg.dataname;
-  else
-    dataname = cell(1,Ndata);
-    for i=1:Ndata
-      if ~isempty(inputname(i+1))
-        dataname{i} = inputname(i+1);
-      else
-        dataname{i} = ['data' num2str(i,'%02d')];
-      end
-    end
-  end
-else  % data provided through cfg.inputfile
+if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
+  dataname = cfg.dataname;
+elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
   dataname = cfg.inputfile;
+elseif nargin>1
+  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
+else
+  dataname = {};
 end
-
 
 %% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
 
@@ -533,17 +525,6 @@ if istrue(cfg.showscale)
   end
 end
 
-% set the figure window title
-if isempty(get(gcf, 'Name'))
-  if isempty(cfg.figurename)
-    set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
-    set(gcf, 'NumberTitle', 'off');
-  else
-    set(gcf, 'name', cfg.figurename);
-    set(gcf, 'NumberTitle', 'off');
-  end
-end
-
 axis tight
 axis off
 hold off
@@ -558,6 +539,14 @@ end
 if ~isempty(cfg.orient)
   orient(gcf, cfg.orient);
 end
+
+% set the figure window title
+if ~isempty(dataname)
+  set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
+else
+  set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
+end
+set(gcf, 'NumberTitle', 'off');
 
 % Set renderer if specified
 if ~isempty(cfg.renderer)
