@@ -166,17 +166,17 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %
 % $Id$
 
-ft_hastoolbox('mvpa_light', 1);
+ft_hastoolbox('mvpa-light', 1);
 
 % do a sanity check on the input data
 assert(isnumeric(dat),    'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 assert(isnumeric(design), 'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 
 % cfg: set defaults
-cfg.searchlight     = ft_getopt(cfg, 'searchlight', 'no');
-cfg.timextime       = ft_getopt(cfg, 'timextime',   'no');
-cfg.mvpa            = ft_getopt(cfg, 'mvpa',        []);
-cfg.mvpa.metric     = ft_getopt(cfg.mvpa, 'metric',   'accuracy');
+cfg.searchlight     = ft_getopt(cfg, 'searchlight','no');
+cfg.timextime       = ft_getopt(cfg, 'timextime', 'no');
+cfg.mvpa            = ft_getopt(cfg, 'mvpa', []);
+cfg.mvpa.metric     = ft_getopt(cfg.mvpa, 'metric', 'accuracy');
 cfg.mvpa.feedback   = istrue(ft_getopt(cfg.mvpa, 'feedback', true)); % this converts 'yes'/'no' into boolean
 
 % flip dimensions such that the number of trials comes first
