@@ -64,6 +64,7 @@ cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam'});
 % set the defaults
 cfg.xlim      = ft_getopt(cfg, 'xlim', 'all');
 cfg.parameter = ft_getopt(cfg, 'parameter', 'avg.icohspctrm');
+cfg.renderer  = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 
 if strcmp(cfg.parameter, 'avg.icohspctrm') && ~issubfield(data, 'avg.icohspctrm')
   data.avg.icohspctrm = abs(imag(data.avg.cohspctrm));
@@ -146,12 +147,39 @@ for k=1:length(chNum) - 2
   end
 end
 
+% this is needed for the figure title
+if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
+  dataname = cfg.dataname;
+elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
+elseif nargin>1
+  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
+else
+  dataname = {};
+end
+
+% set the figure window title
+if ~isempty(dataname)
+  set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
+else
+  set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
+end
+set(gcf, 'NumberTitle', 'off');
+
+% set renderer if specified
+if ~isempty(cfg.renderer)
+  set(gcf, 'renderer', cfg.renderer)
+end
+
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous data
 ft_postamble provenance
 ft_postamble savefig
+
+% add a menu to the figure, but only if the current figure does not have subplots
+menu_fieldtrip(gcf, cfg, false);
 
 if ~ft_nargout
   % don't return anything

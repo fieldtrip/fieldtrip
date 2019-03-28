@@ -86,6 +86,7 @@ cfg = ft_checkconfig(cfg, 'renamed', {'optofile', 'opto'});
 % set the defaults
 cfg.enableedit = ft_getopt(cfg, 'enableedit', 'no');
 cfg.visible    = ft_getopt(cfg, 'visible', 'on');
+cfg.renderer   = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 
 if isfield(cfg, 'neighbours')
   cfg.neighbours = cfg.neighbours;
@@ -194,7 +195,8 @@ for i=1:length(cfg.neighbours)
     ft_error('Channel coordinates are too high dimensional');
   end
 end
-hold off;
+
+hold off
 title('[Click on a sensor to see its label]');
 
 % store what is needed in UserData of figure
@@ -218,11 +220,36 @@ if istrue(cfg.enableedit)
   hf = getparent(hf);
   delete(hf);
 end
-% in any case remove SCALE and COMNT
+
+% remove SCALE and COMNT
 desired = ft_channelselection({'all', '-SCALE', '-COMNT'}, {cfg.neighbours.label});
 
 neighb_idx = ismember({cfg.neighbours.label}, desired);
 cfg.neighbours = cfg.neighbours(neighb_idx);
+
+% this is needed for the figure title
+if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
+  dataname = cfg.dataname;
+elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
+elseif nargin>1
+  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
+else
+  dataname = {};
+end
+
+% set the figure window title
+if ~isempty(dataname)
+  set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
+else
+  set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
+end
+set(gcf, 'NumberTitle', 'off');
+
+% set renderer if specified
+if ~isempty(cfg.renderer)
+  set(gcf, 'renderer', cfg.renderer)
+end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
@@ -230,6 +257,9 @@ ft_postamble trackconfig
 ft_postamble previous data
 ft_postamble provenance
 ft_postamble savefig
+
+% add a menu to the figure, but only if the current figure does not have subplots
+menu_fieldtrip(gcf, cfg, false);
 
 if ~ft_nargout
   % don't return anything
