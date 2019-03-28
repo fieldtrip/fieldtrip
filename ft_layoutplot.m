@@ -167,9 +167,9 @@ if isfield(cfg, 'image') && ~isempty(cfg.image)
   fprintf('reading background image from %s\n', cfg.image);
   img = imread(cfg.image);
   img = flipdim(img, 1); % in combination with "axis xy"
-
+  
   bw = 1;
-
+  
   if bw
     % convert to greyscale image
     img = mean(img, 3);
@@ -208,11 +208,11 @@ if isfield(cfg, 'montage') && ~isempty(cfg.montage)
       % one of the channels in the bipolar pair does not seem to be in the layout
       continue
     end
-
+    
     begpos = lay.pos(begindx,:);
     endpos = lay.pos(endindx,:);
     arrow(begpos, endpos, 'Length', 5)
-
+    
   end % for all re-referenced channels
 end % if montage
 
@@ -227,8 +227,10 @@ ft_postamble previous data
 ft_postamble provenance
 ft_postamble savefig
 
+% add a menu to the figure, but only if the current figure does not have subplots
+menu_fieldtrip(gcf, cfg, false);
+
 if ~ft_nargout
   % don't return anything
   clear cfg
 end
-

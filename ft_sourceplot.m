@@ -1433,11 +1433,9 @@ ft_postamble previous functional
 ft_postamble provenance
 ft_postamble savefig
 
-% add a menu to the figure
-% also, delete any possibly existing previous menu, this is safe because delete([]) does nothing
-ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
-uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
-uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
+% add a menu to the figure, the subplots are well-controlled in this case
+menu_fieldtrip(gcf, cfg, true);
+
 
 if ~ft_nargout
   % don't return anything

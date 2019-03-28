@@ -399,6 +399,9 @@ ft_postamble previous   data
 ft_postamble provenance
 ft_postamble savefig
 
+% add a menu to the figure, but only if the current figure does not have subplots
+menu_fieldtrip(gcf, cfg, false);
+
 if ~ft_nargout
   % don't return anything
   clear cfg
