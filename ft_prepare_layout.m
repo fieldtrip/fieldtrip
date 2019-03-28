@@ -210,7 +210,8 @@ if isempty(cfg.skipcomnt)
   end
 end
 
-if isempty(cfg.outline) || istrue(cfg.outline)
+if isempty(cfg.outline) || strcmp(cfg.outline, 'yes')
+  % determine the most suitable shape of the outline
   if ~isempty(cfg.headshape)
     cfg.outline = 'headshape';
   elseif ~isempty(cfg.mri)
@@ -224,7 +225,8 @@ if isempty(cfg.outline) || istrue(cfg.outline)
   end
 end
 
-if isempty(cfg.mask) || istrue(cfg.mask)
+if isempty(cfg.mask) || strcmp(cfg.mask, 'yes')
+  % determine the most suitable shape of the mask
   if ~isempty(cfg.headshape)
     cfg.mask = 'headshape';
   elseif ~isempty(cfg.mri)
