@@ -3,7 +3,7 @@ function test_headmodel_localspheres_new_old
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_prepare_localspheres ft_prepare_headmodel
+% DEPENDENCY ft_prepare_localspheres ft_prepare_headmodel
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % get the data which is needed

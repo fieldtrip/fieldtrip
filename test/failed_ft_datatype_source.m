@@ -2,9 +2,7 @@ function failed_ft_datatype_source
 
 % WALLTIME 24:00:00
 % MEM 4gb
-
-% TEST test_bug2185
-% TEST ft_sourcegrandaverage ft_selectdata ft_selectdata_new ft_datatype_source ft_math
+% DEPENDENCY ft_sourcegrandaverage ft_selectdata ft_selectdata_new ft_datatype_source ft_math
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% test the historical dirlists

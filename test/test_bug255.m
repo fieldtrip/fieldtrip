@@ -3,7 +3,7 @@ function test_bug255
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_timelockanalysis ft_prepare_layout ft_timelockstatistics ft_topoplotER
+% DEPENDENCY ft_timelockanalysis ft_prepare_layout ft_timelockstatistics ft_topoplotER
 
 % this script tests the functionality of ft_topoplotER with respect to
 % functional data having dimord 'chan', i.e. after doing statistics with

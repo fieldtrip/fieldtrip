@@ -3,7 +3,7 @@ function test_bug3078
 % MEM 500mb
 % WALLTIME 00:15:00
 
-% TEST ft_sourceanalysis
+% DEPENDENCY ft_sourceanalysis
 
 % there's something obscure going on with the channel order in the spatial filters,
 % supposedly in an interaction with precomputed leadfields and/or freq data with powandcsd

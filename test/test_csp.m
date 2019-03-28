@@ -3,7 +3,7 @@ function test_csp
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_component_analysis
+% DEPENDENCY ft_component_analysis
 
 % Please beware of notations mistakes in [1]. For example equation (1) does not
 % compute the t by t channel covariance, but an n by n time covariance matrix.

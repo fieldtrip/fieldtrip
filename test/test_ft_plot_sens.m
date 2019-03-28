@@ -3,8 +3,7 @@ function test_ft_plot_sens
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_ft_plot_sens
-% TEST ft_plot_sens
+% DEPENDENCY ft_plot_sens
 
 elec.pnt = randn(32,3);
 for i=1:32

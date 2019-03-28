@@ -2,9 +2,7 @@ function test_bug1042
 
 % MEM 1500mb
 % WALLTIME 00:45:00
-
-% TEST test_bug1042 test_bug686
-% TEST ft_convert_units ft_prepare_headmodel ft_compute_leadfield ft_prepare_sourcemodel ft_headmodel_openmeeg
+% DEPENDENCY ft_convert_units ft_prepare_headmodel ft_compute_leadfield ft_prepare_sourcemodel ft_headmodel_openmeeg
 
 % create sensors in cm
 [pnt, tri] = icosahedron162;

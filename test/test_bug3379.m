@@ -3,7 +3,7 @@ function test_bug3379
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST ft_redefinetrial ft_fetch_data
+% DEPENDENCY ft_redefinetrial ft_fetch_data
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3379.mat'));
 

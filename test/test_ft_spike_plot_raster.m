@@ -3,8 +3,7 @@ function test_ft_spike_plot_isireturn()
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_ft_spike_plot_raster
-% TEST test_ft_spike_plot_raster
+% DEPENDENCY ft_spike_plot_raster
 
 %%
 clear

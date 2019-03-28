@@ -2,9 +2,7 @@ function test_ft_spiketriggeredspectrum_stat()
 
 % MEM 1gb
 % WALLTIME 00:10:00
-
-% TEST test_ft_spiketriggeredspectrum_stat
-% TEST ft_spiketriggeredspectrum_stat
+% DEPENDENCY ft_spiketriggeredspectrum_stat ft_spiketriggeredspectrum_tfr
 
 nSpikes = 10000;
 randPhases = [];
@@ -50,7 +48,6 @@ figure, plot(sts_tfr.freq, squeeze(sts_tfr.ppc1(1,:,:))), colorbar
 %%
 % now make a case where no phase locking should be present
 
-% TEST test_ft_spiketriggeredspectrum_tfr
 % ft_spiketriggeredspectrum_tfr
 nSpikes = 10000;
 randPhases = [];

@@ -3,7 +3,7 @@ function test_meg_leadfield_units
 % MEM 2000mb
 % WALLTIME 00:10:00
 
-% TEST ft_convert_units ft_datatype_sens ft_convert_vol_sens ft_compute_leadfield current_dipole
+% DEPENDENCY ft_convert_units ft_datatype_sens ft_convert_vol_sens ft_compute_leadfield current_dipole
 
 %% do a forward computation for a single vector magnetometer
 clear all

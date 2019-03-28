@@ -1,7 +1,6 @@
 function inspect_bug3013
 
-% TEST inspect_bug3013
-% TEST ft_sourceplot ft_plot_ortho
+% DEPENDENCY ft_sourceplot ft_plot_ortho
 
 %%
 

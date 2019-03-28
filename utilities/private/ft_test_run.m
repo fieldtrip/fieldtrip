@@ -27,7 +27,7 @@ command = varargin{1};
 assert(isequal(command, 'run') || isequal(command, 'inventorize'));
 varargin = varargin(2:end);
 
-optbeg = find(ismember(varargin, {'dependency', 'dccnpath', 'maxmem', 'maxwalltime', 'upload', 'sort'}));
+optbeg = find(ismember(varargin, {'dependency', 'dccnpath', 'maxmem', 'maxwalltime', 'upload', 'sort', 'returnerror'}));
 if ~isempty(optbeg)
   optarg   = varargin(optbeg:end);
   varargin = varargin(1:optbeg-1);
@@ -43,8 +43,9 @@ dependency  = ft_getopt(optarg, 'dependency', {});
 hasdccnpath = ft_getopt(optarg, 'dccnpath');  % default is handled below
 maxmem      = ft_getopt(optarg, 'maxmem', inf);
 maxwalltime = ft_getopt(optarg, 'maxwalltime', inf);
-upload      = ft_getopt(optarg, 'upload', 'yes'); % win case FieldTrip version is not clean this will be set to 'no'
+upload      = ft_getopt(optarg, 'upload', 'yes'); % this will be set to 'no' in case FieldTrip version is not clean
 sortarg     = ft_getopt(optarg, 'sort', 'alphabetical');
+returnerror = ft_getopt(optarg, 'returnerror', 'no');
 
 if ischar(dependency)
   % this should be a cell-array
@@ -110,7 +111,7 @@ for i=1:numel(filelist)
   for k=1:numel(line)
     for j=1:numel(dependency)
       % search for the dependencies in each of the test functions
-      [s, e] = regexp(line{k}, sprintf('%% TEST.*%s.*', dependency{j}), 'once', 'start', 'end');
+      [s, e] = regexp(line{k}, sprintf('%% DEPENDENCY.*%s.*', dependency{j}), 'once', 'start', 'end');
       if ~isempty(s)
         dep(i) = true;
       end
@@ -196,7 +197,7 @@ end
 
 % uploading results to the dashboard from a work-in-progress version is not supported
 if istrue(upload) && ~istrue(ft_version('clean'))
-  ft_warning('FieldTrip version is not clean, not uploading results to the dashboard')
+  warning('FieldTrip version is not clean, not uploading results to the dashboard')
   upload = 'no';
 end
 
@@ -215,13 +216,13 @@ for i=1:numel(functionlist)
   catch me
     passed = false;
     runtime = round(toc(stopwatch));
-    fprintf('=== %s FAILED in %d seconds\n', functionlist{i}, runtime);
     % show the error with the stack trace
     fprintf('Error using %s (line %d)\n', me.stack(1).name, me.stack(1).line);
     disp(me.message)
     for j=2:numel(me.stack)
       fprintf('Error in %s (line %d)\n', me.stack(j).name, me.stack(j).line);
     end
+    fprintf('=== %s FAILED in %d seconds\n', functionlist{i}, runtime);
   end
   close all
   
@@ -247,7 +248,22 @@ for i=1:numel(functionlist)
     url = 'http://dashboard.fieldtriptoolbox.org/api/';
     webwrite(url, result(i), options);
   end
+  
+  if strcmp(returnerror, 'immediate') && ~passed
+    % report only on the tests completed sofar and give an error
+    printstruct_as_table(result);
+    rethrow(me);
+  end
+  
 end
+
+if strcmp(returnerror, 'final') && any(~[result.passed])
+  % report on the complete batch and give an error
+  printstruct_as_table(result);
+  failed = find(~[result.passed]);
+  error('%d of the test scripts failed', numel(failed));
+end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -260,6 +276,7 @@ if isnan(walltime)
   hms = sscanf(str, '%d:%d:%d'); % hours, minutes, seconds
   walltime = 60*60*hms(1) + 60*hms(2) + hms(3);
 end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

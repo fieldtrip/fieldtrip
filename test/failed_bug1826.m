@@ -2,9 +2,7 @@ function failed_bug1826
 
 % MEM 3gb
 % WALLTIME 00:20:00
-
-% TEST test_bug1826
-% TEST ft_read_mri ft_write_mri ft_volumerealign
+% DEPENDENCY ft_read_mri ft_write_mri ft_volumerealign
 
 % Uses the linear tranformation algorithms of FSL to register a T2 image
 % and DTI image to T1 space. It also rotates the gradient direction vectors

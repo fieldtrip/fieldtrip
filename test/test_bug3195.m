@@ -3,7 +3,7 @@ function test_bug3195
 % MEM 2gb
 % WALLTIME 00:20:00
 
-% TEST ft_prepare_sourcemodel ft_inside_headmodel
+% DEPENDENCY ft_prepare_sourcemodel ft_inside_headmodel
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3195'));
 load('template_FEM.mat')

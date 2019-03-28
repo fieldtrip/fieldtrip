@@ -3,8 +3,8 @@ function test_tutorial_eventrelatedstatistics
 % MEM 2500mb
 % WALLTIME 00:20:00
 
-% TEST ft_timelockanalysis ft_multiplotER ft_singleplotER ft_timelockstatistics
-% TEST ft_topoplotER ft_clusterplot
+% DEPENDENCY ft_timelockanalysis ft_multiplotER ft_singleplotER ft_timelockstatistics
+% DEPENDENCY ft_topoplotER ft_clusterplot
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedstatistics/ERF_orig.mat'));
 

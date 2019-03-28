@@ -2,9 +2,8 @@ function failed_eeg_leadfield_units
 
 % MEM 2000mb
 % WALLTIME 00:10:00
+% DEPENDENCY ft_convert_units ft_datatype_sens ft_convert_vol_sens ft_compute_leadfield current_dipole
 
-% TEST test_meg_leadfield_units
-% TEST ft_convert_units ft_datatype_sens ft_convert_vol_sens ft_compute_leadfield current_dipole
 [pnt, tri] = icosahedron162;
 sel = find(pnt(:,3)>0);
 

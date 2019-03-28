@@ -26,7 +26,8 @@ function [result] = ft_test(varargin)
 %   dccnpath         = string, allow files to be read from the DCCN path, can be 'yes' or 'no' (default is automatic)
 %   maxmem           = number (in bytes) or string such as 10GB
 %   maxwalltime      = number (in seconds) or string such as HH:MM:SS
-%   sort             = string, can be 'alphabetical', 'walltime', 'mem' or 'random'
+%   sort             = string, can be 'alphabetical', 'walltime', 'mem' or 'random' (default = 'alphabetical')
+%   returnerror      = string, whether give an error upon detecting a failed script, can be 'immediate', 'final', 'no' (default = 'no')
 %
 % ========= Running MOxUnit tests =========
 %

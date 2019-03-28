@@ -3,7 +3,7 @@ function test_headmodel_singleshell_new_old
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_headmodel_singleshell ft_prepare_headmodel ft_headmodel_singleshell
+% DEPENDENCY ft_headmodel_singleshell ft_prepare_headmodel ft_headmodel_singleshell
 
 % generate a unit sphere
 [pnt, tri] = icosahedron162;

@@ -2,8 +2,7 @@ function test_bug1082
 
 % MEM 1500mb
 % WALLTIME 00:10:00
-
-% TEST ft_prepare_vol_sens ft_prepare_headmodel ft_compute_leadfield ft_plot_topo3d ft_headmodel_openmeeg
+% DEPENDENCY ft_prepare_vol_sens ft_prepare_headmodel ft_compute_leadfield ft_plot_topo3d ft_headmodel_openmeeg
 
 fprintf('***  DIAGNOSTICAL INFORMATION ***\n');
 fprintf('test script is running on host: %s\n', gethostname());

@@ -2,8 +2,7 @@ function failed_bug2377b
 
 % MEM 1500mb
 % WALLTIME 00:10:00
-
-% TEST ft_senslabel ft_senstype ft_chantype ft_chanunit ft_datatype_sens ft_apply_transform
+% DEPENDENCY ft_senslabel ft_senstype ft_chantype ft_chanunit ft_datatype_sens ft_apply_transform
 
 [pnt, tri] = icosahedron162;
 

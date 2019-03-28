@@ -3,7 +3,7 @@ function test_bug3441
 % MEM 3gb
 % WALLTIME 00:20:00
 
-% TEST loadcnt
+% DEPENDENCY loadcnt
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3441'));
 

@@ -3,8 +3,7 @@ function test_ft_spike_psth()
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_ft_spike_psth
-% TEST ft_spike_psth
+% DEPENDENCY ft_spike_psth
 
 % fixed number of spikes, equal length trials, one LFP channel, gamma distribution psth
 % one channel with spikes at known positions

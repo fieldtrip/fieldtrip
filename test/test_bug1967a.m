@@ -2,11 +2,9 @@ function test_bug1967a
 
 % MEM 2gb
 % WALLTIME 00:20:00
+% DEPENDENCY ft_prepare_vol_sens
 
 % with the inititial version of this test script I had merge conflicts that I was not able to resolve, hence now the name with an "a'
-
-% TEST test_bug1967
-% TEST ft_prepare_vol_sens
 
 %% construct a segmentation
 nx = 101;

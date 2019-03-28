@@ -3,7 +3,7 @@ function test_bug2784
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST ft_mvaranalysis
+% DEPENDENCY ft_mvaranalysis
 
 data = [];
 data.trial{1} = randn(2,100);

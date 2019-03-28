@@ -2,8 +2,7 @@ function test_bug3089
 
 % MEM 4000mb
 % WALLTIME 00:20:00
-
-% TEST ft_dipolefitting ft_compute_leadfield ft_apply_transform
+% DEPENDENCY ft_dipolefitting ft_compute_leadfield ft_apply_transform
 
 dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/natmeg/oddball1_mc_downsampled.fif');
 datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/bug3089');

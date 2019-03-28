@@ -3,7 +3,7 @@ function test_bug2509
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST ft_selectdata
+% DEPENDENCY ft_selectdata
 
 freq = [];
 freq.dimord = 'rpt_chan_freq_time';
