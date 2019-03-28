@@ -1,4 +1,4 @@
-function result = ft_test_report(varargin)
+function [result] = ft_test_report(varargin)
 
 % FT_TEST_REPORT
 
@@ -81,11 +81,4 @@ if ~showdate
   result = removefields(result, 'date');
 end
 
-% convert the struct-array to a table
-if nargout == 0
-  tbl = struct2tablestrs(result);
-  fprintf('%s\n', tbl{:});
-else
-  result = struct2table(result);
-end
 
