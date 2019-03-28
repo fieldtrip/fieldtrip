@@ -190,7 +190,7 @@ cfg.fontsize       = ft_getopt(cfg, 'fontsize', 8);
 cfg.fontweight     = ft_getopt(cfg, 'fontweight');
 cfg.interactive    = ft_getopt(cfg, 'interactive', 'yes');
 cfg.hotkeys        = ft_getopt(cfg, 'hotkeys', 'yes');
-cfg.renderer       = ft_getopt(cfg, 'renderer'); % let MATLAB decide on default
+cfg.renderer       = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 cfg.orient         = ft_getopt(cfg, 'orient', 'landscape');
 cfg.maskalpha      = ft_getopt(cfg, 'maskalpha', 1);
 cfg.masknans       = ft_getopt(cfg, 'masknans', 'yes');
@@ -221,25 +221,16 @@ if isfield(cfg,'colormap')
   end
 end
 
-% this is needed for the figure title and correct labeling of graphcolor later on
-if nargin>1
-  if isfield(cfg, 'dataname')
-    if iscell(cfg.dataname)
-      dataname = cfg.dataname{1}; % only one can be plotted
-    else
-      dataname = cfg.dataname;
-    end
-  else
-    if ~isempty(inputname(2))
-      dataname = inputname(2);
-    else
-      dataname = ['data' num2str(1,'%02d')];
-    end
-  end
-else  % data provided through cfg.inputfile
+% this is needed for the figure title
+if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
+  dataname = cfg.dataname;
+elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
   dataname = cfg.inputfile;
+elseif nargin>1
+  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
+else
+  dataname = {};
 end
-
 
 %% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
 
@@ -558,22 +549,6 @@ if strcmp('yes', cfg.hotkeys)
   set(gcf, 'KeyPressFcn', {@key_sub, zmin, zmax})
 end
 
-% set the figure window title
-if isempty(get(gcf, 'Name'))
-  if isfield(cfg, 'funcname')
-    funcname = cfg.funcname;
-  else
-    funcname = mfilename;
-  end
-  if isempty(cfg.figurename)
-    set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), funcname, dataname));
-    set(gcf, 'NumberTitle', 'off');
-  else
-    set(gcf, 'name', cfg.figurename);
-    set(gcf, 'NumberTitle', 'off');
-  end
-end
-
 axis tight
 axis off
 hold off
@@ -588,6 +563,14 @@ end
 if ~isempty(cfg.orient)
   orient(gcf, cfg.orient);
 end
+
+% set the figure window title
+if ~isempty(dataname)
+  set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
+else
+  set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
+end
+set(gcf, 'NumberTitle', 'off');
 
 % Set renderer if specified
 if ~isempty(cfg.renderer)
@@ -613,21 +596,15 @@ if strcmp(cfg.interactive, 'yes')
   set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonMotionFcn'});
 end
 
-% add a menu to the figure, but only if the current figure does not have subplots
-% also, delete any possibly existing previous menu, this is safe because delete([]) does nothing
-delete(findobj(gcf, 'type', 'uimenu', 'label', 'FieldTrip'));
-if numel(findobj(gcf, 'type', 'axes')) <= 1
-  ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
-  uimenu(ftmenu, 'Label', 'Show pipeline', 'Callback', {@menu_pipeline, cfg});
-  uimenu(ftmenu, 'Label', 'About', 'Callback', @menu_about);
-end
-
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous data
 ft_postamble provenance
 ft_postamble savefig
+
+% add a menu to the figure, but only if the current figure does not have subplots
+menu_fieldtrip(gcf, cfg, false);
 
 if ~ft_nargout 
   % don't return anything

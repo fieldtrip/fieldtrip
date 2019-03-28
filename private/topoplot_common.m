@@ -157,7 +157,7 @@ cfg.baseline          = ft_getopt(cfg, 'baseline',         'no'); % to avoid war
 cfg.trials            = ft_getopt(cfg, 'trials',           'all', 1);
 cfg.interactive       = ft_getopt(cfg, 'interactive',      'yes');
 cfg.hotkeys           = ft_getopt(cfg, 'hotkeys',          'yes');
-cfg.renderer          = ft_getopt(cfg, 'renderer',          []); % MATLAB sets the default
+cfg.renderer          = ft_getopt(cfg, 'renderer',          []); % let MATLAB decide on the default
 cfg.marker            = ft_getopt(cfg, 'marker',           'on');
 cfg.markersymbol      = ft_getopt(cfg, 'markersymbol',     'o');
 cfg.markercolor       = ft_getopt(cfg, 'markercolor',       [0 0 0]);
@@ -815,19 +815,6 @@ if strcmp(cfg.interactive, 'yes')
   end
 end
 
-% add a menu to the figure, but only if the current figure does not have subplots
-% also, delete any possibly existing previous menu, this is safe because delete([]) does nothing
-delete(findobj(gcf, 'type', 'uimenu', 'label', 'FieldTrip'));
-if numel(findobj(gcf, 'type', 'axes')) <= 1
-  ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
-  if ft_platform_supports('uimenu')
-    % not supported by Octave
-    uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
-    uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
-  end
-end
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting channels in case of cfg.interactive='yes'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -837,11 +824,11 @@ info        = guidata(gcf);
 cfg         = info.(ident).cfg;
 datvarargin = info.(ident).datvarargin;
 if ~isempty(label)
-  cfg = removefields(cfg, 'inputfile');   % the reading has already been done and varargin contains the data
-  cfg.baseline = 'no';                    % make sure the next function does not apply a baseline correction again
+  cfg = removefields(cfg, 'inputfile');       % the reading has already been done and varargin contains the data
+  cfg.baseline = 'no';                        % make sure the next function does not apply a baseline correction again
   cfg.channel = label;
   cfg.dataname = info.(ident).cfg.dataname;   % put data name in here, this cannot be resolved by other means
-  cfg.trials = 'all';                     % trial selection has already been taken care of
+  cfg.trials = 'all';                         % trial selection has already been taken care of
   cfg.xlim = 'maxmin';
   % if user specified a zlim, copy it over to the ylim of singleplot
   if isfield(cfg, 'zlim')
