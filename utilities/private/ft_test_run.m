@@ -1,4 +1,4 @@
-function out = ft_test_run(varargin)
+function [result] = ft_test_run(varargin)
 
 % FT_TEST_RUN
 
@@ -24,11 +24,10 @@ function out = ft_test_run(varargin)
 
 narginchk(1, inf);
 command = varargin{1};
-assert(isequal(command, 'run'));
+assert(isequal(command, 'run') || isequal(command, 'inventorize'));
 varargin = varargin(2:end);
 
-optbeg = find(ismember(varargin, {'dependency', 'dccnpath', 'maxmem', 'maxwalltime', ...
-  'upload', 'assertclean', 'inventorize'}));
+optbeg = find(ismember(varargin, {'dependency', 'dccnpath', 'maxmem', 'maxwalltime', 'upload', 'sort'}));
 if ~isempty(optbeg)
   optarg   = varargin(optbeg:end);
   varargin = varargin(1:optbeg-1);
@@ -44,9 +43,8 @@ dependency  = ft_getopt(optarg, 'dependency', {});
 hasdccnpath = ft_getopt(optarg, 'dccnpath');  % default is handled below
 maxmem      = ft_getopt(optarg, 'maxmem', inf);
 maxwalltime = ft_getopt(optarg, 'maxwalltime', inf);
-upload      = ft_getopt(optarg, 'upload', 'yes');
-assertclean = ft_getopt(optarg, 'assertclean', 'yes');
-inventorize = ft_getopt(optarg, 'inventorize', 'no');
+upload      = ft_getopt(optarg, 'upload', 'yes'); % win case FieldTrip version is not clean this will be set to 'no'
+sortarg     = ft_getopt(optarg, 'sort', 'alphabetical');
 
 if ischar(dependency)
   % this should be a cell-array
@@ -71,11 +69,6 @@ end
 % get the version and the path
 [revision, ftpath] = ft_version;
 
-% testing a work-in-progress version is not supported
-if istrue(assertclean)
-  assert(istrue(ft_version('clean')), 'this requires all local changes to be committed');
-end
-
 %% determine the list of functions to test
 if ~isempty(varargin) && exist(varargin{1}, 'file')
   functionlist = varargin;
@@ -94,16 +87,7 @@ for i=1:numel(functionlist)
   filelist{i} = which(functionlist{i});
 end
 
-if istrue(inventorize)
-  if nargout == 0
-    fprintf('considering %d test functions for execution:\n', numel(filelist));
-    fprintf('%s\n', strjoin(strcat({'  '}, filelist), '\n'));
-  else
-    out.files = filelist;
-  end
-  return
-end
-fprintf('considering %d test functions for execution\n', numel(filelist));
+fprintf('considering %d test scripts\n', numel(filelist));
 
 %% make a subselection based on the filters
 dep  = true(size(filelist));
@@ -155,13 +139,13 @@ for i=1:numel(filelist)
   
 end % for each function/file
 
-fprintf('%3d scripts are excluded due to the dependencies\n', sum(~dep));
+fprintf('%3d scripts are excluded due to the dependencies\n',                  sum(~dep));
 fprintf('%3d scripts are excluded due to loading files from the DCCN path\n',  sum(file));
 fprintf('%3d scripts are excluded due to the requirements for memory\n',       sum(mem>maxmem));
 fprintf('%3d scripts are excluded due to the requirements for walltime \n',    sum(tim>maxwalltime));
 
 % make selection of test scripts, remove scripts that exceed walltime or memory
-sel  = true(size(filelist));
+sel                  = true(size(filelist));
 sel(tim>maxwalltime) = false;
 sel(mem>maxmem)      = false;
 sel(dep==false)      = false;
@@ -169,8 +153,52 @@ sel(file==true)      = false;
 
 % make the subselection of functions to test
 functionlist = functionlist(sel);
+tim = tim(sel);
+mem = mem(sel);
 
-fprintf('executing %d test scripts\n', numel(functionlist));
+switch (sortarg)
+  case {'alphabet' 'alphabetic' 'alphabetical'}
+    [functionlist, indx] = sort(functionlist);
+    tim = tim(indx);
+    mem = mem(indx);
+  case {'mem' 'memory'}
+    [mem, indx]  = sort(mem);
+    tim          = tim(indx);
+    functionlist = functionlist(indx);
+  case {'walltime' 'time'}
+    [tim, indx]  = sort(tim);
+    mem          = mem(indx);
+    functionlist = functionlist(indx);
+  case 'random'
+    indx = randperm(numel(functionlist));
+    functionlist = functionlist(indx);
+    tim          = tim(indx);
+    mem          = mem(indx);
+  otherwise
+    ft_error('incorrect specification for ''sort''');
+end
+
+% this will hold all results
+result = [];
+
+if strcmp(command, 'inventorize')
+  % do not execute anything, only return the function names
+  for i=1:numel(functionlist)
+    result(i).functionname = functionlist{i};
+    result(i).mem          = mem(i);
+    result(i).walltime     = tim(i);
+  end
+  fprintf('selecting %d test scripts\n', numel(functionlist));
+  return
+else
+  fprintf('executing %d test scripts\n', numel(functionlist));
+end
+
+% uploading results to the dashboard from a work-in-progress version is not supported
+if istrue(upload) && ~istrue(ft_version('clean'))
+  ft_warning('FieldTrip version is not clean, not uploading results to the dashboard')
+  upload = 'no';
+end
 
 %% run over all tests
 for i=1:numel(functionlist)
@@ -197,18 +225,17 @@ for i=1:numel(functionlist)
   end
   close all
   
-  result = [];
-  result.matlabversion    = version('-release');
-  result.fieldtripversion = revision;
-  result.branch           = ft_version('branch');
-  result.arch             = computer('arch');
-  result.hostname         = gethostname;
-  result.user             = getusername;
-  result.passed           = passed;
-  result.runtime          = runtime;
-  result.functionname     = functionlist{i};
-  
-  out = passed;
+  result(i).matlabversion    = version('-release');
+  result(i).fieldtripversion = revision;
+  result(i).branch           = ft_version('branch');
+  result(i).arch             = computer('arch');
+  result(i).hostname         = gethostname;
+  result(i).user             = getusername;
+  result(i).passed           = passed;
+  result(i).runtime          = runtime;
+  result(i).functionname     = functionlist{i};
+  result(i).mem              = mem(i);
+  result(i).walltime         = tim(i);
   
   if istrue(upload)
     try
@@ -218,9 +245,7 @@ for i=1:numel(functionlist)
       options = [];
     end
     url = 'http://dashboard.fieldtriptoolbox.org/api/';
-    webwrite(url, result, options);
-  else
-    ft_warning('not uploading results to the FieldTrip dashboard')
+    webwrite(url, result(i), options);
   end
 end
 
