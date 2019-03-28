@@ -1,10 +1,10 @@
 function test_openmeeg_eeg
 
-% Test the computation of an EEG leadfield with OpenMEEG
-% Copyright (C) 2010-2017, OpenMEEG developers
-
 % WALLTIME 00:30:00
 % MEM 4gb
+
+% Test the computation of an EEG leadfield with OpenMEEG
+% Copyright (C) 2010-2017, OpenMEEG developers
 
 addpath(pwd) % Make sure current folder is in the path
 

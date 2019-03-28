@@ -3,7 +3,7 @@ function test_bug97
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_preprocessing ft_selectdata
+% DEPENDENCY ft_preprocessing ft_selectdata
 
 % This script tests the solution to bug 97, where selectdata is working in an
 % unexpected way. If the user explicitly states cfg.trials = [], no trials are to be

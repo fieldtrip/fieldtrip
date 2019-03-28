@@ -3,7 +3,7 @@ function test_headmodel_singlesphere
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_prepare_vol_sens ft_compute_leadfield ft_headmodel_singlesphere
+% DEPENDENCY ft_prepare_vol_sens ft_compute_leadfield ft_headmodel_singlesphere
 
 % generate some random points and scale to a unit sphere
 pnt = randn(100,3);

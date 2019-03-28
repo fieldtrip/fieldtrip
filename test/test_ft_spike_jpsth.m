@@ -3,8 +3,7 @@ function test_ft_spike_jpsth()
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST test_ft_spike_jpsth
-% TEST ft_spike_jpsth
+% DEPENDENCY ft_spike_jpsth
 
 %%
 % 1 channelcmb with same latency, gamma

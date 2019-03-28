@@ -3,8 +3,7 @@ function test_ft_spike_isi()
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST test_ft_spike_isi
-% TEST ft_spike_isi
+% DEPENDENCY ft_spike_isi
 
 clear
 nTrials = 100;

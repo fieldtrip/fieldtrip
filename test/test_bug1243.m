@@ -3,7 +3,7 @@ function test_bug1243
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_topoplotIC
+% DEPENDENCY ft_topoplotIC
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1243.mat'));
 

@@ -2,9 +2,7 @@ function failed_fieldtrip2fiff
 
 % MEM 11gb
 % WALLTIME 00:10:00
-
-% TEST test_fieldtrip2fiff
-% TEST fieldtrip2fiff ft_read_header ft_read_data ft_read_event
+% DEPENDENCY fieldtrip2fiff ft_read_header ft_read_data ft_read_event
 
 % use file location on Donders server
 dataset_ctf      = dccnpath('/home/common/matlab/fieldtrip/data/MarkusBraille.ds');

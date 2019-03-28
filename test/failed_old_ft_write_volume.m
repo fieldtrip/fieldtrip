@@ -3,8 +3,6 @@ function failed_old_ft_write_volume
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_old_ft_write_volume
-
 % this script tests whether ft_volumewrite and ft_write_volume works
 
 % create some data

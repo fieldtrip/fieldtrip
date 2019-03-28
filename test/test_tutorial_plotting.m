@@ -3,7 +3,7 @@ function test_tutorial_plotting
 % WALLTIME 00:15:00
 % MEM 4gb
 
-% TEST ft_multiplotER ft_singleplotER ft_topoplotER ft_singleplotTFR ft_multiplotTRF ft_megplanar ft_combineplanar ft_volumereslice
+% DEPENDENCY ft_multiplotER ft_singleplotER ft_topoplotER ft_singleplotTFR ft_multiplotTRF ft_megplanar ft_combineplanar ft_volumereslice
 
 %%
 % *Plotting data at the channel and source level*

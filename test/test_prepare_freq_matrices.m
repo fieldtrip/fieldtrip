@@ -3,7 +3,7 @@ function test_prepare_freq_matrices
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST prepare_freq_matrices ft_sourceanalysis
+% DEPENDENCY prepare_freq_matrices ft_sourceanalysis
 
 datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/freq/meg');
 

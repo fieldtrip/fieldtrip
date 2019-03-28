@@ -2,9 +2,7 @@ function failed_bug2355
 
 % MEM 1500mb
 % WALLTIME 00:10:00
-
-% TEST test_bug2355
-% TEST ft_prepare_sourcemodel
+% DEPENDENCY ft_prepare_sourcemodel
 
 %% make a spherical model fitted to scalp surface, in cm
 vol = [];

@@ -3,7 +3,7 @@ function test_bug3192
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST ft_plot_mesh, ft_plot_box, ft_plot_headmodel, ft_plot_dipole, ft_plot_headshape
+% DEPENDENCY ft_plot_mesh, ft_plot_box, ft_plot_headmodel, ft_plot_dipole, ft_plot_headshape
 
 % one color for all vertex
 cfg = [];

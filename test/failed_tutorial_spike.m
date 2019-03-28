@@ -2,9 +2,7 @@ function failed_tutorial_spike
 
 % MEM 4gb
 % WALLTIME 00:10:00
-
-% TEST test_tutorial_spike
-% TEST ft_read_spike ft_spike_select ft_spike_waveform ft_spike_maketrials ft_spike_isi ft_spike_plot_isireturn ft_spike_psth ft_spikedensity ft_spike_plot_raster ft_spike_rate ft_spike_select ft_spike_xcorr ft_spike_jpsth ft_spike_plot_jpsth
+% DEPENDENCY ft_read_spike ft_spike_select ft_spike_waveform ft_spike_maketrials ft_spike_isi ft_spike_plot_isireturn ft_spike_psth ft_spikedensity ft_spike_plot_raster ft_spike_rate ft_spike_select ft_spike_xcorr ft_spike_jpsth ft_spike_plot_jpsth
 
 filenex = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/spikefield/p029_sort_final_01.nex');
 spike   = ft_read_spike(filenex);

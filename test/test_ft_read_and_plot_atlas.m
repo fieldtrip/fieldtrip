@@ -3,7 +3,7 @@ function test_ft_read_and_plot_atlas
 % WALLTIME 00:15:00
 % MEM 3gb
 
-% TEST ft_read_atlas ft_sourceplot
+% DEPENDENCY ft_read_atlas ft_sourceplot
 
 % spm8 might have mexfile issues
 ft_hastoolbox('spm12',1);

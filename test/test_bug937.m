@@ -3,7 +3,7 @@ function test_bug937
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_prepare_mesh ft_headmodeltype ft_plot_mesh
+% DEPENDENCY ft_prepare_mesh ft_headmodeltype ft_plot_mesh
 
 
 csvol.o = [0,0,0];

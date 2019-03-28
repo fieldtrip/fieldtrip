@@ -3,7 +3,7 @@ function test_headmodel_dipoli_new_old
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_headmodel_dipoli icosahedron162 ft_prepare_vol_sens ft_compute_leadfield
+% DEPENDENCY ft_headmodel_dipoli icosahedron162 ft_prepare_vol_sens ft_compute_leadfield
 
 % tests the old and new version of dipoli wrapper
 

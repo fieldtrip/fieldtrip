@@ -2,9 +2,7 @@ function failed_headmodel_fns
 
 % MEM 1500mb
 % WALLTIME 00:10:00
-
-% TEST test_ft_compute_leadfield
-% TEST ft_compute_leadfield ft_headmodel_fns ft_prepare_vol_sens ft_compute_leadfield
+% DEPENDENCY ft_compute_leadfield ft_headmodel_fns ft_prepare_vol_sens ft_compute_leadfield
 
 % this function tests that FNS forward model works, comparing the results with a 3 concentric
 % spheres model

@@ -3,7 +3,7 @@ function test_bug1599(datainfo, version)
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_sourceanalysis beamformer_lcmv
+% DEPENDENCY ft_sourceanalysis beamformer_lcmv
 
 % fixedori is set correctly in beamformer_lcmv, the only problem is
 % that sourceanalysis seems to not bother about this when using a

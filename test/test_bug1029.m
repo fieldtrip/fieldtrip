@@ -3,7 +3,7 @@ function test_bug1029
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_read_headmodel ft_headmodel_bem_asa ft_prepare_headmodel
+% DEPENDENCY ft_read_headmodel ft_headmodel_bem_asa ft_prepare_headmodel
 
 % tests the functionality of the forward models after changing the names of
 % the headmodels

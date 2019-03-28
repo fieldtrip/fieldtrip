@@ -3,8 +3,6 @@ function failed_tutorial_spike20130308
 % MEM 4gb
 % WALLTIME 00:10:00
 
-% TEST test_tutorial_spike20130308
-
 % Reading in spike data
 % 
 % Make sure you run ft_defaults after having added the main FieldTrip path (e.g. addpath('path_to_fieldtrip')), ensuring that the required functions are in your MATLAB path. For spike analysis there is spike toolbox that is located in fieldtrip/contrib/spike.

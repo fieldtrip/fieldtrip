@@ -3,8 +3,7 @@ function test_ft_spike_plot_isireturn()
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_ft_spike_plot_isireturn
-% TEST ft_spike_plot_isireturn
+% DEPENDENCY ft_spike_plot_isireturn
 
 nTrials = 100;
 data = [];

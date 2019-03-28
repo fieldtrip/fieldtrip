@@ -3,7 +3,7 @@ function test_bug2031
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_topoplotER ft_topoplotTFR ft_singleplotER ft_singleplotTFR
+% DEPENDENCY ft_topoplotER ft_topoplotTFR ft_singleplotER ft_singleplotTFR
 
 % this test script makes some figures, to verify that the FieldTrip menu
 % item is not added multiple times (1) when subplots are being used, and

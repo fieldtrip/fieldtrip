@@ -3,7 +3,7 @@ function test_bug1153
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1153 ft_redefinetrial
+% DEPENDENCY ft_redefinetrial
 
 % problem: ft_redefinetrial loses the cfg in the output when specifying
 % cfg.trl

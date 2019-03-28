@@ -3,7 +3,7 @@ function test_bug3275
 % WALLTIME 00:10:00
 % MEM 2gb
 
-% TEST ft_sourceplot ft_checkdata
+% DEPENDENCY ft_sourceplot ft_checkdata
 
 mri = ft_read_mri('single_subj_T1.nii');
 elec = ft_read_sens('standard_1020.elc'); % this is in MNI space

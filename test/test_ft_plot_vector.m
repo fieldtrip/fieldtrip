@@ -3,8 +3,7 @@ function test_ft_plot_vector
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_ft_plot_vector
-% TEST ft_plot_vector
+% DEPENDENCY ft_plot_vector
 
 mask = zeros(1, 100)
 %boundary conditions

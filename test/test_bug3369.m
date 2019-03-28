@@ -3,7 +3,7 @@
 % WALLTIME 00:20:00
 % MEM 2gb
 
-% TEST read_neuromag_maxfilterlog
+% DEPENDENCY read_neuromag_maxfilterlog
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3369'));
 

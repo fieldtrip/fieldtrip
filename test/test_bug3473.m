@@ -3,7 +3,7 @@ function test_bug3473
 % WALLTIME 00:10:00
 % MEM 2gb
 
-%TEST ft_prepare_mesh 
+% DEPENDENCY ft_prepare_mesh 
 
 filename = '/home/common/matlab/fieldtrip/data/ftp/tutorial/epilepsy/case1/ctf_data/case1.pos';
 

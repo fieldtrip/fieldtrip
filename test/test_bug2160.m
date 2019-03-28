@@ -3,7 +3,7 @@ function test_bug2160
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_multiplotER ft_selectdata
+% DEPENDENCY ft_multiplotER ft_selectdata
 
 %%
 

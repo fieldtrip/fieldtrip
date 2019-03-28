@@ -43,7 +43,7 @@ dependency  = ft_getopt(optarg, 'dependency', {});
 hasdccnpath = ft_getopt(optarg, 'dccnpath');  % default is handled below
 maxmem      = ft_getopt(optarg, 'maxmem', inf);
 maxwalltime = ft_getopt(optarg, 'maxwalltime', inf);
-upload      = ft_getopt(optarg, 'upload', 'yes'); % win case FieldTrip version is not clean this will be set to 'no'
+upload      = ft_getopt(optarg, 'upload', 'yes'); % this will be set to 'no' in case FieldTrip version is not clean
 sortarg     = ft_getopt(optarg, 'sort', 'alphabetical');
 returnerror = ft_getopt(optarg, 'returnerror', 'no');
 
@@ -111,7 +111,7 @@ for i=1:numel(filelist)
   for k=1:numel(line)
     for j=1:numel(dependency)
       % search for the dependencies in each of the test functions
-      [s, e] = regexp(line{k}, sprintf('%% TEST.*%s.*', dependency{j}), 'once', 'start', 'end');
+      [s, e] = regexp(line{k}, sprintf('%% DEPENDENCY.*%s.*', dependency{j}), 'once', 'start', 'end');
       if ~isempty(s)
         dep(i) = true;
       end

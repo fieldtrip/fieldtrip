@@ -2,9 +2,7 @@ function test_ft_spiketriggeredspectrum()
 
 % MEM 1gb
 % WALLTIME 00:10:00
-
-% TEST test_ft_spiketriggeredspectrum
-% TEST ft_spiketriggeredspectrum
+% DEPENDENCY ft_spiketriggeredspectrum
 
 % create the data, in which spikes fall at known phases, and in which our spike times
 % fall precicely on the samples. In this case there is no phase error
@@ -148,9 +146,6 @@ title('shows phases are equivalent for one trial, though generally more reliable
 
 %% check the linear detrending
 
-% TEST test_ft_spiketriggeredspectrum
-% ft_spiketriggeredspectrum
-
 % create the data, in which spikes fall at known phases, and in which our spike times
 % fall precicely on the samples. In this case there is no phase error
 data = [];
@@ -290,11 +285,10 @@ inTrial = freq3.trial{1}>0;
 phases1 = angle(freq3.fourierspctrm{1}(inTrial,1,foi));
 plot(freq3.time{1}(inTrial),phases1,'gd-')
 title('shows phases are equivalent for one trial, though generally more reliable with spike input')
+
 %%
 % NOTE THAT THE PHASE USING THE TRUE TIMES IS MORE RELIABLE!
 %% make sure that the power is outputted correctly
-% TEST test_ft_spiketriggeredspectrum
-% ft_spiketriggeredspectrum
 
 % create the data, in which spikes fall at known phases, and in which our spike times
 % fall precicely on the samples. In this case there is no phase error

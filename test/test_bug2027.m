@@ -3,9 +3,9 @@ function test_bug2027
 % MEM 1500mb
 % WALLTIME 00:20:00
 
-% TEST read_4d_hdr
-% TEST ft_read_header
-% TEST ft_channelselection
+% DEPENDENCY read_4d_hdr
+% DEPENDENCY ft_read_header
+% DEPENDENCY ft_channelselection
 
 % Bug: ft_read_header returns only 152 MEG channels in the hdr.label
 % This goes wrong at a low level, i.e. in read_4d_hdr

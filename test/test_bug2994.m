@@ -3,9 +3,9 @@ function test_bug2994
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST ft_freqstatistics
-% TEST ft_freqgrandaverage
-% TEST ft_selectdata
+% DEPENDENCY ft_freqstatistics
+% DEPENDENCY ft_freqgrandaverage
+% DEPENDENCY ft_selectdata
 
 % Bug 2994 has been reported by Niels. Apparently once upon a time it was
 % possible to call ft_freqstatistics with ft_freqgrandaveraged data in the

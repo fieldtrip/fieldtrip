@@ -2,9 +2,7 @@ function inspect_qsubcellfun3
 
 % MEM 1500mb
 % WALLTIME 00:10:00
-
-% TEST test_qsubcellfun3
-% TEST qsubcellfun qsubfeval qsubget
+% DEPENDENCY qsubcellfun qsubfeval qsubget
 
 % this should not run in the automated batch, because the torque queue
 % will be completely full with other jobs, causing this job to timeout

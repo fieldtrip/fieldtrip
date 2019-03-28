@@ -3,8 +3,7 @@ function test_ft_denoise_tsr
 % MEM 8000mb
 % WALLTIME 01:30:00
 
-% TEST test_ft_denoise_tsr
-% TEST ft_denoise_tsr
+% DEPENDENCY ft_denoise_tsr
 
 % create some data
 for k = 1:50

@@ -3,7 +3,7 @@ function test_bug2378
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST ft_redefinetrial
+% DEPENDENCY ft_redefinetrial
 
 % This function tests the functionality of ft_redefinetrial, whether it
 % keeps the trialinfo in all the different ways of calling it.
