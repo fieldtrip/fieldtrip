@@ -1,17 +1,17 @@
-function table = struct2tablestrs(s)
+function printstruct_as_table(s)
 
-% STRUCT2TABLESTRS converts a struct-array to a cell-array of strings that represents a table
+% PRINTSTRUCT_AS_TABLE prints a struct-array as a table in Markdown format
 %
 % Example
 %   s(1).a = 1
 %   s(1).b = 2
 %   s(2).a = 3
 %   s(2).b = 4
-%   disp(struct2tablestrs(s))
+%   printstruct_as_table(s)
 %
 % See also PRINTSTRUCT, APPENDSTRUCT
 
-% Copyright (C) 2017, Robert Oostenveld
+% Copyright (C) 2017-2019, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -74,6 +74,7 @@ for i=1:numel(fn)
 end
 
 divider = repmat('-', size(header));
+divider(header=='|') = '|';
 
 % divider = header;
 % divider(divider~='|') = '-';
@@ -87,3 +88,4 @@ for i=1:numel(s)
 end
 
 table = cat(1, header, divider, line);
+fprintf('%s\n', table{:});

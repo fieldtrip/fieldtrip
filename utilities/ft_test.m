@@ -117,17 +117,18 @@ switch (varargin{1})
     result = ft_test_run(varargin{:});
   case 'inventorize'
     result = ft_test_run(varargin{:}); % this uses the same code as 'run'
-  case 'moxunit_run'
-    ft_test_moxunit_run(varargin{:});
   case 'report'
     result = ft_test_report(varargin{:});
   case 'compare'
-    ft_test_compare(varargin{:});
+    result = ft_test_compare(varargin{:});
+  case 'moxunit_run'
+    ft_test_moxunit_run(varargin{:});
   otherwise
     ft_error('unsupported command "%s"', varargin{1})
 end % switch
 
-if ~nargout
-  % do not return 'ans'
+if ~nargout && exist('result', 'var')
+  % show it on screen, do not return 'ans'
+  printstruct_as_table(result);
   clear result
 end
