@@ -58,6 +58,11 @@ function out = ft_test(varargin)
 %   hostname         = string
 %   user             = string
 %
+% Optionally, you may capture the output to get the results as a Matlab table
+% array, in which case they are not automatically displayed.
+%   rslt = ft_test('report', 'fieldtripversion', 'cef3396');
+%
+%
 % ========= Comparing tests =========
 %
 % To print a table comparing different test results, you would do
@@ -107,11 +112,17 @@ switch (varargin{1})
   case 'moxunit_run'
     ft_test_moxunit_run(varargin{:});
   case 'report'
-    ft_test_report(varargin{:});
+    if nargout == 0
+      ft_test_report(varargin{:});
+    else
+      out = ft_test_report(varargin{:});
+    end
   case 'compare'
     ft_test_compare(varargin{:});
   otherwise
     ft_error('unsupported command "%s"', varargin{1})
 end % switch
 
-
+if nargin == 0
+  clear out
+end

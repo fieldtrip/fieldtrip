@@ -82,6 +82,10 @@ if ~showdate
 end
 
 % convert the struct-array to a table
-table = struct2table(result);
-fprintf('%s\n', table{:});
+if nargout == 0
+  tbl = struct2tablestrs(result);
+  fprintf('%s\n', tbl{:});
+else
+  result = struct2table(result);
+end
 

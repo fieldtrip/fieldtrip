@@ -1,13 +1,13 @@
-function table = struct2table(s)
+function table = struct2tablestrs(s)
 
-% STRUCT2TABLE converts a struct-array to a cell-array of strings that represents a table
+% STRUCT2TABLESTRS converts a struct-array to a cell-array of strings that represents a table
 %
 % Example
 %   s(1).a = 1
 %   s(1).b = 2
 %   s(2).a = 3
 %   s(2).b = 4
-%   disp(struct2table(s))
+%   disp(struct2tablestrs(s))
 %
 % See also PRINTSTRUCT, APPENDSTRUCT
 
