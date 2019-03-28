@@ -183,26 +183,20 @@ if ft_abort
   return
 end
 
-% make sure figure window titles are labeled appropriately, pass this onto the actual
-% plotting function. if we don't specify this, the window will be called
-% 'ft_topoplotER', which is confusing to the user
-cfg.funcname = mfilename;
-if nargin>1
-  if ~isfield(cfg, 'dataname')
-    cfg.dataname = [];
-    for k = 2:nargin
-      if isstruct(varargin{k-1})
-        if ~isempty(inputname(k))
-          cfg.dataname{k-1} = inputname(k);
-        else
-          cfg.dataname{k-1} = ['data' num2str(k-1,'%02d')];
-        end
-      end
-    end
-  end
-else  % data provided through cfg.inputfile
-  cfg.dataname = cfg.inputfile;
+% this is needed for the figure title
+if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
+  dataname = cfg.dataname;
+elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
+elseif nargin>1
+  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
+else
+  dataname = {};
 end
+
+% make sure figure window titles are labeled appropriately, pass this onto the actual plotting function
+cfg.funcname = mfilename;
+cfg.dataname = dataname;
 
 % prepare the layout, this should be done only once
 tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});

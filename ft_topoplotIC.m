@@ -140,7 +140,22 @@ cfg.interactive = 'no';
 tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
 tmpcomp.label = comp.topolabel; % the input to ft_prepare_layout needs at least a data.label field
 cfg.layout = ft_prepare_layout(tmpcfg, tmpcomp);
-clear tmpcomp;
+clear tmpcomp
+
+% this is needed for the figure title
+if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
+  dataname = cfg.dataname;
+elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
+elseif nargin>1
+  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
+else
+  dataname = {};
+end
+
+% make sure figure window titles are labeled appropriately, pass this onto the actual plotting function
+cfg.funcname = mfilename;
+cfg.dataname = dataname;
 
 % don't show the callinfo for each separate component
 tmpshowcallinfo = cfg.showcallinfo;
@@ -148,12 +163,6 @@ cfg.showcallinfo = 'no';
 
 % create temporary variable to prevent overwriting the selected components
 selcomp = cfg.component;
-
-% make sure figure window titles are labeled appropriately, pass this onto the actual
-% plotting function if we don't specify this, the window will be called
-% 'ft_topoplotTFR', which is confusing to the user
-cfg.funcname = mfilename;
-cfg.dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
 
 nplots = numel(selcomp);
 if nplots>1
@@ -192,25 +201,6 @@ cfg = removefields(cfg, 'funcname');
 
 % show the callinfo for all components together
 cfg.showcallinfo = tmpshowcallinfo;
-
-% this is needed for the figure title
-if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
-  dataname = cfg.dataname;
-elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
-  dataname = cfg.inputfile;
-elseif nargin>1
-  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
-else
-  dataname = {};
-end
-
-% set the figure window title
-if ~isempty(dataname)
-  set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
-else
-  set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
-end
-set(gcf, 'NumberTitle', 'off');
 
 % set renderer if specified
 if ~isempty(cfg.renderer)
