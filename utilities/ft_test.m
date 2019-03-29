@@ -123,13 +123,16 @@ switch (varargin{1})
   case 'compare'
     result = ft_test_compare(varargin{:});
   case 'moxunit_run'
-    ft_test_moxunit_run(varargin{:});
+    result = ft_test_moxunit_run(varargin{:});
   otherwise
     ft_error('unsupported command "%s"', varargin{1})
 end % switch
 
-if ~nargout && exist('result', 'var')
+if ~nargout
   % show it on screen, do not return 'ans'
   printstruct_as_table(result);
   clear result
+else
+  % convert it to a proper MATLAB table
+  result = struct2table(result);
 end
