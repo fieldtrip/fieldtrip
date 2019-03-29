@@ -149,7 +149,7 @@ end
 
 if ~isdeployed
 
-  if isempty(which('ft_hastoolbox')) || isempty(which('ft_platform_supports'))
+  if isempty(which('ft_test')) || isempty(which('ft_notice'))
     % the fieldtrip/utilities directory contains the ft_hastoolbox and ft_warning
     % functions, which are required for the remainder of this script
     addpath(fullfile(fileparts(which('ft_defaults')), 'utilities'));
