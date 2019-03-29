@@ -21,7 +21,7 @@ function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 % The configuration can contain
 %   cfg.method        = 'distance', 'triangulation' or 'template'
 %   cfg.neighbourdist = number, maximum distance between neighbouring sensors (only for 'distance')
-%   cfg.template      = name of the template file, e.g. CTF275_neighb.mat
+%   cfg.neighbours    = name of the template file, e.g. CTF275_neighb.mat
 %   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
 %   cfg.channel       = channels for which neighbours should be found
 %   cfg.feedback      = 'yes' or 'no' (default = 'no')
@@ -86,6 +86,8 @@ cfg = ft_checkconfig(cfg, 'required', {'method'});
 cfg = ft_checkconfig(cfg, 'renamed',  {'elecfile', 'elec'});
 cfg = ft_checkconfig(cfg, 'renamed',  {'gradfile', 'grad'});
 cfg = ft_checkconfig(cfg, 'renamed',  {'optofile', 'opto'});
+cfg = ft_checkconfig(cfg, 'renamed',  {'template', 'neighbours'});
+
 
 % set the defaults
 cfg.feedback = ft_getopt(cfg, 'feedback', 'no');
@@ -113,7 +115,7 @@ if strcmp(cfg.method, 'template')
   neighbours = [];
   fprintf('Trying to load sensor neighbours from a template\n');
   % determine from where to load the neighbour template
-  if ~isfield(cfg, 'template')
+  if ~isfield(cfg, 'neighbours')
     % if data has been put in, try to estimate the sensor type
     if hasdata
       fprintf('Estimating sensor type of data to determine the layout filename\n');
@@ -126,37 +128,37 @@ if strcmp(cfg.method, 'template')
           fprintf('Name of sensor type does not match name of layout- and template-file\n');
         end
       else
-        cfg.template = [senstype '_neighb.mat'];
+        cfg.neighbours = [senstype '_neighb.mat'];
       end
     end
   end
   % if that failed
-  if ~isfield(cfg, 'template')
+  if ~isfield(cfg, 'neighbours')
     % check whether a layout can be used
     if ~isfield(cfg, 'layout')
       % error if that fails as well
       ft_error('You need to define a template or layout or give data as an input argument when ft_prepare_neighbours is called with cfg.method=''template''');
     end
     fprintf('Using the 2-D layout filename to determine the template filename\n');
-    cfg.template = [strtok(cfg.layout, '.') '_neighb.mat'];
+    cfg.neighbours = [strtok(cfg.layout, '.') '_neighb.mat'];
   end
   % adjust filename
-  if ~exist(cfg.template, 'file')
-    cfg.template = lower(cfg.template);
+  if ~exist(cfg.neighbours, 'file')
+    cfg.neighbours = lower(cfg.neighbours);
   end
   % add necessary extensions
-  if numel(cfg.template) < 4 || ~isequal(cfg.template(end-3:end), '.mat')
-    if numel(cfg.template) < 7 || ~isequal(cfg.template(end-6:end), '_neighb')
-      cfg.template = [cfg.template, '_neighb'];
+  if numel(cfg.neighbours) < 4 || ~isequal(cfg.neighbours(end-3:end), '.mat')
+    if numel(cfg.neighbours) < 7 || ~isequal(cfg.neighbours(end-6:end), '_neighb')
+      cfg.neighbours = [cfg.neighbours, '_neighb'];
     end
-    cfg.template = [cfg.template, '.mat'];
+    cfg.neighbours = [cfg.neighbours, '.mat'];
   end
   % check for existence
-  if ~exist(cfg.template, 'file')
+  if ~exist(cfg.neighbours, 'file')
     ft_error('Template file could not be found - please check spelling or see http://www.fieldtriptoolbox.org/faq/how_can_i_define_my_own_neighbourhood_template (please consider sharing it with others via the FT mailing list)');
   end
-  load(cfg.template);
-  fprintf('Successfully loaded neighbour structure from %s\n', cfg.template);
+  load(cfg.neighbours);
+  fprintf('Successfully loaded neighbour structure from %s\n', cfg.neighbours);
 
 else
   % get the the grad or elec if not present in the data
