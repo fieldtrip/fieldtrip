@@ -130,7 +130,11 @@ end % switch
 
 if ~nargout
   % show it on screen, do not return 'ans'
-  printstruct_as_table(result);
+  if isempty(result)
+    fprintf('Results are empty\n');
+  else
+    printstruct_as_table(result);
+  end
   clear result
 else
   % convert it to a proper MATLAB table
