@@ -125,18 +125,22 @@ if trlnum>1
     else
       trlbeg = trlbeg - begsample + 1;
       trlend = trlend - begsample + 1;
+      offset = 0;
+      overlap = 0;
       if trlbeg < 1
+        offset = 1 - trlbeg;
         trlbeg = 1;
       end
-      if trlend > endsample
-        trlend = endsample;
+      if trlend > buflen
+        overlap = trlend - buflen;
+        trlend = buflen;
       end
       % make vector with 0= no sample of old data, 1= one sample of old data, 2= two samples of old data, etc
       count(trlbeg:trlend) = count(trlbeg:trlend) + 1;
       % make vector with 1's if samples belong to trial 1, 2's if samples belong to trial 2 etc. overlap/ no data --> Nan
       trialnum(trlbeg:trlend) = trllop;
       % make samplenum vector with samplenrs for each sample in the old trials
-      samplenum(trlbeg:trlend) = 1:trllen(trllop);
+      samplenum(trlbeg:trlend) = (1 + offset):(trllen(trllop) - overlap);
     end
   end
   
