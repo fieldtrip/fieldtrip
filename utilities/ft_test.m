@@ -130,6 +130,10 @@ end % switch
 
 if ~nargout && exist('result', 'var')
   % show it on screen, do not return 'ans'
-  printstruct_as_table(result);
+  if isempty(result)
+    fprintf('Results are empty\n');
+  else
+    printstruct_as_table(result);
+  end
   clear result
 end
