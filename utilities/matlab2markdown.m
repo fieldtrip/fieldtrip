@@ -1,6 +1,6 @@
 function matlab2markdown(infile,outfile,varargin)
 
-% MATLAB2MARKDOWN converts a MATLAB script or function to MarkDown format. All
+% MATLAB2MARKDOWN converts a MATLAB script or function to Markdown format. All
 % comments are converted to text, comment lines starting with %% are converted to
 % headings, sections with code are properly formatted, and words that appear in bold,
 % italic or monospace are converted.
@@ -190,7 +190,7 @@ while ~feof(infid)
     image = line(startIndex:endIndex);
     [~, f] = fileparts(image);
     if strcmp(imagestyle, 'inline')
-      % include a default MarkDown inline image
+      % include a default Markdown inline image
       fprintf(outfid, '![%s](%s)\n', f, image);
     elseif strcmp(imagestyle, 'jekyll')
       % include an image as a Jekyll include

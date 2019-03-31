@@ -68,7 +68,7 @@ end
 
 oldevttable = struct2table(old.evt);
 % Empty values in numeric variables cause the column to be represented as a
-% cell array when the structure is converted to a table, which is not
+% cell-array when the structure is converted to a table, which is not
 % supported by ismember.  The empty values should only be in the new event
 % types I added support for, so they can be safely excluded from the table
 % when verifying that all old event rows are contained in the new event

@@ -158,7 +158,7 @@ if isempty(eventformat)
 end
 
 if iscell(eventformat)
-  % this happens for datasets specified as cell array for concatenation
+  % this happens for datasets specified as cell-array for concatenation
   eventformat = eventformat{1};
 end
 
@@ -1688,7 +1688,7 @@ switch eventformat
         ts = [];
       end
       
-      % reformat the values as cell array, since the struct function can work with those
+      % reformat the values as cell-array, since the struct function can work with those
       type      = repmat({'trigger'},size(smp));
       value     = num2cell(val);
       sample    = num2cell(smp + begsample - 1);
@@ -1737,7 +1737,7 @@ switch eventformat
     % the following code should only be executed if there are events,
     % otherwise there will be an error subtracting an uint64 from an []
     if ~isempty(nev)
-      % now get the values as cell array, since the struct function can work with those
+      % now get the values as cell-array, since the struct function can work with those
       value     = {nev.TTLValue};
       timestamp = {nev.TimeStamp};
       number    = {nev.EventNumber};
@@ -1759,7 +1759,7 @@ switch eventformat
     % the following code should only be executed if there are events,
     % otherwise there will be an error subtracting an uint64 from an []
     if ~isempty(nev)
-      % now get the values as cell array, since the struct function can work with those
+      % now get the values as cell-array, since the struct function can work with those
       value     = {nev.TTLValue};
       timestamp = {nev.TimeStamp};
       number    = {nev.EventNumber};
@@ -1870,7 +1870,7 @@ switch eventformat
     %     % select only the events with a TTL value
     %     ttl = [nev.TTLValue];
     %     sel = find(ttl~=0);
-    %     % now get the values as cell array, since teh struct function can work with those
+    %     % now get the values as cell-array, since the struct function can work with those
     %     value     = {nev(sel).TTLValue};
     %     timestamp = {nev(sel).TimeStamp};
     %     event = struct('value', value, 'timestamp', timestamp);

@@ -269,7 +269,7 @@ if ft_headmodeltype(headmodel, 'openmeeg')
   % any post-computation options can be applied (e.g., normalization, etc.)
   lf = ft_compute_leadfield(sourcemodel.pos(diprange,:), sens, headmodel, 'lf', lf, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
 
-  % reshape result into sourcemodel.leadfield cell array
+  % reshape result into sourcemodel.leadfield cell-array
   for i=1:ndip
     sourcemodel.leadfield{insideindx(i)} = lf(:,3*(i-1) + [1:3]);
   end

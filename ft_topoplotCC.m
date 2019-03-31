@@ -33,7 +33,7 @@ function [cfg] = ft_topoplotCC(cfg, freq)
 % If you specify this option the input data will be read from a *.mat
 % file on disk. This mat files should contain only a single variable named 'data',
 % corresponding to the input structure. For this particular function, the input should be
-% structured as a cell array.
+% structured as a cell-array.
 %
 % See also FT_PREPARE_LAYOUT, FT_MULTIPLOTCC, FT_CONNECTIVITYPLOT
 

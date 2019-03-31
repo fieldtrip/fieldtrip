@@ -390,7 +390,7 @@ if Ntrials == 0
 end
 
 if ischar(cfg.selectfeature)
-  % ensure that it is a cell array
+  % ensure that it is a cell-array
   cfg.selectfeature = {cfg.selectfeature};
 end
 if ~isempty(cfg.selectfeature)

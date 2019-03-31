@@ -36,9 +36,9 @@ function [np_info] = np_readfileinfo (filename, option)
 %      np_info.setup          -   electrode setup
 %      np_info.pmtype         -   type of primary montage
 %      np_info.algorithm      -   used algorithm for measurement
-%      np_info.channels       -   cell array with channel names
-%      np_info.channeltypes   -   cell array with channel types
-%      np_info.units          -   cell array with channel units
+%      np_info.channels       -   cell-array with channel names
+%      np_info.channeltypes   -   cell-array with channel types
+%      np_info.units          -   cell-array with channel units
 %      np_info.PhysMin        -   physical minimum for each channel (global for splitted EEG files!)
 %      np_info.PhysMax        -   physical maximum for each channel (global for splitted EEG files!)
 %      np_info.N              -   number of samples per channel (global for splitted EEG files!)
@@ -96,7 +96,7 @@ np_info=struct('filename','','pathname','','name','','firstname','','birthday','
                'SPLIT_PhysMin',[],'SPLIT_PhysMax',[]);
 
 % -------------------------------------------------------------------------
-% alle zusammengehörenden EEG-Dateien ermitteln (z.B. bei SPLITTING)
+% alle zusammengehï¿½renden EEG-Dateien ermitteln (z.B. bei SPLITTING)
 % -------------------------------------------------------------------------
 [pa,fn,ex]=fileparts(filename);
 if strcmp(pa,''),
@@ -119,7 +119,7 @@ np_info.SPLIT_N=zeros(np_info.SPLIT_Z,1);
 np_info.SPLIT_fp_data=zeros(np_info.SPLIT_Z,1);
 
 for Z=1:np_info.SPLIT_Z
-    % Infos für nächste EEG-Datei lesen
+    % Infos fï¿½r nï¿½chste EEG-Datei lesen
     np_splitted_info=np_read_splitted_fileinfo(filenames{Z},option);
     
     % fixe Daten in np_info eintragen
@@ -154,7 +154,7 @@ for Z=1:np_info.SPLIT_Z
     np_info.SPLIT_PhysMin(Z,:)=np_splitted_info.PhysMin;
     np_info.SPLIT_PhysMax(Z,:)=np_splitted_info.PhysMax;
 
-    % Samplezähler erhöhen
+    % Samplezï¿½hler erhï¿½hen
     np_info.N=np_info.N+np_info.SPLIT_N(Z);
     
 end

@@ -139,7 +139,7 @@ facealpha       = ft_getopt(varargin, 'facealpha',   1);
 edgealpha       = ft_getopt(varargin, 'edgealpha',   1);
 
 if ischar(chantype)
-  % this should be a cell array
+  % this should be a cell-array
   chantype = {chantype};
 end
 

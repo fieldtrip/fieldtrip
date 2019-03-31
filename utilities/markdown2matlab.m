@@ -1,6 +1,6 @@
 function markdown2matlab(infile,outfile,varargin)
 
-% MARKDOWN2MATLAB converts a MarkDown file to a MATLAB script or function. All text
+% MARKDOWN2MATLAB converts a Markdown file to a MATLAB script or function. All text
 % is converted to comments, headings are converted to comment lines starting with %%
 % sections with code are properly formatted, and words that appear in bold, italic or
 % monospace are converted.
@@ -54,7 +54,7 @@ end
 [inpath, inname, inext] = fileparts(infile);
 if isempty(inpath), [inpath, inname, inext] = fileparts(which([inname inext])); end
 if ~strcmp(inext,'.md')
-  error('please specify a MarkDown file')
+  error('please specify a Markdown file')
 end
 
 if nargin < 2 || isempty(outfile)

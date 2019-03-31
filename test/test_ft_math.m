@@ -306,7 +306,7 @@ assert(tmp.avg(1)==9);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% idem for a source structure with a cell array
+% idem for a source structure with a cell-array
 
 cfg = [];
 cfg.parameter = 'mom';

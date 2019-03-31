@@ -38,7 +38,7 @@ function [data] = ft_appenddata(cfg, varargin)
 % file on disk and/or the output data will be written to a *.mat file. These mat
 % files should contain only a single variable, corresponding with the
 % input/output structure. The data structure in the input file should be a
-% cell array for this particular function.
+% cell-array for this particular function.
 %
 % See also FT_PREPROCESSING, FT_DATAYPE_RAW, FT_APPENDTIMELOCK, FT_APPENDFREQ,
 % FT_APPENDSOURCE, FT_APPENDSENS

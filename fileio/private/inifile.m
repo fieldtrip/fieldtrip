@@ -8,7 +8,7 @@ function readsett = inifile(fileName,operation,keys,style)
 %                   'deletekeys'(deletes keys and their values - if they exist),
 %                   'read'      (reads values as strings),
 %                   'write'     (writes values given as strings),
-%   - keys:         cell array of STRINGS; max 5 columns, min
+%   - keys:         cell-array of STRINGS; max 5 columns, min
 %                   3 columns. Each row has the same number of columns. The columns are:
 %                   'section':      section name string (the root is considered if empty or not given)
 %                   'subsection':   subsection name string (the root is considered if empty or not given)
@@ -361,7 +361,7 @@ function writekeys(fileName,keys,style)
 % Writes keys to the section and subsection pair
 % If any of the keys doesn't exist, a new key is added to
 % the end of the section-subsection pair otherwise the key is updated (changed).
-% Keys is a 4-column cell array of strings.
+% Keys is a 4-column cell-array of strings.
 
 global NL_CHAR;
 
@@ -666,7 +666,7 @@ end
 
 %------------------------------------
 function cs = cellstrings(m,n)
-% Creates a m x n cell array of empty strings - ''
+% Creates a m x n cell-array of empty strings - ''
 cs = cell(m,n);
 for ii=1:m
     for jj=1:n

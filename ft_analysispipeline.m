@@ -21,7 +21,7 @@ function [pipeline] = ft_analysispipeline(cfg, data)
 %   cfg.filetype   = string, can be 'matlab', 'html' or 'dot'
 %   cfg.feedback   = string, 'no', 'text', 'gui' or 'yes', whether text and/or
 %                    graphical feedback should be presented (default = 'yes')
-%   cfg.showinfo   = string or cell array of strings, information to display
+%   cfg.showinfo   = string or cell-array of strings, information to display
 %                    in the gui boxes, can be any combination of
 %                    'functionname', 'revision', 'matlabversion',
 %                    'computername', 'username', 'calltime', 'timeused',
@@ -189,7 +189,7 @@ ft_progress('init', cfg.feedback, 'parsing provenance...');
 pipeline = walktree(datacfg);
 ft_progress('close');
 
-% convert the cell array into a structure array
+% convert the cell-array into a structure array
 for i=1:length(pipeline)
   tmp(i) = pipeline{i};
 end

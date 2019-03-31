@@ -425,12 +425,12 @@ else
     cfg.trl = trl;
   end
   
-  % this should be a cell array
+  % this should be a cell-array
   if ~iscell(cfg.channel) && ischar(cfg.channel)
     cfg.channel = {cfg.channel};
   end
   
-  % this should be a cell array
+  % this should be a cell-array
   if ~iscell(cfg.refchannel) && ischar(cfg.refchannel)
     cfg.refchannel = {cfg.refchannel};
   end
