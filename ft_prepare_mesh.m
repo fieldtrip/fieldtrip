@@ -37,9 +37,9 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %     cfg.headshape    = polhemus;
 %     cfg.template     = template;
 %     cfg.method       = 'fittemplate';
-%     mesh        = ft_prepare_mesh(cfg, mesh); will compute an
-%     affine transformation to fit cfg.template to cfg.headshape, and
-%     applies this transformation on mesh
+%     mesh             = ft_prepare_mesh(cfg, mesh); will compute an
+%                       affine transformation to fit cfg.template to cfg.headshape, and
+%                       applies this transformation on mesh
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
