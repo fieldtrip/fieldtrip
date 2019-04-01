@@ -22,12 +22,24 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %   cfg.downsample  = integer number (default = 1, i.e. no downsampling), see FT_VOLUMEDOWNSAMPLE
 %   cfg.spmversion  = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
 %
-% For method 'headshape you should specify
+% For method 'headshape' you should specify
 %   cfg.headshape   = a filename containing headshape, a Nx3 matrix with surface
 %                     points, or a structure with a single or multiple boundaries
 %
 % For method 'cortexhull' you should not give input data, but specify
-%   cfg.headshape   = sting, filename containing the pial surface computed by freesurfer recon-all
+%   cfg.headshape   = string, filename containing the pial surface computed by freesurfer recon-all
+%
+% For method 'fittemplate' you should specify
+%   cfg.headshape   = a filename containing headshape
+%   cfg.template    = a filename containing headshape
+%   Example use:
+%     cfg              = [];
+%     cfg.headshape    = polhemus;
+%     cfg.template     = template;
+%     cfg.method       = 'fittemplate';
+%     mesh        = ft_prepare_mesh(cfg, mesh); will compute an
+%     affine transformation to fit cfg.template to cfg.headshape, and
+%     applies this transformation on mesh
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
