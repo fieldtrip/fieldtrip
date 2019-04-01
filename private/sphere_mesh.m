@@ -1,15 +1,15 @@
-function [pos, tri] = sphere_mesh(varargin)
+function [pos, tri] = sphere_mesh(n)
 
-% SPHERE_MESH creates spherical mesh, based on a (refined) icosahedron, starting
-% from 12 vertices and 20 triangles
+% SPHERE_MESH creates spherical mesh, with approximately nvertices vertices
 %
 % Use as
-%   [pos, tri] = sphere_mesh(n)
+%   [pos, tri] = sphere_mesh(numvertices)
 %
-% Where the input parameter specifies the number of refinement steps. If n = 0,
-% or empty, the sphere will consist of 12 vertices. The number of vertices will
-% be equal to 10*4^(n+1)+2. This function replaces Roberts old icosahedronXXX
-% functions.
+% Where the input parameter specifies the (approximate) number of vertices.
+% Once log4((n-2)/10) is an integer, the mesh will be based on a refined
+% icosahedron, using Robert's old icosahedronXXX functionality. Otherwise,
+% an msphere will be used. If n is empty, or undefined, a 12 vertex
+% icosahedron will be returned.
 %
 % See also TETRAHEDRON, OCTAHEDRON
 
@@ -33,52 +33,62 @@ function [pos, tri] = sphere_mesh(varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 
-tri = [
-  1   2   3
-  1   3   4
-  1   4   5
-  1   5   6
-  1   6   2
-  2   8   3
-  3   9   4
-  4  10   5
-  5  11   6
-  6   7   2
-  7   8   2
-  8   9   3
-  9  10   4
-  10  11   5
-  11   7   6
-  12   8   7
-  12   9   8
-  12  10   9
-  12  11  10
-  12   7  11
-  ];
+if nargin==0
+  n = 12;
+end
 
-pos = zeros(12, 3);
+r = log((n-2)./10)./log(4);
 
-rho=0.4*sqrt(5);
-phi=2*pi*(0:4)/5;
-
-pos( 1, :) = [0 0  1];          % top point
-
-pos(2:6, 1) = rho*cos(phi)';
-pos(2:6, 2) = rho*sin(phi)';
-pos(2:6, 3) = rho/2;
-
-pos(7:11, 1) = rho*cos(phi - pi/5)';
-pos(7:11, 2) = rho*sin(phi - pi/5)';
-pos(7:11, 3) = -rho/2;
-
-pos(12, :) = [0 0 -1];          % bottom point
-
-if nargin>0
-  n = varargin{1};
-  % perform an n-fold refinement
-  for i=1:n
-    [pos, tri] = refine(pos, tri);
-    % scale all vertices to the unit sphere
-    pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1, 3);
+if round(r)==r
+  
+  tri = [
+    1   2   3
+    1   3   4
+    1   4   5
+    1   5   6
+    1   6   2
+    2   8   3
+    3   9   4
+    4  10   5
+    5  11   6
+    6   7   2
+    7   8   2
+    8   9   3
+    9  10   4
+    10  11   5
+    11   7   6
+    12   8   7
+    12   9   8
+    12  10   9
+    12  11  10
+    12   7  11
+    ];
+  
+  pos = zeros(12, 3);
+  
+  rho=0.4*sqrt(5);
+  phi=2*pi*(0:4)/5;
+  
+  pos( 1, :) = [0 0  1];          % top point
+  
+  pos(2:6, 1) = rho*cos(phi)';
+  pos(2:6, 2) = rho*sin(phi)';
+  pos(2:6, 3) = rho/2;
+  
+  pos(7:11, 1) = rho*cos(phi - pi/5)';
+  pos(7:11, 2) = rho*sin(phi - pi/5)';
+  pos(7:11, 3) = -rho/2;
+  
+  pos(12, :) = [0 0 -1];          % bottom point
+  
+  if r>0
+    % perform an n-fold refinement
+    for i=1:r
+      [pos, tri] = refine(pos, tri);
+      % scale all vertices to the unit sphere
+      pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1, 3);
+    end
   end
+else
+  [pos, tri] = msphere(n);
 end

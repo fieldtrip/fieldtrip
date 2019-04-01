@@ -167,7 +167,7 @@ switch cfg.method
   case {'singlesphere' 'concentricspheres' 'localspheres'}
     % FIXME for localspheres it should be replaced by an outline of the head, see private/headsurface
     fprintf('triangulating the sphere in the volume conductor\n');
-    [pos, tri] = makesphere(cfg.numvertices);
+    [pos, tri] = sphere_mesh(cfg.numvertices);
     bnd = [];
     mri = ft_determine_units(mri);      % ensure that it has units
     headmodel = ft_datatype_headmodel(mri); % rename it and ensure that it is consistent and up-to-date
@@ -220,28 +220,3 @@ ft_postamble trackconfig
 ft_postamble previous   mri
 ft_postamble provenance bnd
 ft_postamble history    bnd
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% HELPER FUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [pos, tri] = makesphere(numvertices)
-
-if isempty(numvertices)
-  [pos,tri] = icosahedron162;
-  fprintf('using the mesh specified by icosaedron162\n');
-elseif numvertices==42
-  [pos,tri] = icosahedron42;
-  fprintf('using the mesh specified by icosaedron%d\n',size(pos,1));
-elseif numvertices==162
-  [pos,tri] = icosahedron162;
-  fprintf('using the mesh specified by icosaedron%d\n',size(pos,1));
-elseif numvertices==642
-  [pos,tri] = icosahedron642;
-  fprintf('using the mesh specified by icosaedron%d\n',size(pos,1));
-elseif numvertices==2562
-  [pos,tri] = icosahedron2562;
-  fprintf('using the mesh specified by icosaedron%d\n',size(pos,1));
-else
-  [pos, tri] = msphere(numvertices);
-  fprintf('using the mesh specified by msphere with %d vertices\n',size(pos,1));
-end
