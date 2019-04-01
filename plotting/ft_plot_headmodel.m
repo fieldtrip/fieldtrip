@@ -74,7 +74,7 @@ faceindex   = istrue(faceindex);   % yes=view the face number
 vertexindex = istrue(vertexindex); % yes=view the vertex number
 
 % we will probably need a sphere, so let's prepare one
-[pos, tri] = icosahedron2562;
+[pos, tri] = sphere_mesh(2562);
 
 % prepare a single or multiple triangulated boundaries
 switch ft_headmodeltype(headmodel)

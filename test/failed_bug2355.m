@@ -11,7 +11,7 @@ vol.o = [0 0 4];
 vol.unit = 'cm';
 
 %% make a set of electrodes, in cm
-[pnt, tri] = icosahedron162;
+[pnt, tri] = sphere_mesh(162);
 pnt = pnt(pnt(:,3)>0,:); % only above z=0
 pnt = pnt*12;
 pnt(:,3) = pnt(:,3) + 4;

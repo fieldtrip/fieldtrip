@@ -18,7 +18,7 @@ inside  = find(inside);
 clear x y z
 
 % create a triangulated mesh
-[pnt,tri] = icosahedron162;
+[pnt,tri] = sphere_mesh(162);
 npnt      = size(pnt,1);
 
 

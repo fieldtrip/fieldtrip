@@ -108,7 +108,7 @@ cfg.sourcemodel.resolution = 0.01;
 cfg.channel = 'MEG';
 sourcemodel_grid = ft_prepare_leadfield(cfg);
 
-[pnt,tri] = icosahedron642;
+[pnt,tri] = sphere_mesh(642);
 cfg.sourcemodel  = struct('pos',pnt.*0.06,'tri',tri,'unit','m');
 sourcemodel_mesh = ft_prepare_leadfield(cfg);
 

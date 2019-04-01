@@ -1,15 +1,17 @@
-function [pos, tri] = sphere_mesh(n)
+function [pos, tri] = sphere_mesh(n, method)
 
 % SPHERE_MESH creates spherical mesh, with approximately nvertices vertices
 %
 % Use as
-%   [pos, tri] = sphere_mesh(numvertices)
+%   [pos, tri] = sphere_mesh(numvertices, method)
 %
-% Where the input parameter specifies the (approximate) number of vertices.
+% Where the input parameter  n specifies the (approximate) number of vertices.
 % Once log4((n-2)/10) is an integer, the mesh will be based on a refined
 % icosahedron, using Robert's old icosahedronXXX functionality. Otherwise,
 % an msphere will be used. If n is empty, or undefined, a 12 vertex
-% icosahedron will be returned.
+% icosahedron will be returned. The method parameter defines which function
+% to use when an refined icosahedron is not possible, and can be 'msphere'
+% (default), or 'ksphere'.
 %
 % See also TETRAHEDRON, OCTAHEDRON
 
@@ -35,6 +37,10 @@ function [pos, tri] = sphere_mesh(n)
 
 if nargin==0
   n = 12;
+end
+
+if nargin==1
+  method = 'msphere';
 end
 
 r = log((n-2)./10)./log(4);
@@ -90,5 +96,10 @@ if round(r)==r
     end
   end
 else
-  [pos, tri] = msphere(n);
+  switch method
+    case 'msphere'
+      [pos, tri] = msphere(n);
+    case 'ksphere'
+      [pos, tri] = ksphere(n);
+  end
 end

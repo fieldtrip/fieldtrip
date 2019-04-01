@@ -14,7 +14,7 @@ ssvol.o = [0,0,0];
 ssvol.r = [60];
 assert(ft_headmodeltype(ssvol,'singlesphere'))
 
-[pnt, tri] = icosahedron162;
+[pnt, tri] = sphere_mesh(162);
 svol.bnd(1).pnt = 10*pnt;
 svol.bnd(1).tri = tri;
 svol.bnd(2).pnt = 50*pnt;

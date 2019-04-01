@@ -7,7 +7,7 @@ function test_bug2370
 
 filename = [tempname '.ply'];
 
-[pos, tri] = icosahedron162;
+[pos, tri] = sphere_mesh(162);
 
 % combine them in a structure
 mesh1.pos = pos;

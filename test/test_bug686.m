@@ -5,7 +5,7 @@ function test_bug686
 
 % DEPENDENCY ft_convert_units ft_prepare_headmodel ft_prepare_leadfield ft_prepare_sourcemodel ft_headmodel_openmeeg headsurface
 
-[pnt, tri] = icosahedron162;
+[pnt, tri] = sphere_mesh(162);
 pnt = pnt .* 10;           % convert to cm
 sel = find(pnt(:,3)>0);    % take the upper hemisphere
 
