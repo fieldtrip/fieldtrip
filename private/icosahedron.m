@@ -27,4 +27,4 @@ function [pos, tri] = icosahedron(varargin)
 %
 
 warning('icosahedron is only a compatibility wrapper, which will soon be removed. Please instead call sphere_mesh.');
-[pos, tri] = icosahedron(varargin{:});
+[pos, tri] = sphere_mesh(varargin{:});
