@@ -114,6 +114,10 @@ cfg.feedback     = ft_getopt(cfg, 'feedback',     'text');
 cfg = ft_checkconfig(cfg, 'renamedval',  {'headshape', 'headmodel', []});
 if ~strcmp(cfg.planarmethod, 'sourceproject')
   cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
+  if ischar(cfg.neighbours) && strcmp(ft_filetype(cfg.neighbours), 'matlab') 
+    tmpcfg = keepfields(cfg, {'neighbours', 'neighbourdist', 'channel', 'elec', 'grad', 'opto', 'showcallinfo'});
+    cfg.neighbours = ft_prepare_neighbours(tmpcfg);
+  end
 end
 
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')

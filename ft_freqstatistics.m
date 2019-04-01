@@ -122,6 +122,10 @@ tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'latency', 'avgovertime', 
 if strcmp(cfg.correctm, 'cluster') && length(varargin{1}.label)>1
   % this is required for clustering with multiple channels
   ft_checkconfig(cfg, 'required', 'neighbours');
+  if ischar(cfg.neighbours) && strcmp(ft_filetype(cfg.neighbours), 'matlab') 
+    tmpcfg = keepfields(cfg, {'neighbours', 'neighbourdist', 'channel', 'elec', 'grad', 'opto', 'showcallinfo'});
+    cfg.neighbours = ft_prepare_neighbours(tmpcfg);
+  end
 end
 
 dimord = getdimord(varargin{1}, cfg.parameter);
