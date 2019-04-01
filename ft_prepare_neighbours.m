@@ -81,196 +81,203 @@ if ft_abort
   return
 end
 
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'required', {'method'});
-cfg = ft_checkconfig(cfg, 'renamed',  {'elecfile', 'elec'});
-cfg = ft_checkconfig(cfg, 'renamed',  {'gradfile', 'grad'});
-cfg = ft_checkconfig(cfg, 'renamed',  {'optofile', 'opto'});
-cfg = ft_checkconfig(cfg, 'renamed',  {'template', 'neighbours'});
-
-
-% set the defaults
-cfg.feedback = ft_getopt(cfg, 'feedback', 'no');
-cfg.channel  = ft_getopt(cfg, 'channel', 'all');
-
 % the data can be passed as input arguments or can be read from disk
 hasdata = exist('data', 'var');
 
-if hasdata
-  % check if the input data is valid for this function
-  data = ft_checkdata(data);
-  % set the default for senstype depending on the data
-  if isfield(data, 'grad')
-    cfg.senstype = ft_getopt(cfg, 'senstype', 'meg');
-  elseif isfield(data, 'elec')
-    cfg.senstype = ft_getopt(cfg, 'senstype', 'eeg');
-  elseif isfield(data, 'opto')
-    cfg.senstype = ft_getopt(cfg, 'senstype', 'opto');
-  else
-    cfg.senstype = ft_getopt(cfg, 'senstype', []);
-  end
-end
 
-if strcmp(cfg.method, 'template')
-  neighbours = [];
-  fprintf('Trying to load sensor neighbours from a template\n');
-  % determine from where to load the neighbour template
-  if ~isfield(cfg, 'neighbours')
-    % if data has been put in, try to estimate the sensor type
-    if hasdata
-      fprintf('Estimating sensor type of data to determine the layout filename\n');
-      senstype = ft_senstype(data.label);
-      fprintf('Data is of sensor type ''%s''\n', senstype);
-      if ~exist([senstype '_neighb.mat'], 'file')
-        if exist([senstype '.lay'], 'file')
-          cfg.layout = [senstype '.lay'];
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'renamed',  {'template', 'neighbours'});
+if ~hasdata && isfield(cfg, 'neighbours') && ischar(cfg.neighbours) && ...
+        strcmp(ft_filetype(cfg.neighbours), 'matlab')
+    neighbours = loadvar(cfg.neighbours);
+else
+  cfg = ft_checkconfig(cfg, 'required', {'method'});
+  cfg = ft_checkconfig(cfg, 'renamed',  {'elecfile', 'elec'});
+  cfg = ft_checkconfig(cfg, 'renamed',  {'gradfile', 'grad'});
+  cfg = ft_checkconfig(cfg, 'renamed',  {'optofile', 'opto'});
+  
+  
+  % set the defaults
+  cfg.feedback = ft_getopt(cfg, 'feedback', 'no');
+  cfg.channel  = ft_getopt(cfg, 'channel', 'all');
+  
+  
+  if hasdata
+    % check if the input data is valid for this function
+    data = ft_checkdata(data);
+    % set the default for senstype depending on the data
+    if isfield(data, 'grad')
+      cfg.senstype = ft_getopt(cfg, 'senstype', 'meg');
+    elseif isfield(data, 'elec')
+      cfg.senstype = ft_getopt(cfg, 'senstype', 'eeg');
+    elseif isfield(data, 'opto')
+      cfg.senstype = ft_getopt(cfg, 'senstype', 'opto');
+    else
+      cfg.senstype = ft_getopt(cfg, 'senstype', []);
+    end
+  end
+  
+  if strcmp(cfg.method, 'template')
+    neighbours = [];
+    fprintf('Trying to load sensor neighbours from a template\n');
+    % determine from where to load the neighbour template
+    if ~isfield(cfg, 'neighbours')
+      % if data has been put in, try to estimate the sensor type
+      if hasdata
+        fprintf('Estimating sensor type of data to determine the layout filename\n');
+        senstype = ft_senstype(data.label);
+        fprintf('Data is of sensor type ''%s''\n', senstype);
+        if ~exist([senstype '_neighb.mat'], 'file')
+          if exist([senstype '.lay'], 'file')
+            cfg.layout = [senstype '.lay'];
+          else
+            fprintf('Name of sensor type does not match name of layout- and template-file\n');
+          end
         else
-          fprintf('Name of sensor type does not match name of layout- and template-file\n');
+          cfg.neighbours = [senstype '_neighb.mat'];
         end
-      else
-        cfg.neighbours = [senstype '_neighb.mat'];
       end
     end
-  end
-  % if that failed
-  if ~isfield(cfg, 'neighbours')
-    % check whether a layout can be used
-    if ~isfield(cfg, 'layout')
-      % error if that fails as well
-      ft_error('You need to define a template or layout or give data as an input argument when ft_prepare_neighbours is called with cfg.method=''template''');
-    end
-    fprintf('Using the 2-D layout filename to determine the template filename\n');
-    cfg.neighbours = [strtok(cfg.layout, '.') '_neighb.mat'];
-  end
-  % adjust filename
-  if ~exist(cfg.neighbours, 'file')
-    cfg.neighbours = lower(cfg.neighbours);
-  end
-  % add necessary extensions
-  if numel(cfg.neighbours) < 4 || ~isequal(cfg.neighbours(end-3:end), '.mat')
-    if numel(cfg.neighbours) < 7 || ~isequal(cfg.neighbours(end-6:end), '_neighb')
-      cfg.neighbours = [cfg.neighbours, '_neighb'];
-    end
-    cfg.neighbours = [cfg.neighbours, '.mat'];
-  end
-  % check for existence
-  if ~exist(cfg.neighbours, 'file')
-    ft_error('Template file could not be found - please check spelling or see http://www.fieldtriptoolbox.org/faq/how_can_i_define_my_own_neighbourhood_template (please consider sharing it with others via the FT mailing list)');
-  end
-  load(cfg.neighbours);
-  fprintf('Successfully loaded neighbour structure from %s\n', cfg.neighbours);
-
-else
-  % get the the grad or elec if not present in the data
-  if hasdata
-    sens = ft_fetch_sens(cfg, data);
-  else
-    sens = ft_fetch_sens(cfg);
-  end
-
-  if strcmp(ft_senstype(sens), 'neuromag306')
-    ft_warning('Neuromag306 system detected - be aware of different sensor types, see http://www.fieldtriptoolbox.org/faq/why_are_there_multiple_neighbour_templates_for_the_neuromag306_system');
-  end
-  chanpos = sens.chanpos;
-  label   = sens.label;
-
-  if nargin > 1
-    % remove channels that are not in data
-    [dataidx, sensidx] = match_str(data.label, label);
-    chanpos = chanpos(sensidx, :);
-    label   = label(sensidx);
-  end
-
-  if ~strcmp(cfg.channel, 'all')
-    desired = ft_channelselection(cfg.channel, label);
-    [sensidx] = match_str(label, desired);
-    chanpos = chanpos(sensidx, :);
-    label   = label(sensidx);
-  end
-
-  switch lower(cfg.method)
-    case 'distance'
-      % use a smart default for the distance
-      if ~isfield(cfg, 'neighbourdist')
-        sens = ft_checkdata(sens, 'hasunit', 'yes');
-        cfg.neighbourdist = 40 * ft_scalingfactor('mm', sens.unit);
-        fprintf('using a distance threshold of %g\n', cfg.neighbourdist);
+    % if that failed
+    if ~isfield(cfg, 'neighbours')
+      % check whether a layout can be used
+      if ~isfield(cfg, 'layout')
+        % error if that fails as well
+        ft_error('You need to define a template or layout or give data as an input argument when ft_prepare_neighbours is called with cfg.method=''template''');
       end
-
-      neighbours = compneighbstructfromgradelec(chanpos, label, cfg.neighbourdist);
-    case {'triangulation', 'tri'} % the latter for reasons of simplicity
-      if size(chanpos, 2)==2 || all(chanpos(:,3)==0)
-        % the sensor positions are already on a 2D plane
-        prj = chanpos(:,1:2);
-      else
-        % project sensor on a 2D plane
-        prj = elproj(chanpos);
+      fprintf('Using the 2-D layout filename to determine the template filename\n');
+      cfg.neighbours = [strtok(cfg.layout, '.') '_neighb.mat'];
+    end
+    % adjust filename
+    if ~exist(cfg.neighbours, 'file')
+      cfg.neighbours = lower(cfg.neighbours);
+    end
+    % add necessary extensions
+    if numel(cfg.neighbours) < 4 || ~isequal(cfg.neighbours(end-3:end), '.mat')
+      if numel(cfg.neighbours) < 7 || ~isequal(cfg.neighbours(end-6:end), '_neighb')
+        cfg.neighbours = [cfg.neighbours, '_neighb'];
       end
-      % make a 2d delaunay triangulation of the projected points
-      tri = delaunay(prj(:,1), prj(:,2));
-      tri_x = delaunay(prj(:,1)./2, prj(:,2));
-      tri_y = delaunay(prj(:,1), prj(:,2)./2);
-      tri = [tri; tri_x; tri_y];
-      neighbours = compneighbstructfromtri(chanpos, label, tri);
-    otherwise
-      ft_error('Method ''%s'' not known', cfg.method);
-  end
-end
-
-% removed as from Nov 09 2011 - hope there are no problems with this
-% if iscell(neighbours)
-%   ft_warning('Neighbourstructure is in old format - converting to structure array');
-%   neighbours = fixneighbours(neighbours);
-% end
-
-% only select those channels that are in the data
-neighb_chans = {neighbours(:).label};
-if isfield(cfg, 'channel') && ~isempty(cfg.channel)
-  if hasdata
-    desired = ft_channelselection(cfg.channel, data.label);
+      cfg.neighbours = [cfg.neighbours, '.mat'];
+    end
+    % check for existence
+    if ~exist(cfg.neighbours, 'file')
+      ft_error('Template file could not be found - please check spelling or see http://www.fieldtriptoolbox.org/faq/how_can_i_define_my_own_neighbourhood_template (please consider sharing it with others via the FT mailing list)');
+    end
+    load(cfg.neighbours);
+    fprintf('Successfully loaded neighbour structure from %s\n', cfg.neighbours);
+    
   else
-    desired = ft_channelselection(cfg.channel, neighb_chans);
+    % get the the grad or elec if not present in the data
+    if hasdata
+      sens = ft_fetch_sens(cfg, data);
+    else
+      sens = ft_fetch_sens(cfg);
+    end
+    
+    if strcmp(ft_senstype(sens), 'neuromag306')
+      ft_warning('Neuromag306 system detected - be aware of different sensor types, see http://www.fieldtriptoolbox.org/faq/why_are_there_multiple_neighbour_templates_for_the_neuromag306_system');
+    end
+    chanpos = sens.chanpos;
+    label   = sens.label;
+    
+    if nargin > 1
+      % remove channels that are not in data
+      [dataidx, sensidx] = match_str(data.label, label);
+      chanpos = chanpos(sensidx, :);
+      label   = label(sensidx);
+    end
+    
+    if ~strcmp(cfg.channel, 'all')
+      desired = ft_channelselection(cfg.channel, label);
+      [sensidx] = match_str(label, desired);
+      chanpos = chanpos(sensidx, :);
+      label   = label(sensidx);
+    end
+    
+    switch lower(cfg.method)
+      case 'distance'
+        % use a smart default for the distance
+        if ~isfield(cfg, 'neighbourdist')
+          sens = ft_checkdata(sens, 'hasunit', 'yes');
+          cfg.neighbourdist = 40 * ft_scalingfactor('mm', sens.unit);
+          fprintf('using a distance threshold of %g\n', cfg.neighbourdist);
+        end
+        
+        neighbours = compneighbstructfromgradelec(chanpos, label, cfg.neighbourdist);
+      case {'triangulation', 'tri'} % the latter for reasons of simplicity
+        if size(chanpos, 2)==2 || all(chanpos(:,3)==0)
+          % the sensor positions are already on a 2D plane
+          prj = chanpos(:,1:2);
+        else
+          % project sensor on a 2D plane
+          prj = elproj(chanpos);
+        end
+        % make a 2d delaunay triangulation of the projected points
+        tri = delaunay(prj(:,1), prj(:,2));
+        tri_x = delaunay(prj(:,1)./2, prj(:,2));
+        tri_y = delaunay(prj(:,1), prj(:,2)./2);
+        tri = [tri; tri_x; tri_y];
+        neighbours = compneighbstructfromtri(chanpos, label, tri);
+      otherwise
+        ft_error('Method ''%s'' not known', cfg.method);
+    end
   end
-elseif (hasdata)
-  desired = data.label;
-else
-  desired = neighb_chans;
-end
-
-% in any case remove SCALE and COMNT
-desired = ft_channelselection({'all', '-SCALE', '-COMNT'}, desired);
-
-neighb_idx = ismember(neighb_chans, desired);
-neighbours = neighbours(neighb_idx);
-
-k = 0;
-for i=1:length(neighbours)
-  if isempty(neighbours(i).neighblabel)
-    ft_warning('no neighbours found for %s\n', neighbours(i).label);
-    % JMH: I removed this in Feb 2013 - this is handled above now
-    % note however that in case of using a template, this function behaves
-    % differently now (neighbourschans can still be channels not in
-    % cfg.channel)
-    %else % only selected desired channels
-    %  neighbours(i).neighblabel = neighbours(i).neighblabel(ismember(neighbours(i).neighblabel, desired));
-  end
-  k = k + length(neighbours(i).neighblabel);
-end
-
-if k==0
-  ft_error('No neighbours were found');
-end
-
-fprintf('there are on average %.1f neighbours per channel\n', k/length(neighbours));
-
-if strcmp(cfg.feedback, 'yes')
-  % give some graphical feedback
-  tmpcfg = keepfields(cfg, {'grad', 'elec', 'opto', 'layout', 'senstype'});
-  tmpcfg.neighbours = neighbours;
-  if hasdata
-    ft_neighbourplot(tmpcfg, data);
+  
+  % removed as from Nov 09 2011 - hope there are no problems with this
+  % if iscell(neighbours)
+  %   ft_warning('Neighbourstructure is in old format - converting to structure array');
+  %   neighbours = fixneighbours(neighbours);
+  % end
+  
+  % only select those channels that are in the data
+  neighb_chans = {neighbours(:).label};
+  if isfield(cfg, 'channel') && ~isempty(cfg.channel)
+    if hasdata
+      desired = ft_channelselection(cfg.channel, data.label);
+    else
+      desired = ft_channelselection(cfg.channel, neighb_chans);
+    end
+  elseif (hasdata)
+    desired = data.label;
   else
-    ft_neighbourplot(tmpcfg);
+    desired = neighb_chans;
+  end
+  
+  % in any case remove SCALE and COMNT
+  desired = ft_channelselection({'all', '-SCALE', '-COMNT'}, desired);
+  
+  neighb_idx = ismember(neighb_chans, desired);
+  neighbours = neighbours(neighb_idx);
+  
+  k = 0;
+  for i=1:length(neighbours)
+    if isempty(neighbours(i).neighblabel)
+      ft_warning('no neighbours found for %s\n', neighbours(i).label);
+      % JMH: I removed this in Feb 2013 - this is handled above now
+      % note however that in case of using a template, this function behaves
+      % differently now (neighbourschans can still be channels not in
+      % cfg.channel)
+      %else % only selected desired channels
+      %  neighbours(i).neighblabel = neighbours(i).neighblabel(ismember(neighbours(i).neighblabel, desired));
+    end
+    k = k + length(neighbours(i).neighblabel);
+  end
+  
+  if k==0
+    ft_error('No neighbours were found');
+  end
+  
+  fprintf('there are on average %.1f neighbours per channel\n', k/length(neighbours));
+  
+  if strcmp(cfg.feedback, 'yes')
+    % give some graphical feedback
+    tmpcfg = keepfields(cfg, {'grad', 'elec', 'opto', 'layout', 'senstype'});
+    tmpcfg.neighbours = neighbours;
+    if hasdata
+      ft_neighbourplot(tmpcfg, data);
+    else
+      ft_neighbourplot(tmpcfg);
+    end
   end
 end
 
