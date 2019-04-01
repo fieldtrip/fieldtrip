@@ -2,7 +2,7 @@ function failed_headmodel_interpolate
 
 % WALLTIME 00:45:00
 % MEM 6gb
-% DEPENDENCY sphere_mesh(162) ft_headmodeltype ft_headmodel_interpolate ft_prepare_vol_sens ft_compute_leadfield leadfield_interpolate ft_apply_transform
+% DEPENDENCY sphere_mesh ft_headmodeltype ft_headmodel_interpolate ft_prepare_vol_sens ft_compute_leadfield leadfield_interpolate ft_apply_transform
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% create a set of electrodes nicely covering the upper half of a sphere
