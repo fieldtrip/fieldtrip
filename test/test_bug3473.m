@@ -16,16 +16,12 @@ template = ft_convert_units(template,'mm');
 
 m = [0.0000    0.9000         0   40.5000;
     -0.8966    0.0000    0.0784         0;
-    0.0784   -0.0000    0.8966   18.0000;
-    0         0         0    1.0000];
+     0.0784   -0.0000    0.8966   18.0000;
+     0         0         0         1.0000];
 template = ft_transform_geometry(m, template);
 
-% deface the head surfaces, here I use only the undefaced meshes, defaced
-% ones would need an interactive function
-defaced_template      = template.bnd(1);
-defaced_template.unit = template.unit;
-
-defaced_polhemus = polhemus;
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3473/defaced_polhemus.mat'))
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3473/defaced_template.mat'))
 
 ft_plot_mesh(defaced_template);
 ft_plot_mesh(defaced_polhemus);
@@ -59,15 +55,15 @@ transformation = T1*S*T2;
 
 template_sphere = ft_transform_geometry(transformation, template);
 
-cfg             = [];
-cfg.headshape   = polhemus;
-cfg.template    = defaced_template;
-cfg.method      = 'fittemplate';
-fitted          = ft_prepare_mesh(cfg, template.bnd);
+cfg              = [];
+cfg.headshape    = polhemus;
+cfg.template     = defaced_template;
+cfg.method       = 'fittemplate';
+template_surface = ft_prepare_mesh(cfg, template.bnd);
 
 cfg = [];
 cfg.method = 'openmeeg';
-headmodel_sphere = ft_prepare_headmodel(cfg, template_sphere);
+headmodel_sphere = ft_prepare_headmodel(cfg, template_sphere.bnd);
 
 cfg = [];
 cfg.method = 'openmeeg';
