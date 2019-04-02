@@ -95,11 +95,11 @@ if ~isempty(headshape)
       headshape(i).tri = projecttri(headshape(i).pos);
     end
   end
-
+  
   % the headshape should be specified as a surface structure with pos and tri
   pos = headshape.pos;
   tri = headshape.tri;
-
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif ~isempty(headmodel) && isfield(headmodel, 'r') && length(headmodel.r)<5
   if length(headmodel.r)==1
@@ -133,14 +133,26 @@ elseif ~isempty(headmodel) && isfield(headmodel, 'r') && length(headmodel.r)<5
     npos = 642;
   end
   % construct an evenly tesselated unit sphere
-  [pos, tri] = sphere_mesh(npos, 'ksphere')
-
+  switch npos
+    case 2562
+      [pos, tri] = sphere_mesh(2562);
+    case 642
+      [pos, tri] = sphere_mesh(642);
+    case 162
+      [pos, tri] = sphere_mesh(162);
+    case 42
+      [pos, tri] = sphere_mesh(42);
+    case 12
+      [pos, tri] = icosahedron;
+    otherwise
+      [pos, tri] = ksphere(npos);
+  end
   % scale and translate the vertices
   pos = pos*radius;
   pos(:,1) = pos(:,1) + origin(1);
   pos(:,2) = pos(:,2) + origin(2);
   pos(:,3) = pos(:,3) + origin(3);
-
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif ft_headmodeltype(headmodel, 'localspheres')
   % local spheres MEG model, this also requires a gradiometer structure
@@ -175,7 +187,7 @@ elseif ft_headmodeltype(headmodel, 'localspheres')
   end
   % construct the triangulation of the surface
   tri = projecttri(pos);
-
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif ft_headmodeltype(headmodel, 'bem') ||  ft_headmodeltype(headmodel, 'singleshell')
   % volume conduction model with triangulated boundaries
@@ -199,8 +211,21 @@ end
 
 % retriangulate the skin/brain/cortex surface to the desired number of vertices
 if ~isempty(npos) && size(pos,1)~=npos
-  [pnt2, tri2] = sphere_mesh(npos, 'ksphere')
-  [pos,  tri]  = retriangulate(pos, tri, pnt2, tri2, 2);
+  switch npos
+    case 2562
+      [pnt2, tri2] = sphere_mesh(2562);
+    case 642
+      [pnt2, tri2] = sphere_mesh(642);
+    case 162
+      [pnt2, tri2] = sphere_mesh(162);
+    case 42
+      [pnt2, tri2] = sphere_mesh(42);
+    case 12
+      [pnt2, tri2] = icosahedron;
+    otherwise
+      [pnt2, tri2] = ksphere(npos);
+  end
+  [pos, tri] = retriangulate(pos, tri, pnt2, tri2, 2);
 end
 
 % shift the surface inward with a certain amount
