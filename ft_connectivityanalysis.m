@@ -421,7 +421,7 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
           data = ft_checkdata(data, 'cmbrepresentation', 'full');
         end
 
-        % convert the inparam back to cell array in the case of granger
+        % convert the inparam back to cell-array in the case of granger
         if any(strcmp(cfg.method, {'granger' 'instantaneous_causality' 'total_interdependence' 'transfer' 'iis'}))
           inparam = {'transfer' 'noisecov' 'crsspctrm'};
           tmpcfg  = ft_checkconfig(cfg, 'createsubcfg', {'granger'});

@@ -3,7 +3,7 @@ function test_bug1725
 % MEM 3gb
 % WALLTIME 00:10:00
 
-% TEST ft_read_atlas ft_prepare_atlas
+% DEPENDENCY ft_read_atlas ft_prepare_atlas
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1725/afni'));
 

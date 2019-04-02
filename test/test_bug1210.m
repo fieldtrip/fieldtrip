@@ -3,7 +3,7 @@ function test_bug1210
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_datatype_sens
+% DEPENDENCY ft_datatype_sens
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
 load bug1210.mat

@@ -31,7 +31,7 @@ function [elec] = read_bioimage_mgrid(mgridfile)
 % $Id$
 
 % define output
-elec.label = {}; % N x 1 cell array
+elec.label = {}; % N x 1 cell-array
 elec.elecpos = []; % N x 3 matrix
 
 % conditional variables

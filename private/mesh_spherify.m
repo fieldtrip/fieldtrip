@@ -36,7 +36,7 @@ end
 % the following code is for debugging
 if fb
   figure
-  [sphere_pnt, sphere_tri] = icosahedron162;
+  [sphere_pnt, sphere_tri] = sphere_mesh(162);
   y = vonmisesfischer(5, [0 0 1], sphere_pnt);
   triplot(sphere_pnt, sphere_tri, y);
 end
@@ -111,7 +111,7 @@ pnt = mscale * pnt;
 
 if fb
   figure
-  [sphere_pnt, sphere_tri] = icosahedron162;
+  [sphere_pnt, sphere_tri] = sphere_mesh(162);
   triplot(sphere_pnt, sphere_tri, [], 'faces_skin');
   triplot(pnt, tri, [], 'faces_skin');
   alpha 0.5

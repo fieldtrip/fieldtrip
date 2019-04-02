@@ -6,7 +6,7 @@ function test_bug1816
 % test the ft_volumesegment function used for segmentation with FSL BET and FAST
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1816
 
-% TEST ft_read_mri ft_volumesegment
+% DEPENDENCY ft_read_mri ft_volumesegment
 
 mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri'));
 

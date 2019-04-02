@@ -33,7 +33,7 @@ if length(index)==1
       y = set(x, index.subs, val);
     case '{}'
       y = set(x, index.subs, val);
-      % error('Cell contents reference from a non-cell array object.');
+      % error('Cell contents reference from a non-cell-array object.');
     case '()'
       y = set(x, index.subs, val);
       % error('Index exceeds matrix dimensions.');

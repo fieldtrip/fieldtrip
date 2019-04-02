@@ -3,7 +3,7 @@ function test_ft_denoise_prewhiten
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_denoise_prewhiten
+% DEPENDENCY ft_denoise_prewhiten
 
 % create some data
 data = [];

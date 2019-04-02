@@ -3,7 +3,7 @@ function test_pull832
 % WALLTIME 00:10:00
 % MEM 3gb
 
-% TEST ft_read_sens ft_read_header mne2grad
+% DEPENDENCY ft_read_sens ft_read_header mne2grad
 
 %%
 

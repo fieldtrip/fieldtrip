@@ -2,9 +2,7 @@ function failed_headmodel_simbio
 
 % WALLTIME 00:45:00
 % MEM 16gb
-
-% TEST test_headmodel_simbio
-% TEST ft_prepare_headmodel ft_prepare_mesh ft_prepare_leadfield ft_prepare_sourcemodel 
+% DEPENDENCY ft_prepare_headmodel ft_prepare_mesh ft_prepare_leadfield ft_prepare_sourcemodel 
 
 % this function tests that simbio forward model works, comparing the results with a 3 concentric spheres model
 % intial version by Lilla Magyari 2013
@@ -51,7 +49,7 @@ end
 currdir = pwd;
 cd ~/matlab/fieldtrip/test/private/;
 r = radius3;
-[pnt, tri] = icosahedron42; 
+[pnt, tri] = sphere_mesh(42); 
 sens.pnt   = r * pnt;
 sens.label = {};
 nsens  = size(sens.pnt,1);

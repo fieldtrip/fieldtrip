@@ -11,7 +11,7 @@ function [freq] = ft_freqbaseline(cfg, freq)
 %                      frequency specific baseline windows.
 %   cfg.baselinetype = 'absolute', 'relative', 'relchange', 'normchange', 'db' or 'zscore' (default = 'absolute')
 %   cfg.parameter    = field for which to apply baseline normalization, or
-%                      cell array of strings to specify multiple fields to normalize
+%                      cell-array of strings to specify multiple fields to normalize
 %                      (default = 'powspctrm')
 %
 % See also FT_FREQANALYSIS, FT_TIMELOCKBASELINE, FT_FREQCOMPARISON,
@@ -77,7 +77,7 @@ cfg =               ft_checkopt(cfg, 'baseline', {'char', 'doublevector', 'doubl
 cfg =               ft_checkopt(cfg, 'baselinetype', 'char', {'absolute', 'relative', 'relchange', 'normchange', 'db', 'vssum'});
 cfg =               ft_checkopt(cfg, 'parameter', {'char', 'charcell'});
 
-% make sure cfg.parameter is a cell array of strings
+% make sure cfg.parameter is a cell-array of strings
 if (~isa(cfg.parameter, 'cell'))
   cfg.parameter = {cfg.parameter};
 end
@@ -108,7 +108,7 @@ end
 
 % check if the field of interest is present in the data
 if (~all(isfield(freq, cfg.parameter)))
-  ft_error('cfg.parameter should be a string or cell array of strings referring to (a) field(s) in the freq input structure')
+  ft_error('cfg.parameter should be a string or cell-array of strings referring to (a) field(s) in the freq input structure')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

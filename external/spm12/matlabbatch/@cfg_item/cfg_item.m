@@ -76,7 +76,7 @@ function item = cfg_item(varargin)
 % cfg_item/harvest returns item.val{1}. If this is a dependency object
 % and dependencies shall and can be resolved the contents of the
 % dependencies will be returned. Otherwise the dependency object(s) will
-% be returned. This is the default behaviour for all cfg_leaf items. 
+% be returned. This is the default behavior for all cfg_leaf items. 
 %
 % The layout of the configuration tree and the types of configuration items
 % have been kept compatible to a configuration system and job manager

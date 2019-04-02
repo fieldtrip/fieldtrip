@@ -27,9 +27,9 @@ c = [1 1/80 1];
 % c = [1];
 
 %% Description of the spherical mesh
-[pos, tri] = icosahedron42;
-% [pos, tri] = icosahedron162;
-% [pos, tri] = icosahedron642;
+[pos, tri] = sphere_mesh(42);
+% [pos, tri] = sphere_mesh(162);
+% [pos, tri] = sphere_mesh(642);
 
 %% Create a set of magnetometers outside the outer surface
 sens.pos = max(r) * pos * 1.2;

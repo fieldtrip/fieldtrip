@@ -23,7 +23,7 @@ function [varargout] = ft_plot_vector(varargin)
 %   'box'             = draw a box around the local axes, can be 'yes' or 'no'
 %
 % The line color can be specified in a variety of ways
-%   - as a string with one character per line that you want to plot. Supported colors are teh same as in PLOT, i.e. 'bgrcmykw'.
+%   - as a string with one character per line that you want to plot. Supported colors are the same as in PLOT, i.e. 'bgrcmykw'.
 %   - as 'none' if you do not want the lines to be plotted (useful in combination with the difference highlightstyle).
 %   - as a Nx3 matrix, where N=length(x), to use graded RGB colors along the line
 %

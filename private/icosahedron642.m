@@ -1,10 +1,10 @@
-function [pos, tri] = icosahedron642()
+function [pos, tri] = icosahedron642
 
 % ICOSAHEDRON642 creates a 3-fold refined icosahedron with the vertices on a unit
 % sphere
 %
 % Use as
-%   [pos, tri] = icosahedron642;
+%   [pos, tri] = sphere_mesh(642);
 %
 % See also ICOSAHEDRON
 
@@ -28,5 +28,5 @@ function [pos, tri] = icosahedron642()
 %
 % $Id$
 
+warning('sphere_mesh(642) is only a compatibility wrapper, which will soon be removed. Please instead call sphere_mesh.');
 [pos, tri] = icosahedron(3);
-

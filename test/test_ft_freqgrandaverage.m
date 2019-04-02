@@ -3,7 +3,7 @@ function test_ft_freqgrandaverage
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_freqgrandaverage
+% DEPENDENCY ft_freqgrandaverage
 
 % this functions tests the new implementation of ft_freqgrandaverage. the
 % new functionality includes the use of a cfg.parameter, and allows for

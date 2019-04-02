@@ -9,13 +9,15 @@
 ################################################################################
 
 function sync {
-# find the latest file from the list and copies it to all other files
-latest=`ls -t $* | head -n1`
-for file in $*; do
-if [ $file != $latest ] ; then
-cp $latest $file
-fi
-done
+  # find the latest file from the list and copies it to all other files
+  latest=`ls -t $* 2>/dev/null | head -n1`
+  for file in $*; do
+    if [ -n "$latest" ]; then
+      if [ "$file" != "$latest" ] ; then
+        cp "$latest" "$file"
+      fi
+    fi
+  done
 }
 
 ################################################################################
@@ -159,6 +161,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(private/combineClusters.mexa64)
+ARRAY+=(plotting/private/combineClusters.mexa64)
 ARRAY+=(src/combineClusters.mexa64)
 sync ${ARRAY[*]}
 
@@ -167,6 +170,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(private/combineClusters.mexw32)
+ARRAY+=(plotting/private/combineClusters.mexw32)
 ARRAY+=(src/combineClusters.mexw32)
 sync ${ARRAY[*]}
 
@@ -175,6 +179,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(private/combineClusters.mexw64)
+ARRAY+=(plotting/private/combineClusters.mexw64)
 ARRAY+=(src/combineClusters.mexw64)
 sync ${ARRAY[*]}
 
@@ -3391,6 +3396,18 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(contrib/spike/private/specest_nanfft.m)
 ARRAY+=(private/specest_nanfft.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# sphere_mesh.m
+
+ARRAY=()
+ARRAY+=(external/openmeeg/sphere_mesh.m)
+ARRAY+=(forward/private/sphere_mesh.m)
+ARRAY+=(plotting/private/sphere_mesh.m)
+ARRAY+=(private/sphere_mesh.m)
+ARRAY+=(test/private/sphere_mesh.m)
+ARRAY+=(utilities/private/sphere_mesh.m)
 sync ${ARRAY[*]}
 
 ################################################################################

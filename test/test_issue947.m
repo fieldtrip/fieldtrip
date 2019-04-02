@@ -81,7 +81,7 @@ ft_warning('b:b', 'b')
 
 ft_default = [];
 
-% the desired behaviour in the following is not really well defined
+% the desired behavior in the following is not really well defined
 
 wsa = ft_warning('off', 'a:a')
 ft_warning('off')

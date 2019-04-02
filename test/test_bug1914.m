@@ -3,7 +3,7 @@ function test_bug1914
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_filetype ft_read_header ft_read_data ft_read_event
+% DEPENDENCY ft_filetype ft_read_header ft_read_data ft_read_event
 
 %%
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1914'));

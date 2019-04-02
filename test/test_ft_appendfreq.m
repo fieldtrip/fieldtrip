@@ -3,7 +3,7 @@ function test_ft_appendfreq
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_appendfreq
+% DEPENDENCY ft_appendfreq
 
 % make some dummy frequency structures
 freq1.label = {'1';'2'};

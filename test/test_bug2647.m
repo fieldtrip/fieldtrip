@@ -1,6 +1,6 @@
 function test_bug2647
 
-% TEST ft_freqstatistics
+% DEPENDENCY ft_freqstatistics
 
 % WALLTIME 00:10:00
 % MEM 1gb

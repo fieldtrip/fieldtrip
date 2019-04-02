@@ -3,7 +3,7 @@ function test_bug1043
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_megplanar ft_apply_montage yokogawa2grad channelposition ft_apply_transform
+% DEPENDENCY ft_megplanar ft_apply_montage yokogawa2grad channelposition ft_apply_transform
 
 % the bug consists of ft_apply_montage not adequately dealing with
 % sensor descriptions that contain coilori/pos chanori/pos.

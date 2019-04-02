@@ -45,7 +45,7 @@ if length(index)==1
       varargout      = cell(1, numel(x));
       [varargout{:}] = get(x, index.subs, inc);
     case '{}'
-      error('Cell contents reference from a non-cell array object.');
+      error('Cell contents reference from a non-cell-array object.');
     case '()'
       % add singleton dimensions to the end
       index.subs((ndims+1):6) = {1};
@@ -103,7 +103,7 @@ end
 %         y{1} = get(x, index.subs, inc);
 %       end
 %     case '{}'
-%       error('Cell contents reference from a non-cell array object.');
+%       error('Cell contents reference from a non-cell-array object.');
 %     case '()'
 %         y{1} = x(index.subs{1});
 %     otherwise

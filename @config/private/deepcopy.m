@@ -2,7 +2,7 @@ function [varargout] = deepcopy(varargin)
 
 % DEEPCOPY makes a deep copy of an array, and returns a pointer to
 % the copy. A deep copy refers to a copy in which all levels of data
-% are copied. For example, a deep copy of a cell array copies each
+% are copied. For example, a deep copy of a cell-array copies each
 % cell, and the contents of the each cell (if any), and so on.
 %
 % Example
@@ -60,7 +60,7 @@ catch
 end
 
 if success
-  % execute the mex file that was juist created
+  % execute the mex file that was just created
   funname   = mfilename;
   funhandle = str2func(funname);
   [varargout{1:nargout}] = funhandle(varargin{:});

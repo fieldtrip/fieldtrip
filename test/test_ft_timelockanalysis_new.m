@@ -3,7 +3,7 @@ function test_ft_timelockanalysis_new(datainfo,writeflag)
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_timelockanalysis_new ft_timelockanalysis ref_datasets
+% DEPENDENCY ft_timelockanalysis_new ft_timelockanalysis ref_datasets
 
 % the optional writeflag determines whether the output should be saved to
 % disk

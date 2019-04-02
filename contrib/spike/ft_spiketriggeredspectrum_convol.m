@@ -67,8 +67,8 @@ function [sts] = ft_spiketriggeredspectrum_convol(cfg, data, spike)
 %
 % Outputs:
 %   sts is a spike structure, containing new fields:
-%   sts.fourierspctrm = 1 x nUnits cell array with dimord spike_lfplabel_freq
-%   sts.lfplabel      = 1 x nChan cell array with EEG labels
+%   sts.fourierspctrm = 1 x nUnits cell-array with dimord spike_lfplabel_freq
+%   sts.lfplabel      = 1 x nChan cell-array with EEG labels
 %   sts.freq          = 1 x nFreq frequencies. Note that per default, not
 %                       all frequencies can be used as we compute the DFT
 %                       around the spike based on an uneven number of

@@ -149,7 +149,7 @@ end
 
 if ~isdeployed
 
-  if isempty(which('ft_hastoolbox')) || isempty(which('ft_platform_supports'))
+  if isempty(which('ft_test')) || isempty(which('ft_notice'))
     % the fieldtrip/utilities directory contains the ft_hastoolbox and ft_warning
     % functions, which are required for the remainder of this script
     addpath(fullfile(fileparts(which('ft_defaults')), 'utilities'));
@@ -300,8 +300,13 @@ if ~isdeployed
   end
 
   try
+    % this contains test scripts
+    ft_hastoolbox('test', 1, 1);
+  end
+
+  try
     % this contains the functions for spike and spike-field analysis
-    ft_hastoolbox('spike', 1, 1);
+    ft_hastoolbox('contrib/spike', 1, 1);
   end
 
   try
@@ -354,7 +359,7 @@ if length(list)>1
       ft_warning('one version of %s is found here: %s', toolbox, list{i});
     end
   end
-  ft_warning('You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behaviour. See http://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');
+  ft_warning('You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behavior. See http://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');
 end
 end % function checkMultipleToolbox
 
@@ -365,6 +370,6 @@ function checkIncorrectPath
 p = fileparts(mfilename('fullpath'));
 incorrect = fullfile(p, 'compat', 'incorrect');
 if ~isempty(strfind(path, incorrect))
-  ft_warning('Your path is set up incorrectly. You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behaviour. See http://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');
+  ft_warning('Your path is set up incorrectly. You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behavior. See http://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');
 end
 end % function checkIncorrectPath

@@ -3,7 +3,7 @@ function failed_bug1049
 % MEM 2000mb
 % WALLTIME 00:10:00
 
-% TEST ft_prepare_sourcemodel headsurface ft_prepare_leadfield ft_freqanalysis ft_sourceanalysis
+% DEPENDENCY ft_prepare_sourcemodel headsurface ft_prepare_leadfield ft_freqanalysis ft_sourceanalysis
 
 % this function creates a set of source-structures to be used for testing
 
@@ -24,7 +24,7 @@ cfg.sourcemodel.resolution = 1.5;
 grid = ft_prepare_leadfield(cfg);
 
 % create 2D grid
-[pnt, tri] = icosahedron162;
+[pnt, tri] = sphere_mesh(162);
 pnt   = pnt*(vol.orig.MEG_Sphere.RADIUS-1.5);
 shift = [vol.orig.MEG_Sphere.ORIGIN_X vol.orig.MEG_Sphere.ORIGIN_Y vol.orig.MEG_Sphere.ORIGIN_Z];
 pnt   = pnt+repmat(shift,[size(pnt,1) 1]);

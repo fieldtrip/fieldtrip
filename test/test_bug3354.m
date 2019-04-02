@@ -3,7 +3,7 @@
 % WALLTIME 00:20:00
 % MEM 2gb
 
-% TEST ft_selectdata
+% DEPENDENCY ft_selectdata
 
 trial = cell(1,10);
 time  = cell(1,10);

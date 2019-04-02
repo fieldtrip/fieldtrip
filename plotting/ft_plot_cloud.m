@@ -17,7 +17,7 @@ function ft_plot_cloud(pos, val, varargin)
 %   'radius'             = scalar, maximum radius of cloud (default = 4)
 %   'clim'               = 1x2 vector specifying the min and max for the colorscale
 %   'unit'               = string, convert the sensor array to the specified geometrical units (default = [])
-%   'mesh'               = string or Nx1 cell array, triangulated mesh(es), see FT_PREPARE_MESH
+%   'mesh'               = string or Nx1 cell-array, triangulated mesh(es), see FT_PREPARE_MESH
 %   'slice'              = requires 'mesh' as input (default = 'none')
 %                          '2d', plots 2D slices through the cloud with an outline of the mesh
 %                          '3d', draws an outline around the mesh at a particular slice
@@ -43,8 +43,8 @@ function ft_plot_cloud(pos, val, varargin)
 %   'nslices'            = scalar, number of slices to plot if 'slicepos' = 'auto (default = 1)
 %   'minspace'           = scalar, minimum spacing between slices if nslices>1
 %                          (default = 1)
-%   'intersectcolor'     = string, Nx1 cell array, or Nx3 vector specifying line color (default = 'k')
-%   'intersectlinestyle' = string or Nx1 cell array, line style specification (default = '-')
+%   'intersectcolor'     = string, Nx1 cell-array, or Nx3 vector specifying line color (default = 'k')
+%   'intersectlinestyle' = string or Nx1 cell-array, line style specification (default = '-')
 %   'intersectlinewidth' = scalar or Nx1 vector, line width specification (default = 2)
 %
 % See also FT_ELECTRODEPLACEMENT, FT_PLOT_TOPO, FT_PLOT_TOPO3D
@@ -166,7 +166,7 @@ if ~isempty(meshplot)
     end
   end
   
-  % facecolor, edgecolor, and vertexcolor should be cell array
+  % facecolor, edgecolor, and vertexcolor should be cell-array
   if ~iscell(facecolor)
     tmp = facecolor;
     if ischar(tmp)

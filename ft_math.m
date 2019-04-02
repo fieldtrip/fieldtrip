@@ -93,7 +93,7 @@ ft_revision = '$Id$';
 ft_nargin   = nargin;
 ft_nargout  = nargout;
 
-% do teh general setup of the function
+% do the general setup of the function
 ft_defaults
 ft_preamble init
 ft_preamble debug
@@ -311,7 +311,7 @@ for p = 1:length(cfg.parameter)
           end
         else
           y = cell(size(x1));
-          % do the same thing, but now for each element of the cell array
+          % do the same thing, but now for each element of the cell-array
           for i=1:numel(y)
             for j=1:length(varargin)
               % rather than working with x1 and x2, we need to work on its elements
@@ -409,7 +409,7 @@ for p = 1:length(cfg.parameter)
           end
         else
           y = cell(size(x1));
-          % do the same thing, but now for each element of the cell array
+          % do the same thing, but now for each element of the cell-array
           for i=1:numel(y)
             for j=1:length(varargin)
               % rather than working with x1 and x2, we need to work on its elements

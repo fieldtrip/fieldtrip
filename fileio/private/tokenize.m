@@ -1,6 +1,6 @@
 function [tok] = tokenize(str, sep, rep)
 
-% TOKENIZE cuts a string into pieces, returning the pieces in a cell array
+% TOKENIZE cuts a string into pieces, returning the pieces in a cell-array
 %
 % Use as
 %   t = tokenize(str)

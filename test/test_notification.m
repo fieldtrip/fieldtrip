@@ -3,7 +3,7 @@ function test_notification
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST ft_debug ft_info ft_notice ft_warning ft_notification
+% DEPENDENCY ft_debug ft_info ft_notice ft_warning ft_notification
 
 subfunction(@ft_debug)
 subfunction(@ft_info)

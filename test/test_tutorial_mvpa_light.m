@@ -3,7 +3,7 @@ function test_tutorial_mvpa_light
 % MEM 3000mb
 % WALLTIME 00:20:00
 
-% TEST ft_timelockstatisitcs ft_statistics_mvpa
+% DEPENDENCY ft_timelockstatisitcs ft_statistics_mvpa
 
 
 

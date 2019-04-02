@@ -3,8 +3,6 @@ function failed_old_specest_vs_oldimplementation
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_old_specest_vs_oldimplementation
-
 % read in data from /home/common/testdata (I just my own testdata)
 % data = .....
 
