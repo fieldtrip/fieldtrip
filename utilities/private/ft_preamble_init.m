@@ -65,6 +65,9 @@ if iscell(cfg)
   cfg = ft_keyval2cfg(cfg);
 end
 
+% check that it is an struct or empty numeric array
+assert(isstruct(cfg) || (isnumeric(cfg) && isempty(cfg)), 'The configuration must be a structure or empty');
+
 % this script requires some options that can be user-specified, but otherwise are obtained from ft_default
 % merge the default options into the configuration, except the preamble field which is used for passing arguments
 cfg = mergeconfig(cfg, ft_default);
@@ -133,7 +136,7 @@ if isfield(cfg, 'reproducescript') && ~isempty(cfg.reproducescript)
     % with cfg.reproducescript functionality, throw error to make them
     % mutually exclusive
     if (isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)) || ...
-       (isfield(cfg, 'outputfile') && ~isemty(cfg.outputfile))
+       (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile))
       ft_error('cfg.reproducescript cannot be used together with a user-specified cfg.inputfile or cfg.outputfile');
     end
     % this variable is used in loadvar, savevar and savefig
