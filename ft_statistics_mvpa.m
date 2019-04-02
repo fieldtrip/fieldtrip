@@ -176,7 +176,7 @@ cfg.searchlight     = ft_getopt(cfg, 'searchlight', 'no');
 cfg.timextime       = ft_getopt(cfg, 'timextime',   'no');
 cfg.mvpa            = ft_getopt(cfg, 'mvpa',        []);
 cfg.mvpa.metric     = ft_getopt(cfg.mvpa, 'metric',   'accuracy');
-cfg.mvpa.feedback   = istrue(ft_getopt(cfg.mvpa, 'feedback', true)); % this converts 'yes'/'no' into boolean
+cfg.mvpa.feedback   = ft_getopt(cfg.mvpa, 'feedback',   'yes');
 cfg.mvpa.neighbours = ft_getopt(cfg.mvpa, 'neighbours', []);
 
 % flip dimensions such that the number of trials comes first
@@ -208,9 +208,6 @@ dimord = [];
 
 %% Call MVPA-Light
 
-% ensure the feedback option to be a boolean (since the mv code expects this)
-cfgmvpa          = cfg.mvpa;
-cfgmvpa.feedback = istrue(cfgmvpa.feedback);
 if strcmp(cfg.searchlight, 'yes')
   % --- searchlight analysis ---
 
@@ -231,7 +228,7 @@ if strcmp(cfg.searchlight, 'yes')
 
 elseif strcmp(cfg.timextime, 'yes')
   % --- time x time generalisation ---
-  [perf, result] = mv_classify_timextime(cfgmvpa, dat, y);
+  [perf, result] = mv_classify_timextime(cfg.mvpa, dat, y);
 
   % this does note preserve any spatial dimension, so label should be
   % adjusted
@@ -241,7 +238,7 @@ elseif strcmp(cfg.timextime, 'yes')
 
 elseif data_is_3D
   % --- classification across time ---
-  [perf, result] = mv_classify_across_time(cfgmvpa, dat, y);
+  [perf, result] = mv_classify_across_time(cfg.mvpa, dat, y);
 
   % this does note preserve any spatial dimension, so label should be
   % adjusted
@@ -250,7 +247,7 @@ elseif data_is_3D
 
 else
   % --- data has no time dimension, perform only cross-validation ---
-  [perf, result] = mv_crossvalidate(cfgmvpa, dat, y);
+  [perf, result] = mv_crossvalidate(cfg.mvpa, dat, y);
 
   % this does note preserve any spatial dimension, so label should be
   % adjusted
