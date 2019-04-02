@@ -28,7 +28,7 @@ spike = ft_spike_select(cfg, spike);
 %           hdr: [1x1 struct]
 %        dimord: '{chan}_lead_time_spike'
 %           cfg: [1x1 struct]
-% The spike structure contains a representation of timestamps, waveform and labels for a number of cells (N = 2). The field spike.label is an 1 x N cell array containing a character string that identifies each cell. For each of the N units, the field spike.timestamp contains the spike timestamps, where one timestamps corresponds to 1/40000 seconds in this case, as can be seen from spike.hdr.FileHeader.Frequency (and would correspond to microseconds for the Digital Neuralynx, for example). For example, 164456 spikes were recorded for the isolated single unit 'sig002a_wf'. The (optional) waveform field spike.waveform contains the waveform information for each of the spikes. The first dimension of spike.waveform{i} is 'leads'. For tetrode recordings, multiple leads per electrode are available, in which case the first dimension of spike.waveform{i} would have been of size 4. The second dimension of waveform contains the samples. In this case one sample corresponds to 1/40000 seconds. The third dimension of spike.waveform{i} equals the length of spike.timestamp{i}, such that a waveform is present for every spike ('spike' dimension). The waveforms can be processed further using ft_spike_waveform.
+% The spike structure contains a representation of timestamps, waveform and labels for a number of cells (N = 2). The field spike.label is an 1 x N cell-array containing a character string that identifies each cell. For each of the N units, the field spike.timestamp contains the spike timestamps, where one timestamps corresponds to 1/40000 seconds in this case, as can be seen from spike.hdr.FileHeader.Frequency (and would correspond to microseconds for the Digital Neuralynx, for example). For example, 164456 spikes were recorded for the isolated single unit 'sig002a_wf'. The (optional) waveform field spike.waveform contains the waveform information for each of the spikes. The first dimension of spike.waveform{i} is 'leads'. For tetrode recordings, multiple leads per electrode are available, in which case the first dimension of spike.waveform{i} would have been of size 4. The second dimension of waveform contains the samples. In this case one sample corresponds to 1/40000 seconds. The third dimension of spike.waveform{i} equals the length of spike.timestamp{i}, such that a waveform is present for every spike ('spike' dimension). The waveforms can be processed further using ft_spike_waveform.
 % 
 % 
 % Computing average waveforms
@@ -92,7 +92,7 @@ event = ft_read_event('p029_sort_final_01.nex');
 % The structure event
 % 
 % event = 
-% 37689x1 struct array with fields:
+% 37689x1 struct-array with fields:
 %     sample
 %     value
 %     timestamp

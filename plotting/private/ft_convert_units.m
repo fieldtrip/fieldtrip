@@ -69,7 +69,7 @@ if isstruct(obj) && numel(obj)>1
   obj = tmp;
   return
 elseif iscell(obj) && numel(obj)>1
-  % deal with a cell array
+  % deal with a cell-array
   % this might represent combined EEG, ECoG and/or MEG
   for i=1:numel(obj)
     obj{i} = ft_convert_units(obj{i}, target, varargin{:});

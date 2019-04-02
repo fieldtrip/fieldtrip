@@ -830,7 +830,7 @@ for i=1:numel(fieldsorig)
 end % for each of the fieldsorig
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION converts a cell array of structure arrays into a structure array
+% SUBFUNCTION converts a cell-array of structure arrays into a structure array
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [newNeighbours] = fixneighbours(neighbours)
 newNeighbours = struct;

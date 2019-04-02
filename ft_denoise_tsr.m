@@ -29,7 +29,7 @@ function dataout = ft_denoise_tsr(cfg, varargin)
 %   cfg.reflags            = integer array, specifying temporal lags (in msec) by which to shift refchannel
 %                            with respect to data channels
 %   cfg.trials             = integer array, trials to be used in regression, see FT_SELECTDATA
-%   cfg.testtrials         = cell array or string, trial indices to be used as test folds in a cross-validation scheme
+%   cfg.testtrials         = cell-array or string, trial indices to be used as test folds in a cross-validation scheme
 %                            (numel(cfg.testrials == number of folds))
 %   cfg.nfold              = scalar, indicating the number of test folds to
 %                            use in a cross-validation scheme

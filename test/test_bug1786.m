@@ -19,8 +19,8 @@ function test_bug1786
 % EEG bad electrode repair
 % 
 % input format:
-% labels   - 1XN cell array  
-% badchans - 1XB cell array eg. {'O2', 'Fp2'}
+% labels   - 1XN cell-array  
+% badchans - 1XB cell-array eg. {'O2', 'Fp2'}
 % data     - MXN array
 
 % function fixedelec = fixelec(labels, badchans,data)
@@ -84,7 +84,7 @@ function [elec] = elec_1020all_cart
 % 
 % [elec] = elec_1020all_cart
 %
-% elec is a struct array with fields:
+% elec is a struct-array with fields:
 %
 % elec.labels
 % elec.X
@@ -870,7 +870,7 @@ function [CHAN1020,XYZ1020] = elec_1020select(CHAN)
 % 
 % [labels,xyz] = elec_1020select(CHAN)
 %
-% where CHAN input is a cell array of channel names from the International
+% where CHAN input is a cell-array of channel names from the International
 % 10-20 nomenclature for EEG electrode placement.  For a list of the 10-20
 % electrode names, see the elec_1020all_cart function, which is based on:
 %

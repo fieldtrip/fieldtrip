@@ -302,7 +302,7 @@ channeighbstructmat = (dist<neighbourdist);
 % electrode istelf is not a neighbour
 channeighbstructmat = (channeighbstructmat .* ~eye(nsensors));
 
-% construct a structured cell array with all neighbours
+% construct a structured cell-array with all neighbours
 neighbours=struct;
 for i=1:nsensors
   neighbours(i).label       = label{i};
@@ -328,7 +328,7 @@ for i=1:size(tri, 1)
   channeighbstructmat(tri(i, 3), tri(i, 2)) = 1;
 end
 
-% construct a structured cell array with all neighbours
+% construct a structured cell-array with all neighbours
 neighbours = struct;
 alldist = [];
 for i=1:nsensors

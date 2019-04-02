@@ -116,7 +116,7 @@ for i=1:no_channels,
   endstr = findstr(temp, '-'); temp(endstr:end) = ' ';  % cut off at '-'
   endstr = findstr(temp, ' '); temp(endstr:end) = ' ';  % cut off at ' '
   chan_name(i,:) = char(temp);      % as char array
-  chan_label{i}  = deblank(char(temp)); % as cell array
+  chan_label{i}  = deblank(char(temp)); % as cell-array
 end %for
 
 % pre-allocate some memory space

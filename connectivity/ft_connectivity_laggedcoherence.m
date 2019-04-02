@@ -72,7 +72,7 @@ function [lcoh] = ft_connectivity_laggedcoherence(cfg,freqout)
 %                      see FT_CHANNELCOMBINATION for details
 %   cfg.autocmb      = 'yes' or 'no' (default='no'). Adds all auto-
 %                      combinations of cfg.channel to cfg.channelcmb
-%   cfg.trialsets    = cell array with per cell the set of trials over
+%   cfg.trialsets    = cell-array with per cell the set of trials over
 %                      which lcoh is calculated. Each cell must contain 'all' or a
 %                      1xN vector of trial indices. Default={'all'}. Note that this
 %                      differs from the required format of cfg.trials in e.g.
