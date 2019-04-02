@@ -17,7 +17,7 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 % no longer recommended, since the outline of the head and the mask within which the
 % interpolation is done is less refined for an ASCII layout. A large number of
 % template layout files is provided in the fieldtrip/template/layout directory. See
-% also http://fieldtriptoolbox.org/template/layout
+% also http://www.fieldtriptoolbox.org/template/layout
 %
 % You can specify any one of the following configuration options
 %   cfg.layout      = filename containg the input layout (*.mat or *.lay file), this can also be a layout
