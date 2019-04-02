@@ -256,7 +256,7 @@ switch purpose
       'sourcemodel'
       'grad'
       'elec'
-      'event'
+      'opto'
       'mri'
       'neighbours'
       };

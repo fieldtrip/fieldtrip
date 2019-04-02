@@ -65,6 +65,9 @@ if iscell(cfg)
   cfg = ft_keyval2cfg(cfg);
 end
 
+% check that it is an struct or empty numeric array
+assert(isstruct(cfg) || (isnumeric(cfg) && isempty(cfg)), 'The configuration must be a structure or empty');
+
 % this script requires some options that can be user-specified, but otherwise are obtained from ft_default
 % merge the default options into the configuration, except the preamble field which is used for passing arguments
 cfg = mergeconfig(cfg, ft_default);
