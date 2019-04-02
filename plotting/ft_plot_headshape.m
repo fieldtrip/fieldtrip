@@ -58,7 +58,7 @@ if ~isstruct(headshape) && isnumeric(headshape) && size(headshape,2)==3
   warning(ws1);
 end
 
-% the default behaviour depends on whether there is a triangulated surface or not
+% the default behavior depends on whether there is a triangulated surface or not
 hastri = isfield(headshape, 'tri');
 
 % get the optional input arguments

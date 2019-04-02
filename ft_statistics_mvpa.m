@@ -35,7 +35,7 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %                         https://github.com/treder/MVPA-Light for more
 %                         details.
 %
-%   
+%
 %   cfg.mvpa.classifier      = 'lda'          Regularised linear discriminant analysis
 %                                        (LDA) (for two classes)
 %                         'multiclass_lda' LDA for more than two classes
@@ -165,7 +165,7 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %
 % $Id$
 
-ft_hastoolbox('mvpa_light', 1);
+ft_hastoolbox('mvpa-light', 1);
 
 % do a sanity check on the input data
 assert(isnumeric(dat),    'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
@@ -207,8 +207,13 @@ dim   = [];
 dimord = [];
 
 %% Call MVPA-Light
+
+% ensure the feedback option to be a boolean (since the mv code expects this)
+cfgmvpa          = cfg.mvpa;
+cfgmvpa.feedback = istrue(cfgmvpa.feedback);
 if strcmp(cfg.searchlight, 'yes')
   % --- searchlight analysis ---
+
   if isstruct(cfg.mvpa.neighbours)
     cfg.mvpa.neighbours = channelconnectivity(struct('neighbours',cfg.mvpa.neighbours, 'channel', {cfg.channel}));
   end
@@ -219,39 +224,39 @@ if strcmp(cfg.searchlight, 'yes')
   if isfield(cfg, 'channel')
     label = cfg.channel;
   end
-  
+
   if isfield(cfg, 'dim')
     dim = cfg.dim;
   end
-  
+
 elseif strcmp(cfg.timextime, 'yes')
   % --- time x time generalisation ---
-  [perf, result] = mv_classify_timextime(cfg.mvpa, dat, y);
-  
+  [perf, result] = mv_classify_timextime(cfgmvpa, dat, y);
+
   % this does note preserve any spatial dimension, so label should be
   % adjusted
   label = squeezelabel(label, cfg);
   dim   = squeezedim(dim, cfg);
   dimord = 'time_time';
-  
+
 elseif data_is_3D
   % --- classification across time ---
-  [perf, result] = mv_classify_across_time(cfg.mvpa, dat, y);
-  
+  [perf, result] = mv_classify_across_time(cfgmvpa, dat, y);
+
   % this does note preserve any spatial dimension, so label should be
   % adjusted
   label = squeezelabel(label, cfg);
   dim   = squeezedim(dim, cfg);
-  
+
 else
   % --- data has no time dimension, perform only cross-validation ---
-  [perf, result] = mv_crossvalidate(cfg.mvpa, dat, y);
-  
+  [perf, result] = mv_crossvalidate(cfgmvpa, dat, y);
+
   % this does note preserve any spatial dimension, so label should be
   % adjusted
   label = squeezelabel(label, cfg);
   dim   = squeezedim(dim, cfg);
-  
+
 end
 
 %% setup stat struct
@@ -259,10 +264,10 @@ stat = [];
 if ~iscell(cfg.mvpa.metric), cfg.mvpa.metric = {cfg.mvpa.metric}; end
 if ~iscell(perf),            perf            = {perf};            end
 for mm=1:numel(perf)
-  
+
   % Performance metric
   stat.(cfg.mvpa.metric{mm}) = perf{mm};
-  
+
   % Std of performance
   if iscell(result.perf_std)
     stat.([cfg.mvpa.metric{mm} '_std']) = result.perf_std{mm};
@@ -290,7 +295,7 @@ function label = squeezelabel(label, cfg)
 
 if isfield(cfg, 'channel')
   label = sprintf('combined(%s)', sprintf('%s',cfg.channel{:}));
-end 
+end
 
 function dim = squeezedim(dim, cfg)
 
@@ -298,4 +303,3 @@ if isfield(cfg, 'dim')
   dim = cfg.dim;
   dim(1) = 1;
 end
-

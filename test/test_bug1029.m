@@ -3,7 +3,7 @@ function test_bug1029
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_read_headmodel ft_headmodel_bem_asa ft_prepare_headmodel
+% DEPENDENCY ft_read_headmodel ft_headmodel_bem_asa ft_prepare_headmodel
 
 % tests the functionality of the forward models after changing the names of
 % the headmodels
@@ -25,7 +25,7 @@ vol = ft_prepare_headmodel(cfg);
 % BEMCP
 %%%%%%%%%%%%%%%%
 % create the BEM geometry
-[pnt, tri] = icosahedron162;
+[pnt, tri] = sphere_mesh(162);
 geom = [];
 geom.bnd(1).pnt = pnt * 100;
 geom.bnd(1).tri = tri;

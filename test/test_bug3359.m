@@ -3,7 +3,7 @@ function test_bug3359
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_connectivityanalysis ft_topoplotER 
+% DEPENDENCY ft_connectivityanalysis ft_topoplotER 
 
 % first create some data
 %--------------------------------------------------------

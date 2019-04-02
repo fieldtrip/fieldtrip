@@ -3,7 +3,7 @@ function test_bug1785
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_read_sens read_asa_elc read_asa
+% DEPENDENCY ft_read_sens read_asa_elc read_asa
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1785'));
 

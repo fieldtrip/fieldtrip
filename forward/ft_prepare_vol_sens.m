@@ -19,7 +19,7 @@ function [headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, varargin)
 % Additional options should be specified in key-value pairs and can be
 %   'channel'  = cell-array with strings (default = 'all')
 %
-% The detailed behaviour of this function depends on whether the input
+% The detailed behavior of this function depends on whether the input
 % consists of EEG or MEG and furthermoree depends on the type of volume
 % conductor model:
 % - in case of EEG single and concentric sphere models, the electrodes are

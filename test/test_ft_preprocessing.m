@@ -3,7 +3,7 @@ function test_ft_preprocessing(datainfo, writeflag, version)
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_preprocessing ref_datasets
+% DEPENDENCY ft_preprocessing ref_datasets
 
 % writeflag determines whether the output should be saved to disk
 % version determines the output directory

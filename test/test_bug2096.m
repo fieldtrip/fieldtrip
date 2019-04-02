@@ -3,7 +3,7 @@ function test_bug2096
 % MEM 4000mb
 % WALLTIME 00:20:00
 
-% TEST ft_sourcewrite ft_read_cifti ft_write_cifti
+% DEPENDENCY ft_sourcewrite ft_read_cifti ft_write_cifti
 
 % needed for the dccnpath function, since we will change directory later on
 addpath(fileparts(mfilename('fullpath')));

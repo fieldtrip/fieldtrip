@@ -3,7 +3,7 @@ function test_bug2419
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST ft_read_headshape
+% DEPENDENCY ft_read_headshape
 
 % reported bug: some particular fif-mesh files don't contain triangle area
 % (use_tri_area) information, causing ft_read_headshape to crash (since it

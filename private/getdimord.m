@@ -221,6 +221,21 @@ switch field
       dimord = 'pos_unknown';
     end
     
+  case {'tri'}
+    if datsiz(2)==3
+      dimord = 'tri_unknown';
+    end
+    
+  case {'tet'}
+    if datsiz(2)==4
+      dimord = 'tet_unknown';
+    end
+    
+  case {'hex'}
+    if datsiz(2)==8
+      dimord = 'hex_unknown';
+    end
+    
   case {'individual'}
     if isequalwithoutnans(datsiz, [nsubj nchan ntime])
       dimord = 'subj_chan_time';

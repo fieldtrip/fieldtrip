@@ -27,7 +27,7 @@ function [data] = ft_steadystatesimulation(cfg)
 %
 % Stimuli are created at the lowest experimental level, and are modulated according to the product of the gain of all levels.
 % Each trial can contain one or multiple stimuli.
-% The behaviour of each stimuli is specified with
+% The behavior of each stimuli is specified with
 %   cfg.stimulus1.mode = 'periodic', 'transient' or 'off' (default = 'periodic')
 %   cfg.stimulus2.mode = 'periodic', 'transient' or 'off' (default = 'transient')
 %

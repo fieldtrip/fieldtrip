@@ -3,7 +3,7 @@ function test_headmodel_concentricspheres
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_headmodel_concentricspheres ft_prepare_vol_sens ft_compute_leadfield
+% DEPENDENCY ft_headmodel_concentricspheres ft_prepare_vol_sens ft_compute_leadfield
 
 % generate some random points
 pnt = randn(101,3);
@@ -45,7 +45,7 @@ geom(4).pnt = pnt;
 vol = ft_headmodel_concentricspheres(geom, 'conductivity', [0.42 0.0033 1 0.42]);
 
 % generate a unit sphere
-[pnt, tri] = icosahedron162;
+[pnt, tri] = sphere_mesh(162);
 
 % create a set of electrodes
 sel = find(pnt(:,3)>0);

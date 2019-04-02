@@ -3,7 +3,7 @@ function test_bug367
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_megrealign ft_read_sens ft_dipolesimulation ft_timelockanalysis ft_multiplotER
+% DEPENDENCY ft_megrealign ft_read_sens ft_dipolesimulation ft_timelockanalysis ft_multiplotER
 
 % this test script is for http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=367
 % and was constructed from http://www.fieldtriptoolbox.org/example/megrealign

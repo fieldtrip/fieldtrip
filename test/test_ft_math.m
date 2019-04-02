@@ -3,7 +3,7 @@ function test_ft_math
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_math
+% DEPENDENCY ft_math
 
 % create some test data
 raw1 = [];

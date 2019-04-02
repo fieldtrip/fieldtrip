@@ -255,7 +255,7 @@ end
 
 if strcmp(cfg.viewmode, 'component')
   % read or create the layout that will be used for the topoplots
-  tmpcfg = keepfields(cfg, {'layout', 'elec', 'grad', 'opto', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
   if hasdata && isempty(cfg.layout)
     cfg.layout = ft_prepare_layout(tmpcfg, data);
   else
@@ -1689,7 +1689,7 @@ opt.curdata.sampleinfo = [begsample endsample];
 clear lab tim dat
 
 fn = fieldnames(cfg);
-tmpcfg = keepfields(cfg, fn(contains(fn, 'scale') | contains(fn, 'mychan')));
+tmpcfg = keepfields(cfg, fn(contains(fn, 'scale') | contains(fn, 'mychan') |  contains(fn, 'channel')));
 tmpcfg.parameter = 'trial';
 opt.curdata = chanscale_common(tmpcfg, opt.curdata);
 
@@ -1716,16 +1716,14 @@ if strcmp(cfg.viewmode, 'butterfly')
 else
   % this needs to be reconstructed if the channel selection changes
   if changedchanflg % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
-    tmpcfg = [];
+    tmpcfg = keepfields(cfg, {'channel', 'columns', 'rows', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
     if strcmp(cfg.viewmode, 'component')
       tmpcfg.layout  = 'vertical';
     else
-      tmpcfg.layout  = cfg.viewmode;
+      tmpcfg.layout = cfg.viewmode;
     end
-    tmpcfg.channel = cfg.channel;
     tmpcfg.skipcomnt = 'yes';
     tmpcfg.skipscale = 'yes';
-    tmpcfg.showcallinfo = 'no';
     opt.laytime = ft_prepare_layout(tmpcfg, opt.orgdata);
   end
 end

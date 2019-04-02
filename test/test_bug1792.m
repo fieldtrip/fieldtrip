@@ -6,7 +6,7 @@ function test_bug1792
 % this script should not be included in the regression test (yet)
 return
 
-% TEST ft_realtime_headlocalizer
+% DEPENDENCY ft_realtime_headlocalizer
 
 fieldtripdir = mfilename('fullpath');
 fieldtripdir = fileparts(fieldtripdir); % strip the filename

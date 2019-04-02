@@ -3,10 +3,10 @@ function test_bug1775
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST ft_sourceparcellate ft_checkdata ft_datatype_source ft_datatype_volume ft_datatype_parcellation ft_datatype_segmentation
+% DEPENDENCY ft_sourceparcellate ft_checkdata ft_datatype_source ft_datatype_volume ft_datatype_parcellation ft_datatype_segmentation
 
 %% create a set of sensors
-[pnt, tri] = icosahedron162;
+[pnt, tri] = sphere_mesh(162);
 pnt = pnt .* 10; % convert to cm
 sel = find(pnt(:,3)>0);
 

@@ -3,7 +3,7 @@ function test_bug1447
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_multiplotER ft_singleplotER ft_plot_vector
+% DEPENDENCY ft_multiplotER ft_singleplotER ft_plot_vector
 
 % this contains the example data from Lilla, i.e. two ERPs and a layout
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))

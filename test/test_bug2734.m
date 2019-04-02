@@ -3,7 +3,7 @@ function test_bug2734
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST ft_read_cifti
+% DEPENDENCY ft_read_cifti
 
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2734'));

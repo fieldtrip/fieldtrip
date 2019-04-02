@@ -53,7 +53,7 @@ end
 % val = ft_getopt(varargin, 'key', default);
 imagestyle = ft_getopt(varargin, 'imagestyle', 'inline');
 pageheader = ft_getopt(varargin, 'pageheader', 'none');
-pagelayout = ft_getopt(varargin, 'pagelayout', 'default');
+pagelayout = ft_getopt(varargin, 'pagelayout', '');
 pagetitle  = ft_getopt(varargin, 'pagetitle', '');
 pagetags   = ft_getopt(varargin, 'pagetags', '');
 monospacehelp = ft_getopt(varargin, 'monospacehelp', false); % convert the help in monospace format
@@ -100,9 +100,9 @@ if strcmp(pageheader, 'jekyll')
   % tags: eeg, tutorial
   % ---
   fprintf(outfid, '---\n');
-  fprintf(outfid, 'title: %s\n', pagetitle);
-  fprintf(outfid, 'layout: %s\n', pagelayout);
-  fprintf(outfid, 'tags: %s\n', pagetags);
+  if ~isempty(pagetitle),   fprintf(outfid, 'title: %s\n', pagetitle); end
+  if ~isempty(pagelayout),  fprintf(outfid, 'layout: %s\n', pagelayout); end
+  if ~isempty(pagetags),    fprintf(outfid, 'tags: %s\n', pagetags); end
   fprintf(outfid, '---\n');
 end
 

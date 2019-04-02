@@ -3,7 +3,7 @@ function test_bug2093
 % WALLTIME 00:20:00
 % MEM 3gb
 
-% TEST ft_read_header ft_read_data ft_read_event read_nex_header read_nex_data read_plexon_nex
+% DEPENDENCY ft_read_header ft_read_data ft_read_event read_nex_header read_nex_data read_plexon_nex
 
 % Compares output of same test NEX file from ft_read_header,
 % ft_read_data, and ft_read_event using old (master branch) and new

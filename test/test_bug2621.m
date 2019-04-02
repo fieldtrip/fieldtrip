@@ -3,7 +3,7 @@ function test_bug2621
 % MEM 2gb
 % WALLTIME 00:30:00
 
-% TEST ft_volumesegment
+% DEPENDENCY ft_volumesegment
 
 
 %read in the mri

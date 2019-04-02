@@ -20,7 +20,7 @@ end
 
 for k = 1:numel(datainfo)
   disp(['now you are in k=' num2str(k)]);
-
+  
   datanew = timelockanalysis10trials(datainfo(k), writeflag, version, 'yes', 'yes');
   fname   = fullfile(datainfo(k).origdir,version,'timelock',datainfo(k).type,['timelock_cov_trl_',datainfo(k).datatype]);
   comparedata(datanew, fname);
@@ -59,22 +59,22 @@ end
 % the file names should distinguish between the cfg.covariance and cfg.keeptrials option
 postfix = '';
 switch covariance
-case 'no'
-  % don't change
-case 'yes'
-  postfix = [postfix 'cov_'];
-otherwise
-  error('unexpected keeptrials');
+  case 'no'
+    % don't change
+  case 'yes'
+    postfix = [postfix 'cov_'];
+  otherwise
+    error('unexpected keeptrials');
 end
 
 % the file names should distinguish between the cfg.covariance and cfg.keeptrials option
 switch keeptrials
-case 'no'
-  % don't change
-case 'yes'
-  postfix = [postfix 'trl_'];
-otherwise
-  error('unexpected keeptrials');
+  case 'no'
+    % don't change
+  case 'yes'
+    postfix = [postfix 'trl_'];
+  otherwise
+    error('unexpected keeptrials');
 end
 
 cfg = [];
@@ -101,11 +101,17 @@ if isfield(tmp, 'data')
   data = tmp.data;
 elseif isfield(tmp, 'datanew')
   data = tmp.datanew;
-else isfield(tmp, 'timelock')
+elseif isfield(tmp, 'timelock')
   data = tmp.timelock;
 end
 
-datanew = removefields(datanew, 'cfg'); % these are per construction different if writeflag = 0;
+try
+  % these are sensitive to numerical erorrs, especially for MEG data and when the covariance is close to zero
+  datanew.cov = trimnumericalerror(datanew.cov, eps*1e3);
+  data.cov    = trimnumericalerror(data.cov   , eps*1e3);
+end
+
+datanew = removefields(datanew, 'cfg'); % these are per construction different if writeflag = 0
 data    = removefields(data,    'cfg');
 [ok,msg] = isalmostequal(data, datanew, 'reltol', eps*1e8);
 if ~ok

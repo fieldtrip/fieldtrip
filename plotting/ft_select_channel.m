@@ -22,7 +22,7 @@ function ft_select_channel(handle, eventdata, varargin)
 %   cfg.channel = {'chan1', 'chan2', 'chan3', 'chan4'};
 %   cfg.layout  = 'ordered';
 %   lay = ft_prepare_layout(cfg);
-%   ft_plot_lay(lay)
+%   ft_plot_layout(lay)
 %
 %   % add the required guidata
 %   info       = guidata(gcf)
@@ -47,7 +47,7 @@ function ft_select_channel(handle, eventdata, varargin)
 %   cfg.channel = {'chan1', 'chan2', 'chan3', 'chan4'};
 %   cfg.layout  = 'ordered';
 %   lay = ft_prepare_layout(cfg);
-%   ft_plot_lay(lay) 
+%   ft_plot_layout(lay) 
 %
 %   % add the channel information to guidata under identifier linked to this axis
 %   ident              = ['axh' num2str(round(sum(clock.*1e6)))]; % unique identifier for this axis

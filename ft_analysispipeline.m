@@ -8,7 +8,7 @@ function [pipeline] = ft_analysispipeline(cfg, data)
 % Use as
 %   output = ft_analysispipeline(cfg, data)
 %
-% The first cfg input contains the settings that apply to the behaviour of this
+% The first cfg input contains the settings that apply to the behavior of this
 % particular function and the second data input argument can be the output of any
 % FieldTrip function, e.g. FT_PREPROCESSING, FT_TIMELOCKANALYSIS, FT_SOURCEANALYSIS,
 % FT_FREQSTATISTICS or whatever you like.
@@ -16,7 +16,7 @@ function [pipeline] = ft_analysispipeline(cfg, data)
 % Alternatively, for the second input argument you can also only give the configuration
 % of the processed data (i.e. "data.cfg") instead of the full data.
 %
-% The configuration options that apply to the behaviour of this function are
+% The configuration options that apply to the behavior of this function are
 %   cfg.filename   = string, filename without the extension
 %   cfg.filetype   = string, can be 'matlab', 'html' or 'dot'
 %   cfg.feedback   = string, 'no', 'text', 'gui' or 'yes', whether text and/or

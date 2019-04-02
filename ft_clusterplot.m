@@ -17,7 +17,7 @@ function [cfg] = ft_clusterplot(cfg, stat)
 %   cfg.saveaspng                 = string, filename of the output figures (default = 'no')
 %   cfg.visible                   = string, 'on' or 'off' whether figure will be visible (default = 'on')
 %
-% You can also specify all cfg options that apply to FT_TOPOPLOTER or FT_TOPOPLOTTFR,
+% You can also specify most configuration options that apply to FT_TOPOPLOTER or FT_TOPOPLOTTFR,
 % except for cfg.xlim, any of the highlight options, cfg.comment and cfg.commentpos.
 %
 % To facilitate data-handling and distributed computing you can use
@@ -106,6 +106,7 @@ cfg.saveaspng               = ft_getopt(cfg, 'saveaspng',               'no');
 cfg.subplotsize             = ft_getopt(cfg, 'subplotsize',             [3 5]);
 cfg.feedback                = ft_getopt(cfg, 'feedback',                'text');
 cfg.visible                 = ft_getopt(cfg, 'visible',                 'on');
+cfg.renderer                = ft_getopt(cfg, 'renderer',                []); % let MATLAB decide on the default
 
 % error if cfg.highlightseries is not a cell, for possible confusion with cfg-options
 if ~iscell(cfg.highlightseries)
@@ -115,7 +116,7 @@ end
 % get the options that are specific for topoplotting
 cfgtopo = keepfields(cfg, {'parameter', 'marker', 'markersymbol', 'markercolor', 'markersize', 'markerfontsize', 'style', 'gridscale', 'interplimits', 'interpolation', 'contournum', 'colorbar', 'shading', 'zlim'});
 % prepare the layout, this only has to be done once
-tmpcfg = keepfields(cfg, {'layout', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
 cfgtopo.layout = ft_prepare_layout(tmpcfg, stat);
 cfgtopo.showcallinfo = 'no';
 cfgtopo.feedback = 'no';
@@ -453,12 +454,39 @@ ft_progress('close');
 % return to previous warning settings
 ft_warning(ws);
 
+% this is needed for the figure title
+if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
+  dataname = cfg.dataname;
+elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
+elseif nargin>1
+  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
+else
+  dataname = {};
+end
+
+% set the figure window title
+if ~isempty(dataname)
+  set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
+else
+  set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
+end
+set(gcf, 'NumberTitle', 'off');
+
+% set renderer if specified
+if ~isempty(cfg.renderer)
+  set(gcf, 'renderer', cfg.renderer)
+end
+
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous stat
 ft_postamble provenance
 ft_postamble savefig
+
+% add a menu to the figure, but only if the current figure does not have subplots
+menu_fieldtrip(gcf, cfg, false);
 
 if ~ft_nargout
   % don't return anything

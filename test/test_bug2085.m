@@ -3,7 +3,7 @@ function test_bug2085
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_senstype ft_senslabel
+% DEPENDENCY ft_senstype ft_senslabel
 
 %% create a volume conductor
 vol = [];
@@ -13,7 +13,7 @@ vol.unit = 'cm';
 vol = ft_datatype_headmodel(vol);
 
 %% create a set of sensors
-[pnt, tri] = icosahedron162;
+[pnt, tri] = sphere_mesh(162);
 pnt = pnt .* 10; % convert to cm
 sel = find(pnt(:,3)>0);
 grad.pnt = pnt(sel,:) .* 1.2;

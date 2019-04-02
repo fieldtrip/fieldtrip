@@ -3,7 +3,7 @@ function test_headmodel_asa
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_headmodel_asa ft_prepare_vol_sens ft_compute_leadfield
+% DEPENDENCY ft_headmodel_asa ft_prepare_vol_sens ft_compute_leadfield
 
 % the standard BEM model that is supplied on the FieldTrip ftp server 
 % and included in EEGLAB was originally constructed in ASA version 2

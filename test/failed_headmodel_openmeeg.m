@@ -2,14 +2,13 @@ function test_headmodel_openmeeg
 
 % MEM 1500mb
 % WALLTIME 00:20:00
-
-% TEST ft_prepare_vol_sens ft_compute_leadfield ft_headmodel_openmeeg
+% DEPENDENCY ft_prepare_vol_sens ft_compute_leadfield ft_headmodel_openmeeg
 
 % load openmeeg paths
 system('module load openmeeg');
 
 % generate a unit sphere
-[pnt, tri] = icosahedron162;
+[pnt, tri] = sphere_mesh(162);
 
 % create the BEM geometries
 geom = [];

@@ -1,10 +1,10 @@
 function test_openmeeg_eeg
 
-% Test the computation of an EEG leadfield with OpenMEEG
-% Copyright (C) 2010-2017, OpenMEEG developers
-
 % WALLTIME 00:30:00
 % MEM 4gb
+
+% Test the computation of an EEG leadfield with OpenMEEG
+% Copyright (C) 2010-2017, OpenMEEG developers
 
 addpath(pwd) % Make sure current folder is in the path
 
@@ -62,9 +62,9 @@ assert(norm(mags-[1.3584 1.3583 1.2138])<thr)
   function [rdms,mags] = run_bem_computation(r,c,dippos)
     
     %% Description of the spherical mesh
-    [pos, tri] = icosahedron42;
-    % [pos, tri] = icosahedron162;
-    % [pos, tri] = icosahedron642;
+    [pos, tri] = sphere_mesh(42);
+    % [pos, tri] = sphere_mesh(162);
+    % [pos, tri] = sphere_mesh(642);
     
     %% Create a set of electrodes on the outer surface
     sens.elecpos = max(r) * pos;

@@ -3,7 +3,7 @@ function test_bug937
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_prepare_mesh ft_headmodeltype ft_plot_mesh
+% DEPENDENCY ft_prepare_mesh ft_headmodeltype ft_plot_mesh
 
 
 csvol.o = [0,0,0];
@@ -14,7 +14,7 @@ ssvol.o = [0,0,0];
 ssvol.r = [60];
 assert(ft_headmodeltype(ssvol,'singlesphere'))
 
-[pnt, tri] = icosahedron162;
+[pnt, tri] = sphere_mesh(162);
 svol.bnd(1).pnt = 10*pnt;
 svol.bnd(1).tri = tri;
 svol.bnd(2).pnt = 50*pnt;
