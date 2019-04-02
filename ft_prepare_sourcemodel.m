@@ -64,23 +64,23 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 %   cfg.headmodel     = structure with volume conduction model or filename, see FT_PREPARE_HEADMODEL
 %
 % Other configuration options
-%   cfg.sourcemodel.unit    = string, can be 'mm', 'cm', 'm' (default is automatic)
-%   cfg.tight   = 'yes' or 'no' (default is automatic)
-%   cfg.inwardshift  = number, how much should the innermost surface be moved inward to constrain
-%                      sources to be considered inside the source compartment (default = 0)
-%   cfg.moveinward   = number, move dipoles inward to ensure a certain distance to the innermost
-%                      surface of the source compartment (default = 0)
-%   cfg.spherify     = 'yes' or 'no', scale the source model so that it fits inside a sperical
-%                      volume conduction model (default = 'no')
-%   cfg.symmetry     = 'x', 'y' or 'z' symmetry for two dipoles, can be empty (default = [])
-%   cfg.headshape    = a filename for the headshape, a structure containing a single surface,
-%                      or a Nx3 matrix with headshape surface points (default = [])
-%   cfg.spmversion   = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
+%   cfg.unit          = string, can be 'mm', 'cm', 'm' (default is automatic)
+%   cfg.tight         = 'yes' or 'no' (default is automatic)
+%   cfg.inwardshift   = number, how much should the innermost surface be moved inward to constrain
+%                       sources to be considered inside the source compartment (default = 0)
+%   cfg.moveinward    = number, move dipoles inward to ensure a certain distance to the innermost
+%                       surface of the source compartment (default = 0)
+%   cfg.spherify      = 'yes' or 'no', scale the source model so that it fits inside a sperical
+%                       volume conduction model (default = 'no')
+%   cfg.symmetry      = 'x', 'y' or 'z' symmetry for two dipoles, can be empty (default = [])
+%   cfg.headshape     = a filename for the headshape, a structure containing a single surface,
+%                       or a Nx3 matrix with headshape surface points (default = [])
+%   cfg.spmversion    = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
 %
 % See also FT_PREPARE_LEADFIELD, FT_PREPARE_HEADMODEL, FT_SOURCEANALYSIS,
 % FT_DIPOLEFITTING, FT_MEGREALIGN
 
-% Copyright (C) 2004-2013, Robert Oostenveld
+% Copyright (C) 2004-2019, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -135,10 +135,6 @@ cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
 % move some fields from cfg.sourcemodel back to the top-level configuration
 cfg = ft_checkconfig(cfg, 'createtopcfg', {'sourcemodel'});
 
-if ischar(cfg.sourcemodel)
-  cfg.sourcemodel = loadvar(cfg.sourcemodel, 'sourcemodel');
-end
-
 % set the defaults
 cfg.moveinward        = ft_getopt(cfg, 'moveinward'); % the default is automatic and depends on a triangulation being present
 cfg.spherify          = ft_getopt(cfg, 'spherify', 'no');
@@ -147,7 +143,7 @@ cfg.symmetry          = ft_getopt(cfg, 'symmetry');
 cfg.spmversion        = ft_getopt(cfg, 'spmversion', 'spm8');
 cfg.headmodel         = ft_getopt(cfg, 'headmodel');
 cfg.sourcemodel       = ft_getopt(cfg, 'sourcemodel');
-cfg.sourcemodel.unit  = ft_getopt(cfg.sourcemodel, 'unit', 'auto');
+cfg.unit              = ft_getopt(cfg, 'unit', 'auto');
 
 % this code expects the inside to be represented as a logical array
 cfg = ft_checkconfig(cfg, 'inside2logical', 'yes');
@@ -177,6 +173,7 @@ basedonmni        = isfield(cfg, 'mri') &&  (isfield(cfg, 'warpmni') && istrue(c
 basedonvol        = false;                                                                    % surface mesh based on inward shifted brain surface from volume conductor
 basedoncortex     = isfield(cfg, 'headshape') && (iscell(cfg.headshape) || any(ft_filetype(cfg.headshape, {'neuromag_fif', 'freesurfer_triangle_binary', 'caret_surf', 'gifti'}))); % cortical sheet from external software such as Caret or FreeSurfer, can also be two separate hemispheres
 basedonresolution = isfield(cfg, 'resolution') && ~basedonmri && ~basedonmni;                 % regular 3D grid with specification of the resolution
+basedonfile       = isfield(cfg, 'sourcemodel') && ischar(cfg.sourcemodel);
 
 if basedonshape && basedoncortex
   % treating it as cortical sheet has preference
@@ -196,59 +193,64 @@ end
 % these are mutually exclusive, but printing all requested methods here
 % facilitates debugging of weird configs. Also specify the defaults here to
 % keep the overview
+if basedonfile
+  fprintf('reading sourcemodel from file\n');
+  cfg.tight       = ft_getopt(cfg, 'tight',   'no');
+end
+
 if basedonresolution
   fprintf('creating sourcemodel based on automatic 3D grid with specified resolution\n');
   cfg.xgrid       = ft_getopt(cfg, 'xgrid',  'auto');
   cfg.ygrid       = ft_getopt(cfg, 'ygrid',  'auto');
   cfg.zgrid       = ft_getopt(cfg, 'zgrid',  'auto');
-  cfg.inwardshift = ft_getopt(cfg, 'inwardshift', 0); % in this case for inside detection, FIXME move to cfg.sourcemodel
+  cfg.inwardshift = ft_getopt(cfg, 'inwardshift', 0); % in this case for inside detection
   cfg.tight       = ft_getopt(cfg, 'tight',   'yes');
 end
 
 if basedongrid
   fprintf('creating sourcemodel based on user specified 3D grid\n');
-  cfg.inwardshift = ft_getopt(cfg, 'inwardshift', 0); % in this case for inside detection, FIXME move to cfg.sourcemodel
+  cfg.inwardshift = ft_getopt(cfg, 'inwardshift', 0); % in this case for inside detection
   cfg.tight       = ft_getopt(cfg, 'tight',   'yes');
 end
 
 if basedonpos
   fprintf('creating sourcemodel based on user specified dipole positions\n');
-  cfg.inwardshift = ft_getopt(cfg, 'inwardshift', 0); % in this case for inside detection, FIXME move to cfg.sourcemodel
+  cfg.inwardshift = ft_getopt(cfg, 'inwardshift', 0); % in this case for inside detection
   cfg.tight       = ft_getopt(cfg, 'tight',    'no');
 end
 
 if basedonshape
   fprintf('creating sourcemodel based on inward-shifted head shape\n');
-  cfg.inwardshift = ft_getopt(cfg, 'inwardshift',  0); % in this case for inside detection, FIXME move to cfg.sourcemodel
-  cfg.spheremesh  = ft_getopt(cfg, 'spheremesh', 642); % FIXME move spheremesh to cfg.sourcemodel
+  cfg.inwardshift = ft_getopt(cfg, 'inwardshift',  0); % in this case for inside detection
+  cfg.spheremesh  = ft_getopt(cfg, 'spheremesh', 642);
   cfg.tight       = ft_getopt(cfg, 'tight',    'yes');
 end
 
 if basedoncortex
-  cfg.tight  = ft_getopt(cfg, 'tight', 'yes');
+  cfg.tight       = ft_getopt(cfg, 'tight', 'yes');
 end
 
 if basedonmri
   fprintf('creating sourcemodel based on an anatomical volume\n');
-  cfg.threshold   = ft_getopt(cfg, 'threshold', 0.1);    % relative
-  cfg.smooth      = ft_getopt(cfg, 'smooth',      5);    % in voxels
+  cfg.threshold   = ft_getopt(cfg, 'threshold', 0.1); % relative
+  cfg.smooth      = ft_getopt(cfg, 'smooth',      5); % in voxels
   cfg.tight       = ft_getopt(cfg, 'tight',   'yes');
 end
 
 if basedonvol
   fprintf('creating sourcemodel based on inward-shifted brain surface from volume conductor model\n');
-  cfg.inwardshift = ft_getopt(cfg, 'inwardshift',   0); % in this case for inside detection, FIXME move to cfg.sourcemodel
-  cfg.spheremesh  = ft_getopt(cfg, 'spheremesh',  642); % FIXME move spheremesh to cfg.sourcemodel
+  cfg.inwardshift = ft_getopt(cfg, 'inwardshift',   0); % in this case for inside detection
+  cfg.spheremesh  = ft_getopt(cfg, 'spheremesh',  642);
   cfg.tight       = ft_getopt(cfg, 'tight',      'no');
 end
 
 if basedonmni
-  cfg.tight = ft_getopt(cfg.sourcemodel, 'tight',       'no');
-  cfg.nonlinear         = ft_getopt(cfg.sourcemodel, 'nonlinear',   'no');
+  cfg.tight       = ft_getopt(cfg.sourcemodel, 'tight',       'no');
+  cfg.nonlinear   = ft_getopt(cfg.sourcemodel, 'nonlinear',   'no');
 end
 
 % these are mutually exclusive
-if sum([basedonresolution basedongrid basedonpos basedonshape basedonmri basedonvol basedoncortex basedonmni])~=1
+if sum([basedonresolution basedongrid basedonpos basedonshape basedonmri basedonvol basedoncortex basedonmni basedonfile])~=1
   ft_error('incorrect cfg specification for constructing a sourcemodel');
 end
 
@@ -276,31 +278,49 @@ catch
   sens = [];
 end
 
-if strcmp(cfg.sourcemodel.unit, 'auto')
-  if isfield(cfg.sourcemodel, 'pos') && size(cfg.sourcemodel.pos,1)>10
+if basedonfile
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % read the source model from a MATLAB file
+  % this needs to be done prior to determining the default units
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  sourcemodel = loadvar(cfg.sourcemodel, 'sourcemodel');
+end
+
+if strcmp(cfg.unit, 'auto')
+  if basedonfile && isfield(sourcemodel, 'unit')
+    % take the existing source model units
+    cfg.unit = sourcemodel.unit;
+  elseif basedonfile && isfield(sourcemodel, 'pos') && size(sourcemodel.pos,1)>10
     % estimate the units based on the existing source positions
-    cfg.sourcemodel = rmfield(cfg.sourcemodel, 'unit'); % remove 'auto' and have ft_determine_units determine it properly
+    sourcemodel = ft_determine_units(cfg.sourcemodel);
+    cfg.unit = sourcemodel.unit;
+  elseif isfield(cfg.sourcemodel, 'unit')
+    % take the existing source model units
+    cfg.unit = cfg.sourcemodel.unit;
+  elseif isfield(cfg.sourcemodel, 'pos') && size(cfg.sourcemodel.pos,1)>10
+    % estimate the units based on the existing source positions
     cfg.sourcemodel = ft_determine_units(cfg.sourcemodel);
+    cfg.unit = cfg.sourcemodel.unit;
   elseif ~isempty(sens)
     % copy the units from the sensor array
-    cfg.sourcemodel.unit = sens.unit;
+    cfg.unit = sens.unit;
   elseif ~isempty(headmodel)
     % copy the units from the volume conduction model
-    cfg.sourcemodel.unit = headmodel.unit;
+    cfg.unit = headmodel.unit;
   else
-    ft_warning('assuming "cm" as default source units');
-    cfg.sourcemodel.unit = 'cm';
+    ft_warning('assuming "cm" as default units for source model');
+    cfg.unit = 'cm';
   end
 end
 
 % convert the sensor array to the desired units for the source model
 if ~isempty(sens)
-  sens = ft_convert_units(sens, cfg.sourcemodel.unit);
+  sens = ft_convert_units(sens, cfg.unit);
 end
 
 % convert the head model to the desired units for the source model
 if ~isempty(headmodel)
-  headmodel = ft_convert_units(headmodel, cfg.sourcemodel.unit);
+  headmodel = ft_convert_units(headmodel, cfg.unit);
 end
 
 if basedonresolution
@@ -637,7 +657,7 @@ end
 
 % in most cases the source model will already be in the desired units, but e.g. for "basedonmni" it will be in 'mm'
 % convert to the requested units
-sourcemodel = ft_convert_units(sourcemodel, cfg.sourcemodel.unit);
+sourcemodel = ft_convert_units(sourcemodel, cfg.unit);
 
 if strcmp(cfg.spherify, 'yes')
   if ~ft_headmodeltype(headmodel, 'singlesphere') && ~ft_headmodeltype(headmodel, 'concentricspheres')

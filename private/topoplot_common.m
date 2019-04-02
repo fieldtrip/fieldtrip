@@ -331,10 +331,11 @@ if ~strcmp(cfg.baseline, 'no')
   if ~isempty(cfg.maskparameter)
     tempmask = data.(cfg.maskparameter);
   end
+  tmpcfg = removefields(cfg, 'inputfile');
   if strcmp(xparam, 'time') && strcmp(yparam, 'freq')
-    data = ft_freqbaseline(cfg, data);
+    data = ft_freqbaseline(tmpcfg, data);
   elseif strcmp(xparam, 'time') && strcmp(yparam, '')
-    data = ft_timelockbaseline(cfg, data);
+    data = ft_timelockbaseline(tmpcfg, data);
   end
   % put mask-parameter back if it is set
   if ~isempty(cfg.maskparameter)
@@ -414,10 +415,11 @@ if ~ischar(cfg.xlim) && length(cfg.xlim)>2 %&& any(ismember(dimtok, 'time'))
   nplots = numel(xlims)-1;
   nyplot = ceil(sqrt(nplots));
   nxplot = ceil(nplots./nyplot);
+  tmpcfg = removefields(cfg, 'inputfile');
   for i=1:length(xlims)-1
     subplot(nxplot, nyplot, i);
-    cfg.xlim = xlims(i:i+1);
-    ft_topoplotTFR(cfg, data);
+    tmpcfg.xlim = xlims(i:i+1);
+    ft_topoplotTFR(tmpcfg, data);
   end
   return
 end

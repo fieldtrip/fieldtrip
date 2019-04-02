@@ -37,8 +37,8 @@ function [cfg] = ft_checkconfig(cfg, varargin)
 %   forbidden       = {'opt1', 'opt2', etc.} % list the forbidden options, these result in an error
 %   deprecated      = {'opt1', 'opt2', etc.} % list the deprecated options
 %   unused          = {'opt1', 'opt2', etc.} % list the unused options, these will be removed and a warning is issued
-%   createsubcfg    = {'subname', etc.}      % list the names of the subcfg
-%   createtopcfg    = {'subname', etc.}      % list the names of the subcfg
+%   createsubcfg    = {'subname', etc.}      % list the names of the sub-configuration
+%   createtopcfg    = {'topname', etc.}      % list the names of the top-configuration
 %   dataset2files   = 'yes', 'no'            % converts dataset into headerfile and datafile
 %   inside2logical  = 'yes', 'no'            % converts cfg.inside or cfg.sourcemodel.inside into logical representation
 %   checksize       = 'yes', 'no'            % remove large fields from the cfg
@@ -280,18 +280,18 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(createtopcfg)
   for j=1:length(createtopcfg)
-    subname = createtopcfg{j};
+    topname = createtopcfg{j};
 
-    if isfield(cfg, subname)
-      % get the options that are already specified in the substructure
-      subcfg = cfg.(subname);
+    if isfield(cfg, topname)
+      % get the options that are already specified in the topstructure
+      topcfg = cfg.(topname);
     else
-      % start with an empty substructure
-      subcfg = [];
+      % start with an empty topstructure
+      topcfg = [];
     end
     
-    % move all relevant options from the substructure to the top
-    switch subname
+    % move all relevant options from the topstructure to the top
+    switch topname
       case 'sourcemodel'
         fieldname = {
           'xgrid'
@@ -302,26 +302,26 @@ if ~isempty(createtopcfg)
           'warpmni'
           'template'
           };
-    end % switch subname
+    end % switch topname
     
     for i=1:length(fieldname)
-      if ~isfield(cfg, fieldname{i}) && isfield(subcfg, fieldname{i})
+      if ~isfield(cfg, fieldname{i}) && isfield(topcfg, fieldname{i})
 
         if silent
           % don't mention it
         elseif loose
-          ft_warning('The field cfg.%s.%s is deprecated, pleae use cfg.%s\n', subname, fieldname{i}, fieldname{i});
+          ft_warning('The field cfg.%s.%s is deprecated, pleae use cfg.%s\n', topname, fieldname{i}, fieldname{i});
         elseif pedantic
-          ft_error('The field cfg.%s.%s is not longer supported, please use cfg.%s\n', subname, fieldname{i}, fieldname{i});
+          ft_error('The field cfg.%s.%s is not longer supported, please use cfg.%s\n', topname, fieldname{i}, fieldname{i});
         end
 
-        cfg = setfield(cfg, fieldname{i}, getfield(subcfg, fieldname{i}));  % set it in the top configuration
-        subcfg = rmfield(subcfg, fieldname{i});                             % remove it from the sub configuration
+        cfg = setfield(cfg, fieldname{i}, getfield(topcfg, fieldname{i}));  % set it in the top-configuration
+        topcfg = rmfield(topcfg, fieldname{i});                             % remove it from the sub-configuration
       end
     end
 
-    % copy the substructure back into the main configuration structure
-    cfg = setfield(cfg, subname, subcfg);
+    % copy the topstructure back into the main configuration structure
+    cfg = setfield(cfg, topname, topcfg);
   end
 end
 
@@ -391,7 +391,6 @@ if ~isempty(createsubcfg)
 
       case 'sourcemodel'
         fieldname = {
-          'unit'
           'filter'
           'leadfield'
           'inside'
@@ -577,8 +576,8 @@ if ~isempty(createsubcfg)
           ft_error('The field cfg.%s is not longer supported, please use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
         end
 
-        subcfg = setfield(subcfg, fieldname{i}, getfield(cfg, fieldname{i}));  % set it in the subconfiguration
-        cfg = rmfield(cfg, fieldname{i});                                      % remove it from the main configuration
+        subcfg = setfield(subcfg, fieldname{i}, getfield(cfg, fieldname{i}));  % set it in the sub-configuration
+        cfg = rmfield(cfg, fieldname{i});                                      % remove it from the top-configuration
       end
     end
 

@@ -719,6 +719,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(fileio/private/ft_fetch_data.m)
+ARRAY+=(test/private/ft_fetch_data.m)
 ARRAY+=(utilities/ft_fetch_data.m)
 sync ${ARRAY[*]}
 
