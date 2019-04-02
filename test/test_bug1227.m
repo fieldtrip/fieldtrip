@@ -5,7 +5,7 @@ function test_bug1227
 
 % DEPENDENCY ft_sourcewrite
 
-[pnt, tri] = icosahedron162;
+[pnt, tri] = sphere_mesh(162);
 
 source = [];
 source.pos = pnt;

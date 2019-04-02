@@ -12,7 +12,7 @@ c = [1 1/20 1/80 1];
 order = [1 2 3 4];
 
 % Description of the spherical mesh
-[pnt, tri] = icosahedron42;
+[pnt, tri] = sphere_mesh(42);
 
 % Create a set of electrodes on the outer surface
 elec.elecpos = max(r) * pnt;

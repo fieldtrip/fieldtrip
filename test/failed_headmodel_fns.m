@@ -10,7 +10,7 @@ function failed_headmodel_fns
 ft_hastoolbox('fns', 1);
 
 % create 3 spherical meshes and the corresponding volumes
-[pnt, tri] = icosahedron162;
+[pnt, tri] = sphere_mesh(162);
 
 % radiuses and origins are defined in mm
 svol(1).o = [0,0,0];
@@ -34,7 +34,7 @@ tmp = load(dccnpath('/home/common/matlab/fieldtrip/data/test/spheres.mat'));
 bkgrnd = tmp.bkgrnd;
 
 % generate volume's external surface (mm)
-[pnt, tri] = icosahedron162;
+[pnt, tri] = sphere_mesh(162);
 o = [0,0,0];
 r = 60;
 bnd.pnt = r*pnt;
@@ -87,7 +87,7 @@ end
 vol2 = ft_headmodel_concentricspheres(geom, 'conductivity', 1e-3*[0.022 0.33 0.33]); %S/mm 
 
 % sensors
-[pnt, tri] = icosahedron162;
+[pnt, tri] = sphere_mesh(162);
 o = [0,0,0];
 r = 60;
 bnd.pnt = r*pnt;

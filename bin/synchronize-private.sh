@@ -3399,6 +3399,18 @@ ARRAY+=(private/specest_nanfft.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# sphere_mesh.m
+
+ARRAY=()
+ARRAY+=(external/openmeeg/sphere_mesh.m)
+ARRAY+=(forward/private/sphere_mesh.m)
+ARRAY+=(plotting/private/sphere_mesh.m)
+ARRAY+=(private/sphere_mesh.m)
+ARRAY+=(test/private/sphere_mesh.m)
+ARRAY+=(utilities/private/sphere_mesh.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # standardise.m
 
 ARRAY=()

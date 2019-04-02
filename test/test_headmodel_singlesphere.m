@@ -16,7 +16,7 @@ geom.pnt = pnt * 100;
 vol = ft_headmodel_singlesphere(geom, 'conductivity', [0.42]);
 
 % generate a unit sphere
-[pnt, tri] = icosahedron162;
+[pnt, tri] = sphere_mesh(162);
 
 % create a set of electrodes
 sel = find(pnt(:,3)>0);

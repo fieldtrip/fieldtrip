@@ -135,13 +135,13 @@ elseif ~isempty(headmodel) && isfield(headmodel, 'r') && length(headmodel.r)<5
   % construct an evenly tesselated unit sphere
   switch npos
     case 2562
-      [pos, tri] = icosahedron2562;
+      [pos, tri] = sphere_mesh(2562);
     case 642
-      [pos, tri] = icosahedron642;
+      [pos, tri] = sphere_mesh(642);
     case 162
-      [pos, tri] = icosahedron162;
+      [pos, tri] = sphere_mesh(162);
     case 42
-      [pos, tri] = icosahedron42;
+      [pos, tri] = sphere_mesh(42);
     case 12
       [pos, tri] = icosahedron;
     otherwise
@@ -213,13 +213,13 @@ end
 if ~isempty(npos) && size(pos,1)~=npos
   switch npos
     case 2562
-      [pnt2, tri2] = icosahedron2562;
+      [pnt2, tri2] = sphere_mesh(2562);
     case 642
-      [pnt2, tri2] = icosahedron642;
+      [pnt2, tri2] = sphere_mesh(642);
     case 162
-      [pnt2, tri2] = icosahedron162;
+      [pnt2, tri2] = sphere_mesh(162);
     case 42
-      [pnt2, tri2] = icosahedron42;
+      [pnt2, tri2] = sphere_mesh(42);
     case 12
       [pnt2, tri2] = icosahedron;
     otherwise

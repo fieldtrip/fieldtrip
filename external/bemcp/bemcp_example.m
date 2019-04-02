@@ -24,7 +24,7 @@ function bemcp_example
 % $Id$
 
 % create volume conductor starting from unit sphere
-[pnt, tri] = icosahedron162;
+[pnt, tri] = sphere_mesh(162);
 
 vol = [];
 vol.cond = [1 1/80 1];
@@ -69,13 +69,13 @@ return
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Subfunctions from FieldTrip
-function [pnt, tri] = icosahedron162
+function [pnt, tri] = sphere_mesh(162)
 
 % ICOSAHEDRON162 creates a 2-fold refined icosahedron
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% $Log: icosahedron162.m,v $
+% $Log: sphere_mesh(162).m,v $
 % Revision 1.3  2003/11/28 09:40:12  roberto
 % added a single help line
 %
