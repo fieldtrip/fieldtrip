@@ -1,6 +1,6 @@
 function test_tutorial_connectivity20130308
 
-% MEM 4gb
+% MEM 7gb
 % WALLTIME 00:10:00
 
 % Simulated data with directed connections
