@@ -261,12 +261,11 @@ end
 sourcemodel = [];
 
 % get the volume conduction model
-if isstruct(cfg.headmodel)
-  headmodel = cfg.headmodel;
-elseif ischar(cfg.headmodel)
+if ischar(cfg.headmodel)
   headmodel = ft_read_headmodel(cfg.headmodel);
 else
-  headmodel = [];
+  % ensure that the volume conduction model is up-to-date
+  headmodel = ft_datatype_headmodel(cfg.headmodel);
 end
 
 % get the gradiometer or electrode definition
