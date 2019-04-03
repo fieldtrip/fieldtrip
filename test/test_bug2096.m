@@ -47,7 +47,7 @@ source2 = ft_read_cifti('test_bug2096b.pow.dscalar.nii');
 % assert(isequal(source1, source2)); % numerical differences
 
 %%
-[pnt, tri] = icosahedron;
+[pnt, tri] = sphere_mesh;
 
 source = [];
 source.pos    = pnt;
@@ -193,7 +193,7 @@ sourcep2 = ft_read_cifti('test_bug2096b.pow.pscalar.nii');
 clear all; close all
 
 %% test the dscalar output
-[pnt, tri] = icosahedron;
+[pnt, tri] = sphere_mesh;
 pntL = pnt; pntL(:,1) = pntL(:,1) - 1; % shift along X
 pntR = pnt; pntR(:,1) = pntR(:,1) + 1; % shift along X
 
@@ -216,7 +216,7 @@ source1 = ft_read_cifti('test_bug2096.activity.dscalar.nii');
 ft_plot_mesh(source1, 'vertexcolor', source1.activity(:,1), 'edgecolor', 'none')
 
 %% test the dtsetries output
-[pnt, tri] = icosahedron;
+[pnt, tri] = sphere_mesh;
 pntL = pnt; pntL(:,1) = pntL(:,1) - 1; % shift along X
 pntR = pnt; pntR(:,1) = pntR(:,1) + 1; % shift along X
 
@@ -242,7 +242,7 @@ source1 = ft_read_cifti('test_bug2096.timeseries.dtseries.nii');
 ft_plot_mesh(source1, 'vertexcolor', source1.timeseries(:,1), 'edgecolor', 'none')
 
 %% test the dconn output
-[pnt, tri] = icosahedron;
+[pnt, tri] = sphere_mesh;
 pntL = pnt; pntL(:,1) = pntL(:,1) - 1; % shift along X
 pntR = pnt; pntR(:,1) = pntR(:,1) + 1; % shift along X
 
@@ -268,7 +268,7 @@ source1 = ft_read_cifti('test_bug2096.imagcoh.dconn.nii');
 clear all; close all
 
 %% test the pscalar output
-[pnt, tri] = icosahedron;
+[pnt, tri] = sphere_mesh;
 pntL = pnt; pntL(:,1) = pntL(:,1) - 1; % shift along X
 pntR = pnt; pntR(:,1) = pntR(:,1) + 1; % shift along X
 
@@ -299,7 +299,7 @@ figure
 ft_plot_mesh(source1.brainordinate, 'vertexcolor', source1.brainordinate.parcellation(:), 'edgecolor', 'none')
 
 %% test the ptsetries output
-[pnt, tri] = icosahedron;
+[pnt, tri] = sphere_mesh;
 pntL = pnt; pntL(:,1) = pntL(:,1) - 1; % shift along X
 pntR = pnt; pntR(:,1) = pntR(:,1) + 1; % shift along X
 
@@ -333,7 +333,7 @@ figure
 ft_plot_mesh(source1.brainordinate, 'vertexcolor', source1.brainordinate.parcellation, 'edgecolor', 'none')
 
 %% test the pconn output
-[pnt, tri] = icosahedron;
+[pnt, tri] = sphere_mesh;
 pntL = pnt; pntL(:,1) = pntL(:,1) - 1; % shift along X
 pntR = pnt; pntR(:,1) = pntR(:,1) + 1; % shift along X
 
