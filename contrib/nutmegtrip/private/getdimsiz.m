@@ -73,7 +73,7 @@ dimsiz = cellmatsize(data.(field));
 dimsiz = [prefix dimsiz];
 
 % deal with trailing singleton dimensions
-dimsiz(end:numdim) = 1;
+dimsiz(end+1:numdim) = 1;
 
 end % main function
 
