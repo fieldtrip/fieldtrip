@@ -54,7 +54,8 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %                        'nonlin3'         apply a 3rd order non-linear warp
 %                        'nonlin4'         apply a 4th order non-linear warp
 %                        'nonlin5'         apply a 5th order non-linear warp
-%                        'dykstra2012'     non-linear wrap only for headshape method, useful for projecting ECoG onto cortex hull
+%                        'dykstra2012'     back-project ECoG onto the cortex using energy minimzation
+%                        'hermes2010'      back-project ECoG onto the cortex along the local norm vector
 %                        'fsaverage'       surface-based realignment with FreeSurfer fsaverage brain (left->left or right->right)
 %                        'fsaverage_sym'   surface-based realignment with FreeSurfer fsaverage_sym left hemisphere (left->left or right->left)
 %                        'fsinflated'      surface-based realignment with FreeSurfer individual subject inflated brain (left->left or right->right)
