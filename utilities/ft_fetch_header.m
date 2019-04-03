@@ -44,28 +44,24 @@ else
   trl = [1 sum(trllen)];
 end
 
-% fill in hdr.nChans
+% fill in some header details
+hdr.Fs     = data.fsample;
+hdr.label  = data.label(:);
 hdr.nChans = numel(data.label);
 
-% fill in the channel labels
-hdr.label = data.label(:);
-
 % fill in the channel type and units
-if isfield(data, 'hdr') && isfield(data.hdr, 'chantype')
-  [datindx, hdrindx] = match_str(data.label, data.hdr.label); % ordered according to the FieldTrip data structure
-  hdr.chantype = data.hdr.chantype(hdrindx);
-else
+if isfield(data, 'hdr')
+  % keep them ordered according to the FieldTrip data structure, which might differ from the original header
+  [datindx, hdrindx] = match_str(data.label, data.hdr.label);
   hdr.chantype = repmat({'unknown'}, hdr.nChans, 1);
-end
-if isfield(data, 'hdr') && isfield(data.hdr, 'chanunit')
-  [datindx, hdrindx] = match_str(data.label, data.hdr.label); % ordered according to the FieldTrip data structure
-  hdr.chanunit = data.hdr.chanunit(hdrindx);
-else
+  if isfield(data.hdr, 'chantype')
+    hdr.chantype(datindx) = data.hdr.chantype(hdrindx);
+  end
   hdr.chanunit = repmat({'unknown'}, hdr.nChans, 1);
+  if isfield(data.hdr, 'chanunit')
+    hdr.chanunit(datindx) = data.hdr.chanunit(hdrindx);
+  end
 end
-
-% fill in sample frequency
-hdr.Fs = data.fsample;
 
 % determine hdr.nSamples, hdr.nSamplesPre, hdr.nTrials
 % always pretend that it is continuous data
@@ -97,4 +93,3 @@ end
 if isfield(data, 'hdr') && isfield(data.hdr, 'TimeStampPerSample')
   hdr.TimeStampPerSample = data.hdr.TimeStampPerSample;
 end
-
