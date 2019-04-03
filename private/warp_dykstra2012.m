@@ -118,7 +118,9 @@ end
 energy_deform = (dist - dist_orig).^2;
 
 % (weighted) sum of the above
-energy = mean(energy_eshift) + (deformweight * mean(energy_deform.^2));
+%energy = mean(energy_eshift) + (deformweight * mean(energy_deform.^2));
+energy = (deformweight * mean(energy_deform.^2)); % FIXME: despite commenting out eshift the elecs are projected to the hull ..
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
