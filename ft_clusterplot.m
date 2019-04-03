@@ -124,19 +124,18 @@ cfgtopo.feedback = 'no';
 % handle with the data, it should be 1D or 2D
 dimord = getdimord(stat, cfg.parameter);
 dimtok = tokenize(dimord, '_');
-dimsiz = getdimsiz(stat, cfg.parameter);
-dimsiz(end+1:length(dimtok)) = 1; % there can be additional trailing singleton dimensions
+dimsiz = getdimsiz(stat, cfg.parameter, numel(dimtok));
 
 switch dimord
   case 'chan'
     is2D = false;
-    
+
   case 'chan_time'
     is2D = true;
-    
+
   case 'chan_freq'
     is2D = true;
-    
+
   case 'chan_freq_time'
     % no more than two dimensions are supported, we can ignore singleton dimensions
     is2D = true;
@@ -155,7 +154,7 @@ switch dimord
     else
       ft_error('this only works if either frequency or time is a singleton dimension');
     end
-    
+
   otherwise
     ft_error('unsupported dimord %s', dimord);
 end % switch dimord
@@ -204,11 +203,11 @@ else
   Nsigpos = length(sigpos);
   Nsigneg = length(signeg);
   Nsigall = Nsigpos + Nsigneg;
-  
+
   if Nsigall == 0
     ft_error('no clusters present with a p-value lower than the specified alpha, nothing to plot')
   end
-  
+
   % make clusterslabel matrix per significant cluster
   if haspos
     posCLM = stat.posclusterslabelmat;
@@ -224,7 +223,7 @@ else
     sigposCLM = [];
     probpos = [];
   end
-  
+
   if hasneg
     negCLM = stat.negclusterslabelmat;
     signegCLM = zeros(size(negCLM));
@@ -239,9 +238,9 @@ else
     signegCLM = [];
     probneg = [];
   end
-  
+
   fprintf('There are %d clusters smaller than alpha (%g)\n', Nsigall, cfg.alpha);
-  
+
   if is2D
     % define time or freq window per cluster
     for iPos = 1:length(sigpos)
@@ -267,13 +266,13 @@ else
         fprintf('%s%s%s%s%s%s%s%s%s%s%s\n', 'Negative cluster: ',num2str(signeg(iNeg)), ', pvalue: ',num2str(probneg(iNeg)), ' (',hlsignneg(iNeg), ')', ', f = ',num2str(time_perclus(1)), ' to ',num2str(time_perclus(2)))
       end
     end
-    
+
     % define time- or freq-window containing all significant clusters
     possum = sum(sigposCLM,3); %sum over Chans for timevector
     possum = sum(possum,1);
     negsum = sum(signegCLM,3);
     negsum = sum(negsum,1);
-    
+
     if haspos && hasneg
       allsum = possum + negsum;
     elseif haspos
@@ -281,11 +280,11 @@ else
     else
       allsum = negsum;
     end
-    
+
     ind_timewin_min = find(allsum~=0, 1 );
     ind_timewin_max = find(allsum~=0, 1, 'last' );
     timewin = time(ind_timewin_min:ind_timewin_max);
-    
+
   else
     for iPos = 1:length(sigpos)
       fprintf('%s%s%s%s%s%s%s\n', 'Positive cluster: ',num2str(sigpos(iPos)), ', pvalue: ',num2str(probpos(iPos)), ' (',hlsignpos(iPos), ')')
@@ -294,7 +293,7 @@ else
       fprintf('%s%s%s%s%s%s%s\n', 'Negative cluster: ',num2str(signeg(iNeg)), ', pvalue: ',num2str(probneg(iNeg)), ' (',hlsignneg(iNeg), ')')
     end
   end
-  
+
   % setup highlight options for all clusters and make comment for 1D data
   compos = [];
   comneg = [];
@@ -328,7 +327,7 @@ else
     cfgtopo.highlightcolor{iPos}        = cfg.highlightcolorpos;
     compos = strcat(compos,cfgtopo.highlightsymbol{iPos}, 'p=',num2str(probpos(iPos)), ' '); % make comment, only used for 1D data
   end
-  
+
   for iNeg = 1:length(signeg)
     if stat.negclusters(signeg(iNeg)).prob < 0.01
       cfgtopo.highlight{length(sigpos)+iNeg}         = cfg.highlightseries{1};
@@ -359,16 +358,16 @@ else
     cfgtopo.highlightcolor{length(sigpos)+iNeg}        = cfg.highlightcolorneg;
     comneg = strcat(comneg,cfgtopo.highlightsymbol{length(sigpos)+iNeg}, 'p=',num2str(probneg(iNeg)), ' '); % make comment, only used for 1D data
   end
-  
+
   if is2D
     Npl = length(timewin);
   else
     Npl = 1;
   end
-  
+
   numSubplots = prod(cfg.subplotsize);
   Nfig = ceil(Npl/numSubplots);
-  
+
   % put channel indexes in list
   if is2D
     for iPl = 1:Npl
@@ -389,11 +388,11 @@ else
       end
     end
   end
-  
+
   count = 0;
   ft_progress('init', cfg.feedback, 'making subplots...');
   ft_progress(count/Npl, 'making subplot %d from %d', count, Npl);
-  
+
   % make plots
   for iPl = 1:Nfig
     figure('visible', cfg.visible);

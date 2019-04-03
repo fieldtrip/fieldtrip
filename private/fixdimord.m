@@ -3,7 +3,7 @@ function [data] = fixdimord(data)
 % FIXDIMORD ensures consistency between the dimord string and the axes
 % that describe the data dimensions. The main purpose of this function
 % is to ensure backward compatibility of all functions with data that has
-% been processed by older FieldTrip versions
+% been processed by older FieldTrip versions.
 %
 % Use as
 %   [data] = fixdimord(data)
@@ -126,7 +126,7 @@ for i=1:length(dimtok)
       dimtok{i} = 'chancmb';
       
     case {'rpttap'}
-      % this is a 2-D field, coding trials and tapers along the same dimension
+      % this is a 2D field, coding trials and tapers along the same dimension
       % don't change, it is ok
       
     case {'refchan'}
@@ -143,14 +143,14 @@ for i=1:length(dimtok)
       ft_warning('unexpected dimord "%s"', data.dimord);
       
     case {'pos'}
-      % this is for source data on a 3-d grid, a cortical sheet, or unstructured positions
+      % this is for source data on a 3D grid, a cortical sheet, or unstructured positions
       
-    case {'{pos}' '{pos}_rpt' '{pos}_rpttap'}
-      % this is for source data on a 3-d grid, a cortical sheet, or unstructured positions
+    case {'{pos}'}
+      % this is for source data on a 3D grid, a cortical sheet, or unstructured positions
       % the data itself is represented in a cell-array, e.g. source.mom or source.leadfield
       
     case {'{pos_pos}'}
-      % this is for bivariate source data on a 3-d grid, a cortical sheet, or unstructured positions
+      % this is for bivariate source data on a 3D grid, a cortical sheet, or unstructured positions
       
     otherwise
       ft_error('unexpected dimord "%s"', data.dimord);
