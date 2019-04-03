@@ -16,6 +16,7 @@ seg.brain = ones(50, 50, 50);
 cfg = [];
 cfg.tissue = 'brain';
 cfg.numvertices = 100;
+cfg.spmversion = 'spm12';
 mesh1 = ft_prepare_mesh(cfg, seg);
 
 seg.brain = zeros(50, 50, 50);
@@ -74,6 +75,9 @@ figure; ft_plot_cloud(pos, val, 'mesh', {mesh1, mesh2}, 'facealpha', [.5 1], 'fa
 % these two should be the same
 figure; ft_plot_cloud(pos, val, 'mesh', {mesh1, mesh2}, 'facealpha', 0, 'edgealpha', [.5 1], 'edgecolor', {'r', 'b'});
 figure; ft_plot_cloud(pos, val, 'mesh', {mesh1, mesh2}, 'facealpha', 0, 'edgealpha', [.5 1], 'edgecolor', {[1 0 0], [0 0 1]});
+
+% plot electrodes as discs
+figure; ft_plot_cloud(pos, val, 'cloudtype', 'disc', 'mesh', mesh1);
 
 %%
 % slice options

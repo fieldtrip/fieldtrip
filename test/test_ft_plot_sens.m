@@ -35,3 +35,15 @@ figure; ft_plot_sens(elec, 'elec', true, 'individual', false, 'orientation', tru
 figure; ft_plot_sens(elec, 'elec', true, 'individual', false, 'orientation', true, 'elecshape', 'square');
 figure; ft_plot_sens(elec, 'elec', true, 'individual', false, 'orientation', true, 'elecshape', 'sphere');
 
+% plot electrodes as discs
+seg.dim = [50 50 50];
+seg.transform = eye(4);
+seg.unit = 'mm';
+seg.brain = ones(50, 50, 50);
+cfg = [];
+cfg.tissue = 'brain';
+cfg.numvertices = 100;
+cfg.spmversion = 'spm12';
+mesh = ft_prepare_mesh(cfg, seg);
+
+figure; ft_plot_sens(elec, 'elecshape', 'disc', 'headshape', mesh);

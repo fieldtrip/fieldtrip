@@ -707,7 +707,7 @@ else % plot 3d cloud
       Fn = Fn * (1/sqrt(sum(Fn.^2,2))); % normalize
       
       % create disc aligned with the headshape (ideally, a hull)
-      [X,Y,Z] = cylinder2([rmax(n) rmax(n)],[Fn(:,1) Fn(:,2) Fn(:,3)], 100);
+      [X,Y,Z] = cylinder([rmax(n) rmax(n)],[Fn(:,1) Fn(:,2) Fn(:,3)], 100);
       X(1,:) = X(1,:)+pos(n,1); Y(1,:) = Y(1,:)+pos(n,2); Z(1,:) = Z(1,:)+pos(n,3);
       t = rmax(n)/10; % add thickness (outward), X(2,1)-X(1,1) etc.
       X(2,:) = X(1,:)-t*Fn(:,1); Y(2,:) = Y(1,:)-t*Fn(:,2); Z(2,:) = Z(1,:)-t*Fn(:,3);
@@ -805,3 +805,48 @@ else % plot 3d cloud
     caxis(gca, clim);
   end
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION return a cylinder with radius r, direction d, and n points
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [XX,YY,ZZ] = cylinder(r,d,n)
+
+% basic cylinder
+r = r(:);
+d = d(:);
+m = length(r);
+theta = (0:n)/n*2*pi;
+sintheta = sin(theta); 
+sintheta(n+1) = 0;
+x = r * cos(theta);
+y = r * sintheta;
+z = (0:m-1)'/(m-1) * ones(1,n+1);
+
+% rotation axis and angle
+d0      = [0,0,1];
+rotaxis = cross(d0,d);
+if norm(rotaxis)==0
+  rotaxis = [1,0,0];
+end
+rotaxis = rotaxis/norm(rotaxis);
+angle   = -atan2(norm(cross(d0,d)),dot(d0,d));
+
+% rotation quaternion
+q(1:3,1) = rotaxis*sin(angle/2);
+q(4,1)   = cos(angle/2);
+
+% rotation matrix
+Q   = [0, -q(3), q(2);q(3), 0, -q(1);-q(2), q(1), 0];
+C   = eye(3)*(q(4)^2-q(1:3)'*q(1:3))+2*q(1:3)*q(1:3)'-2*q(4)*Q;
+
+% generate cylinder
+x1      = reshape(x,1,size(x,1)*size(x,2));
+y1      = reshape(y,1,size(y,1)*size(y,2));
+z1      = reshape(z,1,size(z,1)*size(z,2));
+M       = (C*[x1;y1;z1])';
+X1      = M(:,1);
+Y1      = M(:,2);
+Z1      = M(:,3);
+XX      = reshape(X1,size(x,1),size(x,2));
+YY      = reshape(Y1,size(y,1),size(y,2));
+ZZ      = reshape(Z1,size(z,1),size(z,2));

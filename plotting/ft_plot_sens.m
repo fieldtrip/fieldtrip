@@ -349,7 +349,7 @@ switch sensshape
     
   case 'circle'
     plotcoil(pos, ori, [], senssize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
-
+    
   case 'square'
     % determine the rotation-around-the-axis of each sensor
     % only applicable for neuromag planar gradiometers
@@ -375,7 +375,7 @@ switch sensshape
     end
     
     plotcoil(pos, ori, chandir, senssize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
-
+    
   case 'sphere'
     [xsp, ysp, zsp] = sphere(100);
     rsp = senssize/2; % convert coilsenssize from diameter to radius
@@ -397,13 +397,13 @@ switch sensshape
       d = sqrt( (pos(i,1)-headshape.pos(:,1)).^2 + ...
         (pos(i,2)-headshape.pos(:,2)).^2 + (pos(i,3)-headshape.pos(:,3)).^2 );
       [ds, idx] = sort(d);
-      x = headshape.pos(idx(1:npoints),1); 
-      y = headshape.pos(idx(1:npoints),2); 
+      x = headshape.pos(idx(1:npoints),1);
+      y = headshape.pos(idx(1:npoints),2);
       z = headshape.pos(idx(1:npoints),3);
       ptCloud = pointCloud([x y z]);
       nrm = pcnormals(ptCloud);
-      u = nrm(:,1); 
-      v = nrm(:,2); 
+      u = nrm(:,1);
+      v = nrm(:,2);
       w = nrm(:,3);
       
       % flip the normal vector if it is not pointing toward the center
@@ -423,13 +423,13 @@ switch sensshape
       ori(i,:) = Fn;
       
       % create disc aligned with the headshape (ideally, a hull)
-      [X,Y,Z] = cylinder2([senssize/2 senssize/2],[ori(i,1) ori(i,2) ori(i,3)], 100);
+      [X,Y,Z] = cylinder([senssize/2 senssize/2],[ori(i,1) ori(i,2) ori(i,3)], 100);
       X(1,:) = X(1,:)+pos(i,1); Y(1,:) = Y(1,:)+pos(i,2); Z(1,:) = Z(1,:)+pos(i,3);
       t = (senssize/2)/10; % add thickness (outward), X(2,1)-X(1,1) etc.
       X(2,:) = X(1,:)-t*ori(i,1); Y(2,:) = Y(1,:)-t*ori(i,2); Z(2,:) = Z(1,:)-t*ori(i,3);
       hold on; mesh(X,Y,Z, 'facecolor', facecolor, 'edgecolor', edgecolor, 'lineStyle','none'); % draw cylinder
       hold on; fill3(X(1,:),Y(1,:),Z(1,:), facecolor, 'lineStyle','none'); % fill sides
-      hold on; fill3(X(2,:),Y(2,:),Z(2,:), facecolor, 'lineStyle','none');  
+      hold on; fill3(X(2,:),Y(2,:),Z(2,:), facecolor, 'lineStyle','none');
     end
     
   otherwise
@@ -555,9 +555,54 @@ pos = [x y z]/2;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [pos] = square
 pos = [
-   0.5  0.5 0
+  0.5  0.5 0
   -0.5  0.5 0
   -0.5 -0.5 0
-   0.5 -0.5 0
-   0.5  0.5 0 % this closes the square
+  0.5 -0.5 0
+  0.5  0.5 0 % this closes the square
   ];
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION return a cylinder with radius r, direction d, and n points
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [XX,YY,ZZ] = cylinder(r,d,n)
+
+% basic cylinder
+r = r(:);
+d = d(:);
+m = length(r);
+theta = (0:n)/n*2*pi;
+sintheta = sin(theta); 
+sintheta(n+1) = 0;
+x = r * cos(theta);
+y = r * sintheta;
+z = (0:m-1)'/(m-1) * ones(1,n+1);
+
+% rotation axis and angle
+d0      = [0,0,1];
+rotaxis = cross(d0,d);
+if norm(rotaxis)==0
+  rotaxis = [1,0,0];
+end
+rotaxis = rotaxis/norm(rotaxis);
+angle   = -atan2(norm(cross(d0,d)),dot(d0,d));
+
+% rotation quaternion
+q(1:3,1) = rotaxis*sin(angle/2);
+q(4,1)   = cos(angle/2);
+
+% rotation matrix
+Q   = [0, -q(3), q(2);q(3), 0, -q(1);-q(2), q(1), 0];
+C   = eye(3)*(q(4)^2-q(1:3)'*q(1:3))+2*q(1:3)*q(1:3)'-2*q(4)*Q;
+
+% generate cylinder
+x1      = reshape(x,1,size(x,1)*size(x,2));
+y1      = reshape(y,1,size(y,1)*size(y,2));
+z1      = reshape(z,1,size(z,1)*size(z,2));
+M       = (C*[x1;y1;z1])';
+X1      = M(:,1);
+Y1      = M(:,2);
+Z1      = M(:,3);
+XX      = reshape(X1,size(x,1),size(x,2));
+YY      = reshape(Y1,size(y,1),size(y,2));
+ZZ      = reshape(Z1,size(z,1),size(z,2));
