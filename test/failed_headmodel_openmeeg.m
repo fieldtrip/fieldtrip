@@ -8,7 +8,7 @@ function test_headmodel_openmeeg
 system('module load openmeeg');
 
 % generate a unit sphere
-[pnt, tri] = sphere_mesh(162);
+[pnt, tri] = mesh_sphere(162);
 
 % create the BEM geometries
 geom = [];

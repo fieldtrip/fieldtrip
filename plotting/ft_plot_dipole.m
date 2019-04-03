@@ -112,7 +112,7 @@ if ~holdflag
 end
 
 % these are reused
-[unitsphere.pos, unitsphere.tri] = sphere_mesh(642);
+[unitsphere.pos, unitsphere.tri] = mesh_sphere(642);
 [unitcylinder.pos, unitcylinder.tri] = cylinder(36, 2);
 
 for i=1:size(pos,1)

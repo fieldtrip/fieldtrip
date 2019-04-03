@@ -62,9 +62,9 @@ assert(norm(mags-[1.3584 1.3583 1.2138])<thr)
   function [rdms,mags] = run_bem_computation(r,c,dippos)
     
     %% Description of the spherical mesh
-    [pos, tri] = sphere_mesh(42);
-    % [pos, tri] = sphere_mesh(162);
-    % [pos, tri] = sphere_mesh(642);
+    [pos, tri] = mesh_sphere(42);
+    % [pos, tri] = mesh_sphere(162);
+    % [pos, tri] = mesh_sphere(642);
     
     %% Create a set of electrodes on the outer surface
     sens.elecpos = max(r) * pos;

@@ -24,7 +24,7 @@ cfg.sourcemodel.resolution = 1.5;
 grid = ft_prepare_leadfield(cfg);
 
 % create 2D grid
-[pnt, tri] = sphere_mesh(162);
+[pnt, tri] = mesh_sphere(162);
 pnt   = pnt*(vol.orig.MEG_Sphere.RADIUS-1.5);
 shift = [vol.orig.MEG_Sphere.ORIGIN_X vol.orig.MEG_Sphere.ORIGIN_Y vol.orig.MEG_Sphere.ORIGIN_Z];
 pnt   = pnt+repmat(shift,[size(pnt,1) 1]);

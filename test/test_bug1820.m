@@ -65,7 +65,7 @@ currdir = pwd;
 [~,ftpath] = ft_version();
 cd([ftpath '/test/private/']);
 r = radius1;
-[pnt, tri] = sphere_mesh(42); 
+[pnt, tri] = mesh_sphere(42); 
 sens.pnt   = r * pnt;
 sens.label = {};
 nsens  = size(sens.pnt,1);

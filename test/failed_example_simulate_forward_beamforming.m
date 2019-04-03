@@ -10,7 +10,7 @@ function failed_example_simulate_forward_beamforming
 % source.
 
 % create a gradiometer array with magnetometers at 12cm distance from the origin
-[pnt, tri] = sphere_mesh(162);
+[pnt, tri] = mesh_sphere(162);
 pnt = pnt(pnt(:,3)>=0,:);
 grad.pnt = 12*pnt;
 grad.ori = pnt;

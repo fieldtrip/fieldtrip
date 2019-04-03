@@ -99,7 +99,7 @@ if strcmp(cfg.feedback, 'yes')
   axis off
   drawnow
   colors = {'b', 'y', 'm', 'r'};
-  [sphere_pos, sphere_tri] = sphere_mesh(162);
+  [sphere_pos, sphere_tri] = mesh_sphere(162);
 end
 
 % fit a single sphere to all headshape points

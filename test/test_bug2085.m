@@ -13,7 +13,7 @@ vol.unit = 'cm';
 vol = ft_datatype_headmodel(vol);
 
 %% create a set of sensors
-[pnt, tri] = sphere_mesh(162);
+[pnt, tri] = mesh_sphere(162);
 pnt = pnt .* 10; % convert to cm
 sel = find(pnt(:,3)>0);
 grad.pnt = pnt(sel,:) .* 1.2;

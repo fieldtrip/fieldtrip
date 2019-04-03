@@ -7,7 +7,7 @@ function test_bug131
 
 % test the issue related to the scaling of the leadfields in the different implementations
 
-[pnt, tri] = sphere_mesh(162);
+[pnt, tri] = mesh_sphere(162);
 
 % create volume conductor models
 vol = [];

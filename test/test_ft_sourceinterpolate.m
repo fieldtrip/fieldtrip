@@ -231,8 +231,8 @@ ft_sourceplot(cfg, interp2d_sfr2vol);
 
 %%
 
-[sphere_lo.pnt, sphere_lo.tri] = sphere_mesh(162);
-[sphere_hi.pnt, sphere_hi.tri] = sphere_mesh(642);
+[sphere_lo.pnt, sphere_lo.tri] = mesh_sphere(162);
+[sphere_hi.pnt, sphere_hi.tri] = mesh_sphere(642);
 % Ensure that the first 162 vertices are on exactly identical positions. Without this
 % line there would be differences of around 1e-15 due to numerical errors, causing
 % the smudge interpolation to fail.

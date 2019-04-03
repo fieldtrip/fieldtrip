@@ -5,7 +5,7 @@ function test_bug1227
 
 % DEPENDENCY ft_sourcewrite
 
-[pnt, tri] = sphere_mesh(162);
+[pnt, tri] = mesh_sphere(162);
 
 source = [];
 source.pos = pnt;

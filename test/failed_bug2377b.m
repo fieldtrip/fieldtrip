@@ -4,7 +4,7 @@ function failed_bug2377b
 % WALLTIME 00:10:00
 % DEPENDENCY ft_senslabel ft_senstype ft_chantype ft_chanunit ft_datatype_sens ft_apply_transform
 
-[pnt, tri] = sphere_mesh(162);
+[pnt, tri] = mesh_sphere(162);
 
 pnt = pnt .* 10;                % convert to cm
 sel = find(pnt(:,3)>0);         % take the upper hemisphere
