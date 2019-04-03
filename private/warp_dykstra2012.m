@@ -1,15 +1,25 @@
 function [coord_snapped] = warp_dykstra2012(cfg, elec, surf)
 
 % WARP_DYKSTRA2012 projects the ECoG grid / strip onto a cortex hull
-% using the algorithm described in Dykstra et al. (2012,
-% Neuroimage) in which the distance from original positions and the
-% deformation of the grid are minimized. This function relies on MATLAB's
-% optimization toolbox. To align ECoG electrodes to the pial surface, you
-% first need to compute the cortex hull with FT_PREPARE_MESH.
+% using the algorithm described in Dykstra et al. (2012, Neuroimage) in 
+% which the distance from original positions and the deformation of the 
+% grid are minimized. This function relies on MATLAB's optimization toolbox. 
+% To align ECoG electrodes to the pial surface, you first need to compute 
+% the cortex hull with FT_PREPARE_MESH.
+%
+% Additional configuration options to the original functionality
+%   cfg.maxiter       = number (default: 50), maximum number of optimization 
+%                       iterations
+%   cfg.pairmethod    = 'pos' (default) or 'label', the method for electrode
+%                       pairing on which the deformation energy is based
+%   cfg.isodistance   = 'yes', 'no' (default) or number, to enforce isotropic
+%                       inter-electrode distances (pairmethod 'label' only)
+%   cfg.deformweight  = number (default: 1), weight of deformation relative 
+%                       to shift energy cost (lower increases grid flexibility)
 %
 % See also FT_ELECTRODEREALIGN, FT_PREPARE_MESH, WARP_HERMES2010
 
-% Copyright (C) 2012-2018, Andrew Dykstra, Gio Piantoni, Arjen Stolk
+% Copyright (C) 2012-2019, Andrew Dykstra, Gio Piantoni, Arjen Stolk
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -49,11 +59,10 @@ ft_hastoolbox('optim', 1);
 disp('using warp algorithm described in Dykstra et al. 2012 Neuroimage PMID: 22155045')
 
 % set the defaults
-cfg.feedback      = ft_getopt(cfg, 'feedback', 'no');
-
-% undocumented local options
+cfg.feedback      = ft_getopt(cfg, 'feedback',    'no');
+cfg.maxiter       = ft_getopt(cfg, 'maxiter',       50); 
 cfg.pairmethod    = ft_getopt(cfg, 'pairmethod', 'pos'); % eletrode pairing based on electrode 'pos' or 'label' (for computing deformation energy)
-cfg.isodistance   = ft_getopt(cfg, 'isodistance',   []); % enforce isotropic inter-electrode distances (support for pairmethod 'label' only)
+cfg.isodistance   = ft_getopt(cfg, 'isodistance', 'no'); % enforce isotropic inter-electrode distances (support for pairmethod 'label' only)
 cfg.deformweight  = ft_getopt(cfg, 'deformweight',   1); % weight of deformation relative to shift energy cost (a lower value results in more grid flexibility)
 
 % compute pairs of neighbors
@@ -70,7 +79,7 @@ cfun = @(coord_snapped) dist_to_surface(coord_snapped, surf);
 % options
 %   'UseParallel', 'always',...
 options = optimset('Algorithm','active-set',...
-  'MaxIter', 50,...
+  'MaxIter', cfg.maxiter,...
   'MaxFunEvals', Inf,...
   'GradObj', 'off',...
   'TypicalX', coord(:),...
@@ -111,7 +120,10 @@ energy_eshift = sum((coord - coord_orig).^2, 2);
 % energy needed to deform grid shape
 dist = sqrt(sum((coord(pairs(:, 1), :) - coord(pairs(:, 2), :)).^2, 2));
 dist_orig = sqrt(sum((coord_orig(pairs(:, 1), :) - coord_orig(pairs(:, 2), :)).^2, 2));
-if ~isempty(isodistance) % enforce isotropic inter-electrode distances
+if ~strcmp(isodistance, 'no') % enforce isotropic inter-electrode distances
+  if strcmp(isodistance, 'yes') % determine isodistance automatically
+    isodistance = median(dist_orig(pairs(:,3)==1));
+  end
   dist_orig(pairs(:,3)==1) = isodistance; % adjacent electrodes
   dist_orig(pairs(:,3)==2) = sqrt(isodistance^2+isodistance^2); % diagonal electrodes
 end
