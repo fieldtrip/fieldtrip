@@ -6,14 +6,15 @@ function [pos, tri] = mesh_sphere(n, method)
 %   [pos, tri] = mesh_sphere(numvertices, method)
 %
 % Where the input parameter  n specifies the (approximate) number of vertices.
-% Once log4((n-2)/10) is an integer, the mesh will be based on a refined
-% icosahedron, using Robert's old icosahedronXXX functionality. Otherwise,
-% an msphere will be used. If n is empty, or undefined, a 12 vertex
+% Once log4((n-2)/10) is an integer, the mesh will be based on an icosahedron.
+% Once log4((n-2)/4) is an integer, the mesh will be based on a refined octahedron.
+% Once log4((n-2)/2) is an integer, the mesh will be based on a refined tetrahedron.
+% Otherwise, an msphere will be used. If n is empty, or undefined, a 12 vertex
 % icosahedron will be returned. The method parameter defines which function
-% to use when an refined icosahedron is not possible, and can be 'msphere'
+% to use when an refined XXXhedron is not possible, and can be 'msphere'
 % (default), or 'ksphere'.
 %
-% See also TETRAHEDRON, OCTAHEDRON
+% See also MESH_TETRAHEDRON, MESH_OCTAHEDRON, MESH_SPHERE
 
 % Copyright (C) 2002, Robert Oostenveld
 % Copyright (C) 2019, Robert Oostenveld and Jan-Mathijs Schoffelen
@@ -39,73 +40,32 @@ if nargin==0
   n = 12;
 end
 
-r = log((n-2)./10)./log(4);
-if nargin==1 && n==4
+r_ico   = log((n-2)./10)./log(4);
+r_octa  = log((n-2)./4)./log(4);
+r_tetra = log((n-2)./2)./log(4);
+if nargin==1 && round(r_tetra)==r_tetra
   method = 'tetrahedron';
-elseif nargin==1 && round(r)==r
+elseif nargin==1 && round(r_ico)==r_ico
   method = 'icosahedron';
+elseif nargin==1 && round(r_octa)==r_octa
+  method = 'octahedron';
 elseif nargin==1 || isempty(method)
   method = 'msphere';
   % default method is dependent on n
 end
 
 switch method
+  case 'tetrahedron'
+    [pos, tri] = mesh_tetrahedron(r_tetra);
   case 'icosahedron'
-
-    tri = [
-      1   2   3
-      1   3   4
-      1   4   5
-      1   5   6
-      1   6   2
-      2   8   3
-      3   9   4
-      4  10   5
-      5  11   6
-      6   7   2
-      7   8   2
-      8   9   3
-      9  10   4
-      10  11   5
-      11   7   6
-      12   8   7
-      12   9   8
-      12  10   9
-      12  11  10
-      12   7  11
-      ];
-
-    pos = zeros(12, 3);
-
-    rho = 0.4*sqrt(5);
-    phi = 2*pi*(0:4)/5;
-
-    pos( 1, :) = [0 0  1];          % top point
-
-    pos(2:6, 1) = rho*cos(phi)';
-    pos(2:6, 2) = rho*sin(phi)';
-    pos(2:6, 3) = rho/2;
-
-    pos(7:11, 1) = rho*cos(phi - pi/5)';
-    pos(7:11, 2) = rho*sin(phi - pi/5)';
-    pos(7:11, 3) = -rho/2;
-
-    pos(12, :) = [0 0 -1];          % bottom point
-
-    if r>0
-      % perform an n-fold refinement
-      for i=1:r
-        [pos, tri] = refine(pos, tri);
-        % scale all vertices to the unit sphere
-        pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1, 3);
-      end
-    end
-  case 'msphere'
-    [pos, tri] = msphere(n);
+    [pos, tri] = mesh_icosahedron(r_ico);
   case 'ksphere'
     [pos, tri] = ksphere(n);
+  case 'msphere'
+    [pos, tri] = msphere(n);
+  case 'octahedron'
+    [pos, tri] = mesh_octahedron(r_octa);
 end
-
 
 % subfunction
 function [pos, tri] = ksphere(N)
