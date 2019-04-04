@@ -14,7 +14,7 @@ vol_hs = ft_headmodel_halfspace(geom,[-1 -1 -1],'conductivity',1);
 
   % create vol conductor for sphere (radius = 100 m)
   r = 1e5; % in mm
-  pnt = r*sphere_mesh(162);
+  pnt = r*mesh_sphere(162);
   pnt(:,3) = pnt(:,3) - r;
   % figure,ft_plot_mesh(pnt),axis on
   vol_sph = ft_headmodel_singlesphere(pnt,'conductivity',1);

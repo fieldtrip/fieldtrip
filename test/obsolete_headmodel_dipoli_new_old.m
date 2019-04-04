@@ -3,12 +3,12 @@ function test_headmodel_dipoli_new_old
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% DEPENDENCY ft_headmodel_dipoli sphere_mesh ft_prepare_vol_sens ft_compute_leadfield
+% DEPENDENCY ft_headmodel_dipoli mesh_sphere ft_prepare_vol_sens ft_compute_leadfield
 
 % tests the old and new version of dipoli wrapper
 
 % generate a unit sphere
-[pnt, tri] = sphere_mesh(162);
+[pnt, tri] = mesh_sphere(162);
 
 % create the BEM geometries
 geom = [];

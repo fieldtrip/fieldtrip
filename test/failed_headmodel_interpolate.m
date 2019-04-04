@@ -2,11 +2,11 @@ function failed_headmodel_interpolate
 
 % WALLTIME 00:45:00
 % MEM 6gb
-% DEPENDENCY sphere_mesh ft_headmodeltype ft_headmodel_interpolate ft_prepare_vol_sens ft_compute_leadfield leadfield_interpolate ft_apply_transform
+% DEPENDENCY mesh_sphere ft_headmodeltype ft_headmodel_interpolate ft_prepare_vol_sens ft_compute_leadfield leadfield_interpolate ft_apply_transform
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% create a set of electrodes nicely covering the upper half of a sphere
-[pnt, tri] = sphere_mesh(162);
+[pnt, tri] = mesh_sphere(162);
 pnt = pnt .* 10; % convert to cm
 sel = find(pnt(:,3)>0);
 elec1 = [];

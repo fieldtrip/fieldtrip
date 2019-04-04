@@ -49,7 +49,7 @@ end
 currdir = pwd;
 cd ~/matlab/fieldtrip/test/private/;
 r = radius3;
-[pnt, tri] = sphere_mesh(42); 
+[pnt, tri] = mesh_sphere(42); 
 sens.pnt   = r * pnt;
 sens.label = {};
 nsens  = size(sens.pnt,1);

@@ -30,7 +30,7 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 % If you don't want the faces, edges or vertices to be plotted, you should specify the color as 'none'.
 %
 % Example
-%   [pos, tri] = sphere_mesh(162);
+%   [pos, tri] = mesh_sphere(162);
 %   mesh.pos = pos;
 %   mesh.tri = tri;
 %   ft_plot_mesh(mesh, 'facecolor', 'skin', 'edgecolor', 'none')

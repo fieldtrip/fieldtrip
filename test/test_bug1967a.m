@@ -50,7 +50,7 @@ cfg.method = 'simbio';
 headmodel = ft_prepare_headmodel(cfg, mesh);
 
 %% make some electrodes
-[pnt, tri] = sphere_mesh(42);
+[pnt, tri] = mesh_sphere(42);
 pnt = pnt(pnt(:,3)>0,:);
 pnt = pnt*55; % not precisely fitting on the mesh
 elec = [];

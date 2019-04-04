@@ -12,7 +12,7 @@ function test_datatype_parcellation
 clear all
 
 % construct the data structures that are given as examples in the function help
-[pnt, tri] = sphere_mesh(162);
+[pnt, tri] = mesh_sphere(162);
 
 example1 = [];
 example1.pos = pnt;

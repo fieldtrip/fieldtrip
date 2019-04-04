@@ -167,7 +167,7 @@ switch cfg.method
   case {'singlesphere' 'concentricspheres' 'localspheres'}
     % FIXME for localspheres it should be replaced by an outline of the head, see private/headsurface
     fprintf('triangulating the sphere in the volume conductor\n');
-    [pos, tri] = sphere_mesh(cfg.numvertices);
+    [pos, tri] = mesh_sphere(cfg.numvertices);
     bnd = [];
     mri = ft_determine_units(mri);      % ensure that it has units
     headmodel = ft_datatype_headmodel(mri); % rename it and ensure that it is consistent and up-to-date

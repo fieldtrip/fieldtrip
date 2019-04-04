@@ -21,7 +21,7 @@ for k = 1:10
 end
 
 %create grad-structure and add to data
-[pnt,tri] = sphere_mesh(162);
+[pnt,tri] = mesh_sphere(162);
 nrm       = normals(pnt, tri, 'vertex');
 pnt       = pnt.*12;
 [srt,ind] = sort(pnt(:,3),'descend');

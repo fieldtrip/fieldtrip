@@ -25,7 +25,7 @@ vol = ft_prepare_headmodel(cfg);
 % BEMCP
 %%%%%%%%%%%%%%%%
 % create the BEM geometry
-[pnt, tri] = sphere_mesh(162);
+[pnt, tri] = mesh_sphere(162);
 geom = [];
 geom.bnd(1).pnt = pnt * 100;
 geom.bnd(1).tri = tri;

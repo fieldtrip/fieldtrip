@@ -86,7 +86,7 @@ if num>1,
 end
 
 % start with a unit sphere with evenly distributed vertices
-[pnt, tri] = sphere_mesh(npnt, 'ksphere');
+[pnt, tri] = mesh_sphere(npnt, 'ksphere');
 
 ishollow = false;
 
