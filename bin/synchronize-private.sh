@@ -1729,6 +1729,34 @@ ARRAY+=(plotting/private/mesh2edge.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# mesh_icosahedron.m
+
+ARRAY=()
+ARRAY+=(external/openmeeg/mesh_icosahedron.m)
+ARRAY+=(external/bemcp/mesh_icosahedron.m)
+ARRAY+=(external/dipoli/mesh_icosahedron.m)
+ARRAY+=(forward/private/mesh_icosahedron.m)
+ARRAY+=(plotting/private/mesh_icosahedron.m)
+ARRAY+=(private/mesh_icosahedron.m)
+ARRAY+=(test/private/mesh_icosahedron.m)
+ARRAY+=(utilities/private/mesh_icosahedron.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# mesh_octahedron.m
+
+ARRAY=()
+ARRAY+=(external/openmeeg/mesh_octahedron.m)
+ARRAY+=(external/bemcp/mesh_octahedron.m)
+ARRAY+=(external/dipoli/mesh_octahedron.m)
+ARRAY+=(forward/private/mesh_octahedron.m)
+ARRAY+=(plotting/private/mesh_octahedron.m)
+ARRAY+=(private/mesh_octahedron.m)
+ARRAY+=(test/private/mesh_octahedron.m)
+ARRAY+=(utilities/private/mesh_octahedron.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # mesh_sphere.m
 
 ARRAY=()
@@ -1740,6 +1768,20 @@ ARRAY+=(plotting/private/mesh_sphere.m)
 ARRAY+=(private/mesh_sphere.m)
 ARRAY+=(test/private/mesh_sphere.m)
 ARRAY+=(utilities/private/mesh_sphere.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# mesh_tetrahedron.m
+
+ARRAY=()
+ARRAY+=(external/openmeeg/mesh_tetrahedron.m)
+ARRAY+=(external/bemcp/mesh_tetrahedron.m)
+ARRAY+=(external/dipoli/mesh_tetrahedron.m)
+ARRAY+=(forward/private/mesh_tetrahedron.m)
+ARRAY+=(plotting/private/mesh_tetrahedron.m)
+ARRAY+=(private/mesh_tetrahedron.m)
+ARRAY+=(test/private/mesh_tetrahedron.m)
+ARRAY+=(utilities/private/mesh_tetrahedron.m)
 sync ${ARRAY[*]}
 
 ################################################################################
