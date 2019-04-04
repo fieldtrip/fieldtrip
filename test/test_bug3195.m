@@ -1,11 +1,14 @@
 function test_bug3195
 
-% MEM 2gb
+% MEM 8gb
 % WALLTIME 00:20:00
-
 % DEPENDENCY ft_prepare_sourcemodel ft_inside_headmodel
 
+%%
+% load the data
+
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3195'));
+
 load('template_FEM.mat')
 load('sourcemodel.mat')
 
@@ -31,7 +34,7 @@ ft_plot_mesh(sourcemodel1.pos(sourcemodel1.inside,:))
 
 cfg = [];
 cfg.headmodel = template_FEM;
-cfg.sourcemodel.resolution = 20;
+cfg.resolution = 20;
 sourcemodel2 = ft_prepare_sourcemodel(cfg);
 
 figure

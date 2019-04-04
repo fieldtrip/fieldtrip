@@ -43,10 +43,10 @@ else
   load grad2_old
 end
 
-assert( isequal(gradx, gradx_old));
-assert(~isequal(grad0, grad0_old));
-assert(~isequal(grad1, grad1_old));
-assert(~isequal(grad2, grad2_old));
+assert( isalmostequal(gradx, gradx_old, 'abstol', 1e-12));
+assert(~isalmostequal(grad0, grad0_old, 'abstol', 1e-12));
+assert(~isalmostequal(grad1, grad1_old, 'abstol', 1e-12));
+assert(~isalmostequal(grad2, grad2_old, 'abstol', 1e-12));
 
 %%
 

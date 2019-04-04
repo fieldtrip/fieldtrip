@@ -1,6 +1,6 @@
 function test_bug1646
 
-% MEM 4gb
+% MEM 6gb
 % WALLTIME 00:15:00
 
 % DEPENDENCY ft_prepare_mesh ft_datatype_segmentation

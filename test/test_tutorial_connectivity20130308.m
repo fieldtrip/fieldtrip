@@ -1,16 +1,13 @@
 function test_tutorial_connectivity20130308
 
-% MEM 3gb
+% MEM 7gb
 % WALLTIME 00:10:00
-
 
 % Simulated data with directed connections
 % We will first simulate some data with a known connectivity structure built in. This way we know what to expect in terms of connectivity. To simulate data we use ft_connectivitysimulation. We will use an order 2 multivariate autoregressive model. The necessary ingredients are a set of NxN coefficient matrices, one matrix for each time lag. These coefficients need to be stored in the cfg.param field. Next to the coefficients we have to specify the NxN covariance matrix of the innovation noise. This matrix needs to be stored in the cfg.noisecov field. The model we are going to use to simulate the data is as follows:
 % 
 % x(t) = 0.8*x(t-1) - 0.5*x(t-2)
-% 
 % y(t) = 0.9*y(t-1) + 0.5*z(t-1) - 0.8*y(t-2)
-% 
 % z(t) = 0.5*z(t-1) + 0.4*x(t-1) - 0.2*z(t-2)
 
 cfg             = [];

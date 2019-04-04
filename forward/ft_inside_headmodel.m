@@ -181,7 +181,7 @@ switch ft_headmodeltype(headmodel)
     stopwatch = tic;
     dsearchn(headmodel.pos, dippos(1,:)); % call it once to estimate the time
     t = toc(stopwatch);
-    fprintf('determining inside points, this takes about %d seconds\n', round(numdip*t));
+    fprintf('determining inside points, this takes an estimates %d seconds\n', round(numdip*t));
     posindx = dsearchn(headmodel.pos, dippos);
 
     % The following code is only guaranteed to work with convex elements. Regular
