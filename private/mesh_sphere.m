@@ -56,15 +56,42 @@ end
 
 switch method
   case 'tetrahedron'
-    [pos, tri] = mesh_tetrahedron(r_tetra);
+    [pos, tri] = mesh_tetrahedron;
+    if r_tetra>0
+      % perform an n-fold refinement
+      for i=1:r_tetra
+        [pos, tri] = refine(pos, tri, 'banks');
+      end
+      % scale all vertices to the unit sphere
+      pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1,3);
+    end
+
   case 'icosahedron'
-    [pos, tri] = mesh_icosahedron(r_ico);
+    [pos, tri] = mesh_icosahedron;
+    if r_ico>0
+      % perform an n-fold refinement
+      for i=1:r_ico
+        [pos, tri] = refine(pos, tri, 'banks');
+      end
+      % scale all vertices to the unit sphere
+      pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1,3);
+    end
+
   case 'ksphere'
     [pos, tri] = ksphere(n);
   case 'msphere'
     [pos, tri] = msphere(n);
   case 'octahedron'
-    [pos, tri] = mesh_octahedron(r_octa);
+    [pos, tri] = mesh_octahedron;
+    if r_octa>0
+      % perform an n-fold refinement
+      for i=1:r_octa
+        [pos, tri] = refine(pos, tri, 'banks');
+      end
+      % scale all vertices to the unit sphere
+      pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1,3);
+    end
+
 end
 
 % subfunction
