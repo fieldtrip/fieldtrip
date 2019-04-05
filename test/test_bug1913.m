@@ -1,6 +1,6 @@
 function test_bug1913
 
-% MEM 3gb
+% MEM 6gb
 % WALLTIME 00:10:00
 
 fn1 = dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/eeprobe/martlbc1.cnt');
