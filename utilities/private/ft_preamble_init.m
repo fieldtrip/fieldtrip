@@ -61,7 +61,8 @@ end
 % check whether we are currently in a top-level user-called FT function
 % (note that checking of names only probably is not sufficient, as recursion
 % could occur)
-FjmoT6aA_current_ft_toplevel = strcmp(FjmoT6aA_lowest_ft, FjmoT6aA_highest_ft) && FjmoT6aA_k == 4;
+FjmoT6aA_current_ft_toplevel = strcmp(FjmoT6aA_lowest_ft, FjmoT6aA_highest_ft) && ...
+  (FjmoT6aA_k == 4 || numel(FjmoT6aA_stack) == 3);
 
 if ft_nargin==0
   help(FjmoT6aA_lowest_ft);
