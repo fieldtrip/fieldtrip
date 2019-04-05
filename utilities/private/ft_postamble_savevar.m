@@ -41,7 +41,8 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
     iW1aenge_now = datestr(now, 30);
     cfg.outputfile = {};
     for i=1:numel(iW1aenge_postamble)
-      cfg.outputfile{i} = fullfile(Fief7bee_reproducescript, sprintf('%s_output_%s.mat', iW1aenge_now, iW1aenge_postamble{i}));
+      cfg.outputfile{i} = fullfile(Fief7bee_reproducescript, sprintf('%s_%s_output_%s.mat', ...
+        iW1aenge_now, FjmoT6aA_highest_ft, iW1aenge_postamble{i}));
     end
     
     % write the large configuration fields to a MATLAB file
@@ -49,10 +50,11 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
     % note that this is here, rather than in the (seemingly more logical)
     % ft_preamble_loadvar, because this code depends on cfg.callinfo (which
     % is only present at postamble stage)
-    cfg = save_large_cfg_fields(cfg, Fief7bee_reproducescript, iW1aenge_now);
+    cfg = save_large_cfg_fields(cfg, FjmoT6aA_highest_ft, Fief7bee_reproducescript, iW1aenge_now);
     
     % write a snippet of MATLAB code with the user-specified configuration and function call
-    reproducescript(fullfile(Fief7bee_reproducescript, 'script.m'), cfg, isempty(iW1aenge_postamble));
+    reproducescript(Fief7bee_reproducescript, fullfile(Fief7bee_reproducescript, 'script.m'),...
+      FjmoT6aA_highest_ft, cfg, isempty(iW1aenge_postamble));
     
     % instruct savevar() to also write hashes of output files to the
     % hashfile
