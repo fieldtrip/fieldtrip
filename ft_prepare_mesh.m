@@ -32,14 +32,10 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 % For method 'fittemplate' you should specify
 %   cfg.headshape   = a filename containing headshape
 %   cfg.template    = a filename containing headshape
-%   Example use:
-%     cfg              = [];
-%     cfg.headshape    = polhemus;
-%     cfg.template     = template;
-%     cfg.method       = 'fittemplate';
-%     mesh             = ft_prepare_mesh(cfg, mesh); will compute an
-%                       affine transformation to fit cfg.template to cfg.headshape, and
-%                       applies this transformation on mesh
+% With this method you are fitting the headshape from the configuration to the template; 
+% the resulting affine transformation is applied to the input mesh (or set of meshes), 
+% which is subsequently returned as output variable.
+%
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
