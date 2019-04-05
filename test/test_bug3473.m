@@ -25,7 +25,7 @@ load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3473/defaced_template.
 
 ft_plot_mesh(defaced_template);
 ft_plot_mesh(defaced_polhemus);
-
+% Method 1
 cfg=[];
 cfg.method='singlesphere';
 template_sphere = ft_prepare_headmodel(cfg, defaced_template);
@@ -53,19 +53,16 @@ S  = [scale 0 0 0;
 
 transformation = T1*S*T2;
 
-template_sphere = ft_transform_geometry(transformation, template);
+template_t_sphere = ft_transform_geometry(transformation, template);
 
-cfg              = [];
-cfg.headshape    = polhemus;
-cfg.template     = defaced_template;
-cfg.method       = 'fittemplate';
-template_surface = ft_prepare_mesh(cfg, template.bnd);
-
+% Method 2
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3473/fiducials.mat'))
 
 cfg             = [];
 cfg.method      = 'singlesphere';
 template_sphere = ft_prepare_headmodel(cfg, fiducials);
+
+polhemus.fid.pos = polhemus.fid.pos+randn(3,3)/100;
 
 cfg              = [];
 cfg.method      = 'singlesphere';
@@ -90,12 +87,43 @@ S  = [scale 0 0 0;
 
 transformation = T1*S*T2;
 
-template_fiducials = ft_transform_geometry(transformation, template)
+template_fiducials = ft_transform_geometry(transformation, template);
 
-cfg = [];
-cfg.method = 'openmeeg';
-headmodel_sphere = ft_prepare_headmodel(cfg, template_sphere.bnd);
+% Method 3
 
-cfg = [];
-cfg.method = 'openmeeg';
+cfg              = [];
+cfg.headshape    = polhemus;
+cfg.template     = defaced_template;
+cfg.method       = 'fittemplate';
+template_surface = ft_prepare_mesh(cfg, template.bnd);
+
+% Volume conduction models
+
+cfg              = [];
+cfg.conductivity = [0.33 0.0042 0.33];
+cfg.method       = 'openmeeg';
+headmodel_sphere = ft_prepare_headmodel(cfg, template_t_sphere.bnd);
+
+cfg               = [];
+cfg.conductivity = [0.33 0.0042 0.33];
+cfg.method        = 'openmeeg';
+headmodel_fiducials = ft_prepare_headmodel(cfg, template_fiducials);
+
+cfg               = [];
+cfg.conductivity = [0.33 0.0042 0.33];
+cfg.method        = 'openmeeg';
 headmodel_surface = ft_prepare_headmodel(cfg, template_surface);
+
+%
+
+cfg                          = [];
+cfg.method                   = 'singlesphere';
+headmodel_singleshell_sphere = ft_prepare_headmodel(cfg, template_t_sphere.bnd(3));
+
+cfg                          = [];
+cfg.method                   = 'singlesphere';
+headmodel_singleshell_sphere = ft_prepare_headmodel(cfg, template_fiducials.bnd(3));
+
+cfg                          = [];
+cfg.method                   = 'singlesphere';
+headmodel_singleshell_sphere = ft_prepare_headmodel(cfg, template_surface(3));
