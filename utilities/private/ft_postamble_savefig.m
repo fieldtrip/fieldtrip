@@ -45,7 +45,7 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
     % note that this is here, rather than in the (seemingly more logical)
     % ft_preamble_loadvar, because this code depends on cfg.callinfo (which
     % is only present at postamble stage)
-    cfg = save_large_cfg_fields(cfg, Fief7bee_reproducescript, iW1aenge_now);
+    cfg = save_large_cfg_fields(cfg, FjmoT6aA_highest_ft, Fief7bee_reproducescript, iW1aenge_now);
     
     % write a snippet of MATLAB code with the user-specified configuration and function call
     reproducescript(fullfile(Fief7bee_reproducescript, 'script.m'), cfg, false);
