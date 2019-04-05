@@ -20,7 +20,7 @@ function [M_V] = vox2ras_dfmeas(str_filename, varargin)
 %% ARGUMENTS
 %%
 %%	str_filename	in      string specifying meas.asc to parse
-%%	ch_override	in/opt	character string specifying override behaviour
+%%	ch_override	in/opt	character string specifying override behavior
 %%	voxelDimension	in/opt	row vector specifying the data set's voxel mm
 %%					dimensions. This should be a 1x3 vector
 %%					of [ReadOut PhaseEncode SliceSelect] 

@@ -3,7 +3,7 @@ function test_bug3119
 % WALLTIME 00:20:00
 % MEM 2gb
 
-% TEST ft_dipolefitting dipole_fit
+% DEPENDENCY ft_dipolefitting dipole_fit
 
 %% load template mri
 ftdir = fileparts(which('ft_defaults'));

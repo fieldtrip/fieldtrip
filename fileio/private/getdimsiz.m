@@ -1,22 +1,50 @@
-function dimsiz = getdimsiz(data, field)
+function dimsiz = getdimsiz(data, field, numdim)
 
 % GETDIMSIZ
 %
 % Use as
 %   dimsiz = getdimsiz(data, field)
+% or
+%   dimsiz = getdimsiz(data, field, numdim)
 %
-% If the length of the vector that is returned is smaller than the
-% number of dimensions that you would expect from GETDIMORD, you
-% should assume that it has trailing singleton dimensions.
+% MATLAB will not return the size of a  field in the data structure that has trailing
+% singleton dimensions, since those are automatically squeezed out. With the optional
+% numdim parameter you can specify how many dimensions the data element has. This
+% will result in the trailing singleton dimensions being added to the output vector.
 %
 % Example use
 %   dimord = getdimord(datastructure, fieldname);
 %   dimtok = tokenize(dimord, '_');
-%   dimsiz = getdimsiz(datastructure, fieldname);
-%   dimsiz(end+1:length(dimtok)) = 1; % there can be additional trailing singleton dimensions
+%   dimsiz = getdimsiz(datastructure, fieldname, numel(dimtok));
 %
 % See also GETDIMORD, GETDATFIELD
 
+% Copyright (C) 2014-2019, Robert Oostenveld
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
+
+% deal with trailing singleton dimensions
+if nargin<3
+  numdim = 0;
+end
+
+% deal with data located in a nested sub-structure
 if ~isfield(data, field) && isfield(data, 'avg') && isfield(data.avg, field)
   field = ['avg.' field];
 elseif ~isfield(data, field) && isfield(data, 'trial') && isfield(data.trial, field)
@@ -43,6 +71,9 @@ dimsiz = cellmatsize(data.(field));
 
 % add nrpt in case of source.trial
 dimsiz = [prefix dimsiz];
+
+% deal with trailing singleton dimensions
+dimsiz(end+1:numdim) = 1;
 
 end % main function
 

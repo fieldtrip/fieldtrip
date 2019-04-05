@@ -3,10 +3,7 @@ function test_bug2004
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2004 
-% TEST ft_connectivityanalysis
-% TEST ft_connectivity_corr
-% TEST ft_connectivity_powcorr_ortho
+% DEPENDENCY ft_connectivityanalysis ft_connectivity_corr ft_connectivity_powcorr_ortho
 
 %% test the functionality of ft_connectivityanalysis with respect to source level data (pcc)
 

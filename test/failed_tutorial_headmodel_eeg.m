@@ -2,11 +2,7 @@ function failed_tutorial_headmodel_eeg
 
 % MEM 5gb
 % WALLTIME 01:30:00
-
-% TEST test_tutorial_headmodel_eeg
-% TEST ft_read_mri ft_volumesegment ft_prepare_mesh ft_prepare_headmodel
-% TEST ft_read_sens ft_warp_apply ft_electroderealign
-% TEST ft_plot_mesh ft_plot_headmodel ft_plot_sens
+% DEPENDENCY ft_read_mri ft_volumesegment ft_prepare_mesh ft_prepare_headmodel ft_read_sens ft_warp_apply ft_electroderealign ft_plot_mesh ft_plot_headmodel ft_plot_sens
 
 clear all;
 %% load mri

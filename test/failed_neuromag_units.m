@@ -2,9 +2,7 @@ function failed_neuromag_units
 
 % MEM 1500mb
 % WALLTIME 00:10:00
-
-% TEST test_neuromag_units
-% TEST ft_read_header ft_read_data
+% DEPENDENCY ft_read_header ft_read_data
 
 % http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=953
 % http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=963

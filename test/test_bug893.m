@@ -3,7 +3,7 @@ function test_bug893
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_freqstatistics statfun_indepsamplesZcoh
+% DEPENDENCY ft_freqstatistics statfun_indepsamplesZcoh
 
 % function to confirm the bug and to test the fix.
 % ft_freqstatistics fails when input data has 'rpttap' in the dimord

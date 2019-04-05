@@ -197,7 +197,7 @@ if implementation~=1
     sel = sel & tmp;
   end
 
-  % restructure the data into a struct array, by first making cell-arrays out of it ...
+  % restructure the data into a struct-array, by first making cell-arrays out of it ...
   numsel = sum(sel);
   PktStart      = mat2cell(PktStart(sel)     , ones(1,numsel), 1);
   PktId         = mat2cell(PktId(sel)        , ones(1,numsel), 1);

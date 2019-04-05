@@ -230,7 +230,7 @@ end
 
 if usegui && ~isempty(trl)
   % This complicated line just computes the trigger times in seconds and
-  % converts them to a cell array of strings to use in the GUI
+  % converts them to a cell-array of strings to use in the GUI
   eventstrings = cellfun(@num2str, mat2cell((trl(:, 1)- trl(:, 3))./hdr.Fs , ones(1, size(trl, 1))), 'UniformOutput', 0);
   
   % Let us start with handling at least the completely unsegmented case

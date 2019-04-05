@@ -3,8 +3,6 @@ function failed_old_halfspace_bug243
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_old_halfspace_bug243
-
 % this tests for bug 243
 
 % create vol conductor for halfspace (in mm)
@@ -16,7 +14,7 @@ vol_hs = ft_headmodel_halfspace(geom,[-1 -1 -1],'conductivity',1);
 
   % create vol conductor for sphere (radius = 100 m)
   r = 1e5; % in mm
-  pnt = r*icosahedron162;
+  pnt = r*mesh_sphere(162);
   pnt(:,3) = pnt(:,3) - r;
   % figure,ft_plot_mesh(pnt),axis on
   vol_sph = ft_headmodel_singlesphere(pnt,'conductivity',1);

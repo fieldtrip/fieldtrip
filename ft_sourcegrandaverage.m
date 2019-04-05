@@ -29,7 +29,7 @@ function [grandavg] = ft_sourcegrandaverage(cfg, varargin)
 % file on disk and/or the output data will be written to a *.mat file. These mat
 % files should contain only a single variable, corresponding with the
 % input/output structure. For this particular function, the input data
-% should be structured as a single cell array.
+% should be structured as a single cell-array.
 %
 % See also FT_SOURCEANALYSIS, FT_SOURCEDESCRIPTIVES, FT_SOURCESTATISTICS, FT_MATH
 

@@ -3,9 +3,9 @@ function test_bug2231
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST: ft_read_header
-% TEST: ft_preprocessing
-% TEST: read_bti_m4d
+% DEPENDENCY: ft_read_header
+% DEPENDENCY: ft_preprocessing
+% DEPENDENCY: read_bti_m4d
 
 % Bug reported by Christian Wienbruch, about the functionality of reading 4D-data
 % the old-fashioned way being broken

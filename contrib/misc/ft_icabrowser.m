@@ -76,6 +76,7 @@ rej_comp(reject) = true;
 
 numOfPlots = 4;                                                             % number of subplots per page
 page = 1;                                                                   % number of current page
+numOfPages = ceil(size(comp.label, 1)/4);                                   % maximum number of pages
 row = 0;                                                                    % number of current row in page
 
 % to save time redoing this for each topo
@@ -117,18 +118,24 @@ while err == 0 % KEEP GOING UNTIL THERE IS AN ERROR
 
   while row < numOfPlots % il is the subplot count
     % ------------------------------------------------
-    % LAST/NEXT PAGE BUTTONS
+    % FIRST/PREVIOUS/NEXT/LAST PAGE BUTTONS
     % ------------------------------------------------
-    prev = uicontrol('Units','normalized','Position',[0.1 0.01 0.075 0.05],'Style','pushbutton','String','Prev','Callback',@(h, evt)lastplot);
+    first = uicontrol('Units','normalized','Position',[0.05 0.01 0.075 0.05],'Style','pushbutton','String','First','Callback',@(h, evt)firstpage);
+    first.Enable = 'off';
+
+    prev = uicontrol('Units','normalized','Position',[0.15 0.01 0.075 0.05],'Style','pushbutton','String','Prev','Callback',@(h, evt)prevpage);
     prev.Enable = 'off';
 
-    next = uicontrol('Units','normalized','Position',[0.2 0.01 0.075 0.05],'Style','pushbutton','String','Next','Callback',@(h, evt)nextplot);
+    next = uicontrol('Units','normalized','Position',[0.25 0.01 0.075 0.05],'Style','pushbutton','String','Next','Callback',@(h, evt)nextpage);
     next.Enable = 'off';
+
+    last = uicontrol('Units','normalized','Position',[0.35 0.01 0.075 0.05],'Style','pushbutton','String','Last','Callback',@(h, evt)lastpage);
+    last.Enable = 'off';
 
     % ------------------------------------------------
     % SWITCH FREQUENCY AXIS LOG/LINEAR
     % ------------------------------------------------
-    log = uicontrol('Units','normalized','Position',[0.3 0.01 0.075 0.05],'Style','pushbutton', 'Callback',@(h, evt)plotlog);
+    log = uicontrol('Units','normalized','Position',[0.45 0.01 0.075 0.05],'Style','pushbutton', 'Callback',@(h, evt)plotlog);
     log.Enable = 'off';
     if strcmp(powscale, 'log10')
       log.String = 'Linear';
@@ -163,6 +170,7 @@ while err == 0 % KEEP GOING UNTIL THERE IS AN ERROR
     % ------------------------------------------------
     % COMPUTE POWER SPECTRUM
     % ------------------------------------------------
+
     smo = 50;
     steps = 10;
     Fs = comp.fsample;
@@ -172,15 +180,8 @@ while err == 0 % KEEP GOING UNTIL THERE IS AN ERROR
     psdx = (1/(Fs*N)).*abs(xdft).^2;
     psdx(2:end-1) = 2*psdx(2:end-1);
 
-    j = 1;
-    k = 1;
-    smoothed = zeros(1, fix((length(psdx)-smo)/steps));
-    while j < length(psdx)-smo
-      smoothed(k)=mean(psdx(j:j+smo));
-      j = j + steps;
-      k = k + 1;
-    end
-    smoothed = smoothed(1:k-1);
+    smoothed = conv(psdx, ones(smo,1), 'valid');
+    smoothed = smoothed(1:steps:fix(length(psdx) - smo))/smo;
 
     freq = linspace(0,Fs/2,size(smoothed,2));
     strt = find(freq > 2,1,'first');
@@ -279,14 +280,18 @@ while err == 0 % KEEP GOING UNTIL THERE IS AN ERROR
       % ------------------------------------------------
       if compNum > 4
         prev.Enable = 'on';
+        first.Enable = 'on';
       else
         prev.Enable = 'off';
+        first.Enable = 'off';
       end
 
       if compNum < size(comp.label,1)-3
         next.Enable = 'on';
+        last.Enable = 'on';
       else
         next.Enable = 'off';
+        last.Enable = 'off';
       end
 
       if isempty(outputfile)
@@ -391,7 +396,23 @@ end
     end
 
 % gui
-    function nextplot()
+    function firstpage()
+      manpos = get(f,'OuterPosition');
+      page = 1;
+      row = 0;
+      clf;
+      uiresume;
+    end
+
+    function prevpage()
+      manpos = get(f,'OuterPosition');
+      page = page - 1;
+      row = 0;
+      clf;
+      uiresume;
+    end
+
+    function nextpage()
       manpos = get(f,'OuterPosition');
       page = page + 1;
       row = 0;
@@ -399,9 +420,9 @@ end
       uiresume;
     end
 
-    function lastplot()
+    function lastpage()
       manpos = get(f,'OuterPosition');
-      page = page - 1;
+      page = numOfPages;
       row = 0;
       clf;
       uiresume;

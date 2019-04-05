@@ -2,8 +2,7 @@ function failed_bug2850
 
 % WALLTIME 00:10:00
 % MEM 2gb
-
-% TEST ft_sourceanalysis ft_eloreta
+% DEPENDENCY ft_sourceanalysis ft_eloreta
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/avgFIC.mat'));
 

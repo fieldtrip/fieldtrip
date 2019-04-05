@@ -3,7 +3,7 @@ function test_bug3420
 % WALLTIME 00:10:00
 % MEM 2gb
 
-% TEST ft_statistics_stats ft_timelockstatistics
+% DEPENDENCY ft_statistics_stats ft_timelockstatistics
 
 close all
 

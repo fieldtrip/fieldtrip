@@ -6,8 +6,8 @@ function [opts, args] = hcp_getopt(varargin)
 %
 % Use as
 %   megconnectome.exe --option1 arg1 --option2 arg2 scriptA.m scriptB.m
-% splits the command line arguments into a cell array with key-value pairs
-% and a cell array with the filenames.
+% splits the command line arguments into a cell-array with key-value pairs
+% and a cell-array with the filenames.
 %
 % In this example the hcp_getopt function returns
 %   opts = {'option1', arg1, 'option2', arg2};

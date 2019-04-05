@@ -3,7 +3,7 @@ function test_fileformat_asa
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_read_sens ft_read_headmodel ft_read_headshape ft_read_mri read_asa read_asa_dip	read_asa_mri read_asa_vol read_asa_bnd read_asa_elc read_asa_msr
+% DEPENDENCY ft_read_sens ft_read_headmodel ft_read_headshape ft_read_mri read_asa read_asa_dip	read_asa_mri read_asa_vol read_asa_bnd read_asa_elc read_asa_msr
 
 elcfile  = dccnpath('/home/common/matlab/fieldtrip/data/test/original/electrodes/asa/standard_primed.elc');
 volfile  = dccnpath('/home/common/matlab/fieldtrip/data/test/original/headmodel/asa/standard.vol');

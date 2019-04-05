@@ -329,7 +329,7 @@ elseif needdat || needevt
 
   % There can be an optional chansel field containing a list of predefined channels.
   % These channels are in that case also the only ones represented in the FieldTrip
-  % header, which means that teh other channels are simply not visible to the naive
+  % header, which means that the other channels are simply not visible to the naive
   % user. This field can be present because the user specified an explicit channel
   % selection in FT_READ_HEADER or because the read_edf function had to automatically
   % choose a subset to cope with heterogenous sampling rates or even both.  In any

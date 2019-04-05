@@ -2,9 +2,7 @@ function test_bug840
 
 % MEM 1500mb
 % WALLTIME 00:10:00
-
-% TEST test_bug800
-% TEST ft_preproc_resample
+% DEPENDENCY ft_preproc_resample
 
 nchans = 13;
 nsamples = 10000;

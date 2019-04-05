@@ -5,7 +5,7 @@ function [z, mu, s] = zscore(x, varargin)
 % 
 % X should be an linear cell-array of matrices for which the size in at 
 % least one of the dimensions should be the same for all cells. If flag==1, the mean will
-% be subtracted first (default behaviour, but to save time on already demeaned data, it
+% be subtracted first (default behavior, but to save time on already demeaned data, it
 % can be set to 0). MU and S are vectors containing the mean and standard deviations used
 % for zscoring
 

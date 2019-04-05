@@ -3,7 +3,7 @@ function test_bug3078
 % MEM 500mb
 % WALLTIME 00:15:00
 
-% TEST ft_sourceanalysis
+% DEPENDENCY ft_sourceanalysis
 
 % there's something obscure going on with the channel order in the spatial filters,
 % supposedly in an interaction with precomputed leadfields and/or freq data with powandcsd
@@ -12,7 +12,7 @@ function test_bug3078
 data = [];
 data.label = {'d';'c';'b';'a'}; 
 % do 4 channels: when playing with 3 channels and exploring the effect of 
-% taking a subset of channels in the cfg, I noticed strange behaviour when
+% taking a subset of channels in the cfg, I noticed strange behavior when
 % converting sparse->full, or some interaction with ft_selectdata (I
 % suspect the haschancmb situation not being handled well with
 % 'sparsewithpow' input, if the number of combinations is equal to the

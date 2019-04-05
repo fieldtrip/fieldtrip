@@ -2,12 +2,10 @@ function failed_ft_prepare_mesh
 
 % MEM 1500mb
 % WALLTIME 00:10:00
+% DEPENDENCY ft_prepare_mesh ft_datatype_segmentation ft_plot_mesh
 
 % test ft_prepare_mesh also used for constructing SIMBIO FEM head models
 % see also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1815
-
-% TEST test_ft_prepare_mesh
-% TEST ft_prepare_mesh ft_datatype_segmentation ft_plot_mesh
 
 %% segmentations
 

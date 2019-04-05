@@ -69,7 +69,7 @@ function [freq] = ft_spiketriggeredspectrum_stat(cfg, spike)
 %   stat.nspikes                    =  nChancmb-by-nFreqs-nTimepoints number
 %                                      of spikes used to compute stat
 %   stat.dimord                     = 'chan_freq_time'
-%   stat.labelcmb                   =  nChancmbs cell array with spike vs
+%   stat.labelcmb                   =  nChancmbs cell-array with spike vs
 %                                      LFP labels
 %   stat.(cfg.method)               =  nChancmb-by-nFreqs-nTimepoints  statistic
 %   stat.freq                       =  1xnFreqs array of frequencies

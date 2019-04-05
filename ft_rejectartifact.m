@@ -138,7 +138,7 @@ if isfield(cfg.artfctdef,'common')
   end
 end
 
-% ensure that it is a cell array
+% ensure that it is a cell-array
 if ischar(cfg.artfctdef.type)
   cfg.artfctdef.type = {cfg.artfctdef.type};
 end

@@ -3,8 +3,8 @@ function test_bug2148
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_connectivitysimulation ft_freqanalysis ft_connectivityanalysis
-% TEST ft_connectivityplot ft_freqdescriptives ft_checkdata
+% DEPENDENCY ft_connectivitysimulation ft_freqanalysis ft_connectivityanalysis
+% DEPENDENCY ft_connectivityplot ft_freqdescriptives ft_checkdata
 
 % ft_checkdata (ie fixdimord) always wants to reverts dimord to 'chan'
 % although 'labelcmb' is present. The only way to make e.g.

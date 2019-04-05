@@ -184,12 +184,12 @@ if basedonshape && basedoncortex
 end
 
 if basedongrid && basedonpos
-  % fall back to default behaviour, in which the pos overrides the grid
+  % fall back to default behavior, in which the pos overrides the grid
   basedongrid = false;
 end
 
 if ~any([basedonresolution basedongrid basedonpos basedonshape basedonmri basedoncortex basedonmni]) && ~isempty(cfg.headmodel)
-  % fall back to default behaviour, which is to create a surface grid (e.g. used in FT_MEGREALIGN)
+  % fall back to default behavior, which is to create a surface grid (e.g. used in FT_MEGREALIGN)
   basedonvol = true;
 end
 
@@ -261,12 +261,11 @@ end
 sourcemodel = [];
 
 % get the volume conduction model
-if isstruct(cfg.headmodel)
-  headmodel = cfg.headmodel;
-elseif ischar(cfg.headmodel)
+if ischar(cfg.headmodel)
   headmodel = ft_read_headmodel(cfg.headmodel);
 else
-  headmodel = [];
+  % ensure that the volume conduction model is up-to-date
+  headmodel = ft_datatype_headmodel(cfg.headmodel);
 end
 
 % get the gradiometer or electrode definition

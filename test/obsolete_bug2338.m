@@ -3,7 +3,7 @@ function test_bug2338
 % MEM 2000mb
 % WALLTIME 00:20:00
 
-% TEST ft_prepare_bemmodel ft_prepare_headmodel ft_prepare_leadfield ft_compute_leadfield ft_headmodel_openmeeg 
+% DEPENDENCY ft_prepare_bemmodel ft_prepare_headmodel ft_prepare_leadfield ft_compute_leadfield ft_headmodel_openmeeg 
 
 % 4 Layers
 r = [85 88 92 100];
@@ -12,7 +12,7 @@ c = [1 1/20 1/80 1];
 order = [1 2 3 4];
 
 % Description of the spherical mesh
-[pnt, tri] = icosahedron42;
+[pnt, tri] = mesh_sphere(42);
 
 % Create a set of electrodes on the outer surface
 elec.elecpos = max(r) * pnt;

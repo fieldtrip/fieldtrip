@@ -2,9 +2,7 @@ function failed_ft_prepare_headmodel
 
 % MEM 20gb
 % WALLTIME 03:00:00
-
-% TEST test_ft_prepare_headmodel
-% TEST ft_headmodel_localspheres ft_prepare_localspheres
+% DEPENDENCY ft_headmodel_localspheres ft_prepare_localspheres
 
 % function to test ft_prepare_headmodel.
 % This function allows for different types of structure information to be

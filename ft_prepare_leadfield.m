@@ -200,6 +200,9 @@ end
 insideindx = find(sourcemodel.inside);
 
 if ft_headmodeltype(headmodel, 'openmeeg')
+  
+  ft_hastoolbox('openmeeg', 1);  % add to path (if not yet on path)
+  
   % repeated system calls to the openmeeg executable makes it rather slow
   % calling it once is much more efficient
   fprintf('calculating leadfield for all positions at once, this may take a while...\n');
@@ -266,7 +269,7 @@ if ft_headmodeltype(headmodel, 'openmeeg')
   % any post-computation options can be applied (e.g., normalization, etc.)
   lf = ft_compute_leadfield(sourcemodel.pos(diprange,:), sens, headmodel, 'lf', lf, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
 
-  % reshape result into sourcemodel.leadfield cell array
+  % reshape result into sourcemodel.leadfield cell-array
   for i=1:ndip
     sourcemodel.leadfield{insideindx(i)} = lf(:,3*(i-1) + [1:3]);
   end

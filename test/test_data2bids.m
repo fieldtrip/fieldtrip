@@ -3,7 +3,7 @@ function test_data2bids
 % WALLTIME 00:20:00
 % MEM 5gb
 
-% TEST data2bids
+% DEPENDENCY data2bids
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/mous'));
 

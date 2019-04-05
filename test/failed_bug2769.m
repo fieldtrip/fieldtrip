@@ -2,9 +2,7 @@ function failed_bug2769
 
 % MEM 1gb
 % WALLTIME 00:10:00
-
-% TEST test_bug2769
-% TEST ft_sourceplot ft_sourceinterpolate
+% DEPENDENCY ft_sourceplot ft_sourceinterpolate
 
 clear all
 close all

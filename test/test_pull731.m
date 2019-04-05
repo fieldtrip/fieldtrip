@@ -3,7 +3,7 @@ function test_pull731
 % MEM 12gb
 % WALLTIME 01:00:00
 
-% TEST ft_read_header ft_read_data ft_read_event
+% DEPENDENCY ft_read_header ft_read_data ft_read_event
 
 datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/pull731');
 

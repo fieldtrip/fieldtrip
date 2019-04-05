@@ -3,7 +3,7 @@
 % WALLTIME 00:20:00
 % MEM 3gb
 
-% TEST ft_sourcestatistics ft_sourcegrandaverage
+% DEPENDENCY ft_sourcestatistics ft_sourcegrandaverage
 
 %%
 

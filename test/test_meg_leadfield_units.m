@@ -3,7 +3,7 @@ function test_meg_leadfield_units
 % MEM 2000mb
 % WALLTIME 00:10:00
 
-% TEST ft_convert_units ft_datatype_sens ft_convert_vol_sens ft_compute_leadfield current_dipole
+% DEPENDENCY ft_convert_units ft_datatype_sens ft_convert_vol_sens ft_compute_leadfield current_dipole
 
 %% do a forward computation for a single vector magnetometer
 clear all
@@ -45,7 +45,7 @@ assert(n1/n0 > 0.31);
 %% do a forward computation for a more realistic sensor layout
 clear all
 
-[pnt, tri] = icosahedron162;
+[pnt, tri] = mesh_sphere(162);
 sel = find(pnt(:,3)>0);
 
 grad = [];
@@ -158,7 +158,7 @@ clear all
 
 grad = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds'), 'senstype', 'meg');
 
-[pnt, tri] = icosahedron162;
+[pnt, tri] = mesh_sphere(162);
 
 mesh = [];
 mesh.pnt = pnt * 10;                % set of points on a 10 cm sphere

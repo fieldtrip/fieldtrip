@@ -3,8 +3,7 @@ function test_ft_freqbaseline
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST test_ft_freqbaseline 
-% TEST ft_freqbaseline
+% DEPENDENCY ft_freqbaseline
 
 % generate some data
 freq = [];
