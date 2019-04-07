@@ -172,10 +172,10 @@ if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis')
 elseif verbose
   fprintf([str, '\n']);
 end
-pow = cell(ntaper(1),1);
 spectrum = cell(ntaper(1),1);
 for itap = 1:ntaper(1)
   %%%% IRASA STARTS %%%%
+  pow = zeros(nchan,nfreqboi,nhset);
   for ih = 1:nhset % loop across resampling factors
     % resample
     [n, d] = rat(hset(ih)); % n > d
@@ -195,11 +195,11 @@ for itap = 1:ntaper(1)
     % geometric mean for this resampling factor
     upow = abs(ucom).^2;
     dpow = abs(dcom).^2;
-    pow{itap}(:,:,ih) = sqrt(upow.*dpow); 
+    pow(:,:,ih) = sqrt(upow.*dpow); 
   end
   
   % median across resampling factors
-  spectrum{itap} = median(pow{itap},3);
+  spectrum{itap} = median(pow,3);
   %%%% IRASA ENDS %%%%
 end
 
