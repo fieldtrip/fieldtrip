@@ -61,10 +61,7 @@ fbopt     = ft_getopt(varargin, 'feedback');
 verbose   = ft_getopt(varargin, 'verbose', true);
 polyorder = ft_getopt(varargin, 'polyorder', 0);
 tapopt    = ft_getopt(varargin, 'taperopt');
-
-% Set IRASA resampling factors
-hset = 1.1:0.05:1.9;
-nhset = length(hset);
+hset      = ft_getopt(varargin, 'hset', 1.1:0.05:1.9); % IRASA resampling factors
 
 if isempty(fbopt)
   fbopt.i = 1;
@@ -81,6 +78,7 @@ dat = cast(dat, 'double');
 
 % Set n's
 [nchan,ndatsample] = size(dat);
+nhset = length(hset);
 
 % This does not work on integer data
 if ~isa(dat, 'double') && ~isa(dat, 'single')
@@ -146,14 +144,21 @@ if isequal(current_argin, previous_argin)
   % don't recompute tapers
   tap = previous_tap;
 else
-  % recompute tapers
-  tap = hanning(ndatsample)';
-  tap = tap./norm(tap, 'fro');
+  % recompute tapers, 1:mid are upsample tapers, mid+1:end are downsample tapers
+  for ih = 1:nhset
+    [n, d] = rat(hset(ih)); % n > d
+    udat = resample(dat', n, d)'; % upsample
+    utap = hanning(size(udat,2))'; % Hanning taper
+    tap{ih,1} = utap./norm(utap, 'fro');
+    ddat = resample(dat', d, n)'; % downsample
+    dtap = hanning(size(ddat,2))'; % Hanning taper
+    tap{ih+nhset,1} = dtap./norm(dtap, 'fro');
+  end
 end
 
 % set ntaper
 if ~((strcmp(taper,'dpss') || strcmp(taper,'sine')) && numel(tapsmofrq)>1) % variable number of slepian tapers not requested
-  ntaper = repmat(size(tap,1),nfreqoi,1);
+  ntaper = repmat(size(tap,2),nfreqoi,1); % pretend there's only one taper
 else % variable number of slepian tapers requested
   ntaper = cellfun(@size,tap,repmat({1},[1 nfreqoi]));
 end
@@ -167,37 +172,34 @@ if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis')
 elseif verbose
   fprintf([str, '\n']);
 end
+pow = cell(ntaper(1),1);
 spectrum = cell(ntaper(1),1);
-for itap = 1:ntaper(1) % FIXME: the original implementation additionally loops 15 times across 90% subsegments, and filters
+for itap = 1:ntaper(1)
   %%%% IRASA STARTS %%%%
   for ih = 1:nhset % loop across resampling factors
+    % resample
     [n, d] = rat(hset(ih)); % n > d
+    udat = resample(dat', n, d)'; % upsample
+    ddat = resample(dat', d, n)'; % downsample
     
     % fft of upsampled data
-    udat = resample(dat', n, d)'; % upsample
-    utap = hanning(size(udat,2))'; % get taper
-    utap = utap./norm(utap, 'fro');
-    ucom = fft(ft_preproc_padding(bsxfun(@times,udat,utap(itap,:)), padtype, 0, postpad),[], 2); % fft
+    ucom = fft(ft_preproc_padding(bsxfun(@times,udat,tap{ih,1}), padtype, 0, postpad),[], 2); % fft
     ucom = ucom(:,freqboi);
     ucom = ucom .* sqrt(2 ./ endnsample);
-    %ucom(2:end,:) = ucom(2:end,:)*2; % FIXME inconsistent with mtmfft
     
     % fft of downsampled data
-    ddat = resample(dat', d, n)'; % downsample
-    dtap = hanning(size(ddat,2))'; % get taper
-    dtap = dtap./norm(dtap, 'fro');
-    dcom = fft(ft_preproc_padding(bsxfun(@times,ddat,dtap(itap,:)), padtype, 0, postpad),[], 2); % fft
+    dcom = fft(ft_preproc_padding(bsxfun(@times,ddat,tap{ih+nhset,1}), padtype, 0, postpad),[], 2); % fft
     dcom = dcom(:,freqboi);
     dcom = dcom .* sqrt(2 ./ endnsample);
-    %dcom(2:end,:) = dcom(2:end,:)*2;
     
     % geometric mean for this resampling factor
-    upow = abs(ucom).^2; % FIXME: ensure the powflag is off in ft_freqanalysis
+    upow = abs(ucom).^2;
     dpow = abs(dcom).^2;
-    spectrum{itap}(:,:,ih) = sqrt(upow.*dpow);
+    pow{itap}(:,:,ih) = sqrt(upow.*dpow); 
   end
+  
   % median across resampling factors
-  spectrum{itap} = median(spectrum{itap},3);
+  spectrum{itap} = median(pow{itap},3);
   %%%% IRASA ENDS %%%%
 end
 
