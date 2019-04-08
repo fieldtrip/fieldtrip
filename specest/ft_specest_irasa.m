@@ -3,7 +3,7 @@ function [spectrum,ntaper,freqoi] = ft_specest_irasa(dat, time, varargin)
 % FT_SPECEST_IRASA estimates the powerspectral arrythmic component of the 
 % time-domain using Irregular-Resampling Auto-Spectral Analysis
 % (IRASA, Wen & Liu, 2016). This arrythmic component is instrumental for 
-% extracting individual rhythmic components (see Stolk et al., 2019)
+% estimating rhythm frequency bands (see Stolk et al., 2019)
 %
 % Use as
 %   [spectrum,ntaper,freqoi] = ft_specest_irasa(dat,time...)
