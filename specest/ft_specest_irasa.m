@@ -1,10 +1,9 @@
 function [spectrum,ntaper,freqoi] = ft_specest_irasa(dat, time, varargin)
 
-% FT_SPECEST_IRASA performs Irregular-Resampling Auto-Spectral Analysis
-% to estimate the powerspectral arrythmic component in the time-domain
-% signal (see Wen et al., 2016). This arrythmic component can be used to
-% extract individual rhythmic components in the powerspectrum 
-% (see Stolk et al., 2019).
+% FT_SPECEST_IRASA estimates the powerspectral arrythmic component of the 
+% time-domain using Irregular-Resampling Auto-Spectral Analysis
+% (IRASA, Wen & Liu, 2016). This arrythmic component is instrumental for 
+% extracting individual rhythmic components (see Stolk et al., 2019)
 %
 % Use as
 %   [spectrum,ntaper,freqoi] = ft_specest_irasa(dat,time...)
@@ -95,7 +94,7 @@ end
 fsample = 1./mean(diff(time));
 dattime = ndatsample / fsample; % total time in seconds of input data
 
-% Zero padding (FIXME: the effect of padding on taking the fft of the resampled signal has not been tested yet) 
+% Zero padding (FIXME: the effect of padding on taking the fft of the resampled signal has not been tested) 
 if round(pad * fsample) < ndatsample
   ft_error('the padding that you specified is shorter than the data');
 end
@@ -145,7 +144,7 @@ if isequal(current_argin, previous_argin)
   % don't recompute tapers
   tap = previous_tap;
 else
-  % recompute tapers, 1:mid are upsample tapers, mid+1:end are downsample tapers
+  % (re)compute tapers, 1:mid are upsample tapers, mid+1:end are downsample tapers
   for ih = 1:nhset
     [n, d] = rat(hset(ih)); % n > d
     udat = resample(dat', n, d)'; % upsample
