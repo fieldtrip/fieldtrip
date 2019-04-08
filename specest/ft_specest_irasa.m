@@ -1,9 +1,10 @@
 function [spectrum,ntaper,freqoi] = ft_specest_irasa(dat, time, varargin)
 
 % FT_SPECEST_IRASA performs Irregular-Resampling Auto-Spectral Analysis
-% (Wen et al., 2016) to estimate the powerspectral arrythmic component in the
-% time-domain signal. This arrythmic component can be used to identify
-% individual rhythmic components in the powerspectrum (see Stolk et al., 2019)
+% to estimate the powerspectral arrythmic component in the time-domain
+% signal (see Wen et al., 2016). This arrythmic component can be used to
+% extract individual rhythmic components in the powerspectrum 
+% (see Stolk et al., 2019).
 %
 % Use as
 %   [spectrum,ntaper,freqoi] = ft_specest_irasa(dat,time...)
@@ -15,7 +16,7 @@ function [spectrum,ntaper,freqoi] = ft_specest_irasa(dat, time, varargin)
 %   freqoi     = vector of frequencies in spectrum
 %
 % Optional arguments should be specified in key-value pairs and can include
-%   taper      = 'dpss', 'hanning' or many others, see WINDOW (default = 'dpss')
+%   taper      = 'dpss', 'hanning' or many others, see WINDOW (default = 'hanning')
 %   pad        = number, total length of data after zero padding (in seconds)
 %   padtype    = string, indicating type of padding to be used (see ft_preproc_padding, default: zero)
 %   freqoi     = vector, containing frequencies of interest
@@ -94,7 +95,7 @@ end
 fsample = 1./mean(diff(time));
 dattime = ndatsample / fsample; % total time in seconds of input data
 
-% Zero padding FIXME: needs testing
+% Zero padding (FIXME: the effect of padding on taking the fft of the resampled signal has not been tested yet) 
 if round(pad * fsample) < ndatsample
   ft_error('the padding that you specified is shorter than the data');
 end
@@ -172,6 +173,7 @@ if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis')
 elseif verbose
   fprintf([str, '\n']);
 end
+nfft = size(dat,2); % fixed, to move rhythmic content up and down in the powerspectrum
 spectrum = cell(ntaper(1),1);
 for itap = 1:ntaper(1)
   %%%% IRASA STARTS %%%%
@@ -183,14 +185,14 @@ for itap = 1:ntaper(1)
     ddat = resample(dat', d, n)'; % downsample
     
     % fft of upsampled data
-    ucom = fft(ft_preproc_padding(bsxfun(@times,udat,tap{ih,1}), padtype, 0, postpad),[], 2); % fft
+    ucom = fft(ft_preproc_padding(bsxfun(@times,udat,tap{ih,1}), padtype, 0, postpad), nfft, 2); % fft
     ucom = ucom(:,freqboi);
-    ucom = ucom .* sqrt(2 ./ endnsample);
+    ucom = ucom .* sqrt(2 ./ size(udat,2));
     
     % fft of downsampled data
-    dcom = fft(ft_preproc_padding(bsxfun(@times,ddat,tap{ih+nhset,1}), padtype, 0, postpad),[], 2); % fft
+    dcom = fft(ft_preproc_padding(bsxfun(@times,ddat,tap{ih+nhset,1}), padtype, 0, postpad), nfft, 2); % fft
     dcom = dcom(:,freqboi);
-    dcom = dcom .* sqrt(2 ./ endnsample);
+    dcom = dcom .* sqrt(2 ./ size(ddat,2));
     
     % geometric mean for this resampling factor
     upow = abs(ucom).^2;

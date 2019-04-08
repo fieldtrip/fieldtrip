@@ -671,7 +671,7 @@ for itrial = 1:ntrials
       
       acttap = logical([ones(ntaper(ifoi),1);zeros(size(spectrum,1)-ntaper(ifoi),1)]);
       if powflg
-        if strcmp(cfg.method, 'irasa')
+        if strcmp(cfg.method, 'irasa') % ft_specest_irasa outputs power and not amplitude
           powdum = spectrum(acttap,:,foiind(ifoi),acttboi);
         else
           powdum = abs(spectrum(acttap,:,foiind(ifoi),acttboi)) .^2;
@@ -761,7 +761,7 @@ for itrial = 1:ntrials
     %rptind = reshape(1:ntrials .* maxtap,[maxtap ntrials]);
     %currrptind = rptind(:,itrial);
     if powflg
-      if strcmp(cfg.method, 'irasa')
+      if strcmp(cfg.method, 'irasa') % ft_specest_irasa outputs power and not amplitude
         powspctrm(currrptind,:,:) = spectrum;
       else
         powspctrm(currrptind,:,:) = abs(spectrum).^2;
