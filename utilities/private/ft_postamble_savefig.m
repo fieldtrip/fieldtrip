@@ -38,17 +38,19 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
   if exist('Fief7bee_reproducescript', 'var')
     % write the output figure to a MATLAB file
     iW1aenge_now = datestr(now, 30);
-    cfg.outputfile = fullfile(Fief7bee_reproducescript, sprintf('%s_output', iW1aenge_now)); % the file extension is added later
+    cfg.outputfile = fullfile(Fief7bee_reproducescript, sprintf('%s_%s_output',...
+      iW1aenge_now, FjmoT6aA_highest_ft)); % the file extension is added later
     
     % write the large configuration fields to a MATLAB file
     % this applies to layout, event, sourcemodel, headmodel, grad, etc.
     % note that this is here, rather than in the (seemingly more logical)
     % ft_preamble_loadvar, because this code depends on cfg.callinfo (which
     % is only present at postamble stage)
-    cfg = save_large_cfg_fields(cfg, Fief7bee_reproducescript, iW1aenge_now);
+    cfg = save_large_cfg_fields(cfg, FjmoT6aA_highest_ft, Fief7bee_reproducescript, iW1aenge_now);
     
     % write a snippet of MATLAB code with the user-specified configuration and function call
-    reproducescript(fullfile(Fief7bee_reproducescript, 'script.m'), cfg, false);
+    reproducescript(Fief7bee_reproducescript, fullfile(Fief7bee_reproducescript, 'script.m'),...
+      FjmoT6aA_highest_ft, cfg, false);
     
   elseif (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile))
     % keep the output file as it is
