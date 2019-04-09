@@ -251,8 +251,8 @@ switch purpose
       % these fields should not recursively be checked on their size
       'elec'
       'event'
-      'event'
       'grad'
+      'grid'
       'headmodel'
       'headshape'
       'layout'
@@ -260,6 +260,7 @@ switch purpose
       'neighbours'
       'opto'
       'sourcemodel'
+      'vol'
       };
 
   otherwise
