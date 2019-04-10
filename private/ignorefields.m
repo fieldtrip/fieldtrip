@@ -256,6 +256,7 @@ switch purpose
       'headmodel'
       'headshape'
       'layout'
+      'matrix'
       'mri'
       'neighbours'
       'opto'
