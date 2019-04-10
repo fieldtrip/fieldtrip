@@ -3,7 +3,7 @@ function test_bug2086
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_databrowser
+% DEPENDENCY ft_databrowser
 
 warning('this test should not run automatically');
 return

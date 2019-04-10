@@ -6,7 +6,7 @@ function [swf] = read_besa_swf(filename)
 %   [swf] = read_besa_swf(filename)
 %
 % This will return a structure with the header information in
-%   swf.label     cell array with labels
+%   swf.label     cell-array with labels
 %   swf.data      data matrix, Nchan X Npnts
 %   swf.npnt
 %   swf.tsb

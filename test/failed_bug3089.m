@@ -2,8 +2,7 @@ function test_bug3089
 
 % MEM 4000mb
 % WALLTIME 00:20:00
-
-% TEST ft_dipolefitting ft_compute_leadfield ft_apply_transform
+% DEPENDENCY ft_dipolefitting ft_compute_leadfield ft_apply_transform
 
 dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/natmeg/oddball1_mc_downsampled.fif');
 datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/bug3089');
@@ -157,8 +156,8 @@ cfg.latency         = 0.100;
 cfg.numdipoles      = 2;
 cfg.symmetry        = 'x';
 cfg.gridsearch      = 'yes';
-cfg.grid.unit       = 'm';
-cfg.grid.resolution = 0.02;
+cfg.sourcemodel.unit       = 'm';
+cfg.sourcemodel.resolution = 0.02;
 
 cfg.senstype        = 'MEG';
 cfg.headmodel       = headmodel_meg;
@@ -182,8 +181,8 @@ cfg.latency         = 0.100;
 cfg.numdipoles      = 2;
 cfg.symmetry        = 'x';
 cfg.gridsearch      = 'yes';
-cfg.grid.unit       = 'm';
-cfg.grid.resolution = 0.02;
+cfg.sourcemodel.unit       = 'm';
+cfg.sourcemodel.resolution = 0.02;
 
 cfg.channel = {'MEGMAG'};
 timelock_sel = ft_selectdata(cfg, timelock_cov); % this selects channels from the covariance
@@ -215,8 +214,8 @@ cfg.numdipoles      = 2;
 cfg.latency         = 0.100;
 cfg.symmetry        = 'x';
 cfg.gridsearch      = 'yes';
-cfg.grid.unit       = 'm';
-cfg.grid.resolution = 0.02;
+cfg.sourcemodel.unit       = 'm';
+cfg.sourcemodel.resolution = 0.02;
 
 cov_mag  = zeros(306);
 for i=1:3:306
@@ -299,7 +298,7 @@ dipoles_all = {dipole_mag, dipole_grad, dipole_eeg, dipole_mag_grad};
 
 close all
 colours = {'r', 'g', 'b', 'k', 'm', 'c'};
-ft_plot_axes(headmodel_meg);%, 'edgecolor', 'none', 'facealpha', 0.5);
+ft_plot_axes(headmodel_meg); %, 'edgecolor', 'none', 'facealpha', 0.5);
 hold on
 for i = 1:length(dipoles_all)
   ft_plot_dipole(dipoles_all{i}.dip.pos, reshape(dipoles_all{i}.dip.mom, [3 2]), 'unit', 'm', 'color', colours{i})

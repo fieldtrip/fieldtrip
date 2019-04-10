@@ -39,7 +39,7 @@ function [isih] = ft_spike_isi(cfg, spike)
 %                          second spike fired was 0.1 s later than the
 %                          first. Note that jumps within trials or first
 %                          spikes within trials are given NaNs.
-%   isih.label           = 1-by-nUnits cell array with labels
+%   isih.label           = 1-by-nUnits cell-array with labels
 
 % Copyright (C) 2010-2012, Martin Vinck
 %
@@ -98,7 +98,7 @@ cfg = ft_checkconfig(cfg, 'allowed', {'param', 'outputunit', 'bins', 'spikechann
 % get the number of trials or change DATA according to cfg.trials
 if  strcmp(cfg.trials,'all')
   cfg.trials = 1:size(spike.trialtime,1);
-elseif islogical(cfg.trials)
+elseif islogical(cfg.trials) || all(cfg.trials==0 | cfg.trials==1)
   cfg.trials = find(cfg.trials);
 end
 cfg.trials = sort(cfg.trials);

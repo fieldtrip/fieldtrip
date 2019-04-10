@@ -61,9 +61,9 @@ assert(norm(mags-[1.3584 1.3583 1.2138])<thr)
 function [rdms,mags] = run_bem_computation(r,c,dippos)
 
     %% Description of the spherical mesh
-    [pos, tri] = icosahedron42;
-    % [pos, tri] = icosahedron162;
-    % [pos, tri] = icosahedron642;
+    [pos, tri] = mesh_sphere(42);
+    % [pos, tri] = mesh_sphere(162);
+    % [pos, tri] = mesh_sphere(642);
 
     %% Create a set of electrodes on the outer surface
     sens.elecpos = max(r) * pos;
@@ -80,12 +80,12 @@ function [rdms,mags] = run_bem_computation(r,c,dippos)
         bnd(ii).pos = pos * r(ii);
         bnd(ii).tri = tri;
     end
-    
-    
+
+
     %% Compute the BEM model
     cfg = [];
     cfg.method = 'openmeeg';
-    
+
     % vol structure only needs these elements;
     % ft_prepare_headmodel should *not* be used!
     vol_bem = [];
@@ -98,8 +98,8 @@ function [rdms,mags] = run_bem_computation(r,c,dippos)
     %cfg.conductivity = c;
     %vol_bem = ft_prepare_headmodel(cfg, bnd);
     %vol_bem = rmfield(vol_bem,'mat');
-    
-    cfg.vol = vol_bem;
+
+    cfg.headmodel = vol_bem;
     cfg.grid.pos = dippos;
     cfg.grid.unit = 'mm';
     cfg.elec = sens;

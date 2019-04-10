@@ -150,7 +150,7 @@ cfg = ft_checkconfig(cfg, 'renamed',  {'keepchannels',  'keepchannel'});
 % set the defaults
 cfg.channel     = ft_getopt(cfg, 'channel'    , 'all');
 cfg.trials      = ft_getopt(cfg, 'trials'     , 'all', 1);
-cfg.latency     = ft_getopt(cfg, 'latency'    , 'maxperlength');
+cfg.latency     = ft_getopt(cfg, 'latency'    , 'maxperiod');
 cfg.keepchannel = ft_getopt(cfg, 'keepchannel', 'no');
 cfg.keeptrial   = ft_getopt(cfg, 'keeptrial'  , 'no');
 cfg.feedback    = ft_getopt(cfg, 'feedback'   , 'textbar');
@@ -181,7 +181,7 @@ data   = ft_selectdata(selcfg, data);
 [cfg, data] = rollback_provenance(cfg, data);
 
 % apply scaling to the selected channel types to equate the absolute numbers (i.e. fT and uV)
-% make a seperate copy to prevent the original data from being scaled
+% make a separate copy to prevent the original data from being scaled
 tmpdata = data;
 scaled  = false;
 if ~isempty(cfg.eegscale)

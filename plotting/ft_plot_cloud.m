@@ -1,8 +1,8 @@
 function ft_plot_cloud(pos, val, varargin)
 
-% FT_PLOT_CLOUD visualizes spatially sparse scalar data as points, spheres, or 
-% spherical clouds of points and optionally 2D slices through the spherical 
-% clouds. This is for example useful for spectral power on depth (sEEG) electrodes.
+% FT_PLOT_CLOUD visualizes spatially sparse scalar data as points, spheres,
+% discs, or spherical clouds of points and optionally 2D slices through the 
+% spherical clouds
 %
 % Use as
 %   ft_plot_cloud(pos, val, ...)
@@ -13,11 +13,12 @@ function ft_plot_cloud(pos, val, varargin)
 %   'cloudtype'          = 'point' plots a single 2D point at each sensor position (see plot3)
 %                          'cloud' (default) plots a group of spherically arranged points at each sensor position
 %                          'surf' plots a single spherical surface mesh at each sensor position
+%                          'disc' plots a single cylindrical disc at each sensor position aligned with the mesh (required)
 %   'scalerad'           = scale radius with val, can be 'yes' or 'no' (default = 'yes')
 %   'radius'             = scalar, maximum radius of cloud (default = 4)
 %   'clim'               = 1x2 vector specifying the min and max for the colorscale
 %   'unit'               = string, convert the sensor array to the specified geometrical units (default = [])
-%   'mesh'               = string or Nx1 cell array, triangulated mesh(es), see FT_PREPARE_MESH
+%   'mesh'               = string or Nx1 cell-array, triangulated mesh(es), see FT_PREPARE_MESH
 %   'slice'              = requires 'mesh' as input (default = 'none')
 %                          '2d', plots 2D slices through the cloud with an outline of the mesh
 %                          '3d', draws an outline around the mesh at a particular slice
@@ -43,19 +44,19 @@ function ft_plot_cloud(pos, val, varargin)
 %   'nslices'            = scalar, number of slices to plot if 'slicepos' = 'auto (default = 1)
 %   'minspace'           = scalar, minimum spacing between slices if nslices>1
 %                          (default = 1)
-%   'intersectcolor'     = string, Nx1 cell array, or Nx3 vector specifying line color (default = 'k')
-%   'intersectlinestyle' = string or Nx1 cell array, line style specification (default = '-')
+%   'intersectcolor'     = string, Nx1 cell-array, or Nx3 vector specifying line color (default = 'k')
+%   'intersectlinestyle' = string or Nx1 cell-array, line style specification (default = '-')
 %   'intersectlinewidth' = scalar or Nx1 vector, line width specification (default = 2)
 %
-% See also FT_ELECTRODEPLACEMENT, FT_PLOT_TOPO, FT_PLOT_TOPO3D
-
 % The following inputs apply when 'cloudtype' = 'surf' and 'slice' = '2d'
 %   'ncirc'           = scalar, number of concentric circles to plot for each
 %                       cloud slice (default = 15) make this hidden or scale
 %   'scalealpha'      = 'yes' or 'no', scale the maximum alpha value of the center circle
 %                       with distance from center of cloud
+%
+% See also FT_ELECTRODEPLACEMENT, FT_PLOT_TOPO, FT_PLOT_TOPO3D
 
-% Copyright (C) 2017, Arjen Stolk, Sandon Griffin
+% Copyright (C) 2017-2018, Arjen Stolk, Sandon Griffin
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -166,7 +167,7 @@ if ~isempty(meshplot)
     end
   end
   
-  % facecolor, edgecolor, and vertexcolor should be cell array
+  % facecolor, edgecolor, and vertexcolor should be cell-array
   if ~iscell(facecolor)
     tmp = facecolor;
     if ischar(tmp)
@@ -663,23 +664,69 @@ else % plot 3d cloud
       
       % draw the points
       scatter3(x+pos(n,1), y+pos(n,2), z+pos(n,3), ptsize, ptcol, '.');
-    elseif strcmp(cloudtype, 'surf') 
+    elseif strcmp(cloudtype, 'surf')
       indx  = ceil(cmid) + sign(colscf(n))*floor(abs(colscf(n)*cmid));
       indx  = max(min(indx,size(cmapsc,1)),1);  % index should fall within the colormap
       fcol  = cmapsc(indx,:);                   % color [Nx3]
       [xsp, ysp, zsp] = sphere(100);
       hs = surf(rmax(n)*xsp+pos(n,1), rmax(n)*ysp+pos(n,2), rmax(n)*zsp+pos(n,3));
       set(hs, 'EdgeColor', 'none', 'FaceColor', fcol, 'FaceAlpha', 1);
+      
+    elseif strcmp(cloudtype, 'disc')
+      if isempty(meshplot)
+        ft_error('cannot plot electrodes as discs without a mesh to align them with')
+      end
+      
+      % calculate local norm vectors
+      npoints = 25; % points on the headshape used for estimating the local norm
+      d = sqrt( (pos(n,1)-meshplot{1}.pos(:,1)).^2 + ...
+        (pos(n,2)-meshplot{1}.pos(:,2)).^2 + (pos(n,3)-meshplot{1}.pos(:,3)).^2 );
+      [ds, idx] = sort(d);
+      x = meshplot{1}.pos(idx(1:npoints),1);
+      y = meshplot{1}.pos(idx(1:npoints),2);
+      z = meshplot{1}.pos(idx(1:npoints),3);
+      ptCloud = pointCloud([x y z]);
+      normals = pcnormals(ptCloud);
+      u = normals(:,1);
+      v = normals(:,2);
+      w = normals(:,3);
+      
+      % flip the normal vector if it is not pointing toward the center
+      C = mean(meshplot{1}.pos,1); % headshape center
+      for k = 1:numel(x)
+        p1 = C - [x(k),y(k),z(k)];
+        p2 = [u(k),v(k),w(k)];
+        angle = atan2(norm(cross(p1,p2)),p1*p2');
+        if angle > pi/2 || angle < -pi/2
+          u(k) = -u(k);
+          v(k) = -v(k);
+          w(k) = -w(k);
+        end
+      end
+      Fn = nanmean([u v w],1);
+      Fn = Fn * (1/sqrt(sum(Fn.^2,2))); % normalize
+      
+      % create disc aligned with the headshape (ideally, a hull)
+      [X,Y,Z] = cylinder2([rmax(n) rmax(n)],[Fn(:,1) Fn(:,2) Fn(:,3)], 100);
+      X(1,:) = X(1,:)+pos(n,1); Y(1,:) = Y(1,:)+pos(n,2); Z(1,:) = Z(1,:)+pos(n,3);
+      t = rmax(n)/10; % add thickness (outward), X(2,1)-X(1,1) etc.
+      X(2,:) = X(1,:)-t*Fn(:,1); Y(2,:) = Y(1,:)-t*Fn(:,2); Z(2,:) = Z(1,:)-t*Fn(:,3);
+      indx  = ceil(cmid) + sign(colscf(n))*floor(abs(colscf(n)*cmid));
+      indx  = max(min(indx,size(cmapsc,1)),1);  % index should fall within the colormap
+      fcol  = cmapsc(indx,:);                   % color [Nx3]
+      hold on; mesh(X,Y,Z, 'facecolor', fcol, 'edgecolor', fcol, 'lineStyle','none'); % draw cylinder
+      hold on; fill3(X(1,:),Y(1,:),Z(1,:), fcol, 'lineStyle','none'); % fill sides
+      hold on; fill3(X(2,:),Y(2,:),Z(2,:), fcol, 'lineStyle','none');
     elseif strcmp(cloudtype, 'point')
       indx  = ceil(cmid) + sign(colscf(n))*floor(abs(colscf(n)*cmid));
       indx  = max(min(indx,size(cmapsc,1)),1);  % index should fall within the colormap
       fcol  = cmapsc(indx,:);                   % color [Nx3]
-
+      
       hs = plot3(pos(n,1), pos(n,2), pos(n,3), 'Marker', marker, 'MarkerSize', rmax(n), 'Color', fcol, 'Linestyle', 'none');
     end
   end % end cloud loop
   
-  if ~isempty(meshplot)
+  if ~isempty(meshplot) && ~strcmp(cloudtype, 'disc') % do not plot the mesh when plotting electrodes as discs
     for k = 1:numel(meshplot) % mesh loop
       ft_plot_mesh(meshplot{k}, 'facecolor', facecolor{k}, 'EdgeColor', edgecolor{k}, ...
         'facealpha', facealpha(k), 'edgealpha', edgealpha(k), 'vertexcolor', vertexcolor{k});

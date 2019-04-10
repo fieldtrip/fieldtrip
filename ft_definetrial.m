@@ -12,8 +12,14 @@ function [cfg] = ft_definetrial(cfg)
 % where the configuration structure should contain
 %   cfg.trialdef   = structure with details of trial definition, see below
 %   cfg.trialfun   = string with function name, see below (default = 'ft_trialfun_general')
-% and also
-%   cfg.dataset    = pathname to dataset from which to read the events
+% and furthermore
+%   cfg.dataset     = string with the filename
+% or
+%   cfg.headerfile  = string with the filename
+%   cfg.datafile    = string with the filename
+% and optionally
+%   cfg.headerformat
+%   cfg.dataformat
 %
 % A call to FT_DEFINETRIAL results in the trial definition "trl" being
 % added to the output configuration structure. The trials are defined
@@ -58,7 +64,7 @@ function [cfg] = ft_definetrial(cfg)
 % If you specify cfg.trialdef.eventtype  = '?' a list with the events in your
 % data file will be displayed on screen.
 %
-% If you want to read all data from a continous file in a single or in
+% If you want to read all data from a continuous file in a single or in
 % multiple segments, TRIALFUN_GENERAL understands the following options
 %    cfg.trialdef.triallength = duration in seconds (can also be 1 or Inf)
 %    cfg.trialdef.ntrials     = number of trials (can also be 1 or Inf)
@@ -120,6 +126,7 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
+ft_preamble loadvar
 ft_preamble provenance
 
 % the ft_abort variable is set to true or false in ft_preamble_init
@@ -196,3 +203,4 @@ cfg.trl = trl;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
+ft_postamble savevar

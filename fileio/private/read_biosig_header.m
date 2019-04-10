@@ -95,7 +95,7 @@ return;
 % HDR.T0                  float[1..6]     [yyyy mm dd hh MM ss.cc] see HELP CLOCK
 % HDR.NS                  integer         number of channels
 % HDR.SampleRate          integer         sampling frequency in [Hz]
-% HDR.NRec                integer         number of records or blocks; 1 for continous data
+% HDR.NRec                integer         number of records or blocks; 1 for continuous data
 % HDR.SPR                 integer         samples per record
 % HDR.Dur                 float           Duration (in [s]) of minimal block length
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

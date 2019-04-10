@@ -12,7 +12,7 @@ function [depth] = ft_sourcedepth(dippos, headmodel)
 % A negative depth indicates that the source is inside the source
 % compartment, positive indicates outside.
 %
-% See also FIND_INSIDE_VOL
+% See also FT_INSIDE_HEADMODEL
 
 % Copyright (C) 2007-2008, Robert Oostenveld
 %
@@ -38,7 +38,7 @@ function [depth] = ft_sourcedepth(dippos, headmodel)
 headmodel = ft_datatype_headmodel(headmodel);
 
 % determine the type of volume conduction model
-switch ft_voltype(headmodel)
+switch ft_headmodeltype(headmodel)
 
 % single-sphere or multiple concentric spheres
 case {'singlesphere', 'concentricspheres'}
@@ -89,4 +89,3 @@ case {'bem' 'dipoli', 'bemcp', 'asa', 'singleshell', 'neuromag','openmeeg'}
 otherwise
   ft_error('upsupported volume conductor model');
 end
-

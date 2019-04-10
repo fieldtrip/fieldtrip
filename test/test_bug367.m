@@ -3,7 +3,7 @@ function test_bug367
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_megrealign ft_read_sens ft_dipolesimulation ft_timelockanalysis ft_multiplotER
+% DEPENDENCY ft_megrealign ft_read_sens ft_dipolesimulation ft_timelockanalysis ft_multiplotER
 
 % this test script is for http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=367
 % and was constructed from http://www.fieldtriptoolbox.org/example/megrealign
@@ -26,7 +26,7 @@ vol.unit = 'cm';
 cfg = [];
 cfg.dip.pos = [0 0 13.5];  % 4 + 12 - 2.5
 cfg.dip.frequency = 1;
-cfg.vol = vol;
+cfg.headmodel = vol;
 cfg.grad = grad151;
 data151 = ft_dipolesimulation(cfg);
 cfg.grad = grad275;
@@ -42,7 +42,7 @@ avg275 = ft_timelockanalysis(cfg, data275);
 % to avg151 would show.
 cfg = [];
 cfg.inwardshift = 3;
-cfg.vol = vol;
+cfg.headmodel = vol;
 cfg.template{1} = grad151; avg151_151 = ft_timelockanalysis([], ft_megrealign(cfg, avg151));
 cfg.template{1} = grad275; avg151_275 = ft_timelockanalysis([], ft_megrealign(cfg, avg151));
 cfg.template{1} = grad151; avg275_151 = ft_timelockanalysis([], ft_megrealign(cfg, avg275));

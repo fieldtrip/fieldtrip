@@ -231,6 +231,7 @@ switch info.cfg.viewmode
     tmp(~info.chansel, :) = nan;
     tmp(:, ~info.trlsel)  = nan;
     imagesc(tmp);
+    caxis([min(tmp(:)) max(tmp(:))]);
   case 'hide'
     imagesc(level(info.chansel==1, info.trlsel==1));
     if ~all(info.trlsel)
@@ -521,7 +522,7 @@ uiresume;
 % end
 % if all(trls==0)
 %   % use visual selection
-%   update_log(info.output_box, sprintf('make visual selection of trials to be plotted seperately...'));
+%   update_log(info.output_box, sprintf('make visual selection of trials to be plotted separately...'));
 %   [x, y] = select2d;
 %   maxpertrl  = max(info.origlevel, [], 1);
 %   toggle = find(1:ntrl>=x(1) & ...

@@ -437,7 +437,7 @@ if exist('img', 'var')
   %nx = size(img,1);
   %ny = size(img,2);
   %nz = size(img,3);
-  mri.dim = size(img);%[nx ny nz];
+  mri.dim = size(img); %[nx ny nz];
   % store the anatomical data
   mri.anatomy = img;
 end

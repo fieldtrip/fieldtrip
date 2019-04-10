@@ -41,7 +41,7 @@ ft_chunk_t *encodeChannelNames(const mxArray *L, int N) {
 
   ptr = chunk->data;
 
-  /* run through the cell array again */
+  /* run through the cell-array again */
   for (i=0;i<NL;i++) {
     mxArray *S = mxGetCell(L, i);
     int n = mxGetNumberOfElements(S) + 1;

@@ -1,8 +1,8 @@
 function [cfg, artifact] = ft_artifact_clip(cfg, data)
 
-% FT_ARTIFACT_CLIP scans the data segments of interest for channels that
-% clip. A clipping artifact is detected by the signal being completely
-% flat for some time.
+% FT_ARTIFACT_CLIP scans the data segments of interest for channels that clip. These
+% artifacts are detected by the signal being completely flat for a given amount of
+% time.
 %
 % Use as
 %   [cfg, artifact] = ft_artifact_clip(cfg)
@@ -11,6 +11,9 @@ function [cfg, artifact] = ft_artifact_clip(cfg, data)
 % or
 %   cfg.headerfile  = string with the filename
 %   cfg.datafile    = string with the filename
+% and optionally
+%   cfg.headerformat
+%   cfg.dataformat
 %
 % Alternatively you can use it as
 %   [cfg, artifact] = ft_artifact_clip(cfg, data)
@@ -213,3 +216,5 @@ cfg.artfctdef.clip.artifact = artifact;
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
 ft_postamble previous data
+ft_postamble savevar
+

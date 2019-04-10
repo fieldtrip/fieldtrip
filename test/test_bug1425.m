@@ -3,8 +3,8 @@ function test_bug1425
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_connectivityanalysis
-% TEST ft_connectivity_corr
+% DEPENDENCY ft_connectivityanalysis
+% DEPENDENCY ft_connectivity_corr
 
 % the bug pertains to a non-specific error when trying to do coherence computation on single trial data
 

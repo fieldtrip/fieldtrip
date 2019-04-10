@@ -181,7 +181,7 @@ switch fileformat
     %labels
     atlas.tissuelabel = cell(1,246);
     fid = fopen(labelfile, 'rt');
-    lab  = fgetl(fid);%lab='Brainnetome Atlas'
+    lab  = fgetl(fid); %lab='Brainnetome Atlas'
     for label_i=1:246
         atlas.tissuelabel{1,label_i}=fgetl(fid);
     end
@@ -1912,7 +1912,7 @@ switch fileformat
   case 'spm_anatomy'
     ft_hastoolbox('spm8up', 1);
     
-    % load the map, this is assumed to be the struct array MAP
+    % load the map, this is assumed to be the struct-array MAP
     load(filename);
     [p,f,e]      = fileparts(filename);
     mrifilename  = fullfile(p,[strrep(f, '_MPM',''),'.img']);

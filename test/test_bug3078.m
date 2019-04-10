@@ -3,7 +3,7 @@ function test_bug3078
 % MEM 500mb
 % WALLTIME 00:15:00
 
-% TEST ft_sourceanalysis
+% DEPENDENCY ft_sourceanalysis
 
 % there's something obscure going on with the channel order in the spatial filters,
 % supposedly in an interaction with precomputed leadfields and/or freq data with powandcsd
@@ -12,7 +12,7 @@ function test_bug3078
 data = [];
 data.label = {'d';'c';'b';'a'}; 
 % do 4 channels: when playing with 3 channels and exploring the effect of 
-% taking a subset of channels in the cfg, I noticed strange behaviour when
+% taking a subset of channels in the cfg, I noticed strange behavior when
 % converting sparse->full, or some interaction with ft_selectdata (I
 % suspect the haschancmb situation not being handled well with
 % 'sparsewithpow' input, if the number of combinations is equal to the
@@ -46,11 +46,11 @@ freq2 = ft_freqanalysis(cfg, data);
 
 headmodel.o = [0 0 0];
 headmodel.r = 8;
-headmodel.type = ft_voltype(headmodel);
+headmodel.type = ft_headmodeltype(headmodel);
 headmodel   = ft_datatype_headmodel(headmodel);
 
 cfg = [];
-cfg.grid.resolution = 2;
+cfg.sourcemodel.resolution = 2;
 cfg.headmodel = headmodel;
 cfg.grad      = data.grad;
 sourcemodel   = ft_prepare_sourcemodel(cfg);
@@ -58,7 +58,7 @@ sourcemodel   = ft_prepare_sourcemodel(cfg);
 % compute the leadfields with a grad in the cfg, returns order as in the
 % grad.label
 cfg           = [];
-cfg.grid      = sourcemodel;
+cfg.sourcemodel      = sourcemodel;
 cfg.headmodel = headmodel;
 cfg.grad      = data.grad;
 sourcemodel_lf1 = ft_prepare_leadfield(cfg);
@@ -72,7 +72,7 @@ cfg = [];
 cfg.method = 'dics';
 cfg.frequency = 20;
 cfg.headmodel = headmodel;
-cfg.grid      = sourcemodel;
+cfg.sourcemodel      = sourcemodel;
 cfg.dics.keepfilter    = 'yes';
 cfg.dics.realfilter    = 'yes';
 source1 = ft_sourceanalysis(cfg, freq1);
@@ -94,12 +94,12 @@ cfg = [];
 cfg.method = 'dics';
 cfg.frequency = 20;
 cfg.headmodel = headmodel;
-cfg.grid      = sourcemodel_lf1;
+cfg.sourcemodel      = sourcemodel_lf1;
 cfg.dics.keepleadfield = 'yes';
 cfg.dics.keepfilter    = 'yes';
 cfg.dics.realfilter    = 'yes';
 source1 = ft_sourceanalysis(cfg, freq1);
-cfg.grid      = sourcemodel_lf2;
+cfg.sourcemodel      = sourcemodel_lf2;
 source2 = ft_sourceanalysis(cfg, freq1);
 
 firstinside         = find(source1.inside,1,'first');
@@ -117,12 +117,12 @@ cfg = [];
 cfg.method = 'dics';
 cfg.frequency = 20;
 cfg.headmodel = headmodel;
-cfg.grid      = sourcemodel;
+cfg.sourcemodel      = sourcemodel;
 cfg.dics.keepfilter    = 'yes';
 cfg.dics.realfilter    = 'yes';
 source1 = ft_sourceanalysis(cfg, freq1);
 cfg.keepleadfield = 'yes';
 source2 = ft_sourceanalysis(cfg, freq1);
-cfg.grid      = sourcemodel_lf1;
+cfg.sourcemodel      = sourcemodel_lf1;
 source3 = ft_sourceanalysis(cfg, freq1);
 

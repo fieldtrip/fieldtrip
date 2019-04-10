@@ -37,10 +37,8 @@ function [simulated] = ft_dipolesimulation(cfg)
 %   cfg.headmodel     = structure with volume conduction model, see FT_PREPARE_HEADMODEL
 %
 % The EEG or MEG sensor positions should be specified as
-%   cfg.elec          = structure with electrode positions, see FT_DATATYPE_SENS
-%   cfg.grad          = structure with gradiometer definition, see FT_DATATYPE_SENS
-%   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
-%   cfg.gradfile      = name of file containing the gradiometer definition, see FT_READ_SENS
+%   cfg.elec          = structure with electrode positions or filename, see FT_READ_SENS
+%   cfg.grad          = structure with gradiometer definition or filename, see FT_READ_SENS
 %
 % See also FT_SOURCEANALYSIS, FT_DIPOLEFITTING, FT_TIMELOCKSIMULATION,
 % FT_FREQSIMULATION, FT_CONNECTIVITYSIMULATION
@@ -88,6 +86,10 @@ if ft_abort
   return
 end
 
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'renamed', {'elecfile', 'elec'});
+cfg = ft_checkconfig(cfg, 'renamed', {'gradfile', 'grad'});
+cfg = ft_checkconfig(cfg, 'renamed', {'optofile', 'opto'});
 cfg = ft_checkconfig(cfg, 'renamed', {'hdmfile', 'headmodel'});
 cfg = ft_checkconfig(cfg, 'renamed', {'vol',     'headmodel'});
 
@@ -200,9 +202,9 @@ ft_progress('init', cfg.feedback, 'computing simulated data');
 for trial=1:Ntrials
   ft_progress(trial/Ntrials, 'computing simulated data for trial %d\n', trial);
   if numel(cfg.chanunit) == numel(cfg.channel)
-      lf = ft_compute_leadfield(dippos{trial}, sens, headmodel, 'dipoleunit', cfg.dipoleunit, 'chanunit', cfg.chanunit);
+    lf = ft_compute_leadfield(dippos{trial}, sens, headmodel, 'dipoleunit', cfg.dipoleunit, 'chanunit', cfg.chanunit);
   else
-      lf = ft_compute_leadfield(dippos{trial}, sens, headmodel);
+    lf = ft_compute_leadfield(dippos{trial}, sens, headmodel);
   end
   nsamples = size(dipsignal{trial},2);
   nchannels = size(lf,1);

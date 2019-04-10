@@ -6,7 +6,7 @@ function [filename, headerfile, datafile] = dataset2files(filename, format)
 % Use as
 %   [filename, headerfile, datafile] = dataset2files(filename, format)
 
-% Copyright (C) 2007-2013, Robert Oostenveld
+% Copyright (C) 2007-2019, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -65,6 +65,10 @@ switch format
     datafile   = fullfile(path, [file,ext]);
     headerfile = fullfile(path, [file,ext]);
     configfile = fullfile(path, 'config');
+  case {'anywave_ades', 'anywave_dat'}
+    [path, file, ext] = fileparts(filename);
+    datafile   = fullfile(path, [file '.dat']);
+    headerfile = fullfile(path, [file '.ades']);
   case {'ctf_ds', 'ctf_old'}
     % convert CTF filename into filenames
     [path, file, ext] = fileparts(filename);

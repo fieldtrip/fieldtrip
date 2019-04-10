@@ -38,6 +38,8 @@ function [pos, tri] = headsurface(headmodel, sens, varargin)
 %
 % $Id$
 
+% FIXME perhaps ft_fetch_headshape or ft_prepare_headshape would be a better name for this function
+
 if nargin<1
   headmodel = [];
 end
@@ -63,10 +65,41 @@ npos          = ft_getopt(varargin, 'npos');                % number of vertices
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(headshape)
+  % get the surface describing the head shape
+  if isstruct(headshape) && isfield(headshape, 'hex')
+    headshape = fixpos(headshape);
+    fprintf('extracting surface from hexahedral mesh\n');
+    headshape = mesh2edge(headshape);
+    headshape = poly2tri(headshape);
+  elseif isstruct(headshape) && isfield(headshape, 'tet')
+    headshape = fixpos(headshape);
+    fprintf('extracting surface from tetrahedral mesh\n');
+    headshape = mesh2edge(headshape);
+  elseif isstruct(headshape) && isfield(headshape, 'tri')
+    headshape = fixpos(headshape);
+  elseif isstruct(headshape) && isfield(headshape, 'pos')
+    headshape = fixpos(headshape);
+  elseif isstruct(headshape) && isfield(headshape, 'pnt')
+    headshape = fixpos(headshape);
+  elseif isnumeric(headshape) && size(headshape,2)==3
+    % use the headshape points specified in the configuration
+    headshape = struct('pos', headshape);
+  elseif ischar(headshape)
+    % read the headshape from file
+    headshape = ft_read_headshape(headshape);
+  end
+  if ~isfield(headshape, 'tri')
+    for i=1:numel(headshape)
+      % generate a closed triangulation from the surface points
+      headshape(i).pos = unique(headshape(i).pos, 'rows');
+      headshape(i).tri = projecttri(headshape(i).pos);
+    end
+  end
+
   % the headshape should be specified as a surface structure with pos and tri
   pos = headshape.pos;
   tri = headshape.tri;
-  
+
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif ~isempty(headmodel) && isfield(headmodel, 'r') && length(headmodel.r)<5
   if length(headmodel.r)==1
@@ -100,28 +133,16 @@ elseif ~isempty(headmodel) && isfield(headmodel, 'r') && length(headmodel.r)<5
     npos = 642;
   end
   % construct an evenly tesselated unit sphere
-  switch npos
-    case 2562
-      [pos, tri] = icosahedron2562;
-    case 642
-      [pos, tri] = icosahedron642;
-    case 162
-      [pos, tri] = icosahedron162;
-    case 42
-      [pos, tri] = icosahedron42;
-    case 12
-      [pos, tri] = icosahedron;
-    otherwise
-      [pos, tri] = ksphere(npos);
-  end
+  [pos, tri] = mesh_sphere(npos);
+
   % scale and translate the vertices
   pos = pos*radius;
   pos(:,1) = pos(:,1) + origin(1);
   pos(:,2) = pos(:,2) + origin(2);
   pos(:,3) = pos(:,3) + origin(3);
-  
+
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif ft_voltype(headmodel, 'localspheres')
+elseif ft_headmodeltype(headmodel, 'localspheres')
   % local spheres MEG model, this also requires a gradiometer structure
   grad = sens;
   if ~isfield(grad, 'tra') || ~isfield(grad, 'coilpos')
@@ -154,9 +175,9 @@ elseif ft_voltype(headmodel, 'localspheres')
   end
   % construct the triangulation of the surface
   tri = projecttri(pos);
-  
+
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif ft_voltype(headmodel, 'bem') ||  ft_voltype(headmodel, 'singleshell')
+elseif ft_headmodeltype(headmodel, 'bem') ||  ft_headmodeltype(headmodel, 'singleshell')
   % volume conduction model with triangulated boundaries
   switch surface
     case 'skin'
@@ -178,21 +199,8 @@ end
 
 % retriangulate the skin/brain/cortex surface to the desired number of vertices
 if ~isempty(npos) && size(pos,1)~=npos
-  switch npos
-    case 2562
-      [pnt2, tri2] = icosahedron2562;
-    case 642
-      [pnt2, tri2] = icosahedron642;
-    case 162
-      [pnt2, tri2] = icosahedron162;
-    case 42
-      [pnt2, tri2] = icosahedron42;
-    case 12
-      [pnt2, tri2] = icosahedron;
-    otherwise
-      [pnt2, tri2] = ksphere(npos);
-  end
-  [pos, tri] = retriangulate(pos, tri, pnt2, tri2, 2);
+  [pnt2, tri2] = mesh_sphere(npos);
+  [pos, tri]   = retriangulate(pos, tri, pnt2, tri2, 2);
 end
 
 % shift the surface inward with a certain amount

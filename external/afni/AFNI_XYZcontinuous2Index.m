@@ -83,7 +83,7 @@ Indx = [];
 
 % NNO added
 if nargin < 5 %check last input argument
-    retNaNoutside=false; % default: use old behaviour, do not return NaNs
+    retNaNoutside=false; % default: use old behavior, do not return NaNs
 elseif ~islogical(retNaNoutside) || numel(retNaNoutside) ~= 1
     fprintf(2,'%s: Illegal value for retNaNoutside\n\n', FuncName);
     return

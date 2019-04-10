@@ -23,6 +23,8 @@ function [data] = ft_checkdata(data, varargin)
 %   isnirs             = yes, no
 %   hasunit            = yes, no
 %   hascoordsys        = yes, no
+%   haschantype        = yes, no
+%   haschanunit        = yes, no
 %   hassampleinfo      = yes, no, ifmakessense (applies to raw and timelock data)
 %   hascumtapcnt       = yes, no (only applies to freq data)
 %   hasdim             = yes, no
@@ -103,6 +105,8 @@ inside               = ft_getopt(varargin, 'inside'); % can be 'logical' or 'ind
 hastrials            = ft_getopt(varargin, 'hastrials');
 hasunit              = ft_getopt(varargin, 'hasunit', 'no');
 hascoordsys          = ft_getopt(varargin, 'hascoordsys', 'no');
+haschantype          = ft_getopt(varargin, 'haschantype', 'no');
+haschanunit          = ft_getopt(varargin, 'haschanunit', 'no');
 hassampleinfo        = ft_getopt(varargin, 'hassampleinfo', 'ifmakessense');
 hasdim               = ft_getopt(varargin, 'hasdim');
 hascumtapcnt         = ft_getopt(varargin, 'hascumtapcnt');
@@ -635,6 +639,14 @@ end % if hasunit
 if istrue(hascoordsys) && ~isfield(data, 'coordsys')
   data = ft_determine_coordsys(data);
 end % if hascoordsys
+
+if istrue(haschantype) && ~isfield(data, 'chantype')
+  data.chantype = ft_chantype(data);
+end % if haschantype
+
+if istrue(haschanunit) && ~isfield(data, 'chanunit')
+  data.chanunit = ft_chanunit(data);
+end % if haschanunit
 
 if isequal(hastrials, 'yes')
   hasrpt = isfield(data, 'trial');
@@ -1394,23 +1406,28 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = source2volume(data)
 
-if isfield(data, 'dimord')
-  % it is a modern source description
-  
-  %this part depends on the assumption that the list of positions is describing a full 3D volume in
-  %an ordered way which allows for the extraction of a transformation matrix
-  %i.e. slice by slice
+fn = fieldnames(data);
+fd = nan(size(fn));
+for i=1:numel(fn)
+  fd(i) = ndims(data.(fn{i}));
+end
+
+if ~isfield(data, 'dim')
+  % this part depends on the assumption that the list of positions is describing a full 3D volume in
+  % an ordered way which allows for the extraction of a transformation matrix, i.e. slice by slice
+  data.dim = pos2dim(data.pos);
   try
-    if isfield(data, 'dim')
-      data.dim = pos2dim(data.pos, data.dim);
-    else
-      data.dim = pos2dim(data);
-    end
+    % if the dim is correct, it should be possible to obtain the transform
+    ws = warning('off', 'MATLAB:rankDeficientMatrix');
+    pos2transform(data.pos, data.dim);
+    warning(ws);
   catch
+    % remove the incorrect dim
+    data = rmfield(data, 'dim');
   end
 end
 
-if isfield(data, 'dim') && length(data.dim)>=3
+if isfield(data, 'dim')
   data.transform = pos2transform(data.pos, data.dim);
 end
 

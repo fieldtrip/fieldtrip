@@ -456,7 +456,7 @@ function [Eft, Covft, ljpyt] = gpep_jpred(gp, x, y, varargin)
         B=Luu\(K_fu');
         Qv_ff=sum(B.^2)';
         Lav = Kv_ff-Cv_ff;
-        Eft(tstind) = Eft(tstind);% + Lav.*p;
+        Eft(tstind) = Eft(tstind); % + Lav.*p;
       end
       
       if nargout > 1

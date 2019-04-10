@@ -7,7 +7,7 @@ function [stat] = ft_sourcestatistics(cfg, varargin)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
 % where the input data is the result from FT_SOURCEANALYSIS, FT_SOURCEDESCRIPTIVES
 % or FT_SOURCEGRANDAVERAGE.  The source structures should be spatially alligned
-% to each other and should have the same positions for the source grid.
+% to each other and should have the same positions for the sourcemodel.
 %
 % The configuration should contain the following option for data selection
 %   cfg.parameter  = string, describing the functional data to be processed, e.g. 'pow', 'nai' or 'coh'
@@ -119,8 +119,7 @@ tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'latency', 'avgovertime', 
 
 dimord = getdimord(varargin{1}, cfg.parameter);
 dimtok = tokenize(dimord, '_');
-dimsiz = getdimsiz(varargin{1}, cfg.parameter);
-dimsiz(end+1:length(dimtok)) = 1; % there can be additional trailing singleton dimensions
+dimsiz = getdimsiz(varargin{1}, cfg.parameter, numel(dimtok));
 rptdim = find( strcmp(dimtok, 'subj') |  strcmp(dimtok, 'rpt') |  strcmp(dimtok, 'rpttap'));
 datdim = find(~strcmp(dimtok, 'subj') & ~strcmp(dimtok, 'rpt') & ~strcmp(dimtok, 'rpttap'));
 datsiz = dimsiz(datdim);

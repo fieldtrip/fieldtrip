@@ -11,7 +11,7 @@ function [grandavg] = ft_sourcegrandaverage(cfg, varargin)
 % FT_SOURCESTATISTICS with the method 'randomization' or 'randcluster'.
 %
 % The input source structures should be spatially alligned to each other
-% and should have the same positions for the source grid.
+% and should have the same positions for the sourcemodel.
 %
 % Use as
 %  [grandavg] = ft_sourcegrandaverage(cfg, source1, source2, ...)
@@ -29,7 +29,7 @@ function [grandavg] = ft_sourcegrandaverage(cfg, varargin)
 % file on disk and/or the output data will be written to a *.mat file. These mat
 % files should contain only a single variable, corresponding with the
 % input/output structure. For this particular function, the input data
-% should be structured as a single cell array.
+% should be structured as a single cell-array.
 %
 % See also FT_SOURCEANALYSIS, FT_SOURCEDESCRIPTIVES, FT_SOURCESTATISTICS, FT_MATH
 
@@ -135,7 +135,7 @@ npos = size(varargin{1}.pos,1);
 grandavg = [];
 
 if startsWith(dimord, '{pos}')
-  
+
   dat = cell(npos, nrpt);
   for i=1:npos
     for j=1:nrpt
@@ -148,7 +148,7 @@ if startsWith(dimord, '{pos}')
       dat{i,j} =[];
     end
   end
-  
+
   if strcmp(cfg.keepindividual, 'yes')
     for i=find(varargin{1}.inside(:)')
       for j=1:nrpt
@@ -159,14 +159,14 @@ if startsWith(dimord, '{pos}')
       dat{i,1} = cat(1, dat{i,:});
     end
     grandavg.(cfg.parameter) = dat(:,1); % keep it as cell-array
-    
+
     % update the dimord
     dimtok = tokenize(dimord, '_');
     dimtok = {dimtok{1} 'rpt' dimtok{2:end}};
     dimord = sprintf('%s_', dimtok{:});
     dimord = dimord(1:end-1); % remove the trailing '_'
     grandavg.dimord = dimord;
-    
+
   else
     for i=find(varargin{1}.inside(:)')
       for j=2:nrpt
@@ -176,18 +176,18 @@ if startsWith(dimord, '{pos}')
       dat{i,1} = dat{i,1}/nrpt;
     end
     grandavg.(cfg.parameter) = dat(:,1); % keep it as cell-array
-    
+
     % keep the same dimord
     grandavg.dimord = dimord;
   end
-  
+
 else
-  
+
   dat = cell(nrpt, 1);
   for i=1:nrpt
     dat{i} = varargin{i}.(cfg.parameter);
   end
-  
+
   if strcmp(cfg.keepindividual, 'yes')
     for i=1:nrpt
       % add a singleton dimension at the start
@@ -195,25 +195,25 @@ else
     end
     % concatenate along first dimension
     grandavg.(cfg.parameter) = cat(1, dat{:});
-    
+
     % update the dimord
     dimtok = tokenize(dimord, '_');
     dimtok = {'rpt' dimtok{1} dimtok{2:end}};
     dimord = sprintf('%s_', dimtok{:});
     dimord = dimord(1:end-1); % remove the trailing '_'
     grandavg.dimord = dimord;
-    
+
   else
     for i=2:nrpt
       % sum up and store in the first element
       dat{1} = dat{1} + dat{i};
     end
     grandavg.(cfg.parameter) = dat{1}/nrpt;
-    
+
     % keep the same dimord
     grandavg.dimord = dimord;
   end
-  
+
 end
 
 % the fields that describe the actual data need to be copied over from the input to the output

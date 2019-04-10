@@ -3,8 +3,8 @@ function test_bug1828
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_convert_coordsys
-% TEST align_ctf2acpc
+% DEPENDENCY ft_convert_coordsys
+% DEPENDENCY align_ctf2acpc
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1828'));
 

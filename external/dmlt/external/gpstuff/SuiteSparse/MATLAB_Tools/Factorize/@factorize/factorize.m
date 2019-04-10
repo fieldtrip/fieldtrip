@@ -43,7 +43,7 @@ classdef factorize
         R = [ ] ;           % R factor for QR
         p = [ ] ;           % sparse row permutation matrix
         q = [ ] ;           % sparse column permutation matrix
-        is_inverse = false ;% F represents the factorization of A or inv(A)
+        is_inverse = false ; % F represents the factorization of A or inv(A)
         kind = 0 ;          % F is one of 8 kinds of factorizations
     end
 

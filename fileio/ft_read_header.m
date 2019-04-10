@@ -79,6 +79,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %
 % The following NIRS dataformats are supported
 %   BUCN - Birkbeck college, London (*.txt)
+%   Artinis - Artinis Medical Systems B.V. (*.oxy3, *.oxyproj)
 %
 % The following Eyetracker dataformats are supported
 %   EyeLink - SR Research (*.asc)
@@ -810,7 +811,7 @@ switch headerformat
   case 'eep_cnt'
     % check that the required low-level toolbox is available
     ft_hastoolbox('eeprobe', 1);
-    % read the first sample from the continous data, this will also return the header
+    % read the first sample from the continuous data, this will also return the header
     orig = read_eep_cnt(filename, 1, 1);
     hdr.Fs          = orig.rate;
     hdr.nSamples    = orig.nsample;
@@ -1183,10 +1184,9 @@ switch headerformat
     hdr.orig = orig;
     
   case 'egi_mff_v2'
-    % ensure that the EGI_MFF toolbox is on the path
-    ft_hastoolbox('egi_mff', 1);
-    % ensure that the JVM is running and the jar file is on the path
-    
+    % ensure that the EGI_MFF_V2 toolbox is on the path
+    ft_hastoolbox('egi_mff_v2', 1);
+
     %%%%%%%%%%%%%%%%%%%%%%
     %workaround for MATLAB bug resulting in global variables being cleared
     globalTemp=cell(0);
@@ -1198,6 +1198,7 @@ switch headerformat
     end
     %%%%%%%%%%%%%%%%%%%%%%
     
+    % ensure that the JVM is running and the jar file is on the path
     mff_setup;
     
     %%%%%%%%%%%%%%%%%%%%%%
@@ -1212,7 +1213,7 @@ switch headerformat
     end
     clear globalTemp globalList varNames varList;
     %%%%%%%%%%%%%%%%%%%%%%
-    
+
     if isunix && filename(1)~=filesep
       % add the full path to the dataset directory
       filename = fullfile(pwd, filename);
@@ -1220,6 +1221,7 @@ switch headerformat
       % add the full path, including drive letter or slashes as needed.
       filename = fullfile(pwd, filename);
     end
+
     hdr = read_mff_header(filename);
     
   case {'egi_mff_v3' 'egi_mff'} % this is the default
@@ -2276,6 +2278,10 @@ switch headerformat
   case 'artinis_oxy3'
     ft_hastoolbox('artinis', 1);
     hdr = read_artinis_oxy3(filename);
+    
+  case 'artinis_oxyproj'
+    ft_hastoolbox('artinis', 1);
+    hdr = read_oxyproj_header(filename);
     
   case 'plexon_ds'
     hdr = read_plexon_ds(filename);

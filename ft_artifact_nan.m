@@ -96,3 +96,4 @@ cfg.artfctdef.nan.artifact = artifact;
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous   data
+ft_postamble savevar

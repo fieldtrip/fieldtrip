@@ -2,11 +2,7 @@ function failed_tutorial_spikefield
 
 % MEM 2500mb
 % WALLTIME 00:10:00
-
-% TEST test_tutorial_spikefield
-% TEST ft_read_spike ft_spike_select ft_spike_maketrials ft_appendspike
-% ft_spiketriggeredinterpolation ft_spiketriggeredaverage
-% ft_spiketriggeredspectrum ft_spiketriggeredspectrum_stat
+% DEPENDENCY ft_read_spike ft_spike_select ft_spike_maketrials ft_appendspike ft_spiketriggeredinterpolation ft_spiketriggeredaverage ft_spiketriggeredspectrum ft_spiketriggeredspectrum_stat
 
 memtic;
 

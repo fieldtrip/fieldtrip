@@ -1,6 +1,6 @@
 function [segmented] = ft_volumesegment(cfg, mri)
 
-% FT_VOLUMESEGMENT segments an anatomical MRI. The behaviour depends on the output requested. It can
+% FT_VOLUMESEGMENT segments an anatomical MRI. The behavior depends on the output requested. It can
 % return probabilistic tissue maps of gray/white/csf compartments, a skull-stripped anatomy, or
 % binary masks representing the brain surface, skull, or scalp surface.
 %
@@ -276,7 +276,7 @@ end
 
 if cfg.downsample~=1
   % optionally downsample the anatomical and/or functional volumes
-  tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'downsample', 'spmversion', 'showcallinfo'});
   tmpcfg.smooth = 'no'; % smoothing is done in ft_volumesegment itself
   mri = ft_volumedownsample(tmpcfg, mri);
   % restore the provenance information

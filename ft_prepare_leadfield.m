@@ -1,10 +1,10 @@
-function [grid, cfg] = ft_prepare_leadfield(cfg, data)
+function [sourcemodel, cfg] = ft_prepare_leadfield(cfg, data)
 
 % FT_PREPARE_LEADFIELD computes the forward model for many dipole locations
-% on a regular 2D or 3D grid and stores it for efficient inverse modelling
+% on a regular 2D or 3D sourcemodel and stores it for efficient inverse modelling
 %
 % Use as
-%   [grid] = ft_prepare_leadfield(cfg, data);
+%   [sourcemodel] = ft_prepare_leadfield(cfg, data)
 %
 % It is neccessary to input the data on which you want to perform the
 % inverse computations, since that data generally contain the gradiometer
@@ -18,25 +18,23 @@ function [grid, cfg] = ft_prepare_leadfield(cfg, data)
 %                            see FT_CHANNELSELECTION for details
 %
 % The positions of the sources can be specified as a regular 3-D
-% grid that is aligned with the axes of the head coordinate system
-%   cfg.grid.xgrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
-%   cfg.grid.ygrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
-%   cfg.grid.zgrid      = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
-%   cfg.grid.resolution = number (e.g. 1 cm) for automatic grid generation
+% sourcemodel that is aligned with the axes of the head coordinate system
+%   cfg.sourcemodel.xgrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
+%   cfg.sourcemodel.ygrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
+%   cfg.sourcemodel.zgrid      = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
+%   cfg.sourcemodel.resolution = number (e.g. 1 cm) for automatic sourcemodel generation
 % Alternatively the position of a few sources at locations of interest can
 % be specified, for example obtained from an anatomical or functional MRI
-%   cfg.grid.pos        = N*3 matrix with position of each source
-%   cfg.grid.inside     = N*1 vector with boolean value whether grid point is inside brain (optional)
-%   cfg.grid.dim        = [Nx Ny Nz] vector with dimensions in case of 3-D grid (optional)
+%   cfg.sourcemodel.pos        = N*3 matrix with position of each source
+%   cfg.sourcemodel.inside     = N*1 vector with boolean value whether sourcemodel point is inside brain (optional)
+%   cfg.sourcemodel.dim        = [Nx Ny Nz] vector with dimensions in case of 3-D sourcemodel (optional)
 %
 % The volume conduction model of the head should be specified as
 %   cfg.headmodel     = structure with volume conduction model, see FT_PREPARE_HEADMODEL
 %
 % The EEG or MEG sensor positions can be present in the data or can be specified as
-%   cfg.elec          = structure with electrode positions, see FT_DATATYPE_SENS
-%   cfg.grad          = structure with gradiometer definition, see FT_DATATYPE_SENS
-%   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
-%   cfg.gradfile      = name of file containing the gradiometer definition, see FT_READ_SENS
+%   cfg.elec          = structure with electrode positions or filename, see FT_READ_SENS
+%   cfg.grad          = structure with gradiometer definition or filename, see FT_READ_SENS
 %
 % Optionally, you can modify the leadfields by reducing the rank (i.e.
 % remove the weakest orientation), or by normalizing each column.
@@ -48,20 +46,20 @@ function [grid, cfg] = ft_prepare_leadfield(cfg, data)
 %                         linear subspace, or not.
 %
 % Depending on the type of headmodel, some additional options may be
-% specified. 
+% specified.
 %
 % For OPENMEEG based headmodels:
-%   cfg.openmeeg.batchsize    = scalar (default 100e3), number of dipoles 
-%                               for which the leadfield is computed in a 
+%   cfg.openmeeg.batchsize    = scalar (default 100e3), number of dipoles
+%                               for which the leadfield is computed in a
 %                               single call to the low-level code. Trades off
 %                               memory efficiency for speed.
 %   cfg.openmeeg.dsm          = 'no'/'yes', reuse existing DSM if provided
 %   cfg.openmeeg.keepdsm      = 'no'/'yes', option to retain DSM (no by default)
 %   cfg.openmeeg.nonadaptive  = 'no'/'yes'
-%  
+%
 % For SINGLESHELL based headmodels:
 %   cfg.singleshell.batchsize = scalar or 'all' (default 1), number of dipoles
-%                               for which the leadfield is computed in a 
+%                               for which the leadfield is computed in a
 %                               single call to the low-level code. Trades off
 %                               memory efficiency for speed.
 %
@@ -71,8 +69,7 @@ function [grid, cfg] = ft_prepare_leadfield(cfg, data)
 % file on disk. This mat files should contain only a single variable named 'data',
 % corresponding to the input structure.
 %
-% See also FT_SOURCEANALYSIS, FT_DIPOLEFITTING, FT_PREPARE_HEADMODEL,
-% FT_PREPARE_SOURCEMODEL
+% See also FT_SOURCEANALYSIS, FT_DIPOLEFITTING, FT_PREPARE_HEADMODEL,FT_PREPARE_SOURCEMODEL
 
 % Undocumented local options:
 % cfg.feedback
@@ -133,7 +130,11 @@ end
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed', {'hdmfile', 'headmodel'});
 cfg = ft_checkconfig(cfg, 'renamed', {'vol',     'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed', {'grid',    'sourcemodel'});
 cfg = ft_checkconfig(cfg, 'renamed', {'om',      'openmeeg'});
+cfg = ft_checkconfig(cfg, 'renamed', {'elecfile', 'elec'});
+cfg = ft_checkconfig(cfg, 'renamed', {'gradfile', 'grad'});
+cfg = ft_checkconfig(cfg, 'renamed', {'optofile', 'opto'});
 
 % set the defaults
 cfg.normalize      = ft_getopt(cfg, 'normalize',      'no');
@@ -146,13 +147,16 @@ cfg.patchsvd       = ft_getopt(cfg, 'patchsvd',       'no');
 cfg.backproject    = ft_getopt(cfg, 'backproject',    'yes'); % determines whether after rank reduction the subspace projected leadfield is backprojected onto the original space
 % cfg.reducerank   = ft_getopt(cfg, 'reducerank', 'no');      % the default for this depends on EEG/MEG and is set below
 
-% put the low-level options pertaining to the dipole grid in their own field
-cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'});  % this is moved to cfg.grid.tight by the subsequent createsubcfg
-cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.grid.unit by the subsequent createsubcfg
-cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
+cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'});  % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.sourcemodel.unit by the subsequent createsubcfg
+
+% put the low-level options pertaining to the sourcemodel in their own field
+cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
+% move some fields from cfg.sourcemodel back to the top-level configuration
+cfg = ft_checkconfig(cfg, 'createtopcfg', {'sourcemodel'});
 
 % this code expects the inside to be represented as a logical array
-cfg.grid = ft_checkconfig(cfg.grid, 'renamed',  {'pnt' 'pos'});
+cfg.sourcemodel = ft_checkconfig(cfg.sourcemodel, 'renamed',  {'pnt' 'pos'});
 cfg = ft_checkconfig(cfg, 'inside2logical', 'yes');
 
 if strcmp(cfg.sel50p, 'yes') && strcmp(cfg.lbex, 'yes')
@@ -171,31 +175,38 @@ else
   cfg.reducerank = ft_getopt(cfg, 'reducerank', 2);
 end
 
-% construct the dipole grid according to the configuration
-tmpcfg           = keepfields(cfg, {'grid', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'showcallinfo'});
+% construct the sourcemodel for which the leadfield will be computed
+tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo'});
 tmpcfg.headmodel = headmodel;
-tmpcfg.grad      = sens; % either electrodes or gradiometers
-grid = ft_prepare_sourcemodel(tmpcfg);
+if ft_senstype(sens, 'eeg')
+  tmpcfg.elec = sens;
+elseif ft_senstype(sens, 'meg')
+  tmpcfg.grad = sens;
+end
+sourcemodel = ft_prepare_sourcemodel(tmpcfg);
 
 % check whether units are equal (NOTE: this was previously not required,
 % this check can be removed if the underlying bug is resolved. See
 % http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2387
-if ~isfield(headmodel, 'unit') || ~isfield(grid, 'unit') || ~isfield(sens, 'unit')
+if ~isfield(headmodel, 'unit') || ~isfield(sourcemodel, 'unit') || ~isfield(sens, 'unit')
   ft_warning('cannot determine the units of all geometric objects required for leadfield computation (headmodel, sourcemodel, sensor configuration). THIS CAN LEAD TO WRONG RESULTS! (refer to http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2387)');
 else
-  if ~strcmp(headmodel.unit, grid.unit) || ~strcmp(grid.unit, sens.unit)
+  if ~strcmp(headmodel.unit, sourcemodel.unit) || ~strcmp(sourcemodel.unit, sens.unit)
     ft_error('geometric objects (headmodel, sourcemodel, sensor configuration) are not expressed in the same units (this used to be allowed, and will be again in the future, but for now there is a bug which prevents a correct leadfield from being computed; see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2387)');
   end
 end
 
-% find the indices of all grid points that are inside the brain
-insideindx = find(grid.inside);
+% find the indices of all sourcemodel points that are inside the brain
+insideindx = find(sourcemodel.inside);
 
-if ft_voltype(headmodel, 'openmeeg')
+if ft_headmodeltype(headmodel, 'openmeeg')
+  
+  ft_hastoolbox('openmeeg', 1);  % add to path (if not yet on path)
+  
   % repeated system calls to the openmeeg executable makes it rather slow
   % calling it once is much more efficient
   fprintf('calculating leadfield for all positions at once, this may take a while...\n');
-  
+
   if(~isfield(cfg,'openmeeg'))
     cfg.openmeeg = [];
   end
@@ -203,7 +214,7 @@ if ft_voltype(headmodel, 'openmeeg')
   dsm         = ft_getopt(cfg.openmeeg, 'dsm');             % reuse existing DSM if provided
   keepdsm     = ft_getopt(cfg.openmeeg, 'keepdsm', 'no');   % retain DSM
   nonadaptive = ft_getopt(cfg.openmeeg, 'nonadaptive', 'no');
-  
+
   ndip       = length(insideindx);
   numchunks  = ceil(ndip/batchsize);
   if(numchunks > 1)
@@ -212,35 +223,35 @@ if ft_voltype(headmodel, 'openmeeg')
     end
     keepdsm = false;
   end
-  
+
   try
     % DSM computation is computationally intensive:
-    % As it can be reused with same voxel grid (i.e. if voxels are defined in
+    % As it can be reused with same voxel sourcemodel (i.e. if voxels are defined in
     % MRI coordinates rather than MEG coordinates), optionally save result.
     % Dense voxel grids may require several gigabytes of RAM, so optionally
     % split into smaller batches
-    
-    [h2sens,ds2sens] = ft_sensinterp_openmeeg(grid.pos(insideindx,:), headmodel, sens);
-    
+
+    [h2sens,ds2sens] = ft_sensinterp_openmeeg(sourcemodel.pos(insideindx,:), headmodel, sens);
+
     % use pre-existing DSM if present
     if(~isempty(dsm))
       lf = ds2sens + h2sens*headmodel.mat*dsm;
     else
       lf = zeros(size(ds2sens)); % pre-allocate Msensors x Nvoxels
-      
+
       for ii = 1:numchunks
-        % select grid positions for this batch
+        % select sourcemodel positions for this batch
         diprange = (((ii-1)*batchsize + 1):(min((ii)*batchsize,ndip)));
         % remap with 3 orientations per position
         diprangeori = [((ii-1)*3*batchsize + 1):(min((ii)*3*batchsize,3*ndip))];
-        dsm = ft_sysmat_openmeeg(grid.pos(insideindx(diprange),:), headmodel, sens, nonadaptive);
+        dsm = ft_sysmat_openmeeg(sourcemodel.pos(insideindx(diprange),:), headmodel, sens, nonadaptive);
         lf(:,diprangeori) = ds2sens(:,diprangeori) + h2sens*headmodel.mat*dsm;
-        
+
         if istrue(keepdsm)
           % retain DSM in cfg if desired
           cfg.openmeeg.dsm = dsm;
         end
-        
+
         dipindx = insideindx(diprange);
       end
     end
@@ -248,33 +259,33 @@ if ft_voltype(headmodel, 'openmeeg')
     me = lasterror;
     rethrow(me);
   end
-  
+
   % apply montage, if applicable
   if isfield(sens, 'tra')
     lf = sens.tra * lf;
   end
- 
+
   % lead field computation already done, but pass to ft_compute_leadfield so that
   % any post-computation options can be applied (e.g., normalization, etc.)
-  lf = ft_compute_leadfield(grid.pos(diprange,:), sens, headmodel, 'lf', lf, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
-  
-  % reshape result into grid.leadfield cell array
+  lf = ft_compute_leadfield(sourcemodel.pos(diprange,:), sens, headmodel, 'lf', lf, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
+
+  % reshape result into sourcemodel.leadfield cell-array
   for i=1:ndip
-    grid.leadfield{insideindx(i)} = lf(:,3*(i-1) + [1:3]);
+    sourcemodel.leadfield{insideindx(i)} = lf(:,3*(i-1) + [1:3]);
   end
   clear lf
-  
-elseif ft_voltype(headmodel, 'singleshell')
+
+elseif ft_headmodeltype(headmodel, 'singleshell')
   cfg.singleshell = ft_getopt(cfg, 'singleshell', []);
   batchsize       = ft_getopt(cfg.singleshell, 'batchsize', 1);
   if ischar(batchsize) && strcmp(batchsize, 'all')
     batchsize = length(insideindx);
   end
-  
-  dippos     = grid.pos(insideindx,:);
+
+  dippos     = sourcemodel.pos(insideindx,:);
   ndip       = length(insideindx);
   numchunks  = ceil(ndip/batchsize);
-  
+
   ft_progress('init', cfg.feedback, 'computing leadfield');
   for k = 1:numchunks
     ft_progress(k/numchunks, 'computing leadfield %d/%d\n', k, numchunks);
@@ -283,60 +294,60 @@ elseif ft_voltype(headmodel, 'singleshell')
     for i=1:length(diprange)
       thisindx = insideindx(diprange(i));
       if istrue(cfg.backproject)
-        grid.leadfield{thisindx} = tmp(:,(i-1)*3+(1:3));
+        sourcemodel.leadfield{thisindx} = tmp(:,(i-1)*3+(1:3));
       else
-        grid.leadfield{thisindx} = tmp(:,(i-1)*cfg.reducerank+(1:cfg.reducerank));
+        sourcemodel.leadfield{thisindx} = tmp(:,(i-1)*cfg.reducerank+(1:cfg.reducerank));
       end
-      
-      if isfield(cfg, 'grid') && isfield(cfg.grid, 'mom')
+
+      if isfield(cfg, 'sourcemodel') && isfield(cfg.sourcemodel, 'mom')
         % multiply with the normalized dipole moment to get the leadfield in the desired orientation
-        grid.leadfield{thisindx} = grid.leadfield{thisindx} * grid.mom(:,thisindx);
+        sourcemodel.leadfield{thisindx} = sourcemodel.leadfield{thisindx} * sourcemodel.mom(:,thisindx);
       end
     end
   end
   ft_progress('close');
-  
+
 else
   ft_progress('init', cfg.feedback, 'computing leadfield');
   for i=1:length(insideindx)
-    % compute the leadfield on all grid positions inside the brain
+    % compute the leadfield on all sourcemodel positions inside the brain
     ft_progress(i/length(insideindx), 'computing leadfield %d/%d\n', i, length(insideindx));
     thisindx = insideindx(i);
-    grid.leadfield{thisindx} = ft_compute_leadfield(grid.pos(thisindx,:), sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
+    sourcemodel.leadfield{thisindx} = ft_compute_leadfield(sourcemodel.pos(thisindx,:), sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
 
-    if isfield(cfg, 'grid') && isfield(cfg.grid, 'mom')
+    if isfield(cfg, 'sourcemodel') && isfield(cfg.sourcemodel, 'mom')
       % multiply with the normalized dipole moment to get the leadfield in the desired orientation
-      grid.leadfield{thisindx} = grid.leadfield{thisindx} * grid.mom(:,thisindx);
+      sourcemodel.leadfield{thisindx} = sourcemodel.leadfield{thisindx} * sourcemodel.mom(:,thisindx);
     end
-  end % for all grid locations inside the brain
+  end % for all sourcemodel locations inside the brain
   ft_progress('close');
 end
 
 % represent the leadfield for positions outside the brain as empty array
-grid.leadfield(~grid.inside) = {[]};
+sourcemodel.leadfield(~sourcemodel.inside) = {[]};
 
 % add the label of the channels
-grid.label           = sens.label;
-grid.leadfielddimord = '{pos}_chan_ori';
+sourcemodel.label           = sens.label;
+sourcemodel.leadfielddimord = '{pos}_chan_ori';
 
 % mollify the leadfields
 if ~strcmp(cfg.mollify, 'no')
-  grid = mollify(cfg, grid);
+  sourcemodel = mollify(cfg, sourcemodel);
 end
 
 % combine leadfields in patches and do an SVD on them
 if ~strcmp(cfg.patchsvd, 'no')
-  grid = patchsvd(cfg, grid);
+  sourcemodel = patchsvd(cfg, sourcemodel);
 end
 
 % compute the 50 percent channel selection subspace projection
 if ~strcmp(cfg.sel50p, 'no')
-  grid = sel50p(cfg, grid, sens);
+  sourcemodel = sel50p(cfg, sourcemodel, sens);
 end
 
 % compute the local basis function expansion (LBEX) subspace projection
 if ~strcmp(cfg.lbex, 'no')
-  grid = lbex(cfg, grid);
+  sourcemodel = lbex(cfg, sourcemodel);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -345,5 +356,6 @@ end
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous   data
-ft_postamble provenance grid
-ft_postamble history    grid
+ft_postamble provenance sourcemodel
+ft_postamble history    sourcemodel
+ft_postamble savevar    sourcemodel

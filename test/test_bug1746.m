@@ -3,7 +3,7 @@ function test_bug1746
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_sourceanalysis test_bug1746 ft_prepare_leadfield
+% DEPENDENCY ft_sourceanalysis test_bug1746 ft_prepare_leadfield
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/vol/Subject01vol_singleshell.mat'));
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/freq/meg/freq_mtmfft_powandcsd_ctf275'));
@@ -15,7 +15,7 @@ meglabel    = ft_channelselection('MEG', freq.label);
 
 cfg           = [];
 cfg.headmodel = vol;
-cfg.grid      = sourcemodel;
+cfg.sourcemodel      = sourcemodel;
 cfg.channel   = meglabel;
 leadfield1    = ft_prepare_leadfield(cfg, freq);
 assert(isfield(leadfield1, 'label'));
@@ -36,7 +36,7 @@ assert(norm(leadfield1.leadfield{idx}(:)-leadfield2.leadfield{idx}(:))./norm(lea
 cfg = [];
 cfg.method      = 'dics';
 cfg.headmodel   = vol;
-cfg.grid        = leadfield1;
+cfg.sourcemodel        = leadfield1;
 cfg.frequency   = 5;
 cfg.dics.lambda = '10%';
 cfg.channel     = meglabel;

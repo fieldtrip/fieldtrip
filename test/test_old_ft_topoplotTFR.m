@@ -4,7 +4,7 @@ function test_old_ft_topoplotTFR
 % WALLTIME 00:20:00
 
 
-% TEST_FT_TOPOPLOTTFR
+% DEPENDENCY_FT_TOPOPLOTTFR
 % This script tests the ft_topoplotTFR function and should display a figure
 % with the ctf275 layout showing power decreases at the parietal lobes
 

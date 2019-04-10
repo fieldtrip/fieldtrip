@@ -20,6 +20,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %                       (not possible for mean over multiple channels, or when input contains multiple subjects
 %                       or trials)
 %   cfg.maskstyle     = style used for masking of data, 'box', 'thickness' or 'saturation' (default = 'box')
+%   cfg.maskfacealpha = mask transparency value between 0 and 1
 %   cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.ylim          = 'maxmin', 'maxabs', 'zeromax', 'minzero', or [ymin ymax] (default = 'maxmin')
 %   cfg.channel       = nx1 cell-array with selection of channels (default = 'all')
@@ -157,11 +158,12 @@ cfg.fontsize        = ft_getopt(cfg, 'fontsize',       8);
 cfg.graphcolor      = ft_getopt(cfg, 'graphcolor',    'brgkywrgbkywrgbkywrgbkyw');
 cfg.hotkeys         = ft_getopt(cfg, 'hotkeys',       'yes');
 cfg.interactive     = ft_getopt(cfg, 'interactive',   'yes');
-cfg.renderer        = ft_getopt(cfg, 'renderer',       []);
+cfg.renderer        = ft_getopt(cfg, 'renderer',       []); % let MATLAB decide on the default
 cfg.maskparameter   = ft_getopt(cfg, 'maskparameter',  []);
 cfg.linestyle       = ft_getopt(cfg, 'linestyle',     '-');
 cfg.linewidth       = ft_getopt(cfg, 'linewidth',      0.5);
 cfg.maskstyle       = ft_getopt(cfg, 'maskstyle',     'box');
+cfg.maskfacealpha   = ft_getopt(cfg, 'maskfacealpha', 1);
 cfg.channel         = ft_getopt(cfg, 'channel',       'all');
 cfg.title           = ft_getopt(cfg, 'title',          []);
 cfg.directionality  = ft_getopt(cfg, 'directionality', []);
@@ -193,21 +195,14 @@ elseif (length(cfg.linestyle) < Ndata ) && (length(cfg.linestyle) == 1)
 end
 
 % this is needed for the figure title and correct labeling of graphcolor later on
-if nargin>1
-  if isfield(cfg, 'dataname')
-    dataname = cfg.dataname;
-  else
-    dataname = cell(1,Ndata);
-    for i=1:Ndata
-      if ~isempty(inputname(i+1))
-        dataname{i} = inputname(i+1);
-      else
-        dataname{i} = ['data' num2str(i,'%02d')];
-      end
-    end
-  end
-else  % data provided through cfg.inputfile
+if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
+  dataname = cfg.dataname;
+elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
   dataname = cfg.inputfile;
+elseif nargin>1
+  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
+else
+  dataname = {};
 end
 
 %% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
@@ -271,15 +266,16 @@ end
 
 % apply baseline correction
 if ~strcmp(cfg.baseline, 'no')
+  tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'baselinewindow', 'demean', 'parameter', 'channel'});
   for i=1:Ndata
     % keep mask-parameter if it is set
     if ~isempty(cfg.maskparameter)
       tempmask = varargin{i}.(cfg.maskparameter);
     end
     if strcmp(dtype, 'timelock') && strcmp(xparam, 'time')
-      varargin{i} = ft_timelockbaseline(cfg, varargin{i});
+      varargin{i} = ft_timelockbaseline(tmpcfg, varargin{i});
     elseif strcmp(dtype, 'freq') && strcmp(xparam, 'time')
-      varargin{i} = ft_freqbaseline(cfg, varargin{i});
+      varargin{i} = ft_freqbaseline(tmpcfg, varargin{i});
     elseif strcmp(dtype, 'freq') && strcmp(xparam, 'freq')
       ft_error('baseline correction is not supported for spectra without a time dimension');
     else
@@ -435,9 +431,15 @@ yval = mean(datamatrix, 2); % over channels
 yval = reshape(yval, size(yval,1), size(yval,3));
 mask = squeeze(mean(maskmatrix, 1)); % over channels
 
-ft_plot_vector(xval, yval, 'style', cfg.linestyle{i}, 'color', graphcolor, ...
-  'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, ...
-  'hlim', [xmin xmax], 'vlim', [ymin ymax]);
+if strcmp(cfg.maskstyle, 'difference')
+  % combine the conditions in a single plot, highlight the difference
+  ft_plot_vector(xval, yval, 'style', cfg.linestyle{i}, 'color', graphcolor(i), 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
+else
+  % loop over the conditions, plot them on top of each other
+  for i=1:Ndata
+    ft_plot_vector(xval, yval(i,:), 'style', cfg.linestyle{i}, 'color', graphcolor(i), 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
+  end
+end
 
 colorLabels = [];
 if Ndata > 1
@@ -494,27 +496,19 @@ if isempty(get(gcf, 'Name'))
   else
     chans = '<multiple channels>';
   end
-  if isempty(cfg.figurename)
-    if iscell(dataname)
-      set(gcf, 'Name', sprintf('%d: %s: %s (%s)', double(gcf), mfilename, join_str(', ', dataname), chans));
-    else
-      set(gcf, 'Name', sprintf('%d: %s: %s (%s)', double(gcf), mfilename, dataname, chans));
-    end
+  if ~isempty(cfg.figurename)
+    set(gcf, 'name', cfg.figurename);
+    set(gcf, 'NumberTitle', 'off');
+  elseif ~isempty(dataname)
+    set(gcf, 'Name', sprintf('%d: %s: %s (%s)', double(gcf), mfilename, join_str(', ', dataname), chans));
     set(gcf, 'NumberTitle', 'off');
   else
-    set(gcf, 'name', cfg.figurename);
+    set(gcf, 'Name', sprintf('%d: %s (%s)', double(gcf), mfilename, chans));
     set(gcf, 'NumberTitle', 'off');
   end
 end
 
-% set renderer if specified
-if ~isempty(cfg.renderer)
-  set(gcf, 'renderer', cfg.renderer)
-end
-
-hold off
-
-% Make the figure interactive
+% make the figure interactive
 if strcmp(cfg.interactive, 'yes')
   % add the cfg/data/channel information to the figure under identifier linked to this axis
   ident                  = ['axh' num2str(round(sum(clock.*1e6)))]; % unique identifier for this axis
@@ -529,22 +523,24 @@ if strcmp(cfg.interactive, 'yes')
   set(gcf, 'windowbuttonmotionfcn', {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttonmotionfcn'});
 end
 
-% add a menu to the figure, but only if the current figure does not have subplots
-% also, delete any possibly existing previous menu, this is safe because delete([]) does nothing
-delete(findobj(gcf, 'type', 'uimenu', 'label', 'FieldTrip'));
-if numel(findobj(gcf, 'type', 'axes', '-not', 'tag', 'ft-colorbar')) <= 1
-  ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
-  uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
-  uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
+% set renderer if specified
+if ~isempty(cfg.renderer)
+  set(gcf, 'renderer', cfg.renderer)
 end
+
+hold off
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous varargin
 ft_postamble provenance
+ft_postamble savefig
 
-if ~nargout
+% add a menu to the figure, but only if the current figure does not have subplots
+menu_fieldtrip(gcf, cfg, false);
+
+if ~ft_nargout
   % don't return anything
   clear cfg
 end

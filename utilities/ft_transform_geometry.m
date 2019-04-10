@@ -13,12 +13,11 @@ function [output] = ft_transform_geometry(transform, input)
 %
 % Use as
 %   output = ft_transform_geometry(transform, input)
-% where transform should be a 4x4 homogenous transformation matrix and the input data
-% structure can be any of the FieldTrip data structures that describes geometrical
-% data.
+% where the transform should be a 4x4 homogenous transformation matrix and the
+% input data structure can be any of the FieldTrip data structures that
+% describes geometrical data.
 %
-% See also FT_WARP_APPLY, FT_HEADCOORDINATES, FT_TRANSFORM_SENS, FT_TRANSFORM_HEADSHAPE,
-% FT_TRANSFORM_VOL
+% See also FT_WARP_APPLY, FT_HEADCOORDINATES, FT_SCALINGFACTOR
 
 % Copyright (C) 2011, Jan-Mathijs Schoffelen
 %

@@ -285,3 +285,5 @@ cfg.artfctdef.threshold.artifact = artifact;        % detected artifacts
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
 ft_postamble previous data
+ft_postamble savevar
+

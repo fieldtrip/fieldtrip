@@ -3,7 +3,7 @@ function test_bug1416
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_setopt
+% DEPENDENCY ft_setopt
 
 opt = {'opt1' 1 'opt2' 2};
 

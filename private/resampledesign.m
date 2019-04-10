@@ -33,7 +33,7 @@ function [resample] = resampledesign(cfg, design)
 % cells, where the multiple observations in a groups should not be broken
 % apart. This for example applies to multiple tapers in a spectral estimate
 % of a single trial of data (the "rpttap" dimension), where different
-% tapers should not be shuffled seperately. Another example is a blocked
+% tapers should not be shuffled separately. Another example is a blocked
 % fMRI design, with a different condition in each block and multiple
 % repetitions of the same condition within a block. Assuming that there is
 % a slow HRF that convolutes the trials within a block, you can shuffle the

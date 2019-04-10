@@ -1,15 +1,38 @@
 function dimord = getdimord(data, field, varargin)
 
-% GETDIMORD
+% GETDIMORD determine the dimensions and order of a data field in a FieldTrip
+% structure.
 %
 % Use as
 %   dimord = getdimord(data, field)
 %
-% See also GETDIMSIZ, GETDATFIELD
+% See also GETDIMSIZ, GETDATFIELD, FIXDIMORD
 
+% Copyright (C) 2014-2019, Robert Oostenveld
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Please note that this function is called from many other FT functions. To avoid
 % unwanted recursion, you should avoid (where possible) calling other FT functions
 % inside this one.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ~isfield(data, field) && isfield(data, 'avg') && isfield(data.avg, field)
   field = ['avg.' field];
@@ -221,6 +244,21 @@ switch field
       dimord = 'pos_unknown';
     end
     
+  case {'tri'}
+    if datsiz(2)==3
+      dimord = 'tri_unknown';
+    end
+    
+  case {'tet'}
+    if datsiz(2)==4
+      dimord = 'tet_unknown';
+    end
+    
+  case {'hex'}
+    if datsiz(2)==8
+      dimord = 'hex_unknown';
+    end
+    
   case {'individual'}
     if isequalwithoutnans(datsiz, [nsubj nchan ntime])
       dimord = 'subj_chan_time';
@@ -324,7 +362,7 @@ switch field
       dimord = 'pos_freq_time';
     end
     
-  case {'pow' 'noise' 'rv'}
+  case {'pow' 'noise' 'rv' 'nai'}
     if isequal(datsiz, [npos ntime])
       dimord = 'pos_time';
     elseif isequal(datsiz, [npos nfreq])
@@ -471,6 +509,11 @@ switch field
       dimord = 'freq';
     end
     
+  case {'chantype', 'chanunit'}
+    if numel(data.(field))==nchan
+      dimord = 'chan';
+    end
+    
   otherwise
     if isfield(data, 'dim') && isequal(datsiz, data.dim)
       dimord = 'dim1_dim2_dim3';
@@ -558,8 +601,12 @@ if ~exist('dimord', 'var')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   if isequal(datsiz, [ndim1 ndim2 ndim3])
     dimord = 'dim1_dim2_dim3';
+  elseif isfield(data, 'pos') && prod(datsiz)==size(data.pos, 1)
+    dimord = 'dim1_dim2_dim3';
   end
 end % if dimord does not exist
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FINAL RESORT: return "unknown" for all unknown dimensions
@@ -569,7 +616,7 @@ if ~exist('dimord', 'var')
   % if it does, it might help in diagnosis to have a very informative warning message
   % since there have been problems with trials not being selected correctly due to the warning going unnoticed
   % it is better to throw an error than a warning
-  warning_dimord_could_not_be_determined(field,data);
+  warning_dimord_could_not_be_determined(field, data);
   
   dimtok(cellfun(@isempty, dimtok)) = {'unknown'};
   if all(~cellfun(@isempty, dimtok))

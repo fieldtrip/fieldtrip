@@ -117,7 +117,7 @@ for k = 1:numel(block)
   end
   [dum, i2]    = match_str(b_label{k}, z_label{indx});
   cmbindx{k} = reshape(z_block{indx}(i2,i2),[],1);
-  n{k}       = b_n{k};%(i2);
+  n{k}       = b_n{k}; %(i2);
 end
 
 blocklabel = []; % don't know why this is needed, keep for now.

@@ -3,9 +3,9 @@ function test_bug2221
 % MEM 500mb
 % WALLTIME 00:15:00
 
-% TEST ft_selectdata
-% TEST ft_selectdata_new
-% TEST ft_multiplotER
+% DEPENDENCY ft_selectdata
+% DEPENDENCY ft_selectdata_new
+% DEPENDENCY ft_multiplotER
 
 
 % this test function intends to test the functionality of:

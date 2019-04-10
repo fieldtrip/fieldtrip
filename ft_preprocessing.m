@@ -425,12 +425,12 @@ else
     cfg.trl = trl;
   end
   
-  % this should be a cell array
+  % this should be a cell-array
   if ~iscell(cfg.channel) && ischar(cfg.channel)
     cfg.channel = {cfg.channel};
   end
   
-  % this should be a cell array
+  % this should be a cell-array
   if ~iscell(cfg.refchannel) && ischar(cfg.refchannel)
     cfg.refchannel = {cfg.refchannel};
   end
@@ -556,7 +556,7 @@ else
             ft_error('unsupported requested direction of padding');
         end
         
-        if strcmp(cfg.padtype, 'data');
+        if strcmp(cfg.padtype, 'data')
           begsample  = cfg.trl(i,1) - begpadding;
           endsample  = cfg.trl(i,2) + endpadding;
         else

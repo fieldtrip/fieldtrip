@@ -1,6 +1,6 @@
 function test_bug2563
 
-% TEST ft_selectdata getdimord
+% DEPENDENCY ft_selectdata getdimord
 
 % WALLTIME 00:10:00
 % MEM 1gb

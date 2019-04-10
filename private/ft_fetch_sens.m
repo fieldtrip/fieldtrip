@@ -1,6 +1,6 @@
 function [sens] = ft_fetch_sens(cfg, data)
 
-% FT_FETCH_SENS mimics the behaviour of FT_READ_SENS, but for a FieldTrip
+% FT_FETCH_SENS mimics the behavior of FT_READ_SENS, but for a FieldTrip
 % data structure or a FieldTrip configuration instead of a file on disk.
 %
 % Use as
@@ -9,26 +9,22 @@ function [sens] = ft_fetch_sens(cfg, data)
 %   [sens] = ft_fetch_sens(cfg, data)
 %
 % The sensor configuration can be passed into this function in four ways:
-%
-%  (1) in a configuration field,
-%  (2) in a file whose name is passed in a configuration field, see FT_READ_SENS,
-%  (3) in a layout file, see FT_PREPARE_LAYOUT, or
+%  (1) in a configuration field
+%  (2) in a file whose name is passed in a configuration field, see FT_READ_SENS
+%  (3) in a layout file, see FT_PREPARE_LAYOUT
 %  (4) in a data field
 %
 % The following fields are used from the configuration:
-%   cfg.gradfile      = sensor definition file to be read for MEG data
-%   cfg.elecfile      = sensor definition file to be read for EEG data
-%   cfg.optofile      = sensor definition file to be read for NIRS data
-%   cfg.grad          = sensor definition from MEG data
-%   cfg.elec          = sensor definition from EEG data
-%   cfg.opto          = sensor definition from NIRS data
-%   cfg.layout        = layout definition or file name, see FT_PREPARE_LAYOUT
-%   cfg.senstype      = string, can be 'meg', 'eeg', or 'nirs', this is used to choose in combined data (default = 'eeg')
+%   cfg.elec     = structure with electrode positions or filename, see FT_READ_SENS
+%   cfg.grad     = structure with gradiometer definition or filename, see FT_READ_SENS
+%   cfg.opto     = structure with optode definition or filename, see FT_READ_SENS
+%   cfg.layout   = structure with layout definition or filename, see FT_PREPARE_LAYOUT
+%   cfg.senstype = string, can be 'meg', 'eeg', or 'nirs', this is used to choose in combined data (default = 'eeg')
 %
-% When not specified in the configuration, this function will fetch the grad, elec or
-% opto field from the data.
+% When the sensors are not specified in the configuration, this function will
+% fetch the grad, elec or opto field from the data.
 %
-% See also FT_READ_SENS, FT_PREPARE_LAYOUT, FT_FETCH_DATA
+% See also FT_READ_SENS, FT_DATATYPE_SENS, FT_FETCH_DATA, FT_PREPARE_LAYOUT
 
 % Copyright (C) 2011-2016, Jorn M. Horschig
 %
@@ -41,7 +37,7 @@ function [sens] = ft_fetch_sens(cfg, data)
 %    (at your option) any later version.
 %
 %    FieldTrip is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    but WITHOUT ANY WARRANTY; without evft_neighbourploten the implied warranty of
 %    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 %    GNU General Public License for more details.
 %
@@ -56,24 +52,27 @@ else
   data = struct; % initialize as empty struct
 end
 
-cfg = ft_checkconfig(cfg);
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'renamed', {'elecfile', 'elec'});
+cfg = ft_checkconfig(cfg, 'renamed', {'gradfile', 'grad'});
+cfg = ft_checkconfig(cfg, 'renamed', {'optofile', 'opto'});
 
 % set the defaults
 cfg.senstype = ft_getopt(cfg, 'senstype');
 
 % meg booleans
-hasgradfile = isfield(cfg, 'gradfile');
-hascfggrad  = isfield(cfg, 'grad');
+hasgradfile = isfield(cfg, 'grad') && ischar(cfg.grad);
+hascfggrad  = isfield(cfg, 'grad') && isstruct(cfg.grad);
 hasdatagrad = isfield(data, 'grad');
 
 % eeg booleans
-haselecfile = isfield(cfg, 'elecfile');
-hascfgelec  = isfield(cfg, 'elec');
+haselecfile = isfield(cfg, 'elec') && ischar(cfg.elec);
+hascfgelec  = isfield(cfg, 'elec') && isstruct(cfg.elec);
 hasdataelec = isfield(data, 'elec');
 
 % nirs booleans
-hasoptofile = isfield(cfg, 'optofile');
-hascfgopto  = isfield(cfg, 'opto');
+hasoptofile = isfield(cfg, 'opto') && ischar(cfg.opto);
+hascfgopto  = isfield(cfg, 'opto') && isstruct(cfg.opto);
 hasdataopto = isfield(data, 'opto');
 
 % other
@@ -82,8 +81,8 @@ iscfgsens   = isfield(cfg, 'pnt')  || isfield(cfg, 'chanpos');
 isdatasens  = isfield(data, 'pnt') || isfield(data, 'chanpos');
 
 if isempty(cfg.senstype) && ((hasgradfile || hascfggrad || hasdatagrad) + (haselecfile || hascfgelec || hasdataelec) + (hasoptofile || hascfgopto || hasdataopto))>1
-  ft_error('Cannot determine which sensor information you need. Specify cfg.senstype as ''meg'', ''eeg'' or ''nirs''');
-  
+  ft_error('Cannot determine which sensors you want to work on. Specify cfg.senstype as ''meg'', ''eeg'' or ''nirs''');
+
 elseif ~isempty(cfg.senstype)
   if iscell(cfg.senstype)
     % this represents combined EEG and MEG sensors, where each modality has its own sensor definition
@@ -95,7 +94,7 @@ elseif ~isempty(cfg.senstype)
       sens{i} = ft_fetch_sens(tmpcfg, data);
     end
     return
-    
+
   else
     switch lower(cfg.senstype)
       case 'meg'
@@ -136,18 +135,18 @@ else
 end
 
 if hasgradfile
-  display('reading gradiometers from file ''%s''\n', cfg.gradfile);
-  sens = ft_read_sens(cfg.gradfile);
+  display('reading gradiometers from file ''%s''\n', cfg.grad);
+  sens = ft_read_sens(cfg.grad, 'senstype', 'meg');
 elseif hascfggrad
   display('using gradiometers specified in the configuration\n');
   sens = cfg.grad;
 elseif hasdatagrad
   display('using gradiometers specified in the data\n');
   sens = data.grad;
-  
+
 elseif haselecfile
-  display('reading electrodes from file ''%s''\n', cfg.elecfile);
-  sens = ft_read_sens(cfg.elecfile);
+  display('reading electrodes from file ''%s''\n', cfg.elec);
+  sens = ft_read_sens(cfg.elec, 'senstype', 'eeg');
   % only keep positions and labels in case of EEG electrodes
   sens = keepfields(sens, {'elecpos', 'chanpos', 'unit', 'coordsys', 'label','tra'});
 elseif hascfgelec
@@ -160,10 +159,10 @@ elseif hasdataelec
   sens = data.elec;
   % only keep positions and labels in case of EEG electrodes
   sens = keepfields(sens, {'elecpos', 'chanpos', 'unit', 'coordsys', 'label','tra'});
-  
+
 elseif hasoptofile
-  display('reading optodes from file ''%s''\n', cfg.optofile);
-  sens = ft_read_sens(cfg.optofile);
+  display('reading optodes from file ''%s''\n', cfg.opto);
+  sens = ft_read_sens(cfg.opto, 'senstype', 'nirs');
   % only keep known fields in case of NIRS optodes
   sens = keepfields(sens, {'optopos', 'optotype', 'chanpos', 'unit', 'coordsys', 'label', 'transceiver', 'wavelength', 'transmits', 'laserstrength'});
 elseif hascfgopto
@@ -176,29 +175,29 @@ elseif hasdataopto
   sens = data.opto;
   % only keep known fields in case of NIRS optodes
   sens = keepfields(sens, {'optopos', 'optotype', 'chanpos', 'unit', 'coordsys', 'label', 'transceiver', 'wavelength', 'transmits', 'laserstrength'});
-  
+
 elseif haslayout
   display('Using the 2-D layout to determine the sensor position\n');
   lay = ft_prepare_layout(cfg);
-  
+
   % remove the COMNT and SCALE labels
   sel = ~ismember(lay.label, {'COMNT' 'SCALE'});
-  
+
   sens = [];
   sens.label = lay.label(sel);
   sens.chanpos = lay.pos(sel,:);
   sens.chanpos(:,3) = 0;
-  
+
 elseif iscfgsens
   % could be a sensor description
   display('The configuration input might already be a sensor description.\n');
   sens = cfg;
-  
+
 elseif isdatasens
   % could be a sensor description
   display('The data input might already be a sensor description.\n');
   sens = data;
-  
+
 else
   ft_error('no electrodes, gradiometers or optodes specified.');
 end

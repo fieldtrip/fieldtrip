@@ -24,6 +24,7 @@ function ft_defaults
 %   ft_default.toolbox.signal    = string, can be 'compat' or 'matlab' (default = 'compat')
 %   ft_default.toolbox.stats     = string, can be 'compat' or 'matlab' (default = 'compat')
 %   ft_default.toolbox.images    = string, can be 'compat' or 'matlab' (default = 'compat')
+%   ft_default.reproducescript   = string, directory to which the script and intermediate data are written (default = [])
 %
 % If you want to overrule these default settings, you can add something like this in your startup.m script
 %   ft_defaults
@@ -147,13 +148,13 @@ if isempty(regexp(path, [ftPath pathsep '|' ftPath '$'], 'once'))
 end
 
 if ~isdeployed
-  
-  if isempty(which('ft_hastoolbox')) || isempty(which('ft_platform_supports'))
+
+  if isempty(which('ft_test')) || isempty(which('ft_notice'))
     % the fieldtrip/utilities directory contains the ft_hastoolbox and ft_warning
     % functions, which are required for the remainder of this script
     addpath(fullfile(fileparts(which('ft_defaults')), 'utilities'));
   end
-  
+
   % Some people mess up their path settings and then have different versions of certain toolboxes on the path.
   % The following will issue a warning
   checkMultipleToolbox('FieldTrip',           'ft_defaults.m');
@@ -184,33 +185,33 @@ if ~isdeployed
   checkMultipleToolbox('yokogawa_meg_reader', 'getYkgwHdrEvent.p');
   checkMultipleToolbox('biosig',              'sopen.m');
   checkMultipleToolbox('icasso',              'icassoEst.m');
-  
+
   try
     % external/signal contains alternative implementations of some signal processing functions
     if ~ft_platform_supports('signal') || ~strcmp(ft_default.toolbox.signal, 'matlab') || ~ft_hastoolbox('signal')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
     end
   end
-  
+
   try
     % external/stats contains alternative implementations of some statistics functions
     if ~ft_platform_supports('stats') || ~strcmp(ft_default.toolbox.stats, 'matlab') || ~ft_hastoolbox('stats')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
     end
   end
-  
+
   try
     % external/images contains alternative implementations of some image processing functions
     if ~ft_platform_supports('images') || ~strcmp(ft_default.toolbox.images, 'matlab') || ~ft_hastoolbox('images')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'images'));
     end
   end
-  
+
   try
     % this directory contains various functions that were obtained from elsewere, e.g. MATLAB file exchange
     ft_hastoolbox('fileexchange', 3, 1); % not required
   end
-  
+
   try
     % these directories deal with compatibility with older MATLAB versions
     if ft_platform_supports('matlabversion', -inf, '2008a'), ft_hastoolbox('compat/matlablt2008b', 3, 1); end
@@ -242,7 +243,7 @@ if ~isdeployed
     % this deals with compatibility with all OCTAVE versions
     if ft_platform_supports('octaveversion', -inf, +inf),    ft_hastoolbox('compat/octave', 3, 1); end
   end
-  
+
   try
     % these contains template layouts, neighbour structures, MRIs and cortical meshes
     ft_hastoolbox('template/layout',      1, 1);
@@ -252,62 +253,67 @@ if ~isdeployed
     ft_hastoolbox('template/neighbours',  1, 1);
     ft_hastoolbox('template/sourcemodel', 1, 1);
   end
-  
+
   try
     % this is used in ft_statistics
     ft_hastoolbox('statfun', 1, 1);
   end
-  
+
   try
     % this is used in ft_definetrial
     ft_hastoolbox('trialfun', 1, 1);
   end
-  
+
   try
     % this contains the low-level reading functions
     ft_hastoolbox('fileio', 1, 1);
   end
-  
+
   try
     % this is for filtering etc. on time-series data
     ft_hastoolbox('preproc', 1, 1);
   end
-  
+
   try
     % this contains forward models for the EEG and MEG volume conductor
     ft_hastoolbox('forward', 1, 1);
   end
-  
+
   try
     % this contains inverse source estimation methods
     ft_hastoolbox('inverse', 1, 1);
   end
-  
+
   try
     % this contains intermediate-level plotting functions, e.g. multiplots and 3-d objects
     ft_hastoolbox('plotting', 1, 1);
   end
-  
+
   try
     % this contains intermediate-level functions for spectral analysis
     ft_hastoolbox('specest', 1, 1);
   end
-  
+
   try
     % this contains the functions to compute connectivity metrics
     ft_hastoolbox('connectivity', 1, 1);
   end
-  
+
+  try
+    % this contains test scripts
+    ft_hastoolbox('test', 1, 1);
+  end
+
   try
     % this contains the functions for spike and spike-field analysis
-    ft_hastoolbox('spike', 1, 1);
+    ft_hastoolbox('contrib/spike', 1, 1);
   end
-  
+
   try
     % this contains user contributed functions
     ft_hastoolbox('contrib/misc', 1, 1);
   end
-  
+
   try
     % this contains specific code and examples for realtime processing
     ft_hastoolbox('realtime/example', 3, 1);    % not required
@@ -315,7 +321,7 @@ if ~isdeployed
     ft_hastoolbox('realtime/online_meg', 3, 1); % not required
     ft_hastoolbox('realtime/online_eeg', 3, 1); % not required
   end
-  
+
 end
 
 % the toolboxes added by this function should not be removed by FT_POSTAMBLE_HASTOOLBOX
@@ -353,7 +359,7 @@ if length(list)>1
       ft_warning('one version of %s is found here: %s', toolbox, list{i});
     end
   end
-  ft_warning('You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behaviour. See http://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');
+  ft_warning('You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behavior. See http://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');
 end
 end % function checkMultipleToolbox
 
@@ -364,6 +370,6 @@ function checkIncorrectPath
 p = fileparts(mfilename('fullpath'));
 incorrect = fullfile(p, 'compat', 'incorrect');
 if ~isempty(strfind(path, incorrect))
-  ft_warning('Your path is set up incorrectly. You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behaviour. See http://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');
+  ft_warning('Your path is set up incorrectly. You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behavior. See http://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');
 end
 end % function checkIncorrectPath

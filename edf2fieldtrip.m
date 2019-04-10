@@ -6,7 +6,7 @@ function data = edf2fieldtrip(filename)
 % output of FT_PREPROCESSING.
 %
 % Use as
-%   data = edf2fieldtrip(filename);
+%   data = edf2fieldtrip(filename)
 %
 % For reading EDF files in which all channels have the same sampling rate, you can
 % use the standard procedure with FT_DEFINETRIAL and FT_PREPROCESSING.
@@ -41,14 +41,14 @@ data = cell(size(samplerate));
 for i=1:numel(samplerate)
   chanindx = find(hdr.orig.SampleRate==samplerate(i));
   fprintf('reading %d channels with %g Hz sampling rate\n', numel(chanindx), samplerate(i));
-  
+
   % read the header and data for the selected channels
   hdr = ft_read_header(filename, 'chanindx', chanindx);
   dat = ft_read_data(filename, 'header', hdr);
-  
+
   % construct a time axis, starting at 0 seconds
   time = ((1:(hdr.nTrials*hdr.nSamples)) - 1)./hdr.Fs;
-  
+
   % make a raw data structure
   data{i}.hdr   = hdr;
   data{i}.label = hdr.label;
@@ -64,7 +64,7 @@ for i=1:numel(samplerate)
     continue
   end
   fprintf('upsampling %d channels from %g to %g Hz\n', numel(data{i}.label), samplerate(i), maxrate);
-  
+
   cfg = [];
   cfg.time = data{maxindex}.time;
   data{i} = ft_resampledata(cfg, data{i});
@@ -88,5 +88,3 @@ if isfield(data, 'hdr')
   % remove this, as otherwise it might be very confusing with the subselections
   data = rmfield(data, 'hdr');
 end
-
-

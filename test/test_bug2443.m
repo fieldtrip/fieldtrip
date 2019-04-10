@@ -3,7 +3,7 @@ function test_bug2443
 % WALLTIME 00:20:00
 % MEM 4gb
 
-% TEST ft_multiplotER
+% DEPENDENCY ft_multiplotER
 
 % get some data
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_neuromag306.mat');

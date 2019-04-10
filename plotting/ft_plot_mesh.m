@@ -30,13 +30,19 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 % If you don't want the faces, edges or vertices to be plotted, you should specify the color as 'none'.
 %
 % Example
-%   [pos, tri] = icosahedron162;
+%   [pos, tri] = mesh_sphere(162);
 %   mesh.pos = pos;
 %   mesh.tri = tri;
 %   ft_plot_mesh(mesh, 'facecolor', 'skin', 'edgecolor', 'none')
 %   camlight
 %
-% See also FT_PLOT_HEADSHAPE, FT_PLOT_VOL, TRIMESH, PATCH
+% You can plot an additional contour around specified areas using
+%   'contour'           = inside of contour per vertex, either 0 or 1
+%   'contourcolor'      = string, color specification
+%   'contourlinestyle'  = string, line specification 
+%   'contourlinewidth'  = number
+%
+% See also FT_PLOT_HEADSHAPE, FT_PLOT_HEADMODEL, TRIMESH, PATCH
 
 % Copyright (C) 2009, Cristiano Micheli
 % Copyright (C) 2009-2015, Robert Oostenveld
@@ -101,6 +107,12 @@ alphalim     = ft_getopt(varargin, 'alphalim');
 alphamapping = ft_getopt(varargin, 'alphamap', 'rampup');
 cmap         = ft_getopt(varargin, 'colormap');
 maskstyle    = ft_getopt(varargin, 'maskstyle', 'opacity');
+contour      = ft_getopt(varargin, 'contour', false);
+
+contourcolor      = ft_getopt(varargin, 'contourcolor', 'k');
+contourlinewidth  = ft_getopt(varargin, 'contourlinewidth', 3);
+contourlinestyle  = ft_getopt(varargin, 'contourlinestyle');
+
 
 haspos   = isfield(mesh, 'pos');  % vertices
 hastri   = isfield(mesh, 'tri');  % triangles   as a Mx3 matrix with vertex indices
@@ -316,6 +328,27 @@ switch maskstyle
     rgb     = bg_rgba2rgb(bgcolor, vertexcolor, cmap, clim, facealpha, alphamapping, alphalim);
     set(hs, 'FaceVertexCData', rgb, 'facecolor', 'interp');
     if ~isempty(clim); caxis(clim); end % set colorbar scale to match [fcolmin fcolmax]
+end
+
+if numel(contour)>1 && any(contour)
+    cfg                 = [];
+    cfg.connectivity    = triangle2connectivity(tri);
+    neighcmb            = full(ft_getopt(cfg, 'connectivity', false));
+    
+    posclusobs = findcluster(contour,neighcmb,0); %minnbchan=0
+    
+    for cl = 1:max(posclusobs)
+        idxcl = find(posclusobs==cl);
+        [xbnd, ybnd, zbnd] = extract_contour(pos,tri,idxcl,contour);
+        
+        % draw each individual line segment of the intersection
+        for i = 1:length(xbnd)
+            p(i) = patch(xbnd(i,:)', ybnd(i,:)', zbnd(i,:)',NaN);
+        end
+        if ~isempty(contourcolor),     set(p(:), 'EdgeColor', contourcolor); end
+        if ~isempty(contourlinewidth), set(p(:), 'LineWidth', contourlinewidth); end
+        if ~isempty(contourlinestyle), set(p(:), 'LineStyle', contourlinestyle); end
+    end
 end
 
 if faceindex

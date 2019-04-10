@@ -102,7 +102,7 @@ data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'h
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'forbidden',  {'normalizecov', 'normalizevar'});
-cfg = ft_checkconfig(cfg, 'forbidden',  {'latency', 'blcovariance', 'blcovariancewindow'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'blcovariance', 'blcovariancewindow'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'blcwindow', 'baselinewindow'});
 
@@ -198,7 +198,9 @@ data   = ft_selectdata(tmpcfg, data);
 
 % convert to a timelock structure with trials kept and NaNs for missing
 % data points, when there's only a single trial in the input data
-% structure, this leads to an 'avg' field, rather than a 'trial' field
+% structure, this leads to an 'avg' field, rather than a 'trial' field,
+% and also the trialinfo is removed, so keep separate before conversion
+if isfield(data, 'trialinfo'), trialinfo = data.trialinfo; end
 data = ft_checkdata(data, 'datatype', {'timelock+comp' 'timelock'});
 
 if ~keeptrials && isfield(data, 'trial')
@@ -215,16 +217,14 @@ elseif keeptrials && isfield(data, 'trial')
 elseif keeptrials && ~isfield(data, 'trial')
   % don't know whether this is a use case
   data.trial = shiftdim(data.avg, -1);
+  if exist('trialinfo', 'var')
+    data.trialinfo = trialinfo;
+  end
 end  
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % collect the results
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-
-
 
 timelock = keepfields(data, {'time' 'grad', 'elec', 'opto', 'topo', 'topodimord', 'topolabel', 'unmixing', 'unmixingdimord', 'label'});
 if ~keeptrials

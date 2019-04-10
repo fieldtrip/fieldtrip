@@ -117,6 +117,26 @@ else
   ft_abort = false;
 end % if chiL7fee_outputfile{i}
 
+if isfield(cfg, 'reproducescript') && ~isempty(cfg.reproducescript)
+  % the reproducescript code should only be executed in a top-level FT function
+  st = dbstack(2, '-completenames');
+  [ft_ver, ft_path] = ft_version;
+  if numel(st)>1 && startsWith(st(2).file, ft_path)
+    % we are in a FT function that was called by another FT function
+    cfg = rmfield(cfg, 'reproducescript');
+  else
+    % we are in a top-level FT function
+    if ~isfolder(cfg.reproducescript)
+      mkdir(cfg.reproducescript);
+    end
+    % this variable is used in loadvar, savevar and savefig
+    Fief7bee_reproducescript = cfg.reproducescript;
+    cfg = rmfield(cfg, 'reproducescript');
+    % pause one second to ensure that subsequent file names (which contain the time stamp) are unique
+    pause(1);
+  end
+end
+
 if false
   % this is currently generating too much data and therefore disabled
   if isfield(cfg, 'trackusage') && ~(isequal(cfg.trackusage, false) || isequal(cfg.trackusage, 'no') || isequal(cfg.trackusage, 'off'))

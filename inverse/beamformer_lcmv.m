@@ -22,6 +22,8 @@ function [dipout] = beamformer_lcmv(dip, grad, headmodel, dat, Cy, varargin)
 %
 % Additional options should be specified in key-value pairs and can be
 %  'lambda'           = regularisation parameter
+%  'kappa'            = parameter for covariance matrix inversion
+%  'tol'              = parameter for covariance matrix inversion
 %  'powmethod'        = can be 'trace' or 'lambda1'
 %  'feedback'         = give ft_progress indication, can be 'text', 'gui' or 'none' (default)
 %  'fixedori'         = use fixed or free orientation,                   can be 'yes' or 'no'
@@ -82,6 +84,9 @@ keepleadfield  = ft_getopt(varargin, 'keepleadfield', 'no');
 keepcov        = ft_getopt(varargin, 'keepcov', 'no');
 keepmom        = ft_getopt(varargin, 'keepmom', 'yes');
 lambda         = ft_getopt(varargin, 'lambda', 0);
+kappa          = ft_getopt(varargin, 'kappa',  []);
+tol            = ft_getopt(varargin, 'tol',    []);
+invmethod      = ft_getopt(varargin, 'invmethod',    []);
 projectnoise   = ft_getopt(varargin, 'projectnoise', 'yes');
 projectmom     = ft_getopt(varargin, 'projectmom', 'no');
 fixedori       = ft_getopt(varargin, 'fixedori', 'no');
@@ -115,7 +120,7 @@ end
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfield(dip, 'inside')
-  dip.inside = ft_inside_vol(dip.pos, headmodel);
+  dip.inside = ft_inside_headmodel(dip.pos, headmodel);
 end
 
 if any(dip.inside>1)
@@ -156,11 +161,11 @@ rankCy = rank(Cy);
 if ~isempty(lambda) && ischar(lambda) && lambda(end)=='%'
   ratio = sscanf(lambda, '%f%%');
   ratio = ratio/100;
-  if ~isempty(subspace) && numel(subspace)>1,
-    lambda = ratio * trace(subspace*Cy*subspace')/size(subspace,1);
-  else
-    lambda = ratio * trace(Cy)/size(Cy,1);
-  end
+  tmplambda = ratio * trace(Cy)/size(Cy,1);
+elseif ~isempty(lambda)
+  tmplambda = lambda;
+else
+  tmplambda = 0;
 end
 
 if projectnoise
@@ -168,7 +173,7 @@ if projectnoise
     noise = svd(Cy);
     noise = noise(rankCy);
     % estimated noise floor is equal to or higher than lambda
-    noise = max(noise, lambda);
+    noise = max(noise, tmplambda);
 end
 
 % the inverse only has to be computed once for all dipoles
@@ -201,11 +206,11 @@ elseif ~isempty(subspace)
     Cy    = subspace*Cy*subspace'; 
     % here the subspace can be different from the singular vectors of Cy, so we
     % have to do the sandwiching as opposed to line 216
-    invCy = pinv(Cy + lambda * eye(size(Cy)));
+    invCy = ft_inv(Cy, 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
     dat   = subspace*dat;
   end
 else
-  invCy = pinv(Cy + lambda * eye(size(Cy)));
+  invCy = ft_inv(Cy, 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
 end
 
 % compute the square of invCy, which might be needed
@@ -238,7 +243,7 @@ for i=1:size(dip.pos,1)
     % the data and the covariance become voxel dependent due to the projection
     dat   =      dip.subspace{i} * dat_pre_subspace;
     Cy    =      dip.subspace{i} *  Cy_pre_subspace * dip.subspace{i}';
-    invCy = pinv(dip.subspace{i} * (Cy_pre_subspace + lambda * eye(size(Cy_pre_subspace))) * dip.subspace{i}');
+    invCy = ft_inv(dip.subspace{i} * Cy_pre_subspace * dip.subspace{i}', 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
   elseif ~isempty(subspace)
     % do subspace projection of the forward model only
     lforig = lf;

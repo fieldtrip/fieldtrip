@@ -3,31 +3,31 @@ function test_bug937
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_prepare_mesh ft_voltype ft_plot_mesh
+% DEPENDENCY ft_prepare_mesh ft_headmodeltype ft_plot_mesh
 
 
 csvol.o = [0,0,0];
 csvol.r = [10 50 60];
-assert(ft_voltype(csvol,'concentricspheres'))
+assert(ft_headmodeltype(csvol,'concentricspheres'))
 
 ssvol.o = [0,0,0];
 ssvol.r = [60];
-assert(ft_voltype(ssvol,'singlesphere'))
+assert(ft_headmodeltype(ssvol,'singlesphere'))
 
-[pnt, tri] = icosahedron162;
+[pnt, tri] = mesh_sphere(162);
 svol.bnd(1).pnt = 10*pnt;
 svol.bnd(1).tri = tri;
 svol.bnd(2).pnt = 50*pnt;
 svol.bnd(2).tri = tri;
 svol.bnd(3).pnt = 60*pnt;
 svol.bnd(3).tri = tri;
-assert(ft_voltype(svol,'unknown'))
+assert(ft_headmodeltype(svol,'unknown'))
 
 tcfg=[];
 tcfg.headshape=svol.bnd;
 tcfg.method = 'concentricspheres'
 svolcs = ft_prepare_headmodel(tcfg);
-assert(ft_voltype(svolcs,'concentricspheres'))
+assert(ft_headmodeltype(svolcs,'concentricspheres'))
 
 
 % To generate a volume of 3 concentric spheres (works if number of voxels is odd)

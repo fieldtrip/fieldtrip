@@ -5,24 +5,27 @@ function fieldtrip2besa(filename, data, varargin)
 % BESA.
 %
 % Use as
-%   fieldtrip2besa(filename, elec)
-% to export single trial data as a set of ascii-vectorized files (.avr)
+%   fieldtrip2besa(filename, data)
+% with data as obtained from FT_PREPROCESSING to export single trial data as a
+% set of .avr files.
 %
 % Use as
 %   fieldtrip2besa(filename, elec)
 % or
 %   fieldtrip2besa(filename, grad)
-% to export channel positions (.elp).
+% with an electrode structure as obtained from FT_READ_SENS to export channel
+% positions to an .elp file.
 %
 % Additional key-value pairs can be specified according to
-%   channel   = cell-array, can be used to make subset and to reorder the channels
+%   channel = cell-array, can be used to make subset and to reorder the channels
 %
 % See also FIELDTRIP2SPSS, FIELDTRIP2FIFF
 
 % parse the optional input arguments
 channel = ft_getopt(varargin, 'channel');
 
-% this requires the "MATLAB to BESA Export functions" which are available from http://www.besa.de/downloads/matlab/
+% this requires the "MATLAB to BESA Export functions"
+% which are available from http://www.besa.de/downloads/matlab/
 ft_hastoolbox('matlab2besa', 1);
 
 datatype = ft_datatype(data);
@@ -53,7 +56,7 @@ switch datatype
 
     if isfield(data, 'trial') && strcmp(getdimord(data, 'trial'), 'rpt_chan_time')
       [NumTrials, NumChans, NumSamp] = size(data.trial);
-      
+
       % Multiply by 1000 to get the time in milliseconds.
       time_samples = data.time.*1000;
       channel_labels = data.label;
