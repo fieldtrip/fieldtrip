@@ -1,9 +1,9 @@
-function [pnt, tri] = cylinder(Naz, Nel)
+function [pnt, tri] = mesh_cylinder(Naz, Nel)
 
-% CYLINDER creates a triangulated cylinder
-% 
+% MESH_CYLINDER creates a triangulated cylinder
+%
 % Use as
-%   [pnt, tri] = cylinder(Naz, Nel)
+%   [pnt, tri] = mesh_cylinder(Naz, Nel)
 
 % Copyright (C) 2002, Robert Oostenveld
 %
@@ -66,4 +66,3 @@ for i=1:(Naz-1)
   ntri = ntri+1;
 end
 tri(ntri, :) = [Naz*Nel+2 Naz*Nel Naz*(Nel-1)+1];
-

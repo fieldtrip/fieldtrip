@@ -10,7 +10,7 @@ fprintf('test script is running on host: %s\n', gethostname());
 %%
 
 % generate a unit sphere
-[pnt, tri] = sphere_mesh(162);
+[pnt, tri] = mesh_sphere(162);
 
 % create the BEM geometries (in mm)
 bnd = [];

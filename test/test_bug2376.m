@@ -5,7 +5,7 @@ function test_bug2376
 
 % DEPENDENCY channelposition ft_plot_sens ft_plot_headmodel ft_plot_mesh ft_prepare_vol_sens
 
-[pnt, tri] = sphere_mesh(162);
+[pnt, tri] = mesh_sphere(162);
 
 % create volume conductor models
 vol = [];

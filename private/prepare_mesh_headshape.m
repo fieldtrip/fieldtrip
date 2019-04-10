@@ -246,7 +246,7 @@ tri1 = tri;
 if 0
   % this is some test/demo code
   mesh = [];
-  [mesh.pos, mesh.tri] = sphere_mesh(162);
+  [mesh.pos, mesh.tri] = mesh_sphere(162);
   
   scale = 1+0.3*randn(size(pos,1),1);
   mesh.pos = mesh.pos .* [scale scale scale];

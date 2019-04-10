@@ -5,7 +5,7 @@ function test_bug1042
 % DEPENDENCY ft_convert_units ft_prepare_headmodel ft_compute_leadfield ft_prepare_sourcemodel ft_headmodel_openmeeg
 
 % create sensors in cm
-[pnt, tri] = sphere_mesh(162);
+[pnt, tri] = mesh_sphere(162);
 pnt = pnt .* 10; % convert to cm
 sel = find(pnt(:,3)>0);
 

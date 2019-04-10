@@ -6,7 +6,7 @@ function test_headmodel_openmeeg_new_old
 % DEPENDENCY ft_prepare_headmodel ft_headmodel_openmeeg ft_prepare_bemmodel ft_headmodel_openmeeg
 
 % generate a unit sphere
-[pnt, tri] = sphere_mesh(162);
+[pnt, tri] = mesh_sphere(162);
 
 % create the BEM geometries
 geom = [];

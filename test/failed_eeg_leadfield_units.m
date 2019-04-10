@@ -4,7 +4,7 @@ function failed_eeg_leadfield_units
 % WALLTIME 00:10:00
 % DEPENDENCY ft_convert_units ft_datatype_sens ft_convert_vol_sens ft_compute_leadfield current_dipole
 
-[pnt, tri] = sphere_mesh(162);
+[pnt, tri] = mesh_sphere(162);
 sel = find(pnt(:,3)>0);
 
 elec = [];

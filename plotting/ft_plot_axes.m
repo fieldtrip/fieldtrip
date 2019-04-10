@@ -129,7 +129,7 @@ for k = 1:n
 end
 
 % create the ball at the origin
-[O.pos, O.tri] = sphere_mesh(42);
+[O.pos, O.tri] = mesh_sphere(42);
 O.pos = O.pos.*rbol;
 ft_plot_mesh(O, 'edgecolor', 'none');
 

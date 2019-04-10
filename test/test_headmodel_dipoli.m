@@ -6,7 +6,7 @@ function test_headmodel_dipoli
 % DEPENDENCY ft_headmodel_dipoli ft_prepare_vol_sens ft_compute_leadfield
 
 % generate a unit sphere
-[pnt, tri] = sphere_mesh(162);
+[pnt, tri] = mesh_sphere(162);
 
 % create the BEM geometries
 geom = [];

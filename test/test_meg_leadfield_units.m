@@ -45,7 +45,7 @@ assert(n1/n0 > 0.31);
 %% do a forward computation for a more realistic sensor layout
 clear all
 
-[pnt, tri] = sphere_mesh(162);
+[pnt, tri] = mesh_sphere(162);
 sel = find(pnt(:,3)>0);
 
 grad = [];
@@ -158,7 +158,7 @@ clear all
 
 grad = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds'), 'senstype', 'meg');
 
-[pnt, tri] = sphere_mesh(162);
+[pnt, tri] = mesh_sphere(162);
 
 mesh = [];
 mesh.pnt = pnt * 10;                % set of points on a 10 cm sphere

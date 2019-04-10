@@ -1,13 +1,14 @@
-function [pos, tri] = icosahedron(varargin)
+function [pos, tri] = mesh_octahedron(n)
 
-% ICOSAHEDRON creates an icosahedron with 12 vertices and 20 triangles
+% MESH_OCTAHEDRON returns the vertices and triangles of a refined octahedron,
+% with n refinement steps.
 %
 % Use as
-%   [pos, tri] = icosahedron
+%   [pos tri] = mesh_octahedron(n);
 %
-% See also TETRAHEDRON, OCTAHEDRON, ICOSAHEDRON42, ICOSAHEDRON162, ICOSAHEDRON642, ICOSAHEDRON2562
+% See also MESH_TETRAHEDRON, MESH_OCTAHEDRON, MESH_SPHERE
 
-% Copyright (C) 2002, Robert Oostenveld
+% Copyright (C) 2019, Robert Oostenveld and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -26,5 +27,35 @@ function [pos, tri] = icosahedron(varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 
-warning('icosahedron is only a compatibility wrapper, which will soon be removed. Please instead call sphere_mesh.');
-[pos, tri] = sphere_mesh(varargin{:});
+if nargin==0 || isempty(n)
+  n = 0;
+end
+
+pos = [
+  0  0 +1
+  +1  0  0
+  0 +1  0
+  -1  0  0
+  0 -1  0
+  0  0 -1
+  ];
+
+tri = [
+  1 2 3
+  1 3 4
+  1 4 5
+  1 5 2
+  6 3 2
+  6 4 3
+  6 5 4
+  6 2 5
+  ];
+
+if n>0
+  % perform an n-fold refinement
+  for i=1:n
+    [pos, tri] = refine(pos, tri, 'banks');
+  end
+  % scale all vertices to the unit sphere
+  pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1,3);
+end

@@ -6,7 +6,7 @@ function test_headmodel_singleshell_new_old
 % DEPENDENCY ft_headmodel_singleshell ft_prepare_headmodel ft_headmodel_singleshell
 
 % generate a unit sphere
-[pnt, tri] = sphere_mesh(162);
+[pnt, tri] = mesh_sphere(162);
 
 % create the BEM geometries
 geom = [];

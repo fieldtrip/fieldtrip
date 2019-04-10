@@ -8,7 +8,7 @@ function test_bug1925
 [ftver, ftpath] = ft_version;
 cd(fullfile(ftpath, 'forward/private')); % this is where the surface_nesting function is located
 
-[pos, tri] = sphere_mesh(162);
+[pos, tri] = mesh_sphere(162);
 
 bnd10.id  = 10;
 bnd10.pos = pos*10;
