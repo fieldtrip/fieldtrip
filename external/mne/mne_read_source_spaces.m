@@ -10,7 +10,7 @@ function [src] = mne_read_source_spaces(source,add_geom,tree)
 %               source spaces here
 %
 
-%   This version is a copy from Bushra Riaz of Gothenburg University
+%
 %
 %   Author : Matti Hamalainen, MGH Martinos Center
 %   License : BSD 3-clause

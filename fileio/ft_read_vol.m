@@ -61,16 +61,13 @@ switch fileformat
   case 'mbfys_ama'
     ama = loadama(filename);
     headmodel = ama2vol(ama);
-<<<<<<< HEAD
 
   case 'neuromag_fif'
     ft_hastoolbox('mne',1);
     temp = mne_read_bem_surfaces(filename);
     headmodel.bnd.pos = temp.rr;
     headmodel.bnd.tri = temp.tris;
-        
-=======
-    
+            
   case 'neuromag_fif'
     ft_hastoolbox('mne', 1);
     global FIFF
@@ -79,7 +76,6 @@ switch fileformat
     headmodel.bnd.tri = bem.tris;
     headmodel.coordsys = fif2coordsys(lol.coord_frame);
     
->>>>>>> 79e6b4b954dcde665cb1d572e025c144e322b553
   otherwise
     ft_error('unknown fileformat for volume conductor model');
 end

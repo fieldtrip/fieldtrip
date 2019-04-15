@@ -128,7 +128,11 @@ for k=1:numel(cfg.parameter)
 
     % determine which channels, frequencies and latencies are available for all inputs
     for i=1:Nsubj
+        if ~isfield(varargin{i}, 'label') && isfield(varargin{i}, 'labelcmb')
+            varargin{i}.label = strcat(varargin{i}.labelcmb(:,1), varargin{i}.labelcmb(:,2));   % Create dummy labels
+        end
         cfg.channel = ft_channelselection(cfg.channel, varargin{i}.label);
+        
         if hasfreq
             fbeg = max(fbeg, varargin{i}.freq(1  ));
             fend = min(fend, varargin{i}.freq(end));
@@ -167,6 +171,8 @@ for k=1:numel(cfg.parameter)
                 varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(:,chansel,freqsel);
             case {'rpt_chan_freq_time' 'rpttap_chan_freq_time' 'subj_chan_freq_time'}
                 varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(:,chansel,freqsel,timesel);
+            case 'chancmb_freq'
+                varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(chansel,freqsel);
             otherwise
                 ft_error('unsupported dimord');
         end

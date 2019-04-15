@@ -61,7 +61,7 @@ cfg.funparameter  = ft_getopt(cfg, 'funparameter', 'avg.pow');        % use powe
 cfg.funcolormap   = ft_getopt(cfg, 'funcolormap',  'jet');
 cfg.maskparameter = ft_getopt(cfg, 'maskparameter');
 
-if isempty(cfg.yparam) && isfield(source, 'freq')
+if isempty(cfg.yparam) && isfield(source, 'freq') && ~strcmp('freq',cfg.xparam)
   % the default is freq (if present)
   cfg.yparam = 'freq';
 end
@@ -105,7 +105,7 @@ end
 
 if ~isempty(cfg.yparam)
   yparam = source.(cfg.yparam);
-  if length(cfg.yparam)~=size(fun,3)
+  if length(yparam)~=size(fun,3)
     error('inconsistent size of "%s" compared to "%s"', cfg.funparameter, cfg.yparam);
   end
 end

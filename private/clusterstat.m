@@ -204,6 +204,10 @@ if needpos
     posclusobs = posclusobs(:);
   end % if channeighbstructmat
   Nobspos = max(posclusobs(:)); % number of clusters exceeding the threshold
+%   if isempty(Nobspos)
+% %     ft_warning('Empty positive clusters');
+%     Nobspos = 0;
+%   end
   fprintf('found %d positive clusters in observed data\n', Nobspos);
   
 end % if needpos
@@ -236,6 +240,10 @@ if needneg
   end % if channeighbstructmat
   
   Nobsneg = max(negclusobs(:));
+%   if isempty(Nobsneg)
+% %     ft_warning('Empty negative clusters');
+%     Nobsneg = 0;
+%   end
   fprintf('found %d negative clusters in observed data\n', Nobsneg);
   
 end % if needneg
