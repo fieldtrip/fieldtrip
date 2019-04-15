@@ -164,14 +164,14 @@ switch cfg.method
     % call the corresponding helper function
     bnd = prepare_mesh_tetrahedral(cfg, mri);
 
-  case {'singlesphere' 'concentricspheres' 'localspheres'}
-    % FIXME for localspheres it should be replaced by an outline of the head, see private/headsurface
-    fprintf('triangulating the sphere in the volume conductor\n');
-    [pos, tri] = mesh_sphere(cfg.numvertices);
+  case {'singlesphere' 'concentricspheres'}
+    headmodel = mri;
+    headmodel = ft_datatype_headmodel(headmodel);   % ensure that it is consistent and up-to-date
+    headmodel = ft_determine_units(headmodel);      % ensure that it has units
     bnd = [];
-    mri = ft_determine_units(mri);      % ensure that it has units
-    headmodel = ft_datatype_headmodel(mri); % rename it and ensure that it is consistent and up-to-date
+    [pos, tri] = mesh_sphere(cfg.numvertices);
     for i=1:length(headmodel.r)
+      ft_info('triangulating sphere %d in the volume conductor\n', i);
       bnd(i).pos(:,1) = pos(:,1)*headmodel.r(i) + headmodel.o(1);
       bnd(i).pos(:,2) = pos(:,2)*headmodel.r(i) + headmodel.o(2);
       bnd(i).pos(:,3) = pos(:,3)*headmodel.r(i) + headmodel.o(3);
