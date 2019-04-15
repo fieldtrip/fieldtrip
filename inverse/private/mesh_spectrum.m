@@ -34,7 +34,7 @@ for j = 1:length(pnt)
     elseif length(pnt)==2&&j == 2
         disp('Computing the spectrum of the the second hemisphere')
     end
-    [L{j},~] = mesh_laplacian(pnt{j},tri{j});
+    L{j} = mesh_laplacian(pnt{j},tri{j});
     L{j} = (L{j} + L{j}')/2;
     disp('Computing the spectrum of the negative Laplacian matrix')
     [H{j},D] = eigs(L{j},n,'sm');

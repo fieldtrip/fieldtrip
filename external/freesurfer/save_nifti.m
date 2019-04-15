@@ -68,7 +68,11 @@ hdr.db_name = [hdr.data_type(:)' repmat(' ',[1 18])];
 hdr.db_name = hdr.db_name(1:18);
 
 hdr.dim = ones(1,8);
-hdr.dim(1) = 4;
+if size(hdr.vol,4)>1
+  hdr.dim(1) = 4;
+else
+  hdr.dim(1) = 3;
+end
 hdr.dim(2) = size(hdr.vol,1);
 hdr.dim(3) = size(hdr.vol,2);
 hdr.dim(4) = size(hdr.vol,3);

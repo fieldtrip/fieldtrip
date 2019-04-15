@@ -3,7 +3,7 @@ function test_example_combineplanar_pipelineorder
 % WALLTIME 00:10:00
 % MEM 2gb
 
-% TEST ft_dipolesimulation ft_combineplanar ft_singleplotER ft_topoplotER
+% DEPENDENCY ft_dipolesimulation ft_combineplanar ft_singleplotER ft_topoplotER
 
 grad275 = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/megrealign/ctf275.mat'));
 
@@ -19,7 +19,7 @@ vol.o = [0 0 4];
 fsample = 500;
 ntrial = 20;
 smp = fsample*2; % 2 seconds epoch duration
-time = -1:(1/fsample):1-(1/fsample); 
+time = -1:(1/fsample):1-(1/fsample);
 f = 10; % signal frequency content
 
 cfg=[];
@@ -28,17 +28,17 @@ for k=1:ntrial;
   endsig = randi([35,50],1); % vary randomly the begining of the alpha desynchronization
   t = linspace(endsig-100,endsig,smp);
   env = (-1./(1+exp(-t/(rand()+5)))) + amp; % inverted sigmoid function to simulate alpha desynchronization
-  
+
   phi = randn()*0.5; % vary signal phase trial-by-trial
   signal = cos(f*time*2*pi + phi);
   cfg.dip.signal{k} = (env .* signal) + randn(1,smp); %power sigmoid envelope * oscillation + gaussian random noise
 end
 
-cfg.dip.pos = [-1 -1 7];%dipole located on posterior sensors
-cfg.fsample = fsample;
-cfg.vol     = vol;
-cfg.grad    = grad275;
-data_axial  = ft_dipolesimulation(cfg);
+cfg.dip.pos   = [-1 -1 7]; %dipole located on posterior sensors
+cfg.fsample   = fsample;
+cfg.headmodel = vol;
+cfg.grad      = grad275;
+data_axial    = ft_dipolesimulation(cfg);
 
 %% synthetic planar computation
 cfg              = [];
@@ -91,16 +91,16 @@ cfg.channel = 'MEG';
 cfg.xlim    = [0.5 1];
 cfg.ylim    = [8 12];
 
-figure; 
+figure;
 subplot(321);ft_topoplotTFR(cfg, freq_axial_avg);title('axial');colorbar;
 subplot(323);ft_topoplotTFR(cfg, freq_combined_avg1);title('combined-then-average');colorbar;
 subplot(325);ft_topoplotTFR(cfg, freq_combined_avg2);title('average-then-combined');colorbar;
 
 cfg         = [];
-cfg.channel = {'MRO14', 'MRO24', 'MRO34', 'MRT27', 'MRT37'};%right axial cluster
+cfg.channel = {'MRO14', 'MRO24', 'MRO34', 'MRT27', 'MRT37'}; %right axial cluster
 subplot(322);ft_singleplotTFR(cfg, freq_axial);title('axial');colorbar;
 
-cfg.channel = {'MRO11', 'MRO12', 'MRO14', 'MRO22', 'MRO24', 'MRO31', 'MRO32', 'MRO34', 'MRT27', 'MRT37'};%combined-planar cluster
+cfg.channel = {'MRO11', 'MRO12', 'MRO14', 'MRO22', 'MRO24', 'MRO31', 'MRO32', 'MRO34', 'MRT27', 'MRT37'}; %combined-planar cluster
 subplot(324);ft_singleplotTFR(cfg, freq_combined_avg1);title('combined-then-average');colorbar;
 subplot(326);ft_singleplotTFR(cfg, freq_combined_avg2);title('average-then-combined');colorbar;
 
@@ -144,18 +144,17 @@ cfg.layout  = 'CTF275.lay';
 cfg.channel = 'MEG';
 cfg.xlim    = [0.5 1];
 
-figure; 
+figure;
 subplot(421);ft_topoplotER(cfg, data_axial_avg);    title('axial');colorbar;
 subplot(423);ft_topoplotER(cfg, data_combined_avg1);title('combined then average');colorbar;
 subplot(425);ft_topoplotER(cfg, data_combined_avg2);title('average axial then planar+combined');colorbar;
 subplot(427);ft_topoplotER(cfg, data_combined_avg3);title('average planar then combined');colorbar;
 
 cfg = [];
-cfg.channel = {'MRO14', 'MRO24', 'MRO34', 'MRT27', 'MRT37'};%right axial cluster
+cfg.channel = {'MRO14', 'MRO24', 'MRO34', 'MRT27', 'MRT37'}; %right axial cluster
 subplot(422);ft_singleplotER(cfg, data_axial_avg);title('axial');
 
-cfg.channel = {'MRO11', 'MRO12', 'MRO14', 'MRO22', 'MRO24', 'MRO31', 'MRO32', 'MRO34', 'MRT27', 'MRT37'};%combined-planar cluster
+cfg.channel = {'MRO11', 'MRO12', 'MRO14', 'MRO22', 'MRO24', 'MRO31', 'MRO32', 'MRO34', 'MRT27', 'MRT37'}; %combined-planar cluster
 subplot(424);ft_singleplotER(cfg, data_combined_avg1);title('combined then average');
 subplot(426);ft_singleplotER(cfg, data_combined_avg2);title('average axial then planar+combined');
 subplot(428);ft_singleplotER(cfg, data_combined_avg3);title('average planar then combined');
-

@@ -3,7 +3,7 @@ function test_bug2754
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST ft_selectdata
+% DEPENDENCY ft_selectdata
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2754.mat'));
 

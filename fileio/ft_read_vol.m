@@ -1,9 +1,9 @@
-function [headmodel] = ft_read_vol(filename, varargin)
+function varargout = ft_read_vol(varargin)
 
-% FT_READ_VOL reads a volume conduction model from various manufacturer
-% specific files. Currently supported are ASA, CTF, Neuromag, MBFYS
-% and Matlab.
+% This function is a backward compatibility wrapper for existing MATLAB scripts
+% that call a function that is not part of the FieldTrip toolbox any more.
 %
+<<<<<<< HEAD
 % Use as
 %   headmodel = ft_read_vol(filename, ...)
 %
@@ -83,34 +83,13 @@ switch fileformat
   otherwise
     ft_error('unknown fileformat for volume conductor model');
 end
+=======
+% Please update your code to make it future-proof.
+>>>>>>> b2d9f68d43511beb176a1ba9214b2e7dad070447
 
-% this will ensure that the structure is up to date, e.g. that the type is correct and that it has units
-headmodel = ft_datatype_headmodel(headmodel);
+oldname = mfilename;
+newname = 'ft_read_headmodel';
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function coordsys = fif2coordsys(coord_frame)
-ft_hastoolbox('mne', 1);
-global FIFF
+ft_warning('%s is only a backward compatibility wrapper, which will soon be removed. Please call %s instead.', upper(oldname), upper(newname));
 
-switch coord_frame
-  case FIFF.FIFFV_COORD_DEVICE
-    coordsys = 'device';
-  case FIFF.FIFFV_COORD_HPI
-    coordsys = 'hpi';
-  case FIFF.FIFFV_COORD_HEAD
-    coordsys = 'head';
-  case FIFF.FIFFV_COORD_MRI
-    coordsys = 'mri';
-  case FIFF.FIFFV_COORD_MRI_SLICE
-    coordsys = 'mri_slice';
-  case FIFF.FIFFV_COORD_MRI_DISPLAY
-    coordsys = 'mri_display';
-  case FIFF.FIFFV_COORD_DICOM_DEVICE
-    coordsys = 'dicom_device';
-  case FIFF.FIFFV_COORD_IMAGING_DEVICE
-    coordsys = 'imaging_device';
-  otherwise
-    error('unrecognized coord_frame')
-end
+[varargout{1:nargout}] = feval(newname, varargin{:});

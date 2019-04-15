@@ -3,7 +3,7 @@ function test_bug1806
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_componentanalysis ft_rejectcomponent ft_megplanar ft_combineplanar ft_megrealign ft_datatype_sens
+% DEPENDENCY ft_componentanalysis ft_rejectcomponent ft_megplanar ft_combineplanar ft_megrealign ft_datatype_sens
 
 ctf151_sens = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf151.mat'));
 ctf275_sens = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf275.mat'));
@@ -53,7 +53,7 @@ vol.r = 12;
 vol.o = [0 0 4];
 
 cfg = [];
-cfg.vol = vol;
+cfg.headmodel = vol;
 cfg.inwardshift = 0;
 cfg.template = ctf275_sens;
 data_r = ft_megrealign(cfg, data);

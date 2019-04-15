@@ -7,7 +7,7 @@
 %   .... regular code goes here ...
 %   ft_postamble debug
 %
-% See also FT_PREAMBLE_DEBUG, DEBUGCLEANUP
+% See also FT_PREAMBLE, FT_POSTAMBLE, FT_PREAMBLE_DEBUG, DEBUGCLEANUP
 
 % these variables are shared by the three debug handlers
 global Ce9dei2ZOo_debug Ce9dei2ZOo_funname Ce9dei2ZOo_argin Ce9dei2ZOo_ws Ce9dei2ZOo_ns Ce9dei2ZOo_is Ce9dei2ZOo_ds

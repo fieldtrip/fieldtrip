@@ -1,6 +1,6 @@
 function ft_write_data(filename, dat, varargin)
 
-% FT_WRITE_DATA exports electrophysiological data such as EEG to a file. 
+% FT_WRITE_DATA exports electrophysiological data such as EEG to a file.
 %
 % Use as
 %   ft_write_data(filename, dat, ...)
@@ -10,13 +10,15 @@ function ft_write_data(filename, dat, varargin)
 %
 % Additional options should be specified in key-value pairs and can be
 %   'header'         header structure that describes the data, see FT_READ_HEADER
+%   'event'          event structure that corresponds to the data, see FT_READ_EVENT
+%   'chanindx'       1xN array, for selecting a subset of channels from header and data
 %   'dataformat'     string, see below
 %   'append'         boolean, not supported for all formats
-%   'chanindx'       1xN array
 %
-% The supported dataformats are
+% The supported dataformats for writing are
 %   edf
 %   gdf
+%   anywave_ades
 %   brainvision_eeg
 %   neuralynx_ncs
 %   neuralynx_sdma
@@ -69,6 +71,11 @@ dataformat    = ft_getopt(varargin, 'dataformat');
 if isempty(dataformat)
   % only do the autodetection if the format was not specified
   dataformat = ft_filetype(filename);
+end
+
+if strcmp(dataformat, 'riff_wave')
+  % this allows other audio formats to be supported as well
+  dataformat = 'wav';
 end
 
 % convert 'yes' or 'no' string into boolean
@@ -191,12 +198,12 @@ switch dataformat
         buffer('put_hdr', packet, host, port);
         
       catch
-        if ~isempty(strfind(lasterr, 'Buffer size N must be an integer-valued scalar double.'))
+        if contains(lasterr, 'Buffer size N must be an integer-valued scalar double.')
           % this happens if the MATLAB75/toolbox/signal/signal/buffer
           % function is used instead of the FieldTrip buffer
           ft_error('the FieldTrip buffer mex file was not found on your path, it should be in fieldtrip/fileio/private');
           
-        elseif ~isempty(strfind(lasterr, 'failed to create socket')) && (strcmp(host, 'localhost') || strcmp(host, '127.0.0.1'))
+        elseif contains(lasterr, 'failed to create socket') && (strcmp(host, 'localhost') || strcmp(host, '127.0.0.1'))
           
           % start a local instance of the TCP server
           ft_warning('starting FieldTrip buffer on %s:%d', host, port);
@@ -246,13 +253,13 @@ switch dataformat
         packet.nchans    = size(dat,1);
         packet.nsamples  = size(dat,2);
         packet.data_type = find(strcmp(type, class(dat))) - 1; % zero-offset
-        packet.bufsize   = numel(dat) * wordsize{find(strcmp(type, class(dat)))};
+        packet.bufsize   = numel(dat) * wordsize{strcmp(type, class(dat))};
         packet.buf       = dat;
         buffer('put_dat', packet, host, port);
       end % if data larger than chuncksize
     end
     
-  case 'brainvision_eeg'
+  case {'brainvision_eeg', 'brainvision_vhdr'}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % combination of *.eeg and *.vhdr file
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -298,7 +305,7 @@ switch dataformat
       end
       
       save(headerfile, 'hdr', 'event', '-v6');
-
+      
       % update the data file
       [fid,message] = fopen(datafile,'ab','ieee-le');
       fwrite(fid, dat, hdr.precision);
@@ -413,6 +420,13 @@ switch dataformat
     end
     save(filename, 'dat', 'hdr');
     
+  case 'mff'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % MFF files using Phillips plugin
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    ft_hastoolbox('mffmatlabio', 1);
+    mff_fileio_write(filename, hdr, dat, evt);
+    
   case 'neuralynx_sdma'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % The first version of this file format contained in the first 8 bytes the
@@ -464,7 +478,7 @@ switch dataformat
       filename{i} = fullfile(dirname, [file '.' hdr.label{i} '.bin']);
     end
     
-    if ~isdir(dirname)
+    if ~isfolder(dirname)
       mkdir(dirname);
     end
     
@@ -510,12 +524,20 @@ switch dataformat
       fclose(fid(j));
     end % for each channel
     
-  case 'riff_wave'
+  case {'flac' 'm4a' 'mp4' 'oga' 'ogg' 'wav'}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %     This writes data Y to a Windows WAVE file specified by the file name
-    %     WAVEFILE, with a sample rate of FS Hz and with NBITS number of bits.
-    %     NBITS must be 8, 16, 24, or 32.  For NBITS < 32, amplitude values
-    %     outside the range [-1,+1] are clipped
+    % This writes data Y to a Windows WAVE file specified by the file name
+    % WAVEFILE, with a sample rate of FS Hz and with NBITS number of bits.
+    % NBITS must be 8, 16, 24, or 32.  For NBITS < 32, amplitude values
+    % outside the range [-1,+1] are clipped
+    %
+    % Supported extensions for AUDIOWRITE are:
+    %   .flac
+    % 	.m4a
+    % 	.mp4
+    % 	.oga
+    % 	.ogg
+    % 	.wav
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if append
       ft_error('appending data is not yet supported for this data format');
@@ -527,9 +549,17 @@ switch dataformat
       hdr.label  = hdr.label(chanindx);
       hdr.nChans = length(chanindx);
     end
+    
     if nchans~=1
       ft_error('this format only supports single channel continuous data');
     end
+    
+    [p, f, x] = fileparts(filename);
+    if isempty(x)
+      % append the format as extension
+      filename = [filename '.' dataformat];
+    end
+    
     audiowrite(filename, dat, hdr.Fs, 'BitsPerSample', nbits);
     
   case 'plexon_nex'
@@ -671,6 +701,94 @@ switch dataformat
     end
     write_edf(filename, hdr, dat);
     
+  case 'anywave_ades'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % see http://meg.univ-amu.fr/wiki/AnyWave:ADES
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if append
+      ft_error('appending data is not yet supported for this data format');
+    end
+    if ~isempty(chanindx)
+      % assume that the header corresponds to the original multichannel
+      % file and that the data represents a subset of channels
+      hdr.label     = hdr.label(chanindx);
+      hdr.chantype  = hdr.chantype(chanindx);
+      hdr.chanunit  = hdr.chanunit(chanindx);
+      hdr.nChans    = length(chanindx);
+    end
+    
+    dattype = unique(hdr.chantype);
+    datunit = cell(size(dattype));
+    for i=1:numel(dattype)
+      unit = hdr.chanunit(strcmp(hdr.chantype, dattype{i}));
+      if ~all(strcmp(unit, unit{1}))
+        ft_error('channels of the same type with different units are not supported');
+      end
+      datunit{i} = unit{1};
+    end
+    
+    % only change these after checking channel types and units
+    chantype = adestype(hdr.chantype);
+    dattype  = adestype(dattype);
+    
+    % ensure that all channels have the right scaling
+    for i=1:size(dat,1)
+      switch chantype{i}
+        case 'MEG'
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'pT');
+        case 'Reference'
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'pT');
+        case 'GRAD'
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'pT/m');
+        case 'EEG'
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'uV');
+        case 'SEEG'
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'uV');
+        case 'EMG'
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'uV');
+        case 'ECG'
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'uV');
+        otherwise
+          % FIXME I am not sure what scaling to apply
+      end
+    end
+    
+    [p, f, x] = fileparts(filename);
+    filename = fullfile(p, f); % without extension
+    mat2ades(dat, filename, hdr.Fs, hdr.label, chantype, dattype, datunit);
+    
   otherwise
     ft_error('unsupported data format');
 end % switch dataformat
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function type = adestype(type)
+for i=1:numel(type)
+  switch lower(type{i})
+    case 'meggrad'
+      type{i} = 'MEG'; % this is for CTF and BTi/4D
+    case 'megmag'
+      type{i} = 'MEG'; % this is for Neuromag and BTi/4D
+    case 'megplanar'
+      type{i} = 'GRAD'; % this is for Neuromag
+    case {'refmag' 'refgrad'}
+      type{i} = 'Reference';
+    case 'eeg'
+      type{i} = 'EEG';
+    case {'seeg' 'ecog' 'ieeg'}
+      type{i} = 'SEEG'; % all intracranial channels
+    case 'ecg'
+      type{i} = 'ECG';
+    case 'emg'
+      type{i} = 'EMG';
+    case 'trigger'
+      type{i} = 'Trigger';
+    case 'source'
+      type{i} = 'Source'; % virtual channel
+    otherwise
+      type{i} = 'Other';
+  end
+end

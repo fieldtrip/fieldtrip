@@ -101,7 +101,7 @@ if(dobbx|~isempty(edges))
         4 nn nn+1 nn+2 nn+3;   % z=zmin
         4 nn+1 nn+2 nn+6 nn+5; % x=xmax
         4 nn+2 nn+3 nn+7 nn+6; % y=ymax
-        4 nn+4 nn+5 nn+6 nn+7];% z=zmax
+        4 nn+4 nn+5 nn+6 nn+7]; % z=zmax
 
     node=[v;boxnode];
 end

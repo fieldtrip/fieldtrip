@@ -3,7 +3,7 @@ function test_bug27
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_preproc_lowpassfilter ft_resampledata ft_resampledata 
+% DEPENDENCY ft_preproc_lowpassfilter ft_resampledata ft_resampledata 
 
 % this script tests for bug 27 and for the solution
 % the 'bug' is that if ft_resampledata is called on data with different time axes

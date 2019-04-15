@@ -7,7 +7,7 @@ function [stat] = ft_sourcestatistics(cfg, varargin)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
 % where the input data is the result from FT_SOURCEANALYSIS, FT_SOURCEDESCRIPTIVES
 % or FT_SOURCEGRANDAVERAGE.  The source structures should be spatially alligned
-% to each other and should have the same positions for the source grid.
+% to each other and should have the same positions for the sourcemodel.
 %
 % The configuration should contain the following option for data selection
 %   cfg.parameter  = string, describing the functional data to be processed, e.g. 'pow', 'nai' or 'coh'
@@ -76,6 +76,7 @@ ft_preamble debug
 ft_preamble loadvar varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
+ft_preamble randomseed
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -118,8 +119,7 @@ tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'latency', 'avgovertime', 
 
 dimord = getdimord(varargin{1}, cfg.parameter);
 dimtok = tokenize(dimord, '_');
-dimsiz = getdimsiz(varargin{1}, cfg.parameter);
-dimsiz(end+1:length(dimtok)) = 1; % there can be additional trailing singleton dimensions
+dimsiz = getdimsiz(varargin{1}, cfg.parameter, numel(dimtok));
 rptdim = find( strcmp(dimtok, 'subj') |  strcmp(dimtok, 'rpt') |  strcmp(dimtok, 'rpttap'));
 datdim = find(~strcmp(dimtok, 'subj') & ~strcmp(dimtok, 'rpt') & ~strcmp(dimtok, 'rpttap'));
 datsiz = dimsiz(datdim);
@@ -245,6 +245,7 @@ cfg = removefields(cfg, {'dimord', 'tri', 'dim', 'origdim', 'inside', 'originsid
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
+ft_postamble randomseed
 ft_postamble trackconfig
 ft_postamble previous   varargin
 ft_postamble provenance stat

@@ -3,7 +3,7 @@ function test_ft_connectivityanalysis
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_connectivityanalysis ft_connectivity_granger ft_connectivity_corr ft_connectivity_psi ft_mvaranalysis ft_connectivitysimulation ft_freqanalysis ft_connectivity_pdc ft_connectivity_dtf ft_connectivity_csd2transfer
+% DEPENDENCY ft_connectivityanalysis ft_connectivity_granger ft_connectivity_corr ft_connectivity_psi ft_mvaranalysis ft_connectivitysimulation ft_freqanalysis ft_connectivity_pdc ft_connectivity_dtf ft_connectivity_csd2transfer
 
 % this function tests the functionality of FT_CONNECTIVITYANALYSIS
 % on frequency domain channel data
@@ -235,7 +235,10 @@ cfgf.method    = 'mtmfft';
 cfgf.output    = 'fourier';
 cfgf.tapsmofrq = 2;
 freq           = ft_freqanalysis(cfgf, data);
-freqsub        = ft_selectdata(freq, 'foilim', freq.freq(2:end));
+
+tmpcfg = [];
+tmpcfg.frequency = freq.freq([2 end]);
+freqsub        = ft_selectdata(tmpcfg, freq);
 
 % connectivityanalysis
 cfgc           = [];

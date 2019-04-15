@@ -4,7 +4,7 @@ function ft_plot_topo3d(pos, val, varargin)
 % potential or field at the sensor locations
 %
 % Use as
-%   ft_plot_topo3d(pos, val, ...);
+%   ft_plot_topo3d(pos, val, ...)
 % where the channel positions are given as a Nx3 matrix and the values are
 % given as Nx1 vector.
 %
@@ -63,7 +63,7 @@ end
 % the interpolation requires a triangulation
 tri = projecttri(pos, 'delaunay');
 
-if nrefine>0,
+if nrefine>0
   posorig = pos;
   triorig = tri;
   valorig = val;

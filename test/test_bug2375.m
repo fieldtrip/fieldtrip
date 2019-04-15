@@ -3,7 +3,7 @@ function test_bug2375
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_prepare_headmodel ft_headmodel_localspheres
+% DEPENDENCY ft_prepare_headmodel ft_headmodel_localspheres
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2375/localspheres_bug.mat'));
 

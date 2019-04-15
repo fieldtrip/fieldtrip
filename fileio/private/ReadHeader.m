@@ -10,7 +10,7 @@ function H = ReadHeader(fp)
 %      fid -- file-pointer (i.e. not filename)
 %  OUTPUT: 
 
-%      H -- cell array.  Each entry is one line from the NSMA header
+%      H -- cell-array.  Each entry is one line from the NSMA header
 
 %
 

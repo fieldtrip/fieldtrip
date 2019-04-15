@@ -16,9 +16,9 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, varargin)
 % used to estimate the line noise. The estimate is subtracted from the
 % complete data.
 %
-% B) Alternatively line noise is reduced via spectrum interpolation 
-% (introduced by Mewett et al., 2004, Med. Biol. Eng. Comput. 42, 
-% doi:10.1007/BF02350994). 
+% B) Alternatively line noise is reduced via spectrum interpolation
+% (Leske & Dalal, 2019, NeuroImage 189,
+%  doi: 10.1016/j.neuroimage.2019.01.026)
 % The signal is:
 % I)   transformed into the frequency domain via a discrete Fourier 
 %       transform (DFT), 
@@ -148,6 +148,12 @@ if strcmp(Flreplace,'zero')
 elseif strcmp(Flreplace,'neighbour')
    Flwidth = Flwidth(:);
    Neighwidth = Neighwidth(:);
+   
+   % error message if periodicity of the interference frequency doesn't match the DFT length 
+   n = round(floor(nsamples .* Fl./Fs) * Fs./Fl);
+   if n ~= nsamples 
+       ft_error('Spectrum interpolation requires that the data length fits complete cycles of the powerline frequency, e.g., exact multiples of 20 ms for a 50 Hz line frequency (sampling rate of 1000 Hz).');
+   end
    
    if (length(Fl) ~= length(Flwidth)) || (length(Fl) ~= length(Neighwidth))
        ft_error('The number of frequencies to interpolate (cfg.dftfreq) should be the same as the number of bandwidths (cfg.dftbandwidth) and bandwidths of neighbours (cfg.neighbourwidth)');

@@ -2,12 +2,11 @@ function failed_headmodel_interpolate
 
 % WALLTIME 00:45:00
 % MEM 6gb
-
-% TEST icosahedron162 ft_voltype ft_headmodel_interpolate ft_prepare_vol_sens ft_compute_leadfield leadfield_interpolate ft_apply_transform
+% DEPENDENCY mesh_sphere ft_headmodeltype ft_headmodel_interpolate ft_prepare_vol_sens ft_compute_leadfield leadfield_interpolate ft_apply_transform
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% create a set of electrodes nicely covering the upper half of a sphere
-[pnt, tri] = icosahedron162;
+[pnt, tri] = mesh_sphere(162);
 pnt = pnt .* 10; % convert to cm
 sel = find(pnt(:,3)>0);
 elec1 = [];
@@ -68,9 +67,9 @@ volA.r = 10;
 volA.o = [0 0 0];
 
 cfg      = [];
-cfg.vol = volA;
+cfg.headmodel = volA;
 cfg.elec = elec1;
-cfg.grid.resolution = 1;
+cfg.sourcemodel.resolution = 1;
 leadfield = ft_prepare_leadfield(cfg);
 
 % remember one position
@@ -84,7 +83,7 @@ filename = fullfile(tempname, 'leadfield');
 ft_headmodel_interpolate(filename, elec1, leadfield, 'smooth', false);
 
 % the next day you would start by reading it from disk
-volB = ft_read_vol([filename '.mat']); % this is a mat file containing the "vol" structure
+volB = ft_read_headmodel([filename '.mat']); % this is a mat file containing the "vol" structure
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% use the same electrodes

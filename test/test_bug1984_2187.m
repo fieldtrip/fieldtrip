@@ -3,7 +3,7 @@ function test_bug1984_2187
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_appendfreq ft_freqgrandaverage ft_freqstatistics ft_prepare_neighbours
+% DEPENDENCY ft_appendfreq ft_freqgrandaverage ft_freqstatistics ft_prepare_neighbours
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1984_2187.mat'));
 

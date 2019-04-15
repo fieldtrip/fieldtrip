@@ -161,8 +161,8 @@ if usefsample
   ntr = length(data.trial);
   
   ft_progress('init', cfg.feedback, 'resampling data');
-  [fsorig, fsres] = rat(cfg.origfs./cfg.resamplefs);%account for non-integer fs
-  cfg.resamplefs  = cfg.origfs.*(fsres./fsorig);%get new fs exact
+  [fsorig, fsres] = rat(cfg.origfs./cfg.resamplefs); %account for non-integer fs
+  cfg.resamplefs  = cfg.origfs.*(fsres./fsorig); %get new fs exact
   
   % make sure that the resampled time axes are aligned (this is to avoid
   % rounding errors in the time axes). this procedure relies on the
@@ -204,9 +204,9 @@ if usefsample
     if ~strcmp(cfg.baselinewindow, 'all')
       begsample   = ceil(data.fsample*cfg.baselinewindow(1))+find(data.time{itr}==0);
       endsample   = floor(data.fsample*cfg.baselinewindow(2))-1+find(data.time{itr}==0);
-      [~,bsl]     = ft_preproc_baselinecorrect(data.trial{itr}, begsample, endsample);
+      [dum,bsl]   = ft_preproc_baselinecorrect(data.trial{itr}, begsample, endsample);
     else
-      [~,bsl]     = ft_preproc_baselinecorrect(data.trial{itr});
+      [dum,bsl]   = ft_preproc_baselinecorrect(data.trial{itr});
     end
     % always remove the mean to avoid edge effects when there's a strong
     % offset, the cfg.demean option is dealt with below

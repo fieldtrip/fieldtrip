@@ -28,9 +28,9 @@ c = [1 1/80 1];
 % c = [1];
 
 %% Description of the spherical mesh
-[pos, tri] = icosahedron42;
-% [pos, tri] = icosahedron162;
-% [pos, tri] = icosahedron642;
+[pos, tri] = mesh_sphere(42);
+% [pos, tri] = mesh_sphere(162);
+% [pos, tri] = mesh_sphere(642);
 
 %% Create a set of electrodes on the outer surface
 sens.elecpos = max(r) * pos;

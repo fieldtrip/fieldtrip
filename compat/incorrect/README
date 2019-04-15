@@ -1,0 +1,4 @@
+This is a directory that should never be added to your MATLAB path.
+It only serves to check whether your path is setup incorrectly.
+
+See also http://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path

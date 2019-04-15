@@ -5,7 +5,7 @@ function [sd] = cellstd(x, dim, flag)
 % 
 % X should be an linear cell-array of matrices for which the size in at 
 % least one of the dimensions should be the same for all cells. If flag==1, the mean will
-% be subtracted first (default behaviour, but to save time on already demeaned data, it
+% be subtracted first (default behavior, but to save time on already demeaned data, it
 % can be set to 0).
 
 nx = size(x);
@@ -30,7 +30,7 @@ if flag,
 end
 
 nx   = max(nx);
-nsmp = cellfun('size', x, dim);
+nsmp = cellfun(@nansum, isfinite(x), repmat({dim},1,nx), 'UniformOutput', 0);
 ssmp = cellfun(@sumsq,   x, repmat({dim},1,nx), 'UniformOutput', 0);
 sd   = sqrt(nansum(cell2mat(ssmp), dim)./nansum(nsmp));  
 

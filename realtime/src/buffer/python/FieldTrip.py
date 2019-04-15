@@ -10,48 +10,52 @@ import struct
 import numpy
 
 VERSION = 1
-PUT_HDR = 0x101
-PUT_DAT = 0x102
-PUT_EVT = 0x103
-PUT_OK = 0x104
-PUT_ERR = 0x105
-GET_HDR = 0x201
-GET_DAT = 0x202
-GET_EVT = 0x203
-GET_OK = 0x204
-GET_ERR = 0x205
-FLUSH_HDR = 0x301
-FLUSH_DAT = 0x302
-FLUSH_EVT = 0x303
-FLUSH_OK = 0x304
-FLUSH_ERR = 0x305
-WAIT_DAT = 0x402
-WAIT_OK = 0x404
-WAIT_ERR = 0x405
 
-DATATYPE_CHAR = 0
-DATATYPE_UINT8 = 1
-DATATYPE_UINT16 = 2
-DATATYPE_UINT32 = 3
-DATATYPE_UINT64 = 4
-DATATYPE_INT8 = 5
-DATATYPE_INT16 = 6
-DATATYPE_INT32 = 7
-DATATYPE_INT64 = 8
+PUT_HDR            = 0x0101
+PUT_DAT            = 0x0102
+PUT_EVT            = 0x0103
+PUT_OK             = 0x0104
+PUT_ERR            = 0x0105
+GET_HDR            = 0x0201
+GET_DAT            = 0x0202
+GET_EVT            = 0x0203
+GET_OK             = 0x0204
+GET_ERR            = 0x0205
+FLUSH_HDR          = 0x0301
+FLUSH_DAT          = 0x0302
+FLUSH_EVT          = 0x0303
+FLUSH_OK           = 0x0304
+FLUSH_ERR          = 0x0305
+WAIT_DAT           = 0x0402
+WAIT_OK            = 0x0404
+WAIT_ERR           = 0x0405
+PUT_HDR_NORESPONSE = 0x0501
+PUT_DAT_NORESPONSE = 0x0502
+PUT_EVT_NORESPONSE = 0x0503
+
+DATATYPE_CHAR    = 0
+DATATYPE_UINT8   = 1
+DATATYPE_UINT16  = 2
+DATATYPE_UINT32  = 3
+DATATYPE_UINT64  = 4
+DATATYPE_INT8    = 5
+DATATYPE_INT16   = 6
+DATATYPE_INT32   = 7
+DATATYPE_INT64   = 8
 DATATYPE_FLOAT32 = 9
 DATATYPE_FLOAT64 = 10
 DATATYPE_UNKNOWN = 0xFFFFFFFF
 
-CHUNK_UNSPECIFIED = 0
-CHUNK_CHANNEL_NAMES = 1
-CHUNK_CHANNEL_FLAGS = 2
-CHUNK_RESOLUTIONS = 3
-CHUNK_ASCII_KEYVAL = 4
-CHUNK_NIFTI1 = 5
-CHUNK_SIEMENS_AP = 6
-CHUNK_CTF_RES4 = 7
-CHUNK_NEUROMAG_FIF = 8
-CHUNK_NEUROMAG_ISOTRAK = 9
+CHUNK_UNSPECIFIED        = 0
+CHUNK_CHANNEL_NAMES      = 1
+CHUNK_CHANNEL_FLAGS      = 2
+CHUNK_RESOLUTIONS        = 3
+CHUNK_ASCII_KEYVAL       = 4
+CHUNK_NIFTI1             = 5
+CHUNK_SIEMENS_AP         = 6
+CHUNK_CTF_RES4           = 7
+CHUNK_NEUROMAG_FIF       = 8
+CHUNK_NEUROMAG_ISOTRAK   = 9
 CHUNK_NEUROMAG_HPIRESULT = 10
 
 # List for converting FieldTrip datatypes to Numpy datatypes
@@ -325,9 +329,13 @@ class Client:
         return H
 
     def putHeader(self, nChannels, fSample, dataType, labels=None,
-                  chunks=None):
+                  chunks=None, reponse=True):
         haveLabels = False
         extras = ''
+
+        if (type(labels)==list) and (len(labels)==0):
+            labels=None
+
         if not(labels is None):
             serLabels = ''
             try:
@@ -351,14 +359,21 @@ class Client:
 
         sizeChunks = len(extras)
 
+        if reponse:
+            command = PUT_HDR
+        else:
+            command = PUT_HDR_NORESPONSE
+
         hdef = struct.pack('IIIfII', nChannels, 0, 0,
                            fSample, dataType, sizeChunks)
-        request = struct.pack('HHI', VERSION, PUT_HDR,
+        request = struct.pack('HHI', VERSION, command,
                               sizeChunks + len(hdef)) + hdef + extras
         self.sendRaw(request)
-        (status, bufsize, resp_buf) = self.receiveResponse()
-        if status != PUT_OK:
-            raise IOError('Header could not be written')
+
+        if reponse:
+            (status, bufsize, resp_buf) = self.receiveResponse()
+            if status != PUT_OK:
+                raise IOError('Header could not be written')
 
     def getData(self, index=None):
         """
@@ -435,7 +450,7 @@ class Client:
 
         return E
 
-    def putEvents(self, E):
+    def putEvents(self, E, reponse=True):
         """
         putEvents(E) -- writes a single or multiple events, depending on
         whether an 'Event' object, or a list of 'Event' objects is
@@ -452,13 +467,19 @@ class Client:
                 buf = buf + e.serialize()
                 num = num + 1
 
-        self.sendRequest(PUT_EVT, buf)
-        (status, bufsize, resp_buf) = self.receiveResponse()
+        if reponse:
+            command = PUT_EVT
+        else:
+            command = PUT_EVT_NORESPONSE
 
-        if status != PUT_OK:
-            raise IOError('Events could not be written.')
+        self.sendRequest(command, buf)
 
-    def putData(self, D):
+        if reponse:
+            (status, bufsize, resp_buf) = self.receiveResponse()
+            if status != PUT_OK:
+                raise IOError('Events could not be written.')
+
+    def putData(self, D, response=True):
         """
         putData(D) -- writes samples that must be given as a NUMPY array,
         samples x channels. The type of the samples (D) and the number of
@@ -477,13 +498,19 @@ class Client:
 
         dataBufSize = len(dataBuf)
 
-        request = struct.pack('HHI', VERSION, PUT_DAT, 16 + dataBufSize)
+        if reponse:
+            command = PUT_DAT
+        else:
+            command = PUT_DAT_NORESPONSE
+
+        request = struct.pack('HHI', VERSION, command, 16 + dataBufSize)
         dataDef = struct.pack('IIII', nChan, nSamp, dataType, dataBufSize)
         self.sendRaw(request + dataDef + dataBuf)
 
-        (status, bufsize, resp_buf) = self.receiveResponse()
-        if status != PUT_OK:
-            raise IOError('Samples could not be written.')
+        if response:
+            (status, bufsize, resp_buf) = self.receiveResponse()
+            if status != PUT_OK:
+                raise IOError('Samples could not be written.')
 
     def poll(self):
 

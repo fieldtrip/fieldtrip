@@ -3,18 +3,12 @@ function [chansel, trlsel, cfg] = rejectvisual_channel(cfg, data)
 % SUBFUNCTION for ft_rejectvisual
 
 % determine the initial selection of trials
-ntrl = length(data.trial);
-if isequal(cfg.trials, 'all') % support specification like 'all'
-  cfg.trials = 1:ntrl;
-end
-trlsel = false(1,ntrl);
-trlsel(cfg.trials) = true;
+ntrl   = numel(data.trial);
+trlsel = true(1, ntrl);
 
 % determine the initial selection of channels
-nchan = length(data.label);
-cfg.channel = ft_channelselection(cfg.channel, data.label); % support specification like 'all'
-chansel = false(1,nchan);
-chansel(match_str(data.label, cfg.channel)) = true;
+nchan   = numel(data.label);
+chansel = true(1, nchan);
 
 % compute the sampling frequency from the first two timepoints
 fsample = 1/mean(diff(data.time{1}));
@@ -36,12 +30,11 @@ end
 
 % select the specified latency window from the data
 % this is done AFTER the filtering to prevent edge artifacts
-for i=1:ntrl
-  begsample = nearest(data.time{i}, cfg.latency(1));
-  endsample = nearest(data.time{i}, cfg.latency(2));
-  data.time{i} = data.time{i}(begsample:endsample);
-  data.trial{i} = data.trial{i}(:,begsample:endsample);
+if ischar(cfg.latency)
+  cfg.latency(1) = min(cellfun(@min, data.time));
+  cfg.latency(2) = max(cellfun(@max, data.time));
 end
+
 
 h = figure;
 axis([0 1 0 1]);

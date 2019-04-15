@@ -627,14 +627,17 @@ for itrial = 1:ntrials
   %%% Create output
   if keeprpt~=4
     
+    % mtmconvol is a special case and needs special processing
+    if strcmp(cfg.method, 'mtmconvol')
+      foiind = ones(1,nfoi);
+    else
+      % by using this vector below for indexing, the below code does not need to be duplicated for mtmconvol
+      foiind = 1:nfoi;
+    end
+
     for ifoi = 1:nfoi
-      
-      % mtmconvol is a special case and needs special processing
       if strcmp(cfg.method, 'mtmconvol')
         spectrum = reshape(permute(spectrum_mtmconvol(:,:,freqtapind{ifoi}),[3 1 2]),[ntaper(ifoi) nchan 1 ntoi]);
-        foiind = ones(1,nfoi);
-      else
-        foiind = 1:nfoi; % by using this vector below for indexing, the below code does not need to be duplicated for mtmconvol
       end
       
       % set ingredients for below

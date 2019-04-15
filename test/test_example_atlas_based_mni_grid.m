@@ -14,11 +14,11 @@ load(fullfile(ftpath, 'template/headmodel/standard_singleshell.mat'));
 %%
 
 cfg = [];
-cfg.grid.xgrid  = -20:1:20;
-cfg.grid.ygrid  = -20:1:20;
-cfg.grid.zgrid  = -20:1:20;
-cfg.grid.unit   = 'cm';
-cfg.grid.tight  = 'yes';
+cfg.sourcemodel.xgrid  = -20:1:20;
+cfg.sourcemodel.ygrid  = -20:1:20;
+cfg.sourcemodel.zgrid  = -20:1:20;
+cfg.sourcemodel.unit   = 'cm';
+cfg.sourcemodel.tight  = 'yes';
 cfg.inwardshift = -1.5;
 cfg.headmodel   = vol;
 template_grid   = ft_prepare_sourcemodel(cfg);
@@ -28,7 +28,7 @@ template_grid = ft_convert_units(template_grid,'cm');
 figure;
 hold on
 ft_plot_mesh(template_grid.pos(template_grid.inside,:));
-ft_plot_vol(vol,  'facecolor', 'cortex', 'edgecolor', 'none');
+ft_plot_headmodel(vol,  'facecolor', 'cortex', 'edgecolor', 'none');
 ft_plot_axes(vol);
 alpha 0.5
 camlight
@@ -60,9 +60,9 @@ ft_plot_mesh(template_grid.pos(template_grid.inside,:));
 mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/salzburg/mri.mat'));
 
 cfg                = [];
-cfg.grid.warpmni   = 'yes';
-cfg.grid.template  = template_grid;
-cfg.grid.nonlinear = 'yes'; % use non-linear normalization
+cfg.sourcemodel.warpmni   = 'yes';
+cfg.sourcemodel.template  = template_grid;
+cfg.sourcemodel.nonlinear = 'yes'; % use non-linear normalization
 cfg.mri            = mri;
 sourcemodel        = ft_prepare_sourcemodel(cfg);
 
@@ -77,7 +77,7 @@ sourcemodel = ft_convert_units(sourcemodel, 'm');
 
 figure
 hold on
-ft_plot_vol(hdm,  'facecolor', 'cortex', 'edgecolor', 'none');
+ft_plot_headmodel(hdm,  'facecolor', 'cortex', 'edgecolor', 'none');
 ft_plot_axes(hdm);
 alpha 0.4  % make the surface transparent
 ft_plot_mesh(sourcemodel.pos(sourcemodel.inside,:));

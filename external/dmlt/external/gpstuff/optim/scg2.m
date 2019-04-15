@@ -38,7 +38,7 @@ end
 sigma0 = 1.0e-4;
 fold = feval(f, x, varargin{:});	% Initial function value.
 iter = 0;
-gradnew = feval(gradf, x, varargin{:});% Initial gradient.
+gradnew = feval(gradf, x, varargin{:}); % Initial gradient.
 gradold = gradnew;
 d = - gradnew;				% Initial search direction.
 success = 1;                            % Force calculation of directional derivs.

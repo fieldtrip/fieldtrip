@@ -97,7 +97,7 @@ elseif ft_filetype(filename, 'caret_label')
 elseif ~isempty(strfind(filename, 'MPM'))
   % assume to be from the spm_anatomy toolbox
   defaultformat = 'spm_anatomy';
-elseif strcmp(x, '.xml') && (isdir(strtok(fullfile(p,f), '_')) || isdir(strtok(fullfile(p,f), '-')))
+elseif strcmp(x, '.xml') && (isfolder(strtok(fullfile(p,f), '_')) || isfolder(strtok(fullfile(p,f), '-')))
   % fsl-format atlas, this is assumed to consist of an .xml file that
   % specifies the labels, as well as the filenames of the files with the actual data stored
   % in a directory with the of the strtok'ed (with '-' or '_') file name.
@@ -181,7 +181,7 @@ switch fileformat
     %labels
     atlas.tissuelabel = cell(1,246);
     fid = fopen(labelfile, 'rt');
-    lab  = fgetl(fid);%lab='Brainnetome Atlas'
+    lab  = fgetl(fid); %lab='Brainnetome Atlas'
     for label_i=1:246
         atlas.tissuelabel{1,label_i}=fgetl(fid);
     end
@@ -1912,7 +1912,7 @@ switch fileformat
   case 'spm_anatomy'
     ft_hastoolbox('spm8up', 1);
     
-    % load the map, this is assumed to be the struct array MAP
+    % load the map, this is assumed to be the struct-array MAP
     load(filename);
     [p,f,e]      = fileparts(filename);
     mrifilename  = fullfile(p,[strrep(f, '_MPM',''),'.img']);

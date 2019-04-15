@@ -1,16 +1,17 @@
-function [lf] = eeg_infinite_monopole(rd, elc, vol)
+function [lf] = eeg_infinite_monopole(monpos, elc, vol)
 
-% EEG_HALFSPACE_MONOPOLE calculate the halfspace medium leadfield
-% on positions pnt for a monopole at position rd and conductivity cond
-% The halfspace solution requires a plane dividing a conductive zone of
-% conductivity cond, from a non coductive zone (cond = 0)
-%       
-% [lf] = eeg_halfspace_monopole(rd, elc, cond)
+% EEG_INFINITE_MONOPOLE calculate the infinite medium potential for a monopole
+%
+% Use as
+%   [lf] = eeg_infinite_monopole(monpos, elc, vol)
 %
 % Implemented from Malmivuo J, Plonsey R, Bioelectromagnetism (1993)
-% http://www.bem.fi/book/index.htm
+% http://www.bem.fi/book/08/08.htm
+%
+% See also EEG_INFINITE_DIPOLE, EEG_HALFSPACE_DIPOLE, EEG_HALFSPACE_MONOPOLE
 
 % Copyright (C) 2011, Cristiano Micheli
+% Copyright (C) 2019, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -30,33 +31,40 @@ function [lf] = eeg_infinite_monopole(rd, elc, vol)
 %
 % $Id$
 
-siz = size(rd);
+if ~isstruct(vol)
+  % it only represents the conductivity, make a structure out of it
+  vol = struct('cond', vol);
+end
+
+siz = size(monpos);
 if any(siz==1)
   % positions are specified as a single vector
   Npoles = prod(siz)/3;
-  rd = rd(:)'; % ensure that it is a row vector
+  monpos = monpos(:)'; % ensure that it is a row vector
 elseif siz(2)==3
   % positions are specified as a Nx3 matrix -> reformat to a single vector
   Npoles = siz(1);
-  rd = rd';
-  rd = rd(:)'; % ensure that it is a row vector
+  monpos = monpos';
+  monpos = monpos(:)'; % ensure that it is a row vector
 else
-  ft_error('incorrect specification of dipole locations');
+  ft_error('incorrect specification of monopole locations');
 end
 
+cond     = vol.cond;
 Nelc     = size(elc,1);
-lf       = zeros(Nelc,Npoles); 
+lf       = zeros(Nelc,Npoles);
+
+mu0   = 4*pi*1e-7;         % Permeability of free space
+c     = 2.99792458 * 1e8;  % Speed of light
+e0    = 1 / (mu0*c^2);     % Permittivity of Free Space
 
 for i=1:Npoles
-  % this is the position of dipole "i"
-  pole1 = rd((1:3) + 3*(i-1));
+  % this is the position of monopole "i"
+  monopole = monpos((1:3) + 3*(i-1));
   
-  % distances electrodes - corrent poles
-  r1 = elc - ones(Nelc,1) * pole1;
+  % distances from electrodes to monopole
+  r = elc - ones(Nelc,1) * monopole;
+  r = sqrt(sum(r.^2,2));
   
-  % denominator
-  R1 =  (4*pi*1) * (sum(r1' .^2 ) )';
-  
-  lf(:,i) = (1 ./ R1);
-
+  lf(:,i) = 1 ./ (4*pi*cond*r);
 end

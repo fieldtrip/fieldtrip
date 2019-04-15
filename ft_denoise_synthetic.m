@@ -4,8 +4,7 @@ function [data] = ft_denoise_synthetic(cfg, data)
 % preprocessed data and for the corresponding gradiometer definition.
 %
 % Use as
-%   [data] = ft_denoise_synthetic(cfg, data);
-%
+%   [data] = ft_denoise_synthetic(cfg, data)
 % where data should come from FT_PREPROCESSING and the configuration should contain
 %   cfg.gradient = 'none', 'G1BR', 'G2BR' or 'G3BR' specifies the gradiometer
 %                  type to which the data should be changed

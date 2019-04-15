@@ -104,9 +104,6 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 assert(isnumeric(dat),    'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 assert(isnumeric(design), 'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 
-% deal with the user specified random seed
-ft_preamble randomseed
-
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed',     {'factor',           'ivar'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'unitfactor',       'uvar'});
@@ -219,7 +216,7 @@ resample = resampledesign(cfg, design);
 Nrand = size(resample,1);
 
 % most of the statfuns result in this warning, which is not interesting
-ws = warning('off', 'MATLAB:warn_r14_stucture_assignment');
+ws = ft_warning('off', 'MATLAB:warn_r14_stucture_assignment');
 
 if strcmp(cfg.correctm, 'cluster')
   % determine the critical value for cluster thresholding
@@ -497,9 +494,5 @@ for i=1:length(fn)
   end
 end
 
-% deal with the potential user specified randomseed
-ft_postamble randomseed
-
-warning(ws); % revert to original state
-
+ft_warning(ws); % revert to original state
 

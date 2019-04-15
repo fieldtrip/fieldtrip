@@ -79,6 +79,7 @@ ft_preamble debug
 ft_preamble loadvar varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
+ft_preamble randomseed
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -125,8 +126,7 @@ end
 
 dimord = getdimord(varargin{1}, cfg.parameter);
 dimtok = tokenize(dimord, '_');
-dimsiz = getdimsiz(varargin{1}, cfg.parameter);
-dimsiz(end+1:length(dimtok)) = 1; % there can be additional trailing singleton dimensions
+dimsiz = getdimsiz(varargin{1}, cfg.parameter, numel(dimtok));
 rptdim = find( strcmp(dimtok, 'subj') |  strcmp(dimtok, 'rpt') |  strcmp(dimtok, 'rpttap'));
 datdim = find(~strcmp(dimtok, 'subj') & ~strcmp(dimtok, 'rpt') & ~strcmp(dimtok, 'rpttap'));
 datsiz = dimsiz(datdim);
@@ -219,6 +219,7 @@ cfg = removefields(cfg, {'dim', 'dimord'});
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
+ft_postamble randomseed
 ft_postamble trackconfig
 ft_postamble previous   varargin
 ft_postamble provenance stat

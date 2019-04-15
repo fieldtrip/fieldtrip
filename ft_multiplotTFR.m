@@ -31,7 +31,7 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 %   cfg.channel          = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.refchannel       = name of reference channel for visualising connectivity, can be 'gui'
 %   cfg.baseline         = 'yes', 'no' or [time1 time2] (default = 'no'), see FT_FREQBASELINE
-%   cfg.baselinetype     = 'absolute', 'relative', 'relchange' or 'db' (default = 'absolute')
+%   cfg.baselinetype     = 'absolute', 'relative', 'relchange', 'normchange', 'db' or 'zscore' (default = 'absolute')
 %   cfg.trials           = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.box              = 'yes', 'no' (default = 'no' if maskparameter given default = 'yes')
 %                          Draw a box around each graph
@@ -96,7 +96,7 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 % If you specify this option the input data will be read from a *.mat
 % file on disk. This mat files should contain only a single variable named 'data',
 % corresponding to the input structure. For this particular function, the
-% data should be provided as a cell array.
+% data should be provided as a cell-array.
 %
 % See also:
 %   FT_MULTIPLOTER, FT_SINGLEPLOTER, FT_SINGLEPLOTTFR, FT_TOPOPLOTER, FT_TOPOPLOTTFR,
@@ -190,7 +190,7 @@ cfg.fontsize       = ft_getopt(cfg, 'fontsize', 8);
 cfg.fontweight     = ft_getopt(cfg, 'fontweight');
 cfg.interactive    = ft_getopt(cfg, 'interactive', 'yes');
 cfg.hotkeys        = ft_getopt(cfg, 'hotkeys', 'yes');
-cfg.renderer       = ft_getopt(cfg, 'renderer'); % let MATLAB decide on default
+cfg.renderer       = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 cfg.orient         = ft_getopt(cfg, 'orient', 'landscape');
 cfg.maskalpha      = ft_getopt(cfg, 'maskalpha', 1);
 cfg.masknans       = ft_getopt(cfg, 'masknans', 'yes');
@@ -198,6 +198,8 @@ cfg.maskparameter  = ft_getopt(cfg, 'maskparameter');
 cfg.maskstyle      = ft_getopt(cfg, 'maskstyle', 'opacity');
 cfg.directionality = ft_getopt(cfg, 'directionality', '');
 cfg.figurename     = ft_getopt(cfg, 'figurename');
+cfg.commentpos     = ft_getopt(cfg, 'commentpos', 'layout');
+cfg.scalepos       = ft_getopt(cfg, 'scalepos', 'layout');
 
 if ~isfield(cfg, 'box')
   if ~isempty(cfg.maskparameter)
@@ -219,25 +221,16 @@ if isfield(cfg,'colormap')
   end
 end
 
-% this is needed for the figure title and correct labeling of graphcolor later on
-if nargin>1
-  if isfield(cfg, 'dataname')
-    if iscell(cfg.dataname)
-      dataname = cfg.dataname{1}; % only one can be plotted
-    else
-      dataname = cfg.dataname;
-    end
-  else
-    if ~isempty(inputname(2))
-      dataname = inputname(2);
-    else
-      dataname = ['data' num2str(1,'%02d')];
-    end
-  end
-else  % data provided through cfg.inputfile
+% this is needed for the figure title
+if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
+  dataname = cfg.dataname;
+elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
   dataname = cfg.inputfile;
+elseif nargin>1
+  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
+else
+  dataname = {};
 end
-
 
 %% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
 
@@ -269,11 +262,12 @@ end
 
 % Apply baseline correction:
 if ~strcmp(cfg.baseline, 'no')
+  tmpcfg = removefields(cfg, {'inputfile', 'reproducescript'});
   % keep mask-parameter if it is set
   if ~isempty(cfg.maskparameter)
     tempmask = data.(cfg.maskparameter);
   end
-  data = ft_freqbaseline(cfg, data);
+  data = ft_freqbaseline(tmpcfg, data);
   % put mask-parameter back if it is set
   if ~isempty(cfg.maskparameter)
     data.(cfg.maskparameter) = tempmask;
@@ -338,7 +332,7 @@ data = chanscale_common(tmpcfg, data);
 %% Section 3: select the data to be plotted and determine min/max range
 
 % Read or create the layout that will be used for plotting
-tmpcfg = removefields(cfg, 'inputfile'); % ensure the inputfile field not to exist
+tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
 cfg.layout = ft_prepare_layout(tmpcfg, data);
 
 % Take the subselection of channels that is contained in the layout, this is the same in all datasets
@@ -412,7 +406,7 @@ if ~isempty(cfg.maskparameter)
       error('Outline masking with a numeric cfg.maskparameter is not supported. Please use a logical mask instead.')
     end
     if cfg.maskalpha ~= 1
-      warning(sprintf('Using field "%s" for masking, cfg.maskalpha is ignored.', cfg.maskparameter))
+      ft_warning('Using field "%s" for masking, cfg.maskalpha is ignored.', cfg.maskparameter)
     end
     % scale mask between 0 and 1
     minval = min(maskmatrix(:));
@@ -482,7 +476,7 @@ for k=1:length(selchan)
 end % plot channels
 
 % plot the layout, labels and outline
-ft_plot_lay(cfg.layout, 'box', istrue(cfg.box), 'label', istrue(cfg.showlabels), 'outline', istrue(cfg.showoutline), 'point', 'no', 'mask', 'no', 'fontsize', cfg.fontsize, 'labelyoffset', 1.4*median(cfg.layout.height/2), 'labelalignh', 'center', 'chanindx', find(~ismember(cfg.layout.label, {'COMNT', 'SCALE'})) );
+ft_plot_layout(cfg.layout, 'box', istrue(cfg.box), 'label', istrue(cfg.showlabels), 'outline', istrue(cfg.showoutline), 'point', 'no', 'mask', 'no', 'fontsize', cfg.fontsize, 'labelyoffset', 1.4*median(cfg.layout.height/2), 'labelalignh', 'center', 'chanindx', find(~ismember(cfg.layout.label, {'COMNT', 'SCALE'})) );
 
 % show colormap
 if isfield(cfg, 'colormap')
@@ -490,22 +484,30 @@ if isfield(cfg, 'colormap')
   set(gcf, 'colormap', cfg.colormap);
 end
 
-% show comment
-comment_handle = [];
-if istrue(cfg.showcomment)
-  k = find(strcmp('COMNT', cfg.layout.label));
-  if ~isempty(k)
-    limittext = cfg.limittext;
-    if ~strcmp(limittext, 'default')
-      comment = limittext;
-    else
-      comment = cfg.comment;
-      comment = sprintf('%0s\nxlim=[%.3g %.3g]', comment, xmin, xmax);
-      comment = sprintf('%0s\nylim=[%.3g %.3g]', comment, ymin, ymax);
-      comment = sprintf('%0s\nzlim=[%.3g %.3g]', comment, zmin, zmax);
-    end
-    comment_handle = ft_plot_text(cfg.layout.pos(k, 1), cfg.layout.pos(k, 2), sprintf(comment), 'FontSize', cfg.fontsize, 'FontWeight', cfg.fontweight);
+% Construct comment
+if ~strcmp(cfg.comment, 'no')
+  if ~strcmp(cfg.limittext, 'default')
+    comment = cfg.limittext;
+  else
+    comment = cfg.comment;
+    comment = sprintf('%0s\nxlim=[%.3g %.3g]', comment, xmin, xmax);
+    comment = sprintf('%0s\nylim=[%.3g %.3g]', comment, ymin, ymax);
+    comment = sprintf('%0s\nzlim=[%.3g %.3g]', comment, zmin, zmax);
   end
+end
+
+% Write comment
+if strcmp(cfg.comment, 'no')
+  comment_handle = [];
+elseif strcmp(cfg.commentpos, 'title')
+  comment_handle = title(comment, 'FontSize', cfg.fontsize);
+elseif ~isempty(strcmp(cfg.layout.label, 'COMNT'))
+  x_comment = cfg.layout.pos(strcmp(cfg.layout.label, 'COMNT'), 1);
+  y_comment = cfg.layout.pos(strcmp(cfg.layout.label, 'COMNT'), 2);
+  % 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom',
+  comment_handle = ft_plot_text(x_comment, y_comment, comment, 'FontSize', cfg.fontsize, 'FontWeight', cfg.fontweight);
+else
+  comment_handle = [];
 end
 
 % show scale
@@ -547,22 +549,6 @@ if strcmp('yes', cfg.hotkeys)
   set(gcf, 'KeyPressFcn', {@key_sub, zmin, zmax})
 end
 
-% set the figure window title
-if isempty(get(gcf, 'Name'))
-  if isfield(cfg, 'funcname')
-    funcname = cfg.funcname;
-  else
-    funcname = mfilename;
-  end
-  if isempty(cfg.figurename)
-    set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), funcname, dataname));
-    set(gcf, 'NumberTitle', 'off');
-  else
-    set(gcf, 'name', cfg.figurename);
-    set(gcf, 'NumberTitle', 'off');
-  end
-end
-
 axis tight
 axis off
 hold off
@@ -577,6 +563,14 @@ end
 if ~isempty(cfg.orient)
   orient(gcf, cfg.orient);
 end
+
+% set the figure window title
+if ~isempty(dataname)
+  set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
+else
+  set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
+end
+set(gcf, 'NumberTitle', 'off');
 
 % Set renderer if specified
 if ~isempty(cfg.renderer)
@@ -602,22 +596,17 @@ if strcmp(cfg.interactive, 'yes')
   set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonMotionFcn'});
 end
 
-% add a menu to the figure, but only if the current figure does not have subplots
-% also, delete any possibly existing previous menu, this is safe because delete([]) does nothing
-delete(findobj(gcf, 'type', 'uimenu', 'label', 'FieldTrip'));
-if numel(findobj(gcf, 'type', 'axes')) <= 1
-  ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
-  uimenu(ftmenu, 'Label', 'Show pipeline', 'Callback', {@menu_pipeline, cfg});
-  uimenu(ftmenu, 'Label', 'About', 'Callback', @menu_about);
-end
-
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous data
 ft_postamble provenance
+ft_postamble savefig
 
-if ~nargout 
+% add a menu to the figure, but only if the current figure does not have subplots
+menu_fieldtrip(gcf, cfg, false);
+
+if ~ft_nargout 
   % don't return anything
   clear cfg
 end

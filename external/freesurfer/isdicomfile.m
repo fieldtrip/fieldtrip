@@ -41,7 +41,7 @@ catch
     res = 0;
   else
     stat = fseek(fid,128,'bof'); % move to DICM string
-    tmp = char(fread(fid,4,'uchar')');%'
+    tmp = char(fread(fid,4,'uchar')'); %'
     res = strcmp(tmp,'DICM');
     fclose(fid);
   end

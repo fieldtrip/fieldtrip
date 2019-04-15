@@ -49,7 +49,7 @@ end
 En = chol(En/N)'; % Covariance of the noise
 
 % Initial output variables
-coeff = [];%  Coefficient matrices of the AR model
+coeff = []; %  Coefficient matrices of the AR model
 kr=[];  % reflection coefficients
 
 for m=1:p

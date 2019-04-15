@@ -30,7 +30,7 @@ tol       = ft_getopt(varargin, 'tol', 1e-6);
 hasrefdata = ~isempty(Y);
 
 % hmmmm we need to observe the epochs' boundaries to not create rubbish
-% support cell array input
+% support cell-array input
 
 if isa(X, 'cell')
   

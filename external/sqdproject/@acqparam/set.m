@@ -14,12 +14,12 @@ else
         error('First input must belong to class acqparam');
     end;
     inargs = varargin;              % Input arguments
-    taglist = fieldnames(struct(t));% List of fields
+    taglist = fieldnames(struct(t)); % List of fields
     while length(inargs)>=2
         prop = inargs{1};           % One property at a time
         val  = inargs{2};
         inargs = inargs(3:end);
-        tagindx = find(strcmpi(taglist(:),prop));% Find which property?
+        tagindx = find(strcmpi(taglist(:),prop)); % Find which property?
         if ~isempty(tagindx)        % If regular field
             eval(['t.' taglist{tagindx} ' = val;']);
         else                        % If SampleInfo field

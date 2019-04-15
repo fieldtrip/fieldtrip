@@ -39,7 +39,7 @@ if nargin==1
     end
   end
 else
-  % mimic the behaviour of the builtin MATLAB struct function
+  % mimic the behavior of the builtin MATLAB struct function
   if mod(nargin,2)
     error('Incorrect number of input arguments (should be key-value pairs)')
   end

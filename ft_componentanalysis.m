@@ -4,7 +4,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 % spatio-temporal decompositions of EEG or MEG data. This function computes
 % the topography and timecourses of the components. The output of this
 % function can be further analyzed with FT_TIMELOCKANALYSIS or
-% FT_FREQNANALYSIS.
+% FT_FREQANALYSIS.
 %
 % Use as
 %   [comp] = ft_componentanalysis(cfg, data)
@@ -208,7 +208,7 @@ if isfield(cfg, 'topo') && isfield(cfg, 'topolabel')
   ft_warning(['Specifying cfg.topo (= mixing matrix) to determine component '...
     'timecourses in specified data is deprecated; please specify an '...
     'unmixing matrix instead with cfg.unmixing. '...
-    'Using cfg.unmixing=pinv(cfg.topo) for now to reproduce old behaviour.']);
+    'Using cfg.unmixing=pinv(cfg.topo) for now to reproduce old behavior.']);
   
   cfg.unmixing = pinv(cfg.topo);
   cfg = rmfield(cfg, 'topo');
@@ -281,7 +281,6 @@ end
 % select trials of interest
 tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
 data   = ft_selectdata(tmpcfg, data);
-
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
 
@@ -439,7 +438,7 @@ switch cfg.method
     % do the rest of the icasso related processing
     sR = icassoCluster(sR, 'strategy', 'AL', 'simfcn', 'abscorr', 's2d', 'sim2dis', 'L',cfg.numcomponent);
     sR = icassoProjection(sR, 'cca', 's2d', 'sqrtsim2dis', 'epochs', 75);
-    [Iq, mixing, unmixing, ~, index2centrotypes] = icassoResult(sR,cfg.numcomponent);
+    [Iq, mixing, unmixing, dum, index2centrotypes] = icassoResult(sR,cfg.numcomponent);
     
     % this step is done, because in icassoResult mixing is determined to be
     % pinv(unmixing), which yields strange results. Better take it from the
