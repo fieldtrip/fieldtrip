@@ -1,10 +1,9 @@
-function [pos, tri] = mesh_tetrahedron(n)
+function [pos, tri] = mesh_tetrahedron
 
-% MESH_TETRAHEDRON returns the vertices and triangles of a refined tetrahedron,
-% with n refinement steps.
+% MESH_TETRAHEDRON returns the vertices and triangles of a tetrahedron.
 %
 % Use as
-%   [pos, tri] = mesh_tetrahedron(N);
+%   [pos, tri] = mesh_tetrahedron;
 %
 % See also MESH_ICOSAHEDRON, MESH_OCTAHEDRON, MESH_SPHERE
 
@@ -26,10 +25,6 @@ function [pos, tri] = mesh_tetrahedron(n)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 
-if nargin==0 || isempty(n)
-  n = 0;
-end
-
 v1 = [ 0, 0, 1 ];
 v2 = [  sqrt(8/9),          0, -1/3 ];
 v3 = [ -sqrt(2/9),  sqrt(2/3), -1/3 ];
@@ -49,11 +44,5 @@ tri = [
   2 4 3
   ];
 
-if n>0
-  % perform an n-fold refinement
-  for i=1:n
-    [pos, tri] = refine(pos, tri, 'banks');
-  end
   % scale all vertices to the unit sphere
   pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1,3);
-end
