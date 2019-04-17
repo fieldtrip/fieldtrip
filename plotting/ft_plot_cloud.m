@@ -106,10 +106,6 @@ else
   cmap             = ft_getopt(varargin, 'colormap', 'jet');
 end
 
-if ~strcmp(cloudtype, 'cloud')
-  ft_warning('cloudtype ''%s'' is deprecated and will be removed, please update your code', cloudtype);
-end
-
 % cloud related inputs
 ptsize             = ft_getopt(varargin, 'ptsize', 1 * ft_scalingfactor('mm', unit));
 ptdensity          = ft_getopt(varargin, 'ptdensityity', 20 / ft_scalingfactor('mm', unit)^3);  % points per unit of volume
@@ -158,12 +154,12 @@ if ~isempty(meshplot)
   else
     meshplot = {};
   end
-
+  
   % replace pnt by pos
   for k = 1:numel(meshplot)
     meshplot{k} = fixpos(meshplot{k});
   end
-
+  
   for k = 1:numel(meshplot)
     if ~isfield(meshplot{k}, 'pos') || ~isfield(meshplot{k}, 'tri')
       % ft_error('the mesh should be a structure with pos and tri');
@@ -171,7 +167,7 @@ if ~isempty(meshplot)
       meshplot{k}.tri = [];
     end
   end
-
+  
   % facecolor, edgecolor, and vertexcolor should be cell-array
   if ~iscell(facecolor)
     tmp = facecolor;
@@ -212,7 +208,7 @@ if ~isempty(meshplot)
       vertexcolor = {};
     end
   end
-
+  
   % make sure each mesh has plotting options specified
   if numel(meshplot) > 1
     nmesh = numel(meshplot);
@@ -276,7 +272,7 @@ if dointersect % check intersection inputs
   else
     intersectlinestyle = {};
   end
-
+  
   % make sure each intersection has plotting options specified
   if numel(meshplot) > 1
     nmesh = numel(meshplot);
@@ -344,18 +340,18 @@ if dointersect
   x = cos(angles)';
   y = sin(angles)';
   slicedim = zeros(length(angles),1);
-
+  
   if strcmp(slicepos, 'auto') % search each slice for largest area of data
     % find the potential limits of the interpolation
     intxmax = max(pos(:,1))+radius; intxmin = min(pos(:,1))-radius;
     intymax = max(pos(:,2))+radius; intymin = min(pos(:,2))-radius;
     intzmax = max(pos(:,3))+radius; intzmin = min(pos(:,3))-radius;
-
+    
     % define potential slices with data
     if oriX; potent_slices = round(intxmin):round(intxmax); end
     if oriY; potent_slices = round(intymin):round(intymax); end
     if oriZ; potent_slices = round(intzmin):round(intzmax); end
-
+    
     area = NaN(length(pos),length(potent_slices));  % preallocate matrix of electrode interpolation area for each slice
     for s = 1:length(potent_slices)                 % only search slices that could potentially contain data
       distance = NaN(length(pos),1);                % preallocate vector for each electrodes distance from the slice
@@ -364,17 +360,17 @@ if dointersect
         if oriX; distance(c) = abs(indpos(1)-potent_slices(s)); end
         if oriY; distance(c) = abs(indpos(2)-potent_slices(s)); end
         if oriZ; distance(c) = abs(indpos(3)-potent_slices(s)); end
-
+        
         if distance(c) < rmax(c) % if there is any data from this electrode in this slice
           % find the circle points for the interpolation of this electrode
           xmax = rmax(c)*x;
           ymax = rmax(c)*y;
-
+          
           % find the maximum radius of a cross section of the virtual sphere in the given slice
           xmaxdif = abs(xmax-distance(c));
           imindif = find(xmaxdif == min(xmaxdif), 1); % index of x value closest to distance(e)
           rcmax = abs(ymax(imindif));
-
+          
           area(c, s) = 0.5*pi*rcmax^2;
         else % area must be zero
           area(c, s) = 0;
@@ -382,7 +378,7 @@ if dointersect
       end % for each loop
     end % for each slice
     totalarea = sum(area);
-
+    
     slicepos = zeros(nslices,1);
     for n = 1:nslices
       imaxslice = find(totalarea == max(totalarea), 1);       % index of the slice with the maximum area
@@ -390,7 +386,7 @@ if dointersect
       totalarea(imaxslice-minspace:imaxslice+minspace) = 0;   % change the totalarea of the chosen slice and those within minspace to 0 so that it is not chosen again
     end
   end
-
+  
   % pre-allocate logical array specifying whether intersection with a given mesh (k) actually exists within a given slice (s)
   intersect_exists = zeros(numel(slicepos), numel(meshplot));
 end
@@ -401,154 +397,158 @@ if strcmp(sli, '2d')
   xsmax = NaN(numel(slicepos),1); xsmin = NaN(numel(slicepos),1);
   ysmax = NaN(numel(slicepos),1); ysmin = NaN(numel(slicepos),1);
   zsmax = NaN(numel(slicepos),1); zsmin = NaN(numel(slicepos),1);
-
+  
   for s = 1:numel(slicepos) % slice loop
     subplot(numel(slicepos),1,s); hold on;
-
+    
     % pre-allocate interpolation limits of each cloud to facilitate finding slice limits after plotting
     xcmax = NaN(length(pos(:,1)),1); xcmin = NaN(length(pos(:,1)),1);
     ycmax = NaN(length(pos(:,1)),1); ycmin = NaN(length(pos(:,1)),1);
     zcmax = NaN(length(pos(:,1)),1); zcmin = NaN(length(pos(:,1)),1);
-
+    
     for c = 1:length(pos(:,1)) % cloud loop
       indpos = pos(c, :);
       % calculate distance from slice
       if oriX; distance = abs(indpos(1)-slicepos(s)); end
       if oriY; distance = abs(indpos(2)-slicepos(s)); end
       if oriZ; distance = abs(indpos(3)-slicepos(s)); end
-
+      
       if distance < rmax(c)
-        if strcmp(cloudtype, 'surf')
-          xmax = rmax(c)*x;
-          ymax = rmax(c)*y;
-
-          if strcmp(scalealpha, 'yes')
-            maxalpha = (rmax(c)-distance)/rmax(c);
-          else
-            maxalpha = 1;
-          end
-
-          % find the maximum radius of a cross section of the virtual sphere in the given slice
-          xmaxdif = abs(xmax-distance);
-          imindif = find(xmaxdif == min(xmaxdif), 1); % index of x value closest to distance(e)
-          rcmax = abs(ymax(imindif));
-
-          % determine points along outermost circle
-          xe = rcmax*x;
-          ye = rcmax*y;
-
-          % jitter values of points in the slice plane so no surfaces overlap
-          slicedime = slicedim+(0.01*rand*ones(length(x), 1));
-
-          % plot concentric circles
-          for n = 0:ncirc-1 % circle loop
-            xo = xe*((ncirc-n)/ncirc);    % outer x points
-            yo = ye*((ncirc-n)/ncirc);    % outer z points
-            xi = xe*((ncirc-1-n)/ncirc);  % inner x points
-            yi = ye*((ncirc-1-n)/ncirc);  % inner z points
-            if n == ncirc-1 % for the last concentric circle
-              if oriX; hs = fill3(slicepos(s)+slicedime, indpos(2)+xo, indpos(3)+yo, val(c)); end
-              if oriY; hs = fill3(indpos(1)+xo, slicepos(s)+slicedime, indpos(3)+yo, val(c)); end
-              if oriZ; hs = fill3(indpos(1)+xo, indpos(2)+yo, slicepos(s)+slicedime, val(c)); end
+        switch (cloudtype)
+          case 'surf'
+            xmax = rmax(c)*x;
+            ymax = rmax(c)*y;
+            
+            if strcmp(scalealpha, 'yes')
+              maxalpha = (rmax(c)-distance)/rmax(c);
             else
-              if oriX; hs = fill3([slicepos(s)+slicedime; slicepos(s)+slicedim], [indpos(2)+xo; indpos(2)+xi], [indpos(3)+yo; indpos(3)+yi], val(c)); end
-              if oriY; hs = fill3([indpos(1)+xo; indpos(1)+xi], [slicepos(s)+slicedime; slicepos(s)+slicedim], [indpos(3)+yo; indpos(3)+yi], val(c)); end
-              if oriZ; hs = fill3([indpos(1)+xo; indpos(1)+xi], [indpos(2)+yo; indpos(2)+yi], [slicepos(s)+slicedime; slicepos(s)+slicedim], val(c)); end
+              maxalpha = 1;
             end
-            set(hs, 'EdgeColor', 'none', 'FaceAlpha', maxalpha*n/ncirc)
-          end % end circle loop
-
-          % find the limits of the plotted surfaces for this electrode
-          if oriX
-            xcmax(c) = max(slicedime+slicepos(s)); xcmin(c) = min(slicedime+slicepos(s));
-            ycmax(c) = max(xe+indpos(2)); ycmin(c) = min(xe+indpos(2));
-            zcmax(c) = max(ye+indpos(3)); zcmin(c) = min(ye+indpos(3));
-          elseif oriY
-            xcmax(c) = max(xe+indpos(1)); xcmin(c) = min(xe+indpos(1));
-            ycmax(c) = max(slicedime+slicepos(s)); ycmin(c) = min(slicedime+slicepos(s));
-            zcmax(c) = max(ye+indpos(3)); zcmin(c) = min(ye+indpos(3));
-          elseif oriZ
-            xcmax(c) = max(xe+indpos(1)); xcmin(c) = min(xe+indpos(1));
-            ycmax(c) = max(ye+indpos(2)); ycmin(c) = min(ye+indpos(2));
-            zcmax(c) = max(slicedime+slicepos(s)); zcmin(c) = min(slicedime+indpos(s));
-          end
-        elseif strcmp(cloudtype, 'cloud')
-          rng(0, 'twister');                          % random number generator
-          npoints = round(ptdensity*pi*rmax(c)^2);       % number of points based on area of cloud cross section
-          azimuth = 2*pi*rand(npoints,1);             % azimuthal angle for each point
-          radii = rmax(c)*(rand(npoints,1).^ptgradient);  % radius value for each point
-          radii = sort(radii);                        % sort radii in ascending order so they are plotted from inside out
-          % convert to Carthesian; note that second input controls third output
-          if oriX; [y,z,x] = sph2cart(azimuth, zeros(npoints,1)+0.01*rand(npoints,1), radii); end
-          if oriY; [x,z,y] = sph2cart(azimuth, zeros(npoints,1)+0.01*rand(npoints,1), radii); end
-          if oriZ; [x,y,z] = sph2cart(azimuth, zeros(npoints,1)+0.01*rand(npoints,1), radii); end
-
-          % color axis with radius scaling
-          if strcmp(colorgrad, 'white') % color runs up to white
-            fcolidx = ceil(cmid) + sign(colscf(c))*floor(abs(colscf(c)*cmid));
-            if fcolidx == 0; fcolidx = 1; end
-            fcol = cmapsc(fcolidx,:); % color [Nx3]
-            ptcol = [linspace(fcol(1), 1, npoints)' linspace(fcol(2), 1, npoints)' linspace(fcol(3), 1, npoints)'];
-          elseif isscalar(colorgrad) % color runs down towards colorbar middle
-            rnorm = radii/rmax(c); % normalized radius
-            if radscf(c)>=.5 % extreme values
-              ptcol = val(c) - (flip(1-rnorm).^inv(colorgrad))*val(c); % scaled fun [Nx1]
-            elseif radscf(c)<.5 % values closest to zero
-              ptcol = val(c) + (flip(1-rnorm).^inv(colorgrad))*abs(val(c)); % scaled fun [Nx1]
+            
+            % find the maximum radius of a cross section of the virtual sphere in the given slice
+            xmaxdif = abs(xmax-distance);
+            imindif = find(xmaxdif == min(xmaxdif), 1); % index of x value closest to distance(e)
+            rcmax = abs(ymax(imindif));
+            
+            % determine points along outermost circle
+            xe = rcmax*x;
+            ye = rcmax*y;
+            
+            % jitter values of points in the slice plane so no surfaces overlap
+            slicedime = slicedim+(0.01*rand*ones(length(x), 1));
+            
+            % plot concentric circles
+            for n = 0:ncirc-1 % circle loop
+              xo = xe*((ncirc-n)/ncirc);    % outer x points
+              yo = ye*((ncirc-n)/ncirc);    % outer z points
+              xi = xe*((ncirc-1-n)/ncirc);  % inner x points
+              yi = ye*((ncirc-1-n)/ncirc);  % inner z points
+              if n == ncirc-1 % for the last concentric circle
+                if oriX; hs = fill3(slicepos(s)+slicedime, indpos(2)+xo, indpos(3)+yo, val(c)); end
+                if oriY; hs = fill3(indpos(1)+xo, slicepos(s)+slicedime, indpos(3)+yo, val(c)); end
+                if oriZ; hs = fill3(indpos(1)+xo, indpos(2)+yo, slicepos(s)+slicedime, val(c)); end
+              else
+                if oriX; hs = fill3([slicepos(s)+slicedime; slicepos(s)+slicedim], [indpos(2)+xo; indpos(2)+xi], [indpos(3)+yo; indpos(3)+yi], val(c)); end
+                if oriY; hs = fill3([indpos(1)+xo; indpos(1)+xi], [slicepos(s)+slicedime; slicepos(s)+slicedim], [indpos(3)+yo; indpos(3)+yi], val(c)); end
+                if oriZ; hs = fill3([indpos(1)+xo; indpos(1)+xi], [indpos(2)+yo; indpos(2)+yi], [slicepos(s)+slicedime; slicepos(s)+slicedim], val(c)); end
+              end
+              set(hs, 'EdgeColor', 'none', 'FaceAlpha', maxalpha*n/ncirc)
+            end % end circle loop
+            
+            % find the limits of the plotted surfaces for this electrode
+            if oriX
+              xcmax(c) = max(slicedime+slicepos(s)); xcmin(c) = min(slicedime+slicepos(s));
+              ycmax(c) = max(xe+indpos(2)); ycmin(c) = min(xe+indpos(2));
+              zcmax(c) = max(ye+indpos(3)); zcmin(c) = min(ye+indpos(3));
+            elseif oriY
+              xcmax(c) = max(xe+indpos(1)); xcmin(c) = min(xe+indpos(1));
+              ycmax(c) = max(slicedime+slicepos(s)); ycmin(c) = min(slicedime+slicepos(s));
+              zcmax(c) = max(ye+indpos(3)); zcmin(c) = min(ye+indpos(3));
+            elseif oriZ
+              xcmax(c) = max(xe+indpos(1)); xcmin(c) = min(xe+indpos(1));
+              ycmax(c) = max(ye+indpos(2)); ycmin(c) = min(ye+indpos(2));
+              zcmax(c) = max(slicedime+slicepos(s)); zcmin(c) = min(slicedime+indpos(s));
             end
-          else
-            ft_error('color gradient should be either ''white'' or a scalar determining color falloff')
-          end
-
-          % draw the points
-          if oriX; scatter3(x+slicepos(s), y+indpos(2), z+indpos(3), ptsize, ptcol, '.'); end
-          if oriY; scatter3(x+indpos(1), y+slicepos(s), z+indpos(3), ptsize, ptcol, '.'); end
-          if oriZ; scatter3(x+indpos(1), y+indpos(2), z+slicepos(s), ptsize, ptcol, '.'); end
-
-          % find the limits of the plotted points for this electrode
-          if oriX
-            xcmax(c) = max(x+slicepos(s)); xcmin(c) = min(x+slicepos(s));
-            ycmax(c) = max(y+indpos(2)); ycmin(c) = min(y+indpos(2));
-            zcmax(c) = max(z+indpos(3)); zcmin(c) = min(z+indpos(3));
-          elseif oriY
-            xcmax(c) = max(x+indpos(1)); xcmin(c) = min(x+indpos(1));
-            ycmax(c) = max(y+slicepos(s)); ycmin(c) = min(y+slicepos(s));
-            zcmax(c) = max(z+indpos(3)); zcmin(c) = min(z+indpos(3));
-          elseif oriZ
-            xcmax(c) = max(x+indpos(1)); xcmin(c) = min(x+indpos(1));
-            ycmax(c) = max(y+indpos(2)); ycmin(c) = min(y+indpos(2));
-            zcmax(c) = max(z+slicepos(s)); zcmin(c) = min(z+slicepos(s));
-          end
-        else
-          error('if slice = "2d" then cloudtype must be either "surf" or "cloud"');
-        end % cloudtype
+            
+          case 'cloud'
+            rng(0, 'twister');                          % random number generator
+            npoints = round(ptdensity*pi*rmax(c)^2);       % number of points based on area of cloud cross section
+            azimuth = 2*pi*rand(npoints,1);             % azimuthal angle for each point
+            radii = rmax(c)*(rand(npoints,1).^ptgradient);  % radius value for each point
+            radii = sort(radii);                        % sort radii in ascending order so they are plotted from inside out
+            % convert to Carthesian; note that second input controls third output
+            if oriX; [y,z,x] = sph2cart(azimuth, zeros(npoints,1)+0.01*rand(npoints,1), radii); end
+            if oriY; [x,z,y] = sph2cart(azimuth, zeros(npoints,1)+0.01*rand(npoints,1), radii); end
+            if oriZ; [x,y,z] = sph2cart(azimuth, zeros(npoints,1)+0.01*rand(npoints,1), radii); end
+            
+            % color axis with radius scaling
+            if strcmp(colorgrad, 'white') % color runs up to white
+              fcolidx = ceil(cmid) + sign(colscf(c))*floor(abs(colscf(c)*cmid));
+              if fcolidx == 0; fcolidx = 1; end
+              fcol = cmapsc(fcolidx,:); % color [Nx3]
+              ptcol = [linspace(fcol(1), 1, npoints)' linspace(fcol(2), 1, npoints)' linspace(fcol(3), 1, npoints)'];
+            elseif isscalar(colorgrad) % color runs down towards colorbar middle
+              rnorm = radii/rmax(c); % normalized radius
+              if radscf(c)>=.5 % extreme values
+                ptcol = val(c) - (flip(1-rnorm).^inv(colorgrad))*val(c); % scaled fun [Nx1]
+              elseif radscf(c)<.5 % values closest to zero
+                ptcol = val(c) + (flip(1-rnorm).^inv(colorgrad))*abs(val(c)); % scaled fun [Nx1]
+              end
+            else
+              ft_error('color gradient should be either ''white'' or a scalar determining the fall-off')
+            end
+            
+            % draw the points
+            if oriX; scatter3(x+slicepos(s), y+indpos(2), z+indpos(3), ptsize, ptcol, '.'); end
+            if oriY; scatter3(x+indpos(1), y+slicepos(s), z+indpos(3), ptsize, ptcol, '.'); end
+            if oriZ; scatter3(x+indpos(1), y+indpos(2), z+slicepos(s), ptsize, ptcol, '.'); end
+            
+            % find the limits of the plotted points for this electrode
+            if oriX
+              xcmax(c) = max(x+slicepos(s)); xcmin(c) = min(x+slicepos(s));
+              ycmax(c) = max(y+indpos(2)); ycmin(c) = min(y+indpos(2));
+              zcmax(c) = max(z+indpos(3)); zcmin(c) = min(z+indpos(3));
+            elseif oriY
+              xcmax(c) = max(x+indpos(1)); xcmin(c) = min(x+indpos(1));
+              ycmax(c) = max(y+slicepos(s)); ycmin(c) = min(y+slicepos(s));
+              zcmax(c) = max(z+indpos(3)); zcmin(c) = min(z+indpos(3));
+            elseif oriZ
+              xcmax(c) = max(x+indpos(1)); xcmin(c) = min(x+indpos(1));
+              ycmax(c) = max(y+indpos(2)); ycmin(c) = min(y+indpos(2));
+              zcmax(c) = max(z+slicepos(s)); zcmin(c) = min(z+slicepos(s));
+            end
+            
+          otherwise
+            ft_error('unsupported cloudtype "%s"', cloudtype);
+            
+        end % switch cloudtype
       end % if distance < rmax(c)
     end % for each position
-
+    
     if dointersect
       if oriX; ori = [1 0 0]; loc = [slicepos(s) 0 0]; end
       if oriY; ori = [0 1 0]; loc = [0 slicepos(s) 0]; end
       if oriZ; ori = [0 0 1]; loc = [0 0 slicepos(s)]; end
-
+      
       % normalise the orientation vector to one
       ori = ori./sqrt(sum(ori.^2));
-
+      
       % shift the location to be along the orientation vector
       loc = ori*dot(loc,ori);
-
+      
       % determine three points on the plane
       inplane = eye(3) - (eye(3) * ori') * ori;
       v1 = loc + inplane(1,:);
       v2 = loc + inplane(2,:);
       v3 = loc + inplane(3,:);
-
+      
       for k = 1:numel(meshplot)
-
+        
         % only plot if the mesh actually intersects the plane
         xmmax = max(meshplot{k}.pos(:,1)); xmmin = min(meshplot{k}.pos(:,1));
         ymmax = max(meshplot{k}.pos(:,2)); ymmin = min(meshplot{k}.pos(:,2));
         zmmax = max(meshplot{k}.pos(:,3)); zmmin = min(meshplot{k}.pos(:,3));
-
+        
         if oriX
           if slicepos(s) < xmmax && slicepos(s) > xmmin
             intersect_exists(s,k) = 1;
@@ -568,10 +568,10 @@ if strcmp(sli, '2d')
             intersect_exists(s,k) = 0;
           end
         end
-
+        
         if intersect_exists(s,k)
           [xmesh, ymesh, zmesh] = intersect_plane(meshplot{k}.pos, meshplot{k}.tri, v1, v2, v3);
-
+          
           % draw each individual line segment of the intersection
           if ~isempty(xmesh)
             p = patch(xmesh', ymesh', zmesh', nan(1, size(xmesh,1)));
@@ -579,7 +579,7 @@ if strcmp(sli, '2d')
             if ~isempty(intersectlinewidth), set(p, 'LineWidth', intersectlinewidth(k)); end
             if ~isempty(intersectlinestyle), set(p, 'LineStyle', intersectlinestyle{k}); end
           end
-
+          
           % find the limits of the lines and add them to the limits of the
           % interpolation to facilitate finding the limits of the slice
           xcmax(end+1) = max(xmesh(:)); xcmin(end+1) = min(xmesh(:));
@@ -588,18 +588,18 @@ if strcmp(sli, '2d')
         end
       end % for each mesh
     end % if dointersect
-
+    
     % find limits of this particular slice
     xsmax(s) = max(xcmax); xsmin(s) = min(xcmin);
     ysmax(s) = max(ycmax); ysmin(s) = min(ycmin);
     zsmax(s) = max(zcmax); zsmin(s) = min(zcmin);
-
+    
     % color settings
     colormap(cmap);
     if ~isempty(clim) && clim(2)>clim(1)
       caxis(gca, clim);
     end
-
+    
     % axis and view settings
     set(gca, 'DataAspectRatio', [1 1 1])
     if oriX
@@ -609,13 +609,13 @@ if strcmp(sli, '2d')
     elseif oriZ
       view([90 90]);
     end
-
+    
     % add title to differentiate slices
     if oriX; title(['slicepos = [' num2str(slicepos(s)) ' 0 0]']); end
     if oriY; title(['slicepos = [0 ' num2str(slicepos(s)) ' 0]']); end
     if oriZ; title(['slicepos = [0 0 ' num2str(slicepos(s)) ']']); end
   end
-
+  
   % set matching limits in the non-slice dimensions for each slice
   for s = 1:numel(slicepos) % slice loop
     subplot(numel(slicepos),1,s);
@@ -633,134 +633,87 @@ if strcmp(sli, '2d')
       zlim([zsmin(s)-2 zsmax(s)+2]);
     end
   end
-
+  
 else % plot 3d cloud
-  % generate point cloud(s)
   hold on;
   for n = 1:size(pos,1) % cloud loop
-    if strcmp(cloudtype, 'cloud')
-      % point cloud with radius scaling
-      rng(0, 'twister'); % random number generator
-      npoints   = round(ptdensity*(4/3)*pi*rmax(n)^3);      % number of points based on cloud volume
-      elevation = asin(2*rand(npoints,1)-1);                % elevation angle for each point
-      azimuth   = 2*pi*rand(npoints,1);                     % azimuth angle for each point
-      radii     = rmax(n)*(rand(npoints,1).^ptgradient);    % radius value for each point
-      radii     = sort(radii);                              % sort radii in ascending order so they are plotted from inside out
-      [x,y,z]   = sph2cart(azimuth, elevation, radii);      % convert to Carthesian
-
-      % color axis with radius scaling
-      if strcmp(colorgrad, 'white')                   % color runs up to white
+    switch (cloudtype)
+      case 'cloud'
+        % point cloud with radius scaling
+        rng(0, 'twister'); % random number generator
+        npoints   = round(ptdensity*(4/3)*pi*rmax(n)^3);      % number of points based on cloud volume
+        elevation = asin(2*rand(npoints,1)-1);                % elevation angle for each point
+        azimuth   = 2*pi*rand(npoints,1);                     % azimuth angle for each point
+        radii     = rmax(n)*(rand(npoints,1).^ptgradient);    % radius value for each point
+        radii     = sort(radii);                              % sort radii in ascending order so they are plotted from inside out
+        [x,y,z]   = sph2cart(azimuth, elevation, radii);      % convert to Carthesian
+        
+        % color axis with radius scaling
+        if strcmp(colorgrad, 'white')                   % color runs up to white
+          indx  = ceil(cmid) + sign(colscf(n))*floor(abs(colscf(n)*cmid));
+          indx  = max(min(indx,size(cmapsc,1)),1);      % index should fall within the colormap
+          fcol  = cmapsc(indx,:);                       % color [Nx3]
+          ptcol = [linspace(fcol(1), 1, npoints)' linspace(fcol(2), 1, npoints)' linspace(fcol(3), 1, npoints)'];
+        elseif isscalar(colorgrad)                      % color runs down towards colorbar middle
+          rnorm = radii/rmax(n);                        % normalized radius
+          if radscf(n)>=.5                              % extreme values
+            ptcol = val(n) - (flip(1-rnorm).^inv(colorgrad))*val(n); % scaled fun [Nx1]
+          elseif radscf(n)<.5                           % values closest to zero
+            ptcol = val(n) + (flip(1-rnorm).^inv(colorgrad))*abs(val(n)); % scaled fun [Nx1]
+          end
+        else
+          ft_error('color gradient should be either ''white'' or a scalar determining color falloff')
+        end
+        
+        % draw the points
+        scatter3(x+pos(n,1), y+pos(n,2), z+pos(n,3), ptsize, ptcol, '.');
+        
+      case 'surf'
         indx  = ceil(cmid) + sign(colscf(n))*floor(abs(colscf(n)*cmid));
-        indx  = max(min(indx,size(cmapsc,1)),1);      % index should fall within the colormap
-        fcol  = cmapsc(indx,:);                       % color [Nx3]
-        ptcol = [linspace(fcol(1), 1, npoints)' linspace(fcol(2), 1, npoints)' linspace(fcol(3), 1, npoints)'];
-      elseif isscalar(colorgrad)                      % color runs down towards colorbar middle
-        rnorm = radii/rmax(n);                        % normalized radius
-        if radscf(n)>=.5                              % extreme values
-          ptcol = val(n) - (flip(1-rnorm).^inv(colorgrad))*val(n); % scaled fun [Nx1]
-        elseif radscf(n)<.5                           % values closest to zero
-          ptcol = val(n) + (flip(1-rnorm).^inv(colorgrad))*abs(val(n)); % scaled fun [Nx1]
-        end
-      else
-        ft_error('color gradient should be either ''white'' or a scalar determining color falloff')
-      end
-
-      % draw the points
-      scatter3(x+pos(n,1), y+pos(n,2), z+pos(n,3), ptsize, ptcol, '.');
-    elseif strcmp(cloudtype, 'surf')
-      indx  = ceil(cmid) + sign(colscf(n))*floor(abs(colscf(n)*cmid));
-      indx  = max(min(indx,size(cmapsc,1)),1);  % index should fall within the colormap
-      fcol  = cmapsc(indx,:);                   % color [Nx3]
-      [xsp, ysp, zsp] = sphere(100);
-      hs = surf(rmax(n)*xsp+pos(n,1), rmax(n)*ysp+pos(n,2), rmax(n)*zsp+pos(n,3));
-      set(hs, 'EdgeColor', 'none', 'FaceColor', fcol, 'FaceAlpha', 1);
-
-    elseif strcmp(cloudtype, 'disc')
-      if isempty(meshplot)
-        ft_error('cannot plot electrodes as discs without a mesh to align them with')
-      end
-
-      % calculate local norm vectors
-      npoints = 25; % points on the headshape used for estimating the local norm
-      d = sqrt( (pos(n,1)-meshplot{1}.pos(:,1)).^2 + ...
-        (pos(n,2)-meshplot{1}.pos(:,2)).^2 + (pos(n,3)-meshplot{1}.pos(:,3)).^2 );
-      [ds, idx] = sort(d);
-      x = meshplot{1}.pos(idx(1:npoints),1);
-      y = meshplot{1}.pos(idx(1:npoints),2);
-      z = meshplot{1}.pos(idx(1:npoints),3);
-      ptCloud = pointCloud([x y z]);
-      normals = pcnormals(ptCloud);
-      u = normals(:,1);
-      v = normals(:,2);
-      w = normals(:,3);
-
-      % flip the normal vector if it is not pointing toward the center
-      C = mean(meshplot{1}.pos,1); % headshape center
-      for k = 1:numel(x)
-        p1 = C - [x(k),y(k),z(k)];
-        p2 = [u(k),v(k),w(k)];
-        angle = atan2(norm(cross(p1,p2)),p1*p2');
-        if angle > pi/2 || angle < -pi/2
-          u(k) = -u(k);
-          v(k) = -v(k);
-          w(k) = -w(k);
-        end
-      end
-      Fn = nanmean([u v w],1);
-      Fn = Fn * (1/sqrt(sum(Fn.^2,2))); % normalize
-
-      % create disc aligned with the headshape (ideally, a hull)
-      [X,Y,Z] = cylinder2([rmax(n) rmax(n)],[Fn(:,1) Fn(:,2) Fn(:,3)], 100);
-      X(1,:) = X(1,:)+pos(n,1); Y(1,:) = Y(1,:)+pos(n,2); Z(1,:) = Z(1,:)+pos(n,3);
-      t = rmax(n)/10; % add thickness (outward), X(2,1)-X(1,1) etc.
-      X(2,:) = X(1,:)-t*Fn(:,1); Y(2,:) = Y(1,:)-t*Fn(:,2); Z(2,:) = Z(1,:)-t*Fn(:,3);
-      indx  = ceil(cmid) + sign(colscf(n))*floor(abs(colscf(n)*cmid));
-      indx  = max(min(indx,size(cmapsc,1)),1);  % index should fall within the colormap
-      fcol  = cmapsc(indx,:);                   % color [Nx3]
-      hold on; mesh(X,Y,Z, 'facecolor', fcol, 'edgecolor', fcol, 'lineStyle','none'); % draw cylinder
-      hold on; fill3(X(1,:),Y(1,:),Z(1,:), fcol, 'lineStyle','none'); % fill sides
-      hold on; fill3(X(2,:),Y(2,:),Z(2,:), fcol, 'lineStyle','none');
-    elseif strcmp(cloudtype, 'point')
-      indx  = ceil(cmid) + sign(colscf(n))*floor(abs(colscf(n)*cmid));
-      indx  = max(min(indx,size(cmapsc,1)),1);  % index should fall within the colormap
-      fcol  = cmapsc(indx,:);                   % color [Nx3]
-
-      hs = plot3(pos(n,1), pos(n,2), pos(n,3), 'Marker', marker, 'MarkerSize', rmax(n), 'Color', fcol, 'Linestyle', 'none');
-    end
+        indx  = max(min(indx,size(cmapsc,1)),1);  % index should fall within the colormap
+        fcol  = cmapsc(indx,:);                   % color [Nx3]
+        [xsp, ysp, zsp] = sphere(100);
+        hs = surf(rmax(n)*xsp+pos(n,1), rmax(n)*ysp+pos(n,2), rmax(n)*zsp+pos(n,3));
+        set(hs, 'EdgeColor', 'none', 'FaceColor', fcol, 'FaceAlpha', 1);
+        
+      otherwise
+        ft_error('unsupported cloudtype "%s"', cloudtype);
+        
+    end % switch cloudtype
   end % end cloud loop
-
+  
   if ~isempty(meshplot) && ~strcmp(cloudtype, 'disc') % do not plot the mesh when plotting electrodes as discs
     for k = 1:numel(meshplot) % mesh loop
       ft_plot_mesh(meshplot{k}, 'facecolor', facecolor{k}, 'EdgeColor', edgecolor{k}, ...
         'facealpha', facealpha(k), 'edgealpha', edgealpha(k), 'vertexcolor', vertexcolor{k});
       material dull
     end % end mesh loop
-
+    
     if dointersect % plot the outlines on the mesh
       for s = 1:numel(slicepos) % slice loop
         if oriX; ori = [1 0 0]; loc = [slicepos(s) 0 0]; end
         if oriY; ori = [0 1 0]; loc = [0 slicepos(s) 0]; end
         if oriZ; ori = [0 0 1]; loc = [0 0 slicepos(s)]; end
-
+        
         % normalise the orientation vector to one
         ori = ori./sqrt(sum(ori.^2));
-
+        
         % shift the location to be along the orientation vector
         loc = ori*dot(loc,ori);
-
+        
         % determine three points on the plane
         inplane = eye(3) - (eye(3) * ori') * ori;
         v1 = loc + inplane(1,:);
         v2 = loc + inplane(2,:);
         v3 = loc + inplane(3,:);
-
+        
         for k = 1:numel(meshplot)
-
+          
           % only plot if the mesh actually intersects the plane
           xmmax = max(meshplot{k}.pos(:,1)); xmmin = min(meshplot{k}.pos(:,1));
           ymmax = max(meshplot{k}.pos(:,2)); ymmin = min(meshplot{k}.pos(:,2));
           zmmax = max(meshplot{k}.pos(:,3)); zmmin = min(meshplot{k}.pos(:,3));
-
+          
           if oriX
             if slicepos(s) < xmmax && slicepos(s) > xmmin
               intersect_exists(s,k) = 1;
@@ -780,10 +733,10 @@ else % plot 3d cloud
               intersect_exists(s,k) = 0;
             end
           end
-
+          
           if intersect_exists(s,k)
             [xmesh, ymesh, zmesh] = intersect_plane(meshplot{k}.pos, meshplot{k}.tri, v1, v2, v3);
-
+            
             % draw each individual line segment of the intersection
             if ~isempty(xmesh)
               p = patch(xmesh', ymesh', zmesh', nan(1, size(xmesh,1)));
@@ -796,12 +749,12 @@ else % plot 3d cloud
       end % for each slice
     end % if dointersect
   end % if plotting mesh
-
+  
   % axis settings
   axis off
   axis vis3d
   axis equal
-
+  
   % color settings
   colormap(cmap);
   if ~isempty(clim) && clim(2)>clim(1)
