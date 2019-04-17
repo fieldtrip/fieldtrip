@@ -867,6 +867,7 @@ ARRAY=()
 ARRAY+=(fileio/private/ft_hastoolbox.m)
 ARRAY+=(forward/private/ft_hastoolbox.m)
 ARRAY+=(inverse/private/ft_hastoolbox.m)
+ARRAY+=(plotting/private/ft_hastoolbox.m)
 ARRAY+=(utilities/ft_hastoolbox.m)
 sync ${ARRAY[*]}
 

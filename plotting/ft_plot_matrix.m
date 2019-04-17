@@ -251,6 +251,9 @@ vdat = vdat .* height;
 % then shift to the new vertical position
 vdat = vdat + vpos;
 
+% uimagesc is in external/fileexchange
+ft_hastoolbox('fileexchange', 1);
+
 % the uimagesc-call needs to be here to avoid calling it several times in switch-highlight
 if isempty(highlight)
   h = uimagesc(hdat, vdat, cdat, clim);
@@ -272,21 +275,21 @@ if ~isempty(highlight)
         set(h, 'AlphaDataMapping', 'scaled');
         alim([0 1]);
       end
-      
+
     case 'saturation'
       cmap    = get(gcf, 'colormap');
       rgbcdat = cdat2rgb(cdat, cmap, clim, highlight);
-      
+
       h = uimagesc(hdat, vdat, rgbcdat, clim);
       set(h,'tag',tag);
-      
+
     case 'colormix'
       cmap    = get(gcf, 'colormap');
       rgbcdat = bg_rgba2rgb([1 1 1], cdat, cmap, clim, highlight, 'rampup', [0 1]);
-      
+
       h = uimagesc(hdat, vdat, rgbcdat, clim);
       set(h,'tag',tag);
-      
+
     case 'outline'
       % the significant voxels could be outlined with a black contour
       % plot outline
@@ -305,7 +308,7 @@ if ~isempty(highlight)
       if ~holdflag
         hold off % revert to the previous hold state
       end
-      
+
     otherwise
       ft_error('unsupported highlightstyle')
   end % switch highlightstyle

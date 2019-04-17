@@ -46,7 +46,8 @@ if strcmp(cfg.refchannel, 'gui')
   set(h, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@make_selection, cfg, varargin{:}}, 'event', 'WindowButtonDownFcn'});
   set(h, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@make_selection, cfg, varargin{:}}, 'event', 'WindowButtonMotionFcn'});
 else
-  make_figure(cfg, varargin{:});
+  
+  make_figure(cfg, varargin{~cellfun(@isnumeric,varargin)});
 end
 
 
