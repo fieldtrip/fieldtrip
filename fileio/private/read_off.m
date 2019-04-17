@@ -26,32 +26,26 @@ function [pnt, tri] = read_off(fn)
 %
 % $Id$
 
-fid = fopen(fn, 'rt');
-if fid~=-1
+fid = fopen_or_error(fn, 'rt');
 
-  % scan the file type
-  [s, count] = fscanf(fid, '%s\n', 1);
-  if ~strcmp(s,'OFF')
-    msg = sprintf('wrong file type %s', s);
-    ft_error(msg);
-  end
-
-  % read the number of vertex points and triangles
-  [val, count] = fscanf(fid, '%d', 3);
-  Npnt = val(1)
-  Ntri = val(2)
-
-  % read the vertex points
-  pnt  = fscanf(fid, '%f', [3, Npnt]);
-  pnt  = pnt(1:3,:)';
-
-  % read the triangles
-  tri = fscanf(fid, '%d', [4, Ntri]);
-  tri = (tri(2:4,:)+1)';
-  fclose(fid);
-
-else
-  ft_error('unable to open file');
+% scan the file type
+[s, count] = fscanf(fid, '%s\n', 1);
+if ~strcmp(s,'OFF')
+  msg = sprintf('wrong file type %s', s);
+  ft_error(msg);
 end
 
+% read the number of vertex points and triangles
+[val, count] = fscanf(fid, '%d', 3);
+Npnt = val(1)
+Ntri = val(2)
+
+% read the vertex points
+pnt  = fscanf(fid, '%f', [3, Npnt]);
+pnt  = pnt(1:3,:)';
+
+% read the triangles
+tri = fscanf(fid, '%d', [4, Ntri]);
+tri = (tri(2:4,:)+1)';
+fclose(fid);
 

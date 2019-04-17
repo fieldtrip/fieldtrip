@@ -1,4 +1,4 @@
-function [varargout] = pad(varargin)
+function [varargout] = startsWith(varargin)
 
 % STARTSWITH True if text starts with pattern.
 %   TF = startsWith(S,PATTERN) returns true if any element of string array S
@@ -10,7 +10,7 @@ function [varargout] = pad(varargin)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % see https://github.com/fieldtrip/fieldtrip/issues/899
 
-if exist(mfilename, 'builtin') || any(strncmp(which(mfilename, '-all'), matlabroot, length(matlabroot)))
+if exist(mfilename, 'builtin') || any(strncmp(which(mfilename, '-all'), matlabroot, length(matlabroot)) & cellfun(@isempty, regexp(which(mfilename, '-all'), fullfile('private', mfilename))))
   % remove this directory from the path
   p = fileparts(mfilename('fullpath'));
   warning('removing %s from your path, see http://bit.ly/2SPPjUS', p);

@@ -110,7 +110,7 @@ physMax = digMax;
 %	uint16_t numChannels;
 %	uint16_t reserved3;
   
-fid = fopen(filename, 'wb', 'ieee-le');
+fid = fopen_or_error(filename, 'wb', 'ieee-le');
 % first write fixed part
 fprintf(fid, 'GDF 2.20'); %version
 fwrite(fid, zeros(1,66), 'int8'); % patient

@@ -31,7 +31,7 @@ function [elec] = read_brainvision_pos(filename)
 %
 % $Id$
 
-fid = fopen(filename, 'rt');
+fid = fopen_or_error(filename, 'rt');
 line = fgetl(fid);
 Nchan = str2double(line);
 

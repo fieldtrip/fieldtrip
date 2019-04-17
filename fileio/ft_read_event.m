@@ -429,10 +429,7 @@ switch eventformat
     event = read_ah5_markers(hdr, filename);
     
   case 'brainvision_vmrk'
-    fid=fopen(filename,'rt');
-    if fid==-1
-      ft_error('cannot open BrainVision marker file')
-    end
+    fid = fopen_or_error(filename,'rt');
     line = [];
     while ischar(line) || isempty(line)
       line = fgetl(fid);
@@ -1163,7 +1160,7 @@ switch eventformat
     
     if ~exist(fifo,'file')
       ft_warning('the FIFO %s does not exist; attempting to create it', fifo);
-      fid = fopen(fifo, 'r');
+      fid = fopen_or_error(fifo, 'r');
       system(sprintf('mkfifo -m 0666 %s',fifo));
     end
     

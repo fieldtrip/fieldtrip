@@ -303,7 +303,7 @@ end
 switch dataformat
   
   case {'4d' '4d_pdf', '4d_m4d', '4d_xyz'}
-    [fid, message] = fopen(datafile,'rb','ieee-be');
+    fid = fopen_or_error(datafile,'rb','ieee-be');
     % determine the type and size of the samples
     sampletype = lower(hdr.orig.Format);
     switch sampletype
@@ -778,7 +778,7 @@ switch dataformat
     elseif strcmp(sampletype, 'double')
       samplesize  = 8;
     end
-    [fid,message] = fopen(datafile,'rb','ieee-le');
+    fid = fopen_or_error(datafile,'rb','ieee-le');
     % jump to the desired data
     fseek(fid, offset*samplesize*hdr.nChans, 'cof');
     % read the desired data
@@ -903,10 +903,10 @@ switch dataformat
   case 'itab_raw'
     if any(hdr.orig.data_type==[0 1 2])
       % big endian
-      fid = fopen(datafile, 'rb', 'ieee-be');
+      fid = fopen_or_error(datafile, 'rb', 'ieee-be');
     elseif any(hdr.orig.data_type==[3 4 5])
       % little endian
-      fid = fopen(datafile, 'rb', 'ieee-le');
+      fid = fopen_or_error(datafile, 'rb', 'ieee-le');
     else
       ft_error('unsuppported data_type in itab format');
     end
@@ -941,7 +941,7 @@ switch dataformat
     end
     
   case 'jaga16'
-    fid = fopen(filename, 'r');
+    fid = fopen_or_error(filename, 'r');
     fseek(fid, hdr.orig.offset + (begtrial-1)*hdr.orig.packetsize, 'bof');
     buf = fread(fid, (endtrial-begtrial+1)*hdr.orig.packetsize/2, 'uint16');
     fclose(fid);
@@ -971,7 +971,7 @@ switch dataformat
     end
     
     iEpoch = unique(trlind(begsample:endsample));
-    sfid = fopen(filename, 'r');
+    sfid = fopen_or_error(filename, 'r');
     dat  = zeros(hdr.nChans, endsample - begsample + 1);
     for i = 1:length(iEpoch)
       dat(:, trlind(begsample:endsample) == iEpoch(i)) =...

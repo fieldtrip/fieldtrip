@@ -119,11 +119,7 @@ return
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [ avw ] = read_image(avw,IMGorient,machine,verbose)
 
-fid = fopen(sprintf('%s.img',avw.fileprefix),'r',machine);
-if fid < 0,
-  msg = sprintf('...cannot open file %s.img\n\n',avw.fileprefix);
-  ft_error(msg);
-end
+fid = fopen_or_error(sprintf('%s.img',avw.fileprefix),'r',machine);
 
 if verbose,
     ver = '[$Revision$]';

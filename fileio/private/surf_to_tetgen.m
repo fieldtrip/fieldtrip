@@ -23,7 +23,7 @@ else
 end
 
 
-fid = fopen(node_filename, 'w');
+fid = fopen_or_error(node_filename, 'w');
 fprintf(fid, [num2str(N_nodes) ' 3 ' num2str(N_attributes) ' 0\n']);
 for i=1:(N_nodes)
     fprintf(fid,precision_str,i,A(i,:));
@@ -35,7 +35,7 @@ poly_filename = [filename '.poly'];
 
 N_elements = size(elements,1);
 
-fid = fopen(poly_filename, 'w');
+fid = fopen_or_error(poly_filename, 'w');
 fprintf(fid, ['0  3  ' num2str(N_attributes) '  0\n']);
 fprintf(fid, [num2str(N_elements) ' 1\n']);
 for i=1:(N_elements)

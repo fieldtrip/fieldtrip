@@ -51,7 +51,7 @@ end
 % int16 ChanZ[31]
 
 hdr = neuralynx_getheader(filename);
-fid = fopen(filename, 'rb', 'ieee-le');
+fid = fopen_or_error(filename, 'rb', 'ieee-le');
 
 % determine the length of the file
 fseek(fid, 0, 'eof');
@@ -64,7 +64,7 @@ if NRecords>0
   % read the timestamp from the first and last record
   hdr.FirstTimeStamp = neuralynx_timestamp(filename, 1);
   hdr.LastTimeStamp  = neuralynx_timestamp(filename, inf);
-  if (ispc), fid = fopen(filename, 'rb', 'ieee-le'); end
+  if (ispc), fid = fopen_or_error(filename, 'rb', 'ieee-le'); end
 else
   hdr.FirstTimeStamp = nan;
   hdr.LastTimeStamp  = nan;

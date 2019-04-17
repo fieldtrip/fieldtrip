@@ -72,7 +72,7 @@ stepsize = typesizes(strmatch(strtok(datatype, '-'), typenames));
 
 filename = [filename(1:(end-3)) 'dat'];
 
-fid = fopen(filename, 'r');
+fid = fopen_or_error(filename, 'r');
 fseek(fid, stepsize*header.nChans*(begsample-1), 'bof');
 [dat, siz] = fread(fid, [header.nChans, (endsample-begsample+1)], strtok(datatype, '-'));
 fclose(fid);

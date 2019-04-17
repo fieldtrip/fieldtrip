@@ -49,10 +49,7 @@ eeg = rmfield(eeg, 'variance');
 eeg.time = linspace(eeg.xmin, eeg.xmax, eeg.npnt);
 
 % open the file and seek towards the place where the raw data is
-fid = fopen(filename,'r','ieee-le');
-if fid<0
-  ft_error(['cannot open ', filename]);
-end
+fid = fopen_or_error(filename,'r','ieee-le');
 
 % the default is to read all epochs
 if nargin<2

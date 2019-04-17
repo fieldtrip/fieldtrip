@@ -60,8 +60,9 @@ if nargin==1
   cname=computer;
   if cname(1:2)=='PC' SLASH=BSLASH; end;
 
-  fid=fopen(FILENAME,'r','ieee-le');
-  if fid<0
+  try
+    fid=fopen_or_error(FILENAME,'r','ieee-le');
+  catch err
     fprintf(2,['Error LOADEDF: File ' FILENAME ' not found\n']);
     return;
   end;

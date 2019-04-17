@@ -37,7 +37,7 @@ if ~exist(datafile, 'file')
   datafile = fullfile(p, [f '.Dat']);
 end
 
-fid = fopen(datafile, 'rb');
+fid = fopen_or_error(datafile, 'rb');
 hdr.id        = fread(fid, [1, 12], 'uint8=>char');
 hdr.lastname  = fread(fid, [1, 12], 'uint8=>char');
 hdr.firstname = fread(fid, [1, 12], 'uint8=>char');

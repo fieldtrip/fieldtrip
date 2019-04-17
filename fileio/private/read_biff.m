@@ -41,7 +41,7 @@ function [this] = read_biff(filename, opt)
 define_biff;
 this = [];
 
-fid = fopen(filename, 'r');
+fid = fopen_or_error(filename, 'r');
 fseek(fid,0,'bof');
 
 [id, siz] = chunk_header(fid);

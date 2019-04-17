@@ -2,7 +2,7 @@ function event = read_micromed_event(trcfile)
 
 % reads the events of the Micromed TRC format files
 
-fid=fopen(trcfile,'r');
+fid=fopen_or_error(trcfile,'r');
 
 %------------------reading patient & recording info----------
 fseek(fid,64,-1);

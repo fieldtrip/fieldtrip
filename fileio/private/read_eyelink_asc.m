@@ -37,7 +37,7 @@ asc.dat     = [];
 current   = 0;
 
 % read the whole file at once
-fid = fopen(filename, 'rt');
+fid = fopen_or_error(filename, 'rt');
 aline = fread(fid, inf, 'char=>char');          % returns a single long string
 fclose(fid);
 

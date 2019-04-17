@@ -177,10 +177,7 @@ end
 % CREATES a new, empty file (rewrites an existing one)
 %----------------------------
 if strcmpi(operation,'new')
-    fh = fopen(fileName,'w');
-    if fh == -1
-        ft_error(['File: ''' fileName ''' can not be (re)created']);
-    end
+    fh = fopen_or_error(fileName,'w');
     fclose(fh);
     return
 
@@ -264,10 +261,7 @@ line = [];
 currSection = '';
 currSubSection = '';
 
-fh = fopen(fileName,'r');
-if fh == -1
-    ft_error(['File: ''' fileName ''' does not exist or can not be opened.']);
-end
+fh = fopen_or_error(fileName,'r');
 
 try
     %--- Searching for the keys - their values and start and end locations in bytes
@@ -378,10 +372,7 @@ keysIn = keys;
 [secsExist,subSecsExist,keysExist,readValues,so,eo] = findkeys(fileName,keys(:,1:3));
 
 % Read the whole file's contents out
-fh = fopen(fileName,'r');
-if fh == -1
-    ft_error(['File: ''' fileName ''' does not exist or can not be opened.']);
-end
+fh = fopen_or_error(fileName,'r');
 try
     dataout = fscanf(fh,'%c');
 catch
@@ -391,10 +382,7 @@ end
 fclose(fh);
 
 %--- Rewriting the file -> writing the refined contents
-fh = fopen(fileName,'w');
-if fh == -1
-    ft_error(['File: ''' fileName ''' does not exist or can not be opened.']);
-end
+fh = fopen_or_error(fileName,'w');
 try
     tab1 = [];
     if strcmpi(style,'tabbed')
@@ -537,10 +525,7 @@ keysIn = keys;
 [secsExist,subSecsExist,keysExist,readValues,so,eo] = findkeys(fileName,keys(:,1:3));
 
 % Read the whole file's contents out
-fh = fopen(fileName,'r');
-if fh == -1
-    ft_error(['File: ''' fileName ''' does not exist or can not be opened.']);
-end
+fh = fopen_or_error(fileName,'r');
 try
     dataout = fscanf(fh,'%c');
 catch
@@ -550,10 +535,7 @@ end
 fclose(fh);
 
 %--- Rewriting the file -> writing the refined contents
-fh = fopen(fileName,'w');
-if fh == -1
-    ft_error(['File: ''' fileName ''' does not exist or can not be opened.']);
-end
+fh = fopen_or_error(fileName,'w');
 try
     ind = find(keysExist);
     nExistingKeys = length(ind);

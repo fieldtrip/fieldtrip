@@ -17,7 +17,7 @@ sizeSoFar = 0;
 name_k = datafile;
 
 while true
-  F = fopen(datafile,'rb',hdr.orig.endianness);
+  F = fopen_or_error(datafile,'rb',hdr.orig.endianness);
   fseek(F, 0, 'eof');
   size_k = ftell(F);
    

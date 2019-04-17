@@ -77,10 +77,7 @@ else
 end
 
 % Markeranzahl auslesen, Strukturen und cell-Arrays definieren 
-fid=fopen([filename(1:length(filename)-1) '_'],'r');
-if fid==-1,
-    ft_error(['Unable to open file "' [filename(1:length(filename)-1) '_'] '" . Error code: ' ferror(fid)]);
-end
+fid=fopen_or_error([filename(1:length(filename)-1) '_'],'r');
 try
     s=fscanf(fid,'%c',inf);
     fclose(fid);

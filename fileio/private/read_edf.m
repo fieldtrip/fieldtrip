@@ -94,11 +94,7 @@ if needhdr
   cname=computer;
   if cname(1:2)=='PC' SLASH=BSLASH; end
 
-  fid=fopen(FILENAME,'r','ieee-le');
-  if fid<0
-    fprintf(2,['Error LOADEDF: File ' FILENAME ' not found\n']);
-    return;
-  end
+  fid=fopen_or_error(FILENAME,'r','ieee-le');
 
   EDF.FILE.FID=fid;
   EDF.FILE.OPEN = 1;

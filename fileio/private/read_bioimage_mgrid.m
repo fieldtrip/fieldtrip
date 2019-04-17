@@ -41,7 +41,7 @@ WaitForDim = 0;
 
 % open and read ascii-file line by line
 fileline = 0;
-fid = fopen(mgridfile,'r'); % open ascii-file
+fid = fopen_or_error(mgridfile,'r'); % open ascii-file
 while fileline >= 0 % read line by line
 
   fileline = fgets(fid); % read a line

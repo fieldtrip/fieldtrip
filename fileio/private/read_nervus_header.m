@@ -34,10 +34,7 @@ UNITSIZE = 16;
 ITEMNAMESIZE  = 64;
 
 % ---------------- Opening File------------------
-h = fopen(filename,'rb','ieee-le');
-if h==-1
-    ft_error('Can''t open Nervus EEG file')
-end
+h = fopen_or_error(filename,'rb','ieee-le');
 
 nrvHdr = struct();
 nrvHdr.filename = filename;

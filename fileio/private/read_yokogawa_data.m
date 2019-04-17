@@ -47,7 +47,7 @@ if nargin<5
 end
 
 handles = definehandles;
-fid = fopen(filename, 'rb', 'ieee-le');
+fid = fopen_or_error(filename, 'rb', 'ieee-le');
 
 switch hdr.acq_type
   case handles.AcqTypeEvokedAve

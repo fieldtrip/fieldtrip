@@ -38,7 +38,7 @@ function [col1, col2, col3, col4] = read_neuromag_eve(filename)
 
 % TODO check sample indexing (1 or 0 based)
 
-fid = fopen(filename, 'rt');
+fid = fopen_or_error(filename, 'rt');
 [a, count] = fscanf(fid, '%f', [inf]);
 fclose(fid);
 

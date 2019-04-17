@@ -407,7 +407,7 @@ switch dataformat
     
   case 'yokogawa_mri'
     ft_hastoolbox('yokogawa', 1);
-    fid = fopen(filename, 'rb');
+    fid = fopen_or_error(filename, 'rb');
     mri_info = GetMeg160MriInfoM(fid);
     patient_info = GetMeg160PatientInfoFromMriFileM(fid);
     [data_style, model, marker, image_parameter, normalize, besa_fiducial_point] = GetMeg160MriFileHeaderInfoM(fid);

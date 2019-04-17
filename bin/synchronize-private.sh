@@ -565,6 +565,14 @@ ARRAY+=(utilities/private/fixsampleinfo.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# fopen_or_error.m
+
+ARRAY=()
+ARRAY+=(private/fopen_or_error.m)
+ARRAY+=(fileio/private/fopen_or_error.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # ft_apply_montage.m
 
 ARRAY=()

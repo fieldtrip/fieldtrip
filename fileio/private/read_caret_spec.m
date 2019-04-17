@@ -81,7 +81,7 @@ try,
 catch
   
   % process as ASCII-file
-  fid  = fopen(specfile);
+  fid  = fopen_or_error(specfile);
   line = 'some text';
   while isempty(strfind(line, 'EndHeader'))
     line = fgetl(fid);

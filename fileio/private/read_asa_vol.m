@@ -93,17 +93,13 @@ else
     nr = read_asa(fullfile(path, mat_file), 'NumberRows=', '%d');
     nc = read_asa(fullfile(path, mat_file), 'NumberColumns=', '%d');
     mab_file = read_asa(fullfile(path, mat_file), 'Matrix', '%s');
-    fid = fopen(fullfile(path, mab_file), 'rb', 'ieee-le');
-    if fid==-1
-      ft_error(sprintf('could not open file %s', mab_file));
-    else
-      vol.mat = fread(fid, [nr nc], 'float32');
-      fclose(fid);
-      % remove the factor 2 that ASA assumes in the system matrix
-      vol.mat = vol.mat/2;
-      % scale the system matrix corresponding to vertex coordinates in mm
-      vol.mat = vol.mat*100;
-    end
+    fid = fopen_or_error(fullfile(path, mab_file), 'rb', 'ieee-le');
+    vol.mat = fread(fid, [nr nc], 'float32');
+    fclose(fid);
+    % remove the factor 2 that ASA assumes in the system matrix
+    vol.mat = vol.mat/2;
+    % scale the system matrix corresponding to vertex coordinates in mm
+    vol.mat = vol.mat*100;
   end
 
   vol.cond   = cond;

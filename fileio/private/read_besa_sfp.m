@@ -17,7 +17,7 @@ if nargin==1
 	uniqueonly = 1;
 end
 
-fid = fopen(filename);
+fid = fopen_or_error(filename);
 tmp = textscan(fid, ' %[^ \t]%n%n%n');
 fclose(fid);
 		

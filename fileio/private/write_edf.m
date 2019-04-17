@@ -87,7 +87,7 @@ digMax = sprintf('%-8i', maxV);
 physMin = sprintf('%-8g', double(minV) ./ scale);
 physMax = sprintf('%-8g', double(maxV) ./ scale);
   
-fid = fopen(filename, 'wb', 'ieee-le');
+fid = fopen_or_error(filename, 'wb', 'ieee-le');
 % first write fixed part
 fprintf(fid, '0       ');   % version
 fprintf(fid, '%-80s', '<no patient info>');
