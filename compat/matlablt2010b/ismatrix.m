@@ -22,7 +22,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is where the actual replacement code starts
-% function status = ismatrix(x)
+% function tf = ismatrix(x)
 
 % deal with the input arguments
 if nargin==1
@@ -32,7 +32,7 @@ else
 end
 
 siz = size(x);
-status = numel(siz)==2 && siz(1)>=0 && siz(2)>=0;
+tf = numel(siz)==2 && siz(1)>=0 && siz(2)>=0;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % deal with the output arguments
