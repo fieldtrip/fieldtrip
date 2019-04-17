@@ -39,6 +39,9 @@ function unit = ft_estimate_units(size)
 %
 % $Id$
 
+% the objects size should be estimated outside this function
+assert(isscalar(size), 'the size should be a scalar');
+
 % do some magic based on the size
 unit = {'m', 'dm', 'cm', 'mm'};
 est  = log10(size)+1.8;
