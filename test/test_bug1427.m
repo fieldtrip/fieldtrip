@@ -3,7 +3,7 @@ function test_bug1427
 % MEM 3gb
 % WALLTIME 00:10:00
 
-% TEST dataset2files ft_read_header ft_read_data
+% DEPENDENCY dataset2files ft_read_header ft_read_data
 
 % the Long64ChannelWithEvents fails because it consists of muliple segments
 % filepath = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1427/Long64ChannelWithEvents.mff');

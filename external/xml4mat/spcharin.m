@@ -21,12 +21,12 @@ if iscell(x)
         end
     end   
 elseif ischar(x)
-    x=['AAA',x,'AAA'];% add polyA header and tail
+    x=['AAA',x,'AAA']; % add polyA header and tail
     % replace delimiters first (% and ;)
     x=strrep(x,';','*59;');
     x=strrep(x,'#','#35;');
     x=strrep(x,'*59;','#59;');
-    ascii=x*1;% Find special characters
+    ascii=x*1; % Find special characters
     sp=find(~(((x>47)&(x<58))|((x>96)&(x<123))|((x>64)&(x<91))|(x==59)|(x==35)));
     % Replace them by ascii code delimited by % and ;
     for i=length(sp):-1:1

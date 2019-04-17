@@ -49,7 +49,7 @@ if isstruct(obj) && numel(obj)>1
   obj = tmp;
   return
 elseif iscell(obj) && numel(obj)>1
-  % deal with a cell array
+  % deal with a cell-array
   % this might represent combined EEG, ECoG and/or MEG
   for i=1:numel(obj)
     obj{i} = ft_determine_units(obj{i});
@@ -114,19 +114,19 @@ else
     siz = norm(idrange(obj.fid.pos));
     unit = ft_estimate_units(siz);
     
-  elseif ft_voltype(obj, 'infinite')
+  elseif ft_headmodeltype(obj, 'infinite')
     % this is an infinite medium volume conductor, which does not care about units
     unit = 'm';
     
-  elseif ft_voltype(obj,'singlesphere')
+  elseif ft_headmodeltype(obj,'singlesphere')
     siz = obj.r;
     unit = ft_estimate_units(siz);
     
-  elseif ft_voltype(obj,'localspheres')
+  elseif ft_headmodeltype(obj,'localspheres')
     siz = median(obj.r);
     unit = ft_estimate_units(siz);
     
-  elseif ft_voltype(obj,'concentricspheres')
+  elseif ft_headmodeltype(obj,'concentricspheres')
     siz = max(obj.r);
     unit = ft_estimate_units(siz);
     

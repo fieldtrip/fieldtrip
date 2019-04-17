@@ -30,7 +30,7 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 % If you don't want the faces, edges or vertices to be plotted, you should specify the color as 'none'.
 %
 % Example
-%   [pos, tri] = icosahedron162;
+%   [pos, tri] = mesh_sphere(162);
 %   mesh.pos = pos;
 %   mesh.tri = tri;
 %   ft_plot_mesh(mesh, 'facecolor', 'skin', 'edgecolor', 'none')
@@ -42,7 +42,7 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %   'contourlinestyle'  = string, line specification 
 %   'contourlinewidth'  = number
 %
-% See also FT_PLOT_HEADSHAPE, FT_PLOT_VOL, TRIMESH, PATCH
+% See also FT_PLOT_HEADSHAPE, FT_PLOT_HEADMODEL, TRIMESH, PATCH
 
 % Copyright (C) 2009, Cristiano Micheli
 % Copyright (C) 2009-2015, Robert Oostenveld
@@ -335,7 +335,7 @@ if numel(contour)>1 && any(contour)
     cfg.connectivity    = triangle2connectivity(tri);
     neighcmb            = full(ft_getopt(cfg, 'connectivity', false));
     
-    posclusobs = findcluster(contour,neighcmb,0);%minnbchan=0
+    posclusobs = findcluster(contour,neighcmb,0); %minnbchan=0
     
     for cl = 1:max(posclusobs)
         idxcl = find(posclusobs==cl);

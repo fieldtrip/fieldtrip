@@ -130,7 +130,7 @@ if strcmp(cfg.computestat,'yes')
   %  MSfac = SSfac/df;
   %  MSerr = SSerr/dfe;
   %
-  %  s.stat(smplindx) = MSfac/MSerr;% F-statistic
+  %  s.stat(smplindx) = MSfac/MSerr; % F-statistic
   %end
   dat  = reshape(dat(:,poslabelsperunit),[nsmpls nunits nconds]);
   Ysub = mean(dat,3);

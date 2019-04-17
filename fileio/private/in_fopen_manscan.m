@@ -131,7 +131,7 @@ end
 
 %% ===== CREATE BRAINSTORM SFILE STRUCTURE =====
 % Initialize returned file structure
-sFile = [];%db_template('sfile');
+sFile = []; %db_template('sfile');
 % Add information read from header
 sFile.byteorder  = 'l';
 sFile.filename   = DataFile;
@@ -252,7 +252,7 @@ function splStr = str_split( str, delimiters, isCollapse )
 %    - isCollapse : If 1, remove all the empty entries
 % 
 % OUTPUT: 
-%    - splStr : cell array of blocks found between separators
+%    - splStr : cell-array of blocks found between separators
 
 % @=============================================================================
 % This software is part of the Brainstorm software:

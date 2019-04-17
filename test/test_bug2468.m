@@ -3,7 +3,7 @@ function test_bug2468
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST ft_sourcedescriptives
+% DEPENDENCY ft_sourcedescriptives
 
 % this test function tests the functionality to do projectmom on the output
 % of a pcc-beamformer with a different number of components per dipole.
@@ -25,9 +25,9 @@ sd             = ft_sourcedescriptives(cfg, sdata);
 % recompute source level pcc data
 cfg                             = [];
 cfg.frequency                   = fdata.freq;
-cfg.vol                         = sourceVol;
-cfg.grid                        = leadfieldModel;
-cfg.grid.filter                 = spatialFilters.avg.filter;
+cfg.headmodel                   = sourceVol;
+cfg.sourcemodel                        = leadfieldModel;
+cfg.sourcemodel.filter                 = spatialFilters.avg.filter;
 cfg.keeptrials                  = 'no';
 cfg.method                      = 'pcc';
 cfg.(cfg.method).keepfilter     = 'yes';

@@ -2,9 +2,7 @@ function failed_example_simulate_forward_beamforming
 
 % MEM 1gb
 % WALLTIME 00:10:00
-
-% TEST test_example_simulate_forward_beamforming
-% TEST ft_dipolesimulation ft_timelockanalysis ft_sourceanalysis
+% DEPENDENCY ft_dipolesimulation ft_timelockanalysis ft_sourceanalysis
 
 % This example script shows you how to create some simulated channel-level
 % MEG data with a single dipole at a specified location in the head.
@@ -12,7 +10,7 @@ function failed_example_simulate_forward_beamforming
 % source.
 
 % create a gradiometer array with magnetometers at 12cm distance from the origin
-[pnt, tri] = icosahedron162;
+[pnt, tri] = mesh_sphere(162);
 pnt = pnt(pnt(:,3)>=0,:);
 grad.pnt = 12*pnt;
 grad.ori = pnt;
@@ -28,7 +26,7 @@ vol.o = [0 0 0];
 % not put the dipole on a position that will not be covered by a grid
 % location later
 cfg = [];
-cfg.vol = vol;
+cfg.headmodel = vol;
 cfg.grad = grad;
 cfg.dip.pos = [0 0 4];    % you can vary the location, here the dipole is along the z-axis
 cfg.dip.mom = [1 0 0]';   % the dipole points along the x-axis
@@ -44,7 +42,7 @@ timelock = ft_timelockanalysis(cfg, data);
 
 % do the beamformer source reconstuction on a 1 cm grid
 cfg = [];
-cfg.vol = vol;
+cfg.headmodel = vol;
 cfg.grad = grad;
 cfg.grad.unit='cm'; %error otherwise
 cfg.resolution = 1;

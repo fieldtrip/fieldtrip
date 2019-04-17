@@ -19,7 +19,7 @@
 % of the GNU General Public Licence as published by the Free Software Foundation (either
 % version 2, or at your option any later version). See the file COPYING for more
 % details.
-% 
+%
 % The functions in this toolbox are copyrighted by their respective authors:
 %   Robert Oostenveld, DCCN, FCDC, SMI, MBFYS
 %   Jan-Mathijs Schoffelen, CCNi, FCDC
@@ -38,17 +38,17 @@
 %   Lilla Magyari, MPI, DCCN
 %   and many others ...
 %
-% Copyright (C) 2008-2018, Donders Institute, Radboud University, The Netherlands (DCCN, DCC, DCN, DCMN)  
-% Copyright (C) 2014-2018, Karolinska Institute, Stockholm, Sweden (NatMEG)  
-% Copyright (C) 2012-2016, Max Planck Institute for Psycholinguistics, The Netherlands (MPI)  
-% Copyright (C) 2010-2013, Swammerdam Institute for Life Sciences, University of Amsterdam (SILS)  
-% Copyright (C) 2008-2009, Centre for Cognitive Neuroimaging in Glasgow, United Kingdom (CCNi)  
-% Copyright (C) 2009-2009, Netherlands Institute for Neuroscience (NIN)  
-% Copyright (C) 2003-2008, F.C. Donders Centre, Radboud University Nijmegen, The Netherlands (FCDC)  
-% Copyright (C) 2004-2007, Nijmegen Institute for Cognition and Information, The Netherlands (NICI)  
-% Copyright (C) 2004-2005, Universitatsklinikum Hamburg-Eppendorf, Germany (UKE)  
-% Copyright (C) 2003-2004, Center for Sensory Motor Interaction, University Aalborg, Denmark (SMI)  
-% Copyright (C) 1999-2003, Department of Medical Physics, Katholieke Universiteit Nijmegen, The Netherlands (MBFYS)  
+% Copyright (C) 2008-2018, Donders Institute, Radboud University, The Netherlands (DCCN, DCC, DCN, DCMN)
+% Copyright (C) 2014-2018, Karolinska Institute, Stockholm, Sweden (NatMEG)
+% Copyright (C) 2012-2016, Max Planck Institute for Psycholinguistics, The Netherlands (MPI)
+% Copyright (C) 2010-2013, Swammerdam Institute for Life Sciences, University of Amsterdam (SILS)
+% Copyright (C) 2008-2009, Centre for Cognitive Neuroimaging in Glasgow, United Kingdom (CCNi)
+% Copyright (C) 2009-2009, Netherlands Institute for Neuroscience (NIN)
+% Copyright (C) 2003-2008, F.C. Donders Centre, Radboud University Nijmegen, The Netherlands (FCDC)
+% Copyright (C) 2004-2007, Nijmegen Institute for Cognition and Information, The Netherlands (NICI)
+% Copyright (C) 2004-2005, Universitatsklinikum Hamburg-Eppendorf, Germany (UKE)
+% Copyright (C) 2003-2004, Center for Sensory Motor Interaction, University Aalborg, Denmark (SMI)
+% Copyright (C) 1999-2003, Department of Medical Physics, Katholieke Universiteit Nijmegen, The Netherlands (MBFYS)
 %
 % The FieldTrip toolbox depend on functions from other toolboxes to do a large part of
 % the actual work, such as reading data from binary files and forward and inverse
@@ -60,7 +60,7 @@
 % the GPL is not allowed!
 %
 % Below is a non-exhaustive overview of some of the important FieldTrip functions, sorted by category.
-% You can get more details on a function by typing "help functionname" in MATLAB.
+% You can get more details on a function by typing 'help functionname' in MATLAB.
 %
 % Preprocessing, reading and converting data
 %   ft_definetrial

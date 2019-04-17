@@ -2,8 +2,7 @@ function failed_bug2850
 
 % WALLTIME 00:10:00
 % MEM 2gb
-
-% TEST ft_sourceanalysis ft_eloreta
+% DEPENDENCY ft_sourceanalysis ft_eloreta
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/avgFIC.mat'));
 
@@ -13,25 +12,25 @@ vol.o = [0 0 4];
 vol.unit = 'cm';
 
 cfg = [];
-cfg.vol = vol;
+cfg.headmodel = vol;
 cfg.grad = avgFIC.grad;
-cfg.grid.resolution = 1;
-cfg.grid.unit = 'cm';
+cfg.sourcemodel.resolution = 1;
+cfg.sourcemodel.unit = 'cm';
 grid = ft_prepare_sourcemodel(cfg);
 
 % due to the spherical volume conductor and the regular grid, some dipole
 % positions would get a leadfield of rank 1, which eloreta does not like
-grid.pos = grid.pos + 0.01*randn(size(grid.pos));
+sourcemodel.pos = sourcemodel.pos + 0.01*randn(size(sourcemodel.pos));
 
 cfg = [];
-cfg.vol = vol;
-cfg.grid = grid;
+cfg.headmodel = vol;
+cfg.sourcemodel = grid;
 cfg.channel = 'MEG';
 grid = ft_prepare_leadfield(cfg, avgFIC);
 
 cfg = [];
-cfg.vol = vol;
-cfg.grid = grid;
+cfg.headmodel = vol;
+cfg.sourcemodel = grid;
 cfg.method = 'eloreta';
 cfg.eloreta.keepleadfield = 'yes';
 source = ft_sourceanalysis(cfg, avgFIC);

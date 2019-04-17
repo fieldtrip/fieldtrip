@@ -1,14 +1,15 @@
 function ft_documentationreference(outdir)
 
-% FT_DOCUMENTATIONREFERENCE is a function to maintain the online reference documentation.
+% FT_DOCUMENTATIONREFERENCE is a function to maintain the online reference
+% documentation.
 %
 % Normal users will not be calling this function, but will rather look at
 % http://www.fieldtriptoolbox.org/reference where the output of this function can
 % be found.
 %
-% See also FT_DOCUMENTATIONINDEX
+% See also FT_DOCUMENTATIONCONFIGURATION
 
-% Copyright (C) 2008-2018, Robert Oostenveld
+% Copyright (C) 2008-2019, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -34,26 +35,27 @@ ft_defaults
 
 subdir = {
   '.'
-  'inverse'
-  'trialfun'
-  'fileio'
-  'qsub'
   'connectivity'
-  'preproc'
-  'peer'
-  'utilities'
-  'plotting'
-  'statfun'
-  'specest'
-  'engine'
-  'forward'
   'contrib/misc'
   'contrib/nutmegtrip'
   'contrib/spike'
+  'engine'
+  'external/artinis'
+  'fileio'
+  'forward'
+  'inverse'
+  'peer'
+  'plotting'
+  'preproc'
+  'qsub'
   'realtime/example'
   'realtime/online_eeg'
   'realtime/online_meg'
   'realtime/online_mri'
+  'specest'
+  'statfun'
+  'trialfun'
+  'utilities'
   };
 
 infile = {};
@@ -76,5 +78,5 @@ end
 for i=1:length(infile)
   [p, f, x] = fileparts(infile{i});
   outfile = fullfile(outdir, [f '.md']);
-  matlab2markdown(infile{i}, outfile, 'monospacehelp', true, 'pageheader', 'jekyll', 'pagelayout', 'default', 'pagetitle', f);
+  matlab2markdown(infile{i}, outfile, 'monospacehelp', true, 'pageheader', 'jekyll', 'pagetitle', f);
 end

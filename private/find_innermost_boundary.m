@@ -6,7 +6,7 @@ function [innermost, inside] = find_innermost_boundary(bnd)
 %
 % [innermost] = find_innermost_boundary(bnd)
 %
-% with the boundaries described by a struct array bnd with
+% with the boundaries described by a struct-array bnd with
 %   bnd(i).pnt  vertices of boundary i (matrix of size Nx3)
 %   bnd(i).tri  triangles of boundary i (matrix of size Mx3)
 

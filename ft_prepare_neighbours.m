@@ -27,10 +27,8 @@ function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 %   cfg.feedback      = 'yes' or 'no' (default = 'no')
 %
 % The EEG or MEG sensor positions can be present in the data or can be specified as
-%   cfg.elec          = structure with electrode positions, see FT_DATATYPE_SENS
-%   cfg.grad          = structure with gradiometer definition, see FT_DATATYPE_SENS
-%   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
-%   cfg.gradfile      = name of file containing the gradiometer definition, see FT_READ_SENS
+%   cfg.elec          = structure with electrode positions or filename, see FT_READ_SENS
+%   cfg.grad          = structure with gradiometer definition or filename, see FT_READ_SENS
 %
 % The output is an array of structures with the "neighbours" which is
 % structured like this:
@@ -85,10 +83,13 @@ end
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', {'method'});
+cfg = ft_checkconfig(cfg, 'renamed',  {'elecfile', 'elec'});
+cfg = ft_checkconfig(cfg, 'renamed',  {'gradfile', 'grad'});
+cfg = ft_checkconfig(cfg, 'renamed',  {'optofile', 'opto'});
 
 % set the defaults
 cfg.feedback = ft_getopt(cfg, 'feedback', 'no');
-cfg.channel = ft_getopt(cfg, 'channel', 'all');
+cfg.channel  = ft_getopt(cfg, 'channel', 'all');
 
 % the data can be passed as input arguments or can be read from disk
 hasdata = exist('data', 'var');
@@ -156,7 +157,7 @@ if strcmp(cfg.method, 'template')
   end
   load(cfg.template);
   fprintf('Successfully loaded neighbour structure from %s\n', cfg.template);
-  
+
 else
   % get the the grad or elec if not present in the data
   if hasdata
@@ -164,27 +165,27 @@ else
   else
     sens = ft_fetch_sens(cfg);
   end
-  
+
   if strcmp(ft_senstype(sens), 'neuromag306')
     ft_warning('Neuromag306 system detected - be aware of different sensor types, see http://www.fieldtriptoolbox.org/faq/why_are_there_multiple_neighbour_templates_for_the_neuromag306_system');
   end
   chanpos = sens.chanpos;
   label   = sens.label;
-  
+
   if nargin > 1
     % remove channels that are not in data
     [dataidx, sensidx] = match_str(data.label, label);
     chanpos = chanpos(sensidx, :);
     label   = label(sensidx);
   end
-  
+
   if ~strcmp(cfg.channel, 'all')
     desired = ft_channelselection(cfg.channel, label);
     [sensidx] = match_str(label, desired);
     chanpos = chanpos(sensidx, :);
     label   = label(sensidx);
   end
-  
+
   switch lower(cfg.method)
     case 'distance'
       % use a smart default for the distance
@@ -193,7 +194,7 @@ else
         cfg.neighbourdist = 40 * ft_scalingfactor('mm', sens.unit);
         fprintf('using a distance threshold of %g\n', cfg.neighbourdist);
       end
-      
+
       neighbours = compneighbstructfromgradelec(chanpos, label, cfg.neighbourdist);
     case {'triangulation', 'tri'} % the latter for reasons of simplicity
       if size(chanpos, 2)==2 || all(chanpos(:,3)==0)
@@ -262,9 +263,10 @@ fprintf('there are on average %.1f neighbours per channel\n', k/length(neighbour
 
 if strcmp(cfg.feedback, 'yes')
   % give some graphical feedback
-  tmpcfg = keepfields(cfg, {'grad', 'elec', 'opto', 'gradfile', 'elecfile', 'optofile', 'layout', 'senstype'});
+  tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'})
   tmpcfg.neighbours = neighbours;
   if hasdata
+    tmpcfg.senstype = cfg.senstype;
     ft_neighbourplot(tmpcfg, data);
   else
     ft_neighbourplot(tmpcfg);
@@ -300,7 +302,7 @@ channeighbstructmat = (dist<neighbourdist);
 % electrode istelf is not a neighbour
 channeighbstructmat = (channeighbstructmat .* ~eye(nsensors));
 
-% construct a structured cell array with all neighbours
+% construct a structured cell-array with all neighbours
 neighbours=struct;
 for i=1:nsensors
   neighbours(i).label       = label{i};
@@ -326,7 +328,7 @@ for i=1:size(tri, 1)
   channeighbstructmat(tri(i, 3), tri(i, 2)) = 1;
 end
 
-% construct a structured cell array with all neighbours
+% construct a structured cell-array with all neighbours
 neighbours = struct;
 alldist = [];
 for i=1:nsensors

@@ -3,7 +3,7 @@ function test_bug97
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_preprocessing ft_selectdata
+% DEPENDENCY ft_preprocessing ft_selectdata
 
 % This script tests the solution to bug 97, where selectdata is working in an
 % unexpected way. If the user explicitly states cfg.trials = [], no trials are to be
@@ -28,7 +28,7 @@ data           = ft_preprocessing(cfg);
 % now subselect no trials
 cfg        = [];
 cfg.trials = [];
-datax      = ft_preprocessing(cfg, data); % this reproduces the behaviour
+datax      = ft_preprocessing(cfg, data); % this reproduces the behavior
 
 % after adjusting selectdata
 datay      = ft_preprocessing(cfg, data);

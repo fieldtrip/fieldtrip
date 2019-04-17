@@ -15,7 +15,7 @@ function pix_hdr = GE_readHeaderPixel(fid, byte_align)
 
 % define the structure and read
 pix_hdr = struct('img_magic', fread(fid,1,'int32'));
-pix_hdr = setfield(pix_hdr, 'img_hdr_length', fread(fid,1,'int32'));% length of total header in bytes and
+pix_hdr = setfield(pix_hdr, 'img_hdr_length', fread(fid,1,'int32')); % length of total header in bytes and
                                                                     % a byte displacement to the 'pixel data area'  
 pix_hdr = setfield(pix_hdr, 'img_width', fread(fid,1,'int32'));  % width (pixels) of image  
 pix_hdr = setfield(pix_hdr, 'img_height', fread(fid,1,'int32')); % height (pixels) of image 
@@ -45,7 +45,7 @@ pix_hdr = setfield(pix_hdr, 'img_p_graphics', fread(fid,1,'int32')); % a byte di
 pix_hdr = setfield(pix_hdr, 'img_l_graphics', fread(fid,1,'int32')); % byte length of 'graphics plane data' 
 pix_hdr = setfield(pix_hdr, 'img_p_dbHdr', fread(fid,1,'int32'));    % a byte disp to 'data base header data' 
 pix_hdr = setfield(pix_hdr, 'img_l_dbHdr', fread(fid,1,'int32'));    % byte length of 'data base header data' 
-pix_hdr = setfield(pix_hdr, 'img_levelOffset', fread(fid,1,'int32'));% value to add to stored Pixel Data values
+pix_hdr = setfield(pix_hdr, 'img_levelOffset', fread(fid,1,'int32')); % value to add to stored Pixel Data values
                                                                      % to get the correct presentation value 
 pix_hdr = setfield(pix_hdr, 'img_p_user', fread(fid,1,'int32')); % byte displacement to user defined data 
 pix_hdr = setfield(pix_hdr, 'img_l_user', fread(fid,1,'int32')); % byte length of user defined data 

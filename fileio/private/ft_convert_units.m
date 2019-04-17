@@ -51,7 +51,7 @@ function [obj] = ft_convert_units(obj, target, varargin)
 % prior to that it was also possible to use this function to estimate units
 % the backward compatibility support can be removed in Aug 2018
 if nargin<2
-  ft_warning('calling this function only to determine units is deprecated, please use FT_DETERMINE_COORDSYS instead');
+  ft_warning('calling this function only to determine units is deprecated, please use FT_DETERMINE_UNITS instead');
   obj = ft_determine_units(obj);
   return
 end
@@ -69,7 +69,7 @@ if isstruct(obj) && numel(obj)>1
   obj = tmp;
   return
 elseif iscell(obj) && numel(obj)>1
-  % deal with a cell array
+  % deal with a cell-array
   % this might represent combined EEG, ECoG and/or MEG
   for i=1:numel(obj)
     obj{i} = ft_convert_units(obj{i}, target, varargin{:});

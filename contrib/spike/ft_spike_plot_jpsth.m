@@ -26,7 +26,7 @@ function [cfg] = ft_spike_plot_jpsth(cfg, jpsth)
 %     ' gausswin'     use a Gaussian smooth function
 %     ' boxcar'       use a box-car to smooth
 %   cfg.gaussvar    =  variance  (default = 1/16 of window length in sec).
-%   cfg.winlen      =  cfg.window length in seconds (default = 5*binwidth).
+%   cfg.winlen      =  window length in seconds (default = 5*binwidth).
 %     length of our window is 2*round*(cfg.winlen/binwidth)
 %     where binwidth is the binwidth of the jpsth (jpsth.time(2)-jpsth.time(1)).
 %
@@ -161,7 +161,7 @@ sampleTime    = mean(diff(jpsth.time)); % get the binwidt
 
 
 % smooth the jpsth with a kernel if requested
-if ~strcmp(cfg.window,'no')
+if ~strcmp(cfg.window, 'no')
   
   % construct the kernel
   winTime       = [fliplr(0:-sampleTime:-cfg.winlen) sampleTime:sampleTime:cfg.winlen];

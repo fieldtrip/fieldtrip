@@ -1,21 +1,23 @@
 function cfg = data2bids(cfg, varargin)
 
 % DATA2BIDS is a helper function to convert MEG, EEG, iEEG or anatomical MRI data to
-% the Brain Imaging Data Structure. This function starts from an existing dataset on
-% disk and creates the required sidecar files. The overall idea is that you would
-% write a MATLAB script in which you call this function multiple times, once for each
-% of the data files. For each data file it will write the corresponding JSON file.
-% When operating on MEG data files, it will also write a corresponding channels.tsv
-% and events.tsv file.
+% the Brain Imaging Data Structure. This function starts from an existing data file on
+% disk or MATLAB memory, converts/writes the data file if needed and creates the
+% required sidecar files.
+%
+% The overall idea is that you write a MATLAB script in which you call this
+% function multiple times, once for each data files. For each data file it will
+% write the corresponding JSON file. For MEG/EEG/iEEG data files it will also
+% write the corresponding _channels.tsv and _events.tsv file.
 %
 % Use as
 %   data2bids(cfg)
 % or as
 %   data2bids(cfg, data)
 %
-% The first input argument "cfg" is the configuration structure, which contains the
+% The first input argument 'cfg' is the configuration structure, which contains the
 % details for the (meta)data and which specifies the sidecar files you want to write.
-% The optional "data" argument corresponds to preprocessed raw data according to
+% The optional 'data' argument corresponds to preprocessed raw data according to
 % FT_DATAYPE_RAW or an anatomical MRI according to FT_DATAYPE_VOLUME. The optional
 % data argument allows you to write a preprocessed and realigned anatomical MRI to
 % disk, or to write a preprocessed electrophysiological dataset to disk.
@@ -23,6 +25,7 @@ function cfg = data2bids(cfg, varargin)
 % The configuration structure should contains
 %   cfg.dataset                 = string, filename of the input data
 %   cfg.outputfile              = string, optional filename for the output data, see below
+%   cfg.keepnative              = string, 'yes' or 'no' to copy the native file rather than convert it (default = 'no')
 %   cfg.presentationfile        = string, optional filename for the presentation log file, see below
 %   cfg.mri.deface              = string, 'yes' or 'no' (default = 'no')
 %   cfg.mri.writesidecar        = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
@@ -37,20 +40,17 @@ function cfg = data2bids(cfg, varargin)
 %
 % If you specify cfg.dataset without cfg.outputfile, this function will only
 % construct and write the appropriate sidecar files matching the header details that
-% it will get from the dataset.
+% it will get from the data file.
 %
-% If you also specify cfg.outputfile, this function will furthermore read the data
-% from the input dataset and (if needed) convert and write it to the output file. The
-% output format is NIFTI for anatomical MRIs, and BrainVision for EEG and iEEG. Note
-% that in principle you can also convert MEG data to BrainVision, but that is not
-% recommended.
-%
-% You can specify cfg.presentationfile for a NBS Presentation log file that
-% is to be used to construct the events.tsv file for task data.
+% If you specify cfg.dataset with cfg.outputfile, this function will  read the data
+% from the input data file and convert and write it to the output file. The output
+% format is NIFTI for anatomical MRIs, and BrainVision for EEG and iEEG. MEG data
+% files are to be stored in BIDS in their native format, this function will NOT
+% convert or rename them for you.
 %
 % You can specify cfg.mri.dicomfile in combination with a NIFTI file. This will
-% cause the detailled header information with MR scanner and sequence details to be
-% read from the DICOM file and used to fill in the details of the JSON file.
+% read the detailled header information (MR scanner and sequence details) from
+% the DICOM file and used to fill in the details of the JSON file.
 %
 % You can specify cfg.events.trl as a Nx3 matrix with the trial definition (see
 % FT_DEFINETRIAL) or as a MATLAB table. When specified as table, the first three
@@ -58,15 +58,18 @@ function cfg = data2bids(cfg, varargin)
 % offset, the additional colums can be of another type and can have any name. If you
 % do not specify the definition of trials, the events will be read from the dataset.
 %
+% If you do not specify cfg.events.trl, this function will read the events from
+% the MEG/EEG/iEEG data file and write them to the events.tsv file.
+%
 % You can specify cfg.presentationfile with a NBS presentation log file, which will
-% be aligned with the data based on triggers (MEG/EEG/iEEG) or on volumes (fMRI). You
-% should also specify
+% be aligned with the data based on triggers (MEG/EEG/iEEG) or based on the
+% volumes (fMRI). To indicate how triggers or volumes match the presentation events,
+% you should also specify
 %   cfg.trigger.eventtype       = string (default = [])
 %   cfg.trigger.eventvalue      = string or number
 %   cfg.presentation.eventtype  = string (default = [])
 %   cfg.presentation.eventvalue = string or number
 %   cfg.presentation.skip       = 'last'/'first'/'none'
-% to indicate how triggers or volumes match the presentation events.
 %
 % General BIDS options that apply to all data types are
 %   cfg.TaskName                    = string
@@ -85,8 +88,8 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.CogPOID                     = string
 %
 % There are many more BIDS options for the JSON files for specific datatypes. Rather
-% than listing them here in the help, please open this function in the MATLAB editor
-% to see what those are.
+% than listing them here in the help, please open this function in the MATLAB editor,
+% and scroll down a bit to see what those are.
 %
 % Example with a CTF dataset on disk that needs no conversion
 %   cfg = [];
@@ -180,6 +183,7 @@ cfg = ft_checkconfig(cfg, 'forbidden', 'deface');       % should be cfg.mri.defa
 cfg.dataset                 = ft_getopt(cfg, 'dataset');
 cfg.feedback                = ft_getopt(cfg, 'feedback', 'yes');
 cfg.outputfile              = ft_getopt(cfg, 'outputfile', cfg.dataset);      % default is the same as the input dataset
+cfg.keepnative              = ft_getopt(cfg, 'keepnative', 'no');             % default is convert to vhdr
 cfg.presentationfile        = ft_getopt(cfg, 'presentationfile');             % full path to the NBS presentation log file, it will be read and parsed using FT_READ_EVENT
 cfg.presentation            = ft_getopt(cfg, 'presentation');
 cfg.presentation.eventtype  = ft_getopt(cfg.presentation, 'eventtype');
@@ -217,7 +221,7 @@ cfg.coordsystem.writesidecar = ft_getopt(cfg.coordsystem, 'writesidecar', 'yes')
 %% Generic fields for all data types
 cfg.TaskName                          = ft_getopt(cfg, 'TaskName'                    ); % REQUIRED. Name of the task (for resting state use the "rest" prefix). Different Tasks SHOULD NOT have the same name. The Task label is derived from this field by removing all non alphanumeric ([a-zA-Z0-9]) characters.
 cfg.TaskDescription                   = ft_getopt(cfg, 'TaskDescription'             ); % OPTIONAL. Description of the task.
-cfg.Instructions                      = ft_getopt(cfg, 'Instructions'                ); % OPTIONAL. Text of the instructions given to participants before the scan. This is not only important for behavioural or cognitive tasks but also in resting state paradigms (e.g. to distinguish between eyes open and eyes closed).
+cfg.Instructions                      = ft_getopt(cfg, 'Instructions'                ); % OPTIONAL. Text of the instructions given to participants before the scan. This is not only important for behavioral or cognitive tasks but also in resting state paradigms (e.g. to distinguish between eyes open and eyes closed).
 cfg.CogAtlasID                        = ft_getopt(cfg, 'CogAtlasID'                  ); % OPTIONAL. URL of the corresponding "Cognitive Atlas term that describes the task (e.g. Resting State with eyes closed ""http://www.cognitiveatlas.org/term/id/trm_54e69c642d89b""")
 cfg.CogPOID                           = ft_getopt(cfg, 'CogPOID'                     ); % OPTIONAL. URL of the corresponding "CogPO term that describes the task (e.g. Rest "http://wiki.cogpo.org/index.php?title=Rest")
 cfg.Manufacturer                      = ft_getopt(cfg, 'Manufacturer'                ); % OPTIONAL. Manufacturer of the MEG system ("CTF", ""Elekta/Neuromag"", ""4D/BTi"", ""KIT/Yokogawa"", ""ITAB"", "KRISS", "Other")
@@ -277,7 +281,7 @@ cfg.meg.SubjectArtefactDescription    = ft_getopt(cfg.meg, 'SubjectArtefactDescr
 cfg.meg.AssociatedEmptyRoom           = ft_getopt(cfg.meg, 'AssociatedEmptyRoom'         ); % OPTIONAL. Relative path in BIDS folder structure to empty-room file associated with the subject's MEG recording. The path needs to use forward slashes instead of backward slashes (e.g. "sub-emptyroom/ses-<label>/meg/sub-emptyroom_ses-<label>_ta sk-noise_run-<label>_meg.ds").
 
 %% EEG specific fields
-cfg.eeg.SamplingFrequency             = ft_getopt(cfg.eeg, 'SamplingFrequency'        ); % Sampling frequency (in Hz) of the EEG recording (e.g. 2400)
+cfg.eeg.SamplingFrequency             = ft_getopt(cfg.eeg, 'SamplingFrequency'           ); % Sampling frequency (in Hz) of the EEG recording (e.g. 2400)
 cfg.eeg.EEGChannelCount               = ft_getopt(cfg.eeg, 'EEGChannelCount'             ); % Number of EEG channels included in the recording (e.g. 128).
 cfg.eeg.EOGChannelCount               = ft_getopt(cfg.eeg, 'EOGChannelCount'             ); % Number of EOG channels included in the recording (e.g. 2).
 cfg.eeg.ECGChannelCount               = ft_getopt(cfg.eeg, 'ECGChannelCount'             ); % Number of ECG channels included in the recording (e.g. 1).
@@ -419,12 +423,12 @@ switch typ
       dcm = [];
     end
     need_mri_json = true;
-    
+
   case 'dicom'
     mri = ft_read_mri(cfg.dataset);
     dcm = dicominfo(cfg.dataset);
     need_mri_json = true;
-    
+
   case 'volume'
     % the input data structure represents imaging data
     mri = varargin{1};
@@ -439,7 +443,7 @@ switch typ
       dcm = [];
     end
     need_mri_json = true;
-    
+
   case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275', 'neuromag_fif', 'neuromag122', 'neuromag306'}
     % it is MEG data from disk and in a supported format
     hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false);
@@ -454,7 +458,7 @@ switch typ
       dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
     end
     need_meg_json = true;
-    
+
   case {'brainvision_vhdr', 'edf', 'eeglab_set'}
     % it is EEG data from disk and in a supported format
     hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false);
@@ -469,17 +473,17 @@ switch typ
       dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
     end
     need_eeg_json = true;
-    
+
   case 'raw'
     % the input data structure represents raw electrophysiology data, which will be written in BrainVision format
     ft_warning('assuming that the input data structure represents EEG');
     need_eeg_json = true;
-    
+
     % the data is not on disk, but has been passed as input argument
     % it should be written to disk in a supported file format
     hdr = ft_fetch_header(varargin{1});
     dat = ft_fetch_data(varargin{1}, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
-    
+
     if isempty(cfg.trigger.event)
       trigger = ft_fetch_event(varargin{1});
     else
@@ -490,16 +494,16 @@ switch typ
       % use the subsequent MEG-specific handling for the JSON and TSV sidecar files
       typ = ft_senstype(varargin{1});
     end
-    
+
   otherwise
     % it is EEG data from disk but not in a supported format
     ft_warning('assuming that the dataset represents EEG');
     assert(~isempty(cfg.outputfile) && ~isequal(cfg.dataset, cfg.outputfile), 'unsupported dataset format for BIDS, you should specify cfg.outputfile');
-    
+
     % it will be written to disk in BrainVision format
     hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false);
     dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
-    
+
     if isempty(cfg.trigger.event)
       trigger = ft_read_event(cfg.datafile, 'header', hdr);
     else
@@ -507,7 +511,7 @@ switch typ
       trigger = cfg.trigger.event;
     end
     need_eeg_json = true;
-    
+
 end % switch typ
 
 need_events_tsv       = need_meg_json || need_eeg_json || need_ieeg_json || (need_mri_json && contains(cfg.outputfile, 'task'));
@@ -598,7 +602,7 @@ if need_meg_json
     meg_json.Manufacturer             = 'Elekta/Neuromag';
     % meg_json.ManufacturersModelName can not be determined, since both have 306 channels
   end
-  
+
   % merge the information from the defaults with the information obtained from the data
   % in case fields appear in both, the first input overrules the second
   meg_json = mergeconfig(meg_json, meg_defaults, false);
@@ -618,7 +622,7 @@ if need_eeg_json
   eeg_json.MiscChannelCount           = sum(strcmp(hdr.chantype, 'misc') | strcmp(hdr.chantype, 'unknown'));
   eeg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
   eeg_json.EpochLength                = hdr.nSamples/hdr.Fs;
-  
+
   % merge the information from the defaults with the information obtained from the data
   % in case fields appear in both, the first input overrules the second
   eeg_json = mergeconfig(eeg_json, eeg_defaults, false);
@@ -632,7 +636,7 @@ if need_coordsystem_json
     coordsystem_json.MEGCoordinateSystem            = 'CTF';
     coordsystem_json.MEGCoordinateUnits             = 'cm';
     coordsystem_json.MEGCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
-    
+
     % coordinate system for head localization coils
     coordsystem_json.HeadCoilCoordinates                 = []; % see below
     coordsystem_json.HeadCoilCoordinateSystem            = 'CTF';
@@ -663,13 +667,13 @@ if need_channels_tsv
       cfg.channels.(fn{i}) = repmat(cfg.channels.(fn{i}), hdr.nChans, 1);
     end
   end
-  
+
   % EEG and MEG data should also have a channels.tsv file
   name                = mergevector(hdr.label(:),    cfg.channels.name);
   type                = mergevector(hdr.chantype(:), cfg.channels.type);
   units               = mergevector(hdr.chanunit(:), cfg.channels.units);
   sampling_frequency  = mergevector(repmat(hdr.Fs, hdr.nChans, 1), cfg.channels.sampling_frequency);
-  
+
   % construct a table with the corresponding columns
   % FIXME there are more columns that should be added
   channels_tsv = table(name, type, units, sampling_frequency);
@@ -683,40 +687,40 @@ if need_events_tsv
   else
     presentation = [];
   end
-  
+
   if need_mri_json
-    
+
     if isempty(presentation)
       ft_warning('cfg.presentationfile not specified, cannot determine events')
-      
+
       onset    = [];
       duration = [];
       events_tsv = table(onset, duration);
-      
+
     else
       % align the events from the presentation log file with the MR volumes
       % this requires one event per volume in the presentation file
-      
+
       % merge the information with the json sidecar file
       % in case fields appear in both, the first input overrules the second
       tmp = mergeconfig(mri_json, read_json(corresponding_json(cfg.outputfile)), false);
       assert(~isempty(tmp.RepetitionTime), 'you must specify cfg.mri.RepetitionTime');
-      
+
       % create a header structure that represents the fMRI timeseries
       hdr.Fs = 1/tmp.RepetitionTime;
       hdr.nSamples = mri.dim(4);
-      
+
       % create a event structure with one event for each fMRI volume
       volume = [];
       for i=1:hdr.nSamples
         volume(i).type   = 'volume';
         volume(i).sample = i;
       end
-      
+
       % find the presentation events corresponding to each volume
       selpres = select_event(presentation, cfg.presentation.eventtype, cfg.presentation.eventvalue);
       selpres = presentation(selpres);
-      
+
       ft_info('%d volumes, %d presentation events', length(volume), length(selpres));
       if length(volume)>length(selpres)
         % this happens when the scanner keeps running while presentation has already been stopped
@@ -737,15 +741,15 @@ if need_events_tsv
             ft_error('not enough volumes to match the presentation events');
         end % case
       end
-      
+
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % the following code is largely shared between the MEG and MRI section
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      
+
       % predict the sample number from the timestamp
       model     = polyfit([selpres.timestamp], [volume.sample], 1);
       estimated = polyval(model, [selpres.timestamp]);
-      
+
       if istrue(cfg.feedback)
         [p, f, x] = fileparts(cfg.dataset);
         figure('name', ['PRESENTATION - ' f]);
@@ -757,13 +761,13 @@ if need_events_tsv
         xlabel('presentation time (s)')
         ylabel('MRI volumes')
         legend({'observed', 'predicted'})
-        
+
         subplot(2,1,2)
         plot([selpres.timestamp]/1e4, ([volume.sample]-estimated)/hdr.Fs, 'g.')
         xlabel('presentation time (s)')
         ylabel('difference (s)')
       end
-      
+
       % estimate the time in seconds of all presentation events
       estimated = polyval(model, [presentation.timestamp]);
       estimated = round(1000*estimated)/1000; % round to three decimals
@@ -775,18 +779,18 @@ if need_events_tsv
       % rename the column to "volume" instead of "sample"
       sel = strcmp(presentation_tsv.Properties.VariableNames, 'sample');
       presentation_tsv.Properties.VariableNames{sel} = 'volume';
-      
+
       % for fMRI the presentation log file is the only source of events
       events_tsv = presentation_tsv;
       clear presentation_tsv selpres volume
-      
+
       % sort ascending on the onset of each event
       events_tsv = sortrows(events_tsv, 'onset');
     end
-    
+
   elseif need_meg_json || need_eeg_json || need_ieeg_json
     % merge the events from the trigger channel with those from the (optional) presentation file
-    
+
     if istable(cfg.events.trl)
       % check that the column names are valid
       assert(stcmp(cfg.events.trl.Properties.VariableNames{1}, 'begsample'));
@@ -813,20 +817,20 @@ if need_events_tsv
       % convert the events from the dataset into a table
       events_tsv = event2table(hdr, trigger);
     end
-    
+
     if ~isempty(presentation) && ~isempty(trigger)
       % align the events from the presentation log file with the triggers
-      
+
       % select the correspopnding triggers and events in the presentation file
       seltrig = select_event(trigger,      cfg.trigger.eventtype,      cfg.trigger.eventvalue);
       selpres = select_event(presentation, cfg.presentation.eventtype, cfg.presentation.eventvalue);
       seltrig = trigger(seltrig);
       selpres = presentation(selpres);
-      
+
       %if length(seltrig)~=length(selpres)
       %  ft_error('inconsistent number: %d triggers, %d presentation events', length(seltrig), length(selpres));
       %end
-      
+
       ft_info('%d triggers, %d presentation events', length(seltrig), length(selpres));
       if length(seltrig)>length(selpres)
         % don't know how to solve this
@@ -847,15 +851,15 @@ if need_events_tsv
             ft_error('not enough triggers to match the presentation events');
         end % case
       end
-      
+
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % the following code is largely shared between the MEG and MRI section
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      
+
       % predict the presentation sample number from the presentation timestamp
       model     = polyfit([selpres.timestamp], [seltrig.sample], 1);
       estimated = polyval(model, [selpres.timestamp]);
-      
+
       if istrue(cfg.feedback)
         [p, f, x] = fileparts(cfg.dataset);
         figure('name', ['PRESENTATION - ' f]);
@@ -867,13 +871,13 @@ if need_events_tsv
         xlabel('presentation time (s)')
         ylabel('data samples')
         legend({'observed', 'predicted'})
-        
+
         subplot(2,1,2)
         plot([selpres.timestamp]/1e4, ([seltrig.sample]-estimated)/hdr.Fs, 'g.')
         xlabel('presentation time (s)')
         ylabel('difference (s)')
       end
-      
+
       % estimate the sample number and time in seconds of all presentation events
       estimated = polyval(model, [presentation.timestamp]);
       estimated = round(estimated); % round to the nearest sample
@@ -882,7 +886,7 @@ if need_events_tsv
       end
       % convert the event structure to a TSV table
       presentation_tsv = event2table(hdr, presentation);
-      
+
       % the events from the the presentation log file should be merged with the triggers
       % trigger values are often numeric, whereas presentation event values are often strings
       if isnumeric(events_tsv.value) && ~isnumeric(presentation_tsv.value)
@@ -891,13 +895,15 @@ if need_events_tsv
       end
       % concatenate them
       events_tsv = [events_tsv; presentation_tsv];
-      
+
       clear presentation_tsv selpres seltrig
     end
   end
-  
-  % sort the events ascending on the onset
-  events_tsv = sortrows(events_tsv, 'onset');
+
+  if ~isempty(events_tsv)
+      % sort the events ascending on the onset
+      events_tsv = sortrows(events_tsv, 'onset');
+  end
 end % if need_events
 
 % remove fields that have an empty value
@@ -950,12 +956,22 @@ if ~isequal(cfg.dataset, cfg.outputfile) || istrue(cfg.mri.deface)
       ft_write_mri(cfg.outputfile, mri, 'dataformat', 'nifti');
 
     otherwise
-      [p, f, x] = fileparts(cfg.outputfile);
-      if ~isequal(x, '.vhdr')
-        cfg.outputfile = fullfile(p, [f '.vhdr']);
+      if not(istrue(cfg.keepnative))
+        [p, f, x] = fileparts(cfg.outputfile);
+        if ~isequal(x, '.vhdr')
+          cfg.outputfile = fullfile(p, [f '.vhdr']);
+        end
+        ft_info('writing %s\n', cfg.outputfile);
+        ft_write_data(cfg.outputfile, dat, 'dataformat', 'brainvision_eeg', 'header', hdr, 'event', trigger);
+      else
+        [~, ~, xin] = fileparts(cfg.dataset);
+        [~, ~, xout] = fileparts(cfg.outputfile);
+        if strcmp(xin, xout)
+          copyfile(cfg.dataset, cfg.outputfile);
+        else
+          ft_error('input and output filename extension don''t match. Cannot use keepnative.');
+        end
       end
-      ft_info('writing %s\n', cfg.outputfile);
-      ft_write_data(cfg.outputfile, dat, 'dataformat', 'brainvision_eeg', 'header', hdr, 'event', trigger);
   end
 end
 

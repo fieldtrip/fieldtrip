@@ -811,7 +811,7 @@ switch headerformat
   case 'eep_cnt'
     % check that the required low-level toolbox is available
     ft_hastoolbox('eeprobe', 1);
-    % read the first sample from the continous data, this will also return the header
+    % read the first sample from the continuous data, this will also return the header
     orig = read_eep_cnt(filename, 1, 1);
     hdr.Fs          = orig.rate;
     hdr.nSamples    = orig.nsample;

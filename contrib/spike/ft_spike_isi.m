@@ -39,7 +39,7 @@ function [isih] = ft_spike_isi(cfg, spike)
 %                          second spike fired was 0.1 s later than the
 %                          first. Note that jumps within trials or first
 %                          spikes within trials are given NaNs.
-%   isih.label           = 1-by-nUnits cell array with labels
+%   isih.label           = 1-by-nUnits cell-array with labels
 
 % Copyright (C) 2010-2012, Martin Vinck
 %

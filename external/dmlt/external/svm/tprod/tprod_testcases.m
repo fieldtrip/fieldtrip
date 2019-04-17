@@ -153,22 +153,22 @@ fprintf('%30s %gs\n','MATLAB',toc/1000); % = .03  / .01
 fprintf([str ' MatrixProduct [1 -1][-1 2]\n']);                    
 A=complex(randn(size(X)),randn(size(X))); % flush cache?
 tic, for i=1:1000;Z=tprod(X(:,:,1),[1 -1],Y,[-1 2]);end
-fprintf('%30s %gs\n','tprod',toc/1000);% = .28 / .06
+fprintf('%30s %gs\n','tprod',toc/1000); % = .28 / .06
 A=complex(randn(size(X)),randn(size(X))); % flush cache?
 tic, for i=1:1000;Zm=tprod(X(:,:,1),[1 -1],Y,[-1 2],'m');end
-fprintf('%30s %gs\n','tprod m',toc/1000);% = .28 / .06
+fprintf('%30s %gs\n','tprod m',toc/1000); % = .28 / .06
 A=complex(randn(size(X)),randn(size(X))); % flush cache?
 tic, for i=1:1000;T=X(:,:,1)*Y;end
-fprintf('%30s %gs\n','MATLAB',toc/1000);% = .17 / .06
+fprintf('%30s %gs\n','MATLAB',toc/1000); % = .17 / .06
 
 % transposed matrix product simulation
 fprintf([str ' transposed Matrix Product [-1 1][2 -1]\n']);
 A=complex(randn(size(X)),randn(size(X))); % flush cache?
 tic, for i=1:1000;Z=tprod(X(:,:,1),[-1 1],Y,[2 -1]);end
-fprintf('%30s %gs\n','tprod',toc/1000);% =.3 / .06 
+fprintf('%30s %gs\n','tprod',toc/1000); % =.3 / .06 
 A=complex(randn(size(X)),randn(size(X))); % flush cache?
 tic, for i=1:1000;Zm=tprod(X(:,:,1),[-1 1],Y,[2 -1],'m');end
-fprintf('%30s %gs\n','tprod m',toc/1000);% =.3 / .06 
+fprintf('%30s %gs\n','tprod m',toc/1000); % =.3 / .06 
 A=complex(randn(size(X)),randn(size(X))); % flush cache?
 tic, for i=1:1000;T=X(:,:,1).'*Y.';end
 fprintf('%30s %gs\n','MATLAB',toc/1000); % =.17  / .06
@@ -177,10 +177,10 @@ fprintf('%30s %gs\n','MATLAB',toc/1000); % =.17  / .06
 fprintf([str ' spatio-temporal filter [-1 -2 1] [-1 -2]\n']);        
 A=complex(randn(size(X)),randn(size(X))); % flush cache?
 tic,for i=1:500;Z=tprod(X,[-1 -2 1],Y,[-1 -2]);end,
-fprintf('%30s %gs\n','tprod',toc/500);% =.26 / .18
+fprintf('%30s %gs\n','tprod',toc/500); % =.26 / .18
 A=complex(randn(size(X)),randn(size(X))); % flush cache?
 tic,for i=1:500;Zm=tprod(X,[-1 -2 1],Y,[-1 -2],'m');end,
-fprintf('%30s %gs\n','tprod m',toc/500);% =.26 / .18
+fprintf('%30s %gs\n','tprod m',toc/500); % =.26 / .18
 A=complex(randn(size(X)),randn(size(X))); % flush cache?
 tic,for i=1:500;T=reshape(Y(:).'*reshape(X,size(X,1)*size(X,2),size(X,3)),[size(X,3) 1]);end,
 fprintf('%30s %gs\n','MATLAB',toc/500); %=.21 / .18
@@ -188,10 +188,10 @@ fprintf('%30s %gs\n','MATLAB',toc/500); %=.21 / .18
 fprintf([str ' transposed spatio-temporal filter [1 -2 -3] [-2 -3]\n']);    
 A=complex(randn(size(X)),randn(size(X))); % flush cache?
 tic,for i=1:50;Z=tprod(X,[1 -2 -3],Y,[-2 -3]);end,
-fprintf('%30s %gs\n','tprod',toc/50);% =.27 / .28
+fprintf('%30s %gs\n','tprod',toc/50); % =.27 / .28
 A=complex(randn(size(X)),randn(size(X))); % flush cache?
 tic,for i=1:50;Zm=tprod(X,[1 -2 -3],Y,[-2 -3],'m');end,
-fprintf('%30s %gs\n','tprod m',toc/50);% =.27 / .28
+fprintf('%30s %gs\n','tprod m',toc/50); % =.27 / .28
 A=complex(randn(size(X)),randn(size(X))); % flush cache?
 tic,for i=1:50;T=reshape(reshape(X,size(X,1),size(X,2)*size(X,3))*Y(:),[size(X,1) 1]);end,
 fprintf('%30s %gs\n','MATLAB',toc/50); %=.24 / .26
@@ -206,7 +206,7 @@ tic,for i=1:500; Zm=tprod(X,[-1 1 2],Y(:,1),[-1],'m');end,
 fprintf('%30s %gs\n','tprod m',toc/500); %=.27 / .26
 A=complex(randn(size(X)),randn(size(X))); % flush cache?
 tic,for i=1:500; T=reshape(Y(:,1).'*reshape(X,[size(X,1) size(X,2)*size(X,3)]),[1 size(X,2) size(X,3)]);end,
-fprintf('%30s %gs\n','MATLAB (reshape)',toc/500);%=.21 / .28
+fprintf('%30s %gs\n','MATLAB (reshape)',toc/500); %=.21 / .28
 A=complex(randn(size(X)),randn(size(X))); % flush cache?
 tic,for i=1:500; T=zeros([size(X,1),1,size(X,3)]);for k=1:size(X,3); T(:,:,k)=Y(1,:)*X(:,:,k); end,end,
 fprintf('%30s %gs\n','MATLAB (loop)',toc/500); %=.49 /
@@ -215,10 +215,10 @@ fprintf('%30s %gs\n','MATLAB (loop)',toc/500); %=.49 /
 fprintf([str ' Spatial filter: [-1 2 3],[-1 1]\n']);
 A=complex(randn(size(X)),randn(size(X))); % flush cache?
 tic;for i=1:500;Z=tprod(X,[-1 2 3],Y(:,1:2),[-1 1]);end;
-fprintf('%30s %gs\n','tprod',toc/500);%=.39/.37
+fprintf('%30s %gs\n','tprod',toc/500); %=.39/.37
 A=complex(randn(size(X)),randn(size(X))); % flush cache?
 tic;for i=1:500;Zm=tprod(X,[-1 2 3],Y(:,1:2),[-1 1],'m');end;
-fprintf('%30s %gs\n','tprod m',toc/500);%=.39/.37
+fprintf('%30s %gs\n','tprod m',toc/500); %=.39/.37
 A=complex(randn(size(X)),randn(size(X))); % flush cache?
 tic;for i=1:500; T=reshape(Y(:,1:2).'*reshape(X,[size(X,1) size(X,2)*size(X,3)]),[2 size(X,2) size(X,3)]);end;
 fprintf('%30s %gs\n','MATLAB',toc/500); 
@@ -273,9 +273,9 @@ for N=Ns;
 fprintf('X=[%d x %d]\n',N,N*N);X=randn(N,N*N);Y=randn(N*N,1);
 fprintf('[1 -1][-1]\n');
 tic, for i=1:1000;Z=tprod(X,[1 -1],Y,[-1],'n');end
-fprintf('%30s %gs\n','tprod',toc/1000);% = .28 / .06
+fprintf('%30s %gs\n','tprod',toc/1000); % = .28 / .06
 tic, for i=1:1000;Z=tprod(X,[1 -1],Y,[-1],'mn');end
-fprintf('%30s %gs\n','tprod m',toc/1000);% = .28 / .06
+fprintf('%30s %gs\n','tprod m',toc/1000); % = .28 / .06
 end
 
 fprintf('Simple mat vs non mat tests\n');
@@ -283,19 +283,19 @@ for N=Ns;
 fprintf('N=%d\n',N);X=randn(N,N,N);Y=randn(N,N);
 fprintf('[1 -1 -2][-1 -2]\n');
 tic, for i=1:1000;Z=tprod(X,[1 -1 -2],Y,[-1 -2]);end
-fprintf('%30s %gs\n','tprod',toc/1000);% = .28 / .06
+fprintf('%30s %gs\n','tprod',toc/1000); % = .28 / .06
 tic, for i=1:1000;Z=tprod(X,[1 -1 -2],Y,[-1 -2],'m');end
-fprintf('%30s %gs\n','tprod m',toc/1000);% = .28 / .06
+fprintf('%30s %gs\n','tprod m',toc/1000); % = .28 / .06
 fprintf('[-1 -2 1][-1 -2]\n');
 tic, for i=1:1000;Z=tprod(X,[-1 -2 1],Y,[-1 -2]);end
-fprintf('%30s %gs\n','tprod',toc/1000);% = .28 / .06
+fprintf('%30s %gs\n','tprod',toc/1000); % = .28 / .06
 tic, for i=1:1000;Z=tprod(X,[-1 -2 1],Y,[-1 -2],'m');end
-fprintf('%30s %gs\n','tprod m',toc/1000);% = .28 / .06
+fprintf('%30s %gs\n','tprod m',toc/1000); % = .28 / .06
 fprintf('[-1 2 3][-1 1]\n');
 tic, for i=1:100;Z=tprod(X,[-1 2 3],Y,[-1 1]);end
-fprintf('%30s %gs\n','tprod',toc/100);% = .28 / .06
+fprintf('%30s %gs\n','tprod',toc/100); % = .28 / .06
 tic, for i=1:100;Z=tprod(X,[-1 2 3],Y,[-1 1],'m');end
-fprintf('%30s %gs\n','tprod m',toc/100);% = .28 / .06
+fprintf('%30s %gs\n','tprod m',toc/100); % = .28 / .06
 end
 
 function []=blkSzTests(blkSzs,Ns);
@@ -303,7 +303,7 @@ function []=blkSzTests(blkSzs,Ns);
 fprintf('Blksz optimisation tests\n');
 %blkSzs=[64 48 40 32 24 16 0];
 tptime=zeros(numel(blkSzs+2));
-for N=Ns;%[128,256,512,1024,2048];
+for N=Ns; %[128,256,512,1024,2048];
   X=randn(N,N);Y=randn(size(X));
   for i=1:5;
 

@@ -3,7 +3,7 @@ function test_bug1502
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_checkconfig
+% DEPENDENCY ft_checkconfig
 
 cfg   = [];
 cfg.a = 1;

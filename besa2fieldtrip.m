@@ -18,7 +18,7 @@ function data = besa2fieldtrip(input)
 %   *.dat is converted to a structure similar to the output of FT_SOURCANALYSIS
 %   *.dat combined with a *.gen or *.generic is converted to a structure similar to the output of FT_PREPROCESSING
 %
-% Note (*): If the BESA toolbox by Karsten Hochstatter is found on your
+% (*) If the BESA toolbox by Karsten Hochstatter is found on your
 % MATLAB path, the readBESAxxx functions will be used (where xxx=tfc/swf),
 % alternatively the private functions from FieldTrip will be used.
 %
@@ -107,7 +107,7 @@ if isstruct(input)
     data.dim      = [nx ny nz];
     % Array with all possible positions (x,y,z)
     data.pos      = WritePosArray(xTemp,yTemp,zTemp,nx,ny,nz);
-    data.inside   = 1:prod(data.dim);%as in Fieldtrip - not correct
+    data.inside   = 1:prod(data.dim); %as in Fieldtrip - not correct
     data.outside  = [];
 
     %--------------------Source Waveform--------------------------------------%

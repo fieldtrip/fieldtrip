@@ -1,8 +1,8 @@
 function dat = read_biosemi_bdf(filename, hdr, begsample, endsample, chanindx)
 
-% READ_BIOSEMI_BDF reads specified samples from a BDF continous datafile
+% READ_BIOSEMI_BDF reads specified samples from a BDF continuous datafile
 % It neglects all trial boundaries as if the data was acquired in
-% non-continous mode.
+% non-continuous mode.
 %
 % Use as
 %   [hdr] = read_biosemi_bdf(filename);
@@ -153,16 +153,16 @@ if nargin==1
   tmp = find(EDF.Cal < 0);
   EDF.Cal(tmp) = ones(size(tmp));
   EDF.Off(tmp) = zeros(size(tmp));
-  
+
   % the following adresses https://github.com/fieldtrip/fieldtrip/pull/395
   tmp = find(strcmpi(cellstr(EDF.Label), 'STATUS'));
   if EDF.Cal(tmp)~=1
-    timeout = 60*15; % do not show it for the next 15 minutes 
+    timeout = 60*15; % do not show it for the next 15 minutes
     ft_warning('FieldTrip:BDFCalibration', 'calibration for status channel appears incorrect, setting it to 1', timeout);
     EDF.Cal(tmp) = 1;
   end
   if EDF.Off(tmp)~=0
-    timeout = 60*15; % do not show it for the next 15 minutes 
+    timeout = 60*15; % do not show it for the next 15 minutes
     ft_warning('FieldTrip:BDFOffset', 'offset for status channel appears incorrect, setting it to 0', timeout);
     EDF.Off(tmp) = 0;
   end
@@ -201,10 +201,10 @@ if nargin==1
   end;
 
   EDF.AS.spb = sum(EDF.SPR);    % Samples per Block
-  
+
   % close the file
   fclose(EDF.FILE.FID);
-  
+
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % convert the header to Fieldtrip-style
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -296,4 +296,3 @@ else
     return
   end
 end
-

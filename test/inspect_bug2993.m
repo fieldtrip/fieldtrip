@@ -54,15 +54,15 @@ assert(~isequal(outcfg.m, eye(4)));
 
 cfg = [];
 cfg.elec = elec_original;
-figure; ft_plot_lay(ft_prepare_layout(cfg));
+figure; ft_plot_layout(ft_prepare_layout(cfg));
 
 cfg = [];
 cfg.elec = elec_original;
 cfg.rotate = 180;
-figure; ft_plot_lay(ft_prepare_layout(cfg));
+figure; ft_plot_layout(ft_prepare_layout(cfg));
 
 cfg = [];
 cfg.elec = elec_realigned1;
-figure; ft_plot_lay(ft_prepare_layout(cfg));
+figure; ft_plot_layout(ft_prepare_layout(cfg));
 
 

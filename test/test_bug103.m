@@ -3,7 +3,7 @@ function test_bug103
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_singleplotER
+% DEPENDENCY ft_singleplotER
 
 freq.freq       = 1:1:100;
 freq.powspctrm  = randn(size(freq.freq)).^2;

@@ -3,7 +3,7 @@ function test_meg_leadfield_units
 % MEM 2000mb
 % WALLTIME 00:10:00
 
-% TEST ft_convert_units ft_datatype_sens ft_convert_vol_sens ft_compute_leadfield current_dipole
+% DEPENDENCY ft_convert_units ft_datatype_sens ft_convert_vol_sens ft_compute_leadfield current_dipole
 
 %% do a forward computation for a single vector magnetometer
 clear all
@@ -45,7 +45,7 @@ assert(n1/n0 > 0.31);
 %% do a forward computation for a more realistic sensor layout
 clear all
 
-[pnt, tri] = icosahedron162;
+[pnt, tri] = mesh_sphere(162);
 sel = find(pnt(:,3)>0);
 
 grad = [];
@@ -89,7 +89,7 @@ assert(n1/n0 > 0.99);
 
 figure
 ft_plot_dipole(dip, [1 0 0], 'unit', 'm');
-ft_plot_vol(vol1);
+ft_plot_headmodel(vol1);
 ft_plot_sens(grad, 'coildiameter', 0.01); % 10 mm
 ft_plot_topo3d(grad.chanpos, lf1(:,1));
 alpha 0.5
@@ -140,7 +140,7 @@ assert(n1/n0 > 0.9);
 
 figure
 ft_plot_dipole(dip, [1 0 0], 'unit', 'm');
-ft_plot_vol(vol1);
+ft_plot_headmodel(vol1);
 ft_plot_sens(grad, 'coildiameter', 0.01); % 10 mm
 ft_plot_topo3d(grad.chanpos, lf1(:,1));
 alpha 0.5
@@ -158,7 +158,7 @@ clear all
 
 grad = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds'), 'senstype', 'meg');
 
-[pnt, tri] = icosahedron162;
+[pnt, tri] = mesh_sphere(162);
 
 mesh = [];
 mesh.pnt = pnt * 10;                % set of points on a 10 cm sphere
@@ -213,7 +213,7 @@ assert(abs(n3/n0-1)<0.05);
 
 figure
 ft_plot_dipole(dip, [1 0 0], 'unit', 'm');
-ft_plot_vol(vol3);
+ft_plot_headmodel(vol3);
 ft_plot_sens(grad, 'coilsize', 0.01); % 10 mm
 ft_plot_topo3d(grad.chanpos, lf3(:,1));
 alpha 0.5

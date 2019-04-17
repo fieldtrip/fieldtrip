@@ -38,7 +38,7 @@ function [data] = ft_appenddata(cfg, varargin)
 % file on disk and/or the output data will be written to a *.mat file. These mat
 % files should contain only a single variable, corresponding with the
 % input/output structure. The data structure in the input file should be a
-% cell array for this particular function.
+% cell-array for this particular function.
 %
 % See also FT_PREPROCESSING, FT_DATAYPE_RAW, FT_APPENDTIMELOCK, FT_APPENDFREQ,
 % FT_APPENDSOURCE, FT_APPENDSENS
@@ -110,10 +110,12 @@ cfg.tolerance  = ft_getopt(cfg, 'tolerance', 1e-5);
 isequaltime  = true;
 isequallabel = true;
 issamelabel  = true;
+isequalfsample = true;
 for i=2:numel(varargin)
   isequaltime  = isequaltime  && isequal(varargin{i}.time , varargin{1}.time );
   isequallabel = isequallabel && isequal(varargin{i}.label, varargin{1}.label);
   issamelabel  = issamelabel  && isempty(setxor(varargin{i}.label, varargin{1}.label));
+  isequalfsample = isequalfsample && isfield(varargin{i},'fsample') && isfield(varargin{1},'fsample') && isequal(varargin{i}.fsample, varargin{1}.fsample);
 end
 
 if isempty(cfg.appenddim) || strcmp(cfg.appenddim, 'auto')
@@ -202,6 +204,10 @@ switch cfg.appenddim
   otherwise
     ft_error('unsupported cfg.appenddim');
 end % switch
+
+if isequalfsample
+  data.fsample = varargin{1}.fsample;
+end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

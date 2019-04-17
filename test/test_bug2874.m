@@ -3,7 +3,7 @@ function test_bug2874
 % WALLTIME 00:10:100
 % MEM 1000mb
 
-% TEST ft_sourcegrandaverage
+% DEPENDENCY ft_sourcegrandaverage
 
 pos = randn(19344, 3);
 nsubj = 3;

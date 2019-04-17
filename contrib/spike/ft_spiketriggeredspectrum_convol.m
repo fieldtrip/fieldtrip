@@ -67,8 +67,8 @@ function [sts] = ft_spiketriggeredspectrum_convol(cfg, data, spike)
 %
 % Outputs:
 %   sts is a spike structure, containing new fields:
-%   sts.fourierspctrm = 1 x nUnits cell array with dimord spike_lfplabel_freq
-%   sts.lfplabel      = 1 x nChan cell array with EEG labels
+%   sts.fourierspctrm = 1 x nUnits cell-array with dimord spike_lfplabel_freq
+%   sts.lfplabel      = 1 x nChan cell-array with EEG labels
 %   sts.freq          = 1 x nFreq frequencies. Note that per default, not
 %                       all frequencies can be used as we compute the DFT
 %                       around the spike based on an uneven number of
@@ -480,7 +480,7 @@ for iTaper = 1:nTapers
     sinwav  = taper(iTaper,:).*sin(2*pi*(findx-1)*indN/numsmp);
     wavelet = complex(coswav(:), sinwav(:));       
     fftRamp = sum(xKern.*coswav) + 1i*sum(xKern.*sinwav); % fft of ramp with dx/ds = 1 * taper 
-    fftDC   = sum(ones(1,timwinSamples).*coswav) + 1i*sum(ones(1,timwinSamples).*sinwav);% fft of unit direct current * taper
+    fftDC   = sum(ones(1,timwinSamples).*coswav) + 1i*sum(ones(1,timwinSamples).*sinwav); % fft of unit direct current * taper
     spctrm  = spctrm + (conv_fftbased(dat(:),wavelet) - (beta0*fftDC + beta1.*fftRamp))/(numsmp/2);           
                        % fft                       % mean            %linear ramp      % make magnitude invariant to window length                             
 end

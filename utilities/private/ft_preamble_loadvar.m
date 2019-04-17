@@ -47,14 +47,14 @@ if (isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)) || exist('Fief7bee_rep
       cfg.inputfile = {};
       iW1aenge_now = datestr(now, 30);
       for i=1:(ft_nargin-1)
-        cfg.inputfile{i} = fullfile(Fief7bee_reproducescript, sprintf('%s_input_varargin_%d', iW1aenge_now, i));
+        cfg.inputfile{i} = fullfile(Fief7bee_reproducescript, sprintf('%s_input_varargin_%d.mat', iW1aenge_now, i));
         savevar(cfg.inputfile{i}, 'data', varargin{i});
       end
     else
       cfg.inputfile = {};
       iW1aenge_now = datestr(now, 30);
       for i=1:(ft_nargin-1)
-        cfg.inputfile{i} = fullfile(Fief7bee_reproducescript, sprintf('%s_input_%s', iW1aenge_now, iW1aenge_preamble{i}));
+        cfg.inputfile{i} = fullfile(Fief7bee_reproducescript, sprintf('%s_input_%s.mat', iW1aenge_now, iW1aenge_preamble{i}));
         savevar(cfg.inputfile{i}, iW1aenge_preamble{i}, eval(iW1aenge_preamble{i}));
       end
     end
@@ -68,7 +68,7 @@ if (isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)) || exist('Fief7bee_rep
   end
   
   if isequal(iW1aenge_preamble, {'varargin'}) && ~iscell(cfg.inputfile)
-    % this should be a cell-array, oterwise it cannot be assigned to varargin
+    % this should be a cell-array, otherwise it cannot be assigned to varargin
     cfg.inputfile = {cfg.inputfile};
   end
   

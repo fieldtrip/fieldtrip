@@ -446,7 +446,7 @@ x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimens
 y        = x(ix);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTIONS for doing something over the first dimension of a cell array
+% SUBFUNCTIONS for doing something over the first dimension of a cell-array
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function y = cellmean1(x)
 siz = size(x);
@@ -509,7 +509,7 @@ x = cat(1,x{:});
 y = u(:,1)'*x;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTIONS to compute something over the first two dimensions of a cell array
+% SUBFUNCTIONS to compute something over the first two dimensions of a cell-array
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function y = cellmean2(x)
 siz = size(x);

@@ -1,4 +1,4 @@
-function ft_test_compare(varargin)
+function [summary] = ft_test_compare(varargin)
 
 % FT_TEST_COMPARE
 
@@ -79,10 +79,6 @@ for i=1:numel(functionname)
     summary(i).(fn) = haspassed(results{j}, sel);
   end % for each functionname
 end % for each of the features
-
-% convert the struct-array to a table
-table = struct2table(summary);
-fprintf('%s\n', table{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION to convert the boolean result into a string

@@ -83,7 +83,7 @@ sampinfotaglist = fieldnames(t.SampleInfo); % Get fields of SampleInfo
 
 if find(strcmpi(taglist(:),prop))           % If regular field
     indx = find(strcmpi(taglist(:),prop));
-    out = getfield(struct(t),taglist{indx});% see builtin getfield for structure
+    out = getfield(struct(t),taglist{indx}); % see builtin getfield for structure
 elseif find(strcmpi(sampinfotaglist(:),prop))% Is SampleInfo field
     indx = find(strcmpi(sampinfotaglist(:),prop));
     out = getfield(t.SampleInfo,sampinfotaglist{indx});

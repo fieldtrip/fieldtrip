@@ -2,9 +2,7 @@ function failed_bug3177
 
 % WALLTIME 00:20:00
 % MEM 3gb
-
-% TEST test_bug3177
-% TEST ft_electroderealign mesh2edge poly2tri
+% DEPENDENCY ft_electroderealign mesh2edge poly2tri
 
 %%
 

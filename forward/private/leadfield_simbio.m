@@ -14,7 +14,7 @@ function [lf] = leadfield_simbio(pos, vol)
 % copyright (c) 2012, Johannes Vorwerk
 
 try   
-    lf = zeros(size(3*pos,1),size(vol.transfer,1));
+    lf = zeros(3*size(pos,1),size(vol.transfer,1));
     dir = diag([1,1,1]);
     for i=1:size(pos,1)
         locpos = repmat(pos(i,:),3,1);

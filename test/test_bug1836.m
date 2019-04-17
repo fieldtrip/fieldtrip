@@ -3,7 +3,7 @@ function test_bug1836
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_datatype_segmentation ft_prepare_mesh ft_write_headshape
+% DEPENDENCY ft_datatype_segmentation ft_prepare_mesh ft_write_headshape
 
 % this bugscript does not need to run automatically, because the problem is
 % that ft_write_headshape does not write hexahedral meshes in the proper

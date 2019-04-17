@@ -1406,23 +1406,28 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = source2volume(data)
 
-if isfield(data, 'dimord')
-  % it is a modern source description
-  
-  %this part depends on the assumption that the list of positions is describing a full 3D volume in
-  %an ordered way which allows for the extraction of a transformation matrix
-  %i.e. slice by slice
+fn = fieldnames(data);
+fd = nan(size(fn));
+for i=1:numel(fn)
+  fd(i) = ndims(data.(fn{i}));
+end
+
+if ~isfield(data, 'dim')
+  % this part depends on the assumption that the list of positions is describing a full 3D volume in
+  % an ordered way which allows for the extraction of a transformation matrix, i.e. slice by slice
+  data.dim = pos2dim(data.pos);
   try
-    if isfield(data, 'dim')
-      data.dim = pos2dim(data.pos, data.dim);
-    else
-      data.dim = pos2dim(data);
-    end
+    % if the dim is correct, it should be possible to obtain the transform
+    ws = warning('off', 'MATLAB:rankDeficientMatrix');
+    pos2transform(data.pos, data.dim);
+    warning(ws);
   catch
+    % remove the incorrect dim
+    data = rmfield(data, 'dim');
   end
 end
 
-if isfield(data, 'dim') && length(data.dim)>=3
+if isfield(data, 'dim')
   data.transform = pos2transform(data.pos, data.dim);
 end
 

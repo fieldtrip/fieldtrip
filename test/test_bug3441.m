@@ -3,7 +3,7 @@ function test_bug3441
 % MEM 3gb
 % WALLTIME 00:20:00
 
-% TEST loadcnt
+% DEPENDENCY loadcnt
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3441'));
 
@@ -27,7 +27,7 @@ cfg.dftfreq = 60; %this is the frequency of the line noise (in Europe it would b
 cfg.padding = 10; %amount of seconds to pad each trial to minimize filtering artifacts
 cfg.bpfilter='yes'; %bandpass filter
 cfg.bpfreq=[.1 100]; %pass frequencies within 0.5 Hz and 90 Hz only
-cfg.bpfilttype = 'but';% or 'fir' or 'firls' (default = 'but')
+cfg.bpfilttype = 'but'; % or 'fir' or 'firls' (default = 'but')
 
 preproc_odd = ft_preprocessing(cfg);
 %save('preproc_odd','preproc_od')

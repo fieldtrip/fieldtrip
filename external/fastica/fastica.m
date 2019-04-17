@@ -4,7 +4,7 @@ function [Out1, Out2, Out3] = fastica(mixedsig, varargin)
 %   NOTICE!
 % THIS IS NOT THE ORIGINAL VERSION BUT A MODIFIED VERSION: 
 % this one does not compute the icasig if this is not necessary (otherwise
-% there is no change, thus there is (should be) no change in behaviour
+% there is no change, thus there is (should be) no change in behavior
 %   kaigoe  (kai.goergen@bccn-berlin.de)
 %
 % FastICA for Matlab 7.x and 6.x

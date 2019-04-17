@@ -4,13 +4,13 @@ function [headmodel, sens, cfg] = prepare_headmodel(cfg, data)
 % SUBFUNCTION that helps to prepare the electrodes/gradiometers and the
 % volume conduction model. This is used in sourceanalysis and dipolefitting.
 %
-% This function will get the gradiometer/electrode definition using
-% FT_FETCH_SENS and the volume conductor definition using FT_FETCH_VOL
+% This function will get the gradiometer/electrode definition and the volume
+% conductor definition.
 %
 % Subsequently it will remove the gradiometers/electrodes that are not
 % present in the data. Finally it with attach the gradiometers to a
 % multi-sphere head model (if supplied) or attach the electrodes to
-% a BEM head model.
+% the skin surface of a BEM head model.
 %
 % This function will return the electrodes/gradiometers in an order that is
 % consistent with the order in cfg.channel, or in case that is empty in the
@@ -62,7 +62,12 @@ if hasdata
 end
 
 % get the volume conduction model
-headmodel = ft_fetch_vol(cfg);
+if ischar(cfg.headmodel)
+  headmodel = ft_read_headmodel(cfg.headmodel);
+else
+  % ensure that the volume conduction model is up-to-date
+  headmodel = ft_datatype_headmodel(cfg.headmodel);
+end
 
 % get the gradiometer or electrode definition, these can be in the cfg or in the data
 if hasdata
@@ -75,15 +80,15 @@ if istrue(cfg.siunits)
   % ensure that the geometrical units are in SI units
   sens       = ft_convert_units(sens,       'm', 'feedback', true);
   headmodel  = ft_convert_units(headmodel,  'm', 'feedback', true);
-  if isfield(cfg, 'grid')
-    cfg.grid = ft_convert_units(cfg.grid,  'm', 'feedback', true);
+  if isfield(cfg, 'sourcemodel')
+    cfg.sourcemodel = ft_convert_units(cfg.sourcemodel,  'm', 'feedback', true);
   end
 else
   % ensure that the geometrical units are the same
-  if isfield(cfg, 'grid') && isfield(cfg.grid, 'unit')
+  if isfield(cfg, 'sourcemodel') && isfield(cfg.sourcemodel, 'unit')
     % convert it to the units of the source model
-    sens       = ft_convert_units(sens,       cfg.grid.unit, 'feedback', true);
-    headmodel  = ft_convert_units(headmodel,  cfg.grid.unit, 'feedback', true);
+    sens       = ft_convert_units(sens,       cfg.sourcemodel.unit, 'feedback', true);
+    headmodel  = ft_convert_units(headmodel,  cfg.sourcemodel.unit, 'feedback', true);
   else
     % convert it to the units of the head model
     sens = ft_convert_units(sens, headmodel.unit, 'feedback', true);

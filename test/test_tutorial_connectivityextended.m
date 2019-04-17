@@ -2,9 +2,7 @@ function test_tutorial_connectivityextended
 
 % WALLTIME 00:45:00
 % MEM 3gb
-
-% TEST test_tutorial_connectivity
-% TEST ft_connectivityanalysis ft_connectivitysimulation ft_freqanalysis ft_connectivityplot ft_mvaranalysis
+% DEPENDENCY ft_connectivityanalysis ft_connectivitysimulation ft_freqanalysis ft_connectivityplot ft_mvaranalysis
 
 % This is the first section of the connectivity tutorial, which
 % starts with an MVAR model and then uses parametric and nonparametric
@@ -111,9 +109,9 @@ tlock                 = ft_timelockanalysis(cfg, data_cmb);
 cfg              = [];
 cfg.method       = 'lcmv';
 cfg.headmodel    = hdm;
-cfg.grid.pos     = sourcemodel.pos([maxcohindx maxpowindx], :);
-cfg.grid.inside  = true(2,1);
-cfg.grid.unit    = sourcemodel.unit;
+cfg.sourcemodel.pos     = sourcemodel.pos([maxcohindx maxpowindx], :);
+cfg.sourcemodel.inside  = true(2,1);
+cfg.sourcemodel.unit    = sourcemodel.unit;
 cfg.lcmv.keepfilter = 'yes';
 source_idx       = ft_sourceanalysis(cfg, tlock);
 

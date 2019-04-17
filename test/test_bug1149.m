@@ -5,7 +5,7 @@ function test_bug1149
 
 
 % generate a unit sphere
-[pnt, tri] = icosahedron162;
+[pnt, tri] = mesh_sphere(162);
 
 % create the sphere
 bnd.pnt = pnt * 90;
@@ -21,7 +21,7 @@ figure,ft_plot_mesh(bnd,'facecolor','g')
 figure,ft_plot_mesh(bnd,'facecolor','none')
 
 
-figure,ft_plot_vol(vol,'faceindex','yes')
-figure,ft_plot_vol(vol,'faceindex','none')
-figure,ft_plot_vol(vol,'facecolor','g')
-figure,ft_plot_vol(vol,'facecolor','none')
+figure,ft_plot_headmodel(vol,'faceindex','yes')
+figure,ft_plot_headmodel(vol,'faceindex','none')
+figure,ft_plot_headmodel(vol,'facecolor','g')
+figure,ft_plot_headmodel(vol,'facecolor','none')

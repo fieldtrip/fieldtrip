@@ -58,7 +58,7 @@ function status = besa_save2Swf(file_path, file_name, data_matrix, ...
 % Author: Todor Jordanov
 % Created: 2012-08-27
 
-n_sources = size(source_labels, 2);%size(data_matrix, 1);
+n_sources = size(source_labels, 2); %size(data_matrix, 1);
 
 % Check if data is vectorized or multiplex.
 isMul = 1;  % boolean variable containing the info if the file is 

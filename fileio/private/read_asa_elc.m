@@ -51,7 +51,7 @@ end
 tmp = tokenize(lab{1});
 if length(tmp)==size(pnt,1)
   % the electrode labels were on a single line
-  % reformat the electrode labels into an appropriately sized cell array
+  % reformat the electrode labels into an appropriately sized cell-array
   lab = tmp;
 end
 

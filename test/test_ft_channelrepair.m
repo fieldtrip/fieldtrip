@@ -3,7 +3,7 @@ function test_ft_channelrepair
 % MEM 3gb
 % WALLTIME 00:10:00
 
-% TEST ft_channelrepair ft_datatype_sens fixsens ft_prepare_neighbours
+% DEPENDENCY ft_channelrepair ft_datatype_sens fixsens ft_prepare_neighbours
 
 datainfo = ref_datasets;
 
@@ -108,7 +108,7 @@ data_eeg_repaired_spline = ft_channelrepair(cfg,data_eeg_juggled);
 
 cfg = [];
 cfg.channel = {'19','20','24','25','26'};
-cfg.continous = 'no';
+cfg.continuous = 'no';
 ft_databrowser(cfg, data_eeg_repaired_spline);
 
 % treat as a missing channel

@@ -98,14 +98,14 @@ for c=1:nClass; % generate sf's for each sub-problem
       % the other eigenvectors, i.e. are mapped to 0 by both Sigmac and Sigma
       % N.B. if the numerics are OK this is probably uncessary!
       Na  = sum((double(Sigmac(:,:,c))*W(:,si)).^2)./sum(W(:,si).^2); 
-      ssi=find(si);ssi=ssi(abs(Na)<singThresh & imag(Na)==0);%ssi=dc>1-singThresh|dc<0+singThresh;
+      ssi=find(si);ssi=ssi(abs(Na)<singThresh & imag(Na)==0); %ssi=dc>1-singThresh|dc<0+singThresh;
       if ( ~isempty(ssi) ) % remove anything in this dir in other eigenvectors
          % Compute the projection of the rest onto the singular direction(s)
          Pssi    = repop(W(:,ssi)'*W(:,~si),'./',sum(W(:,ssi).*W(:,ssi),1)');
          W(:,~si)= W(:,~si) - W(:,ssi)*Pssi; %remove this singular contribution
       end
 
-      W=W(:,~si); dc=dc(~si); nf=nf(~si);% discard singular components   
+      W=W(:,~si); dc=dc(~si); nf=nf(~si); % discard singular components   
    end
    
    %Normalise, so that diag(W'*Sigma*W)=N, i.e.mean_i W'*(X_i*X_i')*W/nSamp = 1

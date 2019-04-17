@@ -3,8 +3,6 @@ function failed_old_source2sparse
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_old_source2sparse
-
 % this script tests the functionality of ft_source2sparse with respect
 % to source data new style
 
@@ -23,7 +21,7 @@ for k = 1:10
 end
 
 %create grad-structure and add to data
-[pnt,tri] = icosahedron162;
+[pnt,tri] = mesh_sphere(162);
 nrm       = normals(pnt, tri, 'vertex');
 pnt       = pnt.*12;
 [srt,ind] = sort(pnt(:,3),'descend');
@@ -44,8 +42,8 @@ vol.r = 8;
 
 %prepare leadfields and grid
 cfg                 = [];
-cfg.grid.resolution = 1.5;
-cfg.vol             = vol;
+cfg.sourcemodel.resolution = 1.5;
+cfg.headmodel       = vol;
 cfg.grad            = grad;
 grid                = ft_prepare_leadfield(cfg);
 
@@ -89,7 +87,7 @@ cfgsd            = [];
 cfgsd.projectmom = 'yes';
 sd               = ft_sourcedescriptives(cfgsd, source);
 
-cfgs.grid.filter = sd.avg.filter;
+cfgs.sourcemodel.filter = sd.avg.filter;
 cfgs.method      = 'pcc';
 cfgs.keepmom     = 'yes';
 
@@ -101,7 +99,7 @@ end
 
 for k = 1:numel(source.inside)
   kk = source.inside(k);
-  cfgs.grid.leadfield{kk} = sd.leadfield{kk}*sd.avg.ori{kk};
+  cfgs.sourcemodel.leadfield{kk} = sd.leadfield{kk}*sd.avg.ori{kk};
 end
 spccold = ft_sourceanalysis(cfgs, freq);
 spccnew = ft_checkdata(spccold, 'sourcerepresentation', 'new');

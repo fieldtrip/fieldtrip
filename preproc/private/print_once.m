@@ -23,7 +23,7 @@ function [ws warned] = print_once(varargin)
 % See also FT_WARNING
 
 % Copyright (C) 2012, Robert Oostenveld
-% Copyright (C) 2013, Robert Oostenveld, Jörn M. Horschig
+% Copyright (C) 2013, Robert Oostenveld, Jï¿½rn M. Horschig
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -56,7 +56,7 @@ if ~isfield(ft_default, 'printonce')
   ft_default.printonce.identifier = [];
 end
 
-% put the arguments we will pass to fprintf() in this cell array
+% put the arguments we will pass to fprintf() in this cell-array
 warningArgs = {};
 
 if nargin==3

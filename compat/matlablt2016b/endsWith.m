@@ -42,7 +42,7 @@ else
 end
 
 if ~ischar(s) && ~iscellstr(s)
-  error('the input should be either a char-array or a cell array with chars');
+  error('the input should be either a char-array or a cell-array with chars');
 end
 if nargin<4
   boolean = false;

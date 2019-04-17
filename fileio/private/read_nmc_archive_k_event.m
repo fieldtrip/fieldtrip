@@ -68,7 +68,7 @@ for ievent = 1:length(events_old.events)
           % rename certain events and insert
           tmpevent.sample      = events_old.events(ievent).eegoffset;
           if iscell(events_old.events(ievent).mode)
-            tmpevent.mode    = events_old.events(ievent).mode{1}; % .mode variables are a cell array in some subjects
+            tmpevent.mode    = events_old.events(ievent).mode{1}; % .mode variables are a cell-array in some subjects
           else
             tmpevent.mode    = events_old.events(ievent).mode;
           end

@@ -26,7 +26,7 @@ for i = 1:length(indx)
 end %find all "outer" neighbours to this cluster
 outbnd = unique(outbnd);
 
-indx1 = any(ismember(tri,outbnd)');% outer vertex connections
+indx1 = any(ismember(tri,outbnd)'); % outer vertex connections
 indx2 = any(ismember(tri,indx)'); % inner vertex connections
 indxnew = find(indx1 & indx2); % triangles spanning at least one outer & one inner vertex
 

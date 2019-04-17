@@ -29,6 +29,8 @@
 % ------ EEGLAB DEFINITION - YOU MAY CHANGE THE TEXT BELOW -------------
 % ----------------------------------------------------------------------
 
+
+
 EEGOPTION_PATH = ''; % if empty, the home folder of the current user is used
                      % Note that this may create problems under Windows
                      % when unicode characters are part of the user name
@@ -39,30 +41,102 @@ YDIR  = 1;                  % positive potential up = 1; negative up = -1
 
 HZDIR = 'up';               % ascending freqs = 'up'; descending = 'down' 
                             % (e.g., timef/newtimef frequency direction)
+                            
+% Checking MATLAB version
+tmpvers = version;
+indp = find(tmpvers == '.');
+if str2num(tmpvers(indp(1)+1)) >= 1, tmpvers = [ tmpvers(1:indp(1)) '0' tmpvers(indp(1)+1:end) ]; end
+indp = find(tmpvers == '.');
+VERS = str2num(tmpvers(1:indp(2)-1));                            
 
 % font size
 tmpComputer   = computer;
 tmpScreenSize = get(0, 'ScreenSize');
-retinaDisplay = false;
-if tmpScreenSize(3) == 1440 && ( tmpScreenSize(3) == 878 || tmpScreenSize(3) == 900 )
-    retinaDisplay = true;
-end;
+
+% Graph Definitions
+DEFAULT_COLORMAP = 'jet';
+
+if VERS < 8.04
+    PLOT_LINEWIDTH   = 2;
+    PLOT_LINEWIDTH_S = 1;
     
-% retinaDisplay = false; % uncoment this line if not retina display
-if retinaDisplay && strcmpi(tmpComputer(1:3), 'MAC')
-    W_MAIN = findobj('tag', 'EEGLAB');
-    if isempty(W_MAIN)
-        disp('Mac OSX retina display detected. If this is not the case uncoment line 50 of icadefs.m');
-    end;
-    GUI_FONTSIZE  = 18; % graphic interface font size
-    AXES_FONTSIZE = 18; % Axis labels and legend font size
-    TEXT_FONTSIZE = 18; % Miscellaneous font sizes
-else
-    GUI_FONTSIZE  = 10; % graphic interface font size
-    AXES_FONTSIZE = 10; % Axis labels and legend font size
-    TEXT_FONTSIZE = 10; % Miscellaneous font sizes
-end;
-clear retinaDisplay tmpScreenSize tmpComputer;
+    % AXES FONTSIZE
+    AXES_FONTSIZE   = 10;                % Axis labels and legend font size
+    AXES_FONTSIZE_S = AXES_FONTSIZE - 2; % Axis labels and legend font size Small
+    AXES_FONTSIZE_L = 16;                % Axis labels and legend font size Large
+    
+    % GUI FONTSIZE
+    GUI_FONTSIZE    = 10;               % graphic interface font size
+    GUI_FONTSIZE_S  = GUI_FONTSIZE - 2; % graphic interface font size Small
+    GUI_FONTSIZE_L  = GUI_FONTSIZE + 2; % graphic interface font size Large
+   
+    % TEXT FONTSIZE
+    TEXT_FONTSIZE = 10;                  % Miscellaneous font sizes
+    TEXT_FONTSIZE_S = TEXT_FONTSIZE - 2; % Miscellaneous font sizes Small
+    TEXT_FONTSIZE_L = TEXT_FONTSIZE + 2; % Miscellaneous font sizes Large
+    
+elseif VERS >= 8.04
+  
+    if strcmpi(tmpComputer(1:3), 'MAC')
+      
+        PLOT_LINEWIDTH   = 1;
+        PLOT_LINEWIDTH_S = 0.5;
+      
+        %scale up fontsizes on higher resolution mac screens
+        retinaDisplay = false;
+        if tmpScreenSize(3) >= 1920 % bump fontsize only for the highest retina res settings
+            retinaDisplay = true; %comment this out if you don't want fontsizes increased at high display resolutions
+            %disp('Mac OSX retina display detected. If this is not desired comment out line 83 of icadefs.m');
+        end
+        
+        % AXES FONTSIZE
+        if retinaDisplay
+          AXES_FONTSIZE   = 12;                 % Axis labels and legend font size
+        else
+          AXES_FONTSIZE   = 9;                 % Axis labels and legend font size
+        end
+        AXES_FONTSIZE_S = AXES_FONTSIZE - 2; % Axis labels and legend font size Small
+        AXES_FONTSIZE_L = 12.5;              % Axis labels and legend font size Large
+        
+        % GUI FONTSIZE
+        if retinaDisplay
+          GUI_FONTSIZE    = 14;                % graphic interface font size
+        else
+          GUI_FONTSIZE    = 12;                % graphic interface font size
+        end
+        GUI_FONTSIZE_S  = GUI_FONTSIZE - 2; % graphic interface font size Small
+        GUI_FONTSIZE_L  = GUI_FONTSIZE + 2; % graphic interface font size Large
+        
+        % TEXT FONTSIZE
+        if retinaDisplay
+          TEXT_FONTSIZE   = 14;                 % Miscellaneous font sizes
+        else
+          TEXT_FONTSIZE   = 12;                 % Miscellaneous font sizes
+        end
+        TEXT_FONTSIZE_S = TEXT_FONTSIZE - 2; % Miscellaneous font sizes Small
+        TEXT_FONTSIZE_L = TEXT_FONTSIZE + 4; % Miscellaneous font sizes Large
+    else
+        PLOT_LINEWIDTH   = 1;
+        PLOT_LINEWIDTH_S = 0.5;
+        
+        % AXES FONTSIZE
+        AXES_FONTSIZE   = 9;                 % Axis labels and legend font size
+        AXES_FONTSIZE_S = AXES_FONTSIZE - 2; % Axis labels and legend font size Small
+        AXES_FONTSIZE_L = 12.5;              % Axis labels and legend font size Large
+        
+        % GUI FONTSIZE
+        GUI_FONTSIZE    = 10;                % graphic interface font size
+        GUI_FONTSIZE_S  = GUI_FONTSIZE - 2; % graphic interface font size Small
+        GUI_FONTSIZE_L  = GUI_FONTSIZE + 2; % graphic interface font size Large
+        
+        % TEXT FONTSIZE
+        TEXT_FONTSIZE   = 10;                 % Miscellaneous font sizes
+        TEXT_FONTSIZE_S = TEXT_FONTSIZE - 2; % Miscellaneous font sizes Small
+        TEXT_FONTSIZE_L = TEXT_FONTSIZE + 4; % Miscellaneous font sizes Large
+    end
+end
+
+clear retinaDisplay tmpScreenSize tmpComputer tmpvers indp;
 
 % the eeg_options.m file also countains additional options
 
@@ -70,9 +144,18 @@ clear retinaDisplay tmpScreenSize tmpComputer;
 % ------------------------ END OF DEFINITIONS --------------------------
 % ----------------------------------------------------------------------
 
-% INSERT location of ica executable (LINUX ONLY) for binica.m below
-eeglab_p = fileparts(which('eeglab'));
-ICABINARY = fullfile(eeglab_p, 'functions', 'resources', 'ica_linux'); 
+% INSERT location of ica executable (UNIX ONLY) for binica.m below
+if ~isdeployed
+    eeglab_p = fileparts(which('eeglab'));
+    ICABINARY = fullfile(eeglab_p, 'functions', 'resources', 'ica_linux'); 
+    tmpComputer = computer;
+    if strcmpi(tmpComputer(1:3), 'MAC')
+        ICABINARY = fullfile(eeglab_p, 'functions', 'resources', 'ica_osx_intel_64');
+        clear tmpComputer
+    end
+else
+    ICABINARY = fullfile(ctfroot, 'ica_linux');
+end
 
 try
     set(0,'defaultaxesfontsize',AXES_FONTSIZE);
@@ -80,7 +163,7 @@ try
     set(0,'DefaultUicontrolFontSize',GUI_FONTSIZE);
 catch
     % most likely Octave here
-end;
+end
 
 TUTORIAL_URL = 'http://sccn.ucsd.edu/wiki/EEGLAB'; % online version
 DEFAULT_SRATE = 256.0175;      % default local sampling rate (rarely used)
@@ -92,8 +175,8 @@ lowscreendepth = 0;
 if ~exist('OCTAVE_VERSION')
     if get(0, 'screendepth') <=8 % if mono or 8-bit color
 	lowscreendepth = 1; 
-    end;
-end;
+    end
+end
 if lowscreendepth    
     %fprintf('icadefs(): Setting display parameters for mono or 8-bit color\n');
     BACKCOLOR           = [1 1 1];    % Background figure color 
@@ -112,7 +195,7 @@ else % if full color screen
     GUIBACKCOLOR        = BACKEEGLABCOLOR;% EEGLAB GUI background color <---------
     GUITEXTCOLOR        = [0 0 0.4];      % GUI foreground color for text
     PLUGINMENUCOLOR     = [.5 0 .5];      % plugin menu color
-end;
+end
 
 
 % THE FOLLOWING PARAMETERS WILL BE DEPRECATED IN LATER VERSIONS

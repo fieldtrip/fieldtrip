@@ -6,7 +6,7 @@ function opt = ft_setopt(opt, key, val)
 %
 % Use as
 %   s = ft_setopt(s, key, val)
-% where s is a structure or a cell array.
+% where s is a structure or a cell-array.
 %
 % See also FT_GETOPT, FT_CHECKOPT
 

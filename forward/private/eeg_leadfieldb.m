@@ -70,7 +70,7 @@ elseif size(vol.mat,1)==nskin
   % the output leadfield corresponds to the number skin vertices
 elseif size(vol.mat,1)==nall
   % the output leadfield corresponds to the total number of vertices
-elseif strcmp(ft_voltype(vol), 'openmeeg')
+elseif strcmp(ft_headmodeltype(vol), 'openmeeg')
   % this is handled differently, although at the moment I don't know why
 else
   ft_error('unexpected size of system matrix')
@@ -80,7 +80,7 @@ end
 cond = vol.cond(vol.source);
 
 % compute the infinite medium potential on all vertices
-switch ft_voltype(vol)
+switch ft_headmodeltype(vol)
   case 'dipoli'
     % the system matrix was computed using Thom Oostendorp's DIPOLI
     % concatenate the vertices of all compartment boundaries in a single Nx3 matrix
@@ -89,7 +89,7 @@ switch ft_voltype(vol)
       pos = [pos; vol.bnd(i).pos];
     end
     % dipoli incorporates the conductivity into the system matrix
-    lf = inf_medium_leadfield(dippos, pos, 1);
+    lf = eeg_infinite_dipole(dippos, pos, 1);
     
   case 'asa'
     % the system matrix was computed using ASA from www.ant-neuro.com
@@ -99,7 +99,7 @@ switch ft_voltype(vol)
       pos = [pos; vol.bnd(i).pos];
     end
     % assume that isolated potential approach was used
-    lf = inf_medium_leadfield(dippos, pos, cond);
+    lf = eeg_infinite_dipole(dippos, pos, cond);
     
   case 'bemcp'
     % the system matrix was computed using code from Christopher Phillips
@@ -108,16 +108,16 @@ switch ft_voltype(vol)
     % loop over boundaries and compute the leadfield for each
     for i=1:ncmp
       co = (cond(i)+cond(i+1))/2 ;
-      lf{i} = inf_medium_leadfield(dippos, vol.bnd(i).pos, co);
+      lf{i} = eeg_infinite_dipole(dippos, vol.bnd(i).pos, co);
     end
     % concatenate the leadfields
     lf = cat(1, lf{:});
     
   otherwise
-    ft_error('unsupported type of volume conductor (%s)\n', ft_voltype(vol));
-end % switch ft_voltype
+    ft_error('unsupported type of volume conductor (%s)\n', ft_headmodeltype(vol));
+end % switch ft_headmodeltype
 
-if isfield(vol, 'mat') && ~ft_voltype(vol, 'openmeeg')
+if isfield(vol, 'mat') && ~ft_headmodeltype(vol, 'openmeeg')
   % compute the bounded medium potential on all vertices
   % this may include the bilinear interpolation from vertices towards electrodes
   lf = vol.mat * lf;

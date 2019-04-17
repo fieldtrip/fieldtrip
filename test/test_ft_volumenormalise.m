@@ -3,7 +3,7 @@ function test_ft_volumenormalise
 % MEM 4000mb
 % WALLTIME 00:45:00
 
-% TEST ft_volumenormalise ft_warp_apply
+% DEPENDENCY ft_volumenormalise ft_warp_apply
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri');
 mri = ft_read_mri(filename);
@@ -13,7 +13,7 @@ mri = ft_read_mri(filename);
 cfg                 = [];
 cfg.mri             = mri;
 cfg.threshold       = 0.1;
-cfg.grid.resolution = 0.6;
+cfg.sourcemodel.resolution = 0.6;
 cfg.smooth          = 10;
 sourcemodel         = ft_prepare_sourcemodel(cfg);
 sourcemodel         = ft_convert_units(sourcemodel, 'mm');
@@ -77,9 +77,9 @@ cfg.spmversion      = 'spm12';
 cfg.spmmethod       = 'new';
 cfg.mri             = mri;
 cfg.threshold       = 0.1;
-cfg.grid.resolution = 6;
-cfg.grid.warpmni    = 'yes';
-cfg.grid.nonlinear  = 'yes';
+cfg.sourcemodel.resolution = 6;
+cfg.sourcemodel.warpmni    = 'yes';
+cfg.sourcemodel.nonlinear  = 'yes';
 sourcemodel_warp    = ft_prepare_sourcemodel(cfg);
 
 rmpath(genpath(fullfile(p,'external','spm12')));

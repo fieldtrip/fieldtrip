@@ -37,16 +37,30 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
   end
   
   if exist('Fief7bee_reproducescript', 'var')
-    % write the function output variable(s) to a MATLAB file
+    % write the output variable(s) to a MATLAB file
     iW1aenge_now = datestr(now, 30);
     cfg.outputfile = {};
     for i=1:numel(iW1aenge_postamble)
-      cfg.outputfile{i} = fullfile(Fief7bee_reproducescript, sprintf('%s_output_%s', iW1aenge_now, iW1aenge_postamble{i}));
+      cfg.outputfile{i} = fullfile(Fief7bee_reproducescript, sprintf('%s_output_%s.mat', iW1aenge_now, iW1aenge_postamble{i}));
     end
+    
+    % write the large configuration fields to a MATLAB file
+    % this applies to layout, event, sourcemodel, headmodel, grad, etc.
+    fn = ignorefields('recursesize');
+    for i=1:numel(fn)
+      if isfield(cfg.callinfo.usercfg, fn{i}) && isstruct((cfg.callinfo.usercfg.(fn{i})))
+        Fief7bee_outputfile = fullfile(Fief7bee_reproducescript, sprintf('%s_input_%s.mat', iW1aenge_now, fn{i}));
+        savevar(Fief7bee_outputfile, fn{i}, cfg.callinfo.usercfg.(fn{i}));
+        cfg.callinfo.usercfg.(fn{i})  = Fief7bee_outputfile;
+      end
+    end
+    
     % write a snippet of MATLAB code with the user-specified configuration and function call
     reproducescript(fullfile(Fief7bee_reproducescript, 'script.m'), cfg, isempty(iW1aenge_postamble))
+    
   elseif (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile))
     % keep the output file as it is
+    
   else
     % don't write to an output file
     cfg.outputfile = {};
@@ -57,6 +71,7 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
     cfg.outputfile = {cfg.outputfile};
   end
   
+  % save the output data structures to a MATLAB .mat file
   if iscell(cfg.outputfile)
     % iW1aenge_postamble is a cell-array containing the variable names
     if isequal(iW1aenge_postamble, {'varargout'})
@@ -86,4 +101,3 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
     clear(iW1aenge_postamble{1});
   end
 end
-

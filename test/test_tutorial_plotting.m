@@ -3,7 +3,7 @@ function test_tutorial_plotting
 % WALLTIME 00:15:00
 % MEM 4gb
 
-% TEST ft_multiplotER ft_singleplotER ft_topoplotER ft_singleplotTFR ft_multiplotTRF ft_megplanar ft_combineplanar ft_volumereslice
+% DEPENDENCY ft_multiplotER ft_singleplotER ft_topoplotER ft_singleplotTFR ft_multiplotTRF ft_megplanar ft_combineplanar ft_volumereslice
 
 %%
 % *Plotting data at the channel and source level*
@@ -197,7 +197,7 @@ figure; ft_multiplotTFR(cfg,TFRhann);
 cfg = [];
 cfg.layout = 'CTF151.lay';
 cfg.layout = ft_prepare_layout(cfg);
-figure; ft_plot_lay(cfg.layout);
+figure; ft_plot_layout(cfg.layout);
 %%
 % Note that the layout contains all 151 MEG channels; the one channel missing
 % in the data is automatically excluded from the plots.
@@ -221,7 +221,7 @@ view(-90, 90) % you should rotate the figure to get a good 3-D feel of the chann
 cfg = [];
 cfg.layout = 'CTF151_helmet.mat'; % note that it is a binary *.mat file, not an ascii *.lay file
 cfg.layout = ft_prepare_layout(cfg);
-figure; ft_plot_lay(cfg.layout);
+figure; ft_plot_layout(cfg.layout);
 %%
 % The layout is determined by the layout file. Read more on layout files
 % [[tutorial:layout|here]], and in the [[faq:what_is_the_format_of_the_layout_file_which_is_used_for_plotting|frequently
@@ -241,7 +241,7 @@ figure; ft_plot_lay(cfg.layout);
 cfg = [];
 cfg.layout = 'neuromag306all.lay';
 cfg.layout = ft_prepare_layout(cfg);
-figure; ft_plot_lay(cfg.layout);
+figure; ft_plot_layout(cfg.layout);
 %%
 % You should zoom in on the figure to see the triplets for the three channels
 % ar each sensor locations. There are also template layouts available that only

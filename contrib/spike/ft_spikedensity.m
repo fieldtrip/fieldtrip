@@ -34,7 +34,7 @@ function [sdf, sdfdata] = ft_spikedensity(cfg, data)
 %                        For cfg.winfunc = 'gauss': the standard deviation in seconds (default =
 %                                         1/4 of window duration in seconds)
 %                        For cfg.winfunc = 'wname' with 'wname' any standard window function
-%                                          see window opts in that function and add as cell array
+%                                          see window opts in that function and add as cell-array
 %                        If cfg.winfunctopt = [], default opts are taken.
 %   cfg.latency        = [begin end] in seconds, 'maxperiod' (default), 'minperiod',
 %                        'prestim'(t>=0), or 'poststim' (t>=0).
@@ -284,7 +284,7 @@ for iTrial = 1:nTrials
     end
     
     % pad with nans if there's variable trial length
-    dofsel = ~isnan(y);%true(1,length(y));
+    dofsel = ~isnan(y); %true(1,length(y));
     if strcmp(cfg.vartriallen,'yes')
       padLeft  = zeros(1, samplesShift(iTrial));
       padRight = zeros(1,(maxNumSamples - nSamples - samplesShift(iTrial)));

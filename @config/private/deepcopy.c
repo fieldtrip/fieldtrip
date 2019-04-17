@@ -4,7 +4,7 @@
  *
  * This implements Y=X by making a deep copy. A deep copy refers
  * to a copy in which all levels of data are copied. For example, a
- * deep copy of a cell array copies each cell, and the contents of
+ * deep copy of a cell-array copies each cell, and the contents of
  * the each cell (if any), and so on.
  *
  */

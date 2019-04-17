@@ -73,7 +73,7 @@ switch lower(link),
  case 'al'
   link='average'; % Change Icasso name to SOM Toolbox name
  case 'cl'
-  link='complete';% Change Icasso name to SOM Toolbox name
+  link='complete'; % Change Icasso name to SOM Toolbox name
  case 'sl'
   link='single'; % Change Icasso name to SOM Toolbox name
 end

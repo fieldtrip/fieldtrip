@@ -25,7 +25,7 @@ function [grandavg] = ft_freqgrandaverage(cfg, varargin)
 % file on disk and/or the output data will be written to a *.mat file. These mat
 % files should contain only a single variable, corresponding with the
 % input/output structure. For this particular function, the input should be
-% specified as a cell array.
+% specified as a cell-array.
 %
 % See also FT_TIMELOCKGRANDAVERAGE, FT_FREQANALYSIS, FT_FREQDESCRIPTIVES,
 % FT_FREQBASELINE

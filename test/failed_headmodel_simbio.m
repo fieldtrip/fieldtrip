@@ -2,9 +2,7 @@ function failed_headmodel_simbio
 
 % WALLTIME 00:45:00
 % MEM 16gb
-
-% TEST test_headmodel_simbio
-% TEST ft_prepare_headmodel ft_prepare_mesh ft_prepare_leadfield ft_prepare_sourcemodel 
+% DEPENDENCY ft_prepare_headmodel ft_prepare_mesh ft_prepare_leadfield ft_prepare_sourcemodel 
 
 % this function tests that simbio forward model works, comparing the results with a 3 concentric spheres model
 % intial version by Lilla Magyari 2013
@@ -51,7 +49,7 @@ end
 currdir = pwd;
 cd ~/matlab/fieldtrip/test/private/;
 r = radius3;
-[pnt, tri] = icosahedron42; 
+[pnt, tri] = mesh_sphere(42); 
 sens.pnt   = r * pnt;
 sens.label = {};
 nsens  = size(sens.pnt,1);
@@ -98,22 +96,22 @@ pos = [zeros(size(zp)) zeros(size(zp)) zp];
 % Define the corresponding spatial grid 
 cfg = [];
 cfg.inwardshift = 5; % otherwise some sourcepoints will be on boundary or really close to it
-cfg.grid.pos    = pos;
-cfg.vol = volcs;
+cfg.sourcemodel.pos    = pos;
+cfg.headmodel = volcs;
 cfg.sens = sens;
 gridp = ft_prepare_sourcemodel(cfg);
 
 cfg=[];
-cfg.vol = vol_hex;
+cfg.headmodel = vol_hex;
 cfg.elec = sens;
-cfg.grid = gridp;
+cfg.sourcemodel = gridp;
 lf_hex  = ft_prepare_leadfield(cfg);
 clear vol_hex;
 
 cfg=[];
-cfg.vol = volcs;
+cfg.headmodel = volcs;
 cfg.elec = sens;
-cfg.grid = gridp;
+cfg.sourcemodel = gridp;
 lf_cc  = ft_prepare_leadfield(cfg);
 
 grid1 = lf_cc;
