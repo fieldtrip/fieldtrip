@@ -120,8 +120,9 @@ tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'latency', 'avgovertime', 
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 
 if strcmp(cfg.correctm, 'cluster') && length(varargin{1}.label)>1
-  % this is required for clustering with multiple channels
-  ft_checkconfig(cfg, 'required', 'neighbours');
+  % neighbours are required for clustering with multiple channels
+  tmpcfg = keepfields(cfg, {'neighbours', 'neighbourdist', 'channel', 'elec', 'grad', 'opto', 'showcallinfo'});
+  cfg.neighbours = ft_prepare_neighbours(tmpcfg);
 end
 
 dimord = getdimord(varargin{1}, cfg.parameter);
