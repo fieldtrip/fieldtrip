@@ -16,7 +16,7 @@ function mri = ft_defacevolume(cfg, mri)
 % If you specify the box method, the following options apply
 %   cfg.translate  = initial position of the center of the box (default = [0 0 0])
 %   cfg.scale      = initial size of the box along each dimension (default is automatic)
-%   cfg.translate  = initial rotation of the box (default = [0 0 0])
+%   cfg.rotate     = initial rotation of the box (default = [0 0 0])
 %   cfg.selection  = which voxels to keep, can be 'inside' or 'outside' (default = 'outside')
 %   cfg.smooth     = 'no' or the FWHM of the gaussian kernel in voxels (default = 'no')
 %   cfg.keepbrain  = 'no' or 'yes', segment and retain the brain (default = 'no')
