@@ -224,7 +224,7 @@ switch cfg.method
       cfg.neighbourdist = 40 * ft_scalingfactor('mm', sens.unit);
       fprintf('using a distance threshold of %g\n', cfg.neighbourdist);
     end
-    neighbours = compneighbstructfromgradelec(chanpos, label, cfg.neighbourdist);
+    neighbours = compneighbstructfrompos(chanpos, label, cfg.neighbourdist);
     
   case 'triangulation'
     if size(chanpos, 2)==2 || all(chanpos(:,3)==0)
@@ -278,7 +278,7 @@ fprintf('there are on average %.1f neighbours per channel\n', k/length(neighbour
 
 if strcmp(cfg.feedback, 'yes')
   % give some graphical feedback
-  tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'})
+  tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
   tmpcfg.neighbours = neighbours;
   if hasdata
     tmpcfg.senstype = cfg.senstype;
@@ -300,14 +300,14 @@ ft_postamble history    neighbours
 % SUBFUNCTION that compute the neighbourhood geometry from the
 % gradiometer/electrode positions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [neighbours] = compneighbstructfromgradelec(chanpos, label, neighbourdist)
+function [neighbours] = compneighbstructfrompos(chanpos, label, neighbourdist)
 
-nsensors = length(label);
+nchan = length(label);
 
 % compute the distance between all sensors
-dist = zeros(nsensors,nsensors);
-for i=1:nsensors
-  dist(i,:) = sqrt(sum((chanpos(1:nsensors,:) - repmat(chanpos(i,:), nsensors, 1)).^2,2))';
+dist = zeros(nchan,nchan);
+for i=1:nchan
+  dist(i,:) = sqrt(sum((chanpos(1:nchan,:) - repmat(chanpos(i,:), nchan, 1)).^2,2))';
 end
 
 % find the neighbouring electrodes based on distance
@@ -315,11 +315,14 @@ end
 channeighbstructmat = (dist<neighbourdist);
 
 % electrode istelf is not a neighbour
-channeighbstructmat = (channeighbstructmat .* ~eye(nsensors));
+channeighbstructmat = (channeighbstructmat .* ~eye(nchan));
+
+% convert back to logical
+channeighbstructmat = logical(channeighbstructmat);
 
 % construct a structured cell-array with all neighbours
 neighbours=struct;
-for i=1:nsensors
+for i=1:nchan
   neighbours(i).label       = label{i};
   neighbours(i).neighblabel = label(channeighbstructmat(i,:));
 end
@@ -330,9 +333,9 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [neighbours] = compneighbstructfromtri(chanpos, label, tri)
 
-nsensors = length(label);
+nchan = length(label);
 
-channeighbstructmat = zeros(nsensors,nsensors);
+channeighbstructmat = zeros(nchan,nchan);
 % mark neighbours according to triangulation
 for i=1:size(tri, 1)
   channeighbstructmat(tri(i, 1), tri(i, 2)) = 1;
@@ -346,7 +349,7 @@ end
 % construct a structured cell-array with all neighbours
 neighbours = struct;
 alldist = [];
-for i=1:nsensors
+for i=1:nchan
   neighbours(i).label       = label{i};
   neighbidx                 = find(channeighbstructmat(i,:));
   neighbours(i).dist        = sqrt(sum((repmat(chanpos(i, :), numel(neighbidx), 1) - chanpos(neighbidx, :)).^2, 2));
@@ -357,7 +360,7 @@ end
 % remove neighbouring channels that are too far away (imporntant e.g. in
 % case of missing sensors)
 neighbdist = mean(alldist)+3*std(alldist);
-for i=1:nsensors
+for i=1:nchan
   idx = neighbours(i).dist > neighbdist;
   neighbours(i).dist(idx)         = [];
   neighbours(i).neighblabel(idx)  = [];
