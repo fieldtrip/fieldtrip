@@ -1,6 +1,6 @@
 function [varargout] = contains(varargin)
 
-%CONTAINS True if text contains a pattern.
+% CONTAINS True if text contains a pattern.
 %   TF = contains(S,PATTERN) returns true if any element of string array S
 %   contains PATTERN. TF is the same size as S.
 %
@@ -13,7 +13,7 @@ function [varargout] = contains(varargin)
 if exist(mfilename, 'builtin') || any(strncmp(which(mfilename, '-all'), matlabroot, length(matlabroot)))
   % remove this directory from the path
   p = fileparts(mfilename('fullpath'));
-  ft_warning('removing %s from your path, see http://bit.ly/2SPPjUS', p);
+  warning('removing %s from your path, see http://bit.ly/2SPPjUS', p);
   rmpath(p);
   % call the original MATLAB function
   if exist(mfilename, 'builtin')
@@ -24,6 +24,10 @@ if exist(mfilename, 'builtin') || any(strncmp(which(mfilename, '-all'), matlabro
   return
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% this is where the actual replacement code starts
+% function tf = contains(s, pattern, str, boolean)
+
 % deal with the input arguments
 if nargin==1
   [s                       ] = deal(varargin{1:1});
@@ -33,10 +37,9 @@ elseif nargin==3
   [s, pattern, str         ] = deal(varargin{1:3});
 elseif nargin==4
   [s, pattern, str, boolean] = deal(varargin{1:4});
+else
+  error('incorrect number of input arguments')
 end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% this is where the actual replacement code starts
 
 if ~ischar(s) && ~iscellstr(s)
   error('the input should be either a char-array or a cell-array with chars');
