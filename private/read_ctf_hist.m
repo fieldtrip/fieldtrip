@@ -25,18 +25,18 @@ hist.stopdate    = 'unknown';
 
 while fileline >= 0
   fileline = fgets(fid);
-  if ~isempty(findstr(fileline,'Collection started'))
-    startdate = sscanf(fileline(findstr(fileline,'Collection started:'):end),'Collection started: %s');
-    hist.starttime = sscanf(fileline(findstr(fileline,startdate):end),strcat(startdate, '%s'));
+  if contains(fileline,'Collection started')
+    startdate = sscanf(fileline(strfind(fileline,'Collection started:'):end),'Collection started: %s');
+    hist.starttime = sscanf(fileline(strfind(fileline,startdate):end),strcat(startdate, '%s'));
     hist.startdate = startdate;
   end
-  if ~isempty(findstr(fileline,'Collection stopped'))
-    stopdate = sscanf(fileline(findstr(fileline,'Collection stopped:'):end),'Collection stopped: %s');
-    hist.stoptime = sscanf(fileline(findstr(fileline,stopdate):end),strcat(stopdate, '%s'));
+  if contains(fileline,'Collection stopped')
+    stopdate = sscanf(fileline(strfind(fileline,'Collection stopped:'):end),'Collection stopped: %s');
+    hist.stoptime = sscanf(fileline(strfind(fileline,stopdate):end),strcat(stopdate, '%s'));
     hist.stopdate = stopdate;
   end
-  if ~isempty(findstr(fileline,'Dataset name'))
-    hist.datasetname = sscanf(fileline(findstr(fileline,'Dataset name'):end),'Dataset name %s');
+  if contains(fileline,'Dataset name')
+    hist.datasetname = sscanf(fileline(strfind(fileline,'Dataset name'):end),'Dataset name %s');
   end
 end
 

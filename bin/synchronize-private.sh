@@ -400,6 +400,7 @@ ARRAY=()
 ARRAY+=(fileio/private/elproj.m)
 ARRAY+=(forward/private/elproj.m)
 ARRAY+=(plotting/private/elproj.m)
+ARRAY+=(test/private/elproj.m)
 ARRAY+=(private/elproj.m)
 sync ${ARRAY[*]}
 

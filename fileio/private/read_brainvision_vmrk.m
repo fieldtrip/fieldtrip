@@ -5,7 +5,7 @@ function [stimulus, response, segment, timezero] = read_brainvision_vmrk(filenam
 %
 % Use as
 %   [stim, resp, segment, timezero] = read_brainvision_vmrk(filename)
-% 
+%
 % This function needs to read the header from a separate file and
 % assumes that it is located at the same location.
 %
@@ -50,37 +50,36 @@ while line~=-1,
   line=fgetl(fid);
   % pause
   if ~isempty(line),
-    if ~isempty(findstr(line,'Mk')),
-      if ~isempty(findstr(line,'Stimulus'))
+    if contains(line,'Mk')
+      if contains(line,'Stimulus')
         [token,rem] = strtok(line,',');
         type=sscanf(rem,',S %i');
         [token,rem] = strtok(rem,',');
-        time=(sscanf(rem,', %i')-1)/hdr.Fs*1000; 
+        time=(sscanf(rem,', %i')-1)/hdr.Fs*1000;
         stimulus=[stimulus; type time(1)];
 
-      elseif ~isempty(findstr(line,'Response'))
+      elseif contains(line,'Response')
         [token,rem] = strtok(line,',');
         type=sscanf(rem,',R %i');
         [token,rem] = strtok(rem,',');
-        time=(sscanf(rem,', %i')-1)/hdr.Fs*1000;                
+        time=(sscanf(rem,', %i')-1)/hdr.Fs*1000;
         response=[response; type, time(1)];
 
-      elseif ~isempty(findstr(line,'New Segment'))
+      elseif contains(line,'New Segment')
         [token,rem] = strtok(line,',');
-        time=(sscanf(rem,',,%i')-1)/hdr.Fs*1000;                
+        time=(sscanf(rem,',,%i')-1)/hdr.Fs*1000;
         segment=[segment; time(1)];
 
-      elseif ~isempty(findstr(line,'Time 0'))
+      elseif contains(line,'Time 0')
         [token,rem] = strtok(line,',');
-        time=(sscanf(rem,',,%i')-1)/hdr.Fs*1000;                
+        time=(sscanf(rem,',,%i')-1)/hdr.Fs*1000;
         timezero=[timezero; time(1)];
 
       end
     end
-  else 
+  else
     line=1;
   end
 end
 
-fclose(fid);    
-
+fclose(fid);

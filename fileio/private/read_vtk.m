@@ -14,11 +14,11 @@ function [pnt, tri] = read_vtk(fn)
 
 fid = fopen(fn, 'rt');
 if fid~=-1
-  
+
   npnt = 0;
   while (~npnt)
     line = fgetl(fid);
-    if ~isempty(findstr(line, 'POINTS'))
+    if contains(line, 'POINTS')
       npnt = sscanf(line, 'POINTS %d float');
     end
   end
@@ -26,11 +26,11 @@ if fid~=-1
   for i=1:npnt
     pnt(i,:) = fscanf(fid, '%f', 3)';
   end
-  
+
   ntri = 0;
   while (~ntri)
     line = fgetl(fid);
-    if ~isempty(findstr(line, 'POLYGONS'))
+    if contains(line, 'POLYGONS')
       tmp = sscanf(line, 'POLYGONS %d %d');
       ntri = tmp(1);
     end
@@ -40,9 +40,9 @@ if fid~=-1
     tri(i,:) = fscanf(fid, '%d', 4)';
   end
   tri = tri(:,2:4) + 1;
-  
+
   fclose(fid);
-  
+
 else
   ft_error('unable to open file');
 end
