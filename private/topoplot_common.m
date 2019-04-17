@@ -389,7 +389,7 @@ dimord = getdimord(varargin{1}, cfg.parameter);
 if startsWith(dimord, 'chan_chan_') || startsWith(dimord, 'chancmb_')
   % convert the bivariate data to univariate and call the parent plotting function again
   s = dbstack;
-  cfg.originalfunction = s(end).name;
+  cfg.originalfunction = s(2).name;
   cfg.trials = 'all'; % trial selection has been taken care off
   bivariate_common(cfg, varargin{:});
   return
