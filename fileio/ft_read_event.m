@@ -429,11 +429,7 @@ switch eventformat
     event = read_ah5_markers(hdr, filename);
     
   case 'brainvision_vmrk'
-    try
-      fid = fopen_or_error(filename,'rt');
-    catch err
-      ft_error(sprintf('cannot open BrainVision marker file: %s', err.message);
-    end
+    fid = fopen_or_error(filename,'rt');
     line = [];
     while ischar(line) || isempty(line)
       line = fgetl(fid);
