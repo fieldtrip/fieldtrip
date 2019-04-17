@@ -58,13 +58,15 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is where the actual replacement code starts
-% function status = webwrite(url, data)
+% function status = webwrite(url, data, options)
 
 % deal with the input arguments
 if nargin==1
-  [url      ] = deal(varargin{1:1});
+  [url               ] = deal(varargin{1:1});
 elseif nargin==2
-  [url, data] = deal(varargin{1:2});
+  [url, data         ] = deal(varargin{1:2});
+elseif nargin==3
+  [url, data, options] = deal(varargin{1:3});
 else
   error('incorrect number of input arguments')
 end
