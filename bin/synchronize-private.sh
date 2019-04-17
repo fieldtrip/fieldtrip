@@ -9,13 +9,15 @@
 ################################################################################
 
 function sync {
-# find the latest file from the list and copies it to all other files
-latest=`ls -t $* | head -n1`
-for file in $*; do
-if [ $file != $latest ] ; then
-cp $latest $file
-fi
-done
+  # find the latest file from the list and copies it to all other files
+  latest=`ls -t $* 2>/dev/null | head -n1`
+  for file in $*; do
+    if [ -n "$latest" ]; then
+      if [ "$file" != "$latest" ] ; then
+        cp "$latest" "$file"
+      fi
+    fi
+  done
 }
 
 ################################################################################
@@ -159,6 +161,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(private/combineClusters.mexa64)
+ARRAY+=(plotting/private/combineClusters.mexa64)
 ARRAY+=(src/combineClusters.mexa64)
 sync ${ARRAY[*]}
 
@@ -167,6 +170,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(private/combineClusters.mexw32)
+ARRAY+=(plotting/private/combineClusters.mexw32)
 ARRAY+=(src/combineClusters.mexw32)
 sync ${ARRAY[*]}
 
@@ -175,6 +179,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(private/combineClusters.mexw64)
+ARRAY+=(plotting/private/combineClusters.mexw64)
 ARRAY+=(src/combineClusters.mexw64)
 sync ${ARRAY[*]}
 
@@ -395,6 +400,7 @@ ARRAY=()
 ARRAY+=(fileio/private/elproj.m)
 ARRAY+=(forward/private/elproj.m)
 ARRAY+=(plotting/private/elproj.m)
+ARRAY+=(test/private/elproj.m)
 ARRAY+=(private/elproj.m)
 sync ${ARRAY[*]}
 
@@ -870,6 +876,7 @@ ARRAY=()
 ARRAY+=(fileio/private/ft_hastoolbox.m)
 ARRAY+=(forward/private/ft_hastoolbox.m)
 ARRAY+=(inverse/private/ft_hastoolbox.m)
+ARRAY+=(plotting/private/ft_hastoolbox.m)
 ARRAY+=(utilities/ft_hastoolbox.m)
 sync ${ARRAY[*]}
 
@@ -1177,62 +1184,6 @@ ARRAY+=(private/headsurface.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# icosahedron.m
-
-ARRAY=()
-ARRAY+=(external/openmeeg/icosahedron.m)
-ARRAY+=(forward/private/icosahedron.m)
-ARRAY+=(plotting/private/icosahedron.m)
-ARRAY+=(private/icosahedron.m)
-ARRAY+=(test/private/icosahedron.m)
-ARRAY+=(utilities/private/icosahedron.m)
-sync ${ARRAY[*]}
-
-################################################################################
-# icosahedron162.m
-
-ARRAY=()
-ARRAY+=(external/openmeeg/icosahedron162.m)
-ARRAY+=(forward/private/icosahedron162.m)
-ARRAY+=(plotting/private/icosahedron162.m)
-ARRAY+=(private/icosahedron162.m)
-ARRAY+=(test/private/icosahedron162.m)
-sync ${ARRAY[*]}
-
-################################################################################
-# icosahedron2562.m
-
-ARRAY=()
-ARRAY+=(forward/private/icosahedron2562.m)
-ARRAY+=(plotting/private/icosahedron2562.m)
-ARRAY+=(private/icosahedron2562.m)
-ARRAY+=(test/private/icosahedron2562.m)
-sync ${ARRAY[*]}
-
-################################################################################
-# icosahedron42.m
-
-ARRAY=()
-ARRAY+=(external/openmeeg/icosahedron42.m)
-ARRAY+=(forward/private/icosahedron42.m)
-ARRAY+=(plotting/private/icosahedron42.m)
-ARRAY+=(private/icosahedron42.m)
-ARRAY+=(test/private/icosahedron42.m)
-ARRAY+=(utilities/private/icosahedron42.m)
-sync ${ARRAY[*]}
-
-################################################################################
-# icosahedron642.m
-
-ARRAY=()
-ARRAY+=(external/openmeeg/icosahedron642.m)
-ARRAY+=(forward/private/icosahedron642.m)
-ARRAY+=(plotting/private/icosahedron642.m)
-ARRAY+=(private/icosahedron642.m)
-ARRAY+=(test/private/icosahedron642.m)
-sync ${ARRAY[*]}
-
-################################################################################
 # ignorefields.m
 
 ARRAY=()
@@ -1473,14 +1424,6 @@ ARRAY=()
 ARRAY+=(plotting/private/keyvalcheck.m)
 ARRAY+=(specest/private/keyvalcheck.m)
 ARRAY+=(utilities/keyvalcheck.m)
-sync ${ARRAY[*]}
-
-################################################################################
-# ksphere.m
-
-ARRAY=()
-ARRAY+=(forward/private/ksphere.m)
-ARRAY+=(private/ksphere.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -1793,6 +1736,62 @@ ARRAY=()
 ARRAY+=(private/mesh2edge.m)
 ARRAY+=(forward/private/mesh2edge.m)
 ARRAY+=(plotting/private/mesh2edge.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# mesh_icosahedron.m
+
+ARRAY=()
+ARRAY+=(external/openmeeg/mesh_icosahedron.m)
+ARRAY+=(external/bemcp/mesh_icosahedron.m)
+ARRAY+=(external/dipoli/mesh_icosahedron.m)
+ARRAY+=(forward/private/mesh_icosahedron.m)
+ARRAY+=(plotting/private/mesh_icosahedron.m)
+ARRAY+=(private/mesh_icosahedron.m)
+ARRAY+=(test/private/mesh_icosahedron.m)
+ARRAY+=(utilities/private/mesh_icosahedron.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# mesh_octahedron.m
+
+ARRAY=()
+ARRAY+=(external/openmeeg/mesh_octahedron.m)
+ARRAY+=(external/bemcp/mesh_octahedron.m)
+ARRAY+=(external/dipoli/mesh_octahedron.m)
+ARRAY+=(forward/private/mesh_octahedron.m)
+ARRAY+=(plotting/private/mesh_octahedron.m)
+ARRAY+=(private/mesh_octahedron.m)
+ARRAY+=(test/private/mesh_octahedron.m)
+ARRAY+=(utilities/private/mesh_octahedron.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# mesh_sphere.m
+
+ARRAY=()
+ARRAY+=(external/openmeeg/mesh_sphere.m)
+ARRAY+=(external/bemcp/mesh_sphere.m)
+ARRAY+=(external/dipoli/mesh_sphere.m)
+ARRAY+=(forward/private/mesh_sphere.m)
+ARRAY+=(plotting/private/mesh_sphere.m)
+ARRAY+=(private/mesh_sphere.m)
+ARRAY+=(test/private/mesh_sphere.m)
+ARRAY+=(utilities/private/mesh_sphere.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# mesh_tetrahedron.m
+
+ARRAY=()
+ARRAY+=(external/openmeeg/mesh_tetrahedron.m)
+ARRAY+=(external/bemcp/mesh_tetrahedron.m)
+ARRAY+=(external/dipoli/mesh_tetrahedron.m)
+ARRAY+=(forward/private/mesh_tetrahedron.m)
+ARRAY+=(plotting/private/mesh_tetrahedron.m)
+ARRAY+=(private/mesh_tetrahedron.m)
+ARRAY+=(test/private/mesh_tetrahedron.m)
+ARRAY+=(utilities/private/mesh_tetrahedron.m)
 sync ${ARRAY[*]}
 
 ################################################################################

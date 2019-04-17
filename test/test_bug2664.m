@@ -3,7 +3,7 @@ function test_bug2664
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST ft_sourceanalysis ft_checkdata
+% DEPENDENCY ft_sourceanalysis ft_checkdata
 
 %% create some data
 data = [];

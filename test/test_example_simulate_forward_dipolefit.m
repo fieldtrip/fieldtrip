@@ -3,7 +3,7 @@ function test_example_simulate_forward_dipolefit
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST ft_dipolesimulation ft_timelockanalysis ft_dipolefitting
+% DEPENDENCY ft_dipolesimulation ft_timelockanalysis ft_dipolefitting
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % create a set of electrodes, randomly placed on the sphere

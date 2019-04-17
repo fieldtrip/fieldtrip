@@ -207,15 +207,15 @@ if needhdr
     else
       EDF.ChanTyp(k)=' ';
     end
-    if findstr(upper(EDF.Label(k,:)),'ECG')
+    if contains(upper(EDF.Label(k,:)),'ECG')
       EDF.ChanTyp(k)='C';
-    elseif findstr(upper(EDF.Label(k,:)),'EKG')
+    elseif contains(upper(EDF.Label(k,:)),'EKG')
       EDF.ChanTyp(k)='C';
-    elseif findstr(upper(EDF.Label(k,:)),'EEG')
+    elseif contains(upper(EDF.Label(k,:)),'EEG')
       EDF.ChanTyp(k)='E';
-    elseif findstr(upper(EDF.Label(k,:)),'EOG')
+    elseif contains(upper(EDF.Label(k,:)),'EOG')
       EDF.ChanTyp(k)='O';
-    elseif findstr(upper(EDF.Label(k,:)),'EMG')
+    elseif contains(upper(EDF.Label(k,:)),'EMG')
       EDF.ChanTyp(k)='M';
     end
   end
@@ -325,7 +325,7 @@ elseif needdat || needevt
 
   % There can be an optional chansel field containing a list of predefined channels.
   % These channels are in that case also the only ones represented in the FieldTrip
-  % header, which means that teh other channels are simply not visible to the naive
+  % header, which means that the other channels are simply not visible to the naive
   % user. This field can be present because the user specified an explicit channel
   % selection in FT_READ_HEADER or because the read_edf function had to automatically
   % choose a subset to cope with heterogenous sampling rates or even both.  In any

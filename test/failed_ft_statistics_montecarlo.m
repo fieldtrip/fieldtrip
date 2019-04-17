@@ -2,11 +2,9 @@ function failed_ft_statistics_montecarlo
 
 % MEM 4gb
 % WALLTIME 00:20:00
+% DEPENDENCY ft_statistics_montecarlo ft_timelockstatistics ft_freqstatistics ft_sourcestatistics clusterstat findcluster
 
-% TEST test_ft_statistics_montecarlo
-% TEST ft_statistics_montecarlo ft_timelockstatistics ft_freqstatistics ft_sourcestatistics clusterstat findcluster
-
-% test the functionality of ft_statistics_montecarlo, in particular with respect to the clustering behaviour.
+% test the functionality of ft_statistics_montecarlo, in particular with respect to the clustering behavior.
 
 % start with some data
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275.mat');
@@ -110,7 +108,7 @@ cfg.sourcemodel.resolution = 0.01;
 cfg.channel = 'MEG';
 sourcemodel_grid = ft_prepare_leadfield(cfg);
 
-[pnt,tri] = icosahedron642;
+[pnt,tri] = mesh_sphere(642);
 cfg.sourcemodel  = struct('pos',pnt.*0.06,'tri',tri,'unit','m');
 sourcemodel_mesh = ft_prepare_leadfield(cfg);
 

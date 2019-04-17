@@ -3,7 +3,7 @@ function test_eeglab_ft_integration
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST ft_dipolefitting ft_checkdata
+% DEPENDENCY ft_dipolefitting ft_checkdata
 
 % See http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2595
 

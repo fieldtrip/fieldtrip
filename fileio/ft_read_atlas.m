@@ -1912,7 +1912,7 @@ switch fileformat
   case 'spm_anatomy'
     ft_hastoolbox('spm8up', 1);
     
-    % load the map, this is assumed to be the struct array MAP
+    % load the map, this is assumed to be the struct-array MAP
     load(filename);
     [p,f,e]      = fileparts(filename);
     mrifilename  = fullfile(p,[strrep(f, '_MPM',''),'.img']);

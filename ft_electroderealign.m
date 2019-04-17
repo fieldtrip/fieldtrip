@@ -54,7 +54,8 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %                        'nonlin3'         apply a 3rd order non-linear warp
 %                        'nonlin4'         apply a 4th order non-linear warp
 %                        'nonlin5'         apply a 5th order non-linear warp
-%                        'dykstra2012'     non-linear wrap only for headshape method, useful for projecting ECoG onto cortex hull
+%                        'dykstra2012'     back-project ECoG onto the cortex using energy minimzation
+%                        'hermes2010'      back-project ECoG onto the cortex along the local norm vector
 %                        'fsaverage'       surface-based realignment with FreeSurfer fsaverage brain (left->left or right->right)
 %                        'fsaverage_sym'   surface-based realignment with FreeSurfer fsaverage_sym left hemisphere (left->left or right->left)
 %                        'fsinflated'      surface-based realignment with FreeSurfer individual subject inflated brain (left->left or right->right)
@@ -101,6 +102,15 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %                        points
 %   cfg.feedback       = 'yes' or 'no' (default), feedback of the iteration procedure
 %
+% Additional configuration options for cfg.warp = 'dykstra2012'
+%   cfg.maxiter        = number (default: 50), maximum number of optimization iterations
+%   cfg.pairmethod     = 'pos' (default) or 'label', the method for electrode
+%                        pairing on which the deformation energy is based
+%   cfg.isodistance    = 'yes', 'no' (default) or number, to enforce isotropic
+%                        inter-electrode distances (pairmethod 'label' only)
+%   cfg.deformweight   = number (default: 1), weight of deformation relative 
+%                        to shift energy cost (lower increases grid flexibility)
+%
 % If you want to move the electrodes inward, you should specify
 %   cfg.moveinward     = number, the distance that the electrode should be moved
 %                        inward (negative numbers result in an outward move)
@@ -111,7 +121,7 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 % Moreover, the path to the local freesurfer home is required. Note that, because the
 % electrodes are being aligned to the fsaverage brain, the corresponding brain should
 % be also used when plotting the data, i.e. use freesurfer/subjects/fsaverage/surf/lh.pial
-% rather than surface_pial_left.mat.
+% rather than surface_pial_left.mat
 %   cfg.method         = 'headshape'
 %   cfg.warp           = 'fsaverage'
 %   cfg.headshape      = string, filename containing subject headshape (e.g. <path to freesurfer/surf/lh.pial>)
@@ -120,7 +130,7 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 % See also FT_READ_SENS, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN,
 % FT_DETERMINE_COORDSYS, FT_PREPARE_MESH
 
-% Copyright (C) 2005-2015, Robert Oostenveld
+% Copyright (C) 2005-2019, Robert Oostenveld, Arjen Stolk
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

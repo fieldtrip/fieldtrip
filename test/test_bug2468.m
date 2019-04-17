@@ -3,7 +3,7 @@ function test_bug2468
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST ft_sourcedescriptives
+% DEPENDENCY ft_sourcedescriptives
 
 % this test function tests the functionality to do projectmom on the output
 % of a pcc-beamformer with a different number of components per dipole.

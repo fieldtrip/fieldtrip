@@ -41,7 +41,7 @@ fseek(fid, 0, 'bof');
 
 if printableascii(section)
   % the first 160 characters are printable ascii, so assume it is an ascii format
-  
+
   % solid   testsphere
   %   facet normal -0.13 -0.13 -0.98
   %     outer loop
@@ -51,21 +51,21 @@ if printableascii(section)
   %     endloop
   %   endfacet
   %   ...
-  
+
   ntri = 0;
   while ~feof(fid)
     line = fgetl(fid);
-    ntri = ntri + ~isempty(findstr('facet normal', line));
+    ntri = ntri + contains('facet normal', line);
   end
   fseek(fid, 0, 'bof');
-  
+
   tri = zeros(ntri,3);
   nrm = zeros(ntri,3);
   pnt = zeros(ntri*3,3);
-  
+
   line = fgetl(fid);
   name = sscanf(line, 'solid %s');
-  
+
   for i=1:ntri
     line1 = fgetl(fid);
     line2 = fgetl(fid); % outer loop
@@ -83,23 +83,23 @@ if printableascii(section)
     dum = sscanf(strtrim(line4), 'vertex %f %f %f'); pnt(i2,:) = dum(:)';
     dum = sscanf(strtrim(line5), 'vertex %f %f %f'); pnt(i3,:) = dum(:)';
   end
-  
+
 else
   % reopen the file in binary mode, which does not make a difference on
   % UNIX but it does on windows
   fclose(fid);
   fid = fopen(filename, 'rb');
-  
+
   fseek(fid, 80, 'bof'); % skip the ascii header
   ntri = fread(fid, 1, 'uint32');
   tri = reshape(1:(ntri*3),[3 ntri])';
   tmp = fread(fid, [12 ntri], '12*float32', 2); % read 12 floats at a time, and skip 2 bytes.
   nrm = tmp(1:3,:)';
-  
+
   tmp = reshape(tmp(4:end,:),[3 3 ntri]); % position info
   tmp = permute(tmp,[2 3 1]);
   pnt = reshape(tmp, [], 3);
-  
+
   % the above replaces the below, which is much slower, because it is using
   % a for loop across triangles
 %   tri  = zeros(ntri,3);

@@ -94,20 +94,21 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'zparam', 'parameter'});
 cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
 
 % set the defaults
-cfg.xlim          = ft_getopt(cfg, 'xlim', 'maxmin');
-cfg.ylim          = ft_getopt(cfg, 'ylim', 'maxmin');
-cfg.zlim          = ft_getopt(cfg, 'zlim', 'maxmin');
-cfg.parameter     = ft_getopt(cfg, 'parameter', 'powspctrm'); % use power as default
-cfg.inputfile     = ft_getopt(cfg, 'inputfile',    []);
-cfg.samperframe   = ft_getopt(cfg, 'samperframe',  1);
-cfg.framespersec  = ft_getopt(cfg, 'framespersec', 5);
-cfg.framesfile    = ft_getopt(cfg, 'framesfile',   []);
-cfg.moviefreq     = ft_getopt(cfg, 'moviefreq', []);
-cfg.movietime     = ft_getopt(cfg, 'movietime', []);
-cfg.movierpt      = ft_getopt(cfg, 'movierpt', 1);
-cfg.baseline      = ft_getopt(cfg, 'baseline', 'no');
-cfg.colorbar      = ft_getopt(cfg, 'colorbar', 'no');
-cfg.interactive   = ft_getopt(cfg, 'interactive', 'yes');
+cfg.xlim          = ft_getopt(cfg, 'xlim',          'maxmin');
+cfg.ylim          = ft_getopt(cfg, 'ylim',          'maxmin');
+cfg.zlim          = ft_getopt(cfg, 'zlim',          'maxmin');
+cfg.parameter     = ft_getopt(cfg, 'parameter',     'powspctrm'); % use power as default
+cfg.inputfile     = ft_getopt(cfg, 'inputfile',     []);
+cfg.samperframe   = ft_getopt(cfg, 'samperframe',   1);
+cfg.framespersec  = ft_getopt(cfg, 'framespersec',  5);
+cfg.framesfile    = ft_getopt(cfg, 'framesfile',    []);
+cfg.moviefreq     = ft_getopt(cfg, 'moviefreq',     []);
+cfg.movietime     = ft_getopt(cfg, 'movietime',     []);
+cfg.movierpt      = ft_getopt(cfg, 'movierpt',      1);
+cfg.baseline      = ft_getopt(cfg, 'baseline',      'no');
+cfg.colorbar      = ft_getopt(cfg, 'colorbar',      'no');
+cfg.renderer      = ft_getopt(cfg, 'renderer',      []); % let MATLAB decide on the default
+cfg.interactive   = ft_getopt(cfg, 'interactive',   'yes');
 dointeractive     = istrue(cfg.interactive);
 
 xparam = 'time';
@@ -116,7 +117,7 @@ if isfield(data, 'freq')
 end
 
 % read or create the layout that will be used for plotting:
-tmpcfg = keepfields(cfg, {'layout', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
 layout = ft_prepare_layout(tmpcfg, data);
 
 % apply optional baseline correction
@@ -390,6 +391,30 @@ else
   % play movie
   movie(F, cfg.movierpt, cfg.framespersec);
 
+end % if dointeractive
+
+% this is needed for the figure title
+if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
+  dataname = cfg.dataname;
+elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
+elseif nargin>1
+  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
+else
+  dataname = {};
+end
+
+% set the figure window title
+if ~isempty(dataname)
+  set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
+else
+  set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
+end
+set(gcf, 'NumberTitle', 'off');
+
+% set renderer if specified
+if ~isempty(cfg.renderer)
+  set(gcf, 'renderer', cfg.renderer)
 end
 
 % do the general cleanup and bookkeeping at the end of the function
@@ -398,6 +423,9 @@ ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble provenance
 ft_postamble savefig
+
+% add a menu to the figure, but only if the current figure does not have subplots
+menu_fieldtrip(gcf, cfg, false);
 
 if ~ft_nargout
   % don't return anything

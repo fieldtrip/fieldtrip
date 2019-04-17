@@ -2,9 +2,7 @@ function failed_bug2359
 
 % MEM 2000mb
 % WALLTIME 00:30:00
-
-% TEST test_bug2359
-% TEST ft_prepare_mesh ft_prepare_sourcemodel
+% DEPENDENCY ft_prepare_mesh ft_prepare_sourcemodel
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2359'));
 

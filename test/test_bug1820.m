@@ -3,17 +3,18 @@ function test_bug1820
 % MEM 12gb
 % WALLTIME 04:30:00
 
-% TEST ft_prepare_mesh ft_headmodel_simbio ft_prepare_vol_sens ft_compute_leadfield
+% DEPENDENCY ft_prepare_mesh ft_headmodel_simbio ft_prepare_vol_sens ft_compute_leadfield
 
 % See http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1820
 
 %% create segmentation 
 
-example.dim = [200 200 200];   % slightly different numbers
-example.transform = eye(4);
+example.dim = [40 40 40];   % slightly different numbers
+example.transform = eye(4).*5; example.transform(4,4)=1;
 example.coordsys = 'ctf';
 example.unit = 'mm';
 example.seg = zeros(example.dim);
+example.seglabel = {'scalp' 'skull' 'brain'}';
 
 % adjusting transformation matrix: center of the head-coordinates [0 0 0] should
 % be the center of volume
@@ -64,7 +65,7 @@ currdir = pwd;
 [~,ftpath] = ft_version();
 cd([ftpath '/test/private/']);
 r = radius1;
-[pnt, tri] = icosahedron42; 
+[pnt, tri] = mesh_sphere(42); 
 sens.pnt   = r * pnt;
 sens.label = {};
 nsens  = size(sens.pnt,1);
@@ -95,3 +96,67 @@ lf = ft_compute_leadfield(pos,sens,test_transfer);
 
 % now it would be good to compute leadfields with an analytic concentric
 % sphere solution and compare them
+
+%% prepare head model
+
+cfg = [];
+cfg.conductivity = [0.33,0.0042,0.33];
+cfg.method = 'simbio';
+headmodel = ft_prepare_headmodel(cfg,mesh);
+% headmodel.tissuelabel = {'skull','scalp','brain'};
+
+%% combine sensors and headmodel
+
+[headmodel, sens] = ft_prepare_vol_sens(headmodel,sens);
+
+%% prepare sourcemodel
+
+cfg = [];
+cfg.sourcemodel.pos = pos;
+cfg.headmodel = headmodel;
+cfg.sourcemodel.unit = 'mm';
+% cfg.moveinward = 5;
+sourcemodel = ft_prepare_sourcemodel(cfg)
+
+%% prepare leadfied
+
+cfg = [];
+cfg.elec = sens;
+cfg.sourcemodel = sourcemodel;
+cfg.headmodel = headmodel;
+
+lf_prep = ft_prepare_leadfield(cfg);
+
+%% prepare data
+fsample = 1e3;
+dataLength = 2; %in seconds
+
+dataRaw.trial = {rand(nsens,dataLength*fsample)};
+dataRaw.fsample = fsample;
+dataRaw.label = sens.label;
+dataRaw.time = {linspace(0,dataLength,dataLength*fsample)};
+dataRaw.elec = sens;
+
+%% freq analysis
+
+cfg = [];
+cfg.method = 'mtmfft';
+cfg.output = 'fourier';
+cfg.foi = 40;
+cfg.taper = 'hanning';
+cfg.pad = 'nextpow2';
+
+dataFreq = ft_freqanalysis(cfg,dataRaw);
+
+%% source analysis
+
+cfg                   = [];
+cfg.frequency         = dataFreq.freq;
+cfg.method            = 'dics';
+cfg.sourcemodel       = lf_prep;
+cfg.headmodel         = headmodel;
+cfg.dics.lambda       = '5%';
+cfg.dics.keepfilter   = 'yes';
+cfg.dics.fixedori     = 'yes';
+cfg.dics.realfilter   = 'yes';
+source                = ft_sourceanalysis(cfg, dataFreq);

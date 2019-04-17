@@ -32,7 +32,7 @@ function passed = ft_test_moxunit_run(unused,varargin)
     check_dependencies();
 
     % By default, running FieldTrip excludes files if their name
-    % starts with 'failed'. Here this default behaviour is mimicked.
+    % starts with 'failed'. Here this default behavior is mimicked.
     override_default_arg={'exclude_if_prefix_equals_failed',true};
     arg=cat(2,override_default_arg,varargin);
 

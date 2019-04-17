@@ -3,7 +3,7 @@ function test_bug2025
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_plot_headmodel ft_compute_leadfield
+% DEPENDENCY ft_plot_headmodel ft_compute_leadfield
 
 vol = [];
 assert(ft_headmodeltype(vol, 'infinite'))

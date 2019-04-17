@@ -2,9 +2,7 @@ function [varargout] = test_ft_sourceanalysis(datainfo, writeflag, version, diag
 
 % MEM 4gb
 % WALLTIME 04:30:00
-
-% TEST test_ft_sourceanalysis
-% TEST ft_sourceanalysis ref_datasets
+% DEPENDENCY ft_sourceanalysis ref_datasets
 
 % writeflag determines whether the output should be saved to disk
 % version determines the output directory

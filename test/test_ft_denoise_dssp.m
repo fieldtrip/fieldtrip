@@ -3,7 +3,7 @@ function test_ft_denoise_dssp
 % MEM 3000mb
 % WALLTIME 00:10:00
 
-% TEST ft_denoise_dssp
+% DEPENDENCY ft_denoise_dssp
 
 % below is based on simulated data using Kensuke's code, and should behave as the
 % bdssp_main script that he uses to demonstrate the algorithm

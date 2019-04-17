@@ -3,7 +3,7 @@ function test_bug2005
 % WALLTIME 00:20:00
 % MEM 4gb
 
-% TEST ft_sourceanalysis
+% DEPENDENCY ft_sourceanalysis
 
 fname = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2005.mat');
 load(fname);

@@ -17,7 +17,7 @@ fid = fopen_or_error(fn, 'rt');
 npnt = 0;
 while (~npnt)
   line = fgetl(fid);
-  if ~isempty(findstr(line, 'POINTS'))
+  if contains(line, 'POINTS')
     npnt = sscanf(line, 'POINTS %d float');
   end
 end
@@ -29,7 +29,7 @@ end
 ntri = 0;
 while (~ntri)
   line = fgetl(fid);
-  if ~isempty(findstr(line, 'POLYGONS'))
+  if contains(line, 'POLYGONS')
     tmp = sscanf(line, 'POLYGONS %d %d');
     ntri = tmp(1);
   end
@@ -41,4 +41,3 @@ end
 tri = tri(:,2:4) + 1;
 
 fclose(fid);
-

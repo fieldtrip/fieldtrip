@@ -3,7 +3,7 @@ function test_bug168
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_realtime_topography
+% DEPENDENCY ft_realtime_topography
  
 [ftver, ftpath] = ft_version;
 cd(ftpath);
@@ -82,7 +82,7 @@ inlist = {
 
 [outlist, depmat] = mydepfun(inlist);
 
-problem = ~cellfun(@isempty, regexp(outlist, 'compat'));
+problem = ~cellfun(@isempty, regexp(outlist, 'compat/obsolete'));
 problem = outlist(problem)  % display the output;
 
 if ~isempty(problem)

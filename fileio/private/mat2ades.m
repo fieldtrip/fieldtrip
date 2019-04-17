@@ -4,7 +4,7 @@ function mat2ades(dat, fileName, Fs, chanlabel, chanunit, dattype, datunit)
 % data = matrix of data (nbchannel * time points) - the data have to be in microVolt
 % fileName = string of the output files without extension ; the ades and dat files will have the same name
 % FS = sampling rate
-% labels = cell array with channel labels
+% labels = cell-array with channel labels
 % labelType : 'EEG' or 'MEG'
 %
 % Data are stored in a binary file which name is exactly the same than the header file except the extension: .dat

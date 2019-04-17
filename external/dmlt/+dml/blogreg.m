@@ -168,7 +168,7 @@ classdef blogreg < dml.method
     
     fraction    = 0.9;   % fraction or power for fractional/power EP
     niter       = 100;    % maximum number of iterations
-    temperature = 1;      % forces MAP like behaviour for t->0
+    temperature = 1;      % forces MAP like behavior for t->0
     tolerance   = 1e-5;   % convergence criterion
     degenerate  = [];     % whether or not to run in degenerate mode
     

@@ -42,7 +42,7 @@ for dirindex=1:length(dirlist)
   
   compat = false(size(outlist));
   for i=1:length(outlist)
-    compat(i) = ~isempty(regexp(outlist{i}, '/compat', 'once'));
+    compat(i) = ~isempty(regexp(outlist{i}, '/compat/obsolete', 'once'));
   end
   % switch to list indices
   compat = find(compat);

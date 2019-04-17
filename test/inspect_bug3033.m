@@ -1,7 +1,6 @@
-% function inspect_bug3033
+function inspect_bug3033
 
-% TEST inspect_bug3033
-% TEST ft_plot_topo ft_databrowser ft_topoplotER
+% DEPENDENCY ft_plot_topo ft_databrowser ft_topoplotER
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3033'));
 

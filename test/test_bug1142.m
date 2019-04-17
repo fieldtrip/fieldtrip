@@ -5,8 +5,8 @@ function test_bug1142
 
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1142
 %
-% TEST ft_definetrial ft_preprocessing ft_rejectvisual ft_rejectartifact
-% TEST ft_artifact_clip ft_artifact_eog ft_artifact_muscle ft_artifact_zvalue ft_artifact_ecg ft_artifact_jump ft_artifact_threshold
+% DEPENDENCY ft_definetrial ft_preprocessing ft_rejectvisual ft_rejectartifact
+% DEPENDENCY ft_artifact_clip ft_artifact_eog ft_artifact_muscle ft_artifact_zvalue ft_artifact_ecg ft_artifact_jump ft_artifact_threshold
 
 % the script is not yet finished, so at this moment it should not proceed to give an error
 return

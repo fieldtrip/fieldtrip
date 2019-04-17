@@ -3,8 +3,6 @@ function failed_old_sourcestatistics
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_old_sourcestatistics
-
 % this script tests the fixsource function which is part of checkdata
 
 %-------------------------------------
@@ -22,7 +20,7 @@ for k = 1:10
 end
 
 %create grad-structure and add to data
-[pnt,tri] = icosahedron162;
+[pnt,tri] = mesh_sphere(162);
 nrm       = normals(pnt, tri, 'vertex');
 pnt       = pnt.*12;
 [srt,ind] = sort(pnt(:,3),'descend');

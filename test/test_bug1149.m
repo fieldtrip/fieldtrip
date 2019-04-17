@@ -5,7 +5,7 @@ function test_bug1149
 
 
 % generate a unit sphere
-[pnt, tri] = icosahedron162;
+[pnt, tri] = mesh_sphere(162);
 
 % create the sphere
 bnd.pnt = pnt * 90;

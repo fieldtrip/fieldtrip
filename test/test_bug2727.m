@@ -3,7 +3,7 @@ function test_bug2727
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST ft_clusterplot topoplot_common
+% DEPENDENCY ft_clusterplot topoplot_common
 
 %%
 

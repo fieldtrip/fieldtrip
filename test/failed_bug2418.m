@@ -2,9 +2,7 @@ function failed_bug2418
 
 % WALLTIME 00:10:00
 % MEM 1500mb
-
-% TEST test_bug2418
-% TEST ft_senstype ft_senslabel
+% DEPENDENCY ft_senstype ft_senslabel
 
 %% test the consistency between labels and type
 

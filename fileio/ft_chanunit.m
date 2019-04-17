@@ -10,7 +10,7 @@ function chanunit = ft_chanunit(input, desired)
 %   unit = ft_chanunit(hdr, desired)
 %
 % If the desired unit is not specified as second input argument, this
-% function returns a Nchan*1 cell array with a string describing the
+% function returns a Nchan*1 cell-array with a string describing the
 % physical units of each channel, or 'unknown' if those cannot be
 % determined.
 %
@@ -131,7 +131,7 @@ elseif isheader && ft_senstype(input, 'eeg')
   chanunit(strcmp('eeg',              input.chantype)) = {'uV'};
 
 elseif isheader && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74')) && issubfield(input, 'orig.chs')
-  for i = 1:numchan % make a cell array of units for each channel
+  for i = 1:numchan % make a cell-array of units for each channel
     switch input.orig.chs(i).unit
       case 201 % defined as constants by MNE, see p. 217 of MNE manual
         chanunit{i} = 'T/m';

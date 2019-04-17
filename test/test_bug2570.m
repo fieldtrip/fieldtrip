@@ -3,7 +3,7 @@ function test_bug2570
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST ft_apply_montage ft_scalingfactor
+% DEPENDENCY ft_apply_montage ft_scalingfactor
 
 montage = [];
 montage.tra = 1e6;

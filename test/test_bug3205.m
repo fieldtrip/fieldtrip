@@ -3,7 +3,7 @@ function test_bug3205
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST ft_electroderealign moveinward
+% DEPENDENCY ft_electroderealign moveinward
 
 elec = ft_read_sens('standard_1020.elc');
 

@@ -3,7 +3,7 @@ function test_bug1735
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_appenddata
+% DEPENDENCY ft_appenddata
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
 load bug1735.mat

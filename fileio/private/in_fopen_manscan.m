@@ -252,7 +252,7 @@ function splStr = str_split( str, delimiters, isCollapse )
 %    - isCollapse : If 1, remove all the empty entries
 % 
 % OUTPUT: 
-%    - splStr : cell array of blocks found between separators
+%    - splStr : cell-array of blocks found between separators
 
 % @=============================================================================
 % This software is part of the Brainstorm software:

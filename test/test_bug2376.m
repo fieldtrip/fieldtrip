@@ -3,9 +3,9 @@ function test_bug2376
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST channelposition ft_plot_sens ft_plot_headmodel ft_plot_mesh ft_prepare_vol_sens
+% DEPENDENCY channelposition ft_plot_sens ft_plot_headmodel ft_plot_mesh ft_prepare_vol_sens
 
-[pnt, tri] = icosahedron162;
+[pnt, tri] = mesh_sphere(162);
 
 % create volume conductor models
 vol = [];

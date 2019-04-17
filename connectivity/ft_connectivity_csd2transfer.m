@@ -138,7 +138,7 @@ elseif strcmp(sfmethod, 'bivariate_conditional')
   % this method requires a channeltriplet
   channeltriplet = cell(0,3);
   
-  % ensure channelcnd to be a cell array of cell arrays
+  % ensure channelcnd to be a cell-array of cell arrays
   for k = 1:size(channelcmb,1)
     if ~iscell(channelcmb{k,3})
       channelcmb{k,3} = {channelcmb{k,3}};

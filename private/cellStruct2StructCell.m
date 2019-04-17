@@ -1,5 +1,5 @@
 function structCell = cellStruct2StructCell(cellStruct)
-% Converts a cell array of structure arrays into a structure array
+% Converts a cell-array of structure arrays into a structure array
 
 structCell = struct;
 for i=1:numel(cellStruct)

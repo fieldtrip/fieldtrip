@@ -56,7 +56,7 @@ if isa(val, 'config')
 end
 
 % Note that because we don't know the final size of the string, iteratively appending
-% is actually faster than creating a cell array and subsequently doing a cat(2,
+% is actually faster than creating a cell-array and subsequently doing a cat(2,
 % strings{:}). Note also that sprintf() is slow.
 str = '';
 
