@@ -1,4 +1,4 @@
-function [varargout] = pad(varargin)
+function [varargout] = startsWith(varargin)
 
 % STARTSWITH True if text starts with pattern.
 %   TF = startsWith(S,PATTERN) returns true if any element of string array S
