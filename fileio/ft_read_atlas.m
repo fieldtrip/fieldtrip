@@ -693,8 +693,8 @@ switch fileformat
     end
     
     % replace the original brick with interspersed integers with one that contains contiguous integets
-    atlas.brick0      = new_brick0;
-    atlas.brick0label = label;
+    atlas.parcellation      = new_brick0;
+    atlas.parcellationlabel = label;
     
   case {'freesurfer_volume'}
     % numeric values in the volume correspond to a label that can be found
