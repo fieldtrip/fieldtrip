@@ -627,6 +627,11 @@ switch fileformat
     
     [p, f, x] = fileparts(filename);
     
+    % if the original file was a .gz
+    if isequal(x,'.gz')
+      [p, f, x] = fileparts(filename(1:end-3));
+    end
+    
     % this is a mat file that Ingrid apparently discovered somewhere
     % filename1 = fullfile(p, [f '_List.mat']);
     
