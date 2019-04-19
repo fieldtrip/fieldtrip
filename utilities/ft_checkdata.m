@@ -1477,10 +1477,10 @@ end
 for i=1:nrpt
   data.time{i}  = freq.time;
   data.trial{i} = reshape(dat(i,:,:,:), nchan*nfreq, ntime);
-  if any(isnan(data.trial{i}(1,:)))
-    tmp = data.trial{i}(1,:);
-    begsmp = find(isfinite(tmp),1, 'first');
-    endsmp = find(isfinite(tmp),1, 'last' );
+  if any(sum(isnan(data.trial{i}),1)==size(data.trial{i},1))
+    tmp = sum(~isfinite(data.trial{i}),1)==size(data.trial{i},1);
+    begsmp = find(~tmp,1, 'first');
+    endsmp = find(~tmp,1, 'last' );
     data.trial{i} = data.trial{i}(:, begsmp:endsmp);
     data.time{i}  = data.time{i}(begsmp:endsmp);
   end
