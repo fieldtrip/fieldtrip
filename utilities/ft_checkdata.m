@@ -1347,7 +1347,7 @@ if ~isfield(data, 'brainordinate')
 end
 % the main structure contains the functional data on the parcels
 % the brainordinate sub-structure contains the original geometrical model
-source = data.brainordinate;
+source = ft_checkdata(data.brainordinate, 'datatype', 'source');
 data   = rmfield(data, 'brainordinate');
 if isfield(data, 'cfg')
   source.cfg = data.cfg;
