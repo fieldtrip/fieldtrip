@@ -293,7 +293,7 @@ switch cfg.method
       ft_error('only hanning tapers are supported');
     end
     if isfield(cfg, 'output') && ~isequal(cfg.output, 'pow')
-      ft_error('the output from the irasa method can be power only');
+      ft_error('the irasa method outputs power only');
     end
     % check for foi above Nyquist
     if isfield(cfg, 'foi')
