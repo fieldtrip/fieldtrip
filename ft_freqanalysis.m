@@ -292,14 +292,14 @@ switch cfg.method
     if ~isequal(cfg.taper, 'hanning')
       ft_error('only hanning tapers are supported');
     end
+    if isfield(cfg, 'output') && ~isequal(cfg.output, 'pow')
+      ft_error('the output from the irasa method can be power only');
+    end
     % check for foi above Nyquist
     if isfield(cfg, 'foi')
       if any(cfg.foi > (data.fsample/2))
         ft_error('frequencies in cfg.foi are above Nyquist')
       end
-    end
-    if isequal(cfg.taper, 'dpss') && not(isfield(cfg, 'tapsmofrq'))
-      ft_error('you must specify a smoothing parameter with taper = dpss');
     end
     
   case 'wavelet'
