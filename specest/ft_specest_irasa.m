@@ -1,9 +1,7 @@
 function [spectrum,ntaper,freqoi] = ft_specest_irasa(dat, time, varargin)
 
 % FT_SPECEST_IRASA estimates the powerspectral arrythmic component of the 
-% time-domain using Irregular-Resampling Auto-Spectral Analysis
-% (IRASA, Wen & Liu, 2016). This arrythmic component is instrumental for 
-% extracting rhythmic spectral features (see Stolk et al., 2019)
+% time-domain using Irregular-Resampling Auto-Spectral Analysis. 
 %
 % Use as
 %   [spectrum,ntaper,freqoi] = ft_specest_irasa(dat,time...)
@@ -24,6 +22,8 @@ function [spectrum,ntaper,freqoi] = ft_specest_irasa(dat, time, varargin)
 %   polyorder  = number, the order of the polynomial to fitted to and removed from the data prior to the fourier transform (default = 0 -> remove DC-component)
 %   taperopt   = additional taper options to be used in the WINDOW function, see WINDOW
 %   verbose    = output progress to console (0 or 1, default 1)
+%
+% This implements: Wen H, Liu Z. Separating fractal and oscillatory components in the power spectrum of neurophysiological signal. Brain Topogr. 2016 Jan;29(1):13-26.
 %
 % See also FT_FREQANALYSIS, FT_SPECEST_MTMFFT, FT_SPECEST_MTMCONVOL, FT_SPECEST_TFR, FT_SPECEST_HILBERT, FT_SPECEST_WAVELET
 
