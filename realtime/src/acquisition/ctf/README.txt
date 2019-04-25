@@ -17,7 +17,7 @@ Acq to write new data towards. It is to be used with MATLAB running
 on the acquisition computer in conjunction with the "ctf_shm"
 fileformat option in the low-level reading functions.
 
-For more information please visit http://fieldtriptoolbox.org/development/realtime
+For more information please visit http://www.fieldtriptoolbox.org/development/realtime
 
 This software is free but copyrighted software, distributed
 under the terms of the GNU General Public Licence as published by

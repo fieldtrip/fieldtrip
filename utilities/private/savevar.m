@@ -1,4 +1,4 @@
-function savevar(filename, varname, value)
+function savevar(filename, varname, value, hashfile)
 
 % SAVEVAR is a helper function for cfg.outputfile
 %
@@ -22,4 +22,25 @@ if (s.bytes < 500000000)
   save(filename, varname, '-v6');
 else
   save(filename, varname, '-v7.3');
+end
+
+% Also store the hash of the data we just stored into the specified
+% hashfile, if requested. This is used by the reproducescript functionality
+% in order to match up different input and output variables among different
+% FieldTrip function calls.
+if nargin > 3 && ~isempty(hashfile)
+  % load the hashes already present in the file, if it exists
+  if exist(hashfile, 'file')
+    hashes = load(hashfile);
+  else
+    hashes = struct();
+  end
+  % key for the hash is the filename (no path) with 'f' prepended, since variable
+  % names cannot begin with a number
+  [~,fileonly,~] = fileparts(filename);
+  hashkey = ['f' fileonly];
+  hashes.(hashkey) = ft_hash(value);
+  % save back into the hashfile
+  save(hashfile, '-struct', 'hashes');
+  ft_info('writing data hash for ''%s'' to file ''%s''\n', varname, hashfile);
 end

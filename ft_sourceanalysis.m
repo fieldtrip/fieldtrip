@@ -397,7 +397,9 @@ else
   end
   % construct the dipole positions on which the source reconstruction will be done
   sourcemodel = ft_prepare_sourcemodel(tmpcfg);
-
+  if ischar(cfg.sourcemodel)
+    cfg.sourcemodel = sourcemodel;
+  end
 end
 
 if isfield(cfg.sourcemodel, 'filter')
