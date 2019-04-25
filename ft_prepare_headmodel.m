@@ -166,8 +166,8 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'nolte', 'singleshell'});
 cfg = ft_checkconfig(cfg, 'renamed', {'hdmfile', 'headmodel'});
 cfg = ft_checkconfig(cfg, 'renamed', {'vol',     'headmodel'});
 
-if isfield(cfg, 'headmodel') && ischar(cfg.headmodel)
-  cfg.method = 'file'; % FIXME this is not documented
+if isfield(cfg, 'headmodel') && ischar(cfg.headmodel) && ~endsWith(cfg.headmodel, '.lft')
+  cfg.method = 'file'; % FIXME this is not documented, note that it does not apply to BESA headmodels
 elseif isfield(cfg, 'headmodel') && isstruct(cfg.headmodel)
   cfg.method = 'existing'; % FIXME this is not documented
 end
