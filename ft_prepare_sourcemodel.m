@@ -126,9 +126,10 @@ cfg = ft_checkconfig(cfg, 'renamed', {'grid',    'sourcemodel'});
 cfg = ft_checkconfig(cfg, 'renamed', {'elecfile', 'elec'});
 cfg = ft_checkconfig(cfg, 'renamed', {'gradfile', 'grad'});
 cfg = ft_checkconfig(cfg, 'renamed', {'optofile', 'opto'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'unit', 'auto', []});
 
 cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'});  % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
-cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.sourcemodel.unit by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.unit by the subsequent createsubcfg
 
 % put the low-level options pertaining to the sourcemodel in their own field
 cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
@@ -143,7 +144,7 @@ cfg.symmetry          = ft_getopt(cfg, 'symmetry');
 cfg.spmversion        = ft_getopt(cfg, 'spmversion', 'spm8');
 cfg.headmodel         = ft_getopt(cfg, 'headmodel');
 cfg.sourcemodel       = ft_getopt(cfg, 'sourcemodel');
-cfg.unit              = ft_getopt(cfg, 'unit', 'auto');
+cfg.unit              = ft_getopt(cfg, 'unit');
 
 % this code expects the inside to be represented as a logical array
 cfg = ft_checkconfig(cfg, 'inside2logical', 'yes');
@@ -285,15 +286,15 @@ if basedonfile
   sourcemodel = loadvar(cfg.sourcemodel, 'sourcemodel');
 end
 
-if strcmp(cfg.unit, 'auto')
-  if basedonfile && isfield(sourcemodel, 'unit')
+if isempty(cfg.unit)
+  if basedonfile && isfield(sourcemodel, 'unit') && ~isempty(sourcemodel.unit)
     % take the existing source model units
     cfg.unit = sourcemodel.unit;
   elseif basedonfile && isfield(sourcemodel, 'pos') && size(sourcemodel.pos,1)>10
     % estimate the units based on the existing source positions
     sourcemodel = ft_determine_units(cfg.sourcemodel);
     cfg.unit = sourcemodel.unit;
-  elseif isfield(cfg.sourcemodel, 'unit')
+  elseif isfield(cfg.sourcemodel, 'unit') && ~isempty(cfg.sourcemodel.unit)
     % take the existing source model units
     cfg.unit = cfg.sourcemodel.unit;
   elseif isfield(cfg.sourcemodel, 'pos') && size(cfg.sourcemodel.pos,1)>10
@@ -363,10 +364,10 @@ if basedonresolution
     ft_error('creating a 3D grid based on resolution requires either sensor positions or a headmodel to estimate the extent');
   end
   
-  fprintf('creating 3D grid with %g %s resolution\n', cfg.resolution, cfg.sourcemodel.unit);
+  fprintf('creating 3D grid with %g %s resolution\n', cfg.resolution, cfg.unit);
   
   % round the bounding box limits to the nearest cm
-  switch cfg.sourcemodel.unit
+  switch cfg.unit
     case 'm'
       minpos = floor(minpos*100)/100;
       maxpos = ceil(maxpos*100)/100;
@@ -374,7 +375,7 @@ if basedonresolution
       minpos = floor(minpos);
       maxpos = ceil(maxpos);
     case 'mm'
-      minpos = floor(minpos/10)*10;
+      minpos = floor(minpos/cfg.sourcemodel.unit10)*10;
       maxpos = ceil(maxpos/10)*10;
   end
   
@@ -390,7 +391,7 @@ if basedonresolution
   sourcemodel.dim   = [length(xgrid) length(ygrid) length(zgrid)];
   [X, Y, Z]  = ndgrid(xgrid, ygrid, zgrid);
   sourcemodel.pos   = [X(:) Y(:) Z(:)];
-  sourcemodel.unit  = cfg.sourcemodel.unit;
+  sourcemodel.unit  = cfg.unit;
   fprintf('initial 3D grid dimensions are [%d %d %d]\n', sourcemodel.dim(1), sourcemodel.dim(2), sourcemodel.dim(3));
 end
 
@@ -402,7 +403,7 @@ if basedongrid
   sourcemodel.dim   = [length(cfg.xgrid) length(cfg.ygrid) length(cfg.zgrid)];
   [X, Y, Z]  = ndgrid(cfg.xgrid, cfg.ygrid, cfg.zgrid);
   sourcemodel.pos   = [X(:) Y(:) Z(:)];
-  sourcemodel.unit  = cfg.sourcemodel.unit;
+  sourcemodel.unit  = cfg.unit;
 end
 
 if basedonpos
@@ -431,7 +432,7 @@ if basedonmri
   end
   
   if ~isfield(cfg, 'resolution')
-    switch cfg.sourcemodel.unit
+    switch cfg.unit
       case 'mm'
         cfg.resolution = 10;
       case 'cm'
@@ -494,7 +495,7 @@ if basedonmri
   head = dat./max(dat(:)) > cfg.threshold;
   
   % convert the source/functional data into the same units as the anatomical MRI
-  scale = ft_scalingfactor(cfg.sourcemodel.unit, mri.unit);
+  scale = ft_scalingfactor(cfg.unit, mri.unit);
   
   ind                 = find(head(:));
   fprintf('%d from %d voxels in the segmentation are marked as ''inside'' (%.0f%%)\n', length(ind), numel(head), 100*length(ind)/numel(head));
@@ -514,7 +515,7 @@ if basedonmri
   sourcemodel.pos     = pos2head/scale;                                               % convert to source units
   sourcemodel.dim     = [length(xgrid) length(ygrid) length(zgrid)];
   sourcemodel.inside  = inside(:);
-  sourcemodel.unit    = cfg.sourcemodel.unit;
+  sourcemodel.unit    = cfg.unit;
   
   if issegmentation
     % pass on the segmentation information on the grid points, the
@@ -542,7 +543,7 @@ if basedoncortex
     shape = ft_read_headshape(cfg.headshape);
   end
   % ensure that the headshape is in the same units as the source
-  shape     = ft_convert_units(shape, cfg.sourcemodel.unit);
+  shape     = ft_convert_units(shape, cfg.unit);
   % return both the vertices and triangles from the cortical sheet
   sourcemodel.pos  = shape.pos;
   sourcemodel.tri  = shape.tri;
@@ -558,9 +559,9 @@ if basedonshape
   [headshape.pos, headshape.tri] = headsurface([], [], 'headshape', cfg.headshape);
   
   % ensure that the headshape is in the same units as the source model
-  headshape = ft_convert_units(headshape, cfg.sourcemodel.unit);
+  headshape = ft_convert_units(headshape, cfg.unit);
   
-  % note that cfg.inwardshift should be expressed in the units consistent with cfg.sourcemodel.unit
+  % note that cfg.inwardshift should be expressed in the units consistent with cfg.unit
   sourcemodel.pos     = headsurface([], [], 'headshape', headshape, 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);
   sourcemodel.tri     = headshape.tri;
   sourcemodel.unit    = headshape.unit;
@@ -572,9 +573,9 @@ if basedonvol
   % use the volume conduction model to make a superficial dipole layer (e.g.
   % for megrealign). Assume that all points are inside the volume.
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % please note that cfg.inwardshift should be expressed in the units consistent with cfg.sourcemodel.unit
+  % please note that cfg.inwardshift should be expressed in the units consistent with cfg.unit
   sourcemodel.pos     = headsurface(headmodel, sens, 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);
-  sourcemodel.unit    = cfg.sourcemodel.unit;
+  sourcemodel.unit    = cfg.unit;
   sourcemodel.inside  = true(size(sourcemodel.pos,1),1);
 end
 

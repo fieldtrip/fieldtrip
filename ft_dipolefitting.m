@@ -165,7 +165,7 @@ cfg.normalize       = ft_getopt(cfg, 'normalize');      % this is better not use
 cfg.normalizeparam  = ft_getopt(cfg, 'normalizeparam'); % this is better not used in dipole fitting
 cfg.backproject     = ft_getopt(cfg, 'backproject');    % this is better not used in dipole fitting
 cfg.reducerank      = ft_getopt(cfg, 'reducerank', []); % the default for this is handled below
-cfg.dipfit          = ft_getopt(cfg, 'dipfit', []);   % the default for this is handled below
+cfg.dipfit          = ft_getopt(cfg, 'dipfit', []);     % the default for this is handled below
 
 cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
 cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.sourcemodel.unit by the subsequent createsubcfg

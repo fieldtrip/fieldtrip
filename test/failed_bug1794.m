@@ -9,7 +9,7 @@ load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/dataFI
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri'))
 
 cfg = [];
-cfg.sourcemodel.resolution = 1;
+cfg.resolution = 1;
 cfg.mri = segmentedmri;
 grid = ft_prepare_sourcemodel(cfg);
 

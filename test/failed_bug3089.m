@@ -47,16 +47,16 @@ else
   cfg = [];
   cfg.method = 'summary';
   cfg.keepchannel = 'yes';
-  
+
   cfg.channel = 'EEG';
   data_clean = ft_rejectvisual(cfg, data_raw);
-  
+
   cfg.channel = 'MEG*1'; % MEGMAG
   data_clean = ft_rejectvisual(cfg, data_clean);
-  
+
   cfg.channel = {'MEG*2', 'MEG*3'}; % MEGGRAD
   data_clean = ft_rejectvisual(cfg, data_clean);
-  
+
   save(fullfile(datadir,'data_clean'), 'data_clean');
 end
 
@@ -68,14 +68,14 @@ if false
   cfg.refchannel = 'all';
   cfg.channel = 'EEG';
   data_eeg = ft_preprocessing(cfg, data_clean);
-  
+
   cfg = [];
   cfg.channel = 'MEG';
   data_meg = ft_preprocessing(cfg, data_clean);
-  
+
   cfg = []
   data_all = ft_appenddata(cfg, data_eeg, data_meg);
-  
+
 else
   montage = [];
   montage.labelold = ft_channelselection('EEG', data_clean.label);
@@ -85,13 +85,13 @@ else
     montage.tra(i,:) = montage.tra(i,:) - ones(1,length(montage.labelold))/length(montage.labelold);
   end
   data_all      = ft_apply_montage(data_clean, montage, 'keepunused', true, 'balancename', 'avgref');
-  
+
   % apply the montage to the electrode definition
   elec = data_clean.elec;
   elec.tra = eye(length(elec.label));
   elec.balance.current = 'none';
   elec = ft_apply_montage(elec, montage, 'keepunused', true, 'balancename', 'avgref');
-  
+
   % keep it with the data
   data_all.elec = elec;
 end
@@ -156,8 +156,8 @@ cfg.latency         = 0.100;
 cfg.numdipoles      = 2;
 cfg.symmetry        = 'x';
 cfg.gridsearch      = 'yes';
-cfg.sourcemodel.unit       = 'm';
-cfg.sourcemodel.resolution = 0.02;
+cfg.unit       = 'm';
+cfg.resolution = 0.02;
 
 cfg.senstype        = 'MEG';
 cfg.headmodel       = headmodel_meg;
@@ -181,8 +181,8 @@ cfg.latency         = 0.100;
 cfg.numdipoles      = 2;
 cfg.symmetry        = 'x';
 cfg.gridsearch      = 'yes';
-cfg.sourcemodel.unit       = 'm';
-cfg.sourcemodel.resolution = 0.02;
+cfg.unit       = 'm';
+cfg.resolution = 0.02;
 
 cfg.channel = {'MEGMAG'};
 timelock_sel = ft_selectdata(cfg, timelock_cov); % this selects channels from the covariance
@@ -214,8 +214,8 @@ cfg.numdipoles      = 2;
 cfg.latency         = 0.100;
 cfg.symmetry        = 'x';
 cfg.gridsearch      = 'yes';
-cfg.sourcemodel.unit       = 'm';
-cfg.sourcemodel.resolution = 0.02;
+cfg.unit       = 'm';
+cfg.resolution = 0.02;
 
 cov_mag  = zeros(306);
 for i=1:3:306

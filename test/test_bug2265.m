@@ -12,7 +12,7 @@ load(dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_bem.mat
 load(dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_mri.mat'));
 elecs = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/template/electrode/standard_1020.elc'));
 
-%% 
+%%
 CMMM = 'cm'; scale=1;
 CMMM = 'mm'; scale=10; % prepare_leadfield, or another method does not work with mm (a bugg)
 
@@ -22,11 +22,11 @@ vol = ft_convert_units(vol, CMMM); % Convert the vol to cm, or mm
 % the source units are in cm
 % the negative inwardshift means an outward shift of the brain surface for inside/outside detection
 cfg = [];
-cfg.sourcemodel.xgrid = scale*[-20:1:20];
-cfg.sourcemodel.ygrid = scale*[-20:1:20];
-cfg.sourcemodel.zgrid = scale*[-20:1:20];
-cfg.sourcemodel.unit = CMMM;
-cfg.sourcemodel.tight = 'yes';
+cfg.xgrid = scale*[-20:1:20];
+cfg.ygrid = scale*[-20:1:20];
+cfg.zgrid = scale*[-20:1:20];
+cfg.unit = CMMM;
+cfg.tight = 'yes';
 cfg.inwardshift = -scale*0;
 cfg.headmodel = vol;
 template_grid = ft_prepare_sourcemodel(cfg);
@@ -53,7 +53,7 @@ data = [];
 cfg.sourcemodel = template_grid;
 cfg.headmodel = vol;
 cfg.elec = elecs;
-cfg.unit = CMMM; % this is confusing in case it is different from cfg.sourcemodel.unit
+cfg.unit = CMMM;
 [grid] = ft_prepare_leadfield(cfg, data);
 
 grid = ft_convert_units(grid, CMMM); %% does not really functional!!
