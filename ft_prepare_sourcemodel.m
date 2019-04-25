@@ -655,9 +655,13 @@ if basedonmni
   
 end
 
+if isfield(sourcemodel, 'unit')
 % in most cases the source model will already be in the desired units, but e.g. for "basedonmni" it will be in 'mm'
-% convert to the requested units
-sourcemodel = ft_convert_units(sourcemodel, cfg.unit);
+  sourcemodel = ft_convert_units(sourcemodel, cfg.unit);
+else
+  % the units were specified by the user or determined automatically, assign them to the source model
+  sourcemodel.unit = cfg.unit;
+end
 
 if strcmp(cfg.spherify, 'yes')
   if ~ft_headmodeltype(headmodel, 'singlesphere') && ~ft_headmodeltype(headmodel, 'concentricspheres')
