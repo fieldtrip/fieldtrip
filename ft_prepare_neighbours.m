@@ -273,7 +273,7 @@ for i=1:length(neighbours)
 end
 
 if k==0
-  ft_error('No neighbours were found');
+  ft_warning('No neighbours were found');
 end
 
 fprintf('there are on average %.1f neighbours per channel\n', k/length(neighbours));

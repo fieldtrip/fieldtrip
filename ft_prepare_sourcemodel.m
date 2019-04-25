@@ -375,7 +375,7 @@ if basedonresolution
       minpos = floor(minpos);
       maxpos = ceil(maxpos);
     case 'mm'
-      minpos = floor(minpos/cfg.sourcemodel.unit10)*10;
+      minpos = floor(minpos/10)*10;
       maxpos = ceil(maxpos/10)*10;
   end
   
