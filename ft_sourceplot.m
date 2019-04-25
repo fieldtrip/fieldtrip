@@ -67,6 +67,7 @@ function ft_sourceplot(cfg, functional, anatomical)
 %                        'auto', if funparameter values are all positive: 'zeromax',
 %                          all negative: 'minzero', both possitive and negative: 'maxabs'
 %   cfg.colorbar      = 'yes' or 'no' (default = 'yes')
+%   cfg.colorbartext  =  string indicating the text next to colorbar
 %
 % The 'ortho' method can also plot time and/or frequency, the other methods can not.
 % If your functional data has a time and/or frequency dimension, you can use
@@ -289,6 +290,7 @@ cfg.markersize    = ft_getopt(cfg, 'markersize',    5);
 cfg.markercolor   = ft_getopt(cfg, 'markercolor',   [1 1 1]);
 cfg.renderer      = ft_getopt(cfg, 'renderer',      'opengl');
 cfg.colorbar      = ft_getopt(cfg, 'colorbar',      'yes');
+cfg.colorbartext  = ft_getopt(cfg, 'colorbartext',  '');
 cfg.voxelratio    = ft_getopt(cfg, 'voxelratio',    'data'); % display size of the voxel, 'data' or 'square'
 cfg.axisratio     = ft_getopt(cfg, 'axisratio',     'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
 cfg.visible       = ft_getopt(cfg, 'visible',       'on');
@@ -908,6 +910,7 @@ switch cfg.method
         % use a normal MATLAB coorbar
         hc = colorbar;
         set(hc, 'YLim', [fcolmin fcolmax]);
+        hc.Label.String = cfg.colorbartext;
       else
         ft_warning('no colorbar possible without functional data')
       end
@@ -1084,6 +1087,7 @@ switch cfg.method
     opt.opacmax       = opacmax;
     opt.clim          = cfg.clim; % contrast limits for the anatomy, see ft_volumenormalise
     opt.colorbar      = cfg.colorbar;
+    opt.colorbartext  = cfg.colorbartext;
     opt.queryrange    = cfg.queryrange;
     opt.funcolormap   = cfg.funcolormap;
     opt.crosshair     = istrue(cfg.crosshair);
@@ -1275,6 +1279,7 @@ switch cfg.method
         if strcmp(cfg.maskstyle, 'opacity')
           % functional values are according to original input values
           set(hc, 'YLim', [fcolmin fcolmax]);
+          hc.Label.String = cfg.colorbartext;
         else
           % functional values have been transformed to be scaled
         end
@@ -1414,11 +1419,12 @@ switch cfg.method
 
     if istrue(cfg.colorbar)
       if ~strcmp(cfg.slice, '2d')
-        colorbar;
+        c = colorbar;
       else % position the colorbar so that it does not change the axis of the last subplot
         subplotpos = get(subplot(cfg.nslices,1,cfg.nslices), 'Position'); % position of the bottom or rightmost subplot
-        colorbar('Position', [subplotpos(1)+subplotpos(3)+0.01 subplotpos(2) .03 subplotpos(2)+subplotpos(4)*(cfg.nslices+.1)]);
+        c = colorbar('Position', [subplotpos(1)+subplotpos(3)+0.01 subplotpos(2) .03 subplotpos(2)+subplotpos(4)*(cfg.nslices+.1)]);
       end
+      c.Label.String = cfg.colorbartext;
     end
 
 
@@ -1686,6 +1692,7 @@ elseif strcmp(opt.colorbar,  'yes') && ~isfield(opt, 'hc')
     try
       set(opt.hc, 'XLim', [opt.fcolmin opt.fcolmax]);
     end
+    opt.hc.Label.String = opt.colorbartext;
   else
     ft_warning('no colorbar possible without functional data');
   end
