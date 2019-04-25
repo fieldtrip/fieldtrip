@@ -149,6 +149,7 @@ cfg.interplimits      = ft_getopt(cfg, 'interplimits',     'head');
 cfg.interpolation     = ft_getopt(cfg, 'interpolation',     default_interpmethod);
 cfg.contournum        = ft_getopt(cfg, 'contournum',        6);
 cfg.colorbar          = ft_getopt(cfg, 'colorbar',         'no');
+cfg.colorbartext      = ft_getopt(cfg, 'colorbartext',    '');
 cfg.shading           = ft_getopt(cfg, 'shading',          'flat');
 cfg.comment           = ft_getopt(cfg, 'comment',          'auto');
 cfg.fontsize          = ft_getopt(cfg, 'fontsize',          8);
@@ -748,10 +749,11 @@ end
 % Plot colorbar
 if isfield(cfg, 'colorbar')
   if strcmp(cfg.colorbar, 'yes')
-    colorbar;
+    c = colorbar;
   elseif ~strcmp(cfg.colorbar, 'no')
-    colorbar('location', cfg.colorbar);
+    c = colorbar('location', cfg.colorbar);
   end
+  ylabel(c, cfg.colorbartext);
 end
 
 % Set renderer if specified
