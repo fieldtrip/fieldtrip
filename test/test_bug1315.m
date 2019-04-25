@@ -12,6 +12,7 @@ cfg = [];
 cfg.method = 'template';
 cfg.layout = 'CTF275.lay';
 neighbours = ft_prepare_neighbours(cfg, data);
+
 %% producing the bug
 cfg = [];
 cfg.neighbours = neighbours;

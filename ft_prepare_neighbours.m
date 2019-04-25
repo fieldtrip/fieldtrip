@@ -259,8 +259,10 @@ else
   desired = neighb_chans;
 end
 
-neighb_idx = ismember(neighb_chans, desired);
-neighbours = neighbours(neighb_idx);
+if ~isempty(desired)
+  neighb_idx = ismember(neighb_chans, desired);
+  neighbours = neighbours(neighb_idx);
+end
 
 k = 0;
 for i=1:length(neighbours)
