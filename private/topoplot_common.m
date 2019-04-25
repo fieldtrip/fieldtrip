@@ -753,7 +753,7 @@ if isfield(cfg, 'colorbar')
   elseif ~strcmp(cfg.colorbar, 'no')
     c = colorbar('location', cfg.colorbar);
   end
-  c.Label.String = cfg.colorbartext;
+  ylabel(c, cfg.colorbartext);
 end
 
 % Set renderer if specified

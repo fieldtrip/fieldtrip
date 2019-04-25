@@ -411,7 +411,7 @@ axis xy
 
 if isequal(cfg.colorbar, 'yes')
   c = colorbar;
-  c.Label.String = cfg.colorbartext;
+  ylabel(c, cfg.colorbartext);
 end
 
 % Set callback to adjust color axis

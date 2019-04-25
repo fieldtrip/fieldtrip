@@ -320,7 +320,7 @@ if dointeractive
   axis off;
   if opt.colorbar
     c = colorbar;
-    c.Label.String = cfg.colorbartext;
+    ylabel(c, cfg.colorbartext);
   end
 
   % add sum stuff at a higher level for quicker access in the callback

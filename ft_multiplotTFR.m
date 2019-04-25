@@ -542,7 +542,7 @@ end % show scale
 % show colorbar
 if isfield(cfg, 'colorbar') && (strcmp(cfg.colorbar, 'yes'))
   c = colorbar;
-  c.Label.String = cfg.colorbartext;
+  ylabel(c, cfg.colorbartext);
 end
 
 % Set colour axis

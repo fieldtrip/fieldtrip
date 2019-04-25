@@ -910,7 +910,7 @@ switch cfg.method
         % use a normal MATLAB coorbar
         hc = colorbar;
         set(hc, 'YLim', [fcolmin fcolmax]);
-        hc.Label.String = cfg.colorbartext;
+        ylabel(hc, cfg.colorbartext);
       else
         ft_warning('no colorbar possible without functional data')
       end
@@ -1279,7 +1279,7 @@ switch cfg.method
         if strcmp(cfg.maskstyle, 'opacity')
           % functional values are according to original input values
           set(hc, 'YLim', [fcolmin fcolmax]);
-          hc.Label.String = cfg.colorbartext;
+          ylabel(hc, cfg.colorbartext);
         else
           % functional values have been transformed to be scaled
         end
@@ -1424,7 +1424,7 @@ switch cfg.method
         subplotpos = get(subplot(cfg.nslices,1,cfg.nslices), 'Position'); % position of the bottom or rightmost subplot
         c = colorbar('Position', [subplotpos(1)+subplotpos(3)+0.01 subplotpos(2) .03 subplotpos(2)+subplotpos(4)*(cfg.nslices+.1)]);
       end
-      c.Label.String = cfg.colorbartext;
+      ylabel(c, cfg.colorbartext);
     end
 
 
