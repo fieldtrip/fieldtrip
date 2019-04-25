@@ -1685,14 +1685,14 @@ elseif strcmp(opt.colorbar,  'yes') && ~isfield(opt, 'hc')
     try
       caxis([opt.fcolmin opt.fcolmax]);
     end
+
     opt.hc = colorbar;
     set(opt.hc, 'location', 'southoutside');
     set(opt.hc, 'position',[0.06+0.06+opt.h1size(1) 0.06-0.06+opt.h3size(2) opt.h2size(1) 0.06]);
-
+    ylabel(opt.hc, opt.colorbartext);
     try
       set(opt.hc, 'XLim', [opt.fcolmin opt.fcolmax]);
     end
-    opt.hc.Label.String = opt.colorbartext;
   else
     ft_warning('no colorbar possible without functional data');
   end
