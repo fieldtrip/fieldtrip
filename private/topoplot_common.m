@@ -752,10 +752,11 @@ end
 if isfield(cfg, 'colorbar')
   if strcmp(cfg.colorbar, 'yes')
     c = colorbar;
+    ylabel(c, cfg.colorbartext);
   elseif ~strcmp(cfg.colorbar, 'no')
     c = colorbar('location', cfg.colorbar);
+    ylabel(c, cfg.colorbartext);
   end
-  ylabel(c, cfg.colorbartext);
 end
 
 % Set renderer if specified
