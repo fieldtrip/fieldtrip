@@ -29,8 +29,6 @@ function [freq] = ft_freqanalysis(cfg, data)
 %                       output will contain a spectral transfer matrix,
 %                       the cross-spectral density matrix, and the
 %                       covariance matrix of the innovatio noise.
-%                     'irasa', analyses an entire spectrum for the entire data
-%                       length, returns the fractal/arrhythmic component.
 %   cfg.output      = 'pow'       return the power-spectra
 %                     'powandcsd' return the power and the cross-spectra
 %                     'fourier'   return the complex Fourier-spectra
@@ -288,6 +286,7 @@ switch cfg.method
     end
     
   case 'irasa'
+    ft_warning('the irasa method is under construction')
     cfg.taper       = ft_getopt(cfg, 'taper', 'hanning');
     if ~isequal(cfg.taper, 'hanning')
       ft_error('only hanning tapers are supported');
