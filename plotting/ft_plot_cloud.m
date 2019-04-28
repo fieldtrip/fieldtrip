@@ -1,6 +1,6 @@
 function ft_plot_cloud(pos, val, varargin)
 
-% FT_PLOT_CLOUD visualizes spatially sparse scalar data as points, spheres, discs, or
+% FT_PLOT_CLOUD visualizes spatially sparse scalar data as points, spheres, or
 % spherical clouds of points and optionally 2D slices through the spherical clouds
 %
 % Use as
@@ -9,10 +9,9 @@ function ft_plot_cloud(pos, val, varargin)
 % for each location.
 %
 % Optional input arguments should come in key-value pairs and can include
-%   'cloudtype'          = 'point' plots a single 2D point at each sensor position (see plot3)
-%                          'cloud' (default) plots a group of spherically arranged points at each sensor position
+%   'cloudtype'          = 'cloud' (default) plots a group of spherically arranged points at each sensor position
 %                          'surf' plots a single spherical surface mesh at each sensor position
-%                          'disc' plots a single cylindrical disc at each sensor position aligned with the mesh (required)
+%                          'point' plots a single 2D point at each sensor position (see plot3)
 %   'scalerad'           = scale radius with val, can be 'yes' or 'no' (default = 'yes')
 %   'radius'             = scalar, maximum radius of cloud (default = 4 mm)
 %   'clim'               = 1x2 vector specifying the min and max for the colorscale
@@ -53,7 +52,7 @@ function ft_plot_cloud(pos, val, varargin)
 %
 % See also FT_ELECTRODEPLACEMENT, FT_PLOT_SENS, FT_PLOT_TOPO, FT_PLOT_TOPO3D
 
-% Copyright (C) 2017-2018, Arjen Stolk, Sandon Griffin
+% Copyright (C) 2017-2019, Arjen Stolk, Sandon Griffin
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -676,13 +675,19 @@ else % plot 3d cloud
         hs = surf(rmax(n)*xsp+pos(n,1), rmax(n)*ysp+pos(n,2), rmax(n)*zsp+pos(n,3));
         set(hs, 'EdgeColor', 'none', 'FaceColor', fcol, 'FaceAlpha', 1);
         
+      case 'point'
+        indx  = ceil(cmid) + sign(colscf(n))*floor(abs(colscf(n)*cmid));
+        indx  = max(min(indx,size(cmapsc,1)),1);  % index should fall within the colormap
+        fcol  = cmapsc(indx,:);                   % color [Nx3]
+        hs = plot3(pos(n,1), pos(n,2), pos(n,3), 'Marker', marker, 'MarkerSize', rmax(n), 'Color', fcol, 'Linestyle', 'none');
+        
       otherwise
         ft_error('unsupported cloudtype "%s"', cloudtype);
         
     end % switch cloudtype
   end % end cloud loop
   
-  if ~isempty(meshplot) && ~strcmp(cloudtype, 'disc') % do not plot the mesh when plotting electrodes as discs
+  if ~isempty(meshplot)
     for k = 1:numel(meshplot) % mesh loop
       ft_plot_mesh(meshplot{k}, 'facecolor', facecolor{k}, 'EdgeColor', edgecolor{k}, ...
         'facealpha', facealpha(k), 'edgealpha', edgealpha(k), 'vertexcolor', vertexcolor{k});

@@ -17,6 +17,7 @@ seg.brain = ones(50, 50, 50);
 cfg = [];
 cfg.tissue = 'brain';
 cfg.numvertices = 100;
+cfg.spmversion = 'spm12';
 mesh1 = ft_prepare_mesh(cfg, seg);
 
 seg.brain = zeros(50, 50, 50);
@@ -81,6 +82,9 @@ figure; ft_plot_cloud(pos, val, 'colorgrad', 0.1, 'ptdensity', 50);
 
 figure; ft_plot_cloud(pos, val, 'colorgrad', 0.1, 'scalerad', 'yes');
 figure; ft_plot_cloud(pos, val, 'colorgrad', 0.1, 'scalerad', 'no');
+
+figure; ft_plot_cloud(pos, val, 'cloudtype', 'surf');
+figure; ft_plot_cloud(pos, val, 'cloudtype', 'point');
 
 %% 
 % mesh options
