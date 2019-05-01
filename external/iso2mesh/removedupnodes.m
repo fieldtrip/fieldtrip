@@ -1,4 +1,4 @@
-function [newnode,newelem]=removedupnodes(node,elem)
+function [newnode,newelem]=removedupnodes(node,elem,tol)
 %
 % [newnode,newelem]=removedupnodes(node,elem)
 %
@@ -19,5 +19,12 @@ function [newnode,newelem]=removedupnodes(node,elem)
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
+if(nargin>=3 && tol~=0)
+    node=round(node/tol)*tol;
+end
 [newnode,I,J]=unique(node,'rows');
-newelem=J(elem);
+if(iscell(elem))
+    newelem=cellfun(@(x) J(x)', elem,'UniformOutput',false);
+else
+    newelem=J(elem);
+end
