@@ -59,17 +59,49 @@ hdr.Fs = 1e6/(hdr.SamplingInterval);
 % the number of samples is unkown to start with
 hdr.nSamples = Inf;
 
-% determine the number of samples by looking at the binary file
+% confirm the names of the .vmrk and .eeg files
 [p, f, x] = fileparts(filename);
 datafile = fullfile(p, hdr.DataFile); % add full-path to datafile
+sameEEGname=[p filesep f '.eeg'];
+sameVMRKname=[p filesep f '.vmrk'];
 
+info = dir(datafile);
+if isempty(info)
+    info = dir(filename);
+    if ~isempty(info)
+        hdr.DataFile=sameEEGname;
+        disp(['Note: Could not find .eeg file (' datafile ') named in .vhdr file so will use .eeg file with same stem as .vhdr file (' sameEEGname ').']);
+        datafile=sameEEGname;
+    else
+        ft_error('cannot determine the location of the data file %s', datafile);
+    end;
+else
+    if ~strcmp(datafile,sameEEGname)
+        disp(['Note: Name of the .eeg file (' datafile ') listed in the .vhdr file is different than the current stem of the .vhdr file (' sameEEGname ').']);
+    end;
+end
+
+info = dir([p filesep hdr.MarkerFile]);
+if isempty(info)
+    info = dir(sameVMRKname);
+    if ~isempty(info)
+        hdr.MarkerFile=[f '.vmrk'];
+        disp(['Note: Could not find .vmrk file (' [p filesep hdr.MarkerFile] ') named in .vhdr file so will use .vrmk file with same stem as .vhdr file (' sameVMRKname ').']);
+    else
+        ft_error('cannot determine the location of the marker file %s', [p filesep hdr.MarkerFile]);
+    end;
+else
+    if ~strcmp([p filesep hdr.MarkerFile],sameVMRKname)
+        disp(['Note: Name of the .vmrk file (' [p filesep hdr.MarkerFile] ') listed in the .vhdr file is different than the current stem of the .vhdr file (' sameVMRKname ').']);
+    end;
+end
+
+% determine the number of samples by looking at the binary file
 if strcmpi(hdr.DataFormat, 'binary')
   % the data file is supposed to be located in the same directory as the header file
   % but that might be on another location than the present working directory
+  
   info = dir(datafile);
-  if isempty(info)
-    ft_error('cannot determine the location of the data file %s', hdr.DataFile);
-  end
   switch lower(hdr.BinaryFormat)
     case 'int_16';
       hdr.nSamples = info.bytes./(hdr.NumberOfChannels*2);
@@ -78,7 +110,8 @@ if strcmpi(hdr.DataFormat, 'binary')
     case 'ieee_float_32';
       hdr.nSamples = info.bytes./(hdr.NumberOfChannels*4);
   end
-elseif strcmpi(hdr.DataFormat, 'ascii') 
+  
+elseif strcmpi(hdr.DataFormat, 'ascii')
   hdr.skipLines = 0;
   hdr.skipColumns = 0;
   
