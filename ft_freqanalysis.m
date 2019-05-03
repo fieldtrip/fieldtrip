@@ -106,10 +106,18 @@ function [freq] = ft_freqanalysis(cfg, data)
 %   cfg.foilim     = [begin end], frequency band of interest
 %   cfg.toi        = vector 1 x numtoi, the times on which the analysis
 %                    windows should be centered (in seconds)
-%   cfg.width      = 'width', or number of cycles, of the wavelet (default = 7)
+%   cfg.width      = 'width', or number of cycles, of the wavelet or base wavelet for 
+%                    superlets(default = 7)
 %   cfg.gwidth     = determines the length of the used wavelets in standard
 %                    deviations of the implicit Gaussian kernel and should
 %                    be choosen >= 3; (default = 3)
+%   cfg.superlets  = 'no', 'additive', 'multiplicative' (default = 'no')
+%                    If set to value other than 'no' performs superlet spectral estimation 
+%                    according to Moca et al. 2019 (https://doi.org/10.1101/583732), i.e.
+%                    frequency-wise combination of responses from Morlet wavelets of varying
+%                    cycle width using the geometric mean.
+%   cfg.sl_order   = vector 1 x numfoi, superlet order, i.e. number of combined wavelets, for
+%                    individual frequencies of interest.
 %
 % The standard deviation in the frequency domain (sf) at frequency f0 is
 % defined as: sf = f0/width
@@ -304,6 +312,8 @@ switch cfg.method
   case 'wavelet'
     cfg.width  = ft_getopt(cfg, 'width',  7);
     cfg.gwidth = ft_getopt(cfg, 'gwidth', 3);
+    cfg.superlets = ft_getopt(cfg, 'superlets', 'no');
+    cfg.sl_order = ft_getopt(cfg,'sl_order', []);
     
   case 'tfr'
     cfg = ft_checkconfig(cfg, 'renamed', {'waveletwidth', 'width'});
@@ -531,7 +541,47 @@ for itrial = 1:ntrials
       hastime = false;
       
     case 'wavelet'
-      [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:}, 'feedback', fbopt);
+      if strcmp(cfg.superlets, 'no')
+        [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth, options{:}, 'feedback', fbopt);
+      else
+        % calculate number of wavelets and respective cycle width dependent on superlet order
+        % equivalent one-liners: 
+        %   multiplicative: cycles = arrayfun(@(order) arrayfun(@(wl_num) cfg.width*wl_num, 1:order), cfg.sl_order,'uni',0)
+        %   additive: cycles = arrayfun(@(order) arrayfun(@(wl_num) cfg.width+wl_num-1, 1:order), cfg.sl_order,'uni',0)
+        cycles = cell(length(cfg.foi),1);
+        for i_f = 1:length(cfg.foi)
+          frq_cyc = NaN(1,cfg.sl_order(i_f));
+          if strcmp(cfg.superlets, 'multiplicative')
+            for i_wl = 1:cfg.sl_order(i_f)
+              frq_cyc(i_wl) = cfg.width*i_wl;
+            end
+          elseif strcmp(cfg.superlets, 'additive')
+            for i_wl = 1:cfg.sl_order(i_f)
+              frq_cyc(i_wl) = cfg.width+i_wl-1;
+            end
+          end
+          cycles{i_f} = frq_cyc;
+        end
+
+        % compute superlets
+        spectrum = NaN(1,length(cfg.foi),length(cfg.toi));
+        % index of 'freqoi' value in 'options'
+        idx_freqoi = find(ismember(options(1:2:end), 'freqoi'))*2;
+        foi = options{idx_freqoi};
+        for i_f = 1:length(cfg.foi)
+          % collext individual wavelets' responses per frequency
+          spec_f = NaN(cfg.sl_order(i_f), 1, length(cfg.toi));
+          opt = options;
+          opt{idx_freqoi} = cfg.foi(i_f);
+          % compute responses for individual wavelets
+          for i_wl = 1:cfg.sl_order(i_f)
+            [spec_f(i_wl,:,:),~,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cycles{i_f}(i_wl), 'gwidth', cfg.gwidth, opt{:}, 'feedback', fbopt);
+          end
+          % geometric mean across individual wavelets
+          spectrum(1,i_f,:) = prod(spec_f, 1).^(1/cfg.sl_order(i_f));
+        end
+        clear spec_f
+      end
       
       % the following variable is created to keep track of the number of
       % trials per time bin and is needed for proper normalization if
