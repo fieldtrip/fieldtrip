@@ -564,13 +564,13 @@ for itrial = 1:ntrials
         end
 
         % compute superlets
-        spectrum = NaN(1,length(cfg.foi),length(cfg.toi));
+        spectrum = NaN(nchan,length(cfg.foi),length(cfg.toi));
         % index of 'freqoi' value in 'options'
         idx_freqoi = find(ismember(options(1:2:end), 'freqoi'))*2;
         foi = options{idx_freqoi};
         for i_f = 1:length(cfg.foi)
           % collext individual wavelets' responses per frequency
-          spec_f = NaN(cfg.sl_order(i_f), 1, length(cfg.toi));
+          spec_f = NaN(cfg.sl_order(i_f), nchan, length(cfg.toi));
           opt = options;
           opt{idx_freqoi} = cfg.foi(i_f);
           % compute responses for individual wavelets
@@ -578,7 +578,7 @@ for itrial = 1:ntrials
             [spec_f(i_wl,:,:),~,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cycles{i_f}(i_wl), 'gwidth', cfg.gwidth, opt{:}, 'feedback', fbopt);
           end
           % geometric mean across individual wavelets
-          spectrum(1,i_f,:) = prod(spec_f, 1).^(1/cfg.sl_order(i_f));
+          spectrum(:,i_f,:) = prod(spec_f, 1).^(1/cfg.sl_order(i_f));
         end
         clear spec_f
       end
