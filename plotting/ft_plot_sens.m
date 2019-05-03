@@ -25,9 +25,8 @@ function hs = ft_plot_sens(sens, varargin)
 % The following options apply to EEG electrodes
 %   'elec'            = true/false, plot each individual electrode (default = false)
 %   'orientation'     = true/false, plot a line for the orientation of each electrode (default = false)
-%   'elecshape'       = 'point', 'circle', 'square', 'sphere', or 'disc' (default is automatic)
+%   'elecshape'       = 'point', 'circle', 'square', or 'sphere' (default is automatic)
 %   'elecsize'        = diameter of the electrodes (default is automatic)
-%   'headshape'       = headshape, required for elecshape 'disc'
 % The following options apply to NIRS optodes
 %   'opto'            = true/false, plot each individual optode (default = false)
 %   'orientation'     = true/false, plot a line for the orientation of each optode (default = false)
@@ -97,7 +96,6 @@ coilsize        = ft_getopt(varargin, 'coilsize');  % default depends on the inp
 elec            = ft_getopt(varargin, 'elec', false);
 elecshape       = ft_getopt(varargin, 'elecshape'); % default depends on the input, see below
 elecsize        = ft_getopt(varargin, 'elecsize');  % default depends on the input, see below
-headshape       = ft_getopt(varargin, 'headshape', []); % for elecshape 'disc'
 % this is for NIRS optode arrays
 opto            = ft_getopt(varargin, 'opto', false);
 optoshape       = ft_getopt(varargin, 'optoshape'); % default depends on the input, see below
@@ -129,7 +127,7 @@ style           = ft_getopt(varargin, 'style');
 marker          = ft_getopt(varargin, 'marker', '.');
 
 % this is simply passed to ft_plot_mesh
-if strcmp(sensshape, 'sphere') || strcmp(sensshape, 'disc')
+if strcmp(sensshape, 'sphere')
   edgecolor     = ft_getopt(varargin, 'edgecolor', 'none');
 else
   edgecolor     = ft_getopt(varargin, 'edgecolor', 'k');
@@ -186,7 +184,7 @@ if isempty(senssize)
     case 'ctf275'
       senssize = 18;
     otherwise
-      if strcmp(sensshape, 'sphere') || strcmp(sensshape, 'disc')
+      if strcmp(sensshape, 'sphere')
         senssize = 4; % assuming spheres are used for intracranial electrodes, diameter is about 4mm
       elseif strcmp(sensshape, 'point')
         senssize = 30;
@@ -204,7 +202,7 @@ if isempty(facecolor) % set default color depending on shape
     facecolor = 'k';
   elseif strcmp(sensshape, 'circle') || strcmp(sensshape, 'square')
     facecolor = 'none';
-  elseif strcmp(sensshape, 'sphere') || strcmp(sensshape, 'disc')
+  elseif strcmp(sensshape, 'sphere')
     facecolor = 'b';
   end
 end
@@ -383,53 +381,6 @@ switch sensshape
     for i=1:size(pos,1)
       hs = surf(rsp*xsp+pos(i,1), rsp*ysp+pos(i,2), rsp*zsp+pos(i,3));
       set(hs, 'EdgeColor', edgecolor, 'FaceColor', facecolor, 'EdgeAlpha', edgealpha, 'FaceAlpha', facealpha);
-    end
-    
-  case 'disc'
-    if isempty(headshape)
-      ft_error('cannot plot electrodes as discs without a headshape to align them with')
-    end
-    
-    npoints = 25; % points on the headshape used for estimating the local norm
-    for i=1:size(pos,1)
-      
-      % calculate local norm vectors
-      d = sqrt( (pos(i,1)-headshape.pos(:,1)).^2 + ...
-        (pos(i,2)-headshape.pos(:,2)).^2 + (pos(i,3)-headshape.pos(:,3)).^2 );
-      [ds, idx] = sort(d);
-      x = headshape.pos(idx(1:npoints),1); 
-      y = headshape.pos(idx(1:npoints),2); 
-      z = headshape.pos(idx(1:npoints),3);
-      ptCloud = pointCloud([x y z]);
-      nrm = pcnormals(ptCloud);
-      u = nrm(:,1); 
-      v = nrm(:,2); 
-      w = nrm(:,3);
-      
-      % flip the normal vector if it is not pointing toward the center
-      C = mean(headshape.pos,1); % headshape center
-      for k = 1:numel(x)
-        p1 = C - [x(k),y(k),z(k)];
-        p2 = [u(k),v(k),w(k)];
-        angle = atan2(norm(cross(p1,p2)),p1*p2');
-        if angle > pi/2 || angle < -pi/2
-          u(k) = -u(k);
-          v(k) = -v(k);
-          w(k) = -w(k);
-        end
-      end
-      Fn = nanmean([u v w],1);
-      Fn = Fn * (1/sqrt(sum(Fn.^2,2))); % normalize
-      ori(i,:) = Fn;
-      
-      % create disc aligned with the headshape (ideally, a hull)
-      [X,Y,Z] = cylinder2([senssize/2 senssize/2],[ori(i,1) ori(i,2) ori(i,3)], 100);
-      X(1,:) = X(1,:)+pos(i,1); Y(1,:) = Y(1,:)+pos(i,2); Z(1,:) = Z(1,:)+pos(i,3);
-      t = (senssize/2)/10; % add thickness (outward), X(2,1)-X(1,1) etc.
-      X(2,:) = X(1,:)-t*ori(i,1); Y(2,:) = Y(1,:)-t*ori(i,2); Z(2,:) = Z(1,:)-t*ori(i,3);
-      hold on; mesh(X,Y,Z, 'facecolor', facecolor, 'edgecolor', edgecolor, 'lineStyle','none'); % draw cylinder
-      hold on; fill3(X(1,:),Y(1,:),Z(1,:), facecolor, 'lineStyle','none'); % fill sides
-      hold on; fill3(X(2,:),Y(2,:),Z(2,:), facecolor, 'lineStyle','none');  
     end
     
   otherwise
