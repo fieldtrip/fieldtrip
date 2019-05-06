@@ -138,7 +138,7 @@ catch err
 end
 while ~feof(fid)
     tline = fgetl(fid);
-    if (length(tline) >= 9) && strcmp(tline(1:9),'Impedance')
+    if (length(tline) >= 11) && strcmp(tline(1:11),'[Impedance []')
         chanCounter=0;
         refCounter=0;
         impCounter=0;
@@ -192,7 +192,7 @@ while ~feof(fid)
                         hdr.impedances.reference(refCounter) = NaN;
                     end
                 end
-                if strcmpi(tline(1:4),'gnd:')
+                if strcmpi(tline(1:4),'gnd:') | strcmpi(tline(1:4),'Gnd:')
                     [chanName,impedances] = strtok(tline,':');
                     hdr.impedances.ground = str2double(impedances(2:end));
                 end
@@ -204,7 +204,7 @@ while ~feof(fid)
                 tline = fgetl(fid);
             end;
             if ~isempty(tline)
-                if strcmpi(tline(1:4),'gnd:')
+                if strcmpi(tline(1:4),'gnd:') | strcmpi(tline(1:4),'Gnd:')
                     [chanName,impedances] = strtok(tline,':');
                     hdr.impedances.ground = str2double(impedances(2:end));
                 end
