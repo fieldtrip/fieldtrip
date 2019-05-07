@@ -204,9 +204,7 @@ classdef crossvalidator
       end
       
       if strcmp(obj.type,'split'), obj.folds = 1; end
-      
-      if obj.verbose, fprintf('fixing random number generator for reproducibility\n'); end
-      
+          
       if ~iscell(Y)
         
         test = create_test_folds(Y);
