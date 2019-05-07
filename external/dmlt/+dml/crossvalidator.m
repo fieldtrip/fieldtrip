@@ -240,6 +240,10 @@ classdef crossvalidator
       
         function y = create_test_folds(Y)
           
+          % NOTE: Fixing of the random seed has been removed here in the fieldtrip 
+          % version since the randomseed is dealt with higher up in the code 
+          % hierarchy (i.e. specify cfg.randomseed in ft_timelockstatistics).
+          
           y = cell(obj.folds,1);
           
           % determine indices of labeled (non-nan) datapoints
