@@ -204,9 +204,7 @@ classdef crossvalidator
       end
       
       if strcmp(obj.type,'split'), obj.folds = 1; end
-      
-      if obj.verbose, fprintf('fixing random number generator for reproducibility\n'); end
-      
+          
       if ~iscell(Y)
         
         test = create_test_folds(Y);
@@ -240,12 +238,9 @@ classdef crossvalidator
       
         function y = create_test_folds(Y)
           
-          % use the same ordering for multiple datasets by reinitializing the random number generator
-          try
-            RandStream.setGlobalStream(RandStream('mt19937ar','seed',1));
-          catch
-            rand('twister',1); randn('state',1);
-          end
+          % NOTE: Fixing of the random seed has been removed here in the fieldtrip 
+          % version since the randomseed is dealt with higher up in the code 
+          % hierarchy (i.e. specify cfg.randomseed in ft_timelockstatistics).
           
           y = cell(obj.folds,1);
           
