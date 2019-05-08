@@ -172,7 +172,7 @@ catch err
 end
 while ~feof(fid)
   tline = fgetl(fid);
-  if (length(tline) >= 11) && strcmp(tline(1:11),'[Impedance []')
+  if startsWith(tline, 'Impedance [')
     chanCounter=0;
     refCounter=0;
     impCounter=0;
