@@ -52,7 +52,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % open parameter file
 fid = fopen_or_error(ParameterFile,'rt');
-cell = textscan(fid,'%s','whitespace','','endofline','§');
+cell = textscan(fid,'%s','whitespace','','endofline',char(167));
 fclose(fid);
 cont = cell2mat(cell{1});
 
@@ -143,7 +143,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % open label file
 fid = fopen_or_error(LabelFile,'rt');
-cell = textscan(fid,'%s','whitespace','','endofline','§');
+cell = textscan(fid,'%s','whitespace','','endofline',char(167));
 fclose(fid);
 cont = cell2mat(cell{1});
 
@@ -241,7 +241,7 @@ if fid < 0
 end
 
 if fid >= 0
-    cell = textscan(fid,'%s','whitespace','','endofline','§');
+    cell = textscan(fid,'%s','whitespace','','endofline',char(167));
     fclose(fid);
     cont = cell2mat(cell{1});
 
