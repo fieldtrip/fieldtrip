@@ -75,11 +75,11 @@ if isempty(info)
     datafile=sameEEGname;
   else
     ft_error('cannot determine the location of the data file %s', datafile);
-  end;
+  end
 else
   if ~strcmp(datafile,sameEEGname)
     disp(['Note: Name of the .eeg file (' datafile ') listed in the .vhdr file is different than the current stem of the .vhdr file (' sameEEGname ').']);
-  end;
+  end
 end
 
 info = dir(markerFile);
@@ -90,11 +90,11 @@ if isempty(info)
     disp(['Note: Could not find .vmrk file (' markerFile ') named in .vhdr file so will use .vrmk file with same stem as .vhdr file (' sameVMRKname ').']);
   else
     ft_error('cannot determine the location of the marker file %s', markerFile);
-  end;
+  end
 else
   if ~strcmp(markerFile,sameVMRKname)
     disp(['Note: Name of the .vmrk file (' markerFile ') listed in the .vhdr file is different than the current stem of the .vhdr file (' sameVMRKname ').']);
-  end;
+  end
 end
 
 % determine the number of samples by looking at the binary file
@@ -104,11 +104,11 @@ if strcmpi(hdr.DataFormat, 'binary')
   
   info = dir(datafile);
   switch lower(hdr.BinaryFormat)
-    case 'int_16';
+    case 'int_16'
       hdr.nSamples = info.bytes./(hdr.NumberOfChannels*2);
-    case 'int_32';
+    case 'int_32'
       hdr.nSamples = info.bytes./(hdr.NumberOfChannels*4);
-    case 'ieee_float_32';
+    case 'ieee_float_32'
       hdr.nSamples = info.bytes./(hdr.NumberOfChannels*4);
   end
   
@@ -122,10 +122,10 @@ elseif strcmpi(hdr.DataFormat, 'ascii')
   skipColumns = read_asa(filename, 'SkipColumns=', '%d');
   decimalSymbol = read_asa(filename, 'DecimalSymbol=', '%s'); % This is not used in reading dataset yet
   
-  if ~isempty(dataPoints); hdr.nSamples = dataPoints; end;
-  if ~isempty(skipLines); hdr.skipLines = skipLines; end;
-  if ~isempty(skipColumns); hdr.skipColumns = skipColumns; end;
-  if ~isempty(decimalSymbol); hdr.decimalSymbol = decimalSymbol; end;
+  if ~isempty(dataPoints); hdr.nSamples = dataPoints; end
+  if ~isempty(skipLines); hdr.skipLines = skipLines; end
+  if ~isempty(skipColumns); hdr.skipColumns = skipColumns; end
+  if ~isempty(decimalSymbol); hdr.decimalSymbol = decimalSymbol; end
   
   if isempty(dataPoints) && strcmpi(hdr.DataOrientation, 'vectorized')
     % this is a very inefficient fileformat to read data from, it looks like this:
@@ -140,7 +140,7 @@ elseif strcmpi(hdr.DataFormat, 'ascii')
     fclose(fid);
     t = tokenize(tline, ' ', true); % cut the line into pieces
     hdr.nSamples = length(t) - 1;   % the first element is the channel label
-  end;
+  end
 end
 
 if isinf(hdr.nSamples)
@@ -156,23 +156,16 @@ hdr.label      = hdr.label(:);
 hdr.reference  = hdr.reference(:);
 hdr.resolution = hdr.resolution(:);
 
-%read in impedance values
-hdr.impedances.channels=[];
-hdr.impedances.reference=[];
-hdr.impedances.ground=NaN;
-hdr.impedances.refChan=[];
+% read in impedance values
+hdr.impedances.channels = [];
+hdr.impedances.reference = [];
+hdr.impedances.ground = NaN;
+hdr.impedances.refChan = [];
 
-try
-  fid = fopen_or_error(filename, 'rt');
-catch err
-  % quash
-  % TODO: Are we sure we want this to just silently return, instead of raising
-  % an error or printing a warning?
-  return
-end
+fid = fopen_or_error(filename, 'rt');
 while ~feof(fid)
   tline = fgetl(fid);
-  if (length(tline) >= 9) && strcmp(tline(1:9),'Impedance')
+  if startsWith(tline, 'Impedance [')
     chanCounter=0;
     refCounter=0;
     impCounter=0;
@@ -184,7 +177,7 @@ while ~feof(fid)
         spaceList=strfind(chanName,' ');
         if ~isempty(spaceList)
           chanName=chanName(spaceList(end)+1:end);
-        end;
+        end
         if strfind(chanName,'REF_')==1 %for situation where there is more than one reference
           refCounter=refCounter+1;
           hdr.impedances.refChan(refCounter)=impCounter;
@@ -208,14 +201,14 @@ while ~feof(fid)
           else
             hdr.impedances.channels(chanCounter,1) = NaN;
           end
-        end;
-      end;
+        end
+      end
     end
     if ~feof(fid)
       tline='';
       while ~feof(fid) && isempty(tline)
         tline = fgetl(fid);
-      end;
+      end
       if ~isempty(tline)
         if strcmp(tline(1:4),'Ref:')
           refCounter=refCounter+1;
@@ -230,20 +223,20 @@ while ~feof(fid)
           [chanName,impedances] = strtok(tline,':');
           hdr.impedances.ground = str2double(impedances(2:end));
         end
-      end;
-    end;
+      end
+    end
     if ~feof(fid)
       tline='';
       while ~feof(fid) && isempty(tline)
         tline = fgetl(fid);
-      end;
+      end
       if ~isempty(tline)
         if strcmpi(tline(1:4),'gnd:')
           [chanName,impedances] = strtok(tline,':');
           hdr.impedances.ground = str2double(impedances(2:end));
         end
-      end;
-    end;
-  end;
-end;
+      end
+    end
+  end
+end
 fclose(fid);
