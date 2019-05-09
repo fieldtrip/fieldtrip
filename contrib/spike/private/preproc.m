@@ -257,7 +257,7 @@ end
 % do the rereferencing in case of EEG
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(cfg.implicitref) && ~any(match_str(cfg.implicitref,label))
-  label = {label{:} cfg.implicitref};
+  label = {label{:} cfg.implicitref}';
   dat(end+1,:) = 0;
 end
 
@@ -411,7 +411,7 @@ else
     end
     % kernel = ones(1,numsmp) ./ numsmp;
     % dat    = convn(dat, kernel, 'same');
-    dat = ft_preproc_smooth(dat, numsmp); % better edge behaviour
+    dat = ft_preproc_smooth(dat, numsmp); % better edge behavior
   end
   if isnumeric(cfg.conv)
     kernel = (cfg.conv(:)'./sum(cfg.conv));

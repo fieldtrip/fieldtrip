@@ -157,7 +157,7 @@ switch eventformat
           system(sprintf('mkfifo -m 0666 %s',fifo));          
       end
 
-      fid = fopen(fifo, 'w');
+      fid = fopen_or_error(fifo, 'w');
       for i=1:length(event)
 
         try

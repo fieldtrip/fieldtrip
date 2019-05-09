@@ -12,8 +12,8 @@ function [obj] = convert_event(obj, target, varargin)
 %
 % Possible input objects types are
 %   event structure
-%   Nx3 trl matrix, or cell array of multiple trl definitions
-%   Nx2 artifact matrix, or cell array of multiple artifact definitions
+%   Nx3 trl matrix, or cell-array of multiple trl definitions
+%   Nx2 artifact matrix, or cell-array of multiple artifact definitions
 %   boolean vector, or matrix with multiple vectors as rows
 %
 % Possible targets are 'event', 'trl', 'artifact', 'boolvec'
@@ -143,7 +143,7 @@ end
 %%%%%%%%%%%%%%% SUBFUNCTION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function artvec = artifact2artvec(varargin)
 % ARTIFACT2ARTVEC makes boolian vector (or matrix when artifact is
-% cell array of multiple artifact definitions) with 0 for artifact free
+% cell-array of multiple artifact definitions) with 0 for artifact free
 % sample and 1 for sample containing an artifact according to artifact
 % specification. Length of vector is (from sample 1) last sample as
 % defined in the artifact definition, or when datendsample is speciefied
@@ -199,7 +199,7 @@ end
 
 %%%%%%%%%%%%%%% SUBFUNCTION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function artifact = artvec2artifact(artvec)
-% ARTVEC2ARTIFACT makes artifact definition (or cell array of artifact
+% ARTVEC2ARTIFACT makes artifact definition (or cell-array of artifact
 % definitions) from boolian vector (or matrix) with [artbegsample
 % artendsample]. Assumed is that the artvec starts with sample 1.
 

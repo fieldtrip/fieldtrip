@@ -30,15 +30,6 @@ function infoMatlab = mff_importinfo(mffFile)
 p = fileparts(which('mff_importsignal.m'));
 warning('off', 'MATLAB:Java:DuplicateClass');
 javaaddpath(fullfile(p, 'MFF-1.2.2-jar-with-dependencies.jar'));
-import com.egi.services.mff.api.MFFFactory;
-import com.egi.services.mff.api.MFFResourceType;
-import com.egi.services.mff.api.LocalMFFFactoryDelegate;
-import com.egi.services.mff.utility.ResourceUnmarshalException;
-import com.egi.services.mff.api.Signal;
-import com.egi.services.mff.api.SignalBlock;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
 warning('on', 'MATLAB:Java:DuplicateClass');
 
 mfffactorydelegate = javaObject('com.egi.services.mff.api.LocalMFFFactoryDelegate');
@@ -51,7 +42,7 @@ infoMatlab.version = 0;
 infoMatlab.timezone = [];
 infoMatlab.recordtimematlab = 0;
 if ~isempty(info)
-    try
+    %try
         if (info.loadResource() == true)
                         
             % The files version number.
@@ -86,9 +77,9 @@ if ~isempty(info)
             fprintf( 'Error: Could not load Info resource; file might be corrupted.\n');
         end
         
-    catch
-        error( 'Unknown while decoding info ressource; send us your data file.\n');
-    end
+    %catch
+    %   error( 'Unknown while decoding info ressource; send us your data file.\n');
+    %end
     
 else
     error( 'Error: Could not open the Info resource; check path\n');

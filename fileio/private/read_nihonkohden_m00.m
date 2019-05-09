@@ -1,24 +1,17 @@
-function [dat] = read_nihonkohden_m00(filename, begsample, endsample)
+function [hdr, dat] = read_nihonkohden_m00(filename)
 
-% READ_NIHONKOHDEN_M00 reads data Nihon Kohden EEG system and converts the
-% floating point ASCII values to 16-bit signed integers from *.m00 file
-% format. This function is an adaptation of convert_nkascii2mat.m written
-% by Timothy Ellmore
+% READ_NIHONKOHDEN_M00 reads the header and data from a file in the Nihon Kohden *.m00 format.
+% This implementation is an adaptation of convert_nkascii2mat.m and get_nkheader.m written
+% by Timothy Ellmore, see https://openwetware.org/wiki/Beauchamp:AnalyzeEEGinMatlab.
 %
 % Use as
-%   dat = read_nihonkohden_m00(filename)
+%   [hdr, dat] = read_nihonkohden_m00(filename)
 %
-% This returns a header structure with
-%   hdr.nSamples      number of data points per channel
-%   hdr.nchannels     number of channels sampled during recording
-%   hdr.bsweep        begin sweep (ms)
-%   hdr.sampintms     sampling interval in ms
-%   hdr.binsuV        number of bins per microvolts
-%   hdr.start_time    starting time of recording
-%   hdr.label         char array of channel names
+% This returns a FieldTrip compatible header structure and the data matrix.
 %
-% See also READ_NIHONKOHDEN_HDR
+% See also FT_READ_HEADER, FT_READ_DATA
 
+% Copyright (C) 2007, Timothy.Ellmore@uth.tmc.edu
 % Copyright (C) 2016, Diego Lozano-Soldevilla
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
@@ -39,30 +32,72 @@ function [dat] = read_nihonkohden_m00(filename, begsample, endsample)
 %
 % $Id$
 
-hdr = read_nihonkohden_hdr(filename);
-mult = 10;% a multiplier; divide stored value by this to floats
-nsmp = (endsample-begsample+1);
+% open the ascii file
+fid = fopen_or_error(filename, 'r');
 
-% the name of the ascii file
-fid=fopen(filename,'r');
-
-% skip header information
+%header line 1: acquisition information
 hline1 = fgets(fid);
+
+% get the six different fields in the header, store in cell-array
+hd = textscan(hline1, '%s %s %s %s %s %s');
+fprintf('\nNihon Kohden ASCII EEG header fields:');
+fprintf('\n-------------------------------------');
+
+% number of timepoints
+[txt, ntpoints] = strread(char(hd{1}), '%s%d', 'delimiter', '=');
+fprintf('\n%s is %d', char(txt), ntpoints);
+
+% number of channels sampled
+[txt, nchannels] = strread(char(hd{2}), '%s%d', 'delimiter', '=');
+fprintf('\nNumber of %s is %d', char(txt), nchannels);
+
+% begin sweep in ms
+[txt, bsweep] = strread(char(hd{3}), '%s%f', 'delimiter', '=');
+fprintf('\n%s is %2.2f', char(txt), bsweep);
+
+% sampling interval in ms
+[txt, sampintms] = strread(char(hd{4}), '%s%f', 'delimiter', '=');
+fprintf('\n%s is %1.2f (or %2.1f Hz)', char(txt), sampintms, (1000./sampintms));
+
+% bins per micro volt
+[txt, binsuV] = strread(char(hd{5}), '%s%f', 'delimiter', '=');
+fprintf('\n%s is %1.2f', char(txt), binsuV);
+
+% start time
+tt = char(hd{6});
+start_time = tt(end-7:end);
+fprintf('\nStart Time is %s\n', start_time);
+
+% header line 2: names of recording channels
 hline2 = fgets(fid);
 
-fprintf('\nWill read from %d to %d sample points: %d seconds \n',begsample,endsample,nsmp/hdr.Fs);
+% channel names as cell-array
+ch_names = textscan(hline2, '%s');
 
-dc = textscan(fid,'%f',hdr.nChans*nsmp,'delimiter','\n','headerlines',begsample-1);
-df = dc{1};clear dc;
-%df = df.*mult; % multiply by 10, don't forget to divide when reading in data!
+% convert it into a FieldTrip header
+hdr.Fs          = 1000./sampintms;
+hdr.nChans      = nchannels;
+hdr.nSamples    = ntpoints;
+hdr.nSamplesPre = 0;
+hdr.nTrials     = 1;
+hdr.label       = ch_names{1};
 
-%fprintf('converting ASCII floats to 16-bit signed ints');
+% keep the original header details
+hdr.orig.hline1     = hline1;
+hdr.orig.hline2     = hline2;
+hdr.orig.binsuV     = binsuV;
+hdr.orig.bsweep     = bsweep;
+hdr.orig.ntpoints   = ntpoints;
+hdr.orig.sampintms  = sampintms;
+hdr.orig.start_time = start_time;
 
-dat = reshape(df,hdr.nChans,nsmp);
-%clear df;
-%dat = int16(dat)./mult;
-%dat = double(dat);
-% should we double it? No clue why the int16 and the multiplier.
-% Later convert data has to be multiplied to transform it into microvolts
-% nkdata.eeg=nkdata.eeg./nkdata.multiplier; (Diego)
+if nargout>1
+  % read the remaining data
+  dat = textscan(fid, '%f', hdr.nChans*hdr.nSamples);
+  dat = reshape(dat{1}, hdr.nChans, hdr.nSamples);
+  % calibrate the data to obtain uV values
+  dat = dat ./ hdr.orig.binsuV;
+end
+
+% close input file
 fclose(fid);

@@ -30,24 +30,19 @@ function [el, lab] = read_elec(fn)
 %
 % $Id$
 
-fid = fopen(fn, 'rt');
-if fid~=-1
+fid = fopen_or_error(fn, 'rt');
 
-  % read the number of electrodes
-  Nel = sscanf(fgetl(fid), '%d'); 
- 
-  % read the electrode triangle, lambda and mu
-  for i=1:Nel
-    str = fgetl(fid);
-    el(i,:)  = sscanf(str, '%f %f %f')';
-    indx = find(str=='!');
-    if (indx)
-      lab(i,:) = sprintf('%6s', str((indx+1):length(str)));
-    end
+% read the number of electrodes
+Nel = sscanf(fgetl(fid), '%d'); 
+
+% read the electrode triangle, lambda and mu
+for i=1:Nel
+  str = fgetl(fid);
+  el(i,:)  = sscanf(str, '%f %f %f')';
+  indx = find(str=='!');
+  if (indx)
+    lab(i,:) = sprintf('%6s', str((indx+1):length(str)));
   end
-  fclose(fid);
-
-else
-  ft_error('unable to open file');
 end
+fclose(fid);
 

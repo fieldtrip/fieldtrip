@@ -143,7 +143,7 @@ switch version
       try
         volume.(fn{i}) = reshape(volume.(fn{i}), volume.dim);
       catch
-        ft_warning('could not reshape "%s" to the expected dimensions', fn{i});
+        ft_notice('could not reshape "%s" to the dimensions of the volume', fn{i});
       end
     end
 

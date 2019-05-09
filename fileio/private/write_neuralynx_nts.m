@@ -31,7 +31,7 @@ if ~isa(nts.TimeStamp, 'uint64')
   ft_error('timestamps should be uint64');
 end
 
-fid  = fopen(filename, 'wb', 'ieee-le');
+fid  = fopen_or_error(filename, 'wb', 'ieee-le');
 
 % construct the header
 buf  = [];

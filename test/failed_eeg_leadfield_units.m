@@ -2,10 +2,9 @@ function failed_eeg_leadfield_units
 
 % MEM 2000mb
 % WALLTIME 00:10:00
+% DEPENDENCY ft_convert_units ft_datatype_sens ft_convert_vol_sens ft_compute_leadfield current_dipole
 
-% TEST test_meg_leadfield_units
-% TEST ft_convert_units ft_datatype_sens ft_convert_vol_sens ft_compute_leadfield current_dipole
-[pnt, tri] = icosahedron162;
+[pnt, tri] = mesh_sphere(162);
 sel = find(pnt(:,3)>0);
 
 elec = [];
@@ -80,6 +79,6 @@ assert(abs(n4/n0-2)<0.3);
 
 figure
 ft_plot_dipole(dip, [1 0 0], 'unit', 'm');
-ft_plot_vol(vol3, 'edgecolor', 'none', 'facealpha', 0.2);
+ft_plot_headmodel(vol3, 'edgecolor', 'none', 'facealpha', 0.2);
 ft_plot_sens(elec);
 ft_plot_topo3d(elec.chanpos, lf3(:,1), 'facealpha', 0.6);

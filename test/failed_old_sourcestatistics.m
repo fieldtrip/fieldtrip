@@ -3,8 +3,6 @@ function failed_old_sourcestatistics
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_old_sourcestatistics
-
 % this script tests the fixsource function which is part of checkdata
 
 %-------------------------------------
@@ -22,7 +20,7 @@ for k = 1:10
 end
 
 %create grad-structure and add to data
-[pnt,tri] = icosahedron162;
+[pnt,tri] = mesh_sphere(162);
 nrm       = normals(pnt, tri, 'vertex');
 pnt       = pnt.*12;
 [srt,ind] = sort(pnt(:,3),'descend');
@@ -43,8 +41,8 @@ vol.r = 8;
 
 %prepare leadfields and grid
 cfg                 = [];
-cfg.grid.resolution = 1.5;
-cfg.vol             = vol;
+cfg.sourcemodel.resolution = 1.5;
+cfg.headmodel       = vol;
 cfg.grad            = grad;
 grid                = ft_prepare_leadfield(cfg);
 
@@ -88,7 +86,7 @@ cfgsd            = [];
 cfgsd.projectmom = 'yes';
 sd               = ft_sourcedescriptives(cfgsd, source);
 
-cfgs.grid.filter = sd.avg.filter;
+cfgs.sourcemodel.filter = sd.avg.filter;
 cfgs.method      = 'pcc';
 cfgs.keepmom     = 'yes';
 
@@ -102,7 +100,7 @@ end
 
 for k = 1:numel(insidevec)
   kk = insidevec(k);
-  cfgs.grid.leadfield{kk} = sd.leadfield{kk}*sd.avg.ori{kk};
+  cfgs.sourcemodel.leadfield{kk} = sd.leadfield{kk}*sd.avg.ori{kk};
 end
 spcc = ft_sourceanalysis(cfgs, freq);
 
@@ -125,7 +123,7 @@ cfgs.keepcov   = 'yes';
 cfgs.keepleadfield = 'yes';
 slcmv          = ft_sourceanalysis(cfgs,tlck);
 
-cfgs.grid.filter = slcmv.avg.filter;
+cfgs.sourcemodel.filter = slcmv.avg.filter;
 cfgs.rawtrial    = 'yes';
 slcmv2           = ft_sourceanalysis(cfgs, tlck);
 

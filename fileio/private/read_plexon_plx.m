@@ -60,7 +60,7 @@ else
 end
 
 % read header info from file, use Matlabs for automatic byte-ordering
-fid = fopen(filename, 'r', 'ieee-le');
+fid = fopen_or_error(filename, 'r', 'ieee-le');
 fseek(fid, 0, 'eof');
 siz = ftell(fid);
 fseek(fid, 0, 'bof');

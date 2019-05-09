@@ -191,7 +191,7 @@ if ~strcmp(filename, datafile) && ~any(strcmp(dataformat, {'ctf_ds', 'ctf_old', 
   dataformat = ft_filetype(filename);   % update the filetype
 end
 
-% for backward compatibility, default is to check when it is not continous
+% for backward compatibility, default is to check when it is not continuous
 if isempty(checkboundary)
   checkboundary = ~ft_getopt(varargin, 'continuous');
 end
@@ -272,7 +272,7 @@ if checkboundary && hdr.nTrials>1
   end
 end
 
-if any(strcmp(dataformat, {'bci2000_dat', 'eyelink_asc', 'gtec_mat', 'gtec_hdf5', 'mega_neurone'}))
+if any(strcmp(dataformat, {'bci2000_dat', 'eyelink_asc', 'gtec_mat', 'gtec_hdf5', 'mega_neurone', 'nihonkohden_m00'}))
   % caching for these formats is handled in the main section and in ft_read_header
 else
   % implement the caching in a data-format independent way
@@ -303,7 +303,7 @@ end
 switch dataformat
   
   case {'4d' '4d_pdf', '4d_m4d', '4d_xyz'}
-    [fid, message] = fopen(datafile,'rb','ieee-be');
+    fid = fopen_or_error(datafile,'rb','ieee-be');
     % determine the type and size of the samples
     sampletype = lower(hdr.orig.Format);
     switch sampletype
@@ -442,7 +442,7 @@ switch dataformat
     ft_hastoolbox('NPMK', 1);
     % ensure that the filename contains a full path specification,
     % otherwise the low-level function fails
-    [p,~,~] = fileparts(filename);
+    p = fileparts(filename);
     if isempty(p)
       filename = which(filename);
     end
@@ -529,6 +529,13 @@ switch dataformat
     
   case 'ced_spike6mat'
     dat = read_spike6mat_data(filename, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx);
+    
+  case {'curry_dat', 'curry_cdt'} 
+    [orig, dat] = load_curry_data_file(datafile);
+    if orig.nMultiplex
+        dat = dat';
+    end
+    dat = dat(chanindx, begsample:endsample);
     
   case {'deymed_ini' 'deymed_dat'}
     % the data is stored in a binary *.dat file
@@ -662,9 +669,9 @@ switch dataformat
     end
     
   case 'egi_mff_v2'
-    % ensure that the EGI_MFF toolbox is on the path
-    ft_hastoolbox('egi_mff', 1);
-    % ensure that the JVM is running and the jar file is on the path
+    % ensure that the EGI_MFF_V2 toolbox is on the path
+    ft_hastoolbox('egi_mff_v2', 1);
+
     %%%%%%%%%%%%%%%%%%%%%%
     %workaround for MATLAB bug resulting in global variables being cleared
     globalTemp=cell(0);
@@ -676,6 +683,7 @@ switch dataformat
     end
     %%%%%%%%%%%%%%%%%%%%%%
     
+    % ensure that the JVM is running and the jar file is on the path
     mff_setup;
     
     %%%%%%%%%%%%%%%%%%%%%%
@@ -689,7 +697,7 @@ switch dataformat
     end
     clear globalTemp globalList varNames varList;
     %%%%%%%%%%%%%%%%%%%%%%
-    
+
     if isunix && filename(1)~=filesep
       % add the full path to the dataset directory
       filename = fullfile(pwd, filename);
@@ -697,6 +705,7 @@ switch dataformat
       % add the full path, including drive letter
       filename = fullfile(pwd, filename);
     end
+
     % pass the header along to speed it up, it will be read on the fly in case it is empty
     dat = read_mff_data(filename, 'sample', begsample, endsample, chanindx, hdr);
     
@@ -769,7 +778,7 @@ switch dataformat
     elseif strcmp(sampletype, 'double')
       samplesize  = 8;
     end
-    [fid,message] = fopen(datafile,'rb','ieee-le');
+    fid = fopen_or_error(datafile,'rb','ieee-le');
     % jump to the desired data
     fseek(fid, offset*samplesize*hdr.nChans, 'cof');
     % read the desired data
@@ -894,10 +903,10 @@ switch dataformat
   case 'itab_raw'
     if any(hdr.orig.data_type==[0 1 2])
       % big endian
-      fid = fopen(datafile, 'rb', 'ieee-be');
+      fid = fopen_or_error(datafile, 'rb', 'ieee-be');
     elseif any(hdr.orig.data_type==[3 4 5])
       % little endian
-      fid = fopen(datafile, 'rb', 'ieee-le');
+      fid = fopen_or_error(datafile, 'rb', 'ieee-le');
     else
       ft_error('unsuppported data_type in itab format');
     end
@@ -932,7 +941,7 @@ switch dataformat
     end
     
   case 'jaga16'
-    fid = fopen(filename, 'r');
+    fid = fopen_or_error(filename, 'r');
     fseek(fid, hdr.orig.offset + (begtrial-1)*hdr.orig.packetsize, 'bof');
     buf = fread(fid, (endtrial-begtrial+1)*hdr.orig.packetsize/2, 'uint16');
     fclose(fid);
@@ -962,7 +971,7 @@ switch dataformat
     end
     
     iEpoch = unique(trlind(begsample:endsample));
-    sfid = fopen(filename, 'r');
+    sfid = fopen_or_error(filename, 'r');
     dat  = zeros(hdr.nChans, endsample - begsample + 1);
     for i = 1:length(iEpoch)
       dat(:, trlind(begsample:endsample) == iEpoch(i)) =...
@@ -998,19 +1007,21 @@ switch dataformat
   case {'mpi_ds', 'mpi_dap'}
     [hdr, dat] = read_mpi_ds(filename);
     dat = dat(chanindx, begsample:endsample); % select the desired channels and samples
+
   case 'nervus_eeg'
     hdr = read_nervus_header(filename);
-    %Nervus usually has discontinuous EEGs, e.g. pauses in clinical
-    %recordings. The code currently concatenates these trials.
-    %We could set this up as separate "trials" later.
-    %We could probably add "boundary events" in EEGLAB later
+    % Nervus usually has discontinuous EEGs, e.g. pauses in clinical
+    % recordings. The code currently concatenates these trials.
+    % We could set this up as separate "trials" later.
+    % We could probably add "boundary events" in EEGLAB later
     dat = zeros(0,size(hdr.orig.Segments(1).chName,2));
-    for segment=1:size(hdr.orig.Segments,2);
+    for segment=1:size(hdr.orig.Segments,2)
       range = [1 hdr.orig.Segments(segment).sampleCount];
       datseg = read_nervus_data(hdr.orig,segment, range, chanindx);
       dat = cat(1,dat,datseg);
     end
     dimord = 'samples_chans';
+
   case 'neuroscope_bin'
     switch hdr.orig.nBits
       case 16
@@ -1099,15 +1110,15 @@ switch dataformat
     dat = read_nexstim_nxe(filename, begsample, endsample, chanindx);
     
   case 'nihonkohden_m00'
-    if isfield(hdr, 'dat')
-      % this is inefficient, since it keeps the complete data in memory
-      % but it does speed up subsequent read operations without the user
-      % having to care about it
-      dat = hdr.dat;
+    if isfield(hdr, 'orig') && isfield(hdr.orig, 'dat')
+      % caching is memory-wise inefficient, since it keeps the complete data in memory
+      % but it does speed up subsequent read operations without the user having to care about it
+      dat = hdr.orig.dat;
     else
-      dat = read_nihonkohden_m00(filename, begsample, endsample);
+      [hdr, dat] = read_nihonkohden_m00(filename);
     end
-    dat = dat(chanindx,begsample:endsample);
+    % make the selection of channels and samples
+    dat = dat(chanindx, begsample:endsample);
     
   case 'nihonkohden_eeg'
     dat = read_brainstorm_data(filename, hdr, begsample, endsample, chanindx);

@@ -3,7 +3,7 @@ function test_ft_appendtimelock
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST ft_appendtimelock append_common ft_datatype_timelock
+% DEPENDENCY ft_appendtimelock append_common ft_datatype_timelock
 
 % (C) Johanna Zumer
 

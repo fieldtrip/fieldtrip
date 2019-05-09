@@ -18,11 +18,11 @@ CFLAGS	 = $(INCPATH)
 
 all: libbuffer.lib
 
-libbuffer.lib: tcpserver.obj tcpsocket.obj tcprequest.obj clientrequest.obj dmarequest.obj cleanup.obj util.obj printstruct.obj swapbytes.obj extern.obj endianutil.obj socketserver.obj
+libbuffer.lib: tcpserver.obj tcpsocket.obj tcprequest.obj clientrequest.obj dmarequest.obj cleanup.obj util.obj print.obj swap.obj extern.obj endian.obj socketserver.obj
 	del libbuffer.lib
-	 $(AR) libbuffer.lib +tcpserver +tcpsocket +tcprequest +clientrequest +dmarequest +cleanup +util +printstruct +swapbytes +extern +endianutil +socketserver
+	 $(AR) libbuffer.lib +tcpserver +tcpsocket +tcprequest +clientrequest +dmarequest +cleanup +util +print +swap +extern +endian +socketserver
 	 
-%.obj: %.c buffer.h message.h swapbytes.h socket_includes.h unix_includes.h
+%.obj: %.c buffer.h message.h swap.h socket_includes.h unix_includes.h
 	$(CC) $(CFLAGS) -c $*.c
 
 clean:

@@ -41,7 +41,7 @@ function h = ft_plot_dipole(pos, ori, varargin)
 %
 % $Id$
 
-ws = warning('on', 'MATLAB:divideByZero');
+ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 amplitudescale = ft_getopt(varargin, 'scale',     'none');
@@ -112,13 +112,13 @@ if ~holdflag
 end
 
 % these are reused
-[unitsphere.pos, unitsphere.tri] = icosahedron642;
-[unitcylinder.pos, unitcylinder.tri] = cylinder(36, 2);
+[unitsphere.pos, unitsphere.tri] = mesh_sphere(642);
+[unitcylinder.pos, unitcylinder.tri] = mesh_cylinder(36, 2);
 
 for i=1:size(pos,1)
   amplitude = norm(ori(:,i));
   ori(:,i) = ori(:,i) ./ amplitude;
-  
+
   % scale the dipole diameter and length with its amplitude
   if strcmp(amplitudescale, 'length') || strcmp(amplitudescale, 'both')
     this_length    = length*amplitude;
@@ -132,50 +132,50 @@ for i=1:size(pos,1)
     this_diameter  = diameter;
     this_thickness = thickness;
   end
-  
+
   % start with a unit sphere and cylinder
   sphere  = unitsphere;
   stick   = unitcylinder;
   sphere.pos = ft_warp_apply(scale([0.5 0.5 0.5]), sphere.pos, 'homogeneous'); % the diameter should be 1
   stick.pos  = ft_warp_apply(scale([0.5 0.5 0.5]), stick.pos, 'homogeneous');  % the length and thickness should be 1
   stick.pos  = ft_warp_apply(translate([0 0 0.5]), stick.pos, 'homogeneous');  % it should start in the origin
-  
+
   % scale the sphere
   sx = this_diameter;
   sy = this_diameter;
   sz = this_diameter;
   sphere.pos = ft_warp_apply(scale([sx sy sz]),     sphere.pos, 'homogeneous');
-  
+
   % translate the sphere
   tx = pos(i,1);
   ty = pos(i,2);
   tz = pos(i,3);
   sphere.pos = ft_warp_apply(translate([tx ty tz]), sphere.pos, 'homogeneous');
-  
+
   % scale the stick
   sx = this_thickness;
   sy = this_thickness;
   sz = this_length;
   stick.pos = ft_warp_apply(scale([sx sy sz]),     stick.pos, 'homogeneous');
-  
+
   % first rotate the stick to point along the x-axis
   stick.pos = ft_warp_apply(rotate([0 90 0]),    stick.pos, 'homogeneous');
   % then rotate the stick in the desired direction
   [az, el] = cart2sph(ori(1,i), ori(2,i), ori(3,i));
   stick.pos = ft_warp_apply(rotate([0 -el*180/pi 0]),  stick.pos, 'homogeneous'); % rotate around y-axis
   stick.pos = ft_warp_apply(rotate([0  0 az*180/pi]),  stick.pos, 'homogeneous'); % rotate around z-axis
-  
+
   % translate the stick
   tx = pos(i,1);
   ty = pos(i,2);
   tz = pos(i,3);
   stick.pos = ft_warp_apply(translate([tx ty tz]), stick.pos, 'homogeneous');
-  
+
   % plot the sphere and the stick
   p1 = ft_plot_mesh(sphere, 'vertexcolor', 'none', 'edgecolor', false, 'facecolor', color, 'facealpha', alpha);
   h = cat(2, h(:)', p1(:)');
   clear p1;
-  
+
   p2 = ft_plot_mesh(stick,  'vertexcolor', 'none', 'edgecolor', false, 'facecolor', color, 'facealpha', alpha);
   h = cat(2, h(:)', p2(:)');
   clear p2;
@@ -193,4 +193,4 @@ if ~nargout
   clear h
 end
 
-warning(ws); %revert to original state
+ft_warning(ws); %revert to original state

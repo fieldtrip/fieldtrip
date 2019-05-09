@@ -41,19 +41,19 @@ for iVar = 1:size(variables,1)
         if isempty(varName)
             % special case for TilingSet
             for iArray = 1:length(matStruct.value)
-                mffObj.add(java.lang.Integer(matStruct.value(iArray)));
+                mffObj.add(javaObject('java.lang.Integer', matStruct.value(iArray)));
             end
         else
             if ~isempty(matStruct.(lower(varName)))
-                jList = java.util.ArrayList;
+                jList = javaObject('java.util.ArrayList');
                 for iArray = 1:length(matStruct.(lower(varName)))
                     if isempty(varArray) || isempty(varArray{1})
-                        mffObj2 = java.util.ArrayList;
+                        mffObj2 = javaObject('java.util.ArrayList');
                     else
                         mffObj2 = javaObject( [ 'com.egi.services.mff.api.' varName(1:end-1) ]);
                     end
                     if isreal(matStruct.(lower(varName))(iArray))
-                        jList.add(java.lang.Integer(matStruct.(lower(varName))(iArray)));
+                        jList.add(javaObject('java.lang.Integer', matStruct.(lower(varName))(iArray)));
                     else
                         jList.add(mff_setobj(mffObj2, matStruct.(lower(varName))(iArray), varArray));
                     end

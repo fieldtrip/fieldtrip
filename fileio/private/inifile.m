@@ -8,7 +8,7 @@ function readsett = inifile(fileName,operation,keys,style)
 %                   'deletekeys'(deletes keys and their values - if they exist),
 %                   'read'      (reads values as strings),
 %                   'write'     (writes values given as strings),
-%   - keys:         cell array of STRINGS; max 5 columns, min
+%   - keys:         cell-array of STRINGS; max 5 columns, min
 %                   3 columns. Each row has the same number of columns. The columns are:
 %                   'section':      section name string (the root is considered if empty or not given)
 %                   'subsection':   subsection name string (the root is considered if empty or not given)
@@ -35,7 +35,7 @@ function readsett = inifile(fileName,operation,keys,style)
 %
 %   Later, you can read them out. Additionally, if any of them won't
 %   exist, a default value will be returned (if the 5-th column is given as below).
-%   
+%
 %   readKeys = {'measurement','person','name','','John Doe';...
 %               'measurement','protocol','id','','0';...
 %               'application','','description','','none'};
@@ -177,16 +177,13 @@ end
 % CREATES a new, empty file (rewrites an existing one)
 %----------------------------
 if strcmpi(operation,'new')
-    fh = fopen(fileName,'w');
-    if fh == -1
-        ft_error(['File: ''' fileName ''' can not be (re)created']);
-    end
+    fh = fopen_or_error(fileName,'w');
     fclose(fh);
     return
 
 %----------------------------
 % READS key-value pairs out
-%----------------------------    
+%----------------------------
 elseif (strcmpi(operation,'read'))
     if n < 5
         defaultValues = cellstrings(m,1);
@@ -195,17 +192,17 @@ elseif (strcmpi(operation,'read'))
     end
     readsett = defaultValues;
     keysIn = keys(:,1:3);
-    [secsExist,subsecsExist,keysExist,readValues,so,eo] = findkeys(fileName,keysIn);    
+    [secsExist,subsecsExist,keysExist,readValues,so,eo] = findkeys(fileName,keysIn);
     ind = find(keysExist);
     if ~isempty(ind)
         readsett(ind) = readValues(ind);
-    end   
+    end
     return
-    
+
 %----------------------------
 % WRITES key-value pairs to an existing or non-existing
 % file (file can even be empty)
-%----------------------------  
+%----------------------------
 elseif (strcmpi(operation,'write'))
     if m < 1
         ft_error('At least one key is needed when writing keys');
@@ -215,18 +212,18 @@ elseif (strcmpi(operation,'write'))
     end
     writekeys(fileName,keys,style);
     return
-    
+
 %----------------------------
 % DELETES key-value pairs out
-%----------------------------        
+%----------------------------
 elseif (strcmpi(operation,'deletekeys'))
     deletekeys(fileName,keys);
-    
-    
-    
+
+
+
 else
     ft_error('Unknown operation for INIFILE.');
-end      
+end
 
 
 
@@ -264,27 +261,24 @@ line = [];
 currSection = '';
 currSubSection = '';
 
-fh = fopen(fileName,'r');
-if fh == -1
-    ft_error(['File: ''' fileName ''' does not exist or can not be opened.']);
-end
+fh = fopen_or_error(fileName,'r');
 
 try
     %--- Searching for the keys - their values and start and end locations in bytes
     while 1
-       
+
         pos1 = ftell(fh);
         line = fgetl(fh);
         if line == -1               % end of file, exit
             line = [];
             break
         end
-        [status,readValue,readKey] = processiniline(line);        
+        [status,readValue,readKey] = processiniline(line);
         if (status == 1)            % (new) section found
             % Keys that were found as belonging to any previous section
             % are now assumed as located (because another
             % section is found here which could even be a repeated one)
-            keyInd = find( ~keysLocated & strcmpi(keysIn(:,1),currSection) );  
+            keyInd = find( ~keysLocated & strcmpi(keysIn(:,1),currSection) );
             if length(keyInd)
                 keysLocated(keyInd) = 1;
                 nKeysLocated = nKeysLocated + length(keyInd);
@@ -292,7 +286,7 @@ try
             currSection = readValue;
             currSubSection = '';
             % Indices to non-located keys belonging to current section
-            keyInd = find( ~keysLocated & strcmpi(keysIn(:,1),currSection) );  
+            keyInd = find( ~keysLocated & strcmpi(keysIn(:,1),currSection) );
             if ~isempty(keyInd)
                 secsExist(keyInd) = 1;
             end
@@ -343,9 +337,9 @@ try
             end
         else
                                     % general text found (even empty line(s))
-        end       
+        end
     %--- End searching
-    end    
+    end
     fclose(fh);
 catch
     fclose(fh);
@@ -361,7 +355,7 @@ function writekeys(fileName,keys,style)
 % Writes keys to the section and subsection pair
 % If any of the keys doesn't exist, a new key is added to
 % the end of the section-subsection pair otherwise the key is updated (changed).
-% Keys is a 4-column cell array of strings.
+% Keys is a 4-column cell-array of strings.
 
 global NL_CHAR;
 
@@ -374,14 +368,11 @@ if n < 4
 end
 
 % Get keys position first using findkeys
-keysIn = keys;    
+keysIn = keys;
 [secsExist,subSecsExist,keysExist,readValues,so,eo] = findkeys(fileName,keys(:,1:3));
 
 % Read the whole file's contents out
-fh = fopen(fileName,'r');
-if fh == -1
-    ft_error(['File: ''' fileName ''' does not exist or can not be opened.']);
-end
+fh = fopen_or_error(fileName,'r');
 try
     dataout = fscanf(fh,'%c');
 catch
@@ -391,10 +382,7 @@ end
 fclose(fh);
 
 %--- Rewriting the file -> writing the refined contents
-fh = fopen(fileName,'w');
-if fh == -1
-    ft_error(['File: ''' fileName ''' does not exist or can not be opened.']);
-end
+fh = fopen_or_error(fileName,'w');
 try
     tab1 = [];
     if strcmpi(style,'tabbed')
@@ -402,18 +390,18 @@ try
     end
     % Proper sorting of keys is cruical at this point in order to avoid
     % inproper key-writing.
-    
+
     % Find keys with -1 offsets - keys with non-existing section AND
-    % subsection - keys that will be added to the end of the file   
+    % subsection - keys that will be added to the end of the file
     fs = length(dataout);       % file size in bytes
     nAddedKeys = 0;
     ind = find(so==-1);
-    if ~isempty(ind)        
+    if ~isempty(ind)
         so(ind) = (fs+10);      % make sure these keys will come to the end when sorting
         eo(ind) = (fs+10);
         nAddedKeys = length(ind);
     end
-    
+
     % Sort keys according to start- and end-offsets
     [dummy,ind] = sort(so,1);
     so = so(ind);
@@ -423,7 +411,7 @@ try
     secsExist = secsExist(ind);
     subSecsExist = subSecsExist(ind);
     readValues = readValues(ind);
-    values = keysIn(:,4);   
+    values = keysIn(:,4);
 
     % Find keys with equal start offset (so) and additionally sort them
     % (locally). These are non-existing keys, including the ones whose
@@ -445,7 +433,7 @@ try
             ii = ii + 1;
         end
     end
-    
+
     % Final (re)sorting
     so = so(fullInd);
     eo = eo(fullInd);
@@ -454,11 +442,11 @@ try
     secsExist = secsExist(fullInd);
     subSecsExist = subSecsExist(fullInd);
     readValues = readValues(fullInd);
-    values = keysIn(:,4);    
-    
+    values = keysIn(:,4);
+
     % Refined data - datain
     datain = [];
-    
+
     for ii=1:nKeys      % go through all the keys, existing and non-existing ones
         if ii==1
             from = 1;   % from byte-offset of original data (dataout)
@@ -469,21 +457,21 @@ try
             end
         end
         to = min(so(ii)-1,fs);  % to byte-offset of original data (dataout)
-        
+
         if ~isempty(dataout)
             datain = [datain dataout(from:to)];    % the lines before the key
         end
-        
+
         if length(datain) && (~(datain(end)==RETURN || datain(end)==NEWLINE))
             datain = [datain, sprintf(NL_CHAR)];
         end
 
         tab = [];
-        if ~keysExist(ii) 
+        if ~keysExist(ii)
             if ~secsExist(ii) && ~isempty(keysIn(ii,1))
                 if ~isempty(keysIn{ii,1})
                     datain = [datain sprintf(['%s' NL_CHAR],['[' keysIn{ii,1} ']'])];
-                end                
+                end
                 % Key-indices with the same section as this, ii-th key (even empty sections are considered)
                 ind = find( strcmpi( keysIn(:,1), keysIn(ii,1)) );
                 % This section exists at all keys  corresponding to the same section from know on (even the empty ones)
@@ -533,14 +521,11 @@ if n < 3
 end
 
 % Get keys position first
-keysIn = keys;    
+keysIn = keys;
 [secsExist,subSecsExist,keysExist,readValues,so,eo] = findkeys(fileName,keys(:,1:3));
 
 % Read the whole file's contents out
-fh = fopen(fileName,'r');
-if fh == -1
-    ft_error(['File: ''' fileName ''' does not exist or can not be opened.']);
-end
+fh = fopen_or_error(fileName,'r');
 try
     dataout = fscanf(fh,'%c');
 catch
@@ -550,15 +535,12 @@ end
 fclose(fh);
 
 %--- Rewriting the file -> writing the refined contents
-fh = fopen(fileName,'w');
-if fh == -1
-    ft_error(['File: ''' fileName ''' does not exist or can not be opened.']);
-end
+fh = fopen_or_error(fileName,'w');
 try
     ind = find(keysExist);
     nExistingKeys = length(ind);
     datain = dataout;
-    
+
     if nExistingKeys
         % Filtering - retain only the existing keys...
         fs = length(dataout);       % file size in bytes
@@ -569,10 +551,10 @@ try
         [so,ind] = sort(so);
         eo = eo(ind);
         keysIn = keysIn(ind,:);
-        
+
         % Refined data - datain
         datain = [];
-        
+
         for ii=1:nExistingKeys  % go through all the existing keys
             if ii==1
                 from = 1;   % from byte-offset of original data (dataout)
@@ -580,10 +562,10 @@ try
                 from = eo(ii-1)+1;
             end
             to = so(ii)-1;  % to byte-offset of original data (dataout)
-            
+
             if ~isempty(dataout)
                 datain = [datain dataout(from:to)];    % the lines before the key
-            end       
+            end
         end
         from = eo(ii)+1;
         to = length(dataout);
@@ -591,7 +573,7 @@ try
             datain = [datain dataout(from:to)];
         end
     end
-    
+
     fprintf(fh,'%c',datain);
 catch
     fclose(fh);
@@ -629,8 +611,8 @@ elseif (line(1) == '{') &&...                % subsection found
        (line(end) == '}') && (length(line) >= 3)
     value = lower(line(2:end-1));
     status = 2;
-else    
-    pos = findstr(line,'=');
+else
+    pos = strfind(line,'=');
     if ~isempty(pos)                        % key-value pair found
         status = 3;
         key = lower(line(1:pos-1));
@@ -655,9 +637,9 @@ if isnumeric(str);
     outstr = str;
     return
 end
-ind = find( ~isspace(str) );        % indices of the non-space characters in the str    
+ind = find( ~isspace(str) );        % indices of the non-space characters in the str
 if isempty(ind)
-    outstr = [];        
+    outstr = [];
 else
     outstr = str( ind(1):ind(end) );
 end
@@ -666,7 +648,7 @@ end
 
 %------------------------------------
 function cs = cellstrings(m,n)
-% Creates a m x n cell array of empty strings - ''
+% Creates a m x n cell-array of empty strings - ''
 cs = cell(m,n);
 for ii=1:m
     for jj=1:n

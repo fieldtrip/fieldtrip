@@ -17,7 +17,7 @@ function [ChannelLabels, Time, Frequency, Data, Info] = read_besa_tfc(FILENAME)
 %       ConditionName: name of analyzed condition
 %       NumbeOfTrials: Number of trials on which the data is based
 %       StatisticsCorrection: Type of statistics correction for multiple testing
-%       EvokedSignalSubtraction: Type of evoked signal subtraction 
+%       EvokedSignalSubtraction: Type of evoked signal subtraction
 
 % Copyright (C) 2005, Vladimir Litvak
 %
@@ -40,7 +40,7 @@ function [ChannelLabels, Time, Frequency, Data, Info] = read_besa_tfc(FILENAME)
 % $Id$
 
 fp = fopen(FILENAME);
-   
+
 VersionNumber = fscanf(fp,'VersionNumber=%s ',1);
 DataType = fscanf(fp,'DataType=%s ',1);
 ConditionName = fscanf(fp,'ConditionName=%s ',1);
@@ -77,7 +77,7 @@ while i<1000
     end
     i=i+1;
 end
-    
+
 % Generate return values
 % FIXME the following statement does not work for MATLAB 7.2 on XP (see mail from Stephan Bickel)
 Time = [TimeStartInMS:TimeIntervalInMS:(NumberTimeSamples-1)*TimeIntervalInMS+TimeStartInMS];
@@ -89,14 +89,14 @@ else
         'StatisticsCorrection',{StatisticsCorrection},'EvokedSignalSubtraction',{EvokedSignalSubtraction});
 end
 
-if isempty(findstr(DataType,'COH'))
+if ~contains(DataType,'COH')
     for Channel=1:NumberChannels
         ChannelLabels(Channel) = cellstr(fscanf(fp,'%s ',1));
     end
 else
     for Channel=1:NumberChannels
         ChannelLabels(Channel) = cellstr(fscanf(fp,'%s ',3));
-    end    
+    end
 end
 
 ChannelLabels=char(ChannelLabels);

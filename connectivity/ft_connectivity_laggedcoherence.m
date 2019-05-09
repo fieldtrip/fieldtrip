@@ -16,7 +16,7 @@ function [lcoh] = ft_connectivity_laggedcoherence(cfg,freqout)
 % the time resolution in freqout.
 %
 % This function must be called separately for each frequency of interest. To analyse
-% multiple frequencies, we advise the use of a for loop like this:
+% multiple frequencies, you can use a for-loop like this:
 %   cfg_F             = [];
 %   cfg_F.method      = 'wavelet';
 %   cfg_F.output      = 'fourier';
@@ -32,8 +32,8 @@ function [lcoh] = ft_connectivity_laggedcoherence(cfg,freqout)
 %       cfg_LC.foi    = foi(counter);
 %       width         = cfg_F.width/cfg_F.foi;
 %       cfg_F.toi     = data.time{1}(1) + ceil(fs*width/2)/fs : ...   %from:
-%         cfg_LC.lag/cfg_F.foi : ...                     %in steps of size:
-%         data.time{1}(end) - ceil(fs*width/2)/fs;                     %to:
+%         cfg_LC.lag/cfg_F.foi : ...                      %in steps of size:
+%         data.time{1}(end) - ceil(fs*width/2)/fs;                      %to:
 %       freqout       = ft_freqanalysis(cfg_F,data);
 %       lcoh(counter) = ft_connectivityanalysis(cfg_LC,freqout);
 %   end
@@ -72,7 +72,7 @@ function [lcoh] = ft_connectivity_laggedcoherence(cfg,freqout)
 %                      see FT_CHANNELCOMBINATION for details
 %   cfg.autocmb      = 'yes' or 'no' (default='no'). Adds all auto-
 %                      combinations of cfg.channel to cfg.channelcmb
-%   cfg.trialsets    = cell array with per cell the set of trials over
+%   cfg.trialsets    = cell-array with per cell the set of trials over
 %                      which lcoh is calculated. Each cell must contain 'all' or a
 %                      1xN vector of trial indices. Default={'all'}. Note that this
 %                      differs from the required format of cfg.trials in e.g.
@@ -207,13 +207,13 @@ switch cfg.timeresolved
     hasdata         = false(nrep,cfg.nlags);
     nsmplslaggedcps = zeros(cfg.nlags,nrep);
     lagwidth        = zeros(1,cfg.nlags);
-    
+
     for lagindx=1:cfg.nlags
       % select all pairs of timepoints with relative lag cfg.lag (identified with precision cfg.precision)
       lagwidth(lagindx) = cfg.lag*cyclelength*lagindx;
       lagwidth(lagindx) = dtim(find(abs(dtim-lagwidth(lagindx))==min(abs(dtim(:)-lagwidth(lagindx))),1));
       [t1, t2]          = find(dtim==lagwidth(lagindx));
-      
+
       % calculate laggedcrossproducts and power per channelcmb and trial
       for trialindx=1:nrep
         % get the spectrum for this trial and frequency
@@ -234,7 +234,7 @@ switch cfg.timeresolved
         end
       end
     end
-    
+
     % calculate lagged coherence
     if strcmp('lcoh',cfg.output)
       laggedcoh         = complex(nan(ntrialsets,nchancmb,cfg.nlags));
@@ -283,7 +283,7 @@ switch cfg.timeresolved
           lcoh.dimord      = 'rep_chan_rep';
         end
       end
-      
+
       % calculate lagged crossspectra and corresponding power spectra
     elseif csdflag
       laggedcrsspctrm    = complex(zeros(ntrialsets,nchancmb,cfg.nlags));
@@ -343,24 +343,24 @@ switch cfg.timeresolved
         end
       end
     end
-    
+
   case 'yes'
     % method-specfic checks
     if cfg.nlags>1
       ft_error('when calculating timeresolved lcoh, cfg.nlags must be set to 1');
     end
-    
+
     % select pairs of timepoints with relative lag cfg.lag (identified with precision cfg.precision)
     lagwidth            =  cfg.lag*cyclelength;
     lagwidth            =  dtim(find(abs(dtim-lagwidth)==min(abs(dtim(:)-lagwidth)),1));
     [t1, t2]            =  find(dtim==lagwidth);
-    
+
     % initiate some variables (dependent on nr of timepoints)
     ntoi                =   length(t1);
     laggedcrossproduct  =   complex(zeros(nchancmb,ntoi,nrep));
     power               =   complex(zeros(nchancmb,ntoi,2,nrep));
     hasdata             =   false(nrep,ntoi);
-    
+
     % calculate laggedcrossproducts and power per channel, time of interest, and trial
     for trialindx=1:nrep
       % get the spectrum for this trial and frequency
@@ -379,7 +379,7 @@ switch cfg.timeresolved
         hasdata(trialindx,tcounter)             = true;
       end
     end
-    
+
     % calculate lagged coherence
     if strcmp('lcoh',cfg.output)
       ntrialsets  = length(cfg.trialsets);
@@ -423,7 +423,7 @@ switch cfg.timeresolved
         end
         lcoh.dimord      = 'rep_chan_time';
       end
-      
+
       % calculate lagged crossspectra and corresponding power spectra
     elseif csdflag
       laggedcrsspctrm      = complex(nan(ntrialsets,nchancmb,ntoi));

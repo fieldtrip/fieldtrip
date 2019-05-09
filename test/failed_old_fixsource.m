@@ -3,8 +3,6 @@ function failed_old_fixsource
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_old_fixsource
-
 % this script tests the fixsource function which is part of ft_checkdata
 
 %-------------------------------------
@@ -22,7 +20,7 @@ for k = 1:10
 end
 
 %create grad-structure and add to data
-[pnt,tri] = icosahedron162;
+[pnt,tri] = mesh_sphere(162);
 nrm       = normals(pnt, tri, 'vertex');
 pnt       = pnt.*12;
 [srt,ind] = sort(pnt(:,3),'descend');
@@ -43,8 +41,8 @@ vol.r = 8;
 
 %prepare leadfields and grid
 cfg                 = [];
-cfg.grid.resolution = 1.5;
-cfg.vol             = vol;
+cfg.sourcemodel.resolution = 1.5;
+cfg.headmodel       = vol;
 cfg.grad            = grad;
 grid                = ft_prepare_leadfield(cfg);
 
@@ -85,7 +83,7 @@ cfgs.keepleadfield = 'yes';
 source         = ft_sourceanalysis(cfgs,freq);
 sdics          = ft_checkdata(source, 'sourcerepresentation', 'new');
 
-cfgs.grid.filter = sdics.filter;
+cfgs.sourcemodel.filter = sdics.filter;
 cfgs.method      = 'pcc';
 cfgs.keepmom     = 'yes';
 source           = ft_sourceanalysis(cfgs, freq);
@@ -105,7 +103,7 @@ cfgs.fixedori = 'yes';
 source        = ft_sourceanalysis(cfgs, freq);
 sdics2        = ft_checkdata(source, 'sourcerepresentation', 'new');
 
-cfgs.grid.filter = sdics2.filter;
+cfgs.sourcemodel.filter = sdics2.filter;
 cfgs.method      = 'pcc';
 cfgs.keepmom     = 'yes';
 
@@ -118,7 +116,7 @@ else
 end
 for k = 1:numel(insidevec)
   kk = insidevec(k);
-  cfgs.grid.leadfield{kk} = sdics2.leadfield{kk}*sdics2.ori{kk};
+  cfgs.sourcemodel.leadfield{kk} = sdics2.leadfield{kk}*sdics2.ori{kk};
 end
 source = ft_sourceanalysis(cfgs, freq);
 spcc1f = ft_checkdata(source, 'sourcerepresentation', 'new', 'haspow', 'yes');
@@ -126,10 +124,10 @@ spcc1f = ft_checkdata(source, 'sourcerepresentation', 'new', 'haspow', 'yes');
 
 % alternative
 % append a mom to the grid as (3xN) matrix
-cfgs.grid.mom = zeros(size(grid.pos))';
+cfgs.sourcemodel.mom = zeros(size(sourcemodel.pos))';
 for k = 1:numel(insidevec)
   kk = insidevec(k);
-  cfgs.grid.mom(:,kk) = sdics2.ori{kk};
+  cfgs.sourcemodel.mom(:,kk) = sdics2.ori{kk};
 end
 %FIXME there's an issue here with mom being expected to be Nx3 and 3xN in beamformer_pcc
 source = ft_sourceanalysis(cfgs, freq);
@@ -160,7 +158,7 @@ cfgs.keepleadfield = 'yes';
 source         = ft_sourceanalysis(cfgs,tlck);
 slcmv          = ft_checkdata(source, 'sourcerepresentation', 'new');
 
-cfgs.grid.filter = slcmv.filter;
+cfgs.sourcemodel.filter = slcmv.filter;
 cfgs.rawtrial    = 'yes';
 %cfgs.keepfilter  = 'no';
 source           = ft_sourceanalysis(cfgs, tlck);

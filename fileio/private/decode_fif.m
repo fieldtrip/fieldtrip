@@ -43,7 +43,7 @@ if isfield(orig, 'neuromag_header')
   
   filename = tempname;
   % write the binary blob to disk, byte-by-byte to avoid any swapping between little and big-endian content
-  F = fopen(filename, 'w');
+  F = fopen_or_error(filename, 'w');
   fwrite(F, orig.neuromag_header, 'uint8');
   fclose(F);
   % read the content of the file using the standard reading functions
@@ -62,7 +62,7 @@ end
 if isfield(orig, 'neuromag_isotrak')
   filename = tempname;
   % write the binary blob to disk, byte-by-byte to avoid any swapping between little and big-endian content
-  F = fopen(filename, 'w');
+  F = fopen_or_error(filename, 'w');
   fwrite(F, orig.neuromag_isotrak, 'uint8');
   fclose(F);
   % read the content of the file using the standard reading functions
@@ -74,7 +74,7 @@ end
 if isfield(orig, 'neuromag_hpiresult')
   filename = tempname;
   % write the binary blob to disk, byte-by-byte to avoid any swapping between little and big-endian content
-  F = fopen(filename, 'w');
+  F = fopen_or_error(filename, 'w');
   fwrite(F, orig.neuromag_hpiresult, 'uint8');
   fclose(F);
   % read the content of the file using the standard reading functions

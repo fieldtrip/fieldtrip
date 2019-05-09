@@ -1,13 +1,13 @@
 function CVerr = cvglmnet(x,y,nfolds,foldid,type,family,options,verbous)
-% Do crossvalidation of glmnet model. The coordinate descent algorithm 
+% Do crossvalidation of glmnet model. The coordinate descent algorithm
 % chooses a set of lambda to optimize over based on the input given in
 % the options struct.Parameter tuning should be done in such a way that for
 % a fixed alpha, a set of lambda values are evaluated. Basically it does
 % not matter if lambda corresponds across alpha values, as each cv-plot
 % should inspected seperatly.
 % So e.g. to find optimal tuning parameters, fit a total of 10 alpha
-% values, beeing alpha = 0:0.1:1.lambdas will then be chosen according to 
-% the specific alpha. 
+% values, beeing alpha = 0:0.1:1.lambdas will then be chosen according to
+% the specific alpha.
 % Call: CVerr = cvglmnet(x,y,nfolds,foldid,type,family,options,verbous)
 % Example:
 % x=randn(100,2000);
@@ -16,14 +16,14 @@ function CVerr = cvglmnet(x,y,nfolds,foldid,type,family,options,verbous)
 % CVerr=cvglmnet(x,y,100,[],'response','gaussian',glmnetSet,1);
 % CVerr=cvglmnet(x,g2,100,[],'response','binomial',glmnetSet,1);
 % x         : Covariates
-% y         : Response (For now only elastic net = continous data supported
+% y         : Response (For now only elastic net = continuous data supported
 % nfolds    : How many folds to evaluate. nfolds = size(x,1) for LOOCV
 % foldid    : Possibility for supplying own folding series. [] for nothing
 % type      : Used in the glmnetPredict routine. (Now only "response" works)
 % family    : Used in glmnet routine. (Now only "gaussian" works)
 % options   : See function glmnetSet()
 % verbous   : Print model plot
-% 
+%
 % Written by Bjørn Skovlund Dissing (27-02-2010)
 glmnet_object = glmnet(x, y, family,options);
 options.lambda = glmnet_object.lambda;

@@ -119,7 +119,13 @@ fb   = istrue(cfg.feedback);
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
-  if fb, fprintf('selecting %d trials\n', length(cfg.trials)); end
+  if fb
+    if islogical(cfg.trials)
+      fprintf('selecting %d trials\n', sum(cfg.trials));
+    else
+      fprintf('selecting %d trials\n', length(cfg.trials));
+    end
+  end
   
   % select trials of interest
   tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'});
@@ -219,8 +225,10 @@ elseif ~isempty(cfg.begsample) || ~isempty(cfg.endsample)
   
   % also correct the sampleinfo
   if isfield(data, 'sampleinfo')
-    data.sampleinfo(:, 1) = data.sampleinfo(:, 1) + begsample - 1;
-    data.sampleinfo(:, 2) = data.sampleinfo(:, 1) + endsample - begsample;
+    sampleinfo = data.sampleinfo;
+    data.sampleinfo = [];
+    data.sampleinfo(:, 1) = sampleinfo(:, 1) + begsample - 1;
+    data.sampleinfo(:, 2) = sampleinfo(:, 1) + endsample - begsample;
   end
   
 elseif ~isempty(cfg.trl)

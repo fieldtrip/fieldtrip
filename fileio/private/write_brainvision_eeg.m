@@ -5,7 +5,7 @@ function write_brainvision_eeg(filename, hdr, dat, event)
 % multiplexed and stored in ieee-le float32 format.
 %
 % Use as
-%   write_brainvision_eeg(filename, hdr, dat)
+%   write_brainvision_eeg(filename, hdr, dat, evt)
 %
 % See also READ_BRAINVISION_EEG, READ_BRAINVISION_VHDR, READ_BRAINVISION_VMRK
 
@@ -65,7 +65,7 @@ datafile_without_path   = [f '.eeg'];
 
 
 % open the data file and write the binary data
-fid = fopen(datafile, 'wb', 'ieee-le');
+fid = fopen_or_error(datafile, 'wb', 'ieee-le');
 if length(size(dat))>2
   ft_warning('writing segmented data as if it were continuous');
   for i=1:ntrl
@@ -78,7 +78,7 @@ end
 fclose(fid);
 
 % open the header file and write the ascii header information
-fid = fopen(headerfile, 'wb');
+fid = fopen_or_error(headerfile, 'wb');
 fprintf(fid, 'Brain Vision Data Exchange Header File Version 1.0\r\n');
 fprintf(fid, '; Data created by FieldTrip\r\n');
 fprintf(fid, '\r\n');
@@ -106,7 +106,7 @@ end
 fclose(fid);
 
 % open the marker file and write the ascii marker information
-fid = fopen(markerfile, 'wb');
+fid = fopen_or_error(markerfile, 'wb');
 fprintf(fid, 'Brain Vision Data Exchange Marker File, Version 1.0\n');
 fprintf(fid, '\n');
 fprintf(fid, '[Common Infos]\n');
@@ -121,14 +121,14 @@ fprintf(fid, '; Commas in type or description text are coded as "\1".\n');
 for i=1:length(event)
   type  = event(i).type;          % type is always a string
   descr = event(i).value;         % value can be empty, string or numeric
-  if isempty(descr),
+  if isempty(descr)
     descr = '';
   elseif isnumeric(descr)
     descr = num2str(descr);
   end
   pos = num2str(event(i).sample); % sample is always numeric, hence convert to string
   siz = event(i).duration;        % duration can be empty or numeric
-  if isempty(siz),
+  if isempty(siz)
     siz = '1';
   else
     siz = num2str(siz);

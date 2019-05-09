@@ -3,7 +3,7 @@ function test_bug2539
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST ft_datatype ft_checkdata
+% DEPENDENCY ft_datatype ft_checkdata
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2539.mat'))
 

@@ -3,7 +3,7 @@ function test_bug2377
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_datatype_sens ft_compute_leadfield
+% DEPENDENCY ft_datatype_sens ft_compute_leadfield
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2377/eeg_lf_scaling.mat'));
 
@@ -11,7 +11,7 @@ sens = rmfield(sens, 'tra');
 
 % initially the electrodes are not on the skin surface
 figure
-ft_plot_vol(vol);
+ft_plot_headmodel(vol);
 ft_plot_sens(sens);
 camlight
 alpha 0.5
@@ -20,7 +20,7 @@ alpha 0.5
 
 % now they are on the skin surface
 figure
-ft_plot_vol(vol);
+ft_plot_headmodel(vol);
 ft_plot_sens(sens);
 camlight
 alpha 0.5
@@ -37,7 +37,7 @@ lf3 = ft_compute_leadfield([0 0 0.05], sens, vol, 'chanunit', [], 'dipoleunit', 
 lf4 = ft_compute_leadfield([0 0 0.05], sens, vol, 'chanunit', repmat({'uV'}, 1, 128), 'dipoleunit', 'nA*m');
 
 figure
-% ft_plot_vol(vol);
+% ft_plot_headmodel(vol);
 ft_plot_topo3d(sens.chanpos, lf4(:,1));
 colorbar
 

@@ -9,7 +9,7 @@ function [timelock] = ft_timelockbaseline(cfg, timelock)
 %   cfg.baseline     = [begin end] (default = 'no')
 %   cfg.channel      = cell-array, see FT_CHANNELSELECTION
 %   cfg.parameter    = field for which to apply baseline normalization, or
-%                      cell array of strings to specify multiple fields to normalize
+%                      cell-array of strings to specify multiple fields to normalize
 %                      (default = 'avg')
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -88,7 +88,7 @@ if isempty(cfg.parameter)
   end
 end
 
-% make sure cfg.parameter is a cell array of strings
+% make sure cfg.parameter is a cell-array of strings
 if (~isa(cfg.parameter, 'cell'))
   cfg.parameter = {cfg.parameter};
 end

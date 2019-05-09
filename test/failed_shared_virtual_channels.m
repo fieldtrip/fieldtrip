@@ -2,9 +2,7 @@ function failed_shared_virtual_channels
 
 % MEM 1500mb
 % WALLTIME 00:10:00
-
-% TEST test_shared_virtual_channels
-% TEST ft_timelockanalysis ft_sourceanalysis ft_channelselection ft_databrowser
+% DEPENDENCY ft_timelockanalysis ft_sourceanalysis ft_channelselection ft_databrowser
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended/hdm.mat'));
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended/source_diff'));
@@ -31,10 +29,10 @@ tlock                 = ft_timelockanalysis(cfg, data_cmb);
 
 cfg             = [];
 cfg.method      = 'lcmv';
-cfg.vol         = hdm;
-cfg.grid.pos    = source_diff.pos([maxcohindx maxpowindx], :);
-cfg.grid.inside = 1:size(cfg.grid.pos, 1);
-cfg.grid.outside = [];
+cfg.headmodel   = hdm;
+cfg.sourcemodel.pos    = source_diff.pos([maxcohindx maxpowindx], :);
+cfg.sourcemodel.inside = 1:size(cfg.sourcemodel.pos, 1);
+cfg.sourcemodel.outside = [];
 cfg.keepfilter  = 'yes';
 source_idx      = ft_sourceanalysis(cfg, tlock);
 

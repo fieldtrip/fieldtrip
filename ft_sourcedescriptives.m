@@ -91,10 +91,10 @@ cfg = ft_checkconfig(cfg, 'deprecated',  {'transform'}); % please use ft_math in
 
 % set the defaults
 cfg.transform        = ft_getopt(cfg, 'transform',        []);
-cfg.projectmom       = ft_getopt(cfg, 'projectmom',       'no');% if yes -> svdfft
+cfg.projectmom       = ft_getopt(cfg, 'projectmom',       'no'); % if yes -> svdfft
 cfg.numcomp          = ft_getopt(cfg, 'numcomp',          1);
-cfg.powmethod        = ft_getopt(cfg, 'powmethod',        []);% see below
-cfg.cohmethod        = ft_getopt(cfg, 'cohmethod',        []);% see below
+cfg.powmethod        = ft_getopt(cfg, 'powmethod',        []); % see below
+cfg.cohmethod        = ft_getopt(cfg, 'cohmethod',        []); % see below
 cfg.feedback         = ft_getopt(cfg, 'feedback',         'textbar');
 cfg.supmethod        = ft_getopt(cfg, 'supmethod',        'none');
 cfg.resolutionmatrix = ft_getopt(cfg, 'resolutionmatrix', 'no');
@@ -163,7 +163,7 @@ if strcmp(cfg.projectmom, 'yes')
     ft_error('unsupported powmethod in combination with projectmom');
   end
   if isempty(cfg.cohmethod)
-    cfg.cohmethod = 'regular';% set the default
+    cfg.cohmethod = 'regular'; % set the default
   elseif ~strcmp(cfg.cohmethod, 'regular')
     ft_error('unsupported cohmethod in combination with projectmom');
   end
@@ -869,7 +869,7 @@ if strcmp(source.method, 'jackknife') || strcmp(source.method, 'bootstrap') || s
 
   % determine the (original) number of trials in the data
   if strcmp(source.method, 'bootstrap') %VERANDERD ER ZAT GEEN .RESAMPLE IN SOURCE
-    Ntrials = size(source.trial,2);% WAS size(source.resample, 2);
+    Ntrials = size(source.trial,2); % WAS size(source.resample, 2);
   else
     Ntrials = length(source.trial);
   end
@@ -922,14 +922,14 @@ if strcmp(source.method, 'jackknife') || strcmp(source.method, 'bootstrap') || s
     if isfield(dip(trial), 'rv'),     sqrdip.rv     = sqrdip.rv    + (dip(trial).rv   ).^2; end
     if isfield(dip(trial), 'noise'),  sqrdip.noise  = sqrdip.noise + (dip(trial).noise).^2; end
     if isfield(dip(trial), 'nai'),    sqrdip.nai    = sqrdip.nai   + (dip(trial).nai  ).^2; end
-    % do the same for the cell array with mom
+    % do the same for the cell-array with mom
     if isfield(dip(trial), 'mom')
       for i=1:length(dip(1).mom)
         sumdip.mom{i} = sumdip.mom{i} +  dip(trial).mom{i};
         sqrdip.mom{i} = sqrdip.mom{i} + (dip(trial).mom{i}).^2;
       end
     end
-    % do the same for the cell array with csd
+    % do the same for the cell-array with csd
     if isfield(dip(trial), 'csd')
       for i=1:length(dip(1).csd)
         sumdip.csd{i} = sumdip.csd{i} +  dip(trial).csd{i};
@@ -945,8 +945,8 @@ if strcmp(source.method, 'jackknife') || strcmp(source.method, 'bootstrap') || s
   if isfield(sumdip, 'rv'),     dipmean.rv     = sumdip.rv    / length(dip); end
   if isfield(sumdip, 'noise'),  dipmean.noise  = sumdip.noise / length(dip); end
   if isfield(sumdip, 'nai'),    dipmean.nai    = sumdip.nai   / length(dip); end
-  % for the cell array with mom, this is done further below
-  % for the cell array with csd, this is done further below
+  % for the cell-array with mom, this is done further below
+  % for the cell-array with csd, this is done further below
 
   % the estimates for variance and SEM are biased if we are working with the jackknife/bootstrap
   % determine the proper variance scaling that corrects for this bias
@@ -985,7 +985,7 @@ if strcmp(source.method, 'jackknife') || strcmp(source.method, 'bootstrap') || s
   if isfield(sumdip, 'noise' ), dipsem.noise  = (dipvar.noise /Ntrials).^0.5; end
   if isfield(sumdip, 'nai' ),   dipsem.nai    = (dipvar.nai   /Ntrials).^0.5; end
 
-  % compute the mean and SEM over all repetitions for the cell array with mom
+  % compute the mean and SEM over all repetitions for the cell-array with mom
   if isfield(dip(trial), 'mom')
     for i=1:length(dip(1).mom)
       dipmean.mom{i} = sumdip.mom{i}/length(dip);
@@ -994,7 +994,7 @@ if strcmp(source.method, 'jackknife') || strcmp(source.method, 'bootstrap') || s
     end
   end
 
-  % compute the mean and SEM over all repetitions for the cell array with csd
+  % compute the mean and SEM over all repetitions for the cell-array with csd
   if isfield(dip(trial), 'csd')
     for i=1:length(dip(1).csd)
       dipmean.csd{i} = sumdip.csd{i}/length(dip);

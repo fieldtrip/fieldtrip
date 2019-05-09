@@ -3,8 +3,6 @@ function failed_old_besa2fieldtrip
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_old_besa2fieldtrip
-
 % Test the besa2fieldtrip function, which reads an object from a BESA file
 % and returns it as FieldTrip object (e.g. timelocked, freq, source).
 %

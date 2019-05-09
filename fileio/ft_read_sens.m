@@ -9,38 +9,21 @@ function [sens] = ft_read_sens(filename, varargin)
 %
 % Additional options should be specified in key-value pairs and can be
 %   'fileformat'     = string, see the list of supported file formats (the default is determined automatically)
-%   'senstype'       = string, can be 'eeg' or 'meg', specifies which type of sensors to read from the file (default = 'eeg')
+%   'senstype'       = string, can be 'eeg', 'meg' or 'nirs', specifies which type of sensors to read from the file (default = 'eeg')
 %   'coordsys'       = string, 'head' or 'dewar' (default = 'head')
-%   'coilaccuracy'   = can be empty or a number (0, 1 or 2) to specify the accuracy (default = [])
+%   'coilaccuracy'   = scalar, can be empty or a number (0, 1 or 2) to specify the accuracy (default = [])
 %
-% An electrode definition contain the following fields
-%   elec.elecpos = Nx3 matrix with carthesian (x,y,z) coordinates of each
-%                  electrode
-%   elec.label   = cell-array of length N with the label of each electrode
-%   elec.chanpos = Nx3 matrix with coordinates of each sensor
-%
-% A gradiometer definition generally consists of multiple coils per channel, e.g. two
-% coils for a 1st order gradiometer in which the orientation of the coils is
-% opposite. Each coil is described separately and a large "tra" matrix has to be
-% given that defines how the forward computed field is combined over the coils to
-% generate the output of each channel. The gradiometer definition constsis of the
-% following fields
-%   grad.coilpos = Mx3 matrix with the position of each coil
-%   grad.coilori = Mx3 matrix with the orientation of each coil
-%   grad.tra     = NxM matrix with the weight of each coil into each channel
-%   grad.label   = cell-array of length N with the label of each of the channels
-%   grad.chanpos = Nx3 matrix with the positions of each sensor
+% The electrode, gradiometer and optode structures are defined in more detail 
+% in FT_DATATYPE_SENS.
 %
 % Files from the following acquisition systems and analysis platforms file formats
 % are supported.
-%
 %   asa_elc besa_elp besa_pos besa_sfp yokogawa_ave yokogawa_con yokogawa_raw 4d
 %   4d_pdf 4d_m4d 4d_xyz ctf_ds ctf_res4 itab_raw itab_mhd netmeg neuromag_fif
 %   neuromag_mne neuromag_mne_elec neuromag_mne_grad polhemus_fil polhemus_pos
-%   zebris_sfp spmeeg_mat eeglab_set localite_pos artiins_oxy3 matlab
+%   zebris_sfp spmeeg_mat eeglab_set localite_pos artinis_oxy3 artinis_oxyproj matlab
 %
-% See also FT_READ_HEADER, FT_TRANSFORM_SENS, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD,
-% FT_DATATYPE_SENS
+% See also FT_READ_HEADER, FT_DATATYPE_SENS, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD,
 
 % Copyright (C) 2005-2018 Robert Oostenveld
 %
@@ -91,7 +74,12 @@ switch fileformat
     
   case 'artinis_oxy3'
     ft_hastoolbox('artinis', 1);
-    hdr = read_artinis_oxy3(filename);
+    hdr = read_oxy3_header(filename, true);    
+    sens = hdr.opto;
+    
+  case 'artinis_oxyproj'
+    ft_hastoolbox('artinis', 1);
+    hdr = read_oxyproj_header(filename); 
     sens = hdr.opto;
 
   case 'polhemus_pos'
@@ -100,7 +88,7 @@ switch fileformat
   case 'besa_elp'
     ft_error('unknown fileformat for electrodes or gradiometers');
     % the code below does not yet work
-    fid = fopen(filename);
+    fid = fopen_or_error(filename);
     % the ascii file contains: type, label, angle, angle
     tmp = textscan(fid, '%s%s%f%f');
     fclose(fid);
@@ -200,6 +188,15 @@ switch fileformat
       ft_error('neither electrode nor gradiometer information is present');
     end
 
+  case {'curry_dat', 'curry_cdt'}  
+    
+    hdr = ft_read_header(filename);
+    
+    if ~isempty(hdr.orig.sensorpos)
+      sens.elecpos = hdr.orig.sensorpos';
+      sens.label   = hdr.label(1:size(sens.elecpos, 1));
+    end  
+    
   case 'fcdc_buffer'
     % the online header should have a binary blob with the sensor information
     hdr = ft_read_header(filename, 'headerformat', fileformat);
@@ -276,7 +273,7 @@ switch fileformat
     sens.fid.label = sens.fid.label(:);
 
   case '4d_el_ascii'
-    fid = fopen(filename, 'rt');
+    fid = fopen_or_error(filename, 'rt');
     c = textscan(fid, '%s%s%f%f%f');
     l = c{:,1}; % label
     s = c{:,2}; % status, it can be 'Collected' or empty
@@ -308,7 +305,7 @@ switch fileformat
 
   case {'localite_pos','localite_ins'}
     if ~usejava('jvm') % Using xml2struct requires java
-      fid = fopen(filename);
+      fid = fopen_or_error(filename);
 
       % Read marker-file and store contents in cells of strings
       tmp = textscan(fid,'%s');
@@ -379,7 +376,7 @@ switch fileformat
 
   case 'easycap_txt'
     % Read the file and store all contents in cells of strings
-    fid = fopen(filename);
+    fid = fopen_or_error(filename);
     tmp = textscan(fid,'%s%s%s%s');
     fclose(fid);
 

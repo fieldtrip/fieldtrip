@@ -37,12 +37,12 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %   cfg.artfctdef.zvalue.artfctpeak  = 'yes' or 'no'
 %   cfg.artfctdef.zvalue.interactive = 'yes' or 'no'
 %
-% If you specify artfctpeak='yes', the maximum value of the artifact within its range
-% will be found and saved into cfg.artfctdef.zvalue.peaks.
+% If you specify cfg.artfctdef.zvalue.artfctpeak='yes', the maximum value of the
+% artifact within its range will be found and saved into cfg.artfctdef.zvalue.peaks.
 %
-% If you specify interactive='yes', a GUI will be started and you can manually
-% accept/reject detected artifacts, and/or change the threshold. To control the
-% graphical interface via keyboard, use the following keys:
+% If you specify cfg.artfctdef.zvalue.interactive='yes', a GUI will be started and
+% you can manually accept/reject detected artifacts, and/or change the threshold. To
+% control the graphical interface via keyboard, use the following keys:
 %
 %     q                 : Stop
 %
@@ -608,6 +608,8 @@ delete(h);
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
 ft_postamble previous data
+ft_postamble savevar
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -923,7 +925,7 @@ trlpadsmp = round(artcfg.trlpadding*hdr.Fs);
 channel   = opt.channel;
 
 % determine the channel with the highest z-value to be displayed
-% this is default behaviour but can be overruled in the gui
+% this is default behavior but can be overruled in the gui
 if strcmp(channel, 'artifact')
   [dum, indx] = max(zval);
   sgnind      = zindx(indx);

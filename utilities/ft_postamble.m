@@ -44,6 +44,7 @@ function ft_postamble(cmd, varargin)
 %#function ft_postamble_previous
 %#function ft_postamble_history
 %#function ft_postamble_savevar
+%#function ft_postamble_savefig
 %#function ft_postamble_randomseed
 %#function ft_postamble_hastoolbox
 

@@ -89,12 +89,12 @@ end
 
 % old data structures may use latency/frequency instead of time/freq. It is
 % unclear when these were introduced and removed again, but they were never
-% used by any FieldTrip function itself
-if isfield(source, 'frequency'),
+% used by any FieldTrip function itself.
+if isfield(source, 'frequency')
   source.freq = source.frequency;
   source      = rmfield(source, 'frequency');
 end
-if isfield(source, 'latency'),
+if isfield(source, 'latency')
   source.time = source.latency;
   source      = rmfield(source, 'latency');
 end
@@ -104,10 +104,10 @@ switch version
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % ensure that it has individual source positions
     source = fixpos(source);
-    
+
     % ensure that it is always logical
     source = fixinside(source, 'logical');
-    
+
     % remove obsolete fields
     if isfield(source, 'method')
       source = rmfield(source, 'method');
@@ -130,7 +130,7 @@ switch version
       ft_warning('removing ''avg'', keeping ''trial''');
       source = rmfield(source, 'avg');
     end
-    
+
     if isfield(source, 'avg') && isstruct(source.avg)
       % move the average fields to the main structure
       fn = fieldnames(source.avg);
@@ -145,7 +145,7 @@ switch version
       end % j
       source = rmfield(source, 'avg');
     end
-    
+
     if isfield(source, 'inside')
       % the inside is by definition logically indexed
       probe = find(source.inside, 1, 'first');
@@ -153,27 +153,27 @@ switch version
       % just take the first source position
       probe = 1;
     end
-    
+
     if isfield(source, 'trial') && isstruct(source.trial)
       npos = size(source.pos,1);
-      
+
       % concatenate the fields for each trial and move them to the main structure
       fn = fieldnames(source.trial);
-      
+
       for i=1:length(fn)
         % some fields are descriptive and hence identical over trials
         if strcmp(fn{i}, 'csdlabel')
           source.csdlabel = dat;
           continue
         end
-        
+
         % start with the first trial
         dat    = source.trial(1).(fn{i});
         datsiz = getdimsiz(source, fn{i});
         nrpt   = datsiz(1);
         datsiz = datsiz(2:end);
-        
-        
+
+
         if iscell(dat)
           datsiz(1) = nrpt; % swap the size of pos with the size of rpt
           val  = cell(npos,1);
@@ -188,10 +188,10 @@ switch version
             for k=1:length(indx)
               val{indx(k)}(j,:,:,:) = dat{indx(k)};
             end
-            
+
           end % for all trials
           source.(fn{i}) = val;
-          
+
         else
           % concatenate all data as pos_rpt_etc
           val = nan([datsiz(1) nrpt datsiz(2:end)]);
@@ -217,24 +217,23 @@ switch version
 %             val(:,j,:,:,:) = dat(:);
 %           end % for all trials
 %           source.(fn{i}) = val;
-          
+
         end
       end % for each field
-      
+
       source = rmfield(source, 'trial');
-      
+
     end % if trial
-    
+
     % ensure that it has a dimord (or multiple for the different fields)
     source = fixdimord(source);
-    
+
     % ensure that all data fields have the correct dimensions
     fn = getdatfield(source);
     for i=1:numel(fn)
       dimord = getdimord(source, fn{i});
       dimtok = tokenize(dimord, '_');
-      dimsiz = getdimsiz(source, fn{i});
-      dimsiz(end+1:length(dimtok)) = 1; % there can be additional trailing singleton dimensions
+      dimsiz = getdimsiz(source, fn{i}, numel(dimtok));
       if numel(dimsiz)>=3 && strcmp(dimtok{1}, 'dim1') && strcmp(dimtok{2}, 'dim2') && strcmp(dimtok{3}, 'dim3')
         % convert it from voxel-based representation to position-based representation
         try
@@ -244,13 +243,13 @@ switch version
         end
       end
     end
-      
-    
+
+
   case '2011'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % ensure that it has individual source positions
     source = fixpos(source);
-    
+
     % remove obsolete fields
     if isfield(source, 'xgrid')
       source = rmfield(source, 'xgrid');
@@ -264,15 +263,15 @@ switch version
     if isfield(source, 'transform')
       source = rmfield(source, 'transform');
     end
-    
+
     % ensure that it has a dimord (or multiple for the different fields)
     source = fixdimord(source);
-    
+
   case '2010'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % ensure that it has individual source positions
     source = fixpos(source);
-    
+
     % remove obsolete fields
     if isfield(source, 'xgrid')
       source = rmfield(source, 'xgrid');
@@ -283,15 +282,15 @@ switch version
     if isfield(source, 'zgrid')
       source = rmfield(source, 'zgrid');
     end
-    
+
     % ensure that it has a dimord (or multiple for the different fields)
     source = fixdimord(source);
-    
+
   case '2007'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % ensure that it has individual source positions
     source = fixpos(source);
-    
+
     % remove obsolete fields
     if isfield(source, 'dimord')
       source = rmfield(source, 'dimord');
@@ -305,13 +304,13 @@ switch version
     if isfield(source, 'zgrid')
       source = rmfield(source, 'zgrid');
     end
-    
+
   case '2003'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if isfield(source, 'dimord')
       source = rmfield(source, 'dimord');
     end
-    
+
     if ~isfield(source, 'xgrid') || ~isfield(source, 'ygrid') || ~isfield(source, 'zgrid')
       if isfield(source, 'dim')
         minx = min(source.pos(:,1));
@@ -325,7 +324,7 @@ switch version
         source.zgrid = linspace(minz, maxz, source.dim(3));
       end
     end
-    
+
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     ft_error('unsupported version "%s" for source datatype', version);

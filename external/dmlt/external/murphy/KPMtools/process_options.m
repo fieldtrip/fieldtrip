@@ -51,7 +51,7 @@
 %     [u, v, unused_args] = process_options(varargin, 'u', 0, 'v', 1);
 %
 % then the call func(0, 1, 'u', 5, 'z', 2) will yield no warning,
-% and unused_args will have the value {'z', 2}.  This behaviour is
+% and unused_args will have the value {'z', 2}.  This behavior is
 % useful for functions with options that invoke other functions
 % with options; all options can be passed to the outer function and
 % its unprocessed arguments can be passed to the inner function.

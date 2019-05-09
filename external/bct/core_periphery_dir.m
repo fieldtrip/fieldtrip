@@ -72,7 +72,7 @@ while f;
         % end
         
         max_Qt = max(Qt(Idx));              % make swap with maximal
-        u = find(abs(Qt(Idx)-max_Qt)<1e-10);% increase in core-ness
+        u = find(abs(Qt(Idx)-max_Qt)<1e-10); % increase in core-ness
         u = u(randi(numel(u)));
         Ct(Idx(u)) = ~Ct(Idx(u));
         Idx(u)=[];                          % remove index from consideration

@@ -3,8 +3,6 @@ function failed_old_specest_vs_oldimplementation
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_old_specest_vs_oldimplementation
-
 % read in data from /home/common/testdata (I just my own testdata)
 % data = .....
 
@@ -117,7 +115,7 @@ cfg.foi        = 2:2:20;
 cfg.toi        = data.time{1}(1):0.050:data.time{1}(end);
 cfg.output     = 'powandcsd';
 cfg.taper      = 'hanning';
-cfg.t_ftimwin  = 4 ./ cfg.foi; %ones(length(cfg.foi),1) .* 1.5;%
+cfg.t_ftimwin  = 4 ./ cfg.foi; %ones(length(cfg.foi),1) .* 1.5; %
 cfg.tapsmofrq  = ones(length(cfg.foi),1) * 8;
 cfg.calcdof    = 'yes';
 cfg.correctt_ftimwin = 'no';
@@ -206,7 +204,7 @@ cfg.foi        = 0:2:128;
 cfg.toi        = data.time{1}(1):0.0050:data.time{1}(end);
 cfg.output     = 'pow';
 cfg.taper      = 'hanning';
-cfg.t_ftimwin  = 4 ./ cfg.foi;%ones(length(cfg.foi),1) .* 1.5;%
+cfg.t_ftimwin  = 4 ./ cfg.foi; %ones(length(cfg.foi),1) .* 1.5; %
 cfg.tapsmofrq  = ones(length(cfg.foi),1) * 8;
 cfg.calcdof    = 'yes';
 cfg.correctt_ftimwin = 'no';
@@ -216,7 +214,7 @@ tic; freqnew = ft_freqanalysis(cfg,data); toc
 % old style
 cfg.method     = 'mtmconvol_old';
 cfg.foi = freqnew.freq;
-cfg.t_ftimwin  = 4 ./ cfg.foi;%ones(length(cfg.foi),1) .* 1.5;%
+cfg.t_ftimwin  = 4 ./ cfg.foi; %ones(length(cfg.foi),1) .* 1.5; %
 tic; freqold = ft_freqanalysis(cfg,data); toc
 
 
@@ -288,7 +286,7 @@ cfg.keeptrials = 'yes';
 cfg.keeptapers = 'no';
 %cfg.pad        = 4.24;
 cfg.foi        = 2:1:40;
-cfg.toi        = 0:0.05:4;%data.time{1}(1):(1/data.fsample):data.time{1}(end);
+cfg.toi        = 0:0.05:4; %data.time{1}(1):(1/data.fsample):data.time{1}(end);
 cfg.output     = 'pow';
 cfg.calcdof    = 'yes';
 cfg.correctt_ftimwin = 'no';
@@ -525,7 +523,7 @@ cfg.keeptapers = 'no';
 cfg.width      = 1;
 cfg.pad        = 'maxperlen';
 cfg.foi        = 10:2:40;
-cfg.toi        = 0:0.05:4;%data.time{1}(1):(1/data.fsample):data.time{1}(end);
+cfg.toi        = 0:0.05:4; %data.time{1}(1):(1/data.fsample):data.time{1}(end);
 cfg.output     = 'pow';
 cfg.calcdof    = 'yes';
 cfg.correctt_ftimwin = 'no';
@@ -540,7 +538,7 @@ tic; freqnew = ft_freqanalysis(cfg,data); toc
 cfg.foi = freqnew.freq;
 cfg.method     = 'mtmconvol';
 cfg.taper      = 'hanning';
-cfg.t_ftimwin  = 3 ./ cfg.foi;%ones(length(cfg.foi),1) .* 1.5;%
+cfg.t_ftimwin  = 3 ./ cfg.foi; %ones(length(cfg.foi),1) .* 1.5; %
 tic; freqold = ft_freqanalysis(cfg,data); toc
 
 
@@ -606,7 +604,7 @@ cfg.keeptapers = 'yes';
 cfg.width      = 1;
 cfg.pad        ='maxperlen';
 cfg.foi        = 10:2:40;
-cfg.toi        = 0:0.05:4;%data.time{1}(1):(1/data.fsample):data.time{1}(end);
+cfg.toi        = 0:0.05:4; %data.time{1}(1):(1/data.fsample):data.time{1}(end);
 cfg.output     = 'fourier';
 cfg.calcdof    = 'yes';
 cfg.correctt_ftimwin = 'no';
@@ -620,7 +618,7 @@ tic; freqnew = ft_freqanalysis(cfg,data); toc
 cfg.foi = freqnew.freq;
 cfg.method     = 'mtmconvol';
 cfg.taper      = 'hanning';
-cfg.t_ftimwin  = 3 ./ cfg.foi;%ones(length(cfg.foi),1) .* 1.5;%
+cfg.t_ftimwin  = 3 ./ cfg.foi; %ones(length(cfg.foi),1) .* 1.5; %
 tic; freqold = ft_freqanalysis(cfg,data); toc
 
 
@@ -660,7 +658,7 @@ cfg.keeptrials = 'yes';
 cfg.keeptapers = 'yes';
 cfg.pad        = 6;
 cfg.foi        = 2:5:20;
-cfg.toi        = 0:0.05:4;%data.time{1}(1):(1/data.fsample):data.time{1}(end);
+cfg.toi        = 0:0.05:4; %data.time{1}(1):(1/data.fsample):data.time{1}(end);
 cfg.output     = 'fourier';
 cfg.calcdof    = 'yes';
 cfg.correctt_ftimwin = 'no';

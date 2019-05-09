@@ -1,4 +1,4 @@
-function parcel = ft_sourceparcellate(cfg, source, parcellation)
+function [parcel] = ft_sourceparcellate(cfg, source, parcellation)
 
 % FT_SOURCEPARCELLATE combines the source-reconstruction parameters over the parcels, for
 % example by averaging all the values in the anatomically or functionally labeled parcel.
@@ -104,7 +104,7 @@ end
 source = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical');
 
 % ensure that the source and the parcellation are anatomically consistent
-if ~isalmostequal(source.pos, parcellation.pos, 'abstol', 1000*eps)
+if ~isalmostequal(source.pos, parcellation.pos, 'abstol', 1000000*eps)
   ft_error('the source positions are not consistent with the parcellation, please use FT_SOURCEINTERPOLATE');
 end
 
@@ -446,7 +446,7 @@ x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimens
 y        = x(ix);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTIONS for doing something over the first dimension of a cell array
+% SUBFUNCTIONS for doing something over the first dimension of a cell-array
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function y = cellmean1(x)
 siz = size(x);
@@ -509,7 +509,7 @@ x = cat(1,x{:});
 y = u(:,1)'*x;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTIONS to compute something over the first two dimensions of a cell array
+% SUBFUNCTIONS to compute something over the first two dimensions of a cell-array
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function y = cellmean2(x)
 siz = size(x);

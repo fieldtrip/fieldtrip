@@ -4,13 +4,13 @@
  * 
  * Use as
  *   val = ft_getopt(s, key, default)
- * where s is a structure or a cell array.
+ * where s is a structure or a cell-array.
  *
  * It will return the value of the option, or an empty array if the option was
  * not present.
  *
  * The optional fourth argument allows you to specify whether
- * or not an empty value in the configuration structure/cell array should be
+ * or not an empty value in the configuration structure/cell-array should be
  * interpreted as meaningful. If emptymeaningful = 1, then an empty
  * configuration option will be returned if present. If emptymeaningful = 0,
  * then the specified default will be returned if an empty value is

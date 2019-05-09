@@ -175,7 +175,7 @@ end
 
 % remove duplicates if clustering is to be performed
 if dokmeans && ~isequal(cfg.method, 'pertrial_cluster')
-  [tmpdata, ~, ic] = unique(dat', 'rows');
+  [tmpdata, dum, ic] = unique(dat', 'rows');
   dat = tmpdata';
 
   % count how often each position occurs

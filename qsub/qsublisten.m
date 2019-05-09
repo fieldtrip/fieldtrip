@@ -3,9 +3,9 @@
 % QSUBLISTEN checks whether jobs, submitted by qsubfeval, have been
 % completed. Whenever a job returns, it executes the provided callback function
 % (should be a function handle), with the job ID as an input argument. Results
-% can then be retrieved by calling QSUBGET. If a cell array is provided as
+% can then be retrieved by calling QSUBGET. If a cell-array is provided as
 % a the 'filter' option (see below), the second input argument passed to the
-% callback function will be an index into this cell array (to facilitate
+% callback function will be an index into this cell-array (to facilitate
 % checking which job returned in the callback function).
 %
 % Note that this function is blocking; i.e., it only returns after a
@@ -18,7 +18,7 @@
 %                   maxnum=Inf the function will never return.
 %     filter      = regular expression filter for job IDs to respond to.
 %                   The default tests for jobs generated from the current
-%                   MATLAB process. A cell array of strings can be
+%                   MATLAB process. A cell-array of strings can be
 %                   provided; in that case, exact match is required.
 %     sleep       = number of seconds to sleep between checks (default=0)
 %
@@ -54,7 +54,7 @@ if ischar(filter)
 elseif iscellstr(filter)
   regexpFilt = 0;
 else
-  error('filter should either be a regexp string or cell array of exact-match strings');
+  error('filter should either be a regexp string or cell-array of exact-match strings');
 end
 
 % keep track of which job IDs we have already recognized and fired the callback for
@@ -64,16 +64,16 @@ curPwd = getcustompwd();
 
 num = 0;
 while (num < maxnum)
-  
+
   files = dir();
   for k = 1:numel(files)
-    
+
     % preliminary filter to get just the qsub-specific output files
     jobid = regexp(files(k).name, '^(.*)\.o.*$', 'tokens');
-    
-    if ~isempty(jobid) && isempty(findstr(foundJobs, jobid{1}{1}))
+
+    if ~isempty(jobid) && ~contains(foundJobs, jobid{1}{1})
       jobid = jobid{1}{1};
-      
+
       % wait until not only the stdout file exists, but also the stderr and
       % _output.mat. If we fire the callback before all three files are
       % present, a subsequent call to qsubget will fail
@@ -82,29 +82,29 @@ while (num < maxnum)
       while ~exist(outputfile,'file') || ~isfile(logerr)
         pausejava(0.01);
       end
-    
+
       if (regexpFilt && ~isempty(regexp(jobid, filter, 'once'))) || (~regexpFilt && ~isempty(find(strcmp(jobid, filter))))
-        
+
         if (~regexpFilt && nargin(callback)>1)
           % also provide an index into the filter array
           callback(jobid, find(strcmp(jobid, filter)));
         else
           callback(jobid);
         end
-        
+
         num = num+1;
         foundJobs = [foundJobs '|' jobid];
       end
-      
+
     end
   end
-  
+
   if (sleep > 0)
     pausejava(sleep);
   end
-  
+
 end
-  
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function that detects a file, even with a wildcard in the filename
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

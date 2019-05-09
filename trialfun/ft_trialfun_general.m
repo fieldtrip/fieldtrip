@@ -10,7 +10,7 @@ function [trl, event] = ft_trialfun_general(cfg)
 %   cfg.trialdef.prestim    = latency in seconds (optional)
 %   cfg.trialdef.poststim   = latency in seconds (optional)
 %
-% If you want to read all data from a continous file in segments, you can specify
+% If you want to read all data from a continuous file in segments, you can specify
 %    cfg.trialdef.triallength = duration in seconds (can be Inf)
 %    cfg.trialdef.ntrials     = number of trials
 %
@@ -99,7 +99,7 @@ if isfield(cfg.trialdef, 'triallength')
     % make one long trial with the complete continuous data in it
     trl = [1 hdr.nSamples*hdr.nTrials 0];
   elseif isinf(cfg.trialdef.ntrials)
-    % cut the continous data into as many segments as possible
+    % cut the continuous data into as many segments as possible
     nsamples = round(cfg.trialdef.triallength*hdr.Fs);
     trlbeg   = 1:nsamples:(hdr.nSamples*hdr.nTrials - nsamples + 1);
     trlend   = trlbeg + nsamples - 1;
@@ -230,7 +230,7 @@ end
 
 if usegui && ~isempty(trl)
   % This complicated line just computes the trigger times in seconds and
-  % converts them to a cell array of strings to use in the GUI
+  % converts them to a cell-array of strings to use in the GUI
   eventstrings = cellfun(@num2str, mat2cell((trl(:, 1)- trl(:, 3))./hdr.Fs , ones(1, size(trl, 1))), 'UniformOutput', 0);
   
   % Let us start with handling at least the completely unsegmented case

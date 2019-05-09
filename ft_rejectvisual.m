@@ -39,8 +39,8 @@ function [data] = ft_rejectvisual(cfg, data)
 %                     'range'     range from min to max in each channel
 %                     'kurtosis'  kurtosis, i.e. measure of peakedness of the amplitude distribution
 %                     'zvalue'    mean and std computed over all time and trials, per channel
-%   cfg.latency     = [begin end] in seconds, or 'minperlength', 'maxperlength',
-%                     'prestim', 'poststim' (default = 'maxperlength')
+%   cfg.latency     = [begin end] in seconds, or 'all', 'minperiod', 'maxperiod',
+%                     'prestim', 'poststim' (default = 'all')
 %   cfg.alim        = value that determines the amplitude scaling for the
 %                     channel and trial display, if empty then the amplitude
 %                     scaling is automatic (default = [])
@@ -150,7 +150,7 @@ cfg = ft_checkconfig(cfg, 'renamed',  {'keepchannels',  'keepchannel'});
 % set the defaults
 cfg.channel     = ft_getopt(cfg, 'channel'    , 'all');
 cfg.trials      = ft_getopt(cfg, 'trials'     , 'all', 1);
-cfg.latency     = ft_getopt(cfg, 'latency'    , 'maxperlength');
+cfg.latency     = ft_getopt(cfg, 'latency'    , 'maxperiod');
 cfg.keepchannel = ft_getopt(cfg, 'keepchannel', 'no');
 cfg.keeptrial   = ft_getopt(cfg, 'keeptrial'  , 'no');
 cfg.feedback    = ft_getopt(cfg, 'feedback'   , 'textbar');
@@ -175,37 +175,13 @@ if strcmp(cfg.keepchannel, 'repair')
   cfg = ft_checkconfig(cfg, 'required', 'neighbours');
 end
 
-% determine the duration of each trial
-for i=1:length(data.time)
-  begsamplatency(i) = min(data.time{i});
-  endsamplatency(i) = max(data.time{i});
-end
-
-% determine the latency window which is possible in all trials
-minperlength = [max(begsamplatency) min(endsamplatency)];
-maxperlength = [min(begsamplatency) max(endsamplatency)];
-
-% latency window for averaging and variance computation is given in seconds
-if (strcmp(cfg.latency, 'minperlength'))
-  cfg.latency = [];
-  cfg.latency(1) = minperlength(1);
-  cfg.latency(2) = minperlength(2);
-elseif (strcmp(cfg.latency, 'maxperlength'))
-  cfg.latency = [];
-  cfg.latency(1) = maxperlength(1);
-  cfg.latency(2) = maxperlength(2);
-elseif (strcmp(cfg.latency, 'prestim'))
-  cfg.latency = [];
-  cfg.latency(1) = maxperlength(1);
-  cfg.latency(2) = 0;
-elseif (strcmp(cfg.latency, 'poststim'))
-  cfg.latency = [];
-  cfg.latency(1) = 0;
-  cfg.latency(2) = maxperlength(2);
-end
+selcfg = keepfields(cfg, {'trials', 'channel','latency', 'showcallinfo'});
+data   = ft_selectdata(selcfg, data);
+% restore the provenance information
+[cfg, data] = rollback_provenance(cfg, data);
 
 % apply scaling to the selected channel types to equate the absolute numbers (i.e. fT and uV)
-% make a seperate copy to prevent the original data from being scaled
+% make a separate copy to prevent the original data from being scaled
 tmpdata = data;
 scaled  = false;
 if ~isempty(cfg.eegscale)

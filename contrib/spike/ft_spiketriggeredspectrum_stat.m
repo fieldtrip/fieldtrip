@@ -69,7 +69,7 @@ function [freq] = ft_spiketriggeredspectrum_stat(cfg, spike)
 %   stat.nspikes                    =  nChancmb-by-nFreqs-nTimepoints number
 %                                      of spikes used to compute stat
 %   stat.dimord                     = 'chan_freq_time'
-%   stat.labelcmb                   =  nChancmbs cell array with spike vs
+%   stat.labelcmb                   =  nChancmbs cell-array with spike vs
 %                                      LFP labels
 %   stat.(cfg.method)               =  nChancmb-by-nFreqs-nTimepoints  statistic
 %   stat.freq                       =  1xnFreqs array of frequencies
@@ -437,7 +437,7 @@ P = exp(-Z).*...
 function [resLen] = resultantlength(angles)
 
 n = sum(~isnan(angles),1);
-resLen = abs(nansum(angles,1))./n;%calculate the circular variance
+resLen = abs(nansum(angles,1))./n; %calculate the circular variance
 
 function [y] = ppc(crss)
 
@@ -458,7 +458,7 @@ function [cfg] = trialselection(cfg,spike)
 nTrials = size(spike.trialtime,1);
 if  strcmp(cfg.trials, 'all')
   cfg.trials = 1:nTrials;
-elseif islogical(cfg.trials)
+elseif islogical(cfg.trials) || all(cfg.trials==0 | cfg.trials==1)
   cfg.trials = find(cfg.trials);
 end
 cfg.trials = sort(cfg.trials(:));

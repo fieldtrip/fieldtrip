@@ -121,11 +121,11 @@ elseif strcmp(sfmethod, 'trivariate')
   end
   
   % create an Ntriplet x 3 index matrix, to be used below
-  [~,i2] = match_str(channeltriplet(:,1),freq.label);
+  [dum,i2] = match_str(channeltriplet(:,1),freq.label);
   cmbindx(:,1) = i2;
-  [~,i2] = match_str(channeltriplet(:,2),freq.label);
+  [dum,i2] = match_str(channeltriplet(:,2),freq.label);
   cmbindx(:,2) = i2;
-  [~,i2] = match_str(channeltriplet(:,3),freq.label);
+  [dum,i2] = match_str(channeltriplet(:,3),freq.label);
   cmbindx(:,3) = i2;
   
 elseif strcmp(sfmethod, 'bivariate_conditional')
@@ -138,7 +138,7 @@ elseif strcmp(sfmethod, 'bivariate_conditional')
   % this method requires a channeltriplet
   channeltriplet = cell(0,3);
   
-  % ensure channelcnd to be a cell array of cell arrays
+  % ensure channelcnd to be a cell-array of cell arrays
   for k = 1:size(channelcmb,1)
     if ~iscell(channelcmb{k,3})
       channelcmb{k,3} = {channelcmb{k,3}};
@@ -159,7 +159,7 @@ elseif strcmp(sfmethod, 'bivariate_conditional')
   ok      = true(size(tmp,1),1);
   tmpindx = zeros(size(tmp));
   for k = 1:size(tmpindx,1)
-    [~, tmpindx(k,:)] = match_str(tmp(k,:)', utmp);
+    [dum, tmpindx(k,:)] = match_str(tmp(k,:)', utmp);
     tmptmpindx = tmpindx(k,:);
     tmptmpindx = tmptmpindx([1 2 3;1 3 2;2 1 3;2 3 1;3 1 2;3 2 1]);
     if ~isempty(intersect(tmpindx(1:(k-1),:), tmptmpindx, 'rows'))
@@ -217,7 +217,7 @@ if strcmp(sfmethod, 'bivariate')
   list2 = char(channelcmb(:,2)); siz2 = size(list2,2);
   ix    = 1:min(siz1,siz2);
   npair = sum(sum(list1(:,ix)~=list2(:,ix),2)~=0);
-  fprintf('computing pairwise non-parametric spectral factorization on %d channel pairs\n', npair);%size(channelcmb,1) - numel(unique(channelcmb(:))));
+  fprintf('computing pairwise non-parametric spectral factorization on %d channel pairs\n', npair); %size(channelcmb,1) - numel(unique(channelcmb(:))));
 elseif strcmp(sfmethod, 'bivariate_conditional')
   % no text
 elseif strcmp(sfmethod, 'multivariate')
@@ -433,7 +433,7 @@ elseif strcmp(sfmethod, 'bivariate')
     cmbindx     = zeros(size(channelcmb));
     ok          = true(size(cmbindx,1), 1);
     for k = 1:size(cmbindx,1)
-      [~, cmbindx(k,:)] = match_str(channelcmb(k,:)', freq.label);
+      [dum, cmbindx(k,:)] = match_str(channelcmb(k,:)', freq.label);
       if ~isempty(intersect(cmbindx(1:(k-1),:), cmbindx(k,:), 'rows'))
         ok(k) = false;
       elseif cmbindx(k,1)==cmbindx(k,2)
@@ -533,7 +533,7 @@ elseif strcmp(sfmethod, 'bivariate_conditional')
   ok      = true(size(tmp,1),1);
   tmpindx = zeros(size(tmp));
   for k = 1:size(tmpindx,1)
-    [~, tmpindx(k,:)] = match_str(tmp(k,:)', utmp);
+    [dum, tmpindx(k,:)] = match_str(tmp(k,:)', utmp);
     if ~isempty(intersect(tmpindx(1:(k-1),:), [tmpindx(k,:);tmpindx(k,[2 1])], 'rows'))
       ok(k) = false;
     elseif tmpindx(k,1)==tmpindx(k,2)

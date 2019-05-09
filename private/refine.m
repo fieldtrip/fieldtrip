@@ -69,7 +69,7 @@ switch lower(method)
       ntri   = size(tri,1);
       ntex   = size(texture,1);
       
-      assert(ntex==ntri, 'invalid size of texture');
+      assert(ntex==npnt, 'invalid size of texture');
       
       insert = spalloc(3*npnt,3*npnt,3*ntri);
       trir  = zeros(4*ntri,3);      % allocate memory for the new triangles

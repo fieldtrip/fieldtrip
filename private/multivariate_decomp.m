@@ -78,8 +78,8 @@ end
 
 % perform the decomposition in a svd-based subspace
 if ~isempty(strfind(method, 'svd'))
-  [ux,sx,~] = svd(B(x,x));
-  [uy,sy,~] = svd(B(y,y));
+  [ux,sx] = svd(B(x,x));
+  [uy,sy] = svd(B(y,y));
   
   if thr(1)<1
     keepx = cumsum(diag(sx))./sum(diag(sx))<=thr(1); keepx(1) = true;

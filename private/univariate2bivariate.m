@@ -156,7 +156,7 @@ switch dtype
         data = rmfield(data, 'powdimord');
         % powindx = [nvox+(1:nvox) nvox+(1:nvox); cmb*ones(1,nvox) nvox+(1:nvox)]';
         powindx = [repmat(ncmb*nvox+(1:nvox)',[ncmb 1]) reshape(repmat(ncmb*nvox+cmb(:)', [nvox 1]),[nvox*ncmb 1]); ncmb*nvox+(1:nvox)' ncmb*nvox+(1:nvox)'];
-        data.pos = [repmat(data.pos, [ncmb+1 1])];% FIXME come up with something reshape( repmat(data.pos(cmb,:),[nvox 1]);data.pos data.pos];
+        data.pos = [repmat(data.pos, [ncmb+1 1])]; % FIXME come up with something reshape( repmat(data.pos(cmb,:),[nvox 1]);data.pos data.pos];
         data.inside = reshape(repmat(data.inside(:), [1 ncmb+1])+repmat(nvox*(0:ncmb), [nvox 1]), [nvox*(ncmb+1) 1]);
         if ~isempty(data.outside)
           data.outside = reshape(repmat(data.outside(:), [1 ncmb+1])+repmat(nvox*(0:ncmb), [nvox 1]), [nvox*(ncmb+1) 1]);
@@ -210,7 +210,7 @@ switch dtype
         end
         % powindx = [nvox+(1:nvox) nvox+(1:nvox); cmb*ones(1,nvox) nvox+(1:nvox)]';
         powindx = [repmat(ncmb*nvox+(1:nvox)',[ncmb 1]) reshape(repmat(ncmb*nvox+cmb(:)', [nvox 1]),[nvox*ncmb 1]); ncmb*nvox+(1:nvox)' ncmb*nvox+(1:nvox)'];
-        data.pos = [repmat(data.pos, [ncmb+1 1])];% FIXME come up with something reshape( repmat(data.pos(cmb,:),[nvox 1]);data.pos data.pos];
+        data.pos = [repmat(data.pos, [ncmb+1 1])]; % FIXME come up with something reshape( repmat(data.pos(cmb,:),[nvox 1]);data.pos data.pos];
         data.inside = reshape(repmat(data.inside(:), [1 ncmb+1])+repmat(nvox*(0:ncmb), [nvox 1]), [nvox*(ncmb+1) 1]);
         if ~isempty(data.outside)
           data.outside = reshape(repmat(data.outside(:), [1 ncmb+1])+repmat(nvox*(0:ncmb), [nvox 1]), [nvox*(ncmb+1) 1]);
@@ -305,7 +305,7 @@ switch dtype
           data.inside = data.inside(:);
           data.outside = setdiff((1:nvox*(ncmb+1))', data.inside);
           if isfield(data, 'momdimord'),
-            data.crsspctrmdimord = ['pos_',data.momdimord(14:end)];% FIXME this assumes dimord to be 'rpttap_...'
+            data.crsspctrmdimord = ['pos_',data.momdimord(14:end)]; % FIXME this assumes dimord to be 'rpttap_...'
           end
           data = rmfield(data, 'mom');
           data = rmfield(data, 'momdimord');

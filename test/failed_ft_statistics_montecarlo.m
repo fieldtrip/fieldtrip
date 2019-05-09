@@ -2,11 +2,9 @@ function failed_ft_statistics_montecarlo
 
 % MEM 4gb
 % WALLTIME 00:20:00
+% DEPENDENCY ft_statistics_montecarlo ft_timelockstatistics ft_freqstatistics ft_sourcestatistics clusterstat findcluster
 
-% TEST test_ft_statistics_montecarlo
-% TEST ft_statistics_montecarlo ft_timelockstatistics ft_freqstatistics ft_sourcestatistics clusterstat findcluster
-
-% test the functionality of ft_statistics_montecarlo, in particular with respect to the clustering behaviour.
+% test the functionality of ft_statistics_montecarlo, in particular with respect to the clustering behavior.
 
 % start with some data
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275.mat');
@@ -21,8 +19,8 @@ vol   = ft_datatype_headmodel(struct('o',[0 0 0.04],'r',0.08,'unit','m'));
 cfg = [];
 cfg.dip.pos = [0 sqrt(2)/2 sqrt(2)/2;0 -sqrt(2)/2 sqrt(2)/2]*0.06;
 cfg.dip.mom = [1 1;0 0; 0 0];
-cfg.grad    = grad;
-cfg.vol     = vol;
+cfg.grad = grad;
+cfg.headmodel = vol;
 cfg.channel = 'MEG';
 cfg.ntrials = 40;
 cfg.absnoise = 8e-8;
@@ -32,10 +30,10 @@ for k = 1:40
   % create some data with an oscillation
   tmp   = ft_preproc_bandpassfilter(randn(1,1000),1000, [15 25]);
   taper = [zeros(1,500) hanning(500)'].*0.8;
-  
-  tmp2   = ft_preproc_bandpassfilter(tmpx, 1000, [8 12]); 
+
+  tmp2   = ft_preproc_bandpassfilter(tmpx, 1000, [8 12]);
   taper2 = [hanning(500)',zeros(1,500)];
-  
+
   signal{k} = [tmp.*taper;tmp2.*taper2];
   signal2{k} = zeros(2,1000);
 end
@@ -103,30 +101,30 @@ freq1      = ft_freqanalysis(cfg, data1);
 freq2      = ft_freqanalysis(cfg, data2);
 freq       = ft_freqanalysis(cfg, ft_appenddata([], data1, data2));
 
-cfg      = [];
-cfg.vol  = vol;
+cfg = [];
+cfg.headmodel = vol;
 cfg.grad = grad;
-cfg.grid.resolution = 0.01;
+cfg.sourcemodel.resolution = 0.01;
 cfg.channel = 'MEG';
 sourcemodel_grid = ft_prepare_leadfield(cfg);
 
-[pnt,tri] = icosahedron642;
-cfg.grid  = struct('pos',pnt.*0.06,'tri',tri,'unit','m');
+[pnt,tri] = mesh_sphere(642);
+cfg.sourcemodel  = struct('pos',pnt.*0.06,'tri',tri,'unit','m');
 sourcemodel_mesh = ft_prepare_leadfield(cfg);
 
-cfg       = [];
-cfg.vol   = vol;
-cfg.grid   = sourcemodel_grid;
+cfg = [];
+cfg.headmodel = vol;
+cfg.sourcemodel = sourcemodel_grid;
 cfg.method = 'dics';
 cfg.dics.projectnoise = 'yes';
 cfg.dics.lambda = '10%';
 cfg.dics.keepfilter = 'yes';
 cfg.dics.realfilter = 'yes';
 cfg.frequency = 10;
-cfg.latency   = 0.25;
+cfg.latency` = 0.25;
 source_grid = ft_sourceanalysis(cfg, freq);
 
-cfg.grid.filter = source_grid.avg.filter;
+cfg.sourcemodel.filter = source_grid.avg.filter;
 source1avg = ft_sourceanalysis(cfg, freq1);
 source2avg = ft_sourceanalysis(cfg, freq2);
 
@@ -135,10 +133,10 @@ source1         = ft_sourceanalysis(cfg, freq1);
 source2         = ft_sourceanalysis(cfg, freq2);
 
 cfg.rawtrial    = 'no';
-cfg.grid        = sourcemodel_mesh;
+cfg.sourcemodel        = sourcemodel_mesh;
 source_mesh     = ft_sourceanalysis(cfg, freq);
 
-cfg.grid.filter = source_mesh.avg.filter;
+cfg.sourcemodel.filter = source_mesh.avg.filter;
 source1avg_mesh = ft_sourceanalysis(cfg, freq1);
 source2avg_mesh = ft_sourceanalysis(cfg, freq2);
 
@@ -195,5 +193,3 @@ cfg.parameter = 'pow';
 stat  = ft_sourcestatistics(cfg, source1_mesh, source2_mesh);
 cfg.parameter = 'avg.pow';
 stat = ft_sourcestatistics(cfg, s1_mesh{:}, s2_mesh{:});
-
-

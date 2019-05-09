@@ -32,14 +32,6 @@ rVal = true;
 p = fileparts(which('mff_importsignal.m'));
 warning('off', 'MATLAB:Java:DuplicateClass');
 javaaddpath(fullfile(p, 'MFF-1.2.2-jar-with-dependencies.jar'));
-import com.egi.services.mff.api.MFFFactory;
-import com.egi.services.mff.api.MFFResourceType;
-import com.egi.services.mff.api.LocalMFFFactoryDelegate;
-import com.egi.services.mff.utility.ResourceUnmarshalException;
-import com.egi.services.mff.api.SensorLayout;
-import com.egi.services.mff.api.Sensor;
-import com.egi.services.mff.api.Key;
-import com.egi.services.mff.api.Neighbor;
 warning('on', 'MATLAB:Java:DuplicateClass');
 
 % Create an MFFFactory object.
@@ -69,7 +61,7 @@ sLayout = mfffactory.openResourceAtURI(sLayoutURI, sensorLayoutType);
 % 
 %         sensors = sLayout.getSensors();
 %         neighbors = sLayout.getNeighbors();
-%         threads = sLayout.getThreads();%Not CPU threads.
+%         threads = sLayout.getThreads(); %Not CPU threads.
 %         tilingSets = sLayout.getTilingSets();
 % 
 %         % Accessing the sensors.

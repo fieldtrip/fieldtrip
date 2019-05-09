@@ -9,7 +9,7 @@ function output = read_nervus_header(filename)
 %
 % Copyright (C) 2016, Jan Brogger and Joost Wagenaar 
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -34,10 +34,7 @@ UNITSIZE = 16;
 ITEMNAMESIZE  = 64;
 
 % ---------------- Opening File------------------
-h = fopen(filename,'rb','ieee-le');
-if h==-1
-    ft_error('Can''t open Nervus EEG file')
-end
+h = fopen_or_error(filename,'rb','ieee-le');
 
 nrvHdr = struct();
 nrvHdr.filename = filename;
@@ -219,11 +216,11 @@ for i = 1:QIIndex.LQi
     QIIndex2(i).misc1 = fread(h,1,'uint32');   %8
     QIIndex2(i).indexIdx = fread(h,1,'uint32'); %12
     QIIndex2(i).misc2 = fread(h,3,'uint32')'; %24
-    QIIndex2(i).sectionIdx = fread(h,1,'uint32');%28
+    QIIndex2(i).sectionIdx = fread(h,1,'uint32'); %28
     QIIndex2(i).misc3 = fread(h,1,'uint32'); %32
     QIIndex2(i).offset = fread(h,1,'uint64'); % 40
-    QIIndex2(i).blockL = fread(h,1,'uint32');%44
-    QIIndex2(i).dataL = fread(h,1,'uint32')';%48
+    QIIndex2(i).blockL = fread(h,1,'uint32'); %44
+    QIIndex2(i).dataL = fread(h,1,'uint32')'; %48
 end
 end
 
@@ -390,7 +387,7 @@ for i = 1:nrValues
     id = fread(h,1,'uint64');
     switch id
         case {7,8}
-            unix_time = (fread(h,1, 'double')*(3600*24)) - 2209161600;% 2208988800; %8
+            unix_time = (fread(h,1, 'double')*(3600*24)) - 2209161600; % 2208988800; %8
             obj.segments(i).dateStr = datestr(unix_time/86400 + datenum(1970,1,1));
             value = datevec( obj.segments(i).dateStr );
             value = value([3 2 1]);
@@ -602,13 +599,13 @@ segments = struct();
 for i = 1: nrSegments
     dateOLE = fread(h,1, 'double');
     segments(i).dateOLE = dateOLE;
-    unix_time = (dateOLE*(3600*24)) - 2209161600;% 2208988800; %8
+    unix_time = (dateOLE*(3600*24)) - 2209161600; % 2208988800; %8
     segments(i).dateStr = datestr(unix_time/86400 + datenum(1970,1,1));
     datev = datevec( segments(i).dateStr );
     segments(i).startDate = datev(1:3);
     segments(i).startTime = datev(4:6);
     fseek(h, 8 , 'cof'); %16
-    segments(i).duration = fread(h,1, 'double');%24
+    segments(i).duration = fread(h,1, 'double'); %24
     fseek(h, 128 , 'cof'); %152       
 end
 
@@ -658,7 +655,7 @@ while (pktGUID == evtPktGUID)
     evtDateFraction   = fread(h,1,'double');
     eventMarkers(i).dateOLE = evtDate;
     eventMarkers(i).dateFraction = evtDateFraction;
-    evtPOSIXTime = evtDate*DAYSECS + evtDateFraction - 2209161600;% 2208988800; %8
+    evtPOSIXTime = evtDate*DAYSECS + evtDateFraction - 2209161600; % 2208988800; %8
     eventMarkers(i).dateStr = datestr(evtPOSIXTime/DAYSECS + datenum(1970,1,1),'dd-mmmm-yyyy HH:MM:SS.FFF'); % Save fractions of seconds, as well
     eventMarkers(i).duration  = fread(h,1,'double');
     fseek(h,48,'cof');

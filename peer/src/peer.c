@@ -834,7 +834,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mexErrMsgTxt ("invalid number of input arguments");
 				if (!mxIsCell(prhs[1]))
 						mexErrMsgTxt ("invalid input argument #2");
-				/* check that all elements of the cell array are strings */
+				/* check that all elements of the cell-array are strings */
 				for (i=0; i<mxGetNumberOfElements(prhs[1]); i++) {
 						arg = mxGetCell(prhs[1], i);
 						if (!mxIsChar(arg))
@@ -868,7 +868,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mexErrMsgTxt ("invalid number of input arguments");
 				if (!mxIsCell(prhs[1]))
 						mexErrMsgTxt ("invalid input argument #2");
-				/* check that all elements of the cell array are strings */
+				/* check that all elements of the cell-array are strings */
 				for (i=0; i<mxGetNumberOfElements(prhs[1]); i++) {
 						arg = mxGetCell(prhs[1], i);
 						if (!mxIsChar(arg))
@@ -902,7 +902,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mexErrMsgTxt ("invalid number of input arguments");
 				if (!mxIsCell(prhs[1]))
 						mexErrMsgTxt ("invalid input argument #2");
-				/* check that all elements of the cell array are strings */
+				/* check that all elements of the cell-array are strings */
 				for (i=0; i<mxGetNumberOfElements(prhs[1]); i++) {
 						arg = mxGetCell(prhs[1], i);
 						if (!mxIsChar(arg))
@@ -936,7 +936,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mexErrMsgTxt ("invalid number of input arguments");
 				if (!mxIsCell(prhs[1]))
 						mexErrMsgTxt ("invalid input argument #2");
-				/* check that all elements of the cell array are strings */
+				/* check that all elements of the cell-array are strings */
 				for (i=0; i<mxGetNumberOfElements(prhs[1]); i++) {
 						arg = mxGetCell(prhs[1], i);
 						if (!mxIsChar(arg))
@@ -970,7 +970,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mexErrMsgTxt ("invalid number of input arguments");
 				if (!mxIsCell(prhs[1]))
 						mexErrMsgTxt ("invalid input argument #2");
-				/* check that all elements of the cell array are strings */
+				/* check that all elements of the cell-array are strings */
 				for (i=0; i<mxGetNumberOfElements(prhs[1]); i++) {
 						arg = mxGetCell(prhs[1], i);
 						if (!mxIsChar(arg))
@@ -1004,7 +1004,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 						mexErrMsgTxt ("invalid number of input arguments");
 				if (!mxIsCell(prhs[1]))
 						mexErrMsgTxt ("invalid input argument #2");
-				/* check that all elements of the cell array are strings */
+				/* check that all elements of the cell-array are strings */
 				for (i=0; i<mxGetNumberOfElements(prhs[1]); i++) {
 						arg = mxGetCell(prhs[1], i);
 						if (!mxIsChar(arg))

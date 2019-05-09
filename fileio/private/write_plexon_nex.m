@@ -114,7 +114,7 @@ ts     = nex.var.ts;
 ts_beg = min(ts);
 ts_end = 0;  % FIXME
 
-fid = fopen(filename, 'wb', 'ieee-le');
+fid = fopen_or_error(filename, 'wb', 'ieee-le');
 
 % write the file header
 write_NexFileHeader;

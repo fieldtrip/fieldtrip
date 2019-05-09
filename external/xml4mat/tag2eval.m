@@ -13,7 +13,7 @@ function [to_eval,eval_i,j]=tag2eval(tag_contents,to_eval,eval_i,j,tags)
 % Jonas Almeida, almeidaj@musc.edu 20 Aug 2002, XML4MAT Tbox
 
 i=tags(j);
-w=tag_contents{i,2};%disp(i)
+w=tag_contents{i,2}; %disp(i)
 if ~isfield(w,'class');w.class='struct';w.size=[1 1];tag_contents{i,2}=w;end
 if strcmp(w.class,'struct')
     if ~isfield(w,'size')
@@ -35,7 +35,7 @@ if strcmp(w.class,'struct')
     for ind=1:nn    
         for ind_f=1:(nf/nn)
             %disp(['ind=',num2str(ind),' nf=',num2str(nf)])
-            j=j+1;%disp(['j=',num2str(j)])
+            j=j+1; %disp(['j=',num2str(j)])
             i=tags(j);
             field_name=tag_contents{w.fields(ind_f),2}.name;iis_val=num2str(eval(['[',iis,']']));
             iis_val(findstr(iis_val,'  '))=[];iis_val(isspace(iis_val))=',';
@@ -59,7 +59,7 @@ elseif strcmp(w.class,'cell')
     for ind=1:nn
         for ind_f=1:(nf/nn)
             %disp(['ind=',num2str(ind),' nf=',num2str(nf)])
-            j=j+1;%disp(['j=',num2str(j)])
+            j=j+1; %disp(['j=',num2str(j)])
             i=tags(j);
             %disp(iis)
             
@@ -92,7 +92,7 @@ elseif strcmp(w.class,'cellstruct')
     clear field_exist;
 else % str or double
     %disp('not struct')
-    eval_i_str='';for eval_i_j=1:length(eval_i);eval_i_str=[eval_i_str,eval_i{eval_i_j}];end;eval_i_str=[eval_i_str,'=tag_contents{',num2str(i),',4};'];%disp(eval_i_str)
+    eval_i_str='';for eval_i_j=1:length(eval_i);eval_i_str=[eval_i_str,eval_i{eval_i_j}];end;eval_i_str=[eval_i_str,'=tag_contents{',num2str(i),',4};']; %disp(eval_i_str)
     to_eval{length(to_eval)+1}=eval_i_str;
 end
     

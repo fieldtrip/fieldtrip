@@ -3,7 +3,7 @@ function test_ft_timelockstatistics
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST ft_timelockstatistics, findcluster, clusterstat, ft_statistics_montecarlo
+% DEPENDENCY ft_timelockstatistics, findcluster, clusterstat, ft_statistics_montecarlo
 
 %For the case of "chan_time"
 

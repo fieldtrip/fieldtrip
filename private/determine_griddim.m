@@ -9,10 +9,9 @@ function GridDim = determine_griddim(elec)
 %   where elec is a structure that contains an elecpos field and a label field
 %   and GridDim(1) = number of rows and GridDim(2) = number of columns
 %   
-%
 % See also FT_ELECTRODEREALIGN
 
-% Copyright (C) 2017, Arjen Stolk, Sandon Griffin
+% Copyright (C) 2017-2018, Arjen Stolk, Sandon Griffin
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -32,60 +31,54 @@ function GridDim = determine_griddim(elec)
 %
 % $Id$
 
+% determine electrode range
 digits = regexp(elec.label, '\d+', 'match');
-maxdigit = 1;
+elec.maxdigit = 1;
+elec.mindigit = Inf;
 for l=1:numel(digits)
   ElecStrs{l,1} = regexprep(elec.label{l}, '\d+(?:_(?=\d))?', ''); % without electrode numbers
-  labels{l,1} = digits{l}{1}; % use first found digit
-  if str2num(digits{l}{1}) > maxdigit
-    maxdigit = str2num(digits{l}{1});
+  elec.ElecLab{l,1} = digits{l}{1}; % use first found digit
+  if str2num(digits{l}{1}) > elec.maxdigit
+    elec.maxdigit = str2num(digits{l}{1});
+  end
+  if str2num(digits{l}{1}) < elec.mindigit
+    elec.mindigit = str2num(digits{l}{1});
   end
 end
-ElecStr = cell2mat(unique(ElecStrs));
+elec.ElecStr = cell2mat(unique(ElecStrs));
 
-% determine if any electrodes appear to be cut out of this grid based on
-% the labels
-cutout = []; % index of electrodes that appear to be cut out
-dowarn = 0;
-for e = 1:maxdigit;
-  if isempty(match_str(labels, num2str(e)))
-    cutout(end+1) = e;
-    dowarn = 1;
+% determine if any electrodes appear to be misordered or cut out of this grid
+pos_ordered = [];
+labels_ordered = {};
+elec.cutout = []; % index of electrodes that appear to be cut out
+dowarn = false;
+for e = elec.mindigit:elec.maxdigit
+  if ~isempty(match_str(elec.ElecLab, num2str(e))) % in case labels are 1, 2, 3 etc.
+    labels_ordered{end+1,1} = [elec.ElecStr num2str(e)];
+    pos_ordered(end+1, :) = elec.elecpos(match_str(elec.ElecLab, num2str(e)),:);
+  elseif ~isempty(match_str(elec.ElecLab, num2str(e, ['%0' num2str(numel(elec.ElecLab{1})) 'd']))) % in case labels are 001, 002, 003 etc.
+    labels_ordered{end+1,1} = [elec.ElecStr num2str(e, ['%0' num2str(numel(elec.ElecLab{1})) 'd'])];
+    pos_ordered(end+1, :) = elec.elecpos(match_str(elec.ElecLab, num2str(e, ['%0' num2str(numel(elec.ElecLab{1})) 'd'])),:);
+  else
+    elec.cutout(end+1) = e;
+    labels_ordered{end+1,1} = [num2str(e)];
+    pos_ordered(end+1, :) = NaN(1,3); % replace missing numbers with electrodes at position [NaN NaN NaN]
+    dowarn = true;
   end
 end
 if dowarn
-  ft_warning('%s appears to be missing electrodes %s or have electrodes that are labeled using an unconventional numbering system', ElecStr, num2str(cutout));
+  ft_warning('%s appears to be missing electrodes %s or have electrodes that are labeled using an unconventional numbering system', elec.ElecStr, num2str(elec.cutout));
 end
+elec.label = labels_ordered;
+elec.elecpos = pos_ordered;
 
-% determine if the labels are out of order and if they are, then re-order
-% electrode positions based on numbers in the label and replace
-% missing numbers with electrodes at position [NaN NaN NaN];
-labels_out_of_order = 0;
-for n = 1:numel(labels)-1
-  if str2num(cell2mat(labels(n+1))) ~= str2num(cell2mat(labels(n)))+1
-    labels_out_of_order = 1;
-  end
-end
-
-if labels_out_of_order
-  pos_ordered = NaN(maxdigit,3);
-  for e = 1:maxdigit;
-    if ~isempty(match_str(labels, num2str(e)))
-      pos_ordered(e, :) = elec.elecpos(match_str(labels, num2str(e)),:);
-    end
-  end
-  elec.elecpos = pos_ordered;
-end
-
+% find the electrode spacing
 d_bwelec = [];
-for e = 1:size(elec.elecpos,1)-1;
+for e = 1:size(elec.elecpos,1)-1
   d_bwelec(e) = sqrt(sum((elec.elecpos(e+1,:)-elec.elecpos(e,:)).^2));
 end
-
-% Find the electrode spacing
 d_bwelec(find(d_bwelec == 0)) = NaN;
 elec_space = nanmedian(d_bwelec); 
-
 
 % For each electrode, find the electrodes that are within 1.3*elec_space,
 % which should be the adjacent neighbors. Without considering the
@@ -118,7 +111,7 @@ if ~isempty(vertical_skip) && size(vertical_skip,1)>2 % if this is a two dimensi
   n_mode = count(find(uniq_skips == mode1)); % the count of the mode
   modes = uniq_skips(find(count > n_mode*0.75));
   GridDim(2) = mode(vertical_skip(:,2));
-  GridDim(1) = ceil(maxdigit/GridDim(2));
+  GridDim(1) = ceil((elec.maxdigit-elec.mindigit+1)/GridDim(2));
   
   if numel(modes) == 2 && diff(modes) ~= 1 % this set of electrodes is derived from an L-shaped grid
     LGridDim = NaN(2,2);
@@ -130,15 +123,15 @@ if ~isempty(vertical_skip) && size(vertical_skip,1)>2 % if this is a two dimensi
     LGridDim(1, 1) = ceil(e_kink/LGridDim(1, 2));
     
     LGridDim(2, 2) = mode2;
-    LGridDim(2, 1) = ceil((maxdigit-e_kink)/LGridDim(2,2));
-    ft_warning('%s appears to be a grid that is derived from an L-shaped structure and is best described as a %d x %d grid adjacent to a %d x %d grid', ElecStr, LGridDim(1,1), LGridDim(1,2), LGridDim(2,1), LGridDim(2,2));
+    LGridDim(2, 1) = ceil((elec.maxdigit-elec.mindigit+1-e_kink)/LGridDim(2,2));
+    ft_warning('%s appears to be a grid that is derived from an L-shaped structure and is best described as a %d x %d grid adjacent to a %d x %d grid', elec.ElecStr, LGridDim(1,1), LGridDim(1,2), LGridDim(2,1), LGridDim(2,2));
     isLshaped = 1;
   end
   
 else
-  GridDim(2) = maxdigit;
+  GridDim(2) = elec.maxdigit-elec.mindigit+1;
   GridDim(1) = 1;
 end
 
 % Give feedback about the grid dimensions
-fprintf('assuming %s has %d x %d grid dimensions\n', ElecStr, GridDim(1), GridDim(2));
+fprintf('assuming %s has %d x %d grid dimensions\n', elec.ElecStr, GridDim(1), GridDim(2));

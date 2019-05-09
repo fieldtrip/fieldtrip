@@ -1,4 +1,4 @@
-function s = webread(varargin)
+function [varargout] = webread(varargin)
 
 % WEBREAD is a drop-in replacement for the function with the same
 % name that was introduced in MATLAB 2014b. This function is only
@@ -24,7 +24,28 @@ function s = webread(varargin)
 %
 % $Id$
 
-options = {};
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% see https://github.com/fieldtrip/fieldtrip/issues/899
+
+if exist(mfilename, 'builtin') || any(strncmp(which(mfilename, '-all'), matlabroot, length(matlabroot)) & cellfun(@isempty, regexp(which(mfilename, '-all'), fullfile('private', mfilename))))
+  % remove this directory from the path
+  p = fileparts(mfilename('fullpath'));
+  warning('removing %s from your path, see http://bit.ly/2SPPjUS', p);
+  rmpath(p);
+  % call the original MATLAB function
+  if exist(mfilename, 'builtin')
+    [varargout{1:nargout}] = builtin(mfilename, varargin{:});
+  else
+    [varargout{1:nargout}] = feval(mfilename, varargin{:});
+  end
+  return
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% this is where the actual replacement code starts
+% function s = webread(varargin)
+
+options = weboptions;
 url = varargin{1};
 s = urlread(url, 'get', options);
 
@@ -42,8 +63,13 @@ if isequal(s(1:2), '[{')
     s = c;
   elseif numel(c)==1
     % return a single struct
-    s = c{1}; 
+    s = c{1};
   else
     % return the string as it is
   end
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% deal with the output arguments
+
+varargout = {s};

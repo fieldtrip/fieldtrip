@@ -2,11 +2,9 @@ function failed_ft_connectivity_laggedcoherence
 
 % WALLTIME 00:10:00
 % MEM 3gb
+% DEPENDENCY ft_connectivity_laggedcoherence ft_connectivityanalysis
 
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2951
-
-% TEST test_ft_connectivity_laggedcoherence
-% TEST ft_connectivity_laggedcoherence ft_connectivityanalysis
 
 %% --------------------------------------------------------
 % first create some data, this is the same as in test_ft_connectivityanalysis

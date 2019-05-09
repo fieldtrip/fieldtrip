@@ -13,7 +13,7 @@
 %
 % See also FT_PREAMBLE, FT_POSTAMBLE, FT_POSTAMBLE_SAVEVAR, FT_PREAMBLE_PROVENANCE
 
-% Copyright (C) 2011-2012, Robert Oostenveld, DCCN
+% Copyright (C) 2011-2019, Robert Oostenveld, DCCN
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -36,19 +36,41 @@
 % use an anonymous function
 assign = @(var, val) assignin('caller', var, val);
 
-if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
-
+if (isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)) || exist('Fief7bee_reproducescript', 'var')
   % the input data should be read from file
-  if (ft_nargin>1)
+  
+  if exist('Fief7bee_reproducescript', 'var')
+    % the script, input and output files are written to a directory
+    
+    % write the function input variables to a MATLAB file
+    if isequal(iW1aenge_preamble, {'varargin'})
+      cfg.inputfile = {};
+      iW1aenge_now = datestr(now, 30);
+      for i=1:(ft_nargin-1)
+        cfg.inputfile{i} = make_or_fetch_inputfile(Fief7bee_reproducescript,...
+          sprintf('%s_%s_input_varargin_%d.mat', FjmoT6aA_highest_ft, iW1aenge_now, i),...
+          'data', varargin{i}); 
+      end
+    else
+      cfg.inputfile = {};
+      iW1aenge_now = datestr(now, 30);
+      for i=1:(ft_nargin-1)
+        cfg.inputfile{i} = make_or_fetch_inputfile(Fief7bee_reproducescript,...
+          sprintf('%s_%s_input_%s.mat', iW1aenge_now, FjmoT6aA_highest_ft, iW1aenge_preamble{i}),...
+          iW1aenge_preamble{i}, eval(iW1aenge_preamble{i}));
+      end
+    end
+  
+  elseif ft_nargin>1
     ft_error('cfg.inputfile should not be used in conjunction with giving input data to this function');
   end
-
+  
   if isfield(cfg, 'inputlock') && ~isempty(cfg.inputlock)
     mutexlock(cfg.inputlock);
   end
   
   if isequal(iW1aenge_preamble, {'varargin'}) && ~iscell(cfg.inputfile)
-    % this should be a cell-array, oterwise it cannot be assigned to varargin
+    % this should be a cell-array, otherwise it cannot be assigned to varargin
     cfg.inputfile = {cfg.inputfile};
   end
   
@@ -78,3 +100,4 @@ if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
   end
   
 end % if inputfile
+

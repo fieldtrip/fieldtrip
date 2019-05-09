@@ -3,7 +3,7 @@
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST ft_sourceinterpolate ft_sourceparcellate ft_volumereslice
+% DEPENDENCY ft_sourceinterpolate ft_sourceparcellate ft_volumereslice
 
 %% Lets load atlas, sourcemodel, and a connectivity structure
 atlas = ft_read_atlas(dccnpath('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii'));

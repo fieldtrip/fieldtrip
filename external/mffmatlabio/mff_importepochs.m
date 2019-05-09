@@ -1,10 +1,11 @@
 % mff_importepochs - import information from MFF 'epochs.xml' file
 %
 % Usage:
-%   epochs = mff_importepochs(mffFile);
+%   epochs = mff_importepochs(mffFile, version);
 %
 % Inputs:
 %  mffFile - filename/foldername for the MFF file
+%  vesion  - file version (optional - default is 3)
 %
 % Output:
 %  epochs - Matlab structure containing informations contained in the MFF file.
@@ -24,21 +25,21 @@
 % You should have received a copy of the GNU General Public License
 % along with mffmatlabio.  If not, see <https://www.gnu.org/licenses/>.
 
-function continuous = mff_importepochs(mffFile)
+function continuous = mff_importepochs(mffFile, version)
 
 p = fileparts(which('mff_importsignal.m'));
 warning('off', 'MATLAB:Java:DuplicateClass');
 javaaddpath(fullfile(p, 'MFF-1.2.2-jar-with-dependencies.jar'));
-import com.egi.services.mff.api.MFFFactory;
-import com.egi.services.mff.api.MFFResourceType;
-import com.egi.services.mff.api.LocalMFFFactoryDelegate;
-import com.egi.services.mff.utility.ResourceUnmarshalException;
-import com.egi.services.mff.api.Signal;
-import com.egi.services.mff.api.SignalBlock;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
 warning('on', 'MATLAB:Java:DuplicateClass');
+
+if nargin < 2
+    version = 3;
+end
+if version == 0
+    divider = 1000;
+else
+    divider = 1;
+end
 
 % Create a factory.
 mfffactorydelegate = javaObject('com.egi.services.mff.api.LocalMFFFactoryDelegate');
@@ -57,8 +58,8 @@ if epochResource.loadResource()
     
     for iEpoch = 1:epochs.size
         singleEpoch = epochs.get(iEpoch-1);
-        continuous(iEpoch).begintime  = singleEpoch.getBeginTime();
-        continuous(iEpoch).endtime    = singleEpoch.getEndTime();
+        continuous(iEpoch).begintime  = singleEpoch.getBeginTime()/divider;
+        continuous(iEpoch).endtime    = singleEpoch.getEndTime()/divider;
         continuous(iEpoch).firstblock = singleEpoch.getFirstBlock();
         continuous(iEpoch).lastblock  = singleEpoch.getLastBlock();
 %         fprintf('Continuous portion Begin Time: %d\n', singleEpoch.getBeginTime());

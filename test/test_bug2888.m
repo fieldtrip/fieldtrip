@@ -3,7 +3,7 @@ function test_bug2888
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST ft_filetype ft_read_header dataset2files
+% DEPENDENCY ft_filetype ft_read_header dataset2files
 
 filename = {
   dccnpath('/home/common/matlab/fieldtrip/data/test/bug2888/0001') % top level directory

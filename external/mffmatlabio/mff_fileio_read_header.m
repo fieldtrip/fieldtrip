@@ -32,35 +32,10 @@ if nargin < 1
 end
 
 % import basic information
-header.orig = mff_import(mffFile);
-header.Fs          = header.orig.srate;
-header.nChans      = header.orig.nbchan;
-header.nSamples    = header.orig.pnts;
-
-% Import epoch information if any
-header.nTrials     = header.orig.trials;
-header.nSamplesPre = -header.orig.xmin*header.orig.srate;
-header.nSamples    = header.orig.pnts;
-
-% import coordinate layout in EEGLAB format
-chanlocs = header.orig.chanlocs;
-header.elec.pnt   = zeros(length( chanlocs ), 3);
-for ind = 1:length( chanlocs )
-    header.elec.label{ind} = chanlocs(ind).labels;
-    if ~isempty(chanlocs(ind).X)
-        header.elec.pnt(ind,1) = chanlocs(ind).X;
-        header.elec.pnt(ind,2) = chanlocs(ind).Y;
-        header.elec.pnt(ind,3) = chanlocs(ind).Z;
-    else
-        header.elec.pnt(ind,:) = [0 0 0];
-    end
-end
-if isfield(header, 'elec') && isfield(header.elec, 'pnt') && isempty(header.elec.pnt)
-    header = rmfield(header, 'elec');
-end
-
-if isfield(header, 'elec') && isfield(header.elec, 'label')
-    header.label = header.elec.label;
-else
-    header.label = {};
-end
+tmp = mff_import(mffFile);
+curPath = pwd;
+p = fileparts(which('ft_read_header'));
+cd(fullfile(p, 'private'));
+header = read_eeglabheader( tmp ); 
+cd(curPath);
+header.orig = tmp;

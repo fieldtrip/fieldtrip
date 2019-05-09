@@ -35,7 +35,7 @@ pos  = [];
 mom  = [];
 ampl = [];
 time = [];
-fid1 = fopen(fn, 'r');
+fid1 = fopen_or_error(fn, 'r');
 
 while ~Npos
   line = fgetl(fid1);

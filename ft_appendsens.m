@@ -7,9 +7,9 @@ function [sens] = ft_appendsens(cfg, varargin)
 %   combined = ft_appendsens(cfg, sens1, sens2, ...)
 %
 % A call to FT_APPENDSENS results in the label, pos and ori fields to be
-% concatenated, and the tra matrix to be merged. Any duplicates will be removed.
-% The labelold and chanposold fields are kept under the condition that they
-% are identical across the inputs.
+% concatenated, and the tra matrix to be merged. Any duplicate electrodes
+% will be removed. The labelold and chanposold fields are kept under the
+% condition that they are identical across the inputs.
 %
 % See also FT_ELECTRODEPLACEMENT, FT_ELECTRODEREALIGN, FT_DATAYPE_SENS,
 % FT_APPENDDATA, FT_APPENDTIMELOCK, FT_APPENDFREQ, FT_APPENDSOURCE
@@ -108,7 +108,7 @@ for i=1:length(varargin)
   if isfield(varargin{i}, 'chanpos')
     chanpos{i} = varargin{i}.chanpos;
   end
-  
+
   % some the following fields are likely present in a sens structure
   if isfield(varargin{i}, 'elecpos') % EEG
     elecpos{i} = varargin{i}.elecpos;
@@ -134,7 +134,7 @@ for i=1:length(varargin)
     tra{i} = varargin{i}.tra;
     hastra = 1;
   end
-  
+
   % the following fields might be present in a sens structure
   if isfield(varargin{i}, 'labelold')
     labelold{i} = varargin{i}.labelold(:); % ensure column orientation
@@ -148,14 +148,14 @@ end
 
 % concatenate the main fields and remove duplicates
 sens.label = cat(1,label{:});
-[~, labidx] = unique(sens.label, 'stable');
+[dum, labidx] = unique(sens.label, 'stable');
 if ~isequal(numel(labidx), numel(sens.label))
   fprintf('removing duplicate labels\n')
   sens.label = sens.label(labidx);
 end
 
 sens.chanpos = cat(1,chanpos{:});
-[~, chanidx] = unique(sens.chanpos, 'rows', 'stable');
+[dum, chanidx] = unique(sens.chanpos, 'rows', 'stable');
 if ~isequal(numel(chanidx), size(sens.chanpos,1))
   fprintf('removing duplicate channels\n')
   sens.chanpos = sens.chanpos(chanidx,:);
@@ -184,7 +184,7 @@ end
 
 if haselecpos
   sens.elecpos = cat(1,elecpos{:});
-  [~, elecidx, elecidx2] = unique(sens.elecpos, 'rows', 'stable');
+  [dum, elecidx, elecidx2] = unique(sens.elecpos, 'rows', 'stable');
   if ~isequal(numel(elecidx), size(sens.elecpos,1))
     fprintf('removing duplicate electrodes\n')
     sens.elecpos = sens.elecpos(elecidx,:);
@@ -206,7 +206,7 @@ end
 
 if hasoptopos
   sens.optopos = cat(1,optopos{:});
-  [~, optoidx, optoidx2] = unique(sens.optopos, 'rows', 'stable');
+  [dum, optoidx, optoidx2] = unique(sens.optopos, 'rows', 'stable');
   if ~isequal(numel(optoidx), size(sens.optopos,1))
     fprintf('removing duplicate optodes\n')
     sens.optopos = sens.optopos(optoidx,:);
@@ -228,7 +228,7 @@ end
 
 if hascoilpos
   sens.coilpos = cat(1,coilpos{:});
-  [~, coilidx, coilidx2] = unique(sens.coilpos, 'rows', 'stable');
+  [dum, coilidx, coilidx2] = unique(sens.coilpos, 'rows', 'stable');
   if ~isequal(numel(coilidx), size(sens.coilpos,1))
     fprintf('removing duplicate coils\n')
     sens.coilpos = sens.coilpos(coilidx,:);

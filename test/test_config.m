@@ -3,7 +3,7 @@ function test_config
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST config
+% DEPENDENCY config
 
 %% See http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1614
 

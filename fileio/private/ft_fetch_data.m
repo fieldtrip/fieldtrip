@@ -1,6 +1,6 @@
 function [dat] = ft_fetch_data(data, varargin)
 
-% FT_FETCH_DATA mimics the behaviour of FT_READ_DATA, but for a FieldTrip
+% FT_FETCH_DATA mimics the behavior of FT_READ_DATA, but for a FieldTrip
 % raw data structure instead of a file on disk.
 %
 % Use as
@@ -64,8 +64,12 @@ if isempty(hdr)
   hdr = ft_fetch_header(data);
 end
 
-if isempty(begsample) || isempty(endsample)
-  ft_error('begsample and endsample must be specified');
+if isempty(begsample)
+  begsample = min(data.sampleinfo(:,1));
+end
+
+if isempty(endsample)
+  endsample = max(data.sampleinfo(:,2));
 end
 
 if isempty(chanindx)
@@ -85,11 +89,8 @@ dat = nan(numel(chanindx), endsample-begsample+1);
 
 if trlnum>1
   % original implementation, used when the input data has multiple trials
-  
-  trllen = zeros(trlnum,1);
-  for trllop=1:trlnum
-    trllen(trllop) = size(data.trial{trllop},2);
-  end
+
+  trllen = trl(:,2) - trl(:,1) + 1;
   
   % check whether data.trial is consistent with trl
   if size(trl,1)~=length(data.trial)
@@ -104,42 +105,48 @@ if trlnum>1
     ft_error('selected channels are not present in the data')
   end
   
-  % these are for bookkeeping
-  maxsample = max([trl(:,2); endsample]);
-  count     = zeros(1, maxsample, 'int32');
-  trialnum  = zeros(1, maxsample, 'int32');
-  samplenum = zeros(1, maxsample, 'int32');
-  
   % determine for each sample in the data where it originates from
-  for trllop=1:trlnum
+  if begsample<1
+    buflen  = endsample;
+  else
+    buflen  = endsample - begsample + 1;
+  end
+  buffer    = zeros(1, buflen, 'int32');
+
+  count     = buffer;
+  trialnum  = buffer;
+  samplenum = buffer;
+
+  for trllop = 1:trlnum
     trlbeg = trl(trllop,1);
     trlend = trl(trllop,2);
     if trlbeg>endsample || trlend<begsample
       % skip this piece, it is not interesting because the requested range falls completely outside
     else
+      trlbeg = trlbeg - begsample + 1;
+      trlend = trlend - begsample + 1;
+      offset = 0;
+      overlap = 0;
+      if trlbeg < 1
+        offset = 1 - trlbeg;
+        trlbeg = 1;
+      end
+      if trlend > buflen
+        overlap = trlend - buflen;
+        trlend = buflen;
+      end
       % make vector with 0= no sample of old data, 1= one sample of old data, 2= two samples of old data, etc
       count(trlbeg:trlend) = count(trlbeg:trlend) + 1;
       % make vector with 1's if samples belong to trial 1, 2's if samples belong to trial 2 etc. overlap/ no data --> Nan
       trialnum(trlbeg:trlend) = trllop;
       % make samplenum vector with samplenrs for each sample in the old trials
-      samplenum(trlbeg:trlend) = 1:trllen(trllop);
+      samplenum(trlbeg:trlend) = (1 + offset):(trllen(trllop) - overlap);
     end
   end
   
   % overlap --> NaN
   % trialnum(count>1)  = NaN;
   % samplenum(count>1) = NaN;
-  
-  % make a subselection for the desired samples
-  if begsample<1
-    count     = count    (1:endsample);
-    trialnum  = trialnum (1:endsample);
-    samplenum = samplenum(1:endsample);
-  else
-    count     = count    (begsample:endsample);
-    trialnum  = trialnum (begsample:endsample);
-    samplenum = samplenum(begsample:endsample);
-  end
   
   % check if all samples are present and are not present twice or more
   if any(count>1)
@@ -154,7 +161,8 @@ if trlnum>1
         selsmp = smplop - trl(seltrl,1) + begsample; % which sample in each of the trials, requires the adjustment with begsample, rather than 1
         for i=2:length(seltrl)
           % compare all occurences to the first one
-          if ~all(data.trial{seltrl(i)}(:,selsmp(i)) == data.trial{seltrl(1)}(:,selsmp(1)))
+          % consider also mutual occurring NaNs as equal values
+          if ~all(isequaln(data.trial{seltrl(i)}(:,selsmp(i)), data.trial{seltrl(1)}(:,selsmp(1))))
             ft_error('some of the requested samples occur twice in the data and have conflicting values');
           end
         end

@@ -2,9 +2,7 @@ function failed_ft_prepare_headmodel
 
 % MEM 20gb
 % WALLTIME 03:00:00
-
-% TEST test_ft_prepare_headmodel
-% TEST ft_headmodel_localspheres ft_prepare_localspheres
+% DEPENDENCY ft_headmodel_localspheres ft_prepare_localspheres
 
 % function to test ft_prepare_headmodel.
 % This function allows for different types of structure information to be
@@ -42,25 +40,25 @@ hdmfile  = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.hdm');
 %   vol = ft_prepare_headmodel(cfg, bnd)  with the output of FT_PREPARE_MESH
 %   vol = ft_prepare_headmodel(cfg, seg)  with the output of FT_VOLUMESEGMENT
 %   vol = ft_prepare_headmodel(cfg, elec) with the output of FT_READ_SENS
-%   vol = ft_prepare_headmodel(cfg, vol)  with the output of FT_READ_VOL
+%   vol = ft_prepare_headmodel(cfg, vol)  with the output of FT_READ_HEADMODEL
 
 csvol.o = [0, 0,0];
 csvol.r = [10 50 60];
-assert(ft_voltype(csvol, 'concentricspheres'))
+assert(ft_headmodeltype(csvol, 'concentricspheres'))
 cfg = [];
 cfg.numvertices = 1000;
 csbnd = ft_prepare_mesh(cfg, csvol);
 
 ssvol.o = [0, 0,0];
 ssvol.r = 60;
-assert(ft_voltype(ssvol, 'singlesphere'))
+assert(ft_headmodeltype(ssvol, 'singlesphere'))
 cfg = [];
 cfg.numvertices = 1000;
 ssbnd = ft_prepare_mesh(cfg, ssvol);
 
 cs4vol.o = [0, 0,0];
 cs4vol.r = [10 30 50 60];
-assert(ft_voltype(cs4vol, 'concentricspheres'))
+assert(ft_headmodeltype(cs4vol, 'concentricspheres'))
 cfg = [];
 cfg.numvertices = 1000;
 cs4bnd = ft_prepare_mesh(cfg, cs4vol);

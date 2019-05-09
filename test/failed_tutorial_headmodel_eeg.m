@@ -2,11 +2,7 @@ function failed_tutorial_headmodel_eeg
 
 % MEM 5gb
 % WALLTIME 01:30:00
-
-% TEST test_tutorial_headmodel_eeg
-% TEST ft_read_mri ft_volumesegment ft_prepare_mesh ft_prepare_headmodel
-% TEST ft_read_sens ft_warp_apply ft_electroderealign
-% TEST ft_plot_mesh ft_plot_vol ft_plot_sens
+% DEPENDENCY ft_read_mri ft_volumesegment ft_prepare_mesh ft_prepare_headmodel ft_read_sens ft_warp_apply ft_electroderealign ft_plot_mesh ft_plot_headmodel ft_plot_sens
 
 clear all;
 %% load mri
@@ -151,12 +147,12 @@ cfg.conductivity=[0.33 0.041 0.33];
 vol_cs=ft_prepare_headmodel(cfg,bnd);
 
 figure;
-ft_plot_vol(vol_cs,'facealpha', 0.3)
+ft_plot_headmodel(vol_cs,'facealpha', 0.3)
 hold on;
 ft_plot_mesh(bnd(3),'facealpha', 0.3, 'facecolor', 'red', 'edgecolor', 'none');
 
 figure;
-ft_plot_vol(vol_cs,'facealpha', 0.3)
+ft_plot_headmodel(vol_cs,'facealpha', 0.3)
 hold on;
 ft_plot_mesh(bnd(1),'facealpha', 0.3, 'facecolor', 'red', 'edgecolor', 'none');
 

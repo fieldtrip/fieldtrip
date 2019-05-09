@@ -3,7 +3,7 @@ function test_bug3124
 % WALLTIME 00:30:00
 % MEM 3gb
 
-% TEST ft_sourceanalysis
+% DEPENDENCY ft_sourceanalysis
 
 %%
 
@@ -24,8 +24,8 @@ freq = ft_freqanalysis(cfg, dataFIC);
 
 cfg = [];
 cfg.headmodel = vol;
-cfg.grid.resolution = 2;
-cfg.grid.unit = 'cm';
+cfg.sourcemodel.resolution = 2;
+cfg.sourcemodel.unit = 'cm';
 cfg.channel = 'MEG';
 
 sourcemodel = ft_prepare_leadfield(cfg, freq);
@@ -46,18 +46,18 @@ freq2 = ft_selectdata(fcfg, freq);
 
 cfg = [];
 cfg.headmodel = vol;
-cfg.grid = sourcemodel;
+cfg.sourcemodel = sourcemodel;
 cfg.frequency = 10;
 source0 = ft_sourceanalysis(cfg, freq);
 
 cfg = [];
 cfg.headmodel = vol;
-cfg.grid = sourcemodel;
+cfg.sourcemodel = sourcemodel;
 source1 = ft_sourceanalysis(cfg, freq1);
 
 cfg = [];
 cfg.headmodel = vol;
-cfg.grid = sourcemodel;
+cfg.sourcemodel = sourcemodel;
 source2 = ft_sourceanalysis(cfg, freq2);
 
 assert(isequal(source0.freq, [10]));
@@ -83,18 +83,18 @@ freq2 = ft_selectdata(fcfg, freq);
 
 cfg = [];
 cfg.headmodel = vol;
-cfg.grid = sourcemodel;
+cfg.sourcemodel = sourcemodel;
 cfg.frequency = [9 11];
 source0 = ft_sourceanalysis(cfg, freq);
 
 cfg = [];
 cfg.headmodel = vol;
-cfg.grid = sourcemodel;
+cfg.sourcemodel = sourcemodel;
 source1 = ft_sourceanalysis(cfg, freq1);
 
 cfg = [];
 cfg.headmodel = vol;
-cfg.grid = sourcemodel;
+cfg.sourcemodel = sourcemodel;
 source2 = ft_sourceanalysis(cfg, freq2);
 
 assert(isequal(source0.freq, [10]));

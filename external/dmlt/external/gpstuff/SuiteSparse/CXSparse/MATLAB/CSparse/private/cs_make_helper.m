@@ -141,7 +141,7 @@ for i = 1:length (cs)
         csrc = [ 'cs_cl_' csrc(4:end) ] ;
         CS = [CS ' ' csrc obj] ;            %#ok
         if (nargout > 0)
-            objfiles = [objfiles ' ..' filesep 'CSparse' filesep csrc obj] ;%#ok
+            objfiles = [objfiles ' ..' filesep 'CSparse' filesep csrc obj] ; %#ok
         end
         if (s)
             copyfile (['../../Source/' cs{i} '.c'], [csrc '.c'], 'f') ;

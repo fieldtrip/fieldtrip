@@ -407,7 +407,7 @@ switch dataformat
     
   case 'yokogawa_mri'
     ft_hastoolbox('yokogawa', 1);
-    fid = fopen(filename, 'rb');
+    fid = fopen_or_error(filename, 'rb');
     mri_info = GetMeg160MriInfoM(fid);
     patient_info = GetMeg160PatientInfoFromMriFileM(fid);
     [data_style, model, marker, image_parameter, normalize, besa_fiducial_point] = GetMeg160MriFileHeaderInfoM(fid);
@@ -437,7 +437,7 @@ if exist('img', 'var')
   %nx = size(img,1);
   %ny = size(img,2);
   %nz = size(img,3);
-  mri.dim = size(img);%[nx ny nz];
+  mri.dim = size(img); %[nx ny nz];
   % store the anatomical data
   mri.anatomy = img;
 end

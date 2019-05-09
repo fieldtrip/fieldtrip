@@ -3,7 +3,7 @@ function test_bug2197
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST ft_selectdata
+% DEPENDENCY ft_selectdata
 
 freq = [];
 freq.labelcmb = {

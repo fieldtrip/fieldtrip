@@ -49,9 +49,9 @@ function hs = ft_plot_sens(sens, varargin)
 %   figure; ft_plot_sens(sens, 'coilshape', 'circle', 'coil', true, 'chantype', 'meggrad')
 %   figure; ft_plot_sens(sens, 'coilshape', 'circle', 'coil', false, 'orientation', true)
 %
-% See also FT_READ_SENS, FT_PLOT_HEADSHAPE, FT_PLOT_VOL
+% See also FT_READ_SENS, FT_PLOT_HEADSHAPE, FT_PLOT_HEADMODEL
 
-% Copyright (C) 2009-2016, Robert Oostenveld
+% Copyright (C) 2009-2018, Robert Oostenveld, Arjen Stolk
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -71,7 +71,7 @@ function hs = ft_plot_sens(sens, varargin)
 %
 % $Id$
 
-ws = warning('on', 'MATLAB:divideByZero');
+ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % ensure that the sensor description is up-to-date
 sens = ft_datatype_sens(sens);
@@ -105,21 +105,21 @@ optosize        = ft_getopt(varargin, 'optosize');  % default depends on the inp
 if     ft_senstype(sens, 'eeg')
   individual = elec;
   sensshape  = elecshape;
-  sensize    = elecsize;
+  senssize   = elecsize;
 elseif ft_senstype(sens, 'meg')
   individual = coil;
   sensshape  = coilshape;
-  sensize    = coilsize;
+  senssize   = coilsize;
 elseif ft_senstype(sens, 'nirs')
   % this has not been tested
   individual = opto;
   sensshape  = optoshape;
-  sensize    = optosize;
+  senssize   = optosize;
 else
   ft_warning('unknown sensor array description');
   individual = false;
   sensshape  = [];
-  sensize    = [];
+  senssize   = [];
 end
 
 % this is simply passed to plot3
@@ -137,7 +137,7 @@ facealpha       = ft_getopt(varargin, 'facealpha',   1);
 edgealpha       = ft_getopt(varargin, 'edgealpha',   1);
 
 if ischar(chantype)
-  % this should be a cell array
+  % this should be a cell-array
   chantype = {chantype};
 end
 
@@ -149,9 +149,9 @@ end
 
 if ~isempty(ft_getopt(varargin, 'coildiameter'))
   % for backward compatibility, added on 6 July 2016
-  % the sensize is the diameter for a circle, or the edge length for a square
+  % the senssize is the diameter for a circle, or the edge length for a square
   ft_warning('the coildiameter option is deprecated, please use "coilsize" instead')
-  sensize = ft_getopt(varargin, 'coildiameter');
+  senssize = ft_getopt(varargin, 'coildiameter');
 end
 
 if ~isempty(unit)
@@ -173,27 +173,27 @@ if isempty(sensshape)
   end
 end
 
-if isempty(sensize)
+if isempty(senssize)
   switch ft_senstype(sens)
     case 'neuromag306'
-      sensize = 30; % FIXME this is only an estimate
+      senssize = 30; % FIXME this is only an estimate
     case 'neuromag122'
-      sensize = 35; % FIXME this is only an estimate
+      senssize = 35; % FIXME this is only an estimate
     case 'ctf151'
-      sensize = 15; % FIXME this is only an estimate
+      senssize = 20;
     case 'ctf275'
-      sensize = 15; % FIXME this is only an estimate
+      senssize = 18;
     otherwise
       if strcmp(sensshape, 'sphere')
-        sensize = 4; % assuming spheres are used for intracranial electrodes, diameter is about 4mm
+        senssize = 4; % assuming spheres are used for intracranial electrodes, diameter is about 4mm
       elseif strcmp(sensshape, 'point')
-        sensize = 30;
+        senssize = 30;
       else
-        sensize = 10;
+        senssize = 10;
       end
   end
   % convert from mm to the units of the sensor array
-  sensize = sensize/ft_scalingfactor(sens.unit, 'mm');
+  senssize = senssize/ft_scalingfactor(sens.unit, 'mm');
 end
 
 % color management
@@ -292,18 +292,23 @@ else
   
 end % if istrue(individual)
 
-if isempty(ori)
-  % determine the orientation by fitting a sphere to the positions
-  % this should be reasonable for scalp electrodes or optodes with complete coverage
-  try
-    tmp = pos(~any(isnan(pos), 2),:); % remove rows that contain a nan
-    center = fitsphere(tmp);
-  catch
-    center = [nan nan nan];
-  end
-  for i=1:size(pos,1)
-    ori(i,:) = pos(i,:) - center;
-    ori(i,:) = ori(i,:)/norm(ori(i,:));
+if isempty(ori) && ~isempty(pos)
+  if ~any(isnan(pos(:)))
+    % determine orientations based on surface triangulation
+    tri = projecttri(pos);
+    ori = normals(pos, tri);
+  else
+    % determine orientations by fitting a sphere to the sensors
+    try
+      tmp = pos(~any(isnan(pos), 2),:); % remove rows that contain a nan
+      center = fitsphere(tmp);
+    catch
+      center = [nan nan nan];
+    end
+    for i=1:size(pos,1)
+      ori(i,:) = pos(i,:) - center;
+      ori(i,:) = ori(i,:)/norm(ori(i,:));
+    end
   end
 end
 
@@ -329,18 +334,19 @@ switch sensshape
       end
       if any(specified)
         % the marker shape is specified in the style option
-        hs = plot3(pos(:,1), pos(:,2), pos(:,3), style, 'MarkerSize', sensize);
+        hs = plot3(pos(:,1), pos(:,2), pos(:,3), style, 'MarkerSize', senssize);
       else
         % the marker shape is not specified in the style option, use the marker option instead and assume that the style option represents the color
-        hs = plot3(pos(:,1), pos(:,2), pos(:,3), 'Marker', marker, 'MarkerSize', sensize, 'Color', style, 'Linestyle', 'none');
+        hs = plot3(pos(:,1), pos(:,2), pos(:,3), 'Marker', marker, 'MarkerSize', senssize, 'Color', style, 'Linestyle', 'none');
       end
     else
       % the style is not specified, use facecolor for the marker
-      hs = scatter3(pos(:,1), pos(:,2), pos(:,3), sensize.^2, facecolor, marker);
+      % if the marker is '.' it will show points that do not depend on the size, in all other cases (e.g. 'o') the size is relevant
+      hs = scatter3(pos(:,1), pos(:,2), pos(:,3), senssize.^2, facecolor, marker);
     end
     
   case 'circle'
-    plotcoil(pos, ori, [], sensize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
+    plotcoil(pos, ori, [], senssize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
 
   case 'square'
     % determine the rotation-around-the-axis of each sensor
@@ -366,11 +372,11 @@ switch sensshape
       chandir = [];
     end
     
-    plotcoil(pos, ori, chandir, sensize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
+    plotcoil(pos, ori, chandir, senssize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
 
   case 'sphere'
     [xsp, ysp, zsp] = sphere(100);
-    rsp = sensize/2; % convert coilsensize from diameter to radius
+    rsp = senssize/2; % convert coilsenssize from diameter to radius
     hold on
     for i=1:size(pos,1)
       hs = surf(rsp*xsp+pos(i,1), rsp*ysp+pos(i,2), rsp*zsp+pos(i,3));
@@ -382,6 +388,21 @@ switch sensshape
 end % switch
 
 if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
+  
+  % determine the amount of offset for the labels
+  if strcmp(sensshape, 'point')
+    % determine the median of the distance to the nearest neighbour
+    sensdist = triu(dist(sens.chanpos'),1);
+    sensdist(sensdist==0) = Inf;
+    sensdist = min(sensdist,[], 2);
+    sensdist = median(sensdist);
+    % the offset is based on distance between sensors
+    offset = 0.5 * sensdist;
+  else
+    % the offset is based on size of the sensors
+    offset = 1.5 * senssize;
+  end
+  
   for i=1:length(sens.label)
     switch label
       case {'on', 'yes'}
@@ -393,17 +414,10 @@ if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
       otherwise
         ft_error('unsupported value for option ''label''');
     end % switch
-    if isfield(sens, 'chanori')
-      % shift the labels along the channel orientation, which is presumably orthogonal to the scalp
-      ori = sens.chanori(i,:);
-    else
-      % shift the labels away from the origin of the coordinate system
-      ori = sens.chanpos(i,:) / norm(sens.chanpos(i,:));
-    end
-    % shift the label 5 mm
-    x = sens.chanpos(i,1) + 5 * ft_scalingfactor('mm', sens.unit) * ori(1);
-    y = sens.chanpos(i,2) + 5 * ft_scalingfactor('mm', sens.unit) * ori(2);
-    z = sens.chanpos(i,3) + 5 * ft_scalingfactor('mm', sens.unit) * ori(3);
+    % shift the label with a certain offset
+    x = sens.chanpos(i,1) + offset * ori(i,1);
+    y = sens.chanpos(i,2) + offset * ori(i,2);
+    z = sens.chanpos(i,3) + offset * ori(i,3);
     text(x, y, z, str, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight, 'horizontalalignment', 'center', 'verticalalignment', 'middle');
   end % for each channel
 end % if label
@@ -418,7 +432,7 @@ if ~holdflag
   hold off
 end
 
-warning(ws); % revert to original state
+ft_warning(ws); % revert to original state
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION all optional inputs are passed to ft_plot_mesh

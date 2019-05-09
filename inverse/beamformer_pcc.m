@@ -79,6 +79,9 @@ keepfilter     = ft_getopt(varargin, 'keepfilter',    'no');
 keepleadfield  = ft_getopt(varargin, 'keepleadfield', 'no');
 keepmom        = ft_getopt(varargin, 'keepmom',       'yes');
 lambda         = ft_getopt(varargin, 'lambda',        0);
+kappa          = ft_getopt(varargin, 'kappa',  []);
+tol            = ft_getopt(varargin, 'tol',    []);
+invmethod      = ft_getopt(varargin, 'invmethod',    []);
 projectnoise   = ft_getopt(varargin, 'projectnoise',  'yes');
 realfilter     = ft_getopt(varargin, 'realfilter',    'yes');
 fixedori       = ft_getopt(varargin, 'fixedori',      'no');
@@ -99,7 +102,7 @@ keepcsd = 1;
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfield(dip, 'inside')
-  dip.inside = ft_inside_vol(dip.pos, headmodel);
+  dip.inside = ft_inside_headmodel(dip.pos, headmodel);
 end
 
 if any(dip.inside>1)
@@ -164,24 +167,28 @@ rankCmeg = rank(Cmeg);
 if ~isempty(lambda) && ischar(lambda) && lambda(end)=='%'
   ratio = sscanf(lambda, '%f%%');
   ratio = ratio/100;
-  lambda = ratio * trace(Cmeg)/size(Cmeg,1);
+  tmplambda = ratio * trace(Cmeg)/size(Cmeg,1);
+elseif ~isempty(lambda)
+  tmplambda = lambda;
+else
+  tmplambda = 0;
 end
 
 if projectnoise
   % estimate the noise level in the covariance matrix by the smallest singular (non-zero) value
     noise = svd(Cmeg);
     noise = noise(rankCmeg);
-    % estimated noise floor is equal to or higher than lambda
-    noise = max(noise, lambda);
+    % estimated noise floor is equal to or higher than a numeric lambda
+    noise = max(noise, tmplambda);
 end
 
 if realfilter
   % construct the filter only on the real part of the CSD matrix, i.e. filter is real
-  invCmeg = pinv(real(Cmeg) + lambda*eye(Nmegchan));
+  invCmeg = ft_inv(real(Cmeg), 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
 else
   % construct the filter on the complex CSD matrix, i.e. filter contains imaginary component as well
   % this results in a phase rotation of the channel data if the filter is applied to the data
-  invCmeg = pinv(Cmeg + lambda*eye(Nmegchan));
+  invCmeg = ft_inv(Cmeg, 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
 end
 
 % start the scanning with the proper metric

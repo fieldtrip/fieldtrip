@@ -3,7 +3,7 @@
 % WALLTIME 00:20:00
 % MEM 2gb
 
-% TEST read_neuromag_maxfilterlog
+% DEPENDENCY read_neuromag_maxfilterlog
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3369'));
 
@@ -29,6 +29,7 @@ cfg.dataset = file2;
 data2 = ft_preprocessing(cfg);
 
 cfg = [];
+cfg.keepsampleinfo = 'no'; % the sampleinfo of the three does not match
 data = ft_appenddata(cfg, data0, data1, data2);
 
 %%
