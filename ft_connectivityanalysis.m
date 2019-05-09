@@ -183,6 +183,7 @@ if isfield(data, 'label')
   end
   tmpcfg = [];
   tmpcfg.channel = unique(selchan);
+  tmpcfg.channelcmb = ft_channelcombination({'all' 'all'}, tmpcfg.channel, 0, 2); % ensure the crosspectra (if present) to also be selected
   data = ft_selectdata(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
@@ -216,12 +217,13 @@ switch cfg.method
           ft_error('partial coherence/csd is only supported for input allowing for a all-to-all csd representation');
         end
       else
-        try
-          data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'}, 'cmbrepresentation', 'full');
+%         try
+%           data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'}, 'cmbrepresentation', 'full');
+%           inparam = 'crsspctrm';
+%         catch
+%           ft_error('partial coherence/csd is only supported for input allowing for a all-to-all csd representation');
+%         end
           inparam = 'crsspctrm';
-        catch
-          ft_error('partial coherence/csd is only supported for input allowing for a all-to-all csd representation');
-        end
       end
     else
       data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source' 'source+mesh'});
@@ -487,13 +489,20 @@ end
 % convert the labels for the partialisation channels into indices
 % do the same for the labels of the channels that should be kept
 % convert the labels in the output to reflect the partialisation
-if ~isempty(cfg.partchannel)
-  allchannel = ft_channelselection(cfg.channel, data.label);
-  pchanindx = match_str(allchannel, cfg.partchannel);
-  kchanindx = setdiff(1:numel(allchannel), pchanindx);
-  keepchn = allchannel(kchanindx);
-  cfg.pchanindx = pchanindx;
+if ~isempty(cfg.partchannel) && (isfield(data, 'label')||isfield(data, 'labelcmb'))
+  if isfield(data, 'label')
+    label = data.label;
+  elseif isfield(data, 'labelcmb')
+    [indx, label] = labelcmb2indx(data.labelcmb);
+  end
+  allchannel = ft_channelselection(cfg.channel, label);
+  pchanindx  = match_str(allchannel, cfg.partchannel);
+  kchanindx  = setdiff(1:numel(allchannel), pchanindx);
+  keepchn    = allchannel(kchanindx);
+  
+  cfg.pchanindx   = pchanindx;
   cfg.allchanindx = kchanindx;
+  
   partstr = '';
   for k = 1:numel(cfg.partchannel)
     partstr = [partstr, '-', cfg.partchannel{k}];
@@ -501,10 +510,17 @@ if ~isempty(cfg.partchannel)
   for k = 1:numel(keepchn)
     keepchn{k} = [keepchn{k}, '\', partstr(2:end)];
   end
-  data.label = keepchn; % update labels to remove the partialed channels
-  % FIXME consider keeping track of which channels have been partialised
+  if isfield(data, 'label')
+    data.label = keepchn; % update labels to remove the partialed channels
+    % FIXME consider keeping track of which channels have been partialised
+  elseif isfield(data, 'labelcmb')
+    for k = 1:numel(data.labelcmb)
+      data.labelcmb{k} = [data.labelcmb{k}, '\', partstr(2:end)];
+    end
+  end
+  
 else
-  cfg.pchanindx = [];
+  cfg.pchanindx   = [];
   cfg.allchanindx = [];
 end
 

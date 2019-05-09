@@ -104,7 +104,7 @@ end
 siz = [size(input) 1];
 
 % do partialisation if necessary
-if ~isempty(pchanindx)
+if ~isempty(pchanindx) && isempty(powindx)
   % partial spectra are computed as in Rosenberg JR et al (1998) J.Neuroscience Methods, equation 38
   
   chan   = allchanindx;
@@ -130,6 +130,40 @@ if ~isempty(pchanindx)
   end
   input = A;
   siz = size(input);
+elseif ~isempty(pchanindx)
+  % linearly indexed crossspectra require some more complicated handling
+  if numel(pchanindx)>1
+    ft_error('more than one channel for partialisation with linearly indexed crossspectra is currently not implemented');
+  end
+  
+  p_input = input;
+  for k = 1:size(powindx,1)
+    % we need to look for the combi's (and take conjugates if needed), to
+    % achieve F_ab\p = F_ab - F_ap*inv(F_p)*F_pb;
+    
+    this = powindx(k,:);
+    sela = find(powindx(:,1)==this(1)&powindx(:,2)==pchanindx);
+    if ~isempty(sela)
+      F_ap = input(:,sela,:,:);
+    else
+      sela = find(powindx(:,2)==this(1)&powindx(:,1)==pchanindx);
+      F_ap = conj(input(:,sela,:,:));
+    end
+    
+    selb = find(powindx(:,2)==this(2)&powindx(:,1)==pchanindx);
+    if ~isempty(selb)
+      F_pb = input(:,selb,:,:);
+    else
+      selb = find(powindx(:,1)==this(2)&powindx(:,2)==pchanindx);
+      F_pb = conj(input(:,selb,:,:));
+    end
+    selp = find(powindx(:,1)==pchanindx&powindx(:,2)==pchanindx);
+    F_pp = input(:,selp,:,:);
+    
+    p_input(:,k,:,:) = input(:,k,:,:) - F_ap.*(1./F_pp).*F_pb;
+    
+  end
+  input = p_input; clear p_input; 
 else
   % do nothing
 end
