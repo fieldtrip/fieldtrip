@@ -3,13 +3,12 @@ function test_old_ft_singleplotER
 % MEM 1gb
 % WALLTIME 00:10:00
 
-
-% this script tests the functionality of ft_singleplotER with respect to the 
+% this script tests the functionality of ft_singleplotER with respect to the
 % different input datatypes. no other functionality is tested.
 % the script has been written in order to test a clean up of the code
 
-filename = fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/'), 'preproc_neuroscan16');
-load(filename);
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/preproc_neuroscan16');
+load(filename)
 
 %there's an unresolved issue with duplicate labels 'FREE'
 %FIXME
@@ -62,11 +61,14 @@ cfg.refchannel = coh.label(1);
 ft_singleplotER(cfg, coh);
 
 %create connectivity-data with sparse linear indexing
-cfgc2.channelcmb = [repmat(freqx.label(5),[numel(freqx.label)-1 1]) freqx.label([1:4 6:end])];
+cfgc2.channelcmb = [repmat(freqx.label(5), [numel(freqx.label)-1 1]) freqx.label([1:4 6:end])];
 coh2  = ft_connectivityanalysis(cfgc2, freqx);
 
 %plot
-cfg.refchannel = coh2.labelcmb{1,1};
+cfg.refchannel = 'Cz';
+coh2 = ft_checkdata(coh2, 'cmbrepresentation', 'full');
+ft_singleplotER(cfg, coh2);
+coh2 = ft_checkdata(coh2, 'cmbrepresentation', 'full');
 ft_singleplotER(cfg, coh2);
 
 %create connectivity-data with very sparse linear indexing
@@ -87,25 +89,25 @@ figure;ft_singleplotER(cfg, tlck1, tlck2);
 %create connectivity-data with even sparser linear indexing
 % cfgc2.channelcmb = [repmat(freq2.label(5),[10 1]) freq2.label(21:30)';repmat(freq2.label(10),[10 1]) freq2.label(21:30)'];
 % coh4 = ft_connectivityanalysis(cfgc2, freq2);
-% 
+%
 % %plot: this breaks
 % cfg.cohrefchannel = 'gui';
 % ft_topoplotER(cfg, coh4);
-% 
+%
 % %plot: this works
 % cfg.cohrefchannel = coh4.labelcmb(1,1);
 % ft_topoplotER(cfg, coh4);
-% 
+%
 % %create connectivity-data with asymmetry
 % %the data are probably not full-rank creating a problem for the sf
 % %freq3 = ft_selectdata(freq2, 'channel', freq2.label(1:30));
 % %%subselection of channels does not help
 % freq4 = freq2transfer([], freq2);
-% 
+%
 % cfgc2 = [];
 % cfgc2.method = 'granger';
 % granger = ft_connectivityanalysis(cfgc2, freq4);
-% 
+%
 % cfg.cohrefchannel = 'gui';
 % cfg.zparam = 'grangerspctrm';
 % ft_topoplotER(cfg, granger);
