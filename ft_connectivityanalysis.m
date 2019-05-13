@@ -181,7 +181,7 @@ if isfield(data, 'label')
   end
   tmpcfg = [];
   tmpcfg.channel = unique(selchan);
-  tmpcfg.channelcmb = ft_channelcombination({'all' 'all'}, tmpcfg.channel, 0, 2); % ensure the crosspectra (if present) to also be selected
+  %tmpcfg.channelcmb = ft_channelcombination({'all' 'all'}, tmpcfg.channel, 0, 2); % ensure the crosspectra (if present) to also be selected
   data = ft_selectdata(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
