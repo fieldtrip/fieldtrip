@@ -95,7 +95,7 @@ cfg = [];
 cfg.layout = 'biosemi64.lay';
 cfg.parameter = 'cohspctrm';
 % cfg.refchannel = 'gui';
-cfg.refchannel = 'Cz';
+cfg.refchannel = freq2.label{5};
 
 coh2 = ft_checkdata(coh2, 'cmbrepresentation', 'full');
 figure; ft_topoplotER(cfg, coh2);drawnow
@@ -115,7 +115,7 @@ cfgc2.channelcmb = [repmat(freq2.label(5),[10 1]) freq2.label(21:30);repmat(freq
 coh4 = ft_connectivityanalysis(cfgc2, freq2);
 
 %plot
-cfg.refchannel = 'Cz';
+cfg.refchannel = freq2.label{5};
 
 coh2 = ft_checkdata(coh2, 'cmbrepresentation', 'full');
 figure; ft_topoplotER(cfg, coh4);drawnow
