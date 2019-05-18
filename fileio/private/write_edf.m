@@ -47,10 +47,11 @@ end
 labels = char(32*ones(nChans, 16));
 % labels
 for i=1:nChans
-  if length(hdr.label{i}) > 16
+  ln = length(hdr.label{i});
+  if ln > 16
     ft_warning('Truncating label %s to %s\n', hdr.label{i}, hdr.label{i}(1:16));
   end
-  labels(i,1:16) = hdr.label{i}(1:16);
+  labels(i,1:ln) = hdr.label{i}(1:ln);
 end
 
 if ~isreal(data)
@@ -79,8 +80,8 @@ minV = min(data, [], 2);
 %   data = int16(data);
 % end
 
-% approximately one second, with an integer number of samples
-blocksize = round(hdr.Fs)/hdr.Fs;
+% write in data blocks of approximately one second, with an integer number of samples
+blocksize = round(hdr.Fs);
 nBlocks = floor(nSamples/blocksize);
 
 digMin = sprintf('%-8i', minV);
@@ -115,8 +116,8 @@ fprintf(fid, '%02i.%02i.%02i', c(4), c(5), round(c(6))); % time as hh.mm.ss
 
 fprintf(fid, '%-8i', 256*(1+nChans));  % number of bytes in header
 fprintf(fid, '%44s', ' '); % reserved (44 spaces)
-fprintf(fid, '%-8i', nBlocks);  % number of data records
-fprintf(fid, '%8f', blocksize);  % duration of data record
+fprintf(fid, '%-8i', nBlocks); % number of data records
+fprintf(fid, '%8f', blocksize/hdr.Fs); % duration of data record in seconds
 fprintf(fid, '%-4i', nChans);  % number of signals = channels
 
 fwrite(fid, labels', 'char*1'); % labels
@@ -128,9 +129,9 @@ fwrite(fid, digMin', 'char*1'); % digital minimum
 fwrite(fid, digMax', 'char*1'); % digital maximum
 fwrite(fid, 32*ones(80,nChans), 'uint8'); % prefiltering (all spaces)
 for k=1:nChans
-  fprintf(fid, '%-8i', 1); % 1 sample pre record (each channel)
+  fprintf(fid, '%-8i', blocksize); % samples per record (each channel)
 end
-fwrite(fid, 32*ones(32,nChans), 'uint8'); % reserverd (32 spaces / channel)
+fwrite(fid, 32*ones(32,nChans), 'uint8'); % reserved (32 spaces / channel)
 
 % now write data
 begsample = 1;
