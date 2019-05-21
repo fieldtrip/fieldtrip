@@ -25,7 +25,7 @@ function [dat, lab] = read_bham(filename)
 %
 % $Id$
 
-fid = fopen(filename, 'rt');
+fid = fopen_or_error(filename, 'rt');
 
 lablen = 6;
 line   = fgetl(fid);

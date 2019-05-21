@@ -1,4 +1,4 @@
-function status = webwrite(url, data, ignored_options)
+function [varargout] = webwrite(varargin)
 
 % WEBWRITE is a drop-in replacement for the function with the same
 % name that was introduced in MATLAB 2014b. This function is only
@@ -10,17 +10,16 @@ function status = webwrite(url, data, ignored_options)
 % This function posts data (which can be a struct or a string) to url.
 % The options argument is currently ignored.
 %
-% Unlike builtin Matlab webwrite, this function
-% - sets headers always to
-%  'Content-Type: application/json; charset=UTF-8' irrespective of the
-%   contents of the options argument.
+% Unlike builtin MATLAB webwrite, this function
+% - sets headers always to 'Content-Type: application/json; charset=UTF-8'
+%   irrespective of the contents of the options argument.
 % - the status returned is zero if succesful, and nonzero otherwise
 %
 % This requires that curl is available on the command-line.
 % If curl is not available, or an other error occurs, then this function
 % raises an error.
 
-% Copyright (C) 2017, Robert Oostenveld, Nikolaas N. Oosterhof
+% Copyright (C) 2017-2019, Robert Oostenveld, Nikolaas N. Oosterhof
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -40,14 +39,40 @@ function status = webwrite(url, data, ignored_options)
 %
 % $Id$
 
-if nargin<2
-  data = '';
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% see https://github.com/fieldtrip/fieldtrip/issues/899
+
+if exist(mfilename, 'builtin') || any(strncmp(which(mfilename, '-all'), matlabroot, length(matlabroot)) & cellfun(@isempty, regexp(which(mfilename, '-all'), fullfile('private', mfilename))))
+  % remove this directory from the path
+  p = fileparts(mfilename('fullpath'));
+  warning('removing %s from your path, see http://bit.ly/2SPPjUS', p);
+  rmpath(p);
+  % call the original MATLAB function
+  if exist(mfilename, 'builtin')
+    [varargout{1:nargout}] = builtin(mfilename, varargin{:});
+  else
+    [varargout{1:nargout}] = feval(mfilename, varargin{:});
+  end
+  return
 end
 
-if nargin<3
-  % this code could be removed - it is kept because earlier versions
-  % contained it.
-  ignored_options = {};
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% this is where the actual replacement code starts
+% function status = webwrite(url, data, options)
+
+% deal with the input arguments
+if nargin==1
+  [url               ] = deal(varargin{1:1});
+elseif nargin==2
+  [url, data         ] = deal(varargin{1:2});
+elseif nargin==3
+  [url, data, options] = deal(varargin{1:3});
+else
+  error('incorrect number of input arguments')
+end
+
+if nargin<2
+  data = '';
 end
 
 if isstruct(data)
@@ -72,6 +97,12 @@ cmd = sprintf(['curl '...
                 data, url);
 
 [status, str] = system(cmd);
+
 if status
   error('An error occured when running this command: ''%s'':\n%s',cmd,str);
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% deal with the output arguments
+
+varargout = {status};

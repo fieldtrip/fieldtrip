@@ -82,7 +82,7 @@ end
 
 % the file starts with a 16*1024 bytes header in ascii, followed by a number of records
 hdr = neuralynx_getheader(filename);
-fid = fopen(filename, 'rb', 'ieee-le');
+fid = fopen_or_error(filename, 'rb', 'ieee-le');
 
 % determine the length of the file
 fseek(fid, 0, 'eof');
@@ -155,7 +155,7 @@ if NRecords>0
   if (ispc), fclose(fid); end
   ts1 = neuralynx_timestamp(filename, 1);
   tsE = neuralynx_timestamp(filename, inf);
-  if (ispc), fid = fopen(filename, 'rb', 'ieee-le'); end
+  if (ispc), fid = fopen_or_error(filename, 'rb', 'ieee-le'); end
   
   hdr.FirstTimeStamp  = ts1;
   hdr.LastTimeStamp   = tsE;

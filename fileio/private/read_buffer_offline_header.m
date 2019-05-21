@@ -54,8 +54,8 @@ if ( isempty(finfo) || finfo.bytes==0 )
   ft_warning(sprintf('Could not open text header file : %s',headerfile));
 else  
   txt.nSamples=0;
-  FA = fopen([headerfile '.txt'], 'r');
-  while ~feof(FA);
+  FA = fopen_or_error([headerfile '.txt'], 'r');
+  while ~feof(FA)
     s = fgetl(FA);
     indEq = find(s=='=');
     if numel(indEq)==1
@@ -120,7 +120,7 @@ else
   if ( ~isfield(hdr.orig,'endianness') )
     hdr.orig.endianness='native';
   end
-  F = fopen(headerfile,'rb',hdr.orig.endianness);
+  F = fopen_or_error(headerfile,'rb',hdr.orig.endianness);
   hdr.nChans    = double(fread(F,1,'uint32'));
   hdr.nSamples  = double(fread(F,1,'uint32'));
   hdr.nEvents   = double(fread(F,1,'uint32'));
@@ -185,7 +185,7 @@ else
      case 7 % FT_CHUNK_CTF_RES4 = 7
       hdr.orig.ctf_res4 = fread(F, typeAndSize(2), 'uint8=>uint8');
       tmp_name = tempname;
-      FT = fopen(tmp_name, 'wb');
+      FT = fopen_or_error(tmp_name, 'wb');
       fwrite(FT, orig.ctf_res4, 'uint8');
       fclose(FT);
       R4F = read_ctf_res4(tmp_name);
@@ -203,7 +203,7 @@ end
 % binary has invalid samples info (or isn't there), get from samples file instead..
 if ~isfield(hdr,'nSamples') || hdr.nSamples == 0
   datafile = [headerfile(1:end-6) 'samples'];
-  FD = fopen(datafile, 'rb');
+  FD = fopen_or_error(datafile, 'rb');
   fseek(FD,0,'eof');
   fileSize = ftell(FD);
   fclose(FD);

@@ -31,7 +31,7 @@ success = true;
 % create config options
 cfg                 = [];
 cfg.symmetry        = [];
-cfg.sourcemodel.resolution = 2;
+cfg.resolution = 2;
 cfg.headmodel = vol;
 cfg.grad = grad_standard;
 
@@ -55,7 +55,7 @@ end
 % create config options
 cfg                 = [];
 cfg.symmetry        = [];
-cfg.sourcemodel.resolution = 2;
+cfg.resolution = 2;
 cfg.headmodel = vol;
 cfg.grad = grad_extended;
 

@@ -41,7 +41,7 @@ sgn    = chanindx;
 nsmp   = (endsample-begsample+1);
 dat    = zeros(length(sgn), nsmp);
 
-fid = fopen(filename, 'r', 'ieee-le');
+fid = fopen_or_error(filename, 'r', 'ieee-le');
 for sgnlop=1:length(sgn)
 
   if hdr.varheader(sgn(sgnlop)).typ == 0

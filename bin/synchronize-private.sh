@@ -400,6 +400,7 @@ ARRAY=()
 ARRAY+=(fileio/private/elproj.m)
 ARRAY+=(forward/private/elproj.m)
 ARRAY+=(plotting/private/elproj.m)
+ARRAY+=(test/private/elproj.m)
 ARRAY+=(private/elproj.m)
 sync ${ARRAY[*]}
 
@@ -564,6 +565,14 @@ ARRAY+=(utilities/private/fixsampleinfo.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# fopen_or_error.m
+
+ARRAY=()
+ARRAY+=(private/fopen_or_error.m)
+ARRAY+=(fileio/private/fopen_or_error.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # ft_apply_montage.m
 
 ARRAY=()
@@ -719,6 +728,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(fileio/private/ft_fetch_data.m)
+ARRAY+=(test/private/ft_fetch_data.m)
 ARRAY+=(utilities/ft_fetch_data.m)
 sync ${ARRAY[*]}
 

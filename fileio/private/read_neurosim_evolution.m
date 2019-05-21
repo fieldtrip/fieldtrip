@@ -46,7 +46,7 @@ end
 label = {};
 orig  = {};
 
-fid = fopen(filename, 'rb');
+fid = fopen_or_error(filename, 'rb');
 
 % read the header
 line =  '#';

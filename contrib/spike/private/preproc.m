@@ -257,7 +257,7 @@ end
 % do the rereferencing in case of EEG
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(cfg.implicitref) && ~any(match_str(cfg.implicitref,label))
-  label = {label{:} cfg.implicitref};
+  label = {label{:} cfg.implicitref}';
   dat(end+1,:) = 0;
 end
 

@@ -41,29 +41,32 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
     iW1aenge_now = datestr(now, 30);
     cfg.outputfile = {};
     for i=1:numel(iW1aenge_postamble)
-      cfg.outputfile{i} = fullfile(Fief7bee_reproducescript, sprintf('%s_output_%s.mat', iW1aenge_now, iW1aenge_postamble{i}));
+      cfg.outputfile{i} = fullfile(Fief7bee_reproducescript, sprintf('%s_%s_output_%s.mat', ...
+        iW1aenge_now, FjmoT6aA_highest_ft, iW1aenge_postamble{i}));
     end
     
     % write the large configuration fields to a MATLAB file
     % this applies to layout, event, sourcemodel, headmodel, grad, etc.
-    fn = ignorefields('recursesize');
-    for i=1:numel(fn)
-      if isfield(cfg.callinfo.usercfg, fn{i}) && isstruct((cfg.callinfo.usercfg.(fn{i})))
-        Fief7bee_outputfile = fullfile(Fief7bee_reproducescript, sprintf('%s_input_%s.mat', iW1aenge_now, fn{i}));
-        savevar(Fief7bee_outputfile, fn{i}, cfg.callinfo.usercfg.(fn{i}));
-        cfg.callinfo.usercfg.(fn{i})  = Fief7bee_outputfile;
-      end
-    end
+    % note that this is here, rather than in the (seemingly more logical)
+    % ft_preamble_loadvar, because this code depends on cfg.callinfo (which
+    % is only present at postamble stage)
+    cfg = save_large_cfg_fields(cfg, FjmoT6aA_highest_ft, Fief7bee_reproducescript, iW1aenge_now);
     
     % write a snippet of MATLAB code with the user-specified configuration and function call
-    reproducescript(fullfile(Fief7bee_reproducescript, 'script.m'), cfg, isempty(iW1aenge_postamble))
+    reproducescript(Fief7bee_reproducescript, fullfile(Fief7bee_reproducescript, 'script.m'),...
+      FjmoT6aA_highest_ft, cfg, isempty(iW1aenge_postamble));
+    
+    % instruct savevar() to also write hashes of output files to the
+    % hashfile
+    Fief7bee_hashfile = fullfile(Fief7bee_reproducescript, 'hashes.mat');
     
   elseif (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile))
     % keep the output file as it is
-    
+    Fief7bee_hashfile = [];
   else
     % don't write to an output file
     cfg.outputfile = {};
+    Fief7bee_hashfile = [];
   end
   
   if isequal(iW1aenge_postamble, {'varargout'}) && ~iscell(cfg.outputfile)
@@ -77,19 +80,19 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
     if isequal(iW1aenge_postamble, {'varargout'})
       % the output is in varargout
       for tmpindx=1:length(cfg.outputfile)
-        savevar(cfg.outputfile{tmpindx}, 'data', varargout{tmpindx});
+        savevar(cfg.outputfile{tmpindx}, 'data', varargout{tmpindx}, Fief7bee_hashfile);
       end % for
       clear tmpindx
     else
       % the output is in explicitly named variables
       for tmpindx=1:length(cfg.outputfile)
-        savevar(cfg.outputfile{tmpindx}, iW1aenge_postamble{tmpindx}, eval(iW1aenge_postamble{tmpindx}));
+        savevar(cfg.outputfile{tmpindx}, iW1aenge_postamble{tmpindx}, eval(iW1aenge_postamble{tmpindx}), Fief7bee_hashfile);
       end % for
       clear tmpindx
     end
   else
     % iW1aenge_postamble{1} contains the name of the only variable
-    savevar(cfg.outputfile, iW1aenge_postamble{1}, eval(iW1aenge_postamble{1}));
+    savevar(cfg.outputfile, iW1aenge_postamble{1}, eval(iW1aenge_postamble{1}), Fief7bee_hashfile);
   end
   
   if isfield(cfg, 'outputlock') && ~isempty(cfg.outputlock)

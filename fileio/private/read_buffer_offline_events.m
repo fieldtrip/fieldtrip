@@ -33,7 +33,7 @@ wordsize = {
   8 % 'double'
 };
 
-F = fopen(eventfile,'rb',hdr.orig.endianness);
+F = fopen_or_error(eventfile,'rb',hdr.orig.endianness);
 numEvt = 0;
 
 fseek(F, 0, 'eof');

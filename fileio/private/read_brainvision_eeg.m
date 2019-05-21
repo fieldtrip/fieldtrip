@@ -57,7 +57,7 @@ if strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'multiplexe
       samplesize = 4;
   end % case
   
-  fid = fopen(filename, 'rb', 'ieee-le');
+  fid = fopen_or_error(filename, 'rb', 'ieee-le');
   
   if isempty(chanindx)
     % read all the channels
@@ -95,7 +95,7 @@ if strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'multiplexe
   fclose(fid);
   
 elseif strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'vectorized') && strcmpi(hdr.BinaryFormat, 'ieee_float_32')
-  fid = fopen(filename, 'rb', 'ieee-le');
+  fid = fopen_or_error(filename, 'rb', 'ieee-le');
   fseek(fid, 0, 'eof');
   hdr.nSamples = ftell(fid)/(4*hdr.NumberOfChannels);
   fseek(fid, 0, 'bof');
@@ -109,7 +109,7 @@ elseif strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'vector
   fclose(fid);
   
 elseif strcmpi(hdr.DataFormat, 'ascii') && strcmpi(hdr.DataOrientation, 'multiplexed')
-  fid = fopen(filename, 'rt');
+  fid = fopen_or_error(filename, 'rt');
   
   % skip lines if hdr.skipLines is set and not zero
   if isfield(hdr,'skipLines') && hdr.skipLines > 0
@@ -135,7 +135,7 @@ elseif strcmpi(hdr.DataFormat, 'ascii') && strcmpi(hdr.DataOrientation, 'multipl
 elseif strcmpi(hdr.DataFormat, 'ascii') && strcmpi(hdr.DataOrientation, 'vectorized')
   % this is a very inefficient fileformat to read data from, since it requires to
   % read in all the samples of each channel and then select only the samples of interest
-  fid = fopen(filename, 'rt');
+  fid = fopen_or_error(filename, 'rt');
   dat = zeros(hdr.NumberOfChannels, endsample-begsample+1);
   skipColumns = 0;
   for chan=1:hdr.NumberOfChannels

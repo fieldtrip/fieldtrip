@@ -29,7 +29,7 @@ function [hdr] = read_wdq_header(filename)
 % information about how to interpret the file are taken from the document
 % 'CODAS data storage format'
 
-fid = fopen(filename, 'r');
+fid = fopen_or_error(filename, 'r');
 %tmp = fread(fid, 110); % the first 110 bytes are always interpretable equally
 hdr = [];
 hdr.nchan         = fread(fid, 1, 'uint16=>uint16');

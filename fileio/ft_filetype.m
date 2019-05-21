@@ -909,6 +909,12 @@ elseif (filetype_check_extension(filename, '.vid') || filetype_check_extension(f
   manufacturer = 'VideoMEG';
   content = 'video';
   
+elseif (filetype_check_extension(filename, '.avi') || filetype_check_extension(filename, '.vlf') || filetype_check_extension(filename, '.wmv') || filetype_check_extension(filename, '.mov') || filetype_check_extension(filename, '.mp4'))
+  % generic fideo files, these are also supported by ft_read_header and ft_read_data
+  type = 'video';
+  manufacturer = 'generic';
+  content = 'video';
+  
 elseif (filetype_check_extension(filename, '.dat') ||  filetype_check_extension(filename, '.Dat')) && (exist(fullfile(p, [f '.ini']), 'file') || exist(fullfile(p, [f '.Ini']), 'file'))
   % this should go before curry_dat
   type = 'deymed_dat';

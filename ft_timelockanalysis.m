@@ -115,7 +115,7 @@ cfg.vartrllength = ft_getopt(cfg, 'vartrllength', 0);
 cfg.feedback     = ft_getopt(cfg, 'feedback',     'text');
 cfg.preproc      = ft_getopt(cfg, 'preproc',      []);
 cfg.covariance       = ft_getopt(cfg, 'covariance',      'no');
-cfg.covariancewindow = ft_getopt(cfg, 'covariancwindow', 'all');
+cfg.covariancewindow = ft_getopt(cfg, 'covariancewindow', 'all');
 cfg.removemean       = ft_getopt(cfg, 'removemean',      'yes');
 
 % create logical flags for convenience

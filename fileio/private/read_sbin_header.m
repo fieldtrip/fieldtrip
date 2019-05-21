@@ -39,10 +39,7 @@ function [header_array, CateNames, CatLengths, preBaseline] = read_sbin_header(f
 %
 % $Id$
 
-fid=fopen([filename],'r');
-if fid==-1
-    ft_error('wrong filename')
-end
+fid=fopen_or_error([filename],'r');
 
 version     = fread(fid,1,'int32');
 if isempty(version)

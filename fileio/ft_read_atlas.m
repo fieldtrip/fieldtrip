@@ -77,7 +77,7 @@ elseif strcmp(x, '.nii') && exist(fullfile(p, [f '.txt']), 'file')
   % and then a variable number of column text info, where the first column
   % is the index, and the second column the label.
   labelfile = fullfile(p, [f '.txt']);
-  fid = fopen(labelfile, 'rt');
+  fid = fopen_or_error(labelfile, 'rt');
   l1  = fgetl(fid);
   if strcmp(l1(1),'[') && strcmp(l1(end),']')
     defaultformat = 'aal_ext';
@@ -115,7 +115,7 @@ unit       = ft_getopt(varargin, 'unit');
 switch fileformat
   case 'aal'
     labelfile = fullfile(p, [f '.txt']);
-    fid = fopen(labelfile, 'rt');
+    fid = fopen_or_error(labelfile, 'rt');
     C = textscan(fid, '%s%s%d');
     lab = C{2};
     idx = C{3};
@@ -140,7 +140,7 @@ switch fileformat
     
   case 'aal_ext'
     labelfile = fullfile(p, [f '.txt']);
-    fid = fopen(labelfile, 'rt');
+    fid = fopen_or_error(labelfile, 'rt');
     C = textscan(fid, '%d%s%*[^\n]', 'HeaderLines', 1, 'Delimiter', '\t');
     lab = C{2};
     idx = C{1};
@@ -180,7 +180,7 @@ switch fileformat
     
     %labels
     atlas.tissuelabel = cell(1,246);
-    fid = fopen(labelfile, 'rt');
+    fid = fopen_or_error(labelfile, 'rt');
     lab  = fgetl(fid); %lab='Brainnetome Atlas'
     for label_i=1:246
         atlas.tissuelabel{1,label_i}=fgetl(fid);
@@ -627,6 +627,11 @@ switch fileformat
     
     [p, f, x] = fileparts(filename);
     
+    % if the original file was a .gz
+    if isequal(x,'.gz')
+      [p, f, x] = fileparts(filename(1:end-3));
+    end
+    
     % this is a mat file that Ingrid apparently discovered somewhere
     % filename1 = fullfile(p, [f '_List.mat']);
     
@@ -647,7 +652,7 @@ switch fileformat
       % ...
       
       
-      fid = fopen(filename2);
+      fid = fopen_or_error(filename2);
       i = 1;
       value = [];
       label = {};
@@ -693,8 +698,8 @@ switch fileformat
     end
     
     % replace the original brick with interspersed integers with one that contains contiguous integets
-    atlas.brick0      = new_brick0;
-    atlas.brick0label = label;
+    atlas.parcellation      = new_brick0;
+    atlas.parcellationlabel = label(:);
     
   case {'freesurfer_volume'}
     % numeric values in the volume correspond to a label that can be found

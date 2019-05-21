@@ -102,8 +102,7 @@ for j=1:length(funname)
   for i=1:length(str)
     if length(str{i})>1
       % remove double spaces
-      dum = findstr(str{i}, '  ');
-      str{i}(dum) = [];
+      str{i} = strrep(str{i}, ' ', '');
     end
     while ~isempty(str{i}) && str{i}(1)==' '
       % remove spaces at the begin of the line

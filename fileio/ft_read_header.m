@@ -1553,7 +1553,7 @@ switch headerformat
     % this is hard-coded for the Jinga-Hi JAGA16 system with 16 channels
     packetsize = (4*2 + 6*2 + 16*43*2); % in bytes
     % read the first packet
-    fid  = fopen(filename, 'r');
+    fid  = fopen_or_error(filename, 'r');
     buf  = fread(fid, packetsize/2, 'uint16');
     fclose(fid);
     

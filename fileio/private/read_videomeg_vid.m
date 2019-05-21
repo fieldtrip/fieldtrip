@@ -15,7 +15,7 @@ needdat = numel(varargin)==3;
 % the following code is largely copied from LOAD_VIDEO0123
 
 if needhdr
-  fid   = fopen(filename, 'rb');
+  fid   = fopen_or_error(filename, 'rb');
   magic = fread(fid, [1 length('ELEKTA_VIDEO_FILE')], 'uchar=>char');
   ver   = fread(fid, 1, 'uint32');
   
@@ -111,7 +111,7 @@ elseif needdat
   nframes = endsample-begsample+1;
   dat     = zeros(prod(dim), nframes);
   
-  fid = fopen(filename, 'rb');
+  fid = fopen_or_error(filename, 'rb');
   for i=1:nframes
     fseek(fid, frame_ptr(begsample-1+i), 'bof');
     frame = fread(fid, frame_size(begsample-1+i), 'uchar=>uchar');

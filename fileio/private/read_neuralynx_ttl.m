@@ -29,7 +29,7 @@ function [dat] = read_neuralynx_ttl(filename, begsample, endsample)
 %
 % $Id$
 
-fid = fopen(filename, 'rb', 'ieee-le');
+fid = fopen_or_error(filename, 'rb', 'ieee-le');
 
 if begsample<1
   begsample = 1;

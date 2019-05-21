@@ -65,7 +65,7 @@ datafile_without_path   = [f '.eeg'];
 
 
 % open the data file and write the binary data
-fid = fopen(datafile, 'wb', 'ieee-le');
+fid = fopen_or_error(datafile, 'wb', 'ieee-le');
 if length(size(dat))>2
   ft_warning('writing segmented data as if it were continuous');
   for i=1:ntrl
@@ -78,7 +78,7 @@ end
 fclose(fid);
 
 % open the header file and write the ascii header information
-fid = fopen(headerfile, 'wb');
+fid = fopen_or_error(headerfile, 'wb');
 fprintf(fid, 'Brain Vision Data Exchange Header File Version 1.0\r\n');
 fprintf(fid, '; Data created by FieldTrip\r\n');
 fprintf(fid, '\r\n');
@@ -106,7 +106,7 @@ end
 fclose(fid);
 
 % open the marker file and write the ascii marker information
-fid = fopen(markerfile, 'wb');
+fid = fopen_or_error(markerfile, 'wb');
 fprintf(fid, 'Brain Vision Data Exchange Marker File, Version 1.0\n');
 fprintf(fid, '\n');
 fprintf(fid, '[Common Infos]\n');

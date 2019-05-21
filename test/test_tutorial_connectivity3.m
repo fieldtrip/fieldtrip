@@ -29,12 +29,12 @@ cfg.vartrllength      = 2;
 cfg.covariancewindow  = 'all';
 timelock              = ft_timelockanalysis(cfg, data);
 
-cfg             = [];
-cfg.method      = 'lcmv';
-cfg.hdmfile     = fullfile(datadir,'SubjectCMC.hdm');
-cfg.sourcemodel.pos    = maxpos;
-cfg.keepfilter  = 'yes';
-source          = ft_sourceanalysis(cfg, timelock);
+cfg                  = [];
+cfg.method           = 'lcmv';
+cfg.hdmfile          = fullfile(datadir,'SubjectCMC.hdm');
+cfg.sourcemodel.pos  = maxpos;
+cfg.keepfilter       = 'yes';
+source               = ft_sourceanalysis(cfg, timelock);
 
 %% construct the 3-D virtual channel at the location of interest
 beamformer = source.avg.filter{1};

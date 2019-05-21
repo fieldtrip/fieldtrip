@@ -25,9 +25,9 @@ function [condNumbers,condLabels] = read_ctf_cls(fname)
 condNumbers = [];
 condLabels = {};
 
-fid = fopen(fname,'r');
-
-if fid == -1
+try
+  fid = fopen_or_error(fname,'r');
+catch err
   condNumbers = [];
   condLabels = [];
   return

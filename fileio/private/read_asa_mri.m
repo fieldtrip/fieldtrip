@@ -61,7 +61,7 @@ seg = [];
 if ~isempty(hdr.mrifile)
   mrifile = fullfile(path, hdr.mrifile);
   mri = zeros(dim);
-  fid = fopen(mrifile, 'rb', 'ieee-le');
+  fid = fopen_or_error(mrifile, 'rb', 'ieee-le');
   mri(:) = fread(fid, prod(dim), 'uint8');
   mri = uint8(mri);
   fclose(fid);
@@ -71,7 +71,7 @@ end
 if ~isempty(hdr.segfile)
   segfile = fullfile(path, hdr.segfile);
   seg = zeros(dim);
-  fid = fopen(segfile, 'rb', 'ieee-le');
+  fid = fopen_or_error(segfile, 'rb', 'ieee-le');
   seg(:) = fread(fid, prod(dim), 'uint8');
   seg = uint8(seg);
   fclose(fid);

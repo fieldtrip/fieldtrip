@@ -51,7 +51,7 @@ end
 % int16 ChanZ[31]
 
 hdr = neuralynx_getheader(filename);
-fid = fopen(filename, 'rb', 'ieee-le');
+fid = fopen_or_error(filename, 'rb', 'ieee-le');
 
 % determine the length of the file
 fseek(fid, 0, 'eof');

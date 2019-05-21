@@ -18,6 +18,7 @@ function [cfg] = ft_movieplotER(cfg, data)
 %   cfg.baseline     = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE
 %   cfg.baselinetype = 'absolute' or 'relative' (default = 'absolute')
 %   cfg.colorbar     = 'yes', 'no' (default = 'no')
+%   cfg.colorbartext =  string indicating the text next to colorbar
 %
 % The layout defines how the channels are arranged. You can specify the
 % layout in a variety of ways:
