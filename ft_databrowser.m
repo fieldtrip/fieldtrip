@@ -212,6 +212,7 @@ cfg.verticalpadding = ft_getopt(cfg, 'verticalpadding', 'auto');
 cfg.artifactalpha   = ft_getopt(cfg, 'artifactalpha', 0.2);          % for the opacity of marked artifacts
 cfg.allowoverlap    = ft_getopt(cfg, 'allowoverlap', 'no');          % for ft_fetch_data
 cfg.contournum      = ft_getopt(cfg, 'contournum', 0);               % topoplot contour lines
+cfg.trl             = ft_getopt(cfg, 'trl');
 
 if ~isfield(cfg, 'viewmode')
   % butterfly, vertical, component
@@ -229,7 +230,7 @@ if ~isempty(cfg.chanscale)
   elseif numel(cfg.channel) ~= numel(cfg.chanscale)
     ft_error('cfg.chanscale should have the same number of elements as cfg.channel');
   end
-
+  
   % make sure chanscale is a column vector, not a row vector
   if size(cfg.chanscale,2) > size(cfg.chanscale,1)
     cfg.chanscale = cfg.chanscale';
@@ -270,12 +271,19 @@ end
 if hasdata
   % save whether data came from a timelock structure
   istimelock = strcmp(ft_datatype(data), 'timelock');
-
+  
+  if ~isempty(cfg.trl)
+    % reduce the input data to the requested trial segments
+    tmpcfg = keepfields(cfg, {'trl'});
+    data = ft_redefinetrial(tmpcfg, data);
+    [cfg, data] = rollback_provenance(cfg, data);
+  end
+  
   % check if the input data is valid for this function
   data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
   % fetch the header from the data structure in memory
   hdr = ft_fetch_header(data);
-
+  
   if isfield(data, 'cfg') && ~isempty(ft_findcfg(data.cfg, 'origfs'))
     % don't use the events in case the data has been resampled
     ft_warning('the data has been resampled, not showing the events');
@@ -291,11 +299,11 @@ if hasdata
     %event = ft_fetch_event(data);
     event = [];
   end
-
+  
   cfg.channel = ft_channelselection(cfg.channel, hdr.label);
   chansel = match_str(data.label, cfg.channel);
   Nchans  = length(chansel);
-
+  
   if isempty(cfg.continuous)
     if numel(data.trial) == 1 && ~istimelock
       cfg.continuous = 'yes';
@@ -307,17 +315,17 @@ if hasdata
       ft_warning('interpreting trial-based data as continuous, time-axis is no longer appropriate. t(0) now corresponds to the first sample of the first trial, and t(end) to the last sample of the last trial')
     end
   end
-
+  
   % this is how the input data is segmented
-  trlorg = zeros(numel(data.trial), 3);
-  trlorg(:, [1 2]) = data.sampleinfo;
-
+  trlorg = data.sampleinfo;
+  trlorg(:,3) = 0;
+  
   % recreate offset vector (databrowser depends on this for visualisation)
   for ntrl = 1:numel(data.trial)
     trlorg(ntrl,3) = time2offset(data.time{ntrl}, data.fsample);
   end
   Ntrials = size(trlorg, 1);
-
+  
 else
   % check if the input cfg is valid for this function
   cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
@@ -326,7 +334,7 @@ else
   cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
   % read the header from file
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
-
+  
   if isempty(cfg.continuous)
     if hdr.nTrials==1
       cfg.continuous = 'yes';
@@ -334,7 +342,7 @@ else
       cfg.continuous = 'no';
     end
   end
-
+  
   if ~isempty(cfg.event)
     % use the events that the user passed in the configuration
     event = cfg.event;
@@ -342,27 +350,30 @@ else
     % read the events from file
     event = ft_read_event(cfg.dataset);
   end
-
+  
   cfg.channel = ft_channelselection(cfg.channel, hdr.label);
   chansel = match_str(hdr.label, cfg.channel);
   Nchans  = length(chansel);
-
+  
   if strcmp(cfg.continuous, 'yes')
     Ntrials = 1;
   else
     Ntrials = hdr.nTrials;
   end
-
-  % FIXME in case of continuous=yes the trl should be [1 hdr.nSamples*nTrials 0]
-  % and a scrollbar should be used
-
-  % construct trl-matrix for data from file on disk
-  trlorg = zeros(Ntrials,3);
-  if strcmp(cfg.continuous, 'yes')
-    trlorg(1, [1 2]) = [1 hdr.nSamples*hdr.nTrials];
+  
+  % construct trl-matrix for the data on disk
+  if ~isempty(cfg.trl)
+    % take the one specified by the user
+    trlorg = cfg.trl;
   else
-    for k = 1:Ntrials
-      trlorg(k, [1 2]) = [1 hdr.nSamples] + [hdr.nSamples hdr.nSamples] .* (k-1);
+    % make one that is according to the segments/trials in the data on disk
+    trlorg = zeros(Ntrials,3);
+    if strcmp(cfg.continuous, 'yes')
+      trlorg(1, [1 2]) = [1 hdr.nSamples*hdr.nTrials];
+    else
+      for k = 1:Ntrials
+        trlorg(k, [1 2]) = [1 hdr.nSamples] + [hdr.nSamples hdr.nSamples] .* (k-1);
+      end
     end
   end
 end % if hasdata
@@ -377,7 +388,6 @@ if cfg.blocksize<round(10*1/hdr.Fs)
   ft_warning('the blocksize is very small given the samping rate, increasing blocksize to 10 samples');
   cfg.blocksize = round(10*1/hdr.Fs);
 end
-
 
 % FIXME make a check for the consistency of cfg.continuous, cfg.blocksize, cfg.trl and the data header
 
@@ -470,10 +480,10 @@ if isnumeric(cfg.colorgroups)
   G = cfg.channelcolormap(:,2);
   B = cfg.channelcolormap(:,3);
   chancolors = [R(cfg.colorgroups(:)) G(cfg.colorgroups(:)) B(cfg.colorgroups(:))];
-
+  
 elseif strcmp(cfg.colorgroups, 'allblack')
   chancolors = zeros(length(labels_all),3);
-
+  
 elseif strcmp(cfg.colorgroups, 'chantype')
   type = ft_chantype(labels_all);
   [tmp1, tmp2, cfg.colorgroups] = unique(type);
@@ -482,7 +492,7 @@ elseif strcmp(cfg.colorgroups, 'chantype')
   G = cfg.channelcolormap(:,2);
   B = cfg.channelcolormap(:,3);
   chancolors = [R(cfg.colorgroups(:)) G(cfg.colorgroups(:)) B(cfg.colorgroups(:))];
-
+  
 elseif strcmp(cfg.colorgroups(1:9), 'labelchar')
   % groups determined by xth letter of label
   labelchar_num = str2double(cfg.colorgroups(10));
@@ -496,11 +506,11 @@ elseif strcmp(cfg.colorgroups(1:9), 'labelchar')
   G = cfg.channelcolormap(:,2);
   B = cfg.channelcolormap(:,3);
   chancolors = [R(cfg.colorgroups(:)) G(cfg.colorgroups(:)) B(cfg.colorgroups(:))];
-
+  
 elseif strcmp(cfg.colorgroups, 'sequential')
   % no grouping
   chancolors = lines(length(labels_all));
-
+  
 else
   ft_error('do not understand cfg.colorgroups')
 end
@@ -548,48 +558,42 @@ end
 
 % cfg.selfun - labels that are presented in rightclick menu, and is appended using ft_getuserfun(..., 'browse') later on to create a function handle
 % cfg.selcfg - cfgs for functions to be executed
-defselfun = {};
-defselcfg = {};
 
-
-% add defselfuns to user-specified defselfuns
-if ~iscell(cfg.selfun) && ~isempty(cfg.selfun)
-  cfg.selfun = {cfg.selfun};
-  cfg.selfun = [cfg.selfun defselfun];
-  % do the same for the cfgs
-  cfg.selcfg = {cfg.selcfg}; % assume the cfg is not a cell-array
-  cfg.selcfg = [cfg.selcfg defselcfg];
-else
+if ~isempty(cfg.selfun) || ~isempty(cfg.selcfg)
+  if ischar(cfg.selfun)
+    cfg.selfun = {cfg.selfun};
+  end
+  if isstruct(cfg.selcfg)
+    cfg.selcfg = {cfg.selcfg};
+  end
+elseif isempty(cfg.selfun) && isempty(cfg.selcfg)
   % simplefft
-  defselcfg{1} = [];
-  defselcfg{1}.chancolors = chancolors;
-  defselfun{1} = 'simpleFFT';
+  cfg.selcfg{1} = [];
+  cfg.selcfg{1}.chancolors = chancolors;
+  cfg.selfun{1} = 'simpleFFT';
   % multiplotER
-  defselcfg{2} = [];
-  defselcfg{2}.layout = cfg.layout;
-  defselfun{2} = 'multiplotER';
+  cfg.selcfg{2} = [];
+  cfg.selcfg{2}.layout = cfg.layout;
+  cfg.selfun{2} = 'multiplotER';
   % topoplotER
-  defselcfg{3} = [];
-  defselcfg{3}.layout = cfg.layout;
-  defselfun{3} = 'topoplotER';
+  cfg.selcfg{3} = [];
+  cfg.selcfg{3}.layout = cfg.layout;
+  cfg.selfun{3} = 'topoplotER';
   % topoplotVAR
-  defselcfg{4} = [];
-  defselcfg{4}.layout = cfg.layout;
-  defselfun{4} = 'topoplotVAR';
+  cfg.selcfg{4} = [];
+  cfg.selcfg{4}.layout = cfg.layout;
+  cfg.selfun{4} = 'topoplotVAR';
   % movieplotER
-  defselcfg{5} = [];
-  defselcfg{5}.layout      = cfg.layout;
-  defselcfg{5}.interactive = 'yes';
-  defselfun{5} = 'movieplotER';
+  cfg.selcfg{5} = [];
+  cfg.selcfg{5}.layout = cfg.layout;
+  cfg.selcfg{5}.interactive = 'yes';
+  cfg.selfun{5} = 'movieplotER';
   % audiovideo
-  defselcfg{6} = [];
-  defselcfg{6}.audiofile = ft_getopt(cfg, 'audiofile');
-  defselcfg{6}.videofile = ft_getopt(cfg, 'videofile');
-  defselcfg{6}.anonimize = ft_getopt(cfg, 'anonimize');
-  defselfun{6} = 'audiovideo';
-
-  cfg.selfun = defselfun;
-  cfg.selcfg = defselcfg;
+  cfg.selcfg{6} = [];
+  cfg.selcfg{6}.audiofile = ft_getopt(cfg, 'audiofile');
+  cfg.selcfg{6}.videofile = ft_getopt(cfg, 'videofile');
+  cfg.selcfg{6}.anonimize = ft_getopt(cfg, 'anonimize');
+  cfg.selfun{6} = 'audiovideo';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -668,7 +672,7 @@ set(h, 'Interruptible', 'off', 'BusyAction', 'queue'); % enforce busyaction to q
 
 % enable custom data cursor text
 dcm = datacursormode(h);
-set(dcm, 'updatefcn', @datacursortext);
+set(dcm, 'updatefcn', @cb_datacursortext);
 
 % set the figure window title
 funcname = mfilename();
@@ -800,7 +804,7 @@ redraw_cb(h);
 if nargout
   % wait until the user interface is closed, get the user data with the updated artifact details
   set(h, 'CloseRequestFcn', @cleanup_cb);
-
+  
   while ishandle(h)
     uiwait(h);
     opt = getappdata(h, 'opt');
@@ -808,21 +812,21 @@ if nargout
       delete(h);
     end
   end
-
+  
   % add the updated artifact definitions to the output cfg
   for i=1:length(opt.artdata.label)
     cfg.artfctdef.(opt.artdata.label{i}).artifact = convert_event(opt.artdata.trial{1}(i,:), 'artifact');
   end
-
+  
   % add the updated preproc to the output
   try
     browsecfg = getappdata(h, 'cfg');
     cfg.preproc = browsecfg.preproc;
   end
-
+  
   % add the update event to the output cfg
   cfg.event = opt.event;
-
+  
 end % if nargout
 
 % do the general cleanup and bookkeeping at the end of the function
@@ -855,8 +859,9 @@ end
 function definetrial_cb(h, eventdata)
 opt = getappdata(h, 'opt');
 cfg = getappdata(h, 'cfg');
-if strcmp(cfg.continuous, 'no')
 
+if strcmp(cfg.continuous, 'no')
+  
   % when zooming in, lock the trial! one can only go to the next trial when horizontal scaling doesn't segment the data - from ft-meeting: this might be relaxed later on - roevdmei
   if isempty(opt.trllock)
     opt.trllock = opt.trlop;
@@ -866,7 +871,7 @@ if strcmp(cfg.continuous, 'no')
   if (abs(locktrllen-cfg.blocksize) / locktrllen) < 0.1
     cfg.blocksize = locktrllen;
   end
-
+  
   %%%%%%%%%
   % trial is locked, change subdivision of trial
   if cfg.blocksize < locktrllen
@@ -895,7 +900,7 @@ if strcmp(cfg.continuous, 'no')
     trllen   = (trlvis(:,2) - trlvis(:,1)+1);
     sizediff = smpperseg - trllen;
     opt.nanpaddata = sizediff;
-
+    
     if isfield(opt, 'trlvis')
       % update the current trial counter and try to keep the current sample the same
       opt.trlop   = nearest(begsamples, thissegbeg);
@@ -905,8 +910,8 @@ if strcmp(cfg.continuous, 'no')
     % update button
     set(findobj(get(h, 'children'), 'string', 'trial'), 'string', 'segment');
     %%%%%%%%%
-
-
+    
+    
     %%%%%%%%%
     % trial is not locked, go to original trial division and zoom out
   elseif cfg.blocksize >= locktrllen
@@ -920,19 +925,20 @@ if strcmp(cfg.continuous, 'no')
     trllen   = (trlvis(:,2) - trlvis(:,1)+1);
     sizediff = smpperseg - trllen;
     opt.nanpaddata = sizediff;
-
+    
     % update trialviewtype
     opt.trialviewtype = 'trial';
     % update button
     set(findobj(get(h, 'children'), 'string', 'trialsegment'), 'string',opt.trialviewtype);
-
+    
     % release trial lock
     opt.trllock = [];
     %%%%%%%%%
   end
-
+  
   % save trlvis
   opt.trlvis  = trlvis;
+  
 else
   % construct a trial definition for visualisation
   if isfield(opt, 'trlvis') % if present, remember where we were
@@ -959,14 +965,14 @@ else
     offset = begsamples - repmat(begsamples(1), [1 numel(begsamples)]);
     trlvis(:,3) = offset;
   end
-
+  
   if isfield(opt, 'trlvis')
     % update the current trial counter and try to keep the current sample the same
     % opt.trlop   = nearest(round((begsamples+endsamples)/2), thissample);
     opt.trlop   = nearest(begsamples, thistrlbeg);
   end
   opt.trlvis  = trlvis;
-
+  
   % NaN-padding when horizontal scaling is bigger than the data
   % two possible situations, 1) zoomed out so far that all data is one segment, or 2) multiple segments but last segment is smaller than the rest
   sizediff = smpperseg-(endsamples-begsamples+1);
@@ -1031,7 +1037,7 @@ endsel = min(endsample, endsel);
 % mark or execute selfun
 if isempty(cmenulab)
   % the left button was clicked INSIDE a selected range, update the artifact definition or event
-
+  
   if strcmp(cfg.selectmode, 'markartifact')
     % mark or unmark artifacts
     artval = opt.artdata.trial{1}(opt.ftsel, begsel:endsel);
@@ -1043,7 +1049,7 @@ if isempty(cmenulab)
       fprintf('there is no overlap with the active artifact (%s), marking this as a new artifact\n',opt.artdata.label{opt.ftsel});
       opt.artdata.trial{1}(opt.ftsel, begsel:endsel) = 1;
     end
-
+    
     % redraw only when marking (so the focus doesn't go back to the databrowser after calling selfuns
     setappdata(h, 'opt', opt);
     setappdata(h, 'cfg', cfg);
@@ -1102,14 +1108,14 @@ if isempty(cmenulab)
     setappdata(h, 'cfg', cfg);
     redraw_cb(h);
   end
-
+  
 else
   % the right button was used to activate the context menu and the user made a selection from that menu
   % execute the corresponding function
-
+  
   % get index into cfgs
   selfunind = strcmp(cfg.selfun, cmenulab);
-
+  
   % cut out the requested data segment
   switch cfg.seldat
     case 'current'
@@ -1122,7 +1128,7 @@ else
   seldata.time{1}     = offset2time(offset+begsel-begsample, opt.fsample, endsel-begsel+1);
   seldata.fsample     = opt.fsample;
   seldata.sampleinfo  = [begsel endsel];
-
+  
   % prepare input
   funhandle = ft_getuserfun(cmenulab, 'browse');
   funcfg    = cfg.selcfg{selfunind};
@@ -1224,7 +1230,7 @@ if ~isempty(code)
   for icomm = 1:numel(code)
     eval([code{icomm} ';']);
   end
-
+  
   % check for cfg and output into the original appdata-window
   if ~exist('cfg', 'var')
     cfg = [];
@@ -1630,7 +1636,7 @@ cfg.channel =   union(cfg.channel, cfg.channelclamped);
 if numel(cfg.channel)<numel(userchan) + numel(cfg.channelclamped)
   addchan = numel(userchan) + numel(cfg.channelclamped) - numel(cfg.channel); % Gets the number of channels to add.
   lastchan = min(match_str(opt.hdr.label, cfg.channel)) - 1; % Gets the previous channel.
-
+  
   % Adds up to n more channels.
   cfg.channel = union(opt.hdr.label(max(lastchan - addchan + 1, 1): lastchan), cfg.channel);
 end
@@ -1781,7 +1787,7 @@ for j = ordervec
   tmp = diff([0 art(j,:) 0]);
   artbeg = find(tmp==+1);
   artend = find(tmp==-1) - 1;
-
+  
   for k=1:numel(artbeg)
     xpos = [tim(artbeg(k)) tim(artend(k))] + ([-.5 +.5]./opt.fsample);
     ft_plot_box([xpos -1 1], 'facecolor', opt.artifactcolors(j,:), 'facealpha', cfg.artifactalpha, 'edgecolor', 'none', 'tag', 'artifact', 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1]);
@@ -1795,7 +1801,7 @@ delete(findobj(h, 'tag', 'event'));
 
 if strcmp(cfg.plotevents, 'yes')
   if any(strcmp(cfg.viewmode, {'butterfly', 'component', 'vertical'}))
-
+    
     if strcmp(cfg.ploteventlabels , 'colorvalue') && ~isempty(opt.event)
       eventlabellegend = [];
       for iType = 1:length(opt.eventtypes)
@@ -1803,13 +1809,13 @@ if strcmp(cfg.plotevents, 'yes')
       end
       fprintf(eventlabellegend);
     end
-
+    
     % save stuff to able to shift event labels downwards when they occur at the same time-point
     eventcol = cell(1,numel(event));
     eventstr = cell(1,numel(event));
     eventtim = NaN(1,numel(event));
     concount = NaN(1,numel(event));
-
+    
     % gather event info and plot lines
     for ievent = 1:numel(event)
       try
@@ -1828,26 +1834,26 @@ if strcmp(cfg.plotevents, 'yes')
         eventcol{ievent} = 'k';
         eventstr{ievent} = 'unknown';
       end
-
+      
       % compute the time of the event
       eventtim(ievent) = (event(ievent).sample-begsample)/opt.fsample + opt.hlim(1);
-
+      
       lh = ft_plot_line([eventtim(ievent) eventtim(ievent)], [-1 1], 'tag', 'event', 'color', eventcol{ievent}, 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1]);
-
+      
       % store this data in the line object so that it can be displayed in the
-      % data cursor (see subfunction datacursortext below)
+      % data cursor (see subfunction cb_datacursortext below)
       setappdata(lh, 'ft_databrowser_linetype', 'event');
       setappdata(lh, 'ft_databrowser_eventtime', eventtim(ievent));
       setappdata(lh, 'ft_databrowser_eventtype', event(ievent).type);
       setappdata(lh, 'ft_databrowser_eventvalue', event(ievent).value);
-
+      
       % count the consecutive occurrence of each time point, this is used for the vertical shift of the event label
       concount(ievent) = sum(eventtim(ievent)==eventtim(1:ievent-1));
-
+      
       % plot the event label
       ft_plot_text(eventtim(ievent), 0.9-concount(ievent)*.06, eventstr{ievent}, 'tag', 'event', 'Color', eventcol{ievent}, 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1], 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits, 'horizontalalignment', 'left');
     end
-
+    
   end % if viewmode appropriate for events
 end % if user wants to see event marks
 
@@ -1865,7 +1871,7 @@ if strcmp(cfg.viewmode, 'butterfly')
   set(gca, 'ColorOrder',opt.chancolors(chanindx,:)) % plot vector does not clear axis, therefore this is possible
   ft_plot_vector(tim, dat, 'box', false, 'tag', 'timecourse', 'hpos', opt.laytime.pos(1,1), 'vpos', opt.laytime.pos(1,2), 'width', opt.laytime.width(1), 'height', opt.laytime.height(1), 'hlim', opt.hlim, 'vlim', opt.vlim, 'linewidth', cfg.linewidth);
   set(gca, 'FontSize', cfg.axisfontsize, 'FontUnits', cfg.axisfontunits);
-
+  
   % two ticks per channel
   yTick = sort([
     opt.laytime.pos(:,2)+(opt.laytime.height/2)
@@ -1874,13 +1880,13 @@ if strcmp(cfg.viewmode, 'butterfly')
     opt.laytime.pos(:,2)-(opt.laytime.height/4)
     opt.laytime.pos(:,2)-(opt.laytime.height/2)
     ]); % sort
-
+  
   yTickLabel = {num2str(yTick.*range(opt.vlim) + opt.vlim(1))};
-
+  
   set(gca, 'yTick', yTick, 'yTickLabel', yTickLabel)
-
+  
 elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
-
+  
   % determine channel indices into data outside of loop
   laysels = match_str(opt.laytime.label, opt.hdr.label);
   % delete old chan labels before renewing, if they need to be renewed
@@ -1895,7 +1901,7 @@ elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
     end
     datsel = i;
     laysel = laysels(i);
-
+    
     if ~isempty(datsel) && ~isempty(laysel)
       % only plot chanlabels when necessary
       if changedchanflg % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
@@ -1914,18 +1920,18 @@ elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
           set(gca, 'FontSize', cfg.axisfontsize, 'FontUnits', cfg.axisfontunits);
         end
       end
-
+      
       lh = ft_plot_vector(tim, dat(datsel, :), 'box', false, 'color', color, 'tag', 'timecourse', 'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim, 'linewidth', cfg.linewidth);
-
+      
       % store this data in the line object so that it can be displayed in the
-      % data cursor (see subfunction datacursortext below)
+      % data cursor (see subfunction cb_datacursortext below)
       setappdata(lh, 'ft_databrowser_linetype', 'channel');
       setappdata(lh, 'ft_databrowser_label', opt.hdr.label(chanindx(i)));
       setappdata(lh, 'ft_databrowser_xaxis', tim);
       setappdata(lh, 'ft_databrowser_yaxis', dat(datsel,:));
     end
   end
-
+  
   % plot yticks
   if length(chanindx)> 6
     % plot yticks at each label in case adaptive labeling is used (cfg.plotlabels = 'some')
@@ -1968,38 +1974,38 @@ elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
   end
   yTickLabel = repmat(yTickLabel, 1, length(chanindx));
   set(gca, 'yTick', yTick, 'yTickLabel', yTickLabel);
-
+  
 else
   % the following is implemented for 2column, 3column, etcetera.
   % it also works for topographic layouts, such as CTF151
-
+  
   % determine channel indices into data outside of loop
   laysels = match_str(opt.laytime.label, opt.hdr.label);
-
+  
   for i = 1:length(chanindx)
     color = opt.chancolors(chanindx(i),:);
     datsel = i;
     laysel = laysels(i);
-
+    
     if ~isempty(datsel) && ~isempty(laysel)
-
+      
       lh = ft_plot_vector(tim, dat(datsel, :), 'box', false, 'color', color, 'tag', 'timecourse', 'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim, 'linewidth', cfg.linewidth);
-
+      
       % store this data in the line object so that it can be displayed in the
-      % data cursor (see subfunction datacursortext below)
+      % data cursor (see subfunction cb_datacursortext below)
       setappdata(lh, 'ft_databrowser_linetype', 'channel');
       setappdata(lh, 'ft_databrowser_label', opt.hdr.label(chanindx(i)));
       setappdata(lh, 'ft_databrowser_xaxis', tim);
       setappdata(lh, 'ft_databrowser_yaxis', dat(datsel,:));
     end
   end
-
+  
   % ticks are not supported with such a layout
   yTick = [];
   yTickLabel = [];
   yTickLabel = repmat(yTickLabel, 1, length(chanindx));
   set(gca, 'yTick', yTick, 'yTickLabel', yTickLabel);
-
+  
 end % if strcmp viewmode
 
 if any(strcmp(cfg.viewmode, {'butterfly', 'component', 'vertical'}))
@@ -2017,35 +2023,35 @@ else
 end
 
 if strcmp(cfg.viewmode, 'component')
-
+  
   % determine the position of each of the original channels for the topgraphy
   laychan = opt.layorg;
-
+  
   % determine the position of each of the topographies
   laytopo.pos(:,1)  = opt.laytime.pos(:,1) - opt.laytime.width/2 - opt.laytime.height;
   laytopo.pos(:,2)  = opt.laytime.pos(:,2) + opt.laytime.height/2;
   laytopo.width     = opt.laytime.height;
   laytopo.height    = opt.laytime.height;
   laytopo.label     = opt.laytime.label;
-
+  
   if ~isequal(opt.chanindx, chanindx)
     opt.chanindx = chanindx;
-
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % fprintf('plotting component topographies...\n');
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     delete(findobj(h, 'tag', 'topography'));
-
+    
     [sel1, sel2] = match_str(opt.orgdata.topolabel, laychan.label);
     chanx = laychan.pos(sel2,1);
     chany = laychan.pos(sel2,2);
-
+    
     if strcmp(cfg.compscale, 'global')
       for i=1:length(chanindx) % loop through all components to get max and min
         zmin(i) = min(opt.orgdata.topo(sel1,chanindx(i)));
         zmax(i) = max(opt.orgdata.topo(sel1,chanindx(i)));
       end
-
+      
       if strcmp(cfg.zlim, 'maxmin')
         zmin = min(zmin);
         zmax = max(zmax);
@@ -2056,12 +2062,12 @@ if strcmp(cfg.viewmode, 'component')
         ft_error('configuration option for component scaling could not be recognized');
       end
     end
-
+    
     for i=1:length(chanindx)
       % plot the topography of this component
       laysel = match_str(opt.laytime.label, opt.hdr.label(chanindx(i)));
       chanz = opt.orgdata.topo(sel1,chanindx(i));
-
+      
       if strcmp(cfg.compscale, 'local')
         % compute scaling factors here
         if strcmp(cfg.zlim, 'maxmin')
@@ -2072,25 +2078,25 @@ if strcmp(cfg.viewmode, 'component')
           zmin = -zmax;
         end
       end
-
+      
       % scaling
       chanz = (chanz - zmin) ./  (zmax- zmin);
-
+      
       % laychan is the actual topo layout, in pixel units for .mat files
       % laytopo is a vertical layout determining where to plot each topo, with one entry per component
-
+      
       ft_plot_topo(chanx, chany, chanz, 'mask', laychan.mask, 'interplim', 'mask', 'outline', laychan.outline, 'tag', 'topography', 'hpos', laytopo.pos(laysel,1)-laytopo.width(laysel)/2, 'vpos', laytopo.pos(laysel,2)-laytopo.height(laysel)/2, 'width', laytopo.width(laysel), 'height', laytopo.height(laysel), 'gridscale', 45, 'isolines', cfg.contournum);
-
+      
       %axis equal
       %drawnow
     end
-
+    
     caxis([0 1]);
-
+    
   end % if redraw_topo
-
+  
   set(gca, 'yTick', [])
-
+  
   ax(1) = min(laytopo.pos(:,1) - laytopo.width);
   ax(2) = max(opt.laytime.pos(:,1) + opt.laytime.width/2);
   ax(3) = min(opt.laytime.pos(:,2) - opt.laytime.height/2);
@@ -2143,7 +2149,7 @@ end % function redraw_cb
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cursortext = datacursortext(obj, event_obj)
+function cursortext = cb_datacursortext(obj, event_obj)
 pos = get(event_obj, 'Position');
 
 linetype = getappdata(event_obj.Target, 'ft_databrowser_linetype');
@@ -2153,16 +2159,16 @@ if strcmp(linetype, 'event')
 elseif strcmp(linetype, 'channel')
   % get plotted x axis
   plottedX = get(event_obj.Target, 'xdata');
-
+  
   % determine values of data at real x axis
   timeAxis = getappdata(event_obj.Target, 'ft_databrowser_xaxis');
   dataAxis = getappdata(event_obj.Target, 'ft_databrowser_yaxis');
   tInd = nearest(plottedX, pos(1));
-
+  
   % get label
   chanLabel = getappdata(event_obj.Target, 'ft_databrowser_label');
   chanLabel = chanLabel{1};
-
+  
   cursortext = sprintf('t = %g\n%s = %g', timeAxis(tInd), chanLabel, dataAxis(tInd));
 else
   cursortext = '<no cursor available>';
@@ -2170,13 +2176,13 @@ else
   % y-axis do not correspond to real data values (both are between 0 and
   % 1 always)
 end
-end % function datacursortext
+end % function cb_datacursortext
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function winresize_cb(h,eventdata)
+function winresize_cb(h, eventdata)
 
 % check whether the current figure is the browser
 if get(0, 'currentFigure') ~= h
@@ -2190,4 +2196,4 @@ opt.changedchanflg = true; % trigger for redrawing channel labels and preparing 
 setappdata(h, 'opt', opt);
 redraw_cb(h,eventdata);
 
-end  % function datacursortext
+end % function winresize_cb
