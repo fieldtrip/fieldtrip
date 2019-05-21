@@ -587,18 +587,18 @@ switch eventformat
     % contact Robert Oostenveld if you are interested in real-time acquisition on the CTF system
     % read the events from shared memory
     event = read_shm_event(filename, varargin{:});
-        
-  case {'curry_dat', 'curry_cdt'}  
+    
+  case {'curry_dat', 'curry_cdt'}
     if isempty(hdr)
       hdr = ft_read_header(filename);
     end
     event = [];
     for i=1:size(hdr.orig.events, 2)
-        event(i).type     = 'trigger';
-        event(i).value    = hdr.orig.events(2, i);
-        event(i).sample   = hdr.orig.events(1, i);
-        event(i).offset   = hdr.orig.events(3, i)-hdr.orig.events(1, i);
-        event(i).duration = hdr.orig.events(4, i)-hdr.orig.events(1, i);
+      event(i).type     = 'trigger';
+      event(i).value    = hdr.orig.events(2, i);
+      event(i).sample   = hdr.orig.events(1, i);
+      event(i).offset   = hdr.orig.events(3, i)-hdr.orig.events(1, i);
+      event(i).duration = hdr.orig.events(4, i)-hdr.orig.events(1, i);
     end
     
   case 'dataq_wdq'
@@ -974,7 +974,7 @@ switch eventformat
   case 'egi_mff_v2'
     % ensure that the EGI_MFF_V2 toolbox is on the path
     ft_hastoolbox('egi_mff_v2', 1);
-
+    
     %%%%%%%%%%%%%%%%%%%%%%
     %workaround for MATLAB bug resulting in global variables being cleared
     globalTemp=cell(0);
@@ -1001,7 +1001,7 @@ switch eventformat
     end
     clear globalTemp globalList varNames varList;
     %%%%%%%%%%%%%%%%%%%%%%
-
+    
     if isunix && filename(1)~=filesep
       % add the full path to the dataset directory
       filename = fullfile(pwd, filename);
@@ -1009,7 +1009,7 @@ switch eventformat
       % add the full path, including drive letter
       filename = fullfile(pwd, filename);
     end
-
+    
     % pass the header along to speed it up, it will be read on the fly in case it is empty
     event = read_mff_event(filename, hdr);
     % clean up the fields in the event structure
@@ -1904,7 +1904,7 @@ switch eventformat
     
   case 'nihonkohden_m00'
     % FIXME why is the flank detection not done using the generic read_trigger function?
-
+    
     event = [];
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -1913,7 +1913,7 @@ switch eventformat
     % in the data I tested the triggers are marked as DC offsets (deactivation of the DC channel)
     event_chan = {'DC09', 'DC10', 'DC11', 'DC12'};
     trgindx = match_str(hdr.label, event_chan);
-
+    
     if isempty(trgindx)
       return
     end
@@ -2220,7 +2220,14 @@ if ~isempty(event)
   if ~isfield(event, 'duration'), for i=1:length(event), event(i).duration = []; end; end
 end
 
-% make sure that all numeric values are double
+% check whether string event values can be converted to numeric
+if all(cellfun(@ischar, {event.value})) &&  ~any(isnan(cellfun(@str2double, {event.value})))
+  for i=1:length(event)
+    event(i).value = str2double(event(i).value);
+  end
+end
+
+% make sure that all numeric values are double precision
 if ~isempty(event)
   for i=1:length(event)
     if isnumeric(event(i).value)
