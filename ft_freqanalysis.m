@@ -576,22 +576,7 @@ for itrial = 1:ntrials
       ntaper = ones(1,numel(foi));
       % modify spectrum for same reason as fake ntaper
       spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
-      
-    case 'tfr'
-      [spectrum,foi,toi] = ft_specest_tfr(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:}, 'feedback', fbopt);
-      
-      % the following variable is created to keep track of the number of
-      % trials per time bin and is needed for proper normalization if
-      % keeprpt==1 and the triallength is variable
-      if itrial==1, trlcnt = zeros(1, numel(foi), numel(toi)); end
-      
-      hastime = true;
-      % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
-      ntaper = ones(1,numel(foi));
-      % modify spectrum for same reason as fake ntaper
-      spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
-      
-      
+
     case 'superlet'
       % calculate number of wavelets and respective cycle width dependent on superlet order
       % equivalent one-liners: 
