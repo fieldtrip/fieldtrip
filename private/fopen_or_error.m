@@ -4,6 +4,8 @@ function fid = fopen_or_error(filename, mode, varargin)
 %
 % This keeps you from having to write "if fid < 0; error(...)" everywhere
 % you do an fopen.
+%
+% See also ISDIR_OR_MKDIR
 
 if nargin < 2 || isempty(mode)
   mode = 'r';
