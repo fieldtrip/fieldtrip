@@ -2221,9 +2221,11 @@ if ~isempty(event)
 end
 
 % check whether string event values can be converted to numeric
-if all(cellfun(@ischar, {event.value})) &&  ~any(isnan(cellfun(@str2double, {event.value})))
-  for i=1:length(event)
-    event(i).value = str2double(event(i).value);
+if ~isempty(event)
+  if all(cellfun(@ischar, {event.value})) &&  ~any(isnan(cellfun(@str2double, {event.value})))
+    for i=1:length(event)
+      event(i).value = str2double(event(i).value);
+    end
   end
 end
 
