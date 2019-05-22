@@ -342,7 +342,7 @@ switch varargin{1}
         if ~isempty(msgId)
           error(state);
         else
-          error(varargin{:});
+          error(rmfield(state, 'identifier'));
         end
         
       elseif strcmp(level, 'warning')

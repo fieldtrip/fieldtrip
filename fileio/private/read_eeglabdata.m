@@ -13,7 +13,7 @@
 %   'header'    - FILEIO structure header
 %
 % Outputs:
-%   dat    - data over the specified range
+%   dat         - data over the specified range
 %
 % Author: Arnaud Delorme, SCCN, INC, UCSD, 2008-
 
@@ -38,9 +38,9 @@
 function dat = read_eeglabdata(filename, varargin)
 
 if nargin < 1
-  help read_eeglabdata;
-  return;
-end;
+  help read_eeglabdata
+  return
+end
 
 header    = ft_getopt(varargin, 'header');
 begsample = ft_getopt(varargin, 'begsample');
@@ -54,43 +54,43 @@ if isempty(header)
 end
 
 if ischar(header.orig.data)
-  if strcmpi(header.orig.data(end-2:end), 'set'),
+  if strcmpi(header.orig.data(end-2:end), 'set')
     header.ori = load('-mat', filename);
   else
-      
-      % assuming that the data file is in the current directory
-      fid = fopen(header.orig.data);
-
-      % assuming the .dat and .set files are located in the same directory
-      if fid == -1
-          pathstr = fileparts(filename);
-          fid = fopen(fullfile(pathstr, header.orig.data));
-      end
-
-      if fid == -1
-          fid = fopen(fullfile(header.orig.filepath, header.orig.data)); %
-      end
-
-if fid == -1, ft_error(['Cannot not find data file: ' header.orig.data]); end;
-
+    
+    % assuming that the data file is in the current directory
+    fid = fopen(header.orig.data);
+    
+    % assuming the .dat and .set files are located in the same directory
+    if fid == -1
+      pathstr = fileparts(filename);
+      fid = fopen(fullfile(pathstr, header.orig.data));
+    end
+    
+    if fid == -1
+      fid = fopen(fullfile(header.orig.filepath, header.orig.data));
+    end
+    
+    if fid == -1, ft_error(['Cannot not find data file: ' header.orig.data]); end
+    
     % only read the desired trials
     if strcmpi(header.orig.data(end-2:end), 'dat')
-        dat = fread(fid,[header.nSamples*header.nTrials header.nChans],'float32')';
+      dat = fread(fid,[header.nSamples*header.nTrials header.nChans],'float32')';
     else
-        dat = fread(fid,[header.nChans header.nSamples*header.nTrials],'float32');
-    end;
+      dat = fread(fid,[header.nChans header.nSamples*header.nTrials],'float32');
+    end
     dat = reshape(dat, header.nChans, header.nSamples, header.nTrials);
     fclose(fid);
-  end;
+  end
 else
   dat = header.orig.data;
   dat = reshape(dat, header.nChans, header.nSamples, header.nTrials);
-end;
+end
 
-if isempty(begtrial), begtrial = 1; end;
-if isempty(endtrial), endtrial = header.nTrials; end;
-if isempty(begsample), begsample = 1; end;
-if isempty(endsample), endsample = header.nSamples; end;
+if isempty(begtrial), begtrial = 1; end
+if isempty(endtrial), endtrial = header.nTrials; end
+if isempty(begsample), begsample = 1; end
+if isempty(endsample), endsample = header.nSamples; end
 dat = dat(:,begsample:endsample,begtrial:endtrial);
 
 if ~isempty(chanindx)
