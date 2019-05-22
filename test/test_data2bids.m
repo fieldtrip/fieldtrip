@@ -41,7 +41,6 @@ data2bids(cfg);
 %%
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/mous'));
 
-
 cfg = [];
 cfg.dataset                     = 'sub-A2002/func/sub-A2002_task-auditory_bold.nii';
 cfg.presentationfile            = 'sourcedata/mri_task/A2002-2-fMRI-MOUS-Aud.log';
@@ -65,8 +64,8 @@ cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/eeglab'));
 % the following uses a dataset that originates from the EEGLAB website
 % wget --no-check-certificate https://sccn.ucsd.edu/mediawiki/images/9/9c/Eeglab_data.set
 
-age = [11  96  23 77  82  87  18 40  26  80];
-sex = ['f' 'f' 'f' 'f' 'f' 'm' 'm' 'm' 'm' 'm'];
+age = [11  96  nan 77  82  87  18 40  26  80];
+sex = {'f' [] 'f' 'f' 'f' 'm' 'm' 'm' 'm' 'm'};
 
 sub = {'01', '02', '03', '04', '05', '06', '07', '08', '09', '10'};
 ses = {'pre', 'post'};
@@ -81,9 +80,12 @@ for subindx=1:numel(sub)
       cfg.datatype  = 'eeg';
       
       cfg.participants.age = age(subindx);
-      cfg.participants.sex = sex(subindx);
+      cfg.participants.sex = sex{subindx};
       
       cfg.scans.acq_time = datestr(now, 'yyyy-mm-ddThh:MM:SS'); % RFC3339
+      
+      cfg.InstitutionName             = 'Radboud University';
+      cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
       
       cfg.bidsroot  = 'bids';
       cfg.sub       = sub{subindx};
@@ -94,3 +96,5 @@ for subindx=1:numel(sub)
     end % for run
   end % for ses
 end % for sub
+
+

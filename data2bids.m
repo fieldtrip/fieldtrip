@@ -1,9 +1,7 @@
 function cfg = data2bids(cfg, varargin)
 
 % DATA2BIDS is a helper function to convert MEG, EEG, iEEG or anatomical MRI data to
-% the Brain Imaging Data Structure. This function starts from an existing data file on
-% disk or MATLAB memory, converts/writes the data file if needed and creates the
-% required sidecar files.
+% the Brain Imaging Data Structure.
 %
 % The overall idea is that you write a MATLAB script in which you call this
 % function multiple times, once for each data files. For each data file it will
@@ -23,10 +21,9 @@ function cfg = data2bids(cfg, varargin)
 % disk, or to write a preprocessed electrophysiological dataset to disk.
 %
 % The configuration structure should contains
+%   cfg.method                  = string, can be 'decorate', 'convert' or 'copy', see below (default = 'convert')
 %   cfg.dataset                 = string, filename of the input data
-%   cfg.outputfile              = string, optional filename for the output data, see below
-%   cfg.keepnative              = string, 'yes' or 'no' to copy the native file rather than convert it (default = 'no')
-%   cfg.presentationfile        = string, optional filename for the presentation log file, see below
+%   cfg.outputfile              = string, optional filename for the output data
 %   cfg.mri.deface              = string, 'yes' or 'no' (default = 'no')
 %   cfg.mri.writesidecar        = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
 %   cfg.meg.writesidecar        = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
@@ -36,20 +33,30 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.coordystem.writesidecar = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
 %   cfg.channels.writesidecar   = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
 %
-% If you specify cfg.dataset identical to cfg.outputfile, this function will read the
-% data and construct the appropriate sidecar files matching the header and event
-% details that it will get from the data file. You would use this to obtain the
-% sidecar files for a dataset that already has the correct BIDS name.
+% This function in general starts from existing data file on disk or from a FieldTrip
+% compatible data structure in MATLAB memory that is passed as second input argument.
+% Depending on cfg.method it will add the sidecar files, copy the dataset and add
+% sidecar files, or convert the dataset and add the sidecar files. Each of the
+% methods is discussed here.
 %
-% If you specify cfg.dataset with a different cfg.outputfile, this function will read
-% the data from the input data file and convert and write it to the output file. The
-% output format is NIFTI for anatomical MRIs, and BrainVision for EEG and iEEG. MEG
-% data files are stored in BIDS in their native format and this function will NOT
-% convert or rename them for you.
+% DECORATE - data2bids will read the header and event details from the data and write
+% the appropriate sidecar files alongside the existing dataset. You would use this to
+% obtain the sidecar files for a dataset that already has the correct BIDS name.
 %
-% For looping over multiple subjects, sessions and runs, you should NOT specify
-% cfg.outputfile, but rather use the following configuration options which are used
-% to construct the output directory and file name.
+% CONVERT - data2bids will read the data from the input data file and write it to a
+% new output file that is BIDS compliant. The output format is NIFTI for MRI data,
+% and BrainVision for EEG and iEEG. MEG data files are stored in BIDS in their native
+% format and this function will NOT convert or rename them for you.
+%
+% COPY - data2bids will copy the data from the input data file to the output data
+% file, which renames it but does not change its content. Furthermore, it will read
+% the header and event details from the data and construct the appropriate sidecar
+% files.
+%
+% Although you can explicitly specify cfg.outputfile yourself, it is recommended to
+% use the following configuration options. This results in a BIDS compliant output
+% directory and file name. When specifying these options, data2bids will also write
+% or update the participants.tsv and the scans.tsv files.
 %   cfg.bidsroot                = string, top level directory for the BIDS output
 %   cfg.sub                     = string, subject name
 %   cfg.ses                     = string, optional session name
@@ -64,8 +71,17 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.echo                    = string
 %   cfg.proc                    = string
 %
+% When specifying the output directory in cfg.bidsroot, you can also specify
+% additional information that will be added to the participants.tsv and the scans.tsv
+% files. For example
+%   cfg.participant.age         = scalar
+%   cfg.participant.sex         = string, 'm' or 'f'
+%   cfg.scan.acq_time           = string, should be formatted according to  RFC3339 as '2019-05-22T15:13:38'
+% In case any of these values is specified as empty (i.e. []) or as nan, it will be
+% written to the tsv file as 'n/a'.
+%
 % You can specify cfg.mri.dicomfile in combination with a NIFTI file. This will
-% read the detailled header information (MR scanner and sequence details) from
+% read the detailed header information (MR scanner and sequence details) from
 % the DICOM file and used to fill in the details of the JSON file.
 %   cfg.mri.dicomfile           = string, filename of a matching DICOM file for header details (default = [])
 %
@@ -77,10 +93,11 @@ function cfg = data2bids(cfg, varargin)
 % dataset.
 %   cfg.events.trl              = trial definition, see below
 %
-% You can specify cfg.presentationfile with a NBS presentation log file, which will
-% be aligned with the data based on triggers (MEG/EEG/iEEG) or based on the
-% volumes (fMRI). To indicate how triggers or volumes match the presentation events,
-% you should also specify
+% You can specify cfg.presentationfile with the name of a NBS presentation log file,
+% which will be aligned with the data based on triggers (MEG/EEG/iEEG) or based on
+% the volumes (fMRI). To indicate how triggers (in MEG/EEG/iEEG) or volumes (in fMRI)
+% match the presentation events, you should also specify the mapping between them.
+%   cfg.presentationfile        = string, optional filename for the presentation log file
 %   cfg.trigger.eventtype       = string (default = [])
 %   cfg.trigger.eventvalue      = string or number
 %   cfg.presentation.eventtype  = string (default = [])
@@ -109,6 +126,7 @@ function cfg = data2bids(cfg, varargin)
 %
 % Example with a CTF dataset on disk that needs no conversion
 %   cfg = [];
+%   cfg.method                      = 'decorate';
 %   cfg.dataset                     = 'sub-01_ses-meg_task-language_meg.ds';
 %   cfg.TaskName                    = 'language';
 %   cfg.meg.PowerLineFrequency      = 50;
@@ -118,6 +136,7 @@ function cfg = data2bids(cfg, varargin)
 %
 % Example with an anatomical MRI on disk that needs no conversion
 %   cfg = [];
+%   cfg.method                      = 'decorate';
 %   cfg.dataset                     = 'sub-01_ses-mri_T1w.nii';
 %   cfg.mri.dicomfile               = '00080_1.3.12.2.1107.5.2.43.66068.2017082413175824865636649.IMA'
 %   cfg.mri.MagneticFieldStrength   = 3; % this is usually not needed, as it will be obtained from the DICOM file
@@ -127,6 +146,7 @@ function cfg = data2bids(cfg, varargin)
 %
 % Example with a NeuroScan EEG dataset on disk that needs to be converted
 %   cfg = [];
+%   cfg.method                      = 'convert';
 %   cfg.dataset                     = 'subject01.cnt';
 %   cfg.outputfile                  = 'sub-001_task-visual_eeg.vhdr';
 %   cfg.InstitutionName             = 'Radboud University';
@@ -140,6 +160,7 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.bpfreq                      = [0.1 40];
 %   data = ft_preprocessing(cfg);
 %   cfg = [];
+%   cfg.method                      = 'convert';
 %   cfg.outputfile                  = 'sub-001_task-visual_eeg.vhdr';
 %   cfg.InstitutionName             = 'Radboud University';
 %   cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
@@ -147,16 +168,18 @@ function cfg = data2bids(cfg, varargin)
 %
 % Example with realigned and resliced anatomical MRI data in memory
 %   cfg = [];
+%   cfg.method                      = 'convert';
 %   cfg.outputfile                  = 'sub-01_ses-mri_T1w.nii';
 %   cfg.mri.MagneticFieldStrength   = 3;
 %   cfg.InstitutionName             = 'Radboud University';
 %   cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
 %   data2bids(cfg, mri)
 %
-% This function corresponds to version 1.1.1 of the BIDS specification.
-% See http://bids.neuroimaging.io/ for further details.
+% This function corresponds to version 1.2 of the BIDS specification. See
+% https://bids-specification.readthedocs.io/ for the full specification and
+% http://bids.neuroimaging.io/ for further details.
 
-% Copyright (C) 2018, Robert Oostenveld
+% Copyright (C) 2018-2019, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -193,18 +216,21 @@ end
 
 % ensure backward compatibility
 cfg = ft_checkconfig(cfg, 'renamed', {'anat', 'mri'});
-cfg = ft_checkconfig(cfg, 'forbidden', 'deface');       % should be cfg.mri.deface
+cfg = ft_checkconfig(cfg, 'forbidden', 'deface');                           % should be cfg.mri.deface
+cfg = ft_checkconfig(cfg, 'renamedval', {'native', 'no', 'convert'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'native', 'yes', 'copy'});
+cfg = ft_checkconfig(cfg, 'renamed', {'native', 'method'});
 
 % get the options and set the defaults
+cfg.method                  = ft_getopt(cfg, 'method');                     % default is handled below
 cfg.dataset                 = ft_getopt(cfg, 'dataset');
 cfg.feedback                = ft_getopt(cfg, 'feedback', 'yes');
-cfg.outputfile              = ft_getopt(cfg, 'outputfile');                   % default is handled below
-cfg.keepnative              = ft_getopt(cfg, 'keepnative', 'no');             % default is convert EEG to BrainVision format
-cfg.presentationfile        = ft_getopt(cfg, 'presentationfile');             % full path to the NBS presentation log file, it will be read and parsed using FT_READ_EVENT
+cfg.outputfile              = ft_getopt(cfg, 'outputfile');                 % default is handled below
+cfg.presentationfile        = ft_getopt(cfg, 'presentationfile');           % full path to the NBS presentation log file, it will be read and parsed using FT_READ_EVENT
 cfg.presentation            = ft_getopt(cfg, 'presentation');
 cfg.presentation.eventtype  = ft_getopt(cfg.presentation, 'eventtype');
 cfg.presentation.eventvalue = ft_getopt(cfg.presentation, 'eventvalue');
-cfg.presentation.skip       = ft_getopt(cfg.presentation, 'skip',  'last'); % this is a sensible default for fMRI, for MEG one should probably do 'none'
+cfg.presentation.skip       = ft_getopt(cfg.presentation, 'skip',  'last');  % this is a sensible default for fMRI, for MEG one should probably do 'none'
 cfg.trigger                 = ft_getopt(cfg, 'trigger');
 cfg.trigger.eventtype       = ft_getopt(cfg.trigger, 'eventtype');
 cfg.trigger.eventvalue      = ft_getopt(cfg.trigger, 'eventvalue');
@@ -229,14 +255,13 @@ cfg.echo      = ft_getopt(cfg, 'echo');
 cfg.proc      = ft_getopt(cfg, 'proc');
 cfg.datatype  = ft_getopt(cfg, 'datatype');
 
-if ~isempty(cfg.outputfile)
-  if ~all(cellfun(@isempty, struct2cell(keepfields(cfg, {'bidsroot' 'sub' 'ses' 'task' 'acq' 'ce' 'rec' 'dir' 'run' 'mod' 'echo' 'proc' 'datatype'}))))
-    ft_error('you should specify either cfg.outputfile or cfg.bidsroot, cfg.sub, cfg.ses, etc.');
-  end
-else
-  if isempty(cfg.bidsroot)
-    ft_notice('cfg.bidsroot is required to construct BIDS output directory and file, using cfg.dataset instead');
+if isempty(cfg.outputfile)
+  if isempty(cfg.method) && isempty(cfg.bidsroot)
     cfg.outputfile = cfg.dataset;
+    cfg.method = 'decorate';
+    ft_notice('using cfg.outputfile=''%s'' and cfg.method=''%s''', cfg.outputfile, cfg.method);
+  elseif isempty(cfg.bidsroot)
+    ft_error('cfg.bidsroot is required to construct BIDS output directory and file');
   elseif isempty(cfg.sub)
     ft_error('cfg.sub is required to construct BIDS output directory and file');
   elseif isempty(cfg.datatype)
@@ -288,6 +313,42 @@ cfg.events.writesidecar     = ft_getopt(cfg.events, 'writesidecar', 'yes');   % 
 
 cfg.coordsystem              = ft_getopt(cfg, 'coordsystem');
 cfg.coordsystem.writesidecar = ft_getopt(cfg.coordsystem, 'writesidecar', 'yes');
+
+% set the default method
+if isempty(cfg.method)
+  if ~isequal(cfg.dataset, cfg.outputfile)
+    cfg.method = 'convert';
+  else
+    cfg.method = 'decorate';
+  end
+  ft_notice('using cfg.method=''%s''', cfg.method);
+end
+
+% do some sanity checks on the input and the method
+if istrue(cfg.mri.deface) && ~strcmp(cfg.method, 'convert')
+  ft_error('defacing only works in combination with cfg.method=''convert''');
+elseif ft_nargin>1 && ~strcmp(cfg.method, 'convert')
+  ft_error('input data only works in combination with cfg.method=''convert''');
+end
+
+% do some more sanity checks on the input and the method
+switch cfg.method
+  case 'decorate'
+    if ~isempty(cfg.outputfile) && ~isequal(cfg.dataset, cfg.outputfile)
+      ft_error('cfg.dataset and cfg.outputfile should be the same');
+    end
+  case 'convert'
+    if ~isempty(cfg.outputfile) && isequal(cfg.dataset, cfg.outputfile)
+      ft_error('cfg.dataset and cfg.outputfile should not be the same');
+    end
+  case 'copy'
+    if ~isempty(cfg.outputfile) && isequal(cfg.dataset, cfg.outputfile)
+      ft_error('cfg.dataset and cfg.outputfile should not be the same');
+    end
+  otherwise
+    ft_error('unsupported value for cfg.method')
+end
+
 
 %% Generic fields for all data types
 cfg.TaskName                          = ft_getopt(cfg, 'TaskName'                    ); % REQUIRED. Name of the task (for resting state use the "rest" prefix). Different Tasks SHOULD NOT have the same name. The Task label is derived from this field by removing all non alphanumeric ([a-zA-Z0-9]) characters.
@@ -524,7 +585,7 @@ switch typ
       % use the triggers as specified in the cfg
       trigger = cfg.trigger.event;
     end
-    if ~isequal(cfg.dataset, cfg.outputfile)
+    if strcmp(cfg.method, 'convert')
       % the data should be converted and written to disk
       dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
     end
@@ -539,7 +600,7 @@ switch typ
       % use the triggers as specified in the cfg
       trigger = cfg.trigger.event;
     end
-    if ~isequal(cfg.dataset, cfg.outputfile)
+    if strcmp(cfg.method, 'convert')
       % the data should be converted and written to disk
       dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
     end
@@ -567,9 +628,9 @@ switch typ
     end
     
   otherwise
-    % it is EEG data from disk but not in a supported format
+    % it is data on disk, but not in a supported format
     ft_warning('assuming that the dataset represents EEG');
-    assert(~isempty(cfg.outputfile) && ~isequal(cfg.dataset, cfg.outputfile), 'unsupported dataset format for BIDS, you should specify cfg.outputfile');
+    need_eeg_json = true;
     
     % it will be written to disk in BrainVision format
     hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false);
@@ -581,7 +642,6 @@ switch typ
       % use the triggers as specified in the cfg
       trigger = cfg.trigger.event;
     end
-    need_eeg_json = true;
     
 end % switch typ
 
@@ -986,65 +1046,81 @@ ieeg_json = remove_empty(ieeg_json);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% write the data to the output file
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~isequal(cfg.dataset, cfg.outputfile) || istrue(cfg.mri.deface)
-  switch typ
-    case {'nifti', 'nifti2', 'nifti_fsl', 'dicom', 'volume'}
-      [p, f, x] = fileparts(cfg.outputfile);
-      if ~isequal(x, '.nii')
-        cfg.outputfile = fullfile(p, [f '.nii']);
-      end
-      if istrue(cfg.mri.deface)
-        % deface the anatomical MRI
-        ft_info('defacing anatomical MRI');
-        if istrue(cfg.feedback)
-          tmpcfg = [];
-          tmpcfg.figurename = sprintf('ORIGINAL - %s', f);
-          tmpcfg.showcallinfo = 'no';
-          tmpcfg.colorbar = 'no';
-          ft_sourceplot(tmpcfg, mri);
+switch cfg.method
+  case 'decorate'
+    % there is nothing to do here
+    
+  case 'convert'
+    % the output depends on the type of input data
+    switch typ
+      case {'nifti', 'nifti2', 'nifti_fsl', 'dicom', 'volume'}
+        [p, f, x] = fileparts(cfg.outputfile);
+        if ~isequal(x, '.nii')
+          cfg.outputfile = fullfile(p, [f '.nii']);
         end
-        tmpcfg = [];
-        tmpcfg.method = 'spm';
-        if ~isfield(mri, 'coordsys')
-          % try to determine it from the BIDS filename
-          coordsys = get_token(cfg.outputfile, 'space');
-          if ~isempty(coordsys)
-            mri.coordsys = coordsys;
-          else
-            mri.coordsys = 'unknown';
+        if istrue(cfg.mri.deface)
+          % deface the anatomical MRI
+          ft_info('defacing anatomical MRI');
+          if istrue(cfg.feedback)
+            tmpcfg = [];
+            tmpcfg.figurename = sprintf('ORIGINAL - %s', f);
+            tmpcfg.showcallinfo = 'no';
+            tmpcfg.colorbar = 'no';
+            ft_sourceplot(tmpcfg, mri);
+          end
+          tmpcfg = [];
+          tmpcfg.method = 'spm';
+          if ~isfield(mri, 'coordsys')
+            % try to determine it from the BIDS filename
+            coordsys = get_token(cfg.outputfile, 'space');
+            if ~isempty(coordsys)
+              mri.coordsys = coordsys;
+            else
+              mri.coordsys = 'unknown';
+            end
+          end
+          mri = ft_defacevolume(tmpcfg, mri);
+          if istrue(cfg.feedback)
+            tmpcfg = [];
+            tmpcfg.figurename = sprintf('DEFACED - %s', f);
+            tmpcfg.showcallinfo = 'no';
+            tmpcfg.colorbar = 'no';
+            ft_sourceplot(tmpcfg, mri);
           end
         end
-        mri = ft_defacevolume(tmpcfg, mri);
-        if istrue(cfg.feedback)
-          tmpcfg = [];
-          tmpcfg.figurename = sprintf('DEFACED - %s', f);
-          tmpcfg.showcallinfo = 'no';
-          tmpcfg.colorbar = 'no';
-          ft_sourceplot(tmpcfg, mri);
+        ft_info('writing %s\n', cfg.outputfile);
+        ft_write_mri(cfg.outputfile, mri, 'dataformat', 'nifti');
+        
+      otherwise
+        if any(strcmp({'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275', 'neuromag_fif', 'neuromag122', 'neuromag306'}, typ))
+          ft_warning('please use a MEG system specific tool for converting datasets, such as "newDs"');
         end
-      end
-      ft_info('writing %s\n', cfg.outputfile);
-      ft_write_mri(cfg.outputfile, mri, 'dataformat', 'nifti');
-      
-    otherwise
-      if not(istrue(cfg.keepnative))
+        
         [p, f, x] = fileparts(cfg.outputfile);
         if ~isequal(x, '.vhdr')
           cfg.outputfile = fullfile(p, [f '.vhdr']);
         end
         ft_info('writing %s\n', cfg.outputfile);
         ft_write_data(cfg.outputfile, dat, 'dataformat', 'brainvision_eeg', 'header', hdr, 'event', trigger);
-      else
-        [~, ~, xin] = fileparts(cfg.dataset);
-        [~, ~, xout] = fileparts(cfg.outputfile);
-        if strcmp(xin, xout)
-          copyfile(cfg.dataset, cfg.outputfile);
-        else
-          ft_error('input and output filename extension don''t match. Cannot use keepnative.');
-        end
-      end
-  end
-end
+    end % switch typ
+    
+  case 'copy'
+    [~, ~, xin] = fileparts(cfg.dataset);
+    [~, ~, xout] = fileparts(cfg.outputfile);
+    if ~strcmp(xin, xout)
+      ft_error('input and output filename extension don''t match. Cannot use keepnative.');
+    end
+    
+    if any(strcmp({'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275', 'neuromag_fif', 'neuromag122', 'neuromag306'}, typ))
+      ft_warning('please use a MEG system specific tool for copying datasets, such as "newDs"');
+    end
+    
+    copyfile(cfg.dataset, cfg.outputfile);
+    
+  otherwise
+    ft_error('unsupported value for cfg.method')
+end % switch method
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% write the metadata to the json and tsv files
@@ -1254,7 +1330,10 @@ if ~isempty(cfg.bidsroot)
   this.participant_id = ['sub-' cfg.sub];
   fn = fieldnames(cfg.participants);
   for i=1:numel(fn)
-    this.(fn{i})= cfg.participants.(fn{i});
+    % write [] as 'n/a'
+    % write nan as 'n/a'
+    % write boolean as 'True' or 'False'
+    this.(fn{i}) = output_compatible(cfg.participants.(fn{i}));
   end
   
   if isfile(filename)
@@ -1281,7 +1360,10 @@ if ~isempty(cfg.bidsroot)
   this.filename = fullfile(cfg.datatype, [f x]);
   fn = fieldnames(cfg.scans);
   for i=1:numel(fn)
-    this.(fn{i})= cfg.scans.(fn{i});
+    % write [] as 'n/a'
+    % write nan as 'n/a'
+    % write boolean as 'True' or 'False'
+    this.(fn{i}) = output_compatible(cfg.scans.(fn{i}));
   end
   
   if isfile(filename)
@@ -1293,7 +1375,7 @@ if ~isempty(cfg.bidsroot)
   
   % write the updated file back to disk
   write_tsv(filename, scans);
-
+  
 end
 
 % do not return an output variable if not requested
@@ -1397,22 +1479,26 @@ function write_tsv(filename, tsv)
 ft_info('writing %s\n', filename);
 fn = tsv.Properties.VariableNames;
 for i=1:numel(fn)
-  val = [tsv.(fn{i})];
-  if isnumeric(val) && any(isnan(val))
-    sel = isnan(val);
-    val = num2cell(val);
-    val(sel) = {'n/a'};
-    % replace the numeric value NaN with the string 'n/a'
-    tsv.(fn{i}) = val;
-  elseif iscell(val)
-    for j=1:numel(val)
-      if isnan(val{j})
-        val{j} = 'n/a';
-      end
-    end
-    % replace the numeric value NaN with the string 'n/a'
-    tsv.(fn{i}) = val;
-  end
+  % write [] as 'n/a'
+  % write nan as 'n/a'
+  % write boolean as 'True' or 'False'
+  tsv.(fn{i}) = output_compatible(tsv.(fn{i}));
+  %   val = [];
+  %   if isnumeric(val) && any(isnan(val))
+  %     sel = isnan(val);
+  %     val = num2cell(val);
+  %     val(sel) = {'n/a'};
+  %     % replace the numeric value NaN with the string 'n/a'
+  %     tsv.(fn{i}) = val;
+  %   elseif iscell(val)
+  %     for j=1:numel(val)
+  %       if isnan(val{j})
+  %         val{j} = 'n/a';
+  %       end
+  %     end
+  %     % replace the numeric value NaN with the string 'n/a'
+  %     tsv.(fn{i}) = val;
+  %   end
 end
 writetable(tsv, filename, 'Delimiter', 'tab', 'FileType', 'text');
 
@@ -1434,6 +1520,7 @@ json = sort_fields(json);
 json = ft_struct2char(json); % convert strings into char-arrays
 ft_info('writing %s\n', filename);
 ft_hastoolbox('jsonlab', 1);
+% see also the output_compatible helper function
 % write nan as 'n/a'
 % write boolean as True/False
 str = savejson('', json, 'NaN', 'n/a', 'ParseLogical', true);
@@ -1542,4 +1629,32 @@ switch typ
     dir = 'ieeg';
   otherwise
     ft_error('unrecognized data type "%s"', typ);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function val = output_compatible(val)
+if iscell(val)
+  % use recursion to make all elements compatible
+  val = cellfun(@output_compatible, val, 'UniformOutput', false);
+elseif isnumeric(val) && numel(val)>1 && any(isnan(val))
+  % convert and use recursion to make all elements compatible
+  val = num2cell(val);
+  val = cellfun(@output_compatible, val, 'UniformOutput', false);
+else
+  % write [] as 'n/a'
+  % write nan as 'n/a'
+  % write boolean as 'True' or 'False'
+  if isempty(val)
+    val = 'n/a';
+  elseif isnan(val)
+    val = 'n/a';
+  elseif islogical(val)
+    if val
+      val = 'True';
+    else
+      val = 'False';
+    end
+  end
 end
