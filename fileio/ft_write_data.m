@@ -84,6 +84,9 @@ append = istrue(append);
 % determine the data size
 [nchans, nsamples] = size(dat);
 
+% ensure that the directory exists
+isdir_or_mkdir(fileparts(filename));
+
 switch dataformat
   
   case 'empty'
