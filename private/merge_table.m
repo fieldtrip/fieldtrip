@@ -9,7 +9,7 @@ function t3 = merge_table(t1, t2, key)
 %
 % See also TABLE
 
-% Copyright (C) 2018, Robert Oostenveld
+% Copyright (C) 2019, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
