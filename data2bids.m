@@ -31,6 +31,7 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.events.writesidecar     = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
 %   cfg.coordystem.writesidecar = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
 %   cfg.channels.writesidecar   = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
+%   cfg.electrodes.writesidecar = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
 %
 % This function starts from existing data file on disk or from a FieldTrip compatible
 % data structure in MATLAB memory that is passed as the second input argument.
@@ -104,6 +105,11 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.presentation.eventvalue = string or number
 %   cfg.presentation.skip       = 'last'/'first'/'none'
 %
+% For EEG and iEEG data you can specify an electrode definition according to
+% FT_DATATYPE_SENS as an "elec" field in the input data, you can specify it as
+% cfg.elec or you can specify a filename with electrode information.
+%   cfg.elec                     = structure with electrode positions or filename, see FT_READ_SENS
+%
 % General BIDS options that apply to all data types are
 %   cfg.InstitutionName             = string
 %   cfg.InstitutionAddress          = string
@@ -137,7 +143,7 @@ function cfg = data2bids(cfg, varargin)
 % https://bids-specification.readthedocs.io/ for the full specification and
 % http://bids.neuroimaging.io/ for further details.
 %
-% See also FT_DATAYPE_RAW, FT_DATAYPE_VOLUME
+% See also FT_DATAYPE_RAW, FT_DATAYPE_VOLUME, FT_DATATYPE_SENS
 
 % Copyright (C) 2018-2019, Robert Oostenveld
 %
@@ -263,6 +269,9 @@ cfg.ieeg.writesidecar       = ft_getopt(cfg.ieeg, 'writesidecar', 'yes');     % 
 
 cfg.channels                = ft_getopt(cfg, 'channels');
 cfg.channels.writesidecar   = ft_getopt(cfg.channels, 'writesidecar', 'yes'); % whether to write the sidecar file
+
+cfg.electrodes              = ft_getopt(cfg, 'electrodes');
+cfg.electrodes.writesidecar = ft_getopt(cfg.electrodes, 'writesidecar', 'yes'); % whether to write the sidecar file
 
 cfg.events                  = ft_getopt(cfg, 'events');
 cfg.events.trl              = ft_getopt(cfg.events, 'trl');                   % this can contain the trial definition as Nx3 array or as table
@@ -496,6 +505,15 @@ cfg.channels.software_filters   = ft_getopt(cfg.channels, 'software_filters'   ,
 cfg.channels.status             = ft_getopt(cfg.channels, 'status'             , nan);  % OPTIONAL. Data quality observed on the channel (good/bad). A channel is considered bad if its data quality is compromised by excessive noise. Description of noise type SHOULD be provided in [status_description].
 cfg.channels.status_description = ft_getopt(cfg.channels, 'status_description' , nan);  % OPTIONAL. Freeform text description of noise or artifact affecting data quality on the channel. It is meant to explain why the channel was declared bad in [status].
 
+%% columns in the electrodes.tsv
+cfg.electrodes.name	            = ft_getopt(cfg.channels, 'name'               , nan);  % REQUIRED. Name of the electrode
+cfg.electrodes.x	              = ft_getopt(cfg.channels, 'x'                  , nan);  % REQUIRED. Recorded position along the x-axis
+cfg.electrodes.y	              = ft_getopt(cfg.channels, 'y'                  , nan);  % REQUIRED. Recorded position along the y-axis
+cfg.electrodes.z	              = ft_getopt(cfg.channels, 'z'                  , nan);  % REQUIRED. Recorded position along the z-axis
+cfg.electrodes.type	            = ft_getopt(cfg.channels, 'type'               , nan);  % RECOMMENDED. Type of the electrode (e.g., cup, ring, clip-on, wire, needle)
+cfg.electrodes.material	        = ft_getopt(cfg.channels, 'material'           , nan);  % RECOMMENDED. Material of the electrode, e.g., Tin, Ag/AgCl, Gold
+cfg.electrodes.impedance	      = ft_getopt(cfg.channels, 'impedance'          , nan);  % RECOMMENDED. Impedance of the electrode in kOhm
+
 %% information for the participants.tsv
 cfg.participants = ft_getopt(cfg, 'participants', struct());
 
@@ -623,6 +641,15 @@ switch typ
       % use the triggers as specified in the cfg
       trigger = cfg.trigger.event;
     end
+    try
+      % try to get the electrode definition, either from the data or from the configuration
+      tmpcfg = keepfields(cfg, {'elec'});
+      tmpcfg.senstype = 'eeg';
+      elec = ft_fetch_sens(tmpcfg, varargin{1});
+      need_electrodes_tsv = true;
+    catch
+      need_electrodes_tsv = false;
+    end
     
     if ft_senstype(varargin{1}, 'ctf') || ft_senstype(varargin{1}, 'neuromag')
       % use the subsequent MEG-specific metadata handling for the JSON and TSV sidecar files
@@ -665,12 +692,13 @@ need_coordsystem_json = need_meg_json; % FIXME this is also needed when EEG and 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % start with empty metadata descriptions
-mri_json      = [];
-meg_json      = [];
-eeg_json      = [];
-ieeg_json     = [];
-events_tsv    = [];
-channels_tsv  = [];
+mri_json         = [];
+meg_json         = [];
+eeg_json         = [];
+ieeg_json        = [];
+events_tsv       = [];
+channels_tsv     = [];
+electrodes_tsv   = [];
 coordsystem_json = [];
 
 % make the relevant selection, all json fields start with a capital letter
@@ -857,7 +885,46 @@ if need_channels_tsv
       channels_tsv.(fn{i}) = cfg.channels.(fn{i});
     end
   end
-end
+end % if need_channels_tsv
+
+%% need_electrodes_tsv
+if need_electrodes_tsv
+  % construct a table
+  electrodes_tsv = table();
+  
+  % ensure that all columns have the correct number of elements
+  fn = setdiff(fieldnames(cfg.electrodes), 'writesidecar');
+  for i=1:numel(fn)
+    if ischar(cfg.electrodes.(fn{i}))
+      cfg.electrodes.(fn{i}) = repmat({cfg.electrodes.(fn{i})}, hdr.nChans, 1);
+    elseif isnumeric(cfg.electrodes.(fn{i})) && numel(cfg.electrodes.(fn{i}))==1
+      cfg.electrodes.(fn{i}) = repmat(cfg.electrodes.(fn{i}), hdr.nChans, 1);
+    elseif iscell(cfg.electrodes.(fn{i})) && numel(cfg.electrodes.(fn{i}))==1
+      cfg.electrodes.(fn{i}) = repmat(cfg.electrodes.(fn{i}), hdr.nChans, 1);
+    elseif iscell(cfg.electrodes.(fn{i})) && numel(cfg.electrodes.(fn{i}))==hdr.nChans
+      cfg.electrodes.(fn{i}) = cfg.electrodes.(fn{i})(:); % just make sure it is a column vector
+    else
+      ft_error('incorrect specification of cfg.electrodes.%s', fn{i});
+    end
+  end
+  
+  % these columns can be determined from the header
+  electrodes_tsv.name   = merge_vector(elec.label,        cfg.electrodes.name);
+  electrodes_tsv.x      = merge_vector(elec.elecpos(:,1), cfg.electrodes.x);
+  electrodes_tsv.y      = merge_vector(elec.elecpos(:,2), cfg.electrodes.y);
+  electrodes_tsv.z      = merge_vector(elec.elecpos(:,3), cfg.electrodes.z);
+  
+  % all other columns have to be specified by the user
+  fn = setdiff(fieldnames(cfg.electrodes), {'writesidecar', 'name', 'x', 'y', 'z'});
+  for i=1:numel(fn)
+    if isnumeric(cfg.electrodes.(fn{i})) && all(isnan(cfg.electrodes.(fn{i})))
+      % this is the default when not specified by the user, do not add it to the table
+    else
+      electrodes_tsv.(fn{i}) = cfg.electrodes.(fn{i});
+    end
+  end
+end % need_electrodes_tsv
+
 
 %% need_events_tsv
 if need_events_tsv
@@ -1084,13 +1151,7 @@ if need_events_tsv
     % sort the events ascending on the onset
     events_tsv = sortrows(events_tsv, 'onset');
   end
-end % if need_events
-
-% remove fields that have an empty value
-mri_json  = remove_empty(mri_json);
-meg_json  = remove_empty(meg_json);
-eeg_json  = remove_empty(eeg_json);
-ieeg_json = remove_empty(ieeg_json);
+end % if need_events_tsv
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% write the data to the output file
@@ -1175,6 +1236,12 @@ end % switch method
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% write the metadata to the json and tsv files
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% remove fields that have an empty value
+mri_json  = remove_empty(mri_json);
+meg_json  = remove_empty(meg_json);
+eeg_json  = remove_empty(eeg_json);
+ieeg_json = remove_empty(ieeg_json);
 
 if ~isempty(mri_json)
   filename = corresponding_json(cfg.outputfile);ls
@@ -1339,6 +1406,36 @@ if ~isempty(channels_tsv)
       % do nothing
     otherwise
       ft_error('incorrect option for cfg.channels.writesidecar');
+  end % switch
+end
+
+if ~isempty(electrodes_tsv)
+  [p, f, ~] = fileparts(cfg.outputfile);
+  f = remove_datatype(f); % remove _bold, _meg, etc.
+  filename = fullfile(p, [f '_electrodes.tsv']);
+  if isfile(filename)
+    existing = read_tsv(filename);
+  else
+    existing = [];
+  end
+  switch cfg.electrodes.writesidecar
+    case 'yes'
+      if ~isempty(existing)
+        ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
+      else
+        write_tsv(filename, electrodes_tsv);
+      end
+    case 'replace'
+      write_tsv(filename, electrodes_tsv);
+    case 'merge'
+      if ~isempty(existing)
+        electrodes_tsv = unique(cat(1, electrodes_tsv, existing));
+      end
+      write_tsv(filename, electrodes_tsv);
+    case 'no'
+      % do nothing
+    otherwise
+      ft_error('incorrect option for cfg.electrodes.writesidecar');
   end % switch
 end
 
@@ -1650,6 +1747,7 @@ end
 function y = sort_fields(x)
 fn = fieldnames(x);
 fn = sort(fn);
+y = struct();
 for i=1:numel(fn)
   y.(fn{i}) = x.(fn{i});
 end
