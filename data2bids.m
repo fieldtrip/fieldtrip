@@ -20,7 +20,7 @@ function cfg = data2bids(cfg, varargin)
 % and/or realigned and defaced anatomical MRI to disk.
 %
 % The configuration structure should contains
-%   cfg.method                  = string, can be 'decorate', 'convert' or 'copy', see below (default = 'convert')
+%   cfg.method                  = string, can be 'decorate', 'convert' or 'copy', see below (default is automatic)
 %   cfg.dataset                 = string, filename of the input data
 %   cfg.outputfile              = string, optional filename for the output data
 %   cfg.mri.deface              = string, 'yes' or 'no' (default = 'no')
@@ -120,10 +120,11 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.CogAtlasID                  = string
 %   cfg.CogPOID                     = string
 %
-% There are more BIDS options for the datatype specific sidecar files. Rather than
-% listing them all here, please open this function in the MATLAB editor, and scroll
-% down a bit to see what those are. In general the information in the JSON files is
-% specified in CamelCase, whereas the information for TSV files is in lowercase.
+% There are more BIDS options for the mri/meg/eeg/ieeg data type specific sidecars.
+% Rather than listing them all here, please open this function in the MATLAB editor,
+% and scroll down a bit to see what those are. In general the information in the JSON
+% files is specified in CamelCase, whereas the information for TSV files is in
+% lowercase.
 %   cfg.mri.SomeOption              = string in CamelCase, please check the MATLAB code
 %   cfg.meg.SomeOption              = string in CamelCase, please check the MATLAB code
 %   cfg.eeg.SomeOption              = string in CamelCase, please check the MATLAB code
@@ -132,7 +133,7 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.events.someoption           = string in lowercase, please check the MATLAB code
 %   cfg.coordsystem.someoption      = string in lowercase, please check the MATLAB code
 %
-% This function corresponds to version 1.2 of the BIDS specification. See
+% The implementation in this function corresponds to BIDS version 1.2.0. See
 % https://bids-specification.readthedocs.io/ for the full specification and
 % http://bids.neuroimaging.io/ for further details.
 %
@@ -208,6 +209,7 @@ cfg.run       = ft_getopt(cfg, 'run');
 cfg.mod       = ft_getopt(cfg, 'mod');
 cfg.echo      = ft_getopt(cfg, 'echo');
 cfg.proc      = ft_getopt(cfg, 'proc');
+% cfg.space     = ft_getopt(cfg, 'space'); % FIXME
 cfg.datatype  = ft_getopt(cfg, 'datatype');
 
 if isempty(cfg.outputfile)
@@ -319,27 +321,60 @@ cfg.InstitutionName                   = ft_getopt(cfg, 'InstitutionName'        
 cfg.InstitutionAddress                = ft_getopt(cfg, 'InstitutionAddress'          ); % OPTIONAL. The address of the institution in charge of the equipment that produced the composite instances.
 cfg.InstitutionalDepartmentName       = ft_getopt(cfg, 'InstitutionalDepartmentName' ); % The department in the institution in charge of the equipment that produced the composite instances. Corresponds to DICOM Tag 0008, 1040 "Institutional Department Name".
 
-%% information for the coordsystem.json file for MEG, EEG and iEEG
-cfg.coordsystem.MEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystem'                            ); % REQUIRED. Defines the coordinate system for the MEG sensors. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in [MEGCoordinateSystemDescription].
-cfg.coordsystem.MEGCoordinateUnits                              = ft_getopt(cfg.coordsystem, 'MEGCoordinateUnits'                             ); % REQUIRED. Units of the coordinates of MEGCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
-cfg.coordsystem.MEGCoordinateSystemDescription                  = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystemDescription'                 ); % OPTIONAL. Freeform text description or link to document describing the MEG coordinate system system in detail.
-cfg.coordsystem.EEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'EEGCoordinateSystem'                            ); % OPTIONAL. Describes how the coordinates of the EEG sensors are to be interpreted.
-cfg.coordsystem.EEGCoordinateUnits                              = ft_getopt(cfg.coordsystem, 'EEGCoordinateUnits'                             ); % OPTIONAL. Units of the coordinates of EEGCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
-cfg.coordsystem.EEGCoordinateSystemDescription                  = ft_getopt(cfg.coordsystem, 'EEGCoordinateSystemDescription'                 ); % OPTIONAL. Freeform text description or link to document describing the EEG coordinate system system in detail.
-cfg.coordsystem.HeadCoilCoordinates                             = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinateSystem'                       ); % OPTIONAL. Key:value pairs describing head localization coil labels and their coordinates, interpreted following the HeadCoilCoordinateSystem, e.g., {"NAS": [12.7,21.3,13.9], "LPA": [5.2,11.3,9.6], "RPA": [20.2,11.3,9.1]}. Note that coils are not always placed at locations that have a known anatomical name (e.g. for Elekta, Yokogawa systems); in that case generic labels can be used (e.g. {"coil1": [122,213,123], "coil2": [67,123,86], "coil3": [219,110,81]} ).
-cfg.coordsystem.HeadCoilCoordinateSystem                        = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinates'                            ); % OPTIONAL. Defines the coordinate system for the coils. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in HeadCoilCoordinateSystemDescription.
-cfg.coordsystem.HeadCoilCoordinateUnits                         = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinateUnits'                        ); % OPTIONAL. Units of the coordinates of HeadCoilCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
-cfg.coordsystem.HeadCoilCoordinateSystemDescription             = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinateSystemDescription'            ); % OPTIONAL. Freeform text description or link to document describing the Head Coil coordinate system system in detail.
-cfg.coordsystem.DigitizedHeadPoints                             = ft_getopt(cfg.coordsystem, 'DigitizedHeadPoints'                            ); % OPTIONAL. Relative path to the file containing the locations of digitized head points collected during the session (e.g., "sub-01_headshape.pos"). RECOMMENDED for all MEG systems, especially for CTF and 4D/BTi. For Elekta/Neuromag the head points will be stored in the fif file.
-cfg.coordsystem.DigitizedHeadPointsCoordinateSystem             = ft_getopt(cfg.coordsystem, 'DigitizedHeadPointsCoordinateSystem'            ); % OPTIONAL. Defines the coordinate system for the digitized head points. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in DigitizedHeadPointsCoordinateSystemDescription.
-cfg.coordsystem.DigitizedHeadPointsCoordinateUnits              = ft_getopt(cfg.coordsystem, 'DigitizedHeadPointsCoordinateUnits'             ); % OPTIONAL. Units of the coordinates of DigitizedHeadPointsCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
-cfg.coordsystem.DigitizedHeadPointsCoordinateSystemDescription  = ft_getopt(cfg.coordsystem, 'DigitizedHeadPointsCoordinateSystemDescription' ); % OPTIONAL. Freeform text description or link to document describing the Digitized head Points coordinate system system in detail.
-cfg.coordsystem.IntendedFor                                     = ft_getopt(cfg.coordsystem, 'IntendedFor'                                    ); % OPTIONAL. Path or list of path relative to the subject subfolder pointing to the structural MRI, possibly of different types if a list is specified, to be used with the MEG recording. The path(s) need(s) to use forward slashes instead of backward slashes (e.g. "ses-<label>/anat/sub-01_T1w.nii.gz").
-cfg.coordsystem.AnatomicalLandmarkCoordinates                   = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinates'                  ); % OPTIONAL. Key:value pairs of the labels and 3-D digitized locations of anatomical landmarks, interpreted following the AnatomicalLandmarkCoordinateSystem, e.g., {"NAS": [12.7,21.3,13.9], "LPA": [5.2,11.3,9.6], "RPA": [20.2,11.3,9.1]}.
-cfg.coordsystem.AnatomicalLandmarkCoordinateSystem              = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinateSystem'             ); % OPTIONAL. Defines the coordinate system for the anatomical landmarks. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in AnatomicalLandmarkCoordinateSystemDescripti on.
-cfg.coordsystem.AnatomicalLandmarkCoordinateUnits               = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinateUnits'              ); % OPTIONAL. Units of the coordinates of AnatomicalLandmarkCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
-cfg.coordsystem.AnatomicalLandmarkCoordinateSystemDescription   = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinateSystemDescription'  ); % OPTIONAL. Freeform text description or link to document describing the Head Coil coordinate system system in detail.
-cfg.coordsystem.FiducialsDescription                            = ft_getopt(cfg.coordsystem, 'FiducialsDescription'                           ); % OPTIONAL. A freeform text field documenting the anatomical landmarks that were used and how the head localization coils were placed relative to these. This field can describe, for instance, whether the true anatomical locations of the left and right pre-auricular points were used and digitized, or rather whether they were defined as the intersection between the tragus and the helix (the entry of the ear canal), or any other anatomical description of selected points in the vicinity of the ears.
+%% MR Scanner Hardware
+cfg.mri.StationName                   = ft_getopt(cfg.mri, 'StationName'                    ); % Institution defined name of the machine that produced the composite instances. Corresponds to DICOM Tag 0008, 1010 "Station Name"
+cfg.mri.HardcopyDeviceSoftwareVersion = ft_getopt(cfg.mri, 'HardcopyDeviceSoftwareVersion'  ); % (Deprecated) Manufacturer's designation of the software of the device that created this Hardcopy Image (the printer). Corresponds to DICOM Tag 0018, 101A "Hardcopy Device Software Version".
+cfg.mri.MagneticFieldStrength         = ft_getopt(cfg.mri, 'MagneticFieldStrength'          ); % Nominal field strength of MR magnet in Tesla. Corresponds to DICOM Tag 0018,0087 "Magnetic Field Strength" .
+cfg.mri.ReceiveCoilName               = ft_getopt(cfg.mri, 'ReceiveCoilName'                ); % Information describing the receiver coil. Corresponds to DICOM Tag 0018, 1250 "Receive Coil Name", although not all vendors populate that DICOM Tag, in which case this field can be derived from an appropriate private DICOM field.
+cfg.mri.ReceiveCoilActiveElements     = ft_getopt(cfg.mri, 'ReceiveCoilActiveElements'      ); % Information describing the active/selected elements of the receiver coil.  This doesn't correspond to a tag in the DICOM ontology. The vendor-defined terminology for active coil elements can go in this field. As an example, for Siemens, coil channels are typically not activated/selected individually, but rather  in pre-defined selectable "groups" of individual channels, and the list of the  "groups" of elements that are active/selected in any given scan populates  the "Coil String" entry in Siemen's private DICOM fields (e.g., "HEA;HEP" for the Siemens standard 32 ch coil when both the anterior and posterior groups are activated). This is a flexible field that can be used as most appropriate for a given vendor and coil to define the "active" coil elements. Since individual scans can sometimes not have the intended coil elements selected, it is preferable for this field to be populated directly from the DICOM for each individual scan, so that it can be used as a mechanism for checking that a given scan was collected with the intended coil elements selected.
+cfg.mri.GradientSetType               = ft_getopt(cfg.mri, 'GradientSetType'                ); % It should be possible to infer the gradient coil from the scanner model. If not,e.g. because of a custom upgrade or use of a gradient insert set, then the specifications of the actual gradient coil should be reported independently.
+cfg.mri.MRTransmitCoilSequence        = ft_getopt(cfg.mri, 'MRTransmitCoilSequence'         ); % This is a relevant field if a non-standard transmit coil is used. Corresponds to DICOM Tag 0018, 9049 "MR Transmit Coil Sequence".
+cfg.mri.MatrixCoilMode                = ft_getopt(cfg.mri, 'MatrixCoilMode'                 ); % (If used) A method for reducing the number of independent channels by combining in analog the signals from multiple coil elements. There are typically different default modes when using un-accelerated or accelerated (e.g. GRAPPA, SENSE) imaging.
+cfg.mri.CoilCombinationMethod         = ft_getopt(cfg.mri, 'CoilCombinationMethod'          ); % Almost all fMRI studies using phased-array coils use root-sum-of-squares (rSOS) combination, but other methods exist. The image reconstruction is changed by the coil combination method (as for the matrix coil mode above), so anything non-standard should be reported.
+
+%% MR Sequence Specifics
+cfg.mri.PulseSequenceType             = ft_getopt(cfg.mri, 'PulseSequenceType'              ); % A general description of the pulse sequence used for the scan (i.e. MPRAGE, Gradient Echo EPI, Spin Echo EPI, Multiband gradient echo EPI).
+cfg.mri.ScanningSequence              = ft_getopt(cfg.mri, 'ScanningSequence'               ); % Description of the type of data acquired. Corresponds to DICOM Tag 0018, 0020 "Sequence Sequence".
+cfg.mri.SequenceVariant               = ft_getopt(cfg.mri, 'SequenceVariant'                ); % Variant of the ScanningSequence. Corresponds to DICOM Tag 0018, 0021 "Sequence Variant".
+cfg.mri.ScanOptions                   = ft_getopt(cfg.mri, 'ScanOptions'                    ); % Parameters of ScanningSequence. Corresponds to DICOM Tag 0018, 0022 "Scan Options".
+cfg.mri.SequenceName                  = ft_getopt(cfg.mri, 'SequenceName'                   ); % Manufacturer's designation of the sequence name. Corresponds to DICOM Tag 0018, 0024 "Sequence Name".
+cfg.mri.PulseSequenceDetails          = ft_getopt(cfg.mri, 'PulseSequenceDetails'           ); % Information beyond pulse sequence type that identifies the specific pulse sequence used (i.e. "Standard Siemens Sequence distributed with the VB17 software," "Siemens WIP ### version #.##," or "Sequence written by X using a version compiled on MM/DD/YYYY").
+cfg.mri.NonlinearGradientCorrection   = ft_getopt(cfg.mri, 'NonlinearGradientCorrection'    ); % Boolean stating if the image saved  has been corrected for gradient nonlinearities by the scanner sequence.
+
+%% MR In-Plane Spatial Encoding
+cfg.mri.NumberShots                   = ft_getopt(cfg.mri, 'NumberShots'                    ); % The number of RF excitations need to reconstruct a slice or volume. Please mind that  this is not the same as Echo Train Length which denotes the number of lines of k-space collected after an excitation.
+cfg.mri.ParallelReductionFactorInPlan = ft_getopt(cfg.mri, 'ParallelReductionFactorInPlane' ); % The parallel imaging (e.g, GRAPPA) factor. Use the denominator of the fraction of k-space encoded for each slice. For example, 2 means half of k-space is encoded. Corresponds to DICOM Tag 0018, 9069 "Parallel Reduction Factor In-plane".
+cfg.mri.ParallelAcquisitionTechnique  = ft_getopt(cfg.mri, 'ParallelAcquisitionTechnique'   ); % The type of parallel imaging used (e.g. GRAPPA, SENSE). Corresponds to DICOM Tag 0018, 9078 "Parallel Acquisition Technique".
+cfg.mri.PartialFourier                = ft_getopt(cfg.mri, 'PartialFourier'                 ); % The fraction of partial Fourier information collected. Corresponds to DICOM Tag 0018, 9081 "Partial Fourier".
+cfg.mri.PartialFourierDirection       = ft_getopt(cfg.mri, 'PartialFourierDirection'        ); % The direction where only partial Fourier information was collected. Corresponds to DICOM Tag 0018, 9036 "Partial Fourier Direction".
+cfg.mri.PhaseEncodingDirection        = ft_getopt(cfg.mri, 'PhaseEncodingDirection'         ); % Possible values = [];                     % "i", "j", "k", "i-", "j-", "k-". The letters "i", "j", "k" correspond to the first, second and third axis of the data in the NIFTI file. The polarity of the phase encoding is assumed to go from zero index to maximum index unless "-" sign is present (then the order is reversed - starting from the highest index instead of zero). PhaseEncodingDirection is defined as the direction along which phase is was modulated which may result in visible distortions. Note that this is not the same as the DICOM term InPlanePhaseEncodingDirection which can have "ROW" or "COL" values. This parameter is REQUIRED if corresponding fieldmap data is present or when using multiple runs with different phase encoding directions (which can be later used for field inhomogeneity correction).
+cfg.mri.EffectiveEchoSpacing          = ft_getopt(cfg.mri, 'EffectiveEchoSpacing'           ); % The "effective" sampling interval, specified in seconds, between lines in the phase-encoding direction, defined based on the size of the reconstructed image in the phase direction.  It is frequently, but incorrectly, referred to as  "dwell time" (see DwellTime parameter below for actual dwell time).  It is  required for unwarping distortions using field maps. Note that beyond just in-plane acceleration, a variety of other manipulations to the phase encoding need to be accounted for properly, including partial fourier, phase oversampling, phase resolution, phase field-of-view and interpolation. This parameter is REQUIRED if corresponding fieldmap data is present.
+cfg.mri.TotalReadoutTime              = ft_getopt(cfg.mri, 'TotalReadoutTime'               ); % This is actually the "effective" total readout time , defined as the readout duration, specified in seconds, that would have generated data with the given level of distortion.  It is NOT the actual, physical duration of the readout train.  If EffectiveEchoSpacing has been properly computed, it is just EffectiveEchoSpacing * (ReconMatrixPE - 1). . This parameter is REQUIRED if corresponding "field/distortion" maps acquired with opposing phase encoding directions are present  (see 8.9.4).
+
+%% MR Timing Parameters
+cfg.mri.EchoTime                      = ft_getopt(cfg.mri, 'EchoTime'                       ); % The echo time (TE) for the acquisition, specified in seconds. This parameter is REQUIRED if corresponding fieldmap data is present or the data comes from a multi echo sequence. Corresponds to DICOM Tag 0018, 0081 "Echo Time"  (please note that the DICOM term is in milliseconds not seconds).
+cfg.mri.InversionTime                 = ft_getopt(cfg.mri, 'InversionTime'                  ); % The inversion time (TI) for the acquisition, specified in seconds. Inversion time is the time after the middle of inverting RF pulse to middle of excitation pulse to detect the amount of longitudinal magnetization. Corresponds to DICOM Tag 0018, 0082 "Inversion Time"  (please note that the DICOM term is in milliseconds not seconds).
+cfg.mri.SliceTiming                   = ft_getopt(cfg.mri, 'SliceTiming'                    ); % The time at which each slice was acquired within each volume (frame) of  the acquisition.  Slice timing is not slice order -- rather, it  is a list of times (in JSON format) containing the time (in seconds) of each slice acquisition in relation to the beginning of volume acquisition.  The list goes through the slices along the slice axis in the slice encoding dimension (see below). Note that to ensure the proper interpretation of the SliceTiming field, it is important to check if the (optional) SliceEncodingDirection exists. In particular,  if SliceEncodingDirection is negative, the entries in SliceTiming are defined in reverse order with respect to the slice axis (i.e., the final entry in the SliceTiming list is the time of acquisition of slice 0). This parameter is REQUIRED for sparse sequences that do not have the DelayTime field set. In addition without this parameter slice time correction will not be possible.
+cfg.mri.SliceEncodingDirection        = ft_getopt(cfg.mri, 'SliceEncodingDirection'         ); % Possible values = [];                     % "i", "j", "k", "i-", "j-", "k-" (the axis of the NIfTI data along which slices were acquired, and the direction in which SliceTiming is  defined with respect to). "i", "j", "k" identifiers correspond to the first, second and third axis of the data in the NIfTI file. A "-" sign indicates that the contents of SliceTiming are defined in reverse order -- that is, the first entry corresponds to the slice with the largest index, and the final entry corresponds to slice index zero. When present ,the axis defined by SliceEncodingDirection  needs to be consistent with the "slice_dim" field in the NIfTI header. When absent, the entries in SliceTiming must be in the order of increasing slice index as defined by the NIfTI header.
+cfg.mri.DwellTime                     = ft_getopt(cfg.mri, 'DwellTime'                      ); % Actual dwell time (in seconds) of the receiver per point in the readout direction, including any oversampling.  For Siemens, this corresponds to DICOM field (0019,1018) (in ns).   This value is necessary for the (optional) readout distortion correction of anatomicals in the HCP Pipelines.  It also usefully provides a handle on the readout bandwidth, which isn't captured in the other metadata tags.  Not to be confused with "EffectiveEchoSpacing", and the frequent mislabeling of echo spacing (which is spacing in the phase encoding direction) as "dwell time" (which is spacing in the readout direction).
+
+%% MR RF & Contrast
+cfg.mri.FlipAngle                     = ft_getopt(cfg.mri, 'FlipAngle'                      ); % Flip angle for the acquisition, specified in degrees. Corresponds to = [];                     % DICOM Tag 0018, 1314 "Flip Angle".
+cfg.mri.MultibandAccelerationFactor   = ft_getopt(cfg.mri, 'MultibandAccelerationFactor'    ); % RECOMMENDED. The multiband factor, for multiband acquisitions.
+cfg.mri.NegativeContrast              = ft_getopt(cfg.mri, 'NegativeContrast'               ); % OPTIONAL. Boolean (true or false) value specifying whether increasing voxel intensity (within sample voxels) denotes a decreased value with respect to the contrast suffix. This is commonly the case when Cerebral Blood Volume is estimated via usage of a contrast agent in conjunction with a T2* weighted acquisition protocol.
+
+%% MR Slice Acceleration
+cfg.mri.MultibandAccelerationFactor   = ft_getopt(cfg.mri, 'MultibandAccelerationFactor'    ); % The multiband factor, for multiband acquisitions.
+
+%% Anatomical landmarks, useful for multimodaltimodal co-registration with MEG, (S)HeadCoil, TMS,etc
+cfg.mri.AnatomicalLandmarkCoordinates = ft_getopt(cfg.mri, 'AnatomicalLandmarkCoordinates'  ); % Key:value pairs of any number of additional anatomical landmarks and their coordinates in voxel units (where first voxel has index 0,0,0) relative to the associated anatomical MRI, (e.g. {"AC" = []; % [127,119,149], "PC" = []; % [128,93,141], "IH" = []; % [131,114,206]}, or {"NAS" = []; % [127,213,139], "LPA" = []; % [52,113,96], "RPA" = []; % [202,113,91]}).
+
+%% MR Anatomical scan information
+cfg.mri.ContrastBolusIngredient	      = ft_getopt(cfg.mri, 'ContrastBolusIngredient'        ); % OPTIONAL. Active ingredient of agent. Values MUST be one of: IODINE, GADOLINIUM, CARBON DIOXIDE, BARIUM, XENON Corresponds to DICOM Tag 0018,1048.
+
+%% MR Functional scan information
+cfg.mri.RepetitionTime                = ft_getopt(cfg.mri, 'RepetitionTime'                 ); % REQUIRED. The time in seconds between the beginning of an acquisition of one volume and the beginning of acquisition of the volume following it (TR). Please note that this definition includes time between scans (when no data has been acquired) in case of sparse acquisition schemes. This value needs to be consistent with the pixdim[4] field (after accounting for units stored in xyzt_units field) in the NIfTI header. This field is mutually exclusive with VolumeTiming and is derived from DICOM Tag 0018, 0080 and converted to seconds.
+cfg.mri.VolumeTiming                  = ft_getopt(cfg.mri, 'VolumeTiming'                   ); % REQUIRED. The time at which each volume was acquired during the acquisition. It is described using a list of times (in JSON format) referring to the onset of each volume in the BOLD series. The list must have the same length as the BOLD series, and the values must be non-negative and monotonically increasing. This field is mutually exclusive with RepetitionTime and DelayTime. If defined, this requires acquisition time (TA) be defined via either SliceTiming or AcquisitionDuration be defined.
 
 %% MEG specific fields
 cfg.meg.SamplingFrequency             = ft_getopt(cfg.meg, 'SamplingFrequency'           ); % REQUIRED. Sampling frequency (in Hz) of all the data in the recording, regardless of their type (e.g., 2400)
@@ -366,34 +401,46 @@ cfg.meg.HeadCoilFrequency             = ft_getopt(cfg.meg, 'HeadCoilFrequency'  
 cfg.meg.MaxMovement                   = ft_getopt(cfg.meg, 'MaxMovement'                 ); % OPTIONAL. Maximum head movement (in mm) detected during the recording, as measured by the head localisation coils (e.g., 4.8)
 cfg.meg.SubjectArtefactDescription    = ft_getopt(cfg.meg, 'SubjectArtefactDescription'  ); % OPTIONAL. Freeform description of the observed subject artefact and its possible cause (e.g. "Vagus Nerve Stimulator", "non-removable implant"). If this field is set to "n/a", it will be interpreted as absence of major source of artifacts except cardiac and blinks.
 cfg.meg.AssociatedEmptyRoom           = ft_getopt(cfg.meg, 'AssociatedEmptyRoom'         ); % OPTIONAL. Relative path in BIDS folder structure to empty-room file associated with the subject's MEG recording. The path needs to use forward slashes instead of backward slashes (e.g. "sub-emptyroom/ses-<label>/meg/sub-emptyroom_ses-<label>_ta sk-noise_run-<label>_meg.ds").
+cfg.meg.HardwareFilters               = ft_getopt(cfg.meg, 'HardwareFilters'             ); % RECOMMENDED. List of temporal hardware filters applied. Ideally key:value pairs of pre-applied hardware filters and their parameter values: e.g., {"HardwareFilters": {"Highpass RC filter": {"Half amplitude cutoff (Hz)": 0.0159, "Roll-off": "6dB/Octave"}}}. Write n/a if no hardware filters applied.
+
+%% Specific EEG fields - if recorded with the MEG system
+cfg.meg.EEGPlacementScheme	          = ft_getopt(cfg.meg, 'EEGPlacementScheme'          ); % OPTIONAL. Placement scheme of EEG electrodes. Either the name of a standardised placement system (e.g., "10-20") or a list of standardised electrode names (e.g. ["Cz", "Pz"]).
+cfg.meg.CapManufacturer	              = ft_getopt(cfg.meg, 'CapManufacturer'             ); % OPTIONAL. Manufacturer of the EEG cap (e.g. EasyCap)
+cfg.meg.CapManufacturersModelName	    = ft_getopt(cfg.meg, 'CapManufacturersModelName'   ); % OPTIONAL. Manufacturer’s designation of the EEG cap model (e.g., M10)
+cfg.meg.EEGReference	                = ft_getopt(cfg.meg, 'EEGReference'                ); % OPTIONAL. Description of the type of EEG reference used (e.g., M1 for left mastoid, average, or longitudinal bipolar).
 
 %% EEG specific fields
-cfg.eeg.SamplingFrequency             = ft_getopt(cfg.eeg, 'SamplingFrequency'           ); % Sampling frequency (in Hz) of the EEG recording (e.g. 2400)
-cfg.eeg.EEGChannelCount               = ft_getopt(cfg.eeg, 'EEGChannelCount'             ); % Number of EEG channels included in the recording (e.g. 128).
-cfg.eeg.EOGChannelCount               = ft_getopt(cfg.eeg, 'EOGChannelCount'             ); % Number of EOG channels included in the recording (e.g. 2).
-cfg.eeg.ECGChannelCount               = ft_getopt(cfg.eeg, 'ECGChannelCount'             ); % Number of ECG channels included in the recording (e.g. 1).
-cfg.eeg.EMGChannelCount               = ft_getopt(cfg.eeg, 'EMGChannelCount'             ); % Number of EMG channels included in the recording (e.g. 2).
 cfg.eeg.EEGReference                  = ft_getopt(cfg.eeg, 'EEGReference'                ); % Description of the type of reference used (common", "average", "DRL", "bipolar" ).  Any specific electrode used as reference should be indicated as such in the channels.tsv file
-cfg.eeg.MiscChannelCount              = ft_getopt(cfg.eeg, 'MiscChannelCount'            ); % Number of miscellaneous analog channels for auxiliary  signals
-cfg.eeg.TriggerChannelCount           = ft_getopt(cfg.eeg, 'TriggerChannelCount'         ); % Number of channels for digital and analog triggers.
+cfg.eeg.SamplingFrequency             = ft_getopt(cfg.eeg, 'SamplingFrequency'           ); % Sampling frequency (in Hz) of the EEG recording (e.g. 2400)
 cfg.eeg.PowerLineFrequency            = ft_getopt(cfg.eeg, 'PowerLineFrequency'          ); % Frequency (in Hz) of the power grid where the EEG is installed (i.e. 50 or 60).
-cfg.eeg.EEGPlacementScheme            = ft_getopt(cfg.eeg, 'EEGPlacementScheme'          ); % Placement scheme of the EEG electrodes. Either the name of a placement system (e.g. "10-20", "equidistant", "geodesic") or a list of electrode positions (e.g. "Cz", "Pz").
+cfg.eeg.SoftwareFilters               = ft_getopt(cfg.eeg, 'SoftwareFilters'             ); % List of temporal software filters applied or ideally  key:value pairs of pre-applied filters and their parameter values
 cfg.eeg.CapManufacturer               = ft_getopt(cfg.eeg, 'CapManufacturer'             ); % name of the cap manufacturer
 cfg.eeg.CapModelName                  = ft_getopt(cfg.eeg, 'CapModelName'                ); % Manufacturer's designation of the EEG cap model (e.g. "CAPML128", "actiCAP 64Ch Standard-2")
-cfg.eeg.HardwareFilters               = ft_getopt(cfg.eeg, 'HardwareFilters'             ); % List of hardware (amplifier) filters applied or ideally  key:value pairs of pre-applied filters and their parameter values
-cfg.eeg.SoftwareFilters               = ft_getopt(cfg.eeg, 'SoftwareFilters'             ); % List of temporal software filters applied or ideally  key:value pairs of pre-applied filters and their parameter values
+cfg.eeg.EEGChannelCount               = ft_getopt(cfg.eeg, 'EEGChannelCount'             ); % Number of EEG channels included in the recording (e.g. 128).
+cfg.eeg.ECGChannelCount               = ft_getopt(cfg.eeg, 'ECGChannelCount'             ); % Number of ECG channels included in the recording (e.g. 1).
+cfg.eeg.EMGChannelCount               = ft_getopt(cfg.eeg, 'EMGChannelCount'             ); % Number of EMG channels included in the recording (e.g. 2).
+cfg.eeg.EOGChannelCount               = ft_getopt(cfg.eeg, 'EOGChannelCount'             ); % Number of EOG channels included in the recording (e.g. 2).
+cfg.eeg.MiscChannelCount              = ft_getopt(cfg.eeg, 'MiscChannelCount'            ); % Number of miscellaneous analog channels for auxiliary  signals
+cfg.eeg.TriggerChannelCount           = ft_getopt(cfg.eeg, 'TriggerChannelCount'         ); % Number of channels for digital and analog triggers.
 cfg.eeg.RecordingDuration             = ft_getopt(cfg.eeg, 'RecordingDuration'           ); % Length of the recording in seconds (e.g. 3600)
 cfg.eeg.RecordingType                 = ft_getopt(cfg.eeg, 'RecordingType'               ); % "continuous", "epoched"
 cfg.eeg.EpochLength                   = ft_getopt(cfg.eeg, 'EpochLength'                 ); % Duration of individual epochs in seconds (e.g. 1). If recording was continuous, set value to Inf or leave out the field.
-cfg.eeg.DeviceSoftwareVersion         = ft_getopt(cfg.eeg, 'DeviceSoftwareVersion'       ); % Manufacturer's designation of the acquisition software.
+cfg.eeg.HeadCircumference             = ft_getopt(cfg.eeg, 'HeadCircumference'           ); % RECOMMENDED. Circumference of the participants head, expressed in cm (e.g., 58).
+cfg.eeg.EEGPlacementScheme            = ft_getopt(cfg.eeg, 'EEGPlacementScheme'          ); % Placement scheme of the EEG electrodes. Either the name of a placement system (e.g. "10-20", "equidistant", "geodesic") or a list of electrode positions (e.g. "Cz", "Pz").
+cfg.eeg.EEGGround                     = ft_getopt(cfg.eeg, 'EEGGround'                   ); % RECOMMENDED. Description of the location of the ground electrode (e.g., "placed on right mastoid (M2)").
+cfg.eeg.HardwareFilters               = ft_getopt(cfg.eeg, 'HardwareFilters'             ); % List of hardware (amplifier) filters applied or ideally  key:value pairs of pre-applied filters and their parameter values
 cfg.eeg.SubjectArtefactDescription    = ft_getopt(cfg.eeg, 'SubjectArtefactDescription'  ); % Freeform description of the observed subject artefact and its possible cause (e.g. "Vagus Nerve Stimulator", "non-removable implant"). If this field is left empty, it will be interpreted as absence of  a source of (constantly present) artifacts.
-cfg.eeg.SimultaneousRecording         = ft_getopt(cfg.eeg, 'SimultaneousRecording'       ); % indicate over acquired modalities (keys are: fMRI, PET, MEG, NIRS)
 
 %% iEEG specific fields
+
+cfg.ieeg.iEEGReference                   = ft_getopt(cfg, 'iEEGReference'                  ); % REQUIRED. General description of the reference scheme used and (when applicable) of location of the reference electrode in the raw recordings (e.g. "left mastoid”, “bipolar”, “T01” for electrode with name T01, “intracranial electrode on top of a grid, not included with data”, “upside down electrode”). If different channels have a different reference, this field should have a general description and the channel specific reference should be defined in the _channels.tsv file.
 cfg.ieeg.SamplingFrequency               = ft_getopt(cfg, 'SamplingFrequency'              ); % REQUIRED. Sampling frequency (in Hz) of all the iEEG channels in the recording (e.g., 2400). All other channels should have frequency specified as well in the channels.tsv file.
 cfg.ieeg.PowerLineFrequency              = ft_getopt(cfg, 'PowerLineFrequency'             ); % REQUIRED. Frequency (in Hz) of the power grid where the iEEG recording was done (i.e. 50 or 60)
-cfg.ieeg.HardwareFilters                 = ft_getopt(cfg, 'HardwareFilters'                ); % REQUIRED. List of hardware (amplifier) filters applied with  key:value pairs of filter parameters and their values.
 cfg.ieeg.SoftwareFilters                 = ft_getopt(cfg, 'SoftwareFilters'                ); % REQUIRED. List of temporal software filters applied or ideally  key:value pairs of pre-applied filters and their parameter values. (n/a if none).
+% cfg.ieeg.DCOffsetCorrection see https://github.com/bids-standard/bids-specification/issues/237
+cfg.ieeg.HardwareFilters                 = ft_getopt(cfg, 'HardwareFilters'                ); % REQUIRED. List of hardware (amplifier) filters applied with  key:value pairs of filter parameters and their values.
+cfg.ieeg.ElectrodeManufacturer           = ft_getopt(cfg, 'ElectrodeManufacturer'          ); % RECOMMENDED. can be used if all electrodes are of the same manufacturer (e.g. AD-TECH, DIXI). If electrodes of different manufacturers are used, please use the corresponding table in the _electrodes.tsv file.
+cfg.ieeg.ElectrodeManufacturersModelName = ft_getopt(cfg, 'ElectrodeManufacturersModelName'); % RECOMMENDED. If different electrode types are used, please use the corresponding table in the _electrodes.tsv file.
 cfg.ieeg.Manufacturer                    = ft_getopt(cfg, 'Manufacturer'                   ); % RECOMMENDED. Manufacturer of the amplifier system  (e.g. "TDT, Blackrock")
 cfg.ieeg.ManufacturersModelName          = ft_getopt(cfg, 'ManufacturersModelName'         ); % RECOMMENDED. Manufacturer’s designation of the iEEG amplifier model.
 cfg.ieeg.ECOGChannelCount                = ft_getopt(cfg, 'ECOGChannelCount'               ); % RECOMMENDED. Number of iEEG surface channels included in the recording (e.g. 120)
@@ -407,64 +454,34 @@ cfg.ieeg.TriggerChannelCount             = ft_getopt(cfg, 'TriggerChannelCount' 
 cfg.ieeg.RecordingDuration               = ft_getopt(cfg, 'RecordingDuration'              ); % RECOMMENDED. Length of the recording in seconds (e.g. 3600)
 cfg.ieeg.RecordingType                   = ft_getopt(cfg, 'RecordingType'                  ); % RECOMMENDED. Defines whether the recording is  “continuous” or  “epoched”; this latter limited to time windows about events of interest (e.g., stimulus presentations, subject responses etc.)
 cfg.ieeg.EpochLength                     = ft_getopt(cfg, 'EpochLength'                    ); % RECOMMENDED. Duration of individual epochs in seconds (e.g. 1) in case of epoched data
-cfg.ieeg.SubjectArtefactDescription      = ft_getopt(cfg, 'SubjectArtefactDescription'     ); % RECOMMENDED. Freeform description of the observed subject artefact and its possible cause (e.g. “door open”, ”nurse walked into room at 2 min”, ”seizure at 10 min”). If this field is left empty, it will be interpreted as absence of artifacts.
-cfg.ieeg.SoftwareVersions                = ft_getopt(cfg, 'SoftwareVersions'               ); % RECOMMENDED. Manufacturer’s designation of the acquisition software.
-cfg.ieeg.iEEGReference                   = ft_getopt(cfg, 'iEEGReference'                  ); % REQUIRED. General description of the reference scheme used and (when applicable) of location of the reference electrode in the raw recordings (e.g. "left mastoid”, “bipolar”, “T01” for electrode with name T01, “intracranial electrode on top of a grid, not included with data”, “upside down electrode”). If different channels have a different reference, this field should have a general description and the channel specific reference should be defined in the _channels.tsv file.
-cfg.ieeg.ElectrodeManufacturer           = ft_getopt(cfg, 'ElectrodeManufacturer'          ); % RECOMMENDED. can be used if all electrodes are of the same manufacturer (e.g. AD-TECH, DIXI). If electrodes of different manufacturers are used, please use the corresponding table in the _electrodes.tsv file.
-cfg.ieeg.ElectrodeManufacturersModelName = ft_getopt(cfg, 'ElectrodeManufacturersModelName'); % RECOMMENDED. If different electrode types are used, please use the corresponding table in the _electrodes.tsv file.
 cfg.ieeg.iEEGGround                      = ft_getopt(cfg, 'iEEGGround'                     ); % RECOMMENDED. Description  of the location of the ground electrode (“placed on right mastoid (M2)”).
 cfg.ieeg.iEEGPlacementScheme             = ft_getopt(cfg, 'iEEGPlacementScheme'            ); % RECOMMENDED. Freeform description of the placement of the iEEG electrodes. Left/right/bilateral/depth/surface (e.g. “left frontal grid and bilateral hippocampal depth” or “surface strip and STN depth” or “clinical indication bitemporal, bilateral temporal strips and left grid”).
 cfg.ieeg.iEEGElectrodeGroups             = ft_getopt(cfg, 'iEEGElectrodeGroups'            ); % RECOMMENDED. Field to describe the way electrodes are grouped into strips, grids or depth probes e.g. {'grid1': "10x8 grid on left temporal pole", 'strip2': "1x8 electrode strip on xxx"}.
+cfg.ieeg.SubjectArtefactDescription      = ft_getopt(cfg, 'SubjectArtefactDescription'     ); % RECOMMENDED. Freeform description of the observed subject artefact and its possible cause (e.g. “door open”, ”nurse walked into room at 2 min”, ”seizure at 10 min”). If this field is left empty, it will be interpreted as absence of artifacts.
 cfg.ieeg.ElectricalStimulation           = ft_getopt(cfg, 'ElectricalStimulation'          ); % OPTIONAL. Boolean field to specify if electrical stimulation was done during the recording (options are “true” or “false”). Parameters for event-like stimulation should be specified in the _events.tsv file (see example underneath).
 cfg.ieeg.ElectricalStimulationParameters = ft_getopt(cfg, 'ElectricalStimulationParameters'); % OPTIONAL. Free form description of stimulation parameters, such as frequency, shape etc. Specific onsets can be specified in the _events.tsv file. Specific shapes can be described here in freeform text.
 
-%% MR Scanner Hardware
-cfg.mri.MagneticFieldStrength         = ft_getopt(cfg.mri, 'MagneticFieldStrength'          ); % Nominal field strength of MR magnet in Tesla. Corresponds to DICOM Tag 0018,0087 "Magnetic Field Strength" .
-cfg.mri.StationName                   = ft_getopt(cfg.mri, 'StationName'                    ); % Institution defined name of the machine that produced the composite instances. Corresponds to DICOM Tag 0008, 1010 "Station Name"
-cfg.mri.HardcopyDeviceSoftwareVersion = ft_getopt(cfg.mri, 'HardcopyDeviceSoftwareVersion'  ); % (Deprecated) Manufacturer's designation of the software of the device that created this Hardcopy Image (the printer). Corresponds to DICOM Tag 0018, 101A "Hardcopy Device Software Version".
-cfg.mri.ReceiveCoilName               = ft_getopt(cfg.mri, 'ReceiveCoilName'                ); % Information describing the receiver coil. Corresponds to DICOM Tag 0018, 1250 "Receive Coil Name", although not all vendors populate that DICOM Tag, in which case this field can be derived from an appropriate private DICOM field.
-cfg.mri.ReceiveCoilActiveElements     = ft_getopt(cfg.mri, 'ReceiveCoilActiveElements'      ); % Information describing the active/selected elements of the receiver coil.  This doesn't correspond to a tag in the DICOM ontology. The vendor-defined terminology for active coil elements can go in this field. As an example, for Siemens, coil channels are typically not activated/selected individually, but rather  in pre-defined selectable "groups" of individual channels, and the list of the  "groups" of elements that are active/selected in any given scan populates  the "Coil String" entry in Siemen's private DICOM fields (e.g., "HEA;HEP" for the Siemens standard 32 ch coil when both the anterior and posterior groups are activated). This is a flexible field that can be used as most appropriate for a given vendor and coil to define the "active" coil elements. Since individual scans can sometimes not have the intended coil elements selected, it is preferable for this field to be populated directly from the DICOM for each individual scan, so that it can be used as a mechanism for checking that a given scan was collected with the intended coil elements selected.
-cfg.mri.GradientSetType               = ft_getopt(cfg.mri, 'GradientSetType'                ); % It should be possible to infer the gradient coil from the scanner model. If not,e.g. because of a custom upgrade or use of a gradient insert set, then the specifications of the actual gradient coil should be reported independently.
-cfg.mri.MRTransmitCoilSequence        = ft_getopt(cfg.mri, 'MRTransmitCoilSequence'         ); % This is a relevant field if a non-standard transmit coil is used. Corresponds to DICOM Tag 0018, 9049 "MR Transmit Coil Sequence".
-cfg.mri.MatrixCoilMode                = ft_getopt(cfg.mri, 'MatrixCoilMode'                 ); % (If used) A method for reducing the number of independent channels by combining in analog the signals from multiple coil elements. There are typically different default modes when using un-accelerated or accelerated (e.g. GRAPPA, SENSE) imaging.
-cfg.mri.CoilCombinationMethod         = ft_getopt(cfg.mri, 'CoilCombinationMethod'          ); % Almost all fMRI studies using phased-array coils use root-sum-of-squares (rSOS) combination, but other methods exist. The image reconstruction is changed by the coil combination method (as for the matrix coil mode above), so anything non-standard should be reported.
-
-%% MR Sequence Specifics
-cfg.mri.PulseSequenceType             = ft_getopt(cfg.mri, 'PulseSequenceType'              ); % A general description of the pulse sequence used for the scan (i.e. MPRAGE, Gradient Echo EPI, Spin Echo EPI, Multiband gradient echo EPI).
-cfg.mri.ScanningSequence              = ft_getopt(cfg.mri, 'ScanningSequence'               ); % Description of the type of data acquired. Corresponds to DICOM Tag 0018, 0020 "Sequence Sequence".
-cfg.mri.SequenceVariant               = ft_getopt(cfg.mri, 'SequenceVariant'                ); % Variant of the ScanningSequence. Corresponds to DICOM Tag 0018, 0021 "Sequence Variant".
-cfg.mri.ScanOptions                   = ft_getopt(cfg.mri, 'ScanOptions'                    ); % Parameters of ScanningSequence. Corresponds to DICOM Tag 0018, 0022 "Scan Options".
-cfg.mri.SequenceName                  = ft_getopt(cfg.mri, 'SequenceName'                   ); % Manufacturer's designation of the sequence name. Corresponds to DICOM Tag 0018, 0024 "Sequence Name".
-cfg.mri.PulseSequenceDetails          = ft_getopt(cfg.mri, 'PulseSequenceDetails'           ); % Information beyond pulse sequence type that identifies the specific pulse sequence used (i.e. "Standard Siemens Sequence distributed with the VB17 software," "Siemens WIP ### version #.##," or "Sequence written by X using a version compiled on MM/DD/YYYY").
-cfg.mri.NonlinearGradientCorrection   = ft_getopt(cfg.mri, 'NonlinearGradientCorrection'    ); % Boolean stating if the image saved  has been corrected for gradient nonlinearities by the scanner sequence.
-
-%% MR In-Plane Spatial Encoding
-cfg.mri.NumberShots                   = ft_getopt(cfg.mri, 'NumberShots'                    ); % The number of RF excitations need to reconstruct a slice or volume. Please mind that  this is not the same as Echo Train Length which denotes the number of lines of k-space collected after an excitation.
-cfg.mri.ParallelReductionFactorInPlan = ft_getopt(cfg.mri, 'ParallelReductionFactorInPlane' ); % The parallel imaging (e.g, GRAPPA) factor. Use the denominator of the fraction of k-space encoded for each slice. For example, 2 means half of k-space is encoded. Corresponds to DICOM Tag 0018, 9069 "Parallel Reduction Factor In-plane".
-cfg.mri.ParallelAcquisitionTechnique  = ft_getopt(cfg.mri, 'ParallelAcquisitionTechnique'   ); % The type of parallel imaging used (e.g. GRAPPA, SENSE). Corresponds to DICOM Tag 0018, 9078 "Parallel Acquisition Technique".
-cfg.mri.PartialFourier                = ft_getopt(cfg.mri, 'PartialFourier'                 ); % The fraction of partial Fourier information collected. Corresponds to DICOM Tag 0018, 9081 "Partial Fourier".
-cfg.mri.PartialFourierDirection       = ft_getopt(cfg.mri, 'PartialFourierDirection'        ); % The direction where only partial Fourier information was collected. Corresponds to DICOM Tag 0018, 9036 "Partial Fourier Direction".
-cfg.mri.PhaseEncodingDirection        = ft_getopt(cfg.mri, 'PhaseEncodingDirection'         ); % Possible values = [];                     % "i", "j", "k", "i-", "j-", "k-". The letters "i", "j", "k" correspond to the first, second and third axis of the data in the NIFTI file. The polarity of the phase encoding is assumed to go from zero index to maximum index unless "-" sign is present (then the order is reversed - starting from the highest index instead of zero). PhaseEncodingDirection is defined as the direction along which phase is was modulated which may result in visible distortions. Note that this is not the same as the DICOM term InPlanePhaseEncodingDirection which can have "ROW" or "COL" values. This parameter is REQUIRED if corresponding fieldmap data is present or when using multiple runs with different phase encoding directions (which can be later used for field inhomogeneity correction).
-cfg.mri.EffectiveEchoSpacing          = ft_getopt(cfg.mri, 'EffectiveEchoSpacing'           ); % The "effective" sampling interval, specified in seconds, between lines in the phase-encoding direction, defined based on the size of the reconstructed image in the phase direction.  It is frequently, but incorrectly, referred to as  "dwell time" (see DwellTime parameter below for actual dwell time).  It is  required for unwarping distortions using field maps. Note that beyond just in-plane acceleration, a variety of other manipulations to the phase encoding need to be accounted for properly, including partial fourier, phase oversampling, phase resolution, phase field-of-view and interpolation. This parameter is REQUIRED if corresponding fieldmap data is present.
-cfg.mri.TotalReadoutTime              = ft_getopt(cfg.mri, 'TotalReadoutTime'               ); % This is actually the "effective" total readout time , defined as the readout duration, specified in seconds, that would have generated data with the given level of distortion.  It is NOT the actual, physical duration of the readout train.  If EffectiveEchoSpacing has been properly computed, it is just EffectiveEchoSpacing * (ReconMatrixPE - 1). . This parameter is REQUIRED if corresponding "field/distortion" maps acquired with opposing phase encoding directions are present  (see 8.9.4).
-cfg.mri.WaterFatShift                 = ft_getopt(cfg.mri, 'WaterFatShift'                  ); % in pixels, is defined as the displacement of the water signal with respect to fat signal in the image. Water-fat shift (WFS) is expressed in number of pixels (e.g. 3 pixels). The WFS is directly related to the bandwidth per pixel in readout direction, and also to the effective echo spacing.
-cfg.mri.EchoTrainLength               = ft_getopt(cfg.mri, 'EchoTrainLength'                ); % number of EPI echoes to acquire one slice. In Siemens, this parameter is the "EPI Factor". Number of lines in k-space acquired per excitation per image.  Corresponds to In GE scanners it corresponds to the DICOM tag (0018,0091) for GE and Siemens; . In Philips, it corresponds to the tag (0019,10d9) for Philips.
-
-%% MR Timing Parameters
-cfg.mri.EchoTime                      = ft_getopt(cfg.mri, 'EchoTime'                       ); % The echo time (TE) for the acquisition, specified in seconds. This parameter is REQUIRED if corresponding fieldmap data is present or the data comes from a multi echo sequence. Corresponds to DICOM Tag 0018, 0081 "Echo Time"  (please note that the DICOM term is in milliseconds not seconds).
-cfg.mri.InversionTime                 = ft_getopt(cfg.mri, 'InversionTime'                  ); % The inversion time (TI) for the acquisition, specified in seconds. Inversion time is the time after the middle of inverting RF pulse to middle of excitation pulse to detect the amount of longitudinal magnetization. Corresponds to DICOM Tag 0018, 0082 "Inversion Time"  (please note that the DICOM term is in milliseconds not seconds).
-cfg.mri.SliceTiming                   = ft_getopt(cfg.mri, 'SliceTiming'                    ); % The time at which each slice was acquired within each volume (frame) of  the acquisition.  Slice timing is not slice order -- rather, it  is a list of times (in JSON format) containing the time (in seconds) of each slice acquisition in relation to the beginning of volume acquisition.  The list goes through the slices along the slice axis in the slice encoding dimension (see below). Note that to ensure the proper interpretation of the SliceTiming field, it is important to check if the (optional) SliceEncodingDirection exists. In particular,  if SliceEncodingDirection is negative, the entries in SliceTiming are defined in reverse order with respect to the slice axis (i.e., the final entry in the SliceTiming list is the time of acquisition of slice 0). This parameter is REQUIRED for sparse sequences that do not have the DelayTime field set. In addition without this parameter slice time correction will not be possible.
-cfg.mri.SliceEncodingDirection        = ft_getopt(cfg.mri, 'SliceEncodingDirection'         ); % Possible values = [];                     % "i", "j", "k", "i-", "j-", "k-" (the axis of the NIfTI data along which slices were acquired, and the direction in which SliceTiming is  defined with respect to). "i", "j", "k" identifiers correspond to the first, second and third axis of the data in the NIfTI file. A "-" sign indicates that the contents of SliceTiming are defined in reverse order -- that is, the first entry corresponds to the slice with the largest index, and the final entry corresponds to slice index zero. When present ,the axis defined by SliceEncodingDirection  needs to be consistent with the "slice_dim" field in the NIfTI header. When absent, the entries in SliceTiming must be in the order of increasing slice index as defined by the NIfTI header.
-cfg.mri.DwellTime                     = ft_getopt(cfg.mri, 'DwellTime'                      ); % Actual dwell time (in seconds) of the receiver per point in the readout direction, including any oversampling.  For Siemens, this corresponds to DICOM field (0019,1018) (in ns).   This value is necessary for the (optional) readout distortion correction of anatomicals in the HCP Pipelines.  It also usefully provides a handle on the readout bandwidth, which isn't captured in the other metadata tags.  Not to be confused with "EffectiveEchoSpacing", and the frequent mislabeling of echo spacing (which is spacing in the phase encoding direction) as "dwell time" (which is spacing in the readout direction).
-
-%% MR RF & Contrast
-cfg.mri.FlipAngle                     = ft_getopt(cfg.mri, 'FlipAngle'                      ); % Flip angle for the acquisition, specified in degrees. Corresponds to = [];                     % DICOM Tag 0018, 1314 "Flip Angle".
-
-%% MR Slice Acceleration
-cfg.mri.MultibandAccelerationFactor   = ft_getopt(cfg.mri, 'MultibandAccelerationFactor'    ); % The multiband factor, for multiband acquisitions.
-
-%% Anatomical landmarks, useful for multimodaltimodal co-registration with MEG, (S)HeadCoil, TMS,etc
-cfg.mri.AnatomicalLandmarkCoordinates = ft_getopt(cfg.mri, 'AnatomicalLandmarkCoordinates'  ); % Key:value pairs of any number of additional anatomical landmarks and their coordinates in voxel units (where first voxel has index 0,0,0) relative to the associated anatomical MRI, (e.g. {"AC" = []; % [127,119,149], "PC" = []; % [128,93,141], "IH" = []; % [131,114,206]}, or {"NAS" = []; % [127,213,139], "LPA" = []; % [52,113,96], "RPA" = []; % [202,113,91]}).
+%% information for the coordsystem.json file for MEG, EEG and iEEG
+cfg.coordsystem.MEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystem'                            ); % REQUIRED. Defines the coordinate system for the MEG sensors. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in [MEGCoordinateSystemDescription].
+cfg.coordsystem.MEGCoordinateUnits                              = ft_getopt(cfg.coordsystem, 'MEGCoordinateUnits'                             ); % REQUIRED. Units of the coordinates of MEGCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
+cfg.coordsystem.MEGCoordinateSystemDescription                  = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystemDescription'                 ); % OPTIONAL. Freeform text description or link to document describing the MEG coordinate system system in detail.
+cfg.coordsystem.EEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'EEGCoordinateSystem'                            ); % OPTIONAL. Describes how the coordinates of the EEG sensors are to be interpreted.
+cfg.coordsystem.EEGCoordinateUnits                              = ft_getopt(cfg.coordsystem, 'EEGCoordinateUnits'                             ); % OPTIONAL. Units of the coordinates of EEGCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
+cfg.coordsystem.EEGCoordinateSystemDescription                  = ft_getopt(cfg.coordsystem, 'EEGCoordinateSystemDescription'                 ); % OPTIONAL. Freeform text description or link to document describing the EEG coordinate system system in detail.
+cfg.coordsystem.HeadCoilCoordinates                             = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinateSystem'                       ); % OPTIONAL. Key:value pairs describing head localization coil labels and their coordinates, interpreted following the HeadCoilCoordinateSystem, e.g., {"NAS": [12.7,21.3,13.9], "LPA": [5.2,11.3,9.6], "RPA": [20.2,11.3,9.1]}. Note that coils are not always placed at locations that have a known anatomical name (e.g. for Elekta, Yokogawa systems); in that case generic labels can be used (e.g. {"coil1": [122,213,123], "coil2": [67,123,86], "coil3": [219,110,81]} ).
+cfg.coordsystem.HeadCoilCoordinateSystem                        = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinates'                            ); % OPTIONAL. Defines the coordinate system for the coils. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in HeadCoilCoordinateSystemDescription.
+cfg.coordsystem.HeadCoilCoordinateUnits                         = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinateUnits'                        ); % OPTIONAL. Units of the coordinates of HeadCoilCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
+cfg.coordsystem.HeadCoilCoordinateSystemDescription             = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinateSystemDescription'            ); % OPTIONAL. Freeform text description or link to document describing the Head Coil coordinate system system in detail.
+cfg.coordsystem.DigitizedHeadPoints                             = ft_getopt(cfg.coordsystem, 'DigitizedHeadPoints'                            ); % OPTIONAL. Relative path to the file containing the locations of digitized head points collected during the session (e.g., "sub-01_headshape.pos"). RECOMMENDED for all MEG systems, especially for CTF and 4D/BTi. For Elekta/Neuromag the head points will be stored in the fif file.
+cfg.coordsystem.DigitizedHeadPointsCoordinateSystem             = ft_getopt(cfg.coordsystem, 'DigitizedHeadPointsCoordinateSystem'            ); % OPTIONAL. Defines the coordinate system for the digitized head points. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in DigitizedHeadPointsCoordinateSystemDescription.
+cfg.coordsystem.DigitizedHeadPointsCoordinateUnits              = ft_getopt(cfg.coordsystem, 'DigitizedHeadPointsCoordinateUnits'             ); % OPTIONAL. Units of the coordinates of DigitizedHeadPointsCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
+cfg.coordsystem.DigitizedHeadPointsCoordinateSystemDescription  = ft_getopt(cfg.coordsystem, 'DigitizedHeadPointsCoordinateSystemDescription' ); % OPTIONAL. Freeform text description or link to document describing the Digitized head Points coordinate system system in detail.
+cfg.coordsystem.IntendedFor                                     = ft_getopt(cfg.coordsystem, 'IntendedFor'                                    ); % OPTIONAL. Path or list of path relative to the subject subfolder pointing to the structural MRI, possibly of different types if a list is specified, to be used with the MEG recording. The path(s) need(s) to use forward slashes instead of backward slashes (e.g. "ses-<label>/anat/sub-01_T1w.nii.gz").
+cfg.coordsystem.AnatomicalLandmarkCoordinates                   = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinates'                  ); % OPTIONAL. Key:value pairs of the labels and 3-D digitized locations of anatomical landmarks, interpreted following the AnatomicalLandmarkCoordinateSystem, e.g., {"NAS": [12.7,21.3,13.9], "LPA": [5.2,11.3,9.6], "RPA": [20.2,11.3,9.1]}.
+cfg.coordsystem.AnatomicalLandmarkCoordinateSystem              = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinateSystem'             ); % OPTIONAL. Defines the coordinate system for the anatomical landmarks. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in AnatomicalLandmarkCoordinateSystemDescripti on.
+cfg.coordsystem.AnatomicalLandmarkCoordinateUnits               = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinateUnits'              ); % OPTIONAL. Units of the coordinates of AnatomicalLandmarkCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
+cfg.coordsystem.AnatomicalLandmarkCoordinateSystemDescription   = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinateSystemDescription'  ); % OPTIONAL. Freeform text description or link to document describing the Head Coil coordinate system system in detail.
+cfg.coordsystem.FiducialsDescription                            = ft_getopt(cfg.coordsystem, 'FiducialsDescription'                           ); % OPTIONAL. A freeform text field documenting the anatomical landmarks that were used and how the head localization coils were placed relative to these. This field can describe, for instance, whether the true anatomical locations of the left and right pre-auricular points were used and digitized, or rather whether they were defined as the intersection between the tragus and the helix (the entry of the ear canal), or any other anatomical description of selected points in the vicinity of the ears.
 
 %% columns in the channels.tsv
 cfg.channels.name               = ft_getopt(cfg.channels, 'name'               , nan);  % REQUIRED. Channel name (e.g., MRT012, MEG023)
@@ -479,11 +496,26 @@ cfg.channels.software_filters   = ft_getopt(cfg.channels, 'software_filters'   ,
 cfg.channels.status             = ft_getopt(cfg.channels, 'status'             , nan);  % OPTIONAL. Data quality observed on the channel (good/bad). A channel is considered bad if its data quality is compromised by excessive noise. Description of noise type SHOULD be provided in [status_description].
 cfg.channels.status_description = ft_getopt(cfg.channels, 'status_description' , nan);  % OPTIONAL. Freeform text description of noise or artifact affecting data quality on the channel. It is meant to explain why the channel was declared bad in [status].
 
-%% additional information for the participants.tsv
+%% information for the participants.tsv
 cfg.participants = ft_getopt(cfg, 'participants', struct());
 
-%% additional information for the scans.tsv
+%% information for the scans.tsv
 cfg.scans = ft_getopt(cfg, 'scans', struct());
+
+%% sanity check
+
+% the task is both part of the file name (cfg.task) and one of the general JSON metadata fields (cfg.TaskName)
+if isempty(cfg.task) && isempty(cfg.TaskName)
+  % this is fine
+elseif ~isempty(cfg.task) && isempty(cfg.TaskName)
+  cfg.TaskName = cfg.task;
+elseif isempty(cfg.task) && ~isempty(cfg.TaskName)
+  cfg.task = cfg.TaskName;
+elseif ~isempty(cfg.task) && ~isempty(cfg.TaskName)
+  if ~strcmp(cfg.task, cfg.TaskName)
+    ft_error('cfg.task and cfg.TaskName should be identical');
+  end
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% read the information from the dataset
@@ -540,30 +572,30 @@ switch typ
   case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275', 'neuromag_fif', 'neuromag122', 'neuromag306'}
     % it is MEG data from disk and in a supported format
     hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false);
+    if strcmp(cfg.method, 'convert')
+      % the data should be converted and written to disk
+      dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
+    end
     if isempty(cfg.trigger.event)
       trigger = ft_read_event(cfg.datafile, 'header', hdr);
     else
       % use the triggers as specified in the cfg
       trigger = cfg.trigger.event;
-    end
-    if strcmp(cfg.method, 'convert')
-      % the data should be converted and written to disk
-      dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
     end
     need_meg_json = true;
     
   case {'brainvision_vhdr', 'edf', 'eeglab_set'}
     % it is EEG data from disk and in a supported format
     hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false);
+    if strcmp(cfg.method, 'convert')
+      % the data should be converted and written to disk
+      dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
+    end
     if isempty(cfg.trigger.event)
       trigger = ft_read_event(cfg.datafile, 'header', hdr);
     else
       % use the triggers as specified in the cfg
       trigger = cfg.trigger.event;
-    end
-    if strcmp(cfg.method, 'convert')
-      % the data should be converted and written to disk
-      dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
     end
     need_eeg_json = true;
     
@@ -581,16 +613,19 @@ switch typ
     end
     
     hdr = ft_fetch_header(varargin{1});
-    dat = ft_fetch_data(varargin{1}, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
-    
+    if strcmp(cfg.method, 'convert')
+      % the data should be written to disk
+      dat = ft_fetch_data(varargin{1}, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
+    end
     if isempty(cfg.trigger.event)
       trigger = ft_fetch_event(varargin{1});
     else
       % use the triggers as specified in the cfg
       trigger = cfg.trigger.event;
     end
+    
     if ft_senstype(varargin{1}, 'ctf') || ft_senstype(varargin{1}, 'neuromag')
-      % use the subsequent MEG-specific handling for the JSON and TSV sidecar files
+      % use the subsequent MEG-specific metadata handling for the JSON and TSV sidecar files
       typ = ft_senstype(varargin{1});
     end
     
@@ -608,8 +643,10 @@ switch typ
     end
     
     hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false);
-    dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
-    
+    if strcmp(cfg.method, 'convert')
+      % the data should be converted and written to disk
+      dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
+    end
     if isempty(cfg.trigger.event)
       trigger = ft_read_event(cfg.datafile, 'header', hdr);
     else
@@ -619,7 +656,7 @@ switch typ
     
 end % switch typ
 
-need_events_tsv       = need_meg_json || need_eeg_json || need_ieeg_json || (need_mri_json && contains(cfg.outputfile, 'task'));
+need_events_tsv       = need_meg_json || need_eeg_json || need_ieeg_json || (need_mri_json && (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task)));
 need_channels_tsv     = need_meg_json || need_eeg_json || need_ieeg_json;
 need_coordsystem_json = need_meg_json; % FIXME this is also needed when EEG and iEEG electrodes are present
 
@@ -638,36 +675,36 @@ coordsystem_json = [];
 
 % make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg);
-fn = fn(~cellfun(@isempty, regexp(fn, '[A-Z].*')));
+fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
 generic_settings = keepfields(cfg, fn);
 
 % make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg.mri);
-fn = fn(~cellfun(@isempty, regexp(fn, '[A-Z].*')));
+fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
 mri_settings = keepfields(cfg.mri, fn);
 
 % make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg.meg);
-fn = fn(~cellfun(@isempty, regexp(fn, '[A-Z].*')));
+fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
 meg_settings = keepfields(cfg.meg, fn);
 
 % make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg.eeg);
-fn = fn(~cellfun(@isempty, regexp(fn, '[A-Z].*')));
+fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
 eeg_settings = keepfields(cfg.eeg, fn);
 
-% make the relevant selection, all json fields start with a capital letter
+% make the relevant selection, most json fields start with a capital letter, some start with iEEG
 fn = fieldnames(cfg.ieeg);
-fn = fn(~cellfun(@isempty, regexp(fn, '[A-Z].*')));
+fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*|^iEEG')));
 ieeg_settings = keepfields(cfg.ieeg, fn);
 
 % make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg.coordsystem);
-fn = fn(~cellfun(@isempty, regexp(fn, '[A-Z].*')));
+fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
 coordsystem_settings = keepfields(cfg.coordsystem, fn);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% construct the json and tsv files
+%% construct the content for the json and tsv files
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% need_mri_json
@@ -682,14 +719,12 @@ end % if need_mri_json
 
 %% need_meg_json
 if need_meg_json
-  % these MUST be present
   meg_json.SamplingFrequency          = hdr.Fs;
-  % these SHOULD be present
   meg_json.MEGChannelCount            = sum(strcmp(hdr.chantype, 'megmag') | strcmp(hdr.chantype, 'meggrad') | strcmp(hdr.chantype, 'megplanar') | strcmp(hdr.chantype, 'megaxial'));
   meg_json.MEGREFChannelCount         = sum(strcmp(hdr.chantype, 'refmag') | strcmp(hdr.chantype, 'refgrad') | strcmp(hdr.chantype, 'refplanar') | strcmp(hdr.chantype, 'ref'));
   meg_json.EEGChannelCount            = sum(strcmp(hdr.chantype, 'eeg'));
-  meg_json.ECOGChannelCount           = sum(strcmp(hdr.chantype, '???')); % FIXME
-  meg_json.SEEGChannelCount           = sum(strcmp(hdr.chantype, '???')); % FIXME
+  meg_json.ECOGChannelCount           = sum(strcmp(hdr.chantype, 'ecog'));
+  meg_json.SEEGChannelCount           = sum(strcmp(hdr.chantype, 'seeg'));
   meg_json.EOGChannelCount            = sum(strcmp(hdr.chantype, 'eog'));
   meg_json.ECGChannelCount            = sum(strcmp(hdr.chantype, 'ecg'));
   meg_json.EMGChannelCount            = sum(strcmp(hdr.chantype, 'emg'));
@@ -710,7 +745,7 @@ if need_meg_json
     meg_json.ManufacturersModelName   = 'Neuromag-122';
   elseif ft_senstype(hdr.grad, 'neuromag306')
     meg_json.Manufacturer             = 'Elekta/Neuromag';
-    % meg_json.ManufacturersModelName can not be determined, since both have 306 channels
+    % the ManufacturersModelName could be either Vectorview or Triux
   end
   
   % merge the information specified by the user with that from the data
@@ -721,9 +756,7 @@ end % if need_meg_json
 
 %% need_eeg_json
 if need_eeg_json
-  % these MUST be present
   eeg_json.SamplingFrequency          = hdr.Fs;
-  % these SHOULD be present
   eeg_json.EEGChannelCount            = sum(strcmp(hdr.chantype, 'eeg'));
   eeg_json.EOGChannelCount            = sum(strcmp(hdr.chantype, 'eog'));
   eeg_json.ECGChannelCount            = sum(strcmp(hdr.chantype, 'ecg'));
@@ -741,9 +774,9 @@ end % if need_eeg_json
 
 %% need_ieeg_json
 if need_ieeg_json
-  % these MUST be present
   ieeg_json.SamplingFrequency          = hdr.Fs;
-  % these SHOULD be present
+  ieeg_json.ECOGChannelCount           = sum(strcmp(hdr.chantype, 'ecog'));
+  ieeg_json.SEEGChannelCount           = sum(strcmp(hdr.chantype, 'seeg'));
   ieeg_json.EEGChannelCount            = sum(strcmp(hdr.chantype, 'eeg'));
   ieeg_json.EOGChannelCount            = sum(strcmp(hdr.chantype, 'eog'));
   ieeg_json.ECGChannelCount            = sum(strcmp(hdr.chantype, 'ecg'));
@@ -1124,13 +1157,14 @@ switch cfg.method
     [~, ~, xin] = fileparts(cfg.dataset);
     [~, ~, xout] = fileparts(cfg.outputfile);
     if ~strcmp(xin, xout)
-      ft_error('input and output filename extension don''t match. Cannot use keepnative.');
+      ft_error('input and output filename extension do not match');
     end
     
-    if any(strcmp({'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275', 'neuromag_fif', 'neuromag122', 'neuromag306'}, typ))
-      ft_warning('please use a MEG system specific tool for copying datasets, such as "newDs"');
+    if any(strcmp({'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275'}, typ))
+      ft_error('please use the CTF software for copying datasets, i.e. "newDs", "copyDs", "moveDS" or "changeDsName"');
     end
     
+    ft_info('copying %s to %s\n', cfg.dataset, cfg.outputfile);
     copyfile(cfg.dataset, cfg.outputfile);
     
   otherwise
