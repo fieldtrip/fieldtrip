@@ -72,18 +72,74 @@ cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Be
 cfg.mri.writesidecar            = 'merge';
 data2bids(cfg)
 
-
 %% Example with realigned and resliced anatomical MRI data in memory
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/convert'))
 
 mri = ft_read_mri('dicom/ERIVDBER_030731_R.OOSTERVELD.MR.PAUGAA_ANATOMICAL-3D.2.56.2003.7.31.11.19.16.468000.53834351.IMA');
 
 cfg = [];
-cfg.method                      = 'convert';
 cfg.outputfile                  = 'sub-RO_T1w.nii';
 cfg.InstitutionName             = 'Radboud University';
 cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
 data2bids(cfg, mri)
+
+%% Example where the data is copied
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/copy'));
+
+cfg = [];
+cfg.method                      = 'copy';
+cfg.dataset                     = 'Eeglab_data.set';
+cfg.outputfile                  = 'sub-EEG_task-attention_eeg.set';
+cfg.InstitutionName             = 'Radboud University';
+cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
+data2bids(cfg)
+
+
+cfg = [];
+cfg.method                      = 'copy';
+cfg.dataset                     = 'jg_single_01raw.fif';
+cfg.outputfile                  = 'sub-MEG_task-stimuluation_meg.fif';
+cfg.InstitutionName             = 'Radboud University';
+cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
+data2bids(cfg)
+
+%% try some iEEG data with electrodes
+
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/convert'));
+
+% this loads data, elec_acpc_fr, and mri
+load(dccnpath('/Volumes/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog/SubjectUCI29/SubjectUCI29_data.mat'));
+load(dccnpath('/Volumes/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog/SubjectUCI29/SubjectUCI29_elec_acpc_fr.mat'));
+mri = ft_read_mri(dccnpath('/Volumes/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog/SubjectUCI29/SubjectUCI29_MR_acpc.nii'));
+
+% make the data a bit smaller
+cfg = [];
+cfg.trials = 1;
+data = ft_selectdata(cfg, data);
+
+cfg = [];
+cfg.resamplefs = 500;
+data = ft_resampledata(cfg, data);
+
+% add the electrode definition
+data.elec = elec_acpc_fr;
+
+cfg = [];
+cfg.bidsroot = 'human_ecog';
+cfg.sub = 'UCI29';
+cfg.task = 'attention';
+cfg.datatype = 'ieeg';
+data2bids(cfg, data);
+
+cfg = [];
+cfg.bidsroot = 'human_ecog';
+cfg.sub = 'UCI29';
+cfg.datatype = 'T1w';
+cfg.mri.StationName = 'bay3';
+cfg.mri.MagneticFieldStrength = 3;
+data2bids(cfg, mri);
+
+
 
 %%
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/mous'));
