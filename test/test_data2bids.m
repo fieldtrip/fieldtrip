@@ -5,6 +5,24 @@ function test_data2bids
 
 % DEPENDENCY data2bids
 
+%% Example with only behavioural data
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/behavioral'))
+
+cfg = [];
+cfg.method                      = 'convert';
+cfg.dataset                     = [];
+cfg.presentationfile            = './sourcedata/A2002-2-MEG-MOUS-Aud.log';
+cfg.events.writesidecar         = 'replace';
+cfg.bidsroot                    = './bids';
+cfg.sub                         = 'A2002';
+cfg.ses                         = 'MEG';
+cfg.datatype                    = 'events';
+cfg.TaskName                    = 'language';
+cfg.InstitutionName             = 'Radboud University';
+cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
+data2bids(cfg)
+
+
 %% Example with a CTF dataset on disk that needs no conversion
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/decorate'))
 
@@ -138,8 +156,6 @@ cfg.datatype = 'T1w';
 cfg.mri.StationName = 'bay3';
 cfg.mri.MagneticFieldStrength = 3;
 data2bids(cfg, mri);
-
-
 
 %%
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/mous'));

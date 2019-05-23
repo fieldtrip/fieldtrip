@@ -1,11 +1,10 @@
 function cfg = data2bids(cfg, varargin)
 
-% DATA2BIDS is a helper function to convert MEG, EEG, iEEG or MRI data to
-% the Brain Imaging Data Structure.
-%
-% The overall idea is that you write a MATLAB script in which you call this function
-% multiple times, once for each individually recorded data file (or data set). It
-% will write the corresponding sidecar JSON and TSV files for each data file.
+% DATA2BIDS is a helper function to convert MEG, EEG, iEEG or MRI data to the Brain
+% Imaging Data Structure. The overall idea is that you write a MATLAB script in which
+% you call this function multiple times, once for each individually recorded data
+% file (or data set). It will write the corresponding sidecar JSON and TSV files for
+% each data file.
 %
 % Use as
 %   data2bids(cfg)
@@ -72,8 +71,8 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.proc                    = string
 %
 % When specifying the output directory in cfg.bidsroot, you can also specify
-% additional information to be added to the participants.tsv and the scans.tsv files.
-% For example
+% additional information to be added to the participants.tsv and scans.tsv files.
+% For example:
 %   cfg.participant.age         = scalar
 %   cfg.participant.sex         = string, 'm' or 'f'
 %   cfg.scan.acq_time           = string, should be formatted according to  RFC3339 as '2019-05-22T15:13:38'
@@ -89,15 +88,17 @@ function cfg = data2bids(cfg, varargin)
 % You can specify cfg.events.trl as a Nx3 matrix with the trial definition (see
 % FT_DEFINETRIAL) or as a MATLAB table. When specified as table, the first three
 % columns containing integer values corresponding to the begsample, endsample and
-% offset, the additional colums can be of another type and can have any name. If you
-% do not specify the trial definition, the events will be read from the MEG/EEG/iEEG
-% dataset.
-%   cfg.events.trl              = trial definition, see below
+% offset, the additional colums can be of another type and have any name. If you do
+% not specify the trial definition, the events will be read from the MEG/EEG/iEEG
+% dataset. Events from the trial definition or from the data will be written to
+% events.tsv.
+%   cfg.events.trl              = trial definition, see also FT_DEFINETRIAL
 %
 % You can specify cfg.presentationfile with the name of a NBS presentation log file,
 % which will be aligned with the data based on triggers (MEG/EEG/iEEG) or based on
 % the volumes (fMRI). To indicate how triggers (in MEG/EEG/iEEG) or volumes (in fMRI)
 % match the presentation events, you should also specify the mapping between them.
+% Events from the presentation log file will be written to events.tsv.
 %   cfg.presentationfile        = string, optional filename for the presentation log file
 %   cfg.trigger.eventtype       = string (default = [])
 %   cfg.trigger.eventvalue      = string or number
@@ -106,7 +107,7 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.presentation.skip       = 'last'/'first'/'none'
 %
 % For EEG and iEEG data you can specify an electrode definition according to
-% FT_DATATYPE_SENS as an "elec" field in the input data, you can specify it as
+% FT_DATATYPE_SENS as an "elec" field in the input data, or you can specify it as
 % cfg.elec or you can specify a filename with electrode information.
 %   cfg.elec                     = structure with electrode positions or filename, see FT_READ_SENS
 %
@@ -143,7 +144,8 @@ function cfg = data2bids(cfg, varargin)
 % https://bids-specification.readthedocs.io/ for the full specification and
 % http://bids.neuroimaging.io/ for further details.
 %
-% See also FT_DATAYPE_RAW, FT_DATAYPE_VOLUME, FT_DATATYPE_SENS
+% See also FT_DATAYPE_RAW, FT_DATAYPE_VOLUME, FT_DATATYPE_SENS, FT_DEFINETRIAL,
+% FT_PREPROCESSING, FT_READ_MRI
 
 % Copyright (C) 2018-2019, Robert Oostenveld
 %
@@ -219,7 +221,7 @@ cfg.proc      = ft_getopt(cfg, 'proc');
 cfg.datatype  = ft_getopt(cfg, 'datatype');
 
 if isempty(cfg.outputfile)
-  if isempty(cfg.method) && isempty(cfg.bidsroot)
+  if isempty(cfg.method) && isempty(cfg.bidsroot) && ~isempty(cfg.dataset)
     cfg.outputfile = cfg.dataset;
     cfg.method = 'decorate';
     ft_notice('using cfg.outputfile=''%s'' and cfg.method=''%s''', cfg.outputfile, cfg.method);
@@ -547,7 +549,11 @@ if nargin>1
 else
   % data should be read from disk
   cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
-  typ = ft_filetype(cfg.headerfile);
+  if isfield(cfg, 'headerfile')
+    typ = ft_filetype(cfg.headerfile);
+  else
+    typ = ft_filetype(cfg.presentationfile);
+  end
 end
 
 % determine the sidecar files that are required
@@ -555,6 +561,7 @@ need_mri_json         = false;
 need_meg_json         = false;
 need_eeg_json         = false;
 need_ieeg_json        = false;
+need_events_tsv       = false;  % for behavioral experiments
 
 switch typ
   case {'nifti', 'nifti2', 'nifti_fsl'}
@@ -656,6 +663,9 @@ switch typ
       typ = ft_senstype(varargin{1});
     end
     
+  case 'presentation_log'
+    need_events_tsv = true;
+    
   otherwise
     % the file on disk contains raw electrophysiology data
     if isequal(cfg.datatype, 'meg')
@@ -683,9 +693,10 @@ switch typ
     
 end % switch typ
 
-need_events_tsv       = need_meg_json || need_eeg_json || need_ieeg_json || (need_mri_json && (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task)));
+need_events_tsv       = need_events_tsv || need_meg_json || need_eeg_json || need_ieeg_json || (need_mri_json && (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task)));
 need_channels_tsv     = need_meg_json || need_eeg_json || need_ieeg_json;
 need_coordsystem_json = need_meg_json; % FIXME this is also needed when EEG and iEEG electrodes are present
+need_electrodes_tsv   = false; % this is only needed when actually present
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% get the defaults and user-specified settings for each possible sidecar file
@@ -1145,12 +1156,31 @@ if need_events_tsv
       
       clear presentation_tsv selpres seltrig
     end
+    
+  elseif need_events_tsv
+    % convert the presentation structure to a TSV table
+    events_tsv = struct2table(presentation);
+    % the sample and offset are specific for events that are aligned with samples in the data
+    events_tsv = removevars(events_tsv, 'sample');
+    events_tsv = removevars(events_tsv, 'offset');
+    events_tsv.onset = events_tsv.timestamp/10000; % the resolution is 0.1 milliseconds
+    events_tsv = removevars(events_tsv, 'timestamp');
+    % a value of zero implies that the delta function or event is so short as to be effectively modeled as an impulse.
+    events_tsv.duration = zeros(size(events_tsv.duration));
+    % reorder them so that onset and duration are the first two columns
+    order = [];
+    order = [order find(strcmp(events_tsv.Properties.VariableNames, 'onset'))];
+    order = [order find(strcmp(events_tsv.Properties.VariableNames, 'duration'))];
+    order = [order setdiff(1:numel(events_tsv.Properties.VariableNames), order)];
+    events_tsv = events_tsv(:,order);
+    
   end
   
-  if ~isempty(events_tsv)
+  if ~isempty(events_tsv) && isfield(events_tsv, 'offset')
     % sort the events ascending on the onset
     events_tsv = sortrows(events_tsv, 'onset');
   end
+  
 end % if need_events_tsv
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1200,10 +1230,13 @@ switch cfg.method
         end
         ft_info('writing %s\n', cfg.outputfile);
         ft_write_mri(cfg.outputfile, mri, 'dataformat', 'nifti');
-        
+
+      case {'presentation_log'}
+        % do not write data, but only write the events.tsv file
+
       otherwise
         if any(strcmp({'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275', 'neuromag_fif', 'neuromag122', 'neuromag306'}, typ))
-          ft_warning('please use a MEG system specific tool for converting datasets, such as "newDs"');
+          ft_error('please use a MEG system specific tool for converting datasets');
         end
         
         [p, f, x] = fileparts(cfg.outputfile);
@@ -1441,6 +1474,7 @@ end
 
 if ~isempty(events_tsv)
   [p, f, ~] = fileparts(cfg.outputfile);
+  isdir_or_mkdir(p);
   f = remove_datatype(f); % remove _bold, _meg, etc.
   filename = fullfile(p, [f '_events.tsv']);
   if isfile(filename)
@@ -1569,10 +1603,10 @@ function f = add_datatype(f, typ)
 f = [f '_' typ];
 
 function f = remove_datatype(f)
-typ = {'_T1w', '_T2w', '_dwi', '_bold', '_meg', '_eeg', '_ieeg'};
+typ = {'FLAIR', 'FLASH', 'PD', 'PDT2', 'PDmap', 'T1map', 'T1rho', 'T1w', 'T2map', 'T2star', 'T2w', 'angio', 'bold', 'bval', 'bvec', 'channels', 'coordsystem', 'defacemask', 'dwi', 'eeg', 'epi', 'events', 'fieldmap', 'headshape', 'ieeg', 'inplaneT1', 'inplaneT2', 'magnitude', 'magnitude1', 'magnitude2', 'meg', 'phase1', 'phase2', 'phasediff', 'photo', 'physio', 'sbref', 'stim'};
 for i=1:numel(typ)
-  if endsWith(f, typ{i})
-    f = f(1:end-length(typ{i}));
+  if endsWith(f, ['_' typ{i}])
+    f = f(1:end-length(typ{i})-1); % also the '_'
     return
   end
 end
@@ -1760,7 +1794,7 @@ function dir = datatype2dirname(typ)
 switch typ
   case {'T1w' 'T2w' 'T1rho' 'T1map' 'T2map' 'T2star' 'FLAIR' 'FLASH' 'PD' 'PDmap' 'PDT2' 'inplaneT1' 'inplaneT2' 'angio' 'defacemask'}
     dir = 'anat';
-  case {'bold' 'sbref' 'events' 'physio' 'stim'}
+  case {'bold' 'sbref'} % this could also include 'events' 'physio' 'stim'
     dir = 'func';
   case {'dwi' 'bvec' 'bval'}
     dir = 'dwi';
@@ -1768,11 +1802,11 @@ switch typ
     dir = 'fmap';
   case {'events' 'stim' 'physio'}
     dir = 'beh';
-  case {'meg' 'channels' 'photo' 'coordsystem' 'headshape'}
+  case {'meg'} % this could also include 'channels' 'photo' 'coordsystem' 'headshape'
     dir = 'meg';
-  case {'eeg' 'channels' 'photo' 'coordsystem'}
+  case {'eeg'} % this could also include 'channels' 'photo' 'coordsystem'
     dir = 'eeg';
-  case {'ieeg' 'channels' 'photo' 'coordsystem'}
+  case {'ieeg'} % this could also include 'channels' 'photo' 'coordsystem'
     dir = 'ieeg';
   otherwise
     ft_error('unrecognized data type "%s"', typ);
