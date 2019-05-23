@@ -1,12 +1,11 @@
 function cfg = data2bids(cfg, varargin)
 
-% DATA2BIDS is a helper function to convert MEG, EEG, iEEG or anatomical MRI data to
+% DATA2BIDS is a helper function to convert MEG, EEG, iEEG or MRI data to
 % the Brain Imaging Data Structure.
 %
-% The overall idea is that you write a MATLAB script in which you call this
-% function multiple times, once for each data files. For each data file it will
-% write the corresponding JSON file. For MEG/EEG/iEEG data files it will also
-% write the corresponding _channels.tsv and _events.tsv file.
+% The overall idea is that you write a MATLAB script in which you call this function
+% multiple times, once for each individually recorded data file (or data set). It
+% will write the corresponding sidecar JSON and TSV files for each data file.
 %
 % Use as
 %   data2bids(cfg)
@@ -17,8 +16,8 @@ function cfg = data2bids(cfg, varargin)
 % details for the (meta)data and which specifies the sidecar files you want to write.
 % The optional 'data' argument corresponds to preprocessed raw data according to
 % FT_DATAYPE_RAW or an anatomical MRI according to FT_DATAYPE_VOLUME. The optional
-% data argument allows you to write a preprocessed and realigned anatomical MRI to
-% disk, or to write a preprocessed electrophysiological dataset to disk.
+% data input argument allows you to write preprocessed electrophysiological data
+% and/or realigned and defaced anatomical MRI to disk.
 %
 % The configuration structure should contains
 %   cfg.method                  = string, can be 'decorate', 'convert' or 'copy', see below (default = 'convert')
@@ -33,30 +32,30 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.coordystem.writesidecar = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
 %   cfg.channels.writesidecar   = string, 'yes', 'replace', 'merge' or 'no' (default = 'yes')
 %
-% This function in general starts from existing data file on disk or from a FieldTrip
-% compatible data structure in MATLAB memory that is passed as second input argument.
+% This function starts from existing data file on disk or from a FieldTrip compatible
+% data structure in MATLAB memory that is passed as the second input argument.
 % Depending on cfg.method it will add the sidecar files, copy the dataset and add
 % sidecar files, or convert the dataset and add the sidecar files. Each of the
 % methods is discussed here.
 %
-% DECORATE - data2bids will read the header and event details from the data and write
+% DECORATE - data2bids will read the header details and events from the data and write
 % the appropriate sidecar files alongside the existing dataset. You would use this to
 % obtain the sidecar files for a dataset that already has the correct BIDS name.
 %
-% CONVERT - data2bids will read the data from the input data file and write it to a
-% new output file that is BIDS compliant. The output format is NIFTI for MRI data,
-% and BrainVision for EEG and iEEG. MEG data files are stored in BIDS in their native
-% format and this function will NOT convert or rename them for you.
+% CONVERT - data2bids will read the input data (or use the specified input data) and
+% write it to a new output file that is BIDS compliant. The output format is NIFTI
+% for MRI data, and BrainVision for EEG and iEEG. Note that MEG data files are stored
+% in BIDS in their native format and this function will NOT convert them for you.
 %
 % COPY - data2bids will copy the data from the input data file to the output data
-% file, which renames it but does not change its content. Furthermore, it will read
-% the header and event details from the data and construct the appropriate sidecar
+% file, which renames it, but does not change its content. Furthermore, it will read
+% the header details and events from the data and construct the appropriate sidecar
 % files.
 %
 % Although you can explicitly specify cfg.outputfile yourself, it is recommended to
 % use the following configuration options. This results in a BIDS compliant output
-% directory and file name. When specifying these options, data2bids will also write
-% or update the participants.tsv and the scans.tsv files.
+% directory and file name. With these options data2bids will also write, or if
+% already present update the participants.tsv and scans.tsv files.
 %   cfg.bidsroot                = string, top level directory for the BIDS output
 %   cfg.sub                     = string, subject name
 %   cfg.ses                     = string, optional session name
@@ -72,17 +71,18 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.proc                    = string
 %
 % When specifying the output directory in cfg.bidsroot, you can also specify
-% additional information that will be added to the participants.tsv and the scans.tsv
-% files. For example
+% additional information to be added to the participants.tsv and the scans.tsv files.
+% For example
 %   cfg.participant.age         = scalar
 %   cfg.participant.sex         = string, 'm' or 'f'
 %   cfg.scan.acq_time           = string, should be formatted according to  RFC3339 as '2019-05-22T15:13:38'
 % In case any of these values is specified as empty (i.e. []) or as nan, it will be
 % written to the tsv file as 'n/a'.
 %
-% You can specify cfg.mri.dicomfile in combination with a NIFTI file. This will
-% read the detailed header information (MR scanner and sequence details) from
-% the DICOM file and used to fill in the details of the JSON file.
+% In case cfg.dataset points to a NIFTI file, or in case you pass a preprocessed MRI
+% as input data structure, you can specify cfg.mri.dicomfile to read the detailed MR
+% scanner and sequence details from the DICOM file. This will be used to fill in the
+% details of the corresponding JSON file.
 %   cfg.mri.dicomfile           = string, filename of a matching DICOM file for header details (default = [])
 %
 % You can specify cfg.events.trl as a Nx3 matrix with the trial definition (see
@@ -105,7 +105,6 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.presentation.skip       = 'last'/'first'/'none'
 %
 % General BIDS options that apply to all data types are
-%   cfg.TaskName                    = string
 %   cfg.InstitutionName             = string
 %   cfg.InstitutionAddress          = string
 %   cfg.InstitutionalDepartmentName = string
@@ -115,69 +114,29 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.SoftwareVersions            = string
 %
 % General BIDS options that apply to all functional data types are
+%   cfg.TaskName                    = string
 %   cfg.TaskDescription             = string
 %   cfg.Instructions                = string
 %   cfg.CogAtlasID                  = string
 %   cfg.CogPOID                     = string
 %
-% There are many more BIDS options for the JSON files for specific datatypes. Rather
-% than listing them here in the help, please open this function in the MATLAB editor,
-% and scroll down a bit to see what those are.
-%
-% Example with a CTF dataset on disk that needs no conversion
-%   cfg = [];
-%   cfg.method                      = 'decorate';
-%   cfg.dataset                     = 'sub-01_ses-meg_task-language_meg.ds';
-%   cfg.TaskName                    = 'language';
-%   cfg.meg.PowerLineFrequency      = 50;
-%   cfg.InstitutionName             = 'Radboud University';
-%   cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
-%   data2bids(cfg)
-%
-% Example with an anatomical MRI on disk that needs no conversion
-%   cfg = [];
-%   cfg.method                      = 'decorate';
-%   cfg.dataset                     = 'sub-01_ses-mri_T1w.nii';
-%   cfg.mri.dicomfile               = '00080_1.3.12.2.1107.5.2.43.66068.2017082413175824865636649.IMA'
-%   cfg.mri.MagneticFieldStrength   = 3; % this is usually not needed, as it will be obtained from the DICOM file
-%   cfg.InstitutionName             = 'Radboud University';
-%   cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
-%   data2bids(cfg)
-%
-% Example with a NeuroScan EEG dataset on disk that needs to be converted
-%   cfg = [];
-%   cfg.method                      = 'convert';
-%   cfg.dataset                     = 'subject01.cnt';
-%   cfg.outputfile                  = 'sub-001_task-visual_eeg.vhdr';
-%   cfg.InstitutionName             = 'Radboud University';
-%   cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
-%   data2bids(cfg)
-%
-% Example with preprocessed EEG data in memory
-%   cfg = [];
-%   cfg.dataset                     = 'subject01.cnt';
-%   cfg.bpfilter                    = 'yes';
-%   cfg.bpfreq                      = [0.1 40];
-%   data = ft_preprocessing(cfg);
-%   cfg = [];
-%   cfg.method                      = 'convert';
-%   cfg.outputfile                  = 'sub-001_task-visual_eeg.vhdr';
-%   cfg.InstitutionName             = 'Radboud University';
-%   cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
-%   data2bids(cfg, data)
-%
-% Example with realigned and resliced anatomical MRI data in memory
-%   cfg = [];
-%   cfg.method                      = 'convert';
-%   cfg.outputfile                  = 'sub-01_ses-mri_T1w.nii';
-%   cfg.mri.MagneticFieldStrength   = 3;
-%   cfg.InstitutionName             = 'Radboud University';
-%   cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
-%   data2bids(cfg, mri)
+% There are more BIDS options for the datatype specific sidecar files. Rather than
+% listing them all here, please open this function in the MATLAB editor, and scroll
+% down a bit to see what those are. In general the information in the JSON files is
+% specified in CamelCase, whereas the information for TSV files is in lowercase.
+%   cfg.mri.SomeOption              = string in CamelCase, please check the MATLAB code
+%   cfg.meg.SomeOption              = string in CamelCase, please check the MATLAB code
+%   cfg.eeg.SomeOption              = string in CamelCase, please check the MATLAB code
+%   cfg.ieeg.SomeOption             = string in CamelCase, please check the MATLAB code
+%   cfg.channels.someoption         = string in lowercase, please check the MATLAB code
+%   cfg.events.someoption           = string in lowercase, please check the MATLAB code
+%   cfg.coordsystem.someoption      = string in lowercase, please check the MATLAB code
 %
 % This function corresponds to version 1.2 of the BIDS specification. See
 % https://bids-specification.readthedocs.io/ for the full specification and
 % http://bids.neuroimaging.io/ for further details.
+%
+% See also FT_DATAYPE_RAW, FT_DATAYPE_VOLUME
 
 % Copyright (C) 2018-2019, Robert Oostenveld
 %
@@ -235,10 +194,6 @@ cfg.trigger                 = ft_getopt(cfg, 'trigger');
 cfg.trigger.eventtype       = ft_getopt(cfg.trigger, 'eventtype');
 cfg.trigger.eventvalue      = ft_getopt(cfg.trigger, 'eventvalue');
 cfg.trigger.event           = ft_getopt(cfg.trigger, 'event');
-
-% this is for the participants.tsv and the scans.tsv
-cfg.participants = ft_getopt(cfg, 'participants', struct());
-cfg.scans        = ft_getopt(cfg, 'scans', struct());
 
 % these are used to construct the directory and file name
 cfg.bidsroot  = ft_getopt(cfg, 'bidsroot');
@@ -515,14 +470,20 @@ cfg.mri.AnatomicalLandmarkCoordinates = ft_getopt(cfg.mri, 'AnatomicalLandmarkCo
 cfg.channels.name               = ft_getopt(cfg.channels, 'name'               , nan);  % REQUIRED. Channel name (e.g., MRT012, MEG023)
 cfg.channels.type               = ft_getopt(cfg.channels, 'type'               , nan);  % REQUIRED. Type of channel; MUST use the channel types listed below.
 cfg.channels.units              = ft_getopt(cfg.channels, 'units'              , nan);  % REQUIRED. Physical unit of the data values recorded by this channel in SI (see Appendix V: Units for allowed symbols).
-cfg.channels.description        = ft_getopt(cfg.channels, 'description'        , nan);  % OPTIONAL. Brief free-text description of the channel, or other information of interest. See examples below.
 cfg.channels.sampling_frequency = ft_getopt(cfg.channels, 'sampling_frequency' , nan);  % OPTIONAL. Sampling rate of the channel in Hz.
+cfg.channels.description        = ft_getopt(cfg.channels, 'description'        , nan);  % OPTIONAL. Brief free-text description of the channel, or other information of interest. See examples below.
 cfg.channels.low_cutoff         = ft_getopt(cfg.channels, 'low_cutoff'         , nan);  % OPTIONAL. Frequencies used for the high-pass filter applied to the channel in Hz. If no high-pass filter applied, use n/a.
 cfg.channels.high_cutoff        = ft_getopt(cfg.channels, 'high_cutoff'        , nan);  % OPTIONAL. Frequencies used for the low-pass filter applied to the channel in Hz. If no low-pass filter applied, use n/a. Note that hardware anti-aliasing in A/D conversion of all MEG/EEG electronics applies a low-pass filter; specify its frequency here if applicable.
 cfg.channels.notch              = ft_getopt(cfg.channels, 'notch'              , nan);  % OPTIONAL. Frequencies used for the notch filter applied to the channel, in Hz. If no notch filter applied, use n/a.
 cfg.channels.software_filters   = ft_getopt(cfg.channels, 'software_filters'   , nan);  % OPTIONAL. List of temporal and/or spatial software filters applied (e.g. "SSS", "SpatialCompensation"). Note that parameters should be defined in the general MEG sidecar .json file. Indicate n/a in the absence of software filters applied.
 cfg.channels.status             = ft_getopt(cfg.channels, 'status'             , nan);  % OPTIONAL. Data quality observed on the channel (good/bad). A channel is considered bad if its data quality is compromised by excessive noise. Description of noise type SHOULD be provided in [status_description].
 cfg.channels.status_description = ft_getopt(cfg.channels, 'status_description' , nan);  % OPTIONAL. Freeform text description of noise or artifact affecting data quality on the channel. It is meant to explain why the channel was declared bad in [status].
+
+%% additional information for the participants.tsv
+cfg.participants = ft_getopt(cfg, 'participants', struct());
+
+%% additional information for the scans.tsv
+cfg.scans = ft_getopt(cfg, 'scans', struct());
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% read the information from the dataset
@@ -607,12 +568,18 @@ switch typ
     need_eeg_json = true;
     
   case 'raw'
-    % the input data structure represents raw electrophysiology data, which will be written in BrainVision format
-    ft_warning('assuming that the input data structure represents EEG');
-    need_eeg_json = true;
+    % the input data structure contains raw electrophysiology data
+    if isequal(cfg.datatype, 'meg')
+      need_meg_json = true;
+    elseif isequal(cfg.datatype, 'eeg')
+      need_eeg_json = true;
+    elseif isequal(cfg.datatype, 'ieeg')
+      need_ieeg_json = true;
+    else
+      ft_warning('assuming that the dataset represents EEG');
+      need_eeg_json = true;
+    end
     
-    % the data is not on disk, but has been passed as input argument
-    % it should be written to disk in a supported file format
     hdr = ft_fetch_header(varargin{1});
     dat = ft_fetch_data(varargin{1}, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
     
@@ -628,11 +595,18 @@ switch typ
     end
     
   otherwise
-    % it is data on disk, but not in a supported format
-    ft_warning('assuming that the dataset represents EEG');
-    need_eeg_json = true;
+    % the file on disk contains raw electrophysiology data
+    if isequal(cfg.datatype, 'meg')
+      need_meg_json = true;
+    elseif isequal(cfg.datatype, 'eeg')
+      need_eeg_json = true;
+    elseif isequal(cfg.datatype, 'ieeg')
+      need_ieeg_json = true;
+    else
+      ft_warning('assuming that the dataset represents EEG');
+      need_eeg_json = true;
+    end
     
-    % it will be written to disk in BrainVision format
     hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false);
     dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
     
@@ -647,7 +621,7 @@ end % switch typ
 
 need_events_tsv       = need_meg_json || need_eeg_json || need_ieeg_json || (need_mri_json && contains(cfg.outputfile, 'task'));
 need_channels_tsv     = need_meg_json || need_eeg_json || need_ieeg_json;
-need_coordsystem_json = need_meg_json; % FIXME also needed when EEG and iEEG electrodes are present
+need_coordsystem_json = need_meg_json; % FIXME this is also needed when EEG and iEEG electrodes are present
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% get the defaults and user-specified settings for each possible sidecar file
@@ -665,27 +639,32 @@ coordsystem_json = [];
 % make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg);
 fn = fn(~cellfun(@isempty, regexp(fn, '[A-Z].*')));
-generic_defaults = keepfields(cfg, fn);
+generic_settings = keepfields(cfg, fn);
 
 % make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg.mri);
 fn = fn(~cellfun(@isempty, regexp(fn, '[A-Z].*')));
-mri_defaults = keepfields(cfg.mri, fn);
+mri_settings = keepfields(cfg.mri, fn);
 
 % make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg.meg);
 fn = fn(~cellfun(@isempty, regexp(fn, '[A-Z].*')));
-meg_defaults = keepfields(cfg.meg, fn);
+meg_settings = keepfields(cfg.meg, fn);
 
 % make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg.eeg);
 fn = fn(~cellfun(@isempty, regexp(fn, '[A-Z].*')));
-eeg_defaults = keepfields(cfg.eeg, fn);
+eeg_settings = keepfields(cfg.eeg, fn);
+
+% make the relevant selection, all json fields start with a capital letter
+fn = fieldnames(cfg.ieeg);
+fn = fn(~cellfun(@isempty, regexp(fn, '[A-Z].*')));
+ieeg_settings = keepfields(cfg.ieeg, fn);
 
 % make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg.coordsystem);
 fn = fn(~cellfun(@isempty, regexp(fn, '[A-Z].*')));
-coordsystem_defaults = keepfields(cfg.coordsystem, fn);
+coordsystem_settings = keepfields(cfg.coordsystem, fn);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% construct the json and tsv files
@@ -693,12 +672,12 @@ coordsystem_defaults = keepfields(cfg.coordsystem, fn);
 
 %% need_mri_json
 if need_mri_json
-  % get the available information from the DICOM header
-  mri_json = keepfields(dcm, fn);
-  % merge the information from the defaults with the information obtained from the data
+  % start with the information from the DICOM header
+  mri_json = keepfields(dcm, fieldnames(mri_settings));
+  % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
-  mri_json = mergeconfig(mri_json, mri_defaults, false);
-  mri_json = mergeconfig(mri_json, generic_defaults, false);
+  mri_json = mergeconfig(mri_json, mri_settings, false);
+  mri_json = mergeconfig(mri_json, generic_settings, false);
 end % if need_mri_json
 
 %% need_meg_json
@@ -734,10 +713,10 @@ if need_meg_json
     % meg_json.ManufacturersModelName can not be determined, since both have 306 channels
   end
   
-  % merge the information from the defaults with the information obtained from the data
+  % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
-  meg_json = mergeconfig(meg_json, meg_defaults, false);
-  meg_json = mergeconfig(meg_json, generic_defaults, false);
+  meg_json = mergeconfig(meg_json, meg_settings, false);
+  meg_json = mergeconfig(meg_json, generic_settings, false);
 end % if need_meg_json
 
 %% need_eeg_json
@@ -754,11 +733,31 @@ if need_eeg_json
   eeg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
   eeg_json.EpochLength                = hdr.nSamples/hdr.Fs;
   
-  % merge the information from the defaults with the information obtained from the data
+  % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
-  eeg_json = mergeconfig(eeg_json, eeg_defaults, false);
-  eeg_json = mergeconfig(eeg_json, generic_defaults, false);
+  eeg_json = mergeconfig(eeg_json, eeg_settings, false);
+  eeg_json = mergeconfig(eeg_json, generic_settings, false);
 end % if need_eeg_json
+
+%% need_ieeg_json
+if need_ieeg_json
+  % these MUST be present
+  ieeg_json.SamplingFrequency          = hdr.Fs;
+  % these SHOULD be present
+  ieeg_json.EEGChannelCount            = sum(strcmp(hdr.chantype, 'eeg'));
+  ieeg_json.EOGChannelCount            = sum(strcmp(hdr.chantype, 'eog'));
+  ieeg_json.ECGChannelCount            = sum(strcmp(hdr.chantype, 'ecg'));
+  ieeg_json.EMGChannelCount            = sum(strcmp(hdr.chantype, 'emg'));
+  ieeg_json.TriggerChannelCount        = sum(strcmp(hdr.chantype, 'trigger'));
+  ieeg_json.MiscChannelCount           = sum(strcmp(hdr.chantype, 'misc') | strcmp(hdr.chantype, 'unknown'));
+  ieeg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
+  ieeg_json.EpochLength                = hdr.nSamples/hdr.Fs;
+  
+  % merge the information specified by the user with that from the data
+  % in case fields appear in both, the first input overrules the second
+  ieeg_json = mergeconfig(ieeg_json, ieeg_settings, false);
+  ieeg_json = mergeconfig(ieeg_json, generic_settings, false);
+end
 
 %% need_coordsystem_json
 if need_coordsystem_json
@@ -781,9 +780,9 @@ if need_coordsystem_json
         coordsystem_json.HeadCoilCoordinates.(fixname(label{i})) = position(:,i)';
       end
     end
-    % merge the information from the defaults with the information obtained from the data
+    % merge the information specified by the user with that from the data
     % in case fields appear in both, the first input overrules the second
-    coordsystem_json = mergeconfig(coordsystem_defaults, coordsystem_json, false); % FIXME the order of precedence is different here
+    coordsystem_json = mergeconfig(coordsystem_settings, coordsystem_json, false); % FIXME the order of precedence is different here
   else
     ft_warning('coordsystem handling not yet supported for %s', ft_senstype(hdr.grad));
   end
@@ -791,23 +790,40 @@ end % if need_coordsystem_json
 
 %% need_channels_tsv
 if need_channels_tsv
-  % ensure that all channels have the correct details
-  fn = {'name' 'type' 'units' 'description' 'sampling_frequency' 'low_cutoff' 'high_cutoff' 'notch' 'software_filters' 'status' 'status_description'};
+  % construct a table
+  channels_tsv = table();
+  
+  % ensure that all columns have the correct number of elements
+  fn = setdiff(fieldnames(cfg.channels), 'writesidecar');
   for i=1:numel(fn)
-    if numel(cfg.channels.(fn{i}))==1
+    if ischar(cfg.channels.(fn{i}))
+      cfg.channels.(fn{i}) = repmat({cfg.channels.(fn{i})}, hdr.nChans, 1);
+    elseif isnumeric(cfg.channels.(fn{i})) && numel(cfg.channels.(fn{i}))==1
       cfg.channels.(fn{i}) = repmat(cfg.channels.(fn{i}), hdr.nChans, 1);
+    elseif iscell(cfg.channels.(fn{i})) && numel(cfg.channels.(fn{i}))==1
+      cfg.channels.(fn{i}) = repmat(cfg.channels.(fn{i}), hdr.nChans, 1);
+    elseif iscell(cfg.channels.(fn{i})) && numel(cfg.channels.(fn{i}))==hdr.nChans
+      cfg.channels.(fn{i}) = cfg.channels.(fn{i})(:); % just make sure it is a column vector
+    else
+      ft_error('incorrect specification of cfg.channels.%s', fn{i});
     end
   end
   
-  % EEG and MEG data should also have a channels.tsv file
-  name                = mergevector(hdr.label(:),    cfg.channels.name);
-  type                = mergevector(hdr.chantype(:), cfg.channels.type);
-  units               = mergevector(hdr.chanunit(:), cfg.channels.units);
-  sampling_frequency  = mergevector(repmat(hdr.Fs, hdr.nChans, 1), cfg.channels.sampling_frequency);
+  % these columns can be determined from the header
+  channels_tsv.name                = merge_vector(hdr.label(:),    cfg.channels.name);
+  channels_tsv.type                = merge_vector(hdr.chantype(:), cfg.channels.type);
+  channels_tsv.units               = merge_vector(hdr.chanunit(:), cfg.channels.units);
+  channels_tsv.sampling_frequency  = merge_vector(repmat(hdr.Fs, hdr.nChans, 1), cfg.channels.sampling_frequency);
   
-  % construct a table with the corresponding columns
-  % FIXME there are more columns that should be added
-  channels_tsv = table(name, type, units, sampling_frequency);
+  % all other columns have to be specified by the user
+  fn = setdiff(fieldnames(cfg.channels), {'writesidecar', 'name', 'type', 'unit', 'sampling_frequency'});
+  for i=1:numel(fn)
+    if isnumeric(cfg.channels.(fn{i})) && all(isnan(cfg.channels.(fn{i})))
+      % this is the default when not specified by the user, do not add it to the table
+    else
+      channels_tsv.(fn{i}) = cfg.channels.(fn{i});
+    end
+  end
 end
 
 %% need_events_tsv
@@ -992,7 +1008,7 @@ if need_events_tsv
       estimated = polyval(model, [selpres.timestamp]);
       
       if istrue(cfg.feedback)
-        [p, f, x] = fileparts(cfg.dataset);
+        [~, f, ~] = fileparts(cfg.dataset);
         figure('name', ['PRESENTATION - ' f]);
         subplot(2,1,1)
         hold on
@@ -1227,7 +1243,7 @@ if ~isempty(ieeg_json)
 end
 
 if ~isempty(coordsystem_json)
-  [p, f, x] = fileparts(cfg.outputfile);
+  [p, f, ~] = fileparts(cfg.outputfile);
   f = remove_entity(f, 'task');     % remove _task-something
   f = remove_entity(f, 'acq');      % remove _acq-something
   f = remove_entity(f, 'ce');       % remove _ce-something
@@ -1263,7 +1279,7 @@ if ~isempty(coordsystem_json)
 end
 
 if ~isempty(channels_tsv)
-  [p, f, x] = fileparts(cfg.outputfile);
+  [p, f, ~] = fileparts(cfg.outputfile);
   f = remove_datatype(f); % remove _bold, _meg, etc.
   filename = fullfile(p, [f '_channels.tsv']);
   if isfile(filename)
@@ -1293,7 +1309,7 @@ if ~isempty(channels_tsv)
 end
 
 if ~isempty(events_tsv)
-  [p, f, x] = fileparts(cfg.outputfile);
+  [p, f, ~] = fileparts(cfg.outputfile);
   f = remove_datatype(f); % remove _bold, _meg, etc.
   filename = fullfile(p, [f '_events.tsv']);
   if isfile(filename)
@@ -1388,7 +1404,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function val = get_token(f, tok)
 % ensure that it is only the filename
-[p, f, x] = fileparts(f);
+[~, f, ~] = fileparts(f);
 pieces = tokenize(f, '_');
 val = '';
 for i=1:numel(pieces)
@@ -1534,16 +1550,15 @@ fclose(fid);
 function filename = corresponding_json(filename)
 [p, f, x] = fileparts(filename);
 if isequal(x, '.gz') && endsWith(f, '.nii')
-  % it is a gzip compressed nifti file
+  % it is a gzip compressed nifti file, remove the .nii from the file name
   f = f(1:end-4);
-  x = '.nii.gz';
 end
 filename = fullfile(p, [f '.json']);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function x = mergevector(x, y)
+function x = merge_vector(x, y)
 assert(isequal(size(x), size(y)));
 for i=1:numel(x)
   if isnumeric(x) && isnumeric(y) && isnan(x(i)) && ~isnan(y(i))
