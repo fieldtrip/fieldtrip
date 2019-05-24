@@ -330,8 +330,10 @@ switch varargin{1}
     % store the last notification
     state.message    = strtrim(sprintf(varargin{:})); % remove the trailing newline
     state.identifier = msgId;
-    state.stack      = stack;
-    s = setstate(s, 'last', state);
+    if ~isempty(stack)
+      state.stack      = stack;
+      s = setstate(s, 'last', state);
+    end
     
     if strcmp(msgState, 'on')
       
