@@ -206,7 +206,7 @@ elseif (strcmp(baselinetype, 'normchange')) || (strcmp(baselinetype, 'vssum'))
 elseif (strcmp(baselinetype, 'db'))
   data = 10*log10(data ./ meanVals);
 elseif (strcmp(baselinetype,'zscore'))
-    stdVals = repmat(std(data(:,:,baselineTimes),[], 3,'omitnan'), [1 1 size(data, 3)]);
+    stdVals = repmat(nanstd(data(:,:,baselineTimes),1, 3), [1 1 size(data, 3)]);
     data=(data-meanVals)./stdVals;
 else
   ft_error('unsupported method for baseline normalization: %s', baselinetype);
