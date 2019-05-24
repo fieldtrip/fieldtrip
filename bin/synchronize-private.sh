@@ -1315,6 +1315,14 @@ ARRAY+=(src/inv3x3.mexw64)
 sync ${ARRAY[*]}
 
 ################################################################################
+# isdir_or_mkdir.m
+
+ARRAY=()
+ARRAY+=(fileiot/private/isdir_or_mkdir.m)
+ARRAY+=(private/isdir_or_mkdir.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # isalmostequal.m
 
 ARRAY=()
