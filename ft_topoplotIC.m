@@ -139,9 +139,7 @@ cfg.interactive = 'no';
 
 % prepare the layout, this should be done only once
 tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
-tmpcomp.label = comp.topolabel; % the input to ft_prepare_layout needs at least a data.label field
-cfg.layout = ft_prepare_layout(tmpcfg, tmpcomp);
-clear tmpcomp
+cfg.layout = ft_prepare_layout(tmpcfg);
 
 % this is needed for the figure title
 if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)

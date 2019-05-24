@@ -257,7 +257,7 @@ end
 if strcmp(cfg.viewmode, 'component')
   % read or create the layout that will be used for the topoplots
   tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
-  if hasdata && isempty(cfg.layout)
+  if hasdata
     cfg.layout = ft_prepare_layout(tmpcfg, data);
   else
     cfg.layout = ft_prepare_layout(tmpcfg);
