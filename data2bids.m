@@ -76,6 +76,9 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.participant.age         = scalar
 %   cfg.participant.sex         = string, 'm' or 'f'
 %   cfg.scan.acq_time           = string, should be formatted according to  RFC3339 as '2019-05-22T15:13:38'
+%   cfg.dataset_description.
+
+
 % In case any of these values is specified as empty (i.e. []) or as nan, it will be
 % written to the tsv file as 'n/a'.
 %
@@ -220,41 +223,6 @@ cfg.proc      = ft_getopt(cfg, 'proc');
 % cfg.space     = ft_getopt(cfg, 'space'); % FIXME
 cfg.datatype  = ft_getopt(cfg, 'datatype');
 
-if isempty(cfg.outputfile)
-  if isempty(cfg.method) && isempty(cfg.bidsroot) && ~isempty(cfg.dataset)
-    cfg.outputfile = cfg.dataset;
-    cfg.method = 'decorate';
-    ft_notice('using cfg.outputfile=''%s'' and cfg.method=''%s''', cfg.outputfile, cfg.method);
-  elseif isempty(cfg.bidsroot)
-    ft_error('cfg.bidsroot is required to construct BIDS output directory and file');
-  elseif isempty(cfg.sub)
-    ft_error('cfg.sub is required to construct BIDS output directory and file');
-  elseif isempty(cfg.datatype)
-    ft_error('cfg.datatype is required to construct BIDS output directory and file');
-  else
-    dirname = datatype2dirname(cfg.datatype);
-    filename = ['sub-' cfg.sub];
-    filename = add_entity(filename, 'ses',  cfg.ses);
-    filename = add_entity(filename, 'task', cfg.task);
-    filename = add_entity(filename, 'acq',  cfg.acq);
-    filename = add_entity(filename, 'ce',   cfg.ce);
-    filename = add_entity(filename, 'rec',  cfg.rec);
-    filename = add_entity(filename, 'dir',  cfg.dir);
-    filename = add_entity(filename, 'run',  cfg.run);
-    filename = add_entity(filename, 'mod',  cfg.mod);
-    filename = add_entity(filename, 'echo', cfg.echo);
-    filename = add_entity(filename, 'proc', cfg.proc);
-    filename = add_datatype(filename, cfg.datatype);
-    if ~isempty(cfg.ses)
-      % construct the output filename, with session directory
-      cfg.outputfile = fullfile(cfg.bidsroot, ['sub-' cfg.sub], ['ses-' cfg.ses], dirname, filename);
-    else
-      % construct the output filename, without session directory
-      cfg.outputfile = fullfile(cfg.bidsroot, ['sub-' cfg.sub], dirname, filename);
-    end
-  end
-end
-
 cfg.mri                     = ft_getopt(cfg, 'mri');
 cfg.mri.deface              = ft_getopt(cfg.mri, 'deface', 'no');             % deface the anatomical MRI
 cfg.mri.dicomfile           = ft_getopt(cfg.mri, 'dicomfile');                % get the details from one of the original DICOM files
@@ -282,41 +250,19 @@ cfg.events.writesidecar     = ft_getopt(cfg.events, 'writesidecar', 'yes');   % 
 cfg.coordsystem              = ft_getopt(cfg, 'coordsystem');
 cfg.coordsystem.writesidecar = ft_getopt(cfg.coordsystem, 'writesidecar', 'yes');
 
-% set the default method
-if isempty(cfg.method)
-  if ~isequal(cfg.dataset, cfg.outputfile)
-    cfg.method = 'convert';
-  else
-    cfg.method = 'decorate';
-  end
-  ft_notice('using cfg.method=''%s''', cfg.method);
-end
+%% Dataset description
 
-% do some sanity checks on the input and the method
-if istrue(cfg.mri.deface) && ~strcmp(cfg.method, 'convert')
-  ft_error('defacing only works in combination with cfg.method=''convert''');
-elseif ft_nargin>1 && ~strcmp(cfg.method, 'convert')
-  ft_error('input data only works in combination with cfg.method=''convert''');
-end
-
-% do some more sanity checks on the input and the method
-switch cfg.method
-  case 'decorate'
-    if ~isempty(cfg.outputfile) && ~isequal(cfg.dataset, cfg.outputfile)
-      ft_error('cfg.dataset and cfg.outputfile should be the same');
-    end
-  case 'convert'
-    if ~isempty(cfg.outputfile) && isequal(cfg.dataset, cfg.outputfile)
-      ft_error('cfg.dataset and cfg.outputfile should not be the same');
-    end
-  case 'copy'
-    if ~isempty(cfg.outputfile) && isequal(cfg.dataset, cfg.outputfile)
-      ft_error('cfg.dataset and cfg.outputfile should not be the same');
-    end
-  otherwise
-    ft_error('unsupported value for cfg.method')
-end
-
+cfg.dataset_description                     = ft_getopt(cfg, 'dataset_description'                       );
+cfg.dataset_description.writesidecar        = ft_getopt(cfg.dataset_description, 'writesidecar', 'yes'   );
+cfg.dataset_description.Name	              = ft_getopt(cfg.dataset_description, 'Name'                  ); % REQUIRED. Name of the dataset.
+cfg.dataset_description.BIDSVersion	        = ft_getopt(cfg.dataset_description, 'BIDSVersion'           ); % REQUIRED. The version of the BIDS standard that was used.
+cfg.dataset_description.License	            = ft_getopt(cfg.dataset_description, 'License'               ); % RECOMMENDED. What license is this dataset distributed under? The use of license name abbreviations is suggested for specifying a license. A list of common licenses with suggested abbreviations can be found in Appendix II.
+cfg.dataset_description.Authors	            = ft_getopt(cfg.dataset_description, 'Authors'               ); % OPTIONAL. List of individuals who contributed to the creation/curation of the dataset.
+cfg.dataset_description.Acknowledgements	  = ft_getopt(cfg.dataset_description, 'Acknowledgements'      ); % OPTIONAL. Text acknowledging contributions of individuals or institutions beyond those listed in Authors or Funding.
+cfg.dataset_description.HowToAcknowledge	  = ft_getopt(cfg.dataset_description, 'HowToAcknowledge'      ); % OPTIONAL. Instructions how researchers using this dataset should acknowledge the original authors. This field can also be used to define a publication that should be cited in publications that use the dataset.
+cfg.dataset_description.Funding	            = ft_getopt(cfg.dataset_description, 'Funding'               ); % OPTIONAL. List of sources of funding (grant numbers)
+cfg.dataset_description.ReferencesAndLinks	= ft_getopt(cfg.dataset_description, 'ReferencesAndLinks'    ); % OPTIONAL. List of references to publication that contain information on the dataset, or links.
+cfg.dataset_description.DatasetDOI	        = ft_getopt(cfg.dataset_description, 'DatasetDOI'            ); % OPTIONAL. The Document Object Identifier of the dataset (not the corresponding paper).
 
 %% Generic fields for all data types
 cfg.TaskName                          = ft_getopt(cfg, 'TaskName'                    ); % REQUIRED. Name of the task (for resting state use the "rest" prefix). Different Tasks SHOULD NOT have the same name. The Task label is derived from this field by removing all non alphanumeric ([a-zA-Z0-9]) characters.
@@ -522,7 +468,7 @@ cfg.participants = ft_getopt(cfg, 'participants', struct());
 %% information for the scans.tsv
 cfg.scans = ft_getopt(cfg, 'scans', struct());
 
-%% sanity check
+%% sanity checks and determine the default method/outputfile
 
 % the task is both part of the file name (cfg.task) and one of the general JSON metadata fields (cfg.TaskName)
 if isempty(cfg.task) && isempty(cfg.TaskName)
@@ -535,6 +481,82 @@ elseif ~isempty(cfg.task) && ~isempty(cfg.TaskName)
   if ~strcmp(cfg.task, cfg.TaskName)
     ft_error('cfg.task and cfg.TaskName should be identical');
   end
+end
+
+% construct the output directory and file name
+if isempty(cfg.outputfile)
+  if isempty(cfg.method) && isempty(cfg.bidsroot) && ~isempty(cfg.dataset)
+    cfg.outputfile = cfg.dataset;
+    cfg.method = 'decorate';
+    ft_notice('using cfg.outputfile=''%s'' and cfg.method=''%s''', cfg.outputfile, cfg.method);
+  elseif isempty(cfg.bidsroot)
+    ft_error('cfg.bidsroot is required to construct BIDS output directory and file');
+  elseif isempty(cfg.sub)
+    ft_error('cfg.sub is required to construct BIDS output directory and file');
+  elseif isempty(cfg.datatype)
+    ft_error('cfg.datatype is required to construct BIDS output directory and file');
+  else
+    dirname = datatype2dirname(cfg.datatype);
+    filename = ['sub-' cfg.sub];
+    filename = add_entity(filename, 'ses',  cfg.ses);
+    filename = add_entity(filename, 'task', cfg.task);
+    filename = add_entity(filename, 'acq',  cfg.acq);
+    filename = add_entity(filename, 'ce',   cfg.ce);
+    filename = add_entity(filename, 'rec',  cfg.rec);
+    filename = add_entity(filename, 'dir',  cfg.dir);
+    filename = add_entity(filename, 'run',  cfg.run);
+    filename = add_entity(filename, 'mod',  cfg.mod);
+    filename = add_entity(filename, 'echo', cfg.echo);
+    filename = add_entity(filename, 'proc', cfg.proc);
+    filename = add_datatype(filename, cfg.datatype);
+    if ~isempty(cfg.ses)
+      % construct the output filename, with session directory
+      cfg.outputfile = fullfile(cfg.bidsroot, ['sub-' cfg.sub], ['ses-' cfg.ses], dirname, filename);
+    else
+      % construct the output filename, without session directory
+      cfg.outputfile = fullfile(cfg.bidsroot, ['sub-' cfg.sub], dirname, filename);
+    end
+    if strcmp(cfg.method, 'copy') && ~isempty(cfg.dataset)
+      % copy the file extension from the input dataset
+      [~, ~, x] = fileparts(cfg.dataset);
+      cfg.outputfile = [cfg.outputfile x];
+    end
+  end
+end
+
+% set the default method
+if isempty(cfg.method)
+  if ~isequal(cfg.dataset, cfg.outputfile)
+    cfg.method = 'convert';
+  else
+    cfg.method = 'decorate';
+  end
+  ft_notice('using cfg.method=''%s''', cfg.method);
+end
+
+% do some sanity checks on the input and the method
+if istrue(cfg.mri.deface) && ~strcmp(cfg.method, 'convert')
+  ft_error('defacing only works in combination with cfg.method=''convert''');
+elseif ft_nargin>1 && ~strcmp(cfg.method, 'convert')
+  ft_error('input data only works in combination with cfg.method=''convert''');
+end
+
+% do some more sanity checks on the input and the method
+switch cfg.method
+  case 'decorate'
+    if ~isempty(cfg.outputfile) && ~isequal(cfg.dataset, cfg.outputfile)
+      ft_error('cfg.dataset and cfg.outputfile should be the same');
+    end
+  case 'convert'
+    if ~isempty(cfg.outputfile) && isequal(cfg.dataset, cfg.outputfile)
+      ft_error('cfg.dataset and cfg.outputfile should not be the same');
+    end
+  case 'copy'
+    if ~isempty(cfg.outputfile) && isequal(cfg.dataset, cfg.outputfile)
+      ft_error('cfg.dataset and cfg.outputfile should not be the same');
+    end
+  otherwise
+    ft_error('unsupported value for cfg.method')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -561,7 +583,8 @@ need_mri_json         = false;
 need_meg_json         = false;
 need_eeg_json         = false;
 need_ieeg_json        = false;
-need_events_tsv       = false;  % for behavioral experiments
+need_events_tsv       = false; % for behavioral experiments
+need_electrodes_tsv   = false; % only needed when actually present as data.cfg or as cfg.elec
 
 switch typ
   case {'nifti', 'nifti2', 'nifti_fsl'}
@@ -696,7 +719,6 @@ end % switch typ
 need_events_tsv       = need_events_tsv || need_meg_json || need_eeg_json || need_ieeg_json || (need_mri_json && (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task)));
 need_channels_tsv     = need_meg_json || need_eeg_json || need_ieeg_json;
 need_coordsystem_json = need_meg_json; % FIXME this is also needed when EEG and iEEG electrodes are present
-need_electrodes_tsv   = false; % this is only needed when actually present
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% get the defaults and user-specified settings for each possible sidecar file
@@ -711,6 +733,11 @@ events_tsv       = [];
 channels_tsv     = [];
 electrodes_tsv   = [];
 coordsystem_json = [];
+
+% make the relevant selection, all json fields start with a capital letter
+fn = fieldnames(cfg.dataset_description);
+fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
+dataset_description_settings = keepfields(cfg.dataset_description, fn);
 
 % make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg);
@@ -741,6 +768,7 @@ ieeg_settings = keepfields(cfg.ieeg, fn);
 fn = fieldnames(cfg.coordsystem);
 fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
 coordsystem_settings = keepfields(cfg.coordsystem, fn);
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% construct the content for the json and tsv files
@@ -862,7 +890,7 @@ end % if need_coordsystem_json
 
 %% need_channels_tsv
 if need_channels_tsv
-  % construct a table
+  % start with an empty table
   channels_tsv = table();
   
   % ensure that all columns have the correct number of elements
@@ -900,7 +928,7 @@ end % if need_channels_tsv
 
 %% need_electrodes_tsv
 if need_electrodes_tsv
-  % construct a table
+  % start with an empty table
   electrodes_tsv = table();
   
   % ensure that all columns have the correct number of elements
@@ -935,7 +963,6 @@ if need_electrodes_tsv
     end
   end
 end % need_electrodes_tsv
-
 
 %% need_events_tsv
 if need_events_tsv
@@ -1230,10 +1257,10 @@ switch cfg.method
         end
         ft_info('writing %s\n', cfg.outputfile);
         ft_write_mri(cfg.outputfile, mri, 'dataformat', 'nifti');
-
+        
       case {'presentation_log'}
         % do not write data, but only write the events.tsv file
-
+        
       otherwise
         if any(strcmp({'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275', 'neuromag_fif', 'neuromag122', 'neuromag306'}, typ))
           ft_error('please use a MEG system specific tool for converting datasets');
@@ -1249,17 +1276,27 @@ switch cfg.method
     
   case 'copy'
     [~, ~, xin] = fileparts(cfg.dataset);
-    [~, ~, xout] = fileparts(cfg.outputfile);
+    [p, ~, xout] = fileparts(cfg.outputfile);
     if ~strcmp(xin, xout)
       ft_error('input and output filename extension do not match');
     end
     
-    if any(strcmp({'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275'}, typ))
-      ft_error('please use the CTF software for copying datasets, i.e. "newDs", "copyDs", "moveDS" or "changeDsName"');
-    end
     
-    ft_info('copying %s to %s\n', cfg.dataset, cfg.outputfile);
-    copyfile(cfg.dataset, cfg.outputfile);
+    switch typ
+      case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275'}
+        ft_error('please use the CTF software for copying datasets, i.e. "newDs", "copyDs", "moveDS" or "changeDsName"');
+        
+      case {'brainvision_vhdr', 'brainvision_vmrk', 'brainvision_eeg', 'brainvision_dat', 'brainvision_seg'}
+        % the data consists of three files and the header file contains pointers to the markers and data
+        ft_info('copying %s to %s\n', cfg.dataset, cfg.outputfile);
+        isdir_or_mkdir(p);
+        copy_brainvision_files(cfg.dataset, cfg.outputfile, false);
+        
+      otherwise
+        ft_info('copying %s to %s\n', cfg.dataset, cfg.outputfile);
+        isdir_or_mkdir(p);
+        copyfile(cfg.dataset, cfg.outputfile);
+    end
     
   otherwise
     ft_error('unsupported value for cfg.method')
@@ -1504,7 +1541,36 @@ if ~isempty(events_tsv)
 end
 
 if ~isempty(cfg.bidsroot)
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % update the dataset_description
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  filename = fullfile(cfg.bidsroot, 'dataset_description.json');
+  
+  if isfile(filename)
+    existing = read_json(filename);
+  else
+    existing = [];
+  end
+  switch cfg.dataset_description.writesidecar
+    case 'yes'
+      if ~isempty(existing)
+        ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
+      else
+        write_json(filename, dataset_description_settings);
+      end
+    case 'replace'
+      write_json(filename, dataset_description_settings);
+    case 'merge'
+      write_json(filename, mergeconfig(dataset_description_settings, existing, false));
+    case 'no'
+      % do nothing
+    otherwise
+      ft_error('incorrect option for cfg.dataset_description.writesidecar');
+  end % switch
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % update the participants.tsv
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   filename = fullfile(cfg.bidsroot, 'participants.tsv');
   
   this = table();
@@ -1527,7 +1593,9 @@ if ~isempty(cfg.bidsroot)
   % write the updated file back to disk
   write_tsv(filename, participants);
   
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % update the scans.tsv
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   if ~isempty(cfg.ses)
     % construct the output filename, with session directory
     filename = fullfile(cfg.bidsroot, ['sub-' cfg.sub], ['ses-' cfg.ses], ['sub-' cfg.sub '_' 'ses-' cfg.ses '_scans.tsv']);
