@@ -76,9 +76,7 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.participant.age         = scalar
 %   cfg.participant.sex         = string, 'm' or 'f'
 %   cfg.scan.acq_time           = string, should be formatted according to  RFC3339 as '2019-05-22T15:13:38'
-%   cfg.dataset_description.
-
-
+%   cfg.dataset_description     = structure with additional fields, see below
 % In case any of these values is specified as empty (i.e. []) or as nan, it will be
 % written to the tsv file as 'n/a'.
 %
@@ -122,6 +120,20 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.ManufacturersModelName      = string
 %   cfg.DeviceSerialNumber          = string
 %   cfg.SoftwareVersions            = string
+%
+% If you specify cfg.bidsroot, this function will also write the dataset_description.json
+% file. You can specify the following fields
+%   cfg.dataset_description                     = string
+%   cfg.dataset_description.writesidecar        = string
+%   cfg.dataset_description.Name	              = string
+%   cfg.dataset_description.BIDSVersion	        = string
+%   cfg.dataset_description.License	            = string
+%   cfg.dataset_description.Authors	            = string
+%   cfg.dataset_description.Acknowledgements	  = string
+%   cfg.dataset_description.HowToAcknowledge	  = string
+%   cfg.dataset_description.Funding	            = string
+%   cfg.dataset_description.ReferencesAndLinks	= string
+%   cfg.dataset_description.DatasetDOI	        = string
 %
 % General BIDS options that apply to all functional data types are
 %   cfg.TaskName                    = string
@@ -1261,11 +1273,10 @@ switch cfg.method
       case {'presentation_log'}
         % do not write data, but only write the events.tsv file
         
-      otherwise
-        if any(strcmp({'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275', 'neuromag_fif', 'neuromag122', 'neuromag306'}, typ))
-          ft_error('please use a MEG system specific tool for converting datasets');
-        end
+      case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275', 'neuromag_fif', 'neuromag122', 'neuromag306'}
+        ft_error('please use a system specific tool for converting MEG datasets');
         
+      otherwise
         [p, f, x] = fileparts(cfg.outputfile);
         if ~isequal(x, '.vhdr')
           cfg.outputfile = fullfile(p, [f '.vhdr']);
@@ -1281,10 +1292,12 @@ switch cfg.method
       ft_error('input and output filename extension do not match');
     end
     
-    
     switch typ
       case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275'}
-        ft_error('please use the CTF software for copying datasets, i.e. "newDs", "copyDs", "moveDS" or "changeDsName"');
+        % the data consists of a directory with multiple files inside
+        ft_info('copying %s to %s\n', cfg.dataset, cfg.outputfile);
+        isdir_or_mkdir(p);
+        copy_ctf_files(cfg.dataset, cfg.outputfile, false);
         
       case {'brainvision_vhdr', 'brainvision_vmrk', 'brainvision_eeg', 'brainvision_dat', 'brainvision_seg'}
         % the data consists of three files and the header file contains pointers to the markers and data
