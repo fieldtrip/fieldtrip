@@ -17,6 +17,7 @@ function matlab2markdown(infile,outfile,varargin)
 % Optional input arguments can be specified as key-value pairs and can include
 %   imagestyle = 'none|inline|jekyll'
 %   pageheader = 'none|jekyll'
+%   overwrite  = true/false allow overwriting of the .md file
 %   ...
 %
 % See also MARKDOWN2MATLAB
@@ -51,12 +52,13 @@ end
 
 % parse the optional input arguments
 % val = ft_getopt(varargin, 'key', default);
-imagestyle = ft_getopt(varargin, 'imagestyle', 'inline');
-pageheader = ft_getopt(varargin, 'pageheader', 'none');
-pagelayout = ft_getopt(varargin, 'pagelayout', '');
-pagetitle  = ft_getopt(varargin, 'pagetitle', '');
-pagetags   = ft_getopt(varargin, 'pagetags', '');
+imagestyle    = ft_getopt(varargin, 'imagestyle', 'inline');
+pageheader    = ft_getopt(varargin, 'pageheader', 'none');
+pagelayout    = ft_getopt(varargin, 'pagelayout', '');
+pagetitle     = ft_getopt(varargin, 'pagetitle', '');
+pagetags      = ft_getopt(varargin, 'pagetags', '');
 monospacehelp = ft_getopt(varargin, 'monospacehelp', false); % convert the help in monospace format
+overwrite     = ft_getopt(varargin, 'overwrite', false);
 
 % check input
 [inpath, inname, inext] = fileparts(infile);
@@ -77,13 +79,15 @@ if ~strcmp(outext,'.md')
 end
 
 % add a suffix to avoid overwriting files
-suffix = 1;
-newname = outname;
-while exist(fullfile(outpath,[newname,outext]),'file') == 2
-  newname = [outname sprintf('-%0d',suffix)];
-  suffix = suffix+1;
+if ~overwrite
+    suffix = 1;
+    newname = outname;
+    while exist(fullfile(outpath,[newname,outext]),'file') == 2
+      newname = [outname sprintf('-%0d',suffix)];
+      suffix = suffix+1;
+    end
+    outname = newname;
 end
-outname = newname;
 
 infile = fullfile(inpath,[inname,inext]);
 outfile = fullfile(outpath,[outname,outext]);
