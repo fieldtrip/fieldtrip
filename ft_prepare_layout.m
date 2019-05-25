@@ -253,7 +253,9 @@ if ~isempty(cfg.viewpoint) && ~isempty(cfg.rotate)
 end
 
 % update the selection of channels according to the data
-if hasdata && isfield(data, 'label')
+if hasdata && isfield(data, 'topolabel')
+  cfg.channel = ft_channelselection(cfg.channel, data.topolabel);
+elseif hasdata && isfield(data, 'label')
   cfg.channel = ft_channelselection(cfg.channel, data.label);
 elseif hasdata && isfield(data, 'labelcmb')
   cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));

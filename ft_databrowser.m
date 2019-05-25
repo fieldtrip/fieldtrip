@@ -1730,7 +1730,9 @@ else
     end
     tmpcfg.skipcomnt = 'yes';
     tmpcfg.skipscale = 'yes';
-    opt.laytime = ft_prepare_layout(tmpcfg, opt.orgdata);
+    % remove the component information from the data
+    tmpdata = ft_checkdata(opt.orgdata, 'datatype', 'raw'); 
+    opt.laytime = ft_prepare_layout(tmpcfg, tmpdata);
   end
 end
 
