@@ -1473,7 +1473,7 @@ switch dataformat
       if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
         dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
       else
-        ft_error('unsupported data format (%s)', dataformat);
+        ft_error('unsupported data format "%s"', dataformat);
       end
     end
 end % switch dataformat

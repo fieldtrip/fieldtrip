@@ -2182,7 +2182,7 @@ switch eventformat
       hdr   = feval(eventformat, filename);
       event = feval(eventformat, filename, hdr);
     catch
-      ft_warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format (%s)', eventformat);
+      ft_warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format "%s"', eventformat);
       event = [];
     end
     
@@ -2194,7 +2194,7 @@ switch eventformat
       event = feval(eventformat, filename);
       
     catch
-      ft_warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format (%s)', eventformat);
+      ft_warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format "%s"', eventformat);
       event = [];
     end
 end

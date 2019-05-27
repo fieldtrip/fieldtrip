@@ -137,7 +137,7 @@ switch cfg.method
         axmax = 0.15;
         rbol  = 0.005;
       otherwise
-        ft_error('unknown units (%s)', unit);
+        ft_error('unknown units "%s"', unit);
     end
     
     figHandle = figure;
