@@ -261,6 +261,10 @@ switch version
             sens.chanunit{i} = amplitude;
           elseif strcmp(sens.chanunit{i}, amplitude)
             % no conversion needed
+          elseif isfield(sens, 'balance') && strcmp(sens.balance.current, 'comp')
+            % no conversion needed
+          elseif isfield(sens, 'balance') && strcmp(sens.balance.current, 'planar')
+            % no conversion needed
           else
             % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3144
             ft_warning('unexpected channel unit "%s" in channel %d', sens.chanunit{i}, i);
