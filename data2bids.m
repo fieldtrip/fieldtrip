@@ -71,11 +71,11 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.proc                    = string
 %
 % When specifying the output directory in cfg.bidsroot, you can also specify
-% additional information to be added to the participants.tsv and scans.tsv files.
-% For example:
+% additional information to be added as extra columns in the participants.tsv and
+% scans.tsv files. For example:
 %   cfg.participant.age         = scalar
 %   cfg.participant.sex         = string, 'm' or 'f'
-%   cfg.scan.acq_time           = string, should be formatted according to  RFC3339 as '2019-05-22T15:13:38'
+%   cfg.scans.acq_time          = string, should be formatted according to  RFC3339 as '2019-05-22T15:13:38'
 %   cfg.dataset_description     = structure with additional fields, see below
 % In case any of these values is specified as empty (i.e. []) or as nan, it will be
 % written to the tsv file as 'n/a'.
@@ -1785,7 +1785,7 @@ ft_hastoolbox('jsonlab', 1);
 % see also the output_compatible helper function
 % write nan as 'n/a'
 % write boolean as True/False
-str = savejson('', json, 'NaN', 'n/a', 'ParseLogical', true);
+str = savejson('', json, 'NaN', '"n/a"', 'ParseLogical', true);
 fid = fopen(filename, 'w');
 fwrite(fid, str);
 fclose(fid);
