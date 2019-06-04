@@ -123,17 +123,16 @@ function cfg = data2bids(cfg, varargin)
 %
 % If you specify cfg.bidsroot, this function will also write the dataset_description.json
 % file. You can specify the following fields
-%   cfg.dataset_description                     = string
 %   cfg.dataset_description.writesidecar        = string
-%   cfg.dataset_description.Name	              = string
-%   cfg.dataset_description.BIDSVersion	        = string
-%   cfg.dataset_description.License	            = string
-%   cfg.dataset_description.Authors	            = string
-%   cfg.dataset_description.Acknowledgements	  = string
-%   cfg.dataset_description.HowToAcknowledge	  = string
-%   cfg.dataset_description.Funding	            = string
-%   cfg.dataset_description.ReferencesAndLinks	= string
-%   cfg.dataset_description.DatasetDOI	        = string
+%   cfg.dataset_description.Name                = string
+%   cfg.dataset_description.BIDSVersion         = string
+%   cfg.dataset_description.License             = string
+%   cfg.dataset_description.Authors             = string or cell-array of strings
+%   cfg.dataset_description.Acknowledgements    = string
+%   cfg.dataset_description.HowToAcknowledge    = string
+%   cfg.dataset_description.Funding             = string or cell-array of strings
+%   cfg.dataset_description.ReferencesAndLinks  = string or cell-array of strings
+%   cfg.dataset_description.DatasetDOI          = string
 %
 % General BIDS options that apply to all functional data types are
 %   cfg.TaskName                    = string
@@ -266,15 +265,15 @@ cfg.coordsystem.writesidecar = ft_getopt(cfg.coordsystem, 'writesidecar', 'yes')
 
 cfg.dataset_description                     = ft_getopt(cfg, 'dataset_description'                       );
 cfg.dataset_description.writesidecar        = ft_getopt(cfg.dataset_description, 'writesidecar', 'yes'   );
-cfg.dataset_description.Name	              = ft_getopt(cfg.dataset_description, 'Name'                  ); % REQUIRED. Name of the dataset.
-cfg.dataset_description.BIDSVersion	        = ft_getopt(cfg.dataset_description, 'BIDSVersion'           ); % REQUIRED. The version of the BIDS standard that was used.
-cfg.dataset_description.License	            = ft_getopt(cfg.dataset_description, 'License'               ); % RECOMMENDED. What license is this dataset distributed under? The use of license name abbreviations is suggested for specifying a license. A list of common licenses with suggested abbreviations can be found in Appendix II.
-cfg.dataset_description.Authors	            = ft_getopt(cfg.dataset_description, 'Authors'               ); % OPTIONAL. List of individuals who contributed to the creation/curation of the dataset.
-cfg.dataset_description.Acknowledgements	  = ft_getopt(cfg.dataset_description, 'Acknowledgements'      ); % OPTIONAL. Text acknowledging contributions of individuals or institutions beyond those listed in Authors or Funding.
-cfg.dataset_description.HowToAcknowledge	  = ft_getopt(cfg.dataset_description, 'HowToAcknowledge'      ); % OPTIONAL. Instructions how researchers using this dataset should acknowledge the original authors. This field can also be used to define a publication that should be cited in publications that use the dataset.
-cfg.dataset_description.Funding	            = ft_getopt(cfg.dataset_description, 'Funding'               ); % OPTIONAL. List of sources of funding (grant numbers)
-cfg.dataset_description.ReferencesAndLinks	= ft_getopt(cfg.dataset_description, 'ReferencesAndLinks'    ); % OPTIONAL. List of references to publication that contain information on the dataset, or links.
-cfg.dataset_description.DatasetDOI	        = ft_getopt(cfg.dataset_description, 'DatasetDOI'            ); % OPTIONAL. The Document Object Identifier of the dataset (not the corresponding paper).
+cfg.dataset_description.Name                = ft_getopt(cfg.dataset_description, 'Name'                  ); % REQUIRED. Name of the dataset.
+cfg.dataset_description.BIDSVersion         = ft_getopt(cfg.dataset_description, 'BIDSVersion'           ); % REQUIRED. The version of the BIDS standard that was used.
+cfg.dataset_description.License             = ft_getopt(cfg.dataset_description, 'License'               ); % RECOMMENDED. What license is this dataset distributed under? The use of license name abbreviations is suggested for specifying a license. A list of common licenses with suggested abbreviations can be found in Appendix II.
+cfg.dataset_description.Authors             = ft_getopt(cfg.dataset_description, 'Authors'               ); % OPTIONAL. List of individuals who contributed to the creation/curation of the dataset.
+cfg.dataset_description.Acknowledgements    = ft_getopt(cfg.dataset_description, 'Acknowledgements'      ); % OPTIONAL. Text acknowledging contributions of individuals or institutions beyond those listed in Authors or Funding.
+cfg.dataset_description.HowToAcknowledge    = ft_getopt(cfg.dataset_description, 'HowToAcknowledge'      ); % OPTIONAL. Instructions how researchers using this dataset should acknowledge the original authors. This field can also be used to define a publication that should be cited in publications that use the dataset.
+cfg.dataset_description.Funding             = ft_getopt(cfg.dataset_description, 'Funding'               ); % OPTIONAL. List of sources of funding (grant numbers)
+cfg.dataset_description.ReferencesAndLinks  = ft_getopt(cfg.dataset_description, 'ReferencesAndLinks'    ); % OPTIONAL. List of references to publication that contain information on the dataset, or links.
+cfg.dataset_description.DatasetDOI          = ft_getopt(cfg.dataset_description, 'DatasetDOI'            ); % OPTIONAL. The Document Object Identifier of the dataset (not the corresponding paper).
 
 %% Generic fields for all data types
 cfg.TaskName                          = ft_getopt(cfg, 'TaskName'                    ); % REQUIRED. Name of the task (for resting state use the "rest" prefix). Different Tasks SHOULD NOT have the same name. The Task label is derived from this field by removing all non alphanumeric ([a-zA-Z0-9]) characters.
@@ -339,7 +338,7 @@ cfg.mri.MultibandAccelerationFactor   = ft_getopt(cfg.mri, 'MultibandAcceleratio
 cfg.mri.AnatomicalLandmarkCoordinates = ft_getopt(cfg.mri, 'AnatomicalLandmarkCoordinates'  ); % Key:value pairs of any number of additional anatomical landmarks and their coordinates in voxel units (where first voxel has index 0,0,0) relative to the associated anatomical MRI, (e.g. {"AC" = []; % [127,119,149], "PC" = []; % [128,93,141], "IH" = []; % [131,114,206]}, or {"NAS" = []; % [127,213,139], "LPA" = []; % [52,113,96], "RPA" = []; % [202,113,91]}).
 
 %% MR Anatomical scan information
-cfg.mri.ContrastBolusIngredient	      = ft_getopt(cfg.mri, 'ContrastBolusIngredient'        ); % OPTIONAL. Active ingredient of agent. Values MUST be one of: IODINE, GADOLINIUM, CARBON DIOXIDE, BARIUM, XENON Corresponds to DICOM Tag 0018,1048.
+cfg.mri.ContrastBolusIngredient       = ft_getopt(cfg.mri, 'ContrastBolusIngredient'        ); % OPTIONAL. Active ingredient of agent. Values MUST be one of: IODINE, GADOLINIUM, CARBON DIOXIDE, BARIUM, XENON Corresponds to DICOM Tag 0018,1048.
 
 %% MR Functional scan information
 cfg.mri.RepetitionTime                = ft_getopt(cfg.mri, 'RepetitionTime'                 ); % REQUIRED. The time in seconds between the beginning of an acquisition of one volume and the beginning of acquisition of the volume following it (TR). Please note that this definition includes time between scans (when no data has been acquired) in case of sparse acquisition schemes. This value needs to be consistent with the pixdim[4] field (after accounting for units stored in xyzt_units field) in the NIfTI header. This field is mutually exclusive with VolumeTiming and is derived from DICOM Tag 0018, 0080 and converted to seconds.
@@ -373,10 +372,10 @@ cfg.meg.AssociatedEmptyRoom           = ft_getopt(cfg.meg, 'AssociatedEmptyRoom'
 cfg.meg.HardwareFilters               = ft_getopt(cfg.meg, 'HardwareFilters'             ); % RECOMMENDED. List of temporal hardware filters applied. Ideally key:value pairs of pre-applied hardware filters and their parameter values: e.g., {"HardwareFilters": {"Highpass RC filter": {"Half amplitude cutoff (Hz)": 0.0159, "Roll-off": "6dB/Octave"}}}. Write n/a if no hardware filters applied.
 
 %% Specific EEG fields - if recorded with the MEG system
-cfg.meg.EEGPlacementScheme	          = ft_getopt(cfg.meg, 'EEGPlacementScheme'          ); % OPTIONAL. Placement scheme of EEG electrodes. Either the name of a standardised placement system (e.g., "10-20") or a list of standardised electrode names (e.g. ["Cz", "Pz"]).
-cfg.meg.CapManufacturer	              = ft_getopt(cfg.meg, 'CapManufacturer'             ); % OPTIONAL. Manufacturer of the EEG cap (e.g. EasyCap)
-cfg.meg.CapManufacturersModelName	    = ft_getopt(cfg.meg, 'CapManufacturersModelName'   ); % OPTIONAL. Manufacturer’s designation of the EEG cap model (e.g., M10)
-cfg.meg.EEGReference	                = ft_getopt(cfg.meg, 'EEGReference'                ); % OPTIONAL. Description of the type of EEG reference used (e.g., M1 for left mastoid, average, or longitudinal bipolar).
+cfg.meg.EEGPlacementScheme            = ft_getopt(cfg.meg, 'EEGPlacementScheme'          ); % OPTIONAL. Placement scheme of EEG electrodes. Either the name of a standardised placement system (e.g., "10-20") or a list of standardised electrode names (e.g. ["Cz", "Pz"]).
+cfg.meg.CapManufacturer               = ft_getopt(cfg.meg, 'CapManufacturer'             ); % OPTIONAL. Manufacturer of the EEG cap (e.g. EasyCap)
+cfg.meg.CapManufacturersModelName     = ft_getopt(cfg.meg, 'CapManufacturersModelName'   ); % OPTIONAL. Manufacturer’s designation of the EEG cap model (e.g., M10)
+cfg.meg.EEGReference                  = ft_getopt(cfg.meg, 'EEGReference'                ); % OPTIONAL. Description of the type of EEG reference used (e.g., M1 for left mastoid, average, or longitudinal bipolar).
 
 %% EEG specific fields
 cfg.eeg.EEGReference                  = ft_getopt(cfg.eeg, 'EEGReference'                ); % Description of the type of reference used (common", "average", "DRL", "bipolar" ).  Any specific electrode used as reference should be indicated as such in the channels.tsv file
@@ -466,13 +465,13 @@ cfg.channels.status             = ft_getopt(cfg.channels, 'status'             ,
 cfg.channels.status_description = ft_getopt(cfg.channels, 'status_description' , nan);  % OPTIONAL. Freeform text description of noise or artifact affecting data quality on the channel. It is meant to explain why the channel was declared bad in [status].
 
 %% columns in the electrodes.tsv
-cfg.electrodes.name	            = ft_getopt(cfg.channels, 'name'               , nan);  % REQUIRED. Name of the electrode
-cfg.electrodes.x	              = ft_getopt(cfg.channels, 'x'                  , nan);  % REQUIRED. Recorded position along the x-axis
-cfg.electrodes.y	              = ft_getopt(cfg.channels, 'y'                  , nan);  % REQUIRED. Recorded position along the y-axis
-cfg.electrodes.z	              = ft_getopt(cfg.channels, 'z'                  , nan);  % REQUIRED. Recorded position along the z-axis
-cfg.electrodes.type	            = ft_getopt(cfg.channels, 'type'               , nan);  % RECOMMENDED. Type of the electrode (e.g., cup, ring, clip-on, wire, needle)
-cfg.electrodes.material	        = ft_getopt(cfg.channels, 'material'           , nan);  % RECOMMENDED. Material of the electrode, e.g., Tin, Ag/AgCl, Gold
-cfg.electrodes.impedance	      = ft_getopt(cfg.channels, 'impedance'          , nan);  % RECOMMENDED. Impedance of the electrode in kOhm
+cfg.electrodes.name             = ft_getopt(cfg.channels, 'name'               , nan);  % REQUIRED. Name of the electrode
+cfg.electrodes.x                = ft_getopt(cfg.channels, 'x'                  , nan);  % REQUIRED. Recorded position along the x-axis
+cfg.electrodes.y                = ft_getopt(cfg.channels, 'y'                  , nan);  % REQUIRED. Recorded position along the y-axis
+cfg.electrodes.z                = ft_getopt(cfg.channels, 'z'                  , nan);  % REQUIRED. Recorded position along the z-axis
+cfg.electrodes.type             = ft_getopt(cfg.channels, 'type'               , nan);  % RECOMMENDED. Type of the electrode (e.g., cup, ring, clip-on, wire, needle)
+cfg.electrodes.material         = ft_getopt(cfg.channels, 'material'           , nan);  % RECOMMENDED. Material of the electrode, e.g., Tin, Ag/AgCl, Gold
+cfg.electrodes.impedance        = ft_getopt(cfg.channels, 'impedance'          , nan);  % RECOMMENDED. Impedance of the electrode in kOhm
 
 %% information for the participants.tsv
 cfg.participants = ft_getopt(cfg, 'participants', struct());
