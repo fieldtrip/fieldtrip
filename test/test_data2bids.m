@@ -126,9 +126,9 @@ data2bids(cfg)
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/convert'));
 
 % this loads data, elec_acpc_fr, and mri
-load(dccnpath('/Volumes/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog/SubjectUCI29/SubjectUCI29_data.mat'));
-load(dccnpath('/Volumes/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog/SubjectUCI29/SubjectUCI29_elec_acpc_fr.mat'));
-mri = ft_read_mri(dccnpath('/Volumes/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog/SubjectUCI29/SubjectUCI29_MR_acpc.nii'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog/SubjectUCI29/SubjectUCI29_data.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog/SubjectUCI29/SubjectUCI29_elec_acpc_fr.mat'));
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog/SubjectUCI29/SubjectUCI29_MR_acpc.nii'));
 
 % make the data a bit smaller
 cfg = [];

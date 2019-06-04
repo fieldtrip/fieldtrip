@@ -29,7 +29,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is where the actual replacement code starts
-% function T2 = removevars1(T1, vars)
+% function T2 = removevars(T1, vars)
 
 % deal with the input arguments
 if nargin==2
@@ -40,13 +40,13 @@ end
 
 if islogical(vars)
   vars = T1.Properties.VariableNames(vars);
-  T2 = removevars1(T1, vars);
+  T2 = removevars(T1, vars);
 elseif isnumeric(vars)
   vars = T1.Properties.VariableNames(vars);
-  T2 = removevars1(T1, vars);
+  T2 = removevars(T1, vars);
 elseif ischar(vars)
   vars = {vars};
-  T2 = removevars1(T1, vars);
+  T2 = removevars(T1, vars);
 elseif iscell(vars)
   T2 = table();
   for i=1:numel(T1.Properties.VariableNames)
