@@ -275,7 +275,6 @@ if ~isfield(cfg, 'spmparams')
     if strcmp(cfg.spmmethod, 'new')
       bb        = spm_get_bbox(opts.tpm.V(1));
       spm_preproc_write8(params, zeros(6,4), [0 0], [0 1], 1, 1, bb, cfg.downsample);
-      %spm_preproc_write8(p, [ones(6,2) zeros(6,2)], [0 0], [0 1], 1, 1, nan(2,3), nan);
     elseif strcmp(cfg.spmmethod, 'mars')
       ft_hastoolbox('mars', 1);
       if ~isfield(cfg, 'mars'), cfg.mars = []; end
