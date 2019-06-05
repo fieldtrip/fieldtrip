@@ -7,7 +7,7 @@ function ft_documentationreference(outdir)
 % http://www.fieldtriptoolbox.org/reference where the output of this function can
 % be found.
 %
-% See also FT_DOCUMENTATIONCONFIGURATION
+% See also FT_DOCUMENTATIONCONFIGURATION, MATLAB2MARKDOWN
 
 % Copyright (C) 2008-2019, Robert Oostenveld
 %
@@ -78,5 +78,5 @@ end
 for i=1:length(infile)
   [p, f, x] = fileparts(infile{i});
   outfile = fullfile(outdir, [f '.md']);
-  matlab2markdown(infile{i}, outfile, 'monospacehelp', true, 'pageheader', 'jekyll', 'pagetitle', f);
+  matlab2markdown(infile{i}, outfile, 'monospacehelp', true, 'pageheader', 'jekyll', 'pagetitle', f, 'highlight', 'plaintext');
 end

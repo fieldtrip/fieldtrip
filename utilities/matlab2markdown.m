@@ -1,4 +1,4 @@
-function matlab2markdown(infile,outfile,varargin)
+function matlab2markdown(infile, outfile, varargin)
 
 % MATLAB2MARKDOWN converts a MATLAB script or function to Markdown format. All
 % comments are converted to text, comment lines starting with %% are converted to
@@ -17,12 +17,13 @@ function matlab2markdown(infile,outfile,varargin)
 % Optional input arguments can be specified as key-value pairs and can include
 %   imagestyle = 'none|inline|jekyll'
 %   pageheader = 'none|jekyll'
-%   overwrite  = true/false allow overwriting of the .md file
+%   overwrite  = true/false, allow overwriting of the .md file
+%   highlight  = string, 'matlab', 'plaintext' or '' (default = '')
 %   ...
 %
 % See also MARKDOWN2MATLAB
 
-% Copyright (C) 2018 Sophie Arana and Robert Oostenveld
+% Copyright (C) 2018, Sophie Arana and Robert Oostenveld
 %
 % This file is part of FieldTrip.
 %
@@ -59,6 +60,7 @@ pagetitle     = ft_getopt(varargin, 'pagetitle', '');
 pagetags      = ft_getopt(varargin, 'pagetags', '');
 monospacehelp = ft_getopt(varargin, 'monospacehelp', false); % convert the help in monospace format
 overwrite     = ft_getopt(varargin, 'overwrite', false);
+highlight     = ft_getopt(varargin, 'highlight', '');
 
 % check input
 [inpath, inname, inext] = fileparts(infile);
@@ -71,6 +73,10 @@ if nargin < 2 || isempty(outfile)
   outfile = infile;
 end
 
+if isempty(highlight)
+  highlight = '';
+end
+
 % check output
 [outpath, outname,outext] = fileparts(outfile);
 if isempty(outpath), outpath = inpath; end
@@ -80,13 +86,16 @@ end
 
 % add a suffix to avoid overwriting files
 if ~overwrite
-    suffix = 1;
-    newname = outname;
-    while exist(fullfile(outpath,[newname,outext]),'file') == 2
-      newname = [outname sprintf('-%0d',suffix)];
-      suffix = suffix+1;
-    end
-    outname = newname;
+  suffix = 1;
+  newname = outname;
+  while exist(fullfile(outpath,[newname,outext]),'file') == 2
+    newname = [outname sprintf('-%0d',suffix)];
+    suffix = suffix+1;
+  end
+  if ~strcmp(outname, newname)
+    warning('writing to %s', newname);
+  end
+  outname = newname;
 end
 
 infile = fullfile(inpath,[inname,inext]);
@@ -120,17 +129,17 @@ while ~feof(infid)
   reset_index = true;
   % reset the state, unless explicitly specified
   reset_state = true;
-
+  
   line = fgetl(infid);
   linenumber = linenumber + 1;
   if ~ischar(line), break, end
-
+  
   if monospacehelp
     if match(line, '^%') && strcmp(state, 'unknown')
       % the help has started
       state = 'help';
       reset_state = false;
-      fprintf(outfid, '```\n');  % start of code block
+      fprintf(outfid, '```%s\n', highlight);  % start of code block
       fprintf(outfid, '%s\n', formathelp(line));
     elseif match(line, '^%') && strcmp(state, 'help')
       % the help is continuing
@@ -147,7 +156,7 @@ while ~feof(infid)
       state = 'ignore';
       reset_state = false;
     end
-
+    
   elseif isempty(line)
     % keep the complete line as it is
     fprintf(outfid, '%s\n', line);
