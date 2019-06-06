@@ -281,7 +281,7 @@ if ~isfield(cfg, 'spmparams')
       beta        = ft_getopt(cfg.mars, 'beta', 0.1);
       convergence = ft_getopt(cfg.mars, 'convergence', 0.1);
       tcm{1}      = fullfile(fileparts(which('spm_mars_mrf')), 'rTCM_BW20_S1.mat');
-      params = spm_mars_mrf(params, [ones(6,2) zeros(6,2)], [0 0], [0 1], tcm, beta, convergence, 1);
+      params = spm_mars_mrf(params, zeros(6,4), [0 0], [0 1], tcm, beta, convergence, 1);
     end
     
     oldparams = false;
