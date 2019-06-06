@@ -28,7 +28,8 @@ function atlas = ft_read_atlas(filename, varargin)
 %
 % See also FT_READ_MRI, FT_READ_HEADSHAPE, FT_PREPARE_SOURCEMODEL, FT_SOURCEPARCELLATE, FT_PLOT_MESH
 
-% Copyright (C) 2005-2016, Robert Oostenveld, Ingrid Nieuwenhuis, Jan-Mathijs Schoffelen
+% Copyright (C) 2005-2019, Robert Oostenveld, Ingrid Nieuwenhuis,
+% Jan-Mathijs Schoffelen, Arjen Stolk
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -2003,11 +2004,14 @@ switch fileformat
     end
     
   case 'yeo7'
+    % this uses Yeo2011_7Networks_MNI152_FreeSurferConformed1mm_LiberalMask_colin27.nii, which is
+    % the 7 network parcelation from https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation_Yeo2011 
+    % aligned to the colin27 template (skull-stripped version of single_subj_T1_1mm.nii) 
+    % using AFNI's 3dQwarp and 3dNwarpApply
     atlas = ft_read_mri(filename);
     atlas.tissue = atlas.anatomy;
     atlas = rmfield(atlas, 'anatomy');
-    atlas.tissuelabel       = {
-      'None'
+    atlas.tissuelabel = {
       '7Networks_1'
       '7Networks_2'
       '7Networks_3'
@@ -2018,7 +2022,6 @@ switch fileformat
       };
     atlas.coordsys = 'mni';
     colors = [
-      0 0 0;
       120 18 134;
       70 130 180;
       0 118 14;
@@ -2026,14 +2029,17 @@ switch fileformat
       220 248 164;
       230 148 34;
       205 62 78
-      ];
+      ]; % not used
     
   case 'yeo17'
+    % this uses Yeo2011_17Networks_MNI152_FreeSurferConformed1mm_LiberalMask_colin27.nii, which is
+    % the 17 network parcelation from https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation_Yeo2011 
+    % aligned to the colin27 template (skull-stripped version of single_subj_T1_1mm.nii) 
+    % using AFNI's 3dQwarp and 3dNwarpApply
     atlas = ft_read_mri(filename);
     atlas.tissue = atlas.anatomy;
     atlas = rmfield(atlas, 'anatomy');
-    atlas.tissuelabel       = {
-      'None'
+    atlas.tissuelabel = {
       '17Networks_1'
       '17Networks_2'
       '17Networks_3'
@@ -2054,7 +2060,6 @@ switch fileformat
       };
     atlas.coordsys = 'mni';
     colors = [
-      0 0 0;
       120 18 134;
       255 0 0;
       70 130 180;
@@ -2072,7 +2077,7 @@ switch fileformat
       0 0 130;
       255 255 0;
       205 62 78
-      ];
+      ]; % not used
     
   otherwise
     ft_error('unsupported format "%s"', fileformat);
