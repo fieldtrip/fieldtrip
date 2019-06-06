@@ -266,16 +266,6 @@ if istrue(cfg.demeandata)
   end
 end
 
-% standardise the data
-if istrue(cfg.standardiserefdata)
-  fprintf('standardising the reference channels \n');
-  [refdata.trial, std_refdata] = cellzscore(refdata.trial, 2, 0);
-end
-if istrue(cfg.standardisedata)
-  fprintf('standardising the data channels \n');
-  [data.trial, std_data] = cellzscore(data.trial, 2, 0);
-end
-
 % do the time shifting for the reference channel data
 ft_hastoolbox('cellfunction', 1);
 
@@ -300,6 +290,7 @@ end
 data.trial = cellshift(data.trial, 0, 2, [abs(min(reflags)) abs(max(reflags))], 'overlap');
 data.time  = cellshift(data.time,  0, 2, [abs(min(reflags)) abs(max(reflags))], 'overlap');
 
+
 % only keep the trials that have > 0 samples
 tmpcfg        = [];
 tmpcfg.trials = find(cellfun('size',data.trial,2)>0);
@@ -307,6 +298,20 @@ data          = ft_selectdata(tmpcfg, data);
 [cfg, data]   = rollback_provenance(cfg, data);
 refdata       = ft_selectdata(tmpcfg, refdata);
 [dum,refdata] = rollback_provenance(cfg, refdata);
+
+% standardise the data
+if istrue(cfg.standardiserefdata)
+  fprintf('standardising the reference channels \n');
+  [refdata.trial, std_refdata] = cellzscore(refdata.trial, 2, 0);
+else
+  std_refdata = ones(numel(refdata.label),1);
+end
+if istrue(cfg.standardisedata)
+  fprintf('standardising the data channels \n');
+  [data.trial, std_data] = cellzscore(data.trial, 2, 0);
+else
+  std_data = ones(numel(data.label),1);
+end
 
 % demean again, just to be sure
 if istrue(cfg.demeanrefdata)
@@ -344,29 +349,23 @@ if istrue(cfg.perchannel)
   %beta_ref = (diag(rho))*beta_ref; % scale with sqrt(rho), to get the proper scaling
 
 else
-  [E, rho]  = multivariate_decomp(C, 1:nchan, nchan+(1:nref), cfg.method, 1, cfg.threshold);
+  [E, rho]  = multivariate_decomp(C, nchan+(1:nref), 1:nchan, cfg.method, 1, cfg.threshold);
   %beta_ref  = normc(E(nchan+(1:nref),:))';
   %beta_data = normc(E(1:nchan,:))';
   beta_ref  = E(nchan+(1:nref),:);
   beta_data = E(1:nchan,:);
+  
 end
 
-% Unstandardise the data/refchannels and test data/refchannels
-if istrue(cfg.standardiserefdata)
-  std_refdata       = repmat(std_refdata, numel(cfg.reflags), 1);
-  refdata.trial     = cellvecmult(refdata.trial, std_refdata);
-  if exist('beta_data', 'var')
-    beta_ref  = beta_ref'*diag(std_refdata);
-  else
-    beta_ref = diag(std_data)*beta_ref*diag(1./std_refdata);
-  end
-end
-
-if istrue(cfg.standardisedata)
-  data.trial     = cellvecmult(data.trial, std_data);
-  if exist('beta_data', 'var')
-    beta_data = diag(std_data)*beta_data;
-  end
+% Unstandardise the data/refchannels and test data/refchannels, the
+% respective std_data/std_refdata are all(ones) if the flags were false.
+refdata.trial = cellvecmult(refdata.trial, std_refdata);
+data.trial    = cellvecmult(data.trial, std_data);
+if exist('beta_data', 'var')
+  beta_ref  = beta_ref'*diag(std_refdata); 
+  beta_data = diag(std_data)*beta_data;
+else
+  beta_ref = diag(std_data)*beta_ref*diag(1./std_refdata);
 end
 
 if usetestdata
@@ -407,7 +406,11 @@ if usetestdata
   time      = testdata.time;
 else
   predicted = beta_ref*refdata.trial;
-  observed  = data.trial;
+  if exist('beta_data', 'var')
+    observed = beta_data'*data.trial;
+  else
+    observed = data.trial;
+  end
   time      = data.time;
 end
 
@@ -425,8 +428,8 @@ end
 weights.time = cfg.reflags;
 weights.rho  = rho;
 if exist('beta_data', 'var')
-  weights.unmixing = beta_data;
-  weights.beta = beta_ref;
+  weights.mixing = beta_data; 
+  weights.beta   = beta_ref;
 else
   % a per channel approach has been done, the beta weights reflect
   % (channelxtime-lag) -> reshape
@@ -435,7 +438,7 @@ else
   for k = 1:size(newbeta,3)
     newbeta(:,:,k) = beta_ref(:,k:nref:end);
   end
-  weights.beta = newbeta;
+  weights.beta     = newbeta;
   weights.reflabel = reflabel;
   weights.dimord   = 'chan_lag_refchan';
 end
