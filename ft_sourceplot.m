@@ -1366,8 +1366,6 @@ switch cfg.method
     scale = ft_scalingfactor('mm', functional.unit);
     % set the defaults for method=cloud
     cfg.cloudtype          = ft_getopt(cfg, 'cloudtype', 'cloud');
-    cfg.radius             = ft_getopt(cfg, 'radius', 4*scale);
-    cfg.rmin               = ft_getopt(cfg, 'rmin', 1*scale);
     cfg.scalerad           = ft_getopt(cfg, 'scalerad', 'yes');
     cfg.ptsize             = ft_getopt(cfg, 'ptsize', 1);
     cfg.ptdensity          = ft_getopt(cfg, 'ptdensity', 20);
@@ -1406,6 +1404,10 @@ switch cfg.method
     end
     
     if strcmp(cfg.cloudtype, 'cloud') || strcmp(cfg.cloudtype, 'surf')
+      % set the defaults for cloudtype=cloud & cloudtype=surf
+      cfg.radius             = ft_getopt(cfg, 'radius', 4*scale);
+      cfg.rmin               = ft_getopt(cfg, 'rmin', 1*scale);
+      
       ft_plot_cloud(pos, fun, 'mesh', anatomical,...
         'radius', cfg.radius, 'rmin', cfg.rmin, 'scalerad', cfg.scalerad, ...
         'ptsize', cfg.ptsize, 'ptdensity', cfg.ptdensity, 'ptgradient', cfg.ptgradient,...
@@ -1421,10 +1423,33 @@ switch cfg.method
       if strcmp(cfg.slice, '2d') || strcmp(cfg.slice, '3d')
         error('slices are not supported for point cloudtype')
       end
-      tmp.elecpos = pos;
-      tmp.chanpos = pos;
-      tmp.label = 0;
-      hs = ft_plot_sens(tmp, varargin);
+      
+      % set the defaults for cloudtype=point
+      cfg.radius             = ft_getopt(cfg, 'radius', 40*scale);
+      cfg.rmin               = ft_getopt(cfg, 'rmin', 10*scale);
+      
+      % functional scaling
+      cmap    = cfg.funcolormap;
+      cmid    = size(cmap,1)/2;                 % colorbar middle
+      clim    = [fcolmin fcolmax];              % color limits
+      colscf  = fun / max(abs(clim));           % color between -1 and 1, used when colorgrad = 'white'
+      colscf(colscf>1)=1; colscf(colscf<-1)=-1; % clamp values outside the [-1 1] range
+      radscf = abs( fun / max(abs(clim)) );     % radius between 0 and 1, used when colorgrad = scalar
+      radscf(radscf>1)=1; radscf(radscf<0)=0;   % clamp values outside the [0 1] range
+      if strcmp(cfg.scalerad, 'yes')
+        rmax = cfg.rmin+(cfg.radius-cfg.rmin)*radscf; % maximum radius of the clouds
+      else
+        rmax = ones(length(pos), 1)*cfg.radius; % each cloud has the same radius
+      end
+      
+      % plotting
+      for n = 1:size(pos,1) % sensor loop
+        indx  = ceil(cmid) + sign(colscf(n))*floor(abs(colscf(n)*cmid));
+        indx  = max(min(indx,size(cmap,1)),1);  % index should fall within the colormap
+        fcol  = cmap(indx,:);                   % color [Nx3]
+        hs = plot3(pos(n,1), pos(n,2), pos(n,3), 'Marker', cfg.marker, 'MarkerSize', rmax(n), 'Color', fcol, 'Linestyle', 'none');
+      end
+      
     end
     
     if istrue(cfg.colorbar)

@@ -110,9 +110,6 @@ ptsize             = ft_getopt(varargin, 'ptsize', 1 * ft_scalingfactor('mm', un
 ptdensity          = ft_getopt(varargin, 'ptdensityity', 20 / ft_scalingfactor('mm', unit)^3);  % points per unit of volume
 ptgradient         = ft_getopt(varargin, 'ptgradient', .5);
 
-% point related inputs
-marker             = ft_getopt(varargin, 'marker', '.');
-
 % slice related inputs
 sli                = ft_getopt(varargin, 'slice', 'none');
 ori                = ft_getopt(varargin, 'ori', 'y');
