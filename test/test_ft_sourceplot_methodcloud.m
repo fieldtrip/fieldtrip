@@ -23,7 +23,7 @@ freq_sel = ft_selectdata(cfg, freq_blc);
 cfg = [];
 cfg.funparameter = 'powspctrm';
 cfg.funcolorlim = [-.5 .5];
-cfg.method = 'cloud';
+cfg.method = 'cloud'; % <-- uses ft_plot_cloud
 ft_sourceplot(cfg, freq_sel, cortex.mesh);
 view([120 40]);
 lighting gouraud;
@@ -34,7 +34,7 @@ cfg = [];
 cfg.funparameter = 'powspctrm';
 cfg.funcolorlim = [-.5 .5];
 cfg.method = 'cloud';
-cfg.cloudtype = 'cloud';  % <--
+cfg.cloudtype = 'cloud';  % <-- uses ft_plot_cloud
 ft_sourceplot(cfg, freq_sel, cortex.mesh);
 view([120 40]);
 lighting gouraud;
@@ -45,7 +45,7 @@ cfg = [];
 cfg.funparameter = 'powspctrm';
 cfg.funcolorlim = [-.5 .5];
 cfg.method = 'cloud';
-cfg.cloudtype = 'point';  % <--
+cfg.cloudtype = 'point';  % <-- uses ft_sourceplot
 ft_sourceplot(cfg, freq_sel, cortex.mesh);
 view([120 40]);
 lighting gouraud;
@@ -56,7 +56,7 @@ cfg = [];
 cfg.funparameter = 'powspctrm';
 cfg.funcolorlim = [-.5 .5];
 cfg.method = 'cloud';
-cfg.cloudtype = 'surf';  % <--
+cfg.cloudtype = 'surf';  % <-- uses ft_plot_cloud
 ft_sourceplot(cfg, freq_sel, cortex.mesh);
 view([120 40]);
 lighting gouraud;
