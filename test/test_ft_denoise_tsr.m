@@ -67,9 +67,9 @@ end
 cfg.threshold = [0.01 0];
 out2n = ft_denoise_tsr(cfg, data2, refdata);
 
-cfg.method = 'mlrsvd';
-cfg.threshold = [1 1];
-out2svd = ft_denoise_tsr(cfg, data2, refdata);
+% cfg.method = 'mlrsvd';
+% cfg.threshold = [1 1];
+% out2svd = ft_denoise_tsr(cfg, data2, refdata);
 
 for k = 1:numel(trial)
   trial{k} = trial{k} + 5.*ft_preproc_bandpassfilter(randn(1,1000), 1000, [8 12], [], 'firws');
