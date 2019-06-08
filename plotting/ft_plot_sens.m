@@ -174,6 +174,7 @@ if isempty(sensshape)
 end
 
 if isempty(senssize)
+  % start with a size expressed in millimeters
   switch ft_senstype(sens)
     case 'neuromag306'
       senssize = 30; % FIXME this is only an estimate
@@ -295,7 +296,7 @@ end % if istrue(individual)
 if isempty(ori) && ~isempty(pos)
   if ~any(isnan(pos(:)))
     % determine orientations based on surface triangulation
-    tri = projecttri(pos);
+    tri = projecttri(pos, 'delaunay');
     ori = normals(pos, tri);
   else
     % determine orientations by fitting a sphere to the sensors

@@ -272,16 +272,20 @@ if ~isempty(get(0, 'currentfigure')) && strcmp(get(gcf, 'tag'), 'stop')
   % interrupt the fitting
   close;
   ft_error('USER ABORT');
-end;
+end
 
 % convert the non-linear parameter vector into the dipole model parameters
 [pos, ori] = param2dipolemodel(param, constr);
+
+% assume that the dipole is inside the source compartment
+isinside = true;
 
 % check whether the dipole is inside the source compartment
 if checkinside
   inside = ft_inside_headmodel(pos, headmodel);
   if ~all(inside)
-    ft_error('Dipole is outside the source compartment');
+    ft_warning('dipole is outside the source compartment');
+    isinside = false;
   end
 end
 
@@ -289,6 +293,11 @@ end
 lf = ft_compute_leadfield(pos, sens, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
 if ~isempty(ori)
   lf = lf * ori;
+end
+
+if ~isinside
+  % set the leadfield to zero, this will cause the error to be as large as it can be
+  lf(:) = 0;
 end
 
 % compute the optimal dipole moment and the model error
