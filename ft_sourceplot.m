@@ -1421,7 +1421,7 @@ switch cfg.method
         'vertexcolor', cfg.vertexcolor);
     elseif strcmp(cfg.cloudtype, 'point')
       if strcmp(cfg.slice, '2d') || strcmp(cfg.slice, '3d')
-        error('slices are not supported for point cloudtype')
+        error('slices are not supported for the point cloudtype')
       end
       
       % set the defaults for cloudtype=point
@@ -1442,14 +1442,26 @@ switch cfg.method
         rmax = ones(length(pos), 1)*cfg.radius; % each cloud has the same radius
       end
       
-      % plotting
+      % plot functional
       for n = 1:size(pos,1) % sensor loop
         indx  = ceil(cmid) + sign(colscf(n))*floor(abs(colscf(n)*cmid));
         indx  = max(min(indx,size(cmap,1)),1);  % index should fall within the colormap
         fcol  = cmap(indx,:);                   % color [Nx3]
-        hs = plot3(pos(n,1), pos(n,2), pos(n,3), 'Marker', cfg.marker, 'MarkerSize', rmax(n), 'Color', fcol, 'Linestyle', 'none');
+        hold on; plot3(pos(n,1), pos(n,2), pos(n,3), 'Marker', cfg.marker, 'MarkerSize', rmax(n), 'Color', fcol, 'Linestyle', 'none');
       end
       
+      % plot anatomical
+      if hasanatomical
+        ft_plot_mesh(anatomical, 'facecolor', cfg.facecolor, 'EdgeColor', cfg.edgecolor, ...
+          'facealpha', cfg.facealpha, 'edgealpha', cfg.edgealpha, 'vertexcolor', cfg.vertexcolor);
+        material dull
+      end
+      
+      % color settings
+      colormap(cmap);
+      if ~isempty(clim) && clim(2)>clim(1)
+        caxis(gca, clim);
+      end
     end
     
     if istrue(cfg.colorbar)
