@@ -1,11 +1,13 @@
-function test_ft_sourceplot_methodcloud
+function test_pull1138
 
 % MEM 1500mb
 % WALLTIME 00:10:00
+% DEPENDENCY ft_sourceplot ft_plot_cloud
 
-% FIXME: please change location to Donders location of human ecog tutorial dataset
-load('/Users/arjsto/Documents/Talks/FieldTrip/davis2019/data/human_ecog/SubjectUCI29_freq.mat');
-cortex = load('/Users/arjsto/Documents/Talks/FieldTrip/davis2019/data/human_ecog/SubjectUCI29_hull_lh.mat');
+load('/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog/SubjectUCI29/SubjectUCI29_freq.mat');
+cortex = load('/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog/SubjectUCI29/SubjectUCI29_hull_lh.mat');
+
+%%
 
 cfg = [];
 cfg.baseline = [-.3 -.1]; 
