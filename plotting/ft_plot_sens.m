@@ -101,16 +101,20 @@ opto            = ft_getopt(varargin, 'opto', false);
 optoshape       = ft_getopt(varargin, 'optoshape'); % default depends on the input, see below
 optosize        = ft_getopt(varargin, 'optosize');  % default depends on the input, see below
 
+iseeg = ft_senstype(sens, 'eeg');
+ismeg = ft_senstype(sens, 'meg');
+isnirs = ft_senstype(sens, 'nirs');
+
 % make sure that the options are consistent with the data
-if     ft_senstype(sens, 'eeg')
+if iseeg
   individual = elec;
   sensshape  = elecshape;
   senssize   = elecsize;
-elseif ft_senstype(sens, 'meg')
+elseif ismeg
   individual = coil;
   sensshape  = coilshape;
   senssize   = coilsize;
-elseif ft_senstype(sens, 'nirs')
+elseif isnirs
   % this has not been tested
   individual = opto;
   sensshape  = optoshape;
@@ -313,6 +317,19 @@ if isempty(ori) && ~isempty(pos)
   end
 end
 
+if any(isnan(ori(:)))
+  if iseeg
+    ft_notice('orienting EEG electrodes along the z-axis')
+  elseif ismeg
+    ft_notice('orienting MEG sensors along the z-axis')
+  elseif isnirs
+    ft_notice('orienting NIRS optodes along the z-axis')
+  end
+  ori(:,1) = 0;
+  ori(:,2) = 0;
+  ori(:,3) = 1;
+end
+
 if istrue(orientation)
   scale = ft_scalingfactor('mm', sens.unit)*20; % draw a line segment of 20 mm
   for i=1:size(pos,1)
@@ -351,7 +368,7 @@ switch sensshape
 
   case 'square'
     % determine the rotation-around-the-axis of each sensor
-    % only applicable for neuromag planar gradiometers
+    % this is only applicable for neuromag planar gradiometers
     if ft_senstype(sens, 'neuromag')
       [nchan, ncoil] = size(sens.tra);
       chandir = nan(nchan,3);
@@ -402,6 +419,11 @@ if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
   else
     % the offset is based on size of the sensors
     offset = 1.5 * senssize;
+  end
+  
+  if isinf(offset)
+    % this happens in case there is only one sensor and the size has not been specified
+    offset = ft_scalingfactor('mm', sens.unit)*10; % displace the label by 10 mm
   end
   
   for i=1:length(sens.label)
