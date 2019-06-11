@@ -10,18 +10,18 @@ cortex = load('/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog/Subjec
 %%
 
 cfg = [];
-cfg.baseline = [-.3 -.1]; 
-cfg.baselinetype = 'relchange'; 
+cfg.baseline = [-.3 -.1];
+cfg.baselinetype = 'relchange';
 freq_blc = ft_freqbaseline(cfg, freq);
 
 cfg = [];
-cfg.frequency = [70 150]; 
+cfg.frequency = [70 150];
 cfg.avgoverfreq = 'yes';
 cfg.latency = [0 0.8];
 cfg.avgovertime = 'yes';
 freq_sel = ft_selectdata(cfg, freq_blc);
 
-% default
+%% default
 cfg = [];
 cfg.funparameter = 'powspctrm';
 cfg.funcolorlim = [-.5 .5];
@@ -31,7 +31,7 @@ view([120 40]);
 lighting gouraud;
 camlight;
 
-% cloudtype cloud
+%% cloudtype cloud
 cfg = [];
 cfg.funparameter = 'powspctrm';
 cfg.funcolorlim = [-.5 .5];
@@ -42,18 +42,7 @@ view([120 40]);
 lighting gouraud;
 camlight;
 
-% cloudtype point
-cfg = [];
-cfg.funparameter = 'powspctrm';
-cfg.funcolorlim = [-.5 .5];
-cfg.method = 'cloud';
-cfg.cloudtype = 'point';  % <-- uses ft_sourceplot
-ft_sourceplot(cfg, freq_sel, cortex.mesh);
-view([120 40]);
-lighting gouraud;
-camlight;
-
-% cloudtype surf
+%% cloudtype surf
 cfg = [];
 cfg.funparameter = 'powspctrm';
 cfg.funcolorlim = [-.5 .5];
@@ -63,3 +52,15 @@ ft_sourceplot(cfg, freq_sel, cortex.mesh);
 view([120 40]);
 lighting gouraud;
 camlight;
+
+%% cloudtype point
+cfg = [];
+cfg.funparameter = 'powspctrm';
+cfg.funcolorlim = [-.5 .5];
+cfg.method = 'cloud';
+cfg.cloudtype = 'point';  % <-- uses plot3
+ft_sourceplot(cfg, freq_sel, cortex.mesh);
+view([120 40]);
+lighting gouraud;
+camlight;
+
