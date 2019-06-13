@@ -298,7 +298,7 @@ else
 end % if istrue(individual)
 
 if isempty(ori) && ~isempty(pos)
-  if ~any(isnan(pos(:)))
+  if ~any(isnan(pos(:))) && size(pos,1)>=3
     % determine orientations based on surface triangulation
     tri = projecttri(pos, 'delaunay');
     ori = normals(pos, tri);
