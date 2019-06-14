@@ -347,8 +347,13 @@ elseif ft_datatype(input, 'raw')
   inputtype = 'raw';
 elseif ft_datatype(input, 'timelock')
   inputtype = 'timelock';
-elseif isfield(input, 'fourierspctrm')
+elseif ft_datatype(input, 'freq') && isfield(input, 'fourierspctrm')
   inputtype = 'freq';
+elseif ft_datatype(input, 'freq') && isfield(input, 'crsspctrm')
+  inputtype = 'freq_crsspctrm';
+  
+  % attempt to convert to a chan-chan representation
+  input     = ft_checkdata(input, 'cmbrepresentation', 'full');
 else
   inputtype = 'unknown';
 end
@@ -532,7 +537,7 @@ switch inputtype
             nchan  = siz(2);
             output = zeros(nrpt, size(montage.tra,1), size(montage.tra,1));
             for rptlop=1:nrpt
-              output(rptlop,:,:) = montage.tra * reshape(timelock.(fn{i})(rptlop,:,:), [nchan nchan]);
+              output(rptlop,:,:) = montage.tra * reshape(timelock.(fn{i})(rptlop,:,:), [nchan nchan]) * montage.tra';
             end
             timelock.(fn{i}) = output; % replace the original field
           otherwise
@@ -591,7 +596,43 @@ switch inputtype
     % rename the output variable
     input = freq;
     clear freq
+  case 'freq_crsspctrm'
+    % input freq data has a chan-chan crsspctrm, montage needs te be
+    % applied to both ends
+    
+    freq = input;
+    clear input
+    if contains(getdimord(freq, 'crsspctrm'), 'rpt')
+      % first dimension is rpt-like, so the square is dimensions 2 and 3
+      siz   = [getdimsiz(freq, 'crsspctrm') 1];
+      nrpt  = siz(1);
+      nchan = siz(2);
+      nrest = prod(siz(4:end));
+      output = zeros([nrpt size(montage.tra,1).*[1 1] siz(4:end)]);
+      for rptlop = 1:nrpt
+        for restlop = 1:nrest
+          output(rptlop,:,:,restlop) = montage.tra*reshape(freq.crsspctrm(rptlop,:,:,restlop),[nchan nchan])*montage.tra';
+        end
+      end
+      freq.crsspctrm = output;
+    else
+      % the square is dimensions 1 and 2
+      siz   = [getdimsiz(freq, 'crsspctrm') 1];
+      nrest = prod(siz(4:end));
+      output = zeros([size(montage.tra,1).*[1 1] siz(4:end)]);
+      for restlop = 1:nrest
+        output(:,:,restlop) = montage.tra*freq.crsspctrm(:,:,restlop)*montage.tra';
+      end
+      freq.crsspctrm = output;
+    end
+    
+    freq.label    = montage.labelnew;
+    freq.chantype = montage.chantypenew;
+    freq.chanunit = montage.chanunitnew;
 
+    % rename the output variable
+    input = freq;
+    clear freq
   otherwise
     ft_error('unrecognized input');
 end % switch inputtype
