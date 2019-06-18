@@ -38,3 +38,34 @@ load test_eeglab_ft_integration_20150528T150257.mat
 
 source5 = ft_dipolefitting(cfg, data);
 
+%%
+clear all
+
+% this contains the EEG structure from eeglab_data.set/fdt used during the 2019 Aspet workshop
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeglab/eeglab_data.mat'))
+
+data      = eeglab2fieldtrip(EEG, 'preprocessing');
+timelock  = eeglab2fieldtrip(EEG, 'timelockanalysis');
+
+ft_checkdata(data, 'datatype', 'raw');
+ft_checkdata(timelock, 'datatype', 'timelock');
+
+%%
+clear all
+
+% this contains the EEG structure from eeglab_data_epochs_ica.set/fdt used during the 2019 Aspet workshop
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeglab/eeglab_data_epochs_ica.mat'))
+
+data      = eeglab2fieldtrip(EEG, 'preprocessing');
+timelock  = eeglab2fieldtrip(EEG, 'timelockanalysis');
+comp      = eeglab2fieldtrip(EEG, 'componentanalysis');
+data1     = eeglab2fieldtrip(EEG, 'chanloc');
+data2     = eeglab2fieldtrip(EEG, 'chanloc_withfid');
+
+ft_checkdata(data, 'datatype', 'raw');
+ft_checkdata(timelock, 'datatype', 'timelock');
+ft_checkdata(comp, 'datatype', 'comp'); % only check the ICA topographies
+ft_checkdata(comp, 'datatype', 'raw+comp'); % also check the ICA timecourses
+ft_datatype_sens(data1.elec);
+ft_datatype_sens(data2.elec);
+
