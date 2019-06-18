@@ -63,9 +63,10 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.frequency   = single number (in Hz)
 %
 % Low level details of the fitting can be specified in the cfg.dipfit structure
-%   cfg.dipfit.display  = level of display, can be 'off', 'iter', 'notify' or 'final' (default = 'iter')
-%   cfg.dipfit.optimfun = function to use, can be 'fminsearch' or 'fminunc' (default is determined automatic)
-%   cfg.dipfit.maxiter  = maximum number of function evaluations allowed (default depends on the optimfun)
+%   cfg.dipfit.display      = level of display, can be 'off', 'iter', 'notify' or 'final' (default = 'iter')
+%   cfg.dipfit.optimfun     = function to use, can be 'fminsearch' or 'fminunc' (default is determined automatic)
+%   cfg.dipfit.maxiter      = maximum number of function evaluations allowed (default depends on the optimfun)
+%   cfg.dipfit.checkinside  = boolean, check that the dipole remains in the source compartment (default = false)
 %
 % Optionally, you can modify the leadfields by reducing the rank, i.e. remove the weakest orientation
 %   cfg.reducerank      = 'no', or number (default = 3 for EEG, 2 for MEG)
