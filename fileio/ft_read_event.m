@@ -2149,10 +2149,10 @@ switch eventformat
     % 'noread' prevents reading of the spike waveforms
     % 'nosave' prevents the automatic conversion of
     % the .nev file as a .mat file
-    orig = openNEV(filename, 'noread', 'nosave')
+    orig = openNEV(filename, 'noread', 'nosave');
     
     if orig.MetaTags.SampleRes ~= 30000
-      error('sampling rate is different from 30 kHz')
+      error('sampling rate is different from 30 kHz');
       % FIXME: why would this be a problem?
     end
     
@@ -2174,25 +2174,13 @@ switch eventformat
       event(k).offset    = [];
     end
     
-  case 'biopac_acq'
-    % this one has an implementation that I guess is intended
-    % to work according to the 'otherwise' case, yet it requires
-    % a two-pass through the function, needing a header
-    try
-      hdr   = feval(eventformat, filename);
-      event = feval(eventformat, filename, hdr);
-    catch
-      ft_warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format "%s"', eventformat);
-      event = [];
-    end
-    
   otherwise
     % attempt to run eventformat as a function
     % in case using an external read function was desired, this is where it is executed
     % if it fails, the regular unsupported warning message is thrown
     try
-      event = feval(eventformat, filename);
-      
+      hdr   = feval(eventformat, filename);
+      event = feval(eventformat, filename, hdr);
     catch
       ft_warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format "%s"', eventformat);
       event = [];

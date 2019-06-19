@@ -1397,6 +1397,10 @@ elseif contains(filename, '_events.tsv')
   type = 'events_tsv';
   manufacturer = 'BIDS';
   content = 'events';
+elseif filetype_check_extension(filename, '.xdf') && filetype_check_header(filename, 'XDF')
+  type = 'sccn_xdf';
+  manufacturer = 'SCCN / Lab Streaming Layer';
+  content = 'multiple streams';
 end
 
 

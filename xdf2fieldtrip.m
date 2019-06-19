@@ -36,8 +36,6 @@ function data = xdf2fieldtrip(filename)
 % ensure this is on the path
 ft_hastoolbox('xdf', 1);
 
-
-%%
 streams = load_xdf(filename);
 
 iscontinuous = false(size(streams));
@@ -47,10 +45,9 @@ for i=1:numel(streams)
 end
 
 % discard the non-continuous streams
-% FIXME these could be converted into events
 streams = streams(iscontinuous);
 
-% convert each stream into a FieldTrip raw data structure
+% convert each continuous stream into a FieldTrip raw data structure
 data = cell(size(streams));
 for i=1:numel(streams)
   if ischar(streams{i}.info.channel_count)
@@ -66,12 +63,12 @@ for i=1:numel(streams)
   data{i}.trial = {streams{i}.time_series};
 end
 
-% determine the stream with the highest sampling rate
+% determine the continuous stream with the highest sampling rate
 srate = nan(size(streams));
 for i=1:numel(streams)
   srate(i) = streams{i}.info.effective_srate;
 end
-[m, indx] = max(srate);
+[~, indx] = max(srate);
 
 % resample all data, except the one with the max sampling rate
 for i=1:numel(data)
@@ -85,4 +82,3 @@ end
 
 % append all data
 data = ft_appenddata([], data{:});
-

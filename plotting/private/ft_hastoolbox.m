@@ -158,6 +158,7 @@ url = {
   'JSONIO'        'see https://github.com/gllmflndn/JSONio'
   'CPD'           'see https://sites.google.com/site/myronenko/research/cpd'
   'MVPA-LIGHT'    'see https://github.com/treder/MVPA-Light'
+  'XDF'           'see https://github.com/xdf-modules/xdf-Matlab'
   };
 
 if nargin<2
@@ -391,6 +392,8 @@ switch toolbox
     dependency = {'jsonread', 'jsonwrite', 'jsonread.mexa64'};
   case 'CPD'
     dependency = {'cpd', 'cpd_affine', 'cpd_P'};
+  case 'XDF'
+    dependency = {'load_xdf', 'load_xdf_innerloop'};
     
     % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
