@@ -57,15 +57,17 @@ end
 stream = streams{indx};
 
 if needhdr
-  hdr = [];
-  hdr.Fs = stream.info.effective_srate;
-  hdr.nChans = numel(stream.info.desc.channels.channel);
+  % this section of code is shared with xdf2fieldtrip
+  hdr             = [];
+  hdr.Fs          = stream.info.effective_srate;
+  hdr.nChans      = numel(stream.info.desc.channels.channel);
   hdr.nSamplesPre = 0;
-  hdr.nSamples = length(stream.time_stamps);
-  hdr.nTrials = 1;
-  hdr.label = cell(hdr.nChans, 1);
-  hdr.chantype = cell(hdr.nChans, 1);
-  hdr.chanunit = cell(hdr.nChans, 1);
+  hdr.nSamples    = length(stream.time_stamps);
+  hdr.nTrials     = 1;
+  hdr.label       = cell(hdr.nChans, 1);
+  hdr.chantype    = cell(hdr.nChans, 1);
+  hdr.chanunit    = cell(hdr.nChans, 1);
+  
   prefix = stream.info.name;
   for i=1:hdr.nChans
     hdr.label{i} = [prefix '_' stream.info.desc.channels.channel{i}.label];
@@ -73,7 +75,7 @@ if needhdr
     hdr.chanunit{i} = stream.info.desc.channels.channel{i}.unit;
   end
   
-  hdr.FirstTimeStamp = stream.time_stamps(1);
+  hdr.FirstTimeStamp     = stream.time_stamps(1);
   hdr.TimeStampPerSample = (stream.time_stamps(end)-stream.time_stamps(1)) / (length(stream.time_stamps) - 1);
   
   % keep the original header details

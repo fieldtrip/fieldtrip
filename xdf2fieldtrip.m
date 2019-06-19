@@ -1,4 +1,4 @@
-function data = xdf2fieldtrip(filename)
+function data = xdf2fieldtrip(filename, varargin)
 
 % XDF2FIELDTRIP reads data from a XDF file with multiple streams. It upsamples the
 % data of all streams to the highest sampling rate and concatenates all channels in
@@ -6,10 +6,18 @@ function data = xdf2fieldtrip(filename)
 % FT_PREPROCESSING.
 %
 % Use as
-%   data = xdf2fieldtrip(filename)
+%   data = xdf2fieldtrip(filename, ...)
 %
-% For reading XDF files with a single stream, you can use the standard procedure with
-% FT_DEFINETRIAL and FT_PREPROCESSING.
+% Optional arguments should come in key-value pairs and can include
+%   streamindx  = list, indices of the streams to read (default is all)
+%
+% You can also use the standard procedure with FT_DEFINETRIAL and FT_PREPROCESSING
+% for XDF files. This will return (only) the stream with the highest sampling rate,
+% which is typically the EEG.
+%
+% You can use FT_READ_EVENT to read the events from the non-continuous data streams.
+% To get them aligned with the samples in one of the specific data streams, you
+% should specify the corresponding header structure.
 %
 % See also FT_PREPROCESSING, FT_DEFINETRIAL, FT_REDEFINETRIAL
 
@@ -33,9 +41,13 @@ function data = xdf2fieldtrip(filename)
 %
 % $Id$
 
+% process the options
+streamindx = ft_getopt(varargin, 'streamindx');
+
 % ensure this is on the path
 ft_hastoolbox('xdf', 1);
 
+% read all streams
 streams = load_xdf(filename);
 
 iscontinuous = false(size(streams));
@@ -44,24 +56,68 @@ for i=1:numel(streams)
   iscontinuous(i) = isfield(streams{i}.info, 'effective_srate');
 end
 
+% give some feedback
+for i=1:numel(streams)
+  if iscontinuous(i)
+    ft_info('stream %d contains continuous %s data\n', i, streams{i}.info.name);
+  else
+    ft_info('stream %d contains non-continuous %s data\n', i, streams{i}.info.name);
+  end
+end
+
+% select the streams to continue working with
+if isempty(streamindx)
+  selected = true(size(streams));
+else
+  selected = false(size(streams));
+  selected(streamindx) = true;
+end
+
 % discard the non-continuous streams
-streams = streams(iscontinuous);
+streams = streams(iscontinuous & selected);
+
+if isempty(streams)
+  ft_error('no continuous streams were selected');
+end
 
 % convert each continuous stream into a FieldTrip raw data structure
 data = cell(size(streams));
 for i=1:numel(streams)
-  if ischar(streams{i}.info.channel_count)
-    streams{i}.info.channel_count = str2double(streams{i}.info.channel_count);
+  
+  % make a copy for convenience
+  stream = streams{i};
+  
+  % this section of code is shared with fileio/private/sccn_xdf
+  hdr             = [];
+  hdr.Fs          = stream.info.effective_srate;
+  hdr.nChans      = numel(stream.info.desc.channels.channel);
+  hdr.nSamplesPre = 0;
+  hdr.nSamples    = length(stream.time_stamps);
+  hdr.nTrials     = 1;
+  hdr.label       = cell(hdr.nChans, 1);
+  hdr.chantype    = cell(hdr.nChans, 1);
+  hdr.chanunit    = cell(hdr.nChans, 1);
+  
+  prefix = stream.info.name;
+  
+  for j=1:hdr.nChans
+    hdr.label{j} = [prefix '_' stream.info.desc.channels.channel{j}.label];
+    hdr.chantype{j} = stream.info.desc.channels.channel{j}.type;
+    hdr.chanunit{j} = stream.info.desc.channels.channel{j}.unit;
   end
   
-  prefix = streams{i}.info.name;
-  data{i}.label = cell(streams{i}.info.channel_count, 1);
-  for j=1:streams{i}.info.channel_count
-    data{i}.label{j} = [prefix '_' streams{i}.info.desc.channels.channel{j}.label];
-  end
+  hdr.FirstTimeStamp     = stream.time_stamps(1);
+  hdr.TimeStampPerSample = (stream.time_stamps(end)-stream.time_stamps(1)) / (length(stream.time_stamps) - 1);
+  
+  % keep the original header details
+  hdr.orig = stream.info;
+
+  data{i}.hdr = hdr;
+  data{i}.label = hdr.label;
   data{i}.time = {streams{i}.time_stamps};
   data{i}.trial = {streams{i}.time_series};
-end
+  
+end % for all continuous streams
 
 % determine the continuous stream with the highest sampling rate
 srate = nan(size(streams));
@@ -70,15 +126,23 @@ for i=1:numel(streams)
 end
 [~, indx] = max(srate);
 
-% resample all data, except the one with the max sampling rate
-for i=1:numel(data)
-  if i==indx
-    continue
+if numel(data)>1
+  % resample all data structures, except the one with the max sampling rate
+  % this will also align the time axes
+  for i=1:numel(data)
+    if i==indx
+      continue
+    end
+    
+    ft_notice('resampling %s', streams{i}.info.name);
+    cfg = [];
+    cfg.time = data{indx}.time;
+    data{i} = ft_resampledata(cfg, data{i});
   end
-  cfg = [];
-  cfg.time = data{indx}.time;
-  data{i} = ft_resampledata(cfg, data{i});
+  
+  % append all data structures
+  data = ft_appenddata([], data{:});
+else
+  % simply return the first and only one
+  data = data{1};
 end
-
-% append all data
-data = ft_appenddata([], data{:});
