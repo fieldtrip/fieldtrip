@@ -1,10 +1,11 @@
 function varargout = biopac_acq(filename, hdr, begsample, endsample, chanindx)
 
-% BIOPAC_ACQ is a wrapper to plug in the reading function from Mathworks file exchange.
+% BIOPAC_ACQ is a wrapper to for the reading function from Mathworks file exchange.
 %
 % Use as
 %   hdr = biopac_acq(filename);
 %   dat = biopac_acq(filename, hdr, begsample, endsample, chanindx);
+%   evt = biopac_acq(filename, hdr);
 %
 % See also FT_FILETYPE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT
 
@@ -30,23 +31,26 @@ function varargout = biopac_acq(filename, hdr, begsample, endsample, chanindx)
 
 persistent acq previous_fullname
 
+% add fieldtrip/external/fileexchange to the path
+ft_hastoolbox('fileexchange', 1);
+
+needhdr = (nargin==1);
+needevt = (nargin==2);
+needdat = (nargin==5);
+
 % use the full filename including path to distinguish between similarly named files in different directories
 fullname = which(filename);
 
 if isempty(previous_fullname) || ~isequal(fullname, previous_fullname)
   % remember the full filename including path
   previous_fullname = fullname;
-  
-  % add fieldtrip/external/fileexchange to the path
-  ft_hastoolbox('fileexchange', 1);
-  
   % read the header and data
   acq = load_acq(filename, false);
 else
   % use the persistent variable to speed up subsequent read operations
 end
 
-if nargin==1
+if needhdr
   % convert to FieldTrip header representation
   hdr.Fs           = 1000/acq.hdr.graph.sample_time;
   hdr.nChans       = size(acq.data,2);
@@ -59,12 +63,12 @@ if nargin==1
   hdr.orig = acq.hdr;
   varargout{1} = hdr;
   
-elseif nargin==2
+elseif needevt
   % convert to FieldTrip event representation
   event = [];
   varargout{1} = event;
   
-else
+elseif needdat
   % select the requested channels and samples from the data and transpose
   dat = acq.data(begsample:endsample,chanindx)';
   varargout{1} = dat;

@@ -193,7 +193,7 @@ if strcmp(eventformat, 'brainvision_vhdr')
   if ~isfield(hdr, 'MarkerFile') || isempty(hdr.MarkerFile)
     filename = [];
   else
-    [p, f] = fileparts(filename);
+    [p, ~, ~] = fileparts(filename);
     filename = fullfile(p, hdr.MarkerFile);
   end
 end
@@ -2174,9 +2174,12 @@ switch eventformat
       event(k).offset    = [];
     end
     
+  case 'presentation_log'
+    event = read_presentation_log(filename);
+    
   otherwise
-    % attempt to run eventformat as a function
-    % in case using an external read function was desired, this is where it is executed
+    % attempt to run "eventformat" as a function
+    % this allows the user to specify an external reading function
     % if it fails, the regular unsupported warning message is thrown
     try
       hdr   = feval(eventformat, filename);

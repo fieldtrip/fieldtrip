@@ -2574,11 +2574,11 @@ switch headerformat
     checkUniqueLabels = false;
     
   otherwise
-    % attempt to run headerformat as a function
-    % in case using an external read function was desired, this is where it is executed
-    % if it fails, the regular unsupported error message is thrown
+    % attempt to run "headerformat" as a function
+    % this allows the user to specify an external reading function
+    % if it fails, the regular unsupported warning message is thrown
     try
-      hdr = feval(headerformat,filename);
+      hdr = feval(headerformat, filename);
     catch
       if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
         hdr = read_biosig_header(filename);

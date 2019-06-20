@@ -3,8 +3,9 @@ function varargout = sccn_xdf(filename, hdr, begsample, endsample, chanindx)
 % This is a wrapper to the reading function from the XDF MATLAB toolbox.
 %
 % Use as
-%   hdr = xdf(filename);
-%   dat = xdf(filename, hdr, begsample, endsample, chanindx);
+%   hdr = sccn_xdf(filename);
+%   dat = sccn_xdf(filename, hdr, begsample, endsample, chanindx);
+%   evt = sccn_xdf(filename, hdr);
 %
 % See also FT_FILETYPE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, XDF2FIELDTRIP
 
