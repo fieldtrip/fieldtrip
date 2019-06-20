@@ -537,6 +537,13 @@ if hasfun
         hasfreq = 0;
         hastime = numel(functional.time)>1;
         fun     = reshape(fun, [dim numel(functional.time)]);
+      elseif strcmp(dimord, 'pos_ori_time') || strcmp(dimord, 'dim1_dim2_dim3_ori_time')
+        % functional contains evoked field
+        qi      = 1;
+        hasfreq = 0;
+        hastime = numel(functional.time)>1;
+        % the following will fail if the number of orientations is larger than 1
+        fun     = reshape(fun, [dim numel(functional.time)]);
       elseif strcmp(dimord, 'pos_freq') || strcmp(dimord, 'dim1_dim2_dim3_freq')
         % functional contains frequency spectra
         qi      = 1;

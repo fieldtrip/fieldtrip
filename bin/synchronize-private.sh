@@ -1318,7 +1318,7 @@ sync ${ARRAY[*]}
 # isdir_or_mkdir.m
 
 ARRAY=()
-ARRAY+=(fileiot/private/isdir_or_mkdir.m)
+ARRAY+=(fileio/private/isdir_or_mkdir.m)
 ARRAY+=(private/isdir_or_mkdir.m)
 sync ${ARRAY[*]}
 
