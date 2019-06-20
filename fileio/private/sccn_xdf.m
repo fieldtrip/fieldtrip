@@ -1,4 +1,4 @@
-function varargout = xdf(filename, hdr, begsample, endsample, chanindx)
+function varargout = sccn_xdf(filename, hdr, begsample, endsample, chanindx)
 
 % This is a wrapper to the reading function from the XDF MATLAB toolbox.
 %
