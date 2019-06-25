@@ -171,7 +171,7 @@ if isfield(data, 'csdlabel')
     % one list of labels for all positions
     nori = length(data.csdlabel);
   end
-elseif isfield(data, 'mom') && isfield(data, 'inside')
+elseif isfield(data, 'mom') && isfield(data, 'inside') && iscell(data.mom)
     % this is used in LCMV beamformers
     size1 = @(x) size(x, 1);
     len = cellfun(size1, data.mom(data.inside));
