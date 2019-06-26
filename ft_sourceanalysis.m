@@ -567,7 +567,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
     cfg.numcondition = 2;
   end
 
-  % prepare the resampling of the trials, or average the data if multiple trials are present and no resampling is neccessary
+  % prepare the resampling of the trials, or average the data if multiple trials are present and no resampling is necessary
   if (Ntrials<=1) && (strcmp(cfg.jackknife, 'yes') || strcmp(cfg.bootstrap, 'yes') || strcmp(cfg.pseudovalue, 'yes') || strcmp(cfg.singletrial, 'yes') || strcmp(cfg.rawtrial, 'yes') || strcmp(cfg.randomization, 'yes') || strcmp(cfg.permutation, 'yes'))
     ft_error('multiple trials required in the data\n');
 
@@ -830,7 +830,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
     cfg2.numcondition = 2;
   end
 
-  % prepare the resampling of the trials, or average the data if multiple trials are present and no resampling is neccessary
+  % prepare the resampling of the trials, or average the data if multiple trials are present and no resampling is necessary
   if (strcmp(cfg.jackknife, 'yes') || strcmp(cfg.bootstrap, 'yes') || strcmp(cfg.pseudovalue, 'yes') || strcmp(cfg.singletrial, 'yes') || strcmp(cfg.rawtrial, 'yes') || strcmp(cfg.randomization, 'yes')) && ~strcmp(data.dimord, 'rpt_chan_time')
     ft_error('multiple trials required in the data\n');
 

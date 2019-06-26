@@ -327,7 +327,7 @@ for i=chansel(:)'
           fprintf(', more than avg. rate of 600 spikes per sec. detected.\n');
           adjustValue = 1-(numadjustment*0.1);
         else
-          % the detected spike rate is "reasonable", no further adjustments neccessary
+          % the detected spike rate is "reasonable", no further adjustments necessary
           break;
         end
 

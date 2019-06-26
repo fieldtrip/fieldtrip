@@ -6,7 +6,7 @@ function [sourcemodel, cfg] = ft_prepare_leadfield(cfg, data)
 % Use as
 %   [sourcemodel] = ft_prepare_leadfield(cfg, data)
 %
-% It is neccessary to input the data on which you want to perform the
+% It is necessary to input the data on which you want to perform the
 % inverse computations, since that data generally contain the gradiometer
 % information and information about the channels that should be included in
 % the forward model computation. The data structure can be either obtained
