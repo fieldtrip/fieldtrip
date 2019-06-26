@@ -1,7 +1,7 @@
 function [data] = ft_checkdata(data, varargin)
 
 % FT_CHECKDATA checks the input data of the main FieldTrip functions, e.g. whether the
-% type of data strucure corresponds with the required data. If neccessary and possible,
+% type of data strucure corresponds with the required data. If necessary and possible,
 % this function will adjust the data structure to the input requirements (e.g. change
 % dimord, average over trials, convert inside from index into logical).
 %

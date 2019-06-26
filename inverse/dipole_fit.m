@@ -54,7 +54,7 @@ function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin)
 %
 % $Id$
 
-% It is neccessary to provide backward compatibility support for the old function call
+% It is necessary to provide backward compatibility support for the old function call
 % in case people want to use it in conjunction with EEGLAB and the dipfit1 plugin.
 % old style: function [dipout] = dipole_fit(dip, dat, sens, headmodel, constr), where constr is optional
 % new style: function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin), where varargin is in key-value pairs

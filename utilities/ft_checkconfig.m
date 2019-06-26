@@ -589,7 +589,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkinside, i.e. inside2logical
 %
-% Converts indexed cfg.inside/outside into logical representation if neccessary.
+% Converts indexed cfg.inside/outside into logical representation if necessary.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if istrue(checkinside)
   if isfield(cfg, 'inside') && any(cfg.inside>1)
@@ -612,7 +612,7 @@ end % if checkinside
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkfilenames, i.e. dataset2files
 %
-% Converts cfg.dataset into cfg.headerfile and cfg.datafile if neccessary.
+% Converts cfg.dataset into cfg.headerfile and cfg.datafile if necessary.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if istrue(checkfilenames)
 

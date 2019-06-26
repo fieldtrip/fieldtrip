@@ -173,7 +173,7 @@ d_x = d_x / norm(d_x);
 d_y = d_y / norm(d_y);
 d_z = d_z / norm(d_z);
 
-% compute the translation and rotation which are neccessary to transform
+% compute the translation and rotation which are necessary to transform
 % any given location from the dewar to the head coordinate system
 hc.translation = -(hc.dewar.lpa + hc.dewar.rpa)/2;
 hc.rotation = inv([d_x' d_y' d_z']);

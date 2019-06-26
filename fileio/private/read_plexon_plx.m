@@ -51,7 +51,7 @@ needhdr = isempty(hdr);
 % start with empty return values
 varargout = {};
 
-% the datafile is little endian, hence it may be neccessary to swap bytes in
+% the datafile is little endian, hence it may be necessary to swap bytes in
 % the memory mapped data stream depending on the CPU type of this computer
 if littleendian
   swapFcn = @(x) x;
