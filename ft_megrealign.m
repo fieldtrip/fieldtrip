@@ -28,7 +28,8 @@ function [data] = ft_megrealign(cfg, data)
 %   cfg.headmodel   = structure, see FT_PREPARE_HEADMODEL
 %
 % A source model (i.e. a superficial layer with distributed sources) can be
-% constructed from a headshape file, or from the volume conduction model
+% constructed from a headshape file, or from inner surface of the volume conduction
+% model using FT_PREPARE_SOIURCEMODEL using the following options
 %   cfg.spheremesh  = number of dipoles in the source layer (default = 642)
 %   cfg.inwardshift = depth of the source layer relative to the headshape
 %                     surface or volume conduction model (no default
@@ -112,11 +113,12 @@ if ft_abort
 end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed',     {'plot3d',      'feedback'});
-cfg = ft_checkconfig(cfg, 'renamedval',  {'headshape',   'headmodel', []});
-cfg = ft_checkconfig(cfg, 'required',    {'inwardshift', 'template'});
-cfg = ft_checkconfig(cfg, 'renamed',     {'hdmfile',     'headmodel'});
-cfg = ft_checkconfig(cfg, 'renamed',     {'vol',         'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'plot3d',      'feedback'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'headshape',   'headmodel', []});
+cfg = ft_checkconfig(cfg, 'required',   {'inwardshift', 'template'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'hdmfile',     'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'vol',         'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'grid',        'sourcemodel'});
 
 % set the default configuration
 cfg.headshape  = ft_getopt(cfg, 'headshape', []);
@@ -138,9 +140,13 @@ data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo',
 pertrial = all(ismember({'nasX';'nasY';'nasZ';'lpaX';'lpaY';'lpaZ';'rpaX';'rpaY';'rpaZ'}, data.label));
 
 % put the low-level options pertaining to the dipole grid in their own field
-cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.grid.tight by the subsequent createsubcfg
-cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.grid.unit by the subsequent createsubcfg
-cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
+cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.sourcemodel.unit by the subsequent createsubcfg
+
+% put the low-level options pertaining to the sourcemodel in their own field
+cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
+% move some fields from cfg.sourcemodel back to the top-level configuration
+cfg = ft_checkconfig(cfg, 'createtopcfg', {'sourcemodel'});
 
 if isstruct(cfg.template)
   % this should be a cell-array
@@ -185,16 +191,16 @@ Ntrials = length(data.trial);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 template = struct([]); % initialize as empty structure
 for i=1:length(cfg.template)
-  if ischar(cfg.template{i}),
+  if ischar(cfg.template{i})
     fprintf('reading template sensor position from %s\n', cfg.template{i});
-    tmp = ft_read_sens(cfg.template{i});
-  elseif isstruct(cfg.template{i}) && isfield(cfg.template{i}, 'coilpos') && isfield(cfg.template{i}, 'coilori') && isfield(cfg.template{i}, 'tra'),
+    tmp = ft_read_sens(cfg.template{i}, 'senstype', 'meg');
+  elseif isstruct(cfg.template{i}) && isfield(cfg.template{i}, 'coilpos') && isfield(cfg.template{i}, 'coilori') && isfield(cfg.template{i}, 'tra')
     tmp = cfg.template{i};
-  elseif isstruct(cfg.template{i}) && isfield(cfg.template{i}, 'pnt') && isfield(cfg.template{i}, 'ori') && isfield(cfg.template{i}, 'tra'),
+  elseif isstruct(cfg.template{i}) && isfield(cfg.template{i}, 'pnt') && isfield(cfg.template{i}, 'ori') && isfield(cfg.template{i}, 'tra')
     % it seems to be a pre-2011v1 type gradiometer structure, update it
     tmp = ft_datatype_sens(cfg.template{i});
   else
-    error('unrecognized template input');
+    ft_error('unrecognized template input');
   end
   % prevent "Subscripted assignment between dissimilar structures" error
   template = appendstruct(template, tmp); clear tmp
@@ -224,8 +230,8 @@ gradorig         = data.grad;  % this is needed later on for plotting. As of
 % other (in order to compute the projection matrix).
 [volold, data.grad] = prepare_headmodel(volcfg);
 
-% note that it is neccessary to keep the two volume conduction models
-% seperate, since the single-shell Nolte model contains gradiometer specific
+% note that it is necessary to keep the two volume conduction models
+% separate, since the single-shell Nolte model contains gradiometer specific
 % precomputed parameters. Note that this is not guaranteed to result in a
 % good projection for local sphere models.
 volcfg.grad    = template.grad;
@@ -242,12 +248,12 @@ else
 end
 
 % copy all options that are potentially used in ft_prepare_sourcemodel
-tmpcfg            = keepfields(cfg, {'grid' 'mri' 'headshape' 'symmetry' 'smooth' 'threshold' 'spheremesh' 'inwardshift'});
-tmpcfg.headmodel  = volold;
-tmpcfg.grad       = data.grad;
-% create the dipole grid on which the data will be projected
-grid = ft_prepare_sourcemodel(tmpcfg);
-pos = grid.pos;
+tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo'});
+tmpcfg.headmodel = volold;
+tmpcfg.grad      = data.grad;
+% create the source positions on which the data will be projected
+sourcemodel = ft_prepare_sourcemodel(tmpcfg);
+pos = sourcemodel.pos;
 
 % sometimes some of the dipole positions are nan, due to problems with the headsurface triangulation
 % remove them to prevent problems with the forward computation
@@ -257,7 +263,7 @@ pos(sel,:) = [];
 % compute the forward model for the new gradiometer positions
 fprintf('computing forward model for %d dipoles\n', size(pos,1));
 lfnew = ft_compute_leadfield(pos, template.grad, volnew);
-if ~pertrial,
+if ~pertrial
   %this needs to be done only once
   lfold = ft_compute_leadfield(pos, data.grad, volold);
   [realign, noalign, bkalign] = computeprojection(lfold, lfnew, cfg.pruneratio, cfg.verify);
@@ -265,24 +271,24 @@ else
   %the forward model and realignment matrices have to be computed for each trial
   %this also goes for the singleshell volume conductor model
   %x = which('rigidbodyJM'); %this function is needed
-  %if isempty(x),
-  %  error('you are trying out experimental code for which you need some extra functionality which is currently not in the release version of fieldtrip. if you are interested in trying it out, contact jan-mathijs');
+  %if isempty(x)
+  %  ft_error('you are trying out experimental code for which you need some extra functionality which is currently not in the release version of FieldTrip. if you are interested in trying it out, contact Jan-Mathijs');
   %end
 end
 
 % interpolate the data towards the template gradiometers
 for i=1:Ntrials
   fprintf('realigning trial %d\n', i);
-  if pertrial,
+  if pertrial
     %warp the gradiometer array according to the motiontracking data
     sel   = match_str(rest.label, {'nasX';'nasY';'nasZ';'lpaX';'lpaY';'lpaZ';'rpaX';'rpaY';'rpaZ'});
     hmdat = rest.trial{i}(sel,:);
     if ~all(hmdat==repmat(hmdat(:,1),[1 size(hmdat,2)]))
-      error('only one position per trial is at present allowed');
+      ft_error('only one position per trial is at present allowed');
     else
       %M    = rigidbodyJM(hmdat(:,1))
       M    = ft_headcoordinates(hmdat(1:3,1),hmdat(4:6,1),hmdat(7:9,1));
-      grad = ft_transform_sens(M, data.grad);
+      grad = ft_transform_geometry(M, data.grad);
     end
 
     volcfg.grad = grad;
@@ -311,7 +317,7 @@ end
 % plot the topography before and after the realignment
 if strcmp(cfg.feedback, 'yes')
 
-  warning('showing MEG topography (RMS value over time) in the first trial only');
+  ft_warning('showing MEG topography (RMS value over time) in the first trial only');
   Nchan = length(data.grad.label);
   [id,it]   = match_str(data.grad.label, template.grad.label);
   pos1 = data.grad.chanpos(id,:);
@@ -327,18 +333,18 @@ if strcmp(cfg.feedback, 'yes')
       [u, s, v] = svd(data.trial{1}(id,:)); p1 = u(:,1);
       [u, s, v] = svd(data.realign{1}(it,:)); p2 = u(:,1);
     otherwise
-      error('unsupported cfg.topoparam');
+      ft_error('unsupported cfg.topoparam');
   end
 
   X = [pos1(:,1) pos2(:,1)]';
   Y = [pos1(:,2) pos2(:,2)]';
   Z = [pos1(:,3) pos2(:,3)]';
 
-  % show figure with old an new helmets, volume model and dipole grid
+  % show figure with old an new helmets, volume model and source positions
   figure
   hold on
-  ft_plot_vol(volold);
-  plot3(grid.pos(:,1),grid.pos(:,2),grid.pos(:,3),'b.');
+  ft_plot_headmodel(volold);
+  plot3(sourcemodel.pos(:,1),sourcemodel.pos(:,2),sourcemodel.pos(:,3),'b.');
   plot3(pos1(:,1), pos1(:,2), pos1(:,3), 'r.') % original positions
   plot3(pos2(:,1), pos2(:,2), pos2(:,3), 'g.') % template positions
   line(X,Y,Z, 'color', 'black');
@@ -447,7 +453,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [lfi] = prunedinv(lf, r)
 [u, s, v] = svd(lf);
-if r<1,
+if r<1
   % treat r as a ratio
   p = find(s<(s(1,1)*r) & s~=0);
 else

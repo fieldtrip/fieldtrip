@@ -52,14 +52,14 @@ normalize      = ft_getopt(varargin, 'normalize');
 normalizeparam = ft_getopt(varargin, 'normalizeparam');
 
 if isempty(numcomponent)
-  error('you must specify the number of signal components');
+  ft_error('you must specify the number of signal components');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfield(dip, 'inside')
-  dip.inside = ft_inside_vol(dip.pos, headmodel);
+  dip.inside = ft_inside_headmodel(dip.pos, headmodel);
 end
 
 if any(dip.inside>1)
@@ -76,6 +76,12 @@ origpos    = dip.pos;
 % select only the dipole positions inside the brain for scanning
 dip.pos    = dip.pos(originside,:);
 dip.inside = true(size(dip.pos,1),1);
+
+% also deal with the inside locations of the leadfield, if present
+if isfield(dip, 'leadfield')
+  origleadfield = dip.leadfield;
+  dip.leadfield = dip.leadfield(originside);
+end
 
 if ~isempty(cov)
   % compute signal and noise subspace from covariance matrix
@@ -119,6 +125,9 @@ ft_progress('close');
 % wrap it all up, prepare the complete output
 dipout.inside   = originside;
 dipout.pos      = origpos;
+if isfield(dip, 'leadfield')
+  dipout.leadfield = origleadfield;
+end
 
 % reassign the scan values over the inside and outside grid positions
 if isfield(dipout, 'jr')

@@ -1,11 +1,10 @@
 function mesh = ft_defacemesh(cfg, mesh)
 
-% FT_DEFACEVOLUME allows you to de-identify a head
-% surface mesh by erasing specific regions, such as the face and ears. The graphical
-% user interface allows you to position a box over the anatomical data inside which
-% all vertices will be removed. You might have to call this
-% function multiple times when both face and ears need to be removed. Following
-% defacing, you should check the result with FT_PLOT_MESH .
+% FT_DEFACEMESH allows you to de-identify a scalp surface mesh by erasing specific
+% regions, such as the face and ears. The graphical user interface allows you to
+% position a box over the anatomical data inside which all vertices will be removed.
+% You might have to call this function multiple times when both face and ears need to
+% be removed. Following defacing, you should check the result with FT_PLOT_MESH.
 %
 % Use as
 %   mesh = ft_defacevolume(cfg, mesh)
@@ -13,10 +12,10 @@ function mesh = ft_defacemesh(cfg, mesh)
 % The configuration can contain the following options
 %   cfg.translate  = initial position of the center of the box (default = [0 0 0])
 %   cfg.scale      = initial size of the box along each dimension (default is automatic)
-%   cfg.translate  = initial rotation of the box (default = [0 0 0])
+%   cfg.rotate     = initial rotation of the box (default = [0 0 0])
 %   cfg.selection  = which voxels to keep, can be 'inside' or 'outside' (default = 'outside')
 %
-% See also FT_ANONIMIZEDATA, FT_DEFACEVCOLUME, FT_ANALYSISPIPELINE, FT_PLOT_MESH
+% See also FT_ANONYMIZEDATA, FT_DEFACEVCOLUME, FT_ANALYSISPIPELINE, FT_PLOT_MESH
 
 % Copyright (C) 2015-2016, Robert Oostenveld
 %
@@ -57,13 +56,13 @@ if ft_abort
 end
 
 % the actual work is done by FT_DEFACEVOLUME
-previous = cfg.showcallinfo;
 tmpcfg = cfg;
 tmpcfg.showcallinfo = 'no';
 mesh = ft_defacevolume(tmpcfg, mesh);
-% restore provenance information
+% restore provenance information and put back cfg.callinfo
+tmpcallinfo = cfg.showcallinfo;
 [cfg, mesh] = rollback_provenance(cfg, mesh);
-cfg.showcallinfo = previous;
+cfg.showcallinfo = tmpcallinfo;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

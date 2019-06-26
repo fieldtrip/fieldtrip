@@ -58,6 +58,10 @@ function [stat, cfg] = ft_statistics_analytic(cfg, dat, design)
 %
 % $Id$
 
+% do a sanity check on the input data
+assert(isnumeric(dat),    'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
+assert(isnumeric(design), 'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'bonferoni', 'bonferroni'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'holms', 'holm'});
@@ -73,7 +77,7 @@ cfg.tail     = ft_getopt(cfg, 'tail', 0);
 % fetch function handle to the low-level statistics function
 statfun = ft_getuserfun(cfg.statistic, 'statfun');
 if isempty(statfun)
-  error('could not locate the appropriate statistics function');
+  ft_error('could not locate the appropriate statistics function');
 else
   fprintf('using "%s" for the single-sample statistics\n', func2str(statfun));
 end
@@ -94,7 +98,7 @@ cfg = rmfield(cfg, 'computeprob');
 cfg = rmfield(cfg, 'computecritval');
 
 if ~isfield(stat, 'prob')
-  warning('probability was not computed');
+  ft_warning('probability was not computed');
 else
   switch lower(cfg.correctm)
     case 'bonferroni'
@@ -127,6 +131,6 @@ else
       fprintf('not performing a correction for multiple comparisons\n');
       stat.mask = stat.prob<=cfg.alpha;
     otherwise
-      error('unsupported option "%s" for cfg.correctm', cfg.correctm);
+      ft_error('unsupported option "%s" for cfg.correctm', cfg.correctm);
   end
 end

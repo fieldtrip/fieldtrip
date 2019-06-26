@@ -53,7 +53,7 @@ dim = size(seg);
 len = ceil(sqrt(sum(dim.^2))/2);
 
 if ~any(seg(:))
-  error('the segmentation is empty')
+  ft_error('the segmentation is empty')
 end
 
 % define the origin if it is not provided in the input arguments
@@ -66,16 +66,18 @@ end
 % ensure that the seg consists of only one filled blob.
 % if not filled: throw a warning and fill
 % if more than one blob: throw a warning and use the biggest
-ft_hastoolbox('SPM8', 1);
 
 % look for holes
 seg = volumefillholes(seg);
 
+% ensure that SPM is available, needed for spm_bwlabel
+ft_hastoolbox('spm8up', 3) || ft_hastoolbox('spm2', 1);
+
 % look for >1 blob
 [lab, num] = spm_bwlabel(double(seg), 26);
 if num>1,
-  warning('the segmented volume consists of more than one compartment, using only the biggest one for the segmentation');
-  
+  ft_warning('the segmented volume consists of more than one compartment, using only the biggest one for the segmentation');
+
   for k = 1:num
     n(k) = sum(lab(:)==k);
   end
@@ -84,7 +86,7 @@ if num>1,
 end
 
 % start with a unit sphere with evenly distributed vertices
-[pnt, tri] = ksphere(npnt);
+[pnt, tri] = mesh_sphere(npnt, 'ksphere');
 
 ishollow = false;
 
@@ -103,14 +105,14 @@ for i=1:npnt
         lin(:,3)<1 | lin(:,3)>dim(3);
   lin = lin(~sel,:);
   sel = sub2ind(dim, lin(:,1), lin(:,2), lin(:,3));
-  
+
   % interpolate the segmented volume along the sampled line
   int = seg(sel);
-  
+
   % the value along the line is expected to be 1 at first and then drop to 0
   % anything else suggests that the segmentation is hollow
   ishollow = any(diff(int)==1);
-  
+
   % find the last sample along the line that is inside the segmentation
   sel = find(int, 1, 'last');
   % this is a problem if sel is empty. If so, use the edge of the volume
@@ -125,7 +127,7 @@ end
 
 if ishollow
   % this should not have hapened, especially not after filling the holes
-  warning('the segmentation is not star-shaped, please check the surface mesh');
+  ft_warning('the segmentation is not star-shaped, please check the surface mesh');
 end
 
 % undo the shift of the origin from where the projection is done
@@ -136,4 +138,3 @@ end
 % fast unconditional re-implementation of the standard MATLAB function
 function [s] = sub2ind(dim, i, j, k)
 s = i + (j-1)*dim(1) + (k-1)*dim(1)*dim(2);
-

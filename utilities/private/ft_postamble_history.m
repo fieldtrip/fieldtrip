@@ -1,10 +1,11 @@
-% FT_POSTAMBLE_HISTORY stores the configuration structure that is present in the
-% present workspace in the output variable.
+% FT_POSTAMBLE_HISTORY is a helper script that stores the configuration structure that
+% is present in the present workspace (i.e. the workspace of the calling function) in
+% the output variable.
 %
 % Use as
 %   ft_postamble history outputvar
 %
-% See also FT_POSTAMBLE_PROVENANCE
+% See also FT_PREAMBLE, FT_POSTAMBLE, FT_POSTAMBLE_PROVENANCE
 
 % Copyright (C) 2011-2016, Robert Oostenveld, DCCN
 %
@@ -26,19 +27,32 @@
 %
 % $Id$
 
-global ft_default
-
 % some fields are for internal use only and should not be stored
 cfg = removefields(cfg, ignorefields('history'));
 
-for tmpindx=1:length(ft_default.postamble)
-  if isequal(ft_default.postamble, {'varargout'})
-    eval(sprintf('try, %s{%d}.cfg = cfg; end', ft_default.postamble{tmpindx}, tmpindx));
+if isequal(iW1aenge_postamble, {'varargout'}) && isequal(iW1aenge_preamble, {'varargin'}) && isfield(cfg, 'previous')
+  % distribute the elements of cfg.previous over the output variables
+  if iscell(cfg.previous)
+    aa5mo0Ke = cfg.previous;
   else
-    eval(sprintf('try, %s.cfg = cfg; end', ft_default.postamble{tmpindx}));
+    % this happens when varargin only has a single element
+    aa5mo0Ke = {cfg.previous};
   end
+  for tmpindx=1:numel(varargout)
+    cfg.previous = aa5mo0Ke{tmpindx};
+    eval(sprintf('try, varargout{%d}.cfg = cfg; end', tmpindx));
+  end
+  cfg.previous = aa5mo0Ke;
+  clear aa5mo0Ke tmpindx
+elseif isequal(iW1aenge_postamble, {'varargout'})
+  for tmpindx=1:numel(varargout)
+    eval(sprintf('try, varargout{%d}.cfg = cfg; end', tmpindx));
+  end
+  clear tmpindx
+else
+  for tmpindx=1:length(iW1aenge_postamble)
+    eval(sprintf('try, %s.cfg = cfg; end', iW1aenge_postamble{tmpindx}));
+  end
+  clear tmpindx
 end
-clear tmpindx
 
-% clear warnings from ft_default, so that they don't end up in the next cfg
-ft_warning('-clear');

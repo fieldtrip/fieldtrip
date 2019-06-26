@@ -2,6 +2,12 @@ function mesh = prepare_mesh_headshape(cfg)
 
 % PREPARE_MESH_HEADSHAPE
 %
+% Configuration options:
+%   cfg.headshape   = a filename containing headshape, a Nx3 matrix with surface
+%                     points, or a structure with a single or multiple boundaries
+%   cfg.smooth      = a scalar indicating the number of non-shrinking
+%                     smoothing iterations (default = no smoothing)
+%
 % See also PREPARE_MESH_MANUAL, PREPARE_MESH_SEGMENTATION
 
 % Copyrights (C) 2009, Robert Oostenveld
@@ -26,6 +32,7 @@ function mesh = prepare_mesh_headshape(cfg)
 
 % get the specific options
 cfg.headshape    = ft_getopt(cfg, 'headshape');
+cfg.smooth       = ft_getopt(cfg, 'smooth');   % no default
 
 if isa(cfg, 'config')
   % convert the config-object back into a normal structure
@@ -38,36 +45,18 @@ if isa(cfg.headshape, 'config')
 end
 
 % get the surface describing the head shape
-if isstruct(cfg.headshape) && isfield(cfg.headshape, 'pos')
-  % use the headshape surface specified in the configuration
-  headshape = cfg.headshape;
-elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
-  % use the headshape surface specified in the configuration
-  headshape = fixpos(cfg.headshape);
-elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
-  % use the headshape points specified in the configuration
-  headshape.pos = cfg.headshape;
-elseif ischar(cfg.headshape)
-  % read the headshape from file
-  headshape = ft_read_headshape(cfg.headshape);
-else
-  error('cfg.headshape is not specified correctly')
-end
-
-% usually a headshape only describes a single surface boundaries, but there are cases
-% that multiple surfaces are included, e.g. skin_surface, outer_skull_surface, inner_skull_surface
-nmesh = numel(headshape);
-
-if ~isfield(headshape, 'tri')
-  % generate a closed triangulation from the surface points
-  for i=1:nmesh
-    headshape(i).pos = unique(headshape(i).pos, 'rows');
-    headshape(i).tri = projecttri(headshape(i).pos);
+if isstruct(cfg.headshape) && numel(cfg.headshape)>1
+  % this applies for multilayer BEM models and concentric sphere models
+  headshape = [];
+  for i=1:numel(cfg.headshape)
+    [headshape(i).pos, headshape(i).tri] = headsurface([], [], 'headshape', cfg.headshape(i));
   end
+else
+  [headshape.pos, headshape.tri] = headsurface([], [], 'headshape', cfg.headshape);
 end
 
 if ~isempty(cfg.numvertices) && ~strcmp(cfg.numvertices, 'same')
-  for i=1:nmesh
+  for i=1:numel(headshape)
     tri1 = headshape(i).tri;
     pos1 = headshape(i).pos;
     % The number of vertices is multiplied by 3 in order to have more
@@ -87,7 +76,7 @@ if ~isempty(cfg.numvertices) && ~strcmp(cfg.numvertices, 'same')
     % and retriangulate it to the desired accuracy
     [pos2, tri2] = mysphere(cfg.numvertices); % this is a regular triangulation
     [pos1, tri1] = retriangulate(pos1, tri1, pos2, tri2, 2);
-    [pos1, tri1] = fairsurface(pos1, tri1, 1);% this helps redistribute the superimposed points
+    [pos1, tri1] = fairsurface(pos1, tri1, 1); % this helps redistribute the superimposed points
     
     % remove double vertices
     [headshape(i).pos,headshape(i).tri] = remove_double_vertices(pos1, tri1);
@@ -95,9 +84,16 @@ if ~isempty(cfg.numvertices) && ~strcmp(cfg.numvertices, 'same')
   end
 end
 
+% smooth the mesh
+if ~isempty(cfg.smooth)
+  for i=1:numel(headshape)
+    [headshape(i).pos,headshape(i).tri] = fairsurface(headshape(i).pos, headshape(i).tri, cfg.smooth);
+  end
+end
+
 % the output should only describe one or multiple boundaries and should not
 % include any other fields
-mesh = rmfield(headshape, setdiff(fieldnames(headshape), {'pos', 'tri'}));
+mesh = keepfields(headshape, {'pos', 'tri'});
 
 function [tri1, pos1] = refinepatch(tri, pos, numvertices)
 fprintf('the original mesh has %d vertices against the %d requested\n',size(pos,1),numvertices/3);
@@ -134,7 +130,7 @@ while (1)
       phi(end+1) = newphi;
       th(end+1)  = (j/Q)*2*pi;
       % in case of even number of contours
-      if mod(M,2) & k>(M/2)
+      if mod(M,2) && k>(M/2)
         th(end) = th(end) + pi/Q;
       end
     end
@@ -202,8 +198,8 @@ M_con = sparse([ts.tri(1,:)';ts.tri(1,:)';ts.tri(2,:)';ts.tri(3,:)';ts.tri(2,:)'
   [ts.tri(2,:)';ts.tri(3,:)';ts.tri(1,:)';ts.tri(1,:)';ts.tri(3,:)';ts.tri(2,:)'], ...
   ones(ts.nr(2)*6,1),ts.nr(1),ts.nr(1));
 
-kpb   = .1;                       % Cutt-off frequency
-lam   = .5; mu = lam/(lam*kpb-1); % Parameters for elasticity.
+kpb   = .1;                       % Cutt-off frequency (default: .1)
+lam   = .5; mu = lam/(lam*kpb-1); % Parameters for elasticity. (default: .5)
 XYZmm = ts.XYZmm;
 
 % smoothing iterations
@@ -250,7 +246,7 @@ tri1 = tri;
 if 0
   % this is some test/demo code
   mesh = [];
-  [mesh.pos, mesh.tri] = icosahedron162;
+  [mesh.pos, mesh.tri] = mesh_sphere(162);
   
   scale = 1+0.3*randn(size(pos,1),1);
   mesh.pos = mesh.pos .* [scale scale scale];

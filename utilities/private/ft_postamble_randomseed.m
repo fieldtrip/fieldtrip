@@ -6,7 +6,7 @@
 %   ... regular code goes here ...
 %   ft_postamble randomseed
 %
-% See also FT_PREAMBLE_RANDOMSEED
+% See also FT_PREAMBLE, FT_POSTAMBLE, FT_PREAMBLE_RANDOMSEED
 
 if exist('ftFuncRandomseed','var')
   cfg.callinfo.randomseed = ftFuncRandomseed;

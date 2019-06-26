@@ -45,13 +45,13 @@ sclose(biosig);
 %   hdr.label        cell-array with labels of each channel
 
 if length(biosig.SampleRate)>1 && any(diff(biosig.SampleRate))
-  error('channels with different sampling rates are not supported');
+  ft_error('channels with different sampling rates are not supported');
 else
   hdr.Fs          = biosig.SampleRate(1);
 end
 
 if length(biosig.SPR)>1 && any(diff(biosig.SPR))
-  error('channels with different number of samples are not supported');
+  ft_error('channels with different number of samples are not supported');
 else
   hdr.nSamples  = biosig.SPR(1);
 end
@@ -95,7 +95,7 @@ return;
 % HDR.T0                  float[1..6]     [yyyy mm dd hh MM ss.cc] see HELP CLOCK
 % HDR.NS                  integer         number of channels
 % HDR.SampleRate          integer         sampling frequency in [Hz]
-% HDR.NRec                integer         number of records or blocks; 1 for continous data
+% HDR.NRec                integer         number of records or blocks; 1 for continuous data
 % HDR.SPR                 integer         samples per record
 % HDR.Dur                 float           Duration (in [s]) of minimal block length
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

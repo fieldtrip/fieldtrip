@@ -17,8 +17,7 @@ if strcmp(required, 'unique')
   boolval = numel(unique(taxis))==numel(taxis) && ~all(isnan(taxis));
   % the second condition is included when the time is set to dummy nan
 elseif strcmp(required, 'identical')
-  % the number of time bins needs at least to be the same across
-  % inputs
+  % the number of time bins needs at least to be the same across inputs
   boolval = all(Ntime==Ntime(1));
   if boolval
     % then check whether the axes are equal

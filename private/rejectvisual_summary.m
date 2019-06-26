@@ -2,30 +2,38 @@ function [chansel, trlsel, cfg] = rejectvisual_summary(cfg, data)
 
 % SUBFUNCTION for ft_rejectvisual
 
-% determine the initial selection of trials
-ntrl = length(data.trial);
-if isequal(cfg.trials, 'all') % support specification like 'all'
-  cfg.trials = 1:ntrl;
-end
-trlsel = false(1, ntrl);
-trlsel(cfg.trials) = true;
+% % determine the initial selection of trials
+%ntrl = length(data.trial);
+% if isequal(cfg.trials, 'all') % support specification like 'all'
+%   cfg.trials = 1:ntrl;
+% end
+% trlsel = false(1, ntrl);
+% trlsel(cfg.trials) = true;
+ntrl   = numel(data.trial);
+trlsel = true(1, ntrl); % there has been trial selection in the caller function
 
-% determine the initial selection of channels
-nchan = length(data.label);
-cfg.channel = ft_channelselection(cfg.channel, data.label); % support specification like 'all'
-chansel = false(1, nchan);
-chansel(match_str(data.label, cfg.channel)) = true;
+% % determine the initial selection of channels
+% nchan = length(data.label);
+% cfg.channel = ft_channelselection(cfg.channel, data.label); % support specification like 'all'
+% chansel = false(1, nchan);
+% chansel(match_str(data.label, cfg.channel)) = true;
+nchan   = numel(data.label);
+chansel = true(1, nchan); 
 
 % compute the sampling frequency from the first two timepoints
 fsample = 1/mean(diff(data.time{1}));
 
-% select the specified latency window from the data
-% here it is done BEFORE filtering and metric computation
-for i=1:ntrl
-  begsample = nearest(data.time{i}, cfg.latency(1));
-  endsample = nearest(data.time{i}, cfg.latency(2));
-  data.time{i} = data.time{i}(begsample:endsample);
-  data.trial{i} = data.trial{i}(:, begsample:endsample);
+% % select the specified latency window from the data
+% % here it is done BEFORE filtering and metric computation
+% for i=1:ntrl
+%   begsample = nearest(data.time{i}, cfg.latency(1));
+%   endsample = nearest(data.time{i}, cfg.latency(2));
+%   data.time{i} = data.time{i}(begsample:endsample);
+%   data.trial{i} = data.trial{i}(:, begsample:endsample);
+% end
+if ischar(cfg.latency)
+  cfg.latency(1) = min(cellfun(@min, data.time));
+  cfg.latency(2) = max(cellfun(@max, data.time));
 end
 
 % compute the offset from the time axes
@@ -195,7 +203,7 @@ for i=1:info.ntrl
     case 'maxzvalue'
       level(:, i) = nanmax( ( dat-repmat(mval, 1, size(dat, 2)) )./repmat(sd, 1, size(dat, 2)) , [], 2);
     otherwise
-      error('unsupported method');
+      ft_error('unsupported method');
   end
 end
 ft_progress('close');
@@ -223,6 +231,7 @@ switch info.cfg.viewmode
     tmp(~info.chansel, :) = nan;
     tmp(:, ~info.trlsel)  = nan;
     imagesc(tmp);
+    caxis([min(tmp(:)) max(tmp(:))]);
   case 'hide'
     imagesc(level(info.chansel==1, info.trlsel==1));
     if ~all(info.trlsel)
@@ -513,7 +522,7 @@ uiresume;
 % end
 % if all(trls==0)
 %   % use visual selection
-%   update_log(info.output_box, sprintf('make visual selection of trials to be plotted seperately...'));
+%   update_log(info.output_box, sprintf('make visual selection of trials to be plotted separately...'));
 %   [x, y] = select2d;
 %   maxpertrl  = max(info.origlevel, [], 1);
 %   toggle = find(1:ntrl>=x(1) & ...
@@ -611,10 +620,17 @@ cfg_mp.layout  = info.cfg.layout;
 cfg_mp.channel = info.data.label(info.chansel);
 currfig = gcf;
 for n = 1:length(trls)
+  % ft_multiplotER should be able to make the selection, but fails due to http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2978
+  % that bug is hard to fix, hence it is solved here with a work-around
+  cfg_sd = [];
+  cfg_sd.trials = trls(n);
+  cfg_sd.avgoverrpt = 'yes';
+  cfg_sd.keeprpt = 'no';
+  tmpdata = ft_selectdata(cfg_sd, info.data);
+  
   figure()
-  cfg_mp.trials = trls(n);
   cfg_mp.interactive = 'yes';
-  ft_multiplotER(cfg_mp, info.data);
+  ft_multiplotER(cfg_mp, tmpdata);
   title(sprintf('Trial %i', trls(n)));
 end
 figure(currfig);

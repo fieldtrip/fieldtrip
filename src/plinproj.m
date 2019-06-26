@@ -1,4 +1,4 @@
-function [varargout] = funname(varargin)
+function [varargout] = plinproj(varargin)
 
 % PLINPROJ projects a point onto a line or linepiece
 %
@@ -65,7 +65,7 @@ catch
 end
 
 if success
-  % execute the mex file that was juist created
+  % execute the mex file that was just created
   funname   = mfilename;
   funhandle = str2func(funname);
   [varargout{1:nargout}] = funhandle(varargin{:});

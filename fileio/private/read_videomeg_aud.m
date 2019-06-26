@@ -15,7 +15,7 @@ needdat = numel(varargin)==3;
 % the following code is largely copied from LOAD_AUDIO0123
 
 if needhdr
-  fid    = fopen(filename, 'rb');
+  fid    = fopen_or_error(filename, 'rb');
   magic  = fread(fid, [1 length('ELEKTA_AUDIO_FILE')], 'uchar=>char');
   ver    = fread(fid, 1, 'uint32');
   srate  = fread(fid, 1, 'uint32');
@@ -116,7 +116,7 @@ elseif needdat
   endptr = dt_start + (endblk  ) * (blklen+attrib_sz);
   
   % read the required blocks of data from the file
-  fid = fopen(filename, 'rb');
+  fid = fopen_or_error(filename, 'rb');
   fseek(fid, begptr, 'bof');
   blk = fread(fid, [1 endptr-begptr], 'uint8=>uint8');
   fclose(fid);

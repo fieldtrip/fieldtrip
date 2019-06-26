@@ -4,11 +4,8 @@ function [output] = volumefillholes(input, along)
 %
 % See also VOLUMETHRESHOLD, VOLUMESMOOTH
 
-% check for any version of SPM
-if ~ft_hastoolbox('spm')
-  % add SPM8 to the path
-  ft_hastoolbox('spm8', 1);
-end
+% ensure that SPM is available, needed for spm_bwlabel
+hasspm = ft_hastoolbox('spm8up', 3) || ft_hastoolbox('spm2', 1);
 
 if nargin<2
   inflate = false(size(input)+2);                   % grow the edges along each dimension
@@ -43,10 +40,10 @@ else
       for i=1:dim(3)
         slice=reshape(input(:,:,i),dim([1 2]));
         im = imfill(slice,8,'holes');
-        output(:,:,3) = im;
+        output(:,:,i) = im;
       end
       
     otherwise
-      error('invalid dimension along which to slice the volume');
+      ft_error('invalid dimension along which to slice the volume');
   end % switch
 end % if nargin

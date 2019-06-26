@@ -37,7 +37,7 @@ N = SAMweights * noise_covariance * SAMweights';
 inv_pseudo_Z = sqrt(N/P);
 
 % make sure the angle stays between 0 and 180 degrees
-if (angle > pi) | (angle < 0) 
+if (angle > pi) || (angle < 0) 
     inv_pseudo_Z = inv_pseudo_Z*10^4;
 else
 %    hold on

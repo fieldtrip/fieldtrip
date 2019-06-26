@@ -25,23 +25,26 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'coordsys'    = string, e.g. 'head' or 'dewar' (only supported for CTF)
 %   'unit'        = string, e.g. 'mm' (default is the native units of the file)
 %   'concatenate' = 'no' or 'yes' (default = 'yes')
-%   'image'       = path to .jpeg file
+%   'image'       = path to .jpg file
+%   'surface'     = specific surface to be read (only for caret spec files)
 %
 % Supported input file formats include
 %   'matlab'       containing FieldTrip or BrainStorm headshapes or cortical meshes
 %   'stl'          STereoLithography file format, for use with CAD and/or generic 3D mesh editing programs
 %   'vtk'          Visualization ToolKit file format, for use with Paraview
 %   'mne_*'        MNE surface description in ASCII format ('mne_tri') or MNE source grid in ascii format, described as 3D points ('mne_pos')
+%   'obj'          Wavefront .obj file obtained with the structure.io
+%   'off'
+%   'ply'
+%   'itab_asc'
 %   'ctf_*'
 %   '4d_*'
-%   'itab_asc'
 %   'neuromag_*'
-%   'mne_source'
 %   'yokogawa_*'
 %   'polhemus_*'
-%   'spmeeg_mat'
-%   'off'
 %   'freesurfer_*'
+%   'mne_source'
+%   'spmeeg_mat'
 %   'netmeg'
 %   'vista'
 %   'tet'
@@ -53,11 +56,10 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'caret_spec'
 %   'brainvisa_mesh'
 %   'brainsuite_dfs'
-%   'obj'           Wavefront .obj file obtained with the structure.io
 %
-% See also FT_READ_VOL, FT_READ_SENS, FT_READ_ATLAS, FT_WRITE_HEADSHAPE
+% See also FT_READ_HEADMODEL, FT_READ_SENS, FT_READ_ATLAS, FT_WRITE_HEADSHAPE
 
-% Copyright (C) 2008-2016 Robert Oostenveld
+% Copyright (C) 2008-2017 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -83,7 +85,8 @@ concatenate    = ft_getopt(varargin, 'concatenate', 'yes');
 coordsys       = ft_getopt(varargin, 'coordsys', 'head');    % for ctf or neuromag_mne coil positions, the alternative is dewar
 fileformat     = ft_getopt(varargin, 'format');
 unit           = ft_getopt(varargin, 'unit');
-image          = ft_getopt(varargin, 'image',[100, 100 ,100]);               % path to .jpeg file
+image          = ft_getopt(varargin, 'image', [100, 100 ,100]); % path to .jpeg file
+surface        = ft_getopt(varargin, 'surface');
 
 % Check the input, if filename is a cell-array, call ft_read_headshape recursively and combine the outputs.
 % This is used to read the left and right hemisphere of a Freesurfer cortical segmentation.
@@ -106,7 +109,7 @@ if iscell(filename)
   
   if  numel(filename)>1 && all(haspos==1) && strcmp(concatenate, 'yes')
     if length(bnd)>2
-      error('Cannot concatenate more than two files') % no more than two files are taken for cancatenation
+      ft_error('Cannot concatenate more than two files') % no more than two files are taken for cancatenation
     else
       fprintf('Concatenating the meshes in %s and %s\n', filename{1}, filename{2});
       
@@ -119,7 +122,7 @@ if iscell(filename)
       elseif ~isfield(bnd(1), 'tri') && ~isfield(bnd(2), 'tri')
         % this is ok
       else
-        error('not all input files seem to contain a triangulation');
+        ft_error('not all input files seem to contain a triangulation');
       end
       
       % concatenate any other fields
@@ -130,7 +133,7 @@ if iscell(filename)
         elseif ~isfield(bnd(1), fnames{k}) && ~isfield(bnd(2), fnames{k})
           % this is ok
         else
-          error('not all input files seem to contain a "%s"', fnames{k});
+          ft_error('not all input files seem to contain a "%s"', fnames{k});
         end
       end
       
@@ -166,7 +169,7 @@ if iscell(filename)
     end
   elseif numel(filename)>1 && ~all(haspos==1)
     if numel(bnd)>2
-      error('Cannot combine more than two files') % no more than two files are taken for cancatenation
+      ft_error('Cannot combine more than two files') % no more than two files are taken for cancatenation
     else
       shape = [];
       if sum(haspos==1)==1
@@ -174,14 +177,14 @@ if iscell(filename)
         shape.pos  = bnd(haspos==1).pos;
         shape.unit = bnd(haspos==1).unit;
       else
-        error('Don''t know what to do');
+        ft_error('Don''t know what to do');
       end
       if sum(hastri==1)==1
         fprintf('Using the faces definition from %s\n', filename{find(hastri==1)});
         shape.tri = bnd(hastri==1).tri;
       end
       if max(shape.tri(:))~=size(shape.pos,1)
-        error('mismatch in number of points in pos and tri');
+        ft_error('mismatch in number of points in pos and tri');
       end
     end
     
@@ -197,7 +200,9 @@ end % if iscell
 [pathstr,name]  = fileparts(filename);
 if exist(fullfile(pathstr,[name,'.jpg']))
   image    = fullfile(pathstr,[name,'.jpg']);
-  hasimage = 1;
+  hasimage = true;
+else
+  hasimage = false;
 end
 
 
@@ -210,7 +215,7 @@ if isempty(fileformat)
 end
 
 if ~isempty(annotationfile) && ~strcmp(fileformat, 'mne_source')
-  error('at present extracting annotation information only works in conjunction with mne_source files');
+  ft_error('at present extracting annotation information only works in conjunction with mne_source files');
 end
 
 % start with an empty structure
@@ -242,18 +247,22 @@ switch fileformat
         shape.fid.pos = cell2mat(struct2cell(orig.dewar));
         shape.coordsys = 'dewar';
       otherwise
-        error('incorrect coordsys specified');
+        ft_error('incorrect coordsys specified');
     end
     shape.fid.label = fieldnames(orig.head);
     
   case 'ctf_shape'
     orig = read_ctf_shape(filename);
     shape.pos = orig.pos;
-    shape.fid.label = {'NASION', 'LEFT_EAR', 'RIGHT_EAR'};
-    shape.fid.pos = zeros(0,3); % start with an empty array
-    for i = 1:numel(shape.fid.label)
-      shape.fid.pos = cat(1, shape.fid.pos, getfield(orig.MRI_Info, shape.fid.label{i}));
-    end
+    
+    % The file also contains fiducial information, but those are in MRI voxels and 
+    % inconsistent with the headshape itself.
+    % 
+    % shape.fid.label = {'NASION', 'LEFT_EAR', 'RIGHT_EAR'};
+    % shape.fid.pos = zeros(0,3); % start with an empty array
+    % for i = 1:numel(shape.fid.label)
+    %   shape.fid.pos = cat(1, shape.fid.pos, getfield(orig.MRI_Info, shape.fid.label{i}));
+    % end
     
   case {'4d_xyz', '4d_m4d', '4d_hs', '4d', '4d_pdf'}
     [p, f, x] = fileparts(filename);
@@ -288,7 +297,7 @@ switch fileformat
     ft_hastoolbox('gifti', 1);
     g = gifti(filename);
     if ~isfield(g, 'vertices')
-      error('%s does not contain a tesselated surface', filename);
+      ft_error('%s does not contain a tesselated surface', filename);
     end
     shape.pos = ft_warp_apply(g.mat, g.vertices);
     shape.tri = g.faces;
@@ -331,6 +340,9 @@ switch fileformat
     
     % check whether there is curvature info etc
     filename    = strrep(filename, '.surf.', '.shape.');
+    filename    = strrep(filename, '.topo.', '.shape.');
+    filename    = strrep(filename, '.coord.', '.shape.');
+
     [p,f,e]     = fileparts(filename);
     tok         = tokenize(f, '.');
     if length(tok)>2
@@ -342,8 +354,9 @@ switch fileformat
     end
     
   case 'caret_spec'
+    [p, f, e] = fileparts(filename);
     [spec, headerinfo] = read_caret_spec(filename);
-    fn = fieldnames(spec)
+    fn = fieldnames(spec);
     
     % concatenate the filenames that contain coordinates
     % concatenate the filenames that contain topologies
@@ -351,15 +364,23 @@ switch fileformat
     topofiles  = {};
     for k = 1:numel(fn)
       if ~isempty(strfind(fn{k}, 'topo'))
-        topofiles = cat(1,topofiles, spec.(fn{k}));
+        topofiles = cat(1,topofiles, fullfile(p,spec.(fn{k})));
       end
       if ~isempty(strfind(fn{k}, 'coord'))
-        coordfiles = cat(1,coordfiles, spec.(fn{k}));
+        coordfiles = cat(1,coordfiles, fullfile(p,spec.(fn{k})));
       end
     end
-    [selcoord, ok] = listdlg('ListString',coordfiles,'SelectionMode','single','PromptString','Select a file describing the coordinates');
-    [seltopo, ok]  = listdlg('ListString',topofiles,'SelectionMode','single','PromptString','Select a file describing the topology');
-    
+    if isempty(surface)
+      [selcoord, ok] = listdlg('ListString',coordfiles,'SelectionMode','single','PromptString','Select a file describing the coordinates');
+    else
+      selcoord = find(contains(coordfiles, surface));
+    end
+    if numel(topofiles)>1
+      [seltopo, ok]  = listdlg('ListString',topofiles,'SelectionMode','single','PromptString','Select a file describing the topology');
+    else
+      seltopo = 1;
+    end
+      
     % recursively call ft_read_headshape
     tmp1 = ft_read_headshape(coordfiles{selcoord});
     tmp2 = ft_read_headshape(topofiles{seltopo});
@@ -367,10 +388,10 @@ switch fileformat
     % quick and dirty sanity check to see whether the indexing of the
     % points in the topology matches the number of points
     if max(tmp2.tri(:))~=size(tmp1.pos,1)
-      error('there''s a mismatch between the number of points used in the topology, and described by the coordinates');
+      ft_error('there''s a mismatch between the number of points used in the topology, and described by the coordinates');
     end
     
-    shape.pos = tmp1.pos;
+    shape     = tmp1;
     shape.tri = tmp2.tri;
     
   case 'neuromag_mex'
@@ -393,7 +414,7 @@ switch fileformat
     if ~isempty(annotationfile)
       ft_hastoolbox('freesurfer', 1);
       if numel(annotationfile)~=2
-        error('two annotationfiles expected, one for each hemisphere');
+        ft_error('two annotationfiles expected, one for each hemisphere');
       end
       for k = 1:numel(annotationfile)
         [v{k}, label{k}, c(k)] = read_annotation(annotationfile{k}, 1);
@@ -407,10 +428,10 @@ switch fileformat
         src(1).labelindx = label{2};
         src(2).labelindx = label{1};
       else
-        warning('incompatible annotation with triangulations, not using annotation information');
+        ft_warning('incompatible annotation with triangulations, not using annotation information');
       end
       if ~isequal(c(1),c(2))
-        error('the annotation tables differ, expecting equal tables for the hemispheres');
+        ft_error('the annotation tables differ, expecting equal tables for the hemispheres');
       end
       c = c(1);
     end
@@ -451,8 +472,7 @@ switch fileformat
       %         shape.orig.labelindx(shape.orig.labelindx==ulabelindx(k)) = k;
       %         shape.labelindx(shape.labelindx==ulabelindx(k)) = k;
       %       end
-      % FIXME the above screws up the interpretation of the labels, because the
-      % color table is not sorted
+      % FIXME the above screws up the interpretation of the labels, because the color table is not sorted
       shape.label = c.struct_names;
       shape.annotation = c.orig_tab; % to be able to recover which one
       shape.ctable = c.table;
@@ -493,10 +513,179 @@ switch fileformat
         end
         shape.coordsys = orig.dewar.coordsys;
       otherwise
-        error('incorrect coordinates specified');
+        ft_error('incorrect coordinates specified');
     end
     
-  case {'yokogawa_mrk', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw' }
+  case {'ricoh_mrk', 'ricoh_ave', 'ricoh_con'}
+    hdr = read_ricoh_header(filename);
+    
+    %% An exported file or an original one
+    isexported = hdr.orig.digitize.info.done;
+    
+    %% Marker-coil positions
+    mrk_pnt = hdr.orig.coregist.hpi;
+    if any([mrk_pnt(:).meg_pos])
+      mrk_pos = cat(1, mrk_pnt(1:end).meg_pos);
+      mrk_label = transpose({mrk_pnt(1:end).label});
+      sw_ind = [3 1 2];
+      mrk_pos(1:3,:)= mrk_pos(sw_ind, :);
+      mrk_pos = mrk_pos * 100; % unit: cm
+      mrk_label(1:3,:)= mrk_label(sw_ind, :);
+    else
+      ft_error('No coil information found in the file');
+    end
+    
+    %% Digitized points
+    if ~isexported
+      ft_info('The input file is an original one: only marker-coil positions are loaded\n');
+      % The fiducial points are represented by the marker-coil positions.
+      if any([mrk_pnt(:).meg_pos])
+        shape.fid.pos = mrk_pos;   % unit: cm
+        shape.fid.label = {'nas'; 'lpa'; 'rpa'; 'Marker4'; 'Marker5'};
+      end
+    else
+      ft_info('The input file is a third-party-exported one including the digitized points\n');
+      % All digitized points
+      dig_pnt = hdr.orig.digitize.point;
+      digitizer2meg = hdr.orig.digitize.info.digitizer2meg;
+      R = digitizer2meg(1:3,1:3);
+      T = digitizer2meg(1:3,4);
+      % Transform to MEG coordinate:
+      shape.pos = transpose( R * [[dig_pnt.x]; [dig_pnt.y]; [dig_pnt.z]] + repmat(T, 1, numel(dig_pnt))).*100; % unit: cm
+      shape.label = transpose( deblank({dig_pnt(1:end).name}));
+      % Fiducial points
+      nas = find(strcmpi(shape.label, 'fidnz'));
+      lpa = find(strcmpi(shape.label, 'fidt9'));
+      rpa = find(strcmpi(shape.label, 'fidt10'));
+      if ~isempty(nas) && ~isempty(lpa) && ~isempty(rpa)
+        anatfid_pos = [ shape.pos(nas,:) ;  shape.pos(lpa,:) ; shape.pos(rpa,:) ];
+        anatfid_label = {'nas'; 'lpa'; 'rpa'};
+      end
+      % HPIs
+      HPI_1 = find(strcmpi(shape.label, 'HPI_1'));
+      HPI_2 = find(strcmpi(shape.label, 'HPI_2'));
+      HPI_3 = find(strcmpi(shape.label, 'HPI_3'));
+      HPI_4 = find(strcmpi(shape.label, 'HPI_4'));
+      HPI_5 = find(strcmpi(shape.label, 'HPI_5'));
+      if ~isempty(HPI_1) && ~isempty(HPI_2) && ~isempty(HPI_3) && ~isempty(HPI_4) && ~isempty(HPI_5)
+        HPI_pos = [ shape.pos(HPI_3,:) ;...
+          shape.pos(HPI_1,:) ;...
+          shape.pos(HPI_2,:) ;...
+          shape.pos(HPI_4,:) ;...
+          shape.pos(HPI_5,:) ];
+        HPI_label = { 'HPI_3'; 'HPI_1'; 'HPI_2'; 'HPI_4'; 'HPI_5' };
+      end
+      shape.fid.pos = [ anatfid_pos; HPI_pos; mrk_pos ];
+      shape.fid.label = [ anatfid_label; HPI_label; mrk_label ];
+    end
+    % 'cm' as a unit for 'pos':
+    shape.unit = 'cm';
+    
+  case {'yokogawa_mrk', 'yokogawa_ave', 'yokogawa_con'}
+    if ft_hastoolbox('yokogawa_meg_reader')
+      hdr = read_yokogawa_header_new(filename);
+      %% Marker-coil positions
+      mrk_pnt = hdr.orig.coregist.hpi;
+      
+      % markers 1-3 identical to zero: try *.mrk file
+      if ~any([mrk_pnt(:).meg_pos])
+        ft_info('Reading marker-coil positions from a .mrk file\n');
+        [p, f, x] = fileparts(filename);
+        filename = fullfile(p, [f '.mrk']);
+        if exist(filename, 'file')
+          hdr_tmp = read_yokogawa_header_new(filename);
+          mrk_pnt = hdr_tmp.orig.coregist.hpi;
+        end
+      end
+      
+      if any([mrk_pnt(:).meg_pos])
+        mrk_pos = cat(1, mrk_pnt(1:end).meg_pos);
+        mrk_label = transpose({mrk_pnt(1:end).label});
+        sw_ind = [3 1 2];
+        mrk_pos(1:3,:)= mrk_pos(sw_ind, :);
+        mrk_pos = mrk_pos * 100; % unit: cm
+        mrk_label(1:3,:)= mrk_label(sw_ind, :);
+      else
+        ft_error('No coil information found in the file');
+      end
+      
+      %% An exported file or an original one
+      isexported = hdr.orig.digitize.info.done;
+      
+      %% Digitized points
+      if ~isexported
+        ft_info('The input file is an original one: only marker-coil positions are loaded\n');
+        % The fiducial points are represented by the marker-coil positions.
+        if any([mrk_pnt(:).meg_pos])
+          shape.fid.pos = mrk_pos;   % unit: cm
+          shape.fid.label = {'nas'; 'lpa'; 'rpa'; 'Marker4'; 'Marker5'};
+        end
+      else
+        ft_info('The input file is a third-party-exported one including the digitized points\n');
+        % All digitized points
+        dig_pnt = hdr.orig.digitize.point;
+        digitizer2meg = hdr.orig.digitize.info.digitizer2meg;
+        R = digitizer2meg(1:3,1:3);
+        T = digitizer2meg(1:3,4);
+        % Transform to MEG coordinate:
+        shape.pos = transpose( R * [[dig_pnt.x]; [dig_pnt.y]; [dig_pnt.z]] + repmat(T, 1, numel(dig_pnt))).*100; % unit: cm
+        shape.label = transpose( deblank({dig_pnt(1:end).name}));
+        % Fiducial points
+        nas = find(strcmpi(shape.label, 'fidnz'));
+        lpa = find(strcmpi(shape.label, 'fidt9'));
+        rpa = find(strcmpi(shape.label, 'fidt10'));
+        if ~isempty(nas) && ~isempty(lpa) && ~isempty(rpa)
+          anatfid_pos = [ shape.pos(nas,:) ;  shape.pos(lpa,:) ; shape.pos(rpa,:) ];
+          anatfid_label = {'nas'; 'lpa'; 'rpa'};
+        end
+        % HPIs
+        HPI_1 = find(strcmpi(shape.label, 'HPI_1'));
+        HPI_2 = find(strcmpi(shape.label, 'HPI_2'));
+        HPI_3 = find(strcmpi(shape.label, 'HPI_3'));
+        HPI_4 = find(strcmpi(shape.label, 'HPI_4'));
+        HPI_5 = find(strcmpi(shape.label, 'HPI_5'));
+        if ~isempty(HPI_1) && ~isempty(HPI_2) && ~isempty(HPI_3) && ~isempty(HPI_4) && ~isempty(HPI_5)
+          HPI_pos = [ shape.pos(HPI_3,:) ;...
+            shape.pos(HPI_1,:) ;...
+            shape.pos(HPI_2,:) ;...
+            shape.pos(HPI_4,:) ;...
+            shape.pos(HPI_5,:) ];
+          HPI_label = { 'HPI_3'; 'HPI_1'; 'HPI_2'; 'HPI_4'; 'HPI_5' };
+        end
+        shape.fid.pos = [ anatfid_pos; HPI_pos; mrk_pos ];
+        shape.fid.label = [ anatfid_label; HPI_label; mrk_label ];
+      end
+      % 'cm' as a unit for 'pos':
+      shape.unit = 'cm';
+      
+    else  % the case that "yokogawa_meg_reader" is not available
+      hdr = read_yokogawa_header(filename);
+      marker = hdr.orig.matching_info.marker;
+      % markers 1-3 identical to zero: try *.mrk file
+      if ~any([marker(:).meg_pos])
+        [p, f, x] = fileparts(filename);
+        filename = fullfile(p, [f '.mrk']);
+        if exist(filename, 'file')
+          hdr = read_yokogawa_header(filename);
+          marker = hdr.orig.matching_info.marker;
+        end
+      end
+      
+      % non zero markers 1-3
+      if any([marker(:).meg_pos])
+        shape.fid.pos = cat(1, marker(1:5).meg_pos);
+        sw_ind = [3 1 2];
+        shape.fid.pos(1:3,:)= shape.fid.pos(sw_ind, :);
+        shape.fid.label = {'nas'; 'lpa'; 'rpa'; 'Marker4'; 'Marker5'};
+      else
+        ft_error('no coil information found in Yokogawa file');
+      end
+      
+      % convert to the units of the grad, the desired default for yokogawa is centimeter.
+      shape = ft_convert_units(shape, 'cm');
+    end
+    
+  case 'yokogawa_raw'
     if ft_hastoolbox('yokogawa_meg_reader')
       hdr = read_yokogawa_header_new(filename);
       marker = hdr.orig.coregist.hpi;
@@ -527,11 +716,48 @@ switch fileformat
       shape.fid.pos(1:3,:)= shape.fid.pos(sw_ind, :);
       shape.fid.label = {'nas'; 'lpa'; 'rpa'; 'Marker4'; 'Marker5'};
     else
-      error('no coil information found in Yokogawa file');
+      ft_error('no coil information found in Yokogawa file');
     end
     
     % convert to the units of the grad, the desired default for yokogawa is centimeter.
     shape = ft_convert_units(shape, 'cm');
+    
+    %  case {'yokogawa_mrk', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw' }
+    %    if ft_hastoolbox('yokogawa_meg_reader')
+    %      hdr = read_yokogawa_header_new(filename);
+    %      marker = hdr.orig.coregist.hpi;
+    %    else
+    %      hdr = read_yokogawa_header(filename);
+    %      marker = hdr.orig.matching_info.marker;
+    %    end
+    %
+    %    % markers 1-3 identical to zero: try *.mrk file
+    %    if ~any([marker(:).meg_pos])
+    %      [p, f, x] = fileparts(filename);
+    %      filename = fullfile(p, [f '.mrk']);
+    %      if exist(filename, 'file')
+    %        if ft_hastoolbox('yokogawa_meg_reader')
+    %          hdr = read_yokogawa_header_new(filename);
+    %          marker = hdr.orig.coregist.hpi;
+    %        else
+    %          hdr = read_yokogawa_header(filename);
+    %          marker = hdr.orig.matching_info.marker;
+    %        end
+    %      end
+    %    end
+    %
+    %    % non zero markers 1-3
+    %    if any([marker(:).meg_pos])
+    %      shape.fid.pos = cat(1, marker(1:5).meg_pos);
+    %      sw_ind = [3 1 2];
+    %      shape.fid.pos(1:3,:)= shape.fid.pos(sw_ind, :);
+    %      shape.fid.label = {'nas'; 'lpa'; 'rpa'; 'Marker4'; 'Marker5'};
+    %    else
+    %      ft_error('no coil information found in Yokogawa file');
+    %    end
+    %
+    %    % convert to the units of the grad, the desired default for yokogawa is centimeter.
+    %    shape = ft_convert_units(shape, 'cm');
     
   case 'yokogawa_coregis'
     in_str = textread(filename, '%s');
@@ -552,7 +778,7 @@ switch fileformat
       end
     end
     if size(shape.fid.label,1) ~= 5
-      error('Wrong number of coils');
+      ft_error('Wrong number of coils');
     end
     
     sw_ind = [3 1 2];
@@ -561,7 +787,7 @@ switch fileformat
     shape.fid.label(1:3)= {'nas', 'lpa', 'rpa'};
     
   case 'yokogawa_hsp'
-    fid = fopen(filename, 'rt');
+    fid = fopen_or_error(filename, 'rt');
     
     fidstart = false;
     hspstart = false;
@@ -637,7 +863,7 @@ switch fileformat
     if isfield(tmp.D, 'fiducials') && ~isempty(tmp.D.fiducials)
       shape = tmp.D.fiducials;
     else
-      error('no headshape found in SPM EEG file');
+      ft_error('no headshape found in SPM EEG file');
     end
     
   case 'matlab'
@@ -648,6 +874,8 @@ switch fileformat
       shape = tmp.shape;
     elseif isfield(tmp, 'headshape')
       shape = tmp.headshape;
+    elseif isfield(tmp, 'surface')
+      shape = tmp.surface;
     elseif isfield(tmp, 'bnd')
       % the variable in the file is most likely a precomputed triangulation of some sort
       shape = tmp.bnd;
@@ -665,8 +893,13 @@ switch fileformat
       % copy some optional fields over with a new name
       shape = copyfields(tmp, shape, {'Faces', 'Curvature', 'SulciMap'});
       shape = renamefields(shape, {'Faces', 'Curvature', 'SulciMap'}, {'tri', 'curv', 'sulc'});
+    elseif numel(fieldnames(tmp))==1
+      fn = fieldnames(tmp);
+      shape = tmp.(fn{1});
+      % check that it has vertices and triangles
+      assert(isfield(shape, 'pos') && isfield(shape, 'tri'), 'no headshape found in MATLAB file')
     else
-      error('no headshape found in MATLAB file');
+      ft_error('no headshape found in MATLAB file');
     end
     
   case {'freesurfer_triangle_binary', 'freesurfer_quadrangle'}
@@ -712,24 +945,26 @@ switch fileformat
     
   case 'obj'
     ft_hastoolbox('wavefront', 1);
-    % Implemented for structure.io .obj thus far
+    % Only tested for structure.io .obj thus far
     obj = read_wobj(filename);
-    shape.pos     = obj.vertices;
+    shape.pos     = obj.vertices(:,1:3);
     shape.pos     = shape.pos - repmat(sum(shape.pos)/length(shape.pos),[length(shape.pos),1]); %centering vertices
-    shape.tri     = obj.objects(2).data.vertices;
-    if (~isempty(image) && exist('hasimage','var'))
+    shape.tri     = obj.objects(end).data.vertices;
+    if hasimage
       texture = obj.vertices_texture;
       
-      %Refines the mesh and textures to increase resolution of the
-      %colormapping
-      for i = 1:1
-        [shape.pos, shape.tri,texture] = refine(shape.pos,shape.tri,'banks',texture);
-      end
-      picture     = imread(image);
-      color = uint8(zeros(length(shape.pos),3));
+      % Refines the mesh and textures to increase resolution of the colormapping
+      [shape.pos, shape.tri, texture] = refine(shape.pos, shape.tri, 'banks', texture);
+      
+      picture = imread(image);
+      color   = uint8(zeros(length(shape.pos),3));
       for i=1:length(shape.pos)
         color(i,1:3) = picture(floor((1-texture(i,2))*length(picture)),1+floor(texture(i,1)*length(picture)),1:3);
       end
+      shape.color = color;
+    elseif size(obj.vertices,2)==6
+      % the vertices also contain RGB colors
+      shape.color = obj.vertices(:,4:6);
     end
     
   case 'vtk'
@@ -755,7 +990,7 @@ switch fileformat
     if isfield(hdr.orig, 'headshapedata')
       shape.pos = hdr.orig.Var.headshapedata;
     else
-      error('the NetMEG file "%s" does not contain headshape data', filename);
+      ft_error('the NetMEG file "%s" does not contain headshape data', filename);
     end
     
   case 'vista'
@@ -767,7 +1002,7 @@ switch fileformat
     elseif size(elements,2)==4
       shape.tet = elements;
     else
-      error('unknown elements format')
+      ft_error('unknown elements format')
     end
     % representation of data is compatible with ft_datatype_parcellation
     shape.tissue = zeros(size(labels));
@@ -798,9 +1033,9 @@ switch fileformat
     if size(IMPORT.data,2)==6
       labels = IMPORT.data(:,6);
       % representation of tissue type is compatible with ft_datatype_parcellation
-      numlabels = size(unique(labels),1);
-      ulabel    = unique(labels);
-      shape.tissue      = zeros(size(labels));
+      numlabels    = size(unique(labels),1);
+      ulabel       = unique(labels);
+      shape.tissue = zeros(size(labels));
       shape.tissuelabel = {};
       for i = 1:numlabels
         shape.tissue(labels == ulabel(i)) = i;
@@ -842,7 +1077,7 @@ switch fileformat
       shape.pos  = ft_warp_apply(transform, shape.pos);
       shape.unit = mri.unit;
     else
-      warning('could not find accompanying MRI file, returning vertices in voxel coordinates');
+      ft_warning('could not find accompanying MRI file, returning vertices in voxel coordinates');
     end
     
   case 'brainvisa_mesh'
@@ -853,7 +1088,7 @@ switch fileformat
     shape.unit = 'unkown';
     
     if exist([filename '.minf'], 'file')
-      minffid = fopen([filename '.minf']);
+      minffid = fopen_or_error([filename '.minf']);
       hdr=fgetl(minffid);
       tfm_idx = strfind(hdr,'''transformations'':') + 21;
       transform = sscanf(hdr(tfm_idx:end),'%f,',[4 4])';
@@ -889,7 +1124,7 @@ switch fileformat
     end
     
     if isempty(transform)
-      warning('cound not determine the coordinate transformation, returning vertices in voxel coordinates');
+      ft_warning('cound not determine the coordinate transformation, returning vertices in voxel coordinates');
     end
     
   case 'brainvoyager_srf'
@@ -922,15 +1157,14 @@ switch fileformat
     npos = read_asa(filename, 'NumberHeadShapePoints=', '%d');
     if ~isempty(npos) && npos>0
       origunit = read_asa(filename, 'UnitHeadShapePoints', '%s', 1);
-      pos  = read_asa(filename, 'HeadShapePoints', '%f', npos, ':');
-      
+      pos = read_asa(filename, 'HeadShapePoints', '%f', npos, ':');
       pos = ft_scalingfactor(origunit, 'mm')*pos;
       
       shape.pos = pos;
     end
     
   case 'neuromag_mesh'
-    fid = fopen(filename, 'rt');
+    fid = fopen_or_error(filename, 'rt');
     npos = fscanf(fid, '%d', 1);
     pos = fscanf(fid, '%f', [6 npos])';
     ntri = fscanf(fid, '%d', 1);
@@ -951,7 +1185,7 @@ switch fileformat
       try
         elec = ft_read_sens(filename);
         if ~ft_senstype(elec, 'eeg')
-          error('headshape information can not be read from MEG gradiometer file');
+          ft_error('headshape information can not be read from MEG gradiometer file');
         else
           shape.fid.pos   = elec.chanpos;
           shape.fid.label = elec.label;
@@ -966,9 +1200,9 @@ switch fileformat
       % try reading it as volume conductor
       % and treat the skin surface as headshape
       try
-        headmodel = ft_read_vol(filename);
-        if ~ft_voltype(headmodel, 'bem')
-          error('skin surface can only be extracted from boundary element model');
+        headmodel = ft_read_headmodel(filename);
+        if ~ft_headmodeltype(headmodel, 'bem')
+          ft_error('skin surface can only be extracted from boundary element model');
         else
           if ~isfield(headmodel, 'skin')
             headmodel.skin = find_outermost_boundary(headmodel.bnd);
@@ -983,7 +1217,7 @@ switch fileformat
     end
     
     if ~success
-      error('unknown fileformat "%s" for head shape information', fileformat);
+      ft_error('unknown fileformat "%s" for head shape information', fileformat);
     end
 end % switch fileformat
 
@@ -1002,17 +1236,13 @@ if ~isempty(unit)
   shape = ft_convert_units(shape, unit);
 else
   try
-    % ft_convert_units will fail for triangle-only gifties.
-    shape = ft_convert_units(shape);
-  catch
+    % ft_determine_units will fail for triangle-only gifties.
+    shape = ft_determine_units(shape);
   end
 end
 
 % ensure that vertex positions are given in pos, not in pnt
 shape = fixpos(shape);
+
 % ensure that the numerical arrays are represented in double precision and not as integers
 shape = ft_struct2double(shape);
-
-if (~isempty(image) && exist('hasimage','var'))
-  shape.color = color;
-end

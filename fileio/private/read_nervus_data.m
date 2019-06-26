@@ -18,7 +18,7 @@ function out = read_nervus_data(nrvHdr, segment, range, chIdx)
 %
 % Copyright (C) 2016, Jan Brogger and Joost Wagenaar 
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -38,7 +38,7 @@ function out = read_nervus_data(nrvHdr, segment, range, chIdx)
 
 
 if nargin == 0
-    error('Missing argument');
+    ft_error('Missing argument');
 elseif nargin == 1
     segment = 1;
     range = [1 nrvHdr.Segments(1).duration*max(nrvHdr.Segments(1).samplingRate)];
@@ -58,7 +58,7 @@ assert(length(segment) == 1, 'Segment must be single value.');
 cSumSegments = [0 cumsum([nrvHdr.Segments.duration])];
 
 % Reopen .e file.
-h = fopen(nrvHdr.filename,'r','ieee-le');
+h = fopen_or_error(nrvHdr.filename,'r','ieee-le');
 
 % Find sectionID for channels
 lChIdx = length(chIdx);
@@ -111,7 +111,7 @@ for i = 1 : lChIdx
     end
     
     if lastSection > lastSectionForSegment
-        error('Index out of range for current section: %i > %i, on channel: %i', ...
+        ft_error('Index out of range for current section: %i > %i, on channel: %i', ...
             range(2), cSectionLengths(lastSectionForSegment+1), chIdx(i));
     end
     

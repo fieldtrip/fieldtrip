@@ -3,7 +3,7 @@ function test_bug2528
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST ft_math ft_selectdata ft_selectdata_new
+% DEPENDENCY ft_math ft_selectdata ft_selectdata_new
 
 % data1 =
 %           avg: [63x2000 double]
@@ -41,10 +41,10 @@ data2.trialinfo = randn(42,5);
 data2.dimord = 'rpt_chan_time';
 
 % the following is known to fail with the latest version on 8 April 2014
-% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2528
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2528
 
 cfg = [];
 cfg.operation = 'subtract';
-cfg.parameter = 'avg';
+cfg.parameter = 'trial';  % since the data contains both avg and trial, the avg will be discarded by ft_checkdata (as of timelock data structure version 2017)
 output = ft_math(cfg, data1, data2);
 

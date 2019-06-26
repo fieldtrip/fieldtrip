@@ -1,14 +1,18 @@
-function test_tutorial_networkanalysis_new
+function test_tutorial_networkanalysis(datadirs)
 
-% MEM 3000mb
 % WALLTIME 00:30:00
+% MEM 9gb
 
-% TEST test_tutorial_networkanalysis_new
-% TEST ft_networkanalysis
+% DEPENDENCY ft_networkanalysis
+
+if nargin==0,
+    datadirs{1} = dccnpath('/home/common/matlab/fieldtrip/data');
+    datadirs{2} = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/networkanalysis');
+end
 
 %% read the continuous data and segment into 2 seconds epochs, with 50% overlap
 cfg            = [];
-cfg.dataset    = dccnpath(fullfile('/home/common/matlab/fieldtrip/data','SubjectRest.ds')); 
+cfg.dataset    = fullfile(datadirs{1},'SubjectRest.ds'); 
 cfg.continuous = 'yes';
 cfg.channel    = {'MEG'};
 data = ft_preprocessing(cfg);
@@ -23,7 +27,7 @@ cfg.demean = 'yes';
 cfg.trials = 1:(numel(data.trial)-6);
 data       = ft_preprocessing(cfg, data);
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/networkanalysis');
+datadir = datadirs{2};
 cd(datadir);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -39,7 +43,7 @@ cd(datadir);
 % trlind = [];
 % for i=1:length(dataclean.cfg.artfctdef.summary.artifact)
 %  trlind(i) = find(data.sampleinfo(:,1)==dataclean.cfg.artfctdef.summary.artifact(i));
-% end;
+% end
 % disp(trlind);
 
 badtrials  = [18 19 21 72 73 74 75 76 93 94 109 110 126 127 128 140 172 173 179 180 181 182 196 197 198 227 228 233 243 244 250 251 265 266 286];
@@ -56,11 +60,12 @@ cfg.detrend    = 'yes';
 datads         = ft_resampledata(cfg, dataclean);
 
 %% use ICA in order to identify cardiac and blink components
-cfg                 = [];
-cfg.method          = 'runica'; 
-cfg.runica.maxsteps = 50;
-cfg.randomseed      = 0;
-comp                = ft_componentanalysis(cfg, datads);
+%cfg                 = [];
+%cfg.method          = 'runica'; 
+%cfg.runica.maxsteps = 50;
+%cfg.randomseed      = 0;
+%comp                = ft_componentanalysis(cfg, datads);
+load(fullfile(datadir,'comp.mat'));
 
 %% visualize components
 
@@ -131,14 +136,14 @@ load sourcemodel_4k
 figure;
 
 % make the headmodel surface transparent
-ft_plot_vol(hdm, 'edgecolor', 'none'); alpha 0.4           
+ft_plot_headmodel(hdm, 'edgecolor', 'none'); alpha 0.4           
 ft_plot_mesh(ft_convert_units(sourcemodel, 'cm'),'vertexcolor',sourcemodel.sulc);
 ft_plot_sens(dataclean.grad);
 view([0 -90 0])
 
 %% compute the leadfield
 cfg             = [];
-cfg.grid        = sourcemodel;
+cfg.sourcemodel        = sourcemodel;
 cfg.headmodel   = hdm;
 cfg.channel     = {'MEG'};
 lf              = ft_prepare_leadfield(cfg, dataica);
@@ -157,7 +162,7 @@ freq           = ft_freqanalysis(cfg, dataica);
 cfg                   = [];
 cfg.frequency         = freq.freq;
 cfg.method            = 'pcc';
-cfg.grid              = lf;
+cfg.sourcemodel              = lf;
 cfg.headmodel         = hdm;
 cfg.keeptrials        = 'yes';
 cfg.pcc.lambda        = '10%';
@@ -241,7 +246,7 @@ freq_high  = ft_freqanalysis(cfg, dataica);
 cfg                   = [];
 cfg.frequency         = freq.freq;
 cfg.method            = 'pcc';
-cfg.grid              = lf;
+cfg.sourcemodel              = lf;
 cfg.headmodel         = hdm;
 cfg.keeptrials        = 'yes';
 cfg.pcc.lambda        = '10%';
@@ -254,8 +259,8 @@ source = ft_sourceanalysis(cfg, freq);
 cfg                   = [];
 cfg.frequency         = freq.freq;
 cfg.method            = 'pcc';
-cfg.grid              = lf;
-cfg.grid.filter       = source.avg.filter;
+cfg.sourcemodel              = lf;
+cfg.sourcemodel.filter       = source.avg.filter;
 cfg.headmodel         = hdm;
 cfg.keeptrials        = 'yes';
 cfg.pcc.lambda        = '10%';
@@ -338,8 +343,8 @@ chanind = find(mean(tmp,1)==max(mean(tmp,1)));  % find the sensor where power is
 cfg                   = [];
 cfg.frequency         = freq.freq;
 cfg.method            = 'pcc';
-cfg.grid              = lf;
-cfg.grid.filter       = source.avg.filter;
+cfg.sourcemodel              = lf;
+cfg.sourcemodel.filter       = source.avg.filter;
 cfg.headmodel         = hdm;
 cfg.keeptrials        = 'yes';
 cfg.pcc.lambda        = '10%';

@@ -8,7 +8,6 @@
 #include <stdio.h>
 
 #include "mex.h"
-#include "matrix.h"
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		char *old, *new;

@@ -17,7 +17,7 @@ function [spike] = ft_datatype_spike(spike, varargin)
 % The fields of the SPIKE structure that contain the specific information
 % per spike depends on the available information. A relevant distinction
 % can be made between the representation of raw spikes that are not related
-% to the temporal strucutre of the experimental design (i.e trials), and
+% to the temporal structure of the experimental design (i.e trials), and
 % the data representation in which the spikes are related to the trial.
 %
 % For a continuous recording the SPIKE structure must contain a cell-array
@@ -35,7 +35,7 @@ function [spike] = ft_datatype_spike(spike, varargin)
 % If the data has been organised to reflect the temporal structure of the
 % experiment (i.e. the trials), the SPIKE structure should contain a
 % cell-array with the spike times relative to an experimental trigger. The
-% FT_SPIKE_REDEFINETRIAL function can be used to reorganise the SPIKE
+% FT_SPIKE_MAKETRIALS function can be used to reorganise the SPIKE
 % structure such that the spike times are expressed relative to a trigger
 % instead of relative to the acquisition devices internal timestamp clock.
 % The time field then contains only those spikes that ocurred within one of
@@ -158,7 +158,7 @@ switch version
     
     if isfield(spike,'origtrial') && isfield(spike,'origtime')
       % this was the old spiketriggered spectrum output
-      warning('The spike datatype format you are using is depreciated. Converting to newer spike format');
+      ft_warning('The spike datatype format you are using is depreciated. Converting to newer spike format');
       spike.trial = {spike.origtrial};
       spike       = rmfield(spike,'origtrial');      
       spike.time  = {spike.origtime};
@@ -168,7 +168,7 @@ switch version
       end
       if ~isfield(spike, 'trialtime')
         % determine from the data itself
-        warning('Reconstructing the field trialtime from spike.origtime and spike.origtrial. This is not the original representation');        
+        ft_warning('Reconstructing the field trialtime from spike.origtime and spike.origtrial. This is not the original representation');        
         tmax  = nanmax(spike.trial{1});
         tsmin = nanmin(spike.time{1});
         tsmax = nanmax(spike.time{1});
@@ -181,7 +181,7 @@ switch version
         try
           spike.label = spike.spikechannel;
         catch
-          {'unit1'}; %default
+          spike.label = {'unit1'}; %default
         end
       end
       spike.dimord = '{chan}_spike_lfpchan_freq';
@@ -206,7 +206,7 @@ switch version
             nSpikes = length(spike.timestamp{iUnit}); % check what's the spike dimension from the timestamps            
             spikedim = dim==nSpikes;
             if isempty(spikedim)
-              error('waveforms contains data but number of waveforms does not match number of spikes');
+              ft_error('waveforms contains data but number of waveforms does not match number of spikes');
             end
             if spikedim==1
               spike.waveform{iUnit} = permute(spike.waveform{iUnit},[3 2 1]);
@@ -221,10 +221,10 @@ switch version
             leaddim  = dim<6 & dim~=nSpikes;
             sampdim  = dim>=6 & dim~=nSpikes;
             if isempty(spikedim)
-              error('waveforms contains data but number of waveforms does not match number of spikes');
+              ft_error('waveforms contains data but number of waveforms does not match number of spikes');
             end
-            if sum(leaddim)~=1 | sum(sampdim)~=1, continue,end % in this case we do not know what to do                        
-            if find(spikedim)~=3 & find(leaddim)~=1 & find(sampdim)~=2
+            if sum(leaddim)~=1 || sum(sampdim)~=1, continue,end % in this case we do not know what to do                        
+            if find(spikedim)~=3 && find(leaddim)~=1 && find(sampdim)~=2
                 spike.waveform{iUnit} = permute(spike.waveform{iUnit}, [find(leaddim) find(sampdim) find(spikedim)]);
             end
           end                        
@@ -270,7 +270,7 @@ switch version
         
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    error('unsupported version "%s" for spike datatype', version);
+    ft_error('unsupported version "%s" for spike datatype', version);
 end
 
 

@@ -3,22 +3,16 @@ function test_bug1658
 % WALLTIME 00:20:00
 % MEM 4gb
 
-% TEST test_bug1658
-% TEST ft_sourcedescriptives
-% TEST ft_selectdata
+% DEPENDENCY ft_sourcedescriptives
+% DEPENDENCY ft_selectdata
 
 % test whether ft_sourceescriptives supports trial selection
 
 % load some source data
 load(dccnpath(fullfile('/home/common/matlab/fieldtrip/data/test/latest/source/meg','source_grid_mtmfft_fourier_trl_DICS_keepall_rawtrial_ctf151.mat')));
 
-% for now, work around the inconsistent data representation in noisecsd
-% (number of entries is inconsistent with the number of positions in the
-% grid), explicitly remove it
-source.trial = rmfield(source.trial, 'noisecsd');
-
-% also remove the spatial filters
-source.trial = rmfield(source.trial, 'filter');
+% remove the spatial filters
+source.trial = rmfield(source.trial, {'filter' 'filterdimord', 'label'});
 
 cfg = [];
 cfg.trials = [1 2 3 4];

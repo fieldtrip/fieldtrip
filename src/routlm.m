@@ -1,4 +1,4 @@
-function [varargout] = funname(varargin)
+function [varargout] = routlm(varargin)
 
 % ROUTLM computes the projection of a point from its la/mu parameters
 % these equal the "Barycentric" coordinates
@@ -68,7 +68,7 @@ catch
 end
 
 if success
-  % execute the mex file that was juist created
+  % execute the mex file that was just created
   funname   = mfilename;
   funhandle = str2func(funname);
   [varargout{1:nargout}] = funhandle(varargin{:});

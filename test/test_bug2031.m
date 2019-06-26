@@ -3,8 +3,7 @@ function test_bug2031
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2031
-% TEST ft_topoplotER ft_topoplotTFR ft_singleplotER ft_singleplotTFR
+% DEPENDENCY ft_topoplotER ft_topoplotTFR ft_singleplotER ft_singleplotTFR
 
 % this test script makes some figures, to verify that the FieldTrip menu
 % item is not added multiple times (1) when subplots are being used, and
@@ -25,7 +24,7 @@ freq.dimord = 'chan_freq_time';
 freq.powspctrm = randn(numel(freq.label), numel(freq.freq), numel(freq.time));
   
 %% ft_topoplotER, subplots
-% expected behaviour: no menu after second and subsequent calls
+% expected behavior: no menu after second and subsequent calls
 
 figure;
 cfg = [];
@@ -40,7 +39,7 @@ subplot(2,2,4);
 ft_topoplotER(cfg, tl);
 
 %% ft_topoplotTFR, subplots
-% expected behaviour: no menu after second and subsequent calls
+% expected behavior: no menu after second and subsequent calls
 
 figure;
 cfg = [];
@@ -55,7 +54,7 @@ subplot(2,2,4);
 ft_topoplotTFR(cfg, freq);
 
 %% ft_topoplotER, subplots
-% expected behaviour: no menu after second and subsequent calls
+% expected behavior: no menu after second and subsequent calls
 
 figure;
 cfg = [];
@@ -70,7 +69,7 @@ subplot(2,2,4);
 ft_topoplotER(cfg, tl);
 
 %% ft_topoplotER, subsequent plots
-% expected behaviour: one menu after second and subsequent calls
+% expected behavior: one menu after second and subsequent calls
 
 figure;
 cfg = [];
@@ -80,7 +79,7 @@ ft_topoplotER(cfg, tl);
 ft_topoplotER(cfg, tl);
 
 %% ft_topoplotTFR, subsequent plots
-% expected behaviour: one menu after second and subsequent calls
+% expected behavior: one menu after second and subsequent calls
 
 figure;
 cfg = [];
@@ -90,7 +89,7 @@ ft_topoplotTFR(cfg, freq);
 ft_topoplotTFR(cfg, freq);
 
 %% ft_singleplotER, subplots
-% expected behaviour: no menu after second and subsequent calls
+% expected behavior: no menu after second and subsequent calls
 
 figure;
 cfg = [];
@@ -104,7 +103,7 @@ subplot(2,2,4);
 ft_singleplotER(cfg, tl);
 
 %% ft_singleplotTFR, subplots
-% expected behaviour: no menu after second and subsequent calls
+% expected behavior: no menu after second and subsequent calls
 
 figure;
 cfg = [];
@@ -118,7 +117,7 @@ subplot(2,2,4);
 ft_singleplotTFR(cfg, freq);
 
 %% ft_singleplotER, subsequent plots
-% expected behaviour: one menu after second and subsequent calls
+% expected behavior: one menu after second and subsequent calls
 
 figure;
 cfg = [];
@@ -127,7 +126,7 @@ ft_singleplotER(cfg, tl);
 ft_singleplotER(cfg, tl);
 
 %% ft_singleplotTFR, subsequent plots
-% expected behaviour: one menu after second and subsequent calls
+% expected behavior: one menu after second and subsequent calls
 
 figure;
 cfg = [];

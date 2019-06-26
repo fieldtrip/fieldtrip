@@ -35,7 +35,7 @@ function [dat] = read_yokogawa_data(filename, hdr, begsample, endsample, chanind
 % $Id$
 
 if ~ft_hastoolbox('yokogawa')
-    error('cannot determine whether Yokogawa toolbox is present');
+    ft_error('cannot determine whether Yokogawa toolbox is present');
 end
 
 % hdr = read_yokogawa_header(filename);
@@ -47,7 +47,7 @@ if nargin<5
 end
 
 handles = definehandles;
-fid = fopen(filename, 'rb', 'ieee-le');
+fid = fopen_or_error(filename, 'rb', 'ieee-le');
 
 switch hdr.acq_type
   case handles.AcqTypeEvokedAve
@@ -77,19 +77,19 @@ switch hdr.acq_type
     begtrial = ceil(begsample/hdr.sample_count);
     endtrial = ceil(endsample/hdr.sample_count);
     if begtrial<1
-      error('cannot read before the begin of the file');
+      ft_error('cannot read before the begin of the file');
     elseif endtrial>hdr.actual_epoch_count
-      error('cannot read beyond the end of the file');
+      ft_error('cannot read beyond the end of the file');
     end
     epoch_count = endtrial-begtrial+1;
     start_epoch = begtrial-1;
-    % read all the neccessary trials that contain the desired samples
+    % read all the necessary trials that contain the desired samples
     dat = double(GetMeg160EvokedRawDataM( fid, start_epoch, epoch_count ));
     % the first extra sample is the channel number
     channum = dat(:,1);
     dat     = dat(:,2:end);
     if size(dat,2)~=epoch_count*hdr.sample_count
-      error('could not read all epochs');
+      ft_error('could not read all epochs');
     end
     rawbegsample = begsample - (begtrial-1)*hdr.sample_count;
     rawendsample = endsample - (begtrial-1)*hdr.sample_count;
@@ -98,15 +98,15 @@ switch hdr.acq_type
     dat = dat(:,rawbegsample:rawendsample);
 
   otherwise
-    error('unknown data type');
+    ft_error('unknown data type');
 end
 
 fclose(fid);
 
 if size(dat,1)~=hdr.channel_count
-  error('could not read all channels');
+  ft_error('could not read all channels');
 elseif size(dat,2)~=(endsample-begsample+1)
-  error('could not read all samples');
+  ft_error('could not read all samples');
 end
 
 % Count of AxialGradioMeter

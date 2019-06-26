@@ -1,17 +1,13 @@
 function test_tutorial_connectivity20130308
 
-% MEM 1500mb
+% MEM 7gb
 % WALLTIME 00:10:00
-
-% TEST test_tutorial_connectivity20130308
 
 % Simulated data with directed connections
 % We will first simulate some data with a known connectivity structure built in. This way we know what to expect in terms of connectivity. To simulate data we use ft_connectivitysimulation. We will use an order 2 multivariate autoregressive model. The necessary ingredients are a set of NxN coefficient matrices, one matrix for each time lag. These coefficients need to be stored in the cfg.param field. Next to the coefficients we have to specify the NxN covariance matrix of the innovation noise. This matrix needs to be stored in the cfg.noisecov field. The model we are going to use to simulate the data is as follows:
 % 
 % x(t) = 0.8*x(t-1) - 0.5*x(t-2)
-% 
 % y(t) = 0.9*y(t-1) + 0.5*z(t-1) - 0.8*y(t-2)
-% 
 % z(t) = 0.5*z(t-1) + 0.4*x(t-1) - 0.2*z(t-2)
 
 cfg             = [];
@@ -72,7 +68,7 @@ mdata       = ft_mvaranalysis(cfg, data);
 %     fsampleorig: 200
 %             cfg: [1x1 struct]
 %             
-% The resulting variable mdata contains a description of the data in terms of a multivariate autoregressive model. For each time-lag up to the model order (which is 5 in this case), a 3×3 matrix of coefficients is outputted. The noisecov-field contains covariance matrix of the model's residuals.
+% The resulting variable mdata contains a description of the data in terms of a multivariate autoregressive model. For each time-lag up to the model order (which is 5 in this case), a 33 matrix of coefficients is outputted. The noisecov-field contains covariance matrix of the model's residuals.
 % 
 % Exercise 1
 % Compare the parameters specified for the simulation with the estimated coefficients and discuss.
@@ -273,13 +269,13 @@ cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/connectivity'));
 load source
 
 [maxval, maxindx] = max(source.avg.coh);
-maxpos = source.pos(maxindx,:)
+maxpos = source.pos(maxindx,:);
 
 % maxpos = 
 %     4 -3 12
 % The cortical position is expressed in individual subject head-coordinates and in centimeter. Relative to the center of the head (in between the ears) the position is 4 cm towards the nose, -3 towards the left side (i.e., 3 cm towards the right!) and 12 cm towards the vertex.
 % 
-% The ft_sourceanalysis methods are usually applied to the whole brain using a regular 3-D grid or using a triangulated cortical sheet. You can also just specify the location of a single or multiple points of interest with cfg.grid.pos and the LCMV beamformer will simply be performed at the location of interest.
+% The ft_sourceanalysis methods are usually applied to the whole brain using a regular 3-D grid or using a triangulated cortical sheet. You can also just specify the location of a single or multiple points of interest with cfg.sourcemodel.pos and the LCMV beamformer will simply be performed at the location of interest.
 % 
 % The LCMV beamformer spatial filter for the location of interest will pass the activity at that location with unit-gain, while optimally suppressing all other noise and other source contributions to the MEG data. The LCMV implementation in FieldTrip requires the data covariance matrix to be computed with ft_timelockanalysis.
 % 
@@ -298,7 +294,7 @@ timelock              = ft_timelockanalysis(cfg, data);
 cfg             = [];
 cfg.method      = 'lcmv';
 cfg.hdmfile     = 'SubjectCMC.hdm';
-cfg.grid.pos    = maxpos;
+cfg.sourcemodel.pos = maxpos;
 cfg.keepfilter  = 'yes';
 source          = ft_sourceanalysis(cfg, timelock);
 % The source reconstruction contains the estimated power and the source-level time-series of the averaged ERF, but here we are not interested in those. The cfg.keepfilter option results in the spatial filter being kept in the output source structure. That spatial can be used to reconstruct the single-trial time series as a virtual channel by multiplying it with the original MEG data.
@@ -357,7 +353,7 @@ for i=1:length(data.trial)
   virtualchanneldata.trial{i} = u(:,1)' * beamformer * data.trial{i}(chansel,:);
 end
 % Rather than using a sourcemodel in the beamformer that consists of all three (x, y, z) directions, you can also have the beamformer compute the filter for only the optimal source orientation. This is implemented using the cfg.lcmv.fixedori='yes' option.
-% Recompute the spatial filter for the optimal source orientation and using that spatial filter (a 1×151 vector) recompute the time-series.
+% Recompute the spatial filter for the optimal source orientation and using that spatial filter (a 1151 vector) recompute the time-series.
 % 
 % Investigate and describe the difference between the two time-series. What is the difference between the two dipole orientations?
 % 

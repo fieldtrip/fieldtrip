@@ -9,9 +9,10 @@ function b=om_spher_mag_iso(x,q,p)
 % MOSHER & Al. : EEG and MEG: Forward solutions for inverse methods
 % Ilmoniemi & Al
 % Sarvas
-% E.Olivi 2008/11/18
+% 
+% Author: E. Olivi 2008/11/18
 
-% $Id$
+% Copyright (C) 2010-2017, OpenMEEG developers
 
 mu0 = 4*pi*1e-7;
 %mu0 = 1;

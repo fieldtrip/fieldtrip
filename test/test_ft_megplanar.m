@@ -3,12 +3,7 @@ function test_ft_megplanar
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_megplanar
-% TEST ft_megplanar ft_prepare_neighbours ft_topoplotER
-
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
+% DEPENDENCY ft_megplanar ft_prepare_neighbours ft_topoplotER
 
 datainfo = ref_datasets;
 sel      = match_str({datainfo.datatype}',{'bti148' 'bti248' 'ctf151' 'ctf275' 'itab153' 'yokogawa160'}');
@@ -46,10 +41,9 @@ for k = 1:numel(datainfo)
   vol.unit = 'cm';
   
   % ensure units in the gradiometer array and volume conductor to be equal
-  data.grad = ft_convert_units(data.grad);
-  vol       = ft_convert_units(vol, data.grad.unit);
+  vol = ft_convert_units(vol, data.grad.unit);
   cfg.planarmethod = 'sourceproject';
-  cfg.vol = vol;
+  cfg.headmodel = vol;
   data5 = ft_megplanar(cfg, data);
   
 %   % subtract mean
@@ -126,7 +120,7 @@ avgFICplanarComb = ft_combineplanar(cfg,avgFICplanar);
 it = 5; % #iterations
 i = 0;
 while it < i
-    [a, b] = nanmax(nanmax(avgFICplanarComb.avg, [], 2))
+    [a, b] = nanmax(nanmax(avgFICplanarComb.avg, [], 2));
     if (b~=29) || b~= 53 || b~=4 || b~=28 || b~=3
         error('the global maxima has moved location');
     else
@@ -138,7 +132,7 @@ fprintf('global maxima seems all fine\n');
 
 i = 0;
 while it < i
-    [a, b] = nanmin(nanmin(avgFICplanarComb.avg, [], 2))
+    [a, b] = nanmin(nanmin(avgFICplanarComb.avg, [], 2));
     if b~=21|| b~=33 || b~=133 || b~=92 || b~=144
         error('the global minima has moved location');
     else

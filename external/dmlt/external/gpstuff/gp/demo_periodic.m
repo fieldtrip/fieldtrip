@@ -227,11 +227,11 @@ title('The long and short term latent component')
 % PART 2 Drowning data analysis with FULL GP
 %========================================================
 
-% Here we use a GP model with Poisson likelihood to analyse the
+% Here we use a GP model with Poisson likelihood to analyze the
 % monthly Finnish drowning mortality data from 2002-2008. Finland,
 % with almost 200 000 lakes and a long coast on the Baltic sea, has a
 % relatively high drowning mortality among the developed countries.
-% It is well known that drownings exhibit a periodic behaviour within
+% It is well known that drownings exhibit a periodic behavior within
 % the year, peaking in the summer holiday season in July and coming to
 % near zero in the winter when most lakes and the Baltic sea are
 % frozen.

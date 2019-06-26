@@ -171,13 +171,13 @@ switch parcelversion
 
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    error('unsupported version "%s" for parcellation datatype', parcelversion);
+    ft_error('unsupported version "%s" for parcellation datatype', parcelversion);
 end
 
 % the parcellation is a speciat type of volume structure, so ensure that it also fulfills the requirements for that
 parcellation = ft_datatype_source(parcellation, 'version', sourceversion);
 
-% For the pass through ft_datatype_volume it is perhaps neccessary to remove
+% For the pass through ft_datatype_volume it is perhaps necessary to remove
 % the fields that are specific for the parcellation and add them later again.
 % At this moment ft_datatype_volume nicely passes all fields, so there is no
 % special handling of the parcellation fields needed.

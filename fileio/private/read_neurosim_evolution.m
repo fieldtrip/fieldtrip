@@ -32,7 +32,7 @@ function [hdr, dat] = read_neurosim_evolution(filename, varargin)
 %
 % $Id$
 
-if isdir(filename)
+if isfolder(filename)
   filename = fullfile(filename, 'evolution');
 end
 
@@ -46,7 +46,7 @@ end
 label = {};
 orig  = {};
 
-fid = fopen(filename, 'rb');
+fid = fopen_or_error(filename, 'rb');
 
 % read the header
 line =  '#';

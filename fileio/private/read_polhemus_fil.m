@@ -70,10 +70,10 @@ while temp == 0
     if strcmp(file{nl},'NZ')
         NZ = [NZ ; str2num(file{nl+1}) str2num(file{nl+2}) str2num(file{nl+3}) ];
         nl = nl + 4;
-    elseif strcmp(file{nl},'LE') | strcmp(file{nl},'OG')
+    elseif strcmp(file{nl},'LE') || strcmp(file{nl},'OG')
         LE = [LE ; str2num(file{nl+1}) str2num(file{nl+2}) str2num(file{nl+3}) ];
         nl = nl + 4;
-    elseif strcmp(file{nl},'RE') | strcmp(file{nl},'OD')
+    elseif strcmp(file{nl},'RE') || strcmp(file{nl},'OD')
         RE = [RE ; str2num(file{nl+1}) str2num(file{nl+2}) str2num(file{nl+3}) ];
         nl = nl + 4;
     elseif isempty(str2num(file{nl})) % Add possible other named points

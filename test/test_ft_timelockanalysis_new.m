@@ -3,22 +3,18 @@ function test_ft_timelockanalysis_new(datainfo,writeflag)
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_timelockanalysis_new
-% ft_timelockanalysis_new ft_timelockanalysis ref_datasets
-
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-
-% this is a function for testing ft_timelockanalysis_new, which is not official yet
+% DEPENDENCY ft_timelockanalysis_new ft_timelockanalysis ref_datasets
 
 % the optional writeflag determines whether the output should be saved to
 % disk
 
-%% 
+%%
+% this is a function for testing ft_timelockanalysis_new, which is not official yet
+%
 % This function is testing a new ft_timelockanalysis_new which is something
 % Johanna is working on and not in SVN yet.
-return;
+
+return
 
 %%
 
@@ -28,10 +24,11 @@ end
 if nargin<1
   datainfo = ref_datasets;
 end
+
 % for k = 1:numel(datainfo)
 for k = 1:10
   datanew = timelockanalysis10trials(datainfo(k), writeflag);
-  
+
   fname = fullfile(datainfo(k).origdir,'latest/timelock',datainfo(k).type,'timelock_',datainfo(k).datatype);
   tmp = load(fname);
   if isfield(tmp, 'data')
@@ -41,7 +38,7 @@ for k = 1:10
   else isfield(tmp, 'timelock')
     data = tmp.timelock;
   end
-  
+
   datanew = rmfield(datanew, 'cfg'); % these are per construction different if writeflag = 0;
   data    = rmfield(data,    'cfg');
   assert(isequaln(data, datanew));
@@ -62,9 +59,9 @@ return
 
 
 function test_cfg_options
-load /home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFC_LP.mat
-data=dataFC_LP;
-clear dataFC_LP;
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFC_LP.mat'));
+data = dataFC_LP;
+clear dataFC_LP
 
 data.time{2}=data.time{2}+.5; % purposely add some jitter to time window
 data.time{3}=data.time{3}-.5;
@@ -330,7 +327,7 @@ if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(f
 
 % test ft_sourceanalysis versus MNE event related tutorial
 if 0
-    
+
     cfg=[];
     cfg.output='avg';
     cfg.feedback='none';
@@ -338,11 +335,11 @@ if 0
     tlock=ft_timelockanalysis_new(cfg,data);
     cfg=[];
     cfg.method='lcmv';
-    cfg.hdmfile=['/home/common/matlab/fieldtrip/data/Subject01.hdm'];
+    cfg.hdmfile=dccnpath('/home/common/matlab/fieldtrip/data/Subject01.hdm');
     cfg.grad=data.grad;
     source=ft_sourceanalysis(cfg,tlock);
-    
-    
+
+
     cfg = [];
     cfg.covariance = 'yes';
     cfg.vartrllength=1;
@@ -354,7 +351,7 @@ if 0
     save tlck tlckFC tlckFIC;
     cfg=[];
     cfg.method='lcmv';
-    cfg.hdmfile=['/home/common/matlab/fieldtrip/data/Subject01.hdm'];
+    cfg.hdmfile=dccnpath('/home/common/matlab/fieldtrip/data/Subject01.hdm');
     cfg.grad=data.grad;
     sourceFC=ft_sourceanalysis(cfg,tlckFC);
 end
@@ -369,24 +366,24 @@ if 0
     cfg.preproc.bpfilter='yes';
     cfg.preproc.bpfreq=[16 20];
     tlock=ft_timelockanalysis_new(cfg,data);
-    load /home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat
+    load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'))
     cfg=[];
     vol=ft_prepare_singleshell(cfg,segmentedmri);
     cfg=[];
-    cfg.vol=vol;
+    cfg.headmodel=vol;
     cfg.reducerank = 2;
     cfg.grad=tlock.grad;
-    cfg.grid.resolution=1;
+    cfg.sourcemodel.resolution=1;
     cfg.channel={'MEG','-MLP31','-MLO12'};
     grid=ft_prepare_leadfield(cfg);
     cfg=[];
     cfg.method='lcmv';
     cfg.projectnoise='yes';
-    cfg.grid=grid;
-    cfg.vol=vol;
+    cfg.sourcemodel=grid;
+    cfg.headmodel=vol;
     source=ft_sourceanalysis(cfg,tlock);
-    
-    mri=ft_read_mri('/home/common/matlab/fieldtrip/data/Subject01.mri');
+
+    mri=ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri'));
     sourcediff=source;
     % sourcediff.avg.pow=(source.avg.pow-source.avg.noise)./source.avg.noise;
     sourcediff.avg.pow=(source.avg.pow)./source.avg.noise;
@@ -401,7 +398,7 @@ if 0
     cfg.opacitylim=[5 6.2];
     cfg.opacitymap='rampup';
     figure;ft_sourceplot(cfg,sourcediffint); %ok
-    
+
     cfg=[];
     cfg.downsample=2;
     sourceint=ft_sourceinterpolate(cfg,source,mri);
@@ -413,20 +410,20 @@ if 0
     % cfg.opacitylim=[5 6.2];
     % cfg.opacitymap='rampup';
     figure;ft_sourceplot(cfg,sourceint); %ok
-    
-    
+
+
 end
 
 % test ft_timelockstatistics
 if 0
-    
+
 cfg=[];
 cfg.output='cov';
 cfg.feedback='none';
 cfg.keeptrials='yes';
 cfg.preproc.feedback='textbar';
 tlock=ft_timelockanalysis_new(cfg,data);
-    
+
 tlock1 = ft_selectdata(tlock, 'rpt',1:36)
 tlock2 = ft_selectdata(tlock, 'rpt',37:72)
 
@@ -435,4 +432,3 @@ cfg.method='analytic';
    cfg.statistic='ft_statfun_indepsamplesT' ;
 stat=ft_timelockstatistics(cfg,tlock1,tlock2);
 end
-

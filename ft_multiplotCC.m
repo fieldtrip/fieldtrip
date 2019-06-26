@@ -45,6 +45,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble debug
+ft_preamble loadvar data
 ft_preamble provenance data
 ft_preamble trackconfig
 
@@ -57,19 +58,19 @@ end
 data = ft_checkdata(data);
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam', 'parameter'});
+cfg = ft_checkconfig(cfg, 'renamed', {'zparam', 'parameter'});
 cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam'});
 
-% if ~isfield(cfg, 'layout'),    cfg.layout = 'CTF151.lay';        end;
-%if ~isfield(cfg, 'xparam'),      cfg.xparam = 'freq';                end;
-if ~isfield(cfg, 'xlim'),        cfg.xlim   = 'all';                end;
-if ~isfield(cfg, 'parameter'),   cfg.parameter = 'avg.icohspctrm';  end;
+% set the defaults
+cfg.xlim      = ft_getopt(cfg, 'xlim', 'all');
+cfg.parameter = ft_getopt(cfg, 'parameter', 'avg.icohspctrm');
+cfg.renderer  = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 
-if strcmp(cfg.parameter, 'avg.icohspctrm') && ~issubfield(data, 'avg.icohspctrm'),
+if strcmp(cfg.parameter, 'avg.icohspctrm') && ~issubfield(data, 'avg.icohspctrm')
   data.avg.icohspctrm = abs(imag(data.avg.cohspctrm));
 end
 
-if strcmp(data.dimord, 'chan_chan_freq'),
+if strcmp(data.dimord, 'chan_chan_freq')
   % reshape input-data, such that ft_topoplotTFR will take it
   cnt = 1;
   siz = size(data.prob);
@@ -88,67 +89,99 @@ else
   scale = [0 max(dat(:))-0.2];
 end
 
-if isfield(cfg, 'xparam'),
+if isfield(cfg, 'xparam')
   xparam = getsubfield(data, cfg.xparam);
-  if ~strcmp(cfg.xlim, 'all'),
+  if ~strcmp(cfg.xlim, 'all')
     fbin = [nearest(xparam, cfg.xlim(1)) nearest(xparam, cfg.xlim(2))];
   else
     fbin = [xparam(1) xparam(end)];
   end
 end
 
-% R=read or create the layout that will be used for plotting
-lay = ft_prepare_layout(cfg);%, varargin{1});
-cfg.layout = lay;
-ft_plot_lay(lay, 'box', false,'label','no','point','no');
+% read or create the layout that will be used for plotting
+tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
+layout = ft_prepare_layout(tmpcfg);
+ft_plot_layout(layout, 'box', false, 'label', 'no', 'point', 'no');
 
-%[chNum,X,Y,Width,Height,Lbl] = textread(cfg.layout,'%f %f %f %f %f %s');
-X = lay.pos(:,1);
-Y = lay.pos(:,2);
-Width = lay.width;
-Height = lay.height;
-Lbl = lay.label;
-chNum = numel(lay.label);
+X = layout.pos(:,1);
+Y = layout.pos(:,2);
+Width = layout.width;
+Height = layout.height;
+Lbl = layout.label;
+chNum = numel(layout.label);
 
 xScaleFac = 1/(max(Width)+ max(X) - min(X));
 yScaleFac = 1/(max(Height)+ max(Y) - min(Y));
-
 
 Xpos = xScaleFac*(X-min(X));
 Ypos = 0.9*yScaleFac*(Y-min(Y));
 
 for k=1:length(chNum) - 2
   subplotOL('position',[Xpos(k) Ypos(k)+(Height(k)*yScaleFac) Width(k)*xScaleFac*2 Height(k)*yScaleFac*2])
-  config.layout = cfg.layout;
+  tmpcfg = [];
+  tmpcfg.layout = layout;
   if exist('tmpdata', 'var')
-    config.style      = 'straight';
-    config.marker     = 'off';
+    tmpcfg.style      = 'straight';
+    tmpcfg.marker     = 'off';
     try
-        config.refmarker = strmatch(Lbl(k), data.reflabel);
+      tmpcfg.refmarker = strmatch(Lbl(k), data.reflabel);
     catch
-        config.refmarker = strmatch(Lbl(k), data.label);
+      tmpcfg.refmarker = strmatch(Lbl(k), data.label);
     end
-    config.interplimits = 'electrodes';
-    if isfield(cfg, 'xparam'),
-      config.xparam = cfg.xparam;
-      config.xlim   = xparam;
+    tmpcfg.interplimits = 'electrodes';
+    if isfield(cfg, 'xparam')
+      tmpcfg.xparam = cfg.xparam;
+      tmpcfg.xlim   = xparam;
     else
-      config.xparam = 'freq';
-      config.xlim   = [k-0.5 k+0.5];
+      tmpcfg.xparam = 'freq';
+      tmpcfg.xlim   = [k-0.5 k+0.5];
     end
-    config.parameter  = cfg.parameter;
-    config.refchannel = Lbl(k);
-    config.colorbar   = 'no';
-    config.zlim       = scale;
-    config.grid_scale = 30;
-    ft_topoplotTFR(config, data);
-    drawnow;
+    tmpcfg.parameter  = cfg.parameter;
+    tmpcfg.refchannel = Lbl(k);
+    tmpcfg.colorbar   = 'no';
+    tmpcfg.zlim       = scale;
+    tmpcfg.grid_scale = 30;
+    ft_topoplotTFR(tmpcfg, data);
+    drawnow
   end
+end
+
+% this is needed for the figure title
+if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
+  dataname = cfg.dataname;
+elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
+elseif nargin>1
+  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
+else
+  dataname = {};
+end
+
+% set the figure window title
+if ~isempty(dataname)
+  set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
+else
+  set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
+end
+set(gcf, 'NumberTitle', 'off');
+
+% set renderer if specified
+if ~isempty(cfg.renderer)
+  set(gcf, 'renderer', cfg.renderer)
 end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble previous   data
-ft_postamble history    data
+ft_postamble previous data
 ft_postamble provenance
+ft_postamble savefig
+
+% add a menu to the figure, but only if the current figure does not have subplots
+menu_fieldtrip(gcf, cfg, false);
+
+if ~ft_nargout
+  % don't return anything
+  clear cfg
+end
+

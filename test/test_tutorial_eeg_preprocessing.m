@@ -3,8 +3,7 @@ function test_tutorial_eeg_preprocessing
 % WALLTIME 00:45:00
 % MEM 2gb
 
-% TEST test_tutorial_eeg_preprocessing
-% TEST ft_definetrial ft_preprocessing
+% DEPENDENCY ft_definetrial ft_preprocessing
 
 %% defining trials
 dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/preprocessing_erp/s04.vhdr');
@@ -17,7 +16,7 @@ trl = cfg.trl;
 
 %% pre-processing and re-referencing
 cfg = [];
-cfg.datafile        = 's04.eeg';
+cfg.datafile        = dataset;
 cfg.trl             = trl;
 
 % Baseline-correction options

@@ -9,9 +9,9 @@ function [freq] = ft_freqbaseline(cfg, freq)
 %   cfg.baseline     = [begin end] (default = 'no'), alternatively an
 %                      Nfreq x 2 matrix can be specified, that provides
 %                      frequency specific baseline windows.
-%   cfg.baselinetype = 'absolute', 'relative', 'relchange', 'normchange' or 'db' (default = 'absolute')
+%   cfg.baselinetype = 'absolute', 'relative', 'relchange', 'normchange', 'db', 'vssum' or 'zscore' (default = 'absolute')
 %   cfg.parameter    = field for which to apply baseline normalization, or
-%                      cell array of strings to specify multiple fields to normalize
+%                      cell-array of strings to specify multiple fields to normalize
 %                      (default = 'powspctrm')
 %
 % See also FT_FREQANALYSIS, FT_TIMELOCKBASELINE, FT_FREQCOMPARISON,
@@ -74,17 +74,17 @@ cfg.parameter    =  ft_getopt(cfg, 'parameter', 'powspctrm');
 
 % check validity of input options
 cfg =               ft_checkopt(cfg, 'baseline', {'char', 'doublevector', 'doublematrix'});
-cfg =               ft_checkopt(cfg, 'baselinetype', 'char', {'absolute', 'relative', 'relchange', 'normchange', 'db', 'vssum'});
+cfg =               ft_checkopt(cfg, 'baselinetype', 'char', {'absolute', 'relative', 'relchange', 'normchange', 'db', 'vssum','zscore'});
 cfg =               ft_checkopt(cfg, 'parameter', {'char', 'charcell'});
 
-% make sure cfg.parameter is a cell array of strings
+% make sure cfg.parameter is a cell-array of strings
 if (~isa(cfg.parameter, 'cell'))
   cfg.parameter = {cfg.parameter};
 end
 
 % is input consistent?
 if ischar(cfg.baseline) && strcmp(cfg.baseline, 'no') && ~isempty(cfg.baselinetype)
-  warning('no baseline correction done');
+  ft_warning('no baseline correction done');
 end
 
 % process possible yes/no value of cfg.baseline
@@ -97,18 +97,18 @@ elseif ischar(cfg.baseline) && strcmp(cfg.baseline, 'no')
 end
 
 % allow for baseline to be nfreq x 2
-if size(cfg.baseline,1)==numel(freq.freq) && size(cfg.baseline,2)==2,
+if size(cfg.baseline,1)==numel(freq.freq) && size(cfg.baseline,2)==2
   % this is ok
-elseif numel(cfg.baseline)==2,
+elseif numel(cfg.baseline)==2
   % this is also ok
   cfg.baseline = cfg.baseline(:)'; % ensure row vector
 else
-  error('cfg.baseline should either be a string, a 1x2 vector, or an Nfreqx2 matrix');
+  ft_error('cfg.baseline should either be a string, a 1x2 vector, or an Nfreqx2 matrix');
 end
 
 % check if the field of interest is present in the data
 if (~all(isfield(freq, cfg.parameter)))
-  error('cfg.parameter should be a string or cell array of strings referring to (a) field(s) in the freq input structure')
+  ft_error('cfg.parameter should be a string or cell-array of strings referring to (a) field(s) in the freq input structure')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -118,7 +118,7 @@ end
 % initialize output structure
 freqOut = keepfields(freq, {'label' 'freq' 'dimord' 'time'});
 freqOut = copyfields(freq, freqOut,...
-  {'grad', 'elec', 'trialinfo','topo', 'topolabel', 'unmixing'});
+  {'grad', 'elec', 'trialinfo', 'topo', 'topolabel', 'unmixing'});
 
 % loop over all fields that should be normalized
 for k = 1:numel(cfg.parameter)
@@ -143,7 +143,7 @@ for k = 1:numel(cfg.parameter)
     end
 
   else
-    error('unsupported data dimensions: %s', freq.dimord);
+    ft_error('unsupported data dimensions: %s', freq.dimord);
   end
 
 end
@@ -179,8 +179,8 @@ for k = 1:size(baseline,1)
   baselineTimes(k,:) = (timeVec >= baseline(k,1) & timeVec <= baseline(k,2));
 end
 
-if length(size(data)) ~= 3,
-  error('time-frequency matrix should have three dimensions (chan,freq,time)');
+if length(size(data)) ~= 3
+  ft_error('time-frequency matrix should have three dimensions (chan,freq,time)');
 end
 
 % compute mean of time/frequency quantity in the baseline interval,
@@ -205,6 +205,9 @@ elseif (strcmp(baselinetype, 'normchange')) || (strcmp(baselinetype, 'vssum'))
   data = (data - meanVals) ./ (data + meanVals);
 elseif (strcmp(baselinetype, 'db'))
   data = 10*log10(data ./ meanVals);
+elseif (strcmp(baselinetype,'zscore'))
+    stdVals = repmat(nanstd(data(:,:,baselineTimes),1, 3), [1 1 size(data, 3)]);
+    data=(data-meanVals)./stdVals;
 else
-  error('unsupported method for baseline normalization: %s', baselinetype);
+  ft_error('unsupported method for baseline normalization: %s', baselinetype);
 end

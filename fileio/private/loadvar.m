@@ -1,6 +1,8 @@
 function value = loadvar(filename, varname)
 
 % LOADVAR is a helper function for cfg.inputfile
+%
+% See also SAVEVAR
 
 % Copyright (C) 2010, Robert Oostenveld
 %
@@ -9,25 +11,25 @@ function value = loadvar(filename, varname)
 assert(ischar(filename), 'file name should be a string');
 
 if nargin<2
-  fprintf('reading variable from file ''%s''\n', filename);
+  ft_info('reading variable from file ''%s''\n', filename);
 else
   assert(ischar(varname), 'variable name should be a string');
-  fprintf('reading ''%s'' from file ''%s''\n', varname, filename);
+  ft_info('reading ''%s'' from file ''%s''\n', varname, filename);
 end
 
 % note that this sometimes fails, returning an empty var
 % this is probably due to MATLAB filename and MATLAB version issues
 var = whos('-file', filename);
 
-if length(var)==0 && nargin==1
+if isempty(var) && nargin==1
   filecontent = load(filename); % read everything from the file, regardless of how the variables are called
   varname = fieldnames(filecontent);
   if length(varname)==1
     % the one variable in the file will be returned
-    value = filecontent.(varname{i});
+    value = filecontent.(varname{1});
     clear filecontent
   else
-    error('cannot read an unspecified variable in case of a file containing multiple variables');
+    ft_error('cannot read an unspecified variable in case of a file containing multiple variables');
   end
 
 elseif length(var)==1

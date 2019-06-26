@@ -1,10 +1,9 @@
 function test_ft_crossfrequencyanalysis
 
 % MEM 2gb
-% WALLTIME 0:15:00
+% WALLTIME 00:15:00
 
-% TEST test_ft_crossfrequencyanalysis
-% TEST ft_crossfrequencyanalysis
+% DEPENDENCY ft_crossfrequencyanalysis
 
 clear all
 close all

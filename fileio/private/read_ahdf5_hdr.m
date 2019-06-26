@@ -2,14 +2,14 @@ function [header] = read_ahdf5_hdr(datafile)
 
 %read header
 if nargin ~= 1
-    error('Wrong number of input arguments');
+    ft_error('Wrong number of input arguments');
 end
 
 if ~isempty(datafile),
  
   id = h5readatt(datafile, '/', 'id');
   if ~strcmp(id, 'AnyWave')
-      error('This is not the ahf5 format.');
+      ft_error('This is not the ahf5 format.');
   end
   
   ch = h5read(datafile, '/channels');
@@ -52,12 +52,12 @@ if ~isempty(datafile),
       header.channels(i).ox = ox(i);
       header.channels(i).oy = oy(i);
       header.channels(i).oz = oz(i);     
-      % create label cell array
+      % create label cell-array
       header.label{i} =  header.channels(i).label;
-      % create reference cell array
+      % create reference cell-array
       header.reference{i} = header.channels(i).ref;
       % create chantype
-      if  strcmp(header.channels(i).unit, 'µV')
+      if  strcmp(header.channels(i).unit, 'ï¿½V')
           header.unit{i} = 'uV';
       else
           header.unit{i} = header.channels(i).unit;

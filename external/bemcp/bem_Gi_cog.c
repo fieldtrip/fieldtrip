@@ -1,13 +1,12 @@
 /*
-Direct potential for a COG approach
+  Direct potential for a COG approach
 
-IN : 	XYZv, ind_tr, XYZd, weight
+  Input : XYZv, ind_tr, XYZd, weight
+  Output : Gi *transposed* !!!!
 
-OUT : Gi *transposed* !!!!
-
-weight=1./(2.*pi*(siga[0]+sigb[0])) ;
-
+  weight = 1./(2.*pi*(siga[0]+sigb[0]));
 */
+
 #include <math.h>
 #include "mex.h"
 
@@ -19,8 +18,8 @@ void Gi_cog(double Gi[],
 	double ri[3], diff[3] ;
 	int i, j, u, v, w ;
 
-	printf("Ndip = %d\n",Ndip);
-	printf("Ntri = %d\n",Ntri);
+	/*printf("Ndip = %d\n",Ndip);*/
+	/*printf("Ntri = %d\n",Ntri);*/
 
 	for (i=0;i<Ntri;++i) { 
 		u=ind_tr[i] - 1 ;

@@ -1,10 +1,9 @@
 function test_ft_channelrepair
 
-% MEM 1500mb
+% MEM 3gb
 % WALLTIME 00:10:00
 
-% TEST test_ft_channelrepair
-% TEST ft_channelrepair ft_datatype_sens fixsens ft_prepare_neighbours
+% DEPENDENCY ft_channelrepair ft_datatype_sens fixsens ft_prepare_neighbours
 
 datainfo = ref_datasets;
 
@@ -109,12 +108,12 @@ data_eeg_repaired_spline = ft_channelrepair(cfg,data_eeg_juggled);
 
 cfg = [];
 cfg.channel = {'19','20','24','25','26'};
-cfg.continous = 'no';
+cfg.continuous = 'no';
 ft_databrowser(cfg, data_eeg_repaired_spline);
 
 % treat as a missing channel
 data_eeg_miss = data_eeg_clean;
-chan_idx = ismember(data_eeg_miss.label, '25')
+chan_idx = ismember(data_eeg_miss.label, '25');
 data_eeg_miss.label(chan_idx) = []; % remove channel 25
 
 for i=1:numel(data_eeg_miss.trial) 
@@ -152,7 +151,7 @@ for tr=1:numel(data_eeg_interp_spline.trial)
   a = data_eeg_interp_spline.trial{tr}(idx, :);
   idx = ismember(data_eeg_repaired_spline.label, '25');
   b = data_eeg_repaired_spline.trial{tr}(idx, :);
-  if ~identical(a, b, 'reltol', 0.001) % 0.1% i.e. nearly ==0
+  if ~isalmostequal(a, b, 'reltol', 0.001) % 0.1% i.e. nearly ==0
     disp(['relative difference is: ' num2str(max(abs(a-b)./(0.5*(a+b))))]); 
     error('The reconstruction of the same channel differs when being treated as a missing channel compared to a bad channel');
   else

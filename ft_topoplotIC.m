@@ -36,6 +36,7 @@ function [cfg] = ft_topoplotIC(cfg, comp)
 %                            'SouthOutside'       outside bottom
 %                            'EastOutside'        outside right
 %                            'WestOutside'        outside left
+%   cfg.colorbartext       =  string indicating the text next to colorbar
 %   cfg.interplimits       = limits for interpolation (default = 'head')
 %                            'electrodes' to furthest electrode
 %                            'head' to edge of head
@@ -121,37 +122,46 @@ end
 % this will remove all time-series information
 comp = ft_checkdata(comp, 'datatype', 'comp');
 
+% set the config defaults
+cfg.title     = ft_getopt(cfg, 'title', 'auto');
+cfg.parameter = ft_getopt(cfg, 'parameter', 'topo'); % needed in topoplot_common
+cfg.renderer  = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', 'component');
-
-% set the config defaults
-cfg.title = ft_getopt(cfg, 'title', 'auto');
+cfg = ft_checkconfig(cfg, 'allowedval', {'parameter' 'topo'});
 
 % interactive plotting doesn't work for chan_comp dimord.
 if isfield(cfg, 'interactive') && strcmp(cfg.interactive, 'yes')
-  warning('Interactive plotting is not supported.');
+  ft_warning('Interactive plotting is not supported.');
 end
 cfg.interactive = 'no';
 
 % prepare the layout, this should be done only once
-cfg.layout = ft_prepare_layout(cfg, comp);
+tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
+cfg.layout = ft_prepare_layout(tmpcfg);
+
+% this is needed for the figure title
+if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
+  dataname = cfg.dataname;
+elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
+elseif nargin>1
+  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
+else
+  dataname = {};
+end
+
+% make sure figure window titles are labeled appropriately, pass this onto the actual plotting function
+cfg.funcname = mfilename;
+cfg.dataname = dataname;
 
 % don't show the callinfo for each separate component
+tmpshowcallinfo = cfg.showcallinfo;
 cfg.showcallinfo = 'no';
 
 % create temporary variable to prevent overwriting the selected components
 selcomp = cfg.component;
-
-% make sure figure window titles are labeled appropriately, pass this onto the actual
-% plotting function if we don't specify this, the window will be called
-% 'ft_topoplotTFR', which is confusing to the user
-cfg.funcname = mfilename;
-if nargin > 1
-  cfg.dataname = {inputname(2)};
-  for k = 3:nargin
-    cfg.dataname{end+1} = inputname(k);
-  end
-end
 
 nplots = numel(selcomp);
 if nplots>1
@@ -189,14 +199,25 @@ end
 cfg = removefields(cfg, 'funcname');
 
 % show the callinfo for all components together
-cfg.showcallinfo = 'yes';
+cfg.showcallinfo = tmpshowcallinfo;
+
+% set renderer if specified
+if ~isempty(cfg.renderer)
+  set(gcf, 'renderer', cfg.renderer)
+end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous comp
 ft_postamble provenance
+ft_postamble savefig
 
-if ~nargout
+% add a menu to the figure, but only if the current figure does not have subplots
+menu_fieldtrip(gcf, cfg, false);
+
+if ~ft_nargout
+  % don't return anything
   clear cfg
 end
+

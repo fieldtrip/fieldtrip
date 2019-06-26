@@ -2,25 +2,16 @@ function test_ft_headmodel_bemcp
 
 % MEM 12gb
 % WALLTIME 03:00:00
-
-% TEST test_ft_prepare_bemcp
-% TEST ft_headmodel_localspheres ft_prepare_localspheres
+% DEPENDENCY ft_headmodel_localspheres ft_prepare_localspheres
 
 % to test actual numerical output of bemcp, rather than simply successful
 % running and correct inputs (which is what test_ft_prepare_headmodel tests).
-
-% flag for location where running code
-atdonders = true;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% method 1: segment MRI then compute bnd from it
 
 % read in the mri, this is already (non?)linearly aligned with MNI
-if atdonders
-  mri = ft_read_mri('/home/common/matlab/fieldtrip/template/headmodel/standard_mri.mat');
-else
-  mri = ft_read_mri('~/home/fieldtrip_svn/template/headmodel/standard_mri.mat');
-end
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_mri.mat'));
 
 cfg = [];
 cfg.output = {'brain', 'skull', 'scalp'};
@@ -56,11 +47,7 @@ end
 %% method 2: compute bnd from segmented MRI
 
 % read in the already-segmented mri (in case its segmentation is better than above)
-if atdonders
-  segmentedmri = ft_read_mri('/home/common/matlab/fieldtrip/template/headmodel/standard_seg.mat');
-else
-  segmentedmri = ft_read_mri('~/home/fieldtrip_svn/template/headmodel/standard_seg.mat');
-end
+segmentedmri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_seg.mat'));
 
 cfg = [];
 cfg.tissue = [3 2 1]; % brain, skull, scalp
@@ -95,7 +82,7 @@ end
 
 % presumably the mesh that was used to create this 'standard' output from
 % dipoli should work (irrespective of segmentation above).
-load standard_bem
+load(dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_bem.mat'));
 vol_exist_dipoli = vol;
 mesh_exist = vol.bnd;
 mesh_exist = ft_convert_units(mesh_exist, 'mm');
@@ -122,11 +109,7 @@ vol_exist_bemcp = ft_prepare_headmodel(cfg, mesh_exist);
 load standard_sourcemodel3d8mm;
 sourcemodel = ft_convert_units(sourcemodel, 'mm');
 
-if atdonders
-  elec = ft_read_sens('/home/common/matlab/fieldtrip/template/electrode/standard_1005.elc');
-else
-  elec = ft_read_sens('~/home/fieldtrip_svn/template/electrode/standard_1005.elc');
-end
+elec = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/template/electrode/standard_1005.elc'));
 elec = ft_convert_units(elec, 'mm');
 
 % check for general spatial alignment
@@ -169,35 +152,39 @@ sourcemodel.unit = 'mm';
 for ll = 1:length(volnames)
   vol = eval(volnames(ll).name);
   
-  cfg = [];
-  cfg.grid = sourcemodel;
-  cfg.elec = elec;
-  cfg.headmodel = vol;
-  
-  lf = ft_prepare_leadfield(cfg);
-  
-  % Hack: to make LF appear as if it were an ERP
-  tlock = [];
-  tlock.time = [1 2 3];
-  tlock.avg = lf.leadfield{dsearchn(sourcemodel.pos, [-20 0 50])};
-  tlock.label = lf.cfg.channel;
-  tlock.dimord = 'chan_time';
-  
-  cfg = [];
-  cfg.layout = 'elec1010.lay';
-  cfg.xlim = [0.9 1.1];
-  figure;
-  ft_topoplotER(cfg, tlock);
-  title(volnames(ll).name)
-  cfg.xlim = [1.9 2.1];
-  figure;
-  ft_topoplotER(cfg, tlock);
-  title(volnames(ll).name)
-  cfg.xlim = [2.9 3.1];
-  figure;
-  ft_topoplotER(cfg, tlock);
-  title(volnames(ll).name)
-  
-  disp(volnames(ll).name)
+  if ~isempty(vol)
+    % vol can be empty in case it failed to be created above, e.g. one of
+    % the dipoli examples, for one reason or another
+    cfg = [];
+    cfg.sourcemodel = sourcemodel;
+    cfg.elec = elec;
+    cfg.headmodel = vol;
+    
+    lf = ft_prepare_leadfield(cfg);
+    
+    % Hack: to make LF appear as if it were an ERP
+    tlock = [];
+    tlock.time = [1 2 3];
+    tlock.avg = lf.leadfield{dsearchn(sourcemodel.pos, [-20 0 50])};
+    tlock.label = lf.cfg.channel;
+    tlock.dimord = 'chan_time';
+    
+    cfg = [];
+    cfg.layout = 'elec1010.lay';
+    cfg.xlim = [0.9 1.1];
+    figure;
+    ft_topoplotER(cfg, tlock);
+    title(volnames(ll).name)
+    cfg.xlim = [1.9 2.1];
+    figure;
+    ft_topoplotER(cfg, tlock);
+    title(volnames(ll).name)
+    cfg.xlim = [2.9 3.1];
+    figure;
+    ft_topoplotER(cfg, tlock);
+    title(volnames(ll).name)
+    
+    disp(volnames(ll).name)
+  end
 end
 % For me, sensible patterns come from the vol*cs and vol*dipoli, but not from the vol*bemcp

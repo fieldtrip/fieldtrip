@@ -8,7 +8,7 @@ function [newnode,newelem,newelem0]=surfboolean(node,elem,varargin)
 %
 % input:
 %      node: node coordinates, dimension (nn,3)
-%      elem: tetrahedral element or triangle surface (ne,3)
+%      elem: triangle surfaces (ne,3)
 %      op:  a string of a boolean operator, possible op values include
 %           'union' or 'or': the outter surface of the union of the enclosed space
 %           'inter' or 'and': the surface of the domain contained by both meshes
@@ -59,10 +59,28 @@ len=length(varargin);
 newnode=node;
 newelem=elem;
 if(len>0 && mod(len,3)~=0)
-   error('you must give operator, node and element in trilet forms');
+   error('you must give operator, node and element in a triplet form');
 end
 
-exesuff=fallbackexeext(getexeext,'gtsset');
+try
+    exename=evalin('caller','ISO2MESH_SURFBOOLEAN');
+catch
+    try
+        exename=evalin('base','ISO2MESH_SURFBOOLEAN');
+    catch
+        exename='cork';
+    end
+end
+isgts=0;
+if(strcmp(exename,'gtsset'))
+    isgts=1;
+end
+
+exesuff=fallbackexeext(getexeext,exename);
+randseed=hex2dec('623F9A9E'); % "U+623F U+9A9E"
+if(~isempty(getvarfrom({'caller','base'},'ISO2MESH_RANDSEED')))
+    randseed=getvarfrom({'caller','base'},'ISO2MESH_RANDSEED');
+end
 
 for i=1:3:len
    op=varargin{i};
@@ -71,14 +89,26 @@ for i=1:3:len
    opstr=op;
    if(strcmp(op,'or'))   opstr='union'; end
    if(strcmp(op,'xor'))  opstr='all';   end
-   if(strcmp(op,'and'))  opstr='inter'; end
+   if(strcmp(op,'and'))
+        if(isgts)
+           opstr='inter'; 
+        else
+	   opstr='isct'; 
+	end
+   end
    if(strcmp(op,'-'))    opstr='diff';  end
    if(strcmp(op,'self')) opstr='inter -s';  end
-   if(strcmp(op,'first') || strcmp(op,'second') || strcmp(op,'+'))
+   if(isgts && (strcmp(op,'first') || strcmp(op,'second') || strcmp(op,'+')))
        opstr='all';
    end
-
-   deletemeshfile(mwpath('pre_surfbool*.gts'));
+   if(strcmp(opstr,'all') && isgts==0)
+       opstr='resolve';
+   end
+   tempsuff='gts';
+   if(isgts==0)
+       tempsuff='off';
+   end
+   deletemeshfile(mwpath(['pre_surfbool*.' tempsuff]));
    deletemeshfile(mwpath('post_surfbool.off'));
    if(strcmp(opstr,'all'))
       deletemeshfile(mwpath('s1out2.off'));
@@ -93,15 +123,8 @@ for i=1:3:len
           newnode(:,4)=1;
           newelem(:,4)=1;
        end
-       opstr=['-q --shells 2'];
+       opstr=[' --decouple-inin 1 --shells 2']; %-q
        saveoff(node1(:,1:3),elem1(:,1:3),mwpath('pre_decouple1.off'));
-       if(isstruct(el))
-           if(isfield(el,'MoreOptions'))
-               opstr=[opstr el.MoreOptions];
-           end
-       else
-           opstr=[opstr ' --decouple-inin 1'];
-       end
        if(size(no,2)~=3)
            opstr=['-q --shells ' num2str(no)];
            cmd=sprintf('cd "%s" && "%s%s" "%s" %s',mwpath,mcpath('meshfix'),exesuff,...
@@ -111,11 +134,54 @@ for i=1:3:len
            cmd=sprintf('cd "%s" && "%s%s" "%s" "%s" %s',mwpath,mcpath('meshfix'),exesuff,...
                mwpath('pre_decouple1.off'),mwpath('pre_decouple2.off'),opstr);
        end
+   elseif(strcmp(op,'decoupleout'))
+       if(exist('node1','var')==0)
+          node1=node;
+          elem1=elem;
+          newnode(:,4)=1;
+          newelem(:,4)=1;
+       end
+       opstr=[' --decouple-outout 1 --shells 2']; %-q
+       saveoff(node1(:,1:3),elem1(:,1:3),mwpath('pre_decouple1.off'));
+       if(size(no,2)~=3)
+           opstr=['-q --shells ' num2str(no)];
+           cmd=sprintf('cd "%s" && "%s%s" "%s" %s',mwpath,mcpath('meshfix'),exesuff,...
+               mwpath('pre_decouple1.off'),opstr);
+       else
+           saveoff(no(:,1:3),el(:,1:3),mwpath('pre_decouple2.off'));
+           cmd=sprintf('cd "%s" && "%s%s" "%s" "%s" %s',mwpath,mcpath('meshfix'),exesuff,...
+               mwpath('pre_decouple1.off'),mwpath('pre_decouple2.off'),opstr);
+       end
+   elseif(strcmp(op,'separate'))
+       if(exist('node1','var')==0)
+          node1=node;
+          elem1=elem;
+          newnode(:,4)=1;
+          newelem(:,4)=1;
+       end
+       opstr=[' --shells 2']; %-q
+       saveoff(node1(:,1:3),elem1(:,1:3),mwpath('pre_decouple1.off'));
+       if(size(no,2)~=3)
+           opstr=['-q --shells ' num2str(no)];
+           cmd=sprintf('cd "%s" && "%s%s" "%s" %s',mwpath,mcpath('meshfix'),exesuff,...
+               mwpath('pre_decouple1.off'),opstr);
+       else
+           saveoff(no(:,1:3),el(:,1:3),mwpath('pre_decouple2.off'));
+           cmd=sprintf('cd "%s" && "%s%s" "%s" "%s" %s',mwpath,mcpath('meshfix'),exesuff,...
+               mwpath('pre_decouple1.off'),mwpath('pre_decouple2.off'),opstr);
+       end       
    else
-       savegts(newnode(:,1:3),newelem(:,1:3),mwpath('pre_surfbool1.gts'));
-       savegts(no(:,1:3),el(:,1:3),mwpath('pre_surfbool2.gts'));
-       cmd=sprintf('cd "%s" && "%s%s" %s "%s" "%s" -v > "%s"',mwpath,mcpath('gtsset'),exesuff,...
-           opstr,mwpath('pre_surfbool1.gts'),mwpath('pre_surfbool2.gts'),mwpath('post_surfbool.off'));
+       if(isgts)
+           savegts(newnode(:,1:3),newelem(:,1:3),mwpath(['pre_surfbool1.' tempsuff]));
+           savegts(no(:,1:3),el(:,1:3),mwpath(['pre_surfbool2.' tempsuff]));
+           cmd=sprintf('cd "%s" && "%s%s" %s "%s" "%s" -v > "%s"',mwpath,mcpath('gtsset'),exesuff,...
+               opstr,mwpath('pre_surfbool1.gts'),mwpath('pre_surfbool2.gts'),mwpath('post_surfbool.off'));
+       else
+           saveoff(newnode(:,1:3),newelem(:,1:3),mwpath(['pre_surfbool1.' tempsuff]));
+           saveoff(no(:,1:3),el(:,1:3),mwpath(['pre_surfbool2.' tempsuff]));
+           cmd=sprintf('cd "%s" && "%s%s" %s%s "%s" "%s" "%s" -%d',mwpath,mcpath(exename),exesuff,'-',...
+               opstr,mwpath(['pre_surfbool1.' tempsuff]),mwpath(['pre_surfbool2.' tempsuff]),mwpath('post_surfbool.off'),randseed);
+       end
    end
    [status outstr]=system(cmd);
    if(status~=0 && strcmp(op,'self')==0)
@@ -145,20 +211,25 @@ for i=1:3:len
       [nnode nelem]=readoff(mwpath('s2in1.off'));
       newelem=[newelem; nelem+size(newnode,1) 4*ones(size(nelem,1),1)];
       newnode=[newnode; nnode 4*ones(size(nnode,1),1)];
-
-      if(strcmp(op,'first'))
-          newelem=newelem(find(mod(newelem(:,4),2)==1),:);
-          [newnode,nelem]=removeisolatednode(newnode,newelem(:,1:3));
-          newelem=[nelem newelem(:,4)];
-      elseif(strcmp(op,'second'))
-          newelem=newelem(find(mod(newelem(:,4),2)==0),:);
-          [newnode,nelem]=removeisolatednode(newnode,newelem(:,1:3));
-          newelem=[nelem,newelem(:,4)];
+      if(isgts)
+          if(strcmp(op,'first'))
+              newelem=newelem(find(mod(newelem(:,4),2)==1),:);
+              [newnode,nelem]=removeisolatednode(newnode,newelem(:,1:3));
+              newelem=[nelem newelem(:,4)];
+          elseif(strcmp(op,'second'))
+              newelem=newelem(find(mod(newelem(:,4),2)==0),:);
+              [newnode,nelem]=removeisolatednode(newnode,newelem(:,1:3));
+              newelem=[nelem,newelem(:,4)];
+          end
       end
    elseif(strcmp(op,'decouple'))
-      [node1,elem1]=readoff(mwpath('pre_decouple1_fixed.off'));
-      newelem=[newelem;elem1+size(newnode,1) (i+1)*ones(size(elem1,1),1)];
-      newnode=[newnode;node1 (i+1)*ones(size(node1,1),1)];
+      [newnode,newelem]=readoff(mwpath('pre_decouple1_fixed.off')); %[node1,elem1]
+      %newelem=[newelem;elem1+size(newnode,1) (i+1)*ones(size(elem1,1),1)];
+      %newnode=[newnode;node1 (i+1)*ones(size(node1,1),1)];
+   elseif(strcmp(op,'separate'))
+       [newnode,newelem]=readoff(mwpath('pre_decouple1_fixed.off'));
+   elseif(strcmp(op,'decoupleout'))
+      [newnode,newelem]=readoff(mwpath('pre_decouple1_fixed.off')); %[node1,elem1]
    else
       [newnode,newelem]=readoff(mwpath('post_surfbool.off'));
       if(strcmp(op,'self'))

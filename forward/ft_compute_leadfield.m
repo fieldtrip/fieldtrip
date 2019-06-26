@@ -9,7 +9,7 @@ function [lf] = ft_compute_leadfield(dippos, sens, headmodel, varargin)
 % Use as
 %   [lf] = ft_compute_leadfield(dippos, sens, headmodel, ...)
 % with input arguments
-%   dippos       = position dipole (1*3 or Ndip*3)
+%   dippos    = position dipole (1*3 or Ndip*3)
 %   sens      = structure with gradiometer or electrode definition
 %   headmodel = structure with volume conductor definition
 %
@@ -45,16 +45,19 @@ function [lf] = ft_compute_leadfield(dippos, sens, headmodel, varargin)
 % electrodes.
 %
 % The supported forward solutions for MEG are
+%   infinite homogenous medium
 %   single sphere (Cuffin and Cohen, 1977)
 %   multiple spheres with one sphere per channel (Huang et al, 1999)
 %   realistic single shell using superposition of basis functions (Nolte, 2003)
-%   leadfield interpolation using a precomputed grid
+%   leadfield interpolation using a precomputed sourcemodel
 %   boundary element method (BEM)
 %
 % The supported forward solutions for EEG are
+%   infinite homogenous medium
+%   infinite halfspace homogenous medium
 %   single sphere
 %   multiple concentric spheres (up to 4 spheres)
-%   leadfield interpolation using a precomputed grid
+%   leadfield interpolation using a precomputed sourcemodel
 %   boundary element method (BEM)
 %
 % See also FT_PREPARE_VOL_SENS, FT_HEADMODEL_ASA, FT_HEADMODEL_BEMCP,
@@ -104,10 +107,10 @@ chanunit        = ft_getopt(varargin, 'chanunit');   % this is something like V,
 dipoleunit      = ft_getopt(varargin, 'dipoleunit'); % this is something like nA*m
 
 if any(strcmp(varargin(1:2:end), 'unit'))
-  error('the ''unit'' option is not supported any more, please use ''chanunit''');
+  ft_error('the ''unit'' option is not supported any more, please use ''chanunit''');
 end
 if any(strcmp(varargin(1:2:end), 'units'))
-  error('the ''units'' option is not supported any more, please use ''chanunit''');
+  ft_error('the ''units'' option is not supported any more, please use ''chanunit''');
 end
 
 if ~isstruct(sens) && size(sens, 2)==3
@@ -129,10 +132,10 @@ ismeg = ft_senstype(sens, 'meg');
 if isempty(reducerank)
   if iseeg
     reducerank = 'no';    % for EEG
-  elseif ismeg && ft_voltype(headmodel, 'infinite')
+  elseif ismeg && ft_headmodeltype(headmodel, 'infinite')
     reducerank = 'no';    % for MEG with a magnetic dipole, e.g. a HPI coil
   else
-    reducerank = 'yes';   % for MEG with a current dipole in a volume conductor 
+    reducerank = 'yes';   % for MEG with a current dipole in a volume conductor
   end
 end
 
@@ -144,33 +147,33 @@ if all(size(dippos)==[1 3*Ndipoles])
 end
 
 if isfield(headmodel, 'unit') && isfield(sens, 'unit') && ~strcmp(headmodel.unit, sens.unit)
-  error('inconsistency in the units of the volume conductor and the sensor array');
+  ft_error('inconsistency in the units of the volume conductor and the sensor array');
 end
 
 if ismeg && iseeg
   % this is something that could be implemented relatively easily
-  error('simultaneous EEG and MEG not supported');
-  
+  ft_error('simultaneous EEG and MEG not supported');
+
 elseif ~ismeg && ~iseeg
-  error('the input does not look like EEG, nor like MEG');
-  
+  ft_error('the input does not look like EEG, nor like MEG');
+
 elseif ismeg
-  switch ft_voltype(headmodel)
-    
+  switch ft_headmodeltype(headmodel)
+
     case 'singlesphere'
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % MEG single-sphere volume conductor model
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      
+
       coilpos = sens.coilpos; % position of each coil
       coilori = sens.coilori; % orientation of each coil
-      
+
       if isfield(headmodel, 'o')
         % shift dipole and magnetometers to origin of sphere
         dippos  = dippos  - repmat(headmodel.o, Ndipoles, 1);
         coilpos = coilpos - repmat(headmodel.o, size(coilpos, 1), 1);
       end
-      
+
       if Ndipoles>1
         % loop over multiple dipoles
         lf = zeros(size(coilpos, 1), 3*Ndipoles);
@@ -181,27 +184,27 @@ elseif ismeg
         % only single dipole
         lf = meg_leadfield1(dippos, coilpos, coilori);
       end
-      
+
       if isfield(sens, 'tra')
         % this appears to be the modern complex gradiometer definition
         % construct the channels from a linear combination of all magnetometers
         lf = sens.tra * lf;
       end
-      
+
     case 'localspheres'
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % MEG multiple overlapping sphere volume conductor model
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       ncoils = length(sens.coilpos);
-      
+
       if size(headmodel.r, 1)~=ncoils
-        error('number of spheres is not equal to the number of coils')
+        ft_error('number of spheres is not equal to the number of coils')
       end
-      
+
       if size(headmodel.o, 1)~=ncoils
-        error('number of spheres is not equal to the number of coils');
+        ft_error('number of spheres is not equal to the number of coils');
       end
-      
+
       lf = zeros(ncoils, 3*Ndipoles);
       for coil=1:ncoils
         for dip=1:Ndipoles
@@ -212,13 +215,13 @@ elseif ismeg
           lf(coil, (3*dip-2):(3*dip)) = tmp;
         end
       end
-      
+
       if isfield(sens, 'tra')
         % this appears to be the modern complex gradiometer definition
         % construct the channels from a linear combination of all magnetometers
         lf = sens.tra * lf;
       end
-      
+
     case 'neuromag'
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % use external Neuromag toolbox for forward computation
@@ -239,7 +242,7 @@ elseif ismeg
       end
       % select only those channels from the forward model that are part of the gradiometer definition
       lf = lf(headmodel.chansel, :);
-      
+
     case 'singleshell'
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % use code from Guido Nolte for the forward computation
@@ -262,41 +265,21 @@ elseif ismeg
         % compute the leadfield for each gradiometer (linear combination of coils)
         lf = sens.tra * lf;
       end
-      
+
     case 'openmeeg'
-      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      % use code from OpenMEEG
-      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      ft_hastoolbox('openmeeg', 1);
-      
-      if isfield(headmodel,'mat')
-        % switch the non adaptive algorithm on
-        nonadaptive = true; % HACK : this is hardcoded at the moment
-        dsm = openmeeg_dsm(dippos, headmodel, nonadaptive);
-        [h2mm, s2mm]= openmeeg_megm(dippos, headmodel, sens);
-        
-        %if isfield(headmodel, 'mat')
-        lf = s2mm+h2mm*(headmodel.mat*dsm);
-        %else
-        %  error('No system matrix is present, BEM head model not calculated yet')
-        %end
-        if isfield(sens, 'tra')
-          % compute the leadfield for each gradiometer (linear combination of coils)
-          lf = sens.tra * lf;
-        end
-      else
-        warning('No system matrix is present, Calling the Nemo Lab pipeline')
-        lf = leadfield_openmeeg(dippos, headmodel, sens);
-      end
-      
+        % OpenMEEG lead field already computed in ft_prepare_leadfield;
+        % load here so any post-processing options (e.g. normalization) may
+        % be applied
+        lf = ft_getopt(varargin, 'lf');
+
     case {'infinite_magneticdipole', 'infinite'}
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % magnetic dipole instead of electric (current) dipole in an infinite vacuum
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      
+
       coilpos = sens.coilpos; % position of each coil
       coilori = sens.coilori; % orientation of each coil
-      
+
       if Ndipoles>1
         % loop over multiple dipoles
         lf = zeros(size(coilpos, 1), 3*Ndipoles);
@@ -307,20 +290,20 @@ elseif ismeg
         % only single dipole
         lf = magnetic_dipole(dippos, coilpos, coilori);
       end
-      
+
       if isfield(sens, 'tra')
         % construct the channels from a linear combination of all magnetometer coils
         lf = sens.tra * lf;
       end
-      
+
     case {'infinite_currentdipole'}
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % current dipole in an infinite homogenous conducting medium
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      
+
       coilpos = sens.coilpos; % position of each coil
       coilori = sens.coilori; % orientation of each coil
-      
+
       if Ndipoles>1
         % loop over multiple dipoles
         lf = zeros(size(coilpos, 1), 3*Ndipoles);
@@ -331,28 +314,28 @@ elseif ismeg
         % only single dipole
         lf = current_dipole(dippos, coilpos, coilori);
       end
-      
+
       if isfield(sens, 'tra')
         % construct the channels from a linear combination of all magnetometer coils
         lf = sens.tra * lf;
       end
-      
+
     otherwise
-      error('unsupported volume conductor model for MEG');
-  end % switch voltype for MEG
-  
+      ft_error('unsupported volume conductor model for MEG');
+  end % switch type for MEG
+
 elseif iseeg
-  switch ft_voltype(headmodel)
-    
+  switch ft_headmodeltype(headmodel)
+
     case 'multisphere'
       % Based on the approximation of the potential due to a single dipole in
       % a multishell sphere by three dipoles in a homogeneous sphere, code
       % contributed by Punita Christopher. Note that this one should not get
       % confused with the MEG localspheres model.
-      
+
       Nelec    = size(sens.elecpos, 1);
       Nspheres = length(headmodel.r);
-      
+
       % the center of the spherical volume conduction model does not have
       % to be in the origin, therefore shift the spheres, the electrodes
       % and the dipole
@@ -361,14 +344,14 @@ elseif iseeg
       else
         center = [0 0 0];
       end
-      
+
       % sort the spheres from the smallest to the largest
       % furthermore, the radius should be one (?)
       [radii, indx] = sort(headmodel.r/max(headmodel.r));
       sigma = headmodel.cond(indx);
       r = (sens.elecpos-repmat(center, Nelec, 1))./max(headmodel.r);
       dippos = dippos./max(headmodel.r);
-      
+
       if Ndipoles>1
         % loop over multiple dipoles
         lf = zeros(Nelec, 3*Ndipoles);
@@ -390,28 +373,28 @@ elseif iseeg
         q1 = [0 1 0] ; lf(:, 2) = multisphere(Nspheres, radii, sigma, r, rq, q1);
         q1 = [0 0 1] ; lf(:, 3) = multisphere(Nspheres, radii, sigma, r, rq, q1);
       end
-      
+
     case {'singlesphere', 'concentricspheres'}
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % EEG spherical volume conductor model
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      
+
       % FIXME, this is not consistent between spherical and BEM
       % sort the spheres from the smallest to the largest
       [headmodel.r, indx] = sort(headmodel.r);
       headmodel.cond = headmodel.cond(indx);
-      
+
       Nspheres = length(headmodel.cond);
       if length(headmodel.r)~=Nspheres
-        error('the number of spheres in the volume conductor model is ambiguous');
+        ft_error('the number of spheres in the volume conductor model is ambiguous');
       end
-      
+
       if isfield(headmodel, 'o')
         % shift the origin of the spheres, electrodes and dipole
         sens.elecpos = sens.elecpos - repmat(headmodel.o, size(sens.elecpos, 1), 1);
         dippos = dippos - repmat(headmodel.o, Ndipoles, 1);
       end
-      
+
       switch Nspheres
         case 1
           funnam = 'eeg_leadfield1';
@@ -428,32 +411,46 @@ elseif iseeg
           headmodel.cond = [headmodel.cond(1) headmodel.cond(2) headmodel.cond(3) headmodel.cond(4)];
           funnam = 'eeg_leadfield4';
         otherwise
-          error('more than 4 concentric spheres are not supported')
+          ft_error('more than 4 concentric spheres are not supported')
       end
-      
+
       lf = zeros(size(sens.elecpos, 1), 3*Ndipoles);
       for i=1:Ndipoles
         lf(:, (3*i-2):(3*i)) = feval(funnam, dippos(i, :), sens.elecpos, headmodel);
       end
-      
+
     case {'bem', 'dipoli', 'asa', 'bemcp'}
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % EEG boundary element method volume conductor model
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       lf = eeg_leadfieldb(dippos, sens.elecpos, headmodel);
-      
+
     case 'openmeeg'
-      ft_hastoolbox('openmeeg', 1)
-      if isfield(headmodel, 'mat')
-        % switch the non adaptive algorithm on
-        nonadaptive = true; % HACK this is hardcoded at the moment
-        dsm = openmeeg_dsm(dippos, headmodel, nonadaptive);
-        lf = headmodel.mat*dsm;
-      else
-        disp('No system matrix is present, calling the Nemo Lab pipeline...')
-        lf = leadfield_openmeeg(dippos, headmodel, sens);
-      end
-      
+        % OpenMEEG lead field already computed in ft_prepare_leadfield;
+        % load here so any post-processing options (e.g. normalization) may
+        % be applied
+        lf = ft_getopt(varargin, 'lf');
+
+    case {'infinite_currentdipole' 'infinite'}
+      lf = eeg_infinite_dipole(dippos, sens.elecpos, headmodel);
+
+    case 'halfspace'
+      lf = eeg_halfspace_dipole(dippos, sens.elecpos, headmodel);
+
+    case 'infinite_monopole'
+      lf = eeg_infinite_monopole(dippos, sens.elecpos, headmodel);
+
+    case 'halfspace_monopole'
+      lf = eeg_halfspace_monopole(dippos, sens.elecpos, headmodel);
+
+    case 'slab_monopole'
+      lf = eeg_slab_monopole(dippos, sens.elecpos, headmodel);
+
+    case 'simbio'
+      ft_hastoolbox('simbio', 1);
+      % note that the electrode information is contained in the headmodel (thanks to ft_prepare_vol_sens)
+      lf = leadfield_simbio(dippos, headmodel);
+
     case 'metufem'
       p3 = zeros(Ndipoles * 3, 6);
       for i = 1:Ndipoles
@@ -461,7 +458,7 @@ elseif iseeg
         p3((3*i - 2) : (3 * i), 4:6) = [1 0 0; 0 1 0; 0 0 1];
       end
       lf = metufem('pot', p3', 'interp');
-      
+
     case 'metubem'
       session = headmodel.session;
       p3 = zeros(Ndipoles * 3, 6);
@@ -470,33 +467,12 @@ elseif iseeg
         p3((3*i - 2) : (3 * i), 4:6) = [1 0 0; 0 1 0; 0 0 1];
       end
       [lf, session] = bem_solve_lfm_eeg(session, p3);
-      
-    case {'infinite_currentdipole' 'infinite'}
-      % FIXME the conductivity of the medium is not known
-      lf = inf_medium_leadfield(dippos, sens.elecpos, 1);
-      
-    case 'halfspace'
-      lf = eeg_halfspace_medium_leadfield(dippos, sens.elecpos, headmodel);
-      
-    case 'infinite_monopole'
-      lf = eeg_infinite_monopole(dippos, sens.elecpos, headmodel);
-      
-    case 'halfspace_monopole'
-      lf = eeg_halfspace_monopole(dippos, sens.elecpos, headmodel);
-      
-    case 'slab_monopole'
-      lf = eeg_slab_monopole(dippos, sens.elecpos, headmodel);
-      
-    case 'simbio'
-      ft_hastoolbox('simbio', 1);
-      % note that the electrode information is contained in the headmodel (thanks to ft_prepare_vol_sens)
-      lf = leadfield_simbio(dippos, headmodel);
-      
+
     case 'fns'
       % note that the electrode information is contained in the headmodel
       % tolerance = 1e-8;
       lf = leadfield_fns(dippos, headmodel);
-      
+
     case 'interpolate'
       % note that the electrode information is contained in the headmodel
       lf = leadfield_interpolate(dippos, headmodel);
@@ -504,12 +480,12 @@ elseif iseeg
       % channel values rather than the electrode values. Prevent that the
       % referencing is done once more.
       sens.tra = speye(length(headmodel.filename));
-      
+
     otherwise
-      error('unsupported volume conductor model for EEG');
-      
-  end % switch voltype for EEG
-  
+      ft_error('unsupported volume conductor model for EEG');
+
+  end % switch type for EEG
+
   % the forward model potential is computed on the electrodes relative to
   % an unknown reference, not on the channels. Therefore the data has to be
   % explicitly referenced here.
@@ -522,7 +498,7 @@ elseif iseeg
       lf(:,i) = lf(:,i) - mean(lf(:,i));
     end
   end
-  
+
 end % iseeg or ismeg
 
 % optionally apply leadfield rank reduction
@@ -545,21 +521,21 @@ if reducerank<size(lf,2)
     for j=1:reducerank
       s(j, j) = r(j);
     end
-    
+
     if istrue(backproject)
       % recompose the leadfield with reduced rank
       lf(:, (3*ii-2):(3*ii)) = u * s * v';
     else
       % if not backprojected, the new leadfield has a different dimension
-      if ii==1,
+      if ii==1
         newlf    = zeros(size(lf,1), Ndipoles*reducerank);
         origrank = size(lf,2)./Ndipoles;
       end
       newlf(:, reducerank*(ii-1) + (1:reducerank)) = lf(:, origrank*(ii-1) + (1:origrank))*v(:,1:reducerank);
     end
   end
-  
-  if ~istrue(backproject),
+
+  if ~istrue(backproject)
     lf = newlf;
   end
   clear newlf;

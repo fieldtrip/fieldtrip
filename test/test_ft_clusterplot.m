@@ -1,7 +1,7 @@
 function test_ft_clusterplot
 
+% MEM 8gb
 % WALLTIME 00:20:00
-% MEM 3gb
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedstatistics'));
 

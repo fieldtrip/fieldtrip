@@ -22,6 +22,10 @@ class OnlineDataManager : public StringRequestHandler {
 
 public:
 
+    OnlineDataManager(int nStatus, int nCont, float fSample) {
+      OnlineDataManager(nStatus, nCont, fSample, fSample);
+    }
+
     OnlineDataManager(int nStatus, int nCont, float fSample, float fSampleSaving) {
         this->nStatus = nStatus;
         this->nCont   = nCont;

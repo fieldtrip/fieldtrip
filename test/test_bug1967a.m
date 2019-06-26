@@ -2,11 +2,9 @@ function test_bug1967a
 
 % MEM 2gb
 % WALLTIME 00:20:00
+% DEPENDENCY ft_prepare_vol_sens
 
 % with the inititial version of this test script I had merge conflicts that I was not able to resolve, hence now the name with an "a'
-
-% TEST test_bug1967
-% TEST ft_prepare_vol_sens
 
 %% construct a segmentation
 nx = 101;
@@ -52,7 +50,7 @@ cfg.method = 'simbio';
 headmodel = ft_prepare_headmodel(cfg, mesh);
 
 %% make some electrodes
-[pnt, tri] = icosahedron42;
+[pnt, tri] = mesh_sphere(42);
 pnt = pnt(pnt(:,3)>0,:);
 pnt = pnt*55; % not precisely fitting on the mesh
 elec = [];
@@ -68,7 +66,7 @@ ft_plot_mesh(mesh, 'surfaceonly', 1)
 ft_plot_sens(elec)
 
 %% prepare the volume conductor and electrodes for leadfield computation
-[vol, sens] = ft_prepare_vol_sens(headmodel, elec)
+[vol, sens] = ft_prepare_vol_sens(headmodel, elec);
 
 % elec is the original one, sens is the one after projecting
 if isequal(sens.elecpos, elec.elecpos)

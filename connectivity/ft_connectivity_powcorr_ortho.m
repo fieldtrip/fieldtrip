@@ -1,22 +1,27 @@
 function [c] = ft_connectivity_powcorr_ortho(mom, varargin)
 
-% FT_CONNECTIVITY_POWCORR_ORTHO computes power correlation after removing
-% the zero-lag contribution on a trial-by-trial basis, according to Hipp's
-% Nature Neuroscience paper. 
+% FT_CONNECTIVITY_POWCORR_ORTHO computes power correlation after removing the
+% zero-lag contribution on a trial-by-trial basis. This implements the method
+% described in JF Hipp, DJ Hawellek, M Corbetta, M Siegel, AK Engel. Large-scale
+% cortical correlation structure of spontaneous oscillatory activity. Nature
+% neuroscience 15 (6), 884-890.
 %
 % Use as
-%   c = ft_connectivity_powcorr(mom)
-%   c = ft_connectivity_powcorr(mom, 'refindx', refindx)
+%   c = ft_connectivity_powcorr(mom, ...)
 %
-% Where mom is a NchanxNrpt matrix containing the complex-valued amplitude
-% and phase information at a given frequency, and the optional key refindx
-% specifies the index/indices of the channels that serve as a reference 
-% channel. (Default is 'all').
+% The input argument mom should be a NchanxNrpt matrix containing the complex-valued
+% amplitude and phase information at a given frequency, and the optional key refindx
+% specifies the
+%
+% Additional optional input arguments come as key-value pairs:
+%   refindx   = index/indices of the channels that serve as a reference channel (default is all)
 %
 % The output c is a NchanxNrefchan matrix that contain the power correlation
 % for all channels orthogonalised relative to the reference channel in the first
-% Nrefchan columns, and the power correlation for the reference channels 
+% Nrefchan columns, and the power correlation for the reference channels
 % orthogonalised relative to the channels in the second Nrefchan columns.
+%
+% See also FT_CONNECTIVITYANALYSIS
 
 % Copyright (C) 2012 Jan-Mathijs Schoffelen
 %
@@ -50,11 +55,11 @@ cmomnorm = conj(mom./abs(mom)); % only need to do conj() once
 n        = size(mom,1);
 ntap     = tapvec(1);
 if ~all(tapvec==ntap)
-  error('unequal number of tapers per observation is not yet supported');
+  ft_error('unequal number of tapers per observation is not yet supported');
 end
 % FIXME think about multiple tapers per trial
 %if ntap>1
-%  error('more than one taper per observation is not yet supported');
+%  ft_error('more than one taper per observation is not yet supported');
 %end
 
 % create a sparse matrix tra, that can be used as a right multiplying
@@ -79,14 +84,14 @@ tra = sparse(ix,jx,sx,sum(tapvec),numel(tapvec));
 powmom = (abs(mom).^2)*tra; % need only once
 powmom = standardise(log10(powmom), 2);
 
-c = zeros(n, numel(refindx));%;*2);
+c = zeros(n, numel(refindx)); %;*2);
 N = ones(n,1);
 %warning off;
 for k = 1:numel(refindx)
   indx     = refindx(k);
   ref      = mom(indx,:);
   crefnorm = conj(ref./abs(ref));
-
+  
   % FIXME the following is probably not correct for ntap>1
   pow2 = (abs(imag(ref(N,:).*cmomnorm)).^2)*tra;
   pow2 = standardise(log10(pow2), 2);
@@ -98,8 +103,7 @@ for k = 1:numel(refindx)
   pow2 = standardise(log10(pow2), 2);
   pow2 = repmat(pow2, [n 1]);
   c2   = mean(pow1.*pow2, 2);
-
+  
   c(:,k) = (c1+c2)./2;
   %c(:,k+numel(refindx)) = c2;
 end
-

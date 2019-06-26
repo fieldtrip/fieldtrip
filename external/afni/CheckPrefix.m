@@ -45,19 +45,19 @@ DBG = 1;
 ans = 0;
 
 %make sure you have no HEAD or BRIK as an extension
-[Prefix, Ext] = RemoveExtension(Prefix, '.HEAD|.BRIK'));
+[Prefix, Ext] = RemoveExtension(Prefix, '.HEAD|.BRIK');
 
 %make sure you have no view
 [Prefix, ViewName] = RemoveExtension(Prefix, '+orig|+acpc|+tlrc');
 
 %check for conflict
-if (~isempty(Ext) & isempty(ViewName)),
+if (~isempty(Ext) & isempty(ViewName))
 	ans = -1; 
 	ErrEval(FuncName,'Err_Expected a correct view (+orig, +acpc or +tlrc) but found none.');
 	return;
 end 
 
-if (~isempty(ViewName), View = ViewName; else View = '+orig'; end
+if ~isempty(ViewName), View = ViewName; else View = '+orig'; end
 
 %look for various files
 if (exist(sprintf('%s%s.HEAD', Prefix, View)) == 2), return; end

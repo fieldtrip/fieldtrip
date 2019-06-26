@@ -1,10 +1,9 @@
 function test_bug1646
 
-% MEM 4gb
-% WALLTIME 00:10:00
+% MEM 6gb
+% WALLTIME 00:15:00
 
-% TEST test_bug1646
-% TEST ft_prepare_mesh ft_datatype_segmentation
+% DEPENDENCY ft_prepare_mesh ft_datatype_segmentation
 
 % the purpose of this test script is to ensure that the new implementation
 % of ft_prepare_mesh, which is a merger between the old ft_prepare_mesh and
@@ -12,9 +11,9 @@ function test_bug1646
 % done is to search for as many as possible other tets cases and replicated
 % them here.
 
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=105 is obsolete
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=115 is obsolete
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=964 is obsolete
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=105 is obsolete
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=115 is obsolete
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=964 is obsolete
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -46,30 +45,30 @@ bnd = ft_prepare_mesh(cfg, headmodel);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the following piece of test code relates loosely to
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=222
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=373
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=222
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=373
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 cfg = [];
-cfg.headshape = '/home/common/matlab/fieldtrip/data/Subject01.shape';
+cfg.headshape = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.shape');
 bnd = ft_prepare_mesh(cfg);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is the same test data as used for bug 1652
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=1652
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1652
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-cd /home/common/matlab/fieldtrip/data/test/bug1646
+datadir = fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1646'));
 
-load seg1
-load seg2
-load seg3
-load seg4
-load seg5
-load seg6
+load(fullfile(datadir,'seg1'));
+load(fullfile(datadir,'seg2'));
+load(fullfile(datadir,'seg3'));
+load(fullfile(datadir,'seg4'));
+load(fullfile(datadir,'seg5'));
+load(fullfile(datadir,'seg6'));
 
-atlas = ft_read_atlas('TTatlas+tlrc.BRIK');
-mri = ft_read_mri('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/Subject01.mri');
+atlas = ft_read_atlas(dccnpath('/home/common/matlab/fieldtrip/template/atlas/afni/TTatlas+tlrc.BRIK'));
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/Subject01.mri'));
 
 assert(ft_datatype(seg1, 'segmentation'));
 assert(ft_datatype(seg2, 'segmentation'));
@@ -102,9 +101,9 @@ cfg.numvertices = [1000, 100, 10];
 cfg.tissue = {'brain', 'skull', 'scalp'};
 bndA = ft_prepare_mesh(cfg, seg2);
 assert(isequal(bndA(1).unit, seg2.unit));
-assert(size(bndA(1).pnt,1)==1000);
-assert(size(bndA(2).pnt,1)==100);
-assert(size(bndA(3).pnt,1)==10);
+assert(size(bndA(1).pos,1)==1000);
+assert(size(bndA(2).pos,1)==100);
+assert(size(bndA(3).pos,1)==10);
 % check that the output has the desired order (as specified in the cfg)
 cfg.numvertices = [10, 100, 1000];
 cfg.tissue = {'scalp', 'skull', 'brain'};
@@ -116,27 +115,27 @@ cfg.numvertices = [1000, 100, 10];
 cfg.tissue = {'brain', 'skull', 'scalp'};
 bnd = ft_prepare_mesh(cfg, seg3);
 assert(isequal(bnd(1).unit, seg3.unit));
-assert(size(bnd(1).pnt,1)==1000);
-assert(size(bnd(2).pnt,1)==100);
-assert(size(bnd(3).pnt,1)==10);
+assert(size(bnd(1).pos,1)==1000);
+assert(size(bnd(2).pos,1)==100);
+assert(size(bnd(3).pos,1)==10);
 
 cfg = [];
 cfg.numvertices = [1000, 100, 10];
 cfg.tissue = {'brain', 'skull', 'scalp'};
 bnd = ft_prepare_mesh(cfg, seg4);
 assert(isequal(bnd(1).unit, seg4.unit));
-assert(size(bnd(1).pnt,1)==1000);
-assert(size(bnd(2).pnt,1)==100);
-assert(size(bnd(3).pnt,1)==10);
+assert(size(bnd(1).pos,1)==1000);
+assert(size(bnd(2).pos,1)==100);
+assert(size(bnd(3).pos,1)==10);
 
 cfg = [];
 cfg.numvertices = [1000, 100, 10];
 cfg.tissue = [3 2 1];
 bnd = ft_prepare_mesh(cfg, seg5);
 assert(isequal(bnd(1).unit, seg5.unit));
-assert(size(bnd(1).pnt,1)==1000);
-assert(size(bnd(2).pnt,1)==100);
-assert(size(bnd(3).pnt,1)==10);
+assert(size(bnd(1).pos,1)==1000);
+assert(size(bnd(2).pos,1)==100);
+assert(size(bnd(3).pos,1)==10);
 
 cfg = [];
 cfg.numvertices = 642;
@@ -234,11 +233,11 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this shares the test data with bug 1651
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=1651
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1651
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear all
-load('/home/common/matlab/fieldtrip/data/test/bug1651.mat');
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1651.mat'));
 
 cfg = [];
 cfg.tissue = {'brain', 'skull', 'scalp'};
@@ -246,16 +245,16 @@ cfg.numvertices = [1000 2000 3000];
 bnd = ft_prepare_mesh(cfg, seg2);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=997
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=997
 % this one does not state an explicit way of reproducing the problems, it rather refers to 937
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=937
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=937
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-load('/home/common/matlab/fieldtrip/data/test/bug937.mat');
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug937.mat'));
 
 mri = [];
 mri.anatomy = bkgrnd;

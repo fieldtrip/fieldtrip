@@ -3,16 +3,15 @@ function test_ft_timelockanalysis(datainfo, writeflag, version)
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_timelockanalysis
 % ft_timelockanalysis ref_datasets
 
 % writeflag determines whether the output should be saved to disk
 % version determines the output directory
 
-if nargin<1
+if nargin<1 || isempty(datainfo)
   datainfo = ref_datasets;
 end
-if nargin<2
+if nargin<2 || isempty(writeflag)
   writeflag = 0;
 end
 if nargin<3
@@ -20,28 +19,24 @@ if nargin<3
 end
 
 for k = 1:numel(datainfo)
-  datanew = timelockanalysis10trials(datainfo(k), writeflag, version, 'yes', 'yes');
-  datanew = timelockanalysis10trials(datainfo(k), writeflag, version, 'yes', 'no');
-  datanew = timelockanalysis10trials(datainfo(k), writeflag, version, 'no', 'yes');
-  datanew = timelockanalysis10trials(datainfo(k), writeflag, version, 'no', 'no'); % should be the latest
-  
-  fname = fullfile(datainfo(k).origdir,version,'timelock',datainfo(k).type,['timelock_',datainfo(k).datatype]);
-  tmp = load(fname);
-  if isfield(tmp, 'data')
-    data = tmp.data;
-  elseif isfield(tmp, 'datanew')
-    data = tmp.datanew;
-  else isfield(tmp, 'timelock')
-    data = tmp.timelock;
-  end
-  
-  datanew = removefields(datanew, 'cfg'); % these are per construction different if writeflag = 0;
-  data    = removefields(data,    'cfg');
-  [ok,msg] = identical(data, datanew,'reltol',eps*1e6);
   disp(['now you are in k=' num2str(k)]);
-  if ~ok
-    error('stored and computed data not identical: %s', msg{:});
-  end
+  
+  datanew = timelockanalysis10trials(datainfo(k), writeflag, version, 'yes', 'yes');
+  fname   = fullfile(datainfo(k).origdir,version,'timelock',datainfo(k).type,['timelock_cov_trl_',datainfo(k).datatype]);
+  comparedata(datanew, fname);
+  
+  datanew = timelockanalysis10trials(datainfo(k), writeflag, version, 'yes', 'no');
+  fname   = fullfile(datainfo(k).origdir,version,'timelock',datainfo(k).type,['timelock_cov_',datainfo(k).datatype]);
+  comparedata(datanew, fname);
+  
+  datanew = timelockanalysis10trials(datainfo(k), writeflag, version, 'no', 'yes');
+  fname   = fullfile(datainfo(k).origdir,version,'timelock',datainfo(k).type,['timelock_trl_',datainfo(k).datatype]);
+  comparedata(datanew, fname);
+  
+  datanew = timelockanalysis10trials(datainfo(k), writeflag, version, 'no', 'no'); % should be the latest
+  fname   = fullfile(datainfo(k).origdir,version,'timelock',datainfo(k).type,['timelock_',datainfo(k).datatype]);
+  comparedata(datanew, fname);
+  
 end
 
 function [timelock] = timelockanalysis10trials(dataset, writeflag, version, covariance, keeptrials)
@@ -64,22 +59,22 @@ end
 % the file names should distinguish between the cfg.covariance and cfg.keeptrials option
 postfix = '';
 switch covariance
-case 'no'
-  % don't change
-case 'yes'
-  postfix = [postfix 'cov_'];
-otherwise
-  error('unexpected keeptrials');
+  case 'no'
+    % don't change
+  case 'yes'
+    postfix = [postfix 'cov_'];
+  otherwise
+    error('unexpected keeptrials');
 end
 
 % the file names should distinguish between the cfg.covariance and cfg.keeptrials option
 switch keeptrials
-case 'no'
-  % don't change
-case 'yes'
-  postfix = [postfix 'trl_'];
-otherwise
-  error('unexpected keeptrials');
+  case 'no'
+    % don't change
+  case 'yes'
+    postfix = [postfix 'trl_'];
+  otherwise
+    error('unexpected keeptrials');
 end
 
 cfg = [];
@@ -99,3 +94,26 @@ else
   timelock = ft_timelockanalysis(cfg);
 end
 
+function comparedata(datanew, fname)
+
+tmp = load(fname);
+if isfield(tmp, 'data')
+  data = tmp.data;
+elseif isfield(tmp, 'datanew')
+  data = tmp.datanew;
+elseif isfield(tmp, 'timelock')
+  data = tmp.timelock;
+end
+
+try
+  % these are sensitive to numerical erorrs, especially for MEG data and when the covariance is close to zero
+  datanew.cov = trimnumericalerror(datanew.cov, eps*1e3);
+  data.cov    = trimnumericalerror(data.cov   , eps*1e3);
+end
+
+datanew = removefields(datanew, 'cfg'); % these are per construction different if writeflag = 0
+data    = removefields(data,    'cfg');
+[ok,msg] = isalmostequal(data, datanew, 'reltol', eps*1e8);
+if ~ok
+  error('stored and computed data not identical: %s', msg{:});
+end

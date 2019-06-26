@@ -46,7 +46,7 @@ function [dipout] = ft_sloreta(dip, grad, headmodel, dat, Cy, varargin)
 % Copyright (C) 2016, Sarang Dalal
 % based on code Copyright (C) 2003-2014, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -65,7 +65,7 @@ function [dipout] = ft_sloreta(dip, grad, headmodel, dat, Cy, varargin)
 
 if mod(nargin-5,2)
   % the first 5 arguments are fixed, the other arguments should come in pairs
-  error('invalid number of optional arguments');
+  ft_error('invalid number of optional arguments');
 end
 
 % these optional settings do not have defaults
@@ -108,14 +108,14 @@ powtrace   = strcmp(powmethod, 'trace');
 powlambda1 = strcmp(powmethod, 'lambda1');
 
 if isfield(dip, 'mom') && fixedori
-  error('you cannot specify a dipole orientation and fixedmom simultaneously');
+  ft_error('you cannot specify a dipole orientation and fixedmom simultaneously');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfield(dip, 'inside')
-  dip.inside = ft_inside_vol(dip.pos, headmodel);
+  dip.inside = ft_inside_headmodel(dip.pos, headmodel);
 end
 
 if any(dip.inside>1)
@@ -237,7 +237,7 @@ for i=1:size(dip.pos,1)
 
   if fixedori
       [vv, dd] = eig(pinv(lf' * invG * lf) * lf' * invG * Cy * invG * lf); % eqn 13.22 from Sekihara & Nagarajan 2008 for sLORETA
-      [~,maxeig]=max(diag(dd));
+      [dum,maxeig]=max(diag(dd));
       eta = vv(:,maxeig);
       lf  = lf * eta;
       if ~isempty(subspace), lforig = lforig * eta; end
@@ -256,7 +256,7 @@ for i=1:size(dip.pos,1)
     end
   end
   if(any(~isreal(filt)))
-      error('spatial filter has complex values -- did you set lambda properly?');
+      ft_error('spatial filter has complex values -- did you set lambda properly?');
   end
   if projectmom
     [u, s, v] = svd(filt * Cy * ctranspose(filt));

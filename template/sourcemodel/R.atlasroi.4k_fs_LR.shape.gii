@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GIFTI xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="http://brainvis.wustl.edu/caret6/xml_schemas/GIFTI_Caret.xsd"
+       Version="1"
+       NumberOfDataArrays="1">
+   <MetaData>
+      <MD>
+         <Name><![CDATA[AnatomicalStructurePrimary]]></Name>
+         <Value><![CDATA[CortexRight]]></Value>
+      </MD>
+      <MD>
+         <Name><![CDATA[ParentProvenance]]></Name>
+         <Value><![CDATA[R.sphere.4k_fs_LR.surf.gii:
+/home/language/jansch/workbench/bin_linux64/../exe_linux64/wb_command -surface-create-sphere 4000 Sphere.4k.R.surf.gii
+
+]]></Value>
+      </MD>
+      <MD>
+         <Name><![CDATA[ProgramProvenance]]></Name>
+         <Value><![CDATA[Connectome Workbench
+Version: 1.0
+Qt Compiled Version: 4.8.4
+Qt Runtime Version: 4.8.4
+commit: dfd2086d37612ccf2369b85b5f5f0f5987369339
+commit date: 2014-09-09 13:23:57 -0500
+Compiler: g++44 (/usr/bin)
+Compiler Version: 4.4.7
+Compiled Debug: NO
+Operating System: Linux
+]]></Value>
+      </MD>
+      <MD>
+         <Name><![CDATA[Provenance]]></Name>
+         <Value><![CDATA[/opt/hcp-workbench/1.0/bin_rh_linux64/../exe_rh_linux64/wb_command -metric-resample R.atlasroi.32k_fs_LR.shape.gii R.sphere.32k_fs_LR.surf.gii R.sphere.4k_fs_LR.surf.gii BARYCENTRIC R.atlasroi.4k_fs_LR.shape.gii]]></Value>
+      </MD>
+      <MD>
+         <Name><![CDATA[WorkingDirectory]]></Name>
+         <Value><![CDATA[/home/language/jansch/projects/Pipelines/global/templates/standard_mesh_atlases]]></Value>
+      </MD>
+   </MetaData>
+   <LabelTable>
+      <Label Key="0" Red="1" Green="1" Blue="1" Alpha="0"><![CDATA[???]]></Label>
+   </LabelTable>
+<DataArray Intent="NIFTI_INTENT_NORMAL"
+           DataType="NIFTI_TYPE_FLOAT32"
+           ArrayIndexingOrder="RowMajorOrder"
+           Dimensionality="1"
+           Dim0="4002"
+           Encoding="GZipBase64Binary"
+           Endian="LittleEndian"
+           ExternalFileName=""
+           ExternalFileOffset="0">
+   <MetaData>
+      <MD>
+         <Name><![CDATA[Name]]></Name>
+         <Value><![CDATA[deformed_Atlas_Cortex_ROI]]></Value>
+      </MD>
+      <MD>
+         <Name><![CDATA[PaletteColorMapping]]></Name>
+         <Value><![CDATA[<PaletteColorMapping Version="1">
+   <ScaleMode>MODE_AUTO_SCALE_PERCENTAGE</ScaleMode>
+   <AutoScalePercentageValues>98.000000 2.000000 2.000000 98.000000</AutoScalePercentageValues>
+   <UserScaleValues>-100.000000 0.000000 0.000000 100.000000</UserScaleValues>
+   <PaletteName>ROY-BIG-BL</PaletteName>
+   <InterpolatePalette>true</InterpolatePalette>
+   <DisplayPositiveData>true</DisplayPositiveData>
+   <DisplayZeroData>false</DisplayZeroData>
+   <DisplayNegativeData>true</DisplayNegativeData>
+   <ThresholdTest>THRESHOLD_TEST_SHOW_OUTSIDE</ThresholdTest>
+   <ThresholdType>THRESHOLD_TYPE_OFF</ThresholdType>
+   <ThresholdFailureInGreen>false</ThresholdFailureInGreen>
+   <ThresholdNormalValues>-1.000000 1.000000</ThresholdNormalValues>
+   <ThresholdMappedValues>-1.000000 1.000000</ThresholdMappedValues>
+   <ThresholdMappedAvgAreaValues>-1.000000 1.000000</ThresholdMappedAvgAreaValues>
+   <ThresholdDataName></ThresholdDataName>
+   <ThresholdRangeMode>PALETTE_THRESHOLD_RANGE_MODE_MAP</ThresholdRangeMode>
+</PaletteColorMapping>
+]]></Value>
+      </MD>
+   </MetaData>
+   <Data>eJztWz9LHUEQf1qKVbqnXQpDagsLyTtsYiMhKVK8QBBsxSpgIAjed7AKBKvUKUwI+RDpA2lSBPwEVimiLMfx3q2zs/P33qk7MMi73Z2d/c3szOyyjkZ1NUpyoFy7hjDZXGbSl71nOZmHG5cTm/XJ6fr6tFre/SjWI4yXz15Xv3Zqwdx1NX3F1bmugq4rj6mYN9i+/bZHWF/TN8h/dDJG+jd9Zn/TstK+h7V3v4c52vm4LB3nw1ScdAyt+X/0bckBw/MPY3Q8JGdm24a2r1ars3+VAlOKzl36/eZFJsZx7Hab/mz+BOSniNMHptSefPpkbBSn7ydT90Trs1B/yl6J+ywR5WL7J9WGrQmLq55xMye7T52oMheB0xAYit2c3GGFkRT/uJ2rC0V+au952COFPZZjvWyEjZFgkqvz7vNew/zb2jZ9r8ECA+i35RqH7lsW+Wfoa1wkjhKMrfzdu9YKHJ//qFh45jZO7ub2jfOkVmduzWM9vnDe7i33cdeRG4/fdcC/LTHwWkNuXk39ZhWb5/X3wHtoXHIaD4uS0xq+qznNyn5SX/WKI5y4C52JpHcd2DhNnKDYSWrLh3buoayBsh8hH9PegVpgrrERpdbSyIRir4f9PMamMLHyJ0v9rO0vWUPcH6ox+li7xz3ufBsFF+25iRtjYt+UxChOX+2da59+r/EH6blLUx/lxlnnB8t4H1gT77U1TR9+pcHLXr8ZHfxdJfWD6PVReEvF03PYNRP+5gKTfZF4i4ONDd8+/5iy7Tf5PgXxKTUTLndrummi40NkiX2l73UoeqTuHD3W4SkvV+/m5huKXe46a2vTIeBptbdy3z3qpqH7n+ZejtO3nDvKucOSF33umJfxaT/+34tuX1ouvE1UPJt23jvrrkyYXq69y+BGo/frXyfcMYVi8ttHsv3R1Um29xsfl+/HNC45fZ4f15O2HaoDpPUoNk6Tayl20sZtqb/0zZK8bFHnYOM9cWn9sbxT0Om8qHcKkB3K/z502z19lGpH7V62Pk9LMMnl07btBvutddY=</Data>
+</DataArray>
+</GIFTI>

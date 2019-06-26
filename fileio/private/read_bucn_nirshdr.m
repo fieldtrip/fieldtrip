@@ -31,7 +31,7 @@ function [hdr] = read_bucn_nirshdr(filename)
 %
 % $Id: read_bucn_nirshdr.m$
 
-fid = fopen(filename, 'r');
+fid = fopen_or_error(filename, 'r');
 
 % read the first line
 line1 = textscan(fid, '%[^\n]',1);
@@ -53,7 +53,7 @@ Fs    = str2num(strtok(strtok(label{1},'#Time.'),'Hz'));
 labelnumber = cellfun(@str2num, label, 'UniformOutput', false);
 labelstring = cellfun(@isempty, labelnumber, 'UniformOutput', true);
 if ~any(labelstring)
-  error('channel labels were not found in the first line of the file');
+  ft_error('channel labels were not found in the first line of the file');
 end
 
 % read the rest

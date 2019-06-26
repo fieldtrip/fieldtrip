@@ -29,7 +29,7 @@ function sFile = in_fopen_manscan(DataFile)
 MbiFile = strrep(DataFile, '.mb2', '.mbi');
 % If doesn't exist: error
 if ~exist(MbiFile, 'file')
-    error('Cannot open file: missing text file .mbi');
+    ft_error('Cannot open file: missing text file .mbi');
 end
 % Initialize header
 iEpoch = 1;
@@ -38,7 +38,7 @@ hdr.epoch(iEpoch).Channel = [];
 hdr.Events = [];
 curBlock = '';
 % Read file line by line
-fid = fopen(MbiFile,'r');
+fid = fopen_or_error(MbiFile,'r');
 while(1)
     % Reached the end of the file: exit the loop
     if feof(fid)
@@ -131,7 +131,7 @@ end
 
 %% ===== CREATE BRAINSTORM SFILE STRUCTURE =====
 % Initialize returned file structure
-sFile = [];%db_template('sfile');
+sFile = []; %db_template('sfile');
 % Add information read from header
 sFile.byteorder  = 'l';
 sFile.filename   = DataFile;
@@ -164,7 +164,7 @@ else
         
         % Check if all the epochs have the same channel list
         if (iEpoch > 1) && ~isequal(hdr.epoch(iEpoch).ChannelOrder, hdr.epoch(1).ChannelOrder)
-            error('Channel list must remain constant across epochs.');
+            ft_error('Channel list must remain constant across epochs.');
         end
     end
     % Extract global min/max for time and samples indices
@@ -252,7 +252,7 @@ function splStr = str_split( str, delimiters, isCollapse )
 %    - isCollapse : If 1, remove all the empty entries
 % 
 % OUTPUT: 
-%    - splStr : cell array of blocks found between separators
+%    - splStr : cell-array of blocks found between separators
 
 % @=============================================================================
 % This software is part of the Brainstorm software:

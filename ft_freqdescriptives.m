@@ -45,8 +45,8 @@ function [freq] = ft_freqdescriptives(cfg, freq)
 % cfg.previous
 % cfg.version
 
-% Copyright (C) 2004-2006, Pascal Fries & Jan-Mathijs Schoffelen, F.C. Donders Centre
-% Copyright (C) 2010, Jan-Mathijs Schoffelen, F.C. Donders Centre
+% Copyright (C) 2004-2006, Pascal Fries & Jan-Mathijs Schoffelen
+% Copyright (C) 2010, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -109,7 +109,7 @@ cfg.latency    = ft_getopt(cfg, 'latency',    'all');
 cfg.keeptrials = ft_getopt(cfg, 'keeptrials', 'no');
 
 % check if the input data is valid for this function
-freq = ft_checkdata(freq, 'datatype', {'freq', 'freqmvar'}, 'feedback', 'yes');
+freq = ft_checkdata(freq, 'datatype', {'freq', 'freqmvar'}, 'feedback', cfg.feedback);
 % get data in the correct representation, it should only have power
 freq = ft_checkdata(freq, 'cmbrepresentation', 'sparsewithpow', 'channelcmb', {});
 
@@ -122,18 +122,18 @@ jckflg   = strcmp(cfg.jackknife, 'yes');
 keepflg  = strcmp(cfg.keeptrials, 'yes');
 
 % check sensibility of configuration
-if sum([varflg keepflg]>1),               error('you should specify only one of cfg.keeptrials or cfg.variance');                                             end
-if ~hasrpt && (varflg || keepflg),        error('a variance-estimate or a single trial estimate without repeated observations in the input is not possible'); end
-if ~hasrpt && ~strcmp(cfg.trials, 'all'), error('trial selection requires input data with repeated observations');                                            end
+if sum([varflg keepflg]>1),               ft_error('you should specify only one of cfg.keeptrials or cfg.variance');                                             end
+if ~hasrpt && (varflg || keepflg),        ft_error('a variance-estimate or a single trial estimate without repeated observations in the input is not possible'); end
+if ~hasrpt && ~strcmp(cfg.trials, 'all'), ft_error('trial selection requires input data with repeated observations');                                            end
 if ~varflg && jckflg,                     varflg = 1; end
 
 % select data of interest
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'latency', 'frequency'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'latency', 'frequency', 'showcallinfo'});
 freq = ft_selectdata(tmpcfg, freq);
 % restore the provenance information
 [cfg, freq] = rollback_provenance(cfg, freq);
 
-if jckflg,
+if jckflg
   % the data is 'sparsewithpow', so it contains a powspctrm and optionally a crsspctrm
   % the checking of a 'rpt' is handled above, so it can be assumed that the 'rpt' is the
   % first dimension
@@ -148,7 +148,7 @@ if jckflg,
   end
 end
 
-if varflg,
+if varflg
   siz    = [size(freq.powspctrm) 1];
   outsum = zeros(siz(2:end));
   outssq = zeros(siz(2:end));
@@ -164,7 +164,7 @@ if varflg,
   end
   ft_progress('close');
 
-  if jckflg,
+  if jckflg
     bias = (n-1).^2;
   else
     bias = 1;
@@ -184,7 +184,7 @@ else
   powspctrm = freq.powspctrm;
 end
 
-if hasrpt && ~keepflg,
+if hasrpt && ~keepflg
   dimtok    = tokenize(freq.dimord, '_');
   newdimord = dimtok{2};
   for k = 3:numel(dimtok)
@@ -199,12 +199,12 @@ output                = [];
 output.dimord         = newdimord;
 output.freq           = freq.freq;
 output.label          = freq.label;
-if isfield(freq, 'time'), output.time      = freq.time;      end;
-if isfield(freq, 'grad'), output.grad      = freq.grad;      end;
-if isfield(freq, 'cumtapcnt'), output.cumtapcnt = freq.cumtapcnt; end;
-if isfield(freq, 'cumsumcnt'), output.cumsumcnt = freq.cumsumcnt; end;
 output.powspctrm      = powspctrm;
-if exist('powspctrmsem', 'var'), output.powspctrmsem = powspctrmsem; end;
+if isfield(freq, 'time'),      output.time      = freq.time;      end
+if isfield(freq, 'grad'),      output.grad      = freq.grad;      end
+if isfield(freq, 'cumtapcnt'), output.cumtapcnt = freq.cumtapcnt; end
+if isfield(freq, 'cumsumcnt'), output.cumsumcnt = freq.cumsumcnt; end
+if exist('powspctrmsem', 'var'), output.powspctrmsem = powspctrmsem; end
 
 % remember the trialinfo
 if strcmp(cfg.keeptrials, 'yes') && isfield(freq, 'trialinfo')

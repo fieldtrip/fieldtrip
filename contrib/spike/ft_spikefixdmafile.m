@@ -2,7 +2,7 @@ function ft_spikefixdmafile(cfg)
 
 % FT_SPIKEFIXDMAFILE fixes the problem in DMA files due to stopping and
 % restarting the acquisition. It takes one Neuralynx DMA file and and
-% creates seperate DMA files, each corresponding with one continuous
+% creates separate DMA files, each corresponding with one continuous
 % section of the recording.
 %
 % Use as
@@ -42,7 +42,7 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance
 ft_preamble trackconfig
 
 % set the general defaults
@@ -124,5 +124,5 @@ fclose(fin);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
+ft_postamble provenance
 

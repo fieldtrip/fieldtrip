@@ -11,14 +11,51 @@
 %   .... regular code goes here ...
 %   ft_postamble debug
 %
-% See also FT_POSTAMBLE_DEBUG, DEBUGCLEANUP
+% See also FT_PREAMBLE, FT_POSTAMBLE, FT_POSTAMBLE_DEBUG, DEBUGCLEANUP
 
 % these variables are shared by the three debug handlers
-global Ce9dei2ZOo_debug Ce9dei2ZOo_funname Ce9dei2ZOo_argin
+global Ce9dei2ZOo_debug Ce9dei2ZOo_funname Ce9dei2ZOo_argin Ce9dei2ZOo_ws Ce9dei2ZOo_ns Ce9dei2ZOo_is Ce9dei2ZOo_ds
 
 if ~isempty(Ce9dei2ZOo_debug) && ~isequal(Ce9dei2ZOo_debug, 'no')
   % the debugging handler is already set by a higher-level function
   return
+end
+
+if isfield(cfg, 'verbose') && ischar(cfg.verbose)
+  % store the current state of the notifications
+  Ce9dei2ZOo_ws = ft_warning;
+  Ce9dei2ZOo_ns = ft_notice;
+  Ce9dei2ZOo_is = ft_info;
+  Ce9dei2ZOo_ds = ft_debug;
+  switch cfg.verbose
+    case 'error'
+      ft_warning off
+      ft_notice  off
+      ft_info    off
+      ft_debug   off
+    case 'warning'
+      ft_warning on
+      ft_notice  off
+      ft_info    off
+      ft_debug   off
+    case 'notice'
+      ft_warning on
+      ft_notice  on
+      ft_info    off
+      ft_debug   off
+    case 'info'
+      ft_warning on
+      ft_notice  on
+      ft_info    on
+      ft_debug   off
+    case 'debug'
+      ft_warning on
+      ft_notice  on
+      ft_info    on
+      ft_debug   on
+    otherwise
+      % just leave them as they are
+  end
 end
 
 if ~isfield(cfg, 'debug')
@@ -38,7 +75,7 @@ lastwarn('');
 % remember the variables that were passed as input arguments
 Ce9dei2ZOo_workspace = evalin('caller', 'whos');
 Ce9dei2ZOo_workspace = Ce9dei2ZOo_workspace(~strcmp({Ce9dei2ZOo_workspace.class}, 'function_handle')); % only variables, not anonymous functions
-Ce9dei2ZOo_workspace = setdiff({Ce9dei2ZOo_workspace.name}, {'ft_default', 'ft_revision', 'ft_nargin', 'ft_abort', 'ftohDiW7th_FuncMem', 'ftohDiW7th_FuncTimer', 'Ce9dei2ZOo_debug', 'Ce9dei2ZOo_funname', 'Ce9dei2ZOo_argin'});
+Ce9dei2ZOo_workspace = setdiff({Ce9dei2ZOo_workspace.name}, {'ft_default', 'ft_revision', 'ft_nargin', 'ft_abort', 'ftohDiW7th_FuncMem', 'ftohDiW7th_FuncTimer', 'Ce9dei2ZOo_debug', 'Ce9dei2ZOo_funname', 'Ce9dei2ZOo_argin', 'iW1aenge_preamble', 'iW1aenge_postamble'});
 Ce9dei2ZOo_argin     = [];
 for Ce9dei2ZOo_indx=1:length(Ce9dei2ZOo_workspace)
   Ce9dei2ZOo_argin(Ce9dei2ZOo_indx).name  = Ce9dei2ZOo_workspace{Ce9dei2ZOo_indx};

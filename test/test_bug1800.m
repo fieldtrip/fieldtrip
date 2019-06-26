@@ -3,8 +3,7 @@ function test_bug1800
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1800
-% TEST ft_defaults ft_selectdata ft_topoplotER
+% DEPENDENCY ft_defaults ft_selectdata ft_topoplotER
 
 % this was reported by Giorgos Michalareas
 %
@@ -14,13 +13,14 @@ function test_bug1800
 % channels and it seems to assume that the are already matched. This results in a
 % wrong topology plot. 
 %
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=1800
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1800
 
 % Load the timelocked data
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
-load bug1800 tmpavg1
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1800.mat'));
 
-tmpavg2=ft_selectdata(tmpavg1,'avgovertime','yes');  % average timelocked data across all time points
+cfg = [];
+cfg.avgovertime = 'yes';
+tmpavg2=ft_selectdata(cfg,tmpavg1);  % average timelocked data across all time points
 
 % Error  case - Plot the topoplot for timelocked data
 cfg=[];

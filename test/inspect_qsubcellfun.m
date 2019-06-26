@@ -3,8 +3,7 @@ function inspect_qsubcellfun
 % MEM 3gb
 % WALLTIME 00:31:04
 
-% TEST inspect_qsubcellfun
-% TEST qsubcellfun qsubfeval qsubget
+% DEPENDENCY qsubcellfun qsubfeval qsubget
 
 if isempty(which('qsubcellfun'))
   [ftver, ftpath] = ft_version;
@@ -14,7 +13,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this test script is based on http://www.fieldtriptoolbox.org/tutorial/distributedcomputing
 
-cd /home/common/matlab/fieldtrip/data
+cd(dccnpath('/home/common/matlab/fieldtrip/data'));
 timreq = 20*60;
 memreq = 2*1024^3;
 

@@ -39,6 +39,9 @@ function unit = ft_estimate_units(size)
 %
 % $Id$
 
+% the objects size should be estimated outside this function
+assert(isscalar(size), 'the size should be a scalar');
+
 % do some magic based on the size
 unit = {'m', 'dm', 'cm', 'mm'};
 est  = log10(size)+1.8;
@@ -46,14 +49,14 @@ indx = round(est);
 
 if indx>length(unit)
   indx = length(unit);
-  warning('assuming that the units are "%s"', unit{indx});
+  ft_warning('assuming that the units are "%s"', unit{indx});
 elseif indx<1
   indx = 1;
-  warning('assuming that the units are "%s"', unit{indx});
+  ft_warning('assuming that the units are "%s"', unit{indx});
 elseif abs((est-floor(est)) - 0.5)<0.1
   % the size estimate falls within the expected range, but is not very decisive
   % for example round(1.49) results in meter, but round(1.51) results in decimeter
-  warning('the estimated units are not very decisive, assuming that the units are "%s"', unit{indx});
+  ft_warning('the estimated units are not very decisive, assuming that the units are "%s"', unit{indx});
 end
 
 unit = unit{indx};

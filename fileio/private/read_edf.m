@@ -1,7 +1,7 @@
 function [dat] = read_edf(filename, hdr, begsample, endsample, chanindx)
 
 % READ_EDF reads specified samples from an EDF datafile. It neglects all trial or
-% data block boundaries as if the data was acquired in non-continous mode.
+% data block boundaries as if the data was acquired in non-continuous mode.
 %
 % Note that since FieldTrip only accommodates a single sampling rate in a given
 % dataset, whereas EDF allows specification of a sampling rate for each channel.  If
@@ -18,23 +18,9 @@ function [dat] = read_edf(filename, hdr, begsample, endsample, chanindx)
 % override chanindx during data reading.
 %
 % Use as
-%   [hdr] = read_edf(filename);
+%   [hdr] = read_edf(filename)
 % where
 %    filename        name of the datafile, including the .edf extension
-% This returns a header structure with the following elements
-%   hdr.Fs           sampling frequency
-%   hdr.nChans       number of channels
-%   hdr.nSamples     number of samples per trial
-%   hdr.nSamplesPre  number of pre-trigger samples in each trial
-%   hdr.nTrials      number of trials
-%   hdr.label        cell-array with labels of each channel
-%   hdr.orig         detailled EDF header information
-%
-% Use as
-%   [hdr] = read_edf(filename, [], chanindx);
-% where
-%    filename        name of the datafile, including the .edf extension
-%    chanindx        index of channels to read (optional, default is all)
 % This returns a header structure with the following elements
 %   hdr.Fs           sampling frequency
 %   hdr.nChans       number of channels
@@ -45,7 +31,7 @@ function [dat] = read_edf(filename, hdr, begsample, endsample, chanindx)
 %   hdr.orig         detailled EDF header information
 %
 % Or use as
-%   [dat] = read_edf(filename, hdr, begsample, endsample, chanindx);
+%   [dat] = read_edf(filename, hdr, begsample, endsample, chanindx)
 % where
 %    filename        name of the datafile, including the .edf extension
 %    hdr             header structure, see above
@@ -55,7 +41,7 @@ function [dat] = read_edf(filename, hdr, begsample, endsample, chanindx)
 % This returns a Nchans X Nsamples data matrix
 %
 % Or use as
-%   [evt] = read_edf(filename, hdr);
+%   [evt] = read_edf(filename, hdr)
 % where
 %    filename        name of the datafile, including the .edf extension
 %    hdr             header structure, see above
@@ -100,24 +86,20 @@ if needhdr
   % read the header, this code is from EEGLAB's openbdf
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   FILENAME = filename;
-  
+
   % defines Seperator for Subdirectories
   SLASH='/';
   BSLASH=char(92);
-  
+
   cname=computer;
   if cname(1:2)=='PC' SLASH=BSLASH; end
-  
-  fid=fopen(FILENAME,'r','ieee-le');
-  if fid<0
-    fprintf(2,['Error LOADEDF: File ' FILENAME ' not found\n']);
-    return;
-  end
-  
+
+  fid=fopen_or_error(FILENAME,'r','ieee-le');
+
   EDF.FILE.FID=fid;
   EDF.FILE.OPEN = 1;
   EDF.FileName = FILENAME;
-  
+
   PPos=min([max(find(FILENAME=='.')) length(FILENAME)+1]);
   SPos=max([0 find((FILENAME=='/') | (FILENAME==BSLASH))]);
   EDF.FILE.Ext = FILENAME(PPos+1:length(FILENAME));
@@ -128,7 +110,7 @@ if needhdr
     EDF.FILE.Path = FILENAME(1:SPos-1);
   end
   EDF.FileName = [EDF.FILE.Path SLASH EDF.FILE.Name '.' EDF.FILE.Ext];
-  
+
   H1=char(fread(EDF.FILE.FID,256,'char')');
   EDF.VERSION=H1(1:8);                          % 8 Byte  Versionsnummer
   %if 0 fprintf(2,'LOADEDF: WARNING  Version EDF Format %i',ver); end
@@ -137,7 +119,7 @@ if needhdr
   %EDF.H.StartDate = H1(169:176);               % 8 Byte
   %EDF.H.StartTime = H1(177:184);               % 8 Byte
   EDF.T0=[str2num(H1(168+[7 8])) str2num(H1(168+[4 5])) str2num(H1(168+[1 2])) str2num(H1(168+[9 10])) str2num(H1(168+[12 13])) str2num(H1(168+[15 16])) ];
-  
+
   % Y2K compatibility until year 2090
   if EDF.VERSION(1)=='0'
     if EDF.T0(1) < 91
@@ -148,22 +130,22 @@ if needhdr
   else
     % in a future version, this is hopefully not needed
   end
-  
+
   EDF.HeadLen = str2num(H1(185:192));  % 8 Byte  Length of Header
   % reserved = H1(193:236);            % 44 Byte
   EDF.NRec = str2num(H1(237:244));     % 8 Byte  # of data records
   EDF.Dur  = str2num(H1(245:252));     % 8 Byte  # duration of data record in sec
   EDF.NS   = str2num(H1(253:256));     % 8 Byte  # of signals
-  
+
   EDF.Label      = char(fread(EDF.FILE.FID,[16,EDF.NS],'char')');
   EDF.Transducer = char(fread(EDF.FILE.FID,[80,EDF.NS],'char')');
   EDF.PhysDim    = char(fread(EDF.FILE.FID,[ 8,EDF.NS],'char')');
-  
+
   EDF.PhysMin= str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'char')'));
   EDF.PhysMax= str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'char')'));
   EDF.DigMin = str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'char')'));
   EDF.DigMax = str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'char')'));
-  
+
   % check validity of DigMin and DigMax
   if (length(EDF.DigMin) ~= EDF.NS)
     fprintf(2,'Warning OPENEDF: Failing Digital Minimum\n');
@@ -178,35 +160,37 @@ if needhdr
   end
   % check validity of PhysMin and PhysMax
   if (length(EDF.PhysMin) ~= EDF.NS)
-    fprintf(2,'Warning OPENEDF: Failing Physical Minimum\n');
+    fprintf(2,'Warning OPENEDF: Failing Physical Minimum, taking Digital Minimum instead\n');
     EDF.PhysMin = EDF.DigMin;
   end
   if (length(EDF.PhysMax) ~= EDF.NS)
-    fprintf(2,'Warning OPENEDF: Failing Physical Maximum\n');
+    fprintf(2,'Warning OPENEDF: Failing Physical Maximum, taking Digital Maximum instead\n');
     EDF.PhysMax = EDF.DigMax;
   end
-  if (any(EDF.PhysMin >= EDF.PhysMax))
-    fprintf(2,'Warning OPENEDF: Physical Minimum larger than Maximum\n');
-    EDF.PhysMin = EDF.DigMin;
-    EDF.PhysMax = EDF.DigMax;
+  idx_PhysMin_ge_PhysMax = EDF.PhysMin >= EDF.PhysMax;
+  if (any(idx_PhysMin_ge_PhysMax))
+    tmplabel = cellfun(@(x) [x ' '], cellstr(EDF.Label(idx_PhysMin_ge_PhysMax,:)),'UniformOutput',false)';
+    fprintf(2,['Warning OPENEDF: Physical Minimum larger than Maximum.\nPLEASE recheck if the scaling and polarity in the following channels are still correct if used:\n' tmplabel{:} '\n']);
+    %EDF.PhysMin = EDF.DigMin;
+    %EDF.PhysMax = EDF.DigMax;
   end
   EDF.PreFilt= char(fread(EDF.FILE.FID,[80,EDF.NS],'char')');
   EDF.SPR = str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'char')'));  % samples per data record
-  
+
   fseek(EDF.FILE.FID,32*EDF.NS,0);
-  
+
   EDF.Cal = (EDF.PhysMax-EDF.PhysMin)./(EDF.DigMax-EDF.DigMin);
   EDF.Off = EDF.PhysMin - EDF.Cal .* EDF.DigMin;
-  tmp = find(EDF.Cal < 0);
-  EDF.Cal(tmp) = ones(size(tmp));
-  EDF.Off(tmp) = zeros(size(tmp));
-  
+  %tmp = find(EDF.Cal < 0);
+  %EDF.Cal(tmp) = ones(size(tmp));
+  %EDF.Off(tmp) = zeros(size(tmp));
+
   EDF.Calib=[EDF.Off';(diag(EDF.Cal))];
   %EDF.Calib=sparse(diag([1; EDF.Cal]));
   %EDF.Calib(1,2:EDF.NS+1)=EDF.Off';
-  
+
   EDF.SampleRate = EDF.SPR / EDF.Dur;
-  
+
   EDF.FILE.POS = ftell(EDF.FILE.FID);
   if EDF.NRec == -1                            % unknown record size, determine correct NRec
     fseek(EDF.FILE.FID, 0, 'eof');
@@ -215,7 +199,7 @@ if needhdr
     fseek(EDF.FILE.FID, EDF.FILE.POS, 'bof');
     H1(237:244)=sprintf('%-8i',EDF.NRec);      % write number of records
   end
-  
+
   EDF.Chan_Select=(EDF.SPR==max(EDF.SPR));
   for k=1:EDF.NS
     if EDF.Chan_Select(k)
@@ -223,26 +207,26 @@ if needhdr
     else
       EDF.ChanTyp(k)=' ';
     end
-    if findstr(upper(EDF.Label(k,:)),'ECG')
+    if contains(upper(EDF.Label(k,:)),'ECG')
       EDF.ChanTyp(k)='C';
-    elseif findstr(upper(EDF.Label(k,:)),'EKG')
+    elseif contains(upper(EDF.Label(k,:)),'EKG')
       EDF.ChanTyp(k)='C';
-    elseif findstr(upper(EDF.Label(k,:)),'EEG')
+    elseif contains(upper(EDF.Label(k,:)),'EEG')
       EDF.ChanTyp(k)='E';
-    elseif findstr(upper(EDF.Label(k,:)),'EOG')
+    elseif contains(upper(EDF.Label(k,:)),'EOG')
       EDF.ChanTyp(k)='O';
-    elseif findstr(upper(EDF.Label(k,:)),'EMG')
+    elseif contains(upper(EDF.Label(k,:)),'EMG')
       EDF.ChanTyp(k)='M';
     end
   end
-  
+
   if isempty(chanindx)
     chanindx=1:EDF.NS;
   end
-  
+
   EDF.AS.spb = sum(EDF.SPR);    % Samples per Block
   bi=[0;cumsum(EDF.SPR)];
-  
+
   idx=[];idx2=[];
   for k=1:EDF.NS
     idx2=[idx2, (k-1)*max(EDF.SPR)+(1:EDF.SPR(k))];
@@ -250,14 +234,14 @@ if needhdr
   maxspr=max(EDF.SPR);
   idx3=zeros(EDF.NS*maxspr,1);
   for k=1:EDF.NS, idx3(maxspr*(k-1)+(1:maxspr))=bi(k)+ceil((1:maxspr)'/maxspr*EDF.SPR(k));end
-  
+
   %EDF.AS.bi=bi;
   EDF.AS.IDX2=idx2;
   %EDF.AS.IDX3=idx3;
-  
+
   % close the file
   fclose(EDF.FILE.FID);
-  
+
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % convert the header to Fieldtrip-style
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -265,12 +249,15 @@ if needhdr
     chansel=chanindx;
     hdr.Fs           = EDF.SampleRate(chanindx(1));
     hdr.nChans       = length(chansel);
-    hdr.label        = cellstr(EDF.Label);
-    hdr.label        = hdr.label(chansel);
+    hdr.label        = cellstr(EDF.Label(chansel,:));
     % it is continuous data, therefore append all records in one trial
     hdr.nSamples     = EDF.NRec * EDF.SPR(chansel(1));
     hdr.nSamplesPre  = 0;
     hdr.nTrials      = 1;
+    hdr.chanunit     = cellstr(EDF.PhysDim(chansel,:));
+    hdr.chantype     = repmat({'unknown'}, size(hdr.chanunit));  % start with unknown
+    hdr.chantype(strcmp(hdr.chanunit, 'uV')) = {'eeg'};          % it might also be EOG, ECG, EMG, etc
+    hdr.chantype(strcmp(hdr.chanunit, 'Boolean')) = {'trigger'};
     hdr.orig         = EDF;
     % this will be used on subsequent reading of data
     if length(chansel) ~= EDF.NS
@@ -279,7 +266,7 @@ if needhdr
       hdr.orig.chansel = 1:hdr.nChans;
     end
     hdr.orig.annotation = find(strcmp(cellstr(hdr.orig.Label), 'EDF Annotations'));
-    
+
   elseif all(EDF.SampleRate(1:end-1)==EDF.SampleRate(1))
     % only the last channel has a deviant sampling frequency
     % this is the case for EGI recorded datasets that have been converted
@@ -288,7 +275,7 @@ if needhdr
     % continue with the subset of channels that has a consistent sampling frequency
     hdr.Fs           = EDF.SampleRate(chansel(1));
     hdr.nChans       = length(chansel);
-    warning('Skipping "%s" as continuous data channel because of inconsistent sampling frequency (%g Hz)', deblank(EDF.Label(end,:)), EDF.SampleRate(end));
+    ft_warning('Skipping "%s" as continuous data channel because of inconsistent sampling frequency (%g Hz)', deblank(EDF.Label(end,:)), EDF.SampleRate(end));
     hdr.label        = cellstr(EDF.Label(chansel,:));
     % it is continuous data, therefore append all records in one trial
     hdr.nSamples     = EDF.NRec * EDF.SPR(chansel(1));
@@ -298,7 +285,7 @@ if needhdr
     % this will be used on subsequent reading of data
     hdr.orig.chansel    = chansel;
     hdr.orig.annotation = find(strcmp(cellstr(hdr.orig.Label), 'EDF Annotations'));
-    
+
   else
     % select the sampling rate that results in the most channels
     [a, b, c] = unique(EDF.SampleRate);
@@ -308,7 +295,7 @@ if needhdr
     end
     [dum, indx] = max(chancount);
     chansel = find(EDF.SampleRate == a(indx));
-    
+
     % continue with the subset of channels that has a consistent sampling frequency
     hdr.Fs           = EDF.SampleRate(chansel(1));
     hdr.nChans       = length(chansel);
@@ -322,23 +309,23 @@ if needhdr
     % this will be used on subsequent reading of data
     hdr.orig.chansel    = chansel;
     hdr.orig.annotation = find(strcmp(cellstr(hdr.orig.Label), 'EDF Annotations'));
-    
-    warning('channels with different sampling rate not supported, selecting subset of %d channels at %f Hz', length(hdr.label), hdr.Fs);
+
+    ft_warning('channels with different sampling rate not supported, selecting subset of %d channels at %f Hz', length(hdr.label), hdr.Fs);
   end
-  
+
   % return the header
   dat = hdr;
-  
+
 elseif needdat || needevt
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % read the data
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % retrieve the original header
   EDF = hdr.orig;
-  
+
   % There can be an optional chansel field containing a list of predefined channels.
   % These channels are in that case also the only ones represented in the FieldTrip
-  % header, which means that teh other channels are simply not visible to the naive
+  % header, which means that the other channels are simply not visible to the naive
   % user. This field can be present because the user specified an explicit channel
   % selection in FT_READ_HEADER or because the read_edf function had to automatically
   % choose a subset to cope with heterogenous sampling rates or even both.  In any
@@ -346,7 +333,7 @@ elseif needdat || needevt
   % has the proper specification for channel selection, taking into account both the
   % user channel selection as well as any correction that might have been made due to
   % heterogenous sampling rates.
-  
+
   if     ~isempty(chanindx) && ~isfield(EDF, 'chansel')
     % a subset of channels should been selected from the full list of channels in the file
     chanindx = chanindx; % keep as it is
@@ -364,14 +351,14 @@ elseif needdat || needevt
     chanindx = 1:EDF.NS;
     useChanindx = false;
   end
-  
+
   if needevt
     % read the annotation channel, not the data channels
     chanindx = EDF.annotation;
     begsample = 1;
     endsample = EDF.SPR(EDF.annotation)*EDF.NRec;
   end
-  
+
   if useChanindx
     epochlength = EDF.SPR(chanindx(1));   % in samples for the selected channel
     blocksize   = sum(EDF.SPR);           % in samples for all channels
@@ -383,15 +370,15 @@ elseif needdat || needevt
     blocksize   = sum(EDF.SPR);           % in samples for all channels
     nchans      = EDF.NS;                 % use all channels
   end
-  
+
   % determine the trial containing the begin and end sample
   begepoch    = floor((begsample-1)/epochlength) + 1;
   endepoch    = floor((endsample-1)/epochlength) + 1;
   nepochs     = endepoch - begepoch + 1;
-  
+
   % allocate memory to hold the data
   dat = zeros(length(chanindx),nepochs*epochlength);
-  
+
   % read and concatenate all required data epochs
   for i=begepoch:endepoch
     if useChanindx
@@ -403,7 +390,7 @@ elseif needdat || needevt
         % cut out the part that corresponds with a single channel
         dat(j,((i-begepoch)*epochlength+1):((i-begepoch+1)*epochlength)) = buf((1:epochlength) + chanoffset(chanindx(j)));
       end
-      
+
     elseif length(chanindx)==1
       % this is more efficient if only one channel has to be read, e.g. the status channel
       offset = EDF.HeadLen + (i-1)*blocksize*2; % in bytes
@@ -411,7 +398,7 @@ elseif needdat || needevt
       % read the data for a single channel
       buf = readLowLevel(filename, offset, epochlength); % see below in subfunction
       dat(:,((i-begepoch)*epochlength+1):((i-begepoch+1)*epochlength)) = buf;
-      
+
     else
       % read the data from all channels, subsequently select the desired channels
       offset = EDF.HeadLen + (i-1)*blocksize*2; % in bytes
@@ -421,12 +408,12 @@ elseif needdat || needevt
       dat(:,((i-begepoch)*epochlength+1):((i-begepoch+1)*epochlength)) = buf(:,chanindx)';
     end
   end
-  
+
   % select the desired samples
   begsample = begsample - (begepoch-1)*epochlength;  % correct for the number of bytes that were skipped
   endsample = endsample - (begepoch-1)*epochlength;  % correct for the number of bytes that were skipped
   dat = dat(:, begsample:endsample);
-  
+
   % Calibrate the data
   if useChanindx
     calib = diag(EDF.Cal(chanindx));
@@ -444,20 +431,27 @@ end
 % SUBFUNCTION for reading the 16 bit values
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function buf = readLowLevel(filename, offset, numwords)
-if offset < 2*1024^2
+is_below_2GB = offset < 2*1024^2;
+read_16bit_success = true;
+if is_below_2GB
   % use the external mex file, only works for <2GB
+  try
   buf = read_16bit(filename, offset, numwords);
-else
+  catch e
+      read_16bit_success = false;
+  end
+end
+if ~is_below_2GB || ~read_16bit_success
   % use plain matlab, thanks to Philip van der Broek
   fp = fopen(filename,'r','ieee-le');
   status = fseek(fp, offset, 'bof');
   if status
-    error(['failed seeking ' filename]);
+    ft_error(['failed seeking ' filename]);
   end
   [buf,num] = fread(fp,numwords,'bit16=>double');
   fclose(fp);
   if (num<numwords)
-    error(['failed reading ' filename]);
+    ft_error(['failed reading ' filename]);
+    return
   end
 end
-

@@ -46,7 +46,7 @@ keys = arglist(1:2:end);
 vals = arglist(2:2:end);
 
 if numel(keys)~=numel(vals)
-  error('optional input arguments should come in key-value pairs, i.e. there should be an even number');
+  ft_error('optional input arguments should come in key-value pairs, i.e. there should be an even number');
 end
 
 keys = cellfun(@lower, keys, 'UniformOutput', false);
@@ -56,7 +56,7 @@ if ~isempty(required)
   required  = cellfun(@lower, required, 'UniformOutput', false);
   set = intersect(keys, required);
   if numel(set)~=numel(required)
-    error('the required input argument ''%s'' was not specified', set{:});
+    ft_error('the required input argument ''%s'' was not specified', set{:});
   end
 end
 
@@ -65,7 +65,7 @@ if ~isempty(forbidden)
   forbidden = cellfun(@lower, forbidden, 'UniformOutput', false);
   set = intersect(keys, forbidden);
   if numel(set)~=0
-    error('the input argument ''%s'' is forbidden', set{:});
+    ft_error('the input argument ''%s'' is forbidden', set{:});
   end
 end
 
@@ -74,7 +74,7 @@ if ~isempty(optional)
   optional  = cellfun(@lower, optional, 'UniformOutput', false);
   set = setdiff(keys, optional);
   if numel(set)>0
-    error('the input argument ''%s'' is forbidden', set{:});
+    ft_error('the input argument ''%s'' is forbidden', set{:});
   end
 end
 

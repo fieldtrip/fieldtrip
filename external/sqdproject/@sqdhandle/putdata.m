@@ -98,7 +98,7 @@ if ~rem(nargin-2,2)&fix((nargin-2)/2)
 end;
 
 if ~exist(filename,'file')
-    fid = fopen(get(t,'FileName'),'rb','l');% Open sqd-read-file to obtain template    
+    fid = fopen(get(t,'FileName'),'rb','l'); % Open sqd-read-file to obtain template    
     if (fid==-1)
         disp('Error opening files');
         err = -1;

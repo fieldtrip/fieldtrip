@@ -9,10 +9,17 @@
 #include <stdlib.h>
 #include "buffer.h"
 
-#define MERGE_THRESHOLD 4096 /* TODO: optimize this value? Maybe look at MTU size */
+#define MERGE_THRESHOLD 1460
+
+/*
+  The default MTU is 1500 for most network interfaces. Adding 26 bytes for the Ethernet header
+  results in a frame size of 1526. For TCP there is also a Maximum Segment Size (MSS),
+  which is 1460 after subtracting 20 bytes for the IPv4 and TCP header.
+*/
 
 /*******************************************************************************
  * communicate with the buffer through TCP
+ * returns 0 on success, -1 on error
  *******************************************************************************/
 int tcprequest(int server, const message_t *request, message_t **response_ptr) {
   unsigned int n, total;
@@ -38,7 +45,7 @@ int tcprequest(int server, const message_t *request, message_t **response_ptr) {
     }
   }
   /* Now check whether the total size is below the merge threshold, in which case
-     we'll copy it to contiguous memory and again send it in one go 
+     we'll copy it to contiguous memory and again send it in one go
    */
   else if (total <= MERGE_THRESHOLD) {
     char merged[MERGE_THRESHOLD];
@@ -54,7 +61,7 @@ int tcprequest(int server, const message_t *request, message_t **response_ptr) {
   /* Otherwise, send "def" and "buf" in separate pieces. This might introduce latencies
      if the other end runs Windows :-(
    */
-     else {		
+     else {
        /* send the request to the server, first the message definition */
        /* FIXME: bufwrite expects unsigned int, gets size_t. Similar for return. */
        if ((n = bufwrite(server, request->def, sizeof(messagedef_t)))!=sizeof(messagedef_t)) {
@@ -101,4 +108,3 @@ cleanup:
      *response_ptr = NULL;
      return -1;
 }
-

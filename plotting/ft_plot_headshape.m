@@ -23,6 +23,8 @@ function hs = ft_plot_headshape(headshape,varargin)
 % Example
 %   shape = ft_read_headshape(filename);
 %   ft_plot_headshape(shape)
+%
+% See also FT_PLOT_MESH, FT_PLOT_ORTHO
 
 % Copyright (C) 2009, Cristiano Micheli
 %
@@ -51,11 +53,12 @@ headshape = fixpos(headshape);
 
 if ~isstruct(headshape) && isnumeric(headshape) && size(headshape,2)==3
   % the input seems like a list of points, convert into something that resembles a headshape
-  warning('off', 'MATLAB:warn_r14_stucture_assignment');
+  ws1 = warning('off', 'MATLAB:warn_r14_stucture_assignment');
   headshape.pos = headshape;
+  warning(ws1);
 end
 
-% the default behaviour depends on whether there is a triangulated surface or not
+% the default behavior depends on whether there is a triangulated surface or not
 hastri = isfield(headshape, 'tri');
 
 % get the optional input arguments

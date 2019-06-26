@@ -1,4 +1,4 @@
-function [d] = triangle2distance(tri, pos, s)
+function [d] = triangle2distance(tri, pos, s, maxinitdist)
 
 % TRIANGLE2DISTANCE computes the geodesic distance (across the edges) on a
 % mesh, using Dijkstra's algorithm. The Dijkstra code is an efficient
@@ -40,8 +40,11 @@ function [d] = triangle2distance(tri, pos, s)
 
 adj = triangle2connectivity(tri, pos);
 n   = length(adj);
-if nargin==2
+if nargin<3 || isempty(s)
   s  = 1:n;
+end
+if nargin<4
+  maxinitdist = inf;
 end
 ns = length(s);
 
@@ -56,9 +59,18 @@ for k = 1:ns
     fprintf('computing distance between node %d and nodes 1:%d\n', s(k), n);
   end
   T = 1:n;    % node set with shortest paths not found
+  
+  if isfinite(maxinitdist)
+    initd = sqrt(sum((pos-pos(s(k),:)).^2,2));
+    T(initd>=maxinitdist) = [];
+  end
+  
   %while ~isempty(T) %%% a for-loop goes ~10% faster, and we know how often
   %we need to iterate
-  for m = 1:n  
+  for m = 1:n
+    if mod(m,1000)==0,
+      fprintf('looping across vertices %d/%d\n', m, n);
+    end
     [dmin,ind] = min(d(T,k));
     
     adj_ = adj(T,T(ind));

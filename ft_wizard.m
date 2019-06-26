@@ -1,4 +1,4 @@
-function varargout = ft_wizard(wizard_filename)
+function [varargout] = ft_wizard(wizard_filename)
 
 % FT_WIZARD is a graphical user interface to evaluate a FieldTrip analysis
 % script one step at a time, allowing you to go to the next step if you are

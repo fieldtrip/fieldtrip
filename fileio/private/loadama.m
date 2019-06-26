@@ -32,7 +32,7 @@ fid = fopen(filename, 'rb', 'ieee-le');
 
 version = fread(fid, 1, 'int');
 if version~=10
-  error(sprintf('%s is either not an inverted A matrix, or one of an old version', filename));
+  ft_error(sprintf('%s is either not an inverted A matrix, or one of an old version', filename));
 end
 
 mode = fread(fid, 1, 'int');
@@ -79,7 +79,7 @@ end
 
 % read the gradiometers
 if mode~=0
-  error('gradiometers not yet implemented');
+  ft_error('gradiometers not yet implemented');
 else
   grad = [];
 end

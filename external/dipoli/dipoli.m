@@ -1,6 +1,6 @@
 function [vol] = dipoli(vol, isolated)
 
-% DIPOLI computes a BEM system matrix
+% DIPOLI computes the BEM system matrix
 %
 % Use as
 %   [vol] = dipoli(vol, isolated)
@@ -34,10 +34,10 @@ dipoli = fullfile(p, f);  % without the .m extension
 dipoli = checkplatformbinary(dipoli);
 
 if ~isempty(dipoli)
-  
+
   skin   = find_outermost_boundary(vol.bnd);
   source = find_innermost_boundary(vol.bnd);
-  
+
   % the first compartment should be the skin, the last the source
   if skin==1 && source==length(vol.bnd)
     vol.skin   = 1;
@@ -50,13 +50,13 @@ if ~isempty(dipoli)
   else
     error('the first compartment should be the skin, the last  the source');
   end
-  
+
   if isolated
     fprintf('using the isolated source approach\n');
   else
     fprintf('not using isolated source approach\n');
   end
-  
+
   % write the triangulations to file
   bnddip = vol.bnd;
   bndfile = {};
@@ -66,13 +66,13 @@ if ~isempty(dipoli)
     % make sure that normals on the vertices point outwards
     ok = checknormals(bnddip(i));
     if ~ok,  bnddip(i).tri = fliplr(bnddip(i).tri);end
-    write_tri(bndfile{i}, bnddip(i).pnt, bnddip(i).tri);
+    write_tri(bndfile{i}, bnddip(i).pos, bnddip(i).tri);
   end
-  
+
   % these will hold the shell script and the inverted system matrix
   exefile = [tempname '.sh'];
   amafile = [tempname '.ama'];
-  
+
   fid = fopen(exefile, 'w');
   fprintf(fid, '#!/bin/sh\n');
   fprintf(fid, '\n');
@@ -91,17 +91,17 @@ if ~isempty(dipoli)
   fprintf(fid, 'EOF\n');
   fclose(fid);
   dos(sprintf('chmod +x %s', exefile));
-  
+
   try
     % execute dipoli and read the resulting file
     dos(exefile);
     ama = loadama(amafile);
-    vol = ama2vol(ama);
+    vol = ama2headmodel(ama);
   catch
     warning('an error ocurred while running dipoli');
     disp(lasterr);
   end
-  
+
   % delete the temporary files
   for i=1:length(vol.bnd)
     delete(bndfile{i})
@@ -147,15 +147,15 @@ end
 
 function ok = checknormals(bnd)
 ok = 0;
-pnt = bnd.pnt;
+pos = bnd.pos;
 tri = bnd.tri;
 % translate to the center
-org = mean(pnt,1);
-pnt(:,1) = pnt(:,1) - org(1);
-pnt(:,2) = pnt(:,2) - org(2);
-pnt(:,3) = pnt(:,3) - org(3);
+org = mean(pos,1);
+pos(:,1) = pos(:,1) - org(1);
+pos(:,2) = pos(:,2) - org(2);
+pos(:,3) = pos(:,3) - org(3);
 
-w = sum(solid_angle(pnt, tri));
+w = sum(solid_angle(pos, tri));
 
 if w<0 && (abs(w)-4*pi)<1000*eps
   % FIXME: this method is rigorous only for star shaped surfaces

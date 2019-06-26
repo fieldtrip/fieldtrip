@@ -39,14 +39,11 @@ function dat = read_egis_data(filename, hdr, begtrial, endtrial, chanindx)
 %
 % $Id$
 
-fh=fopen([filename],'r');
-if fh==-1
-    error('wrong filename')
-end
+fh=fopen_or_error([filename],'r');
 fclose(fh);
 
 [fhdr,chdr,ename,cnames,fcom,ftext] = read_egis_header(filename);
-fh=fopen([filename],'r');
+fh=fopen_or_error([filename],'r');
 fhdr(1)=fread(fh,1,'int32'); %BytOrd
 [str,maxsize,cEndian]=computer;
 if fhdr(1)==16909060
@@ -62,7 +59,7 @@ elseif fhdr(1)==67305985
         endian = 'ieee-be';
     end;
 else
-    error('This is not an EGIS average file.');
+    ft_error('This is not an EGIS average file.');
 end;
 
 if fhdr(2) == -1
@@ -70,7 +67,7 @@ if fhdr(2) == -1
 elseif fhdr(2) == 3
     fileType = 'ses';
 else
-    error('This is not an EGIS file.');
+    ft_error('This is not an EGIS file.');
 end;
 
 dat=zeros(hdr.nChans,hdr.nSamples,endtrial-begtrial+1);

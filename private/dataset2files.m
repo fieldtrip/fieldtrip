@@ -1,7 +1,7 @@
 function cfg = dataset2files(cfg)
 
 % Helper function that converts a dataset into headerfile and datafile
-% if neccessary. This is used in PREPROCESSING and DEFINETRIAL
+% if necessary. This is used in PREPROCESSING and DEFINETRIAL
 %
 % This function operates only on
 %   cfg.dataset
@@ -46,7 +46,7 @@ if ~isempty(cfg.dataset)
     if d==0
       [f, p] = uigetfile;
       if f==0
-        error('You should select a dataset file or directory');
+        ft_error('You should select a dataset file or directory');
       else
         d = fullfile(p, f);
       end

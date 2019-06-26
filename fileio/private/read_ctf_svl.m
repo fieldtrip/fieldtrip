@@ -4,13 +4,8 @@
 
 function [data, hdr] = read_ctf_svl(filename)
   
-  fid = fopen(filename, 'rb', 'ieee-be', 'ISO-8859-1');
+  fid = fopen_or_error(filename, 'rb', 'ieee-be', 'ISO-8859-1');
   
-  if fid <= 0
-    error('Could not open SAM file: %s\n', filename);
-  end
-  
-
   % ----------------------------------------------------------------------
   % Read header.
   hdr.identity = fread(fid, 8, '*char')'; % 'SAMIMAGE'
@@ -19,7 +14,7 @@ function [data, hdr] = read_ctf_svl(filename)
   hdr.numChans = fread(fid, 1, 'int32');
   hdr.numWeights = fread(fid, 1, 'int32'); % 0 for static image.
   if(hdr.numWeights ~= 0)
-    warning('hdr.numWeights ~= 0');
+    ft_warning('hdr.numWeights ~= 0');
   end
   
   fread(fid,1,'int32'); % Padding to next 8 byte boundary.

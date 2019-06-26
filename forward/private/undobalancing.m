@@ -8,7 +8,7 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
   fnames = setdiff(fieldnames(sens.balance), 'current');
   indx   = find(ismember(fnames, sens.balance.current));
   
-  if length(indx)==1,
+  if length(indx)==1
     % undo the synthetic gradient balancing
     fprintf('undoing the %s balancing for the gradiometer definition\n', sens.balance.current);
     
@@ -21,7 +21,7 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
       tmp  = tra1*tra2;
       tmp  = null(tmp); % nullspace after ft_componentanalysis and ft_rejectcomponent
       tmp  = tmp*tmp';  % this is the part which was removed at some point
-      [ix,iy]     = match_str(sens.balance.comp.labelorg, sens.balance.invcomp.labelnew);
+      [ix,iy]     = match_str(sens.balance.comp.labelold, sens.balance.invcomp.labelnew);
       tra3(iy,iy) = (eye(numel(ix))+tmp(ix,ix))*tra1(iy,iy);
       sens.balance.invcomp.tra = tra3;
       % FIXME check whether this is robust
@@ -29,7 +29,7 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
     
     if strcmp(sens.balance.current, 'planar')
       if isfield(sens, 'type') && ~isempty(strfind(sens.type, '_planar'))
-        % remove the planar postfox from the sensor type
+        % remove the planar postfix from the sensor type
         sens.type = sens.type(1:(end-7));
       end
     end
@@ -49,7 +49,7 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
     end
     
   else
-    warning('cannot undo %s balancing in the gradiometer definition\n', sens.balance.current);
+    ft_warning('cannot undo %s balancing in the gradiometer definition\n', sens.balance.current);
     break
   end
 end

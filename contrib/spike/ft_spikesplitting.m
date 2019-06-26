@@ -1,7 +1,7 @@
 function [cfg] = ft_spikesplitting(cfg)
 
 % FT_SPIKESPLITTING reads a single Neuralynx DMA log file and writes each
-% individual channel to a seperate file.
+% individual channel to a separate file.
 %
 % Use as
 %   [cfg] = ft_spikesplitting(cfg)
@@ -51,7 +51,7 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance
 ft_preamble trackconfig
 
 % set the general defaults
@@ -72,7 +72,7 @@ end
 
 status = mkdir(cfg.output);
 if ~status
-  error(sprintf('error creating splitted DMA output dataset %s', cfg.output));
+  error('error creating splitted DMA output dataset %s', cfg.output);
 end
 fprintf('writing to output directory ''%s''\n', cfg.output);
 
@@ -140,7 +140,7 @@ s = s - 60*m - 60*60*h;
 fprintf('duration of selection %02dh:%02dm:%02ds\n', h, m, s);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% split the DMA file into seperate channels
+% split the DMA file into separate channels
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~ft_filetype(cfg.dataset, 'neuralynx_dma')
   error('unsupported data format for DMA splitting');
@@ -265,5 +265,5 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
+ft_postamble provenance
 

@@ -44,28 +44,22 @@ function y = base64encode(x, eol)
 %   URL:         http://home.online.no/~pjacklam
 
    % check number of input arguments
-   try
-     % this is available from MATLAB 2011b onwards
-     narginchk(1, 2);
-   catch
-     % this is available in older versions
-     error(nargchk(1, 2, nargin));
-   end
+   narginchk(1, 2);
    
    % make sure we have the EOL value
    if nargin < 2
       eol = ''; %sprintf('\n');
    else
       if sum(size(eol) > 1) > 1
-         error('EOL must be a vector.');
+         ft_error('EOL must be a vector.');
       end
       if any(eol(:) > 255)
-         error('EOL can not contain values larger than 255.');
+         ft_error('EOL can not contain values larger than 255.');
       end
    end
 
    if sum(size(x) > 1) > 1
-      error('STR must be a vector.');
+      ft_error('STR must be a vector.');
    end
 
    x   = uint8(x);

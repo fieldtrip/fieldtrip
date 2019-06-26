@@ -1,4 +1,4 @@
-function [sdf, sdfdata] = ft_spikedensity(cfg,data)
+function [sdf, sdfdata] = ft_spikedensity(cfg, data)
 
 % FT_SPIKEDENSITY computes the spike density function of the spike trains by
 % convolving the data with a window.
@@ -34,7 +34,7 @@ function [sdf, sdfdata] = ft_spikedensity(cfg,data)
 %                        For cfg.winfunc = 'gauss': the standard deviation in seconds (default =
 %                                         1/4 of window duration in seconds)
 %                        For cfg.winfunc = 'wname' with 'wname' any standard window function
-%                                          see window opts in that function and add as cell array
+%                                          see window opts in that function and add as cell-array
 %                        If cfg.winfunctopt = [], default opts are taken.
 %   cfg.latency        = [begin end] in seconds, 'maxperiod' (default), 'minperiod',
 %                        'prestim'(t>=0), or 'poststim' (t>=0).
@@ -55,8 +55,8 @@ function [sdf, sdfdata] = ft_spikedensity(cfg,data)
 %
 % The SDF output is a data structure similar to the TIMELOCK structure from FT_TIMELOCKANALYSIS.
 % For subsequent processing you can use for example
-%   FT_TIMELOCKSTATISTICS:               Compute statistics on SDF
-%   FT_SPIKE_PLOT_RASTER:                Plot together with the raster plots
+%   FT_TIMELOCKSTATISTICS                Compute statistics on SDF
+%   FT_SPIKE_PLOT_RASTER                 Plot together with the raster plots
 %   FT_SINGLEPLOTER and FT_MULTIPLOTER   Plot spike-density alone
 %
 % The SDFDATA output is a data structure similar to DATA type structure from FT_PREPROCESSING.
@@ -92,7 +92,7 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance data
 ft_preamble trackconfig
 
 % get the default options
@@ -140,7 +140,7 @@ if nUnits==0, error('no spikechannel selected by means of cfg.spikechannel'); en
 % get the number of trials or change DATA according to cfg.trials
 if  strcmp(cfg.trials,'all')
   cfg.trials = 1:length(data.trial);
-elseif islogical(cfg.trials)
+elseif islogical(cfg.trials) || all(cfg.trials==0 | cfg.trials==1)
   cfg.trials = find(cfg.trials);
 end
 cfg.trials = sort(cfg.trials(:));
@@ -284,7 +284,7 @@ for iTrial = 1:nTrials
     end
     
     % pad with nans if there's variable trial length
-    dofsel = ~isnan(y);%true(1,length(y));
+    dofsel = ~isnan(y); %true(1,length(y));
     if strcmp(cfg.vartriallen,'yes')
       padLeft  = zeros(1, samplesShift(iTrial));
       padRight = zeros(1,(maxNumSamples - nSamples - samplesShift(iTrial)));
@@ -333,14 +333,17 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
 ft_postamble previous data
-ft_postamble history sdf
+ft_postamble provenance sfd
+ft_postamble history    sdf
 if nargout==2
   ft_postamble history sdfdata
 end
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [spikelabel, eeglabel] = detectspikechan(data)
 
 % autodetect the spike channels

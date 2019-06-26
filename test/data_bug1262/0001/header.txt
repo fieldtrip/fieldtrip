@@ -1,5 +1,0 @@
-version=1
-endian=little
-dataType=float32
-fSample=512.000000
-nChans=16

@@ -3,17 +3,11 @@ function test_bug131
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug131
-% TEST ft_prepare_leadfield
-
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-ft_default.feedback = 'no';
+% DEPENDENCY ft_prepare_leadfield
 
 % test the issue related to the scaling of the leadfields in the different implementations
 
-[pnt, tri] = icosahedron162;
+[pnt, tri] = mesh_sphere(162);
 
 % create volume conductor models
 vol = [];
@@ -40,21 +34,21 @@ grad.unit = 'm';
 
 % create dipole grid
 grid = [];
-grid.pos = [0 0 4];
-grid.inside = 1;
-grid.outside = [];
+sourcemodel.pos = [0 0 4];
+sourcemodel.inside = 1;
+sourcemodel.outside = [];
 
 % create leadfield with single sphere
 cfg = [];
-cfg.vol = vol;
-cfg.grid = grid;
+cfg.headmodel = vol;
+cfg.sourcemodel = grid;
 cfg.grad = grad;
 grid1 = ft_prepare_leadfield(cfg);
 
 % create leadfield with singleshell
 cfg = [];
-cfg.vol = vol2;
-cfg.grid = grid;
+cfg.headmodel = vol2;
+cfg.sourcemodel = grid;
 cfg.grad = grad;
 grid2 = ft_prepare_leadfield(cfg);
 

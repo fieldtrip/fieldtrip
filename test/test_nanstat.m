@@ -3,7 +3,7 @@ function test_nanstat
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_nanstat nansum nanmean nanstd nanvar nanvar_base
+% DEPENDENCY nansum nanmean nanstd nanvar nanvar_base
 
 % Test the conformance of FieldTrip's nansum, nanmean, nanvar and nanstd
 % functions with MATLABs versions in the statistics toolbox.
@@ -69,7 +69,7 @@ for offset = logspace(8, 12, 4)
   sig2_true = var(x);  % note that var also suffers from (serious) numerical imprecision.
   sig2 = nanvar(x);
   fprintf('Adding offset %.2g: var()=%.4f, nanvar()=%.4f.\n', offset, sig2_true, sig2);
-  assert(identical(sig2_true, sig2, 'reltol', 1e-3));
+  assert(isalmostequal(sig2_true, sig2, 'reltol', 1e-3));
 end
 
 % test nansum

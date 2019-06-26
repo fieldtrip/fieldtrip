@@ -63,8 +63,8 @@ end
 
 switch method
   case 'resample'
-    [fold, fnew] = rat(Fold./Fnew);%account for non-integer fs
-    Fnew         = Fold.*(fnew./fold);%get new fs exact
+    [fold, fnew] = rat(Fold./Fnew); %account for non-integer fs
+    Fnew         = Fold.*(fnew./fold); %get new fs exact
     
     % the actual implementation resamples along columns
     datout = resample(dat', fnew, fold)';
@@ -104,7 +104,7 @@ switch method
     end
     datout      = fac*ifft(ifftshift(datfft,2),[],2);
   otherwise
-    error('unsupported resampling method');
+    ft_error('unsupported resampling method');
 end
 
 if ~strcmp(method, 'downsample')

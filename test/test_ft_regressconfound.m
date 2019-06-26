@@ -3,8 +3,7 @@ function test_ft_regressconfound
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_regressconfound
-% TEST ft_regressconfound
+% DEPENDENCY ft_regressconfound
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -16,10 +15,11 @@ freq1.powspctrm = randn(20,2,10);
 
 cfg = [];
 cfg.confound = randn(20,3);
-cfg.model = 'yes';
 cfg.reject = [1:3];
 %cfg.Ftest = {'1','2','3'}; % this needs stat toolbox
 freq1_out = ft_regressconfound(cfg, freq1);
+assert(isfield(freq1_out, 'powspctrm'));
+assert(~isfield(freq1_out, 'beta'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -32,10 +32,12 @@ freq2.powspctrm = randn(20,2,10,5);
 
 cfg = [];
 cfg.confound = randn(20,3);
-cfg.model = 'yes';
+cfg.output = 'beta';
 cfg.reject = [1:3];
 %cfg.Ftest = {'1','2','3'};
 freq2_out = ft_regressconfound(cfg, freq2);
+assert(isfield(freq2_out, 'beta'));
+assert(~isfield(freq2_out, 'powspctrm'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -48,10 +50,12 @@ timelock.avg = randn(2,5);
 
 cfg = [];
 cfg.confound = randn(20,3);
-cfg.model = 'yes';
+cfg.output = 'model';
 cfg.reject = [1:3];
 %cfg.Ftest = {'1','2','3'};
 timelock_out = ft_regressconfound(cfg, timelock);
+assert(isfield(timelock_out, 'model'));
+assert(~isfield(timelock_out, 'trial'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -66,10 +70,11 @@ end
 
 cfg = [];
 cfg.confound = randn(20,3);
-cfg.model = 'yes';
 cfg.reject = [1:3];
 %cfg.Ftest = {'1','2','3'};
 source_out = ft_regressconfound(cfg, source);
+assert(isfield(source_out, 'pow'));
+assert(~isfield(source_out, 'beta'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -83,10 +88,11 @@ timelock2.trial(3,1,3:5) = NaN;
 
 cfg = [];
 cfg.confound = randn(20,3);
-cfg.model = 'yes';
 cfg.reject = [1:3];
 %cfg.Ftest = {'1','2','3'};
 timelock2_out = ft_regressconfound(cfg, timelock2);
+assert(isfield(timelock2_out, 'trial'));
+assert(~isfield(timelock2_out, 'beta'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -102,9 +108,49 @@ source2.trial(1,10).pow = NaN(size(source2.pos(:,1)));
 
 cfg = [];
 cfg.confound = randn(20,3);
-cfg.model = 'yes';
 cfg.reject = [1:3];
 %cfg.Ftest = {'1','2','3'};
 source2_out = ft_regressconfound(cfg, source2);
+assert(isfield(source2_out, 'pow'));
+assert(~isfield(source2_out, 'beta'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+source3 = [];
+source3.pos = randn(100,3);
+source3.inside = true(100,1);
+source3.pow = randn(100,25);
+source3.dimord = 'pos_rpt';
+
+cfg = [];
+cfg.confound = randn(25,2);
+cfg.normalize = 'no';
+source3_out = ft_regressconfound(cfg, source3);
+
+betas = cfg.confound \ transpose(source3.pow);
+desired = transpose(transpose(source3.pow) - cfg.confound * betas);
+
+assert(isequal(source3_out.pow, desired));
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+source4 = [];
+source4.pos = randn(100,3);
+source4.inside = true(100,1);
+source4.pow = randn(100,25,10);
+source4.time = 1:10;
+source4.dimord = 'pos_rpt_time';
+
+cfg = [];
+cfg.confound = randn(25,2);
+cfg.normalize = 'no';
+source4_out = ft_regressconfound(cfg, source4);
+
+assert(isequal(size(source4_out.pow), size(source4.pow)));
+for t = 1:10
+  betas = cfg.confound \ transpose(source4.pow(:,:,t));
+  desired = transpose(transpose(source4.pow(:,:,t)) - cfg.confound * betas);
+  assert(isequal(source4_out.pow(:,:,t), desired));
+end
+
+

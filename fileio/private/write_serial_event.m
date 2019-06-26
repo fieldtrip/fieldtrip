@@ -60,7 +60,7 @@ if strcmp(s.Status,'open')
     fprintf(s,'%s',msg);
   end
 else
-  error('could not write event to serial port');
+  ft_error('could not write event to serial port');
 end
 
 %% this is the old code
@@ -105,5 +105,5 @@ end
 %     if isa(s,'serial') && strcmp(s.Status,'open')
 %       fwrite(s,char(event.value));
 %     else
-%       error('could not write event to serial port');
+%       ft_error('could not write event to serial port');
 %     end

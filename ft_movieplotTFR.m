@@ -22,8 +22,9 @@ function [cfg] = ft_movieplotTFR(cfg, data)
 %   cfg.layout       = specification of the layout, see below
 %   cfg.interactive  = 'no' or 'yes', make it interactive
 %   cfg.baseline     = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
-%   cfg.baselinetype = 'absolute' or 'relative' (default = 'absolute')
+%   cfg.baselinetype = 'absolute', 'relative', 'relchange', 'normchange', 'db' or 'zscore' (default = 'absolute')
 %   cfg.colorbar     = 'yes', 'no' (default = 'no')
+%   cfg.colorbartext =  string indicating the text next to colorbar
 %
 % the layout defines how the channels are arranged. you can specify the
 % layout in a variety of ways:
@@ -42,27 +43,29 @@ function [cfg] = ft_movieplotTFR(cfg, data)
 % if you specify this option the input data will be read from a *.mat
 % file on disk. this mat files should contain only a single variable named 'data',
 % corresponding to the input structure.
+%
+% See also FT_MULTIPLOTTFR, FT_TOPOPLOTTFR, FT_SINGLEPLOTTFR, FT_MOVIEPLOTER, FT_SOURCEMOVIE
 
 % Copyright (c) 2009, Ingrid Nieuwenhuis
-% Copyright (c) 2011, jan-Mathijs Schoffelen, Robert Oostenveld, Cristiano Micheli
+% Copyright (c) 2011, Jan-Mathijs Schoffelen, Robert Oostenveld, Cristiano Micheli
 %
-% this file is part of fieldtrip, see http://www.fieldtriptoolbox.org
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
-%    it under the terms of the gnu general public license as published by
-%    the free software foundation, either version 3 of the license, or
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
 %    (at your option) any later version.
 %
 %    FieldTrip is distributed in the hope that it will be useful,
-%    but without any warranty; without even the implied warranty of
-%    merchantability or fitness for a particular purpose.  see the
-%    gnu general public license for more details.
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
 %
-%    you should have received a copy of the gnu general public license
-%    along with fieldtrip. if not, see <http://www.gnu.org/licenses/>.
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $id: ft_movieploter.m 4354 2011-10-05 15:06:02z crimic $
+% $Id$
 
 % these are used by the ft_preamble/ft_postamble function and scripts
 ft_revision = '$Id$';
@@ -92,20 +95,22 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'zparam', 'parameter'});
 cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
 
 % set the defaults
-cfg.xlim          = ft_getopt(cfg, 'xlim', 'maxmin');
-cfg.ylim          = ft_getopt(cfg, 'ylim', 'maxmin');
-cfg.zlim          = ft_getopt(cfg, 'zlim', 'maxmin');
-cfg.parameter     = ft_getopt(cfg, 'parameter', 'powspctrm'); % use power as default
-cfg.inputfile     = ft_getopt(cfg, 'inputfile',    []);
-cfg.samperframe   = ft_getopt(cfg, 'samperframe',  1);
-cfg.framespersec  = ft_getopt(cfg, 'framespersec', 5);
-cfg.framesfile    = ft_getopt(cfg, 'framesfile',   []);
-cfg.moviefreq     = ft_getopt(cfg, 'moviefreq', []);
-cfg.movietime     = ft_getopt(cfg, 'movietime', []);
-cfg.movierpt      = ft_getopt(cfg, 'movierpt', 1);
-cfg.baseline      = ft_getopt(cfg, 'baseline', 'no');
-cfg.colorbar      = ft_getopt(cfg, 'colorbar', 'no');
-cfg.interactive   = ft_getopt(cfg, 'interactive', 'yes');
+cfg.xlim          = ft_getopt(cfg, 'xlim',          'maxmin');
+cfg.ylim          = ft_getopt(cfg, 'ylim',          'maxmin');
+cfg.zlim          = ft_getopt(cfg, 'zlim',          'maxmin');
+cfg.parameter     = ft_getopt(cfg, 'parameter',     'powspctrm'); % use power as default
+cfg.inputfile     = ft_getopt(cfg, 'inputfile',     []);
+cfg.samperframe   = ft_getopt(cfg, 'samperframe',   1);
+cfg.framespersec  = ft_getopt(cfg, 'framespersec',  5);
+cfg.framesfile    = ft_getopt(cfg, 'framesfile',    []);
+cfg.moviefreq     = ft_getopt(cfg, 'moviefreq',     []);
+cfg.movietime     = ft_getopt(cfg, 'movietime',     []);
+cfg.movierpt      = ft_getopt(cfg, 'movierpt',      1);
+cfg.baseline      = ft_getopt(cfg, 'baseline',      'no');
+cfg.colorbar      = ft_getopt(cfg, 'colorbar',      'no');
+cfg.colorbartext  = ft_getopt(cfg, 'colorbartext',  '');
+cfg.renderer      = ft_getopt(cfg, 'renderer',      []); % let MATLAB decide on the default
+cfg.interactive   = ft_getopt(cfg, 'interactive',   'yes');
 dointeractive     = istrue(cfg.interactive);
 
 xparam = 'time';
@@ -114,11 +119,12 @@ if isfield(data, 'freq')
 end
 
 % read or create the layout that will be used for plotting:
-layout = ft_prepare_layout(cfg, data);
+tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
+layout = ft_prepare_layout(tmpcfg, data);
 
 % apply optional baseline correction
 if ~strcmp(cfg.baseline, 'no')
-  tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'parameter'});
+  tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'parameter', 'showcallinfo'});
   data = ft_freqbaseline(tmpcfg, data);
   [cfg, data] = rollback_provenance(cfg, data);
 end
@@ -138,17 +144,17 @@ end
 if isfield(data,'dimord')
   if strcmp(data.dimord,'chan_freq_time')
     if length(xvalues)~=size(parameter,3)
-      error('inconsistent size of "%s" compared to "%s"', cfg.parameter, xparam);
+      ft_error('inconsistent size of "%s" compared to "%s"', cfg.parameter, xparam);
     end
     if length(yvalues)~=size(parameter,2)
-      error('inconsistent size of "%s" compared to "%s"', cfg.parameter, yparam);
+      ft_error('inconsistent size of "%s" compared to "%s"', cfg.parameter, yparam);
     end
   elseif strcmp(data.dimord,'chan_time')
     if length(xvalues)~=size(parameter,2)
-      error('inconsistent size of "%s" compared to "%s"', cfg.parameter, xparam);
+      ft_error('inconsistent size of "%s" compared to "%s"', cfg.parameter, xparam);
     end
   else
-    error('input data is incompatible')
+    ft_error('input data is incompatible')
   end
 end
 
@@ -188,7 +194,7 @@ end
 % select the channels in the data that match with the layout:
 [seldat, sellay] = match_str(data.label, layout.label);
 if isempty(seldat)
-  error('labels in data and labels in layout do not match');
+  ft_error('labels in data and labels in layout do not match');
 end
 
 % make a subselection of the data
@@ -313,7 +319,8 @@ if dointeractive
   caxis(cfg.zlim);
   axis off;
   if opt.colorbar
-    colorbar
+    c = colorbar;
+    ylabel(c, cfg.colorbartext);
   end
 
   % add sum stuff at a higher level for quicker access in the callback
@@ -368,7 +375,7 @@ else
         F(iFrame) = getframe;
       end
     else
-      error('Either moviefreq or movietime should contain a bin number')
+      ft_error('Either moviefreq or movietime should contain a bin number')
     end
   else
     for iFrame = 1:floor(size(parameter, 2)/cfg.samperframe)
@@ -387,14 +394,46 @@ else
   % play movie
   movie(F, cfg.movierpt, cfg.framespersec);
 
+end % if dointeractive
+
+% this is needed for the figure title
+if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
+  dataname = cfg.dataname;
+elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
+elseif nargin>1
+  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
+else
+  dataname = {};
+end
+
+% set the figure window title
+if ~isempty(dataname)
+  set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
+else
+  set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
+end
+set(gcf, 'NumberTitle', 'off');
+
+% set renderer if specified
+if ~isempty(cfg.renderer)
+  set(gcf, 'renderer', cfg.renderer)
 end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous   data
-ft_postamble provenance data
-ft_postamble history    data
+ft_postamble provenance
+ft_postamble savefig
+
+% add a menu to the figure, but only if the current figure does not have subplots
+menu_fieldtrip(gcf, cfg, false);
+
+if ~ft_nargout
+  % don't return anything
+  clear cfg
+end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

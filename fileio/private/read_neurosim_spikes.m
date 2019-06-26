@@ -39,7 +39,7 @@ function [spike] = read_neurosim_spikes(filename,headerOnly)
 %
 % $Id$
 
-if isdir(filename)
+if isfolder(filename)
     filename = fullfile(filename, 'spikes');
 end
 
@@ -47,7 +47,7 @@ if nargin<2
   headerOnly = false;
 end
 
-fid = fopen(filename, 'rb');
+fid = fopen_or_error(filename, 'rb');
 label = {};
 orig  = {};
 

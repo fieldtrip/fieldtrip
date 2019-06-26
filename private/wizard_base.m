@@ -1,4 +1,4 @@
-function h = wizard_gui(filename)
+function h = wizard_base(filename)
 
 % This is the low level wizard function. It evaluates the MATLAB content
 % in the workspace of the calling function. To prevent overwriting

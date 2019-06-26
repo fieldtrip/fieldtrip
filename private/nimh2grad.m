@@ -56,7 +56,7 @@ for i=1:length(sel)
     % assume that the orientation of the upper coil is opposite to the lower coil
     ori = [ori; -ori];
   else
-    error('do not know how to deal with higher order gradiometer hardware')
+    ft_error('do not know how to deal with higher order gradiometer hardware')
   end
 
   % add this channels coil positions and orientations
@@ -73,7 +73,7 @@ for i=1:length(sel)
     grad.tra(i,end+1) = 1;
     grad.tra(i,end+1) = 1;
   else
-    error('do not know how to deal with higher order gradiometer hardware')
+    ft_error('do not know how to deal with higher order gradiometer hardware')
   end
 end
 

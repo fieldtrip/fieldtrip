@@ -7,7 +7,6 @@
  */
 
 #include <mex.h>
-#include <matrix.h>
 #include <siemensap.h>
 #include <string.h>
 
@@ -52,7 +51,7 @@ mxArray *createStructFromSAP(sap_item_t *item) {
 				if (item->is_array) {
 					sap_item_t **children = (sap_item_t **) item->value;
 					int i;
-					/*  We need to use a cell array here, since we're not guaranteed to have 
+					/*  We need to use a cell-array here, since we're not guaranteed to have 
 						the same fields in each element
 					*/
 					F = mxCreateCellMatrix(item->num_elements,1);

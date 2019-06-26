@@ -1,4 +1,4 @@
-function dataout = ft_globalmeanfield(cfg, datain)
+function [dataout] = ft_globalmeanfield(cfg, datain)
 
 % FT_GLOBALMEANFIELD calculates global mean field amplitude or power of input data
 %
@@ -74,8 +74,9 @@ if ft_abort
 end
 
 % select channels and trials of interest, by default this will select all channels and trials
-tmpcfg = keepfields(cfg, {'trials', 'channel'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
 datain = ft_selectdata(tmpcfg, datain);
+% restore the provenance information
 [cfg, datain] = rollback_provenance(cfg, datain);
 
 % ensure that the input data is valid for this function, this will also do

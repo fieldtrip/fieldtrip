@@ -2,12 +2,10 @@ function test_ft_prepare_mesh
 
 % MEM 1500mb
 % WALLTIME 00:10:00
+% DEPENDENCY ft_prepare_mesh ft_datatype_segmentation ft_plot_mesh
 
 % test ft_prepare_mesh also used for constructing SIMBIO FEM head models
-% see also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1815
-
-% TEST test_ft_prepare_mesh
-% TEST ft_prepare_mesh ft_datatype_segmentation ft_plot_mesh
+% see also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1815
 
 %% segmentations
 
@@ -91,22 +89,22 @@ cfg.numvertices = 1000;
 meshA = ft_prepare_mesh(cfg,seg1p);
 meshB = ft_prepare_mesh(cfg,seg1);
 assert(isequalwithoutcfg(meshA,meshB),'error: 01');
-assert(isfield(meshA,'pnt') && isfield(meshA,'tri') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
-assert((cfg.numvertices == size(meshA.pnt,1)) , 'Number of points is not equal to required');
+assert(isfield(meshA,'pos') && isfield(meshA,'tri') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
+assert((cfg.numvertices == size(meshA.pos,1)) , 'Number of points is not equal to required');
 cfg=[];
 cfg.numvertices = 1000;
 meshA = ft_prepare_mesh(cfg,seg3p);
 meshB = ft_prepare_mesh(cfg,seg3);
 assert(isequalwithoutcfg(meshA,meshB),'error: 02');
-assert(isfield(meshA(1),'pnt') && isfield(meshA(1),'tri') && isfield(meshA(1),'unit'), 'Missing field(s) in mesh structure');
-assert((cfg.numvertices == size(meshA(1).pnt,1)) && (cfg.numvertices == size(meshA(2).pnt,1)) && (cfg.numvertices == size(meshA(3).pnt,1)), 'Number of points is not equal to required');
+assert(isfield(meshA(1),'pos') && isfield(meshA(1),'tri') && isfield(meshA(1),'unit'), 'Missing field(s) in mesh structure');
+assert((cfg.numvertices == size(meshA(1).pos,1)) && (cfg.numvertices == size(meshA(2).pos,1)) && (cfg.numvertices == size(meshA(3).pos,1)), 'Number of points is not equal to required');
 cfg=[];
 cfg.numvertices = 1000;
 meshA = ft_prepare_mesh(cfg,seg5p);
 meshB = ft_prepare_mesh(cfg,seg5);
 assert(isequalwithoutcfg(meshA,meshB),'error: 03');
-assert(isfield(meshA(1),'pnt') && isfield(meshA(1),'tri') && isfield(meshA(1),'unit'), 'Missing field(s) in mesh structure');
-assert((cfg.numvertices == size(meshA(1).pnt,1)) && (cfg.numvertices == size(meshA(2).pnt,1)) && (cfg.numvertices == size(meshA(3).pnt,1)) && (cfg.numvertices == size(meshA(4).pnt,1)) && (cfg.numvertices == size(meshA(5).pnt,1)), 'Number of points is not equal to required');
+assert(isfield(meshA(1),'pos') && isfield(meshA(1),'tri') && isfield(meshA(1),'unit'), 'Missing field(s) in mesh structure');
+assert((cfg.numvertices == size(meshA(1).pos,1)) && (cfg.numvertices == size(meshA(2).pos,1)) && (cfg.numvertices == size(meshA(3).pos,1)) && (cfg.numvertices == size(meshA(4).pos,1)) && (cfg.numvertices == size(meshA(5).pos,1)), 'Number of points is not equal to required');
 figure; ft_plot_mesh(meshA,'facecolor','none');
 %% method: hexahedral
 cfg=[];
@@ -115,7 +113,7 @@ cfg.numvertices = 1000;
 meshA = ft_prepare_mesh(cfg,seg1p);
 meshB = ft_prepare_mesh(cfg,seg1);
 assert(isequalwithoutcfg(meshA,meshB),'error: 04');
-assert(isfield(meshA,'pnt') && isfield(meshA,'hex') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
+assert(isfield(meshA,'pos') && isfield(meshA,'hex') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
 cfg=[];
 cfg.method = 'hexahedral';
 cfg.numvertices = 1000;
@@ -124,7 +122,7 @@ meshB = ft_prepare_mesh(cfg,seg3);
 meshA=rmfield(meshA,'tissuelabel');
 meshB=rmfield(meshB,'tissuelabel');
 assert(isequalwithoutcfg(meshA,meshB),'error: 05');
-assert(isfield(meshA,'pnt') && isfield(meshA,'hex') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
+assert(isfield(meshA,'pos') && isfield(meshA,'hex') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
 cfg=[];
 cfg.method = 'hexahedral';
 cfg.numvertices = 1000;
@@ -133,24 +131,24 @@ meshB = ft_prepare_mesh(cfg,seg5);
 meshA=rmfield(meshA,'tissuelabel');
 meshB=rmfield(meshB,'tissuelabel');
 assert(isequalwithoutcfg(meshA,meshB),'error: 06');
-assert(isfield(meshA,'pnt') && isfield(meshA,'hex') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
+assert(isfield(meshA,'pos') && isfield(meshA,'hex') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
 figure; ft_plot_mesh(meshA,'surfaceonly','yes')
 %% tissue specified
 cfg=[];
 cfg.tissue='tissue_1';
 cfg.numvertices=3000;
-meshA=ft_prepare_mesh(cfg,seg3)
-meshB=ft_prepare_mesh(cfg,seg3p)
+meshA=ft_prepare_mesh(cfg,seg3);
+meshB=ft_prepare_mesh(cfg,seg3p);
 assert(isequalwithoutcfg(meshA,meshB),'error: 07');
-assert(isfield(meshA,'pnt') && isfield(meshA,'tri') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
+assert(isfield(meshA,'pos') && isfield(meshA,'tri') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
 cfg.method='hexahedral';
-meshA=ft_prepare_mesh(cfg,seg3)
-meshB=ft_prepare_mesh(cfg,seg3p)
+meshA=ft_prepare_mesh(cfg,seg3);
+meshB=ft_prepare_mesh(cfg,seg3p);
 assert(isequalwithoutcfg(meshA,meshB),'error: 08');
-assert(isfield(meshA,'pnt') && isfield(meshA,'hex') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
+assert(isfield(meshA,'pos') && isfield(meshA,'hex') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
 assert(isequalwithoutcfg(meshA.tissuelabel, {'tissue_1'}), 'error:09');
 cfg.tissue='tissue_2';
-meshB=ft_prepare_mesh(cfg,seg3)
+meshB=ft_prepare_mesh(cfg,seg3);
 assert(isequalwithoutcfg(meshB.tissuelabel, {'tissue_2'}), 'error:10');
 meshA=rmfield(meshA,'tissuelabel');
 meshB=rmfield(meshB,'tissuelabel');
@@ -161,6 +159,87 @@ assert(isequalwithoutcfg(meshC.tissuelabel, cfg.tissue), 'error:12');
 meshC=rmfield(meshC,'tissuelabel');
 assert(~(isequalwithoutcfg(meshA,meshC)),'error: 13');
 assert(~(isequalwithoutcfg(meshB,meshC)),'error: 14');
+
+
+% This section evaluates the isosurface/iso2mesh functionality
+% create a segmentation
+
+datamatrix = zeros(31,41,25);
+datamatrix(16,21,13) = 1;
+
+[ftver, ftdir] = ft_version;
+
+curr_dir = pwd;
+cd(fullfile(ftdir,'private'));
+datamatrix = volumesmooth(datamatrix, [15 20 12]);
+cd(curr_dir);
+
+voxres = 4.5;
+
+mri         = [];
+mri.anatomy = datamatrix;
+mri.dim     = size(datamatrix);
+mri.unit    = 'mm';
+mri.transform = inv([eye(3)./voxres (mri.dim(:)+1)./2; 0 0 0 1]);
+mri.coordsys = 'acpc';
+figure; ft_sourceplot([], mri);
+
+cfg             = [];
+cfg.output      = 'scalp';
+cfg.scalpsmooth = 'no';
+cfg.scalpthreshold = 0.2;
+seg             = ft_volumesegment(cfg, mri);
+
+mri.pow = double(seg.scalp);
+cfg              = [];
+cfg.funparameter ='pow';
+ft_sourceplot(cfg, mri);
+
+cfg = [];
+cfg.tissue = {'scalp'};
+cfg.method = 'isosurface';
+bnd1       = ft_prepare_mesh(cfg, seg);
+%figure;ft_plot_ortho(double(seg.scalp),'location',[0 0 0],'transform',seg.transform,'intersectmesh',bnd1,'intersectcolor','r');
+cfg.method = 'iso2mesh';
+cfg.numvertices = 3000;
+bnd2       = ft_prepare_mesh(cfg, seg);
+%figure;ft_plot_ortho(double(seg.scalp),'location',[0 0 0],'transform',seg.transform,'intersectmesh',{bnd1 bnd2},'intersectcolor','rgm');
+cfg.radbound = 0.8;
+bnd3       = ft_prepare_mesh(cfg, seg);
+figure;ft_plot_ortho(double(seg.scalp),'location',[0 0 0],'transform',seg.transform,'intersectmesh',{bnd1 bnd2 bnd3},'intersectcolor','rgm','interpmethod','linear');
+% conclusion: too large a radbound (default = 3) leads to severe
+% downsampling
+
+% at this point, I included a half-voxel shift in the iso2mesh method,
+% check whether this is correct in general
+seg2 = seg;
+curr_dir = pwd;
+cd(fullfile(ftdir, 'private'));
+seg2 = volumeflip(seg2, [1 0 0]);
+cd(curr_dir);
+cfg = [];
+cfg.dim = seg2.dim;
+seg2rs = ft_volumereslice(cfg, seg2);
+
+cfg = [];
+cfg.tissue = {'scalp'};
+cfg.method = 'isosurface';
+bnd1b       = ft_prepare_mesh(cfg, seg2);
+%figure;ft_plot_ortho(double(seg.scalp),'location',[0 0 0],'transform',seg.transform,'intersectmesh',bnd1,'intersectcolor','r');
+cfg.method = 'iso2mesh';
+cfg.numvertices = 3000;
+bnd2b       = ft_prepare_mesh(cfg, seg2);
+%figure;ft_plot_ortho(double(seg.scalp),'location',[0 0 0],'transform',seg.transform,'intersectmesh',{bnd1 bnd2},'intersectcolor','rgm');
+cfg.radbound = 0.8;
+bnd3b       = ft_prepare_mesh(cfg, seg2);
+figure;ft_plot_ortho(double(seg2.scalp),'location',[0 0 0],'transform',seg2.transform,'intersectmesh',{bnd1b bnd1},'intersectcolor','rgm','interpmethod','linear');
+figure;ft_plot_ortho(double(seg2.scalp),'location',[0 0 0],'transform',seg2.transform,'intersectmesh',{bnd2b bnd2},'intersectcolor','rgm','interpmethod','linear');
+figure;ft_plot_ortho(double(seg2.scalp),'location',[0 0 0],'transform',seg2.transform,'intersectmesh',{bnd3b bnd3},'intersectcolor','rgm','interpmethod','linear');
+
+ft_hastoolbox('fileexchange',1);
+[R,T] = icp(bnd1.pos',bnd3.pos');
+assert(norm(R-eye(3))<0.01);
+assert(norm(T)<0.1);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

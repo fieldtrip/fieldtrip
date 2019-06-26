@@ -45,13 +45,13 @@ elseif strcmpi(Unit,'cm')
 elseif strcmpi(Unit,'m')
   pnt = 1000*pnt;
 elseif ~isempty(Unit)
-  error('Unknown unit of distance for electrodes (%s)', Unit);
+  ft_error('Unknown unit of distance for electrodes (%s)', Unit);
 end
 
 tmp = tokenize(lab{1});
 if length(tmp)==size(pnt,1)
   % the electrode labels were on a single line
-  % reformat the electrode labels into an appropriately sized cell array
+  % reformat the electrode labels into an appropriately sized cell-array
   lab = tmp;
 end
 

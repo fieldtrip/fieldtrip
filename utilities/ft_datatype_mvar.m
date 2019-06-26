@@ -7,8 +7,8 @@ function [mvar] = ft_datatype_mvar(mvar, varargin)
 % in the frequency-domain. This is usually obtained from FT_MVARANALYSIS,
 % optionally in combination with FT_FREQANALYSIS.
 %
-% The following is an example of sensor level MVAR model data in the time
-% domain
+% The following is an example of sensor level MVAR model data in the time domain
+%
 %        dimord: 'chan_chan_lag'     defines how the numeric data should be interpreted
 %         label: {3x1 cell}          the channel labels
 %        coeffs: [3x3x5 double]      numeric data (MVAR model coefficients 3 channels x 3 channels x 5 time lags)
@@ -17,8 +17,8 @@ function [mvar] = ft_datatype_mvar(mvar, varargin)
 %   fsampleorig: 200
 %           cfg: [1x1 struct]
 %
-% The following is an example of sensor-level MVAR model data in the frequency
-% domain
+% The following is an example of sensor-level MVAR model data in the frequency domain
+%
 %        dimord: 'chan_chan_freq'    defines how the numeric data should be interpreted
 %         label: {3x1 cell}          the channel labels
 %          freq: [1x101 double]      the frequencies, expressed in Hz
@@ -86,14 +86,15 @@ end
 switch version
   case '2011'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % ensure that the sensor structures are up to date
     if isfield(mvar, 'grad')
-      % ensure that the gradiometer structure is up to date
       mvar.grad = ft_datatype_sens(mvar.grad);
     end
-
     if isfield(mvar, 'elec')
-      % ensure that the electrode structure is up to date
       mvar.elec = ft_datatype_sens(mvar.elec);
+    end
+    if isfield(mvar, 'opto')
+      mvar.opto = ft_datatype_sens(mvar.opto);
     end
 
   case '2008'
@@ -102,5 +103,5 @@ switch version
 
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    error('unsupported version "%s" for mvar datatype', version);
+    ft_error('unsupported version "%s" for mvar datatype', version);
 end

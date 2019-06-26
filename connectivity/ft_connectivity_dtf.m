@@ -1,18 +1,27 @@
 function [dtf, dtfvar, n] = ft_connectivity_dtf(input, varargin)
 
-% FT_CONNECTIVITY_DTF computes directed transfer function.
-% 
+% FT_CONNECTIVITY_DTF computes the directed transfer function.
+%
 % Use as
-%   [d, v, n] = ft_connectivity_dtf(h, key1, value1, ...)
+%   [d, v, n] = ft_connectivity_dtf(h, ...)
 %
-% Input arguments: 
-%   h = spectral transfer matrix, Nrpt x Nchan x Nchan x Nfreq (x Ntime),
-%      Nrpt can be 1.
+% The input data h should be a spectral transfer matrix organized as
+%   Nrpt x Nchan x Nchan x Nfreq (x Ntime),
+% where Nrpt can be 1.
 %
-% additional options need to be specified as key-value pairs and are:
+% Additional optional input arguments come as key-value pairs:
 %   'hasjack'  = 0 (default) is a boolean specifying whether the input
 %                contains leave-one-outs, required for correct variance
-%                estimate
+%                estimate.
+%   'feedback' = string, determining verbosity (default = 'none'), see FT_PROGRESS
+%   'crsspctrm' = matrix containing the cross-spectral density. If this
+%                 matrix is defined, the function
+%                 returns the ddtf, which requires an estimation of partial
+%                 coherence from this matrix.
+%   'invfun'   = 'inv' (default) or 'pinv', the function used to invert the
+%                crsspctrm matrix to obtain the partial coherence. Pinv is
+%                useful if the data are poorly-conditioned.
+%
 %
 % Output arguments:
 %   d = partial directed coherence matrix Nchan x Nchan x Nfreq (x Ntime).
@@ -20,12 +29,14 @@ function [dtf, dtfvar, n] = ft_connectivity_dtf(input, varargin)
 %   v = variance of d across observations.
 %   n = number of observations.
 %
-% Typically, nrpt should be 1 (where the spectral transfer matrix is
-% computed across observations. When nrpt>1 and hasjack is true the input
-% is assumed to contain the leave-one-out estimates of H, thus a more
-% reliable estimate of the relevant quantities.
+% Typically, nrpt should be 1 (where the spectral transfer matrix is computed across
+% observations. When nrpt>1 and hasjack is true the input is assumed to contain the
+% leave-one-out estimates of H, thus a more reliable estimate of the relevant
+% quantities.
+%
+% See also FT_CONNECTIVITYANALYSIS
 
-% Copyright (C) 2009-2013, Jan-Mathijs Schoffelen
+% Copyright (C) 2009-2017, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -45,62 +56,75 @@ function [dtf, dtfvar, n] = ft_connectivity_dtf(input, varargin)
 %
 % $Id$
 
-hasjack = ft_getopt(varargin, 'hasjack', 0);
-powindx = ft_getopt(varargin, 'powindx');
-% FIXME build in feedback
-% FIXME build in dDTF etc
+hasjack   = ft_getopt(varargin, 'hasjack', 0);
+powindx   = ft_getopt(varargin, 'powindx');
+feedback  = ft_getopt(varargin, 'feedback', 'none');
+crsspctrm = ft_getopt(varargin, 'crsspctrm');
+invfun    = ft_getopt(varargin, 'invfun', 'inv');
+
+switch invfun
+  case {'inv' 'pinv'}
+    invfun = str2func(invfun);
+  otherwise
+    ft_error('unknown specification of inversion-function for the transfer matrix');
+end
+
+if ~isempty(powindx)
+  % this error message is rather uninformative, but is kept for now for
+  % backward compatibility reasons (i.e. it might exist when called from
+  % ft_connectivityanalysis
+  ft_error('linearly indexed data for dtf computation is at the moment not supported');
+end
 
 siz    = [size(input) 1];
 n      = siz(1);
-%ncmb   = siz(2);
 outsum = zeros(siz(2:end));
 outssq = zeros(siz(2:end));
 
-if isempty(powindx)
-  % data are represented as chan_chan_therest
-  for j = 1:n
-    tmph   = reshape(input(j,:,:,:,:), siz(2:end));
+% check the crsspctrm, if it's present, compute the partial coherence
+if ~isempty(crsspctrm)
+  assert(isequal(size(crsspctrm),size(input)), 'the input data should be of the same size as the crsspctrm');
+  fprintf('computing dDTF in the presence of a crsspctrm\n');
+  
+  % the crsspctrm allows for the partial coherence to be computed
+  pdim   = prod(siz(4:end));
+  tmpcrs = reshape(crsspctrm, [siz(1:3) pdim]);
+  ft_progress('init', feedback, 'computing partial coherence...');
+  for k = 1:n
+    ft_progress(k/n, 'computing partial coherence for replicate %d from %d\n', k, n);
+    tmp = reshape(tmpcrs(k,:,:,:), [siz(2:3) pdim]);
+    for m = 1:pdim
+      tmp(:,:,m) = invfun(tmp(:,:,m));
+      tmp(:,:,m) = abs(tmp(:,:,m))./sqrt(abs(diag(tmp(:,:,m))*diag(tmp(:,:,m))'));
+    end
+    tmpcrs(k,:,:,:) = tmp;
+  end
+  ft_progress('close');
+  crsspctrm = reshape(tmpcrs, siz);
+end
+
+% data should be represented as chan_chan_therest
+for j = 1:n
+  tmph   = reshape(input(j,:,:,:,:), siz(2:end));
+  if isempty(crsspctrm)
+    % plain DTF
     den    = sum(abs(tmph).^2,2);
     tmpdtf = abs(tmph)./sqrt(repmat(den, [1 siz(2) 1 1 1]));
-    outsum = outsum + tmpdtf;
-    outssq = outssq + tmpdtf.^2;
-    %tmp    = outsum; tmp(2,1,:,:) = outsum(1,2,:,:); tmp(1,2,:,:) = outsum(2,1,:,:); outsum = tmp;
-    %tmp    = outssq; tmp(2,1,:,:) = outssq(1,2,:,:); tmp(1,2,:,:) = outssq(2,1,:,:); outssq = tmp;
-    % FIXME swap the order of the cross-terms to achieve the convention such that
-    % labelcmb {'a' 'b'} represents: a->b
+  else
+    % dDTF
+    tmpc   = reshape(crsspctrm(j,:,:,:,:), siz(2:end));
+    
+    den    = sum(sum(abs(tmph).^2,3),2);
+    tmpdtf = abs(tmph)./sqrt(repmat(den, [1 siz(2) siz(4) 1 1 1]));
+    tmpdtf = tmpdtf.*tmpc;
   end
-else
-  error('linearly indexed data for dtf computation is at the moment not supported');
-%FIXME this needs to be thought through -> also, as a multivariate measure
-%a pairwise decomposition does not make sense, should this be dealt with by
-%ft_connectivityanalysis?
-  %   % data are linearly indexed
-%   sortindx = [0 0 0 0];
-%   for k = 1:ncmb
-%     iauto1  = find(sum(cfg.powindx==cfg.powindx(k,1),2)==2);
-%     iauto2  = find(sum(cfg.powindx==cfg.powindx(k,2),2)==2);
-%     icross1 = k;
-%     icross2 = find(sum(cfg.powindx==cfg.powindx(ones(ncmb,1)*k,[2 1]),2)==2);
-%     indx    = [iauto1 icross2 icross1 iauto2];
-%     
-%     if isempty(intersect(sortindx, sort(indx), 'rows')),
-%       sortindx = [sortindx; sort(indx)];
-%       for j = 1:n
-%         tmph    = reshape(input(j,indx,:,:), [2 2 siz(3:end)]);
-%         den     = sum(abs(tmph).^2,2);
-%         tmpdtf  = reshape(abs(tmph)./sqrt(repmat(den, [1 2 1 1])), [4 siz(3:end)]);
-%         outsum(indx,:) = outsum(indx,:) + tmpdtf([1 3 2 4],:);
-%         outssq(indx,:) = outssq(indx,:) + tmpdtf([1 3 2 4],:).^2;
-%         % FIXME swap the order of the cross-terms to achieve the convention such that
-%         % labelcmb {'a' 'b'} represents: a->b
-%       end
-%     end
-%   end
+  outsum = outsum + tmpdtf;
+  outssq = outssq + tmpdtf.^2;
 end
 dtf = outsum./n;
 
-if n>1, %FIXME this is strictly only true for jackknife, otherwise other bias is needed
-  if hasjack,
+if n>1 % FIXME this is strictly only true for jackknife, otherwise other bias is needed
+  if hasjack
     bias = (n - 1).^2;
   else
     bias = 1;

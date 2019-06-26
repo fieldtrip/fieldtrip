@@ -1,7 +1,7 @@
 function data = ft_spikesimulation(cfg)
 
-% FT_SPIKESIMULATION simulates a spiketrain with a structures timing of the
-% neuronal firing.
+% FT_SPIKESIMULATION simulates a spiketrain with a structured timing in the neuronal
+% firing.
 %
 % Use as
 %   data = ft_spikesimulation(cfg)
@@ -37,11 +37,11 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance
 ft_preamble trackconfig
 
 % set the defaults
-if ~isfield(cfg, 'trlduration'),  cfg.trlduration = 1; end %  in seconds
+if ~isfield(cfg, 'trlduration'),  cfg.trlduration = 1;  end %  in seconds
 if ~isfield(cfg, 'nlfpchan'),     cfg.nlfpchan    = 10; end
 if ~isfield(cfg, 'nspikechan'),   cfg.nspikechan  = 10; end
 if ~isfield(cfg, 'spikerate'),    cfg.spikerate   = ones(cfg.nspikechan,1)*10; end
@@ -67,7 +67,6 @@ spikemix(6,1:2) = [0.5 0.5]; % mix with lfp chan 1 and 2
 % cfg.spikerate  = [100 100 300 300 100 300];
 fsample    = 1000;
 nsample    = cfg.trlduration*fsample;
-nchan      = cfg.nlfpchan + cfg.nspikechan;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % create the data
@@ -89,7 +88,7 @@ for t=1:cfg.ntrial
   lfp   = zeros(cfg.nlfpchan, nsample);
   spike = zeros(cfg.nspikechan, nsample);
   
-  for i=1:cfg.nlfpchan,
+  for i=1:cfg.nlfpchan
     lfp(i,:) = ft_preproc_bandpassfilter(randn(1,nsample), fsample, cfg.bpfreq);
   end
   
@@ -111,8 +110,8 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble history data
+ft_postamble provenance data
+ft_postamble history    data
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION to strengthen the temporal strucure in the spike train

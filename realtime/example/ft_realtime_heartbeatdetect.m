@@ -81,9 +81,9 @@ chanindx    = match_str(hdr.label, cfg.channel);
 nchan       = length(chanindx);
 
 if nchan==0
-  error('no channels were selected');
+  ft_error('no channels were selected');
 elseif nchan>1
-  error('this function expects that you select a single channel');
+  ft_error('this function expects that you select a single channel');
 end
 
 % determine the size of blocks to process
@@ -100,8 +100,8 @@ count = 0;
 
 tpl = [];
 
-ws_noPeaks    = warning('off', 'signal:findpeaks:noPeaks');
-ws_PeakHeight = warning('off', 'signal:findpeaks:largeMinPeakHeight');
+ws_noPeaks    = ft_warning('off', 'signal:findpeaks:noPeaks');
+ws_PeakHeight = ft_warning('off', 'signal:findpeaks:largeMinPeakHeight');
 
 % start the timer
 tic
@@ -150,7 +150,7 @@ while true
     endsample  = min(prevSample+blocksize, hdr.nSamples*hdr.nTrials);
     begsample  = endsample - blocksize + 1;
   else
-    error('unsupported value for cfg.bufferdata');
+    ft_error('unsupported value for cfg.bufferdata');
   end
   
   % remember up to where the data was read
@@ -223,7 +223,7 @@ while true
   
   if numel(peakind)/(blocksize/hdr.Fs)>3
     % heartbeat cannot be above 180 bpm
-    warning('skipping due to noise');
+    ft_warning('skipping due to noise');
     peakval = [];
     peakind = [];
   end

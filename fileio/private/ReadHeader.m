@@ -10,7 +10,7 @@ function H = ReadHeader(fp)
 %      fid -- file-pointer (i.e. not filename)
 %  OUTPUT: 
 
-%      H -- cell array.  Each entry is one line from the NSMA header
+%      H -- cell-array.  Each entry is one line from the NSMA header
 
 %
 
@@ -54,7 +54,7 @@ if strcmp(headerLine, beginheader)
 
    H{1} = headerLine;
 
-   while ~feof(fp) & ~strcmp(headerLine, endheader)     
+   while ~feof(fp) && ~strcmp(headerLine, endheader)     
       headerLine = fgetl(fp);
       iH = iH+1;
 

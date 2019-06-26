@@ -23,7 +23,7 @@ for i=1:numboundaries
 end
 
 if sum(nesting(:))~=(numboundaries*(numboundaries-1)/2)
-  error('the compartment nesting cannot be determined');
+  ft_error('the compartment nesting cannot be determined');
 end
 
 if strcmp(desired,'insidefirst')
@@ -43,6 +43,6 @@ elseif strcmp(desired,'outsidefirst')
   [dum, order] = sort(sum(nesting,2));
   
 else
-  error('unknown surface order "%s"', desired);
+  ft_error('unknown surface order "%s"', desired);
 end
 

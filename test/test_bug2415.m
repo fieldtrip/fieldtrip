@@ -3,10 +3,10 @@ function test_bug2415(updatereference)
 % MEM 3gb
 % WALLTIME 00:15:00
 
-% TEST ft_read_event
+% DEPENDENCY ft_read_event
 
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=2409
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=2415
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2409
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2415
 
 if nargin<1
   updatereference = false;

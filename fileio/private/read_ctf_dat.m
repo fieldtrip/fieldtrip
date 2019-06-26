@@ -8,7 +8,7 @@ function [meg] = read_ctf_dat(filename)
 %   meg.data        Nchans x Ntime
 %   meg.time        1xNtime in miliseconds
 %   meg.trigger     1xNtime with trigger values
-%   meg.label       1xNchans cell array with channel labels (string)
+%   meg.label       1xNchans cell-array with channel labels (string)
 
 % Copyright (C) 2002, Robert Oostenveld
 % 
@@ -30,10 +30,7 @@ function [meg] = read_ctf_dat(filename)
 %
 % $Id$
 
-fid = fopen(filename, 'r');
-if fid==-1
-  error(sprintf('could not open file %s', filename));
-end
+fid = fopen_or_error(filename, 'r');
 
 % read the sample number
 line = fgetl(fid);
@@ -56,7 +53,7 @@ meg.label = {};
 chan = 0;
 while (1)
   line = fgetl(fid);
-  if ~isempty(line) & line==-1
+  if ~isempty(line) && line==-1
     % reached end of file
     break
   end

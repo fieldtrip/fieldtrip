@@ -1,14 +1,14 @@
 function [select] = select_channel_list(label, select, titlestr)
 
 % SELECT_CHANNEL_LIST presents a dialog for selecting multiple elements
-% from a cell array with strings, such as the labels of EEG channels.
+% from a cell-array with strings, such as the labels of EEG channels.
 % The dialog presents two columns with an add and remove mechanism.
 % 
 % select = select_channel_list(label, initial, titlestr)
 % 
 % with 
 %   initial indices of channels that are initially selected 
-%   label   cell array with channel labels (strings)
+%   label   cell-array with channel labels (strings)
 %   titlestr    title for dialog (optional)
 % and
 %   select  indices of selected channels
@@ -81,14 +81,14 @@ set(findobj(h, 'tag', 'lbunsel'), 'string', userdata.label(userdata.unselect));
 % set the active element in the select listbox, based on the previous active element
 tmp = min(get(findobj(h, 'tag', 'lbsel'), 'value'));
 tmp = min(tmp, length(get(findobj(h, 'tag', 'lbsel'), 'string')));
-if isempty(tmp) | tmp==0
+if isempty(tmp) || tmp==0
   tmp = 1;
 end
 set(findobj(h, 'tag', 'lbsel'  ), 'value', tmp);
 % set the active element in the unselect listbox, based on the previous active element
 tmp = min(get(findobj(h, 'tag', 'lbunsel'), 'value'));
 tmp = min(tmp, length(get(findobj(h, 'tag', 'lbunsel'), 'string')));
-if isempty(tmp) | tmp==0
+if isempty(tmp) || tmp==0
   tmp = 1;
 end
 set(findobj(h, 'tag', 'lbunsel'  ), 'value', tmp);

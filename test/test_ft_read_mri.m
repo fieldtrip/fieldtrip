@@ -3,8 +3,8 @@ function test_ft_read_mri
 % WALLTIME 00:10:00
 % MEM 2gb
 
-% TEST TEST_FT_READ_MRI
-% TEST FT_READ_MRI
+% DEPENDENCY TEST_FT_READ_MRI
+% DEPENDENCY FT_READ_MRI
 
 files = {
   'afni/anat+orig.BRIK'
@@ -21,7 +21,7 @@ files = {
   };
   %'neuromag/slices/MR1.3.12.2.1107.5.2.32.35204.2008010817494647729256323'
 
-datadir = '/home/common/matlab/fieldtrip/data/test/latest/mri';
+datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/mri');
 
 for k = 1:numel(files)
   filename = dccnpath(fullfile(datadir,files{k}));

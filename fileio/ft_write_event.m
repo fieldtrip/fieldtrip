@@ -104,6 +104,20 @@ switch eventformat
 	% type, value
 	%   -- these can be strings or any numeric type (double, single, [u]int[8-64])
 	%      will be transmitted as if vectorised
+  
+  % hack to fix empty event.offset and event.duration fields
+  % Maybe should track down why they're empty? But this works for now
+  % ES, 10-may-2019
+  if ~isempty(event)
+    for k = 1:numel(event)
+      if isfield(event(k), 'offset') && isempty(event(k).offset)
+        event(k).offset = 0;
+      end
+      if isfield(event(k), 'duration') && isempty(event(k).duration)
+        event(k).duration = 0;
+      end
+    end
+  end
 	buffer('put_evt', event, host, port);
 
 	% SK: There was some code here for firing up a FieldTrip buffer locally,
@@ -153,11 +167,11 @@ switch eventformat
       fifo = filetype_check_uri(filename);
       
       if ~exist(fifo,'file')
-          warning('the FIFO %s does not exist; attempting to create it', fifo);          
+          ft_warning('the FIFO %s does not exist; attempting to create it', fifo);          
           system(sprintf('mkfifo -m 0666 %s',fifo));          
       end
 
-      fid = fopen(fifo, 'w');
+      fid = fopen_or_error(fifo, 'w');
       for i=1:length(event)
 
         try
@@ -165,11 +179,11 @@ switch eventformat
           msg = mxSerialize(event(i));
           num = fwrite(fid, msg, 'uint8');
         catch
-          warning(lasterr);
+          ft_warning(lasterr);
         end
 
         if num~=length(msg)
-          error('problem writing to FIFO %s', fifo);
+          ft_error('problem writing to FIFO %s', fifo);
         end
       end
       fclose(fid);
@@ -197,7 +211,7 @@ switch eventformat
                     pnet(con,'printf','\n');
                 end
 %            catch             
-%                warning(lasterr);
+%                ft_warning(lasterr);
             end
             
             pnet(con,'close');
@@ -224,7 +238,7 @@ switch eventformat
                 end
 
             catch
-              warning(lasterr);
+              ft_warning(lasterr);
             end
             pnet(udp,'close');
         end
@@ -260,6 +274,6 @@ switch eventformat
                 save(filename, 'event', '-v6');
             end
         else
-            error('unsupported file type')
+            ft_error('unsupported file type')
         end
 end

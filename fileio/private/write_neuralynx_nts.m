@@ -28,10 +28,10 @@ function write_neuralynx_nts(filename, nts)
 % $Id$
 
 if ~isa(nts.TimeStamp, 'uint64')
-  error('timestamps should be uint64');
+  ft_error('timestamps should be uint64');
 end
 
-fid  = fopen(filename, 'wb', 'ieee-le');
+fid  = fopen_or_error(filename, 'wb', 'ieee-le');
 
 % construct the header
 buf  = [];
@@ -47,7 +47,7 @@ for i=1:length(f)
     case 'double'
       buf = [buf sprintf('-%s\t%g\r\n', f{i}, v)];
     otherwise
-      error('unknown class in writing header');
+      ft_error('unknown class in writing header');
   end
 end
 

@@ -1,8 +1,8 @@
 function [s, cfg] = ft_statfun_depsamplesregrT(cfg, dat, design)
 
-% FT_STATFUN_DEPSAMPLESREGRT calculates dependent samples regression T-statistic 
-% on the biological data in dat (the dependent variable), using the information on 
-% the independent variable (ivar) in design.
+% FT_STATFUN_DEPSAMPLESREGRT calculates dependent samples regression T-statistic on
+% the biological data in dat (the dependent variable), using the information on the
+% independent variable (ivar) in design.
 %
 % Use this function by calling one of the high-level statistics functions as
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
@@ -10,14 +10,6 @@ function [s, cfg] = ft_statfun_depsamplesregrT(cfg, dat, design)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
 % with the following configuration option
 %   cfg.statistic = 'ft_statfun_depsamplesregrT'
-% see FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
-%
-% For low-level use, the external interface of this function has to be
-%   [s,cfg] = ft_statfun_depsamplesregrT(cfg, dat, design);
-% where
-%   dat    contains the biological data, Nsamples x Nreplications
-%   design contains the independent variable (ivar) and the unit-of-observation (uvar) 
-%          factor,  Nreplications x Nvar
 %
 % Configuration options
 %   cfg.computestat    = 'yes' or 'no', calculate the statistic (default='yes')
@@ -37,8 +29,10 @@ function [s, cfg] = ft_statfun_depsamplesregrT(cfg, dat, design)
 % Design specification
 %   cfg.ivar  = row number of the design that contains the independent variable.
 %   cfg.uvar  = row number of design that contains the labels of the units-of-observation (subjects or trials)
-%               (default=2). The labels are assumed to be integers ranging from 1 to 
+%               (default=2). The labels are assumed to be integers ranging from 1 to
 %               the number of units-of-observation.
+%
+% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
 
 % Copyright (C) 2006, Eric Maris
 %
@@ -61,18 +55,18 @@ function [s, cfg] = ft_statfun_depsamplesregrT(cfg, dat, design)
 % $Id$
 
 % set defaults
-if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end;
-if ~isfield(cfg, 'computecritval'),    cfg.computecritval='no';   end;
-if ~isfield(cfg, 'computeprob'),       cfg.computeprob='no';      end;
-if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end;
-if ~isfield(cfg, 'tail'),              cfg.tail=1;                end;
+if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end
+if ~isfield(cfg, 'computecritval'),    cfg.computecritval='no';   end
+if ~isfield(cfg, 'computeprob'),       cfg.computeprob='no';      end
+if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end
+if ~isfield(cfg, 'tail'),              cfg.tail=1;                end
 
 % perform some checks on the configuration
-if strcmp(cfg.computeprob,'yes') & strcmp(cfg.computestat,'no')
-    error('P-values can only be calculated if the test statistics are calculated.');
-end;
+if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
+  ft_error('P-values can only be calculated if the test statistics are calculated.');
+end
 if ~isfield(cfg,'uvar') || isempty(cfg.uvar)
-    error('uvar must be specified for dependent samples statistics');
+  ft_error('uvar must be specified for dependent samples statistics');
 end
 
 if ~isempty(cfg.cvar)
@@ -80,20 +74,20 @@ if ~isempty(cfg.cvar)
   nblocks=length(condlabels);
 else
   nblocks=1;
-end;
+end
 
 nunits = max(design(cfg.uvar,:));
 df = nunits - 1;
 if nunits<2
-    error('The data must contain at least two units-of-observation (usually subjects).')
-end;
+  ft_error('The data must contain at least two units-of-observation (usually subjects).')
+end
 
 if strcmp(cfg.computestat,'yes')
-% compute the statistic
+  % compute the statistic
   regrweights=zeros(size(dat,1),nunits);
   for indx=1:nunits
     unitselvec=find(design(cfg.uvar,:)==indx);
-    indvar=design(cfg.ivar,unitselvec); 
+    indvar=design(cfg.ivar,unitselvec);
     if isempty(cfg.cvar)
       designmat=[ones(1,length(indvar));indvar];
     else
@@ -101,16 +95,16 @@ if strcmp(cfg.computestat,'yes')
       for blockindx=1:nblocks
         blockselvec=find(design(cfg.cvar,unitselved)==condlabels(blockindx));
         designmat(blockindx,blockselvec)=1;
-      end;
+      end
       designmat((nblocks+1),:)=indvar;
-    end;
+    end
     coeff=(designmat*designmat')\(designmat*dat(:,unitselvec)');
     regrweights(:,indx)=coeff((nblocks+1),:)';
-  end;
+  end
   avgw=mean(regrweights,2);
   varw=var(regrweights,0,2);
   s.stat=sqrt(nunits)*avgw./sqrt(varw);
-end;
+end
 
 if strcmp(cfg.computecritval,'yes')
   % also compute the critical values
@@ -121,7 +115,7 @@ if strcmp(cfg.computecritval,'yes')
     s.critval = [tinv(cfg.alpha/2,df),tinv(1-cfg.alpha/2,df)];
   elseif cfg.tail==1
     s.critval = tinv(1-cfg.alpha,df);
-  end;
+  end
 end
 
 if strcmp(cfg.computeprob,'yes')
@@ -133,6 +127,6 @@ if strcmp(cfg.computeprob,'yes')
     s.prob = 2*tcdf(-abs(s.stat),s.df);
   elseif cfg.tail==1
     s.prob = 1-tcdf(s.stat,s.df);
-  end;
+  end
 end
 

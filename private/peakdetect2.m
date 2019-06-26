@@ -45,7 +45,7 @@ while sect<=length(d)
     p = [p i(sect)];
   else
     s = [];
-    while ~jump(sect) & sect<length(d)
+    while ~jump(sect) && sect<length(d)
       s = [s sect];
       sect = sect + 1;
     end

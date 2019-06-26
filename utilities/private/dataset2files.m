@@ -6,7 +6,7 @@ function [filename, headerfile, datafile] = dataset2files(filename, format)
 % Use as
 %   [filename, headerfile, datafile] = dataset2files(filename, format)
 
-% Copyright (C) 2007-2013, Robert Oostenveld
+% Copyright (C) 2007-2019, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -65,6 +65,10 @@ switch format
     datafile   = fullfile(path, [file,ext]);
     headerfile = fullfile(path, [file,ext]);
     configfile = fullfile(path, 'config');
+  case {'anywave_ades', 'anywave_dat'}
+    [path, file, ext] = fileparts(filename);
+    datafile   = fullfile(path, [file '.dat']);
+    headerfile = fullfile(path, [file '.ades']);
   case {'ctf_ds', 'ctf_old'}
     % convert CTF filename into filenames
     [path, file, ext] = fileparts(filename);
@@ -106,7 +110,7 @@ switch format
     elseif exist(fullfile(path, [file '.dat']), 'file')
       datafile   = fullfile(path, [file '.dat']);
     else
-      error('cannot determine the data file that corresponds to %s', filename);
+      ft_error('cannot determine the data file that corresponds to %s', filename);
     end
   case 'brainvision_eeg'
     [path, file, ext] = fileparts(filename);
@@ -129,7 +133,7 @@ switch format
     headerfile = fullfile(path, [file '.mat']);
     datafile   = fullfile(path, [file '.bin']);
   case 'fcdc_buffer_offline'
-    if isdir(filename)
+    if isfolder(filename)
       path = filename;
     else
       [path, file, ext] = fileparts(filename);
@@ -141,7 +145,7 @@ switch format
     headerfile = fullfile(path, [file '.tsq']);
     datafile   = fullfile(path, [file '.tev']);
   case 'egi_mff'
-    if ~isdir(filename);
+    if ~isfolder(filename);
       [path, file, ext] = fileparts(filename);
       headerfile = path;
       datafile   = path;

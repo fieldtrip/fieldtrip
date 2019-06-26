@@ -1,4 +1,4 @@
-function [freq] = ft_spiketriggeredspectrum_stat(cfg,spike)
+function [freq] = ft_spiketriggeredspectrum_stat(cfg, spike)
 
 % FT_SPIKETRIGGEREDSPECTRUM_STAT computes phase-locking statistics for spike-LFP
 % phases. These contain the PPC statistics according to Vinck et al. 2010 (Neuroimage)
@@ -7,8 +7,7 @@ function [freq] = ft_spiketriggeredspectrum_stat(cfg,spike)
 % Use as:
 %   [stat] = ft_spiketriggeredspectrum_stat(cfg, spike)
 %
-% Inputs:
-%   SPIKE should be a structure as obtained from from the FT_SPIKETRIGGEREDSPECTRUM function.
+% The input SPIKE should be a structure as obtained from the FT_SPIKETRIGGEREDSPECTRUM function.
 %
 % Configurations (cfg) 
 %
@@ -70,7 +69,7 @@ function [freq] = ft_spiketriggeredspectrum_stat(cfg,spike)
 %   stat.nspikes                    =  nChancmb-by-nFreqs-nTimepoints number
 %                                      of spikes used to compute stat
 %   stat.dimord                     = 'chan_freq_time'
-%   stat.labelcmb                   =  nChancmbs cell array with spike vs
+%   stat.labelcmb                   =  nChancmbs cell-array with spike vs
 %                                      LFP labels
 %   stat.(cfg.method)               =  nChancmb-by-nFreqs-nTimepoints  statistic
 %   stat.freq                       =  1xnFreqs array of frequencies
@@ -106,7 +105,7 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance spike
 ft_preamble trackconfig
 
 % check if the data is of spike format, and convert from old format if required
@@ -418,11 +417,14 @@ freq.dimord     = 'chancmb_freq_time';
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble previous spike
-ft_postamble history freq
+ft_postamble previous   spike
+ft_postamble provenance freq
+ft_postamble history    freq
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [P] = rayleightest(x)
 
 n = sum(~isnan(x),1);
@@ -435,7 +437,7 @@ P = exp(-Z).*...
 function [resLen] = resultantlength(angles)
 
 n = sum(~isnan(angles),1);
-resLen = abs(nansum(angles,1))./n;%calculate the circular variance
+resLen = abs(nansum(angles,1))./n; %calculate the circular variance
 
 function [y] = ppc(crss)
 
@@ -456,7 +458,7 @@ function [cfg] = trialselection(cfg,spike)
 nTrials = size(spike.trialtime,1);
 if  strcmp(cfg.trials, 'all')
   cfg.trials = 1:nTrials;
-elseif islogical(cfg.trials)
+elseif islogical(cfg.trials) || all(cfg.trials==0 | cfg.trials==1)
   cfg.trials = find(cfg.trials);
 end
 cfg.trials = sort(cfg.trials(:));

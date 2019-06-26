@@ -1,19 +1,19 @@
 function avw_img_write(avw, fileprefix, IMGorient, machine, verbose)
 
 % avw_img_write - write Analyze image files (*.img)
-% 
+%
 % avw_img_write(avw,fileprefix,[IMGorient],[machine],[verbose])
-% 
+%
 % avw.img    - a 3D matrix of image data (double precision).
 % avw.hdr    - a struct with image data parameters.  If
 %              not empty, this function calls avw_hdr_write.
-% 
+%
 % fileprefix - a string, the filename without the .img
 %              extension. If empty, may use avw.fileprefix
-% 
-% IMGorient - optional int, force writing of specified 
+%
+% IMGorient - optional int, force writing of specified
 %             orientation, with values:
-% 
+%
 %   [],  if empty, will use avw.hdr.hist.orient field
 %    0,  transverse/axial unflipped (default, radiological)
 %    1,  coronal unflipped
@@ -21,24 +21,24 @@ function avw_img_write(avw, fileprefix, IMGorient, machine, verbose)
 %    3,  transverse/axial flipped, left to right
 %    4,  coronal flipped, anterior to posterior
 %    5,  sagittal flipped, superior to inferior
-% 
-% This function will set avw.hdr.hist.orient and write the 
-% image data in a corresponding order.  This function is 
-% in alpha development, so it has not been exhaustively 
-% tested (07/2003). See avw_img_read for more information 
-% and documentation on the orientation option.  
-% Orientations 3-5 are NOT recommended!  They are part 
+%
+% This function will set avw.hdr.hist.orient and write the
+% image data in a corresponding order.  This function is
+% in alpha development, so it has not been exhaustively
+% tested (07/2003). See avw_img_read for more information
+% and documentation on the orientation option.
+% Orientations 3-5 are NOT recommended!  They are part
 % of the Analyze format, but only used in Analyze
 % for faster raster graphics during movies.
-% 
+%
 % machine - a string, see machineformat in fread for details.
 %           The default here is 'ieee-le'.
-% 
+%
 % verbose - the default is to output processing information to the command
 %           window.  If verbose = 0, this will not happen.
 %
 % Tip: to change the data type, set avw.hdr.dime.datatype to:
-% 
+%
 %     1    Binary             (  1 bit  per voxel)
 %     2    Unsigned character (  8 bits per voxel)
 %     4    Signed short       ( 16 bits per voxel)
@@ -47,16 +47,16 @@ function avw_img_write(avw, fileprefix, IMGorient, machine, verbose)
 %    32    Complex, 2 floats  ( 64 bits per voxel), not supported
 %    64    Double precision   ( 64 bits per voxel)
 %   128    Red-Green-Blue     (128 bits per voxel), not supported
-% 
-% See also: avw_write, avw_hdr_write, 
+%
+% See also: avw_write, avw_hdr_write,
 %           avw_read, avw_hdr_read, avw_img_read, avw_view
-% 
+%
 
 % $Revision$ $Date: 2009/01/14 09:24:45 $
 
 % Licence:  GNU GPL, no express or implied warranties
 % History:  05/2002, Darren.Weber@flinders.edu.au
-%                    The Analyze format is copyright 
+%                    The Analyze format is copyright
 %                    (c) Copyright, 1986-1995
 %                    Biomedical Imaging Resource, Mayo Foundation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -65,18 +65,18 @@ function avw_img_write(avw, fileprefix, IMGorient, machine, verbose)
 %------------------------------------------------------------------------
 % Check inputs
 
-if ~exist('avw','var'),
+if ~exist('avw','var')
     doc avw_img_write;
-    error('...no input avw.');
-elseif isempty(avw),
-    error('...empty input avw.');
-elseif ~isfield(avw,'img'),
-    error('...empty input avw.img');
+    ft_error('...no input avw.');
+elseif isempty(avw)
+    ft_error('...empty input avw.');
+elseif ~isfield(avw,'img')
+    ft_error('...empty input avw.img');
 end
 
-if ~exist('fileprefix','var'),
-    if isfield(avw,'fileprefix'),
-        if ~isempty(avw.fileprefix),
+if ~exist('fileprefix','var')
+    if isfield(avw,'fileprefix')
+        if ~isempty(avw.fileprefix)
             fileprefix = avw.fileprefix;
         else
             fileprefix = [];
@@ -85,20 +85,20 @@ if ~exist('fileprefix','var'),
         fileprefix = [];
     end
 end
-if isempty(fileprefix),
+if isempty(fileprefix)
     [fileprefix, pathname, filterindex] = uiputfile('*.hdr','Specify an output Analyze .hdr file');
     if pathname, cd(pathname); end
-    if ~fileprefix,
+    if ~fileprefix
         doc avw_img_write;
-        error('no output .hdr file specified');
+        ft_error('no output .hdr file specified');
     end
 end
 
-if findstr('.hdr',fileprefix),
+if contains(fileprefix, '.hdr')
 %    fprintf('AVW_IMG_WRITE: Removing .hdr extension from ''%s''\n',fileprefix);
     fileprefix = strrep(fileprefix,'.hdr','');
 end
-if findstr('.img',fileprefix),
+if contains(fileprefix, '.img')
 %    fprintf('AVW_IMG_WRITE: Removing .img extension from ''%s''\n',fileprefix);
     fileprefix = strrep(fileprefix,'.img','');
 end
@@ -115,20 +115,19 @@ if isempty(verbose), verbose = 1; end
 
 %------------------------------------------------------------------------
 % MAIN
-if verbose,
+if verbose
     version = '[$Revision$]';
     fprintf('\nAVW_IMG_WRITE [v%s]\n',version(12:16));  tic;
 end
 
 fid = fopen(sprintf('%s.img',fileprefix),'w',machine);
-if fid < 0,
-    msg = sprintf('Cannot open file %s.img\n',fileprefix);
-    error(msg);
+if fid < 0
+    ft_error('Cannot open file %s.img\n',fileprefix);
 else
     avw = write_image(fid,avw,fileprefix,IMGorient,machine,verbose);
 end
 
-if verbose,
+if verbose
     t=toc; fprintf('...done (%5.2f sec).\n\n',t);
 end
 
@@ -143,21 +142,21 @@ return
 function avw_hdr_write(avw, fileprefix, machine, verbose)
 
 % AVW_HDR_WRITE - Write Analyze header file (*.hdr)
-% 
+%
 % avw_hdr_write(avw,[fileprefix],[machine],[verbose])
-% 
+%
 % eg, avw_hdr_write(avw,'test');
-% 
+%
 % avw        - a struct with .hdr field, which itself is a struct,
 %              containing all fields of an Analyze header.
 %              For details, see avw_hdr_read.m
-% 
+%
 % fileprefix - a string, the filename without the .hdr extension.
 %              If empty, may use avw.fileprefix
-% 
+%
 % machine    - a string, see machineformat in fread for details.
 %              The default here is 'ieee-le'.
-% 
+%
 % verbose - the default is to output processing information to the command
 %           window.  If verbose = 0, this will not happen.
 %
@@ -173,7 +172,7 @@ function avw_hdr_write(avw, fileprefix, machine, verbose)
 %                    - more specific data history var sizes
 %                    - 02/2003 confirmed, Darren
 %
-%                    The Analyze format and c code below is copyright 
+%                    The Analyze format and c code below is copyright
 %                    (c) Copyright, 1986-1995
 %                    Biomedical Imaging Resource, Mayo Foundation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -189,40 +188,39 @@ end
 %----------------------------------------------------------------------------
 % Check inputs
 
-if ~exist('avw','var'),
-    warning('...no input avw - calling avw_hdr_make\n');
+if ~exist('avw','var')
+    ft_warning('...no input avw - calling avw_hdr_make\n');
     avw = avw_hdr_make;
-elseif isempty(avw),
-    warning('...empty input avw - calling avw_hdr_make\n');
+elseif isempty(avw)
+    ft_warning('...empty input avw - calling avw_hdr_make\n');
     avw = avw_hdr_make;
-elseif ~isfield(avw,'hdr'),
-    warning('...empty input avw.hdr - calling avw_hdr_make\n');
+elseif ~isfield(avw,'hdr')
+    ft_warning('...empty input avw.hdr - calling avw_hdr_make\n');
     avw = avw_hdr_make;
 end
-if ~isequal(avw.hdr.hk.sizeof_hdr,348),
-    msg = sprintf('...avw.hdr.hk.sizeof_hdr must be 348!\n');
-    error(msg);
+if ~isequal(avw.hdr.hk.sizeof_hdr,348)
+    ft_error('...avw.hdr.hk.sizeof_hdr must be 348!\n');
 end
 
 quit = 0;
-if ~exist('fileprefix','var'),
-    if isfield(avw,'fileprefix'),
-        if ~isempty(avw.fileprefix),
+if ~exist('fileprefix','var')
+    if isfield(avw,'fileprefix')
+        if ~isempty(avw.fileprefix)
             fileprefix = avw.fileprefix;
-        else,
+        else
             quit = 1;
         end
     else
         quit = 1;
     end
-    if quit,
+    if quit
         helpwin avw_hdr_write;
-        error('...no input fileprefix - see help avw_hdr_write\n\n');
+        ft_error('...no input fileprefix - see help avw_hdr_write\n\n');
         return;
     end
 end
 
-if findstr('.hdr',fileprefix),
+if contains(fileprefix, '.hdr')
 %    fprintf('AVW_HDR_WRITE: Removing .hdr extension from ''%s''\n',fileprefix);
     fileprefix = strrep(fileprefix,'.hdr','');
 end
@@ -247,13 +245,12 @@ if verbose, tic; end
 %    avw.hdr.dime.dim(currDim+2:minDim+1) = int16(1);
 %    avw.hdr.dime.pixdim(1) = int16(minDim);
 %    avw.hdr.dime.pixdim(currDim+2:minDim+1) = int16(1);
-% end;
+% end
 
 
 fid = fopen(sprintf('%s.hdr',fileprefix),'w',machine);
-if fid < 0,
-    msg = sprintf('Cannot write to file %s.hdr\n',fileprefix);
-    error(msg);
+if fid < 0
+    ft_error('Cannot write to file %s.hdr\n',fileprefix);
 else
     if verbose, fprintf('...writing %s Analyze header.\n',machine); end
     write_header(fid,avw,verbose);
@@ -268,40 +265,40 @@ return
 
 function avw = write_image(fid,avw,fileprefix,IMGorient,machine,verbose)
 
-% short int bitpix;    /* Number of bits per pixel; 1, 8, 16, 32, or 64. */ 
+% short int bitpix;    /* Number of bits per pixel; 1, 8, 16, 32, or 64. */
 % short int datatype   /* Datatype for this image set */
-% /*Acceptable values for datatype are*/ 
+% /*Acceptable values for datatype are*/
 % #define DT_NONE             0
-% #define DT_UNKNOWN          0    /*Unknown data type*/ 
-% #define DT_BINARY           1    /*Binary             ( 1 bit per voxel)*/ 
-% #define DT_UNSIGNED_CHAR    2    /*Unsigned character ( 8 bits per voxel)*/ 
-% #define DT_SIGNED_SHORT     4    /*Signed short       (16 bits per voxel)*/ 
-% #define DT_SIGNED_INT       8    /*Signed integer     (32 bits per voxel)*/ 
-% #define DT_FLOAT           16    /*Floating point     (32 bits per voxel)*/ 
-% #define DT_COMPLEX         32    /*Complex,2 floats   (64 bits per voxel)/* 
-% #define DT_DOUBLE          64    /*Double precision   (64 bits per voxel)*/ 
+% #define DT_UNKNOWN          0    /*Unknown data type*/
+% #define DT_BINARY           1    /*Binary             ( 1 bit per voxel)*/
+% #define DT_UNSIGNED_CHAR    2    /*Unsigned character ( 8 bits per voxel)*/
+% #define DT_SIGNED_SHORT     4    /*Signed short       (16 bits per voxel)*/
+% #define DT_SIGNED_INT       8    /*Signed integer     (32 bits per voxel)*/
+% #define DT_FLOAT           16    /*Floating point     (32 bits per voxel)*/
+% #define DT_COMPLEX         32    /*Complex,2 floats   (64 bits per voxel)/*
+% #define DT_DOUBLE          64    /*Double precision   (64 bits per voxel)*/
 % #define DT_RGB            128    /*A Red-Green-Blue datatype*/
 % #define DT_ALL            255    /*Undocumented*/
 
-switch double(avw.hdr.dime.datatype),
-case   1,
+switch double(avw.hdr.dime.datatype)
+case   1
     avw.hdr.dime.bitpix = int16( 1); precision = 'bit1';
-case   2,
+case   2
     avw.hdr.dime.bitpix = int16( 8); precision = 'uchar';
-case   4,
+case   4
     avw.hdr.dime.bitpix = int16(16); precision = 'int16';
-case   8,
+case   8
     avw.hdr.dime.bitpix = int16(32); precision = 'int32';
-case  16,
+case  16
     avw.hdr.dime.bitpix = int16(32); precision = 'single';
-case  32,
-    error('...complex datatype not yet supported.\n');
-case  64,
+case  32
+    ft_error('...complex datatype not yet supported.\n');
+case  64
     avw.hdr.dime.bitpix = int16(64); precision = 'double';
-case 128,
-    error('...RGB datatype not yet supported.\n');
+case 128
+    ft_error('...RGB datatype not yet supported.\n');
 otherwise
-    warning('...unknown datatype, using type 16 (32 bit floats).\n');
+    ft_warning('...unknown datatype, using type 16 (32 bit floats).\n');
     avw.hdr.dime.datatype = int16(16);
     avw.hdr.dime.bitpix = int16(32); precision = 'single';
 end
@@ -321,7 +318,7 @@ if isempty(avw.hdr.hist.orient),
             '   in axial unflipped orientation in memory.  This is\n',...
             '   created by the avw_img_read function, which converts\n',...
             '   any input file image to axial unflipped in memory.\n'];
-    warning(msg)
+    ft_warning(msg)
 end
 
 if isempty(IMGorient),
@@ -339,190 +336,190 @@ if ~isfinite(IMGorient),
 end
 
 switch IMGorient,
-    
+
 case 0, % transverse/axial unflipped
-    
+
     % For the 'transverse unflipped' type, the voxels are stored with
     % Pixels in 'x' axis (varies fastest) - from patient right to left
     % Rows in   'y' axis                  - from patient posterior to anterior
     % Slices in 'z' axis                  - from patient inferior to superior
-    
+
     if verbose, fprintf('...writing axial unflipped\n'); end
-    
+
     avw.hdr.hist.orient = uint8(0);
-    
+
     SliceDim = double(avw.hdr.dime.dim(4)); % z
     RowDim   = double(avw.hdr.dime.dim(3)); % y
     PixelDim = double(avw.hdr.dime.dim(2)); % x
     SliceSz  = double(avw.hdr.dime.pixdim(4));
     RowSz    = double(avw.hdr.dime.pixdim(3));
     PixelSz  = double(avw.hdr.dime.pixdim(2));
-    
+
     x = 1:PixelDim;
     for z = 1:SliceDim,
         for y = 1:RowDim,
             fwrite(fid,avw.img(x,y,z),precision);
         end
     end
-    
+
 case 1, % coronal unflipped
-    
+
     % For the 'coronal unflipped' type, the voxels are stored with
     % Pixels in 'x' axis (varies fastest) - from patient right to left
     % Rows in   'z' axis                  - from patient inferior to superior
     % Slices in 'y' axis                  - from patient posterior to anterior
-    
+
     if verbose, fprintf('...writing coronal unflipped\n'); end
-    
+
     avw.hdr.hist.orient = uint8(1);
-    
+
     SliceDim = double(avw.hdr.dime.dim(3)); % y
     RowDim   = double(avw.hdr.dime.dim(4)); % z
     PixelDim = double(avw.hdr.dime.dim(2)); % x
     SliceSz  = double(avw.hdr.dime.pixdim(3));
     RowSz    = double(avw.hdr.dime.pixdim(4));
     PixelSz  = double(avw.hdr.dime.pixdim(2));
-    
+
     x = 1:PixelDim;
     for y = 1:SliceDim,
         for z = 1:RowDim,
             fwrite(fid,avw.img(x,y,z),precision);
         end
     end
-    
+
 case 2, % sagittal unflipped
-    
+
     % For the 'sagittal unflipped' type, the voxels are stored with
     % Pixels in 'y' axis (varies fastest) - from patient posterior to anterior
     % Rows in   'z' axis                  - from patient inferior to superior
     % Slices in 'x' axis                  - from patient right to left
-    
+
     if verbose, fprintf('...writing sagittal unflipped\n'); end
-    
+
     avw.hdr.hist.orient = uint8(2);
-    
+
     SliceDim = double(avw.hdr.dime.dim(2)); % x
     RowDim   = double(avw.hdr.dime.dim(4)); % z
     PixelDim = double(avw.hdr.dime.dim(3)); % y
     SliceSz  = double(avw.hdr.dime.pixdim(2));
     RowSz    = double(avw.hdr.dime.pixdim(4));
     PixelSz  = double(avw.hdr.dime.pixdim(3));
-    
+
     y = 1:PixelDim;
     for x = 1:SliceDim,
         for z = 1:RowDim,
             fwrite(fid,avw.img(x,y,z),precision);
         end
     end
-    
+
 case 3, % transverse/axial flipped
-    
+
     % For the 'transverse flipped' type, the voxels are stored with
     % Pixels in 'x' axis (varies fastest) - from patient right to left
     % Rows in   'y' axis                  - from patient anterior to posterior*
     % Slices in 'z' axis                  - from patient inferior to superior
-    
+
     if verbose,
         fprintf('...writing axial flipped (+Y from Anterior to Posterior)\n');
     end
-    
+
     avw.hdr.hist.orient = uint8(3);
-    
+
     SliceDim = double(avw.hdr.dime.dim(4)); % z
     RowDim   = double(avw.hdr.dime.dim(3)); % y
     PixelDim = double(avw.hdr.dime.dim(2)); % x
     SliceSz  = double(avw.hdr.dime.pixdim(4));
     RowSz    = double(avw.hdr.dime.pixdim(3));
     PixelSz  = double(avw.hdr.dime.pixdim(2));
-    
+
     x = 1:PixelDim;
     for z = 1:SliceDim,
         for y = RowDim:-1:1, % flipped in Y
             fwrite(fid,avw.img(x,y,z),precision);
         end
     end
-    
+
 case 4, % coronal flipped
-    
+
     % For the 'coronal flipped' type, the voxels are stored with
     % Pixels in 'x' axis (varies fastest) - from patient right to left
     % Rows in   'z' axis                  - from patient inferior to superior
     % Slices in 'y' axis                  - from patient anterior to posterior
-    
+
     if verbose,
         fprintf('...writing coronal flipped (+Z from Superior to Inferior)\n');
     end
-    
+
     avw.hdr.hist.orient = uint8(4);
-    
+
     SliceDim = double(avw.hdr.dime.dim(3)); % y
     RowDim   = double(avw.hdr.dime.dim(4)); % z
     PixelDim = double(avw.hdr.dime.dim(2)); % x
     SliceSz  = double(avw.hdr.dime.pixdim(3));
     RowSz    = double(avw.hdr.dime.pixdim(4));
     PixelSz  = double(avw.hdr.dime.pixdim(2));
-    
+
     x = 1:PixelDim;
     for y = 1:SliceDim,
         for z = RowDim:-1:1,
             fwrite(fid,avw.img(x,y,z),precision);
         end
     end
-    
+
 case 5, % sagittal flipped
-    
+
     % For the 'sagittal flipped' type, the voxels are stored with
     % Pixels in 'y' axis (varies fastest) - from patient posterior to anterior
     % Rows in   'z' axis                  - from patient superior to inferior
     % Slices in 'x' axis                  - from patient right to left
-    
+
     if verbose,
         fprintf('...writing sagittal flipped (+Z from Superior to Inferior)\n');
     end
-    
+
     avw.hdr.hist.orient = uint8(5);
-    
+
     SliceDim = double(avw.hdr.dime.dim(2)); % x
     RowDim   = double(avw.hdr.dime.dim(4)); % z
     PixelDim = double(avw.hdr.dime.dim(3)); % y
     SliceSz  = double(avw.hdr.dime.pixdim(2));
     RowSz    = double(avw.hdr.dime.pixdim(4));
     PixelSz  = double(avw.hdr.dime.pixdim(3));
-    
+
     y = 1:PixelDim;
     for x = 1:SliceDim,
         for z = RowDim:-1:1, % superior to inferior
             fwrite(fid,avw.img(x,y,z),precision);
         end
     end
-    
+
 otherwise, % transverse/axial unflipped
-    
+
     % For the 'transverse unflipped' type, the voxels are stored with
     % Pixels in 'x' axis (varies fastest) - from patient right to left
     % Rows in   'y' axis                  - from patient posterior to anterior
     % Slices in 'z' axis                  - from patient inferior to superior
-    
+
     if verbose,
         fprintf('...unknown orientation specified, assuming default axial unflipped\n');
     end
-    
+
     avw.hdr.hist.orient = uint8(0);
-    
+
     SliceDim = double(avw.hdr.dime.dim(4)); % z
     RowDim   = double(avw.hdr.dime.dim(3)); % y
     PixelDim = double(avw.hdr.dime.dim(2)); % x
     SliceSz  = double(avw.hdr.dime.pixdim(4));
     RowSz    = double(avw.hdr.dime.pixdim(3));
     PixelSz  = double(avw.hdr.dime.pixdim(2));
-    
+
     x = 1:PixelDim;
     for z = 1:SliceDim,
         for y = 1:RowDim,
             fwrite(fid,avw.img(x,y,z),precision);
         end
     end
-    
+
 end
 
 fclose(fid);
@@ -542,27 +539,27 @@ return
 %----------------------------------------------------------------------------
 
 function write_header(fid,avw,verbose)
-    
+
     header_key(fid,avw.hdr.hk);
     image_dimension(fid,avw.hdr.dime);
     data_history(fid,avw.hdr.hist);
-    
+
     % check the file size is 348 bytes
     fbytes = ftell(fid);
     fclose(fid);
     if ~isequal(fbytes,348),
         msg = sprintf('...file size is not 348 bytes!\n');
-        warning(msg);
+        ft_warning(msg);
     end
-    
+
 return
 
 %----------------------------------------------------------------------------
 
 function header_key(fid,hk)
-    
+
 	% Original header structures - ANALYZE 7.5
-	% struct header_key                      /* header key      */ 
+	% struct header_key                      /* header key      */
 	%       {                                /* off + size      */
 	%       int sizeof_hdr                   /*  0 +  4         */
 	%       char data_type[10];              /*  4 + 10         */
@@ -572,40 +569,40 @@ function header_key(fid,hk)
 	%       char regular;                    /* 38 +  1         */
 	%       char hkey_un0;                   /* 39 +  1         */
 	%       };                               /* total=40 bytes  */
-    
+
     fseek(fid,0,'bof');
-    
+
     fwrite(fid, hk.sizeof_hdr(1),   'int32');  % must be 348!
-    
+
     data_type = sprintf('%-10s',hk.data_type); % ensure it is 10 chars
     fwrite(fid, hk.data_type(1:10), 'uchar');
-    
+
     db_name   = sprintf('%-18s',hk.db_name);   % ensure it is 18 chars
     fwrite(fid, db_name(1:18),      'uchar');
-    
+
     fwrite(fid, hk.extents(1),      'int32');
     fwrite(fid, hk.session_error(1),'int16');
-    
+
     regular   = sprintf('%1s',hk.regular);     % ensure it is 1 char
     fwrite(fid, regular(1),         'uchar');  % might be uint8
-    
+
     %hkey_un0  = sprintf('%1s',hk.hkey_un0);    % ensure it is 1 char
     %fwrite(fid, hkey_un0(1),        'uchar');
     fwrite(fid, hk.hkey_un0(1),     'uint8');
-    
+
     %    >Would you set hkey_un0 as char or uint8?
     %   Really doesn't make any difference.  As far as anyone here can remember,
     %   this was just to pad to an even byte boundary for that structure.  I guess
     %   I'd suggest setting it to a uint8 value of 0 (i.e, truly zero-valued) so
     %   that it doesn't look like anything important!
     %   Denny <hanson.dennis2@mayo.edu>
-    
+
 return
 
 %----------------------------------------------------------------------------
 
 function image_dimension(fid,dime)
-    
+
 	%struct image_dimension
 	%       {                                /* off + size      */
 	%       short int dim[8];                /* 0 + 16          */
@@ -634,7 +631,7 @@ function image_dimension(fid,dime)
 	%       int glmax;                       /* 100 + 4         */
 	%       int glmin;                       /* 104 + 4         */
 	%       };                               /* total=108 bytes */
-    
+
 	fwrite(fid, dime.dim(1:8),      'int16');
 	fwrite(fid, dime.vox_units(1:4),'uchar');
 	fwrite(fid, dime.cal_units(1:8),'uchar');
@@ -644,11 +641,11 @@ function image_dimension(fid,dime)
 	fwrite(fid, dime.dim_un0(1),    'int16');
 	fwrite(fid, dime.pixdim(1:8),   'float32');
 	fwrite(fid, dime.vox_offset(1), 'float32');
-    
+
     % Ensure compatibility with SPM (according to MRIcro)
     if dime.roi_scale == 0, dime.roi_scale = 0.00392157; end
 	fwrite(fid, dime.roi_scale(1),  'float32');
-    
+
 	fwrite(fid, dime.funused1(1),   'float32');
 	fwrite(fid, dime.funused2(1),   'float32');
 	fwrite(fid, dime.cal_max(1),    'float32');
@@ -657,15 +654,15 @@ function image_dimension(fid,dime)
 	fwrite(fid, dime.verified(1),   'int32');
 	fwrite(fid, dime.glmax(1),      'int32');
 	fwrite(fid, dime.glmin(1),      'int32');
-	
+
 return
 
 %----------------------------------------------------------------------------
 
 function data_history(fid,hist)
-    
+
 	% Original header structures - ANALYZE 7.5
-	%struct data_history       
+	%struct data_history
 	%       {                                /* off + size      */
 	%       char descrip[80];                /* 0 + 80          */
 	%       char aux_file[24];               /* 80 + 24         */
@@ -686,7 +683,7 @@ function data_history(fid,hist)
 	%       int smax;                        /* 192 + 4         */
 	%       int smin;                        /* 196 + 4         */
 	%       };                               /* total=200 bytes */
-	
+
     descrip     = sprintf('%-80s', hist.descrip);       % 80 chars
     aux_file    = sprintf('%-24s', hist.aux_file);      % 24 chars
     originator  = sprintf('%-10s', hist.originator);    % 10 chars
@@ -696,14 +693,14 @@ function data_history(fid,hist)
     exp_date    = sprintf('%-10s', hist.exp_date);      % 10 chars
     exp_time    = sprintf('%-10s', hist.exp_time);      % 10 chars
     hist_un0    = sprintf( '%-3s', hist.hist_un0);      %  3 chars
-    
+
     % ---
     % The following should not be necessary, but I actually
     % found one instance where it was, so this totally anal
     % retentive approach became necessary, despite the
     % apparently elegant solution above to ensuring that variables
     % are the right length.
-    
+
     if length(descrip) < 80,
       paddingN = 80-length(descrip);
       padding = char(repmat(double(' '),1,paddingN));
@@ -749,10 +746,10 @@ function data_history(fid,hist)
       padding = char(repmat(double(' '),1,paddingN));
       hist_un0 = [hist_un0, padding];
     end
-    
+
     % -- if you thought that was anal, try this;
     % -- lets check for unusual ASCII char values!
-    
+
     if find(double(descrip)>128),
       indexStrangeChar = find(double(descrip)>128);
       descrip(indexStrangeChar) = ' ';
@@ -789,18 +786,18 @@ function data_history(fid,hist)
       indexStrangeChar = find(double(hist_un0)>128);
       hist_un0(indexStrangeChar) = ' ';
     end
-    
-    
+
+
     % --- finally, we write the fields
-    
+
     fwrite(fid, descrip(1:80),    'uchar');
     fwrite(fid, aux_file(1:24),   'uchar');
-    
-    
+
+
     %orient      = sprintf(  '%1s', hist.orient);        %  1 char
     %fwrite(fid, orient(1),        'uchar');
     fwrite(fid, hist.orient(1),   'uint8');     % see note below on char
-    
+
     fwrite(fid, originator(1:10), 'uchar');
     fwrite(fid, generated(1:10),  'uchar');
     fwrite(fid, scannum(1:10),    'uchar');
@@ -808,7 +805,7 @@ function data_history(fid,hist)
     fwrite(fid, exp_date(1:10),   'uchar');
     fwrite(fid, exp_time(1:10),   'uchar');
     fwrite(fid, hist_un0(1:3),    'uchar');
-    
+
     fwrite(fid, hist.views(1),      'int32');
     fwrite(fid, hist.vols_added(1), 'int32');
     fwrite(fid, hist.start_field(1),'int32');
@@ -817,7 +814,7 @@ function data_history(fid,hist)
     fwrite(fid, hist.omin(1),       'int32');
     fwrite(fid, hist.smax(1),       'int32');
     fwrite(fid, hist.smin(1),       'int32');
-    
+
 return
 
 

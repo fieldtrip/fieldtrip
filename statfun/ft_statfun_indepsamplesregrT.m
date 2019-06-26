@@ -1,9 +1,8 @@
 function [s, cfg] = ft_statfun_indepsamplesregrT(cfg, dat, design)
 
-% FT_STATFUN_INDEPSAMPLESREGRT calculates independent samples regression
-% coefficient T-statistics on the biological data in dat (the dependent
-% variable), using the information on the independent variable
-% (predictor) in design.
+% FT_STATFUN_INDEPSAMPLESREGRT calculates independent samples regression coefficient
+% T-statistics on the biological data in dat (the dependent variable), using the
+% information on the independent variable (predictor) in design.
 %
 % Use this function by calling one of the high-level statistics functions as
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
@@ -11,13 +10,6 @@ function [s, cfg] = ft_statfun_indepsamplesregrT(cfg, dat, design)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
 % with the following configuration option
 %   cfg.statistic = 'ft_statfun_indepsamplesregrT'
-% see FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
-%
-% For low-level use, the external interface of this function has to be
-%   [s,cfg] = ft_statfun_indepsamplesregrT(cfg, dat, design);
-% where
-%   dat    contains the biological data,  Nsamples x Nreplications
-%   design contains the independent variable,  Nvar X Nreplications
 %
 % Configuration options
 %   cfg.computestat    = 'yes' or 'no', calculate the statistic (default='yes')
@@ -36,6 +28,8 @@ function [s, cfg] = ft_statfun_indepsamplesregrT(cfg, dat, design)
 %
 % Design specification
 %   cfg.ivar  = row number of the design that contains the independent variable (default=1)
+%
+% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
 
 % Copyright (C) 2006, Eric Maris
 %
@@ -58,18 +52,18 @@ function [s, cfg] = ft_statfun_indepsamplesregrT(cfg, dat, design)
 % $Id$
 
 % set defaults
-if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end;
-if ~isfield(cfg, 'computecritval'),    cfg.computecritval='no';   end;
-if ~isfield(cfg, 'computeprob'),       cfg.computeprob='no';      end;
-if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end;
-if ~isfield(cfg, 'tail'),              cfg.tail=1;                end;
+if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end
+if ~isfield(cfg, 'computecritval'),    cfg.computecritval='no';   end
+if ~isfield(cfg, 'computeprob'),       cfg.computeprob='no';      end
+if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end
+if ~isfield(cfg, 'tail'),              cfg.tail=1;                end
 
 % perform some checks on the configuration
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
-    error('P-values can only be calculated if the test statistics are calculated.');
-end;
+    ft_error('P-values can only be calculated if the test statistics are calculated.');
+end
 if isfield(cfg,'uvar') && ~isempty(cfg.uvar)
-    error('cfg.uvar should not exist for an independent samples statistic');
+    ft_error('cfg.uvar should not exist for an independent samples statistic');
 end
 
 if ~isempty(cfg.cvar)
@@ -77,13 +71,13 @@ if ~isempty(cfg.cvar)
   nblocks=length(condlabels);
 else
   nblocks=1;
-end;
+end
 
 [nsmpl,nrepl] = size(dat);
 df = nrepl - nblocks - 1;
 if df<1
-  error('Insufficient error degrees of freedom for this analysis.')
-end;
+  ft_error('Insufficient error degrees of freedom for this analysis.')
+end
 
 if strcmp(cfg.computestat, 'yes')
   % compute the statistic
@@ -95,9 +89,9 @@ if strcmp(cfg.computestat, 'yes')
       for blockindx=1:nblocks
         selvec=find(design(cfg.cvar,:)==condlabels(blockindx));
         designmat(selvec,blockindx)=1; 
-      end;
+      end
       designmat(:,(nblocks+1))=indvar'; % designmat is a matrix of order Nrepl x (nblocks+1)
-    end;
+    end
     cpmat = designmat'*designmat;
     invcpmat = inv(cpmat);
     projmat = invcpmat*designmat';
@@ -106,12 +100,12 @@ if strcmp(cfg.computestat, 'yes')
     resvar = zeros(nsmpl,1);
     for indx=1:nsmpl
       resvar(indx)=res(indx,:)*res(indx,:)';
-    end;
+    end
     resvar=resvar/df;
     
     se=sqrt(invcpmat(nblocks+1,nblocks+1)*resvar);
     s.stat=B(:,nblocks+1)./se;
-end;
+end
 
 if strcmp(cfg.computecritval,'yes')
   % also compute the critical values
@@ -122,7 +116,7 @@ if strcmp(cfg.computecritval,'yes')
     s.critval = [tinv(cfg.alpha/2,df),tinv(1-cfg.alpha/2,df)];
   elseif cfg.tail==1
     s.critval = tinv(1-cfg.alpha,df);
-  end;
+  end
 end
 
 if strcmp(cfg.computeprob,'yes')
@@ -134,6 +128,6 @@ if strcmp(cfg.computeprob,'yes')
     s.prob = 2*tcdf(-abs(s.stat),s.df);
   elseif cfg.tail==1
     s.prob = 1-tcdf(s.stat,s.df);
-  end;
+  end
 end
 

@@ -8,7 +8,7 @@ function sev = read_tdt_sev(filename, dtype, begsample, endsample)
 % Note: sev files contain raw broadband data that is streamed to the RS4
 
 
-fid = fopen(filename, 'rb', 'ieee-le');
+fid = fopen_or_error(filename, 'rb', 'ieee-le');
 
 if nargin<3
   begsample = 1;
@@ -35,9 +35,9 @@ switch dtype
     fmt   = 'double';
     wsize = 8;
   case 5
-    error('don''t know what a DFORM_QWORD is');
+    ft_error('don''t know what a DFORM_QWORD is');
   otherwise
-    error('unknown dtype');
+    ft_error('unknown dtype');
 end
 
 fseek(fid, begsample*wsize, 'cof');

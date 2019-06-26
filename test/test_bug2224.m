@@ -3,8 +3,7 @@ function test_bug2224
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2224
-% TEST ft_selectdata ft_selectdata_new ft_postamble ft_postamble_previous ft_postamble_history
+% DEPENDENCY ft_selectdata ft_selectdata_new ft_postamble ft_postamble_previous ft_postamble_history
 
 freq1 = [];
 freq1.dimord = 'chan_freq';
@@ -22,7 +21,7 @@ freq2.powspctrm = randn(3,10);
 freq2.powspctrm(1) = 2;
 freq2.cfg.v = 2;
 
-[f1, f2] = ft_selectdata([], freq1, freq2)
+[f1, f2] = ft_selectdata([], freq1, freq2);
 
 assert(isfield(f1.cfg, 'previous'), 'one failed');
 assert(isfield(f2.cfg, 'previous'), 'two failed');

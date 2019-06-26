@@ -36,6 +36,6 @@ elseif all(siz(1:2)==3),
 elseif numel(siz)==2,
   d = det(x);
 else
-  error('not implemented');
+  ft_error('not implemented');
   % write for loop for the higher dimensions, using normal inv
 end

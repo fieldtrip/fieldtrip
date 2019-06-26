@@ -37,5 +37,5 @@ function headmodel = ft_headmodel_asa(filename)
 
 % read the headmodel from file
 % this works for ASA version 2.x, perhaps also for ASA 3.x 
-headmodel = ft_read_vol(filename);
+headmodel = ft_read_headmodel(filename);
 

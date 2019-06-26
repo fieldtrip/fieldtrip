@@ -2,13 +2,14 @@
  * Copyright (C) 2010, Stefan Klanke
  * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
+ *
  */
-#ifndef __socketserver_h
-#define __socketserver_h
 
+#ifndef __SOCKETSERVER_H
+#define __SOCKETSERVER_H
 
-#include "buffer.h"
 #include <pthread.h>
+#include "buffer.h"
 
 #define MERGE_THRESHOLD 4096    /* TODO: optimize this value? Maybe look at MTU size */
 
@@ -80,4 +81,4 @@ void ft_stop_buffer_server(ft_buffer_server_t *S);
 }
 #endif
 
-#endif
+#endif /* __SOCKETSERVER_H */

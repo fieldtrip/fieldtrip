@@ -3,8 +3,7 @@ function test_bug3184
 % WALLTIME 00:10:00
 % MEM 300mb
 
-% TEST test_bug3184
-% TEST getdimord ft_datatype_source ft_selectdata
+% DEPENDENCY getdimord ft_datatype_source ft_selectdata
 
 % it seems it already goes wrong at an earlier stage, since the data lacks
 % a csdlabel field. This seems the consequence of an intermediate call to
@@ -17,7 +16,7 @@ assert(isfield(source.avg, 'csdlabel'));
 cfg = [];
 cfg.trials = 1:5;
 source2 = ft_selectdata(cfg, source);
-assert(isfield(source2.avg, 'csdlabel'));
+assert(isfield(source2, 'avg') && isfield(source2.avg, 'csdlabel') || isfield(source2, 'csdlabel'));
 
 source3 = ft_datatype_source(source);
 assert(isequal(getdimord(source3, 'mom'),'{pos}_ori_rpt'));
@@ -38,7 +37,7 @@ assert(isfield(source.avg, 'csdlabel'));
 cfg = [];
 cfg.trials = 1:5;
 source2 = ft_selectdata(cfg, source);
-assert(isfield(source2.avg, 'csdlabel'));
+assert(isfield(source2, 'avg') && isfield(source2.avg, 'csdlabel') || isfield(source2, 'csdlabel'));
 
 source3 = ft_datatype_source(source);
 assert(isequal(getdimord(source3, 'mom'),'{pos}_ori_rpt'));

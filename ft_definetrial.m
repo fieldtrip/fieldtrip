@@ -12,8 +12,14 @@ function [cfg] = ft_definetrial(cfg)
 % where the configuration structure should contain
 %   cfg.trialdef   = structure with details of trial definition, see below
 %   cfg.trialfun   = string with function name, see below (default = 'ft_trialfun_general')
-% and also
-%   cfg.dataset    = pathname to dataset from which to read the events
+% and furthermore
+%   cfg.dataset     = string with the filename
+% or
+%   cfg.headerfile  = string with the filename
+%   cfg.datafile    = string with the filename
+% and optionally
+%   cfg.headerformat
+%   cfg.dataformat
 %
 % A call to FT_DEFINETRIAL results in the trial definition "trl" being
 % added to the output configuration structure. The trials are defined
@@ -34,7 +40,7 @@ function [cfg] = ft_definetrial(cfg)
 % a negative offset indicates that the trial begins before the trigger.
 %
 % The trial definition "trl" can contain additional columns besides the
-% required three that represend begin, end and offset. These additional
+% required three that represent begin, end and offset. These additional
 % columns can be used by a custom trialfun to provide numeric information
 % about each trial such as trigger codes, response latencies, trial
 % type and response correctness. The additional columns of the "trl"
@@ -58,7 +64,7 @@ function [cfg] = ft_definetrial(cfg)
 % If you specify cfg.trialdef.eventtype  = '?' a list with the events in your
 % data file will be displayed on screen.
 %
-% If you want to read all data from a continous file in a single or in
+% If you want to read all data from a continuous file in a single or in
 % multiple segments, TRIALFUN_GENERAL understands the following options
 %    cfg.trialdef.triallength = duration in seconds (can also be 1 or Inf)
 %    cfg.trialdef.ntrials     = number of trials (can also be 1 or Inf)
@@ -120,6 +126,7 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
+ft_preamble loadvar
 ft_preamble provenance
 
 % the ft_abort variable is set to true or false in ft_preamble_init
@@ -132,19 +139,19 @@ cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
 
 if ~isfield(cfg, 'trl') && (~isfield(cfg, 'trialfun') || isempty(cfg.trialfun))
   % there used to be other system specific trialfuns in previous versions
-  % of fieldtrip, but they are deprecated and not included in recent
+  % of FieldTrip, but they are deprecated and not included in recent
   % versions any more
   cfg.trialfun = 'ft_trialfun_general';
-  warning('no trialfun was specified, using ft_trialfun_general');
+  ft_warning('no trialfun was specified, using ft_trialfun_general');
 end
 
 % create the trial definition for this dataset and condition
 if isfield(cfg, 'trl')
   % the trial definition is already part of the configuration
-  fprintf('retaining existing trial definition\n');
+  ft_info('retaining existing trial definition\n');
   trl = cfg.trl;
   if isfield(cfg, 'event')
-    fprintf('retaining existing event information\n');
+    ft_info('retaining existing event information\n');
     event = cfg.event;
   else
     event = [];
@@ -156,9 +163,9 @@ elseif isfield(cfg, 'trialfun')
   cfg.trialfun = ft_getuserfun(cfg.trialfun, 'trialfun');
 
   if isempty(cfg.trialfun)
-    error('the specified trialfun ''%s'' was not found', trialfunSpecified);
+    ft_error('the specified trialfun ''%s'' was not found', trialfunSpecified);
   else
-    fprintf('evaluating trialfunction ''%s''\n', func2str(cfg.trialfun));
+    ft_info('evaluating trialfunction ''%s''\n', func2str(cfg.trialfun));
   end
 
   % determine the number of outpout arguments of the user-supplied trial function
@@ -178,21 +185,22 @@ elseif isfield(cfg, 'trialfun')
     [trl, event] = feval(cfg.trialfun, cfg);
   end
 else
-  error('no trialfunction specified, see FT_DEFINETRIAL for help');
+  ft_error('no trialfunction specified, see FT_DEFINETRIAL for help');
 end
 
 if isfield(cfg, 'trialdef') && isfield(cfg.trialdef, 'eventtype') && isequal(cfg.trialdef.eventtype, '?')
   % give a gentle message instead of an error
-  fprintf('no trials have been defined yet, see FT_DEFINETRIAL for further help\n');
+  ft_info('no trials have been defined yet, see FT_DEFINETRIAL for further help\n');
 elseif size(trl,1)<1
-  error('no trials were defined, see FT_DEFINETRIAL for help');
+  ft_error('no trials were defined, see FT_DEFINETRIAL for help');
 end
 
 % add the new trials and events to the output configuration
-fprintf('found %d events\n', length(event));
+ft_info('found %d events\n', length(event));
 cfg.event = event;
-fprintf('created %d trials\n', size(trl,1));
+ft_info('created %d trials\n', size(trl,1));
 cfg.trl = trl;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
+ft_postamble savevar

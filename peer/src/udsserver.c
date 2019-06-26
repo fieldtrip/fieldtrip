@@ -183,7 +183,7 @@ void *udsserver(void *arg) {
 				else {
 						DEBUG(LOG_DEBUG, "udsserver: opened connection to client on socket %d", c);
 
-						/* deal with the incoming connection on the UDS socket in a seperate thread */
+						/* deal with the incoming connection on the UDS socket in a separate thread */
 						/* rc = pthread_create(&tid, &attr, udssocket, (void *)c); */
 						rc = pthread_create(&tid, NULL, tcpsocket, (void *)c);
 

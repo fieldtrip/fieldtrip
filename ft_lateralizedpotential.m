@@ -8,7 +8,7 @@ function [lrp] = ft_lateralizedpotential(cfg, avgL, avgR)
 %
 % where the input datasets should come from FT_TIMELOCKANALYSIS
 % and the configuration should contain
-%   cfg.channelcmb = Nx2 cell array
+%   cfg.channelcmb = Nx2 cell-array
 %
 % An example channelcombination containing the homologous channels
 % in the 10-20 standard system is
@@ -91,7 +91,7 @@ avgL = ft_checkdata(avgL, 'datatype', 'timelock');
 avgR = ft_checkdata(avgR, 'datatype', 'timelock');
 
 % set the defaults
-if ~isfield(cfg, 'channelcmb'),
+if ~isfield(cfg, 'channelcmb')
   cfg.channelcmb = {
     'Fp1'   'Fp2'
     'F7'    'F8'
@@ -105,7 +105,7 @@ if ~isfield(cfg, 'channelcmb'),
 end
 
 if ~isequal(avgL.time, avgR.time)
-  error('the time axes are not the same');
+  ft_error('the time axes are not the same');
 end
 
 % start with an empty output structure
@@ -117,12 +117,12 @@ lrp.time      = avgL.time;
 % add timelock signature
 if isfield(avgL, 'dimord') && isfield(avgR, 'dimord')
     if ~strcmp(avgL.dimord, avgR.dimord)
-        error('The input data are of different dimord types');
+        ft_error('The input data are of different dimord types');
     else
         lrp.dimord = avgL.dimord;
     end
 else
-    error('''dimord'' not found. The function expects timelock data');
+    ft_error('''dimord'' not found. The function expects timelock data');
 end
 
 % compute the lateralized potentials

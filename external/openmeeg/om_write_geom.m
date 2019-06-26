@@ -8,6 +8,8 @@ function om_write_geom(geomfile,bndfile,names)
 %   Authors: Alexandre Gramfort alexandre.gramfort@inria.fr
 %            Paul Czienskowski
 
+% Copyright (C) 2010-2017, OpenMEEG developers
+
 numbnd = length(bndfile);
 
 if nargin < 3
@@ -33,24 +35,22 @@ fprintf(gfid,'Interfaces %d Mesh      \n', numbnd);
 fprintf(gfid,'                        \n');
 
 for i=1:numbnd
-    ind = mod(i,numbnd)+1;
-    fprintf(gfid,'%s                  \n', bndfile{ind});
+    fprintf(gfid,'%s                  \n', bndfile{i});
 end
 
 fprintf(gfid,'                        \n');
 fprintf(gfid,'Domains %d              \n', numbnd+1);
 fprintf(gfid,'                        \n');
 
+fprintf(gfid,'Domain air %d           \n', 1);
 for i=1:numbnd
-    ind = mod(i-2,numbnd) + 1;
     if i < numbnd
-        fprintf(gfid,'Domain %s %d -%d\n', names{i}, i, ind);
+        fprintf(gfid,'Domain %s %d %d\n', names{i}, i+1, -i);
     else
-        fprintf(gfid,'Domain %s -%d   \n', names{i}, ind);
+        fprintf(gfid,'Domain %s %d   \n', names{i}, -i);
     end
 end
 
-fprintf(gfid,'Domain Air %d           \n', numbnd);
 fclose(gfid);
 
 end %  function

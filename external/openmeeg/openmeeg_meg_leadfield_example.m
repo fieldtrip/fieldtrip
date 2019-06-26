@@ -27,9 +27,9 @@ c = [1 1/80 1];
 % c = [1];
 
 %% Description of the spherical mesh
-[pos, tri] = icosahedron42;
-% [pos, tri] = icosahedron162;
-% [pos, tri] = icosahedron642;
+[pos, tri] = mesh_sphere(42);
+% [pos, tri] = mesh_sphere(162);
+% [pos, tri] = mesh_sphere(642);
 
 %% Create a set of magnetometers outside the outer surface
 sens.pos = max(r) * pos * 1.2;
@@ -63,7 +63,7 @@ vol1.cond = c(1);
 cfg.method = 'openmeeg';
 vol = ft_prepare_bemmodel(cfg, vol);
 
-cfg.vol = vol;
+cfg.headmodel = vol;
 cfg.grid.pos = pos;
 cfg.grad = sens;
 cfg.reducerank = 'no';
@@ -77,7 +77,7 @@ cfg.grid.pos = pos;
 cfg.grad = sens;
 vol1.type = 'singleshell';
 [vol1,sens] = ft_prepare_vol_sens(vol1, sens);
-cfg.vol = vol1;
+cfg.headmodel = vol1;
 cfg.reducerank = 'no';
 grid = ft_prepare_leadfield(cfg);
 lf_singleshell = grid.leadfield{1};

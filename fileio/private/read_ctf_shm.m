@@ -1,4 +1,4 @@
-function [varargout] = funname(varargin)
+function [varargout] = read_ctf_shm(varargin)
 
 % READ_CTF_SHM reads metainformation or selected blocks of data from
 % shared memory. This function can be used for real-time processing of
@@ -42,7 +42,7 @@ mexsrc  = [funname '.c'];
 
 try
   % try to compile the mex file on the fly
-  warning('trying to compile MEX file from %s', mexsrc);
+  ft_warning('trying to compile MEX file from %s', mexsrc);
   cd(mexdir);
   mex(mexsrc);
   cd(pwdir);
@@ -51,13 +51,13 @@ try
 catch
   % compilation failed
   disp(lasterr);
-  error('could not locate MEX file for %s', mexname);
+  ft_error('could not locate MEX file for %s', mexname);
   cd(pwdir);
   success = false;
 end
 
 if success
-  % execute the mex file that was juist created
+  % execute the mex file that was just created
   funname   = mfilename;
   funhandle = str2func(funname);
   [varargout{1:nargout}] = funhandle(varargin{:});

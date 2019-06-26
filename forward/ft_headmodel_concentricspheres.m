@@ -18,14 +18,14 @@ function headmodel = ft_headmodel_concentricspheres(mesh, varargin)
 % Use as
 %   headmodel = ft_headmodel_concentricspheres(mesh, ...)
 %
-% Optional input arguments should be specified in key-value pairs and can
-% include
+% Optional input arguments should be specified in key-value pairs and can include
 %   conductivity = vector with the conductivity of each compartment
 %   fitind       = vector with indices of the surfaces to use in fitting the center of the spheres
+%   order        = number of iterations in series expansion (default = 60)
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
-% Copyright (C) 2012-2013, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
+% Copyright (C) 2012-2018, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -48,17 +48,18 @@ function headmodel = ft_headmodel_concentricspheres(mesh, varargin)
 % get the optional input arguments
 conductivity = ft_getopt(varargin, 'conductivity'); % default is determined below
 fitind       = ft_getopt(varargin, 'fitind', 'all');
+order        = ft_getopt(varargin, 'order', 60);
 
 if any(strcmp(varargin(1:2:end), 'unit')) || any(strcmp(varargin(1:2:end), 'units'))
   % the geometrical units should be specified in the input mesh
-  error('the ''unit'' option is not supported any more');
+  ft_error('the ''unit'' option is not supported any more');
 end
 
 if isnumeric(mesh) && size(mesh,2)==3
   % assume that it is a Nx3 array with vertices
   % convert it to a structure, this is needed to determine the units further down
   mesh = struct('pos', mesh);
-elseif isstruct(mesh) && isfield(mesh,'bnd')
+elseif isstruct(mesh) && isfield(mesh, 'bnd')
   % take the triangulated surfaces from the input structure
   mesh = mesh.bnd;
 end
@@ -67,14 +68,14 @@ end
 mesh = fixpos(mesh);
 
 if ~isstruct(mesh) || ~isfield(mesh, 'pos')
-  error('the input mesh should be a set of points or a single triangulated surface')
+  ft_error('the input mesh should be a set of points or a single triangulated surface')
 end
 
 % start with an empty volume conductor
 headmodel = [];
 
 % ensure that the mesh has units, estimate them if needed
-mesh = ft_convert_units(mesh);
+mesh = ft_determine_units(mesh);
 
 % copy the geometrical units into the volume conductor
 headmodel.unit = mesh(1).unit;
@@ -120,7 +121,7 @@ if isempty(headmodel.cond)
   elseif length(headmodel.r)==4
     headmodel.cond = [0.3300 1 0.0042 0.3300]; % brain, csf, skull, skin
   else
-    error('conductivity values should be specified for each tissue type');
+    ft_error('conductivity values should be specified for each tissue type');
   end
 else
   % the conductivity as specified by the user should be in the same order as the geometries
@@ -129,5 +130,26 @@ else
 end
 
 for i=1:numel(mesh)
-  fprintf('concentric sphere %d: radius = %.1f, conductivity = %f\n', i, headmodel.r(i), headmodel.cond(i));
+  fprintf('concentric sphere %d: radius = %f, conductivity = %f\n', i, headmodel.r(i), headmodel.cond(i));
 end
+
+% replicate the spheres if there are fewer than four
+switch numel(mesh)
+  case 1
+    headmodel.r    = [headmodel.r(1)    headmodel.r(1)    headmodel.r(1)    headmodel.r(1)];
+    headmodel.cond = [headmodel.cond(1) headmodel.cond(1) headmodel.cond(1) headmodel.cond(1)];
+  case 2
+    headmodel.r    = [headmodel.r(1)    headmodel.r(2)    headmodel.r(2)    headmodel.r(2)];
+    headmodel.cond = [headmodel.cond(1) headmodel.cond(2) headmodel.cond(2) headmodel.cond(2)];
+  case 3
+    headmodel.r    = [headmodel.r(1)    headmodel.r(2)    headmodel.r(3)    headmodel.r(3)];
+    headmodel.cond = [headmodel.cond(1) headmodel.cond(2) headmodel.cond(3) headmodel.cond(3)];
+  case 4
+    headmodel.r    = [headmodel.r(1)    headmodel.r(2)    headmodel.r(3)    headmodel.r(4)];
+    headmodel.cond = [headmodel.cond(1) headmodel.cond(2) headmodel.cond(3) headmodel.cond(4)];
+  otherwise
+    error('not more than 4 spheres are supported');
+end
+
+% precompute the parameters for the series expansion
+headmodel.t = eeg_leadfield4_prepare(headmodel, order);

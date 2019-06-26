@@ -1,4 +1,4 @@
-function [out] = read_tmri_poly5(filename, varargin)
+function [out] = read_tmsi_poly5(filename, varargin)
 
 % READ_TMSI_POLY5
 %
@@ -27,7 +27,7 @@ if needdat
   endblock = varargin{3};
 end
 
-fid = fopen(filename, 'rb');
+fid = fopen_or_error(filename, 'rb');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % read the header

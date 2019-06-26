@@ -12,8 +12,8 @@ function [obj] = convert_event(obj, target, varargin)
 %
 % Possible input objects types are
 %   event structure
-%   Nx3 trl matrix, or cell array of multiple trl definitions
-%   Nx2 artifact matrix, or cell array of multiple artifact definitions
+%   Nx3 trl matrix, or cell-array of multiple trl definitions
+%   Nx2 artifact matrix, or cell-array of multiple artifact definitions
 %   boolean vector, or matrix with multiple vectors as rows
 %
 % Possible targets are 'event', 'trl', 'artifact', 'boolvec'
@@ -46,7 +46,7 @@ function [obj] = convert_event(obj, target, varargin)
 
 % Check if target is specified correctly
 if sum(strcmp(target, {'event', 'trl', 'artifact', 'boolvec'})) < 1
-  error('target has to be ''event'', ''trl'', ''artifact'', or ''boolvec''.')
+  ft_error('target has to be ''event'', ''trl'', ''artifact'', or ''boolvec''.')
 end
 
 % Get the options
@@ -74,7 +74,7 @@ elseif iscell(obj)
       end
     end
   else
-    error('incorrect input object, see help for what is allowed.')
+    ft_error('incorrect input object, see help for what is allowed.')
   end
 elseif islogical(obj)
   input_obj = 'boolvec';
@@ -94,7 +94,7 @@ elseif size(obj,2) > 3
     obj = obj(:,1:3);
   end
 else
-  error('incorrect input object, see help for what is allowed.')
+  ft_error('incorrect input object, see help for what is allowed.')
 end
 
 % do conversion
@@ -136,14 +136,14 @@ elseif strcmp(input_obj, 'trl') && strcmp(target,'artifact')
 elseif strcmp(input_obj, 'empty')
   obj = [];
 else
-  warning('conversion not supported yet') %FIXME
+  ft_warning('conversion not supported yet') %FIXME
 end
 
 
 %%%%%%%%%%%%%%% SUBFUNCTION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function artvec = artifact2artvec(varargin)
 % ARTIFACT2ARTVEC makes boolian vector (or matrix when artifact is
-% cell array of multiple artifact definitions) with 0 for artifact free
+% cell-array of multiple artifact definitions) with 0 for artifact free
 % sample and 1 for sample containing an artifact according to artifact
 % specification. Length of vector is (from sample 1) last sample as
 % defined in the artifact definition, or when datendsample is speciefied
@@ -153,23 +153,23 @@ artifact = varargin{1};
 if length(varargin) == 1
   if ~iscell(artifact) % assume only one artifact is given
     if isempty(artifact)
-      error('When input object is empty ''endsample'' must be specified to convert into boolvec')
+      ft_error('When input object is empty ''endsample'' must be specified to convert into boolvec')
     else
       endsample = max(artifact(:,2));
     end
   elseif length(artifact) == 1
     if isempty(artifact{1})
-      error('When input object is empty ''endsample'' must be specified to convert into boolvec')
+      ft_error('When input object is empty ''endsample'' must be specified to convert into boolvec')
     else
       endsample = max(artifact{1}(:,2));
     end
   else
-    error('when giving multiple artifact definitions, endsample should be specified to assure all output vectors are of the same length')
+    ft_error('when giving multiple artifact definitions, endsample should be specified to assure all output vectors are of the same length')
   end
 elseif length(varargin) == 2
   endsample = varargin{2};
 elseif length(varargin) > 2
-  error('too many input arguments')
+  ft_error('too many input arguments')
 end
 if ~iscell(artifact)
   artifact = {artifact};
@@ -183,10 +183,10 @@ for i=1:length(artifact)
     artbegsample = artifact{i}(j,1);
     artendsample = artifact{i}(j,2);
     if artbegsample > endsample
-      warning('artifact definition contains later samples than endsample, these samples are ignored')
+      ft_warning('artifact definition contains later samples than endsample, these samples are ignored')
       break
     elseif artendsample > endsample
-      warning('artifact definition contains later samples than endsample, these samples are ignored')
+      ft_warning('artifact definition contains later samples than endsample, these samples are ignored')
       artendsample = endsample;
       breakflag = 1;
     end
@@ -199,7 +199,7 @@ end
 
 %%%%%%%%%%%%%%% SUBFUNCTION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function artifact = artvec2artifact(artvec)
-% ARTVEC2ARTIFACT makes artifact definition (or cell array of artifact
+% ARTVEC2ARTIFACT makes artifact definition (or cell-array of artifact
 % definitions) from boolian vector (or matrix) with [artbegsample
 % artendsample]. Assumed is that the artvec starts with sample 1.
 
@@ -227,7 +227,7 @@ end
 
 if ~isempty(typenames)
   if length(artifact) ~= length(typenames)
-    error('length typenames should be the same as length artifact')
+    ft_error('length typenames should be the same as length artifact')
   end
 end
 

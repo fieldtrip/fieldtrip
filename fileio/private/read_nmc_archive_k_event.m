@@ -37,7 +37,7 @@ function [event] = read_nmc_archive_k_event(eventfile)
 
 % Checking events-file:
 if exist(eventfile,'file') ~= 2
-    error('no events.mat file found in specified directory');
+    ft_error('no events.mat file found in specified directory');
 end
 
 % Load event-file as events_old
@@ -68,7 +68,7 @@ for ievent = 1:length(events_old.events)
           % rename certain events and insert
           tmpevent.sample      = events_old.events(ievent).eegoffset;
           if iscell(events_old.events(ievent).mode)
-            tmpevent.mode    = events_old.events(ievent).mode{1}; % .mode variables are a cell array in some subjects
+            tmpevent.mode    = events_old.events(ievent).mode{1}; % .mode variables are a cell-array in some subjects
           else
             tmpevent.mode    = events_old.events(ievent).mode;
           end
@@ -94,5 +94,5 @@ end % ievent
 
 % Send warning if no events are found for current session
 if isempty(event)
-    warning(['no events found for session: ' sessionname ' of subject: ' subjname])
+    ft_warning(['no events found for session: ' sessionname ' of subject: ' subjname])
 end

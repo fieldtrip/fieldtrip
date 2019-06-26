@@ -42,12 +42,12 @@ tsq = read_tdt_tsq(tsqfile);
 tev = cell(size(tsq));
 
 % open the nev file
-fidnev = fopen(tevfile, 'rb');
+fidnev = fopen_or_error(tevfile, 'rb');
 % open the sev files
 fidsev = zeros(size(sevfile));
 for i=1:length(sevfile)
   % add the full path
-  fidsev(i) = fopen(fullfile(p, sevfile{i}), 'rb');
+  fidsev(i) = fopen_or_error(fullfile(p, sevfile{i}), 'rb');
 end
 
 for i=1:numel(tsq)
@@ -76,9 +76,9 @@ for i=1:numel(tsq)
         case 4
           fmt = 'double';
         case 5
-          error('don''t know what a DFORM_QWORD is');
+          ft_error('don''t know what a DFORM_QWORD is');
         otherwise
-          error('unknown tsq.type');
+          ft_error('unknown tsq.type');
       end % switch
       siz = double(tsq(i).size)-10; % in words
       fseek(fidsev(index), tsq(i).offset, 'bof');
@@ -101,9 +101,9 @@ for i=1:numel(tsq)
       case 4
         fmt = 'double';
       case 5
-        error('don''t know what a DFORM_QWORD is');
+        ft_error('don''t know what a DFORM_QWORD is');
       otherwise
-        error('unknown tsq.type');
+        ft_error('unknown tsq.type');
     end % switch
     siz = double(tsq(i).size)-10; % in words
     fseek(fidnev, tsq(i).offset, 'bof');

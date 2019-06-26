@@ -168,14 +168,14 @@ end
 
 % there are potentially errors to catch from the which() function
 if isempty(whichfunction) && ischar(fname)
-  error('Not a valid M-file (%s).', fname);
+  error('not a valid M-file "%s"', fname);
 end
 
 % determine the number of input arguments and the number of jobs
 numargin    = numel(varargin);
 numjob      = numel(varargin{1});
 
-% determine the number of MATLAB jobs to "stack" together into seperate qsub jobs
+% determine the number of MATLAB jobs to "stack" together into separate qsub jobs
 if isequal(stack, 'auto')
   if ~isempty(timreq)
     stack = floor(180/timreq);

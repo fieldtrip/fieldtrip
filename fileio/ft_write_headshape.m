@@ -87,7 +87,7 @@ end
 
 switch fileformat
   case 'mne_pos'
-    fid = fopen(filename, 'wt');
+    fid = fopen_or_error(filename, 'wt');
     % convert to milimeter
     bnd = ft_convert_units(bnd, 'mm');
     n=size(bnd.pnt,1);
@@ -102,7 +102,7 @@ switch fileformat
     fclose(fid);
     
   case 'mne_tri'
-    fid = fopen(filename, 'wt');
+    fid = fopen_or_error(filename, 'wt');
     % convert to milimeter
     bnd = ft_convert_units(bnd, 'mm');
     n=size(bnd.pnt,1);
@@ -138,10 +138,10 @@ switch fileformat
       elseif isfield(bnd,'tet')
         write_vista_mesh(filename,bnd.pnt,bnd.tet,bnd.index);
       else
-        error('unknown format')
+        ft_error('unknown format')
       end
     else
-      error('You need Simbio/Vista toolbox to write a .v file')
+      ft_error('You need Simbio/Vista toolbox to write a .v file')
     end
     
   case 'tetgen'
@@ -185,8 +185,9 @@ switch fileformat
     end
     
   case 'stl'
-    nrm = normals(bnd.pnt, bnd.tri, 'triangle');
-    write_stl(filename, bnd.pnt, bnd.tri, nrm);
+    %nrm = normals(bnd.pnt, bnd.tri, 'triangle');
+    %write_stl(filename, bnd.pnt, bnd.tri, nrm);
+    stlwrite(filename, bnd.tri, bnd.pnt);
     
   case 'gifti'
     ft_hastoolbox('gifti', 1);
@@ -215,10 +216,10 @@ switch fileformat
           ix = find(n==size(tmp.vertices,1));
           tmp.private.data{ix}.metadata = metadata;
         else
-          error('the metadata structure should contain the fields ''name'' and ''value''');
+          ft_error('the metadata structure should contain the fields ''name'' and ''value''');
         end
       else
-        error('metadata should be provided as a struct-array');
+        ft_error('metadata should be provided as a struct-array');
       end
     end
         
@@ -229,9 +230,9 @@ switch fileformat
     write_surf(filename, bnd.pnt, bnd.tri);
     
   case []
-    error('you must specify the output format');
+    ft_error('you must specify the output format');
     
   otherwise
-    error('unsupported output format "%s"', fileformat);
+    ft_error('unsupported output format "%s"', fileformat);
 end
 

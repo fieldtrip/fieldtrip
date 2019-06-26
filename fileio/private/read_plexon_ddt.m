@@ -51,7 +51,7 @@ function [dat] = read_plexon_ddt(filename, begsample, endsample)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 dat = [];
-fid = fopen(filename, 'rb', 'ieee-le');
+fid = fopen_or_error(filename, 'rb', 'ieee-le');
 
 Version    = fread(fid, 1, 'int'    ); 
 dat.Version    = Version;
@@ -92,7 +92,7 @@ elseif Version==103
   dat.MaxMagnitudeMV = fread(fid,   1, 'short');
   dat.Padding        = fread(fid, 189, 'char');
 else
-  error('unsupported version of ddt file');
+  ft_error('unsupported version of ddt file');
 end
 
 % determine the number of samples by looking at the length of the datafile

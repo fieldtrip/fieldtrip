@@ -3,8 +3,7 @@ function test_ft_timelockgrandaverage
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_timelockgrandaverage
-% TEST ft_timelockgrandaverage
+% DEPENDENCY ft_timelockgrandaverage
 
 % this functions tests the new implementation of ft_timelockgrandaverage. the
 % new functionality includes the use of a cfg.parameter, and allows for
@@ -85,5 +84,5 @@ tlckall = ft_timelockgrandaverage(cfg, tlck1, tlck2, tlck3);
 tlck    = rmfield(tlck, 'cfg');
 tlckall = rmfield(tlckall, 'cfg');
 
-assert(identical(tlck, tlckall));
+assert(isalmostequal(tlck, tlckall,'reltol', 1000*eps));
 

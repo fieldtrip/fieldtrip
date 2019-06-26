@@ -35,7 +35,7 @@ end
 
 % the file starts with a 16*1024 bytes header in ascii, followed by a number of records
 hdr = neuralynx_getheader(filename);
-fid = fopen(filename, 'rb', 'ieee-le');
+fid = fopen_or_error(filename, 'rb', 'ieee-le');
 
 % determine the length of the file
 fseek(fid, 0, 'eof');
@@ -46,9 +46,9 @@ NRecords   = floor((ftell(fid) - headersize)/recordsize);
 if begrecord==0 && endrecord==0
   % only read the header  
 elseif begrecord<1
-  error('cannot read before the first record');
+  ft_error('cannot read before the first record');
 elseif begrecord>NRecords
-  error('cannot read beyond the last record')
+  ft_error('cannot read beyond the last record')
 elseif endrecord>NRecords
   endrecord = NRecords;
 end
@@ -58,7 +58,7 @@ if NRecords>0
   % read the timestamp from the first and last record
   hdr.FirstTimeStamp = neuralynx_timestamp(filename, 1);
   hdr.LastTimeStamp  = neuralynx_timestamp(filename, inf);
-  if (ispc), fid = fopen(filename, 'rb', 'ieee-le'); end
+  if (ispc), fid = fopen_or_error(filename, 'rb', 'ieee-le'); end
 else
   hdr.FirstTimeStamp = nan;
   hdr.LastTimeStamp  = nan;

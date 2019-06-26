@@ -3,9 +3,8 @@ function test_ft_componentanalysis_methods
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_componentanalysis_methods
-% TEST ft_componentanalysis, ft_rejectcomponent, ft_checkdata
-% TEST runica, fastica, sobi, jader, dss, parafac
+% DEPENDENCY ft_componentanalysis, ft_rejectcomponent, ft_checkdata
+% DEPENDENCY runica, fastica, sobi, jader, dss, parafac
 
 % note 3) binica does not run on all computers, which is why it is disabled
 % note 9) parafac depends on an external toolbox, which I don't have access to at the moment 
@@ -161,7 +160,7 @@ assert(length(comp8f.label)==nchan);
 assert(length(comp10f.label)==nchan);
 assert(length(comp11f.label)==nchan);
 
-% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=903
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=903
 assert(length(comp1s.label)==nchan-1);
 assert(length(comp2s.label)==nchan-1);
 % assert(length(comp3s.label)==nchan);

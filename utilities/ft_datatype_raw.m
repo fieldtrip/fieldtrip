@@ -16,23 +16,19 @@ function [data] = ft_datatype_raw(data, varargin)
 %      trialinfo: [266x1 double]    optional trigger or condition codes for each trial
 %            hdr: [1x1 struct]      the full header information of the original dataset on disk
 %           grad: [1x1 struct]      information about the sensor array (for EEG it is called elec)
-%            cfg: [1x1 struct]      the configuration used by the function that generated this data structure
+%           cfg: [1x1 struct]       the configuration used by the function that generated this data structure
 %
 % Required fields:
 %   - time, trial, label
 %
 % Optional fields:
-%   - sampleinfo, trialinfo, grad, elec, hdr, cfg
+%   - sampleinfo, trialinfo, grad, elec, opto, hdr, cfg
 %
 % Deprecated fields:
 %   - fsample
 %
 % Obsoleted fields:
 %   - offset
-%
-% Historical fields:
-%   - cfg, elec, fsample, grad, hdr, label, offset, sampleinfo, time,
-%   trial, trialdef, see bug2513
 %
 % Revision history:
 %
@@ -88,42 +84,17 @@ for i=1:length(data.trial)
   assert(size(data.trial{i},1)==length(data.label), 'inconsistent number of channels in trial %d', i);
 end
 
-if isequal(hassampleinfo, 'ifmakessense')
-  hassampleinfo = 'no'; % default to not adding it
-  if isfield(data, 'sampleinfo') && size(data.sampleinfo,1)~=numel(data.trial)
-    % it does not make sense, so don't keep it
-    hassampleinfo = 'no';
-  end
-  if isfield(data, 'sampleinfo')
-    hassampleinfo = 'yes'; % if it's already there, consider keeping it
-    numsmp = data.sampleinfo(:,2)-data.sampleinfo(:,1)+1;
-    for i=1:length(data.trial)
-      if size(data.trial{i},2)~=numsmp(i);
-        % it does not make sense, so don't keep it
-        hassampleinfo = 'no';
-        % the actual removal will be done further down
-        warning('removing inconsistent sampleinfo');
-        break;
-      end
-    end
-  end
-end
-
-if isequal(hastrialinfo, 'ifmakessense')
-  hastrialinfo = 'no';
-  if isfield(data, 'trialinfo')
-    hastrialinfo = 'yes';
-    if size(data.trialinfo,1)~=numel(data.trial)
-      % it does not make sense, so don't keep it
-      hastrialinfo = 'no';
-      warning('removing inconsistent trialinfo');
-    end
-  end
-end
-
 % convert it into true/false
-hassampleinfo = istrue(hassampleinfo);
-hastrialinfo  = istrue(hastrialinfo);
+if isequal(hassampleinfo, 'ifmakessense')
+  hassampleinfo = makessense(data, 'sampleinfo');
+else
+  hassampleinfo = istrue(hassampleinfo);
+end
+if isequal(hastrialinfo, 'ifmakessense')
+  hastrialinfo = makessense(data, 'trialinfo');
+else
+  hastrialinfo = istrue(hastrialinfo);
+end
 
 if strcmp(version, 'latest')
   version = '2011';
@@ -136,14 +107,15 @@ end
 switch version
   case '2011'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % ensure that the sensor structures are up to date
     if isfield(data, 'grad')
-      % ensure that the gradiometer structure is up to date
       data.grad = ft_datatype_sens(data.grad);
     end
-    
     if isfield(data, 'elec')
-      % ensure that the electrode structure is up to date
       data.elec = ft_datatype_sens(data.elec);
+    end
+    if isfield(data, 'opto')
+      data.opto = ft_datatype_sens(data.opto);
     end
     
     if ~isfield(data, 'fsample')
@@ -156,7 +128,7 @@ switch version
         end
       end
       if isnan(data.fsample)
-        warning('cannot determine sampling frequency');
+        ft_warning('cannot determine sampling frequency');
       end
     end
     
@@ -252,13 +224,13 @@ switch version
     
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    error('unsupported version "%s" for raw datatype', version);
+    ft_error('unsupported version "%s" for raw datatype', version);
 end
 
 
 % Numerical inaccuracies in the binary representations of floating point
 % values may accumulate. The following code corrects for small inaccuracies
-% in the time axes of the trials. See http://bugzilla.fcdonders.nl/show_bug.cgi?id=1390
+% in the time axes of the trials. See http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1390
 data = fixtimeaxes(data);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -272,12 +244,14 @@ else
   fsample = data.fsample;
 end
 
-begtime   = zeros(1, length(data.time));
-endtime   = zeros(1, length(data.time));
+begtime   = nan(1, length(data.time));
+endtime   = nan(1, length(data.time));
 numsample = zeros(1, length(data.time));
 for i=1:length(data.time)
-  begtime(i)   = data.time{i}(1);
-  endtime(i)   = data.time{i}(end);
+  if ~isempty(data.time{i})
+    begtime(i) = data.time{i}(1);
+    endtime(i) = data.time{i}(end);
+  end
   numsample(i) = length(data.time{i});
 end
 

@@ -1,4 +1,4 @@
-function [varargout] = funname(varargin)
+function [varargout] = read_ctf_shm(varargin)
 
 % READ_CTF_SHM reads metainformation or selected blocks of data from
 % shared memory. This function can be used for real-time processing of
@@ -57,7 +57,7 @@ catch
 end
 
 if success
-  % execute the mex file that was juist created
+  % execute the mex file that was just created
   funname   = mfilename;
   funhandle = str2func(funname);
   [varargout{1:nargout}] = funhandle(varargin{:});

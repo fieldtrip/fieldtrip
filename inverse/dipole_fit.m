@@ -54,13 +54,13 @@ function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin)
 %
 % $Id$
 
-% It is neccessary to provide backward compatibility support for the old function call
+% It is necessary to provide backward compatibility support for the old function call
 % in case people want to use it in conjunction with EEGLAB and the dipfit1 plugin.
 % old style: function [dipout] = dipole_fit(dip, dat, sens, headmodel, constr), where constr is optional
 % new style: function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin), where varargin is in key-value pairs
 if nargin==4 && ~isstruct(sens) && isstruct(dat)
   % looks like old style, the order of the input arguments has to be changed
-  warning('converting from old style input\n');
+  ft_warning('converting from old style input\n');
   olddat    = sens;
   oldsens   = headmodel;
   oldhdm    = dat;
@@ -70,7 +70,7 @@ if nargin==4 && ~isstruct(sens) && isstruct(dat)
 elseif nargin==5  && ~isstruct(sens) && isstruct(dat)
   % looks like old style, the order of the input arguments has to be changed
   % furthermore the additional constraint has to be fixed
-  warning('converting from old style input\n');
+  ft_warning('converting from old style input\n');
   olddat    = sens;
   oldsens   = headmodel;
   oldhdm    = dat;
@@ -127,7 +127,7 @@ ismeg = ft_senstype(sens, 'meg');
 
 if ismeg && iseeg
   % this is something that I might implement in the future
-  error('simultaneous EEG and MEG not supported');
+  ft_error('simultaneous EEG and MEG not supported');
 elseif iseeg
   % ensure that the potential data is average referenced, just like the model potential
   dat = avgref(dat);
@@ -158,14 +158,14 @@ elseif isequal(optimfun, @fminsearch)
     'MaxFunEvals',2*maxiter*length(param),...
     'Display',display);
 else
-  warning('unknown optimization function "%s", using default parameters', func2str(optimfun));
+  ft_warning('unknown optimization function "%s", using default parameters', func2str(optimfun));
 end
 
 % perform the optimization with either the fminsearch or fminunc function
 [param, fval, exitflag, output] = optimfun(@dipfit_error, param, options, dat, sens, headmodel, constr, metric, checkinside, reducerank, normalize, normalizeparam, weight);
 
 if exitflag==0
-  error('Maximum number of iterations exceeded before reaching the minimum, please try with another initial guess.')
+  ft_error('Maximum number of iterations exceeded before reaching the minimum, please try with another initial guess.')
 end
 
 % do the linear optimization of the dipole moment parameters
@@ -211,7 +211,7 @@ if constr.fixedori
 end
 
 if constr.symmetry && constr.rigidbody
-  error('simultaneous symmetry and rigidbody constraints are not supported')
+  ft_error('simultaneous symmetry and rigidbody constraints are not supported')
   
 elseif constr.symmetry
   % reduce the number of parameters to be fitted according to the constraints
@@ -230,7 +230,7 @@ end
 function [pos, ori] = param2dipolemodel(param, constr)
 
 if constr.symmetry && constr.rigidbody
-  error('simultaneous symmetry and rigidbody constraints are not supported')
+  ft_error('simultaneous symmetry and rigidbody constraints are not supported')
   
 elseif constr.symmetry
   param  = constr.mirror .* param(constr.expand);
@@ -271,17 +271,21 @@ drawnow;
 if ~isempty(get(0, 'currentfigure')) && strcmp(get(gcf, 'tag'), 'stop')
   % interrupt the fitting
   close;
-  error('USER ABORT');
-end;
+  ft_error('USER ABORT');
+end
 
 % convert the non-linear parameter vector into the dipole model parameters
 [pos, ori] = param2dipolemodel(param, constr);
 
+% assume that the dipole is inside the source compartment
+isinside = true;
+
 % check whether the dipole is inside the source compartment
 if checkinside
-  inside = ft_inside_vol(pos, headmodel);
+  inside = ft_inside_headmodel(pos, headmodel);
   if ~all(inside)
-    error('Dipole is outside the source compartment');
+    ft_warning('dipole is outside the source compartment');
+    isinside = false;
   end
 end
 
@@ -291,11 +295,16 @@ if ~isempty(ori)
   lf = lf * ori;
 end
 
+if ~isinside
+  % set the leadfield to zero, this will cause the error to be as large as it can be
+  lf(:) = 0;
+end
+
 % compute the optimal dipole moment and the model error
 if ~isempty(weight)
   % maximum likelihood estimation using the weigth matrix
   if constr.sequential
-    error('not supported');
+    ft_error('not supported');
   else
     mom = pinv(lf'*weight*lf)*lf'*weight*dat;  % Lutkenhoner equation 5
     dif = dat - lf*mom;
@@ -310,7 +319,7 @@ if ~isempty(weight)
       num   = dif' * weight * dif;
       err   = sum(num(:));
     otherwise
-      error('Unsupported error metric for maximum likelihood dipole fitting');
+      ft_error('Unsupported error metric for maximum likelihood dipole fitting');
   end
 else
   % ordinary least squares, this is the same as MLE with weight=eye(nchans,nchans)
@@ -343,7 +352,7 @@ else
     case 'abs' % absolute difference
       err = sum(abs(dif));
     otherwise
-      error('Unsupported error metric for dipole fitting');
+      ft_error('Unsupported error metric for dipole fitting');
   end
 end
 

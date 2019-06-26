@@ -16,6 +16,7 @@ function [data] = ft_determine_coordsys(data, varargin)
 % and can include
 %   interactive  = string, 'yes' or 'no' (default = 'yes')
 %   axisscale    = scaling factor for the reference axes and sphere (default = 1)
+%   clim         = lower and upper anatomical MRI limits (default = [0 1])
 %
 % This function wil pop up a figure that allows you to check whether the
 % alignment of the object relative to the coordinate system axes is correct
@@ -25,9 +26,9 @@ function [data] = ft_determine_coordsys(data, varargin)
 % coordinate system, you should press the corresponding keyboard button.
 %
 % Recognized and supported coordinate systems include: ctf, 4d, bti, itab,
-% neuromag, spm, mni, tal, als, ras, paxinos.
+% neuromag, spm, mni, tal, acpc, als, ras, paxinos.
 %
-% See also FT_VOLUMEREALIGN, FT_VOLUMERESLICE
+% See also FT_VOLUMEREALIGN, FT_VOLUMERESLICE, FT_PLOT_ORTHO, FT_PLOT_AXES
 
 % Copyright (C) 2015, Jan-Mathijs Schoffelen
 %
@@ -51,10 +52,10 @@ function [data] = ft_determine_coordsys(data, varargin)
 
 dointeractive = ft_getopt(varargin, 'interactive', 'yes');
 axisscale     = ft_getopt(varargin, 'axisscale', 1); % this is used to scale the axmax and rbol
+clim          = ft_getopt(varargin, 'clim', [0 1]); % this is used to scale the orthoplot
 
-data  = ft_checkdata(data);
+data  = ft_checkdata(data, 'hasunit', 'yes');
 dtype = ft_datatype(data);
-data  = ft_convert_units(data);
 
 % the high-level data structures are detected with ft_datatype, but there are
 % also some low-level data structures that need to be supproted here
@@ -65,7 +66,7 @@ if strcmp(dtype, 'unknown')
     dtype = 'mesh';
   elseif isfield(data, 'tet') && isfield(data, 'pos')
     dtype = 'mesh';
-  elseif ~strcmp(ft_voltype(data), 'unknown')
+  elseif ~strcmp(ft_headmodeltype(data), 'unknown')
     dtype = 'headmodel';
   elseif ~strcmp(ft_senstype(data), 'unknown')
     dtype = 'sens';
@@ -75,51 +76,14 @@ elseif strcmp(dtype, 'mesh+label')
   dtype = 'mesh';
 end
 
-% NOTE this section should be kept consistent with the shorter labels in FT_PLOT_AXES
 if isfield(data, 'coordsys') && ~isempty(data.coordsys)
-  label = cell(3,1);
-  if length(data.coordsys)==3 && length(intersect(data.coordsys, 'rlasif'))==3
-    for i=1:3
-      switch data.coordsys(i)
-        case 'l'
-          label{i} = 'the left';
-        case 'r'
-          label{i} = 'the right';
-        case 'i'
-          label{i} = 'inferior';
-        case 's'
-          label{i} = 'superior';
-        case 'a'
-          label{i} = 'anterior';
-        case 'p'
-          label{i} = 'posterior';
-        otherwise
-          error('incorrect letter in the coordsys');
-      end % switch
-    end % for each of the three axes
-  elseif strcmpi(data.coordsys, 'itab') || strcmpi(data.coordsys, 'neuromag') || strcmpi(data.coordsys, 'tal') || strcmpi(data.coordsys, 'mni') || strcmpi(data.coordsys, 'spm')
-    label{1} = 'the right';
-    label{2} = 'anterior';
-    label{3} = 'superior';
-  elseif strcmpi(data.coordsys, 'ctf') || strcmpi(data.coordsys, '4d') || strcmpi(data.coordsys, 'bti')
-    label{1} = 'anterior';
-    label{2} = 'the left';
-    label{3} = 'superior';
-  elseif strcmpi(data.coordsys, 'paxinos')
-    label{1} = 'the right';
-    label{2} = 'superior';
-    label{3} = 'posterior';
-  elseif strcmpi(data.coordsys, 'unknown')
-    label{1} = 'unknown';
-    label{2} = 'unknown';
-    label{3} = 'unknown';
-  else
-    error('unsupported coordsys');
-  end
-
-  fprintf('The positive x-axis is pointing towards %s\n', label{1});
-  fprintf('The positive y-axis is pointing towards %s\n', label{2});
-  fprintf('The positive z-axis is pointing towards %s\n', label{3});
+  % ensure that it is in lower case
+  data.coordsys = lower(data.coordsys);
+  % print the interpretation of the coordinate system
+  [labelx, labely, labelz] = coordsys2label(data.coordsys, 2, 0);
+  fprintf('The positive x-axis is pointing towards %s\n', labelx);
+  fprintf('The positive y-axis is pointing towards %s\n', labely);
+  fprintf('The positive z-axis is pointing towards %s\n', labelz);
 end
 
 % plot the geometrical object
@@ -150,7 +114,7 @@ switch dtype
     end
 
     if isempty(funparam)
-      error('don''t know which volumetric parameter to plot');
+      ft_error('don''t know which volumetric parameter to plot');
     end
 
     % the volumetric data needs to be interpolated onto three orthogonal planes
@@ -159,12 +123,17 @@ switch dtype
     diagonal_head = norm(range(corner_head));
     diagonal_vox  = norm(range(corner_vox));
     resolution    = diagonal_head/diagonal_vox; % this is in units of "data.unit"
-
+    
+    % scale funparam between 0 and 1
+    dmin = min(funparam(:));
+    dmax = max(funparam(:));
+    funparam  = (funparam-dmin)./(dmax-dmin);
+    
     clear ft_plot_slice
-    ft_plot_ortho(funparam, 'transform', data.transform, 'unit', data.unit, 'resolution', resolution, 'style', 'intersect');
+    ft_plot_ortho(funparam, 'transform', data.transform, 'unit', data.unit, 'resolution', resolution, 'style', 'intersect', 'clim', clim);
     axis vis3d
     view([110 36]);
-
+    
   case 'source'
     if isfield(data, 'inside') && ~isfield(data, 'tri')
       % only plot the source locations that are inside the volume conduction model
@@ -187,7 +156,7 @@ switch dtype
     camlight;
 
   case 'headmodel'
-    ft_plot_vol(data);
+    ft_plot_headmodel(data);
     camlight;
 
   case {'grad' 'elec' 'sens'}
@@ -214,7 +183,7 @@ end
 % plot the 3-D axes, labels, and sphere at the origin
 ft_plot_axes(data, 'axisscale', axisscale);
 
-if istrue(dointeractive),
+if istrue(dointeractive)
 
   if ~isfield(data, 'coordsys') || isempty(data.coordsys)
     % default is yes
@@ -247,9 +216,9 @@ if istrue(dointeractive),
   end
 
   if origin=='a' && strcmp(orientation, 'ras')
-    coordsys = 'spm';
+    coordsys = 'acpc'; % also used for spm, mni, tal
   elseif origin=='i' && strcmp(orientation, 'als')
-    coordsys = 'ctf';
+    coordsys = 'ctf'; % also used for 4d, bti
   elseif origin=='i' && strcmp(orientation, 'ras')
     coordsys = 'neuromag'; % also used for itab
   else

@@ -60,7 +60,7 @@ function [dipout] = ft_eloreta(dip, grad, headmodel, dat, Cf, varargin)
 
 if mod(nargin-5,2)
   % the first 5 arguments are fixed, the other arguments should come in pairs
-  error('invalid number of optional arguments');
+  ft_error('invalid number of optional arguments');
 end
 
 % these optional settings do not have defaults
@@ -81,7 +81,7 @@ keepleadfield  = istrue(keepleadfield);
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfield(dip, 'inside')
-  dip.inside = ft_inside_vol(dip.pos, headmodel);
+  dip.inside = ft_inside_headmodel(dip.pos, headmodel);
 end
 
 % ensure logical representation
@@ -133,7 +133,7 @@ for i=1:size(dip.pos,1)
   rank_lf(i) = rank(dip.leadfield{i});
 end
 if ~all(rank_lf==rank_lf(1))
-  error('the forward solutions have a different rank for each location, which is not supported');
+  ft_error('the forward solutions have a different rank for each location, which is not supported');
 end
 if rank_lf(1)<size(dip.leadfield{1})
   fprintf('the forward solutions have a rank of %d, but %d orientations\n',rank_lf(1),size(dip.leadfield{1},2));
@@ -151,7 +151,7 @@ leadfield     = permute(reshape(cat(2,dip.leadfield{:}),Nchan,Nori,Ndip),[1 3 2]
 
 % use existing filters, or compute them
 if ~isfield(dip, 'filter')
-  filt = mkfilt_eloreta_v2(leadfield, lambda);
+  filt = mkfilt_eloreta(leadfield, lambda);
   for i=1:size(dip.pos,1)
     dip.filter{i,1} = squeeze(filt(:,i,:))';
   end

@@ -3,8 +3,7 @@ function test_bug2061
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2061
-% TEST ft_timelockanalysis
+% DEPENDENCY ft_timelockanalysis
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % create some test data

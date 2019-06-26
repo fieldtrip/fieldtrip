@@ -2,7 +2,7 @@ function event = read_micromed_event(trcfile)
 
 % reads the events of the Micromed TRC format files
 
-fid=fopen(trcfile,'r');
+fid=fopen_or_error(trcfile,'r');
 
 %------------------reading patient & recording info----------
 fseek(fid,64,-1);
@@ -50,7 +50,7 @@ year=num2str(fread(fid,1,'char')+1900);
 fseek(fid,175,-1);
 Header_Type=fread(fid,1,'char');
 if Header_Type ~= 4
-    error('*.trc file is not Micromed System98 Header type 4')
+    ft_error('*.trc file is not Micromed System98 Header type 4')
 end
 
 fseek(fid,138,-1);
@@ -101,7 +101,7 @@ m=length(trace);
 tl=length(trigger);
 NoTrig=0;
 for tr=1:tl
-    if ((trigger(1,tr) <= m) & (trigger(1,tr) >= first_trigger))
+    if ((trigger(1,tr) <= m) && (trigger(1,tr) >= first_trigger))
         NoTrig=NoTrig+1;
     end
 end

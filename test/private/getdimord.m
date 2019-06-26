@@ -1,18 +1,45 @@
 function dimord = getdimord(data, field, varargin)
 
-% GETDIMORD
+% GETDIMORD determine the dimensions and order of a data field in a FieldTrip
+% structure.
 %
 % Use as
 %   dimord = getdimord(data, field)
 %
-% See also GETDIMSIZ, GETDATFIELD
+% See also GETDIMSIZ, GETDATFIELD, FIXDIMORD
+
+% Copyright (C) 2014-2019, Robert Oostenveld
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Please note that this function is called from many other FT functions. To avoid
+% unwanted recursion, you should avoid (where possible) calling other FT functions
+% inside this one.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ~isfield(data, field) && isfield(data, 'avg') && isfield(data.avg, field)
   field = ['avg.' field];
 elseif ~isfield(data, field) && isfield(data, 'trial') && isfield(data.trial, field)
   field = ['trial.' field];
 elseif ~isfield(data, field)
-  error('field "%s" not present in data', field);
+  ft_error('field "%s" not present in data', field);
 end
 
 if strncmp(field, 'avg.', 4)
@@ -53,7 +80,7 @@ nsubj     = nan;
 nrpt      = nan;
 nrpttap   = nan;
 npos      = inf;
-nori      = nan; % this will be 3 in many cases
+nori      = nan; % this will be 3 in many cases, 1 after projectmom, and can be >3 for parcels
 ntopochan = inf;
 nspike    = inf; % this is only for the first spike channel
 nlag      = nan;
@@ -90,11 +117,13 @@ if isfield(data, 'freq')
   nfreq = length(data.freq);
 end
 
-if isfield(data, 'trial') && ft_datatype(data, 'raw')
+if isfield(data, 'trial') && iscell(data.trial)
+  % raw data
   nrpt = length(data.trial);
 end
 
-if isfield(data, 'trialtime') && ft_datatype(data, 'spike')
+if isfield(data, 'trialtime') && isfield(data, 'timestamp') && isfield(data, 'label')
+  % spike data
   nrpt = size(data.trialtime,1);
 end
 
@@ -108,7 +137,7 @@ if isfield(data, 'cumtapcnt')
     % this happens after  mtmconvol with keeptrials
     nrpttap = sum(data.cumtapcnt,2);
     if any(nrpttap~=nrpttap(1))
-      warning('unexpected variation of the number of tapers over trials')
+      ft_warning('unexpected variation of the number of tapers over trials')
       nrpttap = nan;
     else
       nrpttap = nrpttap(1);
@@ -142,7 +171,15 @@ if isfield(data, 'csdlabel')
     % one list of labels for all positions
     nori = length(data.csdlabel);
   end
-elseif isfinite(npos)
+elseif isfield(data, 'mom') && isfield(data, 'inside') && iscell(data.mom)
+    % this is used in LCMV beamformers
+    size1 = @(x) size(x, 1);
+    len = cellfun(size1, data.mom(data.inside));
+    if all(len==len(1))
+      % they all have the same length
+      nori = len(1);
+    end
+else
   % assume that there are three dipole orientations per source
   nori = 3;
 end
@@ -156,7 +193,8 @@ if isfield(data, 'timestamp') && iscell(data.timestamp)
   nspike = length(data.timestamp{1}); % spike data: only for the first channel
 end
 
-if ft_datatype(data, 'mvar') && isfield(data, 'coeffs')
+if isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'lag')) && isfield(data, 'coeffs')
+  % mvar data
   nlag = size(data.coeffs,3);
 end
 
@@ -212,6 +250,21 @@ switch field
   case {'pos'}
     if isequalwithoutnans(datsiz, [npos 3])
       dimord = 'pos_unknown';
+    end
+    
+  case {'tri'}
+    if datsiz(2)==3
+      dimord = 'tri_unknown';
+    end
+    
+  case {'tet'}
+    if datsiz(2)==4
+      dimord = 'tet_unknown';
+    end
+    
+  case {'hex'}
+    if datsiz(2)==8
+      dimord = 'hex_unknown';
     end
     
   case {'individual'}
@@ -316,7 +369,8 @@ switch field
     if isequal(datsiz, [npos nfreq ntime])
       dimord = 'pos_freq_time';
     end
-  case {'pow' 'noise'}
+    
+  case {'pow' 'noise' 'rv' 'nai'}
     if isequal(datsiz, [npos ntime])
       dimord = 'pos_time';
     elseif isequal(datsiz, [npos nfreq])
@@ -341,7 +395,7 @@ switch field
       dimord = 'rpt_pos_freq';
     end
     
-  case {'mom','itc','aa','stat','pval','statitc','pitc'}
+  case {'mom' 'itc' 'aa' 'stat','pval' 'statitc' 'pitc'}
     if isequal(datsiz, [npos nori nrpt])
       dimord = 'pos_ori_rpt';
     elseif isequal(datsiz, [npos nori ntime])
@@ -397,6 +451,8 @@ switch field
   case {'ori' 'eta'}
     if isequal(datsiz, [npos nori]) || isequal(datsiz, [npos 3])
       dimord = 'pos_ori';
+    elseif isequal(datsiz, [npos 1 nori]) || isequal(datsiz, [npos 1 3])
+      dimord = 'pos_unknown_unknown';
     end
     
   case {'csdlabel'}
@@ -437,23 +493,37 @@ switch field
       dimord = 'chan_topochan';
     end
     
-  case {'inside'}
-    if isequalwithoutnans(datsiz, [npos])
+  case {'anatomy' 'inside'}
+    if isfield(data, 'dim') && isequal(datsiz, data.dim)
+      dimord = 'dim1_dim2_dim3';
+    elseif isequalwithoutnans(datsiz, [npos 1]) || isequalwithoutnans(datsiz, [1 npos])
       dimord = 'pos';
     end
     
-  case {'timestamp' 'time'}
-    if ft_datatype(data, 'spike') && iscell(data.(field)) && datsiz(1)==nchan
+  case {'timestamp'}
+    if iscell(data.(field)) && isfield(data, 'label') && datsiz(1)==nchan
       dimord = '{chan}_spike';
-    elseif ft_datatype(data, 'raw') && iscell(data.(field)) && datsiz(1)==nrpt
+    end
+    
+  case {'time'}
+    if iscell(data.(field)) && isfield(data, 'label') && datsiz(1)==nrpt
       dimord = '{rpt}_time';
     elseif isvector(data.(field)) && isequal(datsiz, [1 ntime ones(1,numel(datsiz)-2)])
       dimord = 'time';
+    elseif iscell(data.(field)) && isfield(data, 'label') && isfield(data, 'timestamp') && isequal(getdimsiz(data, 'timestamp'), datsiz) && datsiz(1)==nchan
+      dimord = '{chan}_spike';
     end
     
   case {'freq'}
-    if isvector(data.(field)) && isequal(datsiz, [1 nfreq])
+    if iscell(data.(field)) && isfield(data, 'label') && datsiz(1)==nrpt
+      dimord = '{rpt}_freq';
+    elseif isvector(data.(field)) && isequal(datsiz, [1 nfreq ones(1,numel(datsiz)-2)])
       dimord = 'freq';
+    end
+    
+  case {'chantype', 'chanunit'}
+    if numel(data.(field))==nchan
+      dimord = 'chan';
     end
     
   otherwise
@@ -543,8 +613,12 @@ if ~exist('dimord', 'var')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   if isequal(datsiz, [ndim1 ndim2 ndim3])
     dimord = 'dim1_dim2_dim3';
+  elseif isfield(data, 'pos') && prod(datsiz)==size(data.pos, 1)
+    dimord = 'dim1_dim2_dim3';
   end
 end % if dimord does not exist
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FINAL RESORT: return "unknown" for all unknown dimensions
@@ -554,8 +628,7 @@ if ~exist('dimord', 'var')
   % if it does, it might help in diagnosis to have a very informative warning message
   % since there have been problems with trials not being selected correctly due to the warning going unnoticed
   % it is better to throw an error than a warning
-  warning('could not determine dimord of "%s" in the following data', field)
-  disp(data);
+  warning_dimord_could_not_be_determined(field, data);
   
   dimtok(cellfun(@isempty, dimtok)) = {'unknown'};
   if all(~cellfun(@isempty, dimtok))
@@ -572,6 +645,42 @@ dimord = [prefix dimord];
 
 
 end % function
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function warning_dimord_could_not_be_determined(field,data)
+  msg=sprintf('could not determine dimord of "%s" in:',field);
+
+  if isempty(which('evalc'))
+    % May not be available in Octave
+    content=sprintf('object of type ''%s''',class(data));
+  else
+    % in Octave, disp typically shows full data arrays which can result in
+    % very long output. Here we take out the middle part of the output if
+    % the output is very long (more than 40 lines)
+    full_content=evalc('disp(data)');
+    max_pre_post_lines=20;
+
+    newline_pos=find(full_content==newline);
+    newline_pos=newline_pos(max_pre_post_lines:(end-max_pre_post_lines));
+
+    if numel(newline_pos)>=2
+      pre_end=newline_pos(1)-1;
+      post_end=newline_pos(end)+1;
+
+      content=sprintf('%s\n\n... long output omitted ...\n\n%s',...
+                                full_content(1:pre_end),...
+                                full_content(post_end:end));
+    else
+      content=full_content;
+    end
+  end
+
+  msg = sprintf('%s\n\n%s', msg, content);
+  ft_warning(msg);
+end % function warning_dimord_could_not_be_determined
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -607,11 +716,11 @@ for k = 1:numel(dimtok)
     case 'chan'
       ok = numel(data.label)==1;
     otherwise
-      if isfield(data, dimtok{k}); % check whether field exists
+      if isfield(data, dimtok{k}) % check whether field exists
         ok = numel(data.(dimtok{k}))==1;
-      end;
+      end
   end
-  if ok,
+  if ok
     break;
   end
 end

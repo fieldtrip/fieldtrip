@@ -63,16 +63,16 @@ faceiout = [];
 
 % other variables
 ERRMSG = 'Input argument must be a valid graphics handle';
-isline = logical(0);
-isperspective = logical(0);
+isline = false;
+isperspective = false;
 
 % Parse input arguments
 if nargin<1
    obj = gco;
 end
 
-if isempty(obj) | ~ishandle(obj) | length(obj)~=1
-    error(ERRMSG);
+if isempty(obj) || ~ishandle(obj) || length(obj)~=1
+    ft_error(ERRMSG);
 end
 
 % if obj is a figure
@@ -121,7 +121,7 @@ is_perspective = strcmp(get(ax,'projection'),'perspective');
 [a b] = view(ax); 
 xform = viewmtx(a,b);
 if is_perspective
-    warning('%s does not support perspective axes projection.',mfilename);
+    ft_warning('%s does not support perspective axes projection.',mfilename);
     d = norm(camtarget(ax)-campos(ax))
     P = [1 0 0 0; 
          0 1 0 0;
@@ -154,7 +154,7 @@ elseif strcmp(obj_type,'line')
     zdata = get(axchild,'zdata');
     vert = [xdata', ydata',zdata'];
     faces = []; 
-    isline = logical(1);
+    isline = true;
 
 % Ignore all other objects
 else     
@@ -172,8 +172,8 @@ end
 % NaN and Inf check 
 nan_inf_test1 = isnan(faces) | isinf(faces);
 nan_inf_test2 = isnan(vert) | isinf(vert);
-if any(nan_inf_test1(:)) | any(nan_inf_test2(:))
-    warning('%s does not support NaNs or Infs in face/vertex data.',mfilename);
+if any(nan_inf_test1(:)) || any(nan_inf_test2(:))
+    ft_warning('%s does not support NaNs or Infs in face/vertex data.',mfilename);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -259,7 +259,7 @@ end
 vert_with_negative_y = zeros(size(faces));
 face_y_vert = xvert(2,faces);
 ind_vert_with_negative_y = find(face_y_vert<0); 
-vert_with_negative_y(ind_vert_with_negative_y) = logical(1);
+vert_with_negative_y(ind_vert_with_negative_y) = true;
 
 % Find all the line segments that span the x axis
 is_line_segment_spanning_x = abs(diff([vert_with_negative_y, vert_with_negative_y(:,1)],1,2));
@@ -308,7 +308,7 @@ end
 % three vertices since that is all we need to define a plane).
 % assuming planar polygons.
 candidate_faces = candidate_faces(ind_intersection_test,1:3);
-candidate_faces = reshape(candidate_faces',1,prod(size(candidate_faces)));
+candidate_faces = reshape(candidate_faces',1,numel(candidate_faces));
 vert = vert';
 candidate_facev = vert(:,candidate_faces);
 candidate_facev = reshape(candidate_facev,3,3,length(ind_intersection_test));
@@ -319,8 +319,8 @@ v2 = squeeze(candidate_facev(:,2,:));
 v3 = squeeze(candidate_facev(:,3,:));
 
 % Get normal to face plane
-vec1 = [v2-v1];
-vec2 = [v3-v2];
+vec1 = v2-v1;
+vec2 = v3-v2;
 crs = cross(vec1,vec2);
 mag = sqrt(sum(crs.*crs));
 nplane(1,:) = crs(1,:)./mag;

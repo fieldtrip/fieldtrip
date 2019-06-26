@@ -30,7 +30,7 @@ function write_neuralynx_ncs(filename, ncs)
 % $Id$
 
 if ~isa(ncs.TimeStamp, 'uint64')
-  error('timestamps should be uint64');
+  ft_error('timestamps should be uint64');
 end
 
 % convert the data from uV into V
@@ -63,7 +63,7 @@ for i=1:length(f)
     case 'double'
       buf = [buf sprintf('-%s\t%s\r\n', f{i}, num2str(v))];
     otherwise
-      error('unknown class in writing header');
+      ft_error('unknown class in writing header');
   end
 end
 
@@ -71,7 +71,7 @@ end
 buf((end+1):16384) = 0;
 
 % open the file and write the header
-fid  = fopen(filename, 'wb', 'ieee-le');
+fid  = fopen_or_error(filename, 'wb', 'ieee-le');
 fwrite(fid, buf);
 
 % The format of a continuous sampled record is

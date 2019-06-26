@@ -87,7 +87,7 @@ end
 output  = ft_getopt(varargin, 'output', 'normal'); % 'normal' or 'planarcombined'
 
 if ~exist(type, 'var')
-  error('the requested sensor type "%s" is not supported', type);
+  ft_error('the requested sensor type "%s" is not supported', type);
   
 elseif isempty(eval(type))
   % assign the list of channels only once, keep it as persistent variable
@@ -3673,7 +3673,7 @@ elseif isempty(eval(type))
       label = ft_senslabel(type);
       
     otherwise
-      error('the requested sensor type "%s" is not supported', type);
+      ft_error('the requested sensor type "%s" is not supported', type);
       
   end % switch
   
@@ -3700,6 +3700,6 @@ switch output
     label     = [planar(:,1:2) combined]; % magnetometers are in the 3rd column for neuromag306
     
   otherwise
-    error('unsupported output "%s"', output);
+    ft_error('unsupported output "%s"', output);
     
 end

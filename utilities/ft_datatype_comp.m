@@ -11,12 +11,12 @@ function [comp] = ft_datatype_comp(comp, varargin)
 % An example of a decomposed raw data structure with 100 components that resulted from
 % a 151-channel MEG recording is shown here:
 %
-%       unmixing: [100x151 double]  the compoment unmixing matrix
 %           topo: [151x100 double]  the compoment topographies
+%       unmixing: [100x151 double]  the compoment unmixing matrix
 %      topolabel: {151x1 cell}      the channel labels (e.g. 'MRC13')
-%           time: {1x10 cell}       the timeaxis [1*Ntime double] per trial
-%          trial: {1x10 cell}       the numeric data [151*Ntime double] per trial
 %          label: {100x1 cell}      the component labels (e.g. 'runica001')
+%           time: {1x10 cell}       the time axis [1*Ntime double] per trial
+%          trial: {1x10 cell}       the numeric data [151*Ntime double] per trial
 %           grad: [1x1 struct]      information about the sensor array (for EEG it is called elec)
 %            cfg: [1x1 struct]      the configuration used by the function that generated this data structure
 %
@@ -33,7 +33,7 @@ function [comp] = ft_datatype_comp(comp, varargin)
 %   - cfg, all fields from FT_DATATYPE_RAW, FT_DATATYPE_TIMELOCK or FT_DATATYPE_FREQ
 %
 % Historical fields:
-%   - cfg, offset, fsample, grad, elec, label, sampleinfo, time, topo, topolabel, trial, unmixing, see bug2513
+%   - offset, fsample
 %
 % Revision history:
 % (2014) The combination of comp with raw, timelock or freq has been defined explicitly.
@@ -68,8 +68,8 @@ function [comp] = ft_datatype_comp(comp, varargin)
 
 % get the optional input arguments, which should be specified as key-value pairs
 version       = ft_getopt(varargin, 'version', 'latest');
-hassampleinfo = ft_getopt(varargin, 'hassampleinfo', []); % the default is determined in ft_datatype_raw
-hastrialinfo  = ft_getopt(varargin, 'hastrialinfo', []);  % the default is determined in ft_datatype_raw
+hassampleinfo = ft_getopt(varargin, 'hassampleinfo', []); % the default is determined elsewhere
+hastrialinfo  = ft_getopt(varargin, 'hastrialinfo', []);  % the default is determined elsewhere
 
 if strcmp(version, 'latest')
   version         = '2014';
@@ -96,47 +96,37 @@ switch version
       end
     end
     
+    if isfield(comp, 'unmixing') && ~isfield(comp, 'unmixingdimord')
+      comp.unmixingdimord = 'chan_topochan';
+    end
+    
+    if isfield(comp, 'topo') && ~isfield(comp, 'topodimord')
+      comp.topodimord = 'topochan_chan';
+    end
+    
     % convert it into a raw data structure and update it to the latest version
     if ft_datatype(comp, 'raw')
-      raw = comp;
-      raw = rmfield(raw, 'topo');
-      raw = rmfield(raw, 'unmixing');
-      raw = rmfield(raw, 'topolabel');
+      raw = removefields(comp, {'topo', 'topodimord', 'unmixing', 'unmixingdimord', 'topolabel'});
       raw = ft_datatype_raw(raw, 'version', rawversion, 'hassampleinfo', hassampleinfo, 'hastrialinfo', hastrialinfo);
       
       % add the component specific fields again
-      raw.unmixing  = comp.unmixing;
-      raw.topo      = comp.topo;
-      raw.topolabel = comp.topolabel;
-      comp = raw;
+      comp = copyfields(comp, raw, {'topo', 'topodimord', 'unmixing', 'unmixingdimord', 'topolabel'});
       clear raw
       
     elseif ft_datatype(comp, 'timelock')
-      timelock = comp;
-      timelock = rmfield(timelock, 'topo');
-      timelock = rmfield(timelock, 'unmixing');
-      timelock = rmfield(timelock, 'topolabel');
+      timelock = removefields(comp, {'topo', 'topodimord', 'unmixing', 'unmixingdimord', 'topolabel'});
       timelock = ft_datatype_timelock(timelock, 'version', timelockversion);
       
       % add the component specific fields again
-      timelock.unmixing  = comp.unmixing;
-      timelock.topo      = comp.topo;
-      timelock.topolabel = comp.topolabel;
-      comp = timelock;
+      comp = copyfields(comp, timelock, {'topo', 'topodimord', 'unmixing', 'unmixingdimord', 'topolabel'});
       clear timelock
       
     elseif ft_datatype(comp, 'freq')
-      freq = comp;
-      freq = rmfield(freq, 'topo');
-      freq = rmfield(freq, 'unmixing');
-      freq = rmfield(freq, 'topolabel');
+      freq = removefields(comp, {'topo', 'topodimord', 'unmixing', 'unmixingdimord', 'topolabel'});
       freq = ft_datatype_freq(freq, 'version', freqversion);
       
       % add the component specific fields again
-      freq.unmixing  = comp.unmixing;
-      freq.topo      = comp.topo;
-      freq.topolabel = comp.topolabel;
-      comp = freq;
+      comp = copyfields(comp, freq, {'topo', 'topodimord', 'unmixing', 'unmixingdimord', 'topolabel'});
       clear freq
       
     end % raw, timelock or freq
@@ -167,7 +157,7 @@ switch version
     
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    error('unsupported version "%s" for comp datatype', version);
+    ft_error('unsupported version "%s" for comp datatype', version);
 end
 
 

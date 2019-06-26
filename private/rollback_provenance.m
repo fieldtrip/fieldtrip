@@ -46,33 +46,27 @@ for i=1:(nargin-1)
     continue
   end
   
-  fn0 = fieldnames(cfg);
+  if isempty(cfg)
+    % allow for [] as the input cfg
+    fn0 = {};
+  else
+    % get the input cfg
+    fn0 = fieldnames(cfg);
+  end
   
   if ~isfield(varargin{i}, 'cfg')
     % input does not contain cfg, so no rollback to be performed
     continue;
+  else
+    % get the data cfg
+    fn1 = fieldnames(varargin{i}.cfg);
   end
   
-  fn1 = fieldnames(varargin{i}.cfg);
-  
-  % only work on the fields that are explicitly present in the cfg
+  % work on the fields that are present in both input cfg and data cfg
   fn = intersect(fn0, fn1);
   
-  % ignore the provenance fields themselves
-  fn = setdiff(fn, { ...
-    'trackconfig'
-    'checkconfig'
-    'checksize'
-    'trackusage'
-    'trackdatainfo'
-    'trackcallinfo'
-    'showcallinfo'
-    'callinfo'
-    'version'
-    'warning'
-    'debug'
-    'previous'
-    });
+  % some of the fields should not be rolled back
+  fn = setdiff(fn, ignorefields('rollback'));
   
   for j=1:length(fn)
     cfg.(fn{j}) = varargin{i}.cfg.(fn{j});

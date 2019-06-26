@@ -3,8 +3,7 @@ function test_tutorial_tmseeg
 % MEM 16gb
 % WALLTIME 01:20:00
 
-% TEST test_tutorial_tmseeg
-% TEST ft_math ft_interpolatenan
+% DEPENDENCY ft_math ft_interpolatenan
 
 triggers = {'S  1', 'S  3'}; % These values correspond to the markers placed in this dataset
 
@@ -47,7 +46,7 @@ data_tms_avg = ft_timelockanalysis(cfg, data_tms_raw);
 % clear data_tms_raw to save memory
 clear data_tms_raw
 
-% plot all in seperate window
+% plot all in separate window
 for i=1:numel(data_tms_avg.label) % Loop through all channels
   figure;
   plot(data_tms_avg.time, data_tms_avg.avg(i,:)); % Plot all data

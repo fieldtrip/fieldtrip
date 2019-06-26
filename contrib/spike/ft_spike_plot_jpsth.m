@@ -26,7 +26,7 @@ function [cfg] = ft_spike_plot_jpsth(cfg, jpsth)
 %     ' gausswin'     use a Gaussian smooth function
 %     ' boxcar'       use a box-car to smooth
 %   cfg.gaussvar    =  variance  (default = 1/16 of window length in sec).
-%   cfg.winlen      =  cfg.window length in seconds (default = 5*binwidth).
+%   cfg.winlen      =  window length in seconds (default = 5*binwidth).
 %     length of our window is 2*round*(cfg.winlen/binwidth)
 %     where binwidth is the binwidth of the jpsth (jpsth.time(2)-jpsth.time(1)).
 %
@@ -62,7 +62,7 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance jpsth
 ft_preamble trackconfig
 
 % get the default options
@@ -161,7 +161,7 @@ sampleTime    = mean(diff(jpsth.time)); % get the binwidt
 
 
 % smooth the jpsth with a kernel if requested
-if ~strcmp(cfg.window,'no')
+if ~strcmp(cfg.window, 'no')
   
   % construct the kernel
   winTime       = [fliplr(0:-sampleTime:-cfg.winlen) sampleTime:sampleTime:cfg.winlen];
@@ -321,8 +321,8 @@ set(pan,'ActionPostCallback',{@mypostcallback,ax,cfg.latency,psthLim});
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
 ft_postamble previous jpsth
+ft_postamble provenance
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

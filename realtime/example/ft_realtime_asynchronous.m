@@ -52,7 +52,7 @@ function cmd = ft_realtime_asynchronous(cfg)
 % If you want to skip all data that was acquired before you start the
 % RT function, but don't want to miss any data that was acquired while
 % the realtime function is started, then you should use jumptoeof=yes and
-% bufferdata=first. If you want to analyse data from a file, then you
+% bufferdata=first. If you want to analyze data from a file, then you
 % should use jumptoeof=no and bufferdata=first.
 %
 % To stop the realtime function, you have to press Ctrl-C
@@ -106,7 +106,7 @@ hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'cache', 
 cfg.channel = ft_channelselection(cfg.channel, hdr.label);
 chanindx    = match_str(hdr.label, cfg.channel);
 nchan       = length(chanindx);
-if nchan==0, error('no channels were selected'); end
+if nchan==0, ft_error('no channels were selected'); end
 
 % determine the size of blocks to process
 blocksize = round(cfg.blocksize * hdr.Fs);
@@ -140,7 +140,7 @@ while cfg.count < cfg.nsamples
       begsample  = prevSample+1;
       endsample  = prevSample+blocksize ;
     else
-      error('unsupported value for cfg.bufferdata');
+      ft_error('unsupported value for cfg.bufferdata');
     end
 
     % this allows overlapping data segments

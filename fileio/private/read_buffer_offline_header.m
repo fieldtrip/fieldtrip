@@ -51,11 +51,11 @@ nameFlag = 0;
 txt=[];
 finfo=dir([headerfile '.txt']);
 if ( isempty(finfo) || finfo.bytes==0 )
-  warning(sprintf('Could not open text header file : %s',headerfile));
+  ft_warning(sprintf('Could not open text header file : %s',headerfile));
 else  
   txt.nSamples=0;
-  FA = fopen([headerfile '.txt'], 'r');
-  while ~feof(FA);
+  FA = fopen_or_error([headerfile '.txt'], 'r');
+  while ~feof(FA)
     s = fgetl(FA);
     indEq = find(s=='=');
     if numel(indEq)==1
@@ -90,7 +90,7 @@ else
         elseif strcmp(val,'little')
           txt.orig.endianness='ieee-le';
         else
-          error('Invalid value for key ''endian''.');
+          ft_error('Invalid value for key ''endian''.');
         end
       end
       continue;
@@ -103,7 +103,7 @@ else
         txt.label{ind} = name;
         nameFlag = 2;
       else
-        error('Invalid channel name definition - broken header file?');
+        ft_error('Invalid channel name definition - broken header file?');
       end
     end
   end
@@ -114,13 +114,13 @@ end
 bin=[];
 finfo=dir(headerfile);
 if ( isempty(finfo) || finfo.bytes==0 )
-  warning(sprintf('Couldnt open binary header file : %s',headerfile));
+  ft_warning(sprintf('Couldnt open binary header file : %s',headerfile));
   hdr = copyfields(txt, hdr, fieldnames(txt)); % ensure that the predefined stuff still exists
 else  
   if ( ~isfield(hdr.orig,'endianness') )
     hdr.orig.endianness='native';
   end
-  F = fopen(headerfile,'rb',hdr.orig.endianness);
+  F = fopen_or_error(headerfile,'rb',hdr.orig.endianness);
   hdr.nChans    = double(fread(F,1,'uint32'));
   hdr.nSamples  = double(fread(F,1,'uint32'));
   hdr.nEvents   = double(fread(F,1,'uint32'));
@@ -129,13 +129,13 @@ else
   hdr.bufsize   = fread(F,1,'uint32');
 
   if isfield(txt,'nChans') && ~isequal(hdr.nChans,txt.nChans)
-    error('Number of channels in binary header does not match ASCII definition');
+    ft_error('Number of channels in binary header does not match ASCII definition');
   end
   if isfield(txt,'nChans') && ~isequal(hdr.nSamples,txt.nSamples)
-    warning('Number of samples in binary header does not match ASCII definition');
+    ft_warning('Number of samples in binary header does not match ASCII definition');
   end
   if isfield(txt,'nEvents') && ~isequal(hdr.nEvents,txt.nEvents)
-    error('Number of events in binary header does not match ASCII definition');
+    ft_error('Number of events in binary header does not match ASCII definition');
   end
   if isempty(hdr.data_type)
     hdr.data_type = strmatch(txt.orig.data_type,type)-1;
@@ -144,7 +144,7 @@ else
   hdr.orig.data_type = type{hdr.data_type+1};
   hdr.orig.wordsize = wordsize{hdr.data_type+1};
   %else
-  %  error('Data type in binary header does not match ASCII definition');
+  %  ft_error('Data type in binary header does not match ASCII definition');
   %end
 
   % TODO: add chunk handling
@@ -164,7 +164,7 @@ else
       if typeAndSize(2) == 8*hdr.nChans
         hdr.resolutions = fread(F, [hdr.nChans, 1], 'double');
       else
-        warning('Invalid size of RESOLUTIONS chunk - skipping');
+        ft_warning('Invalid size of RESOLUTIONS chunk - skipping');
         dummy = fread(F, typeAndSize(2), 'uint8=>uint8');
       end
      case 4 % FT_CHUNK_ASCII_KEYVAL
@@ -175,7 +175,7 @@ else
       if typeAndSize(2) == 348
         hdr.nifti_1 = decode_nifti1(hdr.orig.nifti_1);
       else
-        warning('Invalid size of NIFTI_1 chunk - skipping');
+        ft_warning('Invalid size of NIFTI_1 chunk - skipping');
       end
      case 6 % FT_CHUNK_SIEMENS_AP = 6
       hdr.orig.siemensap = fread(F, typeAndSize(2), 'uint8=>uint8');
@@ -185,7 +185,7 @@ else
      case 7 % FT_CHUNK_CTF_RES4 = 7
       hdr.orig.ctf_res4 = fread(F, typeAndSize(2), 'uint8=>uint8');
       tmp_name = tempname;
-      FT = fopen(tmp_name, 'wb');
+      FT = fopen_or_error(tmp_name, 'wb');
       fwrite(FT, orig.ctf_res4, 'uint8');
       fclose(FT);
       R4F = read_ctf_res4(tmp_name);
@@ -203,7 +203,7 @@ end
 % binary has invalid samples info (or isn't there), get from samples file instead..
 if ~isfield(hdr,'nSamples') || hdr.nSamples == 0
   datafile = [headerfile(1:end-6) 'samples'];
-  FD = fopen(datafile, 'rb');
+  FD = fopen_or_error(datafile, 'rb');
   fseek(FD,0,'eof');
   fileSize = ftell(FD);
   fclose(FD);
@@ -211,7 +211,7 @@ if ~isfield(hdr,'nSamples') || hdr.nSamples == 0
   n = fileSize / hdr.orig.wordsize / hdr.nChans;
   hdr.nSamples = floor(n);
   if hdr.nSamples ~= n
-    warning('Size of ''samples'' is not a multiple of the size of one sample');
+    ft_warning('Size of ''samples'' is not a multiple of the size of one sample');
   end
 end
 

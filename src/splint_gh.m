@@ -1,4 +1,4 @@
-function [varargout] = funname(varargin)
+function [varargout] = splint_gh(varargin)
 
 % SPLINT_GH implements equations (3) and (5b) of Perrin 1989
 % for simultaneous computation of multiple values
@@ -49,7 +49,7 @@ catch
 end
 
 if success
-  % execute the mex file that was juist created
+  % execute the mex file that was just created
   funname   = mfilename;
   funhandle = str2func(funname);
   [varargout{1:nargout}] = funhandle(varargin{:});

@@ -39,14 +39,11 @@ function [header_array, CateNames, CatLengths, preBaseline] = read_sbin_header(f
 %
 % $Id$
 
-fid=fopen([filename],'r');
-if fid==-1
-    error('wrong filename')
-end
+fid=fopen_or_error([filename],'r');
 
 version     = fread(fid,1,'int32');
 if isempty(version)
-    error('ERROR:  This is not a simple binary file.  Note that NetStation does not successfully directly convert EGIS files to simple binary format.');
+    ft_error('ERROR:  This is not a simple binary file.  Note that NetStation does not successfully directly convert EGIS files to simple binary format.');
 end;
 
 %check byteorder
@@ -65,7 +62,7 @@ elseif (version > 6) && ~bitand(version,6)
     end;
     version = swapbytes(uint32(version));
 else
-    error('ERROR:  This is not a simple binary file.  Note that NetStation does not successfully directly convert EGIS files to simple binary format.');
+    ft_error('ERROR:  This is not a simple binary file.  Note that NetStation does not successfully directly convert EGIS files to simple binary format.');
 end;
 
 if bitand(version,1) == 0
@@ -76,7 +73,7 @@ end;
 
 precision = bitand(version,6);
 if precision == 0
-    error('File precision is not defined.');
+    ft_error('File precision is not defined.');
 end;
 
 %       read header...

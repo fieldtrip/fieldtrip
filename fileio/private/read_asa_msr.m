@@ -34,7 +34,7 @@ val = read_asa(fn, 'Values', '%f');
 if any(size(val)~=[Npnt,Ntime])
   msm_file = read_asa(fn, 'Values', '%s');
   [path, name, ext] = fileparts(fn);
-  fid = fopen(fullfile(path, msm_file), 'rb', 'ieee-le');
+  fid = fopen_or_error(fullfile(path, msm_file), 'rb', 'ieee-le');
   val = fread(fid, [Ntime, Npnt], 'float32')';
   fclose(fid);
 end
@@ -47,7 +47,7 @@ if strcmpi(UnitT,'ms')
 elseif strcmpi(UnitT,'s')
   time = 1000*time;
 elseif ~isempty(UnitT)
-  error(sprintf('Unknown unit of time (%s)', UnitT));
+  ft_error(sprintf('Unknown unit of time (%s)', UnitT));
 end
 
 if strcmpi(UnitM,'uv')
@@ -63,7 +63,7 @@ elseif strcmpi(UnitM,'ft')
 elseif strcmpi(UnitM,'pt')
   val = 1000*val;
 elseif ~isempty(UnitM)
-  error(sprintf('Unknown unit of measurement (%s)', UnitM));
+  ft_error(sprintf('Unknown unit of measurement (%s)', UnitM));
 end
 
 if length(size(lab))==2

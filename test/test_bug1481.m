@@ -3,10 +3,9 @@ function test_bug1481
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1481
-% TEST ft_rejectcomponent
+% DEPENDENCY ft_componentanalysis ft_rejectcomponent ft_apply_montage
 
-load('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/preproc_brainvision.mat');
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/preproc_brainvision.mat'));
 
 elec = ft_read_sens('standard_1020.elc');
 data.elec = elec;
@@ -31,7 +30,7 @@ rej1 = ft_rejectcomponent(cfg, comp, data_reref);
 % ft_componentanalysis/ft_rejectcomponent still works correctly.
 montage = [];
 montage.tra = eye(numel(data.label))-ones(numel(data.label))./numel(data.label);
-montage.labelorg = data.label;
+montage.labelold = data.label;
 montage.labelnew = data.label;
 
 cfg = [];

@@ -18,10 +18,6 @@ function [cfg] = ft_spike_plot_raster(cfg, spike, timelock)
 %   cfg.spikechannel     =  see FT_CHANNELSELECTION for details
 %   cfg.latency          =  [begin end] in seconds, 'maxperiod' (default), 'minperiod',
 %                           'prestim' (all t<=0), or 'poststim' (all t>=0).
-%                           If a third input is present, we will use the
-%                           timelock.cfg.latency field to ensure that the
-%                           raster and the timelock data have the same
-%                           latency.
 %   cfg.linewidth        =  number indicating the width of the lines (default = 1);
 %   cfg.cmapneurons      =  'auto' (default), or nUnits-by-3 matrix.
 %                           Controls coloring of spikes and psth/density
@@ -69,7 +65,7 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance spike timelock
 ft_preamble trackconfig
 
 % check if input spike structure is indeed a spike structure
@@ -108,10 +104,7 @@ cfg = ft_checkconfig(cfg, 'allowed', {'spikechannel', 'latency', 'trials', 'line
 % check if a third input is present, and check if it's a timelock structure
 if nargin==3
   doTopData = true;
-  timelock  = ft_checkdata(timelock,'datatype', 'timelock', 'feedback', 'yes');
-  if isfield(timelock,'cfg') && isfield(timelock.cfg, 'latency')
-    cfg.latency = timelock.cfg.latency; 
-  end
+  timelock  = ft_checkdata(timelock, 'datatype', 'timelock', 'hastrials', 'no', 'feedback', 'yes');
 else
   doTopData = false;
 end
@@ -127,12 +120,12 @@ nTrialsOrig = size(spike.trialtime,1);
 nTrialsShown = nTrialsOrig;
 if  strcmp(cfg.trials,'all')
   cfg.trials = 1:nTrialsOrig;
-elseif islogical(cfg.trials)
+elseif islogical(cfg.trials) || all(cfg.trials==0 | cfg.trials==1)
   cfg.trials = find(cfg.trials);
 end
 cfg.trials = sort(cfg.trials(:));
 
-if max(cfg.trials)>nTrialsOrig, 
+if max(cfg.trials)>nTrialsOrig
   error('maximum trial number in cfg.trials should not exceed length of spike.trial')
 end
 if isempty(cfg.trials), errors('No trials were selected in cfg.trials'); end
@@ -144,7 +137,7 @@ endTrialLatency = spike.trialtime(cfg.trials,2);
 % select the latencies
 if strcmp(cfg.latency,'minperiod')
   cfg.latency = [max(begTrialLatency) min(endTrialLatency)];
-elseif strcmp(cfg.latency,'maxperiod')
+elseif strcmp(cfg.latency,'maxperiod') || strcmp(cfg.latency,'all')
   cfg.latency = [min(begTrialLatency) max(endTrialLatency)];
 elseif strcmp(cfg.latency,'prestim')
   cfg.latency = [min(begTrialLatency) 0];
@@ -189,12 +182,12 @@ for iUnit = 1:nUnits
 end
 
 % some error checks on spike length
-if (cfg.spikelength<=0 || cfg.spikelength>1), 
+if (cfg.spikelength<=0 || cfg.spikelength>1)
   error('cfg.spikelength should be a single number >0 and <=1. 1 row (1 trial) = 1'); 
 end
 
 % some error checks on the size of the top figure
-if (cfg.topplotsize<=0 || cfg.topplotsize>1), 
+if (cfg.topplotsize<=0 || cfg.topplotsize>1)
   error('cfg.topplotsize should be a single number >0 and <=1. 0.7 = 70%'); 
 end
 
@@ -342,7 +335,7 @@ if doTopData
     if ~strcmp(cfg.errorbars,'no')
       
       % check if the right error information is there
-      if ~isfield(timelock,'var')  || ~isfield(timelock,'dof'), 
+      if ~isfield(timelock, 'var') || ~isfield(timelock, 'dof') 
         error('timelock should contain field .var and .dof for errorbars'); 
       end
       
@@ -445,8 +438,8 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
 ft_postamble previous spike
+ft_postamble provenance
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
