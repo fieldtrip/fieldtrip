@@ -10,8 +10,10 @@ function hm=plottetra(node,elem,varargin)
 %      node: a node coordinate list, 3 columns for x/y/z; if node has a 
 %            4th column, it will be used to set the color at each node.
 %      elem: a tetrahedral element list; if elem has a 5th column,
-%            it will be used to separate the mesh into 
-%            sub-domains and display them in different colors.
+%            and the 5th column are all integers, it will be treated
+%            as labels of sub-domains and display them in different colors.
+%            if the 5th column contains non-integer values, it will be
+%            used to map to the color of triangles.
 %      opt:  additional options for a patch object, see plotmesh
 %
 % output:
@@ -41,15 +43,24 @@ if(~iscell(elem))
 		types=unique(tag);
 		hold on;
 		h=[];
-		for i=1:length(types)
+                if(all(isinteger(tag)))
+		    for i=1:length(types)
 			idx=find(tag==types(i));
 			face=volface(elem(idx,1:4));
 	                if(size(node,2)==3)
 			    h=[h plotsurf(node,face,'facecolor',rand(3,1),varargin{:})];
 			else
                             h=[h plotsurf(node,face,varargin{:})];
-			end
-		end
+                        end
+                    end
+                else
+                    [face,eid]=volface(elem(:,1:4));
+                    if(size(elem,2)>=5)
+                        h=[h plotsurf(node,face,'FaceVertexCData',tag(eid), varargin{:})];
+                    else
+                        h=[h plotsurf(node,face,varargin{:})];
+                    end
+                end
 	else
 		face=volface(elem(:,1:4));
 		h=plotsurf(node,face,varargin{:});

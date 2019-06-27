@@ -2,6 +2,12 @@ function [orig, data] = load_curry_data_file(datafile)
 
 [PathName, FileName, Extension] = fileparts(datafile);
 
+if isempty(PathName)
+  % the dataset is in the current working directory, refer to this with a .
+  % to ensure proper path detection later on
+  PathName = '.';
+end
+
 FileName = [FileName, Extension];
 PathName = [PathName filesep]; % add the / or \
 
@@ -45,8 +51,8 @@ end
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % open parameter file
-fid = fopen(ParameterFile,'rt');
-cell = textscan(fid,'%s','whitespace','','endofline','§');
+fid = fopen_or_error(ParameterFile,'rt');
+cell = textscan(fid,'%s','whitespace','','endofline',char(167));
 fclose(fid);
 cont = cell2mat(cell{1});
 
@@ -136,8 +142,8 @@ end
             
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % open label file
-fid = fopen(LabelFile,'rt');
-cell = textscan(fid,'%s','whitespace','','endofline','§');
+fid = fopen_or_error(LabelFile,'rt');
+cell = textscan(fid,'%s','whitespace','','endofline',char(167));
 fclose(fid);
 cont = cell2mat(cell{1});
 
@@ -235,7 +241,7 @@ if fid < 0
 end
 
 if fid >= 0
-    cell = textscan(fid,'%s','whitespace','','endofline','§');
+    cell = textscan(fid,'%s','whitespace','','endofline',char(167));
     fclose(fid);
     cont = cell2mat(cell{1});
 
@@ -273,12 +279,12 @@ if nargout>1
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % read data file
     if nASCII == 1
-        fid = fopen(DataFile,'rt');
+        fid = fopen_or_error(DataFile,'rt');
         cell = textscan(fid,'%f',nChannels*nSamples*nTrials);
         fclose(fid);
         data = reshape([cell{1}],nChannels,nSamples*nTrials);
     else
-        fid = fopen(DataFile,'rb');
+        fid = fopen_or_error(DataFile,'rb');
         data = fread(fid,[nChannels,nSamples*nTrials],'float32');
         fclose(fid);
     end

@@ -104,7 +104,7 @@ end
 source = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical');
 
 % ensure that the source and the parcellation are anatomically consistent
-if ~isalmostequal(source.pos, parcellation.pos, 'abstol', 1000*eps)
+if ~isalmostequal(source.pos, parcellation.pos, 'abstol', 1000000*eps)
   ft_error('the source positions are not consistent with the parcellation, please use FT_SOURCEINTERPOLATE');
 end
 

@@ -82,7 +82,7 @@ inlist = {
 
 [outlist, depmat] = mydepfun(inlist);
 
-problem = ~cellfun(@isempty, regexp(outlist, 'compat'));
+problem = ~cellfun(@isempty, regexp(outlist, 'compat/obsolete'));
 problem = outlist(problem)  % display the output;
 
 if ~isempty(problem)

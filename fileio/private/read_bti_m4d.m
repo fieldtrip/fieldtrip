@@ -31,10 +31,7 @@ if ~strcmp(x, '.m4d')
   filename = [filename '.m4d'];
 end
 
-fid = fopen(filename, 'r');
-if fid==-1
-  ft_error(sprintf('could not open file %s', filename));
-end
+fid = fopen_or_error(filename, 'r');
 
 % start with an empty header structure
 msi = struct;
@@ -86,11 +83,11 @@ while ischar(line)
     ft_error('unexpected content in m4d file');
   end
 
-  if ~isempty(strfind(line, 'Begin')) && (~isempty(strfind(line, 'Meg_Position_Information')) || ~isempty(strfind(line, 'Ref_Position_Information'))) 
+  if ~isempty(strfind(line, 'Begin')) && (~isempty(strfind(line, 'Meg_Position_Information')) || ~isempty(strfind(line, 'Ref_Position_Information')))
     % jansch added the second ~isempty() to accommodate for when the
     % block is about Eeg_Position_Information, which does not pertain to
     % gradiometers, and moreover can be empty (added: Aug 03, 2013)
-    
+
     sep = strfind(key, '.');
     sep = sep(end);
     key = key(1:(sep-1));
@@ -122,7 +119,7 @@ while ischar(line)
     lab = lab(:);
     num = num(:);
     num = cell2mat(num);
-    
+
     % the following is FieldTrip specific
     if size(num,2)==6
       msi.grad.label = [msi.grad.label; lab(:)];
@@ -133,7 +130,7 @@ while ischar(line)
       ft_error('unknown gradiometer design')
     end
   end
-  
+
   % the key looks like 'MSI.fieldname.subfieldname'
   fieldname = key(5:end);
 
@@ -176,7 +173,7 @@ function line = cleanline(line)
 if isempty(line) || (length(line)==1 && all(line==-1))
   return
 end
-comment = findstr(line, '//');
+comment = strfind(line, '//');
 if ~isempty(comment)
   line(min(comment):end) = ' ';
 end

@@ -1,10 +1,9 @@
-function [pos, tri] = mesh_octahedron(n)
+function [pos, tri] = mesh_octahedron
 
-% MESH_OCTAHEDRON returns the vertices and triangles of a refined octahedron,
-% with n refinement steps.
+% MESH_OCTAHEDRON returns the vertices and triangles of an octahedron
 %
 % Use as
-%   [pos tri] = mesh_octahedron(n);
+%   [pos tri] = mesh_octahedron;
 %
 % See also MESH_TETRAHEDRON, MESH_OCTAHEDRON, MESH_SPHERE
 
@@ -27,10 +26,6 @@ function [pos, tri] = mesh_octahedron(n)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 
-if nargin==0 || isempty(n)
-  n = 0;
-end
-
 pos = [
   0  0 +1
   +1  0  0
@@ -51,11 +46,6 @@ tri = [
   6 2 5
   ];
 
-if n>0
-  % perform an n-fold refinement
-  for i=1:n
-    [pos, tri] = refine(pos, tri, 'banks');
-  end
   % scale all vertices to the unit sphere
   pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1,3);
-end
+  

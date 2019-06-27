@@ -30,10 +30,7 @@ function s = read_curry(filename)
 % $Id$
 
 
-fid = fopen(filename, 'rt');
-if fid<0
-  ft_error(sprintf('could not open file: %s', filename));
-end
+fid = fopen_or_error(filename, 'rt');
 
 s    = [];
 line = [];

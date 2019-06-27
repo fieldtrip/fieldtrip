@@ -59,10 +59,7 @@ if nargin<5,                 chanindx = 1:nchn;                                 
 if isempty(chanindx),        ft_error('no channels were specified for reading CTF data'); end
 
 %open the .meg4 file
-fid = fopen(fname,'r','ieee-be');
-if fid == -1,
-  ft_error('could not open datafile');
-end
+fid = fopen_or_error(fname,'r','ieee-be');
 
 %check whether it is a known format
 CTFformat=char(fread(fid, 8, 'uint8'))';
@@ -105,7 +102,7 @@ for trllop = 1:length(trials)
     if fb
       fprintf('data goes beyond 2GB file boundary, continuing with %s\n', nextname);
     end
-    fid = fopen(nextname,'r','ieee-be');
+    fid = fopen_or_error(nextname,'r','ieee-be');
     fseek(fid, 0, 'eof');
     openfile = filenr;
   end

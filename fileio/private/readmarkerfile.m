@@ -15,7 +15,7 @@ if ~exist(name, 'file')
   ft_error('%s not found', name);
 end
 
-f = fopen(name, 'rt');
+f = fopen_or_error(name, 'rt');
 markfile = {};
 while true
   l = fgetl(f);

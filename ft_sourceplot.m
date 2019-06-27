@@ -67,6 +67,7 @@ function ft_sourceplot(cfg, functional, anatomical)
 %                        'auto', if funparameter values are all positive: 'zeromax',
 %                          all negative: 'minzero', both possitive and negative: 'maxabs'
 %   cfg.colorbar      = 'yes' or 'no' (default = 'yes')
+%   cfg.colorbartext  =  string indicating the text next to colorbar
 %
 % The 'ortho' method can also plot time and/or frequency, the other methods can not.
 % If your functional data has a time and/or frequency dimension, you can use
@@ -289,6 +290,7 @@ cfg.markersize    = ft_getopt(cfg, 'markersize',    5);
 cfg.markercolor   = ft_getopt(cfg, 'markercolor',   [1 1 1]);
 cfg.renderer      = ft_getopt(cfg, 'renderer',      'opengl');
 cfg.colorbar      = ft_getopt(cfg, 'colorbar',      'yes');
+cfg.colorbartext  = ft_getopt(cfg, 'colorbartext',  '');
 cfg.voxelratio    = ft_getopt(cfg, 'voxelratio',    'data'); % display size of the voxel, 'data' or 'square'
 cfg.axisratio     = ft_getopt(cfg, 'axisratio',     'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
 cfg.visible       = ft_getopt(cfg, 'visible',       'on');
@@ -535,6 +537,13 @@ if hasfun
         hasfreq = 0;
         hastime = numel(functional.time)>1;
         fun     = reshape(fun, [dim numel(functional.time)]);
+      elseif strcmp(dimord, 'pos_ori_time') || strcmp(dimord, 'dim1_dim2_dim3_ori_time')
+        % functional contains evoked field
+        qi      = 1;
+        hasfreq = 0;
+        hastime = numel(functional.time)>1;
+        % the following will fail if the number of orientations is larger than 1
+        fun     = reshape(fun, [dim numel(functional.time)]);
       elseif strcmp(dimord, 'pos_freq') || strcmp(dimord, 'dim1_dim2_dim3_freq')
         % functional contains frequency spectra
         qi      = 1;
@@ -660,7 +669,7 @@ if hasfun && ~hasmsk && isfield(functional, 'inside')
     msk(functional.inside&isfinite(functional.(cfg.funparameter))) = 1;
     if any(functional.inside&~isfinite(functional.(cfg.funparameter)))
       ft_warning('functional data contains %d NaNs labeled as inside', sum(functional.inside&~isfinite(functional.(cfg.funparameter))));
-    end    
+    end
   else
     if hasana
       msk(functional.inside) = 0.5; % so anatomy is visible
@@ -908,6 +917,7 @@ switch cfg.method
         % use a normal MATLAB coorbar
         hc = colorbar;
         set(hc, 'YLim', [fcolmin fcolmax]);
+        ylabel(hc, cfg.colorbartext);
       else
         ft_warning('no colorbar possible without functional data')
       end
@@ -1084,6 +1094,7 @@ switch cfg.method
     opt.opacmax       = opacmax;
     opt.clim          = cfg.clim; % contrast limits for the anatomy, see ft_volumenormalise
     opt.colorbar      = cfg.colorbar;
+    opt.colorbartext  = cfg.colorbartext;
     opt.queryrange    = cfg.queryrange;
     opt.funcolormap   = cfg.funcolormap;
     opt.crosshair     = istrue(cfg.crosshair);
@@ -1275,6 +1286,7 @@ switch cfg.method
         if strcmp(cfg.maskstyle, 'opacity')
           % functional values are according to original input values
           set(hc, 'YLim', [fcolmin fcolmax]);
+          ylabel(hc, cfg.colorbartext);
         else
           % functional values have been transformed to be scaled
         end
@@ -1359,10 +1371,9 @@ switch cfg.method
     
     % some defaults depend on the geometrical units
     scale = ft_scalingfactor('mm', functional.unit);
+    
     % set the defaults for method=cloud
     cfg.cloudtype          = ft_getopt(cfg, 'cloudtype', 'cloud');
-    cfg.radius             = ft_getopt(cfg, 'radius', 4*scale);
-    cfg.rmin               = ft_getopt(cfg, 'rmin', 1*scale);
     cfg.scalerad           = ft_getopt(cfg, 'scalerad', 'yes');
     cfg.ptsize             = ft_getopt(cfg, 'ptsize', 1);
     cfg.ptdensity          = ft_getopt(cfg, 'ptdensity', 20);
@@ -1400,25 +1411,75 @@ switch cfg.method
       end
     end
     
-    ft_plot_cloud(pos, fun, 'mesh', anatomical,...
-      'radius', cfg.radius, 'rmin', cfg.rmin, 'scalerad', cfg.scalerad, ...
-      'ptsize', cfg.ptsize, 'ptdensity', cfg.ptdensity, 'ptgradient', cfg.ptgradient,...
-      'colorgrad', cfg.colorgrad, 'colormap', cfg.funcolormap, 'clim', [fcolmin fcolmax], ...
-      'unit', functional.unit, 'slice', cfg.slice, 'cloudtype', cfg.cloudtype, ...
-      'ori', cfg.ori, 'slicepos', cfg.slicepos, 'nslices', cfg.nslices, 'minspace', cfg.minspace,...
-      'intersectcolor', cfg.intersectcolor, 'intersectlinestyle', cfg.intersectlinestyle, ...
-      'intersectlinewidth', cfg.intersectlinewidth, 'ncirc', cfg.ncirc, ...
-      'scalealpha', cfg.scalealpha, 'facecolor', cfg.facecolor, 'edgecolor', cfg.edgecolor,...
-      'facealpha', cfg.facealpha, 'edgealpha', cfg.edgealpha, 'marker', cfg.marker,...
-      'vertexcolor', cfg.vertexcolor);
+    if strcmp(cfg.cloudtype, 'cloud') || strcmp(cfg.cloudtype, 'surf')
+      % set the defaults for cloudtype=cloud & cloudtype=surf
+      cfg.radius = ft_getopt(cfg, 'radius', 4*scale);
+      cfg.rmin   = ft_getopt(cfg, 'rmin', 1*scale);
+      
+      ft_plot_cloud(pos, fun, 'mesh', anatomical,...
+        'radius', cfg.radius, 'rmin', cfg.rmin, 'scalerad', cfg.scalerad, ...
+        'ptsize', cfg.ptsize, 'ptdensity', cfg.ptdensity, 'ptgradient', cfg.ptgradient,...
+        'colorgrad', cfg.colorgrad, 'colormap', cfg.funcolormap, 'clim', [fcolmin fcolmax], ...
+        'unit', functional.unit, 'slice', cfg.slice, 'cloudtype', cfg.cloudtype, ...
+        'ori', cfg.ori, 'slicepos', cfg.slicepos, 'nslices', cfg.nslices, 'minspace', cfg.minspace,...
+        'intersectcolor', cfg.intersectcolor, 'intersectlinestyle', cfg.intersectlinestyle, ...
+        'intersectlinewidth', cfg.intersectlinewidth, 'ncirc', cfg.ncirc, ...
+        'scalealpha', cfg.scalealpha, 'facecolor', cfg.facecolor, 'edgecolor', cfg.edgecolor,...
+        'facealpha', cfg.facealpha, 'edgealpha', cfg.edgealpha, 'marker', cfg.marker,...
+        'vertexcolor', cfg.vertexcolor);
+      
+    elseif strcmp(cfg.cloudtype, 'point')
+      if strcmp(cfg.slice, '2d') || strcmp(cfg.slice, '3d')
+        error('slices are not supported for cloudtype=''point''')
+      end
+      
+      % set the defaults for cloudtype=point
+      cfg.radius = ft_getopt(cfg, 'radius', 40*scale);
+      cfg.rmin   = ft_getopt(cfg, 'rmin', 10*scale);
+      
+      % functional scaling
+      cmap    = cfg.funcolormap;
+      cmid    = size(cmap,1)/2;                 % colorbar middle
+      clim    = [fcolmin fcolmax];              % color limits
+      colscf  = fun / max(abs(clim));           % color between -1 and 1, used when colorgrad = 'white'
+      colscf(colscf>1)=1; colscf(colscf<-1)=-1; % clamp values outside the [-1 1] range
+      radscf = abs( fun / max(abs(clim)) );     % radius between 0 and 1, used when colorgrad = scalar
+      radscf(radscf>1)=1; radscf(radscf<0)=0;   % clamp values outside the [0 1] range
+      if strcmp(cfg.scalerad, 'yes')
+        rmax = cfg.rmin+(cfg.radius-cfg.rmin)*radscf; % maximum radius of the clouds
+      else
+        rmax = ones(length(pos), 1)*cfg.radius; % each cloud has the same radius
+      end
+      
+      % plot functional
+      for n = 1:size(pos,1) % sensor loop
+        indx  = ceil(cmid) + sign(colscf(n))*floor(abs(colscf(n)*cmid));
+        indx  = max(min(indx,size(cmap,1)),1);  % index should fall within the colormap
+        fcol  = cmap(indx,:);                   % color [Nx3]
+        hold on; plot3(pos(n,1), pos(n,2), pos(n,3), 'Marker', cfg.marker, 'MarkerSize', rmax(n), 'Color', fcol, 'Linestyle', 'none');
+      end
+      
+      % plot anatomical
+      if hasanatomical
+        ft_plot_mesh(anatomical, 'facecolor', cfg.facecolor, 'EdgeColor', cfg.edgecolor, 'facealpha', cfg.facealpha, 'edgealpha', cfg.edgealpha, 'vertexcolor', cfg.vertexcolor);
+        material dull
+      end
+      
+      % color settings
+      colormap(cmap);
+      if ~isempty(clim) && clim(2)>clim(1)
+        caxis(gca, clim);
+      end
+    end
     
     if istrue(cfg.colorbar)
       if ~strcmp(cfg.slice, '2d')
-        colorbar;
+        c = colorbar;
       else % position the colorbar so that it does not change the axis of the last subplot
         subplotpos = get(subplot(cfg.nslices,1,cfg.nslices), 'Position'); % position of the bottom or rightmost subplot
-        colorbar('Position', [subplotpos(1)+subplotpos(3)+0.01 subplotpos(2) .03 subplotpos(2)+subplotpos(4)*(cfg.nslices+.1)]);
+        c = colorbar('Position', [subplotpos(1)+subplotpos(3)+0.01 subplotpos(2) .03 subplotpos(2)+subplotpos(4)*(cfg.nslices+.1)]);
       end
+      ylabel(c, cfg.colorbartext);
     end
     
     
@@ -1656,6 +1717,8 @@ set(opt.handlesaxes(3), 'Visible',opt.axis);
 if opt.hasfreq && opt.hastime && opt.hasfun
   h4 = subplot(2,2,4);
   tmpdat = double(shiftdim(opt.fun(xi,yi,zi,:,:),3));
+  % uimagesc is in external/fileexchange
+  ft_hastoolbox('fileexchange', 1);
   uimagesc(double(functional.time), double(functional.freq), tmpdat); axis xy;
   xlabel('time'); ylabel('freq');
   set(h4, 'tag', 'TF1');
@@ -1677,10 +1740,11 @@ elseif strcmp(opt.colorbar,  'yes') && ~isfield(opt, 'hc')
     try
       caxis([opt.fcolmin opt.fcolmax]);
     end
+    
     opt.hc = colorbar;
     set(opt.hc, 'location', 'southoutside');
     set(opt.hc, 'position',[0.06+0.06+opt.h1size(1) 0.06-0.06+opt.h3size(2) opt.h2size(1) 0.06]);
-    
+    ylabel(opt.hc, opt.colorbartext);
     try
       set(opt.hc, 'XLim', [opt.fcolmin opt.fcolmax]);
     end
@@ -1927,4 +1991,3 @@ while p~=0
   h = p;
   p = get(h, 'parent');
 end
-

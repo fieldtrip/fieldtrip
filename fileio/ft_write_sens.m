@@ -13,10 +13,11 @@ function ft_write_sens(filename, sens, varargin)
 %
 % The supported file formats are
 %   bioimage_mgrid
+%   matlab
 %
 % See also FT_READ_SENS, FT_DATATYPE_SENS
 
-% Copyright (C) 2017, Robert Oostenveld
+% Copyright (C) 2017-2019, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -42,11 +43,19 @@ format = ft_getopt(varargin, 'format');
 % ensure the input is according to the latest standards
 sens = ft_datatype_sens(sens);
 
+% ensure that the directory exists
+isdir_or_mkdir(fileparts(filename));
+
 switch format
   case 'bioimage_mgrid'
     [p, f, x] = fileparts(filename);
     filename = fullfile(p, [f '.mgrid']);
     write_bioimage_mgrid(filename, sens);
+    
+  case 'matlab'
+    [p, f, x] = fileparts(filename);
+    filename = fullfile(p, [f '.mat']);
+    save(filename, sens);
     
   otherwise
     ft_error('unsupported format "%s"', format);

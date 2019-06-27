@@ -63,6 +63,10 @@ if isfield(data, 'hdr')
   end
 end
 
+% try to determine them on the basis of heuristics, when already present they will stay the same
+hdr.chantype = ft_chantype(hdr);
+hdr.chanunit = ft_chanunit(hdr);
+
 % determine hdr.nSamples, hdr.nSamplesPre, hdr.nTrials
 % always pretend that it is continuous data
 hdr.nSamples    = max(trl(:,2));

@@ -28,7 +28,7 @@ vol = ft_prepare_headmodel(cfg, iskull);
 cfg = [];
 cfg.headmodel = vol;
 cfg.sourcemodel = cortex;    % this is in mm
-cfg.inwardshift = 0;  % this should be expressed in the units consistent with cfg.sourcemodel.unit
+cfg.inwardshift = 0;  % this should be expressed in the units consistent with cfg.unit
 cfg.moveinward = 0;
 gridorig = ft_prepare_sourcemodel(cfg);
 

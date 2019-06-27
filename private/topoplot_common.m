@@ -149,6 +149,7 @@ cfg.interplimits      = ft_getopt(cfg, 'interplimits',     'head');
 cfg.interpolation     = ft_getopt(cfg, 'interpolation',     default_interpmethod);
 cfg.contournum        = ft_getopt(cfg, 'contournum',        6);
 cfg.colorbar          = ft_getopt(cfg, 'colorbar',         'no');
+cfg.colorbartext      = ft_getopt(cfg, 'colorbartext',    '');
 cfg.shading           = ft_getopt(cfg, 'shading',          'flat');
 cfg.comment           = ft_getopt(cfg, 'comment',          'auto');
 cfg.fontsize          = ft_getopt(cfg, 'fontsize',          8);
@@ -183,7 +184,7 @@ cfg.scalepos          = ft_getopt(cfg, 'scalepos',         'layout');
 % the user can either specify a single group of channels for highlighting
 % which are all to be plotted in the same style, or multiple groups with a
 % different style for each group. The latter is used by ft_clusterplot.
-if iscell(cfg.highlightchannel) && ~isempty(cfg.highlightchannel) && ischar(cfg.highlightchannel{1}) 
+if iscell(cfg.highlightchannel) && ~isempty(cfg.highlightchannel) && ischar(cfg.highlightchannel{1})
   % it is a single cell-array with channels names, e.g. {'C1', 'Cz', 'C2'}
   cfg.highlightchannel = {cfg.highlightchannel};
 elseif isnumeric(cfg.highlightchannel)
@@ -270,8 +271,8 @@ switch dtype
     end
   case 'freq'
     if hastime
-    xparam = ft_getopt(cfg, 'xparam', 'time');
-    yparam = ft_getopt(cfg, 'yparam', 'freq');
+      xparam = ft_getopt(cfg, 'xparam', 'time');
+      yparam = ft_getopt(cfg, 'yparam', 'freq');
       cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');
     else
       xparam = 'freq';
@@ -331,10 +332,11 @@ if ~strcmp(cfg.baseline, 'no')
   if ~isempty(cfg.maskparameter)
     tempmask = data.(cfg.maskparameter);
   end
+  tmpcfg = removefields(cfg, 'inputfile');
   if strcmp(xparam, 'time') && strcmp(yparam, 'freq')
-    data = ft_freqbaseline(cfg, data);
+    data = ft_freqbaseline(tmpcfg, data);
   elseif strcmp(xparam, 'time') && strcmp(yparam, '')
-    data = ft_timelockbaseline(cfg, data);
+    data = ft_timelockbaseline(tmpcfg, data);
   end
   % put mask-parameter back if it is set
   if ~isempty(cfg.maskparameter)
@@ -414,10 +416,11 @@ if ~ischar(cfg.xlim) && length(cfg.xlim)>2 %&& any(ismember(dimtok, 'time'))
   nplots = numel(xlims)-1;
   nyplot = ceil(sqrt(nplots));
   nxplot = ceil(nplots./nyplot);
+  tmpcfg = removefields(cfg, 'inputfile');
   for i=1:length(xlims)-1
     subplot(nxplot, nyplot, i);
-    cfg.xlim = xlims(i:i+1);
-    ft_topoplotTFR(cfg, data);
+    tmpcfg.xlim = xlims(i:i+1);
+    ft_topoplotTFR(tmpcfg, data);
   end
   return
 end
@@ -734,7 +737,7 @@ elseif strcmp(cfg.commentpos, 'title')
 elseif ~isempty(strcmp(cfg.layout.label, 'COMNT'))
   x_comment = cfg.layout.pos(strcmp(cfg.layout.label, 'COMNT'), 1);
   y_comment = cfg.layout.pos(strcmp(cfg.layout.label, 'COMNT'), 2);
-  % 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 
+  % 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom',
   comment_handle = ft_plot_text(x_comment, y_comment, comment, 'FontSize', cfg.fontsize, 'FontWeight', cfg.fontweight);
 else
   comment_handle = [];
@@ -748,9 +751,11 @@ end
 % Plot colorbar
 if isfield(cfg, 'colorbar')
   if strcmp(cfg.colorbar, 'yes')
-    colorbar;
+    c = colorbar;
+    ylabel(c, cfg.colorbartext);
   elseif ~strcmp(cfg.colorbar, 'no')
-    colorbar('location', cfg.colorbar);
+    c = colorbar('location', cfg.colorbar);
+    ylabel(c, cfg.colorbartext);
   end
 end
 

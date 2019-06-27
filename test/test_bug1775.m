@@ -36,7 +36,7 @@ vol = ft_datatype_headmodel(vol);
 cfg = [];
 cfg.grad            = grad;
 cfg.headmodel       = vol;
-cfg.sourcemodel.resolution = 2; % cm
+cfg.resolution      = 2; % cm
 cfg.channel         = 'all';
 grid = ft_prepare_leadfield(cfg);
 

@@ -94,7 +94,7 @@ void *tcpsocket(void *arg) {
 
 #ifdef ENABLE_POLLING
     /* wait for data to become available or until the connection is closed */
-    /* thohar: i think this is not neccessary as we dont need a timeout. */
+    /* thohar: i think this is not necessary as we dont need a timeout. */
     /* roboos: we need it to detect when the socket is closed by the client */
     while (1) {
       fds.fd      = client;

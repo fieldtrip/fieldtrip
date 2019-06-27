@@ -21,6 +21,7 @@ function [data] = ft_math(cfg, varargin)
 % If you specify only a single input data structure and the operation is 'add',
 % 'subtract', 'divide' or 'multiply', the configuration should also contain:
 %   cfg.scalar    = scalar value to be used in the operation
+%   cfg.matrix    = matrix with identical size as the data, it will be element-wise be applied
 %
 % The operation 'add' is implemented as follows
 %   y = x1 + x2 + ....
@@ -56,15 +57,7 @@ function [data] = ft_math(cfg, varargin)
 %
 % See also FT_DATATYPE
 
-% Undocumented options:
-%   cfg.matrix = rather than using a scalar, a matrix can be specified. In
-%                this case, the dimensionality of cfg.matrix should be equal
-%                to the dimensionality of data.(cfg.parameter). If used in
-%                combination with cfg.operation, the operation should
-%                involve element-wise combination of the data and the
-%                matrix.
-
-% Copyright (C) 2012-2015, Robert Oostenveld
+% Copyright (C) 2012-2019, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -277,6 +270,7 @@ for p = 1:length(cfg.parameter)
         end
 
       case 'log10'
+        assert(isempty(s), sprintf('cfg.scalar or cfg.matrix are not supported for %s', cfg.operation));
         fprintf('taking the log10 of %s\n', cfg.parameter{p});
         if iscell(x1)
           y = celllog10(x1);
@@ -285,6 +279,7 @@ for p = 1:length(cfg.parameter)
         end
 
       case 'abs'
+        assert(isempty(s), sprintf('cfg.scalar or cfg.matrix are not supported for %s', cfg.operation));
         fprintf('taking the abs of %s\n', cfg.parameter{p});
         if iscell(x1)
           y = cellabs(x1);

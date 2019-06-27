@@ -34,6 +34,7 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 %   cfg.hotkeys        = enables hotkeys (leftarrow/rightarrow/uparrow/downarrow/pageup/pagedown/m) for dynamic zoom and translation (ctrl+) of the axes and color limits
 %   cfg.colormap       = any sized colormap, see COLORMAP
 %   cfg.colorbar       = 'yes', 'no' (default = 'yes')
+%   cfg.colorbartext   =  string indicating the text next to colorbar
 %   cfg.interactive    = Interactive plot 'yes' or 'no' (default = 'yes')
 %                        In a interactive plot you can select areas and produce a new
 %                        interactive plot when a selected area is clicked. Multiple areas
@@ -137,6 +138,7 @@ cfg.ylim           = ft_getopt(cfg, 'ylim',          'maxmin');
 cfg.zlim           = ft_getopt(cfg, 'zlim',          'maxmin');
 cfg.fontsize       = ft_getopt(cfg, 'fontsize',       8);
 cfg.colorbar       = ft_getopt(cfg, 'colorbar',      'yes');
+cfg.colorbartext   = ft_getopt(cfg, 'colorbartext',   '');
 cfg.interactive    = ft_getopt(cfg, 'interactive',   'yes');
 cfg.hotkeys        = ft_getopt(cfg, 'hotkeys',       'yes');
 cfg.renderer       = ft_getopt(cfg, 'renderer',       []); % let MATLAB decide on the default
@@ -408,7 +410,8 @@ end
 axis xy
 
 if isequal(cfg.colorbar, 'yes')
-  colorbar;
+  c = colorbar;
+  ylabel(c, cfg.colorbartext);
 end
 
 % Set callback to adjust color axis

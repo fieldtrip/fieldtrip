@@ -30,10 +30,7 @@ function [magn] = read_ctf_sens(filename)
 %
 % $Id$
 
-fid = fopen(filename, 'r');
-if fid==-1
-  ft_error(sprintf('could not open file %s', filename));
-end
+fid = fopen_or_error(filename, 'r');
 
 % skip the first line
 line = fgetl(fid);

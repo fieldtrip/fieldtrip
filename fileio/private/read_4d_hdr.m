@@ -35,11 +35,7 @@ end
 
 if ~isempty(datafile),
   %always big endian  
-  fid = fopen(datafile, 'r', 'b');
-  
-  if fid == -1
-    ft_error('Cannot open file %s', datafile);
-  end
+  fid = fopen_or_error(datafile, 'r', 'b');
   
   fseek(fid, 0, 'eof');
   header_end = ftell(fid);
@@ -211,7 +207,7 @@ if ~isempty(datafile),
         %here we go: check whether this applies to the whole PDF weight table
         fp = ftell(fid);
         fclose(fid);
-        fid = fopen(datafile, 'r', 'l');
+        fid = fopen_or_error(datafile, 'r', 'l');
         fseek(fid, fp, 'bof');
         for k = 1:Nchan
           header.process(np).step(ns).Weights(k,:) = fread(fid, 23, 'float32=>float32')';
@@ -230,11 +226,7 @@ end
 %end read header
 
 %read config file
-fid = fopen(configfile, 'r', 'b');
-
-if fid == -1
-  ft_error('Cannot open config file');
-end
+fid = fopen_or_error(configfile, 'r', 'b');
 
 header.config_data.version           = fread(fid, 1, 'uint16=>uint16');
 site_name                            = char(fread(fid, 32, 'uchar'))';

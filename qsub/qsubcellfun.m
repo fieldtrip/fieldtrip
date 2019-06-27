@@ -168,7 +168,7 @@ end
 
 % there are potentially errors to catch from the which() function
 if isempty(whichfunction) && ischar(fname)
-  error('Not a valid M-file (%s).', fname);
+  error('not a valid M-file "%s"', fname);
 end
 
 % determine the number of input arguments and the number of jobs

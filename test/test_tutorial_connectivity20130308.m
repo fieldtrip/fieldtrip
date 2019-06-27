@@ -294,7 +294,7 @@ timelock              = ft_timelockanalysis(cfg, data);
 cfg             = [];
 cfg.method      = 'lcmv';
 cfg.hdmfile     = 'SubjectCMC.hdm';
-cfg.sourcemodel.pos    = maxpos;
+cfg.sourcemodel.pos = maxpos;
 cfg.keepfilter  = 'yes';
 source          = ft_sourceanalysis(cfg, timelock);
 % The source reconstruction contains the estimated power and the source-level time-series of the averaged ERF, but here we are not interested in those. The cfg.keepfilter option results in the spatial filter being kept in the output source structure. That spatial can be used to reconstruct the single-trial time series as a virtual channel by multiplying it with the original MEG data.

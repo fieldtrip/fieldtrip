@@ -558,7 +558,7 @@ end % if chan
 xmlfile = [tempname '.xml'];  % this will contain the cifti XML structure
 save(tree, xmlfile);          % write the XMLTREE object to disk
 
-xmlfid = fopen(xmlfile, 'rb');
+xmlfid = fopen_or_error(xmlfile, 'rb');
 xmldat = fread(xmlfid, [1, inf], 'char');
 fclose(xmlfid);
 
@@ -719,7 +719,7 @@ hdr.dim_info        = 0;
 hdr.unused_str      = char(zeros(1,15));
 
 % open the file
-fid = fopen(filename, 'wb');
+fid = fopen_or_error(filename, 'wb');
 
 % write the header, this is 4+540 bytes
 write_nifti2_hdr(fid, hdr);
@@ -728,7 +728,7 @@ if debug
   try
     % write the xml section to a temporary file for debugging
     xmlfile = 'debug.xml';
-    tmp = fopen(xmlfile, 'w');
+    tmp = fopen_or_error(xmlfile, 'w');
     fwrite(tmp, xmldat, 'char');
     fclose(tmp);
   end

@@ -303,7 +303,7 @@ end
 switch dataformat
   
   case {'4d' '4d_pdf', '4d_m4d', '4d_xyz'}
-    [fid, message] = fopen(datafile,'rb','ieee-be');
+    fid = fopen_or_error(datafile,'rb','ieee-be');
     % determine the type and size of the samples
     sampletype = lower(hdr.orig.Format);
     switch sampletype
@@ -411,7 +411,7 @@ switch dataformat
   case 'biosemi_old'
     % this uses the openbdf and readbdf functions that I copied from the EEGLAB toolbox
     epochlength = hdr.orig.Head.SampleRate(1);
-    % it has already been checked in read_header that all channels have the same sampling rate
+    % it has already been checked in ft_read_header that all channels have the same sampling rate
     begepoch = floor((begsample-1)/epochlength) + 1;
     endepoch = floor((endsample-1)/epochlength) + 1;
     nepochs  = endepoch - begepoch + 1;
@@ -778,7 +778,7 @@ switch dataformat
     elseif strcmp(sampletype, 'double')
       samplesize  = 8;
     end
-    [fid,message] = fopen(datafile,'rb','ieee-le');
+    fid = fopen_or_error(datafile,'rb','ieee-le');
     % jump to the desired data
     fseek(fid, offset*samplesize*hdr.nChans, 'cof');
     % read the desired data
@@ -903,10 +903,10 @@ switch dataformat
   case 'itab_raw'
     if any(hdr.orig.data_type==[0 1 2])
       % big endian
-      fid = fopen(datafile, 'rb', 'ieee-be');
+      fid = fopen_or_error(datafile, 'rb', 'ieee-be');
     elseif any(hdr.orig.data_type==[3 4 5])
       % little endian
-      fid = fopen(datafile, 'rb', 'ieee-le');
+      fid = fopen_or_error(datafile, 'rb', 'ieee-le');
     else
       ft_error('unsuppported data_type in itab format');
     end
@@ -941,7 +941,7 @@ switch dataformat
     end
     
   case 'jaga16'
-    fid = fopen(filename, 'r');
+    fid = fopen_or_error(filename, 'r');
     fseek(fid, hdr.orig.offset + (begtrial-1)*hdr.orig.packetsize, 'bof');
     buf = fread(fid, (endtrial-begtrial+1)*hdr.orig.packetsize/2, 'uint16');
     fclose(fid);
@@ -971,7 +971,7 @@ switch dataformat
     end
     
     iEpoch = unique(trlind(begsample:endsample));
-    sfid = fopen(filename, 'r');
+    sfid = fopen_or_error(filename, 'r');
     dat  = zeros(hdr.nChans, endsample - begsample + 1);
     for i = 1:length(iEpoch)
       dat(:, trlind(begsample:endsample) == iEpoch(i)) =...
@@ -1256,20 +1256,19 @@ switch dataformat
   case 'neurosim_spikes'
     ft_warning('Reading Neurosim spikes as continuous data, for better memory efficiency use spike structure provided by ft_read_spike instead.');
     spike = ft_read_spike(filename);
-    cfg          = [];
+    cfg = [];
     cfg.trialdef.triallength = inf;
     cfg.trialfun = 'ft_trialfun_general';
-    cfg.trlunit='samples'; %ft_trialfun_general gives us samples, not timestamps
-    
-    cfg.datafile=filename;
+    cfg.trlunit = 'samples'; % ft_trialfun_general gives us samples, not timestamps
+    cfg.datafile = filename;
     cfg.hdr = ft_read_header(cfg.datafile);
     ft_warning('off','FieldTrip:ft_read_event:unsupported_event_format')
     cfg = ft_definetrial(cfg);
     ft_warning('on','FieldTrip:ft_read_event:unsupported_event_format')
     spiketrl = ft_spike_maketrials(cfg,spike);
     
-    dat=ft_checkdata(spiketrl,'datatype', 'raw', 'fsample', spiketrl.hdr.Fs);
-    dat=dat.trial{1};
+    dat = ft_checkdata(spiketrl,'datatype', 'raw', 'fsample', spiketrl.hdr.Fs);
+    dat = dat.trial{1};
     
   case 'nmc_archive_k'
     dat = read_nmc_archive_k_data(filename, hdr, begsample, endsample, chanindx);
@@ -1437,7 +1436,7 @@ switch dataformat
     % or Yokogawa MEG160 (old inofficial toolbox)
     % newest toolbox takes precedence over others.
     
-    if ft_hastoolbox('yokogawa_meg_reader', 3); %stay silent if it cannot be added
+    if ft_hastoolbox('yokogawa_meg_reader', 3) % stay silent if it cannot be added
       dat = read_yokogawa_data_new(filename, hdr, begsample, endsample, chanindx);
     elseif ft_hastoolbox('sqdproject', 2) % give warning if it cannot be added
       % channels are counted 0-based, samples are counted 1-based
@@ -1447,33 +1446,18 @@ switch dataformat
       ft_hastoolbox('yokogawa', 1); % error if it cannot be added
       dat = read_yokogawa_data(filename, hdr, begsample, endsample, chanindx);
     end
-    
-  case 'blackrock_nsx'
-    % use the NPMK toolbox for the file reading
-    ft_hastoolbox('NPMK', 1);
-    
-    % ensure that the filename contains a full path specification,
-    % otherwise the low-level function fails
-    [p,f,e] = fileparts(filename);
-    if ~isempty(p)
-      % this is OK
-    elseif isempty(p)
-      filename = which(filename);
-    end
-    orig = openNSx(filename, 'duration', [begsample endsample], 'channels', chanindx);
-    dat  = double(orig.Data);
-    
+        
   otherwise
-    % attempt to run dataformat as a function
-    % in case using an external read function was desired, this is where it is executed
-    % if it fails, the regular unsupported error message is thrown
+    % attempt to run "dataformat" as a function
+    % this allows the user to specify an external reading function
+    % if it fails, the regular unsupported warning message is thrown
     try
-      dat = feval(dataformat,filename, hdr, begsample, endsample, chanindx);
+      dat = feval(dataformat, filename, hdr, begsample, endsample, chanindx);
     catch
       if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
         dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
       else
-        ft_error('unsupported data format (%s)', dataformat);
+        ft_error('unsupported data format "%s"', dataformat);
       end
     end
 end % switch dataformat
@@ -1520,7 +1504,7 @@ if ~isempty(chanunit)
       for i=1:length(scaling)
         dat(i,:) = scaling(i) .* dat(i,:);
       end
-    case'chans_samples_trials';
+    case'chans_samples_trials'
       for i=1:length(scaling)
         dat(i,:,:) = scaling(i) .* dat(i,:,:);
       end
@@ -1567,7 +1551,7 @@ if inflated
 end
 
 if strcmp(dataformat, 'bci2000_dat') || strcmp(dataformat, 'eyelink_asc') || strcmp(dataformat, 'gtec_mat')
-  % caching for these formats is handled in the main section and in read_header
+  % caching for these formats is handled in the main section and in ft_read_header
 else
   % implement caching in a data independent way
   if cache && requestsamples

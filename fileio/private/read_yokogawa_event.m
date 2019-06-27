@@ -105,7 +105,7 @@ elseif ft_hastoolbox('yokogawa');
 
   if hdr.orig.acq_type==handles.AcqTypeEvokedRaw
     % read the trigger id from all trials
-    fid   = fopen(filename, 'r');
+    fid   = fopen_or_error(filename, 'r');
     value = GetMeg160TriggerEventM(fid);
     fclose(fid);
     % use the standard FieldTrip header for trial events

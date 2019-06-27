@@ -41,7 +41,7 @@ if exist(paramfile,'file') ~= 2
 end
 
 % Reading samplingrate and channelnumber from paramfile
-paramid = fopen(paramfile);
+paramid = fopen_or_error(paramfile);
 allfound = false;
 param = [];
 channelnum = []; samplingrate = [];
@@ -81,7 +81,7 @@ end % while
 fclose(paramid);
 
 % Get dataformat out of paramfile and default it when not present
-paramid = fopen(paramfile);
+paramid = fopen_or_error(paramfile);
 allfound = false;
 param = [];
 dataformat = [];
@@ -111,7 +111,7 @@ end
 
 % Get missing channel numbers from paramfile if not read in from above
 if ~exist('missingchan','var')
-  paramid = fopen(paramfile);
+  paramid = fopen_or_error(paramfile);
   allfound = false;
   param = [];
   missingchan = [];
@@ -163,7 +163,7 @@ elseif strcmp(paramfile(end-10:end),'.params.txt')
 else
   ft_error(['could not properly parse param-file: ' paramfile])
 end
-datafid = fopen(datafile,'r','l');
+datafid = fopen_or_error(datafile,'r','l');
 fseek(datafid,0,'eof');
 samplesnum = ftell(datafid) / nBytes;
 

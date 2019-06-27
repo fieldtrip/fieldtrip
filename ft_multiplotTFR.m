@@ -37,6 +37,7 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 %                          Draw a box around each graph
 %   cfg.hotkeys          = enables hotkeys (up/down arrows) for dynamic colorbar adjustment
 %   cfg.colorbar         = 'yes', 'no' (default = 'no')
+%   cfg.colorbartext     =  string indicating the text next to colorbar
 %   cfg.colormap         = any sized colormap, see COLORMAP
 %   cfg.showlabels       = 'yes', 'no' (default = 'no')
 %   cfg.showoutline      = 'yes', 'no' (default = 'no')
@@ -80,8 +81,8 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 %
 % The layout defines how the channels are arranged and what the size of each
 % subplot is. You can specify the layout in a variety of ways:
-%  - you can provide a pre-computed layout structure (see ft_prepare_layout)
-%  - you can give the name of an ascii layout file with extension *.lay
+%  - you can provide a pre-computed layout structure, see FT_PREPARE_LAYOUT
+%  - you can give the name of an ASCII layout file with extension *.lay
 %  - you can give the name of an electrode file
 %  - you can give an electrode definition, i.e. "elec" structure
 %  - you can give a gradiometer definition, i.e. "grad" structure
@@ -179,6 +180,7 @@ cfg.xlim           = ft_getopt(cfg, 'xlim', 'maxmin');
 cfg.ylim           = ft_getopt(cfg, 'ylim', 'maxmin');
 cfg.zlim           = ft_getopt(cfg, 'zlim', 'maxmin');
 cfg.colorbar       = ft_getopt(cfg, 'colorbar', 'no');
+cfg.colorbartext   = ft_getopt(cfg, 'colorbartext', '');
 cfg.comment        = ft_getopt(cfg, 'comment', date);
 cfg.limittext      = ft_getopt(cfg, 'limittext', 'default');
 cfg.showlabels     = ft_getopt(cfg, 'showlabels', 'no');
@@ -539,7 +541,8 @@ end % show scale
 
 % show colorbar
 if isfield(cfg, 'colorbar') && (strcmp(cfg.colorbar, 'yes'))
-  colorbar;
+  c = colorbar;
+  ylabel(c, cfg.colorbartext);
 end
 
 % Set colour axis

@@ -24,6 +24,7 @@ function [cfg] = ft_movieplotTFR(cfg, data)
 %   cfg.baseline     = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
 %   cfg.baselinetype = 'absolute', 'relative', 'relchange', 'normchange', 'db' or 'zscore' (default = 'absolute')
 %   cfg.colorbar     = 'yes', 'no' (default = 'no')
+%   cfg.colorbartext =  string indicating the text next to colorbar
 %
 % the layout defines how the channels are arranged. you can specify the
 % layout in a variety of ways:
@@ -107,6 +108,7 @@ cfg.movietime     = ft_getopt(cfg, 'movietime',     []);
 cfg.movierpt      = ft_getopt(cfg, 'movierpt',      1);
 cfg.baseline      = ft_getopt(cfg, 'baseline',      'no');
 cfg.colorbar      = ft_getopt(cfg, 'colorbar',      'no');
+cfg.colorbartext  = ft_getopt(cfg, 'colorbartext',  '');
 cfg.renderer      = ft_getopt(cfg, 'renderer',      []); % let MATLAB decide on the default
 cfg.interactive   = ft_getopt(cfg, 'interactive',   'yes');
 dointeractive     = istrue(cfg.interactive);
@@ -317,7 +319,8 @@ if dointeractive
   caxis(cfg.zlim);
   axis off;
   if opt.colorbar
-    colorbar
+    c = colorbar;
+    ylabel(c, cfg.colorbartext);
   end
 
   % add sum stuff at a higher level for quicker access in the callback

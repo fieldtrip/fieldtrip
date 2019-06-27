@@ -132,7 +132,7 @@ end
 
 % no signal was given, compute a cosine-wave signal as timcourse for the dipole
 if ~isfield(cfg.dip, 'signal')
-  % set some additional defaults if neccessary
+  % set some additional defaults if necessary
   if ~isfield(cfg.dip, 'frequency')
     cfg.dip.frequency = ones(Ndipoles,1)*10;
   end

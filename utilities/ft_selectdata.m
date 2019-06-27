@@ -270,10 +270,6 @@ if ~keepfreqdim,    assert(avgoverfreq,    'removing a dimension is only possibl
 if ~keeptimedim,    assert(avgovertime,    'removing a dimension is only possible when averaging'); end
 if ~keeprptdim,     assert(avgoverrpt,     'removing a dimension is only possible when averaging'); end
 
-if strcmp(cfg.select, 'union') && (avgoverpos || avgoverchan || avgoverchancmb || avgoverfreq || avgovertime || avgoverrpt)
-  ft_error('cfg.select ''union'' in combination with averaging across one of the dimensions is not possible');
-end
-
 % trim the selection to all inputs, rpt and rpttap are dealt with later
 if hasspike,   [selspike,   cfg] = getselection_spike  (cfg, varargin{:}); end
 if haspos,     [selpos,     cfg] = getselection_pos    (cfg, varargin{:}, cfg.tolerance, cfg.select); end

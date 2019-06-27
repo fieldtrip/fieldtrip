@@ -89,11 +89,8 @@ dat = nan(numel(chanindx), endsample-begsample+1);
 
 if trlnum>1
   % original implementation, used when the input data has multiple trials
-  
-  trllen = zeros(trlnum,1);
-  for trllop=1:trlnum
-    trllen(trllop) = size(data.trial{trllop},2);
-  end
+
+  trllen = trl(:,2) - trl(:,1) + 1;
   
   % check whether data.trial is consistent with trl
   if size(trl,1)~=length(data.trial)
@@ -108,42 +105,48 @@ if trlnum>1
     ft_error('selected channels are not present in the data')
   end
   
-  % these are for bookkeeping
-  maxsample = max([trl(:,2); endsample]);
-  count     = zeros(1, maxsample, 'int32');
-  trialnum  = zeros(1, maxsample, 'int32');
-  samplenum = zeros(1, maxsample, 'int32');
-  
   % determine for each sample in the data where it originates from
-  for trllop=1:trlnum
+  if begsample<1
+    buflen  = endsample;
+  else
+    buflen  = endsample - begsample + 1;
+  end
+  buffer    = zeros(1, buflen, 'int32');
+
+  count     = buffer;
+  trialnum  = buffer;
+  samplenum = buffer;
+
+  for trllop = 1:trlnum
     trlbeg = trl(trllop,1);
     trlend = trl(trllop,2);
     if trlbeg>endsample || trlend<begsample
       % skip this piece, it is not interesting because the requested range falls completely outside
     else
+      trlbeg = trlbeg - begsample + 1;
+      trlend = trlend - begsample + 1;
+      offset = 0;
+      overlap = 0;
+      if trlbeg < 1
+        offset = 1 - trlbeg;
+        trlbeg = 1;
+      end
+      if trlend > buflen
+        overlap = trlend - buflen;
+        trlend = buflen;
+      end
       % make vector with 0= no sample of old data, 1= one sample of old data, 2= two samples of old data, etc
       count(trlbeg:trlend) = count(trlbeg:trlend) + 1;
       % make vector with 1's if samples belong to trial 1, 2's if samples belong to trial 2 etc. overlap/ no data --> Nan
       trialnum(trlbeg:trlend) = trllop;
       % make samplenum vector with samplenrs for each sample in the old trials
-      samplenum(trlbeg:trlend) = 1:trllen(trllop);
+      samplenum(trlbeg:trlend) = (1 + offset):(trllen(trllop) - overlap);
     end
   end
   
   % overlap --> NaN
   % trialnum(count>1)  = NaN;
   % samplenum(count>1) = NaN;
-  
-  % make a subselection for the desired samples
-  if begsample<1
-    count     = count    (1:endsample);
-    trialnum  = trialnum (1:endsample);
-    samplenum = samplenum(1:endsample);
-  else
-    count     = count    (begsample:endsample);
-    trialnum  = trialnum (begsample:endsample);
-    samplenum = samplenum(begsample:endsample);
-  end
   
   % check if all samples are present and are not present twice or more
   if any(count>1)

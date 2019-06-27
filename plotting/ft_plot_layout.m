@@ -190,7 +190,7 @@ if label
       labelalignv = repmat({labelalignv},[n 1]);
     end
     if numel(Lbl)~=numel(labelrotate)||numel(Lbl)~=numel(labelalignh)||numel(Lbl)~=numel(labelalignv)
-      eror('there is something wrong with the input arguments');
+      error('there is something wrong with the input arguments');
     end
     for k = 1:numel(Lbl)
       h = text(X(k)+labelxoffset, Y(k)+labelyoffset, Lbl{k}, 'interpreter', interpreter, 'horizontalalignment', labelalignh{k}, 'verticalalignment', labelalignv{k}, 'rotation', labelrotate(k), 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);

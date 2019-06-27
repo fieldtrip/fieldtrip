@@ -27,10 +27,7 @@ function log = read_neuromag_maxfilterlog(filename)
 %
 % $Id$
 
-fid = fopen(filename, 'rt');
-if fid<0
-  ft_error('cannot open %s', filername);
-end
+fid = fopen_or_error(filename, 'rt');
 
 % ************************************************************
 % *** This is Elekta Neuromag MaxFilter(TM) version 2.2.15 ***

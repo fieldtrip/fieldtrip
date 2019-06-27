@@ -64,16 +64,16 @@ curPwd = getcustompwd();
 
 num = 0;
 while (num < maxnum)
-  
+
   files = dir();
   for k = 1:numel(files)
-    
+
     % preliminary filter to get just the qsub-specific output files
     jobid = regexp(files(k).name, '^(.*)\.o.*$', 'tokens');
-    
-    if ~isempty(jobid) && isempty(findstr(foundJobs, jobid{1}{1}))
+
+    if ~isempty(jobid) && ~contains(foundJobs, jobid{1}{1})
       jobid = jobid{1}{1};
-      
+
       % wait until not only the stdout file exists, but also the stderr and
       % _output.mat. If we fire the callback before all three files are
       % present, a subsequent call to qsubget will fail
@@ -82,29 +82,29 @@ while (num < maxnum)
       while ~exist(outputfile,'file') || ~isfile(logerr)
         pausejava(0.01);
       end
-    
+
       if (regexpFilt && ~isempty(regexp(jobid, filter, 'once'))) || (~regexpFilt && ~isempty(find(strcmp(jobid, filter))))
-        
+
         if (~regexpFilt && nargin(callback)>1)
           % also provide an index into the filter array
           callback(jobid, find(strcmp(jobid, filter)));
         else
           callback(jobid);
         end
-        
+
         num = num+1;
         foundJobs = [foundJobs '|' jobid];
       end
-      
+
     end
   end
-  
+
   if (sleep > 0)
     pausejava(sleep);
   end
-  
+
 end
-  
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function that detects a file, even with a wildcard in the filename
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
