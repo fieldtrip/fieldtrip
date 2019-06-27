@@ -1116,6 +1116,11 @@ elseif filetype_check_extension(filename, '.oxy3')
   type = 'artinis_oxy3';
   manufacturer = 'Artinis Medical Systems';
   content = '(f)NIRS data';
+  % known Artinis file format
+elseif filetype_check_extension(filename, '.oxy4')
+  type = 'artinis_oxy4';
+  manufacturer = 'Artinis Medical Systems';
+  content = '(f)NIRS data';
 elseif filetype_check_extension(filename, '.oxyproj')
   type = 'artinis_oxyproj';
   manufacturer = 'Artinis Medical Systems';
