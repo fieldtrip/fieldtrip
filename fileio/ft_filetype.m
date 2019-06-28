@@ -1111,12 +1111,11 @@ elseif filetype_check_extension(filename, '.sd') && filetype_check_header(filena
   manufacturer = 'Homer';
   content = 'source detector information';
 
-  % known Artinis file format
+  % known Artinis file formats
 elseif filetype_check_extension(filename, '.oxy3')
   type = 'artinis_oxy3';
   manufacturer = 'Artinis Medical Systems';
   content = '(f)NIRS data';
-  % known Artinis file format
 elseif filetype_check_extension(filename, '.oxy4')
   type = 'artinis_oxy4';
   manufacturer = 'Artinis Medical Systems';

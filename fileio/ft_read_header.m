@@ -78,7 +78,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %
 % The following NIRS dataformats are supported
 %   BUCN - Birkbeck college, London (*.txt)
-%   Artinis - Artinis Medical Systems B.V. (*.oxy3, *.oxyproj)
+%   Artinis - Artinis Medical Systems B.V. (*.oxy3, *.oxy4, *.oxyproj)
 %
 % The following Eyetracker dataformats are supported
 %   EyeLink - SR Research (*.asc)
@@ -2277,6 +2277,10 @@ switch headerformat
   case 'artinis_oxy3'
     ft_hastoolbox('artinis', 1);
     hdr = read_artinis_oxy3(filename);
+
+  case 'artinis_oxy4'
+    ft_hastoolbox('artinis', 1);
+    hdr = read_artinis_oxy4(filename);
 
   case 'artinis_oxyproj'
     ft_hastoolbox('artinis', 1);
