@@ -157,17 +157,42 @@ if needhdr
     end
   end % if ftype_ncs
 
+  % take into account the pause/stop feature + epoch data if discontinuous recording
+  ncs = read_neuralynx_ncs(fname{1});
+  idxPauses = find(ncs.NumValidSamp < recordsize);
+  nValidSamples = ncs.NumValidSamp(idxPauses);
+  nPauses = length(idxPauses);
+  isPause = false(nPauses, 1);
+  for i = 1:nPauses
+      if idxPauses(i) == ncs.NRecords
+          isPause(i) = true;
+      else
+          timeGap = double(diff(ncs.TimeStamp(idxPauses(i):idxPauses(i)+1)));
+          if timeGap > 3 * mode(diff(ncs.TimeStamp)) % threshold to be tuned
+              isPause(i) = true;
+          end
+      end
+  end
+  idxPauses = idxPauses(isPause);
+  nValidSamples = nValidSamples(isPause);
+  nTrials = length(idxPauses);
+  trl = zeros(nTrials, 3);
+  trl(:, 2) = ((idxPauses-1)*recordsize + nValidSamples)';
+  trl(1, 1) = 1;
+  trl(2:end, 1) = (idxPauses(1:end-1)*recordsize+1)';
+
   % construct the header that applies to all channels combined
   hdr.nChans         = length(label);
   hdr.label          = label;
   hdr.filename       = fname;
-  hdr.nTrials        = 1;                           % it is continuous
+  hdr.nTrials        = nTrials;
   hdr.Fs             = SamplingFrequency(1);
-  hdr.nSamplesPre    = 0;                           % it is continuous
-
+  hdr.nSamplesPre    = 0;
+  hdr.trl = trl;
+  
   if ~isempty(ftype_ncs)
     % these elements are only relevant for continuously sampled channels
-    hdr.nSamples           = NRecords(1) * 512;
+    hdr.nSamples           = NRecords(1) * recordsize;
     hdr.FirstTimeStamp     = FirstTimeStamp(1);
     hdr.LastTimeStamp      = LastTimeStamp(1);
     hdr.TimeStampPerSample = TimeStampPerSample(1);
