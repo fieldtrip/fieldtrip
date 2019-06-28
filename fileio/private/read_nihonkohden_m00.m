@@ -33,7 +33,7 @@ function [hdr, dat] = read_nihonkohden_m00(filename)
 % $Id$
 
 % open the ascii file
-fid = fopen(filename, 'r');
+fid = fopen_or_error(filename, 'r');
 
 %header line 1: acquisition information
 hline1 = fgets(fid);

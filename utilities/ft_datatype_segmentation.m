@@ -253,7 +253,7 @@ end
 % the segmentation is a speciat type of volume structure, so ensure that it also fulfills the requirements for that
 segmentation = ft_datatype_volume(segmentation, 'version', volversion);
 
-% For the pass through ft_datatype_volume it is perhaps neccessary to remove
+% For the pass through ft_datatype_volume it is perhaps necessary to remove
 % the fields that are specific for the segmentation and add them later again.
 % At this moment ft_datatype_volume nicely passes all fields, so there is no
 % special handling of the segmentation fields needed.

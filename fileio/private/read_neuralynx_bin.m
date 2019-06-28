@@ -52,7 +52,7 @@ needdat = (nargin>=2);
 oldformat = false;
 
 % the first 8 bytes contain the header
-fid    = fopen(filename, 'rb', 'ieee-le');
+fid    = fopen_or_error(filename, 'rb', 'ieee-le');
 magic  = fread(fid, 8, 'uint8=>char')';
 
 % the header describes the format of the subsequent samples

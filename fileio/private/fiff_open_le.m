@@ -45,11 +45,8 @@ end
 
 me='MNE:fiff_open';
 verbose=false;
-fid = fopen(fname,'rb','ieee-le'); % Arjen Stolk: this is 'ieee-be' in fiff_open.m
+fid = fopen_or_error(fname,'rb','ieee-le'); % Arjen Stolk: this is 'ieee-be' in fiff_open.m
 
-if (fid < 0)
-    ft_error(me,'Cannot open file %s', fname);
-end;
 %
 %   Check that this looks like a fif file
 %

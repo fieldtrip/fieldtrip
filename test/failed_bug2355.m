@@ -63,7 +63,7 @@ grid5 = ft_prepare_sourcemodel(cfg5);
 assert(sum(grid5.inside)==2469);
 
 %% repeat with cfg.xgrid etc. instead of cfg.resolution
-% cfg.sourceunits was used prior to 31 October 2013, now it is cfg.sourcemodel.unit
+% cfg.sourceunits was used prior to 31 October 2013, now it is cfg.unit
 
 clear cfg* grid*
 
@@ -93,7 +93,7 @@ grid3 = ft_prepare_sourcemodel(cfg3);
 assert(sum(grid3.inside)==2469);
 
 %% repeat with new name of cfg.sourceunits option
-% cfg.sourceunits was used prior to 31 October 2013, now it is cfg.sourcemodel.unit
+% cfg.sourceunits was used prior to 31 October 2013, now it is cfg.unit
 
 clear cfg* grid*
 

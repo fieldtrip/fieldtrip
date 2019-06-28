@@ -150,6 +150,10 @@ if isempty(val)
 end
 if all(size(val)==1)
   str = sprintf('%s = { %s };\n', name, printval(val{1}));
+elseif numel(siz) == 2 && siz(2) == 1
+  % print column vector as (non-conjugate) transposed row
+  str = printcell(name, transpose(val));
+  str = sprintf('%s.'';\n', str(1:end-2));
 else
   str = sprintf('%s = {\n', name);
   for i=1:siz(1)
@@ -180,11 +184,16 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function str = printmat(val)
+siz = size(val);
 if numel(val) == 0
   str = '[]';
 elseif numel(val) == 1
   % an integer will never get trailing decimals when using %g
   str = sprintf('%g', val);
+elseif numel(siz) == 2 && siz(2) == 1
+  % print column vector as (non-conjugate) transposed row
+  str = printmat(transpose(val));
+  str = sprintf('%s.''', str);
 elseif ismatrix(val)
   if isa(val, 'double')
     str = mat2str(val);

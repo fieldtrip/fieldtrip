@@ -41,7 +41,7 @@ function [this] = read_biff(filename, opt)
 define_biff;
 this = [];
 
-fid = fopen(filename, 'r');
+fid = fopen_or_error(filename, 'r');
 fseek(fid,0,'bof');
 
 [id, siz] = chunk_header(fid);
@@ -50,17 +50,17 @@ switch id
   case 'SEMG'
     child  = subtree(BIFF, id);
     this   = read_biff_chunk(fid, id, siz, child);
-    
+
   case 'LIST'
     fprintf('skipping unimplemented chunk id="%s" size=%4d\n', id, siz);
-    
+
   case 'CAT '
     fprintf('skipping unimplemented chunk id="%s" size=%4d\n', id, siz);
-    
+
   otherwise
     fprintf('skipping unrecognized chunk id="%s" size=%4d\n', id, siz);
     fseek(fid, siz, 'cof');
-    
+
 end                         % switch
 fclose(fid);                        % close file
 
@@ -76,27 +76,27 @@ if strcmp(id, 'null')               % this is an empty chunk
   fprintf('skipping empty chunk id="%s" size=%4d\n', id, siz);
   assert(~feof(fid));
   fseek(fid, siz, 'cof');
-  
+
 elseif isempty(chunk)               % this is an unrecognized chunk
   fprintf('skipping unrecognized chunk id="%s" size=%4d\n', id, siz);
   assert(~feof(fid));
   fseek(fid, siz, 'cof');
-  
+
 else
   eoc   = ftell(fid) + siz;
   name  = char(chunk.desc(2));
   type  = char(chunk.desc(3));
-  
+
   fprintf('reading chunk id= "%s" size=%4d name="%s"\n', id, siz, name);
-  
+
   switch type
     case 'group'
-      
+
       while ~feof(fid) && ftell(fid)<eoc
         % read all subchunks
         [id, siz] = chunk_header(fid);
         child     = subtree(chunk, id);
-        
+
         if ~isempty(child)
           % read data and add subchunk data to chunk structure
           name  = char(child.desc(2));
@@ -107,22 +107,22 @@ else
           fseek(fid, siz, 'cof');
         end
       end                     % while
-      
+
     case 'string'
       this = char(fread(fid, siz, 'uchar')');
-      
+
     case {'char', 'uchar', 'int8', 'int16', 'int32', 'int64', 'uint8', 'uint16', 'uint32', 'float32', 'float64'}
       this = fread(fid, 1, type);
-      
+
     case {'int8vec', 'int16vec', 'int32vec', 'int64vec', 'uint8vec', 'uint16vec', 'uint32vec', 'float32vec', 'float64vec'}
       ncol = fread(fid, 1, 'uint32');
       this = fread(fid, ncol, type(1:(length(type)-3)));
-      
+
     case {'int8mat', 'int16mat', 'int32mat', 'int64mat', 'uint8mat', 'uint16mat', 'uint32mat', 'float32mat', 'float64mat'}
       nrow = fread(fid, 1, 'uint32');
       ncol = fread(fid, 1, 'uint32');
       this = fread(fid, [nrow, ncol], type(1:(length(type)-3)));
-      
+
     otherwise
       fseek(fid, siz, 'cof');         % skip this chunk
       sprintf('unimplemented data type "%s" in chunk "%s"', type, id);
@@ -134,10 +134,10 @@ end                     % else
 % SUBFUNCTION subtree
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function child = subtree(parent, id)
-blank = findstr(id, ' ');
+blank = strfind(id, ' ');
 while ~isempty(blank)
   id(blank) = '_';
-  blank = findstr(id, ' ');
+  blank = strfind(id, ' ');
 end
 elem  = fieldnames(parent);                   % list of all subitems
 num   = find(strcmp(elem, id));               % number in parent tree

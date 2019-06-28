@@ -100,17 +100,15 @@ end
 
 % read or create the layout that will be used for plotting
 tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
-lay = ft_prepare_layout(tmpcfg); %, varargin{1});
-cfg.layout = lay;
-ft_plot_layout(lay, 'box', false,'label','no','point','no');
+layout = ft_prepare_layout(tmpcfg);
+ft_plot_layout(layout, 'box', false, 'label', 'no', 'point', 'no');
 
-%[chNum,X,Y,Width,Height,Lbl] = textread(cfg.layout,'%f %f %f %f %f %s');
-X = lay.pos(:,1);
-Y = lay.pos(:,2);
-Width = lay.width;
-Height = lay.height;
-Lbl = lay.label;
-chNum = numel(lay.label);
+X = layout.pos(:,1);
+Y = layout.pos(:,2);
+Width = layout.width;
+Height = layout.height;
+Lbl = layout.label;
+chNum = numel(layout.label);
 
 xScaleFac = 1/(max(Width)+ max(X) - min(X));
 yScaleFac = 1/(max(Height)+ max(Y) - min(Y));
@@ -120,29 +118,30 @@ Ypos = 0.9*yScaleFac*(Y-min(Y));
 
 for k=1:length(chNum) - 2
   subplotOL('position',[Xpos(k) Ypos(k)+(Height(k)*yScaleFac) Width(k)*xScaleFac*2 Height(k)*yScaleFac*2])
-  config.layout = cfg.layout;
+  tmpcfg = [];
+  tmpcfg.layout = layout;
   if exist('tmpdata', 'var')
-    config.style      = 'straight';
-    config.marker     = 'off';
+    tmpcfg.style      = 'straight';
+    tmpcfg.marker     = 'off';
     try
-        config.refmarker = strmatch(Lbl(k), data.reflabel);
+      tmpcfg.refmarker = strmatch(Lbl(k), data.reflabel);
     catch
-        config.refmarker = strmatch(Lbl(k), data.label);
+      tmpcfg.refmarker = strmatch(Lbl(k), data.label);
     end
-    config.interplimits = 'electrodes';
+    tmpcfg.interplimits = 'electrodes';
     if isfield(cfg, 'xparam')
-      config.xparam = cfg.xparam;
-      config.xlim   = xparam;
+      tmpcfg.xparam = cfg.xparam;
+      tmpcfg.xlim   = xparam;
     else
-      config.xparam = 'freq';
-      config.xlim   = [k-0.5 k+0.5];
+      tmpcfg.xparam = 'freq';
+      tmpcfg.xlim   = [k-0.5 k+0.5];
     end
-    config.parameter  = cfg.parameter;
-    config.refchannel = Lbl(k);
-    config.colorbar   = 'no';
-    config.zlim       = scale;
-    config.grid_scale = 30;
-    ft_topoplotTFR(config, data);
+    tmpcfg.parameter  = cfg.parameter;
+    tmpcfg.refchannel = Lbl(k);
+    tmpcfg.colorbar   = 'no';
+    tmpcfg.zlim       = scale;
+    tmpcfg.grid_scale = 30;
+    ft_topoplotTFR(tmpcfg, data);
     drawnow
   end
 end

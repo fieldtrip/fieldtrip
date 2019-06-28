@@ -151,7 +151,7 @@ switch (cfg.filetype)
     ft_write_cifti(cfg.filename, source, 'parameter', cfg.parameter, 'brainstructure', cfg.brainstructure, 'parcellation', cfg.parcellation, 'precision', cfg.precision);
 
   otherwise
-    ft_error('unsupported output format (%s)', cfg.filetype);
+    ft_error('unsupported output format "%s"', cfg.filetype);
 end % switch filetype
 
 ft_postamble debug

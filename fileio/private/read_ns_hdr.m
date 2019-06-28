@@ -34,11 +34,7 @@ function [hdr] = read_ns_hdr(filename)
 %
 % $Id$
 
-fid = fopen(filename,'r','ieee-le');
-
-if fid<0,
-    ft_error(['cannot open ', filename]);
-end;
+fid = fopen_or_error(filename,'r','ieee-le');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % these structures are from Neuroscan sethead.h

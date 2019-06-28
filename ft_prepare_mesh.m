@@ -22,12 +22,20 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %   cfg.downsample  = integer number (default = 1, i.e. no downsampling), see FT_VOLUMEDOWNSAMPLE
 %   cfg.spmversion  = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
 %
-% For method 'headshape you should specify
+% For method 'headshape' you should specify
 %   cfg.headshape   = a filename containing headshape, a Nx3 matrix with surface
 %                     points, or a structure with a single or multiple boundaries
 %
 % For method 'cortexhull' you should not give input data, but specify
-%   cfg.headshape   = sting, filename containing the pial surface computed by freesurfer recon-all
+%   cfg.headshape   = string, filename containing the pial surface computed by freesurfer recon-all
+%
+% For method 'fittemplate' you should specify
+%   cfg.headshape   = a filename containing headshape
+%   cfg.template    = a filename containing headshape
+% With this method you are fitting the headshape from the configuration to the template; 
+% the resulting affine transformation is applied to the input mesh (or set of meshes), 
+% which is subsequently returned as output variable.
+%
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -164,14 +172,14 @@ switch cfg.method
     % call the corresponding helper function
     bnd = prepare_mesh_tetrahedral(cfg, mri);
 
-  case {'singlesphere' 'concentricspheres' 'localspheres'}
-    % FIXME for localspheres it should be replaced by an outline of the head, see private/headsurface
-    fprintf('triangulating the sphere in the volume conductor\n');
-    [pos, tri] = mesh_sphere(cfg.numvertices);
+  case {'singlesphere' 'concentricspheres'}
+    headmodel = mri;
+    headmodel = ft_datatype_headmodel(headmodel);   % ensure that it is consistent and up-to-date
+    headmodel = ft_determine_units(headmodel);      % ensure that it has units
     bnd = [];
-    mri = ft_determine_units(mri);      % ensure that it has units
-    headmodel = ft_datatype_headmodel(mri); % rename it and ensure that it is consistent and up-to-date
+    [pos, tri] = mesh_sphere(cfg.numvertices);
     for i=1:length(headmodel.r)
+      ft_info('triangulating sphere %d in the volume conductor\n', i);
       bnd(i).pos(:,1) = pos(:,1)*headmodel.r(i) + headmodel.o(1);
       bnd(i).pos(:,2) = pos(:,2)*headmodel.r(i) + headmodel.o(2);
       bnd(i).pos(:,3) = pos(:,3)*headmodel.r(i) + headmodel.o(3);

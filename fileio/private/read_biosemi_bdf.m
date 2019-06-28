@@ -60,8 +60,9 @@ if nargin==1
   cname=computer;
   if cname(1:2)=='PC' SLASH=BSLASH; end;
 
-  fid=fopen(FILENAME,'r','ieee-le');
-  if fid<0
+  try
+    fid=fopen_or_error(FILENAME,'r','ieee-le');
+  catch err
     fprintf(2,['Error LOADEDF: File ' FILENAME ' not found\n']);
     return;
   end;
@@ -187,15 +188,15 @@ if nargin==1
     else
       EDF.ChanTyp(k)=' ';
     end;
-    if findstr(upper(EDF.Label(k,:)),'ECG')
+    if contains(upper(EDF.Label(k,:)),'ECG')
       EDF.ChanTyp(k)='C';
-    elseif findstr(upper(EDF.Label(k,:)),'EKG')
+    elseif contains(upper(EDF.Label(k,:)),'EKG')
       EDF.ChanTyp(k)='C';
-    elseif findstr(upper(EDF.Label(k,:)),'EEG')
+    elseif contains(upper(EDF.Label(k,:)),'EEG')
       EDF.ChanTyp(k)='E';
-    elseif findstr(upper(EDF.Label(k,:)),'EOG')
+    elseif contains(upper(EDF.Label(k,:)),'EOG')
       EDF.ChanTyp(k)='O';
-    elseif findstr(upper(EDF.Label(k,:)),'EMG')
+    elseif contains(upper(EDF.Label(k,:)),'EMG')
       EDF.ChanTyp(k)='M';
     end;
   end;

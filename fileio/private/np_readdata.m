@@ -84,12 +84,9 @@ np_data.t=(N_start:N_start+N-1)'./np_info.fa;
 % anschlieﬂend transponieren in eine Matrix der Dimension: (NxK)
 %
 % -------------------------------------------------------------------------
-fid=fopen(filename,'r');
-if fid==-1,
-    ft_error(['Unable to open file "' filename '" . Error code: ' ferror(fid)]);
-end
+fid=fopen_or_error(filename,'r');
 status=fseek(fid,np_info.fp_data+N_start*np_info.K*4,'bof');    % 4 Byte pro Sample
-if status~=0,
+if status~=0
     fclose(fid);
     ft_error('Unable to set filepointer to begin of data block.');
 end

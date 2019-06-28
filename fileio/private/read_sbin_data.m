@@ -36,10 +36,7 @@ function [trialData] = read_sbin_data(filename, hdr, begtrial, endtrial, chanind
 %
 % $Id$
 
-fh=fopen([filename],'r');
-if fh==-1
-  ft_error('wrong filename')
-end
+fh=fopen_or_error([filename],'r');
 
 version = fread(fh,1,'int32');
 

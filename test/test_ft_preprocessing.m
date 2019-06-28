@@ -1,7 +1,7 @@
 function test_ft_preprocessing(datainfo, writeflag, version)
 
 % MEM 1500mb
-% WALLTIME 00:10:00
+% WALLTIME 00:20:00
 
 % DEPENDENCY ft_preprocessing ref_datasets
 

@@ -193,7 +193,7 @@ if strcmp(eventformat, 'brainvision_vhdr')
   if ~isfield(hdr, 'MarkerFile') || isempty(hdr.MarkerFile)
     filename = [];
   else
-    [p, f] = fileparts(filename);
+    [p, ~, ~] = fileparts(filename);
     filename = fullfile(p, hdr.MarkerFile);
   end
 end
@@ -429,10 +429,7 @@ switch eventformat
     event = read_ah5_markers(hdr, filename);
     
   case 'brainvision_vmrk'
-    fid=fopen(filename,'rt');
-    if fid==-1
-      ft_error('cannot open BrainVision marker file')
-    end
+    fid = fopen_or_error(filename,'rt');
     line = [];
     while ischar(line) || isempty(line)
       line = fgetl(fid);
@@ -590,18 +587,18 @@ switch eventformat
     % contact Robert Oostenveld if you are interested in real-time acquisition on the CTF system
     % read the events from shared memory
     event = read_shm_event(filename, varargin{:});
-        
-  case {'curry_dat', 'curry_cdt'}  
+    
+  case {'curry_dat', 'curry_cdt'}
     if isempty(hdr)
       hdr = ft_read_header(filename);
     end
     event = [];
     for i=1:size(hdr.orig.events, 2)
-        event(i).type     = 'trigger';
-        event(i).value    = hdr.orig.events(2, i);
-        event(i).sample   = hdr.orig.events(1, i);
-        event(i).offset   = hdr.orig.events(3, i)-hdr.orig.events(1, i);
-        event(i).duration = hdr.orig.events(4, i)-hdr.orig.events(1, i);
+      event(i).type     = 'trigger';
+      event(i).value    = hdr.orig.events(2, i);
+      event(i).sample   = hdr.orig.events(1, i);
+      event(i).offset   = hdr.orig.events(3, i)-hdr.orig.events(1, i);
+      event(i).duration = hdr.orig.events(4, i)-hdr.orig.events(1, i);
     end
     
   case 'dataq_wdq'
@@ -977,7 +974,7 @@ switch eventformat
   case 'egi_mff_v2'
     % ensure that the EGI_MFF_V2 toolbox is on the path
     ft_hastoolbox('egi_mff_v2', 1);
-
+    
     %%%%%%%%%%%%%%%%%%%%%%
     %workaround for MATLAB bug resulting in global variables being cleared
     globalTemp=cell(0);
@@ -1004,7 +1001,7 @@ switch eventformat
     end
     clear globalTemp globalList varNames varList;
     %%%%%%%%%%%%%%%%%%%%%%
-
+    
     if isunix && filename(1)~=filesep
       % add the full path to the dataset directory
       filename = fullfile(pwd, filename);
@@ -1012,7 +1009,7 @@ switch eventformat
       % add the full path, including drive letter
       filename = fullfile(pwd, filename);
     end
-
+    
     % pass the header along to speed it up, it will be read on the fly in case it is empty
     event = read_mff_event(filename, hdr);
     % clean up the fields in the event structure
@@ -1163,7 +1160,7 @@ switch eventformat
     
     if ~exist(fifo,'file')
       ft_warning('the FIFO %s does not exist; attempting to create it', fifo);
-      fid = fopen(fifo, 'r');
+      fid = fopen_or_error(fifo, 'r');
       system(sprintf('mkfifo -m 0666 %s',fifo));
     end
     
@@ -1907,7 +1904,7 @@ switch eventformat
     
   case 'nihonkohden_m00'
     % FIXME why is the flank detection not done using the generic read_trigger function?
-
+    
     event = [];
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -1916,7 +1913,7 @@ switch eventformat
     % in the data I tested the triggers are marked as DC offsets (deactivation of the DC channel)
     event_chan = {'DC09', 'DC10', 'DC11', 'DC12'};
     trgindx = match_str(hdr.label, event_chan);
-
+    
     if isempty(trgindx)
       return
     end
@@ -2152,10 +2149,10 @@ switch eventformat
     % 'noread' prevents reading of the spike waveforms
     % 'nosave' prevents the automatic conversion of
     % the .nev file as a .mat file
-    orig = openNEV(filename, 'noread', 'nosave')
+    orig = openNEV(filename, 'noread', 'nosave');
     
     if orig.MetaTags.SampleRes ~= 30000
-      error('sampling rate is different from 30 kHz')
+      error('sampling rate is different from 30 kHz');
       % FIXME: why would this be a problem?
     end
     
@@ -2177,27 +2174,18 @@ switch eventformat
       event(k).offset    = [];
     end
     
-  case 'biopac_acq'
-    % this one has an implementation that I guess is intended
-    % to work according to the 'otherwise' case, yet it requires
-    % a two-pass through the function, needing a header
+  case 'presentation_log'
+    event = read_presentation_log(filename);
+    
+  otherwise
+    % attempt to run "eventformat" as a function
+    % this allows the user to specify an external reading function
+    % if it fails, the regular unsupported warning message is thrown
     try
       hdr   = feval(eventformat, filename);
       event = feval(eventformat, filename, hdr);
     catch
-      ft_warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format (%s)', eventformat);
-      event = [];
-    end
-    
-  otherwise
-    % attempt to run eventformat as a function
-    % in case using an external read function was desired, this is where it is executed
-    % if it fails, the regular unsupported warning message is thrown
-    try
-      event = feval(eventformat, filename);
-      
-    catch
-      ft_warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format (%s)', eventformat);
+      ft_warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format "%s"', eventformat);
       event = [];
     end
 end
@@ -2223,7 +2211,16 @@ if ~isempty(event)
   if ~isfield(event, 'duration'), for i=1:length(event), event(i).duration = []; end; end
 end
 
-% make sure that all numeric values are double
+% check whether string event values can be converted to numeric
+if ~isempty(event)
+  if all(cellfun(@ischar, {event.value})) &&  ~any(isnan(cellfun(@str2double, {event.value})))
+    for i=1:length(event)
+      event(i).value = str2double(event(i).value);
+    end
+  end
+end
+
+% make sure that all numeric values are double precision
 if ~isempty(event)
   for i=1:length(event)
     if isnumeric(event(i).value)

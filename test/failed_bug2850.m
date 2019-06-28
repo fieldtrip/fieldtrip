@@ -14,8 +14,8 @@ vol.unit = 'cm';
 cfg = [];
 cfg.headmodel = vol;
 cfg.grad = avgFIC.grad;
-cfg.sourcemodel.resolution = 1;
-cfg.sourcemodel.unit = 'cm';
+cfg.resolution = 1;
+cfg.unit = 'cm';
 grid = ft_prepare_sourcemodel(cfg);
 
 % due to the spherical volume conductor and the regular grid, some dipole

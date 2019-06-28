@@ -1,12 +1,10 @@
-function [pos, tri] = mesh_icosahedron(n)
+function [pos, tri] = mesh_icosahedron
 
-% MESH_ICOSAHEDRON creates spherical mesh, based on a refined
-% icosahedron with n refinement steps.
+% MESH_ICOSAHEDRON returns the vertices and triangle of a 12-vertex icosahedral
+% mesh.
 %
 % Use as
-%   [pos, tri] = mesh_icosahedron(n)
-%
-% Where the input parameter  n specifies the number of refinement steps.
+%   [pos, tri] = mesh_icosahedron
 %
 % See also MESH_TETRAHEDRON, MESH_OCTAHEDRON, MESH_SPHERE
 
@@ -30,9 +28,6 @@ function [pos, tri] = mesh_icosahedron(n)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 
-if nargin==0 || isempty(n)
-  n = 0;
-end
 
 tri = [
   1   2   3
@@ -74,11 +69,5 @@ pos(7:11, 3) = -rho/2;
 
 pos(12, :) = [0 0 -1];          % bottom point
 
-if n>0
-  % perform an n-fold refinement
-  for i=1:n
-    [pos, tri] = refine(pos, tri);
-    % scale all vertices to the unit sphere
-    pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1, 3);
-  end
-end
+% scale all vertices to the unit sphere
+pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1,3);

@@ -16,6 +16,12 @@
 
 <script type="text/javascript">
 
+  // polyfill for functionality removed in Chrome 48
+  // see https://github.com/dagrejs/dagre-d3/issues/202#issuecomment-173653044
+SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformToElement || function(elem) {
+    return elem.getScreenCTM().inverse().multiply(this.getScreenCTM());
+};
+
 ${PIPELINE}
 
 </script>

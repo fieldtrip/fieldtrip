@@ -50,7 +50,13 @@ if recursive
   fn = fieldnames(s);
   for i=1:numel(fn)
     if isstruct(s.(fn{i}))
-      s.(fn{i}) = removefields(s.(fn{i}), fields, varargin{:});
+      if numel(s.(fn{i}))==1
+        s.(fn{i}) = removefields(s.(fn{i}), fields, varargin{:});
+      else
+        for j=1:numel(s.(fn{i}))
+          s.(fn{i})(j) = removefields(s.(fn{i})(j), fields, varargin{:});
+        end
+      end
     end
   end
 end

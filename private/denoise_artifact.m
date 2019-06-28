@@ -80,7 +80,7 @@ for i=1:numart
   sum = sum + s(:,begsmp(i):endsmp(i));
 end
 
-% averaging is not strictly neccessary, but conceptually nicer
+% averaging is not strictly necessary, but conceptually nicer
 sum = sum ./ numart;
 
 s_new = zeros(size(s));

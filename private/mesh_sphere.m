@@ -5,16 +5,18 @@ function [pos, tri] = mesh_sphere(n, method)
 % Use as
 %   [pos, tri] = mesh_sphere(numvertices, method)
 %
-% Where the input parameter  n specifies the (approximate) number of vertices.
+% The input parameter 'n' specifies the (approximate) number of vertices.
 % Once log4((n-2)/10) is an integer, the mesh will be based on an icosahedron.
 % Once log4((n-2)/4) is an integer, the mesh will be based on a refined octahedron.
 % Once log4((n-2)/2) is an integer, the mesh will be based on a refined tetrahedron.
 % Otherwise, an msphere will be used. If n is empty, or undefined, a 12 vertex
-% icosahedron will be returned. The method parameter defines which function
-% to use when an refined XXXhedron is not possible, and can be 'msphere'
+% icosahedron will be returned.
+%
+% The input parameter 'method' defines which function to use when an refined
+% icosahedron, octahedron or tetrahedron is not possible, and can be 'msphere'
 % (default), or 'ksphere'.
 %
-% See also MESH_TETRAHEDRON, MESH_OCTAHEDRON, MESH_SPHERE
+% See also MESH_TETRAHEDRON, MESH_OCTAHEDRON, MESH_ICOSAHEDRON
 
 % Copyright (C) 2002, Robert Oostenveld
 % Copyright (C) 2019, Robert Oostenveld and Jan-Mathijs Schoffelen
@@ -36,25 +38,36 @@ function [pos, tri] = mesh_sphere(n, method)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 
-if nargin==0
+if nargin<1 || isempty(n)
   n = 12;
 end
+assert(isscalar(n), 'number of vertices should be specified as a scalar');
 
 r_ico   = log((n-2)./10)./log(4);
 r_octa  = log((n-2)./4)./log(4);
 r_tetra = log((n-2)./2)./log(4);
-if nargin==1 && round(r_tetra)==r_tetra
-  method = 'tetrahedron';
-elseif nargin==1 && round(r_ico)==r_ico
-  method = 'icosahedron';
-elseif nargin==1 && round(r_octa)==r_octa
-  method = 'octahedron';
-elseif nargin==1 || isempty(method)
-  method = 'msphere';
+
+if nargin<2 || isempty(method)
   % default method is dependent on n
+  if round(r_tetra)==r_tetra
+    method = 'tetrahedron';
+  elseif round(r_ico)==r_ico
+    method = 'icosahedron';
+  elseif round(r_octa)==r_octa
+    method = 'octahedron';
+  else
+    method = 'msphere';
+  end
 end
+assert(ischar(method), 'method should be specified as a string');
 
 switch method
+  case 'ksphere'
+    [pos, tri] = ksphere(n);
+    
+  case 'msphere'
+    [pos, tri] = msphere(n);
+    
   case 'tetrahedron'
     [pos, tri] = mesh_tetrahedron;
     if r_tetra>0
@@ -65,7 +78,7 @@ switch method
       % scale all vertices to the unit sphere
       pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1,3);
     end
-
+    
   case 'icosahedron'
     [pos, tri] = mesh_icosahedron;
     if r_ico>0
@@ -76,11 +89,7 @@ switch method
       % scale all vertices to the unit sphere
       pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1,3);
     end
-
-  case 'ksphere'
-    [pos, tri] = ksphere(n);
-  case 'msphere'
-    [pos, tri] = msphere(n);
+    
   case 'octahedron'
     [pos, tri] = mesh_octahedron;
     if r_octa>0
@@ -91,10 +100,12 @@ switch method
       % scale all vertices to the unit sphere
       pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1,3);
     end
+    
+end % switch method
 
-end
-
-% subfunction
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [pos, tri] = ksphere(N)
 
 % KSPHERE returns a triangulated sphere with K vertices that are
@@ -122,7 +133,9 @@ el = theta - pi/2;
 pos = [x, y, z];
 tri = convhulln(pos);
 
-% subfunction
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [pos, tri] = msphere(N)
 
 % MSPHERE returns a triangulated sphere with approximately M vertices
@@ -181,11 +194,12 @@ storeM    = [];
 storelen  = [];
 increaseM = 0;
 while (1)
-
-  % put a single vertex at the top
-  phi = [0];
-  th  = [0];
-
+  
+  % put a single vertex at the top% subfunction
+  
+  phi = 0;
+  th  = 0;
+  
   M = round((pi/4)*sqrt(N)) + increaseM;
   for k=1:M
     newphi = (k/M)*pi;
@@ -199,11 +213,11 @@ while (1)
       end
     end
   end
-
+  
   % put a single vertex at the bottom
   phi(end+1) = [pi];
   th(end+1)  = [0];
-
+  
   % store this vertex packing
   storeM(end+1).th  = th;
   storeM(end  ).phi = phi;
@@ -225,5 +239,3 @@ phi = storeM(i).phi;
 [x, y, z] = sph2cart(th, pi/2-phi, 1);
 pos = [x' y' z'];
 tri = convhulln(pos);
-
-fprintf('returning %d vertices, %d triangles\n', size(pos,1), size(tri,1));

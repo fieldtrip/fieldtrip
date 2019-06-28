@@ -63,9 +63,10 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.frequency   = single number (in Hz)
 %
 % Low level details of the fitting can be specified in the cfg.dipfit structure
-%   cfg.dipfit.display  = level of display, can be 'off', 'iter', 'notify' or 'final' (default = 'iter')
-%   cfg.dipfit.optimfun = function to use, can be 'fminsearch' or 'fminunc' (default is determined automatic)
-%   cfg.dipfit.maxiter  = maximum number of function evaluations allowed (default depends on the optimfun)
+%   cfg.dipfit.display      = level of display, can be 'off', 'iter', 'notify' or 'final' (default = 'iter')
+%   cfg.dipfit.optimfun     = function to use, can be 'fminsearch' or 'fminunc' (default is determined automatic)
+%   cfg.dipfit.maxiter      = maximum number of function evaluations allowed (default depends on the optimfun)
+%   cfg.dipfit.checkinside  = boolean, check that the dipole remains in the source compartment (default = false)
 %
 % Optionally, you can modify the leadfields by reducing the rank, i.e. remove the weakest orientation
 %   cfg.reducerank      = 'no', or number (default = 3 for EEG, 2 for MEG)
@@ -165,7 +166,7 @@ cfg.normalize       = ft_getopt(cfg, 'normalize');      % this is better not use
 cfg.normalizeparam  = ft_getopt(cfg, 'normalizeparam'); % this is better not used in dipole fitting
 cfg.backproject     = ft_getopt(cfg, 'backproject');    % this is better not used in dipole fitting
 cfg.reducerank      = ft_getopt(cfg, 'reducerank', []); % the default for this is handled below
-cfg.dipfit          = ft_getopt(cfg, 'dipfit', []);   % the default for this is handled below
+cfg.dipfit          = ft_getopt(cfg, 'dipfit', []);     % the default for this is handled below
 
 cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
 cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.sourcemodel.unit by the subsequent createsubcfg

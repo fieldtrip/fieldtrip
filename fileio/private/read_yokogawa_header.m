@@ -56,7 +56,7 @@ if ~ft_hastoolbox('yokogawa')
 end
 
 handles = definehandles;
-fid = fopen(filename, 'rb', 'ieee-le');
+fid = fopen_or_error(filename, 'rb', 'ieee-le');
 
 % these are always present
 [id ver rev sys_name] = GetMeg160SystemInfoM(fid);

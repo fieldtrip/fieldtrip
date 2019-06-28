@@ -31,7 +31,7 @@ function write_nifti2_hdr(filename, hdr)
 % $Id$
 
 if ischar(filename)
-  fid = fopen(filename, 'w');
+  fid = fopen_or_error(filename, 'w');
 else
   fid = filename;
 end
