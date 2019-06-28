@@ -17,7 +17,7 @@ function [event] = ft_read_event(filename, varargin)
 %   'chanindx'       list with channel indices in case of different sampling frequencies (only for EDF)
 %   'trigshift'      integer, number of samples to shift from flank to detect trigger value (default = 0)
 %   'trigindx'       list with channel numbers for the trigger detection, only for Yokogawa & Ricoh (default is automatic)
-%   'triglabel'      list of channel labels for the trigger detection (default is all ADC* channels for Artinis *.oxy3 files
+%   'triglabel'      list of channel labels for the trigger detection (default is all ADC* channels for Artinis .oxy3- or .oxy4-  files)
 %   'threshold'      threshold for analog trigger channels (default is system specific)
 %   'blocking'       wait for the selected number of events (default = 'no')
 %   'timeout'        amount of time in seconds to wait when blocking (default = 5)
@@ -2097,7 +2097,7 @@ switch eventformat
     event = read_artinis_oxy3(filename, true);
     
     if isempty(trigindx) % indx gets precedence over labels! numbers before words
-      triglabel = ft_getopt(varargin, 'triglabel', 'ADC*');  % this allows subselection of AD channels to be markes as trigger channels (for Artinis *.oxy3 data)
+      triglabel = ft_getopt(varargin, 'triglabel', 'ADC*', true);  % this allows subselection of AD channels to be markes as trigger channels (for Artinis *.oxy3 data)
       trigindx = find(ismember(hdr.label, ft_channelselection(triglabel, hdr.label)));
     end
     
@@ -2111,7 +2111,44 @@ switch eventformat
       while i<numel(trigger)
         if strcmp(trigger(i).type, trigger(i+1).type) && trigger(i+1).sample-last_trigger_sample <= tolerance
           [trigger(i).value, idx] = max([trigger(i).value, trigger(i+1).value]);
-          fprintf('Merging triggers at sample %d and %d\n', trigger(i).sample, trigger(i+1).sample);
+          last_trigger_sample =  trigger(i+1).sample;
+          if (idx==2)
+            trigger(i).sample = trigger(i+1).sample;
+          end
+          
+          trigger(i+1) = [];
+        else
+          i=i+1;
+          last_trigger_sample = trigger(i).sample;
+        end
+      end
+      
+      event = appendevent(event, trigger);
+    end
+    
+    
+  case 'artinis_oxy4'
+    ft_hastoolbox('artinis', 1);
+    if isempty(hdr)
+      hdr = read_artinis_oxy4(filename);
+    end
+    event = read_artinis_oxy4(filename, true);
+    
+    if isempty(trigindx) % indx gets precedence over labels! numbers before words
+      triglabel = ft_getopt(varargin, 'triglabel', 'ADC*', true);  % this allows subselection of AD channels to be markes as trigger channels (for Artinis *.oxy3 data)
+      trigindx = find(ismember(hdr.label, ft_channelselection(triglabel, hdr.label)));
+    end
+    
+    % read the trigger channel and do flank detection
+    trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'threshold', threshold, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixartinis', true);
+    
+    % remove consecutive triggers
+    if ~isempty(trigger)
+      i = 1;
+      last_trigger_sample = trigger(i).sample;
+      while i<numel(trigger)
+        if strcmp(trigger(i).type, trigger(i+1).type) && trigger(i+1).sample-last_trigger_sample <= tolerance
+          [trigger(i).value, idx] = max([trigger(i).value, trigger(i+1).value]);
           last_trigger_sample =  trigger(i+1).sample;
           if (idx==2)
             trigger(i).sample = trigger(i+1).sample;
