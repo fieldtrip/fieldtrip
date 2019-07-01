@@ -208,7 +208,7 @@ while true
   % shift each of the channels with a given offset
   nchan = size(dat,1);
   for i=1:nchan
-    dat(i,:) = dat(i,:) + (nchan-i-1)*cfg.offset(i);
+    dat(i,:) = dat(i,:) + cfg.offset(i);
   end
   
   % plot the data
