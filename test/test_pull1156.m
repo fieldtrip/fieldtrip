@@ -10,7 +10,6 @@ filename = {
   '/home/common/matlab/fieldtrip/data/test/original/eeg/edf/0601_s.edf'
   '/home/common/matlab/fieldtrip/data/test/original/eeg/edf/shhs1-200001.edf'
   '/home/common/matlab/fieldtrip/data/test/original/eeg/edf/RecordSession_2017.09.07_20.41.53.edf'
-  '/home/common/matlab/fieldtrip/data/test/original/eeg/edf/RecordSession_2017.09.07_20.41.53.edf'
   '/home/common/matlab/fieldtrip/data/test/original/eeg/nicolet/Patient59_EEG-OPPTAKER-1_t1-EDF.edf'
   '/home/common/matlab/fieldtrip/data/test/original/eeg/nicolet/Patient59_EEG-OPPTAKER-1_t1-EDFPLUS.edf'
   };
