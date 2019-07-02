@@ -95,8 +95,13 @@ else
 end
 
 % these are optional, at the end we will clean up the output in case they did not exist
-haschantype = (isfield(input, 'chantype') || isfield(input, 'chantypenew')) && all(isfield(montage, {'chantypeold', 'chantypenew'}));
-haschanunit = (isfield(input, 'chanunit') || isfield(input, 'chanunitnew')) && all(isfield(montage, {'chanunitold', 'chanunitnew'}));
+if ~istrue(inverse)
+  haschantype = (isfield(input, 'chantype') || isfield(input, 'chantypenew')) && all(isfield(montage, {'chantypeold', 'chantypenew'}));
+  haschanunit = (isfield(input, 'chanunit') || isfield(input, 'chanunitnew')) && all(isfield(montage, {'chanunitold', 'chanunitnew'}));
+else
+  haschantype = (isfield(input, 'chantype') || isfield(input, 'chantypeold')) && all(isfield(montage, {'chantypeold', 'chantypenew'}));
+  haschanunit = (isfield(input, 'chanunit') || isfield(input, 'chanunitold')) && all(isfield(montage, {'chanunitold', 'chanunitnew'}));
+end
 
 % make sure they always exist to facilitate the remainder of the code
 if ~isfield(montage, 'chantypeold')

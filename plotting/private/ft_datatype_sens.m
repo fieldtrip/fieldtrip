@@ -234,15 +234,17 @@ switch version
       elseif strcmp(sens.unit, 'mm') && (any(sel_m) || any(sel_dm) || any(sel_cm))
         ft_error('inconsistent units in input gradiometer');
       end
-
+      
+      % use an inline function
+      containsdivision = @(x) contains(x, '/');
+      
       % the default should be amplitude/distance for neuromag and amplitude for all others
       if isempty(scaling)
-        if ft_senstype(sens, 'neuromag')
+        if ft_senstype(sens, 'neuromag') && ~any(containsdivision(sens.chanunit))
+          ft_warning('asuming that the default scaling should be amplitude/distance rather than amplitude');
           scaling = 'amplitude/distance';
-        elseif ft_senstype(sens, 'yokogawa440')
+        elseif ft_senstype(sens, 'yokogawa440') && any(containsdivision(sens.chanunit))
           ft_warning('asuming that the default scaling should be amplitude rather than amplitude/distance');
-          scaling = 'amplitude';
-        else
           scaling = 'amplitude';
         end
       end
@@ -308,10 +310,10 @@ switch version
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case '2011v2'
-
+    
     % rename from old to org (reverse = true)
     sens = fixoldorg(sens, true);
-
+    
     if ~isempty(amplitude) || ~isempty(distance) || ~isempty(scaling)
       ft_warning('amplitude, distance and scaling are not supported for version "%s"', version);
     end
