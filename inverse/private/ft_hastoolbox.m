@@ -517,7 +517,7 @@ global ft_default
 
 if ~isfolder(toolbox)
   % search for a case-insensitive match, this is needed for MVPA-Light
-  [p, f, ~] = fileparts(toolbox);
+  [p, f] = fileparts(toolbox);
   dirlist = dir(p);
   sel = strcmpi({dirlist.name}, f);
   if sum(sel)==1
@@ -539,7 +539,7 @@ elseif isfolder(toolbox)
     addpath(genpath(toolbox));
     % check whether the mex files are compatible
     check_spm_mex;
-  elseif ~isempty(regexp(lower(toolbox), 'mvpa-light$'))
+  elseif ~isempty(regexp(lower(toolbox), 'mvpa-light$', 'once'))
     % this comes with its own startup script
     addpath(fullfile(toolbox, 'startup'))
     startup_MVPA_Light;
