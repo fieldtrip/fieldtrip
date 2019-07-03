@@ -220,7 +220,13 @@ if istrue(inverse)
 end
 
 % select and keep the columns that are non-empty, i.e. remove the empty columns
-selcol              = find(~all(montage.tra==0, 1));
+selcol = ~all(montage.tra==0, 1);
+if keepunused
+  for i=find(selcol==false)
+    % don't remove the column if it corresponds to one of the output channels
+    selcol(i) = any(strcmp(montage.labelnew, montage.labelold{i}));
+  end
+end
 montage.tra         = montage.tra(:,selcol);
 montage.labelold    = montage.labelold(selcol);
 montage.chantypeold = montage.chantypeold(selcol);
@@ -245,7 +251,7 @@ montage.chantypenew = montage.chantypenew(~selrow);
 montage.chanunitold = montage.chanunitold(~selcol);
 montage.chanunitnew = montage.chanunitnew(~selrow);
 montage.tra         = montage.tra(~selrow, ~selcol);
-clear remove selcol selrow i
+clear remove selcol selrow
 
 % add columns for channels that are present in the input data but not specified in
 % the montage, stick to the original order in the data
