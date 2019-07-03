@@ -82,7 +82,7 @@ end
 
 shuffledata = ERP_standard;
 randidx = randperm(length(shuffledata.label));
-[~,unidx] = sort(randidx); % unshuffle
+[dum, unidx] = sort(randidx); % unshuffle
 shuffledata.avg = shuffledata.avg(randidx,:);
 shuffledata.var = shuffledata.var(randidx,:);
 shuffledata.dof = shuffledata.dof(randidx,:);

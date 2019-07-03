@@ -18,7 +18,7 @@ if nargin<3
   version = 'latest';
 end
 
-[dummy,ftpath] = ft_version();
+[ftver, ftpath] = ft_version;
 addpath([ftpath '/test']);
 
 % make a subselection of the MEG datasets

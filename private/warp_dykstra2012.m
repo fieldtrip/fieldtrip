@@ -250,7 +250,7 @@ elseif strcmp(method, 'label') % alternative method
     end
   end
   pairs( pairs(:,2)<1 | pairs(:,2)>GridDim(1)*GridDim(2) ,:) = []; % out of bounds
-  [~, idx] = unique(sort(pairs(:,[1 2]),2),'rows'); % unique pairs
+  [dum, idx] = unique(sort(pairs(:,[1 2]),2),'rows'); % unique pairs
   pairs = pairs(idx,:);
   
   % remove electrodes that are cut out from elec.elecpos and update the

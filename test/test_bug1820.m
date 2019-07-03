@@ -62,7 +62,7 @@ end
 %% create electrodes
 % Create a set of 42 electrodes on the outer surface
 currdir = pwd;
-[~,ftpath] = ft_version();
+[ftver, ftpath] = ft_version;
 cd([ftpath '/test/private/']);
 r = radius1;
 [pnt, tri] = mesh_sphere(42); 

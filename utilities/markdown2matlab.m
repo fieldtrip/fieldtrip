@@ -130,9 +130,8 @@ while ~feof(infid)
     
   elseif match(line, '^ *[-+*] ')
     % unordered list
-    [~,endIndex] = regexp(line, '^ *[-+*] ');
-    
-    [~,level] = regexp(line, '^ *');
+    [dum,endIndex] = regexp(line, '^ *[-+*] ');
+    [dum,level] = regexp(line, '^ *');
     if isempty(level)
       level = 0;
     end
@@ -142,7 +141,7 @@ while ~feof(infid)
     
   elseif match(line, '^    ')
     % normal code
-    [~,endIndex] = regexp(line, '^    ');
+    [dum,endIndex] = regexp(line, '^    ');
     remainder = line((endIndex+1):end);
     fprintf(outfid, '%s\n', remainder);
     state = 'code';
@@ -156,13 +155,13 @@ while ~feof(infid)
     
   elseif match(line, '^ *[0-9]*\.')
     % ordered list
-    [~,endIndex] = regexp(line, '^ *[0-9]*\. ');
+    [dum,endIndex] = regexp(line, '^ *[0-9]*\. ');
     remainder = reformat(line((endIndex+1):end));
     fprintf(outfid, '%% # %s\n', remainder);
     
   elseif match(line, '^#')
     % heading
-    [~,endIndex] = regexp(line, '^# *');
+    [dum,endIndex] = regexp(line, '^# *');
     remainder = reformat(line((endIndex+1):end));
     fprintf(outfid, '%%%% %s\n', remainder);
     
