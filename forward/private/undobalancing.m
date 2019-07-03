@@ -55,4 +55,4 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
 end
 
 % ensure that it is consistent with the latest standards
-sens = ft_datatype_sens(sens, 'scaling', 'ignore');
+sens = ft_datatype_sens(sens);
