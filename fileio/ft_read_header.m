@@ -299,16 +299,13 @@ switch headerformat
     
   case 'AnyWave'
     orig = read_ahdf5_hdr(datafile);
-    hdr.orig = orig;
     hdr.Fs = orig.channels(1).samplingRate;
     hdr.nChans = numel(orig.channels);
     hdr.nSamples = orig.numberOfSamples;
     hdr.nTrials = orig.numberOfBlocks;
     hdr.nSamplesPre = 0;
     hdr.label = orig.label;
-    hdr.reference = orig.reference(:);
-    hdr.chanunit = orig.unit(:);
-    hdr.chantype = orig.type(:);
+    hdr.orig = orig;
     
   case 'bci2000_dat'
     % this requires the load_bcidat mex file to be present on the path

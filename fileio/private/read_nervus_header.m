@@ -88,10 +88,10 @@ end
 
 nrvHdr.startDateTime = nrvHdr.Segments(1).date;
 
-%Fieldtrip can't handle multiple sampling rates in a data block
-%We will return only the data for the most frequent sampling rate
-%TODO: make this a parameter to this function so that user can
-%decide what data to get
+% Fieldtrip can't handle multiple sampling rates in a data block
+% We will return only the data for the most frequent sampling rate
+% TODO: make this a parameter to this function so that user can
+% decide what data to get
 targetSamplingRate = mode(nrvHdr.Segments(1).samplingRate);
 matchingChannels = find(nrvHdr.Segments(1).samplingRate(:) == targetSamplingRate);
 firstMatchingChannel = matchingChannels(1);
@@ -111,6 +111,7 @@ for i=1:size(nrvHdr.Segments(1).chName,2)
     j = j+1;
   end
 end
+
 %if targetNumberOfChannels ~= size(nrvHdr.Segments(1).sampleCount, 2)
 %    warning('Some channels ignored due to different sampling rates');
 %end
@@ -122,10 +123,7 @@ output.label       = newlabels;
 output.nSamples    = targetSampleCount;
 output.nSamplesPre = 0;
 output.nTrials     = 1;
-output.reference   = nrvHdr.reference;
-output.filename    = nrvHdr.filename;
 output.orig        = nrvHdr;
-output.startDateTime = nrvHdr.startDateTime;
 end % function
 
 
