@@ -1,4 +1,5 @@
 function out = read_nervus_data(nrvHdr, segment, range, chIdx)
+
 % read_nervus_data  Returns data from Nicolet file.
 %
 %   OUT = GETDATA(NRVHDR, SEGMENT, RANGE, CHIDX) returns data in an n x m array of
@@ -15,8 +16,8 @@ function out = read_nervus_data(nrvHdr, segment, range, chIdx)
 %
 %   Based on ieeg-portal/Nicolet-Reader
 %   at https://github.com/ieeg-portal/Nicolet-Reader
-%
-% Copyright (C) 2016, Jan Brogger and Joost Wagenaar 
+
+% Copyright (C) 2016, Jan Brogger and Joost Wagenaar
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -36,18 +37,17 @@ function out = read_nervus_data(nrvHdr, segment, range, chIdx)
 %
 % $Id: $
 
-
 if nargin == 0
-    ft_error('Missing argument');
+  ft_error('Missing argument');
 elseif nargin == 1
-    segment = 1;
-    range = [1 nrvHdr.Segments(1).duration*max(nrvHdr.Segments(1).samplingRate)];
-    chIdx = 1:size(nrvHdr.Segments(1).chName,2);
+  segment = 1;
+  range = [1 nrvHdr.Segments(1).duration*max(nrvHdr.Segments(1).samplingRate)];
+  chIdx = 1:size(nrvHdr.Segments(1).chName,2);
 elseif nargin == 2
-    range = [1 nrvHdr.Segments(segment).duration*max(nrvHdr.Segments(1).samplingRate)];
-    chIdx = 1:size(nrvHdr.Segments(1).chName,2);
+  range = [1 nrvHdr.Segments(segment).duration*max(nrvHdr.Segments(1).samplingRate)];
+  chIdx = 1:size(nrvHdr.Segments(1).chName,2);
 elseif nargin == 3
-    chIdx = 1:size(nrvHdr.Segments(1).chName,2);
+  chIdx = 1:size(nrvHdr.Segments(1).chName,2);
 end
 
 assert(length(range) == 2, 'Range is [firstIndex lastIndex]');
@@ -64,95 +64,93 @@ h = fopen_or_error(nrvHdr.filename,'r','ieee-le');
 lChIdx = length(chIdx);
 sectionIdx = zeros(lChIdx,1);
 for i = 1:lChIdx
-    tmp = find(strcmp(num2str(chIdx(i)-1),{nrvHdr.StaticPackets.tag}),1);
-    sectionIdx(i) = nrvHdr.StaticPackets(tmp).index;
+  tmp = find(strcmp(num2str(chIdx(i)-1),{nrvHdr.StaticPackets.tag}),1);
+  sectionIdx(i) = nrvHdr.StaticPackets(tmp).index;
 end
 
 % Iterate over all requested channels and populate array.
 out = zeros(range(2) - range(1) + 1, lChIdx);
 for i = 1 : lChIdx
-    
-    % Get sampling rate for current channel
-    curSF = nrvHdr.Segments(segment).samplingRate(chIdx(i));
-    mult = nrvHdr.Segments(segment).scale(chIdx(i));        
-    
-    % Find all sections
-    allSectionIdx = nrvHdr.allIndexIDs == sectionIdx(i);
-    allSections = find(allSectionIdx);
-    
-    % Find relevant sections
-    sectionLengths = [nrvHdr.MainIndex(allSections).sectionL]./2;
-    cSectionLengths = [0 cumsum(sectionLengths)];
-    
-    skipValues = cSumSegments(segment) * curSF;
-    firstSectionForSegment = find(cSectionLengths > skipValues, 1) - 1 ;
-    lastSectionForSegment = firstSectionForSegment + ...
-        find(cSectionLengths > curSF*nrvHdr.Segments(segment).duration,1) - 2 ;
-    
-    if isempty(lastSectionForSegment)
-        lastSectionForSegment = length(cSectionLengths);
+  
+  % Get sampling rate for current channel
+  curSF = nrvHdr.Segments(segment).samplingRate(chIdx(i));
+  mult = nrvHdr.Segments(segment).scale(chIdx(i));
+  
+  % Find all sections
+  allSectionIdx = nrvHdr.allIndexIDs == sectionIdx(i);
+  allSections = find(allSectionIdx);
+  
+  % Find relevant sections
+  sectionLengths = [nrvHdr.MainIndex(allSections).sectionL]./2;
+  cSectionLengths = [0 cumsum(sectionLengths)];
+  
+  skipValues = cSumSegments(segment) * curSF;
+  firstSectionForSegment = find(cSectionLengths > skipValues, 1) - 1 ;
+  lastSectionForSegment = firstSectionForSegment + ...
+    find(cSectionLengths > curSF*nrvHdr.Segments(segment).duration,1) - 2 ;
+  
+  if isempty(lastSectionForSegment)
+    lastSectionForSegment = length(cSectionLengths);
+  end
+  
+  offsetSectionLengths = cSectionLengths - cSectionLengths(firstSectionForSegment);
+  
+  firstSection = find(offsetSectionLengths < range(1) ,1,'last');
+  
+  samplesInChannel = nrvHdr.Segments(segment).samplingRate(chIdx(i))*nrvHdr.Segments(segment).duration;
+  if range(2) > samplesInChannel
+    endRange = samplesInChannel;
+  else
+    endRange = range(2);
+  end
+  
+  lastSection = find(offsetSectionLengths >= endRange,1)-1;
+  
+  if isempty(lastSection)
+    lastSection = length(offsetSectionLengths);
+  end
+  
+  if lastSection > lastSectionForSegment
+    ft_error('Index out of range for current section: %i > %i, on channel: %i', ...
+      range(2), cSectionLengths(lastSectionForSegment+1), chIdx(i));
+  end
+  
+  useSections = allSections(firstSection: lastSection) ;
+  useSectionL = sectionLengths(firstSection: lastSection) ;
+  
+  % First Partial Segment
+  curIdx = 1;
+  curSec = nrvHdr.MainIndex(useSections(1));
+  fseek(h, curSec.offset,'bof');
+  
+  firstOffset = range(1) - offsetSectionLengths(firstSection);
+  lastOffset = min([range(2) useSectionL(1)]);
+  lsec = lastOffset-firstOffset + 1;
+  
+  fseek(h, (firstOffset-1) * 2,'cof');
+  
+  out(1 : lsec,i) = fread(h, lsec, 'int16') * mult;
+  curIdx = curIdx +  lsec;
+  
+  if length(useSections) > 1
+    % Full Segments
+    for j = 2: (length(useSections)-1)
+      curSec = nrvHdr.MainIndex(useSections(j));
+      fseek(h, curSec.offset,'bof');
+      
+      out(curIdx : (curIdx + useSectionL(j) - 1),i) = fread(h, useSectionL(j), 'int16') * mult;
+      curIdx = curIdx +  useSectionL(j);
     end
     
-    offsetSectionLengths = cSectionLengths - cSectionLengths(firstSectionForSegment);
-    
-    firstSection = find(offsetSectionLengths < range(1) ,1,'last');
-    
-    samplesInChannel = nrvHdr.Segments(segment).samplingRate(chIdx(i))*nrvHdr.Segments(segment).duration;
-    if range(2) > samplesInChannel
-        endRange = samplesInChannel;
-    else
-        endRange = range(2);
-    end
-    
-    lastSection = find(offsetSectionLengths >= endRange,1)-1;
-    
-    if isempty(lastSection)
-        lastSection = length(offsetSectionLengths);
-    end
-    
-    if lastSection > lastSectionForSegment
-        ft_error('Index out of range for current section: %i > %i, on channel: %i', ...
-            range(2), cSectionLengths(lastSectionForSegment+1), chIdx(i));
-    end
-    
-    useSections = allSections(firstSection: lastSection) ;
-    useSectionL = sectionLengths(firstSection: lastSection) ;
-    
-    % First Partial Segment
-    curIdx = 1;
-    curSec = nrvHdr.MainIndex(useSections(1));
+    % Final Partial Segment
+    curSec = nrvHdr.MainIndex(useSections(end));
     fseek(h, curSec.offset,'bof');
-    
-    firstOffset = range(1) - offsetSectionLengths(firstSection);
-    lastOffset = min([range(2) useSectionL(1)]);
-    lsec = lastOffset-firstOffset + 1;
-    
-    fseek(h, (firstOffset-1) * 2,'cof');
-        
-    out(1 : lsec,i) = fread(h, lsec, 'int16') * mult;
-    curIdx = curIdx +  lsec;
-    
-    if length(useSections) > 1
-        % Full Segments
-        for j = 2: (length(useSections)-1)
-            curSec = nrvHdr.MainIndex(useSections(j));
-            fseek(h, curSec.offset,'bof');
-                        
-            out(curIdx : (curIdx + useSectionL(j) - 1),i) = fread(h, useSectionL(j), 'int16') * mult;
-            curIdx = curIdx +  useSectionL(j);
-        end
-        
-        % Final Partial Segment
-        curSec = nrvHdr.MainIndex(useSections(end));
-        fseek(h, curSec.offset,'bof');
-        out(curIdx : end,i) = fread(h, length(out)-curIdx + 1, 'int16') * mult;
-    end
-    
+    out(curIdx : end,i) = fread(h, length(out)-curIdx + 1, 'int16') * mult;
+  end
+  
 end
 
 % Close the .e file.
 fclose(h);
 
-end
-
-
+end % function
