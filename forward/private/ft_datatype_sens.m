@@ -234,66 +234,68 @@ switch version
       elseif strcmp(sens.unit, 'mm') && (any(sel_m) || any(sel_dm) || any(sel_cm))
         ft_error('inconsistent units in input gradiometer');
       end
-
-      % the default should be amplitude/distance for neuromag and amplitude for all others
-      if isempty(scaling)
-        if ft_senstype(sens, 'neuromag')
-          scaling = 'amplitude/distance';
-        elseif ft_senstype(sens, 'yokogawa440')
-          ft_warning('asuming that the default scaling should be amplitude rather than amplitude/distance');
-          scaling = 'amplitude';
-        else
-          scaling = 'amplitude';
-        end
-      end
       
-      % update the gradiometer scaling
-      if strcmp(scaling, 'amplitude') && isfield(sens, 'tra')
-        for i=1:nchan
-          if strcmp(sens.chanunit{i}, [amplitude '/' distance])
-            % this channel is expressed as amplitude per distance
-            coil = find(abs(sens.tra(i,:))~=0);
-            if length(coil)~=2
-              ft_error('unexpected number of coils contributing to channel %d', i);
-            end
-            baseline         = norm(sens.coilpos(coil(1),:) - sens.coilpos(coil(2),:));
-            sens.tra(i,:)    = sens.tra(i,:)*baseline;  % scale with the baseline distance
-            sens.chanunit{i} = amplitude;
-          elseif strcmp(sens.chanunit{i}, amplitude)
-            % no conversion needed
-          elseif isfield(sens, 'balance') && strcmp(sens.balance.current, 'comp')
-            % no conversion needed
-          elseif isfield(sens, 'balance') && strcmp(sens.balance.current, 'planar')
-            % no conversion needed
-          else
-            % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3144
-            ft_warning('unexpected channel unit "%s" in channel %d', sens.chanunit{i}, i);
-          end % if
-        end % for
+      if ~strcmp(amplitude, 'unknown') && ~strcmp(distance, 'unknown')
         
-      elseif strcmp(scaling, 'amplitude/distance') && isfield(sens, 'tra')
-        for i=1:nchan
-          if strcmp(sens.chanunit{i}, amplitude)
-            % this channel is expressed as amplitude
-            coil = find(abs(sens.tra(i,:))~=0);
-            if length(coil)==1 || strcmp(sens.chantype{i}, 'megmag')
-              % this is a magnetometer channel, no conversion needed
-              continue
-            elseif length(coil)~=2
-              ft_error('unexpected number of coils (%d) contributing to channel %s (%d)', length(coil), sens.label{i}, i);
-            end
-            baseline         = norm(sens.coilpos(coil(1),:) - sens.coilpos(coil(2),:));
-            sens.tra(i,:)    = sens.tra(i,:)/baseline; % scale with the baseline distance
-            sens.chanunit{i} = [amplitude '/' distance];
-          elseif strcmp(sens.chanunit{i}, [amplitude '/' distance])
-            % no conversion needed
-          else
-            % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3144
-            ft_warning('unexpected channel unit "%s" in channel %d', sens.chanunit{i}, i);
-          end % if
-        end % for
+        % the default should be "amplitude/distance" for neuromag and "amplitude" for all others
+        if isempty(scaling)
+          if ft_senstype(sens, 'neuromag') && ~any(contains(sens.chanunit, '/'))
+            ft_warning('asuming that the default scaling should be amplitude/distance rather than amplitude');
+            scaling = 'amplitude/distance';
+          elseif ft_senstype(sens, 'yokogawa440') && any(contains(sens.chanunit, '/'))
+            ft_warning('asuming that the default scaling should be amplitude rather than amplitude/distance');
+            scaling = 'amplitude';
+          end
+        end
         
-      end % if strcmp scaling
+        % update the gradiometer scaling
+        if strcmp(scaling, 'amplitude') && isfield(sens, 'tra')
+          for i=1:nchan
+            if strcmp(sens.chanunit{i}, [amplitude '/' distance])
+              % this channel is expressed as amplitude per distance
+              coil = find(abs(sens.tra(i,:))~=0);
+              if length(coil)~=2
+                ft_error('unexpected number of coils contributing to channel %d', i);
+              end
+              baseline         = norm(sens.coilpos(coil(1),:) - sens.coilpos(coil(2),:));
+              sens.tra(i,:)    = sens.tra(i,:)*baseline;  % scale with the baseline distance
+              sens.chanunit{i} = amplitude;
+            elseif strcmp(sens.chanunit{i}, amplitude)
+              % no conversion needed
+            elseif isfield(sens, 'balance') && strcmp(sens.balance.current, 'comp')
+              % no conversion needed
+            elseif isfield(sens, 'balance') && strcmp(sens.balance.current, 'planar')
+              % no conversion needed
+            else
+              % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3144
+              ft_warning('unexpected channel unit "%s" in channel %d', sens.chanunit{i}, i);
+            end % if
+          end % for nchan
+          
+        elseif strcmp(scaling, 'amplitude/distance') && isfield(sens, 'tra')
+          for i=1:nchan
+            if strcmp(sens.chanunit{i}, amplitude)
+              % this channel is expressed as amplitude
+              coil = find(abs(sens.tra(i,:))~=0);
+              if length(coil)==1 || strcmp(sens.chantype{i}, 'megmag')
+                % this is a magnetometer channel, no conversion needed
+                continue
+              elseif length(coil)~=2
+                ft_error('unexpected number of coils (%d) contributing to channel %s (%d)', length(coil), sens.label{i}, i);
+              end
+              baseline         = norm(sens.coilpos(coil(1),:) - sens.coilpos(coil(2),:));
+              sens.tra(i,:)    = sens.tra(i,:)/baseline; % scale with the baseline distance
+              sens.chanunit{i} = [amplitude '/' distance];
+            elseif strcmp(sens.chanunit{i}, [amplitude '/' distance])
+              % no conversion needed
+            else
+              % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3144
+              ft_warning('unexpected channel unit "%s" in channel %d', sens.chanunit{i}, i);
+            end % if
+          end % for nchan
+          
+        end % if strcmp scaling
+      end % if amplitude and scaling are not unknown
       
     else
       sel_m  = ~cellfun(@isempty, regexp(sens.chanunit, '/m$'));
@@ -308,10 +310,10 @@ switch version
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case '2011v2'
-
+    
     % rename from old to org (reverse = true)
     sens = fixoldorg(sens, true);
-
+    
     if ~isempty(amplitude) || ~isempty(distance) || ~isempty(scaling)
       ft_warning('amplitude, distance and scaling are not supported for version "%s"', version);
     end
