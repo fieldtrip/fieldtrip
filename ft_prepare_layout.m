@@ -565,7 +565,7 @@ elseif ischar(cfg.layout)
       ft_info('reading layout from file %s\n', cfg.layout);
       layout = readlay(cfg.layout);
     else
-      [p, f, ~] = fileparts(cfg.layout);
+      [p, f] = fileparts(cfg.layout);
       ft_warning('the file "%s" was not found on your path, attempting "%s" instead', cfg.layout, fullfile(p, [f '.mat']));
       cfg.layout = fullfile(p, [f '.mat']);
       layout = ft_prepare_layout(cfg);

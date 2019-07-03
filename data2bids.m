@@ -1426,7 +1426,7 @@ if ~isempty(ieeg_json)
 end
 
 if ~isempty(coordsystem_json)
-  [p, f, ~] = fileparts(cfg.outputfile);
+  [p, f] = fileparts(cfg.outputfile);
   f = remove_entity(f, 'task');     % remove _task-something
   f = remove_entity(f, 'acq');      % remove _acq-something
   f = remove_entity(f, 'ce');       % remove _ce-something
@@ -1462,7 +1462,7 @@ if ~isempty(coordsystem_json)
 end
 
 if ~isempty(channels_tsv)
-  [p, f, ~] = fileparts(cfg.outputfile);
+  [p, f] = fileparts(cfg.outputfile);
   f = remove_datatype(f); % remove _bold, _meg, etc.
   filename = fullfile(p, [f '_channels.tsv']);
   if isfile(filename)
@@ -1492,7 +1492,7 @@ if ~isempty(channels_tsv)
 end
 
 if ~isempty(electrodes_tsv)
-  [p, f, ~] = fileparts(cfg.outputfile);
+  [p, f] = fileparts(cfg.outputfile);
   f = remove_datatype(f); % remove _bold, _meg, etc.
   filename = fullfile(p, [f '_electrodes.tsv']);
   if isfile(filename)
@@ -1522,7 +1522,7 @@ if ~isempty(electrodes_tsv)
 end
 
 if ~isempty(events_tsv)
-  [p, f, ~] = fileparts(cfg.outputfile);
+  [p, f] = fileparts(cfg.outputfile);
   isdir_or_mkdir(p);
   f = remove_datatype(f); % remove _bold, _meg, etc.
   filename = fullfile(p, [f '_events.tsv']);
@@ -1649,7 +1649,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function val = get_token(f, tok)
 % ensure that it is only the filename
-[~, f, ~] = fileparts(f);
+[p, f] = fileparts(f);
 pieces = tokenize(f, '_');
 val = '';
 for i=1:numel(pieces)
