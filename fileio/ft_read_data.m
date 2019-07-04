@@ -14,7 +14,7 @@ function [dat] = ft_read_data(filename, varargin)
 %   'begtrial'       first trial to read, mutually exclusive with begsample+endsample
 %   'endtrial'       last trial to read, mutually exclusive with begsample+endsample
 %   'chanindx'       list with channel indices to read
-%   'chanunit'       cell-array with strings, the desired unit of each channel
+%   'chanunit'       cell-array with strings, convert each channel to the desired unit
 %   'checkboundary'  boolean, whether to check for reading segments over a trial boundary
 %   'checkmaxfilter' boolean, whether to check that maxfilter has been correctly applied (default = true)
 %   'cache'          boolean, whether to use caching for multiple reads
@@ -1496,6 +1496,11 @@ end
 % convert the channel data to the desired units
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(chanunit)
+  if ischar(chanunit)
+    % take the same units for all channels
+    chanunit = repmat({chanunit}, size(chanindx));
+  end
+  
   if length(chanunit)~=length(chanindx)
     ft_error('the number of channel units is inconsistent with the number of channels');
   end
