@@ -7,7 +7,7 @@ function test_issue1159
 %%
 % see https://github.com/fieldtrip/fieldtrip/issues/1159
 
-load issue1159.mat
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1159.mat'))
 
 %%
 % this works
