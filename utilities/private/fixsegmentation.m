@@ -31,11 +31,12 @@ switch style
         % which happens if the segmentation unexpectedly does not contain a certain tissue type
         indexlabel = segmentation.([fn{i} 'label']);
         if numel(indexval)>numel(indexlabel)
-          ft_error('each index value should have a corresponding entry in %s', [fn{i} 'label']);
+          ft_error('each index value should have a corresponding entry in "%s"', [fn{i} 'label']);
         elseif any(cellfun(@isempty, indexlabel(indexval)))
-          ft_error('each index value should have a corresponding entry in %s', [fn{i} 'label']);
-        elseif numel(indexval)<numel(indexlabel)
-          ft_warning('there are more labels than actuall tissue types in %s', [fn{i} 'label']);
+          ft_error('each index value should have a corresponding entry in "%s"', [fn{i} 'label']);
+        elseif max(indexval)~=numel(indexlabel)
+          ft_error('there is a different number of labels than tissue types in "%s"', [fn{i} 'label']);
+        else
           % ensure that the indices are subsequent integers, i.e. [1 2 3] rather than [1 2 4]
           for j=1:length(indexval)
             tmp = segmentation.(fn{i});
