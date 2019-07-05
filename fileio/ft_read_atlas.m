@@ -167,8 +167,8 @@ switch fileformat
       atlas.tissue = reshape(j-1, atlas.dim);
       atlas.tissuelabel = atlas.tissuelabel(a(a~=0));
     end
-  case 'brainnetome'
     
+  case 'brainnetome'
     % Brainnetome Atlas
     % L. Fan, et al.The Human Brainnetome Atlas: A New Brain Atlas Based on
     % Connectional Architecture. Cereb Cortex 2016; 26 (8): 3508-3526.
@@ -199,10 +199,11 @@ switch fileformat
     atlas = ft_read_mri(filename);
     
     % the AFNI atlas contains two volumes at 1mm resolution
-    atlas.brick0 = atlas.anatomy(:,:,:,1);
-    atlas.brick1 = atlas.anatomy(:,:,:,2);
-    atlas        = rmfield(atlas, 'anatomy');
-    atlas.coordsys  = 'tal';
+    atlas.brick0   = atlas.anatomy(:,:,:,1);
+    atlas.brick1   = atlas.anatomy(:,:,:,2);
+    atlas          = rmfield(atlas, 'anatomy');
+    atlas.dim      = atlas.dim([1 2 3]);
+    atlas.coordsys = 'tal';
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % the following information is from https://afni.nimh.nih.gov/afni/doc/misc/ttatlas_tlrc
