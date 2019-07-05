@@ -1,7 +1,7 @@
 function test_artinis_oxy
 
 % WALLTIME 00:20:00
-% MEM 3gb
+% MEM 4gb
 % DEPENDENCY read_artinis_oxy3 read_artinis_oxy4
 
 rootdir = dccnpath('/home/common/matlab/fieldtrip/data/test/original/nirs/artinis');
@@ -30,6 +30,9 @@ for i=1:numel(filename)
   
   file = fullfile(rootdir, filename{i});
   disp(file)
+  
+  [p, f, x] = fileparts(file);
+  cd(p); % otherwise the GUI pops up, asking for the  optodetemplates.xml file
   
   hdr = ft_read_header(file);
   dat = ft_read_data(file);
