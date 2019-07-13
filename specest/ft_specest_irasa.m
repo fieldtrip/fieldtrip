@@ -25,14 +25,10 @@ function [spectrum,ntaper,freqoi] = ft_specest_irasa(dat, time, varargin)
 %
 % This implements: Wen H, Liu Z. Separating fractal and oscillatory components in the power spectrum of neurophysiological signal. Brain Topogr. 2016 Jan;29(1):13-26.
 %   For usage, see Stolk et al., Electrocorticographic dissociation of 
-%   alpha and beta rhythmic activity in the human sensorimotor system.
-%   The algorithm deviates slightly from the original in that no additional
-%   sub-segmentation takes place (step A in Wen & Liu) in order to have
-%   irasa's frequency resolution match that of the mtmfft implementation.
-%   The original sub-segmentation step can, however, be achieved by calling 
-%   ft_redefinetrial with cfg.overlap = 0.9 prior to ft_frequencyanalysis.
-%   Furthermore, it is recommended the user specifies cfg.pad = nextpow2,
-%   which implements the zero-padding of step B in the original article.
+%   alpha and beta rhythmic activity in the human sensorimotor system. It
+%   is recommended the user first sub-segments the data using ft_redefinetrial 
+%   and specifies cfg.pad = 'nextpow2' when calling ft_frequencyanalysis in 
+%   order to implement steps A and B of the original algorithm in Wen & liu.
 %
 % See also FT_FREQANALYSIS, FT_SPECEST_MTMFFT, FT_SPECEST_MTMCONVOL, FT_SPECEST_TFR, FT_SPECEST_HILBERT, FT_SPECEST_WAVELET
 
