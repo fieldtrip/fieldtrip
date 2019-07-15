@@ -1,4 +1,4 @@
-function [X, Y, Z, pnt1, tri1, indx1, pnt2, tri2, indx2] = intersect_plane(pnt, tri, v1, v2, v3)
+function [X, Y, Z, pnt1, tri1, pnt2, tri2] = intersect_plane(pnt, tri, v1, v2, v3)
 
 % INTERSECT_PLANE intersection between a triangulated surface and a plane
 % it returns the coordinates of the vertices which form a contour
