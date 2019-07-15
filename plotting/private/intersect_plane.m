@@ -1,4 +1,4 @@
-function [X, Y, Z, pnt1, tri1, pnt2, tri2] = intersect_plane(pnt, tri, v1, v2, v3)
+function [X, Y, Z, pnt1, tri1, indx1, pnt2, tri2, indx2] = intersect_plane(pnt, tri, v1, v2, v3)
 
 % INTERSECT_PLANE intersection between a triangulated surface and a plane
 % it returns the coordinates of the vertices which form a contour
@@ -85,9 +85,9 @@ if nargout>3
   pnt1  = pnt(indx1,:);
   sel1  = sum(ismember(tri, indx1), 2)==3;
   tri1  = tri(sel1,:);
-  pnt1  = pnt(unique(tri1(:)),:); 
+  pnt1  = pnt(unique(tri1(:)),:);
   tri1  = tri_reindex(tri1);
-  
+
   indx2 = find(side==-1);
   pnt2  = pnt(indx2,:);
   sel2  = sum(ismember(tri, indx2), 2)==3;
