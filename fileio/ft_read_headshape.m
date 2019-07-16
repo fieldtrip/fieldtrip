@@ -81,6 +81,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 
 % get the options
 annotationfile = ft_getopt(varargin, 'annotationfile');
+useimage       = ft_getopt(varargin, 'useimage', true); % use image if hasimage
 concatenate    = ft_getopt(varargin, 'concatenate', 'yes');
 coordsys       = ft_getopt(varargin, 'coordsys', 'head');    % for ctf or neuromag_mne coil positions, the alternative is dewar
 fileformat     = ft_getopt(varargin, 'format');
@@ -198,7 +199,7 @@ end % if iscell
 
 % checks if there exists a .jpg file of 'filename'
 [pathstr,name]  = fileparts(filename);
-if exist(fullfile(pathstr,[name,'.jpg']))
+if exist(fullfile(pathstr,[name,'.jpg'])) && useimage
   image    = fullfile(pathstr,[name,'.jpg']);
   hasimage = true;
 else
