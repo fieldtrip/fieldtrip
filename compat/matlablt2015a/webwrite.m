@@ -42,7 +42,7 @@ function [varargout] = webwrite(varargin)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % see https://github.com/fieldtrip/fieldtrip/issues/899
 
-if exist(mfilename, 'builtin') || any(strncmp(which(mfilename, '-all'), matlabroot, length(matlabroot)) & cellfun(@isempty, regexp(which(mfilename, '-all'), fullfile('private', mfilename))))
+if exist(mfilename, 'builtin') || any(strncmp(which(mfilename, '-all'), matlabroot, length(matlabroot)) & all(cellfun(@isempty, regexp(which(mfilename, '-all'), fullfile('private', mfilename), 'match'))))
   % remove this directory from the path
   p = fileparts(mfilename('fullpath'));
   warning('removing "%s" from your path, see http://bit.ly/2SPPjUS', p);
