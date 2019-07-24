@@ -74,7 +74,7 @@ switch hdr.acq_type
     end
     epoch_count = endtrial-begtrial+1;
     start_epoch = begtrial-1;
-    % read all the neccessary trials that contain the desired samples
+    % read all the necessary trials that contain the desired samples
     dat = getYkgwData(filename, start_epoch, epoch_count);
     if size(dat,2)~=epoch_count*hdr.sample_count
       ft_error('could not read all epochs');

@@ -14,7 +14,7 @@ function [dat] = ft_read_data(filename, varargin)
 %   'begtrial'       first trial to read, mutually exclusive with begsample+endsample
 %   'endtrial'       last trial to read, mutually exclusive with begsample+endsample
 %   'chanindx'       list with channel indices to read
-%   'chanunit'       cell-array with strings, the desired unit of each channel
+%   'chanunit'       cell-array with strings, convert each channel to the desired unit
 %   'checkboundary'  boolean, whether to check for reading segments over a trial boundary
 %   'checkmaxfilter' boolean, whether to check that maxfilter has been correctly applied (default = true)
 %   'cache'          boolean, whether to use caching for multiple reads
@@ -411,7 +411,7 @@ switch dataformat
   case 'biosemi_old'
     % this uses the openbdf and readbdf functions that I copied from the EEGLAB toolbox
     epochlength = hdr.orig.Head.SampleRate(1);
-    % it has already been checked in read_header that all channels have the same sampling rate
+    % it has already been checked in ft_read_header that all channels have the same sampling rate
     begepoch = floor((begsample-1)/epochlength) + 1;
     endepoch = floor((endsample-1)/epochlength) + 1;
     nepochs  = endepoch - begepoch + 1;
@@ -1256,20 +1256,19 @@ switch dataformat
   case 'neurosim_spikes'
     ft_warning('Reading Neurosim spikes as continuous data, for better memory efficiency use spike structure provided by ft_read_spike instead.');
     spike = ft_read_spike(filename);
-    cfg          = [];
+    cfg = [];
     cfg.trialdef.triallength = inf;
     cfg.trialfun = 'ft_trialfun_general';
-    cfg.trlunit='samples'; %ft_trialfun_general gives us samples, not timestamps
-    
-    cfg.datafile=filename;
+    cfg.trlunit = 'samples'; % ft_trialfun_general gives us samples, not timestamps
+    cfg.datafile = filename;
     cfg.hdr = ft_read_header(cfg.datafile);
     ft_warning('off','FieldTrip:ft_read_event:unsupported_event_format')
     cfg = ft_definetrial(cfg);
     ft_warning('on','FieldTrip:ft_read_event:unsupported_event_format')
     spiketrl = ft_spike_maketrials(cfg,spike);
     
-    dat=ft_checkdata(spiketrl,'datatype', 'raw', 'fsample', spiketrl.hdr.Fs);
-    dat=dat.trial{1};
+    dat = ft_checkdata(spiketrl,'datatype', 'raw', 'fsample', spiketrl.hdr.Fs);
+    dat = dat.trial{1};
     
   case 'nmc_archive_k'
     dat = read_nmc_archive_k_data(filename, hdr, begsample, endsample, chanindx);
@@ -1287,6 +1286,10 @@ switch dataformat
   case 'artinis_oxy3'
     ft_hastoolbox('artinis', 1);
     dat = read_artinis_oxy3(filename, hdr, begsample, endsample, chanindx);
+    
+  case 'artinis_oxy4'
+    ft_hastoolbox('artinis', 1);
+    dat = read_artinis_oxy4(filename, hdr, begsample, endsample, chanindx);
     
   case 'plexon_ds'
     dat = read_plexon_ds(filename, hdr, begsample, endsample, chanindx);
@@ -1437,7 +1440,7 @@ switch dataformat
     % or Yokogawa MEG160 (old inofficial toolbox)
     % newest toolbox takes precedence over others.
     
-    if ft_hastoolbox('yokogawa_meg_reader', 3); %stay silent if it cannot be added
+    if ft_hastoolbox('yokogawa_meg_reader', 3) % stay silent if it cannot be added
       dat = read_yokogawa_data_new(filename, hdr, begsample, endsample, chanindx);
     elseif ft_hastoolbox('sqdproject', 2) % give warning if it cannot be added
       % channels are counted 0-based, samples are counted 1-based
@@ -1447,28 +1450,13 @@ switch dataformat
       ft_hastoolbox('yokogawa', 1); % error if it cannot be added
       dat = read_yokogawa_data(filename, hdr, begsample, endsample, chanindx);
     end
-    
-  case 'blackrock_nsx'
-    % use the NPMK toolbox for the file reading
-    ft_hastoolbox('NPMK', 1);
-    
-    % ensure that the filename contains a full path specification,
-    % otherwise the low-level function fails
-    [p,f,e] = fileparts(filename);
-    if ~isempty(p)
-      % this is OK
-    elseif isempty(p)
-      filename = which(filename);
-    end
-    orig = openNSx(filename, 'duration', [begsample endsample], 'channels', chanindx);
-    dat  = double(orig.Data);
-    
+        
   otherwise
-    % attempt to run dataformat as a function
-    % in case using an external read function was desired, this is where it is executed
-    % if it fails, the regular unsupported error message is thrown
+    % attempt to run "dataformat" as a function
+    % this allows the user to specify an external reading function
+    % if it fails, the regular unsupported warning message is thrown
     try
-      dat = feval(dataformat,filename, hdr, begsample, endsample, chanindx);
+      dat = feval(dataformat, filename, hdr, begsample, endsample, chanindx);
     catch
       if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
         dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
@@ -1508,6 +1496,11 @@ end
 % convert the channel data to the desired units
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(chanunit)
+  if ischar(chanunit)
+    % take the same units for all channels
+    chanunit = repmat({chanunit}, size(chanindx));
+  end
+  
   if length(chanunit)~=length(chanindx)
     ft_error('the number of channel units is inconsistent with the number of channels');
   end
@@ -1520,7 +1513,7 @@ if ~isempty(chanunit)
       for i=1:length(scaling)
         dat(i,:) = scaling(i) .* dat(i,:);
       end
-    case'chans_samples_trials';
+    case'chans_samples_trials'
       for i=1:length(scaling)
         dat(i,:,:) = scaling(i) .* dat(i,:,:);
       end
@@ -1567,7 +1560,7 @@ if inflated
 end
 
 if strcmp(dataformat, 'bci2000_dat') || strcmp(dataformat, 'eyelink_asc') || strcmp(dataformat, 'gtec_mat')
-  % caching for these formats is handled in the main section and in read_header
+  % caching for these formats is handled in the main section and in ft_read_header
 else
   % implement caching in a data independent way
   if cache && requestsamples

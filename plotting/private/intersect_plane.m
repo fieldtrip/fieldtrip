@@ -85,9 +85,9 @@ if nargout>3
   pnt1  = pnt(indx1,:);
   sel1  = sum(ismember(tri, indx1), 2)==3;
   tri1  = tri(sel1,:);
-  pnt1  = pnt(unique(tri1(:)),:); 
+  pnt1  = pnt(unique(tri1(:)),:);
   tri1  = tri_reindex(tri1);
-  
+
   indx2 = find(side==-1);
   pnt2  = pnt(indx2,:);
   sel2  = sum(ismember(tri, indx2), 2)==3;

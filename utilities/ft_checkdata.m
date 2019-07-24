@@ -1,7 +1,7 @@
 function [data] = ft_checkdata(data, varargin)
 
 % FT_CHECKDATA checks the input data of the main FieldTrip functions, e.g. whether the
-% type of data strucure corresponds with the required data. If neccessary and possible,
+% type of data strucure corresponds with the required data. If necessary and possible,
 % this function will adjust the data structure to the input requirements (e.g. change
 % dimord, average over trials, convert inside from index into logical).
 %
@@ -392,20 +392,6 @@ if ~isempty(dtype)
       isvolume = 1;
       issource = 0;
       okflag = 1;
-    elseif isequal(dtype(iCell), {'raw+comp'}) && istimelock && iscomp
-      data = timelock2raw(data);
-      data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
-      istimelock = 0;
-      iscomp = 1;
-      israw = 1;
-      okflag = 1;
-    elseif isequal(dtype(iCell), {'timelock+comp'}) && israw && iscomp
-      data = raw2timelock(data);
-      data = ft_datatype_timelock(data, 'hassampleinfo', hassampleinfo);
-      istimelock = 1;
-      iscomp = 1;
-      israw = 0;
-      okflag = 1;
     elseif isequal(dtype(iCell), {'raw'}) && issource
       data = source2raw(data);
       data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
@@ -421,6 +407,20 @@ if ~isempty(dtype)
       data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
       istimelock = 0;
       israw = 1;
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'raw+comp'}) && istimelock && iscomp
+      data = timelock2raw(data);
+      data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
+      istimelock = 0;
+      iscomp = 1;
+      israw = 1;
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'timelock+comp'}) && israw && iscomp
+      data = raw2timelock(data);
+      data = ft_datatype_timelock(data, 'hassampleinfo', hassampleinfo);
+      istimelock = 1;
+      iscomp = 1;
+      israw = 0;
       okflag = 1;
     elseif isequal(dtype(iCell), {'comp'}) && israw  && iscomp
       data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields

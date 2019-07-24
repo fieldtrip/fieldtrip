@@ -37,10 +37,10 @@ if nargin > 3 && ~isempty(hashfile)
   end
   % key for the hash is the filename (no path) with 'f' prepended, since variable
   % names cannot begin with a number
-  [~,fileonly,~] = fileparts(filename);
-  hashkey = ['f' fileonly];
+  [p, f, x] = fileparts(filename);
+  hashkey = ['f' f]; % only use the file name
   hashes.(hashkey) = ft_hash(value);
-  % save back into the hashfile
+  % store it in the hashfile
   save(hashfile, '-struct', 'hashes');
   ft_info('writing data hash for ''%s'' to file ''%s''\n', varname, hashfile);
 end

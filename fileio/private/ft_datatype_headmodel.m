@@ -125,7 +125,7 @@ switch version
     % first make it consistent with the 2012 version
     headmodel = ft_datatype_headmodel(headmodel, 'version', '2012');
 
-    % then rename (if neccessary the c into cond
+    % then rename (if necessary the c into cond
     if isfield(headmodel, 'c') && ~isfield(headmodel, 'cond')
       headmodel.cond = headmodel.c;
       headmodel = rmfield(headmodel, 'c');

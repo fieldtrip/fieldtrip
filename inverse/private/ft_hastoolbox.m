@@ -158,6 +158,7 @@ url = {
   'JSONIO'        'see https://github.com/gllmflndn/JSONio'
   'CPD'           'see https://sites.google.com/site/myronenko/research/cpd'
   'MVPA-LIGHT'    'see https://github.com/treder/MVPA-Light'
+  'XDF'           'see https://github.com/xdf-modules/xdf-Matlab'
   };
 
 if nargin<2
@@ -391,6 +392,8 @@ switch toolbox
     dependency = {'jsonread', 'jsonwrite', 'jsonread.mexa64'};
   case 'CPD'
     dependency = {'cpd', 'cpd_affine', 'cpd_P'};
+  case 'XDF'
+    dependency = {'load_xdf', 'load_xdf_innerloop'};
     
     % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
@@ -514,7 +517,7 @@ global ft_default
 
 if ~isfolder(toolbox)
   % search for a case-insensitive match, this is needed for MVPA-Light
-  [p, f, ~] = fileparts(toolbox);
+  [p, f] = fileparts(toolbox);
   dirlist = dir(p);
   sel = strcmpi({dirlist.name}, f);
   if sum(sel)==1
@@ -536,7 +539,7 @@ elseif isfolder(toolbox)
     addpath(genpath(toolbox));
     % check whether the mex files are compatible
     check_spm_mex;
-  elseif ~isempty(regexp(lower(toolbox), 'mvpa-light$'))
+  elseif ~isempty(regexp(lower(toolbox), 'mvpa-light$', 'once'))
     % this comes with its own startup script
     addpath(fullfile(toolbox, 'startup'))
     startup_MVPA_Light;

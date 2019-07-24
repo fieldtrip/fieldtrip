@@ -245,7 +245,7 @@ if ~isfield(cfg, 'spmparams')
     %VF         = spm_vol([cfg.intermediatename '_anatomy' ext]);
     flags.nits = 0; % put number of non-linear iterations to zero
     params     = spm_normalise(VG, VF(1), [], [], [], flags);
-  elseif strcmp(cfg.spmversion, 'spm12') && strcmp(cfg.spmmethod, 'new')
+  elseif strcmp(cfg.spmversion, 'spm12') && (strcmp(cfg.spmmethod, 'new') || strcmp(cfg.spmmethod, 'mars'))
     if ~isfield(cfg, 'tpm') || isempty(cfg.tpm)
       cfg.tpm = fullfile(spm('dir'),'tpm','TPM.nii');
     end
@@ -272,8 +272,17 @@ if ~isfield(cfg, 'spmparams')
     
     % this writes the 'deformation field'
     fprintf('writing the deformation field to file\n');
-    bb        = spm_get_bbox(opts.tpm.V(1));
-    spm_preproc_write8(params, zeros(6,4), [0 0], [0 1], 1, 1, bb, cfg.downsample);
+    if strcmp(cfg.spmmethod, 'new')
+      bb        = spm_get_bbox(opts.tpm.V(1));
+      spm_preproc_write8(params, zeros(6,4), [0 0], [0 1], 1, 1, bb, cfg.downsample);
+    elseif strcmp(cfg.spmmethod, 'mars')
+      ft_hastoolbox('mars', 1);
+      if ~isfield(cfg, 'mars'), cfg.mars = []; end
+      beta        = ft_getopt(cfg.mars, 'beta', 0.1);
+      convergence = ft_getopt(cfg.mars, 'convergence', 0.1);
+      tcm{1}      = fullfile(fileparts(which('spm_mars_mrf')), 'rTCM_BW20_S1.mat');
+      params = spm_mars_mrf(params, zeros(6,4), [0 0], [0 1], tcm, beta, convergence, 1);
+    end
     
     oldparams = false;
     newparams = true;

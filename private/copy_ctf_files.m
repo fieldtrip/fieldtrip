@@ -40,8 +40,8 @@ if isfolder(newname)
   ft_error('directory "%s" already not exist', oldname);
 end
 
-[~, fo, ~] = fileparts(oldname);
-[~, fn, ~] = fileparts(newname);
+[po, fo, xo] = fileparts(oldname);
+[pn, fn, xn] = fileparts(newname);
 
 mkdir(newname);
 recurse_copyfile(oldname, newname, fo, fn)
@@ -57,7 +57,7 @@ for i=1:numel(list)
   elseif strcmp(list(i).name, '..')
     continue
   elseif list(i).isdir
-    [~, f, x] = fileparts(list(i).name);
+    [p, f, x] = fileparts(list(i).name);
     mkdir(fullfile(new, [f, x]));
     if strcmp(f, fo)
       % replace the old directory name by the new one
@@ -67,7 +67,7 @@ for i=1:numel(list)
       recurse_copyfile(fullfile(old, [f, x]), fullfile(new, [f, x]), fo, fn);
     end
   else
-    [~, f, x] = fileparts(list(i).name);
+    [p, f, x] = fileparts(list(i).name);
     if strcmp(f, fo)
       % copy the old file to the new one
       copyfile(fullfile(old, [fo, x]), fullfile(new, [fn, x]));

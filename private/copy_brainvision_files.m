@@ -11,8 +11,11 @@ function copy_brainvision_files(oldheaderfile, newheaderfile, deleteflag)
 % optional, it should be a boolean that specifies whether the original files should
 % be deleted after copying or not (default = false).
 %
-% See also https://gist.github.com/robertoostenveld/e31637a777c514bf1e86272e1092316e
-% and https://gist.github.com/CPernet/e037df46e064ca83a49fb4c595d4566a
+% An earlier version of this function can be found on
+%   - https://gist.github.com/robertoostenveld/e31637a777c514bf1e86272e1092316e
+%   - https://gist.github.com/CPernet/e037df46e064ca83a49fb4c595d4566a
+%
+% See also COPY_CTF_FILES
 
 % Copyright (C) 2018-2019, Robert Oostenveld
 %
@@ -55,8 +58,8 @@ else
   switchcase = @lower;
 end
 
-% determine the filename without extension
-[~, f, ~] = fileparts(newheaderfile);
+% determine the new filename without extension
+[pn, fn, xn] = fileparts(newheaderfile);
 
 %% do the copying
 
@@ -75,16 +78,16 @@ fid2 = fopen(newheaderfile, 'w'); % write new
 while ~feof(fid1)
   line = fgetl(fid1);
   if ~isempty(regexp(line, '^MarkerFile', 'once'))
-    [~, rem] = strtok(line, '=');
+    [dum, rem] = strtok(line, '=');
     oldmarkerfile = rem(2:end);
-    [~, ~, x] = fileparts(oldmarkerfile);
-    newmarkerfile = [f switchcase(x)];
+    [po, fo, xo] = fileparts(oldmarkerfile);
+    newmarkerfile = [fn switchcase(xo)];
     line = sprintf('MarkerFile=%s', newmarkerfile);
   elseif ~isempty(regexp(line, '^DataFile', 'once'))
-    [~, rem] = strtok(line, '=');
+    [dum, rem] = strtok(line, '=');
     olddatafile = rem(2:end);
-    [~, ~, x] = fileparts(olddatafile);
-    newdatafile = [f switchcase(x)];
+    [po, fo, xo] = fileparts(olddatafile);
+    newdatafile = [fn switchcase(xo)];
     line = sprintf('DataFile=%s', newdatafile);
   end
   fprintf(fid2, '%s\r\n', line);
@@ -94,10 +97,10 @@ fclose(fid2);
 
 % deal with the marker file
 if exist(oldmarkerfile, 'file') == 0
-  [~, ~, xx] = fileparts(oldmarkerfile);
-  [~, ff, ~] = fileparts(oldheaderfile); % re-reading as sometimes weird names comes up
-  if exist([ff xx], 'file')
-    oldmarkerfile = [ff xx];
+  [po, fo, xo] = fileparts(oldmarkerfile);
+  [po, fo]     = fileparts(oldheaderfile); % re-reading as sometimes weird names comes up
+  if exist([fo xo], 'file')
+    oldmarkerfile = [fo xo];
   else
     error('the file "%s" does not exists', oldmarkerfile);
   end
@@ -113,16 +116,16 @@ fid2 = fopen(newmarkerfile, 'w');
 while ~feof(fid1)
   line = fgetl(fid1);
   if ~isempty(regexp(line, '^HeaderFile', 'once'))
-    [~, rem] = strtok(line, '=');
+    [dum, rem] = strtok(line, '=');
     oldheaderfile = rem(2:end);
-    [~, ~, x] = fileparts(oldheaderfile);
-    newheaderfile = [f switchcase(x)];
+    [po, fo, xo] = fileparts(oldheaderfile);
+    newheaderfile = [fn switchcase(xo)];
     line = sprintf('HeaderFile=%s', newheaderfile);
   elseif ~isempty(regexp(line, '^DataFile', 'once'))
-    [~, rem] = strtok(line, '=');
+    [dum, rem] = strtok(line, '=');
     olddatafile = rem(2:end);
-    [~, ~, x] = fileparts(olddatafile);
-    newdatafile = [f switchcase(x)];
+    [po, fo, xo] = fileparts(olddatafile);
+    newdatafile = [fn switchcase(xo)];
     line = sprintf('DataFile=%s', newdatafile);
   end
   fprintf(fid2, '%s\r\n', line);
@@ -132,10 +135,10 @@ fclose(fid2);
 
 % deal with the data file
 if exist(olddatafile, 'file') == 0
-  [~, ~, xx] = fileparts(olddatafile);
-  [~, ff, ~] = fileparts(oldheaderfile); % re-reading as sometimes weird names comes up
-  if exist([ff xx], 'file')
-    olddatafile = [ff xx];
+  [po, fo, xo] = fileparts(olddatafile);
+  [po, fo]     = fileparts(oldheaderfile); % re-reading as sometimes weird names comes up
+  if exist([fo xo], 'file')
+    olddatafile = [fo xo];
   else
     error('the file "%s" does not exists', oldmarkerfile);
   end

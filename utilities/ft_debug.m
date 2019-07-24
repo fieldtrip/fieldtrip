@@ -31,7 +31,7 @@ function varargout = ft_debug(varargin)
 % You can query the current on/off/once state for all messages using
 %   ft_debug query
 %
-% See also FT_ERROR, FT_WARNING, FT_NOTICE, FT_debug, FT_DEBUG, ERROR, WARNING
+% See also FT_ERROR, FT_WARNING, FT_NOTICE, FT_INFO, FT_DEBUG, ERROR, WARNING
 
 % Copyright (C) 2017, Robert Oostenveld
 %

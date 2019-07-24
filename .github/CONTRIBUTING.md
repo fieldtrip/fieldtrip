@@ -5,6 +5,10 @@ Contributing to FieldTrip
 
 The [FieldTrip GitHub repo](https://github.com/fieldtrip/fieldtrip) is the home for FieldTrip development. Please submit bug reports and pull requests there.
 
+## Reporting issues
+
+Please see <http://www.fieldtriptoolbox.org/bugzilla/> for instructions how to report issues.
+
 ## Style guidelines
 
 Please see the [FieldTrip website guidelines pages](http://www.fieldtriptoolbox.org/tag/guidelines/) for guidelines on contributing to the FieldTrip code base.

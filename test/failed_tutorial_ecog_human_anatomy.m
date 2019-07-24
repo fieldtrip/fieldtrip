@@ -11,7 +11,7 @@ cd(subj_dir)
 % use matlab functions that come with freesurfer
 % the subset in FieldTrip is not enough. The problem is freesurfer's
 % license (does it allow to copy their functions to GPLv3 toolbox?)
-[~, recon_file] = system('which recon-all');
+[status, recon_file] = system('which recon-all');
 freesurfer_dir = fileparts(fileparts(recon_file));
 
 addpath(fullfile(freesurfer_dir, 'matlab'))
