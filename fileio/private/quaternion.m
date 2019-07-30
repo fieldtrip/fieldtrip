@@ -11,8 +11,14 @@ function [H] = quaternion(q)
 %           quanternions from Neuromag MaxFilter output].
 %   H       corresponding homogenous transformation matrix
 %
+<<<<<<< HEAD
 % See Elekta/Neuromag MaxFilter manual version 2.2, section "D2 Coordinate Matching",
 % page 77 for more details and
+=======
+% If the input vector has length 6, it is assumed to represent a unit quaternion without scaling.
+%
+% See Neuromag/Elekta MaxFilter manual version 2.2, section "D2 Coordinate Matching", page 77 for more details and
+>>>>>>> cef9aba30fb05e0319a6461d4a246e3bdf321a4b
 % https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation#Conversion_to_and_from_the_matrix_representation
 
 % Copyright (C) 2016, Robert Oostenveld. [!] Edit: 2017-11-27 by MCV.
@@ -49,6 +55,7 @@ function [H] = quaternion(q)
 %
 % $Id$
 
+<<<<<<< HEAD
 if numel(q)==7
     q0 = q(0+1);
     q1 = q(1+1);
@@ -69,6 +76,14 @@ elseif numel(q)==6  %First q not present (for MaxFilter quaternions)
 %     q0 = sqrt(1-sum([q1,q2,q3]).^2);  
     
     q0 = sqrt(1-q1^2-q2^2-q3^2);  
+=======
+if numel(q)==6
+  % this is used a lot by the Neuromag/Elekta software, where the first element is left out and a rigid body transformation wothout scaling is used.
+  % see also https://github.com/mne-tools/mne-python/blob/maint/0.15/mne/transforms.py#L1137
+  q0 = sqrt(1 - q(1)^2 - q(2)^2 - q(3)^2);
+  q = [q0 q];
+end
+>>>>>>> cef9aba30fb05e0319a6461d4a246e3bdf321a4b
 
     
 else

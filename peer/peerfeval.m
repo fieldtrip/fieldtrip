@@ -114,7 +114,7 @@ end
 if ~isempty(previous_argin) && ~isequal(varargin{1}, previous_argin{1})
   % this can be skipped if the previous call used the same function
   if isempty(which(varargin{1}))
-    error('Not a valid M-file (%s).', varargin{1});
+    error('not a valid M-file "%s"', varargin{1});
   end
 end
 

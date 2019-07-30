@@ -9,7 +9,7 @@ function [varargout] = isequaln(varargin)
 if exist(mfilename, 'builtin') || any(strncmp(which(mfilename, '-all'), matlabroot, length(matlabroot)) & cellfun(@isempty, regexp(which(mfilename, '-all'), fullfile('private', mfilename))))
   % remove this directory from the path
   p = fileparts(mfilename('fullpath'));
-  warning('removing %s from your path, see http://bit.ly/2SPPjUS', p);
+  warning('removing "%s" from your path, see http://bit.ly/2SPPjUS', p);
   rmpath(p);
   % call the original MATLAB function
   if exist(mfilename, 'builtin')

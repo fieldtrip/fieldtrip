@@ -180,7 +180,9 @@ if needhdr
   fseek(EDF.FILE.FID,32*EDF.NS,0);
 
   EDF.Cal = (EDF.PhysMax-EDF.PhysMin)./(EDF.DigMax-EDF.DigMin);
+  EDF.Cal(isnan(EDF.Cal)) = 0;
   EDF.Off = EDF.PhysMin - EDF.Cal .* EDF.DigMin;
+  
   %tmp = find(EDF.Cal < 0);
   %EDF.Cal(tmp) = ones(size(tmp));
   %EDF.Off(tmp) = zeros(size(tmp));

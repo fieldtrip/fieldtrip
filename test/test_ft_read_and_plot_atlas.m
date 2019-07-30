@@ -7,7 +7,7 @@ function test_ft_read_and_plot_atlas
 
 % spm8 might have mexfile issues
 ft_hastoolbox('spm12',1);
-[~, ftpath] = ft_version;
+[ftver, ftpath] = ft_version;
 
 % load MNI pial mesh
 pial = load([ftpath '/template/anatomy/surface_pial_both.mat']);

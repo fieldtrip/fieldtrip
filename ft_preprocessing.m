@@ -217,7 +217,7 @@ cfg.montage        = ft_getopt(cfg, 'montage', 'no');
 cfg.updatesens     = ft_getopt(cfg, 'updatesens', 'no');    % in case a montage or rereferencing is specified
 cfg.chantype       = ft_getopt(cfg, 'chantype', {});        %2017.10.10 AB required for NeuroOmega files
 
-% these options relate to the actual preprocessing, it is neccessary to specify here because of padding
+% these options relate to the actual preprocessing, it is necessary to specify here because of padding
 cfg.dftfilter      = ft_getopt(cfg, 'dftfilter', 'no');
 cfg.lpfilter       = ft_getopt(cfg, 'lpfilter', 'no');
 cfg.hpfilter       = ft_getopt(cfg, 'hpfilter', 'no');
@@ -226,7 +226,7 @@ cfg.bsfilter       = ft_getopt(cfg, 'bsfilter', 'no');
 cfg.medianfilter   = ft_getopt(cfg, 'medianfilter', 'no');
 cfg.padtype        = ft_getopt(cfg, 'padtype', 'data');
 
-% these options relate to the actual preprocessing, it is neccessary to specify here because of channel selection
+% these options relate to the actual preprocessing, it is necessary to specify here because of channel selection
 cfg.reref          = ft_getopt(cfg, 'reref', 'no');
 cfg.refchannel     = ft_getopt(cfg, 'refchannel', {});
 cfg.refmethod      = ft_getopt(cfg, 'refmethod', 'avg');
@@ -296,7 +296,7 @@ if hasdata
         cfg.padtype = 'mirror';
       end
     else
-      % no filtering will be done, hence no padding is neccessary
+      % no filtering will be done, hence no padding is necessary
       padding = 0;
     end
     % update the configuration (in seconds) for external reference
@@ -462,7 +462,7 @@ else
         strcmp(cfg.medianfilter, 'yes')
       padding = round(cfg.padding * hdr.Fs);
     else
-      % no filtering will be done, hence no padding is neccessary
+      % no filtering will be done, hence no padding is necessary
       padding = 0;
     end
     % update the configuration (in seconds) for external reference

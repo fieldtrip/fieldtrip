@@ -93,13 +93,18 @@ if ~isempty(strfind(method, 'svd'))
     keepy = false(numel(y),1);
     keepy(1:min(thr(2),numel(y))) = true;
   end
-  U = blkdiag(ux(:,keepx),uy(:,keepy));
+  %U = blkdiag(ux(:,keepx),uy(:,keepy));
+  U = zeros(size(B,1),sum(keepx)+sum(keepy));
+  U(x,1:sum(keepx)) = ux(:,keepx);
+  U(y,sum(keepx)+(1:sum(keepy))) = uy(:,keepy);
   
   A = U'*A*U;
   B = U'*B*U;
+  C = U'*C*U;
   
   A = (A+A')./2;
   B = (B+B')./2;
+  C = (C+C')./2;
 end
 
 % ad hoc check for well-behavedness of the matrix, and do the decomposition
@@ -121,19 +126,34 @@ n          = min(n, numel(diag(D)));
 E          = E(:, order(1:n));
 D          = D(1:n);
 
-if ~isempty(strfind(method, 'svd'))
-  E = U*E;
-end
-
-[E(x,:),norm_x] = normc(E(x,:)); % norm normalise the coefficients per block
-[E(y,:),norm_y] = normc(E(y,:));
-if ~isempty(strfind(method, 'mlr'))
-  % scale the weights for the independent variable, such that they reflect
-  % proper beta weights
-  E(x,:) = E(x,:).*D(:)'.*(norm_x./norm_y);
+if isempty(strfind(method, 'svd'))
+  [E(x,:),norm_x] = normc(E(x,:)); % norm normalise the coefficients per block
+  [E(y,:),norm_y] = normc(E(y,:));
+  if ~isempty(strfind(method, 'mlr'))
+    % scale the weights for the independent variable, such that they reflect
+    % proper beta weights
+    %E(x,:) = E(x,:).*D(:)'.*(norm_x./norm_y);
+    E(x,:) = E(x,:)*diag(norm_x./norm_y)*diag(D(:));
+    
+    % output the ssq error in D
+    D = 1-diag(E(y,:)'*C(y,x)*E(x,:))./diag(E(y,:)'*C(y,y)*E(y,:));
+  end
+else
+  indx_x = 1:sum(keepx);
+  indx_y = sum(keepx)+(1:sum(keepy));
   
-  % output the ssq error in D
-  D = trace(C(y,y))-(sum((E(y,:)'*C(y,x)).*E(x,:)',2).^2)./(sum((E(x,:)'*C(x,x)).*E(x,:)',2));
+  [E(indx_x,:), norm_x] = normc(E(indx_x,:));
+  [E(indx_y,:), norm_y] = normc(E(indx_y,:));
+  
+  if ~isempty(strfind(method, 'mlr'))
+    % scale the weights for the independent variable, such that they reflect
+    % proper beta weights
+    E(x,:) = E(x,:)*diag(norm_x./norm_y)*diag(D(:));
+    
+    % output the ssq error in D
+    D = 1-diag(E(y,:)'*C(y,x)*E(x,:))./diag(E(y,:)'*C(y,y)*E(y,:));
+  end
+  E = U*E;
 end
 
 function R = ridge_matrix(x, y, type, thr)

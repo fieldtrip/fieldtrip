@@ -67,7 +67,7 @@ elseif (magic == TRIANGLE_FILE_MAGIC_NUMBER)
   vnum = fread(fid, 1, 'int32') ;
   fnum = fread(fid, 1, 'int32') ;
   % possibly the comment line was not followed by two \n’s, this patch is suggested by J.M.Schoffelen, 20190502
-  if ~isa(vnum, 'int32') || ~isa(fnum, 'int32’)
+  if round(abs(vnum))~=vnum || round(abs(fnum))~=fnum
     frewind(fid);
     fread3(fid);
     fgets(fid);

@@ -489,6 +489,14 @@ for i=1:length(MatrixIndicesMap)
         key = NamedMap(j).LabelTable.Key;
         lab = NamedMap(j).LabelTable.Label;
         sel = key>0;
+        if isfield(NamedMap(j).LabelTable, 'Red')
+          % assume rgba to be also specified
+          rgba = [NamedMap(j).LabelTable.Red(:) ...
+                  NamedMap(j).LabelTable.Green(:) ...
+                  NamedMap(j).LabelTable.Blue(:) ...
+                  NamedMap(j).LabelTable.Alpha(:)];
+          Cifti.rgba{j} = rgba(sel,:);
+        end          
         Cifti.labeltable{j}(key(sel)) = lab(sel);
         Cifti.mapname{j} = fixname(NamedMap(j).MapName);
       end
@@ -809,9 +817,12 @@ if readdata
             if length(fieldname)>58
               % truncate it, needed to be able to append 'label' to the end
               fieldname = fieldname(1:58);
-              % append 'label' to the end
-              source.([fieldname 'label']) = Cifti.labeltable{i};
             end
+            % append 'label' to the end
+            source.([fieldname 'label']) = Cifti.labeltable{i}(:);
+          end
+          if isfield(Cifti, 'rgba')
+            source.([fieldname 'rgba']) = Cifti.rgba{i};
           end
           source.(fieldname) = dat(:,i);
         end

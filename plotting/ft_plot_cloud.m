@@ -1,7 +1,7 @@
 function ft_plot_cloud(pos, val, varargin)
 
-% FT_PLOT_CLOUD visualizes spatially sparse scalar data as points, spheres, discs, or
-% spherical clouds of points and optionally 2D slices through the spherical clouds
+% FT_PLOT_CLOUD visualizes spatially sparse scalar data as spheres or
+% spherical clouds of points and optionally 2D slices through those clouds
 %
 % Use as
 %   ft_plot_cloud(pos, val, ...)
@@ -9,10 +9,8 @@ function ft_plot_cloud(pos, val, varargin)
 % for each location.
 %
 % Optional input arguments should come in key-value pairs and can include
-%   'cloudtype'          = 'point' plots a single 2D point at each sensor position (see plot3)
-%                          'cloud' (default) plots a group of spherically arranged points at each sensor position
+%   'cloudtype'          = 'cloud' (default) plots a group of spherically arranged points at each sensor position
 %                          'surf' plots a single spherical surface mesh at each sensor position
-%                          'disc' plots a single cylindrical disc at each sensor position aligned with the mesh (required)
 %   'scalerad'           = scale radius with val, can be 'yes' or 'no' (default = 'yes')
 %   'radius'             = scalar, maximum radius of cloud (default = 4 mm)
 %   'clim'               = 1x2 vector specifying the min and max for the colorscale
@@ -29,9 +27,6 @@ function ft_plot_cloud(pos, val, varargin)
 %   'ptsize'             = scalar, size of points in cloud (default = 1 mm)
 %   'ptdensity'          = scalar, density of points in cloud (default = 20 per mm^3)
 %   'ptgradient'         = scalar, degree to which density of points in cloud changes from its center (default = 0.5, i.e. uniform density)
-%
-% The following options apply when 'cloudtype' = 'point'
-%   'marker'          = marker type representing the channels, see plot3 (default = '.')
 %
 % The following inputs apply when 'slice' = '2d' or '3d'
 %   'ori'                = 'x', 'y', or 'z', specifies the orthogonal plane which will be plotted (default = 'y')
@@ -110,9 +105,6 @@ end
 ptsize             = ft_getopt(varargin, 'ptsize', 1 * ft_scalingfactor('mm', unit));
 ptdensity          = ft_getopt(varargin, 'ptdensityity', 20 / ft_scalingfactor('mm', unit)^3);  % points per unit of volume
 ptgradient         = ft_getopt(varargin, 'ptgradient', .5);
-
-% point related inputs
-marker             = ft_getopt(varargin, 'marker', '.');
 
 % slice related inputs
 sli                = ft_getopt(varargin, 'slice', 'none');
@@ -682,7 +674,7 @@ else % plot 3d cloud
     end % switch cloudtype
   end % end cloud loop
   
-  if ~isempty(meshplot) && ~strcmp(cloudtype, 'disc') % do not plot the mesh when plotting electrodes as discs
+  if ~isempty(meshplot)
     for k = 1:numel(meshplot) % mesh loop
       ft_plot_mesh(meshplot{k}, 'facecolor', facecolor{k}, 'EdgeColor', edgecolor{k}, ...
         'facealpha', facealpha(k), 'edgealpha', edgealpha(k), 'vertexcolor', vertexcolor{k});

@@ -136,8 +136,8 @@ fwrite(fid, 32*ones(32,nChans), 'uint8'); % reserved (32 spaces / channel)
 % now write data
 begsample = 1;
 endsample = blocksize;
-while endsample<nSamples
-  fwrite(fid, data(:,begsample:endsample), 'int16');
+while endsample<=nSamples
+  fwrite(fid, data(:,begsample:endsample)', 'int16');
   begsample = begsample+blocksize;
   endsample = endsample+blocksize;
 end
