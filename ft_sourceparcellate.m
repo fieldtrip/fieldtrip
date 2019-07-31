@@ -24,6 +24,7 @@ function [parcel] = ft_sourceparcellate(cfg, source, parcellation)
 %   'min'       take the minimal value
 %   'max'       take the maximal value
 %   'maxabs'    take the signed maxabs value
+%   'std'       take the standard deviation
 %
 % See also FT_SOURCEANALYSIS, FT_DATATYPE_PARCELLATION, FT_DATATYPE_SEGMENTATION
 
@@ -203,6 +204,8 @@ for i=1:numel(fn)
             tmp{j1,j2} = cellmax2(dat(seg==j1,seg==j2,:));
           case 'eig'
             tmp{j1,j2} = celleig2(dat(seg==j1,seg==j2,:));
+          case 'std'
+            tmp{j1,j2} = cellstd2(dat(seg==j1,seg==j2,:));
           otherwise
             ft_error('method %s not implemented for %s', cfg.method, dimord{i});
         end % switch
@@ -227,6 +230,8 @@ for i=1:numel(fn)
           tmp{j} = cellmax1(dat(seg==j));
         case 'eig'
           tmp{j} = celleig1(dat(seg==j));
+        case 'std'
+          tmp{j} = cellstd1(dat(seg==j));
         otherwise
           ft_error('method %s not implemented for %s', cfg.method, dimord{i});
       end % switch
@@ -259,6 +264,8 @@ for i=1:numel(fn)
             tmp(j1,j2,:) = arrayeig2(dat(seg==j1,seg==j2,:));
           case 'maxabs'
             tmp(j1,j2,:) = arraymaxabs2(dat(seg==j1,seg==j2,:));
+          case 'std'
+            tmp(j1,j2,:) = arraystd2(dat(seg==j1,seg==j2,:));
           otherwise
             ft_error('method %s not implemented for %s', cfg.method, dimord{i});
         end % switch
@@ -299,6 +306,8 @@ for i=1:numel(fn)
           tmp(j,:) = arraymaxabs1(dat(seg==j,:));
         case 'eig'
           tmp(j,:) = arrayeig1(dat(seg==j,:));
+        case 'std'
+          tmp(j,:)  = arraystd1(dat(seg==j,:));
         otherwise
           ft_error('method %s not implemented for %s', cfg.method, dimord{i});
       end % switch
@@ -410,6 +419,13 @@ else
   y = nan(1,size(x,2));
 end
 
+function y = arraystd1(x)
+if ~isempty(x)
+  y = std(x,0, 1);
+else
+  y = nan(1,size(x, 2));
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS to compute something over the first two dimensions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -444,6 +460,11 @@ siz = size(x);
 x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimension
 [dum,ix] = max(abs(x), [], 1);
 y        = x(ix);
+
+function y = arraystd2(x)
+siz = size(x);
+x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimension
+y = arraystd1(x);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS for doing something over the first dimension of a cell-array
@@ -508,6 +529,20 @@ x = cat(1,x{:});
 [u, s] = svds(real(x*x'), 1);
 y = u(:,1)'*x;
 
+function y = cellstd1(x)
+siz = size(x);
+if siz(1)==1 && siz(2)>1
+  siz([2 1]) = siz([1 2]);
+  x = reshape(x, siz);
+end
+y = x{1};
+n = 1;
+for i=2:siz(1)
+  y = y + x{i};
+  n = n + 1;
+end
+y = std(y);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS to compute something over the first two dimensions of a cell-array
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -535,3 +570,8 @@ function y = celleig2(x)
 siz = size(x);
 x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % represent the first two as a single dimension
 y = celleig1(x);
+
+function y = cellstd2(x)
+siz = size(x);
+x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % represent the first two as a single dimension
+y = cellstd1(x);
