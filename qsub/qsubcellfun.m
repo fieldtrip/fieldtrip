@@ -70,7 +70,7 @@ function varargout = qsubcellfun(fname, varargin)
 %   qdel <jobnumber>
 %   qdel all
 %
-% See also QSUBCOMPILE, QSUBFEVAL, CELLFUN, PEERCELLFUN, FEVAL, DFEVAL, DFEVALASYNC
+% See also QSUBCOMPILE, QSUBFEVAL, CELLFUN, PEERCELLFUN, FEVAL, BATCH
 
 % -----------------------------------------------------------------------
 % Copyright (C) 2011-2016, Robert Oostenveld
@@ -257,7 +257,7 @@ if stack>1
   % combine multiple jobs in one, the idea is to use recursion like this
   % a = {{@plus, @plus}, {{1}, {2}}, {{3}, {4}}}
   % b = cellfun(@cellfun, a{:})
-  
+
   % these options will be passed to the recursive call after being modified further down
   if ~any(strcmpi(optarg, 'timreq'))
     optarg{end+1} = 'timreq';
@@ -279,17 +279,17 @@ if stack>1
     optarg{end+1} = 'compile';
     optarg{end+1} = compile;
   end
-  
+
   % update these settings for the recursive call
   optarg{find(strcmpi(optarg, 'timreq'))+1}        = timreq*stack;
   optarg{find(strcmpi(optarg, 'stack'))+1}         = 1;
   optarg{find(strcmpi(optarg, 'UniformOutput'))+1} = false;
   optarg{find(strcmpi(optarg, 'compile'))+1}       = false;
-  
+
   % FIXME the partitioning can be further perfected
   partition     = floor((0:numjob-1)/stack)+1;
   numpartition  = partition(end);
-  
+
   stackargin = cell(1,numargin+3); % include the fname, uniformoutput, false
   if istrue(compile)
     if ischar(fcomp.fname)
@@ -308,7 +308,7 @@ if stack>1
   end
   stackargin{end-1} = repmat({'uniformoutput'},1,numpartition);  % uniformoutput
   stackargin{end}   = repmat({false},1,numpartition);            % false
-  
+
   % reorganize the original input into the stacked format
   for i=1:numargin
     tmp = cell(1,numpartition);
@@ -318,10 +318,10 @@ if stack>1
     stackargin{i+1} = tmp; % note that the first element is the fname
     clear tmp
   end
-  
+
   stackargout = cell(1,numargout);
   [stackargout{:}] = qsubcellfun(@cellfun, stackargin{:}, optarg{:});
-  
+
   % reorganise the stacked output into the original format
   for i=1:numargout
     tmp = cell(size(varargin{1}));
@@ -331,11 +331,11 @@ if stack>1
     varargout{i} = tmp;
     clear tmp
   end
-  
+
   if numargout>0 && UniformOutput
     [varargout{:}] = makeuniform(varargout{:});
   end
-  
+
   return;
 end
 
@@ -355,7 +355,7 @@ for submit=1:numjob
   for j=1:numargin
     argin{j} = varargin{j}{submit};
   end
-  
+
   % submit the job
   if ~isempty(fcomp)
     % use the compiled version
@@ -364,7 +364,7 @@ for submit=1:numjob
     % use the non-compiled version
     [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'memoverhead', memoverhead, 'timoverhead', timoverhead, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'matlabcmd', matlabcmd, 'display', display, 'jvm', jvm, 'nargout', numargout, 'whichfunction', whichfunction, 'rerunable', rerunable);
   end
-  
+
   % fprintf('submitted job %d\n', submit);
   jobid{submit}      = curjobid;
   puttime(submit)    = curputtime;
@@ -375,37 +375,37 @@ end % for
 
 while (~all(collected))
   % try to collect the jobs that have finished
-  
+
   for collect=find(~collected)
     % this will return empty arguments if the job has not finished
     ws = warning('off', 'FieldTrip:qsub:jobNotAvailable');
     [argout, options] = qsubget(jobid{collect}, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
     warning(ws);
-    
+
     if ~isempty(argout) || ~isempty(options)
       % fprintf('collected job %d\n', collect);
       collected(collect)   = true;
       collecttime(collect) = toc(stopwatch);
-      
+
       if isempty(argout) && StopOnError==false
-        % this happens if an error was detected in qsubget and StopOnError is false 
+        % this happens if an error was detected in qsubget and StopOnError is false
         % replace the output of the failed jobs with []
         argout = repmat({[]}, 1, numargout);
       end
-      
+
       % redistribute the output arguments
       for j=1:numargout
         varargout{j}{collect} = argout{j};
       end
-      
+
       % gather the job statistics
       % these are empty in case an error happened during remote evaluation, therefore the default value of NaN is specified
       timused(collect) = ft_getopt(options, 'timused', nan);
       memused(collect) = ft_getopt(options, 'memused', nan);
-      
+
     end  % if
   end % for
-  
+
   pausejava(sleep);
 end % while
 

@@ -31,7 +31,7 @@ function [jobid, puttime] = qsubfeval(varargin)
 %   jvm         = 'yes' or 'no', whether the nojvm option should be passed to MATLAB (default = 'yes', meaning with jvm)
 %   rerunable   = 'yes' or 'no', whether the job can be restarted on a torque/maui/moab cluster (default = 'no')
 %
-% See also QSUBCELLFUN, QSUBGET, FEVAL, DFEVAL, DFEVALASYNC
+% See also QSUBCELLFUN, QSUBGET, FEVAL, BATCH
 
 % -----------------------------------------------------------------------
 % Copyright (C) 2011-2016, Robert Oostenveld
@@ -181,12 +181,12 @@ else
 end
 
 if ~compiled
-  
+
   if ~isempty(matlabcmd)
     % take the user-specified matlab startup script
   elseif isempty(previous_matlabcmd)
     % determine the name of the matlab startup script
-    
+
     if ft_platform_supports('program_invocation_name')
       % supported in GNU Octave
       matlabcmd = program_invocation_name();
@@ -210,14 +210,14 @@ if ~compiled
         matlabcmd = sprintf('matlab%s', version('-release')); % the version command returns a string like '2014a'
       end
     end
-    
+
     if system(sprintf('which %s > /dev/null', matlabcmd))==1
       % the linux command "which" returns 0 on succes and 1 on failure
       warning('the executable for "%s" could not be found, trying "matlab" instead', matlabcmd);
       % use whatever is available as default
       matlabcmd = 'matlab';
     end
-    
+
     % keep the matlab command for subsequent calls, this will
     % avoid subsequent attempts to set the matlabcmd
     % and the system('which ...') call on the scheduling of subsequent
@@ -227,12 +227,12 @@ if ~compiled
     % re-use the matlab command that was determined on the previous call to this function
     matlabcmd = previous_matlabcmd;
   end
-  
+
   if ft_platform_supports('singleCompThread')
     % this is only supported for version 7.8 onward
     matlabcmd = [matlabcmd ' -singleCompThread'];
   end
-  
+
   % these options can be appended regardless of the version
   if ft_platform_supports('nosplash');
     matlabcmd = [matlabcmd ' -nosplash'];
@@ -250,14 +250,14 @@ if ~compiled
   if ~istrue(jvm)
     matlabcmd = [matlabcmd ' -nojvm'];
   end
-  
+
   % create the matlab script commands (one entry per line)
   matlabscript = [...
     'restoredefaultpath;',...
     sprintf('addpath(''%s'');', fileparts(mfilename('fullpath'))),...
     sprintf('qsubexec(''%s'');', fullfile(pwd, jobid)),...
     sprintf('exit')];
-  
+
 end % if ~compiled
 
 % set the job requirements according to the users specification
@@ -265,13 +265,13 @@ switch backend
   case 'local'
     % this is for testing the execution in case no cluster is available,
     % for example when working on the road with a laptop
-    
+
     cmdline = [];
-    
+
   case 'system'
     % this is for testing the execution in case no cluster is available,
     % for example when working on the road with a laptop
-    
+
     if compiled
       % create the command line for the compiled application
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
@@ -279,27 +279,27 @@ switch backend
       % create the shell commands to execute matlab
       cmdline = sprintf('%s -r "%s"', matlabcmd, matlabscript);
     end
-    
+
   case 'sge'
     % this is for Sun Grid Engine, Oracle Grid Engine, and other derivatives
-    
+
     if isempty(submitoptions)
       % start with an empty string
       submitoptions = '';
     end
-    
+
     if ~isempty(queue)
       submitoptions = [submitoptions sprintf('-q %s ', queue)];
     end
-    
+
     if ~isempty(timreq) && ~isnan(timreq) && ~isinf(timreq)
       submitoptions = [submitoptions sprintf('-l h_rt=%.0f ', timreq+timoverhead)];
     end
-    
+
     if ~isempty(memreq) && ~isnan(memreq) && ~isinf(memreq)
       submitoptions = [submitoptions sprintf('-l mem_free=%.0fG ', round((memreq+memoverhead)/1024^3))];
     end
-    
+
     if compiled
       % create the command line for the compiled application
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
@@ -307,26 +307,26 @@ switch backend
       % create the shell commands to execute matlab
       cmdline = sprintf('%s -r \\"%s\\"', matlabcmd, matlabscript);
     end
-    
+
     % pass the command to qsub with all requirements
     cmdline = sprintf('echo "%s" | qsub -N %s %s -cwd -o %s -e %s', cmdline, jobid, submitoptions, curPwd, curPwd);
-    
+
   case 'torque'
     % this is for PBS, Torque, and other derivatives
-    
+
     if isempty(submitoptions)
       % start with an empty string
       submitoptions = '';
     end
-    
+
     if ~isempty(queue)
       submitoptions = [submitoptions sprintf(' -q %s ', queue)];
     end
-    
+
     if ~isempty(timreq) && ~isnan(timreq) && ~isinf(timreq)
       submitoptions = [submitoptions sprintf(' -l walltime=%.0f ', timreq+timoverhead)];
     end
-    
+
     if ~isempty(memreq) && ~isnan(memreq) && ~isinf(memreq)
       % mem is the real memory, vmem is the virtual, pmem and pvmem relate to the memory per process in case of an MPI job with multiple processes
       submitoptions = [submitoptions sprintf(' -l mem=%.0f ',   memreq+memoverhead)];
@@ -334,7 +334,7 @@ switch backend
       %   submitoptions = [submitoptions sprintf(' -l pmem=%.0f ',  memreq+memoverhead)];
       %   submitoptions = [submitoptions sprintf(' -l pvmem=%.0f ', memreq+memoverhead)];
     end
-    
+
     if ~isempty(waitfor)
       % waitfor contains the jobids of the jobs to wait for
       submitoptions = [submitoptions '-W depend=afterok'];
@@ -342,12 +342,12 @@ switch backend
         submitoptions = [submitoptions sprintf(':%s',qsublist('getpbsid', waitfor{iJob}))];
       end
     end
-    
+
     % In the command below both stderr and stout are redirected to /dev/null,
     % so any output information will not be available for inspection.
     % However, any matlab errors will be reported back by fexec.
     % cmdline = ['qsub -e /dev/null -o /dev/null -N ' jobid ' ' requirements shellscript];
-    
+
     if compiled
       % create the command line for the compiled application
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
@@ -355,42 +355,42 @@ switch backend
       % create the shell commands to execute matlab
       cmdline = sprintf('%s -r \\"%s\\"', matlabcmd, matlabscript);
     end
-    
+
     if any(curPwd==' ')
       % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1898
       error('you cannot execute jobs from within a directory that has a space in its name');
     end
-    
+
     % pass the command to qsub with all requirements
     cmdline = sprintf('echo "%s" | qsub -N %s %s -d "%s" -o "%s" -e "%s"', cmdline, jobid, submitoptions, curPwd, curPwd, curPwd);
-    
+
   case 'slurm'
     % this is for Simple Linux Utility for Resource Management
-    
+
     if isempty(submitoptions)
       % start with an empty string
       submitoptions = '';
     end
-    
+
     if ~isempty(queue)
       % with slurm queues are "partitions"
       submitoptions = [submitoptions sprintf(' --partition=%s ', queue)];
     end
-    
+
     if ~isempty(timreq) && ~isnan(timreq) && ~isinf(timreq)
       % TESTME this is experimental and needs more testing!
       % submitoptions = [submitoptions sprintf('--time=%d ', timreq+timoverhead)];
     end
-    
+
     if ~isempty(memreq) && ~isnan(memreq) && ~isinf(memreq)
       % TESTME this is experimental and needs more testing!
       % submitoptions = [submitoptions sprintf('--mem-per-cpu=%.0f ', round((memreq+memoverhead)./1024^2))];
     end
-    
+
     % specifying the o and e names might be useful for the others as well
     logout = fullfile(curPwd, sprintf('%s.o', jobid));
     logerr = fullfile(curPwd, sprintf('%s.e', jobid));
-    
+
     if compiled
       % create the command line for the compiled application
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
@@ -404,13 +404,13 @@ switch backend
       % cmdline = sprintf('nohup srun --job-name=%s %s --output=%s --error=%s %s -r "%s" & ', jobid, submitoptions, logout, logerr, matlabcmd, matlabscript);
       cmdline = sprintf('srun --job-name=%s %s --output=%s --error=%s %s -r "%s" ', jobid, submitoptions, logout, logerr, matlabcmd, matlabscript);
     end
-    
+
   case 'condor'
     % this is highly experimental and contains some first ideas following the discussion with Rhodri
-    
+
     % create a condor submit script
     submitfile = fullfile(curPwd, sprintf('%s.condor', jobid));
-    
+
     % the Condor submit script should look something like this
     fid = fopen(submitfile, 'wt');
     fprintf(fid, '# Condor submit script\n');
@@ -429,34 +429,34 @@ switch backend
     fprintf(fid, '\n');
     fprintf(fid, 'Queue\n');
     fclose(fid);
-    
+
     cmdline = sprintf('condor_submit %s', submitfile);
-    
-    
+
+
   case 'lsf'
     % this is for Platform Load Sharing Facility (LSF)
-    
+
     if isempty(submitoptions)
       % start with an empty string
       submitoptions = '';
     end
-    
+
     if ~isempty(queue)
       submitoptions = [submitoptions sprintf('-q %s ', queue)];
     end
-    
+
     if ~isempty(timreq) && ~isnan(timreq) && ~isinf(timreq)
       submitoptions = [submitoptions sprintf('-W %.0f ', ceil((timreq+timoverhead) / 60))]; % in minutes
     end
-    
+
     if ~isempty(memreq) && ~isnan(memreq) && ~isinf(memreq)
       submitoptions = [submitoptions sprintf('-M %.0f ', ceil((memreq+memoverhead) / 1024^2))];  % in MB
     end
-    
+
     % specifying the o and e names might be useful for the others as well
     logout = fullfile(curPwd, sprintf('%s.o', jobid));
     logerr = fullfile(curPwd, sprintf('%s.e', jobid));
-    
+
     if compiled
       % create the command line for the compiled application
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
@@ -464,13 +464,13 @@ switch backend
       % create the shell commands to execute matlab
       cmdline = sprintf('%s -r \\"%s\\"', matlabcmd, matlabscript);
     end
-    
+
     % pass the command to qsub with all requirements
     cmdline = sprintf('echo "%s" | bsub -J %s %s -o %s -e %s', cmdline, jobid, submitoptions, logout, logerr);
-    
+
   otherwise
     error('unsupported backend "%s"', backend);
-    
+
 end % switch
 
 fprintf('submitting job %s...', jobid); % note the lack of the end-of-line, the qsub output will follow

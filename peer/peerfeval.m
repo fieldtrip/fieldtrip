@@ -22,7 +22,7 @@ function [jobid, puttime] = peerfeval(varargin)
 %   argout = peerget(jobid, 'timeout', inf);
 %   disp(argout);
 %
-% See also PEERGET, PEERCELLFUN, PEERMASTER, PEERSLAVE, FEVAL, DFEVAL, DFEVALASYNC
+% See also PEERGET, PEERCELLFUN, PEERMASTER, PEERSLAVE, FEVAL, BATCH
 
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld
@@ -134,57 +134,57 @@ options = {'pwd', getcustompwd, 'path', getcustompath, 'global', getglobal, 'dia
 % status = 3 means busy slave, don't accept a new job
 
 while isempty(jobid)
-  
+
   if toc(stopwatch)>timeout
     % it took too long to find a peer that was willing to execute the job
     break;
   end
-  
+
   % get the full list of peers
   list = peerlist;
-  
+
   if ~isempty(hostid)
     % only consider peers in the user specified list
     list = list(ismember([list.hostid], hostid));
   end
-  
+
   % only peers that are currently in idle or busy slave mode are interesting
   list = list([list.status]==2 | [list.status]==3);
   if isempty(list)
     error('there is no peer available as slave');
   end
-  
+
   % only peers with enough memory are interesting
   list = list([list.memavail] >= memreq);
   if isempty(list)
     error('there are no slave peers available that meet the memory requirements');
   end
-  
+
   % only peers with enough CPU speed are interesting
   list = list([list.cpuavail] >= cpureq);
   if isempty(list)
     error('there are no slave peers available that meet the CPU requirements');
   end
-  
+
   % only peers with enough time for a single job are interesting
   list = list([list.timavail] >= timreq);
   if isempty(list)
     error('there are no slave peers available to execute a job of this duration');
   end
-  
+
   % only the idle slaves are interesting from now on
   % the busy slaves may again become relevant on the next attempt
   list = list([list.status] == 2);
-  
+
   if isempty(list)
     % at the moment all the appropriate slaves are busy
     % give the peer network some time to recover
     pause(sleep);
     continue;
   end
-  
+
   list = peerschedule(list, memreq, timreq, cpureq);
-  
+
   for i=1:length(list)
     try
       jobid   = [];
@@ -199,14 +199,14 @@ while isempty(jobid)
       % the peer rejected the job, perhaps because it is busy or perhaps because of allowuser/allowgroup/allowhost
     end
   end % for
-  
+
   if isempty(jobid)
     % the job was not submitted succesfully and another attempt is needed
     % give the peer network some time to recover
     pause(sleep);
     continue;
   end
-  
+
 end % while isempty(jobid)
 
 if isempty(jobid)
@@ -215,4 +215,3 @@ end
 
 % remember the input arguments to speed up subsequent calls
 previous_argin  = varargin;
-

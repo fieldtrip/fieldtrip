@@ -27,7 +27,7 @@ function varargout = peercellfun(fname, varargin)
 %   x2    = {2, 2, 2, 2, 2};
 %   y     = peercellfun(fname, x1, x2);
 %
-% See also PEERMASTER, PEERSLAVE, PEERLIST, PEERINFO, PEERFEVAL, CELLFUN, DFEVAL
+% See also PEERMASTER, PEERSLAVE, PEERLIST, PEERINFO, PEERFEVAL, CELLFUN, BATCH
 
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld
@@ -66,8 +66,8 @@ RetryOnError  = ft_getopt(optarg, 'RetryOnError',  0.050   ); % ratio, fraction 
 sleep         = ft_getopt(optarg, 'sleep',         0.050   ); % time in seconds
 diary         = ft_getopt(optarg, 'diary',         'error' ); % 'always', 'never', 'warning', 'error'
 order         = ft_getopt(optarg, 'order',         'random'); % 'random', 'original'
-timreq        = ft_getopt(optarg, 'timreq',        []      ); 
-mintimreq     = ft_getopt(optarg, 'mintimreq',     []      ); 
+timreq        = ft_getopt(optarg, 'timreq',        []      );
+mintimreq     = ft_getopt(optarg, 'mintimreq',     []      );
 memreq        = ft_getopt(optarg, 'memreq',        []      ); % see below
 minmemreq     = ft_getopt(optarg, 'minmemreq',     []      ); % see below
 
@@ -200,7 +200,7 @@ prevnumcollected = 0;
 prevnumbusy      = 0;
 prevtimreq       = timreq;
 prevmemreq       = memreq;
-  
+
   if any(collected)
     % update the estimate of the time and memory that will be needed for the next job
     % note that it cannot be updated if all collected jobs have failed (in case of stoponerror=false)
@@ -396,7 +396,7 @@ while ~all(submitted) || ~all(collected)
         end
       end
     end
-    
+
     % fprintf('collected job %d\n', collect);
     collected(collect)   = true;
     collecttime(collect) = toc(stopwatch);
@@ -415,7 +415,7 @@ while ~all(submitted) || ~all(collected)
 
   prevtimreq = timreq;
   prevmemreq = memreq;
-  
+
   if any(collected)
     % update the estimate of the time and memory that will be needed for the next job
     % note that it cannot be updated if all collected jobs have failed (in case of stoponerror=false)
@@ -570,7 +570,7 @@ if numargout>0 && UniformOutput
       end
     end
   end
-  
+
   % convert the output to a uniform one
   for i=1:numargout
     varargout{i} = [varargout{i}{:}];
@@ -629,4 +629,3 @@ y = std(x);
 function y = nansum(x)
 x = x(~isnan(x(:)));
 y = sum(x);
-

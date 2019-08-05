@@ -4,7 +4,7 @@ It uses the MATLAB engine interface to start multiple instances of MATLAB and
 distributes the work between them.
 
 The goal of this toolbox is to provide you with an easy MATLAB interface to
-distribute your jobs in a way compatible with the MATLAB dfeval, feval and
+distribute your jobs in a way compatible with the MATLAB batch, feval and
 cellfun functions.
 
 The FieldTrip ENGINE toolbox is compatible with the FieldTrip QSUB toolbox,
@@ -34,4 +34,3 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/
 -------------------------------------------------------------------------------
-
