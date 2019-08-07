@@ -1089,9 +1089,9 @@ if need_events_tsv
 
     if istable(cfg.events.trl)
       % check that the column names are valid
-      assert(stcmp(cfg.events.trl.Properties.VariableNames{1}, 'begsample'));
-      assert(stcmp(cfg.events.trl.Properties.VariableNames{2}, 'endsample'));
-      assert(stcmp(cfg.events.trl.Properties.VariableNames{3}, 'offset'));
+      assert(strcmp(cfg.events.trl.Properties.VariableNames{1}, 'begsample'));
+      assert(strcmp(cfg.events.trl.Properties.VariableNames{2}, 'endsample'));
+      assert(strcmp(cfg.events.trl.Properties.VariableNames{3}, 'offset'));
       % use the events table as it is
       events_tsv = cfg.events.trl;
     elseif ~isempty(cfg.events.trl)
