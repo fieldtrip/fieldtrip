@@ -1,10 +1,17 @@
-function copy_ctf_files(oldname, newname)
+function copy_ctf_files(oldname, newname, deleteflag)
 
 % COPY_CTF_FILES copies a CTF dataset with all files and directories to a new CTF
 % dataset with another name.
 %
 % Use as
-%   copy_brainvision_files(oldname, newname)
+%   copy_brainvision_files(oldname, newname, deleteflag)
+%
+% Both the old and new name should refer to the CTF dataset directory, including
+% the .ds extension.
+%
+% The third "deleteflag" argument is optional, it should be a boolean
+% that specifies whether the original files should be deleted after
+% copying or not (default = false).
 %
 % See also COPY_BRAINVISION_FILES
 
@@ -28,6 +35,12 @@ function copy_ctf_files(oldname, newname)
 %
 % $Id$
 
+%% deal with inputs
+
+if nargin<3
+  deleteflag = false;
+end
+
 if ~endsWith(oldname, '.ds') || ~endsWith(newname, '.ds')
   ft_error('you should specify the CTF directory name ending with .ds');
 end
@@ -45,6 +58,9 @@ end
 
 mkdir(newname);
 recurse_copyfile(oldname, newname, fo, fn)
+if deleteflag
+  rmdir(oldname, 's');
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

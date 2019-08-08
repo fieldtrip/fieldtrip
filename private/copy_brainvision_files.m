@@ -7,9 +7,11 @@ function copy_brainvision_files(oldheaderfile, newheaderfile, deleteflag)
 %   copy_brainvision_files(oldname, newname, deleteflag)
 %
 % Both the old and the new filename should be strings corresponding to the header
-% file, i.e. including the vhdr extension. The third "deleteflag" argument is
-% optional, it should be a boolean that specifies whether the original files should
-% be deleted after copying or not (default = false).
+% file, i.e. including the vhdr extension.
+%
+% The third "deleteflag" argument is optional, it should be a boolean
+% that specifies whether the original files should be deleted after
+% copying or not (default = false).
 %
 % An earlier version of this function can be found on
 %   - https://gist.github.com/robertoostenveld/e31637a777c514bf1e86272e1092316e
