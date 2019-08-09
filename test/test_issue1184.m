@@ -60,5 +60,9 @@ for resamplefs=1:1200
   cfg.resamplefs = resamplefs;
   resampledXX = ft_resampledata(cfg, dataXX);
   
-  assert(isalmostequal(mean(resampledXX.time{1}), mean(resampledXX.time{2}), 'abstol', 1e-6));
+  % with a resampling rate of 600 or higher, the time axes of the resampled trials will have a different length due to the padding
+  % only the first part should be compared
+  n = min(length(resampledXX.time{1}), length(resampledXX.time{2}));
+  assert(isalmostequal(mean(resampledXX.time{1}(1:n)), mean(resampledXX.time{2}(1:n)), 'abstol', 1e-6));
 end
+
