@@ -190,7 +190,7 @@ elseif isfield(cfg,'correctp') && strcmp(cfg.correctp,'no')
   cfg = ft_checkconfig(cfg, 'renamed', {'correctp', 'correcttail'});
 end
 if strcmp(cfg.correcttail,'no') && cfg.tail==0 && cfg.alpha==0.05
-  ft_warning('doing a two-sided test without correcting p-values or alpha-level, p-values and alpha-level will reflect one-sided tests per tail')
+  ft_warning('Doing a two-sided test without correcting p-values or alpha-level, p-values and alpha-level will reflect one-sided tests per tail. See http://bit.ly/2YQ1Hm8')
 end
 
 % for backward compatibility
