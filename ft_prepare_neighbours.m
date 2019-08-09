@@ -82,6 +82,7 @@ end
 % the data can be passed as input arguments or can be read from disk
 hasdata = exist('data', 'var');
 
+% these undocumented methods are only supported to assist ft_timelockstatistics/ft_freqstatistics
 if isfield(cfg, 'neighbours') && ischar(cfg.neighbours)
   cfg.method = 'file'; % FIXME this is a hack
 elseif isfield(cfg, 'neighbours') && isstruct(cfg.neighbours) && ~isempty(cfg.neighbours)
@@ -167,12 +168,12 @@ switch cfg.method
     cfg = rmfield(cfg, 'method'); % FIXME this is a hack
     
   case 'existing'
-    ft_notice('using pre-specified neighbours');
+    ft_notice('using specified neighbours for the channels');
     neighbours = cfg.neighbours;
     cfg = rmfield(cfg, 'method'); % FIXME this is a hack
     
   case 'empty'
-    ft_notice('not using neighbouring channels');
+    ft_notice('not using neighbours for the channels');
     neighbours = struct('label', [], 'neighblabel', []);
     neighbours = neighbours([]);
     cfg = rmfield(cfg, 'method'); % FIXME this is a hack
@@ -282,9 +283,9 @@ end
 
 if k==0
   ft_warning('No neighbouring channels were specified or found');
+else
+  fprintf('there are on average %.1f neighbours per channel\n', k/length(neighbours));
 end
-
-fprintf('there are on average %.1f neighbours per channel\n', k/length(neighbours));
 
 if strcmp(cfg.feedback, 'yes')
   % give some graphical feedback
