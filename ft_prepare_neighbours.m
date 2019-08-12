@@ -99,7 +99,7 @@ if ~isfield(cfg, 'method')
       cfg.neighbours = tmp([]);
     end
     % this is a hack to get past the case-statement
-    cfg.method = 'unspecified_method_but_ok';
+    cfg.method = 'specified';
   end
 end
 
@@ -173,22 +173,9 @@ end % if distance or triangulation
 
 
 switch cfg.method
-  case 'XXfile'
-    % read it from file
-    ft_notice('reading neighbours from file %s', cfg.neighbours);
-    neighbours = loadvar(cfg.neighbours);
-    cfg = rmfield(cfg, 'method'); % FIXME this is a hack
-    
-  case 'XXexisting'
-    ft_notice('using specified neighbours for the channels');
+  case 'specified'
+    % use the neighbours as specified by the user
     neighbours = cfg.neighbours;
-    cfg = rmfield(cfg, 'method'); % FIXME this is a hack
-    
-  case 'XXempty'
-    ft_notice('not using neighbours for the channels');
-    neighbours = struct('label', [], 'neighblabel', []);
-    neighbours = neighbours([]);
-    cfg = rmfield(cfg, 'method'); % FIXME this is a hack
     
   case 'template'
     fprintf('Trying to load sensor neighbours from a template\n');
@@ -261,11 +248,6 @@ switch cfg.method
     tri_y = delaunay(prj(:,1), prj(:,2)./2);
     tri = [tri; tri_x; tri_y];
     neighbours = compneighbstructfromtri(chanpos, label, tri);
-    
-  case 'unspecified_method_but_ok'
-    % this is a hack to get past the case-statement
-    cfg = rmfield(cfg, 'method');
-    neighbours = cfg.neighbours;
     
   otherwise
     ft_error('unsupported method ''%s''', cfg.method);
