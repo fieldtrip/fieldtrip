@@ -119,9 +119,12 @@ tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'latency', 'avgovertime', 
 % restore the provenance information
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 
+% neighbours are required for clustering with multiple channels
 if strcmp(cfg.correctm, 'cluster') && length(varargin{1}.label)>1
-  % neighbours are required for clustering with multiple channels
-  tmpcfg = keepfields(cfg, {'neighbours', 'neighbourdist', 'channel', 'elec', 'grad', 'opto', 'showcallinfo'});
+  % the cfg.neighbours field cannot be empty
+  ft_checkconfig(cfg, 'required', 'neighbours');
+  % use ft_prepare_neighbours to load the neighbours from disk and/or select the channels
+  tmpcfg = keepfields(cfg, {'neighbours', 'channel', 'showcallinfo'});
   cfg.neighbours = ft_prepare_neighbours(tmpcfg);
 end
 

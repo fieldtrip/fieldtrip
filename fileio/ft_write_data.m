@@ -738,19 +738,19 @@ switch dataformat
     for i=1:size(dat,1)
       switch chantype{i}
         case 'MEG'
-          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'pT');
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'T');
         case 'Reference'
-          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'pT');
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'T');
         case 'GRAD'
-          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'pT/m');
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'T/m');
         case 'EEG'
-          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'uV');
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'V');
         case 'SEEG'
-          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'uV');
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'V');
         case 'EMG'
-          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'uV');
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'V');
         case 'ECG'
-          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'uV');
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'V');
         otherwise
           % FIXME I am not sure what scaling to apply
       end

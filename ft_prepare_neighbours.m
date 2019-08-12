@@ -82,10 +82,13 @@ end
 % the data can be passed as input arguments or can be read from disk
 hasdata = exist('data', 'var');
 
+% these undocumented methods are only supported to assist ft_timelockstatistics/ft_freqstatistics
 if isfield(cfg, 'neighbours') && ischar(cfg.neighbours)
-  cfg.method = 'file'; % FIXME this is not documented
-elseif isfield(cfg, 'neighbours') && isstruct(cfg.neighbours)
-  cfg.method = 'existing'; % FIXME this is not documented
+  cfg.method = 'file'; % FIXME this is a hack
+elseif isfield(cfg, 'neighbours') && isstruct(cfg.neighbours) && ~isempty(cfg.neighbours)
+  cfg.method = 'existing'; % FIXME this is a hack
+elseif isfield(cfg, 'neighbours') && isempty(cfg.neighbours) && ~isfield(cfg, 'neighbourdist')
+  cfg.method = 'empty'; % FIXME this is a hack
 end
 
 % check if the input cfg is valid for this function
@@ -113,7 +116,6 @@ if hasdata
     cfg.senstype = ft_getopt(cfg, 'senstype', []);
   end
 end
-
 
 if strcmp(cfg.method, 'distance') || strcmp(cfg.method, 'triangulation')
   % these methods require channel positions in either 3D or in 2D
@@ -161,13 +163,20 @@ end % if distance or triangulation
 switch cfg.method
   case 'file'
     % read it from file
+    ft_notice('reading neighbours from file %s', cfg.neighbours);
     neighbours = loadvar(cfg.neighbours);
-    cfg = rmfield(cfg, 'method'); % FIXME this is not documented
+    cfg = rmfield(cfg, 'method'); % FIXME this is a hack
     
   case 'existing'
-    % return an existing one
+    ft_notice('using specified neighbours for the channels');
     neighbours = cfg.neighbours;
-    cfg = rmfield(cfg, 'method'); % FIXME this is not documented
+    cfg = rmfield(cfg, 'method'); % FIXME this is a hack
+    
+  case 'empty'
+    ft_notice('not using neighbours for the channels');
+    neighbours = struct('label', [], 'neighblabel', []);
+    neighbours = neighbours([]);
+    cfg = rmfield(cfg, 'method'); % FIXME this is a hack
     
   case 'template'
     fprintf('Trying to load sensor neighbours from a template\n');
@@ -273,10 +282,10 @@ for i=1:length(neighbours)
 end
 
 if k==0
-  ft_warning('No neighbours were found');
+  ft_warning('No neighbouring channels were specified or found');
+else
+  fprintf('there are on average %.1f neighbours per channel\n', k/length(neighbours));
 end
-
-fprintf('there are on average %.1f neighbours per channel\n', k/length(neighbours));
 
 if strcmp(cfg.feedback, 'yes')
   % give some graphical feedback

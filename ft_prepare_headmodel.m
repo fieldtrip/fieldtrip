@@ -100,7 +100,6 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 %   cfg.elec
 %   cfg.grad
 %   cfg.transform
-%   cfg.unit
 %
 % HALFSPACE
 %   cfg.point
@@ -157,7 +156,6 @@ end
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'deprecated', 'geom');
-cfg = ft_checkconfig(cfg, 'forbidden', 'unit'); % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2375
 cfg = ft_checkconfig(cfg, 'renamed', {'geom', 'headshape'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'bem_openmeeg', 'openmeeg'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'bem_dipoli', 'dipoli'});
@@ -196,6 +194,7 @@ cfg.singlesphere    = ft_getopt(cfg, 'singlesphere');
 cfg.tissueval       = ft_getopt(cfg, 'tissueval');      % used for simbio
 cfg.transform       = ft_getopt(cfg, 'transform');
 cfg.siunits         = ft_getopt(cfg, 'siunits', 'no');  % yes/no, convert the input and continue with SI units
+cfg.unit            = ft_getopt(cfg, 'unit');
 cfg.smooth          = ft_getopt(cfg, 'smooth');         % used for interpolate
 cfg.headmodel       = ft_getopt(cfg, 'headmodel');      % can contain CTF localspheres model
 
@@ -215,16 +214,21 @@ else
   data = [];
 end
 
+% convert to SI units
 if istrue(cfg.siunits)
-  % convert to SI units
+  cfg.unit = 'm';
+end
+
+% convert the geometrical data to the desired units for the source model
+if ~isempty(cfg.unit)
   if ~isempty(data)
-    data = ft_convert_units(data, 'm');
+    data = ft_convert_units(data, cfg.unit);
   end
   if isfield(cfg, 'grad') && ~isempty(cfg.grad)
-    cfg.grad = ft_convert_units(cfg.grad, 'm');
+    cfg.grad = ft_convert_units(cfg.grad, cfg.unit);
   end
   if isfield(cfg, 'elec') && ~isempty(cfg.elec)
-    cfg.elec = ft_convert_units(cfg.elec, 'm');
+    cfg.elec = ft_convert_units(cfg.elec, cfg.unit);
   end
 end
 
