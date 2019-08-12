@@ -121,9 +121,8 @@ tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'latency', 'avgovertime', 
 
 % neighbours are required for clustering with multiple channels
 if strcmp(cfg.correctm, 'cluster') && length(varargin{1}.label)>1
-  % the cfg.neighbours field cannot be empty
-  ft_checkconfig(cfg, 'required', 'neighbours');
-  % use ft_prepare_neighbours to load the neighbours from disk and/or select the channels
+  % this is limited to reading neighbours from disk and/or selecting channels
+  % the user should call FT_PREPARE_NEIGHBOURS directly for the actual construction
   tmpcfg = keepfields(cfg, {'neighbours', 'channel', 'showcallinfo'});
   cfg.neighbours = ft_prepare_neighbours(tmpcfg);
 end

@@ -49,11 +49,11 @@ end
 
 [p, f, x] = fileparts(file);
 
-alternative1 = [f x];
+alternative1 = [f x]; % this should not be used when it is only "test", since that is too generic
 alternative2 = strrep(filename, '/home/common/matlab/fieldtrip', '/Volumes/home/common/matlab/fieldtrip');
 alternative3 = strrep(filename, '/home/common/matlab/fieldtrip', '/Volumes/128GB/data/test');
 
-if ~exist(file, 'file') && exist(alternative1, 'file')
+if ~exist(file, 'file') && exist(alternative1, 'file') && ~strcmp(alternative1, 'test')
   warning('using local copy %s instead of %s', alternative1, file);
   file = alternative1;
 elseif ~exist(file, 'file') && exist(alternative2, 'file')

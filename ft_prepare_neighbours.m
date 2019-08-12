@@ -82,13 +82,25 @@ end
 % the data can be passed as input arguments or can be read from disk
 hasdata = exist('data', 'var');
 
-% these undocumented methods are only supported to assist ft_timelockstatistics/ft_freqstatistics
-if isfield(cfg, 'neighbours') && ischar(cfg.neighbours)
-  cfg.method = 'file'; % FIXME this is a hack
-elseif isfield(cfg, 'neighbours') && isstruct(cfg.neighbours) && ~isempty(cfg.neighbours)
-  cfg.method = 'existing'; % FIXME this is a hack
-elseif isfield(cfg, 'neighbours') && isempty(cfg.neighbours) && ~isfield(cfg, 'neighbourdist')
-  cfg.method = 'empty'; % FIXME this is a hack
+% these undocumented methods are needed to support some of the high-level FT functions that call this function
+if ~isfield(cfg, 'method')
+  if ~isfield(cfg, 'neighbours')
+    ft_error('cannot figure out how to construct neighbours, please specify cfg.neighbours or cfg.method and call this function directly')
+  else
+    if ischar(cfg.neighbours)
+      ft_notice('reading neighbours from file %s', cfg.neighbours);
+      cfg.neighbours = loadvar(cfg.neighbours);
+    elseif isstruct(cfg.neighbours) && ~isempty(cfg.neighbours)
+      ft_notice('using specified neighbours for the channels');
+    elseif isempty(cfg.neighbours) && ~isfield(cfg, 'neighbourdist')
+      ft_notice('not using neighbours for the channels');
+      % make an empty neighbour structure
+      tmp = struct('label', [], 'neighblabel', []);
+      cfg.neighbours = tmp([]);
+    end
+    % this is a hack to get past the case-statement
+    cfg.method = 'specified';
+  end
 end
 
 % check if the input cfg is valid for this function
@@ -161,22 +173,9 @@ end % if distance or triangulation
 
 
 switch cfg.method
-  case 'file'
-    % read it from file
-    ft_notice('reading neighbours from file %s', cfg.neighbours);
-    neighbours = loadvar(cfg.neighbours);
-    cfg = rmfield(cfg, 'method'); % FIXME this is a hack
-    
-  case 'existing'
-    ft_notice('using specified neighbours for the channels');
+  case 'specified'
+    % use the neighbours as specified by the user
     neighbours = cfg.neighbours;
-    cfg = rmfield(cfg, 'method'); % FIXME this is a hack
-    
-  case 'empty'
-    ft_notice('not using neighbours for the channels');
-    neighbours = struct('label', [], 'neighblabel', []);
-    neighbours = neighbours([]);
-    cfg = rmfield(cfg, 'method'); % FIXME this is a hack
     
   case 'template'
     fprintf('Trying to load sensor neighbours from a template\n');
