@@ -114,7 +114,9 @@ cfg.feedback     = ft_getopt(cfg, 'feedback',     'text');
 cfg = ft_checkconfig(cfg, 'renamedval',  {'headshape', 'headmodel', []});
 
 if ~strcmp(cfg.planarmethod, 'sourceproject')
-  tmpcfg = keepfields(cfg, {'neighbours', 'neighbourdist', 'channel', 'elec', 'grad', 'opto', 'showcallinfo'});
+  % this is limited to reading neighbours from disk and/or selecting channels
+  % the user should call FT_PREPARE_NEIGHBOURS directly for the actual construction
+  tmpcfg = keepfields(cfg, {'neighbours', 'channel', 'showcallinfo'});
   cfg.neighbours = ft_prepare_neighbours(tmpcfg);
 end
 
