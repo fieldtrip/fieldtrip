@@ -4,12 +4,18 @@ function [varargout] = pad(varargin)
 % right of an existing string.
 %
 % This is a compatibility function that should only be added to the path on
-% MATLAB versions prior to 2016b.
+% MATLAB versions prior to R2016b.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % see https://github.com/fieldtrip/fieldtrip/issues/899
 
-if exist(mfilename, 'builtin') || any(strncmp(which(mfilename, '-all'), matlabroot, length(matlabroot)) & cellfun(@isempty, regexp(which(mfilename, '-all'), fullfile('private', mfilename))))
+alternatives = which(mfilename, '-all');
+if ~iscell(alternatives)
+  % this is needed for octave, see https://github.com/fieldtrip/fieldtrip/pull/1171
+  alternatives = {alternatives};
+end
+
+if exist(mfilename, 'builtin') || any(strncmp(alternatives, matlabroot, length(matlabroot)) & cellfun(@isempty, strfind(alternatives, fullfile('private', mfilename))))
   % remove this directory from the path
   p = fileparts(mfilename('fullpath'));
   warning('removing "%s" from your path, see http://bit.ly/2SPPjUS', p);

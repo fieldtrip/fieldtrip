@@ -1,10 +1,10 @@
 function [varargout] = webwrite(varargin)
 
 % WEBWRITE is a drop-in replacement for the function with the same
-% name that was introduced in MATLAB 2014b. This function is only
+% name that was introduced in MATLAB R2014b. This function is only
 % partially compatible with the original.
 %
-% Usage:
+% Use as
 %   status = webwrite(url, [data], [options])
 %
 % This function posts data (which can be a struct or a string) to url.
@@ -15,8 +15,8 @@ function [varargout] = webwrite(varargin)
 %   irrespective of the contents of the options argument.
 % - the status returned is zero if succesful, and nonzero otherwise
 %
-% This requires that curl is available on the command-line.
-% If curl is not available, or an other error occurs, then this function
+% This requires that curl is available on the command-line. If curl
+% is not available, or an other error occurs, then this function
 % raises an error.
 
 % Copyright (C) 2017-2019, Robert Oostenveld, Nikolaas N. Oosterhof
@@ -39,10 +39,16 @@ function [varargout] = webwrite(varargin)
 %
 % $Id$
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % see https://github.com/fieldtrip/fieldtrip/issues/899
 
-if exist(mfilename, 'builtin') || any(strncmp(which(mfilename, '-all'), matlabroot, length(matlabroot)) & cellfun(@isempty, regexp(which(mfilename, '-all'), fullfile('private', mfilename))))
+alternatives = which(mfilename, '-all');
+if ~iscell(alternatives)
+  % this is needed for octave, see https://github.com/fieldtrip/fieldtrip/pull/1171
+  alternatives = {alternatives};
+end
+
+if exist(mfilename, 'builtin') || any(strncmp(alternatives, matlabroot, length(matlabroot)) & cellfun(@isempty, strfind(alternatives, fullfile('private', mfilename))))
   % remove this directory from the path
   p = fileparts(mfilename('fullpath'));
   warning('removing "%s" from your path, see http://bit.ly/2SPPjUS', p);
