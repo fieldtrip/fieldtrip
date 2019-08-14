@@ -110,7 +110,7 @@ if iscell(filename)
   if isempty(hdr) || ~isfield(hdr, 'orig') || ~iscell(hdr.orig)
     for i=1:numel(filename)
       % read the individual file headers
-      hdr{i}  = ft_read_header(filename{i}, varargin{:});
+      hdr{i} = ft_read_header(filename{i}, varargin{:});
     end
   else
     % use the individual file headers that were read previously
@@ -186,15 +186,19 @@ if any(strcmp(eventformat, {'brainvision_eeg', 'brainvision_dat'}))
 end
 
 if strcmp(eventformat, 'brainvision_vhdr')
-  % read the headerfile belonging to the dataset and try to determine the corresponding markerfile
+  % read the header file belonging to the dataset and try to determine the corresponding marker file
   eventformat = 'brainvision_vmrk';
-  hdr = read_brainvision_vhdr(filename);
+  if ~isempty(hdr)
+    vhdr = hdr.orig;
+  else
+    vhdr = read_brainvision_vhdr(filename);
+  end
   % replace the filename with the filename of the markerfile
-  if ~isfield(hdr, 'MarkerFile') || isempty(hdr.MarkerFile)
+  if ~isfield(vhdr, 'MarkerFile') || isempty(vhdr.MarkerFile)
     filename = [];
   else
     [p, ~, ~] = fileparts(filename);
-    filename = fullfile(p, hdr.MarkerFile);
+    filename = fullfile(p, vhdr.MarkerFile);
   end
 end
 

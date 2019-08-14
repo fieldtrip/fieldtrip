@@ -36,7 +36,7 @@ cfg.InstitutionName             = 'Radboud University';
 cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
 data2bids(cfg)
 
-%% Example with a NeuroScan EEG dataset on disk that needs to be converted
+%% Example with a Neuroscan EEG dataset on disk that needs to be converted
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/convert'))
 
 cfg = [];
@@ -46,6 +46,25 @@ cfg.outputfile                  = 'sub-MP_task-visual_eeg.vhdr';
 cfg.eeg.writesidecar            = 'replace';
 cfg.channels.writesidecar       = 'replace';
 cfg.events.writesidecar         = 'replace';
+cfg.TaskName                    = 'visual';
+cfg.TaskDescription             = 'Visual response task';
+cfg.Instructions                = 'Press as fast with your right index finger as you see the target appear on screen.';
+cfg.InstitutionName             = 'Radboud University';
+cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
+cfg.channels.status             = 'good'; % all channels are good
+data2bids(cfg)
+
+%% Example with a BrainVision EEG dataset on disk that needs to be copied
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/copy'))
+
+cfg = [];
+cfg.method                      = 'copy';
+cfg.dataset                     = 'Subject1_MP.vhdr';
+cfg.datatype                    = 'eeg';
+cfg.bidsroot                    = tempname();
+cfg.sub                         = '01';
+cfg.ses                         = '02';
+cfg.run                         = 3;
 cfg.TaskName                    = 'visual';
 cfg.TaskDescription             = 'Visual response task';
 cfg.Instructions                = 'Press as fast with your right index finger as you see the target appear on screen.';
