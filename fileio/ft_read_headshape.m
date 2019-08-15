@@ -1251,7 +1251,7 @@ end
 shape = fixpos(shape);
 
 % ensure that the numerical arrays are represented in double precision and not as integers
-% except when reading an obj file with color information
-if ~strcmp(fileformat,'obj') && isfield(shape, 'color')
+% except when reading an obj file
+if ~strcmp(fileformat,'obj')
     shape = ft_struct2double(shape);
 end
