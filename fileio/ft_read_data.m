@@ -381,8 +381,9 @@ switch dataformat
     end
     % apply the callibration from AD units to uV
     dat = double(signal(begsample:endsample,chanindx)');
-    for i=chanindx(:)'
-      dat(i,:) = dat(i,:).* parameters.SourceChGain.NumericValue(i) + parameters.SourceChOffset.NumericValue(i);
+    for i=1:length(chanindx)
+      i_chan = chanindx(i);
+      dat(i,:) = dat(i,:).* parameters.SourceChGain.NumericValue(i_chan) + parameters.SourceChOffset.NumericValue(i_chan);
     end
     dimord = 'chans_samples';
     
