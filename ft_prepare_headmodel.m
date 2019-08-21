@@ -276,7 +276,16 @@ switch cfg.method
   case {'bemcp' 'dipoli' 'openmeeg'}
     % the low-level functions all need a mesh
     if isfield(data, 'pos') && isfield(data, 'tri')
-      geometry = data;
+      if isempty(cfg.numvertices) || cfg.numvertices==size(data.pos,1)
+        % copy the input data
+        geometry = data;
+      else
+        % retriangulate the input data
+        tmpcfg.method = 'headshape';
+        tmpcfg.headshape = data;
+        tmpcfg.numvertices = cfg.numvertices;
+        geometry = ft_prepare_mesh(tmpcfg);
+      end
     elseif isfield(data, 'transform') && isfield(data, 'dim')
       tmpcfg   = keepfields(cfg, {'numvertices', 'tissue', 'spmverion'});
       geometry = ft_prepare_mesh(tmpcfg, data);
