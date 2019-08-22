@@ -83,7 +83,7 @@ switch fileformat
     sens = hdr.opto;
 
   case 'polhemus_pos'
-    sens = read_brainvision_pos(filename);
+    sens = read_polhemus_pos(filename);
 
   case 'besa_elp'
     ft_error('unknown fileformat for electrodes or gradiometers');
