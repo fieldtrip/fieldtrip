@@ -55,7 +55,7 @@ else
   [headshape.pos, headshape.tri] = headsurface([], [], 'headshape', cfg.headshape);
 end
 
-if ~isempty(cfg.numvertices) && ~isequal(cfg.numvertices, arrayfun(@(x) size(x.pos, 1), data))
+if ~isempty(cfg.numvertices) && ~isequal(cfg.numvertices, arrayfun(@(x) size(x.pos, 1), headshape))
   for i=1:numel(headshape)
     tri1 = headshape(i).tri;
     pos1 = headshape(i).pos;
