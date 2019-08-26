@@ -55,6 +55,11 @@ else
   [headshape.pos, headshape.tri] = headsurface([], [], 'headshape', cfg.headshape);
 end
 
+if numel(headshape)>1 && numel(cfg.numvertices)==1
+  % use the same number of vertices for each of the head shape surfaces
+  cfg.numvertices = repmat(cfg.numvertices, size(headshape));
+end
+
 if ~isempty(cfg.numvertices) && ~isequal(cfg.numvertices, arrayfun(@(x) size(x.pos, 1), headshape))
   for i=1:numel(headshape)
     tri1 = headshape(i).tri;
