@@ -88,17 +88,17 @@ if isfield(dip, 'mom')
   dip.mom = dip.mom(:, dip.inside);
 end
 if isfield(dip, 'leadfield')
-    % check that LF backprojection is not used
-    lfdim = size(dip.leadfield{find(dip.inside,1)},2);
-    lfrank = rank(dip.leadfield{find(dip.inside,1)});
-    if ~strcmp(fixedori, 'spinning') && lfdim > lfrank
-        % in case analytical method is used, check that LF are full rank
-        dip = rmfield(dip, 'leadfield');
-        fprintf('This SAM method does not support backprojected leadfields\n');
-    else
-        fprintf('using precomputed leadfields\n');
-        dip.leadfield = dip.leadfield(dip.inside);
-    end
+  % check that LF backprojection is not used
+  lfdim = size(dip.leadfield{find(dip.inside,1)},2);
+  lfrank = rank(dip.leadfield{find(dip.inside,1)});
+  if ~strcmp(fixedori, 'spinning') && lfdim > lfrank
+    % case analytical method used, check that LF are full rank or remove it
+    dip = rmfield(dip, 'leadfield');
+    fprintf('This SAM method does not support backprojected leadfields\n');
+  else
+    fprintf('using precomputed leadfields\n');
+    dip.leadfield = dip.leadfield(dip.inside);
+  end
 end
 if isfield(dip, 'filter')
   fprintf('using precomputed filters\n');
