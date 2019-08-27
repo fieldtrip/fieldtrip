@@ -806,7 +806,7 @@ if need_meg_json || need_eeg_json || need_ieeg_json
   end
 end
 
-need_events_tsv       = need_events_tsv || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || (need_mri_json && (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task)));
+need_events_tsv       = need_events_tsv || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task));
 need_channels_tsv     = need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json;
 need_coordsystem_json = need_meg_json || need_electrodes_tsv;
 
@@ -1240,17 +1240,16 @@ if need_events_tsv
       events_tsv = sortrows(events_tsv, 'onset');
     end
     
-  elseif need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json
+  elseif need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_video_json
     % merge the events from the trigger channel with those from the (optional) presentation file
     
-    if istable(cfg.events.trl)
-      % check that the column names are valid
-      assert(strcmp(cfg.events.trl.Properties.VariableNames{1}, 'begsample'));
-      assert(strcmp(cfg.events.trl.Properties.VariableNames{2}, 'endsample'));
-      assert(strcmp(cfg.events.trl.Properties.VariableNames{3}, 'offset'));
+    if istable(cfg.events.trl) && all(ismember({'begsample', 'endsample', 'offset'}, fieldnames(cfg.events.trl)))
       % use the events table as it is
       events_tsv = cfg.events.trl;
-    elseif ~isempty(cfg.events.trl)
+    elseif istable(cfg.events.trl) && all(ismember({'onset', 'duration', 'trial_type'}, fieldnames(cfg.events.trl)))
+      % use the events table as it is
+      events_tsv = cfg.events.trl;
+    elseif ismatrix(cfg.events.trl) && ~isempty(cfg.events.trl)
       % convert the trl matrix to an events table
       begsample = cfg.events.trl(:,1);
       endsample = cfg.events.trl(:,2);
@@ -1265,9 +1264,11 @@ if need_events_tsv
       onset     = (begsample-1)/hdr.Fs;
       duration  = (endsample-begsample+1)/hdr.Fs;
       events_tsv = table(onset, duration);
-    else
-      % convert the events from the dataset into a table
+    elseif exist('hdr') && exist('trigger')
+      % convert the events from the EEG/MEG/iEEG dataset into a table
       events_tsv = event2table(hdr, trigger);
+    else
+      ft_warning('no events were specified');
     end
     
     if ~isempty(presentation) && ~isempty(trigger)
@@ -1352,6 +1353,8 @@ if need_events_tsv
     end
     
   elseif need_events_tsv
+    % events are needed, but not linked to fMRI or electrophysiological data 
+    
     % convert the presentation structure to a TSV table
     events_tsv = struct2table(presentation);
     % the sample and offset are specific for events that are aligned with samples in the data
@@ -1370,7 +1373,7 @@ if need_events_tsv
     
   end
   
-  if ~isempty(events_tsv) && isfield(events_tsv, 'offset')
+  if ~isempty(events_tsv) && isfield(events_tsv, 'onset')
     % sort the events ascending on the onset
     events_tsv = sortrows(events_tsv, 'onset');
   end
