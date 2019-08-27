@@ -161,6 +161,13 @@ function cfg = data2bids(cfg, varargin)
 % See also FT_DATAYPE_RAW, FT_DATAYPE_VOLUME, FT_DATATYPE_SENS, FT_DEFINETRIAL,
 % FT_PREPROCESSING, FT_READ_MRI
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Undocumented options exist for converting EMG and video data to BIDS.
+%
+% These data types are currently (Aug 2019) not supported in the BIDS specification,
+% nevertheless this function converts them in a very similar way as other data types.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Copyright (C) 2018-2019, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
@@ -250,6 +257,9 @@ cfg.ieeg.writesidecar       = ft_getopt(cfg.ieeg, 'writesidecar', 'yes');     % 
 
 cfg.emg                     = ft_getopt(cfg, 'emg');
 cfg.emg.writesidecar        = ft_getopt(cfg.emg, 'writesidecar', 'yes');      % whether to write the sidecar file
+
+cfg.video                   = ft_getopt(cfg, 'video');
+cfg.video.writesidecar      = ft_getopt(cfg.video, 'writesidecar', 'yes');    % whether to write the sidecar file
 
 cfg.channels                = ft_getopt(cfg, 'channels');
 cfg.channels.writesidecar   = ft_getopt(cfg.channels, 'writesidecar', 'yes'); % whether to write the sidecar file
@@ -448,13 +458,18 @@ cfg.emg.EMGPlacementScheme                = ft_getopt(cfg.emg, 'EMGPlacementSche
 cfg.emg.EMGReference                      = ft_getopt(cfg.emg, 'EMGReference'                      );
 cfg.emg.EMGGround                         = ft_getopt(cfg.emg, 'EMGGround'                         );
 
+%% video is not part of the official BIDS specification
+cfg.video.FrameRate                       = ft_getopt(cfg.video, 'FrameRate'           );
+cfg.video.Width                           = ft_getopt(cfg.video, 'Width'               );
+cfg.video.Height                          = ft_getopt(cfg.video, 'Height'              );
+cfg.video.BitsPerPixel                    = ft_getopt(cfg.video, 'BitsPerPixel'        );
+cfg.video.AudioSampleRate                 = ft_getopt(cfg.video, 'AudioSampleRate'     );
+cfg.video.AudioChannelCount               = ft_getopt(cfg.video, 'AudioChannelCount'   );
+
 %% information for the coordsystem.json file for MEG, EEG and iEEG
 cfg.coordsystem.MEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystem'                            ); % REQUIRED. Defines the coordinate system for the MEG sensors. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in [MEGCoordinateSystemDescription].
 cfg.coordsystem.MEGCoordinateUnits                              = ft_getopt(cfg.coordsystem, 'MEGCoordinateUnits'                             ); % REQUIRED. Units of the coordinates of MEGCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
 cfg.coordsystem.MEGCoordinateSystemDescription                  = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystemDescription'                 ); % OPTIONAL. Freeform text description or link to document describing the MEG coordinate system system in detail.
-cfg.coordsystem.EEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'EEGCoordinateSystem'                            ); % OPTIONAL. Describes how the coordinates of the EEG sensors are to be interpreted.
-cfg.coordsystem.EEGCoordinateUnits                              = ft_getopt(cfg.coordsystem, 'EEGCoordinateUnits'                             ); % OPTIONAL. Units of the coordinates of EEGCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
-cfg.coordsystem.EEGCoordinateSystemDescription                  = ft_getopt(cfg.coordsystem, 'EEGCoordinateSystemDescription'                 ); % OPTIONAL. Freeform text description or link to document describing the EEG coordinate system system in detail.
 cfg.coordsystem.HeadCoilCoordinates                             = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinateSystem'                       ); % OPTIONAL. Key:value pairs describing head localization coil labels and their coordinates, interpreted following the HeadCoilCoordinateSystem, e.g., {"NAS": [12.7,21.3,13.9], "LPA": [5.2,11.3,9.6], "RPA": [20.2,11.3,9.1]}. Note that coils are not always placed at locations that have a known anatomical name (e.g. for Neuromag/Elekta, Yokogawa systems); in that case generic labels can be used (e.g. {"coil1": [122,213,123], "coil2": [67,123,86], "coil3": [219,110,81]} ).
 cfg.coordsystem.HeadCoilCoordinateSystem                        = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinates'                            ); % OPTIONAL. Defines the coordinate system for the coils. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in HeadCoilCoordinateSystemDescription.
 cfg.coordsystem.HeadCoilCoordinateUnits                         = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinateUnits'                        ); % OPTIONAL. Units of the coordinates of HeadCoilCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
@@ -463,6 +478,14 @@ cfg.coordsystem.DigitizedHeadPoints                             = ft_getopt(cfg.
 cfg.coordsystem.DigitizedHeadPointsCoordinateSystem             = ft_getopt(cfg.coordsystem, 'DigitizedHeadPointsCoordinateSystem'            ); % OPTIONAL. Defines the coordinate system for the digitized head points. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in DigitizedHeadPointsCoordinateSystemDescription.
 cfg.coordsystem.DigitizedHeadPointsCoordinateUnits              = ft_getopt(cfg.coordsystem, 'DigitizedHeadPointsCoordinateUnits'             ); % OPTIONAL. Units of the coordinates of DigitizedHeadPointsCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
 cfg.coordsystem.DigitizedHeadPointsCoordinateSystemDescription  = ft_getopt(cfg.coordsystem, 'DigitizedHeadPointsCoordinateSystemDescription' ); % OPTIONAL. Freeform text description or link to document describing the Digitized head Points coordinate system system in detail.
+cfg.coordsystem.EEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'EEGCoordinateSystem'                            ); % OPTIONAL. Describes how the coordinates of the EEG sensors are to be interpreted.
+cfg.coordsystem.EEGCoordinateUnits                              = ft_getopt(cfg.coordsystem, 'EEGCoordinateUnits'                             ); % OPTIONAL. Units of the coordinates of EEGCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
+cfg.coordsystem.EEGCoordinateSystemDescription                  = ft_getopt(cfg.coordsystem, 'EEGCoordinateSystemDescription'                 ); % OPTIONAL. Freeform text description or link to document describing the EEG coordinate system system in detail.
+cfg.coordsystem.iEEGCoordinateSystem                            = ft_getopt(cfg.coordsystem, 'iEEGCoordinateSystem'                           ); % REQUIRED. Defines the coordinate system for the iEEG electrodes. See Appendix VIII for a list of restricted keywords. If positions correspond to pixel indices in a 2D image (of either a volume-rendering, surface-rendering, operative photo, or operative drawing), this must be "Pixels". For more information, see the section on 2D coordinate systems
+cfg.coordsystem.iEEGCoordinateUnits	                            = ft_getopt(cfg.coordsystem, 'iEEGCoordinateUnits'                            ); % REQUIRED. Units of the _electrodes.tsv, MUST be "m", "mm", "cm" or "pixels".
+cfg.coordsystem.iEEGCoordinateSystemDescription	                = ft_getopt(cfg.coordsystem, 'iEEGCoordinateSystemDescription'                ); % RECOMMENDED. Freeform text description or link to document describing the iEEG coordinate system system in detail (e.g., "Coordinate system with the origin at anterior commissure (AC), negative y-axis going through the posterior commissure (PC), z-axis going to a mid-hemisperic point which lies superior to the AC-PC line, x-axis going to the right").
+cfg.coordsystem.iEEGCoordinateProcessingDescription             = ft_getopt(cfg.coordsystem, 'iEEGCoordinateProcessingDescription'            ); % RECOMMENDED. Has any post-processing (such as projection) been done on the electrode positions (e.g., "surface_projection", "none").
+cfg.coordsystem.iEEGCoordinateProcessingReference	              = ft_getopt(cfg.coordsystem, 'iEEGCoordinateProcessingReference'              ); % RECOMMENDED. A reference to a paper that defines in more detail the method used to localize the electrodes and to post-process the electrode positions. .
 cfg.coordsystem.IntendedFor                                     = ft_getopt(cfg.coordsystem, 'IntendedFor'                                    ); % OPTIONAL. Path or list of path relative to the subject subfolder pointing to the structural MRI, possibly of different types if a list is specified, to be used with the MEG recording. The path(s) need(s) to use forward slashes instead of backward slashes (e.g. "ses-<label>/anat/sub-01_T1w.nii.gz").
 cfg.coordsystem.AnatomicalLandmarkCoordinates                   = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinates'                  ); % OPTIONAL. Key:value pairs of the labels and 3-D digitized locations of anatomical landmarks, interpreted following the AnatomicalLandmarkCoordinateSystem, e.g., {"NAS": [12.7,21.3,13.9], "LPA": [5.2,11.3,9.6], "RPA": [20.2,11.3,9.1]}.
 cfg.coordsystem.AnatomicalLandmarkCoordinateSystem              = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinateSystem'             ); % OPTIONAL. Defines the coordinate system for the anatomical landmarks. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in AnatomicalLandmarkCoordinateSystemDescripti on.
@@ -614,8 +637,9 @@ need_meg_json         = false;
 need_eeg_json         = false;
 need_ieeg_json        = false;
 need_emg_json         = false;
+need_video_json       = false;
 need_events_tsv       = false; % for behavioral experiments
-need_electrodes_tsv   = false; % only needed when actually present as data.cfg or as cfg.elec
+need_electrodes_tsv   = false; % only needed when actually present as cfg.electrodes, data.elec or as cfg.elec
 
 switch typ
   case {'nifti', 'nifti2', 'nifti_fsl'}
@@ -731,6 +755,11 @@ switch typ
   case 'presentation_log'
     need_events_tsv = true;
     
+  case 'video'
+    need_video_json = true;
+    video = VideoReader(cfg.dataset);
+    audio = audioinfo(cfg.dataset);
+    
   otherwise
     % the file on disk contains raw electrophysiology data
     if isequal(cfg.datatype, 'meg')
@@ -760,12 +789,32 @@ switch typ
     
 end % switch typ
 
+if need_meg_json || need_eeg_json || need_ieeg_json
+  try
+    % try to get the electrode definition, either from data.elec or from cfg.elec
+    tmpcfg = keepfields(cfg, {'elec'});
+    tmpcfg.senstype = 'eeg';
+    if ~isempty(varargin)
+      elec = ft_fetch_sens(tmpcfg, varargin{1});
+    else
+      elec = ft_fetch_sens(tmpcfg);
+    end
+    need_electrodes_tsv = true;
+  catch
+    % electrodes can also be specified as cfg.electrodes
+    need_electrodes_tsv = ~isnan(cfg.electrodes.name);
+  end
+end
+
 need_events_tsv       = need_events_tsv || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || (need_mri_json && (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task)));
 need_channels_tsv     = need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json;
-need_coordsystem_json = need_meg_json; % FIXME this is also needed when EEG and iEEG electrodes are present
+need_coordsystem_json = need_meg_json || need_electrodes_tsv;
 
 if need_emg_json
   ft_warning('EMG is not yet part of the official BIDS specification');
+  cfg.dataset_description.BIDSVersion = 'n/a';
+elseif need_video_json
+  ft_warning('Video is not yet part of the official BIDS specification');
   cfg.dataset_description.BIDSVersion = 'n/a';
 end
 
@@ -779,6 +828,7 @@ meg_json         = [];
 eeg_json         = [];
 ieeg_json        = [];
 emg_json         = [];
+video_json       = [];
 events_tsv       = [];
 channels_tsv     = [];
 electrodes_tsv   = [];
@@ -820,6 +870,11 @@ fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
 emg_settings = keepfields(cfg.emg, fn);
 
 % make the relevant selection, all json fields start with a capital letter
+fn = fieldnames(cfg.video);
+fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
+video_settings = keepfields(cfg.video, fn);
+
+% make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg.coordsystem);
 fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
 coordsystem_settings = keepfields(cfg.coordsystem, fn);
@@ -850,7 +905,7 @@ if need_meg_json
   meg_json.EOGChannelCount            = sum(strcmp(hdr.chantype, 'eog'));
   meg_json.ECGChannelCount            = sum(strcmp(hdr.chantype, 'ecg'));
   meg_json.EMGChannelCount            = sum(strcmp(hdr.chantype, 'emg'));
-  meg_json.MiscChannelCount           = sum(strcmp(hdr.chantype, 'misc'));
+  meg_json.MiscChannelCount           = sum(strcmp(hdr.chantype, 'misc') | strcmp(hdr.chantype, 'unknown'));
   meg_json.TriggerChannelCount        = sum(strcmp(hdr.chantype, 'trigger'));
   meg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
   meg_json.EpochLength                = hdr.nSamples/hdr.Fs;
@@ -920,6 +975,8 @@ if need_emg_json
   emg_json.EOGChannelCount            = sum(strcmp(hdr.chantype, 'eog'));
   emg_json.ECGChannelCount            = sum(strcmp(hdr.chantype, 'ecg'));
   emg_json.EMGChannelCount            = sum(strcmp(hdr.chantype, 'emg'));
+  emg_json.TriggerChannelCount        = sum(strcmp(hdr.chantype, 'trigger'));
+  emg_json.MiscChannelCount           = sum(strcmp(hdr.chantype, 'misc') | strcmp(hdr.chantype, 'unknown'));
   emg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
   emg_json.EpochLength                = hdr.nSamples/hdr.Fs;
   
@@ -929,34 +986,13 @@ if need_emg_json
   emg_json = mergeconfig(generic_settings, emg_json, false);
 end
 
-%% need_coordsystem_json
-if need_coordsystem_json
-  if ft_senstype(hdr.grad, 'ctf')
-    % coordinate system for MEG sensors
-    coordsystem_json.MEGCoordinateSystem            = 'CTF';
-    coordsystem_json.MEGCoordinateUnits             = 'cm';
-    coordsystem_json.MEGCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
-    
-    % coordinate system for head localization coils
-    coordsystem_json.HeadCoilCoordinates                 = []; % see below
-    coordsystem_json.HeadCoilCoordinateSystem            = 'CTF';
-    coordsystem_json.HeadCoilCoordinateUnits             = 'cm';
-    coordsystem_json.HeadCoilCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
-    if isempty(coordsystem_json.HeadCoilCoordinates)
-      % get the positions from the dataset header
-      label = cellstr(hdr.orig.hc.names);
-      position = hdr.orig.hc.head;
-      for i=1:numel(label)
-        coordsystem_json.HeadCoilCoordinates.(fixname(label{i})) = position(:,i)';
-      end
-    end
-    % merge the information specified by the user with that from the data
-    % in case fields appear in both, the first input overrules the second
-    coordsystem_json = mergeconfig(coordsystem_settings, coordsystem_json, false); % FIXME the order of precedence is different here
-  else
-    ft_warning('coordsystem handling not yet supported for %s', ft_senstype(hdr.grad));
-  end
-end % if need_coordsystem_json
+%% need_video_json
+if need_video_json
+  video_json = keepfields(struct(video), {'FrameRate', 'Width', 'Height', 'Duration'});
+  video_json.AudioSampleRate    = audio.SampleRate;
+  video_json.AudioDuration      = audio.Duration;
+  video_json.AudioChannelCount  = audio.NumChannels;
+end
 
 %% need_channels_tsv
 if need_channels_tsv
@@ -997,24 +1033,24 @@ if need_channels_tsv
   
   % do a sanity check on the number of channels
   if need_meg_json
-    subcfg = cfg.meg;
+    type_json = meg_json;
   elseif need_eeg_json
-    subcfg = cfg.eeg;
+    type_json = eeg_json;
   elseif need_ieeg_json
-    subcfg = cfg.ieeg;
+    type_json = ieeg_json;
   elseif need_emg_json
-    subcfg = cfg.emg;
+    type_json = emg_json;
   end
-  fn = fieldnames(subcfg);
+  fn = fieldnames(type_json);
   fn = fn(endsWith(fn, 'ChannelCount'));
-  TotalChannelCount = 0;
+  jsoncount = 0;
   for i=1:numel(fn)
-    if ~isempty(subcfg.(fn{i}))
-      TotalChannelCount = TotalChannelCount + subcfg.(fn{i});
+    if ~isempty(type_json.(fn{i}))
+      jsoncount = jsoncount + type_json.(fn{i});
     end
   end
-  if size(channels_tsv,1)~=TotalChannelCount
-    ft_error('incorrect specification of the channel count: %d in the configuration, %d in channels.tsv', TotalChannelCount, size(channels_tsv,1));
+  if size(channels_tsv,1)~=jsoncount
+    ft_warning('incorrect specification of the channel count: %d in the json, %d in the tsv', jsoncount, size(channels_tsv,1));
   end
 end % if need_channels_tsv
 
@@ -1055,6 +1091,45 @@ if need_electrodes_tsv
     end
   end
 end % need_electrodes_tsv
+
+
+%% need_coordsystem_json
+if need_coordsystem_json
+  if isfield(hdr, 'grad') && ft_senstype(hdr.grad, 'ctf')
+    % coordinate system for MEG sensors
+    coordsystem_json.MEGCoordinateSystem            = 'CTF';
+    coordsystem_json.MEGCoordinateUnits             = 'cm';
+    coordsystem_json.MEGCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
+    % coordinate system for head localization coils
+    coordsystem_json.HeadCoilCoordinates                 = []; % see below
+    coordsystem_json.HeadCoilCoordinateSystem            = 'CTF';
+    coordsystem_json.HeadCoilCoordinateUnits             = 'cm';
+    coordsystem_json.HeadCoilCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
+    if isempty(coordsystem_json.HeadCoilCoordinates)
+      % get the positions from the dataset header
+      label = cellstr(hdr.orig.hc.names);
+      position = hdr.orig.hc.head;
+      for i=1:numel(label)
+        coordsystem_json.HeadCoilCoordinates.(fixname(label{i})) = position(:,i)';
+      end
+    end
+  elseif isfield(hdr, 'grad') && ft_senstype(hdr.grad, 'neuromag')
+    % coordinate system for MEG sensors
+    coordsystem_json.MEGCoordinateSystem            = 'Neuromag';
+    coordsystem_json.MEGCoordinateUnits             = 'm';
+    coordsystem_json.MEGCoordinateSystemDescription = 'Neuromag head coordinates, orientation RAS, origin between the ears';
+    % coordinate system for head localization coils
+    coordsystem_json.HeadCoilCoordinates                 = []; % FIXME it might be possible to get these from the dataset header
+    coordsystem_json.HeadCoilCoordinateSystem            = 'Neuromag';
+    coordsystem_json.HeadCoilCoordinateUnits             = 'm';
+    coordsystem_json.HeadCoilCoordinateSystemDescription = 'Neuromag head coordinates, orientation RAS, origin between the ears';
+  else
+    ft_warning('coordsystem handling not yet supported for this data, you MUST specify cfg.coordsystem');
+  end
+  % merge the information specified by the user with that from the data
+  % in case fields appear in both, the first input overrules the second
+  coordsystem_json = mergeconfig(coordsystem_settings, coordsystem_json, false); % FIXME the order of precedence is different here
+end % if need_coordsystem_json
 
 %% need_events_tsv
 if need_events_tsv
@@ -1303,7 +1378,7 @@ if need_events_tsv
 end % if need_events_tsv
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% write the data to the output file
+%% write or copy the data to the output file
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 switch cfg.method
   case 'decorate'
@@ -1404,11 +1479,12 @@ end % switch method
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % remove fields that have an empty value
-mri_json  = remove_empty(mri_json);
-meg_json  = remove_empty(meg_json);
-eeg_json  = remove_empty(eeg_json);
-ieeg_json = remove_empty(ieeg_json);
-emg_json  = remove_empty(emg_json);
+mri_json   = remove_empty(mri_json);
+meg_json   = remove_empty(meg_json);
+eeg_json   = remove_empty(eeg_json);
+ieeg_json  = remove_empty(ieeg_json);
+emg_json   = remove_empty(emg_json);
+video_json = remove_empty(video_json);
 
 if ~isempty(mri_json)
   filename = corresponding_json(cfg.outputfile);ls
@@ -1528,6 +1604,31 @@ if ~isempty(emg_json)
       write_json(filename, emg_json);
     case 'merge'
       write_json(filename, mergeconfig(emg_json, existing, false));
+    case 'no'
+      % do nothing
+    otherwise
+      ft_error('incorrect option for cfg.emg.writesidecar');
+  end % switch
+end
+
+if ~isempty(video_json)
+  filename = corresponding_json(cfg.outputfile);
+  if isfile(filename)
+    existing = read_json(filename);
+  else
+    existing = [];
+  end
+  switch cfg.video.writesidecar
+    case 'yes'
+      if ~isempty(existing)
+        ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
+      else
+        write_json(filename, video_json);
+      end
+    case 'replace'
+      write_json(filename, video_json);
+    case 'merge'
+      write_json(filename, mergeconfig(video_json, existing, false));
     case 'no'
       % do nothing
     otherwise
@@ -2000,6 +2101,8 @@ switch typ
     dir = 'ieeg';
   case {'emg'} % this could also include 'channels'
     dir = 'emg';
+  case {'video'}
+    dir = 'video';
   otherwise
     ft_error('unrecognized data type "%s"', typ);
 end
