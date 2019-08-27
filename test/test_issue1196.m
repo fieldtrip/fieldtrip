@@ -15,33 +15,36 @@ end
 emgfile = 'raw/006_3013065.02_rest1.vhdr';
 t1wfile = 'raw/sub-139075/015-T1w_MPR/00175_1.3.12.2.1107.5.2.43.66068.2019080415440698293169043.IMA'; % any slice is fine
 t2wfile = 'raw/sub-139075/017-T2w_SPC/00011_1.3.12.2.1107.5.2.43.66068.2019080415500178296969403.IMA';
+videofile1 = 'raw/video/welcome1.mp4';
+videofile2 = 'raw/video/welcome2.mp4';
 
 %%
 % the first part is general to the different recordings
 
-cfg = [];
-cfg.bidsroot = 'bids';
-cfg.sub = '139075';
-cfg.ses = 'mri'; % all data was recorded in a single MRI session
+general = [];
+general.bidsroot = 'bids';
+general.sub = '139075';
+general.ses = 'mri'; % all data was recorded in a single MRI session
 
-cfg.InstitutionName             = 'Radboud University';
-cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
-cfg.InstitutionAddress          = 'Kapittelweg 29, 6525 EN, Nijmegen, The Netherlands';
+general.InstitutionName             = 'Radboud University';
+general.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
+general.InstitutionAddress          = 'Kapittelweg 29, 6525 EN, Nijmegen, The Netherlands';
 
 % REQUIRED
-cfg.dataset_description.Name                = 'n/a';
-cfg.dataset_description.BIDSVersion         = '1.2';
+general.dataset_description.Name                = 'n/a';
+general.dataset_description.BIDSVersion         = '1.2';
 % OPTIONAL
-cfg.dataset_description.License             = 'n/a';
-cfg.dataset_description.Authors             = 'n/a';
-cfg.dataset_description.Acknowledgements    = 'n/a';
-cfg.dataset_description.Funding             = 'n/a';
-cfg.dataset_description.ReferencesAndLinks  = 'n/a';
-cfg.dataset_description.DatasetDOI          = 'n/a';
+general.dataset_description.License             = 'n/a';
+general.dataset_description.Authors             = 'n/a';
+general.dataset_description.Acknowledgements    = 'n/a';
+general.dataset_description.Funding             = 'n/a';
+general.dataset_description.ReferencesAndLinks  = 'n/a';
+general.dataset_description.DatasetDOI          = 'n/a';
 
 %%
 % convert the T1w dicom files
 
+cfg = general;
 cfg.dataset = t1wfile;
 cfg.datatype = 'T1w';
 data2bids(cfg);
@@ -49,12 +52,15 @@ data2bids(cfg);
 %%
 % convert the T2w dicom files
 
+cfg = general;
 cfg.dataset = t2wfile;
 cfg.datatype = 'T2w';
 data2bids(cfg);
 
 %%
 % copy the EMG
+
+cfg = general;
 
 % these are general fields and need to be added for EMG
 % for MRI they can (hopefully) be read from the DICOM headers
@@ -87,4 +93,18 @@ cfg.datatype = 'emg';
 
 data2bids(cfg);
 
+%%
+% copy the video
 
+cfg = general;
+
+cfg.method = 'copy'; % no need to convert
+cfg.datatype = 'video';
+
+cfg.dataset = videofile1;
+cfg.run = 1;
+data2bids(cfg);
+
+cfg.dataset = videofile2;
+cfg.run = 2;
+data2bids(cfg);
