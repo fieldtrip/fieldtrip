@@ -269,7 +269,7 @@ cfg.coordsystem.writesidecar = ft_getopt(cfg.coordsystem, 'writesidecar', 'yes')
 cfg.dataset_description                     = ft_getopt(cfg, 'dataset_description'                       );
 cfg.dataset_description.writesidecar        = ft_getopt(cfg.dataset_description, 'writesidecar', 'yes'   );
 cfg.dataset_description.Name                = ft_getopt(cfg.dataset_description, 'Name'                  ); % REQUIRED. Name of the dataset.
-cfg.dataset_description.BIDSVersion         = ft_getopt(cfg.dataset_description, 'BIDSVersion'           ); % REQUIRED. The version of the BIDS standard that was used.
+cfg.dataset_description.BIDSVersion         = ft_getopt(cfg.dataset_description, 'BIDSVersion', 1.2      ); % REQUIRED. The version of the BIDS standard that was used.
 cfg.dataset_description.License             = ft_getopt(cfg.dataset_description, 'License'               ); % RECOMMENDED. What license is this dataset distributed under? The use of license name abbreviations is suggested for specifying a license. A list of common licenses with suggested abbreviations can be found in Appendix II.
 cfg.dataset_description.Authors             = ft_getopt(cfg.dataset_description, 'Authors'               ); % OPTIONAL. List of individuals who contributed to the creation/curation of the dataset.
 cfg.dataset_description.Acknowledgements    = ft_getopt(cfg.dataset_description, 'Acknowledgements'      ); % OPTIONAL. Text acknowledging contributions of individuals or institutions beyond those listed in Authors or Funding.
@@ -766,6 +766,7 @@ need_coordsystem_json = need_meg_json; % FIXME this is also needed when EEG and 
 
 if need_emg_json
   ft_warning('EMG is not yet part of the official BIDS specification');
+  cfg.dataset_description.BIDSVersion = 'n/a';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -992,6 +993,28 @@ if need_channels_tsv
     else
       channels_tsv.(fn{i}) = cfg.channels.(fn{i});
     end
+  end
+  
+  % do a sanity check on the number of channels
+  if need_meg_json
+    subcfg = cfg.meg;
+  elseif need_eeg_json
+    subcfg = cfg.eeg;
+  elseif need_ieeg_json
+    subcfg = cfg.ieeg;
+  elseif need_emg_json
+    subcfg = cfg.emg;
+  end
+  fn = fieldnames(subcfg);
+  fn = fn(endsWith(fn, 'ChannelCount'));
+  TotalChannelCount = 0;
+  for i=1:numel(fn)
+    if ~isempty(subcfg.(fn{i}))
+      TotalChannelCount = TotalChannelCount + subcfg.(fn{i});
+    end
+  end
+  if size(channels_tsv,1)~=TotalChannelCount
+    ft_error('incorrect specification of the channel count: %d in the configuration, %d in channels.tsv', TotalChannelCount, size(channels_tsv,1));
   end
 end % if need_channels_tsv
 
