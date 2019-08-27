@@ -55,7 +55,12 @@ else
   [headshape.pos, headshape.tri] = headsurface([], [], 'headshape', cfg.headshape);
 end
 
-if ~isempty(cfg.numvertices) && ~strcmp(cfg.numvertices, 'same')
+if numel(headshape)>1 && numel(cfg.numvertices)==1
+  % use the same number of vertices for each of the head shape surfaces
+  cfg.numvertices = repmat(cfg.numvertices, size(headshape));
+end
+
+if ~isempty(cfg.numvertices) && ~isequal(cfg.numvertices, arrayfun(@(x) size(x.pos, 1), headshape))
   for i=1:numel(headshape)
     tri1 = headshape(i).tri;
     pos1 = headshape(i).pos;
@@ -63,10 +68,10 @@ if ~isempty(cfg.numvertices) && ~strcmp(cfg.numvertices, 'same')
     % points on the original mesh than on the sphere mesh (see below).
     % The rationale for this is that every projection point on the sphere
     % has three corresponding points on the mesh
-    if (cfg.numvertices>size(pos1,1))
-      [tri1, pos1] = refinepatch(headshape(i).tri, headshape(i).pos, 3*cfg.numvertices);
+    if (cfg.numvertices(i)>size(pos1,1))
+      [tri1, pos1] = refinepatch(headshape(i).tri, headshape(i).pos, 3*cfg.numvertices(i));
     else
-      [tri1, pos1] = reducepatch(headshape(i).tri, headshape(i).pos, 3*cfg.numvertices);
+      [tri1, pos1] = reducepatch(headshape(i).tri, headshape(i).pos, 3*cfg.numvertices(i));
     end
     
     % remove double vertices
@@ -74,12 +79,12 @@ if ~isempty(cfg.numvertices) && ~strcmp(cfg.numvertices, 'same')
     
     % replace the probably unevenly distributed triangulation with a regular one
     % and retriangulate it to the desired accuracy
-    [pos2, tri2] = mysphere(cfg.numvertices); % this is a regular triangulation
+    [pos2, tri2] = mysphere(cfg.numvertices(i)); % this is a regular triangulation
     [pos1, tri1] = retriangulate(pos1, tri1, pos2, tri2, 2);
     [pos1, tri1] = fairsurface(pos1, tri1, 1); % this helps redistribute the superimposed points
     
     % remove double vertices
-    [headshape(i).pos,headshape(i).tri] = remove_double_vertices(pos1, tri1);
+    [headshape(i).pos, headshape(i).tri] = remove_double_vertices(pos1, tri1);
     fprintf('returning %d vertices, %d triangles\n', size(headshape(i).pos,1), size(headshape(i).tri,1));
   end
 end
@@ -96,8 +101,8 @@ end
 mesh = keepfields(headshape, {'pos', 'tri'});
 
 function [tri1, pos1] = refinepatch(tri, pos, numvertices)
-fprintf('the original mesh has %d vertices against the %d requested\n',size(pos,1),numvertices/3);
-fprintf('trying to refine the compartment...\n');
+fprintf('the original mesh has %d vertices, the requested number of vertices is %d\n',size(pos,1),numvertices/3);
+fprintf('trying to refine the mesh...\n');
 [pos1, tri1] = refine(pos, tri, 'updown', numvertices);
 
 function [pos, tri] = mysphere(N)

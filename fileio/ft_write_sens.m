@@ -13,6 +13,8 @@ function ft_write_sens(filename, sens, varargin)
 %
 % The supported file formats are
 %   bioimage_mgrid
+%   besa_sfp
+%   polhemus_pos
 %   matlab
 %
 % See also FT_READ_SENS, FT_DATATYPE_SENS
@@ -52,10 +54,36 @@ switch format
     filename = fullfile(p, [f '.mgrid']);
     write_bioimage_mgrid(filename, sens);
     
+  case 'besa_sfp'
+    % this always seems to be in mm
+    sens = ft_convert_units(sens, 'mm');
+    [p, f, x] = fileparts(filename);
+    filename = fullfile(p, [f '.sfp']);
+    fid = fopen_or_error(filename, 'wt');
+    for i=1:numel(sens.label)
+      fprintf(fid, '%s\t%g\t%g\t%g\n', sens.label{i}, sens.elecpos(i,1), sens.elecpos(i,2), sens.elecpos(i,3));
+    end
+    fclose(fid);
+    
   case 'matlab'
     [p, f, x] = fileparts(filename);
     filename = fullfile(p, [f '.mat']);
     save(filename, sens);
+    
+  case 'polhemus_pos'
+    % this always seems to be in mm
+    sens = ft_convert_units(sens, 'mm');
+    % the files that I know only have the electrode number, not any name
+    % they also end with nasion, left, right, but those are not contained in the elec structure
+    % the correct amount of whitespace might be slightly different
+    [p, f, x] = fileparts(filename);
+    filename = fullfile(p, [f '.pos']);
+    fid = fopen_or_error(filename, 'wt');
+    fprintf(fid, ' %d\n', numel(sens.label));
+    for i=1:numel(sens.label)
+      fprintf(fid, ' %-3d%27.14g%27.14g%27.14g\n', i, sens.elecpos(i,1), sens.elecpos(i,2), sens.elecpos(i,3));
+    end
+    fclose(fid);
     
   otherwise
     ft_error('unsupported format "%s"', format);
