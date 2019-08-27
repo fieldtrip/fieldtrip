@@ -1,24 +1,24 @@
-function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
+function [mesh, cfg] = ft_prepare_mesh(cfg, data)
 
-% FT_PREPARE_MESH creates a triangulated surface mesh for the volume
-% conduction model. The mesh can either be selected manually from raw
-% mri data or can be generated starting from a segmented volume
-% information stored in the mri structure. FT_PREPARE_MESH can be used
-% to create a cortex hull, i.e. the smoothed envelope around the pial
-% surface created by freesurfer. The result is a bnd structure which
-% contains the information about all segmented surfaces related to mri
-% sand are expressed in world coordinates.
+% FT_PREPARE_MESH creates a triangulated surface mesh or tetrahedral/hexahedral
+% volume mesh that can be used as geometrical description for a volume conduction
+% model. The mesh can either be created manually from anatomical MRI data or can be
+% generated starting from a segmented MRI. This function can also be used to create a
+% cortex hull, i.e. the smoothed envelope around the pial surface created by
+% freesurfer.
 %
 % Use as
-%   bnd = ft_prepare_mesh(cfg)
-%   bnd = ft_prepare_mesh(cfg, mri)
-%   bnd = ft_prepare_mesh(cfg, seg)
+%   mesh = ft_prepare_mesh(cfg)
+%   mesh = ft_prepare_mesh(cfg, mri)
+%   mesh = ft_prepare_mesh(cfg, seg)
 %
 % Configuration options:
 %   cfg.method      = string, can be 'interactive', 'projectmesh', 'iso2mesh', 'isosurface',
 %                     'headshape', 'hexahedral', 'tetrahedral','cortexhull', 'fittemplate'
-%   cfg.tissue      = cell-array with tissue types or numeric vector with integer values
-%   cfg.numvertices = numeric vector, should have same number of elements as cfg.tissue
+%   cfg.tissue      = cell-array with strings representing the tissue types, or numeric vector with integer values
+%   cfg.numvertices = numeric vector, should have same number of elements as the number of tissues
+%
+% When providing an anatomical MRI or a segmentation, you should specify
 %   cfg.downsample  = integer number (default = 1, i.e. no downsampling), see FT_VOLUMEDOWNSAMPLE
 %   cfg.spmversion  = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
 %
@@ -32,8 +32,8 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 % For method 'fittemplate' you should specify
 %   cfg.headshape   = a filename containing headshape
 %   cfg.template    = a filename containing headshape
-% With this method you are fitting the headshape from the configuration to the template; 
-% the resulting affine transformation is applied to the input mesh (or set of meshes), 
+% With this method you are fitting the headshape from the configuration to the template;
+% the resulting affine transformation is applied to the input mesh (or set of meshes),
 % which is subsequently returned as output variable.
 %
 %
@@ -55,7 +55,7 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %   cfg             = [];
 %   cfg.tissue      = {'scalp', 'skull', 'brain'};
 %   cfg.numvertices = [800, 1600, 2400];
-%   bnd             = ft_prepare_mesh(cfg, segmentation);
+%   mesh            = ft_prepare_mesh(cfg, segmentation);
 %
 %   cfg             = [];
 %   cfg.method      = 'cortexhull';
@@ -66,8 +66,8 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 % See also FT_VOLUMESEGMENT, FT_PREPARE_HEADMODEL, FT_PLOT_MESH
 
 % Undocumented functionality: at this moment it allows for either
-%   bnd = ft_prepare_mesh(cfg)             or
-%   bnd = ft_prepare_mesh(cfg, headmodel)
+%   mesh = ft_prepare_mesh(cfg)             or
+%   mesh = ft_prepare_mesh(cfg, headmodel)
 % but more consistent would be to specify a volume conduction model with
 %   cfg.headmodel     = structure with volume conduction model, see FT_PREPARE_HEADMODEL
 %   cfg.headshape     = name of file containing the volume conduction model, see FT_READ_HEADMODEL
@@ -105,8 +105,8 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble debug
-ft_preamble loadvar mri
-ft_preamble provenance mri
+ft_preamble loadvar data
+ft_preamble provenance data
 ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
@@ -115,22 +115,22 @@ if ft_abort
 end
 
 % we cannot use nargin, because the data might have been loaded from cfg.inputfile
-hasdata = exist('mri', 'var');
+hasdata = exist('data', 'var');
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'forbidden', {'numcompartments', 'outputfile', 'sourceunits', 'mriunits'});
 
 % get the options
-cfg.downsample  = ft_getopt(cfg, 'downsample', 1); % default is no downsampling
-cfg.numvertices = ft_getopt(cfg, 'numvertices');   % no default
-cfg.smooth      = ft_getopt(cfg, 'smooth');        % no default
+cfg.downsample  = ft_getopt(cfg, 'downsample', 1);      % default is no downsampling
+cfg.numvertices = ft_getopt(cfg, 'numvertices', 3000);  % set the default
+cfg.smooth      = ft_getopt(cfg, 'smooth');             % no default
 cfg.spmversion  = ft_getopt(cfg, 'spmversion', 'spm8');
 
 % Translate the input options in the appropriate default for cfg.method
 if isfield(cfg, 'headshape') && ~isempty(cfg.headshape)
   cfg.method = ft_getopt(cfg, 'method', 'headshape');
-elseif hasdata && ~strcmp(ft_headmodeltype(mri), 'unknown')
-  cfg.method = ft_getopt(cfg, 'method', ft_headmodeltype(mri));
+elseif hasdata && ~strcmp(ft_headmodeltype(data), 'unknown')
+  cfg.method = ft_getopt(cfg, 'method', ft_headmodeltype(data));
 elseif hasdata
   cfg.method = ft_getopt(cfg, 'method', 'projectmesh');
 else
@@ -140,10 +140,10 @@ end
 if hasdata && cfg.downsample~=1
   % optionally downsample the anatomical volume and/or tissue segmentations
   tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo'});
-  mri = ft_volumedownsample(tmpcfg, mri);
+  data = ft_volumedownsample(tmpcfg, data);
   % restore the provenance information and put back cfg.smooth
   tmpsmooth = cfg.smooth;
-  [cfg, mri] = rollback_provenance(cfg, mri);
+  [cfg, data] = rollback_provenance(cfg, data);
   cfg.smooth = tmpsmooth;
 end
 
@@ -151,80 +151,86 @@ switch cfg.method
   case 'interactive'
     % this makes sense with a non-segmented MRI as input
     % call the corresponding helper function
-    bnd = prepare_mesh_manual(cfg, mri);
-
+    mesh = prepare_mesh_manual(cfg, data);
+    
   case {'projectmesh', 'iso2mesh', 'isosurface'}
     % this makes sense with a segmented MRI as input
     % call the corresponding helper function
-    bnd = prepare_mesh_segmentation(cfg, mri);
-
+    mesh = prepare_mesh_segmentation(cfg, data);
+    
   case 'headshape'
     % call the corresponding helper function
-    bnd = prepare_mesh_headshape(cfg);
-
+    mesh = prepare_mesh_headshape(cfg);
+    
   case 'hexahedral'
     % the MRI is assumed to contain a segmentation
     % call the corresponding helper function
-    bnd = prepare_mesh_hexahedral(cfg, mri);
-
+    mesh = prepare_mesh_hexahedral(cfg, data);
+    
   case 'tetrahedral'
-    % the MRI is assumed to contain a segmentation
+    % the input data is assumed to contain a segmentation
     % call the corresponding helper function
-    bnd = prepare_mesh_tetrahedral(cfg, mri);
-
+    mesh = prepare_mesh_tetrahedral(cfg, data);
+    
   case {'singlesphere' 'concentricspheres'}
-    headmodel = mri;
-    headmodel = ft_datatype_headmodel(headmodel);   % ensure that it is consistent and up-to-date
-    headmodel = ft_determine_units(headmodel);      % ensure that it has units
-    bnd = [];
-    [pos, tri] = mesh_sphere(cfg.numvertices);
-    for i=1:length(headmodel.r)
-      ft_info('triangulating sphere %d in the volume conductor\n', i);
-      bnd(i).pos(:,1) = pos(:,1)*headmodel.r(i) + headmodel.o(1);
-      bnd(i).pos(:,2) = pos(:,2)*headmodel.r(i) + headmodel.o(2);
-      bnd(i).pos(:,3) = pos(:,3)*headmodel.r(i) + headmodel.o(3);
-      bnd(i).tri = tri;
+    % the input data is assumed to contain a spherical head model
+    data = ft_datatype_headmodel(data);   % ensure that it is consistent and up-to-date
+    data = ft_determine_units(data);      % ensure that it has units
+    
+    if length(data.r)>1 && numel(cfg.numvertices)==1
+      % use the same number of vertices for each tissue
+      cfg.numvertices = repmat(cfg.numvertices, length(data.r));
     end
-
+    
+    mesh = [];
+    for i=1:length(data.r)
+      ft_info('triangulating sphere %d in the volume conductor\n', i);
+      [pos, tri] = mesh_sphere(cfg.numvertices(i));
+      mesh(i).pos(:,1) = pos(:,1)*data.r(i) + data.o(1);
+      mesh(i).pos(:,2) = pos(:,2)*data.r(i) + data.o(2);
+      mesh(i).pos(:,3) = pos(:,3)*data.r(i) + data.o(3);
+      mesh(i).tri = tri;
+    end
+    
   case 'cortexhull'
-    bnd = prepare_mesh_cortexhull(cfg);
-  
-  case 'fittemplate'  
-    M   = prepare_mesh_fittemplate(cfg.headshape.pos,cfg.template.pos);
-    orig.mri = mri;
-    orig = ft_transform_geometry(M,orig);
-    bnd = orig.mri;
+    mesh = prepare_mesh_cortexhull(cfg);
+    
+  case 'fittemplate'
+    M   = prepare_mesh_fittemplate(cfg.headshape.pos, cfg.template.pos);
+    orig.mri = data;
+    orig = ft_transform_geometry(M, orig);
+    mesh = orig.data;
     
   otherwise
     ft_error('unsupported cfg.method')
 end
 
 % copy the geometrical units from the input to the output
-if ~isfield(bnd, 'unit') && hasdata && isfield(mri, 'unit')
-  for i=1:numel(bnd)
-    bnd(i).unit = mri.unit;
+if ~isfield(mesh, 'unit') && hasdata && isfield(data, 'unit')
+  for i=1:numel(mesh)
+    mesh(i).unit = data.unit;
   end
-elseif ~isfield(bnd, 'unit')
-  bnd = ft_determine_units(bnd);
+elseif ~isfield(mesh, 'unit')
+  mesh = ft_determine_units(mesh);
 end
 
 % copy the coordinate system from the input to the output
-if ~isfield(bnd, 'coordsys') && hasdata && isfield(mri, 'coordsys')
-  for i=1:numel(bnd)
-    bnd(i).coordsys = mri.coordsys;
+if ~isfield(mesh, 'coordsys') && hasdata && isfield(data, 'coordsys')
+  for i=1:numel(mesh)
+    mesh(i).coordsys = data.coordsys;
   end
 end
 
 % smooth the mesh
 if ~isempty(cfg.smooth)
-  cfg.headshape = bnd;
+  cfg.headshape = mesh;
   cfg.numvertices = [];
-  bnd = prepare_mesh_headshape(cfg);
+  mesh = prepare_mesh_headshape(cfg);
 end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble previous   mri
-ft_postamble provenance bnd
-ft_postamble history    bnd
+ft_postamble previous   data
+ft_postamble provenance mesh
+ft_postamble history    mesh
