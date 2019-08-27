@@ -470,9 +470,6 @@ cfg.video.AudioChannelCount               = ft_getopt(cfg.video, 'AudioChannelCo
 cfg.coordsystem.MEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystem'                            ); % REQUIRED. Defines the coordinate system for the MEG sensors. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in [MEGCoordinateSystemDescription].
 cfg.coordsystem.MEGCoordinateUnits                              = ft_getopt(cfg.coordsystem, 'MEGCoordinateUnits'                             ); % REQUIRED. Units of the coordinates of MEGCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
 cfg.coordsystem.MEGCoordinateSystemDescription                  = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystemDescription'                 ); % OPTIONAL. Freeform text description or link to document describing the MEG coordinate system system in detail.
-cfg.coordsystem.EEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'EEGCoordinateSystem'                            ); % OPTIONAL. Describes how the coordinates of the EEG sensors are to be interpreted.
-cfg.coordsystem.EEGCoordinateUnits                              = ft_getopt(cfg.coordsystem, 'EEGCoordinateUnits'                             ); % OPTIONAL. Units of the coordinates of EEGCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
-cfg.coordsystem.EEGCoordinateSystemDescription                  = ft_getopt(cfg.coordsystem, 'EEGCoordinateSystemDescription'                 ); % OPTIONAL. Freeform text description or link to document describing the EEG coordinate system system in detail.
 cfg.coordsystem.HeadCoilCoordinates                             = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinateSystem'                       ); % OPTIONAL. Key:value pairs describing head localization coil labels and their coordinates, interpreted following the HeadCoilCoordinateSystem, e.g., {"NAS": [12.7,21.3,13.9], "LPA": [5.2,11.3,9.6], "RPA": [20.2,11.3,9.1]}. Note that coils are not always placed at locations that have a known anatomical name (e.g. for Neuromag/Elekta, Yokogawa systems); in that case generic labels can be used (e.g. {"coil1": [122,213,123], "coil2": [67,123,86], "coil3": [219,110,81]} ).
 cfg.coordsystem.HeadCoilCoordinateSystem                        = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinates'                            ); % OPTIONAL. Defines the coordinate system for the coils. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in HeadCoilCoordinateSystemDescription.
 cfg.coordsystem.HeadCoilCoordinateUnits                         = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinateUnits'                        ); % OPTIONAL. Units of the coordinates of HeadCoilCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
@@ -481,6 +478,14 @@ cfg.coordsystem.DigitizedHeadPoints                             = ft_getopt(cfg.
 cfg.coordsystem.DigitizedHeadPointsCoordinateSystem             = ft_getopt(cfg.coordsystem, 'DigitizedHeadPointsCoordinateSystem'            ); % OPTIONAL. Defines the coordinate system for the digitized head points. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in DigitizedHeadPointsCoordinateSystemDescription.
 cfg.coordsystem.DigitizedHeadPointsCoordinateUnits              = ft_getopt(cfg.coordsystem, 'DigitizedHeadPointsCoordinateUnits'             ); % OPTIONAL. Units of the coordinates of DigitizedHeadPointsCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
 cfg.coordsystem.DigitizedHeadPointsCoordinateSystemDescription  = ft_getopt(cfg.coordsystem, 'DigitizedHeadPointsCoordinateSystemDescription' ); % OPTIONAL. Freeform text description or link to document describing the Digitized head Points coordinate system system in detail.
+cfg.coordsystem.EEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'EEGCoordinateSystem'                            ); % OPTIONAL. Describes how the coordinates of the EEG sensors are to be interpreted.
+cfg.coordsystem.EEGCoordinateUnits                              = ft_getopt(cfg.coordsystem, 'EEGCoordinateUnits'                             ); % OPTIONAL. Units of the coordinates of EEGCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
+cfg.coordsystem.EEGCoordinateSystemDescription                  = ft_getopt(cfg.coordsystem, 'EEGCoordinateSystemDescription'                 ); % OPTIONAL. Freeform text description or link to document describing the EEG coordinate system system in detail.
+cfg.coordsystem.iEEGCoordinateSystem                            = ft_getopt(cfg.coordsystem, 'iEEGCoordinateSystem'                           ); % REQUIRED. Defines the coordinate system for the iEEG electrodes. See Appendix VIII for a list of restricted keywords. If positions correspond to pixel indices in a 2D image (of either a volume-rendering, surface-rendering, operative photo, or operative drawing), this must be "Pixels". For more information, see the section on 2D coordinate systems
+cfg.coordsystem.iEEGCoordinateUnits	                            = ft_getopt(cfg.coordsystem, 'iEEGCoordinateUnits'                            ); % REQUIRED. Units of the _electrodes.tsv, MUST be "m", "mm", "cm" or "pixels".
+cfg.coordsystem.iEEGCoordinateSystemDescription	                = ft_getopt(cfg.coordsystem, 'iEEGCoordinateSystemDescription'                ); % RECOMMENDED. Freeform text description or link to document describing the iEEG coordinate system system in detail (e.g., "Coordinate system with the origin at anterior commissure (AC), negative y-axis going through the posterior commissure (PC), z-axis going to a mid-hemisperic point which lies superior to the AC-PC line, x-axis going to the right").
+cfg.coordsystem.iEEGCoordinateProcessingDescription             = ft_getopt(cfg.coordsystem, 'iEEGCoordinateProcessingDescription'            ); % RECOMMENDED. Has any post-processing (such as projection) been done on the electrode positions (e.g., "surface_projection", "none").
+cfg.coordsystem.iEEGCoordinateProcessingReference	              = ft_getopt(cfg.coordsystem, 'iEEGCoordinateProcessingReference'              ); % RECOMMENDED. A reference to a paper that defines in more detail the method used to localize the electrodes and to post-process the electrode positions. .
 cfg.coordsystem.IntendedFor                                     = ft_getopt(cfg.coordsystem, 'IntendedFor'                                    ); % OPTIONAL. Path or list of path relative to the subject subfolder pointing to the structural MRI, possibly of different types if a list is specified, to be used with the MEG recording. The path(s) need(s) to use forward slashes instead of backward slashes (e.g. "ses-<label>/anat/sub-01_T1w.nii.gz").
 cfg.coordsystem.AnatomicalLandmarkCoordinates                   = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinates'                  ); % OPTIONAL. Key:value pairs of the labels and 3-D digitized locations of anatomical landmarks, interpreted following the AnatomicalLandmarkCoordinateSystem, e.g., {"NAS": [12.7,21.3,13.9], "LPA": [5.2,11.3,9.6], "RPA": [20.2,11.3,9.1]}.
 cfg.coordsystem.AnatomicalLandmarkCoordinateSystem              = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinateSystem'             ); % OPTIONAL. Defines the coordinate system for the anatomical landmarks. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in AnatomicalLandmarkCoordinateSystemDescripti on.
@@ -989,35 +994,6 @@ if need_video_json
   video_json.AudioChannelCount  = audio.NumChannels;
 end
 
-%% need_coordsystem_json
-if need_coordsystem_json
-  if ft_senstype(hdr.grad, 'ctf')
-    % coordinate system for MEG sensors
-    coordsystem_json.MEGCoordinateSystem            = 'CTF';
-    coordsystem_json.MEGCoordinateUnits             = 'cm';
-    coordsystem_json.MEGCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
-    
-    % coordinate system for head localization coils
-    coordsystem_json.HeadCoilCoordinates                 = []; % see below
-    coordsystem_json.HeadCoilCoordinateSystem            = 'CTF';
-    coordsystem_json.HeadCoilCoordinateUnits             = 'cm';
-    coordsystem_json.HeadCoilCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
-    if isempty(coordsystem_json.HeadCoilCoordinates)
-      % get the positions from the dataset header
-      label = cellstr(hdr.orig.hc.names);
-      position = hdr.orig.hc.head;
-      for i=1:numel(label)
-        coordsystem_json.HeadCoilCoordinates.(fixname(label{i})) = position(:,i)';
-      end
-    end
-    % merge the information specified by the user with that from the data
-    % in case fields appear in both, the first input overrules the second
-    coordsystem_json = mergeconfig(coordsystem_settings, coordsystem_json, false); % FIXME the order of precedence is different here
-  else
-    ft_warning('coordsystem handling not yet supported for %s', ft_senstype(hdr.grad));
-  end
-end % if need_coordsystem_json
-
 %% need_channels_tsv
 if need_channels_tsv
   % start with an empty table
@@ -1116,37 +1092,43 @@ if need_electrodes_tsv
   end
 end % need_electrodes_tsv
 
+
 %% need_coordsystem_json
 if need_coordsystem_json
-  if need_meg_json
-    if ft_senstype(hdr.grad, 'ctf')
-      % coordinate system for MEG sensors
-      coordsystem_json.MEGCoordinateSystem            = 'CTF';
-      coordsystem_json.MEGCoordinateUnits             = 'cm';
-      coordsystem_json.MEGCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
-      
-      % coordinate system for head localization coils
-      coordsystem_json.HeadCoilCoordinates                 = []; % see below
-      coordsystem_json.HeadCoilCoordinateSystem            = 'CTF';
-      coordsystem_json.HeadCoilCoordinateUnits             = 'cm';
-      coordsystem_json.HeadCoilCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
-      if isempty(coordsystem_json.HeadCoilCoordinates)
-        % get the positions from the dataset header
-        label = cellstr(hdr.orig.hc.names);
-        position = hdr.orig.hc.head;
-        for i=1:numel(label)
-          coordsystem_json.HeadCoilCoordinates.(fixname(label{i})) = position(:,i)';
-        end
+  if isfield(hdr, 'grad') && ft_senstype(hdr.grad, 'ctf')
+    % coordinate system for MEG sensors
+    coordsystem_json.MEGCoordinateSystem            = 'CTF';
+    coordsystem_json.MEGCoordinateUnits             = 'cm';
+    coordsystem_json.MEGCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
+    % coordinate system for head localization coils
+    coordsystem_json.HeadCoilCoordinates                 = []; % see below
+    coordsystem_json.HeadCoilCoordinateSystem            = 'CTF';
+    coordsystem_json.HeadCoilCoordinateUnits             = 'cm';
+    coordsystem_json.HeadCoilCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
+    if isempty(coordsystem_json.HeadCoilCoordinates)
+      % get the positions from the dataset header
+      label = cellstr(hdr.orig.hc.names);
+      position = hdr.orig.hc.head;
+      for i=1:numel(label)
+        coordsystem_json.HeadCoilCoordinates.(fixname(label{i})) = position(:,i)';
       end
-      % merge the information specified by the user with that from the data
-      % in case fields appear in both, the first input overrules the second
-      coordsystem_json = mergeconfig(coordsystem_settings, coordsystem_json, false); % FIXME the order of precedence is different here
-    else
-      ft_warning('coordsystem handling not yet supported for %s', ft_senstype(hdr.grad));
     end
-  elseif need_electrodes_tsv
-    keyboard
+  elseif isfield(hdr, 'grad') && ft_senstype(hdr.grad, 'neuromag')
+    % coordinate system for MEG sensors
+    coordsystem_json.MEGCoordinateSystem            = 'Neuromag';
+    coordsystem_json.MEGCoordinateUnits             = 'm';
+    coordsystem_json.MEGCoordinateSystemDescription = 'Neuromag head coordinates, orientation RAS, origin between the ears';
+    % coordinate system for head localization coils
+    coordsystem_json.HeadCoilCoordinates                 = []; % FIXME it might be possible to get these from the dataset header
+    coordsystem_json.HeadCoilCoordinateSystem            = 'Neuromag';
+    coordsystem_json.HeadCoilCoordinateUnits             = 'm';
+    coordsystem_json.HeadCoilCoordinateSystemDescription = 'Neuromag head coordinates, orientation RAS, origin between the ears';
+  else
+    ft_warning('coordsystem handling not yet supported for this data, you MUST specify cfg.coordsystem');
   end
+  % merge the information specified by the user with that from the data
+  % in case fields appear in both, the first input overrules the second
+  coordsystem_json = mergeconfig(coordsystem_settings, coordsystem_json, false); % FIXME the order of precedence is different here
 end % if need_coordsystem_json
 
 %% need_events_tsv
@@ -1396,7 +1378,7 @@ if need_events_tsv
 end % if need_events_tsv
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% write the data to the output file
+%% write or copy the data to the output file
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 switch cfg.method
   case 'decorate'
