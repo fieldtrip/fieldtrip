@@ -900,7 +900,7 @@ if need_meg_json
   meg_json.EOGChannelCount            = sum(strcmp(hdr.chantype, 'eog'));
   meg_json.ECGChannelCount            = sum(strcmp(hdr.chantype, 'ecg'));
   meg_json.EMGChannelCount            = sum(strcmp(hdr.chantype, 'emg'));
-  meg_json.MiscChannelCount           = sum(strcmp(hdr.chantype, 'misc'));
+  meg_json.MiscChannelCount           = sum(strcmp(hdr.chantype, 'misc') | strcmp(hdr.chantype, 'unknown'));
   meg_json.TriggerChannelCount        = sum(strcmp(hdr.chantype, 'trigger'));
   meg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
   meg_json.EpochLength                = hdr.nSamples/hdr.Fs;
@@ -970,6 +970,8 @@ if need_emg_json
   emg_json.EOGChannelCount            = sum(strcmp(hdr.chantype, 'eog'));
   emg_json.ECGChannelCount            = sum(strcmp(hdr.chantype, 'ecg'));
   emg_json.EMGChannelCount            = sum(strcmp(hdr.chantype, 'emg'));
+  emg_json.TriggerChannelCount        = sum(strcmp(hdr.chantype, 'trigger'));
+  emg_json.MiscChannelCount           = sum(strcmp(hdr.chantype, 'misc') | strcmp(hdr.chantype, 'unknown'));
   emg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
   emg_json.EpochLength                = hdr.nSamples/hdr.Fs;
   
@@ -1055,24 +1057,24 @@ if need_channels_tsv
   
   % do a sanity check on the number of channels
   if need_meg_json
-    subcfg = cfg.meg;
+    type_json = meg_json;
   elseif need_eeg_json
-    subcfg = cfg.eeg;
+    type_json = eeg_json;
   elseif need_ieeg_json
-    subcfg = cfg.ieeg;
+    type_json = ieeg_json;
   elseif need_emg_json
-    subcfg = cfg.emg;
+    type_json = emg_json;
   end
-  fn = fieldnames(subcfg);
+  fn = fieldnames(type_json);
   fn = fn(endsWith(fn, 'ChannelCount'));
-  TotalChannelCount = 0;
+  jsoncount = 0;
   for i=1:numel(fn)
-    if ~isempty(subcfg.(fn{i}))
-      TotalChannelCount = TotalChannelCount + subcfg.(fn{i});
+    if ~isempty(type_json.(fn{i}))
+      jsoncount = jsoncount + type_json.(fn{i});
     end
   end
-  if size(channels_tsv,1)~=TotalChannelCount
-    ft_error('incorrect specification of the channel count: %d in the configuration, %d in channels.tsv', TotalChannelCount, size(channels_tsv,1));
+  if size(channels_tsv,1)~=jsoncount
+    ft_warning('incorrect specification of the channel count: %d in the json, %d in the tsv', jsoncount, size(channels_tsv,1));
   end
 end % if need_channels_tsv
 
