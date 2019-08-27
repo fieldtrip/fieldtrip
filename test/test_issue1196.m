@@ -70,14 +70,16 @@ cfg.SoftwareVersions = 'n/a';
 cfg.emg.PowerLineFrequency = 50;
 % cfg.emg.HardwareFilters
 % cfg.emg.SoftwareFilters
-cfg.emg.EMGChannelCount = 2;
-cfg.emg.EOGChannelCount = pi;
-cfg.emg.ECGChannelCount = 42;
+% cfg.emg.EMGChannelCount
+% cfg.emg.EOGChannelCount
+% cfg.emg.ECGChannelCount
+cfg.emg.MiscChannelCount = 2; % Resp and HR
+
 cfg.emg.ElectrodeManufacturer = 'Kendall';
 cfg.emg.ElectrodeManufacturersModelName = 'schuim, 24mm';
-% cfg.emg.EMGPlacementScheme
-% cfg.emg.EMGReference
-% cfg.emg.EMGGround
+cfg.emg.EMGPlacementScheme = 'unknown';
+cfg.emg.EMGReference = 'somewhere';
+cfg.emg.EMGGround = 'else';
 
 cfg.method = 'copy'; % no need to convert
 cfg.dataset = emgfile;
