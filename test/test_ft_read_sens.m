@@ -27,7 +27,7 @@ datainfo = datainfo(use);
 
 for k = 1:numel(datainfo)
   dataset  = datainfo(k);
-  filename =  [dataset.origdir,'original/',dataset.type,'/',dataset.datatype,'/',dataset.filename];
+  filename = fullfile(dataset.origdir, 'original', dataset.type, dataset.datatype, dataset.filename);
   
   % get sensor information
   if ~isempty(dataset.dataformat)
@@ -44,11 +44,12 @@ for k = 1:numel(datainfo)
 end % for
 
 % read all the electrode files
-d = dir('/home/common/matlab/fieldtrip/data/test/original/electrodes/');
+d = dir(dccnpath('/home/common/matlab/fieldtrip/data/test/original/electrodes/'));
 for i=1:numel(d)
   if d(i).isdir && numel(d(i).name)>1
     f = dir(fullfile(d(i).folder, d(i).name));
     f = f(~[f.isdir]);
+    f = f(~startsWith({f.name}, '.')); % exclude files like .DS_Store
     for j=1:numel(f)
       elec = ft_read_sens(fullfile(f(j).folder, f(j).name));
     end
