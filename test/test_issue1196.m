@@ -6,8 +6,8 @@ function test_issue1196
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1196'));
 
-if isfolder('/home/common/matlab/fieldtrip/data/test/issue1196/bids')
-  system('rm -rf /home/common/matlab/fieldtrip/data/test/issue1196/bids');
+if isfolder(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1196/bids'))
+  system(sprintf('rm -rf %s', dccnpath('/home/common/matlab/fieldtrip/data/test/issue1196/bids')));
 end
 
 %%
