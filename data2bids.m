@@ -998,7 +998,9 @@ end
 
 %% need_video_json
 if need_video_json
+  ws = warning('off', 'MATLAB:structOnObject');
   video_json = keepfields(struct(video), {'FrameRate', 'Width', 'Height', 'Duration'});
+  warning(ws);
   video_json.AudioSampleRate    = audio.SampleRate;
   video_json.AudioDuration      = audio.Duration;
   video_json.AudioChannelCount  = audio.NumChannels;
