@@ -757,8 +757,18 @@ switch typ
     
   case 'video'
     need_video_json = true;
-    video = VideoReader(cfg.dataset);
-    audio = audioinfo(cfg.dataset);
+    try
+      video = VideoReader(cfg.dataset);
+    catch
+      ft_warning('video format is unsupported on this MATLAB version and/or operating system');
+      video = struct('FrameRate', nan, 'Width', nan, 'Height', nan, 'Duration', nan);
+    end
+    try
+      audio = audioinfo(cfg.dataset);
+    catch
+      ft_warning('audio format is unsupported on this MATLAB version and/or operating system');
+      audio = struct('SampleRate', nan, 'Duration', nan, 'NumChannels', nan);
+    end
     
   otherwise
     % the file on disk contains raw electrophysiology data
@@ -1353,7 +1363,7 @@ if need_events_tsv
     end
     
   elseif need_events_tsv
-    % events are needed, but not linked to fMRI or electrophysiological data 
+    % events are needed, but not linked to fMRI or electrophysiological data
     
     % convert the presentation structure to a TSV table
     events_tsv = struct2table(presentation);
