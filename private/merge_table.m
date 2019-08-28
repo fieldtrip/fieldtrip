@@ -71,9 +71,15 @@ for j=1:m2
   if ~any(row)
     % add an empty row to t3
     row = size(t3,1)+1;
-    t3(row,:) = cell(1, numel(col));
+    try
+      % on MATLAB R2019a it is required to add a complete empty row first
+      t3(row,:) = cell(1, size(t3,2));
+    catch
+      % on MATLAB R2016b it is not possible to add an empty row, but looping over columns works fine
+    end
   end
   for i=1:numel(col)
+    % this also adds the row (when required) for R2016b
     t3(row, col{i}) = t2(j, col{i});
   end
 end
