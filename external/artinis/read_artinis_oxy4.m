@@ -77,6 +77,10 @@ else % nargin > 1 && ~islogical(header)
       end
     end
   end
-        
+  
+  if endsample > size(data, 2)
+    warning('Cannot deliver all requested samples, missing %d sample(s)', endsample-size(data, 2));
+  end
+  
   data = data(chanindx, begsample:endsample);
 end
