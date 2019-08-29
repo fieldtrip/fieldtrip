@@ -49,7 +49,6 @@ ft_hastoolbox('xdf', 1);
 
 % read all streams
 streams = load_xdf(filename);
-
 iscontinuous = false(size(streams));
 % figure out which streams contain continuous/regular and discrete/irregular data
 for i=1:numel(streams)
@@ -65,6 +64,43 @@ for i=1:numel(streams)
   end
 end
 
+% Read the EEG stream to get the first time stamp and sampling rate
+EEG_info=[];
+for i=1:length(streams)
+    if (strcmp(streams{i}.info.type,'EEG'))
+        EEG_t1= str2double(streams{i}.info.first_timestamp);
+        EEG_srate=streams{i}.info.effective_srate;
+        EEG_info=[EEG_t1 EEG_srate];
+    end
+end
+
+if isempty(EEG_info)
+  ft_error('no EEG streams were selected');
+end
+
+% Read events from the non continuous Marker stream
+event = [];
+for i=1:length(streams)
+    if (strcmp(streams{i}.info.type,'Markers'))
+        try
+            events = struct('sample', [], 'offset', [], 'duration', num2cell(ones(1, length(streams{i}.time_stamps))),...
+                'type', cellstr(repmat({'Marker'}, 1, length(streams{i}.time_stamps))), 'value', ' ', 'timestamp', []); 
+            for k=1:length(streams{i}.time_stamps)
+                if iscell(streams{i}.time_series)
+                    events(k).value = streams{i}.time_series{k};
+                else
+                    events(k).value = num2str(streams{i}.time_series(k));
+                end
+                events(k).sample = round((streams{i}.time_stamps(k)- EEG_t1)*EEG_srate);
+                events(k).timestamp = streams{i}.time_stamps(k);
+            end
+            event = [event, events]; 
+        catch err
+            ft_info('Could not interpret event stream named "', streams{i}.info.name, '": ', err.message);
+        end
+    end
+end
+
 % select the streams to continue working with
 if isempty(streamindx)
   selected = true(size(streams));
@@ -73,7 +109,7 @@ else
   selected(streamindx) = true;
 end
 
-% discard the non-continuous streams
+% discard the non-continuous streams for further processing
 streams = streams(iscontinuous & selected);
 
 if isempty(streams)
@@ -116,6 +152,7 @@ for i=1:numel(streams)
   data{i}.label = hdr.label;
   data{i}.time = {streams{i}.time_stamps};
   data{i}.trial = {streams{i}.time_series};
+  data{i}.event = event;
   
 end % for all continuous streams
 
@@ -146,3 +183,4 @@ else
   % simply return the first and only one
   data = data{1};
 end
+
