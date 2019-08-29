@@ -497,14 +497,12 @@ cfg.stim.SamplingFrequency                = ft_getopt(cfg.stim, 'SamplingFrequen
 
 %% eyetracker is not part of the official BIDS specification
 % this follows https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/06-physiological-and-other-continuous-recordings.html
-% but writes it in an "eyetracker" directory, rather than "func"
 cfg.eyetracker.Columns                    = ft_getopt(cfg.video, 'Columns'              );
 cfg.eyetracker.StartTime                  = ft_getopt(cfg.video, 'StartTime'            );
 cfg.eyetracker.SamplingFrequency          = ft_getopt(cfg.video, 'SamplingFrequency'    );
 
 %% motioncapture is not part of the official BIDS specification
 % this follows https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/06-physiological-and-other-continuous-recordings.html
-% but writes it in an "motioncapture" directory, rather than "func"
 cfg.motioncapture.Columns                 = ft_getopt(cfg.motioncapture, 'Columns'              );
 cfg.motioncapture.StartTime               = ft_getopt(cfg.motioncapture, 'StartTime'            );
 cfg.motioncapture.SamplingFrequency       = ft_getopt(cfg.motioncapture, 'SamplingFrequency'    );
@@ -2372,7 +2370,7 @@ switch typ
     dir = 'dwi';
   case {'phasediff' 'phase1' 'phase2' 'magnitude1' 'magnitude2' 'magnitude' 'fieldmap' 'epi'}
     dir = 'fmap';
-  case {'events' 'stim' 'physio'} % this conflicts with func
+  case {'events' 'stim' 'physio' 'eyetracker' 'motioncapture'} % stim and physio could also be stored in 'func'
     dir = 'beh';
   case {'meg'}
     dir = 'meg';
@@ -2384,10 +2382,6 @@ switch typ
     dir = 'emg'; % not part of the official specification
   case {'video'}
     dir = 'video'; % not part of the official specification
-  case {'eyetracker'}
-    dir = 'eyetracker'; % not part of the official specification
-  case {'motioncapture'}
-    dir = 'motioncapture'; % not part of the official specification
   otherwise
     ft_error('unrecognized data type "%s"', typ);
 end
