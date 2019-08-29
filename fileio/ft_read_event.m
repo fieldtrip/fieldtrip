@@ -1067,8 +1067,13 @@ switch eventformat
     else
       asc = read_eyelink_asc(filename);
     end
-    timestamp = [asc.input(:).timestamp];
-    value     = [asc.input(:).value];
+    if ~isempty(asc.input)
+      timestamp = [asc.input(:).timestamp];
+      value     = [asc.input(:).value];
+    else
+      timestamp = [];
+      value = [];
+    end
     % note that in this dataformat the first input trigger can be before
     % the start of the data acquisition
     for i=1:length(timestamp)
