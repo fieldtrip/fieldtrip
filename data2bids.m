@@ -167,10 +167,12 @@ function cfg = data2bids(cfg, varargin)
 % - video
 % - eyetracking
 % - motioncapture
+% - physio
+% - stim
 %
-% These data types are currently (Aug 2019) not supported in the BIDS specification,
-% but this function converts them in a very similar way as the officially supported
-% data types.
+% Most of these data types are currently (Aug 2019) not supported in the BIDS
+% specification, but this function converts them in a very similar way as the
+% officially supported data types.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Copyright (C) 2018-2019, Robert Oostenveld
@@ -268,6 +270,12 @@ cfg.video.writesidecar          = ft_getopt(cfg.video, 'writesidecar', 'yes');  
 
 cfg.eyetracker                  = ft_getopt(cfg, 'eyetracker');
 cfg.eyetracker.writesidecar     = ft_getopt(cfg.eyetracker, 'writesidecar', 'yes');     % whether to write the sidecar file
+
+cfg.physio                      = ft_getopt(cfg, 'physio');
+cfg.physio.writesidecar         = ft_getopt(cfg.physio, 'writesidecar', 'yes');         % whether to write the sidecar file
+
+cfg.stim                        = ft_getopt(cfg, 'stim');
+cfg.stim.writesidecar           = ft_getopt(cfg.stim, 'writesidecar', 'yes');           % whether to write the sidecar file
 
 cfg.motioncapture               = ft_getopt(cfg, 'motioncapture');
 cfg.motioncapture.writesidecar  = ft_getopt(cfg.motioncapture, 'writesidecar', 'yes');  % whether to write the sidecar file
@@ -477,16 +485,24 @@ cfg.video.BitsPerPixel                    = ft_getopt(cfg.video, 'BitsPerPixel' 
 cfg.video.AudioSampleRate                 = ft_getopt(cfg.video, 'AudioSampleRate'     );
 cfg.video.AudioChannelCount               = ft_getopt(cfg.video, 'AudioChannelCount'   );
 
+%% physio is part of the official BIDS specification and goes into 'beh' or in 'func'
+cfg.physio.Columns                        = ft_getopt(cfg.physio, 'Columns'              );
+cfg.physio.StartTime                      = ft_getopt(cfg.physio, 'StartTime'            );
+cfg.physio.SamplingFrequency              = ft_getopt(cfg.physio, 'SamplingFrequency'    );
+
+%% stim is part of the official BIDS specification and goes into 'beh' or in 'func'
+cfg.stim.Columns                          = ft_getopt(cfg.stim, 'Columns'              );
+cfg.stim.StartTime                        = ft_getopt(cfg.stim, 'StartTime'            );
+cfg.stim.SamplingFrequency                = ft_getopt(cfg.stim, 'SamplingFrequency'    );
+
 %% eyetracker is not part of the official BIDS specification
 % this follows https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/06-physiological-and-other-continuous-recordings.html
-% but writes it in an "eyetracker" directory, rather than "func"
 cfg.eyetracker.Columns                    = ft_getopt(cfg.video, 'Columns'              );
 cfg.eyetracker.StartTime                  = ft_getopt(cfg.video, 'StartTime'            );
 cfg.eyetracker.SamplingFrequency          = ft_getopt(cfg.video, 'SamplingFrequency'    );
 
 %% motioncapture is not part of the official BIDS specification
 % this follows https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/06-physiological-and-other-continuous-recordings.html
-% but writes it in an "motioncapture" directory, rather than "func"
 cfg.motioncapture.Columns                 = ft_getopt(cfg.motioncapture, 'Columns'              );
 cfg.motioncapture.StartTime               = ft_getopt(cfg.motioncapture, 'StartTime'            );
 cfg.motioncapture.SamplingFrequency       = ft_getopt(cfg.motioncapture, 'SamplingFrequency'    );
@@ -663,6 +679,8 @@ need_eeg_json           = false;
 need_ieeg_json          = false;
 need_emg_json           = false;
 need_video_json         = false;
+need_physio_json        = false;
+need_stim_json          = false;
 need_eyetracker_json    = false;
 need_motioncapture_json = false;
 need_events_tsv         = false; % for behavioral experiments
@@ -767,6 +785,10 @@ switch typ
       need_ieeg_json = true;
     elseif isequal(cfg.datatype, 'emg')
       need_emg_json = true;
+    elseif isequal(cfg.datatype, 'physio')
+      need_physio_json = true;
+    elseif isequal(cfg.datatype, 'stim')
+      need_stim_json = true;
     elseif isequal(cfg.datatype, 'eyetracker')
       need_eyetracker_json = true;
     elseif isequal(cfg.datatype, 'motioncapture')
@@ -813,6 +835,10 @@ switch typ
       need_emg_json = true;
     elseif isequal(cfg.datatype, 'emg')
       need_emg_json = true;
+    elseif isequal(cfg.datatype, 'physio')
+      need_physio_json = true;
+    elseif isequal(cfg.datatype, 'stim')
+      need_stim_json = true;
     elseif isequal(cfg.datatype, 'eyetracker')
       need_eyetracker_json = true;
     elseif isequal(cfg.datatype, 'motioncapture')
@@ -852,7 +878,7 @@ if need_meg_json || need_eeg_json || need_ieeg_json
   end
 end
 
-need_events_tsv       = need_events_tsv || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_eyetracker_json || need_motioncapture_json | (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task));
+need_events_tsv       = need_events_tsv || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_eyetracker_json || need_motioncapture_json || (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task));
 need_channels_tsv     = need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json;
 need_coordsystem_json = need_meg_json || need_electrodes_tsv;
 
@@ -881,6 +907,8 @@ eeg_json            = [];
 ieeg_json           = [];
 emg_json            = [];
 video_json          = [];
+physio_json         = [];
+stim_json           = [];
 eyetracker_json     = [];
 motioncapture_json  = [];
 events_tsv          = [];
@@ -929,6 +957,16 @@ fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
 video_settings = keepfields(cfg.video, fn);
 
 % make the relevant selection, all json fields start with a capital letter
+fn = fieldnames(cfg.physio);
+fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
+physio_settings = keepfields(cfg.physio, fn);
+
+% make the relevant selection, all json fields start with a capital letter
+fn = fieldnames(cfg.stim);
+fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
+stim_settings = keepfields(cfg.stim, fn);
+
+% make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg.eyetracker);
 fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
 eyetracker_settings = keepfields(cfg.eyetracker, fn);
@@ -942,7 +980,6 @@ motioncapture_settings = keepfields(cfg.motioncapture, fn);
 fn = fieldnames(cfg.coordsystem);
 fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
 coordsystem_settings = keepfields(cfg.coordsystem, fn);
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% construct the content for the json and tsv files
@@ -1063,6 +1100,30 @@ if need_video_json
   % in case fields appear in both, the first input overrules the second
   video_json = mergeconfig(video_settings,   video_json, false);
   video_json = mergeconfig(generic_settings, video_json, false);
+end
+
+%% need_physio_json
+if need_physio_json
+  physio_json.SamplingFrequency = hdr.Fs;
+  physio_json.StartTime = nan;
+  physio_json.Columns = hdr.label;
+  
+  % merge the information specified by the user with that from the data
+  % in case fields appear in both, the first input overrules the second
+  physio_json = mergeconfig(physio_settings,  physio_json, false);
+  physio_json = mergeconfig(generic_settings, physio_json, false);
+end
+
+%% need_stim_json
+if need_stim_json
+  stim_json.SamplingFrequency = hdr.Fs;
+  stim_json.StartTime = nan;
+  stim_json.Columns = hdr.label;
+  
+  % merge the information specified by the user with that from the data
+  % in case fields appear in both, the first input overrules the second
+  stim_json = mergeconfig(stim_settings,    stim_json, false);
+  stim_json = mergeconfig(generic_settings, stim_json, false);
 end
 
 %% need_eyetracker_json
@@ -1538,18 +1599,16 @@ switch cfg.method
             cfg.outputfile = fullfile(p, [f '.vhdr']);
             ft_info('writing %s\n', cfg.outputfile);
             ft_write_data(cfg.outputfile, dat, 'dataformat', 'brainvision_eeg', 'header', hdr, 'event', trigger);
-          case {'eyetracker', 'motioncapture'}
+          case {'physio', 'stim', 'eyetracker', 'motioncapture'}
             % write the data according to the Stim and Physio format as specified at
             % https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/06-physiological-and-other-continuous-recordings.html
             [p, f, x] = fileparts(cfg.outputfile);
-            tsvfile  = fullfile(p, [f '.tsv']);
-            jsonfile = fullfile(p, [f '.json']);
-            cfg.outputfile = tsvfile;
+            cfg.outputfile = fullfile(p, [f '.tsv']);
             ft_info('writing %s\n', cfg.outputfile);
             isdir_or_mkdir(p);
-            writematrix(dat', tsvfile, 'FileType', 'text', 'Delimiter', '\t'); % without headers
-            write_json(jsonfile, eval(sprintf('%s_json', cfg.datatype)));
+            writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t'); % without headers, the JSON will be written further down
           otherwise
+            ft_error('cannot determine how to write the data')
         end
     end % switch typ
     
@@ -1595,12 +1654,16 @@ end % switch method
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % remove fields that have an empty value
-mri_json   = remove_empty(mri_json);
-meg_json   = remove_empty(meg_json);
-eeg_json   = remove_empty(eeg_json);
-ieeg_json  = remove_empty(ieeg_json);
-emg_json   = remove_empty(emg_json);
-video_json = remove_empty(video_json);
+mri_json            = remove_empty(mri_json);
+meg_json            = remove_empty(meg_json);
+eeg_json            = remove_empty(eeg_json);
+ieeg_json           = remove_empty(ieeg_json);
+emg_json            = remove_empty(emg_json);
+video_json          = remove_empty(video_json);
+physio_json         = remove_empty(physio_json);
+stim_json           = remove_empty(stim_json);
+eyetracker_json     = remove_empty(eyetracker_json);
+motioncapture_json  = remove_empty(motioncapture_json);
 
 if ~isempty(mri_json)
   filename = corresponding_json(cfg.outputfile);ls
@@ -1745,6 +1808,106 @@ if ~isempty(video_json)
       write_json(filename, video_json);
     case 'merge'
       write_json(filename, mergeconfig(video_json, existing, false));
+    case 'no'
+      % do nothing
+    otherwise
+      ft_error('incorrect option for cfg.emg.writesidecar');
+  end % switch
+end
+
+if ~isempty(physio_json)
+  filename = corresponding_json(cfg.outputfile);
+  if isfile(filename)
+    existing = read_json(filename);
+  else
+    existing = [];
+  end
+  switch cfg.video.writesidecar
+    case 'yes'
+      if ~isempty(existing)
+        ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
+      else
+        write_json(filename, physio_json);
+      end
+    case 'replace'
+      write_json(filename, physio_json);
+    case 'merge'
+      write_json(filename, mergeconfig(physio_json, existing, false));
+    case 'no'
+      % do nothing
+    otherwise
+      ft_error('incorrect option for cfg.emg.writesidecar');
+  end % switch
+end
+
+if ~isempty(stim_json)
+  filename = corresponding_json(cfg.outputfile);
+  if isfile(filename)
+    existing = read_json(filename);
+  else
+    existing = [];
+  end
+  switch cfg.video.writesidecar
+    case 'yes'
+      if ~isempty(existing)
+        ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
+      else
+        write_json(filename, stim_json);
+      end
+    case 'replace'
+      write_json(filename, stim_json);
+    case 'merge'
+      write_json(filename, mergeconfig(stim_json, existing, false));
+    case 'no'
+      % do nothing
+    otherwise
+      ft_error('incorrect option for cfg.emg.writesidecar');
+  end % switch
+end
+
+if ~isempty(eyetracker_json)
+  filename = corresponding_json(cfg.outputfile);
+  if isfile(filename)
+    existing = read_json(filename);
+  else
+    existing = [];
+  end
+  switch cfg.video.writesidecar
+    case 'yes'
+      if ~isempty(existing)
+        ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
+      else
+        write_json(filename, eyetracker_json);
+      end
+    case 'replace'
+      write_json(filename, eyetracker_json);
+    case 'merge'
+      write_json(filename, mergeconfig(eyetracker_json, existing, false));
+    case 'no'
+      % do nothing
+    otherwise
+      ft_error('incorrect option for cfg.emg.writesidecar');
+  end % switch
+end
+
+if ~isempty(motioncapture_json)
+  filename = corresponding_json(cfg.outputfile);
+  if isfile(filename)
+    existing = read_json(filename);
+  else
+    existing = [];
+  end
+  switch cfg.video.writesidecar
+    case 'yes'
+      if ~isempty(existing)
+        ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
+      else
+        write_json(filename, motioncapture_json);
+      end
+    case 'replace'
+      write_json(filename, motioncapture_json);
+    case 'merge'
+      write_json(filename, mergeconfig(motioncapture_json, existing, false));
     case 'no'
       % do nothing
     otherwise
@@ -2207,7 +2370,7 @@ switch typ
     dir = 'dwi';
   case {'phasediff' 'phase1' 'phase2' 'magnitude1' 'magnitude2' 'magnitude' 'fieldmap' 'epi'}
     dir = 'fmap';
-  case {'events' 'stim' 'physio'}
+  case {'events' 'stim' 'physio' 'eyetracker' 'motioncapture'} % stim and physio could also be stored in 'func'
     dir = 'beh';
   case {'meg'}
     dir = 'meg';
@@ -2219,10 +2382,6 @@ switch typ
     dir = 'emg'; % not part of the official specification
   case {'video'}
     dir = 'video'; % not part of the official specification
-  case {'eyetracker'}
-    dir = 'eyetracker'; % not part of the official specification
-  case {'motioncapture'}
-    dir = 'motioncapture'; % not part of the official specification
   otherwise
     ft_error('unrecognized data type "%s"', typ);
 end
