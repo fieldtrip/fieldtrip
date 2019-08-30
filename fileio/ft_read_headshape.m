@@ -960,17 +960,31 @@ switch fileformat
           'banks', texture);
       
       picture = imread(image);
-      color   = uint8(zeros(length(shape.pos),3));
+      color   = (zeros(length(shape.pos),3));
       for i=1:length(shape.pos)
         color(i,1:3) = picture(floor((1-texture(i,2))*length(picture)),...
             1+floor(texture(i,1)*length(picture)),1:3);
+      end
+      
+      % If color is specified as 0-255 rather than 0-1 correct by dividing
+      % by 255
+      if range(color(:)) > 1
+          color = color./255;
       end
       
       shape.color = color;
 
     elseif size(vertex,2)==6
       % the vertices also contain RGB colors
-      shape.color = uint8(obj.vertex(:,4:6));
+      
+      color = vertex(:,4:6);
+      % If color is specified as 0-255 rather than 0-1 correct by dividing
+      % by 255
+      if range(color(:)) > 1
+          color = color./255;
+      end
+      
+      shape.color = color;
     end
     
   case 'vtk'
@@ -1251,7 +1265,5 @@ end
 shape = fixpos(shape);
 
 % ensure that the numerical arrays are represented in double precision and not as integers
-% except when reading an obj file
-if ~strcmp(fileformat,'obj')
-    shape = ft_struct2double(shape);
+shape = ft_struct2double(shape);
 end
