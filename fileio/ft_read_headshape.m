@@ -59,7 +59,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %
 % See also FT_READ_HEADMODEL, FT_READ_SENS, FT_READ_ATLAS, FT_WRITE_HEADSHAPE
 
-% Copyright (C) 2008-2017 Robert Oostenveld
+% Copyright (C) 2008-2019 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -947,25 +947,44 @@ switch fileformat
   case 'obj'
     ft_hastoolbox('wavefront', 1);
     % Only tested for structure.io .obj thus far
-    obj = read_wobj(filename);
-    shape.pos     = obj.vertices(:,1:3);
-    shape.pos     = shape.pos - repmat(sum(shape.pos)/length(shape.pos),[length(shape.pos),1]); %centering vertices
-    shape.tri     = obj.objects(end).data.vertices;
-    if hasimage
-      texture = obj.vertices_texture;
-      
+    [vertex, faces, texture, ~] = read_obj_new(filename);
+    
+    shape.pos   = vertex;
+    shape.pos   = shape.pos - repmat(sum(shape.pos)/length(shape.pos),...
+        [length(shape.pos),1]); %centering vertices
+    shape.tri   = faces(1:end-1,:,:); % remove the last row which is zeros
+    
+    if hasimage      
       % Refines the mesh and textures to increase resolution of the colormapping
-      [shape.pos, shape.tri, texture] = refine(shape.pos, shape.tri, 'banks', texture);
+      [shape.pos, shape.tri, texture] = refine(shape.pos, shape.tri,...
+          'banks', texture);
       
       picture = imread(image);
-      color   = uint8(zeros(length(shape.pos),3));
+      color   = (zeros(length(shape.pos),3));
       for i=1:length(shape.pos)
-        color(i,1:3) = picture(floor((1-texture(i,2))*length(picture)),1+floor(texture(i,1)*length(picture)),1:3);
+        color(i,1:3) = picture(floor((1-texture(i,2))*length(picture)),...
+            1+floor(texture(i,1)*length(picture)),1:3);
       end
+      
+      % If color is specified as 0-255 rather than 0-1 correct by dividing
+      % by 255
+      if range(color(:)) > 1
+          color = color./255;
+      end
+      
       shape.color = color;
-    elseif size(obj.vertices,2)==6
+
+    elseif size(vertex,2)==6
       % the vertices also contain RGB colors
-      shape.color = obj.vertices(:,4:6);
+      
+      color = vertex(:,4:6);
+      % If color is specified as 0-255 rather than 0-1 correct by dividing
+      % by 255
+      if range(color(:)) > 1
+          color = color./255;
+      end
+      
+      shape.color = color;
     end
     
   case 'vtk'
@@ -1247,3 +1266,4 @@ shape = fixpos(shape);
 
 % ensure that the numerical arrays are represented in double precision and not as integers
 shape = ft_struct2double(shape);
+end
