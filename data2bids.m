@@ -245,8 +245,19 @@ cfg.run       = ft_getopt(cfg, 'run');
 cfg.mod       = ft_getopt(cfg, 'mod');
 cfg.echo      = ft_getopt(cfg, 'echo');
 cfg.proc      = ft_getopt(cfg, 'proc');
-% cfg.space     = ft_getopt(cfg, 'space'); % FIXME
 cfg.datatype  = ft_getopt(cfg, 'datatype');
+
+if isempty(cfg.datatype)
+  modality = {'meg', 'eeg', 'ieeg', 'emg', 'video', 'eyetracker', 'physio', 'stim', 'motioncapture'};
+  for i=1:numel(modality)
+    if isfield(cfg, modality{i}) && ~isempty(cfg.(modality{i}))
+      % the user specified modality-specific options, assume that the datatype matches
+      cfg.datatype = modality{i};
+      ft_notice('assuming that the datatype is %s', cfg.datatype);
+      continue
+    end
+  end % for each modality
+end
 
 cfg.mri                         = ft_getopt(cfg, 'mri');
 cfg.mri.dicomfile               = ft_getopt(cfg.mri, 'dicomfile');                      % get header details from the specified DICOM files
@@ -2361,6 +2372,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function dir = datatype2dirname(typ)
 % see https://bids-specification.readthedocs.io/en/stable/99-appendices/04-entity-table.html
+% emg, eyetracker, motioncapture and video are not part of the official specification
 switch typ
   case {'T1w' 'T2w' 'T1rho' 'T1map' 'T2map' 'T2star' 'FLAIR' 'FLASH' 'PD' 'PDmap' 'PDT2' 'inplaneT1' 'inplaneT2' 'angio' 'defacemask'}
     dir = 'anat';
