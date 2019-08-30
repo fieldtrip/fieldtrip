@@ -166,7 +166,7 @@ function cfg = data2bids(cfg, varargin)
 % - EMG
 % - video
 % - eyetracking
-% - motioncapture
+% - motion
 % - physio
 % - stim
 %
@@ -248,7 +248,7 @@ cfg.proc      = ft_getopt(cfg, 'proc');
 cfg.datatype  = ft_getopt(cfg, 'datatype');
 
 if isempty(cfg.datatype)
-  modality = {'meg', 'eeg', 'ieeg', 'emg', 'video', 'eyetracker', 'physio', 'stim', 'motioncapture'};
+  modality = {'meg', 'eeg', 'ieeg', 'emg', 'video', 'eyetracker', 'physio', 'stim', 'motion'};
   for i=1:numel(modality)
     if isfield(cfg, modality{i}) && ~isempty(cfg.(modality{i}))
       % the user specified modality-specific options, assume that the datatype matches
@@ -288,8 +288,8 @@ cfg.physio.writesidecar         = ft_getopt(cfg.physio, 'writesidecar', 'yes'); 
 cfg.stim                        = ft_getopt(cfg, 'stim');
 cfg.stim.writesidecar           = ft_getopt(cfg.stim, 'writesidecar', 'yes');           % whether to write the sidecar file
 
-cfg.motioncapture               = ft_getopt(cfg, 'motioncapture');
-cfg.motioncapture.writesidecar  = ft_getopt(cfg.motioncapture, 'writesidecar', 'yes');  % whether to write the sidecar file
+cfg.motion               = ft_getopt(cfg, 'motion');
+cfg.motion.writesidecar  = ft_getopt(cfg.motion, 'writesidecar', 'yes');  % whether to write the sidecar file
 
 cfg.channels                    = ft_getopt(cfg, 'channels');
 cfg.channels.writesidecar       = ft_getopt(cfg.channels, 'writesidecar', 'yes');       % whether to write the sidecar file
@@ -512,11 +512,11 @@ cfg.eyetracker.Columns                    = ft_getopt(cfg.video, 'Columns'      
 cfg.eyetracker.StartTime                  = ft_getopt(cfg.video, 'StartTime'            );
 cfg.eyetracker.SamplingFrequency          = ft_getopt(cfg.video, 'SamplingFrequency'    );
 
-%% motioncapture is not part of the official BIDS specification
+%% motion is not part of the official BIDS specification
 % this follows https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/06-physiological-and-other-continuous-recordings.html
-cfg.motioncapture.Columns                 = ft_getopt(cfg.motioncapture, 'Columns'              );
-cfg.motioncapture.StartTime               = ft_getopt(cfg.motioncapture, 'StartTime'            );
-cfg.motioncapture.SamplingFrequency       = ft_getopt(cfg.motioncapture, 'SamplingFrequency'    );
+cfg.motion.Columns                        = ft_getopt(cfg.motion, 'Columns'              );
+cfg.motion.StartTime                      = ft_getopt(cfg.motion, 'StartTime'            );
+cfg.motion.SamplingFrequency              = ft_getopt(cfg.motion, 'SamplingFrequency'    );
 
 %% information for the coordsystem.json file for MEG, EEG and iEEG
 cfg.coordsystem.MEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystem'                            ); % REQUIRED. Defines the coordinate system for the MEG sensors. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in [MEGCoordinateSystemDescription].
@@ -693,7 +693,7 @@ need_video_json         = false;
 need_physio_json        = false;
 need_stim_json          = false;
 need_eyetracker_json    = false;
-need_motioncapture_json = false;
+need_motion_json        = false;
 need_events_tsv         = false; % for behavioral experiments
 need_electrodes_tsv     = false; % only needed when actually present as cfg.electrodes, data.elec or as cfg.elec
 
@@ -802,8 +802,8 @@ switch typ
       need_stim_json = true;
     elseif isequal(cfg.datatype, 'eyetracker')
       need_eyetracker_json = true;
-    elseif isequal(cfg.datatype, 'motioncapture')
-      need_motioncapture_json = true;
+    elseif isequal(cfg.datatype, 'motion')
+      need_motion_json = true;
     else
       ft_error('cannot determine the type of the data, please specify cfg.dataype');
     end
@@ -852,8 +852,8 @@ switch typ
       need_stim_json = true;
     elseif isequal(cfg.datatype, 'eyetracker')
       need_eyetracker_json = true;
-    elseif isequal(cfg.datatype, 'motioncapture')
-      need_motioncapture_json = true;
+    elseif isequal(cfg.datatype, 'motion')
+      need_motion_json = true;
     else
       ft_error('cannot determine the type of the data, please specify cfg.dataype');
     end
@@ -889,7 +889,7 @@ if need_meg_json || need_eeg_json || need_ieeg_json
   end
 end
 
-need_events_tsv       = need_events_tsv || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_eyetracker_json || need_motioncapture_json || (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task));
+need_events_tsv       = need_events_tsv || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_eyetracker_json || need_motion_json || (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task));
 need_channels_tsv     = need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json;
 need_coordsystem_json = need_meg_json || need_electrodes_tsv;
 
@@ -902,8 +902,8 @@ elseif need_video_json
 elseif need_eyetracker_json
   ft_warning('eyetracker data is not yet part of the official BIDS specification');
   cfg.dataset_description.BIDSVersion = 'n/a';
-elseif need_motioncapture_json
-  ft_warning('motioncapture data is not yet part of the official BIDS specification');
+elseif need_motion_json
+  ft_warning('motion data is not yet part of the official BIDS specification');
   cfg.dataset_description.BIDSVersion = 'n/a';
 end
 
@@ -921,7 +921,7 @@ video_json          = [];
 physio_json         = [];
 stim_json           = [];
 eyetracker_json     = [];
-motioncapture_json  = [];
+motion_json  = [];
 events_tsv          = [];
 channels_tsv        = [];
 electrodes_tsv      = [];
@@ -983,9 +983,9 @@ fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
 eyetracker_settings = keepfields(cfg.eyetracker, fn);
 
 % make the relevant selection, all json fields start with a capital letter
-fn = fieldnames(cfg.motioncapture);
+fn = fieldnames(cfg.motion);
 fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
-motioncapture_settings = keepfields(cfg.motioncapture, fn);
+motion_settings = keepfields(cfg.motion, fn);
 
 % make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg.coordsystem);
@@ -1149,16 +1149,16 @@ if need_eyetracker_json
   eyetracker_json = mergeconfig(generic_settings,     eyetracker_json, false);
 end
 
-%% need_motioncapture_json
-if need_motioncapture_json
-  motioncapture_json.SamplingFrequency = hdr.Fs;
-  motioncapture_json.StartTime = nan;
-  motioncapture_json.Columns = hdr.label;
+%% need_motion_json
+if need_motion_json
+  motion_json.SamplingFrequency = hdr.Fs;
+  motion_json.StartTime = nan;
+  motion_json.Columns = hdr.label;
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
-  motioncapture_json = mergeconfig(motioncapture_settings,  motioncapture_json, false);
-  motioncapture_json = mergeconfig(generic_settings,        motioncapture_json, false);
+  motion_json = mergeconfig(motion_settings,  motion_json, false);
+  motion_json = mergeconfig(generic_settings, motion_json, false);
 end
 
 %% need_channels_tsv
@@ -1407,7 +1407,7 @@ if need_events_tsv
       events_tsv = sortrows(events_tsv, 'onset');
     end
     
-  elseif need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_video_json || need_eyetracker_json || need_motioncapture_json
+  elseif need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_video_json || need_eyetracker_json || need_motion_json
     % merge the events from the trigger channel with those from the (optional) presentation file
     
     if istable(cfg.events.trl) && all(ismember({'begsample', 'endsample', 'offset'}, fieldnames(cfg.events.trl)))
@@ -1610,7 +1610,7 @@ switch cfg.method
             cfg.outputfile = fullfile(p, [f '.vhdr']);
             ft_info('writing %s\n', cfg.outputfile);
             ft_write_data(cfg.outputfile, dat, 'dataformat', 'brainvision_eeg', 'header', hdr, 'event', trigger);
-          case {'physio', 'stim', 'eyetracker', 'motioncapture'}
+          case {'physio', 'stim', 'eyetracker', 'motion'}
             % write the data according to the Stim and Physio format as specified at
             % https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/06-physiological-and-other-continuous-recordings.html
             [p, f, x] = fileparts(cfg.outputfile);
@@ -1674,7 +1674,7 @@ video_json          = remove_empty(video_json);
 physio_json         = remove_empty(physio_json);
 stim_json           = remove_empty(stim_json);
 eyetracker_json     = remove_empty(eyetracker_json);
-motioncapture_json  = remove_empty(motioncapture_json);
+motion_json         = remove_empty(motion_json);
 
 if ~isempty(mri_json)
   filename = corresponding_json(cfg.outputfile);ls
@@ -1901,7 +1901,7 @@ if ~isempty(eyetracker_json)
   end % switch
 end
 
-if ~isempty(motioncapture_json)
+if ~isempty(motion_json)
   filename = corresponding_json(cfg.outputfile);
   if isfile(filename)
     existing = read_json(filename);
@@ -1913,12 +1913,12 @@ if ~isempty(motioncapture_json)
       if ~isempty(existing)
         ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
       else
-        write_json(filename, motioncapture_json);
+        write_json(filename, motion_json);
       end
     case 'replace'
-      write_json(filename, motioncapture_json);
+      write_json(filename, motion_json);
     case 'merge'
-      write_json(filename, mergeconfig(motioncapture_json, existing, false));
+      write_json(filename, mergeconfig(motion_json, existing, false));
     case 'no'
       % do nothing
     otherwise
@@ -2184,7 +2184,7 @@ function f = add_datatype(f, typ)
 f = [f '_' typ];
 
 function f = remove_datatype(f)
-typ = {'FLAIR', 'FLASH', 'PD', 'PDT2', 'PDmap', 'T1map', 'T1rho', 'T1w', 'T2map', 'T2star', 'T2w', 'angio', 'bold', 'bval', 'bvec', 'channels', 'coordsystem', 'defacemask', 'dwi', 'eeg', 'epi', 'events', 'fieldmap', 'headshape', 'ieeg', 'inplaneT1', 'inplaneT2', 'magnitude', 'magnitude1', 'magnitude2', 'meg', 'phase1', 'phase2', 'phasediff', 'photo', 'sbref', 'physio', 'stim', 'emg', 'video', 'eyetracker', 'motioncapture'};
+typ = {'FLAIR', 'FLASH', 'PD', 'PDT2', 'PDmap', 'T1map', 'T1rho', 'T1w', 'T2map', 'T2star', 'T2w', 'angio', 'bold', 'bval', 'bvec', 'channels', 'coordsystem', 'defacemask', 'dwi', 'eeg', 'epi', 'events', 'fieldmap', 'headshape', 'ieeg', 'inplaneT1', 'inplaneT2', 'magnitude', 'magnitude1', 'magnitude2', 'meg', 'phase1', 'phase2', 'phasediff', 'photo', 'sbref', 'physio', 'stim', 'emg', 'video', 'eyetracker', 'motion'};
 for i=1:numel(typ)
   if endsWith(f, ['_' typ{i}])
     f = f(1:end-length(typ{i})-1); % also the '_'
@@ -2372,7 +2372,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function dir = datatype2dirname(typ)
 % see https://bids-specification.readthedocs.io/en/stable/99-appendices/04-entity-table.html
-% emg, eyetracker, motioncapture and video are not part of the official specification
+% emg, eyetracker, motion and video are not part of the official specification
 switch typ
   case {'T1w' 'T2w' 'T1rho' 'T1map' 'T2map' 'T2star' 'FLAIR' 'FLASH' 'PD' 'PDmap' 'PDT2' 'inplaneT1' 'inplaneT2' 'angio' 'defacemask'}
     dir = 'anat';
@@ -2382,7 +2382,7 @@ switch typ
     dir = 'dwi';
   case {'phasediff' 'phase1' 'phase2' 'magnitude1' 'magnitude2' 'magnitude' 'fieldmap' 'epi'}
     dir = 'fmap';
-  case {'events' 'stim' 'physio' 'eyetracker' 'motioncapture' 'video'} % stim and physio could also be stored in 'func'
+  case {'events' 'stim' 'physio' 'eyetracker' 'motion' 'video'} % stim and physio could also be stored in 'func'
     dir = 'beh';
   case {'meg'} % this could also include 'events'
     dir = 'meg';
