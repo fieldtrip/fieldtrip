@@ -162,7 +162,7 @@ function cfg = data2bids(cfg, varargin)
 % FT_PREPROCESSING, FT_READ_MRI
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Undocumented options exist for converting other data types to BIDS:
+% Undocumented options exist for converting some other data types to BIDS:
 % - EMG
 % - video
 % - eyetracking
@@ -2184,7 +2184,7 @@ function f = add_datatype(f, typ)
 f = [f '_' typ];
 
 function f = remove_datatype(f)
-typ = {'FLAIR', 'FLASH', 'PD', 'PDT2', 'PDmap', 'T1map', 'T1rho', 'T1w', 'T2map', 'T2star', 'T2w', 'angio', 'bold', 'bval', 'bvec', 'channels', 'coordsystem', 'defacemask', 'dwi', 'eeg', 'epi', 'events', 'fieldmap', 'headshape', 'ieeg', 'inplaneT1', 'inplaneT2', 'magnitude', 'magnitude1', 'magnitude2', 'meg', 'phase1', 'phase2', 'phasediff', 'photo', 'physio', 'sbref', 'stim', 'emg'};
+typ = {'FLAIR', 'FLASH', 'PD', 'PDT2', 'PDmap', 'T1map', 'T1rho', 'T1w', 'T2map', 'T2star', 'T2w', 'angio', 'bold', 'bval', 'bvec', 'channels', 'coordsystem', 'defacemask', 'dwi', 'eeg', 'epi', 'events', 'fieldmap', 'headshape', 'ieeg', 'inplaneT1', 'inplaneT2', 'magnitude', 'magnitude1', 'magnitude2', 'meg', 'phase1', 'phase2', 'phasediff', 'photo', 'sbref', 'physio', 'stim', 'emg', 'video', 'eyetracker', 'motioncapture'};
 for i=1:numel(typ)
   if endsWith(f, ['_' typ{i}])
     f = f(1:end-length(typ{i})-1); % also the '_'
@@ -2382,18 +2382,16 @@ switch typ
     dir = 'dwi';
   case {'phasediff' 'phase1' 'phase2' 'magnitude1' 'magnitude2' 'magnitude' 'fieldmap' 'epi'}
     dir = 'fmap';
-  case {'events' 'stim' 'physio' 'eyetracker' 'motioncapture'} % stim and physio could also be stored in 'func'
+  case {'events' 'stim' 'physio' 'eyetracker' 'motioncapture' 'video'} % stim and physio could also be stored in 'func'
     dir = 'beh';
-  case {'meg'}
+  case {'meg'} % this could also include 'events'
     dir = 'meg';
-  case {'eeg'}
+  case {'eeg'} % this could also include 'events'
     dir = 'eeg';
-  case {'ieeg'}
+  case {'ieeg'} % this could also include 'events'
     dir = 'ieeg';
-  case {'emg'}
-    dir = 'emg'; % not part of the official specification
-  case {'video'}
-    dir = 'video'; % not part of the official specification
+  case {'emg'} % this is not part of the official specification
+    dir = 'emg';
   otherwise
     ft_error('unrecognized data type "%s"', typ);
 end
