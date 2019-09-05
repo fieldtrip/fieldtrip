@@ -31,8 +31,14 @@ function t3 = merge_table(t1, t2, key)
 %
 % $Id$
 
+% deal with the easy cases
 if isequal(t1, t2)
-  % this is easy
+  t3 = t1;
+  return
+elseif isempty(t1)
+  t3 = t2;
+  return
+elseif isempty(t2)
   t3 = t1;
   return
 end
