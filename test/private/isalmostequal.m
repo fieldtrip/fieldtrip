@@ -53,6 +53,7 @@ knowntypes = {
   'logical'         % Logical array
   'char'            % Character array
   'cell'            % Cell array
+  'table'           % Table
   'struct'          % Structure array
   'numeric'         % Integer or floating-point array
   'single'          % Single precision floating-point numeric array
@@ -64,15 +65,15 @@ knowntypes = {
   'uint32'          % 32-bit unsigned integer array
   };
 
+if isempty(location)
+  location = 'array';
+end
+
 for type=knowntypes(:)'
   if isa(a, type{:}) && ~isa(b, type{:})
     message{end+1} = sprintf('different data type in %s', location);
     return
   end
-end
-
-if isempty(location)
-  location = 'array';
 end
 
 if isa(a, 'numeric') || isa(a, 'char') || isa(a, 'logical')
@@ -181,6 +182,20 @@ elseif isa(a, 'cell')
     tmp = sprintf('%s{%s}', location, my_ind2sub(siz, i));
     [message] = do_work(ra, rb, depth-1, tmp, message, varargin{:});
   end
+
+elseif isa(a, 'table')
+  if any(size(a)~=size(b))
+    message{end+1} = sprintf('different size of table');
+    return;
+  end
+  if ~isequal(a.Properties, b.Properties)
+    message{end+1} = sprintf('different properties of table');
+    return;
+  end
+  ra = table2cell(a);
+  rb = table2cell(b);
+  tmp = '';
+  [message] = do_work(ra, rb, depth-1, tmp, message, varargin{:});
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -189,7 +204,7 @@ function [str] = my_ind2sub(siz,ndx)
 n = length(siz);
 k = [1 cumprod(siz(1:end-1))];
 ndx = ndx - 1;
-for i = n:-1:1,
+for i = n:-1:1
   tmp(i) = floor(ndx/k(i))+1;
   ndx = rem(ndx,k(i));
 end
