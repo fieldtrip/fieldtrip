@@ -1500,7 +1500,13 @@ isdir_or_mkdir(p);
 
 switch cfg.method
   case 'decorate'
-    % there is nothing to do here
+    % look at the user's specification of cfg.datatype
+    if strcmp(cfg.datatype, 'events')
+      % add the TSV file extension, this is needed for behavioral data represented in scans.tsv
+      % the events.tsv file will be written further down
+      [p, f, x] = fileparts(cfg.outputfile);
+      cfg.outputfile = fullfile(p, [f '.tsv']);
+    end
     
   case 'convert'
     % the output depends on the type of input data
@@ -1566,7 +1572,10 @@ switch cfg.method
             ft_info('writing %s\n', cfg.outputfile);
             writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t'); % without headers, the JSON will be written further down
           case {'events'}
+            % add the TSV file extension, this is needed for behavioral data represented in scans.tsv
             % the events.tsv file will be written further down
+            [p, f, x] = fileparts(cfg.outputfile);
+            cfg.outputfile = fullfile(p, [f '.tsv']);
           otherwise
             ft_error('cannot determine how to write the data')
         end
