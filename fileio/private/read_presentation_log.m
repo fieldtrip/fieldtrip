@@ -89,10 +89,17 @@ end
 numevent  = size(table1,1);
 type      = table1.event_type;
 value     = table1.code;
-sample    = num2cell(nan(numevent, 1));
-timestamp = num2cell(table1.time);
+sample    = nan(numevent, 1);
+timestamp = table1.time;
 duration  = cell(numevent, 1); % num2cell(table1.duration); % don't put the duration values in, because the units are non-defined
 offset    = cell(numevent, 1);
+
+if isnumeric(type),       type = num2cell(type); end
+if isnumeric(value),      value = num2cell(value); end
+if isnumeric(sample),     sample = num2cell(sample); end
+if isnumeric(timestamp),  timestamp = num2cell(timestamp); end
+if isnumeric(duration),   duration = num2cell(duration); end
+if isnumeric(offset),     offset = num2cell(offset); end
 
 event = struct('type', type, 'value', value, 'sample', sample, 'timestamp', timestamp, 'offset', offset, 'duration', duration);
 

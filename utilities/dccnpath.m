@@ -53,6 +53,12 @@ alternative1 = [f x]; % this should not be used when it is only "test", since th
 alternative2 = strrep(filename, '/home/common/matlab/fieldtrip', '/Volumes/home/common/matlab/fieldtrip');
 alternative3 = strrep(filename, '/home/common/matlab/fieldtrip', '/Volumes/128GB/data/test');
 
+% exist(alternative1, 'file') returns 7 in case the present working directory matches alternative1
+if endsWith(pwd, alternative1)
+  % it is not a valid match
+  alternative1 = '';
+end
+
 if ~exist(file, 'file') && exist(alternative1, 'file') && ~strcmp(alternative1, 'test')
   warning('using local copy %s instead of %s', alternative1, file);
   file = alternative1;
@@ -63,4 +69,3 @@ elseif ~exist(file, 'file') && exist(alternative3, 'file')
   warning('using local copy %s instead of %s', alternative3, file);
   file = alternative3;
 end
-
