@@ -166,6 +166,8 @@ cfg.bidsroot = 'human_ecog';
 cfg.sub = 'UCI29';
 cfg.task = 'attention';
 cfg.datatype = 'ieeg';
+cfg.coordsystem.iEEGCoordinateSystem = 'ACPC';
+cfg.coordsystem.iEEGCoordinateSystemDescription = 'electrodes were aligned with ACPC and projected on the cortex hull';
 data2bids(cfg, data);
 
 cfg = [];
