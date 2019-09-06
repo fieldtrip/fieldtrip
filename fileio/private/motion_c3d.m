@@ -39,7 +39,16 @@ needevt = (nargin==2);
 needdat = (nargin==5);
 
 % use the full filename including path to distinguish between similarly named files in different directories
-fullname = which(filename);
+[p, f, x] = fileparts(filename);
+if isempty(p)
+  % no path was specified
+  fullname = which(filename);
+elseif startsWith(p, ['.' filesep])
+  % a relative path was specified
+  fullname = fullfile(pwd, p(3:end), [f, x]);
+else
+  fullname = filename;
+end
 
 if isempty(previous_fullname) || ~isequal(fullname, previous_fullname)
   % remember the full filename including path
