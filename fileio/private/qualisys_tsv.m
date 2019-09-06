@@ -64,17 +64,31 @@ if needhdr
   hdr = [];
   hdr.label = {};
   for i=1:orig.no_of_markers
-    hdr.label{end+1} = [orig.marker_names{i} '_x'];
-    hdr.label{end+1} = [orig.marker_names{i} '_y'];
-    hdr.label{end+1} = [orig.marker_names{i} '_z'];
+    switch orig.data_included
+      case '2D'
+        hdr.label{end+1} = [orig.marker_names{i} '_x'];
+        hdr.label{end+1} = [orig.marker_names{i} '_y'];
+      case '3D'
+        hdr.label{end+1} = [orig.marker_names{i} '_x'];
+        hdr.label{end+1} = [orig.marker_names{i} '_y'];
+        hdr.label{end+1} = [orig.marker_names{i} '_z'];
+      case '6D'
+        % FIXME I don't know how the data is represented, but suspect some quaternion-like representation
+        hdr.label{end+1} = [orig.marker_names{i} '_q1'];
+        hdr.label{end+1} = [orig.marker_names{i} '_q2'];
+        hdr.label{end+1} = [orig.marker_names{i} '_q3'];
+        hdr.label{end+1} = [orig.marker_names{i} '_q4'];
+        hdr.label{end+1} = [orig.marker_names{i} '_q5'];
+        hdr.label{end+1} = [orig.marker_names{i} '_q6'];
+    end
   end
-  hdr.nChans = numel(hdr.label);
-  hdr.nSamples = orig.no_of_frames;
+  hdr.nChans      = numel(hdr.label);
+  hdr.nSamples    = orig.no_of_frames;
   hdr.nSamplesPre = 0;  % continuous data
-  hdr.nTrials = 1;      % continuous data
-  hdr.Fs = orig.frequency;
-  hdr.chantype = repmat({'motion'}, size(hdr.label));
-  hdr.chanunit = repmat({'unknown'}, size(hdr.label));
+  hdr.nTrials     = 1;      % continuous data
+  hdr.Fs          = orig.frequency;
+  hdr.chantype    = repmat({'motion'}, size(hdr.label));
+  hdr.chanunit    = repmat({'unknown'}, size(hdr.label));
   
   % keep the original header details
   hdr.orig = orig;
