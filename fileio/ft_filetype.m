@@ -1410,6 +1410,10 @@ elseif filetype_check_extension(filename, '.tsv') && filetype_check_header(filen
   type = 'qualisys_tsv';
   manufacturer = 'Qualisys';
   content = 'motion capture data';
+elseif filetype_check_extension(filename, '.c3d') && filetype_check_header(filename, [2, 80])
+  type = 'motion_c3d';
+  manufacturer = 'https://www.c3d.org';
+  content = 'motion capture data';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
