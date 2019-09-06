@@ -84,8 +84,8 @@ if needhdr
   end
   hdr.nChans      = numel(hdr.label);
   hdr.nSamples    = orig.no_of_frames;
-  hdr.nSamplesPre = 0;  % continuous data
-  hdr.nTrials     = 1;      % continuous data
+  hdr.nSamplesPre = 0; % continuous data
+  hdr.nTrials     = 1; % continuous data
   hdr.Fs          = orig.frequency;
   hdr.chantype    = repmat({'motion'}, size(hdr.label));
   hdr.chanunit    = repmat({'unknown'}, size(hdr.label));
