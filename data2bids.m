@@ -1145,13 +1145,20 @@ if need_channels_tsv
     try
       cfg.channels = struct2table(cfg.channels);
     catch
-      ft_error('incorrect specification of cfg.channels.%s', fn{i});
+      ft_error('incorrect specification of cfg.channels');
     end
   end
   
   % channel information can come from the header and from cfg.channels
   channels_tsv = hdr2table(hdr);
   channels_tsv = merge_table(channels_tsv, cfg.channels, 'name');
+
+  % the default for cfg.channels consists of one row where all values are nan, this needs to be removed
+  keep = false(size(channels_tsv.name));
+  for i=1:numel(channels_tsv.name)
+    keep(i) = ischar(channels_tsv.name{i});
+  end
+  channels_tsv = channels_tsv(keep,:);
   
   % do a sanity check on the number of channels for the electrophysiology data types
   if need_meg_json
@@ -1190,6 +1197,13 @@ if need_electrodes_tsv
   % electrode details can be specified in cfg.elec, data.elec or in cfg.electrodes
   electrodes_tsv = elec2table(elec);
   electrodes_tsv = merge_table(electrodes_tsv, cfg.electrodes, 'name');
+
+  % the default for cfg.electrodes consists of one row where all values are nan, this needs to be removed
+  keep = false(size(electrodes_tsv.name));
+  for i=1:numel(electrodes_tsv.name)
+    keep(i) = ischar(electrodes_tsv.name{i});
+  end
+  electrodes_tsv = electrodes_tsv(keep,:);
   
 end % need_electrodes_tsv
 
@@ -1554,6 +1568,8 @@ switch cfg.method
         
       case {'presentation_log'}
         % the events.tsv file will be written further down
+        [p, f, x] = fileparts(cfg.outputfile);
+        cfg.outputfile = fullfile(p, [f '.tsv']);
         
       otherwise
         % look at the user's specification of cfg.datatype
