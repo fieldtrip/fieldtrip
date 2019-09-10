@@ -32,6 +32,7 @@ function [mri] = ft_read_mri(filename, varargin)
 %   'nifti_fsl'                  uses FreeSurfer code
 %   'nifti_spm'                  uses SPM
 %   'yokogawa_mri'
+%   'mrtrix_mif'                 uses mrtrix code
 %
 % The following MRI file formats are supported
 %   CTF (*.svl, *.mri version 4 and 5)
@@ -44,6 +45,7 @@ function [mri] = ft_read_mri(filename, varargin)
 %   Neuromag/Elekta (*.fif)
 %   ANT - Advanced Neuro Technology (*.mri)
 %   Yokogawa (*.mrk, incomplete)
+%   Mrtrix image format (*.mif)
 %
 % If you have a series of DICOM files, please provide the name of any of the files
 % in the series (e.g. the first one). The other files will be found automatically.
@@ -428,6 +430,15 @@ switch dataformat
   case 'matlab'
     mri = loadvar(filename, 'mri');
 
+  case {'mif' 'mrtrix_mif'}
+    ft_hastoolbox('mrtrix', 1);
+    tmp = read_mrtrix(filename);
+    
+    mri.anatomy = tmp.data;
+    mri.dim     = tmp.dim;
+    mri.transform = tmp.transform;
+    mri.transform(1:3,1:3) = diag(tmp.vox)*mri.transform(1:3,1:3);
+    
   otherwise
     ft_error('unrecognized filetype ''%s'' for ''%s''', dataformat, filename);
 end

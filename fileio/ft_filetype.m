@@ -64,6 +64,7 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - Nicolet *.e (currently from Natus, formerly Carefusion, Viasys and Taugagreining. Also known as Oxford/Teca/Medelec Valor Nervus)
 %  - Biopac *.acq
 %  - AnyWave *.ades
+%  - Mrtrix *.mif
 
 % Copyright (C) 2003-2018 Robert Oostenveld
 %
@@ -1405,6 +1406,16 @@ elseif filetype_check_extension(filename, '.xdf') && filetype_check_header(filen
   type = 'sccn_xdf';
   manufacturer = 'SCCN / Lab Streaming Layer';
   content = 'multiple streams';
+elseif filetype_check_extension(filename, '.mif')
+  % this could be a mrtrix compatible image file
+  type = 'mrtrix_mif';
+  manufacturer = 'Mrtrix';
+  content = 'image data';
+elseif filetype_check_extension(filename, '.tck')
+  % this could be a mrtrix compatible tractography file
+  type = 'mrtrix_tck';
+  manufacturer = 'Mrtrix';
+  content = 'tractography data';  
 end
 
 
