@@ -97,6 +97,7 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.presentationfile        = string, optional filename for the presentation log file
 %   cfg.trigger.eventtype       = string (default = [])
 %   cfg.trigger.eventvalue      = string or number
+%   cfg.trigger.skip            = 'last'/'first'/'none'
 %   cfg.presentation.eventtype  = string (default = [])
 %   cfg.presentation.eventvalue = string or number
 %   cfg.presentation.skip       = 'last'/'first'/'none'
@@ -232,7 +233,7 @@ cfg.presentation.skip       = ft_getopt(cfg.presentation, 'skip',  'last');  % t
 cfg.trigger                 = ft_getopt(cfg, 'trigger');
 cfg.trigger.eventtype       = ft_getopt(cfg.trigger, 'eventtype');
 cfg.trigger.eventvalue      = ft_getopt(cfg.trigger, 'eventvalue');
-cfg.trigger.event           = ft_getopt(cfg.trigger, 'event');
+cfg.trigger.skip            = ft_getopt(cfg.trigger, 'skip',  'none');
 
 % these are used to construct the directory and file name
 cfg.bidsroot  = ft_getopt(cfg, 'bidsroot');
@@ -719,12 +720,8 @@ switch typ
       % the data should be converted and written to disk
       dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
     end
-    if isempty(cfg.trigger.event)
-      trigger = ft_read_event(cfg.datafile, 'header', hdr);
-    else
-      % use the triggers as specified in the cfg
-      trigger = cfg.trigger.event;
-    end
+    % read the triggers from disk
+    trigger = ft_read_event(cfg.datafile, 'header', hdr);
     need_meg_json = true;
     
   case {'brainvision_vhdr', 'edf', 'eeglab_set'}
@@ -734,12 +731,8 @@ switch typ
       % the data should be converted and written to disk
       dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
     end
-    if isempty(cfg.trigger.event)
-      trigger = ft_read_event(cfg.datafile, 'header', hdr);
-    else
-      % use the triggers as specified in the cfg
-      trigger = cfg.trigger.event;
-    end
+    % read the triggers from disk
+    trigger = ft_read_event(cfg.datafile, 'header', hdr);
     if isequal(cfg.datatype, 'eeg')
       need_eeg_json = true;
     elseif isequal(cfg.datatype, 'ieeg')
@@ -796,13 +789,8 @@ switch typ
     hdr = ft_fetch_header(varargin{1});
     if strcmp(cfg.method, 'convert')
       % the data should be written to disk
-      dat = ft_fetch_data(varargin{1}, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
-    end
-    if isempty(cfg.trigger.event)
+      dat     = ft_fetch_data(varargin{1}, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
       trigger = ft_fetch_event(varargin{1});
-    else
-      % use the triggers as specified in the cfg
-      trigger = cfg.trigger.event;
     end
     try
       % try to get the electrode definition, either from the data or from the configuration
@@ -850,17 +838,9 @@ switch typ
       if strcmp(cfg.method, 'convert')
         % the data should be converted and written to disk
         dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
-      end
-      if isempty(cfg.trigger.event)
         trigger = ft_read_event(cfg.datafile, 'header', hdr);
-      else
-        % use the triggers as specified in the cfg
-        trigger = cfg.trigger.event;
       end
-      try
-        % try to get the electrode definition, either from the data or from the configuration
-        % FIXME
-      end
+      % FIXME try to get the electrode definition, either from the data or from the configuration
     end
     
 end % switch typ
@@ -1152,7 +1132,7 @@ if need_channels_tsv
   % channel information can come from the header and from cfg.channels
   channels_tsv = hdr2table(hdr);
   channels_tsv = merge_table(channels_tsv, cfg.channels, 'name');
-
+  
   % the default for cfg.channels consists of one row where all values are nan, this needs to be removed
   keep = false(size(channels_tsv.name));
   for i=1:numel(channels_tsv.name)
@@ -1197,7 +1177,7 @@ if need_electrodes_tsv
   % electrode details can be specified in cfg.elec, data.elec or in cfg.electrodes
   electrodes_tsv = elec2table(elec);
   electrodes_tsv = merge_table(electrodes_tsv, cfg.electrodes, 'name');
-
+  
   % the default for cfg.electrodes consists of one row where all values are nan, this needs to be removed
   keep = false(size(electrodes_tsv.name));
   for i=1:numel(electrodes_tsv.name)
@@ -1250,239 +1230,100 @@ end % if need_coordsystem_json
 %% need_events_tsv
 if need_events_tsv
   
-  if need_mri_json
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %% align the presentation events with BOLD volumes or MEG/EEG triggers
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
+  if ~isempty(cfg.presentationfile) && need_mri_json
+    % the code can either align presentation and BOLD volumes, or use the user-supplied events that must be aligned
+    assert(isempty(cfg.events) || (isstruct(cfg.events) && numel(fieldnames(cfg.events))==0), 'this is mutually exclusive with specifying cfg.events')
     
-    if isempty(cfg.presentationfile)
-      ft_warning('cfg.presentationfile not specified, cannot determine events')
-      % make an empty table with columns for onset and duration
-      onset    = [];
-      duration = [];
-      events_tsv = table(onset, duration);
-      
-    else
-      % align the events from the presentation log file with the MR volumes
-      % this requires one event per volume in the presentation file
-      presentation = ft_read_event(cfg.presentationfile);
-      
-      % merge the information with the json sidecar file
-      % in case fields appear in both, the first input overrules the second
-      tmp = mergeconfig(mri_json, read_json(corresponding_json(cfg.outputfile)), false);
-      assert(~isempty(tmp.RepetitionTime), 'you must specify cfg.mri.RepetitionTime');
-      
-      % create a header structure that represents the fMRI timeseries
-      hdr.Fs = 1/tmp.RepetitionTime;
-      hdr.nSamples = mri.dim(4);
-      
-      % create a event structure with one event for each fMRI volume
-      volume = [];
-      for i=1:hdr.nSamples
-        volume(i).type   = 'volume';
-        volume(i).sample = i;
-      end
-      
-      % find the presentation events corresponding to each volume
-      selpres = select_event(presentation, cfg.presentation.eventtype, cfg.presentation.eventvalue);
-      selpres = presentation(selpres);
-      
-      ft_info('%d volumes, %d presentation events', length(volume), length(selpres));
-      if length(volume)>length(selpres)
-        % this happens when the scanner keeps running while presentation has already been stopped
-        n = length(volume)-length(selpres);
-        ft_warning('discarding last %d volumes for realignment of events', n);
-        volume = volume(1:end-n);
-      elseif length(selpres)>length(volume)
-        % this happens when DICOM volumes that are represented in the presentation log have been deleted from disk
-        n = length(selpres)-length(volume);
-        switch cfg.presentation.skip
-          case 'first'
-            ft_warning('discarding first %d presentation events for realignment of events', n);
-            selpres = selpres((n+1):end);
-          case 'last'
-            ft_warning('discarding last %d presentation events for realignment of events', n);
-            selpres = selpres(1:end-n);
-          case 'none'
-            ft_error('not enough volumes to match the presentation events');
-        end % case
-      end
-      
-      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      % the following code is largely shared between the MEG and MRI section
-      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      
-      % predict the sample number from the timestamp
-      model     = polyfit([selpres.timestamp], [volume.sample], 1);
-      estimated = polyval(model, [selpres.timestamp]);
-      
-      if istrue(cfg.feedback)
-        [p, f, x] = fileparts(cfg.dataset);
-        figure('name', ['PRESENTATION - ' f]);
-        subplot(2,1,1)
-        hold on
-        % presentation timestamps are expressed in units of 0.1 miliseconds
-        plot([selpres.timestamp]/1e4, [volume.sample], 'b.')
-        plot([selpres.timestamp]/1e4, estimated, 'ro')
-        xlabel('presentation time (s)')
-        ylabel('MRI volumes')
-        legend({'observed', 'predicted'})
-        
-        subplot(2,1,2)
-        plot([selpres.timestamp]/1e4, ([volume.sample]-estimated)/hdr.Fs, 'g.')
-        xlabel('presentation time (s)')
-        ylabel('difference (s)')
-      end
-      
-      % estimate the time in seconds of all presentation events
-      estimated = polyval(model, [presentation.timestamp]);
-      estimated = round(1000*estimated)/1000; % round to three decimals
-      for i=1:numel(estimated)
-        presentation(i).sample = estimated(i);
-      end
-      % convert the event structure to a TSV table
-      presentation_tsv = event2table(hdr, presentation);
-      % rename the column to "volume" instead of "sample"
-      sel = strcmp(presentation_tsv.Properties.VariableNames, 'sample');
-      presentation_tsv.Properties.VariableNames{sel} = 'volume';
-      
-      % for fMRI the presentation log file is the only source of events
-      events_tsv = presentation_tsv;
-      clear presentation_tsv selpres volume
-      
-      % sort ascending on the onset of each event
-      events_tsv = sortrows(events_tsv, 'onset');
+    % read the events from the presentation file
+    presentation = ft_read_event(cfg.presentationfile);
+    
+    % merge the information with the json sidecar file
+    % in case fields appear in both, the first input overrules the second
+    tmp = mergeconfig(mri_json, read_json(corresponding_json(cfg.outputfile)), false);
+    assert(~isempty(tmp.RepetitionTime), 'you must specify cfg.mri.RepetitionTime');
+    
+    % create a header structure that represents the fMRI timeseries
+    hdr.Fs = 1/tmp.RepetitionTime;
+    hdr.nSamples = mri.dim(4);
+    
+    % create a event structure with one trigger for each BOLD volume
+    trigger = [];
+    for i=1:hdr.nSamples
+      trigger(i).type   = 'volume';
+      trigger(i).sample = i;
     end
     
-  elseif need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json
+    % align the presentation events with the triggers
+    cfg.events = align_presentation(presentation, cfg.presentation, trigger, cfg.trigger, hdr, istrue(cfg.feedback));
     
+  elseif ~isempty(cfg.presentationfile) && (need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json)
+    % the code can either align presentation and trigger channel, or use the user-supplied events that must be aligned
+    assert(isempty(cfg.events) || (isstruct(cfg.events) && numel(fieldnames(cfg.events))==0), 'this is mutually exclusive with specifying cfg.events')
+    
+    % read the events from the presentation file
+    presentation = ft_read_event(cfg.presentationfile);
+    
+    % align the presentation events with the triggers
+    cfg.events = align_presentation(presentation, cfg.presentation, trigger, cfg.trigger, hdr, istrue(cfg.feedback));
+    
+    % also include all triggers from the MEG/EEG dataset as events
+    cfg.events = appendevent(cfg.events, trigger);
+    
+  end % if presentationfile
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %% convert the events into a table
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
+  if istable(cfg.events) && all(ismember({'onset', 'duration'}, fieldnames(cfg.events)))
+    % use the events table as it is
+    events_tsv = cfg.events;
+  elseif istable(cfg.events) && all(ismember({'begsample', 'endsample', 'offset'}, fieldnames(cfg.events)))
+    % it is a "trl" matrix formatted as table, use it as it is
+    events_tsv = cfg.events;
+  elseif isstruct(cfg.events) && ~isempty(cfg.events) && numel(fieldnames(cfg.events))>0
+    % it is the output from FT_READ_EVENT
+    if exist('hdr', 'var')
+      events_tsv = event2table(hdr, cfg.events);
+    else
+      events_tsv = event2table([], cfg.events);
+    end
+  elseif ismatrix(cfg.events) && ~isempty(cfg.events) && numel(fieldnames(cfg.events))>0
+    % it is a "trl" matrix formatted as numeric array, convert it to an events table
+    begsample = cfg.events(:,1);
+    endsample = cfg.events(:,2);
+    offset    = cfg.events(:,3); % this is not used for the events.tsv
+    if any(offset~=0)
+      ft_warning('the offset in the trl matrix is ignored');
+    end
+    if size(trl,2)>3
+      ft_warning('additional columns in the trl matrix are ignored');
+    end
+    % convert to the required fields
+    onset     = (begsample-1)/hdr.Fs;
+    duration  = (endsample-begsample+1)/hdr.Fs;
+    events_tsv = table(onset, duration);
+  elseif exist('trigger', 'var')
     % convert the triggers from FT_READ_EVENT into a table
-    events_tsv = event2table(hdr, trigger);
-    
-    if ~isempty(trigger) && ~isempty(cfg.presentationfile)
-      % align the events from the presentation log file with the triggers
-      presentation = ft_read_event(cfg.presentationfile);
-      
-      % select the correspopnding triggers and events in the presentation file
-      seltrig = select_event(trigger,      cfg.trigger.eventtype,      cfg.trigger.eventvalue);
-      selpres = select_event(presentation, cfg.presentation.eventtype, cfg.presentation.eventvalue);
-      seltrig = trigger(seltrig);
-      selpres = presentation(selpres);
-      
-      ft_info('%d triggers, %d presentation events', length(seltrig), length(selpres));
-      if length(seltrig)>length(selpres)
-        % don't know how to solve this
-        ft_error('inconsistent number: %d triggers, %d presentation events', length(seltrig), length(selpres));
-      elseif length(selpres)>length(seltrig)
-        n = length(selpres)-length(seltrig);
-        % This could happen when due to acquisition problems there is more than one
-        % *.ds directory. If this is a known case, cfg.presentation.skip can be used.
-        % Note that this only works, if there are two ds-datasets (not more).
-        switch cfg.presentation.skip
-          case 'first'
-            ft_warning('discarding first %d presentation events for realignment of events', n);
-            selpres = selpres((n+1):end);
-          case 'last'
-            ft_warning('discarding last %d presentation events for realignment of events', n);
-            selpres = selpres(1:end-n);
-          case 'none'
-            ft_error('not enough triggers to match the presentation events');
-        end % case
-      end
-      
-      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      % the following code is largely shared between the MEG and MRI section
-      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      
-      % predict the presentation sample number from the presentation timestamp
-      model     = polyfit([selpres.timestamp], [seltrig.sample], 1);
-      estimated = polyval(model, [selpres.timestamp]);
-      
-      if istrue(cfg.feedback)
-        [~, f, ~] = fileparts(cfg.dataset);
-        figure('name', ['PRESENTATION - ' f]);
-        subplot(2,1,1)
-        hold on
-        % presentation timestamps are expressed in units of 0.1 miliseconds
-        plot([selpres.timestamp]/1e4, [seltrig.sample], 'b.')
-        plot([selpres.timestamp]/1e4, estimated, 'ro')
-        xlabel('presentation time (s)')
-        ylabel('data samples')
-        legend({'observed', 'predicted'})
-        
-        subplot(2,1,2)
-        plot([selpres.timestamp]/1e4, ([seltrig.sample]-estimated)/hdr.Fs, 'g.')
-        xlabel('presentation time (s)')
-        ylabel('difference (s)')
-      end
-      
-      % estimate the sample number and time in seconds of all presentation events
-      estimated = polyval(model, [presentation.timestamp]);
-      estimated = round(estimated); % round to the nearest sample
-      for i=1:numel(estimated)
-        presentation(i).sample = estimated(i);
-      end
-      % convert the event structure to a TSV table
-      presentation_tsv = event2table(hdr, presentation);
-      
-      % the events from the the presentation log file should be merged with the triggers
-      % trigger values are often numeric, whereas presentation event values are often strings
-      if isnumeric(events_tsv.value) && ~isnumeric(presentation_tsv.value)
-        % convert them, otherwise the concatenation fails
-        events_tsv.value = num2cell(events_tsv.value);
-      end
-      % concatenate them
-      events_tsv = [events_tsv; presentation_tsv];
-      
-      clear presentation_tsv selpres seltrig
-    end
-    
-  else
-    % events are needed, but not linked to fMRI or MEG/EEG/iEEG/EMG data
-    if istable(cfg.events) && all(ismember({'onset', 'duration'}, fieldnames(cfg.events)))
-      % use the events table as it is
-      events_tsv = cfg.events;
-    elseif istable(cfg.events) && all(ismember({'begsample', 'endsample', 'offset'}, fieldnames(cfg.events)))
-      % it is a "trl" matrix formatted as table, use it as it is
-      events_tsv = cfg.events;
-    elseif isstruct(cfg.events) && ~isempty(cfg.events) && numel(fieldnames(cfg.events))>0
-      % it is the output from FT_READ_EVENT
-      if exist('hdr', 'var')
-        events_tsv = event2table(hdr, cfg.events);
-      else
-        events_tsv = event2table([], cfg.events);
-      end
-    elseif ismatrix(cfg.events) && ~isempty(cfg.events) && numel(fieldnames(cfg.events))>0
-      % it is a "trl" matrix formatted as numeric array, convert it to an events table
-      begsample = cfg.events(:,1);
-      endsample = cfg.events(:,2);
-      offset    = cfg.events(:,3); % this is not used for the events.tsv
-      if any(offset~=0)
-        ft_warning('the offset in the trl matrix is ignored');
-      end
-      if size(trl,2)>3
-        ft_warning('additional columns in the trl matrix are ignored');
-      end
-      % convert to the required fields
-      onset     = (begsample-1)/hdr.Fs;
-      duration  = (endsample-begsample+1)/hdr.Fs;
-      events_tsv = table(onset, duration);
-    elseif exist('trigger', 'var')
-      % convert the triggers from FT_READ_EVENT into a table
-      if exist('hdr', 'var')
-        events_tsv = event2table(hdr, trigger);
-      else
-        events_tsv = event2table([], trigger);
-      end
-    elseif ~isempty(cfg.presentationfile)
-      % read the presentation file and convert into a table
-      events_tsv = event2table([], ft_read_event(cfg.presentationfile));
+    if exist('hdr', 'var')
+      events_tsv = event2table(hdr, trigger);
     else
-      ft_warning('no events were specified');
-      % make an empty table with columns for onset and duration
-      onset    = [];
-      duration = [];
-      events_tsv = table(onset, duration);
+      events_tsv = event2table([], trigger);
     end
-    
-  end % if mri, electrophys, or behavioral
+  elseif ~isempty(cfg.presentationfile)
+    % read the presentation file and convert into a table
+    events_tsv = event2table([], ft_read_event(cfg.presentationfile));
+  else
+    ft_warning('no events were specified');
+    % make an empty table with columns for onset and duration
+    onset    = [];
+    duration = [];
+    events_tsv = table(onset, duration);
+  end
   
   if isempty(events_tsv)
     ft_warning('no events found');
@@ -1501,6 +1342,11 @@ if need_events_tsv
     
     % sort the events ascending on the onset
     events_tsv = sortrows(events_tsv, 'onset');
+  end
+  
+  if ~isempty(cfg.presentationfile) && need_mri_json
+    % rename the column 'sample' into 'volume'
+    events_tsv.Properties.VariableNames('sample') = {'volume'};
   end
   
 end % if need_events_tsv

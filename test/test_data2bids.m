@@ -135,6 +135,7 @@ data2bids(cfg)
 cfg = [];
 cfg.method                      = 'copy';
 cfg.dataset                     = 'jg_single_01raw.fif';
+cfg.events                      = ft_read_event(cfg.dataset, 'chanindx', 123); % this has analog triggers, which require some extra attention
 cfg.outputfile                  = 'sub-MEG_task-stimuluation_meg.fif';
 cfg.InstitutionName             = 'Radboud University';
 cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
@@ -230,6 +231,3 @@ cfg.presentation.eventvalue     = [];
 cfg.RepetitionTime              = 2;
 
 data2bids(cfg);
-
-
-
