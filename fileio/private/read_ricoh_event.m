@@ -14,20 +14,20 @@ event   = [];
 handles = definehandles;
 
 % get the options, the default is set below
-trigindx    = ft_getopt(varargin, 'trigindx');
+chanindx    = ft_getopt(varargin, 'chanindx');
 threshold   = ft_getopt(varargin, 'threshold');
 detectflank = ft_getopt(varargin, 'detectflank');
 
 % ensure that the required toolbox is on the path
-if ft_hastoolbox('ricoh_meg_reader');
+if ft_hastoolbox('ricoh_meg_reader')
 
   % read the dataset header
   hdr = read_ricoh_header(filename);
   ch_info = hdr.orig.channel_info.channel;
   type = [ch_info.type];
   % determine the trigger channels (if not specified by the user)
-  if isempty(trigindx)
-    trigindx = find(type==handles.TriggerChannel);
+  if isempty(chanindx)
+    chanindx = find(type==handles.TriggerChannel);
   end
   % As for trial selection, refer to the documentation "Getting started with Ricoh data".
   if hdr.orig.acq_type==handles.AcqTypeEvokedAve
@@ -75,7 +75,7 @@ if ft_hastoolbox('ricoh_meg_reader');
     end
     clear event_tmp;
     clear annotation_tmp;
-    trigger_tmp = read_trigger(filename, 'header', hdr, 'denoise', false, 'chanindx', trigindx, 'detectflank', detectflank, 'threshold', threshold);
+    trigger_tmp = read_trigger(filename, 'header', hdr, 'denoise', false, 'chanindx', chanindx, 'detectflank', detectflank, 'threshold', threshold);
     trigger = [];
     for i = 1:length(trigger_tmp)
       trigger(end+1).sample = trigger_tmp(i).sample;
