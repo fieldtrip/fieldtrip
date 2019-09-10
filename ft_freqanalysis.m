@@ -286,13 +286,15 @@ switch cfg.method
     end
     
   case 'irasa'
-    ft_warning('the irasa method is under construction')
     cfg.taper       = ft_getopt(cfg, 'taper', 'hanning');
     if ~isequal(cfg.taper, 'hanning')
-      ft_error('only hanning tapers are supported');
+      ft_error('the irasa method supports hanning tapers only');
     end
     if isfield(cfg, 'output') && ~isequal(cfg.output, 'pow')
       ft_error('the irasa method outputs power only');
+    end
+    if ~isequal(cfg.pad, 'nextpow2')
+      ft_warning('consider using cfg.pad=''nextpow2'' for the irasa method');
     end
     % check for foi above Nyquist
     if isfield(cfg, 'foi')

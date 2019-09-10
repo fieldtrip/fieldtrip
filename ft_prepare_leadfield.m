@@ -6,7 +6,7 @@ function [sourcemodel, cfg] = ft_prepare_leadfield(cfg, data)
 % Use as
 %   [sourcemodel] = ft_prepare_leadfield(cfg, data)
 %
-% It is neccessary to input the data on which you want to perform the
+% It is necessary to input the data on which you want to perform the
 % inverse computations, since that data generally contain the gradiometer
 % information and information about the channels that should be included in
 % the forward model computation. The data structure can be either obtained
@@ -19,10 +19,10 @@ function [sourcemodel, cfg] = ft_prepare_leadfield(cfg, data)
 %
 % The positions of the sources can be specified as a regular 3-D
 % sourcemodel that is aligned with the axes of the head coordinate system
-%   cfg.sourcemodel.xgrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
-%   cfg.sourcemodel.ygrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
-%   cfg.sourcemodel.zgrid      = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
-%   cfg.sourcemodel.resolution = number (e.g. 1 cm) for automatic sourcemodel generation
+%   cfg.xgrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
+%   cfg.ygrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
+%   cfg.zgrid      = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
+%   cfg.resolution = number (e.g. 1 cm) for automatic sourcemodel generation
 % Alternatively the position of a few sources at locations of interest can
 % be specified, for example obtained from an anatomical or functional MRI
 %   cfg.sourcemodel.pos        = N*3 matrix with position of each source

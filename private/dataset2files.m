@@ -1,7 +1,7 @@
 function cfg = dataset2files(cfg)
 
 % Helper function that converts a dataset into headerfile and datafile
-% if neccessary. This is used in PREPROCESSING and DEFINETRIAL
+% if necessary. This is used in PREPROCESSING and DEFINETRIAL
 %
 % This function operates only on
 %   cfg.dataset

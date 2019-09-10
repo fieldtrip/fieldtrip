@@ -1,4 +1,4 @@
-function matlab2markdown(infile,outfile,varargin)
+function matlab2markdown(infile, outfile, varargin)
 
 % MATLAB2MARKDOWN converts a MATLAB script or function to Markdown format. All
 % comments are converted to text, comment lines starting with %% are converted to
@@ -17,11 +17,13 @@ function matlab2markdown(infile,outfile,varargin)
 % Optional input arguments can be specified as key-value pairs and can include
 %   imagestyle = 'none|inline|jekyll'
 %   pageheader = 'none|jekyll'
+%   overwrite  = true/false, allow overwriting of the .md file (default = false)
+%   highlight  = string, 'matlab', 'plaintext' or '' (default = '')
 %   ...
 %
 % See also MARKDOWN2MATLAB
 
-% Copyright (C) 2018 Sophie Arana and Robert Oostenveld
+% Copyright (C) 2018, Sophie Arana and Robert Oostenveld
 %
 % This file is part of FieldTrip.
 %
@@ -51,12 +53,14 @@ end
 
 % parse the optional input arguments
 % val = ft_getopt(varargin, 'key', default);
-imagestyle = ft_getopt(varargin, 'imagestyle', 'inline');
-pageheader = ft_getopt(varargin, 'pageheader', 'none');
-pagelayout = ft_getopt(varargin, 'pagelayout', '');
-pagetitle  = ft_getopt(varargin, 'pagetitle', '');
-pagetags   = ft_getopt(varargin, 'pagetags', '');
+imagestyle    = ft_getopt(varargin, 'imagestyle', 'inline');
+pageheader    = ft_getopt(varargin, 'pageheader', 'none');
+pagelayout    = ft_getopt(varargin, 'pagelayout', '');
+pagetitle     = ft_getopt(varargin, 'pagetitle', '');
+pagetags      = ft_getopt(varargin, 'pagetags', '');
 monospacehelp = ft_getopt(varargin, 'monospacehelp', false); % convert the help in monospace format
+overwrite     = ft_getopt(varargin, 'overwrite', false);
+highlight     = ft_getopt(varargin, 'highlight', '');
 
 % check input
 [inpath, inname, inext] = fileparts(infile);
@@ -69,6 +73,10 @@ if nargin < 2 || isempty(outfile)
   outfile = infile;
 end
 
+if isempty(highlight)
+  highlight = '';
+end
+
 % check output
 [outpath, outname,outext] = fileparts(outfile);
 if isempty(outpath), outpath = inpath; end
@@ -77,13 +85,18 @@ if ~strcmp(outext,'.md')
 end
 
 % add a suffix to avoid overwriting files
-suffix = 1;
-newname = outname;
-while exist(fullfile(outpath,[newname,outext]),'file') == 2
-  newname = [outname sprintf('-%0d',suffix)];
-  suffix = suffix+1;
+if ~overwrite
+  suffix = 1;
+  newname = outname;
+  while exist(fullfile(outpath,[newname,outext]),'file') == 2
+    newname = [outname sprintf('-%0d',suffix)];
+    suffix = suffix+1;
+  end
+  if ~strcmp(outname, newname)
+    warning('writing to %s', newname);
+  end
+  outname = newname;
 end
-outname = newname;
 
 infile = fullfile(inpath,[inname,inext]);
 outfile = fullfile(outpath,[outname,outext]);
@@ -116,17 +129,17 @@ while ~feof(infid)
   reset_index = true;
   % reset the state, unless explicitly specified
   reset_state = true;
-
+  
   line = fgetl(infid);
   linenumber = linenumber + 1;
   if ~ischar(line), break, end
-
+  
   if monospacehelp
     if match(line, '^%') && strcmp(state, 'unknown')
       % the help has started
       state = 'help';
       reset_state = false;
-      fprintf(outfid, '```\n');  % start of code block
+      fprintf(outfid, '```%s\n', highlight);  % start of code block
       fprintf(outfid, '%s\n', formathelp(line));
     elseif match(line, '^%') && strcmp(state, 'help')
       % the help is continuing
@@ -143,22 +156,21 @@ while ~feof(infid)
       state = 'ignore';
       reset_state = false;
     end
-
+    
   elseif isempty(line)
     % keep the complete line as it is
     fprintf(outfid, '%s\n', line);
     
   elseif match(line, '^%%')
     % heading
-    [~,endIndex] = regexp(line, '^%% ');
+    [dum,endIndex] = regexp(line, '^%% ');
     remainder = reformat(line((endIndex+1):end));
     fprintf(outfid, '# %s\n', remainder);
     
   elseif match(line, '^% *\* ')
     % unordered list
-    [~,endIndex] = regexp(line, '^% *\* ');
-    
-    [~,level] = regexp(line, '^% *');
+    [dum,endIndex] = regexp(line, '^% *\* ');
+    [dum,level] = regexp(line, '^% *');
     if isempty(level)
       level = 0;
     else
@@ -170,7 +182,7 @@ while ~feof(infid)
     
   elseif match(line, '^% *# ')
     % ordered list
-    [~,endIndex] = regexp(line, '^% *# ');
+    [dum,endIndex] = regexp(line, '^% *# ');
     remainder = reformat(line((endIndex+1):end));
     index = index + 1;
     fprintf(outfid, '%d. %s\n', index, remainder);
@@ -179,7 +191,7 @@ while ~feof(infid)
     
   elseif match(line, '^% *')
     % normal text
-    [~,endIndex] = regexp(line, '^% *');
+    [dum,endIndex] = regexp(line, '^% *');
     remainder = reformat(line((endIndex+1):end));
     fprintf(outfid, '%s\n', remainder);
     
@@ -188,7 +200,7 @@ while ~feof(infid)
     fprintf(outfid, '    %s\n', line);
     [startIndex,endIndex] = regexp(line, '[!-~]*.png$');
     image = line(startIndex:endIndex);
-    [~, f] = fileparts(image);
+    [dum, f] = fileparts(image);
     if strcmp(imagestyle, 'inline')
       % include a default Markdown inline image
       fprintf(outfid, '![%s](%s)\n', f, image);

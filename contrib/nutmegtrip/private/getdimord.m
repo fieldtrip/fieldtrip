@@ -80,7 +80,7 @@ nsubj     = nan;
 nrpt      = nan;
 nrpttap   = nan;
 npos      = inf;
-nori      = nan; % this will be 3 in many cases
+nori      = nan; % this will be 3 in many cases, 1 after projectmom, and can be >3 for parcels
 ntopochan = inf;
 nspike    = inf; % this is only for the first spike channel
 nlag      = nan;
@@ -171,7 +171,15 @@ if isfield(data, 'csdlabel')
     % one list of labels for all positions
     nori = length(data.csdlabel);
   end
-elseif isfinite(npos)
+elseif isfield(data, 'mom') && isfield(data, 'inside') && iscell(data.mom)
+    % this is used in LCMV beamformers
+    size1 = @(x) size(x, 1);
+    len = cellfun(size1, data.mom(data.inside));
+    if all(len==len(1))
+      % they all have the same length
+      nori = len(1);
+    end
+else
   % assume that there are three dipole orientations per source
   nori = 3;
 end
@@ -362,7 +370,7 @@ switch field
       dimord = 'pos_freq_time';
     end
     
-  case {'pow' 'noise' 'rv' 'nai'}
+  case {'pow' 'noise' 'rv' 'nai' 'kurtosis'}
     if isequal(datsiz, [npos ntime])
       dimord = 'pos_time';
     elseif isequal(datsiz, [npos nfreq])
@@ -441,8 +449,10 @@ switch field
     end
     
   case {'ori' 'eta'}
-    if isequal(datsiz, [npos nori]) || isequal(datsiz, [npos 3])
+    if isequal(datsiz, [npos nori]) || isequal(datsiz, [npos nori 1]) || isequal(datsiz, [npos 3]) || isequal(datsiz, [npos 3 1])
       dimord = 'pos_ori';
+    elseif isequal(datsiz, [npos 1 nori]) || isequal(datsiz, [npos 1 3])
+      dimord = 'pos_unknown_ori';
     end
     
   case {'csdlabel'}

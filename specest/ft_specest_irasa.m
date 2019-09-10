@@ -1,7 +1,7 @@
 function [spectrum,ntaper,freqoi] = ft_specest_irasa(dat, time, varargin)
 
 % FT_SPECEST_IRASA estimates the powerspectral arrythmic component of the 
-% time-domain using Irregular-Resampling Auto-Spectral Analysis. 
+% time-domain using Irregular-Resampling Auto-Spectral Analysis (IRASA)
 %
 % Use as
 %   [spectrum,ntaper,freqoi] = ft_specest_irasa(dat,time...)
@@ -24,6 +24,11 @@ function [spectrum,ntaper,freqoi] = ft_specest_irasa(dat, time, varargin)
 %   verbose    = output progress to console (0 or 1, default 1)
 %
 % This implements: Wen H, Liu Z. Separating fractal and oscillatory components in the power spectrum of neurophysiological signal. Brain Topogr. 2016 Jan;29(1):13-26.
+%   For application, see Stolk et al., Electrocorticographic dissociation of 
+%   alpha and beta rhythmic activity in the human sensorimotor system. It
+%   is recommended the user first sub-segments the data using ft_redefinetrial 
+%   and specifies cfg.pad = 'nextpow2' when calling ft_frequencyanalysis in 
+%   order to implement steps A and B of the original algorithm in Wen & liu.
 %
 % See also FT_FREQANALYSIS, FT_SPECEST_MTMFFT, FT_SPECEST_MTMCONVOL, FT_SPECEST_TFR, FT_SPECEST_HILBERT, FT_SPECEST_WAVELET
 
@@ -94,7 +99,7 @@ end
 fsample = 1./mean(diff(time));
 dattime = ndatsample / fsample; % total time in seconds of input data
 
-% Zero padding (FIXME: the effect of padding on taking the fft of the resampled signal has not been tested) 
+% Zero padding
 if round(pad * fsample) < ndatsample
   ft_error('the padding that you specified is shorter than the data');
 end
@@ -172,7 +177,6 @@ if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis')
 elseif verbose
   fprintf([str, '\n']);
 end
-nfft = size(dat,2); % fixed, to move rhythmic content up and down in the powerspectrum
 spectrum = cell(ntaper(1),1);
 for itap = 1:ntaper(1)
   %%%% IRASA STARTS %%%%
@@ -184,12 +188,12 @@ for itap = 1:ntaper(1)
     ddat = resample(dat', d, n)'; % downsample
     
     % fft of upsampled data
-    ucom = fft(ft_preproc_padding(bsxfun(@times,udat,tap{ih,1}), padtype, 0, postpad), nfft, 2); % fft
+    ucom = fft(ft_preproc_padding(bsxfun(@times,udat,tap{ih,1}), padtype, 0, postpad), endnsample, 2); % fft
     ucom = ucom(:,freqboi);
     ucom = ucom .* sqrt(2 ./ size(udat,2));
     
     % fft of downsampled data
-    dcom = fft(ft_preproc_padding(bsxfun(@times,ddat,tap{ih+nhset,1}), padtype, 0, postpad), nfft, 2); % fft
+    dcom = fft(ft_preproc_padding(bsxfun(@times,ddat,tap{ih+nhset,1}), padtype, 0, postpad), endnsample, 2); % fft
     dcom = dcom(:,freqboi);
     dcom = dcom .* sqrt(2 ./ size(ddat,2));
     

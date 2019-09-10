@@ -64,7 +64,11 @@ if nargout>0
   V = [];
 end
 
+% ensure that the directory exists
+isdir_or_mkdir(fileparts(filename));
+
 switch dataformat
+
   case {'analyze_img' 'analyze_hdr' 'analyze' 'nifti_spm'}
     % analyze data, using SPM
     V = volumewrite_spm(filename, dat, transform, spmversion);

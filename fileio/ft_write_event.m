@@ -104,6 +104,20 @@ switch eventformat
 	% type, value
 	%   -- these can be strings or any numeric type (double, single, [u]int[8-64])
 	%      will be transmitted as if vectorised
+  
+  % hack to fix empty event.offset and event.duration fields
+  % Maybe should track down why they're empty? But this works for now
+  % ES, 10-may-2019
+  if ~isempty(event)
+    for k = 1:numel(event)
+      if isfield(event(k), 'offset') && isempty(event(k).offset)
+        event(k).offset = 0;
+      end
+      if isfield(event(k), 'duration') && isempty(event(k).duration)
+        event(k).duration = 0;
+      end
+    end
+  end
 	buffer('put_evt', event, host, port);
 
 	% SK: There was some code here for firing up a FieldTrip buffer locally,

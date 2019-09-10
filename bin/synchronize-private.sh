@@ -38,6 +38,14 @@ ARRAY+=(forward/private/ama2headmodel.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# appendevent.m
+
+ARRAY=()
+ARRAY+=(fileio/private/appendevent.m)
+ARRAY+=(private/appendevent.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # atlas_lookup.m
 
 ARRAY=()
@@ -1312,6 +1320,14 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(connectivity/private/inv3x3.mexw64)
 ARRAY+=(src/inv3x3.mexw64)
+sync ${ARRAY[*]}
+
+################################################################################
+# isdir_or_mkdir.m
+
+ARRAY=()
+ARRAY+=(fileio/private/isdir_or_mkdir.m)
+ARRAY+=(private/isdir_or_mkdir.m)
 sync ${ARRAY[*]}
 
 ################################################################################

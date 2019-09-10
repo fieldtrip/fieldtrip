@@ -253,7 +253,9 @@ if ~isempty(cfg.viewpoint) && ~isempty(cfg.rotate)
 end
 
 % update the selection of channels according to the data
-if hasdata && isfield(data, 'label')
+if hasdata && isfield(data, 'topolabel')
+  cfg.channel = ft_channelselection(cfg.channel, data.topolabel);
+elseif hasdata && isfield(data, 'label')
   cfg.channel = ft_channelselection(cfg.channel, data.label);
 elseif hasdata && isfield(data, 'labelcmb')
   cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
@@ -563,7 +565,7 @@ elseif ischar(cfg.layout)
       ft_info('reading layout from file %s\n', cfg.layout);
       layout = readlay(cfg.layout);
     else
-      [p, f, ~] = fileparts(cfg.layout);
+      [p, f] = fileparts(cfg.layout);
       ft_warning('the file "%s" was not found on your path, attempting "%s" instead', cfg.layout, fullfile(p, [f '.mat']));
       cfg.layout = fullfile(p, [f '.mat']);
       layout = ft_prepare_layout(cfg);

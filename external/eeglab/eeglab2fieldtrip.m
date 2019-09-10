@@ -112,7 +112,7 @@ switch fieldbox
             data.trial{index}  = EEG.data(:,:,index);
             data.time{index}   = linspace(EEG.xmin, EEG.xmax, EEG.pnts); % should be checked in FIELDTRIP
         end
-        data.label = getchanlabels(tmpchanlocs(1:EEG.nbchan));
+        data.label = getchanlabels(tmpchanlocs, 1:EEG.nbchan);
         if EEG.trials > 1
             res = std_maketrialinfo([], EEG);
             data.trialinfo = struct2table(res.datasetinfo.trialinfo);
@@ -128,7 +128,7 @@ switch fieldbox
         data.avg  = mean(EEG.data, 3);
         data.var  = std(EEG.data, [], 3).^2;
         data.time = linspace(EEG.xmin, EEG.xmax, EEG.pnts); % should be checked in FIELDTRIP
-        data.label = getchanlabels(tmpchanlocs(1:EEG.nbchan));
+        data.label = getchanlabels(tmpchanlocs, 1:EEG.nbchan);
         
     case { 'comp' 'componentanalysis' }
         if isempty(EEG.icaact)
@@ -176,11 +176,11 @@ catch
 end
 
 % convert EEGLAB channel labels to Fieldtrip channel labels
-function label = getchanlabels(tmpchanlocs)
+function label = getchanlabels(tmpchanlocs, indices)
 if ~isempty(tmpchanlocs)
     label   = { tmpchanlocs.labels };
 else
-    for iChan = 1:EEG.nbchan
+    for iChan = indices
         label{iChan} = num2str(iChan);
     end
 end

@@ -230,7 +230,7 @@ gradorig         = data.grad;  % this is needed later on for plotting. As of
 % other (in order to compute the projection matrix).
 [volold, data.grad] = prepare_headmodel(volcfg);
 
-% note that it is neccessary to keep the two volume conduction models
+% note that it is necessary to keep the two volume conduction models
 % separate, since the single-shell Nolte model contains gradiometer specific
 % precomputed parameters. Note that this is not guaranteed to result in a
 % good projection for local sphere models.

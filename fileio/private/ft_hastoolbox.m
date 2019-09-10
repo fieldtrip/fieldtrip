@@ -158,6 +158,8 @@ url = {
   'JSONIO'        'see https://github.com/gllmflndn/JSONio'
   'CPD'           'see https://sites.google.com/site/myronenko/research/cpd'
   'MVPA-LIGHT'    'see https://github.com/treder/MVPA-Light'
+  'XDF'           'see https://github.com/xdf-modules/xdf-Matlab'
+  'EZC3D'         'see https://github.com/pyomeca/ezc3d'
   };
 
 if nargin<2
@@ -258,21 +260,21 @@ switch toolbox
   case '4D-VERSION'
     dependency  = {'read4d', 'read4dhdr'};
   case {'STATS', 'STATISTICS'}
-    dependency = has_license('statistics_toolbox');               % also check the availability of a toolbox license
+    dependency = {has_license('statistics_toolbox'), 'betacdf', 'raylcdf', 'unidcdf'};      % also check the availability of a toolbox license
   case {'OPTIM', 'OPTIMIZATION'}
-    dependency = has_license('optimization_toolbox');             % also check the availability of a toolbox license
+    dependency = {has_license('optimization_toolbox'), 'fminunc', 'optimset'};              % also check the availability of a toolbox license
   case {'SPLINES', 'CURVE_FITTING'}
-    dependency = has_license('curve_fitting_toolbox');            % also check the availability of a toolbox license
+    dependency = {has_license('curve_fitting_toolbox'), 'smooth', 'fit'};                   % also check the availability of a toolbox license
   case 'COMM'
-    dependency = {has_license('communication_toolbox'), 'de2bi'}; % also check the availability of a toolbox license
+    dependency = {has_license('communication_toolbox'), 'de2bi', 'fskmod', 'pskmod'};       % also check the availability of a toolbox license
   case 'SIGNAL'
-    dependency = {has_license('signal_toolbox'), 'window'};       % also check the availability of a toolbox license
+    dependency = {has_license('signal_toolbox'), 'window', 'hanning'};                      % also check the availability of a toolbox license
   case 'IMAGES'
-    dependency = has_license('image_toolbox');                    % also check the availability of a toolbox license
+    dependency = {has_license('image_toolbox'), 'imerode', 'imdilate'};                     % also check the availability of a toolbox license
   case {'DCT', 'DISTCOMP'}
-    dependency = has_license('distrib_computing_toolbox');        % also check the availability of a toolbox license
+    dependency = {has_license('distrib_computing_toolbox'), 'parpool', 'batch'};            % also check the availability of a toolbox license
   case 'COMPILER'
-    dependency = has_license('compiler');                         % also check the availability of a toolbox license
+    dependency = {has_license('compiler'), 'mcc', 'mcr'};                                   % also check the availability of a toolbox license
   case 'FASTICA'
     dependency = 'fpica';
   case 'BRAINSTORM'
@@ -329,7 +331,7 @@ switch toolbox
     dependency = {'netcdf'};
   case 'MYSQL'
     % this only consists of a single mex file
-    dependency = has_mex('mysql'); 
+    dependency = has_mex('mysql');
   case 'ISO2MESH'
     dependency = {'vol2surf', 'qmeshcut'};
   case 'QSUB'
@@ -391,6 +393,10 @@ switch toolbox
     dependency = {'jsonread', 'jsonwrite', 'jsonread.mexa64'};
   case 'CPD'
     dependency = {'cpd', 'cpd_affine', 'cpd_P'};
+  case 'XDF'
+    dependency = {'load_xdf', 'load_xdf_innerloop'};
+  case 'EZC3D'
+    dependency = {'ezc3dRead', 'ezc3dWrite'};
     
     % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
@@ -514,14 +520,14 @@ global ft_default
 
 if ~isfolder(toolbox)
   % search for a case-insensitive match, this is needed for MVPA-Light
-  [p, f, ~] = fileparts(toolbox);
+  [p, f] = fileparts(toolbox);
   dirlist = dir(p);
   sel = strcmpi({dirlist.name}, f);
   if sum(sel)==1
     toolbox = fullfile(p, dirlist(sel).name);
   end
 end
-  
+
 if isdeployed
   ft_warning('cannot change path settings for %s in a compiled application', toolbox);
   status = true;
@@ -536,7 +542,7 @@ elseif isfolder(toolbox)
     addpath(genpath(toolbox));
     % check whether the mex files are compatible
     check_spm_mex;
-  elseif ~isempty(regexp(lower(toolbox), 'mvpa-light$'))
+  elseif ~isempty(regexp(lower(toolbox), 'mvpa-light$', 'once'))
     % this comes with its own startup script
     addpath(fullfile(toolbox, 'startup'))
     startup_MVPA_Light;

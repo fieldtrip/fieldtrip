@@ -68,6 +68,7 @@ cfg.split   = ft_getopt(cfg, 'split',   'all');
 cfg.lambda  = ft_getopt(cfg, 'lambda',  0);
 cfg.kappa   = ft_getopt(cfg, 'kappa',   []);
 cfg.tol     = ft_getopt(cfg, 'tol',     []);
+cfg.realflag = ft_getopt(cfg, 'realflag', true); % for complex-valued crsspctrm
 cfg.invmethod = ft_getopt(cfg, 'invmethod', 'tikhonov');
 
 % ensure that the input data is correct, the next line is needed for a
@@ -116,7 +117,11 @@ elseif ft_datatype(noise, 'freq')
   if ~isfield(noise, 'crsspctrm')
     ft_error('noise cross-spectrum is not present');
   else
-    noisecov = real(noise.crsspctrm);
+    if istrue(cfg.realflag)
+      noisecov = real(noise.crsspctrm);
+    else
+      noisecov = noise.crsspctrm;
+    end
   end
 end
 

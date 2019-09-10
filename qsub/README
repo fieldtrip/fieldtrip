@@ -4,8 +4,12 @@ computing engines. It only requires a standard MATLAB installation on the
 cluster nodes. Alternatively, it can use the MATLAB compiler to run on clusters
 where MATLAB is not available or where the number of licenses is limited.
 
+Using the FieldTrip QSUB toolbox requires that you have MATLAB on a computer
+from which you can directly (from the Linux command line) submit jobs, and a
+shared file system between the submit host and the compute nodes.
+
 The goal of this toolbox is to provide you with an easy MATLAB interface to
-distribute your jobs that is compatible with the MATLAB dfeval, feval and
+distribute your jobs that is compatible with the MATLAB batch, feval and
 cellfun functions. It offers a simple MATLAB interface to distribute your jobs
 and you do not have to go to the Linux command-line to use the qsub command
 from there.  The toolbox supports Linux clusters with Torque and other PBS
@@ -18,7 +22,7 @@ FieldTrip project, http://www.fieldtriptoolbox.org/development/qsub for specific
 details on the qsub toolbox or see http://www.fieldtriptoolbox.org/faq.
 
 -------------------------------------------------------------------------------
-Copyright (C) 2011-2013, Robert Oostenveld
+Copyright (C) 2011-2019, Robert Oostenveld
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -33,4 +37,3 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/
 -------------------------------------------------------------------------------
-

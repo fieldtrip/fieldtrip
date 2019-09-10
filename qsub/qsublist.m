@@ -208,7 +208,7 @@ switch cmd
     retval = pbsid;
 
   otherwise
-    error('unsupported command (%s)', cmd);
+    error('unsupported command "%s"', cmd);
 end % switch
 
 if length(list_jobid)~=length(list_pbsid)

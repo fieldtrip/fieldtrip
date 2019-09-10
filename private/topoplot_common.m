@@ -184,7 +184,7 @@ cfg.scalepos          = ft_getopt(cfg, 'scalepos',         'layout');
 % the user can either specify a single group of channels for highlighting
 % which are all to be plotted in the same style, or multiple groups with a
 % different style for each group. The latter is used by ft_clusterplot.
-if iscell(cfg.highlightchannel) && ~isempty(cfg.highlightchannel) && ischar(cfg.highlightchannel{1}) 
+if iscell(cfg.highlightchannel) && ~isempty(cfg.highlightchannel) && ischar(cfg.highlightchannel{1})
   % it is a single cell-array with channels names, e.g. {'C1', 'Cz', 'C2'}
   cfg.highlightchannel = {cfg.highlightchannel};
 elseif isnumeric(cfg.highlightchannel)
@@ -271,8 +271,8 @@ switch dtype
     end
   case 'freq'
     if hastime
-    xparam = ft_getopt(cfg, 'xparam', 'time');
-    yparam = ft_getopt(cfg, 'yparam', 'freq');
+      xparam = ft_getopt(cfg, 'xparam', 'time');
+      yparam = ft_getopt(cfg, 'yparam', 'freq');
       cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');
     else
       xparam = 'freq';
@@ -737,7 +737,7 @@ elseif strcmp(cfg.commentpos, 'title')
 elseif ~isempty(strcmp(cfg.layout.label, 'COMNT'))
   x_comment = cfg.layout.pos(strcmp(cfg.layout.label, 'COMNT'), 1);
   y_comment = cfg.layout.pos(strcmp(cfg.layout.label, 'COMNT'), 2);
-  % 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 
+  % 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom',
   comment_handle = ft_plot_text(x_comment, y_comment, comment, 'FontSize', cfg.fontsize, 'FontWeight', cfg.fontweight);
 else
   comment_handle = [];

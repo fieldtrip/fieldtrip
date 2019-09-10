@@ -74,16 +74,16 @@ switch fileformat
     
   case 'artinis_oxy3'
     ft_hastoolbox('artinis', 1);
-    hdr = read_oxy3_header(filename, true);    
+    hdr = read_artinis_oxy3(filename, false);    
     sens = hdr.opto;
     
   case 'artinis_oxyproj'
     ft_hastoolbox('artinis', 1);
-    hdr = read_oxyproj_header(filename); 
+    hdr = read_artinis_oxyproj(filename); 
     sens = hdr.opto;
 
   case 'polhemus_pos'
-    sens = read_brainvision_pos(filename);
+    sens = read_polhemus_pos(filename);
 
   case 'besa_elp'
     ft_error('unknown fileformat for electrodes or gradiometers');
