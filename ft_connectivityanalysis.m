@@ -166,7 +166,7 @@ end
 % select channels/channelcombination of interest and set the cfg-options accordingly
 if isfield(data, 'label')
   selchan = cell(0, 1);
-  if ~isempty(cfg.channelcmb) && ~isequal(cfg.channelcmb, {'all' 'all'})
+  if ~isempty(cfg.channelcmb) && ~isequal(cfg.channelcmb, {'all' 'all'}) && size(cfg.channelcmb,2)==2
     tmpcmb = ft_channelcombination(cfg.channelcmb, data.label);
     tmpchan = unique(tmpcmb(:));
     cfg.channelcmb = ft_channelcombination(cfg.channelcmb(:, 1:2), tmpchan, 1);
@@ -863,7 +863,7 @@ switch cfg.method
       [nrpttap, nchan, nfreq] = size(data.fourierspctrm);
       datout = cell(1, nfreq);
       for i=1:length(data.freq)
-        dat       = reshape(data.fourierspctrm(:,:,i)', nrpttap, nchan).';
+        dat       = reshape(data.fourierspctrm(:,:,i), nrpttap, nchan).';
         datout{i} = ft_connectivity_powcorr_ortho(dat, optarg{:});
       end
       datout = cat(3, datout{:});
