@@ -68,7 +68,7 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 
 persistent dim X Y Z
 
-if isequal(dim, size(dat))
+if isequal(dim, size(dat(:,:,:,1,1)))
   % reuse the persistent variables to speed up subsequent calls with the same input
 else
   dim       = size(dat);
@@ -90,7 +90,7 @@ loc                 = ft_getopt(varargin, 'location');
 ori                 = ft_getopt(varargin, 'orientation', [0 0 1]);
 unit                = ft_getopt(varargin, 'unit');       % the default will be determined further down
 resolution          = ft_getopt(varargin, 'resolution'); % the default depends on the units and will be determined further down
-mask                = ft_getopt(varargin, 'datmask');
+datmask                = ft_getopt(varargin, 'datmask');
 maskstyle           = ft_getopt(varargin, 'maskstyle', 'opacity');
 background          = ft_getopt(varargin, 'background');
 opacitylim          = ft_getopt(varargin, 'opacitylim');
@@ -116,9 +116,9 @@ if ~isa(dat, 'double')
   dat = cast(dat, 'double');
 end
 
-if exist('msk', 'var') && isempty(mask)
+if exist('msk', 'var') && isempty(datmask)
   ft_warning('using the second input argument as mask rather than the one from the varargin list');
-  mask = msk; clear msk;
+  datmask = msk; clear msk;
 end
 
 % normalise the orientation vector to one
@@ -164,9 +164,9 @@ if dointersect
 end
 
 % check whether the mask is ok
-domask = ~isempty(mask);
+domask = ~isempty(datmask);
 if domask
-  if ~isequal(size(dat), size(mask)) && ~isequal(cmap, 'rgb')
+  if ~isequal(size(dat), size(datmask)) && ~isequal(cmap, 'rgb')
     % the exception is when the functional data is to be interpreted as rgb
     ft_error('the mask data should have the same dimensions as the functional data');
   end
@@ -297,7 +297,7 @@ use_interpn = ~isequal(transform, eye(4)) && ~isequal(interpmethod, 'nearest') &
 get_slice   = ~use_interpn && all([islineXi islineYi islineZi]);
 if use_interpn
   V  = interpn(X, Y, Z, dat, Xi, Yi, Zi, interpmethod);
-  if domask,       Vmask = interpn(X, Y, Z, mask,       Xi, Yi, Zi, interpmethod); end
+  if domask,       Vmask = interpn(X, Y, Z, datmask,       Xi, Yi, Zi, interpmethod); end
   if dobackground, Vback = interpn(X, Y, Z, background, Xi, Yi, Zi, interpmethod); end
 elseif get_slice 
   %something more efficient than an interpolation can be done
@@ -315,7 +315,7 @@ elseif get_slice
     lineZi = lineZi(1);
   end
   V = permute(reshape(dat(lineXi,lineYi,lineZi,:), siz), permutevec);
-  if domask,       Vmask = permute(reshape(mask(lineXi,lineYi,lineZi,:),       siz(1:2)), [2 1]); end
+  if domask,       Vmask = permute(reshape(datmask(lineXi,lineYi,lineZi,:),       siz(1:2)), [2 1]); end
   if dobackground, Vback = permute(reshape(background(lineXi,lineYi,lineZi,:), siz(1:2)), [2 1]); end
 else
   % use sub2ind in the unlikely case that it's an oblique plane, parallel
@@ -323,14 +323,6 @@ else
   % this fails for rgb data
   V = dat(sub2ind(dim, Xi(:), Yi(:), Zi(:)));
   V = reshape(V, siz);
-end
-
-if domask
-  Vmask = interpn(X, Y, Z, mask, Xi, Yi, Zi, interpmethod);
-end
-
-if dobackground
-  Vback = interpn(X, Y, Z, background, Xi, Yi, Zi, interpmethod);
 end
 
 if all(isnan(V(:)))
@@ -357,7 +349,6 @@ if dobackground
   Vback = (Vback-bmin)./(bmax-bmin);
   Vback(~isfinite(Vback)) = 0;
   Vback = cat(3, Vback, Vback, Vback);
-  
 end
 
 interp_center_vc = [Xi(:) Yi(:) Zi(:)]; clear Xi Yi Zi
