@@ -437,7 +437,7 @@ switch dataformat
     mri.anatomy = tmp.data;
     mri.dim     = tmp.dim;
     mri.transform = tmp.transform;
-    mri.transform(1:3,1:3) = diag(tmp.vox)*mri.transform(1:3,1:3);
+    mri.transform(1:3,1:3) = diag(tmp.vox(1:3))*mri.transform(1:3,1:3);
     
   otherwise
     ft_error('unrecognized filetype ''%s'' for ''%s''', dataformat, filename);
