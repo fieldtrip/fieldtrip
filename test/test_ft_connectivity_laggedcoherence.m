@@ -23,3 +23,14 @@ cfg = [];
 cfg.method = 'laggedcoherence';
 cfg.laggedcoherence.lags = 0.5;
 lcoh = ft_connectivityanalysis(cfg, freq);
+
+% try it on a single frequency
+cfg = [];
+cfg.frequency = 10;
+freq2 = ft_selectdata(cfg, freq);
+
+cfg = [];
+cfg.method = 'laggedcoherence';
+cfg.laggedcoherence.lags = 0.5;
+lcoh2 = ft_connectivityanalysis(cfg, freq2);
+
