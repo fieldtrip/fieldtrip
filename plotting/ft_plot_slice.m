@@ -314,9 +314,9 @@ elseif get_slice
   elseif numel(unique(lineZi(:)))==1
     lineZi = lineZi(1);
   end
-  V = permute(reshape(dat(lineXi,lineYi,lineZi,:), siz), permutevec);
-  if domask,       Vmask = permute(reshape(datmask(lineXi,lineYi,lineZi,:),       siz(1:2)), [2 1]); end
-  if dobackground, Vback = permute(reshape(background(lineXi,lineYi,lineZi,:), siz(1:2)), [2 1]); end
+  V = permute(reshape(dat(lineXi,lineYi,lineZi,:), siz(permutevec(1:ndims(dat)-1))), permutevec);
+  if domask,       Vmask = permute(reshape(datmask(lineXi,lineYi,lineZi,:),       siz(permutevec(1:2))), [2 1]); end
+  if dobackground, Vback = permute(reshape(background(lineXi,lineYi,lineZi,:), siz(permutevec(1:2))), [2 1]); end
 else
   % use sub2ind in the unlikely case that it's an oblique plane, parallel
   % to one of the axes with only integer indices
