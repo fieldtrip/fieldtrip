@@ -330,7 +330,7 @@ if isfield(functional, 'time') || isfield(functional, 'freq')
 end
 
 % the data can be passed as input argument or can be read from disk
-hasanatomical = exist('anatomical', 'var');
+hasanatomical = exist('anatomical', 'var') && isfield(anatomical, 'anatomy');
 
 if hasanatomical && ~strcmp(cfg.method, 'cloud') % cloud method should be able to take multiple surfaces and does not require interpolation
   % interpolate on the fly, this also does the downsampling if requested
@@ -338,6 +338,7 @@ if hasanatomical && ~strcmp(cfg.method, 'cloud') % cloud method should be able t
   tmpcfg.parameter = cfg.funparameter;
   functional = ft_sourceinterpolate(tmpcfg, functional, anatomical);
   [cfg, functional] = rollback_provenance(cfg, functional);
+  cfg.anaparameter = 'anatomy';
 elseif ~hasanatomical && cfg.downsample~=1
   % optionally downsample the functional volume
   tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo'});
@@ -352,7 +353,7 @@ if isfield(functional, 'dim') && isfield(functional, 'transform')
 elseif isfield(functional, 'dim') && isfield(functional, 'pos')
   % these are positions that can be mapped onto a 3D regular grid
   isUnstructuredFun  = false;
-  % contstruct the transformation matrix from the positions
+  % construct the transformation matrix from the positions
   functional.transform = pos2transform(functional.pos, functional.dim);
 else
   % this is functional data on irregular positions, such as a cortical sheet
@@ -447,7 +448,7 @@ if hasfun
     fun = abs(fun);
   end
   
-  if strcmp(dimord, 'pos_rgb')
+  if strcmp(dimord, 'pos_rgb') || (ndims(fun)>3 && size(fun,4)==3)
     % treat functional data as rgb values
     if any(fun(:)>1 | fun(:)<0)
       % scale
@@ -468,6 +469,7 @@ if hasfun
     fcolmin = 0;
     fcolmax = 1;
     
+    cfg.funcolormap = 'rgb';
   else
     % determine scaling min and max (fcolmin fcolmax) and funcolormap
     if ~isa(fun, 'logical')
@@ -730,13 +732,18 @@ end
 
 %% set color and opacity mapping for this figure
 if hasfun
-  colormap(cfg.funcolormap);
-  cfg.funcolormap = colormap;
+  if ischar(cfg.funcolormap) && ~strcmp(cfg.funcolormap, 'rgb')
+    colormap(cfg.funcolormap);
+    cfg.funcolormap = colormap;
+  elseif ~ischar(cfg.funcolormap)
+    colormap(cfg.funcolormap);
+    cfg.funcolormap = colormap;  
+  end
 end
 if hasmsk
   cfg.opacitymap = alphamap(cfg.opacitymap);
   alphamap(cfg.opacitymap);
-  if ndims(fun)>3 && ndims(msk)==3
+  if ndims(fun)>3 && ndims(msk)==3 && ~isequal(cfg.funcolormap, 'rgb')
     siz = size(fun);
     msk = repmat(msk, [1 1 1 siz(4:end)]);
   end
@@ -1659,18 +1666,26 @@ end
 
 if opt.hasfun
   if opt.init
+    tmph  = [h1 h2 h3];
+    if isequal(opt.funcolormap, 'rgb')
+      tmpfun = opt.fun;
+      if opt.hasmsk
+        tmpmask = opt.msk;
+      end
+    else
+      tmpqi  = [opt.qi 1];
+      tmpfun = opt.fun(:,:,:,tmpqi(1),tmpqi(2));
+      if opt.hasmsk
+        tmpmask = opt.msk(:,:,:,tmpqi(1),tmpqi(2));
+      end
+    end
     if opt.hasmsk
-      tmpqi = [opt.qi 1];
-      tmph  = [h1 h2 h3];
-      ft_plot_ortho(opt.fun(:,:,:,tmpqi(1),tmpqi(2)), 'datmask', opt.msk(:,:,:,tmpqi(1),tmpqi(2)), 'transform', eye(4), 'location', opt.ijk, ...
+      ft_plot_ortho(tmpfun, 'datmask', tmpmask, 'transform', eye(4), 'location', opt.ijk, ...
         'style', 'subplot', 'parents', tmph, 'update', opt.update, ...
         'colormap', opt.funcolormap, 'clim', [opt.fcolmin opt.fcolmax], ...
         'opacitylim', [opt.opacmin opt.opacmax]);
-      
     else
-      tmpqi = [opt.qi 1];
-      tmph  = [h1 h2 h3];
-      ft_plot_ortho(opt.fun(:,:,:,tmpqi(1),tmpqi(2)), 'transform', eye(4), 'location', opt.ijk, ...
+      ft_plot_ortho(tmpfun, 'transform', eye(4), 'location', opt.ijk, ...
         'style', 'subplot', 'parents', tmph, 'update', opt.update, ...
         'colormap', opt.funcolormap, 'clim', [opt.fcolmin opt.fcolmax]);
     end
@@ -1694,17 +1709,27 @@ if opt.hasfun
     end
     
   else
+    if isequal(opt.funcolormap, 'rgb')
+      tmpfun = opt.fun;
+      if opt.hasmsk
+        tmpmask = opt.msk;
+      end
+    else
+      tmpqi  = [opt.qi 1];
+      tmpfun = opt.fun(:,:,:,tmpqi(1),tmpqi(2));
+      if opt.hasmsk
+        tmpmask = opt.msk(:,:,:,tmpqi(1),tmpqi(2));
+      end
+    end
     if opt.hasmsk
-      tmpqi = [opt.qi 1];
       tmph  = opt.funhandles;
-      ft_plot_ortho(opt.fun(:,:,:,tmpqi(1),tmpqi(2)), 'datmask', opt.msk(:,:,:,tmpqi(1),tmpqi(2)), 'transform', eye(4), 'location', opt.ijk, ...
+      ft_plot_ortho(tmpfun, 'datmask', tmpmask, 'transform', eye(4), 'location', opt.ijk, ...
         'style', 'subplot', 'surfhandle', tmph, 'update', opt.update, ...
         'colormap', opt.funcolormap, 'clim', [opt.fcolmin opt.fcolmax], ...
         'opacitylim', [opt.opacmin opt.opacmax]);
     else
-      tmpqi = [opt.qi 1];
       tmph  = opt.funhandles;
-      ft_plot_ortho(opt.fun(:,:,:,tmpqi(1),tmpqi(2)), 'transform', eye(4), 'location', opt.ijk, ...
+      ft_plot_ortho(tmpfun, 'transform', eye(4), 'location', opt.ijk, ...
         'style', 'subplot', 'surfhandle', tmph, 'update', opt.update, ...
         'colormap', opt.funcolormap, 'clim', [opt.fcolmin opt.fcolmax]);
     end
