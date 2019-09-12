@@ -293,8 +293,8 @@ isintegerZi = issufficientlyinteger(Zi(:),tol);
 [islineYi, lineYi] = isline(Yi);
 [islineZi, lineZi] = isline(Zi);
 
-use_interpn = ~isequal(transform, eye(4)) && ~isequal(interpmethod, 'nearest') && ~all([isintegerXi isintegerYi isintegerZi]);
-get_slice   = ~use_interpn && all([islineXi islineYi islineZi]);
+use_interpn = ~isequal(transform, eye(4)) || ~isequal(interpmethod, 'nearest') || ~all([isintegerXi isintegerYi isintegerZi]);
+get_slice   = ~use_interpn && all([islineXi islineYi islineZi]) && all([isintegerXi isintegerYi isintegerZi]);
 if use_interpn
   V  = interpn(X, Y, Z, dat, Xi, Yi, Zi, interpmethod);
   if domask,       Vmask = interpn(X, Y, Z, datmask,       Xi, Yi, Zi, interpmethod); end
