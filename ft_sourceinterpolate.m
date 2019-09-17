@@ -474,7 +474,7 @@ elseif ~isUnstructuredFun && isUnstructuredAna
         for m=1:dimf(5)
           fv    = dat_array{i}(:,:,:,k,m);
           fv    = fv(functional.inside(:));
-          av    = interpmat*fv;
+          av    = interpmat*double(fv); % ensure double precision to allow sparse multiplication
           allav(:,k,m) = av;
         end
       end
