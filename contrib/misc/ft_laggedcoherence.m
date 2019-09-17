@@ -147,18 +147,10 @@ cfg_freq.toi=superimposedtoi;
 
 freqout=ft_freqanalysis(cfg_freq,datain);
 
-
+dataout=freqout;
 
     
     
-    
-    
-end;
-
-
-
-
-
 
 % this might involve more active checking of whether the input options
 % are consistent with the data and with each other
