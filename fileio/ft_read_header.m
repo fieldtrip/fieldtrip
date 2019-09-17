@@ -2418,31 +2418,20 @@ switch headerformat
     hdr.nSamples            = size(smi.dat,2);
     hdr.nSamplesPre         = 0;
     hdr.nTrials             = 1;
-    hdr.FirstTimeStamp      = smi.trigger(1,1).timestamp;
-
-    % if the header contains the sampling rate use it and if not, compute
-    % it from scratch. If computed, sampling rate might have numerical
-    % issues due to tolerance (the reason that I write the two options)
-    if isfield(smi,'Fs') && ~isempty(smi.Fs);
-      hdr.Fs = smi.Fs;
-      hdr.TimeStampPerSample = 1000./hdr.Fs;
-    else
-      hdr.TimeStampPerSample  = mean(diff(smi.dat(1,:)));
-      hdr.Fs                  = 1000/hdr.TimeStampPerSample;  % these timestamps are in miliseconds
-    end
-
-    if hdr.nChans ~= size(smi.label,1)
-      ft_error('data and header have different number of channels');
-    else
-      hdr.label = smi.label;
-    end
-
-    % remember the original header details
-    hdr.orig.header = smi.header;
-    % remember all header and data details upon request
+    
+    hdr.label               = smi.label;
+    hdr.Fs                  = smi.Fs;
+    hdr.FirstTimeStamp      = smi.timestamp(1);
+    hdr.TimeStampPerSample  = mean(diff(smi.timestamp)); % these timestamps are in microseconds
+    
     if cache
+      % remember all header and data details upon request
       hdr.orig = smi;
+    else
+      % remember only the original header details
+      hdr.orig.header = smi.header;
     end
+    
     % add channel units when possible.
     for i=1:hdr.nChans
       chanunit = regexp(hdr.label{i,1},'(?<=\[).+?(?=\])','match');
