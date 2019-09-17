@@ -1,35 +1,46 @@
-function [dataout] = ft_examplefunction(cfg, datain)
-
-% FT_EXAMPLEFUNCTION demonstrates to new developers how a FieldTrip function should look like
+function [dataout] = ft_laggedcoherence(cfg, datain)
+% FT_LAGGEDCOHERENCE calculates the lagged coherence between a set of
+% channels, for a number of frequencies, and a number of lags.
 %
 % Use as
-%   outdata = ft_examplefunction(cfg, indata)
-% where indata is <<describe the type of data or where it comes from>>
-% and cfg is a configuration structure that should contain
+%   outdata = ft_laggedcoherence(cfg, indata)
+% where cfg is a configuration structure (see below) and indata is the
+% output of FT_PREPROCESSING.
 %
-% <<note that the cfg list should be indented with two spaces
+% The configuration structure has to contain
 %
-%  cfg.option1    = value, explain the value here (default = something)
-%  cfg.option2    = value, describe the value here and if needed
-%                   continue here to allow automatic parsing of the help
+%  cfg.foi        = vector 1 x numfoi, frequencies of interest
+%  cfg.loi        = vector 1 x numloi, lags of interest
+%                   loi must be a vector integers with starting value 0 or
+%                   higher
+%  cfg.numcycles  = value, number of cycles of the Fourier basis functions
+%                   that are used to calculate the Fourier coefficients
+%                   that are the basis for calculating lagged coherence
+%                   numcycles must be an integer
+% 
+% See also FT_PREPROCESSING, FT_FREQANALYSIS, FT_CONNECTIVITYANALYSIS
 %
-% The configuration can optionally contain
-%   cfg.option3   = value, explain it here (default is automatic)
+% Copyright (C) 2019-2020, DCC, Eric Maris & Anne Fransen; DCCN, Jan-Mathijs Schoffelen
 %
-% To facilitate data-handling and distributed computing you can use
-%   cfg.inputfile   =  ...
-%   cfg.outputfile  =  ...
-% If you specify one of these (or both) the input data will be read from a *.mat
-% file on disk and/or the output data will be written to a *.mat file. These mat
-% files should contain only a single variable, corresponding with the
-% input/output structure.
 %
-% See also <<give a list of function names, all in capitals>>
-
-% Here come the Copyrights
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
 %
-% Here comes the Revision tag, which is auto-updated by the version control system
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
 % $Id$
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the initial part deals with parsing the input options and data
@@ -58,33 +69,96 @@ if ft_abort
   return
 end
 
+% ensure that the required options are present
+cfg.channel     = ft_getopt(cfg, 'channel',    'all');
+
 % ensure that the input data is valid for this function, this will also do
 % backward-compatibility conversions of old data that for example was
 % read from an old *.mat file
 datain = ft_checkdata(datain, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'deprecated',  {'normalizecov', 'normalizevar'});
-cfg = ft_checkconfig(cfg, 'renamed',     {'blc', 'demean'});
-cfg = ft_checkconfig(cfg, 'renamed',     {'blcwindow', 'baselinewindow'});
-
 % ensure that the required options are present
-cfg = ft_checkconfig(cfg, 'required', {'method', 'foi', 'tapsmofrq'});
-
-% ensure that the options are valid
-cfg = ft_checkopt(cfg, 'vartrllen', 'double', {0, 1, 2});
-cfg = ft_checkopt(cfg, 'method', 'char', {'mtm', 'convol'});
-
-% get the options
-method    = ft_getopt(cfg, 'method');        % there is no default
-vartrllen = ft_getopt(cfg, 'vartrllen', 2);  % the default is 2
+cfg = ft_checkconfig(cfg, 'required', {'foi', 'loi', 'numcycles'});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the actual computation is done in the middle part
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% do your stuff...
 dataout = [];
+
+% Run a time-resolved frequency analysis (method = mtmconvol) to produce
+% Fourier coefficients that will later be used for calculating lagged
+% coherence. We begin by calculating the toi, foi and t_ftimwin configuration
+% fields for the call to ft_freqanalysis.
+
+Fs=datain.fsample;
+MinFoi=min(cfg.foi);
+NsamplesPerCycleForMinFoi=ceil(Fs/MinFoi);
+NsamplesPerCycleAll=2:NsamplesPerCycleForMinFoi;
+FreqAll=Fs*ones(size(NsamplesPerCycleAll))./NsamplesPerCycleAll;
+NsamplesPerTimwinAll=NsamplesPerCycleAll*cfg.numcycles;
+% remove all elements in NsamplesPerTimwinAll that are even (because only
+% an odd number of samples is consistent with a cfg.toi element that has
+% (NsamplesPerTimwinAll-1)/2 samples at each side.
+OddNsamples=mod(NsamplesPerTimwinAll,2)==1;
+NsamplesPerTimwinAll=NsamplesPerTimwinAll(OddNsamples);
+FreqAll=FreqAll(OddNsamples);
+TimePerTimwinAll=NsamplesPerTimwinAll/Fs;
+% Find the best matching frequencies
+freq=[];
+t_ftimwin=[];
+NsamplesPerTimwin=[];
+for foiind=1:length(cfg.foi)
+    absdiff=abs(FreqAll-cfg.foi(foiind));
+    [minval,minvalind]=min(absdiff);
+    if isempty(freq) || ~any(freq==FreqAll(minvalind))
+        freq(end+1)=FreqAll(minvalind);
+        t_ftimwin(end+1)=TimePerTimwinAll(minvalind);
+        NsamplesPerTimwin(end+1)=NsamplesPerTimwinAll(minvalind);
+    end;
+end;
+% Construct a frequency-specific toi vector for every element in freq, and
+% superimpose these toi vectors to produce the toi vector that will be
+% passed as an argument to ft_freqanalysis.
+% For the moment, we assume that all trials in datain have the same time
+% vector. This may have to be generalized.
+timevec=datain.time{1};
+toicell=cell(size(freq));
+for freqindx=1:length(freq)
+    nsegments=floor(length(timevec)/NsamplesPerTimwin(freqindx));
+    nsamplesnext2toi=(NsamplesPerTimwin(freqindx)-1)/2;
+    toisamples=(nsamplesnext2toi+1):NsamplesPerTimwin(freqindx):nsegments*NsamplesPerTimwin(freqindx);
+    toicell{freqindx}=timevec(toisamples);
+end;
+superimposedtoi=[];
+for freqindx=1:length(toicell)
+    superimposedtoi=[superimposedtoi toicell{freqindx}];
+end;
+superimposedtoi=sort(superimposedtoi,'ascend');
+% Build the cfg for ft_freqanalysis
+cfg_freq=[];
+cfg_freq.method='mtmconvol';
+cfg_freq.output='fourier';
+cfg_freq.keeptrials='yes';
+cfg_freq.foi=freq;
+cfg_freq.taper='hanning';
+cfg_freq.t_ftimwin=t_ftimwin;
+cfg_freq.toi=superimposedtoi;
+
+freqout=ft_freqanalysis(cfg_freq,datain);
+
+
+
+    
+    
+    
+    
+end;
+
+
+
+
+
 
 % this might involve more active checking of whether the input options
 % are consistent with the data and with each other
