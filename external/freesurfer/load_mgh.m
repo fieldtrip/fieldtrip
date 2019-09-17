@@ -29,9 +29,9 @@ function [vol, M, mr_parms, volsz] = load_mgh(fname,slices,frames,headeronly)
 %
 % Original Author: Bruce Fischl
 % CVS Revision Info:
-%    $Author: nicks $
-%    $Date: 2011/03/02 00:04:12 $
-%    $Revision$
+%    $Author: greve $
+%    $Date: 2016/01/19 21:18:27 $
+%    $Revision: 1.22 $
 %
 % Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
 %
@@ -49,7 +49,7 @@ M = [];
 mr_parms = [];
 volsz = [];
 
-if(nargin < 1 | nargin > 4)
+if(nargin < 1 || nargin > 4)
   msg = 'USAGE: [vol M] = load_mgh(fname,<slices>,<frames>,<headeronly>)';
   fprintf('%s',msg);
   return;
@@ -61,9 +61,14 @@ if (strcmpi(fname((strlen(fname)-3):strlen(fname)), '.MGZ') | ...
   rand('state', sum(100*clock));
   gzipped =  round(rand(1)*10000000 + ...
 		   sum(int16(fname))) + round(cputime);
-  ind = findstr(fname, '.');
-  new_fname = sprintf('/tmp/tmp%d.mgh', gzipped);
-  if (ismac || strcmp(computer,'MAC') || strcmp(computer,'MACI') || strcmp(computer, 'MACI64'))
+  %ind = findstr(fname, '.');
+  if(exist('/scratch'))
+    new_fname = sprintf('%s.load_mgh.%d.mgh', tempname(fsgettmppath), gzipped);
+  else
+    new_fname = sprintf('/tmp/tmp.load_mgh.%d.mgh', gzipped);
+  end
+  
+  if(strcmp(computer,'MAC') || strcmp(computer,'MACI') || ismac)
     unix(sprintf('gunzip -c %s > %s', fname, new_fname)) ;
   else
     unix(sprintf('zcat %s > %s', fname, new_fname)) ;
@@ -92,7 +97,7 @@ end
 v       = fread(fid, 1, 'int') ; 
 if(isempty(v))
   fprintf('ERROR: problem reading fname\n');
-  if(gzipped >=0) unix(sprintf('rm %s', fname)); end
+  if(gzipped >=0) unix(sprintf('rm -f %s', fname)); end
 end
 ndim1   = fread(fid, 1, 'int') ; 
 ndim2   = fread(fid, 1, 'int') ; 
@@ -145,12 +150,12 @@ fseek(fid, unused_space_size, 'cof') ;
 nv = ndim1 * ndim2 * ndim3 * nframes;  
 volsz = [ndim1 ndim2 ndim3 nframes];
 
-MRI_UCHAR =  0 ;
-MRI_INT =    1 ;
-MRI_LONG =   2 ;
-MRI_FLOAT =  3 ;
-MRI_SHORT =  4 ;
-MRI_BITMAP = 5 ;
+MRI_UCHAR  = 0;
+MRI_INT    = 1;
+MRI_LONG   = 2;
+MRI_FLOAT  = 3;
+MRI_SHORT  = 4;
+MRI_BITMAP = 5;
 
 % Determine number of bytes per voxel
 switch type
@@ -167,13 +172,13 @@ end
 if(headeronly)
   fseek(fid,nv*nbytespervox,'cof');
   if(~feof(fid))
-    [mr_parms count] = fread(fid,4,'float32');
+    [mr_parms, count] = fread(fid,4,'float32');
     if(count ~= 4) 
       fprintf('WARNING: error reading MR params\n');
     end
   end
   fclose(fid);
-  if(gzipped >=0)  unix(sprintf('rm %s', fname));  end
+  if(gzipped >=0)  unix(sprintf('rm -f %s', fname));  end
   return;
 end
 
@@ -181,24 +186,24 @@ end
 %------------------ Read in the entire volume ----------------%
 if(slices(1) <= 0 & frames(1) <= 0)
   switch type
-   case MRI_FLOAT,
-    vol = fread(fid, nv, 'float32') ; 
-   case MRI_UCHAR,
-    vol = fread(fid, nv, 'uchar') ; 
-   case MRI_SHORT,
-    vol = fread(fid, nv, 'short') ; 
-   case MRI_INT,
-    vol = fread(fid, nv, 'int') ; 
+    case MRI_FLOAT,
+      vol = fread(fid, nv, '*float32'); 
+    case MRI_UCHAR,
+      vol = fread(fid, nv, '*uchar'); 
+    case MRI_SHORT,
+      vol = fread(fid, nv, '*short'); 
+    case MRI_INT,
+      vol = fread(fid, nv, '*int'); 
   end
 
   if(~feof(fid))
-    [mr_parms count] = fread(fid,4,'float32');
+    [mr_parms, count] = fread(fid,4,'float32');
     if(count ~= 4) 
-      fprintf('WARNING: error reading MR params\n');
+      fprintf('WARNING: err8or reading MR params\n');
     end
   end
   fclose(fid) ;
-  if(gzipped >=0)  unix(sprintf('rm %s', fname));  end
+  if(gzipped >=0)  unix(sprintf('rm -f %s', fname));  end
   
   nread = prod(size(vol));
   if(nread ~= nv)
@@ -230,21 +235,21 @@ for frame = frames
     fseek(fid,filepos,'bof');
     
     switch type
-     case MRI_FLOAT,
-      [tmpslice nread]  = fread(fid, nvslice, 'float32') ; 
-     case MRI_UCHAR,
-      [tmpslice nread]  = fread(fid, nvslice, 'uchar') ; 
-     case MRI_SHORT,
-      [tmpslice nread]  = fread(fid, nvslice, 'short') ; 
-     case MRI_INT,
-      [tmpslice nread]  = fread(fid, nvslice, 'int') ; 
+      case MRI_FLOAT,
+        [tmpslice, nread]  = fread(fid, nvslice, '*float32'); 
+      case MRI_UCHAR,
+        [tmpslice, nread]  = fread(fid, nvslice, '*uchar'); 
+      case MRI_SHORT,
+        [tmpslice, nread]  = fread(fid, nvslice, '*short'); 
+      case MRI_INT,
+        [tmpslice, nread]  = fread(fid, nvslice, '*int'); 
     end
 
     if(nread ~= nvslice)
       fprintf('ERROR: load_mgh: reading slice %d, frame %d\n',slice,frame);
       fprintf('  tried to read %d, actually read %d\n',nvslice,nread);
       fclose(fid);
-      if(gzipped >=0) unix(sprintf('rm %s', fname)); end
+      if(gzipped >=0) unix(sprintf('rm -f %s', fname)); end
       return;
     end
 
@@ -260,13 +265,13 @@ filepos = (nframes*nvvol)*nbytespervox + filepos0;
 fseek(fid,filepos,'bof');
 
 if(~feof(fid))
-  [mr_parms count] = fread(fid,5,'float32');
+  [mr_parms, count] = fread(fid,5,'float32');
   if(count < 4) 
     fprintf('WARNING: error reading MR params\n');
   end
 end
 
 fclose(fid) ;
-if(gzipped >=0) unix(sprintf('rm %s', fname)); end
+if(gzipped >=0) unix(sprintf('rm -f %s', fname)); end
 
 return;
