@@ -275,7 +275,7 @@ if isUnstructuredFun && isUnstructuredAna && isfield(anatomical, 'orig') && isfi
     allav = zeros([size(anatomical.orig.pos,1), dimf(2:end)]);
     for k=1:dimf(2)
       for m=1:dimf(3)
-        fv     = dat_array{i}(:,k,m);
+        fv     = double_ifnot(dat_array{i}(:,k,m));
         av     = interpmat*fv;
         av(newoutside) = nan;
         allav(:,k,m)   = av;
@@ -330,7 +330,7 @@ elseif isUnstructuredFun && isUnstructuredAna
     allav = zeros([size(anatomical.pos,1), dimf(2:end)]);
     for k=1:dimf(2)
       for m=1:dimf(3)
-        fv     = dat_array{i}(:,k,m);
+        fv     = double_ifnot(dat_array{i}(:,k,m));
         av     = interpmat*fv;
         av(newoutside) = nan;
         allav(:,k,m)   = av;
@@ -391,7 +391,7 @@ elseif isUnstructuredFun && ~isUnstructuredAna
 
     for k=1:dimf(2)
       for m=1:dimf(3)
-        fv     = dat_array{i}(:,k,m);
+        fv     = double_ifnot(dat_array{i}(:,k,m));
         av(:)  = interpmat*fv;
         av(newoutside)   = nan;
         allav(:,:,:,k,m) = av;
@@ -472,16 +472,16 @@ elseif ~isUnstructuredFun && isUnstructuredAna
     if ~strcmp(cfg.interpmethod, 'project')
       for k=1:dimf(4)
         for m=1:dimf(5)
-          fv    = dat_array{i}(:,:,:,k,m);
+          fv    = double_ifnot(dat_array{i}(:,:,:,k,m)); % ensure double precision to allow sparse multiplication
           fv    = fv(functional.inside(:));
-          av    = interpmat*fv;
+          av    = interpmat*fv; 
           allav(:,k,m) = av;
         end
       end
     else
       for k=1:dimf(4)
         for m=1:dimf(5)
-          fv   = dat_array{i}(:,:,:,k,m);
+          fv   = double_ifnot(dat_array{i}(:,:,:,k,m));
           av   = interp_gridded(functional.transform, fv, anatomical.pos, 'dim', functional.dim, 'projmethod', 'project', 'projvec', cfg.projvec, 'projweight', cfg.projweight, 'projcomb', cfg.projcomb, 'projthresh', cfg.projthresh);
           allav(:,k,m) = av;
         end
@@ -575,11 +575,7 @@ elseif ~isUnstructuredFun && ~isUnstructuredAna
 
     for k=1:dimf(4)
       for m=1:dimf(5)
-        fv = dat_array{i}(:,:,:,k,m);
-        if ~isa(fv, 'double')
-          % only convert if needed, this saves memory
-          fv = double(fv);
-        end
+        fv = double_ifnot(dat_array{i}(:,:,:,k,m));
         % av( sel) = my_interpn(fx, fy, fz, fv, ax(sel), ay(sel), az(sel), cfg.interpmethod, cfg.feedback);
         if islogical(dat_array{i})
           % interpolate always with method nearest
@@ -696,3 +692,14 @@ while (1)
   sel = sel + blocksize;
 end
 ft_progress('close');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION to cast array to double precision, only if needed
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function out = double_ifnot(in)
+
+if ~isa(in, 'double')
+  out = double(in);
+else
+  out = in;
+end

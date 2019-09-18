@@ -425,6 +425,7 @@ hasfun = isfield(functional, cfg.funparameter);
 if hasfun
   fun = getsubfield(functional, cfg.funparameter);
   
+  
   dimord = getdimord(functional, cfg.funparameter);
   dimtok = tokenize(dimord, '_');
   
@@ -446,6 +447,11 @@ if hasfun
   if ~isreal(fun)
     ft_warning('functional data is complex, taking absolute value');
     fun = abs(fun);
+  end
+  
+  if ~isa(fun, 'double')
+    ft_warning('converting functional data to double precision');
+    fun = double(fun);
   end
   
   if strcmp(dimord, 'pos_rgb') || (ndims(fun)>3 && size(fun,4)==3)
