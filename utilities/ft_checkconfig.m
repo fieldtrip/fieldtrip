@@ -653,12 +653,12 @@ if istrue(checkfilenames)
     % this requires correct autodetection of the format of the data set
     [cfg.dataset, cfg.headerfile, cfg.datafile] = dataset2files(cfg.dataset, []);
 
-  elseif ~isempty(cfg.datafile) && isempty(cfg.headerfile);
+  elseif ~isempty(cfg.datafile) && isempty(cfg.headerfile)
     % assume that the datafile also contains the header information
     cfg.dataset    = cfg.datafile;
     cfg.headerfile = cfg.datafile;
 
-  elseif isempty(cfg.datafile) && ~isempty(cfg.headerfile);
+  elseif isempty(cfg.datafile) && ~isempty(cfg.headerfile)
     % assume that the headerfile also contains the data
     cfg.dataset  = cfg.headerfile;
     cfg.datafile = cfg.headerfile;
