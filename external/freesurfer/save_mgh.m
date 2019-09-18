@@ -18,21 +18,19 @@ function r = save_mgh(vol, fname, M, mr_parms);
 %
 % Original Author: Bruce Fischl
 % CVS Revision Info:
-%    $Author: nicks $
-%    $Date: 2007/01/10 22:55:10 $
-%    $Revision$
+%    $Author: greve $
+%    $Date: 2013/02/14 21:50:37 $
+%    $Revision: 1.9 $
 %
-% Copyright (C) 2002-2007,
-% The General Hospital Corporation (Boston, MA). 
-% All rights reserved.
+% Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
 %
-% Distribution, usage and copying of this software is covered under the
-% terms found in the License Agreement file named 'COPYING' found in the
-% FreeSurfer source code root directory, and duplicated here:
-% https://surfer.nmr.mgh.harvard.edu/fswiki/FreeSurferOpenSourceLicense
+% Terms and conditions for use, reproduction, distribution and contribution
+% are found in the 'FreeSurfer Software License Agreement' contained
+% in the file 'LICENSE' found in the FreeSurfer distribution, and here:
 %
-% General inquiries: freesurfer@nmr.mgh.harvard.edu
-% Bug reports: analysis-bugs@nmr.mgh.harvard.edu
+% https://surfer.nmr.mgh.harvard.edu/fswiki/FreeSurferSoftwareLicense
+%
+% Reporting: freesurfer@nmr.mgh.harvard.edu
 %
 
 r = 1;
@@ -114,11 +112,18 @@ r = 0;
 if (strcmpi(fname((length(fname)-3):length(fname)), '.MGZ') | ...
 		strcmpi(fname((length(fname)-3):length(fname)), '.GZ'))
 
-	gzipped =  round(rand(1)*10000000);
-	ind = findstr(fname, '.');
-	new_fname = sprintf('/tmp/tmp%d.mgh', gzipped);
-	unix(sprintf('mv %s %s ; gzip %s ; mv %s.gz %s', fname, new_fname, new_fname, new_fname, fname)) ;
-	fname = new_fname ;
+  % This does not generate a unique fname
+  %gzipped =  round(rand(1)*10000000);
+  %ind = findstr(fname, '.');
+  %new_fname = sprintf('/tmp/tmp%d.mgh', gzipped);
+
+  new_fname = tempname('/tmp');
+  new_fname = sprintf('%s.mgh', new_fname);
+  %fprintf('save_mgh tmp file name %s\n',new_fname);
+  unix(sprintf('mv %s %s ; gzip %s ; mv %s.gz %s', fname, new_fname, new_fname, new_fname, fname)) ;
+  fname = new_fname ;
+
 end	
+
 return;
 
