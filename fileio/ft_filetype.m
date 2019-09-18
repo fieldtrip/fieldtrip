@@ -1425,6 +1425,11 @@ elseif filetype_check_extension(filename, '.tck')
   type = 'mrtrix_tck';
   manufacturer = 'Mrtrix';
   content = 'tractography data';  
+elseif exist(fullfile(p, [f '.tsv']), 'file') && exist(fullfile(p, [f '.json']), 'file')
+  % BIDS uses tsv and json file pairs for behavioral and physiological data
+  type = 'bids_tsv';
+  manufacturer = 'BIDS';
+  content = 'timeseries data';  
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

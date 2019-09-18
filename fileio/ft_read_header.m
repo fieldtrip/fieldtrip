@@ -1,8 +1,8 @@
 function [hdr] = ft_read_header(filename, varargin)
 
-% FT_READ_HEADER reads header information from a variety of EEG, MEG and LFP
-% files and represents the header information in a common data-independent
-% format. The supported formats are listed below.
+% FT_READ_HEADER reads header information from a variety of EEG, MEG and other time
+% series data files and represents the header information in a common
+% data-independent structure. The supported formats are listed below.
 %
 % Use as
 %   hdr = ft_read_header(filename, ...)
@@ -14,6 +14,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   'chanindx'       = list with channel indices in case of different sampling frequencies (only for EDF)
 %   'coordsys'       = string, 'head' or 'dewar' (default = 'head')
 %   'chantype'       = string or cell of strings, channel types to be read (NeuroOmega, BlackRock).
+%   'headerformat'   = name of a MATLAB function that takes the filename as input (default is automatic)
 %
 % This returns a header structure with the following elements
 %   hdr.Fs                  sampling frequency
@@ -25,22 +26,24 @@ function [hdr] = ft_read_header(filename, varargin)
 %   hdr.chantype            Nx1 cell-array with the channel type, see FT_CHANTYPE
 %   hdr.chanunit            Nx1 cell-array with the physical units, see FT_CHANUNIT
 %
+% For continuously recorded data, this will return nSamplesPre=0 and nTrials=1.
+%
 % For some data formats that are recorded on animal electrophysiology
 % systems (e.g. Neuralynx, Plexon), the following optional fields are
 % returned, which allows for relating the timing of spike and LFP data
 %   hdr.FirstTimeStamp      number, represented as 32 bit or 64 bit unsigned integer
 %   hdr.TimeStampPerSample  number, represented in double precision
 %
-% For continuously recorded data, nSamplesPre=0 and nTrials=1.
+% Depending on the file format, additional header information can be
+% returned in the hdr.orig subfield.
 %
-% To use an external reading function, use key-value pair: 'headerformat', FUNCTION_NAME.
-% (Function needs to be on the path, and take as input: filename)
+% To use an external reading function, you can specify a function as the
+% 'headerformat' option. This function should take the filename as input argument.
+% Please check the code of this function for details, and search for BIDS_TSV as
+% example.
 %
 % Use cfg.chantype='chaninfo' to get hdr.chaninfo table. For BlackRock
 % specify decimation with chantype:skipfactor (e.g. cfg.chantype='analog:10')
-%
-% Depending on the file format, additional header information can be
-% returned in the hdr.orig subfield.
 %
 % The following MEG dataformats are supported
 %   CTF (*.ds, *.res4, *.meg4)
@@ -88,7 +91,7 @@ function [hdr] = ft_read_header(filename, varargin)
 % See also FT_READ_DATA, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT,
 % FT_CHANTYPE, FT_CHANUNIT
 
-% Copyright (C) 2003-2016 Robert Oostenveld
+% Copyright (C) 2003-2019 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -2418,31 +2421,20 @@ switch headerformat
     hdr.nSamples            = size(smi.dat,2);
     hdr.nSamplesPre         = 0;
     hdr.nTrials             = 1;
-    hdr.FirstTimeStamp      = smi.trigger(1,1).timestamp;
-
-    % if the header contains the sampling rate use it and if not, compute
-    % it from scratch. If computed, sampling rate might have numerical
-    % issues due to tolerance (the reason that I write the two options)
-    if isfield(smi,'Fs') && ~isempty(smi.Fs);
-      hdr.Fs = smi.Fs;
-      hdr.TimeStampPerSample = 1000./hdr.Fs;
-    else
-      hdr.TimeStampPerSample  = mean(diff(smi.dat(1,:)));
-      hdr.Fs                  = 1000/hdr.TimeStampPerSample;  % these timestamps are in miliseconds
-    end
-
-    if hdr.nChans ~= size(smi.label,1)
-      ft_error('data and header have different number of channels');
-    else
-      hdr.label = smi.label;
-    end
-
-    % remember the original header details
-    hdr.orig.header = smi.header;
-    % remember all header and data details upon request
+    
+    hdr.label               = smi.label;
+    hdr.Fs                  = smi.Fs;
+    hdr.FirstTimeStamp      = smi.timestamp(1);
+    hdr.TimeStampPerSample  = mean(diff(smi.timestamp)); % these timestamps are in microseconds
+    
     if cache
+      % remember all header and data details upon request
       hdr.orig = smi;
+    else
+      % remember only the original header details
+      hdr.orig.header = smi.header;
     end
+    
     % add channel units when possible.
     for i=1:hdr.nChans
       chanunit = regexp(hdr.label{i,1},'(?<=\[).+?(?=\])','match');
@@ -2581,6 +2573,7 @@ switch headerformat
     % this allows the user to specify an external reading function
     % if it fails, the regular unsupported warning message is thrown
     try
+      % this is used for bids_tsv, biopac_acq, motion_c3d, qualisys_tsv, and possibly others
       hdr = feval(headerformat, filename);
     catch
       if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
