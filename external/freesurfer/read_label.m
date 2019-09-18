@@ -17,7 +17,7 @@ function [l] = read_label(sname, lname)
 % CVS Revision Info:
 %    $Author: nicks $
 %    $Date: 2011/03/02 00:04:12 $
-%    $Revision$
+%    $Revision: 1.7 $
 %
 % Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
 %
