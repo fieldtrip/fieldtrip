@@ -1,8 +1,7 @@
 function test_bug103
 
-% MEM 1500mb
 % WALLTIME 00:10:00
-
+% MEM 1500mb
 % DEPENDENCY ft_singleplotER
 
 freq.freq       = 1:1:100;
@@ -15,6 +14,12 @@ figure; ft_singleplotER(cfg, freq);
 
 save /tmp/test_bug103.mat freq
 
-cfg = [];
-cfg.inputfile = '/tmp/test_bug103.mat';
-figure; ft_singleplotER(cfg);
+try
+  cfg = [];
+  cfg.inputfile = '/tmp/test_bug103.mat';
+  figure; ft_singleplotER(cfg);
+  delete /tmp/test_bug103.mat
+catch ME
+  delete /tmp/test_bug103.mat
+  rethrow(ME);
+end
