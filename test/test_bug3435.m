@@ -10,7 +10,7 @@ mri.coordsys = 'mni';
 
 cfg = [];
 cfg.downsample = 2;
-cfg.output = {'scalp', 'skull', 'csf', 'grey', 'white'};
+cfg.output = {'scalp', 'skull', 'csf', 'gray', 'white'};
 mri_segmented = ft_volumesegment(cfg, mri);
 
 cfg = [];

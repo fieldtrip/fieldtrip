@@ -137,7 +137,7 @@ if cfg.downsample~=1
   for i=1:length(cfg.parameter)
     fprintf('downsampling %s\n', cfg.parameter{i});
     tmp        = getsubfield(source, cfg.parameter{i});
-    downsample = setsubfield(downsample, cfg.parameter{i}, tmp(xsel, ysel, zsel));    % downsample the volume
+    downsample = setsubfield(downsample, cfg.parameter{i}, tmp(xsel, ysel, zsel, :));    % downsample the volume
   end
 else
   for i=1:length(cfg.parameter)

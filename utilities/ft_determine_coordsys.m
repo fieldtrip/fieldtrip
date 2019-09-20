@@ -125,6 +125,9 @@ switch dtype
     resolution    = diagonal_head/diagonal_vox; % this is in units of "data.unit"
     
     % scale funparam between 0 and 1
+    if ~isa(funparam, 'double') % avoid integer datatypes to allow for scaling
+      funparam = double(funparam);
+    end
     dmin = min(funparam(:));
     dmax = max(funparam(:));
     funparam  = (funparam-dmin)./(dmax-dmin);

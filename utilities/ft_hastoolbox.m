@@ -159,6 +159,7 @@ url = {
   'CPD'           'see https://sites.google.com/site/myronenko/research/cpd'
   'MVPA-LIGHT'    'see https://github.com/treder/MVPA-Light'
   'XDF'           'see https://github.com/xdf-modules/xdf-Matlab'
+  'MRTRIX'        'see https://mrtrix.org'
   };
 
 if nargin<2
@@ -394,7 +395,9 @@ switch toolbox
     dependency = {'cpd', 'cpd_affine', 'cpd_P'};
   case 'XDF'
     dependency = {'load_xdf', 'load_xdf_innerloop'};
-    
+  case 'MRTRIX'
+    dependency = {'read_mrtrix'};
+
     % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
     dependency = {'ft_read_header', 'ft_read_data', 'ft_read_event', 'ft_read_sens'};
