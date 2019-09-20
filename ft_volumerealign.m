@@ -269,7 +269,7 @@ if isempty(cfg.coordsys)
   elseif strcmp(cfg.method, 'interactive')
     cfg.coordsys = 'ctf';
   else
-    ft_error('you should specify the desired head coordinate system in cfg.coordsys')
+    %ft_error('you should specify the desired head coordinate system in cfg.coordsys')
   end
   ft_warning('defaulting to %s coordinate system', cfg.coordsys);
 end
@@ -932,12 +932,12 @@ switch cfg.method
       cfg.spm.smoref  = ft_getopt(cfg.spm, 'smoref',  2);
       
       if ~isfield(mri,    'coordsys')
-        mri = ft_convert_coordsys(mri);
+        mri = ft_determine_coordsys(mri);
       else
         fprintf('Input volume has coordinate system ''%s''\n', mri.coordsys);
       end
       if ~isfield(target, 'coordsys')
-        target = ft_convert_coordsys(target);
+        target = ft_determine_coordsys(target);
       else
         fprintf('Target volume has coordinate system ''%s''\n', target.coordsys);
       end
