@@ -51,6 +51,7 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(contrib/nutmegtrip/private/atlas_lookup.m)
 ARRAY+=(private/atlas_lookup.m)
+ARRAY+=(plotting/private/atlas_lookup.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -1206,6 +1207,14 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(plotting/private/inside_contour.m)
 ARRAY+=(private/inside_contour.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# intersect_line.m
+
+ARRAY=()
+ARRAY+=(plotting/private/intersect_line.m)
+ARRAY+=(private/intersect_line.m)
 sync ${ARRAY[*]}
 
 ################################################################################
