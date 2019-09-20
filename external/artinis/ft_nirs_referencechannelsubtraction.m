@@ -9,7 +9,7 @@ function data_rcs = ft_nirs_referencechannelsubtraction(cfg, datain)
 %  cfg.shortdistance = scalar, below which distance a channel is regarded
 %                      as short in cm (default = 1.5)
 %  cfg.closedistance = scalar, defines the maximal distance between a
-%                      shallow and a short channel in cm (default = 15).
+%                      long and a short channel in cm (default = 15).
 %                      NOT APPLIED CURRENTLY!
 %  cfg.method        = string, 'regstat2', 'QR' or 'OLS' (default = 'QR')
 %  cfg.verbose       = boolean, whether text output is desired (default =
