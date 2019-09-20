@@ -188,16 +188,6 @@ for diplop=1:size(dip.pos,1)
       case 'robert'
         [U,S] = svd(real(pinv(L' * inv_cov * L)));
 
-      case 'stephen'
-        %% Stephen Robinsons stuff? this did not work!
-        L2_inv = inv(L2);
-        Z2 = L2_inv * L1 * L2_inv;
-        [U,S] = svds(Z2,1,0);
-        % find the smallest eigenvalue and eigenvector
-        Y = L2_inv*U;
-        Y = Y./sqrt(dot(Y,Y));
-        U = Y;
-
       otherwise
         ft_error('unknown orimethod');
     end
@@ -227,7 +217,7 @@ for diplop=1:size(dip.pos,1)
       opt_vox_or = ori1;
     end
 
-  end, % if fixedori
+  end % if fixedori
 
   % compute the spatial filter for the optimal source orientation
   gain        = lf * opt_vox_or;
