@@ -1,4 +1,4 @@
-function data = xdf2fieldtrip(filename, varargin)
+function [data, event] = xdf2fieldtrip(filename, varargin)
 
 % XDF2FIELDTRIP reads data from a XDF file with multiple streams. It upsamples the
 % data of all streams to the highest sampling rate and concatenates all channels in
@@ -6,7 +6,7 @@ function data = xdf2fieldtrip(filename, varargin)
 % FT_PREPROCESSING.
 %
 % Use as
-%   data = xdf2fieldtrip(filename, ...)
+%   [data, events] = xdf2fieldtrip(filename, ...)
 %
 % Optional arguments should come in key-value pairs and can include
 %   streamindx  = list, indices of the streams to read (default is all)
@@ -64,42 +64,29 @@ for i=1:numel(streams)
   end
 end
 
-% Read the EEG stream to get the first time stamp and sampling rate
-EEG_info=[];
+% Read the EEG stream to get the first time stamp
+EEG_t1=[];
 for i=1:length(streams)
     if (strcmp(streams{i}.info.type,'EEG'))
-        EEG_t1= str2double(streams{i}.info.first_timestamp);
-        EEG_srate=streams{i}.info.effective_srate;
-        EEG_info=[EEG_t1 EEG_srate];
+        temp= str2double(streams{i}.info.first_timestamp);
+        EEG_t1=[EEG_t1;temp];
     end
 end
 
-if isempty(EEG_info)
-  ft_error('no EEG streams were selected');
+if isempty(EEG_t1)
+  ft_error('Data doesnot contain an EEG stream');
 end
 
-% Read events from the non continuous Marker stream
-event = [];
-for i=1:length(streams)
-    if (strcmp(streams{i}.info.type,'Markers'))
-        try
-            events = struct('sample', [], 'offset', [], 'duration', num2cell(ones(1, length(streams{i}.time_stamps))),...
-                'type', cellstr(repmat({'Marker'}, 1, length(streams{i}.time_stamps))), 'value', ' ', 'timestamp', []); 
-            for k=1:length(streams{i}.time_stamps)
-                if iscell(streams{i}.time_series)
-                    events(k).value = streams{i}.time_series{k};
-                else
-                    events(k).value = num2str(streams{i}.time_series(k));
-                end
-                events(k).sample = round((streams{i}.time_stamps(k)- EEG_t1)*EEG_srate);
-                events(k).timestamp = streams{i}.time_stamps(k);
-            end
-            event = [event, events]; 
-        catch err
-            ft_info('Could not interpret event stream named "', streams{i}.info.name, '": ', err.message);
-        end
-    end
+% Find the EEG stream with earliest time stamp. In case of two EEG streams
+% with variable sampling rates; e.g 128 Hz vs 1000 Hz
+EEG_t1_min= min(EEG_t1);
+
+% Select Non continuous Marker streams
+ismarker=false(size(streams));
+for i=1:numel(streams)
+    ismarker(i)=strcmp(streams{i}.info.type,'Markers');
 end
+MarkerStreams=streams(ismarker);
 
 % select the streams to continue working with
 if isempty(streamindx)
@@ -152,7 +139,7 @@ for i=1:numel(streams)
   data{i}.label = hdr.label;
   data{i}.time = {streams{i}.time_stamps};
   data{i}.trial = {streams{i}.time_series};
-  data{i}.event = event;
+  %data{i}.event = events;
   
 end % for all continuous streams
 
@@ -161,7 +148,7 @@ srate = nan(size(streams));
 for i=1:numel(streams)
   srate(i) = streams{i}.info.effective_srate;
 end
-[~, indx] = max(srate);
+[max_srate, indx] = max(srate);
 
 if numel(data)>1
   % resample all data structures, except the one with the max sampling rate
@@ -183,4 +170,24 @@ else
   % simply return the first and only one
   data = data{1};
 end
+% Read the events
 
+events = [];
+event = struct('sample', [], 'offset', [], 'duration', num2cell(ones(1, length(MarkerStreams{i}.time_stamps))),...
+                'type', cellstr(repmat({'Marker'}, 1, length(MarkerStreams{i}.time_stamps))), 'value', ' ', 'timestamp', []); 
+for i=1:length(MarkerStreams)
+        try
+            for k=1:length(MarkerStreams{i}.time_stamps)
+                if iscell(MarkerStreams{i}.time_series)
+                    event(k).value = MarkerStreams{i}.time_series{k};
+                else
+                    event(k).value = num2str(MarkerStreams{i}.time_series(k));
+                end
+                event(k).sample = round((MarkerStreams{i}.time_stamps(k)- EEG_t1_min)*max_srate);
+                event(k).timestamp = MarkerStreams{i}.time_stamps(k);
+            end
+            events = [events, event]; 
+        catch err
+            ft_info('Could not interpret event stream named "', MarkerStreams{i}.info.name, '": ', err.message);
+        end
+end
