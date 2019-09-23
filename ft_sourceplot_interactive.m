@@ -96,11 +96,11 @@ end
 data = cellfun(@(x) x.(cfg.parameter), varargin, 'uniformoutput', false);
 
 % set up the arguments
-keyval = struct2keyval(cfg);
+keyval = ft_cfg2keyval(cfg);
 keyval = [keyval {'tri', varargin{1}.tri, 'pos', varargin{1}.pos, 'data', data, 'time', xdat}];
 
 % and launch the viewer
-viewer = ft_interactivesourceviewer(keyval{:});
+viewer = ft_plot_mesh_interactive(keyval{:});
 viewer.show();
 
 ft_postamble debug

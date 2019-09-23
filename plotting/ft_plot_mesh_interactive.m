@@ -1,5 +1,5 @@
-classdef ft_interactivesourceviewer<handle
-  % FT_INTERACTIVESOURCEVIEWER is the lower-level implementation class
+classdef ft_plot_mesh_interactive<handle
+  % FT_PLOT_MESH_INTERACTIVE is the lower-level implementation class
   % corresponding to FT_SOURCEPLOT_INTERACTIVE. See that higher-level
   % function for details on configuration options.
   %
@@ -80,6 +80,9 @@ classdef ft_interactivesourceviewer<handle
       
       % an index into the "current" time point (in seconds)
       self.cur_time = 0;
+      
+      % we need brewermap
+      ft_hastoolbox('brewermap', 1);
       
       self.timeplot_colourmap = brewermap(8, 'Set2');
     end
