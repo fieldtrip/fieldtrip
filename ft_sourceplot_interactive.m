@@ -114,8 +114,8 @@ elseif strcmp(dimord, 'pos_freq')
 end
 
 % optionally load an atlas
-if isfield(cfg, 'atlas') && ischar(cfg.atlas)
-  cfg.atlas = ft_read_atlas(cfg.atlas);
+if isfield(cfg, 'atlas')
+  [cfg.atlas, varargin{:}] = handle_atlas_input(cfg.atlas, varargin{:});
 end
 
 % other defaults are set in the lower-level object

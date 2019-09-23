@@ -41,7 +41,7 @@ classdef ft_plot_mesh_interactive<handle
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    function self = ft_interactivesourceviewer(varargin)
+    function self = ft_plot_mesh_interactive(varargin)
       % Constructor
       
       self.tri = ft_getopt(varargin, 'tri');
