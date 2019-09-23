@@ -1,3 +1,10 @@
+function test_laggedcoherence
+
+% MEM 1500mb
+% WALLTIME 00:20:00
+
+% DEPENDENCY ft_connectivityanalysis ft_laggedcoherence ft_freqanalysis
+
 datain=[];
 datain.label={'Ch1','Ch2'};
 datain.fsample=1000;
