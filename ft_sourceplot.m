@@ -371,26 +371,7 @@ end
 %% get the elements that will be plotted
 hasatlas = ~isempty(cfg.atlas);
 if hasatlas
-  if ischar(cfg.atlas)
-    % initialize the atlas
-    [p, f, x] = fileparts(cfg.atlas);
-    fprintf(['reading ', f, ' atlas coordinates and labels\n']);
-    atlas = ft_read_atlas(cfg.atlas);
-  else
-    atlas = cfg.atlas;
-  end
-  % ensure that the atlas is formatted properly
-  atlas = ft_checkdata(atlas, 'hasunit', isfield(functional, 'unit'), 'hascoordsys', isfield(functional, 'coordsys'));
-  if isfield(functional, 'unit')
-    % ensure that the units are consistent, convert the units if required
-    atlas = ft_convert_units(atlas, functional.unit);
-  end
-  if isfield(functional, 'coordsys')
-    % ensure that the coordinate systems match
-    functional = fixcoordsys(functional);
-    atlas      = fixcoordsys(atlas);
-    assert(isequal(functional.coordsys, atlas.coordsys), 'coordinate systems do not match');
-  end
+  [atlas, functional] = handle_atlas_input(cfg.atlas, functional);
 end
 
 hasroi = ~isempty(cfg.roi);
