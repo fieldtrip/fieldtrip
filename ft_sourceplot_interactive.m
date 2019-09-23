@@ -20,6 +20,7 @@ function ft_sourceplot_interactive(cfg, varargin)
 % ft_sourceplot_interactive(cfg, sourceFC, sourceFIC);
 %
 % Configuration options (all optional) include:
+%   cfg.parameter       = string, functional parameter to plot. Default = 'pow'.
 %   cfg.data_labels     = cell array of strings, describing each data input argument. Default =
 %                         {'Input 1',...,'Input N'}
 %   cfg.time_label      = string, xlabel for line graphs of functional data. Default = 'Time
