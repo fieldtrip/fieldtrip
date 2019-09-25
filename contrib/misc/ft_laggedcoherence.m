@@ -22,6 +22,9 @@ function [dataout] = ft_laggedcoherence(cfg, datain)
 %
 % Copyright (C) 2019-2020, DCC, Eric Maris & Anne Fransen; DCCN, Jan-Mathijs Schoffelen
 %
+% When using the results of this function in a publication, please cite:
+%   Fransen, A. M., van Ede, F., & Maris, E. (2015). Identifying neuronal 
+%   oscillations using rhythmicity. Neuroimage, 118, 256-267.
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -92,60 +95,59 @@ dataout = [];
 % fields for the call to ft_freqanalysis.
 
 Fs=datain.fsample;
-MinFoi=min(cfg.foi);
-NsamplesPerCycleForMinFoi=ceil(Fs/MinFoi);
-NsamplesPerCycleAll=2:NsamplesPerCycleForMinFoi;
-FreqAll=Fs*ones(size(NsamplesPerCycleAll))./NsamplesPerCycleAll;
-NsamplesPerTimwinAll=NsamplesPerCycleAll*cfg.numcycles;
-% remove all elements in NsamplesPerTimwinAll that are even (because only
+minfoi=min(cfg.foi);
+nsamplespercycleforminfoi=ceil(Fs/minfoi);
+nsamplespercycleall=2:nsamplespercycleforminfoi;
+freqall=Fs*ones(size(nsamplespercycleall))./nsamplespercycleall;
+nsamplespertimwinall=nsamplespercycleall*cfg.numcycles;
+% remove all elements in nsamplespertimwinall that are even (because only
 % an odd number of samples is consistent with a cfg.toi element that has
-% (NsamplesPerTimwinAll-1)/2 samples at each side.
-OddNsamples=mod(NsamplesPerTimwinAll,2)==1;
-NsamplesPerTimwinAll=NsamplesPerTimwinAll(OddNsamples);
-FreqAll=FreqAll(OddNsamples);
-TimePerTimwinAll=NsamplesPerTimwinAll/Fs;
+% (nsamplespertimwinall-1)/2 samples at each side.
+oddnsamples=mod(nsamplespertimwinall,2)==1;
+nsamplespertimwinall=nsamplespertimwinall(oddnsamples);
+freqall=freqall(oddnsamples);
+timepertimwinall=nsamplespertimwinall/Fs;
 % Find the best matching frequencies
 freq=[];
 t_ftimwin=[];
-NsamplesPerTimwin=[];
+nsamplespertimwin=[];
 for foiind=1:length(cfg.foi)
-    absdiff=abs(FreqAll-cfg.foi(foiind));
+    absdiff=abs(freqall-cfg.foi(foiind));
     [minval,minvalind]=min(absdiff);
-    if isempty(freq) || ~any(freq==FreqAll(minvalind))
-        freq(end+1)=FreqAll(minvalind);
-        t_ftimwin(end+1)=TimePerTimwinAll(minvalind);
-        NsamplesPerTimwin(end+1)=NsamplesPerTimwinAll(minvalind);
+    if isempty(freq) || ~any(freq==freqall(minvalind))
+        freq(end+1)=freqall(minvalind);
+        t_ftimwin(end+1)=timepertimwinall(minvalind);
+        nsamplespertimwin(end+1)=nsamplespertimwinall(minvalind);
     end;
 end;
-% Construct a frequency-specific toi vector for every element in freq, and
-% superimpose these toi vectors to produce the toi vector that will be
-% passed as an argument to ft_freqanalysis.
+% Construct a frequency-specific toi vector for every element in freq, 
+% which will later be passed as an argument to ft_freqanalysis.
 % For the moment, we assume that all trials in datain have the same time
 % vector. This may have to be generalized.
 timevec=datain.time{1};
 toicell=cell(size(freq));
 for freqindx=1:length(freq)
-    nsegments=floor(length(timevec)/NsamplesPerTimwin(freqindx));
-    nsamplesnext2toi=(NsamplesPerTimwin(freqindx)-1)/2;
-    toisamples=(nsamplesnext2toi+1):NsamplesPerTimwin(freqindx):nsegments*NsamplesPerTimwin(freqindx);
+    nsegments=floor(length(timevec)/nsamplespertimwin(freqindx));
+    nsamplesnext2toi=(nsamplespertimwin(freqindx)-1)/2;
+    toisamples=(nsamplesnext2toi+1):nsamplespertimwin(freqindx):nsegments*nsamplespertimwin(freqindx);
     toicell{freqindx}=timevec(toisamples);
 end;
-superimposedtoi=[];
-for freqindx=1:length(toicell)
-    superimposedtoi=[superimposedtoi toicell{freqindx}];
-end;
-superimposedtoi=sort(superimposedtoi,'ascend');
+
 % Build the cfg for ft_freqanalysis
 cfg_freq=[];
 cfg_freq.method='mtmconvol';
 cfg_freq.output='fourier';
 cfg_freq.keeptrials='yes';
-cfg_freq.foi=freq;
 cfg_freq.taper='hanning';
-cfg_freq.t_ftimwin=t_ftimwin;
-cfg_freq.toi=superimposedtoi;
 
-freqout=ft_freqanalysis(cfg_freq,datain);
+% Loop over the frequencies
+freqout={};
+for freqindx=1:length(freq)
+    cfg_freq.foi=freq(freqindx);
+    cfg_freq.t_ftimwin=t_ftimwin(freqindx);
+    cfg_freq.toi=toicell{freqindx};
+    freqout{freqindx}=ft_freqanalysis(cfg_freq,datain);
+end;
 
 dataout=freqout;
 
