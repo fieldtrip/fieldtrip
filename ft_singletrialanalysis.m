@@ -293,16 +293,19 @@ case 'gbve'
   % initialize the struct that will contain the output parameters
   dataout = removefields(data, 'cfg');
   params  = struct([]);
-  options = cfg.gbve;
   for k = 1:nchan
     % preprocessing data
+    options = cfg.gbve;
+  
+    fprintf('--- Processing channel %d\n',k);
+    
     tmp     = cellrowselect(data.trial,k);
     chandat = cat(1,tmp{:});
     points  = chandat(:,tmin:tmax);
     
     % perform a loop across alpha values, cross validation
     alphas = options.alpha;
-
+    
     if length(alphas) > 1 % Use Cross validation error if multiple alphas are specified
       best_CVerr = -Inf;
 
@@ -315,7 +318,7 @@ case 'gbve'
 
         CVerr = 0;
         for kk = 1:K
-          bidx = block_idx(jj):block_idx(jj+1);
+          bidx = block_idx(kk):block_idx(kk+1);
           idx = 1:ntrl;
           idx(bidx) = [];
 
