@@ -33,7 +33,7 @@ function [dataout] = ft_singletrialanalysis(cfg, data)
 %  cfg.aseo.jitter          = value, time jitter in initial timewindow
 %                              estimate (in seconds). default 0.050 seconds
 %  cfg.aseo.numiteration    = value, number of iteration (default = 1)
-%  cfg.aseo.waveformInitSet = 2xN matrix, initial set of latencies in seconds of event-
+%  cfg.aseo.waveformInitSet = Nx2 matrix, initial set of latencies in seconds of event-
 %                             related components, give as [comp1start, comp1end;
 %                             comp2start, comp2end] (default not specified)
 %  OR
@@ -131,19 +131,17 @@ switch cfg.method
     cfg.aseo.numiteration  = ft_getopt(cfg.aseo, 'numiteration',  1);
     cfg.aseo.tapsmofrq     = ft_getopt(cfg.aseo, 'tapsmofrq',     10);
     cfg.aseo.fsample       = fsample;
-    cfg.aseo.searchGrid    = 1000./fsample; % defined in ms
-    cfg.aseo.sampPeri      = 1000./fsapmle; % defined in ms;
     cfg.aseo.nchan         = nchan;
     cfg.aseo.nsmp          = nsmp;
     cfg.aseo.ntrl          = numel(data.trial);
         
     % deal with the different ways with which the initial waveforms can be defined
     waveformInitSet  = ft_getopt(cfg.aseo, 'waveformInitSet', {});
-    jitter           = ft_getopt(cfg.aseo, 'jitter', 0.020);
+    jitter           = ft_getopt(cfg.aseo, 'jitter', 0.020); % half temporal width of shift 
     initcomp         = ft_getopt(cfg.aseo, 'initcomp', {});
         
     if isempty(waveformInitSet) && isempty(initcomp)
-      ft_error('you should supply either an initial estimate of the waveform component, or a set of latencies');
+      ft_error('for the ASEO method you should supply either an initial estimate of the waveform component, or a set of latencies');
     end
  
     % if jitter universal, put it in the right format
@@ -158,11 +156,10 @@ switch cfg.method
     cfg.aseo.jitter = jitter;
         
     if ~isempty(waveformInitSet)
-      waveformInitSet = waveformInitSet';
-      waveformInitSet = waveformInitSet(:);
       % convert seconds into samples
-      for k = 1:length(waveformInitSet)
+      for k = 1:size(waveformInitSet,1)
         waveformInitSet(k,1) = nearest(data.time{1}, waveformInitSet(k,1)); % convert unit from sec to sample
+        waveformInitSet(k,2) = nearest(data.time{1}, waveformInitSet(k,2)); % convert unit from sec to sample
       end
     end
     cfg.aseo.waveformInitSet = waveformInitSet;
@@ -173,7 +170,7 @@ switch cfg.method
       % this results in the initial components to be estimated from the ERP, given the specification of 
       % approximate latencies
       make_init = true;
-      Ncomp     = size(waveformInitSet,1)./2;
+      Ncomp     = size(waveformInitSet,1);
     else
       make_init = false;
       % ensure it to be a cell-array
@@ -226,8 +223,8 @@ switch cfg.method
         ncomp       = Ncomp(k);
         initcomp{k} = zeros(nsmp, ncomp);
         for m = 1:ncomp
-          begsmp = waveformInitSet(2*m-1, k);
-          endsmp = waveformInitSet(2*m,   k);
+          begsmp = waveformInitSet(m, 1);
+          endsmp = waveformInitSet(m, 2);
           if (endsmp <= begsmp), disp('Invalid input! '); end
           if begsmp<1,           begsmp = 1;              end
           if endsmp>nsmp,        endsmp = nsmp;           end
@@ -246,18 +243,18 @@ switch cfg.method
       chandat_fft  = fft(chandat', nfft);    % Fourier transform of the signal
       output   = ft_singletrialanalysis_aseo(cfg, chandat_fft, initcomp_fft);
       
-      params(k).latency    = output.lat_est/fsample;
-      params(k).amplitude  = output.amp_est_unscaled;
-      params(k).components = output.erp_est;
-      params(k).rejectflag = output.rejectflag;
+      params(k).latency    = output(end).lat_est./fsample;
+      params(k).amplitude  = output(end).amp_est;
+      params(k).components = output(end).erp_est;
+      params(k).rejectflag = output(end).rejectflag;
       
       for m = 1:numel(data.trial)
-        if output.rejectflag(m)==0
+        if output(end).rejectflag(m)==0
           switch cfg.output
             case 'model'
-              dataout.trial{m}(k,:) = data.trial{m}(k,:)-output.residual(:,m)';
+              dataout.trial{m}(k,:) = data.trial{m}(k,:)-output(end).residual(:,m)';
             case 'residual'
-              dataout.trial{m}(k,:) = output.residual(:,m)';
+              dataout.trial{m}(k,:) = output(end).residual(:,m)';
           end
         end
       end

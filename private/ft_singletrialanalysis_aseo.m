@@ -23,19 +23,12 @@ function [output] = ft_singletrialanalysis_aseo(cfg, data, erp_fft)
 % corr_est    : Correlation between the original data and the recovered signal
 
 % define some options locally
-maxOrderAR      = ft_getopt(cfg.aseo, 'maxOrderAR', 10);
 fsample         = ft_getopt(cfg.aseo, 'fsample');
-period          = ft_getopt(cfg.aseo, 'sampPeri');
-jitter          = ft_getopt(cfg.aseo, 'jitter'); % Latency search window defined in main_ASEO.m
-searchGrid      = ft_getopt(cfg.aseo, 'searchGrid'); % Latency search step
-thresholdAmpH   = ft_getopt(cfg.aseo, 'thresholdAmpH'); % maximum acceptable amplitude of trials, times of avergae amplitude
-thresholdAmpL   = ft_getopt(cfg.aseo, 'thresholdAmpL'); % minimum  acceptable amplitude of trials, times of avergae amplitude
-thresholdCorr   = ft_getopt(cfg.aseo, 'thresholdCorr'); % minimum correlation with the original data
 nsample         = ft_getopt(cfg.aseo, 'nsmp'); % the number of original samples in the time domain
 amp_est         = ft_getopt(cfg.aseo, 'amp_est', []);
 erp_est         = ft_getopt(cfg.aseo, 'erp_est', []);
 lat_est         = ft_getopt(cfg.aseo, 'lat_est', []);
-noise           = ft_getopt(cfg.aseo, 'noise', []);
+noise           = ft_getopt(cfg.aseo, 'noise',   []);
 numiteration    = ft_getopt(cfg.aseo, 'numiteration', 1);
 ntrl            = ft_getopt(cfg.aseo, 'ntrl', size(data, 2));
 tapsmofrq       = ft_getopt(cfg.aseo, 'tapsmofrq');
@@ -46,19 +39,19 @@ else
   doinit = false;
 end
 
-[nsmp_fft, ncomp] = size(erp_fft);            % Number of samples and number of components in frequency domain erp
-cfg.aseo.ncomp    = ncomp;
-cfg.aseo.nsmp_fft = nsmp_fft;
-data_init         = real(ifft(data));     % Data in the time domain
+[nsmp_fft, ncomp] = size(erp_fft);    % Number of samples and number of components in frequency domain erp
+cfg.aseo.ncomp    = ncomp;            % Needed downstream
+cfg.aseo.nsmp_fft = nsmp_fft;         % Needed downstream
+data_init         = real(ifft(data)); % Data in the time domain
 data_init         = data_init(1:nsample,:);
 data              = data(1:(nsmp_fft/2+1),:); % Get the signal from [0, pi).
 
 %--------------------------------------
 % initialization of variables if needed
-if isempty(erp_est), erp_est      = erp_fft(1:(nsmp_fft/2+1),:);  end  % ERP waveform, frequency domain
-if isempty(amp_est), amp_est      = ones(ntrl, ncomp);    end  % ERP amplitude
-if isempty(lat_est), lat_est      = zeros(ntrl, ncomp);   end  % ERP latency
-if isempty(noise),   noise        = ones(nsmp_fft/2+1, ntrl); end  %.*repmat(var(data_init,[],1),Nsmp/2+1,1);   % Power spectrum of on-going activity
+if isempty(erp_est), erp_est = erp_fft(1:(nsmp_fft/2+1),:); end  % ERP waveform, frequency domain
+if isempty(amp_est), amp_est = ones(ntrl, ncomp);           end  % ERP amplitude
+if isempty(lat_est), lat_est = zeros(ntrl, ncomp);          end  % ERP latency
+if isempty(noise),   noise   = ones(nsmp_fft/2+1, ntrl);    end  %.*repmat(var(data_init,[],1),Nsmp/2+1,1);   % Power spectrum of on-going activity
   
 %--------------------------------------------------------------------------------------------
 % estimation of the ERP amplitudes and latencies, first pass, starting with uniform estimates 
@@ -75,11 +68,15 @@ end
 %---------------------------------------------------------
 % do one iteration of ERP and on-going activity estimation  
 for k = 1:numiteration
-  %reject trials
+  %reject trials, based on some heuristics defined in the cfg
   [rejectflag, corr_est] = ft_rejecttrial(cfg, erp_est, amp_est, lat_est, data);
-  rejectflag(:) = false;
+  rejectflag(:)          = false;
   
   % ERP estimation in frequency domain
+  amp_est_in = amp_est;
+  lat_est_in = lat_est;
+  erp_est_in = erp_est;
+  
   [erp_est, amp_est, lat_est, residual_f] = ft_estimate_erp(cfg, data, erp_est, amp_est, lat_est, noise, rejectflag);
   
   % on-going activity estimation in Time Domain
@@ -95,17 +92,19 @@ for k = 1:numiteration
   temp3 = temp3 - ones(size(temp3,1),1)*mean(temp3);
   if strcmp(cfg.aseo.noiseEstimate, 'parametric')
     % parametric noise estimate
-    
+    maxOrderAR = ft_getopt(cfg.aseo, 'maxOrderAR', 10);
+
     [noise, ar, sigma] = ft_estimate_ar(residual, rejectflag, Nsmp, maxOrderAR);
     noise              = noise(1:(Nsmp/2+1),:);
     
     % also compute the AR model for the original data
     [orig, ar_orig, sigma_orig] = ft_estimate_ar(temp2, rejectflag, Nsmp, maxOrderAR);
-    orig  = orig(1:(Nsmp/2+1),:);
+    orig                        = orig(1:(Nsmp/2+1),:);
     
     % also compute the AR model for the ERP subtracted data
     [noise3, ar_orig2, sigma_orig2] = ft_estimate_ar(temp3, rejectflag, Nsmp, maxOrderAR);
-    noise3 = noise3(1:(Nsmp/2+1),:);
+    noise3                          = noise3(1:(Nsmp/2+1),:);
+    
   elseif strcmp(cfg.aseo.noiseEstimate, 'non-parametric')
     % non-parametric noise estimate
     
@@ -132,13 +131,12 @@ for k = 1:numiteration
   end
   
   % adjust the latency such that the mean of latencies is 0.
-  
   lat_estMean = mean(lat_est,1);
   lat_est     = lat_est - kron(ones(ntrl,1), lat_estMean);
   
   % shift the erp-components along, this assumes to be defined in samples
-  freqSeq     = 2*pi/nsmp_fft*(0:(nsmp_fft/2))';
-  for m=1:ncomp
+  freqSeq = 2*pi/nsmp_fft*(0:(nsmp_fft/2))';
+  for m = 1:ncomp
     erp_est(:, m) = erp_est(:,m).*exp(-1i*freqSeq*lat_estMean(m));
   end
   if ~exist('freqoi','var')
@@ -155,39 +153,34 @@ for k = 1:numiteration
   tmp_erp_est = tmp_erp_est./(ones(size(tmp_erp_est,1),1)*scale);
   tmp_amp_est = amp_est.*(ones(ntrl,1)*scale);
   
-  output.erp_est    = tmp_erp_est;
-  output.amp_est    = tmp_amp_est;
-  output.erp_est_f  = erp_est;
-  output.lat_est    = lat_est;
-  output.ar         = ar(:,1);
-  output.noise      = noise;
-  output.sigma      = sigma;
-  output.residual   = residual;
-  %output.reconstructed = reconstructed;
-  output.data_init  = data_init(1:nsample,:);
-  output.rejectflag = rejectflag;
-  output.corr_est   = corr_est;
-  output.ar_orig    = ar_orig(:,1);
-  output.sigma_orig = sigma_orig;
-  output.ar_orig2    = ar_orig2(:,1);
-  output.sigma_orig2 = sigma_orig2;
-  output.rejectflag  = rejectflag;
-  output.freq_orig   = orig;
-  [origdata, reconstructed]=ft_reconstruct_erp(output(end));
+  output(k).erp_est     = tmp_erp_est;
+  output(k).amp_est     = tmp_amp_est;
+  output(k).erp_est_f   = erp_est;
+  output(k).lat_est     = lat_est;
+  output(k).ar          = ar(:,1);
+  output(k).noise       = noise;
+  output(k).sigma       = sigma;
+  output(k).residual    = residual;
+  output(k).data_init   = data_init(1:nsample,:);
+  output(k).rejectflag  = rejectflag;
+  output(k).corr_est    = corr_est;
+  output(k).ar_orig     = ar_orig(:,1);
+  output(k).sigma_orig  = sigma_orig;
+  output(k).ar_orig2    = ar_orig2(:,1);
+  output(k).sigma_orig2 = sigma_orig2;
+  output(k).rejectflag  = rejectflag;
+  output(k).freq_orig   = orig;
   
-  % figure;
+  [origdata_avg, reconstructed_avg] = ft_reconstruct_erp(output(end));
+  
+  figure;
   subplot(2,2,1); plot(freqoi,mean(noise,2),freqoi,mean(orig,2),freqoi,mean(noise3,2));xlim([0 60]);drawnow;
-  subplot(2,2,2); plot([origdata reconstructed]);drawnow;
+  subplot(2,2,2); plot([origdata_avg reconstructed_avg]);drawnow;
   subplot(2,2,3); plot(tmp_erp_est);drawnow;
   
-  [origdata, reconstructed] = ft_reconstruct_erp(output(end),0);
+  [origdata, reconstructed] = ft_reconstruct_erp(output(k),0);
   subplot(2,2,4); imagesc(reconstructed'); drawnow;
 end
-
-params.latency    = lat_est;
-params.amplitude  = tmp_amp_est;
-params.components = tmp_erp_est;
-params.rejectflag = rejectflag;
 
 function  [power, coeffAR, sigma] = ft_estimate_ar(dat, rejectflag, nfft, maxOrderAR)
 
@@ -330,38 +323,30 @@ function [lat_est, amp_est] = ft_estimate_parameters(cfg, data, erp_est, amp_est
 % lat_est     : Updated estimates of ERP latencies
 
 % define some options locally
-period          = ft_getopt(cfg.aseo, 'sampPeri');
-jitter = ft_getopt(cfg.aseo, 'jitter'); % Latency search window defined in main_ASEO.m
-searchGrid      = ft_getopt(cfg.aseo, 'searchGrid'); % Latency search step
+jitter          = ft_getopt(cfg.aseo, 'jitter'); % Latency search window defined in main_ASEO.m
 ntrl            = ft_getopt(cfg.aseo, 'ntrl');
 fsample         = ft_getopt(cfg.aseo, 'fsample');
+searchGrid      = 1000/fsample; % Latency search step, seems to be milliseconds
 %{
 maxOrderAR      = ft_getopt(cfg.aseo, 'maxOrderAR', 10);
 thresholdAmpH   = ft_getopt(cfg.aseo, 'thresholdAmpH'); % maximum acceptable amplitude of trials, times of avergae amplitude
 thresholdAmpL   = ft_getopt(cfg.aseo, 'thresholdAmpL'); % minimum  acceptable amplitude of trials, times of avergae amplitude
 thresholdCorr   = ft_getopt(cfg.aseo, 'thresholdCorr'); % minimum correlation with the original data
 nsample         = ft_getopt(cfg.aseo, 'nsample'); % the number of original samples in the time domain
-amp_est         = ft_getopt(cfg.aseo, 'amp_est', []);
-erp_est         = ft_getopt(cfg.aseo, 'erp_est', []);
-lat_est         = ft_getopt(cfg.aseo, 'lat_est', []);
-noise           = ft_getopt(cfg.aseo, 'noise', []);
-numiteration    = ft_getopt(cfg.aseo, 'numiteration', 1);
 ntrl            = ft_getopt(cfg.aseo, 'ntrl', size(data_fft, 2));
 %}
 
-
-inv_noise   = 1./noise;
-  
-data([1 end],:) = data([1 end],:)/2;         % JM note: this probably has something to do with DC and Nyquist
+inv_noise           = 1./noise;
+data([1 end],:)     = data([1 end],:)/2;     % JM note: this probably has something to do with DC and Nyquist
 erp_est([1 end], :) = erp_est([1 end], :)/2; % JM note: this probably has something to do with DC and Nyquist
 [Nsmp, Ncomp]       = size(erp_est);
 freqSeq             = 2*pi/(2*Nsmp-2)*(0:(Nsmp-1))';
   
 % Estimate ERP latencies and amplitudes trial by trial 
 sel       = [1:(compNo-1) (compNo+1):size(amp_est,2)];%setdiff(1:size(amp_est,2), compNo);
-fft_point = round((2*Nsmp-2)*period/searchGrid);
-searchWindow_index1 = round(jitter(compNo,1)/searchGrid) + round(fft_point/2);
-searchWindow_index2 = round(jitter(compNo,2)/searchGrid) + round(fft_point/2);    
+fft_point = round(2*Nsmp-2);
+index1 = round(jitter(compNo,1)/searchGrid) + round(fft_point/2);
+index2 = round(jitter(compNo,2)/searchGrid) + round(fft_point/2);    
 temp = zeros(size(noise));
 for trialNo = 1:ntrl
              
@@ -393,6 +378,7 @@ zero_c(1:(round(fft_point/2) + jitter(compNo,1)),:)     = false;
 zero_c(  (round(fft_point/2) + jitter(compNo,2)):end,:) = false;
 [i1,i2] = find(zero_c);
 i1      = i1 - round(fft_point/2);
+
 cnt = 0;
 for trialNo = 1:ntrl
   tmp_i1 = i1(i2==trialNo);
@@ -400,9 +386,8 @@ for trialNo = 1:ntrl
     cnt = cnt+1;
     % fall back to the original, when no local maximum is found in the
     % search window, this then probably takes an edge
-    ruo        = real(temp_tau(searchWindow_index1:searchWindow_index2,trialNo));
-    [~, index] = max(ruo,[],1);
-    index = round(numel(ruo)./2);
+    ruo        = T(index1:index2,trialNo);
+    index      = round(numel(ruo)./2);
     lat_est(trialNo, compNo) = (jitter(compNo,1) + (index-1)*searchGrid)*(fsample/1000); %searchWindow(index) in samples (as opposed as original implementation;%  
   else
     [~, index] = min(abs(tmp_i1));
@@ -417,7 +402,7 @@ for trialNo = 1:ntrl
   A     = exp(-1i*freqSeq* lat_est(trialNo,:) ).*erp_est; 
   A_tmp = A.*(inv_noise(:,trialNo) * ones(1, Ncomp)) ;
   x     = data(:,trialNo);
-  amp_estTmp          = real(A'*A_tmp)\real(A_tmp'*x);
+  amp_estTmp = real(A'*A_tmp)\real(A_tmp'*x);
   
   %amp_estTmp = real(A(:,compNo)'*A_tmp(:,compNo))\real(A_tmp(:,compNo)'*x);
   
@@ -457,12 +442,11 @@ end
 % %tmp = dat_tmp_new'/[X ones(options.nsample,1)]';
 % 
 % amp_est(:,compNo) = tmp';
-% 
 
 function dT = ft_deriv(T)
 
 % derivative along the columns, where the 2:end-1 elements are the average
-% of the n-1 and n+1 differences
+% of the n-1 aft_estimate_erpnd n+1 differences
 
 [i1,i2]   = size(T);
 dT(i1,i2) = 0;
