@@ -233,7 +233,7 @@ switch cfg.method
           tmp = avgdat(begsmp:endsmp)';
           initcomp{k}(begsmp:endsmp, m) = tmp;
         end
-        initcomp{k} = initcomp{k} - repmat(mean(initcomp{k}),nsmp,1);
+        initcomp{k} = initcomp{k}; %;- repmat(mean(initcomp{k}),nsmp,1);
       end
             
       % do zero-padding and FFT to the signal and initial waveforms
