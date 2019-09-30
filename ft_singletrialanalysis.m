@@ -125,80 +125,82 @@ switch cfg.method
     if ~isfield(cfg, 'aseo'), cfg.aseo = []; end 
     cfg.aseo.thresholdAmpH = ft_getopt(cfg.aseo, 'thresholdAmpH', 0.5);
     cfg.aseo.thresholdAmpL = ft_getopt(cfg.aseo, 'thresholdAmpL', 0.1);
-    cfg.aseo.thresholdCorr = ft_getopt(cfg.aseo, 'thresholdCorr', 0.05);
+    cfg.aseo.thresholdCorr = ft_getopt(cfg.aseo, 'thresholdCorr', 0.2);
     cfg.aseo.maxOrderAR    = ft_getopt(cfg.aseo, 'maxOrderAR',    5);
     cfg.aseo.noiseEstimate = ft_getopt(cfg.aseo, 'noiseEstimate', 'non-parametric');
     cfg.aseo.numiteration  = ft_getopt(cfg.aseo, 'numiteration',  1);
     cfg.aseo.tapsmofrq     = ft_getopt(cfg.aseo, 'tapsmofrq',     5);
-    cfg.aseo.jitter        = 0.1;
     cfg.aseo.fsample       = fsample;
     cfg.aseo.nchan         = nchan;
     cfg.aseo.nsmp          = nsmp;
     cfg.aseo.ntrl          = numel(data.trial);
-        
+    cfg.aseo.pad           = ft_getopt(cfg.aseo, 'pad', (2.*nsmp)/fsample);    
+    
     % deal with the different ways with which the initial waveforms can be defined
     waveformInitSet  = ft_getopt(cfg.aseo, 'waveformInitSet', {});
-    jitter           = ft_getopt(cfg.aseo, 'jitter', 0.020); % half temporal width of shift 
-    initcomp         = ft_getopt(cfg.aseo, 'initcomp', {});
+    initcomp         = ft_getopt(cfg.aseo, 'initcomp',        {});
+    jitter           = ft_getopt(cfg.aseo, 'jitter',          0.020); % half temporal width of shift in s
         
     if isempty(waveformInitSet) && isempty(initcomp)
       ft_error('for the ASEO method you should supply either an initial estimate of the waveform component, or a set of latencies');
-    end
- 
-    % if jitter universal, put it in the right format
-    if length(jitter)==1
-      jitter = jitter*fsample; % convert jitter from sec to sample -> this is inconsistent with the definition of another time parameter in ms
-      jitter = repmat([-jitter jitter], [size(waveformInitSet,1) 1]);
-    elseif size(jitter)==size(waveformInitSet)
-      jitter = jitter*fsample;
-    elseif size(jitter)<size(waveformInitSet) || size(jitter)>size(waveformInitSet)
-      ft_error('please specify cfg.aseo.jitter as a universal single value or as a matrix with size(cfg.aseo.searchWindowSet)')
-    end
-    cfg.aseo.jitter = jitter;
-        
-    if ~isempty(waveformInitSet)
-      % convert seconds into samples
-      for k = 1:size(waveformInitSet,1)
-        waveformInitSet(k,1) = nearest(data.time{1}, waveformInitSet(k,1)); % convert unit from sec to sample
-        waveformInitSet(k,2) = nearest(data.time{1}, waveformInitSet(k,2)); % convert unit from sec to sample
+    elseif ~isempty(waveformInitSet)
+      % this takes precedence, and should contain per channel the begin and
+      % end points of the subwindows in time, based on which the initial
+      % subcomponents are estimated
+    
+      % ensure it to be a cell-array if the input is a matrix
+      if ~iscell(waveformInitSet)
+        waveformInitSet = repmat({waveformInitSet},[1 nchan]);
       end
-    end
-    cfg.aseo.waveformInitSet = waveformInitSet;
-    cfg.aseo.unit            = 'sample';
-        
-    % preliminaries for the inital shape of the waveform's components
-    if isempty(initcomp)
-      % this results in the initial components to be estimated from the ERP, given the specification of 
-      % approximate latencies
       make_init = true;
-      Ncomp     = size(waveformInitSet,1);
-    else
-      make_init = false;
-      % ensure it to be a cell-array
+      
+    elseif ~isempty(initcomp)
+      % ensure it to be a cell-array if the input is a matrix
       if ~iscell(initcomp)
-        initcomp = {initcomp};
+        initcomp = repmat({initcomp}, [1 nchan]);
       end
-      Ncomp = zeros(numel(initcomp));
+      make_init = false;
+      
+    end
+    
+    if ~iscell(jitter)
+      jitter = repmat({jitter}, [1 nchan]);
+    end
+    
+    if make_init
+      assert(numel(waveformInitSet)==nchan);
+      assert(numel(jitter)==nchan);
+      
+      Ncomp = zeros(nchan,1);
+      for k = 1:nchan
+        % convert the stuff to samples
+        if ~isempty(jitter{k})
+          jitter{k} = jitter{k}*fsample;
+        end
+        if size(jitter{k},2)==1
+          jitter{k} = [-jitter{k} jitter{k}];
+        end
+        if ~isempty(waveformInitSet{k})
+          Ncomp(k) = size(waveformInitSet{k},1);
+          for m = 1:size(waveformInitSet{k},1)
+            waveformInitSet{k}(m,:) = nearest(data.time{1}, waveformInitSet{k}(m,:));
+          end
+          if size(jitter{k},1)<Ncomp(k)
+            jitter{k} = repmat(jitter{k}(1,:), [Ncomp(k) 1]);
+          end
+        end
+      end
+      cfg.aseo.waveformInitSet = waveformInitSet;
+      cfg.aseo.unit            = 'sample';
+      
+    else
+      assert(numel(initcomp)==nchan);
+      Ncomp = zeros(nchan,1);
       for k = 1:numel(initcomp)
         Ncomp(k,1) = size(initcomp{k},2);
       end
     end
-        
-    % preliminaries for the jitter
-    if isempty(jitter)
-      jitter = cell(size(initcomp)); % MVE: what if initcomp is not yet specified?
-      for k = 1:numel(jitter)
-        jitter{k} = ones(Ncomp(k),1)*[-cfg.aseo.jitter cfg.aseo.jitter];
-      end
-    elseif ~iscell(jitter)
-      jitter = {jitter};
-    end
-    cfg.aseo.jitter = jitter{1};
-        
-    if nchan>1 && ~make_init && numel(initcomp)==1
-      ft_error('if supplying more than one channel, the initial component waveforms should be entered as a cell-array');
-    end
-        
+    
     % initialize the output data
     dataout = removefields(data, 'cfg');
     for k = 1:numel(data.trial)
@@ -218,31 +220,31 @@ switch cfg.method
       
       % create initial estimate waveform from set of latencies
       if make_init
-        avgdat   = mean(chandat, 1);
+        avgdat = nanmean(chandat, 1);
                 
         % Set the initial ERP waveforms according to the preset parameters
         ncomp       = Ncomp(k);
         initcomp{k} = zeros(nsmp, ncomp);
         for m = 1:ncomp
-          begsmp = waveformInitSet(m, 1);
-          endsmp = waveformInitSet(m, 2);
-          if (endsmp <= begsmp), disp('Invalid input! '); end
-          if begsmp<1,           begsmp = 1;              end
-          if endsmp>nsmp,        endsmp = nsmp;           end
+          begsmp = waveformInitSet{k}(m, 1);
+          endsmp = waveformInitSet{k}(m, 2);
+          if begsmp<1,    begsmp = 1;    end
+          if endsmp>nsmp, endsmp = nsmp; end
                  
           tmp = avgdat(begsmp:endsmp)';
           initcomp{k}(begsmp:endsmp, m) = tmp;
         end
-        initcomp{k} = initcomp{k}; %;- repmat(mean(initcomp{k}),nsmp,1);
+        initcomp{k} = initcomp{k} - repmat(mean(initcomp{k}),nsmp,1);
       end
             
       % do zero-padding and FFT to the signal and initial waveforms
-      %npad             = ceil(max(waveformInitSet(:)) -  min(waveformInitSet(:)));  % zero-padding number
-      npad     = nsmp./2; % zero-padding number, I am not sure what the effect of this parameter is
-      nfft     = 2.^(ceil(log2(nsmp+npad)))*2;
+      npad         = cfg.aseo.pad*fsample; % length of data + zero-padding number
+      nfft         = 2.^(ceil(log2(npad)))*2;
       initcomp_fft = fft(initcomp{k}, nfft); % Fourier transform of the initial waveform
       chandat_fft  = fft(chandat', nfft);    % Fourier transform of the signal
-      output   = ft_singletrialanalysis_aseo(cfg, chandat_fft, initcomp_fft);
+      
+      cfg.aseo.jitter   = jitter{k};
+      output       = ft_singletrialanalysis_aseo(cfg, chandat_fft, initcomp_fft);
       
       params(k).latency    = output(end).lat_est./fsample;
       params(k).amplitude  = output(end).amp_est;
