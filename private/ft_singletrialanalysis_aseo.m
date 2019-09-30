@@ -446,7 +446,7 @@ end
 function dT = ft_deriv(T)
 
 % derivative along the columns, where the 2:end-1 elements are the average
-% of the n-1 aft_estimate_erpnd n+1 differences
+% of the n-1 and n+1 differences
 
 [i1,i2]   = size(T);
 dT(i1,i2) = 0;

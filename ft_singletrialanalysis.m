@@ -130,6 +130,7 @@ switch cfg.method
     cfg.aseo.noiseEstimate = ft_getopt(cfg.aseo, 'noiseEstimate', 'non-parametric');
     cfg.aseo.numiteration  = ft_getopt(cfg.aseo, 'numiteration',  1);
     cfg.aseo.tapsmofrq     = ft_getopt(cfg.aseo, 'tapsmofrq',     10);
+    cfg.aseo.jitter        = 0.1;
     cfg.aseo.fsample       = fsample;
     cfg.aseo.nchan         = nchan;
     cfg.aseo.nsmp          = nsmp;
@@ -375,10 +376,8 @@ case 'gbve'
         % to be done
         error('not yet implemented');
     end
-    
-    
-
   end
+  
 end
 
 dataout.params = params;
