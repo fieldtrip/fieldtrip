@@ -1,4 +1,4 @@
-function test_ft_singletrialanalysis
+%function test_ft_singletrialanalysis
 
 % MEM 1500mb
 % WALLTIME 00:15:00
@@ -8,11 +8,11 @@ function test_ft_singletrialanalysis
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/test_ft_singletrialanalysis'));
 ft_hastoolbox('lagextraction', 1);
 
-cfg = [];
-cfg.method = 'gbve';
-cfg.gbve.latency = [0 inf];
-cfg.gbve.use_maximum = false;
-out_gbve = ft_singletrialanalysis(cfg, data);
+% cfg = [];
+% cfg.method = 'gbve';
+% cfg.gbve.latency = [0 inf];
+% cfg.gbve.use_maximum = false;
+% out_gbve = ft_singletrialanalysis(cfg, data);
 
 cfg = [];
 cfg.method = 'aseo';

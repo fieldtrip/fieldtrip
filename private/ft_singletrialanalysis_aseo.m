@@ -33,7 +33,7 @@ numiteration    = ft_getopt(cfg.aseo, 'numiteration', 1);
 ntrl            = ft_getopt(cfg.aseo, 'ntrl', size(data, 2));
 tapsmofrq       = ft_getopt(cfg.aseo, 'tapsmofrq');
 
-if any([isempty(amp_est) isempty(lat_est)])
+if all([isempty(amp_est) isempty(lat_est)])
   doinit = true;
 else
   doinit = false;
@@ -327,14 +327,6 @@ jitter          = ft_getopt(cfg.aseo, 'jitter'); % Latency search window defined
 ntrl            = ft_getopt(cfg.aseo, 'ntrl');
 fsample         = ft_getopt(cfg.aseo, 'fsample');
 searchGrid      = 1000/fsample; % Latency search step, seems to be milliseconds
-%{
-maxOrderAR      = ft_getopt(cfg.aseo, 'maxOrderAR', 10);
-thresholdAmpH   = ft_getopt(cfg.aseo, 'thresholdAmpH'); % maximum acceptable amplitude of trials, times of avergae amplitude
-thresholdAmpL   = ft_getopt(cfg.aseo, 'thresholdAmpL'); % minimum  acceptable amplitude of trials, times of avergae amplitude
-thresholdCorr   = ft_getopt(cfg.aseo, 'thresholdCorr'); % minimum correlation with the original data
-nsample         = ft_getopt(cfg.aseo, 'nsample'); % the number of original samples in the time domain
-ntrl            = ft_getopt(cfg.aseo, 'ntrl', size(data_fft, 2));
-%}
 
 inv_noise           = 1./noise;
 data([1 end],:)     = data([1 end],:)/2;     % JM note: this probably has something to do with DC and Nyquist
@@ -404,20 +396,14 @@ for trialNo = 1:ntrl
   x     = data(:,trialNo);
   amp_estTmp = real(A'*A_tmp)\real(A_tmp'*x);
   
-  %amp_estTmp = real(A(:,compNo)'*A_tmp(:,compNo))\real(A_tmp(:,compNo)'*x);
-  
-  amp_estTmp(amp_estTmp<0) = nan;
-  
-  amp_est(trialNo, :) = amp_estTmp.';
-  
-  %amp_est(trialNo, compNo) = amp_estTmp.'; % should the amplitude of all components be updated?
+  amp_estTmp(amp_estTmp<0) = nan; % disallow for polarity flips
+  amp_est(trialNo, :)      = amp_estTmp.';
 end
 
 if any(~isfinite(amp_est(:)))
-%     keyboard
-for k = 1:size(amp_est,2)
-  amp_est(~isfinite(amp_est(:,k)),k) = nanmedian(amp_est(:,k))./10;
-end
+  for k = 1:size(amp_est,2)
+    amp_est(~isfinite(amp_est(:,k)),k) = nanmedian(amp_est(:,k));%./10;
+  end
 end
 
 % erp_tmp = real(ifft(cat(1,erp_est,conj(erp_est(end-1:-1:2,:)))));

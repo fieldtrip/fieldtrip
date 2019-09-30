@@ -129,7 +129,7 @@ switch cfg.method
     cfg.aseo.maxOrderAR    = ft_getopt(cfg.aseo, 'maxOrderAR',    5);
     cfg.aseo.noiseEstimate = ft_getopt(cfg.aseo, 'noiseEstimate', 'non-parametric');
     cfg.aseo.numiteration  = ft_getopt(cfg.aseo, 'numiteration',  1);
-    cfg.aseo.tapsmofrq     = ft_getopt(cfg.aseo, 'tapsmofrq',     10);
+    cfg.aseo.tapsmofrq     = ft_getopt(cfg.aseo, 'tapsmofrq',     5);
     cfg.aseo.jitter        = 0.1;
     cfg.aseo.fsample       = fsample;
     cfg.aseo.nchan         = nchan;
@@ -248,6 +248,7 @@ switch cfg.method
       params(k).amplitude  = output(end).amp_est;
       params(k).components = output(end).erp_est;
       params(k).rejectflag = output(end).rejectflag;
+      params(k).noise      = output(end).noise;
       
       for m = 1:numel(data.trial)
         if output(end).rejectflag(m)==0
