@@ -1268,6 +1268,10 @@ elseif filetype_check_extension(filename, '.txt') && filetype_check_header(filen
   type = 'easycap_txt';
   manufacturer = 'Easycap';
   content = 'electrode positions';
+elseif filetype_check_extension(filename, '.txt') && filetype_check_header(filename, '# OpenSignals Text File Format')
+  type = 'opensignals_txt';
+  manufacturer = 'Bitalino';
+  content = '';
 elseif filetype_check_extension(filename, '.txt')
   type = 'ascii_txt';
   manufacturer = '';

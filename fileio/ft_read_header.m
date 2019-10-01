@@ -2573,7 +2573,7 @@ switch headerformat
     % this allows the user to specify an external reading function
     % if it fails, the regular unsupported warning message is thrown
     try
-      % this is used for bids_tsv, biopac_acq, motion_c3d, qualisys_tsv, and possibly others
+      % this is used for bids_tsv, biopac_acq, motion_c3d, opensignals_txt, qualisys_tsv, and possibly others
       hdr = feval(headerformat, filename);
     catch
       if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
