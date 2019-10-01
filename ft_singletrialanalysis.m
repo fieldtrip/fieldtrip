@@ -192,7 +192,6 @@ switch cfg.method
     
     for k = 1:numel(jitter)
       if ~isempty(jitter{k})
-        if size(jitter{k},2)==1, jitter{k} = [-jitter{k} jitter{k}]; end
         if size(jitter{k},1)~=size(initcomp{k},2), jitter{k} = repmat(jitter{k}(1,:),[size(initcomp{k},2) 1]); end
       end
     end

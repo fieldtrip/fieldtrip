@@ -324,8 +324,8 @@ freqSeq             = 2*pi/(2*nsmp-2)*(0:(nsmp-1))';
 % Estimate ERP latencies and amplitudes trial by trial 
 sel       = [1:(compNo-1) (compNo+1):size(amp_est,2)];%setdiff(1:size(amp_est,2), compNo);
 fft_point = round(2*nsmp-2);
-index1 = round(jitter(compNo,1).*fsample + fft_point/2);
-index2 = round(jitter(compNo,2).*fsample + fft_point/2);    
+index1 = round(-jitter(compNo).*fsample + fft_point/2);
+index2 = round( jitter(compNo).*fsample + fft_point/2);    
 temp = zeros(size(noise));
 for trialNo = 1:ntrl
              
@@ -367,7 +367,7 @@ for trialNo = 1:ntrl
     % search window, this then probably takes an edge
     ruo        = T(index1:index2,trialNo);
     index      = round(numel(ruo)./2);
-    lat_est(trialNo, compNo) = (jitter(compNo,1) + (index-1));%*searchGrid)*(fsample/1000); %searchWindow(index) in samples (as opposed as original implementation;%  
+    lat_est(trialNo, compNo) = (-jitter(compNo) + (index-1));%*searchGrid)*(fsample/1000); %searchWindow(index) in samples (as opposed as original implementation;%  
   else
     [~, index] = min(abs(tmp_i1));
     index      = tmp_i1(index);
