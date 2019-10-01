@@ -140,6 +140,9 @@ cfg_freq.output='fourier';
 cfg_freq.keeptrials='yes';
 cfg_freq.taper='hanning';
 
+cfg_lcoh.method = 'laggedcoherence';
+
+
 % Loop over the frequencies
 freqout={};
 for freqindx=1:length(freq)
@@ -147,6 +150,7 @@ for freqindx=1:length(freq)
     cfg_freq.t_ftimwin=t_ftimwin(freqindx);
     cfg_freq.toi=toicell{freqindx};
     freqout{freqindx}=ft_freqanalysis(cfg_freq,datain);
+    cohout{freqindx}=ft_connectivityanalysis(cfg_lcoh,freqout{freqindx});
 end;
 
 dataout=freqout;

@@ -106,7 +106,11 @@ for k = 1:numel(lags_indx)
     % convert the data matrix into a 'rpt_chancmb_freq', accounting for
     % time points with nans may be needed
     ntime = numel(tmpfreq.time);
-    nrpt  = size(tmpfreq.crsspctrm,1);
+    if ~contains(tmpfreq.dimord, 'rpt')
+      nrpt = 1;
+    else
+      nrpt  = size(tmpfreq.crsspctrm,1);
+    end
     ncmb  = size(tmpfreq.labelcmb,1);
     nfreq = numel(tmpfreq.freq);
     tmpfreq.lcrsspctrm = reshape(permute(tmpfreq.crsspctrm, [4 1 2 3]),[nrpt*ntime ncmb nfreq]);
