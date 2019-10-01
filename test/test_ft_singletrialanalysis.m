@@ -16,7 +16,7 @@ ft_hastoolbox('lagextraction', 1);
 
 cfg = [];
 cfg.method = 'aseo';
-cfg.aseo.waveformInitSet = [0.2 0.5];
+cfg.aseo.initlatency = [0.2 0.5];
 out_aseo = ft_singletrialanalysis(cfg, data);
 
 rt=(data.trialinfo(:,end)-data.trialinfo(:,end-1))./1200;
