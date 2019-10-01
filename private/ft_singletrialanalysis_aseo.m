@@ -145,20 +145,21 @@ for k = 1:numiteration
   output(k).amp_est     = tmp_amp_est;
   output(k).erp_est_f   = erp_est;
   output(k).lat_est     = lat_est;
-  output(k).ar          = ar(:,1);
   output(k).noise       = noise;
-  output(k).sigma       = sigma;
   output(k).residual    = residual;
   output(k).data_init   = data_init(1:nsample,:);
   output(k).rejectflag  = rejectflag;
   output(k).corr_est    = corr_est;
-  output(k).ar_orig     = ar_orig(:,1);
-  output(k).sigma_orig  = sigma_orig;
-  output(k).ar_orig2    = ar_orig2(:,1);
-  output(k).sigma_orig2 = sigma_orig2;
   output(k).rejectflag  = rejectflag;
   output(k).freq_orig   = orig;
-  
+  if exist('ar', 'var')
+    output(k).ar = ar(:,1);
+    output(k).sigma       = sigma;
+    output(k).ar_orig     = ar_orig(:,1);
+    output(k).sigma_orig  = sigma_orig;
+    output(k).ar_orig2    = ar_orig2(:,1);
+    output(k).sigma_orig2 = sigma_orig2;
+  end
   [origdata_avg, reconstructed_avg] = ft_reconstruct_erp(output(end));
   
   figure;
