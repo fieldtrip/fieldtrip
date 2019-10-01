@@ -487,6 +487,7 @@ freqSeq       = 2*pi/(2*nsmp-2)*(0:(nsmp-1))';
   
 invsqrt_noise = 1./sqrt(noise);
 acceptIndex   = find(~rejectflag);
+erp_est       = zeros(nsmp,ncomp);
 for k = 1:nsmp
   A_tilde = amp_in(acceptIndex,:).*exp(-1i*freqSeq(k)*lat_in(acceptIndex,:)).* (invsqrt_noise(k, acceptIndex).'*ones(1,ncomp)) ;  
   X_tilde = data(k,acceptIndex).'.*invsqrt_noise(k,acceptIndex).';
