@@ -19,29 +19,49 @@ function [dataout] = ft_singletrialanalysis(cfg, data)
 %  cfg.output  = 'model', or 'residual', which returns the modelled data,
 %                or the residuals.
 %
-% METHOD SPECIFIC OPTIONS AND DESCRIPTIONS
+% Method specific options are specified in the appropriate substructure.
 %
-% ASEO
-%  ASEO iteratively models single-trial event-related activity and
-%  ongoing activity and gives an estimate of single-trial latency shift and
-%  amplitude scaling of event-related components. It has the following options:
-%
-%  cfg.aseo.noiseEstimate   = 'non-parametric' or 'parametric', estimate noise
-%                               using parametric or non-parametric (default) method
-%  cfg.aseo.tapsmofrq       = value, smoothing parameter of noise
-%                               estimate (default = 10)
-%  cfg.aseo.jitter          = value, time jitter in initial timewindow
+% For the ASEO method, the following options can be specified:
+%   cfg.aseo.noiseEstimate   = 'non-parametric' or 'parametric', estimate noise
+%                              using parametric or non-parametric (default) method
+%   cfg.aseo.tapsmofrq       = value, smoothing parameter of noise for
+%                              nonparametric estimation (default = 5)
+%   cfg.aseo.jitter          = value, time jitter in initial timewindow
 %                              estimate (in seconds). default 0.050 seconds
-%  cfg.aseo.numiteration    = value, number of iteration (default = 1)
-%  cfg.aseo.initlatency = Nx2 matrix, initial set of latencies in seconds of event-
-%                             related components, give as [comp1start, comp1end;
-%                             comp2start, comp2end] (default not specified)
-%  OR
-%  cfg.aseo.initcomp        = vector, initial estimate of the waveform component
-%  % NOTE: multiple channels is currently not supported. if jitter is
-%  specified once, jitter{k} where k is the channelnumber, is empty and
-%  fails.
+%   cfg.aseo.numiteration    = value, number of iteration (default = 1)
+%   cfg.aseo.initlatency     = Nx2 matrix, initial set of latencies in seconds of event-
+%                              related components, give as [comp1start, comp1end;
+%                              comp2start, comp2end] (default not
+%                              specified). For multiple channels it should
+%                              be a cell-array, one matrix per channel
+%  Alternatively, rather than specifying a (set of latencies), one can also
+%  specify:
 %
+%   cfg.aseo.initcomp        = vector, initial estimate of the waveform
+%                              components. For multiple channels it should
+%                              be a cell-array, one matrix per channel.
+%
+% For the GBVE method, the following options can be specified:
+%   cfg.gbve.sigma             = vector, range of sigma values to explore in 
+%                                cross-validation loop (default: 0.01:0.01:0.2)
+%   cfg.gbve.distance          = scalar, distance metric to use as
+%                                evaluation criterion, see plugin code for
+%                                more informatoin
+%   cfg.gbve.alpha             = vector, range of alpha values to explor in
+%                                cross-validation loop (default: [0 0.001 0.01 0.1])
+%   cfg.gbve.exponent          = scalar, see plugin code for information
+%   cfg.gbve.use_maximum       = boolean, (default: 1) consider the positive going peak
+%   cfg.gbve.show_pca          = boolean, see plugin code (default 0)
+%   cfg.gbve.show_trial_number = boolean, see plugin code (default 0)
+%   cfg.gbve.verbose           = boolean (default: 1)
+%   cfg.gbve.disp_log          = boolean, see plugin code (default 0)
+%   cfg.gbve.latency           = vector [min max], latency range in s
+%                                (default: [-inf inf])
+%   cfg.gbve.xwin              = scalar smoothing parameter for moving
+%                                average smoothing (default: 1), see
+%                                eeglab's movav function for more
+%                                information.
+%   
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
