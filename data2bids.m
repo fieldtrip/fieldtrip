@@ -251,7 +251,7 @@ cfg.proc      = ft_getopt(cfg, 'proc');
 cfg.datatype  = ft_getopt(cfg, 'datatype');
 
 if isempty(cfg.datatype)
-  modality = {'meg', 'eeg', 'ieeg', 'emg', 'video', 'eyetracker', 'physio', 'stim', 'motion'};
+  modality = {'meg', 'eeg', 'ieeg', 'emg', 'exg', 'video', 'eyetracker', 'physio', 'stim', 'motion'};
   for i=1:numel(modality)
     if isfield(cfg, modality{i}) && ~isempty(cfg.(modality{i}))
       % the user specified modality-specific options, assume that the datatype matches
@@ -272,6 +272,7 @@ cfg.meg           = ft_getopt(cfg, 'meg');
 cfg.eeg           = ft_getopt(cfg, 'eeg');
 cfg.ieeg          = ft_getopt(cfg, 'ieeg');
 cfg.emg           = ft_getopt(cfg, 'emg');
+cfg.exg           = ft_getopt(cfg, 'exg');
 cfg.video         = ft_getopt(cfg, 'video');
 cfg.eyetracker    = ft_getopt(cfg, 'eyetracker');
 cfg.physio        = ft_getopt(cfg, 'physio');
@@ -465,6 +466,11 @@ cfg.emg.ElectrodeManufacturersModelName   = ft_getopt(cfg.emg, 'ElectrodeManufac
 cfg.emg.EMGPlacementScheme                = ft_getopt(cfg.emg, 'EMGPlacementScheme'                );
 cfg.emg.EMGReference                      = ft_getopt(cfg.emg, 'EMGReference'                      );
 cfg.emg.EMGGround                         = ft_getopt(cfg.emg, 'EMGGround'                         );
+
+%% EXG is not part of the official BIDS specification
+cfg.exg.SamplingFrequency                 = ft_getopt(cfg.emg, 'SamplingFrequency'                 );
+cfg.exg.RecordingDuration                 = ft_getopt(cfg.emg, 'RecordingDuration'                 );
+cfg.exg.RecordingType                     = ft_getopt(cfg.emg, 'RecordingType'                     );
 
 %% video is not part of the official BIDS specification
 cfg.video.FrameRate                       = ft_getopt(cfg.video, 'FrameRate'           );
@@ -739,6 +745,8 @@ switch typ
       need_ieeg_json = true;
     elseif isequal(cfg.datatype, 'emg')
       need_emg_json = true;
+    elseif isequal(cfg.datatype, 'exg')
+      need_exg_json = true;
     else
       ft_warning('assuming that the dataset represents EEG');
       need_eeg_json = true;
@@ -774,6 +782,8 @@ switch typ
       need_ieeg_json = true;
     elseif isequal(cfg.datatype, 'emg')
       need_emg_json = true;
+    elseif isequal(cfg.datatype, 'exg')
+      need_exg_json = true;
     elseif isequal(cfg.datatype, 'physio')
       need_physio_json = true;
     elseif isequal(cfg.datatype, 'stim')
@@ -817,8 +827,8 @@ switch typ
       need_ieeg_json = true;
     elseif isequal(cfg.datatype, 'emg')
       need_emg_json = true;
-    elseif isequal(cfg.datatype, 'emg')
-      need_emg_json = true;
+    elseif isequal(cfg.datatype, 'exg')
+      need_exg_json = true;
     elseif isequal(cfg.datatype, 'physio')
       need_physio_json = true;
     elseif isequal(cfg.datatype, 'stim')
@@ -862,12 +872,15 @@ if need_meg_json || need_eeg_json || need_ieeg_json
   end
 end
 
-need_events_tsv       = need_events_tsv       || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_eyetracker_json || need_motion_json || (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task));
-need_channels_tsv     = need_channels_tsv     || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json;
+need_events_tsv       = need_events_tsv       || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_eyetracker_json || need_motion_json || (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task));
+need_channels_tsv     = need_channels_tsv     || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json;
 need_coordsystem_json = need_coordsystem_json || need_meg_json || need_electrodes_tsv;
 
 if need_emg_json
   ft_warning('EMG data is not yet part of the official BIDS specification');
+  cfg.dataset_description.BIDSVersion = 'n/a';
+elseif need_exg_json
+  ft_warning('EXG data is not yet part of the official BIDS specification');
   cfg.dataset_description.BIDSVersion = 'n/a';
 elseif need_video_json
   ft_warning('video data is not yet part of the official BIDS specification');
@@ -918,6 +931,11 @@ ieeg_settings = keepfields(cfg.ieeg, fn);
 fn = fieldnames(cfg.emg);
 fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
 emg_settings = keepfields(cfg.emg, fn);
+
+% make the relevant selection, all json fields start with a capital letter
+fn = fieldnames(cfg.exg);
+fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
+exg_settings = keepfields(cfg.exg, fn);
 
 % make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg.video);
@@ -1055,6 +1073,18 @@ if need_emg_json
   emg_json = mergeconfig(generic_settings, emg_json, false);
 end
 
+%% need_exg_json
+if need_exg_json
+  exg_json.SamplingFrequency          = hdr.Fs;
+  exg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
+  exg_json.EpochLength                = hdr.nSamples/hdr.Fs;
+  
+  % merge the information specified by the user with that from the data
+  % in case fields appear in both, the first input overrules the second
+  exg_json = mergeconfig(exg_settings,     exg_json, false);
+  exg_json = mergeconfig(generic_settings, exg_json, false);
+end
+
 %% need_video_json
 if need_video_json
   ws = warning('off', 'MATLAB:structOnObject');
@@ -1149,6 +1179,8 @@ if need_channels_tsv
     type_json = ieeg_json;
   elseif need_emg_json
     type_json = emg_json;
+  elseif need_exg_json
+    type_json = exg_json;
   end
   fn = fieldnames(type_json);
   fn = fn(endsWith(fn, 'ChannelCount'));
@@ -1260,7 +1292,7 @@ if need_events_tsv
     % align the presentation events with the triggers
     cfg.events = align_presentation(presentation, cfg.presentation, trigger, cfg.trigger, hdr, istrue(cfg.feedback));
     
-  elseif ~isempty(cfg.presentationfile) && (need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json)
+  elseif ~isempty(cfg.presentationfile) && (need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json)
     % the code can either align presentation and trigger channel, or use the user-supplied events that must be aligned
     assert(isempty(cfg.events) || (isstruct(cfg.events) && numel(fieldnames(cfg.events))==0), 'this is mutually exclusive with specifying cfg.events')
     
@@ -1420,7 +1452,7 @@ switch cfg.method
       otherwise
         % look at the user's specification of cfg.datatype
         switch cfg.datatype
-          case {'eeg', 'ieeg', 'emg'}
+          case {'eeg', 'ieeg', 'emg', 'exg'}
             % write the data in BrainVision core file format
             [p, f, x] = fileparts(cfg.outputfile);
             cfg.outputfile = fullfile(p, [f '.vhdr']);
@@ -1482,7 +1514,7 @@ end % switch method
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % each of these has a corresponding json file
-modality = {'mri', 'meg', 'eeg', 'ieeg', 'emg', 'video', 'eyetracker', 'physio', 'stim', 'motion', 'coordsystem'};
+modality = {'mri', 'meg', 'eeg', 'ieeg', 'emg', 'exg', 'video', 'eyetracker', 'physio', 'stim', 'motion', 'coordsystem'};
 for i=1:numel(modality)
   if eval(sprintf('need_%s_json', modality{i}))
     modality_json = eval(sprintf('%s_json', modality{i}));
@@ -1734,7 +1766,7 @@ function f = add_datatype(f, typ)
 f = [f '_' typ];
 
 function f = remove_datatype(f)
-typ = {'FLAIR', 'FLASH', 'PD', 'PDT2', 'PDmap', 'T1map', 'T1rho', 'T1w', 'T2map', 'T2star', 'T2w', 'angio', 'bold', 'bval', 'bvec', 'channels', 'coordsystem', 'defacemask', 'dwi', 'eeg', 'epi', 'events', 'fieldmap', 'headshape', 'ieeg', 'inplaneT1', 'inplaneT2', 'magnitude', 'magnitude1', 'magnitude2', 'meg', 'phase1', 'phase2', 'phasediff', 'photo', 'sbref', 'physio', 'stim', 'emg', 'video', 'eyetracker', 'motion'};
+typ = {'FLAIR', 'FLASH', 'PD', 'PDT2', 'PDmap', 'T1map', 'T1rho', 'T1w', 'T2map', 'T2star', 'T2w', 'angio', 'bold', 'bval', 'bvec', 'channels', 'coordsystem', 'defacemask', 'dwi', 'eeg', 'epi', 'events', 'fieldmap', 'headshape', 'ieeg', 'inplaneT1', 'inplaneT2', 'magnitude', 'magnitude1', 'magnitude2', 'meg', 'phase1', 'phase2', 'phasediff', 'photo', 'sbref', 'physio', 'stim', 'emg', 'exg', 'video', 'eyetracker', 'motion'};
 for i=1:numel(typ)
   if endsWith(f, ['_' typ{i}])
     f = f(1:end-length(typ{i})-1); % also the '_'
@@ -1946,7 +1978,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function dir = datatype2dirname(typ)
 % see https://bids-specification.readthedocs.io/en/stable/99-appendices/04-entity-table.html
-% emg, eyetracker, motion and video are not part of the official specification
+% emg, exg, eyetracker, motion and video are not part of the official specification
 switch typ
   case {'T1w' 'T2w' 'T1rho' 'T1map' 'T2map' 'T2star' 'FLAIR' 'FLASH' 'PD' 'PDmap' 'PDT2' 'inplaneT1' 'inplaneT2' 'angio' 'defacemask'}
     dir = 'anat';
@@ -1966,6 +1998,8 @@ switch typ
     dir = 'ieeg';
   case {'emg'} % this is not part of the official specification
     dir = 'emg';
+  case {'exg'} % this is not part of the official specification
+    dir = 'exg';
   otherwise
     ft_error('unrecognized data type "%s"', typ);
 end
