@@ -5,7 +5,7 @@
 
 % DEPENDENCY ft_singletrialanalysis
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/test_ft_singletrialanalysis'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/test_ft_singletrialanalysis.mat'));
 ft_hastoolbox('lagextraction', 1);
 
 % cfg = [];
