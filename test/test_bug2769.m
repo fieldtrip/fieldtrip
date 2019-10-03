@@ -67,10 +67,10 @@ cfg.numvertices = 1500;
 mesh2 = ft_prepare_mesh(cfg, mri2);
 
 surface1 = mesh1;
-surface1.pow = surface1.pnt(:,3);
+surface1.pow = surface1.pos(:,3);
 
 surface2 = mesh2;
-surface2.pow = surface2.pnt(:,3);
+surface2.pow = surface2.pos(:,3);
 
 %% interpolate volume data onto surface
 
