@@ -17,13 +17,13 @@ function [dataout] = ft_laggedcoherence(cfg, datain)
 %                   that are used to calculate the Fourier coefficients
 %                   that are the basis for calculating lagged coherence
 %                   numcycles must be an integer
-% 
+%
 % See also FT_PREPROCESSING, FT_FREQANALYSIS, FT_CONNECTIVITYANALYSIS
 %
 % Copyright (C) 2019-2020, DCC, Eric Maris & Anne Fransen; DCCN, Jan-Mathijs Schoffelen
 %
 % When using the results of this function in a publication, please cite:
-%   Fransen, A. M., van Ede, F., & Maris, E. (2015). Identifying neuronal 
+%   Fransen, A. M., van Ede, F., & Maris, E. (2015). Identifying neuronal
 %   oscillations using rhythmicity. Neuroimage, 118, 256-267.
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
@@ -74,6 +74,14 @@ end
 
 % ensure that the required options are present
 cfg.channel     = ft_getopt(cfg, 'channel',    'all');
+cfg.trials      = ft_getopt(cfg, 'trials',     'all');
+
+% select channels and trials of interest, by default this will select all channels and trials
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
+datain = ft_selectdata(tmpcfg, datain);
+% restore the provenance information, FIXME this can only be achieved is
+% rollback_provenance is visible from within contrib/misc
+%[cfg, datain] = rollback_provenance(cfg, datain);
 
 % ensure that the input data is valid for this function, this will also do
 % backward-compatibility conversions of old data that for example was
@@ -112,26 +120,34 @@ freq=[];
 t_ftimwin=[];
 nsamplespertimwin=[];
 for foiind=1:length(cfg.foi)
-    absdiff=abs(freqall-cfg.foi(foiind));
-    [minval,minvalind]=min(absdiff);
-    if isempty(freq) || ~any(freq==freqall(minvalind))
-        freq(end+1)=freqall(minvalind);
-        t_ftimwin(end+1)=timepertimwinall(minvalind);
-        nsamplespertimwin(end+1)=nsamplespertimwinall(minvalind);
-    end;
-end;
-% Construct a frequency-specific toi vector for every element in freq, 
+  absdiff=abs(freqall-cfg.foi(foiind));
+  [minval,minvalind]=min(absdiff);
+  if isempty(freq) || ~any(freq==freqall(minvalind))
+    freq(end+1)=freqall(minvalind);
+    t_ftimwin(end+1)=timepertimwinall(minvalind);
+    nsamplespertimwin(end+1)=nsamplespertimwinall(minvalind);
+  end
+end
+% Construct a frequency-specific toi vector for every element in freq,
 % which will later be passed as an argument to ft_freqanalysis.
 % For the moment, we assume that all trials in datain have the same time
 % vector. This may have to be generalized.
 timevec=datain.time{1};
+ok=true;
+for k = 1:numel(datain.trial)
+  ok = ok && isequal(datain.time{k},timevec);
+end
+if ~ok
+  ft_error('the input data should have the same time axis on each trial');
+end
+
 toicell=cell(size(freq));
 for freqindx=1:length(freq)
-    nsegments=floor(length(timevec)/nsamplespertimwin(freqindx));
-    nsamplesnext2toi=(nsamplespertimwin(freqindx)-1)/2;
-    toisamples=(nsamplesnext2toi+1):nsamplespertimwin(freqindx):nsegments*nsamplespertimwin(freqindx);
-    toicell{freqindx}=timevec(toisamples);
-end;
+  nsegments=floor(length(timevec)/nsamplespertimwin(freqindx));
+  nsamplesnext2toi=(nsamplespertimwin(freqindx)-1)/2;
+  toisamples=(nsamplesnext2toi+1):nsamplespertimwin(freqindx):nsegments*nsamplespertimwin(freqindx);
+  toicell{freqindx}=timevec(toisamples);
+end
 
 % Build the cfg for ft_freqanalysis
 cfg_freq=[];
@@ -141,22 +157,40 @@ cfg_freq.keeptrials='yes';
 cfg_freq.taper='hanning';
 
 cfg_lcoh.method = 'laggedcoherence';
-
+cfg_lcoh.channelcmb = ft_channelcombination({'all' 'all'},datain.label);
 
 % Loop over the frequencies
-freqout={};
+freqout=cell(1,numel(freq));
+cohout=cell(1,numel(freq));
 for freqindx=1:length(freq)
-    cfg_freq.foi=freq(freqindx);
-    cfg_freq.t_ftimwin=t_ftimwin(freqindx);
-    cfg_freq.toi=toicell{freqindx};
-    freqout{freqindx}=ft_freqanalysis(cfg_freq,datain);
-    cohout{freqindx}=ft_connectivityanalysis(cfg_lcoh,freqout{freqindx});
-end;
+  cfg_freq.foi=freq(freqindx);
+  cfg_freq.t_ftimwin=t_ftimwin(freqindx);
+  cfg_freq.toi=toicell{freqindx};
+  cfg_freq.pad=ceil(numel(timevec)./Fs.*cfg_freq.foi)./cfg_freq.foi;
+  freqout{freqindx}=ft_freqanalysis(cfg_freq,datain);
+  
+  cfg_lcoh.laggedcoherence.lags = cfg.numcycles.*cfg.loi./freqout{freqindx}.freq;
+  cohout{freqindx}=ft_connectivityanalysis(cfg_lcoh,freqout{freqindx});
+  if freqindx==1
+    labelcmb = cohout{1}.labelcmb;
+    label = cell(size(cohout{1}.labelcmb,1),1);
+    for m = 1:numel(label)
+      label{m} = [cohout{1}.labelcmb{m,1} '_' cohout{1}.labelcmb{m,2}];
+    end
+  end
+  cohout{freqindx}.label = label;
+  cohout{freqindx}.dimord = 'chan_freq_time';
+  cohout{freqindx} = rmfield(cohout{freqindx},'labelcmb');
+  cohout{freqindx}.time = round(cohout{freqindx}.time.*cohout{freqindx}.freq./cfg.numcycles);
+end
 
-dataout=freqout;
-
-    
-    
+cfg_append = [];
+cfg_append.parameter = 'lcohspctrm';
+dataout=ft_appendfreq(cfg_append,cohout{:});
+dataout.labelcmb=labelcmb;
+dataout.dimord='chancmb_freq_lag';
+dataout.lag=dataout.time;
+dataout=removefields(dataout,{'label','time'});
 
 % this might involve more active checking of whether the input options
 % are consistent with the data and with each other

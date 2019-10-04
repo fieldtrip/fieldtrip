@@ -17,3 +17,4 @@ cfg.loi=[1 2 3];
 cfg.numcycles=3;
 
 lcout=ft_laggedcoherence(cfg,datain);
+
