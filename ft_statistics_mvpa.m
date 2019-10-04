@@ -229,7 +229,7 @@ end
 
 %% check if any cfg parameters are incompatible
 if ~strcmp(cfg.generalize,'no') && isempty(strfind(cfg.dimord, cfg.generalize))
-    ft_error('cfg.generalize has been set to ''%s'' but there is no such dimension since dimord is ''%s''', cfg.generalize, cfg.dimord)
+    ft_error('cfg.generalize is ''%s'' but there is no such dimension since dimord is ''%s''', cfg.generalize, cfg.dimord)
 end
 
 if ~strcmp(cfg.generalize,'no') && n_extra_dim < 1
@@ -264,10 +264,17 @@ if numel(cfg.mvpa.dimension_names)==1
 end
 
 %% define search dimensions
-ft_checkopt(cfg,      'search',     {'char' 'cell' 'empty'});
-if any(ismember(dimord_cell,'time')), 	 cfg.search = ft_getopt(cfg, 'search','time', true);
-elseif any(ismember(dimord_cell,'freq')), cfg.search = ft_getopt(cfg, 'search','freq', true);
-else,                                cfg.search = ft_getopt(cfg, 'search','',     true);
+ft_checkopt(cfg,     'search',     {'char' 'cell' 'empty'});
+
+if ~(isempty(cfg.generalize) || strcmp(cfg.generalize,'no'))
+    % the search dimension must include the generalization dimension
+    cfg.search = ft_getopt(cfg, 'search', cfg.generalize, true);
+elseif any(ismember(dimord_cell,'time'))
+    cfg.search = ft_getopt(cfg, 'search','time', true);
+elseif any(ismember(dimord_cell,'freq'))
+    cfg.search = ft_getopt(cfg, 'search','freq', true);
+else
+    cfg.search = ft_getopt(cfg, 'search','',     true);
 end
 
 if isempty(cfg.search) 
@@ -279,8 +286,21 @@ else
     n_search = numel(cfg.search);
 end
 
-if ~all(ismember(cfg.search, {'time' 'freq' 'chan' ''}))
-    ft_error('cfg.search can only take the values: time freq chan')
+% if ~all(ismember(cfg.search, {'time' 'freq' 'chan' ''}))
+%     ft_error('cfg.search can only take the values: time freq chan')
+% end
+
+%% sanity checks on search dimension
+% check whether search dimension exists in data
+for ii = 1:numel(cfg.search)
+    if isempty(strfind(cfg.dimord, cfg.search{ii}))
+        ft_error('cfg.search is ''%s'' but there is no such dimension since data since dimord is ''%s''', cfg.search{ii}, cfg.dimord)
+    end
+end
+
+% check whether generalization dimension is also a search dimension
+if ~isempty(cfg.generalize) && ~strcmp(cfg.generalize,'no') && ~ismember(cfg.generalize, cfg.search)
+    ft_error('cfg.generalize is ''%s'' but there is no such search dimension since cfg.search is ''%s''', cfg.generalize, strjoin(cfg.search))
 end
 
 dimord = strjoin(dimord_cell,'_');
@@ -303,7 +323,7 @@ end
 
 %% Call MVPA-Light
 % MVPA-Light has a number of different high-level functions. Here, we need
-% to map the FieldTrip data to the most suited high-level function by
+% to assign the FieldTrip data to the most suited high-level function by
 % looking at how many data dimensions there are, how many search dimensions
 % are specified, and whether generalization is required.
 label = [];
@@ -321,46 +341,37 @@ if n_search == 0
         cfg.mvpa.feature_dimension = 2:ndims(dat); % all data dimensions are used as features
         [perf, result] = mv_classify(cfg.mvpa, dat, clabel);
     end
-
+        
 elseif strcmp(cfg.search{1}, 'chan') && (strcmp(dimord,'rpt_chan') || strcmp(dimord,'rpt_chan_time') || strcmp(dimord,'rpt_chan_time'))
         % --- searchlight across channels ---
         
         [perf, result] = mv_searchlight(cfg.mvpa, dat, clabel);
         
-        % this preserves any spatial dimension, so no adjustment is done to a
-        % channel list, if present
-        if isfield(cfg, 'channel')
-            label = cfg.channel;
-        end
-        
-        if isfield(cfg, 'dim')
-            dim = cfg.dim;
-        end
-        
+        % this preserves channels, so no adjustment is done if present
+        if isfield(cfg, 'channel'), label = cfg.channel; end
+        if isfield(cfg, 'dim'),     dim = cfg.dim; end
         stat_dimord = 'chan';
 
 elseif n_search==1 && ~has_neighbours && (strcmp(dimord,'rpt_chan_freq') || strcmp(dimord,'rpt_chan_time'))
     % --- 1 search dimension ---
     % Perform classification (or generalization) across time (or freq)
     
-    if strcmp(cfg.generalize, 'time')
-        % --- time x time generalization ---
+    if ~strcmp(cfg.generalize, 'no')
+        % --- time x time or freq x freq generalization ---
         [perf, result] = mv_classify_timextime(cfg.mvpa, dat, clabel);
         
         % this does not preserve any spatial dimension, so label should be
         % adjusted
         label = squeezelabel(label, cfg);
-        dim   = squeezedim(dim, cfg);
-        stat_dimord = 'time_time';
-        
-    elseif strcmp(cfg.generalize, 'freq')
-        
-        error('TODO')
-        stat_dimord = 'freq_freq';
+        if isfield(cfg, 'dim')
+            dim = cfg.dim; 
+            dim(1) = dim(2);
+        end
+        stat_dimord = [cfg.generalize '_' cfg.generalize];
         
     else
-        % classification across time or frequency, but we can use
-        % mv_classify_across_time in any case
+        % --- classification across time (or frequency) ---
+        % we can use mv_classify_across_time for both time or frequency data
         [perf, result] = mv_classify_across_time(cfg.mvpa, dat, clabel);
         
         % this does not preserve any spatial dimension, so label should be
@@ -368,27 +379,23 @@ elseif n_search==1 && ~has_neighbours && (strcmp(dimord,'rpt_chan_freq') || strc
         label = squeezelabel(label, cfg);
         dim   = squeezedim(dim, cfg);
         stat_dimord = cfg.search{1};
-        
-%     else
-%         % --- data has no time dimension, perform only one cross-validation ---
-%         [perf, result] = mv_crossvalidate(cfg.mvpa, dat, clabel);
-%         
-%         % this does not preserve any spatial dimension, so label should be
-%         % adjusted
-%         label = squeezelabel(label, cfg);
-%         dim   = squeezedim(dim, cfg);
-%         stat_dimord = '';
     end
     
 else
+    % --- mv_classify ---
     % For all other cases, we use the general-purpose classification
-    % function mv_classify. Just need to set up the dimensions correctly
+    % function mv_classify. Set up the dimensions correctly
     % according to dimord.
-    %% TODO
-    cfg.mvpa.sample_dimensions = 1;
+    cfg.mvpa.sample_dimension = find(ismember(dimord_cell, 'rpt'));
+    features = setdiff(dimord_cell, ['rpt' cfg.search]); 
+    cfg.mvpa.feature_dimension = find(ismember(dimord_cell, features));
+    cfg.mvpa.generalization_dimension = find(ismember(dimord_cell, cfg.generalize));    
+
+    [perf, result] = mv_classify(cfg.mvpa, dat, clabel);
     
-    if ~strcmp(cfg.generalize,'no')
-    end
+    %%% todo: NEED TO TAKE GENERALIZATION INTO ACCOUNT
+    %%% todo: take metrics with multiple outputs into account
+    stat_dimord = strjoin(cfg.search,'_');
     
 end
 
@@ -408,6 +415,12 @@ for mm=1:numel(perf)
     stat.([cfg.mvpa.metric{mm} '_std']) = result.perf_std;
   end
 end
+
+% expand stat_dimord depending on metric: 
+% some metrics give multiple (eg 'dval') or multi-dimensional ('confusion')
+% outputs, usually one per class. stat_dimord hence expanded with 'class'
+% as dimension ?
+% -- todo --
 
 % return the MVPA-Light result struct as well
 stat.mvpa = result;
