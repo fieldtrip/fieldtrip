@@ -159,6 +159,8 @@ function cfg = data2bids(cfg, varargin)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Undocumented options exist for converting some other data types to BIDS:
 % - EMG
+% - EXG
+% - audio
 % - video
 % - eyetracking
 % - motion
@@ -251,7 +253,7 @@ cfg.proc      = ft_getopt(cfg, 'proc');
 cfg.datatype  = ft_getopt(cfg, 'datatype');
 
 if isempty(cfg.datatype)
-  modality = {'meg', 'eeg', 'ieeg', 'emg', 'exg', 'video', 'eyetracker', 'physio', 'stim', 'motion'};
+  modality = {'meg', 'eeg', 'ieeg', 'emg', 'exg', 'audio', 'video', 'eyetracker', 'physio', 'stim', 'motion'};
   for i=1:numel(modality)
     if isfield(cfg, modality{i}) && ~isempty(cfg.(modality{i}))
       % the user specified modality-specific options, assume that the datatype matches
@@ -273,6 +275,7 @@ cfg.eeg           = ft_getopt(cfg, 'eeg');
 cfg.ieeg          = ft_getopt(cfg, 'ieeg');
 cfg.emg           = ft_getopt(cfg, 'emg');
 cfg.exg           = ft_getopt(cfg, 'exg');
+cfg.audio         = ft_getopt(cfg, 'audio');
 cfg.video         = ft_getopt(cfg, 'video');
 cfg.eyetracker    = ft_getopt(cfg, 'eyetracker');
 cfg.physio        = ft_getopt(cfg, 'physio');
@@ -468,9 +471,13 @@ cfg.emg.EMGReference                      = ft_getopt(cfg.emg, 'EMGReference'   
 cfg.emg.EMGGround                         = ft_getopt(cfg.emg, 'EMGGround'                         );
 
 %% EXG is not part of the official BIDS specification
-cfg.exg.SamplingFrequency                 = ft_getopt(cfg.emg, 'SamplingFrequency'                 );
-cfg.exg.RecordingDuration                 = ft_getopt(cfg.emg, 'RecordingDuration'                 );
-cfg.exg.RecordingType                     = ft_getopt(cfg.emg, 'RecordingType'                     );
+cfg.exg.SamplingFrequency                 = ft_getopt(cfg.exg, 'SamplingFrequency'                 );
+cfg.exg.RecordingDuration                 = ft_getopt(cfg.exg, 'RecordingDuration'                 );
+cfg.exg.RecordingType                     = ft_getopt(cfg.exg, 'RecordingType'                     );
+
+%% audio is not part of the official BIDS specification
+cfg.audio.SampleRate                      = ft_getopt(cfg.audio, 'SampleRate'     );
+cfg.audio.ChannelCount                    = ft_getopt(cfg.audio, 'ChannelCount'   );
 
 %% video is not part of the official BIDS specification
 cfg.video.FrameRate                       = ft_getopt(cfg.video, 'FrameRate'           );
@@ -492,9 +499,9 @@ cfg.stim.SamplingFrequency                = ft_getopt(cfg.stim, 'SamplingFrequen
 
 %% eyetracker is not part of the official BIDS specification
 % this follows https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/06-physiological-and-other-continuous-recordings.html
-cfg.eyetracker.Columns                    = ft_getopt(cfg.video, 'Columns'              );
-cfg.eyetracker.StartTime                  = ft_getopt(cfg.video, 'StartTime'            );
-cfg.eyetracker.SamplingFrequency          = ft_getopt(cfg.video, 'SamplingFrequency'    );
+cfg.eyetracker.Columns                    = ft_getopt(cfg.eyetracker, 'Columns'              );
+cfg.eyetracker.StartTime                  = ft_getopt(cfg.eyetracker, 'StartTime'            );
+cfg.eyetracker.SamplingFrequency          = ft_getopt(cfg.eyetracker, 'SamplingFrequency'    );
 
 %% motion is not part of the official BIDS specification
 % this follows https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/06-physiological-and-other-continuous-recordings.html
@@ -677,6 +684,8 @@ need_meg_json           = false;
 need_eeg_json           = false;
 need_ieeg_json          = false;
 need_emg_json           = false;
+need_exg_json           = false;
+need_audio_json         = false;
 need_video_json         = false;
 need_physio_json        = false;
 need_stim_json          = false;
@@ -756,6 +765,16 @@ switch typ
     trigger = ft_read_event(cfg.dataset);
     need_events_tsv = true;
     
+  case {'audio_wav', 'audio_ogg', 'audio_flac', 'audio_au', 'audio_aiff', 'audio_aif', 'audio_aifc', 'audio_mp3', 'audio_m4a', 'audio_mp4'}
+    % the file on disk contains audio
+    need_audio_json = true;
+    try
+      audio = audioinfo(cfg.dataset);
+    catch
+      ft_warning('audio format is unsupported on this MATLAB version and/or operating system');
+      audio = struct('SampleRate', nan, 'Duration', nan, 'NumChannels', nan);
+    end
+
   case 'video'
     % the file on disk contains video
     need_video_json = true;
@@ -882,6 +901,9 @@ if need_emg_json
 elseif need_exg_json
   ft_warning('EXG data is not yet part of the official BIDS specification');
   cfg.dataset_description.BIDSVersion = 'n/a';
+elseif need_audio_json
+  ft_warning('audio data is not yet part of the official BIDS specification');
+  cfg.dataset_description.BIDSVersion = 'n/a';
 elseif need_video_json
   ft_warning('video data is not yet part of the official BIDS specification');
   cfg.dataset_description.BIDSVersion = 'n/a';
@@ -936,6 +958,11 @@ emg_settings = keepfields(cfg.emg, fn);
 fn = fieldnames(cfg.exg);
 fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
 exg_settings = keepfields(cfg.exg, fn);
+
+% make the relevant selection, all json fields start with a capital letter
+fn = fieldnames(cfg.audio);
+fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
+audio_settings = keepfields(cfg.audio, fn);
 
 % make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg.video);
@@ -1083,6 +1110,18 @@ if need_exg_json
   % in case fields appear in both, the first input overrules the second
   exg_json = mergeconfig(exg_settings,     exg_json, false);
   exg_json = mergeconfig(generic_settings, exg_json, false);
+end
+
+%% need_audio_json
+if need_audio_json
+  audio_json.SampleRate    = audio.SampleRate;
+  audio_json.Duration      = audio.Duration;
+  audio_json.ChannelCount  = audio.NumChannels;
+
+  % merge the information specified by the user with that from the data
+  % in case fields appear in both, the first input overrules the second
+  audio_json = mergeconfig(audio_settings,   audio_json, false);
+  audio_json = mergeconfig(generic_settings, audio_json, false);
 end
 
 %% need_video_json
@@ -1514,7 +1553,7 @@ end % switch method
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % each of these has a corresponding json file
-modality = {'mri', 'meg', 'eeg', 'ieeg', 'emg', 'exg', 'video', 'eyetracker', 'physio', 'stim', 'motion', 'coordsystem'};
+modality = {'mri', 'meg', 'eeg', 'ieeg', 'emg', 'exg', 'audio', 'video', 'eyetracker', 'physio', 'stim', 'motion', 'coordsystem'};
 for i=1:numel(modality)
   if eval(sprintf('need_%s_json', modality{i}))
     modality_json = eval(sprintf('%s_json', modality{i}));
@@ -1766,7 +1805,7 @@ function f = add_datatype(f, typ)
 f = [f '_' typ];
 
 function f = remove_datatype(f)
-typ = {'FLAIR', 'FLASH', 'PD', 'PDT2', 'PDmap', 'T1map', 'T1rho', 'T1w', 'T2map', 'T2star', 'T2w', 'angio', 'bold', 'bval', 'bvec', 'channels', 'coordsystem', 'defacemask', 'dwi', 'eeg', 'epi', 'events', 'fieldmap', 'headshape', 'ieeg', 'inplaneT1', 'inplaneT2', 'magnitude', 'magnitude1', 'magnitude2', 'meg', 'phase1', 'phase2', 'phasediff', 'photo', 'sbref', 'physio', 'stim', 'emg', 'exg', 'video', 'eyetracker', 'motion'};
+typ = {'FLAIR', 'FLASH', 'PD', 'PDT2', 'PDmap', 'T1map', 'T1rho', 'T1w', 'T2map', 'T2star', 'T2w', 'angio', 'bold', 'bval', 'bvec', 'channels', 'coordsystem', 'defacemask', 'dwi', 'eeg', 'epi', 'events', 'fieldmap', 'headshape', 'ieeg', 'inplaneT1', 'inplaneT2', 'magnitude', 'magnitude1', 'magnitude2', 'meg', 'phase1', 'phase2', 'phasediff', 'photo', 'sbref', 'physio', 'stim', 'emg', 'exg', 'audio', 'video', 'eyetracker', 'motion'};
 for i=1:numel(typ)
   if endsWith(f, ['_' typ{i}])
     f = f(1:end-length(typ{i})-1); % also the '_'
@@ -1978,7 +2017,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function dir = datatype2dirname(typ)
 % see https://bids-specification.readthedocs.io/en/stable/99-appendices/04-entity-table.html
-% emg, exg, eyetracker, motion and video are not part of the official specification
+% emg, exg, eyetracker, motion, audio, and video are not part of the official specification
 switch typ
   case {'T1w' 'T2w' 'T1rho' 'T1map' 'T2map' 'T2star' 'FLAIR' 'FLASH' 'PD' 'PDmap' 'PDT2' 'inplaneT1' 'inplaneT2' 'angio' 'defacemask'}
     dir = 'anat';
@@ -1988,7 +2027,7 @@ switch typ
     dir = 'dwi';
   case {'phasediff' 'phase1' 'phase2' 'magnitude1' 'magnitude2' 'magnitude' 'fieldmap' 'epi'}
     dir = 'fmap';
-  case {'events' 'stim' 'physio' 'eyetracker' 'motion' 'video'} % stim and physio could also be stored in 'func'
+  case {'events' 'stim' 'physio' 'eyetracker' 'motion' 'audio' 'video'} % stim and physio could also be stored in 'func'
     dir = 'beh';
   case {'meg'} % this could also include 'events'
     dir = 'meg';

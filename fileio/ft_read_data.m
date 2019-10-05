@@ -530,10 +530,10 @@ switch dataformat
   case 'ced_spike6mat'
     dat = read_spike6mat_data(filename, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx);
     
-  case {'curry_dat', 'curry_cdt'} 
+  case {'curry_dat', 'curry_cdt'}
     [orig, dat] = load_curry_data_file(datafile);
     if orig.nMultiplex
-        dat = dat';
+      dat = dat';
     end
     dat = dat(chanindx, begsample:endsample);
     
@@ -671,7 +671,7 @@ switch dataformat
   case 'egi_mff_v2'
     % ensure that the EGI_MFF_V2 toolbox is on the path
     ft_hastoolbox('egi_mff_v2', 1);
-
+    
     %%%%%%%%%%%%%%%%%%%%%%
     %workaround for MATLAB bug resulting in global variables being cleared
     globalTemp=cell(0);
@@ -697,7 +697,7 @@ switch dataformat
     end
     clear globalTemp globalList varNames varList;
     %%%%%%%%%%%%%%%%%%%%%%
-
+    
     if isunix && filename(1)~=filesep
       % add the full path to the dataset directory
       filename = fullfile(pwd, filename);
@@ -705,7 +705,7 @@ switch dataformat
       % add the full path, including drive letter
       filename = fullfile(pwd, filename);
     end
-
+    
     % pass the header along to speed it up, it will be read on the fly in case it is empty
     dat = read_mff_data(filename, 'sample', begsample, endsample, chanindx, hdr);
     
@@ -1007,7 +1007,7 @@ switch dataformat
   case {'mpi_ds', 'mpi_dap'}
     [hdr, dat] = read_mpi_ds(filename);
     dat = dat(chanindx, begsample:endsample); % select the desired channels and samples
-
+    
   case 'nervus_eeg'
     hdr = read_nervus_header(filename);
     % Nervus usually has discontinuous EEGs, e.g. pauses in clinical
@@ -1021,7 +1021,7 @@ switch dataformat
       dat = cat(1,dat,datseg);
     end
     dimord = 'samples_chans';
-
+    
   case 'neuroscope_bin'
     switch hdr.orig.nBits
       case 16
@@ -1408,7 +1408,7 @@ switch dataformat
     ft_hastoolbox('ricoh_meg_reader', 1);
     dat = read_ricoh_data(filename, hdr, begsample, endsample, chanindx);
     
-  case {'riff_wave', 'audio_m4a'}
+  case {'audio_wav', 'audio_ogg', 'audio_flac', 'audio_au', 'audio_aiff', 'audio_aif', 'audio_aifc', 'audio_mp3', 'audio_m4a', 'audio_mp4'}
     dat = audioread(filename, [begsample endsample])';
     dat = dat(chanindx,:);
     
@@ -1425,7 +1425,7 @@ switch dataformat
       smi = read_smi_txt(filename);
     end
     dat = smi.dat(chanindx,begsample:endsample);
-  
+    
   case 'tmsi_poly5'
     blocksize = hdr.orig.header.SamplePeriodsPerBlock;
     begtrial = floor((begsample-1)/blocksize) + 1;
@@ -1442,7 +1442,7 @@ switch dataformat
   case 'videomeg_vid'
     dat = read_videomeg_vid(filename, hdr, begsample, endsample);
     dat = dat(chanindx,:);
-
+    
   case 'video'
     dat = read_video(filename, hdr, begsample, endsample, chanindx);
     
@@ -1461,7 +1461,7 @@ switch dataformat
       ft_hastoolbox('yokogawa', 1); % error if it cannot be added
       dat = read_yokogawa_data(filename, hdr, begsample, endsample, chanindx);
     end
-        
+    
   otherwise
     % attempt to run "dataformat" as a function
     % this allows the user to specify an external reading function
