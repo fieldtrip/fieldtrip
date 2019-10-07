@@ -153,6 +153,7 @@ url = {
   'BREWERMAP'     'see https://nl.mathworks.com/matlabcentral/fileexchange/45208-colorbrewer--attractive-and-distinctive-colormaps'
   'CELLFUNCTION'  'see https://github.com/schoffelen/cellfunction'
   'MARS'          'see http://www.parralab.org/mars'
+  'LAGEXTRACTION' 'see https://github.com/agramfort/eeglab-plugin-ieee-tbme-2010'
   'JSONLAB'       'see https://se.mathworks.com/matlabcentral/fileexchange/33381-jsonlab--a-toolbox-to-encode-decode-json-files'
   'MFFMATLABIO'   'see https://github.com/arnodelorme/mffmatlabio'
   'JSONIO'        'see https://github.com/gllmflndn/JSONio'
@@ -385,6 +386,8 @@ switch toolbox
     dependency = {'ghdf5read' 'ghdf5fileimport'};
   case 'MARS'
     dependency = {'spm_mars_mrf'};
+  case 'LAGEXTRACTION'
+    dependency = {'extractlag' 'perform_realign'};
   case 'JSONLAB'
     dependency = {'loadjson' 'savejson'};
   case 'PLOTLY'
