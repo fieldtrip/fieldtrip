@@ -140,7 +140,6 @@ if iscell(filename)
       end
     end
   end
-  keyboard
   % return the concatenated events
   event = appendstruct(event{:});
   return
