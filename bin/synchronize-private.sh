@@ -38,11 +38,11 @@ ARRAY+=(forward/private/ama2headmodel.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# appendevent.m
+# appendstruct.m
 
 ARRAY=()
-ARRAY+=(fileio/private/appendevent.m)
-ARRAY+=(private/appendevent.m)
+ARRAY+=(utilities/appendstruct.m)
+ARRAY+=(fileio/private/appendstruct.m)
 sync ${ARRAY[*]}
 
 ################################################################################
