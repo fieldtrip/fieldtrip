@@ -103,32 +103,45 @@ if iscell(filename)
   % use recursion to read events from multiple files
   
   hdr = ft_getopt(varargin, 'header');
-  if isempty(hdr) || ~isfield(hdr, 'orig') || ~iscell(hdr.orig)
-    for i=1:numel(filename)
-      % read the individual file headers
-      hdr{i} = ft_read_header(filename{i}, varargin{:});
-    end
+  if isempty(hdr)
+    % read the combined and individual file headers
+    combined  = ft_read_header(filename, varargin{:});
   else
-    % use the individual file headers that were read previously
-    hdr = hdr.orig;
+    % use the combined and individual file headers that were read previously
+    combined = hdr;
   end
-  nsmp = nan(size(filename));
-  for i=1:numel(filename)
-    nsmp(i) = hdr{i}.nSamples*hdr{i}.nTrials;
-  end
-  offset = [0 cumsum(nsmp(1:end-1))];
+  hdr = combined.orig;
   
-  event = cell(size(filename));
-  for i=1:numel(filename)
-    varargin = ft_setopt(varargin, 'header', hdr{i});
-    event{i} = ft_read_event(filename{i}, varargin{:});
-    for j=1:numel(event{i})
-      % add the offset due to the previous files
-      event{i}(j).sample = event{i}(j).sample + offset(i);
+  allhdr = cat(1, hdr{:});
+  if numel(unique([allhdr.label]))==sum([allhdr.nChans])
+    % each file has different channels, concatenate along the channel dimension
+    % sample indices are the same for all files
+    for i=1:numel(filename)
+      varargin = ft_setopt(varargin, 'header', hdr{i});
+      event{i} = ft_read_event(filename{i}, varargin{:});
+    end
+    
+  else
+    % each file has the same channels, concatenate along the time dimension
+    % this requires careful bookkeeping of the sample indices
+    nsmp = nan(size(filename));
+    for i=1:numel(filename)
+      nsmp(i) = hdr{i}.nSamples*hdr{i}.nTrials;
+    end
+    offset = [0 cumsum(nsmp(1:end-1))];
+    
+    event = cell(size(filename));
+    for i=1:numel(filename)
+      varargin = ft_setopt(varargin, 'header', hdr{i});
+      event{i} = ft_read_event(filename{i}, varargin{:});
+      for j=1:numel(event{i})
+        % add the offset due to the previous files
+        event{i}(j).sample = event{i}(j).sample + offset(i);
+      end
     end
   end
   % return the concatenated events
-  event = appendevent(event{:});
+  event = appendstruct(event{:});
   return
 end
 
@@ -237,12 +250,12 @@ switch eventformat
     else
       trigger = read_trigger(filename, 'header', hdr, 'dataformat', '4d', 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trgindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fix4d8192', false);
     end
-    event   = appendevent(event, trigger);
+    event   = appendstruct(event, trigger);
     
     respindx = match_str(hdr.label, 'RESPONSE');
     if ~isempty(respindx)
       response = read_trigger(filename, 'header', hdr, 'dataformat', '4d', 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', respindx, 'detectflank', detectflank, 'trigshift', trigshift);
-      event    = appendevent(event, response);
+      event    = appendstruct(event, response);
     end
     
   case 'bci2000_dat'
@@ -504,7 +517,7 @@ switch eventformat
     end
     if ~isempty(chanindx)
       trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank);
-      event   = appendevent(event, trigger);
+      event   = appendstruct(event, trigger);
     end
     
   case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf_old'}
@@ -559,7 +572,7 @@ switch eventformat
     if ~isempty(chanindx)
       % read the trigger channel and do flank detection
       trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixctf', true);
-      event   = appendevent(event, trigger);
+      event   = appendstruct(event, trigger);
     end
     
     % read the classification file and make an event for each classified trial
@@ -1293,7 +1306,7 @@ switch eventformat
       ft_warning('no events found in the event table, reading the trigger channel(s)');
       chanindx = find(ft_chantype(hdr, 'flag'));
       trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift);
-      event   = appendevent(event, trigger);
+      event   = appendstruct(event, trigger);
     end
     
   case 'matlab'
@@ -1361,7 +1374,7 @@ switch eventformat
     if isfield(hdr, 'orig') && isfield(hdr.orig, 'Trigger_Area') && isfield(hdr.orig, 'Tigger_Area_Length')
       if ~isempty(chanindx)
         trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift);
-        event   = appendevent(event, trigger);
+        event   = appendstruct(event, trigger);
       else
         % routine that reads analog triggers in case no index is specified
         event = read_micromed_event(filename);
@@ -1528,11 +1541,11 @@ switch eventformat
       
       if ~isempty(binaryindx)
         trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', binaryindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixneuromag', false);
-        event   = appendevent(event, trigger);
+        event   = appendstruct(event, trigger);
       end
       if ~isempty(otherindx)
         trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', otherindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixneuromag', false);
-        event   = appendevent(event, trigger);
+        event   = appendstruct(event, trigger);
       end
       if ~isempty(analogindx)
         % add the triggers to the event structure based on trigger channels with the name "STI xxx"
@@ -1540,7 +1553,7 @@ switch eventformat
         % channels, on older systems only
         % read the trigger channel and do flank detection
         trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', analogindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixneuromag', true);
-        event   = appendevent(event, trigger);
+        event   = appendstruct(event, trigger);
         
         if ~isempty(trigger)
           % throw out everything that is not a (real) trigger...
@@ -1564,7 +1577,7 @@ switch eventformat
               if j >= 1
                 fprintf('Fixing trigger at sample %d\n', all_samples(i));
               end %if
-              cur_triggers = appendevent(cur_triggers, trigger_tmp([trigger_tmp.sample] == all_samples(i+j)));
+              cur_triggers = appendstruct(cur_triggers, trigger_tmp([trigger_tmp.sample] == all_samples(i+j)));
               j = j + 1;
             end %while
             
@@ -1578,7 +1591,7 @@ switch eventformat
             
             i = i + j;
           end %while
-          event = appendevent(event, new_triggers);
+          event = appendstruct(event, new_triggers);
         end %if
         
       end
@@ -1619,7 +1632,7 @@ switch eventformat
       eve = ft_read_event(evefile, 'header', hdr);
       if ~isempty(eve)
         fprintf('appending %d events from "%s"\n', length(eve), evefile);
-        event = appendevent(event, eve);
+        event = appendstruct(event, eve);
       end
     end
     
@@ -1905,7 +1918,7 @@ switch eventformat
       if isempty(tmp.marker{i})
         break;
       end
-      event = appendevent(event, struct('type', tmp.markernames(i), 'sample', num2cell(tmp.marker{i}), 'value', {tmp.markertyp(i)}));
+      event = appendstruct(event, struct('type', tmp.markernames(i), 'sample', num2cell(tmp.marker{i}), 'value', {tmp.markertyp(i)}));
     end
     % if present, read the digital triggers which are present as channel in the data
     if isempty(hdr)
@@ -1914,7 +1927,7 @@ switch eventformat
     trgindx = match_str(hdr.label, 'DTRIG');
     if ~isempty(trgindx)
       trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trgindx, 'detectflank', detectflank, 'trigshift', trigshift);
-      event   = appendevent(event, trigger);
+      event   = appendstruct(event, trigger);
     end
     
   case 'nexstim_nxe'
@@ -2141,7 +2154,7 @@ switch eventformat
         end
       end
       
-      event = appendevent(event, trigger);
+      event = appendstruct(event, trigger);
     end
     
   case 'artinis_oxy4'
@@ -2178,7 +2191,7 @@ switch eventformat
         end
       end
       
-      event = appendevent(event, trigger);
+      event = appendstruct(event, trigger);
     end
     
   case 'spmeeg_mat'

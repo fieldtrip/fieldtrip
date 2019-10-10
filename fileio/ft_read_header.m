@@ -128,27 +128,46 @@ if iscell(filename)
   for i=1:numel(filename)
     hdr{i} = ft_read_header(filename{i}, varargin{:});
   end
-  ntrl = nan(size(filename));
-  nsmp = nan(size(filename));
-  for i=1:numel(filename)
-    assert(isequal(hdr{i}.label, hdr{1}.label));
-    assert(isequal(hdr{i}.Fs, hdr{1}.Fs));
-    ntrl(i) = hdr{i}.nTrials;
-    nsmp(i) = hdr{i}.nSamples;
-  end
-  combined      = hdr{1};
-  combined.orig = hdr; % store the original header details of each file
-  if all(ntrl==1)
-    % each file is a continuous recording
-    combined.nTrials  = ntrl(1);
-    combined.nSamples = sum(nsmp);
-  elseif all(nsmp==nsmp(1))
-    % each file holds segments of the same length
-    combined.nTrials  = sum(ntrl);
-    combined.nSamples = nsmp(1);
+    
+  allhdr = cat(1, hdr{:});
+  if numel(unique([allhdr.label]))==sum([allhdr.nChans])
+    % each file has different channels, concatenate along the channel dimension
+    for i=1:numel(filename)
+      assert(isequal(hdr{i}.Fs, hdr{1}.Fs), 'sampling rates are not consistent over files');
+      assert(isequal(hdr{i}.nSamples, hdr{1}.nSamples), 'number of samples is not consistent over files');
+      assert(isequal(hdr{i}.nTrials, hdr{1}.nTrials), 'number of trials is not consistent over files');
+    end
+    combined          = hdr{1}; % copy the first header as the general one
+    combined.label    = [allhdr.label];
+    combined.chanunit = [allhdr.chanunit];
+    combined.chantype = [allhdr.chantype];
+    combined.nChans   = sum([allhdr.nChans]);
+    combined.orig     = hdr;    % store the original header details of all files
   else
-    ft_error('cannot concatenate files');
-  end
+    % each file has the same channels, concatenate along the time dimension
+    ntrl = nan(size(filename));
+    nsmp = nan(size(filename));
+    for i=1:numel(filename)
+      assert(isequal(hdr{i}.Fs, hdr{1}.Fs), 'sampling rates are not consistent over files');
+      assert(isequal(hdr{i}.label, hdr{1}.label), 'channels are not consistent over files');
+      ntrl(i) = hdr{i}.nTrials;
+      nsmp(i) = hdr{i}.nSamples;
+    end
+    % the subsequent code concatenates the files over time, i.e. each file has the same channels
+    combined      = hdr{1}; % copy the first header as the general one
+    combined.orig = hdr;    % store the original header details of all files
+    if all(ntrl==1)
+      % each file is a continuous recording
+      combined.nTrials  = ntrl(1);
+      combined.nSamples = sum(nsmp);
+    elseif all(nsmp==nsmp(1))
+      % each file holds segments of the same length
+      combined.nTrials  = sum(ntrl);
+      combined.nSamples = nsmp(1);
+    else
+      ft_error('cannot concatenate files');
+    end
+  end % concatenate over channels or over time
   % return the header of the concatenated datafiles
   hdr = combined;
   return

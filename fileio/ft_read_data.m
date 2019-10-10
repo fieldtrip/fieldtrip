@@ -71,26 +71,40 @@ if iscell(filename)
   % use recursion to read data from multiple files
   
   hdr = ft_getopt(varargin, 'header');
-  if isempty(hdr) || ~isfield(hdr, 'orig') || ~iscell(hdr.orig)
-    for i=1:numel(filename)
-      % read the individual file headers
-      hdr{i}  = ft_read_header(filename{i}, varargin{:});
-    end
+  if isempty(hdr)
+    % read the combined and individual file headers
+    combined  = ft_read_header(filename, varargin{:});
   else
-    % use the individual file headers that were read previously
-    hdr = hdr.orig;
+    % use the combined and individual file headers that were read previously
+    combined = hdr;
   end
-  nsmp = nan(size(filename));
-  for i=1:numel(filename)
-    nsmp(i) = hdr{i}.nSamples*hdr{i}.nTrials;
-  end
-  offset = [0 cumsum(nsmp(1:end-1))];
+  hdr = combined.orig;
   
   dat       = cell(size(filename));
   begsample = ft_getopt(varargin, 'begsample', 1);
-  endsample = ft_getopt(varargin, 'endsample', sum(nsmp));
+  endsample = ft_getopt(varargin, 'endsample', combined.nSamples*combined.nTrials);
   
-  for i=1:numel(filename)
+  allhdr = cat(1, hdr{:});
+  if numel(unique([allhdr.label]))==sum([allhdr.nChans])
+    % each file has different channels, concatenate along the channel dimension
+    % the same selection of samples is read from every file
+    for i=1:numel(filename)
+      ft_info('reading data from %s\n', filename{i});
+      varargin = ft_setopt(varargin, 'header', hdr{i});
+      varargin = ft_setopt(varargin, 'begsample', begsample);
+      varargin = ft_setopt(varargin, 'endsample', endsample);
+      dat{i} = ft_read_data(filename{i}, varargin{:});
+    end
+    dat = cat(1, dat{:}); % along the 1st dimension
+    
+  else
+    % each file has the same channels, concatenate along the time dimension
+    % this requires careful bookkeeping of the sample indices
+    nsmp = nan(size(filename));
+    for i=1:numel(filename)
+      nsmp(i) = hdr{i}.nSamples*hdr{i}.nTrials;
+    end
+    offset = [0 cumsum(nsmp(1:end-1))];
     thisbegsample = begsample - offset(i);
     thisendsample = endsample - offset(i);
     if thisbegsample<=nsmp(i) && thisendsample>=1
@@ -101,10 +115,8 @@ if iscell(filename)
     else
       dat{i} = [];
     end
+    dat = cat(2, dat{:}); % along the 2nd dimension
   end
-  
-  % return the concatenated data
-  dat = cat(2, dat{:});
   return
 end
 
