@@ -130,7 +130,7 @@ functional = fixpos(functional);
 % ensure the functional data to be in double precision
 functional = ft_struct2double(functional);
 
-if strcmp(cfg.interpmethod, 'nearest') && (ft_datatype(functional, 'volume+label') || ft_datatype(functional, 'source+label'))
+if (strcmp(cfg.interpmethod, 'nearest') || strcmp(cfg.interpmethod, 'mode')) && (ft_datatype(functional, 'volume+label') || ft_datatype(functional, 'source+label'))
   % the first input argument describes a parcellation or segmentation with tissue labels
   isAtlasFun = true;
 else
@@ -275,7 +275,7 @@ if isUnstructuredFun && isUnstructuredAna && isfield(anatomical, 'orig') && isfi
     allav = zeros([size(anatomical.orig.pos,1), dimf(2:end)]);
     for k=1:dimf(2)
       for m=1:dimf(3)
-        fv     = dat_array{i}(:,k,m);
+        fv     = double_ifnot(dat_array{i}(:,k,m));
         av     = interpmat*fv;
         av(newoutside) = nan;
         allav(:,k,m)   = av;
@@ -330,7 +330,7 @@ elseif isUnstructuredFun && isUnstructuredAna
     allav = zeros([size(anatomical.pos,1), dimf(2:end)]);
     for k=1:dimf(2)
       for m=1:dimf(3)
-        fv     = dat_array{i}(:,k,m);
+        fv     = double_ifnot(dat_array{i}(:,k,m));
         av     = interpmat*fv;
         av(newoutside) = nan;
         allav(:,k,m)   = av;
@@ -391,7 +391,7 @@ elseif isUnstructuredFun && ~isUnstructuredAna
 
     for k=1:dimf(2)
       for m=1:dimf(3)
-        fv     = dat_array{i}(:,k,m);
+        fv     = double_ifnot(dat_array{i}(:,k,m));
         av(:)  = interpmat*fv;
         av(newoutside)   = nan;
         allav(:,:,:,k,m) = av;
@@ -472,16 +472,16 @@ elseif ~isUnstructuredFun && isUnstructuredAna
     if ~strcmp(cfg.interpmethod, 'project')
       for k=1:dimf(4)
         for m=1:dimf(5)
-          fv    = dat_array{i}(:,:,:,k,m);
+          fv    = double_ifnot(dat_array{i}(:,:,:,k,m)); % ensure double precision to allow sparse multiplication
           fv    = fv(functional.inside(:));
-          av    = interpmat*fv;
+          av    = interpmat*fv; 
           allav(:,k,m) = av;
         end
       end
     else
       for k=1:dimf(4)
         for m=1:dimf(5)
-          fv   = dat_array{i}(:,:,:,k,m);
+          fv   = double_ifnot(dat_array{i}(:,:,:,k,m));
           av   = interp_gridded(functional.transform, fv, anatomical.pos, 'dim', functional.dim, 'projmethod', 'project', 'projvec', cfg.projvec, 'projweight', cfg.projweight, 'projcomb', cfg.projcomb, 'projthresh', cfg.projthresh);
           allav(:,k,m) = av;
         end
@@ -497,112 +497,150 @@ elseif ~isUnstructuredFun && ~isUnstructuredAna
 
   % set default interpmethod for this situation
   cfg.interpmethod = ft_getopt(cfg, 'interpmethod', 'linear');
-
-  % start with an empty structure, keep some fields
-  interp = keepfields(functional, {'time', 'freq'});
-  interp = copyfields(anatomical, interp, {'pos', 'tri', 'dim', 'transform', 'coordsys', 'unit', 'anatomy'});
-
-  % convert the anatomical voxel positions into voxel indices into the functional volume
-  anatomical.transform = functional.transform \ anatomical.transform;
-  functional.transform = eye(4);
-
-  [fx, fy, fz] = voxelcoords(functional.dim, functional.transform);
-  [ax, ay, az] = voxelcoords(anatomical.dim, anatomical.transform);
-
-  % estimate the subvolume of the anatomy that is spanned by the functional volume
-  minfx = 1;
-  minfy = 1;
-  minfz = 1;
-  maxfx = functional.dim(1);
-  maxfy = functional.dim(2);
-  maxfz = functional.dim(3);
-  sel = ax(:)>=minfx & ...
-    ax(:)<=maxfx & ...
-    ay(:)>=minfy & ...
-    ay(:)<=maxfy & ...
-    az(:)>=minfz & ...
-    az(:)<=maxfz;
-  fprintf('selecting subvolume of %.1f%%\n', 100*sum(sel)./prod(anatomical.dim));
-
-  if all(functional.inside(:))
-    % keep all voxels marked as inside
-    interp.inside = true(anatomical.dim);
-  else
-    % reslice and interpolate inside
-    interp.inside = zeros(anatomical.dim);
-    % interpolate with method nearest
-    interp.inside( sel) = my_interpn(double(functional.inside), ax(sel), ay(sel), az(sel), 'nearest', cfg.feedback);
-    interp.inside(~sel) = 0;
-    interp.inside = logical(interp.inside);
-  end
-
-  % prepare the grid that is used in the interpolation
-  fg = [fx(:) fy(:) fz(:)];
-  clear fx fy fz
-
-  % reslice and interpolate all functional volumes
-  for i=1:length(dat_name)
-    fprintf('reslicing and interpolating %s\n', dat_name{i});
-
-    dimord = getdimord(functional, dat_name{i});
-    dimtok = tokenize(dimord, '_');
-    dimf   = getdimsiz(functional, dat_name{i});
-    dimf(end+1:length(dimtok)) = 1; % there can be additional trailing singleton dimensions
-
-    if prod(functional.dim)==dimf(1)
-      % convert into 3-D, 4-D or 5-D array
-      dimf = [functional.dim dimf(2:end)];
-      dat_array{i} = reshape(dat_array{i}, dimf);
-    end
-
-    % should be 5-D array, can have trailing singleton dimensions
-    if numel(dimf)<4
-      dimf(4) = 1;
-    end
-    if numel(dimf)<5
-      dimf(5) = 1;
-    end
-
-    av    = zeros([anatomical.dim            ]);
-    allav = zeros([anatomical.dim dimf(4:end)]);
-    functional.inside = functional.inside(:,:,:,1,1);
-
-    if any(dimf(4:end)>1) && ~strcmp(cfg.feedback, 'none')
-      % this is needed to prevent feedback to be displayed for every time-frequency point
-      ft_warning('disabling feedback');
-      cfg.feedback = 'none';
-    end
-
-    for k=1:dimf(4)
-      for m=1:dimf(5)
-        fv = dat_array{i}(:,:,:,k,m);
-        if ~isa(fv, 'double')
-          % only convert if needed, this saves memory
-          fv = double(fv);
-        end
-        % av( sel) = my_interpn(fx, fy, fz, fv, ax(sel), ay(sel), az(sel), cfg.interpmethod, cfg.feedback);
-        if islogical(dat_array{i})
-          % interpolate always with method nearest
-          av( sel) = my_interpn(fv, ax(sel), ay(sel), az(sel), 'nearest', cfg.feedback);
-          av = logical(av);
+  if isequal(cfg.interpmethod, 'mode') && isAtlasFun
+    % use a mode-based interpolation, i.e. a majority vote of the nearby
+    % voxel locations.
+    
+    % first to a nearest interpolation of the voxel coordinates the other
+    % way around
+    tmp = anatomical;
+    [tx, ty, tz] = voxelcoords(tmp.dim, tmp.transform);
+    tmp.tx = tx;
+    tmp.ty = ty;
+    tmp.tz = tz;
+    
+    tmpcfg = [];
+    tmpcfg.interpmethod = 'nearest';
+    tmpcfg.parameter = {'tx' 'ty' 'tz'};
+    tmpint = ft_sourceinterpolate(tmpcfg, tmp, functional);
+    
+    [ix,i1,i2] = intersect([tx(:) ty(:) tz(:)],[tmpint.tx(:) tmpint.ty(:) tmpint.tz(:)],'rows');
+    
+    interp = keepfields(anatomical, {'pos', 'dim', 'transform', 'coordsys', 'unit',  'anatomy'});
+    interp.inside = false(interp.dim);
+    interp.inside(i1) = true;
+    
+    for k = 1:numel(cfg.parameter)
+      interp.(cfg.parameter{k}) = nan(interp.dim);
+      fun = functional.(cfg.parameter{k});
+      for m = 1:numel(i1)
+        values = reshape(fun(tmpint.tx==tx(i1(m)) & tmpint.ty==ty(i1(m)) & tmpint.tz==tz(i1(m))),[],1);
+        [M,f,c] = mode(values);
+        if numel(c)==1
+          interp.(cfg.parameter{k})(i1(m)) = M;
         else
-          if ~all(functional.inside(:))
-            % extrapolate the outside of the functional volumes for better interpolation at the edges
-            fv(~functional.inside) = griddatan(fg(functional.inside(:), :), fv(functional.inside(:)), fg(~functional.inside(:), :), 'nearest');
-          end
-          % interpolate functional onto anatomical grid
-          av( sel) = my_interpn(fv, ax(sel), ay(sel), az(sel), cfg.interpmethod, cfg.feedback);
-          av(~sel) = nan;
-          av(~interp.inside) = nan;
+          ft_warning('multiple modes per voxel, returning NaN');
+          interp.(cfg.parameter{k})(i1(m)) = nan;
         end
-        allav(:,:,:,k,m) = av;
       end
     end
-    if isfield(interp, 'freq') || isfield(interp, 'time')
-      % the output should be a source representation, not a volume
-      allav = reshape(allav, prod(anatomical.dim), dimf(4), dimf(5));
+    
+  elseif isequal(cfg.interpmethod, 'mode') && ~isAtlasFun
+    ft_error('the interpolation method ''mode'' is only supported for parcellations');
+  else
+    % start with an empty structure, keep some fields
+    interp = keepfields(functional, {'time', 'freq'});
+    interp = copyfields(anatomical, interp, {'pos', 'dim', 'transform', 'coordsys', 'unit', 'anatomy'});
+    
+    % convert the anatomical voxel positions into voxel indices into the functional volume
+    anatomical.transform = functional.transform \ anatomical.transform;
+    functional.transform = eye(4);
+    
+    [fx, fy, fz] = voxelcoords(functional.dim, functional.transform);
+    [ax, ay, az] = voxelcoords(anatomical.dim, anatomical.transform);
+    
+    % estimate the subvolume of the anatomy that is spanned by the functional volume
+    minfx = 1;
+    minfy = 1;
+    minfz = 1;
+    maxfx = functional.dim(1);
+    maxfy = functional.dim(2);
+    maxfz = functional.dim(3);
+    sel = ax(:)>=minfx & ...
+      ax(:)<=maxfx & ...
+      ay(:)>=minfy & ...
+      ay(:)<=maxfy & ...
+      az(:)>=minfz & ...
+      az(:)<=maxfz;
+    fprintf('selecting subvolume of %.1f%%\n', 100*sum(sel)./prod(anatomical.dim));
+    
+    if all(functional.inside(:))
+      % keep all voxels marked as inside
+      interp.inside = true(anatomical.dim);
+    else
+      % reslice and interpolate inside
+      interp.inside = zeros(anatomical.dim);
+      % interpolate with method nearest
+      interp.inside( sel) = my_interpn(double(functional.inside), ax(sel), ay(sel), az(sel), 'nearest', cfg.feedback);
+      interp.inside(~sel) = 0;
+      interp.inside = logical(interp.inside);
     end
-    interp = setsubfield(interp, dat_name{i}, allav);
+    
+    % prepare the grid that is used in the interpolation
+    fg = [fx(:) fy(:) fz(:)];
+    clear fx fy fz
+    
+    % reslice and interpolate all functional volumes
+    for i=1:length(dat_name)
+      fprintf('reslicing and interpolating %s\n', dat_name{i});
+      
+      dimord = getdimord(functional, dat_name{i});
+      dimtok = tokenize(dimord, '_');
+      dimf   = getdimsiz(functional, dat_name{i});
+      dimf(end+1:length(dimtok)) = 1; % there can be additional trailing singleton dimensions
+      
+      if prod(functional.dim)==dimf(1)
+        % convert into 3-D, 4-D or 5-D array
+        dimf = [functional.dim dimf(2:end)];
+        dat_array{i} = reshape(dat_array{i}, dimf);
+      end
+      
+      % should be 5-D array, can have trailing singleton dimensions
+      if numel(dimf)<4
+        dimf(4) = 1;
+      end
+      if numel(dimf)<5
+        dimf(5) = 1;
+      end
+      
+      av    = zeros([anatomical.dim            ]);
+      allav = zeros([anatomical.dim dimf(4:end)]);
+      functional.inside = functional.inside(:,:,:,1,1);
+      
+      if any(dimf(4:end)>1) && ~strcmp(cfg.feedback, 'none')
+        % this is needed to prevent feedback to be displayed for every time-frequency point
+        ft_warning('disabling feedback');
+        cfg.feedback = 'none';
+      end
+      
+      for k=1:dimf(4)
+        for m=1:dimf(5)
+          fv = double_ifnot(dat_array{i}(:,:,:,k,m));
+          % av( sel) = my_interpn(fx, fy, fz, fv, ax(sel), ay(sel), az(sel), cfg.interpmethod, cfg.feedback);
+          if islogical(dat_array{i})
+            % interpolate always with method nearest
+            av( sel) = my_interpn(fv, ax(sel), ay(sel), az(sel), 'nearest', cfg.feedback);
+            av = logical(av);
+          else
+            if ~all(functional.inside(:))
+              % extrapolate the outside of the functional volumes for better interpolation at the edges
+              fv(~functional.inside) = griddatan(fg(functional.inside(:), :), fv(functional.inside(:)), fg(~functional.inside(:), :), 'nearest');
+            end
+            % interpolate functional onto anatomical grid
+            av( sel) = my_interpn(fv, ax(sel), ay(sel), az(sel), cfg.interpmethod, cfg.feedback);
+            av(~sel) = nan;
+            av(~interp.inside) = nan;
+          end
+          allav(:,:,:,k,m) = av;
+        end
+      end
+      if isfield(interp, 'freq') || isfield(interp, 'time')
+        % the output should be a source representation, not a volume
+        allav = reshape(allav, prod(anatomical.dim), dimf(4), dimf(5));
+      end
+      interp = setsubfield(interp, dat_name{i}, allav);
+    end
+    
   end
 
 end % computing the interpolation according to the input data
@@ -696,3 +734,14 @@ while (1)
   sel = sel + blocksize;
 end
 ft_progress('close');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION to cast array to double precision, only if needed
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function out = double_ifnot(in)
+
+if ~isa(in, 'double')
+  out = double(in);
+else
+  out = in;
+end

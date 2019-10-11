@@ -167,47 +167,47 @@ elseif isheader && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysq
   elseif isfield(input, 'orig') && isfield(input.orig, 'chs') && isfield(input.orig.chs, 'coil_type')
     % all the chs.kinds and chs.coil_types are obtained from the MNE manual, p.210-211
     for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==2)' % planar gradiometers
-      chantype(sel) = {'megplanar'}; %Neuromag-122 planar gradiometer
+      chantype(sel) = {'megplanar'}; % Neuromag-122 planar gradiometer
     end
     for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3012)' %planar gradiometers
-      chantype(sel) = {'megplanar'}; %Type T1 planar grad
+      chantype(sel) = {'megplanar'}; % Type T1 planar grad
     end
     for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3013)' %planar gradiometers
-      chantype(sel) = {'megplanar'}; %Type T2 planar grad
+      chantype(sel) = {'megplanar'}; % Type T2 planar grad
     end
     for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3014)' %planar gradiometers
-      chantype(sel) = {'megplanar'}; %Type T3 planar grad
+      chantype(sel) = {'megplanar'}; % Type T3 planar grad
     end
     for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3022)' %magnetometers
-      chantype(sel) = {'megmag'};    %Type T1 magenetometer
+      chantype(sel) = {'megmag'};    % Type T1 magenetometer
     end
     for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3023)' %magnetometers
-      chantype(sel) = {'megmag'};    %Type T2 magenetometer
+      chantype(sel) = {'megmag'};    % Type T2 magenetometer
     end
-    for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3024)' %magnetometers
-      chantype(sel) = {'megmag'};    %Type T3 magenetometer
+    for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3024)' % magnetometers
+      chantype(sel) = {'megmag'};    % Type T3 magenetometer
     end
-    for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==7001)' %axial gradiometer
+    for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==7001)' % axial gradiometer
       chantype(sel) = {'megaxial'};
     end
-    for sel=find([input.orig.chs.kind]==301)' %MEG reference channel, located far from head
+    for sel=find([input.orig.chs.kind]==301)' % MEG reference channel, located far from head
       chantype(sel) = {'ref'};
     end
-    for sel=find([input.orig.chs.kind]==2)'   %EEG channels
+    for sel=find([input.orig.chs.kind]==2)'   % EEG channels
       chantype(sel) = {'eeg'};
     end
-    for sel=find([input.orig.chs.kind]==201)' %MCG channels
+    for sel=find([input.orig.chs.kind]==201)' % MCG channels
       chantype(sel) = {'mcg'};
     end
-    for sel=find([input.orig.chs.kind]==3)' %Stim channels
-      if any([input.orig.chs(sel).logno] == 101) %new systems: 101 (and 102, if enabled) are digital; low numbers are 'pseudo-analog' (if enabled)
+    for sel=find([input.orig.chs.kind]==3)' % Stim channels
+      if any([input.orig.chs(sel).logno] == 101) % new systems: 101 (and 102, if enabled) are digital; low numbers are 'pseudo-analog' (if enabled)
         chantype(sel([input.orig.chs(sel).logno] == 101)) = {'digital trigger'};
         chantype(sel([input.orig.chs(sel).logno] == 102)) = {'digital trigger'};
         chantype(sel([input.orig.chs(sel).logno] <= 32))  = {'analog trigger'};
         others = [input.orig.chs(sel).logno] > 32 & [input.orig.chs(sel).logno] ~= 101 & ...
           [input.orig.chs(sel).logno] ~= 102;
         chantype(sel(others)) = {'other trigger'};
-      elseif any([input.orig.chs(sel).logno] == 14) %older systems: STI 014/015/016 are digital; lower numbers 'pseudo-analog'(if enabled)
+      elseif any(ismember([input.orig.chs(sel).logno], [14 15 16])) % older systems: STI 014/015/016 are digital; lower numbers 'pseudo-analog'(if enabled)
         chantype(sel([input.orig.chs(sel).logno] == 14)) = {'digital trigger'};
         chantype(sel([input.orig.chs(sel).logno] == 15)) = {'digital trigger'};
         chantype(sel([input.orig.chs(sel).logno] == 16)) = {'digital trigger'};
@@ -219,19 +219,19 @@ elseif isheader && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysq
         chantype(sel) = {'other trigger'};
       end
     end
-    for sel=find([input.orig.chs.kind]==202)' %EOG
+    for sel=find([input.orig.chs.kind]==202)' % EOG
       chantype(sel) = {'eog'};
     end
-    for sel=find([input.orig.chs.kind]==302)' %EMG
+    for sel=find([input.orig.chs.kind]==302)' % EMG
       chantype(sel) = {'emg'};
     end
-    for sel=find([input.orig.chs.kind]==402)' %ECG
+    for sel=find([input.orig.chs.kind]==402)' % ECG
       chantype(sel) = {'ecg'};
     end
-    for sel=find([input.orig.chs.kind]==502)' %MISC
+    for sel=find([input.orig.chs.kind]==502)' % MISC
       chantype(sel) = {'misc'};
     end
-    for sel=find([input.orig.chs.kind]==602)' %Resp
+    for sel=find([input.orig.chs.kind]==602)' % Resp
       chantype(sel) = {'respiration'};
     end
   end

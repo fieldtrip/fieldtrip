@@ -7,9 +7,11 @@ function copy_brainvision_files(oldheaderfile, newheaderfile, deleteflag)
 %   copy_brainvision_files(oldname, newname, deleteflag)
 %
 % Both the old and the new filename should be strings corresponding to the header
-% file, i.e. including the vhdr extension. The third "deleteflag" argument is
-% optional, it should be a boolean that specifies whether the original files should
-% be deleted after copying or not (default = false).
+% file, i.e. including the vhdr extension.
+%
+% The third "deleteflag" argument is optional, it should be a boolean
+% that specifies whether the original files should be deleted after
+% copying or not (default = false).
 %
 % An earlier version of this function can be found on
 %   - https://gist.github.com/robertoostenveld/e31637a777c514bf1e86272e1092316e
@@ -58,12 +60,12 @@ else
   switchcase = @lower;
 end
 
-% determine the new filename without extension
+% determine the file name and path
+[po, fo, xo] = fileparts(oldheaderfile);
 [pn, fn, xn] = fileparts(newheaderfile);
 
-%% do the copying
+%% copy the header file
 
-% deal with the header file
 if ~exist(oldheaderfile, 'file')
   ft_error('the file "%s" does not exists', oldheaderfile);
 end
@@ -78,15 +80,15 @@ fid2 = fopen(newheaderfile, 'w'); % write new
 while ~feof(fid1)
   line = fgetl(fid1);
   if ~isempty(regexp(line, '^MarkerFile', 'once'))
-    [dum, rem] = strtok(line, '=');
-    oldmarkerfile = rem(2:end);
-    [po, fo, xo] = fileparts(oldmarkerfile);
+    oldmarkerfile = getvalue(line);
+    [xx, xx, xo] = fileparts(oldmarkerfile); % ignore the name, just get the extension
+    oldmarkerfile = [fo switchcase(xo)];
     newmarkerfile = [fn switchcase(xo)];
     line = sprintf('MarkerFile=%s', newmarkerfile);
   elseif ~isempty(regexp(line, '^DataFile', 'once'))
-    [dum, rem] = strtok(line, '=');
-    olddatafile = rem(2:end);
-    [po, fo, xo] = fileparts(olddatafile);
+    olddatafile = getvalue(line);
+    [xx, xx, xo] = fileparts(olddatafile); % ignore the name, just get the extension
+    olddatafile = [fo switchcase(xo)];
     newdatafile = [fn switchcase(xo)];
     line = sprintf('DataFile=%s', newdatafile);
   end
@@ -95,15 +97,14 @@ end
 fclose(fid1);
 fclose(fid2);
 
-% deal with the marker file
-if exist(oldmarkerfile, 'file') == 0
-  [po, fo, xo] = fileparts(oldmarkerfile);
-  [po, fo]     = fileparts(oldheaderfile); % re-reading as sometimes weird names comes up
-  if exist([fo xo], 'file')
-    oldmarkerfile = [fo xo];
-  else
-    error('the file "%s" does not exists', oldmarkerfile);
-  end
+%% copy the marker file
+
+% use the full path
+oldmarkerfile = fullfile(po, oldmarkerfile);
+newmarkerfile = fullfile(pn, newmarkerfile);
+
+if ~exist(oldmarkerfile, 'file')
+  ft_error('the file "%s" does not exist', oldmarkerfile);
 end
 
 if exist(newmarkerfile, 'file')
@@ -115,16 +116,10 @@ fid2 = fopen(newmarkerfile, 'w');
 
 while ~feof(fid1)
   line = fgetl(fid1);
-  if ~isempty(regexp(line, '^HeaderFile', 'once'))
-    [dum, rem] = strtok(line, '=');
-    oldheaderfile = rem(2:end);
-    [po, fo, xo] = fileparts(oldheaderfile);
-    newheaderfile = [fn switchcase(xo)];
-    line = sprintf('HeaderFile=%s', newheaderfile);
-  elseif ~isempty(regexp(line, '^DataFile', 'once'))
-    [dum, rem] = strtok(line, '=');
-    olddatafile = rem(2:end);
-    [po, fo, xo] = fileparts(olddatafile);
+  if ~isempty(regexp(line, '^DataFile', 'once'))
+    olddatafile = getvalue(line);
+    [xx, xx, xo] = fileparts(olddatafile); % ignore the name, just get the extension
+    olddatafile = [fo switchcase(xo)];
     newdatafile = [fn switchcase(xo)];
     line = sprintf('DataFile=%s', newdatafile);
   end
@@ -133,15 +128,14 @@ end
 fclose(fid1);
 fclose(fid2);
 
-% deal with the data file
-if exist(olddatafile, 'file') == 0
-  [po, fo, xo] = fileparts(olddatafile);
-  [po, fo]     = fileparts(oldheaderfile); % re-reading as sometimes weird names comes up
-  if exist([fo xo], 'file')
-    olddatafile = [fo xo];
-  else
-    error('the file "%s" does not exists', oldmarkerfile);
-  end
+%% copy the data file
+
+% use the full path
+olddatafile = fullfile(po, olddatafile);
+newdatafile = fullfile(pn, newdatafile);
+
+if ~exist(olddatafile, 'file')
+  error('the file "%s" does not exists', olddatafile);
 end
 
 if exist(newdatafile, 'file')
@@ -149,6 +143,7 @@ if exist(newdatafile, 'file')
 end
 
 status = copyfile(olddatafile, newdatafile);
+
 if ~status
   error('failed to copy data from "%s" to "%s"', olddatafile, newdatafile);
 end
@@ -171,3 +166,10 @@ if deleteflag
     ft_warning('cannot delete "%s"', olddatafile);
   end
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION retuen the part after the '='
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function val = getvalue(str)
+tok = tokenize(str, '=');
+val = tok{2};

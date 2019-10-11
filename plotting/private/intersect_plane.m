@@ -13,8 +13,8 @@ function [X, Y, Z, pnt1, tri1, pnt2, tri2] = intersect_plane(pnt, tri, v1, v2, v
 %
 % $Id$
 
-npnt = size(pnt,1);
-ntri = size(tri,1);
+if ~isa(pnt, 'double'), pnt = double(pnt); end % low level mex files require double precision input
+
 % side = zeros(npnt,1);
 % for i=1:npnt
 %   side(i) = ptriside(v1, v2, v3, pnt(i,:));

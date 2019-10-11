@@ -38,6 +38,14 @@ ARRAY+=(forward/private/ama2headmodel.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# appendstruct.m
+
+ARRAY=()
+ARRAY+=(utilities/appendstruct.m)
+ARRAY+=(fileio/private/appendstruct.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # atlas_lookup.m
 
 ARRAY=()

@@ -153,12 +153,14 @@ url = {
   'BREWERMAP'     'see https://nl.mathworks.com/matlabcentral/fileexchange/45208-colorbrewer--attractive-and-distinctive-colormaps'
   'CELLFUNCTION'  'see https://github.com/schoffelen/cellfunction'
   'MARS'          'see http://www.parralab.org/mars'
+  'LAGEXTRACTION' 'see https://github.com/agramfort/eeglab-plugin-ieee-tbme-2010'
   'JSONLAB'       'see https://se.mathworks.com/matlabcentral/fileexchange/33381-jsonlab--a-toolbox-to-encode-decode-json-files'
   'MFFMATLABIO'   'see https://github.com/arnodelorme/mffmatlabio'
   'JSONIO'        'see https://github.com/gllmflndn/JSONio'
   'CPD'           'see https://sites.google.com/site/myronenko/research/cpd'
   'MVPA-LIGHT'    'see https://github.com/treder/MVPA-Light'
   'XDF'           'see https://github.com/xdf-modules/xdf-Matlab'
+  'MRTRIX'        'see https://mrtrix.org'
   };
 
 if nargin<2
@@ -259,21 +261,21 @@ switch toolbox
   case '4D-VERSION'
     dependency  = {'read4d', 'read4dhdr'};
   case {'STATS', 'STATISTICS'}
-    dependency = has_license('statistics_toolbox');               % also check the availability of a toolbox license
+    dependency = {has_license('statistics_toolbox'), 'betacdf', 'raylcdf', 'unidcdf'};      % also check the availability of a toolbox license
   case {'OPTIM', 'OPTIMIZATION'}
-    dependency = has_license('optimization_toolbox');             % also check the availability of a toolbox license
+    dependency = {has_license('optimization_toolbox'), 'fminunc', 'optimset'};              % also check the availability of a toolbox license
   case {'SPLINES', 'CURVE_FITTING'}
-    dependency = has_license('curve_fitting_toolbox');            % also check the availability of a toolbox license
+    dependency = {has_license('curve_fitting_toolbox'), 'smooth', 'fit'};                   % also check the availability of a toolbox license
   case 'COMM'
-    dependency = {has_license('communication_toolbox'), 'de2bi'}; % also check the availability of a toolbox license
+    dependency = {has_license('communication_toolbox'), 'de2bi', 'fskmod', 'pskmod'};       % also check the availability of a toolbox license
   case 'SIGNAL'
-    dependency = {has_license('signal_toolbox'), 'window'};       % also check the availability of a toolbox license
+    dependency = {has_license('signal_toolbox'), 'window', 'hanning'};                      % also check the availability of a toolbox license
   case 'IMAGES'
-    dependency = has_license('image_toolbox');                    % also check the availability of a toolbox license
+    dependency = {has_license('image_toolbox'), 'imerode', 'imdilate'};                     % also check the availability of a toolbox license
   case {'DCT', 'DISTCOMP'}
-    dependency = has_license('distrib_computing_toolbox');        % also check the availability of a toolbox license
+    dependency = {has_license('distrib_computing_toolbox'), 'parpool', 'batch'};            % also check the availability of a toolbox license
   case 'COMPILER'
-    dependency = has_license('compiler');                         % also check the availability of a toolbox license
+    dependency = {has_license('compiler'), 'mcc', 'mcr'};                                   % also check the availability of a toolbox license
   case 'FASTICA'
     dependency = 'fpica';
   case 'BRAINSTORM'
@@ -384,6 +386,8 @@ switch toolbox
     dependency = {'ghdf5read' 'ghdf5fileimport'};
   case 'MARS'
     dependency = {'spm_mars_mrf'};
+  case 'LAGEXTRACTION'
+    dependency = {'extractlag' 'perform_realign'};
   case 'JSONLAB'
     dependency = {'loadjson' 'savejson'};
   case 'PLOTLY'
@@ -394,7 +398,9 @@ switch toolbox
     dependency = {'cpd', 'cpd_affine', 'cpd_P'};
   case 'XDF'
     dependency = {'load_xdf', 'load_xdf_innerloop'};
-    
+  case 'MRTRIX'
+    dependency = {'read_mrtrix'};
+
     % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
     dependency = {'ft_read_header', 'ft_read_data', 'ft_read_event', 'ft_read_sens'};

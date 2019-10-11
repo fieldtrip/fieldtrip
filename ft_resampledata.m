@@ -16,8 +16,8 @@ function [data] = ft_resampledata(cfg, data)
 %   cfg.sampleindex     = 'no' or 'yes', add a channel with the original sample indices (default = 'no')
 %
 % Instead of specifying cfg.resamplefs, you can also specify a time axis on which you
-% want the data to be resampled. This is usefull for merging data from two acquisition 
-% devices, after resampledata you can call FT_APPENDDATA to concatenate the channels 
+% want the data to be resampled. This is usefull for merging data from two acquisition
+% devices, after resampledata you can call FT_APPENDDATA to concatenate the channels
 % from the different acquisition devices.
 %   cfg.time        = cell-array with one time axis per trial (i.e. from another dataset)
 %   cfg.method      = interpolation method, see INTERP1 (default = 'pchip')
@@ -256,23 +256,30 @@ if usefsample
       ft_error('unknown method ''%s''', cfg.method);
     end
     
-    % compute the new time axis, assuming that it starts at the same time
-    nsmp   = size(newdat,2);
-    newtim = oldtim(1) + (0:(nsmp-1))/cfg.resamplefs;
-    % the new time axis can be shifted by a sub-sample amount
-    shift  = my_centertime(oldtim) - my_centertime(newtim);
-    newtim = newtim - shift;
-    
     % add back the mean
     if ~strcmp(cfg.demean, 'yes')
       nsmp   = size(newdat,2);
       newdat = newdat + bsl(:,ones(1,nsmp));
     end
     
-    % un-pad the data
-    sel = nearest(newtim, oldtim(1+begpad(itr))):nearest(newtim, oldtim(end-endpad(itr)));
-    data.time{itr}  = newtim(   sel);
-    data.trial{itr} = newdat(:, sel);
+    % compute the new time axis, assuming that it starts at the same time
+    nsmp   = size(newdat,2);
+    newtim = (0:(nsmp-1))/cfg.resamplefs;
+    
+    % the middle of the time bin represented by the first samples are not aligned
+    % the new time axis can be shifted by a sub-sample amount
+    shift  = mean(oldtim) - mean(newtim);
+    newtim = newtim + shift;
+    
+    if begpad(itr)>0 || endpad(itr)>0
+      % un-pad the data
+      sel = (1+round(begpad(itr)*cfg.resamplefs/cfg.origfs)):(length(newtim)-round(endpad(itr)*cfg.resamplefs/cfg.origfs));
+      newtim = newtim(   sel);
+      newdat = newdat(:, sel);
+    end
+    
+    data.time{itr}  = newtim;
+    data.trial{itr} = newdat;
     
   end % for itr
   ft_progress('close');
@@ -289,10 +296,10 @@ elseif usetime
   ft_progress('init', cfg.feedback, 'resampling data');
   for itr = 1:ntr
     ft_progress(itr/ntr, 'resampling data in trial %d from %d\n', itr, ntr);
-
+    
     olddat = data.trial{itr};
     oldtim = data.time{itr};
-
+    
     % detrending is in general not recommended
     if istrue(cfg.detrend)
       if ~strcmp(cfg.baselinewindow, 'all')
@@ -353,19 +360,6 @@ ft_postamble previous   data
 ft_postamble provenance data
 ft_postamble history    data
 ft_postamble savevar    data
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION that computes the center of the time axis
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function y = my_centertime(x)
-nsmp = numel(x);
-if ~mod(nsmp,2)
-  % we want an odd number of samples, drop the last one
-  nsmp = nsmp-1;
-end
-y = mean(x(1:nsmp));
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that decimates along the columns

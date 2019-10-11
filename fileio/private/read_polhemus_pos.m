@@ -1,17 +1,16 @@
-function [elec] = read_brainvision_pos(filename)
+function [elec] = read_polhemus_pos(filename)
 
-% READ_BRAINVISION_POS reads electrode positions measured with the Polhemus
-% tracker in one of the F.C. Donders EEG labs. The polhemus software is actually 
-% not from Brainvision.
+% READ_POLHEMUS_POS reads electrode positions measured with the Polhemus tracker in
+% one of the EEG labs at the DCCN. The software used with the Polhemus is from CTF.
 %
 % Use as:
-%   [elec] = read_brainvision_pos(filename)
+%   [elec] = read_polhemus_pos(filename)
 %
 % This returns an electrode structure with
 %   elec.label     cell-array with electrode labels (strings)
 %   elec.pnt       position of each electrode
 
-% Copyright (C) 2004, Robert Oostenveld
+% Copyright (C) 2004-2019, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

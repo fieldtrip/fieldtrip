@@ -100,6 +100,14 @@ switch format
     if length(path)>3 && strcmp(path(end-2:end), '.ds')
       filename = path; % this is the *.ds directory
     end
+  case 'bids_tsv'
+    [path, file, ext] = fileparts(filename);
+    if exist(fullfile(path, [file '.json']), 'file')
+      headerfile   = fullfile(path, [file '.json']);
+    end
+    if exist(fullfile(path, [file '.tsv']), 'file')
+      datafile   = fullfile(path, [file '.tsv']);
+    end
   case 'brainvision_vhdr'
     [path, file, ext] = fileparts(filename);
     headerfile = fullfile(path, [file '.vhdr']);

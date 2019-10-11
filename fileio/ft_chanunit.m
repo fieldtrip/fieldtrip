@@ -173,9 +173,8 @@ elseif isgrad && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysqui
           ft_warning('assuming that planar MEG channel units are %s', assumption);
         end
       else
-        sel = strcmp('megplanar', input.chantype);
+        sel = strcmp('megplanar', input.chantype) & strcmp('unknown', input.chanunit);
         if any(sel)
-          chanunit(sel) = {'unknown'};
           ft_warning('cannot determine the units for the planar MEG channels');
         end
       end
@@ -199,9 +198,8 @@ elseif (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74')) && 
       ft_warning('assuming that planar MEG channel units are %s, consistent with the geometrical units', assumption);
     end
   else
-    sel = strcmp('megplanar', input.chantype);
+    sel = strcmp('megplanar', input.chantype) & strcmp('unknown', input.chanunit);
     if any(sel)
-      chanunit(strcmp('megplanar',        input.chantype)) = {'unknown'};
       ft_warning('cannot determine the units for the planar MEG channels');
     end
   end

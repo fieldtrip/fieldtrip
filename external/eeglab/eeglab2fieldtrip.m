@@ -90,6 +90,7 @@ if ~isempty(EEG.chanlocs) && ~isempty(EEG.chanlocs(1).X)
             data.elec.elecpos(ind,:) = [0 0 0];
         end
     end
+    data.elec.pnt = data.elec.elecpos;
 end
 
 if nargin > 2
@@ -99,6 +100,7 @@ if nargin > 2
             transfmat = traditionaldipfit(EEG.dipfit.coord_transform);
             data.elec.elecpos = transfmat * [ data.elec.elecpos ones(size(data.elec.elecpos,1),1) ]';
             data.elec.elecpos = data.elec.elecpos(1:3,:)';
+            data.elec.pnt = data.elec.elecpos;
         else
             disp('Warning: no transformation of electrode coordinates to match head model');
         end

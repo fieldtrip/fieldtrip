@@ -6,7 +6,7 @@ function [fspec, fstem, fmt] = MRIfspec(fstring,checkdisk)
 %
 % A specification is the name of a file as it could exist on disk. The
 % specification has the form fstem.fmt, where fmt can be mgh, mgz,
-% bhdr, img, nii, nii.gz. fstring can be either an fspec or fstem. 
+% nii, nii.gz, img, bhdr. fstring can be either an fspec or fstem. 
 %
 % If fstring is an fspec, then the format is determined from the
 % extension.
@@ -27,20 +27,18 @@ function [fspec, fstem, fmt] = MRIfspec(fstring,checkdisk)
 % Original Author: Doug Greve
 % CVS Revision Info:
 %    $Author: nicks $
-%    $Date: 2007/01/10 22:55:09 $
-%    $Revision$
+%    $Date: 2011/03/02 00:04:12 $
+%    $Revision: 1.8 $
 %
-% Copyright (C) 2002-2007,
-% The General Hospital Corporation (Boston, MA). 
-% All rights reserved.
+% Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
 %
-% Distribution, usage and copying of this software is covered under the
-% terms found in the License Agreement file named 'COPYING' found in the
-% FreeSurfer source code root directory, and duplicated here:
-% https://surfer.nmr.mgh.harvard.edu/fswiki/FreeSurferOpenSourceLicense
+% Terms and conditions for use, reproduction, distribution and contribution
+% are found in the 'FreeSurfer Software License Agreement' contained
+% in the file 'LICENSE' found in the FreeSurfer distribution, and here:
 %
-% General inquiries: freesurfer@nmr.mgh.harvard.edu
-% Bug reports: analysis-bugs@nmr.mgh.harvard.edu
+% https://surfer.nmr.mgh.harvard.edu/fswiki/FreeSurferSoftwareLicense
+%
+% Reporting: freesurfer@nmr.mgh.harvard.edu
 %
 
 
@@ -74,6 +72,19 @@ switch(ext)
   fmt = 'mgz';
   fstem = fstring(1:end-4);
   return;
+ case 'nii',
+  fspec = fstring;
+  fmt = 'nii';
+  fstem = fstring(1:end-4);
+  return;
+ case 'gz',
+  ind = findstr(fstring,'nii.gz');
+  if(~isempty(ind))
+    fspec = fstring;
+    fmt = 'nii.gz';
+    fstem = fstring(1:ind-2);
+    return;
+  end
  case 'img',
   fspec = fstring;
   fmt = 'img';
@@ -89,19 +100,6 @@ switch(ext)
   fmt = 'bhdr';
   fstem = fstring(1:end-5);
   return;
- case 'nii',
-  fspec = fstring;
-  fmt = 'nii';
-  fstem = fstring(1:end-4);
-  return;
- case 'gz',
-  ind = findstr(fstring,'nii.gz');
-  if(~isempty(ind))
-    fspec = fstring;
-    fmt = 'nii.gz';
-    fstem = fstring(1:ind-2);
-    return;
-  end
 end
 
 % If it gets here, then it cannot determine the format from an

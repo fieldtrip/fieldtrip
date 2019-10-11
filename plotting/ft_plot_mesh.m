@@ -107,11 +107,11 @@ alphalim     = ft_getopt(varargin, 'alphalim');
 alphamapping = ft_getopt(varargin, 'alphamap', 'rampup');
 cmap         = ft_getopt(varargin, 'colormap');
 maskstyle    = ft_getopt(varargin, 'maskstyle', 'opacity');
-contour      = ft_getopt(varargin, 'contour', false);
+contour      = ft_getopt(varargin, 'contour',   []);
 
-contourcolor      = ft_getopt(varargin, 'contourcolor', 'k');
+contourcolor      = ft_getopt(varargin, 'contourcolor',     'k');
 contourlinewidth  = ft_getopt(varargin, 'contourlinewidth', 3);
-contourlinestyle  = ft_getopt(varargin, 'contourlinestyle');
+contourlinestyle  = ft_getopt(varargin, 'contourlinestyle', '-');
 
 
 haspos   = isfield(mesh, 'pos');  % vertices
@@ -330,25 +330,37 @@ switch maskstyle
     if ~isempty(clim); caxis(clim); end % set colorbar scale to match [fcolmin fcolmax]
 end
 
-if numel(contour)>1 && any(contour)
-    cfg                 = [];
-    cfg.connectivity    = triangle2connectivity(tri);
-    neighcmb            = full(ft_getopt(cfg, 'connectivity', false));
-    
-    posclusobs = findcluster(contour,neighcmb,0); %minnbchan=0
-    
-    for cl = 1:max(posclusobs)
-        idxcl = find(posclusobs==cl);
-        [xbnd, ybnd, zbnd] = extract_contour(pos,tri,idxcl,contour);
-        
-        % draw each individual line segment of the intersection
-        for i = 1:length(xbnd)
-            p(i) = patch(xbnd(i,:)', ybnd(i,:)', zbnd(i,:)',NaN);
-        end
-        if ~isempty(contourcolor),     set(p(:), 'EdgeColor', contourcolor); end
-        if ~isempty(contourlinewidth), set(p(:), 'LineWidth', contourlinewidth); end
-        if ~isempty(contourlinestyle), set(p(:), 'LineStyle', contourlinestyle); end
+if ~isempty(contour)
+  if ~iscell(contour), contour = {contour}; end
+  if ~iscell(contourlinestyle), contourlinestyle = {contourlinestyle}; end
+  
+  if ischar(contourcolor)
+    if numel(contour)>numel(contourcolor)
+      contourcolor = repmat(contourcolor(:), [numel(contour) 1]);
+    else
+      contourcolor = contourcolor(:);
     end
+  end
+  if size(contourcolor,2)==3 && numel(contour)>size(contourcolor,1), contourcolor = repmat(contourcolor, [numel(contour) 1] ); end
+  if numel(contour)>numel(contourlinewidth), contourlinewidth = repmat(contourlinewidth, [1 numel(contour)]); end
+  if numel(contour)>numel(contourlinestyle), contourlinestyle = repmat(contourlinestyle, [1 numel(contour)]); end
+  
+  for m = 1:numel(contour)
+    C    = full(triangle2connectivity(tri));
+    clus = findcluster(contour{m},C,0);
+    
+    for cl = 1:max(clus)
+      idxcl = find(clus==cl);
+      [xbnd, ybnd, zbnd] = extract_contour(pos,tri,idxcl,contour{m});
+      
+      % draw each individual line segment of the intersection
+      p = [];
+      for i = 1:length(xbnd)
+        p(i) = patch(xbnd(i,:)', ybnd(i,:)', zbnd(i,:)',NaN);
+      end
+      set(p(:), 'EdgeColor', contourcolor(m,:), 'LineWidth', contourlinewidth(m), 'LineStyle', contourlinestyle{m});
+    end
+  end
 end
 
 if faceindex

@@ -36,7 +36,7 @@ cfg.InstitutionName             = 'Radboud University';
 cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
 data2bids(cfg)
 
-%% Example with a NeuroScan EEG dataset on disk that needs to be converted
+%% Example with a Neuroscan EEG dataset on disk that needs to be converted
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/convert'))
 
 cfg = [];
@@ -46,6 +46,25 @@ cfg.outputfile                  = 'sub-MP_task-visual_eeg.vhdr';
 cfg.eeg.writesidecar            = 'replace';
 cfg.channels.writesidecar       = 'replace';
 cfg.events.writesidecar         = 'replace';
+cfg.TaskName                    = 'visual';
+cfg.TaskDescription             = 'Visual response task';
+cfg.Instructions                = 'Press as fast with your right index finger as you see the target appear on screen.';
+cfg.InstitutionName             = 'Radboud University';
+cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
+cfg.channels.status             = 'good'; % all channels are good
+data2bids(cfg)
+
+%% Example with a BrainVision EEG dataset on disk that needs to be copied
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/copy'))
+
+cfg = [];
+cfg.method                      = 'copy';
+cfg.dataset                     = 'Subject1_MP.vhdr';
+cfg.datatype                    = 'eeg';
+cfg.bidsroot                    = tempname();
+cfg.sub                         = '01';
+cfg.ses                         = '02';
+cfg.run                         = 3;
 cfg.TaskName                    = 'visual';
 cfg.TaskDescription             = 'Visual response task';
 cfg.Instructions                = 'Press as fast with your right index finger as you see the target appear on screen.';
@@ -116,6 +135,7 @@ data2bids(cfg)
 cfg = [];
 cfg.method                      = 'copy';
 cfg.dataset                     = 'jg_single_01raw.fif';
+cfg.events                      = ft_read_event(cfg.dataset, 'chanindx', 123); % this has analog triggers, which require some extra attention
 cfg.outputfile                  = 'sub-MEG_task-stimuluation_meg.fif';
 cfg.InstitutionName             = 'Radboud University';
 cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
@@ -147,6 +167,8 @@ cfg.bidsroot = 'human_ecog';
 cfg.sub = 'UCI29';
 cfg.task = 'attention';
 cfg.datatype = 'ieeg';
+cfg.coordsystem.iEEGCoordinateSystem = 'ACPC';
+cfg.coordsystem.iEEGCoordinateSystemDescription = 'electrodes were aligned with ACPC and projected on the cortex hull';
 data2bids(cfg, data);
 
 cfg = [];
@@ -209,44 +231,3 @@ cfg.presentation.eventvalue     = [];
 cfg.RepetitionTime              = 2;
 
 data2bids(cfg);
-
-%%
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/eeglab'));
-
-% the following uses a dataset that originates from the EEGLAB website
-% wget --no-check-certificate https://sccn.ucsd.edu/mediawiki/images/9/9c/Eeglab_data.set
-
-age = [11  96  nan 77  82  87  18 40  26  80];
-sex = {'f' [] 'f' 'f' 'f' 'm' 'm' 'm' 'm' 'm'};
-
-sub = {'01', '02', '03', '04', '05', '06', '07', '08', '09', '10'};
-ses = {'pre', 'post'};
-run = {1, 2};
-
-for subindx=1:numel(sub)
-  for sesindx=1:numel(ses)
-    for runindx=1:numel(run)
-      
-      cfg = [];
-      cfg.dataset   = 'sourcedata/Eeglab_data.set';
-      cfg.datatype  = 'eeg';
-      
-      cfg.participants.age = age(subindx);
-      cfg.participants.sex = sex{subindx};
-      
-      cfg.scans.acq_time = datestr(now, 'yyyy-mm-ddThh:MM:SS'); % RFC3339
-      
-      cfg.InstitutionName             = 'Radboud University';
-      cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
-      
-      cfg.bidsroot  = 'bids';
-      cfg.sub       = sub{subindx};
-      cfg.ses       = ses{sesindx};
-      cfg.run       = run{runindx};
-      data2bids(cfg);
-      
-    end % for run
-  end % for ses
-end % for sub
-
-

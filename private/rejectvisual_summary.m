@@ -275,7 +275,16 @@ end % switch
 if any(info.chansel) && any(info.trlsel)
   % don't try to rescale the axes if they are empty
   % have to use 0 as lower limit because in the single channel case ylim([1 1]) will be invalid
-  axis([0.8*xmin 1.2*xmax 0.5 ymax+0.5]);
+  range = [0.8*xmin 1.2*xmax 0.5 ymax+0.5];
+  % ensure that the horizontal and vertical range increase, also when negative
+  % see https://github.com/fieldtrip/fieldtrip/issues/1150
+  if range(1)>range(2)
+    range = range([2 1 3 4]);
+  end
+  if range(3)>range(4)
+    range = range([1 2 4 3]);
+  end
+  axis(range);
 end
 axis ij;
 set(info.axes(2), 'ButtonDownFcn', @toggle_visual);  % needs to be here; call to axis resets this property

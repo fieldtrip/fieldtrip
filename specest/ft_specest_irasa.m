@@ -177,7 +177,6 @@ if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis')
 elseif verbose
   fprintf([str, '\n']);
 end
-nfft = size(dat,2); % fixed, to move rhythmic content up and down in the powerspectrum
 spectrum = cell(ntaper(1),1);
 for itap = 1:ntaper(1)
   %%%% IRASA STARTS %%%%
@@ -189,12 +188,12 @@ for itap = 1:ntaper(1)
     ddat = resample(dat', d, n)'; % downsample
     
     % fft of upsampled data
-    ucom = fft(ft_preproc_padding(bsxfun(@times,udat,tap{ih,1}), padtype, 0, postpad), nfft, 2); % fft
+    ucom = fft(ft_preproc_padding(bsxfun(@times,udat,tap{ih,1}), padtype, 0, postpad), endnsample, 2); % fft
     ucom = ucom(:,freqboi);
     ucom = ucom .* sqrt(2 ./ size(udat,2));
     
     % fft of downsampled data
-    dcom = fft(ft_preproc_padding(bsxfun(@times,ddat,tap{ih+nhset,1}), padtype, 0, postpad), nfft, 2); % fft
+    dcom = fft(ft_preproc_padding(bsxfun(@times,ddat,tap{ih+nhset,1}), padtype, 0, postpad), endnsample, 2); % fft
     dcom = dcom(:,freqboi);
     dcom = dcom .* sqrt(2 ./ size(ddat,2));
     

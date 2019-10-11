@@ -174,6 +174,7 @@ cfg.latency         = ft_getopt(cfg, 'latency',       'all'); % needed for laten
 
 if ischar(cfg.graphcolor)
   graphcolor = cfg.graphcolor(1:Ndata);
+  graphcolor = graphcolor(:); % ensure that it is a column
 elseif isnumeric(cfg.graphcolor)
   graphcolor = cfg.graphcolor(1:Ndata,:);
 end
@@ -433,11 +434,11 @@ mask = squeeze(mean(maskmatrix, 1)); % over channels
 
 if strcmp(cfg.maskstyle, 'difference')
   % combine the conditions in a single plot, highlight the difference
-  ft_plot_vector(xval, yval, 'style', cfg.linestyle{i}, 'color', graphcolor(i), 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
+  ft_plot_vector(xval, yval, 'style', cfg.linestyle{i}, 'color', graphcolor(i,:), 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
 else
   % loop over the conditions, plot them on top of each other
   for i=1:Ndata
-    ft_plot_vector(xval, yval(i,:), 'style', cfg.linestyle{i}, 'color', graphcolor(i), 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
+    ft_plot_vector(xval, yval(i,:), 'style', cfg.linestyle{i}, 'color', graphcolor(i,:), 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
   end
 end
 

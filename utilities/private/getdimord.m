@@ -370,7 +370,7 @@ switch field
       dimord = 'pos_freq_time';
     end
     
-  case {'pow' 'noise' 'rv' 'nai'}
+  case {'pow' 'noise' 'rv' 'nai' 'kurtosis'}
     if isequal(datsiz, [npos ntime])
       dimord = 'pos_time';
     elseif isequal(datsiz, [npos nfreq])
@@ -449,10 +449,10 @@ switch field
     end
     
   case {'ori' 'eta'}
-    if isequal(datsiz, [npos nori]) || isequal(datsiz, [npos 3])
+    if isequal(datsiz, [npos nori]) || isequal(datsiz, [npos nori 1]) || isequal(datsiz, [npos 3]) || isequal(datsiz, [npos 3 1])
       dimord = 'pos_ori';
     elseif isequal(datsiz, [npos 1 nori]) || isequal(datsiz, [npos 1 3])
-      dimord = 'pos_unknown_unknown';
+      dimord = 'pos_unknown_ori';
     end
     
   case {'csdlabel'}

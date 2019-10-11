@@ -213,6 +213,7 @@ switch type
     end
     
     % Reporting
+    ft_info once
     ft_info('Highpass filtering data: %s, order %d, %s-windowed sinc FIR\n', dir, order, wintype);
     if ~isTwopass && ~isOrderLow % Do not report shifted cutoffs
       ft_info('  cutoff (-6 dB) %g Hz\n', Fhp);

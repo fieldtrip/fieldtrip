@@ -1,9 +1,8 @@
 function [event] = ft_read_event(filename, varargin)
 
-% FT_READ_EVENT reads all events from an EEG/MEG dataset and returns
-% them in a well defined structure. It is a wrapper around different
-% EEG/MEG file importers, directly supported formats are CTF, Neuromag,
-% EEP, BrainVision, Neuroscan, Neuralynx and Nervus/Nicolet.
+% FT_READ_EVENT reads all events from an EEG, MEG or other time series dataset and
+% returns them in a common data-independent structure. The supported formats are
+% listed in the accompanying FT_READ_HEADER function.
 %
 % Use as
 %   [event] = ft_read_event(filename, ...)
@@ -14,31 +13,13 @@ function [event] = ft_read_event(filename, varargin)
 %   'eventformat'    string
 %   'header'         header structure, see FT_READ_HEADER
 %   'detectflank'    string, can be 'bit', 'up', 'down', 'both', 'peak', 'trough' or 'auto' (default is system specific)
-%   'chanindx'       list with channel indices in case of different sampling frequencies (only for EDF)
 %   'trigshift'      integer, number of samples to shift from flank to detect trigger value (default = 0)
-%   'trigindx'       list with channel numbers for the trigger detection, only for Yokogawa & Ricoh (default is automatic)
-%   'triglabel'      list of channel labels for the trigger detection (default is all ADC* channels for Artinis .oxy3- or .oxy4-  files)
+%   'chanindx'       list with channel numbers for the trigger detection (default is automatic)
 %   'threshold'      threshold for analog trigger channels (default is system specific)
 %   'blocking'       wait for the selected number of events (default = 'no')
 %   'timeout'        amount of time in seconds to wait when blocking (default = 5)
 %   'tolerance'      tolerance in samples when merging analogue trigger channels, only for Neuromag (default = 1, meaning
 %                    that an offset of one sample in both directions is compensated for)
-%
-% Furthermore, you can specify optional arguments as key-value pairs
-% for filtering the events, e.g. to select only events of a specific
-% type, of a specific value, or events between a specific begin and
-% end sample. This event filtering is especially usefull for real-time
-% processing. See FT_FILTER_EVENT for more details.
-%
-% Some data formats have trigger channels that are sampled continuously with
-% the same rate as the electrophysiological data. The default is to detect
-% only the up-going TTL flanks. The trigger events will correspond with the
-% first sample where the TTL value is up. This behavior can be changed
-% using the 'detectflank' option, which also allows for detecting the
-% down-going flank or both. In case of detecting the down-going flank, the
-% sample number of the event will correspond with the first sample at which
-% the TTF went down, and the value will correspond to the TTL value just
-% prior to going down.
 %
 % This function returns an event structure with the following fields
 %   event.type      = string
@@ -48,11 +29,29 @@ function [event] = ft_read_event(filename, varargin)
 %   event.duration  = expressed in samples
 %   event.timestamp = expressed in timestamp units, which vary over systems (optional)
 %
-% The event type and sample fields are always defined, other fields can be empty,
-% depending on the type of event file. Events are sorted by the sample on
-% which they occur. After reading the event structure, you can use the
-% following tricks to extract information about those events in which you
-% are interested.
+% You can specify optional arguments as key-value pairs for filtering the events,
+% e.g. to select only events of a specific type, of a specific value, or events
+% between a specific begin and end sample. This event filtering is especially usefull
+% for real-time processing. See FT_FILTER_EVENT for more details.
+%
+% Some data formats have trigger channels that are sampled continuously with the same
+% rate as the electrophysiological data. The default is to detect only the up-going
+% TTL flanks. The trigger events will correspond with the first sample where the TTL
+% value is up. This behavior can be changed using the 'detectflank' option, which
+% also allows for detecting the down-going flank or both. In case of detecting the
+% down-going flank, the sample number of the event will correspond with the first
+% sample at which the TTF went down, and the value will correspond to the TTL value
+% just prior to going down.
+%
+% To use an external reading function, you can specify a function as the
+% 'eventformat' option. This function should take the filename  and the headeras
+% input arguments. Please check the code of this function for details, and search for
+% BIDS_TSV as example.
+%
+% The event type and sample fields are always defined, other fields are present but
+% can be empty, depending on the type of event file. Events are sorted by the sample
+% on which they occur. After reading the event structure, you can use the following
+% tricks to extract information about those events in which you are interested.
 %
 % Determine the different event types
 %   unique({event.type})
@@ -69,12 +68,9 @@ function [event] = ft_read_event(filename, varargin)
 %
 % The list of supported file formats can be found in FT_READ_HEADER.
 %
-% To use an external reading function, use key-value pair: 'eventformat', FUNCTION_NAME.
-% (Function needs to be on the path, and take as input: filename)
-%
 % See also FT_READ_HEADER, FT_READ_DATA, FT_WRITE_EVENT, FT_FILTER_EVENT
 
-% Copyright (C) 2004-2016 Robert Oostenveld (Nervus by Jan Brogger)
+% Copyright (C) 2004-2019 Robert Oostenveld (Nervus by Jan Brogger)
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -107,32 +103,45 @@ if iscell(filename)
   % use recursion to read events from multiple files
   
   hdr = ft_getopt(varargin, 'header');
-  if isempty(hdr) || ~isfield(hdr, 'orig') || ~iscell(hdr.orig)
-    for i=1:numel(filename)
-      % read the individual file headers
-      hdr{i}  = ft_read_header(filename{i}, varargin{:});
-    end
+  if isempty(hdr)
+    % read the combined and individual file headers
+    combined  = ft_read_header(filename, varargin{:});
   else
-    % use the individual file headers that were read previously
-    hdr = hdr.orig;
+    % use the combined and individual file headers that were read previously
+    combined = hdr;
   end
-  nsmp = nan(size(filename));
-  for i=1:numel(filename)
-    nsmp(i) = hdr{i}.nSamples*hdr{i}.nTrials;
-  end
-  offset = [0 cumsum(nsmp(1:end-1))];
+  hdr = combined.orig;
   
-  event = cell(size(filename));
-  for i=1:numel(filename)
-    varargin = ft_setopt(varargin, 'header', hdr{i});
-    event{i} = ft_read_event(filename{i}, varargin{:});
-    for j=1:numel(event{i})
-      % add the offset due to the previous files
-      event{i}(j).sample = event{i}(j).sample + offset(i);
+  allhdr = cat(1, hdr{:});
+  if numel(unique([allhdr.label]))==sum([allhdr.nChans])
+    % each file has different channels, concatenate along the channel dimension
+    % sample indices are the same for all files
+    for i=1:numel(filename)
+      varargin = ft_setopt(varargin, 'header', hdr{i});
+      event{i} = ft_read_event(filename{i}, varargin{:});
+    end
+    
+  else
+    % each file has the same channels, concatenate along the time dimension
+    % this requires careful bookkeeping of the sample indices
+    nsmp = nan(size(filename));
+    for i=1:numel(filename)
+      nsmp(i) = hdr{i}.nSamples*hdr{i}.nTrials;
+    end
+    offset = [0 cumsum(nsmp(1:end-1))];
+    
+    event = cell(size(filename));
+    for i=1:numel(filename)
+      varargin = ft_setopt(varargin, 'header', hdr{i});
+      event{i} = ft_read_event(filename{i}, varargin{:});
+      for j=1:numel(event{i})
+        % add the offset due to the previous files
+        event{i}(j).sample = event{i}(j).sample + offset(i);
+      end
     end
   end
   % return the concatenated events
-  event = appendevent(event{:});
+  event = appendstruct(event{:});
   return
 end
 
@@ -143,14 +152,32 @@ filename = fetch_url(filename);
 hdr              = ft_getopt(varargin, 'header');
 detectflank      = ft_getopt(varargin, 'detectflank', 'up', true);   % note that emptymeaningful=true
 trigshift        = ft_getopt(varargin, 'trigshift');                 % default is assigned in subfunction
-trigindx         = ft_getopt(varargin, 'trigindx');                  % this allows to override the automatic trigger channel detection (e.g., useful for Yokogawa & Ricoh)
 headerformat     = ft_getopt(varargin, 'headerformat');
 dataformat       = ft_getopt(varargin, 'dataformat');
 threshold        = ft_getopt(varargin, 'threshold');                 % this is used for analog channels
 tolerance        = ft_getopt(varargin, 'tolerance', 1);
 checkmaxfilter   = ft_getopt(varargin, 'checkmaxfilter');            % will be passed to ft_read_header
 eventformat      = ft_getopt(varargin, 'eventformat');
-chanindx         = ft_getopt(varargin, 'chanindx');                  % used for EDF files with variable sampling rate
+chanindx         = ft_getopt(varargin, 'chanindx');                  % this allows to override the automatic trigger channel detection (useful for Yokogawa & Ricoh, and for EDF with variable sampling rate)
+trigindx         = ft_getopt(varargin, 'trigindx');                  % deprecated, use chanindx instead
+triglabel        = ft_getopt(varargin, 'triglabel');                 % deprecated, use chanindx instead
+
+% for backward compatibility, added by Robert in Sept 2019
+if ~isempty(trigindx)
+  ft_warning('please use ''chanindx'' instead of ''trigindx''')
+  chanindx = trigindx;
+end
+
+% for backward compatibility, added by Robert in Sept 2019
+if ~isempty(triglabel)
+  ft_error('please use ''chanindx'' instead of ''triglabel''')
+  % FIXME it would be possible to read the header and search for the corresponding
+  % channels. However this was only implemented for Artinis oxy3 and oxy4 formats,
+  % and never supported for other formats. I did not find it in use anywhere or
+  % documented on the website. If this were to be re-enabled, it should be done
+  % consistently for all data formats as 'chanlabel', and probably also when
+  % reading data using FT_READ_DATA.
+end
 
 if isempty(eventformat)
   % only do the autodetection if the format was not specified
@@ -186,15 +213,19 @@ if any(strcmp(eventformat, {'brainvision_eeg', 'brainvision_dat'}))
 end
 
 if strcmp(eventformat, 'brainvision_vhdr')
-  % read the headerfile belonging to the dataset and try to determine the corresponding markerfile
+  % read the header file belonging to the dataset and try to determine the corresponding marker file
   eventformat = 'brainvision_vmrk';
-  hdr = read_brainvision_vhdr(filename);
+  if ~isempty(hdr)
+    vhdr = hdr.orig;
+  else
+    vhdr = read_brainvision_vhdr(filename);
+  end
   % replace the filename with the filename of the markerfile
-  if ~isfield(hdr, 'MarkerFile') || isempty(hdr.MarkerFile)
+  if ~isfield(vhdr, 'MarkerFile') || isempty(vhdr.MarkerFile)
     filename = [];
   else
     [p, ~, ~] = fileparts(filename);
-    filename = fullfile(p, hdr.MarkerFile);
+    filename = fullfile(p, vhdr.MarkerFile);
   end
 end
 
@@ -219,12 +250,12 @@ switch eventformat
     else
       trigger = read_trigger(filename, 'header', hdr, 'dataformat', '4d', 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trgindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fix4d8192', false);
     end
-    event   = appendevent(event, trigger);
+    event   = appendstruct(event, trigger);
     
     respindx = match_str(hdr.label, 'RESPONSE');
     if ~isempty(respindx)
       response = read_trigger(filename, 'header', hdr, 'dataformat', '4d', 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', respindx, 'detectflank', detectflank, 'trigshift', trigshift);
-      event    = appendevent(event, response);
+      event    = appendstruct(event, response);
     end
     
   case 'bci2000_dat'
@@ -477,15 +508,16 @@ switch eventformat
       hdr = ft_read_header(filename);
     end
     
-    chanindx = [];
-    for i = 1:numel(hdr.orig)
-      if ~any(isfield(hdr.orig{i}, {'units', 'scale'}))
-        chanindx = [chanindx i];
+    if isempty(chanindx)
+      for i = 1:numel(hdr.orig)
+        if ~any(isfield(hdr.orig{i}, {'units', 'scale'}))
+          chanindx = [chanindx i];
+        end
       end
     end
     if ~isempty(chanindx)
       trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank);
-      event   = appendevent(event, trigger);
+      event   = appendstruct(event, trigger);
     end
     
   case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf_old'}
@@ -536,11 +568,11 @@ switch eventformat
       origSensType = [];
     end
     % meg channels are 5, refmag 0, refgrad 1, adcs 18, trigger 11 or 20, eeg 9
-    trigindx = find(origSensType==11 | origSensType==20);
-    if ~isempty(trigindx)
+    chanindx = find(origSensType==11 | origSensType==20);
+    if ~isempty(chanindx)
       % read the trigger channel and do flank detection
-      trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixctf', true);
-      event   = appendevent(event, trigger);
+      trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixctf', true);
+      event   = appendstruct(event, trigger);
     end
     
     % read the classification file and make an event for each classified trial
@@ -1030,25 +1062,10 @@ switch eventformat
     if isempty(hdr)
       hdr = ft_read_header(filename);
     end
-    if isfield(hdr.orig, 'trigger')
-      % this is inefficient, since it keeps the complete data in memory
-      % but it does speed up subsequent read operations without the user
-      % having to care about it
-      smi = hdr.orig;
-    else
-      smi = read_smi_txt(filename);
-    end
-    timestamp = [smi.trigger(:).timestamp];
-    value     = [smi.trigger(:).value];
-    % note that in this dataformat the first input trigger can be before
-    % the start of the data acquisition
-    for i=1:length(timestamp)
-      event(end+1).type       = 'Trigger';
-      event(end  ).sample     = (timestamp(i)-hdr.FirstTimeStamp)/hdr.TimeStampPerSample + 1;
-      event(end  ).timestamp  = timestamp(i);
-      event(end  ).value      = value(i);
-      event(end  ).duration   = 1;
-      event(end  ).offset     = 0;
+    chanindx = find(strcmp(hdr.label, 'Trigger'));
+    event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift);
+    for i=1:numel(event)
+      event(i).timestamp = hdr.orig.timestamp(event(i).sample);
     end
     
   case 'eyelink_asc'
@@ -1063,8 +1080,13 @@ switch eventformat
     else
       asc = read_eyelink_asc(filename);
     end
-    timestamp = [asc.input(:).timestamp];
-    value     = [asc.input(:).value];
+    if ~isempty(asc.input)
+      timestamp = [asc.input(:).timestamp];
+      value     = [asc.input(:).value];
+    else
+      timestamp = [];
+      value = [];
+    end
     % note that in this dataformat the first input trigger can be before
     % the start of the data acquisition
     for i=1:length(timestamp)
@@ -1244,13 +1266,13 @@ switch eventformat
     if isempty(hdr)
       hdr = ft_read_header(filename);
     end
-    if isempty(trigindx)
+    if isempty(chanindx)
       % these are probably trigger channels
-      trigindx = match_str(hdr.label, {'Display', 'Target'});
+      chanindx = match_str(hdr.label, {'Display', 'Target'});
     end
     % use a helper function to read the trigger channels and detect the flanks
     % pass all the other users options to the read_trigger function
-    event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift);
+    event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift);
     
   case {'homer_nirs'}
     % Homer files are MATLAB files in disguise
@@ -1282,9 +1304,9 @@ switch eventformat
     end
     if isempty(event)
       ft_warning('no events found in the event table, reading the trigger channel(s)');
-      trigindx = find(ft_chantype(hdr, 'flag'));
-      trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift);
-      event   = appendevent(event, trigger);
+      chanindx = find(ft_chantype(hdr, 'flag'));
+      trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift);
+      event   = appendstruct(event, trigger);
     end
     
   case 'matlab'
@@ -1350,9 +1372,9 @@ switch eventformat
       hdr = ft_read_header(filename);
     end
     if isfield(hdr, 'orig') && isfield(hdr.orig, 'Trigger_Area') && isfield(hdr.orig, 'Tigger_Area_Length')
-      if ~isempty(trigindx)
-        trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift);
-        event   = appendevent(event, trigger);
+      if ~isempty(chanindx)
+        trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift);
+        event   = appendstruct(event, trigger);
       else
         % routine that reads analog triggers in case no index is specified
         event = read_micromed_event(filename);
@@ -1500,24 +1522,30 @@ switch eventformat
     end
     
     if iscontinuous
-      analogindx = find(strcmp(ft_chantype(hdr), 'analog trigger'));
-      otherindx  = find(strcmp(ft_chantype(hdr), 'other trigger'));
       binaryindx = find(strcmp(ft_chantype(hdr), 'digital trigger'));
+      otherindx  = find(strcmp(ft_chantype(hdr), 'other trigger'));
+      analogindx = find(strcmp(ft_chantype(hdr), 'analog trigger'));
       
       if isempty(binaryindx) && isempty(analogindx) && isempty(otherindx)
-        % included in case of problems with older systems and MNE reader:
-        % use a predefined set of channel names
+        % in case of problems with older systems and MNE reader we use a predefined set of channel names
         binary     = {'STI 014', 'STI 015', 'STI 016'};
         binaryindx = match_str(hdr.label, binary);
       end
       
+      if ~isempty(chanindx)
+        % only search in the subset of channels specified by the user
+        binaryindx = intersect(binaryindx, chanindx);
+        otherindx  = intersect(otherindx, chanindx);
+        analogindx = intersect(analogindx, chanindx);
+      end
+      
       if ~isempty(binaryindx)
         trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', binaryindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixneuromag', false);
-        event   = appendevent(event, trigger);
+        event   = appendstruct(event, trigger);
       end
       if ~isempty(otherindx)
         trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', otherindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixneuromag', false);
-        event   = appendevent(event, trigger);
+        event   = appendstruct(event, trigger);
       end
       if ~isempty(analogindx)
         % add the triggers to the event structure based on trigger channels with the name "STI xxx"
@@ -1525,7 +1553,7 @@ switch eventformat
         % channels, on older systems only
         % read the trigger channel and do flank detection
         trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', analogindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixneuromag', true);
-        event   = appendevent(event, trigger);
+        event   = appendstruct(event, trigger);
         
         if ~isempty(trigger)
           % throw out everything that is not a (real) trigger...
@@ -1549,7 +1577,7 @@ switch eventformat
               if j >= 1
                 fprintf('Fixing trigger at sample %d\n', all_samples(i));
               end %if
-              cur_triggers = appendevent(cur_triggers, trigger_tmp([trigger_tmp.sample] == all_samples(i+j)));
+              cur_triggers = appendstruct(cur_triggers, trigger_tmp([trigger_tmp.sample] == all_samples(i+j)));
               j = j + 1;
             end %while
             
@@ -1563,7 +1591,7 @@ switch eventformat
             
             i = i + j;
           end %while
-          event = appendevent(event, new_triggers);
+          event = appendstruct(event, new_triggers);
         end %if
         
       end
@@ -1604,7 +1632,7 @@ switch eventformat
       eve = ft_read_event(evefile, 'header', hdr);
       if ~isempty(eve)
         fprintf('appending %d events from "%s"\n', length(eve), evefile);
-        event = appendevent(event, eve);
+        event = appendstruct(event, eve);
       end
     end
     
@@ -1890,7 +1918,7 @@ switch eventformat
       if isempty(tmp.marker{i})
         break;
       end
-      event = appendevent(event, struct('type', tmp.markernames(i), 'sample', num2cell(tmp.marker{i}), 'value', {tmp.markertyp(i)}));
+      event = appendstruct(event, struct('type', tmp.markernames(i), 'sample', num2cell(tmp.marker{i}), 'value', {tmp.markertyp(i)}));
     end
     % if present, read the digital triggers which are present as channel in the data
     if isempty(hdr)
@@ -1899,7 +1927,7 @@ switch eventformat
     trgindx = match_str(hdr.label, 'DTRIG');
     if ~isempty(trgindx)
       trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trgindx, 'detectflank', detectflank, 'trigshift', trigshift);
-      event   = appendevent(event, trigger);
+      event   = appendstruct(event, trigger);
     end
     
   case 'nexstim_nxe'
@@ -2063,7 +2091,7 @@ switch eventformat
     if isempty(threshold)
       threshold = 1.6;
     end
-    event = read_ricoh_event(filename, 'detectflank', detectflank, 'trigindx', trigindx, 'threshold', threshold);
+    event = read_ricoh_event(filename, 'detectflank', detectflank, 'chanindx', chanindx, 'threshold', threshold);
     
   case 'tmsi_poly5'
     if isempty(hdr)
@@ -2090,7 +2118,7 @@ switch eventformat
     if isempty(threshold)
       threshold = 1.6;
     end
-    event = read_yokogawa_event(filename, 'detectflank', detectflank, 'trigindx', trigindx, 'threshold', threshold);
+    event = read_yokogawa_event(filename, 'detectflank', detectflank, 'chanindx', chanindx, 'threshold', threshold);
     
   case 'artinis_oxy3'
     ft_hastoolbox('artinis', 1);
@@ -2099,13 +2127,13 @@ switch eventformat
     end
     event = read_artinis_oxy3(filename, true);
     
-    if isempty(trigindx) % indx gets precedence over labels! numbers before words
-      triglabel = ft_getopt(varargin, 'triglabel', 'ADC*', true);  % this allows subselection of AD channels to be markes as trigger channels (for Artinis *.oxy3 data)
-      trigindx = find(ismember(hdr.label, ft_channelselection(triglabel, hdr.label)));
+    if isempty(chanindx)
+      % this allows subselection of AD channels to be markes as trigger channels (for Artinis *.oxy3 data)
+      chanindx = find(ismember(hdr.label, ft_channelselection('ADC*', hdr.label)));
     end
     
     % read the trigger channel and do flank detection
-    trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'threshold', threshold, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixartinis', true);
+    trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'threshold', threshold, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixartinis', true);
     
     % remove consecutive triggers
     if ~isempty(trigger)
@@ -2126,9 +2154,8 @@ switch eventformat
         end
       end
       
-      event = appendevent(event, trigger);
+      event = appendstruct(event, trigger);
     end
-    
     
   case 'artinis_oxy4'
     ft_hastoolbox('artinis', 1);
@@ -2137,13 +2164,13 @@ switch eventformat
     end
     event = read_artinis_oxy4(filename, true);
     
-    if isempty(trigindx) % indx gets precedence over labels! numbers before words
-      triglabel = ft_getopt(varargin, 'triglabel', 'ADC*', true);  % this allows subselection of AD channels to be markes as trigger channels (for Artinis *.oxy3 data)
-      trigindx = find(ismember(hdr.label, ft_channelselection(triglabel, hdr.label)));
+    if isempty(chanindx)
+      % this allows subselection of AD channels to be markes as trigger channels (for Artinis *.oxy3 data)
+      chanindx = find(ismember(hdr.label, ft_channelselection('ADC*', hdr.label)));
     end
     
     % read the trigger channel and do flank detection
-    trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'threshold', threshold, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixartinis', true);
+    trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'threshold', threshold, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixartinis', true);
     
     % remove consecutive triggers
     if ~isempty(trigger)
@@ -2164,7 +2191,7 @@ switch eventformat
         end
       end
       
-      event = appendevent(event, trigger);
+      event = appendstruct(event, trigger);
     end
     
   case 'spmeeg_mat'
@@ -2222,6 +2249,7 @@ switch eventformat
     % this allows the user to specify an external reading function
     % if it fails, the regular unsupported warning message is thrown
     try
+      % this is used for bids_tsv, biopac_acq, motion_c3d, opensignals_txt, qualisys_tsv, and possibly others
       hdr   = feval(eventformat, filename);
       event = feval(eventformat, filename, hdr);
     catch

@@ -5,8 +5,10 @@ function test_example_simulate_forward_dipolefit
 
 % DEPENDENCY ft_dipolesimulation ft_timelockanalysis ft_dipolefitting
 
+% see http://www.fieldtriptoolbox.org/example/compute_forward_simulated_data_and_apply_a_dipole_fit/
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% create a set of electrodes, randomly placed on the sphere
+%% create a set of electrodes, randomly placed on the sphere
 elec = [];
 elec.pnt = randn(128,3);
 dum = sqrt(sum(elec.pnt.^2,2));
@@ -26,7 +28,7 @@ vol.cond = [1 1/80 1];    % conductivity
 vol.o = [0 0 0];          % center of sphere
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% create a dipole simulation with one dipole and a 10Hz sine wave
+%% create a dipole simulation with one dipole and a 10Hz sine wave
 cfg = [];
 cfg.headmodel = vol;        % see above
 cfg.elec = elec;            % see above
@@ -41,7 +43,7 @@ avg1 = ft_timelockanalysis([], raw1);
 plot(avg1.time, avg1.avg);  % plot the timecourse
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% create a dipole simulation with one dipole and a custom timecourse
+%% create a dipole simulation with one dipole and a custom timecourse
 cfg = [];
 cfg.headmodel = vol;          % see above
 cfg.elec = elec;              % see above
@@ -56,7 +58,7 @@ avg2 = ft_timelockanalysis([], raw2);
 plot(avg2.time, avg2.avg);    % plot the timecourse
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% create a dipole simulation with two dipoles and a custom timecourse
+%% create a dipole simulation with two dipoles and a custom timecourse
 cfg = [];
 cfg.headmodel = vol; % see above
 cfg.elec = elec;     % see above
@@ -77,7 +79,7 @@ raw3 = ft_dipolesimulation(cfg);
 avg3 = ft_timelockanalysis([], raw3);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% do a dipole fit of the first simulated dataset
+%% do a dipole fit of the first simulated dataset
 cfg = [];
 cfg.headmodel = vol;          % see above
 cfg.elec = elec;              % see above
@@ -86,7 +88,7 @@ cfg.gridsearch = 'no';
 dip1 = ft_dipolefitting(cfg, avg1);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% or alternatively start with an exhaustive search on a coarse grid
+%% or alternatively start with an exhaustive search on a coarse grid
 cfg = [];
 cfg.headmodel = vol;          % see above
 cfg.elec = elec;              % see above
