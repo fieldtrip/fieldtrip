@@ -240,10 +240,10 @@ switch version
         % the default should be "amplitude/distance" for neuromag and "amplitude" for all others
         if isempty(scaling)
           if ft_senstype(sens, 'neuromag') && ~any(contains(sens.chanunit, '/'))
-            ft_warning('asuming that the default scaling should be amplitude/distance rather than amplitude');
+            ft_warning('assuming that the default scaling should be amplitude/distance rather than amplitude');
             scaling = 'amplitude/distance';
           elseif ft_senstype(sens, 'yokogawa440') && any(contains(sens.chanunit, '/'))
-            ft_warning('asuming that the default scaling should be amplitude rather than amplitude/distance');
+            ft_warning('assuming that the default scaling should be amplitude rather than amplitude/distance');
             scaling = 'amplitude';
           end
         end
