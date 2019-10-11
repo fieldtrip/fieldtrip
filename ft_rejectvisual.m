@@ -175,11 +175,6 @@ if strcmp(cfg.keepchannel, 'repair')
   cfg = ft_checkconfig(cfg, 'required', 'neighbours');
 end
 
-selcfg = keepfields(cfg, {'trials', 'channel','latency', 'showcallinfo'});
-data   = ft_selectdata(selcfg, data);
-% restore the provenance information
-[cfg, data] = rollback_provenance(cfg, data);
-
 % apply scaling to the selected channel types to equate the absolute numbers (i.e. fT and uV)
 % make a separate copy to prevent the original data from being scaled
 tmpdata = data;
