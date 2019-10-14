@@ -1438,6 +1438,10 @@ elseif filetype_check_extension(filename, '.vtp') && filetype_check_header(filen
   type = 'vtk_xml';
   manufacturer = 'https://vtk.org';
   content = 'vtkPolyData unstructured';
+elseif filetype_check_extension(filename, '.tck') && filetype_check_header(filename, 'mrtrix tracks')
+  type = 'mrtrix_tck';
+  manufacturer = 'https://mrtrix.org';
+  content = 'mrtrix tracks';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

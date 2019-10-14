@@ -17,3 +17,4 @@ end
 
 data.pos  = cat(1, tmp.data{:});
 data.line = lines.';
+data.hdr  = rmfield(tmp, 'data');
