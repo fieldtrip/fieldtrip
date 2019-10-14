@@ -1434,6 +1434,10 @@ elseif exist(fullfile(p, [f '.tsv']), 'file') && exist(fullfile(p, [f '.json']),
   type = 'bids_tsv';
   manufacturer = 'BIDS';
   content = 'timeseries data';
+elseif filetype_check_extension(filename, '.vtp') && filetype_check_header(filename, '<?xml')
+  type = 'vtk_xml';
+  manufacturer = 'https://vtk.org';
+  content = 'vtkPolyData unstructured';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

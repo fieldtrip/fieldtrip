@@ -991,6 +991,14 @@ switch fileformat
     [pos, tri] = read_vtk(filename);
     shape.pos = pos;
     shape.tri = tri;
+  
+  case 'vtk_xml'
+    data = read_vtk_xml(filename);
+    shape.orig = data;
+    shape.pos  = data.Points;
+    if isfield(data, 'Lines')
+      shape.line = data.Lines;
+    end
     
   case 'off'
     [pos, plc] = read_off(filename);
