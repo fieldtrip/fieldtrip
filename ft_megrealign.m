@@ -189,7 +189,7 @@ Ntrials = length(data.trial);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % construct the average template gradiometer array
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-template = struct([]); % initialize as empty structure
+template = struct([]); % initialize as 0x0 empty struct array with no fields
 for i=1:length(cfg.template)
   if ischar(cfg.template{i})
     fprintf('reading template sensor position from %s\n', cfg.template{i});
