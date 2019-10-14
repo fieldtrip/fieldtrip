@@ -65,8 +65,9 @@ if numel(lags)>1 && timeresolved
   error('in case of a timeresolved estimate, only a single time lag is allowed');
 end
 
-% deal with the channelcmb
-channelcmb = ft_channelcombination(channelcmb, freq.label, 1);
+% deal with the channelcmb -> not needed: auto combinations are already
+% handled by the invoking function
+%channelcmb = ft_channelcombination(channelcmb, freq.label, 1);
 
 % determine the corresponding indices of all channel combinations
 [dummy,chancmbind(:,1)] = match_str(channelcmb(:,1), freq.label);
@@ -76,6 +77,7 @@ clear dummy
 ntime       = numel(freq.time);
 
 % convert the lags, expressed in units of time, to samples
+lagsorig  = lags;
 sellags   = lags<=freq.time(end)-freq.time(1);
 lags_indx = round(lags(sellags)./mean(diff(freq.time)));
 fprintf('\nrequested lag(s): %0.3d\t', lags);
@@ -105,20 +107,22 @@ for k = 1:numel(lags_indx)
   else
     % convert the data matrix into a 'rpt_chancmb_freq', accounting for
     % time points with nans may be needed
-    ntime = numel(tmpfreq.time);
+    ntimex = numel(tmpfreq.time);
     if ~contains(tmpfreq.dimord, 'rpt')
       nrpt = 1;
+      permutevec = [3 1 2];
     else
       nrpt  = size(tmpfreq.crsspctrm,1);
+      permutevec = [4 1 2 3];
     end
     ncmb  = size(tmpfreq.labelcmb,1);
     nfreq = numel(tmpfreq.freq);
-    tmpfreq.lcrsspctrm = reshape(permute(tmpfreq.crsspctrm, [4 1 2 3]),[nrpt*ntime ncmb nfreq]);
+    tmpfreq.lcrsspctrm = reshape(permute(tmpfreq.crsspctrm, permutevec),[nrpt*ntimex ncmb nfreq]);
     tmpfreq = removefields(tmpfreq, {'trialinfo'});
     tmpfreq.dimord = 'rpt_chancmb_freq_time';
       
     if k==1
-      tmpfreq.cumtapcnt  = repmat(tmpfreq.cumtapcnt, [ntime 1]);
+      tmpfreq.cumtapcnt  = repmat(tmpfreq.cumtapcnt, [ntimex 1]);
     
       freqout = removefields(tmpfreq, {'time' 'crsspctrm'});
       freqout.time = zeros(1,0);
@@ -137,3 +141,15 @@ end
 
 freqout.lcrsspctrm(repmat(~all(isfinite(freqout.lcrsspctrm),2), [1 ncmb 1 1]))=nan;
 
+% check for a discrepancy between the requested lags and the output data
+if ~all(sellags)
+  siz = size(freqout.lcrsspctrm);
+  siz(4) = numel(lagsorig);
+  tmp = nan(siz);
+  tmp(:,:,:,sellags) = freqout.lcrsspctrm;
+  freqout.lcrsspctrm = tmp;
+  clear tmp;
+  time = lagsorig;
+  time(sellags) = freqout.time;
+  freqout.time  = time;
+end
