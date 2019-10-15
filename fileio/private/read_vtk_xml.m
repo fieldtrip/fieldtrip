@@ -1,5 +1,8 @@
 function data = read_vtk_xml(filename)
 
+% READ_VTK_XML reads a XML-formatted vtk file containing points in 3D and
+% connecting elements.
+%
 % this function is a trial-and-error based implementation to read xml-style
 % vtk files. There is some documentation online, which seems somewhat
 % incomplete, or at least not fully understood by me.
