@@ -37,8 +37,10 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.artfctdef.xxx.artifact  = Nx2 matrix with artifact segments see FT_ARTIFACT_xxx functions
 %   cfg.selectfeature           = string, name of feature to be selected/added (default = 'visual')
 %   cfg.selectmode              = 'markartifact', 'markpeakevent', 'marktroughevent' (default = 'markartifact')
-%   cfg.colorgroups             = 'sequential' 'allblack' 'labelcharx' (x = xth character in label), 'chantype' or vector with length(data/hdr.label) defining groups (default = 'sequential')
-%   cfg.channelcolormap         = COLORMAP (default = customized lines map with 15 colors)
+%   cfg.colorgroups             = 'sequential', 'allblack', 'labelcharN' (N = Nth character in label), 'chantype' or a vector with the length of the number of channels defining the groups (default = 'sequential')
+%   cfg.linecolor               = string with line colors or Nx3 color map (default = customized lines map with 15 colors)
+%   cfg.linewidth               = linewidth in points (default = 0.5)
+%   cfg.linestyle               = linestyle/marker type, see options of the PLOT function (default = '-')
 %   cfg.verticalpadding         = number or 'auto', padding to be added to top and bottom of plot to avoid channels largely dissappearing when viewmode = 'vertical'/'component'  (default = 'auto'). The padding is expressed as a proportion of the total height added to the top and bottom. The setting 'auto' determines the padding depending on the number of channels that are being plotted.
 %   cfg.selfun                  = string, name of function that is evaluated using the right-click context menu. The selected data and cfg.selcfg are passed on to this function.
 %   cfg.selcfg                  = configuration options for function in cfg.selfun
@@ -85,7 +87,6 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.fontunits               = string, can be 'normalized', 'points', 'pixels', 'inches' or 'centimeters' (default = 'normalized')
 %   cfg.axisfontsize            = number, fontsize along the axes (default = 10)
 %   cfg.axisfontunits           = string, can be 'normalized', 'points', 'pixels', 'inches' or 'centimeters' (default = 'points')
-%   cfg.linewidth               = number, width of plotted lines (default = 0.5)
 %
 % When visually selection data, a right-click will bring up a context-menu containing
 % functions to be executed on the selected data. You can use your own function using
@@ -132,8 +133,6 @@ function [cfg] = ft_databrowser(cfg, data)
 
 % FIXME these should be removed or documented
 % cfg.preproc
-% cfg.channelcolormap
-% cfg.colorgroups
 
 % these are used by the ft_preamble/ft_postamble function and scripts
 ft_revision = '$Id$';
@@ -165,6 +164,7 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'selectmode', 'mark', 'markartifact'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'elecfile', 'elec'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'gradfile', 'grad'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'optofile', 'opto'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'channelcolormap', 'linecolor'});
 
 % ensure that the preproc specific options are located in the cfg.preproc substructure
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
@@ -179,8 +179,9 @@ cfg.preproc         = ft_getopt(cfg, 'preproc');                   % see preproc
 cfg.selfun          = ft_getopt(cfg, 'selfun');                    % default functions: 'simpleFFT', 'multiplotER', 'topoplotER', 'topoplotVAR', 'movieplotER'
 cfg.selcfg          = ft_getopt(cfg, 'selcfg');                    % defaulting done below, requires layouts/etc to be processed
 cfg.seldat          = ft_getopt(cfg, 'seldat', 'current');
-cfg.colorgroups     = ft_getopt(cfg, 'colorgroups', 'sequential');
-cfg.channelcolormap = ft_getopt(cfg, 'channelcolormap', [0.75 0 0; 0 0 1; 0 1 0; 0.44 0.19 0.63; 0 0.13 0.38;0.5 0.5 0.5;1 0.75 0; 1 0 0; 0.89 0.42 0.04; 0.85 0.59 0.58; 0.57 0.82 0.31; 0 0.69 0.94; 1 0 0.4; 0 0.69 0.31; 0 0.44 0.75]);
+cfg.linecolor       = ft_getopt(cfg, 'linecolor', [0.75 0 0; 0 0 1; 0 1 0; 0.44 0.19 0.63; 0 0.13 0.38;0.5 0.5 0.5;1 0.75 0; 1 0 0; 0.89 0.42 0.04; 0.85 0.59 0.58; 0.57 0.82 0.31; 0 0.69 0.94; 1 0 0.4; 0 0.69 0.31; 0 0.44 0.75]);
+cfg.linewidth       = ft_getopt(cfg, 'linewidth', 0.5);
+cfg.linestyle       = ft_getopt(cfg, 'linestyle', '-');
 cfg.eegscale        = ft_getopt(cfg, 'eegscale');
 cfg.eogscale        = ft_getopt(cfg, 'eogscale');
 cfg.ecgscale        = ft_getopt(cfg, 'ecgscale');
@@ -207,7 +208,6 @@ cfg.editfontsize    = ft_getopt(cfg, 'editfontsize', 12);
 cfg.editfontunits   = ft_getopt(cfg, 'editfontunits', 'points');     % inches, centimeters, normalized, points, pixels
 cfg.axisfontsize    = ft_getopt(cfg, 'axisfontsize', 10);
 cfg.axisfontunits   = ft_getopt(cfg, 'axisfontunits', 'points');     % inches, centimeters, normalized, points, pixels
-cfg.linewidth       = ft_getopt(cfg, 'linewidth', 0.5);
 cfg.verticalpadding = ft_getopt(cfg, 'verticalpadding', 'auto');
 cfg.artifactalpha   = ft_getopt(cfg, 'artifactalpha', 0.2);          % for the opacity of marked artifacts
 cfg.allowoverlap    = ft_getopt(cfg, 'allowoverlap', 'no');          % for ft_fetch_data
@@ -220,6 +220,15 @@ if ~isfield(cfg, 'viewmode')
     cfg.viewmode = 'component';
   else
     cfg.viewmode = 'butterfly';
+  end
+end
+
+if ~isfield(cfg, 'colorgroups')
+  % 'sequential', 'allblack', 'labelcharx' (x = xth character in label), 'chantype' or a vector with the length of the number of channels defining the groups (default = 'sequential')
+  if hascomp
+    cfg.viewmode = 'allblack';
+  else
+    cfg.viewmode = 'sequential';
   end
 end
 
@@ -461,58 +470,11 @@ else
   end
 end
 
-% determine coloring of channels
+% determine the coloring of channels
 if hasdata
-  labels_all = data.label;
+  linecolor = linecolor_common(cfg, data);
 else
-  labels_all= hdr.label;
-end
-if size(cfg.channelcolormap,2) ~= 3
-  ft_error('cfg.channelcolormap is not valid, size should be Nx3')
-end
-
-if isnumeric(cfg.colorgroups)
-  % groups defined by user
-  if length(labels_all) ~= length(cfg.colorgroups)
-    ft_error('length(cfg.colorgroups) should be length(data/hdr.label)')
-  end
-  R = cfg.channelcolormap(:,1);
-  G = cfg.channelcolormap(:,2);
-  B = cfg.channelcolormap(:,3);
-  chancolors = [R(cfg.colorgroups(:)) G(cfg.colorgroups(:)) B(cfg.colorgroups(:))];
-  
-elseif strcmp(cfg.colorgroups, 'allblack')
-  chancolors = zeros(length(labels_all),3);
-  
-elseif strcmp(cfg.colorgroups, 'chantype')
-  type = ft_chantype(labels_all);
-  [tmp1, tmp2, cfg.colorgroups] = unique(type);
-  fprintf('%3d colorgroups were identified\n',length(tmp1))
-  R = cfg.channelcolormap(:,1);
-  G = cfg.channelcolormap(:,2);
-  B = cfg.channelcolormap(:,3);
-  chancolors = [R(cfg.colorgroups(:)) G(cfg.colorgroups(:)) B(cfg.colorgroups(:))];
-  
-elseif strcmp(cfg.colorgroups(1:9), 'labelchar')
-  % groups determined by xth letter of label
-  labelchar_num = str2double(cfg.colorgroups(10));
-  vec_letters = num2str(zeros(length(labels_all),1));
-  for iChan = 1:length(labels_all)
-    vec_letters(iChan) = labels_all{iChan}(labelchar_num);
-  end
-  [tmp1, tmp2, cfg.colorgroups] = unique(vec_letters);
-  fprintf('%3d colorgroups were identified\n',length(tmp1))
-  R = cfg.channelcolormap(:,1);
-  G = cfg.channelcolormap(:,2);
-  B = cfg.channelcolormap(:,3);
-  chancolors = [R(cfg.colorgroups(:)) G(cfg.colorgroups(:)) B(cfg.colorgroups(:))];
-  
-elseif strcmp(cfg.colorgroups, 'sequential')
-  % no grouping
-  chancolors = lines(length(labels_all));
-  
-else
-  ft_error('do not understand cfg.colorgroups')
+  linecolor = linecolor_common(cfg, hdr);
 end
 
 % collect the artifacts that have been detected from cfg.artfctdef.xxx.artifact
@@ -569,14 +531,16 @@ if ~isempty(cfg.selfun) || ~isempty(cfg.selcfg)
 elseif isempty(cfg.selfun) && isempty(cfg.selcfg)
   % simplefft
   cfg.selcfg{1} = [];
-  cfg.selcfg{1}.chancolors = chancolors;
+  cfg.selcfg{1}.linecolor = linecolor;
   cfg.selfun{1} = 'simpleFFT';
   % multiplotER
   cfg.selcfg{2} = [];
+  cfg.selcfg{2}.linecolor = linecolor;
   cfg.selcfg{2}.layout = cfg.layout;
   cfg.selfun{2} = 'multiplotER';
   % topoplotER
   cfg.selcfg{3} = [];
+  cfg.selcfg{3}.linecolor = linecolor;
   cfg.selcfg{3}.layout = cfg.layout;
   cfg.selfun{3} = 'topoplotER';
   % topoplotVAR
@@ -627,7 +591,7 @@ opt.ftsel       = find(strcmp(artlabel, cfg.selectfeature)); % current artifact/
 opt.trlorg      = trlorg;
 opt.fsample     = hdr.Fs;
 opt.artifactcolors = [0.9686 0.7608 0.7686; 0.7529 0.7098 0.9647; 0.7373 0.9725 0.6824; 0.8118 0.8118 0.8118; 0.9725 0.6745 0.4784; 0.9765 0.9176 0.5686; 0.6863 1 1; 1 0.6863 1; 0 1 0.6000];
-opt.chancolors  = chancolors;
+opt.linecolor   = linecolor;
 opt.cleanup     = false;      % this is needed for a corrent handling if the figure is closed (either in the corner or by "q")
 opt.chanindx    = [];         % this is used to check whether the component topographies need to be redrawn
 opt.eventtypes  = eventtypes;
@@ -635,6 +599,7 @@ opt.eventtypescolors = [0 0 0; 1 0 0; 0 0 1; 0 1 0; 1 0 1; 0.5 0.5 0.5; 0 1 1; 1
 opt.eventtypecolorlabels = {'black', 'red', 'blue', 'green', 'cyan', 'grey', 'light blue', 'yellow'};
 opt.nanpaddata  = []; % this is used to allow horizontal scaling to be constant (when looking at last segment continuous data, or when looking at segmented/zoomed-out non-continuous data)
 opt.trllock     = []; % this is used when zooming into trial based data
+
 
 % save original layout when viewmode = component
 if strcmp(cfg.viewmode, 'component')
@@ -1873,8 +1838,7 @@ delete(findobj(h, 'tag', 'identify'));
 %delete(findobj(h, 'tag', 'chanlabel'));
 
 if strcmp(cfg.viewmode, 'butterfly')
-  set(gca, 'ColorOrder',opt.chancolors(chanindx,:)) % plot vector does not clear axis, therefore this is possible
-  ft_plot_vector(tim, dat', 'box', false, 'tag', 'timecourse', 'hpos', opt.laytime.pos(1,1), 'vpos', opt.laytime.pos(1,2), 'width', opt.laytime.width(1), 'height', opt.laytime.height(1), 'hlim', opt.hlim, 'vlim', opt.vlim, 'linewidth', cfg.linewidth);
+  ft_plot_vector(tim, dat', 'box', false, 'tag', 'timecourse', 'hpos', opt.laytime.pos(1,1), 'vpos', opt.laytime.pos(1,2), 'width', opt.laytime.width(1), 'height', opt.laytime.height(1), 'hlim', opt.hlim, 'vlim', opt.vlim, 'color', opt.linecolor(chanindx,:), 'linewidth', cfg.linewidth, 'style', cfg.linestyle);
   set(gca, 'FontSize', cfg.axisfontsize, 'FontUnits', cfg.axisfontunits);
   
   % two ticks per channel
@@ -1899,12 +1863,7 @@ elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
     delete(findobj(h, 'tag', 'chanlabel'));
   end
   for i = 1:length(chanindx)
-    if strcmp(cfg.viewmode, 'component')
-      color = 'k';
-    else
-      color = opt.chancolors(chanindx(i),:);
-    end
-    datsel = i;
+    datsel = i; % this is not the original channel number, but the one from the selection
     laysel = laysels(i);
     
     if ~isempty(datsel) && ~isempty(laysel)
@@ -1921,12 +1880,12 @@ elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
           labdiscfac = 10;
         end
         if opt.plotLabelFlag == 1 || (opt.plotLabelFlag == 2 && mod(i,labdiscfac)==0)
-          ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'chanlabel', 'HorizontalAlignment', 'right', 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits, 'linewidth', cfg.linewidth);
+          ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'chanlabel', 'HorizontalAlignment', 'right', 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits);
           set(gca, 'FontSize', cfg.axisfontsize, 'FontUnits', cfg.axisfontunits);
         end
       end
       
-      lh = ft_plot_vector(tim, dat(datsel, :)', 'box', false, 'color', color, 'tag', 'timecourse', 'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim, 'linewidth', cfg.linewidth);
+      lh = ft_plot_vector(tim, dat(datsel, :)', 'box', false, 'tag', 'timecourse', 'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim, 'color', opt.linecolor(chanindx(i),:), 'linewidth', cfg.linewidth, 'style', cfg.linestyle);
       
       % store this data in the line object so that it can be displayed in the
       % data cursor (see subfunction cb_datacursortext below)
@@ -1988,13 +1947,12 @@ else
   laysels = match_str(opt.laytime.label, opt.hdr.label);
   
   for i = 1:length(chanindx)
-    color = opt.chancolors(chanindx(i),:);
     datsel = i;
     laysel = laysels(i);
     
     if ~isempty(datsel) && ~isempty(laysel)
       
-      lh = ft_plot_vector(tim, dat(datsel, :)', 'box', false, 'color', color, 'tag', 'timecourse', 'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim, 'linewidth', cfg.linewidth);
+      lh = ft_plot_vector(tim, dat(datsel, :)', 'box', false, 'tag', 'timecourse', 'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim, 'color', opt.linecolor(chanindx(i),:), 'linewidth', cfg.linewidth, 'style', cfg.linestyle);
       
       % store this data in the line object so that it can be displayed in the
       % data cursor (see subfunction cb_datacursortext below)
