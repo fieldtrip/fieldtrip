@@ -470,56 +470,11 @@ else
   end
 end
 
-% determine coloring of channels
+% determine the coloring of channels
 if hasdata
-  labels_all = data.label;
+  linecolor = linecolor_common(cfg, data);
 else
-  labels_all = hdr.label;
-end
-
-if ischar(cfg.linecolor)
-  % ensure it is a column vector of the right length
-  cfg.linecolor = repmat(cfg.linecolor(:), ceil(numel(labels_all)/length(cfg.linecolor)), 1);
-  cfg.linecolor = cfg.linecolor(1:numel(labels_all));
-elseif isnumeric(cfg.linecolor)
-  % ensure it is a Nx3 matrix of the right length
-  cfg.linecolor = repmat(cfg.linecolor, ceil(numel(labels_all)/length(cfg.linecolor)), 1);
-  cfg.linecolor = cfg.linecolor(1:numel(labels_all),:);
-end
-
-if isnumeric(cfg.colorgroups)
-  % groups defined by user
-  if length(labels_all) ~= length(cfg.colorgroups)
-    ft_error('length(cfg.colorgroups) should correspond to the number of channels')
-  end
-  linecolor = cfg.linecolor(cfg.colorgroups(:),:);
-  
-elseif strcmp(cfg.colorgroups, 'allblack')
-  linecolor = zeros(length(labels_all),3);
-  
-elseif strcmp(cfg.colorgroups, 'chantype')
-  type = ft_chantype(data);
-  [tmp1, tmp2, cfg.colorgroups] = unique(type);
-  fprintf('%3d colorgroups were identified\n',length(tmp1))
-  linecolor = cfg.linecolor(cfg.colorgroups(:),:);
-  
-elseif startsWith(cfg.colorgroups, 'labelchar')
-  % groups determined by the Nth letter of label
-  labelchar_num = str2double(cfg.colorgroups(10:end));
-  vec_letters = num2str(zeros(length(labels_all),1));
-  for iChan = 1:length(labels_all)
-    vec_letters(iChan) = labels_all{iChan}(labelchar_num);
-  end
-  [tmp1, tmp2, cfg.colorgroups] = unique(vec_letters);
-  fprintf('%3d colorgroups were identified\n',length(tmp1))
-  linecolor = cfg.linecolor(cfg.colorgroups(:),:);
-  
-elseif strcmp(cfg.colorgroups, 'sequential')
-  % no grouping
-  linecolor = cfg.linecolor;
-  
-else
-  ft_error('do not understand cfg.colorgroups')
+  linecolor = linecolor_common(cfg, hdr);
 end
 
 % collect the artifacts that have been detected from cfg.artfctdef.xxx.artifact

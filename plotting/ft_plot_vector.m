@@ -134,7 +134,7 @@ fontsize        = ft_getopt(varargin, 'fontsize',   get(0, 'defaulttextfontsize'
 fontname        = ft_getopt(varargin, 'fontname',   get(0, 'defaulttextfontname'));
 fontweight      = ft_getopt(varargin, 'fontweight', get(0, 'defaulttextfontweight'));
 fontunits       = ft_getopt(varargin, 'fontunits',  get(0, 'defaulttextfontunits'));
-% FIXME these are now only used for the highlighted box, but shoudl also be used for the difference 
+% FIXME these are now only used for the highlighted box, but shoudl also be used for the difference
 facecolor       = ft_getopt(varargin, 'facecolor', [0.6 0.6 0.6]);
 facealpha       = ft_getopt(varargin, 'facealpha', 1);
 
@@ -397,18 +397,18 @@ switch highlightstyle
     elseif ischar(color) && numel(color)==nline
       % plot each line with its own color
       for i=1:size(vdat,1)
-        h = plot(hdat, vdat(i,:), style, 'LineWidth', linewidth, 'Color', color(i), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
+        h(i) = plot(hdat, vdat(i,:), style, 'LineWidth', linewidth, 'Color', color(i), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
       end
     elseif isnumeric(color) && size(color,1)==nline
       % the color is specified as Nx3 matrix with RGB values for each line
       for i=1:size(vdat,1)
-        h = plot(hdat, vdat(i,:), style, 'LineWidth', linewidth, 'Color', color(i,:), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
+        h(i) = plot(hdat, vdat(i,:), style, 'LineWidth', linewidth, 'Color', color(i,:), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
       end
     elseif isnumeric(color) && size(color,1)==npos
       % the color is specified as Nx3 matrix with RGB values and varies over the length of the line
       for i=1:(size(vdat,2)-1)
         for j=1:size(vdat,1)
-          h = plot(hdat(i:i+1), vdat(j,i:i+1), style, 'LineWidth', linewidth, 'Color', mean(color([i i+1],:),1), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
+          h(i,j) = plot(hdat(i:i+1), vdat(j,i:i+1), style, 'LineWidth', linewidth, 'Color', mean(color([i i+1],:),1), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
         end
       end
     else
@@ -460,7 +460,7 @@ if ~isempty(axis) && ~strcmp(axis, 'no')
   if xaxis
     % x-axis should touch 0,0
     xrange = hlim;
-
+    
     y_intercept = [0 0]; % If the y-axis crosses zero, the horizontal line should be at y = 0.
     
     % If the y-axis is all positive or negative, it should be as close to
@@ -471,7 +471,7 @@ if ~isempty(axis) && ~strcmp(axis, 'no')
       y_intercept = repmat(max(vlim), 1, 2);
     end %if
     
-    ft_plot_line(xrange, y_intercept,'hpos',hpos,'vpos',vpos,'hlim',hlim,'vlim',vlim,'width',width,'height',height);
+    ft_plot_line(xrange, y_intercept, 'hpos', hpos, 'vpos', vpos, 'hlim', hlim, 'vlim', vlim, 'width', width, 'height', height);
   end
   if yaxis
     yrange = vlim;
@@ -486,11 +486,11 @@ if ~isempty(axis) && ~strcmp(axis, 'no')
       x_intercept = repmat(max(hlim), 1, 2);
     end %if
     
-    ft_plot_line(x_intercept, yrange,'hpos',hpos,'vpos',vpos,'hlim',hlim,'vlim',vlim,'width',width,'height',height);
+    ft_plot_line(x_intercept, yrange, 'hpos', hpos, 'vpos', vpos, 'hlim', hlim, 'vlim', vlim, 'width', width, 'height', height);
   end
 end
 
-set(h,'tag',tag);
+set(h, 'tag', tag);
 
 if ~isempty(parent)
   set(h, 'Parent', parent);
