@@ -33,7 +33,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     float  *inputr_ps, *inputi_ps, *output1r_ps, *output1i_ps, *cnts;
 
     /* figure out the classid */
-    classid = mxGetClassID(prhs[0]);
+    if (nrhs>0) {
+      classid = mxGetClassID(prhs[0]);
+    } else {
+      classid = mxUNKNOWN_CLASS;
+    }
 
     /* check inputs */
     if (nrhs > 2) {
