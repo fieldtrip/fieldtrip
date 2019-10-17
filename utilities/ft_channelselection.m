@@ -82,7 +82,7 @@ if isempty(desired)
   desired = {};
 end
 
-if nargin<3
+if nargin<3 || isempty(senstype)
   senstype = ft_senstype(datachannel);
 end
 
