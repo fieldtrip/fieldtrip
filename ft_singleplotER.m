@@ -178,9 +178,10 @@ cfg.hotkeys         = ft_getopt(cfg, 'hotkeys',       'yes');
 cfg.interactive     = ft_getopt(cfg, 'interactive',   'yes');
 cfg.renderer        = ft_getopt(cfg, 'renderer',       []); % let MATLAB decide on the default
 cfg.maskparameter   = ft_getopt(cfg, 'maskparameter',  []);
+cfg.colorgroups     = ft_getopt(cfg, 'colorgroups',   'sequential');
+cfg.linecolor       = ft_getopt(cfg, 'linecolor',     'brgkywrgbkywrgbkywrgbkyw');
 cfg.linestyle       = ft_getopt(cfg, 'linestyle',     '-');
 cfg.linewidth       = ft_getopt(cfg, 'linewidth',      0.5);
-cfg.linecolor       = ft_getopt(cfg, 'linecolor',    'brgkywrgbkywrgbkywrgbkyw');
 cfg.maskstyle       = ft_getopt(cfg, 'maskstyle',     'box');
 cfg.maskfacealpha   = ft_getopt(cfg, 'maskfacealpha', 1);
 cfg.channel         = ft_getopt(cfg, 'channel',       'all');
@@ -440,7 +441,6 @@ end
 %% Section 4: do the actual plotting
 
 % determine the coloring of channels/conditions
-cfg.colorgroups = 'condition';
 linecolor = linecolor_common(cfg, varargin{:});
 
 cla

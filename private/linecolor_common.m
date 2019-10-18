@@ -1,6 +1,14 @@
 function linecolor = linecolor_common(cfg, varargin)
 
 % LINECOLOR_COMMON implements consistent color handling for multiple channels/conditions
+%
+% This function is used by 
+%   ft_databrowser
+%   ft_multiplotER
+%   ft_singleplotER
+%
+% It is not yet used by
+%   ft_connectivityplot
 
 Ndata = length(varargin);
 

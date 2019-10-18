@@ -67,13 +67,15 @@ cfg = ft_checkconfig(cfg, 'renamed', {'color',      'linecolor'});
 cfg = ft_checkconfig(cfg, 'renamed', {'graphcolor', 'linecolor'});
 
 % set the defaults
-cfg.channel   = ft_getopt(cfg, 'channel',   'all');
-cfg.parameter = ft_getopt(cfg, 'parameter', 'cohspctrm');
-cfg.zlim      = ft_getopt(cfg, 'zlim',      'maxmin');
-cfg.ylim      = ft_getopt(cfg, 'ylim',      'maxmin');
-cfg.xlim      = ft_getopt(cfg, 'xlim',      'maxmin');
-cfg.renderer  = ft_getopt(cfg, 'renderer',  []); % let MATLAB decide on the default
-cfg.linecolor = ft_getopt(cfg, 'linecolor', 'brgkywrgbkywrgbkywrgbkyw');
+cfg.channel     = ft_getopt(cfg, 'channel',   'all');
+cfg.parameter   = ft_getopt(cfg, 'parameter', 'cohspctrm');
+cfg.zlim        = ft_getopt(cfg, 'zlim',      'maxmin');
+cfg.ylim        = ft_getopt(cfg, 'ylim',      'maxmin');
+cfg.xlim        = ft_getopt(cfg, 'xlim',      'maxmin');
+cfg.renderer    = ft_getopt(cfg, 'renderer',  []); % let MATLAB decide on the default
+cfg.linecolor   = ft_getopt(cfg, 'linecolor', 'brgkywrgbkywrgbkywrgbkyw');
+cfg.linestyle   = ft_getopt(cfg, 'linestyle', '-');
+cfg.linewidth   = ft_getopt(cfg, 'linewidth', 0.5);
 
 % check if the input data is valid for this function
 % ensure that the input is correct
@@ -300,7 +302,7 @@ for k = 1:nchan
         ft_plot_matrix(tmp, 'width', 1, 'height', 1, 'hpos', ix.*1.2, 'vpos', iy.*1.2, 'clim', cfg.zlim, 'box', 'yes');
       elseif hasfreq
         tmp = reshape(dat(m,k,:), [nfreq 1]);
-        ft_plot_vector(tmp, 'width', 1, 'height', 1, 'hpos', ix.*1.2, 'vpos', iy.*1.2, 'vlim', cfg.zlim, 'box', 'yes', 'color', cfg.linecolor(1,:));
+        ft_plot_vector(tmp, 'width', 1, 'height', 1, 'hpos', ix.*1.2, 'vpos', iy.*1.2, 'vlim', cfg.zlim, 'box', 'yes', 'color', cfg.linecolor(1,:), 'linewidth', cfg.linewidth, 'style', cfg.linestyle);
       elseif hastime
         ft_error('plotting data with only a time axis is not supported yet');
       end
