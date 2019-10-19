@@ -66,6 +66,7 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - AnyWave *.ades
 %  - Qualisys *.tsv
 %  - Mrtrix *.mif
+%  - MAUS *.TextGrid
 
 % Copyright (C) 2003-2019 Robert Oostenveld
 %
@@ -1434,6 +1435,10 @@ elseif exist(fullfile(p, [f '.tsv']), 'file') && exist(fullfile(p, [f '.json']),
   type = 'bids_tsv';
   manufacturer = 'BIDS';
   content = 'timeseries data';
+elseif filetype_check_extension(filename, '.TextGrid')
+  type = 'maus_textgrid';
+  manufacturer = 'MAUS/WebMAUS';
+  content = 'segmented text';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
