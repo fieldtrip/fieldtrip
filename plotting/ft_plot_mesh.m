@@ -99,6 +99,7 @@ vertexsize   = ft_getopt(varargin, 'vertexsize',  10);
 vertexmarker = ft_getopt(varargin, 'vertexmarker', '.');
 facealpha    = ft_getopt(varargin, 'facealpha',   1);
 edgealpha    = ft_getopt(varargin, 'edgealpha',   1);
+material_    = ft_getopt(varargin, 'material');
 tag          = ft_getopt(varargin, 'tag',         '');
 surfaceonly  = ft_getopt(varargin, 'surfaceonly');  % default is handled below
 unit         = ft_getopt(varargin, 'unit');
@@ -113,13 +114,12 @@ contourcolor      = ft_getopt(varargin, 'contourcolor',     'k');
 contourlinewidth  = ft_getopt(varargin, 'contourlinewidth', 3);
 contourlinestyle  = ft_getopt(varargin, 'contourlinestyle', '-');
 
-
-haspos   = isfield(mesh, 'pos');  % vertices
-hastri   = isfield(mesh, 'tri');  % triangles   as a Mx3 matrix with vertex indices
-hastet   = isfield(mesh, 'tet');  % tetraheders as a Mx4 matrix with vertex indices
-hashex   = isfield(mesh, 'hex');  % hexaheders  as a Mx8 matrix with vertex indices
-hasline  = isfield(mesh, 'line'); % line segments in 3-D
-haspoly  = isfield(mesh, 'poly'); % polynomial surfaces in 3-D
+haspos   = isfield(mesh, 'pos');   % vertices
+hastri   = isfield(mesh, 'tri');   % triangles   as a Mx3 matrix with vertex indices
+hastet   = isfield(mesh, 'tet');   % tetraheders as a Mx4 matrix with vertex indices
+hashex   = isfield(mesh, 'hex');   % hexaheders  as a Mx8 matrix with vertex indices
+hasline  = isfield(mesh, 'line');  % line segments in 3-D
+haspoly  = isfield(mesh, 'poly');  % polynomial surfaces in 3-D
 hascolor = isfield(mesh, 'color'); % color code for vertices
 
 if hastet && isempty(surfaceonly)
@@ -264,6 +264,10 @@ if haspos
   %set(hs, 'FaceColor', facecolor);
   set(hs, 'EdgeColor', edgecolor);
   set(hs, 'tag', tag);
+end
+
+if ~isempty(material_)
+  material(material_); % dull, shiny or default
 end
 
 % the vertexcolor can be specified either as a RGB color for each vertex, or as a single value at each vertex
@@ -483,7 +487,6 @@ if ~isequal(vertexcolor, 'none') && ~vertexpotential
   end
   
 end % plotting the vertices as points
-
 
 if vertexindex
   % plot the vertex indices (numbers) at each node
