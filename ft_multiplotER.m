@@ -44,6 +44,8 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %                       interactive plot when a selected area is clicked. Multiple areas
 %                       can be selected by holding down the SHIFT key.
 %   cfg.renderer      = 'painters', 'zbuffer', ' opengl' or 'none' (default = [])
+%   cfg.colorgroups   = 'sequential', 'allblack', 'labelcharN' (N = Nth character in label), 'chantype' or a vector 
+%                       with the length of the number of channels defining the groups (default = 'sequential')
 %   cfg.linestyle     = linestyle/marker type, see options of the PLOT function (default = '-')
 %                       can be a single style for all datasets, or a cell-array containing one style for each dataset
 %   cfg.linewidth     = linewidth in points (default = 0.5)

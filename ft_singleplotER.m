@@ -14,17 +14,14 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 % FT_CONNECTIVITYANALYSIS.
 %
 % The configuration can have the following parameters:
-%   cfg.parameter     = field to be plotted on y-axis (default depends on data.dimord)
-%                       'avg', 'powspctrm' or 'cohspctrm'
-%   cfg.maskparameter = field in the first dataset to be used for masking of data
-%                       (not possible for mean over multiple channels, or when input contains multiple subjects
-%                       or trials)
+%   cfg.parameter     = field to be plotted on y-axis, for example 'avg', 'powspctrm' or 'cohspctrm' (default is automatic)
+%   cfg.maskparameter = field in the first dataset to be used for masking of data; this is not supported when 
+%                       computing the mean over multiple channels, or when giving multiple input datasets (default = [])
 %   cfg.maskstyle     = style used for masking of data, 'box', 'thickness' or 'saturation' (default = 'box')
 %   cfg.maskfacealpha = mask transparency value between 0 and 1
 %   cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.ylim          = 'maxmin', 'maxabs', 'zeromax', 'minzero', or [ymin ymax] (default = 'maxmin')
-%   cfg.channel       = nx1 cell-array with selection of channels (default = 'all')
-%                       see ft_channelselection for details
+%   cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.title         = string, title of plot
 %   cfg.showlegend    = 'yes' or 'no', show the legend with the colors (default = 'no')
 %   cfg.refchannel    = name of reference channel for visualising connectivity, can be 'gui'
@@ -38,6 +35,8 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %                       interactive plot when a selected area is clicked. multiple areas
 %                       can be selected by holding down the shift key.
 %   cfg.renderer      = 'painters', 'zbuffer', ' opengl' or 'none' (default = [])
+%   cfg.colorgroups   = 'sequential', 'allblack', 'labelcharN' (N = Nth character in label), 'chantype' or a vector 
+%                       with the length of the number of channels defining the groups (default = 'sequential')
 %   cfg.linestyle     = linestyle/marker type, see options of the PLOT function (default = '-')
 %                       can be a single style for all datasets, or a cell-array containing one style for each dataset
 %   cfg.linewidth     = linewidth in points (default = 0.5)
