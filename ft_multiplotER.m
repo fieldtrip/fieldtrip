@@ -44,7 +44,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %                       interactive plot when a selected area is clicked. Multiple areas
 %                       can be selected by holding down the SHIFT key.
 %   cfg.renderer      = 'painters', 'zbuffer', ' opengl' or 'none' (default = [])
-%   cfg.colorgroups   = 'sequential', 'allblack', 'labelcharN' (N = Nth character in label), 'chantype' or a vector 
+%   cfg.colorgroups   = 'sequential', 'allblack', 'labelcharN' (N = Nth character in label), 'chantype' or a vector
 %                       with the length of the number of channels defining the groups (default = 'sequential')
 %   cfg.linestyle     = linestyle/marker type, see options of the PLOT function (default = '-')
 %                       can be a single style for all datasets, or a cell-array containing one style for each dataset
@@ -536,6 +536,12 @@ if istrue(cfg.showcomment)
       comment = sprintf('%0s\nylim=[%.3g %.3g]', comment, ymin, ymax);
     end
     ft_plot_text(cfg.layout.pos(k, 1), cfg.layout.pos(k, 2), sprintf(comment), 'FontSize', cfg.fontsize, 'FontWeight', cfg.fontweight);
+    % plot an invisible box, the text itself is not sufficient to get the automatic scaling of the figures axes to include COMNT
+    xy(1) = cfg.layout.pos(k, 1) - cfg.layout.width(k, 1)/2;
+    xy(2) = cfg.layout.pos(k, 1) + cfg.layout.width(k, 1)/2;
+    xy(3) = cfg.layout.pos(k, 2) - cfg.layout.height(k, 1)/2;
+    xy(4) = cfg.layout.pos(k, 2) + cfg.layout.height(k, 1)/2;
+    ft_plot_box(xy, 'edgecolor', 'none');
   end
 end
 
