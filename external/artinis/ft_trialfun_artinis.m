@@ -70,7 +70,7 @@ function [trl, event] = ft_trialfun_artinis(cfg)
 % Contact: askforinfo@artinis.com
 %
 % Main programmer:
-% J�rn M. Horschig, Artinis Medical Systems BV, http://www.artinis.com
+% Jörn M. Horschig, Artinis Medical Systems BV, http://www.artinis.com
 % $Id$
 
 if ~isfield(cfg.trialdef, 'oxyproj') || ~strcmp(cfg.trialdef.oxyproj(end-7:end), '.oxyproj') || ~exist(cfg.trialdef.oxyproj, 'file')

@@ -41,11 +41,9 @@ function [montage, cfg] = ft_nirs_prepare_ODtransformation(cfg, data)
 % options to be implemented:
 %
 % The NIRS positions can be present in the data or can be specified as
-%   cfg.opto          = structure with optode positions, see FT_DATATYPE_SENS
-%
-% cfg.siunits  = ft_getopt(cfg, 'siunits', 'no');   % yes/no, ensure that SI units are used consistently
-%
-% cfg.logarithm           = string, can be 'natural' or 'base10' (default =
+% cfg.opto      = structure with optode positions, see FT_DATATYPE_SENS
+% cfg.siunits   = ft_getopt(cfg, 'siunits', 'no');   % yes/no, ensure that SI units are used consistently
+% cfg.logarithm = string, can be 'natural' or 'base10' (default =
 
 % You are using the FieldTrip NIRS toolbox developed and maintained by
 % Artinis Medical Systems (http://www.artinis.com). For more information
@@ -90,7 +88,7 @@ function [montage, cfg] = ft_nirs_prepare_ODtransformation(cfg, data)
 % Copyright (c) 2015-2016 by Artinis Medical Systems.
 % Contact: askforinfo@artinis.com
 %
-% Main programmer: J�rn M. Horschig
+% Main programmer: Jörn M. Horschig
 % $Id$
 
 revision = '$Id$';
@@ -191,7 +189,7 @@ coefs = cell2mat(textscan(fid, '%f %f %f %f %f'));
 transceivers   = sens.transceiver(chanidx, :);
 transmitteridx = transceivers>0;
 receiveridx    = transceivers<0;
-fiberidx       = transmitteridx | receiveridx;
+optodeidx      = transmitteridx | receiveridx;
 
 % extract the wavelengths
 wavelengths  = sens.wavelength(transceivers(transmitteridx));
@@ -206,7 +204,7 @@ for c=1:numel(chanidx)
     continue;
   end
   % compute the channel combinations
-  tupletidx = sum(bsxfun(@minus, fiberidx, fiberidx(c, :))~=0, 2)==0;
+  tupletidx = sum(bsxfun(@minus, optodeidx, optodeidx(c, :))~=0, 2)==0;
   chanUsed = chanUsed|tupletidx;
   chancmb(:, end+1) = tupletidx;
 end
@@ -226,7 +224,7 @@ for c=1:size(chancmb, 2)
   [coefidx, colidx] = find(wlidx(:, chanidx)==0);
 
   % compute the transmitter/receiver distance in cm
-  dist = sqrt(sum(diff(sens.fiberpos(fiberidx(c, :), :)).^2));
+  dist = sqrt(sum(diff(sens.optopos(optodeidx(c, :), :)).^2));
 
   % select dpf
   dpf = mean(dpfs(chanidx));

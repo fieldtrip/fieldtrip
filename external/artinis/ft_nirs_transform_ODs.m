@@ -93,7 +93,7 @@ function [data] = ft_nirs_transform_ODs(cfg, data)
 % Copyright (c) 2015-2016 by Artinis Medical Systems.
 % Contact: askforinfo@artinis.com
 %
-% Main programmer: J�rn M. Horschig
+% Main programmer: Jörn M. Horschig
 % $Id$
 
 % these are used by the ft_preamble/ft_postamble function and scripts
