@@ -66,6 +66,7 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - AnyWave *.ades
 %  - Qualisys *.tsv
 %  - Mrtrix *.mif
+%  - MAUS *.TextGrid
 
 % Copyright (C) 2003-2019 Robert Oostenveld
 %
@@ -1442,6 +1443,10 @@ elseif filetype_check_extension(filename, '.tck') && filetype_check_header(filen
   type = 'mrtrix_tck';
   manufacturer = 'https://mrtrix.org';
   content = 'mrtrix tracks';
+elseif filetype_check_extension(filename, '.TextGrid')
+  type = 'maus_textgrid';
+  manufacturer = 'MAUS/WebMAUS';
+  content = 'segmented text';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

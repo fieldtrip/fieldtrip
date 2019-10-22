@@ -298,11 +298,11 @@ else
 end % if istrue(individual)
 
 if isempty(ori) && ~isempty(pos)
-  if ~any(isnan(pos(:)))
+  if ~any(isnan(pos(:))) && size(pos,1)>2
     % determine orientations based on surface triangulation
     tri = projecttri(pos, 'delaunay');
     ori = normals(pos, tri);
-  else
+  elseif size(pos,1)>4
     % determine orientations by fitting a sphere to the sensors
     try
       tmp = pos(~any(isnan(pos), 2),:); % remove rows that contain a nan
@@ -314,6 +314,8 @@ if isempty(ori) && ~isempty(pos)
       ori(i,:) = pos(i,:) - center;
       ori(i,:) = ori(i,:)/norm(ori(i,:));
     end
+  else
+    ori = nan(size(pos));
   end
 end
 

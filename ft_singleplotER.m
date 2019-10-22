@@ -14,18 +14,16 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 % FT_CONNECTIVITYANALYSIS.
 %
 % The configuration can have the following parameters:
-%   cfg.parameter     = field to be plotted on y-axis (default depends on data.dimord)
-%                       'avg', 'powspctrm' or 'cohspctrm'
-%   cfg.maskparameter = field in the first dataset to be used for masking of data
-%                       (not possible for mean over multiple channels, or when input contains multiple subjects
-%                       or trials)
+%   cfg.parameter     = field to be plotted on y-axis, for example 'avg', 'powspctrm' or 'cohspctrm' (default is automatic)
+%   cfg.maskparameter = field in the first dataset to be used for masking of data; this is not supported when 
+%                       computing the mean over multiple channels, or when giving multiple input datasets (default = [])
 %   cfg.maskstyle     = style used for masking of data, 'box', 'thickness' or 'saturation' (default = 'box')
 %   cfg.maskfacealpha = mask transparency value between 0 and 1
 %   cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.ylim          = 'maxmin', 'maxabs', 'zeromax', 'minzero', or [ymin ymax] (default = 'maxmin')
-%   cfg.channel       = nx1 cell-array with selection of channels (default = 'all')
-%                       see ft_channelselection for details
-%   cfg.title          = string, title of plot
+%   cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
+%   cfg.title         = string, title of plot
+%   cfg.showlegend    = 'yes' or 'no', show the legend with the colors (default = 'no')
 %   cfg.refchannel    = name of reference channel for visualising connectivity, can be 'gui'
 %   cfg.baseline      = 'yes', 'no' or [time1 time2] (default = 'no'), see ft_timelockbaseline
 %   cfg.baselinetype  = 'absolute' or 'relative' (default = 'absolute')
@@ -40,13 +38,29 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %   cfg.linestyle     = linestyle/marker type, see options of the PLOT function (default = '-')
 %                       can be a single style for all datasets, or a cell-array containing one style for each dataset
 %   cfg.linewidth     = linewidth in points (default = 0.5)
-%   cfg.graphcolor    = color(s) used for plotting the dataset(s) (default = 'brgkywrgbkywrgbkywrgbkyw')
-%                       alternatively, colors can be specified as nx3 matrix of rgb values
+%   cfg.linecolor     = color(s) used for plotting the dataset(s) (default = 'brgkywrgbkywrgbkywrgbkyw')
+%                       alternatively, colors can be specified as nx3 matrix of RGB values
 %   cfg.directionality = '', 'inflow' or 'outflow' specifies for
 %                       connectivity measures whether the inflow into a
 %                       node, or the outflow from a node is plotted. The
 %                       (default) behavior of this option depends on the dimor
 %                       of the input data (see below).
+%
+% The following options for the scaling of the EEG, EOG, ECG, EMG, MEG and NIRS channels
+% is optional and can be used to bring the absolute numbers of the different
+% channel types in the same range (e.g. fT and uV). The channel types are determined
+% from the input data using FT_CHANNELSELECTION.
+%   cfg.eegscale       = number, scaling to apply to the EEG channels prior to display
+%   cfg.eogscale       = number, scaling to apply to the EOG channels prior to display
+%   cfg.ecgscale       = number, scaling to apply to the ECG channels prior to display
+%   cfg.emgscale       = number, scaling to apply to the EMG channels prior to display
+%   cfg.megscale       = number, scaling to apply to the MEG channels prior to display
+%   cfg.gradscale      = number, scaling to apply to the MEG gradiometer channels prior to display (in addition to the cfg.megscale factor)
+%   cfg.magscale       = number, scaling to apply to the MEG magnetometer channels prior to display (in addition to the cfg.megscale factor)
+%   cfg.nirsscale      = number, scaling to apply to the NIRS channels prior to display
+%   cfg.mychanscale    = number, scaling to apply to the channels specified in cfg.mychan
+%   cfg.mychan         = Nx1 cell-array with selection of channels
+%   cfg.chanscale      = Nx1 vector with scaling factors, one per channel specified in cfg.channel
 %
 % For the plotting of directional connectivity data the cfg.directionality
 % option determines what is plotted. The default value and the supported
@@ -144,9 +158,11 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'channelindex',   'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'channelname',    'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'cohrefchannel',  'refchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',	  {'zparam',         'parameter'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'graphcolor', 'linecolor'});
 cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
 
 % set the defaults
+cfg.viewmode        = ft_getopt(cfg, 'viewmode',      'average'); % average or butterfly
 cfg.baseline        = ft_getopt(cfg, 'baseline',      'no');
 cfg.trials          = ft_getopt(cfg, 'trials',        'all', 1);
 cfg.xlim            = ft_getopt(cfg, 'xlim',          'maxmin');
@@ -155,11 +171,12 @@ cfg.zlim            = ft_getopt(cfg, 'zlim',          'maxmin');
 cfg.comment         = ft_getopt(cfg, 'comment',        strcat([date '\n']));
 cfg.axes            = ft_getopt(cfg, ' axes',         'yes');
 cfg.fontsize        = ft_getopt(cfg, 'fontsize',       8);
-cfg.graphcolor      = ft_getopt(cfg, 'graphcolor',    'brgkywrgbkywrgbkywrgbkyw');
 cfg.hotkeys         = ft_getopt(cfg, 'hotkeys',       'yes');
 cfg.interactive     = ft_getopt(cfg, 'interactive',   'yes');
 cfg.renderer        = ft_getopt(cfg, 'renderer',       []); % let MATLAB decide on the default
 cfg.maskparameter   = ft_getopt(cfg, 'maskparameter',  []);
+cfg.colorgroups     = ft_getopt(cfg, 'colorgroups',   'condition'); % this is the only supported option
+cfg.linecolor       = ft_getopt(cfg, 'linecolor',     'brgkywrgbkywrgbkywrgbkyw');
 cfg.linestyle       = ft_getopt(cfg, 'linestyle',     '-');
 cfg.linewidth       = ft_getopt(cfg, 'linewidth',      0.5);
 cfg.maskstyle       = ft_getopt(cfg, 'maskstyle',     'box');
@@ -171,31 +188,20 @@ cfg.figurename      = ft_getopt(cfg, 'figurename',     []);
 cfg.preproc         = ft_getopt(cfg, 'preproc',        []);
 cfg.frequency       = ft_getopt(cfg, 'frequency',     'all'); % needed for frequency selection with TFR data
 cfg.latency         = ft_getopt(cfg, 'latency',       'all'); % needed for latency selection with TFR data, FIXME, probably not used
-
-if ischar(cfg.graphcolor)
-  graphcolor = cfg.graphcolor(1:Ndata);
-  graphcolor = graphcolor(:); % ensure that it is a column
-elseif isnumeric(cfg.graphcolor)
-  graphcolor = cfg.graphcolor(1:Ndata,:);
-end
+cfg.showlegend      = ft_getopt(cfg, 'showlegend',    'no');
 
 % check for linestyle being a cell-array
 if ischar(cfg.linestyle)
-  cfg.linestyle = {cfg.linestyle};
+  cfg.linestyle = repmat({cfg.linestyle}, 1, Ndata);
 end
-
-% check linestyle length, and lengthen it if does not have enough styles in it
-if (length(cfg.linestyle) < Ndata ) && (length(cfg.linestyle) > 1)
+% check it's length, and lengthen it if does not have enough styles in it
+if (length(cfg.linestyle) > 1) && (length(cfg.linestyle) < Ndata )
   ft_error('either specify cfg.linestyle as a cell-array with one cell for each dataset, or only specify one linestyle')
-elseif (length(cfg.linestyle) < Ndata ) && (length(cfg.linestyle) == 1)
-  tmpstyle = cfg.linestyle{1};
-  cfg.linestyle = cell(Ndata , 1);
-  for idataset = 1:Ndata
-    cfg.linestyle{idataset} = tmpstyle;
-  end
+elseif (length(cfg.linestyle) == 1)
+  cfg.linestyle = repmat(cfg.linestyle, 1, Ndata);
 end
 
-% this is needed for the figure title and correct labeling of graphcolor later on
+% this is needed for the figure title and correct labeling of linecolor later on
 if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
   dataname = cfg.dataname;
 elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
@@ -352,7 +358,8 @@ if startsWith(dimord, 'chan_chan_') || startsWith(dimord, 'chancmb_')
 end
 
 % Apply channel-type specific scaling
-tmpcfg = keepfields(cfg, {'parameter', 'chanscale', 'ecgscale', 'eegscale', 'emgscale', 'eogscale', 'gradscale', 'magscale', 'megscale', 'mychan', 'mychanscale'});
+fn = fieldnames(cfg);
+tmpcfg = keepfields(cfg, fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan') | strcmp(fn, 'channel') | strcmp(fn, 'parameter')));
 for i=1:Ndata
   varargin{i}= chanscale_common(tmpcfg, varargin{i});
 end
@@ -385,16 +392,21 @@ xmax = varargin{1}.(xparam)(xmaxindx);
 selx = xminindx:xmaxindx;
 xval = varargin{1}.(xparam)(selx);
 
-% Get physical y-axis range, i.e. parameter to be plotted
+% get physical y-axis range, i.e. parameter to be plotted
 if ~isnumeric(cfg.ylim)
-  % Find maxmin throughout all varargins
+  % find maxmin throughout all varargins
   ymin = [];
   ymax = [];
   for i=1:Ndata
-    % Select the channels in the data that match with the layout and that are selected for plotting
-    dat = nanmean(varargin{i}.(cfg.parameter)(selchan,selx),1); % mean over channels, as that is what will be plotted
-    ymin = nanmin([ymin nanmin(nanmin(nanmin(dat)))]);
-    ymax = nanmax([ymax nanmax(nanmax(nanmax(dat)))]);
+    % select the channels in the data that match with the layout and that are selected for plotting
+    switch cfg.viewmode
+      case 'average'
+        dat = nanmean(varargin{i}.(cfg.parameter)(selchan, selx), 1); % mean over channels
+      case 'butterfly'
+        dat = varargin{i}.(cfg.parameter)(selchan,selx);
+    end
+    ymin = nanmin([ymin nanmin(nanmin(nanmin(dat(:))))]);
+    ymax = nanmax([ymax nanmax(nanmax(nanmax(dat(:))))]);
   end
   if strcmp(cfg.ylim, 'maxabs') % handle maxabs, make y-axis center on 0
     ymax = max([abs(ymax) abs(ymin)]);
@@ -409,15 +421,15 @@ else
   ymax = cfg.ylim(2);
 end
 
-% Gather the data from all input data structures
-datamatrix = zeros(Ndata, length(selchan), length(selx));
+% gather the data from all input data structures
+datamatrix = zeros(Ndata, length(selx));
 for i=1:Ndata
-  datamatrix(i,:,:) = varargin{i}.(cfg.parameter)(selchan, selx);
+  datamatrix(i,:) = mean(varargin{i}.(cfg.parameter)(selchan, selx), 1); % mean over channels
 end
 
+% gather the mask from the first input data structure
 if ~isempty(cfg.maskparameter)
-  % one value for each channel, or one value for each channel-time point
-  maskmatrix = varargin{1}.(cfg.maskparameter)(selchan, selx);
+  maskmatrix = mean(varargin{1}.(cfg.maskparameter)(selchan, selx), 1); % mean over channels
 else
   % create an Nx0 matrix
   maskmatrix = zeros(length(selchan), 0);
@@ -425,32 +437,46 @@ end
 
 %% Section 4: do the actual plotting
 
+% determine the coloring of channels/conditions
+linecolor = linecolor_common(cfg, varargin{:});
+
 cla
 hold on
 
-yval = mean(datamatrix, 2); % over channels
-yval = reshape(yval, size(yval,1), size(yval,3));
-mask = squeeze(mean(maskmatrix, 1)); % over channels
+yval = datamatrix;
+mask = maskmatrix;
 
 if strcmp(cfg.maskstyle, 'difference')
   % combine the conditions in a single plot, highlight the difference
-  ft_plot_vector(xval, yval, 'style', cfg.linestyle{i}, 'color', graphcolor(i,:), 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
+  ft_plot_vector(xval, yval, 'color', linecolor, 'linewidth', cfg.linewidth, 'style', cfg.linestyle{1}, 'linewidth', cfg.linewidth, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
 else
   % loop over the conditions, plot them on top of each other
   for i=1:Ndata
-    ft_plot_vector(xval, yval(i,:), 'style', cfg.linestyle{i}, 'color', graphcolor(i,:), 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
+    ft_plot_vector(xval, yval(i,:), 'color', linecolor(i,:), 'linewidth', cfg.linewidth, 'style', cfg.linestyle{i}, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
   end
 end
 
-colorLabels = [];
-if Ndata > 1
+if ischar(linecolor)
+  set(gca, 'ColorOrder', char2rgb(linecolor))
+elseif isnumeric(linecolor)
+  set(gca, 'ColorOrder', linecolor)
+end
+
+% show the legend with the colors of the conditions
+if istrue(cfg.showlegend) && Ndata>1
+  if strcmp(cfg.maskstyle, 'difference')
+    colorLabels = {'difference'};
+  else
+    colorLabels = {};
+  end
   for i=1:Ndata
-    if ischar(graphcolor)
-      colorLabels = [colorLabels '\n' dataname{i} '='         graphcolor(i)     ];
-    elseif isnumeric(graphcolor)
-      colorLabels = [colorLabels '\n' dataname{i} '=' num2str(graphcolor(i, :)) ];
+    if ischar(linecolor)
+      colorLabels{end+1} = [dataname{i} '='         linecolor(i)     ];
+    elseif isnumeric(linecolor)
+      colorLabels{end+1} = [dataname{i} '=' num2str(linecolor(i, :)) ];
     end
   end
+  legend(colorLabels)
 end
 
 % set xlim and ylim

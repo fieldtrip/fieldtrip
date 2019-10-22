@@ -415,8 +415,11 @@ end
 
 alpha(str2double(get(findobj(fig, 'tag', 'alpha'), 'string')));
 lighting gouraud
-material shiny
-camlight
+l = lightangle(0, 90);  set(l, 'Color', [1 1 1]/2)
+l = lightangle(  0, 0); set(l, 'Color', [1 1 1]/3)
+l = lightangle( 90, 0); set(l, 'Color', [1 1 1]/3)
+l = lightangle(180, 0); set(l, 'Color', [1 1 1]/3)
+l = lightangle(270, 0); set(l, 'Color', [1 1 1]/3)
 
 if strcmp(get(h, 'tag'), 'toggle labels')
   setappdata(fig, 'toggle_labels', ~getappdata(fig, 'toggle_labels'))
@@ -580,7 +583,7 @@ if ischar(style)
     case 'edge'
       style = {'vertexcolor', 'none', 'edgecolor', 'k', 'facecolor', 'none'};
     case 'surface'
-      style = {'vertexcolor', 'none', 'edgecolor', 'none', 'facecolor', 'skin'};
+      style = {'vertexcolor', 'none', 'edgecolor', 'none', 'facecolor', 'skin', 'material', 'dull'};
     case 'both'
       style = {'vertexcolor', 'none', 'edgecolor', 'k', 'facecolor', 'skin'};
     otherwise
