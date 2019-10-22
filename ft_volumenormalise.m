@@ -107,6 +107,7 @@ cfg.keepinside       = ft_getopt(cfg, 'keepinside',       'yes');
 cfg.keepintermediate = ft_getopt(cfg, 'keepintermediate', 'no');
 cfg.nonlinear        = ft_getopt(cfg, 'nonlinear',        'yes');
 cfg.smooth           = ft_getopt(cfg, 'smooth',           'no');
+cfg.templatecoordsys = ft_getopt(cfg, 'templatecoordsys', 'spm');
 
 % check that the preferred SPM version is on the path
 ft_hastoolbox(cfg.spmversion, 1);
@@ -137,6 +138,7 @@ else
     if strcmpi(cfg.spmversion, 'spm2'),  cfg.template = fullfile(spmpath, filesep, 'templates', filesep, 'T1.mnc'); end
     if strcmpi(cfg.spmversion, 'spm8'),  cfg.template = fullfile(spmpath, filesep, 'templates', filesep, 'T1.nii'); end
     if strcmpi(cfg.spmversion, 'spm12'), cfg.template = fullfile(spmpath, filesep, 'toolbox',   filesep, 'OldNorm', filesep, 'T1.nii'); end
+    cfg.templatecoordsys = 'spm';
   end
 end
 
@@ -349,7 +351,7 @@ normalised.transform = Vout(1).mat;
 normalised.dim       = size(normalised.anatomy);
 normalised.params    = params;  % this holds the normalization parameters
 normalised.initial   = initial; % this holds the initial co-registration to approximately align with the template
-normalised.coordsys  = 'spm';
+normalised.coordsys  = cfg.templatecoordsys;
 
 if isfield(normalised, 'inside')
   % convert back to a logical volume
