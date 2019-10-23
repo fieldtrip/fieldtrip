@@ -240,10 +240,10 @@ switch version
         % the default should be "amplitude/distance" for neuromag and "amplitude" for all others
         if isempty(scaling)
           if ft_senstype(sens, 'neuromag') && ~any(contains(sens.chanunit, '/'))
-            ft_warning('asuming that the default scaling should be amplitude/distance rather than amplitude');
+            ft_warning('assuming that the default scaling should be amplitude/distance rather than amplitude');
             scaling = 'amplitude/distance';
           elseif ft_senstype(sens, 'yokogawa440') && any(contains(sens.chanunit, '/'))
-            ft_warning('asuming that the default scaling should be amplitude rather than amplitude/distance');
+            ft_warning('assuming that the default scaling should be amplitude rather than amplitude/distance');
             scaling = 'amplitude';
           end
         end
@@ -337,31 +337,20 @@ switch version
     end
     
     if ~isfield(sens, 'chanpos')
-      if ismeg
-        % sensor description is a MEG sensor-array, containing oriented coils
-        [chanpos, chanori, lab] = channelposition(sens);
-        % the channel order can be different in the two representations
-        [selsens, selpos] = match_str(sens.label, lab);
-        sens.chanpos = nan(length(sens.label), 3);
-        sens.chanori = nan(length(sens.label), 3);
-        % insert the determined position/orientation on the appropriate rows
-        sens.chanpos(selsens,:) = chanpos(selpos,:);
-        sens.chanori(selsens,:) = chanori(selpos,:);
-        if length(selsens)~=length(sens.label)
-          ft_warning('cannot determine the position and orientation for all channels');
-        end
-      else
-        % sensor description is something else, EEG/ECoG etc
-        % note that chanori will be all NaNs
-        [chanpos, chanori, lab] = channelposition(sens);
-        % the channel order can be different in the two representations
-        [selsens, selpos] = match_str(sens.label, lab);
-        sens.chanpos = nan(length(sens.label), 3);
-        % insert the determined position/orientation on the appropriate rows
-        sens.chanpos(selsens,:) = chanpos(selpos,:);
-        if length(selsens)~=length(sens.label)
-          ft_warning('cannot determine the position and orientation for all channels');
-        end
+      % sensor description is a MEG sensor-array, containing oriented coils
+      [chanpos, chanori, lab] = channelposition(sens);
+      % the channel order can be different in the two representations
+      [selsens, selpos] = match_str(sens.label, lab);
+      sens.chanpos = nan(length(sens.label), 3);
+      sens.chanori = nan(length(sens.label), 3);
+      % insert the determined position/orientation on the appropriate rows
+      sens.chanpos(selsens,:) = chanpos(selpos,:);
+      sens.chanori(selsens,:) = chanori(selpos,:);
+      if all(isnan(sens.chanori(:)))
+        sens = rmfield(sens, 'chanori');
+      end
+      if length(selsens)~=length(sens.label)
+        ft_warning('cannot determine the position and orientation for all channels');
       end
     end
     
