@@ -186,7 +186,7 @@ fid = fopen(fullfile(fileparts(mfilename('fullpath')), 'private', 'Cope_ext_coef
 coefs = cell2mat(textscan(fid, '%f %f %f %f %f'));
 
 % extract all transceivers that are relevant here
-transceivers   = sens.transceiver(chanidx, :);
+transceivers   = sens.transmits(chanidx, :);
 transmitteridx = transceivers>0;
 receiveridx    = transceivers<0;
 optodeidx      = transmitteridx | receiveridx;
