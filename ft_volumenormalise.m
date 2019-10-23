@@ -123,9 +123,9 @@ end
 mri  = ft_convert_units(mri, 'mm');
 orig = mri.transform;
 if isdeployed
-  mri = ft_convert_coordsys(mri, 'acpc', 2, cfg.template);
+  mri = ft_convert_coordsys(mri, cfg.templatecoordsys, 2, cfg.template);   % Will give warning if cfg.templatecoordsys='spm' and convert to acpc instead
 else
-  mri = ft_convert_coordsys(mri, 'acpc');
+  mri = ft_convert_coordsys(mri, cfg.templatecoordsys);                    % Will give warning if cfg.templatecoordsys='spm' and convert to acpc instead
 end
 initial = mri.transform / orig;
 
