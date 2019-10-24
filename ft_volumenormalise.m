@@ -107,7 +107,7 @@ cfg.keepinside       = ft_getopt(cfg, 'keepinside',       'yes');
 cfg.keepintermediate = ft_getopt(cfg, 'keepintermediate', 'no');
 cfg.nonlinear        = ft_getopt(cfg, 'nonlinear',        'yes');
 cfg.smooth           = ft_getopt(cfg, 'smooth',           'no');
-cfg.templatecoordsys = ft_getopt(cfg, 'templatecoordsys', 'spm');
+cfg.templatecoordsys = ft_getopt(cfg, 'templatecoordsys', 'spm'); % the assumption is here that the template is one from SPM
 
 % check that the preferred SPM version is on the path
 ft_hastoolbox(cfg.spmversion, 1);
@@ -117,16 +117,16 @@ if ~isfield(mri, 'anatomy')
   ft_error('no anatomical information available, this is required for normalisation');
 end
 
-% ensure that the data has interpretable units and that the coordinate
-% system is in approximate ACPC space and keep track of an initial transformation
-% matrix that approximately does the co-registration
+% ensure that the input MRI has interpretable units and that the input MRI is expressed in 
+% a coordinate system which is in approximate agreement with the template
 mri  = ft_convert_units(mri, 'mm');
 orig = mri.transform;
 if isdeployed
-  mri = ft_convert_coordsys(mri, cfg.templatecoordsys, 2, cfg.template);   % Will give warning if cfg.templatecoordsys='spm' and convert to acpc instead
+  mri = ft_convert_coordsys(mri, cfg.templatecoordsys, 2, cfg.template);
 else
-  mri = ft_convert_coordsys(mri, cfg.templatecoordsys);                    % Will give warning if cfg.templatecoordsys='spm' and convert to acpc instead
+  mri = ft_convert_coordsys(mri, cfg.templatecoordsys);
 end
+% keep track of an initial transformation matrix that does the approximate co-registration
 initial = mri.transform / orig;
 
 if isdeployed
