@@ -138,7 +138,9 @@ else
     if strcmpi(cfg.spmversion, 'spm2'),  cfg.template = fullfile(spmpath, filesep, 'templates', filesep, 'T1.mnc'); end
     if strcmpi(cfg.spmversion, 'spm8'),  cfg.template = fullfile(spmpath, filesep, 'templates', filesep, 'T1.nii'); end
     if strcmpi(cfg.spmversion, 'spm12'), cfg.template = fullfile(spmpath, filesep, 'toolbox',   filesep, 'OldNorm', filesep, 'T1.nii'); end
-    cfg.templatecoordsys = 'spm';
+    if ~strcmp(cfg.templatecoordsys, 'spm')
+      ft_error('you should specify cfg.templatecoordsys=''spm'' when using an SPM template');
+    end
   end
 end
 
