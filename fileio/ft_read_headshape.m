@@ -1003,6 +1003,7 @@ switch fileformat
     end
   
   case 'mrtrix_tck'
+    ft_hastoolbox('mrtrix', 1);
     shape = read_tck(filename);
   
   case 'off'
