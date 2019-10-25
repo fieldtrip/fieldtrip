@@ -99,6 +99,7 @@ vertexsize   = ft_getopt(varargin, 'vertexsize',  10);
 vertexmarker = ft_getopt(varargin, 'vertexmarker', '.');
 facealpha    = ft_getopt(varargin, 'facealpha',   1);
 edgealpha    = ft_getopt(varargin, 'edgealpha',   1);
+edgelinewidth = ft_getopt(varargin, 'edgelinewidth', .5);
 material_    = ft_getopt(varargin, 'material');
 tag          = ft_getopt(varargin, 'tag',         '');
 surfaceonly  = ft_getopt(varargin, 'surfaceonly');  % default is handled below
@@ -263,6 +264,7 @@ if haspos
   end
   %set(hs, 'FaceColor', facecolor);
   set(hs, 'EdgeColor', edgecolor);
+  set(hs, 'LineWidth', edgelinewidth);
   set(hs, 'tag', tag);
 end
 
