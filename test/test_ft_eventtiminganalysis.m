@@ -1,24 +1,24 @@
-%function test_ft_singletrialanalysis
+%function test_ft_eventtiminganalysis
 
 % MEM 1500mb
 % WALLTIME 00:15:00
 
-% DEPENDENCY ft_singletrialanalysis
+% DEPENDENCY ft_eventtiminganalysis
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/test_ft_singletrialanalysis.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/test_ft_eventtiminganalysis.mat'));
 ft_hastoolbox('lagextraction', 1);
 
 cfg = [];
 cfg.method = 'gbve';
 cfg.gbve.latency = [0 inf];
 cfg.gbve.use_maximum = false;
-out_gbve = ft_singletrialanalysis(cfg, data);
+out_gbve = ft_eventtiminganalysis(cfg, data);
 
 cfg = [];
 cfg.method = 'aseo';
 cfg.aseo.initlatency = [0.2 0.5];
 cfg.aseo.jitter = 0.15;
-out_aseo = ft_singletrialanalysis(cfg, data);
+out_aseo = ft_eventtiminganalysis(cfg, data);
 
 rt=(data.trialinfo(:,end)-data.trialinfo(:,end-1))./1200;
 figure;plot(rt, out_gbve.params.latency,'o');
