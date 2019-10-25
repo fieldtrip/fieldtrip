@@ -51,7 +51,7 @@ help:
 	
 
 # FieldTrip source directory
-SRC=src
+SRC=$(shell pwd)/src
 
 # Some helpers for running mex commands
 MEXRUNPRE=succes=false;try,succes=~mex(
@@ -135,8 +135,12 @@ OTHER_TARGETS_PF=connectivity/private/det2x2 \
 		specest/private/ft_getopt \
 		utilities/ft_getopt \
 		utilities/private/lmoutr \
-		utilities/private/ptriproj 
-	
+		utilities/private/ptriproj \
+    external/stats/nanmean \
+    external/stats/nanstd \
+    external/stats/nansum \
+    external/stats/nanvar	
+
 # targets with .mex* extension outside $SRC
 OTHER_TARGETS=$(patsubst %,%.$(EXT),$(OTHER_TARGETS_PF))
 
@@ -179,7 +183,3 @@ mex: octave_or_matlab $(OTHER_TARGETS)
 
 mex_clean: octave_or_matlab
 	rm -f $(OTHER_TARGETS) $(SRC_TARGETS)
-	
-	
-
-
