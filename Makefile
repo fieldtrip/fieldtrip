@@ -170,16 +170,19 @@ endef
 # Apply helper function to each element in $(OTHER_TARGETS)
 $(foreach a, $(OTHER_TARGETS),$(eval $(call addrule, $(a))))
 
+# Helper rule, see https://stackoverflow.com/questions/16467718/how-to-print-out-a-variable-in-makefile
+print-%: ; @echo $* = $($*)
+
 #######################################
 #
 # Main rules
- 
+
 all: mex
 
 clean: mex_clean
 
 # For mex files
-mex: octave_or_matlab $(OTHER_TARGETS)
+mex: octave_or_matlab $(SRC_TARGETS) $(OTHER_TARGETS)
 
 mex_clean: octave_or_matlab
-	rm -f $(OTHER_TARGETS) $(SRC_TARGETS)
+	rm -f $(SRC_TARGETS) $(OTHER_TARGETS) 

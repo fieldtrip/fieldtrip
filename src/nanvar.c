@@ -339,7 +339,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     else {
         /* we now at this point the input data is either numeric, char, or logical, but not double or single precision */
         /* since only double or single can be NaN, simply call matlab's var() function to do the work, we can safely ignore nans */
-        mexCallMATLAB(nlhs, plhs, nrhs, prhs, "var");
+        mexCallMATLAB(nlhs, plhs, nrhs, (mxArray **)prhs, "var");
         return;
     }
 }
