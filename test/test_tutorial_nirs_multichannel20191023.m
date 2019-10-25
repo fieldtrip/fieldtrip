@@ -1,4 +1,4 @@
-function test_tutorial_nirs_multichannel20191023
+% function test_tutorial_nirs_multichannel20191023
 
 % WALLTIME 00:10:00
 % MEM 3gb
@@ -150,27 +150,33 @@ cfg           = [];
 cfg.baseline  = [-5 0];
 timelockDEV   = ft_timelockbaseline(cfg, timelockDEV);
 
-% FIXME the lines commented out below are still part of the tutorial but cause problems
+%%
+% The lines below are not exactly according to the 20191023 version, but have been updated to make it work.
+% The tutorial on the website has also been updated, see https://github.com/fieldtrip/fieldtrip/pull/1245#issuecomment-546270124
 
 load('nirs_48ch_layout.mat')
-% label               = lay.label;
-% label               = strrep(label, 'O2Hb', 'functional');
-% lay.label           = label;
+figure; ft_plot_layout(lay) % note that O2Hb and HHb channels fall on top of each other
 
 cfg                   = [];
 cfg.showlabels        = 'yes';
 cfg.layout            = lay;
 cfg.interactive       = 'yes';
-% cfg.channel           = '* [functional]';
-cfg.graphcolor        = 'r';
+cfg.graphcolor        = 'rb';
+cfg.colorgroups(contains(timelockDEV.label, 'O2Hb')) = 1; % these will be red
+cfg.colorgroups(contains(timelockDEV.label, 'HHb'))  = 2; % these will be blue
 ft_multiplotER(cfg, timelockDEV);
 
 cfg          = [];
 cfg.layout   = lay;
-% cfg.channel  = '* [functional]';
 cfg.marker   = 'labels';
 cfg.xlim     = [5 7];
 cfg.zlim     = [-0.2 0.2];
+cfg.channel  = '* [O2Hb]';
+figure; subplot(1,2,1);
 ft_topoplotER(cfg, timelockDEV);
-title('[functional]');
+title('[O2Hb]');
 
+cfg.channel  = '* [HHb]';
+subplot(1,2,2);
+ft_topoplotER(cfg, timelockDEV);
+title('[HHb]');
