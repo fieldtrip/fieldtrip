@@ -64,7 +64,11 @@ vhdr.nSamples = Inf;
 dataFile = fullfile(p, vhdr.DataFile);
 markerFile = fullfile(p, vhdr.MarkerFile);
 [dum, dum, dataExt] = fileparts(vhdr.DataFile);
-[dum, dum, markerExt] = fileparts(vhdr.MarkerFile);
+if ~isempty(vhdr.MarkerFile)
+    [dum, dum, markerExt] = fileparts(vhdr.MarkerFile);
+else
+    markerExt=dataExt;
+end;
 dataFileSameName = fullfile(p,[f dataExt]);
 markerFileSameName = fullfile(p,[f markerExt]);
 
