@@ -38,10 +38,9 @@ end
 
 if nargin>2
   % use recursion to append multiple structures
-  s1 = varargin{1};
+  s = varargin{1};
   for i=2:nargin
-    s2 = varargin{i};
-    s1 = appendstruct(s1, s2);
+    s = appendstruct(s, varargin{i});
   end
   return
 else
