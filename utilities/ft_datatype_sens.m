@@ -170,7 +170,7 @@ switch version
       
       % these might be present due to the reading functions but are not part of the user/technical documentation yet, so better not include them for now
       % especially the chanunit field needs some careful thought when converting between optical densities and chromophore concentrations.
-      sens = removefields(sens, {'chantype', 'chanunit'});
+      sens = removefields(sens, {'chantype', 'chanunit', 'DPF'});
     end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
