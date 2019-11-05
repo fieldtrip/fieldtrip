@@ -110,12 +110,15 @@ cfg.tolerance  = ft_getopt(cfg, 'tolerance', 1e-5);
 isequaltime  = true;
 isequallabel = true;
 issamelabel  = true;
-isequalfsample = true;
+isequaltrial = true;
+isequalfreq  = true;
 for i=2:numel(varargin)
   isequaltime  = isequaltime  && isequal(varargin{i}.time , varargin{1}.time );
   isequallabel = isequallabel && isequal(varargin{i}.label, varargin{1}.label);
   issamelabel  = issamelabel  && isempty(setxor(varargin{i}.label, varargin{1}.label));
-  isequalfsample = isequalfsample && isfield(varargin{i},'fsample') && isfield(varargin{1},'fsample') && isequal(varargin{i}.fsample, varargin{1}.fsample);
+  isequalfreq  = isequalfreq && isfield(varargin{i},'hdr') && isfield(varargin{1},'hdr') && ...
+                             && isfield(varargin{i}.hdr,'Fs') && isfield(varargin{1}.hdr,'Fs') && ...
+                             length(uniquetol([varargin{i}.hdr.Fs,varargin{1}.hdr.Fs],cfg.tolerance))==1;
 end
 
 if isempty(cfg.appenddim) || strcmp(cfg.appenddim, 'auto')
