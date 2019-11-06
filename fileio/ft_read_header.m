@@ -503,15 +503,15 @@ switch headerformat
     end
 
     orig = openNSx(filename, 'noread');
-    channelstype=regexp({orig.ElectrodesInfo.Label},'[A-Za-z0-9.^_\s]+','match');
+    channelstype=regexp({orig.ElectrodesInfo.Label},'[A-Za-z]+','match','once');  
     chaninfo=table({orig.ElectrodesInfo.ElectrodeID}',...
-      transpose(deblank({orig.ElectrodesInfo.Label})),[channelstype{1,:}]',...
+      transpose(deblank({orig.ElectrodesInfo.Label})),[channelstype]',...
       {orig.ElectrodesInfo.ConnectorBank}',{orig.ElectrodesInfo.ConnectorPin}',...
       transpose(deblank({orig.ElectrodesInfo.AnalogUnits})),...
       'VariableNames',{'id' 'label' 'chantype' 'bank' 'pin' 'unit'});
 
     if isempty(chantype)
-      chantype = unique(cellfun(@(x)x(1),channelstype));
+      chantype = unique(channelstype,'stable');
     end
 
     %selecting channel according to chantype
@@ -2035,9 +2035,9 @@ switch headerformat
 
   case 'neuroomega_mat'
     % These are MATLAB *.mat files created by the software 'Map File
-    % Converter' from the propietary .mpx files recorded by NeuroOmega
-    chantype_dict={'micro','macro',     'analog', 'micro_lfp','macro_lfp','micro_hp','add_analog';...
-                   'CRAW', 'CMacro_RAW','CANALOG', 'CLFP',     'CMacro_LFP',   'CSPK'    ,'CADD_ANALOG'};
+    % Converter' from the proprietary .mpx files recorded by NeuroOmega
+    chantype_dict={'micro','macro',     'analog', 'micro_lfp','macro_lfp','micro_hp','add_analog','emg';...
+                   'CRAW', 'CMacro_RAW','CANALOG', 'CLFP',     'CMacro_LFP',   'CSPK' ,'CADD_ANALOG','CEMG'}; 
     neuroomega_param={'_KHz','_KHz_Orig','_Gain','_BitResolution','_TimeBegin','_TimeEnd'};
 
     %identifying channels to be loaded
