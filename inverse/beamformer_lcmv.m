@@ -168,8 +168,9 @@ else
   tmplambda = 0;
 end
 
-if projectnoise
+if projectnoise || strcmp(weightnorm, 'nai')
     % estimate the noise level in the covariance matrix by the smallest singular (non-zero) value
+    % always needed for the NAI weight normalization case
     noise = svd(Cy);
     noise = noise(rankCy);
     % estimated noise floor is equal to or higher than lambda
