@@ -105,20 +105,28 @@ end
 % set the defaults
 cfg.appendsens = ft_getopt(cfg, 'appendsens', 'no');
 cfg.appenddim  = ft_getopt(cfg, 'appenddim', []);
-cfg.tolerance  = ft_getopt(cfg, 'tolerance', 1e-5);
+cfg.tolerance  = ft_getopt(cfg, 'tolerance', 1e-5); %tolerance for frequencies
 
 isequaltime  = true;
 isequallabel = true;
 issamelabel  = true;
-isequaltrial = true;
 isequalfreq  = true;
+if isfield(varargin{1},'hdr') && isfield(varargin{1}.hdr,'Fs')
+    Fs1 = varargin{1}.hdr.Fs;
+elseif isfield(varargin{1},'fsample')
+    Fs1 = varargin{1}.fsample;
+    ft_warning('using deprecated field fsample');
+end
 for i=2:numel(varargin)
   isequaltime  = isequaltime  && isequal(varargin{i}.time , varargin{1}.time );
   isequallabel = isequallabel && isequal(varargin{i}.label, varargin{1}.label);
   issamelabel  = issamelabel  && isempty(setxor(varargin{i}.label, varargin{1}.label));
-  isequalfreq  = isequalfreq && isfield(varargin{i},'hdr') && isfield(varargin{1},'hdr') && ...
-                             && isfield(varargin{i}.hdr,'Fs') && isfield(varargin{1}.hdr,'Fs') && ...
-                             length(uniquetol([varargin{i}.hdr.Fs,varargin{1}.hdr.Fs],cfg.tolerance))==1;
+  if isfield(varargin{i},'hdr') && isfield(varargin{i}.hdr,'Fs')
+    isequalfreq  = isequalfreq && length(uniquetol([varargin{i}.hdr.Fs,Fs1],cfg.tolerance))==1;
+  elseif isfield(varargin{i},'fsample')
+    isequalfreq  = isequalfreq && length(uniquetol([varargin{i}.fsample,Fs1],cfg.tolerance))==1;
+    ft_warning('using deprecated field fsample');
+  end
 end
 
 if isempty(cfg.appenddim) || strcmp(cfg.appenddim, 'auto')
@@ -208,8 +216,9 @@ switch cfg.appenddim
     ft_error('unsupported cfg.appenddim');
 end % switch
 
-if isequalfsample
-  data.fsample = varargin{1}.fsample;
+if isequalfreq
+  % deprecated field, including for back compatibility  
+  data.fsample = Fs1; 
 end
 
 % do the general cleanup and bookkeeping at the end of the function
