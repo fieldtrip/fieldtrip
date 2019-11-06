@@ -34,6 +34,7 @@ function [dipout] = beamformer_lcmv(dip, grad, headmodel, dat, Cy, varargin)
 %  'keepmom'          = remember the estimated dipole moment timeseries, can be 'yes' or 'no'
 %  'keepcov'          = remember the estimated dipole covariance,        can be 'yes' or 'no'
 %  'kurtosis'         = compute the kurtosis of the dipole timeseries,   can be 'yes' or 'no'
+%  'weightnorm'       = normalize the beamformer weights,                can be 'no', 'unitnoisegain' or 'nai'
 %
 % These options influence the forward computation of the leadfield
 %  'reducerank'       = reduce the leadfield rank, can be 'no' or a number (e.g. 2)
