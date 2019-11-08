@@ -73,7 +73,7 @@ end
 % the final comparison is done on the start of the string, hence flip all of them
 pattern = fliplr(pattern);
 if iscell(s)
-  s = cellfun(@fliplr, s);
+  s = cellfun(@fliplr, s, 'UniformOutput', 0);
 else
   s = fliplr(s);
 end
