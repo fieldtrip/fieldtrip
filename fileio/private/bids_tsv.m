@@ -49,15 +49,17 @@ end
 jsonfile   = fullfile(p, [f '.json']);
 tsvfile    = fullfile(p, [f '.tsv']);
 
-fid = fopen_or_error(jsonfile, 'r');
-str = fread(fid, [1, inf], 'char=>char');
-fclose(fid);
-% convert the json string into a structure
-orig = jsondecode(str);
-
-dat = readtable(tsvfile, 'FileType', 'text', 'Delimiter', '\t');
-dat = table2array(dat)';
-assert(length(orig.Columns)==size(dat,1), 'number of channels does not match');
+if needhdr || needdat
+  fid = fopen_or_error(jsonfile, 'r');
+  str = fread(fid, [1, inf], 'char=>char');
+  fclose(fid);
+  % convert the json string into a structure
+  orig = jsondecode(str);
+  
+  dat = readtable(tsvfile, 'FileType', 'text', 'Delimiter', '\t');
+  dat = table2array(dat)';
+  assert(length(orig.Columns)==size(dat,1), 'number of channels does not match');
+end
 
 if needhdr
   %% parse the header
@@ -111,16 +113,23 @@ elseif needevt
       event.duration = [];
     elseif isnumeric(event.duration)
       % express the duration in samples
-      [event(:).duration] = deal(event.duration*hdr.Fs);
+      %[event(:).duration] = deal(event.duration*hdr.Fs);
+      event.duration = event.duration*hdr.Fs;
     end
   end
   
   event = table2struct(event);
   if ~isfield(event, 'sample')
     % the onset in events.tsv is always relative to the corresponding dataset
-    [event(:).sample] = deal(event.onset*hdr.Fs);
+    onset = mat2cell([event(:).onset].*hdr.Fs, 1, ones(1,numel(event)));
+    [event(:).sample] = deal(onset{:});
   end
-  [event(:).timestamp] = deal(event.onset);
+  if ~isfield(event, 'type') && isfield(event, 'stim_type')
+    type = {event(:).stim_type};
+    [event(:).type] = deal(type{:});
+  end
+  timestamp = mat2cell([event(:).onset], 1, ones(1,numel(event)));
+  [event(:).timestamp] = deal(timestamp{:});
   
   % remove all fields/columns that are not consistent with the output of FT_READ_EVENT
   event = keepfields(event, {'type', 'sample', 'value', 'offset', 'duration', 'timestamp'});

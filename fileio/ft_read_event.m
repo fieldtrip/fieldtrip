@@ -2250,7 +2250,9 @@ switch eventformat
     % if it fails, the regular unsupported warning message is thrown
     try
       % this is used for bids_tsv, biopac_acq, motion_c3d, opensignals_txt, qualisys_tsv, and possibly others
-      hdr   = feval(eventformat, filename);
+      if isempty(hdr)
+        hdr = feval(eventformat, filename);
+      end
       event = feval(eventformat, filename, hdr);
     catch
       ft_warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format "%s"', eventformat);
