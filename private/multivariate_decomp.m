@@ -179,7 +179,9 @@ switch type
     riy = eye(ny).*2 + diag(ones(ny-1,1).*-1,1) + diag(ones(ny-1,1).*-1,-1);
     riy(1)   = 1;
     riy(end) = 1;
-    R = blkdiag(rix,riy);
+    R        = zeros(nx+ny);
+    R(x,x)   = rix;
+    R(y,y)   = riy;
 end
 R = R*thr;
 
