@@ -850,7 +850,6 @@ if opt.init
   hch2 = ft_plot_crosshair([xi+xhiadj yi zi], 'parent', h2, 'color', 'yellow'); % was [opt.dim(1) yi zi], now corrected for zoom
   hch3 = ft_plot_crosshair([xi yi zi], 'parent', h3, 'color', 'yellow'); % was [xi yi opt.dim(3)], now corrected for zoom
   opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
-  opt.redrawmarker = 1;
 else
   % update the existing crosshairs, don't change the handles
   ft_plot_crosshair([xi yi-yloadj zi], 'handle', opt.handlescross(1, :));
@@ -865,95 +864,91 @@ else
 end
 
 % draw markers
-if opt.redrawmarker
+if opt.showmarkers
   delete(findobj(opt.mainfig, 'Type', 'Line', 'Marker', '+')); % remove previous markers
   delete(findobj(opt.mainfig, 'Type', 'text')); % remove previous labels
-  if opt.showmarkers
-    idx = find(~cellfun(@isempty,opt.markerlab)); % non-empty markers
-    if ~isempty(idx)
-      for i=1:numel(idx)
-        opt.markerlab_sel{i,1} = opt.markerlab{idx(i),1};
-        opt.markerpos_sel(i,:) = opt.markerpos{idx(i),1};
-      end
-      
-      tmp1 = opt.markerpos_sel(:,1);
-      tmp2 = opt.markerpos_sel(:,2);
-      tmp3 = opt.markerpos_sel(:,3);
-      
-      subplot(opt.axes(1));
-      if ~opt.global % filter markers distant to the current slice (N units and further)
-        posj_idx = find( abs(tmp2 - repmat(yi,size(tmp2))) < opt.markerdist);
-        posi = tmp1(posj_idx);
-        posj = tmp2(posj_idx);
-        posk = tmp3(posj_idx);
-      else % plot all markers on the current slice
-        posj_idx = 1:numel(tmp1);
-        posi = tmp1;
-        posj = tmp2;
-        posk = tmp3;
-      end
-      if ~isempty(posi)
-        hold on
-        plot3(posi, repmat(yi-yloadj,size(posj)), posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi-yloadj zi]
-        if opt.showlabels
-          for i=1:numel(posj_idx)
-            text(posi(i), yi-yloadj, posk(i), opt.markerlab_sel{posj_idx(i),1}, 'color', [1 .5 0]);
-          end
+  idx = find(~cellfun(@isempty,opt.markerlab)); % non-empty markers
+  if ~isempty(idx)
+    for i=1:numel(idx)
+      opt.markerlab_sel{i,1} = opt.markerlab{idx(i),1};
+      opt.markerpos_sel(i,:) = opt.markerpos{idx(i),1};
+    end
+    
+    tmp1 = opt.markerpos_sel(:,1);
+    tmp2 = opt.markerpos_sel(:,2);
+    tmp3 = opt.markerpos_sel(:,3);
+    
+    subplot(opt.axes(1));
+    if ~opt.global % filter markers distant to the current slice (N units and further)
+      posj_idx = find( abs(tmp2 - repmat(yi,size(tmp2))) < opt.markerdist);
+      posi = tmp1(posj_idx);
+      posj = tmp2(posj_idx);
+      posk = tmp3(posj_idx);
+    else % plot all markers on the current slice
+      posj_idx = 1:numel(tmp1);
+      posi = tmp1;
+      posj = tmp2;
+      posk = tmp3;
+    end
+    if ~isempty(posi)
+      hold on
+      plot3(posi, repmat(yi-yloadj,size(posj)), posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi-yloadj zi]
+      if opt.showlabels
+        for i=1:numel(posj_idx)
+          text(posi(i), yi-yloadj, posk(i), opt.markerlab_sel{posj_idx(i),1}, 'color', [1 .5 0]);
         end
-        hold off
       end
-      
-      subplot(opt.axes(2));
-      if ~opt.global % filter markers distant to the current slice (N units and further)
-        posi_idx = find( abs(tmp1 - repmat(xi,size(tmp1))) < opt.markerdist);
-        posi = tmp1(posi_idx);
-        posj = tmp2(posi_idx);
-        posk = tmp3(posi_idx);
-      else % plot all markers on the current slice
-        posi_idx = 1:numel(tmp1);
-        posi = tmp1;
-        posj = tmp2;
-        posk = tmp3;
-      end
-      if ~isempty(posj)
-        hold on
-        plot3(repmat(xi+xhiadj,size(posi)), posj, posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi+xhiadj yi zi]
-        if opt.showlabels
-          for i=1:numel(posi_idx)
-            text(posi(i)+xhiadj, posj(i), posk(i), opt.markerlab_sel{posi_idx(i),1}, 'color', [1 .5 0]);
-          end
+      hold off
+    end
+    
+    subplot(opt.axes(2));
+    if ~opt.global % filter markers distant to the current slice (N units and further)
+      posi_idx = find( abs(tmp1 - repmat(xi,size(tmp1))) < opt.markerdist);
+      posi = tmp1(posi_idx);
+      posj = tmp2(posi_idx);
+      posk = tmp3(posi_idx);
+    else % plot all markers on the current slice
+      posi_idx = 1:numel(tmp1);
+      posi = tmp1;
+      posj = tmp2;
+      posk = tmp3;
+    end
+    if ~isempty(posj)
+      hold on
+      plot3(repmat(xi+xhiadj,size(posi)), posj, posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi+xhiadj yi zi]
+      if opt.showlabels
+        for i=1:numel(posi_idx)
+          text(posi(i)+xhiadj, posj(i), posk(i), opt.markerlab_sel{posi_idx(i),1}, 'color', [1 .5 0]);
         end
-        hold off
       end
-      
-      subplot(opt.axes(3));
-      if ~opt.global % filter markers distant to the current slice (N units and further)
-        posk_idx = find( abs(tmp3 - repmat(zi,size(tmp3))) < opt.markerdist);
-        posi = tmp1(posk_idx);
-        posj = tmp2(posk_idx);
-        posk = tmp3(posk_idx);
-      else % plot all markers on the current slice
-        posk_idx = 1:numel(tmp1);
-        posi = tmp1;
-        posj = tmp2;
-        posk = tmp3;
-      end
-      if ~isempty(posk)
-        hold on
-        plot3(posi, posj, repmat(zi,size(posk)), 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi zi]
-        if opt.showlabels
-          for i=1:numel(posk_idx)
-            text(posi(i), posj(i), zi, opt.markerlab_sel{posk_idx(i),1}, 'color', [1 .5 0]);
-          end
+      hold off
+    end
+    
+    subplot(opt.axes(3));
+    if ~opt.global % filter markers distant to the current slice (N units and further)
+      posk_idx = find( abs(tmp3 - repmat(zi,size(tmp3))) < opt.markerdist);
+      posi = tmp1(posk_idx);
+      posj = tmp2(posk_idx);
+      posk = tmp3(posk_idx);
+    else % plot all markers on the current slice
+      posk_idx = 1:numel(tmp1);
+      posi = tmp1;
+      posj = tmp2;
+      posk = tmp3;
+    end
+    if ~isempty(posk)
+      hold on
+      plot3(posi, posj, repmat(zi,size(posk)), 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi zi]
+      if opt.showlabels
+        for i=1:numel(posk_idx)
+          text(posi(i), posj(i), zi, opt.markerlab_sel{posk_idx(i),1}, 'color', [1 .5 0]);
         end
-        hold off
       end
-      opt = rmfield(opt, {'markerlab_sel', 'markerpos_sel'});
-      %opt.redrawmarker = 0;
-      %opt.redrawscattermarker = 1;
-    end % if idx
-  end % if showmarkers
-end % redraw
+      hold off
+    end
+    opt = rmfield(opt, {'markerlab_sel', 'markerpos_sel'});
+  end % if idx
+end % if showmarkers
 
 % also update the scatter appendix
 if opt.scatter
@@ -1040,7 +1035,6 @@ if ~isfield(opt, 'scatterfig') % initiate in case the figure does not yet exist
     '   a. use the Data Cursor, Rotate 3D, Pan, and Zoom tools to navigate to electrodes in 3D space\n'));
   
   opt.redrawscatter = 1;
-  opt.redrawscattermarker = 1;
 else
   set(0, 'CurrentFigure', opt.scatterfig) % make current figure (needed for ft_plot_crosshair)
 end
@@ -1060,26 +1054,23 @@ if opt.redrawscatter
   opt.redrawscatter = 0;
 end
 
-if opt.redrawscattermarker
+if opt.showmarkers % plot the markers
   delete(findobj(opt.scatterfig, 'Type', 'line', 'Marker', '+')); % remove all scatterfig markers
   delete(findobj(opt.scatterfig, 'Type', 'text')); % remove all scatterfig labels
-  if opt.showmarkers % plot the markers
-    idx = find(~cellfun(@isempty,opt.markerlab)); % non-empty markers
-    if ~isempty(idx)
-      for i=1:numel(idx)
-        opt.markerlab_sel{i,1} = opt.markerlab{idx(i),1};
-        opt.markerpos_sel(i,:) = opt.markerpos{idx(i),1};
+  idx = find(~cellfun(@isempty,opt.markerlab)); % non-empty markers
+  if ~isempty(idx)
+    for i=1:numel(idx)
+      opt.markerlab_sel{i,1} = opt.markerlab{idx(i),1};
+      opt.markerpos_sel(i,:) = opt.markerpos{idx(i),1};
+    end
+    plot3(opt.scatterfig_h1, opt.markerpos_sel(:,1),opt.markerpos_sel(:,2),opt.markerpos_sel(:,3), 'marker', '+', 'linestyle', 'none', 'color', 'r'); % plot the markers
+    if opt.showlabels
+      for i=1:size(opt.markerpos_sel,1)
+        text(opt.scatterfig_h1, opt.markerpos_sel(i,1), opt.markerpos_sel(i,2), opt.markerpos_sel(i,3), opt.markerlab_sel{i,1}, 'color', [1 .5 0]);
       end
-      plot3(opt.scatterfig_h1, opt.markerpos_sel(:,1),opt.markerpos_sel(:,2),opt.markerpos_sel(:,3), 'marker', '+', 'linestyle', 'none', 'color', 'r'); % plot the markers
-      if opt.showlabels
-        for i=1:size(opt.markerpos_sel,1)
-          text(opt.scatterfig_h1, opt.markerpos_sel(i,1), opt.markerpos_sel(i,2), opt.markerpos_sel(i,3), opt.markerlab_sel{i,1}, 'color', [1 .5 0]);
-        end
-      end
-      opt = rmfield(opt, {'markerlab_sel', 'markerpos_sel'});
-    end % if idx
-  end
-  %opt.redrawscattermarker = 0;
+    end
+    opt = rmfield(opt, {'markerlab_sel', 'markerpos_sel'});
+  end % if idx
 end
 
 % update the existing crosshairs, don't change the handles
@@ -1215,7 +1206,6 @@ switch key
       opt.showlabels = 0;
       set(opt.axes(8), 'Value', 0);
     end
-    opt.redrawscatter = 1;
     setappdata(h, 'opt', opt);
     cb_redraw(h);
     
@@ -1282,7 +1272,6 @@ switch key
     
   case 102 % 'f' for fiducials
     opt.showmarkers = ~opt.showmarkers;
-    opt.redrawscatter = 1;
     setappdata(h, 'opt', opt);
     cb_redraw(h);
     
@@ -1344,7 +1333,7 @@ function cb_buttonpress(h, eventdata)
 
 h = getparent(h);
 cb_getposition(h);
-opt = getappdata(h, 'opt'); 
+opt = getappdata(h, 'opt');
 if strcmp(opt.method, 'volume') % only redraw volume/orthoplot
   switch get(h, 'selectiontype')
     case 'normal'
@@ -1400,7 +1389,7 @@ if strcmp(opt.method, 'volume')
     opt.pos = max(opt.pos(:)', opt.axis([1 3 5]));
   end
   if opt.magradius>0
-    opt = magnetize(opt); 
+    opt = magnetize(opt);
   end
 elseif strcmp(opt.method, 'headshape')
   h2 = get(gca, 'children'); % get the object handles
@@ -1537,7 +1526,6 @@ if ~isempty(elecidx)
   eleclis{elecidx} = eleclab;
   set(h6, 'String', eleclis);
   set(h6, 'ListboxTop', listtopidx); % ensure listbox does not move upon label selec
-  opt.redrawmarker = 1;
   setappdata(h, 'opt', opt);
   if strcmp(opt.method, 'volume')
     cb_redraw(h);
@@ -1635,7 +1623,6 @@ function cb_labelsbutton(h8, eventdata)
 h = getparent(h8);
 opt = getappdata(h, 'opt');
 opt.showlabels = get(h8, 'value');
-opt.redrawscatter = 1;
 setappdata(h, 'opt', opt);
 if strcmp(opt.method, 'volume')
   cb_redraw(h);
@@ -1681,7 +1668,6 @@ function cb_globalbutton(h9, eventdata)
 h = getparent(h9);
 opt = getappdata(h, 'opt');
 opt.global = get(h9, 'value');
-opt.redrawscatter = 1;
 setappdata(h, 'opt', opt);
 cb_redraw(h);
 
