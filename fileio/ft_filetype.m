@@ -1095,6 +1095,11 @@ elseif filetype_check_extension(filename, '.annot')
   type = 'freesurfer_annot';
   manufacturer = 'FreeSurfer';
   content = 'parcellation annotation';
+elseif filetype_check_extension(filename, '.label') && filetype_check_header(filename, '#!ascii')
+  % Freesurfer label file, see https://surfer.nmr.mgh.harvard.edu/fswiki/LabelsClutsAnnotationFiles
+  type = 'freesurfer_label';
+  manufacturer = 'FreeSurfer';
+  content = 'list of vertices belonging to a region';
   
 elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'_nrs_')) == 1
   % This may be improved by looking into the file, rather than assuming the
