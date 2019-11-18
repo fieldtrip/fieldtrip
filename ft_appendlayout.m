@@ -114,7 +114,7 @@ for i=1:numel(varargin)
 end
 height = varargin{1}.height(:);
 for i=1:numel(varargin)
-  width = cat(1, height, varargin{i}.height(:));
+  height = cat(1, height, varargin{i}.height(:));
 end
 
 % set the first target point, it will be updated if we go along
