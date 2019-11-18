@@ -9,7 +9,7 @@ function t3 = merge_table(t1, t2, key)
 % or
 %   t3 = merge_table(t1, t2, key)
 %
-% See also TABLE
+% See also TABLE, JOIN, INNERJOIN, OUTERJOIN
 
 % Copyright (C) 2019, Robert Oostenveld
 %
