@@ -12,7 +12,7 @@ function [freqout] = fourierspctrm2lcrsspctrm(freq, varargin)
 %
 % Options come in key-value pairs, and may contain
 %   lag = scalar (or vector) of time shifts, expressed in units of time
-%      We recommend users to choose cfg.lag such that it is larger or equal 
+%      We recommend users to choose cfg.lag such that it is larger or equal
 %      to the width of the wavelet used for each Fourier transform in ft_freqanalysis
 %   timeresolved = 'yes' or 'no' (default='no'). If set to yes, lagged
 %      coherence is calculated separately for each pair of timepoints that
@@ -51,7 +51,7 @@ channelcmb   = ft_getopt(varargin,        'channelcmb',   {'all' 'all'});
 
 % check if the input data is valid for this function
 if ~isfield(freq, 'time')
-  ft_error('ft_connectivity_laggedcoherence requires frequency data with a time axis')
+  ft_error('this function requires frequency data with a time axis')
 end
 
 % deal with the lag, if it's empty, throw an error if number of lags>1 and timeresolved is true
@@ -91,14 +91,14 @@ tmpchannelcmb = [label(chancmbind(:,1)) label_lagged(chancmbind(:,2));label labe
 for k = 1:numel(lags_indx)
   indx1   = 1:(ntime-lags_indx(k));
   indx2   = (1+lags_indx(k)):ntime;
-  
+
   tmpfreq = freq;
   tmpfreq.fourierspctrm = cat(2, tmpfreq.fourierspctrm(:,:,:,indx1), ...
                                  tmpfreq.fourierspctrm(:,:,:,indx2));
   tmpfreq.time  = freq.time(indx1);
   tmpfreq.label = cat(1, label, label_lagged);
   tmpfreq       = ft_checkdata(tmpfreq, 'cmbrepresentation', 'sparse', 'channelcmb', tmpchannelcmb);
-  
+
   if timeresolved
     error('to do');
   else
@@ -117,10 +117,10 @@ for k = 1:numel(lags_indx)
     tmpfreq.lcrsspctrm = reshape(permute(tmpfreq.crsspctrm, permutevec),[nrpt*ntimex ncmb nfreq]);
     tmpfreq = removefields(tmpfreq, {'trialinfo'});
     tmpfreq.dimord = 'rpt_chancmb_freq_time';
-      
+
     if k==1
       tmpfreq.cumtapcnt  = repmat(tmpfreq.cumtapcnt, [ntimex 1]);
-    
+
       freqout = removefields(tmpfreq, {'time' 'crsspctrm'});
       freqout.time = zeros(1,0);
       freqout.lcrsspctrm(:,:,:,2:numel(lags_indx)) = nan;
@@ -133,7 +133,7 @@ for k = 1:numel(lags_indx)
 end
 
 % use only those slices that contain data for all channel pairs, to ensure
-% the same degrees of freedom for denominator and numerator: note that the 
+% the same degrees of freedom for denominator and numerator: note that the
 % degrees of freedom can go down as a function of time lag
 
 freqout.lcrsspctrm(repmat(~all(isfinite(freqout.lcrsspctrm),2), [1 ncmb 1 1]))=nan;

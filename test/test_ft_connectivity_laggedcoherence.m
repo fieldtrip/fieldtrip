@@ -2,7 +2,7 @@ function test_ft_connectivity_laggedcoherence
 
 % MEM 1500mb
 % WALLTIME 00:10:00
-% DEPENDENCY ft_connectivityanalysis ft_connectivity_laggedcoherence fourierspctrm2lcrsspctrm
+% DEPENDENCY ft_connectivityanalysis ft_laggedcoherence fourierspctrm2lcrsspctrm
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2951
@@ -38,8 +38,8 @@ cfgf           = [];
 cfgf.method    = 'mtmconvol';
 cfgf.output    = 'fourier';
 cfgf.taper     = 'hanning';
-cfgf.toi       = 0:0.01:1; 
-cfgf.foi       = 2:2:70; 
+cfgf.toi       = 0:0.01:1;
+cfgf.foi       = 2:2:70;
 cfgf.tapsmofrq = 2   * ones(size(cfgf.foi));
 cfgf.t_ftimwin = 0.5 * ones(size(cfgf.foi));
 freq           = ft_freqanalysis(cfgf, data);
@@ -80,4 +80,3 @@ cfg = [];
 cfg.method = 'laggedcoherence';
 cfg.laggedcoherence.lags = 0.5;
 lcoh2 = ft_connectivityanalysis(cfg, freq2);
-
