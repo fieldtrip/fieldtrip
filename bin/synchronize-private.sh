@@ -1199,6 +1199,7 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(private/ignorefields.m)
 ARRAY+=(utilities/private/ignorefields.m)
+ARRAY+=(contrib/misc/private/ignorefields.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -2977,6 +2978,14 @@ ARRAY+=(specest/private/rmsubfield.m)
 ARRAY+=(statfun/private/rmsubfield.m)
 ARRAY+=(test/private/rmsubfield.m)
 ARRAY+=(utilities/rmsubfield.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# rollback_provenance.m
+
+ARRAY=()
+ARRAY+=(private/rollback_provenance.m)
+ARRAY+=(contrib/misc/private/rollback_provenance.m)
 sync ${ARRAY[*]}
 
 ################################################################################

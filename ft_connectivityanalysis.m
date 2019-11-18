@@ -171,30 +171,32 @@ if isfield(data, 'label')
     tmpcmb = ft_channelcombination(cfg.channelcmb, data.label);
     tmpchan = unique(tmpcmb(:));
     cfg.channelcmb = ft_channelcombination(cfg.channelcmb(:, 1:2), tmpchan, 1);
-    selchan = [selchan;unique(cfg.channelcmb(:))];
+    selchan = [selchan; unique(cfg.channelcmb(:))];
+  elseif ~isempty(cfg.channelcmb) && isequal(cfg.channelcmb, {'all' 'all'})
+    cfg.channelcmb = ft_channelcombination(cfg.channelcmb, data.label, 1);
+    selchan = [selchan; unique(cfg.channelcmb(:))];
   end
   
   cfg.channel = ft_channelselection(cfg.channel, data.label);
-  selchan = [selchan;cfg.channel];
+  selchan = [selchan; cfg.channel];
   if ~isempty(cfg.partchannel)
     cfg.partchannel = ft_channelselection(cfg.partchannel, data.label);
     selchan = [selchan; cfg.partchannel];
   end
   tmpcfg = [];
   tmpcfg.channel = unique(selchan);
-  %tmpcfg.channelcmb = ft_channelcombination({'all' 'all'}, tmpcfg.channel, 0, 2); % ensure the crosspectra (if present) to also be selected
   data = ft_selectdata(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
 elseif isfield(data, 'labelcmb')
   cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
   if ~isempty(cfg.partchannel)
-    ft_error('partialisation is only possible without linearly indexed bivariate data');
+    ft_error('partialization is only possible without linearly indexed bivariate data');
   end
   if ~isempty(cfg.channelcmb)
     % FIXME do something extra here
   end
-  % FIXME call selectdata
+  % FIXME call ft_selectdata
 end
 
 % FIXME check which methods require hasrpt
@@ -961,14 +963,14 @@ switch cfg.method
   case 'di'
     % directionality index
     ft_error('method %s is not yet implemented', cfg.method);
-  
+    
   case 'laggedcoherence'
     % lagged coherence estimate
     optarg = {'complex', cfg.complex, 'dimord', data.dimord, 'feedback', cfg.feedback, 'pownorm', normpow, 'hasjack', hasjack};
     optarg = cat(2, optarg, {'powindx', powindx});
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     
-    % 
+    %
     
     data = removefields(data, 'dof'); % the dof is not to be trusted
   otherwise
