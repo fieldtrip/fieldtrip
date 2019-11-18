@@ -3489,6 +3489,14 @@ ARRAY+=(utilities/private/traditional.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# transfer2coeffs.m
+
+ARRAY=()
+ARRAY+=(private/transfer2coeffs.m)
+ARRAY+=(connectivity/private/transfer2coeffs.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # translate.m
 
 ARRAY=()
