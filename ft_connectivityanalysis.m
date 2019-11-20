@@ -41,6 +41,7 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %     'wpli_debiased'  debiased weighted phase lag index (estimates squared wpli)
 %     'wppc'       weighted pairwise phase consistency
 %     'corr'       Pearson correlation, support for timelock or raw data
+%     'laggedcoherence', lagged coherence estimate
 %
 % Additional configuration options are
 %   cfg.channel    = Nx1 cell-array containing a list of channels which are
@@ -166,34 +167,36 @@ end
 % select channels/channelcombination of interest and set the cfg-options accordingly
 if isfield(data, 'label')
   selchan = cell(0, 1);
-  if ~isempty(cfg.channelcmb) && ~isequal(cfg.channelcmb, {'all' 'all'})
+  if ~isempty(cfg.channelcmb) && ~isequal(cfg.channelcmb, {'all' 'all'}) && size(cfg.channelcmb,2)==2
     tmpcmb = ft_channelcombination(cfg.channelcmb, data.label);
     tmpchan = unique(tmpcmb(:));
     cfg.channelcmb = ft_channelcombination(cfg.channelcmb(:, 1:2), tmpchan, 1);
-    selchan = [selchan;unique(cfg.channelcmb(:))];
+    selchan = [selchan; unique(cfg.channelcmb(:))];
+  elseif ~isempty(cfg.channelcmb) && isequal(cfg.channelcmb, {'all' 'all'})
+    cfg.channelcmb = ft_channelcombination(cfg.channelcmb, data.label, 1);
+    selchan = [selchan; unique(cfg.channelcmb(:))];
   end
   
   cfg.channel = ft_channelselection(cfg.channel, data.label);
-  selchan = [selchan;cfg.channel];
+  selchan = [selchan; cfg.channel];
   if ~isempty(cfg.partchannel)
     cfg.partchannel = ft_channelselection(cfg.partchannel, data.label);
     selchan = [selchan; cfg.partchannel];
   end
   tmpcfg = [];
   tmpcfg.channel = unique(selchan);
-  %tmpcfg.channelcmb = ft_channelcombination({'all' 'all'}, tmpcfg.channel, 0, 2); % ensure the crosspectra (if present) to also be selected
   data = ft_selectdata(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
 elseif isfield(data, 'labelcmb')
   cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
   if ~isempty(cfg.partchannel)
-    ft_error('partialisation is only possible without linearly indexed bivariate data');
+    ft_error('partialization is only possible without linearly indexed bivariate data');
   end
   if ~isempty(cfg.channelcmb)
     % FIXME do something extra here
   end
-  % FIXME call selectdata
+  % FIXME call ft_selectdata
 end
 
 % FIXME check which methods require hasrpt
@@ -247,25 +250,21 @@ switch cfg.method
     data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'crsspctrm';
     outparam = 'wplispctrm';
-    debiaswpli = 0;
     if hasjack, ft_error('to compute wpli, data should be in rpt format'); end
   case {'wpli_debiased'}
     data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'crsspctrm';
     outparam = 'wpli_debiasedspctrm';
-    debiaswpli = 1;
     if hasjack, ft_error('to compute wpli, data should be in rpt format'); end
   case {'ppc'}
     data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'crsspctrm';
     outparam = 'ppcspctrm';
-    weightppc = 0;
     if hasjack, ft_error('to compute ppc, data should be in rpt format'); end
   case {'wppc'}
     data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'crsspctrm';
     outparam = 'wppcspctrm';
-    weightppc = 1;
     if hasjack, ft_error('to compute wppc, data should be in rpt format'); end
   case {'plv'}
     data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'});
@@ -341,7 +340,7 @@ switch cfg.method
   case {'powcorr_ortho'}
     data = ft_checkdata(data, 'datatype', {'source', 'freq'});
     % inparam = 'avg.mom';
-    inparam = 'mom';
+    inparam  = 'mom';
     outparam = 'powcorrspctrm';
   case {'mi'}
     % create the subcfg for the mutual information
@@ -369,8 +368,21 @@ switch cfg.method
     end
     outparam = 'mi';
     needrpt  = 1;
-  case {'di'}
+  case 'di'
     % wat eigenlijk?
+  case 'laggedcoherence'
+    data = ft_checkdata(data, 'datatype', {'freq'});
+    if ~isfield(data, 'fourierspctrm')
+      error('this connectivity method requires a ''fourierspctrm'' in the input data');
+    end
+    inparam  = 'lcrsspctrm';
+    outparam = 'lcohspctrm';
+    
+    % create the subcfg for the lagged coherence
+    if ~isfield(cfg, 'laggedcoherence'), cfg.laggedcoherence = []; end
+    cfg.laggedcoherence.lags = ft_getopt(cfg.laggedcoherence, 'lags', []);
+    cfg.laggedcoherence.timeresolved = false;
+    
   otherwise
     ft_error('unknown method % s', cfg.method);
 end
@@ -395,20 +407,22 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
     case {'freq' 'freqmvar'}
       if strcmp(inparam, 'crsspctrm')
         if isfield(data, 'fourierspctrm')
-          [data, powindx, hasrpt] = univariate2bivariate(data, 'fourierspctrm', 'crsspctrm', dtype, 'cmb', cfg.channelcmb, 'keeprpt', normrpt);
+          [data, powindx, hasrpt] = univariate2bivariate(data, 'fourierspctrm', 'crsspctrm', dtype, 'channelcmb', cfg.channelcmb, 'keeprpt', normrpt);
         elseif strcmp(inparam, 'crsspctrm') && isfield(data, 'powspctrm')
           % if input data is old-fashioned, i.e. contains powandcsd
-          [data, powindx, hasrpt] = univariate2bivariate(data, 'powandcsd', 'crsspctrm', dtype, 'cmb', cfg.channelcmb, 'keeprpt', normrpt);
+          [data, powindx, hasrpt] = univariate2bivariate(data, 'powandcsd', 'crsspctrm', dtype, 'channelcmb', cfg.channelcmb, 'keeprpt', normrpt);
         elseif isfield(data, 'labelcmb')
           powindx = labelcmb2indx(data.labelcmb);
         else
           powindx = [];
         end
+      elseif strcmp(inparam, 'lcrsspctrm')
+        [data, powindx, hasrpt] = univariate2bivariate(data, 'fourierspctrm', 'lcrsspctrm', dtype, 'channelcmb', cfg.channelcmb, 'timeresolved', cfg.laggedcoherence.timeresolved, 'lags', cfg.laggedcoherence.lags);
       elseif strcmp(inparam, 'powcovspctrm')
         if isfield(data, 'powspctrm')
-          [data, powindx] = univariate2bivariate(data, 'powspctrm', 'powcovspctrm', dtype, 'demeanflag', strcmp(cfg.removemean, 'yes'), 'cmb', cfg.channelcmb, 'sqrtflag', strcmp(cfg.method, 'amplcorr'));
+          [data, powindx] = univariate2bivariate(data, 'powspctrm', 'powcovspctrm', dtype, 'demeanflag', strcmp(cfg.removemean, 'yes'), 'channelcmb', cfg.channelcmb, 'sqrtflag', strcmp(cfg.method, 'amplcorr'));
         elseif isfield(data, 'fourierspctrm')
-          [data, powindx] = univariate2bivariate(data, 'fourierspctrm', 'powcovspctrm', dtype, 'demeanflag', strcmp(cfg.removemean, 'yes'), 'cmb', cfg.channelcmb, 'sqrtflag', strcmp(cfg.method, 'amplcorr'));
+          [data, powindx] = univariate2bivariate(data, 'fourierspctrm', 'powcovspctrm', dtype, 'demeanflag', strcmp(cfg.removemean, 'yes'), 'channelcmb', cfg.channelcmb, 'sqrtflag', strcmp(cfg.method, 'amplcorr'));
         end
       elseif strcmp(inparam, 'transfer')
         if isfield(data, 'fourierspctrm')
@@ -446,18 +460,18 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
         ft_error('cfg.refindx should be a 1xN vector, or ''all''');
       end
       if strcmp(inparam, 'crsspctrm')
-        [data, powindx, hasrpt] = univariate2bivariate(data, 'mom', 'crsspctrm', dtype, 'cmb', cfg.refindx, 'keeprpt', 0);
+        [data, powindx, hasrpt] = univariate2bivariate(data, 'mom', 'crsspctrm', dtype, 'channelcmb', cfg.refindx, 'keeprpt', 0);
         % [data, powindx, hasrpt] = univariate2bivariate(data, 'fourierspctrm', 'crsspctrm', dtype, 0, cfg.refindx, [], 1);
       elseif strcmp(inparam, 'powcov')
         if isfield(data, 'pow')
-          [data, powindx, hasrpt] = univariate2bivariate(data, 'pow', 'powcov', dtype, 'demeanflag', strcmp(cfg.removemean, 'yes'), 'cmb', cfg.refindx, 'sqrtflag', strcmp(cfg.method, 'amplcorr'), 'keeprpt', 0);
+          [data, powindx, hasrpt] = univariate2bivariate(data, 'pow', 'powcov', dtype, 'demeanflag', strcmp(cfg.removemean, 'yes'), 'channelcmb', cfg.refindx, 'sqrtflag', strcmp(cfg.method, 'amplcorr'), 'keeprpt', 0);
         elseif isfield(data, 'mom')
-          [data, powindx, hasrpt] = univariate2bivariate(data, 'mom', 'powcov', dtype, 'demeanflag', strcmp(cfg.removemean, 'yes'), 'cmb', cfg.refindx, 'sqrtflag', strcmp(cfg.method, 'amplcorr'), 'keeprpt', 0);
+          [data, powindx, hasrpt] = univariate2bivariate(data, 'mom', 'powcov', dtype, 'demeanflag', strcmp(cfg.removemean, 'yes'), 'channelcmb', cfg.refindx, 'sqrtflag', strcmp(cfg.method, 'amplcorr'), 'keeprpt', 0);
         end
       end
       
     case 'comp'
-      [data, powindx, hasrpt] = univariate2bivariate(data, 'trial', 'cov', dtype, 'demeanflag', strcmp(cfg.removemean, 'yes'), 'cmb', cfg.channelcmb, 'sqrtflag', false, 'keeprpt', 1);
+      [data, powindx, hasrpt] = univariate2bivariate(data, 'trial', 'cov', dtype, 'demeanflag', strcmp(cfg.removemean, 'yes'), 'channelcmb', cfg.channelcmb, 'sqrtflag', false, 'keeprpt', 1);
       
   end % switch dtype
   
@@ -525,7 +539,7 @@ end
 % check if jackknife is required
 if hasrpt && dojack && hasjack
   % do nothing
-elseif hasrpt && dojack && ~(exist('debiaswpli', 'var') || exist('weightppc', 'var'))
+elseif hasrpt && dojack && ~ismember(cfg.method, {'wpli','wpli_debiased','ppc','wppc'})
   % compute leave-one-outs
   % assume the inparam(s) are well-behaved, i.e. they have the 'rpt'
   % dimension as the first dimension
@@ -543,7 +557,7 @@ elseif hasrpt && dojack && ~(exist('debiaswpli', 'var') || exist('weightppc', 'v
     clear sumdat;
   end
   hasjack = 1;
-elseif hasrpt && ~(exist('debiaswpli', 'var') || exist('weightppc', 'var') || any(strcmp({'powcorr_ortho';'mi'},cfg.method)))% || needrpt)
+elseif hasrpt && ~ismember(cfg.method, {'wpli','wpli_debiased','ppc','wppc','powcorr_ortho','mi'})% || needrpt)
   % create dof variable
   if isfield(data, 'dof')
     dof = data.dof;
@@ -552,6 +566,7 @@ elseif hasrpt && ~(exist('debiaswpli', 'var') || exist('weightppc', 'var') || an
   end
   tmpcfg = [];
   tmpcfg.avgoverrpt = 'yes';
+  tmpcfg.nanmean = 'yes';
   data = ft_selectdata(tmpcfg, data);
   hasrpt = 0;
 else
@@ -594,12 +609,12 @@ switch cfg.method
     
   case {'wpli' 'wpli_debiased'}
     % weighted pli or debiased weighted phase lag index.
-    optarg = {'feedback', cfg.feedback, 'dojack', dojack, 'debias', debiaswpli};
+    optarg = {'feedback', cfg.feedback, 'dojack', dojack, 'debias', strcmp(cfg.method, 'wpli_debiased')};
     [datout, varout, nrpt] = ft_connectivity_wpli(data.(inparam), optarg{:});
     
   case {'wppc' 'ppc'}
     % weighted pairwise phase consistency or pairwise phase consistency
-    optarg = {'feedback', cfg.feedback, 'dojack', dojack, 'weighted', weightppc};
+    optarg = {'feedback', cfg.feedback, 'dojack', dojack, 'weighted', strcmp(cfg.method, 'wppc')};
     [datout, varout, nrpt] = ft_connectivity_ppc(data.(inparam), optarg{:});
     
   case 'plv'
@@ -949,6 +964,15 @@ switch cfg.method
     % directionality index
     ft_error('method %s is not yet implemented', cfg.method);
     
+  case 'laggedcoherence'
+    % lagged coherence estimate
+    optarg = {'complex', cfg.complex, 'dimord', data.dimord, 'feedback', cfg.feedback, 'pownorm', normpow, 'hasjack', hasjack};
+    optarg = cat(2, optarg, {'powindx', powindx});
+    [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
+    
+    %
+    
+    data = removefields(data, 'dof'); % the dof is not to be trusted
   otherwise
     ft_error('unknown method %s', cfg.method);
     

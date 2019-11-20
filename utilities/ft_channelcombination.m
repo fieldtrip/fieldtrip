@@ -1,7 +1,7 @@
 function [collect] = ft_channelcombination(channelcmb, datachannel, includeauto, dirflag)
 
-% FT_CHANNELCOMBINATION creates a cell-array with combinations of EEG/MEG
-% channels for subsequent cross-spectral-density and coherence analysis
+% FT_CHANNELCOMBINATION creates a cell-array with combinations of EEG/MEG channels
+% for subsequent cross-spectral-density, coherence and/or connectivity ananalysis
 %
 % You should specify channel combinations as a two-column cell-array,
 %   cfg.channelcmb = {  'EMG' 'MLF31'
@@ -94,7 +94,7 @@ end
 if isempty(setdiff(channelcmb(:), datachannel))
   % there is not much to do, since there are no channelgroups with special names
   % each element of the input therefore already contains a proper channel name
-
+  
   switch dirflag
     case 0
       % nothing to do
@@ -107,32 +107,32 @@ if isempty(setdiff(channelcmb(:), datachannel))
       ft_error('unknown value for input argument ''dirflag''');
   end
   collect = channelcmb;
-
+  
   if includeauto
     autochannel = unique(channelcmb(:));
     for ch=1:numel(autochannel)
       collect = cat(1, collect, [autochannel(ch) autochannel(ch)]);
     end
   end
-
+  
 else
   % a combination is made for each row of the input selection after
   % translating the channel group (such as 'all') to the proper channel names
   % and within each set, double occurences and autocombinations are removed
-
+  
   selmat = false(numel(datachannel));
   for sel=1:size(channelcmb,1)
     % translate both columns and subsequently make all combinations
     channelcmb1 = ft_channelselection(channelcmb(sel,1), datachannel);
     channelcmb2 = ft_channelselection(channelcmb(sel,2), datachannel);
-
+    
     % translate both columns and subsequently make all combinations
     list1 = match_str(datachannel, channelcmb1);
     list2 = match_str(datachannel, channelcmb2);
-
+    
     selmat(list1,list2) = true;
-
-    if ~includeauto,
+    
+    if ~includeauto
       % exclude the auto-combinations
       selmat = selmat & ~eye(size(selmat));
     else
@@ -141,19 +141,19 @@ else
       autovec([list1(:);list2(:)]) = true;
       selmat = selmat | diag(autovec);
     end
-
-    if dirflag==2,
+    
+    if dirflag==2
       % also fill the other 'direction'
       selmat(list2,list1) = true;
     end
   end
-
+  
   if dirflag<2
     % remove double occurrences
     selmat   = selmat & ~tril(selmat, -1)';
   end
   [i1, i2] = find(selmat);
-
+  
   switch dirflag
     case 0
       % original behavior,
@@ -165,10 +165,14 @@ else
     case 2
       % both
       indx = [i1 i2];
-
+      
     otherwise
       ft_error('unknown value for input argument ''dirflag''');
   end
-
-  collect = [datachannel(indx(:,1)) datachannel(indx(:,2))];
+  
+  if isempty(indx)
+    collect = cell(0,2);
+  else
+    collect = [datachannel(indx(:,1)) datachannel(indx(:,2))];
+  end
 end
