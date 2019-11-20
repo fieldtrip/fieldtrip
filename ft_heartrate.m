@@ -72,7 +72,7 @@ datain = ft_checkdata(datain, 'datatype', 'raw', 'feedback', 'yes');
 cfg = ft_checkconfig(cfg, 'forbidden', 'medianwindow');
 
 % set the default options
-cfg.channel          = ft_getopt(cfg, 'channel', {});
+cfg.channel          = ft_getopt(cfg, 'channel', 'all');
 cfg.envelopewindow   = ft_getopt(cfg, 'envelopewindow', 10);  % in seconds
 cfg.peakseparation   = ft_getopt(cfg, 'peakseparation', []);  % in seconds
 cfg.threshold        = ft_getopt(cfg, 'threshold', 0.4);      % between 0 and 1
