@@ -1,6 +1,6 @@
 function test_ft_connectivity_laggedcoherence
 
-% MEM 1500mb
+% MEM 4gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_connectivityanalysis ft_laggedcoherence fourierspctrm2lcrsspctrm
 
