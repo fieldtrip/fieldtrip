@@ -395,10 +395,6 @@ switch dataformat
     end
 
   case {'nifti', 'freesurfer_mgz', 'freesurfer_mgh', 'nifti_fsl'}
-    if strcmp(dataformat, 'freesurfer_mgz') && ispc
-      keyboard
-      %ft_error('Compressed .mgz files cannot be read on a PC');
-    end
 
     ft_hastoolbox('freesurfer', 1);
     tmp = MRIread(filename);
