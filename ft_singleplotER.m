@@ -366,7 +366,7 @@ if ~isempty(tmpcfg)
   end
   % remove the scaling fields from the, to prevent them from being called
   % again
-  cfg = removefields(cfg, setdiff(fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan')), 'showscale'));
+  cfg = removefields(cfg, setdiff(fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan')), {'gridscale' 'showscale'}));
 else
   % do nothing
 end  
