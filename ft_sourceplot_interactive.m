@@ -71,7 +71,7 @@ if numel(varargin) < 1
   ft_error('this function requires at least one data input argument');
 end
 for k = 1:numel(varargin)
-  varargin{k} = ft_checkdata(varargin{k}, 'datatype', {'source+mesh'}, 'feedback', 'yes');
+  varargin{k} = ft_checkdata(varargin{k}, 'datatype', {'source+mesh'}, 'feedback', 'yes', 'hasunit', 'yes');
   if k > 1 && (~isequaln(varargin{k}.pos, varargin{1}.pos) || ...
     ~isequaln(varargin{k}.tri, varargin{1}.tri))
     % ensure all input arguments are expressed on the same mesh
@@ -93,7 +93,7 @@ cfg.parameter = ft_getopt(cfg, 'parameter', 'pow');
 
 % check whether we're dealing with time or frequency data
 dimord = getdimord(varargin{1}, cfg.parameter);
-if ~ismember(dimord, {'pos_time', 'pos_freq'})
+if ~ismember(dimord, {'pos_time', 'pos_freq' '{pos}_ori_time'})
   ft_error('functional data must be pos_time or pos_freq');
 end
 
@@ -107,7 +107,7 @@ if isempty(cfg.time_label)
   end
 end
 
-if strcmp(dimord, 'pos_time')
+if strcmp(dimord, 'pos_time') || strcmp(dimord, '{pos}_ori_time')
   xdat = varargin{1}.time;
 elseif strcmp(dimord, 'pos_freq')
   xdat = varargin{1}.freq;
@@ -122,10 +122,19 @@ end
 
 % fetch the functional data
 data = cellfun(@(x) x.(cfg.parameter), varargin, 'uniformoutput', false);
-
+if isa(data{1}, 'cell') && size(data{1},1)==size(varargin{1}.pos,1)
+  % convert to matrix, probably mom or so is requested
+  for m = 1:numel(data)
+    nsmp = max(cellfun('size', data{m}, 2));
+    inside = ~cellfun(@isempty, data{m});
+    tmp  = nan(numel(data{m}),nsmp);
+    tmp(inside,:) = cat(1,data{m}{:});
+    data{m} = tmp;
+  end  
+end
 % set up the arguments
 keyval = ft_cfg2keyval(cfg);
-keyval = [keyval {'tri', varargin{1}.tri, 'pos', varargin{1}.pos, 'data', data, 'time', xdat}];
+keyval = [keyval {'tri', varargin{1}.tri, 'pos', varargin{1}.pos, 'data', data, 'time', xdat, 'unit', varargin{1}.unit}];
 
 % and launch the viewer
 viewer = ft_plot_mesh_interactive(keyval{:});

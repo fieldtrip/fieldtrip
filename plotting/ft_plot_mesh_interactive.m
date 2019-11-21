@@ -12,7 +12,7 @@ classdef ft_plot_mesh_interactive<handle
   
   properties
     % data properties
-    tri; pos; time; data;
+    tri; pos; time; data; unit;
     
     % configuration options
     time_label; pow_label; data_labels; has_diff; clim;
@@ -48,6 +48,7 @@ classdef ft_plot_mesh_interactive<handle
       self.pos = ft_getopt(varargin, 'pos');
       self.time = ft_getopt(varargin, 'time');
       self.data = ft_getopt(varargin, 'data');
+      self.unit = ft_getopt(varargin, 'unit');
       
       % configuration options
       self.time_label = ft_getopt(varargin, 'time_label', 'Time (s)');
@@ -204,11 +205,16 @@ classdef ft_plot_mesh_interactive<handle
           
           % render a little sphere at the location of the virtual electrode
           [x,y,z] = sphere();
-          x = x*4; y = y*4; z = z*4;
+          s.pos  = [x(:) y(:) z(:)].*4;
+          s.unit = 'mm';
+          s      = ft_convert_units(s, self.unit);
+          x      = reshape(s.pos(:,1),sqrt(size(s.pos,1)).*[1 1]);
+          y      = reshape(s.pos(:,2),sqrt(size(s.pos,1)).*[1 1]);
+          z      = reshape(s.pos(:,3),sqrt(size(s.pos,1)).*[1 1]);
           for k = 1:self.ncond
             self.virt_elec_surfs(thisfig_ind,k) = surf(...
-              self.axes_surface(k), x+self.pos(index,1), y+self.pos(index,2), z+self.pos(index,3),...
-              'facecolor', colour, 'edgecolor', 'none', 'facelighting', 'gouraud');
+             self.axes_surface(k), x+self.pos(index,1), y+self.pos(index,2), z+self.pos(index,3),...
+             'facecolor', colour, 'edgecolor', 'none', 'facelighting', 'gouraud');
             material shiny;
           end
           
