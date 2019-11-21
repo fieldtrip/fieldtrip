@@ -1106,7 +1106,7 @@ switch cfg.method
         cfg.intersectmesh = {cfg.intersectmesh};
       end
       for m = 1:numel(cfg.intersectmesh)
-        opt.intersectmesh{1,m} = ft_transform_geometry(inv(functional.transform), cfg.intersectmesh{m});
+        opt.intersectmesh{m} = ft_transform_geometry(inv(functional.transform), cfg.intersectmesh{m});
       end
     end
     
