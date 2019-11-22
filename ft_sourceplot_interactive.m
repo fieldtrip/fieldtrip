@@ -118,6 +118,9 @@ if isfield(cfg, 'atlas')
   [cfg.atlas, varargin{:}] = handle_atlas_input(cfg.atlas, varargin{:});
 end
 
+% allow for a user specified colormap of the non-diff surfaces
+cfg.colormap = ft_getopt(cfg, 'colormap');
+
 % other defaults are set in the lower-level object
 
 % fetch the functional data

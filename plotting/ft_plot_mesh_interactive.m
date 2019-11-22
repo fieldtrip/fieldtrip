@@ -12,13 +12,13 @@ classdef ft_plot_mesh_interactive<handle
   
   properties
     % data properties
-    tri; pos; time; data; unit;
+    tri; pos; time; data; unit; 
     
     % configuration options
     time_label; pow_label; data_labels; has_diff; clim;
     
     % not yet configurable
-    timeplot_colourmap;
+    timeplot_colourmap; colourmap;
     
     % graphics handles
     fig_surface; axes_surface; surfs_surface; camlight_surface;
@@ -59,7 +59,8 @@ classdef ft_plot_mesh_interactive<handle
       % has_diff: treat the last input argument as special, and assign
       % different colour limits for the corresponding surface plot
       self.has_diff = ft_getopt(varargin, 'has_diff', false);
-      self.atlas = ft_getopt(varargin, 'atlas');
+      self.atlas    = ft_getopt(varargin, 'atlas');
+      self.colourmap = ft_getopt(varargin, 'colormap');
       
       if isempty(self.clim)
         if self.has_diff
@@ -68,7 +69,12 @@ classdef ft_plot_mesh_interactive<handle
           self.clim = [0 max(cellfun(@(x) max(x(:)), self.data))*0.75];
         end
       end
-
+      
+      % we need brewermap
+      ft_hastoolbox('brewermap', 1);
+      if isempty(self.colourmap)
+        self.colourmap = brewermap(64, 'YlOrRd');
+      end
       self.axes_surface = [];
       self.surfs_surface = [];
       self.figs_time = [];
@@ -82,8 +88,7 @@ classdef ft_plot_mesh_interactive<handle
       % an index into the "current" time point (in seconds)
       self.cur_time = 0;
       
-      % we need brewermap
-      ft_hastoolbox('brewermap', 1);
+      
       
       self.timeplot_colourmap = brewermap(8, 'Set2');
     end
@@ -103,7 +108,7 @@ classdef ft_plot_mesh_interactive<handle
       % INIT_SURFACE_PLOTS initializes a single figure that displays
       % surface plots for all the functional data at a single time point.
       self.fig_surface = figure('Color', 'w');
-      colormap(self.fig_surface, brewermap(64, 'YlOrRd'));
+      colormap(self.fig_surface, self.colourmap);
       for k = 1:self.ncond
         % initialize axes and surface
         self.axes_surface(k) = subtightplot(1, numel(self.data), k);        
