@@ -149,7 +149,7 @@ if numel(chantype)>0
     invnoise(sel,sel) = ft_inv(noisecov(sel,sel), 'lambda', cfg.lambda, 'kappa', cfg.kappa, 'tolerance', cfg.tol, 'method', cfg.invmethod);
     [U,S,V]           = svd(invnoise(sel,sel), 'econ');
     diagS             = diag(S)./numel(chantype);
-    selS              = 1:rank(invnoise);
+    selS              = 1:rank(invnoise(sel,sel));
     tra(sel,sel)      = U(:,selS)*diag(sqrt(diagS(selS)))*U(:,selS)';
   end
   %invnoise = ft_inv(noisecov, 'lambda', cfg.lambda, 'kappa', cfg.kappa, 'tolerance', cfg.tol, 'method', cfg.invmethod);
