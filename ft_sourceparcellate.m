@@ -197,17 +197,17 @@ for i=1:numel(fn)
         ft_progress(k/K, 'computing parcellation for %s combined with %s', seglabel{j1}, seglabel{j2});
         switch cfg.method
           case 'mean'
-            tmp(j1,j2,:) = cellmean2(dat(seg==j1,seg==j2,:));
+            tmp(j1,j2,:,:) = cellmean2(dat(seg==j1,seg==j2,:));
           case 'median'
-            tmp(j1,j2,:) = cellmedian2(dat(seg==j1,seg==j2,:));
+            tmp(j1,j2,:,:) = cellmedian2(dat(seg==j1,seg==j2,:));
           case 'min'
-            tmp(j1,j2,:) = cellmin2(dat(seg==j1,seg==j2,:));
+            tmp(j1,j2,:,:) = cellmin2(dat(seg==j1,seg==j2,:));
           case 'max'
-            tmp(j1,j2,:) = cellmax2(dat(seg==j1,seg==j2,:));
+            tmp(j1,j2,:,:) = cellmax2(dat(seg==j1,seg==j2,:));
           case 'eig'
-            tmp(j1,j2,:) = celleig2(dat(seg==j1,seg==j2,:));
+            tmp(j1,j2,:,:) = celleig2(dat(seg==j1,seg==j2,:));
           case 'std'
-            tmp(j1,j2,:) = cellstd2(dat(seg==j1,seg==j2,:));
+            tmp(j1,j2,:,:) = cellstd2(dat(seg==j1,seg==j2,:));
           otherwise
             ft_error('method %s not implemented for %s', cfg.method, dimord{i});
         end % switch
@@ -223,17 +223,17 @@ for i=1:numel(fn)
       ft_progress(j/numel(seglabel), 'computing parcellation for %s', seglabel{j});
       switch cfg.method
         case 'mean'
-          tmp(j,:) = cellmean1(dat(seg==j));
+          tmp(j,:,:) = cellmean1(dat(seg==j));
         case 'median'
-          tmp(j,:) = cellmedian1(dat(seg==j));
+          tmp(j,:,:) = cellmedian1(dat(seg==j));
         case 'min'
-          tmp(j,:) = cellmin1(dat(seg==j));
+          tmp(j,:,:) = cellmin1(dat(seg==j));
         case 'max'
-          tmp(j,:) = cellmax1(dat(seg==j));
+          tmp(j,:,:) = cellmax1(dat(seg==j));
         case 'eig'
-          tmp(j,:) = celleig1(dat(seg==j));
+          tmp(j,:,:) = celleig1(dat(seg==j));
         case 'std'
-          tmp(j,:) = cellstd1(dat(seg==j));
+          tmp(j,:,:) = cellstd1(dat(seg==j));
         otherwise
           ft_error('method %s not implemented for %s', cfg.method, dimord{i});
       end % switch
@@ -330,8 +330,8 @@ for i=1:numel(fn)
   tok(strcmp(tok, 'pos}'))  = {'chan'}; % replace pos by chan
   
   % squeeze out any singleton oris
-  siz  = size(tmp);
-  oris = contains(tok, 'ori') & siz==1;
+  siz  = [size(tmp) 1]; % add trailing singleton to be sure
+  oris = contains(tok, 'ori') & siz(1:numel(tok))==1;
   siz(oris) = [];
   tmp = reshape(tmp, siz);
   tok(oris) = [];
