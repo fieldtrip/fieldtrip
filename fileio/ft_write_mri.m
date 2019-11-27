@@ -64,8 +64,12 @@ if nargout>0
   V = [];
 end
 
-% ensure that the directory exists
-isdir_or_mkdir(fileparts(filename));
+% ensure that the directory exists (unless we're writing to a FieldTrip
+% buffer - not sure if MRIs are ever written to a buffer but better be
+% safe than sorry)
+if ~startsWith(filename, 'buffer:')
+  isdir_or_mkdir(fileparts(filename));
+end
 
 switch dataformat
 
