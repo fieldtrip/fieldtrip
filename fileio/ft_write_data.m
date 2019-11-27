@@ -84,8 +84,11 @@ append = istrue(append);
 % determine the data size
 [nchans, nsamples] = size(dat);
 
-% ensure that the directory exists
-isdir_or_mkdir(fileparts(filename));
+% ensure that the directory exists (unless we're writing to a FieldTrip
+% buffer)
+if ~startsWith(filename, 'buffer:')
+  isdir_or_mkdir(fileparts(filename));
+end
 
 switch dataformat
 
