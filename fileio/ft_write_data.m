@@ -84,9 +84,8 @@ append = istrue(append);
 % determine the data size
 [nchans, nsamples] = size(dat);
 
-% ensure that the directory exists (unless we're writing to a FieldTrip
-% buffer)
-if ~startsWith(filename, 'buffer:')
+% ensure that the directory exists if we want to write to a file
+if ~ismember(dataformat, {'empty', 'fcdc_global', 'fcdc_buffer', 'fcdc_mysql'})
   isdir_or_mkdir(fileparts(filename));
 end
 
