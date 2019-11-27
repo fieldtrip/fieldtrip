@@ -64,10 +64,8 @@ if nargout>0
   V = [];
 end
 
-% ensure that the directory exists (unless we're writing to a FieldTrip
-% buffer - not sure if MRIs are ever written to a buffer but better be
-% safe than sorry)
-if ~startsWith(filename, 'buffer:')
+% ensure that the directory exists if we want to write to a file
+if ~ismember(dataformat, {'empty', 'fcdc_global', 'fcdc_buffer', 'fcdc_mysql'})
   isdir_or_mkdir(fileparts(filename));
 end
 
