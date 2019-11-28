@@ -201,6 +201,7 @@ cfg.showcomment    = ft_getopt(cfg, 'showcomment', 'yes');
 cfg.box            = ft_getopt(cfg, 'box', 'no');
 cfg.fontsize       = ft_getopt(cfg, 'fontsize', 8);
 cfg.fontweight     = ft_getopt(cfg, 'fontweight');
+cfg.interpreter    = ft_getopt(cfg, 'interpreter', 'none');  % none, tex or latex
 cfg.interactive    = ft_getopt(cfg, 'interactive', 'yes');
 cfg.renderer       = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 cfg.orient         = ft_getopt(cfg, 'orient', 'landscape');
@@ -514,7 +515,7 @@ for m=1:length(selchan)
 end % for number of channels
 
 % plot the layout, labels and outline
-ft_plot_layout(cfg.layout, 'box', istrue(cfg.box), 'label', istrue(cfg.showlabels), 'outline', istrue(cfg.showoutline), 'point', 'no', 'mask', 'no', 'fontsize', cfg.fontsize, 'labelyoffset', 1.4*median(cfg.layout.height/2), 'labelalignh', 'center', 'chanindx', find(~ismember(cfg.layout.label, {'COMNT', 'SCALE'})) );
+ft_plot_layout(cfg.layout, 'box', istrue(cfg.box), 'label', istrue(cfg.showlabels), 'outline', istrue(cfg.showoutline), 'point', 'no', 'mask', 'no', 'fontsize', cfg.fontsize, 'labelyoffset', 1.4*median(cfg.layout.height/2), 'labelalignh', 'center', 'chanindx', find(~ismember(cfg.layout.label, {'COMNT', 'SCALE'})), 'interpreter', cfg.interpreter);
 
 % write comment
 if istrue(cfg.showcomment)
