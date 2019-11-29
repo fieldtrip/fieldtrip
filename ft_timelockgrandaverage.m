@@ -123,8 +123,8 @@ if strcmp(cfg.parameter,'trial')
 end
 
 Nsubj    = length(varargin);
-dimord   = varargin{1}.dimord;
-hastime  = ~isempty(strfind(varargin{1}.dimord, 'time'));
+dimord   = getdimord(varargin{1}, cfg.parameter);
+hastime  = contains(dimord, 'time');
 hasdof   = isfield(varargin{1}, 'dof');
 
 if ischar(cfg.latency) && strcmp(cfg.latency, 'all')
@@ -241,9 +241,9 @@ switch cfg.method
 end
 
 if strcmp(cfg.keepindividual, 'yes')
-  grandavg.dimord = ['subj_',varargin{1}.dimord];
+  grandavg.dimord = ['subj_', dimord];
 else
-  grandavg.dimord = varargin{1}.dimord;
+  grandavg.dimord = dimord;
 end
 
 % do the general cleanup and bookkeeping at the end of the function
