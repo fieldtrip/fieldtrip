@@ -41,7 +41,7 @@ if ~isfield(cfg, 'headerfile')
 end
 
 if ~isempty(cfg.dataset)
-  if strcmp(cfg.dataset, 'gui');
+  if strcmp(cfg.dataset, 'gui')
     d = uigetdir;
     if d==0
       [f, p] = uigetfile;
@@ -83,10 +83,10 @@ if ~isempty(cfg.dataset)
       cfg.datafile   = cfg.dataset;
       cfg.headerfile = cfg.dataset;
   end
-elseif ~isempty(cfg.datafile) && isempty(cfg.headerfile);
+elseif ~isempty(cfg.datafile) && isempty(cfg.headerfile)
   % assume that  the datafile also contains the header
   cfg.headerfile = cfg.datafile;
-elseif isempty(cfg.datafile) && ~isempty(cfg.headerfile);
+elseif isempty(cfg.datafile) && ~isempty(cfg.headerfile)
   % assume that  the headerfile also contains the data
   cfg.datafile = cfg.headerfile;
 end

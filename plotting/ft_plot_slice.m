@@ -99,6 +99,7 @@ cmap                = ft_getopt(varargin, 'colormap');
 clim                = ft_getopt(varargin, 'clim');
 doscale             = ft_getopt(varargin, 'doscale', true); % only scale when necessary (time consuming), i.e. when plotting as grayscale image & when the values are not between 0 and 1
 h                   = ft_getopt(varargin, 'surfhandle', []);
+p                   = ft_getopt(varargin, 'patchhandle', []);
 
 mesh                = ft_getopt(varargin, 'intersectmesh');
 intersectcolor      = ft_getopt(varargin, 'intersectcolor', 'yrgbmyrgbm');
@@ -492,10 +493,14 @@ if dointersect
     
     % draw each individual line segment of the intersection
     if ~isempty(xmesh)
-      p = patch(xmesh', ymesh', zmesh', nan(1, size(xmesh,1)));
-      if ~isempty(intersectcolor),     set(p, 'EdgeColor', intersectcolor(k)); end
-      if ~isempty(intersectlinewidth), set(p, 'LineWidth', intersectlinewidth); end
-      if ~isempty(intersectlinestyle), set(p, 'LineStyle', intersectlinestyle); end
+      if isempty(p)
+        p = patch(xmesh', ymesh', zmesh', nan(1, size(xmesh,1)));
+        if ~isempty(intersectcolor),     set(p, 'EdgeColor', intersectcolor(k));  end
+        if ~isempty(intersectlinewidth), set(p, 'LineWidth', intersectlinewidth); end
+        if ~isempty(intersectlinestyle), set(p, 'LineStyle', intersectlinestyle); end
+      else
+        set(p, 'XData', xmesh', 'YData', ymesh', 'ZData', zmesh', 'FaceVertexCdata', nan(size(xmesh,1),1));
+      end
     end
   end
 end

@@ -632,7 +632,7 @@ elseif ismneavg
       smom = std(mom(:,begsmp:endsmp),[],2);
       pow  = sum(((mom-mmom(:,ones(size(mom,2),1)))./smom(:,ones(size(mom,2),1))).^2,1);
       source.avg.pow(insideindx(diplop),:) = pow;
-      %source.avg.absmom(source.inside(diplop),:) = sum((mom-mmom)./smom,1);
+      source.avg.mom{insideindx(diplop)}   = diag(1./smom)*mom;
     end
     ft_progress('close');
 

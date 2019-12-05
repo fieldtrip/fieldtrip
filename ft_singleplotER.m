@@ -360,9 +360,16 @@ end
 % Apply channel-type specific scaling
 fn = fieldnames(cfg);
 tmpcfg = keepfields(cfg, fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan') | strcmp(fn, 'channel') | strcmp(fn, 'parameter')));
-for i=1:Ndata
-  varargin{i}= chanscale_common(tmpcfg, varargin{i});
-end
+if ~isempty(tmpcfg)
+  for i=1:Ndata
+    varargin{i} = chanscale_common(tmpcfg, varargin{i});
+  end
+  % remove the scaling fields from the, to prevent them from being called
+  % again
+  cfg = removefields(cfg, setdiff(fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan')), {'gridscale' 'showscale'}));
+else
+  % do nothing
+end  
 
 
 %% Section 3: select the data to be plotted and determine min/max range

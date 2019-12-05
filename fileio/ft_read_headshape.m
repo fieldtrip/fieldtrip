@@ -34,6 +34,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'vtk'          Visualization ToolKit file format, for use with Paraview
 %   'vtk_xml'      Visualization ToolKit file format
 %   'tck'          Mrtrix track file
+%   'trk'          Trackvis trk file
 %   'mne_*'        MNE surface description in ASCII format ('mne_tri') or MNE source grid in ascii format, described as 3D points ('mne_pos')
 %   'obj'          Wavefront .obj file obtained with the structure.io
 %   'off'
@@ -1005,6 +1006,9 @@ switch fileformat
   case 'mrtrix_tck'
     ft_hastoolbox('mrtrix', 1);
     shape = read_tck(filename);
+  
+  case 'trackvis_trk'
+    shape = read_trk(filename);
   
   case 'off'
     [pos, plc] = read_off(filename);

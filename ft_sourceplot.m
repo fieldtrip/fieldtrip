@@ -210,8 +210,14 @@ function ft_sourceplot(cfg, functional, anatomical)
 %   slice in all directions
 %   surface also optimal when inside present
 %   come up with a good glass brain projection
+%
+% undocumented option
+%   cfg.intersectmesh = cell-array of mesh(es) to be plotted along with the
+%                       anatomy, useful for evaluating coregistration. Does
+%                       at present not check for coordinate system
 
-% Copyright (C) 2007-2016, Robert Oostenveld, Ingrid Nieuwenhuis
+% Copyright (C) 2007-2019, Robert Oostenveld, Ingrid Nieuwenhuis, J.M.
+% Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -295,6 +301,7 @@ cfg.voxelratio    = ft_getopt(cfg, 'voxelratio',    'data'); % display size of t
 cfg.axisratio     = ft_getopt(cfg, 'axisratio',     'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
 cfg.visible       = ft_getopt(cfg, 'visible',       'on');
 cfg.clim          = ft_getopt(cfg, 'clim',          [0 1]); % this is used to scale the orthoplot
+cfg.intersectmesh = ft_getopt(cfg, 'intersectmesh');
 
 if ~isfield(cfg, 'anaparameter')
   if isfield(functional, 'anatomy')
@@ -371,26 +378,7 @@ end
 %% get the elements that will be plotted
 hasatlas = ~isempty(cfg.atlas);
 if hasatlas
-  if ischar(cfg.atlas)
-    % initialize the atlas
-    [p, f, x] = fileparts(cfg.atlas);
-    fprintf(['reading ', f, ' atlas coordinates and labels\n']);
-    atlas = ft_read_atlas(cfg.atlas);
-  else
-    atlas = cfg.atlas;
-  end
-  % ensure that the atlas is formatted properly
-  atlas = ft_checkdata(atlas, 'hasunit', isfield(functional, 'unit'), 'hascoordsys', isfield(functional, 'coordsys'));
-  if isfield(functional, 'unit')
-    % ensure that the units are consistent, convert the units if required
-    atlas = ft_convert_units(atlas, functional.unit);
-  end
-  if isfield(functional, 'coordsys')
-    % ensure that the coordinate systems match
-    functional = fixcoordsys(functional);
-    atlas      = fixcoordsys(atlas);
-    assert(isequal(functional.coordsys, atlas.coordsys), 'coordinate systems do not match');
-  end
+  [atlas, functional] = handle_atlas_input(cfg.atlas, functional);
 end
 
 hasroi = ~isempty(cfg.roi);
@@ -1111,6 +1099,16 @@ switch cfg.method
     opt.queryrange    = cfg.queryrange;
     opt.funcolormap   = cfg.funcolormap;
     opt.crosshair     = istrue(cfg.crosshair);
+    if ~isempty(cfg.intersectmesh)
+      % the data will be plotted in voxel space, so transform the meshes
+      % accordingly, assuming the same coordinate system as the anatomical
+      if ~isa(cfg.intersectmesh, 'cell')
+        cfg.intersectmesh = {cfg.intersectmesh};
+      end
+      for m = 1:numel(cfg.intersectmesh)
+        opt.intersectmesh{m} = ft_transform_geometry(inv(functional.transform), cfg.intersectmesh{m});
+      end
+    end
     
     %% do the actual plotting
     setappdata(h, 'opt', opt);
@@ -1654,9 +1652,16 @@ end
 
 
 if opt.hasana
+  options = {'transform', eye(4),     'location', opt.ijk, 'style', 'subplot',...
+             'update',    opt.update, 'doscale',  false,   'clim',  opt.clim};
+  if isfield(opt, 'intersectmesh')
+    options = cat(2, options, 'intersectmesh', opt.intersectmesh);
+  end
+   
   if opt.init
     tmph  = [h1 h2 h3];
-    ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'parents', tmph, 'update', opt.update, 'doscale', false, 'clim', opt.clim);
+    options = cat(2, options, {'parents', tmph});
+    ft_plot_ortho(opt.ana, options{:});
     
     opt.anahandles = findobj(opt.handlesfigure, 'type', 'surface')';
     for i=1:length(opt.anahandles)
@@ -1666,8 +1671,18 @@ if opt.hasana
     opt.anahandles = opt.anahandles(i3(i2)); % seems like swapping the order
     opt.anahandles = opt.anahandles(:)';
     set(opt.anahandles, 'tag', 'ana');
+    if isfield(opt, 'intersectmesh')
+      opt.patchhandles = findobj(opt.handlesfigure, 'type', 'patch');
+      opt.patchhandles = opt.patchhandles(i3(i2));
+      opt.patchhandles = opt.patchhandles(:)';
+      set(opt.patchhandles, 'tag', 'patch');
+    end
   else
-    ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false, 'clim', opt.clim);
+    options = cat(2, options, {'surfhandle', opt.anahandles});
+    if isfield(opt, 'intersectmesh')
+      options = cat(2, options, {'patchhandle', opt.patchhandles});
+    end
+    ft_plot_ortho(opt.ana, options{:});
   end
 end
 
