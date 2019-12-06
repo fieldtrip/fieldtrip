@@ -194,7 +194,7 @@ for freqindx = 1:length(freq)
 
   freqout{freqindx} = ft_freqanalysis(cfg_freq,datain);
   
-fr  cfg_lcoh.laggedcoherence.lags = cfg.numcycles.*cfg.loi./freqout{freqindx}.freq;
+  cfg_lcoh.laggedcoherence.lags = cfg.numcycles.*cfg.loi./freqout{freqindx}.freq;
   cohout{freqindx} = ft_connectivityanalysis(cfg_lcoh,freqout{freqindx});
   if freqindx == 1
     labelcmb = cohout{1}.labelcmb;
