@@ -140,7 +140,7 @@ end
 if ~isempty(chanindx)
   trigger = read_trigger(filename, 'header', hdr, 'denoise', false, 'chanindx', chanindx, 'detectflank', detectflank, 'threshold', threshold);
   % combine the triggers and the other events
-  event = appendevent(event, trigger);
+  event = appendstruct(event, trigger);
 end
 
 if isempty(event)

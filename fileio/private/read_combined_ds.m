@@ -43,27 +43,27 @@ supported = {
   'neuralynx_bin'
   'neuralynx_ncs'
   'fcdc_matbin'
-  'riff_wave'  % this only works on mono wav files
+  'audio_wav'  % this only works on mono wav files
   };
 
 if needhdr
-  
+
   ls = dir(dirname);                % get the list of filenames
   ls = ls(~cell2mat({ls.isdir}));   % remove the subdirs
-  
+
   nfiles = length(ls);
   fname = cell(nfiles,1);
   ftype = cell(nfiles,1);
   sel   = false(nfiles,1);
-  
+
   for i=1:nfiles
     fname{i} = fullfile(dirname, ls(i).name);
   end
-  
+
   [p, f, x] = cellfun(@fileparts, fname, 'UniformOutput', 0);
   ismat = strcmp(x, '.mat');
   isbin = strcmp(x, '.bin');
-  
+
   if all(ismat | isbin)
     % the directory contains mat/bin pairs, and possibly an events.mat file
     filepair = intersect(f(ismat), f(isbin));
@@ -74,7 +74,7 @@ if needhdr
     ftype(isbin)   = {'fcdc_matbin'};
     ftype(unknown) = {'unknown'};
     sel = ismat;
-    
+
   else
     % the directory contains another selection of files that should be combined
     % use ft_filetype to detect each type, note that this can be rather slow
@@ -83,56 +83,56 @@ if needhdr
       sel(i)   = any(strcmp(ftype{i}, supported));
     end
   end
-  
+
   if ~any(sel)
     ft_error('no supported files were found');
   end
-  
+
   fname = fname(sel);
   ftype = ftype(sel);
   nfiles = length(fname);
-  
+
   clear filehdr
   for i=1:nfiles
     filehdr(i) = ft_read_header(fname{i}, 'headerformat', ftype{i});
   end
-  
+
   if any([filehdr.nChans]~=1)
     ft_error('more than one channel per file not supported');
   else
     hdr.nChans = sum([filehdr.nChans]);
   end
-  
+
   if length(unique([filehdr.label]))~=nfiles
     ft_error('not all channels have a unique name');
   else
     hdr.label = [filehdr.label]';
   end
-  
+
   if any(diff([filehdr.Fs]))
     ft_error('different sampling frequenties per file not supported');
   else
     hdr.Fs = filehdr(1).Fs;
   end
-  
+
   if any(diff([filehdr.nSamples]))
     ft_error('different nSamples per file not supported');
   else
     hdr.nSamples = filehdr(1).nSamples;
   end
-  
+
   if any(diff([filehdr.nSamplesPre]))
     ft_error('different nSamplesPre per file not supported');
   else
     hdr.nSamplesPre = filehdr(1).nSamplesPre;
   end
-  
+
   if any(diff([filehdr.nTrials]))
     ft_error('different nTrials per file not supported');
   else
     hdr.nTrials = filehdr(1).nTrials;
   end
-  
+
   if isfield(filehdr, 'TimeStampPerSample')
     if any(diff([filehdr.TimeStampPerSample]))
       ft_error('different TimeStampPerSample per file not supported');
@@ -140,7 +140,7 @@ if needhdr
       hdr.TimeStampPerSample = filehdr(1).TimeStampPerSample;
     end
   end
-  
+
   if isfield(filehdr, 'FirstTimeStamp')
     if any(diff([filehdr.FirstTimeStamp]))
       ft_error('different FirstTimeStamp per file not supported');
@@ -148,7 +148,7 @@ if needhdr
       hdr.FirstTimeStamp = filehdr(1).FirstTimeStamp;
     end
   end
-  
+
   % remember the original header details
   hdr.orig.header = filehdr;
   hdr.orig.fname  = fname;
@@ -159,7 +159,7 @@ if needdat
   filehdr = hdr.orig.header;
   fname   = hdr.orig.fname;
   ftype   = hdr.orig.ftype;
-  
+
   if nargin<3
     begsample=1;
   end
@@ -169,11 +169,11 @@ if needdat
   if nargin<5
     chanindx = 1:hdr.nChans;
   end
-  
+
   nsamples  = endsample-begsample+1;
   nchans    = length(chanindx);
   dat       = zeros(nchans, nsamples);
-  
+
   for i=1:nchans
     thischan = chanindx(i);
     tmp = ft_read_data(fname{thischan}, 'header', filehdr(thischan), 'dataformat', ftype{thischan}, 'begsample', begsample, 'endsample', endsample);
@@ -185,4 +185,3 @@ if ~needdat
   % return the header
   dat = hdr;
 end
-

@@ -10,7 +10,7 @@ function [M_V] = vox2ras_dfmeas(str_filename, varargin)
 %%
 %% VERSION
 %%
-%%	$Id$
+%%	$Id: vox2ras_dfmeas.m,v 1.10 2011/03/02 00:04:13 nicks Exp $
 %%
 %% SYNOPSIS
 %%
@@ -20,7 +20,7 @@ function [M_V] = vox2ras_dfmeas(str_filename, varargin)
 %% ARGUMENTS
 %%
 %%	str_filename	in      string specifying meas.asc to parse
-%%	ch_override	in/opt	character string specifying override behavior
+%%	ch_override	in/opt	character string specifying override behaviour
 %%	voxelDimension	in/opt	row vector specifying the data set's voxel mm
 %%					dimensions. This should be a 1x3 vector
 %%					of [ReadOut PhaseEncode SliceSelect] 
@@ -126,20 +126,18 @@ function [M_V] = vox2ras_dfmeas(str_filename, varargin)
 % Original Author: Rudolph Pienaar
 % CVS Revision Info:
 %    $Author: nicks $
-%    $Date: 2007/01/10 22:55:10 $
-%    $Revision$
+%    $Date: 2011/03/02 00:04:13 $
+%    $Revision: 1.10 $
 %
-% Copyright (C) 2002-2007,
-% The General Hospital Corporation (Boston, MA). 
-% All rights reserved.
+% Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
 %
-% Distribution, usage and copying of this software is covered under the
-% terms found in the License Agreement file named 'COPYING' found in the
-% FreeSurfer source code root directory, and duplicated here:
-% https://surfer.nmr.mgh.harvard.edu/fswiki/FreeSurferOpenSourceLicense
+% Terms and conditions for use, reproduction, distribution and contribution
+% are found in the 'FreeSurfer Software License Agreement' contained
+% in the file 'LICENSE' found in the FreeSurfer distribution, and here:
 %
-% General inquiries: freesurfer@nmr.mgh.harvard.edu
-% Bug reports: analysis-bugs@nmr.mgh.harvard.edu
+% https://surfer.nmr.mgh.harvard.edu/fswiki/FreeSurferSoftwareLicense
+%
+% Reporting: freesurfer@nmr.mgh.harvard.edu
 %
 
 %% Check for override specifications and set default values

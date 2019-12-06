@@ -210,8 +210,14 @@ function ft_sourceplot(cfg, functional, anatomical)
 %   slice in all directions
 %   surface also optimal when inside present
 %   come up with a good glass brain projection
+%
+% undocumented option
+%   cfg.intersectmesh = cell-array of mesh(es) to be plotted along with the
+%                       anatomy, useful for evaluating coregistration. Does
+%                       at present not check for coordinate system
 
-% Copyright (C) 2007-2016, Robert Oostenveld, Ingrid Nieuwenhuis
+% Copyright (C) 2007-2019, Robert Oostenveld, Ingrid Nieuwenhuis, J.M.
+% Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -295,6 +301,7 @@ cfg.voxelratio    = ft_getopt(cfg, 'voxelratio',    'data'); % display size of t
 cfg.axisratio     = ft_getopt(cfg, 'axisratio',     'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
 cfg.visible       = ft_getopt(cfg, 'visible',       'on');
 cfg.clim          = ft_getopt(cfg, 'clim',          [0 1]); % this is used to scale the orthoplot
+cfg.intersectmesh = ft_getopt(cfg, 'intersectmesh');
 
 if ~isfield(cfg, 'anaparameter')
   if isfield(functional, 'anatomy')
@@ -330,7 +337,7 @@ if isfield(functional, 'time') || isfield(functional, 'freq')
 end
 
 % the data can be passed as input argument or can be read from disk
-hasanatomical = exist('anatomical', 'var');
+hasanatomical = exist('anatomical', 'var') && isfield(anatomical, 'anatomy');
 
 if hasanatomical && ~strcmp(cfg.method, 'cloud') % cloud method should be able to take multiple surfaces and does not require interpolation
   % interpolate on the fly, this also does the downsampling if requested
@@ -338,6 +345,7 @@ if hasanatomical && ~strcmp(cfg.method, 'cloud') % cloud method should be able t
   tmpcfg.parameter = cfg.funparameter;
   functional = ft_sourceinterpolate(tmpcfg, functional, anatomical);
   [cfg, functional] = rollback_provenance(cfg, functional);
+  cfg.anaparameter = 'anatomy';
 elseif ~hasanatomical && cfg.downsample~=1
   % optionally downsample the functional volume
   tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo'});
@@ -352,7 +360,7 @@ if isfield(functional, 'dim') && isfield(functional, 'transform')
 elseif isfield(functional, 'dim') && isfield(functional, 'pos')
   % these are positions that can be mapped onto a 3D regular grid
   isUnstructuredFun  = false;
-  % contstruct the transformation matrix from the positions
+  % construct the transformation matrix from the positions
   functional.transform = pos2transform(functional.pos, functional.dim);
 else
   % this is functional data on irregular positions, such as a cortical sheet
@@ -370,26 +378,7 @@ end
 %% get the elements that will be plotted
 hasatlas = ~isempty(cfg.atlas);
 if hasatlas
-  if ischar(cfg.atlas)
-    % initialize the atlas
-    [p, f, x] = fileparts(cfg.atlas);
-    fprintf(['reading ', f, ' atlas coordinates and labels\n']);
-    atlas = ft_read_atlas(cfg.atlas);
-  else
-    atlas = cfg.atlas;
-  end
-  % ensure that the atlas is formatted properly
-  atlas = ft_checkdata(atlas, 'hasunit', isfield(functional, 'unit'), 'hascoordsys', isfield(functional, 'coordsys'));
-  if isfield(functional, 'unit')
-    % ensure that the units are consistent, convert the units if required
-    atlas = ft_convert_units(atlas, functional.unit);
-  end
-  if isfield(functional, 'coordsys')
-    % ensure that the coordinate systems match
-    functional = fixcoordsys(functional);
-    atlas      = fixcoordsys(atlas);
-    assert(isequal(functional.coordsys, atlas.coordsys), 'coordinate systems do not match');
-  end
+  [atlas, functional] = handle_atlas_input(cfg.atlas, functional);
 end
 
 hasroi = ~isempty(cfg.roi);
@@ -424,6 +413,7 @@ hasfun = isfield(functional, cfg.funparameter);
 if hasfun
   fun = getsubfield(functional, cfg.funparameter);
   
+  
   dimord = getdimord(functional, cfg.funparameter);
   dimtok = tokenize(dimord, '_');
   
@@ -447,7 +437,12 @@ if hasfun
     fun = abs(fun);
   end
   
-  if strcmp(dimord, 'pos_rgb')
+  if ~isa(fun, 'double')
+    ft_warning('converting functional data to double precision');
+    fun = double(fun);
+  end
+  
+  if strcmp(dimord, 'pos_rgb') || (ndims(fun)>3 && size(fun,4)==3)
     % treat functional data as rgb values
     if any(fun(:)>1 | fun(:)<0)
       % scale
@@ -468,6 +463,7 @@ if hasfun
     fcolmin = 0;
     fcolmax = 1;
     
+    cfg.funcolormap = 'rgb';
   else
     % determine scaling min and max (fcolmin fcolmax) and funcolormap
     if ~isa(fun, 'logical')
@@ -730,13 +726,18 @@ end
 
 %% set color and opacity mapping for this figure
 if hasfun
-  colormap(cfg.funcolormap);
-  cfg.funcolormap = colormap;
+  if ischar(cfg.funcolormap) && ~strcmp(cfg.funcolormap, 'rgb')
+    colormap(cfg.funcolormap);
+    cfg.funcolormap = colormap;
+  elseif ~ischar(cfg.funcolormap)
+    colormap(cfg.funcolormap);
+    cfg.funcolormap = colormap;  
+  end
 end
 if hasmsk
   cfg.opacitymap = alphamap(cfg.opacitymap);
   alphamap(cfg.opacitymap);
-  if ndims(fun)>3 && ndims(msk)==3
+  if ndims(fun)>3 && ndims(msk)==3 && ~isequal(cfg.funcolormap, 'rgb')
     siz = size(fun);
     msk = repmat(msk, [1 1 1 siz(4:end)]);
   end
@@ -1098,6 +1099,16 @@ switch cfg.method
     opt.queryrange    = cfg.queryrange;
     opt.funcolormap   = cfg.funcolormap;
     opt.crosshair     = istrue(cfg.crosshair);
+    if ~isempty(cfg.intersectmesh)
+      % the data will be plotted in voxel space, so transform the meshes
+      % accordingly, assuming the same coordinate system as the anatomical
+      if ~isa(cfg.intersectmesh, 'cell')
+        cfg.intersectmesh = {cfg.intersectmesh};
+      end
+      for m = 1:numel(cfg.intersectmesh)
+        opt.intersectmesh{m} = ft_transform_geometry(inv(functional.transform), cfg.intersectmesh{m});
+      end
+    end
     
     %% do the actual plotting
     setappdata(h, 'opt', opt);
@@ -1439,12 +1450,13 @@ switch cfg.method
       
       % functional scaling
       cmap    = cfg.funcolormap;
-      cmid    = size(cmap,1)/2;                 % colorbar middle
-      clim    = [fcolmin fcolmax];              % color limits
-      colscf  = fun / max(abs(clim));           % color between -1 and 1, used when colorgrad = 'white'
-      colscf(colscf>1)=1; colscf(colscf<-1)=-1; % clamp values outside the [-1 1] range
-      radscf = abs( fun / max(abs(clim)) );     % radius between 0 and 1, used when colorgrad = scalar
-      radscf(radscf>1)=1; radscf(radscf<0)=0;   % clamp values outside the [0 1] range
+      cmid    = size(cmap,1)/2;                            % colorbar middle
+      clim    = [fcolmin fcolmax];                         % color limits
+      colscf  = 2*( (fun-clim(1)) / (clim(2)-clim(1)) )-1; % color between -1 and 1, bottom vs. top colorbar
+      colscf(colscf>1)=1; colscf(colscf<-1)=-1;            % clip values outside the [-1 1] range
+      radscf  = fun-(min(abs(fun)) * sign(max(fun)));      % radius between 0 and 1, small vs. large pos/neg effect
+      radscf  = abs( radscf / max(abs(radscf)) );
+      
       if strcmp(cfg.scalerad, 'yes')
         rmax = cfg.rmin+(cfg.radius-cfg.rmin)*radscf; % maximum radius of the clouds
       else
@@ -1640,9 +1652,16 @@ end
 
 
 if opt.hasana
+  options = {'transform', eye(4),     'location', opt.ijk, 'style', 'subplot',...
+             'update',    opt.update, 'doscale',  false,   'clim',  opt.clim};
+  if isfield(opt, 'intersectmesh')
+    options = cat(2, options, 'intersectmesh', opt.intersectmesh);
+  end
+   
   if opt.init
     tmph  = [h1 h2 h3];
-    ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'parents', tmph, 'update', opt.update, 'doscale', false, 'clim', opt.clim);
+    options = cat(2, options, {'parents', tmph});
+    ft_plot_ortho(opt.ana, options{:});
     
     opt.anahandles = findobj(opt.handlesfigure, 'type', 'surface')';
     for i=1:length(opt.anahandles)
@@ -1652,25 +1671,43 @@ if opt.hasana
     opt.anahandles = opt.anahandles(i3(i2)); % seems like swapping the order
     opt.anahandles = opt.anahandles(:)';
     set(opt.anahandles, 'tag', 'ana');
+    if isfield(opt, 'intersectmesh')
+      opt.patchhandles = findobj(opt.handlesfigure, 'type', 'patch');
+      opt.patchhandles = opt.patchhandles(i3(i2));
+      opt.patchhandles = opt.patchhandles(:)';
+      set(opt.patchhandles, 'tag', 'patch');
+    end
   else
-    ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false, 'clim', opt.clim);
+    options = cat(2, options, {'surfhandle', opt.anahandles});
+    if isfield(opt, 'intersectmesh')
+      options = cat(2, options, {'patchhandle', opt.patchhandles});
+    end
+    ft_plot_ortho(opt.ana, options{:});
   end
 end
 
 if opt.hasfun
   if opt.init
+    tmph  = [h1 h2 h3];
+    if isequal(opt.funcolormap, 'rgb')
+      tmpfun = opt.fun;
+      if opt.hasmsk
+        tmpmask = opt.msk;
+      end
+    else
+      tmpqi  = [opt.qi 1];
+      tmpfun = opt.fun(:,:,:,tmpqi(1),tmpqi(2));
+      if opt.hasmsk
+        tmpmask = opt.msk(:,:,:,tmpqi(1),tmpqi(2));
+      end
+    end
     if opt.hasmsk
-      tmpqi = [opt.qi 1];
-      tmph  = [h1 h2 h3];
-      ft_plot_ortho(opt.fun(:,:,:,tmpqi(1),tmpqi(2)), 'datmask', opt.msk(:,:,:,tmpqi(1),tmpqi(2)), 'transform', eye(4), 'location', opt.ijk, ...
+      ft_plot_ortho(tmpfun, 'datmask', tmpmask, 'transform', eye(4), 'location', opt.ijk, ...
         'style', 'subplot', 'parents', tmph, 'update', opt.update, ...
         'colormap', opt.funcolormap, 'clim', [opt.fcolmin opt.fcolmax], ...
         'opacitylim', [opt.opacmin opt.opacmax]);
-      
     else
-      tmpqi = [opt.qi 1];
-      tmph  = [h1 h2 h3];
-      ft_plot_ortho(opt.fun(:,:,:,tmpqi(1),tmpqi(2)), 'transform', eye(4), 'location', opt.ijk, ...
+      ft_plot_ortho(tmpfun, 'transform', eye(4), 'location', opt.ijk, ...
         'style', 'subplot', 'parents', tmph, 'update', opt.update, ...
         'colormap', opt.funcolormap, 'clim', [opt.fcolmin opt.fcolmax]);
     end
@@ -1694,17 +1731,27 @@ if opt.hasfun
     end
     
   else
+    if isequal(opt.funcolormap, 'rgb')
+      tmpfun = opt.fun;
+      if opt.hasmsk
+        tmpmask = opt.msk;
+      end
+    else
+      tmpqi  = [opt.qi 1];
+      tmpfun = opt.fun(:,:,:,tmpqi(1),tmpqi(2));
+      if opt.hasmsk
+        tmpmask = opt.msk(:,:,:,tmpqi(1),tmpqi(2));
+      end
+    end
     if opt.hasmsk
-      tmpqi = [opt.qi 1];
       tmph  = opt.funhandles;
-      ft_plot_ortho(opt.fun(:,:,:,tmpqi(1),tmpqi(2)), 'datmask', opt.msk(:,:,:,tmpqi(1),tmpqi(2)), 'transform', eye(4), 'location', opt.ijk, ...
+      ft_plot_ortho(tmpfun, 'datmask', tmpmask, 'transform', eye(4), 'location', opt.ijk, ...
         'style', 'subplot', 'surfhandle', tmph, 'update', opt.update, ...
         'colormap', opt.funcolormap, 'clim', [opt.fcolmin opt.fcolmax], ...
         'opacitylim', [opt.opacmin opt.opacmax]);
     else
-      tmpqi = [opt.qi 1];
       tmph  = opt.funhandles;
-      ft_plot_ortho(opt.fun(:,:,:,tmpqi(1),tmpqi(2)), 'transform', eye(4), 'location', opt.ijk, ...
+      ft_plot_ortho(tmpfun, 'transform', eye(4), 'location', opt.ijk, ...
         'style', 'subplot', 'surfhandle', tmph, 'update', opt.update, ...
         'colormap', opt.funcolormap, 'clim', [opt.fcolmin opt.fcolmax]);
     end

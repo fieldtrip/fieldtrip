@@ -73,9 +73,15 @@ switch method
     end
     
   case 'delaunay'
-    if all(pos(:,3)==0)
+    if all(pos(:,1)==0)
       % this can happen with simulated electrode grids
-      prj = pos(:,1:2);
+      prj = pos(:,[2 3]);
+    elseif all(pos(:,2)==0)
+      % this can happen with simulated electrode grids
+      prj = pos(:,[1 3]);
+    elseif all(pos(:,3)==0)
+      % this can happen with simulated electrode grids
+      prj = pos(:,[1 2]);
     else
       % make a 2D triangulation of the projected points using delaunay
       prj = elproj(pos);

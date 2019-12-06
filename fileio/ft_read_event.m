@@ -1,9 +1,8 @@
 function [event] = ft_read_event(filename, varargin)
 
-% FT_READ_EVENT reads all events from an EEG/MEG dataset and returns
-% them in a well defined structure. It is a wrapper around different
-% EEG/MEG file importers, directly supported formats are CTF, Neuromag,
-% EEP, BrainVision, Neuroscan, Neuralynx and Nervus/Nicolet.
+% FT_READ_EVENT reads all events from an EEG, MEG or other time series dataset and
+% returns them in a common data-independent structure. The supported formats are
+% listed in the accompanying FT_READ_HEADER function.
 %
 % Use as
 %   [event] = ft_read_event(filename, ...)
@@ -22,22 +21,6 @@ function [event] = ft_read_event(filename, varargin)
 %   'tolerance'      tolerance in samples when merging analogue trigger channels, only for Neuromag (default = 1, meaning
 %                    that an offset of one sample in both directions is compensated for)
 %
-% Furthermore, you can specify optional arguments as key-value pairs
-% for filtering the events, e.g. to select only events of a specific
-% type, of a specific value, or events between a specific begin and
-% end sample. This event filtering is especially usefull for real-time
-% processing. See FT_FILTER_EVENT for more details.
-%
-% Some data formats have trigger channels that are sampled continuously with
-% the same rate as the electrophysiological data. The default is to detect
-% only the up-going TTL flanks. The trigger events will correspond with the
-% first sample where the TTL value is up. This behavior can be changed
-% using the 'detectflank' option, which also allows for detecting the
-% down-going flank or both. In case of detecting the down-going flank, the
-% sample number of the event will correspond with the first sample at which
-% the TTF went down, and the value will correspond to the TTL value just
-% prior to going down.
-%
 % This function returns an event structure with the following fields
 %   event.type      = string
 %   event.sample    = expressed in samples, the first sample of a recording is 1
@@ -46,11 +29,29 @@ function [event] = ft_read_event(filename, varargin)
 %   event.duration  = expressed in samples
 %   event.timestamp = expressed in timestamp units, which vary over systems (optional)
 %
-% The event type and sample fields are always defined, other fields can be empty,
-% depending on the type of event file. Events are sorted by the sample on
-% which they occur. After reading the event structure, you can use the
-% following tricks to extract information about those events in which you
-% are interested.
+% You can specify optional arguments as key-value pairs for filtering the events,
+% e.g. to select only events of a specific type, of a specific value, or events
+% between a specific begin and end sample. This event filtering is especially usefull
+% for real-time processing. See FT_FILTER_EVENT for more details.
+%
+% Some data formats have trigger channels that are sampled continuously with the same
+% rate as the electrophysiological data. The default is to detect only the up-going
+% TTL flanks. The trigger events will correspond with the first sample where the TTL
+% value is up. This behavior can be changed using the 'detectflank' option, which
+% also allows for detecting the down-going flank or both. In case of detecting the
+% down-going flank, the sample number of the event will correspond with the first
+% sample at which the TTF went down, and the value will correspond to the TTL value
+% just prior to going down.
+%
+% To use an external reading function, you can specify a function as the
+% 'eventformat' option. This function should take the filename  and the headeras
+% input arguments. Please check the code of this function for details, and search for
+% BIDS_TSV as example.
+%
+% The event type and sample fields are always defined, other fields are present but
+% can be empty, depending on the type of event file. Events are sorted by the sample
+% on which they occur. After reading the event structure, you can use the following
+% tricks to extract information about those events in which you are interested.
 %
 % Determine the different event types
 %   unique({event.type})
@@ -67,12 +68,9 @@ function [event] = ft_read_event(filename, varargin)
 %
 % The list of supported file formats can be found in FT_READ_HEADER.
 %
-% To use an external reading function, use key-value pair: 'eventformat', FUNCTION_NAME.
-% (Function needs to be on the path, and take as input: filename)
-%
 % See also FT_READ_HEADER, FT_READ_DATA, FT_WRITE_EVENT, FT_FILTER_EVENT
 
-% Copyright (C) 2004-2016 Robert Oostenveld (Nervus by Jan Brogger)
+% Copyright (C) 2004-2019 Robert Oostenveld (Nervus by Jan Brogger)
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -105,32 +103,45 @@ if iscell(filename)
   % use recursion to read events from multiple files
   
   hdr = ft_getopt(varargin, 'header');
-  if isempty(hdr) || ~isfield(hdr, 'orig') || ~iscell(hdr.orig)
-    for i=1:numel(filename)
-      % read the individual file headers
-      hdr{i} = ft_read_header(filename{i}, varargin{:});
-    end
+  if isempty(hdr)
+    % read the combined and individual file headers
+    combined  = ft_read_header(filename, varargin{:});
   else
-    % use the individual file headers that were read previously
-    hdr = hdr.orig;
+    % use the combined and individual file headers that were read previously
+    combined = hdr;
   end
-  nsmp = nan(size(filename));
-  for i=1:numel(filename)
-    nsmp(i) = hdr{i}.nSamples*hdr{i}.nTrials;
-  end
-  offset = [0 cumsum(nsmp(1:end-1))];
+  hdr = combined.orig;
   
-  event = cell(size(filename));
-  for i=1:numel(filename)
-    varargin = ft_setopt(varargin, 'header', hdr{i});
-    event{i} = ft_read_event(filename{i}, varargin{:});
-    for j=1:numel(event{i})
-      % add the offset due to the previous files
-      event{i}(j).sample = event{i}(j).sample + offset(i);
+  allhdr = cat(1, hdr{:});
+  if numel(unique([allhdr.label]))==sum([allhdr.nChans])
+    % each file has different channels, concatenate along the channel dimension
+    % sample indices are the same for all files
+    for i=1:numel(filename)
+      varargin = ft_setopt(varargin, 'header', hdr{i});
+      event{i} = ft_read_event(filename{i}, varargin{:});
+    end
+    
+  else
+    % each file has the same channels, concatenate along the time dimension
+    % this requires careful bookkeeping of the sample indices
+    nsmp = nan(size(filename));
+    for i=1:numel(filename)
+      nsmp(i) = hdr{i}.nSamples*hdr{i}.nTrials;
+    end
+    offset = [0 cumsum(nsmp(1:end-1))];
+    
+    event = cell(size(filename));
+    for i=1:numel(filename)
+      varargin = ft_setopt(varargin, 'header', hdr{i});
+      event{i} = ft_read_event(filename{i}, varargin{:});
+      for j=1:numel(event{i})
+        % add the offset due to the previous files
+        event{i}(j).sample = event{i}(j).sample + offset(i);
+      end
     end
   end
   % return the concatenated events
-  event = appendevent(event{:});
+  event = appendstruct(event{:});
   return
 end
 
@@ -239,12 +250,12 @@ switch eventformat
     else
       trigger = read_trigger(filename, 'header', hdr, 'dataformat', '4d', 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trgindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fix4d8192', false);
     end
-    event   = appendevent(event, trigger);
+    event   = appendstruct(event, trigger);
     
     respindx = match_str(hdr.label, 'RESPONSE');
     if ~isempty(respindx)
       response = read_trigger(filename, 'header', hdr, 'dataformat', '4d', 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', respindx, 'detectflank', detectflank, 'trigshift', trigshift);
-      event    = appendevent(event, response);
+      event    = appendstruct(event, response);
     end
     
   case 'bci2000_dat'
@@ -449,35 +460,37 @@ switch eventformat
     event = read_ah5_markers(hdr, filename);
     
   case 'brainvision_vmrk'
-    fid = fopen_or_error(filename,'rt');
-    line = [];
-    while ischar(line) || isempty(line)
-      line = fgetl(fid);
-      if ~isempty(line) && ~(isnumeric(line) && line==-1)
-        if strncmpi(line, 'Mk', 2)
-          % this line contains a marker
-          tok = tokenize(line, '=', 0);    % do not squeeze repetitions of the separator
-          if length(tok)~=2
-            ft_warning('skipping unexpected formatted line in BrainVision marker file');
-          else
-            % the line looks like "MkXXX=YYY", which is ok
-            % the interesting part now is in the YYY, i.e. the second token
-            tok = tokenize(tok{2}, ',', 0);    % do not squeeze repetitions of the separator
-            if isempty(tok{1})
-              tok{1}  = [];
+    if ~isempty(filename)
+      fid = fopen_or_error(filename,'rt');
+      line = [];
+      while ischar(line) || isempty(line)
+        line = fgetl(fid);
+        if ~isempty(line) && ~(isnumeric(line) && line==-1)
+          if strncmpi(line, 'Mk', 2)
+            % this line contains a marker
+            tok = tokenize(line, '=', 0);    % do not squeeze repetitions of the separator
+            if length(tok)~=2
+              ft_warning('skipping unexpected formatted line in BrainVision marker file');
+            else
+              % the line looks like "MkXXX=YYY", which is ok
+              % the interesting part now is in the YYY, i.e. the second token
+              tok = tokenize(tok{2}, ',', 0);    % do not squeeze repetitions of the separator
+              if isempty(tok{1})
+                tok{1}  = [];
+              end
+              if isempty(tok{2})
+                tok{2}  = [];
+              end
+              event(end+1).type     = tok{1};
+              event(end  ).value    = tok{2};
+              event(end  ).sample   = str2num(tok{3});
+              event(end  ).duration = str2num(tok{4});
             end
-            if isempty(tok{2})
-              tok{2}  = [];
-            end
-            event(end+1).type     = tok{1};
-            event(end  ).value    = tok{2};
-            event(end  ).sample   = str2num(tok{3});
-            event(end  ).duration = str2num(tok{4});
           end
         end
       end
-    end
-    fclose(fid);
+      fclose(fid);
+    end;
     
   case 'bucn_nirs'
     event = read_bucn_nirsevent(filename);
@@ -506,7 +519,7 @@ switch eventformat
     end
     if ~isempty(chanindx)
       trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank);
-      event   = appendevent(event, trigger);
+      event   = appendstruct(event, trigger);
     end
     
   case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf_old'}
@@ -561,7 +574,7 @@ switch eventformat
     if ~isempty(chanindx)
       % read the trigger channel and do flank detection
       trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixctf', true);
-      event   = appendevent(event, trigger);
+      event   = appendstruct(event, trigger);
     end
     
     % read the classification file and make an event for each classified trial
@@ -1051,25 +1064,10 @@ switch eventformat
     if isempty(hdr)
       hdr = ft_read_header(filename);
     end
-    if isfield(hdr.orig, 'trigger')
-      % this is inefficient, since it keeps the complete data in memory
-      % but it does speed up subsequent read operations without the user
-      % having to care about it
-      smi = hdr.orig;
-    else
-      smi = read_smi_txt(filename);
-    end
-    timestamp = [smi.trigger(:).timestamp];
-    value     = [smi.trigger(:).value];
-    % note that in this dataformat the first input trigger can be before
-    % the start of the data acquisition
-    for i=1:length(timestamp)
-      event(end+1).type       = 'Trigger';
-      event(end  ).sample     = (timestamp(i)-hdr.FirstTimeStamp)/hdr.TimeStampPerSample + 1;
-      event(end  ).timestamp  = timestamp(i);
-      event(end  ).value      = value(i);
-      event(end  ).duration   = 1;
-      event(end  ).offset     = 0;
+    chanindx = find(strcmp(hdr.label, 'Trigger'));
+    event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift);
+    for i=1:numel(event)
+      event(i).timestamp = hdr.orig.timestamp(event(i).sample);
     end
     
   case 'eyelink_asc'
@@ -1310,7 +1308,7 @@ switch eventformat
       ft_warning('no events found in the event table, reading the trigger channel(s)');
       chanindx = find(ft_chantype(hdr, 'flag'));
       trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift);
-      event   = appendevent(event, trigger);
+      event   = appendstruct(event, trigger);
     end
     
   case 'matlab'
@@ -1378,7 +1376,7 @@ switch eventformat
     if isfield(hdr, 'orig') && isfield(hdr.orig, 'Trigger_Area') && isfield(hdr.orig, 'Tigger_Area_Length')
       if ~isempty(chanindx)
         trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift);
-        event   = appendevent(event, trigger);
+        event   = appendstruct(event, trigger);
       else
         % routine that reads analog triggers in case no index is specified
         event = read_micromed_event(filename);
@@ -1545,11 +1543,11 @@ switch eventformat
       
       if ~isempty(binaryindx)
         trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', binaryindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixneuromag', false);
-        event   = appendevent(event, trigger);
+        event   = appendstruct(event, trigger);
       end
       if ~isempty(otherindx)
         trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', otherindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixneuromag', false);
-        event   = appendevent(event, trigger);
+        event   = appendstruct(event, trigger);
       end
       if ~isempty(analogindx)
         % add the triggers to the event structure based on trigger channels with the name "STI xxx"
@@ -1557,7 +1555,7 @@ switch eventformat
         % channels, on older systems only
         % read the trigger channel and do flank detection
         trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', analogindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixneuromag', true);
-        event   = appendevent(event, trigger);
+        event   = appendstruct(event, trigger);
         
         if ~isempty(trigger)
           % throw out everything that is not a (real) trigger...
@@ -1581,7 +1579,7 @@ switch eventformat
               if j >= 1
                 fprintf('Fixing trigger at sample %d\n', all_samples(i));
               end %if
-              cur_triggers = appendevent(cur_triggers, trigger_tmp([trigger_tmp.sample] == all_samples(i+j)));
+              cur_triggers = appendstruct(cur_triggers, trigger_tmp([trigger_tmp.sample] == all_samples(i+j)));
               j = j + 1;
             end %while
             
@@ -1595,7 +1593,7 @@ switch eventformat
             
             i = i + j;
           end %while
-          event = appendevent(event, new_triggers);
+          event = appendstruct(event, new_triggers);
         end %if
         
       end
@@ -1636,7 +1634,7 @@ switch eventformat
       eve = ft_read_event(evefile, 'header', hdr);
       if ~isempty(eve)
         fprintf('appending %d events from "%s"\n', length(eve), evefile);
-        event = appendevent(event, eve);
+        event = appendstruct(event, eve);
       end
     end
     
@@ -1922,7 +1920,7 @@ switch eventformat
       if isempty(tmp.marker{i})
         break;
       end
-      event = appendevent(event, struct('type', tmp.markernames(i), 'sample', num2cell(tmp.marker{i}), 'value', {tmp.markertyp(i)}));
+      event = appendstruct(event, struct('type', tmp.markernames(i), 'sample', num2cell(tmp.marker{i}), 'value', {tmp.markertyp(i)}));
     end
     % if present, read the digital triggers which are present as channel in the data
     if isempty(hdr)
@@ -1931,7 +1929,7 @@ switch eventformat
     trgindx = match_str(hdr.label, 'DTRIG');
     if ~isempty(trgindx)
       trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trgindx, 'detectflank', detectflank, 'trigshift', trigshift);
-      event   = appendevent(event, trigger);
+      event   = appendstruct(event, trigger);
     end
     
   case 'nexstim_nxe'
@@ -2158,7 +2156,7 @@ switch eventformat
         end
       end
       
-      event = appendevent(event, trigger);
+      event = appendstruct(event, trigger);
     end
     
   case 'artinis_oxy4'
@@ -2195,7 +2193,7 @@ switch eventformat
         end
       end
       
-      event = appendevent(event, trigger);
+      event = appendstruct(event, trigger);
     end
     
   case 'spmeeg_mat'
@@ -2253,7 +2251,10 @@ switch eventformat
     % this allows the user to specify an external reading function
     % if it fails, the regular unsupported warning message is thrown
     try
-      hdr   = feval(eventformat, filename);
+      % this is used for bids_tsv, biopac_acq, motion_c3d, opensignals_txt, qualisys_tsv, and possibly others
+      if isempty(hdr)
+        hdr = feval(eventformat, filename);
+      end
       event = feval(eventformat, filename, hdr);
     catch
       ft_warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format "%s"', eventformat);

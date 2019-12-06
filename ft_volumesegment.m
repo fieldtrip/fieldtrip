@@ -287,6 +287,7 @@ end
 % create the tissue probability maps if needed
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if dotpm
+  
   if isdeployed
     % ensure that these exist in this case, otherwise deal with the defaults below
     cfg = ft_checkconfig(cfg, 'required', {'template' 'tpm'});
@@ -638,7 +639,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
       % output: scalp (cummulative) (if this is the only requested output)
       if numel(outp)==1
         segmented.scalp = scalpmask;
-		remove(strcmp(remove,'scalp'))=[];
+		    remove(strcmp(remove,'scalp'))=[];
         break
       end
     end   % end scalp
@@ -664,8 +665,8 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
       brain_ss = cast(brain, class(segmented.anatomy));
       segmented.anatomy = segmented.anatomy.*brain_ss;
       clear brain_ss
-      remove(strcmp(remove,'skullstrip'))=[];
-	  remove(strcmp(remove,'anatomy'))=[];
+      remove(strcmp(remove,'skullstrip')) = [];
+	    remove(strcmp(remove,'anatomy'))    = [];
       if numel(outp)==1
         break
       end
@@ -686,7 +687,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
       % output: gray, white, csf
     elseif any(strcmp(outp, 'gray')) || any(strcmp(outp, 'white')) || any(strcmp(outp, 'csf'))
       [dum, tissuetype] = max(cat(4, segmented.csf, segmented.gray, segmented.white), [], 4);
-      clear dummy
+      clear dum
       if any(strcmp(outp, 'white'))
         segmented.white = (tissuetype == 3) & brainmask;
         remove(strcmp(remove,'white'))=[];

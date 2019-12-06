@@ -1208,8 +1208,8 @@ for i=(numel(siz)+1):numel(dim)
   % all trailing singleton dimensions have length 1
   siz(i) = 1;
 end
-if isvector(x)
-  % there is no harm to keep it as it is
+if isvector(x) && ~(isrow(x) && dim(1) && numel(x)>1)
+  % there is no harm to keep it as it is, unless the data matrix is 1xNx1x1
 elseif istable(x)
   % there is no harm to keep it as it is
 else

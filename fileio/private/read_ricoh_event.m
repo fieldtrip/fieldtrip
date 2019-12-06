@@ -84,7 +84,7 @@ if ft_hastoolbox('ricoh_meg_reader')
     end
     clear trigger_tmp;
     % combine the triggers and the other events
-    event = appendevent(event, trigger); % search for "trigger" events according to 'trigchannel' defined outside the function
+    event = appendstruct(event, trigger); % search for "trigger" events according to 'trigchannel' defined outside the function
     if isfield(event, 'offset')
       event = rmfield(event,'offset');
     end
