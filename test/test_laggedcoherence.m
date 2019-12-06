@@ -9,7 +9,7 @@ function test_laggedcoherence
 datain=[];
 datain.label={'Ch1','Ch2'};
 datain.fsample=1000;
-datain.time{1}=0:1/datain.fsample:1.832;
+datain.time{1}=0:1/datain.fsample:8.832; % changed by JM, since it does not make sense to have less than 6 s of data if 1 Hz is requested with 3 cycles
 datain.trial{1}=randn(2,length(datain.time{1}));
 
 cfg=[];
