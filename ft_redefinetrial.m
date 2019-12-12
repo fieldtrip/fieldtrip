@@ -239,6 +239,9 @@ elseif ~isempty(cfg.trl)
   % ensure that sampleinfo is present, otherwise ft_fetch_data will crash
   data = ft_checkdata(data, 'hassampleinfo', 'yes');
   
+  % check for overlap info, otherwise ft_fetch_data will ignore it
+  overlap = cfg.overlap;
+  
   dataold = data;   % make a copy of the old data
   clear data        % this line is very important, we want to completely reconstruct the data from the old data!
   
@@ -271,7 +274,7 @@ elseif ~isempty(cfg.trl)
   
   for iTrl=1:size(trl, 1)
     
-    data.trial{iTrl} = ft_fetch_data(dataold, 'header', hdr, 'begsample', begsample(iTrl), 'endsample', endsample(iTrl), 'chanindx', 1:hdr.nChans, 'skipcheckdata', 1);
+    data.trial{iTrl} = ft_fetch_data(dataold, 'header', hdr, 'begsample', begsample(iTrl), 'endsample', endsample(iTrl), 'chanindx', 1:hdr.nChans, 'skipcheckdata', 1, ''allowoverlap, overlap);
     data.time{iTrl}  = offset2time(offset(iTrl), dataold.fsample, trllength(iTrl));
     
     % ensure correct handling of trialinfo.
