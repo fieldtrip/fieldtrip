@@ -120,6 +120,7 @@ switch version
     
     fn = fieldnames(timelock);
     fn = setdiff(fn, ignorefields('appendtimelock'));
+    fn = fn(~endsWith(fn, 'dimord'));
     dimord = cell(size(fn));
     hasrpt = false(size(fn));
     for i=1:numel(fn)
