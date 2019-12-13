@@ -141,6 +141,9 @@ freqout.lcrsspctrm(repmat(~all(isfinite(freqout.lcrsspctrm),2), [1 ncmb 1 1]))=n
 % check for a discrepancy between the requested lags and the output data
 if ~all(sellags)
   siz = size(freqout.lcrsspctrm);
+  if numel(freqout.freq)==1
+    siz(3) = 1;
+  end
   siz(4) = numel(lagsorig);
   tmp = nan(siz);
   tmp(:,:,:,sellags) = freqout.lcrsspctrm;

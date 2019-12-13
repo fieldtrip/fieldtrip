@@ -1,7 +1,10 @@
 function [dataout] = ft_laggedcoherence(cfg, datain)
 
-% FT_LAGGEDCOHERENCE calculates the lagged coherence between a set of
-% channels, for a number of frequencies, and a number of lags.
+% FT_LAGGEDCOHERENCE calculates the lagged coherence for a set of
+% channels pairs, a number of frequencies, and a number of lags. The channel
+% pairs are the complete set of pairs that can be formed from the channels
+% in datain, including the auto-pairs (one channel for which the lagged
+% coherence is calculated at different lags).
 %
 % Use as
 %   outdata = ft_laggedcoherence(cfg, indata)
@@ -10,11 +13,12 @@ function [dataout] = ft_laggedcoherence(cfg, datain)
 %
 % The configuration structure should contain
 %   cfg.foi       = vector 1 x numfoi, frequencies of interest
-%   cfg.loi       = vector 1 x numloi, lags of interes, this must be a vector of
+%   cfg.loi       = vector 1 x numloi, lags of interest, this must be a vector of
 %                   integers with starting value 0 or higher
 %   cfg.numcycles = integer, number of cycles of the Fourier basis functions that
 %                   are used to calculate the Fourier coefficients that are the
 %                   basis for calculating lagged coherence
+% 
 %
 % When using the results of this function in a publication, please cite:
 %   Fransen, A. M., van Ede, F., & Maris, E. (2015). Identifying neuronal
@@ -144,6 +148,16 @@ if ~ok
   ft_error('the input data should have the same time axis on each trial');
 end
 
+% remove the frequencies with a nsamplespertimwin that is larger than the trial length.
+remfreq = false(size(freq));
+for freqindx = 1:length(freq)
+  remfreq(freqindx) = nsamplespertimwin(freqindx)>numel(timevec);
+end
+freq=freq(~remfreq);
+nsamplespertimwin=nsamplespertimwin(~remfreq);
+t_ftimwin=t_ftimwin(~remfreq);
+
+% construct the toi vectors for each of the frequencies
 toicell = cell(size(freq));
 for freqindx = 1:length(freq)
   nsegments = floor(length(timevec)/nsamplespertimwin(freqindx));
@@ -169,7 +183,15 @@ for freqindx = 1:length(freq)
   cfg_freq.foi = freq(freqindx);
   cfg_freq.t_ftimwin = t_ftimwin(freqindx);
   cfg_freq.toi = toicell{freqindx};
-  cfg_freq.pad = ceil(numel(timevec)./Fs.*cfg_freq.foi)./cfg_freq.foi;
+%   cfg_freq.pad = ceil(numel(timevec)./Fs.*cfg_freq.foi)./cfg_freq.foi;
+%
+% Code for checking whether the requested cfg_freq.t_ftimwin (calculated as t_ftimwin) allows for the
+% requested cfg_freq.foi (calculated as freq) using the requested number of cycles (cfg.numcycles).
+% 
+% cyclelengths=t_ftimwin/cfg.numcycles
+% correspondingfreqs=ones(size(cyclelengths))./cyclelengths
+% freq % compare with correspondingfreqs
+
   freqout{freqindx} = ft_freqanalysis(cfg_freq,datain);
   
   cfg_lcoh.laggedcoherence.lags = cfg.numcycles.*cfg.loi./freqout{freqindx}.freq;

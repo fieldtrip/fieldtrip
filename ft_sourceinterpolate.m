@@ -130,7 +130,7 @@ functional = fixpos(functional);
 % ensure the functional data to be in double precision
 functional = ft_struct2double(functional);
 
-if (strcmp(cfg.interpmethod, 'nearest') || strcmp(cfg.interpmethod, 'mode')) && (ft_datatype(functional, 'volume+label') || ft_datatype(functional, 'source+label'))
+if (strcmp(cfg.interpmethod, 'nearest') || strcmp(cfg.interpmethod, 'mode')) && (ft_datatype(functional, 'volume+label') || ft_datatype(functional, 'source+label') || ft_datatype(functional, 'mesh+label'))
   % the first input argument describes a parcellation or segmentation with tissue labels
   isAtlasFun = true;
 else
@@ -354,9 +354,10 @@ elseif isUnstructuredFun && ~isUnstructuredAna
   anatomical.pos = [ax(:) ay(:) az(:)];
   clear ax ay az
 
-  interpmat = interp_ungridded(functional.pos, anatomical.pos, 'projmethod', cfg.interpmethod, 'sphereradius', cfg.sphereradius, 'power', cfg.power); % FIXME include other key-value pairs as well
+  tmp = interp_ungridded(functional.pos, anatomical.pos(anatomical.inside,:), 'projmethod', cfg.interpmethod, 'sphereradius', cfg.sphereradius, 'power', cfg.power); % FIXME include other key-value pairs as well
+  interpmat( anatomical.inside(:), :) = tmp;
   interpmat(~anatomical.inside(:), :) = 0;
-
+  
   % start with an empty structure, keep only some fields
   interp = keepfields(functional, {'time', 'freq'});
   interp = copyfields(anatomical, interp, {'pos', 'tri', 'dim', 'transform', 'coordsys', 'unit', 'anatomy'});
