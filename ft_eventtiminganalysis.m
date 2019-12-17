@@ -1,10 +1,11 @@
-function [dataout] = ft_singletrialanalysis(cfg, data)
+function [dataout] = ft_eventtiminganalysis(cfg, data)
 
-% FT_SINGLETRIALANALYSIS computes a model of single trial event-
-% related activity
+% FT_EVENTTIMINGANALYSIS computes a model of single trial event-
+% related activity, by estimating per trial the latency (and
+% amplitude) of event-related signal components.
 %
 % Use as
-%   [dataout] = ft_singletrialanalysis(cfg, data)
+%   [dataout] = ft_eventtiminganalysis(cfg, data)
 % where data is single-channel raw data as obtained by FT_PREPROCESSING
 % and cfg is a configuration structure according to
 %
@@ -72,7 +73,7 @@ function [dataout] = ft_singletrialanalysis(cfg, data)
 %
 % See also FT_SINGLETRIALANALYSIS_ASEO
 
-% Copyright (C) 2018, Jan-Mathijs Schoffelen DCCN
+% Copyright (C) 2018-2019, Jan-Mathijs Schoffelen DCCN
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

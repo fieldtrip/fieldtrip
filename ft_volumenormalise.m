@@ -10,6 +10,8 @@ function [normalised] = ft_volumenormalise(cfg, mri)
 %
 % Configuration options are
 %   cfg.spmversion  = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
+%   cfg.opts        = structure with configurable normalisation options,
+%                       see spm documentation for details. 
 %   cfg.template    = string, filename of the template anatomical MRI (default = 'T1.mnc'
 %                     for spm2 or 'T1.nii' for spm8)
 %   cfg.parameter   = cell-array with the functional data to be normalised (default = 'all')
@@ -41,6 +43,8 @@ function [normalised] = ft_volumenormalise(cfg, mri)
 %   cfg.intermediatename = prefix of the the coregistered images and of the
 %                          original images in the original headcoordinate system
 %   cfg.spmparams        = one can feed in parameters from a prior normalisation
+%   cfg.spmmethod        = 'old' or 'new', to switch between the different
+%                           spm12 implementations
 
 % Copyright (C) 2004-2014, Jan-Mathijs Schoffelen
 %
@@ -100,6 +104,7 @@ mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes
 % set the defaults
 cfg.spmversion       = ft_getopt(cfg, 'spmversion',       'spm8');
 cfg.spmmethod        = ft_getopt(cfg, 'spmmethod',        'old'); % in case of spm12, use the old-style normalisation by default
+cfg.opts             = ft_getopt(cfg, 'opts',             []);    % empty means default settings
 cfg.parameter        = ft_getopt(cfg, 'parameter',        'all');
 cfg.downsample       = ft_getopt(cfg, 'downsample',       1);
 cfg.write            = ft_getopt(cfg, 'write',            'no');
@@ -107,6 +112,7 @@ cfg.keepinside       = ft_getopt(cfg, 'keepinside',       'yes');
 cfg.keepintermediate = ft_getopt(cfg, 'keepintermediate', 'no');
 cfg.nonlinear        = ft_getopt(cfg, 'nonlinear',        'yes');
 cfg.smooth           = ft_getopt(cfg, 'smooth',           'no');
+cfg.templatecoordsys = ft_getopt(cfg, 'templatecoordsys', 'spm'); % the assumption is here that the template is one from SPM
 
 % check that the preferred SPM version is on the path
 ft_hastoolbox(cfg.spmversion, 1);
@@ -116,16 +122,16 @@ if ~isfield(mri, 'anatomy')
   ft_error('no anatomical information available, this is required for normalisation');
 end
 
-% ensure that the data has interpretable units and that the coordinate
-% system is in approximate ACPC space and keep track of an initial transformation
-% matrix that approximately does the co-registration
+% ensure that the input MRI has interpretable units and that the input MRI is expressed in 
+% a coordinate system which is in approximate agreement with the template
 mri  = ft_convert_units(mri, 'mm');
 orig = mri.transform;
 if isdeployed
-  mri = ft_convert_coordsys(mri, 'acpc', 2, cfg.template);
+  mri = ft_convert_coordsys(mri, cfg.templatecoordsys, 2, cfg.template);
 else
-  mri = ft_convert_coordsys(mri, 'acpc');
+  mri = ft_convert_coordsys(mri, cfg.templatecoordsys);
 end
+% keep track of an initial transformation matrix that does the approximate co-registration
 initial = mri.transform / orig;
 
 if isdeployed
@@ -137,6 +143,9 @@ else
     if strcmpi(cfg.spmversion, 'spm2'),  cfg.template = fullfile(spmpath, filesep, 'templates', filesep, 'T1.mnc'); end
     if strcmpi(cfg.spmversion, 'spm8'),  cfg.template = fullfile(spmpath, filesep, 'templates', filesep, 'T1.nii'); end
     if strcmpi(cfg.spmversion, 'spm12'), cfg.template = fullfile(spmpath, filesep, 'toolbox',   filesep, 'OldNorm', filesep, 'T1.nii'); end
+    if ~strcmp(cfg.templatecoordsys, 'spm')
+      ft_error('you should specify cfg.templatecoordsys=''spm'' when using an SPM template');
+    end
   end
 end
 
@@ -243,8 +252,8 @@ if ~isfield(cfg, 'spmparams')
     fprintf('warping the individual anatomy to the template anatomy, using only linear transformations\n');
     % compute the parameters by warping the individual anatomy
     %VF         = spm_vol([cfg.intermediatename '_anatomy' ext]);
-    flags.nits = 0; % put number of non-linear iterations to zero
-    params     = spm_normalise(VG, VF(1), [], [], [], flags);
+    cfg.opts.nits = ft_getopt(cfg.opts, 'nits', 0); % put number of non-linear iterations to zero
+    params     = spm_normalise(VG, VF(1), [], [], [], cfg.opts);
   elseif strcmp(cfg.spmversion, 'spm12') && (strcmp(cfg.spmmethod, 'new') || strcmp(cfg.spmmethod, 'mars'))
     if ~isfield(cfg, 'tpm') || isempty(cfg.tpm)
       cfg.tpm = fullfile(spm('dir'),'tpm','TPM.nii');
@@ -313,20 +322,25 @@ normalised = [];
 
 fprintf('creating the normalized volumes\n');
 if oldparams
+  cfg.opts.interp = ft_getopt(cfg.opts, 'interp', 1); % set to 0 for nearest interpolation
+  
   % apply the normalisation parameters to each of the volumes
-  flags.vox  = cfg.downsample.*[1 1 1];
+  flags.vox    = cfg.downsample.*[1 1 1];
+  flags.interp = cfg.opts.interp; 
   spm_write_sn(char({VF.fname}), params, flags);  % this creates the 'w' prefixed files
   for k = 1:numel(VF)
     [p, f, x] = fileparts(VF(k).fname);
     Vout(k)   = spm_vol(fullfile(p, ['w' f x]));
   end
 elseif newparams
+  cfg.opts.interp = ft_getopt(cfg.opts, 'interp', 4); % set to 0 for nearest interpolation
+  
   [pth,fname,ext] = fileparts(params.image.fname);
   
   tmp        = [];
   tmp.fnames = {VF(:).fname};
   tmp.savedir.saveusr{1} = pth;
-  tmp.interp = 4;
+  tmp.interp = cfg.opts.interp;
   tmp.mask   = 0;
   tmp.fwhm   = [0 0 0];
   
@@ -349,7 +363,7 @@ normalised.transform = Vout(1).mat;
 normalised.dim       = size(normalised.anatomy);
 normalised.params    = params;  % this holds the normalization parameters
 normalised.initial   = initial; % this holds the initial co-registration to approximately align with the template
-normalised.coordsys  = 'spm';
+normalised.coordsys  = cfg.templatecoordsys;
 
 if isfield(normalised, 'inside')
   % convert back to a logical volume
