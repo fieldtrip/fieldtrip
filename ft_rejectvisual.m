@@ -66,14 +66,14 @@ function [data] = ft_rejectvisual(cfg, data)
 % preprocessing and the selection of the latency window is NOT applied
 % to the output data.
 %
-% The following settings are usefull for identifying EOG artifacts:
+% The following settings are useful for identifying EOG artifacts:
 %   cfg.preproc.bpfilter    = 'yes'
 %   cfg.preproc.bpfilttype  = 'but'
 %   cfg.preproc.bpfreq      = [1 15]
 %   cfg.preproc.bpfiltord   = 4
 %   cfg.preproc.rectify     = 'yes'
 %
-% The following settings are usefull for identifying muscle artifacts:
+% The following settings are useful for identifying muscle artifacts:
 %   cfg.preproc.bpfilter    = 'yes'
 %   cfg.preproc.bpfreq      = [110 140]
 %   cfg.preproc.bpfiltord   =  8
@@ -185,6 +185,10 @@ tmpcfg = keepfields(cfg, fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan') | s
 tmpcfg.parameter = 'trial';
 tmpdata = chanscale_common(tmpcfg, data);
 scaled = ~isequal(data.trial, tmpdata.trial);
+
+% select trials, channel and latency
+selcfg = keepfields(cfg, {'trials', 'channel', 'latency', 'showcallinfo'});
+tmpdata = ft_selectdata(selcfg, tmpdata);
 
 switch cfg.method
   case 'channel'
