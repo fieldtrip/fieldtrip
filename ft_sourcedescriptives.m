@@ -115,7 +115,7 @@ cfg.fwhmremovecenter = ft_getopt(cfg, 'fwhmremovecenter', 0);
 cfg.fwhmmethod       = ft_getopt(cfg, 'fwhmmethod',       'barnes');
 cfg.fwhmmaxdist      = ft_getopt(cfg, 'fwhmmaxdist',      []);
 cfg.fixedori         = ft_getopt(cfg, 'fixedori',         'over_trials');
-cfg.flipdori         = ft_getopt(cfg, 'fixedori',         'no');
+cfg.flipori          = ft_getopt(cfg, 'flipori',          'no');
 
 % only works for minimumnormestimate
 cfg.demean         = ft_getopt(cfg, 'demean',         'yes');
