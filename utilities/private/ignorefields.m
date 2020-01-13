@@ -25,6 +25,7 @@ switch purpose
       'trialinfo'  % this is dealt with explicitly
       'unmixing'
       'unmixingdimord'
+      'brainordinate'
       };
 
   case 'appendfreq'
@@ -205,6 +206,7 @@ switch purpose
       'sampleinfo'
       'time'
       'trialinfo'
+      'brainordinate'
       };
 
   case 'html'
@@ -244,6 +246,7 @@ switch purpose
       'topolabel'
       'transform'
       'unit'
+      'brainordinate'
       };
 
   case 'recursesize'

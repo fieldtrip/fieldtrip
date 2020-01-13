@@ -109,12 +109,12 @@ yrange(end+1) = nan;
 
 % these are needed to automatically determine the distance
 width = varargin{1}.width(:);
-for i=1:numel(varargin)
+for i=2:numel(varargin)
   width = cat(1, width, varargin{i}.width(:));
 end
 height = varargin{1}.height(:);
-for i=1:numel(varargin)
-  width = cat(1, height, varargin{i}.height(:));
+for i=2:numel(varargin)
+  height = cat(1, height, varargin{i}.height(:));
 end
 
 % set the first target point, it will be updated if we go along

@@ -84,8 +84,10 @@ append = istrue(append);
 % determine the data size
 [nchans, nsamples] = size(dat);
 
-% ensure that the directory exists
-isdir_or_mkdir(fileparts(filename));
+% ensure that the directory exists if we want to write to a file
+if ~ismember(dataformat, {'empty', 'fcdc_global', 'fcdc_buffer', 'fcdc_mysql'})
+  isdir_or_mkdir(fileparts(filename));
+end
 
 switch dataformat
 
