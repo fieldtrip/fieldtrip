@@ -110,7 +110,7 @@ if nargin>1 && ~strcmpi(target, obj.coordsys)
           else
             obj = align_neuromag2acpc(obj, method);
           end
-        case {'mni', 'fsaverage'}
+        case {'mni', 'fsaverage', 'spm'}
           fprintf('not converting the coordinate system from %s to %s, these are similar enough\n', obj.coordsys, target);
           % these are close enough to ACPC, so nothing needs to be done
         otherwise

@@ -45,6 +45,7 @@ function [normalised] = ft_volumenormalise(cfg, mri)
 %   cfg.spmparams        = one can feed in parameters from a prior normalisation
 %   cfg.spmmethod        = 'old' or 'new', to switch between the different
 %                           spm12 implementations
+%   cfg.templatecoordsys = the coordinate system of the template (default = 'spm').
 
 % Copyright (C) 2004-2014, Jan-Mathijs Schoffelen
 %
