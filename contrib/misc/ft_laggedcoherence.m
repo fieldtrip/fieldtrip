@@ -122,23 +122,19 @@ oddnsamples = mod(nsamplespertimwinall,2) == 1;
 nsamplespertimwinall = nsamplespertimwinall(oddnsamples);
 freqall = freqall(oddnsamples);
 timepertimwinall = nsamplespertimwinall/Fs;
-% % Find the best matching frequencies
-% freq = [];
-% t_ftimwin = [];
-% nsamplespertimwin = [];
-% for foiind = 1:length(cfg.foi)
-%   absdiff = abs(freqall-cfg.foi(foiind));
-%   [minval,minvalind] = min(absdiff);
-%   if isempty(freq) || ~any(freq == freqall(minvalind))
-%     freq(end+1) = freqall(minvalind);
-%     t_ftimwin(end+1) = timepertimwinall(minvalind);
-%     nsamplespertimwin(end+1) = nsamplespertimwinall(minvalind);
-%   end
-% end
-
-freq = cfg.foi;
-nsamplespertimwin = ceil((cfg.numcycles./freq).*datain.fsample);
-t_ftimwin         = nsamplespertimwin./datain.fsample;
+% Find the best matching frequencies
+freq = [];
+t_ftimwin = [];
+nsamplespertimwin = [];
+for foiind = 1:length(cfg.foi)
+  absdiff = abs(freqall-cfg.foi(foiind));
+  [minval,minvalind] = min(absdiff);
+  if isempty(freq) || ~any(freq == freqall(minvalind))
+    freq(end+1) = freqall(minvalind);
+    t_ftimwin(end+1) = timepertimwinall(minvalind);
+    nsamplespertimwin(end+1) = nsamplespertimwinall(minvalind);
+  end
+end
 
 % Construct a frequency-specific toi vector for every element in freq,
 % which will later be passed as an argument to ft_freqanalysis.
