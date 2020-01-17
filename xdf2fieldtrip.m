@@ -90,7 +90,11 @@ for i=1:numel(streams)
   % this section of code is shared with fileio/private/sccn_xdf
   hdr             = [];
   hdr.Fs          = stream.info.effective_srate;
-  hdr.nChans      = numel(stream.info.desc.channels.channel);
+  if isfield(stream.info.desc, 'channels')
+    hdr.nChans    = numel(stream.info.desc.channels.channel);
+  else
+    hdr.nChans    = str2double(stream.info.channel_count);
+  end
   hdr.nSamplesPre = 0;
   hdr.nSamples    = length(stream.time_stamps);
   hdr.nTrials     = 1;
@@ -101,9 +105,15 @@ for i=1:numel(streams)
   prefix = stream.info.name;
   
   for j=1:hdr.nChans
-    hdr.label{j} = [prefix '_' stream.info.desc.channels.channel{j}.label];
-    hdr.chantype{j} = stream.info.desc.channels.channel{j}.type;
-    hdr.chanunit{j} = stream.info.desc.channels.channel{j}.unit;
+    if isfield(stream.info.desc, 'channels')
+      hdr.label{j} = [prefix '_' stream.info.desc.channels.channel{j}.label];
+      hdr.chantype{j} = stream.info.desc.channels.channel{j}.type;
+      hdr.chanunit{j} = stream.info.desc.channels.channel{j}.unit;
+    else
+      hdr.label{j} = num2str(j);
+      hdr.chantype{j} = 'unknown';
+      hdr.chanunit{j} = 'unknown';
+    end
   end
   
   hdr.FirstTimeStamp     = stream.time_stamps(1);
@@ -111,7 +121,7 @@ for i=1:numel(streams)
   
   % keep the original header details
   hdr.orig = stream.info;
-
+  
   data{i}.hdr = hdr;
   data{i}.label = hdr.label;
   data{i}.time = {streams{i}.time_stamps};

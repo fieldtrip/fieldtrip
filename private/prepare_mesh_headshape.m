@@ -32,7 +32,8 @@ function mesh = prepare_mesh_headshape(cfg)
 
 % get the specific options
 cfg.headshape    = ft_getopt(cfg, 'headshape');
-cfg.smooth       = ft_getopt(cfg, 'smooth');   % no default
+cfg.smooth       = ft_getopt(cfg, 'smooth');      % no default
+cfg.numvertices  = ft_getopt(cfg, 'numvertices');
 
 if isa(cfg, 'config')
   % convert the config-object back into a normal structure

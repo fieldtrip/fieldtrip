@@ -61,7 +61,11 @@ if needhdr
   % this section of code is shared with xdf2fieldtrip
   hdr             = [];
   hdr.Fs          = stream.info.effective_srate;
-  hdr.nChans      = numel(stream.info.desc.channels.channel);
+  if isfield(stream.info.desc, 'channels')
+    hdr.nChans    = numel(stream.info.desc.channels.channel);
+  else
+    hdr.nChans    = str2double(stream.info.channel_count);
+  end
   hdr.nSamplesPre = 0;
   hdr.nSamples    = length(stream.time_stamps);
   hdr.nTrials     = 1;
@@ -70,10 +74,16 @@ if needhdr
   hdr.chanunit    = cell(hdr.nChans, 1);
   
   prefix = stream.info.name;
-  for i=1:hdr.nChans
-    hdr.label{i} = [prefix '_' stream.info.desc.channels.channel{i}.label];
-    hdr.chantype{i} = stream.info.desc.channels.channel{i}.type;
-    hdr.chanunit{i} = stream.info.desc.channels.channel{i}.unit;
+  for j=1:hdr.nChans
+    if isfield(stream.info.desc, 'channels')
+      hdr.label{j} = [prefix '_' stream.info.desc.channels.channel{j}.label];
+      hdr.chantype{j} = stream.info.desc.channels.channel{j}.type;
+      hdr.chanunit{j} = stream.info.desc.channels.channel{j}.unit;
+    else
+      hdr.label{j} = num2str(j);
+      hdr.chantype{j} = 'unknown';
+      hdr.chanunit{j} = 'unknown';
+    end
   end
   
   hdr.FirstTimeStamp     = stream.time_stamps(1);

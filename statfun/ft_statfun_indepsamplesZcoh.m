@@ -25,7 +25,7 @@ function [s, cfg] = ft_statfun_indepsamplesZcoh(cfg, dat, design)
 %   cfg.computeprob    = 'yes' or 'no', calculate the p-values (default='no')
 %
 % The following options are relevant if cfg.computecritval='yes' and/or
-% cfg.computeprob='yes'.
+% cfg.computeprob='yes':
 %   cfg.alpha = critical alpha-level of the statistical test (default=0.05)
 %   cfg.tail  = -1, 0, or 1, left, two-sided, or right (default=1)
 %               cfg.tail in combination with cfg.computecritval='yes'
@@ -34,9 +34,9 @@ function [s, cfg] = ft_statfun_indepsamplesZcoh(cfg, dat, design)
 %               cfg.alpha/2 and (1-cfg.alpha/2) (with cfg.tail=0), or at
 %               quantile (1-cfg.alpha) (with cfg.tail=1).
 %
-% Design specification
-%   cfg.ivar  = column number of the design that contains the labels of the conditions that
-%               must be compared (default=1). The labels are the numbers 1 and 2.
+% The experimental design is specified as:
+%   cfg.ivar  = row number of the design that contains the labels of the conditions that must be compared (default=1).
+%               The labels should be specified as the number 1 and 2.
 %
 % See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
 
@@ -61,11 +61,12 @@ function [s, cfg] = ft_statfun_indepsamplesZcoh(cfg, dat, design)
 % $Id$
 
 % set the defaults
-if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end
-if ~isfield(cfg, 'computecritval'),    cfg.computecritval='no';   end
-if ~isfield(cfg, 'computeprob'),       cfg.computeprob='no';      end
-if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end
-if ~isfield(cfg, 'tail'),              cfg.tail=1;                end
+cfg.computestat    = ft_getopt(cfg, 'computestat', 'yes');
+cfg.computecritval = ft_getopt(cfg, 'computecritval', 'no');
+cfg.computeprob    = ft_getopt(cfg, 'computeprob', 'no');
+cfg.alpha          = ft_getopt(cfg, 'alpha', 0.05);      
+cfg.tail           = ft_getopt(cfg, 'tail', 1);
+cfg.ivar           = ft_getopt(cfg, 'ivar', 1);
 
 % perform some checks on the configuration
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')

@@ -34,10 +34,8 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 % statistics will be thresholded and combined into one statistical
 % value per cluster.
 %   cfg.clusterstatistic = how to combine the single samples that belong to a cluster, 'maxsum', 'maxsize', 'wcm' (default = 'maxsum')
-%                          option 'wcm' refers to 'weighted cluster mass',
-%                          a statistic that combines cluster size and
-%                          intensity; see Hayasaka & Nichols (2004) NeuroImage
-%                          for details
+%                          the option 'wcm' refers to 'weighted cluster mass', a statistic that combines cluster size and intensity; 
+%                          see Hayasaka & Nichols (2004) NeuroImage for details
 %   cfg.clusterthreshold = method for single-sample threshold, 'parametric', 'nonparametric_individual', 'nonparametric_common' (default = 'parametric')
 %   cfg.clusteralpha     = for either parametric or nonparametric thresholding per tail (default = 0.05)
 %   cfg.clustercritval   = for parametric thresholding (default is determined by the statfun)
@@ -299,6 +297,9 @@ if strcmp(cfg.precondition, 'after')
   tmpcfg.preconditionflag = 1;
   [tmpstat, tmpcfg, dat] = statfun(tmpcfg, dat, design);
 end
+
+posdistribution = nan(1,Nrand);
+negdistribution = nan(1,Nrand);
 
 % compute the statistic for the randomized data and count the outliers
 for i=1:Nrand

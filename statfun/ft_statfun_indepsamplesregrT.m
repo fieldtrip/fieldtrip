@@ -1,8 +1,8 @@
 function [s, cfg] = ft_statfun_indepsamplesregrT(cfg, dat, design)
 
 % FT_STATFUN_INDEPSAMPLESREGRT calculates independent samples regression coefficient
-% T-statistics on the biological data in dat (the dependent variable), using the
-% information on the independent variable (predictor) in design.
+% t-statistics on the biological data (the dependent variable), using the information
+% on the independent variable (predictor) in the design.
 %
 % Use this function by calling one of the high-level statistics functions as
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
@@ -12,12 +12,12 @@ function [s, cfg] = ft_statfun_indepsamplesregrT(cfg, dat, design)
 %   cfg.statistic = 'ft_statfun_indepsamplesregrT'
 %
 % Configuration options
-%   cfg.computestat    = 'yes' or 'no', calculate the statistic (default='yes')
-%   cfg.computecritval = 'yes' or 'no', calculate the critical values of the test statistics (default='no')
-%   cfg.computeprob    = 'yes' or 'no', calculate the p-values (default='no')
+%   cfg.computestat    = 'yes' or 'no', calculate the statistic (default = 'yes')
+%   cfg.computecritval = 'yes' or 'no', calculate the critical values of the test statistics (default = 'no')
+%   cfg.computeprob    = 'yes' or 'no', calculate the p-values (default = 'no')
 %
 % The following options are relevant if cfg.computecritval='yes' and/or
-% cfg.computeprob='yes'.
+% cfg.computeprob='yes':
 %   cfg.alpha = critical alpha-level of the statistical test (default=0.05)
 %   cfg.tail  = -1, 0, or 1, left, two-sided, or right (default=1)
 %               cfg.tail in combination with cfg.computecritval='yes'
@@ -26,8 +26,8 @@ function [s, cfg] = ft_statfun_indepsamplesregrT(cfg, dat, design)
 %               cfg.alpha/2 and (1-cfg.alpha/2) (with cfg.tail=0), or at
 %               quantile (1-cfg.alpha) (with cfg.tail=1).
 %
-% Design specification
-%   cfg.ivar  = row number of the design that contains the independent variable (default=1)
+% The experimental design is specified as:
+%   cfg.ivar  = row number of the design that contains the independent variable, i.e. the predictor (default=1).
 %
 % See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
 
@@ -51,12 +51,13 @@ function [s, cfg] = ft_statfun_indepsamplesregrT(cfg, dat, design)
 %
 % $Id$
 
-% set defaults
-if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end
-if ~isfield(cfg, 'computecritval'),    cfg.computecritval='no';   end
-if ~isfield(cfg, 'computeprob'),       cfg.computeprob='no';      end
-if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end
-if ~isfield(cfg, 'tail'),              cfg.tail=1;                end
+% set the defaults
+cfg.computestat    = ft_getopt(cfg, 'computestat', 'yes');
+cfg.computecritval = ft_getopt(cfg, 'computecritval', 'no');
+cfg.computeprob    = ft_getopt(cfg, 'computeprob', 'no');
+cfg.alpha          = ft_getopt(cfg, 'alpha', 0.05);      
+cfg.tail           = ft_getopt(cfg, 'tail', 1);
+cfg.ivar           = ft_getopt(cfg, 'ivar', 1);
 
 % perform some checks on the configuration
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
@@ -67,10 +68,10 @@ if isfield(cfg,'uvar') && ~isempty(cfg.uvar)
 end
 
 if ~isempty(cfg.cvar)
-  condlabels=unique(design(cfg.cvar,:));
-  nblocks=length(condlabels);
+  condlabels = unique(design(cfg.cvar,:));
+  nblocks = length(condlabels);
 else
-  nblocks=1;
+  nblocks = 1;
 end
 
 [nsmpl,nrepl] = size(dat);
