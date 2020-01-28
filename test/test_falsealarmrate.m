@@ -4,9 +4,11 @@ function test_falsealarmrate
 % MEM 3gb
 % DEPENDENCY ft_statistics_montecarlo ft_statistics_analytic ft_statfun_ft_statfun_depsamplesT
 
+% This test script relates to this https://github.com/fieldtrip/website/issues/195
+
 nchan = 100;
 ntime = 100;
-nsubj = 10; % it fails for 10, it works for 20
+nsubj = 10; % it failed for 10, it worked for 20
 
 grandavg = [];
 grandavg.label = cellstr(num2str((1:nchan)'));
