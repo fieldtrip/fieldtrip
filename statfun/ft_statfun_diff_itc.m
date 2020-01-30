@@ -2,8 +2,8 @@ function [s, cfg] = ft_statfun_diff_itc(cfg, dat, design)
 
 % FT_STATFUN_DIFF_ITC computes the difference in the inter-trial coherence between
 % two conditions. The input data for this test should consist of complex-values
-% spectral estimates, e.g. computed using FT_FREQANALYSIS with method=mtmfft, wavelet
-% or mtmconvcol.
+% spectral estimates, e.g. computed using FT_FREQANALYSIS with cfg.method='mtmfft',
+% 'wavelet' or 'mtmconvcol'.
 %
 % The ITC is a measure of phase consistency over trials. By randomlly shuffling the
 % trials  between the two consitions and repeatedly computing the ITC difference, you
@@ -15,20 +15,25 @@ function [s, cfg] = ft_statfun_diff_itc(cfg, dat, design)
 %
 % Use this function by calling the high-level statistic functions as
 %   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
-% with the following configuration options
-%   cfg.method    = 'montecarlo'
-%   cfg.statistic = 'diff_itc'
-% and optionally the options
-%  cfg.complex    = 'diffabs' to compute the difference of the absolute ITC values (default), or
-%                   'absdiff' to compute the absolute value of the difference in the complex ITC values.
-% 
+% with the following configuration option:
+%   cfg.statistic = 'ft_statfun_diff_itc'
+%
 % For this specific statistic there is no known parametric distribution, hence the
-% probability and critical value cannot be computed. This specific statistic can
-% therefore only be used with cfg.method='montecarlo'. If you want to do this in
-% combination with cfg.correctm='cluster', you also need either
+% probability and critical value cannot be computed analytically. This specific
+% statistic can therefore only be used with cfg.method='montecarlo'. If you want to
+% do this in combination with cfg.correctm='cluster', you also need to specify
 % cfg.clusterthreshold='nonparametric_common' or 'nonparametric_individual'.
 %
-% See FT_FREQSTATISTICS and FT_STATISTICS_MONTECARLO for more details
+% You can specify the following configuration options:
+%   cfg.complex = string, 'diffabs' (default) to compute the difference of the absolute ITC values,
+%                 or 'absdiff' to compute the absolute value of the difference in the complex ITC values.
+%
+% The experimental design is specified as:
+%   cfg.ivar  = independent variable, row number of the design that contains the labels of the conditions to be compared (default=1)
+%
+% The labels for the independent variable should be specified as the number 1 and 2.
+%
+% See also FT_FREQSTATISTICS and FT_STATISTICS_MONTECARLO
 
 % Copyright (C) 2008-2014, Robert Oostenveld
 %
@@ -51,35 +56,38 @@ function [s, cfg] = ft_statfun_diff_itc(cfg, dat, design)
 % $Id$
 
 % set the defaults
-if ~isfield(cfg, 'complex'), cfg.complex = 'diffabs';   end
+cfg.complex        = ft_getopt(cfg, 'complex', 'diffabs');
+cfg.ivar           = ft_getopt(cfg, 'ivar', 1);
 
-selA = find(design(cfg.ivar,:)==1);
-selB = find(design(cfg.ivar,:)==2);
-dfA  = length(selA);
-dfB  = length(selB);
-if (dfA+dfB)<size(design, 2)
+sel1 = find(design(cfg.ivar,:)==1);
+sel2 = find(design(cfg.ivar,:)==2);
+df1  = length(sel1);
+df2  = length(sel2);
+
+if (df1+df2)<size(design, 2)
   ft_error('inappropriate design, should contain 1''s and 2''s');
 end
+
 if isreal(dat)
-  ft_error('the data should be complex, i.e. computed with freqanalysis and cfg.output="fourier"');
+  ft_error('the data should be complex, i.e. computed with FT_FREQANALYSIS and cfg.output="fourier"');
 end
+
 % normalise the complex data in each trial
 dat = dat./abs(dat);
 
 switch cfg.complex
-case 'diffabs'
-  % first compute the absolute, then take the difference
-  % this is not sensitive to phase differences
-  itcA = abs(mean(dat(:,selA), 2)); % ITC is the length of the average complex numbers
-  itcB = abs(mean(dat(:,selB), 2)); % ITC is the length of the average complex numbers
-  s.stat = itcA - itcB;
-case 'absdiff'
-  % first compute the difference, then take the absolute
-  % this is sensitive to phase differences
-  itcA = mean(dat(:,selA), 2); % ITC is here the average complex number
-  itcB = mean(dat(:,selB), 2); % ITC is here the average complex number
-  s.stat = abs(itcA - itcB);
-otherwise
-  ft_error('incorrect specification of cfg.complex');
+  case 'diffabs'
+    % first compute the absolute, then take the difference
+    % this is not sensitive to phase differences
+    itc1 = abs(mean(dat(:,sel1), 2)); % ITC is the length of the average complex number
+    itc2 = abs(mean(dat(:,sel2), 2)); % ITC is the length of the average complex number
+    s.stat = itc1 - itc2;
+  case 'absdiff'
+    % first compute the difference, then take the absolute
+    % this is sensitive to phase differences
+    itc1 = mean(dat(:,sel1), 2); % ITC is here the average complex number
+    itc2 = mean(dat(:,sel2), 2); % ITC is here the average complex number
+    s.stat = abs(itc1 - itc2);
+  otherwise
+    ft_error('incorrect specification of cfg.complex');
 end
-

@@ -34,10 +34,8 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 % statistics will be thresholded and combined into one statistical
 % value per cluster.
 %   cfg.clusterstatistic = how to combine the single samples that belong to a cluster, 'maxsum', 'maxsize', 'wcm' (default = 'maxsum')
-%                          option 'wcm' refers to 'weighted cluster mass',
-%                          a statistic that combines cluster size and
-%                          intensity; see Hayasaka & Nichols (2004) NeuroImage
-%                          for details
+%                          the option 'wcm' refers to 'weighted cluster mass', a statistic that combines cluster size and intensity; 
+%                          see Hayasaka & Nichols (2004) NeuroImage for details
 %   cfg.clusterthreshold = method for single-sample threshold, 'parametric', 'nonparametric_individual', 'nonparametric_common' (default = 'parametric')
 %   cfg.clusteralpha     = for either parametric or nonparametric thresholding per tail (default = 0.05)
 %   cfg.clustercritval   = for parametric thresholding (default is determined by the statfun)
@@ -300,6 +298,12 @@ if strcmp(cfg.precondition, 'after')
   [tmpstat, tmpcfg, dat] = statfun(tmpcfg, dat, design);
 end
 
+if strcmp(cfg.correctm, 'max')
+  % pre-allocate the memory to hold the distribution of most extreme positive (right) and negative (left) statistical values
+  posdistribution = nan(1,Nrand);
+  negdistribution = nan(1,Nrand);
+end
+
 % compute the statistic for the randomized data and count the outliers
 for i=1:Nrand
   ft_progress(i/Nrand, 'computing statistic %d from %d\n', i, Nrand);
@@ -487,12 +491,7 @@ if exist('statrand', 'var')
 end
 
 % return optional other details that were returned by the statfun
-fn = fieldnames(statfull);
-for i=1:length(fn)
-  if ~isfield(stat, fn{i})
-    stat = setfield(stat, fn{i}, getfield(statfull, fn{i}));
-  end
-end
+stat = copyfields(statfull, stat, fieldnames(statfull));
 
 ft_warning(ws); % revert to original state
 
