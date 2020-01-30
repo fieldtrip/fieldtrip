@@ -2589,18 +2589,19 @@ switch headerformat
     checkUniqueLabels = false;
     
   otherwise
-    % attempt to run "headerformat" as a function
-    % this allows the user to specify an external reading function
-    % if it fails, the regular unsupported warning message is thrown
-    try
-      % this is used for bids_tsv, biopac_acq, motion_c3d, opensignals_txt, qualisys_tsv, and possibly others
+    if exist(headerformat, 'file')
+      % attempt to run "headerformat" as a function, this allows the user to specify an external reading function
+      % this is also used for bids_tsv, biopac_acq, motion_c3d, opensignals_txt, qualisys_tsv, sccn_xdf, and possibly others
       hdr = feval(headerformat, filename);
-    catch
-      if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
+    elseif strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
+      try
+        % there is no guarantee that biosig can read it
         hdr = read_biosig_header(filename);
-      else
+      catch
         ft_error('unsupported header format "%s"', headerformat);
       end
+    else
+      ft_error('unsupported header format "%s"', headerformat);
     end
     
 end % switch headerformat
