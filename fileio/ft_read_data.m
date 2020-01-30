@@ -1475,19 +1475,21 @@ switch dataformat
     end
     
   otherwise
-    % attempt to run "dataformat" as a function
-    % this allows the user to specify an external reading function
-    % if it fails, the regular unsupported warning message is thrown
-    try
-      % this is used for bids_tsv, biopac_acq, motion_c3d, opensignals_txt, qualisys_tsv, and possibly others
+    if exist(dataformat, 'file')
+      % attempt to run "dataformat" as a function, this allows the user to specify an external reading function
+      % this is also used for bids_tsv, biopac_acq, motion_c3d, opensignals_txt, qualisys_tsv, sccn_xdf, and possibly others
       dat = feval(dataformat, filename, hdr, begsample, endsample, chanindx);
-    catch
-      if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
+    elseif strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
+      try
+        % there is no guarantee that biosig can read it
         dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
-      else
+      catch
         ft_error('unsupported data format "%s"', dataformat);
       end
+    else
+      ft_error('unsupported data format "%s"', dataformat);
     end
+    
 end % switch dataformat
 
 if ~exist('dimord', 'var')

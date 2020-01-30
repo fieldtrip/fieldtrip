@@ -88,7 +88,7 @@ elseif needevt
   
   % construct the filename for the events
   [p, f, x] = fileparts(fullname);
-  pieces = split(f, '_');
+  pieces = tokenize(f, '_');
   base = sprintf('%s_', pieces{1:end-1}); % this ends with an inderscore
   eventsfile = fullfile(p, [base 'events.tsv']);
   

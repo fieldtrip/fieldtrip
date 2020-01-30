@@ -2247,20 +2247,19 @@ switch eventformat
     event = read_presentation_log(filename);
     
   otherwise
-    % attempt to run "eventformat" as a function
-    % this allows the user to specify an external reading function
-    % if it fails, the regular unsupported warning message is thrown
-    try
-      % this is used for bids_tsv, biopac_acq, motion_c3d, opensignals_txt, qualisys_tsv, and possibly others
+    if exist(eventformat, 'file')
+      % attempt to run "eventformat" as a function, this allows the user to specify an external reading function
+      % this is also used for bids_tsv, biopac_acq, motion_c3d, opensignals_txt, qualisys_tsv, sccn_xdf, and possibly others
       if isempty(hdr)
         hdr = feval(eventformat, filename);
       end
       event = feval(eventformat, filename, hdr);
-    catch
-      ft_warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format "%s"', eventformat);
+    else
+      ft_warning('unsupported event format "%s"', eventformat);
       event = [];
     end
-end
+    
+end % switch eventformat
 
 if ~isempty(hdr) && hdr.nTrials>1 && (isempty(event) || ~any(strcmp({event.type}, 'trial')))
   % the data suggests multiple trials and trial events have not yet been defined
