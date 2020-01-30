@@ -19,10 +19,12 @@ function stat = ft_statfun_cohensd(cfg, dat, design)
 %   cfg.statistic = 'ft_statfun_cohensd'
 %
 % The experimental design is specified as:
-%   cfg.ivar  = row number of the design that contains the labels of the conditions that must be compared (default=1).
-%               The labels should be specified as numbers ranging from 1 to the number of conditions.
-%   cfg.uvar  = optional, row number of design that contains the labels of the units-of-observation, i.e. subjects or trials (default=2).
-%               The labels should be integers ranging from 1 to the number of units-of-observation.
+%   cfg.ivar  = independent variable, row number of the design that contains the labels of the conditions to be compared (default=1)
+%   cfg.uvar  = optional, row number of design that contains the labels of the units-of-observation, i.e. subjects or trials (default=2)
+%
+% The labels for the independent variable should be specified as the number 1 and 2.
+% The labels for the unit of observation should be integers ranging from 1 to the
+% total number of observations (subjects or trials).
 %
 % The cfg.uvar option is only needed for paired data, you should leave it empty
 % for non-paired data.
@@ -64,16 +66,16 @@ if isempty(cfg.uvar)
   sel2 = find(design(cfg.ivar,:)==2); % select replications that belong to condition 2
   n1 = length(sel1);
   n2 = length(sel2);
-  
+
   x1 = dat(:,sel1);
   x2 = dat(:,sel2);
-  
+
   pooled_sd = sqrt(((n1-1)*std(x1, w, 2)^2 + (n2-1)*std(x2, w, 2)^2) / (n1+n2-1));
   cohensd   = (mean(x1, 2) - mean(x2, 2)) / pooled_sd;
-  
+
 else
   subj = unique(design(cfg.uvar,:)); % it can also be paired over trials
-  
+
   n = length(subj);
   sel1 = nan(size(subj));
   sel2 = nan(size(subj));
@@ -83,7 +85,7 @@ else
   end
   x1 = dat(:,sel1);
   x2 = dat(:,sel2);
-  
+
   cohensd = mean(x1 - x2, 2) ./ std(x1 - x2, w, 2);
 end
 
