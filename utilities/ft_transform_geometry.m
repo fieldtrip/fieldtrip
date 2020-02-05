@@ -5,17 +5,19 @@ function [output] = ft_transform_geometry(transform, input)
 % head, gradiometer of electrode structure containing EEG or MEG sensor positions and
 % MEG coil orientations, a head shape or a source model.
 %
-% The units in which the transformation matrix is expressed are assumed to be the
-% same units as the units in which the geometric object is expressed. Depending on
-% the input object, the homogeneous transformation matrix should be limited to a
-% rigid-body translation plus rotation (MEG-gradiometer array), or to a rigid-body
-% translation plus rotation plus a global rescaling (volume conductor geometry).
-%
 % Use as
-%   output = ft_transform_geometry(transform, input)
+%   [output] = ft_transform_geometry(transform, input)
 % where the transform should be a 4x4 homogenous transformation matrix and the
 % input data structure can be any of the FieldTrip data structures that
 % describes geometrical data.
+%
+% The units of the transformation matrix must be the same as the units in which the
+% geometric object is expressed.
+%
+% Depending on the input object, the homogeneous transformation matrix should be
+% limited to a rigid-body translation plus rotation (MEG-gradiometer array), or to a
+% rigid-body translation plus rotation plus a global rescaling (volume conductor
+% geometry).
 %
 % See also FT_WARP_APPLY, FT_HEADCOORDINATES, FT_SCALINGFACTOR
 
@@ -58,10 +60,15 @@ if ~allowscaling
 end
 
 if allowscaling
-  % FIXME build in a check for uniform rescaling probably do svd or so
-  % FIXME insert check for nonuniform scaling, should give an error
+  s = svd(transform(1:3,1:3));
+  if any(abs(s./s(1)-1)>1e-3)
+    ft_error('only a global rescaling is allowed');
+  end
 end
 
+% tfields must be rotated, translated and scaled
+% rfields must only be rotated
+% mfields must be simply multipied
 tfields   = {'pos' 'pnt' 'o' 'coilpos' 'elecpos' 'optopos' 'chanpos' 'chanposold' 'nas' 'lpa' 'rpa' 'zpoint'}; % apply rotation plus translation
 rfields   = {'ori' 'nrm'     'coilori' 'elecori' 'optoori' 'chanori' 'chanoriold'                           }; % only apply rotation
 mfields   = {'transform'};           % plain matrix multiplication

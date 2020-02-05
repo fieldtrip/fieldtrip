@@ -6,7 +6,7 @@ function [data] = ft_determine_coordsys(data, varargin)
 %
 % Use as
 %   [dataout] = ft_determine_coordsys(datain, ...)
-% where the input data structure can be
+% where the input data structure can be either
 %  - an anatomical MRI
 %  - an electrode or gradiometer definition
 %  - a volume conduction model of the head
@@ -25,10 +25,10 @@ function [data] = ft_determine_coordsys(data, varargin)
 % see the figure from all angles. To change the anatomical labels of the
 % coordinate system, you should press the corresponding keyboard button.
 %
-% Recognized and supported coordinate systems include: ctf, 4d, bti, itab,
-% neuromag, spm, mni, tal, acpc, als, ras, paxinos.
+% Recognized and supported coordinate systems are 'ctf', '4d', 'bti', 'itab',
+% 'neuromag', 'spm', 'mni', 'tal', 'acpc', 'als', 'ras', 'paxinos'.
 %
-% See also FT_VOLUMEREALIGN, FT_VOLUMERESLICE, FT_PLOT_ORTHO, FT_PLOT_AXES
+% See also FT_CONVERT_COORDSYS, FT_DETERMINE_UNITS, FT_CONVERT_UNITS, FT_PLOT_AXES, FT_PLOT_XXX
 
 % Copyright (C) 2015, Jan-Mathijs Schoffelen
 %

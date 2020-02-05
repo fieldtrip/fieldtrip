@@ -52,6 +52,7 @@ switch fileformat
 
   case 'ctf_hdm'
     headmodel = read_ctf_hdm(filename);
+    headmodel.coordsys = 'ctf';
 
   case 'asa_vol'
     headmodel = read_asa_vol(filename);
