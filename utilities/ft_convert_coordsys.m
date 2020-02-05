@@ -115,6 +115,12 @@ if ~strcmpi(target, object.coordsys)
     0.0000  0.0000  0.0000   1.0000
     ];
   
+  fsaverage2mni = [
+    0.9975   -0.0073    0.0176   -0.0429
+    0.0146    1.0009   -0.0024    1.5496
+    -0.0130   -0.0093    0.9971    1.1840
+    ];
+  
   % these are alternative names
   acpc2itab   = acpc2neuromag;
   acpc2bti    = acpc2ctf;
@@ -126,6 +132,7 @@ if ~strcmpi(target, object.coordsys)
   itab2acpc     = inv(acpc2itab);
   bti2acpc      = inv(acpc2bti);
   fourd2acpc    = inv(acpc2fourd);
+  mni2fsaverage = inv(fsaverage2mni);
   
   if strcmp(object.coordsys, '4d')
     xxx = 'fourd'; % '4d' is not a valid variable name
