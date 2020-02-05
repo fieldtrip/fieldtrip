@@ -48,10 +48,17 @@ grad2 = ft_convert_units(grad1, target);
 headmodel2 = ft_convert_units(headmodel1, target);
 
 %%
-method = 1; % spm_affreg
-mri4 = ft_convert_coordsys(mri2, 'acpc', method);
+% spm_affreg
+mri4 = ft_convert_coordsys(mri2, 'acpc', 1);
+
+% this round-trip is not exactly identical
+mri4b = ft_convert_coordsys(mri4, 'ctf', 0);
+assert(~isequal(mri2.transform, mri4b.transform));
 
 %%
-method = 2; % smp_normalise
-mri5 = ft_convert_coordsys(mri2, 'acpc', method);
+% smp_normalise
+mri5 = ft_convert_coordsys(mri2, 'acpc', 2);
 
+% this round-trip is not exactly identical
+mri5b = ft_convert_coordsys(mri5, 'ctf', 0);
+assert(~isequal(mri2.transform, mri5b.transform));

@@ -157,12 +157,15 @@ end % approximate alignment
 % case SPM will throw an error
 
 if method>0
-  % this only works for anatomical MRIs, and only if they are expressed in mm
   if ~isfield(object, 'transform') || ~isfield(object, 'anatomy')
     ft_error('affine or non-linear transformation using SPM are only supported for anatomical MRIs');
   end
   if ~isfield(object, 'unit') || ~strcmp(object.unit, 'mm')
-    ft_error('this requires the anatomial MRI to be expressed in mm');
+    ft_error('affine or non-linear transformation using SPM require the anatomial MRI to be expressed in mm');
+  end
+  if ~strcmp(object.coordsys, 'acpc')
+    % this constraint could be relaxed if we would know that the template is expressed in another coordinate system
+    ft_error('affine or non-linear transformation using SPM are only supported for ACPC');
   end
   
   % this requires SPM to be on the path. However, this is not the proper place to
