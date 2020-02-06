@@ -49,6 +49,7 @@ if any(abs(transform(4,:)-[0 0 0 1])>100*eps)
   ft_error('invalid transformation matrix');
 end
 
+% allow global rescaling for everything except MEG
 if ft_senstype(input, 'meg')
   % allow for some numerical imprecision
   if (abs(det(rotation))-1)>1e-6
@@ -56,6 +57,7 @@ if ft_senstype(input, 'meg')
   end
 end
 
+% allow individual axis rescaling only for EEG
 if ~ft_senstype(input, 'eeg')
   s = svd(transform(1:3,1:3));
   % allow for some numerical imprecision
