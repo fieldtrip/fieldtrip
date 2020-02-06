@@ -41,9 +41,6 @@ function [output] = ft_transform_geometry(transform, input)
 %
 % $Id: ft_transform_geometry.m$
 
-% flg rescaling check
-allowscaling = ~ft_senstype(input, 'meg');
-
 % determine the rotation matrix
 rotation = eye(4);
 rotation(1:3,1:3) = transform(1:3,1:3);
@@ -52,15 +49,16 @@ if any(abs(transform(4,:)-[0 0 0 1])>100*eps)
   ft_error('invalid transformation matrix');
 end
 
-if ~allowscaling
+if ft_senstype(input, 'meg')
   % allow for some numerical imprecision
   if (abs(det(rotation))-1)>1e-6
     ft_error('only a rigid body transformation without rescaling is allowed');
   end
 end
 
-if allowscaling
+if ~ft_senstype(input, 'eeg')
   s = svd(transform(1:3,1:3));
+  % allow for some numerical imprecision
   if any(abs(s./s(1)-1)>1e-3)
     ft_error('only a global rescaling is allowed');
   end
