@@ -46,16 +46,6 @@ function [object] = ft_convert_units(object, target, varargin)
 %   2) determine the requested scaling factor to obtain the output units
 %   3) try to apply the scaling to the known geometrical elements in the input object
 
-
-% the "target" input argument has been made required in Aug 2017
-% prior to that it was also possible to use this function to estimate units
-% the backward compatibility support can be removed in Aug 2018
-if nargin<2
-  ft_warning('calling this function only to determine units is deprecated, please use FT_DETERMINE_UNITS instead');
-  object = ft_determine_units(object);
-  return
-end
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % parse input options
