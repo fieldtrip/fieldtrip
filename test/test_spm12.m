@@ -40,11 +40,11 @@ rmpath(spm('dir'));
 
 %ft_volumerealign: coregistration (used in human ecog tutorial)
 mri.coordsys = 'tal';
-cfg             = [];
-cfg.method      = 'spm';
-cfg.spmversion  = 'spm12';
-cfg.spm.coostfun = 'nmi';
-cfg.coordsys    = 'tal';
+cfg              = [];
+cfg.method       = 'spm';
+cfg.spmversion   = 'spm12';
+cfg.spm.cost_fun = 'nmi';
+cfg.coordsys     = 'tal';
 r12 = ft_volumerealign(cfg, mri, mri2);
 
 rmpath(spm('dir'));
