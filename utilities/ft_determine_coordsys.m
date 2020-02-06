@@ -51,8 +51,9 @@ function [data] = ft_determine_coordsys(data, varargin)
 % $Id$
 
 dointeractive = ft_getopt(varargin, 'interactive', 'yes');
-axisscale     = ft_getopt(varargin, 'axisscale', 1); % this is used to scale the axmax and rbol
-clim          = ft_getopt(varargin, 'clim', [0 1]); % this is used to scale the orthoplot
+axisscale     = ft_getopt(varargin, 'axisscale', 1);  % this is used to scale the axmax and rbol
+clim          = ft_getopt(varargin, 'clim', [0 1]);   % this is used to scale the orthoplot
+fontsize      = ft_getopt(varargin, 'fontsize');      % this is passed to ft_plot_axes
 
 data  = ft_checkdata(data, 'hasunit', 'yes');
 dtype = ft_datatype(data);
@@ -184,7 +185,7 @@ if isfield(data, 'tri')
 end
 
 % plot the 3-D axes, labels, and sphere at the origin
-ft_plot_axes(data, 'axisscale', axisscale);
+ft_plot_axes(data, 'axisscale', axisscale, 'fontsize', fontsize);
 
 if istrue(dointeractive)
 
