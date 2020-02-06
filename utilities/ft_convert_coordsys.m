@@ -2,7 +2,7 @@ function [object] = ft_convert_coordsys(object, target, varargin)
 
 % FT_CONVERT_COORDSYS changes the coordinate system of the input object to the
 % specified coordinate system. The coordinate system of the input object is
-% determined from the structure field object.coordsys, or needs to be determined
+% determined from the 'coordsys' field in the input data, or needs to be determined
 % and specified interactively by the user.
 %
 % Use as
@@ -65,7 +65,7 @@ elseif nargin>2 && isnumeric(varargin{1})
   % old-style with 1 extra input argument
   tmp = {'method', varargin{1}};
   varargin = tmp;
-end  
+end
 
 method        = ft_getopt(varargin, 'method');    % default is handled below
 templatefile  = ft_getopt(varargin, 'template');  % default is handled in the SPM section
@@ -105,7 +105,7 @@ if ~isfield(object, 'unit') || isempty(object.unit)
 end
 
 % all of the internal logic inside this function requires that the units are in millimeter
-originalunit = object.unit;
+original = object;
 object = ft_convert_units(object, 'mm');
 
 if any(strcmp(target, {'spm', 'mni', 'tal'})) && ~any(strcmp(object.coordsys, {'spm', 'mni', 'tal'}))
@@ -128,7 +128,7 @@ if ~strcmpi(target, object.coordsys)
   % this is based on the ear canals, see ALIGN_CTF2ACPC
   acpc2ctf = [
     0.0000  0.9987  0.0517  34.7467
-   -1.0000  0.0000  0.0000   0.0000
+    -1.0000  0.0000  0.0000   0.0000
     0.0000 -0.0517  0.9987  52.2749
     0.0000  0.0000  0.0000   1.0000
     ];
@@ -145,7 +145,7 @@ if ~strcmpi(target, object.coordsys)
   fsaverage2mni = [
     0.9975   -0.0073    0.0176   -0.0429
     0.0146    1.0009   -0.0024    1.5496
-   -0.0130   -0.0093    0.9971    1.1840
+    -0.0130   -0.0093    0.9971    1.1840
     0.0000    0.0000    0.0000    1.0000
     ];
   
@@ -157,48 +157,51 @@ if ~strcmpi(target, object.coordsys)
     0.0000    0.0000    0.0000    1.0000
     ];
   
-  % also allow reverse coordinate system conversions
-  ctf2acpc      = inv(acpc2ctf);
-  neuromag2acpc = inv(acpc2neuromag);
-  mni2fsaverage = inv(fsaverage2mni);
-  neuromag2ctf  = inv(ctf2neuromag);
-  
   % the CTF and BTI coordinate system are the same
   ctf2bti = eye(4);
-  bti2ctf = eye(4);
   
   % the Neuromag and Itab coordinate system are the same
   neuromag2itab = eye(4);
-  itab2neuromag = eye(4);
-
-  % the SPM and MNI coordinate system are the same
-  % see also http://www.fieldtriptoolbox.org/faq/acpc/
-  spm2mni = eye(4);
-  mni2spm = eye(4);
   
-  % the SPM and MNI template coordinate systems are also APCP aligned
-  % although ACPC usually refers to a non-rescaled individual brain
-  % see also http://www.fieldtriptoolbox.org/faq/acpc/
-  spm2acpc = eye(4);
-  mni2acpc = eye(4);
-  acpc2mni = eye(4);
-  acpc2spm = eye(4);
-
-  % these are combinations of alternative names
-  acpc2itab     = acpc2neuromag;
-  acpc2bti      = acpc2ctf;
-  acpc2fourd    = acpc2ctf;
-  fsaverage2spm = fsaverage2mni;
-  bti2neuromag  = ctf2neuromag;
-  bti2itab      = ctf2neuromag;
-  % and the corresponding reverse transformations
-  itab2acpc     = neuromag2acpc;
-  bti2acpc      = ctf2acpc;
-  fourd2acpc    = ctf2acpc;
-  spm2fsaverage = mni2fsaverage;
-  neuromag2bti  = neuromag2ctf;
-  itab2bti      = neuromag2ctf;
-
+  % BTI and 4D are different names for the same system
+  bti2fourd = eye(4);
+  
+  % the SPM and MNI coordinate system are the same, see also http://www.fieldtriptoolbox.org/faq/acpc/
+  spm2mni = eye(4);
+  
+  % make the combined and the inverse transformations where possible
+  coordsys = {'ctf', 'bti', 'neuromag', 'fourd', 'itab', 'acpc', 'mni', 'spm', 'fsaverage'};
+  implemented = zeros(length(coordsys)); % this is only for debugging
+  for i=1:numel(coordsys)
+    for j=1:numel(coordsys)
+      xxx = coordsys{i};
+      yyy = coordsys{j};
+      if  exist(sprintf('%s2%s', xxx, yyy), 'var')
+        eval(sprintf('%s2%s = inv(%s2%s);', yyy, xxx, xxx, yyy));
+        implemented(i,j) = 1;
+        implemented(j,i) = 1;
+      elseif isequal(xxx, yyy)
+        eval(sprintf('%s2%s = eye(4);', xxx, yyy));
+        implemented(i,j) = 2;
+      else
+        for k=1:numel(coordsys)
+          zzz = coordsys{k};
+          if exist(sprintf('%s2%s', xxx, zzz), 'var') && exist(sprintf('%s2%s', zzz, yyy), 'var')
+            eval(sprintf('%s2%s = %s2%s * %s2%s;', xxx, yyy, zzz, yyy, xxx, zzz));
+            eval(sprintf('%s2%s = inv(%s2%s);', yyy, xxx, xxx, yyy));
+            implemented(i,j) = 3;
+            implemented(j,i) = 3;
+          end
+        end % for k
+      end
+    end % for j
+  end % for i
+  
+  % this is only for debugging
+  %   figure; imagesc(implemented);
+  %   xticklabels({'ctf', 'bti', 'neuromag', 'fourd', 'itab', 'acpc', 'mni', 'spm', 'fsaverage'});
+  %   yticklabels({'ctf', 'bti', 'neuromag', 'fourd', 'itab', 'acpc', 'mni', 'spm', 'fsaverage'});
+  
   if strcmp(object.coordsys, '4d')
     xxx = 'fourd'; % '4d' is not a valid variable name
   else
@@ -293,19 +296,12 @@ if method==1
   [M, scale]    = spm_affreg(V1,V2,flags);
   
   % some juggling around with the transformation matrices
-  mrivox2mrihead    = object.transform;
-  mrivox2acpchead2  = M \ V1.mat;
-  acpchead2mrihead2 = mrivox2mrihead / mrivox2acpchead2;
+  vox2head    = object.transform;
+  vox2acpc2  = M \ V1.mat;
+  acpc2head2 = vox2head / vox2acpc2;
   
   % update the transformation matrix
-  object.transform     = mrivox2acpchead2;
-  
-  % this one is unchanged
-  object.vox2headOrig  = mrivox2mrihead;
-  
-  % these are new
-  object.vox2head      = mrivox2acpchead2;
-  object.head2headOrig = acpchead2mrihead2;
+  object.transform = vox2acpc2;
   
   % delete the temporary files
   delete(tname1); delete(strrep(tname1, 'img', 'hdr'));
@@ -351,36 +347,35 @@ elseif method==2
   V1 = ft_write_mri(tname1, object.anatomy,  'transform', object.transform,  'spmversion', spm('ver'), 'dataformat', 'nifti_spm');
   V2 = ft_write_mri(tname2, template.anatomy, 'transform', template.transform, 'spmversion', spm('ver'), 'dataformat', 'nifti_spm');
   
-  flags.nits       = 0; %set number of non-linear iterations to zero
+  flags.nits       = 0; % set number of non-linear iterations to zero
   flags.regtype    = 'rigid';
   params           = spm_normalise(V2,V1,[],[],[],flags);
   
   % some juggling around with the transformation matrices
-  mrivox2mrihead    = object.transform;
-  acpchead2mrihead2 = V1.mat*params.Affine/V2.mat;
-  mrivox2acpchead2  = acpchead2mrihead2\mrivox2mrihead;
+  vox2head   = object.transform;
+  acpc2head2 = V1.mat*params.Affine/V2.mat;
+  vox2acpc2  = acpc2head2\vox2head;
   
   % update the transformation matrix
-  object.transform     = mrivox2acpchead2;
-  
-  % this one is unchanged
-  object.vox2headOrig  = mrivox2mrihead;
-  
-  % these are new
-  object.vox2head      = mrivox2acpchead2;
-  object.head2headOrig = acpchead2mrihead2;
+  object.transform = vox2acpc2;
   
   % delete the temporary files
   delete(tname1); delete(strrep(tname1, 'img', 'hdr'));
   delete(tname2); delete(strrep(tname2, 'img', 'hdr'));
 end
 
+if istrue(feedback)
+  % give some graphical feedback
+  ft_determine_coordsys(object, 'interactive', 'no', 'fontsize', 15);
+  % also add the original axes
+  if method==0
+    ft_plot_axes([], 'transform', transform, 'unit', 'mm', 'coordsys', original.coordsys, 'fontsize', 15);
+  elseif method>0
+    transform = object.transform * inv(original.transform);
+    ft_plot_axes([], 'transform', transform, 'unit', 'mm', 'coordsys', original.coordsys, 'fontsize', 15);
+  end
+end
+
 % all of the internal logic inside this function requires that the units are in millimeter
 % convert back to the original units
-object = ft_convert_units(object, originalunit);
-
-% give some graphical feedback
-% FIXME the original axes should also be added to this figure
-if istrue(feedback)
-  ft_determine_coordsys(object, 'interactive', 'no');
-end
+object = ft_convert_units(object, original.unit);
