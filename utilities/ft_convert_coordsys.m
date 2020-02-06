@@ -1,4 +1,4 @@
-function [object] = ft_convert_coordsys(object, target, method, templatefile)
+function [object] = ft_convert_coordsys(object, target, varargin)
 
 % FT_CONVERT_COORDSYS changes the coordinate system of the input object to the
 % specified coordinate system. The coordinate system of the input object is
@@ -34,6 +34,9 @@ function [object] = ft_convert_coordsys(object, target, method, templatefile)
 %
 % See also FT_DETERMINE_COORDSYS, FT_DETERMINE_UNITS, FT_CONVERT_UNITS, FT_PLOT_AXES, FT_PLOT_XXX
 
+% Undocumented options
+%   feedback  = string, 'yes' or 'no' (default = 'no')
+
 % Copyright (C) 2005-2020, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
@@ -53,6 +56,33 @@ function [object] = ft_convert_coordsys(object, target, method, templatefile)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+if nargin>3 && isnumeric(varargin{1})
+  % old-style with 2 extra input arguments
+  tmp = {'method', varargin{1}, 'template', varargin{2}};
+  varargin = tmp;
+elseif nargin>2 && isnumeric(varargin{1})
+  % old-style with 1 extra input argument
+  tmp = {'method', varargin{1}};
+  varargin = tmp;
+end  
+
+method        = ft_getopt(varargin, 'method');    % default is handled below
+templatefile  = ft_getopt(varargin, 'template');  % default is handled in the SPM section
+feedback      = ft_getopt(varargin, 'feedback', 'yes');
+
+if isempty(method) && isfield(object, 'transform') && isfield(object, 'anatomy')
+  % the default for an anatomical MRI is to start with an approximate alignment,
+  % followed by a call to spm_normalise for a better quality alignment
+  method = 2;
+else
+  % the default for all other objects is to do only an approximate alignment
+  method = 0;
+end
+
+if isdeployed && method>0 && isempty(templatefile)
+  ft_error('you need to specify a template filename for the coregistration');
+end
 
 if ~isfield(object, 'coordsys') || isempty(object.coordsys)
   % determine the coordinate system of the input object
@@ -82,28 +112,6 @@ if any(strcmp(target, {'spm', 'mni', 'tal'})) && ~any(strcmp(object.coordsys, {'
   % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3304
   ft_warning('Not applying any scaling, using ''acpc'' instead of ''%s''. See http://bit.ly/2sw7eC4', target);
   target = 'acpc';
-end
-
-if nargin<3
-  if isfield(object, 'transform') && ~isfield(object, 'anatomy')
-    % the default for an MRI is to start with an approximate alignment,
-    % followed by a call to spm_normalise for a better quality alignment
-    method = 2;
-  else
-    % the default for all other objects is to do only an approximate alignment
-    method = 0;
-  end
-end
-
-if isdeployed && method>0
-  needtemplate = true;
-else
-  needtemplate = false;
-end
-
-hastemplate = nargin>3;
-if needtemplate && ~hastemplate
-  ft_error('you need to specify a template filename for the coregistration');
 end
 
 %--------------------------------------------------------------------------
@@ -137,21 +145,28 @@ if ~strcmpi(target, object.coordsys)
     0.0000    0.0000    0.0000    1.0000
     ];
   
-  % these are alternative names
-  acpc2itab     = acpc2neuromag;
-  acpc2bti      = acpc2ctf;
-  acpc2fourd    = acpc2ctf;
-  fsaverage2spm = fsaverage2mni;
+  % this is a 90 degree rotation around the z-axis
+  ctf2neuromag = [
+    0.0000   -1.0000    0.0000    0.0000
+    1.0000    0.0000    0.0000    0.0000
+    0.0000    0.0000    1.0000    0.0000
+    0.0000    0.0000    0.0000    1.0000
+    ];
   
   % also allow reverse coordinate system conversions
   ctf2acpc      = inv(acpc2ctf);
   neuromag2acpc = inv(acpc2neuromag);
-  itab2acpc     = inv(acpc2itab);
-  bti2acpc      = inv(acpc2bti);
-  fourd2acpc    = inv(acpc2fourd);
   mni2fsaverage = inv(fsaverage2mni);
-  spm2fsaverage = inv(fsaverage2spm);
+  neuromag2ctf  = inv(ctf2neuromag);
   
+  % the CTF and BTI coordinate system are the same
+  ctf2bti = eye(4);
+  bti2ctf = eye(4);
+  
+  % the Neuromag and Itab coordinate system are the same
+  neuromag2itab = eye(4);
+  itab2neuromag = eye(4);
+
   % the SPM and MNI coordinate system are the same
   % see also http://www.fieldtriptoolbox.org/faq/acpc/
   spm2mni = eye(4);
@@ -164,6 +179,21 @@ if ~strcmpi(target, object.coordsys)
   mni2acpc = eye(4);
   acpc2mni = eye(4);
   acpc2spm = eye(4);
+
+  % these are combinations of alternative names
+  acpc2itab     = acpc2neuromag;
+  acpc2bti      = acpc2ctf;
+  acpc2fourd    = acpc2ctf;
+  fsaverage2spm = fsaverage2mni;
+  bti2neuromag  = ctf2neuromag;
+  bti2itab      = ctf2neuromag;
+  % and the corresponding reverse transformations
+  itab2acpc     = neuromag2acpc;
+  bti2acpc      = ctf2acpc;
+  fourd2acpc    = ctf2acpc;
+  spm2fsaverage = mni2fsaverage;
+  neuromag2bti  = neuromag2ctf;
+  itab2bti      = neuromag2ctf;
 
   if strcmp(object.coordsys, '4d')
     xxx = 'fourd'; % '4d' is not a valid variable name
@@ -344,3 +374,9 @@ end
 % all of the internal logic inside this function requires that the units are in millimeter
 % convert back to the original units
 object = ft_convert_units(object, originalunit);
+
+% give some graphical feedback
+% FIXME the original axes should also be added to this figure
+if istrue(feedback)
+  ft_determine_coordsys(object, 'interactive', 'no');
+end
