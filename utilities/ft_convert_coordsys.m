@@ -1,9 +1,9 @@
 function [object] = ft_convert_coordsys(object, target, method, templatefile)
 
-% FT_CONVERT_COORDSYS changes the coordinate system of the input object to
-% the specified coordinate system. The coordinate system of the input
-% object is determined from the structure field object.coordsys, or needs to
-% be determined and specified interactively by the user.
+% FT_CONVERT_COORDSYS changes the coordinate system of the input object to the
+% specified coordinate system. The coordinate system of the input object is
+% determined from the structure field object.coordsys, or needs to be determined
+% and specified interactively by the user.
 %
 % Use as
 %   [output] = ft_convert_coordsys(input, target)
@@ -57,16 +57,28 @@ function [object] = ft_convert_coordsys(object, target, method, templatefile)
 if ~isfield(object, 'coordsys') || isempty(object.coordsys)
   % determine the coordinate system of the input object
   object = ft_determine_coordsys(object, 'interactive', 'yes');
+  if ~isfield(object, 'coordsys') || isempty(object.coordsys)
+    % the call to ft_determine_coordsys should have taken care of this, but
+    % it is possible that the user aborted the coordinate system
+    % determination. See http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2526
+    ft_error('the coordinate system of the geometrical object is not specified');
+  end
+  ft_notice('the coordinate system is determined as ''%s''', object.coordsys);
 end
 
-if ~isfield(object, 'coordsys') || isempty(object.coordsys)
-  % the call to ft_determine_coordsys should have taken care of this, but
-  % it is possible that the user aborted the coordinate system
-  % determination. See http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2526
-  ft_error('the coordinate system of the geometrical object is not specified');
+if ~isfield(object, 'unit') || isempty(object.unit)
+  % determine the units of the input object
+  object = ft_determine_units(object);
+  ft_notice('the units are determined as ''%s''', object.unit);
 end
 
-if any(strcmp(target, {'spm', 'mni', 'tal'}))
+% all of the internal logic inside this function requires that the units are in millimeter
+originalunit = object.unit;
+object = ft_convert_units(object, 'mm');
+
+if any(strcmp(target, {'spm', 'mni', 'tal'})) && ~any(strcmp(object.coordsys, {'spm', 'mni', 'tal'}))
+  % the input appears to be an individual subject MRI which has not been rescaled
+  % the target is a template coordinate system
   % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3304
   ft_warning('Not applying any scaling, using ''acpc'' instead of ''%s''. See http://bit.ly/2sw7eC4', target);
   target = 'acpc';
@@ -97,13 +109,15 @@ end
 %--------------------------------------------------------------------------
 % Start with an approximate alignment, this is based on transformation matrices
 % that were determined by clicking on the CTF fiducial locations in the canonical
-% T1 template MRI
+% T1 template MRI.
+%
+% All of the transformation matrices here are expressed in millimeter.
 
 if ~strcmpi(target, object.coordsys)
   
   acpc2ctf = [
     0.0000  0.9987  0.0517  34.7467
-    -1.0000  0.0000  0.0000   0.0000
+   -1.0000  0.0000  0.0000   0.0000
     0.0000 -0.0517  0.9987  52.2749
     0.0000  0.0000  0.0000   1.0000
     ];
@@ -115,17 +129,19 @@ if ~strcmpi(target, object.coordsys)
     0.0000  0.0000  0.0000   1.0000
     ];
   
+  % see http://freesurfer.net/fswiki/CoordinateSystems
   fsaverage2mni = [
-     0.9975   -0.0073    0.0176   -0.0429
-     0.0146    1.0009   -0.0024    1.5496
-    -0.0130   -0.0093    0.9971    1.1840
-     0.0000    0.0000    0.0000    1.0000
+    0.9975   -0.0073    0.0176   -0.0429
+    0.0146    1.0009   -0.0024    1.5496
+   -0.0130   -0.0093    0.9971    1.1840
+    0.0000    0.0000    0.0000    1.0000
     ];
   
   % these are alternative names
-  acpc2itab   = acpc2neuromag;
-  acpc2bti    = acpc2ctf;
-  acpc2fourd  = acpc2ctf;
+  acpc2itab     = acpc2neuromag;
+  acpc2bti      = acpc2ctf;
+  acpc2fourd    = acpc2ctf;
+  fsaverage2spm = fsaverage2mni;
   
   % also allow reverse coordinate system conversions
   ctf2acpc      = inv(acpc2ctf);
@@ -134,7 +150,21 @@ if ~strcmpi(target, object.coordsys)
   bti2acpc      = inv(acpc2bti);
   fourd2acpc    = inv(acpc2fourd);
   mni2fsaverage = inv(fsaverage2mni);
+  spm2fsaverage = inv(fsaverage2spm);
   
+  % the SPM and MNI coordinate system are the same
+  % see also http://www.fieldtriptoolbox.org/faq/acpc/
+  spm2mni = eye(4);
+  mni2spm = eye(4);
+  
+  % the SPM and MNI template coordinate systems are also APCP aligned
+  % although ACPC usually refers to a non-rescaled individual brain
+  % see also http://www.fieldtriptoolbox.org/faq/acpc/
+  spm2acpc = eye(4);
+  mni2acpc = eye(4);
+  acpc2mni = eye(4);
+  acpc2spm = eye(4);
+
   if strcmp(object.coordsys, '4d')
     xxx = 'fourd'; % '4d' is not a valid variable name
   else
@@ -159,10 +189,12 @@ end % approximate alignment
 
 %--------------------------------------------------------------------------
 % Do a second round of affine registration (rigid body) to get improved
-% alignment with ACPC coordinate system. this is needed because there may be
+% alignment with ACPC coordinate system. This is needed because there may be
 % different conventions defining LPA and RPA. The affine registration may
 % fail however, e.g. if the initial alignment is not close enough. In that
-% case SPM will throw an error
+% case SPM will throw an error.
+%
+% We expect the template MRIs to be expressed in millimeter.
 
 if method>0
   if ~isfield(object, 'transform') || ~isfield(object, 'anatomy')
@@ -308,3 +340,7 @@ elseif method==2
   delete(tname1); delete(strrep(tname1, 'img', 'hdr'));
   delete(tname2); delete(strrep(tname2, 'img', 'hdr'));
 end
+
+% all of the internal logic inside this function requires that the units are in millimeter
+% convert back to the original units
+object = ft_convert_units(object, originalunit);
