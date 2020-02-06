@@ -69,7 +69,7 @@ end
 
 method        = ft_getopt(varargin, 'method');    % default is handled below
 templatefile  = ft_getopt(varargin, 'template');  % default is handled in the SPM section
-feedback      = ft_getopt(varargin, 'feedback', 'yes');
+feedback      = ft_getopt(varargin, 'feedback', 'no');
 
 if isempty(method)
   if isfield(object, 'transform') && isfield(object, 'anatomy')
@@ -156,7 +156,7 @@ if ~strcmpi(target, object.coordsys)
     0.0000    0.0000    1.0000    0.0000
     0.0000    0.0000    0.0000    1.0000
     ];
-  
+    
   % the CTF and BTI coordinate system are the same
   ctf2bti = eye(4);
   
@@ -168,7 +168,10 @@ if ~strcmpi(target, object.coordsys)
   
   % the SPM and MNI coordinate system are the same, see also http://www.fieldtriptoolbox.org/faq/acpc/
   spm2mni = eye(4);
-  
+
+  % the SPM and ACPC coordinate system are not the same but similar enough, see also http://www.fieldtriptoolbox.org/faq/acpc/
+  spm2acpc = eye(4);
+
   % make the combined and the inverse transformations where possible
   coordsys = {'ctf', 'bti', 'neuromag', 'fourd', 'itab', 'acpc', 'mni', 'spm', 'fsaverage'};
   implemented = zeros(length(coordsys)); % this is only for debugging
@@ -205,7 +208,10 @@ if ~strcmpi(target, object.coordsys)
   %   figure; imagesc(implemented);
   %   xticklabels({'ctf', 'bti', 'neuromag', 'fourd', 'itab', 'acpc', 'mni', 'spm', 'fsaverage'});
   %   yticklabels({'ctf', 'bti', 'neuromag', 'fourd', 'itab', 'acpc', 'mni', 'spm', 'fsaverage'});
-  
+
+    % FT_VOLUMENORMALISE should be used for these conversions, as they imply scaling
+  clear acpc2spm acpc2mni acpc2fsaverage
+
   if strcmp(object.coordsys, '4d')
     xxx = 'fourd'; % '4d' is not a valid variable name
   else
@@ -227,6 +233,7 @@ if ~strcmpi(target, object.coordsys)
   end
   
 end % approximate alignment
+
 
 %--------------------------------------------------------------------------
 % Do a second round of affine registration (rigid body) to get improved
