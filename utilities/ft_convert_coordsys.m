@@ -177,20 +177,24 @@ if ~strcmpi(target, object.coordsys)
       xxx = coordsys{i};
       yyy = coordsys{j};
       if  exist(sprintf('%s2%s', xxx, yyy), 'var')
+        % make the inverse
         eval(sprintf('%s2%s = inv(%s2%s);', yyy, xxx, xxx, yyy));
         implemented(i,j) = 1;
         implemented(j,i) = 1;
       elseif isequal(xxx, yyy)
+        % make the ones on the diagonal
         eval(sprintf('%s2%s = eye(4);', xxx, yyy));
-        implemented(i,j) = 2;
+        implemented(i,j) = 1;
       else
+        % try to make the transformation (and inverse) with a two-step approach
         for k=1:numel(coordsys)
           zzz = coordsys{k};
           if exist(sprintf('%s2%s', xxx, zzz), 'var') && exist(sprintf('%s2%s', zzz, yyy), 'var')
             eval(sprintf('%s2%s = %s2%s * %s2%s;', xxx, yyy, zzz, yyy, xxx, zzz));
             eval(sprintf('%s2%s = inv(%s2%s);', yyy, xxx, xxx, yyy));
-            implemented(i,j) = 3;
-            implemented(j,i) = 3;
+            implemented(i,j) = 2;
+            implemented(j,i) = 2;
+            break
           end
         end % for k
       end
