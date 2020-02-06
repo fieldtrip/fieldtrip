@@ -71,13 +71,15 @@ method        = ft_getopt(varargin, 'method');    % default is handled below
 templatefile  = ft_getopt(varargin, 'template');  % default is handled in the SPM section
 feedback      = ft_getopt(varargin, 'feedback', 'yes');
 
-if isempty(method) && isfield(object, 'transform') && isfield(object, 'anatomy')
-  % the default for an anatomical MRI is to start with an approximate alignment,
-  % followed by a call to spm_normalise for a better quality alignment
-  method = 2;
-else
-  % the default for all other objects is to do only an approximate alignment
-  method = 0;
+if isempty(method)
+  if isfield(object, 'transform') && isfield(object, 'anatomy')
+    % the default for an anatomical MRI is to start with an approximate alignment,
+    % followed by a call to spm_normalise for a better quality alignment
+    method = 2;
+  else
+    % the default for all other objects is to do only an approximate alignment
+    method = 0;
+  end
 end
 
 if isdeployed && method>0 && isempty(templatefile)
@@ -123,6 +125,7 @@ end
 
 if ~strcmpi(target, object.coordsys)
   
+  % this is based on the ear canals, see ALIGN_CTF2ACPC
   acpc2ctf = [
     0.0000  0.9987  0.0517  34.7467
    -1.0000  0.0000  0.0000   0.0000
@@ -130,6 +133,7 @@ if ~strcmpi(target, object.coordsys)
     0.0000  0.0000  0.0000   1.0000
     ];
   
+  % this is based on the ear canals, see ALIGN_NEUROMAG2ACPC
   acpc2neuromag = [
     1.0000  0.0000  0.0000   0.0000
     0.0000  0.9987  0.0517  34.7467
