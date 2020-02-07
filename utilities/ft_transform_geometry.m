@@ -57,8 +57,8 @@ if ft_senstype(input, 'meg')
   end
 end
 
-% allow individual axis rescaling only for EEG
-if ~ft_senstype(input, 'eeg')
+% allow individual axis rescaling only for electrode positions and MRI-like geometries
+if ~ft_senstype(input, 'eeg') && ~ft_datatype(input, 'volume')
   s = svd(transform(1:3,1:3));
   % allow for some numerical imprecision
   if any(abs(s./s(1)-1)>1e-3)
