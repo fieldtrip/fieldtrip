@@ -108,13 +108,26 @@ end
 original = object;
 object = ft_convert_units(object, 'mm');
 
-if any(strcmp(target, {'spm', 'mni', 'tal'})) && ~any(strcmp(object.coordsys, {'spm', 'mni', 'tal'}))
+if ~ismember(object.coordsys, {'spm', 'mni', 'tal'}) && ismember(target, {'spm', 'mni', 'tal'})
   % the input appears to be an individual subject MRI which has not been rescaled
   % the target is a template coordinate system
   % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3304
   ft_warning('Not applying any scaling, using ''acpc'' instead of ''%s''. See http://bit.ly/2sw7eC4', target);
   target = 'acpc';
 end
+
+% RAS and ALS are not specific with regard to the origin
+if ismember(object.coordsys, {'ras', 'als'}) && strcmp(target, 'acpc')
+  if method==0
+    ft_error('approximately converting from %s to %s is not supported', object.coordsys, target);
+  elseif method>0
+    % converting an anatomical MRI from RAS or ALS to ACPC using SPM might work
+  end
+elseif ismember(object.coordsys, {'ras', 'als'}) && ~ismember(target, {'ras', 'als'})
+  % other conversions from RAS or ALS are also not supported
+  ft_error('converting from %s to %s is not supported', object.coordsys, target);
+end
+
 
 %--------------------------------------------------------------------------
 % Start with an approximate alignment, this is based on transformation matrices
@@ -123,116 +136,157 @@ end
 %
 % All of the transformation matrices here are expressed in millimeter.
 
-if ~strcmpi(target, object.coordsys)
-  
-  % this is based on the ear canals, see ALIGN_CTF2ACPC
-  acpc2ctf = [
-    0.0000  0.9987  0.0517  34.7467
-    -1.0000  0.0000  0.0000   0.0000
-    0.0000 -0.0517  0.9987  52.2749
-    0.0000  0.0000  0.0000   1.0000
-    ];
-  
-  % this is based on the ear canals, see ALIGN_NEUROMAG2ACPC
-  acpc2neuromag = [
-    1.0000  0.0000  0.0000   0.0000
-    0.0000  0.9987  0.0517  34.7467
-    0.0000 -0.0517  0.9987  52.2749
-    0.0000  0.0000  0.0000   1.0000
-    ];
-  
-  % see http://freesurfer.net/fswiki/CoordinateSystems
-  fsaverage2mni = [
-    0.9975   -0.0073    0.0176   -0.0429
-    0.0146    1.0009   -0.0024    1.5496
-    -0.0130   -0.0093    0.9971    1.1840
-    0.0000    0.0000    0.0000    1.0000
-    ];
-  
-  % this is a 90 degree rotation around the z-axis
-  ctf2neuromag = [
-    0.0000   -1.0000    0.0000    0.0000
-    1.0000    0.0000    0.0000    0.0000
-    0.0000    0.0000    1.0000    0.0000
-    0.0000    0.0000    0.0000    1.0000
-    ];
-    
-  % the CTF and BTI coordinate system are the same
-  ctf2bti = eye(4);
-  
-  % the Neuromag and Itab coordinate system are the same
-  neuromag2itab = eye(4);
-  
-  % BTI and 4D are different names for the same system
-  bti2fourd = eye(4);
-  
-  % the SPM and MNI coordinate system are the same, see also http://www.fieldtriptoolbox.org/faq/acpc/
-  spm2mni = eye(4);
+% this is based on the ear canals, see ALIGN_CTF2ACPC
+acpc2ctf = [
+  0.0000  0.9987  0.0517  34.7467
+  -1.0000  0.0000  0.0000   0.0000
+  0.0000 -0.0517  0.9987  52.2749
+  0.0000  0.0000  0.0000   1.0000
+  ];
 
-  % the SPM and ACPC coordinate system are not the same but similar enough, see also http://www.fieldtriptoolbox.org/faq/acpc/
-  spm2acpc = eye(4);
+% this is based on the ear canals, see ALIGN_NEUROMAG2ACPC
+acpc2neuromag = [
+  1.0000  0.0000  0.0000   0.0000
+  0.0000  0.9987  0.0517  34.7467
+  0.0000 -0.0517  0.9987  52.2749
+  0.0000  0.0000  0.0000   1.0000
+  ];
 
-  % make the combined and the inverse transformations where possible
-  coordsys = {'ctf', 'bti', 'neuromag', 'fourd', 'itab', 'acpc', 'mni', 'spm', 'fsaverage'};
-  implemented = zeros(length(coordsys)); % this is only for debugging
-  for i=1:numel(coordsys)
-    for j=1:numel(coordsys)
-      xxx = coordsys{i};
-      yyy = coordsys{j};
-      if  exist(sprintf('%s2%s', xxx, yyy), 'var')
-        % make the inverse
-        eval(sprintf('%s2%s = inv(%s2%s);', yyy, xxx, xxx, yyy));
-        implemented(i,j) = 1;
-        implemented(j,i) = 1;
-      elseif isequal(xxx, yyy)
-        % make the ones on the diagonal
-        eval(sprintf('%s2%s = eye(4);', xxx, yyy));
-        implemented(i,j) = 1;
-      else
-        % try to make the transformation (and inverse) with a two-step approach
-        for k=1:numel(coordsys)
-          zzz = coordsys{k};
-          if exist(sprintf('%s2%s', xxx, zzz), 'var') && exist(sprintf('%s2%s', zzz, yyy), 'var')
-            eval(sprintf('%s2%s = %s2%s * %s2%s;', xxx, yyy, zzz, yyy, xxx, zzz));
-            eval(sprintf('%s2%s = inv(%s2%s);', yyy, xxx, xxx, yyy));
-            implemented(i,j) = 2;
-            implemented(j,i) = 2;
-            break
-          end
-        end % for k
-      end
-    end % for j
-  end % for i
-  
-  % this is only for debugging
-  %   figure; imagesc(implemented);
-  %   xticklabels({'ctf', 'bti', 'neuromag', 'fourd', 'itab', 'acpc', 'mni', 'spm', 'fsaverage'});
-  %   yticklabels({'ctf', 'bti', 'neuromag', 'fourd', 'itab', 'acpc', 'mni', 'spm', 'fsaverage'});
+% see http://freesurfer.net/fswiki/CoordinateSystems
+fsaverage2mni = [
+  0.9975   -0.0073    0.0176   -0.0429
+  0.0146    1.0009   -0.0024    1.5496
+  -0.0130   -0.0093    0.9971    1.1840
+  0.0000    0.0000    0.0000    1.0000
+  ];
 
-    % FT_VOLUMENORMALISE should be used for these conversions, as they imply scaling
-  clear acpc2spm acpc2mni acpc2fsaverage
+% this is a 90 degree rotation around the z-axis
+ctf2neuromag = [
+  0.0000   -1.0000    0.0000    0.0000
+  1.0000    0.0000    0.0000    0.0000
+  0.0000    0.0000    1.0000    0.0000
+  0.0000    0.0000    0.0000    1.0000
+  ];
 
-  if strcmp(object.coordsys, '4d')
-    xxx = 'fourd'; % '4d' is not a valid variable name
-  else
-    xxx = object.coordsys;
-  end
-  
-  if strcmp(target, '4d')
-    yyy = 'fourd'; % '4d' is not a valid variable name
-  else
-    yyy = target;
-  end
-  
-  if exist(sprintf('%s2%s', xxx, yyy), 'var')
-    transform = eval(sprintf('%s2%s', xxx, yyy));
-    object = ft_transform_geometry(transform, object);
-    object.coordsys = target;
-  else
-    ft_error('conversion from %s to %s is not supported', object.coordsys, target);
-  end
-  
-end % approximate alignment
+% this is a 90 degree rotation around the z-axis
+als2ras = [
+  0.0000   -1.0000    0.0000    0.0000
+  1.0000    0.0000    0.0000    0.0000
+  0.0000    0.0000    1.0000    0.0000
+  0.0000    0.0000    0.0000    1.0000
+  ];
+
+% affine transformation from MNI to Talairach, see http://imaging.mrc-cbu.cam.ac.uk/imaging/MniTalairach
+% the non-linear (i.e. piecewise linear) transform between MNI and Talairach are implemented elsewhere, see the functions MNI2TAL and TAL2MNI
+mni2tal = [
+  0.8800    0.0000    0.0000   -0.8000
+  0.0000    0.9700    0.0000   -3.3200
+  0.0000    0.0500    0.8800   -0.4400
+  0.0000    0.0000    0.0000    1.0000
+  ];
+
+% the CTF and BTI coordinate system are the same, see http://www.fieldtriptoolbox.org/faq/how_are_the_different_head_and_mri_coordinate_systems_defined/
+ctf2bti = eye(4);
+
+% the Neuromag and Itab coordinate system are the same, see http://www.fieldtriptoolbox.org/faq/how_are_the_different_head_and_mri_coordinate_systems_defined/#details-of-the-ctf-coordinate-system
+neuromag2itab = eye(4);
+
+% BTI and 4D are different names for the same system
+bti2fourd = eye(4);
+
+% the SPM and MNI coordinate system are the same, see http://www.fieldtriptoolbox.org/faq/acpc/
+spm2mni = eye(4);
+
+% the SPM (aka MNI) and ACPC coordinate system are not the same but similar enough, see http://www.fieldtriptoolbox.org/faq/acpc/
+spm2acpc = eye(4);
+mni2acpc = eye(4);
+
+% the CTF, BTI and 4D coordinate systems are all ALS coordinate systems
+% but the origin is poorly defined in ALS, hence converting from ALS to another is problematic
+ctf2als   = eye(4);
+bti2als   = eye(4);
+fourd2als = eye(4);
+
+% the Neuromag, Itab, ACPC, MNI, SPM and FSAVERAGE coordinate systems are all RAS coordinate systems
+% but the origin is poorly defined in RAS, hence converting from RAS to another is problematic
+neuromag2ras  = eye(4);
+itab2ras      = eye(4);
+acpc2ras      = eye(4);
+mni2ras       = eye(4);
+spm2ras       = eye(4);
+fsaverage2ras = eye(4);
+tal2ras       = eye(4);
+
+% make the combined and the inverse transformations where possible
+coordsys = {'ctf', 'bti', 'fourd', 'neuromag', 'itab', 'acpc', 'mni', 'spm', 'fsaverage', 'tal', 'ras', 'als'};
+implemented = zeros(length(coordsys)); % this is only for debugging
+for i=1:numel(coordsys)
+  for j=1:numel(coordsys)
+    xxx = coordsys{i};
+    yyy = coordsys{j};
+    if  exist(sprintf('%s2%s', xxx, yyy), 'var')
+      % make the inverse
+      eval(sprintf('%s2%s = inv(%s2%s);', yyy, xxx, xxx, yyy));
+      implemented(i,j) = 1;
+      implemented(j,i) = 1;
+    elseif isequal(xxx, yyy)
+      % make the ones on the diagonal
+      eval(sprintf('%s2%s = eye(4);', xxx, yyy));
+      implemented(i,j) = 2;
+    else
+      % try to make the transformation (and inverse) with a two-step approach
+      for k=1:numel(coordsys(1:10)) % do not use RAS or ALS as intermediate steps
+        zzz = coordsys{k};
+        if exist(sprintf('%s2%s', xxx, zzz), 'var') && exist(sprintf('%s2%s', zzz, yyy), 'var')
+          eval(sprintf('%s2%s = %s2%s * %s2%s;', xxx, yyy, zzz, yyy, xxx, zzz));
+          eval(sprintf('%s2%s = inv(%s2%s);', yyy, xxx, xxx, yyy));
+          implemented(i,j) = 3;
+          implemented(j,i) = 3;
+          break
+        end
+      end % for k
+    end
+  end % for j
+end % for i
+
+if false
+  % this is only for debugging the coverage of conversions, note that some of them are deleted further down
+  figure; imagesc(implemented); caxis([0 3]);
+  xticklabels(coordsys); xticks(1:numel(coordsys));
+  yticklabels(coordsys); yticks(1:numel(coordsys));
+end
+
+% these conversions should be done using FT_VOLUMENORMALISE, as they imply scaling
+clear acpc2spm acpc2mni acpc2fsaverage acpc2tal
+
+% the origin is poorly defined in RAS and ALS, hence converting them to another coordinate system is problematic
+% the only conversion supported here is from RAS or ALS to ACPC, and only when using SPM
+clear ras2bti ras2ctf ras2fourd ras2fsaverage ras2itab ras2mni ras2neuromag ras2spm ras2tal
+clear als2bti als2ctf als2fourd als2fsaverage als2itab als2mni als2neuromag als2spm als2tal
+
+% converting to/from TAL is only possible for some specific template coordinate systems
+clear als2tal ras2tal bti2tal ctf2tal fourd2tal itab2tal neuromag2tal
+clear tal2als tal2ras tal2bti tal2ctf tal2fourd tal2itab tal2neuromag
+
+if strcmp(object.coordsys, '4d')
+  xxx = 'fourd'; % '4d' is not a valid variable name
+else
+  xxx = object.coordsys;
+end
+
+if strcmp(target, '4d')
+  yyy = 'fourd'; % '4d' is not a valid variable name
+else
+  yyy = target;
+end
+
+if exist(sprintf('%s2%s', xxx, yyy), 'var')
+  transform = eval(sprintf('%s2%s', xxx, yyy));
+  object = ft_transform_geometry(transform, object);
+  object.coordsys = target;
+else
+  ft_error('converting from %s to %s is not supported', object.coordsys, target);
+end
 
 
 %--------------------------------------------------------------------------
@@ -242,7 +296,8 @@ end % approximate alignment
 % fail however, e.g. if the initial alignment is not close enough. In that
 % case SPM will throw an error.
 %
-% We expect the template MRIs to be expressed in millimeter.
+% We expect the template MRIs to be expressed in millimeter and to be
+% approximately aligned with ACPC.
 
 if method>0
   if ~isfield(object, 'transform') || ~isfield(object, 'anatomy')
