@@ -91,13 +91,8 @@ if ischar(mri)
 end
 
 % ensure that old and unsupported options are not being relied on by the end-user's script
-% instead of specifying cfg.coordsys, the user should specify the coordsys in the data
-cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates'});
-cfg = ft_checkconfig(cfg, 'deprecated', 'coordsys');
-%if isfield(cfg, 'coordsys') && ~isfield(mri, 'coordsys')
-%  % from revision 8680 onward (Oct 2013) it is not recommended to use cfg.coordsys to specify the coordinate system of the data.
-%  mri.coordsys = cfg.coordsys;
-%end
+% instead of specifying cfg.coordsys, the user should specify the coordsys in the input data
+cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates', 'coordsys'});
 
 % check if the input data is valid for this function
 mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
