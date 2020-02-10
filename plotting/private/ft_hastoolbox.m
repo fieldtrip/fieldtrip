@@ -162,6 +162,7 @@ url = {
   'MVPA-LIGHT'    'see https://github.com/treder/MVPA-Light'
   'XDF'           'see https://github.com/xdf-modules/xdf-Matlab'
   'MRTRIX'        'see https://mrtrix.org'
+  'BAYESFACTOR'   'see https://klabhub.github.io/bayesFactor'
   };
 
 if nargin<2
@@ -401,6 +402,8 @@ switch toolbox
     dependency = {'load_xdf', 'load_xdf_innerloop'};
   case 'MRTRIX'
     dependency = {'read_mrtrix'};
+  case 'BAYESFACTOR'
+    dependency = {'bf.ttest', 'bf.ttest2'};
     
     % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
