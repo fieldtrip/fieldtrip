@@ -268,9 +268,8 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.pow', 'pow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.coh', 'coh'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.mom', 'mom'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'location', 'interactive', 'auto'});
-% instead of specifying cfg.coordsys, the user should specify the coordsys in the functional data
-cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates', 'TTlookup'});
-cfg = ft_checkconfig(cfg, 'deprecated', 'coordsys');
+% instead of specifying cfg.coordsys, the user should specify the coordsys in the data
+cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'coordsys', 'inputcoord', 'inputcoordsys', 'coordinates'});
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2837
 cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
 
@@ -387,11 +386,8 @@ if hasroi
     ft_error('specify cfg.atlas which specifies cfg.roi')
   else
     % get the mask
-    tmpcfg          = [];
-    tmpcfg.roi      = cfg.roi;
-    tmpcfg.atlas    = cfg.atlas;
-    tmpcfg.inputcoord = functional.coordsys;
-    roi = ft_volumelookup(tmpcfg,functional);
+    tmpcfg = keepfields(cfg, {'roi', 'atlas'});
+    roi = ft_volumelookup(tmpcfg, functional);
   end
 end
 
@@ -731,7 +727,7 @@ if hasfun
     cfg.funcolormap = colormap;
   elseif ~ischar(cfg.funcolormap)
     colormap(cfg.funcolormap);
-    cfg.funcolormap = colormap;  
+    cfg.funcolormap = colormap;
   end
 end
 if hasmsk
@@ -1653,11 +1649,11 @@ end
 
 if opt.hasana
   options = {'transform', eye(4),     'location', opt.ijk, 'style', 'subplot',...
-             'update',    opt.update, 'doscale',  false,   'clim',  opt.clim};
+    'update',    opt.update, 'doscale',  false,   'clim',  opt.clim};
   if isfield(opt, 'intersectmesh')
     options = cat(2, options, 'intersectmesh', opt.intersectmesh);
   end
-   
+  
   if opt.init
     tmph  = [h1 h2 h3];
     options = cat(2, options, {'parents', tmph});
