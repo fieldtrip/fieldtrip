@@ -12,6 +12,8 @@ mri0 = ft_read_mri('Subject01.mri');
 grad0 = ft_read_sens('Subject01.ds', 'senstype', 'meg');
 headmodel0 = ft_read_headmodel('Subject01.hdm');
 
+ft_hastoolbox('spm12', 1);
+
 %%
 % these have mixed units
 
