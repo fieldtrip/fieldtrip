@@ -301,14 +301,14 @@ end
 
 if method>0
   if ~isfield(object, 'transform') || ~isfield(object, 'anatomy')
-    ft_error('affine or non-linear transformation using SPM are only supported for anatomical MRIs');
+    ft_error('affine or non-linear transformation are only supported for anatomical MRIs');
   end
   if ~isfield(object, 'unit') || ~strcmp(object.unit, 'mm')
-    ft_error('affine or non-linear transformation using SPM require the anatomial MRI to be expressed in mm');
+    ft_error('affine or non-linear transformation require the anatomial MRI to be expressed in mm');
   end
-  if ~strcmp(object.coordsys, 'acpc')
+  if ~any(ismember(object.coordsys, {'acpc', 'spm', 'mni', 'fsaverage', 'tal'}))
     % this constraint could be relaxed if we would know that the template is expressed in another coordinate system
-    ft_error('affine or non-linear transformation using SPM are only supported for ACPC');
+    ft_error('affine or non-linear transformation is only supported for data in an SPM-like coordinate systems');
   end
   
   % this requires SPM to be on the path. However, this is not the proper place to
