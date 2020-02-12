@@ -824,28 +824,28 @@ switch cfg.method
     
   case 'fsl'
     if ~isfield(cfg, 'fsl'), cfg.fsl = []; end
-    cfg.fsl.path         = ft_getopt(cfg.fsl, 'path',    '');
-    cfg.fsl.costfun      = ft_getopt(cfg.fsl, 'costfun', 'corratio');
+    cfg.fsl.path         = ft_getopt(cfg.fsl, 'path',         '');
+    cfg.fsl.costfun      = ft_getopt(cfg.fsl, 'costfun',      'corratio');
     cfg.fsl.interpmethod = ft_getopt(cfg.fsl, 'interpmethod', 'trilinear');
-    cfg.fsl.dof          = ft_getopt(cfg.fsl, 'dof',     6);
-    cfg.fsl.reslice      = ft_getopt(cfg.fsl, 'reslice', 'yes');
-    cfg.fsl.searchrange  = ft_getopt(cfg.fsl, 'searchrange', [-180 180]);
+    cfg.fsl.dof          = ft_getopt(cfg.fsl, 'dof',          6);
+    cfg.fsl.reslice      = ft_getopt(cfg.fsl, 'reslice',      'yes');
+    cfg.fsl.searchrange  = ft_getopt(cfg.fsl, 'searchrange',  [-180 180]);
     
     % write the input and target to a temporary file
     % and create some additional temporary file names to contain the output
-    tmpname1 = tempname;
-    tmpname2 = tempname;
-    tmpname3 = tempname;
-    tmpname4 = tempname;
+    filename_mri    = tempname;
+    filename_target = tempname;
+    filename_output = tempname;
+    filename_mat    = tempname;
     
-    tmpcfg = [];
+    tmpcfg           = [];
     tmpcfg.parameter = 'anatomy';
-    tmpcfg.filename  = tmpname1;
+    tmpcfg.filename  = filename_mri;
     tmpcfg.filetype  = 'nifti';
-    fprintf('writing the input volume to a temporary file: %s\n', [tmpname1, '.nii']);
+    fprintf('writing the input volume to a temporary file: %s\n', [filename_mri, '.nii']);
     ft_volumewrite(tmpcfg, mri);
-    tmpcfg.filename  = tmpname2;
-    fprintf('writing the  target volume to a temporary file: %s\n', [tmpname2, '.nii']);
+    tmpcfg.filename  = filename_target;
+    fprintf('writing the  target volume to a temporary file: %s\n', [filename_target, '.nii']);
     ft_volumewrite(tmpcfg, target);
     
     % create the command to call flirt
@@ -853,7 +853,7 @@ switch cfg.method
     r1  = num2str(cfg.fsl.searchrange(1));
     r2  = num2str(cfg.fsl.searchrange(2));
     str = sprintf('%s/flirt -in %s -ref %s -out %s -omat %s -bins 256 -cost %s -searchrx %s %s -searchry %s %s -searchrz %s %s -dof %s -interp %s',...
-      cfg.fsl.path, tmpname1, tmpname2, tmpname3, tmpname4, cfg.fsl.costfun, r1, r2, r1, r2, r1, r2, num2str(cfg.fsl.dof), cfg.fsl.interpmethod);
+      cfg.fsl.path, filename_mri, filename_target, filename_output, filename_mat, cfg.fsl.costfun, r1, r2, r1, r2, r1, r2, num2str(cfg.fsl.dof), cfg.fsl.interpmethod);
     if isempty(cfg.fsl.path), str = str(2:end); end % remove the first filesep, assume path to flirt to be known
     
     % system call
@@ -865,36 +865,47 @@ switch cfg.method
       % reconstruct the mapping from the target's world coordinate system
       % to the input's voxel coordinate system
       
-      vox = fopen(tmpname4);
-      tmp = textscan(vox, '%f');
-      fclose(vox);
+      fid = fopen(filename_mat);
+      flirtmat = textscan(fid, '%f');
+      fclose(fid);
       
-      % this transforms from input voxels to target voxels
-      vox2vox = reshape(tmp{1},4,4)';
+      % this contains the coregistration information in FSL convention
+      flirtmat = reshape(flirtmat{1},4,4)';
       
-      if det(target.transform(1:3,1:3))>0
-        % flirt apparently flips along the x-dim if the det < 0
-        % if images are not radiological, the x-axis is flipped, see:
-        %  https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=ind0810&L=FSL&P=185638
-        %  https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=ind0903&L=FSL&P=R93775
-        
-        % flip back
-        flipmat = eye(4); flipmat(1,1) = -1; flipmat(1,4) = target.dim(1);
-        vox2vox = flipmat*vox2vox;
+      % The following chunck of code is from Ged Ridgway's
+      % flirtmat2worldmat code
+      % src = inv(flirtmat) * trg
+      % srcvox = src.mat \ inv(flirtmat) * trg.mat * trgvox
+      % BUT, flirt doesn't use src.mat, only absolute values of the 
+      % scaling elements from it,
+      % AND, if images are not radiological, the x-axis is flipped, see:
+      %  https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=ind0810&L=FSL&P=185638
+      %  https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=ind0903&L=FSL&P=R93775
+      scl_target = diag([sqrt(sum(target.transform(1:3,1:3).^2)) 1]);
+      if det(target.transform(1:3,1:3)) > 0
+        % neurological, x-axis is flipped, such that [3 2 1 0] and [0 1 2 3]
+        % have the same *scaled* coordinates:
+        xflip       = diag([-1 1 1 1]);
+        xflip(1, 4) = target.dim(1)-1; % reflect about centre
+        scl_target = scl_target * xflip;
       end
-      if det(mri.transform(1:3,1:3))>0
-        % flirt apparently flips along the x-dim if the det < 0
-        % flip back
-        flipmat = eye(4); flipmat(1,1) = -1; flipmat(1,4) = mri.dim(1);
-        vox2vox = vox2vox*flipmat;
+      scl_mri    = diag([sqrt(sum(mri.transform(1:3,1:3).^2))    1]);
+      if det(mri.transform(1:3,1:3)) > 0
+        % neurological, x-axis is flipped, such that [3 2 1 0] and [0 1 2 3]
+        % have the same *scaled* coordinates:
+        xflip       = diag([-1 1 1 1]);
+        xflip(1, 4) = mri.dim(1)-1; % reflect about centre
+        scl_mri     = scl_mri * xflip;
       end
+      % AND, Flirt's voxels are zero-based, while SPM's are one-based...
+      addone = eye(4);
+      addone(:, 4) = 1;
       
-      % very not sure about this (e.g. is vox2vox really doing what I think
-      % it is doing? should I care about 0 and 1 based conventions?)
-      % changing handedness?
-      mri.transform = target.transform*vox2vox;
-      
-      transform = eye(4);
+      fslvoxmat  = inv(scl_mri) * inv(flirtmat) * scl_target;
+      spmvoxmat  = addone * (fslvoxmat / addone);
+      target2mri = mri.transform * (spmvoxmat / target.transform);
+      transform  = inv(target2mri); 
+
       if isfield(target, 'coordsys')
         coordsys = target.coordsys;
       else
@@ -903,7 +914,7 @@ switch cfg.method
       
     else
       % get the updated anatomy
-      mrinew        = ft_read_mri([tmpname3, '.nii.gz']);
+      mrinew        = ft_read_mri([filename_output, '.nii.gz']);
       mri.anatomy   = mrinew.anatomy;
       mri.transform = mrinew.transform;
       mri.dim       = mrinew.dim;
@@ -915,10 +926,10 @@ switch cfg.method
         coordsys = 'unknown';
       end
     end
-    delete([tmpname1, '.nii']);
-    delete([tmpname2, '.nii']);
-    delete([tmpname3, '.nii.gz']);
-    delete(tmpname4);
+    delete([filename_mri,    '.nii']);
+    delete([filename_target, '.nii']);
+    delete([filename_output, '.nii.gz']);
+    delete(filename_mat);
     
   case 'spm'
     % check that the preferred SPM version is on the path
