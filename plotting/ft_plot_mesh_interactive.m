@@ -228,8 +228,7 @@ classdef ft_plot_mesh_interactive<handle
           set(self.axes_time(end), 'Color', [colour 0.1]);
           
           if ~isempty(self.atlas)
-            atlas_labels = atlas_lookup(self.atlas, self.pos(index,:),...
-              'inputcoord', 'mni');
+            atlas_labels = atlas_lookup(self.atlas, self.pos(index,:), 'coordsys', 'mni');
             if numel(atlas_labels) > 1
               atlas_labels = unique(atlas_labels);
               tmp = sprintf('%s', strrep(atlas_labels{1}, '_', ' '));
