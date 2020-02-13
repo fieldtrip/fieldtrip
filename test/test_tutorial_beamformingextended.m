@@ -1,4 +1,4 @@
-function test_tutorial_beamformingextended
+% function test_tutorial_beamformingextended
 
 % MEM 5gb
 % WALLTIME 00:30:00
@@ -29,6 +29,7 @@ cfg = [];
 data_cmb = ft_appenddata(cfg, data_bsl, data_exp);
 % code the trial: 0 = baseline, 1 = experimental condition
 data_cmb.trialinfo = [zeros(length(data_bsl.trial), 1); ones(length(data_exp.trial), 1)];
+
 %% calculating the cross spectral density matrix
 cfg = [];
 cfg.method        = 'mtmfft';
