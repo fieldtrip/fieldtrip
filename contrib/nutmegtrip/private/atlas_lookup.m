@@ -11,8 +11,8 @@ function [label] = atlas_lookup(atlas, pos, varargin)
 %   'queryrange'   = number, should be 1, 3, 5, 7, 9 or 11 (default = 3)
 %   'coordsys'     = 'mni' or 'tal' (default = [])
 %
-% Dependent on the input coordinates and the coordinates of the atlas, the
-% input positions are transformed betweem MNI and Talairach-Tournoux coordinates.
+% Dependent on the coordinates if the input points and the coordinates of the atlas,
+% the input positions are transformed betweem MNI and Talairach-Tournoux coordinates.
 % See http://www.mrc-cbu.cam.ac.uk/Imaging/Common/mnispace.shtml for more details.
 
 % Copyright (C) 2005-2020, Robert Oostenveld
@@ -38,7 +38,7 @@ function [label] = atlas_lookup(atlas, pos, varargin)
 % get the optional input arguments
 method      = ft_getopt(varargin, 'method', 'sphere');
 queryrange  = ft_getopt(varargin, 'queryrange', 3);
-coordsys  = ft_getopt(varargin, 'coordsys');
+coordsys    = ft_getopt(varargin, 'coordsys');
 
 if isempty(coordsys)
   ft_error('you must specify coordsys');
