@@ -501,7 +501,7 @@ end
 % convert the labels for the partialisation channels into indices
 % do the same for the labels of the channels that should be kept
 % convert the labels in the output to reflect the partialisation
-if ~isempty(cfg.partchannel) && (isfield(data, 'label')||isfield(data, 'labelcmb'))
+if ~isempty(cfg.partchannel) && (isfield(data, 'label') || isfield(data, 'labelcmb'))
   if isfield(data, 'label')
     label = data.label;
   elseif isfield(data, 'labelcmb')
@@ -523,8 +523,8 @@ if ~isempty(cfg.partchannel) && (isfield(data, 'label')||isfield(data, 'labelcmb
     keepchn{k} = [keepchn{k}, '\', partstr(2:end)];
   end
   if isfield(data, 'label')
-    data.label = keepchn; % update labels to remove the partialed channels
-    % FIXME consider keeping track of which channels have been partialised
+    % update labels of the partialed channels
+    data.label(kchanindx) = keepchn;
   elseif isfield(data, 'labelcmb')
     for k = 1:numel(data.labelcmb)
       data.labelcmb{k} = [data.labelcmb{k}, '\', partstr(2:end)];
@@ -656,6 +656,7 @@ switch cfg.method
       noisecov = shiftdim(noisecov,1);
       crsspctrm = shiftdim(crsspctrm,1);
     end
+    
   case {'granger' 'instantaneous_causality' 'total_interdependence' 'iis'}
     % granger causality
     if ft_datatype(data, 'freq') || ft_datatype(data, 'freqmvar')
@@ -935,6 +936,7 @@ switch cfg.method
         %data.dimord = 'chan_chan';
       case 'freq'
         ft_error('not yet implemented');
+        
       case 'source'
         % for the time being work with mom
         % dat = cat(2, data.mom{data.inside}).';
