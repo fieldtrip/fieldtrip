@@ -71,7 +71,7 @@ else % nargin > 1 && ~islogical(header)
     if nargin < 4
       endsample = header.nSamples;
       if nargin < 3
-        begsample = 0;
+        begsample = 1;
       end
     end
   end  
