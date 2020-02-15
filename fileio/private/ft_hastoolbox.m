@@ -163,6 +163,7 @@ url = {
   'XDF'           'see https://github.com/xdf-modules/xdf-Matlab'
   'MRTRIX'        'see https://mrtrix.org'
   'BAYESFACTOR'   'see https://klabhub.github.io/bayesFactor'
+  'EZC3D'         'see https://github.com/pyomeca/ezc3d'
   };
 
 if nargin<2
@@ -404,6 +405,8 @@ switch toolbox
     dependency = {'read_mrtrix'};
   case 'BAYESFACTOR'
     dependency = {'bf.ttest', 'bf.ttest2'};
+  case 'EZC3D'
+    dependency = {'ezc3dRead', 'ezc3dWrite'};
     
     % the following are FieldTrip modules/toolboxes
   case 'FILEIO'

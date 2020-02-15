@@ -50,7 +50,7 @@ else
   fullname = filename;
 end
 
-if isempty(previous_fullname) || ~isequal(fullname, previous_fullname)
+if isempty(previous_fullname) || ~isequal(fullname, previous_fullname) || isempty(c3d)
   % remember the full filename including path
   previous_fullname = fullname;
   % read the header and data
