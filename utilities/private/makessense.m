@@ -34,6 +34,7 @@ nsmp = nan;
 
 % it should check all possible data fields that are well-behaved
 datfield = setdiff(fieldnames(data), ignorefields('makessense'));
+datfield = datfield(~endsWith(datfield, 'dimord'));
 
 for i=1:numel(datfield)
   if isfield(data, datfield{i})

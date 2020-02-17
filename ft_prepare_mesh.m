@@ -223,9 +223,10 @@ end
 
 % smooth the mesh
 if ~isempty(cfg.smooth)
-  cfg.headshape = mesh;
-  cfg.numvertices = [];
-  mesh = prepare_mesh_headshape(cfg);
+  tmpcfg = keepfields(cfg, {'smooth', 'showcallinfo'});
+  tmpcfg.numvertices = []; % the number of vertices should not be changed
+  tmpcfg.headshape = mesh;
+  mesh = prepare_mesh_headshape(tmpcfg);
 end
 
 % do the general cleanup and bookkeeping at the end of the function

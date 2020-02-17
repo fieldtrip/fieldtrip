@@ -270,19 +270,31 @@ switch ft_senstype(sens)
     if ~isfield(sens, 'tra') && isfield(sens, 'elecpos') && nchan==nelec
       % there is one electrode per channel, which means that the channel position is identical to the electrode position
       pnt = sens.elecpos;
-      ori = nan(size(pnt));
+      if isfield(sens, 'elecori')
+        ori = sens.elecori;
+      else
+        ori = nan(size(pnt));
+      end
       lab = sens.label;
 
     elseif isfield(sens, 'tra') && isfield(sens, 'elecpos') && isequal(sens.tra, eye(nelec))
       % there is one electrode per channel, which means that the channel position is identical to the electrode position
       pnt = sens.elecpos;
-      ori = nan(size(pnt));
+      if isfield(sens, 'elecori')
+        ori = sens.elecori;
+      else
+        ori = nan(size(pnt));
+      end
       lab = sens.label;
 
     elseif isfield(sens, 'tra') && isfield(sens, 'elecpos') && isequal(sens.tra, eye(nelec)-1/nelec)
       % there is one electrode per channel, channels are average referenced
       pnt = sens.elecpos;
-      ori = nan(size(pnt));
+      if isfield(sens, 'elecori')
+        ori = sens.elecori;
+      else
+        ori = nan(size(pnt));
+      end
       lab = sens.label;
 
     elseif ~isfield(sens, 'tra') && isfield(sens, 'coilpos') && nchan==ncoil
@@ -292,9 +304,13 @@ switch ft_senstype(sens)
       lab = sens.label;
 
     elseif ~isfield(sens, 'tra') && isfield(sens, 'optopos') && nchan==nopto
-      % there is one optode per channel, which means that the channel position is identical to the coil position
+      % there is one optode per channel, which means that the channel position is identical to the optode position
       pnt = sens.optopos;
-      ori = nan(size(pnt));
+      if isfield(sens, 'optoori')
+        ori = sens.optoori;
+      else
+        ori = nan(size(pnt));
+      end
       lab = sens.label;
 
     elseif isfield(sens, 'tra')
@@ -326,6 +342,7 @@ switch ft_senstype(sens)
       end
       lab = sens.label;
     end
+    
 end % switch senstype
 
 n = size(lab,2);

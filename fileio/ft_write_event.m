@@ -82,7 +82,7 @@ switch eventformat
     if isempty(event_queue) || ~isstruct(event_queue)
       event_queue = event;
     else
-      event_queue = appendevent(event_queue, event);
+      event_queue = appendstruct(event_queue, event);
     end
 
   case 'fcdc_rfb'
@@ -94,7 +94,7 @@ switch eventformat
     % read from a networked buffer for realtime analysis
     [host, port] = filetype_check_uri(filename);
 
-    if strcmp(append, 'no')        
+    if strcmp(append, 'no')
       buffer('flush_evt', [], host, port);  % flush event
     end
 
@@ -104,7 +104,7 @@ switch eventformat
 	% type, value
 	%   -- these can be strings or any numeric type (double, single, [u]int[8-64])
 	%      will be transmitted as if vectorised
-  
+
   % hack to fix empty event.offset and event.duration fields
   % Maybe should track down why they're empty? But this works for now
   % ES, 10-may-2019
@@ -121,9 +121,9 @@ switch eventformat
 	buffer('put_evt', event, host, port);
 
 	% SK: There was some code here for firing up a FieldTrip buffer locally,
-	% but this is very likely to be senseless because we have no proper header 
+	% but this is very likely to be senseless because we have no proper header
 	% information here. Please explicitly use ft_create_buffer instead.
-  
+
   case 'fcdc_serial'
     % this code is moved to a separate file
     write_serial_event(filename, event);
@@ -162,13 +162,13 @@ switch eventformat
     end
 
    case 'fcdc_fifo'
-    
+
       % these are opened in blocking mode, i.e. reading/writing will block until boths sides are connected
       fifo = filetype_check_uri(filename);
-      
+
       if ~exist(fifo,'file')
-          ft_warning('the FIFO %s does not exist; attempting to create it', fifo);          
-          system(sprintf('mkfifo -m 0666 %s',fifo));          
+          ft_warning('the FIFO %s does not exist; attempting to create it', fifo);
+          system(sprintf('mkfifo -m 0666 %s',fifo));
       end
 
       fid = fopen_or_error(fifo, 'w');
@@ -187,7 +187,7 @@ switch eventformat
         end
       end
       fclose(fid);
-      
+
     case 'fcdc_tcp'
 
         % TCP network socket
@@ -210,17 +210,17 @@ switch eventformat
                     pnet(con,'printf',num2str(msg));
                     pnet(con,'printf','\n');
                 end
-%            catch             
+%            catch
 %                ft_warning(lasterr);
             end
-            
+
             pnet(con,'close');
         end
 
     case 'fcdc_udp'
 
         % UDP network socket
-        
+
         [host, port] = filetype_check_uri(filename);
         udp=pnet('udpsocket',port);
 

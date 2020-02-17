@@ -1,21 +1,22 @@
 function test_ft_sourceinterpolate
 
 % MEM 4500mb
-% WALLTIME 00:10:00
+% WALLTIME 00:15:00
 
 % DEPENDENCY ft_sourceinterpolate ft_sourceplot
 
 % See also test_bug2769 which goes over more interpolation options using fake data
 
-clear all
-close all
-
 %%
+
+[dum, ftpath] = ft_version;
 
 srf_lo = ft_read_headshape('cortex_5124.surf.gii');
 srf_hi = ft_read_headshape('cortex_20484.surf.gii');
 tmp = load('standard_sourcemodel3d10mm.mat'); vol_lo = tmp.sourcemodel;
 tmp = load('standard_sourcemodel3d4mm.mat');  vol_hi = tmp.sourcemodel;
+atlas = ft_read_atlas(fullfile(ftpath,'template','atlas','aal','ROI_MNI_V4.nii'));
+
 
 figure
 ft_plot_mesh(srf_lo);
@@ -51,6 +52,17 @@ source0d_srf_hi.pos = srf_hi.pos;
 source0d_srf_hi.tri = srf_hi.tri;
 source0d_srf_hi.pow = srf_hi.pos(:,3);
 source0d_srf_hi.powdimord = 'pos';
+
+%%
+cfg = [];
+cfg.parameter = 'tissue';
+cfg.interpmethod = 'nearest';
+interp_atlas1lo = ft_sourceinterpolate(cfg, atlas, vol_lo);
+interp_atlas1hi = ft_sourceinterpolate(cfg, atlas, vol_hi);
+cfg.interpmethod = 'mode';
+interp_atlas2lo = ft_sourceinterpolate(cfg, atlas, vol_lo);
+interp_atlas2hi = ft_sourceinterpolate(cfg, atlas, vol_hi);
+
 
 %%
 

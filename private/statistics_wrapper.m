@@ -92,7 +92,7 @@ if (istimelock+isfreq+issource)~=1
   ft_error('Could not determine the type of the input data');
 end
 
-if istimelock || isfreq,
+if istimelock || isfreq
   % these defaults only apply to channel level data
   cfg.channel     = ft_getopt(cfg, 'channel',     'all');
   cfg.avgoverchan = ft_getopt(cfg, 'avgoverchan', 'no');
@@ -134,9 +134,7 @@ if issource
       if islogical(cfg.roi{i})
         tmp = cfg.roi{i};
       else
-        tmpcfg.roi = cfg.roi{i};
-        tmpcfg.inputcoord = cfg.inputcoord;
-        tmpcfg.atlas = cfg.atlas;
+        tmpcfg = keepfields(cfg, {'roi', 'atlas'});
         tmp = ft_volumelookup(tmpcfg, varargin{1});
       end
       if strcmp(cfg.avgoverroi, 'no') && ~isfield(cfg, 'hemisphere')

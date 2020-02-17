@@ -12,14 +12,16 @@ freq.dimord     = 'chan_freq';
 cfg = [];
 figure; ft_singleplotER(cfg, freq);
 
-save /tmp/test_bug103.mat freq
+% save to a temporary file
+filename = [tempname,'.mat'];
+save(filename, 'freq');
 
 try
   cfg = [];
-  cfg.inputfile = '/tmp/test_bug103.mat';
+  cfg.inputfile = filename;
   figure; ft_singleplotER(cfg);
-  delete /tmp/test_bug103.mat
+  delete(filename);
 catch ME
-  delete /tmp/test_bug103.mat
+  delete(filename);
   rethrow(ME);
 end

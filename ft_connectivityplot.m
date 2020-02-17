@@ -62,18 +62,20 @@ if ft_abort
 end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed', {'zparam', 'parameter'});
-cfg = ft_checkconfig(cfg, 'renamed', {'color',  'graphcolor'}); % to make it consistent with ft_singleplotER
+cfg = ft_checkconfig(cfg, 'renamed', {'zparam',     'parameter'});
+cfg = ft_checkconfig(cfg, 'renamed', {'color',      'linecolor'});
+cfg = ft_checkconfig(cfg, 'renamed', {'graphcolor', 'linecolor'});
 
 % set the defaults
-cfg.channel   = ft_getopt(cfg, 'channel',   'all');
-cfg.parameter = ft_getopt(cfg, 'parameter', 'cohspctrm');
-cfg.zlim      = ft_getopt(cfg, 'zlim',      'maxmin');
-cfg.ylim      = ft_getopt(cfg, 'ylim',      'maxmin');
-cfg.xlim      = ft_getopt(cfg, 'xlim',      'maxmin');
-cfg.renderer  = ft_getopt(cfg, 'renderer',  []); % let MATLAB decide on the default
-cfg.graphcolor = ft_getopt(cfg, 'graphcolor', 'brgkywrgbkywrgbkywrgbkyw');
-if ischar(cfg.graphcolor), cfg.graphcolor = cfg.graphcolor(:); end
+cfg.channel     = ft_getopt(cfg, 'channel',   'all');
+cfg.parameter   = ft_getopt(cfg, 'parameter', 'cohspctrm');
+cfg.zlim        = ft_getopt(cfg, 'zlim',      'maxmin');
+cfg.ylim        = ft_getopt(cfg, 'ylim',      'maxmin');
+cfg.xlim        = ft_getopt(cfg, 'xlim',      'maxmin');
+cfg.renderer    = ft_getopt(cfg, 'renderer',  []); % let MATLAB decide on the default
+cfg.linecolor   = ft_getopt(cfg, 'linecolor', 'brgkywrgbkywrgbkywrgbkyw');
+cfg.linestyle   = ft_getopt(cfg, 'linestyle', '-');
+cfg.linewidth   = ft_getopt(cfg, 'linewidth', 0.5);
 
 % check if the input data is valid for this function
 % ensure that the input is correct
@@ -115,7 +117,7 @@ for k = 1:Ndata
       ft_error('the data should have a dimord of %s or %s', 'chan_chan_freq', 'chancmb_freq');
   end
 
-  % this is needed for correct treatment of graphcolor later on
+  % this is needed for correct treatment of linecolor later on
   if nargin>1
     if ~isempty(inputname(k+1))
       iname{k+1} = inputname(k+1);
@@ -132,6 +134,16 @@ if Ndata >1
   if ~all(strcmp(dtype{1}, dtype))
     ft_error('input data are of different type; this is not supported');
   end
+end
+
+if ischar(cfg.linecolor)
+  % ensure it is a column vector of the right length
+  cfg.linecolor = repmat(cfg.linecolor(:), ceil(Ndata/length(cfg.linecolor)), 1);
+  cfg.linecolor = cfg.linecolor(1:Ndata);
+elseif isnumeric(cfg.linecolor)
+  % ensure it is a Nx3 matrix of the right length
+  cfg.linecolor = repmat(cfg.linecolor, ceil(Ndata/length(cfg.linecolor)), 1);
+  cfg.linecolor = cfg.linecolor(1:Ndata,:);
 end
 
 % ensure that the data in all inputs has the same channels, time-axis, etc.
@@ -222,13 +234,13 @@ if Ndata>1
   ft_connectivityplot(tmpcfg, data);
   tmpcfg = cfg;
 
-  if ischar(cfg.graphcolor),        colorLabels = [iname{2} '=' tmpcfg.graphcolor(1) '\n'];
-  elseif isnumeric(cfg.graphcolor), colorLabels = [iname{2} '=' num2str(tmpcfg.graphcolor(1, :)) '\n'];
+  if ischar(cfg.linecolor),        colorLabels = [iname{2} '='         tmpcfg.linecolor(1)     '\n'];
+  elseif isnumeric(cfg.linecolor), colorLabels = [iname{2} '=' num2str(tmpcfg.linecolor(1, :)) '\n'];
   end
 
   for k = 2:Ndata
-    if ischar(cfg.graphcolor),     tmpcfg.graphcolor = tmpcfg.graphcolor(2:end);
-    else isnumeric(cfg.graphcolor),tmpcfg.graphcolor = tmpcfg.graphcolor(2:end,:);
+    if ischar(cfg.linecolor),     tmpcfg.linecolor = tmpcfg.linecolor(2:end);
+    else isnumeric(cfg.linecolor),tmpcfg.linecolor = tmpcfg.linecolor(2:end,:);
     end
 
     tmpcfg.holdfig = 1;
@@ -239,8 +251,8 @@ if Ndata>1
     end
     ft_connectivityplot(tmpcfg, varargin{k});
 
-    if ischar(cfg.graphcolor);        colorLabels = [colorLabels iname{k+1} '=' tmpcfg.graphcolor(1) '\n'];
-    elseif isnumeric(cfg.graphcolor); colorLabels = [colorLabels iname{k+1} '=' num2str(tmpcfg.graphcolor(1, :)) '\n'];
+    if ischar(cfg.linecolor);        colorLabels = [colorLabels iname{k+1} '='         tmpcfg.linecolor(1)     '\n'];
+    elseif isnumeric(cfg.linecolor); colorLabels = [colorLabels iname{k+1} '=' num2str(tmpcfg.linecolor(1, :)) '\n'];
     end
   end
 
@@ -290,7 +302,7 @@ for k = 1:nchan
         ft_plot_matrix(tmp, 'width', 1, 'height', 1, 'hpos', ix.*1.2, 'vpos', iy.*1.2, 'clim', cfg.zlim, 'box', 'yes');
       elseif hasfreq
         tmp = reshape(dat(m,k,:), [nfreq 1]);
-        ft_plot_vector(tmp, 'width', 1, 'height', 1, 'hpos', ix.*1.2, 'vpos', iy.*1.2, 'vlim', cfg.zlim, 'box', 'yes', 'color', cfg.graphcolor(1,:));
+        ft_plot_vector(tmp, 'width', 1, 'height', 1, 'hpos', ix.*1.2, 'vpos', iy.*1.2, 'vlim', cfg.zlim, 'box', 'yes', 'color', cfg.linecolor(1,:), 'linewidth', cfg.linewidth, 'style', cfg.linestyle);
       elseif hastime
         ft_error('plotting data with only a time axis is not supported yet');
       end

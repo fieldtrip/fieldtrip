@@ -96,10 +96,16 @@ if isempty(dataformat)
   dataformat = ft_filetype(filename);
 end
 
-if strcmp(dataformat, 'compressed')
-  % the file is compressed, unzip on the fly
+if strcmp(dataformat, 'compressed') || (strcmp(dataformat, 'freesurfer_mgz') && ispc)
+  % the file is compressed, unzip on the fly, freesurfer mgz files get
+  % special treatment on a pc
   inflated = true;
   filename = inflate_file(filename);
+  if strcmp(dataformat, 'freesurfer_mgz')
+    filename_old = filename;
+    filename     = [filename '.mgh'];
+    movefile(filename_old, filename);
+  end
   dataformat = ft_filetype(filename);
 else
   inflated = false;
@@ -389,9 +395,6 @@ switch dataformat
     end
 
   case {'nifti', 'freesurfer_mgz', 'freesurfer_mgh', 'nifti_fsl'}
-    if strcmp(dataformat, 'freesurfer_mgz') && ispc
-      ft_error('Compressed .mgz files cannot be read on a PC');
-    end
 
     ft_hastoolbox('freesurfer', 1);
     tmp = MRIread(filename);

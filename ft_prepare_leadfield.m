@@ -210,7 +210,7 @@ if ft_headmodeltype(headmodel, 'openmeeg')
   if(~isfield(cfg,'openmeeg'))
     cfg.openmeeg = [];
   end
-  batchsize   = ft_getopt(cfg.openmeeg, 'batchsize',100e3); % number of voxels per DSM batch; set to e.g. 1000 if not much RAM available
+  batchsize   = ft_getopt(cfg.openmeeg, 'batchsize',10e4);  % number of voxels per DSM batch; set to e.g. 1000 if not much RAM available
   dsm         = ft_getopt(cfg.openmeeg, 'dsm');             % reuse existing DSM if provided
   keepdsm     = ft_getopt(cfg.openmeeg, 'keepdsm', 'no');   % retain DSM
   nonadaptive = ft_getopt(cfg.openmeeg, 'nonadaptive', 'no');

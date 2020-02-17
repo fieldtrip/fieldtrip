@@ -1,4 +1,4 @@
-function [mri] = align_ctf2acpc(mri, opt, template)
+function [mri] = align_ctf2acpc(mri, method, template)
 
 % ALIGN_CTF2ACPC performs an approximate rigid body alignment of the anatomical
 % volume from CTF towards ACPC coordinates. Only the homogeneous transformation
@@ -6,8 +6,8 @@ function [mri] = align_ctf2acpc(mri, opt, template)
 %
 % Use as
 %   mri = align_ctf2acpc(mri)
-%   mri = align_ctf2acpc(mri, opt)
-%   mri = align_ctf2acpc(mri, opt, template)
+%   mri = align_ctf2acpc(mri, method)
+%   mri = align_ctf2acpc(mri, method, template)
 %
 % The first input argument is a FieldTrip MRI-structure, and the second optional
 % argument specifies how the registration is to be done:
@@ -15,14 +15,14 @@ function [mri] = align_ctf2acpc(mri, opt, template)
 %   method = 1: an approximate coregistration, followed by spm_affreg
 %   method = 2: an approximate coregistration, followed by spm_normalise (default)
 %
-% When opt = 1 or 2, an optional template filename can be specified, which denotes
+% When method = 1 or 2, an optional template filename can be specified, which denotes
 % the filename of the target volume. This is required when running in deployed
 % mode.
 %
 % See also ALIGN_NEUROMAG2ACPC, ALIGN_FSAVERAGE2MNI
 
 if nargin<2
-  opt = 2;
+  method = 2;
 end
 
 %--------------------------------------------------------------------------
@@ -63,6 +63,13 @@ mri.vox2head      = ctfvox2acpchead;
 mri.head2headOrig = acpchead2ctfhead;
 mri.coordsys      = 'acpc';
 
+if method>0
+  % this requires SPM to be on the path. However, this is not the proper place to
+  % choose between SPM versions. The user can either use cfg.spmversion in a high-level
+  % function, or has to add the path to the desired SPM version by hand.
+  ft_hastoolbox('spm', -1);
+end
+
 %--------------------------------------------------------------------------
 % Do a second round of affine registration (rigid body) to get improved
 % alignment with ACPC coordinate system. this is needed because there may be
@@ -70,27 +77,27 @@ mri.coordsys      = 'acpc';
 % fail however, e.g. if the initial alignment is not close enough. In that
 % case SPM will throw an error
 
-if opt==1
+if method==1
   % use spm_affreg
   
   switch lower(spm('ver'))
     case 'spm2'
       if isdeployed
-        if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using opt==1'); end
+        if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using method==1'); end
       else
         template = fullfile(spm('Dir'),'templates','T1.mnc');
       end
       
     case 'spm8'
       if isdeployed
-        if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using opt==1'); end
+        if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using method==1'); end
       else
         template = fullfile(spm('Dir'),'templates','T1.nii');
       end
       
     case 'spm12'
       if isdeployed
-        if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using opt==1'); end
+        if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using method==1'); end
       else
         template = fullfile(spm('Dir'),'toolbox','OldNorm','T1.nii');
         if ~exist('spm_affreg', 'file')
@@ -131,20 +138,20 @@ if opt==1
   delete(tname1); delete(strrep(tname1, 'img', 'hdr'));
   delete(tname2); delete(strrep(tname2, 'img', 'hdr'));
   
-elseif opt==2
+elseif method==2
   % use spm_normalise
   
   switch lower(spm('ver'))
     case 'spm2'
       if isdeployed
-        if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using opt==2'); end
+        if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using method==2'); end
       else
         template = fullfile(spm('Dir'),'templates','T1.mnc');
       end
       
     case 'spm8'
       if isdeployed
-        if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using opt==2'); end
+        if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using method==2'); end
       else
         template = fullfile(spm('Dir'),'templates','T1.nii');
       end
@@ -153,7 +160,7 @@ elseif opt==2
       % this uses the 'OldNorm' functionality, so the path needs to be
       % added, can only be done if non-deployed.
       if isdeployed
-        if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using opt==2'); end
+        if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using method==2'); end
       else
         template = fullfile(spm('Dir'),'toolbox','OldNorm','T1.nii');
         if ~exist('spm_normalise', 'file')

@@ -71,26 +71,40 @@ if iscell(filename)
   % use recursion to read data from multiple files
   
   hdr = ft_getopt(varargin, 'header');
-  if isempty(hdr) || ~isfield(hdr, 'orig') || ~iscell(hdr.orig)
-    for i=1:numel(filename)
-      % read the individual file headers
-      hdr{i}  = ft_read_header(filename{i}, varargin{:});
-    end
+  if isempty(hdr)
+    % read the combined and individual file headers
+    combined  = ft_read_header(filename, varargin{:});
   else
-    % use the individual file headers that were read previously
-    hdr = hdr.orig;
+    % use the combined and individual file headers that were read previously
+    combined = hdr;
   end
-  nsmp = nan(size(filename));
-  for i=1:numel(filename)
-    nsmp(i) = hdr{i}.nSamples*hdr{i}.nTrials;
-  end
-  offset = [0 cumsum(nsmp(1:end-1))];
+  hdr = combined.orig;
   
   dat       = cell(size(filename));
   begsample = ft_getopt(varargin, 'begsample', 1);
-  endsample = ft_getopt(varargin, 'endsample', sum(nsmp));
+  endsample = ft_getopt(varargin, 'endsample', combined.nSamples*combined.nTrials);
   
-  for i=1:numel(filename)
+  allhdr = cat(1, hdr{:});
+  if numel(unique([allhdr.label]))==sum([allhdr.nChans])
+    % each file has different channels, concatenate along the channel dimension
+    % the same selection of samples is read from every file
+    for i=1:numel(filename)
+      ft_info('reading data from %s\n', filename{i});
+      varargin = ft_setopt(varargin, 'header', hdr{i});
+      varargin = ft_setopt(varargin, 'begsample', begsample);
+      varargin = ft_setopt(varargin, 'endsample', endsample);
+      dat{i} = ft_read_data(filename{i}, varargin{:});
+    end
+    dat = cat(1, dat{:}); % along the 1st dimension
+    
+  else
+    % each file has the same channels, concatenate along the time dimension
+    % this requires careful bookkeeping of the sample indices
+    nsmp = nan(size(filename));
+    for i=1:numel(filename)
+      nsmp(i) = hdr{i}.nSamples*hdr{i}.nTrials;
+    end
+    offset = [0 cumsum(nsmp(1:end-1))];
     thisbegsample = begsample - offset(i);
     thisendsample = endsample - offset(i);
     if thisbegsample<=nsmp(i) && thisendsample>=1
@@ -101,10 +115,8 @@ if iscell(filename)
     else
       dat{i} = [];
     end
+    dat = cat(2, dat{:}); % along the 2nd dimension
   end
-  
-  % return the concatenated data
-  dat = cat(2, dat{:});
   return
 end
 
@@ -530,10 +542,10 @@ switch dataformat
   case 'ced_spike6mat'
     dat = read_spike6mat_data(filename, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx);
     
-  case {'curry_dat', 'curry_cdt'} 
+  case {'curry_dat', 'curry_cdt'}
     [orig, dat] = load_curry_data_file(datafile);
     if orig.nMultiplex
-        dat = dat';
+      dat = dat';
     end
     dat = dat(chanindx, begsample:endsample);
     
@@ -671,7 +683,7 @@ switch dataformat
   case 'egi_mff_v2'
     % ensure that the EGI_MFF_V2 toolbox is on the path
     ft_hastoolbox('egi_mff_v2', 1);
-
+    
     %%%%%%%%%%%%%%%%%%%%%%
     %workaround for MATLAB bug resulting in global variables being cleared
     globalTemp=cell(0);
@@ -697,7 +709,7 @@ switch dataformat
     end
     clear globalTemp globalList varNames varList;
     %%%%%%%%%%%%%%%%%%%%%%
-
+    
     if isunix && filename(1)~=filesep
       % add the full path to the dataset directory
       filename = fullfile(pwd, filename);
@@ -705,7 +717,7 @@ switch dataformat
       % add the full path, including drive letter
       filename = fullfile(pwd, filename);
     end
-
+    
     % pass the header along to speed it up, it will be read on the fly in case it is empty
     dat = read_mff_data(filename, 'sample', begsample, endsample, chanindx, hdr);
     
@@ -1007,7 +1019,7 @@ switch dataformat
   case {'mpi_ds', 'mpi_dap'}
     [hdr, dat] = read_mpi_ds(filename);
     dat = dat(chanindx, begsample:endsample); % select the desired channels and samples
-
+    
   case 'nervus_eeg'
     hdr = read_nervus_header(filename);
     % Nervus usually has discontinuous EEGs, e.g. pauses in clinical
@@ -1021,7 +1033,7 @@ switch dataformat
       dat = cat(1,dat,datseg);
     end
     dimord = 'samples_chans';
-
+    
   case 'neuroscope_bin'
     switch hdr.orig.nBits
       case 16
@@ -1408,7 +1420,7 @@ switch dataformat
     ft_hastoolbox('ricoh_meg_reader', 1);
     dat = read_ricoh_data(filename, hdr, begsample, endsample, chanindx);
     
-  case {'riff_wave', 'audio_m4a'}
+  case {'audio_wav', 'audio_ogg', 'audio_flac', 'audio_au', 'audio_aiff', 'audio_aif', 'audio_aifc', 'audio_mp3', 'audio_m4a', 'audio_mp4'}
     dat = audioread(filename, [begsample endsample])';
     dat = dat(chanindx,:);
     
@@ -1425,7 +1437,7 @@ switch dataformat
       smi = read_smi_txt(filename);
     end
     dat = smi.dat(chanindx,begsample:endsample);
-  
+    
   case 'tmsi_poly5'
     blocksize = hdr.orig.header.SamplePeriodsPerBlock;
     begtrial = floor((begsample-1)/blocksize) + 1;
@@ -1442,7 +1454,7 @@ switch dataformat
   case 'videomeg_vid'
     dat = read_videomeg_vid(filename, hdr, begsample, endsample);
     dat = dat(chanindx,:);
-
+    
   case 'video'
     dat = read_video(filename, hdr, begsample, endsample, chanindx);
     
@@ -1461,21 +1473,23 @@ switch dataformat
       ft_hastoolbox('yokogawa', 1); % error if it cannot be added
       dat = read_yokogawa_data(filename, hdr, begsample, endsample, chanindx);
     end
-        
+    
   otherwise
-    % attempt to run "dataformat" as a function
-    % this allows the user to specify an external reading function
-    % if it fails, the regular unsupported warning message is thrown
-    try
-      % this is used for bids_tsv, biopac_acq, motion_c3d, opensignals_txt, qualisys_tsv, and possibly others
+    if exist(dataformat, 'file')
+      % attempt to run "dataformat" as a function, this allows the user to specify an external reading function
+      % this is also used for bids_tsv, biopac_acq, motion_c3d, opensignals_txt, qualisys_tsv, sccn_xdf, and possibly others
       dat = feval(dataformat, filename, hdr, begsample, endsample, chanindx);
-    catch
-      if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
+    elseif strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
+      try
+        % there is no guarantee that biosig can read it
         dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
-      else
+      catch
         ft_error('unsupported data format "%s"', dataformat);
       end
+    else
+      ft_error('unsupported data format "%s"', dataformat);
     end
+    
 end % switch dataformat
 
 if ~exist('dimord', 'var')

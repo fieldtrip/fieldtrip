@@ -1431,14 +1431,15 @@ layout.label  = {};
 layout.width  = [];
 layout.height = [];
 
+% NIRS channels are named 'RxY - TxZ [wavelength]'
 [rxnames, rem] = strtok(label, {'-', ' '});
 [txnames, rem] = strtok(rem,   {'-', ' '});
 
 for i=1:numel(label)
-  % create average positions
-  rxid = ismember(opto.fiberlabel, rxnames(i));
-  txid = ismember(opto.fiberlabel, txnames(i));
-  layout.pos(i, :) = opto.fiberpos(rxid, :)/2 + opto.fiberpos(txid, :)/2;
+  % create positions halfway between transmitter and receiver
+  rxid = ismember(opto.optolabel, rxnames(i));
+  txid = ismember(opto.optolabel, txnames(i));
+  layout.pos(i, :) = opto.optopos(rxid, :)/2 + opto.optopos(txid, :)/2;
 end
 
 layout.label  = label;

@@ -1,4 +1,4 @@
-function event = read_presentation_log(filename)
+function [event, table1] = read_presentation_log(filename)
 
 % READ_PRESENTATION_LOG reads a NBS Presentation scenario log file and
 % represents it as a FieldTrip event structure.

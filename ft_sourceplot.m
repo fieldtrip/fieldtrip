@@ -210,8 +210,14 @@ function ft_sourceplot(cfg, functional, anatomical)
 %   slice in all directions
 %   surface also optimal when inside present
 %   come up with a good glass brain projection
+%
+% undocumented option
+%   cfg.intersectmesh = cell-array of mesh(es) to be plotted along with the
+%                       anatomy, useful for evaluating coregistration. Does
+%                       at present not check for coordinate system
 
-% Copyright (C) 2007-2016, Robert Oostenveld, Ingrid Nieuwenhuis
+% Copyright (C) 2007-2019, Robert Oostenveld, Ingrid Nieuwenhuis, J.M.
+% Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -262,9 +268,8 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.pow', 'pow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.coh', 'coh'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.mom', 'mom'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'location', 'interactive', 'auto'});
-% instead of specifying cfg.coordsys, the user should specify the coordsys in the functional data
-cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates', 'TTlookup'});
-cfg = ft_checkconfig(cfg, 'deprecated', 'coordsys');
+% instead of specifying cfg.coordsys, the user should specify the coordsys in the data
+cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'coordsys', 'inputcoord', 'inputcoordsys', 'coordinates'});
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2837
 cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
 
@@ -295,6 +300,7 @@ cfg.voxelratio    = ft_getopt(cfg, 'voxelratio',    'data'); % display size of t
 cfg.axisratio     = ft_getopt(cfg, 'axisratio',     'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
 cfg.visible       = ft_getopt(cfg, 'visible',       'on');
 cfg.clim          = ft_getopt(cfg, 'clim',          [0 1]); % this is used to scale the orthoplot
+cfg.intersectmesh = ft_getopt(cfg, 'intersectmesh');
 
 if ~isfield(cfg, 'anaparameter')
   if isfield(functional, 'anatomy')
@@ -371,26 +377,7 @@ end
 %% get the elements that will be plotted
 hasatlas = ~isempty(cfg.atlas);
 if hasatlas
-  if ischar(cfg.atlas)
-    % initialize the atlas
-    [p, f, x] = fileparts(cfg.atlas);
-    fprintf(['reading ', f, ' atlas coordinates and labels\n']);
-    atlas = ft_read_atlas(cfg.atlas);
-  else
-    atlas = cfg.atlas;
-  end
-  % ensure that the atlas is formatted properly
-  atlas = ft_checkdata(atlas, 'hasunit', isfield(functional, 'unit'), 'hascoordsys', isfield(functional, 'coordsys'));
-  if isfield(functional, 'unit')
-    % ensure that the units are consistent, convert the units if required
-    atlas = ft_convert_units(atlas, functional.unit);
-  end
-  if isfield(functional, 'coordsys')
-    % ensure that the coordinate systems match
-    functional = fixcoordsys(functional);
-    atlas      = fixcoordsys(atlas);
-    assert(isequal(functional.coordsys, atlas.coordsys), 'coordinate systems do not match');
-  end
+  [atlas, functional] = handle_atlas_input(cfg.atlas, functional);
 end
 
 hasroi = ~isempty(cfg.roi);
@@ -399,11 +386,8 @@ if hasroi
     ft_error('specify cfg.atlas which specifies cfg.roi')
   else
     % get the mask
-    tmpcfg          = [];
-    tmpcfg.roi      = cfg.roi;
-    tmpcfg.atlas    = cfg.atlas;
-    tmpcfg.inputcoord = functional.coordsys;
-    roi = ft_volumelookup(tmpcfg,functional);
+    tmpcfg = keepfields(cfg, {'roi', 'atlas'});
+    roi = ft_volumelookup(tmpcfg, functional);
   end
 end
 
@@ -743,7 +727,7 @@ if hasfun
     cfg.funcolormap = colormap;
   elseif ~ischar(cfg.funcolormap)
     colormap(cfg.funcolormap);
-    cfg.funcolormap = colormap;  
+    cfg.funcolormap = colormap;
   end
 end
 if hasmsk
@@ -1111,6 +1095,16 @@ switch cfg.method
     opt.queryrange    = cfg.queryrange;
     opt.funcolormap   = cfg.funcolormap;
     opt.crosshair     = istrue(cfg.crosshair);
+    if ~isempty(cfg.intersectmesh)
+      % the data will be plotted in voxel space, so transform the meshes
+      % accordingly, assuming the same coordinate system as the anatomical
+      if ~isa(cfg.intersectmesh, 'cell')
+        cfg.intersectmesh = {cfg.intersectmesh};
+      end
+      for m = 1:numel(cfg.intersectmesh)
+        opt.intersectmesh{m} = ft_transform_geometry(inv(functional.transform), cfg.intersectmesh{m});
+      end
+    end
     
     %% do the actual plotting
     setappdata(h, 'opt', opt);
@@ -1452,12 +1446,13 @@ switch cfg.method
       
       % functional scaling
       cmap    = cfg.funcolormap;
-      cmid    = size(cmap,1)/2;                 % colorbar middle
-      clim    = [fcolmin fcolmax];              % color limits
-      colscf  = fun / max(abs(clim));           % color between -1 and 1, used when colorgrad = 'white'
-      colscf(colscf>1)=1; colscf(colscf<-1)=-1; % clamp values outside the [-1 1] range
-      radscf = abs( fun / max(abs(clim)) );     % radius between 0 and 1, used when colorgrad = scalar
-      radscf(radscf>1)=1; radscf(radscf<0)=0;   % clamp values outside the [0 1] range
+      cmid    = size(cmap,1)/2;                            % colorbar middle
+      clim    = [fcolmin fcolmax];                         % color limits
+      colscf  = 2*( (fun-clim(1)) / (clim(2)-clim(1)) )-1; % color between -1 and 1, bottom vs. top colorbar
+      colscf(colscf>1)=1; colscf(colscf<-1)=-1;            % clip values outside the [-1 1] range
+      radscf  = fun-(min(abs(fun)) * sign(max(fun)));      % radius between 0 and 1, small vs. large pos/neg effect
+      radscf  = abs( radscf / max(abs(radscf)) );
+      
       if strcmp(cfg.scalerad, 'yes')
         rmax = cfg.rmin+(cfg.radius-cfg.rmin)*radscf; % maximum radius of the clouds
       else
@@ -1635,7 +1630,7 @@ end
 if opt.hasatlas
   %tmp = [opt.ijk(:)' 1] * opt.atlas.transform; % atlas and functional might have different transformation matrices, so xyz cannot be used here anymore
   % determine the anatomical label of the current position
-  lab = atlas_lookup(opt.atlas, (xyz(1:3)), 'inputcoord', functional.coordsys, 'queryrange', opt.queryrange);
+  lab = atlas_lookup(opt.atlas, (xyz(1:3)), 'coordsys', functional.coordsys, 'queryrange', opt.queryrange);
   if isempty(lab)
     lab = 'NA';
     %fprintf('atlas labels: not found\n');
@@ -1653,9 +1648,16 @@ end
 
 
 if opt.hasana
+  options = {'transform', eye(4),     'location', opt.ijk, 'style', 'subplot',...
+    'update',    opt.update, 'doscale',  false,   'clim',  opt.clim};
+  if isfield(opt, 'intersectmesh')
+    options = cat(2, options, 'intersectmesh', opt.intersectmesh);
+  end
+  
   if opt.init
     tmph  = [h1 h2 h3];
-    ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'parents', tmph, 'update', opt.update, 'doscale', false, 'clim', opt.clim);
+    options = cat(2, options, {'parents', tmph});
+    ft_plot_ortho(opt.ana, options{:});
     
     opt.anahandles = findobj(opt.handlesfigure, 'type', 'surface')';
     for i=1:length(opt.anahandles)
@@ -1665,8 +1667,18 @@ if opt.hasana
     opt.anahandles = opt.anahandles(i3(i2)); % seems like swapping the order
     opt.anahandles = opt.anahandles(:)';
     set(opt.anahandles, 'tag', 'ana');
+    if isfield(opt, 'intersectmesh')
+      opt.patchhandles = findobj(opt.handlesfigure, 'type', 'patch');
+      opt.patchhandles = opt.patchhandles(i3(i2));
+      opt.patchhandles = opt.patchhandles(:)';
+      set(opt.patchhandles, 'tag', 'patch');
+    end
   else
-    ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false, 'clim', opt.clim);
+    options = cat(2, options, {'surfhandle', opt.anahandles});
+    if isfield(opt, 'intersectmesh')
+      options = cat(2, options, {'patchhandle', opt.patchhandles});
+    end
+    ft_plot_ortho(opt.ana, options{:});
   end
 end
 

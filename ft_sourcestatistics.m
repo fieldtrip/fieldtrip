@@ -26,12 +26,6 @@ function [stat] = ft_sourcestatistics(cfg, varargin)
 % See also FT_SOURCEANALYSIS, FT_SOURCEDESCRIPTIVES, FT_SOURCEGRANDAVERAGE, FT_MATH,
 % FT_STATISTICS_MONTECARLO, FT_STATISTICS_ANALYTIC, FT_STATISTICS_CROSSVALIDATE, FT_STATISTICS_STATS
 
-% Deprecated cfg.method options:
-%                    'parametric'    uses the MATLAB statistics toolbox (very similar to 'stats'),
-%                    'randomization' uses randomization of the data prior to source reconstruction,
-%                    'randcluster'   uses randomization of the data prior to source reconstruction
-%                                    in combination with spatial clusters.
-
 % FIXME the following needs to be reimplemented
 %
 % You can restrict the statistical analysis to regions of interest (ROIs)
@@ -39,12 +33,9 @@ function [stat] = ft_sourcestatistics(cfg, varargin)
 %   cfg.atlas        = filename of the atlas
 %   cfg.roi          = string or cell of strings, region(s) of interest from anatomical atlas
 %   cfg.avgoverroi   = 'yes' or 'no' (default = 'no')
-%   cfg.hemisphere   = 'left', 'right', 'both', 'combined', specifying this is
-%                      required when averaging over regions
-%   cfg.inputcoord   = 'mni' or 'tal', the coordinate system in which your source
-%                      reconstruction is expressed
+%   cfg.hemisphere   = 'left', 'right', 'both', 'combined', specifying this is required when averaging over regions
 
-% Copyright (C) 2005-2014, Robert Oostenveld
+% Copyright (C) 2005-2020, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

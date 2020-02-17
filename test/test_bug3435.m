@@ -5,7 +5,7 @@ function test_bug3435
 
 % DEPENDENCY ft_prepare_mesh prepare_mesh_tetrahedral
 
-mri = ft_read_mri('/home/common/matlab/fieldtrip/template/anatomy/single_subj_T1.nii');
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/template/anatomy/single_subj_T1.nii'));
 mri.coordsys = 'mni';
 
 cfg = [];

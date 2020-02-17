@@ -15,5 +15,9 @@ roboos@mac036> make
 
 # Windows
 
-I do not have access to a windows machine at the moment, so cannot compile the binaries.
+I executed the following in the "x64 Native Tools Command Prompt for VS 2017"
 
+cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=TRUE -D BINDER_MATLAB=ON -D Matlab_ROOT_DIR="c:\Program Files\MATLAB\R2019a" -D Matlab_MEX_LIBRARY="C:\Program Files\MATLAB\R2019a\extern\lib\win64\microsoft\libmex.lib" -D Matlab_MX_LIBRARY="C:\Program Files\MATLAB\R2019a\extern\lib\win64\microsoft\libmx.lib" -G"NMake Makefiles" .
+nmake
+
+Subsequently I had to copy the ezc3d.dll file from the top level directory to the location with the mex files. Compiling without shared libs did not work.
