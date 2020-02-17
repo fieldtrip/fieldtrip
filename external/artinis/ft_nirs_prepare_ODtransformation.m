@@ -186,10 +186,10 @@ fid = fopen(fullfile(fileparts(mfilename('fullpath')), 'private', 'Cope_ext_coef
 coefs = cell2mat(textscan(fid, '%f %f %f %f %f'));
 
 % extract all transmit combinations that are relevant here
-transmits   = sens.transmits(chanidx, :);
+transmits      = sens.transmits(chanidx, :);
 transmitteridx = transmits>0;
 receiveridx    = transmits<0;
-optodeidx       = transmitteridx | receiveridx;
+optodeidx      = transmitteridx | receiveridx;
 
 % extract the wavelengths
 wavelengths  = sens.wavelength(transmits(transmitteridx));
