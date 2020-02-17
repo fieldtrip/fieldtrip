@@ -65,15 +65,15 @@ datain = ft_checkdata(datain, 'datatype', 'raw', 'senstype', 'nirs');
 
 %% Relevant parameters
 label	= datain.label; % transformed channel label, combination Receiver and Transmitter
-flabel	= datain.opto.fiberlabel; % fiber label
-fpos	= datain.opto.fiberpos; % fiber positions
+olabel	= datain.opto.optolabel; % optode label
+opos	= datain.opto.optopos; % optode positions
 
 npos	= numel(label);
 
-xf		= fpos(:,1);
-yf		= fpos(:,2);
+xf		= opos(:,1);
+yf		= opos(:,2);
 
-%% determine distance between Receiver and Transmitter fibers
+%% determine distance between Receiver and Transmitter optodes
 optodedistance				= NaN(npos,1);
 
 for posIdx		= 1:npos
@@ -82,7 +82,7 @@ for posIdx		= 1:npos
   chanRstr = c{1};
   chanTstr = c{2};
   
-	idxR		= match_str(flabel,chanRstr); 
-	idxT		= match_str(flabel,chanTstr);
+	idxR		= match_str(olabel,chanRstr); 
+	idxT		= match_str(olabel,chanTstr);
 	optodedistance(posIdx)	= sqrt( (xf(idxR)-xf(idxT)).^2+(yf(idxR)-yf(idxT)).^2 ); % Pythagorean theorem
 end

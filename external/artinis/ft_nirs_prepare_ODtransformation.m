@@ -187,14 +187,14 @@ chromophoreName = {'O2Hb' 'HHb'};
 fid = fopen(fullfile(fileparts(mfilename('fullpath')), 'private', 'Cope_ext_coeff_table.txt'));
 coefs = cell2mat(textscan(fid, '%f %f %f %f %f'));
 
-% extract all transceivers that are relevant here
-transceivers   = sens.transceiver(chanidx, :);
-transmitteridx = transceivers>0;
-receiveridx    = transceivers<0;
-fiberidx       = transmitteridx | receiveridx;
+% extract all transmit combinations that are relevant here
+transmits   = sens.transmits(chanidx, :);
+transmitteridx = transmits>0;
+receiveridx    = transmits<0;
+optoidx       = transmitteridx | receiveridx;
 
 % extract the wavelengths
-wavelengths  = sens.wavelength(transceivers(transmitteridx));
+wavelengths  = sens.wavelength(transmits(transmitteridx));
 wlidx = bsxfun(@minus, coefs(:, 1), wavelengths);
 
 % find the relevant channel combinations
@@ -206,7 +206,7 @@ for c=1:numel(chanidx)
     continue;
   end
   % compute the channel combinations
-  tupletidx = sum(bsxfun(@minus, fiberidx, fiberidx(c, :))~=0, 2)==0;
+  tupletidx = sum(bsxfun(@minus, optoidx, optoidx(c, :))~=0, 2)==0;
   chanUsed = chanUsed|tupletidx;
   chancmb(:, end+1) = tupletidx;
 end
@@ -226,7 +226,7 @@ for c=1:size(chancmb, 2)
   [coefidx, colidx] = find(wlidx(:, chanidx)==0);
 
   % compute the transmitter/receiver distance in cm
-  dist = sqrt(sum(diff(sens.fiberpos(fiberidx(c, :), :)).^2));
+  dist = sqrt(sum(diff(sens.optopos(optoidx(c, :), :)).^2));
 
   % select dpf
   dpf = mean(dpfs(chanidx));
