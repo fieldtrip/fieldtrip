@@ -8,6 +8,10 @@ function test_issue1294
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/effectsize/ERF_orig.mat'));
 
+cfg = [];
+cfg.keepindividual = 'yes';
+grandavgFIC = ft_timelockgrandaverage(cfg, allsubjFIC{:});
+grandavgFC  = ft_timelockgrandaverage(cfg, allsubjFC{:});
 
 %%
 
