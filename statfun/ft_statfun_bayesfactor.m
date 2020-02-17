@@ -12,11 +12,11 @@ function stat = ft_statfun_bayesfactor(cfg, dat, design)
 %     3 – 10          Moderate evidence for H1
 %     1 – 3           Anecdotal evidence for H1
 %     1               No evidence
-%     1/3 – 1         Anecdotal evidence for H1
-%     1/3 – 1/10      Moderate evidence for H1
-%     1/10 – 1/30     Strong evidence for H1
-%     1/30 – 1/100    Very strong evidence for H1
-%     < 1/100         Extreme evidence for H1
+%     1/3 – 1         Anecdotal evidence for H0
+%     1/3 – 1/10      Moderate evidence for H0
+%     1/10 – 1/30     Strong evidence for H0
+%     1/30 – 1/100    Very strong evidence for H0
+%     < 1/100         Extreme evidence for H0
 %
 % Use this function by calling one of the high-level statistics functions as
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
