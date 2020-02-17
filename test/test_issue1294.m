@@ -21,7 +21,7 @@ cfg.latency = [0.35 0.55];
 cfg.avgoverchan = 'yes';
 cfg.avgovertime = 'yes';
 cfg.method = 'analytic';
-cfg.statistic = 'bayesfactor';
+cfg.statistic = 'bayesfactor'; % see FT_STATFUN_BAYESFACTOR
 cfg.ivar = 1;
 cfg.uvar = 2;
 cfg.design = [
@@ -37,7 +37,7 @@ cfg = [];
 cfg.parameter = 'individual';
 cfg.channel = 'MEG';
 cfg.method = 'analytic';
-cfg.statistic = 'bayesfactor'; % see FT_STATFUN_COHENSD
+cfg.statistic = 'bayesfactor'; % see FT_STATFUN_BAYESFACTOR
 cfg.ivar = 1;
 cfg.uvar = 2;
 cfg.design = [
@@ -46,14 +46,19 @@ cfg.design = [
   ];
 effect_all = ft_timelockstatistics(cfg, grandavgFIC, grandavgFC);
 
+cfg.statistic = 'depsamplesT';
+effect_tstat = ft_timelockstatistics(cfg, grandavgFIC, grandavgFC);
+
 
 %% 
+% this one is only for testing purposes
+% the data should be paired for a proper analysis
 
 cfg = [];
 cfg.parameter = 'individual';
 cfg.channel = 'MEG';
 cfg.method = 'analytic';
-cfg.statistic = 'bayesfactor'; % see FT_STATFUN_COHENSD
+cfg.statistic = 'bayesfactor'; % see FT_STATFUN_BAYESFACTOR
 cfg.latency = [0 0.4];
 cfg.ivar = 1;
 cfg.design = [
@@ -67,5 +72,17 @@ effect_nonpaired = ft_timelockstatistics(cfg, grandavgFIC, grandavgFC);
 cfg = [];
 cfg.layout = 'CTF151_helmet.mat';
 cfg.parameter = 'bf10';
-ft_multiplotER(cfg, effect_all);
+cfg.ylim = [0 10];
+figure; ft_multiplotER(cfg, effect_all); title('Bayes Factor')
+
+%%
+
+cfg = [];
+cfg.layout = 'CTF151_helmet.mat';
+cfg.parameter = 'tstat';
+cfg.ylim = [-6 6];
+figure; ft_multiplotER(cfg, effect_all); title('BF tstat')
+
+cfg.parameter = 'stat';
+figure; ft_multiplotER(cfg, effect_tstat); title('regular stat') 
 
