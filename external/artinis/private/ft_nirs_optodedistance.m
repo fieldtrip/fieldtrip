@@ -64,24 +64,27 @@ function optodedistance = ft_nirs_optodedistance(datain)
 datain = ft_checkdata(datain, 'datatype', 'raw', 'senstype', 'nirs');
 
 %% Relevant parameters
-clabel	= datain.label; % transformed channel label, combination of Receiver and Transmitter
-olabel = datain.opto.optolabel; % optode label
-opos	 = datain.opto.optopos; % optode positions
+label	= datain.label; % transformed channel label, combination Receiver and Transmitter
+olabel	= datain.opto.optolabel; % optode label
+opos	= datain.opto.optopos; % optode positions
 
-npos	= numel(clabel);
+npos	= numel(label);
+
 xf		= opos(:,1);
 yf		= opos(:,2);
 
-%% determine distance between Receiver and Transmitter fibers
-optodedistance	= NaN(npos,1);
+%% determine distance between Receiver and Transmitter optodes
+optodedistance				= NaN(npos,1);
 
 for posIdx=1:npos
-	str	= clabel{posIdx};
+  str	= label{posIdx};
   c = textscan(str, '%s%s%s', 'Delimiter', {'-', ' '});
+  
   chanRstr = c{1};
   chanTstr = c{2};
-
-	idxR		= match_str(olabel,chanRstr);
-	idxT		= match_str(olabel,chanTstr);
-	optodedistance(posIdx)	= sqrt( (xf(idxR)-xf(idxT)).^2+(yf(idxR)-yf(idxT)).^2 ); % Pythagorean theorem
+  
+  idxR		= match_str(olabel,chanRstr); 
+  idxT		= match_str(olabel,chanTstr);
+  
+  optodedistance(posIdx)	= sqrt( (xf(idxR)-xf(idxT)).^2+(yf(idxR)-yf(idxT)).^2 ); % Pythagorean theorem
 end
