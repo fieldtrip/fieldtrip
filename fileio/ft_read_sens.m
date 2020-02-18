@@ -77,6 +77,11 @@ switch fileformat
     hdr = read_artinis_oxy3(filename, false);    
     sens = hdr.opto;
     
+  case 'artinis_oxy4'
+    ft_hastoolbox('artinis', 1);
+    hdr = read_artinis_oxy4(filename, false);    
+    sens = hdr.opto;
+    
   case 'artinis_oxyproj'
     ft_hastoolbox('artinis', 1);
     hdr = read_artinis_oxyproj(filename); 
