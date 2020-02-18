@@ -375,7 +375,7 @@ if ~isempty(dtype)
       ischan = 0; istimelock = 0; isfreq = 0;
       isvolume = 1;
       okflag = 1;
-    elseif isequal(dtype(iCell), {'source'}) && (ischan || istimelock || isfreq)
+    elseif (isequal(dtype(iCell), {'source'}) || isequal(dtype(iCell), {'source+mesh'})) && (ischan || istimelock || isfreq)
       if isfield(data, 'brainordinate')
         data = parcellated2source(data);
         data = ft_datatype_source(data);
