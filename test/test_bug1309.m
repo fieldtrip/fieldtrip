@@ -1,6 +1,6 @@
 function test_bug1309
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % This tests for the reliability of the ft_convert_units function when dealing

@@ -1,6 +1,6 @@
 function test_fileformat_asa
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY ft_read_sens ft_read_headmodel ft_read_headshape ft_read_mri read_asa read_asa_dip	read_asa_mri read_asa_vol read_asa_bnd read_asa_elc read_asa_msr

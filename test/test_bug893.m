@@ -1,6 +1,6 @@
 function test_bug893
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY ft_freqstatistics statfun_indepsamplesZcoh

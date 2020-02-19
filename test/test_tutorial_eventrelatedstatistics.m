@@ -1,6 +1,6 @@
 function test_tutorial_eventrelatedstatistics
 
-% MEM 2500mb
+% MEM 3gb
 % WALLTIME 00:20:00
 
 % DEPENDENCY ft_timelockanalysis ft_multiplotER ft_singleplotER ft_timelockstatistics

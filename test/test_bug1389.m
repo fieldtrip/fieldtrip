@@ -1,6 +1,6 @@
 function test_bug1389
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % there is confusion as to at what level in the cfg tre preproc options

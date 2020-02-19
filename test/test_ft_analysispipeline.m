@@ -1,6 +1,6 @@
 function test_ft_analysispipeline
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 02:53:11
 
 % DEPENDENCY ft_analysispipeline

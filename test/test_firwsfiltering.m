@@ -1,6 +1,6 @@
 function test_firwsfiltering
 
-% MEM 2048mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY ft_preprocessing filter_with_correction ft_preproc_bandpassfilter

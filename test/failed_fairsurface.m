@@ -1,6 +1,6 @@
 function failed_fairsurface
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 ft_defaults

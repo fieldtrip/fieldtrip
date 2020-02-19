@@ -1,6 +1,6 @@
 function test_scalingfactor
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY ft_scalingfactor ft_convert_units

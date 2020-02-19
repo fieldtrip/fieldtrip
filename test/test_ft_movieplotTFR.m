@@ -1,6 +1,6 @@
 function test_ft_movieplotTFR
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY ft_movieplotTFR ft_movieplotER
