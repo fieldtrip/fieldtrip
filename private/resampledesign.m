@@ -206,7 +206,7 @@ elseif ~isempty(cfg.uvar) && strcmp(cfg.resampling, 'permutation')
     fprintf('repeated measurement in mutiple variables over %d levels\n', length(unitlevel));
     fprintf('number of repeated measurements in each level is '); fprintf('%d ', unitlen); fprintf('\n');
   end
-  fprintf('the maxumium number of unique permutations is %d\n', prod(unitlen));
+  fprintf('the maximum number of unique permutations is %d\n', prod(unitlen));
   
   if ischar(cfg.numrandomization) && strcmp(cfg.numrandomization, 'all')
     % create all possible permutations by systematic assignment
