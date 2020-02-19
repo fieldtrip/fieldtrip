@@ -1,6 +1,6 @@
 function test_bug2025
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY ft_plot_headmodel ft_compute_leadfield

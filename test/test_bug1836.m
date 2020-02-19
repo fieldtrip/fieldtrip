@@ -1,6 +1,6 @@
 function test_bug1836
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY ft_datatype_segmentation ft_prepare_mesh ft_write_headshape

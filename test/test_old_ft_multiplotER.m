@@ -1,6 +1,6 @@
 function test_old_ft_multiplotER
 
-% MEM 1gb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 

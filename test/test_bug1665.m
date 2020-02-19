@@ -1,6 +1,6 @@
 function test_bug1665
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY ft_volumesegment ft_volumenormalise align_ctf2acpc ft_hastoolbox

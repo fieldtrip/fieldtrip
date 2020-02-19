@@ -1,6 +1,6 @@
 function test_bug2419
 
-% MEM 1gb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY ft_read_headshape

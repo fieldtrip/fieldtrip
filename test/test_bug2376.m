@@ -1,6 +1,6 @@
 function test_bug2376
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY channelposition ft_plot_sens ft_plot_headmodel ft_plot_mesh ft_prepare_vol_sens

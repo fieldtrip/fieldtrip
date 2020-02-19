@@ -1,6 +1,6 @@
 function test_bug2096
 
-% MEM 4000mb
+% MEM 5gb
 % WALLTIME 00:20:00
 
 % DEPENDENCY ft_sourcewrite ft_read_cifti ft_write_cifti

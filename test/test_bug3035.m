@@ -1,6 +1,6 @@
 function test_bug3035
 
-% MEM 1000mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY ft_rejectcomponent ft_apply_montage

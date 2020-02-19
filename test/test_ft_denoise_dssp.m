@@ -1,6 +1,6 @@
 function test_ft_denoise_dssp
 
-% MEM 3000mb
+% MEM 3gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY ft_denoise_dssp

@@ -1,6 +1,6 @@
 function test_ft_timelockanalysis_new(datainfo,writeflag)
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY ft_timelockanalysis_new ft_timelockanalysis ref_datasets

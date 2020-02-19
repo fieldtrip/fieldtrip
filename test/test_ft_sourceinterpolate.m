@@ -1,6 +1,6 @@
 function test_ft_sourceinterpolate
 
-% MEM 4500mb
+% MEM 5gb
 % WALLTIME 00:15:00
 
 % DEPENDENCY ft_sourceinterpolate ft_sourceplot

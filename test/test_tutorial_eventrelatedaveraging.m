@@ -1,6 +1,6 @@
 function test_tutorial_eventrelatedaveraging(dataset)
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY ft_preprocessing ft_timelockanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_megplanar ft_combineplanar

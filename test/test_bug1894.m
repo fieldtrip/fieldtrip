@@ -1,6 +1,6 @@
 function test_bug1894
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY ft_singleplotTFR ft_daattype_freq ft_datatype_sens ft_chantype
