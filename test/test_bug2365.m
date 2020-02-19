@@ -1,6 +1,6 @@
 function test_bug2365
 
-% MEM 2gb
+% MEM 3gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY ft_freqanalysis

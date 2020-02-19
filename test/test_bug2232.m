@@ -1,6 +1,6 @@
 function test_bug2232
 
-% MEM 1gb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY gifti
