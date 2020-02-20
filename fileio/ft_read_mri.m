@@ -438,7 +438,7 @@ switch dataformat
     tmp = read_mrtrix(filename);
     
     mri.anatomy = tmp.data;
-    mri.dim     = tmp.dim;
+    mri.dim     = tmp.dim(1:length(size(tmp.data)));
     mri.transform = tmp.transform;
     mri.transform(1:3,1:3) = diag(tmp.vox(1:3))*mri.transform(1:3,1:3);
     
