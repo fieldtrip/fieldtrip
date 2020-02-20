@@ -190,5 +190,13 @@ cfg9.artfctdef.zvalue.cutoff = 3;
 cfg9.artfctdef.zvalue.channel = 'MZC01';
 [cfg9, artifact9] = ft_artifact_zvalue(cfg9, data);
 
+%%
+
+cfg = [];
+cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
+cfg.continuous = 'yes';
+cfg.trl = trl;
+
+ft_databrowser(cfg);
 
 
