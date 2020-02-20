@@ -59,16 +59,29 @@ stream = streams{indx};
 
 if needhdr
   % this section of code is shared with xdf2fieldtrip
-  hdr             = [];
-  hdr.Fs          = stream.info.effective_srate;
+  hdr = [];
+  if isfield(stream.info, 'effective_srate')
+    % the stream contains continuously sampled data
+    hdr.Fs                  = stream.info.effective_srate;
+    hdr.nSamplesPre         = 0;
+    hdr.nSamples            = length(stream.time_stamps);
+    hdr.nTrials             = 1;
+    hdr.FirstTimeStamp      = stream.time_stamps(1);
+    hdr.TimeStampPerSample  = (stream.time_stamps(end)-stream.time_stamps(1)) / (length(stream.time_stamps) - 1);
+  else
+    % the stream does not contain continuously sampled data
+    hdr.Fs                  = NaN;
+    hdr.nSamplesPre         = NaN;
+    hdr.nSamples            = NaN;
+    hdr.nTrials             = NaN;
+    hdr.FirstTimeStamp      = NaN;
+    hdr.TimeStampPerSample  = NaN;
+  end
   if isfield(stream.info.desc, 'channels')
     hdr.nChans    = numel(stream.info.desc.channels.channel);
   else
     hdr.nChans    = str2double(stream.info.channel_count);
   end
-  hdr.nSamplesPre = 0;
-  hdr.nSamples    = length(stream.time_stamps);
-  hdr.nTrials     = 1;
   hdr.label       = cell(hdr.nChans, 1);
   hdr.chantype    = cell(hdr.nChans, 1);
   hdr.chanunit    = cell(hdr.nChans, 1);
@@ -80,14 +93,12 @@ if needhdr
       hdr.chantype{j} = stream.info.desc.channels.channel{j}.type;
       hdr.chanunit{j} = stream.info.desc.channels.channel{j}.unit;
     else
+      % the stream does not contain continuously sampled data
       hdr.label{j} = num2str(j);
       hdr.chantype{j} = 'unknown';
       hdr.chanunit{j} = 'unknown';
     end
   end
-  
-  hdr.FirstTimeStamp     = stream.time_stamps(1);
-  hdr.TimeStampPerSample = (stream.time_stamps(end)-stream.time_stamps(1)) / (length(stream.time_stamps) - 1);
   
   % keep the original header details
   hdr.orig = stream.info;
