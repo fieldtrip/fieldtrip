@@ -1,6 +1,6 @@
 function test_issue1311
 
-% WALLTIME 00:10:00
+% WALLTIME 00:20:00
 % MEM 6gb
 % DEPENDENCY ft_definetrial ft_preprocessing
 
@@ -89,5 +89,106 @@ assert(isequal(data0.trial, data4.trial));
 % and the same sample and trial info
 assert(isequal(data0.sampleinfo, data4.sampleinfo));
 assert(isequal(data0.trialinfo, data4.trialinfo));
+
+%%
+% process the artifacts with the data from disk
+
+cfg = [];
+cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
+cfg.continuous = 'yes';
+cfg.trl = trlfile;
+
+cfg1 = cfg;
+cfg1.artfctdef.clip.channel = 'MZC01';
+[cfg1, artifact1] = ft_artifact_clip(cfg1);
+
+cfg2 = cfg;
+cfg2.artfctdef.ecg.channel = 'MZC01';
+cfg2.artfctdef.ecg.feedback = 'no'; % otherwise it is interactive
+[cfg2, artifact2] = ft_artifact_ecg(cfg2);
+
+cfg3 = cfg;
+cfg3.artfctdef.eog.channel = {'MLF*', 'MRF*'};
+[cfg3, artifact3] = ft_artifact_eog(cfg3);
+
+cfg4 = cfg;
+cfg4.artfctdef.jump.channel = 'MZC01';
+[cfg4, artifact4] = ft_artifact_jump(cfg4);
+
+cfg5 = cfg;
+cfg5.artfctdef.muscle.channel = {'MLT*', 'MRT*'};
+[cfg5, artifact5] = ft_artifact_muscle(cfg5);
+
+cfg6 = cfg;
+cfg6.artfctdef.nan.channel = 'MZC01';
+[cfg6, artifact6] = ft_artifact_nan(cfg6);
+
+cfg7 = cfg;
+cfg7.artfctdef.threshold.channel = 'MZC01';
+[cfg7, artifact7] = ft_artifact_threshold(cfg7);
+
+cfg8 = cfg;
+cfg8.method = 'detect';
+cfg8.artfctdef.tms.channel = 'MZC01';
+[cfg8, artifact8] = ft_artifact_tms(cfg8);
+
+cfg9 = cfg;
+cfg9.artfctdef.zvalue.cutoff = 3;
+cfg9.artfctdef.zvalue.channel = 'MZC01';
+[cfg9, artifact9] = ft_artifact_zvalue(cfg9);
+
+%%
+% process the artifacts with the data from memory
+
+cfg = [];
+cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
+cfg.continuous = 'yes';
+cfg.channel = 'MEG';
+data = ft_preprocessing(cfg);
+
+%%
+cfg = [];
+cfg.trl = trlfile;
+
+cfg1 = cfg;
+cfg1.artfctdef.clip.channel = 'MZC01';
+[cfg1, artifact1] = ft_artifact_clip(cfg1, data);
+
+cfg2 = cfg;
+cfg2.artfctdef.ecg.channel = 'MZC01';
+cfg2.artfctdef.ecg.feedback = 'no'; % otherwise it is interactive
+[cfg2, artifact2] = ft_artifact_ecg(cfg2, data);
+
+cfg3 = cfg;
+cfg3.artfctdef.eog.channel = {'MLF*', 'MRF*'};
+[cfg3, artifact3] = ft_artifact_eog(cfg3, data);
+
+cfg4 = cfg;
+cfg4.artfctdef.jump.channel = 'MZC01';
+[cfg4, artifact4] = ft_artifact_jump(cfg4, data);
+
+cfg5 = cfg;
+cfg5.artfctdef.muscle.channel = {'MLT*', 'MRT*'};
+[cfg5, artifact5] = ft_artifact_muscle(cfg5, data);
+
+cfg6 = cfg;
+cfg6.artfctdef.nan.channel = 'MZC01';
+[cfg6, artifact6] = ft_artifact_nan(cfg6, data);
+
+cfg7 = cfg;
+cfg7.artfctdef.threshold.channel = 'MZC01';
+[cfg7, artifact7] = ft_artifact_threshold(cfg7, data);
+
+cfg8 = cfg;
+cfg8.method = 'detect';
+cfg8.artfctdef.tms.channel = 'MZC01';
+cfg8.artfctdef.tms.trlpadding = 0; % cannot be >0 for data in memory
+[cfg8, artifact8] = ft_artifact_tms(cfg8, data);
+
+cfg9 = cfg;
+cfg9.artfctdef.zvalue.cutoff = 3;
+cfg9.artfctdef.zvalue.channel = 'MZC01';
+[cfg9, artifact9] = ft_artifact_zvalue(cfg9, data);
+
 
 
