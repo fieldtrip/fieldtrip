@@ -111,21 +111,19 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 cfg.headerformat          = ft_getopt(cfg, 'headerformat', []);
 cfg.dataformat            = ft_getopt(cfg, 'dataformat',   []);
 cfg.feedback              = ft_getopt(cfg, 'feedback', 'text');
-cfg.artfctdef             = ft_getopt(cfg, 'artfctdef');
-cfg.artfctdef.threshold   = ft_getopt(cfg.artfctdef, 'threshold');
-
-% set default preprocessing parameters if necessary
-if ~isfield(cfg.artfctdef.threshold, 'channel'),   cfg.artfctdef.threshold.channel   = 'all';    end
-if ~isfield(cfg.artfctdef.threshold, 'bpfilter'),  cfg.artfctdef.threshold.bpfilter  = 'yes';    end
-if ~isfield(cfg.artfctdef.threshold, 'bpfreq'),    cfg.artfctdef.threshold.bpfreq    = [0.3 30]; end
-if ~isfield(cfg.artfctdef.threshold, 'bpfiltord'), cfg.artfctdef.threshold.bpfiltord = 4;        end
 
 % set the default artifact detection parameters
-if ~isfield(cfg.artfctdef.threshold, 'range'),    cfg.artfctdef.threshold.range = inf;           end
-if ~isfield(cfg.artfctdef.threshold, 'min'),      cfg.artfctdef.threshold.min =  -inf;           end
-if ~isfield(cfg.artfctdef.threshold, 'max'),      cfg.artfctdef.threshold.max =   inf;           end
-if ~isfield(cfg.artfctdef.threshold, 'onset'),    cfg.artfctdef.threshold.onset  = [];           end
-if ~isfield(cfg.artfctdef.threshold, 'offset'),   cfg.artfctdef.threshold.offset = [];           end
+cfg.artfctdef                         = ft_getopt(cfg, 'artfctdef');
+cfg.artfctdef.threshold               = ft_getopt(cfg.artfctdef, 'threshold');
+cfg.artfctdef.threshold.channel       = ft_getopt(cfg.artfctdef.threshold, 'channel',     'all');
+cfg.artfctdef.threshold.bpfilter      = ft_getopt(cfg.artfctdef.threshold, 'bpfilter'     'yes');
+cfg.artfctdef.threshold.bpfreq        = ft_getopt(cfg.artfctdef.threshold, 'bpfreq',      [0.3 30]);
+cfg.artfctdef.threshold.bpfiltord     = ft_getopt(cfg.artfctdef.threshold, 'bpfiltord',   4);
+cfg.artfctdef.threshold.range         = ft_getopt(cfg.artfctdef.threshold, 'range',       inf);
+cfg.artfctdef.threshold.min           = ft_getopt(cfg.artfctdef.threshold, 'min',         -inf);
+cfg.artfctdef.threshold.max           = ft_getopt(cfg.artfctdef.threshold, 'max',         inf);
+cfg.artfctdef.threshold.onset         = ft_getopt(cfg.artfctdef.threshold, 'onset',       []);
+cfg.artfctdef.threshold.offset        = ft_getopt(cfg.artfctdef.threshold, 'offset',      []);
 
 % the data is either passed into the function by the user or read from file with cfg.inputfile
 hasdata = exist('data', 'var');

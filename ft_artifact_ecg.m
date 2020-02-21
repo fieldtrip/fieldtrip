@@ -86,16 +86,14 @@ end
 cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 
-% this subfield is required
-if ~isfield(cfg, 'artfctdef'),              cfg.artfctdef               = [];            end
-if ~isfield(cfg.artfctdef, 'ecg'),          cfg.artfctdef.ecg           = [];            end
-
 % set the default options
 cfg.feedback      = ft_getopt(cfg, 'feedback',   'text');
 cfg.headerformat  = ft_getopt(cfg, 'headerformat', []);
 cfg.dataformat    = ft_getopt(cfg, 'dataformat',   []);
 
-% set default detection parameters
+% set the default artifact detection parameters
+cfg.artfctdef               = ft_getopt(cfg, 'artfctdef',              []);
+cfg.artfctdef.ecg           = ft_getopt(cfg.artfctdef, 'ecg',          []);
 cfg.artfctdef.ecg.channel   = ft_getopt(cfg.artfctdef.ecg, 'channel',  {'ECG'});
 cfg.artfctdef.ecg.method    = ft_getopt(cfg.artfctdef.ecg, 'method',   'zvalue');
 cfg.artfctdef.ecg.cutoff    = ft_getopt(cfg.artfctdef.ecg, 'cutoff',   3);

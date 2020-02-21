@@ -88,20 +88,14 @@ cfg.feedback      = ft_getopt(cfg, 'feedback',   'text');
 cfg.headerformat  = ft_getopt(cfg, 'headerformat', []);
 cfg.dataformat    = ft_getopt(cfg, 'dataformat',   []);
 
-% set default detection parameters
-if ~isfield(cfg, 'artfctdef'),                    cfg.artfctdef                    = [];    end
-if ~isfield(cfg.artfctdef, 'clip'),               cfg.artfctdef.clip               = [];    end
-if ~isfield(cfg.artfctdef.clip, 'channel'),       cfg.artfctdef.clip.channel       = 'all'; end
-if ~isfield(cfg.artfctdef.clip, 'timethreshold'), cfg.artfctdef.clip.timethreshold = 0.010; end
-if ~isfield(cfg.artfctdef.clip, 'amplthreshold'), cfg.artfctdef.clip.amplthreshold = 0.000; end
-if ~isfield(cfg.artfctdef.clip, 'pretim'),        cfg.artfctdef.clip.pretim        = 0.000; end
-if ~isfield(cfg.artfctdef.clip, 'psttim'),        cfg.artfctdef.clip.psttim        = 0.000; end
-
-% for backward compatibility
-if isfield(cfg.artfctdef.clip, 'sgn')
-  cfg.artfctdef.clip.channel = cfg.artfctdef.clip.sgn;
-  cfg.artfctdef.clip         = rmfield(cfg.artfctdef.clip, 'sgn');
-end
+% set the default artifact detection parameters
+cfg.artfctdef                     = ft_getopt(cfg, 'artfctdef',                    []);
+cfg.artfctdef.clip                = ft_getopt(cfg.artfctdef, 'clip',               []);
+cfg.artfctdef.clip.channel        = ft_getopt(cfg.artfctdef.clip, 'channel',       'all');
+cfg.artfctdef.clip.timethreshold  = ft_getopt(cfg.artfctdef.clip, 'timethreshold', 0.010);
+cfg.artfctdef.clip.amplthreshold  = ft_getopt(cfg.artfctdef.clip, 'amplthreshold', 0.000);
+cfg.artfctdef.clip.pretim         = ft_getopt(cfg.artfctdef.clip, 'pretim',        0.000);
+cfg.artfctdef.clip.psttim         = ft_getopt(cfg.artfctdef.clip, 'psttim',        0.000);
 
 % the data is either passed into the function by the user or read from file with cfg.inputfile
 hasdata = exist('data', 'var');
@@ -223,4 +217,3 @@ cfg.artfctdef.clip.artifact = artifact;
 ft_postamble provenance
 ft_postamble previous data
 ft_postamble savevar
-

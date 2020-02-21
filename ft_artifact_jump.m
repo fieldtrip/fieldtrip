@@ -128,7 +128,7 @@ cfg.artfctdef.jump.trlpadding = ft_getopt(cfg.artfctdef.jump, 'trlpadding', 0.5*
 cfg.artfctdef.jump.fltpadding = ft_getopt(cfg.artfctdef.jump, 'fltpadding', 0.5*cfg.padding);
 cfg.artfctdef.jump.artpadding = ft_getopt(cfg.artfctdef.jump, 'artpadding', 0.5*cfg.padding);
 
-% construct a temporary configuration that can be passed onto artifact_zvalue
+% construct a temporary configuration that can be passed onto FT_ARTIFACT_ZVALUE
 tmpcfg                  = cfg;
 tmpcfg.artfctdef.zvalue = cfg.artfctdef.jump;
 tmpcfg.artfctdef        = rmfield(tmpcfg.artfctdef, 'jump');
