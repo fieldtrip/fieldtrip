@@ -384,6 +384,8 @@ else
   elseif ischar(cfg.trl)
     % load the trial information from file
     trlorg = loadvar(cfg.trl, 'trl');
+  else
+    trlorg = cfg.trl;
   end
   Ntrials = size(trlorg, 1);
   
