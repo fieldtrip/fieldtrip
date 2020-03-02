@@ -79,6 +79,7 @@ cfg = ft_checkconfig(cfg, 'required',    {'method', 'design'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'approach',   'method'});
 cfg = ft_checkconfig(cfg, 'forbidden',   {'transform'});
 cfg = ft_checkconfig(cfg, 'forbidden',   {'trials'}); % this used to be present until 24 Dec 2014, but was deemed too confusing by Robert
+cfg = ft_checkconfig(cfg, 'forbidden',   {'channel'}); 
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
