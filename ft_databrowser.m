@@ -328,15 +328,8 @@ if hasdata
   end
   
   % this is how the input data is segmented
-  trlorg = data.sampleinfo;
-  trlorg(:,3) = 0;
-  
-  % recreate offset vector (databrowser depends on this for visualisation)
-  for ntrl = 1:numel(data.trial)
-    trlorg(ntrl,3) = time2offset(data.time{ntrl}, data.fsample);
-  end
-  Ntrials = size(trlorg, 1);
-  
+  trlorg = sampleinfo2trl(data);
+ 
 else
   % check if the input cfg is valid for this function
   cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
@@ -366,7 +359,7 @@ else
   chansel = match_str(hdr.label, cfg.channel);
   Nchans  = length(chansel);
   
-  if ~isfield(cfg, 'trl')
+  if ~isfield(cfg, 'trl') || isempty(cfg.trl)
     % treat the data as continuous if possible, otherwise define all trials as indicated in the header
     if strcmp(cfg.continuous, 'yes')
       trlorg = zeros(1, 3);
@@ -387,9 +380,10 @@ else
   else
     trlorg = cfg.trl;
   end
-  Ntrials = size(trlorg, 1);
   
 end % if hasdata
+
+Ntrials = size(trlorg, 1);
 
 if strcmp(cfg.continuous, 'no') && isempty(cfg.blocksize)
   cfg.blocksize = (trlorg(1,2) - trlorg(1,1)+1) ./ hdr.Fs;
