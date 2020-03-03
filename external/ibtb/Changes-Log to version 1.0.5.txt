@@ -1,0 +1,31 @@
+-----------
+CHANGES
+-----------
+- In entropy.m the output is now NaN for output options 'HiR' and 'ChiR' for the gaussian method.
+
+- In information.m the output is now NaN for IT options 'ISS', 'IC', 'ICsh', 'ICI', 'ICD', 'ICDsh', 'ILB2' for the gaussian method. This also means that no error is issued when calling this quantities with the gaussian method: this is done to allow reusing the same code independently of the called method.
+
+- Both functions 'entropy.m' and information.m' now behave more coherently for L=1. In particular, for 'entropy.m' and L=1 we have
+
+    HR = HlR = HiR = ChiR = HshR   (HiR and ChiR are still NaN for method 'gs')
+
+and
+
+    HRS = HiRS = HshRS
+
+For 'information.m' and for L=1 we have
+
+    I = Ish = ILIN = ILB1 = ILB2   (ILB2 is still NaN for method 'gs')
+
+while all other IT quantities are null. Thanks to Christoph Kayser for suggesting these changes.
+
+- Removed check on empty varargin in information.m.
+- Cleaned documentation for 'buildr.m'.
+- Added 'make_ibtb.m' M-file for authomatic compiling of the necessary toolbox C-files.
+
+------------
+BUG FIXES
+------------
+- fixed bug in 'direct_method_v5.c' which cause this function to return incorrect values of ChiR and HiR when the number of bins used to discretize the responses is not the same for each cell. Thanks to Alessandro Scaglione for pointing this out.
+- fixed bug in 'information.m' ("soIC" instead of "doIC" in input check with method 'pt') which prevented the function from running when bias pt is called.
+- fixed bug in ceqspace.m which prevented this function from running.
