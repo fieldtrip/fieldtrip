@@ -130,7 +130,7 @@ for trlop=1:numtrl
     begsample = find(diff([0 tmp])>0);
     endsample = find(diff([tmp 0])<0);
     for j=1:numel(begsample)
-      artifact(end+1,:) = [begsample(j) endsample(j)] + data.sampleinfo(i,1) - 1;
+      artifact(end+1,:) = [begsample(j) endsample(j)] + data.sampleinfo(trlop,1) - 1;
     end
   end
 end % for trlop

@@ -107,8 +107,6 @@ if ft_abort
   return
 end
 
-% ft_checkdata is done further down
-
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
 
@@ -198,15 +196,23 @@ end
 % the data can be specified as input variable or through cfg.inputfile
 hasdata = exist('data', 'var');
 
+if hasdata
+  % ensure that the data is valid for this function
+  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'ifmakessense');
+end
+
 if hasdata && isfield(data, 'sampleinfo')
   % construct the trial definition from the sampleinfo and the trialinfo
   trl = sampleinfo2trl(data);
 elseif isfield(cfg, 'trl') && ischar(cfg.trl)
   % load the trial information from file
   trl = loadvar(cfg.trl, 'trl');
-else
+elseif isfield(cfg, 'trl')
   % use the trial information that was specified
   trl = cfg.trl;
+else
+  % there must be trials that can be scanned for artifacts and/or rejected
+  ft_error('no trials were selected, cannot perform artifact detection/rejection');
 end
 
 % ensure the crittoilim input argument is valid
@@ -226,11 +232,6 @@ if ~isempty(cfg.artfctdef.crittoilim)
   checkCritToi = 1; % flag for convenience
 else
   checkCritToi = 0;
-end
-
-% ensure that there are trials that can be scanned for artifacts and/or rejected
-if isempty(trl)
-  ft_error('no trials were selected, cannot perform artifact detection/rejection');
 end
 
 % prevent double occurences of artifact types, ensure that the order remains the same

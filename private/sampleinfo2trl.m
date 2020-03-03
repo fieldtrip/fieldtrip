@@ -19,6 +19,4 @@ if isfield(data, 'trialinfo')
   else
     trl = [trl data.trialinfo];
   end
-else
-  trl = [];
 end
