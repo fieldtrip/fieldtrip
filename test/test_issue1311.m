@@ -195,7 +195,7 @@ cfg9.artfctdef.zvalue.channel = 'MZC01';
 cfg = [];
 cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
 cfg.continuous = 'yes';
-cfg.trl = trl;
+cfg.trl = trlfile;
 
 ft_databrowser(cfg);
 
