@@ -104,15 +104,16 @@ end
 assert(isfield(datahdr, 'FirstTimeStamp'), 'sycnhronization information is missing in the data header');
 assert(isfield(datahdr, 'TimeStampPerSample'), 'sycnhronization information is missing in the data header');
 
-% determine the begin and end samples of the data segments, the corresponding audio and video fragments will be displayes
-if isfield(cfg, 'trl')
-  fprintf('using cfg.trl\n');
-  trl = cfg.trl;
-elseif hasdata && isfield(data, 'sampleinfo')
-  fprintf('using data.sampleinfo\n');
-  trl = data.sampleinfo;
+% determine the begin and end samples of the EEG/MEG data segments, the corresponding audio and video fragments will be displayed
+if hasdata && isfield(data, 'sampleinfo')
+  % construct the trial definition from the sampleinfo and the trialinfo
+  trl = sampleinfo2trl(data);
+elseif isfield(cfg, 'trl') && ischar(cfg.trl)
+  % load the trial information from file
+  trl = loadvar(cfg.trl, 'trl');
 else
-  ft_error('the EEG/MEG data segments should be specified');
+  % use the trial information that was specified
+  trl = cfg.trl;
 end
 
 numtrl = size(trl,1);

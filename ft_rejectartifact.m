@@ -107,8 +107,6 @@ if ft_abort
   return
 end
 
-% ft_checkdata is done further down
-
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
 
@@ -199,34 +197,22 @@ end
 hasdata = exist('data', 'var');
 
 if hasdata
-  % check if the input data is valid for this function
-  data = ft_checkdata(data, 'hassampleinfo', 'yes');
-  
-  if isfield(data, 'sampleinfo')
-    trl = zeros(numel(data.trial), 3);
-    trl(:,[1 2]) = data.sampleinfo;
-    
-    % recreate offset vector (artifact functions depend on this)
-    % TODO: the artifact rejection stuff should be rewritten to avoid
-    % needing this workaround
-    for ntrl = 1:numel(data.trial)
-      trl(ntrl,3) = time2offset(data.time{ntrl}, data.fsample);
-    end
-    
-    if isfield(data, 'trialinfo')
-      if istable(data.trialinfo)
-        % convert table into normal array, keep the column labels
-        VariableNames = data.trialinfo.Properties.VariableNames;
-        data.trialinfo = table2array(data.trialinfo);
-      end
-      trl = [trl data.trialinfo];
-    end
-  else
-    trl = [];
-  end
-  
+  % ensure that the data is valid for this function
+  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'ifmakessense');
+end
+
+if hasdata && isfield(data, 'sampleinfo')
+  % construct the trial definition from the sampleinfo and the trialinfo
+  trl = sampleinfo2trl(data);
+elseif isfield(cfg, 'trl') && ischar(cfg.trl)
+  % load the trial information from file
+  trl = loadvar(cfg.trl, 'trl');
 elseif isfield(cfg, 'trl')
+  % use the trial information that was specified
   trl = cfg.trl;
+else
+  % there must be trials that can be scanned for artifacts and/or rejected
+  ft_error('no trials were selected, cannot perform artifact detection/rejection');
 end
 
 % ensure the crittoilim input argument is valid
@@ -246,11 +232,6 @@ if ~isempty(cfg.artfctdef.crittoilim)
   checkCritToi = 1; % flag for convenience
 else
   checkCritToi = 0;
-end
-
-% ensure that there are trials that can be scanned for artifacts and/or rejected
-if isempty(trl)
-  ft_error('no trials were selected, cannot perform artifact detection/rejection');
 end
 
 % prevent double occurences of artifact types, ensure that the order remains the same
@@ -384,7 +365,7 @@ if strcmp(cfg.artfctdef.feedback, 'yes')
   end
   axis([min(timebeg)-0.1 max(timeend)+0.1 0.5 size(trl,1)+0.5]);
   axis ij
-  legend({'defined trials', cfg.artfctdef.type{:}});
+  legend([{'defined trials'}, cfg.artfctdef.type(:)']);
 end % feedback
 
 % convert to logical, this is required for the subsequent code
@@ -451,7 +432,7 @@ if any(strcmp(cfg.artfctdef.reject, {'partial', 'complete', 'nan', 'value'}))
       data.trial{trial}(:,rejecttrial) = cfg.artfctdef.value;
       count_value = count_value + 1;
       trialok = [trialok; trl(trial,:)]; % Mark the trial as good as nothing will be removed
-
+      
     elseif all(rejecttrial)
       % the whole trial is bad
       count_complete_reject = count_complete_reject + 1;
@@ -500,13 +481,13 @@ if any(strcmp(cfg.artfctdef.reject, {'partial', 'complete', 'nan', 'value'}))
       data.trial{trial}(:,rejecttrial) = nan;
       count_nan = count_nan + 1;
       trialok = [trialok; trl(trial,:)]; % Mark the trial as good as nothing will be removed
-   
+      
     elseif any(rejecttrial) && strcmp(cfg.artfctdef.reject, 'value')
       % Some part of the trial is bad, replace bad part with specified value
       data.trial{trial}(:,rejecttrial) = cfg.artfctdef.value;
       count_value = count_value + 1;
       trialok = [trialok; trl(trial,:)]; % Mark the trial as good as nothing will be removed
-
+      
     end
   end % for each trial
   
