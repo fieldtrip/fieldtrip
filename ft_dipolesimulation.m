@@ -20,7 +20,7 @@ function [data] = ft_dipolesimulation(cfg)
 % or by
 %   cfg.time       = cell-array with one time axis per trial, for example obtained from an existing dataset
 %
-% The timecourse of the dipole activity is given as a cell-array with one 
+% The timecourse of the dipole activity is given as a cell-array with one
 % dipole signal per trial
 %   cfg.dip.signal     = cell-array with one dipole signal per trial
 % or by specifying the parameters of a sine-wave signal
@@ -126,22 +126,27 @@ cfg.dip = fixdipole(cfg.dip);
 Ndipoles = size(cfg.dip.pos,1);
 
 % in case no time or signal was given, set some additional defaults
-if isempty(cfg.dip.time) && isempty(cfg.dip.signal)  
-  cfg.fsample   = ft_getopt(cfg, 'fsample', 1000);
-  cfg.trllen    = ft_getopt(cfg, 'trllen', 1);
-  cfg.numtrl    = ft_getopt(cfg, 'numtrl', 10);
-  cfg.baseline  = ft_getopt(cfg, 'baseline', 0);
-elseif ~isempty(cfg.dip.time)
-  cfg.numtrl    = length(cfg.dip.time);
-  cfg.fsample   = 1/mean(diff(cfg.dip.time{1}));  % determine from time-axis
-elseif ~isempty(cfg.dip.signal)
-  cfg.numtrl    = length(cfg.dip.signal);
-  cfg.fsample   = ft_getopt(cfg, 'fsample', 1000);
-  cfg.baseline  = ft_getopt(cfg, 'baseline', 0);
-else
+if ~isempty(cfg.dip.time) && ~isempty(cfg.dip.signal)
   assert(length(cfg.dip.signal)==length(cfg.dip.time)); % these must match
   cfg.numtrl    = length(cfg.dip.time);
   cfg.fsample   = 1/mean(diff(cfg.dip.time{1}));  % determine from time-axis
+  cfg.trllen    = length(cfg.dip.time{1})/cfg.fsample;
+  cfg.baseline  = -cfg.dip.time{1}(1);
+elseif ~isempty(cfg.dip.time)
+  cfg.numtrl    = length(cfg.dip.time);
+  cfg.fsample   = 1/mean(diff(cfg.dip.time{1}));  % determine from time-axis
+  cfg.trllen    = length(cfg.dip.time{1})/cfg.fsample;
+  cfg.baseline  = -cfg.dip.time{1}(1);
+elseif ~isempty(cfg.dip.signal)
+  cfg.numtrl    = length(cfg.dip.signal);
+  cfg.fsample   = ft_getopt(cfg, 'fsample', 1000);
+  cfg.trllen    = length(cfg.dip.signal{1})/cfg.fsample;
+  cfg.baseline  = ft_getopt(cfg, 'baseline', 0);
+else
+  cfg.numtrl    = ft_getopt(cfg, 'numtrl', 10);
+  cfg.fsample   = ft_getopt(cfg, 'fsample', 1000);
+  cfg.trllen    = ft_getopt(cfg, 'trllen', 1);
+  cfg.baseline  = ft_getopt(cfg, 'baseline', 0);
 end
 
 % no signal was given, set some additional defaults
