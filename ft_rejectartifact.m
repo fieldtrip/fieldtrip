@@ -198,38 +198,14 @@ end
 % the data can be specified as input variable or through cfg.inputfile
 hasdata = exist('data', 'var');
 
-if hasdata
-  % check if the input data is valid for this function
-  data = ft_checkdata(data, 'hassampleinfo', 'yes');
-  
-  if isfield(data, 'sampleinfo')
-    % construct the trial definition from the sampleinfo and the trialinfo
-    trl = zeros(numel(data.trial), 3);
-    trl(:,[1 2]) = data.sampleinfo;
-    
-    % recreate offset vector (artifact functions depend on this)
-    % TODO: the artifact rejection stuff should be rewritten to avoid
-    % needing this workaround
-    for ntrl = 1:numel(data.trial)
-      trl(ntrl,3) = time2offset(data.time{ntrl}, data.fsample);
-    end
-    
-    if isfield(data, 'trialinfo')
-      if istable(data.trialinfo)
-        % convert table into normal array, keep the column labels
-        VariableNames = data.trialinfo.Properties.VariableNames;
-        data.trialinfo = table2array(data.trialinfo);
-      end
-      trl = [trl data.trialinfo];
-    end
-  else
-    trl = [];
-  end
-  
+if hasdata && isfield(data, 'sampleinfo')
+  % construct the trial definition from the sampleinfo and the trialinfo
+  trl = sampleinfo2trl(data);
 elseif isfield(cfg, 'trl') && ischar(cfg.trl)
   % load the trial information from file
   trl = loadvar(cfg.trl, 'trl');
 else
+  % use the trial information that was specified
   trl = cfg.trl;
 end
 
