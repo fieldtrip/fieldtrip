@@ -203,6 +203,7 @@ if hasdata
   data = ft_checkdata(data, 'hassampleinfo', 'yes');
   
   if isfield(data, 'sampleinfo')
+    % construct the trial definition from the sampleinfo and the trialinfo
     trl = zeros(numel(data.trial), 3);
     trl(:,[1 2]) = data.sampleinfo;
     
@@ -225,7 +226,10 @@ if hasdata
     trl = [];
   end
   
-elseif isfield(cfg, 'trl')
+elseif isfield(cfg, 'trl') && ischar(cfg.trl)
+  % load the trial information from file
+  trl = loadvar(cfg.trl, 'trl');
+else
   trl = cfg.trl;
 end
 
@@ -384,7 +388,7 @@ if strcmp(cfg.artfctdef.feedback, 'yes')
   end
   axis([min(timebeg)-0.1 max(timeend)+0.1 0.5 size(trl,1)+0.5]);
   axis ij
-  legend({'defined trials', cfg.artfctdef.type{:}});
+  legend([{'defined trials'}, cfg.artfctdef.type(:)']);
 end % feedback
 
 % convert to logical, this is required for the subsequent code
@@ -451,7 +455,7 @@ if any(strcmp(cfg.artfctdef.reject, {'partial', 'complete', 'nan', 'value'}))
       data.trial{trial}(:,rejecttrial) = cfg.artfctdef.value;
       count_value = count_value + 1;
       trialok = [trialok; trl(trial,:)]; % Mark the trial as good as nothing will be removed
-
+      
     elseif all(rejecttrial)
       % the whole trial is bad
       count_complete_reject = count_complete_reject + 1;
@@ -500,13 +504,13 @@ if any(strcmp(cfg.artfctdef.reject, {'partial', 'complete', 'nan', 'value'}))
       data.trial{trial}(:,rejecttrial) = nan;
       count_nan = count_nan + 1;
       trialok = [trialok; trl(trial,:)]; % Mark the trial as good as nothing will be removed
-   
+      
     elseif any(rejecttrial) && strcmp(cfg.artfctdef.reject, 'value')
       % Some part of the trial is bad, replace bad part with specified value
       data.trial{trial}(:,rejecttrial) = cfg.artfctdef.value;
       count_value = count_value + 1;
       trialok = [trialok; trl(trial,:)]; % Mark the trial as good as nothing will be removed
-
+      
     end
   end % for each trial
   
