@@ -32,9 +32,9 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 % MOVEINWARD - This moves all electrodes inward according to their normals
 %
 % Use as
-%   [elec_realigned] = ft_sensorrealign(cfg)
+%   [elec_realigned] = ft_electroderealign(cfg)
 % with the electrode or gradiometer details in the configuration, or as
-%   [elec_realigned] = ft_sensorrealign(cfg, elec_orig)
+%   [elec_realigned] = ft_electroderealign(cfg, elec_orig)
 % with the electrode or gradiometer definition as 2nd input argument.
 %
 % The configuration can contain the following options
