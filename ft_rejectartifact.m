@@ -16,7 +16,7 @@ function [cfg] = ft_rejectartifact(cfg, data)
 %   data = ft_rejectartifact(cfg, data)
 % with the data as obtained from FT_PREPROCESSING
 %
-% The following configuration options are supported:
+% The following configuration options are supported
 %   cfg.artfctdef.reject          = 'none', 'partial', 'complete', 'nan', or 'value' (default = 'complete')
 %   cfg.artfctdef.minaccepttim    = when using partial rejection, minimum length
 %                                   in seconds of remaining trial (default = 0.1)
@@ -38,7 +38,7 @@ function [cfg] = ft_rejectartifact(cfg, data)
 % specified using minaccepttim.
 %
 % Output:
-%   If cfg is used as the only input parameter, the output is a cfg structure with an updated trl.
+%   If cfg is the only input parameter, the output is a cfg structure with an updated trl.
 %   If cfg and data are both input parameters, the output is an updated raw data structure with only the clean data segments.
 %
 % To facilitate data-handling and distributed computing you can use
@@ -65,7 +65,7 @@ function [cfg] = ft_rejectartifact(cfg, data)
 % cfg.artfctdef.writerej = filename of rejection file
 % cfg.artfctdef.type    = cell-array with strings, e.g. {'eog', 'muscle' 'jump'}
 
-% Copyright (C) 2003-2018, Robert Oostenveld
+% Copyright (C) 2003-2020, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -198,7 +198,7 @@ hasdata = exist('data', 'var');
 
 if hasdata
   % ensure that the data is valid for this function
-  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'ifmakessense');
+  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
 end
 
 if hasdata && isfield(data, 'sampleinfo')
@@ -515,6 +515,8 @@ if any(strcmp(cfg.artfctdef.reject, {'partial', 'complete', 'nan', 'value'}))
   end
   
 else
+  cfg.trlold = trl;
+  cfg.trl    = trl;
   fprintf('not rejecting any data, only marking the artifacts\n');
 end
 
@@ -537,8 +539,8 @@ ft_postamble trackconfig
 ft_postamble provenance
 if hasdata
   ft_postamble previous data
-  ft_postamble history data
-  ft_postamble savevar data
+  ft_postamble history  data
+  ft_postamble savevar  data
   % return the data, the output variable is called cfg instead of data
   cfg = data;
 end
