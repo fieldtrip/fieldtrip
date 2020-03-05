@@ -4,23 +4,22 @@ function [V] = ft_write_mri(filename, dat, varargin)
 % MRI to a file.
 %
 % Use as
-%   V = ft_write_mri(filename, dat, ...)
+%   ft_write_mri(filename, img, ...)
+% where img represents the 3-D array with image values.
 %
-% The specified filename can already contain the filename extention,
-% but that is not required since it will be added automatically.
+% The specified filename can already contain the filename extention, but that is not
+% required since it will be added automatically.
 %
 % Additional options should be specified in key-value pairs and can be
-%   'spmversion'     spmversion to be used (in case data needs to be
-%                      written in analyze format
-%   'dataformat'     string, see below
-%   'transform'      transformation matrix, specifying the transformation
-%                      from voxel coordinates to head coordinates
+%   'dataformat'   = string, see below
+%   'transform'    = transformation matrix, specifying the transformation from voxel coordinates to head coordinates
+%   'spmversion'   = version of SPM to be used, in case data needs to be written in analyze format
 %
 % The supported dataformats are
-%   analyze
-%   nifti
-%   vista
-%   mgz   (freesurfer)
+%   'analyze'
+%   'nifti'
+%   'vista'
+%   'mgz'   (freesurfer)
 %
 % See also FT_READ_MRI, FT_WRITE_DATA, FT_WRITE_HEADSHAPE
 
@@ -49,6 +48,12 @@ transform     = ft_getopt(varargin, 'transform', eye(4));
 spmversion    = ft_getopt(varargin, 'spmversion', 'SPM8');
 dataformat    = ft_getopt(varargin, 'dataformat'); % FIXME this is inconsistent with ft_read_mri, which uses 'format'
 
+if isstruct(dat) && isfield(dat, 'anatomy') && isequal(transform, eye(4))
+  % this is an anatomical MRI as returned by FT_READ_MRI
+  transform = dat.transform;
+  dat       = dat.anatomy;
+end
+
 if isempty(dataformat)
   % only do the autodetection if the format was not specified
   dataformat = ft_filetype(filename);
@@ -59,7 +64,13 @@ if nargout>0
   V = [];
 end
 
+% ensure that the directory exists if we want to write to a file
+if ~ismember(dataformat, {'empty', 'fcdc_global', 'fcdc_buffer', 'fcdc_mysql'})
+  isdir_or_mkdir(fileparts(filename));
+end
+
 switch dataformat
+
   case {'analyze_img' 'analyze_hdr' 'analyze' 'nifti_spm'}
     % analyze data, using SPM
     V = volumewrite_spm(filename, dat, transform, spmversion);

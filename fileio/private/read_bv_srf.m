@@ -66,7 +66,7 @@ function [pnt, tri, srf] = read_bv_srf(filename)
 % NrOfStripElements*4 int  Sequence of strip elements (if NrOfStripElements > 0)
 
 
-fid = fopen(filename, 'rb', 'ieee-le');
+fid = fopen_or_error(filename, 'rb', 'ieee-le');
 
 srf.version_number                                        = fread(fid, 1, 'float');
 srf.reserved                                              = fread(fid, 1, 'int'  );

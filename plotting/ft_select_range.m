@@ -128,7 +128,7 @@ end
 % setup contextmenu
 if ~isempty(contextmenu)
   if isempty(get(handle,'uicontextmenu'))
-    hcmenu    = uicontextmenu;
+    hcmenu    = uicontextmenu(handle);
     hcmenuopt = nan(1,numel(contextmenu));
     for icmenu = 1:numel(contextmenu)
       hcmenuopt(icmenu) = uimenu(hcmenu, 'label', contextmenu{icmenu}, 'callback', {@evalcontextcallback, callback{:}, []}); % empty matrix is placeholder, will be updated to userdata.range

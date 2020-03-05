@@ -134,12 +134,17 @@ end
 % fix suggested by Ralph Huonker to deal with triggers that need to be
 % interpreted as unsigned integers, rather than signed
 if strncmpi(dataformat, 'neuromag', 8) && ~fixneuromag
-  if any(dat<0)
-    tmpdat = zeros(size(dat));
-    for k = 1:size(dat,1)
-      tmpdat(k,:) = double(typecast(int16(dat(k,:)), 'uint16'));
+  for k = 1:size(dat,1)
+    switch hdr.chantype{chanindx(1)}
+      case 'binary trigger'
+        if any(dat(k,:)<0)
+          dat(k,:) = double(typecast(int16(dat(k,:)), 'uint16'));
+        end
+      case 'analog trigger'
+        % keep it as it is
+      case 'other trigger'
+        % keep it as it is
     end
-    dat = tmpdat; clear tmpdat;
   end
 end
 

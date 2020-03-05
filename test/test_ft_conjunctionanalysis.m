@@ -1,6 +1,6 @@
 function test_ft_conjunctionanalysis
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % FT_CONJUNCTIONANALYSIS finds the minimum statistic common across two or 

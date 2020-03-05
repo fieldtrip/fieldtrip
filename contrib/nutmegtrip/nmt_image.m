@@ -54,15 +54,16 @@ switch(op)
             set(st.nmt.gui.beamin,'String',sprintf('%+g',blobintensity));
             
             if(~isempty(st.nmt.cfg.atlas))
-                atlas_labels = atlas_lookup(st.nmt.cfg.atlas,posmrimm,'inputcoord','mni','queryrange',3);
+                atlas_labels = atlas_lookup(st.nmt.cfg.atlas,posmrimm,'coordsys','mni','queryrange',3);
                 set(st.nmt.gui.mnilabel,'String',atlas_labels);
             end
 
             
             if(size(st.nmt.fun{1},2)>1)
                 nmt_timeselect;
-st.nmt.cfg.voxinside_idx=find(st.nmt.cfg.vox_idx==st.nmt.cfg.inside_idx);
-if(isempty(st.nmt.cfg.voxinside_idx)), st.nmt.cfg.voxinside_idx=NaN,end
+                
+                st.nmt.cfg.voxinside_idx=find(st.nmt.cfg.vox_idx==st.nmt.cfg.inside_idx);
+                if(isempty(st.nmt.cfg.voxinside_idx)), st.nmt.cfg.voxinside_idx=NaN,end
 %flash_statori_plotori(st.nmt.cfg.voxinside_idx);
             end
         return

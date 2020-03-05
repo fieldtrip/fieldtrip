@@ -1,21 +1,22 @@
 function test_ft_sourceinterpolate
 
-% MEM 4500mb
-% WALLTIME 00:10:00
+% MEM 5gb
+% WALLTIME 00:15:00
 
-% TEST ft_sourceinterpolate ft_sourceplot
+% DEPENDENCY ft_sourceinterpolate ft_sourceplot
 
 % See also test_bug2769 which goes over more interpolation options using fake data
 
-clear all
-close all
-
 %%
+
+[dum, ftpath] = ft_version;
 
 srf_lo = ft_read_headshape('cortex_5124.surf.gii');
 srf_hi = ft_read_headshape('cortex_20484.surf.gii');
 tmp = load('standard_sourcemodel3d10mm.mat'); vol_lo = tmp.sourcemodel;
 tmp = load('standard_sourcemodel3d4mm.mat');  vol_hi = tmp.sourcemodel;
+atlas = ft_read_atlas(fullfile(ftpath,'template','atlas','aal','ROI_MNI_V4.nii'));
+
 
 figure
 ft_plot_mesh(srf_lo);
@@ -51,6 +52,17 @@ source0d_srf_hi.pos = srf_hi.pos;
 source0d_srf_hi.tri = srf_hi.tri;
 source0d_srf_hi.pow = srf_hi.pos(:,3);
 source0d_srf_hi.powdimord = 'pos';
+
+%%
+cfg = [];
+cfg.parameter = 'tissue';
+cfg.interpmethod = 'nearest';
+interp_atlas1lo = ft_sourceinterpolate(cfg, atlas, vol_lo);
+interp_atlas1hi = ft_sourceinterpolate(cfg, atlas, vol_hi);
+cfg.interpmethod = 'mode';
+interp_atlas2lo = ft_sourceinterpolate(cfg, atlas, vol_lo);
+interp_atlas2hi = ft_sourceinterpolate(cfg, atlas, vol_hi);
+
 
 %%
 
@@ -231,8 +243,12 @@ ft_sourceplot(cfg, interp2d_sfr2vol);
 
 %%
 
-[sphere_lo.pnt, sphere_lo.tri] = icosahedron162;
-[sphere_hi.pnt, sphere_hi.tri] = icosahedron642;
+[sphere_lo.pnt, sphere_lo.tri] = mesh_sphere(162);
+[sphere_hi.pnt, sphere_hi.tri] = mesh_sphere(642);
+% Ensure that the first 162 vertices are on exactly identical positions. Without this
+% line there would be differences of around 1e-15 due to numerical errors, causing
+% the smudge interpolation to fail.
+sphere_lo.pnt = sphere_hi.pnt(1:162,:); 
 
 source0d_sphere_lo = [];
 source0d_sphere_lo.pos = sphere_lo.pnt;

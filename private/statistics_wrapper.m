@@ -92,7 +92,7 @@ if (istimelock+isfreq+issource)~=1
   ft_error('Could not determine the type of the input data');
 end
 
-if istimelock || isfreq,
+if istimelock || isfreq
   % these defaults only apply to channel level data
   cfg.channel     = ft_getopt(cfg, 'channel',     'all');
   cfg.avgoverchan = ft_getopt(cfg, 'avgoverchan', 'no');
@@ -127,20 +127,18 @@ if issource
     % the source representation should specify the position of each voxel in MNI coordinates
     x = varargin{1}.pos(:,1);  % this is from left (negative) to right (positive)
     % determine the mask to restrict the subsequent analysis
-    % process each of the ROIs, and optionally also left and/or right seperately
+    % process each of the ROIs, and optionally also left and/or right separately
     roimask  = {};
     roilabel = {};
     for i=1:length(cfg.roi)
       if islogical(cfg.roi{i})
         tmp = cfg.roi{i};
       else
-        tmpcfg.roi = cfg.roi{i};
-        tmpcfg.inputcoord = cfg.inputcoord;
-        tmpcfg.atlas = cfg.atlas;
+        tmpcfg = keepfields(cfg, {'roi', 'atlas'});
         tmp = ft_volumelookup(tmpcfg, varargin{1});
       end
       if strcmp(cfg.avgoverroi, 'no') && ~isfield(cfg, 'hemisphere')
-        % no reason to deal with seperated left/right hemispheres
+        % no reason to deal with separated left/right hemispheres
         cfg.hemisphere = 'combined';
       end
 
@@ -155,7 +153,7 @@ if issource
         roilabel{end+1} = ['Right ' cfg.roi{i}];
 
       elseif strcmp(cfg.hemisphere, 'both')
-        % deal seperately with the voxels on the left and right side of the brain
+        % deal separately with the voxels on the left and right side of the brain
         tmpL = tmp; tmpL(x>=0) = 0;  % exclude the right hemisphere
         tmpR = tmp; tmpR(x<=0) = 0;  % exclude the left hemisphere
         roimask{end+1}  = tmpL;

@@ -1,4 +1,4 @@
-function [lut_t, cuf_t] = eeg_leadfield4_prepare(vol, Nmax)
+function [lut_t, cuf_t] = eeg_leadfield4_prepare(vol, order)
 
 % EEG_LEADFIELD4_PREPARE computes constant factors for series expansion
 % for the 4 concentric sphere electric leadfield computation. Calling
@@ -6,7 +6,7 @@ function [lut_t, cuf_t] = eeg_leadfield4_prepare(vol, Nmax)
 % factors "t" do not have to be computed each time in eeg_leadfield4.
 %
 % Use as
-%   vol.t = eeg_leadfield4_prepare(vol, N);
+%   vol.t = eeg_leadfield4_prepare(vol, order);
 % where
 %   vol.r      radius of the 4 spheres 
 %   vol.cond   conductivity of the 4 spheres
@@ -50,8 +50,8 @@ r2 = vol.r(2); c2 = vol.cond(2);
 r3 = vol.r(3); c3 = vol.cond(3);
 r4 = vol.r(4); c4 = vol.cond(4);
 
-if nargin==1
-  Nmax = 60;
+if nargin==1 || isempty(order)
+  order = 60;
 end
 
 % these are the constants of cuffin1979
@@ -59,7 +59,7 @@ k1 = c1/c2;
 k2 = c2/c3;
 k3 = c3/c4;
 
-for n=1:Nmax
+for n=1:order
   % according to lutkenhoner1992 the constant C is
   % lut_t(n) = ((n*c1/c2+n+1)*(n*c2/c3+n+1)+n*(n+1)*(c1/c2-1)*(c2/c3-1)*(r1/r2)^(2*n+1)) * ...
   %        ((n*c3/c4+n+1)+(n+1)*(c3/c4-1)*(r3/r4)^(2*n+1)) + ...
@@ -82,7 +82,7 @@ if nargout>1
 
   % according to cuffin1979 the constant Tau is (re-entered on 25 sept 2002)
   % but this requires also slightly other constants in the eeg_leadfield4 function
-  for n=1:Nmax
+  for n=1:order
     cuf_t(n) = d^(2*n+1) * (b^(2*n+1)*n*(k1-1)*(k2-1)*(n+1)...
            + c^(2*n+1)*(k1*n+n+1)*(k2*n+n+1))...
            *((k3*n+n+1)+(n+1)*(k3-1)*d^(2*n+1))...

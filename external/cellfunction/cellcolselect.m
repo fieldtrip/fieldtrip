@@ -7,11 +7,15 @@ function [y] = cellcolselect(x, cols)
 % should be the same for all cells
 
 nx = size(x);
-if ~iscell(x) || length(nx)>2 || all(nx>1),
+if ~iscell(x) || length(nx)>2 || all(nx>1)
   error('incorrect input for cellrows');
 end
 
-y = cellfun(@colc, x, repmat(mat2cell(cols(:),length(cols),1),nx), 'UniformOutput', 0);
+if ~iscell(cols)
+  y = cellfun(@colc, x, repmat(mat2cell(cols(:),length(cols),1),nx), 'UniformOutput', 0);
+else
+  y = cellfun(@colc, x, cols, 'UniformOutput', 0);
+end
 
 function [y] = colc(x, cols)
 

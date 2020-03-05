@@ -3,12 +3,7 @@ function test_bug2773
 % WALLTIME 00:20:00
 % MEM 2gb
 
-% TEST ft_dipolefitting ft_movieplotER ft_prepare_sourcemodel ft_prepare_layout
-
-
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
+% DEPENDENCY ft_dipolefitting ft_movieplotER ft_prepare_sourcemodel ft_prepare_layout
 
 orig = load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2773.mat'));
 vol  = orig.cfg.vol;
@@ -82,9 +77,9 @@ cfg.channel =    {
 
 layout = ft_prepare_layout(cfg); % it is not a very nice layout, but will do for the test script
 
-figure; ft_plot_lay(layout);
+figure; ft_plot_layout(layout);
 figure; ft_plot_sens(elec);
-figure; ft_plot_vol(vol);
+figure; ft_plot_headmodel(vol);
 
 
 

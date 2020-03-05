@@ -1,10 +1,8 @@
 function failed_ft_datatype_sens
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST test_ft_datatype_sens
-% TEST ft_datatype_sens ft_read_sens ft_read_header ctf2grad bti2grad itab2grad fif2grad yokogawa2grad
+% DEPENDENCY ft_datatype_sens ft_read_sens ft_read_header ctf2grad bti2grad itab2grad fif2grad yokogawa2grad
 
 
 %% define the test data

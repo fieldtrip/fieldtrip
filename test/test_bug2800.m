@@ -1,9 +1,9 @@
 function test_bug2800
 
-% TEST project_elec
+% DEPENDENCY project_elec
 
 % WALLTIME 00:10:00
-% MEM 500mb
+% MEM 1gb
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2800.mat');
 load(filename);

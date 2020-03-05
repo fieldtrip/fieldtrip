@@ -1,4 +1,4 @@
-function [varargout] = ft_selectdata(varargin)
+function [varargout] = ft_selectdata(cfg, varargin)
 
 % FT_SELECTDATA makes a selection in the input data along specific data
 % dimensions, such as channels, time, frequency, trials, etc. It can also
@@ -24,7 +24,7 @@ function [varargout] = ft_selectdata(varargin)
 %   cfg.avgoverchancmb = string, can be 'yes' or 'no' (default = 'no')
 %
 % For data with a time dimension you can specify
-%   cfg.latency     = scalar or string, can be 'all', 'prestim', 'poststim', or [beg end], specify time range in seconds
+%   cfg.latency     = scalar or string, can be 'all', 'minperiod', 'maxperiod', 'prestim', 'poststim', or [beg end], specify time range in seconds
 %   cfg.avgovertime = string, can be 'yes' or 'no' (default = 'no')
 %   cfg.nanmean     = string, can be 'yes' or 'no' (default = 'no')
 %
@@ -49,6 +49,7 @@ function [varargout] = ft_selectdata(varargin)
 %   cfg.keepchancmbdim = 'yes' or 'no'
 %   cfg.keepfreqdim    = 'yes' or 'no'
 %   cfg.keeptimedim    = 'yes' or 'no'
+%   cfg.avgoverpos
 
 % Copyright (C) 2012-2014, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
@@ -70,30 +71,17 @@ function [varargout] = ft_selectdata(varargin)
 %
 % $Id$
 
-if nargin==1 || (nargin>2 && ischar(varargin{end-1})) || (isstruct(varargin{1}) && ~ft_datatype(varargin{1}, 'unknown'))
-  % this is the OLD calling style, like this
-  %   data = ft_selectdata(data, 'key1', value1, 'key2', value2, ...)
-  % or with multiple input data structures like this
-  %   data = ft_selectdata(data1, data2, 'key1', value1, 'key2', value2, ...)
-  [varargout{1:nargout}] = ft_selectdata_old(varargin{:});
-  return
-end
-
-% reorganize the input arguments
-cfg = varargin{1};
-varargin = varargin(2:end);
-
 % these are used by the ft_preamble/ft_postamble function and scripts
 ft_revision = '$Id$';
 ft_nargin   = nargin;
 ft_nargout  = nargout;
 
-ft_defaults                   % this ensures that the path is correct and that the ft_defaults global variable is available
-ft_preamble init              % this will reset ft_warning and show the function help if nargin==0 and return an error
-ft_preamble provenance        % this records the time and memory usage at teh beginning of the function
-ft_preamble trackconfig       % this converts the cfg structure in a config object, which tracks the cfg options that are being used
-ft_preamble debug             % this allows for displaying or saving the function name and input arguments upon an error
-ft_preamble loadvar varargin  % this reads the input data in case the user specified the cfg.inputfile option
+ft_defaults
+ft_preamble init
+ft_preamble debug
+ft_preamble trackconfig
+ft_preamble loadvar varargin
+ft_preamble provenance varargin
 
 % determine the characteristics of the input data
 dtype = ft_datatype(varargin{1});
@@ -173,10 +161,9 @@ for i=2:length(varargin)
   % only consider fields that are present in all inputs
   datfield = intersect(datfield, fieldnames(varargin{i}));
 end
-datfield  = setdiff(datfield, {'label' 'labelcmb'}); % these fields will be used for selection, but are not treated as data fields
-datfield  = setdiff(datfield, {'dim'});              % not used for selection, also not treated as data field
-xtrafield =  {'cfg' 'hdr' 'fsample' 'fsampleorig' 'grad' 'elec' 'opto' 'transform' 'unit' 'topolabel'}; % these fields will not be touched in any way by the code
-datfield  = setdiff(datfield, xtrafield);
+datfield  = setdiff(datfield, {'label' 'labelcmb'});  % these fields will be used for selection, but are not treated as data fields
+datfield  = setdiff(datfield, {'dim'});               % not used for selection, also not treated as data field
+datfield  = setdiff(datfield, ignorefields('selectdata'));
 orgdim1   = datfield(~cellfun(@isempty, regexp(datfield, 'label$')) & cellfun(@isempty, regexp(datfield, '^csd'))); % xxxlabel, with the exception of csdlabel
 datfield  = setdiff(datfield, orgdim1);
 datfield  = datfield(:)';
@@ -283,10 +270,6 @@ if ~keepfreqdim,    assert(avgoverfreq,    'removing a dimension is only possibl
 if ~keeptimedim,    assert(avgovertime,    'removing a dimension is only possible when averaging'); end
 if ~keeprptdim,     assert(avgoverrpt,     'removing a dimension is only possible when averaging'); end
 
-if strcmp(cfg.select, 'union') && (avgoverpos || avgoverchan || avgoverchancmb || avgoverfreq || avgovertime || avgoverrpt)
-  ft_error('cfg.select ''union'' in combination with averaging across one of the dimensions is not possible');
-end
-
 % trim the selection to all inputs, rpt and rpttap are dealt with later
 if hasspike,   [selspike,   cfg] = getselection_spike  (cfg, varargin{:}); end
 if haspos,     [selpos,     cfg] = getselection_pos    (cfg, varargin{:}, cfg.tolerance, cfg.select); end
@@ -377,6 +360,19 @@ for i=1:numel(varargin)
       keepdim(strcmp(dimtok, 'subj'))   = false;
     end
     
+    % update the sampleinfo, if possible, and needed
+    if strcmp(datfield{j}, 'sampleinfo') && ~isequal(cfg.latency, 'all')
+      if iscell(seltime{i}) && numel(seltime{i})==size(varargin{i}.sampleinfo,1)
+        for k = 1:numel(seltime{i})
+          varargin{i}.sampleinfo(k,:) = varargin{i}.sampleinfo(k,1) - 1 + seltime{i}{k}([1 end]);
+        end
+      elseif ~iscell(seltime{i}) && ~isempty(seltime{i}) && ~all(isnan(seltime{i}))
+        nrpt       = size(varargin{i}.sampleinfo,1);
+        seltime{i} = seltime{i}(:)';
+        varargin{i}.sampleinfo = varargin{i}.sampleinfo(:,[1 1]) - 1 + repmat(seltime{i}([1 end]),nrpt,1);
+      end
+    end
+    
     varargin{i}.(datfield{j}) = squeezedim(varargin{i}.(datfield{j}), ~keepdim);
     
   end % for datfield
@@ -406,13 +402,13 @@ if avgoverrpt
   keepfield = setdiff(keepfield, {'cumsumcnt' 'cumtapcnt' 'trialinfo' 'sampleinfo'});
 end
 
-if avgovertime || ~isequal(cfg.latency, 'all')
+if avgovertime
   % these are invalid after averaging or making a latency selection
   keepfield = setdiff(keepfield, {'sampleinfo'});
 end
 
 for i=1:numel(varargin)
-  varargin{i} = keepfields(varargin{i}, [keepfield xtrafield]);
+  varargin{i} = keepfields(varargin{i}, [keepfield ignorefields('selectdata')']);
 end
 
 % restore the original dimord fields in the data
@@ -450,30 +446,20 @@ end
 
 varargout = varargin;
 
-ft_postamble debug              % this clears the onCleanup function used for debugging in case of an error
-ft_postamble trackconfig        % this converts the config object back into a struct and can report on the unused fields
-ft_postamble provenance         % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and MATLAB version etc. to the output cfg
-ft_postamble previous varargin  % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
-ft_postamble history varargout  % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg
+ft_postamble debug
+ft_postamble trackconfig
+ft_postamble previous varargin
+ft_postamble provenance varargout
+ft_postamble history varargout
+ft_postamble savevar varargout
 
-% note that the cfg.previous thingy does not work with the postamble,
-% because the postamble puts the cfgs of all input arguments in the (first)
-% output argument's xxx.cfg
-for k = 1:numel(varargout)
-  varargout{k}.cfg          = cfg;
-  if isfield(varargin{k}, 'cfg')
-    varargout{k}.cfg.previous = varargin{k}.cfg;
-  end
-end
-
-% ft_postamble savevar varargout  % this saves the output data structure to disk in case the user specified the cfg.outputfile option
-
-if nargout>numel(varargout)
+% the varargout variable can be cleared when written to outputfile
+if exist('varargout', 'var') && ft_nargout>numel(varargout)
   % also return the input cfg with the combined selection over all input data structures
   varargout{end+1} = cfg;
 end
 
-end % main function ft_selectdata
+end % function ft_selectdata
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS
@@ -515,7 +501,7 @@ end
 switch selmode
   case 'intersect'
     if iscell(selindx)
-      % there are multiple selections in multipe vectors, the selection is in the matrices contained within the cell array
+      % there are multiple selections in multipe vectors, the selection is in the matrices contained within the cell-array
       for j=1:numel(selindx)
         if ~isempty(selindx{j}) && all(isnan(selindx{j}))
           % no selection needs to be made
@@ -906,6 +892,15 @@ for k = 1:numel(alltimecell)
   indx(ix,k) = iy;
 end
 
+if iscell(varargin{1}.time) && ischar(cfg.latency)&& ~strcmp(cfg.latency, 'minperiod')
+  % if the input data arguments are of type 'raw', temporarily set the
+  % selmode to union, otherwise the potentially different length trials
+  % will be truncated to the shorted epoch, prior to latency selection.
+  selmode = 'union';
+elseif ischar(cfg.latency) && strcmp(cfg.latency, 'minperiod')
+  % enforce intersect
+  selmode = 'intersect';
+end
 switch selmode
   case 'intersect'
     sel        = sum(isfinite(indx),2)==numel(alltimecell);
@@ -922,12 +917,15 @@ end
 % convert a string selection into a numeric selection
 if ischar(cfg.latency)
   switch cfg.latency
-    case {'all' 'maxperlen'}
+    case {'all' 'maxperlen' 'maxperiod'}
       cfg.latency = [min(alltimevec) max(alltimevec)];
     case 'prestim'
       cfg.latency = [min(alltimevec) 0];
     case 'poststim'
       cfg.latency = [0 max(alltimevec)];
+    case 'minperiod'
+      % the time vector has been pruned above
+      cfg.latency = [min(alltimevec) max(alltimevec)];
     otherwise
       ft_error('incorrect specification of cfg.latency');
   end % switch
@@ -968,6 +966,12 @@ elseif numel(cfg.latency)==2
   
   for k = 1:numel(alltimecell)
     timeindx{k} = indx(tbeg:tend, k);
+    % if the input data arguments are of type 'raw', the non-finite values
+    % need to be removed from the individual cells to ensure correct
+    % behavior
+    if iscell(varargin{1}.time)
+      timeindx{k} = timeindx{k}(isfinite(timeindx{k}));
+    end
   end
   
 elseif size(cfg.latency,2)==2
@@ -978,9 +982,15 @@ else
 end
 
 for k = 1:numel(alltimecell)
-  if isequal(timeindx{k}(:)', 1:length(alltimecell{k}))
-    % no actual selection is needed for this data structure
-    timeindx{k} = nan;
+  if ~iscell(varargin{1}.time)
+    if isequal(timeindx{k}(:)', 1:length(alltimecell{k}))
+      % no actual selection is needed for this data structure
+      timeindx{k} = nan;
+    end
+  else
+    % if the input data arguments are of type 'raw', they need to be
+    % handled differently, because the individual trials can be of
+    % different length
   end
 end
 
@@ -1198,7 +1208,9 @@ for i=(numel(siz)+1):numel(dim)
   % all trailing singleton dimensions have length 1
   siz(i) = 1;
 end
-if isvector(x)
+if isvector(x) && ~(isrow(x) && dim(1) && numel(x)>1)
+  % there is no harm to keep it as it is, unless the data matrix is 1xNx1x1
+elseif istable(x)
   % there is no harm to keep it as it is
 else
   x = reshape(x, [siz(~dim) 1]);
@@ -1209,7 +1221,7 @@ end % function squeezedim
 function x = makeunion(x, field)
 old = cellfun(@getfield, x, repmat({field}, size(x)), 'uniformoutput', false);
 if iscell(old{1})
-  % empty is indicated to represent missing value for a cell array (label, labelcmb)
+  % empty is indicated to represent missing value for a cell-array (label, labelcmb)
   new = old{1};
   for i=2:length(old)
     sel = ~cellfun(@isempty, old{i});
@@ -1251,6 +1263,9 @@ if iscell(x)
             % sometimes the data is 1xN, whereas the dimord describes only the first dimension
             % in this case a row and column vector can be interpreted as equivalent
             x{i} = x{i}(selindx);
+          elseif istable(x)
+            % multidimensional indexing is not supported
+            x{i} = x{i}(selindx,:);
           else
             x{i} = x{i}(selindx,:,:,:,:);
           end
@@ -1274,6 +1289,9 @@ else
         % sometimes the data is 1xN, whereas the dimord describes only the first dimension
         % in this case a row and column vector can be interpreted as equivalent
         x = x(selindx);
+      elseif istable(x)
+        % multidimensional indexing is not supported
+        x = x(selindx,:);
       else
         x = x(selindx,:,:,:,:,:);
       end

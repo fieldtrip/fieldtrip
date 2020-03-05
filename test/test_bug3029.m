@@ -3,7 +3,7 @@ function test_bug3029
 % MEM 5gb
 % WALLTIME 00:20:00
 
-% TEST test_bug3029 ft_sourceanalysis prepare_freq_matrices
+% DEPENDENCY ft_sourceanalysis prepare_freq_matrices
 
 % this test function tests the correctness of the data handling in
 % ft_sourceanalysis, with respect to:
@@ -21,13 +21,13 @@ vol = ft_datatype_headmodel(vol);
 cfg           = [];
 cfg.headmodel = vol;
 cfg.grad      = freq.grad;
-cfg.grid.resolution = 2.5;
+cfg.sourcemodel.resolution = 2.5;
 s             = ft_prepare_sourcemodel(cfg);
 
 cfg           = [];
 cfg.headmodel = vol;
 cfg.grad      = freq.grad;
-cfg.grid      = s;
+cfg.sourcemodel      = s;
 cfg.channel   = 'MEG';
 lf            = ft_prepare_leadfield(cfg);
 
@@ -39,7 +39,7 @@ cfg           = [];
 cfg.method    = 'dics';
 cfg.frequency = 10;
 cfg.headmodel = vol;
-cfg.grid      = lf;
+cfg.sourcemodel      = lf;
 cfg.channel   = 'MEG'; % this is needed, otherwise there's a detected mismatch in channels vs leadfields
 s1            = ft_sourceanalysis(cfg, freq);
 end
@@ -51,7 +51,7 @@ cfg           = [];
 cfg.method    = 'dics';
 cfg.frequency = 10;
 cfg.headmodel = vol;
-cfg.grid      = lf;
+cfg.sourcemodel      = lf;
 cfg.channel   = 'MEG'; % this is needed, otherwise there's a detected mismatch in channels vs leadfields
 cfg.keeptrials = 'yes';
 s2             = ft_sourceanalysis(cfg, freq);
@@ -64,7 +64,7 @@ cfg           = [];
 cfg.method    = 'dics';
 cfg.frequency = 10;
 cfg.headmodel = vol;
-cfg.grid      = lf;
+cfg.sourcemodel      = lf;
 cfg.channel   = 'MEG'; % this is needed, otherwise there's a detected mismatch in channels vs leadfields
 cfg.refchan   = 'BR1';
 s3             = ft_sourceanalysis(cfg, freq);
@@ -73,7 +73,7 @@ cfg           = [];
 cfg.method    = 'dics';
 cfg.frequency = 10;
 cfg.headmodel = vol;
-cfg.grid      = lf;
+cfg.sourcemodel      = lf;
 cfg.channel   = 'MEG'; % this is needed, otherwise there's a detected mismatch in channels vs leadfields
 cfg.refchan   = 'BR1';
 cfg.keeptrials = 'yes';
@@ -90,7 +90,7 @@ try,
 	cfg.method    = 'dics';
 	cfg.frequency = 10;
 	cfg.headmodel = vol;
-	cfg.grid      = lf;
+	cfg.sourcemodel      = lf;
 	s5            = ft_sourceanalysis(cfg, freq);
 catch
 	% this should be solved with proper error handling
@@ -108,7 +108,7 @@ cfg           = [];
 cfg.method    = 'dics';
 cfg.frequency = 10;
 cfg.headmodel = vol;
-cfg.grid      = lf;
+cfg.sourcemodel      = lf;
 cfg.channel   = 'MEG'; % this is needed, otherwise there's a detected mismatch in channels vs leadfields
 cfg.refchan   = 'BR1';
 cfg.dics.keepcsd = 'yes';
@@ -119,7 +119,7 @@ cfg           = [];
 cfg.method    = 'pcc';
 cfg.frequency = 10;
 cfg.headmodel = vol;
-cfg.grid      = lf;
+cfg.sourcemodel      = lf;
 cfg.channel   = 'MEG'; % this is needed, otherwise there's a detected mismatch in channels vs leadfields
 cfg.refchan   = 'BR1';
 s3b           = ft_sourceanalysis(cfg, freq);
@@ -136,7 +136,7 @@ cfg           = [];
 cfg.method    = 'dics';
 cfg.frequency = 10;
 cfg.headmodel = vol;
-cfg.grid      = lf;
+cfg.sourcemodel      = lf;
 cfg.channel   = 'MEG'; % this is needed, otherwise there's a detected mismatch in channels vs leadfields
 s1            = ft_sourceanalysis(cfg, freq);
 end
@@ -148,7 +148,7 @@ cfg           = [];
 cfg.method    = 'dics';
 cfg.frequency = 10;
 cfg.headmodel = vol;
-cfg.grid      = lf;
+cfg.sourcemodel      = lf;
 cfg.channel   = 'MEG'; % this is needed, otherwise there's a detected mismatch in channels vs leadfields
 cfg.keeptrials = 'yes';
 s2             = ft_sourceanalysis(cfg, freq);
@@ -161,7 +161,7 @@ cfg           = [];
 cfg.method    = 'dics';
 cfg.frequency = 10;
 cfg.headmodel = vol;
-cfg.grid      = lf;
+cfg.sourcemodel      = lf;
 cfg.channel   = 'MEG'; % this is needed, otherwise there's a detected mismatch in channels vs leadfields
 cfg.refchan   = 'BR1';
 s3             = ft_sourceanalysis(cfg, freq);
@@ -170,7 +170,7 @@ cfg           = [];
 cfg.method    = 'dics';
 cfg.frequency = 10;
 cfg.headmodel = vol;
-cfg.grid      = lf;
+cfg.sourcemodel      = lf;
 cfg.channel   = 'MEG'; % this is needed, otherwise there's a detected mismatch in channels vs leadfields
 cfg.refchan   = 'BR1';
 cfg.keeptrials = 'yes';
@@ -187,7 +187,7 @@ try,
 	cfg.method    = 'dics';
 	cfg.frequency = 10;
 	cfg.headmodel = vol;
-	cfg.grid      = lf;
+	cfg.sourcemodel      = lf;
 	s5            = ft_sourceanalysis(cfg, freq);
 catch
 	% this should be solved with proper error handling
@@ -205,7 +205,7 @@ cfg           = [];
 cfg.method    = 'dics';
 cfg.frequency = 10;
 cfg.headmodel = vol;
-cfg.grid      = lf;
+cfg.sourcemodel      = lf;
 cfg.channel   = 'MEG'; % this is needed, otherwise there's a detected mismatch in channels vs leadfields
 cfg.refchan   = 'BR1';
 cfg.dics.keepcsd = 'yes';
@@ -216,7 +216,7 @@ cfg           = [];
 cfg.method    = 'pcc';
 cfg.frequency = 10;
 cfg.headmodel = vol;
-cfg.grid      = lf;
+cfg.sourcemodel      = lf;
 cfg.channel   = 'MEG'; % this is needed, otherwise there's a detected mismatch in channels vs leadfields
 cfg.refchan   = 'BR1';
 s3b           = ft_sourceanalysis(cfg, freq);

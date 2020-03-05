@@ -1,9 +1,9 @@
 function test_tutorial_coherence
 
-% MEM 4500mb
+% MEM 5gb
 % WALLTIME 00:20:00
 
-% TEST ft_freqanalysis ft_connectivityanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_sourceanalysis ft_sourceinterpolate ft_prepare_sourcemodel headsurface
+% DEPENDENCY ft_freqanalysis ft_connectivityanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_sourceanalysis ft_sourceinterpolate ft_prepare_sourcemodel headsurface
 
 addpath(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/coherence'));
 addpath(dccnpath('/home/common/matlab/fieldtrip/data/'));
@@ -208,10 +208,10 @@ cfg           = [];
 cfg.method    = 'dics';
 cfg.refchan   = 'EMGlft';
 cfg.frequency = 18;
-cfg.hdmfile   = 'SubjectCMC.hdm';
+cfg.headmodel = 'SubjectCMC.hdm';
 cfg.inwardshift     = 1;
-cfg.grid.resolution = 1;
-cfg.grid.unit       = 'cm';
+cfg.sourcemodel.resolution = 1;
+cfg.sourcemodel.unit       = 'cm';
 source        = ft_sourceanalysis(cfg, freq);
 
 mri = ft_read_mri('SubjectCMC.mri');

@@ -275,7 +275,7 @@ S4 = sprintf('length-scale: %.3f, magnSigma2: %.3f \n', gp.cf{1}.lengthScale, gp
            
 % ========================================
 % MCMC approach with Student-t likelihood
-%  Here we analyse the model with fixed degrees of freedom
+%  Here we analyze the model with fixed degrees of freedom
 %   nu = 4 
 % ========================================
 disp(['Student-t noise model with nu= 4 and using MCMC integration';...
@@ -317,7 +317,7 @@ S5 = sprintf('length-scale: %.3f, magnSigma2: %.3f \n', mean(rr.cf{1}.lengthScal
 
 % ========================================
 % Laplace approximation Student-t likelihood
-%  Here we analyse the model with fixed degrees of freedom
+%  Here we analyze the model with fixed degrees of freedom
 %   nu = 4 
 % ========================================
 disp(['Student-t noise model with nu=4 using Laplace integration over';...
@@ -361,7 +361,7 @@ S6 = sprintf('length-scale: %.3f, magnSigma2: %.3f \n', gp.cf{1}.lengthScale, gp
 
 % ========================================
 % EP approximation Student-t likelihood
-%  Here we analyse the model with fixed degrees of freedom
+%  Here we analyze the model with fixed degrees of freedom
 %   nu = 4 
 % ========================================
 disp(['Student-t noise model with nu=4 using EP integration over';...

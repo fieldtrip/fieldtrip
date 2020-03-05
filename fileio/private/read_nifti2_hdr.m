@@ -40,14 +40,14 @@ function [hdr] = read_nifti2_hdr(filename)
 % $Id$
 
 hdr.endian = 'l';
-fid = fopen(filename, 'rb', hdr.endian);
+fid = fopen_or_error(filename, 'rb', hdr.endian);
 hdr.sizeof_hdr = fread(fid, [1 1 ], 'int32=>int32'); % 0
 
 if hdr.sizeof_hdr~=348 && hdr.sizeof_hdr~=540
   % try opening as big endian
   fclose(fid);
   hdr.endian = 'b';
-  fid = fopen(filename, 'r', 'b');
+  fid = fopen_or_error(filename, 'r', 'b');
   hdr.sizeof_hdr = fread(fid, [1 1 ], 'int32=>int32'); % 0
 end
 

@@ -81,7 +81,7 @@ end
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfield(dip, 'inside')
-  dip.inside = ft_inside_vol(dip.pos, headmodel);
+  dip.inside = ft_inside_headmodel(dip.pos, headmodel);
 end
 
 if any(dip.inside>1)
@@ -167,7 +167,7 @@ lc           = ft_getopt(varargin, 'filter_bs');
 %% Create brain harmonics matrix
 
 % Mesh harmonics
-[~,H,d] = ct_mesh_spectrum(dip,num_harm,num_comp);
+[dum,H,d] = ct_mesh_spectrum(dip,num_harm,num_comp);
 
 % Elimination of pathological zeroth frequencies and concatenating
 % harmonics numbers

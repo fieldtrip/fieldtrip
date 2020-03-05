@@ -18,7 +18,7 @@ function out = read_nervus_data(nrvHdr, segment, range, chIdx)
 %
 % Copyright (C) 2016, Jan Brogger and Joost Wagenaar 
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -58,7 +58,7 @@ assert(length(segment) == 1, 'Segment must be single value.');
 cSumSegments = [0 cumsum([nrvHdr.Segments.duration])];
 
 % Reopen .e file.
-h = fopen(nrvHdr.filename,'r','ieee-le');
+h = fopen_or_error(nrvHdr.filename,'r','ieee-le');
 
 % Find sectionID for channels
 lChIdx = length(chIdx);

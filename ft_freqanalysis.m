@@ -13,7 +13,7 @@ function [freq] = ft_freqanalysis(cfg, data)
 % The configuration should contain:
 %   cfg.method      = different methods of calculating the spectra
 %                     'mtmfft', analyses an entire spectrum for the entire data
-%                       length, implements multitaper frequency transformation
+%                       length, implements multitaper frequency transformation.
 %                     'mtmconvol', implements multitaper time-frequency
 %                       transformation based on multiplication in the
 %                       frequency domain.
@@ -285,6 +285,24 @@ switch cfg.method
       ft_error('you must specify a smoothing parameter with taper = dpss');
     end
     
+  case 'irasa'
+    cfg.taper       = ft_getopt(cfg, 'taper', 'hanning');
+    if ~isequal(cfg.taper, 'hanning')
+      ft_error('the irasa method supports hanning tapers only');
+    end
+    if isfield(cfg, 'output') && ~isequal(cfg.output, 'pow')
+      ft_error('the irasa method outputs power only');
+    end
+    if ~isequal(cfg.pad, 'nextpow2')
+      ft_warning('consider using cfg.pad=''nextpow2'' for the irasa method');
+    end
+    % check for foi above Nyquist
+    if isfield(cfg, 'foi')
+      if any(cfg.foi > (data.fsample/2))
+        ft_error('frequencies in cfg.foi are above Nyquist')
+      end
+    end
+    
   case 'wavelet'
     cfg.width  = ft_getopt(cfg, 'width',  7);
     cfg.gwidth = ft_getopt(cfg, 'gwidth', 3);
@@ -510,6 +528,10 @@ for itrial = 1:ntrials
       [spectrum,ntaper,foi] = ft_specest_mtmfft(dat, time, 'taper', cfg.taper, options{:}, 'feedback', fbopt);
       hastime = false;
       
+    case 'irasa'
+      [spectrum,ntaper,foi] = ft_specest_irasa(dat, time, 'taper', cfg.taper, options{:}, 'feedback', fbopt);
+      hastime = false;
+      
     case 'wavelet'
       [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:}, 'feedback', fbopt);
       
@@ -627,14 +649,17 @@ for itrial = 1:ntrials
   %%% Create output
   if keeprpt~=4
     
+    % mtmconvol is a special case and needs special processing
+    if strcmp(cfg.method, 'mtmconvol')
+      foiind = ones(1,nfoi);
+    else
+      % by using this vector below for indexing, the below code does not need to be duplicated for mtmconvol
+      foiind = 1:nfoi;
+    end
+    
     for ifoi = 1:nfoi
-      
-      % mtmconvol is a special case and needs special processing
       if strcmp(cfg.method, 'mtmconvol')
         spectrum = reshape(permute(spectrum_mtmconvol(:,:,freqtapind{ifoi}),[3 1 2]),[ntaper(ifoi) nchan 1 ntoi]);
-        foiind = ones(1,nfoi);
-      else
-        foiind = 1:nfoi; % by using this vector below for indexing, the below code does not need to be duplicated for mtmconvol
       end
       
       % set ingredients for below
@@ -649,7 +674,11 @@ for itrial = 1:ntrials
       
       acttap = logical([ones(ntaper(ifoi),1);zeros(size(spectrum,1)-ntaper(ifoi),1)]);
       if powflg
-        powdum = abs(spectrum(acttap,:,foiind(ifoi),acttboi)) .^2;
+        if strcmp(cfg.method, 'irasa') % ft_specest_irasa outputs power and not amplitude
+          powdum = spectrum(acttap,:,foiind(ifoi),acttboi);
+        else
+          powdum = abs(spectrum(acttap,:,foiind(ifoi),acttboi)) .^2;
+        end
         % sinetaper scaling is disabled, because it is not consistent with the other
         % tapers. if scaling is required, please specify cfg.taper =
         % 'sine_old'
@@ -668,7 +697,7 @@ for itrial = 1:ntrials
         fourierdum = spectrum(acttap,:,foiind(ifoi),acttboi);
       end
       if csdflg
-        csddum =      spectrum(acttap,cutdatindcmb(:,1),foiind(ifoi),acttboi) .* conj(spectrum(acttap,cutdatindcmb(:,2),foiind(ifoi),acttboi));
+        csddum = spectrum(acttap,cutdatindcmb(:,1),foiind(ifoi),acttboi) .* conj(spectrum(acttap,cutdatindcmb(:,2),foiind(ifoi),acttboi));
       end
       
       % switch between keep's
@@ -735,7 +764,11 @@ for itrial = 1:ntrials
     %rptind = reshape(1:ntrials .* maxtap,[maxtap ntrials]);
     %currrptind = rptind(:,itrial);
     if powflg
-      powspctrm(currrptind,:,:) = abs(spectrum).^2;
+      if strcmp(cfg.method, 'irasa') % ft_specest_irasa outputs power and not amplitude
+        powspctrm(currrptind,:,:) = spectrum;
+      else
+        powspctrm(currrptind,:,:) = abs(spectrum).^2;
+      end
     end
     if fftflg
       fourierspctrm(currrptind,:,:,:) = spectrum;

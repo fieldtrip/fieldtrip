@@ -1,24 +1,13 @@
 function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 
-% FT_ARTIFACT_ZVALUE reads the interesting segments of data from file and
-% identifies artifacts by means of thresholding the z-transformed value
-% of the preprocessed raw data. Depending on the preprocessing options,
-% this method will be sensitive to EOG, muscle or jump artifacts.
-% This procedure only works on continuously recorded data.
+% FT_ARTIFACT_ZVALUE reads the interesting segments of data from file and identifies
+% artifacts by means of thresholding the z-transformed value of the preprocessed raw data.
+% Depending on the preprocessing options, this method will be sensitive to EOG, muscle or
+% jump artifacts.  This procedure only works on continuously recorded data.
 %
 % Use as
 %   [cfg, artifact] = ft_artifact_zvalue(cfg)
-% or
-%   [cfg, artifact] = ft_artifact_zvalue(cfg, data)
-%
-% The output argument "artifact" is a Nx2 matrix comparable to the
-% "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
-% beginsamples of an artifact period, the second column contains the
-% endsamples of the artifactperiods.
-%
-% If you are calling FT_ARTIFACT_ZVALUE with only the configuration as first
-% input argument and the data still has to be read from file, you should
-% specify
+% with the configuration options
 %   cfg.dataset     = string with the filename
 % or
 %   cfg.headerfile  = string with the filename
@@ -27,32 +16,33 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %   cfg.headerformat
 %   cfg.dataformat
 %
-% If you are calling FT_ARTIFACT_ZVALUE with also the second input argument
-% "data", then that should contain data that was already read from file
-% a call to FT_PREPROCESSING.
-%
-% If you encounter difficulties with memory usage, you can use
-%   cfg.memory = 'low' or 'high', whether to be memory or computationally efficient, respectively (default = 'high')
+% Alternatively you can use it as
+%   [cfg, artifact] = ft_artifact_zvalue(cfg, data)
+% where the input data is a structure as obtained from FT_PREPROCESSING.
 %
 % The required configuration settings are:
-%   cfg.trl
-%   cfg.continuous
+%   cfg.trl         = structure that defines the data segments of interest. See FT_DEFINETRIAL
+%   cfg.continuous  = 'yes' or 'no' whether the file contains continuous data (default   = 'yes')
+% and
 %   cfg.artfctdef.zvalue.channel
 %   cfg.artfctdef.zvalue.cutoff
 %   cfg.artfctdef.zvalue.trlpadding
 %   cfg.artfctdef.zvalue.fltpadding
 %   cfg.artfctdef.zvalue.artpadding
 %
+% If you encounter difficulties with memory usage, you can use
+%   cfg.memory = 'low' or 'high', whether to be memory or computationally efficient, respectively (default = 'high')
+%
 % The optional configuration settings (see below) are:
 %   cfg.artfctdef.zvalue.artfctpeak  = 'yes' or 'no'
 %   cfg.artfctdef.zvalue.interactive = 'yes' or 'no'
 %
-% If you specify artfctpeak='yes', the maximum value of the artifact within its range
-% will be found and saved into cfg.artfctdef.zvalue.peaks.
+% If you specify cfg.artfctdef.zvalue.artfctpeak='yes', the maximum value of the
+% artifact within its range will be found and saved into cfg.artfctdef.zvalue.peaks.
 %
-% If you specify interactive='yes', a GUI will be started and you can manually
-% accept/reject detected artifacts, and/or change the threshold. To control the
-% graphical interface via keyboard, use the following keys:
+% If you specify cfg.artfctdef.zvalue.interactive='yes', a GUI will be started and
+% you can manually accept/reject detected artifacts, and/or change the threshold. To
+% control the graphical interface via keyboard, use the following keys:
 %
 %     q                 : Stop
 %
@@ -107,6 +97,11 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %   cfg.artfctdef.zvalue.hilbert       = 'no' or 'yes'
 %   cfg.artfctdef.zvalue.rectify       = 'no' or 'yes'
 %
+% The output argument "artifact" is a Nx2 matrix comparable to the
+% "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
+% beginsamples of an artifact period, the second column contains the
+% endsamples of the artifactperiods.
+%
 % See also FT_REJECTARTIFACT, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG, FT_ARTIFACT_EOG,
 % FT_ARTIFACT_JUMP, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_ZVALUE
 
@@ -147,6 +142,7 @@ if ft_abort
 end
 
 % set default rejection parameters
+cfg.feedback                     = ft_getopt(cfg,                  'feedback',     'text');
 cfg.headerformat                 = ft_getopt(cfg,                  'headerformat', []);
 cfg.dataformat                   = ft_getopt(cfg,                  'dataformat',   []);
 cfg.memory                       = ft_getopt(cfg,                  'memory',       'high');
@@ -175,9 +171,6 @@ if isfield(cfg.artfctdef.zvalue, 'artifact')
   return
 end
 
-% set feedback
-cfg.feedback = ft_getopt(cfg, 'feedback',   'text');
-
 % clear old warnings from this stack
 ft_warning('-clear')
 
@@ -200,22 +193,13 @@ end
 hasdata = exist('data', 'var');
 
 if ~hasdata
-  % only cfg given, read data from disk
   cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
+  cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
-  trl = cfg.trl;
-  
 else
-  % check whether the value for trlpadding makes sense
-  if cfg.artfctdef.zvalue.trlpadding > 0
-    % negative trlpadding is allowed with in-memory data
-    ft_error('you cannot use positive trlpadding with in-memory data');
-  end
-  % check if the input data is valid for this function
   data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
-  cfg = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
-  hdr = ft_fetch_header(data);
-  trl = data.sampleinfo;
+  cfg  = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
+  hdr  = ft_fetch_header(data);
 end
 
 % set default cfg.continuous
@@ -227,49 +211,69 @@ if ~isfield(cfg, 'continuous')
   end
 end
 
-trlpadding    = round(cfg.artfctdef.zvalue.trlpadding*hdr.Fs);
-fltpadding    = round(cfg.artfctdef.zvalue.fltpadding*hdr.Fs);
-artpadding    = round(cfg.artfctdef.zvalue.artpadding*hdr.Fs);
+% get the specification of the data segments that should be scanned for artifacts
+if ~isfield(cfg, 'trl') && hasdata
+  trl = data.sampleinfo;
+  for k = 1:numel(data.trial)
+    trl(k,3) = time2offset(data.time{k}, data.fsample);
+  end
+elseif isfield(cfg, 'trl') && ischar(cfg.trl)
+  trl = loadvar(cfg.trl, 'trl');
+elseif isfield(cfg, 'trl') && isnumeric(cfg.trl)
+  trl = cfg.trl;
+else
+  ft_error('cannot determine which segments of data to scan for artifacts');
+end
+
+% check whether the value for trlpadding makes sense
+if hasdata && cfg.artfctdef.zvalue.trlpadding > 0
+  % negative trlpadding is allowed with in-memory data, since that would remove some data from each trial
+  ft_error('you cannot use positive trlpadding with in-memory data');
+end
+
+trlpadding = round(cfg.artfctdef.zvalue.trlpadding*hdr.Fs);
+fltpadding = round(cfg.artfctdef.zvalue.fltpadding*hdr.Fs);
+artpadding = round(cfg.artfctdef.zvalue.artpadding*hdr.Fs);
+
 trl(:,1)      = trl(:,1) - trlpadding;       % pad the trial with some samples, in order to detect
 trl(:,2)      = trl(:,2) + trlpadding;       % artifacts at the edges of the relevant trials.
-if size(trl, 2) >= 3
-  trl(:,3)      = trl(:,3) - trlpadding;     % the offset can ofcourse be adjusted as well
+if size(trl,2)>= 3
+  trl(:,3)    = trl(:,3) - trlpadding;     % the offset can ofcourse be adjusted as well
 elseif hasdata
   % reconstruct offset
-  for tr=1:size(trl, 1)
+  for tr=1:size(trl,1)
     % account for 0 might not be in data.time
-    t0         = interp1(data.time{tr}, 1:numel(data.time{tr}), 0, 'linear', 'extrap');
-    trl(tr, 3) = -t0+1 - trlpadding;
+    t0        = interp1(data.time{tr}, 1:numel(data.time{tr}), 0, 'linear', 'extrap');
+    trl(tr,3) = -t0+1 - trlpadding;
   end
 else
   % assuming that the trial starts at t=0s
-  trl(:, 3) = trl(:, 1);
+  trl(:,3) = trl(:,1);
 end
-trllength     = trl(:,2) - trl(:,1) + 1;     % length of each trial
+
 numtrl        = size(trl,1);
-cfg.artfctdef.zvalue.trl = trl;              % remember where we are going to look for artifacts
 cfg.artfctdef.zvalue.channel = ft_channelselection(cfg.artfctdef.zvalue.channel, hdr.label);
-sgnind        = match_str(hdr.label, cfg.artfctdef.zvalue.channel);
-numsgn        = length(sgnind);
+chanindx      = match_str(hdr.label, cfg.artfctdef.zvalue.channel);
+nchan         = length(chanindx);
 thresholdsum  = strcmp(cfg.artfctdef.zvalue.cumulative, 'yes');
 
-if numsgn<1
+if nchan<1
   ft_error('no channels selected');
 end
 
 % read the data and apply preprocessing options
-sumval = zeros(numsgn, 1);
-sumsqr = zeros(numsgn, 1);
-numsmp = zeros(numsgn, 1);
-ft_progress('init', cfg.feedback, ['searching for artifacts in ' num2str(numsgn) ' channels']);
-for trlop = 1:numtrl
+sumval = zeros(nchan, 1);
+sumsqr = zeros(nchan, 1);
+numsmp = zeros(nchan, 1);
+ft_progress('init', cfg.feedback, ['searching for artifacts in ' num2str(nchan) ' channels']);
+for trlop=1:numtrl
   ft_progress(trlop/numtrl, 'searching in trial %d from %d\n', trlop, numtrl);
   
   if strcmp(cfg.memory, 'low') % store nothing in memory
     if hasdata
-      dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'skipcheckdata', 1);
+      dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'skipcheckdata', 1);
     else
-      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
+      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
     end
     dat = preproc(dat, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(dat,2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
     
@@ -277,12 +281,12 @@ for trlop = 1:numtrl
       sumval = zeros(size(dat,1), 1);
       sumsqr = zeros(size(dat,1), 1);
       numsmp = zeros(size(dat,1), 1);
-      numsgn = size(dat,1);
+      nchan = size(dat,1);
     elseif trlop==1 && pertrial
       sumval = zeros(size(dat,1), numtrl);
       sumsqr = zeros(size(dat,1), numtrl);
       numsmp = zeros(size(dat,1), numtrl);
-      numsgn = size(dat,1);
+      nchan = size(dat,1);
     end
     
     if ~pertrial
@@ -298,9 +302,9 @@ for trlop = 1:numtrl
     end
   else % store all data in memory, saves computation time
     if hasdata
-      dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'skipcheckdata', 1);
+      dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'skipcheckdata', 1);
     else
-      dat{trlop} = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
+      dat{trlop} = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
     end
     dat{trlop} = preproc(dat{trlop}, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(dat{trlop},2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
     
@@ -308,12 +312,12 @@ for trlop = 1:numtrl
       sumval = zeros(size(dat{1},1), 1);
       sumsqr = zeros(size(dat{1},1), 1);
       numsmp = zeros(size(dat{1},1), 1);
-      numsgn = size(dat{1},1);
+      nchan = size(dat{1},1);
     elseif trlop==1 && pertrial
       sumval = zeros(size(dat{1},1), numtrl);
       sumsqr = zeros(size(dat{1},1), numtrl);
       numsmp = zeros(size(dat{1},1), numtrl);
-      numsgn = size(dat{1},1);
+      nchan = size(dat{1},1);
     end
     
     if ~pertrial
@@ -358,12 +362,12 @@ else
   indvec = ones(1,numtrl);
 end
 for trlop = 1:numtrl
-  if strcmp(cfg.memory, 'low') % store nothing in memory (note that we need to preproc AGAIN... *yawn*
+  if strcmp(cfg.memory, 'low') % store nothing in memory (note that we need to preproc AGAIN... *yawn*)
     fprintf('.');
     if hasdata
-      dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'));
+      dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'));
     else
-      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
+      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
     end
     dat = preproc(dat, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(dat,2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
     zmax{trlop}  = -inf + zeros(1,size(dat,2));
@@ -374,7 +378,7 @@ for trlop = 1:numtrl
     zdata         = (dat - datavg(:,indvec(trlop)*ones(1,nsmp)))./datstd(:,indvec(trlop)*ones(1,nsmp));  % convert the filtered data to z-values
     zsum{trlop}   = nansum(zdata,1);                   % accumulate the z-values over channels
     [zmax{trlop},ind] = max(zdata,[],1);            % find the maximum z-value and remember it
-    zindx{trlop}      = sgnind(ind);                % also remember the channel number that has the largest z-value
+    zindx{trlop}      = chanindx(ind);                % also remember the channel number that has the largest z-value
   else
     % initialize some matrices
     zmax{trlop}  = -inf + zeros(1,size(dat{trlop},2));
@@ -383,16 +387,16 @@ for trlop = 1:numtrl
     
     nsmp          = size(dat{trlop},2);
     zdata         = (dat{trlop} - datavg(:,indvec(trlop)*ones(1,nsmp)))./datstd(:,indvec(trlop)*ones(1,nsmp));  % convert the filtered data to z-values
-    zsum{trlop}   = nansum(zdata,1);                   % accumulate the z-values over channels
-    [zmax{trlop},ind] = max(zdata,[],1);            % find the maximum z-value and remember it
-    zindx{trlop}      = sgnind(ind);                % also remember the channel number that has the largest z-value
+    zsum{trlop}   = nansum(zdata,1);                  % accumulate the z-values over channels
+    [zmax{trlop},ind] = max(zdata,[],1);              % find the maximum z-value and remember it
+    zindx{trlop}      = chanindx(ind);                % also remember the channel number that has the largest z-value
   end
   % This alternative code does the same, but it is much slower
   %   for i=1:size(zmax{trlop},2)
   %       if zdata{trlop}(i)>zmax{trlop}(i)
   %         % update the maximum value and channel index
   %         zmax{trlop}(i)  = zdata{trlop}(i);
-  %         zindx{trlop}(i) = sgnind(sgnlop);
+  %         zindx{trlop}(i) = chanindx(sgnlop);
   %       end
   %     end
 end % for trlop
@@ -403,7 +407,7 @@ if demeantrial
     zsum{trlop} = zsum{trlop}-mean(zsum{trlop},2);
   end
 end
-%for sgnlop=1:numsgn
+%for sgnlop=1:nchan
 %  % read the data and apply preprocessing options
 %  sumval = 0;
 %  sumsqr = 0;
@@ -412,9 +416,9 @@ end
 %  for trlop = 1:numtrl
 %    fprintf('.');
 %    if hasdata
-%      dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind(sgnlop), 'checkboundary', strcmp(cfg.continuous, 'no'));
+%      dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx(sgnlop), 'checkboundary', strcmp(cfg.continuous, 'no'));
 %    else
-%      dat{trlop} = read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind(sgnlop), 'checkboundary', strcmp(cfg.continuous, 'no'));
+%      dat{trlop} = read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx(sgnlop), 'checkboundary', strcmp(cfg.continuous, 'no'));
 %    end
 %    dat{trlop} = preproc(dat{trlop}, cfg.artfctdef.zvalue.channel(sgnlop), hdr.Fs, cfg.artfctdef.zvalue, [], fltpadding, fltpadding);
 %    % accumulate the sum and the sum-of-squares
@@ -438,14 +442,14 @@ end
 %    zdata{trlop}  = (dat{trlop} - datavg)./datstd;              % convert the filtered data to z-values
 %    zsum{trlop}   = zsum{trlop} + zdata{trlop};                 % accumulate the z-values over channels
 %    zmax{trlop}   = max(zmax{trlop}, zdata{trlop});             % find the maximum z-value and remember it
-%    zindx{trlop}(zmax{trlop}==zdata{trlop}) = sgnind(sgnlop);   % also remember the channel number that has the largest z-value
+%    zindx{trlop}(zmax{trlop}==zdata{trlop}) = chanindx(sgnlop);   % also remember the channel number that has the largest z-value
 %
 %    % This alternative code does the same, but it is much slower
 %    %   for i=1:size(zmax{trlop},2)
 %    %       if zdata{trlop}(i)>zmax{trlop}(i)
 %    %         % update the maximum value and channel index
 %    %         zmax{trlop}(i)  = zdata{trlop}(i);
-%    %         zindx{trlop}(i) = sgnind(sgnlop);
+%    %         zindx{trlop}(i) = chanindx(sgnlop);
 %    %       end
 %    %     end
 %  end
@@ -453,7 +457,7 @@ end
 %end % for sgnlop
 
 for trlop = 1:numtrl
-  zsum{trlop} = zsum{trlop} ./ sqrt(numsgn);
+  zsum{trlop} = zsum{trlop} ./ sqrt(nchan);
 end
 
 % always create figure
@@ -602,9 +606,8 @@ end
 
 % remember the artifacts that were found
 cfg.artfctdef.zvalue.artifact = artifact;
-
-% also update the threshold
-cfg.artfctdef.zvalue.cutoff   = opt.threshold;
+cfg.artfctdef.zvalue.trl      = trl;              % remember where we have been looking for artifacts
+cfg.artfctdef.zvalue.cutoff   = opt.threshold;    % remember the threshold that was used
 
 fprintf('detected %d artifacts\n', size(artifact,1));
 
@@ -613,6 +616,8 @@ delete(h);
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
 ft_postamble previous data
+ft_postamble savevar
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -722,7 +727,7 @@ elseif isa(eventdata, 'matlab.ui.eventdata.KeyData') % only when key was pressed
     curKey = eventdata.Key;
   else
     curKey = [sprintf('%s+', eventdata.Modifier{:}) eventdata.Key];
-  end  
+  end
 elseif isfield(eventdata, 'Key')  % only when key was pressed
   curKey = eventdata.Key;
 elseif isempty(eventdata) % matlab2012b returns an empty double upon a mouse click
@@ -734,7 +739,6 @@ end
 h = getparent(h); % otherwise h is empty if isa [...].ActionData
 opt = getappdata(h, 'opt');
 
-disp(strcat('Key = ', curKey))
 switch strtrim(curKey)
   case 'leftarrow' % change trials
     opt.trlop = max(opt.trlop - 1, 1); % should not be smaller than 1
@@ -786,38 +790,38 @@ switch strtrim(curKey)
     end
     setappdata(h, 'opt', opt);
     redraw_cb(h, eventdata);
-%   case 'control+uparrow' % change channel
-%     if strcmp(opt.channel, 'artifact')
-%       [dum, indx] = max(opt.zval);
-%       sgnind      = opt.zindx(indx);
-%     else
-%       if ~isempty(opt.data)
-%         sgnind  = match_str(opt.channel, opt.data.label);
-%         selchan = match_str(opt.artcfg.channel, opt.channel);
-%       else
-%         sgnind  = match_str(opt.channel,   opt.hdr.label);
-%         selchan = match_str(opt.artcfg.channel, opt.channel);
-%       end
-%     end
-%     numchan = numel(opt.artcfg.channel);
-%     chansel = min(selchan+1, numchan);
-%     % convert numeric array into cell-array with channel labels
-%     opt.channel = tmpchan(chansel);
-%     setappdata(h, 'opt', opt);
-%     redraw_cb(h, eventdata);
-%   case 'c' % select channel
-%     select = match_str([opt.artcfg.channel;{'artifact'}], opt.channel);
-%     opt.channel = select_channel_list([opt.artcfg.channel;{'artifact'}], select);
-%     setappdata(h, 'opt', opt);
-%     redraw_cb(h, eventdata);
-%   case 'control+downarrow'
-%     tmpchan = [opt.artcfg.channel;{'artifact'}]; % append the 'artifact' channel
-%     chansel = match_str(tmpchan, opt.channel);
-%     chansel = max(chansel-1, 1);
-%     % convert numeric array into cell-array with channel labels
-%     opt.channel = tmpchan(chansel);
-%     setappdata(h, 'opt', opt);
-%     redraw_cb(h, eventdata);
+    %   case 'control+uparrow' % change channel
+    %     if strcmp(opt.channel, 'artifact')
+    %       [dum, indx] = max(opt.zval);
+    %       chanindx      = opt.zindx(indx);
+    %     else
+    %       if ~isempty(opt.data)
+    %         chanindx  = match_str(opt.channel, opt.data.label);
+    %         selchan = match_str(opt.artcfg.channel, opt.channel);
+    %       else
+    %         chanindx  = match_str(opt.channel,   opt.hdr.label);
+    %         selchan = match_str(opt.artcfg.channel, opt.channel);
+    %       end
+    %     end
+    %     numchan = numel(opt.artcfg.channel);
+    %     chansel = min(selchan+1, numchan);
+    %     % convert numeric array into cell-array with channel labels
+    %     opt.channel = tmpchan(chansel);
+    %     setappdata(h, 'opt', opt);
+    %     redraw_cb(h, eventdata);
+    %   case 'c' % select channel
+    %     select = match_str([opt.artcfg.channel;{'artifact'}], opt.channel);
+    %     opt.channel = select_channel_list([opt.artcfg.channel;{'artifact'}], select);
+    %     setappdata(h, 'opt', opt);
+    %     redraw_cb(h, eventdata);
+    %   case 'control+downarrow'
+    %     tmpchan = [opt.artcfg.channel;{'artifact'}]; % append the 'artifact' channel
+    %     chansel = match_str(tmpchan, opt.channel);
+    %     chansel = max(chansel-1, 1);
+    %     % convert numeric array into cell-array with channel labels
+    %     opt.channel = tmpchan(chansel);
+    %     setappdata(h, 'opt', opt);
+    %     redraw_cb(h, eventdata);
   case 'a'
     % select the artifact to display
     response = inputdlg(sprintf('artifact trial to display'), 'specify', 1, {num2str(opt.trlop)});
@@ -929,30 +933,33 @@ trlpadsmp = round(artcfg.trlpadding*hdr.Fs);
 channel   = opt.channel;
 
 % determine the channel with the highest z-value to be displayed
-% this is default behaviour but can be overruled in the gui
+% this is default behavior but can be overruled in the gui
 if strcmp(channel, 'artifact')
   [dum, indx] = max(zval);
-  sgnind      = zindx(indx);
+  chanindx      = zindx(indx);
 else
   if ~isempty(opt.data)
-    sgnind = match_str(channel, opt.data.label);
+    chanindx = match_str(channel, opt.data.label);
   else
-    sgnind = match_str(channel, hdr.label);
+    chanindx = match_str(channel, hdr.label);
   end
 end
 
 if ~isempty(opt.data)
-  data = ft_fetch_data(opt.data, 'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'));
+  data = ft_fetch_data(opt.data, 'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'));
 else
-  data = ft_read_data(cfg.datafile,   'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'));
+  data = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'));
 end
-%data = preproc(data, '', hdr.Fs, artcfg, [], artcfg.fltpadding, artcfg.fltpadding);
-str  = sprintf('trial %3d, channel %s', opt.trlop, hdr.label{sgnind});
+
+% data = preproc(data, '', hdr.Fs, artcfg, [], artcfg.fltpadding, artcfg.fltpadding);
+
+% the string us used as title and printed in the command window
+str = sprintf('trial %3d of %d, channel %s', trlop, size(trl,1), hdr.label{chanindx});
 fprintf('showing %s\n', str);
 
 %-----------------------------
 % plot summary in left subplot
-subplot(opt.h1);hold on;
+subplot(opt.h1); hold on;
 
 % plot as a blue line only once
 if isempty(get(opt.h1, 'children'))
@@ -1041,10 +1048,10 @@ end
 subplot(opt.h2); hold on
 if isempty(get(opt.h2, 'children'))
   % do the plotting
-  plot(xval(selpad), data(selpad), 'color', [0.5 0.5 1], 'displayname', 'line1');
-  plot(xval(sel),    data(sel),    'color', [0 0 1],     'displayname', 'line2');
-  vline(xval(  1)+(trlpadsmp-1/opt.hdr.Fs),     'color', [0 0 0],     'displayname', 'vline1');
-  vline(xval(end)-(trlpadsmp/opt.hdr.Fs),       'color', [0 0 0],     'displayname', 'vline2');
+  plot(xval(selpad), data(selpad),          'color', [0.5 0.5 1], 'displayname', 'line1');
+  plot(xval(sel),    data(sel),             'color', [0 0 1],     'displayname', 'line2');
+  vline(xval(  1)+(trlpadsmp-1/opt.hdr.Fs), 'color', [0 0 0],     'displayname', 'vline1');
+  vline(xval(end)-(trlpadsmp/opt.hdr.Fs),   'color', [0 0 0],     'displayname', 'vline2');
   data(~artval) = nan;
   plot(xval, data, 'r-', 'displayname', 'line3');
   xlabel('time(s)');
@@ -1070,7 +1077,7 @@ else
   set(findall(h2children, 'displayname', 'vline2'), 'YData', abc2(3:4));
   set(findall(h2children, 'displayname', 'vline1'), 'visible', 'on');
   set(findall(h2children, 'displayname', 'vline2'), 'visible', 'on');
-  str = sprintf('trial %3d, channel %s', opt.trlop, hdr.label{sgnind});
+  str = sprintf('trial %3d, channel %s', opt.trlop, hdr.label{chanindx});
   title(str);
   xlim([xval(1) xval(end)]);
 end
@@ -1099,8 +1106,8 @@ else
   set(findall(h3children, 'displayname', 'line2b'), 'XData', xval(sel));
   set(findall(h3children, 'displayname', 'line2b'), 'YData', zval(sel));
   zval(~artval) = nan;
-  set(findall(h3children, 'displayname', 'line3b'),  'XData', xval);
-  set(findall(h3children, 'displayname', 'line3b'),  'YData', zval);
+  set(findall(h3children, 'displayname', 'line3b'),     'XData', xval);
+  set(findall(h3children, 'displayname', 'line3b'),     'YData', zval);
   set(findall(h3children, 'displayname', 'threshline'), 'YData', [1 1].*opt.threshold);
   set(findall(h3children, 'displayname', 'threshline'), 'XData', xval([1 end]));
   abc = axis(opt.h3);
@@ -1135,30 +1142,3 @@ while p~=0
   p = get(h, 'parent');
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function key = parseKeyboardEvent(eventdata)
-
-key = eventdata.Key;
-
-% handle possible numpad events (different for Windows and UNIX systems)
-% NOTE: shift+numpad number does not work on UNIX, since the shift
-% modifier is always sent for numpad events
-if isunix()
-  shiftInd = match_str(eventdata.Modifier, 'shift');
-  if ~isnan(str2double(eventdata.Character)) && ~isempty(shiftInd)
-    % now we now it was a numpad keystroke (numeric character sent AND
-    % shift modifier present)
-    key = eventdata.Character;
-    eventdata.Modifier(shiftInd) = []; % strip the shift modifier
-  end
-elseif ispc()
-  if strfind(eventdata.Key, 'numpad')
-    key = eventdata.Character;
-  end
-end
-
-if ~isempty(eventdata.Modifier)
-  key = [eventdata.Modifier{1} '+' key];
-end

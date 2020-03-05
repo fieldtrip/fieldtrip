@@ -51,7 +51,7 @@ normalizeparam    = ft_getopt(varargin, 'normalizeparam');
 
 % determine the mean sphere origin, required for spinning
 if isempty(meansphereorigin)
-  switch ft_voltype(headmodel)
+  switch ft_headmodeltype(headmodel)
     case 'singlesphere'
       meansphereorigin = headmodel.o;
     case 'localspheres'
@@ -59,7 +59,7 @@ if isempty(meansphereorigin)
     case 'singleshell'
       meansphereorigin = mean(headmodel.bnd.pos,1);
     otherwise
-      ft_error('unsupported voltype for determining the mean sphere origin')
+      ft_error('unsupported headmodel type for determining the mean sphere origin')
   end
 end
 
@@ -67,7 +67,7 @@ end
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfield(dip, 'inside')
-  dip.inside = ft_inside_vol(dip.pos, headmodel);
+  dip.inside = ft_inside_headmodel(dip.pos, headmodel);
 end
 
 if any(dip.inside>1)
@@ -88,8 +88,17 @@ if isfield(dip, 'mom')
   dip.mom = dip.mom(:, dip.inside);
 end
 if isfield(dip, 'leadfield')
-  fprintf('using precomputed leadfields\n');
-  dip.leadfield = dip.leadfield(dip.inside);
+  % check that LF backprojection is not used
+  lfdim = size(dip.leadfield{find(dip.inside,1)},2);
+  lfrank = rank(dip.leadfield{find(dip.inside,1)});
+  if ~strcmp(fixedori, 'spinning') && lfdim > lfrank
+    % case analytical method used, check that LF are full rank or remove it
+    dip = rmfield(dip, 'leadfield');
+    fprintf('This SAM method does not support backprojected leadfields\n');
+  else
+    fprintf('using precomputed leadfields\n');
+    dip.leadfield = dip.leadfield(dip.inside);
+  end
 end
 if isfield(dip, 'filter')
   fprintf('using precomputed filters\n');
@@ -130,9 +139,9 @@ ft_progress('init', feedback, 'scanning grid');
 all_angles = 0:pi/72:pi;
 
 for diplop=1:size(dip.pos,1)
-  
+
   vox_pos = dip.pos(diplop,:);
-  
+
   if isfield(dip, 'leadfield')
     % reuse the leadfield that was previously computed
     lf = dip.leadfield{diplop};
@@ -142,9 +151,9 @@ for diplop=1:size(dip.pos,1)
     lf = ft_compute_leadfield(vox_pos, sens, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,diplop);
   else
     % compute the leadfield
-    lf = ft_compute_leadfield(vox_pos, sens, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+    lf = ft_compute_leadfield(vox_pos, sens, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam, 'backproject', 'no');
   end
-  
+
   if strcmp(fixedori, 'spinning')
     % perform a non-linear search for the optimum orientation
     [tanu, tanv] = calctangent(vox_pos - meansphereorigin); % get tangential components
@@ -155,27 +164,27 @@ for diplop=1:size(dip.pos,1)
       all_costfun_val(i) = costfun_val;
     end
     [junk, min_ind] = min(all_costfun_val);
-    
+
     optim_options = optimset('Display', 'final', 'TolX', 1e-3, 'Display', 'off');
     [opt_angle, fval, exitflag, output] = fminsearch(@SAM_costfun, all_angles(min_ind), optim_options, vox_pos, tanu, tanv, lf, all_cov, inv_cov, noise_cov);
     MDip        = settang(opt_angle, tanu, tanv);
     MagDip      = sqrt(dot(MDip,MDip));
     opt_vox_or  = (MDip/MagDip)';
-    
+
     % figure
     % plot(all_angles, all_costfun_val, 'k-'); hold on; plot(opt_angle, fval, 'g*')
     % drawnow
-    
+
   else
     % Use Sekihara's method of finding the optimum orientation
     %
     % Sekihara et al. Asymptotic SNR of scalar and vector minimum-variance
     % beamformers for neuromagnetic source reconstruction. IEEE Trans. Biomed.
     % Eng, No 10, Vol. 51, 2004, pp 1726-1734
-    
+
     % Compute the lead field for 3 orthogonal components
     L = lf; % see above
-    
+
     switch fixedori
       case 'gareth'
         % Compute Y1 = L' R(^-1) * L
@@ -184,10 +193,10 @@ for diplop=1:size(dip.pos,1)
         Y2 = L' * (inv_cov * inv_cov) * L;
         % find the eigenvalues and eigenvectors
         [U,S] = eig(Y2,Y1);
-        
+
       case 'robert'
         [U,S] = svd(real(pinv(L' * inv_cov * L)));
-        
+
       case 'stephen'
         %% Stephen Robinsons stuff? this did not work!
         L2_inv = inv(L2);
@@ -197,28 +206,28 @@ for diplop=1:size(dip.pos,1)
         Y = L2_inv*U;
         Y = Y./sqrt(dot(Y,Y));
         U = Y;
-        
+
       otherwise
         ft_error('unknown orimethod');
     end
-    
+
     % The optimum orientation is the eigenvector that corresponds to the
     % smallest eigenvalue.
-    
+
     % Double check that this is the case, because for single sphere head
     % model, one of the eigenvectors corresponds to the radial direction,
     % giving lead fields that are zero (to within machine precission).
     % The eigenvalue corresponding to this eigenvector can actually be
     % the smallest and can give the optimum (but wrong) Z-value!)
-    
+
     ori1 = U(:,1); ori1 = ori1/norm(ori1);
     ori2 = U(:,2); ori2 = ori2/norm(ori2);
     % ori3 = U(:,3); ori3 = ori3/norm(ori3);
-    
+
     L1 = L * ori1;
     L2 = L * ori2;
     % L3 = L * ori3;
-    
+
     if (norm(L1)/norm(L2)) < 1e-6
       % the first orientation seems to be the silent orientation
       % use the second orientation instead
@@ -226,14 +235,14 @@ for diplop=1:size(dip.pos,1)
     else
       opt_vox_or = ori1;
     end
-    
+
   end, % if fixedori
-  
+
   % compute the spatial filter for the optimal source orientation
   gain        = lf * opt_vox_or;
   trgain_invC = gain' * inv_cov;
   SAMweights  = trgain_invC / (trgain_invC * gain);
-  
+
   % remember all output details for this dipole
   dipout.pow(diplop)    = SAMweights * all_cov * SAMweights';
   dipout.noise(diplop)  = SAMweights * noise_cov * SAMweights';
@@ -242,7 +251,7 @@ for diplop=1:size(dip.pos,1)
   if ~isempty(dat)
     dipout.mom{diplop} = SAMweights * dat;
   end
-  
+
   ft_progress(diplop/size(dip.pos,1), 'scanning grid %d/%d\n', diplop, size(dip.pos,1));
 end % for each dipole position
 

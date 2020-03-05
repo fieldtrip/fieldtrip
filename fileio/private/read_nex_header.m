@@ -27,7 +27,7 @@ function [hdr] = read_nex_header(filename)
 %
 % $Id$
 
-fid = fopen(filename, 'r', 'ieee-le');
+fid = fopen_or_error(filename, 'r', 'ieee-le');
 
 % reading the file header
 filheader.magicnumber     = fread(fid,4,'uint8=>char')';

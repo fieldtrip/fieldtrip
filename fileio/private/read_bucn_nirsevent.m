@@ -33,7 +33,7 @@ function [event] = read_bucn_nirsevent(filename)
 %
 % $Id$
 
-fid = fopen(filename, 'r');
+fid = fopen_or_error(filename, 'r');
 
 % read the first line
 line1 = textscan(fid,         '%[^\n]',1);

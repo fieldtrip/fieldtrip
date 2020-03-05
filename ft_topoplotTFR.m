@@ -44,6 +44,7 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 %                            'SouthOutside'       outside bottom
 %                            'EastOutside'        outside right
 %                            'WestOutside'        outside left
+%   cfg.colorbartext       =  string indicating the text next to colorbar
 %   cfg.interplimits       = limits for interpolation (default = 'head')
 %                            'electrodes' to furthest electrode
 %                            'head' to edge of head
@@ -61,7 +62,7 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 %                            'auto': date, xparam, yparam and parameter limits are printed
 %                            'xlim': only xparam limits are printed
 %                            'ylim': only yparam limits are printed
-%   cfg.commentpos         = string or two numbers, position of comment (default 'leftbottom')
+%   cfg.commentpos         = string or two numbers, position of the comment (default = 'leftbottom')
 %                            'lefttop' 'leftbottom' 'middletop' 'middlebottom' 'righttop' 'rightbottom'
 %                            'title' to place comment as title
 %                            'layout' to place comment as specified for COMNT in layout
@@ -112,10 +113,11 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
+%   cfg.inputfile   =  ...
 % If you specify this option the input data will be read from a *.mat
 % file on disk. This mat files should contain only a single variable named 'data',
 % corresponding to the input structure. For this particular function, the input should be
-% structured as a cell array.
+% structured as a cell-array.
 %
 % See also FT_TOPOPLOTER, FT_TOPOPLOTIC, FT_SINGLEPLOTTFR, FT_MULTIPLOTTFR, FT_PREPARE_LAYOUT
 
@@ -187,29 +189,23 @@ if ft_abort
   return
 end
 
-% make sure figure window titles are labeled appropriately, pass this onto the actual
-% plotting function. if we don't specify this, the window will be called
-% 'ft_topoplotTFR', which is confusing to the user
-cfg.funcname = mfilename;
-if nargin>1
-  if ~isfield(cfg, 'dataname')
-    cfg.dataname = [];
-    for k = 2:nargin
-      if isstruct(varargin{k-1})
-        if ~isempty(inputname(k))
-          cfg.dataname{k-1} = inputname(k);
-        else
-          cfg.dataname{k-1} = ['data' num2str(k-1,'%02d')];
-        end
-      end
-    end
-  end
-else  % data provided through cfg.inputfile
-  cfg.dataname = cfg.inputfile;
+% this is needed for the figure title
+if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
+  dataname = cfg.dataname;
+elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
+elseif nargin>1
+  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
+else
+  dataname = {};
 end
 
+% make sure figure window titles are labeled appropriately, pass this onto the actual plotting function
+cfg.funcname = mfilename;
+cfg.dataname = dataname;
+
 % prepare the layout, this should be done only once
-tmpcfg     = removefields(cfg, {'inputfile', 'style'});
+tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
 cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
 
 % call the common function that is shared between ft_topoplotER and ft_topoplotTFR
@@ -219,12 +215,17 @@ cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
 cfg = removefields(cfg, 'funcname');
 
 % do the general cleanup and bookkeeping at the end of the function
-% this will replace the ft_topoplotTFR callinfo with that of ft_topoplotER
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous varargin
 ft_postamble provenance
+ft_postamble savefig
 
-if ~nargout
+% add a menu to the figure, but only if the current figure does not have subplots
+menu_fieldtrip(gcf, cfg, false);
+
+if ~ft_nargout
+  % don't return anything
   clear cfg
 end
+

@@ -28,7 +28,8 @@ function [data] = ft_megrealign(cfg, data)
 %   cfg.headmodel   = structure, see FT_PREPARE_HEADMODEL
 %
 % A source model (i.e. a superficial layer with distributed sources) can be
-% constructed from a headshape file, or from the volume conduction model
+% constructed from a headshape file, or from inner surface of the volume conduction
+% model using FT_PREPARE_SOIURCEMODEL using the following options
 %   cfg.spheremesh  = number of dipoles in the source layer (default = 642)
 %   cfg.inwardshift = depth of the source layer relative to the headshape
 %                     surface or volume conduction model (no default
@@ -112,11 +113,12 @@ if ft_abort
 end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed',     {'plot3d',      'feedback'});
-cfg = ft_checkconfig(cfg, 'renamedval',  {'headshape',   'headmodel', []});
-cfg = ft_checkconfig(cfg, 'required',    {'inwardshift', 'template'});
-cfg = ft_checkconfig(cfg, 'renamed',     {'hdmfile',     'headmodel'});
-cfg = ft_checkconfig(cfg, 'renamed',     {'vol',         'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'plot3d',      'feedback'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'headshape',   'headmodel', []});
+cfg = ft_checkconfig(cfg, 'required',   {'inwardshift', 'template'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'hdmfile',     'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'vol',         'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'grid',        'sourcemodel'});
 
 % set the default configuration
 cfg.headshape  = ft_getopt(cfg, 'headshape', []);
@@ -138,9 +140,13 @@ data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo',
 pertrial = all(ismember({'nasX';'nasY';'nasZ';'lpaX';'lpaY';'lpaZ';'rpaX';'rpaY';'rpaZ'}, data.label));
 
 % put the low-level options pertaining to the dipole grid in their own field
-cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.grid.tight by the subsequent createsubcfg
-cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.grid.unit by the subsequent createsubcfg
-cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
+cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.sourcemodel.unit by the subsequent createsubcfg
+
+% put the low-level options pertaining to the sourcemodel in their own field
+cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
+% move some fields from cfg.sourcemodel back to the top-level configuration
+cfg = ft_checkconfig(cfg, 'createtopcfg', {'sourcemodel'});
 
 if isstruct(cfg.template)
   % this should be a cell-array
@@ -183,7 +189,7 @@ Ntrials = length(data.trial);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % construct the average template gradiometer array
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-template = struct([]); % initialize as empty structure
+template = struct([]); % initialize as 0x0 empty struct array with no fields
 for i=1:length(cfg.template)
   if ischar(cfg.template{i})
     fprintf('reading template sensor position from %s\n', cfg.template{i});
@@ -224,8 +230,8 @@ gradorig         = data.grad;  % this is needed later on for plotting. As of
 % other (in order to compute the projection matrix).
 [volold, data.grad] = prepare_headmodel(volcfg);
 
-% note that it is neccessary to keep the two volume conduction models
-% seperate, since the single-shell Nolte model contains gradiometer specific
+% note that it is necessary to keep the two volume conduction models
+% separate, since the single-shell Nolte model contains gradiometer specific
 % precomputed parameters. Note that this is not guaranteed to result in a
 % good projection for local sphere models.
 volcfg.grad    = template.grad;
@@ -242,12 +248,12 @@ else
 end
 
 % copy all options that are potentially used in ft_prepare_sourcemodel
-tmpcfg            = keepfields(cfg, {'grid', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'showcallinfo'});
-tmpcfg.headmodel  = volold;
-tmpcfg.grad       = data.grad;
-% create the dipole grid on which the data will be projected
-grid = ft_prepare_sourcemodel(tmpcfg);
-pos = grid.pos;
+tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo'});
+tmpcfg.headmodel = volold;
+tmpcfg.grad      = data.grad;
+% create the source positions on which the data will be projected
+sourcemodel = ft_prepare_sourcemodel(tmpcfg);
+pos = sourcemodel.pos;
 
 % sometimes some of the dipole positions are nan, due to problems with the headsurface triangulation
 % remove them to prevent problems with the forward computation
@@ -282,7 +288,7 @@ for i=1:Ntrials
     else
       %M    = rigidbodyJM(hmdat(:,1))
       M    = ft_headcoordinates(hmdat(1:3,1),hmdat(4:6,1),hmdat(7:9,1));
-      grad = ft_transform_sens(M, data.grad);
+      grad = ft_transform_geometry(M, data.grad);
     end
 
     volcfg.grad = grad;
@@ -334,11 +340,11 @@ if strcmp(cfg.feedback, 'yes')
   Y = [pos1(:,2) pos2(:,2)]';
   Z = [pos1(:,3) pos2(:,3)]';
 
-  % show figure with old an new helmets, volume model and dipole grid
+  % show figure with old an new helmets, volume model and source positions
   figure
   hold on
-  ft_plot_vol(volold);
-  plot3(grid.pos(:,1),grid.pos(:,2),grid.pos(:,3),'b.');
+  ft_plot_headmodel(volold);
+  plot3(sourcemodel.pos(:,1),sourcemodel.pos(:,2),sourcemodel.pos(:,3),'b.');
   plot3(pos1(:,1), pos1(:,2), pos1(:,3), 'r.') % original positions
   plot3(pos2(:,1), pos2(:,2), pos2(:,3), 'g.') % template positions
   line(X,Y,Z, 'color', 'black');

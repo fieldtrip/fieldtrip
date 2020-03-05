@@ -1,10 +1,8 @@
 function test_bug1351
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST test_bug1315
-% TEST ft_topoplotER ft_topoplotTFR ft_checksize ft_checkconfig
+% DEPENDENCY ft_topoplotER ft_topoplotTFR ft_checksize ft_checkconfig
 
 % load the test data of just two subjects
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1351.mat'));

@@ -1,11 +1,11 @@
 function test_bug2232
 
-% MEM 1gb
+% MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST gifti
-% TEST ft_read_headshape
-% TEST ft_read_atlas
+% DEPENDENCY gifti
+% DEPENDENCY ft_read_headshape
+% DEPENDENCY ft_read_atlas
 
 ft_hastoolbox('gifti', 1);
 

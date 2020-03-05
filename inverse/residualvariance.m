@@ -33,7 +33,7 @@ feedback = ft_getopt(varargin, 'feedback', 'text');
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfield(dip, 'inside')
-  dip.inside = ft_inside_vol(dip.pos, headmodel);
+  dip.inside = ft_inside_headmodel(dip.pos, headmodel);
 end
 
 if any(dip.inside>1)
@@ -55,6 +55,10 @@ if isfield(dip, 'mom')
 end
 if isfield(dip, 'subspace')
   dip.subspace = dip.subspace(originside);
+end
+
+if isfield(dip, 'leadfield')
+  dip.leadfield = dip.leadfield(originside);
 end
 
 if isfield(dip, 'subspace')

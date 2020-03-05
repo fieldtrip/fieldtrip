@@ -12,11 +12,14 @@ function [mri] = align_fsaverage2mni(mri)
 % with mni       we mean MNI152, i.e. the template used in SPM
 %
 % See http://freesurfer.net/fswiki/CoordinateSystems
+%
+% See also ALIGN_CTF2ACPC, ALIGN_NEUROMAG2ACPC
 
 fsaverage2mni = [
    0.9975   -0.0073    0.0176   -0.0429
    0.0146    1.0009   -0.0024    1.5496
   -0.0130   -0.0093    0.9971    1.1840
+   0.0000    0.0000    0.0000    1.0000
   ];
 
 assert(strcmp(mri.coordsys, 'fsaverage'), 'incorrect input coordinate system ''%s''', mri.coordsys);

@@ -20,7 +20,7 @@ function h = ft_plot_crosshair(pos, varargin)
 % Example
 %   ft_plot_crosshair([0.5 0.5], 'color', 'r')
 %
-% See also TEXT, LINE
+% See also FT_PLOT_BOX, FT_PLOT_LINE, TEXT, LINE
 
 % Copyright (C) 2003-2017, Robert Oostenveld
 %

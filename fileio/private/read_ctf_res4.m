@@ -41,12 +41,10 @@ function [hdr] = read_ctf_res4(fname)
 % read header information
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-fid = fopen(fname,'r','ieee-be');
-
-% Check if header file exist
-if fid == -1
-  errMsg = strcat('Could not open header file:',fname);
-  ft_error(errMsg);
+try
+  fid = fopen_or_error(fname,'r','ieee-be');
+catch err
+  ft_error('Cound not open header file: %s', err.message);
 end
 
 % First 8 bytes contain filetype, check is fileformat is correct.
@@ -113,10 +111,10 @@ for i=1:no_channels,
   temp=fread(fid,32,'uint8')';
   temp(find(temp<32 )) = ' ';       % remove non-printable characters
   temp(find(temp>126)) = ' ';       % remove non-printable characters
-  endstr = findstr(temp, '-'); temp(endstr:end) = ' ';  % cut off at '-'
-  endstr = findstr(temp, ' '); temp(endstr:end) = ' ';  % cut off at ' '
+  endstr = strfind(temp, '-'); temp(endstr:end) = ' ';  % cut off at '-'
+  endstr = strfind(temp, ' '); temp(endstr:end) = ' ';  % cut off at ' '
   chan_name(i,:) = char(temp);      % as char array
-  chan_label{i}  = deblank(char(temp)); % as cell array
+  chan_label{i}  = deblank(char(temp)); % as cell-array
 end %for
 
 % pre-allocate some memory space

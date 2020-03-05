@@ -35,7 +35,7 @@ for i = chnum
             subsindx = findstr(prop,'.');
             if ~isempty(subsindx)
                 subtag = prop(1:subsindx-1); % Get main-field
-                subsubs = prop(subsindx+1:end);% Get subfield
+                subsubs = prop(subsindx+1:end); % Get subfield
                 ntag = find(strcmpi(taglist(:),subtag));            
                 if ~isempty(ntag),                
                     subtagstruct = getfield(t.handle(i),taglist{ntag}); %get substruct

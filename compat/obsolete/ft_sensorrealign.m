@@ -64,10 +64,8 @@ function [elec_realigned] = ft_sensorrealign(cfg, elec_original)
 %   cfg.feedback       = 'yes' or 'no' (default = 'no')
 %
 % The EEG or MEG sensor positions can be present in the second input argument or can be specified as
-%   cfg.elec          = structure with electrode positions, see FT_DATATYPE_SENS
-%   cfg.grad          = structure with gradiometer definition, see FT_DATATYPE_SENS
-%   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
-%   cfg.gradfile      = name of file containing the gradiometer definition, see FT_READ_SENS
+%   cfg.elec          = structure with electrode positions or filename, see FT_READ_SENS
+%   cfg.grad          = structure with gradiometer definition or filename, see FT_READ_SENS
 %
 % To realign the sensors using the fiducials, the target has to contain the
 % three template fiducials, e.g.
@@ -115,7 +113,7 @@ function [elec_realigned] = ft_sensorrealign(cfg, elec_original)
 % DEPRECATED by roboos on 11 November 2015
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1830
 % support for this functionality can be removed mid 2016
-warning('FT_SENSORREALIGN is deprecated, please use FT_ELECTRODEREALIGN instead.')
+ft_warning('FT_SENSORREALIGN is deprecated, please use FT_ELECTRODEREALIGN instead.')
 
 % these are used by the ft_preamble/ft_postamble function and scripts
 ft_revision = '$Id$';

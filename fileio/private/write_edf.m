@@ -11,9 +11,9 @@ function write_edf(filename, hdr, data)
 % is less than 1s, which some EDF reading programs might complain about. At the
 % same time, there is an upper limit of how big (in bytes) a record should be,
 % which we could easily violate if we write the whole data as *one* record.
-  
+
 % Copyright (C) 2010, Stefan Klanke
-% 
+%
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
@@ -32,32 +32,30 @@ function write_edf(filename, hdr, data)
 %
 % $Id$
 
-[nChans,N] = size(data);
+[nChans,nSamples] = size(data);
 if hdr.nChans ~= nChans
   error 'Data dimension does not match header information';
 end
-fSample = real(hdr.Fs(1)); % make sure this is a scalar + real
 
 if nChans > 9999
   error 'Cannot write more than 9999 channels to an EDF file.';
 end
-if N > 99999999
+if nSamples > 99999999
   error 'Cannot write more than 99999999 data records (=samples) to an EDF file.';
 end
 
 labels = char(32*ones(nChans, 16));
 % labels
-for n=1:nChans
-  ln = length(hdr.label{n});
+for i=1:nChans
+  ln = length(hdr.label{i});
   if ln > 16
-    fprintf(1, 'Warning: truncating label %s to %s\n', hdr.label{n}, hdr.label{n}(1:16));
-    ln = 16;
+    ft_warning('Truncating label %s to %s\n', hdr.label{i}, hdr.label{i}(1:16));
   end
-  labels(n,1:ln) = hdr.label{n}(1:ln);
+  labels(i,1:ln) = hdr.label{i}(1:ln);
 end
 
 if ~isreal(data)
-  error 'Cannot write complex-valued data.';
+  ft_error('Cannot write complex-valued data');
 end
 
 scale = max(abs(data), [], 2);
@@ -82,16 +80,39 @@ minV = min(data, [], 2);
 %   data = int16(data);
 % end
 
+% write in data blocks of approximately one second, with an integer number of samples
+blocksize = round(hdr.Fs);
+nBlocks = floor(nSamples/blocksize);
+
 digMin = sprintf('%-8i', minV);
 digMax = sprintf('%-8i', maxV);
-physMin = sprintf('%-8g', double(minV) ./ scale);
-physMax = sprintf('%-8g', double(maxV) ./ scale);
-  
-fid = fopen(filename, 'wb', 'ieee-le');
+
+% these are tricky to print, since the '-' or 'e' messes up the width
+physMin{1} = sprintf('%-8.7g', double(minV) ./ scale);
+physMin{2} = sprintf('%-8.6g', double(minV) ./ scale);
+physMin{3} = sprintf('%-8.5g', double(minV) ./ scale);
+physMin{4} = sprintf('%-8.4g', double(minV) ./ scale);
+physMin{5} = sprintf('%-8.3g', double(minV) ./ scale);
+physMin{6} = sprintf('%-8.2g', double(minV) ./ scale);
+physMin{7} = sprintf('%-8.1g', double(minV) ./ scale);
+% take the first (most detailled) one that fits within the character space
+physMin = physMin{find(cellfun(@length, physMin)==nChans*8, 1, 'first')};
+
+physMax{1} = sprintf('%-8.7g', double(maxV) ./ scale);
+physMax{2} = sprintf('%-8.6g', double(maxV) ./ scale);
+physMax{3} = sprintf('%-8.5g', double(maxV) ./ scale);
+physMax{4} = sprintf('%-8.4g', double(maxV) ./ scale);
+physMax{5} = sprintf('%-8.3g', double(maxV) ./ scale);
+physMax{6} = sprintf('%-8.2g', double(maxV) ./ scale);
+physMax{7} = sprintf('%-8.1g', double(maxV) ./ scale);
+% take the first (most detailled) one that fits within the character space
+physMax = physMax{find(cellfun(@length, physMax)==nChans*8, 1, 'first')};
+
+fid = fopen_or_error(filename, 'wb', 'ieee-le');
 % first write fixed part
 fprintf(fid, '0       ');   % version
 fprintf(fid, '%-80s', '<no patient info>');
-fprintf(fid,'%-80s', '<no local recording info>');
+fprintf(fid, '%-80s', '<no local recording info>');
 
 c = clock;
 fprintf(fid, '%02i.%02i.%02i', c(3), c(2), mod(c(1),100)); % date as dd.mm.yy
@@ -99,8 +120,8 @@ fprintf(fid, '%02i.%02i.%02i', c(4), c(5), round(c(6))); % time as hh.mm.ss
 
 fprintf(fid, '%-8i', 256*(1+nChans));  % number of bytes in header
 fprintf(fid, '%44s', ' '); % reserved (44 spaces)
-fprintf(fid, '%-8i', N);  % number of data records
-fprintf(fid, '%8f', 1/hdr.Fs);  % duration of data record (=1/Fs)
+fprintf(fid, '%-8i', nBlocks); % number of data records
+fprintf(fid, '%8f', blocksize/hdr.Fs); % duration of data record in seconds
 fprintf(fid, '%-4i', nChans);  % number of signals = channels
 
 fwrite(fid, labels', 'char*1'); % labels
@@ -112,10 +133,16 @@ fwrite(fid, digMin', 'char*1'); % digital minimum
 fwrite(fid, digMax', 'char*1'); % digital maximum
 fwrite(fid, 32*ones(80,nChans), 'uint8'); % prefiltering (all spaces)
 for k=1:nChans
-  fprintf(fid, '%-8i', 1); % 1 sample pre record (each channel)
+  fprintf(fid, '%-8i', blocksize); % samples per record (each channel)
 end
-fwrite(fid, 32*ones(32,nChans), 'uint8'); % reserverd (32 spaces / channel)
+fwrite(fid, 32*ones(32,nChans), 'uint8'); % reserved (32 spaces / channel)
 
 % now write data
-fwrite(fid, data, 'int16');
+begsample = 1;
+endsample = blocksize;
+while endsample<=nSamples
+  fwrite(fid, data(:,begsample:endsample)', 'int16');
+  begsample = begsample+blocksize;
+  endsample = endsample+blocksize;
+end
 fclose(fid);

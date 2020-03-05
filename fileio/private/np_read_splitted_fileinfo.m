@@ -27,10 +27,7 @@ if d(1).bytes==0,
     ft_error('File size = 0 KB.');
 end
 
-fid=fopen(filename,'r');
-if fid==-1,
-    ft_error(['Unable to open file "' filename '". Error code: ' ferror(fid)]);
-end
+fid=fopen_or_error(filename,'r');
 
 status=fseek(fid,16,'bof');
 if status~=0,
@@ -228,9 +225,10 @@ fclose(fid);
 if strcmp(pa,''),
     pa=pwd;
 end
-fid=fopen([pa filesep fn(1:14) '.EE_'],'r');
-if fid==-1,
-    ft_error('Unable to read setup (marker 70) in *.EE_ file.');
+try
+    fid=fopen_or_error([pa filesep fn(1:14) '.EE_'],'r');
+catch err
+    ft_error(sprintf('Unable to read setup (marker 70) in *.EE_ file: %s', err.message));
 end
 s=fscanf(fid,'%c',inf);
 fclose(fid);
@@ -249,9 +247,10 @@ else
     % es muss 16518:... benutzt werden
     % nur setup kann ermittelt werden aus der letzten
     % Sekundärmontage
-    fid=fopen([filename(1:length(filename)-1) '_'],'r');
-    if fid==-1,
-        ft_error('Unable to read setup (marker 16518) in *.EE_ file.');
+    try
+        fid=fopen_or_error([filename(1:length(filename)-1) '_'],'r');
+    catch
+        ft_error('Unable to read setup (marker 16518) in *.EE_ file: %s', err.message);
     end
     s=fscanf(fid,'%c',inf);
     fclose(fid);
@@ -310,9 +309,10 @@ np_info.duration=np_info.N/np_info.fa;
 %
 % neue Version: Auslesen der Zeit aus der EE_ Datei
 %
-fid=fopen([filename(1:length(filename)-1) '_'],'r');
-if fid==-1,
-    ft_error('Unable to read primary setup in *.EE_ file.');
+try
+    fid=fopen_or_error([filename(1:length(filename)-1) '_'],'r');
+catch err
+    ft_error('Unable to read primary setup in *.EE_ file: %s', err.message);
 end
 s=fscanf(fid,'%c',inf);
 fclose(fid);
@@ -356,9 +356,10 @@ np_info.PhysMax=zeros(1,np_info.K);
 if (nargin==2) && (strcmp(upper(option),'NO_MINMAX'))
     return;
 end
-fid=fopen([np_info.pathname filesep np_info.filename],'r');
-if fid==-1,
-    ft_error('Error while opening *.EEG file (read PhysMinMax).');
+try
+    fid=fopen_or_error([np_info.pathname filesep np_info.filename],'r');
+catch err
+    ft_error('Error while opening *.EEG file (read PhysMinMax): %s', err.message);
 end
 status=fseek(fid,np_info.fp_data,'bof');
 if status~=0,

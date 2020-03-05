@@ -9,9 +9,9 @@ function [freq] = ft_freqbaseline(cfg, freq)
 %   cfg.baseline     = [begin end] (default = 'no'), alternatively an
 %                      Nfreq x 2 matrix can be specified, that provides
 %                      frequency specific baseline windows.
-%   cfg.baselinetype = 'absolute', 'relative', 'relchange', 'normchange' or 'db' (default = 'absolute')
+%   cfg.baselinetype = 'absolute', 'relative', 'relchange', 'normchange', 'db', 'vssum' or 'zscore' (default = 'absolute')
 %   cfg.parameter    = field for which to apply baseline normalization, or
-%                      cell array of strings to specify multiple fields to normalize
+%                      cell-array of strings to specify multiple fields to normalize
 %                      (default = 'powspctrm')
 %
 % See also FT_FREQANALYSIS, FT_TIMELOCKBASELINE, FT_FREQCOMPARISON,
@@ -74,10 +74,10 @@ cfg.parameter    =  ft_getopt(cfg, 'parameter', 'powspctrm');
 
 % check validity of input options
 cfg =               ft_checkopt(cfg, 'baseline', {'char', 'doublevector', 'doublematrix'});
-cfg =               ft_checkopt(cfg, 'baselinetype', 'char', {'absolute', 'relative', 'relchange', 'normchange', 'db', 'vssum'});
+cfg =               ft_checkopt(cfg, 'baselinetype', 'char', {'absolute', 'relative', 'relchange', 'normchange', 'db', 'vssum','zscore'});
 cfg =               ft_checkopt(cfg, 'parameter', {'char', 'charcell'});
 
-% make sure cfg.parameter is a cell array of strings
+% make sure cfg.parameter is a cell-array of strings
 if (~isa(cfg.parameter, 'cell'))
   cfg.parameter = {cfg.parameter};
 end
@@ -108,7 +108,7 @@ end
 
 % check if the field of interest is present in the data
 if (~all(isfield(freq, cfg.parameter)))
-  ft_error('cfg.parameter should be a string or cell array of strings referring to (a) field(s) in the freq input structure')
+  ft_error('cfg.parameter should be a string or cell-array of strings referring to (a) field(s) in the freq input structure')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -205,6 +205,9 @@ elseif (strcmp(baselinetype, 'normchange')) || (strcmp(baselinetype, 'vssum'))
   data = (data - meanVals) ./ (data + meanVals);
 elseif (strcmp(baselinetype, 'db'))
   data = 10*log10(data ./ meanVals);
+elseif (strcmp(baselinetype,'zscore'))
+    stdVals = repmat(nanstd(data(:,:,baselineTimes),1, 3), [1 1 size(data, 3)]);
+    data=(data-meanVals)./stdVals;
 else
   ft_error('unsupported method for baseline normalization: %s', baselinetype);
 end

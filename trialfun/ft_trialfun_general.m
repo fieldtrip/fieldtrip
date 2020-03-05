@@ -5,12 +5,12 @@ function [trl, event] = ft_trialfun_general(cfg)
 % by read_event. This function is independent of the dataformat
 %
 % The trialdef structure can contain the following specifications
-%   cfg.trialdef.eventtype  = 'string'
+%   cfg.trialdef.eventtype  = string
 %   cfg.trialdef.eventvalue = number, string or list with numbers or strings
 %   cfg.trialdef.prestim    = latency in seconds (optional)
 %   cfg.trialdef.poststim   = latency in seconds (optional)
 %
-% If you want to read all data from a continous file in segments, you can specify
+% If you want to read all data from a continuous file in segments, you can specify
 %    cfg.trialdef.triallength = duration in seconds (can be Inf)
 %    cfg.trialdef.ntrials     = number of trials
 %
@@ -24,7 +24,7 @@ function [trl, event] = ft_trialfun_general(cfg)
 %
 % See also FT_DEFINETRIAL, FT_PREPROCESSING
 
-% Copyright (C) 2005-2012, Robert Oostenveld
+% Copyright (C) 2005-2018, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -69,15 +69,22 @@ if isfield(cfg.trialdef, 'triallength')
   end
 end
 
-% default rejection parameter
-if ~isfield(cfg, 'eventformat'),  cfg.eventformat  = []; end
-if ~isfield(cfg, 'headerformat'), cfg.headerformat = []; end
-if ~isfield(cfg, 'dataformat'),   cfg.dataformat   = []; end
+% default file formats
+cfg.eventformat   = ft_getopt(cfg, 'eventformat');
+cfg.headerformat  = ft_getopt(cfg, 'headerformat');
+cfg.dataformat    = ft_getopt(cfg, 'dataformat');
 
-% read the header, contains the sampling frequency
-hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
+% get the header, among others for the sampling frequency
+if isfield(cfg, 'hdr')
+  ft_info('using the header from the configuration structure\n');
+  hdr = cfg.hdr;
+else
+  % read the header, contains the sampling frequency
+  ft_info('reading the header from ''%s''\n', cfg.headerfile);
+  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
+end
 
-% read the events
+% get the events
 if isfield(cfg, 'event')
   ft_info('using the events from the configuration structure\n');
   event = cfg.event;
@@ -92,7 +99,7 @@ if isfield(cfg.trialdef, 'triallength')
     % make one long trial with the complete continuous data in it
     trl = [1 hdr.nSamples*hdr.nTrials 0];
   elseif isinf(cfg.trialdef.ntrials)
-    % cut the continous data into as many segments as possible
+    % cut the continuous data into as many segments as possible
     nsamples = round(cfg.trialdef.triallength*hdr.Fs);
     trlbeg   = 1:nsamples:(hdr.nSamples*hdr.nTrials - nsamples + 1);
     trlend   = trlbeg + nsamples - 1;
@@ -203,9 +210,9 @@ for i=sel
   trlend = trlbeg + trldur;
   % add the beginsample, endsample and offset of this trial to the list
   % if all samples are in the dataset
-  if trlbeg>0 && trlend<=hdr.nSamples*hdr.nTrials,
+  if trlbeg>0 && trlend<=hdr.nSamples*hdr.nTrials
     trl = [trl; [trlbeg trlend trloff]];
-    if isnumeric(event(i).value),
+    if isnumeric(event(i).value)
       val = [val; event(i).value];
     elseif ischar(event(i).value) && numel(event(i).value)>1 && (event(i).value(1)=='S'|| event(i).value(1)=='R')
       % on brainvision these are called 'S  1' for stimuli or 'R  1' for responses
@@ -223,7 +230,7 @@ end
 
 if usegui && ~isempty(trl)
   % This complicated line just computes the trigger times in seconds and
-  % converts them to a cell array of strings to use in the GUI
+  % converts them to a cell-array of strings to use in the GUI
   eventstrings = cellfun(@num2str, mat2cell((trl(:, 1)- trl(:, 3))./hdr.Fs , ones(1, size(trl, 1))), 'UniformOutput', 0);
   
   % Let us start with handling at least the completely unsegmented case
@@ -334,27 +341,5 @@ else
     trialdef.eventtype  = settings(selection,1);
     trialdef.eventvalue = settings(selection,2);
   end
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION returns true if x is a member of array y, regardless of the class of x and y
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function s = ismatch(x, y)
-if isempty(x) || isempty(y)
-  s = false;
-elseif ischar(x) && ischar(y)
-  s = strcmp(x, y);
-elseif isnumeric(x) && isnumeric(y)
-  s = ismember(x, y);
-elseif ischar(x) && iscell(y)
-  y = y(strcmp(class(x), cellfun(@class, y, 'UniformOutput', false)));
-  s = ismember(x, y);
-elseif isnumeric(x) && iscell(y) && all(cellfun(@isnumeric, y))
-  s = false;
-  for i=1:numel(y)
-    s = s || ismember(x, y{i});
-  end
-else
-  s = false;
 end
 

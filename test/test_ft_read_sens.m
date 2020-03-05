@@ -1,9 +1,9 @@
 function test_ft_read_sens(datainfo, writeflag, version)
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:20:00
 
-% TEST ft_read_sens
+% DEPENDENCY ft_read_sens
 
 % writeflag determines whether the output should be saved to disk
 % version determines the output directory
@@ -18,16 +18,16 @@ if nargin<3
   version = 'latest';
 end
 
-[dummy,ftpath] = ft_version();
+[ftver, ftpath] = ft_version;
 addpath([ftpath '/test']);
 
 % make a subselection of the MEG datasets
-use      = match_str({datainfo.datatype},{'bti148' 'bti248' 'bti248grad' 'ctf151' 'ctf275' 'itab153' 'neuromag122' 'neuromag306'});
+use      = match_str({datainfo.datatype}, {'bti148' 'bti248' 'bti248grad' 'ctf151' 'ctf275' 'itab153' 'neuromag122' 'neuromag306'});
 datainfo = datainfo(use);
 
 for k = 1:numel(datainfo)
   dataset  = datainfo(k);
-  filename =  [dataset.origdir,'original/',dataset.type,'/',dataset.datatype,'/',dataset.filename];
+  filename = fullfile(dataset.origdir, 'original', dataset.type, dataset.datatype, dataset.filename);
   
   % get sensor information
   if ~isempty(dataset.dataformat)
@@ -42,3 +42,16 @@ for k = 1:numel(datainfo)
   end
   
 end % for
+
+% read all the electrode files
+d = dir(dccnpath('/home/common/matlab/fieldtrip/data/test/original/electrodes/'));
+for i=1:numel(d)
+  if d(i).isdir && numel(d(i).name)>1
+    f = dir(fullfile(d(i).folder, d(i).name));
+    f = f(~[f.isdir]);
+    f = f(~startsWith({f.name}, '.')); % exclude files like .DS_Store
+    for j=1:numel(f)
+      elec = ft_read_sens(fullfile(f(j).folder, f(j).name));
+    end
+  end
+end

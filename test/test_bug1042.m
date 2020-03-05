@@ -1,17 +1,11 @@
 function test_bug1042
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:45:00
-
-% TEST test_bug1042 test_bug686
-% TEST ft_convert_units ft_prepare_headmodel ft_compute_leadfield ft_prepare_sourcemodel ft_headmodel_openmeeg headsurface
-
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
+% DEPENDENCY ft_convert_units ft_prepare_headmodel ft_compute_leadfield ft_prepare_sourcemodel ft_headmodel_openmeeg
 
 % create sensors in cm
-[pnt, tri] = icosahedron162;
+[pnt, tri] = mesh_sphere(162);
 pnt = pnt .* 10; % convert to cm
 sel = find(pnt(:,3)>0);
 
@@ -62,11 +56,9 @@ for k = 1:numel(conductivity)
   cfg.method = 'singlesphere';
   eegvol_singlesphere = ft_prepare_headmodel(cfg, bnd);
   
+  % since there is only one surface, this method will result in 4 identical spheres
   cfg.method = 'concentricspheres';
   eegvol_concentricspheres = ft_prepare_headmodel(cfg, bnd);
-  % HACK otherwise it will call eeg_leadfield1 instead of eeg_leadfield4
-  eegvol_concentricspheres.r    = repmat(eegvol_concentricspheres.r,    1, 4);
-  eegvol_concentricspheres.cond = repmat(eegvol_concentricspheres.cond, 1, 4);
   
   bnd.pnt = pnt;
   bnd.tri = tri;
@@ -195,7 +187,7 @@ units = {
   'mm'
   };
 
-pos = {
+dippos = {
   [0 0 0.07]
   [0 0 7]
   [0 0 70]
@@ -208,9 +200,9 @@ for k = 1:numel(conductivity)
   for i=1:length(eegvol)
     for j=1:length(units)
       cfg = [];
-      cfg.vol  = eval(sprintf('%s_%s(%d)', eegvol{i}, units{j}, k));
+      cfg.headmodel = eval(sprintf('%s_%s(%d)', eegvol{i}, units{j}, k));
       cfg.elec = eval(sprintf('elec_%s', units{j}));
-      cfg.grid.pos = pos{j};
+      cfg.sourcemodel.pos = dippos{j};
       grid = ft_prepare_leadfield(cfg);
       eeg_leadfield{i,j,k} = grid.leadfield{1};
     end
@@ -222,10 +214,10 @@ meg_leadfield = {};
 for k = 1:numel(conductivity)
   for i=1:length(megvol)
     for j=1:length(units)
-      cfg      = [];
-      cfg.vol  = eval(sprintf('%s_%s(%d)', megvol{i}, units{j}, k));
+      cfg = [];
+      cfg.headmodel = eval(sprintf('%s_%s(%d)', megvol{i}, units{j}, k));
       cfg.grad = eval(sprintf('grad_%s', units{j}));
-      cfg.grid.pos = pos{j};
+      cfg.sourcemodel.pos = dippos{j};
       grid = ft_prepare_leadfield(cfg);
       meg_leadfield{i,j,k} = grid.leadfield{1};
     end

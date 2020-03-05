@@ -6,7 +6,7 @@ function display(this)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % Guillaume Flandin
-% $Id$
+% $Id: display.m 4182 2011-02-01 12:29:09Z guillaume $
 
 display_name = inputname(1);
 if isempty(display_name)

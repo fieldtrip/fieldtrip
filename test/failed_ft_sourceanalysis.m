@@ -2,9 +2,7 @@ function [varargout] = test_ft_sourceanalysis(datainfo, writeflag, version, diag
 
 % MEM 4gb
 % WALLTIME 04:30:00
-
-% TEST test_ft_sourceanalysis
-% TEST ft_sourceanalysis ref_datasets
+% DEPENDENCY ft_sourceanalysis ref_datasets
 
 % writeflag determines whether the output should be saved to disk
 % version determines the output directory
@@ -55,13 +53,13 @@ sourcemodel_roi.pos = [0 0 5; 1 0 5; -1 0 5; 0 1 5];
 % for the test computations
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if false
-  
+
   set1 = {
     'sheet'
     'grid'
     'roi'
     };
-  
+
   set2 = {
     'freq_mtmfft_fourier_trl'
     'freq_mtmconvol_fourier_trl'
@@ -74,7 +72,7 @@ if false
     'timelock_cov'
     'timelock_cov_trl'
     };
-  
+
   set3 = {
     'DICS_keepall'
     'DICS_keepall_rawtrial'
@@ -106,7 +104,7 @@ if false
     'PCC_keepnothing_rawtrial'
     'PCC_refdip'
     };
-  
+
   i = 1;
   n = length(set1)*length(set2)*length(set3)
   for i1=1:length(set1)
@@ -119,10 +117,10 @@ if false
       end
     end
   end
-  
+
   % it requires manual intervention to update the list below
   keyboard
-  
+
 end % constructing all combinations
 
 % this script (in test/private) generates the list of allowed combinations
@@ -137,7 +135,7 @@ sel  = strcmp(type, 'meg');
 datainfo = datainfo(sel);
 
 for k = 1:numel(datainfo)
-  
+
   %%%%%%FIXME added by JM for the time being, neuromag306 with both a
   %%%%%%grad and an elec fails
   if strcmp(datainfo(k).datatype, 'neuromag306')
@@ -145,18 +143,18 @@ for k = 1:numel(datainfo)
   else
     removeelec = false;
   end
-  
+
   %     tmp = randperm(size(combination,1));
   %     combination = combination(tmp,:);
   %sel = find(strncmp(combination(:,2),'freq',4)&strncmp(combination(:,3),'MNE',3));
   %for j = sel(:)'%1:size(combination,1)
   for j = 1:size(combination,1)
     clear timelock freq data
-    
+
     sourcemodel        = combination{j,1};
     datarepresentation = combination{j,2};
     algorithm          = combination{j,3};
-    
+
     switch sourcemodel
       case 'sheet'
         grid = sourcemodel_sheet;
@@ -165,7 +163,7 @@ for k = 1:numel(datainfo)
       case 'roi'
         grid = sourcemodel_roi;
     end
-    
+
     switch datarepresentation(1)   % this starts with timelock or freq
       case 'f'
         inputfile = fullfile(datainfo(k).origdir,version,'freq',    datainfo(k).type,[datarepresentation '_' datainfo(k).datatype '.mat']);
@@ -178,12 +176,12 @@ for k = 1:numel(datainfo)
         data = timelock;
         sourcerepresentation = ['source_' sourcemodel '_' datarepresentation];
     end
-    
+
     if removeelec && isfield(data, 'elec')
       data = rmfield(data, 'elec');
     end
     testfunction = str2func(sprintf('sourceanalysis_%s', algorithm));
-    
+
     outputfile = fullfile(datainfo(k).origdir,version,'source',datainfo(k).type,[sourcerepresentation '_' algorithm '_' datainfo(k).datatype '.mat']);
     %try
     fprintf('----------------------------------------------------------------------------------------------------------\n');
@@ -192,7 +190,7 @@ for k = 1:numel(datainfo)
     fprintf('outputfile = %s\n', outputfile);
     fprintf('----------------------------------------------------------------------------------------------------------\n');
     fprintf('----------------------------------------------------------------------------------------------------------\n');
-    
+
     % execute the actual function that performs the computation
     %try
     source = testfunction(data, grid, headmodel);
@@ -211,7 +209,7 @@ for k = 1:numel(datainfo)
     %    keyboard;
     %  end
     %end
-    
+
     if writeflag
       save(outputfile, 'source');
     else
@@ -224,12 +222,12 @@ for k = 1:numel(datainfo)
         source = [];
         source.cfg = [];
       end
-      
+
       if isfield(sourcenew, 'cfg'), sourcenew = rmfield(sourcenew, 'cfg'); end% these are different, a.o. due to the callinfo
       source    = rmfield(source, 'cfg');
       if ~diagnosticsflag,
         [ok,msg] = isalmostequal(source, sourcenew,'reltol',1e-5);
-        
+
         if ~ok
           error('stored and computed data not identical: %s', msg{:});
         end
@@ -265,7 +263,7 @@ for k = 1:numel(datainfo)
         end
       end
     end
-    
+
     %         catch me
     %
     %             if strcmp(me.message, sprintf('assertion failed: the computed data are different from the data in file %s',outputfile))
@@ -280,7 +278,7 @@ for k = 1:numel(datainfo)
     %                 error(me.message);
     %             end
     %         end
-    
+
   end % combination
 end % datainfo
 
@@ -313,7 +311,7 @@ cfg.mne.keepleadfield = 'yes';
 cfg.mne.keepfilter    = 'yes';
 cfg.mne.lambda        = 1e4;
 cfg.headmodel         = headmodel;
-cfg.grid              = grid;
+cfg.sourcemodel              = grid;
 cfg.nanmean           = 'yes'; % for selectdata to average TFRs
 source = ft_sourceanalysis(cfg, data);
 
@@ -338,7 +336,7 @@ cfg.mne.keepleadfield = 'no';
 cfg.mne.keepfilter    = 'no';
 cfg.mne.lambda        = 1e4;
 cfg.headmodel         = headmodel;
-cfg.grid              = grid;
+cfg.sourcemodel              = grid;
 cfg.nanmean           = 'yes'; % for selectdata to average TFRs
 source = ft_sourceanalysis(cfg, data);
 
@@ -353,9 +351,9 @@ cfg.mne.lambda        = 1e4;
 cfg.mne.keepleadfield = 'yes';
 cfg.mne.keepfilter    = 'yes';
 cfg.headmodel         = headmodel;
-cfg.grid              = grid;
+cfg.sourcemodel              = grid;
 cfg.rawtrial          = 'yes';
-cfg.grid.filter       = source.avg.filter;
+cfg.sourcemodel.filter       = source.avg.filter;
 cfg.nanmean           = 'yes'; % for selectdata to average TFRs
 source = ft_sourceanalysis(cfg, data);
 
@@ -370,9 +368,9 @@ cfg.mne.lambda        = 1e4;
 cfg.mne.keepleadfield = 'no';
 cfg.mne.keepfilter    = 'no';
 cfg.headmodel         = headmodel;
-cfg.grid              = grid;
+cfg.sourcemodel              = grid;
 cfg.rawtrial          = 'yes';
-cfg.grid.filter       = source.avg.filter;
+cfg.sourcemodel.filter       = source.avg.filter;
 cfg.nanmean           = 'yes'; % for selectdata to average TFRs
 source = ft_sourceanalysis(cfg, data);
 
@@ -389,7 +387,7 @@ cfg.lcmv.keepfilter    = 'yes';
 cfg.lcmv.keepcov       = 'yes';
 cfg.lcmv.lambda        = '5%';
 cfg.headmodel          = headmodel;
-cfg.grid               = grid;
+cfg.sourcemodel               = grid;
 source = ft_sourceanalysis(cfg, data);
 
 function source = sourceanalysis_LCMV_keepnothing(data, grid, headmodel)
@@ -401,7 +399,7 @@ cfg.lcmv.keepfilter    = 'no';
 cfg.lcmv.keepcov       = 'no';
 cfg.lcmv.lambda        = '5%';
 cfg.headmodel          = headmodel;
-cfg.grid               = grid;
+cfg.sourcemodel               = grid;
 source = ft_sourceanalysis(cfg, data);
 
 function source = sourceanalysis_LCMV_keepall_rawtrial(data, grid, headmodel)
@@ -416,9 +414,9 @@ cfg.lcmv.keepfilter    = 'yes';
 cfg.lcmv.keepcov       = 'yes';
 cfg.lcmv.lambda        = '5%';
 cfg.headmodel          = headmodel;
-cfg.grid               = grid;
+cfg.sourcemodel               = grid;
 cfg.rawtrial           = 'yes';
-cfg.grid.filter        = source.avg.filter;
+cfg.sourcemodel.filter        = source.avg.filter;
 source = ft_sourceanalysis(cfg, data);
 
 function source = sourceanalysis_LCMV_keepnothing_rawtrial(data, grid, headmodel)
@@ -433,9 +431,9 @@ cfg.lcmv.keepfilter    = 'no';
 cfg.lcmv.keepcov       = 'no';
 cfg.lcmv.lambda        = '5%';
 cfg.headmodel          = headmodel;
-cfg.grid               = grid;
+cfg.sourcemodel               = grid;
 cfg.rawtrial           = 'yes';
-cfg.grid.filter        = source.avg.filter;
+cfg.sourcemodel.filter        = source.avg.filter;
 source = ft_sourceanalysis(cfg, data);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -447,7 +445,7 @@ cfg              = [];
 cfg.method       = 'dics';
 cfg.headmodel    = headmodel;
 cfg.channel      = 'MEG';
-cfg.grid         = grid;
+cfg.sourcemodel         = grid;
 cfg.frequency    = 10;
 cfg.latency      = 0.5;
 cfg.keeptrials   = 'yes';
@@ -466,7 +464,7 @@ cfg              = [];
 cfg.method       = 'dics';
 cfg.headmodel    = headmodel;
 cfg.channel      = 'MEG';
-cfg.grid         = grid;
+cfg.sourcemodel         = grid;
 cfg.frequency    = 10;
 cfg.latency      = 0.5;
 cfg.keeptrials   = 'yes';
@@ -481,7 +479,7 @@ cfg.dics.lambda        = '5%';
 % get filter
 tmp = sourceanalysis_DICS_keepall(data, grid, headmodel);
 cfg.rawtrial    = 'yes';
-cfg.grid.filter = tmp.avg.filter;
+cfg.sourcemodel.filter = tmp.avg.filter;
 cfg.feedback    = 'none';
 source = ft_sourceanalysis(cfg, data);
 
@@ -490,7 +488,7 @@ cfg              = [];
 cfg.method       = 'dics';
 cfg.headmodel    = headmodel;
 cfg.channel      = 'MEG';
-cfg.grid         = grid;
+cfg.sourcemodel         = grid;
 cfg.frequency    = 10;
 cfg.latency      = 0.5;
 cfg.keeptrials   = 'no';
@@ -508,7 +506,7 @@ cfg              = [];
 cfg.method       = 'dics';
 cfg.headmodel    = headmodel;
 cfg.channel      = 'MEG';
-cfg.grid         = grid;
+cfg.sourcemodel         = grid;
 cfg.frequency    = 10;
 cfg.latency      = 0.5;
 cfg.dics.projectnoise = 'no';
@@ -522,7 +520,7 @@ cfg.dics.lambda        = '5%';
 tmp = sourceanalysis_DICS_keepall(data, grid, headmodel);
 cfg.rawtrial    = 'yes';
 cfg.keeptrials  = 'yes';
-cfg.grid.filter = tmp.avg.filter;
+cfg.sourcemodel.filter = tmp.avg.filter;
 source = ft_sourceanalysis(cfg, data);
 
 function source = sourceanalysis_DICS_refdip(data, grid, headmodel)
@@ -530,7 +528,7 @@ cfg              = [];
 cfg.method       = 'dics';
 cfg.headmodel    = headmodel;
 cfg.channel      = 'MEG';
-cfg.grid         = grid;
+cfg.sourcemodel         = grid;
 cfg.frequency    = 10;
 cfg.latency      = 0.5;
 cfg.dics.refdip       = [2 5 9];
@@ -543,7 +541,7 @@ cfg              = [];
 cfg.method       = 'dics';
 cfg.headmodel    = headmodel;
 cfg.channel      = 'MEG';
-cfg.grid         = grid;
+cfg.sourcemodel         = grid;
 cfg.frequency    = 10;
 cfg.latency      = 0.5;
 if numel(data.label)<40
@@ -560,7 +558,7 @@ cfg              = [];
 cfg.method       = 'dics';
 cfg.headmodel    = headmodel;
 cfg.channel      = 'MEG';
-cfg.grid         = grid;
+cfg.sourcemodel         = grid;
 cfg.frequency    = 10;
 cfg.latency      = 0.5;
 cfg.dics.realfilter   = 'yes';
@@ -573,7 +571,7 @@ cfg              = [];
 cfg.method       = 'dics';
 cfg.headmodel    = headmodel;
 cfg.channel      = 'MEG';
-cfg.grid         = grid;
+cfg.sourcemodel         = grid;
 cfg.frequency    = 10;
 cfg.latency      = 0.5;
 cfg.dics.fixedori     = 'yes';
@@ -593,7 +591,7 @@ cfg.channel           = 'MEG';
 cfg.frequency         = 10;
 cfg.latency           = 0.5;
 cfg.headmodel         = headmodel;
-cfg.grid              = grid;
+cfg.sourcemodel              = grid;
 source                = ft_sourceanalysis(cfg, data);
 
 function source = sourceanalysis_PCC_keepall_rawtrial(data, grid, headmodel)
@@ -609,12 +607,12 @@ cfg.channel           = 'MEG';
 cfg.frequency         = 10;
 cfg.latency           = 0.5;
 cfg.headmodel         = headmodel;
-cfg.grid              = grid;
+cfg.sourcemodel              = grid;
 tmp                   = ft_sourceanalysis(cfg, data);
 % get filter
 tmp = sourceanalysis_PCC_keepall(data, grid, headmodel);
 cfg.rawtrial    = 'yes';
-cfg.grid.filter = tmp.avg.filter;
+cfg.sourcemodel.filter = tmp.avg.filter;
 cfg.pcc.feedback    = 'none';
 source = ft_sourceanalysis(cfg, data);
 
@@ -631,7 +629,7 @@ cfg.channel           = 'MEG';
 cfg.frequency         = 10;
 cfg.latency           = 0.5;
 cfg.headmodel         = headmodel;
-cfg.grid              = grid;
+cfg.sourcemodel              = grid;
 source                = ft_sourceanalysis(cfg, data);
 
 function source = sourceanalysis_PCC_keepnothing_rawtrial(data, grid, headmodel)
@@ -647,12 +645,12 @@ cfg.channel           = 'MEG';
 cfg.frequency         = 10;
 cfg.latency           = 0.5;
 cfg.headmodel         = headmodel;
-cfg.grid              = grid;
+cfg.sourcemodel              = grid;
 tmp                   = ft_sourceanalysis(cfg, data);
 % get filter
 tmp = sourceanalysis_PCC_keepall(data, grid, headmodel);
 cfg.rawtrial    = 'yes';
-cfg.grid.filter = tmp.avg.filter;
+cfg.sourcemodel.filter = tmp.avg.filter;
 cfg.pcc.feedback    = 'none';
 source = ft_sourceanalysis(cfg, data);
 
@@ -664,7 +662,7 @@ cfg.channel           = 'MEG';
 cfg.frequency         = 10;
 cfg.latency           = 0.5;
 cfg.headmodel         = headmodel;
-cfg.grid              = grid;
+cfg.sourcemodel              = grid;
 cfg.refdip            = [2 5 9];
 %cfg.keepcsd           = 'yes';   % keepcsd is ALWAYS ON with PCC
 source                = ft_sourceanalysis(cfg, data);
@@ -1221,7 +1219,7 @@ combination = {
   'roi'      'timelock_cov_trl'              'LCMV_keepnothing'
   'roi'      'timelock_cov_trl'              'LCMV_keepall_rawtrial'
   'roi'      'timelock_cov_trl'              'LCMV_keepnothing_rawtrial'
-  
+
   };
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

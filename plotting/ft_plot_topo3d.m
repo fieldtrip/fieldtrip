@@ -4,7 +4,7 @@ function ft_plot_topo3d(pos, val, varargin)
 % potential or field at the sensor locations
 %
 % Use as
-%   ft_plot_topo3d(pos, val, ...);
+%   ft_plot_topo3d(pos, val, ...)
 % where the channel positions are given as a Nx3 matrix and the values are
 % given as Nx1 vector.
 %
@@ -14,7 +14,7 @@ function ft_plot_topo3d(pos, val, varargin)
 %   'facealpha'    = scalar, between 0 and 1 (default = 1)
 %   'refine'       = scalar, number of refinement steps for the triangulation, to get a smoother interpolation (default = 0)
 %
-% See also FT_PLOT_TOPO, FT_TOPOPLOTER, FT_TOPOPLOTTFR
+% See also FT_PLOT_TOPO, FT_PLOT_SENS, FT_TOPOPLOTER, FT_TOPOPLOTTFR
 
 % Copyright (C) 2009-2015, Robert Oostenveld
 %
@@ -63,7 +63,7 @@ end
 % the interpolation requires a triangulation
 tri = projecttri(pos, 'delaunay');
 
-if nrefine>0,
+if nrefine>0
   posorig = pos;
   triorig = tri;
   valorig = val;

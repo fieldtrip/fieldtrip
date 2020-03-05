@@ -6,7 +6,7 @@ function artinis_license
 % function to ensure that the license is displayed at least once.
 
 % Copyright (C) 2009-2011, Robert Oostenveld
-% Copyright (C) 2014-2015, Jörn M. Horschig, Artinis Medical Systems, www.artinis.com
+% Copyright (C) 2014-2019, Jörn M. Horschig, Artinis Medical Systems, www.artinis.com
 
 
 persistent status

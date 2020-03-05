@@ -22,6 +22,8 @@ function [dipout] = beamformer_lcmv(dip, grad, headmodel, dat, Cy, varargin)
 %
 % Additional options should be specified in key-value pairs and can be
 %  'lambda'           = regularisation parameter
+%  'kappa'            = parameter for covariance matrix inversion
+%  'tol'              = parameter for covariance matrix inversion
 %  'powmethod'        = can be 'trace' or 'lambda1'
 %  'feedback'         = give ft_progress indication, can be 'text', 'gui' or 'none' (default)
 %  'fixedori'         = use fixed or free orientation,                   can be 'yes' or 'no'
@@ -32,6 +34,7 @@ function [dipout] = beamformer_lcmv(dip, grad, headmodel, dat, Cy, varargin)
 %  'keepmom'          = remember the estimated dipole moment timeseries, can be 'yes' or 'no'
 %  'keepcov'          = remember the estimated dipole covariance,        can be 'yes' or 'no'
 %  'kurtosis'         = compute the kurtosis of the dipole timeseries,   can be 'yes' or 'no'
+%  'weightnorm'       = normalize the beamformer weights,                can be 'no', 'unitnoisegain' or 'nai'
 %
 % These options influence the forward computation of the leadfield
 %  'reducerank'       = reduce the leadfield rank, can be 'no' or a number (e.g. 2)
@@ -82,6 +85,9 @@ keepleadfield  = ft_getopt(varargin, 'keepleadfield', 'no');
 keepcov        = ft_getopt(varargin, 'keepcov', 'no');
 keepmom        = ft_getopt(varargin, 'keepmom', 'yes');
 lambda         = ft_getopt(varargin, 'lambda', 0);
+kappa          = ft_getopt(varargin, 'kappa',  []);
+tol            = ft_getopt(varargin, 'tol',    []);
+invmethod      = ft_getopt(varargin, 'invmethod',    []);
 projectnoise   = ft_getopt(varargin, 'projectnoise', 'yes');
 projectmom     = ft_getopt(varargin, 'projectmom', 'no');
 fixedori       = ft_getopt(varargin, 'fixedori', 'no');
@@ -115,7 +121,7 @@ end
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfield(dip, 'inside')
-  dip.inside = ft_inside_vol(dip.pos, headmodel);
+  dip.inside = ft_inside_headmodel(dip.pos, headmodel);
 end
 
 if any(dip.inside>1)
@@ -156,19 +162,20 @@ rankCy = rank(Cy);
 if ~isempty(lambda) && ischar(lambda) && lambda(end)=='%'
   ratio = sscanf(lambda, '%f%%');
   ratio = ratio/100;
-  if ~isempty(subspace) && numel(subspace)>1,
-    lambda = ratio * trace(subspace*Cy*subspace')/size(subspace,1);
-  else
-    lambda = ratio * trace(Cy)/size(Cy,1);
-  end
+  tmplambda = ratio * trace(Cy)/size(Cy,1);
+elseif ~isempty(lambda)
+  tmplambda = lambda;
+else
+  tmplambda = 0;
 end
 
-if projectnoise
+if projectnoise || strcmp(weightnorm, 'nai')
     % estimate the noise level in the covariance matrix by the smallest singular (non-zero) value
+    % always needed for the NAI weight normalization case
     noise = svd(Cy);
     noise = noise(rankCy);
     % estimated noise floor is equal to or higher than lambda
-    noise = max(noise, lambda);
+    noise = max(noise, tmplambda);
 end
 
 % the inverse only has to be computed once for all dipoles
@@ -201,11 +208,11 @@ elseif ~isempty(subspace)
     Cy    = subspace*Cy*subspace'; 
     % here the subspace can be different from the singular vectors of Cy, so we
     % have to do the sandwiching as opposed to line 216
-    invCy = pinv(Cy + lambda * eye(size(Cy)));
+    invCy = ft_inv(Cy, 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
     dat   = subspace*dat;
   end
 else
-  invCy = pinv(Cy + lambda * eye(size(Cy)));
+  invCy = ft_inv(Cy, 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
 end
 
 % compute the square of invCy, which might be needed
@@ -238,7 +245,7 @@ for i=1:size(dip.pos,1)
     % the data and the covariance become voxel dependent due to the projection
     dat   =      dip.subspace{i} * dat_pre_subspace;
     Cy    =      dip.subspace{i} *  Cy_pre_subspace * dip.subspace{i}';
-    invCy = pinv(dip.subspace{i} * (Cy_pre_subspace + lambda * eye(size(Cy_pre_subspace))) * dip.subspace{i}');
+    invCy = ft_inv(dip.subspace{i} * Cy_pre_subspace * dip.subspace{i}', 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
   elseif ~isempty(subspace)
     % do subspace projection of the forward model only
     lforig = lf;
@@ -254,11 +261,11 @@ for i=1:size(dip.pos,1)
   
   if fixedori
     switch(weightnorm)
-      case {'unitnoisegain','nai'};
+      case {'unitnoisegain','nai'}
         % optimal orientation calculation for unit-noise gain beamformer,
         % (also applies to similar NAI), based on equation 4.47 from Sekihara & Nagarajan (2008)
         [vv, dd] = eig(pinv(lf' * invCy_squared *lf)*(lf' * invCy *lf));
-        [~,maxeig]=max(diag(dd));
+        [dum,maxeig]=max(diag(dd));
         eta = vv(:,maxeig);
         lf  = lf * eta;
         if ~isempty(subspace), lforig = lforig * eta; end
@@ -291,7 +298,7 @@ for i=1:size(dip.pos,1)
     % below equation is equivalent to following:  
     % filt = pinv(lf' * invCy * lf) * lf' * invCy; 
     % filt = filt/sqrt(filt*filt');
-    filt = pinv(sqrt(lf' * invCy_squared * lf)) * lf' *invCy;     % Sekihara & Nagarajan 2008 eqn. 4.15
+    filt = pinv(sqrtm(lf' * invCy_squared * lf)) * lf' *invCy;     % Sekihara & Nagarajan 2008 eqn. 4.15
   else
     % construct the spatial filter
     filt = pinv(lf' * invCy * lf) * lf' * invCy;              % van Veen eqn. 23, use PINV/SVD to cover rank deficient leadfield

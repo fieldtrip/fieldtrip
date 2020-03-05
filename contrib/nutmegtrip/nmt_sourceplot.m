@@ -139,7 +139,7 @@ function nmt_sourceplot(cfg,functional)
 %
 % Author: Sarang S. Dalal
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -188,6 +188,7 @@ end
 
     % set the defaults for all methods
     cfg.funparameter  = ft_getopt(cfg, 'funparameter',  []);
+    cfg.vecparameter  = ft_getopt(cfg, 'vecparameter',  []);
     cfg.maskparameter = ft_getopt(cfg, 'maskparameter', []);
     
         
@@ -391,7 +392,7 @@ for funidx = 1:length(funparameters)
     % elseif isfield(functional, cfg.anaparameter)
     %   hasana = 1;
     %   ana = getsubfield(functional, cfg.anaparameter);
-    %   % convert integers to single precision float if neccessary
+    %   % convert integers to single precision float if necessary
     %   if isa(ana, 'uint8') || isa(ana, 'uint16') || isa(ana, 'int8') || isa(ana, 'int16')
     %     fprintf('converting anatomy to double\n');
     %     ana = double(ana);
@@ -852,4 +853,21 @@ for funidx = 1:length(funparameters)
     nmt_spm_plot(cfg);
     nmt_update_panel(funidx);
     nmt_image;
+    
+    if ~isempty(cfg.vecparameter)
+        if issubfield(functional, cfg.vecparameter)
+            oritmp = getsubfield(functional, cfg.vecparameter);
+            Nvoxels = length(insideindx)
+            Nsamples = size(oritmp{insideindx(1)},2)
+            ori = zeros(Nvoxels,3,Nsamples);
+            for ii=1:Nvoxels
+                ori(ii,:,:) = oritmp{insideindx(ii)};
+            end
+            
+            st.nmt.ori = ori;
+            nmt_sourceoriplot;
+        else
+            error('cfg.vecparameter not found in functional');
+        end
+    end
 end

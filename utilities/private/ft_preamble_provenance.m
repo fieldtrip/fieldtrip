@@ -14,7 +14,7 @@
 %   .... regular code goes here ...
 %   ft_postamble provenance
 %
-% See also FT_POSTAMBLE_PROVENANCE
+% See also FT_PREAMBLE, FT_POSTAMBLE, FT_POSTAMBLE_PROVENANCE
 
 % Copyright (C) 2011-2016, Robert Oostenveld, DCCN
 %
@@ -41,9 +41,6 @@
 % function workspace, which is why they should have cryptical names to prevent any
 % variable name clashes.
 
-% the name of the variables are passed in the preamble field
-global ft_default
-
 if (isfield(cfg, 'trackcallinfo') && ~istrue(cfg.trackcallinfo))
   % do not track the call information
   return
@@ -56,11 +53,11 @@ cfg.callinfo.usercfg = removefields(cfg, ignorefields('provenance'));
 if isfield(cfg, 'trackdatainfo') && istrue(cfg.trackdatainfo)
   % compute the MD5 hash of each of the input arguments
   % temporarily remove the cfg field for getting the hash (creating a duplicate of the data, but still has the same mem ref, so no extra mem needed)
-  if isequal(ft_default.preamble, {'varargin'})
+  if isequal(iW1aenge_preamble, {'varargin'})
     tmpargin = varargin;
   else
-    isvar = cellfun(@(x) exist(x, 'var')==1, ft_default.preamble);
-    tmpargin = cellfun(@eval, ft_default.preamble(isvar), 'UniformOutput', false);
+    isvar = cellfun(@(x) exist(x, 'var')==1, iW1aenge_preamble);
+    tmpargin = cellfun(@eval, iW1aenge_preamble(isvar), 'UniformOutput', false);
     tmpargin( isvar) = tmpargin;
     tmpargin(~isvar) = {[]};
     clear isvar

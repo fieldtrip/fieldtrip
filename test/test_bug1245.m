@@ -1,10 +1,8 @@
 function test_bug1245
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST test_bug_1245
-% TEST ft_multiplotER
+% DEPENDENCY ft_multiplotER
 
 % The issue: when inputting data where the corresponding layout consists of
 % more channels than the to-be-plotted channels (specified in cfg.channel),

@@ -1,10 +1,10 @@
 function test_bug2560
 
+% MEM 2gb
 % WALLTIME 00:15:00
-% MEM 300mb
 
-% TEST ft_sourceplot
-% TEST ft_plot_slice
+% DEPENDENCY ft_sourceplot
+% DEPENDENCY ft_plot_slice
 
 % this function is meant to test the correctness of the 'ortho' method in
 % sourceplot. It relies on ft_plot_ortho and ft_plot_slice. there may be a

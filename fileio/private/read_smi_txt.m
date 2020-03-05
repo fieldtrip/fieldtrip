@@ -29,10 +29,10 @@ function smi = read_smi_txt(filename)
 smi.header  = {};
 smi.label   = {};
 smi.dat     = [];
-current   = 0;
+current     = 0;
 
 % read the whole file at once
-fid = fopen(filename, 'rt');
+fid = fopen_or_error(filename, 'rt');
 aline = fread(fid, inf, 'char=>char');          % returns a single long string
 fclose(fid);
 
@@ -53,9 +53,9 @@ for i=1:numel(aline)
     smi.type{1,current} =  sscanf(tmp{smpidx}, '%s');
     tmp(smpidx,:) = [];
     
-    for j=1:size(tmp,1);
+    for j=1:size(tmp,1)
       val = sscanf(tmp{j,1}, '%f');
-      if isempty(val);
+      if isempty(val)
         smi.dat(j,current) =  NaN;
       else
         smi.dat(j,current) =  val;
@@ -66,17 +66,17 @@ for i=1:numel(aline)
     smi.header = cat(1, smi.header, {tline});
     
     template ='## Sample Rate:';
-    if strncmp(tline,template,length(template));
+    if strncmp(tline,template,length(template))
       smi.Fs = cellfun(@str2num,regexp(tline,'[\d]+','match'));
     end
     
     template = '## Number of Samples:';
-    if strncmp(tline,template,length(template));
+    if strncmp(tline,template,length(template))
       smi.nsmp = cellfun(@str2num,regexp(tline,'[\d]+','match'));
     end
     
     template = '## Head Distance [mm]:';
-    if strncmp(tline,template,length(template));
+    if strncmp(tline,template,length(template))
       smi.headdist = cellfun(@str2num,regexp(tline,'[\d]+','match'));
     end
     	    
@@ -98,17 +98,12 @@ for i=1:numel(aline)
 end
 
 % remove the samples that were not filled with real data
-%smi.dat = smi.dat(:,1:current);
+% smi.dat = smi.dat(:,1:current);
 
-% put the trigger channel outside of the data to take it easier with ft_read_event
-for c=1:size(smi.label,1);
-  if strcmp(smi.label{c,1},'Trigger');
-    for k = 1:size(smi.dat,2);
-      smi.trigger(k,1).timestamp = smi.dat(1,k);
-      smi.trigger(k,1).value     = smi.dat(c,k);
-    end
-  end
+% place the timestamp channel outside of the data
+c = find(strcmp(smi.label, 'Time'));
+if numel(c)==1
+  smi.timestamp = smi.dat(c,:);
+  smi.dat(c,:) = [];
+  smi.label(c) = [];
 end
-smi.dat([1 c],:)      = [];
-smi.label([1 c],:)    = [];
-

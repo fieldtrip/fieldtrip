@@ -1,18 +1,25 @@
 function [coord_snapped] = warp_dykstra2012(cfg, elec, surf)
 
 % WARP_DYKSTRA2012 projects the ECoG grid / strip onto a cortex hull
-% while minimizing the distance from original positions and the
-% deformation of the grid. To align ECoG electrodes to the pial surface,
-% you first need to compute the cortex hull with FT_PREPARE_MESH.
+% using the algorithm described in Dykstra et al. (2012, Neuroimage) in 
+% which the distance from original positions and the deformation of the 
+% grid are minimized. This function relies on MATLAB's optimization toolbox. 
+% To align ECoG electrodes to the pial surface, you first need to compute 
+% the cortex hull with FT_PREPARE_MESH.
 %
-% WARP_DYKSTRA2012 uses the algorithm described in Dykstra et al. (2012,
-% Neuroimage) in which electrodes are projected onto pial surface while
-% minimizing the displacement of the electrodes from original location
-% and maintaining the grid shape. It relies on the optimization toolbox.
+% Additional configuration options to the original functionality
+%   cfg.maxiter       = number (default: 50), maximum number of optimization 
+%                       iterations
+%   cfg.pairmethod    = 'pos' (default) or 'label', the method for electrode
+%                       pairing on which the deformation energy is based
+%   cfg.isodistance   = 'yes', 'no' (default) or number, to enforce isotropic
+%                       inter-electrode distances (pairmethod 'label' only)
+%   cfg.deformweight  = number (default: 1), weight of deformation relative 
+%                       to shift energy cost (lower increases grid flexibility)
 %
-% See also FT_ELECTRODEREALIGN, FT_PREPARE_MESH
+% See also FT_ELECTRODEREALIGN, FT_PREPARE_MESH, WARP_HERMES2010
 
-% Copyright (C) 2012-2017, Arjen Stolk, Gio Piantoni, Andrew Dykstra
+% Copyright (C) 2012-2019, Andrew Dykstra, Gio Piantoni, Arjen Stolk
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -52,27 +59,27 @@ ft_hastoolbox('optim', 1);
 disp('using warp algorithm described in Dykstra et al. 2012 Neuroimage PMID: 22155045')
 
 % set the defaults
-cfg.feedback      = ft_getopt(cfg, 'feedback', 'no');
-
-% undocumented local options
+cfg.feedback      = ft_getopt(cfg, 'feedback',    'no');
+cfg.maxiter       = ft_getopt(cfg, 'maxiter',       50); 
 cfg.pairmethod    = ft_getopt(cfg, 'pairmethod', 'pos'); % eletrode pairing based on electrode 'pos' or 'label' (for computing deformation energy)
-cfg.deformweight  = ft_getopt(cfg, 'deformweight',  1); % weight of deformation relative to shift energy cost
+cfg.isodistance   = ft_getopt(cfg, 'isodistance', 'no'); % enforce isotropic inter-electrode distances (support for pairmethod 'label' only)
+cfg.deformweight  = ft_getopt(cfg, 'deformweight',   1); % weight of deformation relative to shift energy cost (a lower value results in more grid flexibility)
+
+% compute pairs of neighbors
+[pairs, elec] = create_elecpairs(elec, cfg.pairmethod);
 
 % get starting coordinates
 coord0 = elec.elecpos;
 coord = elec.elecpos;
 
-% compute pairs of neighbors
-pairs = create_elecpairs(elec, cfg.pairmethod);
-
 % anonymous function handles
-efun = @(coord_snapped) energy_electrodesnap(coord_snapped, coord, pairs, cfg.deformweight);
+efun = @(coord_snapped) energy_electrodesnap(coord_snapped, coord, pairs, cfg.isodistance, cfg.deformweight);
 cfun = @(coord_snapped) dist_to_surface(coord_snapped, surf);
 
 % options
 %   'UseParallel', 'always',...
 options = optimset('Algorithm','active-set',...
-  'MaxIter', 50,...
+  'MaxIter', cfg.maxiter,...
   'MaxFunEvals', Inf,...
   'GradObj', 'off',...
   'TypicalX', coord(:),...
@@ -90,16 +97,20 @@ else
   options = optimset(options, 'Display', 'final');
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Energy Minimization
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % run minimization: efun (shift + deform energy) is minimized; cfun (surface distance) is a nonlinear constraint
 coord_snapped = fmincon(efun, coord0, [], [], [], [], [], [], cfun, options);
+
+% return the order of the coordinates to its original order (before they
+  % were ordered sequentially in create_elecpairs)
+if strcmp(cfg.pairmethod, 'label')
+  coord_snapped = coord_snapped(elec.order,:);
+end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function energy = energy_electrodesnap(coord, coord_orig, pairs, deformweight) % (minimized) energy function
+function energy = energy_electrodesnap(coord, coord_orig, pairs, isodistance, deformweight) % (minimized) energy function
 % ENERGY_ELECTRODESNAP compute energy to be minimized, based on deformation
 % and distance of the electrodes from original distance
 
@@ -109,6 +120,13 @@ energy_eshift = sum((coord - coord_orig).^2, 2);
 % energy needed to deform grid shape
 dist = sqrt(sum((coord(pairs(:, 1), :) - coord(pairs(:, 2), :)).^2, 2));
 dist_orig = sqrt(sum((coord_orig(pairs(:, 1), :) - coord_orig(pairs(:, 2), :)).^2, 2));
+if ~strcmp(isodistance, 'no') % enforce isotropic inter-electrode distances
+  if strcmp(isodistance, 'yes') % determine isodistance automatically
+    isodistance = median(dist_orig(pairs(:,3)==1));
+  end
+  dist_orig(pairs(:,3)==1) = isodistance; % adjacent electrodes
+  dist_orig(pairs(:,3)==2) = sqrt(isodistance^2+isodistance^2); % diagonal electrodes
+end
 energy_deform = (dist - dist_orig).^2;
 
 % (weighted) sum of the above
@@ -135,173 +153,129 @@ dist = sqrt(dist);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function pairs = create_elecpairs(elec, method)
+function [pairs, elec] = create_elecpairs(elec, method)
 
-if strcmp(method, 'label'); 
-  
-  % determine grid dimensions (1st dim: number of arrays, 2nd dim: number of elecs in an array)
-  fprintf('creating electrode pairs based on electrode labels\n');
-  GridDim = determine_griddim(elec);
-  
-  % create pairs based on dimensions
-  diagonal = 1;
-  pairs = [];
-  for e = 1:GridDim(1)*GridDim(2)   
-    if isequal(mod(e,GridDim(2)), 1) % begin of each elec array
-      pairs(end+1,:) = [e e+1]; % following elec
-      pairs(end+1,:) = [e e-GridDim(2)]; % adjacent preceding elec
-      pairs(end+1,:) = [e e+GridDim(2)]; % adjacent following elec
-      if diagonal
-        pairs(end+1,:) = [e e-GridDim(2)+1]; % adjacent preceding elec
-        pairs(end+1,:) = [e e+GridDim(2)+1]; % adjacent following elec
-      end
-    elseif isequal(mod(e,GridDim(2)), 0) % end of each elec array
-      pairs(end+1,:) = [e e-1]; % preceding elec
-      pairs(end+1,:) = [e e-GridDim(2)]; % adjacent preceding elec
-      pairs(end+1,:) = [e e+GridDim(2)]; % adjacent following elec
-      if diagonal
-        pairs(end+1,:) = [e e-GridDim(2)-1]; % adjacent preceding elec
-        pairs(end+1,:) = [e e+GridDim(2)-1]; % adjacent following elec
-      end
-    else
-      pairs(end+1,:) = [e e-1]; % preceding elec
-      pairs(end+1,:) = [e e+1]; % following elec
-      pairs(end+1,:) = [e e-GridDim(2)]; % adjacent preceding elec
-      pairs(end+1,:) = [e e+GridDim(2)]; % adjacent following elec
-      if diagonal
-        pairs(end+1,:) = [e e-GridDim(2)-1]; % adjacent preceding elec
-        pairs(end+1,:) = [e e+GridDim(2)-1]; % adjacent following elec
-        pairs(end+1,:) = [e e-GridDim(2)+1]; % adjacent preceding elec
-        pairs(end+1,:) = [e e+GridDim(2)+1]; % adjacent following elec
-      end
-    end
-  end
-  pairs( pairs(:,2)<1 | pairs(:,2)>GridDim(1)*GridDim(2) ,:) = []; % out of bounds
-  pairs = unique(sort(pairs,2),'rows'); % unique pairs
- 
-elseif strcmp(method, 'pos');
+if strcmp(method, 'pos') % original method
   
   % KNN_PAIRS compute pairs of neighbors of the grid
   fprintf('creating electrode pairs based on electrode positions\n');
   pairs = knn_pairs(elec.elecpos, 4);
+
+elseif strcmp(method, 'label') % alternative method
   
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function GridDim = determine_griddim(elec)
-% assumes intact grids/strips and elec count starting at 1
-% A. Stolk, 2017
-
-% extract numbers from elec labels
-digits = regexp(elec.label, '\d+', 'match');
-for l=1:numel(digits)
-  labels{l,1} = digits{l}{1}; % use first found digit
-end
-
-% determine grid dimensions (1st dim: number of arrays, 2nd dim: number of elecs in an array)
-if isequal(numel(labels), 256)
-  GridDim(1) = 16; GridDim(2) = 16;
-elseif isequal(numel(labels), 64)
-  GridDim(1) = 8; GridDim(2) = 8;
-elseif isequal(numel(labels), 48)
-  e6 = elec.elecpos(match_str(labels, num2str(6)),:);
-  e7 = elec.elecpos(match_str(labels, num2str(7)),:);
-  e8 = elec.elecpos(match_str(labels, num2str(8)),:);
-  e9 = elec.elecpos(match_str(labels, num2str(9)),:);
-  d6to7 = sqrt(sum((e6-e7).^2)); % distance of elec 6 to 7
-  d8to9 = sqrt(sum((e8-e9).^2)); % distance of elec 8 to 9
-  if d8to9 >= d6to7  % break between e8 and e9
-    GridDim(1) = 6; GridDim(2) = 8;
-  elseif d6to7 > d8to9 % break between e6 and e7
-    GridDim(1) = 8; GridDim(2) = 6;
+  fprintf('creating electrode pairs based on electrode labels\n');
+  % determine electrode range and order
+  digits = regexp(elec.label, '\d+', 'match');
+  elec.maxdigit = 1;
+  elec.mindigit = Inf;
+  for l=1:numel(digits)
+    ElecStrs{l,1} = regexprep(elec.label{l}, '\d+(?:_(?=\d))?', ''); % without electrode numbers
+    elec.ElecLab{l,1} = digits{l}{1}; % use first found digit
+    if str2num(digits{l}{1}) > elec.maxdigit
+      elec.maxdigit = str2num(digits{l}{1});
+    end
+    if str2num(digits{l}{1}) < elec.mindigit
+      elec.mindigit = str2num(digits{l}{1});
+    end
   end
-elseif isequal(numel(labels), 32)
-  e4 = elec.elecpos(match_str(labels, num2str(4)),:);
-  e5 = elec.elecpos(match_str(labels, num2str(5)),:);
-  e8 = elec.elecpos(match_str(labels, num2str(8)),:);
-  e9 = elec.elecpos(match_str(labels, num2str(9)),:);
-  d4to5 = sqrt(sum((e4-e5).^2)); % distance of elec 4 to 5
-  d8to9 = sqrt(sum((e8-e9).^2)); % distance of elec 8 to 9
-  if d8to9 >= d4to5  % break between e8 and e9
-    GridDim(1) = 4; GridDim(2) = 8;
-  elseif d4to5 > d8to9 % break between e4 and e5
-    GridDim(1) = 8; GridDim(2) = 4;
+  elec.ElecStr = cell2mat(unique(ElecStrs));
+  
+  % determine if any electrodes appear to be misordered or cut out of this grid
+  elec.order = [];
+  pos_ordered = [];
+  labels_ordered = {};
+  elec.cutout = []; % index of electrodes that appear to be cut out
+  dowarn = false;
+  for e = elec.mindigit:elec.maxdigit
+    if ~isempty(match_str(elec.ElecLab, num2str(e))) % in case labels are 1, 2, 3 etc.
+      elec.order(end+1) = match_str(elec.ElecLab, num2str(e));
+      labels_ordered{end+1,1} = [elec.ElecStr num2str(e)];
+      pos_ordered(end+1, :) = elec.elecpos(match_str(elec.ElecLab, num2str(e)),:);
+    elseif ~isempty(match_str(elec.ElecLab, num2str(e, ['%0' num2str(numel(elec.ElecLab{1})) 'd']))) % in case labels are 001, 002, 003 etc.
+      elec.order(end+1) = match_str(elec.ElecLab, num2str(e, ['%0' num2str(numel(elec.ElecLab{1})) 'd']));
+      labels_ordered{end+1,1} = [elec.ElecStr num2str(e, ['%0' num2str(numel(elec.ElecLab{1})) 'd'])];
+      pos_ordered(end+1, :) = elec.elecpos(match_str(elec.ElecLab, num2str(e, ['%0' num2str(numel(elec.ElecLab{1})) 'd'])),:);
+    else
+      elec.cutout(end+1) = e-elec.mindigit+1;
+      labels_ordered{end+1,1} = num2str(e);
+      pos_ordered(end+1, :) = NaN(1,3); % replace missing numbers with electrodes at position [NaN NaN NaN]
+      dowarn = true;
+    end
   end
-elseif isequal(numel(labels), 24)
-  e4 = elec.elecpos(match_str(labels, num2str(4)),:);
-  e5 = elec.elecpos(match_str(labels, num2str(5)),:);
-  e6 = elec.elecpos(match_str(labels, num2str(6)),:);
-  e7 = elec.elecpos(match_str(labels, num2str(7)),:);
-  d4to5 = sqrt(sum((e4-e5).^2)); % distance of elec 4 to 5
-  d6to7 = sqrt(sum((e6-e7).^2)); % distance of elec 6 to 7
-  if d6to7 >= d4to5 % break between e6 and e7
-    GridDim(1) = 4; GridDim(2) = 6;
-  elseif d4to5 > d6to7 % break between e4 and e5
-    GridDim(1) = 6; GridDim(2) = 4;
+  if dowarn
+    ft_warning('%s appears to be missing electrodes %s or have electrodes that are labeled using an unconventional numbering system', elec.ElecStr, num2str(elec.cutout));
   end
-elseif isequal(numel(labels), 20)
-  e4 = elec.elecpos(match_str(labels, num2str(4)),:);
-  e5 = elec.elecpos(match_str(labels, num2str(5)),:);
-  e6 = elec.elecpos(match_str(labels, num2str(6)),:);
-  d4to5 = sqrt(sum((e4-e5).^2)); % distance of elec 4 to 5
-  d5to6 = sqrt(sum((e5-e6).^2)); % distance of elec 5 to 6
-  if d5to6 >= d4to5 % break between e5 and e6
-    GridDim(1) = 4; GridDim(2) = 5;
-  elseif d4to5 > d5to6 % break between e4 and e5
-    GridDim(1) = 5; GridDim(2) = 4;
+  elec.label = labels_ordered;
+  elec.elecpos = pos_ordered;
+  
+  % determine grid dimensions (1st dim: number of arrays, 2nd dim: number of elecs in an array)
+  GridDim = determine_griddim(elec);
+  if GridDim(1)*GridDim(2) ~= elec.maxdigit-elec.mindigit+1
+    ft_warning('the product of the dimensions does not equal the maximum digit in the electrode labels, so if incorrect, use cfg.pairmethod = ''pos'' instead\n');
+  elseif any(GridDim(:)==1) % if not because of strips, this could happen in case of missing electrodes
+    ft_warning('if this not a strip, there may be electrodes missing, so if incorrect, use cfg.pairmethod = ''pos'' instead\n');
   end
-elseif isequal(numel(labels), 16)
-  e4 = elec.elecpos(match_str(labels, num2str(4)),:);
-  e5 = elec.elecpos(match_str(labels, num2str(5)),:);
-  e8 = elec.elecpos(match_str(labels, num2str(8)),:);
-  e9 = elec.elecpos(match_str(labels, num2str(9)),:);
-  d4to5 = sqrt(sum((e4-e5).^2)); % distance of elec 4 to 5
-  d8to9 = sqrt(sum((e8-e9).^2)); % distance of elec 8 to 9
-  d4to8 = sqrt(sum((e4-e8).^2)); % distance of elec 4 to 8
-  if d8to9 > 2*d4to5 % break between e8 and e9
-    GridDim(1) = 2; GridDim(2) = 8;
-  elseif d4to5 > 2*d4to8 % break between e4 and e5
-    GridDim(1) = 4; GridDim(2) = 4;
-  else
-    GridDim(1) = 1; GridDim(2) = 16;
+  
+  % create pairs based on dimensions
+  diagonal = 1; % add a 2 rather than 1 to the 3rd column
+  pairs = [];
+  for e = 1:GridDim(1)*GridDim(2)
+    if isequal(mod(e,GridDim(2)), 1) % begin of each elec array
+      pairs(end+1,:) = [e e+1 1]; % following elec
+      pairs(end+1,:) = [e e-GridDim(2) 1]; % adjacent preceding elec
+      pairs(end+1,:) = [e e+GridDim(2) 1]; % adjacent following elec
+      if diagonal
+        pairs(end+1,:) = [e e-GridDim(2)+1 2]; % adjacent preceding elec
+        pairs(end+1,:) = [e e+GridDim(2)+1 2]; % adjacent following elec
+      end
+    elseif isequal(mod(e,GridDim(2)), 0) % end of each elec array
+      pairs(end+1,:) = [e e-1 1]; % preceding elec
+      pairs(end+1,:) = [e e-GridDim(2) 1]; % adjacent preceding elec
+      pairs(end+1,:) = [e e+GridDim(2) 1]; % adjacent following elec
+      if diagonal
+        pairs(end+1,:) = [e e-GridDim(2)-1 2]; % adjacent preceding elec
+        pairs(end+1,:) = [e e+GridDim(2)-1 2]; % adjacent following elec
+      end
+    else
+      pairs(end+1,:) = [e e-1 1]; % preceding elec
+      pairs(end+1,:) = [e e+1 1]; % following elec
+      pairs(end+1,:) = [e e-GridDim(2) 1]; % adjacent preceding elec
+      pairs(end+1,:) = [e e+GridDim(2) 1]; % adjacent following elec
+      if diagonal
+        pairs(end+1,:) = [e e-GridDim(2)-1 2]; % adjacent preceding elec
+        pairs(end+1,:) = [e e+GridDim(2)-1 2]; % adjacent following elec
+        pairs(end+1,:) = [e e-GridDim(2)+1 2]; % adjacent preceding elec
+        pairs(end+1,:) = [e e+GridDim(2)+1 2]; % adjacent following elec
+      end
+    end
   end
-elseif isequal(numel(labels), 12)
-  e4 = elec.elecpos(match_str(labels, num2str(4)),:);
-  e5 = elec.elecpos(match_str(labels, num2str(5)),:);
-  e6 = elec.elecpos(match_str(labels, num2str(6)),:);
-  e7 = elec.elecpos(match_str(labels, num2str(7)),:);
-  d4to5 = sqrt(sum((e4-e5).^2)); % distance of elec 4 to 5
-  d5to6 = sqrt(sum((e5-e6).^2)); % distance of elec 5 to 6
-  d6to7 = sqrt(sum((e6-e7).^2)); % distance of elec 6 to 7
-  if d4to5 > 2*d5to6 % break between e4 and e5
-    GridDim(1) = 3; GridDim(2) = 4; % 4x3 unsuppported
-  elseif d6to7 > 2*d5to6 % break between e6 and e7
-    GridDim(1) = 2; GridDim(2) = 6;
-  else
-    GridDim(1) = 1; GridDim(2) = 12;
+  pairs( pairs(:,2)<1 | pairs(:,2)>GridDim(1)*GridDim(2) ,:) = []; % out of bounds
+  [dum, idx] = unique(sort(pairs(:,[1 2]),2),'rows'); % unique pairs
+  pairs = pairs(idx,:);
+  
+  % remove electrodes that are cut out from elec.elecpos and update the
+  % pairs list to reflect these removals
+  elec.elecpos(elec.cutout, :) = [];
+  for c = length(elec.cutout):-1:1 % for each of the cutout electrodes, starting with the highest numbered one
+    % find pairs that referred to elec.cutout(c) and remove them
+    for n = size(pairs, 1):-1:1 % for each of the rows in pairs, starting with the highest
+      if any(intersect(pairs(n, [1 2]), elec.cutout(c)))
+        pairs(n, :) = [];
+      end
+    end
+    
+    % subtract 1 from all the numbers in pairs that are higher than elec.cutout(c)
+    pairs(find(pairs(:,[1 2]) > elec.cutout(c))) = pairs(find(pairs(:,[1 2]) > elec.cutout(c)))-1;
   end
-elseif isequal(numel(labels), 8)
-  e3 = elec.elecpos(match_str(labels, num2str(3)),:);
-  e4 = elec.elecpos(match_str(labels, num2str(4)),:);
-  e5 = elec.elecpos(match_str(labels, num2str(5)),:);
-  d3to4 = sqrt(sum((e3-e4).^2)); % distance of elec 3 to 4
-  d4to5 = sqrt(sum((e4-e5).^2)); % distance of elec 4 to 5
-  if d4to5 > 2*d3to4 % break between e4 and e5
-    GridDim(1) = 2; GridDim(2) = 4;
-  else
-    GridDim(1) = 1; GridDim(2) = 8;
+  
+  % remove any pairs that reference an electrode higher than the number of
+  % electrodes in elec.elecpos
+  for n = size(pairs, 1):-1:1 % for each of the rows in pairs, starting with the highest
+    if any(pairs(n, [1 2]) > size(elec.elecpos, 1))
+      pairs(n, :) = [];
+    end
   end
-else
-  GridDim(1) = 1; GridDim(2) = numel(labels);
-end
-
-% provide feedback of what grid dimensions were found
-if any(GridDim==1) % if not because of strips, this could happen in case of missing electrodes
-  warning('assuming %d x %d grid dimensions: if incorrect, use cfg.pairmethod = ''pos'' instead\n', GridDim(1), GridDim(2));
-else
-  fprintf('assuming %d x %d grid dimensions\n', GridDim(1), GridDim(2));
+  
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

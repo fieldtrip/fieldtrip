@@ -4,17 +4,23 @@
 <head>
 <title>FieldTrip analysis pipeline, ${TIMESTAMP}</title>
 
-<link rel="icon" type="image/png" href="http://fieldtrip.fcdonders.nl/tree-graph.png" sizes="16x16" />
+<link rel="icon" type="image/png" href="http://www.fieldtriptoolbox.org/tree-graph.png" sizes="16x16" />
 <link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
 
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
 
-<script type="text/javascript" src="http://fieldtrip.fcdonders.nl/jquery.layout+d3+dagre+dagre-d3.min.js"></script>
-<script type="text/javascript" src="http://fieldtrip.fcdonders.nl/pipeline.js"></script>
-<link type="text/css" rel="stylesheet" href="http://fieldtrip.fcdonders.nl/pipeline.css" />
+<script type="text/javascript" src="http://www.fieldtriptoolbox.org/jquery.layout+d3+dagre+dagre-d3.min.js"></script>
+<script type="text/javascript" src="http://www.fieldtriptoolbox.org/pipeline.js"></script>
+<link type="text/css" rel="stylesheet" href="http://www.fieldtriptoolbox.org/pipeline.css" />
 
 <script type="text/javascript">
+
+  // polyfill for functionality removed in Chrome 48
+  // see https://github.com/dagrejs/dagre-d3/issues/202#issuecomment-173653044
+SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformToElement || function(elem) {
+    return elem.getScreenCTM().inverse().multiply(this.getScreenCTM());
+};
 
 ${PIPELINE}
 

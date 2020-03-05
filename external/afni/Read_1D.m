@@ -295,7 +295,7 @@ elseif (Opt.method == 2),
    ftmpout = sprintf('%s.1D.dset', ftmp);
    rmcom = sprintf('rm -f %s', ftmpout);
    if (filexist(ftmpout)), 
-      unix(rmcom);% cleanup 
+      unix(rmcom); % cleanup 
    end 
    % sub-bricks?
    if (~isempty(Opt.col_index)),
@@ -327,7 +327,7 @@ elseif (Opt.method == 3),
    ftmpout = sprintf('%s.1D.dset', ftmp);
    rmcom = sprintf('rm -f %s', ftmpout);
    if (filexist(ftmpout)), 
-      unix(rmcom);% cleanup 
+      unix(rmcom); % cleanup 
    end 
    % sub-bricks?
    if (~isempty(Opt.col_index)),

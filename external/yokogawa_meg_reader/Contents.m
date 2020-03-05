@@ -1,5 +1,5 @@
 % Yokogawa MEG Reader toolbox for MATLAB
-% Version 1.04.01 01-Nov-2011
+% Version 1.5.2 13-Sep-2018
 %
 % Files
 %   getYkgwData        - Get measured data
@@ -18,6 +18,21 @@
 %------------------------------------------------------------
 %                          History
 %------------------------------------------------------------
+% R1.5.2 : 2018.09.13
+%  [ GetSqf, getYkgwData, getYkgwHdrChannel ]
+%    -support Axial2ndOrderGradiometer
+% R1.5.1 : 2018.06.04
+%  [ GetSqf, getYkgwData, getYkgwMriHdr ]
+%    - modify comment(fear of misinterpretation)
+%  [ getYkgwHdrDigitize ]
+%    - Removed the end of unnecessary spaces of point.name
+% R1.05.00 : 2013.05.29
+%  [ getYkgwHdrChannel, getYkgwData ]
+%    - Support third-party exported data containing Nihon-kohden EEG channels
+%    - Fix MATLAB:mir_warning_unrecognized_pragma 
+%  [ getYkgwHdrDigitize ]
+%    - Removed the end of unnecessary spaces of point.name
+%
 % R1.04.01 : 2011.11.01
 %    - License Agreement was updated.
 %
@@ -67,7 +82,7 @@
 %-----------------------------------------------------------------------
 % License Agreement							
 %
-% Copyright (c) 2010-2011 YOKOGAWA Electric Corporation.
+% Copyright (c) 2010-2013 YOKOGAWA Electric Corporation.
 % All rights reserved.
 % 
 % Yokogawa MEG Reader Toolbox is distributed subject to the following license conditions:

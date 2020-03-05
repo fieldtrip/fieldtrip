@@ -1,11 +1,11 @@
 function test_ft_read_header
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST ft_read_header
+% DEPENDENCY ft_read_header
 
-[dummy,ftpath] = ft_version();
+[ftver, ftpath] = ft_version;
 addpath([ftpath '/test']);
 datainfo = ref_datasets;
 datainfo = datainfo(1:17); % lfp does not yet work because of the data

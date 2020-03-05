@@ -14,10 +14,10 @@ function [warped]= individual2sn(P, input)
 %
 % Input parameters:
 %   P     = structure that contains the contents of an spm generated _sn.mat
-%           file
+%           file, or the representaiton of the parameters as of SPM12
 %   input = Nx3 array containing the input positions
 
-% Copyright (C) 2013, Jan-Mathijs Schoffelen
+% Copyright (C) 2013-2017, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -37,23 +37,57 @@ function [warped]= individual2sn(P, input)
 %
 % $Id$
 
-% check for any version of SPM
-if ~ft_hastoolbox('spm')
-  % add SPM8 to the path
-  ft_hastoolbox('spm8', 1);
+if isfield(P, 'Tr')
+  % this is an old-style representation of the parameters, 
+  
+  % check for a sufficiently recent version of SPM
+  if ~ft_hastoolbox('spm')
+    % add SPM8 to the path
+    ft_hastoolbox('spm8up', 1);
+  end
+  
+  % The following is a three-step procedure
+  
+  % 1: create the spatial deformation field from the sn parameters
+  [Def, M] = get_sn2def(P);
+  
+  % 2a: invert the spatial deformation field
+  %[p,f,e]         = fileparts(which('spm_invdef'));
+  %templatedirname = fullfile(p,'templates');
+  %d               = dir([templatedirname,'/T1*']);
+  %VT              = spm_vol(fullfile(templatedirname,d(1).name));
+  VT.dim = [91 109 91];
+  VT.mat = [-2 0 0 92; 0 2 0 -128; 0 0 2 -74; 0 0 0 1];
+  [iy(:,:,:,1), iy(:,:,:,2), iy(:,:,:,3)] = spm_invdef(Def{1},Def{2},Def{3},VT.dim(1:3),inv(VT.mat),M);
+  
+else
+  % this requires spm12 on the path
+  ft_hastoolbox('spm12', 1);
+
+  fprintf('creating the deformation field and writing it to a temporary file\n');
+  bb = spm_get_bbox(P.image(1));
+  
+  fname  = [tempname,'.nii'];
+  V      = nifti;
+  V.dat  = file_array(fname, P.image(1).dim(1:3), [spm_type('float32') spm_platform('bigend')], 0, 1, 0);
+  V.mat  = P.image(1).mat;
+  V.mat0 = P.image(1).mat;
+  V.descrip = 'dummy volume';
+  create(V);
+  V.dat(:) = 0;
+  P.image(1).private = V;
+  P.image(1).fname   = fname;
+  
+  spm_preproc_write8(P, zeros(6,4), [0 0], [1 0], 1, 1, bb, 1);
+  
+  [pth,nam,ext] = fileparts(fname);
+  V  = nifti(fullfile(pth,['iy_',nam,ext]));
+  iy = squeeze(V.dat(:,:,:,:,:));
+  
+  siz    = size(iy);
+  VT.dim = siz(1:3);
+  VT.mat = P.image(1).mat;
 end
-
-% The following is a three-step procedure
-
-% 1: create the spatial deformation field from the sn parameters
-[Def, M] = get_sn2def(P);
-
-% 2a: invert the spatial deformation field
-[p,f,e]         = fileparts(which('spm_invdef'));
-templatedirname = fullfile(p,'templates');
-d               = dir([templatedirname,'/T1*']);
-VT              = spm_vol(fullfile(templatedirname,d(1).name));
-[iy1,iy2,iy3]   = spm_invdef(Def{1},Def{2},Def{3},VT.dim(1:3),inv(VT.mat),M);
 
 % 2b: write the deformation fields in x/y/z direction to temporary files
 V1.fname     = [tempname '.img'];
@@ -62,7 +96,7 @@ V1.pinfo     = [1 0 0]';
 V1.mat       = VT.mat;
 V1.dt        = [64 0];
 V1.descrip   = 'Inverse deformation field';
-spm_write_vol(V1,iy1);
+spm_write_vol(V1,iy(:,:,:,1));
 
 V2.fname     = [tempname '.img'];
 V2.dim(1:3)  = VT.dim(1:3);
@@ -70,7 +104,7 @@ V2.pinfo     = [1 0 0]';
 V2.mat       = VT.mat;
 V2.dt        = [64 0];
 V2.descrip   = 'Inverse deformation field';
-spm_write_vol(V2,iy2);                                                                                   
+spm_write_vol(V2,iy(:,:,:,2));
 
 V3.fname     = [tempname '.img'];
 V3.dim(1:3)  = VT.dim(1:3);
@@ -78,13 +112,13 @@ V3.pinfo     = [1 0 0]';
 V3.mat       = VT.mat;
 V3.dt        = [64 0];
 V3.descrip   = 'Inverse deformation field';
-spm_write_vol(V3,iy3);
+spm_write_vol(V3,iy(:,:,:,3));
 
 % 3: extract the coordinates
 warped = ft_warp_apply(inv(V1.mat), input);  % Express as voxel indices
 warped = cat(2, spm_sample_vol(V1,warped(:,1),warped(:,2),warped(:,3),1), ...
-                spm_sample_vol(V2,warped(:,1),warped(:,2),warped(:,3),1), ... 
-                spm_sample_vol(V3,warped(:,1),warped(:,2),warped(:,3),1));
+  spm_sample_vol(V2,warped(:,1),warped(:,2),warped(:,3),1), ...
+  spm_sample_vol(V3,warped(:,1),warped(:,2),warped(:,3),1));
 
 %_______________________________________________________________________
 function [Def,mat] = get_sn2def(sn)
@@ -101,7 +135,7 @@ mat = sn.VG(1).mat;
 
 st = size(sn.Tr);
 
-if (prod(st) == 0),
+if (prod(st) == 0)
     affine_only = true;
     basX = 0;
     basY = 0;
@@ -144,6 +178,3 @@ for j=1:length(z)
     Def{3}(:,:,j) = single(Z2);
 end;
 %_______________________________________________________________________
-
-              
-              

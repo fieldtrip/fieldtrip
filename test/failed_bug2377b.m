@@ -1,11 +1,10 @@
 function failed_bug2377b
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY ft_senslabel ft_senstype ft_chantype ft_chanunit ft_datatype_sens ft_apply_transform
 
-% TEST ft_senslabel ft_senstype ft_chantype ft_chanunit ft_datatype_sens ft_apply_transform
-
-[pnt, tri] = icosahedron162;
+[pnt, tri] = mesh_sphere(162);
 
 pnt = pnt .* 10;                % convert to cm
 sel = find(pnt(:,3)>0);         % take the upper hemisphere

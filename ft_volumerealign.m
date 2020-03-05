@@ -269,7 +269,7 @@ if isempty(cfg.coordsys)
   elseif strcmp(cfg.method, 'interactive')
     cfg.coordsys = 'ctf';
   else
-    ft_error('you should specify the desired head coordinate system in cfg.coordsys')
+    %ft_error('you should specify the desired head coordinate system in cfg.coordsys')
   end
   ft_warning('defaulting to %s coordinate system', cfg.coordsys);
 end
@@ -394,7 +394,7 @@ switch cfg.method
         set(h, 'windowbuttondownfcn', @cb_buttonpress);
         set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
         set(h, 'windowkeypressfcn',   @cb_keyboard);
-        set(h, 'CloseRequestFcn',     @cb_cleanup);
+        set(h, 'CloseRequestFcn',     @cb_quit);
         
         % axis handles will hold the anatomical functional if present, along with labels etc.
         h1 = axes('position', [0.06                0.06+0.06+h3size(2) h1size(1) h1size(2)]);
@@ -556,6 +556,7 @@ switch cfg.method
         tmpcfg             = [];
         tmpcfg.tissue      = 'scalp';
         tmpcfg.method      = 'isosurface';
+        tmpcfg.spmversion  = cfg.spmversion;
         tmpcfg.numvertices = inf;
         scalp              = ft_prepare_mesh(tmpcfg, seg);
         scalp              = ft_convert_units(scalp, 'mm');
@@ -576,7 +577,7 @@ switch cfg.method
         set(h, 'visible', 'on');
         % add callbacks
         set(h, 'windowkeypressfcn',   @cb_keyboard_surface);
-        set(h, 'CloseRequestFcn',     @cb_cleanup);
+        set(h, 'CloseRequestFcn',     @cb_quit);
         
         % create figure handles
         h1 = axes;
@@ -686,7 +687,7 @@ switch cfg.method
     
     tmpcfg             = [];
     tmpcfg.tissue      = 'scalp';
-    tmpcfg.method      = 'projectmesh';%'isosurface';
+    tmpcfg.method      = 'projectmesh'; %'isosurface';
     tmpcfg.spmversion  = cfg.spmversion;
     tmpcfg.numvertices = 20000;
     scalp              = ft_prepare_mesh(tmpcfg, seg);
@@ -695,7 +696,7 @@ switch cfg.method
       fprintf('doing interactive realignment with headshape\n');
       tmpcfg                           = [];
       tmpcfg.template.headshape        = shape;     % this is the Polhemus recorded headshape
-      tmpcfg.template.headshapestyle   = 'vertex'; 
+      tmpcfg.template.headshapestyle   = 'vertex';
       tmpcfg.individual.headshape      = scalp;     % this is the headshape extracted from the anatomical MRI
       tmpcfg.individual.headshapestyle = 'surface';
       tmpcfg = ft_interactiverealign(tmpcfg);
@@ -823,28 +824,28 @@ switch cfg.method
     
   case 'fsl'
     if ~isfield(cfg, 'fsl'), cfg.fsl = []; end
-    cfg.fsl.path         = ft_getopt(cfg.fsl, 'path',    '');
-    cfg.fsl.costfun      = ft_getopt(cfg.fsl, 'costfun', 'corratio');
+    cfg.fsl.path         = ft_getopt(cfg.fsl, 'path',         '');
+    cfg.fsl.costfun      = ft_getopt(cfg.fsl, 'costfun',      'corratio');
     cfg.fsl.interpmethod = ft_getopt(cfg.fsl, 'interpmethod', 'trilinear');
-    cfg.fsl.dof          = ft_getopt(cfg.fsl, 'dof',     6);
-    cfg.fsl.reslice      = ft_getopt(cfg.fsl, 'reslice', 'yes');
-    cfg.fsl.searchrange  = ft_getopt(cfg.fsl, 'searchrange', [-180 180]);
+    cfg.fsl.dof          = ft_getopt(cfg.fsl, 'dof',          6);
+    cfg.fsl.reslice      = ft_getopt(cfg.fsl, 'reslice',      'yes');
+    cfg.fsl.searchrange  = ft_getopt(cfg.fsl, 'searchrange',  [-180 180]);
     
     % write the input and target to a temporary file
     % and create some additional temporary file names to contain the output
-    tmpname1 = tempname;
-    tmpname2 = tempname;
-    tmpname3 = tempname;
-    tmpname4 = tempname;
+    filename_mri    = tempname;
+    filename_target = tempname;
+    filename_output = tempname;
+    filename_mat    = tempname;
     
-    tmpcfg = [];
+    tmpcfg           = [];
     tmpcfg.parameter = 'anatomy';
-    tmpcfg.filename  = tmpname1;
+    tmpcfg.filename  = filename_mri;
     tmpcfg.filetype  = 'nifti';
-    fprintf('writing the input volume to a temporary file: %s\n', [tmpname1, '.nii']);
+    fprintf('writing the input volume to a temporary file: %s\n', [filename_mri, '.nii']);
     ft_volumewrite(tmpcfg, mri);
-    tmpcfg.filename  = tmpname2;
-    fprintf('writing the  target volume to a temporary file: %s\n', [tmpname2, '.nii']);
+    tmpcfg.filename  = filename_target;
+    fprintf('writing the  target volume to a temporary file: %s\n', [filename_target, '.nii']);
     ft_volumewrite(tmpcfg, target);
     
     % create the command to call flirt
@@ -852,7 +853,7 @@ switch cfg.method
     r1  = num2str(cfg.fsl.searchrange(1));
     r2  = num2str(cfg.fsl.searchrange(2));
     str = sprintf('%s/flirt -in %s -ref %s -out %s -omat %s -bins 256 -cost %s -searchrx %s %s -searchry %s %s -searchrz %s %s -dof %s -interp %s',...
-      cfg.fsl.path, tmpname1, tmpname2, tmpname3, tmpname4, cfg.fsl.costfun, r1, r2, r1, r2, r1, r2, num2str(cfg.fsl.dof), cfg.fsl.interpmethod);
+      cfg.fsl.path, filename_mri, filename_target, filename_output, filename_mat, cfg.fsl.costfun, r1, r2, r1, r2, r1, r2, num2str(cfg.fsl.dof), cfg.fsl.interpmethod);
     if isempty(cfg.fsl.path), str = str(2:end); end % remove the first filesep, assume path to flirt to be known
     
     % system call
@@ -864,36 +865,47 @@ switch cfg.method
       % reconstruct the mapping from the target's world coordinate system
       % to the input's voxel coordinate system
       
-      vox = fopen(tmpname4);
-      tmp = textscan(vox, '%f');
-      fclose(vox);
+      fid = fopen(filename_mat);
+      flirtmat = textscan(fid, '%f');
+      fclose(fid);
       
-      % this transforms from input voxels to target voxels
-      vox2vox = reshape(tmp{1},4,4)';
+      % this contains the coregistration information in FSL convention
+      flirtmat = reshape(flirtmat{1},4,4)';
       
-      if det(target.transform(1:3,1:3))>0
-        % flirt apparently flips along the x-dim if the det < 0
-        % if images are not radiological, the x-axis is flipped, see:
-        %  https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=ind0810&L=FSL&P=185638
-        %  https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=ind0903&L=FSL&P=R93775
-        
-        % flip back
-        flipmat = eye(4); flipmat(1,1) = -1; flipmat(1,4) = target.dim(1);
-        vox2vox = flipmat*vox2vox;
+      % The following chunck of code is from Ged Ridgway's
+      % flirtmat2worldmat code
+      % src = inv(flirtmat) * trg
+      % srcvox = src.mat \ inv(flirtmat) * trg.mat * trgvox
+      % BUT, flirt doesn't use src.mat, only absolute values of the 
+      % scaling elements from it,
+      % AND, if images are not radiological, the x-axis is flipped, see:
+      %  https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=ind0810&L=FSL&P=185638
+      %  https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=ind0903&L=FSL&P=R93775
+      scl_target = diag([sqrt(sum(target.transform(1:3,1:3).^2)) 1]);
+      if det(target.transform(1:3,1:3)) > 0
+        % neurological, x-axis is flipped, such that [3 2 1 0] and [0 1 2 3]
+        % have the same *scaled* coordinates:
+        xflip       = diag([-1 1 1 1]);
+        xflip(1, 4) = target.dim(1)-1; % reflect about centre
+        scl_target = scl_target * xflip;
       end
-      if det(mri.transform(1:3,1:3))>0
-        % flirt apparently flips along the x-dim if the det < 0
-        % flip back
-        flipmat = eye(4); flipmat(1,1) = -1; flipmat(1,4) = mri.dim(1);
-        vox2vox = vox2vox*flipmat;
+      scl_mri    = diag([sqrt(sum(mri.transform(1:3,1:3).^2))    1]);
+      if det(mri.transform(1:3,1:3)) > 0
+        % neurological, x-axis is flipped, such that [3 2 1 0] and [0 1 2 3]
+        % have the same *scaled* coordinates:
+        xflip       = diag([-1 1 1 1]);
+        xflip(1, 4) = mri.dim(1)-1; % reflect about centre
+        scl_mri     = scl_mri * xflip;
       end
+      % AND, Flirt's voxels are zero-based, while SPM's are one-based...
+      addone = eye(4);
+      addone(:, 4) = 1;
       
-      % very not sure about this (e.g. is vox2vox really doing what I think
-      % it is doing? should I care about 0 and 1 based conventions?)
-      % changing handedness?
-      mri.transform = target.transform*vox2vox;
-      
-      transform = eye(4);
+      fslvoxmat  = inv(scl_mri) * inv(flirtmat) * scl_target;
+      spmvoxmat  = addone * (fslvoxmat / addone);
+      target2mri = mri.transform * (spmvoxmat / target.transform);
+      transform  = inv(target2mri); 
+
       if isfield(target, 'coordsys')
         coordsys = target.coordsys;
       else
@@ -902,7 +914,7 @@ switch cfg.method
       
     else
       % get the updated anatomy
-      mrinew        = ft_read_mri([tmpname3, '.nii.gz']);
+      mrinew        = ft_read_mri([filename_output, '.nii.gz']);
       mri.anatomy   = mrinew.anatomy;
       mri.transform = mrinew.transform;
       mri.dim       = mrinew.dim;
@@ -914,10 +926,10 @@ switch cfg.method
         coordsys = 'unknown';
       end
     end
-    delete([tmpname1, '.nii']);
-    delete([tmpname2, '.nii']);
-    delete([tmpname3, '.nii.gz']);
-    delete(tmpname4);
+    delete([filename_mri,    '.nii']);
+    delete([filename_target, '.nii']);
+    delete([filename_output, '.nii.gz']);
+    delete(filename_mat);
     
   case 'spm'
     % check that the preferred SPM version is on the path
@@ -931,12 +943,12 @@ switch cfg.method
       cfg.spm.smoref  = ft_getopt(cfg.spm, 'smoref',  2);
       
       if ~isfield(mri,    'coordsys')
-        mri = ft_convert_coordsys(mri);
+        mri = ft_determine_coordsys(mri);
       else
         fprintf('Input volume has coordinate system ''%s''\n', mri.coordsys);
       end
       if ~isfield(target, 'coordsys')
-        target = ft_convert_coordsys(target);
+        target = ft_determine_coordsys(target);
       else
         fprintf('Target volume has coordinate system ''%s''\n', target.coordsys);
       end
@@ -982,7 +994,7 @@ switch cfg.method
       transform     = inv(spm_matrix(x(:)')); % from V1 to V2, to be multiplied still with the original transform (mri.transform), see below
       
     end
-
+    
     if isfield(target, 'coordsys')
       coordsys = target.coordsys;
     else
@@ -1098,16 +1110,16 @@ if viewresult
   set(h, 'windowbuttondownfcn', @cb_buttonpress);
   set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
   set(h, 'windowkeypressfcn',   @cb_keyboard);
-  set(h, 'CloseRequestFcn',     @cb_cleanup);
+  set(h, 'CloseRequestFcn',     @cb_quit);
   
   % axis handles will hold the anatomical functional if present, along with labels etc.
   h1 = axes('position', [0.06                0.06+0.06+h3size(2) h1size(1) h1size(2)]);
   h2 = axes('position', [0.06+0.06+h1size(1) 0.06+0.06+h3size(2) h2size(1) h2size(2)]);
   h3 = axes('position', [0.06                0.06                h3size(1) h3size(2)]);
   
-  set(h1, 'Tag', 'ik', 'Visible', 'off', 'XAxisLocation', 'top');
+  set(h1, 'Tag', 'ij', 'Visible', 'off', 'XAxisLocation', 'top');
   set(h2, 'Tag', 'jk', 'Visible', 'off', 'YAxisLocation', 'right'); % after rotating in ft_plot_ortho this becomes top
-  set(h3, 'Tag', 'ij', 'Visible', 'off');
+  set(h3, 'Tag', 'ik', 'Visible', 'off');
   
   set(h1, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
   set(h2, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
@@ -1364,7 +1376,7 @@ if isempty(eventdata)
   key = get(h, 'userdata');
 else
   % determine the key that was pressed on the keyboard
-  key = parseKeyboardEvent(eventdata);
+  key = parsekeyboardevent(eventdata);
 end
 
 % get the most recent surface position that was clicked with the mouse
@@ -1397,7 +1409,7 @@ end
 setappdata(h, 'opt', opt);
 
 if isequal(key, 'q')
-  cb_cleanup(h);
+  cb_quit(h);
 else
   cb_redraw_surface(h);
 end
@@ -1690,23 +1702,23 @@ uiresume
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_keyboard(h, eventdata)
+h   = getparent(h);
+opt = getappdata(h, 'opt');
 
 if isempty(eventdata)
   % determine the key that corresponds to the uicontrol element that was activated
   key = get(h, 'userdata');
 else
   % determine the key that was pressed on the keyboard
-  key = parseKeyboardEvent(eventdata);
+  key = parsekeyboardevent(eventdata);
 end
+
 % get focus back to figure
 if ~strcmp(get(h, 'type'), 'figure')
   set(h, 'enable', 'off');
   drawnow;
   set(h, 'enable', 'on');
 end
-
-h   = getparent(h);
-opt = getappdata(h, 'opt');
 
 curr_ax = get(h, 'currentaxes');
 tag     = get(curr_ax, 'tag');
@@ -1716,7 +1728,7 @@ if isempty(key)
   key = '';
 end
 
-% the following code is largely shared with FT_SOURCEPLOT
+% the following code is largely shared by FT_SOURCEPLOT, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN, FT_MESHREALIGN, FT_ELECTRODEPLACEMENT
 switch key
   case {'' 'shift+shift' 'alt-alt' 'control+control' 'command-0'}
     % do nothing
@@ -1742,7 +1754,7 @@ switch key
     
   case 'q'
     setappdata(h, 'opt', opt);
-    cb_cleanup(h);
+    cb_quit(h);
     
   case {'i' 'j' 'k' 'm' 28 29 30 31 'leftarrow' 'rightarrow' 'uparrow' 'downarrow'} % TODO FIXME use leftarrow rightarrow uparrow downarrow
     % update the view to a new position
@@ -1765,8 +1777,8 @@ switch key
     setappdata(h, 'opt', opt);
     cb_redraw(h);
     
+  case {43 'add' 'shift+equal'}  % + or numpad +
     % contrast scaling
-  case {43 'shift+equal'}  % numpad +
     % disable if viewresult
     if ~opt.viewresult
       if isempty(opt.clim)
@@ -1780,7 +1792,8 @@ switch key
       cb_redraw(h);
     end
     
-  case {45 'shift+hyphen'} % numpad -
+  case {45 'subtract' 'hyphen' 'shift+hyphen'} % - or numpad -
+    % contrast scaling
     % disable if viewresult
     if ~opt.viewresult
       if isempty(opt.clim)
@@ -1929,7 +1942,7 @@ uiresume
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_cleanup(h, eventdata)
+function cb_quit(h, eventdata)
 
 opt = getappdata(h, 'opt');
 if ~opt.viewresult
@@ -1950,35 +1963,6 @@ while p~=0
   h = p;
   p = get(h, 'parent');
 end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function key = parseKeyboardEvent(eventdata)
-
-key = eventdata.Key;
-
-% handle possible numpad events (different for Windows and UNIX systems)
-% NOTE: shift+numpad number does not work on UNIX, since the shift
-% modifier is always sent for numpad events
-if isunix()
-  shiftInd = match_str(eventdata.Modifier, 'shift');
-  if ~isnan(str2double(eventdata.Character)) && ~isempty(shiftInd)
-    % now we now it was a numpad keystroke (numeric character sent AND
-    % shift modifier present)
-    key = eventdata.Character;
-    eventdata.Modifier(shiftInd) = []; % strip the shift modifier
-  end
-elseif ispc()
-  if strfind(eventdata.Key, 'numpad')
-    key = eventdata.Character;
-  end
-end
-
-if ~isempty(eventdata.Modifier)
-  key = [eventdata.Modifier{1} '+' key];
-end
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

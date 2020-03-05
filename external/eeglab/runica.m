@@ -603,7 +603,7 @@ end;
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Process the data %%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-icaprintf(verb,fid,'\nInput data size [%d,%d] = %d channels, %d frames/n', ...
+icaprintf(verb,fid,'\nInput data size [%d,%d] = %d channels, %d frames\n', ...
           chans,frames,chans,frames);
 
 if strcmp(pcaflag,'on')
@@ -768,7 +768,7 @@ elseif strcmp(sphering,'off') %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       sphere = eye(chans);                 % return the identity matrix
   end
 elseif strcmp(sphering,'none')
-  sphere = eye(chans,chans);% return the identity matrix
+  sphere = eye(chans,chans); % return the identity matrix
   if ~weights
       icaprintf(verb,fid,'Starting weights are the identity matrix ...\n');
       icaprintf(verb,fid,'Returning the identity matrix in variable "sphere" ...\n');
@@ -910,7 +910,7 @@ if biasflag & extended
                     oldsigns = signs;
                     signcounts = [signcounts signcount];
                     if signcount >= SIGNCOUNT_THRESHOLD,
-                        extblocks = fix(extblocks * SIGNCOUNT_STEP);% make kurt() estimation
+                        extblocks = fix(extblocks * SIGNCOUNT_STEP); % make kurt() estimation
                         signcount = 0;                             % less frequent if sign
                     end                                         % is not changing
                 end % extblocks > 0 & . . .
@@ -1199,7 +1199,7 @@ if ~biasflag & extended
                     oldsigns = signs;
                     signcounts = [signcounts signcount];
                     if signcount >= SIGNCOUNT_THRESHOLD,
-                        extblocks = fix(extblocks * SIGNCOUNT_STEP);% make kurt() estimation
+                        extblocks = fix(extblocks * SIGNCOUNT_STEP); % make kurt() estimation
                         signcount = 0;                             % less frequent if sign
                     end                                         % is not changing
                 end % extblocks > 0 & . . .
@@ -1529,7 +1529,7 @@ end;
   else
       clear data
   end
-  weights = weights(windex,:);% reorder the weight matrix
+  weights = weights(windex,:); % reorder the weight matrix
   bias  = bias(windex);       % reorder them
   signs = diag(signs);        % vectorize the signs matrix
   signs = signs(windex);      % reorder them

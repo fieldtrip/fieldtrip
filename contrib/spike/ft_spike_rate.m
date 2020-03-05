@@ -34,7 +34,7 @@ function [rate] = ft_spike_rate(cfg, spike)
 %   rate.avg:          nTrials array containing the average firing rate per unit
 %   rate.var:          nTrials array containing the variance of firing rates per unit
 %   rate.dof:          nTrials array containing the degree of freedom per unit
-%   rate.label:        nUnits cell array containing the labels of the neuronal units%
+%   rate.label:        nUnits cell-array containing the labels of the neuronal units%
 %   rate.time:         Mean latency (this field ensures it is TIMELOCK
 %                      struct)
 
@@ -196,7 +196,7 @@ function [cfg] = trialselection(cfg,spike)
 nTrials = size(spike.trialtime,1);
 if  strcmp(cfg.trials,'all')
   cfg.trials = 1:nTrials;
-elseif islogical(cfg.trials)
+elseif islogical(cfg.trials) || all(cfg.trials==0 | cfg.trials==1)
   cfg.trials = find(cfg.trials);
 end
 cfg.trials = sort(cfg.trials(:));

@@ -39,11 +39,16 @@ function [data] = ft_rejectvisual(cfg, data)
 %                     'range'     range from min to max in each channel
 %                     'kurtosis'  kurtosis, i.e. measure of peakedness of the amplitude distribution
 %                     'zvalue'    mean and std computed over all time and trials, per channel
-%   cfg.latency     = [begin end] in seconds, or 'minperlength', 'maxperlength',
-%                     'prestim', 'poststim' (default = 'maxperlength')
+%   cfg.latency     = [begin end] in seconds, or 'all', 'minperiod', 'maxperiod',
+%                     'prestim', 'poststim' (default = 'all')
 %   cfg.alim        = value that determines the amplitude scaling for the
 %                     channel and trial display, if empty then the amplitude
 %                     scaling is automatic (default = [])
+%
+% The following options for the scaling of the EEG, EOG, ECG, EMG, MEG and NIRS channels
+% is optional and can be used to bring the absolute numbers of the different
+% channel types in the same range (e.g. fT and uV). The channel types are determined
+% from the input data using FT_CHANNELSELECTION.
 %   cfg.eegscale    = number, scaling to apply to the EEG channels prior to display
 %   cfg.eogscale    = number, scaling to apply to the EOG channels prior to display
 %   cfg.ecgscale    = number, scaling to apply to the ECG channels prior to display
@@ -51,11 +56,10 @@ function [data] = ft_rejectvisual(cfg, data)
 %   cfg.megscale    = number, scaling to apply to the MEG channels prior to display
 %   cfg.gradscale   = number, scaling to apply to the MEG gradiometer channels prior to display (in addition to the cfg.megscale factor)
 %   cfg.magscale    = number, scaling to apply to the MEG magnetometer channels prior to display (in addition to the cfg.megscale factor)
-%
-% The scaling to the EEG, EOG, ECG, EMG and MEG channels is optional and can
-% be used to bring the absolute numbers of the different channel types in
-% the same range (e.g. fT and uV). The channel types are determined from
-% the input data using FT_CHANNELSELECTION.
+%   cfg.nirsscale   = number, scaling to apply to the NIRS channels prior to display
+%   cfg.mychanscale = number, scaling to apply to the channels specified in cfg.mychan
+%   cfg.mychan      = Nx1 cell-array with selection of channels
+%   cfg.chanscale   = Nx1 vector with scaling factors, one per channel specified in cfg.channel
 %
 % Optionally, the raw data is preprocessed (filtering etc.) prior to
 % displaying it or prior to computing the summary metric. The
@@ -150,7 +154,7 @@ cfg = ft_checkconfig(cfg, 'renamed',  {'keepchannels',  'keepchannel'});
 % set the defaults
 cfg.channel     = ft_getopt(cfg, 'channel'    , 'all');
 cfg.trials      = ft_getopt(cfg, 'trials'     , 'all', 1);
-cfg.latency     = ft_getopt(cfg, 'latency'    , 'maxperlength');
+cfg.latency     = ft_getopt(cfg, 'latency'    , 'maxperiod');
 cfg.keepchannel = ft_getopt(cfg, 'keepchannel', 'no');
 cfg.keeptrial   = ft_getopt(cfg, 'keeptrial'  , 'no');
 cfg.feedback    = ft_getopt(cfg, 'feedback'   , 'textbar');
@@ -175,88 +179,17 @@ if strcmp(cfg.keepchannel, 'repair')
   cfg = ft_checkconfig(cfg, 'required', 'neighbours');
 end
 
-% determine the duration of each trial
-for i=1:length(data.time)
-  begsamplatency(i) = min(data.time{i});
-  endsamplatency(i) = max(data.time{i});
-end
-
-% determine the latency window which is possible in all trials
-minperlength = [max(begsamplatency) min(endsamplatency)];
-maxperlength = [min(begsamplatency) max(endsamplatency)];
-
-% latency window for averaging and variance computation is given in seconds
-if (strcmp(cfg.latency, 'minperlength'))
-  cfg.latency = [];
-  cfg.latency(1) = minperlength(1);
-  cfg.latency(2) = minperlength(2);
-elseif (strcmp(cfg.latency, 'maxperlength'))
-  cfg.latency = [];
-  cfg.latency(1) = maxperlength(1);
-  cfg.latency(2) = maxperlength(2);
-elseif (strcmp(cfg.latency, 'prestim'))
-  cfg.latency = [];
-  cfg.latency(1) = maxperlength(1);
-  cfg.latency(2) = 0;
-elseif (strcmp(cfg.latency, 'poststim'))
-  cfg.latency = [];
-  cfg.latency(1) = 0;
-  cfg.latency(2) = maxperlength(2);
-end
+selcfg = keepfields(cfg, {'trials', 'channel','latency', 'showcallinfo'});
+data   = ft_selectdata(selcfg, data);
+% restore the provenance information
+[cfg, data] = rollback_provenance(cfg, data);
 
 % apply scaling to the selected channel types to equate the absolute numbers (i.e. fT and uV)
-% make a seperate copy to prevent the original data from being scaled
-tmpdata = data;
-scaled  = false;
-if ~isempty(cfg.eegscale)
-  scaled = true;
-  chansel = match_str(tmpdata.label, ft_channelselection('EEG', tmpdata.label));
-  for i=1:length(tmpdata.trial)
-    tmpdata.trial{i}(chansel,:) = tmpdata.trial{i}(chansel,:) .* cfg.eegscale;
-  end
-end
-if ~isempty(cfg.eogscale)
-  scaled = true;
-  chansel = match_str(tmpdata.label, ft_channelselection('EOG', tmpdata.label));
-  for i=1:length(tmpdata.trial)
-    tmpdata.trial{i}(chansel,:) = tmpdata.trial{i}(chansel,:) .* cfg.eogscale;
-  end
-end
-if ~isempty(cfg.ecgscale)
-  scaled = true;
-  chansel = match_str(tmpdata.label, ft_channelselection('ECG', tmpdata.label));
-  for i=1:length(tmpdata.trial)
-    tmpdata.trial{i}(chansel,:) = tmpdata.trial{i}(chansel,:) .* cfg.ecgscale;
-  end
-end
-if ~isempty(cfg.emgscale)
-  scaled = true;
-  chansel = match_str(tmpdata.label, ft_channelselection('EMG', tmpdata.label));
-  for i=1:length(tmpdata.trial)
-    tmpdata.trial{i}(chansel,:) = tmpdata.trial{i}(chansel,:) .* cfg.emgscale;
-  end
-end
-if ~isempty(cfg.megscale)
-  scaled = true;
-  chansel = match_str(tmpdata.label, ft_channelselection('MEG', tmpdata.label));
-  for i=1:length(tmpdata.trial)
-    tmpdata.trial{i}(chansel,:) = tmpdata.trial{i}(chansel,:) .* cfg.megscale;
-  end
-end
-if ~isempty(cfg.gradscale)
-  scaled = true;
-  chansel = match_str(tmpdata.label, ft_channelselection('MEGGRAD', tmpdata.label));
-  for i=1:length(tmpdata.trial)
-    tmpdata.trial{i}(chansel,:) = tmpdata.trial{i}(chansel,:) .* cfg.gradscale;
-  end
-end
-if ~isempty(cfg.magscale)
-  scaled = true;
-  chansel = match_str(tmpdata.label, ft_channelselection('MEGMAG', tmpdata.label));
-  for i=1:length(tmpdata.trial)
-    tmpdata.trial{i}(chansel,:) = tmpdata.trial{i}(chansel,:) .* cfg.magscale;
-  end
-end
+fn = fieldnames(cfg);
+tmpcfg = keepfields(cfg, fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan') | strcmp(fn, 'channel')));
+tmpcfg.parameter = 'trial';
+tmpdata = chanscale_common(tmpcfg, data);
+scaled = ~isequal(data.trial, tmpdata.trial);
 
 switch cfg.method
   case 'channel'

@@ -51,7 +51,7 @@ function [dat] = read_plexon_ddt(filename, begsample, endsample)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 dat = [];
-fid = fopen(filename, 'rb', 'ieee-le');
+fid = fopen_or_error(filename, 'rb', 'ieee-le');
 
 Version    = fread(fid, 1, 'int'    ); 
 dat.Version    = Version;

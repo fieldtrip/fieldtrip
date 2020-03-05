@@ -1,8 +1,9 @@
 % FT_POSTAMBLE_PROVENANCE is a helper script that reports the time and memory used by
-% the calling function and that stores this information together with user name,
-% MATLAB version and other provenance information in the output cfg structure. This
-% script is to be used together with FT_PREAMBLE_PROVENANCE, which records the time
-% and memory at the start of the function.
+% the calling function and that stores this information together with user name, MATLAB
+% version and other provenance information in the cfg structure. This script is to be
+% used together with FT_PREAMBLE_PROVENANCE, which records the time and memory at the
+% start of the function. The cfg can be stored in the output variable using
+% FT_POSTAMBLE_HISTORY.
 %
 % FieldTrip also attempts to uniquely identify the input and the output data. The
 % code that deals with tracking the input data structures is found in
@@ -14,7 +15,7 @@
 %   .... regular code goes here ...
 %   ft_postamble provenance
 %
-% See also FT_PREAMBLE_PROVENANCE
+% See also FT_PREAMBLE, FT_POSTAMBLE, FT_PREAMBLE_PROVENANCE
 
 % Copyright (C) 2011-2016, Robert Oostenveld, DCCN
 %
@@ -36,19 +37,10 @@
 %
 % $Id$
 
-% the name of the variables are passed in the preamble field
-global ft_default
-
 if isfield(cfg, 'trackcallinfo') && ~istrue(cfg.trackcallinfo)
   % do not track the call information
   return
 end
-
-stack = dbstack('-completenames');
-% stack(1) is this script
-% stack(2) is the calling ft_postamble function
-% stack(3) is the main FieldTrip function that we are interested in
-stack = stack(3);
 
 % the proctime, procmem and calltime rely on three cryptical variables that were
 % created and added to the function workspace by the ft_preamble_callinfo script.
@@ -78,10 +70,10 @@ clear stack
 if isfield(cfg, 'trackdatainfo') && istrue(cfg.trackdatainfo)
   % compute the MD5 hash of each of the output arguments
   % temporarily remove the cfg field for getting the hash (creating a duplicate of the data, but still has the same mem ref, so no extra mem needed)
-  if isequal(ft_default.postamble, {'varargin'})
+  if isequal(iW1aenge_postamble, {'varargin'})
     tmpargout = varargout;
   else
-    tmpargout = cellfun(@eval, ft_default.postamble, 'UniformOutput', false);
+    tmpargout = cellfun(@eval, iW1aenge_postamble, 'UniformOutput', false);
   end
   cfg.callinfo.outputhash = cell(1,numel(tmpargout));
   for iargout = 1:numel(tmpargout)

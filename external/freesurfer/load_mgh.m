@@ -29,9 +29,9 @@ function [vol, M, mr_parms, volsz] = load_mgh(fname,slices,frames,headeronly)
 %
 % Original Author: Bruce Fischl
 % CVS Revision Info:
-%    $Author: nicks $
-%    $Date: 2011/03/02 00:04:12 $
-%    $Revision$
+%    $Author: greve $
+%    $Date: 2016/01/19 21:18:27 $
+%    $Revision: 1.22 $
 %
 % Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
 %
@@ -56,18 +56,25 @@ if(nargin < 1 | nargin > 4)
 end
 
 % unzip if it is compressed 
-if (strcmpi(fname((strlen(fname)-3):strlen(fname)), '.MGZ') | ...
+if (strcmpi(fname((strlen(fname)-3):strlen(fname)), '.MGZ') || ...
 		strcmpi(fname((strlen(fname)-3):strlen(fname)), '.GZ'))
   rand('state', sum(100*clock));
   gzipped =  round(rand(1)*10000000 + ...
 		   sum(int16(fname))) + round(cputime);
-  ind = findstr(fname, '.');
-  new_fname = sprintf('/tmp/tmp%d.mgh', gzipped);
-  if (ismac || strcmp(computer,'MAC') || strcmp(computer,'MACI') || strcmp(computer, 'MACI64'))
-    unix(sprintf('gunzip -c %s > %s', fname, new_fname)) ;
+  %ind = findstr(fname, '.');
+  new_fname = sprintf('%s.load_mgh.m.mgh', tempname(fsgettmppath));
+  %if(exist('/scratch'))
+  %  new_fname = sprintf('%s.load_mgh.%d.mgh', tempname('/scratch/'),gzipped);
+  %else
+  %  new_fname = sprintf('/tmp/tmp.load_mgh.%d.mgh', gzipped);
+  %end
+  
+  if(strcmp(computer,'MAC') || strcmp(computer,'MACI') || ismac)
+    [status,msg] = unix(sprintf('gunzip -c %s > %s', fname, new_fname)) ;
   else
-    unix(sprintf('zcat %s > %s', fname, new_fname)) ;
+    [status,msg] = unix(sprintf('zcat %s > %s', fname, new_fname)) ;
   end
+  if status ~= 0, fprintf('%s\n',msg) ; end
   fname = new_fname ;
 else
   gzipped = -1 ;
@@ -92,7 +99,10 @@ end
 v       = fread(fid, 1, 'int') ; 
 if(isempty(v))
   fprintf('ERROR: problem reading fname\n');
-  if(gzipped >=0) unix(sprintf('rm %s', fname)); end
+  if(gzipped >=0)
+  [status,msg] = unix(sprintf('rm -f %s', fname));
+  if status ~= 0, fprintf('%s\n',msg) ; end
+  end
 end
 ndim1   = fread(fid, 1, 'int') ; 
 ndim2   = fread(fid, 1, 'int') ; 
@@ -173,7 +183,10 @@ if(headeronly)
     end
   end
   fclose(fid);
-  if(gzipped >=0)  unix(sprintf('rm %s', fname));  end
+  if(gzipped >=0)
+  [status,msg] = unix(sprintf('rm -f %s', fname));
+  if status ~= 0, fprintf('%s\n',msg) ; end
+  end
   return;
 end
 
@@ -182,13 +195,13 @@ end
 if(slices(1) <= 0 & frames(1) <= 0)
   switch type
    case MRI_FLOAT,
-    vol = fread(fid, nv, 'float32') ; 
+    vol = fread(fid, nv, '*float32') ; 
    case MRI_UCHAR,
-    vol = fread(fid, nv, 'uchar') ; 
+    vol = fread(fid, nv, '*uchar') ; 
    case MRI_SHORT,
-    vol = fread(fid, nv, 'short') ; 
+    vol = fread(fid, nv, '*short') ; 
    case MRI_INT,
-    vol = fread(fid, nv, 'int') ; 
+    vol = fread(fid, nv, '*int') ; 
   end
 
   if(~feof(fid))
@@ -198,7 +211,10 @@ if(slices(1) <= 0 & frames(1) <= 0)
     end
   end
   fclose(fid) ;
-  if(gzipped >=0)  unix(sprintf('rm %s', fname));  end
+  if(gzipped >=0)
+  [status,msg] = unix(sprintf('rm -f %s', fname));
+  if status ~= 0, fprintf('%s\n',msg) ; end
+  end
   
   nread = prod(size(vol));
   if(nread ~= nv)
@@ -231,20 +247,23 @@ for frame = frames
     
     switch type
      case MRI_FLOAT,
-      [tmpslice nread]  = fread(fid, nvslice, 'float32') ; 
+      [tmpslice nread]  = fread(fid, nvslice, '*float32') ; 
      case MRI_UCHAR,
-      [tmpslice nread]  = fread(fid, nvslice, 'uchar') ; 
+      [tmpslice nread]  = fread(fid, nvslice, '*uchar') ; 
      case MRI_SHORT,
-      [tmpslice nread]  = fread(fid, nvslice, 'short') ; 
+      [tmpslice nread]  = fread(fid, nvslice, '*short') ; 
      case MRI_INT,
-      [tmpslice nread]  = fread(fid, nvslice, 'int') ; 
+      [tmpslice nread]  = fread(fid, nvslice, '*int') ; 
     end
 
     if(nread ~= nvslice)
       fprintf('ERROR: load_mgh: reading slice %d, frame %d\n',slice,frame);
       fprintf('  tried to read %d, actually read %d\n',nvslice,nread);
       fclose(fid);
-      if(gzipped >=0) unix(sprintf('rm %s', fname)); end
+      if(gzipped >=0)
+      [status,msg] = unix(sprintf('rm -f %s', fname));
+      if status ~= 0, fprintf('%s\n',msg) ; end
+      end
       return;
     end
 
@@ -267,6 +286,9 @@ if(~feof(fid))
 end
 
 fclose(fid) ;
-if(gzipped >=0) unix(sprintf('rm %s', fname)); end
+if(gzipped >=0)
+[status,msg] = unix(sprintf('rm -f %s', fname));
+if status ~= 0, fprintf('%s\n',msg) ; end
+end
 
 return;

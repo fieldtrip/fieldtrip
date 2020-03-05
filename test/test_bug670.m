@@ -1,9 +1,9 @@
 function test_bug670
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST ft_channelselection ft_channelcombination
+% DEPENDENCY ft_channelselection ft_channelcombination
 
 datachannel = {'a1', 'a2', 'a3', 'b1', 'b2', 'b3'};
 

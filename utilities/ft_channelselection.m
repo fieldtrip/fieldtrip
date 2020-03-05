@@ -77,7 +77,12 @@ if isempty(recursion)
   recursion = false;
 end
 
-if nargin<3
+if isempty(desired)
+  % ensure this is an empty cell-array, not an empty numeric array
+  desired = {};
+end
+
+if nargin<3 || isempty(senstype)
   senstype = ft_senstype(datachannel);
 end
 
@@ -213,6 +218,21 @@ switch senstype
     labelmeg      = datachannel(megind);
     labelmegmag   = datachannel(megmag);
     labelmeggrad  = datachannel(megax | megpl);
+    %%
+    %    labeleeg  = datachannel(strncmp('EEG', datachannel, length('EEG')));
+    eeg_A = myregexp('^A[^G]*[0-9hzZ]$', datachannel);
+    eeg_P = myregexp('^P[^G]*[0-9hzZ]$', datachannel);
+    eeg_T = myregexp('^T[^R]*[0-9hzZ]$', datachannel);
+    eeg_E = myregexp('^E$', datachannel);
+    eeg_Z = myregexp('^[zZ]$', datachannel);
+    eeg_M = myregexp('^M[0-9]$', datachannel);
+    eeg_O = myregexp('^[BCFION]\w*[0-9hzZ]$', datachannel);
+    eeg_EEG = myregexp('^EEG[0-9][0-9][0-9]$', datachannel);
+    eegind = logical( eeg_A + eeg_P + eeg_T + eeg_E + eeg_Z + eeg_M + eeg_O + eeg_EEG );
+    clear eeg_A eeg_P eeg_T eeg_E eeg_Z eeg_M eeg_O eeg_EEG
+    labeleeg      = datachannel(eegind);
+    labeleog    = [ labeleog(:); datachannel(myregexp('^EO[0-9]$', datachannel)) ];  % add 'EO'
+    labelecg    = [ labelecg(:); datachannel(myregexp('^X[0-9]$', datachannel)) ];   % add 'X'
     
   case {'ctf64'}
     labelml     = datachannel(~cellfun(@isempty, regexp(datachannel, '^SL')));    % left    MEG channels
@@ -458,7 +478,6 @@ channel(badindx) = [];
 
 % remove channel labels that are not present in the data
 chanindx = match_str(channel, datachannel);
-
 channel  = channel(chanindx);
 
 if findgui

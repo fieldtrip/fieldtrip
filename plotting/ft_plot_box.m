@@ -26,7 +26,7 @@ function [varargout] = ft_plot_box(position, varargin)
 %   ft_plot_box([-1 1 2 3], 'facecolor', 'b')
 %   axis([-4 4 -4 4])
 %
-% See also FT_PLOT_LINE
+% See also FT_PLOT_LINE, FT_PLOT_CROSSHAIR
 
 % Copyrights (C) 2009-2011, Robert Oostenveld
 %

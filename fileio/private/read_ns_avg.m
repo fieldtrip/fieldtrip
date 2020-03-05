@@ -49,13 +49,9 @@ else
 end
 
 % open the file and seek towards the place where the raw data is
-fid = fopen(filename,'r','ieee-le');
-if fid<0
-  ft_error(['cannot open ', filename]);
-else
-  fseek(fid, 900, 'cof');       % skip general header
-  fseek(fid, 75*avg.nchan, 'cof');  % skip channel headers
-end;
+fid = fopen_or_error(filename,'r','ieee-le');
+fseek(fid, 900, 'cof');       % skip general header
+fseek(fid, 75*avg.nchan, 'cof');  % skip channel headers
 
 % read raw signal data and convert to uV
 avg.data = zeros(avg.nchan, avg.npnt);
