@@ -12,7 +12,7 @@ function [dat, ref] = ft_preproc_rereference(dat, refchan, method, handlenan, le
 %   refchan    vector with indices of the new reference channels, or 'all'
 %   method     string, can be 'avg', 'median', or 'rest'
 %              if select 'rest','leadfield' is required.
-%              The leadfield can be a matrix (sources X channels)
+%              The leadfield can be a matrix (channels X sources)
 %              which is calculated by using the forward theory, based on
 %              the electrode montage, head model and equivalent source
 %              model. It can also be the output of ft_prepare_leadfield.m
@@ -95,7 +95,7 @@ else
         case 'rest' % re-referencing to REST
             % get the leafield matrix
             if isnumeric(leadfield)
-               G = leadfield;
+               G = leadfield';
             elseif isstruct(leadfield)
                 try
                     Npos = size(leadfield.pos,1);
@@ -113,7 +113,20 @@ else
                     % contains the potential or field distributions on all 
                     % sensors for the x,y,z-orientations of the dipole.
                 catch
-                    ft_error('leadfiled is not calculated by ''ft_prepare_leadfield.m'' (dipoles contain x,y,z-orientations)?');  
+                    try
+                        Npos = size(leadfield.pos,1);
+                        m = 1;
+                        for i = 1:Npos
+                            if ~isempty(leadfield.leadfield{1,i})
+                                G(:,m) = leadfield.leadfield{1,i};% potential of the dipole.
+                                m = m + 1;
+                            end
+                        end
+                        G = G';
+                    catch
+                        ft_error('leadfiled is not calculated by ''ft_prepare_leadfield.m'' (dipoles contain x,y,z-orientations)?');
+                    end
+                    
                 end
             elseif iscell(leadfield)
                 try
@@ -132,7 +145,19 @@ else
                     % contains the potential or field distributions on all 
                     % sensors for the x,y,z-orientations of the dipole.
                 catch
-                    ft_error('leadfiled is not calculated by ''ft_prepare_leadfield.m'' (dipoles contain x,y,z-orientations)?');  
+                    try
+                        Npos = size(leadfield.pos,1);
+                        m = 1;
+                        for i = 1:Npos
+                            if ~isempty(leadfield{1,i})
+                                G(:,m) = leadfield{1,i};% potential of the dipole.
+                                m = m + 1;
+                            end
+                        end
+                        G = G';
+                    catch
+                        ft_error('leadfiled is not calculated by ''ft_prepare_leadfield.m'' (dipoles contain x,y,z-orientations)?');
+                    end
                 end
             end
             temp_dat = dat(refchan,:);

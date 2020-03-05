@@ -101,7 +101,7 @@ function [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, en
 %   cfg.refmethod     = 'avg', 'median', 'rest' or 'bipolar' (default = 'avg')
 %   cfg.leadfield      = leadfield
 %                     if select 'rest','leadfield' is required.
-%                     The leadfield can be a matrix (sources X channels)
+%                     The leadfield can be a matrix (channels X sources)
 %                     which is calculated by using the forward theory, based on
 %                     the electrode montage, head model and equivalent source
 %                     model. It can also be the output of ft_prepare_leadfield.m
@@ -284,7 +284,44 @@ if strcmp(cfg.reref, 'yes')
     label = tmpdata.label;    % the output channels can be different than the input channels
     clear tmpdata
   elseif isequal(cfg.refmethod,'rest')
+      cfg.refchannel = ft_channelselection(cfg.refchannel, label);
+      refindx = match_str(label, cfg.refchannel);
+      if isempty(refindx)
+          ft_error('reference channel was not found')
+      end
+      
       if isfield(cfg,'leadfield')
+          % check the leadfield
+          if isnumeric(cfg.leadfield)
+              Nchann_lf = size(cfg.leadfield,1); % No. of  channels in leadfield
+              if Nchann_lf ~= length(label)
+                  ft_error('channels in the leadfield is not euqal to the data');
+              else
+                  warning('There is no label info in the leadfield, please maske sure the order in leadfield is the same as in the data');
+              end
+          elseif isstruct(cfg.leadfield)
+              Nchann_lf = size(cfg.leadfield.label,1); % No. of  channels in leadfield
+              if Nchann_lf ~= length(label)
+                  ft_error('channels in the leadfield is not euqal to the data');
+              else
+                  % check the order in leadfield is the same as in the data
+                  try
+                      [indx1,indx2] = match_str(cfg.leadfield.label(refindx), label(refindx));
+                      if ~isequal(indx1,indx2)
+                          ft_error('The order in leadfield may be NOT the same as in the data, please check the leadfield!');
+                      end
+                  catch
+                      warning('There is no label info in the leadfield, please maske sure the order in leadfield is the same as in the data');
+                  end
+              end
+          elseif iscell(cfg.leadfield)
+              Nchann_lf = size(cfg.leadfield{1,1},1); % No. of  channels in leadfield
+              if Nchann_lf ~= length(label)
+                  ft_error('channels in the leadfield is not euqal to the data');
+              else
+                  warning('There is no label info in the leadfield, please maske sure the order in leadfield is the same as in the data');
+              end
+          end
           dat = ft_preproc_rereference(dat, refindx, cfg.refmethod,[],cfg.leadfield);
       else
         ft_error('Leadfield is required to re-refer to REST');  

@@ -107,7 +107,7 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.refmethod     = 'avg', 'median', 'rest' or 'bipolar' for bipolar derivation of sequential channels (default = 'avg')
 %   cfg.leadfield      = leadfield
 %                     if select 'rest','leadfield' is required.
-%                     The leadfield can be a matrix (sources X channels)
+%                     The leadfield can be a matrix (channels X sources)
 %                     which is calculated by using the forward theory, based on
 %                     the electrode montage, head model and equivalent source
 %                     model. It can also be the output of ft_prepare_leadfield.m
