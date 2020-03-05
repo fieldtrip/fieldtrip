@@ -30,6 +30,12 @@ else
 end
 
 tmpcfg = copyfields(cfg, tmpcfg, {'inputfile', 'outputfile'});
+if isempty(tmpcfg.inputfile)
+  tmpcfg = removefields(tmpcfg, 'inputfile');
+end
+if isempty(cfg.outputfile)
+  tmpcfg = removefields(tmpcfg, 'outputfile');
+end
 tmpcfg = printstruct('cfg', tmpcfg);
 
 % We're going to explicitly mention any input files going into the pipeline
