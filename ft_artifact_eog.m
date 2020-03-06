@@ -131,7 +131,7 @@ cfg.artfctdef.eog.fltpadding = ft_getopt(cfg.artfctdef.eog, 'fltpadding', 0.1);
 cfg.artfctdef.eog.artpadding = max(ft_getopt(cfg.artfctdef.eog, 'artpadding', 0.1), artpadding_oldstyle);
 cfg.artfctdef.eog.cutoff     = ft_getopt(cfg.artfctdef.eog, 'cutoff',     4);
 
-% construct a temporary configuration that can be passed onto artifact_zvalue
+% construct a temporary configuration that can be passed onto FT_ARTIFACT_ZVALUE
 tmpcfg                  = cfg;
 tmpcfg.artfctdef.zvalue = cfg.artfctdef.eog;
 tmpcfg.artfctdef        = rmfield(tmpcfg.artfctdef, 'eog');

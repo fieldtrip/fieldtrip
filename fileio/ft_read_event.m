@@ -43,7 +43,7 @@ function [event] = ft_read_event(filename, varargin)
 % sample at which the TTF went down, and the value will correspond to the TTL value
 % just prior to going down.
 %
-% To use an external reading function, you can specify a function as the
+% To use an external reading function, you can specify an external function as the
 % 'eventformat' option. This function should take the filename  and the headeras
 % input arguments. Please check the code of this function for details, and search for
 % BIDS_TSV as example.
@@ -70,7 +70,7 @@ function [event] = ft_read_event(filename, varargin)
 %
 % See also FT_READ_HEADER, FT_READ_DATA, FT_WRITE_EVENT, FT_FILTER_EVENT
 
-% Copyright (C) 2004-2019 Robert Oostenveld (Nervus by Jan Brogger)
+% Copyright (C) 2004-2020 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -1442,7 +1442,7 @@ switch eventformat
       end
       event(i).duration = hdr.orig.Events(i).duration*maxSampleRate;
     end
-    %Add boundary events to indicate segments
+    % Add boundary events to indicate segments
     originalEventCount = length(hdr.orig.Events);
     boundaryEventCount = 1;
     for i=2:length(hdr.orig.Segments)

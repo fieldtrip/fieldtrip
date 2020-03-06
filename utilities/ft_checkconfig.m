@@ -560,6 +560,12 @@ if ~isempty(createsubcfg)
           'stabilityfix'
           };
 
+      case 'dip'
+        fieldname = {
+          'time'
+          'signal'
+          };
+
       otherwise
         ft_error('unexpected name of the subfunction');
 

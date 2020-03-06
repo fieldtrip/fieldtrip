@@ -423,6 +423,9 @@ else
       end
     end
     cfg.trl = trl;
+  elseif ischar(cfg.trl)
+    % load the trial information from file
+    cfg.trl = loadvar(cfg.trl, 'trl');
   end
   
   % this should be a cell-array

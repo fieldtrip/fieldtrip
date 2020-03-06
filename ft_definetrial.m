@@ -184,8 +184,9 @@ elseif isfield(cfg, 'trialfun')
     % conditions, reaction time or any other information
     [trl, event] = feval(cfg.trialfun, cfg);
   end
+  
 else
-  ft_error('no trialfunction specified, see FT_DEFINETRIAL for help');
+  ft_error('cfg.trialfun is not specified, see FT_DEFINETRIAL for help');
 end
 
 if isfield(cfg, 'trialdef') && isfield(cfg.trialdef, 'eventtype') && isequal(cfg.trialdef.eventtype, '?')
