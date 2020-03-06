@@ -95,7 +95,7 @@ else
         case 'rest' % re-referencing to REST
             % get the leafield matrix
             if isnumeric(leadfield)
-               G = leadfield';
+                G = leadfield';
             elseif isstruct(leadfield)
                 try
                     Npos = size(leadfield.pos,1);
@@ -108,9 +108,9 @@ else
                             m = m + 1;
                         end
                     end
-                    G = [lf_X,lf_Y,lf_Z]'; 
-                    % the leadfield matrix (sources*3 X chans), which 
-                    % contains the potential or field distributions on all 
+                    G = [lf_X,lf_Y,lf_Z]';
+                    % the leadfield matrix (sources*3 X chans), which
+                    % contains the potential or field distributions on all
                     % sensors for the x,y,z-orientations of the dipole.
                 catch
                     try
@@ -140,9 +140,9 @@ else
                             m = m + 1;
                         end
                     end
-                    G = [lf_X,lf_Y,lf_Z]'; 
-                    % the leadfield matrix (sources*3 X chans), which 
-                    % contains the potential or field distributions on all 
+                    G = [lf_X,lf_Y,lf_Z]';
+                    % the leadfield matrix (sources*3 X chans), which
+                    % contains the potential or field distributions on all
                     % sensors for the x,y,z-orientations of the dipole.
                 catch
                     try
@@ -203,7 +203,7 @@ if size(data,1)~=size(G,1)
 end
 
 Gar = G - repmat(mean(G),size(G,1),1);
-data_z = G * pinv(Gar,0.05) * data;  % the value 0.05 is for real data;for 
-                                     % simulated data, it may be set as zero.
-                                     
+data_z = G * pinv(Gar,0.05) * data;  % the value 0.05 is for real data;for
+% simulated data, it may be set as zero.
+
 data_z = data + repmat(mean(data_z),size(G,1),1); % V = V_avg + AVG(V_0)
