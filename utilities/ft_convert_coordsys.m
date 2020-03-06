@@ -116,14 +116,16 @@ if ~ismember(object.coordsys, {'spm', 'mni', 'tal'}) && ismember(target, {'spm',
   target = 'acpc';
 end
 
+abc = orientationtriplets; % these are the generic axis orientation triplets
+
 % RAS and ALS are not specific with regard to the origin
-if ismember(object.coordsys, {'ras', 'als'}) && strcmp(target, 'acpc')
+if ismember(object.coordsys, abc) && strcmp(target, 'acpc')
   if method==0
     ft_error('approximately converting from %s to %s is not supported', object.coordsys, target);
   elseif method>0
-    % converting an anatomical MRI from RAS or ALS to ACPC using SPM might work
+    % converting an anatomical MRI from RAS, ALS etc. to ACPC using SPM might work
   end
-elseif ismember(object.coordsys, {'ras', 'als'}) && ~ismember(target, {'ras', 'als'})
+elseif ismember(object.coordsys, abc) && ~ismember(target, abc)
   % other conversions from RAS or ALS are also not supported
   ft_error('converting from %s to %s is not supported', object.coordsys, target);
 end
@@ -169,12 +171,12 @@ ctf2neuromag = [
   ];
 
 % this is a 90 degree rotation around the z-axis
-als2ras = [
-  0.0000   -1.0000    0.0000    0.0000
-  1.0000    0.0000    0.0000    0.0000
-  0.0000    0.0000    1.0000    0.0000
-  0.0000    0.0000    0.0000    1.0000
-  ];
+% als2ras = [
+%   0.0000   -1.0000    0.0000    0.0000
+%   1.0000    0.0000    0.0000    0.0000
+%   0.0000    0.0000    1.0000    0.0000
+%   0.0000    0.0000    0.0000    1.0000
+%   ];
 
 % affine transformation from MNI to Talairach, see http://imaging.mrc-cbu.cam.ac.uk/imaging/MniTalairach
 % the non-linear (i.e. piecewise linear) transform between MNI and Talairach are implemented elsewhere, see the functions MNI2TAL and TAL2MNI
@@ -218,7 +220,7 @@ fsaverage2ras = eye(4);
 tal2ras       = eye(4);
 
 % make the combined and the inverse transformations where possible
-coordsys = {'ctf', 'bti', 'fourd', 'neuromag', 'itab', 'acpc', 'mni', 'spm', 'fsaverage', 'tal', 'ras', 'als'};
+coordsys = [{'ctf', 'bti', 'fourd', 'neuromag', 'itab', 'acpc', 'mni', 'spm', 'fsaverage', 'tal'} abc];
 implemented = zeros(length(coordsys)); % this is only for debugging
 for i=1:numel(coordsys)
   for j=1:numel(coordsys)
@@ -233,6 +235,11 @@ for i=1:numel(coordsys)
       % make the ones on the diagonal
       eval(sprintf('%s2%s = eye(4);', xxx, yyy));
       implemented(i,j) = 2;
+    elseif any(strcmp(abc,xxx)) && any(strcmp(abc,yyy))
+      % create the transformation on-the-fly
+      T = transform_coordinateaxes(xxx, yyy);
+      eval(sprintf('%s2%s = %s;', xxx, yyy, 'T'));
+      implemented(i,j) = 1;
     else
       % try to make the transformation (and inverse) with a two-step approach
       for k=1:numel(coordsys(1:10)) % do not use RAS or ALS as intermediate steps
@@ -445,3 +452,52 @@ end
 % all of the internal logic inside this function requires that the units are in millimeter
 % convert back to the original units
 object = ft_convert_units(object, original.unit);
+
+function triplets = orientationtriplets
+
+% these are the 48 generic axis orientation triplets
+%  a = anterior
+%  p = posterior
+%  l = left
+%  r = right
+%  s = superior
+%  i = inferior
+
+triplets = {
+  'als'; 'ali'; 'ars'; 'ari';...
+  'pls'; 'pli'; 'prs'; 'pri';...
+  'las'; 'lai'; 'ras'; 'rai';...
+  'lps'; 'lpi'; 'rps'; 'rpi';...
+  'asl'; 'ail'; 'asr'; 'air';...
+  'psl'; 'pil'; 'psr'; 'pir';...
+  'sal'; 'ial'; 'sar'; 'iar';...
+  'spl'; 'ipl'; 'spr'; 'ipr';...
+  'sla'; 'ila'; 'sra'; 'ira';...
+  'slp'; 'ilp'; 'srp'; 'irp';...
+  'lsa'; 'lia'; 'rsa'; 'ria';...
+  'lsp'; 'lip'; 'rsp'; 'rip'}';
+  
+function T = transform_coordinateaxes(from, to)
+
+ap_in  = find(from=='a' | from=='p');
+ap_out = find(to=='a'   | to=='p');
+lr_in  = find(from=='l' | from=='r');
+lr_out = find(to=='l'   | to=='r');
+si_in  = find(from=='s' | from=='i');
+si_out = find(to=='s'   | to=='i');
+
+% index axis according to ap,lr,si
+order_in  = [ap_in  lr_in  si_in];
+order_out = [ap_out lr_out si_out];
+
+% check whether one of the axis needs flipping
+flip = 2.*(0.5-double(from(order_in)~=to(order_out)));
+
+T = zeros(4);
+for k = 1:3
+  T(order_out(k),order_in(k)) = flip(k);
+end
+T(4,4) = 1;
+% if strcmp(from,'als')&&strcmp(to,'ras')
+%   keyboard;
+% end
