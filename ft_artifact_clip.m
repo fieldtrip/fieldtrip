@@ -83,25 +83,19 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'artfctdef.clip.thresh', 'artfctdef.clip.timethreshold'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 
-% set default rejection parameters for clip artifacts if necessary.
-if ~isfield(cfg, 'artfctdef'),                    cfg.artfctdef                    = [];    end
-if ~isfield(cfg.artfctdef, 'clip'),               cfg.artfctdef.clip               = [];    end
-if ~isfield(cfg.artfctdef.clip, 'channel'),       cfg.artfctdef.clip.channel       = 'all'; end
-if ~isfield(cfg.artfctdef.clip, 'timethreshold'), cfg.artfctdef.clip.timethreshold = 0.010; end
-if ~isfield(cfg.artfctdef.clip, 'amplthreshold'), cfg.artfctdef.clip.amplthreshold = 0.000; end
-if ~isfield(cfg.artfctdef.clip, 'pretim'),        cfg.artfctdef.clip.pretim        = 0.000; end
-if ~isfield(cfg.artfctdef.clip, 'psttim'),        cfg.artfctdef.clip.psttim        = 0.000; end
-if ~isfield(cfg, 'headerformat'),                cfg.headerformat                 = [];    end
-if ~isfield(cfg, 'dataformat'),                  cfg.dataformat                   = [];    end
+% set the default options
+cfg.feedback      = ft_getopt(cfg, 'feedback',   'text');
+cfg.headerformat  = ft_getopt(cfg, 'headerformat', []);
+cfg.dataformat    = ft_getopt(cfg, 'dataformat',   []);
 
-% for backward compatibility
-if isfield(cfg.artfctdef.clip, 'sgn')
-  cfg.artfctdef.clip.channel = cfg.artfctdef.clip.sgn;
-  cfg.artfctdef.clip         = rmfield(cfg.artfctdef.clip, 'sgn');
-end
-
-% start with an empty artifact list
-artifact = [];
+% set the default artifact detection parameters
+cfg.artfctdef                     = ft_getopt(cfg, 'artfctdef',                    []);
+cfg.artfctdef.clip                = ft_getopt(cfg.artfctdef, 'clip',               []);
+cfg.artfctdef.clip.channel        = ft_getopt(cfg.artfctdef.clip, 'channel',       'all');
+cfg.artfctdef.clip.timethreshold  = ft_getopt(cfg.artfctdef.clip, 'timethreshold', 0.010);
+cfg.artfctdef.clip.amplthreshold  = ft_getopt(cfg.artfctdef.clip, 'amplthreshold', 0.000);
+cfg.artfctdef.clip.pretim         = ft_getopt(cfg.artfctdef.clip, 'pretim',        0.000);
+cfg.artfctdef.clip.psttim         = ft_getopt(cfg.artfctdef.clip, 'psttim',        0.000);
 
 % the data is either passed into the function by the user or read from file with cfg.inputfile
 hasdata = exist('data', 'var');
@@ -110,19 +104,10 @@ if ~hasdata
   cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
   cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
-  trl = cfg.trl;
 else
-  data = ft_checkdata(data, 'hassampleinfo', 'yes');
+  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
   cfg  = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
   hdr  = ft_fetch_header(data);
-  if isfield(data, 'sampleinfo')
-    trl = data.sampleinfo;
-    for k = 1:numel(data.trial)
-      trl(k,3) = time2offset(data.time{k}, data.fsample);
-    end
-  else
-    ft_error('the input data does not contain a valid description of the sampleinfo');
-  end
 end
 
 % set default cfg.continuous
@@ -134,38 +119,54 @@ if ~isfield(cfg, 'continuous')
   end
 end
 
-% find the channel labels present in the data and their indices
-label = ft_channelselection(cfg.artfctdef.clip.channel, hdr.label);
-sgnindx = match_str(hdr.label, label);
+% get the specification of the data segments that should be scanned for artifacts
+if ~isfield(cfg, 'trl') && hasdata
+  trl = data.sampleinfo;
+  for k = 1:numel(data.trial)
+    trl(k,3) = time2offset(data.time{k}, data.fsample);
+  end
+elseif isfield(cfg, 'trl') && ischar(cfg.trl)
+  trl = loadvar(cfg.trl, 'trl');
+elseif isfield(cfg, 'trl') && isnumeric(cfg.trl)
+  trl = cfg.trl;
+else
+  ft_error('cannot determine which segments of data to scan for artifacts');
+end
 
-% make a local copy for convenience
-artfctdef = cfg.artfctdef.clip;
+% get the remaining settings
+artfctdef     = cfg.artfctdef.clip;
+artfctdef.trl = trl;
+label         = ft_channelselection(artfctdef.channel, hdr.label);
+chanindx      = match_str(hdr.label, label);
+nchan         = length(chanindx);
+artifact      = zeros(0,2);
+numtrl        = size(trl,1);
 
-ntrl = size(trl,1);
-nsgn = length(sgnindx);
-for trlop=1:ntrl
-  fprintf('searching for clipping artifacts in trial %d\n', trlop);
-  % read the data of this trial
+ft_progress('init', cfg.feedback, ['searching for artifacts in ' num2str(nchan) ' channels']);
+for trlop=1:numtrl
+  ft_progress(trlop/numtrl, 'searching in trial %d from %d\n', trlop, numtrl);
   if hasdata
-    dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnindx);
+    dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', chanindx);
   else
-    dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
+    dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
   end
-  % get time
-  if size(trl,2)>=3
+  
+  if size(trl,2)>2
     time = offset2time(trl(trlop,3), hdr.Fs, size(dat,2));
-  elseif hasdata
-    time = data.time{trlop};
+  else
+    time = offset2time(0, hdr.Fs, size(dat,2));
   end
+  
+  % apply the filters
   datflt = preproc(dat, label, time, artfctdef);
-
+  
   %check if cfg.artfctdef.clip.amplthreshold is an string indicating percentage (e.g. '10%')
   if ~isempty(cfg.artfctdef.clip.amplthreshold) && ischar(cfg.artfctdef.clip.amplthreshold) && cfg.artfctdef.clip.amplthreshold(end)=='%'
     ratio = sscanf(cfg.artfctdef.clip.amplthreshold, '%f%%');
     ratio = ratio/100;
     identical = abs(datflt(:,1:(end-1))-datflt(:,2:end));
     r = range(identical,2);
-    for sgnlop=1:length(sgnindx);
+    for sgnlop=1:length(chanindx)
       identical(sgnlop,:) = (identical(sgnlop,:)/r(sgnlop))*100;
     end
     identical = identical <= ratio;
@@ -173,13 +174,13 @@ for trlop=1:ntrl
     % detect all samples that have the same value as the previous sample
     identical = abs(datflt(:,1:(end-1))-datflt(:,2:end))<=cfg.artfctdef.clip.amplthreshold;
   end
-
+  
   % ensure that the number of samples does not change
-  identical = [identical zeros(nsgn,1)];
-
+  identical = [identical zeros(nchan,1)];
+  
   % determine the number of consecutively identical samples
   clip = zeros(size(dat));
-  for sgnlop=1:length(sgnindx)
+  for sgnlop=1:length(chanindx)
     up = find(diff([0 identical(sgnlop,:)], 1, 2)== 1);
     dw = find(diff([identical(sgnlop,:) 0], 1, 2)==-1);
     for k=1:length(up)
@@ -188,18 +189,19 @@ for trlop=1:ntrl
   end
   % collapse over cannels
   clip = max(clip,[],1);
-
+  
   % detect whether there are intervals in which the number of consecutive
   % identical samples is larger than the threshold
   thresh = (clip>=artfctdef.timethreshold*hdr.Fs);
-
+  
   % remember the thresholded parts as artifacts
   artup = find(diff([0 thresh])== 1) + trl(trlop,1) - 1;
   artdw = find(diff([thresh 0])==-1) + trl(trlop,1) - 1;
   for k=1:length(artup)
     artifact(end+1,:) = [artup(k) artdw(k)];
   end
-end
+end % for trlop
+ft_progress('close');
 
 if ~isempty(artifact)
   % add the pretim and psttim to the detected artifacts
@@ -209,12 +211,9 @@ end
 
 % remember the details that were used here
 cfg.artfctdef.clip          = artfctdef;
-cfg.artfctdef.clip.label    = label;
-cfg.artfctdef.clip.trl      = trl;
 cfg.artfctdef.clip.artifact = artifact;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
 ft_postamble previous data
 ft_postamble savevar
-

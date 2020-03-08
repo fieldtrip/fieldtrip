@@ -37,7 +37,7 @@ function [hdr] = ft_read_header(filename, varargin)
 % Depending on the file format, additional header information can be
 % returned in the hdr.orig subfield.
 %
-% To use an external reading function, you can specify a function as the
+% To use an external reading function, you can specify an external function as the
 % 'headerformat' option. This function should take the filename as input argument.
 % Please check the code of this function for details, and search for BIDS_TSV as
 % example.
@@ -91,7 +91,7 @@ function [hdr] = ft_read_header(filename, varargin)
 % See also FT_READ_DATA, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT,
 % FT_CHANTYPE, FT_CHANUNIT
 
-% Copyright (C) 2003-2019 Robert Oostenveld
+% Copyright (C) 2003-2020 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

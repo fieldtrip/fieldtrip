@@ -29,14 +29,14 @@ function [dat] = ft_read_data(filename, varargin)
 % Nchans*Nsamples*Ntrials for epoched or trial-based data when begtrial
 % and endtrial are specified.
 %
-% To use an external reading function, you can specify a function as the 'dataformat'
-% option. This function should take five input arguments: filename, hdr, begsample,
-% endsample, chanindx. Please check the code of this function for details, and search
-% for BIDS_TSV as example.
+% To use an external reading function, you can specify an external function as the
+% 'dataformat' option. This function should take five input arguments: filename, hdr,
+% begsample, endsample, chanindx. Please check the code of this function for details,
+% and search for BIDS_TSV as example.
 %
 % See also FT_READ_HEADER, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT
 
-% Copyright (C) 2003-2019 Robert Oostenveld
+% Copyright (C) 2003-2020 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

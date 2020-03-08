@@ -107,44 +107,26 @@ end
 cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 
-% set default rejection parameters for clip artifacts if necessary
-if ~isfield(cfg, 'artfctdef'),           cfg.artfctdef            = [];  end
-if ~isfield(cfg.artfctdef, 'threshold'), cfg.artfctdef.threshold  = [];  end
-if ~isfield(cfg, 'headerformat'),        cfg.headerformat         = [];  end
-if ~isfield(cfg, 'dataformat'),          cfg.dataformat           = [];  end
-
-% copy the specific configuration for this function out of the master cfg
-artfctdef = cfg.artfctdef.threshold;
-
-% rename some cfg fields for backward compatibility
-if isfield(artfctdef, 'sgn') && ~isfield(artfctdef, 'channel')
-  artfctdef.channel = artfctdef.sgn;
-  artfctdef         = rmfield(artfctdef, 'sgn');
-end
-if isfield(artfctdef, 'cutoff') && ~isfield(artfctdef, 'range')
-  artfctdef.range = artfctdef.cutoff;
-  artfctdef       = rmfield(artfctdef, 'cutoff');
-end
-
-% set default preprocessing parameters if necessary
-if ~isfield(artfctdef, 'channel'),   artfctdef.channel   = 'all';    end
-if ~isfield(artfctdef, 'bpfilter'),  artfctdef.bpfilter  = 'yes';    end
-if ~isfield(artfctdef, 'bpfreq'),    artfctdef.bpfreq    = [0.3 30]; end
-if ~isfield(artfctdef, 'bpfiltord'), artfctdef.bpfiltord = 4;        end
+% set the default options
+cfg.headerformat          = ft_getopt(cfg, 'headerformat', []);
+cfg.dataformat            = ft_getopt(cfg, 'dataformat',   []);
+cfg.feedback              = ft_getopt(cfg, 'feedback', 'text');
 
 % set the default artifact detection parameters
-if ~isfield(artfctdef, 'range'),    artfctdef.range = inf;           end
-if ~isfield(artfctdef, 'min'),      artfctdef.min =  -inf;           end
-if ~isfield(artfctdef, 'max'),      artfctdef.max =   inf;           end
-if ~isfield(artfctdef, 'onset'),    artfctdef.onset  = [];           end
-if ~isfield(artfctdef, 'offset'),   artfctdef.offset = [];           end
+cfg.artfctdef                         = ft_getopt(cfg, 'artfctdef');
+cfg.artfctdef.threshold               = ft_getopt(cfg.artfctdef, 'threshold');
+cfg.artfctdef.threshold.channel       = ft_getopt(cfg.artfctdef.threshold, 'channel',     'all');
+cfg.artfctdef.threshold.bpfilter      = ft_getopt(cfg.artfctdef.threshold, 'bpfilter',     'yes');
+cfg.artfctdef.threshold.bpfreq        = ft_getopt(cfg.artfctdef.threshold, 'bpfreq',      [0.3 30]);
+cfg.artfctdef.threshold.bpfiltord     = ft_getopt(cfg.artfctdef.threshold, 'bpfiltord',   4);
+cfg.artfctdef.threshold.range         = ft_getopt(cfg.artfctdef.threshold, 'range',       inf);
+cfg.artfctdef.threshold.min           = ft_getopt(cfg.artfctdef.threshold, 'min',         -inf);
+cfg.artfctdef.threshold.max           = ft_getopt(cfg.artfctdef.threshold, 'max',         inf);
+cfg.artfctdef.threshold.onset         = ft_getopt(cfg.artfctdef.threshold, 'onset',       []);
+cfg.artfctdef.threshold.offset        = ft_getopt(cfg.artfctdef.threshold, 'offset',      []);
 
 % the data is either passed into the function by the user or read from file with cfg.inputfile
 hasdata = exist('data', 'var');
-
-if hasdata
-  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
-end
 
 % read the header, or get it from the input data
 if ~hasdata
@@ -152,10 +134,9 @@ if ~hasdata
   cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
 else
-  % data given as input
-  data = ft_checkdata(data, 'hassampleinfo', 'yes');
-  cfg = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
-  hdr = ft_fetch_header(data);
+  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
+  cfg  = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
+  hdr  = ft_fetch_header(data);
 end
 
 % set default cfg.continuous
@@ -167,17 +148,28 @@ if ~isfield(cfg, 'continuous')
   end
 end
 
-if ~isfield(cfg, 'trl')
-  % get it from the data itself
-  cfg.trl = data.sampleinfo;
-  cfg.trl(:,3) = 0;
+% get the specification of the data segments that should be scanned for artifacts
+if ~isfield(cfg, 'trl') && hasdata
+  trl = data.sampleinfo;
+  for k = 1:numel(data.trial)
+    trl(k,3) = time2offset(data.time{k}, data.fsample);
+  end
+elseif isfield(cfg, 'trl') && ischar(cfg.trl)
+  trl = loadvar(cfg.trl, 'trl');
+elseif isfield(cfg, 'trl') && isnumeric(cfg.trl)
+  trl = cfg.trl;
+else
+  ft_error('cannot determine which segments of data to scan for artifacts');
 end
 
 % get the remaining settings
-numtrl      = size(cfg.trl,1);
-channel     = ft_channelselection(artfctdef.channel, hdr.label);
-channelindx = match_str(hdr.label,channel);
-artifact    = zeros(0,3);
+artfctdef     = cfg.artfctdef.threshold;
+artfctdef.trl = trl;
+numtrl        = size(trl,1);
+channel       = ft_channelselection(artfctdef.channel, hdr.label);
+chanindx      = match_str(hdr.label, channel);
+nchan         = numel(chanindx);
+artifact      = zeros(0,3);
 
 if ~isempty(artfctdef.onset) || ~isempty(artfctdef.offset)
   if artfctdef.onset>0 && artfctdef.offset>0
@@ -191,19 +183,20 @@ else
   direction = 'none';
 end
 
-
-for trlop = 1:numtrl
+ft_progress('init', cfg.feedback, ['searching for artifacts in ' num2str(nchan) ' channels']);
+for trlop=1:numtrl
+  ft_progress(trlop/numtrl, 'searching in trial %d from %d\n', trlop, numtrl);
   if hasdata
-    dat = ft_fetch_data(data,        'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', channelindx, 'checkboundary', strcmp(cfg.continuous, 'no'));
+    dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'));
   else
-    dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', channelindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
+    dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
   end
   
   % only do the preprocessing if there is an option that suggests to have an effect
   status = struct2cell(artfctdef);
   status = status(cellfun(@(x) ischar(x), status));
   if any(ismember(status, {'yes', 'abs', 'complex', 'real', 'imag', 'absreal', 'absimag', 'angle'}))
-    dat = preproc(dat, channel, offset2time(cfg.trl(trlop,3), hdr.Fs, size(dat,2)), artfctdef);
+    dat = preproc(dat, channel, offset2time(trl(trlop,3), hdr.Fs, size(dat,2)), artfctdef);
   end
   
   % make a vector that indicates for each sample whether there is an artifact
@@ -246,8 +239,8 @@ for trlop = 1:numtrl
   end
   
   if any(artval)
-    begsample = find(diff([false artval])>0) + cfg.trl(trlop,1) - 1;
-    endsample = find(diff([artval false])<0) + cfg.trl(trlop,1) - 1;
+    begsample = find(diff([false artval])>0) + trl(trlop,1) - 1;
+    endsample = find(diff([artval false])<0) + trl(trlop,1) - 1;
     offset    = nan(size(begsample));
     
     if size(dat,1)==1
@@ -267,7 +260,8 @@ for trlop = 1:numtrl
     artifact  = cat(1, artifact, [begsample(:) endsample(:) offset(:)]);
   end
   
-end % for trllop
+end % for trlop
+ft_progress('close');
 
 if any(isnan(artifact(:,3)))
   % don't keep the offset if it cannot be determined consistently
@@ -278,12 +272,9 @@ ft_info('detected %d artifacts\n', size(artifact,1));
 
 % remember the details that were used here
 cfg.artfctdef.threshold          = artfctdef;
-cfg.artfctdef.threshold.trl      = cfg.trl;         % trialdefinition prior to rejection
-cfg.artfctdef.threshold.channel  = channel;         % exact channels used for detection
-cfg.artfctdef.threshold.artifact = artifact;        % detected artifacts
+cfg.artfctdef.threshold.artifact = artifact;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
 ft_postamble previous data
 ft_postamble savevar
-

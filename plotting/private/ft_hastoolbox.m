@@ -133,7 +133,7 @@ url = {
   'MYSQL'         'see http://www.mathworks.com/matlabcentral/fileexchange/8663-mysql-database-connector'
   'ISO2MESH'      'see http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Home or contact Qianqian Fang'
   'DATAHASH'      'see http://www.mathworks.com/matlabcentral/fileexchange/31272'
-  'IBTB'          'see https://github.com/selimonat/InformationBreakdownToolbox'
+  'IBTB'          'see Magri et al. BMC Neurosci 2009, 10:81'
   'ICASSO'        'see http://www.cis.hut.fi/projects/ica/icasso'
   'XUNIT'         'see http://www.mathworks.com/matlabcentral/fileexchange/22846-matlab-xunit-test-framework'
   'PLEXON'        'available from http://www.plexon.com/assets/downloads/sdk/ReadingPLXandDDTfilesinMatlab-mexw.zip'

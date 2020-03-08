@@ -108,23 +108,47 @@ end
 original = object;
 object = ft_convert_units(object, 'mm');
 
-if ~ismember(object.coordsys, {'spm', 'mni', 'tal'}) && ismember(target, {'spm', 'mni', 'tal'})
+if ~ismember(object.coordsys, {'spm', 'mni', 'fsaverage', 'tal'}) && ismember(target, {'spm', 'mni', 'fsaverage', 'tal'})
   % the input appears to be an individual subject MRI which has not been rescaled
   % the target is a template coordinate system
-  % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3304
+  % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3304 and http://bit.ly/2sw7eC4
   ft_warning('Not applying any scaling, using ''acpc'' instead of ''%s''. See http://bit.ly/2sw7eC4', target);
   target = 'acpc';
 end
 
-% RAS and ALS are not specific with regard to the origin
-if ismember(object.coordsys, {'ras', 'als'}) && strcmp(target, 'acpc')
+% these are the 48 generic axis orientation triplets
+%   a = anterior
+%   p = posterior
+%   l = left
+%   r = right
+%   s = superior
+%   i = inferior
+
+generic = {
+  'als'; 'ali'; 'ars'; 'ari';...
+  'pls'; 'pli'; 'prs'; 'pri';...
+  'las'; 'lai'; 'ras'; 'rai';...
+  'lps'; 'lpi'; 'rps'; 'rpi';...
+  'asl'; 'ail'; 'asr'; 'air';...
+  'psl'; 'pil'; 'psr'; 'pir';...
+  'sal'; 'ial'; 'sar'; 'iar';...
+  'spl'; 'ipl'; 'spr'; 'ipr';...
+  'sla'; 'ila'; 'sra'; 'ira';...
+  'slp'; 'ilp'; 'srp'; 'irp';...
+  'lsa'; 'lia'; 'rsa'; 'ria';...
+  'lsp'; 'lip'; 'rsp'; 'rip'}';
+
+specific = {'ctf', 'bti', 'fourd', 'neuromag', 'itab', 'acpc', 'mni', 'spm', 'fsaverage', 'tal'};
+
+% generic orientation triplets (like RAS and ALS) are not specific with regard to the origin
+if ismember(object.coordsys, generic) && strcmp(target, 'acpc')
   if method==0
     ft_error('approximately converting from %s to %s is not supported', object.coordsys, target);
   elseif method>0
-    % converting an anatomical MRI from RAS or ALS to ACPC using SPM might work
+    % converting an anatomical MRI from RAS, ALS etc. to ACPC using SPM might work
   end
-elseif ismember(object.coordsys, {'ras', 'als'}) && ~ismember(target, {'ras', 'als'})
-  % other conversions from RAS or ALS are also not supported
+elseif ismember(object.coordsys, generic) && ~ismember(target, generic)
+  % other conversions from generic orientation triplets (like RAS and ALS) are also not supported
   ft_error('converting from %s to %s is not supported', object.coordsys, target);
 end
 
@@ -139,7 +163,7 @@ end
 % this is based on the ear canals, see ALIGN_CTF2ACPC
 acpc2ctf = [
   0.0000  0.9987  0.0517  34.7467
-  -1.0000  0.0000  0.0000   0.0000
+ -1.0000  0.0000  0.0000   0.0000
   0.0000 -0.0517  0.9987  52.2749
   0.0000  0.0000  0.0000   1.0000
   ];
@@ -156,7 +180,7 @@ acpc2neuromag = [
 fsaverage2mni = [
   0.9975   -0.0073    0.0176   -0.0429
   0.0146    1.0009   -0.0024    1.5496
-  -0.0130   -0.0093    0.9971    1.1840
+ -0.0130   -0.0093    0.9971    1.1840
   0.0000    0.0000    0.0000    1.0000
   ];
 
@@ -168,13 +192,14 @@ ctf2neuromag = [
   0.0000    0.0000    0.0000    1.0000
   ];
 
-% this is a 90 degree rotation around the z-axis
-als2ras = [
-  0.0000   -1.0000    0.0000    0.0000
-  1.0000    0.0000    0.0000    0.0000
-  0.0000    0.0000    1.0000    0.0000
-  0.0000    0.0000    0.0000    1.0000
-  ];
+% these are all combinations of 90 degree rotations and/or flips along one of the axes
+for i=1:length(generic)
+  for j=1:length(generic)
+    xxx = generic{i};
+    yyy = generic{j};
+    eval(sprintf('%s2%s = transform_generic(''%s'', ''%s'');', yyy, xxx, xxx, yyy));
+  end
+end
 
 % affine transformation from MNI to Talairach, see http://imaging.mrc-cbu.cam.ac.uk/imaging/MniTalairach
 % the non-linear (i.e. piecewise linear) transform between MNI and Talairach are implemented elsewhere, see the functions MNI2TAL and TAL2MNI
@@ -218,24 +243,26 @@ fsaverage2ras = eye(4);
 tal2ras       = eye(4);
 
 % make the combined and the inverse transformations where possible
-coordsys = {'ctf', 'bti', 'fourd', 'neuromag', 'itab', 'acpc', 'mni', 'spm', 'fsaverage', 'tal', 'ras', 'als'};
+coordsys = [specific generic];
 implemented = zeros(length(coordsys)); % this is only for debugging
 for i=1:numel(coordsys)
   for j=1:numel(coordsys)
     xxx = coordsys{i};
     yyy = coordsys{j};
-    if  exist(sprintf('%s2%s', xxx, yyy), 'var')
-      % make the inverse
-      eval(sprintf('%s2%s = inv(%s2%s);', yyy, xxx, xxx, yyy));
-      implemented(i,j) = 1;
-      implemented(j,i) = 1;
-    elseif isequal(xxx, yyy)
-      % make the ones on the diagonal
+    
+    if isequal(xxx, yyy)
+      % construct the transformations on the diagonal
       eval(sprintf('%s2%s = eye(4);', xxx, yyy));
+      implemented(i,j) = 1;
+    elseif exist(sprintf('%s2%s', xxx, yyy), 'var')
+      % construct the inverse transformations
+      eval(sprintf('%s2%s = inv(%s2%s);', yyy, xxx, xxx, yyy));
       implemented(i,j) = 2;
-    else
+      implemented(j,i) = 2;
+    elseif ismember(xxx, specific) && ismember(yyy, generic)
       % try to make the transformation (and inverse) with a two-step approach
-      for k=1:numel(coordsys(1:10)) % do not use RAS or ALS as intermediate steps
+      % since we go from specific to generic and thereby loose the origin information anyway, it is fine to use any intermediate step
+      for k=1:numel(coordsys)
         zzz = coordsys{k};
         if exist(sprintf('%s2%s', xxx, zzz), 'var') && exist(sprintf('%s2%s', zzz, yyy), 'var')
           eval(sprintf('%s2%s = %s2%s * %s2%s;', xxx, yyy, zzz, yyy, xxx, zzz));
@@ -245,28 +272,59 @@ for i=1:numel(coordsys)
           break
         end
       end % for k
+    elseif ismember(xxx, specific) && ismember(yyy, specific)
+      % try to make the transformation (and inverse) with a two-step approach
+      % do not use the generic orientation triplets (like RAS and ALS) as intermediate steps between two specific coordinate systems
+      for k=1:numel(specific)
+        zzz = specific{k};
+        if exist(sprintf('%s2%s', xxx, zzz), 'var') && exist(sprintf('%s2%s', zzz, yyy), 'var')
+          eval(sprintf('%s2%s = %s2%s * %s2%s;', xxx, yyy, zzz, yyy, xxx, zzz));
+          eval(sprintf('%s2%s = inv(%s2%s);', yyy, xxx, xxx, yyy));
+          implemented(i,j) = 3;
+          implemented(j,i) = 3;
+          break
+        end
+      end % for k
     end
+    
   end % for j
 end % for i
-
-if false
-  % this is only for debugging the coverage of conversions, note that some of them are deleted further down
-  figure; imagesc(implemented); caxis([0 3]);
-  xticklabels(coordsys); xticks(1:numel(coordsys));
-  yticklabels(coordsys); yticks(1:numel(coordsys));
-end
 
 % these conversions should be done using FT_VOLUMENORMALISE, as they imply scaling
 clear acpc2spm acpc2mni acpc2fsaverage acpc2tal
 
-% the origin is poorly defined in RAS and ALS, hence converting them to another coordinate system is problematic
-% the only conversion supported here is from RAS or ALS to ACPC, and only when using SPM
-clear ras2bti ras2ctf ras2fourd ras2fsaverage ras2itab ras2mni ras2neuromag ras2spm ras2tal
-clear als2bti als2ctf als2fourd als2fsaverage als2itab als2mni als2neuromag als2spm als2tal
-
 % converting to/from TAL is only possible for some specific template coordinate systems
-clear als2tal ras2tal bti2tal ctf2tal fourd2tal itab2tal neuromag2tal
-clear tal2als tal2ras tal2bti tal2ctf tal2fourd tal2itab tal2neuromag
+clear bti2tal ctf2tal fourd2tal itab2tal neuromag2tal
+clear tal2bti tal2ctf tal2fourd tal2itab tal2neuromag
+
+% the origin is poorly defined in generic orientation triplets (like RAS and ALS), hence converting them to any specific coordinate system is problematic
+% the only conversion supported is from generic orientation triplets (like RAS and ALS) to ACPC, and only when using SPM
+if method<1
+  for i=1:length(generic)
+    for j=1:length(specific)
+      xxx = generic{i};
+      yyy = specific{j};
+      eval(sprintf('clear %s2%s', xxx, yyy));
+    end
+  end
+end
+
+% this is only for debugging the coverage of conversions, note that some of them are deleted further down
+if false
+  % update the list of implemented transformations, since some might have been cleared
+  for i=1:length(coordsys)
+    for j=1:length(coordsys)
+      xxx = coordsys{i};
+      yyy = coordsys{j};
+      if ~exist(sprintf('%s2%s', xxx, yyy), 'var')
+        implemented(i,j) = 0;
+      end
+    end
+  end
+  figure; imagesc(implemented); caxis([0 3]);
+  xticklabels(coordsys); xticks(1:numel(coordsys));
+  yticklabels(coordsys); yticks(1:numel(coordsys));
+end
 
 if strcmp(object.coordsys, '4d')
   xxx = 'fourd'; % '4d' is not a valid variable name
@@ -445,3 +503,29 @@ end
 % all of the internal logic inside this function requires that the units are in millimeter
 % convert back to the original units
 object = ft_convert_units(object, original.unit);
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION to construct generic transformations such as RAS2ALS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function T = transform_generic(from, to)
+
+ap_in  = find(from=='a' | from=='p');
+ap_out = find(to=='a'   | to=='p');
+lr_in  = find(from=='l' | from=='r');
+lr_out = find(to=='l'   | to=='r');
+si_in  = find(from=='s' | from=='i');
+si_out = find(to=='s'   | to=='i');
+
+% index axis according to ap,lr,si
+order_in  = [ap_in  lr_in  si_in];
+order_out = [ap_out lr_out si_out];
+
+% check whether one of the axis needs flipping
+flip = 2.*(0.5-double(from(order_in)~=to(order_out)));
+
+T = zeros(4);
+for k = 1:3
+  T(order_out(k),order_in(k)) = flip(k);
+end
+T(4,4) = 1;
