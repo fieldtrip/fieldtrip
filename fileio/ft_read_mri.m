@@ -59,6 +59,8 @@ function [mri] = ft_read_mri(filename, varargin)
 % Undocumented key-value pairs:
 %   'fixel2voxel' = string, operation to apply to the fixels belonging to 
 %   the same voxel (only for *.mif). 'max' (default), 'min', 'mean'
+%   'indexfile'   = string, pointing to a fixel index file, if not present in
+%                    the same directory as the functional data
 %
 % Copyright (C) 2008-2020, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
@@ -452,8 +454,13 @@ switch dataformat
       mri.transform = tmp.transform;
       mri.transform(1:3,1:3) = diag(tmp.vox(1:3))*mri.transform(1:3,1:3);
     else
-      [p,f,e]   = fileparts(filename);
-      indexfile = fullfile(p,'index.mif');
+      fix2vox_fun = ft_getopt(varargin, 'fixel2voxel', 'max');
+      indexfile   = ft_getopt(varargin, 'indexfile');
+      if isempty(indexfile)
+        % assume the index file to be in the same directory as the data file
+        [p,f,e]   = fileparts(filename);
+        indexfile = fullfile(p,'index.mif');
+      end
       index     = read_mrtrix(indexfile);
       tmpdata   = reshape(index.data, [], 2);
       
@@ -471,7 +478,6 @@ switch dataformat
       tmpdata             = tmpdata.'; % transpose is intended
       tmpdata(isfinite(tmpdata)) = tmp.data(tmpdata(isfinite(tmpdata)));
       
-      fix2vox_fun = ft_getopt(varargin, 'fixel2voxel', 'max');
       switch fix2vox_fun
         case 'max'
           tmpdata = nanmax(tmpdata,[],1);
