@@ -111,7 +111,7 @@ function [data] = ft_preprocessing(cfg, data)
 %                     which is calculated by using the forward theory, based on
 %                     the electrode montage, head model and equivalent source
 %                     model. It can also be the output of ft_prepare_leadfield.m
-%                     (e.g. lf.leadfield) based on real head modal using FieldTrip.
+%                     (e.g. lf.leadfield or lf) based on real head modal using FieldTrip.
 %   cfg.implicitref   = 'label' or empty, add the implicit EEG reference as zeros (default = [])
 %   cfg.montage       = 'no' or a montage structure, see FT_APPLY_MONTAGE (default = 'no')
 %

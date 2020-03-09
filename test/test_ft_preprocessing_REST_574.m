@@ -1,17 +1,31 @@
 % test the ft_preprocessing for re-referencing to rest
-% Li Dong $ 2020.3.3, (lidong@uestc.edu.cn)
+% Li Dong $ 2020.3.3, (Lidong@uestc.edu.cn)
 clear all;
 clc;
 
 ft_defaults; 
 
-load F:\GitHub_work\test_data\lf.mat % load leadfield calculated by fieldtrip
-% load F:\GitHub_work\test_data\leadfieldMatrix.mat % load leadfield calculated by fieldtrip
+load lf.mat % load leadfield calculated by FieldTrip
+% -------------------------------------------------------------------------
+% A snippet of code to calculate leadfield using FieldTrip
+% cfg                        = [];
+% cfg.elec                   = elec_aligned; % aligned eletrode positions
+% cfg.grid                   = grid; % dipole positions
+% cfg.headmodel              = vol;  % headmodel created by 'ft_prepare_headmodel' 
+% cfg.grid.resolution        = 6; % number for automatic sourcemodel generation
+% cfg.normalize       = 'yes';
+% [lf]        = ft_prepare_leadfield(cfg); % calculate leadfield
+% -----------
+% An full workflow of creating leadfield using real headmodel (BEM and FEM)
+% can be seen in:
+% http://www.fieldtriptoolbox.org/workshop/baci2017/forwardproblem/
 
+% A full example script for leadfield based on FEM headmodel can be seen in
+% http://www.fieldtriptoolbox.org/development/project/example_fem/ 
 % -------------------------------------------------------------------------
 % rest re-referencing
 cfg = [];
-cfg.dataset     = 'F:\GitHub_work\test_data\test_sub01_avg.set';
+cfg.dataset     = 'test_sub01_avg.set';
 cfg.reref       = 'yes';
 cfg.refmethod     = 'rest';     %  if select 'rest','leadfield' is required.
 cfg.leadfield = lf;            
@@ -20,10 +34,6 @@ cfg.leadfield = lf;
 %              the electrode montage, head model and equivalent source
 %              model. It can also be the output of ft_prepare_leadfield.m
 %              (e.g. lf.leadfield) based on real head modal using FieldTrip.
-% refchann = [];
-% for i = 1:60
-%     refchann{i} = num2str(i);
-% end
 
 % cfg.refchannel = lf.label(1:60,1); % use first 60 channels
 cfg.refchannel     = {'all'};   % vector with indices of the selected channels 
@@ -32,19 +42,19 @@ data_eeg_rest        = ft_preprocessing(cfg);
 % -------------------------------------------------------------------------
 % median re-referencing
 cfg = [];
-cfg.dataset     = 'F:\GitHub_work\test_data\test_sub01_avg.set';
+cfg.dataset     = 'test_sub01_avg.set';
 cfg.reref       = 'yes';
 cfg.refmethod   = 'median';    % median
 cfg.refchannel = {'all'};     % use first 60 channels
 
-data_eeg_avg        = ft_preprocessing(cfg);
+data_eeg_median        = ft_preprocessing(cfg);
 
 % plot the results
 
 figure;
 k = 1; % kth channel
 data1 = data_eeg_rest.trial{1,1};
-data2 = data_eeg_avg.trial{1,1};
+data2 = data_eeg_median.trial{1,1};
 
 plot(data1(k,1:100),'-b');
 hold on;
