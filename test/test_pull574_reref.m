@@ -1,11 +1,15 @@
+function test_pull574_reref
+
+% MEM 2gb
+% WALLTIME 01:00:00 
+
+% DEPEDENCY ft_preprocessing preproc ft_preproc_reference
+
 % test the ft_preprocessing for re-referencing to rest
-% Li Dong $ 2020.3.10, (Lidong@uestc.edu.cn)
-clear all;
-clc;
+% Li Dong $ 2020.3.10, (Lidong@uestc.edu.cn) and J.M.Schoffelen
 
-ft_defaults; 
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/test_pull574.mat')); % load data and leadfield calculated by FieldTrip
 
-load test_pr574.mat % load data and leadfield calculated by FieldTrip
 % -------------------------------------------------------------------------
 % A snippet of code to calculate leadfield using FieldTrip
 % cfg                        = [];
@@ -24,9 +28,9 @@ load test_pr574.mat % load data and leadfield calculated by FieldTrip
 % http://www.fieldtriptoolbox.org/development/project/example_fem/ 
 % -------------------------------------------------------------------------
 % rest re-referencing
-cfg = [];
-cfg.reref       = 'yes';
-cfg.refmethod     = 'rest';     %  if select 'rest','leadfield' is required.
+cfg           = [];
+cfg.reref     = 'yes';
+cfg.refmethod = 'rest';     %  if select 'rest','leadfield' is required.
 cfg.leadfield = lf;            
 %              The leadfield can be a matrix (channels X sources)
 %              which is calculated by using the forward theory, based on
@@ -35,17 +39,17 @@ cfg.leadfield = lf;
 %              (e.g. lf.leadfield) based on real head modal using FieldTrip.
 
 % cfg.refchannel = data.label([1:3,5:60],1); % use first 60 channels
-cfg.refchannel     = {'all'};    % vector with indices of the selected channels 
+cfg.refchannel = {'all'};    % vector with indices of the selected channels 
 %                                  %  (re-referenced channels), or 'all'.
-data_eeg_rest        = ft_preprocessing(cfg,data);
+data_eeg_rest  = ft_preprocessing(cfg,data);
 % -------------------------------------------------------------------------
 % median re-referencing
 cfg = [];
 cfg.reref       = 'yes';
 cfg.refmethod   = 'median';    % median
-cfg.refchannel = {'all'};     % use first 60 channels
+cfg.refchannel  = {'all'};     % use first 60 channels
 
-data_eeg_median        = ft_preprocessing(cfg,data);
+data_eeg_median = ft_preprocessing(cfg,data);
 
 % plot the results
 
