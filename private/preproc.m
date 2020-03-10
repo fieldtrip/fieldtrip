@@ -98,7 +98,14 @@ function [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, en
 % Preprocessing options that you should only use for EEG data are
 %   cfg.reref         = 'no' or 'yes' (default = 'no')
 %   cfg.refchannel    = cell-array with new EEG reference channel(s)
-%   cfg.refmethod     = 'avg', 'median', or 'bipolar' (default = 'avg')
+%   cfg.refmethod     = 'avg', 'median', 'rest' or 'bipolar' (default = 'avg')
+%   cfg.leadfield      = leadfield
+%                     if select 'rest','leadfield' is required.
+%                     The leadfield can be a matrix (channels X sources)
+%                     which is calculated by using the forward theory, based on
+%                     the electrode montage, head model and equivalent source
+%                     model. It can also be the output of ft_prepare_leadfield.m
+%                     (e.g. lf.leadfield or lf) based on real head modal using FieldTrip.
 %   cfg.implicitref   = 'label' or empty, add the implicit EEG reference as zeros (default = [])
 %   cfg.montage       = 'no' or a montage structure (default = 'no')
 %
@@ -276,13 +283,110 @@ if strcmp(cfg.reref, 'yes')
     dat   = tmpdata.trial{1}; % the number of channels can have changed
     label = tmpdata.label;    % the output channels can be different than the input channels
     clear tmpdata
-  else
-    % mean or median based derivation of specified or all channels
+  elseif isequal(cfg.refmethod,'rest')
     cfg.refchannel = ft_channelselection(cfg.refchannel, label);
     refindx = match_str(label, cfg.refchannel);
     if isempty(refindx)
       ft_error('reference channel was not found')
     end
+    
+    if isfield(cfg,'leadfield')
+      % check the leadfield
+      if isnumeric(cfg.leadfield)
+        Nchann_lf = size(cfg.leadfield,1); % No. of  channels in leadfield
+        G = cfg.leadfield;
+        if Nchann_lf ~= length(label)
+          ft_error('channels in the leadfield is not euqal to the data');
+        else
+          warning('There is no label info in the leadfield, please maske sure the order in leadfield is the same as in the data');
+        end
+      elseif isstruct(cfg.leadfield)
+        Nchann_lf = size(cfg.leadfield.label,1); % No. of  channels in leadfield
+        if Nchann_lf ~= length(label)
+          ft_error('channels in the leadfield is not euqal to the data');
+        else
+          % check the order in leadfield is the same as in the data
+          try
+            [indx1,indx2] = match_str(cfg.leadfield.label(refindx), label(refindx));
+            if ~isequal(indx1,indx2),ft_error('The order in leadfield may be NOT the same as in the data, please check the leadfield!');end;
+          catch
+            warning('There is no label info in the leadfield input, please maske sure the order in leadfield is the same as in the data');
+          end
+        end
+        % doing the struct-to-matrix conversion for the leadfield
+        try
+          Npos = size(cfg.leadfield.pos,1);
+          lf_X = zeros(Nchann_lf,Npos);
+          lf_Y = zeros(Nchann_lf,Npos);
+          lf_Z = zeros(Nchann_lf,Npos);
+          for i = 1:Npos
+            if ~isempty(cfg.leadfield.leadfield{1,i})
+              lf_X(:,i) = cfg.leadfield.leadfield{1,i}(:,1); % X orientation of the dipole.
+              lf_Y(:,i) = cfg.leadfield.leadfield{1,i}(:,2); % Y orientation of the dipole.
+              lf_Z(:,i) = cfg.leadfield.leadfield{1,i}(:,3); % Z orientation of the dipole.
+            end
+          end
+          G = [lf_X,lf_Y,lf_Z];
+          % the leadfield matrix (channs X sources*3), which
+          % contains the potential or field distributions on all
+          % sensors for the x,y,z-orientations of the dipole.
+        catch
+          try
+            Npos = size(cfg.leadfield.pos,1);
+            G = zeros(Nchann_lf,Npos);
+            for i = 1:Npos
+              if ~isempty(cfg.leadfield.leadfield{1,i}),G(:,i) = cfg.leadfield.leadfield{1,i};end;
+            end
+          catch
+            ft_error('leadfiled may be not calculated by ''ft_prepare_leadfield.m''?');
+          end
+        end
+      elseif iscell(cfg.leadfield)
+        Nchann_lf = size(cfg.leadfield{1,1},1); % No. of  channels in leadfield
+        if Nchann_lf ~= length(label)
+          ft_error('channels in the leadfield is not euqal to the data');
+        else
+          warning('There is no label info in the leadfield input, please maske sure the order in leadfield is the same as in the data');
+        end
+        
+        try
+          Npos = length(cfg.leadfield);
+          lf_X = zeros(Nchann_lf,Npos);
+          lf_Y = zeros(Nchann_lf,Npos);
+          lf_Z = zeros(Nchann_lf,Npos);
+          for i = 1:Npos
+            if ~isempty(cfg.leadfield{1,i})
+              lf_X(:,i) = cfg.leadfield{1,i}(:,1); % X orientation of the dipole.
+              lf_Y(:,i) = cfg.leadfield{1,i}(:,2); % Y orientation of the dipole.
+              lf_Z(:,i) = cfg.leadfield{1,i}(:,3); % Z orientation of the dipole.
+            end
+          end
+          G = [lf_X,lf_Y,lf_Z];
+          % the leadfield matrix (channs X sources*3), which
+          % contains the potential or field distributions on all
+          % sensors for the x,y,z-orientations of the dipole.
+        catch
+          try
+            Npos = length(cfg.leadfield);
+            G = zeros(Nchann_lf,Npos);
+            for i = 1:Npos
+              if ~isempty(cfg.leadfield{1,i}),G(:,i) = cfg.leadfield{1,i};end;
+            end
+          catch
+            ft_error('leadfiled may be not calculated by ''ft_prepare_leadfield.m''?');
+          end
+        end
+      end
+      dat = ft_preproc_rereference(dat, refindx, cfg.refmethod,[],G); % re-referencing
+      label = label(refindx); % re-referenced channel labels
+    else
+      ft_error('Leadfield is required to re-refer to REST');
+    end
+  else
+    % mean or median based derivation of specified or all channels
+    cfg.refchannel = ft_channelselection(cfg.refchannel, label);
+    refindx = match_str(label, cfg.refchannel);
+    if isempty(refindx),ft_error('reference channel was not found');end;
     dat = ft_preproc_rereference(dat, refindx, cfg.refmethod);
   end
 end
