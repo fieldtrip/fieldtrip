@@ -12,11 +12,10 @@ function [dat, ref] = ft_preproc_rereference(dat, refchan, method, handlenan, le
 %   refchan    vector with indices of the new reference channels, or 'all'
 %   method     string, can be 'avg', 'median', or 'rest'
 %              if select 'rest','leadfield' is required.
-%              The leadfield can be a matrix (channels X sources)
+%              The leadfield should be a matrix (channels X sources)
 %              which is calculated by using the forward theory, based on
 %              the electrode montage, head model and equivalent source
-%              model. It can also be the output of ft_prepare_leadfield.m
-%              (e.g. lf.leadfield or lf) based on real head modal using FieldTrip.
+%              model.
 %   handlenan  boolean, can be true or false
 %
 % If the new reference channel is not specified, the data will be
@@ -93,69 +92,8 @@ else
     case 'median'
       ref = median(dat(refchan,:), 1);
     case 'rest' % re-referencing to REST
-      % get the leafield matrix
-      if isnumeric(leadfield)
-        G = leadfield';
-      elseif isstruct(leadfield)
-        try
-          Npos = size(leadfield.pos,1);
-          m = 1;
-          for i = 1:Npos
-            if ~isempty(leadfield.leadfield{1,i})
-              lf_X(:,m) = leadfield.leadfield{1,i}(:,1); % X orientation of the dipole.
-              lf_Y(:,m) = leadfield.leadfield{1,i}(:,2); % Y orientation of the dipole.
-              lf_Z(:,m) = leadfield.leadfield{1,i}(:,3); % Z orientation of the dipole.
-              m = m + 1;
-            end
-          end
-          G = [lf_X,lf_Y,lf_Z]';
-          % the leadfield matrix (sources*3 X chans), which
-          % contains the potential or field distributions on all
-          % sensors for the x,y,z-orientations of the dipole.
-        catch
-          try
-            Npos = size(leadfield.pos,1);
-            m = 1;
-            for i = 1:Npos
-              if ~isempty(leadfield.leadfield{1,i}),G(:,m) = leadfield.leadfield{1,i};m = m + 1;end;
-            end
-            G = G';
-          catch
-            ft_error('leadfiled may be not calculated by ''ft_prepare_leadfield.m''?');
-          end
-          
-        end
-      elseif iscell(leadfield)
-        try
-          Npos = length(leadfield);
-          m = 1;
-          for i = 1:Npos
-            if ~isempty(leadfield{1,i})
-              lf_X(:,m) = leadfield{1,i}(:,1); % X orientation of the dipole.
-              lf_Y(:,m) = leadfield{1,i}(:,2); % Y orientation of the dipole.
-              lf_Z(:,m) = leadfield{1,i}(:,3); % Z orientation of the dipole.
-              m = m + 1;
-            end
-          end
-          G = [lf_X,lf_Y,lf_Z]';
-          % the leadfield matrix (sources*3 X chans), which
-          % contains the potential or field distributions on all
-          % sensors for the x,y,z-orientations of the dipole.
-        catch
-          try
-            Npos = size(leadfield.pos,1);
-            m = 1;
-            for i = 1:Npos
-              if ~isempty(leadfield{1,i}),G(:,m) = leadfield{1,i};m = m + 1;end;
-            end
-            G = G';
-          catch
-            ft_error('leadfiled may be not calculated by ''ft_prepare_leadfield.m''?');
-          end
-        end
-      end
       temp_dat = dat(refchan,:);
-      dat = rest_refer(temp_dat,G(:,refchan)); % re-rerefencing to REST
+      dat = rest_refer(temp_dat,leadfield(refchan,:)); % re-rerefencing to REST
       ref = [];
     otherwise
       ft_error('unsupported method')
@@ -175,15 +113,19 @@ function [data_z] = rest_refer(data,G)
 %   Input:
 %         data:  The EEG potentials,channels X time points,
 %                e.g. 62 channels X 10000 time points.
-%         G: Lead Field matrix, sources X channels, e.g. 3000 sources X 62 channels.
+%         G: Lead Field matrix,channels X sources, e.g. 62 channels X 3000 sources.
 %   Output:
 %         data_z: The EEG potentials with zero reference,
 %                channels X time points.
 %
 %  Edit by Li Dong (Oct. 26, 2017)
 %   For more see http://www.neuro.uestc.edu.cn/rest/
-%   Reference: Yao D (2001) A method to standardize a reference of scalp EEG recordings to a point at infinity.
+%   Reference: 
+%  Yao D (2001) A method to standardize a reference of scalp EEG recordings to a point at infinity.
 %                       Physiol Meas 22:693?11. doi: 10.1088/0967-3334/22/4/305
+%  Li Dong*, Fali Li, Qiang Liu, Xin Wen, Yongxiu Lai, Peng Xu and Dezhong Yao*. 
+%              MATLAB Toolboxes for Reference Electrode Standardization Technique (REST) 
+%              of Scalp EEG. Frontiers in Neuroscience,  2017:11(601).
 
 if nargin < 2
   error('Please input the Lead Field matrix!');
@@ -191,7 +133,6 @@ end
 Nchans = size(data,1);
 data = data - repmat(mean(data),Nchans,1); % average
 
-G = G';
 if size(data,1)~=size(G,1)
   error('No. of channels of leadfield matrix and data are NOT equal!');
 end

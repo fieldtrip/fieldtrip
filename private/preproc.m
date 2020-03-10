@@ -294,6 +294,7 @@ if strcmp(cfg.reref, 'yes')
       % check the leadfield
       if isnumeric(cfg.leadfield)
         Nchann_lf = size(cfg.leadfield,1); % No. of  channels in leadfield
+        G = cfg.leadfield;
         if Nchann_lf ~= length(label)
           ft_error('channels in the leadfield is not euqal to the data');
         else
@@ -312,14 +313,72 @@ if strcmp(cfg.reref, 'yes')
             warning('There is no label info in the leadfield input, please maske sure the order in leadfield is the same as in the data');
           end
         end
+        % doing the struct-to-matrix conversion for the leadfield
+        try
+          Npos = size(cfg.leadfield.pos,1);
+          lf_X = zeros(Nchann_lf,Npos);
+          lf_Y = zeros(Nchann_lf,Npos);
+          lf_Z = zeros(Nchann_lf,Npos);
+          for i = 1:Npos
+            if ~isempty(cfg.leadfield.leadfield{1,i})
+              lf_X(:,i) = cfg.leadfield.leadfield{1,i}(:,1); % X orientation of the dipole.
+              lf_Y(:,i) = cfg.leadfield.leadfield{1,i}(:,2); % Y orientation of the dipole.
+              lf_Z(:,i) = cfg.leadfield.leadfield{1,i}(:,3); % Z orientation of the dipole.
+            end
+          end
+          G = [lf_X,lf_Y,lf_Z];
+          % the leadfield matrix (channs X sources*3), which
+          % contains the potential or field distributions on all
+          % sensors for the x,y,z-orientations of the dipole.
+        catch
+          try
+            Npos = size(cfg.leadfield.pos,1);
+            G = zeros(Nchann_lf,Npos);
+            for i = 1:Npos
+              if ~isempty(cfg.leadfield.leadfield{1,i}),G(:,i) = cfg.leadfield.leadfield{1,i};end;
+            end
+          catch
+            ft_error('leadfiled may be not calculated by ''ft_prepare_leadfield.m''?');
+          end
+        end
       elseif iscell(cfg.leadfield)
         Nchann_lf = size(cfg.leadfield{1,1},1); % No. of  channels in leadfield
-        if Nchann_lf ~= length(label),ft_error('channels in the leadfield is not euqal to the data')
+        if Nchann_lf ~= length(label)
+          ft_error('channels in the leadfield is not euqal to the data');
         else
           warning('There is no label info in the leadfield input, please maske sure the order in leadfield is the same as in the data');
         end
+        
+        try
+          Npos = length(cfg.leadfield);
+          lf_X = zeros(Nchann_lf,Npos);
+          lf_Y = zeros(Nchann_lf,Npos);
+          lf_Z = zeros(Nchann_lf,Npos);
+          for i = 1:Npos
+            if ~isempty(cfg.leadfield{1,i})
+              lf_X(:,i) = cfg.leadfield{1,i}(:,1); % X orientation of the dipole.
+              lf_Y(:,i) = cfg.leadfield{1,i}(:,2); % Y orientation of the dipole.
+              lf_Z(:,i) = cfg.leadfield{1,i}(:,3); % Z orientation of the dipole.
+            end
+          end
+          G = [lf_X,lf_Y,lf_Z];
+          % the leadfield matrix (channs X sources*3), which
+          % contains the potential or field distributions on all
+          % sensors for the x,y,z-orientations of the dipole.
+        catch
+          try
+            Npos = length(cfg.leadfield);
+            G = zeros(Nchann_lf,Npos);
+            for i = 1:Npos
+              if ~isempty(cfg.leadfield{1,i}),G(:,i) = cfg.leadfield{1,i};end;
+            end
+          catch
+            ft_error('leadfiled may be not calculated by ''ft_prepare_leadfield.m''?');
+          end
+        end
       end
-      dat = ft_preproc_rereference(dat, refindx, cfg.refmethod,[],cfg.leadfield);
+      dat = ft_preproc_rereference(dat, refindx, cfg.refmethod,[],G); % re-referencing
+      label = label(refindx); % re-referenced channel labels
     else
       ft_error('Leadfield is required to re-refer to REST');
     end

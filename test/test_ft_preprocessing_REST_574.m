@@ -1,11 +1,11 @@
 % test the ft_preprocessing for re-referencing to rest
-% Li Dong $ 2020.3.3, (Lidong@uestc.edu.cn)
+% Li Dong $ 2020.3.10, (Lidong@uestc.edu.cn)
 clear all;
 clc;
 
 ft_defaults; 
 
-load lf.mat % load leadfield calculated by FieldTrip
+load test_pr574.mat % load data and leadfield calculated by FieldTrip
 % -------------------------------------------------------------------------
 % A snippet of code to calculate leadfield using FieldTrip
 % cfg                        = [];
@@ -25,7 +25,6 @@ load lf.mat % load leadfield calculated by FieldTrip
 % -------------------------------------------------------------------------
 % rest re-referencing
 cfg = [];
-cfg.dataset     = 'test_sub01_avg.set';
 cfg.reref       = 'yes';
 cfg.refmethod     = 'rest';     %  if select 'rest','leadfield' is required.
 cfg.leadfield = lf;            
@@ -35,19 +34,18 @@ cfg.leadfield = lf;
 %              model. It can also be the output of ft_prepare_leadfield.m
 %              (e.g. lf.leadfield) based on real head modal using FieldTrip.
 
-% cfg.refchannel = lf.label(1:60,1); % use first 60 channels
-cfg.refchannel     = {'all'};   % vector with indices of the selected channels 
-%                               %  (re-referenced channels), or 'all'.
-data_eeg_rest        = ft_preprocessing(cfg);
+% cfg.refchannel = data.label([1:3,5:60],1); % use first 60 channels
+cfg.refchannel     = {'all'};    % vector with indices of the selected channels 
+%                                  %  (re-referenced channels), or 'all'.
+data_eeg_rest        = ft_preprocessing(cfg,data);
 % -------------------------------------------------------------------------
 % median re-referencing
 cfg = [];
-cfg.dataset     = 'test_sub01_avg.set';
 cfg.reref       = 'yes';
 cfg.refmethod   = 'median';    % median
 cfg.refchannel = {'all'};     % use first 60 channels
 
-data_eeg_median        = ft_preprocessing(cfg);
+data_eeg_median        = ft_preprocessing(cfg,data);
 
 % plot the results
 
