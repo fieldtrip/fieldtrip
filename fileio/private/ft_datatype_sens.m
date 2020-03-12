@@ -172,6 +172,15 @@ switch version
       % especially the chanunit field needs some careful thought when converting between optical densities and chromophore concentrations.
       sens = removefields(sens, {'chantype', 'chanunit'});
     end
+
+    % ensure all positions are represented as 3D, not 2D
+    fn = {'chanpos', 'optopos', 'elecpos', 'coilpos'};
+    for i=1:numel(fn)
+      if isfield(sens, fn{i}) && size(sens.(fn{i}),2)==2
+        ft_notice('converting %s from 2D to 3D', fn{i});
+        sens.(fn{i})(:,3) = 0;
+      end
+    end % for
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case '2016'
