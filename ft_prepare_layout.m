@@ -624,6 +624,9 @@ elseif ~isempty(cfg.opto)
   else
     layout = opto2lay(sens, sens.label, cfg.rotate);
   end
+  if size(sens.chanpos,2)==3
+      layout=sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
+  end
 
 elseif isfield(data, 'opto') && isstruct(data.opto)
   ft_info('creating layout from data.opto\n');
