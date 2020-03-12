@@ -5,7 +5,10 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 % field distribution, or for plotting timecourses in a topographical arrangement.
 %
 % Use as
+%   layout = ft_prepare_layout(cfg)
+% or
 %   layout = ft_prepare_layout(cfg, data)
+% where the optional data input argument is any of the FieldTrip data structures.
 %
 % There are several ways in which a 2-D layout can be made: 1) it can be read
 % directly from a layout file, 2) it can be created on basis of an image or photo, 3)
@@ -620,18 +623,18 @@ elseif ~isempty(cfg.opto)
     sens = ft_read_sens(cfg.opto, 'senstype', 'nirs');
   end
   if (hasdata)
-    layout = opto2lay(sens, data.label, cfg.rotate);
+    layout = opto2lay(sens, data.label, cfg.rotate, cfg.projection, cfg.viewpoint);
   else
-    layout = opto2lay(sens, sens.label, cfg.rotate);
+    layout = opto2lay(sens, sens.label, cfg.rotate, cfg.projection, cfg.viewpoint);
   end
   
 elseif isfield(data, 'opto') && isstruct(data.opto)
   ft_info('creating layout from data.opto\n');
   sens = ft_datatype_sens(data.opto);
   if (hasdata)
-    layout = opto2lay(sens, data.label, cfg.rotate);
+    layout = opto2lay(sens, data.label, cfg.rotate, cfg.projection, cfg.viewpoint);
   else
-    layout = opto2lay(sens, sens.label, cfg.rotate);
+    layout = opto2lay(sens, sens.label, cfg.rotate, cfg.projection, cfg.viewpoint);
   end
   
 elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
@@ -1341,9 +1344,9 @@ else
       end
     end
     
-    % 3D to 2D
+    % project 3D points to 2D
     prj = getorthoviewpos(pos, sens.coordsys, viewpoint);
-  end
+  end % if viewpoint
   
   % this copy will be used to determine the minimum distance between channels
   % we need a copy because prj retains the original positions, and
@@ -1399,19 +1402,13 @@ else
     end
     %%% \workaround - make a safe guess to detect iEEG until a better solution is found
   else
-    mindist = eps; % not sure this is a good value but it's just to prevent crashes when
-    % the EEG sensor definition is meaningless
+    mindist = eps; % not sure this is a good value, but it's just to prevent crashes when the EEG sensor definition is meaningless
   end
   
-  X = prj(:,1);
-  Y = prj(:,2);
-  Width  = ones(size(X)) * mindist * 0.8;
-  Height = ones(size(X)) * mindist * 0.6;
-  layout.pos    = [X Y];
-  layout.width  = Width;
-  layout.height = Height;
   layout.pos    = prj;
   layout.label  = label;
+  layout.width  = ones(numel(label),1) * mindist * 0.8;
+  layout.height = ones(numel(label),1) * mindist * 0.6;
 end
 
 
@@ -1419,21 +1416,18 @@ end
 % SUBFUNCTION
 % convert 2D optode positions into 2D layout
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function layout = opto2lay(opto, label, rotatez)
+function layout = opto2lay(opto, label, rotatez, projmethod, viewpoint)
 
 if isempty(rotatez)
   rotatez = 90;
 end
 
-layout = [];
-layout.pos    = [];
-layout.label  = {};
-layout.width  = [];
-layout.height = [];
-
 % NIRS channels are named 'RxY - TxZ [wavelength]'
 [rxnames, rem] = strtok(label, {'-', ' '});
 [txnames, rem] = strtok(rem,   {'-', ' '});
+
+% start with an empty layout
+layout = [];
 
 for i=1:numel(label)
   % create positions halfway between transmitter and receiver
@@ -1442,21 +1436,44 @@ for i=1:numel(label)
   layout.pos(i, :) = opto.optopos(rxid, :)/2 + opto.optopos(txid, :)/2;
 end
 
-layout.label  = label;
-layout.width  = ones(numel(label),1);
-layout.height = ones(numel(label),1);
-
 % apply the rotation around the z-axis
 layout.pos = ft_warp_apply(rotate([0 0 rotatez]), layout.pos, 'homogenous');
+
+% project 3D points onto 2D plane
+if all(layout.pos(:,3)==0)
+  ft_notice('not applying 2D projection');
+  layout.pos = layout.pos(:,1:2);
+elseif isempty(viewpoint)
+  layout.pos = elproj(layout.pos, projmethod);
+else
+  layout.pos = getorthoviewpos(layout.pos, opto.coordsys, viewpoint);
+end
+
+% compute the distances between all channel pairs
+dist = zeros(numel(label));
+for i=1:numel(label)
+  for j=1:numel(label)
+    dist(i,j) = norm(layout.pos(i,:)-layout.pos(j,:));
+  end
+end
+dist(dist==0) = inf; % ignore all zeros
+mindist = median(min(dist,[], 2))/2;
+
+% note that the width and height can be overruled elsewhere with cfg.width and cfg.height
+ft_notice('estimating the channel width and height to be %.4f', mindist);
+
+layout.label  = label;
+layout.width  = mindist*ones(numel(label),1);
+layout.height = mindist*ones(numel(label),1);
 
 % prevent the circle-with-ears-and-nose to be added
 layout.outline = {};
 
 % construct a mask for topographic interpolation
-pos1 = layout.pos; pos1(:,1) = pos1(:,1)-layout.width;
-pos2 = layout.pos; pos2(:,1) = pos2(:,1)+layout.width;
-pos3 = layout.pos; pos3(:,2) = pos3(:,2)-layout.height;
-pos4 = layout.pos; pos4(:,2) = pos4(:,2)+layout.height;
+pos1 = layout.pos; pos1(:,1) = pos1(:,1) - layout.width; pos1(:,2) = pos1(:,2) - layout.height;
+pos2 = layout.pos; pos2(:,1) = pos2(:,1) - layout.width; pos2(:,2) = pos2(:,2) + layout.height;
+pos3 = layout.pos; pos3(:,1) = pos3(:,1) + layout.width; pos3(:,2) = pos3(:,2) - layout.height;
+pos4 = layout.pos; pos4(:,1) = pos4(:,1) + layout.width; pos4(:,2) = pos4(:,2) + layout.height;
 pos = [pos1; pos2; pos3; pos4];
 indx = convhull(pos);
 layout.mask{1} = pos(indx,:);
@@ -1598,6 +1615,7 @@ outline = {[
   xmin ymax
   ]};
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION generate an outline from the boundary/convex hull of pos+width/height
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1617,6 +1635,7 @@ outline{1} = [HeadX(:) HeadY(:)];
 outline{2} = [NoseX(:) NoseY(:)];
 outline{3} = [ EarX(:)  EarY(:)];
 outline{4} = [-EarX(:)  EarY(:)];
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION generate an outline from the boundary/convex hull of pos+width/height
