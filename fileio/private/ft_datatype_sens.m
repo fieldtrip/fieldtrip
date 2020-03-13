@@ -182,6 +182,12 @@ switch version
       end
     end % for
     
+    if isfield(sens, 'optolabel')
+      if length(sens.optolabel)~=length(unique(sens.optolabel))
+        ft_warning('non-unique optode labels detected');
+      end
+    end
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case '2016'
 

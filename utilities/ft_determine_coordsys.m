@@ -163,7 +163,7 @@ switch dtype
     ft_plot_headmodel(data);
     camlight;
 
-  case {'grad' 'elec' 'sens'}
+  case {'grad' 'elec' 'opto' 'sens'}
     ft_plot_sens(data, 'label', 'label');
     camlight;
 
