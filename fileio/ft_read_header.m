@@ -2671,6 +2671,11 @@ if isfield(hdr, 'elec')
   hdr.elec = ft_datatype_sens(hdr.elec);
 end
 
+% ensure that the output opto is according to the latest definition
+if isfield(hdr, 'opto')
+  hdr.opto = ft_datatype_sens(hdr.opto);
+end
+
 % ensure that these are column arrays
 hdr.label    = hdr.label(:);
 if isfield(hdr, 'chantype'), hdr.chantype = hdr.chantype(:); end
