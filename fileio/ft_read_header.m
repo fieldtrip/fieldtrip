@@ -2630,9 +2630,8 @@ if checkUniqueLabels
     for i=1:hdr.nChans
       sel = find(strcmp(hdr.label{i}, hdr.label));
       if length(sel)>1
-        % there is no need to rename the first instance
-        % can be particularly disruptive when part of standard MEG
-        % or EEG channel set, so should be avoided
+        % renaming the first instance is particularly disruptive when the channels are 
+        % part of standard MEG or EEG channel set, so that should be avoided
         if any(megflag(sel))
           sel = setdiff(sel, sel(find(megflag(sel), 1)));
         elseif any(eegflag(sel))
@@ -2641,6 +2640,7 @@ if checkUniqueLabels
           sel = sel(2:end);
         end
         for j=1:length(sel)
+          % add a number to the original channel name
           hdr.label{sel(j)} = sprintf('%s-%d', hdr.label{sel(j)}, j);
         end
       end
