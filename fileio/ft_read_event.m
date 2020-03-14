@@ -14,7 +14,7 @@ function [event] = ft_read_event(filename, varargin)
 %   'header'         header structure, see FT_READ_HEADER
 %   'detectflank'    string, can be 'bit', 'up', 'down', 'both', 'peak', 'trough' or 'auto' (default is system specific)
 %   'trigshift'      integer, number of samples to shift from flank to detect trigger value (default = 0)
-%   'chanindx'       list with channel numbers for the trigger detection (default is automatic)
+%   'chanindx'       list with channel numbers for trigger detection, specify -1 in case you don't want to detect triggers (default is automatic)
 %   'threshold'      threshold for analog trigger channels (default is system specific)
 %   'blocking'       wait for the selected number of events (default = 'no')
 %   'timeout'        amount of time in seconds to wait when blocking (default = 5)
