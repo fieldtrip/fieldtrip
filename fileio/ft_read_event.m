@@ -248,7 +248,7 @@ switch eventformat
       chanindx = match_str(hdr.label, 'TRIGGER');
     end
     
-    % read the trigger channel and do flank detection
+    % read the trigger channels and do flank detection
     if isfield(hdr, 'orig') && isfield(hdr.orig, 'config_data') && (strcmp(hdr.orig.config_data.site_name, 'Glasgow') || strcmp(hdr.orig.config_data.site_name, 'Marseille')),
       trigger = read_trigger(filename, 'header', hdr, 'dataformat', '4d', 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fix4d8192', true);
     else
@@ -513,7 +513,6 @@ switch eventformat
     if isempty(hdr)
       hdr = ft_read_header(filename);
     end
-    
     if isempty(chanindx)
       for i = 1:numel(hdr.orig)
         if ~any(isfield(hdr.orig{i}, {'units', 'scale'}))
@@ -522,6 +521,7 @@ switch eventformat
       end
     end
     if ~isempty(chanindx)
+      % read the trigger channels and do flank detection
       trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank);
       event   = appendstruct(event, trigger);
     end
@@ -579,7 +579,7 @@ switch eventformat
     end
     
     if ~isempty(chanindx)
-      % read the trigger channel and do flank detection
+      % read the trigger channels and do flank detection
       trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixctf', true);
       event   = appendstruct(event, trigger);
     end
@@ -1388,6 +1388,7 @@ switch eventformat
     end
     if isfield(hdr, 'orig') && isfield(hdr.orig, 'Trigger_Area') && isfield(hdr.orig, 'Tigger_Area_Length')
       if ~isempty(chanindx)
+        % read the trigger channels and do flank detection
         trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift);
         event   = appendstruct(event, trigger);
       else
@@ -1566,7 +1567,7 @@ switch eventformat
         % add the triggers to the event structure based on trigger channels with the name "STI xxx"
         % there are some issues with noise on these analog trigger
         % channels, on older systems only
-        % read the trigger channel and do flank detection
+        % read the trigger channels and do flank detection
         trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', analogindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixneuromag', true);
         event   = appendstruct(event, trigger);
         
@@ -1944,6 +1945,7 @@ switch eventformat
       chanindx = match_str(hdr.label, 'DTRIG');
     end
     if ~isempty(chanindx)
+      % read the trigger channels and do flank detection
       trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift);
       event   = appendstruct(event, trigger);
     end
@@ -2159,7 +2161,7 @@ switch eventformat
       chanindx = find(ismember(hdr.label, ft_channelselection('ADC*', hdr.label)));
     end
     
-    % read the trigger channel and do flank detection
+    % read the trigger channels and do flank detection
     trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'threshold', threshold, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixartinis', true);
     
     % remove consecutive triggers
