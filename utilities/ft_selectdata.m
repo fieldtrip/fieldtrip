@@ -647,6 +647,8 @@ label    = cell(1,0);
 
 for k = 1:ndata
   selchannel      = cell(0,1);
+  selgrad         = [];
+  selelec         = [];
   if isfield(varargin{k}, 'grad') && isfield(varargin{k}.grad, 'type')
     % this makes channel selection more robust, e.g. when using wildcards
     % in cfg.channel
