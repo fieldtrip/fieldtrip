@@ -11,7 +11,7 @@ function test_tutorial_natmeg_preprocessing
 clear all
 close all
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/natmeg'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/workshop/natmeg'));
 
 cfg = [];
 cfg.dataset    = 'oddball1_mc_downsampled.fif';
