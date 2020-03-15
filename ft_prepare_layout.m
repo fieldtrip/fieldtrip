@@ -1459,8 +1459,13 @@ end
 dist(dist==0) = inf; % ignore all zeros
 mindist = median(min(dist,[], 2))/2;
 
+if isinf(mindist) || isnan(mindist)
+  % this is needed e.g. in case there is only one channel
+  mindist = 1;
+end
+
 % note that the width and height can be overruled elsewhere with cfg.width and cfg.height
-ft_notice('estimating the channel width and height to be %.4f', mindist);
+ft_notice('estimated channel width and height is %.4f', mindist);
 
 layout.label  = label;
 layout.width  = mindist*ones(numel(label),1);
