@@ -128,7 +128,7 @@ if iscell(filename)
   for i=1:numel(filename)
     hdr{i} = ft_read_header(filename{i}, varargin{:});
   end
-    
+  
   allhdr = cat(1, hdr{:});
   if numel(unique([allhdr.label]))==sum([allhdr.nChans])
     % each file has different channels, concatenate along the channel dimension
@@ -1541,8 +1541,6 @@ switch headerformat
     hdr.chanunit = repmat({'unknown'}, hdr.nChans, 1);
     
     % convert the measurement configuration details to an optode structure
-    try
-    end
     hdr.opto = homer2opto(orig.SD);
     
     % keep the header details
@@ -2630,7 +2628,7 @@ if checkUniqueLabels
     for i=1:hdr.nChans
       sel = find(strcmp(hdr.label{i}, hdr.label));
       if length(sel)>1
-        % renaming the first instance is particularly disruptive when the channels are 
+        % renaming the first instance is particularly disruptive when the channels are
         % part of standard MEG or EEG channel set, so that should be avoided
         if any(megflag(sel))
           sel = setdiff(sel, sel(find(megflag(sel), 1)));
@@ -2673,7 +2671,12 @@ end
 
 % ensure that the output opto is according to the latest definition
 if isfield(hdr, 'opto')
-  hdr.opto = ft_datatype_sens(hdr.opto);
+  try
+    hdr.opto = ft_datatype_sens(hdr.opto);
+  catch
+    % the NIRS optode structure is incomplete when reading/converting it from Homer files
+    ft_warning('optode structure is not compliant with FT_DATATPE_SENS');
+  end
 end
 
 % ensure that these are column arrays
