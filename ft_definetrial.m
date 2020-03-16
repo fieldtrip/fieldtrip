@@ -60,7 +60,6 @@ function [cfg] = ft_definetrial(cfg)
 %   cfg.trialdef.eventvalue = number, string or list with numbers or strings
 %   cfg.trialdef.prestim    = number, latency in seconds (optional)
 %   cfg.trialdef.poststim   = number, latency in seconds (optional)
-%   cfg.trialdef.chanindx   = list with channel numbers for trigger detection, specify -1 in case you don't want to detect triggers (default is automatic)
 %
 % If you specify cfg.trialdef.eventtype  = '?' a list with the events in your
 % data file will be displayed on screen.
