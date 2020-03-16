@@ -1,6 +1,6 @@
 function test_ft_read_header
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY ft_read_header

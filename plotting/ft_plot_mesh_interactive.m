@@ -228,8 +228,23 @@ classdef ft_plot_mesh_interactive<handle
           set(self.axes_time(end), 'Color', [colour 0.1]);
           
           if ~isempty(self.atlas)
-            atlas_labels = atlas_lookup(self.atlas, self.pos(index,:),...
-              'inputcoord', 'mni');
+            if isfield(self.atlas, 'dim') && isfield(self.atlas, 'transform')
+              % use atlas_lookup, which operates on volumetrically defined
+              % atlases
+              atlas_labels = atlas_lookup(self.atlas, self.pos(index,:), 'coordsys', 'mni');
+            elseif isfield(self.atlas, 'pos') && size(self.atlas.pos,1)==size(self.pos,1)
+              % assume that the topologies are the same, and use the index
+              % of the selected vertex to look up the label.
+              fn = fieldnames(self.atlas);
+              atlas_labels = {};
+              for i=1:numel(fn)
+                if any(strcmp(fn, [fn{i} 'label']))
+                  atlas_labels{end+1} = self.atlas.([fn{i} 'label']){self.atlas.(fn{i})(index)};
+                end
+              end
+            else
+              atlas_labels = [];
+            end
             if numel(atlas_labels) > 1
               atlas_labels = unique(atlas_labels);
               tmp = sprintf('%s', strrep(atlas_labels{1}, '_', ' '));

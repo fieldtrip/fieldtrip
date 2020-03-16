@@ -1,6 +1,6 @@
 function test_channelconnectivity
 
-% MEM 1000mb
+% MEM 1gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY channelconnectivity ft_megplanar ft_statistics_montecarlo

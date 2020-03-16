@@ -111,8 +111,8 @@ cfg = ft_checkconfig(cfg, 'allowedval', {'method', 'detect', 'marker'});
 
 % set default rejection parameters
 if ~isfield(cfg, 'artfctdef'),                       cfg.artfctdef                   = [];        end
-if ~isfield(cfg, 'method'),                          cfg.method                      = 'detect';  end
 if ~isfield(cfg.artfctdef, 'tms'),                   cfg.artfctdef.tms               = [];        end
+if ~isfield(cfg, 'method'),                          cfg.method                      = 'detect';  end
 if ~isfield(cfg, 'prestim'),                         cfg.prestim                     = 0.005;     end
 if ~isfield(cfg, 'poststim'),                        cfg.poststim                    = 0.010;     end
 
@@ -133,6 +133,7 @@ switch cfg.method
     if ~isfield(cfg.artfctdef.tms, 'fltpadding'), cfg.artfctdef.tms.fltpadding  = 0.1;         end
     if ~isfield(cfg.artfctdef.tms, 'artpadding'), cfg.artfctdef.tms.artpadding  = 0.01;        end
     if ~isfield(cfg.artfctdef.tms, 'cutoff'),     cfg.artfctdef.tms.cutoff      = 4;           end
+    
     % construct a temporary configuration that can be passed onto artifact_zvalue
     tmpcfg                  = [];
     tmpcfg.trl              = cfg.trl;
@@ -140,7 +141,6 @@ switch cfg.method
     if isfield(cfg, 'continuous'),   tmpcfg.continuous       = cfg.continuous;    end
     if isfield(cfg, 'dataformat'),   tmpcfg.dataformat       = cfg.dataformat;    end
     if isfield(cfg, 'headerformat'), tmpcfg.headerformat     = cfg.headerformat;  end
-    % call the zvalue artifact detection function
     
     % the data is either passed into the function by the user or read from file with cfg.inputfile
     hasdata = exist('data', 'var');

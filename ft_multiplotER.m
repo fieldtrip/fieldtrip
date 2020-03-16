@@ -201,6 +201,7 @@ cfg.showcomment    = ft_getopt(cfg, 'showcomment', 'yes');
 cfg.box            = ft_getopt(cfg, 'box', 'no');
 cfg.fontsize       = ft_getopt(cfg, 'fontsize', 8);
 cfg.fontweight     = ft_getopt(cfg, 'fontweight');
+cfg.interpreter    = ft_getopt(cfg, 'interpreter', 'none');  % none, tex or latex
 cfg.interactive    = ft_getopt(cfg, 'interactive', 'yes');
 cfg.renderer       = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 cfg.orient         = ft_getopt(cfg, 'orient', 'landscape');
@@ -399,7 +400,7 @@ end
 %% Section 3: select the data to be plotted and determine min/max range
 
 % Read or create the layout that will be used for plotting
-tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
 cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
 
 % Take the subselection of channels that is contained in the layout, this is the same in all datasets
@@ -514,7 +515,7 @@ for m=1:length(selchan)
 end % for number of channels
 
 % plot the layout, labels and outline
-ft_plot_layout(cfg.layout, 'box', istrue(cfg.box), 'label', istrue(cfg.showlabels), 'outline', istrue(cfg.showoutline), 'point', 'no', 'mask', 'no', 'fontsize', cfg.fontsize, 'labelyoffset', 1.4*median(cfg.layout.height/2), 'labelalignh', 'center', 'chanindx', find(~ismember(cfg.layout.label, {'COMNT', 'SCALE'})) );
+ft_plot_layout(cfg.layout, 'box', istrue(cfg.box), 'label', istrue(cfg.showlabels), 'outline', istrue(cfg.showoutline), 'point', 'no', 'mask', 'no', 'fontsize', cfg.fontsize, 'labelyoffset', 1.4*median(cfg.layout.height/2), 'labelalignh', 'center', 'chanindx', find(~ismember(cfg.layout.label, {'COMNT', 'SCALE'})), 'interpreter', cfg.interpreter);
 
 % write comment
 if istrue(cfg.showcomment)

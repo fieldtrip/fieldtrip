@@ -1,6 +1,6 @@
 function test_bug2027
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:20:00
 
 % DEPENDENCY read_4d_hdr

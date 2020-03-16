@@ -1,7 +1,7 @@
 function test_bug3267
 
 % WALLTIME 00:10:00
-% MEM 3gb
+% MEM 4gb
 
 % this script tests that the trialinfo is properly dealt with in the ft_appendxxx functions
 

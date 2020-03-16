@@ -29,14 +29,14 @@ function [dat] = ft_read_data(filename, varargin)
 % Nchans*Nsamples*Ntrials for epoched or trial-based data when begtrial
 % and endtrial are specified.
 %
-% To use an external reading function, you can specify a function as the 'dataformat'
-% option. This function should take five input arguments: filename, hdr, begsample,
-% endsample, chanindx. Please check the code of this function for details, and search
-% for BIDS_TSV as example.
+% To use an external reading function, you can specify an external function as the
+% 'dataformat' option. This function should take five input arguments: filename, hdr,
+% begsample, endsample, chanindx. Please check the code of this function for details,
+% and search for BIDS_TSV as example.
 %
 % See also FT_READ_HEADER, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT
 
-% Copyright (C) 2003-2019 Robert Oostenveld
+% Copyright (C) 2003-2020 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -1475,19 +1475,21 @@ switch dataformat
     end
     
   otherwise
-    % attempt to run "dataformat" as a function
-    % this allows the user to specify an external reading function
-    % if it fails, the regular unsupported warning message is thrown
-    try
-      % this is used for bids_tsv, biopac_acq, motion_c3d, opensignals_txt, qualisys_tsv, and possibly others
+    if exist(dataformat, 'file')
+      % attempt to run "dataformat" as a function, this allows the user to specify an external reading function
+      % this is also used for bids_tsv, biopac_acq, motion_c3d, opensignals_txt, qualisys_tsv, sccn_xdf, and possibly others
       dat = feval(dataformat, filename, hdr, begsample, endsample, chanindx);
-    catch
-      if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
+    elseif strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
+      try
+        % there is no guarantee that biosig can read it
         dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
-      else
+      catch
         ft_error('unsupported data format "%s"', dataformat);
       end
+    else
+      ft_error('unsupported data format "%s"', dataformat);
     end
+    
 end % switch dataformat
 
 if ~exist('dimord', 'var')

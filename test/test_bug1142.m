@@ -1,6 +1,6 @@
 function test_bug1142
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1142

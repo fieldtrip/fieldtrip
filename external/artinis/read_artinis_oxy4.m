@@ -65,18 +65,22 @@ if nargin == 1 || nargin == 2 && islogical(header) && ~header
   data = read_oxy4_header(filename);
 elseif nargin == 2  && islogical(header) && header
   data = read_oxy3_event(filename);
-else % nargin > 1 && ~islogical(header)
-  data = read_oxy4_data(filename);
-  
+else % nargin > 1 && ~islogical(header)  
   if nargin < 5
-    chanindx = 1:size(data, 1);
+    chanindx = 1:header.nChans;
     if nargin < 4
-      endsample = size(data, 2);    
+      endsample = header.nSamples;
       if nargin < 3
         begsample = 1;
       end
     end
+  end  
+  data = read_oxy4_data(filename, 0, header.nSamples); % sample subselection does not work yet
+  
+  if endsample > size(data, 2)
+    warning('Cannot deliver all requested samples, nan''ing %d sample(s)', endsample-size(data, 2));
+    data(:, end:endsample) = nan;
   end
-        
+  
   data = data(chanindx, begsample:endsample);
 end

@@ -1,6 +1,6 @@
 function test_bug2363
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY ft_selectdata ft_selectdata_new ft_freqstatistics ft_timelockstatistics

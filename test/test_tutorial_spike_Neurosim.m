@@ -1,6 +1,6 @@
 function test_tutorial_spike_Neurosim
 
-% MEM 1gb
+% MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_spike_select ft_definetrial ft_spike_plot_raster
 

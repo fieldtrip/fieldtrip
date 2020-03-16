@@ -37,7 +37,7 @@ function [hdr] = ft_read_header(filename, varargin)
 % Depending on the file format, additional header information can be
 % returned in the hdr.orig subfield.
 %
-% To use an external reading function, you can specify a function as the
+% To use an external reading function, you can specify an external function as the
 % 'headerformat' option. This function should take the filename as input argument.
 % Please check the code of this function for details, and search for BIDS_TSV as
 % example.
@@ -91,7 +91,7 @@ function [hdr] = ft_read_header(filename, varargin)
 % See also FT_READ_DATA, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT,
 % FT_CHANTYPE, FT_CHANUNIT
 
-% Copyright (C) 2003-2019 Robert Oostenveld
+% Copyright (C) 2003-2020 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -128,7 +128,7 @@ if iscell(filename)
   for i=1:numel(filename)
     hdr{i} = ft_read_header(filename{i}, varargin{:});
   end
-    
+  
   allhdr = cat(1, hdr{:});
   if numel(unique([allhdr.label]))==sum([allhdr.nChans])
     % each file has different channels, concatenate along the channel dimension
@@ -1541,8 +1541,6 @@ switch headerformat
     hdr.chanunit = repmat({'unknown'}, hdr.nChans, 1);
     
     % convert the measurement configuration details to an optode structure
-    try
-    end
     hdr.opto = homer2opto(orig.SD);
     
     % keep the header details
@@ -2589,18 +2587,19 @@ switch headerformat
     checkUniqueLabels = false;
     
   otherwise
-    % attempt to run "headerformat" as a function
-    % this allows the user to specify an external reading function
-    % if it fails, the regular unsupported warning message is thrown
-    try
-      % this is used for bids_tsv, biopac_acq, motion_c3d, opensignals_txt, qualisys_tsv, and possibly others
+    if exist(headerformat, 'file')
+      % attempt to run "headerformat" as a function, this allows the user to specify an external reading function
+      % this is also used for bids_tsv, biopac_acq, motion_c3d, opensignals_txt, qualisys_tsv, sccn_xdf, and possibly others
       hdr = feval(headerformat, filename);
-    catch
-      if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
+    elseif strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
+      try
+        % there is no guarantee that biosig can read it
         hdr = read_biosig_header(filename);
-      else
+      catch
         ft_error('unsupported header format "%s"', headerformat);
       end
+    else
+      ft_error('unsupported header format "%s"', headerformat);
     end
     
 end % switch headerformat
@@ -2629,9 +2628,8 @@ if checkUniqueLabels
     for i=1:hdr.nChans
       sel = find(strcmp(hdr.label{i}, hdr.label));
       if length(sel)>1
-        % there is no need to rename the first instance
-        % can be particularly disruptive when part of standard MEG
-        % or EEG channel set, so should be avoided
+        % renaming the first instance is particularly disruptive when the channels are
+        % part of standard MEG or EEG channel set, so that should be avoided
         if any(megflag(sel))
           sel = setdiff(sel, sel(find(megflag(sel), 1)));
         elseif any(eegflag(sel))
@@ -2640,6 +2638,7 @@ if checkUniqueLabels
           sel = sel(2:end);
         end
         for j=1:length(sel)
+          % add a number to the original channel name
           hdr.label{sel(j)} = sprintf('%s-%d', hdr.label{sel(j)}, j);
         end
       end
@@ -2668,6 +2667,16 @@ end
 % ensure that the output elec is according to the latest definition
 if isfield(hdr, 'elec')
   hdr.elec = ft_datatype_sens(hdr.elec);
+end
+
+% ensure that the output opto is according to the latest definition
+if isfield(hdr, 'opto')
+  try
+    hdr.opto = ft_datatype_sens(hdr.opto);
+  catch
+    % the NIRS optode structure is incomplete when reading/converting it from Homer files
+    ft_warning('optode structure is not compliant with FT_DATATPE_SENS');
+  end
 end
 
 % ensure that these are column arrays

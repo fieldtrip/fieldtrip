@@ -1,6 +1,6 @@
 function test_bug2397
 
-% MEM 2000mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY ft_prepare_mesh

@@ -135,6 +135,7 @@ for foiind = 1:length(cfg.foi)
     nsamplespertimwin(end+1) = nsamplespertimwinall(minvalind);
   end
 end
+
 % Construct a frequency-specific toi vector for every element in freq,
 % which will later be passed as an argument to ft_freqanalysis.
 % For the moment, we assume that all trials in datain have the same time
@@ -157,11 +158,12 @@ freq=freq(~remfreq);
 nsamplespertimwin=nsamplespertimwin(~remfreq);
 t_ftimwin=t_ftimwin(~remfreq);
 
+
 % construct the toi vectors for each of the frequencies
 toicell = cell(size(freq));
 for freqindx = 1:length(freq)
   nsegments = floor(length(timevec)/nsamplespertimwin(freqindx));
-  nsamplesnext2toi = (nsamplespertimwin(freqindx)-1)/2;
+  nsamplesnext2toi = ceil(nsamplespertimwin(freqindx)./2); %(nsamplespertimwin(freqindx)-1)/2;
   toisamples = (nsamplesnext2toi+1):nsamplespertimwin(freqindx):nsegments*nsamplespertimwin(freqindx);
   toicell{freqindx} = timevec(toisamples);
 end
@@ -183,7 +185,7 @@ for freqindx = 1:length(freq)
   cfg_freq.foi = freq(freqindx);
   cfg_freq.t_ftimwin = t_ftimwin(freqindx);
   cfg_freq.toi = toicell{freqindx};
-%   cfg_freq.pad = ceil(numel(timevec)./Fs.*cfg_freq.foi)./cfg_freq.foi;
+  cfg_freq.pad = ceil(numel(timevec)./Fs.*cfg_freq.foi)./cfg_freq.foi;
 %
 % Code for checking whether the requested cfg_freq.t_ftimwin (calculated as t_ftimwin) allows for the
 % requested cfg_freq.foi (calculated as freq) using the requested number of cycles (cfg.numcycles).

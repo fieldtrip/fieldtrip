@@ -112,7 +112,6 @@ oneRptTimelock = (strcmp(dtype, 'timelock') &&...
   strcmp(data.dimord, 'rpt_chan_time') &&...
   size(data.trial, 1) == 1);
 
-
 % check if the input data is valid for this function, this will convert it to raw if needed
 data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', cfg.feedback);
 fb   = istrue(cfg.feedback);
@@ -143,6 +142,7 @@ if ~strcmp(cfg.trials, 'all')
     cfg.endsample = cfg.endsample(cfg.trials);
   end
 end
+
 Ntrial = numel(data.trial);
 
 % check the input arguments, only one method for processing is allowed
@@ -234,51 +234,56 @@ elseif ~isempty(cfg.trl)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % select new trials from the existing data
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  if ischar(cfg.trl)
+    % load the trial information from file
+    newtrl = loadvar(cfg.trl, 'trl');
+  else
+    newtrl = cfg.trl;
+  end
   
   % ensure that sampleinfo is present, otherwise ft_fetch_data will crash
   data = ft_checkdata(data, 'hassampleinfo', 'yes');
   
-  dataold = data;   % make a copy of the old data
-  clear data        % this line is very important, we want to completely reconstruct the data from the old data!
+  % make a copy of the old data
+  dataold = data;
   
-  % make header
+  % make the header
   hdr = ft_fetch_header(dataold);
   
-  trl = cfg.trl;
-  
   % start with a completely new data structure
-  data          = [];
+  data          = keepfields(dataold, {'cfg' 'fsample' 'label' 'topo' 'topolabel' 'unmixing' 'mixing' 'grad' 'elec' 'opto'}); % account for all potential fields to be copied over
   data.hdr      = hdr;
-  data.trial    = cell(1,size(trl,1));
-  data.time     = cell(1,size(trl,1));
-  data          = copyfields(dataold, data, {'fsample' 'label' 'topo' 'topolabel' 'unmixing' 'mixing' 'grad' 'elec' 'opto'}); % account for all potential fields to be copied over
+  data.trial    = cell(1,size(newtrl,1));
+  data.time     = cell(1,size(newtrl,1));
   
-  if isfield(dataold,'trialinfo')
-    ft_warning('Original data has trialinfo, using user specified trialinfo instead');
+  if isfield(dataold, 'trialinfo')
+    ft_warning('Original data has trialinfo, using user-specified trialinfo instead');
   end
   
-  if ~istable(trl)
-    begsample = trl(:,1);
-    endsample = trl(:,2);
-    offset    = trl(:,3);
+  if ~istable(newtrl)
+    begsample = newtrl(:,1);
+    endsample = newtrl(:,2);
+    offset    = newtrl(:,3);
   else
-    begsample = trl.begsample;
-    endsample = trl.endsample;
-    offset    = trl.offset;
+    begsample = newtrl.begsample;
+    endsample = newtrl.endsample;
+    offset    = newtrl.offset;
   end
   trllength = endsample - begsample + 1;
   
-  for iTrl=1:size(trl, 1)
+  for iTrl=1:size(newtrl, 1)
     
     data.trial{iTrl} = ft_fetch_data(dataold, 'header', hdr, 'begsample', begsample(iTrl), 'endsample', endsample(iTrl), 'chanindx', 1:hdr.nChans, 'skipcheckdata', 1);
     data.time{iTrl}  = offset2time(offset(iTrl), dataold.fsample, trllength(iTrl));
     
-    % ensure correct handling of trialinfo.
-    % original trial
-    iTrlorig  =  find(begsample(iTrl) <= dataold.sampleinfo(:,2) & endsample(iTrl) >= dataold.sampleinfo(:,1)); % Determines which old trials are present in new trials
+    % The following ensures correct handling of trialinfo.
     
-    if size(cfg.trl,2)>3 % In case user specified a trialinfo
-      data.trialinfo(iTrl,:) = cfg.trl(iTrl,4:end);
+    % Determine which old trials are present in new trials
+    iTrlorig = find(begsample(iTrl) <= dataold.sampleinfo(:,2) & endsample(iTrl) >= dataold.sampleinfo(:,1));
+    
+    if size(newtrl,2)>3 % In case user specified additional trialinfo
+      data.trialinfo(iTrl,:) = newtrl(iTrl,4:end);
     elseif isfield(dataold,'trialinfo') % If old data has trialinfo
       if (numel(iTrlorig) == 1 ...      % only 1 old trial to copy trialinfo from, or
           || size(unique(dataold.trialinfo(iTrlorig,:),'rows'),1)) ... % all old trialinfo rows are identical
@@ -385,12 +390,7 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-if ~isempty(cfg.trl) && exist('dataold', 'var')
-  % the input data has been renamed to dataold
-  ft_postamble previous dataold
-else
-  ft_postamble previous data
-end
+ft_postamble previous   data
 ft_postamble provenance data
 ft_postamble history    data
 ft_postamble savevar    data

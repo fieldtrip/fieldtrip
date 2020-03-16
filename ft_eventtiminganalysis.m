@@ -282,6 +282,7 @@ case 'gbve'
   cfg.gbve.disp_log          = ft_getopt(cfg.gbve, 'disp_log',          false);
   cfg.gbve.latency           = ft_getopt(cfg.gbve, 'latency',  [-inf inf]);
   cfg.gbve.xwin              = ft_getopt(cfg.gbve, 'xwin',     1); % default is a bit of smoothing
+  cfg.gbve.nfold             = ft_getopt(cfg.gbve, 'nfold',    5);
   
   nchan = numel(data.label);
   ntrl  = numel(data.trial);
@@ -308,7 +309,7 @@ case 'gbve'
     if length(alphas) > 1 % Use Cross validation error if multiple alphas are specified
       best_CVerr = -Inf;
 
-      K = 5;
+      K = cfg.gbve.nfold;
       disp(['--- Running K Cross Validation (K = ',num2str(K),')']);
 
       block_idx = fix(linspace(1, ntrl, K+1)); % K cross validation

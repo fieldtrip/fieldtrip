@@ -8,6 +8,7 @@ FieldTrip buffer (V1) client in pure Python
 import socket
 import struct
 import numpy
+import unicodedata
 
 VERSION = 1
 
@@ -88,11 +89,11 @@ def serialize(A):
 
         if A.flags['C_CONTIGUOUS']:
             # great, just use the array's buffer interface
-            return (ft, str(A.data))
+            return (ft, A.tostring())
 
         # otherwise, we need a copy to C order
         AC = A.copy('C')
-        return (ft, str(AC.data))
+        return (ft, AC.tostring())
 
     if isinstance(A, int):
         return (DATATYPE_INT32, struct.pack('i', A))
@@ -331,16 +332,18 @@ class Client:
     def putHeader(self, nChannels, fSample, dataType, labels=None,
                   chunks=None, reponse=True):
         haveLabels = False
-        extras = ''
+        extras = b''
 
         if (type(labels)==list) and (len(labels)==0):
             labels=None
 
         if not(labels is None):
-            serLabels = ''
+            serLabels = b''
+            for n in range(0, nChannels):
+                # ensure that labels are ascii strings, not unicode
+                serLabels += labels[n].encode('ascii', 'ignore') + b'\0'
             try:
-                for n in range(0, nChannels):
-                    serLabels += labels[n] + '\0'
+                pass
             except:
                 raise ValueError('Channels names (labels), if given,'
                                  ' must be a list of N=numChannels strings')
@@ -498,7 +501,7 @@ class Client:
 
         dataBufSize = len(dataBuf)
 
-        if reponse:
+        if response:
             command = PUT_DAT
         else:
             command = PUT_DAT_NORESPONSE
@@ -550,36 +553,36 @@ if __name__ == "__main__":
         try:
             port = int(sys.argv[2])
         except:
-            print ('Error: second argument (%s) must be a valid (=integer)'
-                   ' port number' % sys.argv[2])
+            print(('Error: second argument (%s) must be a valid (=integer)'
+                   ' port number' % sys.argv[2]))
             sys.exit(1)
 
     ftc = Client()
 
-    print 'Trying to connect to buffer on %s:%i ...' % (hostname, port)
+    print('Trying to connect to buffer on %s:%i ...' % (hostname, port))
     ftc.connect(hostname, port)
 
-    print '\nConnected - trying to read header...'
+    print('\nConnected - trying to read header...')
     H = ftc.getHeader()
 
     if H is None:
-        print 'Failed!'
+        print('Failed!')
     else:
-        print H
-        print H.labels
+        print(H)
+        print(H.labels)
 
         if H.nSamples > 0:
-            print '\nTrying to read last sample...'
+            print('\nTrying to read last sample...')
             index = H.nSamples - 1
             D = ftc.getData([index, index])
-            print D
+            print(D)
 
         if H.nEvents > 0:
-            print '\nTrying to read (all) events...'
+            print('\nTrying to read (all) events...')
             E = ftc.getEvents()
             for e in E:
-                print e
+                print(e)
 
-    print ftc.poll()
+    print(ftc.poll())
 
     ftc.disconnect()

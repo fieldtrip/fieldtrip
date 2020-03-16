@@ -1,23 +1,22 @@
 function [s, cfg] = ft_statfun_depsamplesFunivariate(cfg, dat, design)
 
 % FT_STATFUN_DEPSAMPLESFUNIIVARIATE calculates the univariate repeated-mesures ANOVA
-% on the biological data (the dependent variable), using the information on
-% the independent variable (ivar) in design.
+% on the biological data (the dependent variable), using the information on the
+% independent variable (ivar) in design.
 %
 % Use this function by calling one of the high-level statistics functions as
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
 %   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
-% with the following configuration option
+% with the following configuration option:
 %   cfg.statistic = 'ft_statfun_depsamplesFunivariate'
 %
-% Configuration options
+% You can specify the following configuration options:
 %   cfg.computestat    = 'yes' or 'no', calculate the statistic (default='yes')
 %   cfg.computecritval = 'yes' or 'no', calculate the critical values of the test statistics (default='no')
 %   cfg.computeprob    = 'yes' or 'no', calculate the p-values (default='no')
 %
-% The following options are relevant if cfg.computecritval='yes' and/or
-% cfg.computeprob='yes'.
+% The following options are relevant if cfg.computecritval='yes' and/or cfg.computeprob='yes':
 %   cfg.alpha = critical alpha-level of the statistical test (default=0.05)
 %   cfg.tail  = -1, 0, or 1, left, two-sided, or right (default=1)
 %               cfg.tail in combination with cfg.computecritval='yes'
@@ -27,13 +26,13 @@ function [s, cfg] = ft_statfun_depsamplesFunivariate(cfg, dat, design)
 %               quantile (1-cfg.alpha) (with cfg.tail=1). For the
 %               Fstatistic only cfg.tail = 1 makes sense.
 %
-% Design specification
-%   cfg.ivar  = independent vatiable, row number of the design that contains the labels
-%               of the conditions that must be compared (default=1). The labels range
-%               from 1 to the number of conditions.
-%   cfg.uvar  = unit variable, row number of design that contains the labels of the
-%               units-of-observation (subjects or trials) (default=2). The labels
-%               are assumed to be integers ranging from 1 to the number of units-of-observation.
+% The experimental design is specified as:
+%   cfg.ivar  = independent variable, row number of the design that contains the labels of the conditions to be compared (default=1)
+%   cfg.uvar  = unit variable, row number of design that contains the labels of the units-of-observation, i.e. subjects or trials (default=2)
+%
+% The labels for the independent variable should be specified as numbers ranging
+% from 1 to the number of conditions. The labels for the unit of observation should
+% be integers ranging from 1 to the total number of observations (subjects or trials).
 %
 % See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
 
@@ -57,15 +56,16 @@ function [s, cfg] = ft_statfun_depsamplesFunivariate(cfg, dat, design)
 %
 % $Id$
 
+% set the defaults
+cfg.computestat    = ft_getopt(cfg, 'computestat', 'yes');
+cfg.computecritval = ft_getopt(cfg, 'computecritval', 'no');
+cfg.computeprob    = ft_getopt(cfg, 'computeprob', 'no');
+cfg.alpha          = ft_getopt(cfg, 'alpha', 0.05);
+cfg.tail           = ft_getopt(cfg, 'tail', 1);
+cfg.ivar           = ft_getopt(cfg, 'ivar', 1);
+cfg.uvar           = ft_getopt(cfg, 'uvar', 2);
 
-% set defaults
-if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end
-if ~isfield(cfg, 'computecritval'),    cfg.computecritval='no';   end
-if ~isfield(cfg, 'computeprob'),       cfg.computeprob='no';      end
-if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end
-if ~isfield(cfg, 'tail'),              cfg.tail=1;                end
-
-nconds=length(unique(design(cfg.ivar,:)));
+nconds = length(unique(design(cfg.ivar,:)));
 ncontrasts = nconds-1;
 
 % perform some checks on the configuration
@@ -87,7 +87,7 @@ end
 nunits = max(design(cfg.uvar,:));
 dfdenom = nunits - ncontrasts;
 if dfdenom<1
-  ft_error('The data must contain more units-of-observation (usually subjects) than the number of contrasts.')
+  ft_error('The data must contain more units-of-observation (subjects or trials) than the number of contrasts.')
 end
 nrepl=nunits*nconds;
 if (nrepl~=sum(nuospercond)) || (nrepl~=size(dat,2))
@@ -135,20 +135,20 @@ if strcmp(cfg.computestat,'yes')
   dat  = reshape(dat(:,poslabelsperunit),[nsmpls nunits nconds]);
   Ysub = mean(dat,3);
   Yfac = mean(dat,2);
-  
+
   meanYsub = mean(Ysub,2);
   SStot    = sum(sum((dat-meanYsub(:,ones(1,nunits),ones(1,nconds))).^2,3),2);
   SSsub    = nconds * sum((Ysub-meanYsub(:,ones(1,nunits))).^2,2);
   SSfac    = nunits * sum((Yfac-meanYsub(:,1,ones(1,nconds))).^2,3);
   SSerr    = SStot - SSsub - SSfac;
-  
+
   % mean sum of squares for factor levels
   df  = nconds - 1;
   dfe = numel(dat(1,:,:)) - nunits - df;
-  
+
   MSfac = SSfac/df;
   MSerr = SSerr/dfe;
-  
+
   s.stat = MSfac./MSerr; % F-statistic;
 end
 

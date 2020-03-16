@@ -1,7 +1,7 @@
 function test_bug3174
 
 % WALLTIME 00:20:00
-% MEM 2gb
+% MEM 3gb
 
 % DEPENDENCY ft_volumerealign
 

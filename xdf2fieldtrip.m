@@ -1,19 +1,19 @@
 function data = xdf2fieldtrip(filename, varargin)
 
-% XDF2FIELDTRIP reads data from a XDF file with multiple streams. It upsamples the
-% data of all streams to the highest sampling rate and concatenates all channels in
-% all streams into a raw data structure that is compatible with the output of
-% FT_PREPROCESSING.
+% XDF2FIELDTRIP reads continuously sampled data from a XDF file with multiple
+% streams. It upsamples the data of all streams to the highest sampling rate and
+% concatenates all channels in all streams into a raw data structure that is
+% compatible with the output of FT_PREPROCESSING.
 %
 % Use as
 %   data = xdf2fieldtrip(filename, ...)
 %
 % Optional arguments should come in key-value pairs and can include
-%   streamindx  = list, indices of the streams to read (default is all)
+%   streamindx = list, indices of the streams to read (default is all)
 %
 % You can also use the standard procedure with FT_DEFINETRIAL and FT_PREPROCESSING
-% for XDF files. This will return (only) the stream with the highest sampling rate,
-% which is typically the EEG.
+% for XDF files. This will return (only) the continuously sampled stream with the
+% highest sampling rate, which is typically the EEG.
 %
 % You can use FT_READ_EVENT to read the events from the non-continuous data streams.
 % To get them aligned with the samples in one of the specific data streams, you
@@ -88,30 +88,50 @@ for i=1:numel(streams)
   stream = streams{i};
   
   % this section of code is shared with fileio/private/sccn_xdf
-  hdr             = [];
-  hdr.Fs          = stream.info.effective_srate;
-  hdr.nChans      = numel(stream.info.desc.channels.channel);
-  hdr.nSamplesPre = 0;
-  hdr.nSamples    = length(stream.time_stamps);
-  hdr.nTrials     = 1;
+  hdr = [];
+  if isfield(stream.info, 'effective_srate')
+    % the stream contains continuously sampled data
+    hdr.Fs                  = stream.info.effective_srate;
+    hdr.nSamplesPre         = 0;
+    hdr.nSamples            = length(stream.time_stamps);
+    hdr.nTrials             = 1;
+    hdr.FirstTimeStamp      = stream.time_stamps(1);
+    hdr.TimeStampPerSample  = (stream.time_stamps(end)-stream.time_stamps(1)) / (length(stream.time_stamps) - 1);
+  else
+    % the stream does not contain continuously sampled data
+    hdr.Fs                  = NaN;
+    hdr.nSamplesPre         = NaN;
+    hdr.nSamples            = NaN;
+    hdr.nTrials             = NaN;
+    hdr.FirstTimeStamp      = NaN;
+    hdr.TimeStampPerSample  = NaN;
+  end
+  if isfield(stream.info.desc, 'channels')
+    hdr.nChans    = numel(stream.info.desc.channels.channel);
+  else
+    hdr.nChans    = str2double(stream.info.channel_count);
+  end
   hdr.label       = cell(hdr.nChans, 1);
   hdr.chantype    = cell(hdr.nChans, 1);
   hdr.chanunit    = cell(hdr.nChans, 1);
   
   prefix = stream.info.name;
-  
   for j=1:hdr.nChans
-    hdr.label{j} = [prefix '_' stream.info.desc.channels.channel{j}.label];
-    hdr.chantype{j} = stream.info.desc.channels.channel{j}.type;
-    hdr.chanunit{j} = stream.info.desc.channels.channel{j}.unit;
+    if isfield(stream.info.desc, 'channels')
+      hdr.label{j} = [prefix '_' stream.info.desc.channels.channel{j}.label];
+      hdr.chantype{j} = stream.info.desc.channels.channel{j}.type;
+      hdr.chanunit{j} = stream.info.desc.channels.channel{j}.unit;
+    else
+      % the stream does not contain continuously sampled data
+      hdr.label{j} = num2str(j);
+      hdr.chantype{j} = 'unknown';
+      hdr.chanunit{j} = 'unknown';
+    end
   end
-  
-  hdr.FirstTimeStamp     = stream.time_stamps(1);
-  hdr.TimeStampPerSample = (stream.time_stamps(end)-stream.time_stamps(1)) / (length(stream.time_stamps) - 1);
   
   % keep the original header details
   hdr.orig = stream.info;
-
+  
   data{i}.hdr = hdr;
   data{i}.label = hdr.label;
   data{i}.time = {streams{i}.time_stamps};

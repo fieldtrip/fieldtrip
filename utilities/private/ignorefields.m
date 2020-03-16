@@ -15,8 +15,10 @@ switch purpose
       'grad'
       'label'
       'negclusters'
+      'negdistribution'
       'opto'
       'posclusters'
+      'posdistribution'
       'sampleinfo' % this is dealt with explicitly
       'time'
       'topo'
@@ -25,6 +27,7 @@ switch purpose
       'trialinfo'  % this is dealt with explicitly
       'unmixing'
       'unmixingdimord'
+      'brainordinate'
       };
 
   case 'appendfreq'
@@ -38,8 +41,10 @@ switch purpose
       'grad'
       'label'
       'negclusters'
+      'negdistribution'
       'opto'
       'posclusters'
+      'posdistribution'
       'sampleinfo' % this is dealt with explicitly
       'time'
       'trialinfo'  % this is dealt with explicitly
@@ -200,11 +205,14 @@ switch purpose
       'hdr'
       'label'
       'negclusters'
+      'negdistribution'
       'opto'
       'posclusters'
+      'posdistribution'
       'sampleinfo'
       'time'
       'trialinfo'
+      'brainordinate'
       };
 
   case 'html'
@@ -239,11 +247,14 @@ switch purpose
       'grad'
       'hdr'
       'negclusters'
+      'negdistribution'
       'opto'
       'posclusters'
+      'posdistribution'
       'topolabel'
       'transform'
       'unit'
+      'brainordinate'
       };
 
   case 'recursesize'

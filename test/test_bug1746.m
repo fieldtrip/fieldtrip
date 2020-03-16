@@ -1,6 +1,6 @@
 function test_bug1746
 
-% MEM 1500mb
+% MEM 3gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY ft_sourceanalysis test_bug1746 ft_prepare_leadfield

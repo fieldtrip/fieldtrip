@@ -1,6 +1,6 @@
 % function test_bug3190
 
-% MEM 2gb
+% MEM 3gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY ft_sourceinterpolate ft_sourceparcellate ft_volumereslice

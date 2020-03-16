@@ -1,6 +1,6 @@
 function test_laggedcoherence
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_connectivityanalysis ft_laggedcoherence ft_freqanalysis
 

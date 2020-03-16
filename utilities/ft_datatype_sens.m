@@ -33,15 +33,15 @@ function [sens] = ft_datatype_sens(sens, varargin)
 % are assumed to be average referenced.
 %
 % The structure for NIRS channels contains
-%    sens.label          = Mx1 cell-array with channel labels
-%    sens.chanpos        = Mx3 matrix with position of the channels (usually halfway the transmitter and receiver)
-%    sens.optopos        = Nx3 matrix with the position of the optodes
-%    sens.optotype       = Nx1 cell-array with information about the type of optode (receiver or transmitter)
-%    sens.optolabel      = Nx1 cell-array with optode labels
-%    sens.tra            = MxN matrix, boolean, contains information about how receiver and transmitter are combined to form channels
-%    sens.wavelength     = 1xK vector of all wavelengths that were used
-%    sens.transmits      = NxK matrix, boolean, where N is the number of optodes and K the number of wavelengths. Specifies what optode is transmitting at what wavelength (or nothing at all, which indicates that it is a receiver).
-%    sens.laserstrength  = 1xK vector of the strength of the emitted light of the lasers
+%    sens.label         = Mx1 cell-array with channel labels
+%    sens.chanpos       = Mx3 matrix with position of the channels (usually halfway the transmitter and receiver)
+%    sens.optopos       = Nx3 matrix with the position of individual optodes
+%    sens.optotype      = Nx1 cell-array with information about the type of optode (receiver or transmitter)
+%    sens.optolabel     = Nx1 cell-array with optode labels
+%    sens.transmits     = NxK matrix, boolean, where N is the number of optodes and K the number of wavelengths. Specifies what optode is transmitting at what wavelength (or nothing at all, which indicates that it is a receiver).
+%    sens.wavelength    = 1xK vector of all wavelengths that were used
+%    sens.laserstrength = 1xK vector of the strength of the emitted light of the lasers
+%    sens.tra           = MxN matrix, boolean, contains information about how receiver and transmitter are combined to form channels
 %
 % The following fields apply to MEG, EEG, sEEG and ECoG
 %    sens.chantype = Mx1 cell-array with the type of the channel, see FT_CHANTYPE
@@ -92,7 +92,7 @@ function [sens] = ft_datatype_sens(sens, varargin)
 % See also FT_READ_SENS, FT_SENSTYPE, FT_CHANTYPE, FT_APPLY_MONTAGE, CTF2GRAD, FIF2GRAD,
 % BTI2GRAD, YOKOGAWA2GRAD, ITAB2GRAD
 
-% Copyright (C) 2011-2016, Robert Oostenveld & Jan-Mathijs Schoffelen
+% Copyright (C) 2011-2020, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -171,6 +171,21 @@ switch version
       % these might be present due to the reading functions but are not part of the user/technical documentation yet, so better not include them for now
       % especially the chanunit field needs some careful thought when converting between optical densities and chromophore concentrations.
       sens = removefields(sens, {'chantype', 'chanunit'});
+    end
+
+    % ensure all positions are represented as 3D, not 2D
+    fn = {'chanpos', 'optopos', 'elecpos', 'coilpos'};
+    for i=1:numel(fn)
+      if isfield(sens, fn{i}) && size(sens.(fn{i}),2)==2
+        ft_notice('converting %s from 2D to 3D', fn{i});
+        sens.(fn{i})(:,3) = 0;
+      end
+    end % for
+    
+    if isfield(sens, 'optolabel')
+      if length(sens.optolabel)~=length(unique(sens.optolabel))
+        ft_warning('non-unique optode labels detected');
+      end
     end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

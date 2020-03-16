@@ -62,23 +62,18 @@ if isempty(endsample)
   endsample = hdr.nSamples*hdr.nTrials;
 end
 
-% read the trigger channel as raw data, can safely assume that it is continuous
-if ~isempty(chanindx)
-  dat = ft_read_data(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', 0);
-else
-  dat = zeros(0, endsample-begsample+1);
-end
-
 % start with an empty event structure
 event = [];
 
-if isempty(dat)
+if isempty(chanindx) || isempty(intersect(chanindx, 1:hdr.nChans))
   % there are no triggers to detect
   return
+else
+  % read the trigger channels as raw data, here we can safely assume that it is continuous
+  dat = ft_read_data(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', 0);
 end
 
-% Detect situations where the channel value changes almost at every time
-% step which are likely to be noise
+% detect situations where the channel value changes almost at every sample, which are likely to be noise
 if denoise
   for i=1:length(chanindx)
     if (sum(diff(find(diff(dat(i,:))~=0)) == 1)/length(dat(i,:))) > 0.8
@@ -95,18 +90,18 @@ if fixbiosemi
     % apparently the 24 bits are still shifted by one byte
     dat = bitshift(dat,-8);
   else
-  % find indices of negative numbers
-  signbit = find(dat < 0);
-  % change type to double (otherwise bitcmp will fail)
-  dat = double(dat);
-  % make number positive and preserve bits 0-22
-  dat(signbit) = bitcmp(abs(dat(signbit))-1,32);
-  % apparently the 24 bits are still shifted by one byte
-  dat(signbit) = bitshift(dat(signbit),-8);
-  % re-insert the sign bit on its original location, i.e. bit24
-  dat(signbit) = dat(signbit)+(2^(24-1));
-  % typecast the data to ensure that the status channel is represented in 32 bits
-  dat = uint32(dat);
+    % find indices of negative numbers
+    signbit = find(dat < 0);
+    % change type to double (otherwise bitcmp will fail)
+    dat = double(dat);
+    % make number positive and preserve bits 0-22
+    dat(signbit) = bitcmp(abs(dat(signbit))-1,32);
+    % apparently the 24 bits are still shifted by one byte
+    dat(signbit) = bitshift(dat(signbit),-8);
+    % re-insert the sign bit on its original location, i.e. bit24
+    dat(signbit) = dat(signbit)+(2^(24-1));
+    % typecast the data to ensure that the status channel is represented in 32 bits
+    dat = uint32(dat);
   end
   
   byte1 = 2^8  - 1;

@@ -185,14 +185,14 @@ chromophoreName = {'O2Hb' 'HHb'};
 fid = fopen(fullfile(fileparts(mfilename('fullpath')), 'private', 'Cope_ext_coeff_table.txt'));
 coefs = cell2mat(textscan(fid, '%f %f %f %f %f'));
 
-% extract all transceivers that are relevant here
-transceivers   = sens.transmits(chanidx, :);
-transmitteridx = transceivers>0;
-receiveridx    = transceivers<0;
+% extract all transmit combinations that are relevant here
+transmits      = sens.transmits(chanidx, :);
+transmitteridx = transmits>0;
+receiveridx    = transmits<0;
 optodeidx      = transmitteridx | receiveridx;
 
 % extract the wavelengths
-wavelengths  = sens.wavelength(transceivers(transmitteridx));
+wavelengths  = sens.wavelength(transmits(transmitteridx));
 wlidx = bsxfun(@minus, coefs(:, 1), wavelengths);
 
 % find the relevant channel combinations
