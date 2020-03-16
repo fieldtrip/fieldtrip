@@ -199,7 +199,6 @@ else
   ft_error('invalid combination of input arguments for dics');
 end
 
-isrankdeficient = (rank(C)<size(C,1));
 rankC = rank(C);
 
 % it is difficult to give a quantitative estimate of lambda, therefore also
@@ -240,14 +239,14 @@ elseif ~isempty(subspace)
     fprintf('using data-specific subspace projection\n');
   end
   % TODO implement an "eigenspace beamformer" as described in Sekihara et al. 2002 in HBM
-  if numel(subspace)==1,
+  if numel(subspace)==1
     % interpret this as a truncation of the eigenvalue-spectrum
     % if <1 it is a fraction of the largest eigenvalue
     % if >=1 it is the number of largest eigenvalues
     dat_pre_subspace = dat;
     C_pre_subspace  = C;
     [u, s, v] = svd(real(C));
-    if subspace<1,
+    if subspace<1
       sel      = find(diag(s)./s(1,1) > subspace);
       subspace = max(sel);
     end
@@ -255,7 +254,7 @@ elseif ~isempty(subspace)
     C       = s(1:subspace,1:subspace);
     % this is equivalent to subspace*C*subspace' but behaves well numerically
     % by construction.
-    invC    = diag(1./diag(C + lambda * eye(size(C))));
+    invC     = diag(1./diag(C + lambda * eye(size(C))));
     subspace = u(:,1:subspace)';
     if ~isempty(dat), dat = subspace*dat; end
     
@@ -265,9 +264,9 @@ elseif ~isempty(subspace)
     
   else
     C_pre_subspace  = C;
-    C    = subspace*C*subspace'; % here the subspace can be different from
-    % the singular vectors of Cy, so we have to do the sandwiching as opposed
-    % to line 216
+    C               = subspace*C*subspace';
+    % here the subspace can be different from the singular vectors of C, so we 
+    % have to do the sandwiching as opposed to line 254
     if strcmp(realfilter, 'yes')
       invC = ft_inv(real(C), 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
     else
@@ -333,12 +332,10 @@ switch submethod
         lf     = subspace * lf;
         
         % according to Kensuke's paper, the eigenspace bf boils down to projecting
-        % the 'traditional' filter onto the subspace
-        % spanned by the first k eigenvectors [u,s,v] = svd(Cy); filt = ESES*filt;
-        % ESES = u(:,1:k)*u(:,1:k)';
+        % the 'traditional' filter onto the subspace spanned by the first k eigenvectors
+        % [u,s,v] = svd(Cy); filt = ESES*filt; ESES = u(:,1:k)*u(:,1:k)';
         % however, even though it seems that the shape of the filter is identical to
-        % the shape it is obtained with the following code, the w*lf=I does not
-        % hold.
+        % the shape it is obtained with the following code, the w*lf=I does not hold.
       end
       
       if hasfilter

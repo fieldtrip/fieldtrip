@@ -172,7 +172,6 @@ if isfield(dip, 'subspace')
   dip.subspace = dip.subspace(originside);
 end
 
-isrankdeficient = (rank(C)<size(C,1));
 rankC = rank(C);
 
 % it is difficult to give a quantitative estimate of lambda, therefore also
@@ -205,29 +204,33 @@ if hassubspace
   dat_pre_subspace = dat;
   C_pre_subspace  = C;
 elseif ~isempty(subspace)
+  if dofeedback
+    fprintf('using data-specific subspace projection\n');
+  end
+  
   % TODO implement an "eigenspace beamformer" as described in Sekihara et al. 2002 in HBM
-  fprintf('using data-specific subspace projection\n');
-  if numel(subspace)==1,
+  if numel(subspace)==1
     % interpret this as a truncation of the eigenvalue-spectrum
     % if <1 it is a fraction of the largest eigenvalue
     % if >=1 it is the number of largest eigenvalues
     dat_pre_subspace = dat;
     C_pre_subspace  = C;
     [u, s, v] = svd(real(C));
-    if subspace<1,
+    if subspace<1
       subspace = find(diag(s)./s(1,1) > subspace, 1, 'last');
     end
+    
     C       = s(1:subspace,1:subspace);
     % this is equivalent to subspace*C*subspace' but behaves well numerically by construction.
-    invC    = diag(1./diag(C + lambda * eye(size(C))));
+    invC     = diag(1./diag(C + lambda * eye(size(C))));
     subspace = u(:,1:subspace)';
     dat      = subspace*dat;
   else
     dat_pre_subspace = dat;
-    C_pre_subspace  = C;
-    C    = subspace*C*subspace'; 
+    C_pre_subspace   = C;
+    C                = subspace*C*subspace'; 
     % here the subspace can be different from the singular vectors of C, so we
-    % have to do the sandwiching as opposed to line 216
+    % have to do the sandwiching as opposed to line 223
     invC = ft_inv(C, 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
     dat   = subspace*dat;
   end
@@ -240,7 +243,6 @@ invC_squared = invC^2;
 
 % start the scanning with the proper metric
 ft_progress('init', feedback, 'scanning grid');
-
 for i=1:size(dip.pos,1)
   if hasleadfield && hasmom && size(dip.mom, 1)==size(dip.leadfield{i}, 2)
     % reuse the leadfield that was previously computed and project
@@ -272,9 +274,8 @@ for i=1:size(dip.pos,1)
     lf     = subspace * lf;
     
     % according to Kensuke's paper, the eigenspace bf boils down to projecting
-    % the 'traditional' filter onto the subspace
-    % spanned by the first k eigenvectors [u,s,v] = svd(C); filt = ESES*filt; 
-    % ESES = u(:,1:k)*u(:,1:k)';
+    % the 'traditional' filter onto the subspace spanned by the first k eigenvectors 
+    % [u,s,v] = svd(C); filt = ESES*filt; ESES = u(:,1:k)*u(:,1:k)';
     % however, even though it seems that the shape of the filter is identical to
     % the shape it is obtained with the following code, the w*lf=I does not hold.
   end
