@@ -9,6 +9,7 @@ function [trl, event] = ft_trialfun_general(cfg)
 %   cfg.trialdef.eventvalue = number, string or list with numbers or strings
 %   cfg.trialdef.prestim    = latency in seconds (optional)
 %   cfg.trialdef.poststim   = latency in seconds (optional)
+%   cfg.trialdef.chanindx   = list with channel numbers for trigger detection, specify -1 in case you don't want to detect triggers (default is automatic)
 %
 % If you want to read all data from a continuous file in segments, you can specify
 %    cfg.trialdef.triallength = duration in seconds (can be Inf)
@@ -69,10 +70,11 @@ if isfield(cfg.trialdef, 'triallength')
   end
 end
 
-% default file formats
+% default file formats and chanindx for trigger detection
 cfg.eventformat   = ft_getopt(cfg, 'eventformat');
 cfg.headerformat  = ft_getopt(cfg, 'headerformat');
 cfg.dataformat    = ft_getopt(cfg, 'dataformat');
+cfg.chanindx      = ft_getopt(cfg, 'trialdef.chanindx');
 
 % get the header, among others for the sampling frequency
 if isfield(cfg, 'hdr')
@@ -90,7 +92,7 @@ if isfield(cfg, 'event')
   event = cfg.event;
 else
   ft_info('reading the events from ''%s''\n', cfg.headerfile);
-  event = ft_read_event(cfg.headerfile, 'headerformat', cfg.headerformat, 'eventformat', cfg.eventformat, 'dataformat', cfg.dataformat);
+  event = ft_read_event(cfg.headerfile, 'headerformat', cfg.headerformat, 'eventformat', cfg.eventformat, 'dataformat', cfg.dataformat, 'chanindx', cfg.chanindx);
 end
 
 % for the following, the trials do not depend on the events in the data
