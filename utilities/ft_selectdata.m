@@ -646,15 +646,23 @@ chanindx = cell(ndata,1);
 label    = cell(1,0);
 
 for k = 1:ndata
+  selchannel      = cell(0,1);
+  selgrad         = [];
+  selelec         = [];
   if isfield(varargin{k}, 'grad') && isfield(varargin{k}.grad, 'type')
-    % this makes channel selection more robust
-    selchannel = ft_channelselection(cfg.channel, varargin{k}.label, varargin{k}.grad.type);
-  elseif isfield(varargin{k}, 'elec') && isfield(varargin{k}.elec, 'type')
-    % this makes channel selection more robust
-    selchannel = ft_channelselection(cfg.channel, varargin{k}.label, varargin{k}.elec.type);
-  else
-    selchannel = ft_channelselection(cfg.channel, varargin{k}.label);
+    % this makes channel selection more robust, e.g. when using wildcards
+    % in cfg.channel
+    [selgrad, dum] = match_str(varargin{k}.label, varargin{k}.grad.label);
+    selchannel     = cat(1, selchannel, ft_channelselection(cfg.channel, varargin{k}.label(selgrad), varargin{k}.grad.type));
   end
+  if isfield(varargin{k}, 'elec') && isfield(varargin{k}.elec, 'type')
+    % this makes channel selection more robust, e.g. when using wildcards
+    % in cfg.channel
+    [selelec, dum] = match_str(varargin{k}.label, varargin{k}.elec.label);
+    selchannel     = cat(1, selchannel, ft_channelselection(cfg.channel, varargin{k}.label(selelec), varargin{k}.elec.type));
+  end
+  selrest    = setdiff((1:numel(varargin{k}.label))', [selgrad; selelec]);
+  selchannel = cat(1, selchannel, ft_channelselection(cfg.channel, varargin{k}.label(selrest)));
   label      = union(label, selchannel);
 end
 label = label(:);   % ensure column array
