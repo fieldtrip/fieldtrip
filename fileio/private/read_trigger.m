@@ -11,8 +11,10 @@ function [event] = read_trigger(filename, varargin)
 % TODO
 %  - merge read_ctf_trigger into this function (requires trigshift and bitmasking option)
 %  - merge biosemi code into this function (requires bitmasking option)
+%
+% See also FT_READ_EVENT
 
-% Copyright (C) 2008-2015, Robert Oostenveld
+% Copyright (C) 2008-2020, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -38,7 +40,7 @@ dataformat   = ft_getopt(varargin, 'dataformat'         );
 begsample    = ft_getopt(varargin, 'begsample'          );
 endsample    = ft_getopt(varargin, 'endsample'          );
 chanindx     = ft_getopt(varargin, 'chanindx'           );
-detectflank  = ft_getopt(varargin, 'detectflank'        ); % can be bit, up, down, updiff, downdiff, both, auto
+detectflank  = ft_getopt(varargin, 'detectflank'        ); % can be bit, up, down, updiff, downdiff, both
 denoise      = ft_getopt(varargin, 'denoise',      true );
 trigshift    = ft_getopt(varargin, 'trigshift',    false); % causes the value of the trigger to be obtained from a sample that is shifted N samples away from the actual flank
 trigpadding  = ft_getopt(varargin, 'trigpadding',  true );
@@ -60,6 +62,12 @@ end
 
 if isempty(endsample)
   endsample = hdr.nSamples*hdr.nTrials;
+end
+
+% this is for backward compatibility and can be removed in March 2021
+if isequal(detectflank, 'auto')
+  % use empty as the default, consistent with how it is done for other options
+  detectflank = [];
 end
 
 % start with an empty event structure
@@ -183,7 +191,7 @@ if ~isempty(threshold)
   dat(dat>=threshold) = 1;
 end
 
-if strcmp(detectflank, 'auto')
+if isempty(detectflank)
   % look at the first value in the trigger channel to determine whether the trigger is pulled up or down
   % this fails if the first sample is zero and if the trigger values are negative
   if all(dat(:,1)==0)

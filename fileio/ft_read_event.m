@@ -12,14 +12,13 @@ function [event] = ft_read_event(filename, varargin)
 %   'headerformat'   string
 %   'eventformat'    string
 %   'header'         header structure, see FT_READ_HEADER
-%   'detectflank'    string, can be 'bit', 'up', 'down', 'both', 'peak', 'trough' or 'auto' (default is system specific)
+%   'detectflank'    string, can be 'bit', 'up', 'down', 'both', 'peak' or 'trough' (default is system specific)
 %   'trigshift'      integer, number of samples to shift from flank to detect trigger value (default = 0)
 %   'chanindx'       list with channel numbers for trigger detection, specify -1 in case you don't want to detect triggers (default is automatic)
 %   'threshold'      threshold for analog trigger channels (default is system specific)
+%   'tolerance'      tolerance in samples when merging Neuromag analogue trigger channels (default = 1, meaning that an shift of one sample in both directions is compensated for)
 %   'blocking'       wait for the selected number of events (default = 'no')
 %   'timeout'        amount of time in seconds to wait when blocking (default = 5)
-%   'tolerance'      tolerance in samples when merging analogue trigger channels, only for Neuromag (default = 1, meaning
-%                    that an offset of one sample in both directions is compensated for)
 %
 % This function returns an event structure with the following fields
 %   event.type      = string
