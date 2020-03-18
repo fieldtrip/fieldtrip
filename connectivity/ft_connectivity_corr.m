@@ -114,22 +114,20 @@ if ~isempty(pchanindx) && isempty(powindx)
   newsiz = siz;
   newsiz(2:3) = numel(chan); % size of partialised csd
   
-  A  = zeros(newsiz);
+  A = zeros(newsiz);
   
-  % FIXME this only works for data without time dimension
-  if numel(siz)==5 && siz(5)>1, ft_error('this only works for data without time'); end
-  for j = 1:siz(1) %rpt loop
-    AA = reshape(input(j, chan,  chan, : ), [nchan  nchan  siz(4:end)]);
-    AB = reshape(input(j, chan,  pchan,: ), [nchan  npchan siz(4:end)]);
-    BA = reshape(input(j, pchan, chan, : ), [npchan nchan  siz(4:end)]);
-    BB = reshape(input(j, pchan, pchan, :), [npchan npchan siz(4:end)]);
-    for k = 1:siz(4) %freq loop
-      %A(j,:,:,k) = AA(:,:,k) - AB(:,:,k)*pinv(BB(:,:,k))*BA(:,:,k);
+  for j = 1:siz(1) % loop over rpt
+    AA = reshape(input(j, chan,  chan, : ), [nchan  nchan  prod(siz(4:end))]); % fold freq_time into one dimension
+    AB = reshape(input(j, chan,  pchan,: ), [nchan  npchan prod(siz(4:end))]);
+    BA = reshape(input(j, pchan, chan, : ), [npchan nchan  prod(siz(4:end))]);
+    BB = reshape(input(j, pchan, pchan, :), [npchan npchan prod(siz(4:end))]);
+    for k = 1:prod(siz(4:end)) % loop over freq or freq_time
       A(j,:,:,k) = AA(:,:,k) - AB(:,:,k)/(BB(:,:,k))*BA(:,:,k);
     end
   end
   input = A;
   siz = size(input);
+  
 elseif ~isempty(pchanindx)
   % linearly indexed crossspectra require some more complicated handling
   if numel(pchanindx)>1
@@ -163,7 +161,7 @@ elseif ~isempty(pchanindx)
     p_input(:,k,:,:) = input(:,k,:,:) - F_ap.*(1./F_pp).*F_pb;
     
   end
-  input = p_input; clear p_input; 
+  input = p_input; clear p_input;
 else
   % do nothing
 end
