@@ -397,18 +397,18 @@ switch highlightstyle
     elseif ischar(color) && numel(color)==nline
       % plot each line with its own color
       for i=1:size(vdat,1)
-        h(i) = plot(hdat, vdat(i,:), style, 'LineWidth', linewidth, 'Color', color(i), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
+        h(i) = plot(hdat, vdat(i,:), style{i}, 'LineWidth', linewidth, 'Color', color(i), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
       end
     elseif isnumeric(color) && size(color,1)==nline
       % the color is specified as Nx3 matrix with RGB values for each line
       for i=1:size(vdat,1)
-        h(i) = plot(hdat, vdat(i,:), style, 'LineWidth', linewidth, 'Color', color(i,:), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
+        h(i) = plot(hdat, vdat(i,:), style{i}, 'LineWidth', linewidth, 'Color', color(i,:), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
       end
     elseif isnumeric(color) && size(color,1)==npos
       % the color is specified as Nx3 matrix with RGB values and varies over the length of the line
       for i=1:(size(vdat,2)-1)
         for j=1:size(vdat,1)
-          h(i,j) = plot(hdat(i:i+1), vdat(j,i:i+1), style, 'LineWidth', linewidth, 'Color', mean(color([i i+1],:),1), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
+          h(i,j) = plot(hdat(i:i+1), vdat(j,i:i+1), style{i}, 'LineWidth', linewidth, 'Color', mean(color([i i+1],:),1), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
         end
       end
     else
