@@ -36,6 +36,9 @@ end
 if isempty(cfg.outputfile)
   tmpcfg = removefields(tmpcfg, 'outputfile');
 end
+if isfield(cfg, 'randomseed') && ~isempty(cfg.randomseed)
+  tmpcfg = copyfields(cfg, tmpcfg, 'randomseed');
+end
 tmpcfg = printstruct('cfg', tmpcfg);
 
 % We're going to explicitly mention any input files going into the pipeline
