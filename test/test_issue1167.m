@@ -12,4 +12,3 @@ filename = {'ma0844az_1-1+.edf';
 for k = 1:3
   data{k} = edf2fieldtrip(dccnpath(fullfile('/home/common/matlab/fieldtrip/data/test/original/eeg/edf', filename{k})));
 end
-keyboard
