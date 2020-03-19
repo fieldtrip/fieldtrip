@@ -524,7 +524,7 @@ if ~isempty(cfg.partchannel) && (isfield(data, 'label') || isfield(data, 'labelc
   end
   if isfield(data, 'label')
     % update labels of the partialed channels
-    data.label(kchanindx) = keepchn;
+    data.label = keepchn;
   elseif isfield(data, 'labelcmb')
     for k = 1:numel(data.labelcmb)
       data.labelcmb{k} = [data.labelcmb{k}, '\', partstr(2:end)];
@@ -774,7 +774,6 @@ switch cfg.method
       else
         powindx = [];
       end
-      % fs = cfg.fsample; % FIXME do we really need this, or is this related to how noisecov is defined and normalised?
       if ~exist('powindx', 'var'), powindx = []; end
       if strcmp(cfg.method, 'granger'),                 methodstr = 'granger';      end
       if strcmp(cfg.method, 'instantaneous_causality'), methodstr = 'instantaneous'; end
@@ -799,10 +798,8 @@ switch cfg.method
     optarg = {'feedback', cfg.feedback, 'powindx', powindx, 'hasjack', hasjack};
     hasrpt = ~isempty(strfind(data.dimord, 'rpt'));
     if hasrpt
-      nrpt = size(data.transfer, 1);
       datin = data.transfer;
     else
-      nrpt = 1;
       datin = reshape(data.transfer, [1 size(data.transfer)]);
       data.crsspctrm = reshape(data.crsspctrm, [1 size(data.crsspctrm)]);
     end
@@ -820,10 +817,8 @@ switch cfg.method
     if strcmp(cfg.method, 'gpdc'), optarg = cat(2, optarg, {'noisecov' data.noisecov}); end
     hasrpt = ~isempty(strfind(data.dimord, 'rpt'));
     if hasrpt
-      nrpt = size(data.(inparam), 1);
       datin = data.(inparam);
     else
-      nrpt = 1;
       datin = reshape(data.(inparam), [1 size(data.(inparam))]);
     end
     [datout, varout, nrpt] = ft_connectivity_pdc(datin, optarg{:});
@@ -971,10 +966,8 @@ switch cfg.method
     optarg = {'complex', cfg.complex, 'dimord', data.dimord, 'feedback', cfg.feedback, 'pownorm', normpow, 'hasjack', hasjack};
     optarg = cat(2, optarg, {'powindx', powindx});
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
-    
-    %
-    
     data = removefields(data, 'dof'); % the dof is not to be trusted
+  
   otherwise
     ft_error('unknown method %s', cfg.method);
     
@@ -1037,7 +1030,7 @@ end
 
 switch dtype
   case {'freq' 'freqmvar'}
-    stat = keepfields(data, {'label', 'labelcmb', 'grad', 'elec'});
+    stat = keepfields(data, {'label', 'labelcmb', 'grad', 'elec', 'opto'});
     if isfield(data, 'labelcmb')
       % ensure the correct dimord in case the input was 'powandcsd'
       data.dimord = strrep(data.dimord, 'chan_', 'chancmb_');
@@ -1065,7 +1058,7 @@ switch dtype
     end
     
   case 'timelock'
-    stat = keepfields(data, {'label', 'labelcmb', 'grad', 'elec'});
+    stat = keepfields(data, {'label', 'labelcmb', 'grad', 'elec', 'opto'});
     % deal with the dimord
     if exist('outdimord', 'var')
       stat.dimord = outdimord;
