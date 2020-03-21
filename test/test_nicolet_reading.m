@@ -120,5 +120,32 @@ for i=2:size(testlist.textdata,1)
     disp(['Read file number ' num2str(i-1) ' from year ' num2str(year) ' success: ' num2str(success)]);        
 end
 struct2table(testresult)
+% 
+%     year    testcount    successcount
+%     ____    _________    ____________
+% 
+%     1998       10              0     
+%     1999       10              0     
+%     2000       10              0     
+%     2001       10              0     
+%     2002       10              0     
+%     2003       10              0     
+%     2004       10              0     
+%     2005       10              0     
+%     2006       10              0     
+%     2007       10              0     
+%     2008       10              0     
+%     2009       10              0     
+%     2010       10              0     
+%     2011       10              0     
+%     2012       10              8     
+%     2013       10             10     
+%     2014       10              9     
+%     2015       10              8     
+%     2016       10              9     
+%     2017       10              9     
+%     2018       10             10     
+%     2019       10             10     
+%     2020       10             10  
     
 
