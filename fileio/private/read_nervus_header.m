@@ -607,11 +607,14 @@ end
 function [TSInfo] = read_nervus_header_TSInfo(h, StaticPackets, DynamicPackets, Index, TSLABELSIZE, LABELSIZE)
 TSInfo = [];
 tsPackets = DynamicPackets(strcmp({DynamicPackets.IDStr},'TSGUID'));
+if ~isempty(tsPackets)
+    tsPackets = tsPackets([tsPackets.packetSize] > 0);
+end    
 if isempty(tsPackets)
     %Get TSINFO from static packets
-    tsPackets = StaticPackets(strcmp({StaticPackets.IDStr},'TSGUID'));    
+    tsPackets = StaticPackets(strcmp({StaticPackets.IDStr},'TSGUID'));        
     if isempty(tsPackets)
-        ft_error('No TSINFO packets found');
+        ft_error('No non-empty TSINFO packets found');
     else
         tsPacket = tsPackets(1);   
         TSInfo = read_nervus_header_TSInfo_from_static(h, tsPacket, Index, TSLABELSIZE, LABELSIZE);
@@ -627,11 +630,12 @@ end
 function checkAreAllTSInfosEqual(tsPackets,TSLABELSIZE, LABELSIZE)
 if length(tsPackets) > 1
         allEqual = 1;
+        firstTSInfo = read_nervus_header_one_TSInfo(tsPackets(1), TSLABELSIZE, LABELSIZE);
         for i = 2: size(tsPackets,2)
             nextTsPacket = tsPackets(i);
             if (nextTsPacket.packetSize > 0)
                 nextTSInfo = read_nervus_header_one_TSInfo(nextTsPacket, TSLABELSIZE, LABELSIZE);       
-                areEqual = compareTsInfoPackets(TSInfo, nextTSInfo);            
+                areEqual = compareTsInfoPackets(firstTSInfo , nextTSInfo);            
                 if (areEqual == 0)
                     allEqual = 0;
                     break;
@@ -818,6 +822,9 @@ end
 function [eventMarkers] = read_nervus_header_events(h, StaticPackets, Index)
 %% Get events  - Andrei Barborica, Dec 2015
 % Find sequence of events, that are stored in the section tagged 'Events'
+DAYSECS = 86400.0;  
+DATETIMEMINUSFACTOR = 2209161600;
+
 eventsSection = strcmp({StaticPackets.tag}, 'Events');
 idxSection = find(eventsSection);
 indexIdx = find([Index.sectionIdx] == StaticPackets(idxSection).index);
@@ -853,6 +860,7 @@ while (pktGUID == evtPktGUID)
     eventMarkers(i).dateFraction = evtDateFraction;
     evtPOSIXTime = evtDate*DAYSECS + evtDateFraction - DATETIMEMINUSFACTOR; % 2208988800; %8
     eventMarkers(i).dateStr = datestr(evtPOSIXTime/DAYSECS + datenum(1970,1,1),'dd-mmmm-yyyy HH:MM:SS.FFF'); % Save fractions of seconds, as well
+    eventMarkers(i).date = datetime(evtDate*DAYSECS- DATETIMEMINUSFACTOR, 'ConvertFrom', 'posixtime');
     eventMarkers(i).duration  = fread(h,1,'double');
     fseek(h,48,'cof');
     evtUser                       = fread(h,12,'uint16');

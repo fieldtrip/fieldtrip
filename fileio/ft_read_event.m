@@ -1474,7 +1474,7 @@ switch eventformat
       %sample start above assumes continuous sampling without gaps
       for j=1:originalEventCount
         if hdr.orig.Events(j).date > hdr.orig.Segments(i).date
-          event(j).sample = event(j).sample - gapDurationSeconds*sampleRate;
+          event(j).sample = event(j).sample - gapDurationSeconds*maxSampleRate;
         end
       end
       boundaryEventCount = boundaryEventCount+1;

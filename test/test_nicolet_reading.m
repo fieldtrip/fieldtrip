@@ -36,55 +36,6 @@ file4ascii = '';
 test_nicolet_reading_onefile(path_to_load,file4,file4ascii,500,28,714001,1,datetime(2018,06,18,08,07,24));
 
 %%
-% Load a list of 10 random EEGs per year from 1997 to 2020, and try to
-% read:
-% SELECT YEAR(CAST(CASE WHEN dbo.tblTest.dodtRecordingStartTime > 0 THEN dbo.tblTest.dodtRecordingStartTime-2.0  ELSE  2*CAST(dbo.tblTest.dodtRecordingStartTime AS INT) - 2.0 +  ABS(dbo.tblTest.dodtRecordingStartTime) END as datetime)) AS Year,
-% 	dbo.eegfiles.strName AS FileName, 
-% 	dbo.eegfiles.strPath AS FilePath
-% FROM    dbo.tblStudy 
-%     INNER JOIN dbo.tblStudyTest ON dbo.tblStudy.guidStudyID = dbo.tblStudyTest.guidStudyID 
-%     INNER JOIN dbo.tblTest ON dbo.tblStudyTest.guidTestID = dbo.tblTest.guidTestID 
-%     INNER JOIN dbo.eegfiles ON dbo.tblTest.lTestID = dbo.eegfiles.lTest_Id     
-% ORDER BY dbo.tblTest.dodtRecordingStartTime, NEWID()
-testlist = importdata('C:\Midlertidig_Lagring\nicolet-test-data\randomsamplebyyear.txt','\t',1); 
-testresult = struct();
-testresult.year = 0;
-testresult.testcount = 0;
-testresult.successcount = 0;
-startYear = 2000;
-for i=2:size(testlist.textdata,1)
-    year = str2double(testlist.textdata(i,1));
-        
-    testresult(year-startYear ).year = year;
-    if isempty(testresult(year-startYear ).testcount)
-        testresult(year-startYear ).testcount = 0;
-    end
-    testresult(year-startYear ).testcount = testresult(year-startYear ).testcount+1;
-    
-    fileName = char(testlist.textdata(i,4));
-    filePath = char(testlist.textdata(i,5));    
-    fullfile1 = fullfile(filePath,fileName);    
-    %disp(fullfile1);
-    success = 0;
-    try 
-        if isempty(testresult(year-startYear ).successcount)
-            testresult(year-startYear ).successcount = 0;
-        end
-        
-        hdr = ft_read_header(fullfile1);
-        dataopts = {};
-        %ft_read_data(fullfile1, 'header', hdr, dataopts{:});
-        success = 1;        
-        testresult(year-startYear ).successcount = testresult(year-startYear ).successcount+1;
-    catch ME
-        disp(ME);
-    end
-    disp(['Read file number ' num2str(i-1) ' from year ' num2str(year) ' success: ' num2str(success)]);        
-end
-struct2table(testresult)
-    
-
-%%
 % Test code requested by Robert. For file 1
 disp('Checking that files can be displayed. File 1');
 filepath1 = fullfile(path_to_load,file1);
@@ -120,3 +71,54 @@ cfg.channel    = 'all';
 data           = ft_preprocessing(cfg);
 cfg.viewmode   = 'vertical';
 ft_databrowser(cfg, data);
+
+
+%%
+% Load a list of 10 random EEGs per year from 1997 to 2020, and try to
+% read:
+% SELECT YEAR(CAST(CASE WHEN dbo.tblTest.dodtRecordingStartTime > 0 THEN dbo.tblTest.dodtRecordingStartTime-2.0  ELSE  2*CAST(dbo.tblTest.dodtRecordingStartTime AS INT) - 2.0 +  ABS(dbo.tblTest.dodtRecordingStartTime) END as datetime)) AS Year,
+% 	dbo.eegfiles.strName AS FileName, 
+% 	dbo.eegfiles.strPath AS FilePath
+% FROM    dbo.tblStudy 
+%     INNER JOIN dbo.tblStudyTest ON dbo.tblStudy.guidStudyID = dbo.tblStudyTest.guidStudyID 
+%     INNER JOIN dbo.tblTest ON dbo.tblStudyTest.guidTestID = dbo.tblTest.guidTestID 
+%     INNER JOIN dbo.eegfiles ON dbo.tblTest.lTestID = dbo.eegfiles.lTest_Id     
+% ORDER BY dbo.tblTest.dodtRecordingStartTime, NEWID()
+testlist = importdata('C:\Midlertidig_Lagring\nicolet-test-data\randomsamplebyyear.txt','\t',1); 
+testresult = struct();
+testresult.year = 0;
+testresult.testcount = 0;
+testresult.successcount = 0;
+startYear = 1997;
+for i=2:size(testlist.textdata,1)
+    year = str2double(testlist.textdata(i,1));
+        
+    testresult(year-startYear ).year = year;
+    if isempty(testresult(year-startYear ).testcount)
+        testresult(year-startYear ).testcount = 0;
+    end
+    testresult(year-startYear ).testcount = testresult(year-startYear ).testcount+1;
+    
+    fileName = char(testlist.textdata(i,4));
+    filePath = char(testlist.textdata(i,5));    
+    fullfile1 = fullfile(filePath,fileName);    
+    %disp(fullfile1);
+    success = 0;
+    try 
+        if isempty(testresult(year-startYear ).successcount)
+            testresult(year-startYear ).successcount = 0;
+        end
+        
+        hdr = ft_read_header(fullfile1);
+        dataopts = {};
+        ft_read_data(fullfile1, 'header', hdr, dataopts{:});
+        success = 1;        
+        testresult(year-startYear ).successcount = testresult(year-startYear ).successcount+1;
+    catch ME
+        disp(ME);
+    end
+    disp(['Read file number ' num2str(i-1) ' from year ' num2str(year) ' success: ' num2str(success)]);        
+end
+struct2table(testresult)
+    
+
