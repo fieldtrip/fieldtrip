@@ -1030,22 +1030,18 @@ switch dataformat
     %Fieldtrip can't handle multiple sampling rates in a data block
     %We will get only the data with the most frequent sampling rate
     
-    matchingChannels = find(hdr.orig.Segments(1).samplingRate(:) == hdr.Fs);
-    excludedChannels = find(hdr.orig.Segments(1).samplingRate(:) ~= hdr.Fs);
-    firstMatchingChannel = matchingChannels(1);
-    targetNumberOfChannels = length(matchingChannels);
-    targetSampleCount = 0;
-    for i = 1:size(hdr.orig.Segments,2)
-      targetSampleCount = targetSampleCount + hdr.orig.Segments(i).sampleCount(firstMatchingChannel);
-    end
-    targetSampleCount = targetSampleCount +1;
+        
+    targetNumberOfChannels = hdr.orig.targetNumberOfChannels;
+    targetSampleCount = hdr.orig.targetSampleCount;
     
     dat = zeros(targetSampleCount,targetNumberOfChannels);
     j = 1;
     for i=1:size(hdr.orig.Segments(1).samplingRate,2)
       if hdr.orig.Segments(1).samplingRate(i) == hdr.Fs
         dataForChannel = zeros();
+        %disp(['Reading channel ' num2str(i)]);
         for segment=1:size(hdr.orig.Segments,2)
+          %disp(['Reading channel ' num2str(i) ' segment ' num2str(segment)]);
           range = [1 hdr.orig.Segments(segment).sampleCount];
           datseg = read_nervus_data(hdr.orig, segment, range, i);
           dataForChannel = cat(1,dataForChannel,datseg);
@@ -1055,7 +1051,7 @@ switch dataformat
       end
     end
     if targetNumberOfChannels ~= size(hdr.orig.Segments(1).sampleCount, 2)
-      excludedChannelLabels = strjoin({hdr.orig.TSInfo(excludedChannels).label}, ', ');
+      excludedChannelLabels = strjoin({hdr.orig.TSInfo(hdr.orig.excludedChannels).label}, ', ');
       warning(['Some channels ignored due to different sampling rates: ' excludedChannelLabels]);
     end
     dimord = 'samples_chans';

@@ -94,22 +94,23 @@ nrvHdr.startDateTime = nrvHdr.Segments(1).date;
 
 % Fieldtrip can't handle multiple sampling rates in a data block
 % We will return only the data for the most frequent sampling rate
-targetSamplingRate = mode(nrvHdr.Segments(1).samplingRate);
-matchingChannels = find(nrvHdr.Segments(1).samplingRate(:) == targetSamplingRate);
+nrvHdr.targetSamplingRate = mode(nrvHdr.Segments(1).samplingRate);
+nrvHdr.matchingChannels = find(nrvHdr.Segments(1).samplingRate(:) == nrvHdr.targetSamplingRate);
+nrvHdr.excludedChannels = find(nrvHdr.Segments(1).samplingRate(:) ~= nrvHdr.targetSamplingRate);
 
-firstMatchingChannel = matchingChannels(1);
-targetNumberOfChannels = length(matchingChannels);
+firstMatchingChannel = nrvHdr.matchingChannels(1);
+nrvHdr.targetNumberOfChannels = length(nrvHdr.matchingChannels);
 
 targetSampleCount = 0;
 for i = 1:size(nrvHdr.Segments,2)
   targetSampleCount = targetSampleCount + nrvHdr.Segments(i).sampleCount(firstMatchingChannel);
 end
-targetSampleCount = targetSampleCount +1;
+nrvHdr.targetSampleCount = targetSampleCount +1;
 
-newlabels = cell(targetNumberOfChannels, 1);
+newlabels = cell(nrvHdr.targetNumberOfChannels, 1);
 j = 1;
 for i=1:size(nrvHdr.Segments(1).chName,2)
-  if nrvHdr.Segments(1).samplingRate(i) == targetSamplingRate
+  if nrvHdr.Segments(1).samplingRate(i) == nrvHdr.targetSamplingRate
     newlabels(j) = nrvHdr.Segments(1).chName(i);
     j = j+1;
   end
@@ -117,10 +118,10 @@ end
 
 
 output = struct();
-output.Fs          = targetSamplingRate;
-output.nChans      = targetNumberOfChannels;
+output.Fs          = nrvHdr.targetSamplingRate;
+output.nChans      = nrvHdr.targetNumberOfChannels;
 output.label       = newlabels;
-output.nSamples    = targetSampleCount;
+output.nSamples    = nrvHdr.targetSampleCount;
 output.nSamplesPre = 0;
 output.nTrials     = 1; %size(nrvHdr.Segments,2);
 output.reference   = nrvHdr.reference;

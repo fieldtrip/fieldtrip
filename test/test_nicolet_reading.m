@@ -9,7 +9,7 @@ function test_nicolet_reading
 % one is a file from 2018 (newer Nicolet format)
 
 %path_to_load = dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/nicolet');
-path_to_load = 'C:\Midlertidig_Lagring\nicolet-test-data';
+path_to_load = 'C:\Midlertidig_Lagring\FieldTripNicoletTestData';
 
 %%
 file1 = '2018_Patient59_EEG-OPPTAKER-1_t1-NICOLET.e';
@@ -26,7 +26,7 @@ test_nicolet_reading_onefile(path_to_load,file2,file2ascii,256,24,307201,1,datet
 %%
 %file from 2020
 file3 = '2020_Patient4_EEG246_t1.e';
-file3ascii = '2020_Patient4_EEG246_t1.txt';
+file3ascii = '';
 test_nicolet_reading_onefile(path_to_load,file3,file3ascii,500,27,605501,1,datetime(2020,03,18,14,20,34));
 
 %%
@@ -84,7 +84,7 @@ ft_databrowser(cfg, data);
 %     INNER JOIN dbo.tblTest ON dbo.tblStudyTest.guidTestID = dbo.tblTest.guidTestID 
 %     INNER JOIN dbo.eegfiles ON dbo.tblTest.lTestID = dbo.eegfiles.lTest_Id     
 % ORDER BY dbo.tblTest.dodtRecordingStartTime, NEWID()
-testlist = importdata('C:\Midlertidig_Lagring\nicolet-test-data\randomsamplebyyear.txt','\t',1); 
+testlist = importdata('C:\Midlertidig_Lagring\FieldTripNicoletTestData\randomsamplebyyear.txt','\t',1); 
 testresult = struct();
 testresult.year = 0;
 testresult.testcount = 0;

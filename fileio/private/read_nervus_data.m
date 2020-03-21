@@ -41,13 +41,13 @@ if nargin == 0
     ft_error('Missing argument');
 elseif nargin == 1
     segment = 1;
-    range = [1 nrvHdr.Segments(1).duration*max(nrvHdr.Segments(1).samplingRate)];
-    chIdx = 1:size(nrvHdr.Segments(1).chName,2);
+    range = [1 nrvHdr.targetSampleCount];
+    chIdx = nrvHdr.matchingChannels(:);
 elseif nargin == 2
-    range = [1 nrvHdr.Segments(segment).duration*max(nrvHdr.Segments(1).samplingRate)];
-    chIdx = 1:size(nrvHdr.Segments(1).chName,2);
+    range = [1 nrvHdr.targetSampleCount];
+    chIdx = nrvHdr.matchingChannels(:);
 elseif nargin == 3
-    chIdx = 1:size(nrvHdr.Segments(1).chName,2);
+    chIdx = nrvHdr.matchingChannels(:);
 end
 
 assert(length(range) == 2, 'Range is [firstIndex lastIndex]');
@@ -70,8 +70,7 @@ end
 
 % Iterate over all requested channels and populate array.
 out = zeros(range(2) - range(1) + 1, lChIdx);
-for i = 1 : lChIdx
-    
+for i = 1 : lChIdx    
     % Get sampling rate for current channel
     curSF = nrvHdr.Segments(segment).samplingRate(chIdx(i));
     mult = nrvHdr.Segments(segment).scale(chIdx(i));
@@ -97,7 +96,7 @@ for i = 1 : lChIdx
     
     firstSection = find(offsetSectionLengths < range(1) ,1,'last');
     
-    samplesInChannel = nrvHdr.Segments(segment).samplingRate(chIdx(i))*nrvHdr.Segments(segment).duration;
+    samplesInChannel = nrvHdr.Segments(segment).sampleCount;
     if range(2) > samplesInChannel
         endRange = samplesInChannel;
     else
@@ -107,7 +106,7 @@ for i = 1 : lChIdx
     lastSection = find(offsetSectionLengths >= endRange,1)-1;
     
     if isempty(lastSection)
-        lastSection = length(offsetSectionLengths);
+        lastSection = length(offsetSectionLengths)-1;
     end
     
     if lastSection > lastSectionForSegment
