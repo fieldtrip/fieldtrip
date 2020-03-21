@@ -1452,6 +1452,10 @@ elseif filetype_check_extension(filename, '.TextGrid')
   type = 'maus_textgrid';
   manufacturer = 'MAUS/WebMAUS';
   content = 'segmented text';
+elseif filetype_check_extension(filename, '.fcsv')
+  type = '3dslicer_fscv';
+  manufacturer = 'https://www.slicer.org/';
+  content = 'position informaiton about Markups Fiducial Node';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

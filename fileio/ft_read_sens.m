@@ -158,7 +158,7 @@ switch fileformat
     end
     sens.label   = sens.label(sel);
     sens.elecpos = sens.elecpos(sel,:);
-
+  
   case 'besa_sfp'
     [lab, pos] = read_besa_sfp(filename);
     sens.label   = lab;
@@ -458,6 +458,12 @@ switch fileformat
     % it would be possible to use coil_def.dat to construct the coil positions
     sens.label = label;
     sens.chanpos = [x y z];
+    
+  case '3dslicer_fscv'
+    csvData = readtable(filename,'FileType','text');
+    sens.label = csvData.label;
+    sens.elecpos = [csvData.x,csvData.y,csvData.z];
+
 
   otherwise
     ft_error('unknown fileformat for electrodes or gradiometers');
