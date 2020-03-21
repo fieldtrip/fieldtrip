@@ -52,7 +52,7 @@ cortex  = struct;
 % trials are counted with zero-offset
 trial = 0;
 
-i_fid = fopen(filename, 'rb', 'ieee-le');
+i_fid = fopen_or_error(filename, 'rb', 'ieee-le');
 
 % read until the end of file or until the specified trial number
 while ( ~feof (i_fid) && trial<endtrial )

@@ -90,7 +90,7 @@ end
 % ensure consistency between the dimord string and the axes that describe the data dimensions
 timelock = fixdimord(timelock);
 
-% remove the unwanted fields, it is unclear when they were precisely used
+% remove these very obsolete fields, it is unclear when they were precisely used
 if isfield(timelock, 'numsamples'),       timelock = rmfield(timelock, 'numsamples');       end
 if isfield(timelock, 'numcovsamples'),    timelock = rmfield(timelock, 'numcovsamples');    end
 if isfield(timelock, 'numblcovsamples'),  timelock = rmfield(timelock, 'numblcovsamples');  end
@@ -120,6 +120,7 @@ switch version
     
     fn = fieldnames(timelock);
     fn = setdiff(fn, ignorefields('appendtimelock'));
+    fn = fn(~endsWith(fn, 'dimord'));
     dimord = cell(size(fn));
     hasrpt = false(size(fn));
     for i=1:numel(fn)

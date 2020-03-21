@@ -131,8 +131,7 @@ header.orig.channel_info.orig_channel_states = header.orig.channel_info.channel_
 header.orig.channel_info.channel_states = header.orig.channel_info.channel_states(chanindx);
 
 %% Open file
-[fid,msg] = fopen(filename,'r');
-assert(fid~=-1,'ReadBesaMatlab:ErrorOpeningFile',msg);
+fid = fopen_or_error(filename,'r');
 
 % Get length of file
 fseek(fid,0,'eof');
@@ -664,7 +663,7 @@ if isempty(secondscheme_lookuptable)
   % Reshape the lookup grid to be [1:121 x 1:2]
   secondscheme_lookuptable_b = reshape(secondscheme_lookuptable_b,[numel(meshgrid_vals.B)^2 2]);
   
-  % Put the lookup tables together in a cell array (because of different sized cells)
+  % Put the lookup tables together in a cell-array (because of different sized cells)
   secondscheme_lookuptable = num2cell(secondscheme_lookuptable_a,2);
   secondscheme_lookuptable = [secondscheme_lookuptable; num2cell(secondscheme_lookuptable_b,2)];
   
@@ -796,7 +795,7 @@ if isempty(thirdscheme_lookuptable)
   % Reshape the lookup grid to be [1:169 x 1:2]
   thirdscheme_lookuptable_b = reshape(thirdscheme_lookuptable_b,[numel(meshgrid_vals.B)^2 2]);
   
-  % Put the lookup tables together in a cell array (because of different sized cells)
+  % Put the lookup tables together in a cell-array (because of different sized cells)
   thirdscheme_lookuptable = num2cell(thirdscheme_lookuptable_a,2);
   thirdscheme_lookuptable = [thirdscheme_lookuptable; num2cell(thirdscheme_lookuptable_b,2)];
   
@@ -849,8 +848,7 @@ function [header] = read_besa_besa_header(fname)
 % READ_BESA_BESA_HEADER reads header information from a BESA fileheader and skips data
 
 %% Open file
-[fid,msg] = fopen(fname,'r');
-assert(fid~=-1,'ReadBesaMatlab:ErrorOpeningFile',msg);
+fid = fopen_or_error(fname,'r');
 
 % Get length of file
 fseek(fid,0,'eof');
@@ -1628,7 +1626,7 @@ while ~feof(fid) && ftell(fid) < (head_offset+head_length)
   end
 end
 
-% Read all events as structures and put them into a cell array
+% Read all events as structures and put them into a cell-array
 for event_n = 1:events.n_events
   [current_tag,current_length] = read_tag_offset_pair(fid);
   events.events{event_n} = read_event_tag(fid,current_tag,current_length);

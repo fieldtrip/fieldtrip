@@ -64,7 +64,13 @@ if nargout>0
   V = [];
 end
 
+% ensure that the directory exists if we want to write to a file
+if ~ismember(dataformat, {'empty', 'fcdc_global', 'fcdc_buffer', 'fcdc_mysql'})
+  isdir_or_mkdir(fileparts(filename));
+end
+
 switch dataformat
+
   case {'analyze_img' 'analyze_hdr' 'analyze' 'nifti_spm'}
     % analyze data, using SPM
     V = volumewrite_spm(filename, dat, transform, spmversion);

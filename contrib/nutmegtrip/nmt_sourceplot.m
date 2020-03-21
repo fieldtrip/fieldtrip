@@ -139,7 +139,7 @@ function nmt_sourceplot(cfg,functional)
 %
 % Author: Sarang S. Dalal
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -392,7 +392,7 @@ for funidx = 1:length(funparameters)
     % elseif isfield(functional, cfg.anaparameter)
     %   hasana = 1;
     %   ana = getsubfield(functional, cfg.anaparameter);
-    %   % convert integers to single precision float if neccessary
+    %   % convert integers to single precision float if necessary
     %   if isa(ana, 'uint8') || isa(ana, 'uint16') || isa(ana, 'int8') || isa(ana, 'int16')
     %     fprintf('converting anatomy to double\n');
     %     ana = double(ana);

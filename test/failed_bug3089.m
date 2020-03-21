@@ -1,9 +1,8 @@
 function test_bug3089
 
-% MEM 4000mb
+% MEM 4gb
 % WALLTIME 00:20:00
-
-% TEST ft_dipolefitting ft_compute_leadfield ft_apply_transform
+% DEPENDENCY ft_dipolefitting ft_compute_leadfield ft_apply_transform
 
 dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/natmeg/oddball1_mc_downsampled.fif');
 datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/bug3089');
@@ -48,16 +47,16 @@ else
   cfg = [];
   cfg.method = 'summary';
   cfg.keepchannel = 'yes';
-  
+
   cfg.channel = 'EEG';
   data_clean = ft_rejectvisual(cfg, data_raw);
-  
+
   cfg.channel = 'MEG*1'; % MEGMAG
   data_clean = ft_rejectvisual(cfg, data_clean);
-  
+
   cfg.channel = {'MEG*2', 'MEG*3'}; % MEGGRAD
   data_clean = ft_rejectvisual(cfg, data_clean);
-  
+
   save(fullfile(datadir,'data_clean'), 'data_clean');
 end
 
@@ -69,14 +68,14 @@ if false
   cfg.refchannel = 'all';
   cfg.channel = 'EEG';
   data_eeg = ft_preprocessing(cfg, data_clean);
-  
+
   cfg = [];
   cfg.channel = 'MEG';
   data_meg = ft_preprocessing(cfg, data_clean);
-  
+
   cfg = []
   data_all = ft_appenddata(cfg, data_eeg, data_meg);
-  
+
 else
   montage = [];
   montage.labelold = ft_channelselection('EEG', data_clean.label);
@@ -86,13 +85,13 @@ else
     montage.tra(i,:) = montage.tra(i,:) - ones(1,length(montage.labelold))/length(montage.labelold);
   end
   data_all      = ft_apply_montage(data_clean, montage, 'keepunused', true, 'balancename', 'avgref');
-  
+
   % apply the montage to the electrode definition
   elec = data_clean.elec;
   elec.tra = eye(length(elec.label));
   elec.balance.current = 'none';
   elec = ft_apply_montage(elec, montage, 'keepunused', true, 'balancename', 'avgref');
-  
+
   % keep it with the data
   data_all.elec = elec;
 end
@@ -157,8 +156,8 @@ cfg.latency         = 0.100;
 cfg.numdipoles      = 2;
 cfg.symmetry        = 'x';
 cfg.gridsearch      = 'yes';
-cfg.grid.unit       = 'm';
-cfg.grid.resolution = 0.02;
+cfg.unit       = 'm';
+cfg.resolution = 0.02;
 
 cfg.senstype        = 'MEG';
 cfg.headmodel       = headmodel_meg;
@@ -182,8 +181,8 @@ cfg.latency         = 0.100;
 cfg.numdipoles      = 2;
 cfg.symmetry        = 'x';
 cfg.gridsearch      = 'yes';
-cfg.grid.unit       = 'm';
-cfg.grid.resolution = 0.02;
+cfg.unit       = 'm';
+cfg.resolution = 0.02;
 
 cfg.channel = {'MEGMAG'};
 timelock_sel = ft_selectdata(cfg, timelock_cov); % this selects channels from the covariance
@@ -215,8 +214,8 @@ cfg.numdipoles      = 2;
 cfg.latency         = 0.100;
 cfg.symmetry        = 'x';
 cfg.gridsearch      = 'yes';
-cfg.grid.unit       = 'm';
-cfg.grid.resolution = 0.02;
+cfg.unit       = 'm';
+cfg.resolution = 0.02;
 
 cov_mag  = zeros(306);
 for i=1:3:306
@@ -299,7 +298,7 @@ dipoles_all = {dipole_mag, dipole_grad, dipole_eeg, dipole_mag_grad};
 
 close all
 colours = {'r', 'g', 'b', 'k', 'm', 'c'};
-ft_plot_axes(headmodel_meg);%, 'edgecolor', 'none', 'facealpha', 0.5);
+ft_plot_axes(headmodel_meg); %, 'edgecolor', 'none', 'facealpha', 0.5);
 hold on
 for i = 1:length(dipoles_all)
   ft_plot_dipole(dipoles_all{i}.dip.pos, reshape(dipoles_all{i}.dip.mom, [3 2]), 'unit', 'm', 'color', colours{i})

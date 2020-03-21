@@ -8,7 +8,7 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
   fnames = setdiff(fieldnames(sens.balance), 'current');
   indx   = find(ismember(fnames, sens.balance.current));
   
-  if length(indx)==1,
+  if length(indx)==1
     % undo the synthetic gradient balancing
     fprintf('undoing the %s balancing for the gradiometer definition\n', sens.balance.current);
     
@@ -29,7 +29,7 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
     
     if strcmp(sens.balance.current, 'planar')
       if isfield(sens, 'type') && ~isempty(strfind(sens.type, '_planar'))
-        % remove the planar postfox from the sensor type
+        % remove the planar postfix from the sensor type
         sens.type = sens.type(1:(end-7));
       end
     end

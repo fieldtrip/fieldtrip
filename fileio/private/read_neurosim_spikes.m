@@ -47,7 +47,7 @@ if nargin<2
   headerOnly = false;
 end
 
-fid = fopen(filename, 'rb');
+fid = fopen_or_error(filename, 'rb');
 label = {};
 orig  = {};
 

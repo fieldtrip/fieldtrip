@@ -96,14 +96,14 @@ if strcmp(cfg.pertrial, 'yes')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % iterate over trials
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
   tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo'});
   % select trials of interest
   for i=1:numel(varargin)
     varargin{i}        = ft_selectdata(tmpcfg, varargin{i});
     [cfg, varargin{i}] = rollback_provenance(cfg, varargin{i});
   end
-  
+
   tmp             = cell(numel(varargin{1}.trial),1);
   tmpcfg          = cfg;
   tmpcfg.pertrial = 'no';
@@ -114,20 +114,20 @@ if strcmp(cfg.pertrial, 'yes')
   end
   data = ft_appenddata([], tmp{:});
   [cfg, data] = rollback_provenance(cfg, data);
-  
+
 else
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % compute it for the data concatenated over all trials
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
   computeweights = ~isfield(cfg, 'pca');
-  
+
   if length(varargin)==1
     % channel data and reference channel data are in 1 data structure
     data    = varargin{1};
     megchan = ft_channelselection(cfg.channel, data.label);
     refchan = ft_channelselection(cfg.refchannel, data.label);
-    
+
     % split data into data and refdata
     tmpcfg  = [];
     tmpcfg.channel = refchan;
@@ -135,14 +135,14 @@ else
     refdata = ft_preprocessing(tmpcfg, data);
     tmpcfg.channel = megchan;
     data    = ft_preprocessing(tmpcfg, data);
-    
+
   else
     % channel data and reference channel data are in 2 data structures
     data    = varargin{1};
     refdata = varargin{2};
     megchan = ft_channelselection(cfg.channel, data.label);
     refchan = ft_channelselection(cfg.refchannel, refdata.label);
-    
+
     % split data into data and refdata
     tmpcfg  = [];
     tmpcfg.channel = refchan;
@@ -150,10 +150,10 @@ else
     refdata = ft_preprocessing(tmpcfg, refdata);
     tmpcfg.channel = megchan;
     data    = ft_preprocessing(tmpcfg, data);
-    
+
     % FIXME do compatibility check on data vs refdata with respect to dimensions (time-trials)
   end
-  
+
   % select trials of interest
   tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo'});
   data    = ft_selectdata(tmpcfg, data);
@@ -161,34 +161,34 @@ else
   % restore the provenance information
   [cfg, data]    = rollback_provenance(cfg, data);
   [dum, refdata] = rollback_provenance(cfg, refdata);
-  
+
   refchan = ft_channelselection(cfg.refchannel, refdata.label);
   refindx = match_str(refdata.label, refchan);
   megchan = ft_channelselection(cfg.channel, data.label);
   megindx = match_str(data.label, megchan);
-  
+
   nref = length(refindx);
   ntrl = length(data.trial);
-  
+
   if ischar(cfg.truncate) && strcmp(cfg.truncate, 'no')
     cfg.truncate = length(refindx);
   elseif ischar(cfg.truncate) || (cfg.truncate>1 && cfg.truncate/round(cfg.truncate)~=1) || cfg.truncate>length(refindx)
     ft_error('cfg.truncate should be either ''no'', an integer number <= the number of references, or a number between 0 and 1');
     % FIXME the default truncation applied by 4D is 1x10^-8
   end
-  
+
   % compute and remove mean from data
   fprintf('removing the mean from the channel data and reference channel data\n');
   m             = cellmean(data.trial,       2);
   data.trial    = cellvecadd(data.trial,    -m);
   m             = cellmean(refdata.trial,    2);
   refdata.trial = cellvecadd(refdata.trial, -m);
-  
+
   % compute std of data before the regression
   stdpre = cellstd(data.trial, 2);
-  
+
   if computeweights
-    
+
     % zscore
     if strcmp(cfg.zscore, 'yes')
       fprintf('zscoring the reference channel data\n');
@@ -196,12 +196,12 @@ else
     else
       sdref = ones(nref, 1);
     end
-    
+
     % compute covariance of refchannels and do svd
     fprintf('performing pca on the reference channel data\n');
     crefdat = cellcov(refdata.trial, [], 2, 0);
     [u,s,v] = svd(crefdat);
-    
+
     % determine the truncation and rotation
     if cfg.truncate<1
       % keep all singular vectors with singular values >= cfg.truncate*s(1,1)
@@ -212,42 +212,42 @@ else
     end
     fprintf('keeping %d out of %d components\n',numel(keep),size(u,2));
     rotmat = u(:, keep)';
-    
+
     % rotate the refdata
     fprintf('projecting the reference data onto the pca-subspace\n');
     refdata.trial = cellfun(@mtimes, repmat({rotmat}, 1, ntrl), refdata.trial, 'UniformOutput', 0);
-    
+
     % project megdata onto the orthogonal basis
     fprintf('computing the regression weights\n');
     nom   = cellcov(data.trial,    refdata.trial, 2, 0);
     denom = cellcov(refdata.trial, [],            2, 0);
     rw    = (pinv(denom)*nom')';
-    
+
     % subtract projected data
     fprintf('subtracting the reference channel data from the channel data\n');
     for k = 1:ntrl
       data.trial{k} = data.trial{k} - rw*refdata.trial{k};
     end
-    
+
     % rotate back and 'unscale'
     pca.w        = rw*rotmat*diag(1./sdref);
     pca.label    = data.label;
     pca.reflabel = refdata.label;
     pca.rotmat   = rotmat;
     cfg.pca      = pca;
-    
+
   else
     fprintf('applying precomputed weights to the data\n');
     % check whether the weight table contains the specified references
     % ensure the ordering of the meg-data to be consistent with the weights
     % ensure the ordering of the ref-data to be consistent with the weights
-    
+
     [i1,i2] = match_str(refchan, cfg.pca.reflabel);
     [i3,i4] = match_str(megchan, cfg.pca.label);
     if length(i2)~=length(cfg.pca.reflabel)
       ft_error('you specified fewer references to use as there are in the precomputed weight table');
     end
-    
+
     refindx = refindx(i1);
     megindx = megindx(i3);
     cfg.pca.w = cfg.pca.w(i4,i2);
@@ -256,21 +256,21 @@ else
     if isfield(cfg.pca, 'rotmat')
       cfg.pca = rmfield(cfg.pca, 'rotmat'); % dont know
     end
-    
+
     for k = 1:ntrl
       data.trial{k} = data.trial{k} - cfg.pca.w*refdata.trial{k};
     end
     pca = cfg.pca;
-    
+
   end
-  
+
   % compute std of data after
   stdpst = cellstd(data.trial, 2);
-  
+
   % demean FIXME is this needed
   m          = cellmean(data.trial, 2);
   data.trial = cellvecadd(data.trial, -m);
-  
+
   if isfield(data, 'grad')
     sensfield = 'grad';
   elseif isfield(data, 'elec')
@@ -280,33 +280,33 @@ else
   else
     sensfield = [];
   end
-  
+
   % apply the linear projection also to the sensor description
   if ~isempty(sensfield)
     if  strcmp(cfg.updatesens, 'yes')
       fprintf('also applying the weights to the %s structure\n', sensfield);
-      
+
       montage     = [];
       labelnew    = pca.label;
-      
+
       % add columns of refchannels not yet present in labelnew
       % [id, i1]  = setdiff(pca.reflabel, labelnew);
       % labelold  = [labelnew; pca.reflabel(sort(i1))];
       labelold  = data.grad.label;
       nlabelold = length(labelold);
-      
+
       % start with identity
       montage.tra = eye(nlabelold);
-      
+
       % subtract weights
       [i1, i2]  = match_str(labelold, pca.reflabel);
       [i3, i4]  = match_str(labelold, pca.label);
       montage.tra(i3,i1) = montage.tra(i3,i1) - pca.w(i4,i2);
       montage.labelold  = labelold;
       montage.labelnew  = labelold;
-      
+
       data.(sensfield) = ft_apply_montage(data.(sensfield), montage, 'keepunused', 'yes', 'balancename', 'pca');
-      
+
       % order the fields
       fnames = fieldnames(data.(sensfield).balance);
       tmp    = false(1,numel(fnames));
@@ -315,12 +315,12 @@ else
       end
       [tmp, ix] = sort(tmp, 'descend');
       data.grad.balance = orderfields(data.(sensfield).balance, fnames(ix));
-      
+
     else
       fprintf('not applying the weights to the %s structure\n', sensfield);
     end
   end % if sensfield
-  
+
 end % if pertrial
 
 % do the general cleanup and bookkeeping at the end of the function
@@ -435,7 +435,7 @@ function [sd] = cellstd(x, dim, flag)
 %
 % X should be an linear cell-array of matrices for which the size in at
 % least one of the dimensions should be the same for all cells. If flag==1, the mean will
-% be subtracted first (default behaviour, but to save time on already demeaned data, it
+% be subtracted first (default behavior, but to save time on already demeaned data, it
 % can be set to 0).
 
 nx = size(x);
@@ -539,7 +539,7 @@ function [z, sd, m] = cellzscore(x, dim, flag)
 %
 % X should be an linear cell-array of matrices for which the size in at
 % least one of the dimensions should be the same for all cells. If flag==1, the mean will
-% be subtracted first (default behaviour, but to save time on already demeaned data, it
+% be subtracted first (default behavior, but to save time on already demeaned data, it
 % can be set to 0). SD is a vector containing the standard deviations, used for the normalisation.
 
 nx = size(x);

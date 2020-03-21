@@ -1,4 +1,4 @@
-function [posR, triR] = remove_double_vertices(pos, tri)
+function [posR, triR, keeppos] = remove_double_vertices(pos, tri)
 
 % REMOVE_DOUBLE_VERTICES removes double vertices from a triangular mesh
 % renumbering the vertex-indices for the triangles and removing all
@@ -7,9 +7,11 @@ function [posR, triR] = remove_double_vertices(pos, tri)
 % Use as
 %   [pos, tri] = remove_double_vertices(pos, tri)
 
-pos1 = unique(pos, 'rows');
-keeppos   = find(ismember(pos1,pos,'rows'));
-removepos = setdiff([1:size(pos,1)],keeppos);
+[pos1,i1,i2] = unique(pos, 'rows');
+%keeppos   = find(ismember(pos,pos1,'rows'));
+%removepos = setdiff([1:size(pos,1)],keeppos);
+keeppos   = i1;
+removepos = setdiff(1:size(pos,1), keeppos);
 
 npos = size(pos,1);
 ntri = size(tri,1);

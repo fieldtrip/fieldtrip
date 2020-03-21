@@ -10,7 +10,7 @@ ft_hastoolbox('fileexchange', 1);
 
 try
   % this one uses a mex file
-  if isstruct(s) || iscell(s)
+  if isstruct(s) || iscell(s) || istable(s)
     h = CalcMD5(mxSerialize(s));
   else
     h = CalcMD5(s);

@@ -138,7 +138,7 @@ elseif strcmp(sfmethod, 'bivariate_conditional')
   % this method requires a channeltriplet
   channeltriplet = cell(0,3);
   
-  % ensure channelcnd to be a cell array of cell arrays
+  % ensure channelcnd to be a cell-array of cell arrays
   for k = 1:size(channelcmb,1)
     if ~iscell(channelcmb{k,3})
       channelcmb{k,3} = {channelcmb{k,3}};
@@ -217,7 +217,7 @@ if strcmp(sfmethod, 'bivariate')
   list2 = char(channelcmb(:,2)); siz2 = size(list2,2);
   ix    = 1:min(siz1,siz2);
   npair = sum(sum(list1(:,ix)~=list2(:,ix),2)~=0);
-  fprintf('computing pairwise non-parametric spectral factorization on %d channel pairs\n', npair);%size(channelcmb,1) - numel(unique(channelcmb(:))));
+  fprintf('computing pairwise non-parametric spectral factorization on %d channel pairs\n', npair); %size(channelcmb,1) - numel(unique(channelcmb(:))));
 elseif strcmp(sfmethod, 'bivariate_conditional')
   % no text
 elseif strcmp(sfmethod, 'multivariate')

@@ -141,9 +141,6 @@ end
 % FIXME is this still needed when it is already binary?
 %seg = volumethreshold(seg, 0.5, tissue);
 
-% the following requires the simbio toolbox to be on the path
-ft_hastoolbox('simbio', 1);
-
 % build the mesh
 mesh = build_mesh_hexahedral(cfg, seg_build);
 

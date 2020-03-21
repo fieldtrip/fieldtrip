@@ -153,7 +153,7 @@ isgrad   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'p
 iselec   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'pnt')  && ~isfield(input, 'ori'); % old style
 isgrad   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'coilpos')) || isgrad;             % new style
 iselec   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'elecpos')) || iselec;             % new style
-isnirs   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'transceiver');
+isnirs   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'optopos');
 islabel  = isa(input, 'cell')    && ~isempty(input) && isa(input{1}, 'char');
 haslabel    = isa(input, 'struct')  && isfield(input, 'label');
 

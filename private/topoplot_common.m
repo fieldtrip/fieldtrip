@@ -149,16 +149,16 @@ cfg.interplimits      = ft_getopt(cfg, 'interplimits',     'head');
 cfg.interpolation     = ft_getopt(cfg, 'interpolation',     default_interpmethod);
 cfg.contournum        = ft_getopt(cfg, 'contournum',        6);
 cfg.colorbar          = ft_getopt(cfg, 'colorbar',         'no');
+cfg.colorbartext      = ft_getopt(cfg, 'colorbartext',    '');
 cfg.shading           = ft_getopt(cfg, 'shading',          'flat');
 cfg.comment           = ft_getopt(cfg, 'comment',          'auto');
-cfg.commentpos        = ft_getopt(cfg, 'commentpos',        []);  % default is handled further down
 cfg.fontsize          = ft_getopt(cfg, 'fontsize',          8);
 cfg.fontweight        = ft_getopt(cfg, 'fontweight',       'normal');
 cfg.baseline          = ft_getopt(cfg, 'baseline',         'no'); % to avoid warning in timelock/freqbaseline
 cfg.trials            = ft_getopt(cfg, 'trials',           'all', 1);
 cfg.interactive       = ft_getopt(cfg, 'interactive',      'yes');
 cfg.hotkeys           = ft_getopt(cfg, 'hotkeys',          'yes');
-cfg.renderer          = ft_getopt(cfg, 'renderer',          []); % MATLAB sets the default
+cfg.renderer          = ft_getopt(cfg, 'renderer',          []); % let MATLAB decide on the default
 cfg.marker            = ft_getopt(cfg, 'marker',           'on');
 cfg.markersymbol      = ft_getopt(cfg, 'markersymbol',     'o');
 cfg.markercolor       = ft_getopt(cfg, 'markercolor',       [0 0 0]);
@@ -178,23 +178,13 @@ cfg.channel           = ft_getopt(cfg, 'channel',          'all');
 cfg.refchannel        = ft_getopt(cfg, 'refchannel',        []);
 cfg.figurename        = ft_getopt(cfg, 'figurename',        []);
 cfg.interpolatenan    = ft_getopt(cfg, 'interpolatenan',   'yes');
-
-% default commentpos
-if isempty(cfg.commentpos)
-  if any(ismember(cfg.layout.label, 'COMNT'))
-    % layout went through ft_prepare_layout in ft_topoplotER/TFR
-    % use the position that is specified in the layout
-    cfg.commentpos = 'layout';
-  else
-    % put it in the left bottom
-    cfg.commentpos = 'leftbottom';
-  end
-end
+cfg.commentpos        = ft_getopt(cfg, 'commentpos',       'layout');
+cfg.scalepos          = ft_getopt(cfg, 'scalepos',         'layout');
 
 % the user can either specify a single group of channels for highlighting
 % which are all to be plotted in the same style, or multiple groups with a
 % different style for each group. The latter is used by ft_clusterplot.
-if iscell(cfg.highlightchannel) && ~isempty(cfg.highlightchannel) && ischar(cfg.highlightchannel{1}) 
+if iscell(cfg.highlightchannel) && ~isempty(cfg.highlightchannel) && ischar(cfg.highlightchannel{1})
   % it is a single cell-array with channels names, e.g. {'C1', 'Cz', 'C2'}
   cfg.highlightchannel = {cfg.highlightchannel};
 elseif isnumeric(cfg.highlightchannel)
@@ -281,8 +271,8 @@ switch dtype
     end
   case 'freq'
     if hastime
-    xparam = ft_getopt(cfg, 'xparam', 'time');
-    yparam = ft_getopt(cfg, 'yparam', 'freq');
+      xparam = ft_getopt(cfg, 'xparam', 'time');
+      yparam = ft_getopt(cfg, 'yparam', 'freq');
       cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');
     else
       xparam = 'freq';
@@ -342,10 +332,11 @@ if ~strcmp(cfg.baseline, 'no')
   if ~isempty(cfg.maskparameter)
     tempmask = data.(cfg.maskparameter);
   end
+  tmpcfg = removefields(cfg, 'inputfile');
   if strcmp(xparam, 'time') && strcmp(yparam, 'freq')
-    data = ft_freqbaseline(cfg, data);
+    data = ft_freqbaseline(tmpcfg, data);
   elseif strcmp(xparam, 'time') && strcmp(yparam, '')
-    data = ft_timelockbaseline(cfg, data);
+    data = ft_timelockbaseline(tmpcfg, data);
   end
   % put mask-parameter back if it is set
   if ~isempty(cfg.maskparameter)
@@ -425,10 +416,11 @@ if ~ischar(cfg.xlim) && length(cfg.xlim)>2 %&& any(ismember(dimtok, 'time'))
   nplots = numel(xlims)-1;
   nyplot = ceil(sqrt(nplots));
   nxplot = ceil(nplots./nyplot);
+  tmpcfg = removefields(cfg, 'inputfile');
   for i=1:length(xlims)-1
     subplot(nxplot, nyplot, i);
-    cfg.xlim = xlims(i:i+1);
-    ft_topoplotTFR(cfg, data);
+    tmpcfg.xlim = xlims(i:i+1);
+    ft_topoplotTFR(tmpcfg, data);
   end
   return
 end
@@ -556,7 +548,7 @@ else
   zmax = cfg.zlim(2);
 end
 
-% make comment
+% Construct comment
 switch cfg.comment
   case 'auto'
     comment = date;
@@ -594,50 +586,6 @@ if ~isempty(cfg.refchannel)
   else
     comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel);
   end
-end
-
-% Specify the x and y coordinates of the comment
-if strcmp(cfg.commentpos, 'layout')
-  ind_comment = find(strcmp(cfg.layout.label, 'COMNT'));
-  x_comment = cfg.layout.pos(ind_comment,1);
-  y_comment = cfg.layout.pos(ind_comment,2);
-elseif strcmp(cfg.commentpos, 'lefttop')
-  x_comment = -0.7;
-  y_comment =  0.6;
-  HorAlign = 'left';
-  VerAlign = 'top';
-elseif strcmp(cfg.commentpos, 'leftbottom')
-  x_comment = -0.6;
-  y_comment = -0.6;
-  HorAlign = 'left';
-  VerAlign = 'bottom';
-elseif strcmp(cfg.commentpos, 'middletop')
-  x_comment =  0;
-  y_comment =  0.75;
-  HorAlign = 'center';
-  VerAlign = 'top';
-elseif strcmp(cfg.commentpos, 'middlebottom')
-  x_comment =  0;
-  y_comment = -0.7;
-  HorAlign = 'center';
-  VerAlign = 'bottom';
-elseif strcmp(cfg.commentpos, 'righttop')
-  x_comment =  0.65;
-  y_comment =  0.6;
-  HorAlign = 'right';
-  VerAlign = 'top';
-elseif strcmp(cfg.commentpos, 'rightbottom')
-  x_comment =  0.6;
-  y_comment = -0.6;
-  HorAlign = 'right';
-  VerAlign = 'bottom';
-elseif isnumeric(cfg.commentpos)
-  x_comment = cfg.commentpos(1);
-  y_comment = cfg.commentpos(2);
-  HorAlign = 'left';
-  VerAlign = 'middle';
-  x_comment = 0.9*((x_comment-min(cfg.xlim))/(max(cfg.xlim)-min(cfg.xlim))-0.5);
-  y_comment = 0.9*((y_comment-min(cfg.ylim))/(max(cfg.ylim)-min(cfg.ylim))-0.5);
 end
 
 % Draw topoplot
@@ -686,7 +634,7 @@ if ~strcmp(cfg.style, 'blank')
   end
   ft_plot_topo(chanX, chanY, dat, opt{:});
 elseif ~strcmp(cfg.style, 'blank')
-  ft_plot_lay(cfg.layout, 'box', 'no', 'label', 'no', 'point', 'no')
+  ft_plot_layout(cfg.layout, 'box', 'no', 'label', 'no', 'point', 'no')
 end
 
 % For Highlight (channel-selection)
@@ -712,7 +660,7 @@ for icell = 1:length(cfg.highlight)
       end
     end
     
-    ft_plot_lay(templay, 'box', 'no', 'label', labelflg, 'point', ~labelflg, ...
+    ft_plot_layout(templay, 'box', 'no', 'label', labelflg, 'point', ~labelflg, ...
       'pointsymbol',  cfg.highlightsymbol{icell}, ...
       'pointcolor',   cfg.highlightcolor{icell}, ...
       'pointsize',    cfg.highlightsize{icell}, ...
@@ -759,7 +707,7 @@ switch cfg.marker
         templay.label{ichan} = num2str(match_str(data.label,templay.label{ichan}));
       end
     end
-    ft_plot_lay(templay, 'box', 'no', 'label',labelflg, 'point', ~labelflg, ...
+    ft_plot_layout(templay, 'box', 'no', 'label',labelflg, 'point', ~labelflg, ...
       'pointsymbol',  cfg.markersymbol, ...
       'pointcolor',   cfg.markercolor, ...
       'pointsize',    cfg.markersize, ...
@@ -782,12 +730,15 @@ if isfield(cfg, 'vector')
 end
 
 % Write comment
-if ~strcmp(cfg.comment, 'no')
-  if strcmp(cfg.commentpos, 'title')
-    comment_handle = title(comment, 'FontSize', cfg.fontsize);
-  else
-    comment_handle = ft_plot_text(x_comment, y_comment, comment, 'FontSize', cfg.fontsize, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 'FontWeight', cfg.fontweight);
-  end
+if strcmp(cfg.comment, 'no')
+  comment_handle = [];
+elseif strcmp(cfg.commentpos, 'title')
+  comment_handle = title(comment, 'FontSize', cfg.fontsize);
+elseif ~isempty(strcmp(cfg.layout.label, 'COMNT'))
+  x_comment = cfg.layout.pos(strcmp(cfg.layout.label, 'COMNT'), 1);
+  y_comment = cfg.layout.pos(strcmp(cfg.layout.label, 'COMNT'), 2);
+  % 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom',
+  comment_handle = ft_plot_text(x_comment, y_comment, comment, 'FontSize', cfg.fontsize, 'FontWeight', cfg.fontweight);
 else
   comment_handle = [];
 end
@@ -800,9 +751,11 @@ end
 % Plot colorbar
 if isfield(cfg, 'colorbar')
   if strcmp(cfg.colorbar, 'yes')
-    colorbar;
+    c = colorbar;
+    ylabel(c, cfg.colorbartext);
   elseif ~strcmp(cfg.colorbar, 'no')
-    colorbar('location', cfg.colorbar);
+    c = colorbar('location', cfg.colorbar);
+    ylabel(c, cfg.colorbartext);
   end
 end
 
@@ -867,19 +820,6 @@ if strcmp(cfg.interactive, 'yes')
   end
 end
 
-% add a menu to the figure, but only if the current figure does not have subplots
-% also, delete any possibly existing previous menu, this is safe because delete([]) does nothing
-delete(findobj(gcf, 'type', 'uimenu', 'label', 'FieldTrip'));
-if numel(findobj(gcf, 'type', 'axes')) <= 1
-  ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
-  if ft_platform_supports('uimenu')
-    % not supported by Octave
-    uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
-    uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
-  end
-end
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting channels in case of cfg.interactive='yes'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -889,11 +829,11 @@ info        = guidata(gcf);
 cfg         = info.(ident).cfg;
 datvarargin = info.(ident).datvarargin;
 if ~isempty(label)
-  cfg = removefields(cfg, 'inputfile');   % the reading has already been done and varargin contains the data
-  cfg.baseline = 'no';                    % make sure the next function does not apply a baseline correction again
+  cfg = removefields(cfg, 'inputfile');       % the reading has already been done and varargin contains the data
+  cfg.baseline = 'no';                        % make sure the next function does not apply a baseline correction again
   cfg.channel = label;
   cfg.dataname = info.(ident).cfg.dataname;   % put data name in here, this cannot be resolved by other means
-  cfg.trials = 'all';                     % trial selection has already been taken care of
+  cfg.trials = 'all';                         % trial selection has already been taken care of
   cfg.xlim = 'maxmin';
   % if user specified a zlim, copy it over to the ylim of singleplot
   if isfield(cfg, 'zlim')

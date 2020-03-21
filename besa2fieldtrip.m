@@ -18,7 +18,7 @@ function data = besa2fieldtrip(input)
 %   *.dat is converted to a structure similar to the output of FT_SOURCANALYSIS
 %   *.dat combined with a *.gen or *.generic is converted to a structure similar to the output of FT_PREPROCESSING
 %
-% Note (*): If the BESA toolbox by Karsten Hochstatter is found on your
+% (*) If the BESA toolbox by Karsten Hochstatter is found on your
 % MATLAB path, the readBESAxxx functions will be used (where xxx=tfc/swf),
 % alternatively the private functions from FieldTrip will be used.
 %
@@ -43,15 +43,6 @@ function data = besa2fieldtrip(input)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
-% these are used by the ft_preamble/ft_postamble function and scripts
-ft_revision = '$Id$';
-ft_nargin   = nargin;
-ft_nargout  = nargout;
-
-% do the general setup of the function
-ft_defaults
-ft_preamble callinfo
 
 if isstruct(input) && numel(input)>1
   % use a recursive call to convert multiple inputs
@@ -116,7 +107,7 @@ if isstruct(input)
     data.dim      = [nx ny nz];
     % Array with all possible positions (x,y,z)
     data.pos      = WritePosArray(xTemp,yTemp,zTemp,nx,ny,nz);
-    data.inside   = 1:prod(data.dim);%as in Fieldtrip - not correct
+    data.inside   = 1:prod(data.dim); %as in Fieldtrip - not correct
     data.outside  = [];
 
     %--------------------Source Waveform--------------------------------------%
@@ -369,22 +360,6 @@ elseif ischar(input)
   end
 
 end % isstruct || ischar
-
-
-% construct and add a configuration to the output
-cfg = [];
-
-if isstruct(input) && isfield(input, 'datafile')
-  cfg.filename = input.datafile;
-elseif isstruct(input) && ~isfield(input, 'datafile')
-  cfg.filename = 'Unknown';
-elseif ischar(input)
-  cfg.filename = input;
-end
-
-% do the general cleanup and bookkeeping at the end of the function
-ft_postamble callinfo
-ft_postamble history data
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -1,10 +1,8 @@
 function failed_bug2474
 
-% MEM 1000mb
+% MEM 1gb
 % WALLTIME 00:10:00
-
-% TEST test_bug2474
-% TEST ft_compute_leadfield ft_prepare_vol_sens
+% DEPENDENCY ft_compute_leadfield ft_prepare_vol_sens
 
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2474/bug.mat'));

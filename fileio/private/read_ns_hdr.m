@@ -34,14 +34,10 @@ function [hdr] = read_ns_hdr(filename)
 %
 % $Id$
 
-fid = fopen(filename,'r','ieee-le');
-
-if fid<0,
-    ft_error(['cannot open ', filename]);
-end;
+fid = fopen_or_error(filename,'r','ieee-le');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% these structures are from Neuroscan sethead.h 
+% these structures are from Neuroscan sethead.h
 % the first two columns are the size in bytes and the offset
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -76,7 +72,7 @@ end;
 %  358      1  |  char   avgmode;         /* Set during online averaging             */
 %  359      1  |  char   review;          /* Set during review of EEG data           */
 %  360      2  |  short unsigned nsweeps;      /* Number of expected sweeps               */
-%  362      2  |  short unsigned compsweeps;   /* Number of actual sweeps                 */ 
+%  362      2  |  short unsigned compsweeps;   /* Number of actual sweeps                 */
 %  364      2  |  short unsigned acceptcnt;    /* Number of accepted sweeps               */
 %  366      2  |  short unsigned rejectcnt;    /* Number of rejected sweeps               */
 %  368      2  |  short unsigned pnts;         /* Number of points per waveform           */
@@ -100,7 +96,7 @@ end;
 %  412      2  |  short int aux2chnl;     /* AUX2 channel number                     */
 %  414      1  |  char  veogdir;          /* VEOG trigger direction flag             */
 %  415      1  |  char  heogdir;          /* HEOG trigger direction flag             */
-%  416      1  |  char  aux1dir;          /* AUX1 trigger direction flag             */ 
+%  416      1  |  char  aux1dir;          /* AUX1 trigger direction flag             */
 %  417      1  |  char  aux2dir;          /* AUX2 trigger direction flag             */
 %  418      2  |  short int veog_n;       /* Number of points per VEOG waveform      */
 %  420      2  |  short int heog_n;       /* Number of points per HEOG waveform      */
@@ -146,8 +142,8 @@ end;
 %  517      4  |  float AutoMax;          /* Autoscale maximum                       */
 %  521      4  |  float zmin;             /* Z axis minimum - Not currently used     */
 %  525      4  |  float zmax;             /* Z axis maximum - Not currently used     */
-%  529      4  |  float lowcut;           /* Archival value - low cut on external amp*/ 
-%  533      4  |  float highcut;          /* Archival value - Hi cut on external amp */ 
+%  529      4  |  float lowcut;           /* Archival value - low cut on external amp*/
+%  533      4  |  float highcut;          /* Archival value - Hi cut on external amp */
 %  537      1  |  char  common;           /* Common mode rejection flag              */
 %  538      1  |  char  savemode;         /* Save mode EEG AVG or BOTH               */
 %  539      1  |  char  manmode;          /* Manual rejection of incomming data      */
@@ -161,12 +157,12 @@ end;
 %  578      2  |  short int CalMethod;    /* Calibration method                      */
 %  580      2  |  short int CalUpdate;    /* Calibration update rate                 */
 %  582      2  |  short int CalBaseline;  /* Baseline correction during cal          */
-%  584      2  |  short int CalSweeps;    /* Number of calibration sweeps            */           
+%  584      2  |  short int CalSweeps;    /* Number of calibration sweeps            */
 %  586      4  |  float CalAttenuator;    /* Attenuator value for calibration        */
 %  590      4  |  float CalPulseVolt;     /* Voltage for calibration pulse           */
 %  594      4  |  float CalPulseStart;    /* Start time for pulse                    */
-%  598      4  |  float CalPulseStop;     /* Stop time for pulse                     */  
-%  602      4  |  float CalFreq;          /* Sweep frequency                         */  
+%  598      4  |  float CalPulseStop;     /* Stop time for pulse                     */
+%  602      4  |  float CalFreq;          /* Sweep frequency                         */
 %  606     34  |  char  taskfile[34];     /* Task file name                          */
 %  640     34  |  char  seqfile[34];      /* Sequence file path name                 */
 %  674      1  |  char  SpectMethod;      // Spectral method
@@ -185,12 +181,12 @@ end;
 %  708      2  |  unsigned short FspP2;   /* FSP - Stop  of window                   */
 %  710      4  |  float FspAlpha;         /* FSP - Alpha value                       */
 %  714      4  |  float FspNoise;         /* FSP - Signal to ratio value             */
-%  718      2  |  short int FspV1;        /* FSP - degrees of freedom                */   
-%  720     40  |  char  montage[40];      /* Montage file path name                  */   
-%  760     40  |  char  EventFile[40];    /* Event file path name                    */   
+%  718      2  |  short int FspV1;        /* FSP - degrees of freedom                */
+%  720     40  |  char  montage[40];      /* Montage file path name                  */
+%  760     40  |  char  EventFile[40];    /* Event file path name                    */
 %  800      4  |  float fratio;           /* Correction factor for spectral array    */
 %  804      1  |  char  minor_rev;        /* Current minor revision                  */
-%  805      2  |  short int eegupdate;    /* How often incomming eeg is refreshed    */ 
+%  805      2  |  short int eegupdate;    /* How often incomming eeg is refreshed    */
 %  807      1  |  char   compressed;      /* Data compression flag                   */
 %  808      4  |  float  xscale;          /* X position for scale box - Not used     */
 %  812      4  |  float  yscale;          /* Y position for scale box - Not used     */
@@ -198,10 +194,10 @@ end;
 %  820      4  |  float  ysize;           /* Waveform size Y direction               */
 %  824      1  |  char   ACmode;          /* Set SYNAP into AC mode                  */
 %  825      1  |  unsigned char   CommonChnl;      /* Channel for common waveform             */
-%  826      1  |  char   Xtics;           /* Scale tool- 'tic' flag in X direction   */ 
-%  827      1  |  char   Xrange;          /* Scale tool- range (ms,sec,Hz) flag X dir*/ 
-%  828      1  |  char   Ytics;           /* Scale tool- 'tic' flag in Y direction   */ 
-%  829      1  |  char   Yrange;          /* Scale tool- range (uV, V) flag Y dir    */ 
+%  826      1  |  char   Xtics;           /* Scale tool- 'tic' flag in X direction   */
+%  827      1  |  char   Xrange;          /* Scale tool- range (ms,sec,Hz) flag X dir*/
+%  828      1  |  char   Ytics;           /* Scale tool- 'tic' flag in Y direction   */
+%  829      1  |  char   Yrange;          /* Scale tool- range (uV, V) flag Y dir    */
 %  830      4  |  float  XScaleValue;     /* Scale tool- value for X dir             */
 %  834      4  |  float  XScaleInterval;  /* Scale tool- interval between tics X dir */
 %  838      4  |  float  YScaleValue;     /* Scale tool- value for Y dir             */
@@ -211,22 +207,22 @@ end;
 %  854      4  |  float  ScaleToolX2;     /* Scale tool- lower right hand screen pos */
 %  858      4  |  float  ScaleToolY2;     /* Scale tool- lower right hand screen pos */
 %  862      2  |  short int port;         /* Port address for external triggering    */
-%  864      4  |  long  NumSamples;       /* Number of samples in continous file     */
+%  864      4  |  long  NumSamples;       /* Number of samples in continuous file    */
 %  868      1  |  char  FilterFlag;       /* Indicates that file has been filtered   */
 %  869      4  |  float LowCutoff;        /* Low frequency cutoff                    */
 %  873      2  |  short int LowPoles;     /* Number of poles                         */
-%  875      4  |  float HighCutoff;       /* High frequency cutoff                   */ 
+%  875      4  |  float HighCutoff;       /* High frequency cutoff                   */
 %  879      2  |  short int HighPoles;    /* High cutoff number of poles             */
 %  881      1  |  char  FilterType;       /* Bandpass=0 Notch=1 Highpass=2 Lowpass=3 */
 %  882      1  |  char  FilterDomain;     /* Frequency=0 Time=1                      */
 %  883      1  |  char  SnrFlag;          /* SNR computation flag                    */
-%  884      1  |  char  CoherenceFlag;    /* Coherence has been  computed            */
-%  885      1  |  char  ContinousType;    /* Method used to capture events in *.cnt  */ 
-%  886      4  |  long  EventTablePos;    /* Position of event table                 */ 
+%  884      1  |  char  CoherenceFlag;    /* Coherence has been computed             */
+%  885      1  |  char  ContinuousType;   /* Method used to capture events in *.cnt  */
+%  886      4  |  long  EventTablePos;    /* Position of event table                 */
 %  890      4  |  float ContinousSeconds; // Number of seconds to displayed per page
-%  894      4  |  long  ChannelOffset;    // Block size of one channel in SYNAMPS 
+%  894      4  |  long  ChannelOffset;    // Block size of one channel in SYNAMPS
 %  898      1  |  char  AutoCorrectFlag;  // Autocorrect of DC values
-%  899      1  |  unsigned char DCThreshold; // Auto correct of DC level 
+%  899      1  |  unsigned char DCThreshold; // Auto correct of DC level
 
 % ELECTRODE STRUCTURE, total 75 bytes
 %   10     0   |  char  lab[10];          /* Electrode label - last bye contains NULL */
@@ -248,7 +244,7 @@ end;
 %    2    47   |  short int baseline;     /* Baseline correction value in raw ad units*/
 %    1    49   |  char  Filtered;         /* Toggel indicating file has be filtered   */
 %    1    50   |  char  Fsp;              /* Extra data                               */
-%    4    51   |  float aux1_wt;          /* AUX1 Correction weight                   */ 
+%    4    51   |  float aux1_wt;          /* AUX1 Correction weight                   */
 %    4    54   |  float aux1_std;         /* AUX1 Std dev. for weight                 */
 %    4    59   |  float sensitivity;      /* electrode sensitivity                    */
 %    1    63   |  char  Gain;             /* Amplifier gain                           */
@@ -257,8 +253,8 @@ end;
 %    1    66   |  unsigned char Page;     /* Display page                             */
 %    1    67   |  unsigned char Size;     /* Electrode window display size            */
 %    1    68   |  unsigned char Impedance;/* Impedance test                           */
-%    1    69   |  unsigned char PhysicalChnl; /* Physical channel used                    */      
-%    1    70   |  char  Rectify;          /* Free space                               */      
+%    1    69   |  unsigned char PhysicalChnl; /* Physical channel used                    */
+%    1    70   |  char  Rectify;          /* Free space                               */
 %    4    71   |  float calib;            /* Calibration factor                       */
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -315,4 +311,3 @@ else
 end
 
 fclose(fid);
-

@@ -3,7 +3,7 @@
 clear;
 close all;
 
-method ='regression';%'dual';%
+method ='regression'; %'dual'; %
 
 nruns=5;            % number of runs. each run draws new sample dataset
 n = 100;            % input dimension

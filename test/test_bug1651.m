@@ -3,7 +3,7 @@ function test_bug1651
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST ft_prepare_mesh ft_datatype_segmentation
+% DEPENDENCY ft_prepare_mesh ft_datatype_segmentation
 
 readfromdisk = true;
 

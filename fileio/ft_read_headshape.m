@@ -26,11 +26,15 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'unit'        = string, e.g. 'mm' (default is the native units of the file)
 %   'concatenate' = 'no' or 'yes' (default = 'yes')
 %   'image'       = path to .jpg file
+%   'surface'     = specific surface to be read (only for caret spec files)
 %
 % Supported input file formats include
 %   'matlab'       containing FieldTrip or BrainStorm headshapes or cortical meshes
 %   'stl'          STereoLithography file format, for use with CAD and/or generic 3D mesh editing programs
 %   'vtk'          Visualization ToolKit file format, for use with Paraview
+%   'vtk_xml'      Visualization ToolKit file format
+%   'tck'          Mrtrix track file
+%   'trk'          Trackvis trk file
 %   'mne_*'        MNE surface description in ASCII format ('mne_tri') or MNE source grid in ascii format, described as 3D points ('mne_pos')
 %   'obj'          Wavefront .obj file obtained with the structure.io
 %   'off'
@@ -56,9 +60,9 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'brainvisa_mesh'
 %   'brainsuite_dfs'
 %
-% See also FT_READ_VOL, FT_READ_SENS, FT_READ_ATLAS, FT_WRITE_HEADSHAPE
+% See also FT_READ_HEADMODEL, FT_READ_SENS, FT_READ_ATLAS, FT_WRITE_HEADSHAPE
 
-% Copyright (C) 2008-2017 Robert Oostenveld
+% Copyright (C) 2008-2019 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -80,11 +84,13 @@ function [shape] = ft_read_headshape(filename, varargin)
 
 % get the options
 annotationfile = ft_getopt(varargin, 'annotationfile');
+useimage       = ft_getopt(varargin, 'useimage', true); % use image if hasimage
 concatenate    = ft_getopt(varargin, 'concatenate', 'yes');
 coordsys       = ft_getopt(varargin, 'coordsys', 'head');    % for ctf or neuromag_mne coil positions, the alternative is dewar
 fileformat     = ft_getopt(varargin, 'format');
 unit           = ft_getopt(varargin, 'unit');
 image          = ft_getopt(varargin, 'image', [100, 100 ,100]); % path to .jpeg file
+surface        = ft_getopt(varargin, 'surface');
 
 % Check the input, if filename is a cell-array, call ft_read_headshape recursively and combine the outputs.
 % This is used to read the left and right hemisphere of a Freesurfer cortical segmentation.
@@ -196,7 +202,7 @@ end % if iscell
 
 % checks if there exists a .jpg file of 'filename'
 [pathstr,name]  = fileparts(filename);
-if exist(fullfile(pathstr,[name,'.jpg']))
+if exist(fullfile(pathstr,[name,'.jpg'])) && useimage
   image    = fullfile(pathstr,[name,'.jpg']);
   hasimage = true;
 else
@@ -252,11 +258,15 @@ switch fileformat
   case 'ctf_shape'
     orig = read_ctf_shape(filename);
     shape.pos = orig.pos;
-    shape.fid.label = {'NASION', 'LEFT_EAR', 'RIGHT_EAR'};
-    shape.fid.pos = zeros(0,3); % start with an empty array
-    for i = 1:numel(shape.fid.label)
-      shape.fid.pos = cat(1, shape.fid.pos, getfield(orig.MRI_Info, shape.fid.label{i}));
-    end
+    
+    % The file also contains fiducial information, but those are in MRI voxels and 
+    % inconsistent with the headshape itself.
+    % 
+    % shape.fid.label = {'NASION', 'LEFT_EAR', 'RIGHT_EAR'};
+    % shape.fid.pos = zeros(0,3); % start with an empty array
+    % for i = 1:numel(shape.fid.label)
+    %   shape.fid.pos = cat(1, shape.fid.pos, getfield(orig.MRI_Info, shape.fid.label{i}));
+    % end
     
   case {'4d_xyz', '4d_m4d', '4d_hs', '4d', '4d_pdf'}
     [p, f, x] = fileparts(filename);
@@ -334,6 +344,9 @@ switch fileformat
     
     % check whether there is curvature info etc
     filename    = strrep(filename, '.surf.', '.shape.');
+    filename    = strrep(filename, '.topo.', '.shape.');
+    filename    = strrep(filename, '.coord.', '.shape.');
+
     [p,f,e]     = fileparts(filename);
     tok         = tokenize(f, '.');
     if length(tok)>2
@@ -345,8 +358,9 @@ switch fileformat
     end
     
   case 'caret_spec'
+    [p, f, e] = fileparts(filename);
     [spec, headerinfo] = read_caret_spec(filename);
-    fn = fieldnames(spec)
+    fn = fieldnames(spec);
     
     % concatenate the filenames that contain coordinates
     % concatenate the filenames that contain topologies
@@ -354,15 +368,23 @@ switch fileformat
     topofiles  = {};
     for k = 1:numel(fn)
       if ~isempty(strfind(fn{k}, 'topo'))
-        topofiles = cat(1,topofiles, spec.(fn{k}));
+        topofiles = cat(1,topofiles, fullfile(p,spec.(fn{k})));
       end
       if ~isempty(strfind(fn{k}, 'coord'))
-        coordfiles = cat(1,coordfiles, spec.(fn{k}));
+        coordfiles = cat(1,coordfiles, fullfile(p,spec.(fn{k})));
       end
     end
-    [selcoord, ok] = listdlg('ListString',coordfiles,'SelectionMode','single','PromptString','Select a file describing the coordinates');
-    [seltopo, ok]  = listdlg('ListString',topofiles,'SelectionMode','single','PromptString','Select a file describing the topology');
-    
+    if isempty(surface)
+      [selcoord, ok] = listdlg('ListString',coordfiles,'SelectionMode','single','PromptString','Select a file describing the coordinates');
+    else
+      selcoord = find(contains(coordfiles, surface));
+    end
+    if numel(topofiles)>1
+      [seltopo, ok]  = listdlg('ListString',topofiles,'SelectionMode','single','PromptString','Select a file describing the topology');
+    else
+      seltopo = 1;
+    end
+      
     % recursively call ft_read_headshape
     tmp1 = ft_read_headshape(coordfiles{selcoord});
     tmp2 = ft_read_headshape(topofiles{seltopo});
@@ -373,7 +395,7 @@ switch fileformat
       ft_error('there''s a mismatch between the number of points used in the topology, and described by the coordinates');
     end
     
-    shape.pos = tmp1.pos;
+    shape     = tmp1;
     shape.tri = tmp2.tri;
     
   case 'neuromag_mex'
@@ -769,7 +791,7 @@ switch fileformat
     shape.fid.label(1:3)= {'nas', 'lpa', 'rpa'};
     
   case 'yokogawa_hsp'
-    fid = fopen(filename, 'rt');
+    fid = fopen_or_error(filename, 'rt');
     
     fidstart = false;
     hspstart = false;
@@ -928,32 +950,66 @@ switch fileformat
   case 'obj'
     ft_hastoolbox('wavefront', 1);
     % Only tested for structure.io .obj thus far
-    obj = read_wobj(filename);
-    shape.pos     = obj.vertices(:,1:3);
-    shape.pos     = shape.pos - repmat(sum(shape.pos)/length(shape.pos),[length(shape.pos),1]); %centering vertices
-    shape.tri     = obj.objects(end).data.vertices;
-    if hasimage
-      texture = obj.vertices_texture;
-      
+    [vertex, faces, texture, ~] = read_obj_new(filename);
+    
+    shape.pos   = vertex;
+    shape.pos   = shape.pos - repmat(sum(shape.pos)/length(shape.pos),...
+        [length(shape.pos),1]); %centering vertices
+    shape.tri   = faces(1:end-1,:,:); % remove the last row which is zeros
+    
+    if hasimage      
       % Refines the mesh and textures to increase resolution of the colormapping
-      [shape.pos, shape.tri, texture] = refine(shape.pos, shape.tri, 'banks', texture);
+      [shape.pos, shape.tri, texture] = refine(shape.pos, shape.tri,...
+          'banks', texture);
       
       picture = imread(image);
-      color   = uint8(zeros(length(shape.pos),3));
+      color   = (zeros(length(shape.pos),3));
       for i=1:length(shape.pos)
-        color(i,1:3) = picture(floor((1-texture(i,2))*length(picture)),1+floor(texture(i,1)*length(picture)),1:3);
+        color(i,1:3) = picture(floor((1-texture(i,2))*length(picture)),...
+            1+floor(texture(i,1)*length(picture)),1:3);
       end
+      
+      % If color is specified as 0-255 rather than 0-1 correct by dividing
+      % by 255
+      if range(color(:)) > 1
+          color = color./255;
+      end
+      
       shape.color = color;
-    elseif size(obj.vertices,2)==6
+
+    elseif size(vertex,2)==6
       % the vertices also contain RGB colors
-      shape.color = obj.vertices(:,4:6);
+      
+      color = vertex(:,4:6);
+      % If color is specified as 0-255 rather than 0-1 correct by dividing
+      % by 255
+      if range(color(:)) > 1
+          color = color./255;
+      end
+      
+      shape.color = color;
     end
     
   case 'vtk'
     [pos, tri] = read_vtk(filename);
     shape.pos = pos;
     shape.tri = tri;
-    
+  
+  case 'vtk_xml'
+    data = read_vtk_xml(filename);
+    shape.orig = data;
+    shape.pos  = data.Points;
+    if isfield(data, 'Lines')
+      shape.line = data.Lines;
+    end
+  
+  case 'mrtrix_tck'
+    ft_hastoolbox('mrtrix', 1);
+    shape = read_tck(filename);
+  
+  case 'trackvis_trk'
+    shape = read_trk(filename);
+  
   case 'off'
     [pos, plc] = read_off(filename);
     shape.pos  = pos;
@@ -1070,7 +1126,7 @@ switch fileformat
     shape.unit = 'unkown';
     
     if exist([filename '.minf'], 'file')
-      minffid = fopen([filename '.minf']);
+      minffid = fopen_or_error([filename '.minf']);
       hdr=fgetl(minffid);
       tfm_idx = strfind(hdr,'''transformations'':') + 21;
       transform = sscanf(hdr(tfm_idx:end),'%f,',[4 4])';
@@ -1146,7 +1202,7 @@ switch fileformat
     end
     
   case 'neuromag_mesh'
-    fid = fopen(filename, 'rt');
+    fid = fopen_or_error(filename, 'rt');
     npos = fscanf(fid, '%d', 1);
     pos = fscanf(fid, '%f', [6 npos])';
     ntri = fscanf(fid, '%d', 1);
@@ -1182,8 +1238,8 @@ switch fileformat
       % try reading it as volume conductor
       % and treat the skin surface as headshape
       try
-        headmodel = ft_read_vol(filename);
-        if ~ft_voltype(headmodel, 'bem')
+        headmodel = ft_read_headmodel(filename);
+        if ~ft_headmodeltype(headmodel, 'bem')
           ft_error('skin surface can only be extracted from boundary element model');
         else
           if ~isfield(headmodel, 'skin')
@@ -1228,3 +1284,4 @@ shape = fixpos(shape);
 
 % ensure that the numerical arrays are represented in double precision and not as integers
 shape = ft_struct2double(shape);
+end

@@ -1,6 +1,6 @@
 function test_tutorial_eventrelatedaveraging20130308
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 
@@ -271,6 +271,7 @@ ft_topoplotER(cfg,avgFIC);
 cfg                 = [];
 cfg.feedback        = 'yes';
 cfg.method          = 'template';
+cfg.senstype        = 'meg';
 cfg.neighbours      = ft_prepare_neighbours(cfg, avgFIC);
 
 cfg.planarmethod    = 'sincos';

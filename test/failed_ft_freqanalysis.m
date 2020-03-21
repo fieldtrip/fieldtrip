@@ -1,10 +1,8 @@
 function test_ft_freqanalysis(datainfo, writeflag, version)
 
-% MEM 8000mb
+% MEM 8gb
 % WALLTIME 01:30:00
-
-% TEST test_ft_freqanalysis
-% TEST ft_freqanalysis ref_datasets
+% DEPENDENCY ft_freqanalysis ref_datasets
 
 % writeflag determines whether the output should be saved to disk
 % version determines the output directory

@@ -1,10 +1,11 @@
 function [input] = ft_apply_montage(input, montage, varargin)
 
-% FT_APPLY_MONTAGE changes the montage of an electrode or gradiometer array. A
-% montage can be used for EEG rereferencing, MEG synthetic gradients, MEG
-% planar gradients or unmixing using ICA. This function applies the montage
-% to the input EEG or MEG sensor array, which can subsequently be used for
-% forward computation and source reconstruction of the data.
+% FT_APPLY_MONTAGE changes the montage (i.e. linear combination) of a set of
+% electrode or gradiometer channels. A montage can be used for EEG rereferencing, MEG
+% synthetic gradients, MEG planar gradients or unmixing using ICA. This function not
+% only applies the montage to the EEG or MEG data, but also applies the montage to
+% the input EEG or MEG sensor array, which can subsequently be used for forward
+% computation and source reconstruction of the data.
 %
 % Use as
 %   [sens]    = ft_apply_montage(sens,     montage,  ...)
@@ -34,18 +35,18 @@ function [input] = ft_apply_montage(input, montage, varargin)
 %   montage.chanunitnew = Mx1 cell-array
 %
 % Additional options should be specified in key-value pairs and can be
-%   'keepunused'    string, 'yes' or 'no' (default = 'no')
-%   'inverse'       string, 'yes' or 'no' (default = 'no')
-%   'balancename'   string, name of the montage (default = '')
-%   'feedback'      string, see FT_PROGRESS (default = 'text')
-%   'warning'       boolean, whether to show warnings (default = true)
-%   'showcallinfo'  string, 'yes' or 'no' (default = 'no')
+%   'keepunused'    = string, 'yes' or 'no' (default = 'no')
+%   'inverse'       = string, 'yes' or 'no' (default = 'no')
+%   'balancename'   = string, name of the montage (default = '')
+%   'feedback'      = string, see FT_PROGRESS (default = 'text')
+%   'warning'       = boolean, whether to show warnings (default = true)
+%   'showcallinfo'  = string, 'yes' or 'no' (default = 'no')
 %
 % If the first input is a montage, then the second input montage will be
 % applied to the first. In effect, the output montage will first do
 % montage1, then montage2.
 %
-% See also FT_READ_SENS, FT_TRANSFORM_SENS
+% See also FT_READ_SENS, FT_DATATYPE_SENS
 
 % Copyright (C) 2008-2016, Robert Oostenveld
 %
@@ -94,8 +95,13 @@ else
 end
 
 % these are optional, at the end we will clean up the output in case they did not exist
-haschantype = (isfield(input, 'chantype') || isfield(input, 'chantypenew')) && all(isfield(montage, {'chantypeold', 'chantypenew'}));
-haschanunit = (isfield(input, 'chanunit') || isfield(input, 'chanunitnew')) && all(isfield(montage, {'chanunitold', 'chanunitnew'}));
+if ~istrue(inverse)
+  haschantype = (isfield(input, 'chantype') || isfield(input, 'chantypenew')) && all(isfield(montage, {'chantypeold', 'chantypenew'}));
+  haschanunit = (isfield(input, 'chanunit') || isfield(input, 'chanunitnew')) && all(isfield(montage, {'chanunitold', 'chanunitnew'}));
+else
+  haschantype = (isfield(input, 'chantype') || isfield(input, 'chantypeold')) && all(isfield(montage, {'chantypeold', 'chantypenew'}));
+  haschanunit = (isfield(input, 'chanunit') || isfield(input, 'chanunitold')) && all(isfield(montage, {'chanunitold', 'chanunitnew'}));
+end
 
 % make sure they always exist to facilitate the remainder of the code
 if ~isfield(montage, 'chantypeold')
@@ -214,7 +220,13 @@ if istrue(inverse)
 end
 
 % select and keep the columns that are non-empty, i.e. remove the empty columns
-selcol              = find(~all(montage.tra==0, 1));
+selcol = ~all(montage.tra==0, 1);
+if keepunused
+  for i=find(selcol==false)
+    % don't remove the column if it corresponds to one of the output channels
+    selcol(i) = any(strcmp(montage.labelnew, montage.labelold{i}));
+  end
+end
 montage.tra         = montage.tra(:,selcol);
 montage.labelold    = montage.labelold(selcol);
 montage.chantypeold = montage.chantypeold(selcol);
@@ -239,7 +251,7 @@ montage.chantypenew = montage.chantypenew(~selrow);
 montage.chanunitold = montage.chanunitold(~selcol);
 montage.chanunitnew = montage.chanunitnew(~selrow);
 montage.tra         = montage.tra(~selrow, ~selcol);
-clear remove selcol selrow i
+clear remove selcol selrow
 
 % add columns for channels that are present in the input data but not specified in
 % the montage, stick to the original order in the data
@@ -342,10 +354,17 @@ if isfield(input, 'labelold') && isfield(input, 'labelnew')
   inputtype = 'montage';
 elseif isfield(input, 'tra')
   inputtype = 'sens';
-elseif isfield(input, 'trial')
+elseif ft_datatype(input, 'raw')
   inputtype = 'raw';
-elseif isfield(input, 'fourierspctrm')
+elseif ft_datatype(input, 'timelock')
+  inputtype = 'timelock';
+elseif ft_datatype(input, 'freq') && isfield(input, 'fourierspctrm')
   inputtype = 'freq';
+elseif ft_datatype(input, 'freq') && isfield(input, 'crsspctrm')
+  inputtype = 'freq_crsspctrm';
+  
+  % attempt to convert to a chan-chan representation
+  input     = ft_checkdata(input, 'cmbrepresentation', 'full');
 else
   inputtype = 'unknown';
 end
@@ -362,12 +381,12 @@ switch inputtype
     input.labelnew    = montage.labelnew;
     input.chantypenew = montage.chantypenew;
     input.chanunitnew = montage.chanunitnew;
-    
+
   case 'sens'
     % apply the montage to an electrode or gradiometer description
     sens = input;
     clear input
-    
+
     % apply the montage to the inputor array
     if isa(sens.tra, 'single')
       % sparse matrices and single precision do not match
@@ -375,15 +394,15 @@ switch inputtype
     else
       sens.tra = montage.tra * sens.tra;
     end
-    
+
     % The montage operates on the coil weights in sens.tra, but the output channels can be different.
     % If possible, we want to keep the original channel positions and orientations.
     [sel1, sel2] = match_str(montage.labelnew, inputlabel);
     keepchans = isequal(sel1(:)', 1:numel(montage.labelnew));
-    
+
     posweight = abs(montage.tra);
     posweight = diag(1./sum(posweight,2)) * posweight;
-    
+
     if isfield(sens, 'chanpos')
       if keepchans
         sens.chanpos = sens.chanpos(sel2,:);
@@ -400,7 +419,7 @@ switch inputtype
         sens.chanpos = posweight * sens.chanpos;
       end
     end
-    
+
     if isfield(sens, 'chanori')
       if keepchans
         sens.chanori = sens.chanori(sel2,:);
@@ -412,11 +431,11 @@ switch inputtype
         sens.chanori = posweight * sens.chanori;
       end
     end
-    
+
     sens.label    = montage.labelnew;
     sens.chantype = montage.chantypenew;
     sens.chanunit = montage.chanunitnew;
-    
+
     % keep track of the order of the balancing and which one is the current one
     if istrue(inverse)
       if isfield(sens, 'balance')% && isfield(sens.balance, 'previous')
@@ -430,7 +449,7 @@ switch inputtype
           sens.balance.current  = 'none';
         end
       end
-      
+
     elseif ~istrue(inverse) && ~isempty(bname)
       if isfield(sens, 'balance')
         % check whether a balancing montage with name bname already exist,
@@ -458,7 +477,7 @@ switch inputtype
           bname = [bname, num2str(length(sel)+1)];
         end
       end
-      
+
       if isfield(sens, 'balance') && isfield(sens.balance, 'current')
         if ~isfield(sens.balance, 'previous')
           sens.balance.previous = {};
@@ -468,16 +487,16 @@ switch inputtype
         sens.balance.(bname)  = montage;
       end
     end
-    
+
     % rename the output variable
     input = sens;
     clear sens
-    
+
   case 'raw'
     % apply the montage to the raw data that was preprocessed using FieldTrip
     data = input;
     clear input
-    
+
     Ntrials = numel(data.trial);
     ft_progress('init', feedback, 'processing trials');
     for i=1:Ntrials
@@ -491,55 +510,140 @@ switch inputtype
       end
     end
     ft_progress('close');
-    
+
     data.label    = montage.labelnew;
     data.chantype = montage.chantypenew;
     data.chanunit = montage.chanunitnew;
-    
+
     % rename the output variable
     input = data;
     clear data
-    
+
+  case 'timelock'
+    % apply the montage to averaged data
+    timelock = input;
+    clear input
+
+    fn = {'avg', 'trial', 'individual', 'cov'};
+    for i=1:numel(fn)
+      if isfield(timelock, fn{i})
+        switch getdimord(timelock, fn{i})
+          case 'chan_time'
+            timelock.(fn{i}) = montage.tra * timelock.(fn{i});
+          case 'rpt_chan_time'
+            siz    = getdimsiz(timelock, fn{i});
+            nrpt   = siz(1);
+            nchan  = siz(2);
+            ntime  = siz(3);
+            output = zeros(nrpt, size(montage.tra,1), ntime);
+            for rptlop=1:nrpt
+              output(rptlop,:,:) = montage.tra * reshape(timelock.(fn{i})(rptlop,:,:), [nchan ntime]);
+            end
+            timelock.(fn{i}) = output; % replace the original field
+          case 'chan_chan'
+            timelock.(fn{i}) = montage.tra * timelock.(fn{i}) * montage.tra';
+          case 'rpt_chan_chan'
+            siz    = getdimsiz(timelock, fn{i});
+            nrpt   = siz(1);
+            nchan  = siz(2);
+            output = zeros(nrpt, size(montage.tra,1), size(montage.tra,1));
+            for rptlop=1:nrpt
+              output(rptlop,:,:) = montage.tra * reshape(timelock.(fn{i})(rptlop,:,:), [nchan nchan]) * montage.tra';
+            end
+            timelock.(fn{i}) = output; % replace the original field
+          otherwise
+            ft_error('unsupported dimord for %s', fn{i});
+        end % switch
+      end % if
+    end % for
+
+    timelock.label    = montage.labelnew;
+    timelock.chantype = montage.chantypenew;
+    timelock.chanunit = montage.chanunitnew;
+
+    % rename the output variable
+    input = timelock;
+    clear timelock
+
   case 'freq'
     % apply the montage to the spectrally decomposed data
     freq = input;
     clear input
+
+    switch getdimord(freq, 'fourierspctrm')
+      case 'rpttap_chan_freq'
+        siz    = [getdimsiz(freq, 'fourierspctrm') 1];
+        nrpt   = siz(1);
+        nchan  = siz(2);
+        nfreq  = siz(3);
+        output = zeros(nrpt, size(montage.tra,1), nfreq);
+        for foilop=1:nfreq
+          output(:,:,foilop) = freq.fourierspctrm(:,:,foilop) * montage.tra';
+        end
+        freq.fourierspctrm = output; % replace the original Fourier spectrum
+
+      case 'rpttap_chan_freq_time'
+        siz    = getdimsiz(freq, 'fourierspctrm');
+        nrpt   = siz(1);
+        nchan  = siz(2);
+        nfreq  = siz(3);
+        ntime  = siz(4);
+        output = zeros(nrpt, size(montage.tra,1), nfreq, ntime);
+        for foilop=1:nfreq
+          for toilop = 1:ntime
+            output(:,:,foilop,toilop) = freq.fourierspctrm(:,:,foilop,toilop) * montage.tra';
+          end
+        end
+        freq.fourierspctrm = output; % replace the original Fourier spectrum
+
+      otherwise
+        ft_error('unsupported dimord for fourierspctrm');
+    end % switch
+
+    freq.label    = montage.labelnew;
+    freq.chantype = montage.chantypenew;
+    freq.chanunit = montage.chanunitnew;
+
+    % rename the output variable
+    input = freq;
+    clear freq
+  case 'freq_crsspctrm'
+    % input freq data has a chan-chan crsspctrm, montage needs te be
+    % applied to both ends
     
-    if strcmp(freq.dimord, 'rpttap_chan_freq')
-      siz    = size(freq.fourierspctrm);
-      nrpt   = siz(1);
-      nchan  = siz(2);
-      nfreq  = siz(3);
-      output = zeros(nrpt, size(montage.tra,1), nfreq);
-      for foilop=1:nfreq
-        output(:,:,foilop) = freq.fourierspctrm(:,:,foilop) * montage.tra';
-      end
-      freq.fourierspctrm = output; % replace the original Fourier spectrum
-    elseif strcmp(freq.dimord, 'rpttap_chan_freq_time')
-      siz    = size(freq.fourierspctrm);
-      nrpt   = siz(1);
-      nchan  = siz(2);
-      nfreq  = siz(3);
-      ntime  = siz(4);
-      output = zeros(nrpt, size(montage.tra,1), nfreq, ntime);
-      for foilop=1:nfreq
-        for toilop = 1:ntime
-          output(:,:,foilop,toilop) = freq.fourierspctrm(:,:,foilop,toilop) * montage.tra';
+    freq = input;
+    clear input
+    if contains(getdimord(freq, 'crsspctrm'), 'rpt')
+      % first dimension is rpt-like, so the square is dimensions 2 and 3
+      siz   = [getdimsiz(freq, 'crsspctrm') 1];
+      nrpt  = siz(1);
+      nchan = siz(2);
+      nrest = prod(siz(4:end));
+      output = zeros([nrpt size(montage.tra,1).*[1 1] siz(4:end)]);
+      for rptlop = 1:nrpt
+        for restlop = 1:nrest
+          output(rptlop,:,:,restlop) = montage.tra*reshape(freq.crsspctrm(rptlop,:,:,restlop),[nchan nchan])*montage.tra';
         end
       end
-      freq.fourierspctrm = output; % replace the original Fourier spectrum
+      freq.crsspctrm = output;
     else
-      ft_error('unsupported dimord in frequency data (%s)', freq.dimord);
+      % the square is dimensions 1 and 2
+      siz   = [getdimsiz(freq, 'crsspctrm') 1];
+      nrest = prod(siz(4:end));
+      output = zeros([size(montage.tra,1).*[1 1] siz(4:end)]);
+      for restlop = 1:nrest
+        output(:,:,restlop) = montage.tra*freq.crsspctrm(:,:,restlop)*montage.tra';
+      end
+      freq.crsspctrm = output;
     end
     
     freq.label    = montage.labelnew;
     freq.chantype = montage.chantypenew;
     freq.chanunit = montage.chanunitnew;
-    
+
     % rename the output variable
     input = freq;
     clear freq
-    
   otherwise
     ft_error('unrecognized input');
 end % switch inputtype
@@ -564,4 +668,3 @@ y(x) = true;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function nowarning(varargin)
 return
-

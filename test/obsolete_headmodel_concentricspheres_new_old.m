@@ -1,10 +1,10 @@
 function test_headmodel_concentricspheres_new_old
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % generate a unit sphere
-[pnt, tri] = icosahedron162;
+[pnt, tri] = mesh_sphere(162);
 
 % create the BEM geometries
 geom = [];

@@ -28,7 +28,8 @@ function [data] = ft_megrealign(cfg, data)
 %   cfg.headmodel   = structure, see FT_PREPARE_HEADMODEL
 %
 % A source model (i.e. a superficial layer with distributed sources) can be
-% constructed from a headshape file, or from the volume conduction model
+% constructed from a headshape file, or from inner surface of the volume conduction
+% model using FT_PREPARE_SOIURCEMODEL using the following options
 %   cfg.spheremesh  = number of dipoles in the source layer (default = 642)
 %   cfg.inwardshift = depth of the source layer relative to the headshape
 %                     surface or volume conduction model (no default
@@ -50,7 +51,9 @@ function [data] = ft_megrealign(cfg, data)
 % should probably use an inward shift of about 1 cm.
 %
 % Other options are
-% cfg.pruneratio  = for singular values, default is 1e-3
+%   cfg.tolerance   = tolerance ratio for leadfield matrix inverse based on a truncated svd, 
+%                     reflects the relative magnitude of the largest singular value
+%                     to retain (default =s 1e-3)
 % cfg.verify      = 'yes' or 'no', show the percentage difference (default = 'yes')
 % cfg.feedback    = 'yes' or 'no' (default = 'no')
 % cfg.channel     =  Nx1 cell-array with selection of channels (default = 'MEG'),
@@ -112,15 +115,17 @@ if ft_abort
 end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed',     {'plot3d',      'feedback'});
-cfg = ft_checkconfig(cfg, 'renamedval',  {'headshape',   'headmodel', []});
-cfg = ft_checkconfig(cfg, 'required',    {'inwardshift', 'template'});
-cfg = ft_checkconfig(cfg, 'renamed',     {'hdmfile',     'headmodel'});
-cfg = ft_checkconfig(cfg, 'renamed',     {'vol',         'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'plot3d',      'feedback'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'headshape',   'headmodel', []});
+cfg = ft_checkconfig(cfg, 'required',   {'inwardshift', 'template'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'hdmfile',     'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'vol',         'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'grid',        'sourcemodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'pruneratio',  'tolerance'});
 
 % set the default configuration
-cfg.headshape  = ft_getopt(cfg, 'headshape', []);
-cfg.pruneratio = ft_getopt(cfg, 'pruneratio', 1e-3);
+cfg.headshape  = ft_getopt(cfg, 'headshape',  []);
+cfg.pruneratio = ft_getopt(cfg, 'tolerance',  1e-3);
 cfg.spheremesh = ft_getopt(cfg, 'spheremesh', 642);
 cfg.verify     = ft_getopt(cfg, 'verify',     'yes');
 cfg.feedback   = ft_getopt(cfg, 'feedback',   'yes');
@@ -138,9 +143,13 @@ data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo',
 pertrial = all(ismember({'nasX';'nasY';'nasZ';'lpaX';'lpaY';'lpaZ';'rpaX';'rpaY';'rpaZ'}, data.label));
 
 % put the low-level options pertaining to the dipole grid in their own field
-cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.grid.tight by the subsequent createsubcfg
-cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.grid.unit by the subsequent createsubcfg
-cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
+cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.sourcemodel.unit by the subsequent createsubcfg
+
+% put the low-level options pertaining to the sourcemodel in their own field
+cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
+% move some fields from cfg.sourcemodel back to the top-level configuration
+cfg = ft_checkconfig(cfg, 'createtopcfg', {'sourcemodel'});
 
 if isstruct(cfg.template)
   % this should be a cell-array
@@ -183,7 +192,7 @@ Ntrials = length(data.trial);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % construct the average template gradiometer array
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-template = struct([]); % initialize as empty structure
+template = struct([]); % initialize as 0x0 empty struct array with no fields
 for i=1:length(cfg.template)
   if ischar(cfg.template{i})
     fprintf('reading template sensor position from %s\n', cfg.template{i});
@@ -216,16 +225,16 @@ volcfg = [];
 volcfg.headmodel = cfg.headmodel;
 volcfg.grad      = data.grad;
 volcfg.channel   = data.label; % this might be a subset of the MEG channels
-gradorig         = data.grad;  % this is needed later on for plotting. As of
-% yet the next step is not entirely correct, because it does not keep track
+
+% As of yet the next step is not entirely correct, because it does not keep track
 % of the balancing of the gradiometer array. FIXME this may require some
 % thought because the leadfields are computed with low level functions and
 % do not easily accommodate for matching the correct channels with each
 % other (in order to compute the projection matrix).
 [volold, data.grad] = prepare_headmodel(volcfg);
 
-% note that it is neccessary to keep the two volume conduction models
-% seperate, since the single-shell Nolte model contains gradiometer specific
+% note that it is necessary to keep the two volume conduction models
+% separate, since the single-shell Nolte model contains gradiometer specific
 % precomputed parameters. Note that this is not guaranteed to result in a
 % good projection for local sphere models.
 volcfg.grad    = template.grad;
@@ -242,12 +251,12 @@ else
 end
 
 % copy all options that are potentially used in ft_prepare_sourcemodel
-tmpcfg            = keepfields(cfg, {'grid', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'showcallinfo'});
-tmpcfg.headmodel  = volold;
-tmpcfg.grad       = data.grad;
-% create the dipole grid on which the data will be projected
-grid = ft_prepare_sourcemodel(tmpcfg);
-pos = grid.pos;
+tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo'});
+tmpcfg.headmodel = volold;
+tmpcfg.grad      = data.grad;
+% create the source positions on which the data will be projected
+sourcemodel = ft_prepare_sourcemodel(tmpcfg);
+pos = sourcemodel.pos;
 
 % sometimes some of the dipole positions are nan, due to problems with the headsurface triangulation
 % remove them to prevent problems with the forward computation
@@ -334,11 +343,11 @@ if strcmp(cfg.feedback, 'yes')
   Y = [pos1(:,2) pos2(:,2)]';
   Z = [pos1(:,3) pos2(:,3)]';
 
-  % show figure with old an new helmets, volume model and dipole grid
+  % show figure with old an new helmets, volume model and source positions
   figure
   hold on
-  ft_plot_vol(volold);
-  plot3(grid.pos(:,1),grid.pos(:,2),grid.pos(:,3),'b.');
+  ft_plot_headmodel(volold);
+  plot3(sourcemodel.pos(:,1),sourcemodel.pos(:,2),sourcemodel.pos(:,3),'b.');
   plot3(pos1(:,1), pos1(:,2), pos1(:,3), 'r.') % original positions
   plot3(pos2(:,1), pos2(:,2), pos2(:,3), 'g.') % template positions
   line(X,Y,Z, 'color', 'black');
@@ -425,10 +434,10 @@ ft_postamble savevar    data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % subfunction that computes the projection matrix(ces)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [realign, noalign, bkalign] = computeprojection(lfold, lfnew, pruneratio, verify)
+function [realign, noalign, bkalign] = computeprojection(lfold, lfnew, tolerance, verify)
 
 % compute this inverse only once, although it is used twice
-tmp = prunedinv(lfold, pruneratio);
+tmp = ft_inv(lfold, 'method', 'tsvd', 'tolerance', tolerance);
 % compute the three interpolation matrices
 fprintf('computing interpolation matrix #1\n');
 realign = lfnew * tmp;
@@ -436,26 +445,8 @@ if strcmp(verify, 'yes')
   fprintf('computing interpolation matrix #2\n');
   noalign = lfold * tmp;
   fprintf('computing interpolation matrix #3\n');
-  bkalign = lfold * prunedinv(lfnew, pruneratio) * realign;
+  bkalign = (lfold * ft_inv(lfnew, 'method', 'tsvd', 'tolerance', tolerance)) * realign;
 else
   noalign = [];
   bkalign = [];
 end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% subfunction that computes the inverse using a pruned SVD
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [lfi] = prunedinv(lf, r)
-[u, s, v] = svd(lf);
-if r<1
-  % treat r as a ratio
-  p = find(s<(s(1,1)*r) & s~=0);
-else
-  % treat r as the number of spatial components to keep
-  diagels = 1:(min(size(s))+1):(min(size(s)).^2);
-  p       = diagels((r+1):end);
-end
-fprintf('pruning %d from %d, i.e. removing the %d smallest spatial components\n', length(p), min(size(s)), length(p));
-s(p) = 0;
-s(find(s~=0)) = 1./s(find(s~=0));
-lfi = v * s' * u';

@@ -2,7 +2,7 @@ This is the FieldTrip PEER toolbox. It implements peer-to-peer distributed
 computing using MATLAB without the need for a centralized server/manager.
 
 The goal of this toolbox is to provide you with an easy MATLAB interface to
-distribute your jobs in a way compatible with the MATLAB dfeval, feval and
+distribute your jobs in a way compatible with the MATLAB batch, feval and
 cellfun functions.
 
 This toolbox has been developed as part of the FieldTrip toolbox, but can be
@@ -26,4 +26,3 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/
 -------------------------------------------------------------------------------
-

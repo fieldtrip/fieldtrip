@@ -12,7 +12,7 @@ function [dataout] = ft_heartrate(cfg, datain)
 %   cfg.channel          = selected channel for processing, see FT_CHANNELSELECTION
 %   cfg.envelopewindow   = scalar, time in seconds
 %   cfg.peakseparation   = scalar, time in seconds
-%   cfg.threshold        = scalar, between 0 and 1 (default = 0.4)
+%   cfg.threshold        = scalar, usually between 0 and 1 (default = 0.4)
 %   cfg.feedback         = 'yes' or 'no'
 % The input data can be preprocessed on the fly using
 %   cfg.preproc.bpfilter = 'yes' or 'no'
@@ -20,7 +20,7 @@ function [dataout] = ft_heartrate(cfg, datain)
 %
 % See also FT_ELECTRODERMALACTIVITY, FT_HEADMOVEMENT, FT_REGRESSCONFOUND
 
-% Copyright (C) 2018, Robert Oostenveld, DCCN
+% Copyright (C) 2018-2019, Robert Oostenveld, DCCN
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -72,7 +72,7 @@ datain = ft_checkdata(datain, 'datatype', 'raw', 'feedback', 'yes');
 cfg = ft_checkconfig(cfg, 'forbidden', 'medianwindow');
 
 % set the default options
-cfg.channel          = ft_getopt(cfg, 'channel', {});
+cfg.channel          = ft_getopt(cfg, 'channel', 'all');
 cfg.envelopewindow   = ft_getopt(cfg, 'envelopewindow', 10);  % in seconds
 cfg.peakseparation   = ft_getopt(cfg, 'peakseparation', []);  % in seconds
 cfg.threshold        = ft_getopt(cfg, 'threshold', 0.4);      % between 0 and 1

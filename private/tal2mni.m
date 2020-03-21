@@ -7,9 +7,6 @@ function outpoints = tal2mni(inpoints)
 % outpoints is the coordinate matrix with MNI points
 % Matthew Brett 2/2/01
 
-% ensure that SPM is available, needed for spm_matrix
-hasspm = ft_hastoolbox('spm8up', 3) || ft_hastoolbox('spm2', 1);
-
 dimdim = find(size(inpoints) == 3);
 if isempty(dimdim)
   ft_error('input must be a N by 3 or 3 by N matrix')
@@ -19,9 +16,26 @@ if dimdim == 2
 end
 
 % Transformation matrices, different zooms above/below AC
-rotn  = spm_matrix([0 0 0 0.05]);
-upz   = spm_matrix([0 0 0 0 0 0 0.99 0.97 0.92]);
-downz = spm_matrix([0 0 0 0 0 0 0.99 0.97 0.84]);
+rotn  = [
+    1.0000    0.0000    0.0000    0.0000
+    0.0000    0.9988    0.0500    0.0000
+    0.0000   -0.0500    0.9988    0.0000
+    0.0000    0.0000    0.0000    1.0000
+    ];
+
+upz = [
+    0.9900    0.0000    0.0000    0.0000
+    0.0000    0.9700    0.0000    0.0000
+    0.0000    0.0000    0.9200    0.0000
+    0.0000    0.0000    0.0000    1.0000
+     ];
+
+downz = [
+    0.9900    0.0000    0.0000    0.0000
+    0.0000    0.9700    0.0000    0.0000
+    0.0000    0.0000    0.8400    0.0000
+    0.0000    0.0000    0.0000    1.0000
+    ];
 
 inpoints = [inpoints; ones(1, size(inpoints, 2))];
 % Apply inverse translation
@@ -34,7 +48,4 @@ outpoints = inpoints(1:3, :);
 if dimdim == 2
   outpoints = outpoints';
 end
-
-
-
 

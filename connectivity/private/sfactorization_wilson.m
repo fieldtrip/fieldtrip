@@ -148,7 +148,7 @@ for iter = 1:Niterations
   ft_progress(iter./Niterations, 'computing iteration %d/%d\n', iter, Niterations);
   for ind = 1:N2
     %invpsi     = inv(psi(:,:,ind)); 
-    g(:,:,ind) = psi(:,:,ind)\Sarr(:,:,ind)/psi(:,:,ind)'+I;%Eq 3.1
+    g(:,:,ind) = psi(:,:,ind)\Sarr(:,:,ind)/psi(:,:,ind)'+I; %Eq 3.1
   end
   gp = PlusOperator(g,m,N,stabilityfix); %gp constitutes positive and half of zero lags 
 

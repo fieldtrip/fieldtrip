@@ -55,7 +55,7 @@ function R = RVT_from_PeakFinder(R, Opt)
          R(icol).RVTR = R(icol).RVR./R(icol).prdR;
          %smooth RVT so that we can resample it at VolTR later
          fnyq = Opt.PhysFS./2; %nyquist of physio signal
-         fcut = 2./Opt.VolTR ;%cut below nyquist for volume TR
+         fcut = 2./Opt.VolTR ; %cut below nyquist for volume TR
          w = Opt.fcutoff/fnyq;    % cut off frequency normalized
          b = fir1(Opt.FIROrder, w) ;    
          v = R(icol).RVTR; mv  =   mean(v);  

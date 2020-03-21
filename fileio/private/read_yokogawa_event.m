@@ -34,20 +34,20 @@ event   = [];
 handles = definehandles;
 
 % get the options, the default is set below
-trigindx    = ft_getopt(varargin, 'trigindx');
+chanindx    = ft_getopt(varargin, 'chanindx');
 threshold   = ft_getopt(varargin, 'threshold');
 detectflank = ft_getopt(varargin, 'detectflank');
 
 % ensure that the required toolbox is on the path
-if ft_hastoolbox('yokogawa_meg_reader');
+if ft_hastoolbox('yokogawa_meg_reader')
   % read the dataset header
   hdr = read_yokogawa_header_new(filename);
   ch_info = hdr.orig.channel_info.channel;
   type = [ch_info.type];
 
   % determine the trigger channels (if not specified by the user)
-  if isempty(trigindx)
-    trigindx = find(type==handles.TriggerChannel);
+  if isempty(chanindx)
+    chanindx = find(type==handles.TriggerChannel);
   end
 
   % Use the MEG Reader documentation if more detailed support is required.
@@ -99,13 +99,13 @@ elseif ft_hastoolbox('yokogawa');
   hdr = read_yokogawa_header(filename);
 
   % determine the trigger channels (if not specified by the user)
-  if isempty(trigindx)
-    trigindx = find(hdr.orig.channel_info(:,2)==handles.TriggerChannel);
+  if isempty(chanindx)
+    chanindx = find(hdr.orig.channel_info(:,2)==handles.TriggerChannel);
   end
 
   if hdr.orig.acq_type==handles.AcqTypeEvokedRaw
     % read the trigger id from all trials
-    fid   = fopen(filename, 'r');
+    fid   = fopen_or_error(filename, 'r');
     value = GetMeg160TriggerEventM(fid);
     fclose(fid);
     % use the standard FieldTrip header for trial events
@@ -137,10 +137,10 @@ else
 end
 
 % read the trigger channels and detect the flanks
-if ~isempty(trigindx)
-  trigger = read_trigger(filename, 'header', hdr, 'denoise', false, 'chanindx', trigindx, 'detectflank', detectflank, 'threshold', threshold);
+if ~isempty(chanindx)
+  trigger = read_trigger(filename, 'header', hdr, 'denoise', false, 'chanindx', chanindx, 'detectflank', detectflank, 'threshold', threshold);
   % combine the triggers and the other events
-  event = appendevent(event, trigger);
+  event = appendstruct(event, trigger);
 end
 
 if isempty(event)

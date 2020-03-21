@@ -35,7 +35,7 @@ nchan = numel(hdr.label);
 str   = repmat('%f', [1 nchan]);
 
 % read the designated samples
-fid = fopen(filename, 'r');
+fid = fopen_or_error(filename, 'r');
 dat = textscan(fid, str, endsample-begsample+1, 'HeaderLines', begsample);
 fclose(fid);
 
@@ -50,7 +50,7 @@ dat   = dat(chanindx, :);
 % the slower alternative is below which reads the whole file each time
 % and thus is slow for multiple trials
 %
-% fid = fopen(filename, 'r');
+% fid = fopen_or_error(filename, 'r');
 % dat = textscan(fid, '%f', 'Headerlines', 1);
 % dat = reshape(dat, nchan, []);
 % dat = dat(chanindx, begsample:endsample);

@@ -168,6 +168,7 @@ for i =1:numel(cfg.tissue)
       isovalues = 0.5;
       
       [pos, tri, regions, holes] = v2s(seg, isovalues, opt, method);
+      pos = pos + 0.5; % undo the shift that has been introduced in vol2restrictedtri
       
       tri = tri(:,1:3);
       

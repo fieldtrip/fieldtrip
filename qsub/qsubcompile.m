@@ -125,7 +125,7 @@ if numthreads==1
   % pass the singleCompThread option to the MCR
   runtimeopt = '-nodisplay,-singleCompThread';
 elseif numthreads>0 && isinf(numthreads)
-  % the default behaviour of the MCR is to start as many computational threads as cores available
+  % the default behavior of the MCR is to start as many computational threads as cores available
   runtimeopt = '-nodisplay';
 else
   error('unsupported number of threads (%d)', numthreads);

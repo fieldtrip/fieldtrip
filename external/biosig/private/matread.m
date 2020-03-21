@@ -115,7 +115,7 @@ if ~any(CHd==HDR.ADI.DB), % for non-data blocks
 else    
         BLOCKSIZE=64*3*25*4; % 2^12; % You can change this for optimizing on your platform
         
-        %HDR=mat_setfilter(HDR,BlockNo);% set filters for this block 
+        %HDR=mat_setfilter(HDR,BlockNo); % set filters for this block 
         for k=1:max(HDR.SIE.InChanSelect),
                 if k <= HDR.NS,
 		        if HDR.SIE.FILT==1;

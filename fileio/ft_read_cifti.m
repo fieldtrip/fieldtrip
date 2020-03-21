@@ -84,7 +84,7 @@ hdr = read_nifti2_hdr(filename);
 % xml_offset = 540+12;
 % xml_size   = hdr.vox_offset-xml_offset-8;
 
-fid = fopen(filename, 'rb', hdr.endian);
+fid = fopen_or_error(filename, 'rb', hdr.endian);
 
 % determine the file size, this is used to catch endian errors
 fseek(fid, 0, 'eof');
@@ -136,7 +136,7 @@ if debug
   try
     % write the xml section to a temporary file
     xmlfile = 'debug.xml';
-    tmp = fopen(xmlfile, 'w');
+    tmp = fopen_or_error(xmlfile, 'w');
     fwrite(tmp, xmldata);
     fclose(tmp);
   end
@@ -468,7 +468,7 @@ for i=1:length(MatrixIndicesMap)
         case 'SECOND'
           dimord(MatrixIndicesMap(i).AppliesToMatrixDimension+1) = {'time'};
           Cifti.time = (((1:MatrixIndicesMap(i).NumberOfSeriesPoints)-1) * MatrixIndicesMap(i).SeriesStep + MatrixIndicesMap(i).SeriesStart) * 10^MatrixIndicesMap(i).SeriesExponent;
-        case 'HZ'
+        case 'HERTZ'
           dimord(MatrixIndicesMap(i).AppliesToMatrixDimension+1) = {'freq'};
           Cifti.freq = (((1:MatrixIndicesMap(i).NumberOfSeriesPoints)-1) * MatrixIndicesMap(i).SeriesStep + MatrixIndicesMap(i).SeriesStart) * 10^MatrixIndicesMap(i).SeriesExponent;
           % case 'METER'
@@ -489,6 +489,14 @@ for i=1:length(MatrixIndicesMap)
         key = NamedMap(j).LabelTable.Key;
         lab = NamedMap(j).LabelTable.Label;
         sel = key>0;
+        if isfield(NamedMap(j).LabelTable, 'Red')
+          % assume rgba to be also specified
+          rgba = [NamedMap(j).LabelTable.Red(:) ...
+                  NamedMap(j).LabelTable.Green(:) ...
+                  NamedMap(j).LabelTable.Blue(:) ...
+                  NamedMap(j).LabelTable.Alpha(:)];
+          Cifti.rgba{j} = rgba(sel,:);
+        end          
         Cifti.labeltable{j}(key(sel)) = lab(sel);
         Cifti.mapname{j} = fixname(NamedMap(j).MapName);
       end
@@ -733,6 +741,10 @@ if readdata
       Ntime = size(voxdata,3);
       dat = nan(Ngreynodes,Ngreynodes,Ntime);
       dat(greynodeIndex(dataIndex),greynodeIndex(dataIndex),:) = voxdata;
+    case {'pos_pos_freq' 'chan_chan_freq'}
+      Ntime = size(voxdata,3);
+      dat = nan(Ngreynodes,Ngreynodes,Ntime);
+      dat(greynodeIndex(dataIndex),greynodeIndex(dataIndex),:) = voxdata;
       
       % the following representations need to be transposed to be consistent with FieldTrip
     case 'time_pos'
@@ -755,6 +767,27 @@ if readdata
       dat = nan(Ngreynodes,Ngreynodes,Ntime);
       dat(greynodeIndex(dataIndex),greynodeIndex(dataIndex),:) = permute(voxdata, [2 3 1]);
       source.dimord = 'chan_chan_time';
+      case 'freq_pos'
+      Nfreq = size(voxdata,1);
+      dat = nan(Ngreynodes,Nfreq);
+      dat(greynodeIndex(dataIndex),:) = transpose(voxdata);
+      source.dimord = 'pos_freq';
+    case 'freq_chan'
+      Nfreq = size(voxdata,1);
+      dat = nan(Ngreynodes,Nfreq);
+      dat(greynodeIndex(dataIndex),:) = transpose(voxdata);
+      source.dimord = 'chan_freq';
+    case 'freq_pos_pos'
+      Nfreq = size(voxdata,1);
+      dat = nan(Ngreynodes,Ngreynodes,Nfreq);
+      dat(greynodeIndex(dataIndex),greynodeIndex(dataIndex),:) = permute(voxdata, [2 3 1]);
+      source.dimord = 'pos_pos_freq';
+    case 'freq_chan_chan'
+      Nfreq = size(voxdata,1);
+      dat = nan(Ngreynodes,Ngreynodes,Nfreq);
+      dat(greynodeIndex(dataIndex),greynodeIndex(dataIndex),:) = permute(voxdata, [2 3 1]);
+      source.dimord = 'chan_chan_freq';
+      
       
     otherwise
       ft_error('unsupported dimord %s', source.dimord);
@@ -784,9 +817,12 @@ if readdata
             if length(fieldname)>58
               % truncate it, needed to be able to append 'label' to the end
               fieldname = fieldname(1:58);
-              % append 'label' to the end
-              source.([fieldname 'label']) = Cifti.labeltable{i};
             end
+            % append 'label' to the end
+            source.([fieldname 'label']) = Cifti.labeltable{i}(:);
+          end
+          if isfield(Cifti, 'rgba')
+            source.([fieldname 'rgba']) = Cifti.rgba{i};
           end
           source.(fieldname) = dat(:,i);
         end

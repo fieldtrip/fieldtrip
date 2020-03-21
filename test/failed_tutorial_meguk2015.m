@@ -2,9 +2,7 @@ function failed_tutorial_meguk2015
 
 % WALLTIME 01:30:00
 % MEM 8gb
-
-% TEST test_tutorial_meguk2015
-% TEST ft_preprocessing ft_appenddata ft_timelockanalysis ft_componentanalysis ft_rejectcomponent ft_freqanalysis ft_math ft_sourceanalysis ft_sourceinterpolate ft_volumerealign ft_determine_coordsys ft_sourceplot ft_timelockstatistics ft_multiplotER ft_multiplotTFR ft_singleplotER ft_singleplotTFR
+% DEPENDENCY ft_preprocessing ft_appenddata ft_timelockanalysis ft_componentanalysis ft_rejectcomponent ft_freqanalysis ft_math ft_sourceanalysis ft_sourceinterpolate ft_volumerealign ft_determine_coordsys ft_sourceplot ft_timelockstatistics ft_multiplotER ft_multiplotTFR ft_singleplotER ft_singleplotTFR
 
 % This script is the concatenation of the various parts of the MEG-UK 2015
 % workshop demonstration. It has been editted to make it smaller and faster
@@ -21,50 +19,50 @@ rundata = {};
 for run=1 % the original uses 1:6, but that takes too long and too much storage
   trialdef = fullfile(datadir, sprintf('Sub%02d', subj), 'MEEG', 'Trials', sprintf('run_%02d_trldef.txt', run));
   dataset  = fullfile(datadir, sprintf('Sub%02d', subj), 'MEEG', sprintf('run_%02d_sss.fif', run));
-  
+
   [begsample, endsample, offset, trialtype] = textread(trialdef, '%d%d%d%s');
-  
+
   trialcode = nan(size(trialtype));
   trialcode(strcmp(trialtype, 'Famous'))      = 1;
   trialcode(strcmp(trialtype, 'Unfamiliar'))  = 2;
   trialcode(strcmp(trialtype, 'Scrambled'))   = 3;
-  
+
   % construct the trial definition matrix, usually done with FT_DEFINETRIAL
   trl = [begsample(:) endsample(:) offset(:) trialcode(:)];
-  
+
   cfg         = [];
   cfg.dataset = dataset;
   cfg.trl     = trl;
-  
+
   % MEG specific settings
   cfg.channel = 'MEG';
   cfg.demean  = 'yes';
   data_meg = ft_preprocessing(cfg);
-  
+
   % EEG specific settings
   cfg.channel    = 'EEG';
   cfg.demean     = 'yes';
   cfg.reref      = 'yes';
   cfg.refchannel = 'all'; % average reference
   data_eeg = ft_preprocessing(cfg);
-  
+
   % settings for all other channels
   cfg.channel = {'all', '-MEG', '-EEG'};
   cfg.demean  = 'no';
   cfg.reref   = 'no';
   data_other = ft_preprocessing(cfg);
-  
+
   cfg = [];
   cfg.resamplefs = 300;
   data_meg   = ft_resampledata(cfg, data_meg);
   data_eeg   = ft_resampledata(cfg, data_eeg);
   data_other = ft_resampledata(cfg, data_other);
-  
+
   %% append the different channel sets into a single structure
-  
+
   rundata{run} = ft_appenddata(cfg, data_meg, data_eeg, data_other);
   clear data_meg data_eeg data_other
-  
+
 end % for each run
 
 
@@ -361,17 +359,17 @@ vol = ft_prepare_headmodel(cfg, brain);
 ft_determine_coordsys(mri_realigned, 'interactive', 'no')
 hold on; % add the subsequent objects to the same figure
 ft_plot_headshape(headshape);
-ft_plot_vol(ft_convert_units(vol, 'mm'));
+ft_plot_headmodel(ft_convert_units(vol, 'mm'));
 
 figure
 hold on; % add the subsequent objects to the same figure
 ft_plot_headshape(headshape);
 ft_plot_sens(ft_convert_units(sens, 'mm'), 'coil', 'yes', 'coildiameter', 10);
-ft_plot_vol(ft_convert_units(vol, 'mm'));
+ft_plot_headmodel(ft_convert_units(vol, 'mm'));
 
 % figure
-% ft_plot_vol(ft_convert_units(vol,  'mm'), 'facecolor', 'r'); % FT
-% ft_plot_vol(ft_convert_units(vol1, 'mm'), 'facecolor', 'g'); % SPM
+% ft_plot_headmodel(ft_convert_units(vol,  'mm'), 'facecolor', 'r'); % FT
+% ft_plot_headmodel(ft_convert_units(vol1, 'mm'), 'facecolor', 'g'); % SPM
 % alpha 0.5
 
 
@@ -446,10 +444,10 @@ ft_multiplotTFR(cfg, wavelet)
 %%
 
 cfg = [];
-cfg.grid.resolution = 7;
+cfg.sourcemodel.resolution = 7;
 % cfg.inwardshift = -7; % allow dipoles 10mm outside the brain, this improves interpolation at the edges
-cfg.grid.unit = 'mm';
-cfg.vol  = vol;  % from FT
+cfg.sourcemodel.unit = 'mm';
+cfg.headmodel = vol;  % from FT
 cfg.grad = sens; % from FT
 cfg.senstype = 'meg';
 cfg.normalize = 'yes';
@@ -461,10 +459,10 @@ grid = ft_prepare_leadfield(cfg, wavelet);
 %% perform whole-brain source reconstruction
 
 cfg = [];
-cfg.vol       = vol;  % from FT
+cfg.headmodel = vol;  % from FT
 cfg.grad      = sens; % from FT
 cfg.senstype  = 'meg';
-cfg.grid      = grid;
+cfg.sourcemodel      = grid;
 cfg.method    = 'dics';
 
 cfg.frequency = [14 18];
@@ -569,10 +567,10 @@ ft_multiplotER(cfg, timelock2);
 pos = [21 -64 30];
 
 cfg = [];
-cfg.grid.pos = pos;
-cfg.grid.unit = 'mm';
-% cfg.grid = grid;
-cfg.vol  = vol;
+cfg.sourcemodel.pos = pos;
+cfg.sourcemodel.unit = 'mm';
+% cfg.sourcemodel = grid;
+cfg.headmodel = vol;
 cfg.grad = sens;
 cfg.senstype = 'meg';
 cfg.method = 'lcmv';
@@ -682,17 +680,17 @@ ft_sourceplot(cfg, mri_realigned);
 %%
 
 cfg             = [];
-cfg.vol         = vol;
+cfg.headmodel   = vol;
 cfg.grad        = sens;
 cfg.senstype    = 'meg';
 cfg.method      = 'lcmv';
 cfg.lcmv.keepfilter = 'yes';
 cfg.lcmv.projectmom = 'yes';
-cfg.grid.unit   = 'mm';
-cfg.grid.pos    = pos1;
+cfg.sourcemodel.unit   = 'mm';
+cfg.sourcemodel.pos    = pos1;
 source1 = ft_sourceanalysis(cfg, timelock2);
 
-cfg.grid.pos = pos2;
+cfg.sourcemodel.pos = pos2;
 source2 = ft_sourceanalysis(cfg, timelock2);
 
 
@@ -806,10 +804,10 @@ freq = ft_freqanalysis(cfg, data_fix);
 %%
 
 cfg = [];
-cfg.grid.resolution = 7;
+cfg.sourcemodel.resolution = 7;
 % cfg.inwardshift = -7; % allow dipoles 10mm outside the brain, this improves interpolation at the edges
-cfg.grid.unit = 'mm';
-cfg.vol       = vol;  % from FT
+cfg.sourcemodel.unit = 'mm';
+cfg.headmodel = vol;  % from FT
 cfg.grad      = sens; % from FT
 cfg.senstype  = 'meg';
 cfg.normalize = 'yes';
@@ -821,10 +819,10 @@ grid = ft_prepare_leadfield(cfg, freq);
 %%
 
 cfg           = [];
-cfg.vol       = vol;  % from FT
+cfg.headmodel = vol;  % from FT
 cfg.grad      = sens; % from FT
 cfg.senstype  = 'meg';
-cfg.grid      = grid;
+cfg.sourcemodel      = grid;
 cfg.method    = 'pcc';
 cfg.pcc.fixedori = 'yes';
 cfg.latency   = [0.140 0.160];
@@ -843,7 +841,7 @@ ylabel('imag');
 pos = [21 -64 30];
 
 % compute the nearest grid location
-dif = grid.pos;
+dif = sourcemodel.pos;
 dif(:,1) = dif(:,1)-pos(1);
 dif(:,2) = dif(:,2)-pos(2);
 dif(:,3) = dif(:,3)-pos(3);
@@ -922,4 +920,3 @@ prefix = sprintf('/tmp/Sub%02d', subj);
 cfg           = [];
 cfg.filename  = [prefix '_source_difint.html'];
 ft_analysispipeline(cfg, source_difint);
-

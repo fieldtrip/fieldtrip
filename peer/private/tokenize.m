@@ -1,6 +1,6 @@
 function [tok] = tokenize(str, sep, rep)
 
-% TOKENIZE cuts a string into pieces, returning the pieces in a cell array
+% TOKENIZE cuts a string into pieces, returning the pieces in a cell-array
 %
 % Use as
 %   t = tokenize(str)
@@ -16,9 +16,9 @@ function [tok] = tokenize(str, sep, rep)
 % spaces between two words). The default is rep=1, i.e. repeated
 % separators are treated as one.
 %
-% See also STRTOK, TEXTSCAN
+% See also SPLIT, STRTOK, TEXTSCAN
 
-% Copyright (C) 2003-2010, Robert Oostenveld
+% Copyright (C) 2003-2019, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

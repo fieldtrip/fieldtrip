@@ -7,8 +7,8 @@ function [lab, pos] = read_besa_sfp(filename, uniqueonly)
 %
 % Input arguments:
 %   filename   = the file name
-%   uniqueonly = flag to determine behaviour, to return the positions of the
-%                unique labels only (default behaviour: uniqueonly=1), or
+%   uniqueonly = flag to determine behavior, to return the positions of the
+%                unique labels only (default behavior: uniqueonly=1), or
 %                also return double occurrences, which may be useful when
 %                headshape information is represented in the file (as is
 %                done in SPM)
@@ -17,7 +17,7 @@ if nargin==1
 	uniqueonly = 1;
 end
 
-fid = fopen(filename);
+fid = fopen_or_error(filename);
 tmp = textscan(fid, ' %[^ \t]%n%n%n');
 fclose(fid);
 		

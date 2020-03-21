@@ -111,7 +111,7 @@ initial         = cfg_exbranch;
 initial.tag     = 'initial';
 initial.name    = 'Initial Import';
 initial.val     = {matnames odir bb vox image GM WM CSF };
-initial.help    = {'Images first need to be imported into a form that Dartel can work with. If the default segmentation is used (ie the Segment button), then this involves taking the results of the segmentation (*_seg_sn.mat)/* \cite{ashburner05} */, in order to have rigidly aligned tissue class images. Typically, there would be imported grey matter and white matter images, but CSF images can also be included. The subsequent Dartel alignment will then attempt to nonlinearly register these tissue class images together. If the new segmentation routine is used (from the toolbox), then this includes the option to generate ``imported'''' tissue class images. This means that a seperate importing step is not needed for it.'};
+initial.help    = {'Images first need to be imported into a form that Dartel can work with. If the default segmentation is used (ie the Segment button), then this involves taking the results of the segmentation (*_seg_sn.mat)/* \cite{ashburner05} */, in order to have rigidly aligned tissue class images. Typically, there would be imported grey matter and white matter images, but CSF images can also be included. The subsequent Dartel alignment will then attempt to nonlinearly register these tissue class images together. If the new segmentation routine is used (from the toolbox), then this includes the option to generate ``imported'''' tissue class images. This means that a separate importing step is not needed for it.'};
 initial.prog = @spm_dartel_import;
 initial.vout = @vout_initial_import;
 % ---------------------------------------------------------------------

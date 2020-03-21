@@ -1,9 +1,9 @@
 function test_bug298
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST keyval keyvalx
+% DEPENDENCY keyval keyvalx
 
 warning('this test has become obsolete because ot the ft_getopt implementation');
 return

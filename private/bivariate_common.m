@@ -29,11 +29,11 @@ end
 
 % Interactively select the reference channel
 if strcmp(cfg.refchannel, 'gui')
-  tmpcfg = keepfields(cfg, {'channel', 'layout'});
+  tmpcfg = keepfields(cfg, {'channel', 'layout', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
   lay = ft_prepare_layout(tmpcfg, varargin{1});
   % Open a single figure with the channel layout, the user can click on a reference channel
   h = clf;
-  ft_plot_lay(lay, 'box', false);
+  ft_plot_layout(lay, 'box', false);
   title('Select the reference channel by dragging a selection window, more than 1 channel can be selected...');
   % add the channel information to the figure
   info       = guidata(gcf);
@@ -46,7 +46,8 @@ if strcmp(cfg.refchannel, 'gui')
   set(h, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@make_selection, cfg, varargin{:}}, 'event', 'WindowButtonDownFcn'});
   set(h, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@make_selection, cfg, varargin{:}}, 'event', 'WindowButtonMotionFcn'});
 else
-  make_figure(cfg, varargin{:});
+  
+  make_figure(cfg, varargin{~cellfun(@isnumeric,varargin)});
 end
 
 
@@ -65,26 +66,34 @@ for i=1:numel(varargin)
   dimtok = tokenize(dimord, '_');
   
   if isequal(dimtok{1}, 'chancmb')
-    % Convert 2-dimensional channel matrix to a single dimension
+    % convert 2-dimensional channel matrix to a single dimension
     if isempty(cfg.directionality)
-      sel1 = match_str(varargin{i}.labelcmb(:, 2), cfg.refchannel);
-      sel2 = match_str(varargin{i}.labelcmb(:, 1), cfg.refchannel);
+      sel1 = match_str(varargin{i}.labelcmb(:, 1), cfg.refchannel);
+      sel2 = match_str(varargin{i}.labelcmb(:, 2), cfg.refchannel);
     elseif strcmp(cfg.directionality, 'outflow')
-      sel1 = [];
-      sel2 = match_str(varargin{i}.labelcmb(:, 1), cfg.refchannel);
-    elseif strcmp(cfg.directionality, 'inflow')
-      sel1 = match_str(varargin{i}.labelcmb(:, 2), cfg.refchannel);
+      sel1 = match_str(varargin{i}.labelcmb(:, 1), cfg.refchannel);
       sel2 = [];
+    elseif strcmp(cfg.directionality, 'inflow')
+      sel1 = [];
+      sel2 = match_str(varargin{i}.labelcmb(:, 2), cfg.refchannel);
     end
     fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.parameter);
     if length(sel1)+length(sel2)==0
       ft_error('there are no channels selected for plotting: you may need to look at the specification of cfg.directionality');
     end
-    varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)([sel1;sel2], :, :);
-    varargin{i}.label           = [varargin{i}.labelcmb(sel1, 1); varargin{i}.labelcmb(sel2, 2)];
+    
+    % combine the selection in the first and second column
+    selindx = [sel1; sel2];
+    sellab  = [varargin{i}.labelcmb(sel1, 2); varargin{i}.labelcmb(sel2, 1)];
+    [sellab, tmp] = unique(sellab, 'stable');
+    selindx = selindx(tmp);
+    
+    % take the selected rows from the data and the corresponding labels
+    varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)(selindx, :, :);
+    varargin{i}.label           = sellab;
     varargin{i} = rmfield(varargin{i}, 'labelcmb');
     
-    % Update the dimord
+    % update the dimord
     dimtok{1} = 'chan';
     varargin{i} = removefields(varargin{i}, {'dimord', [cfg.parameter 'dimord']});
     varargin{i}.dimord = sprintf('%s_', dimtok{1:end});

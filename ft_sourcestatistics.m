@@ -7,7 +7,7 @@ function [stat] = ft_sourcestatistics(cfg, varargin)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
 % where the input data is the result from FT_SOURCEANALYSIS, FT_SOURCEDESCRIPTIVES
 % or FT_SOURCEGRANDAVERAGE.  The source structures should be spatially alligned
-% to each other and should have the same positions for the source grid.
+% to each other and should have the same positions for the sourcemodel.
 %
 % The configuration should contain the following option for data selection
 %   cfg.parameter  = string, describing the functional data to be processed, e.g. 'pow', 'nai' or 'coh'
@@ -26,12 +26,6 @@ function [stat] = ft_sourcestatistics(cfg, varargin)
 % See also FT_SOURCEANALYSIS, FT_SOURCEDESCRIPTIVES, FT_SOURCEGRANDAVERAGE, FT_MATH,
 % FT_STATISTICS_MONTECARLO, FT_STATISTICS_ANALYTIC, FT_STATISTICS_CROSSVALIDATE, FT_STATISTICS_STATS
 
-% Deprecated cfg.method options:
-%                    'parametric'    uses the MATLAB statistics toolbox (very similar to 'stats'),
-%                    'randomization' uses randomization of the data prior to source reconstruction,
-%                    'randcluster'   uses randomization of the data prior to source reconstruction
-%                                    in combination with spatial clusters.
-
 % FIXME the following needs to be reimplemented
 %
 % You can restrict the statistical analysis to regions of interest (ROIs)
@@ -39,12 +33,9 @@ function [stat] = ft_sourcestatistics(cfg, varargin)
 %   cfg.atlas        = filename of the atlas
 %   cfg.roi          = string or cell of strings, region(s) of interest from anatomical atlas
 %   cfg.avgoverroi   = 'yes' or 'no' (default = 'no')
-%   cfg.hemisphere   = 'left', 'right', 'both', 'combined', specifying this is
-%                      required when averaging over regions
-%   cfg.inputcoord   = 'mni' or 'tal', the coordinate system in which your source
-%                      reconstruction is expressed
+%   cfg.hemisphere   = 'left', 'right', 'both', 'combined', specifying this is required when averaging over regions
 
-% Copyright (C) 2005-2014, Robert Oostenveld
+% Copyright (C) 2005-2020, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -88,6 +79,7 @@ cfg = ft_checkconfig(cfg, 'required',    {'method', 'design'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'approach',   'method'});
 cfg = ft_checkconfig(cfg, 'forbidden',   {'transform'});
 cfg = ft_checkconfig(cfg, 'forbidden',   {'trials'}); % this used to be present until 24 Dec 2014, but was deemed too confusing by Robert
+cfg = ft_checkconfig(cfg, 'forbidden',   {'channel'}); 
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
@@ -112,15 +104,14 @@ for i=1:length(varargin)
 end
 
 % ensure that the data in all inputs has the same channels, time-axis, etc.
-tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'latency', 'avgovertime', 'avgoverpos', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'latency', 'avgovertime', 'avgoverpos', 'parameter', 'showcallinfo', 'select', 'nanmean'});
 [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
 % restore the provenance information
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 
 dimord = getdimord(varargin{1}, cfg.parameter);
 dimtok = tokenize(dimord, '_');
-dimsiz = getdimsiz(varargin{1}, cfg.parameter);
-dimsiz(end+1:length(dimtok)) = 1; % there can be additional trailing singleton dimensions
+dimsiz = getdimsiz(varargin{1}, cfg.parameter, numel(dimtok));
 rptdim = find( strcmp(dimtok, 'subj') |  strcmp(dimtok, 'rpt') |  strcmp(dimtok, 'rpttap'));
 datdim = find(~strcmp(dimtok, 'subj') & ~strcmp(dimtok, 'rpt') & ~strcmp(dimtok, 'rpttap'));
 datsiz = dimsiz(datdim);

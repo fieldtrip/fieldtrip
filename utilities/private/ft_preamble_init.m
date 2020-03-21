@@ -32,17 +32,44 @@
 % disabled for now, see further down
 global ft_default
 
+% Which high-level FieldTrip function is lowest on the stack, and which is
+% highest? Lowest could e.g. be ft_selectdata called by another FieldTrip
+% function, highest should always be the top-level FieldTrip function that
+% was explicitly called by the user. These are used further down below,
+% e.g. in the reproducescript functionality.
+% (Note that we prepend random strings to local variables in pre- and
+% postambles to avoid contaminating the caller's namespace.)
+FjmoT6aA_stack = dbstack('-completenames');
+% FjmoT6aA_stack(1) is this script
+% FjmoT6aA_stack(2) is the calling ft_postamble function
+% FjmoT6aA_stack(3) is the lowest FieldTrip function on the stack, the one currently being evaluated
+% the highest FieldTrip function on the stack is given by the highest n
+% such that FjmoT6aA_stack(n).path begins with the FieldTrip path
+FjmoT6aA_lowest_ft = FjmoT6aA_stack(3).name;
+FjmoT6aA_highest_ft = FjmoT6aA_stack(3).name;
+[FjmoT6aA_ft_ver, FjmoT6aA_ft_path] = ft_version;
+for FjmoT6aA_k = 3:numel(FjmoT6aA_stack)
+  if startsWith(FjmoT6aA_stack(FjmoT6aA_k).file, FjmoT6aA_ft_path)
+    FjmoT6aA_highest_ft = FjmoT6aA_stack(FjmoT6aA_k).name;
+  else
+    % we are operating under the assumption here that a private FieldTrip
+    % function (i.e. one whose name does not start with "ft_") never calls
+    % another high-level FieldTrip function.
+    break;
+  end
+end
+% check whether we are currently in a top-level user-called FT function
+% (note that checking of names only probably is not sufficient, as recursion
+% could occur)
+FjmoT6aA_current_ft_toplevel = strcmp(FjmoT6aA_lowest_ft, FjmoT6aA_highest_ft) && ...
+  (FjmoT6aA_k == 4 || numel(FjmoT6aA_stack) == 3);
+
 if ft_nargin==0
-  stack = dbstack('-completenames');
-  % stack(1) is this script
-  % stack(2) is the calling ft_postamble function
-  % stack(3) is the main FieldTrip function that we are interested in
-  stack = stack(3);
-  help(stack.name);
+  help(FjmoT6aA_lowest_ft);
   % throw the error as if it happened in the original function
   msg.message     = 'This function requires one or multiple input arguments, please refer to the documentation above';
   msg.identifier  = '';
-  msg.stack       = stack;
+  msg.stack       = FjmoT6aA_stack;
   error(msg);
 end % if nargin
 
@@ -50,13 +77,11 @@ end % if nargin
 % erroneously inputted a data argument
 checkdatafields = isfield(cfg, {'cfg' 'label' 'dimord' 'trialinfo' 'avg' 'powspctrm'});
 if any(checkdatafields)
-  stack = dbstack('-completenames');
-  stack = stack(3);
-  help(stack.name);
+  help(FjmoT6aA_lowest_ft);
   % throw the error as if it happened in the original function
   msg.message     = 'It seems as if the first input argument is a FieldTrip data structure, while a cfg is expected';
   msg.identifier  = '';
-  msg.stack       = stack;
+  msg.stack       = FjmoT6aA_stack;
   error(msg);
 end
 
@@ -64,6 +89,9 @@ end
 if iscell(cfg)
   cfg = ft_keyval2cfg(cfg);
 end
+
+% check that it is an struct or empty numeric array
+assert(isstruct(cfg) || (isnumeric(cfg) && isempty(cfg)), 'The configuration must be a structure or empty');
 
 % this script requires some options that can be user-specified, but otherwise are obtained from ft_default
 % merge the default options into the configuration, except the preamble field which is used for passing arguments
@@ -116,6 +144,31 @@ else
   % there is no reason to abort execution
   ft_abort = false;
 end % if chiL7fee_outputfile{i}
+
+if isfield(cfg, 'reproducescript') && ~isempty(cfg.reproducescript)
+  % the reproducescript code should only be executed in a top-level FT function
+  if ~FjmoT6aA_current_ft_toplevel
+    % we are in a FT function that was called by another FT function
+    cfg = rmfield(cfg, 'reproducescript');
+  else
+    % we are in a top-level FT function
+    if ~isfolder(cfg.reproducescript)
+      mkdir(cfg.reproducescript);
+    end
+    % user-specified cfg.inputfile or cfg.outputfile are not compatible
+    % with cfg.reproducescript functionality, throw error to make them
+    % mutually exclusive
+    if (isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)) || ...
+       (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile))
+      ft_error('cfg.reproducescript cannot be used together with a user-specified cfg.inputfile or cfg.outputfile');
+    end
+    % this variable is used in loadvar, savevar and savefig
+    Fief7bee_reproducescript = cfg.reproducescript;
+    cfg = rmfield(cfg, 'reproducescript');
+    % pause one second to ensure that subsequent file names (which contain the time stamp) are unique
+    pause(1);
+  end
+end
 
 if false
   % this is currently generating too much data and therefore disabled

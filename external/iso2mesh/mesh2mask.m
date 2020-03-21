@@ -72,7 +72,7 @@ set(gca,'xlim',[mn(1) mx(1)]);
 set(gca,'ylim',[mn(2) mx(2)]);
 set(gca,'clim',[1 size(face,1)]);
 
-output_size = round((mx(1:2)-mn(1:2))./df);%Size in pixels
+output_size = round((mx(1:2)-mn(1:2))./df); %Size in pixels
 
 if(isoctavemesh || isempty(getenv('DISPLAY')))
     resolution = 300; %Resolution in DPI

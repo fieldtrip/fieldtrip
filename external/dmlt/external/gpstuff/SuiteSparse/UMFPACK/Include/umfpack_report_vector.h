@@ -109,7 +109,7 @@ Arguments:
 
 	Note that all complex routines in UMFPACK V4.4 and later use this same
 	strategy for their complex arguments.  The split format is useful for
-	MATLAB, which holds its real and imaginary parts in seperate arrays.
+	MATLAB, which holds its real and imaginary parts in separate arrays.
 	The packed format is compatible with the intrinsic double _Complex
 	type in ANSI C99, and is also compatible with SuperLU's method of
 	storing complex matrices.  In Version 4.3, this routine was the only

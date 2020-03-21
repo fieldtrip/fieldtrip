@@ -1,6 +1,6 @@
 function [vol] = dipoli(vol, isolated)
 
-% DIPOLI computes a BEM system matrix
+% DIPOLI computes the BEM system matrix
 %
 % Use as
 %   [vol] = dipoli(vol, isolated)
@@ -34,10 +34,10 @@ dipoli = fullfile(p, f);  % without the .m extension
 dipoli = checkplatformbinary(dipoli);
 
 if ~isempty(dipoli)
-  
+
   skin   = find_outermost_boundary(vol.bnd);
   source = find_innermost_boundary(vol.bnd);
-  
+
   % the first compartment should be the skin, the last the source
   if skin==1 && source==length(vol.bnd)
     vol.skin   = 1;
@@ -50,13 +50,13 @@ if ~isempty(dipoli)
   else
     error('the first compartment should be the skin, the last  the source');
   end
-  
+
   if isolated
     fprintf('using the isolated source approach\n');
   else
     fprintf('not using isolated source approach\n');
   end
-  
+
   % write the triangulations to file
   bnddip = vol.bnd;
   bndfile = {};
@@ -68,11 +68,11 @@ if ~isempty(dipoli)
     if ~ok,  bnddip(i).tri = fliplr(bnddip(i).tri);end
     write_tri(bndfile{i}, bnddip(i).pos, bnddip(i).tri);
   end
-  
+
   % these will hold the shell script and the inverted system matrix
   exefile = [tempname '.sh'];
   amafile = [tempname '.ama'];
-  
+
   fid = fopen(exefile, 'w');
   fprintf(fid, '#!/bin/sh\n');
   fprintf(fid, '\n');
@@ -91,17 +91,17 @@ if ~isempty(dipoli)
   fprintf(fid, 'EOF\n');
   fclose(fid);
   dos(sprintf('chmod +x %s', exefile));
-  
+
   try
     % execute dipoli and read the resulting file
     dos(exefile);
     ama = loadama(amafile);
-    vol = ama2vol(ama);
+    vol = ama2headmodel(ama);
   catch
     warning('an error ocurred while running dipoli');
     disp(lasterr);
   end
-  
+
   % delete the temporary files
   for i=1:length(vol.bnd)
     delete(bndfile{i})

@@ -1,13 +1,13 @@
 function test_bug1309
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % This tests for the reliability of the ft_convert_units function when dealing
 % with different input types (vol,sens,etc.)
 
 % artificially create timelock data
-timelock_data.fsamepl = 500;
+timelock_data.fsample = 500;
 timelock_data.dimord = 'chan_time';
 timelock_data.time = zeros(1, 500);
 timelock_data.avg = randn(31, 500);
@@ -16,7 +16,7 @@ for i = 1:31
 end
 
 elec      = ft_read_sens('standard_1020.elc');
-headmodel = ft_read_vol('standard_bem.mat');
+headmodel = ft_read_headmodel('standard_bem.mat');
 
 timelock_data.label = elec.label(1:31);
 
@@ -27,8 +27,8 @@ cfg.numdipoles = 1;
 
 % the grid resolution remains the same, regardless of the electrode and headmodel units
 % the output source model units should be consistent with the ones specified here (and not with elec or headmodel)
-cfg.grid.resolution = 3;
-cfg.grid.unit = 'cm';
+cfg.sourcemodel.resolution = 3;
+cfg.sourcemodel.unit = 'cm';
 
 elecunit      = {'mm', 'cm', 'm', 'inch'};
 headmodelunit = {'mm', 'cm', 'm', 'feet'};

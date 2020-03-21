@@ -51,7 +51,7 @@ needhdr = isempty(hdr);
 % start with empty return values
 varargout = {};
 
-% the datafile is little endian, hence it may be neccessary to swap bytes in
+% the datafile is little endian, hence it may be necessary to swap bytes in
 % the memory mapped data stream depending on the CPU type of this computer
 if littleendian
   swapFcn = @(x) x;
@@ -60,7 +60,7 @@ else
 end
 
 % read header info from file, use Matlabs for automatic byte-ordering
-fid = fopen(filename, 'r', 'ieee-le');
+fid = fopen_or_error(filename, 'r', 'ieee-le');
 fseek(fid, 0, 'eof');
 siz = ftell(fid);
 fseek(fid, 0, 'bof');

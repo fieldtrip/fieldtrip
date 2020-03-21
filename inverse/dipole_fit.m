@@ -7,18 +7,20 @@ function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin)
 %   [dipout] = dipole_fit(dip, sens, headmodel, dat, ...)
 %
 % Additional input arguments should be specified as key-value pairs and can include
-%   'constr'      = Structure with constraints
 %   'display'     = Level of display [ off | iter | notify | final ]
 %   'optimfun'    = Function to use [fminsearch | fminunc ]
 %   'maxiter'     = Maximum number of function evaluations allowed [ positive integer ]
+%   'constr'      = Structure with constraints
 %   'metric'      = Error measure to be minimised [ rv | var | abs ]
 %   'checkinside' = Boolean flag to check whether dipole is inside source compartment [ 0 | 1 ]
-%   'weight'      = weight matrix for maximum likelihood estimation, e.g. inverse noise covariance
+%   'mleweight'   = weight matrix for maximum likelihood estimation, e.g. inverse noise covariance
 %
-% The following optional input arguments relate to the computation of the leadfields
+% The following optional input arguments are for the computation of leadfields
 %   'reducerank'      = 'no' or number
 %   'normalize'       = 'no', 'yes' or 'column'
 %   'normalizeparam'  = parameter for depth normalization (default = 0.5)
+%   'weight'          = number or 1xN vector, weight for each dipole position to compensate for the size of the corresponding patch (default = 1)
+%   'backproject'     = 'yes' (default) or 'no', in the case of a rank reduction this parameter determines whether the result will be backprojected onto the original subspace
 %
 % The constraints on the source model are specified in a structure
 %   constr.symmetry   = boolean, dipole positions are symmetrically coupled to each other
@@ -54,7 +56,7 @@ function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin)
 %
 % $Id$
 
-% It is neccessary to provide backward compatibility support for the old function call
+% It is necessary to provide backward compatibility support for the old function call
 % in case people want to use it in conjunction with EEGLAB and the dipfit1 plugin.
 % old style: function [dipout] = dipole_fit(dip, dat, sens, headmodel, constr), where constr is optional
 % new style: function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin), where varargin is in key-value pairs
@@ -83,16 +85,21 @@ else
   % this is dealt with below
 end
 
-constr         = ft_getopt(varargin, 'constr'         ); % default is not to have constraints
-metric         = ft_getopt(varargin, 'metric',    'rv');
-checkinside    = ft_getopt(varargin, 'checkinside', false);
+% these are for the optimization function
 display        = ft_getopt(varargin, 'display', 'iter');
 optimfun       = ft_getopt(varargin, 'optimfun'       ); if isa(optimfun, 'char'),  optimfun = str2func(optimfun); end
 maxiter        = ft_getopt(varargin, 'maxiter'        );
-reducerank     = ft_getopt(varargin, 'reducerank'     ); % for leadfield computation
-normalize      = ft_getopt(varargin, 'normalize'      ); % for leadfield computation
-normalizeparam = ft_getopt(varargin, 'normalizeparam' ); % for leadfield computation
-weight         = ft_getopt(varargin, 'weight'         ); % for maximum likelihood estimation
+% these are for the error function
+constr         = ft_getopt(varargin, 'constr'         ); % default is not to have constraints
+metric         = ft_getopt(varargin, 'metric', 'rv'   );
+checkinside    = ft_getopt(varargin, 'checkinside', false);
+mleweight      = ft_getopt(varargin, 'mleweight'      ); % for maximum likelihood estimation
+% these are for leadfield computation
+reducerank     = ft_getopt(varargin, 'reducerank'     );
+normalize      = ft_getopt(varargin, 'normalize'      );
+normalizeparam = ft_getopt(varargin, 'normalizeparam' );
+weight         = ft_getopt(varargin, 'weight'         );
+backproject    = ft_getopt(varargin, 'backproject'    );
 
 if isfield(constr, 'mirror')
   % for backward compatibility
@@ -139,8 +146,11 @@ dip = fixdipole(dip);
 % convert the dipole model parameters into the non-linear parameter vector that will be optimized
 [param, constr] = dipolemodel2param(dip.pos, dip.mom, constr);
 
-% determine the scale
-scale = ft_scalingfactor(sens.unit, 'cm');
+% determine the scale for a typical step size of 1 cm
+scale = ft_scalingfactor('cm', sens.unit);
+
+%    'DiffMaxChange',scale*100,...
+%    'DiffMinChange',scale/100,...
 
 % set the parameters for the optimization function
 if isequal(optimfun, @fminunc)
@@ -162,7 +172,7 @@ else
 end
 
 % perform the optimization with either the fminsearch or fminunc function
-[param, fval, exitflag, output] = optimfun(@dipfit_error, param, options, dat, sens, headmodel, constr, metric, checkinside, reducerank, normalize, normalizeparam, weight);
+[param, fval, exitflag, output] = optimfun(@dipfit_error, param, options, dat, sens, headmodel, constr, metric, checkinside, mleweight, reducerank, normalize, normalizeparam, weight, backproject);
 
 if exitflag==0
   ft_error('Maximum number of iterations exceeded before reaching the minimum, please try with another initial guess.')
@@ -170,7 +180,7 @@ end
 
 % do the linear optimization of the dipole moment parameters
 % the error is not interesting any more, only the dipole moment is relevant
-[err, mom] = dipfit_error(param, dat, sens, headmodel, constr, metric, checkinside, reducerank, normalize, normalizeparam, weight);
+[err, mom] = dipfit_error(param, dat, sens, headmodel, constr, metric, checkinside, mleweight, reducerank, normalize, normalizeparam, weight, backproject);
 
 % convert the non-linear parameter vector into the dipole model parameters
 [pos, ori] = param2dipolemodel(param, constr);
@@ -242,7 +252,7 @@ elseif constr.rigidbody
   transform = rigidbody(param);                   % this is a 4x4 homogenous transformation matrix
   pos       = transform * pos;                    % apply the homogenous transformation matrix
   param     = reshape(pos(1:3,:), 1, 3*numdip);
-  clear pos                                       % the actual pos will be constructed from param further down 
+  clear pos                                       % the actual pos will be constructed from param further down
 end
 
 if constr.fixedori
@@ -264,7 +274,7 @@ end
 % DIPFIT_ERROR computes the error between measured and model data
 % and can be used for non-linear fitting of dipole position
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [err, mom] = dipfit_error(param, dat, sens, headmodel, constr, metric, checkinside, reducerank, normalize, normalizeparam, weight)
+function [err, mom] = dipfit_error(param, dat, sens, headmodel, constr, metric, checkinside, mleweight, reducerank, normalize, normalizeparam, weight, backproject)
 
 % flush pending graphics events, ensure that fitting is interruptible
 drawnow;
@@ -272,48 +282,54 @@ if ~isempty(get(0, 'currentfigure')) && strcmp(get(gcf, 'tag'), 'stop')
   % interrupt the fitting
   close;
   ft_error('USER ABORT');
-end;
+end
 
 % convert the non-linear parameter vector into the dipole model parameters
 [pos, ori] = param2dipolemodel(param, constr);
 
-% check whether the dipole is inside the source compartment
 if checkinside
-  inside = ft_inside_vol(pos, headmodel);
-  if ~all(inside)
-    ft_error('Dipole is outside the source compartment');
-  end
+  % check whether the dipole is inside the source compartment
+  isinside = ft_inside_headmodel(pos, headmodel);
+  isinside = all(isinside);
+else
+  % assume that the dipole is inside the source compartment
+  isinside = true;
 end
 
 % construct the leadfield matrix for all dipoles
-lf = ft_compute_leadfield(pos, sens, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+lf = ft_compute_leadfield(pos, sens, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam, 'weight', weight, 'backproject', backproject);
 if ~isempty(ori)
   lf = lf * ori;
 end
 
+if ~isinside
+  % set the leadfield to zero, this will cause the error to be as large as it can be
+  lf(:) = 0;
+end
+
 % compute the optimal dipole moment and the model error
-if ~isempty(weight)
+if ~isempty(mleweight)
   % maximum likelihood estimation using the weigth matrix
   if constr.sequential
     ft_error('not supported');
   else
-    mom = pinv(lf'*weight*lf)*lf'*weight*dat;  % Lutkenhoner equation 5
+    mom = pinv(lf'*mleweight*lf)*lf'*mleweight*dat;  % Lutkenhoner equation 5
     dif = dat - lf*mom;
   end
   % compute the generalized goodness-of-fit measure
   switch metric
     case 'rv' % relative residual variance
-      num   = dif' * weight * dif;
-      denom = dat' * weight * dat;
+      num   = dif' * mleweight * dif;
+      denom = dat' * mleweight * dat;
       err   = sum(num(:)) ./ sum(denom(:)); % Lutkenhonner equation 7, except for the gof=1-rv
     case 'var' % residual variance
-      num   = dif' * weight * dif;
+      num   = dif' * mleweight * dif;
       err   = sum(num(:));
     otherwise
       ft_error('Unsupported error metric for maximum likelihood dipole fitting');
   end
 else
-  % ordinary least squares, this is the same as MLE with weight=eye(nchans,nchans)
+  % ordinary least squares, this is the same as MLE with mleweight=eye(nchans,nchans)
   if constr.sequential
     % the number of slices is the same as the number of dipoles
     % each slice has a number of frames (time points) in it

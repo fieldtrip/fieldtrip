@@ -15,9 +15,10 @@ function [cfg] = ft_movieplotER(cfg, data)
 %   cfg.framespersec = number, frames per second (default = 5)
 %   cfg.framesfile   = [], no file saved, or 'string', filename of saved frames.mat (default = []);
 %   cfg.layout       = specification of the layout, see below
-%   cfg.baseline     = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
+%   cfg.baseline     = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE
 %   cfg.baselinetype = 'absolute' or 'relative' (default = 'absolute')
 %   cfg.colorbar     = 'yes', 'no' (default = 'no')
+%   cfg.colorbartext =  string indicating the text next to colorbar
 %
 % The layout defines how the channels are arranged. You can specify the
 % layout in a variety of ways:
@@ -68,7 +69,10 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
+ft_preamble debug
+ft_preamble loadvar data
 ft_preamble provenance data
+ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -82,19 +86,50 @@ data = ft_checkdata(data, 'datatype', 'timelock');
 cfg.parameter   = ft_getopt(cfg, 'parameter', 'avg');
 cfg.interactive = ft_getopt(cfg, 'interactive', 'yes');
 cfg.baseline    = ft_getopt(cfg, 'baseline', 'no');
+cfg.renderer    = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 
 % apply optional baseline correction
 if ~strcmp(cfg.baseline, 'no')
   tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'parameter', 'showcallinfo'});
   data = ft_timelockbaseline(tmpcfg, data);
   [cfg, data] = rollback_provenance(cfg, data);
-  % prevent the baseline correction from happening in ft_movieplotTFR
-  cfg = removefields(cfg, {'baseline', 'baselinetype'});
 end
 
-cfg = ft_movieplotTFR(cfg, data);
+% prevent the baseline correction from happening in ft_movieplotTFR
+tmpcfg = removefields(cfg, {'baseline', 'baselinetype'});
+tmpcfg = ft_movieplotTFR(tmpcfg, data);
+
+% this is needed for the figure title
+if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
+  dataname = cfg.dataname;
+elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
+elseif nargin>1
+  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
+else
+  dataname = {};
+end
+
+% set the figure window title
+if ~isempty(dataname)
+  set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
+else
+  set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
+end
+set(gcf, 'NumberTitle', 'off');
 
 % do the general cleanup and bookkeeping at the end of the function
-% this will replace the ft_movieplotTFR callinfo with that of ft_movieplotER
-ft_postamble provenance
+ft_postamble debug
+ft_postamble trackconfig
 ft_postamble previous data
+ft_postamble provenance
+ft_postamble savefig
+
+% add a menu to the figure, but only if the current figure does not have subplots
+menu_fieldtrip(gcf, cfg, false);
+
+if ~ft_nargout
+  % don't return anything
+  clear cfg
+end
+

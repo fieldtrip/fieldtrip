@@ -7,12 +7,12 @@ filename = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri');
 mri = ft_read_mri(filename);
 
 cfg             = [];
-cfg.output      =  'scalp' ;
+cfg.output      = 'scalp' ;
 segmentation    = ft_volumesegment(cfg, mri);
 
 cfg             = [];
 cfg.method      = 'isosurface';
-cfg.tissue      =  'scalp' ;
+cfg.tissue      = 'scalp' ;
 headshape       = ft_prepare_mesh(cfg, segmentation);
 
 label = {
@@ -201,3 +201,19 @@ ft_plot_sens(elec1, 'elecshape', 'sphere', 'elecsize', 0.5, 'facecolor', 'b')
 grid on
 view(3)
 cameratoolbar
+
+%%
+% demonstrate 3D Structure Sensor headshape
+
+headshape = ft_read_headshape(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/electrode/Model.obj'));
+
+cfg = [];
+cfg.method = 'fiducial';
+cfg.coordsys = 'ctf';
+cfg.fiducial.nas = [0.0769   -0.0064   -0.1071];
+cfg.fiducial.lpa = [0.0949   -0.0119    0.0219];
+cfg.fiducial.rpa = [-0.0464   -0.0070   -0.0696]; % THIS IS RATHER SLOPPY
+headshape = ft_meshrealign(cfg, headshape);
+
+cfg = [];
+elec0 = ft_electrodeplacement(cfg, headshape);

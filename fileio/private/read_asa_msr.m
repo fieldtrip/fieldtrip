@@ -34,7 +34,7 @@ val = read_asa(fn, 'Values', '%f');
 if any(size(val)~=[Npnt,Ntime])
   msm_file = read_asa(fn, 'Values', '%s');
   [path, name, ext] = fileparts(fn);
-  fid = fopen(fullfile(path, msm_file), 'rb', 'ieee-le');
+  fid = fopen_or_error(fullfile(path, msm_file), 'rb', 'ieee-le');
   val = fread(fid, [Ntime, Npnt], 'float32')';
   fclose(fid);
 end

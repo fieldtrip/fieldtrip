@@ -47,9 +47,9 @@ function [spike] = ft_spike_maketrials(cfg,spike)
 %     or is a priori known.
 %
 % Outputs appended to spike:
-%   spike.time                  = 1-by-nUnits cell array, containing the spike times in
+%   spike.time                  = 1-by-nUnits cell-array, containing the spike times in
 %                                 seconds relative to the event trigger.
-%   spike.trial                 = 1-by-nUnits cell array, containing the trial number for
+%   spike.trial                 = 1-by-nUnits cell-array, containing the trial number for
 %                                 every spike telling in which trial it was recorded.
 %   spike.trialtime             = nTrials-by-2 matrix specifying the start and end of
 %                                 every trial in seconds.
@@ -83,7 +83,7 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init            % this will show the function help if nargin==0 and return an error
-ft_preamble provenance      % this records the time and memory usage at teh beginning of the function
+ft_preamble provenance      % this records the time and memory usage at the beginning of the function
 ft_preamble trackconfig     % this converts the cfg structure in a config object, which tracks the cfg options that are being used
 ft_preamble debug           % this allows for displaying or saving the function name and input arguments upon an error
 

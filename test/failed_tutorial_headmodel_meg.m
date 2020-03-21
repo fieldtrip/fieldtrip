@@ -1,11 +1,9 @@
 function failed_tutorial_headmodel_meg(datadir)
 
-% MEM 2000mb
+% MEM 2gb
 % WALLTIME 00:45:00
+% DEPENDENCY ft_read_mri ft_volumesegment ft_prepare_headmodel ft_plot_headmodel ft_convert_units ft_read_sens ft_plot_sens
 
-% TEST test_tutorial_headmodel_meg
-% TEST ft_read_mri ft_volumesegment ft_prepare_headmodel ft_plot_vol
-% TEST ft_convert_units ft_read_sens ft_plot_sens
 % intial version by Lilla Magyari
 
 if nargin==0
@@ -60,7 +58,7 @@ figure
 ft_plot_sens(sens, 'style', '*b');
 
 hold on
-ft_plot_vol(vol);
+ft_plot_headmodel(vol);
 
 function s = tryrmfield(s, f)
 if isfield(s, f)

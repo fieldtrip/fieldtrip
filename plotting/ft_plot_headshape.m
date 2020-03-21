@@ -58,7 +58,7 @@ if ~isstruct(headshape) && isnumeric(headshape) && size(headshape,2)==3
   warning(ws1);
 end
 
-% the default behaviour depends on whether there is a triangulated surface or not
+% the default behavior depends on whether there is a triangulated surface or not
 hastri = isfield(headshape, 'tri');
 
 % get the optional input arguments
@@ -72,24 +72,25 @@ else
   edgecolor    = ft_getopt(varargin, 'edgecolor',    'none');
 end
 vertexsize   = ft_getopt(varargin, 'vertexsize',   10);
+material_    = ft_getopt(varargin, 'material');
+tag          = ft_getopt(varargin, 'tag',         '');
 fidcolor     = ft_getopt(varargin, 'fidcolor',     'g');
 fidmarker    = ft_getopt(varargin, 'fidmarker',    '*');
 fidlabel     = ft_getopt(varargin, 'fidlabel',     true);
 transform    = ft_getopt(varargin, 'transform');
 unit         = ft_getopt(varargin, 'unit');
 
+if ~isempty(unit)
+  headshape = ft_convert_units(headshape, unit);
+end
+
 % color management, the other colors are handled in ft_plot_mesh
 if ischar(fidcolor) && exist([fidcolor '.m'], 'file')
   fidcolor = eval(fidcolor);
 end
 
-if ~isempty(unit)
-  headshape = ft_convert_units(headshape, unit);
-end
-
-
 % start with empty return values
-hs      = [];
+hs = [];
 
 % everything is added to the current figure
 holdflag = ishold;
@@ -97,16 +98,9 @@ if ~holdflag
   hold on
 end
 
-
-mesh = [];
-mesh.pos = headshape.pos;
-if hastri
-  mesh.tri = headshape.tri;
-else
-  mesh.tri = [];
-end
-
-ft_plot_mesh(mesh, 'vertexcolor', vertexcolor, 'vertexsize', vertexsize, 'facecolor', facecolor, 'edgecolor', edgecolor);
+mesh = keepfields(headshape, {'pos', 'tri', 'tet', 'hex', 'color', 'unit', 'coordsys'});
+h  = ft_plot_mesh(mesh, 'vertexcolor', vertexcolor, 'vertexsize', vertexsize, 'facecolor', facecolor, 'edgecolor', edgecolor, 'material', material_, 'tag', tag);
+hs = [hs; h];
 
 if isfield(headshape, 'fid')
   fid = headshape.fid;
@@ -118,7 +112,8 @@ if isfield(headshape, 'fid')
   
   % show the fiducial labels
   for i=1:size(fid.pos,1)
-    hs = plot3(fid.pos(i,1), fid.pos(i,2), fid.pos(i,3), 'Marker', fidmarker, 'MarkerEdgeColor', fidcolor);
+    h  = plot3(fid.pos(i,1), fid.pos(i,2), fid.pos(i,3), 'Marker', fidmarker, 'MarkerEdgeColor', fidcolor);
+    hs = [hs; h];
     if isfield(fid, 'label') && istrue(fidlabel)
       % the text command does not like int or single position values
       x = double(fid.pos(i, 1));

@@ -1,14 +1,14 @@
 function [select] = select_channel_list(label, select, titlestr)
 
 % SELECT_CHANNEL_LIST presents a dialog for selecting multiple elements
-% from a cell array with strings, such as the labels of EEG channels.
+% from a cell-array with strings, such as the labels of EEG channels.
 % The dialog presents two columns with an add and remove mechanism.
 % 
 % select = select_channel_list(label, initial, titlestr)
 % 
 % with 
 %   initial indices of channels that are initially selected 
-%   label   cell array with channel labels (strings)
+%   label   cell-array with channel labels (strings)
 %   titlestr    title for dialog (optional)
 % and
 %   select  indices of selected channels

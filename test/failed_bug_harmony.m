@@ -48,7 +48,7 @@ load(dccnpath([path_to_load, '/template/headmodel/standard_singleshell.mat']))
 
 % use 'icosahedron' private function to generate the mash
 mesh = [];
-[mesh.pnt, mesh.tri] = icosahedron642();
+[mesh.pnt, mesh.tri] = icosahedron642;
 mesh.pnt = 5*mesh.pnt - repmat([ 0 3 -1.5],size(mesh.pnt,1),1) ;
 
 
@@ -56,7 +56,7 @@ mesh.pnt = 5*mesh.pnt - repmat([ 0 3 -1.5],size(mesh.pnt,1),1) ;
 
 % load vol                                       % volume conduction model
 figure;hold on;
-ft_plot_vol(vol, 'facecolor', 'none');alpha 0.5;
+ft_plot_headmodel(vol, 'facecolor', 'none');alpha 0.5;
 ft_plot_mesh(mesh, 'edgecolor', 'none'); camlight
 ft_plot_sens(dataFIC.grad, 'style', '*b');
 
@@ -70,8 +70,8 @@ cfg.harmony.filter_bs = 1;
 cfg.harmony.number_harmonics = 150;
 cfg.harmony.connected_components = 1;
 cfg.frequency = 18;
-cfg.grid   = mesh;
-cfg.vol    = vol;
+cfg.sourcemodel      = mesh;
+cfg.headmodel = vol;
 cfg.harmony.noisecov = 10^-15*eye(149);
 cfg.harmony.lambda = 0.001;
 source_freq_mne = ft_sourceanalysis(cfg, freq);

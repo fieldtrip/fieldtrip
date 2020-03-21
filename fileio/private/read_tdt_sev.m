@@ -8,7 +8,7 @@ function sev = read_tdt_sev(filename, dtype, begsample, endsample)
 % Note: sev files contain raw broadband data that is streamed to the RS4
 
 
-fid = fopen(filename, 'rb', 'ieee-le');
+fid = fopen_or_error(filename, 'rb', 'ieee-le');
 
 if nargin<3
   begsample = 1;

@@ -1,6 +1,6 @@
 function test_bug895
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % using statfun_indepsamplesZcoh results in an output structure that

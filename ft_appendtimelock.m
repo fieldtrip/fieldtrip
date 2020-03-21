@@ -1,7 +1,7 @@
 function [timelock] = ft_appendtimelock(cfg, varargin)
 
 % FT_APPENDTIMELOCK concatenates multiple timelock (ERP/ERF) data structures that
-% have been processed seperately. If the input data structures contain different
+% have been processed separately. If the input data structures contain different
 % channels, it will be concatenated along the channel direction. If the channels are
 % identical in the input data structures, the data will be concatenated along the
 % repetition dimension.
@@ -9,9 +9,7 @@ function [timelock] = ft_appendtimelock(cfg, varargin)
 % Use as
 %   combined = ft_appendtimelock(cfg, timelock1, timelock2, ...)
 %
-% The following configuration options are supported:
-%
-% The configuration can optionally contain
+% The configuration can contain
 %   cfg.appenddim       = string, the dimension to concatenate over which to append,
 %                         this can be 'chan' and 'rpt' (default is automatic)
 %   cfg.tolerance       = scalar, tolerance to determine how different the time axes
@@ -113,7 +111,7 @@ assert(~isempty(cfg.parameter), 'cfg.parameter should be specified');
 if any(strcmp(cfg.parameter, 'avg')) && any(strcmp(cfg.parameter, 'trial'))
   ft_warning('appending the individual trials, not the averages');
   % also prevent var and dof from being appended
-  cfg.parameter = setdiff(cfg.parameter, {'avg', 'var', 'dof'}); 
+  cfg.parameter = setdiff(cfg.parameter, {'avg', 'var', 'dof'});
 end
 
 % use a low-level function that is shared with the other ft_appendxxx functions

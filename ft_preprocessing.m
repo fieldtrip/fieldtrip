@@ -104,7 +104,14 @@ function [data] = ft_preprocessing(cfg, data)
 % Preprocessing options that you should only use for EEG data are
 %   cfg.reref         = 'no' or 'yes' (default = 'no')
 %   cfg.refchannel    = cell-array with new EEG reference channel(s), this can be 'all' for a common average reference
-%   cfg.refmethod     = 'avg', 'median', or 'bipolar' for bipolar derivation of sequential channels (default = 'avg')
+%   cfg.refmethod     = 'avg', 'median', 'rest' or 'bipolar' for bipolar derivation of sequential channels (default = 'avg')
+%   cfg.leadfield      = leadfield
+%                     if select 'rest','leadfield' is required.
+%                     The leadfield can be a matrix (channels X sources)
+%                     which is calculated by using the forward theory, based on
+%                     the electrode montage, head model and equivalent source
+%                     model. It can also be the output of ft_prepare_leadfield.m
+%                     (e.g. lf.leadfield or lf) based on real head modal using FieldTrip.
 %   cfg.implicitref   = 'label' or empty, add the implicit EEG reference as zeros (default = [])
 %   cfg.montage       = 'no' or a montage structure, see FT_APPLY_MONTAGE (default = 'no')
 %
@@ -217,7 +224,7 @@ cfg.montage        = ft_getopt(cfg, 'montage', 'no');
 cfg.updatesens     = ft_getopt(cfg, 'updatesens', 'no');    % in case a montage or rereferencing is specified
 cfg.chantype       = ft_getopt(cfg, 'chantype', {});        %2017.10.10 AB required for NeuroOmega files
 
-% these options relate to the actual preprocessing, it is neccessary to specify here because of padding
+% these options relate to the actual preprocessing, it is necessary to specify here because of padding
 cfg.dftfilter      = ft_getopt(cfg, 'dftfilter', 'no');
 cfg.lpfilter       = ft_getopt(cfg, 'lpfilter', 'no');
 cfg.hpfilter       = ft_getopt(cfg, 'hpfilter', 'no');
@@ -226,7 +233,7 @@ cfg.bsfilter       = ft_getopt(cfg, 'bsfilter', 'no');
 cfg.medianfilter   = ft_getopt(cfg, 'medianfilter', 'no');
 cfg.padtype        = ft_getopt(cfg, 'padtype', 'data');
 
-% these options relate to the actual preprocessing, it is neccessary to specify here because of channel selection
+% these options relate to the actual preprocessing, it is necessary to specify here because of channel selection
 cfg.reref          = ft_getopt(cfg, 'reref', 'no');
 cfg.refchannel     = ft_getopt(cfg, 'refchannel', {});
 cfg.refmethod      = ft_getopt(cfg, 'refmethod', 'avg');
@@ -296,7 +303,7 @@ if hasdata
         cfg.padtype = 'mirror';
       end
     else
-      % no filtering will be done, hence no padding is neccessary
+      % no filtering will be done, hence no padding is necessary
       padding = 0;
     end
     % update the configuration (in seconds) for external reference
@@ -423,14 +430,17 @@ else
       end
     end
     cfg.trl = trl;
+  elseif ischar(cfg.trl)
+    % load the trial information from file
+    cfg.trl = loadvar(cfg.trl, 'trl');
   end
   
-  % this should be a cell array
+  % this should be a cell-array
   if ~iscell(cfg.channel) && ischar(cfg.channel)
     cfg.channel = {cfg.channel};
   end
   
-  % this should be a cell array
+  % this should be a cell-array
   if ~iscell(cfg.refchannel) && ischar(cfg.refchannel)
     cfg.refchannel = {cfg.refchannel};
   end
@@ -462,7 +472,7 @@ else
         strcmp(cfg.medianfilter, 'yes')
       padding = round(cfg.padding * hdr.Fs);
     else
-      % no filtering will be done, hence no padding is neccessary
+      % no filtering will be done, hence no padding is necessary
       padding = 0;
     end
     % update the configuration (in seconds) for external reference
@@ -556,7 +566,7 @@ else
             ft_error('unsupported requested direction of padding');
         end
         
-        if strcmp(cfg.padtype, 'data');
+        if strcmp(cfg.padtype, 'data')
           begsample  = cfg.trl(i,1) - begpadding;
           endsample  = cfg.trl(i,2) + endpadding;
         else

@@ -1,9 +1,9 @@
 function test_bug2220(datainfo)
 
 % MEM 2gb
-% WALLTIME 00:10:00
+% WALLTIME 00:20:00
 
-% TEST ft_preprocessing ft_preproc_padding preproc
+% DEPENDENCY ft_preprocessing ft_preproc_padding preproc
 
 
 %load('C:\Users\jorhor\Downloads\bugdatafile.mat')

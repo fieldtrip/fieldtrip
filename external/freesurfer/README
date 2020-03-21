@@ -3,7 +3,7 @@ package. These functions are provided as courtesy to the FieldTrip
 users, and provide just enough functionality to provide an interface between
 FieldTrip and the files as they are created by Freesurfer.
 
-The current files are taken from version 4.5.0 (64 bit). Comparing against version 4.3.0 (32 bit) yielded no differences of relevance.
+In older versions, the listed files were taken from version 4.5.0 (64 bit). Comparing against version 4.3.0 (32 bit) yielded no differences of relevance. For the unlisted files, the origin was not specified.
 
 The following files are copied from freesurfer version 5.1:
 isdicomfile.m
@@ -20,3 +20,36 @@ colortable_BA.txt
 The following files are copied from freesurfer version 5.1:
 write_surf.m
 fwrite3.m
+
+
+As of 20190918 the files below have been diff'ed against the version of the code
+in freesurfer version 6.0. 
+
+The following files are copied from freesurfer version 6.0:
+fread3.m
+fsgettmppath.m -> the preferred order of /scratch vs. /tmp is reversed
+fwrite3.m
+isdicomfile.m
+load_analyze_hdr.m
+load_analyze.m
+load_mgh.m -> adjusted by JMS to output data in datatype in file (open PR on freesurfer github)
+load_nifti_hdr.m
+load_nifti.m -> adjusted by JMS to output data in datatype in file (open PR on freesurfer github)
+MRIfspec.m
+MRIread.m
+MRIwrite.m
+read_annotation.m
+read_curv.m
+read_fscolorlut.m
+read_label.m
+save_mgh.m
+strlen.m
+vox2ras_*.m
+vox2rasToQform.m
+
+
+The following files are from an unspecified older version, and locally adjusted
+load_dicom_fl.m
+load_dicom_series.m
+read_surf.m
+write_surf.m

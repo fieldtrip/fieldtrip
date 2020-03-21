@@ -5,8 +5,8 @@ function [data] = ft_resampledata(cfg, data)
 % Use as
 %   [data] = ft_resampledata(cfg, data)
 %
-% The data should be organised in a structure as obtained from
-% the FT_PREPROCESSING function. The configuration should contain
+% The data should be organised in a structure as obtained from the FT_PREPROCESSING
+% function. The configuration should contain
 %   cfg.resamplefs      = frequency at which the data will be resampled (default = 256 Hz)
 %   cfg.detrend         = 'no' or 'yes', detrend the data prior to resampling (no default specified, see below)
 %   cfg.demean          = 'no' or 'yes', whether to apply baseline correction (default = 'no')
@@ -15,30 +15,20 @@ function [data] = ft_resampledata(cfg, data)
 %   cfg.trials          = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.sampleindex     = 'no' or 'yes', add a channel with the original sample indices (default = 'no')
 %
-% Instead of specifying cfg.resamplefs, you can also specify a time axis on
-% which you want the data to be resampled. This is usefull for merging data
-% from two acquisition devides, after resampledata you can call FT_APPENDDATA
-% to concatenate the channles from the different acquisition devices.
+% Instead of specifying cfg.resamplefs, you can also specify a time axis on which you
+% want the data to be resampled. This is usefull for merging data from two acquisition
+% devices, after resampledata you can call FT_APPENDDATA to concatenate the channels
+% from the different acquisition devices.
 %   cfg.time        = cell-array with one time axis per trial (i.e. from another dataset)
 %   cfg.method      = interpolation method, see INTERP1 (default = 'pchip')
 %
-% Previously this function used to detrend the data by default. The
-% motivation for this is that the data is filtered prior to resampling
-% to avoid aliassing and detrending prevents occasional edge artifacts
-% of the filters. Detrending is fine for removing slow drifts in data
-% priot to frequency analysis, but detrending is not good if you
-% subsequenlty want to look at the evoked fields. Therefore the old
-% default value 'yes' has been removed. You now explicitely have to
-% specify whether you want to detrend (probably so if you want to
-% keep your analysis compatible with previous analyses that you did),
-% or if you do not want to detrent (recommended in most cases).
-% If you observe edge artifacts after detrending, it is recommended
-% to apply a baseline correction to the data.
-%
-% The following fields in the structure 'data' are modified by this function
-%   data.fsample
-%   data.trial
-%   data.time
+% Previously this function used to detrend the data by default. The motivation for
+% this is that the data is filtered prior to resampling to avoid aliassing and
+% detrending prevents occasional edge artifacts of the filters. Detrending is fine
+% for removing slow drifts in data prior to frequency analysis, but not good if you
+% subsequently want to look at the evoked fields. Therefore the old default value
+% 'yes' has been removed and you now explicitely have to specify whether you want to
+% detrend.
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -48,10 +38,10 @@ function [data] = ft_resampledata(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_PREPROCESSING, RESAMPLE, DOWNSAMPLE, INTERP1
+% See also FT_PREPROCESSING, FT_APPENDDATA, RESAMPLE, DOWNSAMPLE, INTERP1
 
 % Copyright (C) 2003-2006, FC Donders Centre, Markus Siegel
-% Copyright (C) 2004-2009, FC Donders Centre, Robert Oostenveld
+% Copyright (C) 2004-2019, FC Donders Centre, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -153,131 +143,143 @@ end
 % remember the original sampling frequency in the configuration
 cfg.origfs = double(data.fsample);
 
+% set this to nan, it will be updated later on
+data.fsample = nan;
+
 if usefsample
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % resample/downsample based on new sampling frequency
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   ntr = length(data.trial);
+  nchan  = numel(data.label);
   
   ft_progress('init', cfg.feedback, 'resampling data');
-  [fsorig, fsres] = rat(cfg.origfs./cfg.resamplefs);%account for non-integer fs
-  cfg.resamplefs  = cfg.origfs.*(fsres./fsorig);%get new fs exact
+  [fsorig, fsres] = rat(cfg.origfs./cfg.resamplefs); %account for non-integer fs
+  cfg.resamplefs  = cfg.origfs.*(fsres./fsorig); %get new fs exact
   
-  % make sure that the resampled time axes are aligned (this is to avoid
-  % rounding errors in the time axes). this procedure relies on the
-  % fact that resample assumes all data outside the data window to be zero
-  % anyway. therefore, padding with zeros (to the left) before resampling
-  % does not hurt
-  firstsmp = zeros(ntr, 1);
+  % make sure that the resampled time axes are aligned (this is to avoid rounding
+  % errors in the time axes). this procedure relies on the fact that resample assumes
+  % all data outside the data window to be zero anyway. therefore, padding with zeros
+  % (to the left and right) before resampling does not hurt
+  begsample = zeros(ntr, 1);
+  endsample = zeros(ntr, 1);
   for itr = 1:ntr
-    firstsmp(itr) = data.time{itr}(1);
+    begsample(itr) = round(cfg.origfs * data.time{itr}(1));
+    endsample(itr) = round(cfg.origfs * data.time{itr}(end));
   end
-  minsmp = min(firstsmp);
-  padsmp = round((firstsmp-minsmp).*cfg.origfs);
+  begpad = begsample-min(begsample);
+  endpad = max(endsample)-endsample;
   
-  nchan  = numel(data.label);
-  if any(padsmp~=0)
-    ft_warning('not all of the trials have the same original time axis: to avoid rounding issues in the resampled time axes, data will be zero-padded to the left prior to resampling');
+  if any(begpad~=0) || any(endpad~=0)
+    ft_warning('not all trials have the same time axis; data will be zero-padded prior to resampling to avoid rounding issues in the resampled time axes');
   end
   
   if any(strcmp(cfg.method, {'downsample', 'mean', 'median'}))
-    ft_warning('using cfg.method = ''%s'', only use this if you have applied an anti-aliasing filter prior to downsampling!', cfg.method);
+    ft_warning('using cfg.method = ''%s''; only use this if you have applied an anti-aliasing filter prior to downsampling!', cfg.method);
   end
   
   if any(strcmp(cfg.method, {'decimate', 'downsample', 'mean', 'median'}))
     if mod(fsorig, fsres) ~= 0
-      ft_error('new sampling rate needs to be a proper divisor of original sampling rate');
+      ft_error('the new sampling rate needs to be an integer division of the original sampling rate');
     end
   end
   
   for itr = 1:ntr
     ft_progress(itr/ntr, 'resampling data in trial %d from %d\n', itr, ntr);
+    
+    olddat = data.trial{itr};
+    oldtim = data.time{itr};
+    
+    % detrending is in general not recommended
     if istrue(cfg.detrend)
-      data.trial{itr} = ft_preproc_detrend(data.trial{itr});
+      if ~strcmp(cfg.baselinewindow, 'all')
+        olddat = ft_preproc_detrend(olddat, nearest(oldtim, cfg.baselinewindow(1)), nearest(oldtim, cfg.baselinewindow(2)));
+      else
+        olddat = ft_preproc_detrend(olddat);
+      end
     end
     
-    % Compute mean based on a window (cfg.baselinewindow) or the whole
-    % trial. This does not support nan values anymore. Fix in
-    % ft_preproc_polyremoval.
-    % previously --> bsl = nanmean(data.trial{itr},2);
+    % remove the mean to avoid edge effects when there's a strong offset, the cfg.demean option is dealt with below
     if ~strcmp(cfg.baselinewindow, 'all')
-      begsample   = ceil(data.fsample*cfg.baselinewindow(1))+find(data.time{itr}==0);
-      endsample   = floor(data.fsample*cfg.baselinewindow(2))-1+find(data.time{itr}==0);
-      [dum,bsl]   = ft_preproc_baselinecorrect(data.trial{itr}, begsample, endsample);
+      [olddat, bsl] = ft_preproc_baselinecorrect(olddat, nearest(oldtim, cfg.baselinewindow(1)), nearest(oldtim, cfg.baselinewindow(2)));
     else
-      [dum,bsl]   = ft_preproc_baselinecorrect(data.trial{itr});
+      [olddat, bsl] = ft_preproc_baselinecorrect(olddat);
     end
-    % always remove the mean to avoid edge effects when there's a strong
-    % offset, the cfg.demean option is dealt with below
-    data.trial{itr} = data.trial{itr} - bsl(:,ones(1,size(data.trial{itr},2)));
     
-    % pad the data with zeros to the left
-    data.trial{itr} = [zeros(nchan, padsmp(itr))     data.trial{itr}];
-    data.time{itr}  = [data.time{itr}(1)-(padsmp(itr):-1:1)./cfg.origfs data.time{itr}];
+    % pad the data with zeros on both sides
+    olddat = [zeros(nchan, begpad(itr)) olddat zeros(nchan, endpad(itr))];
+    oldtim = ((begsample(itr)-begpad(itr)):(endsample(itr)+endpad(itr))) / cfg.origfs;
     
     % perform the resampling
     if strcmp(cfg.method, 'downsample')
-      if isa(data.trial{itr}, 'single')
+      if isa(olddat, 'single')
         % temporary convert this trial to double precision
-        data.trial{itr} = transpose(single(downsample(double(transpose(data.trial{itr})),fsorig/fsres)));
+        newdat = transpose(single(downsample(double(transpose(olddat)),fsorig/fsres)));
       else
-        data.trial{itr} = transpose(downsample(transpose(data.trial{itr}),fsorig/fsres));
+        newdat = transpose(downsample(transpose(olddat),fsorig/fsres));
       end
       
     elseif strcmp(cfg.method, 'resample')
-      if isa(data.trial{itr}, 'single')
+      if isa(olddat, 'single')
         % temporary convert this trial to double precision
-        data.trial{itr} = transpose(single(resample(double(transpose(data.trial{itr})),fsres,fsorig)));
+        newdat = transpose(single(resample(double(transpose(olddat)),fsres,fsorig)));
       else
-        data.trial{itr} = transpose(resample(transpose(data.trial{itr}),fsres,fsorig));
+        newdat = transpose(resample(transpose(olddat),fsres,fsorig));
       end
       
     elseif strcmp(cfg.method, 'decimate')
-      if isa(data.trial{itr}, 'single')
+      if isa(olddat, 'single')
         % temporary convert this trial to double precision
-        data.trial{itr} = transpose(single(my_decimate(double(transpose(data.trial{itr})),fsorig/fsres)));
+        newdat = transpose(single(my_decimate(double(transpose(olddat)),fsorig/fsres)));
       else
-        data.trial{itr} = transpose(my_decimate(transpose(data.trial{itr}),fsorig/fsres));
+        newdat = transpose(my_decimate(transpose(olddat),fsorig/fsres));
       end
       
     elseif strcmp(cfg.method, 'mean')
-      if isa(data.trial{itr}, 'single')
+      if isa(olddat, 'single')
         % temporary convert this trial to double precision
-        data.trial{itr} = transpose(single(my_mean(double(transpose(data.trial{itr})),fsorig/fsres)));
+        newdat = transpose(single(my_mean(double(transpose(olddat)),fsorig/fsres)));
       else
-        data.trial{itr} = transpose(my_mean(transpose(data.trial{itr}),fsorig/fsres));
+        newdat = transpose(my_mean(transpose(olddat),fsorig/fsres));
       end
       
     elseif strcmp(cfg.method, 'median')
-      if isa(data.trial{itr}, 'single')
+      if isa(olddat, 'single')
         % temporary convert this trial to double precision
-        data.trial{itr} = transpose(single(my_median(double(transpose(data.trial{itr})),fsorig/fsres)));
+        newdat = transpose(single(my_median(double(transpose(olddat)), fsorig/fsres)));
       else
-        data.trial{itr} = transpose(my_median(transpose(data.trial{itr}),fsorig/fsres));
+        newdat = transpose(my_median(transpose(olddat), fsorig/fsres));
       end
       
     else
       ft_error('unknown method ''%s''', cfg.method);
     end
     
-    % update the time axis
-    nsmp = size(data.trial{itr},2);
-    origtime = data.time{itr};
-    data.time{itr} = origtime(1) + (0:(nsmp-1))/cfg.resamplefs;
-    % the first sample does not exactly remain at the same latency, but can be shifted by a sub-sample amount
-    shift = mean(origtime) - mean(data.time{itr});
-    data.time{itr} = data.time{itr} + shift;
-    
-    % un-pad the data
-    begindx         = ceil(cfg.resamplefs.*padsmp(itr)./cfg.origfs) + 1;
-    data.time{itr}  = data.time{itr}(begindx:end);
-    data.trial{itr} = data.trial{itr}(:, begindx:end);
-    
     % add back the mean
     if ~strcmp(cfg.demean, 'yes')
-      data.trial{itr} = data.trial{itr} + bsl(:,ones(1,numel(data.time{itr})));
+      nsmp   = size(newdat,2);
+      newdat = newdat + bsl(:,ones(1,nsmp));
     end
+    
+    % compute the new time axis, assuming that it starts at the same time
+    nsmp   = size(newdat,2);
+    newtim = (0:(nsmp-1))/cfg.resamplefs;
+    
+    % the middle of the time bin represented by the first samples are not aligned
+    % the new time axis can be shifted by a sub-sample amount
+    shift  = mean(oldtim) - mean(newtim);
+    newtim = newtim + shift;
+    
+    if begpad(itr)>0 || endpad(itr)>0
+      % un-pad the data
+      sel = (1+round(begpad(itr)*cfg.resamplefs/cfg.origfs)):(length(newtim)-round(endpad(itr)*cfg.resamplefs/cfg.origfs));
+      newtim = newtim(   sel);
+      newdat = newdat(:, sel);
+    end
+    
+    data.time{itr}  = newtim;
+    data.trial{itr} = newdat;
     
   end % for itr
   ft_progress('close');
@@ -295,38 +297,41 @@ elseif usetime
   for itr = 1:ntr
     ft_progress(itr/ntr, 'resampling data in trial %d from %d\n', itr, ntr);
     
+    olddat = data.trial{itr};
+    oldtim = data.time{itr};
+    
+    % detrending is in general not recommended
     if istrue(cfg.detrend)
-      data.trial{itr} = ft_preproc_detrend(data.trial{itr});
+      if ~strcmp(cfg.baselinewindow, 'all')
+        olddat = ft_preproc_detrend(olddat, nearest(oldtim, cfg.baselinewindow(1)), nearest(oldtim, cfg.baselinewindow(2)));
+      else
+        olddat = ft_preproc_detrend(olddat);
+      end
     end
     
-    % Compute mean based on a window (cfg.baselinewindow) or the whole
-    % trial. This does not support nan values anymore. Fix in
-    % ft_preproc_polyremoval.
-    % previously --> bsl = nanmean(data.trial{itr},2);
+    % always remove the mean to avoid edge effects when there's a strong offset, the cfg.demean option is dealt with below
     if ~strcmp(cfg.baselinewindow, 'all')
-      begsample   = ceil(data.fsample*cfg.baselinewindow(1))+find(data.time{itr}==0);
-      endsample   = floor(data.fsample*cfg.baselinewindow(2))-1+find(data.time{itr}==0);
-      [dum,bsl]   = ft_preproc_baselinecorrect(data.trial{itr}, begsample, endsample);
+      [olddat, bsl] = ft_preproc_baselinecorrect(olddat, nearest(oldtim, cfg.baselinewindow(1)), nearest(oldtim, cfg.baselinewindow(2)));
     else
-      [dum,bsl]   = ft_preproc_baselinecorrect(data.trial{itr});
+      [olddat, bsl] = ft_preproc_baselinecorrect(olddat);
     end
-    % always remove the mean to avoid edge effects when there's a strong
-    % offset, the cfg.demean option is dealt with below
-    data.trial{itr} = data.trial{itr} - bsl(:,ones(1,size(data.trial{itr},2)));
     
     % perform the resampling
-    if length(data.time{itr})>1
-      data.trial{itr} = interp1(data.time{itr}', data.trial{itr}', cfg.time{itr}', cfg.method)';
+    newtim = cfg.time{itr};
+    if length(oldtim)>1
+      newdat = interp1(oldtim', olddat', newtim', cfg.method)';
     else
-      data.trial{itr} = repmat(data.trial{itr}, [1 length(cfg.time{itr}')]);
+      newdat = repmat(olddat, [1 numel(newtim)]);
     end
-    % update the time axis
-    data.time{itr} = cfg.time{itr};
     
     % add back the mean
     if ~strcmp(cfg.demean, 'yes')
-      data.trial{itr} = data.trial{itr} + bsl(:,ones(1,numel(data.time{itr})));
+      nsmp   = size(newdat, 2);
+      newdat = newdat + bsl(:,ones(1,nsmp));
     end
+    
+    data.trial{itr} = newdat;
+    data.time{itr}  = newtim;
     
   end % for itr
   ft_progress('close');
@@ -355,7 +360,6 @@ ft_postamble previous   data
 ft_postamble provenance data
 ft_postamble history    data
 ft_postamble savevar    data
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that decimates along the columns

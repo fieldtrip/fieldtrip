@@ -1,6 +1,6 @@
 function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 
-% FT_PLOT_ORTHO plots 3 orthographic cuts through a 3-D volume and interpolates if needed
+% FT_PLOT_ORTHO plots 3 orthographic slices through a 3-D volume and interpolates if needed
 %
 % Use as
 %   ft_plot_ortho(dat, ...)
@@ -18,12 +18,10 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 % The following options are supported and passed on to FT_PLOT_SLICE
 %   'clim'                = [min max], lower and upper color limits
 %   'transform'           = 4x4 homogeneous transformation matrix specifying the mapping from voxel space to the coordinate system in which the data are plotted
-%   'location'            = 1x3 vector specifying a point on the plane which will be plotted the coordinates are expressed in the coordinate system in which the data will be plotted. location defines the origin of the plane
+%   'location'            = 1x3 vector specifying the intersection point at which the three slices will be plotted. The coordinates should be expressed in the coordinate system of the data. 
 %   'datmask'             = 3D-matrix with the same size as the matrix dat, serving as opacitymap if the second input argument to the function contains a matrix, this will be used as the mask
 %   'maskstyle'           = string, 'opacity' or 'colormix', defines the rendering
-%   'background'          = needed when maskstyle is 'colormix', 3D-matrix with
-%                           the same size as the data matrix, serving as
-%                           grayscale image that provides the background
+%   'background'          = needed when maskstyle is 'colormix', 3D-matrix with the same size as the data matrix, serving as grayscale image that provides the background
 %   'interpmethod'        = string specifying the method for the interpolation, see INTERPN (default = 'nearest')
 %   'colormap'            = string, see COLORMAP
 %   'unit'                = string, can be 'm', 'cm' or 'mm (default is automatic)
@@ -75,6 +73,7 @@ ori       = ft_getopt(varargin(sellist), 'orientation', eye(3));
 if strcmp(style, 'subplot')
   parents    = ft_getopt(varargin(sellist), 'parents');
   surfhandle = ft_getopt(varargin(sellist), 'surfhandle');
+  patchhandle = ft_getopt(varargin(sellist), 'patchhandle');
   update     = ft_getopt(varargin(sellist), 'update', [true true true]);
   if ~isempty(surfhandle) && ~isempty(parents)
     ft_error('if specifying handles, you should either specify handles to the axes or to the surface objects, not both');
@@ -118,11 +117,14 @@ switch style
       if ~isempty(surfhandle) && update(1)
         varargin(sellist) = ft_setopt(varargin(sellist), 'surfhandle', surfhandle(1));
       end
+      if ~isempty(patchhandle) && update(1)
+        varargin(sellist) = ft_setopt(varargin(sellist), 'patchhandle', patchhandle(1));
+      end
       % swap the first 2 dimensions because of meshgrid vs ndgrid issues
       varargin{2*sel} = ori(2,:);
       set(gcf,'currentaxes',Hx);
       hx = ft_plot_slice(dat, varargin{:});
-      set(Hx, 'view', [0 0]);%, 'xlim', [0.5 size(dat,1)-0.5], 'zlim', [0.5 size(dat,3)-0.5]);
+      set(Hx, 'view', [0 0]); %, 'xlim', [0.5 size(dat,1)-0.5], 'zlim', [0.5 size(dat,3)-0.5]);
       if isempty(parents)
         % only change axis behavior if no parents are specified
         axis off
@@ -133,10 +135,13 @@ switch style
       if ~isempty(surfhandle) && update(2)
         varargin(sellist) = ft_setopt(varargin(sellist), 'surfhandle', surfhandle(2));
       end
+      if ~isempty(patchhandle) && update(2)
+        varargin(sellist) = ft_setopt(varargin(sellist), 'patchhandle', patchhandle(2));
+      end
       varargin{2*sel} = ori(1,:);
       set(gcf,'currentaxes',Hy);
       hy = ft_plot_slice(dat, varargin{:});
-      set(Hy, 'view', [90 0]);%, 'ylim', [0.5 size(dat,2)-0.5], 'zlim', [0.5 size(dat,3)-0.5]);
+      set(Hy, 'view', [90 0]); %, 'ylim', [0.5 size(dat,2)-0.5], 'zlim', [0.5 size(dat,3)-0.5]);
       if isempty(parents)
         % only change axis behavior if no parents are specified
         axis off
@@ -147,10 +152,13 @@ switch style
       if ~isempty(surfhandle) && update(3)
         varargin(sellist) = ft_setopt(varargin(sellist), 'surfhandle', surfhandle(3));
       end
+      if ~isempty(patchhandle) && update(3)
+        varargin(sellist) = ft_setopt(varargin(sellist), 'patchhandle', patchhandle(3));
+      end
       varargin{2*sel} = ori(3,:);
       set(gcf,'currentaxes',Hz);
       hz = ft_plot_slice(dat, varargin{:});
-      set(Hz, 'view', [0 90]);%, 'xlim', [0.5 size(dat,1)-0.5], 'ylim', [0.5 size(dat,2)-0.5]);
+      set(Hz, 'view', [0 90]); %, 'xlim', [0.5 size(dat,1)-0.5], 'ylim', [0.5 size(dat,2)-0.5]);
       if isempty(parents)
         % only change axis behavior if no parents are specified
         axis off

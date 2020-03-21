@@ -2,8 +2,7 @@
 
 % WALLTIME 01:00:00
 % MEM 6gb
-
-% TEST ft_volumesegment ft_prepare_mesh ft_prepare_headmodel ft_headmodel_simbio
+% DEPENDENCY ft_volumesegment ft_prepare_mesh ft_prepare_headmodel ft_headmodel_simbio
 
 % this test script is based on the tutorial under development at
 % http://www.fieldtriptoolbox.org/development/simbio
@@ -109,10 +108,10 @@ end
 %%%%%%%%%
 
 cfg = [];
-cfg.vol = vol;
-cfg.grid.resolution = 10;
+cfg.headmodel = vol;
+cfg.sourcemodel.resolution = 10;
 cfg.elec = elec_aligned2;
-cfg.grid.unit = 'mm';
+cfg.sourcemodel.unit = 'mm';
 source = ft_prepare_sourcemodel(cfg);
 
 

@@ -10,7 +10,7 @@ function chanunit = ft_chanunit(input, desired)
 %   unit = ft_chanunit(hdr, desired)
 %
 % If the desired unit is not specified as second input argument, this
-% function returns a Nchan*1 cell array with a string describing the
+% function returns a Nchan*1 cell-array with a string describing the
 % physical units of each channel, or 'unknown' if those cannot be
 % determined.
 %
@@ -131,7 +131,7 @@ elseif isheader && ft_senstype(input, 'eeg')
   chanunit(strcmp('eeg',              input.chantype)) = {'uV'};
 
 elseif isheader && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74')) && issubfield(input, 'orig.chs')
-  for i = 1:numchan % make a cell array of units for each channel
+  for i = 1:numchan % make a cell-array of units for each channel
     switch input.orig.chs(i).unit
       case 201 % defined as constants by MNE, see p. 217 of MNE manual
         chanunit{i} = 'T/m';
@@ -173,9 +173,8 @@ elseif isgrad && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysqui
           ft_warning('assuming that planar MEG channel units are %s', assumption);
         end
       else
-        sel = strcmp('megplanar', input.chantype);
+        sel = strcmp('megplanar', input.chantype) & strcmp('unknown', chanunit);
         if any(sel)
-          chanunit(sel) = {'unknown'};
           ft_warning('cannot determine the units for the planar MEG channels');
         end
       end
@@ -199,9 +198,8 @@ elseif (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74')) && 
       ft_warning('assuming that planar MEG channel units are %s, consistent with the geometrical units', assumption);
     end
   else
-    sel = strcmp('megplanar', input.chantype);
+    sel = strcmp('megplanar', input.chantype) & strcmp('unknown', chanunit);
     if any(sel)
-      chanunit(strcmp('megplanar',        input.chantype)) = {'unknown'};
       ft_warning('cannot determine the units for the planar MEG channels');
     end
   end
@@ -243,7 +241,7 @@ chanunit = chanunit(:);
 if isdata
   % the input was replaced by one of hdr, grad, elec, opto
   [sel1, sel2] = match_str(origlabel, input.label);
-  origunit = repmat({'unknown'}, size(sel1));
+  origunit = repmat({'unknown'}, size(origlabel));
   origunit(sel1) = chanunit(sel2);
   % the hdr, grad, elec or opto structure might have a different set of channels
   chanunit = origunit;

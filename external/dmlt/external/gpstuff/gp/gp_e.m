@@ -473,7 +473,7 @@ switch gp.type
     if strcmp(gp.type, 'VAR')
       edata = edata + 0.5*sum((Kv_ff-Qv_ff)./Lav);
     end
-    %edata = edata - 0.5*sum((Kv_ff-Qv_ff)./Lav);% - sum(diag(B'*B),1)); %sum(B.^2,1)'
+    %edata = edata - 0.5*sum((Kv_ff-Qv_ff)./Lav); % - sum(diag(B'*B),1)); %sum(B.^2,1)'
     %sum(Qv_ff)
     %K_ff=gp_trcov(gp,x);
     %0.5*trace(K_ff-K_fu*inv(K_uu)*K_fu')
