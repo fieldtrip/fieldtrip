@@ -70,7 +70,8 @@ end
 
 % Iterate over all requested channels and populate array.
 out = zeros(range(2) - range(1) + 1, lChIdx);
-for i = 1 : lChIdx    
+for i = 1 : lChIdx  
+    %disp(['Reading channel ' num2str(chIdx) ' segment ' num2str(segment)]);
     % Get sampling rate for current channel
     curSF = nrvHdr.Segments(segment).samplingRate(chIdx(i));
     mult = nrvHdr.Segments(segment).scale(chIdx(i));
@@ -85,8 +86,9 @@ for i = 1 : lChIdx
     
     skipValues = cSumSegments(segment) * curSF;
     firstSectionForSegment = find(cSectionLengths > skipValues, 1) - 1 ;
-    lastSectionForSegment = firstSectionForSegment + ...
-        find(cSectionLengths > curSF*nrvHdr.Segments(segment).duration,1) - 2 ;
+    lastSectionForSegment = [];
+    %lastSectionForSegment = firstSectionForSegment + ...
+    %    find(cSectionLengths > curSF*nrvHdr.Segments(segment).duration,1) - 2 ;
     
     if isempty(lastSectionForSegment)
         lastSectionForSegment = length(cSectionLengths);
@@ -144,7 +146,17 @@ for i = 1 : lChIdx
         % Final Partial Segment
         curSec = nrvHdr.MainIndex(useSections(end));
         fseek(h, curSec.offset,'bof');
-        out(curIdx : end,i) = fread(h, length(out)-curIdx + 1, 'int16') * mult;
+        %Sometimes there is less data available in the file.
+        %So we calculate the wanted lastReadLength,
+        %but assign in the data array the actualReadLength
+        lastReadLength = length(out)-curIdx+1;
+        %disp(['LastReadLength: ' num2str(lastReadLength)]);
+        lastData = fread(h, lastReadLength, 'int16');
+        actualReadLength = length(lastData);
+        %if (actualReadLength <lastReadLength)
+        %    warning('Some data not found');
+        %disp(['ActualLastReadLength: ' num2str(lastReadLength)]);        
+        out(curIdx : (curIdx+actualReadLength-1),i) = lastData * mult;
     end
     
 end
