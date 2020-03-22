@@ -15,7 +15,7 @@ path_to_load = 'C:\Midlertidig_Lagring\FieldTripNicoletTestData';
 file1 = '2018_Patient59_EEG-OPPTAKER-1_t1-NICOLET.e';
 file1ascii = '2018_Patient59_EEG-OPPTAKER-1_t1-ASCII.txt';
 test_nicolet_reading_onefile(path_to_load,file1,file1ascii,500,24,45501,1,datetime(2018,06,18,08,07,24));
-d
+
 %%
 file2 = '2006_janbrogger.e';
 file2ascii = '2006_janbrogger.txt';
