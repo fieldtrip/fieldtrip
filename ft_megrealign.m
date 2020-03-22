@@ -51,7 +51,9 @@ function [data] = ft_megrealign(cfg, data)
 % should probably use an inward shift of about 1 cm.
 %
 % Other options are
-% cfg.pruneratio  = for singular values, default is 1e-3
+%   cfg.tolerance   = tolerance ratio for leadfield matrix inverse based on a truncated svd, 
+%                     reflects the relative magnitude of the largest singular value
+%                     to retain (default =s 1e-3)
 % cfg.verify      = 'yes' or 'no', show the percentage difference (default = 'yes')
 % cfg.feedback    = 'yes' or 'no' (default = 'no')
 % cfg.channel     =  Nx1 cell-array with selection of channels (default = 'MEG'),
@@ -119,10 +121,11 @@ cfg = ft_checkconfig(cfg, 'required',   {'inwardshift', 'template'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'hdmfile',     'headmodel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'vol',         'headmodel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'grid',        'sourcemodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'pruneratio',  'tolerance'});
 
 % set the default configuration
-cfg.headshape  = ft_getopt(cfg, 'headshape', []);
-cfg.pruneratio = ft_getopt(cfg, 'pruneratio', 1e-3);
+cfg.headshape  = ft_getopt(cfg, 'headshape',  []);
+cfg.pruneratio = ft_getopt(cfg, 'tolerance',  1e-3);
 cfg.spheremesh = ft_getopt(cfg, 'spheremesh', 642);
 cfg.verify     = ft_getopt(cfg, 'verify',     'yes');
 cfg.feedback   = ft_getopt(cfg, 'feedback',   'yes');
@@ -222,8 +225,8 @@ volcfg = [];
 volcfg.headmodel = cfg.headmodel;
 volcfg.grad      = data.grad;
 volcfg.channel   = data.label; % this might be a subset of the MEG channels
-gradorig         = data.grad;  % this is needed later on for plotting. As of
-% yet the next step is not entirely correct, because it does not keep track
+
+% As of yet the next step is not entirely correct, because it does not keep track
 % of the balancing of the gradiometer array. FIXME this may require some
 % thought because the leadfields are computed with low level functions and
 % do not easily accommodate for matching the correct channels with each
@@ -431,10 +434,10 @@ ft_postamble savevar    data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % subfunction that computes the projection matrix(ces)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [realign, noalign, bkalign] = computeprojection(lfold, lfnew, pruneratio, verify)
+function [realign, noalign, bkalign] = computeprojection(lfold, lfnew, tolerance, verify)
 
 % compute this inverse only once, although it is used twice
-tmp = prunedinv(lfold, pruneratio);
+tmp = ft_inv(lfold, 'method', 'tsvd', 'tolerance', tolerance);
 % compute the three interpolation matrices
 fprintf('computing interpolation matrix #1\n');
 realign = lfnew * tmp;
@@ -442,26 +445,8 @@ if strcmp(verify, 'yes')
   fprintf('computing interpolation matrix #2\n');
   noalign = lfold * tmp;
   fprintf('computing interpolation matrix #3\n');
-  bkalign = lfold * prunedinv(lfnew, pruneratio) * realign;
+  bkalign = (lfold * ft_inv(lfnew, 'method', 'tsvd', 'tolerance', tolerance)) * realign;
 else
   noalign = [];
   bkalign = [];
 end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% subfunction that computes the inverse using a pruned SVD
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [lfi] = prunedinv(lf, r)
-[u, s, v] = svd(lf);
-if r<1
-  % treat r as a ratio
-  p = find(s<(s(1,1)*r) & s~=0);
-else
-  % treat r as the number of spatial components to keep
-  diagels = 1:(min(size(s))+1):(min(size(s)).^2);
-  p       = diagels((r+1):end);
-end
-fprintf('pruning %d from %d, i.e. removing the %d smallest spatial components\n', length(p), min(size(s)), length(p));
-s(p) = 0;
-s(find(s~=0)) = 1./s(find(s~=0));
-lfi = v * s' * u';

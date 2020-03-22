@@ -42,8 +42,14 @@ tmpcfg = printstruct('cfg', tmpcfg);
 % at this point in a comment in the script file. We should mention any
 % files that (1) have not been produced as an output in the same pipeline
 % and that (2) have not been used as an input before. Do this by simply
-% checking any .mat file references containing "input" in the stringified cfg against any .mat
+% checking any .mat file references containing "_input_" in the stringified cfg against any .mat
 % file references already in the script file.
+% Note that files not containing "_input_" do not need to be checked here,
+% as these are either explicitly mentioned by the user, or are output files
+% generated in the same pipeline. If an input variable at some step in the
+% pipeline is identical to an output variable at an earlier step, the
+% output variable will automatically be used thanks to the hashing
+% mechanism (see make_or_fetch_inputfile).
 re = ['(?<=' regexptranslate('escape', reproducescript_dir) '[/\\]{1})(\w+_input_\w+(\.mat){1})'];
 if exist(filename, 'file')
   script = fileread(filename);

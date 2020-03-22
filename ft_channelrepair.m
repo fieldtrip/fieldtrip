@@ -159,7 +159,7 @@ if ~isempty(cfg.missingchannel) && strcmp(cfg.method, 'weighted')
 end
 
 % get selection of channels that are missing and/or bad
-cfg.missingchannel = cat(1, cfg.missingchannel(:), cfg.badchannel);
+cfg.missingchannel = cat(1, cfg.missingchannel(:), cfg.badchannel(:));
 cfg.missingchannel = setdiff(cfg.missingchannel, data.label);
 cfg.badchannel = ft_channelselection(cfg.badchannel, data.label);
 fprintf('There are %d bad channels\n', length(cfg.badchannel));
