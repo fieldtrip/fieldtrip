@@ -152,6 +152,7 @@ switch purpose
       'trackusage'
       'version'
       'warning'
+      'event'
       };
 
   case 'trackconfig'
