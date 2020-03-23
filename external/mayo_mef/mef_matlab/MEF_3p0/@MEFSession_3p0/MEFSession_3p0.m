@@ -7,8 +7,10 @@ classdef MEFSession_3p0 < MEFSession & MultiscaleElectrophysiologyFile_3p0
     %   this = __(sesspath, password)
     %
     % Input(s):
-    %   sesspath    - [str] (opt) MEF 3.0 session path
-    %   password    - [struct] (opt) structure of MEF 3.0 passowrd
+    %   sesspath    - [str] (opt) MEF 3.0 session path (default = '')
+    %   password    - [struct] (opt) structure of MEF 3.0 passowrd (default
+    %                 = struct('Level1Password', '', 'Level2Password', '',...
+    %                 'AccessLevel', 1);)
     %                 .Level1Password (default = '')
     %                 .Level2Password (default = '')
     %                 .AccessLevel (default = 1)
@@ -19,7 +21,7 @@ classdef MEFSession_3p0 < MEFSession & MultiscaleElectrophysiologyFile_3p0
     % See also get_sessinfo.
 
 	% Copyright 2020 Richard J. Cui. Created: Thu 02/06/2020 10:07:26.965 AM
-	% $Revision: 0.3 $  $Date: Wed 03/11/2020 11:01:21.803 PM $
+	% $Revision: 0.4 $  $Date: Sat 03/21/2020 10:35:23.147 PM $
 	%
 	% 1026 Rocky Creek Dr NE
 	% Rochester, MN 55906, USA
@@ -59,19 +61,14 @@ classdef MEFSession_3p0 < MEFSession & MultiscaleElectrophysiologyFile_3p0
             % parse and retrun the results
             p.parse(varargin{:});
             q = p.Results;
+            sesspath = q.sesspath;
+            password = q.password;
             
             % operations during construction
             % ------------------------------
             % initialize super classes
             this@MEFSession;
             this@MultiscaleElectrophysiologyFile_3p0;
-            
-            % set session info
-            this.SessionPath = q.sesspath; % set session path directory
-            this.Password = q.password; % set password
-            this.MetaData = this.read_mef_session_metadata_3p0;
-            this.get_sess_parts;
-            this.get_sessinfo;
             
             % set MEF version to serve
             if isempty(this.MEFVersion) == true
@@ -80,6 +77,11 @@ classdef MEFSession_3p0 < MEFSession & MultiscaleElectrophysiologyFile_3p0
                 error('MEFSession_3p0:invalidMEFVer',...
                     'invalid MEF version; this function can serve only MEF 3.0')
             end % if            
+            
+            % set session info
+            if ~isempty(sesspath)
+                this.setSessionInfo(sesspath, password);
+            end % if
         end % function
     end % methods
     
@@ -95,6 +97,7 @@ classdef MEFSession_3p0 < MEFSession & MultiscaleElectrophysiologyFile_3p0
         metadata = read_mef_session_metadata_3p0(this, varargin) % get session metadata of MEF 3.0
         valid_yn = checkSessValid(this, varargin) % check validity of session info
         [X, t] = import_sess(this, varargin) % import session of MEF 3.0 data
+        setSessionInfo(this, sesspath, password) % set session information
     end % methods
 end % classdef
 

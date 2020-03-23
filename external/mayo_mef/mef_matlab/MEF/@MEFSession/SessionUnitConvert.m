@@ -1,5 +1,5 @@
 function out_time = SessionUnitConvert(this, in_time, varargin)
-% MEFSESSION_2P1.SESSIONUNITCONVERT convert units of relative time points
+% MEFSESSION.SESSIONUNITCONVERT convert units of relative time points
 % 
 % Syntax:
 %   out_time = SessionUnitConvert(this, in_time)
@@ -21,7 +21,7 @@ function out_time = SessionUnitConvert(this, in_time, varargin)
 % See also SampleUnitConvert.
 
 % Copyright 2020 Richard J. Cui. Created: Wed 01/22/2020 10:02:38.457 PM
-% $Revision: 0.1 $  $Date: Wed 01/22/2020 10:02:38.457 PM $
+% $Revision: 0.2 $  $Date: Sun 03/22/2020  9:15:46.097 PM $
 %
 % 1026 Rocky Creek Dr NE
 % Rochester, MN 55906, USA

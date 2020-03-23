@@ -114,6 +114,7 @@ function [data] = ft_preprocessing(cfg, data)
 %                     (e.g. lf.leadfield or lf) based on real head modal using FieldTrip.
 %   cfg.implicitref   = 'label' or empty, add the implicit EEG reference as zeros (default = [])
 %   cfg.montage       = 'no' or a montage structure, see FT_APPLY_MONTAGE (default = 'no')
+%   cfg.password      = password structure for encrypted data set (such as mayo_mef30 and mayo_mef21)
 %
 % Preprocessing options that you should only use when you are calling FT_PREPROCESSING with
 % also the second input argument "data" are
@@ -223,6 +224,7 @@ cfg.checkmaxfilter = ft_getopt(cfg, 'checkmaxfilter');      % this allows to rea
 cfg.montage        = ft_getopt(cfg, 'montage', 'no');
 cfg.updatesens     = ft_getopt(cfg, 'updatesens', 'no');    % in case a montage or rereferencing is specified
 cfg.chantype       = ft_getopt(cfg, 'chantype', {});        %2017.10.10 AB required for NeuroOmega files
+cfg.password       = ft_getopt(cfg, 'password', struct([]));% password for encrypted dataset
 
 % these options relate to the actual preprocessing, it is necessary to specify here because of padding
 cfg.dftfilter      = ft_getopt(cfg, 'dftfilter', 'no');
@@ -403,7 +405,8 @@ else
   % read the header
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat,...
     'coordsys', cfg.coordsys, 'coilaccuracy', cfg.coilaccuracy,...
-    'checkmaxfilter', istrue(cfg.checkmaxfilter), 'chantype', cfg.chantype);
+    'checkmaxfilter', istrue(cfg.checkmaxfilter), 'chantype', cfg.chantype,...
+    'password', cfg.password);
   
   % this option relates to reading over trial boundaries in a pseudo-continuous dataset
   if ~isfield(cfg, 'continuous')
@@ -589,7 +592,10 @@ else
       
       % read the raw data with padding on both sides of the trial - this
       % includes datapadding
-      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', rawindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
+      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', begsample,...
+          'endsample', endsample, 'chanindx', rawindx,...
+          'checkboundary', strcmp(cfg.continuous, 'no'),...
+          'dataformat', cfg.dataformat, 'password', cfg.password);
       
       % convert the data to another numeric precision, i.e. double, single or int32
       if ~isempty(cfg.precision)
