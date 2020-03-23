@@ -71,7 +71,7 @@ persistent dim X Y Z
 if isequal(dim, size(dat(:,:,:,1,1)))
   % reuse the persistent variables to speed up subsequent calls with the same input
 else
-  dim       = size(dat);
+  dim       = [size(dat) 1]; % add 1 to catch size(dat,3) is singleton
   [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
 end
 
