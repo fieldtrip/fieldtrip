@@ -1455,7 +1455,7 @@ elseif filetype_check_extension(filename, '.TextGrid')
 elseif filetype_check_extension(filename, '.fcsv')
   type = '3dslicer_fscv';
   manufacturer = 'https://www.slicer.org/';
-  content = 'position informaiton about Markups Fiducial Node';
+  content = 'position information about Markups Fiducial Node';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
