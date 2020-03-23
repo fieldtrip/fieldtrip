@@ -1029,8 +1029,7 @@ switch dataformat
     
     %Fieldtrip can't handle multiple sampling rates in a data block
     %We will get only the data with the most frequent sampling rate
-    
-        
+            
     targetNumberOfChannels = hdr.orig.targetNumberOfChannels;
     targetSampleCount = hdr.orig.targetSampleCount;
     
