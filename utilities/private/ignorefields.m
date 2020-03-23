@@ -274,6 +274,7 @@ switch purpose
       'opto'
       'sourcemodel'
       'vol'
+      'trl'
       };
 
   otherwise
