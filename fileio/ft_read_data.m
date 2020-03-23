@@ -1038,7 +1038,7 @@ switch dataformat
     j = 1;
     for i=1:size(hdr.orig.Segments(1).samplingRate,2)
       if hdr.orig.Segments(1).samplingRate(i) == hdr.Fs
-        dataForChannel = zeros();
+        dataForChannel = [];
         %disp(['Reading channel ' num2str(i)]);
         for segment=1:size(hdr.orig.Segments,2)
           %disp(['Reading channel ' num2str(i) ' segment ' num2str(segment)]);

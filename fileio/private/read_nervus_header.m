@@ -105,7 +105,7 @@ targetSampleCount = 0;
 for i = 1:size(nrvHdr.Segments,2)
   targetSampleCount = targetSampleCount + nrvHdr.Segments(i).sampleCount(firstMatchingChannel);
 end
-nrvHdr.targetSampleCount = targetSampleCount +1;
+nrvHdr.targetSampleCount = targetSampleCount;
 
 newlabels = cell(nrvHdr.targetNumberOfChannels, 1);
 j = 1;

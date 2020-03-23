@@ -65,11 +65,11 @@ else
     try 
     disp('Comparing ASCII-exported data to Nicolet data');
     assert(size(alldata,1)<=size(textData,1),"Nicolet data should have same or fewer columns than text data");
-    assert((size(alldata,2)-1)==size(textData,2),"Nicolet data should have one less samples than text data");
+    assert((size(alldata,2))==size(textData,2),"Nicolet data should have same sample count as text data");
 
     for col=1:size(alldata,1)
         for sample=1:(size(alldata,2)-1)
-            assert(abs(alldata(col,sample+1)-textData(col,sample))<asciiDataTolerance,"Sample inequality found");
+            assert(abs(alldata(col,sample)-textData(col,sample))<asciiDataTolerance,"Sample inequality found");
         end
     end
     disp('Data are equal up to the limits of Nicolet ASCII export');
