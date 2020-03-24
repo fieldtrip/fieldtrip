@@ -152,6 +152,7 @@ switch purpose
       'trackusage'
       'version'
       'warning'
+      'event'
       };
 
   case 'trackconfig'
@@ -273,6 +274,7 @@ switch purpose
       'opto'
       'sourcemodel'
       'vol'
+      'trl'
       };
 
   otherwise
