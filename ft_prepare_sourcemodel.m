@@ -167,7 +167,6 @@ end
 
 % the source model can be constructed in a number of ways
 basedongrid       = isfield(cfg, 'xgrid') && ~ischar(cfg.xgrid);                              % regular 3D grid with explicit specification
-basedonpos        = isfield(cfg.sourcemodel, 'pos');                                          % using user-supplied positions, which can be regular or irregular
 basedonshape      = ~isempty(cfg.headshape);                                                  % surface mesh based on inward shifted head surface from external file
 basedonmri        = isfield(cfg, 'mri') && ~(isfield(cfg, 'warpmni') && istrue(cfg.warpmni)); % regular 3D grid, based on segmented MRI, restricted to gray matter
 basedonmni        = isfield(cfg, 'mri') &&  (isfield(cfg, 'warpmni') && istrue(cfg.warpmni)); % regular 3D grid, based on warped MNI template
@@ -175,6 +174,7 @@ basedonvol        = false;                                                      
 basedoncortex     = isfield(cfg, 'headshape') && (iscell(cfg.headshape) || any(ft_filetype(cfg.headshape, {'neuromag_fif', 'freesurfer_triangle_binary', 'caret_surf', 'gifti'}))); % cortical sheet from external software such as Caret or FreeSurfer, can also be two separate hemispheres
 basedonresolution = isfield(cfg, 'resolution') && ~basedonmri && ~basedonmni;                 % regular 3D grid with specification of the resolution
 basedonfile       = isfield(cfg, 'sourcemodel') && ischar(cfg.sourcemodel);
+basedonpos        = isfield(cfg.sourcemodel, 'pos') || basedonfile;                           % using user-supplied positions, which can be regular or irregular
 
 if basedonshape && basedoncortex
   % treating it as cortical sheet has preference
@@ -251,7 +251,7 @@ if basedonmni
 end
 
 % these are mutually exclusive
-if sum([basedonresolution basedongrid basedonpos basedonshape basedonmri basedonvol basedoncortex basedonmni])~=1
+if sum([basedonresolution basedongrid (basedonpos||basedonfile) basedonshape basedonmri basedonvol basedoncortex basedonmni])~=1
   ft_error('incorrect cfg specification for constructing a sourcemodel');
 end
 
@@ -283,7 +283,8 @@ if basedonfile
   % read the source model from a MATLAB file
   % this needs to be done prior to determining the default units
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  sourcemodel = loadvar(cfg.sourcemodel, 'sourcemodel');
+  cfg.sourcemodel = loadvar(cfg.sourcemodel, 'sourcemodel');
+  sourcemodel = cfg.sourcemodel;
 end
 
 if isempty(cfg.unit)
