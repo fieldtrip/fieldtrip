@@ -8,37 +8,41 @@ function test_nicolet_reading
 % one is a file from 2006 (older Nicolet format)
 % one is a file from 2018 (newer Nicolet format)
 
-%path_to_load = dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/nicolet');
-path_to_load = 'C:\Midlertidig_Lagring\FieldTripNicoletTestData';
+path_to_load = dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/nicolet');
+%path_to_load = 'C:\Midlertidig_Lagring\FieldTripNicoletTestData';
 
 %%
-file1 = '2018_Patient59_EEG-OPPTAKER-1_t1-NICOLET.e';
-file1ascii = '2018_Patient59_EEG-OPPTAKER-1_t1-ASCII.txt';
-test_nicolet_reading_onefile(path_to_load,file1,file1ascii,500,24,45500,1,datetime(2018,06,18,08,07,24));
+% file1 = '2018_Patient59_EEG-OPPTAKER-1_t1-NICOLET.e';
+% file1ascii = '2018_Patient59_EEG-OPPTAKER-1_t1-ASCII.txt';
+% %file1 = 'Patient59_EEG-OPPTAKER-1_t1-NICOLET.e';
+% %file1ascii = 'Patient59_EEG-OPPTAKER-1_t1-ASCII.txt';
+% test_nicolet_reading_onefile(path_to_load,file1,file1ascii,500,24,45500,1,datetime(2018,06,18,08,07,24));
 
 %%
 file2 = '2006_janbrogger.e';
 file2ascii = '2006_janbrogger.txt';
+%file2 = 'janbrogger.e';
+%file2ascii = 'janbrogger.txt';
 test_nicolet_reading_onefile(path_to_load,file2,file2ascii,256,24,307200,1,datetime(2006,06,09,13,42,41));
 
 %%
 % Test code requested by Robert. For file 1
-disp('Checking that files can be displayed. File 1');
-filepath1 = fullfile(path_to_load,file1);
-
-hdr = ft_read_header(filepath1);
-event = ft_read_event(filepath1);
-dataopts = {};
-alldata = ft_read_data(filepath1, 'header', hdr, dataopts{:});
+% disp('Checking that files can be displayed. File 1');
+% filepath1 = fullfile(path_to_load,file1);
+% 
+% hdr = ft_read_header(filepath1);
+% event = ft_read_event(filepath1);
+% dataopts = {};
+% alldata = ft_read_data(filepath1, 'header', hdr, dataopts{:});
 
 % open databrowser for file 1
 cfg            = [];
-cfg.dataset    = filepath1;
+%cfg.dataset    = filepath1;
 cfg.continuous = 'yes';
 cfg.channel    = 'all';
-data           = ft_preprocessing(cfg);
+%data           = ft_preprocessing(cfg);
 cfg.viewmode   = 'vertical';
-ft_databrowser(cfg, data);
+%ft_databrowser(cfg, data);
 
 %%
 % Tests code requested by Robert. For file 2
