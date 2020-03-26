@@ -845,37 +845,43 @@ for k = 1:size(comp.topo,2)
 end
 comp.topolabel = data.label(:);
 
+sensfield = cell(0,1);
 if isfield(data, 'grad')
-  sensfield = 'grad';
-elseif isfield(data, 'elec')
-  sensfield = 'elec';
-elseif isfield(data, 'opto')
-  sensfield = 'opto';
-else
-  sensfield = [];
+  sensfield{end+1} = 'grad';
+end
+if isfield(data, 'elec')
+  sensfield{end+1} = 'elec';
+end
+if isfield(data, 'opto')
+  sensfield{end+1} = 'opto';
 end
 
 % apply the linear projection also to the sensor description
 if ~isempty(sensfield)
   if  strcmp(cfg.updatesens, 'yes')
-    ft_info('also applying the unmixing matrix to the %s structure\n', sensfield);
     % construct a montage and apply it to the sensor description
     montage          = [];
     montage.labelold = data.label;
     montage.labelnew = comp.label;
     montage.tra      = unmixing;
-    comp.(sensfield) = ft_apply_montage(data.(sensfield), montage, 'balancename', 'comp', 'keepunused', 'yes');
     
-    % The output sensor array cannot simply be interpreted as the input
-    % sensor array, hence the type should be removed to allow autodetection
-    % See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1806
-    if isfield(comp.(sensfield), 'type')
-      comp.(sensfield) = rmfield(comp.(sensfield), 'type');
+    for m = 1:numel(sensfield)
+      ft_info('also applying the unmixing matrix to the %s structure\n', sensfield{m});
+      comp.(sensfield{m}) = ft_apply_montage(data.(sensfield{m}), montage, 'balancename', 'comp', 'keepunused', 'yes');
+      
+      % The output sensor array cannot simply be interpreted as the input
+      % sensor array, hence the type should be removed to allow autodetection
+      % See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1806
+      if isfield(comp.(sensfield{m}), 'type')
+        comp.(sensfield{m}) = rmfield(comp.(sensfield{m}), 'type');
+      end
     end
   else
-    ft_info('not applying the unmixing matrix to the %s structure\n', sensfield);
-    % simply copy it over
-    comp.(sensfield) = data.(sensfield);
+    for m = 1:numel(sensfield)
+      ft_info('not applying the unmixing matrix to the %s structure\n', sensfield{m});
+      % simply copy it over
+      comp.(sensfield{m}) = data.(sensfield{m});
+    end
   end
 end % if sensfield
 
