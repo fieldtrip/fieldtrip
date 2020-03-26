@@ -22,14 +22,18 @@ be_second = [0, 10, 0]; % 10-second time of data from the start
 out_unit = 'index';
 be_sample = mef_ft.SessionUnitConvert(be_second, in_unit, out_unit);
 
+% read data header with ft_read_header
+hdr = ft_read_header(sesspath, 'password', password);
+
 % read data with ft_read_data()
 dat = ft_read_data(sesspath, 'begsample', be_sample(1), 'endsample', be_sample(2),...
-    'password', password);
+    'header', hdr, 'password', password);
 
 % read data with ft_preprocessing
 cfg = [];
 cfg.dataset = sesspath;
 cfg.password = password;
+cfg.header = hdr;
 cfg.trl = be_sample;
 dat_ieeg = ft_preprocessing(cfg);
 
