@@ -251,7 +251,7 @@ if basedonmni
 end
 
 % these are mutually exclusive
-if sum([basedonresolution basedongrid basedonpos basedonshape basedonmri basedonvol basedoncortex basedonmni basedonfile])~=1
+if sum([basedonresolution basedongrid basedonpos basedonshape basedonmri basedonvol basedoncortex basedonmni])~=1
   ft_error('incorrect cfg specification for constructing a sourcemodel');
 end
 
