@@ -181,7 +181,7 @@ chanindx       = ft_getopt(varargin, 'chanindx');         % this is used for EDF
 coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
 coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0-2
 chantype       = ft_getopt(varargin, 'chantype', {});
-password       = ft_getopt(varargin, 'password');         % get the password
+password       = ft_getopt(varargin, 'password', struct([])); % get the password
 if ~iscell(chantype); chantype = {chantype}; end
 
 % optionally get the data from the URL and make a temporary local copy

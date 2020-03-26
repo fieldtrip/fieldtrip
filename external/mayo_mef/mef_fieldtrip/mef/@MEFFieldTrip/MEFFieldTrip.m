@@ -16,7 +16,7 @@ classdef MEFFieldTrip < handle
     %
     % Multimodel Neuroimaging Lab (Dr. Dora Hermes)
     % Mayo Clinic St. Mary Campus
-    % Rochester, MN 55905
+    % Rochester, MN 55905, USA
     %
     % Email: richard.cui@utoronto.ca
 

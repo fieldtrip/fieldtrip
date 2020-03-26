@@ -139,7 +139,7 @@ cache           = ft_getopt(varargin, 'cache', false);
 dataformat      = ft_getopt(varargin, 'dataformat');
 chanunit        = ft_getopt(varargin, 'chanunit');
 timestamp       = ft_getopt(varargin, 'timestamp');
-password        = ft_getopt(varargin, 'password');
+password        = ft_getopt(varargin, 'password', struct([]));
 
 % this allows blocking reads to avoid having to poll many times for online processing
 blocking         = ft_getopt(varargin, 'blocking', false);  % true or false

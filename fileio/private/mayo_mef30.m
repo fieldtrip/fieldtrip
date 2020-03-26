@@ -34,7 +34,7 @@ function mayo_out = mayo_mef30(varargin)
 % See also ft_filetype, ft_read_header, ft_read_event, ft_read_data.
 
 % Copyright 2020 Richard J. Cui. Created: Sat 03/21/2020  5:26:02.846 PM
-% $Revision: 0.2 $  $Date: Sun 03/22/2020  8:14:59.010 AM $
+% $Revision: 0.3 $  $Date: Wed 03/25/2020  8:53:17.504 PM $
 %
 % Multimodel Neuroimaging Lab (Dr. Dora Hermes)
 % Mayo Clinic St. Mary Campus
@@ -93,8 +93,7 @@ end % function mayo_mef30
 function q = parseInputs(varargin)
 
 % default
-default_pw = struct('Level1Password', '', 'Level2Password', '',...
-    'AccessLevel', 1);
+default_pw = struct([]);
 default_hr = struct([]);
 default_bs = [];
 default_es = [];
@@ -103,7 +102,7 @@ default_ci = [];
 % parse rule
 p = inputParser;
 p.addRequired('filename', @ischar);
-p.addOptional('password', default_pw, @isstruct);
+p.addOptional('password', default_pw, @(x) isstruct(x) || isempty(x));
 p.addOptional('hdr', default_hr, @isstruct);
 p.addOptional('begsample', default_bs, @isnumeric);
 p.addOptional('endsample', default_es, @isnumeric);
