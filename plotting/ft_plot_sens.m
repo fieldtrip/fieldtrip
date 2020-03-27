@@ -43,7 +43,7 @@ function hs = ft_plot_sens(sens, varargin)
 %   'edgealpha'       = transparency, between 0 and 1 (default = 1)
 %
 % Example
-%   sens = ft_read_sens('Subject01.ds');
+%   sens = ft_read_sens('Subject01.ds', 'senstype', 'meg');
 %   figure; ft_plot_sens(sens, 'coilshape', 'point', 'style', 'r*')
 %   figure; ft_plot_sens(sens, 'coilshape', 'circle')
 %   figure; ft_plot_sens(sens, 'coilshape', 'circle', 'coil', true, 'chantype', 'meggrad')
