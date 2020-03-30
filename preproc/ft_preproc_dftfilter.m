@@ -1,14 +1,14 @@
 function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, varargin)
 
-% FT_PREPROC_DFTFILTER reduces power line noise (50 or 60Hz) via two 
+% FT_PREPROC_DFTFILTER reduces power line noise (50 or 60Hz) via two
 % alternative methods:
 % A) DFT filter (Flreplace = 'zero') or
 % B) Spectrum Interpolation (Flreplace = 'neighbour').
 %
 % A) The DFT filter applies a notch filter to the data to remove the 50Hz
-% or 60Hz line noise components ('zeroing'). This is done by fitting a sine 
-% and cosine at the specified frequency to the data and subsequently 
-% subtracting the estimated components. The longer the data is, the sharper 
+% or 60Hz line noise components ('zeroing'). This is done by fitting a sine
+% and cosine at the specified frequency to the data and subsequently
+% subtracting the estimated components. The longer the data is, the sharper
 % the spectral notch will be that is removed from the data.
 % Preferably the data should have a length that is a multiple of the
 % oscillation period of the line noise (i.e. 20ms for 50Hz noise). If the
@@ -20,25 +20,25 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, varargin)
 % (Leske & Dalal, 2019, NeuroImage 189,
 %  doi: 10.1016/j.neuroimage.2019.01.026)
 % The signal is:
-% I)   transformed into the frequency domain via a discrete Fourier 
-%       transform (DFT), 
-% II)  the line noise component (e.g. 50Hz, Flwidth = 1 (±1Hz): 49-51Hz) is 
-%       interpolated in the amplitude spectrum by replacing the amplitude 
-%       of this frequency bin by the mean of the adjacent frequency bins 
-%       ('neighbours', e.g. 49Hz and 51Hz). 
-%       Neighwidth defines frequencies considered for the mean (e.g. 
-%       Neighwidth = 2 (±2Hz) implies 47-49 Hz and 51-53 Hz). 
+% I)   transformed into the frequency domain via a discrete Fourier
+%       transform (DFT),
+% II)  the line noise component (e.g. 50Hz, Flwidth = 1 (±1Hz): 49-51Hz) is
+%       interpolated in the amplitude spectrum by replacing the amplitude
+%       of this frequency bin by the mean of the adjacent frequency bins
+%       ('neighbours', e.g. 49Hz and 51Hz).
+%       Neighwidth defines frequencies considered for the mean (e.g.
+%       Neighwidth = 2 (±2Hz) implies 47-49 Hz and 51-53 Hz).
 %       The original phase information of the noise frequency bin is
 %       retained.
 % III) the signal is transformed back into the time domain via inverse DFT
 %       (iDFT).
-% If Fline is a vector (e.g. [50 100 150]), harmonics are also considered. 
+% If Fline is a vector (e.g. [50 100 150]), harmonics are also considered.
 % Preferably the data should be continuous or consist of long data segments
 % (several seconds) to avoid edge effects. If the sampling rate and the
 % data length are such, that a full cycle of the line noise and the harmonics
 % fit in the data and if the line noise is stationary (e.g. no variations
-% in amplitude or frequency), then spectrum interpolation can also be 
-% applied to short trials. But it should be used with caution and checked 
+% in amplitude or frequency), then spectrum interpolation can also be
+% applied to short trials. But it should be used with caution and checked
 % for edge effects.
 %
 % Use as
@@ -46,16 +46,22 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, varargin)
 % where
 %   dat             data matrix (Nchans X Ntime)
 %   Fsample         sampling frequency in Hz
-%   Fline           line noise frequency (and harmonics)
+%   Fline           line noise frequency (and harmonics) (default = [60
+%                   120] Hz
 %
 % Additional input arguments come as key-value pairs:
 %
-%   Flreplace       'zero' or 'neighbour', method used to reduce line noise, 'zero' implies DFT filter, 'neighbour' implies spectrum interpolation  
-%   Flwidth         bandwidth of line noise frequencies, applies to spectrum interpolation, in Hz
-%   Neighwidth      width of frequencies neighbouring line noise frequencies, applies to spectrum interpolation (Flreplace = 'neighbour'), in Hz 
+%   Flreplace       'zero' or 'neighbour', method used to reduce line noise,
+%                   'zero' implies DFT filter, 'neighbour' implies spectrum
+%                   interpolation
+%   Flwidth         bandwidth of line noise frequencies, applies to spectrum
+%                   interpolation, in Hz
+%   Neighwidth      width of frequencies neighbouring line noise frequencies,
+%                   applies to spectrum interpolation (Flreplace =
+%                   'neighbour'), in Hz
 %
 % The line frequency should be specified as a single number for the DFT filter.
-% If omitted, a European default of 50Hz will be assumed
+% If omitted, a default of 60 Hz will be assumed
 %
 % See also PREPROC
 
@@ -66,7 +72,7 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, varargin)
 %
 % Copyright (C) 2003, Pascal Fries
 % Copyright (C) 2003-2015, Robert Oostenveld
-% Copyright (C) 2016, Sabine Leske 
+% Copyright (C) 2016, Sabine Leske
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -86,28 +92,43 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, varargin)
 %
 % $Id$
 
-% defaults
-Flreplace = ft_getopt(varargin,'dftreplace','zero');
-Flwidth = ft_getopt(varargin, 'dftbandwidth', [1 2 3]);
-Neighwidth = ft_getopt(varargin, 'dftneighbourwidth', [2 2 2]);
+% Modified by Richard J. Cui on: Sun 03/29/2020  4:40:10.909 PM;
+% Revision: 0.1  Date: Sun 03/29/2020  4:40:10.909 PM
+%
+% Multimodel Neuroimaging Lab (Dr. Dora Hermes)
+% Mayo Clinic St. Mary Campus
+% Rochester, MN 55905, USA
+%
+% Email: richard.cui@utoronto.ca
 
-% determine the size of the data
-[nchans, nsamples] = size(dat);
+% =========================================================================
+% parse inputs
+% =========================================================================
+% defaults
+Flreplace = ft_getopt(varargin,'Flreplace','zero');
+Flwidth = ft_getopt(varargin, 'Flwidth', 1);
+Neighwidth = ft_getopt(varargin, 'Neighwidth', 2);
 
 % set the default filter frequency
 if nargin<3 || isempty(Fl)
-  Fl = 50;
+    Fl = 60;
 end
+
+% =========================================================================
+% main
+% =========================================================================
+% determine the size of the data
+[nchans, nsamples] = size(dat);
 
 % ensure to be a column  vector
 Fl = Fl(:);
 
 % preprocessing fails on channels that contain NaN
 if any(isnan(dat(:)))
-  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+    ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
 end
 
-% Method A): DFT filter 
+% Method A): DFT filter
 if strcmp(Flreplace,'zero')
     % determine the largest integer number of line-noise cycles that fits in the data
     n = round(floor(nsamples .* Fl./Fs) * Fs./Fl);
@@ -143,28 +164,42 @@ if strcmp(Flreplace,'zero')
         % add the mean back to the filtered data
         filt(:,i) = filt(:,i) + meandat;
     end
-
-% Method B): Spectrum Interpolation
+    
+    % Method B): Spectrum Interpolation
 elseif strcmp(Flreplace,'neighbour')
-   Flwidth = Flwidth(:);
-   Neighwidth = Neighwidth(:);
-   
-   % error message if periodicity of the interference frequency doesn't match the DFT length 
-   n = round(floor(nsamples .* Fl./Fs) * Fs./Fl);
-   if n ~= nsamples 
-       ft_error('Spectrum interpolation requires that the data length fits complete cycles of the powerline frequency, e.g., exact multiples of 20 ms for a 50 Hz line frequency (sampling rate of 1000 Hz).');
-   end
-   
-   if (length(Fl) ~= length(Flwidth)) || (length(Fl) ~= length(Neighwidth))
-       ft_error('The number of frequencies to interpolate (cfg.dftfreq) should be the same as the number of bandwidths (cfg.dftbandwidth) and bandwidths of neighbours (cfg.neighbourwidth)');
-   end
-
+    Flwidth = Flwidth(:);
+    Neighwidth = Neighwidth(:);
+    
+    % adjust signal length
+    % error message if periodicity of the interference frequency doesn't match the DFT length
+    % n = round(floor(nsamples .* Fl./Fs) * Fs./Fl);
+    Fl_lcm = vlcm(Fl);
+    n = (floor(nsamples/Fl_lcm)+1)*Fl_lcm; % desired signal length
+    nsamples_original = nsamples;
+    if n ~= nsamples_original
+        dn = n - nsamples;
+        nsamples = n;
+        dat = cat(2, dat, dat(:, end-dn+1:end)); % TODO: here assume data length is larger than dn
+    end % if
+    
+    if n ~= nsamples
+        ft_error('Spectrum interpolation requires that the data length fits complete cycles of the powerline frequency, e.g., exact multiples of 20 ms for a 50 Hz line frequency (sampling rate of 1000 Hz).');
+    end
+    
+    if (length(Fl) ~= length(Flwidth)) || (length(Fl) ~= length(Neighwidth))
+        ft_error('The number of frequencies to interpolate (cfg.dftfreq) should be the same as the number of bandwidths (cfg.dftbandwidth) and bandwidths of neighbours (cfg.neighbourwidth)');
+    end
+    
     % frequencies to interpolate
-    for i = 1:length(Fl)
+    num_Fl = length(Fl);
+    f2int = zeros(num_Fl, 2);
+    for i = 1:num_Fl
         f2int(i,:) = [Fl(i)-Flwidth(i) Fl(i)+Flwidth(i)];
     end
     % frequencies used for interpolation
-    for i = 1:length(Neighwidth)
+    num_nw = length(Neighwidth);
+    f4int = zeros(num_nw, 4);
+    for i = 1:num_nw
         f4int(i,:) = [f2int(i,1)-Neighwidth(i) f2int(i,:) f2int(i,2)+Neighwidth(i)];
     end
     
@@ -180,12 +215,34 @@ elseif strcmp(Flreplace,'neighbour')
         mns4int= bsxfun(@times, ones(size(data_fft(:,smpl2int))), mean(abs(data_fft(:,smpl4int)),2));
         
         % Eulers formula: replace noise components with new mean amplitude combined with phase, that is retained from the original data
-        data_fft(:,smpl2int) = bsxfun(@times, exp(bsxfun(@times,angle(data_fft(:,smpl2int)),1i)), mns4int); 
+        data_fft(:,smpl2int) = bsxfun(@times, exp(bsxfun(@times,angle(data_fft(:,smpl2int)),1i)), mns4int);
     end
     
-    % complex fourier coefficients are transformed back into time domin, fourier coefficients are treated as conjugate 'symmetric'
+    % complex fourier coefficients are transformed back into time domin,
+    % fourier coefficients are treated as conjugate 'symmetric'
     % to ensure a real valued signal after iFFT
     filt = ifft(data_fft,[],2,'symmetric');
-   
+    
+    % get back the correct signal length, if necessary
+    if n ~= nsamples_original
+        filt = filt(:, 1:nsamples_original);
+    end % if
 end
 
+end % funciton
+
+% =========================================================================
+% subroutines
+% =========================================================================
+function L = vlcm(A)
+% least common lcm of a vector
+
+n = numel(A);
+L = A(1);
+for k = 2:n
+    L = lcm(L, A(k));
+end % for
+
+end % funciton
+
+% [EOF]
