@@ -118,7 +118,22 @@ end
 % main
 % =========================================================================
 % determine the size of the data
-[nchans, nsamples] = size(dat);
+filt = zeros(size(dat));
+nchans = size(dat, 1);
+
+for k = 1:nchans
+    filt(k, :) = dftfilter(dat(k, :), Fs, Fl, Flreplace, Flwidth, Neighwidth);
+end % for
+
+end % funciton
+
+% =========================================================================
+% subroutines
+% =========================================================================
+function filt = dftfilter(dat, Fs, Fl, Flreplace, Flwidth, Neighwidth)
+% dft filter interpolation of one channel
+
+nsamples = size(dat, 2);
 
 % ensure to be a column  vector
 Fl = Fl(:);
@@ -227,13 +242,10 @@ elseif strcmp(Flreplace,'neighbour')
     if n ~= nsamples_original
         filt = filt(:, 1:nsamples_original);
     end % if
-end
+end % if
 
 end % funciton
 
-% =========================================================================
-% subroutines
-% =========================================================================
 function L = vlcm(A)
 % least common lcm of a vector
 
