@@ -9,8 +9,8 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 % where the details of the configuration structure determine how the source
 % model will be constructed.
 %
-% % The different options for constructing a source model are
-%   cfg.mode =   'basedongrid'        regular 3D grid with explicit specification
+% The different approaches for constructing a source model are
+%   cfg.method = 'basedongrid'        regular 3D grid with explicit specification
 %                'basedonpos'         regular 3D grid with specification of the resolution
 %                'basedonshape'       surface mesh based on inward shifted head surface from external file
 %                'basedonmri'         regular 3D grid, based on segmented MRI, restricted to gray matter
@@ -19,52 +19,48 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 %                'basedonresolution'  regular 3D grid with specification of the resolution
 %                'basedonvol'         surface mesh based on inward shifted brain surface from volume conductor
 %                'basedonfile'        the sourcemodel should be read from file
-% The approach that will be used depends on the configuration options that
-% you specify.
+% The default for cfg.method is to determine the approach automatically, based on 
+% the configuration options that you specify.
 %
-% The following parameters apply to cfg.mode='basedonresolution'
-%   cfg.xgrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
-%   cfg.ygrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
-%   cfg.zgrid      = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
-%   cfg.resolution = number (e.g. 1 cm) for automatic grid generation
+% BASEDONRESOLUTION - uses an explicitly specified grid, or with the desired 
+% resolution, according to the following configuration options:
+%   cfg.xgrid         = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
+%   cfg.ygrid         = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
+%   cfg.zgrid         = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
+%   cfg.resolution    = number (e.g. 1 cm) for automatic grid generation
 %
-% The following parameters apply to cfg.mode='basedonpos'
-%   cfg.sourcemodel.pos        = N*3 matrix with position of each source
-%   cfg.sourcemodel.inside     = N*1 vector with boolean value whether position is inside brain (optional)
-%   cfg.sourcemodel.dim        = [Nx Ny Nz] vector with dimensions in case of 3D grid (optional)
-% The following fields are not used in this function, but will be copied along to the output
-%   cfg.sourcemodel.leadfield
-%   cfg.sourcemodel.filter
+% BASEDONPOS - places sources on positions that you explicitly specify, 
+% according to the following configuration options:
+%   cfg.sourcemodel.pos       = N*3 matrix with position of each source
+%   cfg.sourcemodel.inside    = N*1 vector with boolean value whether position is inside brain (optional)
+%   cfg.sourcemodel.dim       = [Nx Ny Nz] vector with dimensions in case of 3D grid (optional)
+% The following fields (from FT_PRERARE_LEADFIELD or FT_SOURCEANALYSIS) are 
+% not used in this function, but will be copied along to the output:
+%   cfg.sourcemodel.leadfield = cell-array
+%   cfg.sourcemodel.filter    = cell-array
 %   cfg.sourcemodel.subspace
 %   cfg.sourcemodel.lbex
 %
-% The following parameters apply to cfg.mode='basedonmni'
-%   cfg.mri        = structure with anatomical MRI model or filename, see FT_READ_MRI
-%   cfg.warpmni    = 'yes'
-%   cfg.resolution = number (e.g. 6) of the resolution of the
-%                                template MNI grid, defined in mm
-%   cfg.template   = specification of a template grid (grid structure), or a
-%                                filename of a template grid (defined in MNI space),
-%                                either cfg.resolution or cfg.template needs
-%                                to be defined. If both are defined cfg.template prevails
-%   cfg.nonlinear  = 'no' (or 'yes'), use non-linear normalization
+% BASEDONMNI - uses source positions from a template sourcemodel that is 
+% inversely warped from MNI coordinates to the individual subjects MRI. 
+% It uses the following configuration options:
+%   cfg.mri           = structure with anatomical MRI model or filename, see FT_READ_MRI
+%   cfg.warpmni       = 'yes'
+%   cfg.nonlinear     = 'no' (or 'yes'), use non-linear normalization
+%   cfg.resolution    = number (e.g. 6) of the resolution of the template MNI grid, defined in mm
+%   cfg.template      = specification of a template sourcemodel as structure, or the filename of a template sourcemodel (defined in MNI space)
+% Either cfg.resolution or cfg.template needs to be defined; if both are defined, cfg.template prevails.
 %
-% The following parameters apply to cfg.mode='basedonmri'
+% BASEDONMRI - makes a segmentation of the individual anatomical MRI and places 
+% sources in the grey matter. It uses the following configuration options:
 %   cfg.mri           = can be filename, MRI structure or segmented MRI structure
 %   cfg.threshold     = 0.1, relative to the maximum value in the segmentation
 %   cfg.smooth        = 5, smoothing in voxels
 %
-% The following parameters apply to cfg.mode='basedoncortex'
+% BASEDONCORTEX - places sources on the vertices of a cortical surface description
 %   cfg.headshape     = string, should be a *.fif file
 %
-% The EEG or MEG sensor positions can be present in the data or can be specified as
-%   cfg.elec          = structure with electrode positions or filename, see FT_READ_SENS
-%   cfg.grad          = structure with gradiometer definition or filename, see FT_READ_SENS
-%
-% The headmodel or volume conduction model can be specified as
-%   cfg.headmodel     = structure with volume conduction model or filename, see FT_PREPARE_HEADMODEL
-%
-% Other configuration options
+% Other configuration options include
 %   cfg.unit          = string, can be 'mm', 'cm', 'm' (default is automatic)
 %   cfg.tight         = 'yes' or 'no' (default is automatic)
 %   cfg.inwardshift   = number, how much should the innermost surface be moved inward to constrain
@@ -78,10 +74,17 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 %                       or a Nx3 matrix with headshape surface points (default = [])
 %   cfg.spmversion    = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
 %
+% The EEG or MEG sensor positions can be present in the data or can be specified as
+%   cfg.elec          = structure with electrode positions or filename, see FT_READ_SENS
+%   cfg.grad          = structure with gradiometer definition or filename, see FT_READ_SENS
+%
+% The headmodel or volume conduction model can be specified as
+%   cfg.headmodel     = structure with volume conduction model or filename, see FT_PREPARE_HEADMODEL
+%
 % See also FT_PREPARE_LEADFIELD, FT_PREPARE_HEADMODEL, FT_SOURCEANALYSIS,
 % FT_DIPOLEFITTING, FT_MEGREALIGN
 
-% Copyright (C) 2004-2019, Robert Oostenveld
+% Copyright (C) 2004-2020, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -167,25 +170,25 @@ if isfield(cfg, 'resolution') && isfield(cfg, 'zgrid') && ~ischar(cfg.zgrid)
 end
 
 % the source model can be constructed in a number of ways
-if ~isfield(cfg, 'mode') || isempty(cfg.mode)
+if ~isfield(cfg, 'mode') || isempty(cfg.method)
   if isfield(cfg, 'xgrid') && ~ischar(cfg.xgrid)
-    cfg.mode = 'basedongrid'; % regular 3D grid with explicit specification
+    cfg.method = 'basedongrid'; % regular 3D grid with explicit specification
   elseif isfield(cfg.sourcemodel, 'pos')
-    cfg.mode = 'basedonpos'; % using user-supplied positions, which can be regular or irregular
+    cfg.method = 'basedonpos'; % using user-supplied positions, which can be regular or irregular
   elseif ~isempty(cfg.headshape)
-    cfg.mode = 'basedonshape'; % surface mesh based on inward shifted head surface from external file
+    cfg.method = 'basedonshape'; % surface mesh based on inward shifted head surface from external file
   elseif isfield(cfg, 'mri') && ~(isfield(cfg, 'warpmni') && istrue(cfg.warpmni))
-    cfg.mode = 'basedonmri'; % regular 3D grid, based on segmented MRI, restricted to gray matter
+    cfg.method = 'basedonmri'; % regular 3D grid, based on segmented MRI, restricted to gray matter
   elseif isfield(cfg, 'mri') &&  (isfield(cfg, 'warpmni') && istrue(cfg.warpmni))
-    cfg.mode = 'basedonmni'; % regular 3D grid, based on warped MNI template
+    cfg.method = 'basedonmni'; % regular 3D grid, based on warped MNI template
   elseif isfield(cfg, 'headshape') && (iscell(cfg.headshape) || any(ft_filetype(cfg.headshape, {'neuromag_fif', 'freesurfer_triangle_binary', 'caret_surf', 'gifti'})))
-    cfg.mode = 'basedoncortex'; % cortical sheet from external software such as Caret or FreeSurfer, can also be two separate hemispheres
+    cfg.method = 'basedoncortex'; % cortical sheet from external software such as Caret or FreeSurfer, can also be two separate hemispheres
   elseif isfield(cfg, 'resolution') && ~basedonmri && ~basedonmni
-    cfg.mode = 'basedonresolution'; % regular 3D grid with specification of the resolution
-  elseif isfield(cfg, 'mode') && isempty(cfg.mode) && ~isempty(cfg.headmodel)
-    cfg.mode = 'basedonvol'; % surface mesh based on inward shifted brain surface from volume conductor
+    cfg.method = 'basedonresolution'; % regular 3D grid with specification of the resolution
+  elseif isfield(cfg, 'mode') && isempty(cfg.method) && ~isempty(cfg.headmodel)
+    cfg.method = 'basedonvol'; % surface mesh based on inward shifted brain surface from volume conductor
   elseif isfield(cfg, 'sourcemodel') && ischar(cfg.sourcemodel)
-    cfg.mode = 'basedonfile';
+    cfg.method = 'basedonfile';
   else
     ft_error('incorrect cfg specification for constructing a sourcemodel');
   end
@@ -194,7 +197,7 @@ end
 % these are mutually exclusive, but printing all requested methods here
 % facilitates debugging of weird configs. Also specify the defaults here to
 % keep the overview
-switch cfg.mode
+switch cfg.method
   case 'basedonfile'
     fprintf('reading sourcemodel from file\n');
     cfg.tight       = ft_getopt(cfg, 'tight',   'no');
@@ -244,7 +247,7 @@ switch cfg.mode
     cfg.nonlinear   = ft_getopt(cfg.sourcemodel, 'nonlinear',   'no');
 end
 
-if (isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no')) || strcmp(cfg.mode, 'basedonmni')
+if (isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no')) || strcmp(cfg.method, 'basedonmni')
   % check that the preferred SPM version is on the path
   ft_hastoolbox(cfg.spmversion, 1);
 end
@@ -267,7 +270,7 @@ catch
   sens = [];
 end
 
-if strcmp(cfg.mode, 'basedonfile')
+if strcmp(cfg.method, 'basedonfile')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % read the source model from a MATLAB file
   % this needs to be done prior to determining the default units
@@ -277,10 +280,10 @@ if strcmp(cfg.mode, 'basedonfile')
 end
 
 if isempty(cfg.unit)
-  if strcmp(cfg.mode, 'basedonfile') && isfield(sourcemodel, 'unit') && ~isempty(sourcemodel.unit)
+  if strcmp(cfg.method, 'basedonfile') && isfield(sourcemodel, 'unit') && ~isempty(sourcemodel.unit)
     % take the existing source model units
     cfg.unit = sourcemodel.unit;
-  elseif strcmp(cfg.mode, 'basedonfile') && isfield(sourcemodel, 'pos') && size(sourcemodel.pos,1)>10
+  elseif strcmp(cfg.method, 'basedonfile') && isfield(sourcemodel, 'pos') && size(sourcemodel.pos,1)>10
     % estimate the units based on the existing source positions
     sourcemodel = ft_determine_units(cfg.sourcemodel);
     cfg.unit = sourcemodel.unit;
@@ -313,7 +316,7 @@ if ~isempty(headmodel)
   headmodel = ft_convert_units(headmodel, cfg.unit);
 end
 
-switch cfg.mode
+switch cfg.method
   case 'basedonresolution'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % construct a regular 3D grid that spans a box encompassing all electrode
