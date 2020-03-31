@@ -45,6 +45,11 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
         iW1aenge_now, FjmoT6aA_highest_ft, iW1aenge_postamble{i}));
     end
     
+    % save the state of the random number generator
+    if isfield(cfg, 'randomseed') && isempty(cfg.randomseed)
+      cfg.randomseed = cfg.callinfo.randomseed;
+    end
+    
     % write the large configuration fields to a MATLAB file
     % this applies to layout, event, sourcemodel, headmodel, grad, etc.
     % note that this is here, rather than in the (seemingly more logical)

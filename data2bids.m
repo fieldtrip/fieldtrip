@@ -482,14 +482,17 @@ cfg.nirs.RecordingDuration                 = ft_getopt(cfg.nirs, 'RecordingDurat
 cfg.nirs.RecordingType                     = ft_getopt(cfg.nirs, 'RecordingType'                     );
 
 %% audio is not part of the official BIDS specification
-cfg.audio.SampleRate                      = ft_getopt(cfg.audio, 'SampleRate'     );
-cfg.audio.ChannelCount                    = ft_getopt(cfg.audio, 'ChannelCount'   );
+cfg.audio.SampleRate                      = ft_getopt(cfg.audio, 'SampleRate'        );
+cfg.audio.ChannelCount                    = ft_getopt(cfg.audio, 'ChannelCount'      );
+cfg.audio.RecordingDuration               = ft_getopt(cfg.audio, 'RecordingDuration' );
 
 %% video is not part of the official BIDS specification
 cfg.video.FrameRate                       = ft_getopt(cfg.video, 'FrameRate'           );
 cfg.video.Width                           = ft_getopt(cfg.video, 'Width'               );
 cfg.video.Height                          = ft_getopt(cfg.video, 'Height'              );
 cfg.video.BitsPerPixel                    = ft_getopt(cfg.video, 'BitsPerPixel'        );
+cfg.video.VideoDuration                   = ft_getopt(cfg.video, 'VideoDuration'       );
+cfg.video.AudioDuration                   = ft_getopt(cfg.video, 'AudioDuration'       );
 cfg.video.AudioSampleRate                 = ft_getopt(cfg.video, 'AudioSampleRate'     );
 cfg.video.AudioChannelCount               = ft_getopt(cfg.video, 'AudioChannelCount'   );
 
@@ -785,7 +788,7 @@ switch typ
     end
 
   case 'video'
-    % the file on disk contains video
+    % the file on disk contains not only video, but also audio
     need_video_json = true;
     try
       video = VideoReader(cfg.dataset);
@@ -1152,9 +1155,9 @@ end
 
 %% need_audio_json
 if need_audio_json
-  audio_json.SampleRate    = audio.SampleRate;
-  audio_json.Duration      = audio.Duration;
-  audio_json.ChannelCount  = audio.NumChannels;
+  audio_json.SampleRate         = audio.SampleRate;
+  audio_json.RecordingDuration  = audio.Duration; % please note that this is not consistent with VideoDuration/AudioDuration for a video file, but it is consistent with MEG/EEG/iEEG
+  audio_json.ChannelCount       = audio.NumChannels;
 
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
@@ -1164,11 +1167,12 @@ end
 
 %% need_video_json
 if need_video_json
-  ws = warning('off', 'MATLAB:structOnObject');
-  video_json = keepfields(struct(video), {'FrameRate', 'Width', 'Height', 'Duration'});
-  warning(ws);
+  video_json.FrameRate          = video.FrameRate;
+  video_json.Width              = video.Width;
+  video_json.Height             = video.Height;
+  video_json.VideoDuration      = video.Duration; % to distinguish it from the audio duration
+  video_json.AudioDuration      = audio.Duration; % to distinguish it from the video duration
   video_json.AudioSampleRate    = audio.SampleRate;
-  video_json.AudioDuration      = audio.Duration;
   video_json.AudioChannelCount  = audio.NumChannels;
 
   % merge the information specified by the user with that from the data
