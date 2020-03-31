@@ -170,7 +170,7 @@ if isfield(cfg, 'resolution') && isfield(cfg, 'zgrid') && ~ischar(cfg.zgrid)
 end
 
 % the source model can be constructed in a number of ways
-if ~isfield(cfg, 'mode') || isempty(cfg.method)
+if ~isfield(cfg, 'method') || isempty(cfg.method)
   if isfield(cfg, 'xgrid') && ~ischar(cfg.xgrid)
     cfg.method = 'basedongrid'; % regular 3D grid with explicit specification
   elseif isfield(cfg.sourcemodel, 'pos')
