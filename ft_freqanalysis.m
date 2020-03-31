@@ -247,7 +247,8 @@ switch cfg.method
     end
     % check for foi above Nyquist
     if isfield(cfg, 'foi')
-      if any(cfg.foi > (data.fsample/2))
+      if any(cfg.foi > (data.fsample+100*eps(data.fsample))/2)
+        % add a small number to allow for numeric tolerance issues
         ft_error('frequencies in cfg.foi are above Nyquist')
       end
       if isequal(cfg.taper, 'dpss') && not(isfield(cfg, 'tapsmofrq'))

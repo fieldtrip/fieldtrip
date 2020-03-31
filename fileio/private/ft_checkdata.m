@@ -1588,9 +1588,11 @@ elseif sum(strcmp(dimord, 'subj_chan_time'))==1
 elseif sum(strcmp(dimord, 'chan_time'))==1
   fn = fn{strcmp(dimord, 'chan_time')};
   ft_info('constructing single trial from "%s"\n', fn);
-  data.time  = {data.time};
-  data.trial = {data.(fn)};
+  tmptime  = {data.time};
+  tmptrial = {data.(fn)};
   data = rmfield(data, fn);
+  data.trial = tmptrial;
+  data.time  = tmptime;
 else
   ft_error('unsupported data structure');
 end

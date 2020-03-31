@@ -1033,11 +1033,32 @@ switch dataformat
     % recordings. The code currently concatenates these trials.
     % We could set this up as separate "trials" later.
     % We could probably add "boundary events" in EEGLAB later
-    dat = zeros(0,size(hdr.orig.Segments(1).chName,2));
-    for segment=1:size(hdr.orig.Segments,2)
-      range = [1 hdr.orig.Segments(segment).sampleCount];
-      datseg = read_nervus_data(hdr.orig,segment, range, chanindx);
-      dat = cat(1,dat,datseg);
+    
+    %Fieldtrip can't handle multiple sampling rates in a data block
+    %We will get only the data with the most frequent sampling rate
+            
+    targetNumberOfChannels = hdr.orig.targetNumberOfChannels;
+    targetSampleCount = hdr.orig.targetSampleCount;
+    
+    dat = zeros(targetSampleCount,targetNumberOfChannels);
+    j = 1;
+    for i=1:size(hdr.orig.Segments(1).samplingRate,2)
+      if hdr.orig.Segments(1).samplingRate(i) == hdr.Fs
+        dataForChannel = [];
+        %disp(['Reading channel ' num2str(i)]);
+        for segment=1:size(hdr.orig.Segments,2)
+          %disp(['Reading channel ' num2str(i) ' segment ' num2str(segment)]);
+          range = [1 hdr.orig.Segments(segment).sampleCount];
+          datseg = read_nervus_data(hdr.orig, segment, range, i);
+          dataForChannel = cat(1,dataForChannel,datseg);
+        end
+        dat(1:targetSampleCount, j) = dataForChannel;
+        j = j+1;
+      end
+    end
+    if targetNumberOfChannels ~= size(hdr.orig.Segments(1).sampleCount, 2)
+      excludedChannelLabels = strjoin({hdr.orig.TSInfo(hdr.orig.excludedChannels).label}, ', ');
+      warning(['Some channels ignored due to different sampling rates: ' excludedChannelLabels]);
     end
     dimord = 'samples_chans';
     
