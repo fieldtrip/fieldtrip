@@ -207,6 +207,18 @@ end
 % the statistical output contains multiple elements, e.g. F-value, beta-weights and probability
 fn = fieldnames(stat);
 
+% JM HACK:
+if ~isequal(datsiz, cfg.dim),
+  % the cfg.dim has been updated by the low-level function, let this one
+  % take precedence
+  datsiz = cfg.dim;
+end
+if ~isequal(varargin{1}.label, cfg.channel)
+  % the cfg.channel has been updated by the low-level function, let this
+  % one take precedence
+  varargin{1}.label = cfg.channel;
+end
+
 for i=1:length(fn)
   if numel(stat.(fn{i}))==prod(datsiz)
     % reformat into the same dimensions as the input data
