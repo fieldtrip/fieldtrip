@@ -30,10 +30,10 @@ else
 end
 
 tmpcfg = copyfields(cfg, tmpcfg, {'inputfile', 'outputfile'});
-if isfield(tmpcfg, 'inputfile') && isempty(tmpcfg.inputfile)
+if isempty(tmpcfg.inputfile)
   tmpcfg = removefields(tmpcfg, 'inputfile');
 end
-if isfield(tmpcfg, 'outputfile') && isempty(tmpcfg.outputfile)
+if isempty(cfg.outputfile)
   tmpcfg = removefields(tmpcfg, 'outputfile');
 end
 if isfield(cfg, 'randomseed') && ~isempty(cfg.randomseed)
