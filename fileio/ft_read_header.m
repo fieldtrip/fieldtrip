@@ -1642,8 +1642,12 @@ switch headerformat
     hdr.orig = orig;
     
     case 'mayo_mef30'
-        ft_hastoolbox('mayo_mef', 1); % make sure may_mef exists
+        ft_hastoolbox('mayo_mef', 1); % make sure mayo_mef exists
         hdr = mayo_mef30(filename, password);
+        
+    case 'mayo_mef21'
+        ft_hastoolbox('mayo_mef', 1); % make sure mayo_mef exists
+        hdr = mayo_mef21(filename, password);
         
   case 'mega_neurone'
     % ensure that this external toolbox is on the path

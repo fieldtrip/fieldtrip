@@ -1,16 +1,16 @@
-function mayo_out = mayo_mef30(varargin)
-% MAYO_MEF30 read header, event and data from the files formatted in MEF 3.0
+function mayo_out = mayo_mef21(varargin)
+% MAYO_MEF30 read header, event and data from the files formatted in MEF2.1
 %
 % Syntax:
-%   hdr = mayo_mef30(filename)
-%   hdr = mayo_mef30(filename, password)
-%   evt = mayo_mef30(filename, password, hdr)
-%   dat = mayo_mef30(filename, password, hdr, begsample, endsample, chanindx)
+%   hdr = mayo_mef21(filename)
+%   hdr = mayo_mef21(filename, password)
+%   evt = mayo_mef21(filename, password, hdr)
+%   dat = mayo_mef21(filename, password, hdr, begsample, endsample, chanindx)
 %
 % Input(s):
 %   filename        - [char] name of the file or folder of the dataset
-%   password        - [struct] (opt) password structure of MEF 3.0 data (see
-%                     MEFSession_3p0)
+%   password        - [struct] (opt) password structure of MEF 2.1 data (see
+%                     MEFSession_2.1)
 %   hdr             - [struct] (opt) header structure of the dataset (see
 %                     ft_read_header; default = struct([]))
 %   begsample       - [num] (opt) first sample to read (default = [])
@@ -33,8 +33,8 @@ function mayo_out = mayo_mef30(varargin)
 %
 % See also ft_filetype, ft_read_header, ft_read_event, ft_read_data.
 
-% Copyright 2020 Richard J. Cui. Created: Sat 03/21/2020  5:26:02.846 PM
-% $Revision: 0.4 $  $Date: Thu 04/02/2020 11:03:11.543 AM $
+% Copyright 2020 Richard J. Cui. Created: Thu 04/02/2020  4:13:44.233 PM
+% $Revision: 0.1 $  $Date: Thu 04/02/2020  4:13:44.233 PM $
 %
 % Multimodel Neuroimaging Lab (Dr. Dora Hermes)
 % Mayo Clinic St. Mary Campus
@@ -49,8 +49,7 @@ q = parseInputs(varargin{:});
 filename    = q.filename;
 password    = q.password;
 if isempty(password)
-    password = struct('Level1Password', '', 'Level2Password', '',...
-        'AccessLevel', 1);
+    password = struct('Subject', '', 'Session', '', 'Data', '');
 end % if
 hdr         = q.hdr;
 begsample   = q.begsample;
@@ -62,7 +61,7 @@ chanindx    = q.chanindx;
 % =========================================================================
 % setup the instance of the object
 % --------------------------------
-mef_ft = MEFFieldTrip_3p0(filename, password); % dealing MEF 3.0 data for FieldTrip
+mef_ft = MEFFieldTrip_2p1(filename, password); % dealing MEF 2.1 data for FieldTrip
 channames = mef_ft.SelectedChannel;
 
 % get the desired information
@@ -80,7 +79,7 @@ switch nargin
             chanindx);
     otherwise
         % error
-        error('FieldTrip:mayo_mef30:invalidInput',...
+        error('FieldTrip:mayo_mef21:invalidInput',...
             'invalid number of inputs of the function')
 end % switch
 
