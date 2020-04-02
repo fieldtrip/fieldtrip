@@ -92,7 +92,7 @@ cfg.feedback   = ft_getopt(cfg, 'feedback',   'none');
 cfg.updatesens = ft_getopt(cfg, 'updatesens', 'yes');
 
 
-if strcmp(cfg.pertrial, 'yes')
+if istrue(cfg.pertrial)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % iterate over trials
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -101,7 +101,10 @@ if strcmp(cfg.pertrial, 'yes')
   % select trials of interest
   for i=1:numel(varargin)
     varargin{i}        = ft_selectdata(tmpcfg, varargin{i});
-    [cfg, varargin{i}] = rollback_provenance(cfg, varargin{i});
+    [dum, varargin{i}] = rollback_provenance(cfg, varargin{i});
+    if i==1
+      cfg = dum;
+    end
   end
 
   tmp             = cell(numel(varargin{1}.trial),1);
@@ -122,46 +125,40 @@ else
 
   computeweights = ~isfield(cfg, 'pca');
 
-  if length(varargin)==1
-    % channel data and reference channel data are in 1 data structure
-    data    = varargin{1};
-    megchan = ft_channelselection(cfg.channel, data.label);
-    refchan = ft_channelselection(cfg.refchannel, data.label);
-
-    % split data into data and refdata
-    tmpcfg  = [];
-    tmpcfg.channel = refchan;
-    tmpcfg.feedback = cfg.feedback;
-    refdata = ft_preprocessing(tmpcfg, data);
-    tmpcfg.channel = megchan;
-    data    = ft_preprocessing(tmpcfg, data);
-
-  else
-    % channel data and reference channel data are in 2 data structures
-    data    = varargin{1};
-    refdata = varargin{2};
-    megchan = ft_channelselection(cfg.channel, data.label);
-    refchan = ft_channelselection(cfg.refchannel, refdata.label);
-
-    % split data into data and refdata
-    tmpcfg  = [];
-    tmpcfg.channel = refchan;
-    tmpcfg.feedback = cfg.feedback;
-    refdata = ft_preprocessing(tmpcfg, refdata);
-    tmpcfg.channel = megchan;
-    data    = ft_preprocessing(tmpcfg, data);
-
-    % FIXME do compatibility check on data vs refdata with respect to dimensions (time-trials)
-  end
-
   % select trials of interest
   tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo'});
-  data    = ft_selectdata(tmpcfg, data);
-  refdata = ft_selectdata(tmpcfg, refdata);
-  % restore the provenance information
-  [cfg, data]    = rollback_provenance(cfg, data);
-  [dum, refdata] = rollback_provenance(cfg, refdata);
-
+  if length(varargin)==1
+    % channel data and reference channel data are in 1 data structure
+    megchan = ft_channelselection(cfg.channel,    varargin{1}.label);
+    refchan = ft_channelselection(cfg.refchannel, varargin{1}.label);
+      
+    tmpcfg.channel = refchan;
+    refdata        = ft_selectdata(tmpcfg, varargin{1});
+    [dum,refdata]  = rollback_provenance(cfg, refdata);
+    tmpcfg.channel = megchan;
+    data           = ft_selectdata(tmpcfg, varargin{1});
+    [cfg, data]    = rollback_provenance(cfg, data);
+  
+  else
+    % channel data and reference channel data are in 2 data structures
+    megchan = ft_channelselection(cfg.channel,    varargin{1}.label);
+    refchan = ft_channelselection(cfg.refchannel, varargin{2}.label);
+    
+    % throw a warning if some of the specified reference channels are also
+    % in the first data argument
+    if ~isempty(ft_channelselection(cfg.refchannel, varargin{1}.label))
+      ft_warning('some of the specified reference channels are also present in the first data argument, this information will not be used for the cleaning of the data');
+    end
+    
+    tmpcfg.channel = refchan;
+    refdata        = ft_selectdata(tmpcfg, varargin{2});
+    [dum, refdata] = rollback_provenance(cfg, refdata);
+    tmpcfg.channel = megchan;
+    data           = ft_selectdata(tmpcfg, varargin{1});
+    [cfg, data]    = rollback_provenance(cfg, data);
+    
+  end
+  
   refchan = ft_channelselection(cfg.refchannel, refdata.label);
   refindx = match_str(refdata.label, refchan);
   megchan = ft_channelselection(cfg.channel, data.label);
