@@ -11,7 +11,7 @@ classdef MEFSession < handle
     % See also .
     
     % Copyright 2020 Richard J. Cui. Created: Thu 02/06/2020 10:07:26.965 AM
-    % $Revision: 0.4 $  $Date: Wed 03/11/2020 11:01:21.803 PM $
+    % $Revision: 0.5 $  $Date: Thu 04/02/2020  2:13:08.181 PM $
     %
     % 1026 Rocky Creek Dr NE
     % Rochester, MN 55906, USA
@@ -33,9 +33,6 @@ classdef MEFSession < handle
     % ---------------------------------
     properties        
         SessionPath         % session directory
-        PathToSession       % not include session name and extension
-        SessionName         % not include extension
-        SessionExt          % session extension (includes the '.')
         Password            % password structure of the session
         ChannelName         % channel names
         SamplingFrequency   % in Hz

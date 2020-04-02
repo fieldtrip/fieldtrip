@@ -1,5 +1,5 @@
 function [sesspath, channames] = findSessPath(this, filename)
-% MEFFIELDTRIP_3P0.FINDSESSPATH find session path and channel name 
+% MEFFSESSION_3P0.FINDSESSPATH find session path and channel name 
 %
 % Syntax:
 %   [sesspath, chan_sel] = findSessPath(filename)
@@ -21,7 +21,7 @@ function [sesspath, channames] = findSessPath(this, filename)
 % See also .
 
 % Copyright 2020 Richard J. Cui. Created: Sun 03/22/2020  7:51:37.906 AM
-% $Revision: 0.1 $  $Date: Sun 03/22/2020  7:51:37.920 AM $
+% $Revision: 0.2 $  $Date: Thu 04/02/2020 10:41:14.141 AM $
 %
 % Multimodel Neuroimaging Lab (Dr. Dora Hermes)
 % Mayo Clinic St. Mary Campus
@@ -38,12 +38,10 @@ filename = q.filename;
 % =========================================================================
 % main
 % =========================================================================
-% check filetype
-% --------------
-file_type = ft_filetype(filename);
-if ~isequal(this.FileType, file_type)
-    error('MEFFieldTrip_3p0:FindSessPath:invalidFiletype',...
-        'invalide file type. can only process MEF 3.0 files')
+if isempty(filename)
+    sesspath = '';
+    channames = "";
+    return
 end % if
 
 % find session path and channel name
@@ -68,14 +66,14 @@ switch f_ext
                 end % for
             end % if
         else
-            error('MEFFieldTrip_3p0:FindSessPath:invalidFiletype',...
+            error('MEFSession_3p0:FindSessPath:invalidFiletype',...
                 'invalide file type. can only process MEF 3.0 files')
         end % if
     case '.timd' % channel folder
         if isfolder(filename)
             [sesspath, channames] = fileparts(filename);
         else
-            error('MEFFieldTrip_3p0:FindSessPath:invalidFiletype',...
+            error('MEFSession_3p0:FindSessPath:invalidFiletype',...
                 'invalide file type. can only process MEF 3.0 files')
         end % if
     case '.segd' % segment folder
@@ -83,7 +81,7 @@ switch f_ext
             chanpath = fileparts(filename); % channel path
             [sesspath, channames] = fileparts(chanpath);
         else
-            error('MEFFieldTrip_3p0:FindSessPath:invalidFiletype',...
+            error('MEFSession_3p0:FindSessPath:invalidFiletype',...
                 'invalide file type. can only process MEF 3.0 files')
         end % if
     case {'.tdat', '.tidx', '.tmet'} % data file
@@ -92,11 +90,11 @@ switch f_ext
             chanpath = fileparts(segpath); % channel path
             [sesspath, channames] = fileparts(chanpath);
         else
-            error('MEFFieldTrip_3p0:FindSessPath:invalidFiletype',...
+            error('MEFSession_3p0:FindSessPath:invalidFiletype',...
                 'invalide file type. can only process MEF 3.0 files')
         end % if
     otherwise
-        error('MEFFieldTrip_3p0:FindSessPath:invalidFiletype',...
+        error('MEFSession_3p0:FindSessPath:invalidFiletype',...
             'invalide file type. can only process MEF 3.0 files')
 end % end switch
 end % function findSessPath

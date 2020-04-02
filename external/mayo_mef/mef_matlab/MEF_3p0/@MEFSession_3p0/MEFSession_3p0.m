@@ -3,11 +3,12 @@ classdef MEFSession_3p0 < MEFSession & MultiscaleElectrophysiologyFile_3p0
     % 
     % Syntax:
     %   this = MEFSession_3p0
-    %   this = __(sesspath)
-    %   this = __(sesspath, password)
+    %   this = __(filename)
+    %   this = __(filename, password)
     %
     % Input(s):
-    %   sesspath    - [str] (opt) MEF 3.0 session path (default = '')
+    %   filename    - [str] (opt) MEF 3.0 session path, channel or data file
+    %                 (default = '')
     %   password    - [struct] (opt) structure of MEF 3.0 passowrd (default
     %                 = struct('Level1Password', '', 'Level2Password', '',...
     %                 'AccessLevel', 1);)
@@ -21,12 +22,13 @@ classdef MEFSession_3p0 < MEFSession & MultiscaleElectrophysiologyFile_3p0
     % See also get_sessinfo.
 
 	% Copyright 2020 Richard J. Cui. Created: Thu 02/06/2020 10:07:26.965 AM
-	% $Revision: 0.4 $  $Date: Sat 03/21/2020 10:35:23.147 PM $
+	% $Revision: 0.5 $  $Date: Thu 04/02/2020 10:41:14.141 AM $
 	%
-	% 1026 Rocky Creek Dr NE
-	% Rochester, MN 55906, USA
-	%
-	% Email: richard.cui@utoronto.ca
+    % Multimodel Neuroimaging Lab (Dr. Dora Hermes)
+    % Mayo Clinic St. Mary Campus
+    % Rochester, MN 55905
+    %
+    % Email: richard.cui@utoronto.ca
     
     % =====================================================================
     % properties
@@ -36,7 +38,10 @@ classdef MEFSession_3p0 < MEFSession & MultiscaleElectrophysiologyFile_3p0
     properties
         MetaData            % session metadata (see read_mef_session_metadata_3p0.m
                             % for the detail)
-    end
+        PathToSession       % not include session name and extension
+        SessionName         % not include extension
+        SessionExt          % session extension (includes the '.')
+   end
     
     % =====================================================================
     % methods
@@ -55,13 +60,13 @@ classdef MEFSession_3p0 < MEFSession & MultiscaleElectrophysiologyFile_3p0
             
             % parse rules
             p = inputParser;
-            p.addOptional('sesspath', default_sp, @isstr);
+            p.addOptional('filename', default_sp, @ischar);
             p.addOptional('password', default_pw, @isstruct)
             
             % parse and retrun the results
             p.parse(varargin{:});
             q = p.Results;
-            sesspath = q.sesspath;
+            filename = q.filename;
             password = q.password;
             
             % operations during construction
@@ -79,8 +84,12 @@ classdef MEFSession_3p0 < MEFSession & MultiscaleElectrophysiologyFile_3p0
             end % if            
             
             % set session info
+            [sesspath, channames] = this.findSessPath(filename);
             if ~isempty(sesspath)
                 this.setSessionInfo(sesspath, password);
+            end % if
+            if ~isempty(channames)
+                this.SelectedChannel = channames;
             end % if
         end % function
     end % methods
@@ -94,6 +103,7 @@ classdef MEFSession_3p0 < MEFSession & MultiscaleElectrophysiologyFile_3p0
     % other methods
     % -------------
     methods
+        [sesspath, channames] = findSessPath(this, filename) % find session path and channel name
         metadata = read_mef_session_metadata_3p0(this, varargin) % get session metadata of MEF 3.0
         valid_yn = checkSessValid(this, varargin) % check validity of session info
         [X, t] = import_sess(this, varargin) % import session of MEF 3.0 data
