@@ -164,6 +164,7 @@ url = {
   'MRTRIX'        'see https://mrtrix.org'
   'BAYESFACTOR'   'see https://klabhub.github.io/bayesFactor'
   'EZC3D'         'see https://github.com/pyomeca/ezc3d'
+  'GCMI'          'see https://github.com/robince/gcmi'
   };
 
 if nargin<2
@@ -407,6 +408,8 @@ switch toolbox
     dependency = {'bf.ttest', 'bf.ttest2'};
   case 'EZC3D'
     dependency = {'ezc3dRead', 'ezc3dWrite'};
+  case 'GCMI'
+    dependency = {'copnorm' 'mi_gg'};
     
     % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
