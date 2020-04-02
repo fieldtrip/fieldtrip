@@ -12,7 +12,7 @@ classdef MEFFieldTrip < handle
     % See also .
     
     % Copyright 2020 Richard J. Cui. Created: Sat 03/21/2020 10:35:23.147 PM
-    % $Revision: 0.1 $  $Date: Sat 03/21/2020 10:35:23.147 PM $
+    % $Revision: 0.2 $  $Date:  Wed 04/01/2020 11:55:41.288 PM $
     %
     % Multimodel Neuroimaging Lab (Dr. Dora Hermes)
     % Mayo Clinic St. Mary Campus
@@ -25,7 +25,7 @@ classdef MEFFieldTrip < handle
     % properties
     % =====================================================================    
     properties
-
+        FileType        % file type in field trip
     end % properties
     
     % =====================================================================

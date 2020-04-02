@@ -3,10 +3,11 @@
 // See read_mef_header_mex_3p0.m for details of usage.
 
 // Copyright 2020 Richard J. Cui. Created: Sun 02/02/2020  5:18:29.851 PM
-// $Revision: 0.4 $  $Date: Mon 02/17/2020  8:15:44.891 PM $
+// $Revision: 0.5 $  $Date: Wed 04/01/2020 10:09:33.460 PM$
 //
-// 1026 Rocky Creek Dr NE
-// Rochester, MN 55906, USA
+// Multimodel Neuroimaging Lab (Dr. Dora Hermes)
+// Mayo Clinic St. Mary Campus
+// Rochester, MN 55905, USA
 //
 // Email: richard.cui@utoronto.ca
 
@@ -58,14 +59,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     // ***** password *****
     // check input prhs[1]: password (optional)
     if (nrhs > 1) {
-        if (!mxIsChar(prhs[1])) { // if password not char string
-            mexErrMsgIdAndTxt("read_mef_header_mex_3p0:invalidPasswordArg",
-                    "password should be character string");
+		// note: if the password passed to any of the meflib read function is an empty string, than 
+		//		 the 'process_password_data' function in 'meflib.c' will crash everything, so make
+		// 		 sure it is either NULL or a string with at least one character
+		
+		// check if the password input argument is not empty
+        if (!mxIsEmpty(prhs[1])) { // if password is not empty
+            if (!mxIsChar(prhs[1])) { // if password not char string
+                mexErrMsgIdAndTxt("read_mef_header_mex_3p0:invalidPasswordArg",
+                        "password should be character string");
+            }
+            
+            // set the password
+            mat_password = mxArrayToString(prhs[1]);
+            password = strcpy(password_arr, mat_password);
         }
-        
-        // set the password
-        mat_password = mxArrayToString(prhs[1]);
-        password = strcpy(password_arr, mat_password);
     }
     
     // ***** map indices *****
@@ -125,7 +133,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             // if the data is still encrypted
             if (password == NULL)
                 mexErrMsgIdAndTxt("read_mef_header_mex_3p0:noPassword",
-                        "data are encrypted, but no password provided");
+                        "data are encrypted, but no password is provided");
             else
                 mexErrMsgIdAndTxt("read_mef_header_mex_3p0:invalidPassword",
                         "data are encrypted, but the password is invalid");

@@ -12,12 +12,14 @@ function [X, t] = importSession(this, varargin)
 %   this            - [obj] MEFSession_2p1 object
 %   start_end       - [num] (opt) 1 x 2 array of begin and stop points of
 %                     importing the session, relative time points (default:
-%                     the entire session)
+%                     if it is not given, the system will try to use the
+%                     property this.StartEnd. if StartEnd is empty, the system
+%                     will read the entire signal)
 %   se_unit         - [str] (opt) unit of start_end: 'uUTC' (default),
 %                     'Index', 'Second', 'Minute', 'Hour', and 'Day'.
 %   sess_path       - [str] (opt) session path (default: this.SessionPath)
 %   sel_chan        - [str array] (para) the names of the selected channels
-%                     (default: all channels)
+%                     (default: this.SelectedChannel, otherwise all channels)
 %   pw              - [struct] (para) password structure
 %                     .Session      : session password
 %                     .Subject      : subject password
@@ -52,7 +54,17 @@ sel_chan = q.SelectedChannel;
 pw = q.Password;
 
 if isempty(start_end)
-    start_end = this.BeginStop;
+    if isempty(this.StartEnd)
+        start_end = this.abs2relativeTimePoint(this.BeginStop, this.Unit); % absolute time points
+        this.StartEnd = start_end;
+        this.SEUnit = this.Unit;
+    else
+        start_end = this.StartEnd;
+        se_unit = this.SEUnit;
+    end % if
+else
+    this.StartEnd = start_end;
+    this.SEUnit = se_unit;
 end % if
 
 if isempty(sess_path)
@@ -64,17 +76,25 @@ if isempty(sess_path)
         t = [];
         return
     end % if
+else
+    this.SessionPath = sess_path;
 end
 
 if isempty(sel_chan)
-    sel_chan = this.ChannelName;
+    sel_chan = this.SelectedChannel;
     if isempty(sel_chan)
-        warning('MEFSession:importSession:emptySession',...
-            'Either the session is empty or no channel has been selected')
-        X = [];
-        t = [];
-        return
+        sel_chan = this.ChannelName;
+        if isempty(sel_chan)
+            warning('MEFSession:importSession:emptySession',...
+                'Either the session is empty or no channel has been selected')
+            X = [];
+            t = [];
+            return
+        end % if
+        this.SelectedChannel = sel_chan;
     end % if
+else
+    this.SelectedChannel = sel_chan;
 end % if
 
 if isempty(pw)
