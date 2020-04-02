@@ -183,7 +183,7 @@ if ~isfield(cfg, 'method') || isempty(cfg.method)
     cfg.method = 'basedonmni'; % regular 3D grid, based on warped MNI template
   elseif isfield(cfg, 'headshape') && (iscell(cfg.headshape) || any(ft_filetype(cfg.headshape, {'neuromag_fif', 'freesurfer_triangle_binary', 'caret_surf', 'gifti'})))
     cfg.method = 'basedoncortex'; % cortical sheet from external software such as Caret or FreeSurfer, can also be two separate hemispheres
-  elseif isfield(cfg, 'resolution') && ~basedonmri && ~basedonmni
+  elseif isfield(cfg, 'resolution')
     cfg.method = 'basedonresolution'; % regular 3D grid with specification of the resolution
   elseif isfield(cfg, 'mode') && isempty(cfg.method) && ~isempty(cfg.headmodel)
     cfg.method = 'basedonvol'; % surface mesh based on inward shifted brain surface from volume conductor
