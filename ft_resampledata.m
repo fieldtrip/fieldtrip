@@ -21,6 +21,7 @@ function [data] = ft_resampledata(cfg, data)
 % from the different acquisition devices.
 %   cfg.time        = cell-array with one time axis per trial (i.e. from another dataset)
 %   cfg.method      = interpolation method, see INTERP1 (default = 'pchip')
+%   cfg.extrapval   = extrapolation behaviour, scalar value or 'extrap' (default = as in INTERP1)
 %
 % Previously this function used to detrend the data by default. The motivation for
 % this is that the data is filtered prior to resampling to avoid aliassing and
@@ -97,6 +98,7 @@ cfg.feedback         = ft_getopt(cfg, 'feedback',        'text');
 cfg.trials           = ft_getopt(cfg, 'trials',          'all', 1);
 cfg.method           = ft_getopt(cfg, 'method',          []);
 cfg.sampleindex      = ft_getopt(cfg, 'sampleindex',     'no');
+cfg.extrapval        = ft_getopt(cfg, 'extrapval',       []);
 
 % store original datatype
 convert = ft_datatype(data);
@@ -291,6 +293,14 @@ elseif usetime
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % resample based on the specified new time axes for each trial
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  if isempty(cfg.extrapval)
+    if strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'pchip')
+      cfg.extrapval = 'extrap';
+    else
+      cfg.extrapval = nan;
+    end
+  end
+       
   ntr = length(data.trial);
 
   ft_progress('init', cfg.feedback, 'resampling data');
@@ -319,7 +329,7 @@ elseif usetime
     % perform the resampling
     newtim = cfg.time{itr};
     if length(oldtim)>1
-      newdat = interp1(oldtim', olddat', newtim', cfg.method, 0)';
+      newdat = interp1(oldtim', olddat', newtim', cfg.method, cfg.extrapval)';
     else
       newdat = repmat(olddat, [1 numel(newtim)]);
     end
