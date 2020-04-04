@@ -164,6 +164,7 @@ url = {
   'MRTRIX'        'see https://mrtrix.org'
   'BAYESFACTOR'   'see https://klabhub.github.io/bayesFactor'
   'EZC3D'         'see https://github.com/pyomeca/ezc3d'
+  'MAYO_MEF'      'see https://msel.mayo.edu/codes.html'
   };
 
 if nargin<2
@@ -219,6 +220,8 @@ switch toolbox
     dependency = {'spm', get_spm_version()>=12, get_spm_version()<95};
     %This is to avoid crashes when trying to add SPM to the path
     fallback_toolbox = 'SPM12';
+    case 'MAYO_MEF' % MEF 2.1 and MEF 3.0
+        dependency = {};
   case 'MEG-PD'
     dependency = {'rawdata', 'channames'};
   case 'MEG-CALC'

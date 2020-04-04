@@ -97,6 +97,8 @@ switch f_ext
         error('MEFSession_3p0:FindSessPath:invalidFiletype',...
             'invalide file type. can only process MEF 3.0 files')
 end % end switch
+channames = convertCharsToStrings(channames);
+
 end % function findSessPath
 
 % =========================================================================
