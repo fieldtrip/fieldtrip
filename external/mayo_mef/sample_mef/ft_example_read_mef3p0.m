@@ -13,15 +13,16 @@ password = struct('Level1Password', 'password1', 'Level2Password',...
 
 %% read the MEF 3.0 data into MATLAB using class MEFSession_3p0
 
-% get the object to read into MATLAB
+% get the object to read data into MATLAB
 mef_ft = MEFSession_3p0(sesspath, password);
 
 % now let's import the the first 10 seconds data of two channels 
 % 'Left_Occipital-Ref' and 'left-right_occipital' into MATLAB
 mef_ft.SelectedChannel = ["Left_Occipital-Ref" "left-right_occipital"];
 mef_ft.StartEnd = [0 10]; % you can specify the number of samples too
-                          % for example [1 2561];
-mef_ft.SEUnit = 'Second'; % the unit for reading samples is 'Index'
+                          % for examples [1 2561] or seconds [0 10]
+mef_ft.SEUnit = 'Second'; % the unit for reading data can be 'Index',
+                          % 'Second', 'uUTC', 'Minute', 'Hour' and 'Day'
 [X, t] = mef_ft.importSession;
 fs = mef_ft.SamplingFrequency;
 
@@ -81,7 +82,7 @@ brwview = ft_databrowser(cfg, dat_ieeg);
 
 %% Copyright 2020 Richard J. Cui
 % Created: Sun 03/22/2020  9:03:27.318 PM
-% Revision: 0.2  Date: Thu 04/02/2020 11:30:27.749 AM
+% Revision: 0.3  Date: Fri 04/03/2020  7:27:34.738 PM
 %
 % Multimodel Neuroimaging Lab (Dr. Dora Hermes)
 % Mayo Clinic St. Mary Campus

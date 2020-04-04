@@ -107,7 +107,7 @@ classdef MEFSession_3p0 < MEFSession & MultiscaleElectrophysiologyFile_3p0
         metadata = read_mef_session_metadata_3p0(this, varargin) % get session metadata of MEF 3.0
         valid_yn = checkSessValid(this, varargin) % check validity of session info
         [X, t] = import_sess(this, varargin) % import session of MEF 3.0 data
-        setSessionInfo(this, sesspath, password) % set session information
+        metadata = setSessionInfo(this, sesspath, password) % set session information
     end % methods
 end % classdef
 

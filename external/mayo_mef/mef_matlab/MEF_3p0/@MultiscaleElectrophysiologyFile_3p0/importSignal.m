@@ -20,10 +20,10 @@ function [x, t] = importSignal(this, varargin)
 %                     'Second', 'Minute', 'Hour', and 'Day'
 %   filepath        - [str] (opt) directory of the session
 %   filename        = [str] (opt) filename of the channel
-%   level_1_pw      - [str] (para) password of level 1 (default = '')
-%   level_2_pw      - [str] (para) password of level 2 (default = '')
+%   level_1_pw      - [str] (para) password of level 1 (default = this.Level1Password)
+%   level_2_pw      - [str] (para) password of level 2 (default = this.Level2Password)
 %   access_level    - [str] (para) data decode level to be used
-%                     (default = 1)
+%                     (default = this.AccessLevel)
 % 
 % Output(s):
 %   x               - [num array] extracted signal
@@ -35,10 +35,11 @@ function [x, t] = importSignal(this, varargin)
 % See also .
 
 % Copyright 2020 Richard J. Cui. Created: Wed 02/05/2020 10:24:56.722 PM
-% $Revision: 0.1 $  $Date: Mon 02/10/2020 11:57:50.063 AM $
+% $Revision: 0.3 $  $Date: Fri 04/03/2020  5:11:57.375 PM $
 %
-% 1026 Rocky Creek Dr NE
-% Rochester, MN 55906, USA
+% Multimodel Neuroimaging Lab (Dr. Dora Hermes)
+% Mayo Clinic St. Mary Campus
+% Rochester, MN 55905, USA
 %
 % Email: richard.cui@utoronto.ca
 
@@ -58,19 +59,19 @@ al = q.AccessLevel;
 
 % password
 % --------
-if isempty(l1_pw)
+if isnan(l1_pw)
     l1_pw = this.Level1Password;
 else
     this.Level1Password = l1_pw;
 end % if
 
-if isempty(l2_pw)
+if isnan(l2_pw)
     l2_pw = this.Level2Password;
 else
     this.Level2Password = l2_pw;
 end % if
 
-if isempty(al)
+if isnan(al)
     al = this.AccessLevel;
 else
     this.AccessLevel = al;
@@ -139,7 +140,11 @@ end % if
 % =========================================================================
 % load the data
 % =========================================================================
-if verbo, fprintf('-->Loading...'), end % if
+if verbo
+    [~, thisChannel] = fileparts(wholename);
+    fprintf(['-->Loading ' thisChannel ' ...'])
+    clear thisChannel
+end % if
 x = this.read_mef_ts_data_3p0(wholename, pw, 'samples', se_index(1), se_index(2));
 x = double(x(:)).'; % change to row vector
 % find the indices corresponding to physically collected data
@@ -161,9 +166,9 @@ defaultSTUnit = 'index';
 expectedSTUnit = {'index', 'uutc', 'second', 'minute', 'hour', 'day'};
 default_fp = '';
 default_fn = '';
-default_l1pw = '';
-default_l2pw = '';
-default_al = []; % access level
+default_l1pw = NaN;
+default_l2pw = NaN;
+default_al = nan; % access level
 
 % parse rules
 p = inputParser;
@@ -174,8 +179,8 @@ p.addOptional('st_unit', defaultSTUnit,...
     @(x) any(validatestring(x, expectedSTUnit)));
 p.addOptional('filepath', default_fp, @isstr);
 p.addOptional('filename', default_fn, @isstr);
-p.addParameter('Level1Password', default_l1pw, @isstr);
-p.addParameter('Level2Password', default_l2pw, @isstr);
+p.addParameter('Level1Password', default_l1pw, @(x) ischar(x) || isnan(x));
+p.addParameter('Level2Password', default_l2pw, @(x) ischar(x) || isnan(x));
 p.addParameter('AccessLevel', default_al, @isnumeric);
 
 % parse and return the results

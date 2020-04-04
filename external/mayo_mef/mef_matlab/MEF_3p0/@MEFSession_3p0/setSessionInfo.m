@@ -1,4 +1,4 @@
-function setSessionInfo(this, sesspath, password)
+function metadata = setSessionInfo(this, sesspath, password)
 % MEFSESSION_3P0.SETSESSIONINFO set session information of MEFSession_3p0
 %
 % Syntax:
@@ -6,11 +6,13 @@ function setSessionInfo(this, sesspath, password)
 % 
 % Input(s):
 %   this            - [obj] MEFSession_3p0 object
-%   sesspath        - [char] session path of MEF 3.0 data
-%   password        - [struct] MEF 3.0 password structure (see MEFSession_3p0
+%   sesspath        - [char] (opt) session path of MEF 3.0 data
+%   password        - [struct] (opt) MEF 3.0 password structure (see MEFSession_3p0
 %                     for the details)
 %
 % Output(s):
+%   metadata    	- [struct] structure containing session metadata, 
+%                     channels metadata, segments metadata and records
 %
 % Example:
 %
@@ -18,7 +20,7 @@ function setSessionInfo(this, sesspath, password)
 %
 % References:
 %
-% See also .
+% See also read_mef_session_metadata_3p0.
 
 % Copyright 2020 Richard J. Cui. Created: Sat 03/21/2020 11:09:38.008 PM
 % $Revision: 0.2 $  $Date: Sun 03/22/2020  1:50:17.958 PM $
@@ -41,10 +43,20 @@ password = q.password;
 % =========================================================================
 this.SessionPath = sesspath; % set session path directory
 this.Password = password; % set password
-this.MetaData = this.read_mef_session_metadata_3p0;
 this.get_sess_parts;
 this.get_sessinfo;
 
+% make sure that sequence of 'time_series_channels' is the same as that of
+% the names in property ChannelName
+metadata = this.read_mef_session_metadata_3p0;
+meta_ch_name = convertCharsToStrings({metadata.time_series_channels.name});
+[Lia, Locb] = ismember(meta_ch_name, this.ChannelName);
+if ~all(Lia)
+    error('MEFSession_3p0:setSessionInfo:invalidChannelName',...
+        'invalid channels names')
+end % if
+metadata.time_series_channels = metadata.time_series_channels(Locb);
+this.MetaData = metadata;
 end % function setSessionInfo
 
 % =========================================================================
