@@ -185,7 +185,7 @@ if ~isfield(cfg, 'method') || isempty(cfg.method)
     cfg.method = 'basedoncortex'; % cortical sheet from external software such as Caret or FreeSurfer, can also be two separate hemispheres
   elseif isfield(cfg, 'resolution')
     cfg.method = 'basedonresolution'; % regular 3D grid with specification of the resolution
-  elseif isfield(cfg, 'mode') && isempty(cfg.method) && ~isempty(cfg.headmodel)
+  elseif ~isempty(cfg.headmodel)
     cfg.method = 'basedonvol'; % surface mesh based on inward shifted brain surface from volume conductor
   elseif isfield(cfg, 'sourcemodel') && ischar(cfg.sourcemodel)
     cfg.method = 'basedonfile';
