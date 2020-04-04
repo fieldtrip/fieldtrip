@@ -401,7 +401,7 @@ switch sensshape
     R = senssize/2; % convert coilsenssize from diameter to radius
     hold on
     for i=1:size(pos,1)
-      hs = surf(rsp*X+pos(i,1), R*Y+pos(i,2), R*Z+pos(i,3));
+      hs = surf(R*X+pos(i,1), R*Y+pos(i,2), R*Z+pos(i,3));
       set(hs, 'EdgeColor', edgecolor, 'FaceColor', facecolor, 'EdgeAlpha', edgealpha, 'FaceAlpha', facealpha);
     end
   
