@@ -57,14 +57,14 @@ be_second = [0, 10, 0]; % 10-second time of data from the start
 out_unit = 'index';
 be_sample = mef_ft.SessionUnitConvert(be_second, in_unit, out_unit);
 dat = ft_read_data(sesspath, 'begsample', be_sample(1), 'endsample', be_sample(2),...
-    'header', hdr, 'password', password, 'chanindx', 1:4);
+    'header', hdr, 'password', password, 'chanindx', [4 1 2 3]);
 
 t = linspace(be_second(1), be_second(2), be_sample(2)-be_sample(1)+1);
 figure
 plot(t, dat')
 xlim([0 1])
 xlabel('Time (s)')
-legend(hdr.label{1}, hdr.label{2}, hdr.label{3}, hdr.label{4})
+legend(hdr.label{4}, hdr.label{1}, hdr.label{2}, hdr.label{3})
 
 
 % read data with ft_preprocessing()
@@ -82,7 +82,7 @@ brwview = ft_databrowser(cfg, dat_ieeg);
 
 %% Copyright 2020 Richard J. Cui
 % Created: Sun 03/22/2020  9:03:27.318 PM
-% Revision: 0.3  Date: Fri 04/03/2020  7:27:34.738 PM
+% Revision: 0.4  Date: Sat 04/04/2020  6:20:15.049 PM
 %
 % Multimodel Neuroimaging Lab (Dr. Dora Hermes)
 % Mayo Clinic St. Mary Campus
