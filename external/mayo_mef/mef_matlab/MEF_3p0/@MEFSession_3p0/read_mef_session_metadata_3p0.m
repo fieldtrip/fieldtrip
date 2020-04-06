@@ -41,10 +41,11 @@ function metadata = read_mef_session_metadata_3p0(this, varargin)
 %
 
 % Copyright 2020 Richard J. Cui. Adapted: Sat 02/01/2020 10:30:50.708 PM
-% $Revision: 0.2 $  $Date: Thu 02/06/2020 11:27:26.453 AM $
+% $Revision: 0.3 $  $Date: Sat 04/04/2020  6:20:15.049 PM $
 %
-% 1026 Rocky Creek Dr NE
-% Rochester, MN 55906, USA
+% Multimodel Neuroimaging Lab (Dr. Dora Hermes)
+% Mayo Clinic St. Mary Campus
+% Rochester, MN 55905
 %
 % Email: richard.cui@utoronto.ca
 
@@ -69,6 +70,18 @@ end % if
 % =========================================================================
 pw = this.processPassword(password);
 metadata = read_mef_session_metadata(sess_path, pw, map_indices);
+
+% TODO: this is a quick fix. try key-value option later
+% -----------------------------------------------------
+% sort the order of time_series_channels according to
+% acquisition_channel_number
+n_tsc = metadata.number_of_time_series_channels;
+acn = zeros(1, n_tsc);
+for k = 1:n_tsc
+    acn(k) = metadata.time_series_channels(k).metadata.section_2.acquisition_channel_number;
+end % for
+[~, idx] = sort(acn); % from smallest to the largest
+metadata.time_series_channels = metadata.time_series_channels(idx);
 
 end % function
 
