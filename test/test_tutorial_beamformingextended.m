@@ -82,7 +82,8 @@ hdm = ft_prepare_headmodel(cfg, segmentedmri);
 
 
 template = load(fullfile(templatedir, 'standard_sourcemodel3d8mm'));
-% inverse-warp the subject specific grid to the template grid cfg = [];
+% inverse-warp the subject specific grid to the template grid 
+cfg = [];
 cfg.sourcemodel.warpmni   = 'yes';
 cfg.sourcemodel.template  = template.sourcemodel;
 cfg.sourcemodel.nonlinear = 'yes'; % use non-linear normalization

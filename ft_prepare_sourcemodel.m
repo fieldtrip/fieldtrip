@@ -134,7 +134,9 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'unit', 'auto', []});
 
 cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'});  % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
 cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.unit by the subsequent createsubcfg
-
+cfg = ft_checkconfig(cfg, 'allowedval', {'method', 'basedongrid', 'basedonpos', 'basedonshape', ...
+        'basedonmri', 'basedonmni', 'basedoncortex', 'basedonresolution', 'basedonvol', 'basedonfile'});
+        
 % put the low-level options pertaining to the sourcemodel in their own field
 cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
 % move some fields from cfg.sourcemodel back to the top-level configuration
@@ -149,6 +151,7 @@ cfg.spmversion        = ft_getopt(cfg, 'spmversion', 'spm8');
 cfg.headmodel         = ft_getopt(cfg, 'headmodel');
 cfg.sourcemodel       = ft_getopt(cfg, 'sourcemodel');
 cfg.unit              = ft_getopt(cfg, 'unit');
+cfg.method            = ft_getopt(cfg, 'method'); % empty will lead to attempted automatic detection
 
 % this code expects the inside to be represented as a logical array
 cfg = ft_checkconfig(cfg, 'inside2logical', 'yes');
@@ -170,7 +173,7 @@ if isfield(cfg, 'resolution') && isfield(cfg, 'zgrid') && ~ischar(cfg.zgrid)
 end
 
 % the source model can be constructed in a number of ways
-if ~isfield(cfg, 'method') || isempty(cfg.method)
+if isempty(cfg.method)
   if isfield(cfg, 'xgrid') && ~ischar(cfg.xgrid)
     cfg.method = 'basedongrid'; % regular 3D grid with explicit specification
   elseif isfield(cfg.sourcemodel, 'pos')
