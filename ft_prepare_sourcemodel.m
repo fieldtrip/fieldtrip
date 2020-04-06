@@ -169,6 +169,14 @@ if isfield(cfg, 'resolution') && isfield(cfg, 'zgrid') && ~ischar(cfg.zgrid)
   ft_error('You cannot specify cfg.resolution and an explicit cfg.zgrid simultaneously');
 end
 
+% is the user has specified a method, verify it and remove if incorrect.
+if isfield(cfg, 'method') && ~isempty(cfg.method)
+  if ~any(match_str(cfg.method, {'xgrid', 'basedongrid', 'basedonpos', 'basedonshape', 'basedonmri', 'basedonmni', 'basedoncortex', 'basedonresolution', 'basedonvol', 'basedonfile'}))
+    ft_warning('incorrect specification of cfg.method. Determining method automatically.')
+    cfg.method = [];
+  end
+end
+
 % the source model can be constructed in a number of ways
 if ~isfield(cfg, 'method') || isempty(cfg.method)
   if isfield(cfg, 'xgrid') && ~ischar(cfg.xgrid)
