@@ -1,4 +1,4 @@
-function inspect_issue1368
+function test_issue1368
 
 % WALLTIME 00:10:00
 % MEM 2gb
