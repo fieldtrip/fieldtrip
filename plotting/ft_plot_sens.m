@@ -25,8 +25,9 @@ function hs = ft_plot_sens(sens, varargin)
 % The following options apply to EEG electrodes
 %   'elec'            = true/false, plot each individual electrode (default = false)
 %   'orientation'     = true/false, plot a line for the orientation of each electrode (default = false)
-%   'elecshape'       = 'point', 'circle', 'square', or 'sphere' (default is automatic)
+%   'elecshape'       = 'point', 'circle', 'square', 'sphere', or 'disc' (default is automatic)
 %   'elecsize'        = diameter of the electrodes (default is automatic)
+%   'headshape'       = headshape, required for elecshape 'disc'
 % The following options apply to NIRS optodes
 %   'opto'            = true/false, plot each individual optode (default = false)
 %   'orientation'     = true/false, plot a line for the orientation of each optode (default = false)
@@ -96,6 +97,7 @@ coilsize        = ft_getopt(varargin, 'coilsize');  % default depends on the inp
 elec            = ft_getopt(varargin, 'elec', false);
 elecshape       = ft_getopt(varargin, 'elecshape'); % default depends on the input, see below
 elecsize        = ft_getopt(varargin, 'elecsize');  % default depends on the input, see below
+headshape       = ft_getopt(varargin, 'headshape', []); % for elecshape 'disc'
 % this is for NIRS optode arrays
 opto            = ft_getopt(varargin, 'opto', false);
 optoshape       = ft_getopt(varargin, 'optoshape'); % default depends on the input, see below
@@ -131,7 +133,7 @@ style           = ft_getopt(varargin, 'style');
 marker          = ft_getopt(varargin, 'marker', '.');
 
 % this is simply passed to ft_plot_mesh
-if strcmp(sensshape, 'sphere')
+if strcmp(sensshape, 'sphere') || strcmp(sensshape, 'disc')
   edgecolor     = ft_getopt(varargin, 'edgecolor', 'none');
 else
   edgecolor     = ft_getopt(varargin, 'edgecolor', 'k');
@@ -189,8 +191,8 @@ if isempty(senssize)
     case 'ctf275'
       senssize = 18;
     otherwise
-      if strcmp(sensshape, 'sphere')
-        senssize = 4; % assuming spheres are used for intracranial electrodes, diameter is about 4mm
+      if strcmp(sensshape, 'sphere') || strcmp(sensshape, 'disc')
+        senssize = 4; % assuming spheres/discs are used for intracranial electrodes, diameter is about 4mm
       elseif strcmp(sensshape, 'point')
         senssize = 30;
       else
@@ -207,7 +209,7 @@ if isempty(facecolor) % set default color depending on shape
     facecolor = 'k';
   elseif strcmp(sensshape, 'circle') || strcmp(sensshape, 'square')
     facecolor = 'none';
-  elseif strcmp(sensshape, 'sphere')
+  elseif strcmp(sensshape, 'sphere') || strcmp(sensshape, 'disc')
     facecolor = 'b';
   end
 end
@@ -395,14 +397,94 @@ switch sensshape
     plotcoil(pos, ori, chandir, senssize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
 
   case 'sphere'
-    [xsp, ysp, zsp] = sphere(100);
-    rsp = senssize/2; % convert coilsenssize from diameter to radius
+    [X, Y, Z] = sphere(100);
+    R = senssize/2; % convert coilsenssize from diameter to radius
     hold on
     for i=1:size(pos,1)
-      hs = surf(rsp*xsp+pos(i,1), rsp*ysp+pos(i,2), rsp*zsp+pos(i,3));
+      hs = surf(R*X+pos(i,1), R*Y+pos(i,2), R*Z+pos(i,3));
       set(hs, 'EdgeColor', edgecolor, 'FaceColor', facecolor, 'EdgeAlpha', edgealpha, 'FaceAlpha', facealpha);
     end
+  
+  case 'disc'
+    if isempty(headshape)
+      ft_error('cannot plot electrodes as discs without a headshape to align them with')
+    end
     
+    R = senssize/2; % convert coilsenssize from diameter to radius
+    npoints = 25; % local points on the headshape used for estimating the local norm
+    for i=1:size(pos,1)
+      % calculate local norm vectors
+      d = sqrt( (pos(i,1)-headshape.pos(:,1)).^2 + ...
+        (pos(i,2)-headshape.pos(:,2)).^2 + (pos(i,3)-headshape.pos(:,3)).^2 );
+      [ds, idx] = sort(d);
+      x = headshape.pos(idx(1:npoints),1);
+      y = headshape.pos(idx(1:npoints),2);
+      z = headshape.pos(idx(1:npoints),3);
+      ptCloud = pointCloud([x y z]);
+      nrm = pcnormals(ptCloud);
+      u = nrm(:,1);
+      v = nrm(:,2);
+      w = nrm(:,3);
+      
+      % flip the normal vector if it is not pointing toward the center
+      C = mean(headshape.pos,1); % headshape center
+      for k = 1:numel(x)
+        p1 = C - [x(k),y(k),z(k)];
+        p2 = [u(k),v(k),w(k)];
+        angle = atan2(norm(cross(p1,p2)),p1*p2');
+        if angle > pi/2 || angle < -pi/2
+          u(k) = -u(k);
+          v(k) = -v(k);
+          w(k) = -w(k);
+        end
+      end
+      Fn = nanmean([u v w],1);
+      Fn = Fn * (1/sqrt(sum(Fn.^2,2))); % normalize
+      ori(i,:) = Fn;
+      
+      % create cylinder
+      [X, Y, Z] = cylinder(R, 100);
+      
+      % determine rotation axis and angle
+      d0 = [0,0,1];
+      rotaxis = cross(d0,ori(i,:));
+      if norm(rotaxis)==0
+        rotaxis = [1,0,0];
+      end
+      rotaxis = rotaxis/norm(rotaxis);
+      angle = -atan2(norm(cross(d0,ori(i,:))),dot(d0,ori(i,:)));
+      
+      % rotate
+      q(1:3,1) = rotaxis*sin(angle/2);
+      q(4,1) = cos(angle/2);
+      Q = [0, -q(3), q(2);q(3), 0, -q(1);-q(2), q(1), 0];
+      C = eye(3)*(q(4)^2-q(1:3)'*q(1:3))+2*q(1:3)*q(1:3)'-2*q(4)*Q;
+      x1 = reshape(X,1,size(X,1)*size(X,2));
+      y1 = reshape(Y,1,size(Y,1)*size(Y,2));
+      z1 = reshape(Z,1,size(Z,1)*size(Z,2));
+      M = (C*[x1;y1;z1])';
+      x2 = M(:,1);
+      y2 = M(:,2);
+      z2 = M(:,3);
+      X = reshape(x2,size(X,1),size(X,2));
+      Y = reshape(y2,size(Y,1),size(Y,2));
+      Z = reshape(z2,size(Z,1),size(Z,2));
+      
+      % translate
+      X(1,:) = X(1,:)+pos(i,1);
+      Y(1,:) = Y(1,:)+pos(i,2);
+      Z(1,:) = Z(1,:)+pos(i,3);
+      T = R/10; % add thickness (outward), X(2,1)-X(1,1) etc.
+      X(2,:) = X(1,:)-T*ori(i,1);
+      Y(2,:) = Y(1,:)-T*ori(i,2);
+      Z(2,:) = Z(1,:)-T*ori(i,3);
+      
+      % draw mesh
+      hold on; mesh(X,Y,Z, 'facecolor', facecolor, 'edgecolor', edgecolor, 'linestyle','none');
+      hold on; fill3(X(1,:),Y(1,:),Z(1,:), facecolor, 'linestyle','none'); % fill sides
+      hold on; fill3(X(2,:),Y(2,:),Z(2,:), facecolor, 'linestyle','none');
+    end
+
   otherwise
     ft_error('incorrect shape');
 end % switch
