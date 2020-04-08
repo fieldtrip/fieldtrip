@@ -404,6 +404,9 @@ switch sensshape
       hs = scatter3(pos(:,1), pos(:,2), pos(:,3), senssize.^2, facecolor, marker);
     end
     
+  case 'sphere'
+    plotsens(pos, ori, [], senssize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
+    
   case 'disc'
     plotsens(pos, ori, [], senssize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
     
@@ -435,15 +438,6 @@ switch sensshape
     end
     
     plotsens(pos, ori, chandir, senssize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
-    
-  case 'sphere'
-    [X, Y, Z] = sphere(100);
-    R = senssize/2; % convert coilsenssize from diameter to radius
-    hold on
-    for i=1:size(pos,1)
-      hs = surf(R*X+pos(i,1), R*Y+pos(i,2), R*Z+pos(i,3));
-      set(hs, 'EdgeColor', edgecolor, 'FaceColor', facecolor, 'EdgeAlpha', edgealpha, 'FaceAlpha', facealpha);
-    end
     
   otherwise
     ft_error('incorrect shape');
@@ -508,17 +502,22 @@ function plotsens(senspos, sensori, sensdir, senssize, sensshape, varargin)
 
 % start with a single template coil at [0 0 0], oriented towards [0 0 1]
 switch sensshape
+  case 'sphere'
+    [pos, tri] = mesh_sphere(100);
+    pos(:,1) = pos(:,1)/2;  % unit diameter
+    pos(:,2) = pos(:,2)/2;  % unit diameter
+    pos(:,3) = pos(:,3)/2;  % unit diameter
+  case 'disc'
+    [pos, tri] = mesh_cylinder(36, 2);
+    pos(:,1) = pos(:,1)/2;  % unit diameter
+    pos(:,2) = pos(:,2)/2;  % unit diameter
+    pos(:,3) = pos(:,3)/10;
   case 'circle'
     pos = circle(24);
     tri = [];
   case 'square'
     pos = square;
     tri = [];
-  case 'disc'
-    [pos, tri] = mesh_cylinder(36, 2);
-    pos(:,1) = pos(:,1)/2;  % unit diameter
-    pos(:,2) = pos(:,2)/2;  % unit diameter
-    pos(:,3) = pos(:,3)/10; % 
 end
 
 nsens = size(senspos,1);
@@ -560,18 +559,18 @@ for i=1:nsens
   end
   
   switch sensshape
+    case {'sphere' 'disc'}
+      % construct a single mesh with separate triangles for all sensors
+      sel = ((i-1)*npos+1):(i*npos);
+      mesh.pos(sel,:) = ft_warp_apply(t*r2*r1*r0*s, pos);
+      mesh.tri        = cat(1, mesh.tri, tri + (i-1)*npos);
+      mesh.poly       = [];
     case {'circle' 'square'}
       % construct a single mesh with separate polygons for all sensors
       sel = ((i-1)*npos+1):(i*npos);
       mesh.pos(sel,:) = ft_warp_apply(t*r2*r1*r0*s, pos); % scale, rotate and translate the template coil vertices, skip the central vertex
       mesh.poly(i,:)  = sel;                              % this is a polygon connecting all edge points
       mesh.tri        = [];
-    case 'disc'
-      % construct a single mesh with separate triangles for all sensors
-      sel = ((i-1)*npos+1):(i*npos);
-      mesh.pos(sel,:) = ft_warp_apply(t*r2*r1*r0*s, pos);
-      mesh.tri        = cat(1, mesh.tri, tri + (i-1)*npos);
-      mesh.poly       = [];
   end
   
 end % for each sensor
