@@ -1,145 +1,71 @@
-%
-% WALLTIME:
-% MEM: 
-% 
-% 
+function test_di
 
-%% Simulate the signals (10 channels)
+% MEM 2gb
+% WALLTIME 00:20:00
 
-fs = 150;           % in Hz
-total = 3;          % in seconds
-t = (0:1/fs:total); % time axis
+% DEPENDENCY ft_connectivityanalysis ft_connectivity_mutualinformation 
 
-% connectivity timecourse
-starttime = 0.2;  % when source arrives
-offtime = 0.3;    % when source is off
+%% Simulate two situations as in analogy to Robin's paper
 
-% preallocate data matrix
-sim = zeros(10, size(t, 2));
+nstim    = 500; 
+isi      = ceil(200.*rand(1,nstim));
+amp_smp  = cumsum(isi);
+amp_stim = rand(1,nstim);
 
-% define signal components
+feature1         = zeros(1, max(amp_smp+150));
+feature1(amp_smp) = amp_stim;
 
-omega = 0.1;
-drift = 0.1*sin(2*pi*t*omega); 
-omega = 4;
-theta = 0.4*sin(2*pi*t*omega);
-omega = 40;
-gamma = 0.1*sin(2*pi*t*omega);
+feature2a = zeros(1, max(amp_smp+150));
+feature2b = feature2a;
+feature2a(amp_smp(amp_stim<0.5)) = amp_stim(amp_stim<0.5).*2;
+feature2b(amp_smp(amp_stim>0.5)) = amp_stim(amp_stim>0.5);
 
-% Create 2 source signals with noisepl
-seeds = [123, 321];
-sources = zeros(2, length(t));
-for i = 1:numel(seeds)
-    
-    rng(seeds(i));
-    %noise1 = smoothdata(randn(1, length(t)).*(0.2.*-1.*hamming(length(t))+1)', 'gaussian', 30);
-    noise1 = ft_preproc_smooth(randn(1, length(t)).*(0.2.*-1.*hamming(length(t))+1)', 30);
-    
-    noise2 = 0.2*randn(1, length(t));
-
-    sources(i, :) = drift + theta.*hamming(length(t))' + gamma + noise1 + noise2;
-
-end
-
-% fill unrelated noise signals
-rng(100);
-tap = repmat((0.2.*-1.*hamming(length(t))+1)', [5, 1]);
-%noise1tmp = smoothdata((randn(5, length(t)).*tap), 2, 'gaussian', 30);
-noise1tmp = ft_preproc_smooth((randn(5, length(t)).*tap), 30);
-noise2tmp = (0.2*randn(5, length(t)));
-sim(1:2, :) = noise1tmp(1:2, :) + noise2tmp(1:2, :);
-sim(5:7, :) = noise1tmp(3:5, :) + noise2tmp(3:5, :);
-
-% fill sources 
-sim(3, :) = sources(1, :);
-sim(4, :) = sources(2, :);
-
-% define the start and end sample points
-endsmp = nearest(t, 10);
-begsmp = nearest(t, 4);
-
-% create targets by making them equal to the past of the sources
-targets = zeros(3, endsmp);
-targets(1, :) = sources(1, 1:endsmp);
-targets(2, :) = sources(2, 1:endsmp);
-targets(3, :) = 0.5.*sources(1, 1:endsmp) + 0.5.*sources(2, 1:endsmp);
-
-sim = sim(:, 1:endsmp);
-
-% write targets to the data matrix
-sim(8, :) = targets(1, :);
-sim(9, :) = targets(2, :);
-sim(10, :) = targets(3, :);
-
-%% Plot the signals
-
-tnew = t(1:endsmp);
-
-figure();
-subplot(4, 1, 1);
-plot(tnew, sim(3, :));
-legend('source 1');
-subplot(4, 1, 2);
-plot(tnew, sim(4, :));
-subplot(4, 1, 3);
-legend('source 2');
-plot(tnew, sim(8, :));
-line([tnew(begsmp), tnew(begsmp)], [-1, 1], 'color', 'red');
-legend('target 1', 'source 1 arrives');
-subplot(4, 1, 4);
-plot(tnew, sim(9, :));
-line([tnew(begsmp), tnew(begsmp)], [-1, 1], 'color', 'red');
-legend('target 2', 'source 2 arrives');
-xlabel('time (sec)');
+krn1   = cat(1,zeros(50,1),gausswin(50,5)); krn1 = krn1./sum(krn1);
+krn2   = cat(1,zeros(20,1),gausswin(50,5)); krn2 = krn2./sum(krn2);
+krn2b  = cat(1,zeros(70,1),gausswin(50,5)); krn2b = krn2b./sum(krn2);
 
 
-% plot the whole matrix ('sim' variable)
+% situation 1
+source1 = conv(feature1, krn1', 'same') + randn(1,numel(feature1))./100;
+target1 = conv(source1, krn2', 'same') + randn(1,numel(feature1))./100;
 
-figure();
-imagesc(sim);
-ax = gca;
-ax.YTickLabel{3} = 'S1';
-ax.YTickLabel{4} = 'S2';
-ax.YTickLabel{8} = 'S1-tgt';
-ax.YTickLabel{9} = 'S2-tgt';
-ax.YTickLabel{10} = 'S1+S2-tgt';
-title('Data');
-ylabel('channels');
-xlabel('time (sample point)');
+% situation 2
+noise2  = randn(1,numel(feature2a))./100;
+source2 = conv(feature2a, krn1', 'same') + noise2;
+target2 = conv(feature2b, krn2b', 'same') + conv(noise2, krn2', 'same');% + randn(1,numel(feature2b))./200;
 
+fs    = 100;        % in Hz
+tim   = (1:numel(feature1))./fs;
 
-%% create labels
+data1          = [];
+data1.trial{1} = [feature1; source1; target1];
+data1.time{1}  = tim;
+data1.label    = {'feature';'source';'target'};
+data1.fsample  = fs;
 
-labels = cell(size(sim, 1),1);
-for j = 1:size(sim, 1)
-    labels{j} = sprintf('chan%d', j); 
-end
+data2 = data1;
+data2.trial{1} = [feature2a+feature2b; source2; target2];
 
-% create ft-style struct
+%% Run
+cfg         = [];
+cfg.method  = 'mi';
+cfg.refindx = 'all';
+cfg.mi.lags = (-fs/2:fs/2)./fs;
+mi1 = ft_connectivityanalysis(cfg, data1);
+mi2 = ft_connectivityanalysis(cfg, data2);
 
-data.fsample = fs;
-data.trial = {sim+randn(size(sim))./100};
-data.time = {t(1:endsmp)};
-data.label = labels;
-data.sampleinfo = [1, endsmp];
-
-%% Run 
 cfg            = [];
 cfg.method     = 'di';
 cfg.refindx    = 'all';
-cfg.di.lags    = (0.05:0.05:0.3);
+cfg.di.lags    = (1:fs/2)./fs;
+di1 = ft_connectivityanalysis(cfg, data1);
+di2 = ft_connectivityanalysis(cfg, data2);
 
-% di = ft_connectivityanalysis(cfg, data);
-% 
-% %% Plot connectivity time courses
-% 
-% figure;
-% title('Di')
-% plot(di.time, squeeze(di.di(3, 8, :)), '-o'); hold on;
-% plot(di.time, squeeze(di.di(9, 4, :)), '-o');
-% plot(di.time, squeeze(di.di(8, 3, :)), '-o');
-% plot(di.time, squeeze(di.di(3, 6, :)), '-o');
-% ylabel('di (bit)')
-% xlabel('lag (sec)');
-% labs = {'3(source)-->8(target)', '4(source)-->9(target)', '8(target)-->3(source)', '3(source)-->6(non-target)'};
-% legend(labs);
+cfg = [];
+cfg.method = 'dfi';
+cfg.refindx     = 2;
+cfg.dfi.feature = 'feature';
+cfg.dfi.lags    = (2:2:fs/2)./fs;
+dfi1 = ft_connectivityanalysis(cfg, data1);
+dfi2 = ft_connectivityanalysis(cfg, data2);
+

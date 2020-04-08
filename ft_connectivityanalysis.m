@@ -900,8 +900,8 @@ switch cfg.method
     % presence of the toolbox is checked in the low-level function.
     % directed information using the gcmi toolbox, requires a lag to be
     % specified
-    if (strcmp(cfg.method, 'di') || strcmp(cfg.method, 'dfi')) && any(cfg.(cfg.method).lags==0)
-      error('directed information requires cfg.di.lags to be ~= 0');
+    if (strcmp(cfg.method, 'di') || strcmp(cfg.method, 'dfi')) && any(cfg.(cfg.method).lags<=0)
+      error('directed information requires cfg.di.lags to be > 0');
     end
     
     if ~strcmp(dtype, 'raw') && (numel(cfg.(cfg.method).lags)>1 || cfg.(cfg.method).lags~=0)
