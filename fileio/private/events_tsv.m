@@ -20,12 +20,15 @@ if needhdr
   megjson = [filename(1:(end-length('events.tsv'))) 'meg.json'];
   eegjson = [filename(1:(end-length('events.tsv'))) 'eeg.json'];
   ieegjson = [filename(1:(end-length('events.tsv'))) 'ieeg.json'];
+  nirsjson = [filename(1:(end-length('events.tsv'))) 'nirs.json'];
   if exist(megjson, 'file')
     jsonfile = megjson;
   elseif exist(eegjson, 'file')
     jsonfile = eegjson;
   elseif exist(ieegjson, 'file')
     jsonfile = ieegjson;
+  elseif exist(nirsjson, 'file')
+      jsonfile = nirsjson;
   else
     ft_error('cannot find header information correspoding to %s', filename);
   end
