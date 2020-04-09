@@ -1427,7 +1427,7 @@ elseif filetype_check_extension(filename, '.c3d') && filetype_check_header(filen
   content = 'motion capture data';
 elseif filetype_check_extension(filename, '.mvnx') %FIX: && filetype_check_header(filename, [2, 80])
     type = 'xsens_mvnx';
-    manufacturer = 'http://www.xsens.com/mvn/mvnx';
+    manufacturer = 'https://www.xsens.com/motion-capture';
     content = 'motion capture data';
 elseif filetype_check_extension(filename, '.mif')
   % this could be a mrtrix compatible image file

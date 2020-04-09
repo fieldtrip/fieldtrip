@@ -32,7 +32,7 @@ function varargout = xsens_mvnx(filename, hdr, begsample, endsample, chanindx)
 persistent mvnx previous_fullname
 
 % ensure that the external toolbox is available
-% ft_hastoolbox('xsens', 1); % FIXME
+ft_hastoolbox('xsens', 1); 
 
 needhdr = (nargin==1);
 needevt = (nargin==2);
