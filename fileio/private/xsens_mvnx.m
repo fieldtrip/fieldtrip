@@ -227,65 +227,95 @@ elseif needdat
   dat = nan(nchan, nsample);
   i=1;
   
-  nchan=length(find(contains(hdr.label, '_orientation')));
-  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).orientation], [nchan, nsample]);
-  i=i+nchan;
+  if isfield(mvnx.subject.frames.frame,'orientation')
+      nchan=length(find(contains(hdr.label, '_orientation')));
+      dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).orientation], [nchan, nsample]);
+      i=i+nchan;
+  end
   
-  nchan=length(find(contains(hdr.label, '_position')));
-  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).position], [nchan, nsample]);
-  i=i+nchan;
+  if isfield(mvnx.subject.frames.frame,'position')
+      nchan=length(find(contains(hdr.label, '_position')));
+      dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).position], [nchan, nsample]);
+      i=i+nchan;
+  end
   
-  nchan=length(find(contains(hdr.label, '_velocity')));
-  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).velocity], [nchan, nsample]);
-  i=i+nchan;
+  if isfield(mvnx.subject.frames.frame,'velocity')
+      nchan=length(find(contains(hdr.label, '_velocity')));
+      dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).velocity], [nchan, nsample]);
+      i=i+nchan;
+  end
   
-  nchan=length(find(contains(hdr.label, '_acceleration')));
-  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).acceleration], [nchan, nsample]);
-  i=i+nchan;
+  if isfield(mvnx.subject.frames.frame,'acceleration')
+      nchan=length(find(contains(hdr.label, '_acceleration')));
+      dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).acceleration], [nchan, nsample]);
+      i=i+nchan;
+  end
   
-  nchan=length(find(contains(hdr.label, '_angularVelocity')));
-  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).angularVelocity], [nchan, nsample]);
-  i=i+nchan;
+  if isfield(mvnx.subject.frames.frame,'angularVelocity')
+      nchan=length(find(contains(hdr.label, '_angularVelocity')));
+      dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).angularVelocity], [nchan, nsample]);
+      i=i+nchan;
+  end
   
-  nchan=length(find(contains(hdr.label, '_angularAcceleration')));
-  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).angularAcceleration], [nchan, nsample]);
-  i=i+nchan;
+  if isfield(mvnx.subject.frames.frame,'angularAcceleration')
+      nchan=length(find(contains(hdr.label, '_angularAcceleration')));
+      dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).angularAcceleration], [nchan, nsample]);
+      i=i+nchan;
+  end
   
-  nchan=length(find(contains(hdr.label, '_footContacts')));
-  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).footContacts], [nchan, nsample]);
-  i=i+nchan;
+  if isfield(mvnx.subject.frames.frame,'footContacts')
+      nchan=length(find(contains(hdr.label, '_footContacts')));
+      dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).footContacts], [nchan, nsample]);
+      i=i+nchan;
+  end
   
-  nchan=length(find(contains(hdr.label, '_sensorFreeAcceleration')));
-  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).sensorFreeAcceleration], [nchan, nsample]);
-  i=i+nchan;
+  if isfield(mvnx.subject.frames.frame,'sensorFreeAcceleration')
+      nchan=length(find(contains(hdr.label, '_sensorFreeAcceleration')));
+      dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).sensorFreeAcceleration], [nchan, nsample]);
+      i=i+nchan;
+  end
   
-  nchan=length(find(contains(hdr.label, '_sensorMagneticField')));
-  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).sensorMagneticField], [nchan, nsample]);
-  i=i+nchan;
+  if isfield(mvnx.subject.frames.frame,'sensorMagneticField')
+      nchan=length(find(contains(hdr.label, '_sensorMagneticField')));
+      dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).sensorMagneticField], [nchan, nsample]);
+      i=i+nchan;
+  end
   
-  nchan=length(find(contains(hdr.label, '_sensorOrientation')));
-  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).sensorOrientation], [nchan, nsample]);
-  i=i+nchan;
+  if isfield(mvnx.subject.frames.frame,'sensorOrientation')
+      nchan=length(find(contains(hdr.label, '_sensorOrientation')));
+      dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).sensorOrientation], [nchan, nsample]);
+      i=i+nchan;
+  end
   
-  nchan=length(find(contains(hdr.label, '_jointAngle_')));
-  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).jointAngle], [nchan, nsample]);
-  i=i+nchan;
+  if isfield(mvnx.subject.frames.frame,'jointAngle')
+      nchan=length(find(contains(hdr.label, '_jointAngle_')));
+      dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).jointAngle], [nchan, nsample]);
+      i=i+nchan;
+  end
   
-  nchan=length(find(contains(hdr.label, '_jointAngleXZY')));
-  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).jointAngleXZY], [nchan, nsample]);
-  i=i+nchan;
+  if isfield(mvnx.subject.frames.frame,'jointAngleXZY')
+      nchan=length(find(contains(hdr.label, '_jointAngleXZY')));
+      dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).jointAngleXZY], [nchan, nsample]);
+      i=i+nchan;
+  end
   
-  nchan=length(find(contains(hdr.label, '_jointAngleErgo_')));
-  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).jointAngleErgo], [nchan, nsample]);
-  i=i+nchan;
+  if isfield(mvnx.subject.frames.frame,'jointAngleErgo')
+      nchan=length(find(contains(hdr.label, '_jointAngleErgo_')));
+      dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).jointAngleErgo], [nchan, nsample]);
+      i=i+nchan;
+  end
   
-  nchan=length(find(contains(hdr.label, '_jointAngleErgoXZY')));
-  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).jointAngleErgoXZY], [nchan, nsample]);
-  i=i+nchan;
+  if isfield(mvnx.subject.frames.frame,'jointAngleErgoXZY')
+      nchan=length(find(contains(hdr.label, '_jointAngleErgoXZY')));
+      dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).jointAngleErgoXZY], [nchan, nsample]);
+      i=i+nchan;
+  end
   
-  nchan=length(find(contains(hdr.label, '_centerOfMass')));
-  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).centerOfMass], [nchan, nsample]);
-  i=i+nchan;
+  if isfield(mvnx.subject.frames.frame,'centerOfMass')
+      nchan=length(find(contains(hdr.label, '_centerOfMass')));
+      dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).centerOfMass], [nchan, nsample]);
+      i=i+nchan;
+  end
   
   % only select data that is asked for
   dat = dat(chanindx, begsample:endsample);
