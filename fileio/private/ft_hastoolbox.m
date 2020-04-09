@@ -409,7 +409,7 @@ switch toolbox
   case 'EZC3D'
     dependency = {'ezc3dRead', 'ezc3dWrite'};
   case 'XSENS'
-    dependency = {'load_mvnx.m'};
+    dependency = {'load_mvnx'};
         
     % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
