@@ -1,6 +1,9 @@
 function varargout = xsens_mvnx(filename, hdr, begsample, endsample, chanindx)
 
-% XSENS_MVNX reads motion tracking data from a file
+% XSENS_MVNX reads motion tracking data from a file that was created by
+% xsens MVN motion systems, see: https://www.xsens.com/motion-capture. The
+% current function is designed to read in .mvnx files from release version
+% 4.
 %
 % Use as
 %   hdr = xsens_mvnx(filename);
@@ -60,17 +63,11 @@ else
 end
 
 if mvnx.version~=4
-      ft_warning('This fieldtrip function is currently only designed to export version 4 .mvnx files')
+      ft_warning('This fieldtrip function is currently only designed to export .mvnx files that were released under version 4')
 end
 
 if needhdr
-  %% parse the header
-  
-  % In release version 1.1.0 of ezc3d the c3d.parameters.POINT.LABELS field
-  % was a cell-array. In version 1.2.4 it became a structure, that contains
-  % a subfield DATA as a cell-array. Also the numeric fields in 1.2.4 have the DATA
-  % subfield.
-  
+  %% parse the header  
   hdr = [];
   hdr.label = {}; 
   hdr.chanunit={};
@@ -216,11 +213,7 @@ if needhdr
   varargout = {hdr};
   
 elseif needdat
-  %% parse the data
-  
-  % this only deals with one type of data, the file format itself is much
-  % more complex
-  
+  %% parse the data  
   nchan   = hdr.nChans;
   nsample = hdr.nSamples;
   idx     = find(strcmp({mvnx.subject.frames.frame(:).type}, 'normal')); % indexes of all 'normal' frames
