@@ -60,7 +60,7 @@ else
 end
 
 if mvnx.version~=4
-      ft_warning('This fieldtrip function is designed for the export of version 4 .mvnx files')
+      ft_warning('This fieldtrip function is currently only designed to export version 4 .mvnx files')
 end
 
 if needhdr
@@ -75,76 +75,135 @@ if needhdr
   hdr.label = {}; 
   hdr.chanunit={};
   
-  for seg=1:mvnx.subject.frames.segmentCount % loop over all segments
-      hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_orientation_Q0'];
-      hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_orientation_Q1'];
-      hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_orientation_Q2'];
-      hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_orientation_Q3'];
-      hdr.chanunit(end+1:end+4)=repmat({'quaternion'}, [1 4]);
-      hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_position_X'];
-      hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_position_Y'];
-      hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_position_Z'];
+  % loop over all labels for the segments
+  if isfield(mvnx.subject.frames.frame,'orientation')
+      for seg=1:mvnx.subject.frames.segmentCount % loop over all segments
+          hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_orientation_Q0'];
+          hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_orientation_Q1'];
+          hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_orientation_Q2'];
+          hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_orientation_Q3'];
+          hdr.chanunit(end+1:end+4)=repmat({'quaternion'}, [1 4]);
+      end
+  end
+  if isfield(mvnx.subject.frames.frame,'position')
+      for seg=1:mvnx.subject.frames.segmentCount % loop over all segments
+          hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_position_X'];
+          hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_position_Y'];
+          hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_position_Z'];
+          hdr.chanunit(end+1:end+3)=repmat({'m'}, [1 3]);
+      end
+  end
+  if isfield(mvnx.subject.frames.frame,'velocity')
+      for seg=1:mvnx.subject.frames.segmentCount % loop over all segments
+          hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_velocity_X'];
+          hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_velocity_Y'];
+          hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_velocity_Z'];
+          hdr.chanunit(end+1:end+3)=repmat({'m/s'}, [1 3]);
+      end
+  end
+  if isfield(mvnx.subject.frames.frame,'acceleration')
+      for seg=1:mvnx.subject.frames.segmentCount % loop over all segments
+          hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_acceleration_X'];
+          hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_acceleration_Y'];
+          hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_acceleration_Z'];
+          hdr.chanunit(end+1:end+3)=repmat({'m/s^2'}, [1 3]);
+      end
+  end
+  if isfield(mvnx.subject.frames.frame,'angularVelocity')
+      for seg=1:mvnx.subject.frames.segmentCount % loop over all segments
+          hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_angularVelocity_X'];
+          hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_angularVelocity_Y'];
+          hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_angularVelocity_Z'];
+          hdr.chanunit(end+1:end+3)=repmat({'rad/s'}, [1 3]);
+      end
+  end
+  if isfield(mvnx.subject.frames.frame,'angularAcceleration')
+      for seg=1:mvnx.subject.frames.segmentCount % loop over all segments
+          hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_angularAcceleration_X'];
+          hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_angularAcceleration_Y'];
+          hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_angularAcceleration_Z'];
+          hdr.chanunit(end+1:end+3)=repmat({'rad/s^2'}, [1 3]);
+      end
+  end
+  
+  % loop over the footContacts
+  if isfield(mvnx.subject.frames.frame,'footContacts')
+      for fc=1:numel(mvnx.subject.footContactDefinition.contactDefinition) % loop over foot contacts
+          hdr.label{end+1}=['fc_' mvnx.subject.footContactDefinition.contactDefinition(fc).label '_footContacts'];
+          hdr.chanunit(end+1)={'boolean'};
+      end
+  end
+  
+  % loop over the labels for the sensors
+  if isfield(mvnx.subject.frames.frame,'sensorFreeAcceleration')
+      for sen=1:mvnx.subject.frames.sensorCount % loop over all sensors
+          hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorFreeAcceleration_X'];
+          hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorFreeAcceleration_Y'];
+          hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorFreeAcceleration_Z'];
+          hdr.chanunit(end+1:end+3)=repmat({'m/s^2'}, [1 3]);
+      end
+  end
+  if isfield(mvnx.subject.frames.frame,'sensorMagneticField')
+      for sen=1:mvnx.subject.frames.sensorCount % loop over all sensors
+          hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorMagneticField_X'];
+          hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorMagneticField_Y'];
+          hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorMagneticField_Z'];
+          hdr.chanunit(end+1:end+3)=repmat({'a.u.'}, [1 3]);
+      end
+  end
+  if isfield(mvnx.subject.frames.frame,'sensorOrientation')
+      for sen=1:mvnx.subject.frames.sensorCount % loop over all sensors
+          hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorOrientation_Q0'];
+          hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorOrientation_Q1'];
+          hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorOrientation_Q2'];
+          hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorOrientation_Q3'];
+          hdr.chanunit(end+1:end+4)=repmat({'quaternion'}, [1 4]);
+      end
+  end  
+
+  % loop over the labels of the joints
+  if isfield(mvnx.subject.frames.frame,'jointAngle')
+      for jnt=1:mvnx.subject.frames.jointCount % loop over all joints
+          hdr.label{end+1}=['jnt_' mvnx.subject.joints.joint(jnt).label '_jointAngle_X'];
+          hdr.label{end+1}=['jnt_' mvnx.subject.joints.joint(jnt).label '_jointAngle_Y'];
+          hdr.label{end+1}=['jnt_' mvnx.subject.joints.joint(jnt).label '_jointAngle_Z'];
+          hdr.chanunit(end+1:end+3)=repmat({'deg'}, [1 3]);
+      end
+  end
+  if isfield(mvnx.subject.frames.frame,'jointAngleXZY')
+      for jnt=1:mvnx.subject.frames.jointCount % loop over all joints
+          hdr.label{end+1}=['jnt_' mvnx.subject.joints.joint(jnt).label '_jointAngleXZY_X'];
+          hdr.label{end+1}=['jnt_' mvnx.subject.joints.joint(jnt).label '_jointAngleXZY_Y'];
+          hdr.label{end+1}=['jnt_' mvnx.subject.joints.joint(jnt).label '_jointAngleXZY_Z'];
+          hdr.chanunit(end+1:end+3)=repmat({'deg'}, [1 3]);
+      end
+  end
+  
+  % loop over the labels of the ergonomic joints
+  if isfield(mvnx.subject.frames.frame,'jointAngleErgo')
+      for jntx=1:numel(mvnx.subject.ergonomicJointAngles.ergonomicJointAngle) % loop over all ergonomic joints
+          hdr.label{end+1}=['jntx_' mvnx.subject.ergonomicJointAngles.ergonomicJointAngle(jntx).label '_jointAngleErgo_X'];
+          hdr.label{end+1}=['jntx_' mvnx.subject.ergonomicJointAngles.ergonomicJointAngle(jntx).label '_jointAngleErgo_Y'];
+          hdr.label{end+1}=['jntx_' mvnx.subject.ergonomicJointAngles.ergonomicJointAngle(jntx).label '_jointAngleErgo_Z'];
+          hdr.chanunit(end+1:end+3)=repmat({'deg'}, [1 3]);
+      end
+  end
+  if isfield(mvnx.subject.frames.frame,'jointAngleErgoXZY')
+      for jntx=1:numel(mvnx.subject.ergonomicJointAngles.ergonomicJointAngle) % loop over all ergonomic joints
+          hdr.label{end+1}=['jntx_' mvnx.subject.ergonomicJointAngles.ergonomicJointAngle(jntx).label '_jointAngleErgoXZY_X'];
+          hdr.label{end+1}=['jntx_' mvnx.subject.ergonomicJointAngles.ergonomicJointAngle(jntx).label '_jointAngleErgoXZY_Y'];
+          hdr.label{end+1}=['jntx_' mvnx.subject.ergonomicJointAngles.ergonomicJointAngle(jntx).label '_jointAngleErgoXZY_Z'];
+          hdr.chanunit(end+1:end+3)=repmat({'deg'}, [1 3]);
+      end
+  end
+  
+  % loop over the labels of Center of mass
+  if isfield(mvnx.subject.frames.frame,'centerOfMass')
+      hdr.label{end+1}=['seg_COM_centerOfMass_X']; % add center of mass positions
+      hdr.label{end+1}=['seg_COM_centerOfMass_Y'];
+      hdr.label{end+1}=['seg_COM_centerOfMass_Z'];
       hdr.chanunit(end+1:end+3)=repmat({'m'}, [1 3]);
-      hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_velocity_X'];
-      hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_velocity_Y'];
-      hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_velocity_Z']; 
-      hdr.chanunit(end+1:end+3)=repmat({'m/s'}, [1 3]);
-      hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_acceleration_X'];
-      hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_acceleration_Y'];
-      hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_acceleration_Z'];
-      hdr.chanunit(end+1:end+3)=repmat({'m/s^2'}, [1 3]);
-      hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_angularVelocity_X'];
-      hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_angularVelocity_Y'];
-      hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_angularVelocity_Z']; 
-      hdr.chanunit(end+1:end+3)=repmat({'rad/s'}, [1 3]);
-      hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_angularAcceleration_X'];
-      hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_angularAcceleration_Y'];
-      hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_angularAcceleration_Z'];
-      hdr.chanunit(end+1:end+3)=repmat({'rad/s^2'}, [1 3]);
   end
-  for fc=1:numel(mvnx.subject.footContactDefinition.contactDefinition) % loop over foot contacts
-      hdr.label{end+1}=['fc_' mvnx.subject.footContactDefinition.contactDefinition(fc).label '_footContacts'];
-      hdr.chanunit(end+1)={'boolean'};
-  end
-  for sen=1:mvnx.subject.frames.sensorCount % loop over all sensors
-      hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorFreeAcceleration_X'];
-      hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorFreeAcceleration_Y'];
-      hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorFreeAcceleration_Z'];
-      hdr.chanunit(end+1:end+3)=repmat({'m/s^2'}, [1 3]);
-      hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorMagneticField_X'];
-      hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorMagneticField_Y'];
-      hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorMagneticField_Z']; 
-      hdr.chanunit(end+1:end+3)=repmat({'a.u.'}, [1 3]);
-      hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorOrientation_Q0'];
-      hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorOrientation_Q1'];
-      hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorOrientation_Q2'];
-      hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorOrientation_Q3'];
-      hdr.chanunit(end+1:end+4)=repmat({'quaternion'}, [1 4]);
-  end
-  for jnt=1:mvnx.subject.frames.jointCount % loop over all joints
-      hdr.label{end+1}=['jnt_' mvnx.subject.joints.joint(jnt).label '_jointAngle_X'];
-      hdr.label{end+1}=['jnt_' mvnx.subject.joints.joint(jnt).label '_jointAngle_Y'];
-      hdr.label{end+1}=['jnt_' mvnx.subject.joints.joint(jnt).label '_jointAngle_Z'];
-      hdr.chanunit(end+1:end+3)=repmat({'deg'}, [1 3]);
-      hdr.label{end+1}=['jnt_' mvnx.subject.joints.joint(jnt).label '_jointAngleXZY_X'];
-      hdr.label{end+1}=['jnt_' mvnx.subject.joints.joint(jnt).label '_jointAngleXZY_Y'];
-      hdr.label{end+1}=['jnt_' mvnx.subject.joints.joint(jnt).label '_jointAngleXZY_Z'];
-      hdr.chanunit(end+1:end+3)=repmat({'deg'}, [1 3]);
-  end
-  for jntx=1:numel(mvnx.subject.ergonomicJointAngles.ergonomicJointAngle) % loop over all ergonomic joints
-      hdr.label{end+1}=['jntx_' mvnx.subject.ergonomicJointAngles.ergonomicJointAngle(jntx).label '_jointAngleErgo_X'];
-      hdr.label{end+1}=['jntx_' mvnx.subject.ergonomicJointAngles.ergonomicJointAngle(jntx).label '_jointAngleErgo_Y'];
-      hdr.label{end+1}=['jntx_' mvnx.subject.ergonomicJointAngles.ergonomicJointAngle(jntx).label '_jointAngleErgo_Z'];
-      hdr.chanunit(end+1:end+3)=repmat({'deg'}, [1 3]);
-      hdr.label{end+1}=['jntx_' mvnx.subject.ergonomicJointAngles.ergonomicJointAngle(jntx).label '_jointAngleErgoXZY_X'];
-      hdr.label{end+1}=['jntx_' mvnx.subject.ergonomicJointAngles.ergonomicJointAngle(jntx).label '_jointAngleErgoXZY_Y'];
-      hdr.label{end+1}=['jntx_' mvnx.subject.ergonomicJointAngles.ergonomicJointAngle(jntx).label '_jointAngleErgoXZY_Z'];
-      hdr.chanunit(end+1:end+3)=repmat({'deg'}, [1 3]);
-  end
-  hdr.label{end+1}=['seg_COM_centerOfMass_X']; % add center of mass positions
-  hdr.label{end+1}=['seg_COM_centerOfMass_Y'];
-  hdr.label{end+1}=['seg_COM_centerOfMass_Z'];  
-  hdr.chanunit(end+1:end+3)=repmat({'m'}, [1 3]);
   
   hdr.nChans      = numel(hdr.label);
   hdr.nSamples    = length(find(strcmp({mvnx.subject.frames.frame(:).type}, 'normal'))); %first three frames include 'identity', 'tpose' and 'tpose-isb' information.
