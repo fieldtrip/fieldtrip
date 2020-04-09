@@ -102,6 +102,10 @@ if needhdr
       hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_angularAcceleration_Z'];
       hdr.chanunit(end+1:end+3)=repmat({'rad/s^2'}, [1 3]);
   end
+  for fc=1:numel(mvnx.subject.footContactDefinition.contactDefinition) % loop over foot contacts
+      hdr.label{end+1}=['fc_' mvnx.subject.footContactDefinition.contactDefinition(fc).label '_footContacts'];
+      hdr.chanunit(end+1)={'boolean'};
+  end
   for sen=1:mvnx.subject.frames.sensorCount % loop over all sensors
       hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorFreeAcceleration_X'];
       hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorFreeAcceleration_Y'];
@@ -137,17 +141,13 @@ if needhdr
       hdr.label{end+1}=['jntx_' mvnx.subject.ergonomicJointAngles.ergonomicJointAngle(jntx).label '_jointAngleErgoXZY_Z'];
       hdr.chanunit(end+1:end+3)=repmat({'deg'}, [1 3]);
   end
-  for fc=1:numel(mvnx.subject.footContactDefinition.contactDefinition) % loop over foot contacts
-      hdr.label{end+1}=['fc_' mvnx.subject.footContactDefinition.contactDefinition(fc).label '_footContacts'];
-      hdr.chanunit(end+1)={'boolean'};
-  end
   hdr.label{end+1}=['seg_COM_centerOfMass_X']; % add center of mass positions
   hdr.label{end+1}=['seg_COM_centerOfMass_Y'];
   hdr.label{end+1}=['seg_COM_centerOfMass_Z'];  
   hdr.chanunit(end+1:end+3)=repmat({'m'}, [1 3]);
   
   hdr.nChans      = numel(hdr.label);
-  hdr.nSamples    = length(mvnx.subject.frames.frame);
+  hdr.nSamples    = length(find(strcmp({mvnx.subject.frames.frame(:).type}, 'normal'))); %first three frames include 'identity', 'tpose' and 'tpose-isb' information.
   hdr.nSamplesPre = 0; % continuous data
   hdr.nTrials     = 1; % continuous data
   hdr.Fs          = mvnx.subject.frameRate;
@@ -162,9 +162,73 @@ elseif needdat
   % this only deals with one type of data, the file format itself is much
   % more complex
   
-  nchan   = numel(mvnx.parameters.POINT.LABELS.DATA)*3;
-  nsample = mvnx.parameters.POINT.FRAMES.DATA;
-  dat = reshape(mvnx.data.points, [nchan nsample]);
+  nchan   = hdr.nChans;
+  nsample = hdr.nSamples;
+  idx     = find(strcmp({mvnx.subject.frames.frame(:).type}, 'normal')); % indexes of all 'normal' frames
+  dat = nan(nchan, nsample);
+  i=1;
+  
+  nchan=length(find(contains(hdr.label, '_orientation')));
+  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).orientation], [nchan, nsample]);
+  i=i+nchan;
+  
+  nchan=length(find(contains(hdr.label, '_position')));
+  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).position], [nchan, nsample]);
+  i=i+nchan;
+  
+  nchan=length(find(contains(hdr.label, '_velocity')));
+  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).velocity], [nchan, nsample]);
+  i=i+nchan;
+  
+  nchan=length(find(contains(hdr.label, '_acceleration')));
+  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).acceleration], [nchan, nsample]);
+  i=i+nchan;
+  
+  nchan=length(find(contains(hdr.label, '_angularVelocity')));
+  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).angularVelocity], [nchan, nsample]);
+  i=i+nchan;
+  
+  nchan=length(find(contains(hdr.label, '_angularAcceleration')));
+  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).angularAcceleration], [nchan, nsample]);
+  i=i+nchan;
+  
+  nchan=length(find(contains(hdr.label, '_footContacts')));
+  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).footContacts], [nchan, nsample]);
+  i=i+nchan;
+  
+  nchan=length(find(contains(hdr.label, '_sensorFreeAcceleration')));
+  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).sensorFreeAcceleration], [nchan, nsample]);
+  i=i+nchan;
+  
+  nchan=length(find(contains(hdr.label, '_sensorMagneticField')));
+  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).sensorMagneticField], [nchan, nsample]);
+  i=i+nchan;
+  
+  nchan=length(find(contains(hdr.label, '_sensorOrientation')));
+  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).sensorOrientation], [nchan, nsample]);
+  i=i+nchan;
+  
+  nchan=length(find(contains(hdr.label, '_jointAngle_')));
+  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).jointAngle], [nchan, nsample]);
+  i=i+nchan;
+  
+  nchan=length(find(contains(hdr.label, '_jointAngleXZY')));
+  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).jointAngleXZY], [nchan, nsample]);
+  i=i+nchan;
+  
+  nchan=length(find(contains(hdr.label, '_jointAngleErgo_')));
+  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).jointAngleErgo], [nchan, nsample]);
+  i=i+nchan;
+  
+  nchan=length(find(contains(hdr.label, '_jointAngleErgoXZY')));
+  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).jointAngleErgoXZY], [nchan, nsample]);
+  i=i+nchan;
+  
+  nchan=length(find(contains(hdr.label, '_centerOfMass')));
+  dat(i:i+nchan-1,:) = reshape([mvnx.subject.frames.frame(idx).centerOfMass], [nchan, nsample]);
+  i=i+nchan;
+  
+  % only select data that is asked for
   dat = dat(chanindx, begsample:endsample);
   
   % return the data
