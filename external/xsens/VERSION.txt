@@ -1,0 +1,3 @@
+# Xsens Developer Toolkit (https://www.xsens.com/motion-capture)
+# Version:	 1.0.5
+# Date: 	 2020-04-09
