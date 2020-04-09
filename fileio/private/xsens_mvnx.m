@@ -63,7 +63,7 @@ else
 end
 
 if mvnx.version~=4
-      ft_warning('This fieldtrip function is currently only designed to export .mvnx files that were released under version 4')
+      ft_warning('this has only been tested with .mvnx files in the "version 4" format');
 end
 
 if needhdr
