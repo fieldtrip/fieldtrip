@@ -559,7 +559,7 @@ switch cfg.output
       ft_error('reconstruction of the residuals with keeprpt or dojack is not yet implemented');
     end
     
-    dataout = keepfields(data, {'hdr','grad','fsample','trialinfo','label','cfg'});
+    dataout = keepfields(data, {'hdr','grad','elec','opto','fsample','trialinfo','label','cfg'});
     trial   = cell(1,numel(data.trial));
     time    = cell(1,numel(data.time));
     for k = 1:numel(data.trial)
