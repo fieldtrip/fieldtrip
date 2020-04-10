@@ -10,11 +10,11 @@ ftpath = fileparts(which('ft_defaults'));
 
 functionlist = [];
 % browse the main FieldTrip directory
-functionlist = [functionlist; dir([ftpath,'/', '*plot*.m'])];
-functionlist = [functionlist; dir([ftpath,'/', '*movie*.m'])];
+functionlist = cat(1, functionlist, dir(fullfile(ftpath, '*plot*.m')));
+functionlist = cat(1, functionlist, dir(fullfile(ftpath, '*movie*.m')));
 % browse the plotting directory
-functionlist = [functionlist; dir([ftpath,'/','plotting/', '*plot*.m'])];
-functionlist = [functionlist; dir([ftpath,'/','plotting/', '*movie*.m'])];
+functionlist = cat(1, functionlist, dir(fullfile(ftpath, 'plotting', '*plot*.m')));
+functionlist = cat(1, functionlist, dir(fullfile(ftpath, 'plotting', '*movie*.m')));
 
 % concatenate all function names
 functionlist = struct2cell(functionlist);
