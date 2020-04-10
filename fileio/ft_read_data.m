@@ -24,6 +24,7 @@ function [dat] = ft_read_data(filename, varargin)
 %   'blocking'       wait for the selected number of events (default = 'no')
 %   'timeout'        amount of time in seconds to wait when blocking (default = 5)
 %   'password'       password structure for encrypted data set (such as mayo_mef30 and mayo_mef21)
+%   'sortchannel'    = sort channel order according to either alphabet or number (default is alphabet if header is not provided, otherwise use header.SortChannel)
 %
 % This function returns a 2-D matrix of size Nchans*Nsamples for continuous
 % data when begevent and endevent are specified, or a 3-D matrix of size
@@ -140,6 +141,7 @@ dataformat      = ft_getopt(varargin, 'dataformat');
 chanunit        = ft_getopt(varargin, 'chanunit');
 timestamp       = ft_getopt(varargin, 'timestamp');
 password        = ft_getopt(varargin, 'password', struct([]));
+sortchannel     = ft_getopt(varargin, 'sortchannel', '');
 
 % this allows blocking reads to avoid having to poll many times for online processing
 blocking         = ft_getopt(varargin, 'blocking', false);  % true or false
@@ -998,7 +1000,7 @@ switch dataformat
     
     case 'mayo_mef30'
         hdr.sampleunit = 'index';
-        dat = mayo_mef30(filename, password, hdr, begsample, endsample, chanindx);
+        dat = mayo_mef30(filename, password, sortchannel, hdr, begsample, endsample, chanindx);
         
     case 'mayo_mef21'
         hdr.sampleunit = 'index';

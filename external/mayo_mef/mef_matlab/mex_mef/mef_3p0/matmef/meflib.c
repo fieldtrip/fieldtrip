@@ -4056,8 +4056,7 @@ void	free_session(SESSION *session, si4 free_session_structure)
 						
 						MEF_strcpy(temp_str, enclosing_directory);
 						
-						if ( fdFile.dwFileAttributes &FILE_ATTRIBUTE_DIRECTORY )
-							MEF_strcat(temp_str, "/");
+                        MEF_strcat(temp_str, "/");
 
 						MEF_strcat(temp_str, (si1 *) fdFile.cFileName);
 						MEF_strncpy(file_list[i], temp_str, MEF_FULL_FILE_NAME_BYTES);
@@ -4167,8 +4166,7 @@ void	free_session(SESSION *session, si4 free_session_structure)
 					file_list[i] = (si1 *) e_malloc((size_t) MEF_FULL_FILE_NAME_BYTES, __FUNCTION__, __LINE__, USE_GLOBAL_BEHAVIOR);
 					MEF_strcpy(temp_str, enclosing_directory);
 					
-					if ( contents_list[n]->d_type == DT_DIR )
-						MEF_strcat(temp_str, "/");
+                    MEF_strcat(temp_str, "/");
 
 					MEF_strcat(temp_str, contents_list[n]->d_name);
 					MEF_strncpy(file_list[i], temp_str, MEF_FULL_FILE_NAME_BYTES);

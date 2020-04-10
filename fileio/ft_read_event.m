@@ -20,6 +20,7 @@ function [event] = ft_read_event(filename, varargin)
 %   'blocking'       wait for the selected number of events (default = 'no')
 %   'timeout'        amount of time in seconds to wait when blocking (default = 5)
 %   'password'       password structure for encrypted data set (such as mayo_mef30 and mayo_mef21)
+%   'sortchannel'    = sort channel order according to either alphabet or number (default is alphabet if header is not provided, otherwise use header.SortChannel)
 %
 % This function returns an event structure with the following fields
 %   event.type      = string
@@ -162,6 +163,7 @@ chanindx         = ft_getopt(varargin, 'chanindx');                  % this allo
 trigindx         = ft_getopt(varargin, 'trigindx');                  % deprecated, use chanindx instead
 triglabel        = ft_getopt(varargin, 'triglabel');                 % deprecated, use chanindx instead
 password         = ft_getopt(varargin, 'password');                  % get the password
+sortchannel      = ft_getopt(varargin, 'sortchannel', '');           % sort channel according to either 'alphabet' of channel names or 'number' of acquisition channel number
 
 % for backward compatibility, added by Robert in Sept 2019
 if ~isempty(trigindx)
@@ -1355,9 +1357,9 @@ switch eventformat
     
     case 'mayo_mef30'
         if isempty(hdr)
-            hdr = ft_read_header(filename, 'password', password);
+            hdr = ft_read_header(filename, 'password', password, 'sortchannel', sortchannel);
         end
-        event = mayo_mef30(filename, password, hdr);
+        event = mayo_mef30(filename, password, sortchannel, hdr);
         
     case 'mayo_mef21'
         if isempty(hdr)

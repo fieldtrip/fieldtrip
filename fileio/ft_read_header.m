@@ -16,6 +16,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   'chantype'       = string or cell of strings, channel types to be read (NeuroOmega, BlackRock).
 %   'headerformat'   = name of a MATLAB function that takes the filename as input (default is automatic)
 %   'password'       = password structure for encrypted data set (such as mayo_mef30 and mayo_mef21)
+%   'sortchannel'    = sort channel order according to either alphabet or number (default is alphabet)
 %
 % This returns a header structure with the following elements
 %   hdr.Fs                  sampling frequency
@@ -181,7 +182,9 @@ chanindx       = ft_getopt(varargin, 'chanindx');         % this is used for EDF
 coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
 coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0-2
 chantype       = ft_getopt(varargin, 'chantype', {});
-password       = ft_getopt(varargin, 'password', struct([])); % get the password
+password       = ft_getopt(varargin, 'password', []); % get the password
+sortchannel    = ft_getopt(varargin, 'sortchannel', 'alphabet');
+
 if ~iscell(chantype); chantype = {chantype}; end
 
 % optionally get the data from the URL and make a temporary local copy
@@ -1643,7 +1646,7 @@ switch headerformat
     
     case 'mayo_mef30'
         ft_hastoolbox('mayo_mef', 1); % make sure mayo_mef exists
-        hdr = mayo_mef30(filename, password);
+        hdr = mayo_mef30(filename, password, sortchannel);
         
     case 'mayo_mef21'
         ft_hastoolbox('mayo_mef', 1); % make sure mayo_mef exists

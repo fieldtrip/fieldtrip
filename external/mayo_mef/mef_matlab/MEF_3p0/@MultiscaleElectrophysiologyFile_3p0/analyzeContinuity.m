@@ -36,7 +36,7 @@ function seg_cont = analyzeContinuity(this, varargin)
 % See also readBlockIndexData.
 
 % Copyright 2020 Richard J. Cui. Created: Wed 02/05/2020 10:19:17.599 AM
-% $Revision: 0.3 $  $Date: Wed 03/11/2020  4:41:01.147 PM $
+% $Revision: 0.4 $  $Date: Thu 04/09/2020 10:11:27.490 PM $
 %
 % 1026 Rocky Creek Dr NE
 % Rochester, MN 55906, USA
@@ -57,7 +57,6 @@ end % if
 % =========================================================================
 % main
 % =========================================================================
-fprintf('Analyzing signal continuity...')
 
 % find out index of continous chunks
 % -----------------------------------
@@ -128,7 +127,6 @@ seg_cont = array2table(chunk_cont, 'VariableNames', var_names);
 % -------
 this.Continuity = seg_cont;
 
-fprintf('Done!\n')
 end
 
 % =========================================================================

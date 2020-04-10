@@ -5,6 +5,7 @@ classdef MEFFieldTrip_3p0 < MEFSession_3p0 & MEFFieldTrip
     %   this = MEFFieldTrip_3p0
     %   this = MEFFieldTrip_3p0(filename)
     %   this = MEFFieldTrip_3p0(__, password)
+    %   this = MEFFieldTrip_3p0(__, 'SortChannel', sortchannel)
     %
     % Input(s):
     %   filename    - [char] (opt) session path or channel path or dataset name
@@ -12,6 +13,9 @@ classdef MEFFieldTrip_3p0 < MEFSession_3p0 & MEFFieldTrip
     %                 .Level1Password
     %                 .Level2Password
     %                 .AccessLevel
+    %   sortchannel - [char] (para) sort channel according to either 'alphabet' of
+    %                 the channel names or 'number' of the acquisiton
+    %                 channel number (default = 'alphabet')
     %
     % Output(s):
     %   this        - [obj] MEFFieldTrip_3p0 object
