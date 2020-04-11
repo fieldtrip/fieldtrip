@@ -1425,7 +1425,7 @@ elseif filetype_check_extension(filename, '.c3d') && filetype_check_header(filen
   type = 'motion_c3d';
   manufacturer = 'https://www.c3d.org';
   content = 'motion capture data';
-elseif filetype_check_extension(filename, '.mvnx') %FIX: && filetype_check_header(filename, [2, 80])
+elseif filetype_check_extension(filename, '.mvnx') && filetype_check_header(filename, '<?xml')
     type = 'xsens_mvnx';
     manufacturer = 'https://www.xsens.com/motion-capture';
     content = 'motion capture data';
