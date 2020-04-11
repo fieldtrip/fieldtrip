@@ -164,7 +164,7 @@ url = {
   'MRTRIX'        'see https://mrtrix.org'
   'BAYESFACTOR'   'see https://klabhub.github.io/bayesFactor'
   'EZC3D'         'see https://github.com/pyomeca/ezc3d'
-  'XSENS'         'see https://www.xsens.com/motion-capture'
+  'XSENS'         'see https://www.xsens.com/motion-capture and http://www.fieldtriptoolbox.org/getting_started/xsens/'
   };
 
 if nargin<2
