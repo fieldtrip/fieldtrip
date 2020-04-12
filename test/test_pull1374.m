@@ -1,8 +1,8 @@
 function test_pull1374
 
-# WALLTIME 00:10:00
-# MEM 2gb
-# DEPENDENCY xsens_mvnx motion_c3d
+% WALLTIME 00:10:00
+% MEM 2gb
+% DEPENDENCY xsens_mvnx motion_c3d
 
 %% 
 
@@ -24,5 +24,5 @@ ft_read_data(filename);
 
 cfg = [];
 cfg.dataset = filename;
-data = ft_preprocessing(
+data = ft_preprocessing(cfg);
 
