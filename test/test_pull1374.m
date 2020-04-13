@@ -1,10 +1,10 @@
 function test_pull1374
 
-% WALLTIME 00:10:00
-% MEM 2gb
+% WALLTIME 00:15:00
+% MEM 6gb
 % DEPENDENCY xsens_mvnx motion_c3d
 
-%% 
+%%
 
 filename=dccnpath('/home/common/matlab/fieldtrip/data/test/original/motion/xsens/pull1374.mvnx');
 
@@ -25,4 +25,3 @@ ft_read_data(filename);
 cfg = [];
 cfg.dataset = filename;
 data = ft_preprocessing(cfg);
-
