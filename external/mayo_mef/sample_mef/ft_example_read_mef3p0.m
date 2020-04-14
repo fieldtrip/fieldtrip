@@ -75,10 +75,9 @@ legend(hdr.label{4})
 
 %% read data with ft_read_data() but specifying time interval using seconds
 % -------------------------------------------------------------------------
-% Let's import 10 seconds data at the beginning of the recording with an
-% assumption that the trigger was at 0 second.
+% Let's import 10 seconds data at the beginning of the recording
 in_unit = 'second';
-be_second = [0, 10, 0]; % 10-second time of data from the start
+be_second = [0, 10]; % 10-second time of data from the start
 out_unit = 'index';
 be_sample = mef_ft.SessionUnitConvert(be_second, in_unit, out_unit);
 dat = ft_read_data(sesspath,...
@@ -92,18 +91,31 @@ dat = ft_read_data(sesspath,...
 t = linspace(be_second(1), be_second(2), be_sample(2)-be_sample(1)+1);
 figure
 plot(t, dat')
-xlim([0 1])
+xlim([0 1.5]+be_second(1))
 xlabel('Time (s)')
 legend(hdr.label{4}, hdr.label{1}, hdr.label{2}, hdr.label{3})
 
 
-% read data with ft_preprocessing()
+%% read data with ft_preprocessing()
 % ---------------------------------
+% Let's import 5 trials/epochs. Each trial is 1.50 second long.  The
+% trigger time of the 5 trials are at 0.5, 2.0, 3.5, 5.0 and 6.5 seconds,
+% with the pre-stimulus length of 0.5 second.
+% 
+% setup trial information
+trig = [.5, 2, 3.5, 5, 6.5]; % in seconds
+n_trig = length(trig); % number of triggers
+trigger = mef_ft.SessionUnitConvert(trig, in_unit, out_unit)';
+prestim = mef_ft.SessionUnitConvert(.5, in_unit, out_unit)*ones(n_trig, 1);
+poststim = mef_ft.SessionUnitConvert(1., in_unit, out_unit)*ones(n_trig, 1);
+trl = [trigger-prestim+1, trigger+poststim, -prestim];
+
+% read the data
 cfg = [];
 cfg.dataset = sesspath;
 cfg.password = password;
 cfg.header = hdr;
-cfg.trl = be_sample;
+cfg.trl = trl;
 dat_ieeg = ft_preprocessing(cfg);
 
 % plot the data
