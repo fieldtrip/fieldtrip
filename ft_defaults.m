@@ -213,6 +213,12 @@ if ~isdeployed
   end
 
   try
+      % external/mayo_mef contains the functions to read MEF 2.1/3.0 datasets
+      addpath(genpath(fullfile(fileparts(which('ft_defaults')), 'external', 'mayo_mef')));
+  catch
+  end % try
+  
+  try
     % these directories deal with compatibility with older MATLAB versions
     if ft_platform_supports('matlabversion', -inf, '2008a'), ft_hastoolbox('compat/matlablt2008b', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2008b'), ft_hastoolbox('compat/matlablt2009a', 3, 1); end
@@ -322,6 +328,12 @@ if ~isdeployed
     ft_hastoolbox('realtime/online_eeg', 3, 1); % not required
   end
 
+  try
+      % this contains the functions to read MEF 2.1/3.0 datasets
+      ft_hastoolbox('mayo_mef', 3, 1);
+  catch
+  end % try
+  
 end
 
 % the toolboxes added by this function should not be removed by FT_POSTAMBLE_HASTOOLBOX

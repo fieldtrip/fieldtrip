@@ -61,7 +61,7 @@ hdr = ft_read_header(sesspath, 'password', password, 'SortChannel', 'number');
 % Note: if the key-value 'SortChannel' is not provided to ft_read_data(),
 % the function uses header.SortChannel. If 'header' is not provided, the
 % function use default 'alphabet'.  If both 'header' and 'SortChannel' are
-% provided, there will be an warning of the conflict and the function
+% provided, there will be a warning in case of conflict and the function
 % chooses header.SortChannel. The same rule is applied to function
 % ft_read_event().
 chpath = fullfile(sesspath, [hdr.label{4}, '.timd']);
@@ -124,7 +124,7 @@ brwview = ft_databrowser(cfg, dat_ieeg);
 
 %% Copyright 2020 Richard J. Cui
 % Created: Sun 03/22/2020  9:03:27.318 PM
-% Revision: 0.5  Date: Fri 04/10/2020 12:33:09.126 AM
+% Revision: 0.6  Date: Tue 04/14/2020  4:12:04.314 PM
 %
 % Multimodel Neuroimaging Lab (Dr. Dora Hermes)
 % Mayo Clinic St. Mary Campus
