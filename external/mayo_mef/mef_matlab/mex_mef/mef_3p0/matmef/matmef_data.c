@@ -3,33 +3,21 @@
  * 	MEF 3.0 Library Matlab Wrapper
  * 	Functions to load data from MEF3 datafiles
  *	
- *  Copyright 2020, Max van den Boom (Multimodal Neuroimaging Lab, Mayo 
- *  Clinic, Rochester MN) Adapted from PyMef (by Jan Cimbalnik, Matt Stead,
- *  Ben Brinkmann, and Dan Crepeau)
+ *  Copyright 2020, Max van den Boom (Multimodal Neuroimaging Lab, Mayo Clinic, Rochester MN)
+ *	Adapted from PyMef (by Jan Cimbalnik, Matt Stead, Ben Brinkmann, and Dan Crepeau)
  *  
  *	
- *  This program is free software: you can redistribute it and/or modify it
- *  under the terms of the GNU General Public License as published by the
- *  Free Software Foundation, either version 3 of the License, or (at your 
- *  option) any later version. This program is distributed in the hope that
- *  it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See 
- *  the GNU General Public License for more details. You should have 
- *  received a copy of the GNU General Public License along with this 
- *  program.  If not, see <https://www.gnu.org/licenses/>.
+ *  This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ *  as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ *  This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ *  You should have received a copy of the GNU General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
-// Copyright 2020 Richard J. Cui. Created: Sun 02/16/2020 10:34:49.777 PM
-// $Revision: 0.2 $  $Date: Tue 03/10/2020 10:40:35.408 PM $
-//
-// 1026 Rocky Creek Dr NE
-// Rochester, MN 55906, USA
-//
-// Email: richard.cui@utoronto.ca
-
 #include "matmef_data.h"
 #include "mex.h"
-#include "meflib.h"
+
+#include "meflib/meflib/meflib.c"
+#include "meflib/meflib/mefrec.c"
 
 
 /**
@@ -40,8 +28,8 @@
  * 	@param channel_path		The channel filepath
  * 	@param password			Password for the MEF3 datafiles (no password = NULL or empty string)
  *	@param range_type		Modality that is used to define the data-range to read [either 'time' or 'samples']
- *	@param range_start		Start-point for the reading of data (either as a timepoint or samplenumber; -1 for first)
- *	@param range_end		End-point to stop the of reading data (either as a timepoint or samplenumber; -1 for last)
+ *	@param range_start		Start-point for the reading of data (either as an epoch/unix timestamp or samplenumber; -1 for first)
+ *	@param range_end		End-point to stop the of reading data (either as an epoch/unix timestamp or samplenumber; -1 for last)
  * 	@return					Pointer to a matlab double matrix object (mxArray) containing the data, or NULL on failure
  */
 mxArray *read_channel_data_from_path(si1 *channel_path, si1 *password, bool range_type, si8 range_start, si8 range_end) {
@@ -53,8 +41,9 @@ mxArray *read_channel_data_from_path(si1 *channel_path, si1 *password, bool rang
 	
 	// initialize MEF library
 	(void) initialize_meflib();
-
+	
 	// read the channel metadata
+	MEF_globals->behavior_on_fail = SUPPRESS_ERROR_OUTPUT;
 	CHANNEL *channel = read_MEF_channel(NULL, channel_path, TIME_SERIES_CHANNEL_TYPE, password, NULL, MEF_FALSE, MEF_FALSE);
 	
 	// check the number of segments
@@ -98,8 +87,8 @@ mxArray *read_channel_data_from_path(si1 *channel_path, si1 *password, bool rang
  *
  * 	@param channel			Pointer to the MEF channel object
  *	@param range_type		Modality that is used to define the data-range to read [either 'time' or 'samples']
- *	@param range_start		Start-point for the reading of data (either as a timepoint or samplenumber; -1 for first)
- *	@param range_end		End-point to stop the of reading data (either as a timepoint or samplenumber; -1 for last)	
+ *	@param range_start		Start-point for the reading of data (either as an epoch/unix timestamp or samplenumber; -1 for first)
+ *	@param range_end		End-point to stop the of reading data (either as an epoch/unix timestamp or samplenumber; -1 for last)	
  * 	@return					Pointer to a matlab double matrix object (mxArray) containing the data, or NULL on failure
  */
 mxArray *read_channel_data_from_object(CHANNEL *channel, bool range_type, si8 range_start, si8 range_end) {
@@ -822,4 +811,4 @@ si4 check_block_crc(ui1 *block_hdr_ptr, ui4 max_samps, ui1 *total_data_ptr, ui8 
 	
 }
 
-// [EOF]
+

@@ -13,18 +13,8 @@
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  *  You should have received a copy of the GNU General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
-// Copyright 2020 Richard J. Cui. Created: Sun 02/16/2020 10:34:49.777 PM
-// $Revision: 0.1 $  $Date: Sun 02/16/2020 10:34:49.777 PM $
-//
-// 1026 Rocky Creek Dr NE
-// Rochester, MN 55906, USA
-//
-// Email: richard.cui@utoronto.ca
-
 #include <ctype.h>
 #include "mex.h"
-#include "meflib.h"
 #include "matmef_data.h"
 
 
@@ -34,8 +24,8 @@
  * @param channelPath	path (absolute or relative) to the MEF3 channel folder
  * @param password		Password to the MEF3 data; Pass empty string/variable if not encrypted
  * @param rangeType		Modality that is used to define the data-range to read [either 'time' or 'samples']
- * @param rangeStart	Start-point for the reading of data (either as a timepoint or samplenumber; -1 for first)
- * @param rangeEnd		End-point to stop the of reading data (either as a timepoint or samplenumber; -1 for last)
+ * @param rangeStart	Start-point for the reading of data (either as an epoch/unix timestamp or samplenumber; -1 for first)
+ * @param rangeEnd		End-point to stop the of reading data (either as an epoch/unix timestamp or samplenumber; -1 for last)
  * @return				A vector of doubles holding the channel data
  */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
