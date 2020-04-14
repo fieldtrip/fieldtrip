@@ -13,20 +13,11 @@
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  *  You should have received a copy of the GNU General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
-// Copyright 2020 Richard J. Cui. 1st Modified: Sun 02/16/2020 10:34:49.777 PM
-// $Revision: 0.1 $  $Date: Sun 02/16/2020 10:34:49.777 PM $
-//
-// Multimodel Neuroimaging Lab (Dr. Dora Hermes)
-// Mayo Clinic St. Mary Campus
-// Rochester, MN 55905, USA
-// 
-// Email: richard.cui@utoronto.ca
-
 #include "mex.h"
-#include "meflib.h"
 #include "matmef_mapping.h"
 
+#include "meflib/meflib/meflib.c"
+#include "meflib/meflib/mefrec.c"
 
 
 /**
@@ -135,6 +126,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	initialize_meflib();
 
 	// read the session metadata
+	MEF_globals->behavior_on_fail = SUPPRESS_ERROR_OUTPUT;
 	SESSION *session = read_MEF_session(	NULL, 					// allocate new session object
 											session_path, 			// session filepath
 											password, 				// password
@@ -142,8 +134,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 											MEF_FALSE, 				// do not read time series data
 											MEF_TRUE				// read record data
 										);
-	
-	
+	MEF_globals->behavior_on_fail = EXIT_ON_FAIL;
 	
 	// check for error
 	if (session == NULL)	mexErrMsgTxt("Error while reading session metadata");

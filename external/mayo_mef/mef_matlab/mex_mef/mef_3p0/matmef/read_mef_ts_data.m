@@ -1,14 +1,14 @@
 %	
 %   Read the MEF3 data from a time-series channel
 %	
-%   [data] = read_mef_ts_data(channel_path, password, range_type, range_start, range_end)
+%   [data] = read_mef_ts_data(channel, rangeType, rangeStart, rangeEnd)
 %	
 %   channelPath     = path (absolute or relative) to the MEF3 channel folder
 %   password        = password to the MEF3 data; Pass empty string/variable if not encrypted
 %   rangeType       = Modality that is used to define the data-range to read [either 'time' or 'samples']
-%   rangeStart      = Start-point for the reading of data (either as a timepoint or samplenumber)
+%   rangeStart      = Start-point for the reading of data (either as an epoch/unix timestamp or samplenumber)
 %                     Pass -1 to start at the first sample of the timeseries
-%   rangeEnd        = End-point to stop the of reading data (either as a timepoint or samplenumber)
+%   rangeEnd        = End-point to stop the of reading data (either as an epoch/unix timestamp or samplenumber)
 %                     Pass -1 as value to end at the last sample of the timeseries
 %
 %   Returns: 
@@ -29,4 +29,4 @@
 %   warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 %   You should have received a copy of the GNU General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 %
-
+function data = read_mef_ts_data(channelPath, password, rangeType, rangeStart, rangeEnd)

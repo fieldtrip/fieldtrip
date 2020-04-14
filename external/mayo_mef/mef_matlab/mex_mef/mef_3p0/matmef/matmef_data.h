@@ -15,17 +15,8 @@
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  *  You should have received a copy of the GNU General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
-// Copyright 2020 Richard J. Cui. Created: Sun 02/16/2020 10:34:49.777 PM
-// $Revision: 0.1 $  $Date: Sun 02/16/2020 10:34:49.777 PM $
-//
-// 1026 Rocky Creek Dr NE
-// Rochester, MN 55906, USA
-//
-// Email: richard.cui@utoronto.ca
-
 #include "mex.h"
-#include "meflib.h"
+#include "meflib/meflib/meflib.h"
 
 
 // Range Types

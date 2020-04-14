@@ -13,9 +13,11 @@
 
 #include <ctype.h>
 #include "mex.h"
-#include "matmef/meflib.h"
+#include "matmef/meflib/meflib/meflib.c"
+#include "matmef/meflib/meflib/mefrec.c"
 #include "matmef/matmef_mapping.h"
 #include "matmef/mex_datahelper.h"
+
 
 /**************************************************************************
  * subroutines

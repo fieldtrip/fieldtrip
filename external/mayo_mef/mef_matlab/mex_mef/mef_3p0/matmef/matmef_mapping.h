@@ -7,7 +7,7 @@
  *	
  *  Copyright 2020, Max van den Boom (Multimodal Neuroimaging Lab, Mayo Clinic, Rochester MN)
  *	Adapted from PyMef (by Jan Cimbalnik, Matt Stead, Ben Brinkmann, and Dan Crepeau)
- *  
+ *  Includes updates from Richard J. Cui - richard.cui@utoronto.ca (4 apr 2020)
  *	
  *  This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
  *  as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -15,27 +15,13 @@
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  *  You should have received a copy of the GNU General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
-// Copyright 2020 Richard J. Cui. Created: Sun 02/16/2020 10:34:49.777 PM
-// $Revision: 0.2 $  $Date: Mon 02/17/2020  7:38:26.233 PM $
-//
-// 1026 Rocky Creek Dr NE
-// Rochester, MN 55906, USA
-//
-// Email: richard.cui@utoronto.ca
-
 #include "mex.h"
-#include "meflib.h"
+#include "meflib/meflib/meflib.h"
 
-// structures
 
-// function declaration
-void map_mef3_segment_universal_header_tostruct(
-        UNIVERSAL_HEADER *universal_header, // universal header of 1st segment
-        mxArray *mat_universal_header,
-        int mat_index // index of structure matrix
-        );
+void map_mef3_segment_universal_header_tostruct(UNIVERSAL_HEADER *universal_header, mxArray *mat_universal_header, int mat_index);
 mxArray *map_mef3_segment_universal_header(UNIVERSAL_HEADER *universal_header);
+	
 void map_mef3_segment_tostruct(SEGMENT *segment, si1 map_indices_flag, mxArray *mat_segment, int mat_index);
 mxArray *map_mef3_segment(SEGMENT *segment, si1 map_indices_flag);
 void map_mef3_channel_tostruct(CHANNEL *channel, si1 map_indices_flag, mxArray *mat_channel, int mat_index);
