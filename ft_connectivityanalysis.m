@@ -352,6 +352,7 @@ switch cfg.method
     cfg.(cfg.method).complex = ft_getopt(cfg.(cfg.method), 'complex', 'complex');
     cfg.(cfg.method).combinelags = ft_getopt(cfg.(cfg.method), 'combinelags', false);
     cfg.(cfg.method).feature     = ft_getopt(cfg.(cfg.method), 'feature',     []);
+    cfg.(cfg.method).precondition = ft_getopt(cfg.(cfg.method), 'precondition', false);
     
     % what are the input requirements?
     data  = ft_checkdata(data, 'datatype', {'raw' 'timelock' 'freq' 'source'});
@@ -999,7 +1000,8 @@ switch cfg.method
         % dat = abs(dat);
     end
     optarg = {'numbin', cfg.(cfg.method).numbin, 'lags',    cfg.(cfg.method).lags,    'refindx', refindx, ...
-              'method', cfg.(cfg.method).method, 'complex', cfg.(cfg.method).complex, 'opts',    cfg.(cfg.method).opts};
+              'method', cfg.(cfg.method).method, 'complex', cfg.(cfg.method).complex, 'precondition', cfg.(cfg.method).precondition, ...
+              'opts',   cfg.(cfg.method).opts};
     if ~isempty(tra),             optarg = cat(2, optarg, {'tra' tra});                                   end
     if strcmp(cfg.method, 'mi'),  optarg = cat(2, optarg, {'conditional', false});                        end
     if strcmp(cfg.method, 'mi'),  optarg = cat(2, optarg, {'featureindx', cfg.(cfg.method).featureindx}); end

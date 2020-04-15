@@ -57,6 +57,8 @@ sourcelags  = ft_getopt(varargin, 'sourcelags', []);
 tra         = ft_getopt(varargin, 'tra',     []); % 1/0-matrix for multivariate combination Nnew x Norg, where Norg = size(input,1)
 conditional = istrue(ft_getopt(varargin, 'conditional', false)); % this is only functional if gcmi is the method
 combinelags = istrue(ft_getopt(varargin, 'combinelags', false)); % this is only functional if gcmi is the method, with di/dfi
+precondition = istrue(ft_getopt(varargin, 'precondition', false)); % this copnorms only once, this is strictly speaking incorrect, but numerical difference are minor
+
 if conditional && ~strcmp(method, 'gcmi')
   error('conditional mutual information can be only computed with ''gcmi'' as method');
 end
@@ -199,7 +201,20 @@ switch method
     
     nchans = size(tra,1); 
     n      = size(input, 2);
-    output = zeros(numel(refindx), nchans, numel(lags)) + nan;
+    if ~isempty(featureindx)
+      if isempty(sourcelags)
+        sourcelags = lags;
+      end
+      output = zeros(numel(refindx), nchans, numel(sourcelags), numel(lags)) + nan;  
+    else
+      output = zeros(numel(refindx), nchans, numel(lags)) + nan;
+    end
+    
+    if precondition
+      finitevalstmp = sum(isfinite(input))==size(input,1);
+      input(:,finitevalstmp) = copnorm(input(:,finitevalstmp)')';
+      input(:,~finitevalstmp) = nan;
+    end
     
     % for each lag if combinelags is false
     for m = 1:numel(lags)
@@ -217,20 +232,25 @@ switch method
         end1 = beg1+n1-1;
         end2 = beg2+n1-1;
         for p = 1:numel(refindx)
-          tmprefdata = nan(sum(tra(refindx(p),:)),n);
-          tmprefdata(:, beg1:end1) = input(tra(refindx(p),:), beg2:end2);
+          tmpsource = nan(sum(tra(refindx(p),:)),n);
+          tmpsource(:, beg1:end1) = input(tra(refindx(p),:), beg2:end2);
           
-          finitevals2 = sum(finitevals,1)&sum(isfinite(tmprefdata),1); % this conservatively takes only the non-nan samples across all input data channels
+          finitevals2 = sum(finitevals,1)&sum(isfinite(tmpsource),1); % this conservatively takes only the non-nan samples across all input data channels
           
-          tmpinput    = copnorm(input(:,finitevals2)')';
-          tmprefdata  = copnorm(tmprefdata(:,finitevals2)')';
+          if ~precondition
+            tmptarget  = copnorm(input(:,finitevals2)')';
+            tmpsource  = copnorm(tmpsource(:,finitevals2)')';
+          else
+            tmptarget  = input(:,finitevals2);
+            tmpsource  = tmpsource(:,finitevals2);
+          end
           
           if ~isequal(tra,eye(size(tra,1)))
             for k = setdiff(1:size(tra,1),refindx(p))
-              output(p,k,m) = mi_gg(tmpinput(tra(k,:),:)',tmprefdata');%, false, true);
+              output(p,k,m) = mi_gg(tmptarget(tra(k,:),:)',tmpsource');%, false, true);
             end
           else
-            output(p,:,m) = mi_gg_vec(tmpinput(:,:)',tmprefdata',true,true);
+            output(p,:,m) = mi_gg_vec(tmptarget(:,:)',tmpsource',true,true);
           end
         end
       elseif conditional && isempty(featureindx)
@@ -249,7 +269,7 @@ switch method
         end1 = beg1+n1-1;
         end2 = beg2+n1-1;
         
-        target_shifted               = nan(size(input,1),n,numel(otherlags)+1);
+        target_shifted                 = nan(size(input,1),n,numel(otherlags)+1);
         target_shifted(:, beg1:end1,1) = input(:, beg2:end2);
         for k = 1:numel(otherlags)
           % get the samples for the relative shifts for the given lag,
@@ -267,34 +287,40 @@ switch method
         % the following step is quite expensive computationally, but for
         % the conditioning all shifted versions of the target signal are
         % needed anyway
-        target         = copnorm(input(:,finitevals2)');
-        target         = bsxfun(@minus,target,mean(target,1));
-        target_shifted = permute(target_shifted(:, finitevals2, :), [2 1 3]);
-        for k = 1:size(target_shifted,3)
-          target_shifted(:,:,k) = copnorm(target_shifted(:,:,k));
+        if ~precondition
+          target = copnorm(input(:,finitevals2)');
+          target = bsxfun(@minus,target,mean(target,1));
+        else
+          target = input(:,finitevals2)';
+          target = bsxfun(@minus, target, mean(target,1));
         end
-        target_shifted = bsxfun(@minus,target_shifted,mean(target_shifted,1));
+        
+        target_shifted = permute(target_shifted(:, finitevals2, :), [2 1 3]);
+        if ~precondition
+          for k = 1:size(target_shifted,3)
+            target_shifted(:,:,k) = copnorm(target_shifted(:,:,k));
+          end
+          target_shifted = bsxfun(@minus,target_shifted,mean(target_shifted,1));
+        end
         
         for p = 1:numel(refindx)
           if ~isequal(tra,eye(size(tra,1)))
-            tmprefdata  = target_shifted(:,tra(refindx(p),:));
+            tmpsource  = target_shifted(:,tra(refindx(p),:));
             for k = setdiff(1:size(tra,1),refindx(p))
-              output(p,k,m) = cmi_ggg(target(:,tra(k,:)),tmprefdata,target_shifted(:,tra(k,:),:), true, true);
+              output(p,k,m) = cmi_ggg(target(:,tra(k,:)),tmpsource,target_shifted(:,tra(k,:),:), true, true);
             end
           else
-            tmprefdata = target_shifted(:,tra(refindx(p),:),:);
-            output(p,:,m) = cmi_ggg_vec(target,tmprefdata,target_shifted, true, true);
+            tmpsource = target_shifted(:,tra(refindx(p),:),:);
+            output(p,:,m) = cmi_ggg_vec(target,tmpsource,target_shifted, true, true);
           end
         end
       elseif conditional && ~isempty(featureindx)
         fprintf('computing directed feature information for time lag in samples %d\n', lags(m));
   
         % a featureindx has been specified, this refers to dfi
+        % I(A(t1);F|B(t1)) + I(B(t2);F|B(t1)) - I(A(t1) B(t2);F|B(t1))
         if ~isempty(otherlags)
           error('only a single time lag is allowed in dfi');
-        end
-        if isempty(sourcelags)
-          sourcelags = lags;
         end
         
         if numel(refindx)>1
@@ -309,15 +335,11 @@ switch method
         % positive lags here mean shifted w.r.t. feature
         target                   = nan(size(input,1),n);
         target(:, t_beg2:t_end2) = input(:, t_beg1:t_end1);
-        
-%         % if copula is done here, it's not fully correct (because of
-%         % nanning of shifted values...
-%         sel = sum(isfinite(target),1)>0;
-%         target(:,sel) = copnorm(target(:,sel)')';
-%         target(:,sel) = bsxfun(@minus,target(:,sel),mean(target(:,sel),2));
-     
+             
         for mm = 1:numel(sourcelags)
-          
+          if sourcelags(mm)>=lags(m)
+            continue;
+          end
           % we have an unshifted feature, a shifted target (with lags(m)),
           % and a shifted source (with sourcelags(mm))
           s_beg1 = max(0,  sourcelags(mm)) + 1; 
@@ -326,40 +348,53 @@ switch method
           s_end2 = n + 1 - s_beg1;
           
           % feature data
-          feature                          = input(tra(featureindx,:),:);
+          feature = input(tra(featureindx,:),:);
                     
           % shifted target signals at the time lag of the source
           target_shifted                   = nan(size(input,1),n);
           target_shifted(:, s_beg2:s_end2) = input(:, s_beg1:s_end1);
           
-          finitevals2    = sum(finitevals,1)>0&sum(isfinite(target),1)>0&sum(isfinite(target_shifted),1)>0; % this conservatively takes only the non-nan samples across all input data channels
+          finitevals2 = sum(finitevals,1)>0&sum(isfinite(target),1)>0&sum(isfinite(target_shifted),1)>0; % this conservatively takes only the non-nan samples across all input data channels
           
-          % the following step is quite expensive computationally
-          tmptarget  = copnorm(target(:,finitevals2)'); % allow for the original target variable to be kept
-          tmptarget  = bsxfun(@minus,tmptarget,mean(tmptarget,1));
+          if ~precondition
+            % the following step is quite expensive computationally if it
+            % needs to be done each time
+            tmptarget  = copnorm(target(:,finitevals2)'); % allow for the original target variable to be kept
+            tmptarget  = bsxfun(@minus,tmptarget,mean(tmptarget,1));
           
-          target_shifted = copnorm(target_shifted(:,finitevals2)');
-          target_shifted = bsxfun(@minus,target_shifted,mean(target_shifted,1));
+            target_shifted = copnorm(target_shifted(:,finitevals2)');
+            target_shifted = bsxfun(@minus,target_shifted,mean(target_shifted,1));
+          
+            % feature signal
+            feature = copnorm(feature(:,finitevals2)');
+            feature = bsxfun(@minus,feature,mean(feature,1));
+          else
+            tmptarget  = target(:,finitevals2)';
+            tmptarget  = bsxfun(@minus,tmptarget,mean(tmptarget,1));
+          
+            target_shifted = target_shifted(:,finitevals2)';
+            target_shifted = bsxfun(@minus,target_shifted,mean(target_shifted,1));
+          
+            % feature signal
+            feature = feature(:,finitevals2)';
+            feature = bsxfun(@minus,feature,mean(feature,1));
+          end
           
           % time-lagged version of the source signal,
           source = target_shifted(:,tra(refindx,:));
-          
-          % feature signal
-          feature = copnorm(feature(:,finitevals2)');
-          feature = bsxfun(@minus,feature,mean(feature,1));
             
           if ~isequal(tra,eye(size(tra,1)))
-            % tmprefdata  = target_shifted(:,tra(refindx(p),:));
-            % for k = setdiff(1:size(tra,1),refindx(p))
-            %   output(k,p,m) = cmi_ggg(target(:,tra(k,:)),tmprefdata,target_shifted(:,tra(k,:)), true, false);
-            % end
+            %  not implemented
             keyboard
           else
-            % compute the three information components
-            I1 = cmi_ggg_vec(source,    feature, target_shifted, true, true);
-            I2 = cmi_ggg_vec(tmptarget, feature, target_shifted, true, true);
-            I3 = cmi_ggg_vec(cat(3, tmptarget, repmat(source, 1, size(tmptarget,2))), feature, target_shifted, true, true);
-            output(1,:,mm,m) = I1+I2-I3; % equation 4 in Robin Ince's scientific reports paper.
+            % compute the three information components, exclude the source
+            % and feature 'channels' to avoid potential numerical issues
+            sel = tra(refindx,:)==0&tra(featureindx,:)==0;
+            
+            I1 = cmi_ggg_vec(source,           feature, target_shifted(:,sel), true, true);
+            I2 = cmi_ggg_vec(tmptarget(:,sel), feature, target_shifted(:,sel), true, true);
+            I3 = cmi_ggg_vec(cat(3, tmptarget(:,sel), repmat(source, 1, sum(sel))), feature, target_shifted(:,sel), true, true);
+            output(1,sel,mm,m) = I1+I2-I3; % equation 4 in Robin Ince's scientific reports paper.
           end
         end
         

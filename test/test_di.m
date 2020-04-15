@@ -72,21 +72,30 @@ cfg         = [];
 cfg.method  = 'mi';
 cfg.refindx = 'all';
 cfg.mi.lags = (-fs/2:2:fs/2)./fs;
-%mi1 = ft_connectivityanalysis(cfg, data1);
+mi1 = ft_connectivityanalysis(cfg, data1);
 mi2 = ft_connectivityanalysis(cfg, data2);
+cfg.mi.precondition = true;
+mi1b = ft_connectivityanalysis(cfg, data1);
+mi2b = ft_connectivityanalysis(cfg, data2);
 
 cfg            = [];
 cfg.method     = 'di';
 cfg.refindx    = 'all';
 cfg.di.lags    = (2:2:fs/2)./fs;
-%di1 = ft_connectivityanalysis(cfg, data1);
+di1 = ft_connectivityanalysis(cfg, data1);
 di2 = ft_connectivityanalysis(cfg, data2);
+cfg.di.precondition = true;
+di1b = ft_connectivityanalysis(cfg, data1);
+di2b = ft_connectivityanalysis(cfg, data2);
 
 cfg = [];
 cfg.method = 'dfi';
 cfg.refindx     = 2;
 cfg.dfi.feature = 'feature';
 cfg.dfi.lags    = (2:2:fs/2)./fs;
-%dfi1 = ft_connectivityanalysis(cfg, data1);
+dfi1 = ft_connectivityanalysis(cfg, data1);
 dfi2 = ft_connectivityanalysis(cfg, data2);
+cfg.dfi.precondition = true;
+dfi1b = ft_connectivityanalysis(cfg, data1);
+dfi2b = ft_connectivityanalysis(cfg, data2);
 
