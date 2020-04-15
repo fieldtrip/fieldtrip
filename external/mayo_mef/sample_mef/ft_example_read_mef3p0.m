@@ -126,7 +126,7 @@ brwview = ft_databrowser(cfg, dat_ieeg);
 % Created on Sun 03/22/2020  9:03:27.318 PM
 % Revision: 0.7  Date: Wed 04/15/2020  9:42:41.842 AM
 %
-% Multimodel Neuroimaging Lab (Dr. Dora Hermes)
+% Multimodal Neuroimaging Lab (Dr. Dora Hermes)
 % Mayo Clinic St. Mary Campus
 % Rochester, MN 55905
 %
