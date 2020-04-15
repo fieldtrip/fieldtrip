@@ -122,9 +122,9 @@ dat_ieeg = ft_preprocessing(cfg);
 cfg.viewmode = 'vertical';
 brwview = ft_databrowser(cfg, dat_ieeg);
 
-%% Copyright 2020 Richard J. Cui
-% Created: Sun 03/22/2020  9:03:27.318 PM
-% Revision: 0.6  Date: Tue 04/14/2020  4:12:04.314 PM
+%% Copyright (c) 2020 MNL group
+% Created on Sun 03/22/2020  9:03:27.318 PM
+% Revision: 0.7  Date: Wed 04/15/2020  9:42:41.842 AM
 %
 % Multimodel Neuroimaging Lab (Dr. Dora Hermes)
 % Mayo Clinic St. Mary Campus
