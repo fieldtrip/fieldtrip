@@ -1,9 +1,8 @@
 function test_issue1292
 
-MEM 2gb
-WALLTIME 00:10:00
-
-DEPENDENCY ft_fetch_data
+% MEM 2gb
+% WALLTIME 00:10:00
+% DEPENDENCY ft_fetch_data
 
 %% This one has identical overlap
 
