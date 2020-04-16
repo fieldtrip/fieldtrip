@@ -1,7 +1,7 @@
 function test_bug2770
 
 % WALLTIME 00:10:00
-% MEM 1500mb
+% MEM 2gb
 
 % DEPENDENCY eeglab2fieldtrip
 

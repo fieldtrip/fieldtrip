@@ -1,7 +1,7 @@
 function test_bug3184
 
 % WALLTIME 00:10:00
-% MEM 300mb
+% MEM 1gb
 
 % DEPENDENCY getdimord ft_datatype_source ft_selectdata
 

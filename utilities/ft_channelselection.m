@@ -155,6 +155,52 @@ if length(chanindx)==length(channel)
   return
 end
 
+% initialize all the system-specific variables to empty
+labelall       = {};
+labelreg       = {};
+labelmeg       = {};
+labelecg       = {};
+labelemg       = {};
+labeleeg       = {};
+label102       = {};
+label101       = {};
+label100       = {};
+labelchwilla   = {};
+labelbha       = {};
+labelref       = {};
+labelmegref    = {};
+labelmeggrad   = {};
+labelmegplanar = {};
+labelmegmag    = {};
+labelmegrefa   = {};
+labelmegrefc   = {};
+labelmegrefg   = {};
+labelmegrefl   = {};
+labelmegrefr   = {};
+labelmegrefm   = {};
+labeleog       = {};
+labelmz        = {};
+labelml        = {};
+labelmr        = {};
+labelmlc       = {};
+labelmlf       = {};
+labelmlo       = {};
+labelmlp       = {};
+labelmlt       = {};
+labelmrc       = {};
+labelmrf       = {};
+labelmro       = {};
+labelmrp       = {};
+labelmrt       = {};
+labelmzc       = {};
+labelmzf       = {};
+labelmzo       = {};
+labelmzp       = {};
+labellfp       = {};
+labelmua       = {};
+labelspike     = {};
+labelnirs      = {};
+
 % define the known groups with channel labels
 labelall    = datachannel;
 label1020   = ft_senslabel('eeg1020'); % use external helper function
@@ -197,14 +243,6 @@ if ~isempty(findreg)
   findreg  = unique(findreg); % remove multiple occurances due to multiple wildcards
   labelreg = datachannel(labelreg);
 end
-
-% initialize all the system-specific variables to empty
-labelmeg       = [];
-labelmeggrad   = [];
-labelmegref    = [];
-labelmegmag    = [];
-labelmegplanar = [];
-labeleeg       = [];
 
 switch senstype
   

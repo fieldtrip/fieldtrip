@@ -8,36 +8,36 @@ function [s, cfg] = ft_statfun_depsamplesFmultivariate(cfg, dat, design)
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
 %   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
-% with the following configuration option
+% with the following configuration option:
 %   cfg.statistic = 'ft_statfun_depsamplesFmultivariate'
 %
-% Configuration options
+% You can specify the following configuration options:
 %   cfg.contrastcoefs  = matrix of contrast coefficients determining the
 %                        effect being tested. The number of columns of this
-%                        matrix has to be equal to the number of conditions. 
+%                        matrix has to be equal to the number of conditions.
 %                        The default is a matrix that specifies the
 %                        main effect of the independent variable. This matrix
-%                        has size [(ncond-1),ncond]. 
+%                        has size [(ncond-1),ncond].
 %   cfg.computestat    = 'yes' or 'no', calculate the statistic (default='yes')
 %   cfg.computecritval = 'yes' or 'no', calculate the critical values of the test statistics (default='no')
 %   cfg.computeprob    = 'yes' or 'no', calculate the p-values (default='no')
 %
-% The following options are relevant if cfg.computecritval='yes' and/or
-% cfg.computeprob='yes'.
+% The following options are relevant if cfg.computecritval='yes' and/or cfg.computeprob='yes':
 %   cfg.alpha = critical alpha-level of the statistical test (default=0.05)
 %   cfg.tail  = -1, 0, or 1, left, two-sided, or right (default=1)
 %               cfg.tail in combination with cfg.computecritval='yes'
 %               determines whether the critical value is computed at
 %               quantile cfg.alpha (with cfg.tail=-1), at quantiles
 %               cfg.alpha/2 and (1-cfg.alpha/2) (with cfg.tail=0), or at
-%               quantile (1-cfg.alpha) (with cfg.tail=1).
+%               quantile (1-cfg.alpha) (with cfg.tail=1)
 %
-% Design specification
-%   cfg.ivar  = row number of the design that contains the labels of the conditions that must be 
-%               compared (default=1). The labels range from 1 to the number of conditions.
-%   cfg.uvar  = row number of design that contains the labels of the units-of-observation (subjects or trials)
-%               (default=2). The labels are assumed to be integers ranging from 1 to 
-%               the number of units-of-observation.
+% The experimental design is specified as:
+%   cfg.ivar  = independent variable, row number of the design that contains the labels of the conditions to be compared (default=1)
+%   cfg.uvar  = unit variable, row number of design that contains the labels of the units-of-observation, i.e. subjects or trials (default=2)
+%
+% The labels for the independent variable should be specified as numbers ranging
+% from 1 to the number of conditions. The labels for the unit of observation should
+% be integers ranging from 1 to the total number of observations (subjects or trials).
 %
 % See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
 
@@ -61,17 +61,19 @@ function [s, cfg] = ft_statfun_depsamplesFmultivariate(cfg, dat, design)
 %
 % $Id$
 
+% set the defaults
+cfg.computestat    = ft_getopt(cfg, 'computestat', 'yes');
+cfg.computecritval = ft_getopt(cfg, 'computecritval', 'no');
+cfg.computeprob    = ft_getopt(cfg, 'computeprob', 'no');
+cfg.alpha          = ft_getopt(cfg, 'alpha', 0.05);
+cfg.tail           = ft_getopt(cfg, 'tail', 1);
+cfg.ivar           = ft_getopt(cfg, 'ivar', 1);
+cfg.uvar           = ft_getopt(cfg, 'uvar', 2);
 
-% set defaults
-if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end
-if ~isfield(cfg, 'computecritval'),    cfg.computecritval='no';   end
-if ~isfield(cfg, 'computeprob'),       cfg.computeprob='no';      end
-if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end
-if ~isfield(cfg, 'tail'),              cfg.tail=1;                end
+nconds = length(unique(design(cfg.ivar,:)));
 
-nconds=length(unique(design(cfg.ivar,:)));
 if ~isfield(cfg,'contrastcoefs')
-    % specify the default contrast coefficient matrix.
+    % specify the default contrast coefficient matrix
     ncontrasts = nconds-1;
     cfg.contrastcoefs = zeros(ncontrasts,nconds);
     cfg.contrastcoefs(:,1) = 1;

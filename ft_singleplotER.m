@@ -171,6 +171,7 @@ cfg.zlim            = ft_getopt(cfg, 'zlim',          'maxmin');
 cfg.comment         = ft_getopt(cfg, 'comment',        strcat([date '\n']));
 cfg.axes            = ft_getopt(cfg, ' axes',         'yes');
 cfg.fontsize        = ft_getopt(cfg, 'fontsize',       8);
+cfg.interpreter     = ft_getopt(cfg, 'interpreter', 'none');  % none, tex or latex
 cfg.hotkeys         = ft_getopt(cfg, 'hotkeys',       'yes');
 cfg.interactive     = ft_getopt(cfg, 'interactive',   'yes');
 cfg.renderer        = ft_getopt(cfg, 'renderer',       []); % let MATLAB decide on the default
@@ -521,7 +522,7 @@ else
     t = sprintf('mean(%0s)', join_str(', ', cfg.channel));
   end
 end
-title(t, 'fontsize', cfg.fontsize);
+title(t, 'fontsize', cfg.fontsize, 'interpreter', cfg.interpreter);
 
 % set the figure window title, add channel labels if number is small
 if isempty(get(gcf, 'Name'))

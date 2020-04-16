@@ -56,7 +56,13 @@ function [mri] = ft_read_mri(filename, varargin)
 %
 % See also FT_DATATYPE_VOLUME, FT_WRITE_MRI, FT_READ_DATA, FT_READ_HEADER, FT_READ_EVENT
 
-% Copyright (C) 2008-2013, Robert Oostenveld & Jan-Mathijs Schoffelen
+% Undocumented key-value pairs:
+%   'fixel2voxel' = string, operation to apply to the fixels belonging to 
+%   the same voxel (only for *.mif). 'max' (default), 'min', 'mean'
+%   'indexfile'   = string, pointing to a fixel index file, if not present in
+%                    the same directory as the functional data
+%
+% Copyright (C) 2008-2020, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -435,12 +441,61 @@ switch dataformat
 
   case {'mif' 'mrtrix_mif'}
     ft_hastoolbox('mrtrix', 1);
+    
     tmp = read_mrtrix(filename);
     
-    mri.anatomy = tmp.data;
-    mri.dim     = tmp.dim;
-    mri.transform = tmp.transform;
-    mri.transform(1:3,1:3) = diag(tmp.vox(1:3))*mri.transform(1:3,1:3);
+    % check if it's sparse fixeldata
+    isfixel = numel(tmp.dim==3)&&tmp.dim(3)==1;
+      
+    if ~isfixel
+      mri.hdr     = removefields(tmp, {'data'});
+      mri.anatomy = tmp.data;
+      mri.dim     = tmp.dim(1:length(size(tmp.data)));
+      mri.transform = tmp.transform;
+      mri.transform(1:3,1:3) = diag(tmp.vox(1:3))*mri.transform(1:3,1:3);
+    else
+      fix2vox_fun = ft_getopt(varargin, 'fixel2voxel', 'max');
+      indexfile   = ft_getopt(varargin, 'indexfile');
+      if isempty(indexfile)
+        % assume the index file to be in the same directory as the data file
+        [p,f,e]   = fileparts(filename);
+        indexfile = fullfile(p,'index.mif');
+      end
+      index     = read_mrtrix(indexfile);
+      tmpdata   = reshape(index.data, [], 2);
+      
+      vox_index = find(tmpdata(:,1)>0);
+      num_index = tmpdata(vox_index,1);
+      fix_index = tmpdata(vox_index,2)+1;
+      
+      % create a mapping matrix of fixel2voxel -> currently this only works
+      % for scalar fixel data.
+      tmpdata = zeros(numel(num_index), max(num_index));
+      for k = 1:numel(num_index)
+        tmpdata(k, 1:num_index(k)) = fix_index(k)-1 + (1:num_index(k));
+      end
+      tmpdata(tmpdata==0) = nan;
+      tmpdata             = tmpdata.'; % transpose is intended
+      tmpdata(isfinite(tmpdata)) = tmp.data(tmpdata(isfinite(tmpdata)));
+      
+      switch fix2vox_fun
+        case 'max'
+          tmpdata = nanmax(tmpdata,[],1);
+        case 'min'
+          tmpdata = nanmin(tmpdata,[],1);
+        case 'mean'
+          tmpdata = nanmean(tmpdata,1);
+        otherwise
+          ft_error('unsupported fixel2voxel operation requested');
+      end
+      
+      mri.hdr  = removefields(tmp, {'data'});
+      mri.anatomy = zeros([index.dim(1:3) tmp.dim(2)]);
+      mri.anatomy(vox_index) = tmpdata;
+      mri.dim       = index.dim(1:length(size(tmp.data)));
+      mri.transform = tmp.transform;
+      mri.transform(1:3,1:3) = diag(tmp.vox(1:3))*mri.transform(1:3,1:3);
+    end
     
   otherwise
     ft_error('unrecognized filetype ''%s'' for ''%s''', dataformat, filename);

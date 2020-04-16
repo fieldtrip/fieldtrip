@@ -1,6 +1,6 @@
 function failed_tutorial_spikefield20130308
 
-% MEM 2500mb
+% MEM 3gb
 % WALLTIME 00:10:00
 
 % Preprocessing

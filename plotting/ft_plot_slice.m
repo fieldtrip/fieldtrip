@@ -71,8 +71,15 @@ persistent dim X Y Z
 if isequal(dim, size(dat(:,:,:,1,1)))
   % reuse the persistent variables to speed up subsequent calls with the same input
 else
-  dim       = size(dat);
+  dim       = size(dat); 
+  if numel(dim)<3
+    dim(3) = 1; % add 1 to catch size(dat,3) is singleton
+  end
   [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+end
+
+if any(dim==1)
+  ft_error('it is not possible to plot a volume with a dimensionality of 1 in one of its dimensions');
 end
 
 % parse first input argument(s). it is either
@@ -298,7 +305,7 @@ use_interpn = ~isequal(transform, eye(4)) || ~isequal(interpmethod, 'nearest') |
 get_slice   = ~use_interpn && all([islineXi islineYi islineZi]) && all([isintegerXi isintegerYi isintegerZi]);
 if use_interpn
   V  = interpn(X, Y, Z, dat, Xi, Yi, Zi, interpmethod);
-  if domask,       Vmask = interpn(X, Y, Z, datmask,       Xi, Yi, Zi, interpmethod); end
+  if domask,       Vmask = interpn(X, Y, Z, datmask,    Xi, Yi, Zi, interpmethod); end
   if dobackground, Vback = interpn(X, Y, Z, background, Xi, Yi, Zi, interpmethod); end
 elseif get_slice 
   %something more efficient than an interpolation can be done

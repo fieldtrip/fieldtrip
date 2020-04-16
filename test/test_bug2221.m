@@ -1,6 +1,6 @@
 function test_bug2221
 
-% MEM 500mb
+% MEM 1gb
 % WALLTIME 00:15:00
 
 % DEPENDENCY ft_selectdata

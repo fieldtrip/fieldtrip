@@ -1,6 +1,6 @@
 function test_bug1984_2187
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY ft_appendfreq ft_freqgrandaverage ft_freqstatistics ft_prepare_neighbours

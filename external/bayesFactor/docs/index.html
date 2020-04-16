@@ -1,0 +1,469 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Getting Started with the bayesFactor Toolbox</title><meta name="generator" content="MATLAB 9.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-12-29"><meta name="DC.source" content="gettingStarted.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Getting Started with the bayesFactor Toolbox</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Description</a></li><li><a href="#2">Download</a></li><li><a href="#3">Authors &amp; Sources</a></li><li><a href="#4">System Requirements</a></li><li><a href="#5">Features</a></li><li><a href="#6">Installation</a></li><li><a href="#7">Examples</a></li><li><a href="#8">Single sample T-Test</a></li><li><a href="#10">Paired T-Test</a></li><li><a href="#13">ANOVA</a></li><li><a href="#20">Repeated Measurements</a></li><li><a href="#26">Regression</a></li><li><a href="#27">Show the comparisons</a></li><li><a href="#28">Figures from Rouder et al. 2012</a></li><li><a href="#31">Bayes Factor Design Analysis</a></li><li><a href="#32">Figure 3 in S&amp;W analyzes a Fixed-N design for a two-sample T-test with</a></li></ul></div><h2 id="1">Description</h2><p>Bayesian statistical analysis can help to design experiments that lead to compelling evidence and to quantify the evidence in favor or against a  hypothesis, based on a dataset.</p><p>This toolbox provides easy-to-use functions to replace (or complement) standard tools for experimental design (e.g. power analysis)  and hypothesis testing (e.g. ttest, anova).</p><h2 id="2">Download</h2><p>Clone or fork the repository from <a href="https://github.com/klabhub/bayesFactor">https://github.com/klabhub/bayesFactor</a></p><h2 id="3">Authors &amp; Sources</h2><p>The code was written by Bart Krekelberg (<a href="mailto:bart@vision.rutgers.edu">bart@vision.rutgers.edu</a>) with some code taken from Sam Schwarzkopf's code and with inspiration from the R package by Richard Morey.</p><p>The mathematical underpinning of these analyzes can be found in the following papers:</p><div><ul><li>Rouder, J. N., Morey, R. D., Speckman, P. L. &amp; Province, J. M. Default Bayes factors for ANOVA designs. J. Math. Psychol. 56, 356?374 (2012).</li><li>Kass, R. E. &amp; Raftery, A. E. Bayes factors. J. Am. Stat. Soc. 90, 733?795 (1995).</li><li>Morey, R. D. &amp; Wagenmakers, E. J. Simple relation between Bayesian order-restricted and point-null hypothesis tests. Stat. Probab. Lett. 92, 121?124 (2014).</li><li>Schoenbrodt, F. D. &amp; Wagenmakers, E. J. Bayes factor design analysis: Planning for compelling evidence. Psychon. Bull. Rev. 1?15 (2017). doi:10.3758/s13423-017-1230-y</li></ul></div><h2 id="4">System Requirements</h2><p>This toolbox depends on the Mathworks Statistics and Machine Learning Toolbox <a href="https://www.mathworks.com/products/statistics.html">https://www.mathworks.com/products/statistics.html</a></p><h2 id="5">Features</h2><p>Currently the following statistical tests have been implemented</p><div><ul><li>One sample t-test  (<tt>bf.ttest</tt>)</li><li>Two sample t-test (<tt>bf.ttest2</tt>)</li><li>N-Way Anova with fixed and random effects, including continuous co-variates  (<tt>bf.anova</tt>)</li><li>Regression (<tt>bf.regression</tt>)</li><li>Pearson Correlation  (<tt>bf.corr</tt>)</li><li>Binomial Test  (<tt>bf.binom</tt>)</li><li>Experimental Design &amp; Power Analysis (<tt>bf.designAnalysis</tt>)</li></ul></div><pre>All user accessible functions in this toolbox are defined inside the 'bf'
+package. This avoids naming conflicts with the standard ttest, ttest2 , etc functions.
+Function inside bf.internal are not meant to be called directly.</pre><pre>+bf/  - The package, with all user accessible functions
+docs/ - Documentation
+examples/ - Example scripts
+tools/    - Tools for the maintenance of the package</pre><h2 id="6">Installation</h2><p>Place all files and folders in their own folder (e.g. bayesFactor) and then add that folder to your Matlab search path.</p><p>The <tt>installBayesFactor.m</tt> function willl do this for you.</p><h2 id="7">Examples</h2><p>These examples build on the examples used in the Statistics and Machine Learning Toolbox for traditional (frequentist) hypothesis testing and shows how they can be complemented with Bayesian analysis. The <tt>examples</tt> folder contains additional scripts with examples.</p><h2 id="8">Single sample T-Test</h2><pre class="codeinput">load <span class="string">stockreturns</span>
+[bf10,p] = bf.ttest(stocks(:,3))
+</pre><pre class="codeoutput">
+bf10 =
+
+    2.7158
+
+
+p =
+
+    0.0106
+
+</pre><p>The p-value of the traditional test shows that the stock return was significantly different from zero, but the Bayes Factor shows that the evidence is weak  (BF10&lt;3).</p><h2 id="10">Paired T-Test</h2><p>We are comparing student grades on two exams and want to know whether the grades changed from exam 1 to exam 2.</p><pre class="codeinput">load <span class="string">examgrades</span>
+[bf10,p] = bf.ttest(grades(:,1),grades(:,2))
+</pre><pre class="codeoutput">
+bf10 =
+
+    0.1014
+
+
+p =
+
+    0.9805
+
+</pre><p>The T-test tells us that the Null hypotheses (grades changed) cannot be rejected. The Bayes Factor is more informative, we can convert it to the Bayes Factor for the absence of an effect:</p><pre class="codeinput">bf01 = 1/bf10
+</pre><pre class="codeoutput">
+bf01 =
+
+    9.8621
+
+</pre><p>Which means that there is strong evidence (BF&gt;6) that there was <i>*no change</i>* in grades (evidence for absence).</p><h2 id="13">ANOVA</h2><p>Rouder et al 2012 show data for 10 subjects performing a visual detection task. The targets vary in orientation and spatial frequency. These data are stored in table (data) in rouder2012Data.</p><pre class="codeinput">load <span class="string">rouder2012Data</span>
+</pre><p>Analyze full model (linear effects of frequency and  orientation plus their interaction)</p><pre class="codeinput">modelFull = fitlme(data,<span class="string">'rt~ori*freq'</span>);
+bfFull = bf.anova(data,<span class="string">'rt~ori*freq'</span>);
+</pre><p>The <tt>modelFull</tt> is a LinearMixedModel from the Matlab Statistics toolbox. We use it to show the traditional ANOVA table</p><pre class="codeinput">modelFull.anova
+</pre><pre class="codeoutput">
+ans = 
+
+
+    ANOVA MARGINAL TESTS: DFMETHOD = 'RESIDUAL'
+
+    Term                 FStat      DF1    DF2    pValue    
+    '(Intercept)'         485.34    1      36     1.7406e-22
+    'ori'                 6.2245    1      36       0.017324
+    'freq'                1.8469    1      36         0.1826
+    'ori:freq'           0.66837    1      36          0.419
+
+</pre><p>The table shows a main effect of <tt>ori</tt></p><p>The Bayes Factor shows that the Full model is better than the Null model (i.e. intercept only model)</p><pre class="codeinput">bfFull
+</pre><pre class="codeoutput">
+bfFull =
+
+   16.5823
+
+</pre><p>To specifically look at the evidence for a main effect of orientation, we need to compare the Bayes Factor of the full model to a restricted model in which everything except the main effect of orientation is kept.</p><pre class="codeinput">bfRestricted  =   bf.anova(data,<span class="string">'rt~freq +ori:freq'</span>);  <span class="comment">% Keep main of freq and ori:freq interaction.</span>
+</pre><p>The evidence for the main effect is the ratio of the Bayes Factors.</p><pre class="codeinput">bfMain = bfFull/bfRestricted
+</pre><pre class="codeoutput">
+bfMain =
+
+  179.5458
+
+</pre><p>The evidence is overwhelmingly in favor of a main effect of orientation.</p><h2 id="20">Repeated Measurements</h2><p>The experiment Rouder et al describe took repeated measurements from the same subject (for each orientation and frequency), but this is not used in the analysis above. If there was large intersubject variability (e.g. some subjects have an overall slow reaction time) then this could reduce the power of the statistical test to detect an effect of orientation. In the example data set there isn't much variation across subjects, so let's introduce some variation to illustrate this.</p><pre class="codeinput">load <span class="string">rouder2012Data</span>
+slowSubjects = ismember(data.subject,[1 4 6]); <span class="comment">% Lets make subjects 1 4 and 6 slower overall by 0.25s .</span>
+data{slowSubjects,<span class="string">'rt'</span>} = data.rt(slowSubjects)+0.25;
+</pre><p>Calculate the BF and LMM model again</p><pre class="codeinput">modelFull = fitlme(data,<span class="string">'rt~ori*freq'</span>);
+bfFull = bf.anova(data,<span class="string">'rt~ori*freq'</span>);
+bfFull
+anova(modelFull)
+</pre><pre class="codeoutput">
+bfFull =
+
+    0.5003
+
+
+ans = 
+
+
+    ANOVA MARGINAL TESTS: DFMETHOD = 'RESIDUAL'
+
+    Term                 FStat      DF1    DF2    pValue    
+    '(Intercept)'         276.89    1      36     1.7466e-18
+    'ori'                 2.9474    1      36       0.094611
+    'freq'               0.87453    1      36        0.35594
+    'ori:freq'           0.31648    1      36        0.57722
+
+</pre><p>That does not seem right; we did not change how orientation affects RT and yet both the BF and the anova show that the effect is no longer significant.</p><p>Of course, what is missing is a repeated measures approach. With linear mixed models this is done by including an extra term in the model that captures the idiosyncratic offset in the RT for each subject. In the Wilcoxon formula this is written as (1|subject) : fit a constant term (1) for each level of subject.</p><pre class="codeinput">modelFull = fitlme(data,<span class="string">'rt~ori*freq + (1|subject)'</span>);
+bfFull = bf.anova(data,<span class="string">'rt~ori*freq + (1|subject)'</span>);
+bfFull
+anova(modelFull)
+</pre><pre class="codeoutput">
+bfFull =
+
+   10.3271
+
+
+ans = 
+
+
+    ANOVA MARGINAL TESTS: DFMETHOD = 'RESIDUAL'
+
+    Term                 FStat     DF1    DF2    pValue    
+    '(Intercept)'        276.89    1      36     1.7466e-18
+    'ori'                5.8533    1      36       0.020727
+    'freq'               1.7367    1      36        0.19588
+    'ori:freq'           0.6285    1      36         0.4331
+
+</pre><p>This shows that after including the intercept term for subjects, the Bayes Factor is increased substantially (as are the F values in the ANOVA).</p><p>Isolating a main effect while using the repeated measures aspect of the design works analogously:</p><pre class="codeinput">bfRestricted  =   bf.anova(data,<span class="string">'rt~freq +ori:freq + (1|subject)'</span>);
+</pre><p>The evidence for the main effect is the ratio of the Bayes Factors. the difference withbefore is that now both BF have been calculated with the subject random intercept.</p><pre class="codeinput">bfMain = bfFull/bfRestricted
+</pre><pre class="codeoutput">
+bfMain =
+
+  112.3283
+
+</pre><h2 id="26">Regression</h2><p>We analyze the attitude data set  (See <a href="https://richarddmorey.github.io/BayesFactor/#glm">https://richarddmorey.github.io/BayesFactor/#glm</a>)</p><pre class="codeinput">load <span class="string">attitude</span>
+<span class="comment">% Compare the rating~complaints model with a set of alternatives. Here we</span>
+<span class="comment">% just evaluate all the models relative to the intercept only alternative</span>
+<span class="comment">% and then take the ratios.</span>
+models = {<span class="string">'rating~complaints'</span>,<span class="string">'rating~complaints+learning'</span>,<span class="string">'rating~complaints+learning+advance'</span>,<span class="string">'rating~complaints+raises'</span>,<span class="string">'rating~complaints+privileges'</span>,<span class="string">'rating~complaints+advance'</span>};
+bfAnova = bf.regression(attitude,models);
+</pre><h2 id="27">Show the comparisons</h2><pre class="codeinput"><span class="keyword">for</span> i=1:numel(models)
+    fprintf(<span class="string">'%s vs. %s - Bayes Factor :\t\t\t%3.3f\n'</span>,models{i},models{1},bfAnova(i)./bfAnova(1)); <span class="comment">% Compare rating~complaints with other models.</span>
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">rating~complaints vs. rating~complaints - Bayes Factor :			1.000
+rating~complaints+learning vs. rating~complaints - Bayes Factor :			0.423
+rating~complaints+learning+advance vs. rating~complaints - Bayes Factor :			0.153
+rating~complaints+raises vs. rating~complaints - Bayes Factor :			0.150
+rating~complaints+privileges vs. rating~complaints - Bayes Factor :			0.145
+rating~complaints+advance vs. rating~complaints - Bayes Factor :			0.140
+</pre><h2 id="28">Figures from Rouder et al. 2012</h2><p>Much of the mathematical basis for this package is developed in the Rouder et al. paper. To test the package, I recreated some of the figures in their publication.</p><p>Figure 2 in Rouder et al compares critical T-values for a traditional t-test with a Bayes Factor analysis.</p><pre class="codeinput">rouderFigure2;
+</pre><img vspace="5" hspace="5" src="gettingStarted_01.png" alt=""> <p>Figure 4 shows Bayes Factor analysis for simulated data with different effect sizes.</p><pre class="codeinput">rouderFigure4(100); <span class="comment">% Use 100 bootstrap sets .</span>
+</pre><img vspace="5" hspace="5" src="gettingStarted_02.png" alt=""> <p>Figure 5 illustrates the influence of fixed and random effects</p><pre class="codeinput">rouderFigure5;
+</pre><img vspace="5" hspace="5" src="gettingStarted_03.png" alt=""> <h2 id="31">Bayes Factor Design Analysis</h2><p>Figures from Schoenbrodt &amp; Wagenmakers, a paperthat provides a tutorial treatment of Bayes Factor Design Analysis. See <tt>schoenbrodtFigures.m</tt> for details. Note that proper distribution estimates would require a larger number of MonteCarlo simulations - here we just run 100 to illustrate the main point.</p><h2 id="32">Figure 3 in S&amp;W analyzes a Fixed-N design for a two-sample T-test with</h2><p>N=20 and N=100 and a standardized effect size  of 0.5.</p><pre class="codeinput">schoenbrodtFigures(3,1000); <span class="comment">% 1000 Monte Carlo sims</span>
+</pre><pre class="codeoutput">***************
+N = 20  100
+False Positives (%): 0.9         0.9
+False Negatives (%): 1.1           0
+True Positives (%) 20.9         86.2
+True Negatives (%) 20.2         53.4
+**************
+Necessary sample size for 95% success under H1 is Inf
+False Positives (%): 0.3         0.3         0.3         0.8         0.4         0.6         0.1         0.3         0.2         0.6         0.4         0.1         0.4
+False Negatives (%): 0  0  0  0  0  0  0  0  0  0  0  0  0
+True negative  (%): 55.2         56.2           61         60.7         59.7           61         60.7         58.9         63.4         63.2         61.9         60.4         61.9
+</pre><img vspace="5" hspace="5" src="gettingStarted_04.png" alt=""> <p>Figure 4 in S&amp;W analyzes a Bayes sequential sampling design. and the use of a distribution of a-priori effect sizes (instead ot a single predicted effect size)</p><pre class="codeinput">schoenbrodtFigures(4,1000); <span class="comment">% 1000 Monte Carlo sims</span>
+</pre><pre class="codeoutput">False Positive Rate: 90.4%
+False Negative Rate: 3.5%
+Median Sample Size (H1): 42
+Median Sample Size (H0): 45
+</pre><img vspace="5" hspace="5" src="gettingStarted_05.png" alt=""> <p>Figure 5 refines the Sequential design analysis with asymmetric evidence boundaries and a largger minimal N reduces false positives</p><pre class="codeinput">schoenbrodtFigures(5,1000); <span class="comment">% 1000 Monte Carlo sims</span>
+</pre><pre class="codeoutput">False Positive Rate: 71.6%
+False Negative Rate: 1.7%
+Median Sample Size (H1): 76
+Median Sample Size (H0): 54.5
+</pre><img vspace="5" hspace="5" src="gettingStarted_06.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2018b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Getting Started with the bayesFactor Toolbox
+%% Description
+% Bayesian statistical analysis can help to design experiments that lead to 
+% compelling evidence and to quantify the evidence in favor or against a  hypothesis, 
+% based on a dataset.
+% 
+% This toolbox provides easy-to-use functions to replace (or complement) 
+% standard tools for experimental design (e.g. power analysis)  and hypothesis 
+% testing (e.g. ttest, anova).
+%% Download 
+% Clone or fork the repository from <https://github.com/klabhub/bayesFactor>
+%
+%% Authors & Sources
+% The code was written by Bart Krekelberg (bart@vision.rutgers.edu) with some 
+% code taken from Sam Schwarzkopf's code and with inspiration from the R package 
+% by Richard Morey.
+% 
+% The mathematical underpinning of these analyzes can be found in the following 
+% papers:
+% 
+% *  Rouder, J. N., Morey, R. D., Speckman, P. L. & Province, J. M. Default 
+% Bayes factors for ANOVA designs. J. Math. Psychol. 56, 356?374 (2012).
+% *  Kass, R. E. & Raftery, A. E. Bayes factors. J. Am. Stat. Soc. 90, 733?795 
+% (1995).
+% *  Morey, R. D. & Wagenmakers, E. J. Simple relation between Bayesian order-restricted 
+% and point-null hypothesis tests. Stat. Probab. Lett. 92, 121?124 (2014).
+% *  Schoenbrodt, F. D. & Wagenmakers, E. J. Bayes factor design analysis: Planning 
+% for compelling evidence. Psychon. Bull. Rev. 1?15 (2017). doi:10.3758/s13423-017-1230-y
+%% System Requirements 
+% This toolbox depends on the Mathworks Statistics and Machine Learning Toolbox 
+% <https://www.mathworks.com/products/statistics.html> 
+% 
+%% Features
+% Currently the following statistical tests have been implemented
+% 
+% * One sample t-test  (|bf.ttest|)
+% * Two sample t-test (|bf.ttest2|)
+% * N-Way Anova with fixed and random effects, including continuous co-variates  (|bf.anova|)
+% * Regression (|bf.regression|)
+% * Pearson Correlation  (|bf.corr|)
+% * Binomial Test  (|bf.binom|)
+% * Experimental Design & Power Analysis (|bf.designAnalysis|)
+% 
+%  All user accessible functions in this toolbox are defined inside the 'bf'
+%  package. This avoids naming conflicts with the standard ttest, ttest2 , etc functions. 
+%  Function inside bf.internal are not meant to be called directly.
+%  
+%  +bf/  - The package, with all user accessible functions
+%  docs/ - Documentation
+%  examples/ - Example scripts
+%  tools/    - Tools for the maintenance of the package
+%
+%% Installation
+% 
+% Place all files and folders in their own folder (e.g. bayesFactor) and
+% then add that folder to your Matlab search path.
+% 
+% The |installBayesFactor.m| function willl do this for you.
+%
+%% Examples
+% These examples build on the examples used in the Statistics and Machine Learning 
+% Toolbox for traditional (frequentist) hypothesis testing and shows how they 
+% can be complemented with Bayesian analysis. The |examples| folder
+% contains additional scripts with examples.
+%
+
+%% Single sample T-Test
+
+load stockreturns
+[bf10,p] = bf.ttest(stocks(:,3))
+%% 
+% The p-value of the traditional test shows that the stock return was significantly 
+% different from zero, but the Bayes Factor shows that the evidence is weak  (BF10<3).
+%% Paired T-Test
+% We are comparing student grades on two exams and want to know whether the 
+% grades changed from exam 1 to exam 2.
+
+load examgrades
+[bf10,p] = bf.ttest(grades(:,1),grades(:,2))
+%% 
+% The T-test tells us that the Null hypotheses (grades changed) cannot be 
+% rejected. The Bayes Factor is more informative, we can convert it to the Bayes 
+% Factor for the absence of an effect:
+
+bf01 = 1/bf10
+%% 
+% Which means that there is strong evidence (BF>6) that there was _*no change_* 
+% in grades (evidence for absence).
+%% ANOVA
+% Rouder et al 2012 show data for 10 subjects performing a visual detection 
+% task. The targets vary in orientation and spatial frequency. These data are 
+% stored in table (data) in rouder2012Data.
+
+load rouder2012Data
+%% 
+% Analyze full model (linear effects of frequency and  orientation plus 
+% their interaction) 
+
+modelFull = fitlme(data,'rt~ori*freq');
+bfFull = bf.anova(data,'rt~ori*freq');
+%% 
+% The |modelFull| is a LinearMixedModel from the Matlab Statistics toolbox. 
+% We use it to show the traditional ANOVA table
+% 
+% 
+
+
+modelFull.anova
+%% 
+% The table shows a main effect of |ori|
+% 
+% The Bayes Factor shows that the Full model is better than the Null model 
+% (i.e. intercept only model)
+
+bfFull
+%% 
+% To specifically look at the evidence for a main effect of orientation, 
+% we need to compare the Bayes Factor of the full model to a restricted model 
+% in which everything except the main effect of orientation is kept.
+
+bfRestricted  =   bf.anova(data,'rt~freq +ori:freq');  % Keep main of freq and ori:freq interaction.
+%% 
+% The evidence for the main effect is the ratio of the Bayes Factors. 
+
+bfMain = bfFull/bfRestricted
+%% 
+% The evidence is overwhelmingly in favor of a main effect of orientation.
+% 
+% 
+
+%% Repeated Measurements
+%%
+% The experiment Rouder et al describe took repeated measurements from the
+% same subject (for each orientation and frequency), but this is not used
+% in the analysis above. If there was large intersubject variability
+% (e.g. some subjects have an overall slow reaction time) then this could reduce 
+% the power of the statistical test to detect an effect of orientation. In
+% the example data set there isn't much variation across subjects, so let's
+% introduce some variation to illustrate this.
+
+load rouder2012Data
+slowSubjects = ismember(data.subject,[1 4 6]); % Lets make subjects 1 4 and 6 slower overall by 0.25s .
+data{slowSubjects,'rt'} = data.rt(slowSubjects)+0.25; 
+
+%%
+% Calculate the BF and LMM model again
+modelFull = fitlme(data,'rt~ori*freq');
+bfFull = bf.anova(data,'rt~ori*freq');
+bfFull
+anova(modelFull)
+
+%%
+% That does not seem right; we did not change how orientation affects RT 
+% and yet both the BF and the anova show that the effect is no
+% longer significant. 
+%
+% Of course, what is missing is a repeated measures approach. With linear mixed models
+% this is done by including an extra term in the model that captures the
+% idiosyncratic offset in the RT for each subject. In the Wilcoxon formula
+% this is written as (1|subject) : fit a constant term (1) for each level
+% of subject.
+modelFull = fitlme(data,'rt~ori*freq + (1|subject)');
+bfFull = bf.anova(data,'rt~ori*freq + (1|subject)');
+bfFull
+anova(modelFull)
+
+%%
+% This shows that after including the intercept term for subjects, the
+% Bayes Factor is increased substantially (as are the F values in the ANOVA).
+%
+% Isolating a main effect while using the repeated measures aspect of the design
+% works analogously:
+
+bfRestricted  =   bf.anova(data,'rt~freq +ori:freq + (1|subject)');  
+
+%% 
+% The evidence for the main effect is the ratio of the Bayes Factors. 
+% the difference withbefore is that now both BF have been calculated with
+% the subject random intercept.
+
+bfMain = bfFull/bfRestricted
+
+%% Regression
+% We analyze the attitude data set  (See
+% <https://richarddmorey.github.io/BayesFactor/#glm>)
+load attitude
+% Compare the rating~complaints model with a set of alternatives. Here we
+% just evaluate all the models relative to the intercept only alternative
+% and then take the ratios. 
+models = {'rating~complaints','rating~complaints+learning','rating~complaints+learning+advance','rating~complaints+raises','rating~complaints+privileges','rating~complaints+advance'};
+bfAnova = bf.regression(attitude,models);
+%% Show the comparisons
+for i=1:numel(models)
+    fprintf('%s vs. %s - Bayes Factor :\t\t\t%3.3f\n',models{i},models{1},bfAnova(i)./bfAnova(1)); % Compare rating~complaints with other models.
+end
+
+
+%% Figures from Rouder et al. 2012
+% Much of the mathematical basis for this package is developed in the Rouder 
+% et al. paper. To test the package, I recreated some of the figures in their 
+% publication. 
+% 
+% 
+% Figure 2 in Rouder et al compares critical T-values for a traditional t-test with a 
+% Bayes Factor analysis.
+
+rouderFigure2;
+%% 
+% Figure 4 shows Bayes Factor analysis for simulated data with different 
+% effect sizes.
+% 
+rouderFigure4(100); % Use 100 bootstrap sets . 
+
+%%
+% Figure 5 illustrates the influence of fixed and random effects
+% 
+rouderFigure5;
+
+%% Bayes Factor Design Analysis
+% Figures from Schoenbrodt & Wagenmakers, a paperthat provides a tutorial 
+% treatment of Bayes Factor Design Analysis. See |schoenbrodtFigures.m| for details.
+% Note that proper distribution estimates would require a larger number of 
+% MonteCarlo simulations - here we just run 100 to illustrate the main point.
+
+%% Figure 3 in S&W analyzes a Fixed-N design for a two-sample T-test with 
+% N=20 and N=100 and a standardized effect size  of 0.5.
+schoenbrodtFigures(3,1000); % 1000 Monte Carlo sims
+
+%%
+%
+% Figure 4 in S&W analyzes a Bayes sequential sampling design.
+% and the use of a distribution of a-priori effect sizes (instead ot a single 
+% predicted effect size)
+schoenbrodtFigures(4,1000); % 1000 Monte Carlo sims
+
+%%
+% 
+% Figure 5 refines the Sequential design analysis
+% with asymmetric evidence boundaries and a largger minimal N reduces false positives
+schoenbrodtFigures(5,1000); % 1000 Monte Carlo sims
+
+##### SOURCE END #####
+--></body></html>

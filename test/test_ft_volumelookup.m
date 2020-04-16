@@ -1,6 +1,6 @@
 function test_ft_volumelookup
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY ft_volumelookup
@@ -11,10 +11,10 @@ atlasfilename = dccnpath('/home/common/matlab/fieldtrip/template/atlas/afni/TTat
 mrifilename   = dccnpath('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii');
 
 mri = ft_read_mri(mrifilename);
+mri.coordsys = 'mni';
 
 cfg       = [];
 cfg.atlas = atlasfilename;
-cfg.inputcoord = 'mni';
 cfg.roi   = {'Precentral Gyrus'};
 mask1     = ft_volumelookup(cfg,mri);
 cfg.roi   = {'Brodmann area 47'};
@@ -22,8 +22,8 @@ mask2     = ft_volumelookup(cfg,mri);
 cfg.roi   = {'Precentral Gyrus';'Brodmann area 47'};
 mask3     = ft_volumelookup(cfg,mri);
 
-assert(isequal(sum(mask1(:)),8214));
-assert(isequal(sum(mask2(:)),2102));
+assert(isequal(sum(mask1(:)),8213));
+assert(isequal(sum(mask2(:)),2093));
 assert(isequal(sum(mask3(:)&(mask2(:)|mask1(:))),sum(mask3(:))));
 
 
@@ -38,7 +38,6 @@ mri.mask  = mask4;
 
 cfg       = [];
 cfg.atlas = atlasfilename;
-cfg.inputcoord = 'mni';
 cfg.maskparameter = 'mask';
 mask5     = ft_volumelookup(cfg, mri);
 
@@ -46,7 +45,6 @@ mask5     = ft_volumelookup(cfg, mri);
 atlasfilename = dccnpath('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii');     
 cfg       = [];
 cfg.atlas = atlasfilename;
-cfg.inputcoord = 'mni';
 cfg.roi = 'Calcarine_R'; % right V1
 mask6 = ft_volumelookup(cfg, mri);
 assert(isequal(sum(mask6(:)),1861));
@@ -56,7 +54,6 @@ atlas_MNI.coordsys = 'mni';
 cfg = [];
 cfg.roi = [52 -9 -45; 73 -37 -8];
 cfg.atlas = atlasfilename;
-cfg.inputcoord = 'mni';
 cfg.output = 'single';
 cfg.maxqueryrange = 29;
 label_MNI = ft_volumelookup(cfg, atlas_MNI);

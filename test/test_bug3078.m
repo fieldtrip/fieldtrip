@@ -1,6 +1,6 @@
 function test_bug3078
 
-% MEM 500mb
+% MEM 1gb
 % WALLTIME 00:15:00
 
 % DEPENDENCY ft_sourceanalysis

@@ -1,6 +1,6 @@
 function test_bug1481
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY ft_componentanalysis ft_rejectcomponent ft_apply_montage

@@ -1,6 +1,6 @@
 function test_bug1954
 
-% MEM 2gb
+% MEM 3gb
 % WALLTIME 01:30:00
 
 [ftver, ftpath] = ft_version;

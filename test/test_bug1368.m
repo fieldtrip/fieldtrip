@@ -1,6 +1,6 @@
 function test_bug1368
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:20:00
 
 % DEPENDENCY ft_prepare_sourcemodel ft_headmodel_openmeeg headsurface

@@ -267,7 +267,7 @@ end
 
 if strcmp(cfg.viewmode, 'component')
   % read or create the layout that will be used for the topoplots
-  tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
   if hasdata
     cfg.layout = ft_prepare_layout(tmpcfg, data);
   else
@@ -328,15 +328,8 @@ if hasdata
   end
   
   % this is how the input data is segmented
-  trlorg = data.sampleinfo;
-  trlorg(:,3) = 0;
-  
-  % recreate offset vector (databrowser depends on this for visualisation)
-  for ntrl = 1:numel(data.trial)
-    trlorg(ntrl,3) = time2offset(data.time{ntrl}, data.fsample);
-  end
-  Ntrials = size(trlorg, 1);
-  
+  trlorg = sampleinfo2trl(data);
+ 
 else
   % check if the input cfg is valid for this function
   cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
@@ -366,28 +359,31 @@ else
   chansel = match_str(hdr.label, cfg.channel);
   Nchans  = length(chansel);
   
-  if strcmp(cfg.continuous, 'yes')
-    Ntrials = 1;
-  else
-    Ntrials = hdr.nTrials;
-  end
-  
-  % construct trl-matrix for the data on disk
-  if ~isempty(cfg.trl)
-    % take the one specified by the user
-    trlorg = cfg.trl;
-  else
-    % make one that is according to the segments/trials in the data on disk
-    trlorg = zeros(Ntrials,3);
+  if ~isfield(cfg, 'trl') || isempty(cfg.trl)
+    % treat the data as continuous if possible, otherwise define all trials as indicated in the header
     if strcmp(cfg.continuous, 'yes')
-      trlorg(1, [1 2]) = [1 hdr.nSamples*hdr.nTrials];
+      trlorg = zeros(1, 3);
+      trlorg(1,1) = 1;
+      trlorg(1,2) = hdr.nSamples*hdr.nTrials;
+      trlorg(1,3) = -hdr.nSamplesPre;
     else
-      for k = 1:Ntrials
-        trlorg(k, [1 2]) = [1 hdr.nSamples] + [hdr.nSamples hdr.nSamples] .* (k-1);
+      trlorg = zeros(hdr.nTrials, 3);
+      for i=1:hdr.nTrials
+        trlorg(i,1) = (i-1)*hdr.nSamples + 1;
+        trlorg(i,2) = (i  )*hdr.nSamples    ;
+        trlorg(i,3) = -hdr.nSamplesPre;
       end
     end
+  elseif ischar(cfg.trl)
+    % load the trial information from file
+    trlorg = loadvar(cfg.trl, 'trl');
+  else
+    trlorg = cfg.trl;
   end
+  
 end % if hasdata
+
+Ntrials = size(trlorg, 1);
 
 if strcmp(cfg.continuous, 'no') && isempty(cfg.blocksize)
   cfg.blocksize = (trlorg(1,2) - trlorg(1,1)+1) ./ hdr.Fs;

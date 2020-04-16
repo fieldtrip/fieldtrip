@@ -1,6 +1,6 @@
 function test_bug1029
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % DEPENDENCY ft_read_headmodel ft_headmodel_bem_asa ft_prepare_headmodel
