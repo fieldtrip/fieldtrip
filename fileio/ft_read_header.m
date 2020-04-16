@@ -34,8 +34,9 @@ function [hdr] = ft_read_header(filename, varargin)
 %   hdr.FirstTimeStamp      number, represented as 32 bit or 64 bit unsigned integer
 %   hdr.TimeStampPerSample  number, represented in double precision
 %
-% Depending on the file format, additional header information can be
-% returned in the hdr.orig subfield.
+% For NeuroOmega files, the required chantype option specifies the channel type to
+% be read. Specify 'chaninfo' as chantype to obtain a table (in hdr.chaninfo) describing
+% available channels and their chantype.
 %
 % To use an external reading function, you can specify an external function as the
 % 'headerformat' option. This function should take the filename as input argument.
@@ -78,6 +79,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   MPI - Max Planck Institute (*.dap)
 %   Neurosim  (neurosim_spikes, neurosim_signals, neurosim_ds)
 %   Windaq (*.wdq)
+%   NeuroOmega (*.mat transformed from *.mpx)
 %
 % The following NIRS dataformats are supported
 %   BUCN - Birkbeck college, London (*.txt)
@@ -2099,8 +2101,8 @@ switch headerformat
       if isempty(chantype)
         chaninfo %printing channel info for user. ToDo: ft_print_table
         ft_warning('Define chantype of interest from table above or use ''chaninfo''');
-      elseif ~strcmpi(chantype{1},'chaninfo') | strcmpi(chantype{1},'info')
-        ft_error(['Incorrect cfg.chantype, use one of ',strjoin(unique(chaninfo.chantype),' ')])
+      elseif ~strcmpi(chantype{1},'chaninfo') || strcmpi(chantype{1},'info')
+        ft_error(['Incorrect chantype, use one of ',strjoin(unique(chaninfo.chantype),' ')])
       end
       Fs=nan; nSamples=nan; channelstype=chaninfo.chantype; hdr.chaninfo=chaninfo;
     end
