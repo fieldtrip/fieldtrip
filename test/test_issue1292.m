@@ -32,16 +32,24 @@ data2.sampleinfo = [
 
 %%
 
-dat1a = ft_fetch_data(data1, 'begsample', 1, 'endsample', 190, 'allowoverlap', true);
+dat1a = ft_fetch_data(data1, 'begsample', 1, 'endsample', 190);
 
 %%
 
-dat1b = ft_fetch_data(data1, 'begsample', 1, 'endsample', 190);
+dat1b = ft_fetch_data(data1, 'begsample', 1, 'endsample', 190, 'allowoverlap', true);
 
 %%
 
-dat2a = ft_fetch_data(data2, 'begsample', 1, 'endsample', 190, 'allowoverlap', true);
+try
+  haserror = true; % this will be set when it fails
+  dat2a    = ft_fetch_data(data2, 'begsample', 1, 'endsample', 190);
+  haserror = false; % this will be set when it passed
+end
+
+if ~haserror
+  error('this should give an error');
+end
 
 %%
 
-dat2b = ft_fetch_data(data2, 'begsample', 1, 'endsample', 190);
+dat2b = ft_fetch_data(data2, 'begsample', 1, 'endsample', 190, 'allowoverlap', true);
