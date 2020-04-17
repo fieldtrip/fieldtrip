@@ -164,7 +164,7 @@ url = {
   'MRTRIX'        'see https://mrtrix.org'
   'BAYESFACTOR'   'see https://klabhub.github.io/bayesFactor'
   'EZC3D'         'see https://github.com/pyomeca/ezc3d'
-  'XSENS'         'see https://www.xsens.com/motion-capture and http://www.fieldtriptoolbox.org/getting_started/xsens/'
+  'MAYO_MEF'      'see https://msel.mayo.edu/codes.html'
   };
 
 if nargin<2
@@ -220,6 +220,8 @@ switch toolbox
     dependency = {'spm', get_spm_version()>=12, get_spm_version()<95};
     %This is to avoid crashes when trying to add SPM to the path
     fallback_toolbox = 'SPM12';
+    case 'MAYO_MEF' % MEF 2.1 and MEF 3.0
+        dependency = {'MEFFieldTrip_2p1', 'MEFFieldTrip_3p0'};
   case 'MEG-PD'
     dependency = {'rawdata', 'channames'};
   case 'MEG-CALC'
@@ -408,9 +410,7 @@ switch toolbox
     dependency = {'bf.ttest', 'bf.ttest2'};
   case 'EZC3D'
     dependency = {'ezc3dRead', 'ezc3dWrite'};
-  case 'XSENS'
-    dependency = {'load_mvnx'};
-        
+    
     % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
     dependency = {'ft_read_header', 'ft_read_data', 'ft_read_event', 'ft_read_sens'};

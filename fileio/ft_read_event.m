@@ -19,6 +19,8 @@ function [event] = ft_read_event(filename, varargin)
 %   'tolerance'      tolerance in samples when merging Neuromag analogue trigger channels (default = 1, meaning that an shift of one sample in both directions is compensated for)
 %   'blocking'       wait for the selected number of events (default = 'no')
 %   'timeout'        amount of time in seconds to wait when blocking (default = 5)
+%   'password'       password structure for encrypted data set (such as mayo_mef30 and mayo_mef21)
+%   'sortchannel'    = sort channel order according to either alphabet or number (default is alphabet if header is not provided, otherwise use header.SortChannel)
 %
 % This function returns an event structure with the following fields
 %   event.type      = string
@@ -160,6 +162,8 @@ eventformat      = ft_getopt(varargin, 'eventformat');
 chanindx         = ft_getopt(varargin, 'chanindx');                  % this allows to override the automatic trigger channel detection (useful for Yokogawa & Ricoh, and for EDF with variable sampling rate)
 trigindx         = ft_getopt(varargin, 'trigindx');                  % deprecated, use chanindx instead
 triglabel        = ft_getopt(varargin, 'triglabel');                 % deprecated, use chanindx instead
+password         = ft_getopt(varargin, 'password');                  % get the password
+sortchannel      = ft_getopt(varargin, 'sortchannel', '');           % sort channel according to either 'alphabet' of channel names or 'number' of acquisition channel number
 
 % for backward compatibility, added by Robert in Sept 2019
 if ~isempty(trigindx)
@@ -1351,6 +1355,18 @@ switch eventformat
       end
     end
     
+    case 'mayo_mef30'
+        if isempty(hdr)
+            hdr = ft_read_header(filename, 'password', password, 'sortchannel', sortchannel);
+        end
+        event = mayo_mef30(filename, password, sortchannel, hdr);
+        
+    case 'mayo_mef21'
+        if isempty(hdr)
+            hdr = ft_read_header(filename, 'password', password);
+        end % if
+        event = mayo_mef21(filename, password, hdr);
+        
   case 'mega_neurone'
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -1458,25 +1474,12 @@ switch eventformat
     % Add boundary events to indicate segments
     originalEventCount = length(hdr.orig.Events);
     boundaryEventCount = 1;
-    for i=1:length(hdr.orig.Segments)
-      sampleCountOfchannelsWithSameSampleRate(i,:) = hdr.orig.Segments(i).sampleCount;
-    end
     for i=2:length(hdr.orig.Segments)
       event(originalEventCount+boundaryEventCount).type = 'boundary';
       event(originalEventCount+boundaryEventCount).value = 'boundary';
       event(originalEventCount+boundaryEventCount).offset = 0;
-      gapDurationSeconds = seconds(hdr.orig.Segments(i).date-hdr.orig.Segments(i-1).date)-hdr.orig.Segments(i-1).duration;
-      event(originalEventCount+boundaryEventCount).duration = gapDurationSeconds*maxSampleRate;
-      event(originalEventCount+boundaryEventCount).sample = sum(sampleCountOfchannelsWithSameSampleRate(1:(i-1)));
-      
-      %move all non-boundary events later than this segment start
-      %back by the length of the gap, since the calculation for event
-      %sample start above assumes continuous sampling without gaps
-      for j=1:originalEventCount
-        if hdr.orig.Events(j).date > hdr.orig.Segments(i).date
-          event(j).sample = event(j).sample - gapDurationSeconds*maxSampleRate;
-        end
-      end
+      event(originalEventCount+boundaryEventCount).duration = 0;
+      event(originalEventCount+boundaryEventCount).sample = sum([hdr.orig.Segments(1:(i-1)).sampleCount]);
       boundaryEventCount = boundaryEventCount+1;
     end
     
