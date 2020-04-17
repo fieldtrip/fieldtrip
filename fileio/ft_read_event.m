@@ -1837,12 +1837,13 @@ switch eventformat
     
   case 'neuroomega_mat'
 
-    hdr = ft_read_header(filename, 'headerformat', eventformat, 'chantype', 'chaninfo');
-    fields_orig=who(hdr.orig); %getting digital event channels
+    hdr = ft_read_header(filename, 'headerformat', eventformat);
+    hdr_orig = hdr.orig.orig;
+    fields_orig=hdr.orig.fields; %getting digital event channels
 
     % extracting time begin
     if ismember('CANALOG_IN_1_TimeBegin',fields_orig)
-      TimeBegin = hdr.orig.('CANALOG_IN_1_TimeBegin');
+      TimeBegin = hdr_orig.('CANALOG_IN_1_TimeBegin');
     else
       ft_error('CANALOG_IN_1_TimeBegin required to load event');
     end
@@ -1856,18 +1857,16 @@ switch eventformat
     rx=regexp(fields_orig,'^CDIG_IN_{1}(\d+)[a-zA-Z_]*','tokens');
     dig_channels=unique(cellfun(@(x) str2num(x{1}), [rx{:}]));
 
-    %event.type=[]; event.sample=[]; event.value=[];
-
     if ~ismember(detectflank,{'up','down','both'})
       ft_error('incorrect specification of cfg.detectflank. Use up, down or both');
     end
     if ismember(detectflank,{'up','both'})
       for i=1:length(dig_channels)
         channel = ['CDIG_IN_' num2str(dig_channels(i)) '_Up'];
-        data = hdr.orig.(channel);
-        t0 = hdr.orig.(['CDIG_IN_' num2str(dig_channels(i)) '_TimeBegin']) - TimeBegin;
-        Fs = hdr.orig.(['CDIG_IN_' num2str(dig_channels(i)) '_KHz']) * 1000;
-        for j=1:length(hdr.orig.(channel))
+        data = hdr_orig.(channel);
+        t0 = hdr_orig.(['CDIG_IN_' num2str(dig_channels(i)) '_TimeBegin']) - TimeBegin;
+        Fs = hdr_orig.(['CDIG_IN_' num2str(dig_channels(i)) '_KHz']) * 1000;
+        for j=1:length(hdr_orig.(channel))
           event(end+1).type = channel;
           event(end  ).value = dig_channels(i);
           event(end  ).sample = t0 + data(j) ./ Fs; %events in seconds from begging of file
@@ -1877,10 +1876,10 @@ switch eventformat
     if ismember(detectflank,{'down','both'})
       for i=1:length(dig_channels)
         channel = ['CDIG_IN_' num2str(dig_channels(i)) '_Down'];
-        data = hdr.orig.(channel);
-        t0 = hdr.orig.(['CDIG_IN_' num2str(dig_channels(i)) '_TimeBegin']) - TimeBegin;
-        Fs = hdr.orig.(['CDIG_IN_' num2str(dig_channels(i)) '_KHz']) * 1000;
-        for j=1:length(hdr.orig.(channel))
+        data = hdr_orig.(channel);
+        t0 = hdr_orig.(['CDIG_IN_' num2str(dig_channels(i)) '_TimeBegin']) - TimeBegin;
+        Fs = hdr_orig.(['CDIG_IN_' num2str(dig_channels(i)) '_KHz']) * 1000;
+        for j=1:length(hdr_orig.(channel))
           event(end+1).type = channel;
           event(end  ).value = dig_channels(i);
           event(end  ).sample = t0 + data(j) ./ Fs; %events in seconds from begging of file

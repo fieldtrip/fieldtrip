@@ -1265,8 +1265,8 @@ switch dataformat
     % Converter' from the original .mpx files recorded by NeuroOmega
     dat=zeros(hdr.nChans,endsample - begsample + 1);
     for i=1:hdr.nChans
-      v=double(hdr.orig.(hdr.label{i}));
-      v=v*hdr.orig.(char(strcat(hdr.label{i},'_BitResolution')));
+      v=double(hdr.orig.orig.(hdr.label{i}));
+      v=v*hdr.orig.orig.(char(strcat(hdr.label{i},'_BitResolution')));
       dat(i,:)=v(begsample:endsample); %channels sometimes have small differences in samples
     end
 
