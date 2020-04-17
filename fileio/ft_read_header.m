@@ -34,6 +34,9 @@ function [hdr] = ft_read_header(filename, varargin)
 %   hdr.FirstTimeStamp      number, represented as 32 bit or 64 bit unsigned integer
 %   hdr.TimeStampPerSample  number, represented in double precision
 %
+% Depending on the file format, additional header information can be
+% returned in the hdr.orig subfield.
+%
 % For NeuroOmega files, the required chantype option specifies the channel type to
 % be read. Specify 'chaninfo' as chantype to obtain a table (in hdr.chaninfo) describing
 % available channels and their chantype.
@@ -42,9 +45,6 @@ function [hdr] = ft_read_header(filename, varargin)
 % 'headerformat' option. This function should take the filename as input argument.
 % Please check the code of this function for details, and search for BIDS_TSV as
 % example.
-%
-% Use cfg.chantype='chaninfo' to get hdr.chaninfo table. For BlackRock
-% specify decimation with chantype:skipfactor (e.g. cfg.chantype='analog:10')
 %
 % The following MEG dataformats are supported
 %   CTF (*.ds, *.res4, *.meg4)
