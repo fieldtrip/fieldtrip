@@ -7,11 +7,12 @@ function test_pull1377
 % this function creates a set of source-structures to be used for testing
 
 % get volume conductor model
+% for MEG, localsphere
 volname = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151/Subject01.ds/default.hdm');
 % figure out what model this is, preferably local spheres
 vol     = ft_read_headmodel(volname);
 
-% For EEG, singlesphere
+% for EEG, singlesphere
 
 % get MEG data + sensor info
 dataname = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat');
@@ -20,6 +21,7 @@ load(dataname);
 % get EEG data + channel info
 
 % create 3D grid
+% for MEG
 cfg      = [];
 cfg.grad = data.grad;
 cfg.headmodel = vol;
@@ -44,24 +46,39 @@ cfg.sourcemodel = grid2;
 cfg.channel = 'MEG';
 grid2 = ft_prepare_leadfield(cfg);
 
+% for EEG
+
+% load externally created leadfields
+% for MEG
+
+% for EEG
+
 % create timelock structure with covariance for lcmv beamforming and
 % minimumnormestimate
+% for MEG
 cfg  = [];
 cfg.covariance = 'yes';
 cfg.keeptrials = 'yes';
 cfg.channel    = 'MEG';
-tlck = ft_timelockanalysis(cfg, data);
+MEG_tlck = ft_timelockanalysis(cfg, data);
+
+% for EEG 
 
 % create freq structure for dics beamforming and pcc beamforming
+% for MEG,
 cfg  = [];
 cfg.method = 'mtmfft';
 cfg.output = 'fourier';
 cfg.tapsmofrq = 4;
 cfg.foilim = [0 20];
 cfg.channel = 'MEG';
-freq = ft_freqanalysis(cfg, data);
+MEG_freq = ft_freqanalysis(cfg, data);
+
+% for EEG
 
 outputdir = fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/source/meg'));
+
+% inverse solutions
 
 % do LCMV beamforming
 cfg            = [];
@@ -76,7 +93,7 @@ cfg.outputfile = fullfile(outputdir, 'ctf151_lcmv3d_avg');
 sourcelcmv3d1  = ft_sourceanalysis(cfg, tlck);
 cfg.sourcemodel       = grid2;
 cfg.outputfile = 'ctf151_lcmv2d_avg';
-sourcelcmv2d1  = ft_sourceanalysis(cfg, tlck);
+sourcelcmv2d1  = ft_sourceanalysis(cfg, MEG_tlck);
 
 cfg.rawtrial    = 'yes';
 cfg.sourcemodel        = grid;
@@ -86,7 +103,7 @@ ft_sourceanalysis(cfg, tlck);
 cfg.sourcemodel        = grid2;
 cfg.outputfile  = fullfile(outputdir, 'ctf151_lcmv2d_trial');
 cfg.sourcemodel.filter = sourcelcmv2d1.avg.filter;
-ft_sourceanalysis(cfg, tlck);
+ft_sourceanalysis(cfg, MEG_tlck);
 
 % do MNE
 cfg = [];
@@ -100,7 +117,7 @@ cfg.outputfile = fullfile(outputdir, 'ctf151_mne3d');
 sourcemne3d1 = ft_sourceanalysis(cfg, tlck);
 cfg.sourcemodel = grid2;
 cfg.outputfile = fullfile(outputdir, 'ctf151_mne2d');
-sourcemne2d1 = ft_sourceanalysis(cfg, tlck);
+sourcemne2d1 = ft_sourceanalysis(cfg, MEG_tlck);
 
 cfg.rawtrial    = 'yes';
 cfg.sourcemodel        = grid;
@@ -110,7 +127,7 @@ ft_sourceanalysis(cfg, tlck);
 cfg.sourcemodel        = grid2;
 cfg.sourcemodel.filter = sourcemne2d1.avg.filter;
 cfg.outputfile  = fullfile(outputdir, 'ctf151_mne2d_trial');
-ft_sourceanalysis(cfg, tlck);
+ft_sourceanalysis(cfg, MEG_tlck);
 
 % do DICS
 cfg = [];
@@ -123,20 +140,20 @@ cfg.frequency = 10;
 cfg.headmodel = vol;
 cfg.sourcemodel = grid;
 cfg.outputfile = fullfile(outputdir, 'ctf151_dics3d_avg');
-sourcedics3d1 = ft_sourceanalysis(cfg, freq);
+sourcedics3d1 = ft_sourceanalysis(cfg, MEG_freq);
 cfg.sourcemodel = grid2;
 cfg.outputfile = fullfile(outputdir, 'ctf151_dics2d_avg');
-sourcedics2d1 = ft_sourceanalysis(cfg, freq);
+sourcedics2d1 = ft_sourceanalysis(cfg, MEG_freq);
 
 cfg.rawtrial    = 'yes';
 cfg.sourcemodel        = grid;
 cfg.sourcemodel.filter = sourcedics3d1.avg.filter;
 cfg.outputfile  = fullfile(outputdir, 'ctf151_dics3d_trial');
-ft_sourceanalysis(cfg, freq);
+ft_sourceanalysis(cfg, MEG_freq);
 cfg.sourcemodel        = grid2;
 cfg.sourcemodel.filter = sourcedics2d1.avg.filter;
 cfg.outputfile  = fullfile(outputdir, 'ctf151_dics2d_trial');
-ft_sourceanalysis(cfg, freq);
+ft_sourceanalysis(cfg, MEG_freq);
 
 
 % do PCC
@@ -154,4 +171,27 @@ cfg.outputfile = fullfile(outputdir, 'ctf151_pcc3d');
 ft_sourceanalysis(cfg, freq);
 cfg.sourcemodel = grid2;
 cfg.outputfile = fullfile(outputdir, 'ctf151_pcc2d');
-ft_sourceanalysis(cfg, freq);
+ft_sourceanalysis(cfg, MEG_freq);
+
+% do dipolefit
+% for MEG
+cfg = [];
+cfg.numdipoles    = 1;                              %number of expected sources
+cfg.headmodel     = headmodelr;                     %the head model
+cfg.grid          = leadfield;                      %the (precomputed) leadfield
+cfg.nonlinear     = 'no';                           %only dipole scan
+cfg.grad          = grad;                           %the sensor model
+cfg.latency       = 0.025;                          %the latency of interest
+%dipfit_meg    = ft_dipolefitting(cfg,MEG_avg);
+ft_dipolefitting(cfg,MEG_tlck); % we do not want to save the output I guess
+
+% for EEG
+cfg = [];
+cfg.numdipoles    =  1;                             
+cfg.headmodel     = headmodel;                  
+cfg.grid          = leadfield;    
+cfg.nonlinear     = 'no';                          
+cfg.elec          = elec;                           
+cfg.latency       = 0.025;                         
+ft_dipolefitting(cfg,EEG_tlck);
+
