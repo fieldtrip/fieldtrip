@@ -164,7 +164,7 @@ url = {
   'MRTRIX'        'see https://mrtrix.org'
   'BAYESFACTOR'   'see https://klabhub.github.io/bayesFactor'
   'EZC3D'         'see https://github.com/pyomeca/ezc3d'
-  'MAYO_MEF'      'see https://msel.mayo.edu/codes.html'
+  'MAYO_MEF'      'see https://github.com/MultimodalNeuroimagingLab/mef_reader_fieldtrip and https://msel.mayo.edu/codes.html'
   };
 
 if nargin<2
@@ -569,6 +569,9 @@ elseif isfolder(toolbox)
     % this comes with its own startup script
     addpath(fullfile(toolbox, 'startup'))
     startup_MVPA_Light;
+  elseif ~isempty(regexp(lower(toolbox), 'mayo_mef$', 'once'))
+      % this needs to add all the subdirectories
+      addpath(genpath(toolbox));
   else
     addpath(toolbox);
   end
