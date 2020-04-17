@@ -1,19 +1,23 @@
-function failed_bug1049
-
+function test_pull1377
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% DEPENDENCY ft_prepare_sourcemodel headsurface ft_prepare_leadfield ft_freqanalysis ft_sourceanalysis
+% DEPENDENCY ft_prepare_sourcemodel headsurface ft_prepare_leadfield ft_freqanalysis ft_sourceanalysis 
 
 % this function creates a set of source-structures to be used for testing
 
 % get volume conductor model
 volname = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151/Subject01.ds/default.hdm');
+% figure out what model this is, preferably local spheres
 vol     = ft_read_headmodel(volname);
 
-% get data + sensor info
+% For EEG, singlesphere
+
+% get MEG data + sensor info
 dataname = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat');
 load(dataname);
+
+% get EEG data + channel info
 
 % create 3D grid
 cfg      = [];
