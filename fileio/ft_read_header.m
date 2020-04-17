@@ -37,10 +37,6 @@ function [hdr] = ft_read_header(filename, varargin)
 % Depending on the file format, additional header information can be
 % returned in the hdr.orig subfield.
 %
-% For NeuroOmega files, the required chantype option specifies the channel type to
-% be read. Specify 'chaninfo' as chantype to obtain a table (in hdr.chaninfo) describing
-% available channels and their chantype.
-%
 % To use an external reading function, you can specify an external function as the
 % 'headerformat' option. This function should take the filename as input argument.
 % Please check the code of this function for details, and search for BIDS_TSV as
