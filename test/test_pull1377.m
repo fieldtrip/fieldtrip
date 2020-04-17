@@ -4,32 +4,50 @@ function test_pull1377
 
 % DEPENDENCY ft_prepare_sourcemodel headsurface ft_prepare_leadfield ft_freqanalysis ft_sourceanalysis 
 
-% this function creates a set of source-structures to be used for testing
+% this function creates a set of input-structures to be used for testing source analysis steps prior to inverse solution
 
-% get volume conductor model
+%% get volume conductor model
 % for MEG, localsphere
 volname = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151/Subject01.ds/default.hdm');
-% figure out what model this is, preferably local spheres
-vol     = ft_read_headmodel(volname);
+vol_localsphere     = ft_read_headmodel(volname);
 
 % for EEG, singlesphere
+volname = dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_seg.mat'); %% is there an already segmented?
+cfg = [];
+cfg.method='singlesphere';
+vol_singlesphere = ft_prepare_headmodel(cfg, segmentedmri);
 
-% get MEG data + sensor info
+%% get MEG data + sensor info
 dataname = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat');
 load(dataname);
+datameg = data; 
+clear data
 
 % get EEG data + channel info
+% Figure out for EEG
+%dataname = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat');
+%load(dataname);
+dataeeg = data; 
+clear data
 
-% create 3D grid
+% !! create worse-case scenario, whereby order and nr of chans don't match across inputs
+% remove 2-3 random chans from both MEG and EEG raw data
+cfg=[];
+cfg.channel = randperm(length(datameg.label-3));
+datameg = ft_selectdata(cfg, datameg);
+cfg.channel = randperm(length(dataeeg.label-2));
+dataeeg = ft_selectdata(cfg, dataeeg);
+
+%% create 3D grid
 % for MEG
 cfg      = [];
-cfg.grad = data.grad;
-cfg.headmodel = vol;
+cfg.grad = datameg.grad; %% check that this has remained the same size despite sensors removed
+cfg.headmodel = vol_localsphere;
 cfg.channel = 'MEG';
 cfg.sourcemodel.resolution = 1.5;
-grid = ft_prepare_leadfield(cfg);
+gridmeg = ft_prepare_leadfield(cfg);
 
-% create 2D grid
+%% create 2D grid - is this necessary??
 [pnt, tri] = mesh_sphere(162);
 pnt   = pnt*(vol.orig.MEG_Sphere.RADIUS-1.5);
 shift = [vol.orig.MEG_Sphere.ORIGIN_X vol.orig.MEG_Sphere.ORIGIN_Y vol.orig.MEG_Sphere.ORIGIN_Z];
@@ -40,19 +58,28 @@ grid2.inside = 1:size(grid2.pnt,1);
 grid2.outside = [];
 
 cfg      = [];
-cfg.grad = data.grad;
+cfg.grad = datameg.grad;
 cfg.headmodel = vol;
 cfg.sourcemodel = grid2;
 cfg.channel = 'MEG';
 grid2 = ft_prepare_leadfield(cfg);
+%%
 
 % for EEG
+cfg      = [];
+cfg.grad = dataeeg.grad; %% .elec
+cfg.headmodel = vol_singlesphere;
+cfg.channel = 'EEG';
+cfg.sourcemodel.resolution = 1.5;
+grideeg = ft_prepare_leadfield(cfg);
 
-% load externally created leadfields
+
+%% mimic externally created leadfields
 % for MEG
 
-% for EEG
+% for EEG - not sure what this would be... likely same structure, right?
 
+%% sensor-level data
 % create timelock structure with covariance for lcmv beamforming and
 % minimumnormestimate
 % for MEG
@@ -60,9 +87,14 @@ cfg  = [];
 cfg.covariance = 'yes';
 cfg.keeptrials = 'yes';
 cfg.channel    = 'MEG';
-MEG_tlck = ft_timelockanalysis(cfg, data);
+MEG_tlck = ft_timelockanalysis(cfg, datameg);
 
 % for EEG 
+cfg  = [];
+cfg.covariance = 'yes';
+cfg.keeptrials = 'yes';
+cfg.channel    = 'MEG';
+EEG_tlck = ft_timelockanalysis(cfg, dataeeg);
 
 % create freq structure for dics beamforming and pcc beamforming
 % for MEG,
@@ -75,10 +107,27 @@ cfg.channel = 'MEG';
 MEG_freq = ft_freqanalysis(cfg, data);
 
 % for EEG
+cfg  = [];
+cfg.method = 'mtmfft';
+cfg.output = 'fourier';
+cfg.tapsmofrq = 4;
+cfg.foilim = [0 20];
+cfg.channel = 'EEG';
+EEG_freq = ft_freqanalysis(cfg, dataeeg);
+
 
 outputdir = fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/source/meg'));
 
-% inverse solutions
+%% %%%%%%%%%%%%%%%%%%%%%
+% create worse-case scenario, whereby order and nr of chans don't match across inputs
+%% %%%%%%%%%%%%%%%%%%%%%
+% sensor-level data has 2-3 less
+% now remove other labels from vol, and change the order of labels
+
+
+
+
+%% inverse solutions
 
 % do LCMV beamforming
 cfg            = [];
@@ -87,19 +136,19 @@ cfg.lcmv.keepleadfield = 'yes';
 cfg.lcmv.keepfilter    = 'yes';
 cfg.lcmv.keepcov       = 'yes';
 cfg.lcmv.lambda        = '5%';
-cfg.sourcemodel       = grid;
-cfg.headmodel  = vol;
+cfg.sourcemodel       = gridmeg;
+cfg.headmodel  = vol_localsphere;
 cfg.outputfile = fullfile(outputdir, 'ctf151_lcmv3d_avg');
-sourcelcmv3d1  = ft_sourceanalysis(cfg, tlck);
+sourcelcmv3d1  = ft_sourceanalysis(cfg, MEG_tlck);
 cfg.sourcemodel       = grid2;
 cfg.outputfile = 'ctf151_lcmv2d_avg';
 sourcelcmv2d1  = ft_sourceanalysis(cfg, MEG_tlck);
 
 cfg.rawtrial    = 'yes';
-cfg.sourcemodel        = grid;
+cfg.sourcemodel        = gridmeg;
 cfg.outputfile  = fullfile(outputdir, 'ctf151_lcmv3d_trial');
 cfg.sourcemodel.filter = sourcelcmv3d1.avg.filter;
-ft_sourceanalysis(cfg, tlck);
+ft_sourceanalysis(cfg, MEG_tlck);
 cfg.sourcemodel        = grid2;
 cfg.outputfile  = fullfile(outputdir, 'ctf151_lcmv2d_trial');
 cfg.sourcemodel.filter = sourcelcmv2d1.avg.filter;
