@@ -463,8 +463,8 @@ switch dataformat
     %chan_sel=contains({hdr.orig.ElectrodesInfo.Label},hdr.label); %matlab 2017a
 
     orig = openNSx(filename, 'channels',find(chan_sel),...
-      'duration', [(begsample-1)*hdr.skipfactor+1, endsample*hdr.skipfactor],...
-      'skipfactor', hdr.skipfactor);
+      'duration', [(begsample-1)*hdr.orig.skipfactor+1, endsample*hdr.orig.skipfactor],...
+      'skipfactor', hdr.orig.skipfactor);
 
     d_min=[orig.ElectrodesInfo.MinDigiValue];
     d_max=[orig.ElectrodesInfo.MaxDigiValue];

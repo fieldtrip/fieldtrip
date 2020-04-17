@@ -542,10 +542,7 @@ switch headerformat
     end
     
     %If no channel selected print table with available channels and chantypes
-    if strcmpi(chantype{1},'chaninfo')
-    	channelstype=chaninfo.chantype;
-      hdr.chaninfo=chaninfo;
-    elseif isempty(channels)
+    if isempty(channels)
       ft_error('FieldTip:ft_read_header:blackrock_nsx','No channel selected. Use chantype=''chaninfo'' for ft_read_header to return hdr with hdf.chaninfo\nAvailable CFG.CHANTYPEs are: %s',strjoin(unique(chaninfo.chantype)));
     end
     
@@ -558,8 +555,9 @@ switch headerformat
     hdr.chantype    = channelstype;
     hdr.chanunit    = channelsunit;
     hdr.orig        = orig;
-    hdr.skipfactor  = skipfactor;
-    
+    hdr.orig.chaninfo = chaninfo;
+    hdr.orig.skipfactor = skipfactor;
+
   case {'brainvision_vhdr', 'brainvision_seg', 'brainvision_eeg', 'brainvision_dat'}
     orig = read_brainvision_vhdr(filename);
     hdr.Fs          = orig.Fs;
