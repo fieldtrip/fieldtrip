@@ -21,8 +21,3 @@ ft_read_data(fname_nsx,'header',hdr_nsx);
 hdr_neuroomega=ft_read_header(fname_neuroomega,'chantype','micro');
 ft_read_data(fname_neuroomega,'header',hdr_neuroomega);
 ft_read_event(fname_neuroomega);
-
-%%reading table of available channels and chantypes
-hdr = ft_read_header(fname_neuroomega,'chantype','chaninfo');
-
-
