@@ -12,8 +12,8 @@ function [hdr] = ft_read_header(filename, varargin)
 %   'fallback'       = can be empty or 'biosig' (default = [])
 %   'checkmaxfilter' = boolean, whether to check that maxfilter has been correctly applied (default = true)
 %   'chanindx'       = list with channel indices in case of different sampling frequencies (only for EDF)
+%   'chantype'       = string or cell-array with strings, channel types to be read (only for NeuroOmega and BlackRock)
 %   'coordsys'       = string, 'head' or 'dewar' (default = 'head')
-%   'chantype'       = string or cell of strings, channel types to be read (NeuroOmega, BlackRock).
 %   'headerformat'   = name of a MATLAB function that takes the filename as input (default is automatic)
 %
 % This returns a header structure with the following elements
@@ -177,8 +177,12 @@ retry          = ft_getopt(varargin, 'retry', false);     % the default is not t
 chanindx       = ft_getopt(varargin, 'chanindx');         % this is used for EDF with different sampling rates
 coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
 coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0-2
-chantype       = ft_getopt(varargin, 'chantype', {});
-if ~iscell(chantype); chantype = {chantype}; end
+chantype       = ft_getopt(varargin, 'chantype', {});     % only for BlackRock and NeuroOmega
+
+% this shoudl be a cell-array with strings
+if ~iscell(chantype)
+  chantype = {chantype};
+end
 
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
@@ -498,7 +502,7 @@ switch headerformat
     end
     
     orig = openNSx(filename, 'noread');
-    channelstype=regexp({orig.ElectrodesInfo.Label},'[A-Za-z]+','match','once');  
+    channelstype=regexp({orig.ElectrodesInfo.Label},'[A-Za-z]+','match','once');
     chaninfo=table({orig.ElectrodesInfo.ElectrodeID}',...
       transpose(deblank({orig.ElectrodesInfo.Label})),[channelstype]',...
       {orig.ElectrodesInfo.ConnectorBank}',{orig.ElectrodesInfo.ConnectorPin}',...
@@ -557,7 +561,7 @@ switch headerformat
     hdr.orig        = orig;
     hdr.orig.chaninfo = chaninfo;
     hdr.orig.skipfactor = skipfactor;
-
+    
   case {'brainvision_vhdr', 'brainvision_seg', 'brainvision_eeg', 'brainvision_dat'}
     orig = read_brainvision_vhdr(filename);
     hdr.Fs          = orig.Fs;
@@ -2030,21 +2034,21 @@ switch headerformat
     
     %defining default if chantype is missing
     if isempty(chantype) || strcmpi(chantype{1},'chaninfo') || strcmpi(chantype{1},'info')
-        chantype={'micro'};
+      chantype={'micro'};
     end
     
     chantype_dict={'micro','macro',     'analog', 'micro_lfp','macro_lfp','micro_hp','add_analog','emg', 'eeg';...
-                   'CRAW', 'CMacro_RAW','CANALOG', 'CLFP',     'CMacro_LFP',   'CSPK' ,'CADD_ANALOG','CEMG', 'CEEG'}; 
+      'CRAW', 'CMacro_RAW','CANALOG', 'CLFP',     'CMacro_LFP',   'CSPK' ,'CADD_ANALOG','CEMG', 'CEEG'};
     neuroomega_param={'_KHz','_KHz_Orig','_Gain','_BitResolution','_TimeBegin','_TimeEnd'};
-
+    
     %identifying channels to be loaded
     orig = matfile(filename);
     fields_orig=who(orig);
-
+    
     %is_param=endsWith(fields_orig,neuroomega_param); %Matlab 2017a
     is_param=zeros(length(fields_orig),1);
     for i=1:length(neuroomega_param)
-        is_param = is_param | ~cellfun('isempty',regexp(fields_orig,strcat(neuroomega_param(i),'$'),'start'));
+      is_param = is_param | ~cellfun('isempty',regexp(fields_orig,strcat(neuroomega_param(i),'$'),'start'));
     end
     
     %creating channel info table
@@ -2080,11 +2084,11 @@ switch headerformat
         chan_t=[chan_t;{ch,orig.([ch,'_KHz'])*1000, orig.([ch,'_TimeBegin']), ch_whos.size(2)}];
       end
       chan_t.Properties.VariableNames={'channel' 'Fs' 'T0' 'nSamples'};
-
+      
       Fs=unique(chan_t.Fs);
       T0=unique(chan_t.T0);
       nSamples=unique(chan_t.nSamples);
-
+      
       if length(Fs)>1
         chan_t %; printing table for user
         ft_error('inconsistent channels with different sampling rates for %s',filename);
@@ -2100,7 +2104,7 @@ switch headerformat
         nSamples=min(nSamples);
       end
     else %If no channel selected
-      Fs=nan; nSamples=nan; channelstype=chaninfo.chantype; 
+      Fs=nan; nSamples=nan; channelstype=chaninfo.chantype;
     end
     
     % building header
