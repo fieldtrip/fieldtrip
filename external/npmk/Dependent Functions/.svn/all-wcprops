@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svnroot/npmk/!svn/ver/51/Dependent%20Functions
+END
+parseCommand.m
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svnroot/npmk/!svn/ver/53/Dependent%20Functions/parseCommand.m
+END
+getFolder.m
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svnroot/npmk/!svn/ver/53/Dependent%20Functions/getFolder.m
+END
+getSettingFileFullPath.m
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svnroot/npmk/!svn/ver/53/Dependent%20Functions/getSettingFileFullPath.m
+END
+getFile.m
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svnroot/npmk/!svn/ver/53/Dependent%20Functions/getFile.m
+END
+sortNEV.m
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svnroot/npmk/!svn/ver/53/Dependent%20Functions/sortNEV.m
+END
