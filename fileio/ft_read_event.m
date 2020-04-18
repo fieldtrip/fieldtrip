@@ -1836,27 +1836,27 @@ switch eventformat
     event = [];
     
   case 'neuroomega_mat'
-
+    
     hdr = ft_read_header(filename, 'headerformat', eventformat);
     hdr_orig = hdr.orig.orig;
     fields_orig=hdr.orig.fields; %getting digital event channels
-
+    
     % extracting time begin
     if ismember('CANALOG_IN_1_TimeBegin',fields_orig)
       TimeBegin = hdr_orig.('CANALOG_IN_1_TimeBegin');
     else
       ft_error('CANALOG_IN_1_TimeBegin required to load event');
     end
-
+    
     fields_orig=fields_orig(startsWith(fields_orig,'CDIG_IN')); %compat/matlablt2016b/startsWidth.m
-
+    
     if isempty(fields_orig)
       ft_error('No NeuroOmega events in file %s',filename);
     end
-
+    
     rx=regexp(fields_orig,'^CDIG_IN_{1}(\d+)[a-zA-Z_]*','tokens');
     dig_channels=unique(cellfun(@(x) str2num(x{1}), [rx{:}]));
-
+    
     if ~ismember(detectflank,{'up','down','both'})
       ft_error('incorrect specification of cfg.detectflank. Use up, down or both');
     end
