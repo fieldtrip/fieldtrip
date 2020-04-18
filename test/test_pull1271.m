@@ -13,11 +13,11 @@ function test_pull1271
 fname_nsx         = dccnpath('/home/common/matlab/fieldtrip/data/test/origina//eeg/blackrock/test_data_blackrock.ns2');
 fname_neuroomega  = dccnpath('/home/common/matlab/fieldtrip/data/test/origina//eeg/neuroomega/LT1D0.000F0000.mat');
 
-%%loading blackrock header and data
+%% loading blackrock header and data
 hdr_nsx=ft_read_header(fname_nsx);
 ft_read_data(fname_nsx,'header',hdr_nsx);
 
-%%loading neuroomega header, events and data
+%% loading neuroomega header, events and data
 hdr_neuroomega=ft_read_header(fname_neuroomega,'chantype','micro');
 ft_read_data(fname_neuroomega,'header',hdr_neuroomega);
 ft_read_event(fname_neuroomega);
