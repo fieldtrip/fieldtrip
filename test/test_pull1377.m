@@ -7,11 +7,13 @@ function test_pull1377
 % this function creates a set of input-structures to be used for testing source analysis steps prior to inverse solution
 
 %% get volume conductor model
-% for MEG, localsphere
-volname = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151/Subject01.ds/default.hdm');
-vol_localsphere     = ft_read_headmodel(volname);
 
-% for EEG, singlesphere
+% for MEG, localsphere
+load('/home/common/matlab/fieldtrip/data/test/latest/vol/Subject01vol_localspheres.mat')
+vol_localsphere     = vol;
+clear vol
+
+% for EEG, singlesphere?????
 volname = dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_seg.mat'); %% is there an already segmented?
 cfg = [];
 cfg.method='singlesphere';
@@ -23,20 +25,26 @@ load(dataname);
 datameg = data; 
 clear data
 
+%% get MEG data + sensor info
+dataname = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat');
+load(dataname);
+datameg = data; 
+clear data
+
 % get EEG data + channel info
-% Figure out for EEG
-%dataname = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat');
-%load(dataname);
+dataname = '/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/preproc_brainvision.mat';
+load(dataname);
 dataeeg = data; 
 clear data
 
 % !! create worse-case scenario, whereby order and nr of chans don't match across inputs
 % remove 2-3 random chans from both MEG and EEG raw data
 cfg=[];
-cfg.channel = randperm(length(datameg.label-3));
+cfg.channel = randperm(length(datameg.label)-3);
 datameg = ft_selectdata(cfg, datameg);
-cfg.channel = randperm(length(dataeeg.label-2));
+cfg.channel = randperm(length(dataeeg.label)-2);
 dataeeg = ft_selectdata(cfg, dataeeg);
+
 
 %% create 3D grid
 % for MEG
@@ -47,7 +55,7 @@ cfg.channel = 'MEG';
 cfg.sourcemodel.resolution = 1.5;
 gridmeg = ft_prepare_leadfield(cfg);
 
-%% create 2D grid - is this necessary??
+%% create 2D grid - is this necessary?? Not working
 [pnt, tri] = mesh_sphere(162);
 pnt   = pnt*(vol.orig.MEG_Sphere.RADIUS-1.5);
 shift = [vol.orig.MEG_Sphere.ORIGIN_X vol.orig.MEG_Sphere.ORIGIN_Y vol.orig.MEG_Sphere.ORIGIN_Z];
