@@ -151,14 +151,6 @@ EEG_freq = ft_freqanalysis(cfg, dataeeg);
 
 outputdir = fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/source/meg'));
 
-%% %%%%%%%%%%%%%%%%%%%%%
-% create worse-case scenario, whereby order and nr of chans don't match across inputs
-%% %%%%%%%%%%%%%%%%%%%%%
-% sensor-level data has 2-3 less
-% now remove other labels from vol, and change the order of labels
-
-
-
 
 %% inverse solutions
 
@@ -276,6 +268,17 @@ cfg.frequency = 10;
 %cfg.headmodel = []; % vol_localsphere;
 cfg.sourcemodel = ext_leadfield;
 sourcedics3d1 = ft_sourceanalysis(cfg, MEG_freq);
+
+
+%% %%%%%%%%%%%%%%%%%%%%%
+% create worse-case scenario, whereby order and nr of chans don't match across inputs
+%% %%%%%%%%%%%%%%%%%%%%%
+% sensor-level data has 2-3 less
+% now remove other labels from vol (and artifically change the order of labels)
+cfg=[];
+cfg.channel = randperm(length(vol_localsphere.label)-3);
+vol_localsphere = ft_selectdata(cfg, vol_localsphere);
+%% Inverse solutions break with this vol - maybe I'm doing something wrong
 
 %%
 % do dipolefit - NOT RUNNING
