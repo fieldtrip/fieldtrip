@@ -32,17 +32,21 @@ datameg = data;
 clear data
 
 % get EEG data + channel info
-dataset = '/home/common/matlab/fieldtrip/data/ftp/tutorial/preprocessing_erp/s04.eeg';
-hdr        = ft_read_header(dataset);
-event      = ft_read_event(dataset);
+cfg=[];
+cfg.dataset = '/home/common/matlab/fieldtrip/data/ftp/tutorial/preprocessing_erp/s04.eeg';
+hdr        = ft_read_header(cfg.dataset);
+event      = ft_read_event(cfg.dataset);
 EVsample   = [event.sample]';
 EVvalue    = {event.value}';
+Word = find(strcmp('S141', EVvalue)==1);
 
-begsample = EVsample - 100;
-endsample = EVsample + 500;
+begsample = EVsample(Word) - 10;
+endsample = EVsample(Word) + 50;
 offset = -100*ones(size(endsample));
-trl = [begsample endsample offset];
-dataeeg = ft_definetrial(cfg);
+cfg.trl = [begsample endsample offset];
+
+dataeeg = ft_preprocessing(cfg);
+
 
 % !! create worse-case scenario, whereby order and nr of chans don't match across inputs
 % remove 2-3 random chans from both MEG and EEG raw data
