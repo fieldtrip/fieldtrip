@@ -84,6 +84,21 @@ grideeg = ft_prepare_leadfield(cfg);
 
 %% mimic externally created leadfields
 % for MEG
+leadf = randn(442953, 151);
+ext_leadfield.unit  = 'cm';
+ext_leadfield.leadfielddimord = '{pos}_chan_ori';
+
+% the leadfield
+Ndip = size(leadf,1)/3;
+ext_leadfield.leadfield = cell(1,Ndip);
+
+for d =1:Ndip
+    ext_leadfield.leadfield{d} = [A(d,:); A(d+Ndip,:); A(d+2*Ndip,:)]';
+end
+
+ext_leadfield.inside = ones(size(ext_leadfield.leadfield));
+ext_leadfield.pos = randn(length(ext_leadfield.leadfield),3);
+
 
 % for EEG - not sure what this would be... likely same structure, right?
 
