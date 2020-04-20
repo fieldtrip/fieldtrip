@@ -14,16 +14,14 @@ vol_localsphere     = vol;
 clear vol
 
 % for EEG, singlesphere?????
-volname = dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_seg.mat'); %% is there an already segmented?
-cfg = [];
-cfg.method='singlesphere';
-vol_singlesphere = ft_prepare_headmodel(cfg, segmentedmri);
+%volname = dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_seg.mat'); %% is there an already segmented?
+%cfg = [];
+%cfg.method='singlesphere';
+%vol_singlesphere = ft_prepare_headmodel(cfg, segmentedmri);
 
-%% get MEG data + sensor info
-dataname = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat');
-load(dataname);
-datameg = data; 
-clear data
+%%
+%vol_singleshell = load('/home/common/matlab/fieldtrip/template/headmodel/standard_singleshell.mat');
+vol_bem = load('/home/common/matlab/fieldtrip/template/headmodel/standard_bem.mat');
 
 %% get MEG data + sensor info
 dataname = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat');
@@ -85,8 +83,11 @@ grid2 = ft_prepare_leadfield(cfg);
 %%
 
 % for EEG
+elecname = '/home/common/matlab/fieldtrip/template/electrode/standard_1020.elc';
+elec = ft_read_sens(elecname, 'senstype', 'eeg');
+
 cfg      = [];
-cfg.grad = dataeeg.grad; %% .elec
+cfg.grad = elec;
 cfg.headmodel = vol_singlesphere;
 cfg.channel = 'EEG';
 cfg.sourcemodel.resolution = 1.5;
@@ -104,7 +105,7 @@ Ndip = size(leadf,1)/3;
 ext_leadfield.leadfield = cell(1,Ndip);
 
 for d =1:Ndip
-    ext_leadfield.leadfield{d} = [A(d,:); A(d+Ndip,:); A(d+2*Ndip,:)]';
+    ext_leadfield.leadfield{d} = [leadf(d,:); leadf(d+Ndip,:); leadf(d+2*Ndip,:)]';
 end
 
 ext_leadfield.inside = ones(size(ext_leadfield.leadfield));
@@ -138,7 +139,7 @@ cfg.output = 'fourier';
 cfg.tapsmofrq = 4;
 cfg.foilim = [0 20];
 cfg.channel = 'MEG';
-MEG_freq = ft_freqanalysis(cfg, data);
+MEG_freq = ft_freqanalysis(cfg, datameg);
 
 % for EEG
 cfg  = [];
