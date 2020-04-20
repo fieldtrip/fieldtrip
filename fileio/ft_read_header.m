@@ -526,10 +526,9 @@ switch headerformat
         ft_error('Use : to specify skipfactor, e.g. analog:10')
       end
       chan_sel=~cellfun(@isempty,regexp(orig_label,chantype{c}));
-      %chan_sel=strncmpi(orig_label,chantype{c},length(chantype{c}));
       if sum(chan_sel)==0
         if ~strcmp(chantype{c},'chaninfo')
-          ft_error('FieldTip:ft_read_header:blackrock_nsx','unknown chantype %s, available channels are %s',chantype{c},strjoin(orig_label));
+          ft_error('unknown chantype %s, available channels are %s',chantype{c},strjoin(orig_label));
         end
       else
         channels=[channels, orig_label(chan_sel)];
@@ -545,9 +544,9 @@ switch headerformat
       ft_error('inconsistent skip factors across channels');
     end
     
-    %If no channel selected print table with available channels and chantypes
+    %If no channel selected issue error specifying available chantypes
     if isempty(channels)
-      ft_error('FieldTip:ft_read_header:blackrock_nsx','No channel selected. Use chantype=''chaninfo'' for ft_read_header to return hdr with hdf.chaninfo\nAvailable CFG.CHANTYPEs are: %s',strjoin(unique(chaninfo.chantype)));
+      ft_error('No channel selected. Availabe chantypes are: %s',strjoin(unique(chaninfo.chantype)));
     end
     
     hdr.Fs          = orig.MetaTags.SamplingFreq/skipfactor;

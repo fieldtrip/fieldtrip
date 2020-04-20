@@ -1845,7 +1845,7 @@ switch eventformat
     if ismember('CANALOG_IN_1_TimeBegin',fields_orig)
       TimeBegin = hdr_orig.('CANALOG_IN_1_TimeBegin');
     else
-      ft_error('CANALOG_IN_1_TimeBegin required to load event');
+      ft_error('CANALOG_IN_1_TimeBegin required to load events');
     end
     
     fields_orig=fields_orig(startsWith(fields_orig,'CDIG_IN')); %compat/matlablt2016b/startsWidth.m
@@ -1858,7 +1858,7 @@ switch eventformat
     dig_channels=unique(cellfun(@(x) str2num(x{1}), [rx{:}]));
     
     if ~ismember(detectflank,{'up','down','both'})
-      ft_error('incorrect specification of cfg.detectflank. Use up, down or both');
+      ft_error('incorrect specification of detectflank. Use up, down or both');
     end
     if ismember(detectflank,{'up','both'})
       for i=1:length(dig_channels)
@@ -2224,7 +2224,7 @@ switch eventformat
     
     % ensure that the filename contains a full path specification,
     % otherwise the low-level function fails
-    [p,f,e] = fileparts(filename);
+    [p,~,~] = fileparts(filename);
     if ~isempty(p)
       % this is OK
     elseif isempty(p)
@@ -2235,11 +2235,6 @@ switch eventformat
     % 'nosave' prevents the automatic conversion of
     % the .nev file as a .mat file
     orig = openNEV(filename, 'noread', 'nosave');
-    
-    if orig.MetaTags.SampleRes ~= 30000
-      error('sampling rate is different from 30 kHz');
-      % FIXME: why would this be a problem?
-    end
     
     fs             = orig.MetaTags.SampleRes; % sampling rate
     timestamps     = orig.Data.SerialDigitalIO.TimeStamp;
