@@ -236,7 +236,7 @@ ft_sourceanalysis(cfg, MEG_freq);
 %ft_sourceanalysis(cfg, MEG_freq);
 
 
-% do PCC - NOT TESTED
+% do PCC 
 cfg = [];
 cfg.method = 'pcc';
 cfg.pcc.keepfilter    = 'yes';
@@ -245,14 +245,39 @@ cfg.pcc.keepcsd       = 'yes';
 cfg.pcc.keepmom       = 'yes';
 cfg.pcc.lambda        = '5%';
 cfg.frequency = 10;
-cfg.headmodel = vol;
-cfg.sourcemodel = grid;
-cfg.outputfile = fullfile(outputdir, 'ctf151_pcc3d');
-ft_sourceanalysis(cfg, freq);
-cfg.sourcemodel = grid2;
-cfg.outputfile = fullfile(outputdir, 'ctf151_pcc2d');
+cfg.headmodel = vol_localsphere;
+cfg.sourcemodel = gridmeg;
+%cfg.outputfile = fullfile(outputdir, 'ctf151_pcc3d');
 ft_sourceanalysis(cfg, MEG_freq);
 
+%% %%%%%%%%%%%%%%%%%%%%%%
+% Previous ones work, what about externally generated leadfield:
+%% %%%%%%%%%%%%%%%%%%%%%%
+% Works if cfg.headmodel is provided
+cfg = [];
+cfg.method = 'dics';
+cfg.dics.keepfilter    = 'yes';
+cfg.dics.keepleadfield = 'yes';
+cfg.dics.keepcsd       = 'yes';
+cfg.dics.lambda        = '5%';
+cfg.frequency = 10;
+cfg.headmodel = vol_localsphere;
+cfg.sourcemodel = ext_leadfield;
+sourcedics3d1 = ft_sourceanalysis(cfg, MEG_freq);
+
+% Does NOT work if cfg.headmodel is missing
+cfg = [];
+cfg.method = 'dics';
+cfg.dics.keepfilter    = 'yes';
+cfg.dics.keepleadfield = 'yes';
+cfg.dics.keepcsd       = 'yes';
+cfg.dics.lambda        = '5%';
+cfg.frequency = 10;
+%cfg.headmodel = []; % vol_localsphere;
+cfg.sourcemodel = ext_leadfield;
+sourcedics3d1 = ft_sourceanalysis(cfg, MEG_freq);
+
+%%
 % do dipolefit - NOT RUNNING
 cfg = [];
 cfg.numdipoles    = 1;                              %number of expected sources
