@@ -39,7 +39,7 @@ EVvalue    = {event.value}';
 Word = find(strcmp('S141', EVvalue)==1);
 
 begsample = EVsample(Word) - 10;
-endsample = EVsample(Word) + 50;
+endsample = EVsample(Word) + 500;
 offset = -100*ones(size(endsample));
 cfg.trl = [begsample endsample offset];
 
@@ -126,9 +126,8 @@ MEG_tlck = ft_timelockanalysis(cfg, datameg);
 
 % for EEG 
 cfg  = [];
-%cfg.covariance = 'yes';
+cfg.covariance = 'yes';
 cfg.keeptrials = 'yes';
-cfg.channel    = 'EEG';
 EEG_tlck = ft_timelockanalysis(cfg, dataeeg);
 
 % create freq structure for dics beamforming and pcc beamforming
@@ -147,7 +146,6 @@ cfg.method = 'mtmfft';
 cfg.output = 'fourier';
 cfg.tapsmofrq = 4;
 cfg.foilim = [0 20];
-cfg.channel = 'EEG';
 EEG_freq = ft_freqanalysis(cfg, dataeeg);
 
 
@@ -173,45 +171,43 @@ cfg.lcmv.keepcov       = 'yes';
 cfg.lcmv.lambda        = '5%';
 cfg.sourcemodel       = gridmeg;
 cfg.headmodel  = vol_localsphere;
-cfg.outputfile = fullfile(outputdir, 'ctf151_lcmv3d_avg');
 sourcelcmv3d1  = ft_sourceanalysis(cfg, MEG_tlck);
-cfg.sourcemodel       = grid2;
-cfg.outputfile = 'ctf151_lcmv2d_avg';
-sourcelcmv2d1  = ft_sourceanalysis(cfg, MEG_tlck);
+%cfg.sourcemodel       = grid2;
+%cfg.outputfile = 'ctf151_lcmv2d_avg';
+%sourcelcmv2d1  = ft_sourceanalysis(cfg, MEG_tlck);
 
 cfg.rawtrial    = 'yes';
 cfg.sourcemodel        = gridmeg;
-cfg.outputfile  = fullfile(outputdir, 'ctf151_lcmv3d_trial');
+%cfg.outputfile  = fullfile(outputdir, 'ctf151_lcmv3d_trial');
 cfg.sourcemodel.filter = sourcelcmv3d1.avg.filter;
 ft_sourceanalysis(cfg, MEG_tlck);
-cfg.sourcemodel        = grid2;
-cfg.outputfile  = fullfile(outputdir, 'ctf151_lcmv2d_trial');
-cfg.sourcemodel.filter = sourcelcmv2d1.avg.filter;
-ft_sourceanalysis(cfg, MEG_tlck);
+%cfg.sourcemodel        = grid2;
+%cfg.outputfile  = fullfile(outputdir, 'ctf151_lcmv2d_trial');
+%cfg.sourcemodel.filter = sourcelcmv2d1.avg.filter;
+%ft_sourceanalysis(cfg, MEG_tlck);
 
-% do MNE
+% do MNE 
 cfg = [];
 cfg.method   = 'mne';
 cfg.mne.keepleadfield = 'yes';
 cfg.mne.keepfilter = 'yes';
 cfg.mne.lambda     = 1e4;
-cfg.headmodel = vol;
-cfg.sourcemodel = grid;
-cfg.outputfile = fullfile(outputdir, 'ctf151_mne3d');
+cfg.headmodel = vol_localsphere;
+cfg.sourcemodel = gridmeg;
 sourcemne3d1 = ft_sourceanalysis(cfg, tlck);
-cfg.sourcemodel = grid2;
-cfg.outputfile = fullfile(outputdir, 'ctf151_mne2d');
-sourcemne2d1 = ft_sourceanalysis(cfg, MEG_tlck);
+%cfg.sourcemodel = grid2;
+%cfg.outputfile = fullfile(outputdir, 'ctf151_mne2d');
+%sourcemne2d1 = ft_sourceanalysis(cfg, MEG_tlck);
 
-cfg.rawtrial    = 'yes';
-cfg.sourcemodel        = grid;
-cfg.sourcemodel.filter = sourcemne3d1.avg.filter;
-cfg.outputfile  = fullfile(outputdir, 'ctf151_mne3d_trial');
-ft_sourceanalysis(cfg, tlck);
-cfg.sourcemodel        = grid2;
-cfg.sourcemodel.filter = sourcemne2d1.avg.filter;
-cfg.outputfile  = fullfile(outputdir, 'ctf151_mne2d_trial');
-ft_sourceanalysis(cfg, MEG_tlck);
+%cfg.rawtrial    = 'yes';
+%cfg.sourcemodel        = grid;
+%cfg.sourcemodel.filter = sourcemne3d1.avg.filter;
+%cfg.outputfile  = fullfile(outputdir, 'ctf151_mne3d_trial');
+%ft_sourceanalysis(cfg, tlck);
+%cfg.sourcemodel        = grid2;
+%cfg.sourcemodel.filter = sourcemne2d1.avg.filter;
+%cfg.outputfile  = fullfile(outputdir, 'ctf151_mne2d_trial');
+%ft_sourceanalysis(cfg, MEG_tlck);
 
 % do DICS
 cfg = [];
@@ -221,26 +217,26 @@ cfg.dics.keepleadfield = 'yes';
 cfg.dics.keepcsd       = 'yes';
 cfg.dics.lambda        = '5%';
 cfg.frequency = 10;
-cfg.headmodel = vol;
-cfg.sourcemodel = grid;
-cfg.outputfile = fullfile(outputdir, 'ctf151_dics3d_avg');
+cfg.headmodel = vol_localsphere;
+cfg.sourcemodel = gridmeg;
+%cfg.outputfile = fullfile(outputdir, 'ctf151_dics3d_avg');
 sourcedics3d1 = ft_sourceanalysis(cfg, MEG_freq);
-cfg.sourcemodel = grid2;
-cfg.outputfile = fullfile(outputdir, 'ctf151_dics2d_avg');
-sourcedics2d1 = ft_sourceanalysis(cfg, MEG_freq);
+%cfg.sourcemodel = grid2;
+%cfg.outputfile = fullfile(outputdir, 'ctf151_dics2d_avg');
+%sourcedics2d1 = ft_sourceanalysis(cfg, MEG_freq);
 
 cfg.rawtrial    = 'yes';
-cfg.sourcemodel        = grid;
+cfg.sourcemodel        = gridmeg;
 cfg.sourcemodel.filter = sourcedics3d1.avg.filter;
-cfg.outputfile  = fullfile(outputdir, 'ctf151_dics3d_trial');
+%cfg.outputfile  = fullfile(outputdir, 'ctf151_dics3d_trial');
 ft_sourceanalysis(cfg, MEG_freq);
-cfg.sourcemodel        = grid2;
-cfg.sourcemodel.filter = sourcedics2d1.avg.filter;
-cfg.outputfile  = fullfile(outputdir, 'ctf151_dics2d_trial');
-ft_sourceanalysis(cfg, MEG_freq);
+%cfg.sourcemodel        = grid2;
+%cfg.sourcemodel.filter = sourcedics2d1.avg.filter;
+%cfg.outputfile  = fullfile(outputdir, 'ctf151_dics2d_trial');
+%ft_sourceanalysis(cfg, MEG_freq);
 
 
-% do PCC
+% do PCC - NOT TESTED
 cfg = [];
 cfg.method = 'pcc';
 cfg.pcc.keepfilter    = 'yes';
@@ -257,17 +253,17 @@ cfg.sourcemodel = grid2;
 cfg.outputfile = fullfile(outputdir, 'ctf151_pcc2d');
 ft_sourceanalysis(cfg, MEG_freq);
 
-% do dipolefit
-% for MEG
+% do dipolefit - NOT RUNNING
 cfg = [];
 cfg.numdipoles    = 1;                              %number of expected sources
-cfg.headmodel     = headmodelr;                     %the head model
-cfg.grid          = leadfield;                      %the (precomputed) leadfield
+cfg.headmodel     = vol_localsphere;                     %the head model
+cfg.grid          = gridmeg;                      %the (precomputed) leadfield
 cfg.nonlinear     = 'no';                           %only dipole scan
-cfg.grad          = grad;                           %the sensor model
+cfg.grad          = MEG_tlck.grad;                           %the sensor model
 cfg.latency       = 0.025;                          %the latency of interest
 %dipfit_meg    = ft_dipolefitting(cfg,MEG_avg);
-ft_dipolefitting(cfg,MEG_tlck); % we do not want to save the output I guess
+dipfit_meg = ft_dipolefitting(cfg,MEG_tlck); % what should this input be?
+
 
 % for EEG
 cfg = [];
