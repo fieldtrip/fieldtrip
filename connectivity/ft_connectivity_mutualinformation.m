@@ -303,15 +303,47 @@ switch method
           target_shifted = bsxfun(@minus,target_shifted,mean(target_shifted,1));
         end
         
-        for p = 1:numel(refindx)
-          if ~isequal(tra,eye(size(tra,1)))
-            tmpsource  = target_shifted(:,tra(refindx(p),:));
-            for k = setdiff(1:size(tra,1),refindx(p))
-              output(p,k,m) = cmi_ggg(target(:,tra(k,:)),tmpsource,target_shifted(:,tra(k,:),:), true, true);
+        if isequal(tra, eye(size(tra,1)))
+          % compute the covariance between all channels, and their shifted
+          % versions only once, and then reorganize into a (Ntarget x
+          % Nref) x 3 x 3 matrix
+          C = transpose([target, target_shifted])*[target, target_shifted];
+          C = C./(size(target,1)-1); 
+          
+          nt   = size(target,2);
+          ns   = numel(refindx);
+          
+          cT  = diag(C(1:nt,1:nt)); % variance of the target signals
+          cTs = diag(C(nt+(1:nt),nt+(1:nt))); % variance of the shifted target signals
+          cTTs = diag(C(1:nt, nt+(1:nt))); % covariance between target and shifted target signals
+          Cxyz = zeros(ns*nt,3,3);
+          for p = 1:numel(refindx)
+            ixp = find(tra(refindx(p),:));
+            ix  = (p-1)*nt+(1:nt);
+            
+            Cxyz(ix,1,1) = cT;
+            Cxyz(ix,2,1) = C(1:nt, nt+ixp);
+            Cxyz(ix,3,1) = cTTs;
+            Cxyz(ix,1,2) = Cxyz(ix,2,1);
+            Cxyz(ix,2,2) = cTs(ixp);
+            Cxyz(ix,3,2) = C(nt+(1:nt), nt+ixp);
+            Cxyz(ix,1,3) = Cxyz(ix,3,1);
+            Cxyz(ix,2,3) = Cxyz(ix,3,2);
+            Cxyz(ix,3,3) = cTs;   
+          end
+          I = cov2cmi_ggg(Cxyz, size(target,1), true);
+          output(:,:,m) = reshape(I,[],ns).';
+        else
+          for p = 1:numel(refindx)
+            if ~isequal(tra,eye(size(tra,1)))
+              tmpsource  = target_shifted(:,tra(refindx(p),:));
+              for k = setdiff(1:size(tra,1),refindx(p))
+                output(p,k,m) = cmi_ggg(target(:,tra(k,:)),tmpsource,target_shifted(:,tra(k,:),:), true, true);
+              end
+            else
+              tmpsource = target_shifted(:,tra(refindx(p),:),:);
+              output(p,:,m) = cmi_ggg_vec(target,tmpsource,target_shifted, true, true);
             end
-          else
-            tmpsource = target_shifted(:,tra(refindx(p),:),:);
-            output(p,:,m) = cmi_ggg_vec(target,tmpsource,target_shifted, true, true);
           end
         end
       elseif conditional && ~isempty(featureindx)
@@ -390,10 +422,9 @@ switch method
             % compute the three information components, exclude the source
             % and feature 'channels' to avoid potential numerical issues
             sel = tra(refindx,:)==0&tra(featureindx,:)==0;
-            
-            I1 = cmi_ggg_vec(source,           feature, target_shifted(:,sel), true, true);
-            I2 = cmi_ggg_vec(tmptarget(:,sel), feature, target_shifted(:,sel), true, true);
-            I3 = cmi_ggg_vec(cat(3, tmptarget(:,sel), repmat(source, 1, sum(sel))), feature, target_shifted(:,sel), true, true);
+            I1  = cmi_ggg_vec(source,           feature, target_shifted(:,sel), true, true);
+            I2  = cmi_ggg_vec(tmptarget(:,sel), feature, target_shifted(:,sel), true, true);
+            I3  = cmi_ggg_vec(cat(3, tmptarget(:,sel), repmat(source, 1, sum(sel))), feature, target_shifted(:,sel), true, true);
             output(1,sel,mm,m) = I1+I2-I3; % equation 4 in Robin Ince's scientific reports paper.
           end
         end
@@ -477,3 +508,48 @@ if numel(refindx)==1 && ~(~conditional && ~isempty(featureindx))
   siz    = [size(output) 1];
   output = reshape(output,[siz(2:end)]);
 end
+
+
+function I = cov2cmi_ggg(Cxyz, N, biascorrect)
+
+% subfunction that computes mutual information, conditioned on a third
+% variable.
+
+% submatrices of joint covariance
+Cz  = Cxyz(:,3, 3);
+Cyz = Cxyz(:,[2 3], [2 3]);
+Cxz = Cxyz(:,[1 3], [1 3]);
+
+chCz   = vecchol(Cz);
+chCxz  = vecchol(Cxz);
+chCyz  = real(vecchol(Cyz));
+chCxyz = real(vecchol(Cxyz));
+
+% entropies in nats
+% normalisations cancel for cmi
+HZ   = sum(log(vecdiag(chCz)),  2); % + 0.5*Nvarz*log(2*pi*exp(1));
+HXZ  = sum(log(vecdiag(chCxz)), 2); % + 0.5*(Nvarx+Nvarz)*log(2*pi*exp(1));
+HYZ  = sum(log(vecdiag(chCyz)), 2); % + 0.5*(Nvary+Nvarz)*log(2*pi*exp(1));
+HXYZ = sum(log(vecdiag(chCxyz)),2); % + 0.5*(Nvarx+Nvary+Nvarz)*log(2*pi*exp(1));
+
+ln2 = log(2);
+if biascorrect
+    psiterms = psi((N - (1:3))/2) / 2;
+    dterm = (ln2 - log(N-1)) / 2;
+    HZ   = (HZ   - dterm    - sum(psiterms(1)));
+    HXZ  = (HXZ  - 2*dterm  - sum(psiterms(1:2)));
+    HYZ  = (HYZ  - 2*dterm  - sum(psiterms(1:2)));
+    HXYZ = (HXYZ - 3*dterm  - sum(psiterms));
+end
+
+% convert to bits
+I = (HXZ + HYZ - HXYZ - HZ) / ln2;
+
+function out = vecdiag(in)
+
+n = size(in,2);
+out = zeros(size(in,1),n);
+for k = 1:n
+  out(:,k) = in(:,k,k);
+end
+

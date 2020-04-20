@@ -567,7 +567,7 @@ elseif hasrpt && dojack && ~ismember(cfg.method, {'wpli','wpli_debiased','ppc','
     clear sumdat;
   end
   hasjack = 1;
-elseif hasrpt && ~ismember(cfg.method, {'wpli','wpli_debiased','ppc','wppc','powcorr_ortho','mi'})% || needrpt)
+elseif hasrpt && ~ismember(cfg.method, {'wpli','wpli_debiased','ppc','wppc','powcorr_ortho','mi','di','dfi'})% || needrpt)
   % create dof variable
   if isfield(data, 'dof')
     dof = data.dof;
