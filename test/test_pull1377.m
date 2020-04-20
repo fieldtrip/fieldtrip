@@ -32,10 +32,17 @@ datameg = data;
 clear data
 
 % get EEG data + channel info
-dataname = '/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/preproc_brainvision.mat';
-load(dataname);
-dataeeg = data; 
-clear data
+dataset = '/home/common/matlab/fieldtrip/data/ftp/tutorial/preprocessing_erp/s04.eeg';
+hdr        = ft_read_header(dataset);
+event      = ft_read_event(dataset);
+EVsample   = [event.sample]';
+EVvalue    = {event.value}';
+
+begsample = EVsample - 100;
+endsample = EVsample + 500;
+offset = -100*ones(size(endsample));
+trl = [begsample endsample offset];
+dataeeg = ft_definetrial(cfg);
 
 % !! create worse-case scenario, whereby order and nr of chans don't match across inputs
 % remove 2-3 random chans from both MEG and EEG raw data
@@ -114,9 +121,9 @@ MEG_tlck = ft_timelockanalysis(cfg, datameg);
 
 % for EEG 
 cfg  = [];
-cfg.covariance = 'yes';
+%cfg.covariance = 'yes';
 cfg.keeptrials = 'yes';
-cfg.channel    = 'MEG';
+cfg.channel    = 'EEG';
 EEG_tlck = ft_timelockanalysis(cfg, dataeeg);
 
 % create freq structure for dics beamforming and pcc beamforming
