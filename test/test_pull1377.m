@@ -61,7 +61,7 @@ cfg      = [];
 cfg.grad = datameg.grad; %% check that this has remained the same size despite sensors removed
 cfg.headmodel = vol_localsphere;
 cfg.channel = 'MEG';
-cfg.sourcemodel.resolution = 1.5;
+cfg.resolution = 1.5;
 gridmeg = ft_prepare_leadfield(cfg);
 
 %% create 2D grid - is this necessary?? Not working
