@@ -280,17 +280,23 @@ cfg.channel = randperm(length(vol_localsphere.label)-3);
 vol_localsphere = ft_selectdata(cfg, vol_localsphere);
 %% Inverse solutions break with this vol - maybe I'm doing something wrong
 
-%%
-% do dipolefit - NOT RUNNING
+
+%% dipolefitting
+cfg  = [];
+cfg.covariance = 'yes';
+% cfg.keeptrials = 'yes'; %if this is not commented, the .avg field necessary in dipolefitting is missing
+cfg.channel    = 'MEG';
+MEG_tlck = ft_timelockanalysis(cfg, datameg);
+
+% do dipolefit
 cfg = [];
-cfg.numdipoles    = 1;                              %number of expected sources
-cfg.headmodel     = vol_localsphere;                     %the head model
-cfg.grid          = gridmeg;                      %the (precomputed) leadfield
-cfg.nonlinear     = 'no';                           %only dipole scan
-cfg.grad          = MEG_tlck.grad;                           %the sensor model
-cfg.latency       = 0.025;                          %the latency of interest
-%dipfit_meg    = ft_dipolefitting(cfg,MEG_avg);
-dipfit_meg = ft_dipolefitting(cfg,MEG_tlck); % what should this input be?
+cfg.numdipoles    = 1;                              
+cfg.headmodel     = vol_localsphere;                     
+cfg.grid          = gridmeg;                     
+cfg.nonlinear     = 'no';                           
+cfg.grad          = MEG_tlck.grad;                        
+cfg.latency       = 0.025;                         
+dipfit_meg = ft_dipolefitting(cfg,MEG_tlck); 
 
 
 % for EEG
