@@ -318,13 +318,20 @@ cfg.latency       = 0.025;
 dipfit_meg = ft_dipolefitting(cfg,MEG_tlck); 
 
 
-% for EEG
+% for EEG (dimension problems!!)
+cfg  = [];
+cfg.covariance = 'yes';
+% cfg.keeptrials = 'yes';
+EEG_tlck = ft_timelockanalysis(cfg, dataeeg);
+
+%%
+
 cfg = [];
-cfg.numdipoles    =  1;                             
-cfg.headmodel     = headmodel;                  
-cfg.grid          = leadfield;    
-cfg.nonlinear     = 'no';                          
-cfg.elec          = elec;                           
-cfg.latency       = 0.025;                         
-ft_dipolefitting(cfg,EEG_tlck);
+cfg.numdipoles    =  1;                             %number of expected
+cfg.headmodel     = vol1;                  %the head model
+cfg.grid          = grideeg;                  %the precomputed leadfield
+cfg.elec          = elec;                           %the electrode model
+cfg.latency       = 0.025;                          %the latency of interest
+dipfit_bem        = ft_dipolefitting(cfg,EEG_tlck);
+
 
