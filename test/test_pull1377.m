@@ -55,7 +55,7 @@ cfg.channel = randperm(length(dataeeg.label)-2);
 dataeeg = ft_selectdata(cfg, dataeeg);
 
 
-%% create 3D grid
+%% create leadfield (internally to ft)
 % for MEG
 cfg      = [];
 cfg.grad = datameg.grad; %% check that this has remained the same size despite sensors removed
