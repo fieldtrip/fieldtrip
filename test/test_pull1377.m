@@ -16,6 +16,12 @@ clear vol
 % for EEG, singlesphere
 % read in the single sphere models produced with CTF software
 vol_singlesphere = ft_read_headmodel('/home/common/matlab/fieldtrip/data/Subject01.hdm');
+%also this is ok:
+% load('/home/common/matlab/fieldtrip/data/test/latest/vol/Subject01vol_singlesphere.mat')
+% vol_singlesphere = vol;% 
+% vol_singlesphere.c = 1;
+% clear vol 
+% vol_singlesphere = 
 %volname = dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_seg.mat'); %% is there an already segmented?
 %cfg = [];
 %cfg.method='singlesphere';
