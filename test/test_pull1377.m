@@ -97,7 +97,7 @@ grideeg = ft_prepare_leadfield(cfg);
 %% mimic externally created leadfields
 % for MEG
 %leadf = randn(442953, 151);
-leadf = randn(442953, length(datameg.grad)); % here we are assuming that the externally computed leadfield has the structure Ndip x Nsens
+leadf = randn(1000, length(datameg.grad)); % here we are assuming that the externally computed leadfield has the structure Ndip x Nsens
 ext_leadfield_meg.unit  = 'cm';
 ext_leadfield_meg.leadfielddimord = '{pos}_chan_ori';
 
@@ -116,7 +116,7 @@ ext_leadfield_meg.pos = randn(length(ext_leadfield.leadfield),3);
 % for EEG - not sure what this would be... likely same structure, right?
 % for MEG
 %leadf = randn(442953, 151);
-leadf = randn(442953, length(dataeeg.elec)); % here we are assuming that the externally computed leadfield has the structure Ndip x Nsens
+leadf = randn(1000, length(dataeeg.elec)); % here we are assuming that the externally computed leadfield has the structure Ndip x Nsens
 ext_leadfield_eeg.unit  = 'cm';
 ext_leadfield_eeg.leadfielddimord = '{pos}_chan_ori';
 
