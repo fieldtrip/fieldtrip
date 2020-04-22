@@ -90,7 +90,7 @@ cfg      = [];
 cfg.grad = elec;
 cfg.headmodel = vol_singlesphere;
 cfg.channel = 'EEG';
-cfg.sourcemodel.resolution = 1.5;
+cfg.resolution = 1.5;
 grideeg = ft_prepare_leadfield(cfg);
 
 
