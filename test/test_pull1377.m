@@ -98,22 +98,38 @@ grideeg = ft_prepare_leadfield(cfg);
 % for MEG
 %leadf = randn(442953, 151);
 leadf = randn(442953, length(datameg.grad)); % here we are assuming that the externally computed leadfield has the structure Ndip x Nsens
-ext_leadfield.unit  = 'cm';
-ext_leadfield.leadfielddimord = '{pos}_chan_ori';
+ext_leadfield_meg.unit  = 'cm';
+ext_leadfield_meg.leadfielddimord = '{pos}_chan_ori';
 
 % the leadfield
 Ndip = size(leadf,1)/3;
-ext_leadfield.leadfield = cell(1,Ndip);
+ext_leadfield_meg.leadfield = cell(1,Ndip);
 
 for d =1:Ndip
-    ext_leadfield.leadfield{d} = [leadf(d,:); leadf(d+Ndip,:); leadf(d+2*Ndip,:)]';
+    ext_leadfield_meg.leadfield{d} = [leadf(d,:); leadf(d+Ndip,:); leadf(d+2*Ndip,:)]';
 end
 
-ext_leadfield.inside = ones(size(ext_leadfield.leadfield));
-ext_leadfield.pos = randn(length(ext_leadfield.leadfield),3);
+ext_leadfield_meg.inside = ones(size(ext_leadfield.leadfield));
+ext_leadfield_meg.pos = randn(length(ext_leadfield.leadfield),3);
 
 
 % for EEG - not sure what this would be... likely same structure, right?
+% for MEG
+%leadf = randn(442953, 151);
+leadf = randn(442953, length(dataeeg.elec)); % here we are assuming that the externally computed leadfield has the structure Ndip x Nsens
+ext_leadfield_eeg.unit  = 'cm';
+ext_leadfield_eeg.leadfielddimord = '{pos}_chan_ori';
+
+% the leadfield
+Ndip = size(leadf,1)/3;
+ext_leadfield_eeg.leadfield = cell(1,Ndip);
+
+for d =1:Ndip
+    ext_leadfield_eeg.leadfield{d} = [leadf(d,:); leadf(d+Ndip,:); leadf(d+2*Ndip,:)]';
+end
+
+ext_leadfield_eeg.inside = ones(size(ext_leadfield.leadfield));
+ext_leadfield_eeg.pos = randn(length(ext_leadfield.leadfield),3);
 
 %% sensor-level data
 % create timelock structure with covariance for lcmv beamforming and
@@ -255,7 +271,7 @@ cfg.dics.keepcsd       = 'yes';
 cfg.dics.lambda        = '5%';
 cfg.frequency = 10;
 cfg.headmodel = vol_localsphere;
-cfg.sourcemodel = ext_leadfield;
+cfg.sourcemodel = ext_leadfield_meg;
 sourcedics3d1 = ft_sourceanalysis(cfg, MEG_freq);
 
 % Does NOT work if cfg.headmodel is missing
@@ -267,7 +283,7 @@ cfg.dics.keepcsd       = 'yes';
 cfg.dics.lambda        = '5%';
 cfg.frequency = 10;
 %cfg.headmodel = []; % vol_localsphere;
-cfg.sourcemodel = ext_leadfield;
+cfg.sourcemodel = ext_leadfield_meg;
 sourcedics3d1 = ft_sourceanalysis(cfg, MEG_freq);
 
 
