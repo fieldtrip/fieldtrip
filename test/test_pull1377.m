@@ -1,6 +1,6 @@
 function test_pull1377
-% MEM 2gb
-% WALLTIME 00:10:00
+% MEM ?
+% WALLTIME ?
 
 % DEPENDENCY ft_prepare_sourcemodel headsurface ft_prepare_leadfield ft_freqanalysis ft_sourceanalysis 
 
@@ -37,14 +37,24 @@ offset = -100*ones(size(endsample));
 cfg.trl = [begsample endsample offset];
 
 dataeeg = ft_preprocessing(cfg);
+% Fix EEG channel names
+cfg=[];
+cfg.layout = 'biosemi64.lay';
+lay = ft_prepare_layout(cfg);
+dataeeg.label = lay.label(1:end-2);
+clear lay
 
-% !! create worse-case scenario, whereby order and nr of chans don't match across inputs
-% remove 2-3 random chans from both MEG and EEG raw data
+%
+% !! create worse-case scenario, whereby order and nr of chans don't match across inputs (grad/elec and leadfields)
+% Step 1: remove 2-3 random chans from both MEG and EEG raw data
 cfg=[];
 cfg.channel = randperm(length(datameg.label)-3);
 datameg = ft_selectdata(cfg, datameg);
 cfg.channel = randperm(length(dataeeg.label)-2);
 dataeeg = ft_selectdata(cfg, dataeeg);
+% Setp 2: shuffle order of labels
+datameg.label = datameg.label(randperm(length(datameg.label)));
+dataeeg.label = dataeeg.label(randperm(length(dataeeg.label)));
 
 %% 2. preprocess the data
 % create timelock structure with covariance for lcmv beamforming and minimumnormestimate, 
@@ -111,7 +121,7 @@ vol_singlesphere.unit = 'cm';
 % create leadfield (internally to ft)
 % for MEG
 cfg      = [];
-cfg.grad = datameg.grad; %% check that this has remained the same size despite sensors removed
+cfg.grad = datameg.grad; 
 cfg.headmodel = vol_localsphere;
 cfg.channel = 'MEG';
 cfg.resolution = 1.5;
@@ -119,21 +129,21 @@ gridmeg = ft_prepare_leadfield(cfg);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% create 2D grid - is this necessary?? Not working
-[pnt, tri] = mesh_sphere(162);
-pnt   = pnt*(vol.orig.MEG_Sphere.RADIUS-1.5);
-shift = [vol.orig.MEG_Sphere.ORIGIN_X vol.orig.MEG_Sphere.ORIGIN_Y vol.orig.MEG_Sphere.ORIGIN_Z];
-pnt   = pnt+repmat(shift,[size(pnt,1) 1]);
-grid2.pnt = pnt;
-grid2.tri = tri;
-grid2.inside = 1:size(grid2.pnt,1);
-grid2.outside = [];
+%[pnt, tri] = mesh_sphere(162);
+%pnt   = pnt*(vol.orig.MEG_Sphere.RADIUS-1.5);
+%shift = [vol.orig.MEG_Sphere.ORIGIN_X vol.orig.MEG_Sphere.ORIGIN_Y vol.orig.MEG_Sphere.ORIGIN_Z];
+%pnt   = pnt+repmat(shift,[size(pnt,1) 1]);
+%grid2.pnt = pnt;
+%grid2.tri = tri;
+%grid2.inside = 1:size(grid2.pnt,1);
+%grid2.outside = [];
 
-cfg      = [];
-cfg.grad = datameg.grad;
-cfg.headmodel = vol;
-cfg.sourcemodel = grid2;
-cfg.channel = 'MEG';
-grid2 = ft_prepare_leadfield(cfg);
+%cfg      = [];
+%cfg.grad = datameg.grad;
+%cfg.headmodel = vol;
+%cfg.sourcemodel = grid2;
+%cfg.channel = 'MEG';
+%grid2 = ft_prepare_leadfield(cfg);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % for EEG
@@ -145,7 +155,7 @@ cfg.grad = elec; % why not dataeeg.elec?
 cfg.headmodel = vol_singlesphere;
 cfg.channel = 'EEG';
 cfg.resolution = 1.5;
-grideeg = ft_prepare_leadfield(cfg);
+grideeg = ft_prepare_leadfield(cfg); # inconsistent with dataeeg.labels
 
 %% 3.b externally (mimic externally created leadfields)
 % for MEG
@@ -193,19 +203,12 @@ cfg.lcmv.lambda        = '5%';
 cfg.sourcemodel       = gridmeg;
 cfg.headmodel  = vol_localsphere;
 sourcelcmv3d1  = ft_sourceanalysis(cfg, MEG_tlck);
-%cfg.sourcemodel       = grid2;
-%cfg.outputfile = 'ctf151_lcmv2d_avg';
-%sourcelcmv2d1  = ft_sourceanalysis(cfg, MEG_tlck);
-
+% project through computed filter
 cfg.rawtrial    = 'yes';
 cfg.sourcemodel        = gridmeg;
-%cfg.outputfile  = fullfile(outputdir, 'ctf151_lcmv3d_trial');
 cfg.sourcemodel.filter = sourcelcmv3d1.avg.filter;
 ft_sourceanalysis(cfg, MEG_tlck);
-%cfg.sourcemodel        = grid2;
-%cfg.outputfile  = fullfile(outputdir, 'ctf151_lcmv2d_trial');
-%cfg.sourcemodel.filter = sourcelcmv2d1.avg.filter;
-%ft_sourceanalysis(cfg, MEG_tlck);
+
 
 % do MNE 
 cfg = [];
@@ -215,20 +218,12 @@ cfg.mne.keepfilter = 'yes';
 cfg.mne.lambda     = 1e4;
 cfg.headmodel = vol_localsphere;
 cfg.sourcemodel = gridmeg;
-sourcemne3d1 = ft_sourceanalysis(cfg, MEG_tlck); %this does not exist, you mean MEG_tlck?
-%cfg.sourcemodel = grid2;
-%cfg.outputfile = fullfile(outputdir, 'ctf151_mne2d');
-%sourcemne2d1 = ft_sourceanalysis(cfg, MEG_tlck);
-
+sourcemne3d1 = ft_sourceanalysis(cfg, MEG_tlck); 
 cfg.rawtrial    = 'yes';
 cfg.sourcemodel        = gridmeg;
 cfg.sourcemodel.filter = sourcemne3d1.avg.filter;
-%cfg.outputfile  = fullfile(outputdir, 'ctf151_mne3d_trial');
 ft_sourceanalysis(cfg, MEG_tlck);
-%cfg.sourcemodel        = grid2;
-%cfg.sourcemodel.filter = sourcemne2d1.avg.filter;
-%cfg.outputfile  = fullfile(outputdir, 'ctf151_mne2d_trial');
-%ft_sourceanalysis(cfg, MEG_tlck);
+
 
 % do DICS
 cfg = [];
@@ -240,22 +235,12 @@ cfg.dics.lambda        = '5%';
 cfg.frequency = 10;
 cfg.headmodel = vol_localsphere;
 cfg.sourcemodel = gridmeg;
-%cfg.outputfile = fullfile(outputdir, 'ctf151_dics3d_avg');
 sourcedics3d1 = ft_sourceanalysis(cfg, MEG_freq);
-%cfg.sourcemodel = grid2;
-%cfg.outputfile = fullfile(outputdir, 'ctf151_dics2d_avg');
-%sourcedics2d1 = ft_sourceanalysis(cfg, MEG_freq);
 
 cfg.rawtrial    = 'yes';
 cfg.sourcemodel        = gridmeg;
 cfg.sourcemodel.filter = sourcedics3d1.avg.filter;
-%cfg.outputfile  = fullfile(outputdir, 'ctf151_dics3d_trial');
 ft_sourceanalysis(cfg, MEG_freq);
-%cfg.sourcemodel        = grid2;
-%cfg.sourcemodel.filter = sourcedics2d1.avg.filter;
-%cfg.outputfile  = fullfile(outputdir, 'ctf151_dics2d_trial');
-%ft_sourceanalysis(cfg, MEG_freq);
-
 
 % do PCC 
 cfg = [];
@@ -268,9 +253,9 @@ cfg.pcc.lambda        = '5%';
 cfg.frequency = 10;
 cfg.headmodel = vol_localsphere;
 cfg.sourcemodel = gridmeg;
-%cfg.outputfile = fullfile(outputdir, 'ctf151_pcc3d');
 ft_sourceanalysis(cfg, MEG_freq);
 
+% Only one inverse solution suffices since fixes to ft_sourceanalysis need to happen before inverse solution
 % do DICS for EEG
 cfg = [];
 cfg.method = 'dics';
@@ -281,21 +266,13 @@ cfg.dics.lambda        = '5%';
 cfg.frequency = 10;
 cfg.headmodel = vol_singlesphere;
 cfg.sourcemodel = grideeg;
-%cfg.outputfile = fullfile(outputdir, 'ctf151_dics3d_avg');
+cfg.elec = elec;
 sourcedics3d1 = ft_sourceanalysis(cfg, EEG_freq);
-%cfg.sourcemodel = grid2;
-%cfg.outputfile = fullfile(outputdir, 'ctf151_dics2d_avg');
-%sourcedics2d1 = ft_sourceanalysis(cfg, EEG_freq);
 
 cfg.rawtrial    = 'yes';
 cfg.sourcemodel        = grideeg;
 cfg.sourcemodel.filter = sourcedics3d1.avg.filter;
-%cfg.outputfile  = fullfile(outputdir, 'ctf151_dics3d_trial');
 ft_sourceanalysis(cfg, EEG_freq);
-%cfg.sourcemodel        = grid2;
-%cfg.sourcemodel.filter = sourcedics2d1.avg.filter;
-%cfg.outputfile  = fullfile(outputdir, 'ctf151_dics2d_trial');
-%ft_sourceanalysis(cfg, EEG_freq);
 
 % do dipolefit
 % for MEG
@@ -308,6 +285,9 @@ cfg.grad          = MEG_tlck.grad;
 cfg.latency       = 0.025;                         
 ft_dipolefitting(cfg,MEG_tlck_df);
 
+%% %%%%%%
+%% ERROR
+%% %%%%%%
 % for EEG
 cfg = [];
 cfg.numdipoles    =  1;             
@@ -316,6 +296,7 @@ cfg.grid          = grideeg;
 cfg.elec          = elec;                         
 cfg.latency       = 0.025;                          
 ft_dipolefitting(cfg,EEG_tlck_df); %problems with dimensions!
+% Is this because ft_dipolefitting doesn't behave when elec/leadfield/data have difference labels and order?
 
 %% %%%%%%%%%%%%%%%%%%%%%%
 % Previous ones work, what about externally generated leadfield:
