@@ -269,7 +269,8 @@ cfg.headmodel = vol_singlesphere;
 cfg.sourcemodel = grideeg;
 cfg.elec = elec;
 sourcedics3d1 = ft_sourceanalysis(cfg, EEG_freq);
-
+%% %%%%%
+%% ERROR
 cfg.rawtrial    = 'yes';
 cfg.sourcemodel        = grideeg;
 cfg.sourcemodel.filter = sourcedics3d1.avg.filter;
@@ -303,6 +304,7 @@ ft_dipolefitting(cfg,EEG_tlck_df); %problems with dimensions!
 % Previous ones work, what about externally generated leadfield:
 %% %%%%%%%%%%%%%%%%%%%%%%
 % Works if cfg.headmodel is provided
+%% Used to work, no longer working
 cfg = [];
 cfg.method = 'dics';
 cfg.dics.keepfilter    = 'yes';
@@ -327,17 +329,7 @@ cfg.sourcemodel = ext_leadfield_meg;
 sourcedics3d1 = ft_sourceanalysis(cfg, MEG_freq);
 
 
-%% %%%%%%%%%%%%%%%%%%%%%
-% create worse-case scenario, whereby order and nr of chans don't match across inputs
-%% %%%%%%%%%%%%%%%%%%%%%
-% sensor-level data has 2-3 less
-% now remove other labels from vol (and artifically change the order of labels)
-cfg=[];
-cfg.channel = randperm(length(vol_localsphere.label)-3);
-vol_localsphere = ft_selectdata(cfg, vol_localsphere);
-%% Inverse solutions break with this vol - maybe I'm doing something wrong
 
-%% dipolefit
 
 
 
