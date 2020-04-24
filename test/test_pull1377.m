@@ -166,7 +166,7 @@ ext_leadfield_meg.pos = randn(length(ext_leadfield_meg.leadfield),3);
 
 
 % for EEG
-leadf = randn(3000, length(elec.labels)); % here we are assuming that the externally computed leadfield has the structure Ndip x Nsens
+leadf = randn(3000, length(elec.label)); % here we are assuming that the externally computed leadfield has the structure Ndip x Nsens
 ext_leadfield_eeg.unit  = 'cm';
 ext_leadfield_eeg.leadfielddimord = '{pos}_chan_ori';
 
