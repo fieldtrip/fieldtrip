@@ -53,7 +53,7 @@ datameg = ft_selectdata(cfg, datameg);
 cfg.channel = randperm(length(dataeeg.label)-2);
 dataeeg = ft_selectdata(cfg, dataeeg);
 % Setp 2: shuffle order of labels
-datameg.label = datameg.label(randperm(length(datameg.label)));
+%datameg.label = datameg.label(randperm(length(datameg.label)));
 dataeeg.label = dataeeg.label(randperm(length(dataeeg.label)));
 
 %% 2. preprocess the data
