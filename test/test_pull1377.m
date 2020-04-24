@@ -182,7 +182,7 @@ ext_leadfield_eeg.inside = ones(size(ext_leadfield_eeg.leadfield));
 ext_leadfield_eeg.pos = randn(length(ext_leadfield_eeg.leadfield),3);
 
 %% 4. perform source analysis
-
+% for MEG
 % do LCMV beamforming
 cfg            = [];
 cfg.method     = 'lcmv';
@@ -270,6 +270,32 @@ cfg.headmodel = vol_localsphere;
 cfg.sourcemodel = gridmeg;
 %cfg.outputfile = fullfile(outputdir, 'ctf151_pcc3d');
 ft_sourceanalysis(cfg, MEG_freq);
+
+% do DICS for EEG
+cfg = [];
+cfg.method = 'dics';
+cfg.dics.keepfilter    = 'yes';
+cfg.dics.keepleadfield = 'yes';
+cfg.dics.keepcsd       = 'yes';
+cfg.dics.lambda        = '5%';
+cfg.frequency = 10;
+cfg.headmodel = vol_singlesphere;
+cfg.sourcemodel = grideeg;
+%cfg.outputfile = fullfile(outputdir, 'ctf151_dics3d_avg');
+sourcedics3d1 = ft_sourceanalysis(cfg, EEG_freq);
+%cfg.sourcemodel = grid2;
+%cfg.outputfile = fullfile(outputdir, 'ctf151_dics2d_avg');
+%sourcedics2d1 = ft_sourceanalysis(cfg, EEG_freq);
+
+cfg.rawtrial    = 'yes';
+cfg.sourcemodel        = grideeg;
+cfg.sourcemodel.filter = sourcedics3d1.avg.filter;
+%cfg.outputfile  = fullfile(outputdir, 'ctf151_dics3d_trial');
+ft_sourceanalysis(cfg, EEG_freq);
+%cfg.sourcemodel        = grid2;
+%cfg.sourcemodel.filter = sourcedics2d1.avg.filter;
+%cfg.outputfile  = fullfile(outputdir, 'ctf151_dics2d_trial');
+%ft_sourceanalysis(cfg, EEG_freq);
 
 % do dipolefit
 % for MEG
