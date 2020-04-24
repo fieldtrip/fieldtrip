@@ -155,7 +155,7 @@ cfg.grad = elec; % why not dataeeg.elec?
 cfg.headmodel = vol_singlesphere;
 cfg.channel = 'EEG';
 cfg.resolution = 1.5;
-grideeg = ft_prepare_leadfield(cfg); # inconsistent with dataeeg.labels
+grideeg = ft_prepare_leadfield(cfg); % inconsistent with dataeeg.labels
 
 %% 3.b externally (mimic externally created leadfields)
 % for MEG
