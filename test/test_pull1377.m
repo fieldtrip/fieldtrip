@@ -161,12 +161,12 @@ for d =1:Ndip
     ext_leadfield_meg.leadfield{d} = [leadf(d,:); leadf(d+Ndip,:); leadf(d+2*Ndip,:)]';
 end
 
-ext_leadfield_meg.inside = ones(size(ext_leadfield.leadfield));
-ext_leadfield_meg.pos = randn(length(ext_leadfield.leadfield),3);
+ext_leadfield_meg.inside = ones(size(ext_leadfield_meg.leadfield));
+ext_leadfield_meg.pos = randn(length(ext_leadfield_meg.leadfield),3);
 
 
 % for EEG
-leadf = randn(3000, length(dataeeg.elec)); % here we are assuming that the externally computed leadfield has the structure Ndip x Nsens
+leadf = randn(3000, length(elec.labels)); % here we are assuming that the externally computed leadfield has the structure Ndip x Nsens
 ext_leadfield_eeg.unit  = 'cm';
 ext_leadfield_eeg.leadfielddimord = '{pos}_chan_ori';
 
@@ -178,8 +178,8 @@ for d =1:Ndip
     ext_leadfield_eeg.leadfield{d} = [leadf(d,:); leadf(d+Ndip,:); leadf(d+2*Ndip,:)]';
 end
 
-ext_leadfield_eeg.inside = ones(size(ext_leadfield.leadfield));
-ext_leadfield_eeg.pos = randn(length(ext_leadfield.leadfield),3);
+ext_leadfield_eeg.inside = ones(size(ext_leadfield_eeg.leadfield));
+ext_leadfield_eeg.pos = randn(length(ext_leadfield_eeg.leadfield),3);
 
 %% 4. perform source analysis
 
