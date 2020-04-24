@@ -1,4 +1,5 @@
 function test_pull1377
+% using addpath /home/common/matlab/fieldtrip
 % MEM ?
 % WALLTIME ?
 
