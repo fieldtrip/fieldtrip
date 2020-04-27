@@ -45,18 +45,6 @@ lay = ft_prepare_layout(cfg);
 dataeeg.label = lay.label(1:end-2);
 clear lay
 
-%
-% !! create worse-case scenario, whereby order and nr of chans don't match across inputs (grad/elec and leadfields)
-% Step 1: remove 2-3 random chans from both MEG and EEG raw data
-cfg=[];
-cfg.channel = randperm(length(datameg.label)-3);
-datameg = ft_selectdata(cfg, datameg);
-cfg.channel = randperm(length(dataeeg.label)-2);
-dataeeg = ft_selectdata(cfg, dataeeg);
-% Setp 2: shuffle order of labels
-%datameg.label = datameg.label(randperm(length(datameg.label)));
-dataeeg.label = dataeeg.label(randperm(length(dataeeg.label)));
-
 %% 2. preprocess the data
 % create timelock structure with covariance for lcmv beamforming and minimumnormestimate, 
 % and timeloch without keeptrials fro dipolefitting
@@ -299,6 +287,65 @@ cfg.elec          = elec;
 cfg.latency       = 0.025;                          
 ft_dipolefitting(cfg,EEG_tlck_df); %problems with dimensions!
 % Is this because ft_dipolefitting doesn't behave when elec/leadfield/data have difference labels and order?
+%% error with and without messing with channels
+
+%% %%%%%%
+%% Messing around with channels
+%% %%%%%%
+% !! create worse-case scenario, whereby order and nr of chans don't match across inputs (grad/elec and leadfields)
+% Step 1: remove 2-3 random chans from both MEG and EEG raw data
+cfg=[];
+cfg.channel = randperm(length(datameg.label)-3);
+datameg = ft_selectdata(cfg, datameg);
+cfg.channel = randperm(length(dataeeg.label)-2);
+dataeeg = ft_selectdata(cfg, dataeeg);
+% Setp 2: shuffle order of labels
+%datameg.label = datameg.label(randperm(length(datameg.label)));
+dataeeg.label = dataeeg.label(randperm(length(dataeeg.label)));
+
+%% repeat with messed up channels:
+%% for example, dipolefitting for MEG:
+% 2. process data
+cfg  = [];
+cfg.covariance = 'yes';
+% cfg.keeptrials = 'yes'; %if this is not commented, the .avg field necessary in dipolefitting is missing
+cfg.channel    = 'MEG';
+MEG_tlck_df = ft_timelockanalysis(cfg, datameg);
+
+% 3. % create leadfield (internally to ft)
+cfg      = [];
+cfg.grad = datameg.grad; 
+cfg.headmodel = vol_localsphere;
+cfg.channel = 'MEG';
+cfg.resolution = 1.5;
+gridmeg = ft_prepare_leadfield(cfg);
+
+% 4. do dipolefit
+cfg = [];
+cfg.numdipoles    = 1;                              
+cfg.headmodel     = vol_localsphere;                     
+cfg.sourcemodel          = gridmeg;                     
+cfg.nonlinear     = 'no';                           
+cfg.grad          = MEG_tlck.grad;                        
+cfg.latency       = 0.025;                         
+ft_dipolefitting(cfg,MEG_tlck_df);
+
+%% the error message:
+% the input is timelock data with 149 channels and 300 timebins
+% Your data and configuration allow for multiple sensor definitions.
+% Warning: using gradiometers specified in the configuration\n 
+% selected 149 channels
+% selected 1 topographies
+% creating sourcemodel based on user specified dipole positions
+% using gradiometers specified in the configuration
+% 459 dipoles inside, 309 dipoles outside brain
+% the call to "ft_prepare_sourcemodel" took 0 seconds and required the additional allocation of an estimated 0 MB
+% scanning grid
+% Matrix dimensions must agree.
+
+% Error in ft_dipolefitting (line 424)
+%        sourcemodel.error(thisindx,1) =
+%        sum(sum(((eye(nchans)-lf*pinv(lf))*Vdata).^2));
 
 %% %%%%%%%%%%%%%%%%%%%%%%
 % Previous ones work, what about externally generated leadfield:
