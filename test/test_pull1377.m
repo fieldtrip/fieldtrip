@@ -281,7 +281,7 @@ ft_sourceanalysis(cfg, EEG_freq);
 cfg = [];
 cfg.numdipoles    = 1;                              
 cfg.headmodel     = vol_localsphere;                     
-cfg.grid          = gridmeg;                     
+cfg.sourcemodel   = gridmeg;                     
 cfg.nonlinear     = 'no';                           
 cfg.grad          = MEG_tlck_df.grad;                        
 cfg.latency       = 0.025;                         
@@ -294,7 +294,7 @@ ft_dipolefitting(cfg,MEG_tlck_df);
 cfg = [];
 cfg.numdipoles    =  1;             
 cfg.headmodel     = vol_singlesphere;         
-cfg.grid          = grideeg;                 
+cfg.sourcemodel   = grideeg;                 
 cfg.elec          = elec;                         
 cfg.latency       = 0.025;                          
 ft_dipolefitting(cfg,EEG_tlck_df); %problems with dimensions!
