@@ -212,6 +212,14 @@ cfg.rawtrial    = 'yes';
 cfg.sourcemodel        = gridmeg;
 cfg.sourcemodel.filter = sourcemne3d1.avg.filter;
 ft_sourceanalysis(cfg, MEG_tlck);
+%% error for mc (for mne and lcmv):
+% the input is timelock data with 151 channels and 300 timebins
+% the call to "ft_selectdata" took 0 seconds and required the additional allocation of an estimated 0 MB
+% Unrecognized function or variable 'sourcemodel'.
+% 
+% Error in ft_sourceanalysis (line 940)
+%   if isfield(sourcemodel, 'label') && (isfield(sourcemodel,
+%   'leadfield') || isfield(sourcemodel, 'filter'))
 
 
 % do DICS
