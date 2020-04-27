@@ -283,7 +283,7 @@ cfg.numdipoles    = 1;
 cfg.headmodel     = vol_localsphere;                     
 cfg.grid          = gridmeg;                     
 cfg.nonlinear     = 'no';                           
-cfg.grad          = MEG_tlck.grad;                        
+cfg.grad          = MEG_tlck_df.grad;                        
 cfg.latency       = 0.025;                         
 ft_dipolefitting(cfg,MEG_tlck_df);
 
