@@ -1,5 +1,6 @@
 function test_pull1377
-% using addpath /home/common/matlab/fieldtrip
+
+addpath /home/common/matlab/fieldtrip
 % MEM ?
 % WALLTIME ?
 
@@ -17,6 +18,8 @@ function test_pull1377
 % 4. perform source analysis (MEG and EEG): LCMV beamforming, MNE, DICS, PCC, dipolefitting
 
 %% 1. get the data
+clc
+disp('1: Get the raw data')
 % for MEG data + sensor info
 dataname = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat');
 load(dataname);
@@ -46,6 +49,8 @@ dataeeg.label = lay.label(1:end-2);
 clear lay
 
 %% 2. preprocess the data
+clc
+disp('2: preprocess the data')
 % create timelock structure with covariance for lcmv beamforming and minimumnormestimate, 
 % and timeloch without keeptrials fro dipolefitting
 % for MEG
@@ -93,6 +98,8 @@ cfg.foilim = [0 20];
 EEG_freq = ft_freqanalysis(cfg, dataeeg);
 
 %% 3. create leadfield 
+clc
+disp('3: create leadfield')
 % 3.a internally
 
 % get volume conductor model
@@ -117,7 +124,7 @@ cfg.resolution = 1.5;
 gridmeg = ft_prepare_leadfield(cfg);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% create 2D grid - is this necessary?? Not working
+% create 2D grid - is this necessary?? Not working
 %[pnt, tri] = mesh_sphere(162);
 %pnt   = pnt*(vol.orig.MEG_Sphere.RADIUS-1.5);
 %shift = [vol.orig.MEG_Sphere.ORIGIN_X vol.orig.MEG_Sphere.ORIGIN_Y vol.orig.MEG_Sphere.ORIGIN_Z];
@@ -147,8 +154,11 @@ cfg.resolution = 1.5;
 grideeg = ft_prepare_leadfield(cfg); % inconsistent with dataeeg.labels
 
 %% 3.b externally (mimic externally created leadfields)
+clc;
+disp('3b: Externally computed leadfields for EEG and MEG')
 % for MEG
-leadf = randn(3000, length(datameg.grad)); % here we are assuming that the externally computed leadfield has the structure Ndip x Nsens
+% here we are assuming that the externally computed leadfield has the structure Ndip x Nsens
+leadf = randn(3000, length(datameg.grad)); 
 ext_leadfield_meg.unit  = 'cm';
 ext_leadfield_meg.leadfielddimord = '{pos}_chan_ori';
 
@@ -165,7 +175,8 @@ ext_leadfield_meg.pos = randn(length(ext_leadfield_meg.leadfield),3);
 
 
 % for EEG
-leadf = randn(3000, length(elec.label)); % here we are assuming that the externally computed leadfield has the structure Ndip x Nsens
+% here we are assuming that the externally computed leadfield has the structure Ndip x Nsens
+leadf = randn(3000, length(elec.label)); 
 ext_leadfield_eeg.unit  = 'cm';
 ext_leadfield_eeg.leadfielddimord = '{pos}_chan_ori';
 
@@ -181,6 +192,8 @@ ext_leadfield_eeg.inside = ones(size(ext_leadfield_eeg.leadfield));
 ext_leadfield_eeg.pos = randn(length(ext_leadfield_eeg.leadfield),3);
 
 %% 4. perform source analysis
+clc;
+disp('4: inverse solution, ft_sourceanalysis and ft_dipolefitting')
 % for MEG
 % do LCMV beamforming
 cfg            = [];
@@ -198,7 +211,6 @@ cfg.sourcemodel        = gridmeg;
 cfg.sourcemodel.filter = sourcelcmv3d1.avg.filter;
 ft_sourceanalysis(cfg, MEG_tlck);
 
-
 % do MNE 
 cfg = [];
 cfg.method   = 'mne';
@@ -212,15 +224,6 @@ cfg.rawtrial    = 'yes';
 cfg.sourcemodel        = gridmeg;
 cfg.sourcemodel.filter = sourcemne3d1.avg.filter;
 ft_sourceanalysis(cfg, MEG_tlck);
-%% error for mc (for mne and lcmv):
-% the input is timelock data with 151 channels and 300 timebins
-% the call to "ft_selectdata" took 0 seconds and required the additional allocation of an estimated 0 MB
-% Unrecognized function or variable 'sourcemodel'.
-% 
-% Error in ft_sourceanalysis (line 940)
-%   if isfield(sourcemodel, 'label') && (isfield(sourcemodel,
-%   'leadfield') || isfield(sourcemodel, 'filter'))
-
 
 % do DICS
 cfg = [];
