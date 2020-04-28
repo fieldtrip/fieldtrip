@@ -358,7 +358,7 @@ cfg.grad          = MEG_tlck.grad;
 cfg.latency       = 0.025;                         
 ft_dipolefitting(cfg,MEG_tlck_df);
 
-%% the error message:
+% the error message:
 % Matrix dimensions must agree.
 
 % Error in ft_dipolefitting (line 424)
@@ -384,12 +384,13 @@ sourcedics3d1 = ft_sourceanalysis(cfg, MEG_freq);
 % There's a mismatch between the number/order of channels in the data, with respect to the channels in the precomputed
 % leadfield/filter. This is not easy to solve automatically. Please look into this.
 
-clc;
-disp('Error 5: with ft_sourceanalysis, externally generated leadfield')
 
 %% %%%%%%%%%%%%%%%%%%%%%%
 % what about externally generated leadfield:
 %% %%%%%%%%%%%%%%%%%%%%%%
+clc;
+disp('Error 5: with ft_sourceanalysis, externally generated leadfield')
+
 % if cfg.headmodel is provided
 cfg = [];
 cfg.method = 'dics';
@@ -406,6 +407,7 @@ sourcedics3d1 = ft_sourceanalysis(cfg, MEG_freq);
 % Incorrect dimensions for matrix multiplication. Check that the number of columns in the first matrix matches the number
 % of rows in the second matrix. To perform elementwise multiplication, use '.*'.
 
+%%
 clc;
 disp('Error 6: with ft_sourceanalysis, externally generated leadfield will not have headmodel')
 
