@@ -255,6 +255,8 @@ cfg.headmodel = vol_localsphere;
 cfg.sourcemodel = gridmeg;
 ft_sourceanalysis(cfg, MEG_freq);
 
+clc;
+disp('Error 1: EEG, when projecting through pre-computed filter')
 % Only one inverse solution suffices since fixes to ft_sourceanalysis need to happen before inverse solution
 % do DICS for EEG
 cfg = [];
@@ -268,14 +270,14 @@ cfg.headmodel = vol_singlesphere;
 cfg.sourcemodel = grideeg;
 cfg.elec = elec;
 sourcedics3d1 = ft_sourceanalysis(cfg, EEG_freq);
-%% %%%%%
-%% ERROR
+%%%%%%%
+% ERROR
 cfg.rawtrial    = 'yes';
 cfg.sourcemodel        = grideeg;
 cfg.sourcemodel.filter = sourcedics3d1.avg.filter;
 ft_sourceanalysis(cfg, EEG_freq);
 
-% do dipolefit
+%% do dipolefit
 % for MEG
 cfg = [];
 cfg.numdipoles    = 1;                              
@@ -289,6 +291,9 @@ ft_dipolefitting(cfg,MEG_tlck_df);
 %% %%%%%%
 %% ERROR
 %% %%%%%%
+clc;
+disp('Error 2: ft_dipolefitting with EEG, elec, grid, and EEG data dont have same channel order and labels')
+
 % for EEG
 cfg = [];
 cfg.numdipoles    =  1;             
@@ -298,30 +303,38 @@ cfg.elec          = elec;
 cfg.latency       = 0.025;                          
 ft_dipolefitting(cfg,EEG_tlck_df); %problems with dimensions!
 % Is this because ft_dipolefitting doesn't behave when elec/leadfield/data have difference labels and order?
-%% error with and without messing with channels
+%% error with and without messing with channels, but elec and grideeg have more channels than EEG data
 
 %% %%%%%%
 %% Messing around with channels
 %% %%%%%%
+
 % !! create worse-case scenario, whereby order and nr of chans don't match across inputs (grad/elec and leadfields)
 % Step 1: remove 2-3 random chans from both MEG and EEG raw data
 cfg=[];
-cfg.channel = randperm(length(datameg.label)-3);
+cfg.channel = {'all' '-MZC02' '-MRT23' '-MLT31'};
 datameg = ft_selectdata(cfg, datameg);
 cfg.channel = randperm(length(dataeeg.label)-2);
 dataeeg = ft_selectdata(cfg, dataeeg);
 % Setp 2: shuffle order of labels
-%datameg.label = datameg.label(randperm(length(datameg.label)));
 dataeeg.label = dataeeg.label(randperm(length(dataeeg.label)));
 
 %% repeat with messed up channels:
-%% for example, dipolefitting for MEG:
 % 2. process data
 cfg  = [];
 cfg.covariance = 'yes';
 % cfg.keeptrials = 'yes'; %if this is not commented, the .avg field necessary in dipolefitting is missing
 cfg.channel    = 'MEG';
 MEG_tlck_df = ft_timelockanalysis(cfg, datameg);
+
+% for MEG,
+cfg  = [];
+cfg.method = 'mtmfft';
+cfg.output = 'fourier';
+cfg.tapsmofrq = 4;
+cfg.foilim = [0 20];
+% cfg.channel = 'MEG';
+MEG_freq = ft_freqanalysis(cfg, datameg);
 
 % 3. % create leadfield (internally to ft)
 cfg      = [];
@@ -330,6 +343,10 @@ cfg.headmodel = vol_localsphere;
 cfg.channel = 'MEG';
 cfg.resolution = 1.5;
 gridmeg = ft_prepare_leadfield(cfg);
+
+
+clc;
+disp('Error 3: with ft_dipolefitting, After messing around with channels, creating misalignments in grid, data, etc')
 
 % 4. do dipolefit
 cfg = [];
@@ -342,27 +359,38 @@ cfg.latency       = 0.025;
 ft_dipolefitting(cfg,MEG_tlck_df);
 
 %% the error message:
-% the input is timelock data with 149 channels and 300 timebins
-% Your data and configuration allow for multiple sensor definitions.
-% Warning: using gradiometers specified in the configuration\n 
-% selected 149 channels
-% selected 1 topographies
-% creating sourcemodel based on user specified dipole positions
-% using gradiometers specified in the configuration
-% 459 dipoles inside, 309 dipoles outside brain
-% the call to "ft_prepare_sourcemodel" took 0 seconds and required the additional allocation of an estimated 0 MB
-% scanning grid
 % Matrix dimensions must agree.
 
 % Error in ft_dipolefitting (line 424)
 %        sourcemodel.error(thisindx,1) =
 %        sum(sum(((eye(nchans)-lf*pinv(lf))*Vdata).^2));
 
+clc;
+disp('Error 4: with ft_sourceanalysis, After messing around with channels')
+
+% do DICS
+cfg = [];
+cfg.method = 'dics';
+cfg.dics.keepfilter    = 'yes';
+cfg.dics.keepleadfield = 'yes';
+cfg.dics.keepcsd       = 'yes';
+cfg.dics.lambda        = '5%';
+cfg.frequency = 10;
+cfg.headmodel = vol_localsphere;
+cfg.sourcemodel = gridmeg;
+sourcedics3d1 = ft_sourceanalysis(cfg, MEG_freq);
+%%% Error message: 
+% Error using ft_sourceanalysis (line 544)
+% There's a mismatch between the number/order of channels in the data, with respect to the channels in the precomputed
+% leadfield/filter. This is not easy to solve automatically. Please look into this.
+
+clc;
+disp('Error 5: with ft_sourceanalysis, externally generated leadfield')
+
 %% %%%%%%%%%%%%%%%%%%%%%%
-% Previous ones work, what about externally generated leadfield:
+% what about externally generated leadfield:
 %% %%%%%%%%%%%%%%%%%%%%%%
-% Works if cfg.headmodel is provided
-%% Used to work, no longer working
+% if cfg.headmodel is provided
 cfg = [];
 cfg.method = 'dics';
 cfg.dics.keepfilter    = 'yes';
@@ -373,6 +401,13 @@ cfg.frequency = 10;
 cfg.headmodel = vol_localsphere;
 cfg.sourcemodel = ext_leadfield_meg;
 sourcedics3d1 = ft_sourceanalysis(cfg, MEG_freq);
+%%% Error message at beamformer_dics
+% Error using  * 
+% Incorrect dimensions for matrix multiplication. Check that the number of columns in the first matrix matches the number
+% of rows in the second matrix. To perform elementwise multiplication, use '.*'.
+
+clc;
+disp('Error 6: with ft_sourceanalysis, externally generated leadfield will not have headmodel')
 
 % Does NOT work if cfg.headmodel is missing
 cfg = [];
@@ -382,7 +417,7 @@ cfg.dics.keepleadfield = 'yes';
 cfg.dics.keepcsd       = 'yes';
 cfg.dics.lambda        = '5%';
 cfg.frequency = 10;
-%cfg.headmodel = []; % vol_localsphere;
+%cfg.headmodel = []; % vol_localsphere; %%% EMPTY, not available if computed externally
 cfg.sourcemodel = ext_leadfield_meg;
 sourcedics3d1 = ft_sourceanalysis(cfg, MEG_freq);
 
