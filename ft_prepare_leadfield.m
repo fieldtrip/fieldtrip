@@ -224,42 +224,37 @@ if ft_headmodeltype(headmodel, 'openmeeg')
     keepdsm = false;
   end
 
-  try
-    % DSM computation is computationally intensive:
-    % As it can be reused with same voxel sourcemodel (i.e. if voxels are defined in
-    % MRI coordinates rather than MEG coordinates), optionally save result.
-    % Dense voxel grids may require several gigabytes of RAM, so optionally
-    % split into smaller batches
-
-    [h2sens,ds2sens] = ft_sensinterp_openmeeg(sourcemodel.pos(insideindx,:), headmodel, sens);
-
-    % use pre-existing DSM if present
-    if(~isempty(dsm))
-      lf = ds2sens + h2sens*headmodel.mat*dsm;
-    else
-      lf = zeros(size(ds2sens)); % pre-allocate Msensors x Nvoxels
-
-      for ii = 1:numchunks
-        % select sourcemodel positions for this batch
-        diprange = (((ii-1)*batchsize + 1):(min((ii)*batchsize,ndip)));
-        % remap with 3 orientations per position
-        diprangeori = [((ii-1)*3*batchsize + 1):(min((ii)*3*batchsize,3*ndip))];
-        dsm = ft_sysmat_openmeeg(sourcemodel.pos(insideindx(diprange),:), headmodel, sens, nonadaptive);
-        lf(:,diprangeori) = ds2sens(:,diprangeori) + h2sens*headmodel.mat*dsm;
-
-        if istrue(keepdsm)
-          % retain DSM in cfg if desired
-          cfg.openmeeg.dsm = dsm;
-        end
-
-        dipindx = insideindx(diprange);
+  % DSM computation is computationally intensive:
+  % As it can be reused with same voxel sourcemodel (i.e. if voxels are defined in
+  % MRI coordinates rather than MEG coordinates), optionally save result.
+  % Dense voxel grids may require several gigabytes of RAM, so optionally
+  % split into smaller batches
+  
+  [h2sens,ds2sens] = ft_sensinterp_openmeeg(sourcemodel.pos(insideindx,:), headmodel, sens);
+  
+  % use pre-existing DSM if present
+  if(~isempty(dsm))
+    lf = ds2sens + h2sens*headmodel.mat*dsm;
+  else
+    lf = zeros(size(ds2sens)); % pre-allocate Msensors x Nvoxels
+    
+    for ii = 1:numchunks
+      % select sourcemodel positions for this batch
+      diprange = (((ii-1)*batchsize + 1):(min((ii)*batchsize,ndip)));
+      % remap with 3 orientations per position
+      diprangeori = [((ii-1)*3*batchsize + 1):(min((ii)*3*batchsize,3*ndip))];
+      dsm = ft_sysmat_openmeeg(sourcemodel.pos(insideindx(diprange),:), headmodel, sens, nonadaptive);
+      lf(:,diprangeori) = ds2sens(:,diprangeori) + h2sens*headmodel.mat*dsm;
+      
+      if istrue(keepdsm)
+        % retain DSM in cfg if desired
+        cfg.openmeeg.dsm = dsm;
       end
+      
+      dipindx = insideindx(diprange);
     end
-  catch
-    me = lasterror;
-    rethrow(me);
   end
-
+  
   % apply montage, if applicable
   if isfield(sens, 'tra')
     lf = sens.tra * lf;
