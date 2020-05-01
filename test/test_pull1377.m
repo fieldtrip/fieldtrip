@@ -404,9 +404,106 @@ cfg.frequency = 10;
 cfg.sourcemodel = ext_leadfield_meg;
 sourcedics3d1 = ft_sourceanalysis(cfg, MEG_freq);
 
+%%
+clc;
+disp('no error with ft_dipolefitting, externally generated MEG leadfield, with cfg.headmodel')
+% if cfg.headmodel is provided
+cfg = [];
+cfg.numdipoles    = 1;                              
+cfg.headmodel     = vol_localsphere;                     
+cfg.sourcemodel   = ext_leadfield_meg;                     
+cfg.nonlinear     = 'no';                           
+cfg.grad          = MEG_tlck_df.grad;                        
+cfg.latency       = 0.025;                         
+ft_dipolefitting(cfg,MEG_tlck_df);
+
+%%
+clc;
+disp('Error 7: with ft_dipolefitting, externally generated MEG leadfield, without cfg.headmodel')
+
+% Does NOT work if cfg.headmodel is missing
+cfg = [];
+cfg.numdipoles    = 1;                              
+% cfg.headmodel     = vol_localsphere;                     
+cfg.sourcemodel   = ext_leadfield_meg;                     
+cfg.nonlinear     = 'no';                           
+cfg.grad          = MEG_tlck_df.grad;                        
+cfg.latency       = 0.025;                         
+ft_dipolefitting(cfg,MEG_tlck_df);
+
+% the error message is:
+% Reference to non-existent field 'headmodel'.
+% 
+% Error in prepare_headmodel (line 65) if ischar(cfg.headmodel)
+% 
+% Error in ft_dipolefitting (line 258) [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
 
 
+%%
+clc;
+disp('potential Error 8: with ft_sourceanalysis, externally generated EEG leadfield, with cfg.headmodel')
+disp('this has to be checked once Error 2 has been fixed!!')
 
+% if cfg.headmodel is provided
+cfg = [];
+cfg.method = 'dics';
+cfg.dics.keepfilter    = 'yes';
+cfg.dics.keepleadfield = 'yes';
+cfg.dics.keepcsd       = 'yes';
+cfg.dics.lambda        = '5%';
+cfg.frequency = 10;
+cfg.headmodel = vol_singlesphere;
+cfg.sourcemodel = ext_leadfield_eeg;
+cfg.elec = elec;
+ft_sourceanalysis(cfg, EEG_freq);
 
+%%% Error message at beamformer_dics
+% Error using  * 
+% Incorrect dimensions for matrix multiplication. Check that the number of columns in the first matrix matches the number
+% of rows in the second matrix. To perform elementwise multiplication, use '.*'.
 
+%%
+clc;
+disp('potential Error 9: with ft_sourceanalysis, externally generated EEG leadfield, without cfg.headmodel')
+disp('this has to be checked once Error 2 has been fixed!!')
+
+% Does NOT work if cfg.headmodel is missing
+cfg = [];
+cfg.method = 'dics';
+cfg.dics.keepfilter    = 'yes';
+cfg.dics.keepleadfield = 'yes';
+cfg.dics.keepcsd       = 'yes';
+cfg.dics.lambda        = '5%';
+cfg.frequency = 10;
+% cfg.headmodel = vol_singlesphere;
+cfg.sourcemodel = ext_leadfield_eeg;
+cfg.elec = elec;
+ft_sourceanalysis(cfg, EEG_freq);
+
+%%
+clc;
+disp('potential Error 10: with ft_dipolefitting, externally generated EEG leadfield, with cfg.headmodel')
+disp('this has to be checked once Error 2 has been fixed!!')
+
+% if cfg.headmodel is provided
+cfg = [];
+cfg.numdipoles    =  1;             
+cfg.headmodel     = vol_singlesphere;         
+cfg.sourcemodel   = ext_leadfield_eeg;
+cfg.elec          = elec;                         
+cfg.latency       = 0.025;                          
+ft_dipolefitting(cfg,EEG_tlck_df); 
+
+%%
+clc;
+disp('potential Error 11: with ft_dipolefitting, externally generated MEG leadfield, without cfg.headmodel')
+disp('this has to be checked once Error 2 has been fixed!!')
+
+cfg = [];
+cfg.numdipoles    =  1;             
+% cfg.headmodel     = vol_singlesphere;         
+cfg.sourcemodel   = ext_leadfield_eeg;
+cfg.elec          = elec;                         
+cfg.latency       = 0.025;                          
+ft_dipolefitting(cfg,EEG_tlck_df); 
 
