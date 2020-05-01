@@ -128,7 +128,7 @@ elecname = '/home/common/matlab/fieldtrip/template/electrode/standard_1020.elc';
 elec = ft_read_sens(elecname, 'senstype', 'eeg');
 
 cfg      = [];
-cfg.grad = elec; % why not dataeeg.elec?
+cfg.grad = elec; 
 cfg.headmodel = vol_singlesphere;
 cfg.channel = 'EEG';
 cfg.resolution = 1.5;
@@ -441,8 +441,7 @@ ft_dipolefitting(cfg,MEG_tlck_df);
 
 %%
 clc;
-disp('potential Error 8: with ft_sourceanalysis, externally generated EEG leadfield, with cfg.headmodel')
-disp('this has to be checked once Error 2 has been fixed!!')
+disp('Error 8: with ft_sourceanalysis, externally generated EEG leadfield, with cfg.headmodel')
 
 % if cfg.headmodel is provided
 cfg = [];
@@ -464,8 +463,7 @@ ft_sourceanalysis(cfg, EEG_freq);
 
 %%
 clc;
-disp('potential Error 9: with ft_sourceanalysis, externally generated EEG leadfield, without cfg.headmodel')
-disp('this has to be checked once Error 2 has been fixed!!')
+disp('Error 9: with ft_sourceanalysis, externally generated EEG leadfield, without cfg.headmodel')
 
 % Does NOT work if cfg.headmodel is missing
 cfg = [];
@@ -482,8 +480,7 @@ ft_sourceanalysis(cfg, EEG_freq);
 
 %%
 clc;
-disp('potential Error 10: with ft_dipolefitting, externally generated EEG leadfield, with cfg.headmodel')
-disp('this has to be checked once Error 2 has been fixed!!')
+disp('Error 10: with ft_dipolefitting, externally generated EEG leadfield, with cfg.headmodel')
 
 % if cfg.headmodel is provided
 cfg = [];
@@ -496,8 +493,7 @@ ft_dipolefitting(cfg,EEG_tlck_df);
 
 %%
 clc;
-disp('potential Error 11: with ft_dipolefitting, externally generated MEG leadfield, without cfg.headmodel')
-disp('this has to be checked once Error 2 has been fixed!!')
+disp('Error 11: with ft_dipolefitting, externally generated MEG leadfield, without cfg.headmodel')
 
 cfg = [];
 cfg.numdipoles    =  1;             
