@@ -123,25 +123,6 @@ cfg.channel = 'MEG';
 cfg.resolution = 1.5;
 gridmeg = ft_prepare_leadfield(cfg);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% create 2D grid - is this necessary?? Not working
-%[pnt, tri] = mesh_sphere(162);
-%pnt   = pnt*(vol.orig.MEG_Sphere.RADIUS-1.5);
-%shift = [vol.orig.MEG_Sphere.ORIGIN_X vol.orig.MEG_Sphere.ORIGIN_Y vol.orig.MEG_Sphere.ORIGIN_Z];
-%pnt   = pnt+repmat(shift,[size(pnt,1) 1]);
-%grid2.pnt = pnt;
-%grid2.tri = tri;
-%grid2.inside = 1:size(grid2.pnt,1);
-%grid2.outside = [];
-
-%cfg      = [];
-%cfg.grad = datameg.grad;
-%cfg.headmodel = vol;
-%cfg.sourcemodel = grid2;
-%cfg.channel = 'MEG';
-%grid2 = ft_prepare_leadfield(cfg);
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 % for EEG
 elecname = '/home/common/matlab/fieldtrip/template/electrode/standard_1020.elc';
 elec = ft_read_sens(elecname, 'senstype', 'eeg');
