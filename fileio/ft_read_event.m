@@ -2130,9 +2130,11 @@ switch eventformat
       % auto-detect the trigger channels
       chanindx = find(strcmp(hdr.chantype, 'trigger'));
     end
-    if ~isempty(chanindx)
-      % the "Digi" value goes down from 255 to 254
+    if isempty(detectflank)
+      % the "Digi" value goes down from 255 to 254, or to 251
       detectflank = 'downdiff';
+    end
+    if ~isempty(chanindx)
       event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift);
     end
     
