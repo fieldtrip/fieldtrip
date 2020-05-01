@@ -507,3 +507,104 @@ cfg.elec          = elec;
 cfg.latency       = 0.025;                          
 ft_dipolefitting(cfg,EEG_tlck_df); 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% check explicitly for simbio and openmeeg EEG computed leadfields
+%% simbio
+
+segm = [];
+segm.brain = logical(floor(3*rand(10,10,10)));
+segm.dim = size(segm.brain);
+segm.unit = 'mm';
+segm.coordsys = 'ctf';
+segm.transform = eye(4);
+
+cfg        = [];
+cfg.shift  = 0.3;
+cfg.method = 'hexahedral';
+cfg.resolution = 1; % this is in mm
+mesh_vol = ft_prepare_mesh(cfg,segm);
+
+cfg        = [];
+cfg.method ='simbio';
+cfg.conductivity = [0.33];   % order follows mesh.tissyelabel
+vol_simbio        = ft_prepare_headmodel(cfg, mesh_vol);
+
+%%
+clc;
+disp('no error with ft_dipolefitting, simbio EEG leadfield, with cfg.headmodel')
+cfg = [];
+cfg.numdipoles    =  1;             
+cfg.headmodel     = vol_singlesphere;         
+cfg.sourcemodel   = vol_simbio;
+cfg.elec          = elec;                         
+cfg.latency       = 0.025;                          
+ft_dipolefitting(cfg,EEG_tlck_df); 
+
+%%
+clc;
+disp('Error 12: with ft_dipolefitting, simbio EEG leadfield, without cfg.headmodel')
+cfg = [];
+cfg.numdipoles    =  1;             
+% cfg.headmodel     = vol_singlesphere;         
+cfg.sourcemodel   = vol_simbio;
+cfg.elec          = elec;                         
+cfg.latency       = 0.025;                          
+ft_dipolefitting(cfg,EEG_tlck_df); 
+
+% the error message is:
+% Reference to non-existent field 'headmodel'.
+% 
+% Error in prepare_headmodel (line 65)
+% if ischar(cfg.headmodel)
+% 
+% Error in ft_dipolefitting (line 258)
+% [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
+
+%% openmeg
+load('/home/common/matlab/fieldtrip/data/SubjectSEF_vol.mat')
+bnd_openmeeg = vol;
+clear vol
+
+cfg              = [];
+cfg.conductivity = [0.33];
+cfg.method       = 'openmeeg';
+vol_openmeg = ft_prepare_headmodel(cfg, bnd_openmeeg);
+
+%%
+clc;
+disp('Error 13: with ft_dipolefitting, OpenMEEG EEG leadfield, without cfg.headmodel')
+% not sure about this one, maybe I am building erroneously the headmodel?
+cfg = [];
+cfg.numdipoles    =  1;             
+cfg.headmodel     = bnd_openmeeg;         
+cfg.sourcemodel   = vol_openmeg;
+cfg.elec          = elec;                         
+cfg.latency       = 0.025;                          
+ft_dipolefitting(cfg,EEG_tlck_df); 
+
+% the error message is
+% Error using ft_prepare_vol_sens (line 552)
+% unsupported volume conductor model for EEG
+% 
+% Error in prepare_headmodel (line 118)
+% [headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, 'channel', cfg.channel);
+%%
+clc;
+disp('Error 14: with ft_dipolefitting, OpenMEEG EEG leadfield, without cfg.headmodel')
+cfg = [];
+cfg.numdipoles    =  1;             
+% cfg.headmodel     = bnd_openmeeg;         
+cfg.sourcemodel   = vol_openmeg;
+cfg.elec          = elec;                         
+cfg.latency       = 0.025;                          
+ft_dipolefitting(cfg,EEG_tlck_df); 
+
+% the error message is:
+
+% Reference to non-existent field 'headmodel'.
+% 
+% Error in prepare_headmodel (line 65)
+% if ischar(cfg.headmodel)
+% 
+% Error in ft_dipolefitting (line 258)
+% [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
