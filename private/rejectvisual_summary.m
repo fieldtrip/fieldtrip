@@ -244,8 +244,8 @@ end % switch
 axis ij;
 % colorbar;
 title(info.cfg.method);
-ylabel('channel number');
-xlabel('trial number');
+ylabel('channel number (in selection)');
+xlabel('trial number (in selection)');
 
 set(h, 'CurrentAxes', info.axes(2))
 cla(info.axes(2));
@@ -288,7 +288,7 @@ if any(info.chansel) && any(info.trlsel)
 end
 axis ij;
 set(info.axes(2), 'ButtonDownFcn', @toggle_visual);  % needs to be here; call to axis resets this property
-ylabel('channel number');
+ylabel('channel number (in selection)');
 
 set(h, 'CurrentAxes', info.axes(3))
 cla(info.axes(3));
@@ -322,7 +322,7 @@ if any(info.chansel) && any(info.trlsel)
   axis([0.5 xmax+0.5 (1-sign(ymin)*0.2)*ymin (1+sign(ymax)*0.2)*ymax]);
 end
 set(info.axes(3), 'ButtonDownFcn', @toggle_visual);  % needs to be here; call to axis resets this property
-xlabel('trial number');
+xlabel('trial number (in selection)');
 
 % put rejected trials/channels in their respective edit boxes
 set(info.badchanlbl, 'string', sprintf('Rejected channels: %i/%i', sum(info.chansel==0), info.nchan));
