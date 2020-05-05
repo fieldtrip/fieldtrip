@@ -98,8 +98,8 @@ if isempty(db_blob)
 end
 
 if iscell(filename)
+  % use recursion to read the events from multiple files
   ft_warning('concatenating events from %d files', numel(filename));
-  % use recursion to read events from multiple files
   
   hdr = ft_getopt(varargin, 'header');
   if isempty(hdr)
