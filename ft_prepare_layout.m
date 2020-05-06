@@ -249,7 +249,7 @@ if ~isempty(cfg.headshape) && ~isempty(cfg.mri)
 end
 % cfg.viewpoint can only be used together with cfg.projection = 'orthographic'
 if ~isempty(cfg.viewpoint) && ~isequal(cfg.projection, 'orthographic')
-  ft_error('cfg.viewpoint can only used in the case of orthographic projection')
+  ft_error('cfg.viewpoint can only be used in the case of orthographic projection')
 end
 if ~isempty(cfg.viewpoint) && ~isempty(cfg.rotate)
   ft_error('cfg.viewpoint and cfg.rotate are mutually exclusive, please use only one of the two')
