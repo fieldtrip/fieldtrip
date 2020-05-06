@@ -27,7 +27,6 @@ krn2   = cat(1,zeros(20,1),gausswin(50,5)); krn2 = krn2./sum(krn2);
 krn2b  = cat(1,zeros(70,1),gausswin(50,5)); krn2b = krn2b./sum(krn2b);
 krn2c  = gausswin(50,5);krn2c = krn2c./sum(krn2c);
 
-
 % situation 1
 source1 = conv(feature1, krn1', 'same') + randn(1,numel(feature1))./100;
 target1 = conv(source1, krn2', 'same') + randn(1,numel(feature1))./100;
@@ -72,8 +71,8 @@ cfg         = [];
 cfg.method  = 'mi';
 cfg.refindx = 'all';
 cfg.mi.lags = (-fs/2:2:fs/2)./fs;
-mi1 = ft_connectivityanalysis(cfg, data1);
-mi2 = ft_connectivityanalysis(cfg, data2);
+%mi1 = ft_connectivityanalysis(cfg, data1);
+%mi2 = ft_connectivityanalysis(cfg, data2);
 cfg.mi.precondition = true;
 mi1b = ft_connectivityanalysis(cfg, data1);
 mi2b = ft_connectivityanalysis(cfg, data2);
@@ -81,21 +80,32 @@ mi2b = ft_connectivityanalysis(cfg, data2);
 cfg            = [];
 cfg.method     = 'di';
 cfg.refindx    = 'all';
-cfg.di.lags    = (2:2:fs/2)./fs;
-di1 = ft_connectivityanalysis(cfg, data1);
-di2 = ft_connectivityanalysis(cfg, data2);
+cfg.di.lags    = (1:1:fs/2)./fs;
+%di1 = ft_connectivityanalysis(cfg, data1);
+%di2 = ft_connectivityanalysis(cfg, data2);
 cfg.di.precondition = true;
 di1b = ft_connectivityanalysis(cfg, data1);
 di2b = ft_connectivityanalysis(cfg, data2);
 
 cfg = [];
 cfg.method = 'dfi';
-cfg.refindx     = 2;
+cfg.refindx     = 'all';
 cfg.dfi.feature = 'feature';
-cfg.dfi.lags    = (2:2:fs/2)./fs;
-dfi1 = ft_connectivityanalysis(cfg, data1);
-dfi2 = ft_connectivityanalysis(cfg, data2);
+cfg.dfi.lags    = (1:1:fs/2)./fs;
+%dfi1 = ft_connectivityanalysis(cfg, data1);
+%dfi2 = ft_connectivityanalysis(cfg, data2);
 cfg.dfi.precondition = true;
 dfi1b = ft_connectivityanalysis(cfg, data1);
 dfi2b = ft_connectivityanalysis(cfg, data2);
+
+cfg = [];
+cfg.method = 'mi';
+cfg.refindx     = 'all';
+cfg.mi.feature = 'feature';
+cfg.mi.lags    = (1:1:fs/2)./fs;
+%ci1 = ft_connectivityanalysis(cfg, data1);
+%ci2 = ft_connectivityanalysis(cfg, data2);
+cfg.mi.precondition = true;
+ci1b = ft_connectivityanalysis(cfg, data1);
+ci2b = ft_connectivityanalysis(cfg, data2);
 
