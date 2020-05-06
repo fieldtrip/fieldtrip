@@ -5,7 +5,7 @@ function bnd = prepare_mesh_segmentation(cfg, mri)
 % The following configuration options can be specified if cfg.method = iso2mesh:
 %   cfg.maxsurf     = 1 = only use the largest disjointed surface
 %                     0 = use all surfaces for that levelset
-%   cfg.radbound    = a scalar indicating the radius of the target surface 
+%   cfg.radbound    = a scalar indicating the radius of the target surface
 %                     mesh element bounding sphere
 %
 % See also PREPARE_MESH_MANUAL, PREPARE_MESH_HEADSHAPE,
@@ -36,7 +36,7 @@ function bnd = prepare_mesh_segmentation(cfg, mri)
 mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'}, 'hasunit', 'yes');
 
 % get the default options
-cfg.spmversion    = ft_getopt(cfg, 'spmversion', 'spm8');
+cfg.spmversion    = ft_getopt(cfg, 'spmversion', 'spm12');
 cfg.method        = ft_getopt(cfg, 'method', 'projectmesh');
 cfg.maxsurf       = ft_getopt(cfg, 'maxsurf', 1);
 cfg.radbound      = ft_getopt(cfg, 'radbound', 3);
