@@ -1,7 +1,7 @@
 function test_issue1395
 
-% WALLTIME 00:20:00
-% MEM 3gb
+% WALLTIME 00:30:00
+% MEM 4gb
 % DEPENDENCY opm_fil
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/opm_fil'));
