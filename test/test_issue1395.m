@@ -1,10 +1,10 @@
 function test_issue1395
 
-% WALLTIME 00:30:00
-% MEM 4gb
+% WALLTIME 00:10:00
+% MEM 3gb
 % DEPENDENCY opm_fil
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/opm_fil'));
+% cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/opm_fil'));
 
 %% the data is from https://github.com/tierneytim/OPM
 
@@ -53,9 +53,13 @@ cfg.baselinewindow = [-inf 0];
 data = ft_preprocessing(cfg);
 
 %%
-cfg = [];
-cfg.method = 'summary';
-data_clean = ft_rejectvisual(cfg, data);
+
+% cfg = [];
+% cfg.method = 'summary';
+% data_clean = ft_rejectvisual(cfg, data);
+
+% prevent user interaction in the test script
+data_clean = data;
 
 %%
 
@@ -85,7 +89,8 @@ ft_plot_axes(grad);
 % What is the anatomical label for the positive Z-axis [r, l, a, p, s, i]? s
 % Is the origin of the coordinate system at the a(nterior commissure), i(nterauricular), n(ot a landmark)? n
 
-grad.coordsys = 'ras'; % prevent user interaction in the test script
+% prevent user interaction in the test script
+grad.coordsys = 'ras'; 
 
 %%
 
