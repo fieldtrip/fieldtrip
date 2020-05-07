@@ -4,7 +4,7 @@ function test_issue1395
 % MEM 3gb
 % DEPENDENCY opm_fil
 
-% cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/opm_fil'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/opm_fil'));
 
 %% the data is from https://github.com/tierneytim/OPM
 
