@@ -51,8 +51,8 @@ end
 
 source2 = conv(feature2a, krn1', 'same') ; %+ conv(noise2s,krn2c','same')  + randn(1,numel(feature2b))./200;
 target2 = conv(feature2b, krn2b', 'same'); %+ conv(noise2t,krn2c','same') + randn(1,numel(feature2b))./200;
-source2(11:end)   = source2(11:end)+noise2s(1:end-10);
-target2(1:end-10) = target2(1:end-10)+noise2t(1:end-10);
+source2(1:end-10)   = source2(1:end-10)+noise2s(1:end-10);
+target2(11:end) = target2(11:end)+noise2t(1:end-10);
 
 fs    = 100;        % in Hz
 tim   = (1:numel(feature1))./fs;
