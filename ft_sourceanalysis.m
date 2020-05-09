@@ -193,13 +193,21 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'optofile', 'opto'});
 isfreq     = ft_datatype(data, 'freq');
 iscomp     = ft_datatype(data, 'comp');
 istimelock = ft_datatype(data, 'timelock');
-if all(~[isfreq iscomp istimelock])
+if ~any([isfreq iscomp istimelock])
   ft_error('input data is not recognized');
 end
 
 % set the defaults
+if istimelock
+  cfg.method = ft_getopt(cfg, 'method', 'lcmv');
+elseif isfreq
+  cfg.method = ft_getopt(cfg, 'method', 'dics');
+else
+  cfg.method = ft_getopt(cfg, 'method', []);
+end
+
+cfg.keepleadfield    = ft_getopt(cfg, 'keepleadfield', ft_getopt(cfg.(cfg.method), 'keepleadfield', 'no')); % make these consistent when possible
 cfg.keeptrials       = ft_getopt(cfg, 'keeptrials', 'no');
-cfg.keepleadfield    = ft_getopt(cfg, 'keepleadfield', 'no');
 cfg.trialweight      = ft_getopt(cfg, 'trialweight', 'equal');
 cfg.jackknife        = ft_getopt(cfg, 'jackknife',   'no');
 cfg.pseudovalue      = ft_getopt(cfg, 'pseudovalue', 'no');
@@ -217,16 +225,10 @@ cfg.supdip           = ft_getopt(cfg, 'supdip',        []);
 cfg.latency          = ft_getopt(cfg, 'latency',   'all');
 cfg.frequency        = ft_getopt(cfg, 'frequency', 'all');
 
-if istimelock
-  cfg.method = ft_getopt(cfg, 'method', 'lcmv');
-elseif isfreq
-  cfg.method = ft_getopt(cfg, 'method', 'dics');
-else
-  cfg.method = ft_getopt(cfg, 'method', []);
-end
-
 % put the low-level options pertaining to the source reconstruction method in their own field
 cfg = ft_checkconfig(cfg, 'createsubcfg',  cfg.method);
+% move some fields from cfg.method back to the top-level configuration
+cfg = ft_checkconfig(cfg, 'createtopcfg', cfg.method);
 
 % put the low-level options pertaining to the dipole grid in their own field
 cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'});  % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
@@ -317,21 +319,9 @@ elseif isfreq
   if isfield(data, 'time')
     cfg.latency   = mean(cfg.latency);
   end
-
-elseif iscomp
-  % FIXME, select the components here
-  % FIXME, add the component numbers to the output
-  ft_error('the use of component data in ft_sourceanalysis is disabled for the time being: if you encounter this error message and you need this functionality please contact the FieldTrip development team');
 end
 
-convertcomp = false;
-if iscomp && (strcmp(cfg.method, 'rv') || strcmp(cfg.method, 'music'))
-  % these timelock methods are also supported for frequency or component data
-  if iscomp
-    convertcomp = true;
-    % the conversion will be done below, after the latency and channel selection
-  end
-elseif isfreq && isfield(data, 'labelcmb')
+if isfreq && isfield(data, 'labelcmb')
   % ensure that the cross-spectral densities are chan_chan_therest,
   % otherwise the latency and frequency selection could fail, so we don't
   % need to worry about linearly indexed cross-spectral densities below
@@ -339,15 +329,6 @@ elseif isfreq && isfield(data, 'labelcmb')
   % present in the data
   fprintf('converting the linearly indexed channelcombinations into a square CSD-matrix\n');
   data = ft_checkdata(data, 'cmbrepresentation', 'full');
-end
-
-if isfreq
-  % as per the call to ft_checkdata above, the dimord of the freq-data is
-  % either (rpt_)chan_chan_otherstuff, or rpttap_chan_otherstuff. The
-  % former is with cross-spectra, the latter is with fourierspctrm
-
-  % previously there was some explicit dimord checking here, but I think
-  % with the more consistent data handling it is not necessary anymore.
 end
 
 % collect and preprocess the electrodes/gradiometer and head model
@@ -398,16 +379,15 @@ else
   % construct the dipole positions on which the source reconstruction will be done
   sourcemodel = ft_prepare_sourcemodel(tmpcfg);
   if ischar(cfg.sourcemodel)
+    % replace the file name with the actual source model
     cfg.sourcemodel = sourcemodel;
   end
 end
 
-if isfield(cfg.sourcemodel, 'filter')
-  if numel(cfg.sourcemodel.filter) == size(sourcemodel.pos, 1)
-    sourcemodel.filter = cfg.sourcemodel.filter;
-  else
-    ft_warning('ignoring predefined filter as it does not match the number of source positions');
-  end
+% ensure consistency of the channel order in the pre-computed leadfields and filters, see bugs 1746 and 3029
+if (isfield(sourcemodel, 'filter') || isfield(sourcemodel, 'leadfield')) && ~isequal(sourcemodel.label, cfg.channel)
+  tmpcfg = keepfields(cfg, 'channel');
+  sourcemodel = ft_selectdata(tmpcfg, sourcemodel);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -515,36 +495,6 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
 
     otherwise
   end
-
-  % This is the place to check for the consistency of the channel order in
-  % the pre-computed leadfields/spatial filters, and to correct for it, if
-  % necessary. This pertains to bugs 1746 and 3029.
-  if isfield(sourcemodel, 'label') && (isfield(sourcemodel, 'leadfield') || isfield(sourcemodel, 'filter'))
-    % match the channels in the leadfields/filters with those in the data
-    [i1, i2] = match_str(cfg.channel, sourcemodel.label);
-    if ~isequal(i2(:), (1:numel(sourcemodel.label))')
-      if isfield(sourcemodel, 'leadfield')
-        fprintf('\n\nSubselecting/reordering the channels in the precomputed leadfields\n\n');
-        inside_indx = find(sourcemodel.inside);
-        for k = inside_indx(:)'
-          sourcemodel.leadfield{k} = sourcemodel.leadfield{k}(i2, :);
-        end
-      end
-      if isfield(sourcemodel, 'filter')
-        fprintf('\n\nSubselecting/reordering the channels in the precomputed filters\n\n');
-        inside_indx = find(sourcemodel.inside);
-        for k = inside_indx(:)'
-          sourcemodel.filter{k} = sourcemodel.filter{k}(:, i2);
-        end
-      end
-      sourcemodel.label = sourcemodel.label(i2);
-    end
-    if ~isequal(i1(:), (1:numel(cfg.channel))')
-      % this is not so easy to deal with, throw an error
-      ft_error('There''s a mismatch between the number/order of channels in the data, with respect to the channels in the precomputed leadfield/filter. This is not easy to solve automatically. Please look into this.');
-    end
-  end
-
 
   % fill these with NaNs, so that I dont have to treat them separately
   if isempty(Cr), Cr = nan(Ntrials, Nchans, 1); end
@@ -1105,10 +1055,8 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
     ft_error('method ''%s'' is unsupported for source reconstruction in the time domain', cfg.method);
   end
 
-elseif iscomp
-  ft_error('the use of component data in ft_sourceanalysis is disabled for the time being: if you encounter this error message and you need this functionality please contact the FieldTrip development team');
 else
-  ft_error('the specified method ''%s'' combined with the input data of type ''%s'' are not supported', cfg.method, ft_datatype(data));
+  ft_error('the specified method ''%s'' combined with the input data of type ''%s'' is not supported', cfg.method, ft_datatype(data));
 end % if freq or timelock or comp data
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1137,7 +1085,7 @@ if ~istrue(cfg.keepleadfield)
   source = removefields(source, {'leadfield' 'leadfielddimord' 'label'});
 end
 
-% remove the precomputed leadfields from the cfg regardless of what keepleadfield is saying
+% remove the precomputed leadfields from the cfg, regardless of what keepleadfield is saying
 % it should not be kept in cfg, since there it takes up too much space
 cfg.sourcemodel = removefields(cfg.sourcemodel, {'leadfield' 'leadfielddimord' 'filter' 'filterdimord' 'label'});
 
