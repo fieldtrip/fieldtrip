@@ -652,6 +652,14 @@ else
   sourcemodel.unit = cfg.unit;
 end
 
+% do some sanity checks
+if isfield(sourcemodel, 'filter')
+  assert(numel(sourcemodel.filter) == size(sourcemodel.pos, 1), 'the number of precomputed filters does not match number of source positions');
+end
+if isfield(sourcemodel, 'leadfield')
+  assert(numel(sourcemodel.leadfield) == size(sourcemodel.pos, 1), 'the number of precomputed leadfields does not match number of source positions');
+end
+
 if strcmp(cfg.spherify, 'yes')
   if ~ft_headmodeltype(headmodel, 'singlesphere') && ~ft_headmodeltype(headmodel, 'concentricspheres')
     ft_error('this only works for spherical volume conduction models');
