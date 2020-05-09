@@ -293,11 +293,6 @@ elseif ft_headmodeltype(headmodel, 'singleshell')
       else
         sourcemodel.leadfield{thisindx} = tmp(:,(i-1)*cfg.reducerank+(1:cfg.reducerank));
       end
-
-      if isfield(cfg, 'sourcemodel') && isfield(cfg.sourcemodel, 'mom')
-        % multiply with the normalized dipole moment to get the leadfield in the desired orientation
-        sourcemodel.leadfield{thisindx} = sourcemodel.leadfield{thisindx} * sourcemodel.mom(:,thisindx);
-      end
     end
   end
   ft_progress('close');
@@ -309,13 +304,17 @@ else
     ft_progress(i/length(insideindx), 'computing leadfield %d/%d\n', i, length(insideindx));
     thisindx = insideindx(i);
     sourcemodel.leadfield{thisindx} = ft_compute_leadfield(sourcemodel.pos(thisindx,:), sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
-
-    if isfield(cfg, 'sourcemodel') && isfield(cfg.sourcemodel, 'mom')
-      % multiply with the normalized dipole moment to get the leadfield in the desired orientation
-      sourcemodel.leadfield{thisindx} = sourcemodel.leadfield{thisindx} * sourcemodel.mom(:,thisindx);
-    end
   end % for all sourcemodel locations inside the brain
   ft_progress('close');
+end
+
+if isfield(cfg, 'sourcemodel') && isfield(cfg.sourcemodel, 'mom')
+  for i=1:length(insideindx)
+    % multiply with the normalized dipole moment to get the leadfield in the desired orientation
+    % FIXME mom and ori seem to be mixed up here, see https://github.com/fieldtrip/fieldtrip/issues/1399
+    thisindx = insideindx(i);
+    sourcemodel.leadfield{thisindx} = sourcemodel.leadfield{thisindx} * sourcemodel.mom(:,thisindx);
+  end
 end
 
 % represent the leadfield for positions outside the brain as empty array
