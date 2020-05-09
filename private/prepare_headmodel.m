@@ -89,7 +89,7 @@ else
     % convert it to the units of the source model
     sens       = ft_convert_units(sens,       cfg.sourcemodel.unit, 'feedback', true);
     headmodel  = ft_convert_units(headmodel,  cfg.sourcemodel.unit, 'feedback', true);
-  else
+  elseif isfield(headmodel, 'unit')
     % convert it to the units of the head model
     sens = ft_convert_units(sens, headmodel.unit, 'feedback', true);
   end
