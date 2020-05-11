@@ -31,7 +31,7 @@ function [hdr] = ft_read_header(filename, varargin)
 % For some data formats that are recorded on animal electrophysiology
 % systems (e.g. Neuralynx, Plexon), the following optional fields are
 % returned, which allows for relating the timing of spike and LFP data
-%   hdr.FirstTimeStamp      number, represented as 32 bit or 64 bit unsigned integer
+%   hdr.FirstTimeStamp      number, represented as 32-bit or 64-bit unsigned integer
 %   hdr.TimeStampPerSample  number, represented in double precision
 %
 % Depending on the file format, additional header information can be
@@ -122,8 +122,9 @@ if isempty(db_blob)
 end
 
 if iscell(filename)
-  % use recursion to read events from multiple files
+  % use recursion to read the header from multiple files
   ft_warning('concatenating header from %d files', numel(filename));
+
   hdr = cell(size(filename));
   for i=1:numel(filename)
     hdr{i} = ft_read_header(filename{i}, varargin{:});
