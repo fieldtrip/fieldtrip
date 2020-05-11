@@ -40,7 +40,7 @@ function [stat, cfg] = clusterstat(cfg, statrnd, statobs, varargin)
 cfg.orderedstats = ft_getopt(cfg, 'orderedstats', 'no');
 cfg.multivariate = ft_getopt(cfg, 'multivariate', 'no');
 cfg.minnbchan    = ft_getopt(cfg, 'minnbchan',    0);
-cfg.spmversion   = ft_getopt(cfg, 'spmversion', 'spm8');
+cfg.spmversion   = ft_getopt(cfg, 'spmversion', 'spm12');
 cfg.wcm_weight   = ft_getopt(cfg, 'wcm_weight', 1);
 
 % ensure that the preferred SPM version is on the path

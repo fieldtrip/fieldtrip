@@ -387,6 +387,16 @@ if strcmp(cfg.gridsearch, 'yes')
   end
   % construct the dipole grid on which the gridsearch will be done
   sourcemodel = ft_prepare_sourcemodel(tmpcfg);
+  if ischar(cfg.sourcemodel)
+    % replace the file name with the actual source model
+    cfg.sourcemodel = sourcemodel;
+  end
+  
+  % ensure consistency of the channel order in the pre-computed leadfields and filters, see bugs 1746 and 3029
+  if (isfield(sourcemodel, 'filter') || isfield(sourcemodel, 'leadfield')) && ~isequal(sourcemodel.label, cfg.channel)
+    tmpcfg = keepfields(cfg, 'channel');
+    sourcemodel = ft_selectdata(tmpcfg, sourcemodel);
+  end
 
   ngrid = size(sourcemodel.pos,1);
 
@@ -463,6 +473,8 @@ if strcmp(cfg.gridsearch, 'yes')
   end % switch model
 
 elseif strcmp(cfg.gridsearch, 'no')
+  % there is no grid needed for dipole scanning
+  sourcemodel = [];
   % use the initial guess supplied in the configuration for the remainder
   switch cfg.model
     case 'regional'
@@ -476,6 +488,7 @@ elseif strcmp(cfg.gridsearch, 'no')
   end % switch model
 
 end % if gridsearch yes/no
+
 % multiple dipoles can be represented either as a 1x(N*3) vector or as a Nx3 matrix,
 % i.e. [x1 y1 z1 x2 y2 z2] or [x1 y1 z1; x2 y2 z2]
 switch cfg.model
@@ -630,7 +643,11 @@ source.Vmodel = Vmodel; % FIXME this should be renamed (if possible w.r.t. EEGLA
 
 % the units of the fitted source are the same as the units of the headmodel and the sensor array
 for i=1:length(source.dip)
-  source.dip(i).unit = headmodel.unit;
+  if isfield(headmodel, 'unit')
+    source.dip(i).unit = headmodel.unit;
+  elseif isfield(sourcemodel, 'unit')
+    source.dip(i).unit = sourcemodel.unit;
+  end
 end
 
 % assign a latency, frequeny or component axis to the output

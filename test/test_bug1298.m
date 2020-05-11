@@ -5,12 +5,12 @@ function test_bug1298
 
 % DEPENDENCY ft_timelockanalysis ft_prepare_leadfield ft_sourceanalysis 
 
-megraw = load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/dataFIC.mat'));
+megraw = load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/data_all.mat'));
 
 cfg = [];
 cfg.covariance = 'yes';
 cfg.keeptrials = 'yes';
-megtlock = ft_timelockanalysis(cfg,megraw.dataFIC);
+megtlock = ft_timelockanalysis(cfg,megraw.data_all);
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/vol/Subject01vol_localspheres.mat'))
 
