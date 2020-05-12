@@ -222,8 +222,31 @@ end % switch method
 fprintf('%d trials marked as GOOD, %d trials marked as BAD\n', sum(trlsel), sum(~trlsel));
 fprintf('%d channels marked as GOOD, %d channels marked as BAD\n', sum(chansel), sum(~chansel));
 
+% chansel and trlsel now index into tmpdata, so we need to translate them
+% back to channels and trials as referenced in the original data structure
+% (see https://github.com/fieldtrip/fieldtrip/issues/1391 for how this can
+% go wrong)
+% use the channel labels, rather than integer indices, from here on (safer)
+chansel_labels = tmpdata.label(chansel);
+chans_removed = setdiff(data.label, chansel_labels);
 
-if ~all(chansel)
+% trials don't have labels, so translate the integer indices instead, if
+% needed
+if numel(trlsel) ~= numel(data.trial)
+  % this should only happen if cfg.trials was numeric or logical (i.e. not 'all')
+  % (but we cannot assert on non-equality with 'all' because the user could
+  % also have selected all trials numerically, i.e. 1:N).
+  assert(isnumeric(cfg.trials) | islogical(cfg.trials));
+  alltri = 1:numel(data.trial);
+  alltri = alltri(cfg.trials);
+  trlsel = alltri(trlsel);
+else % no translation needed
+  alltri = 1:numel(data.trial);
+  trlsel = find(trlsel);
+end
+trl_removed = setdiff(alltri, trlsel);
+
+if numel(chans_removed) > 0
   switch cfg.keepchannel
     case 'yes'
       % keep all channels, also when they are not selected
@@ -231,40 +254,27 @@ if ~all(chansel)
 
     case 'no'
       % show the user which channels are removed
-      removed = find(~chansel);
       fprintf('the following channels were removed: ');
-      for i=1:(length(removed)-1)
-        fprintf('%s, ', data.label{removed(i)});
-      end
-      fprintf('%s\n', data.label{removed(end)});
 
     case 'nan'
       % show the user which channels are removed
-      removed = find(~chansel);
       fprintf('the following channels were filled with NANs: ');
-      for i=1:(length(removed)-1)
-        fprintf('%s, ', data.label{removed(i)});
-      end
-      fprintf('%s\n', data.label{removed(end)});
+
       % mark the selection as nan
+      removed_inds = match_str(data.label, chans_removed);
       for i=1:length(data.trial)
-        data.trial{i}(~chansel,:) = nan;
+        data.trial{i}(removed_inds,:) = nan;
       end
 
     case 'repair'
       % show which channels are to be repaired
-      removed = find(~chansel);
       fprintf('the following channels were repaired using FT_CHANNELREPAIR: ');
-      for i=1:(length(removed)-1)
-        fprintf('%s, ', data.label{removed(i)});
-      end
-      fprintf('%s\n', data.label{removed(end)});
 
       % create cfg struct for call to ft_channelrepair
       orgcfg = cfg;
       tmpcfg = [];
       tmpcfg.trials = 'all';
-      tmpcfg.badchannel = data.label(~chansel);
+      tmpcfg.badchannel = chans_removed;
       tmpcfg.neighbours = cfg.neighbours;
       if isfield(cfg, 'grad')
           tmpcfg.grad = cfg.grad;
@@ -282,7 +292,16 @@ if ~all(chansel)
     otherwise
       ft_error('invalid specification of cfg.keepchannel')
   end % case
-end % if ~all(chansel)
+  
+  % provide the channel feedback
+  if any(strcmp({'no', 'nan', 'repair'}, cfg.keepchannel))
+    for i=1:(length(chans_removed)-1)
+      fprintf('%s, ', chans_removed{i});
+    end
+    fprintf('%s\n', chans_removed{end});
+  end
+    
+end % if numel(chans_removed) > 0
 
 if ~all(trlsel)
   switch cfg.keeptrial
@@ -292,44 +311,42 @@ if ~all(trlsel)
 
     case 'no'
       % show the user which channels are removed
-      removed = find(~trlsel);
       fprintf('the following trials were removed: ');
-      for i=1:(length(removed)-1)
-        fprintf('%d, ', removed(i));
-      end
-      fprintf('%d\n', removed(end));
 
     case 'nan'
       % show the user which trials are removed
-      removed = find(~trlsel);
       fprintf('the following trials were filled with NANs: ');
-      for i=1:(length(removed)-1)
-        fprintf('%d, ', removed(i));
-      end
-      fprintf('%d\n', removed(end));
       % mark the selection as nan
-      for i=removed
+      for i = trl_removed
         data.trial{i}(:,:) = nan;
       end
 
     otherwise
       ft_error('invalid specification of cfg.keeptrial')
   end % case
+  
+  % provide the trial feedback
+  if any(strcmp({'no', 'nan', 'repair'}, cfg.keeptrial))
+    for i=1:(length(trl_removed)-1)
+      fprintf('%d, ', trl_removed(i));
+    end
+    fprintf('%d\n', trl_removed(end));
+  end
 end % if ~all(trlsel)
 
 if isfield(data, 'sampleinfo')
   % construct the matrix with sample numbers prior to making the selection
-  cfg.artfctdef.(cfg.method).artifact = data.sampleinfo(~trlsel,:);
+  cfg.artfctdef.(cfg.method).artifact = data.sampleinfo(trl_removed,:);
 end
 
 % perform the selection of channels and trials
 orgcfg = cfg;
 tmpcfg = [];
 if strcmp(cfg.keepchannel, 'no')
-  tmpcfg.channel = find(chansel);
+  tmpcfg.channel = chansel_labels;
 end
 if strcmp(cfg.keeptrial, 'no')
-  tmpcfg.trials = find(trlsel); % note that it is keeptrial without S and trials with S
+  tmpcfg.trials = trlsel; % note that it is keeptrial without S and trials with S
 end
 data = ft_selectdata(tmpcfg, data);
 % restore the provenance information
