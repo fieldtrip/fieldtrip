@@ -81,6 +81,9 @@ if outputcfg
   % this is for ft_definetrial, ft_artifact_zvalue, etc.
   fprintf(fid, 'cfg = %s(cfg);\n\n', highest_ft);
 else
+  if isplottingfunction(highest_ft)
+    fprintf(fid, 'figure; \n');
+  end
   fprintf(fid, '%s(cfg);\n\n', highest_ft);
 end
 

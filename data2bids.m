@@ -66,8 +66,8 @@ function cfg = data2bids(cfg, varargin)
 % When specifying the output directory in cfg.bidsroot, you can also specify
 % additional information to be added as extra columns in the participants.tsv and
 % scans.tsv files. For example:
-%   cfg.participant.age         = scalar
-%   cfg.participant.sex         = string, 'm' or 'f'
+%   cfg.participants.age         = scalar
+%   cfg.participants.sex         = string, 'm' or 'f'
 %   cfg.scans.acq_time          = string, should be formatted according to  RFC3339 as '2019-05-22T15:13:38'
 %   cfg.dataset_description     = structure with additional fields, see below
 % In case any of these values is specified as empty (i.e. []) or as nan, it will be
@@ -208,6 +208,7 @@ if ft_abort
 end
 
 % ensure backward compatibility
+cfg = ft_checkconfig(cfg, 'renamed', {'participant', 'participants'}); % this was wrong in the documentation
 cfg = ft_checkconfig(cfg, 'renamed', {'anat', 'mri'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'native', 'no', 'convert'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'native', 'yes', 'copy'});
@@ -1414,7 +1415,7 @@ if need_events_tsv
     else
       events_tsv = event2table([], cfg.events);
     end
-  elseif ismatrix(cfg.events) && ~isempty(cfg.events) && numel(fieldnames(cfg.events))>0
+  elseif isnumeric(cfg.events) && ~isempty(cfg.events)
     % it is a "trl" matrix formatted as numeric array, convert it to an events table
     begsample = cfg.events(:,1);
     endsample = cfg.events(:,2);
@@ -1422,7 +1423,7 @@ if need_events_tsv
     if any(offset~=0)
       ft_warning('the offset in the trl matrix is ignored');
     end
-    if size(trl,2)>3
+    if size(cfg.events, 2)>3
       ft_warning('additional columns in the trl matrix are ignored');
     end
     % convert to the required fields

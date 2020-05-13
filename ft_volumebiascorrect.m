@@ -8,7 +8,7 @@ function [mri_unbias] = ft_volumebiascorrect(cfg, mri)
 % as obtained from the FT_READ_MRI function
 %
 % The configuration structure can contain
-%   cfg.spmversion     = string, 'spm8', 'spm12' (default = 'spm8')
+%   cfg.spmversion     = string, 'spm8', 'spm12' (default = 'spm12')
 %   cfg.opts           = struct, containing spmversion specific options.
 %                        See the code below and the SPM-documentation for
 %                        more information.
@@ -169,7 +169,7 @@ switch cfg.spmversion
         mri_unbias = keepfields(mri, {'coordsys', 'dim', 'transform', 'unit', 'inside'});
         mri_unbias.anatomy = VO.dat;
         mri_unbias.params = p;
-        mri_unbias.diagn  = diagn;     
+        mri_unbias.diagn  = diagn;
     otherwise
         ft_error('unsupported spmversion requested');
 end
