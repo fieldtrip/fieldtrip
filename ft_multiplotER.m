@@ -436,11 +436,11 @@ if ~isnumeric(cfg.ylim)
   for i=1:Ndata
     % Select the channels in the data that match with the layout and that are selected for plotting
     dat = varargin{i}.(cfg.parameter)(selchan,selx);
-    ymin = min([ymin min(min(min(dat)))]);
-    ymax = max([ymax max(max(max(dat)))]);
+    ymin = min(ymin, min(dat(:)));
+    ymax = max(ymax, max(dat(:)));
   end
   if strcmp(cfg.ylim, 'maxabs') % handle maxabs, make y-axis center on 0
-    ymax = max([abs(ymax) abs(ymin)]);
+    ymax = max(abs(ymax), abs(ymin));
     ymin = -ymax;
   elseif strcmp(cfg.ylim, 'zeromax')
     ymin = 0;
