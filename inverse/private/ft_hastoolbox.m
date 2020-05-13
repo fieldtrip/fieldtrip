@@ -164,6 +164,7 @@ url = {
   'MRTRIX'        'see https://mrtrix.org'
   'BAYESFACTOR'   'see https://klabhub.github.io/bayesFactor'
   'EZC3D'         'see https://github.com/pyomeca/ezc3d'
+  'GCMI'          'see https://github.com/robince/gcmi'
   'XSENS'         'see https://www.xsens.com/motion-capture and http://www.fieldtriptoolbox.org/getting_started/xsens/'
   };
 
@@ -408,9 +409,11 @@ switch toolbox
     dependency = {'bf.ttest', 'bf.ttest2'};
   case 'EZC3D'
     dependency = {'ezc3dRead', 'ezc3dWrite'};
+  case 'GCMI'
+    dependency = {'copnorm' 'mi_gg'};
   case 'XSENS'
     dependency = {'load_mvnx'};
-        
+    
     % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
     dependency = {'ft_read_header', 'ft_read_data', 'ft_read_event', 'ft_read_sens'};
