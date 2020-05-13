@@ -165,6 +165,7 @@ url = {
   'BAYESFACTOR'   'see https://klabhub.github.io/bayesFactor'
   'EZC3D'         'see https://github.com/pyomeca/ezc3d'
   'GCMI'          'see https://github.com/robince/gcmi'
+  'XSENS'         'see https://www.xsens.com/motion-capture and http://www.fieldtriptoolbox.org/getting_started/xsens/'
   };
 
 if nargin<2
@@ -410,6 +411,8 @@ switch toolbox
     dependency = {'ezc3dRead', 'ezc3dWrite'};
   case 'GCMI'
     dependency = {'copnorm' 'mi_gg'};
+  case 'XSENS'
+    dependency = {'load_mvnx'};
     
     % the following are FieldTrip modules/toolboxes
   case 'FILEIO'

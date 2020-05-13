@@ -11,7 +11,7 @@ function result = events_tsv(filename, hdr)
 % See also FT_FILETYPE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT,
 % QUALISYS_TSV, MOTION_C3D
 
-opts = detectImportOptions(filename,'filetype','text');
+opts = detectImportOptions(filename,'filetype','text', 'Delimiter', {'\t'} );
 
 needhdr = nargin==1;
 needevt = nargin==2;
@@ -20,12 +20,15 @@ if needhdr
   megjson = [filename(1:(end-length('events.tsv'))) 'meg.json'];
   eegjson = [filename(1:(end-length('events.tsv'))) 'eeg.json'];
   ieegjson = [filename(1:(end-length('events.tsv'))) 'ieeg.json'];
+  nirsjson = [filename(1:(end-length('events.tsv'))) 'nirs.json'];
   if exist(megjson, 'file')
     jsonfile = megjson;
   elseif exist(eegjson, 'file')
     jsonfile = eegjson;
   elseif exist(ieegjson, 'file')
     jsonfile = ieegjson;
+  elseif exist(nirsjson, 'file')
+      jsonfile = nirsjson;
   else
     ft_error('cannot find header information correspoding to %s', filename);
   end
@@ -64,7 +67,7 @@ if needevt
   % this gets the numeric stuff as doubles right away, yet might erroneously
   % typecast intended strings (e.g. in event_value) into doubles.
   tsv       = readtable(filename, opts);
-  tsv_naive = readtable(filename, 'filetype', 'text');
+  tsv_naive = readtable(filename, 'filetype', 'text', 'Delimiter', {'\t'});
   
   tsv       = table2struct(tsv);
   tsv_naive = table2struct(tsv_naive);

@@ -9,7 +9,7 @@ function [normalised] = ft_volumenormalise(cfg, mri)
 % example read with FT_READ_MRI.
 %
 % Configuration options are
-%   cfg.spmversion  = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
+%   cfg.spmversion  = string, 'spm2', 'spm8', 'spm12' (default = 'spm12')
 %   cfg.opts        = structure with configurable normalisation options,
 %                       see spm documentation for details.
 %   cfg.template    = string, filename of the template anatomical MRI (default = 'T1.mnc'
@@ -98,7 +98,7 @@ cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'coordsys', 'inputcoord', 'inpu
 mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
 
 % set the defaults
-cfg.spmversion       = ft_getopt(cfg, 'spmversion',       'spm8');
+cfg.spmversion       = ft_getopt(cfg, 'spmversion',       'spm12');
 cfg.spmmethod        = ft_getopt(cfg, 'spmmethod',        'old'); % in case of spm12, use the old-style normalisation by default
 cfg.opts             = ft_getopt(cfg, 'opts',             []);    % empty means default settings
 cfg.parameter        = ft_getopt(cfg, 'parameter',        'all');
@@ -136,9 +136,9 @@ if isdeployed
 else
   if ~isfield(cfg, 'template')
     spmpath = spm('dir');
-    if strcmpi(cfg.spmversion, 'spm2'),  cfg.template = fullfile(spmpath, filesep, 'templates', filesep, 'T1.mnc'); end
-    if strcmpi(cfg.spmversion, 'spm8'),  cfg.template = fullfile(spmpath, filesep, 'templates', filesep, 'T1.nii'); end
-    if strcmpi(cfg.spmversion, 'spm12'), cfg.template = fullfile(spmpath, filesep, 'toolbox',   filesep, 'OldNorm', filesep, 'T1.nii'); end
+    if strcmpi(cfg.spmversion, 'spm2'),  cfg.template = fullfile(spmpath, 'templates', 'T1.mnc'); end
+    if strcmpi(cfg.spmversion, 'spm8'),  cfg.template = fullfile(spmpath, 'templates', 'T1.nii'); end
+    if strcmpi(cfg.spmversion, 'spm12'), cfg.template = fullfile(spmpath, 'toolbox',   'OldNorm', 'T1.nii'); end
     if ~strcmp(cfg.templatecoordsys, 'spm')
       ft_error('you should specify cfg.templatecoordsys=''spm'' when using an SPM template');
     end

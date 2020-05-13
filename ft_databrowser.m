@@ -243,9 +243,7 @@ if ~isempty(cfg.chanscale)
   end
   
   % make sure chanscale is a column vector, not a row vector
-  if size(cfg.chanscale,2) > size(cfg.chanscale,1)
-    cfg.chanscale = cfg.chanscale';
-  end
+   cfg.chanscale = cfg.chanscale(:);
 end
 
 if ~isempty(cfg.mychanscale) && ~isfield(cfg, 'mychan')
