@@ -2,23 +2,23 @@ function [chansel, trlsel, cfg] = rejectvisual_summary(cfg, data)
 
 % SUBFUNCTION for ft_rejectvisual
 
-% % determine the initial selection of trials
-%ntrl = length(data.trial);
-% if isequal(cfg.trials, 'all') % support specification like 'all'
-%   cfg.trials = 1:ntrl;
-% end
-% trlsel = false(1, ntrl);
-% trlsel(cfg.trials) = true;
-ntrl   = numel(data.trial);
-trlsel = true(1, ntrl); % there has been trial selection in the caller function
+% determine the initial selection of trials
+ntrl = length(data.trial);
+if isequal(cfg.trials, 'all') % support specification like 'all'
+  cfg.trials = 1:ntrl;
+elseif isempty(cfg.trials)
+  cfg.trials = 1:ntrl;
+elseif isnumeric(cfg.trials)
+  % use the selection as it is
+end
+trlsel = false(1, ntrl);
+trlsel(cfg.trials) = true;
 
-% % determine the initial selection of channels
-% nchan = length(data.label);
-% cfg.channel = ft_channelselection(cfg.channel, data.label); % support specification like 'all'
-% chansel = false(1, nchan);
-% chansel(match_str(data.label, cfg.channel)) = true;
-nchan   = numel(data.label);
-chansel = true(1, nchan); 
+% determine the initial selection of channels
+nchan = length(data.label);
+cfg.channel = ft_channelselection(cfg.channel, data.label); % support specification like 'all'
+chansel = false(1, nchan);
+chansel(match_str(data.label, cfg.channel)) = true;
 
 % compute the sampling frequency from the first two timepoints
 fsample = 1/mean(diff(data.time{1}));
@@ -109,10 +109,10 @@ uicontrol(h, 'Units', 'normalized', 'position', [0.630 0.300 0.14 0.05], 'Style'
 uicontrol(h, 'Units', 'normalized', 'position', [0.630 0.210 0.14 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', 'Plot trial:');
 info.plottrltxt = uicontrol(h, 'Units', 'normalized', 'position', [0.630 0.170 0.14 0.05], 'Style', 'edit', 'HorizontalAlignment', 'left', 'backgroundcolor', [1 1 1], 'callback', @display_trial);
 
-info.badtrllbl  = uicontrol(h, 'Units', 'normalized', 'position', [0.795 0.470 0.230 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', sprintf('Rejected trials: %i/%i', sum(info.trlsel==0), info.ntrl));
-info.badtrltxt  = uicontrol(h, 'Units', 'normalized', 'position', [0.795 0.430 0.230 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'));
-info.badchanlbl = uicontrol(h, 'Units', 'normalized', 'position', [0.795 0.340 0.230 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', sprintf('Rejected channels: %i/%i', sum(info.chansel==0), info.nchan));
-info.badchantxt = uicontrol(h, 'Units', 'normalized', 'position', [0.795 0.300 0.230 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'));
+info.excludetrllbl  = uicontrol(h, 'Units', 'normalized', 'position', [0.795 0.470 0.230 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', sprintf('Rejected trials: %i/%i', sum(info.trlsel==0), info.ntrl));
+info.excludetrltxt  = uicontrol(h, 'Units', 'normalized', 'position', [0.795 0.430 0.230 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'));
+info.excludechanlbl = uicontrol(h, 'Units', 'normalized', 'position', [0.795 0.340 0.230 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', sprintf('Rejected channels: %i/%i', sum(info.chansel==0), info.nchan));
+info.excludechantxt = uicontrol(h, 'Units', 'normalized', 'position', [0.795 0.300 0.230 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'));
 
 % "show rejected" button
 % ui_tog = uicontrol(h, 'Units', 'normalized', 'position', [0.55 0.200 0.25 0.05], 'Style', 'checkbox', 'backgroundcolor', get(h, 'color'), 'string', 'Show rejected?', 'callback', @toggle_rejected);
@@ -127,12 +127,6 @@ info.output_box = uicontrol(h, 'Units', 'normalized', 'position', [0.00 0.00 1.0
 uicontrol(h, 'Units', 'normalized', 'position', [0.80 0.175 0.10 0.05], 'string', 'quit', 'callback', @quit);
 
 guidata(h, info);
-
-% disable trial plotting if cfg.layout not present
-if ~isfield(info.cfg, 'layout')
-  set(info.plottrltxt, 'Enable', 'off');
-  update_log(info.output_box, sprintf('NOTE: "cfg.layout" parameter required for trial plotting!'));
-end
 
 % Compute initial metric...
 compute_metric(h);
@@ -230,7 +224,7 @@ switch info.cfg.viewmode
     tmp = level;
     tmp(~info.chansel, :) = nan;
     tmp(:, ~info.trlsel)  = nan;
-    imagesc(tmp);
+    imagesc(tmp, 'AlphaData', ~isnan(tmp));
     caxis([min(tmp(:)) max(tmp(:))]);
   case 'hide'
     imagesc(level(info.chansel==1, info.trlsel==1));
@@ -244,8 +238,8 @@ end % switch
 axis ij;
 % colorbar;
 title(info.cfg.method);
-ylabel('channel number (in selection)');
-xlabel('trial number (in selection)');
+ylabel('channel number');
+xlabel('trial number');
 
 set(h, 'CurrentAxes', info.axes(2))
 cla(info.axes(2));
@@ -288,7 +282,7 @@ if any(info.chansel) && any(info.trlsel)
 end
 axis ij;
 set(info.axes(2), 'ButtonDownFcn', @toggle_visual);  % needs to be here; call to axis resets this property
-ylabel('channel number (in selection)');
+ylabel('channel number');
 
 set(h, 'CurrentAxes', info.axes(3))
 cla(info.axes(3));
@@ -322,39 +316,40 @@ if any(info.chansel) && any(info.trlsel)
   axis([0.5 xmax+0.5 (1-sign(ymin)*0.2)*ymin (1+sign(ymax)*0.2)*ymax]);
 end
 set(info.axes(3), 'ButtonDownFcn', @toggle_visual);  % needs to be here; call to axis resets this property
-xlabel('trial number (in selection)');
+xlabel('trial number');
 
 % put rejected trials/channels in their respective edit boxes
-set(info.badchanlbl, 'string', sprintf('Rejected channels: %i/%i', sum(info.chansel==0), info.nchan));
-set(info.badtrllbl, 'string', sprintf('Rejected trials: %i/%i', sum(info.trlsel==0), info.ntrl));
+set(info.excludechanlbl, 'string', sprintf('Rejected channels: %i/%i', sum(info.chansel==0), info.nchan));
+set(info.excludetrllbl, 'string', sprintf('Rejected trials: %i/%i', sum(info.trlsel==0), info.ntrl));
 if ~isempty(find(info.trlsel==0, 1))
-  set(info.badtrltxt, 'String', num2str(find(info.trlsel==0)), 'FontAngle', 'normal');
+  set(info.excludetrltxt, 'String', num2str(find(info.trlsel==0)), 'FontAngle', 'normal');
 else
-  set(info.badtrltxt, 'String', 'No trials rejected', 'FontAngle', 'italic');
+  set(info.excludetrltxt, 'String', 'No trials rejected', 'FontAngle', 'italic');
 end
 if ~isempty(find(info.chansel==0, 1))
   if isfield(info.data, 'label')
     chanlabels = info.data.label(info.chansel==0);
-    badchantxt = '';
+    excludechantxt = '';
     for i=find(info.chansel==0)
-      if ~isempty(badchantxt)
-        badchantxt = [badchantxt ', ' info.data.label{i} '(' num2str(i) ')'];
+      if ~isempty(excludechantxt)
+        excludechantxt = [excludechantxt ', ' info.data.label{i} '(' num2str(i) ')'];
       else
-        badchantxt = [info.data.label{i} '(' num2str(i) ')'];
+        excludechantxt = [info.data.label{i} '(' num2str(i) ')'];
       end
     end
-    set(info.badchantxt, 'String', badchantxt, 'FontAngle', 'normal');
+    set(info.excludechantxt, 'String', excludechantxt, 'FontAngle', 'normal');
   else
-    set(info.badtrltxt, 'String', num2str(find(info.chansel==0)), 'FontAngle', 'normal');
+    set(info.excludetrltxt, 'String', num2str(find(info.chansel==0)), 'FontAngle', 'normal');
   end
 else
-  set(info.badchantxt, 'String', 'No channels rejected', 'FontAngle', 'italic');
+  set(info.excludechantxt, 'String', 'No channels rejected', 'FontAngle', 'italic');
 end
 
 function toggle_trials(h, eventdata)
 info = guidata(h);
 % extract trials from string
 rawtrls = get(h, 'string');
+set(h, 'string', '');
 if ~isempty(rawtrls)
   spltrls = regexp(rawtrls, '\s+', 'split');
   trls = [];
@@ -383,6 +378,7 @@ uiresume;
 function toggle_channels(h, eventdata)
 info = guidata(h);
 rawchans = get(h, 'string');
+set(h, 'string', '');
 if ~isempty(rawchans)
   splchans = regexp(rawchans, '\s+', 'split');
   chans = zeros(1, length(splchans));
@@ -515,42 +511,6 @@ compute_metric(h);
 guidata(h, info);
 uiresume;
 
-% function display_trial(h, eventdata)
-% info = guidata(h);
-% rawtrls = get(h, 'string');
-% if ~isempty(rawtrls)
-%   spltrls = regexp(rawtrls, ' ', 'split');
-%   trls = [];
-%   for n = 1:length(spltrls)
-%     trls(n) = str2num(cell2mat(spltrls(n)));
-%   end
-% else
-%   update_log(info.output_box, sprintf('Please enter one or more trials'));
-%   uiresume;
-%   return;
-% end
-% if all(trls==0)
-%   % use visual selection
-%   update_log(info.output_box, sprintf('make visual selection of trials to be plotted separately...'));
-%   [x, y] = select2d;
-%   maxpertrl  = max(info.origlevel, [], 1);
-%   toggle = find(1:ntrl>=x(1) & ...
-%     1:ntrl<=x(2) & ...
-%     maxpertrl(:)'>=y(1) & ...
-%     maxpertrl(:)'<=y(2));
-% else
-%   toggle = trls;
-% end
-% for i=1:length(trls)
-%   figure
-%   % the data being displayed here is NOT filtered
-%   %plot(data.time{toggle(i)}, data.trial{toggle(i)}(chansel, :));
-%   tmp = info.data.trial{toggle(i)}(info.chansel, :);
-%   tmp = tmp - repmat(mean(tmp, 2), [1 size(tmp, 2)]);
-%   plot(info.data.time{toggle(i)}, tmp);
-%   title(sprintf('trial %d', toggle(i)));
-% end
-
 function quit(h, eventdata)
 info = guidata(h);
 info.quit = 1;
@@ -609,10 +569,47 @@ if minflag
   level          = -1 * level;
 end
 
+% function display_trial(h, eventdata)
+% info = guidata(h);
+% rawtrls = get(h, 'string');
+% if ~isempty(rawtrls)
+%   spltrls = regexp(rawtrls, ' ', 'split');
+%   trls = [];
+%   for n = 1:length(spltrls)
+%     trls(n) = str2num(cell2mat(spltrls(n)));
+%   end
+% else
+%   update_log(info.output_box, sprintf('Please enter one or more trials'));
+%   uiresume;
+%   return;
+% end
+% if all(trls==0)
+%   % use visual selection
+%   update_log(info.output_box, sprintf('make visual selection of trials to be plotted separately...'));
+%   [x, y] = select2d;
+%   maxpertrl  = max(info.origlevel, [], 1);
+%   toggle = find(1:ntrl>=x(1) & ...
+%     1:ntrl<=x(2) & ...
+%     maxpertrl(:)'>=y(1) & ...
+%     maxpertrl(:)'<=y(2));
+% else
+%   toggle = trls;
+% end
+% for i=1:length(trls)
+%   figure
+%   % the data being displayed here is NOT filtered
+%   %plot(data.time{toggle(i)}, data.trial{toggle(i)}(chansel, :));
+%   tmp = info.data.trial{toggle(i)}(info.chansel, :);
+%   tmp = tmp - repmat(mean(tmp, 2), [1 size(tmp, 2)]);
+%   plot(info.data.time{toggle(i)}, tmp);
+%   title(sprintf('trial %d', toggle(i)));
+% end
+
 function display_trial(h, eventdata)
 info = guidata(h);
 update_log(info.output_box, 'Making multiplot of individual trials ...');
 rawtrls = get(h, 'string');
+set(h, 'string', '');
 if isempty(rawtrls)
   return;
 else
@@ -627,6 +624,7 @@ cfg_mp = [];
 cfg_mp.trackcallinfo = 'no';
 cfg_mp.layout  = info.cfg.layout;
 cfg_mp.channel = info.data.label(info.chansel);
+cfg_mp.dataname = info.cfg.dataname;
 currfig = gcf;
 for n = 1:length(trls)
   % ft_multiplotER should be able to make the selection, but fails due to http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2978
@@ -644,4 +642,4 @@ for n = 1:length(trls)
 end
 figure(currfig);
 update_log(info.output_box, 'Done.');
-return;
+return
