@@ -2298,14 +2298,22 @@ switch headerformat
   
   case 'nwb'
     % Todo: ft_hastoolbox('', 1)	
+% 	c = load('core.mat'); % might be needed later on
+% 	nwb_version = c.version;
 	tmp = nwbRead(filename); % is lazy, so should not be too costly
+	fn = fieldnames(nwb);
+	fn = fn(startsWith(fn, 'general'));
+	for iFn = 1:numel(fn)
+	  keys = nwb.(fn{iFn}).keys()	
+	  % !! Add Steffen code here
+	end
 	keys = tmp.searchFor('ElectricalSeries').keys; % find lfp data
 	if numel(keys) > 1 % && isempty(additional_user_input) % TODO
 		error('More than one ElectricalSeries present in data. Please specify which signal to use.') % TODO
 	else
 		series = io.resolvePath(tmp, keys{1});
 	end
-	hdr.Fs          = []; % TODO
+	hdr.Fs          = series.starting_time_rate; % TODO
     hdr.nSamples    = []; % TODO
     hdr.nSamplesPre = 0; % continuous data
     hdr.nTrials     = 1; % continuous data
