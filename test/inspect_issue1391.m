@@ -57,6 +57,10 @@ checkalternatives(data, data_clean);
 
 %%
 
+cfg = [];
+cfg.method = 'summary';
+cfg.metric = 'max';
+
 % this one was showing problems
 cfg.channel = {'a' 'c' 'd'};
 data_clean = ft_rejectvisual(cfg, data); % don't make any additional selection, just quit
@@ -90,7 +94,6 @@ assert(isequal(data_clean.label(:), cfg.channel(:)));
 %% trials in summary mode
 
 cfg = [];
-cfg.channel = 'all';
 cfg.method = 'summary';
 cfg.metric = 'max';
 
