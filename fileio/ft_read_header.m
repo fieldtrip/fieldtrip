@@ -2304,23 +2304,27 @@ switch headerformat
 	fn = fieldnames(nwb);
 	fn = fn(startsWith(fn, 'general'));
 	for iFn = 1:numel(fn)
-	  keys = nwb.(fn{iFn}).keys()	
+	  tmp_keys = nwb.(fn{iFn}).keys();
 	  % !! Add Steffen code here
 	end
-	keys = tmp.searchFor('ElectricalSeries').keys; % find lfp data
-	if numel(keys) > 1 % && isempty(additional_user_input) % TODO
+	hdr.orig        = []; % TODO
+	
+	es_key = tmp.searchFor('ElectricalSeries').keys; % find lfp data
+	if numel(es_key) > 1 % && isempty(additional_user_input) % TODO
 		error('More than one ElectricalSeries present in data. Please specify which signal to use.') % TODO
 	else
-		series = io.resolvePath(tmp, keys{1});
+		eseries = io.resolvePath(tmp, es_key{1});
 	end
-	hdr.Fs          = series.starting_time_rate; % TODO
-    hdr.nSamples    = []; % TODO
-    hdr.nSamplesPre = 0; % continuous data
-    hdr.nTrials     = 1; % continuous data
+	hdr.Fs          = eseries.starting_time_rate;
+	hdr.nSamples    = eseries.data.dims(2);
+    hdr.nSamplesPre = 0; % for now: hardcoded continuous data
+    hdr.nTrials     = 1; % for now: hardcoded continuous data
     hdr.label       = cellstr(num2str(nwb.general_extracellular_ephys_electrodes.id.data.load)); % electrode names
     hdr.nChans      = numel(hdr.label); 
-    hdr.orig        = []; % TODO
-  
+	[hdr.chanunit{1:hdr.nChans,1}] = deal(eseries.data_unit);
+	hdr.chanunit    = strrep(hdr.chanunit, 'volt', 'V');
+	hdr.chanunit    = strrep(hdr.chanunit, 'micro', 'u');
+	
   case 'artinis_oxy3'
     ft_hastoolbox('artinis', 1);
     hdr = read_artinis_oxy3(filename);
