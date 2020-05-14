@@ -78,6 +78,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   MPI - Max Planck Institute (*.dap)
 %   Neurosim  (neurosim_spikes, neurosim_signals, neurosim_ds)
 %   Windaq (*.wdq)
+%   Neurodata Without Borders: Neurophysiology (*.nwb)
 %
 % The following NIRS dataformats are supported
 %   BUCN - Birkbeck college, London (*.txt)
@@ -2294,7 +2295,24 @@ switch headerformat
     hdr.nTrials     = 1; % continuous data
     hdr.label       = {tmp.hdr.entityinfo(tmp.list.analog(tmp.analog.contcount~=0)).EntityLabel}; %%% contains non-unique chans?
     hdr.orig        = tmp; % remember the original header
-    
+  
+  case 'nwb'
+    % Todo: ft_hastoolbox('', 1)	
+	tmp = nwbRead(filename); % is lazy, so should not be too costly
+	keys = tmp.searchFor('ElectricalSeries').keys; % find lfp data
+	if numel(keys) > 1 % && isempty(additional_user_input) % TODO
+		error('More than one ElectricalSeries present in data. Please specify which signal to use.') % TODO
+	else
+		series = io.resolvePath(tmp, keys{1});
+	end
+	hdr.Fs          = []; % TODO
+    hdr.nSamples    = []; % TODO
+    hdr.nSamplesPre = 0; % continuous data
+    hdr.nTrials     = 1; % continuous data
+    hdr.label       = cellstr(num2str(nwb.general_extracellular_ephys_electrodes.id.data.load)); % electrode names
+    hdr.nChans      = numel(hdr.label); 
+    hdr.orig        = []; % TODO
+  
   case 'artinis_oxy3'
     ft_hastoolbox('artinis', 1);
     hdr = read_artinis_oxy3(filename);
