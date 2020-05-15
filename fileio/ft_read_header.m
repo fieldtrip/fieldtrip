@@ -2317,7 +2317,7 @@ switch headerformat
     if numel(es_key) > 1 % in case we weren't able to sort out a single
 		error('More than one ElectricalSeries present in data. Please specify which signal to use.')
 	else
-		eseries = io.resolvePath(tmp, es_key{es_idx});
+		eseries = io.resolvePath(tmp, es_key{1});
 	end
 	hdr.Fs          = eseries.starting_time_rate;
 	hdr.nSamples    = eseries.data.dims(2);
