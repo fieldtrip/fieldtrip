@@ -1463,7 +1463,7 @@ elseif filetype_check_extension(filename, '.fcsv')
   content = 'position information about Markups Fiducial Node';
 elseif filetype_check_extension(filename, '.nwb')
   % this could be a mrtrix compatible image file
-  type = 'NWB:N';
+  type = 'nwb';
   manufacturer = 'Neurodata Without Borders';
   content = 'neurophysiology data';
 end

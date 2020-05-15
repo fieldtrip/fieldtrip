@@ -1317,7 +1317,20 @@ switch dataformat
   case 'neuroprax_eeg'
     tmp = np_readdata(filename, hdr.orig, begsample - 1, endsample - begsample + 1, 'samples');
     dat = tmp.data(:,chanindx)';
-    
+   
+  case 'nwb'
+    ft_hastoolbox('MatNWB', 1);
+%     generateCore;
+	tmp = nwbRead(filename);
+	es_key = tmp.searchFor('ElectricalSeries').keys; % find lfp data
+    if numel(es_key) > 1 % && isempty(additional_user_input) % TODO
+		error('More than one ElectricalSeries present in data. Please specify which signal to use.') % TODO
+    else
+		eseries = io.resolvePath(tmp, es_key{1});
+    end
+    dat = eseries.data.load; % TODO: function allows to load segments load([min_channel, min_sample],[max_channel, max_channel]) and one could subselect from there
+    dat = dat(chanindx, begsample:endsample);
+
   case 'artinis_oxy3'
     ft_hastoolbox('artinis', 1);
     dat = read_artinis_oxy3(filename, hdr, begsample, endsample, chanindx);

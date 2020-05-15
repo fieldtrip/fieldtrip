@@ -2297,16 +2297,21 @@ switch headerformat
     hdr.orig        = tmp; % remember the original header
   
   case 'nwb'
-    % Todo: ft_hastoolbox('', 1)	
-% 	c = load('core.mat'); % might be needed later on
-% 	nwb_version = c.version;
+    ft_hastoolbox('MatNWB', 1)	
+    c = load('core.mat'); % might be needed later on
+    nwb_version = c.version;
+    nwb_fileversion = util.getSchemaVersion(filename);
+    if ~strcmp(nwb_version, nwb_fileversion)
+        warning(['Installed NWB:N schema version (' nwb_version ') does not match the file''s schema (' nwb_fileversion{1} '). This might result in an error.'])
+    end
+%     generateCore; % leads to arcane errors; user has to run it before
 	tmp = nwbRead(filename); % is lazy, so should not be too costly
-	fn = fieldnames(nwb);
+	fn = fieldnames(tmp);
 	fn = fn(startsWith(fn, 'general'));
-	for iFn = 1:numel(fn)
-	  tmp_keys = nwb.(fn{iFn}).keys();
+% 	for iFn = 1:numel(fn)
+% 	  tmp_keys = tmp.(fn{iFn}).keys();
 	  % !! Add Steffen code here
-	end
+% 	end
 	hdr.orig        = []; % TODO
 	
 	es_key = tmp.searchFor('ElectricalSeries').keys; % find lfp data
@@ -2319,11 +2324,13 @@ switch headerformat
 	hdr.nSamples    = eseries.data.dims(2);
     hdr.nSamplesPre = 0; % for now: hardcoded continuous data
     hdr.nTrials     = 1; % for now: hardcoded continuous data
-    hdr.label       = cellstr(num2str(nwb.general_extracellular_ephys_electrodes.id.data.load)); % electrode names
+    hdr.label       = cellstr(num2str(io.resolvePath(tmp, eseries.electrodes.table.path).id.data.load)); % electrode names
     hdr.nChans      = numel(hdr.label); 
 	[hdr.chanunit{1:hdr.nChans,1}] = deal(eseries.data_unit);
 	hdr.chanunit    = strrep(hdr.chanunit, 'volt', 'V');
 	hdr.chanunit    = strrep(hdr.chanunit, 'micro', 'u');
+    % TODO: hdr.FirstTimeStamp      
+    % TODO: hdr.TimeStampPerSample
 	
   case 'artinis_oxy3'
     ft_hastoolbox('artinis', 1);
