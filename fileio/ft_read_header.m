@@ -2304,17 +2304,9 @@ switch headerformat
     if ~strcmp(nwb_version, nwb_fileversion)
         warning(['Installed NWB:N schema version (' nwb_version ') does not match the file''s schema (' nwb_fileversion{1} '). This might result in an error.'])
     end
-%     generateCore; % leads to arcane errors; user has to run it manually
-%     before running ft_read_header
-	tmp = nwbRead(filename); % is lazy, so should not be too costly
-	fn = fieldnames(tmp);
-	fn = fn(startsWith(fn, 'general'));
-% 	for iFn = 1:numel(fn)
-% 	  tmp_keys = tmp.(fn{iFn}).keys();
-	  % !! Add Steffen code here
-% 	end
-	hdr.orig        = []; % TODO
-	
+    %     generateCore; % leads to arcane errors; user has to run it manually
+    %     before running ft_read_header
+    tmp = nwbRead(filename); % is lazy, so should not be too costly
 	es_key = tmp.searchFor('ElectricalSeries').keys; % find lfp data
 	if numel(es_key) > 1 % && isempty(additional_user_input) % TODO
 		error('More than one ElectricalSeries present in data. Please specify which signal to use.') % TODO
@@ -2340,7 +2332,25 @@ switch headerformat
 	hdr.chanunit    = strrep(hdr.chanunit, 'micro', 'u');
     % TODO: hdr.FirstTimeStamp      
     % TODO: hdr.TimeStampPerSample
-	
+    
+	% carry over some metadata
+    hdr.orig        = [];
+    fn = {'general_experimenter', ...
+        'general_institution', ...
+        'general_keywords', ...
+        'general_lab', ...
+        'general_notes', ...
+        'general_related_publications', ...
+        'general_session_id', ...
+        'identifier', ...
+        'session_description', ...
+        'nwb_version', ...
+        'help'};
+    for iFn = 1:numel(fn)
+        if isprop(tmp, fn{iFn}) && ~isempty(tmp.(fn{iFn}))
+            hdr.orig.(fn{iFn}) = tmp.(fn{iFn});
+        end
+    end
   case 'artinis_oxy3'
     ft_hastoolbox('artinis', 1);
     hdr = read_artinis_oxy3(filename);
