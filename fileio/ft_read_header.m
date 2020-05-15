@@ -2286,7 +2286,8 @@ switch headerformat
   case 'neuroshare' % NOTE: still under development
     % check that the required neuroshare toolbox is available
     ft_hastoolbox('neuroshare', 1);
-    
+    generateCore; % alternative: use meta.package.fromName to determine whether generateCore has already been called
+    rehash; % required after generateCore, otherwise: https://github.com/NeurodataWithoutBorders/matnwb/issues/220
     tmp = read_neuroshare(filename);
     hdr.Fs          = tmp.hdr.analoginfo(end).SampleRate; % take the sampling freq from the last analog channel (assuming this is the same for all chans)
     hdr.nChans      = length(tmp.list.analog(tmp.analog.contcount~=0)); % get the analog channels, only the ones that are not empty
