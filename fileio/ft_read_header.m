@@ -2295,26 +2295,30 @@ switch headerformat
     hdr.nTrials     = 1; % continuous data
     hdr.label       = {tmp.hdr.entityinfo(tmp.list.analog(tmp.analog.contcount~=0)).EntityLabel}; %%% contains non-unique chans?
     hdr.orig        = tmp; % remember the original header
-  
+    
   case 'nwb'
     ft_hastoolbox('MatNWB', 1)	% when I run this locally outside of ft_read_header it does not work for me
-    c = load('core.mat'); % might be needed later on - I don't have this file
-    nwb_version = c.version;
-    nwb_fileversion = util.getSchemaVersion(filename);
-    if ~strcmp(nwb_version, nwb_fileversion)
-        warning(['Installed NWB:N schema version (' nwb_version ') does not match the file''s schema (' nwb_fileversion{1} '). This might result in an error.'])
+    try
+        c = load('core.mat'); % might be needed later on - I don't have this file
+        nwb_version = c.version;
+        nwb_fileversion = util.getSchemaVersion(filename);
+        if ~strcmp(nwb_version, nwb_fileversion)
+            warning(['Installed NWB:N schema version (' nwb_version ') does not match the file''s schema (' nwb_fileversion{1} '). This might result in an error.'])
+        end
+    catch
+        warning('Something might not be alright with your MatNWB path. Still trying.')
     end
-    %     generateCore; % leads to arcane errors; user has to run it manually
-    %     before running ft_read_header
+    % ; % ; user has to run generateCore manually before running
+    % ft_read_header; running it here leads to arcane errors
     tmp = nwbRead(filename); % is lazy, so should not be too costly
-	es_key = tmp.searchFor('ElectricalSeries').keys; % find lfp data
-	if numel(es_key) > 1 % && isempty(additional_user_input) % TODO
-		error('More than one ElectricalSeries present in data. Please specify which signal to use.') % TODO
-	else
-		eseries = io.resolvePath(tmp, es_key{1});
-	end
-	hdr.Fs          = eseries.starting_time_rate;
-	hdr.nSamples    = eseries.data.dims(2);
+    es_key = tmp.searchFor('ElectricalSeries').keys; % find lfp data
+    if numel(es_key) > 1 % && isempty(additional_user_input) % TODO
+        error('More than one ElectricalSeries present in data. Please specify which signal to use.') % TODO
+    else
+        eseries = io.resolvePath(tmp, es_key{1});
+    end
+    hdr.Fs          = eseries.starting_time_rate;
+    hdr.nSamples    = eseries.data.dims(2);
     hdr.nSamplesPre = 0; % for now: hardcoded continuous data
     hdr.nTrials     = 1; % for now: hardcoded continuous data
     hdr.label       = {};
@@ -2326,14 +2330,14 @@ switch headerformat
             hdr.label(iCh,1) = tmp_ch(iCh);
         end
     end
-    hdr.nChans      = numel(hdr.label); 
-	[hdr.chanunit{1:hdr.nChans,1}] = deal(eseries.data_unit);
-	hdr.chanunit    = strrep(hdr.chanunit, 'volt', 'V');
-	hdr.chanunit    = strrep(hdr.chanunit, 'micro', 'u');
-    % TODO: hdr.FirstTimeStamp      
+    hdr.nChans      = numel(hdr.label);
+    [hdr.chanunit{1:hdr.nChans,1}] = deal(eseries.data_unit);
+    hdr.chanunit    = strrep(hdr.chanunit, 'volt', 'V');
+    hdr.chanunit    = strrep(hdr.chanunit, 'micro', 'u');
+    % TODO: hdr.FirstTimeStamp
     % TODO: hdr.TimeStampPerSample
     
-	% carry over some metadata
+    % carry over some metadata
     hdr.orig        = [];
     fn = {'general_experimenter', ...
         'general_institution', ...
@@ -2351,18 +2355,18 @@ switch headerformat
             hdr.orig.(fn{iFn}) = tmp.(fn{iFn});
         end
     end
-  case 'artinis_oxy3'
-    ft_hastoolbox('artinis', 1);
-    hdr = read_artinis_oxy3(filename);
-    
-  case 'artinis_oxy4'
-    ft_hastoolbox('artinis', 1);
-    hdr = read_artinis_oxy4(filename);
-    
-  case 'artinis_oxyproj'
-    ft_hastoolbox('artinis', 1);
-    hdr = read_oxyproj_header(filename);
-    
+    case 'artinis_oxy3'
+        ft_hastoolbox('artinis', 1);
+        hdr = read_artinis_oxy3(filename);
+        
+    case 'artinis_oxy4'
+        ft_hastoolbox('artinis', 1);
+        hdr = read_artinis_oxy4(filename);
+        
+    case 'artinis_oxyproj'
+        ft_hastoolbox('artinis', 1);
+        hdr = read_oxyproj_header(filename);
+        
   case 'plexon_ds'
     hdr = read_plexon_ds(filename);
     
