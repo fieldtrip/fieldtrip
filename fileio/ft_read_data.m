@@ -1328,8 +1328,10 @@ switch dataformat
     else
 		eseries = io.resolvePath(tmp, es_key{1});
     end
-    dat = eseries.data.load; % TODO: function allows to load segments load([min_channel, min_sample],[max_channel, max_channel]) and one could subselect from there
-    dat = dat(chanindx, begsample:endsample);
+    for iCh=1:numel(chanindx)
+        dat(iCh, :) = eseries.data.load([chanindx(iCh) begsample], [chanindx(iCh) endsample]); % TODO: function allows to load segments load([min_channel, min_sample],[max_channel, max_channel]) and one could subselect from there
+    end
+%     dat = dat(chanindx, begsample:endsample);
 
   case 'artinis_oxy3'
     ft_hastoolbox('artinis', 1);
