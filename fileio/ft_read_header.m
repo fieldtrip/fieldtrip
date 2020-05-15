@@ -2297,8 +2297,8 @@ switch headerformat
     hdr.orig        = tmp; % remember the original header
   
   case 'nwb'
-    ft_hastoolbox('MatNWB', 1)	
-    c = load('core.mat'); % might be needed later on
+    ft_hastoolbox('MatNWB', 1)	% when I run this locally outside of ft_read_header it does not work for me
+    c = load('core.mat'); % might be needed later on - I don't have this file
     nwb_version = c.version;
     nwb_fileversion = util.getSchemaVersion(filename);
     if ~strcmp(nwb_version, nwb_fileversion)
