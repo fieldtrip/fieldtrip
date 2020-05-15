@@ -2304,7 +2304,8 @@ switch headerformat
     if ~strcmp(nwb_version, nwb_fileversion)
         warning(['Installed NWB:N schema version (' nwb_version ') does not match the file''s schema (' nwb_fileversion{1} '). This might result in an error.'])
     end
-%     generateCore; % leads to arcane errors; user has to run it before
+%     generateCore; % leads to arcane errors; user has to run it manually
+%     before running ft_read_header
 	tmp = nwbRead(filename); % is lazy, so should not be too costly
 	fn = fieldnames(tmp);
 	fn = fn(startsWith(fn, 'general'));
@@ -2324,7 +2325,15 @@ switch headerformat
 	hdr.nSamples    = eseries.data.dims(2);
     hdr.nSamplesPre = 0; % for now: hardcoded continuous data
     hdr.nTrials     = 1; % for now: hardcoded continuous data
-    hdr.label       = cellstr(num2str(io.resolvePath(tmp, eseries.electrodes.table.path).id.data.load)); % electrode names
+    hdr.label       = {};
+    tmp_ch          = io.resolvePath(tmp, eseries.electrodes.table.path).id.data.load; % electrode names
+    for iCh=1:numel(tmp_ch) % TODO: does that work if nwb ids are strings?
+        if isnumeric(tmp_ch(iCh))
+            hdr.label(iCh,1) = {num2str(tmp_ch(iCh))};
+        else
+            hdr.label(iCh,1) = tmp_ch(iCh);
+        end
+    end
     hdr.nChans      = numel(hdr.label); 
 	[hdr.chanunit{1:hdr.nChans,1}] = deal(eseries.data_unit);
 	hdr.chanunit    = strrep(hdr.chanunit, 'volt', 'V');
