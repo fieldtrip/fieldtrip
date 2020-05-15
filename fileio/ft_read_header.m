@@ -2308,13 +2308,14 @@ switch headerformat
     catch
         warning('Something might not be alright with your MatNWB path. Still trying.')
     end
-    % ; % ; user has to run generateCore manually before running
-    % ft_read_header; running it here leads to arcane errors
     tmp = nwbRead(filename); % is lazy, so should not be too costly
-	es_key = tmp.searchFor('ElectricalSeries').keys; % find lfp data
-    es_idx = contains(es_key,'lfp','IgnoreCase',true); % SpikeEventSeries is a daughter of ElectrialSeries
-	if numel(es_key) > 1 % && isempty(additional_user_input) % TODO
-		error('More than one ElectricalSeries present in data. Please specify which signal to use.') % TODO
+	es_key = tmp.searchFor('ElectricalSeries').keys; % find lfp data, which should be an ElectricalSeries object
+    if numel(es_key) > 1 % && isempty(additional_user_input) % TODO: Try to sort this out with the user's help
+        % Temporary fix: SpikeEventSeries is a daughter of ElectrialSeries but should not be found here (searchFor update on its way)
+        es_key = es_key(contains(es_key,'lfp','IgnoreCase',true)); 
+    end
+    if numel(es_key) > 1 % in case we weren't able to sort out a single
+		error('More than one ElectricalSeries present in data. Please specify which signal to use.')
 	else
 		eseries = io.resolvePath(tmp, es_key{es_idx});
 	end
