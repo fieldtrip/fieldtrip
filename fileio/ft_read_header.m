@@ -2286,8 +2286,6 @@ switch headerformat
   case 'neuroshare' % NOTE: still under development
     % check that the required neuroshare toolbox is available
     ft_hastoolbox('neuroshare', 1);
-    generateCore; % alternative: use meta.package.fromName to determine whether generateCore has already been called
-    rehash; % required after generateCore, otherwise: https://github.com/NeurodataWithoutBorders/matnwb/issues/220
     tmp = read_neuroshare(filename);
     hdr.Fs          = tmp.hdr.analoginfo(end).SampleRate; % take the sampling freq from the last analog channel (assuming this is the same for all chans)
     hdr.nChans      = length(tmp.list.analog(tmp.analog.contcount~=0)); % get the analog channels, only the ones that are not empty
@@ -2298,7 +2296,9 @@ switch headerformat
     hdr.orig        = tmp; % remember the original header
     
   case 'nwb'
-    ft_hastoolbox('MatNWB', 1)	% when I run this locally outside of ft_read_header it does not work for me
+    ft_hastoolbox('MatNWB', 1);	% when I run this locally outside of ft_read_header it does not work for me
+    generateCore; % alternative: use meta.package.fromName to determine whether generateCore has already been called
+    rehash; % required after generateCore, otherwise: https://github.com/NeurodataWithoutBorders/matnwb/issues/220    
     try
         c = load('core.mat'); % might be needed later on - I don't have this file
         nwb_version = c.version;
