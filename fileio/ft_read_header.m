@@ -2311,14 +2311,15 @@ switch headerformat
     % ; % ; user has to run generateCore manually before running
     % ft_read_header; running it here leads to arcane errors
     tmp = nwbRead(filename); % is lazy, so should not be too costly
-    es_key = tmp.searchFor('ElectricalSeries').keys; % find lfp data
-    if numel(es_key) > 1 % && isempty(additional_user_input) % TODO
-        error('More than one ElectricalSeries present in data. Please specify which signal to use.') % TODO
-    else
-        eseries = io.resolvePath(tmp, es_key{1});
-    end
-    hdr.Fs          = eseries.starting_time_rate;
-    hdr.nSamples    = eseries.data.dims(2);
+	es_key = tmp.searchFor('ElectricalSeries').keys; % find lfp data
+    es_idx = contains(es_key,'lfp','IgnoreCase',true); % SpikeEventSeries is a daughter of ElectrialSeries
+	if numel(es_key) > 1 % && isempty(additional_user_input) % TODO
+		error('More than one ElectricalSeries present in data. Please specify which signal to use.') % TODO
+	else
+		eseries = io.resolvePath(tmp, es_key{es_idx});
+	end
+	hdr.Fs          = eseries.starting_time_rate;
+	hdr.nSamples    = eseries.data.dims(2);
     hdr.nSamplesPre = 0; % for now: hardcoded continuous data
     hdr.nTrials     = 1; % for now: hardcoded continuous data
     hdr.label       = {};
