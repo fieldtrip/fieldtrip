@@ -2308,10 +2308,11 @@ switch headerformat
     %     before running ft_read_header
     tmp = nwbRead(filename); % is lazy, so should not be too costly
 	es_key = tmp.searchFor('ElectricalSeries').keys; % find lfp data
+    es_idx = contains(es_key,'electricalseries','IgnoreCase',true); % SpikeEventSeries is a daughter of ElectrialSeries
 	if numel(es_key) > 1 % && isempty(additional_user_input) % TODO
 		error('More than one ElectricalSeries present in data. Please specify which signal to use.') % TODO
 	else
-		eseries = io.resolvePath(tmp, es_key{1});
+		eseries = io.resolvePath(tmp, es_key{es_idx});
 	end
 	hdr.Fs          = eseries.starting_time_rate;
 	hdr.nSamples    = eseries.data.dims(2);
