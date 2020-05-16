@@ -189,17 +189,9 @@ nwb_elec_info.unit_to_elec = cat(1,nwb.units.electrode_group.data.path);
 
 
 
-% TODO: Generate hdr (more examples than this?: 
-% http://www.fieldtriptoolbox.org/tutorial/spike/
-hdr = [];
-
-
-
 % Create fieldtrip data structure
 spike.label = label;
 spike.timestamp = timestamp;
-% spike.dimord = '{chan}_lead_time_spike'; % TODO: I think this is done in
-                                           % ft_read_spike anyways? Need to check that...
 spike.time = time;
 spike.unit = unit;
 % TODO: Add optional waveform from NWB file
