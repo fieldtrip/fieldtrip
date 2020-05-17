@@ -297,7 +297,7 @@ switch spikeformat
     
   case 'nwb'
     ft_hastoolbox('MatNWB', 1);
-    spike = nwb_read_spike(filename);
+    spike = read_nwb_spike(filename);
      
   otherwise
     ft_error(['unsupported data format (' spikeformat ')']);
