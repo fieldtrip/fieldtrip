@@ -71,7 +71,11 @@ try
             end
         end
     end
-    fprintf('\nTrying to determine Fs from NWB file, setting to %i, found in: %s.', Fs, foundin);
+    if strcmp(foundin, 'not found in NWB file')
+        warning('Could not find Fs in NWB file. Assuming Fs = 1')
+    else
+        fprintf('\nTrying to determine Fs from NWB file, setting to %i, found in: %s.', Fs, foundin);
+    end
 catch ME
     warning('Error while looking for sampling frequency from NWB file.');
     rethrow(ME)
@@ -186,8 +190,9 @@ nwb_elec_info = constrained_set_to_struct(nwb.general_extracellular_ephys_electr
 elecs = nwb.general_extracellular_ephys_electrodes;
 nwb_elec_info.elec_label = elecs.vectordata.get('group_name').data.load;
 nwb_elec_info.elec_id = elecs.id.data.load;
-nwb_elec_info.unit_to_elec = cat(1,nwb.units.electrode_group.data.path);
-
+if ~isempty(nwb.units.electrode_group)
+    nwb_elec_info.unit_to_elec = {nwb.units.electrode_group.data.path};
+end
 
 
 % Create fieldtrip data structure
