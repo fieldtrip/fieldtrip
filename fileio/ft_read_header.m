@@ -2302,14 +2302,16 @@ switch headerformat
         nwb_version = c.version;
         nwb_fileversion = util.getSchemaVersion(filename);
         if ~strcmp(nwb_version, nwb_fileversion)
-            warning(['Installed NWB:N schema version (' nwb_version ') does not match the file''s schema (' nwb_fileversion{1} '). This might result in an error.'])
+            warning(['Installed NWB:N schema version (' nwb_version ') does not match the file''s schema (' nwb_fileversion{1} '). This might result in an error. If so, try to install the matching schema from here: https://github.com/NeurodataWithoutBorders/nwb-schema/releases'])
         end
     catch
-        warning('Something might not be alright with your MatNWB path. Still trying.')
+        warning('Something might not be alright with your MatNWB path. Will try anyways.')
     end
     tmp = nwbRead(filename); % is lazy, so should not be too costly
 	es_key = tmp.searchFor('ElectricalSeries').keys; % find lfp data, which should be an ElectricalSeries object
-    if numel(es_key) > 1 % && isempty(additional_user_input) % TODO: Try to sort this out with the user's help
+    if isempty(es_key)
+        error('Dataset does not contain an LFP signal (i.e., no object of the class ''ElectricalSeries''.')
+    elseif numel(es_key) > 1 % && isempty(additional_user_input) % TODO: Try to sort this out with the user's help
         % Temporary fix: SpikeEventSeries is a daughter of ElectrialSeries but should not be found here (searchFor update on its way)
         es_key = es_key(contains(es_key,'lfp','IgnoreCase',true)); 
     end
