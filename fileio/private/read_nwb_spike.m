@@ -248,7 +248,7 @@ function strct = constrained_set_to_struct(cset, desc)
         if isa(cset.get(k).data, 'types.untyped.DataStub')
             strct.(k_field{ik}) = cset.get(k).data.load;
         elseif isa(cset.get(k).data, 'types.untyped.ObjectView')
-            strct.(k_field{ik}) = cat(1,cset.get(k).data.path);
+            strct.(k_field{ik}) = {cset.get(k).data.path};
         end
     end
     strct.desc = desc;
