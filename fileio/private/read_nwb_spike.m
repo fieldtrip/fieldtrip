@@ -61,7 +61,7 @@ try
             end
             % if no spiking Fs exists, get LFP Fs
             if ismember({'LFP'}, keys) && strcmp(foundin, 'not found in NWB file')
-                fprintf('\nCould not find spike Fs specifically. Looking for LFP Fs.');
+                warning('Could not find spike Fs specifically. Looking for LFP Fs.');
                 lfp_set = nwb.processing.get('ecephys').nwbdatainterface.get('LFP');
                 fn = fieldnames(lfp_set);
                 next_key = lfp_set.(fn{1}).keys();
