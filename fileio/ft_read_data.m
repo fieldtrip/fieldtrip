@@ -1320,8 +1320,6 @@ switch dataformat
    
   case 'nwb'
     ft_hastoolbox('MatNWB', 1);
-    generateCore;
-    rehash;
 	tmp = nwbRead(filename);
 	es_key = tmp.searchFor('ElectricalSeries').keys; % find lfp data, which should be an ElectricalSeries object
     if numel(es_key) > 1 % && isempty(additional_user_input) % TODO: Try to sort this out with the user's help

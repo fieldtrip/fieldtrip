@@ -2297,8 +2297,6 @@ switch headerformat
     
   case 'nwb'
     ft_hastoolbox('MatNWB', 1);	% when I run this locally outside of ft_read_header it does not work for me
-    generateCore; % alternative: use meta.package.fromName to determine whether generateCore has already been called
-    rehash; % required after generateCore, otherwise: https://github.com/NeurodataWithoutBorders/matnwb/issues/220    
     try
         c = load('core.mat'); % might be needed later on - I don't have this file
         nwb_version = c.version;
