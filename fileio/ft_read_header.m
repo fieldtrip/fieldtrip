@@ -2321,9 +2321,9 @@ switch headerformat
     if isa(eseries.data, 'types.untyped.DataStub')
         hdr.nSamples = eseries.data.dims(2);
     elseif isa(eseries.data, 'types.untyped.DataPipe')
-        hdr.nSamples = eseries.data.maxSize(2);
+        hdr.nSamples = eseries.data.internal.maxSize(2);
     else
-        warning('Cannot determine number of samples in the data.'
+        warning('Cannot determine number of samples in the data.')
         hdr.nSamples = []; 
     end
     hdr.Fs          = eseries.starting_time_rate;
