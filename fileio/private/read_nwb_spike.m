@@ -60,7 +60,8 @@ try
                 end
             end
             % if no spiking Fs exists, get LFP Fs
-            if ismember({'LFP'}, keys)
+            if ismember({'LFP'}, keys) && strcmp(foundin, 'not found in NWB file')
+                fprintf('\nCould not find spike Fs specifically. Looking for LFP Fs.');
                 lfp_set = nwb.processing.get('ecephys').nwbdatainterface.get('LFP');
                 fn = fieldnames(lfp_set);
                 next_key = lfp_set.(fn{1}).keys();
@@ -207,7 +208,6 @@ if exist('nwb_trial_stime', 'var')
     spike.trial = trial;
     spike.trialtime = [nwb_trial_stime, nwb_trial_etime];
 end
-spike.hdr = hdr;
 if exist('nwb_unit_info', 'var'), spike.nwb_unit_info = nwb_unit_info; end
 if exist('nwb_stim_info', 'var'), spike.nwb_stim_info = nwb_stim_info; end
 if exist('nwb_trial_info', 'var'), spike.nwb_trial_info = nwb_trial_info; end
