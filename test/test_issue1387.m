@@ -16,9 +16,9 @@ data           = ft_preprocessing(cfg);
 
 idx            = cellfun(@(x)strcmpi(x,labels{1}),{data_events.type});
 event.label	   = labels{1};
-event.idx		= find(idx==1);
-event.evnt		= data_events(event.idx);
-event.samples	= [event.evnt.sample];
+event.idx      = find(idx==1);
+event.evnt     = data_events(event.idx);
+event.samples  = [event.evnt.sample];
 event.times	   = data.time{1}(event.samples);
 
 tm             = data.time{1};
