@@ -403,8 +403,8 @@ xval = varargin{1}.(xparam)(selx);
 % get physical y-axis range, i.e. parameter to be plotted
 if ~isnumeric(cfg.ylim)
   % find maxmin throughout all varargins
-  ymin = [];
-  ymax = [];
+  ymin = +inf;
+  ymax = -inf;
   for i=1:Ndata
     % select the channels in the data that match with the layout and that are selected for plotting
     switch cfg.viewmode
@@ -413,16 +413,21 @@ if ~isnumeric(cfg.ylim)
       case 'butterfly'
         dat = varargin{i}.(cfg.parameter)(selchan,selx);
     end
-    ymin = nanmin([ymin nanmin(nanmin(nanmin(dat(:))))]);
-    ymax = nanmax([ymax nanmax(nanmax(nanmax(dat(:))))]);
+    ymin = min(ymin, min(dat(:)));
+    ymax = max(ymax, max(dat(:)));
   end
-  if strcmp(cfg.ylim, 'maxabs') % handle maxabs, make y-axis center on 0
-    ymax = max([abs(ymax) abs(ymin)]);
-    ymin = -ymax;
-  elseif strcmp(cfg.ylim, 'zeromax')
-    ymin = 0;
-  elseif strcmp(cfg.ylim, 'minzero')
-    ymax = 0;
+  switch cfg.ylim
+    case 'maxmin'
+      % keep them as they are
+    case 'maxabs'
+      ymax = max(abs(ymax), abs(ymin));
+      ymin = -ymax;
+    case 'zeromax'
+      ymin = 0;
+    case 'minzero'
+      ymax = 0;
+    otherwise
+      ft_error('invalid specification of cfg.ylim');
   end
 else
   ymin = cfg.ylim(1);
