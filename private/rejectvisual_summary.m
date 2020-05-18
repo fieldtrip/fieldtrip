@@ -109,10 +109,10 @@ uicontrol(h, 'Units', 'normalized', 'position', [0.630 0.300 0.14 0.05], 'Style'
 uicontrol(h, 'Units', 'normalized', 'position', [0.630 0.210 0.14 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', 'Plot trial:');
 info.plottrltxt = uicontrol(h, 'Units', 'normalized', 'position', [0.630 0.170 0.14 0.05], 'Style', 'edit', 'HorizontalAlignment', 'left', 'backgroundcolor', [1 1 1], 'callback', @display_trial);
 
-info.excludetrllbl  = uicontrol(h, 'Units', 'normalized', 'position', [0.795 0.470 0.230 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', sprintf('Rejected trials: %i/%i', sum(info.trlsel==0), info.ntrl));
-info.excludetrltxt  = uicontrol(h, 'Units', 'normalized', 'position', [0.795 0.430 0.230 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'));
-info.excludechanlbl = uicontrol(h, 'Units', 'normalized', 'position', [0.795 0.340 0.230 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', sprintf('Rejected channels: %i/%i', sum(info.chansel==0), info.nchan));
-info.excludechantxt = uicontrol(h, 'Units', 'normalized', 'position', [0.795 0.300 0.230 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'));
+info.excludetrllbl  = uicontrol(h, 'Units', 'normalized', 'position', [0.795 0.470 0.210 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', sprintf('Rejected trials: %i/%i', sum(info.trlsel==0), info.ntrl));
+info.excludetrltxt  = uicontrol(h, 'Units', 'normalized', 'position', [0.795 0.330 0.210 0.15], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'));
+info.excludechanlbl = uicontrol(h, 'Units', 'normalized', 'position', [0.795 0.340 0.210 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', sprintf('Rejected channels: %i/%i', sum(info.chansel==0), info.nchan));
+info.excludechantxt = uicontrol(h, 'Units', 'normalized', 'position', [0.795 0.200 0.210 0.15], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'));
 
 % "show rejected" button
 % ui_tog = uicontrol(h, 'Units', 'normalized', 'position', [0.55 0.200 0.25 0.05], 'Style', 'checkbox', 'backgroundcolor', get(h, 'color'), 'string', 'Show rejected?', 'callback', @toggle_rejected);
@@ -318,29 +318,26 @@ end
 set(info.axes(3), 'ButtonDownFcn', @toggle_visual);  % needs to be here; call to axis resets this property
 xlabel('trial number');
 
-% put rejected trials/channels in their respective edit boxes
+% put excluded trials/channels in their respective edit boxes
 set(info.excludechanlbl, 'string', sprintf('Channels to exclude: %i/%i', sum(info.chansel==0), info.nchan));
 set(info.excludetrllbl, 'string', sprintf('Trials to exclude: %i/%i', sum(info.trlsel==0), info.ntrl));
-if ~isempty(find(info.trlsel==0, 1))
-  set(info.excludetrltxt, 'String', num2str(find(info.trlsel==0)), 'FontAngle', 'normal');
+
+if ~all(info.trlsel)
+  excludetrltxt = sprintf('%d, ', find(~info.trlsel));
+  excludetrltxt = excludetrltxt(1:end-2);
+  set(info.excludetrltxt, 'String', excludetrltxt, 'FontAngle', 'normal');
 else
   set(info.excludetrltxt, 'String', 'No trials to exclude', 'FontAngle', 'italic');
 end
-if ~isempty(find(info.chansel==0, 1))
-  if isfield(info.data, 'label')
-    chanlabels = info.data.label(info.chansel==0);
-    excludechantxt = '';
-    for i=find(info.chansel==0)
-      if ~isempty(excludechantxt)
-        excludechantxt = [excludechantxt ', ' info.data.label{i}];
-      else
-        excludechantxt = info.data.label{i};
-      end
-    end
-    set(info.excludechantxt, 'String', excludechantxt, 'FontAngle', 'normal');
+
+if ~all(info.chansel)
+  if false % isfield(info.data, 'label')
+    excludechantxt = sprintf('%s, ', info.data.label{~info.chansel});
   else
-    set(info.excludetrltxt, 'String', num2str(find(info.chansel==0)), 'FontAngle', 'normal');
+    excludechantxt = sprintf('%d, ', find(~info.chansel));
   end
+  excludechantxt = excludechantxt(1:end-2);
+  set(info.excludechantxt, 'String', excludechantxt, 'FontAngle', 'normal');
 else
   set(info.excludechantxt, 'String', 'No channels to exclude', 'FontAngle', 'italic');
 end
