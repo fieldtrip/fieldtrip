@@ -184,11 +184,17 @@ end
 if ~isempty(threshold)
   % the trigger channels contain an analog (and hence noisy) TTL signal and should be thresholded
   if ischar(threshold) % evaluate string (e.g., threshold = 'nanmedian')
-    threshold = eval([threshold '(dat)']);
+    for i = 1:size(dat,1)
+      tval = eval([threshold '(dat(i,:))']);
+      % discretize the signal
+      dat(i,dat(i,:)<tval(i)) = 0;
+      dat(i,dat(i,:)>=tval(i)) = 1;
+	 end
+  else
+    % discretize the signal
+    dat(dat<threshold) = 0;
+    dat(dat>=threshold) = 1;
   end
-  % discretize the signal
-  dat(dat<threshold) = 0;
-  dat(dat>=threshold) = 1;
 end
 
 if isempty(detectflank)
