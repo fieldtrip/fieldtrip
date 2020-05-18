@@ -210,15 +210,15 @@ if isfield(sourcemodel, 'leadfield')
     
     if istrue(smooth)
       if i == 1
-        ft_write_mri(masklf,~~dat(:, :, :, 1), 'transform', sourcemodel.transform, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
+        ft_write_mri(masklf,~~dat(:, :, :, 1), 'transform', sourcemodel.transform, 'spmversion', 'spm12', 'dataformat', 'nifti_spm');
         spm_smooth(masklf, smasklf, sourcemodel.transform(1,1)*[1 1 1]);
         mask = spm_read_vols(spm_vol(smasklf));
         
         spm_unlink(masklf);
         spm_unlink(smasklf);
       end
-      
-      ft_write_mri(rawlf, dat, 'transform', sourcemodel.transform, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
+
+      ft_write_mri(rawlf, dat, 'transform', sourcemodel.transform, 'spmversion', 'spm12', 'dataformat', 'nifti_spm');
       spm_smooth(rawlf, srawlf, sourcemodel.transform(1,1)*[1 1 1]);
       dat = spm_read_vols(spm_vol(srawlf));
       dat = dat./repmat(mask, [1 1 1, size(dat, 4)]);
@@ -238,9 +238,9 @@ if isfield(sourcemodel, 'leadfield')
         dat(:, :, :, k+3) = spm_bsplinc(dat(:, :, :, k), [4 4 4 0 0 0]);
       end
     end
-    
-    ft_write_mri(headmodel.filename{i}, dat , 'transform', sourcemodel.transform, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
-    
+
+    ft_write_mri(headmodel.filename{i}, dat , 'transform', sourcemodel.transform, 'spmversion', 'spm12', 'dataformat', 'nifti_spm');
+
   end
   
   filename = sprintf('%s.mat', filename);
@@ -344,7 +344,7 @@ elseif isfield(sourcemodel, 'filename')
     end
     outputvol.filename{i} = sprintf('%s_%s.nii', filename, sens.label{i});
     fprintf('writing single channel leadfield to %s\n', outputvol.filename{i})
-    ft_write_mri(outputvol.filename{i}, dat, 'transform', outputvol.transform, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
+    ft_write_mri(outputvol.filename{i}, dat, 'transform', outputvol.transform, 'spmversion', 'spm12', 'dataformat', 'nifti_spm');
   end
   
   % update the volume conductor

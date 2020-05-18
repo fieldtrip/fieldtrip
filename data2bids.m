@@ -1415,7 +1415,7 @@ if need_events_tsv
     else
       events_tsv = event2table([], cfg.events);
     end
-  elseif ismatrix(cfg.events) && ~isempty(cfg.events) && numel(fieldnames(cfg.events))>0
+  elseif isnumeric(cfg.events) && ~isempty(cfg.events)
     % it is a "trl" matrix formatted as numeric array, convert it to an events table
     begsample = cfg.events(:,1);
     endsample = cfg.events(:,2);
@@ -1423,7 +1423,7 @@ if need_events_tsv
     if any(offset~=0)
       ft_warning('the offset in the trl matrix is ignored');
     end
-    if size(trl,2)>3
+    if size(cfg.events, 2)>3
       ft_warning('additional columns in the trl matrix are ignored');
     end
     % convert to the required fields
