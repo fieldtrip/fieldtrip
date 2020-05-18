@@ -40,6 +40,7 @@ function [data] = ft_rejectvisual(cfg, data)
 %                     'zvalue'    mean and std computed over all time and trials, per channel
 %   cfg.latency     = [begin end] in seconds, or 'all', 'minperiod', 'maxperiod', 'prestim', 'poststim' (default = 'all')
 %   cfg.viewmode    = 'remove', 'toggle' or 'hide', only applies to summary mode (default = 'remove')
+%   cfg.box         = string, 'yes' or 'no' whether to draw a box around each graph (default = 'no')
 %
 % The following options for the scaling of the EEG, EOG, ECG, EMG, MEG and NIRS channels
 % is optional and can be used to bring the absolute numbers of the different
@@ -162,6 +163,7 @@ cfg.magscale    = ft_getopt(cfg, 'magscale'   );
 cfg.ylim        = ft_getopt(cfg, 'ylim'       , 'maxmin');
 cfg.layout      = ft_getopt(cfg, 'layout'     , 'ordered');
 cfg.viewmode    = ft_getopt(cfg, 'viewmode'   , 'remove');
+cfg.box         = ft_getopt(cfg, 'box'        , 'no');
 
 % this is needed for the figure title
 if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)

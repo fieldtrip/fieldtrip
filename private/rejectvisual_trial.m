@@ -282,7 +282,7 @@ for chanindx=1:info.nchan
   else
     color = 'none';
   end
-  ft_plot_vector(tim, dat, 'hpos', info.layout.pos(chanindx,1), 'vpos', info.layout.pos(chanindx,2), 'width', info.layout.width(chanindx), 'height', info.layout.height(chanindx), 'vlim', [ymin ymax], 'box', true, 'color', color, 'label', info.layout.label{chanindx}, 'labelpos', 'lowerleft');
+  ft_plot_vector(tim, dat, 'hpos', info.layout.pos(chanindx,1), 'vpos', info.layout.pos(chanindx,2), 'width', info.layout.width(chanindx), 'height', info.layout.height(chanindx), 'vlim', [ymin ymax], 'box', istrue(info.cfg.box), 'color', color, 'label', info.layout.label{chanindx}, 'labelpos', 'lowerleft');
 end
 
 % enable or disable buttons as appropriate

@@ -293,7 +293,7 @@ for trlindx=1:info.ntrl
   else
     color = 'none';
   end
-  ft_plot_vector(tim, dat, 'hpos', info.layout.pos(trlindx,1), 'vpos', info.layout.pos(trlindx,2), 'width', info.layout.width(trlindx), 'height', info.layout.height(trlindx), 'vlim', [ymin ymax], 'box', true, 'color', color, 'label', info.layout.label{trlindx}, 'labelpos', 'lowerleft');
+  ft_plot_vector(tim, dat, 'hpos', info.layout.pos(trlindx,1), 'vpos', info.layout.pos(trlindx,2), 'width', info.layout.width(trlindx), 'height', info.layout.height(trlindx), 'vlim', [ymin ymax], 'box', istrue(info.cfg.box), 'color', color, 'label', info.layout.label{trlindx}, 'labelpos', 'lowerleft');
 end
 
 % enable or disable buttons as appropriate
