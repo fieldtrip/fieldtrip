@@ -64,7 +64,7 @@ guidata(h, info);
 interactive = true;
 
 % make the figure large enough to hold stuff
-set(h, 'Position', [50 350 800 500]);
+set(h, 'Position', [100 350 900 600]);
 
 % define three axes
 info.axes(1) = axes('position', [0.100 0.650 0.375 0.300]);  % summary
@@ -75,7 +75,7 @@ info.axes(3) = axes('position', [0.100 0.250 0.375 0.300]);  % trials
 % plots
 
 % instructions
-instructions = sprintf('Drag the mouse over the channels or trials you wish to reject');
+instructions = sprintf('Drag the mouse over the channels or trials you wish to exclude');
 uicontrol(h, 'Units', 'normalized', 'position', [0.520 0.520 0.400 0.050], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', instructions, 'FontWeight', 'bold', 'ForegroundColor', 'r');
 
 % set up radio buttons for choosing metric
@@ -319,12 +319,12 @@ set(info.axes(3), 'ButtonDownFcn', @toggle_visual);  % needs to be here; call to
 xlabel('trial number');
 
 % put rejected trials/channels in their respective edit boxes
-set(info.excludechanlbl, 'string', sprintf('Rejected channels: %i/%i', sum(info.chansel==0), info.nchan));
-set(info.excludetrllbl, 'string', sprintf('Rejected trials: %i/%i', sum(info.trlsel==0), info.ntrl));
+set(info.excludechanlbl, 'string', sprintf('Channels to exclude: %i/%i', sum(info.chansel==0), info.nchan));
+set(info.excludetrllbl, 'string', sprintf('Trials to exclude: %i/%i', sum(info.trlsel==0), info.ntrl));
 if ~isempty(find(info.trlsel==0, 1))
   set(info.excludetrltxt, 'String', num2str(find(info.trlsel==0)), 'FontAngle', 'normal');
 else
-  set(info.excludetrltxt, 'String', 'No trials rejected', 'FontAngle', 'italic');
+  set(info.excludetrltxt, 'String', 'No trials to exclude', 'FontAngle', 'italic');
 end
 if ~isempty(find(info.chansel==0, 1))
   if isfield(info.data, 'label')
@@ -332,9 +332,9 @@ if ~isempty(find(info.chansel==0, 1))
     excludechantxt = '';
     for i=find(info.chansel==0)
       if ~isempty(excludechantxt)
-        excludechantxt = [excludechantxt ', ' info.data.label{i} '(' num2str(i) ')'];
+        excludechantxt = [excludechantxt ', ' info.data.label{i}];
       else
-        excludechantxt = [info.data.label{i} '(' num2str(i) ')'];
+        excludechantxt = info.data.label{i};
       end
     end
     set(info.excludechantxt, 'String', excludechantxt, 'FontAngle', 'normal');
@@ -342,7 +342,7 @@ if ~isempty(find(info.chansel==0, 1))
     set(info.excludetrltxt, 'String', num2str(find(info.chansel==0)), 'FontAngle', 'normal');
   end
 else
-  set(info.excludechantxt, 'String', 'No channels rejected', 'FontAngle', 'italic');
+  set(info.excludechantxt, 'String', 'No channels to exclude', 'FontAngle', 'italic');
 end
 
 function toggle_trials(h, eventdata)
