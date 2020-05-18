@@ -82,10 +82,10 @@ info.ui.prev        = uicontrol(h,'units','pixels','position',[ 50 5 25 18],'Str
 info.ui.next        = uicontrol(h,'units','pixels','position',[ 75 5 25 18],'String','>','Callback',@next);
 info.ui.prev10      = uicontrol(h,'units','pixels','position',[105 5 25 18],'String','<<','Callback',@prev10);
 info.ui.next10      = uicontrol(h,'units','pixels','position',[130 5 25 18],'String','>>','Callback',@next10);
-info.ui.exclude     = uicontrol(h,'units','pixels','position',[160 5 50 18],'String','exclude','Callback',@markexclude);
-info.ui.include     = uicontrol(h,'units','pixels','position',[210 5 50 18],'String','include','Callback',@markinclude);
-info.ui.excludenext = uicontrol(h,'units','pixels','position',[270 5 50 18],'String','exclude>','Callback',@markexclude_next);
-info.ui.includenext = uicontrol(h,'units','pixels','position',[320 5 50 18],'String','include>','Callback',@markinclude_next);
+info.ui.exclude     = uicontrol(h,'units','pixels','position',[160 5 70 18],'String','exclude','Callback',@markexclude);
+info.ui.include     = uicontrol(h,'units','pixels','position',[230 5 70 18],'String','include','Callback',@markinclude);
+info.ui.excludenext = uicontrol(h,'units','pixels','position',[310 5 70 18],'String','exclude >','Callback',@markexclude_next);
+info.ui.includenext = uicontrol(h,'units','pixels','position',[380 5 70 18],'String','include >','Callback',@markinclude_next);
 set(gcf, 'WindowButtonUpFcn', @button);
 set(gcf, 'KeyPressFcn', @key);
 
