@@ -191,6 +191,24 @@ scaled = ~isequal(data.trial, tmpdata.trial);
 
 % at this moment it is important that NO data selection is made, all data is passed through to the subfunctions
 % which subsequently refine the initial cfg-based inclusion/exclusion of channels and trials
+% (important because this way the original channel/trial indices are
+% available in the GUI)
+
+% to highlight to the user that cfg.trials/cfg.channel operate on the same
+% selection of trials/channels as the user interface, mention here the
+% consequences of the selection *before* any user interaction
+ntrl_all = length(data.trial);
+if isequal(cfg.trials, 'all') || isempty(cfg.trials)
+  ntrl_keep = ntrl_all;
+elseif isnumeric(cfg.trials)
+  ntrl_keep = numel(cfg.trials);
+elseif islogical(cfg.trials)
+  ntrl_keep = sum(cfg.trials);
+end
+nchan_all = numel(data.label);
+nchan_keep=  numel(ft_channelselection(cfg.channel, data.label));
+fprintf('before GUI interaction: %d trials marked to INCLUDE, %d trials marked to EXCLUDE\n', ntrl_keep, ntrl_all-ntrl_keep);
+fprintf('before GUI interaction: %d channels marked to INCLUDE, %d channels marked to EXCLUDE\n', nchan_keep, nchan_all-nchan_keep);
 
 switch cfg.method
   case 'channel'
@@ -221,8 +239,8 @@ switch cfg.method
     ft_error('unsupported method %s', cfg.method);
 end % switch method
 
-fprintf('%d trials marked to INCLUDE, %d trials marked to EXCLUDE\n', sum(trlsel), sum(~trlsel));
-fprintf('%d channels marked to INCLUDE, %d channels marked to EXCLUDE\n', sum(chansel), sum(~chansel));
+fprintf('after GUI interaction: %d trials marked to INCLUDE, %d trials marked to EXCLUDE\n', sum(trlsel), sum(~trlsel));
+fprintf('after GUI interaction: %d channels marked to INCLUDE, %d channels marked to EXCLUDE\n', sum(chansel), sum(~chansel));
 
 chans_removed = tmpdata.label(~chansel);
 trl_removed = find(~trlsel);
