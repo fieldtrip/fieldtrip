@@ -1,7 +1,7 @@
 function test_issue1387
 
 % WALLTIME 00:00:10
-% MEM 40mb
+% MEM 1gb
 % DEPENDENCY ft_read_event ft_read_header ft_preprocessing
 
 %%
