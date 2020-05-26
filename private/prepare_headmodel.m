@@ -13,12 +13,12 @@ function [headmodel, sens, cfg] = prepare_headmodel(cfg, data)
 % the skin surface of a BEM head model.
 %
 % This function will return the electrodes/gradiometers in an order that is
-% consistent with the order in cfg.channel, or in case that is empty in the
-% order of the input electrode/gradiometer definition.
+% consistent with the order in cfg.channel, or - in case that is empty - in 
+% the order of the input electrode/gradiometer definition.
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Copyright (C) 2004-2012, Robert Oostenveld
+% Copyright (C) 2004-2020, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -39,6 +39,7 @@ function [headmodel, sens, cfg] = prepare_headmodel(cfg, data)
 % $Id$
 
 cfg = ft_checkconfig(cfg, 'forbidden', 'order');
+cfg = ft_checkconfig(cfg, 'required', 'headmodel');
 
 % set the defaults
 cfg.channel  = ft_getopt(cfg, 'channel', 'all');
@@ -109,17 +110,12 @@ else
   cfg.channel = ft_channelselection(cfg.channel, sens.label);
 end
 
-% ensure that these are a struct, which may be required in case configuration tracking is used
-% FIXME this fails for combined EEG+MEG
-% headmodel = struct(headmodel);
-% sens      = struct(sens);
-
 % the prepare_vol_sens function from the forwinv module does most of the actual work
 [headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, 'channel', cfg.channel);
 
 % update the selected channels in the configuration
 if iscell(sens)
-  % this represents combined EEG, ECoG and/or MEG
+  % this represents combined EEG, iEEG and/or MEG
   cfg.channel = {};
   for i=1:numel(sens)
     cfg.channel = cat(1, cfg.channel, sens{i}.label(:));
