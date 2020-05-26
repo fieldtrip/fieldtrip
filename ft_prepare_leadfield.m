@@ -44,7 +44,7 @@ function [sourcemodel, cfg] = ft_prepare_leadfield(cfg, data)
 %                         subspace, or not (default = 'yes')
 %   cfg.normalize       = 'yes' or 'no' (default = 'no')
 %   cfg.normalizeparam  = depth normalization parameter (default = 0.5)
-%   cfg.weight          = number or 1xN vector, weight for each dipole position to compensate 
+%   cfg.weight          = number or Nx1 vector, weight for each dipole position to compensate 
 %                         for the size of the corresponding patch (default = 1)
 %
 % Depending on the type of headmodel, some additional options may be
@@ -143,6 +143,7 @@ cfg.reducerank     = ft_getopt(cfg, 'reducerank');            % the default for 
 cfg.backproject    = ft_getopt(cfg, 'backproject',    'yes'); % determines whether after rank reduction the subspace projected leadfield is backprojected onto the original space
 cfg.normalize      = ft_getopt(cfg, 'normalize',      'no');
 cfg.normalizeparam = ft_getopt(cfg, 'normalizeparam', 0.5);
+cfg.weight         = ft_getopt(cfg, 'weight');
 cfg.lbex           = ft_getopt(cfg, 'lbex',           'no');
 cfg.sel50p         = ft_getopt(cfg, 'sel50p',         'no');
 cfg.feedback       = ft_getopt(cfg, 'feedback',       'text');

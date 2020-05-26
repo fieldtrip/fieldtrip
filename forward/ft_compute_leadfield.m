@@ -30,7 +30,7 @@ function [lf] = ft_compute_leadfield(dippos, sens, headmodel, varargin)
 %   'backproject'     = 'yes' or 'no', in the case of a rank reduction this parameter determines whether the result will be backprojected onto the original subspace (default = 'yes')
 %   'normalize'       = 'no', 'yes' or 'column'
 %   'normalizeparam'  = parameter for depth normalization (default = 0.5)
-%   'weight'          = number or 1xN vector, weight for each dipole position to compensate for the size of the corresponding patch (default = 1)
+%   'weight'          = number or Nx1 vector, weight for each dipole position to compensate for the size of the corresponding patch (default = 1)
 %
 % The leadfield weight may be used to specify a (normalized) corresponding surface
 % area for each dipole, e.g. when the dipoles represent a folded cortical surface
@@ -140,6 +140,10 @@ end
 Ndipoles = numel(dippos)/3;
 if all(size(dippos)==[1 3*Ndipoles])
   dippos = reshape(dippos, 3, Ndipoles)';
+end
+
+if isscalar(weight)
+  weight = weight * ones(Ndipoles, 1);
 end
 
 if isfield(headmodel, 'unit') && isfield(sens, 'unit') && ~strcmp(headmodel.unit, sens.unit)
@@ -572,8 +576,8 @@ end
 if ~isempty(weight)
   for i=1:Ndipoles
     lf(:, 3*(i-1)+1) = lf(:, 3*(i-1)+1) * weight(i); % the leadfield for the x-direction
-    lf(:, 3*(i-1)+2) = lf(:, 3*(i-2)+1) * weight(i); % the leadfield for the y-direction
-    lf(:, 3*(i-1)+3) = lf(:, 3*(i-3)+1) * weight(i); % the leadfield for the z-direction
+    lf(:, 3*(i-1)+2) = lf(:, 3*(i-1)+2) * weight(i); % the leadfield for the y-direction
+    lf(:, 3*(i-1)+3) = lf(:, 3*(i-1)+3) * weight(i); % the leadfield for the z-direction
   end
 end
 

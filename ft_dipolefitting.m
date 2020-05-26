@@ -72,7 +72,7 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.reducerank      = 'no', or number (default = 3 for EEG, 2 for MEG)
 %   cfg.normalize       = 'no', 'yes' or 'column'
 %   cfg.normalizeparam  = parameter for depth normalization (default = 0.5)
-%   cfg.weight          = number or 1xN vector, weight for each dipole position to compensate for the size of the corresponding patch (default = 1)
+%   cfg.weight          = number or Nx1 vector, weight for each dipole position to compensate for the size of the corresponding patch (default = 1)
 %   cfg.backproject     = 'yes' (default) or 'no', in the case of a rank reduction this parameter determines whether the result will be backprojected onto the original subspace
 %
 % The volume conduction model of the head should be specified as
