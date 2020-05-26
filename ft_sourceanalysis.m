@@ -1060,7 +1060,13 @@ if exist('dip', 'var')
 
   if istrue(cfg.(cfg.method).keepfilter) && isfield(dip(1), 'filter')
     for k=1:numel(dip)
-      dip(k).label        = sens.label;
+      if isfield(sourcemodel, 'leadfield')
+        % pre-computed leadfields were used
+        dip(k).label = sourcemodel.label;
+      else
+        % leadfields were computed on the fly
+        dip(k).label = sens.label;
+      end
       dip(k).filterdimord = '{pos}_ori_chan';
     end
   end
