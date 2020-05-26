@@ -206,7 +206,7 @@ else
   cfg.method = ft_getopt(cfg, 'method', []);
 end
 
-cfg.keepleadfield    = ft_getopt(cfg, 'keepleadfield', ft_getopt(cfg.(cfg.method), 'keepleadfield', 'no')); % make these consistent when possible
+cfg.keepleadfield    = ft_getopt(cfg, 'keepleadfield', 'no');
 cfg.keeptrials       = ft_getopt(cfg, 'keeptrials', 'no');
 cfg.trialweight      = ft_getopt(cfg, 'trialweight', 'equal');
 cfg.jackknife        = ft_getopt(cfg, 'jackknife',   'no');
@@ -239,6 +239,7 @@ cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
 % move some fields from cfg.sourcemodel back to the top-level configuration
 cfg = ft_checkconfig(cfg, 'createtopcfg', {'sourcemodel'});
 
+% get the low-level options for the inverse estimation method, these are method specific
 cfg.(cfg.method).keepfilter    = ft_getopt(cfg.(cfg.method), 'keepfilter',    'no');
 cfg.(cfg.method).keepcsd       = ft_getopt(cfg.(cfg.method), 'keepcsd',       'no');
 cfg.(cfg.method).keepmom       = ft_getopt(cfg.(cfg.method), 'keepmom',       'yes');
@@ -249,8 +250,13 @@ cfg.(cfg.method).kappa         = ft_getopt(cfg.(cfg.method), 'kappa',         []
 cfg.(cfg.method).tol           = ft_getopt(cfg.(cfg.method), 'tol',           []);
 cfg.(cfg.method).invmethod     = ft_getopt(cfg.(cfg.method), 'invmethod',     []);
 cfg.(cfg.method).powmethod     = ft_getopt(cfg.(cfg.method), 'powmethod',     []);
-cfg.(cfg.method).normalize     = ft_getopt(cfg.(cfg.method), 'normalize',     'no');
-cfg.(cfg.method).reducerank    = ft_getopt(cfg.(cfg.method), 'reducerank',    []); % the default for this is handled below
+
+% get the low-level options for the leadfield computation, these are not method specific
+cfg.reducerank      = ft_getopt(cfg, 'reducerank');  % the default for this is handled below
+cfg.backproject     = ft_getopt(cfg, 'backproject');
+cfg.normalize       = ft_getopt(cfg, 'normalize');
+cfg.normalizeparam  = ft_getopt(cfg, 'normalizeparam');
+cfg.weight          = ft_getopt(cfg, 'weight');
 
 if hasbaseline && (strcmp(cfg.randomization, 'no') && strcmp(cfg.permutation, 'no'))
   ft_error('input of two conditions only makes sense if you want to randomize or permute');
@@ -289,9 +295,9 @@ elseif isfreq
 
   % ensure that the refchan is kept, if present
   if isfield(tmpcfg, 'refchan') && ~isempty(tmpcfg.refchan) && isempty(match_str(tmpcfg.channel, tmpcfg.refchan))
-    hasrefchan = 1;
+    hasrefchan = true;
   else
-    hasrefchan = 0;
+    hasrefchan = false;
   end
 
   if hasrefchan
@@ -331,25 +337,31 @@ if isfreq && isfield(data, 'labelcmb')
   data = ft_checkdata(data, 'cmbrepresentation', 'full');
 end
 
-% collect and preprocess the electrodes/gradiometer and head model
-[headmodel, sens, cfg] = prepare_headmodel(cfg, data);
-
-% set the default for reducing the rank of the leadfields
-if isempty(cfg.(cfg.method).reducerank)
-  if ft_senstype(sens, 'eeg')
-    cfg.(cfg.method).reducerank = 'no';    % for EEG
-  elseif ft_senstype(sens, 'meg') && ft_headmodeltype(headmodel, 'infinite')
-    cfg.(cfg.method).reducerank = 'no';    % for MEG with a magnetic dipole, e.g. a HPI coil
-  elseif ft_senstype(sens, 'meg')
-    cfg.(cfg.method).reducerank = 'yes';   % for MEG with a current dipole in a volume conductor
+if ~isfield(cfg.sourcemodel, 'leadfield')
+  % collect and preprocess the electrodes/gradiometer and head model
+  % this will also update cfg.channel to match the electrodes/gradiometers
+  [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
+  
+  % set the default for reducing the rank of the leadfields
+  if isempty(cfg.reducerank)
+    if ft_senstype(sens, 'eeg')
+      cfg.reducerank = 'no';    % for EEG
+    elseif ft_senstype(sens, 'meg') && ft_headmodeltype(headmodel, 'infinite')
+      cfg.reducerank = 'no';    % for MEG with a magnetic dipole, e.g. a HPI coil
+    elseif ft_senstype(sens, 'meg')
+      cfg.reducerank = 'yes';   % for MEG with a current dipole in a volume conductor
+    end
   end
+  
+else
+  % pre-computed leadfields are supplied, no forward computations are needed
+  ft_info('no forward computations are needed');
+  headmodel = [];
+  sens = [];
+  cfg = removefields(cfg, {'headmodel', 'elec', 'grad'});
+  % ensure that a selection of channels is made consistent with the data
+  cfg.channel = ft_channelselection(cfg.channel, data.label);
 end
-
-% It might be that the number of channels in the data, the number of
-% channels in the electrode/gradiometer definition and the number of
-% channels in the localspheres volume conduction model are different.
-% Hence a subset of the data channels will be used.
-Nchans = length(cfg.channel);
 
 if strcmp(cfg.keepleadfield, 'yes') && (~isfield(cfg, 'sourcemodel') || ~isfield(cfg.sourcemodel, 'leadfield'))
   % precompute the leadfields upon the users request
@@ -366,7 +378,7 @@ elseif (strcmp(cfg.permutation,   'yes') || ...
   fprintf('precomputing leadfields for efficient handling of multiple trials\n');
   sourcemodel = ft_prepare_leadfield(cfg, data);
 else
-  % only prepare the source positions, the leadfield will be computed on the fly if not present
+  % only prepare the source positions, the leadfield will be computed on the fly
 
   % copy all options that are potentially used in ft_prepare_sourcemodel
   tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo'});
@@ -378,17 +390,21 @@ else
   end
   % construct the dipole positions on which the source reconstruction will be done
   sourcemodel = ft_prepare_sourcemodel(tmpcfg);
-  if ischar(cfg.sourcemodel)
-    % replace the file name with the actual source model
-    cfg.sourcemodel = sourcemodel;
-  end
 end
 
 % ensure consistency of the channel order in the pre-computed leadfields and filters, see bugs 1746 and 3029
 if (isfield(sourcemodel, 'filter') || isfield(sourcemodel, 'leadfield')) && ~isequal(sourcemodel.label, cfg.channel)
   tmpcfg = keepfields(cfg, 'channel');
   sourcemodel = ft_selectdata(tmpcfg, sourcemodel);
+  % the following will give an error in case the precomputed leadfield is only given for a subset of the channels
+  assert(isequal(sourcemodel.label, cfg.channel), 'cannot match the channels in the sourcemodel to those in the data')
 end
+
+% It might be that the number of channels in the data, the number of
+% channels in the electrode/gradiometer definition and the number of
+% channels in the localspheres volume conduction model are different.
+% Hence a subset of the data channels will be used.
+Nchans = length(cfg.channel);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % do frequency domain source reconstruction
@@ -432,7 +448,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
         refchanindx = [];
       end
       if isfield(cfg, 'supchan') && ~isempty(cfg.supchan)
-        [dum, supchanindx] = match_str(cfg.supchan,tmpcfg.channel);
+        [dum, supchanindx] = match_str(cfg.supchan, tmpcfg.channel);
       else
         supchanindx = [];
       end
@@ -687,10 +703,10 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
   else
     Ntrials = 1;
   end
-
+  
   if isfield(data, 'cov')
     % use the estimated data covariance matrix
-    hascovariance = 1;
+    hascovariance = true;
   else
     % add a identity covariance matrix, this simplifies the handling of the different source reconstruction methods
     % since the covariance is only used by some reconstruction methods and might not always be present in the data
@@ -702,8 +718,8 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
         data.cov(i,:,:) = eye(Nchans);
       end
     end
-    hascovariance = 0;
-    ft_warning('No covariance matrix found - will assume identity covariance matrix (mininum-norm solution)');
+    hascovariance = false;
+    ft_warning('No covariance matrix found, assuming identity covariance matrix');
   end
 
   if strcmp(cfg.method, 'pcc')
@@ -876,36 +892,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
   end
 
   % get the relevant low level options from the cfg and convert into key-value pairs
-  optarg = ft_cfg2keyval(getfield(cfg, cfg.method));
-
-  % This is the place to check for the consistency of the channel order in
-  % the pre-computed leadfields/spatial filters, and to correct for it, if
-  % necessary. This pertains to bugs 1746 and 3029.
-  if isfield(sourcemodel, 'label') && (isfield(sourcemodel, 'leadfield') || isfield(sourcemodel, 'filter'))
-    % match the channels in the leadfields/filters with those in the data
-    [i1, i2] = match_str(cfg.channel, sourcemodel.label);
-    if ~isequal(i2(:), (1:numel(sourcemodel.label))')
-      if isfield(sourcemodel, 'leadfield')
-        fprintf('\n\nSubselecting/reordering the channels in the precomputed leadfields\n\n');
-        inside_indx = find(sourcemodel.inside);
-        for k = inside_indx(:)'
-          sourcemodel.leadfield{k} = sourcemodel.leadfield{k}(i2, :);
-        end
-      end
-      if isfield(sourcemodel, 'filter')
-        fprintf('\n\nSubselecting/reordering the channels in the precomputed filters\n\n');
-        inside_indx = find(sourcemodel.inside);
-        for k = inside_indx(:)'
-          sourcemodel.filter{k} = sourcemodel.filter{k}(:, i2);
-        end
-      end
-      sourcemodel.label = sourcemodel.label(i2);
-    end
-    if ~isequal(i1(:), (1:numel(cfg.channel))')
-      % this is not so easy to deal with, throw an error
-      ft_error('There''s a mismatch between the number/order of channels in the data, with respect to the channels in the precomputed leadfield/filter. This is not easy to solve automatically. Please look into this.');
-    end
-  end
+  optarg = ft_cfg2keyval(cfg.(cfg.method));
 
   size_avg = [size(avg) 1];
   size_Cy  = [size(Cy) 1];
@@ -995,7 +982,6 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
       squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
       squeeze_Cy  = reshape(Cy(i,:,:), [size_Cy(2)  size_Cy(3)]);
       fprintf('scanning repetition %d\n', i);
-      squeeze_avg=reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
       dip(i) = beamformer_pcc(sourcemodel, sens, headmodel, squeeze_avg, squeeze_Cy, optarg{:}, 'refdip', cfg.refdip, 'refchan', refchanindx, 'supchan', supchanindx);
     end
   elseif strcmp(cfg.method, 'mne')
@@ -1073,7 +1059,7 @@ if exist('dip', 'var')
   dip    = removefields(dip,       {'pos', 'inside', 'leadfield', 'leadfielddimord', 'label'}); %, 'filter'});
 
   if istrue(cfg.(cfg.method).keepfilter) && isfield(dip(1), 'filter')
-    for k = 1:numel(dip)
+    for k=1:numel(dip)
       dip(k).label        = sens.label;
       dip(k).filterdimord = '{pos}_ori_chan';
     end
@@ -1085,9 +1071,12 @@ if ~istrue(cfg.keepleadfield)
   source = removefields(source, {'leadfield' 'leadfielddimord' 'label'});
 end
 
+cfg.headmodel = headmodel;
+
 % remove the precomputed leadfields from the cfg, regardless of what keepleadfield is saying
 % it should not be kept in cfg, since there it takes up too much space
-cfg.sourcemodel = removefields(cfg.sourcemodel, {'leadfield' 'leadfielddimord' 'filter' 'filterdimord' 'label'});
+cfg.sourcemodel = removefields(sourcemodel, {'leadfield' 'leadfielddimord' 'filter' 'filterdimord' 'label'});
+
 
 if strcmp(cfg.jackknife, 'yes')
   source.method = 'jackknife';
