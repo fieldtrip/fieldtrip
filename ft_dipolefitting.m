@@ -166,11 +166,12 @@ cfg.gridsearch      = ft_getopt(cfg, 'gridsearch', 'yes');
 cfg.nonlinear       = ft_getopt(cfg, 'nonlinear', 'yes');
 cfg.symmetry        = ft_getopt(cfg, 'symmetry');
 cfg.dipfit          = ft_getopt(cfg, 'dipfit', []);     % the default for this is handled below
+
 % the following options are for on-the-fly leadfield computation
-cfg.reducerank      = ft_getopt(cfg, 'reducerank', []); % the default for this is handled below
+cfg.reducerank      = ft_getopt(cfg, 'reducerank');     % the default for this is handled below
+cfg.backproject     = ft_getopt(cfg, 'backproject');    % this is better not used in dipole fitting
 cfg.normalize       = ft_getopt(cfg, 'normalize');      % this is better not used in dipole fitting
 cfg.normalizeparam  = ft_getopt(cfg, 'normalizeparam'); % this is better not used in dipole fitting
-cfg.backproject     = ft_getopt(cfg, 'backproject');    % this is better not used in dipole fitting
 cfg.weight          = ft_getopt(cfg, 'weight');         % this is better not used in dipole fitting
 
 cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
@@ -235,26 +236,22 @@ if ft_getopt(cfg.dipfit.constr, 'sequential', false) && strcmp(cfg.model, 'movin
   % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3119
 end
 
-if isfield(data, 'topolabel')
-  % this looks like a component analysis
-  iscomp = 1;
+iscomp = ft_datatype(data, 'comp');           % it can also be raw+comp, timelock+comp or freq+comp
+isfreq = ft_datatype(data, 'freq');           % it might also be freq+comp, in that case it should be treated as component data
+istimelock = ft_datatype(data, 'timelock');   % it might also be timelock+comp, in that case it should be treated as component data
+
+if iscomp
   % transform the data into a representation on which the timelocked dipole fit can perform its trick
   data = comp2timelock(cfg, data);
-else
-  iscomp = 0;
-end
-
-if isfield(data, 'freq')
-  % this looks like a frequency analysis
-  isfreq = 1;
+elseif isfreq
   % transform the data into a representation on which the timelocked dipole fit can perform its trick
   data = freq2timelock(cfg, data);
-else
-  isfreq = 0;
+elseif istimelock
+  % no transformation is needed
 end
-
-% prepare the volume conduction model and the sensor array
-% this updates the configuration with the appropriate fields
+  
+% collect and preprocess the electrodes/gradiometer and head model
+% this will also update cfg.channel to match the electrodes/gradiometers
 [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
 
 % set the default for reducing the rank of the leadfields
@@ -268,16 +265,19 @@ if isempty(cfg.reducerank)
   end
 end
 
-% construct the options for the leadfield computation, the same options are also passed to DIPOLE_FIT
+% construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD and DIPOLE_FIT
 leadfieldopt = {};
 leadfieldopt = ft_setopt(leadfieldopt, 'reducerank',     cfg.reducerank);
+leadfieldopt = ft_setopt(leadfieldopt, 'backproject',    cfg.backproject);
 leadfieldopt = ft_setopt(leadfieldopt, 'normalize',      cfg.normalize);
 leadfieldopt = ft_setopt(leadfieldopt, 'normalizeparam', cfg.normalizeparam);
 leadfieldopt = ft_setopt(leadfieldopt, 'weight',         cfg.weight);
-leadfieldopt = ft_setopt(leadfieldopt, 'backproject',    cfg.backproject);
 
-% select the desired channels, ordered according to the sensor structure
-[selsens, seldata] = match_str(sens.label, data.label);
+% construct the low-level options for the dipole fitting as key-value pairs, these are passed to DIPOLE_FIT
+dipfitopt = ft_cfg2keyval(cfg.dipfit);
+
+% select the desired channels, ordered according to the sensor structure or configuration
+[selcfg, seldata] = match_str(cfg.channel, data.label);
 % take the selected channels from the data structure
 Vdata = data.avg(seldata, :);
 
@@ -308,7 +308,7 @@ if iscomp
 elseif isfreq
   % the desired frequencies have already been selected
   Vdata = Vdata(:, :);
-else
+elseif istimelock
   % select the desired latencies
   if ischar(cfg.latency) && strcmp(cfg.latency, 'all')
     cfg.latency = data.time([1 end]);
@@ -376,7 +376,7 @@ if strcmp(cfg.gridsearch, 'yes')
   else
     ft_error('dipole scanning is only possible for a single dipole or a symmetric dipole pair');
   end
-
+  
   % copy all options that are potentially used in ft_prepare_sourcemodel
   tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo'});
   tmpcfg.headmodel = headmodel;
@@ -396,10 +396,12 @@ if strcmp(cfg.gridsearch, 'yes')
   if (isfield(sourcemodel, 'filter') || isfield(sourcemodel, 'leadfield')) && ~isequal(sourcemodel.label, cfg.channel)
     tmpcfg = keepfields(cfg, 'channel');
     sourcemodel = ft_selectdata(tmpcfg, sourcemodel);
+    % the following will give an error in case the precomputed leadfield is only given for a subset of the channels
+    assert(isequal(sourcemodel.label, cfg.channel), 'cannot match the channels in the sourcemodel to those in the data')
   end
-
+  
   ngrid = size(sourcemodel.pos,1);
-
+  
   switch cfg.model
     case 'regional'
       sourcemodel.error = nan(ngrid, 1);
@@ -408,7 +410,7 @@ if strcmp(cfg.gridsearch, 'yes')
     otherwise
       ft_error('unsupported cfg.model');
   end
-
+  
   insideindx = find(sourcemodel.inside);
   ft_progress('init', cfg.feedback, 'scanning grid');
   for i=1:length(insideindx)
@@ -440,7 +442,7 @@ if strcmp(cfg.gridsearch, 'yes')
     end % switch model
   end % looping over the grid
   ft_progress('close');
-
+  
   switch cfg.model
     case 'regional'
       % find the source position with the minimum error
@@ -453,7 +455,7 @@ if strcmp(cfg.gridsearch, 'yes')
       elseif cfg.numdipoles==2
         fprintf('found minimum after scanning on grid point [%g %g %g; %g %g %g]\n', dip.pos(1), dip.pos(2), dip.pos(3), dip.pos(4), dip.pos(5), dip.pos(6));
       end
-
+      
     case 'moving'
       for t=1:ntime
         % find the source position with the minimum error
@@ -467,11 +469,11 @@ if strcmp(cfg.gridsearch, 'yes')
           fprintf('found minimum after scanning for topography %d on grid point [%g %g %g; %g %g %g]\n', t, dip(t).pos(1), dip(t).pos(2), dip(t).pos(3), dip(t).pos(4), dip(t).pos(5), dip(t).pos(6));
         end
       end
-
+      
     otherwise
       ft_error('unsupported cfg.model');
   end % switch model
-
+  
 elseif strcmp(cfg.gridsearch, 'no')
   % there is no grid needed for dipole scanning
   sourcemodel = [];
@@ -486,7 +488,7 @@ elseif strcmp(cfg.gridsearch, 'no')
     otherwise
       ft_error('unsupported cfg.model');
   end % switch model
-
+  
 end % if gridsearch yes/no
 
 % multiple dipoles can be represented either as a 1x(N*3) vector or as a Nx3 matrix,
@@ -502,16 +504,6 @@ switch cfg.model
     ft_error('unsupported cfg.model');
 end % switch model
 
-% convert the structure with the additional low-level options into key-value pairs
-dipfitopt = ft_cfg2keyval(cfg.dipfit);
-
-% add the options for the leadfield computation
-dipfitopt = ft_setopt(dipfitopt, 'reducerank',     cfg.reducerank);
-dipfitopt = ft_setopt(dipfitopt, 'normalize',      cfg.normalize);
-dipfitopt = ft_setopt(dipfitopt, 'normalizeparam', cfg.normalizeparam);
-dipfitopt = ft_setopt(dipfitopt, 'weight',         cfg.weight);
-dipfitopt = ft_setopt(dipfitopt, 'backproject',    cfg.backproject);
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % perform the non-linear fit
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -521,7 +513,7 @@ if strcmp(cfg.nonlinear, 'yes')
       % perform the non-linear dipole fit for all latencies together
       % catch errors due to non-convergence
       try
-        dip = dipole_fit(dip, sens, headmodel, Vdata, dipfitopt{:});
+        dip = dipole_fit(dip, sens, headmodel, Vdata, dipfitopt{:}, leadfieldopt{:});
         success = 1;
         if cfg.numdipoles==1
           fprintf('found minimum after non-linear optimization on [%g %g %g]\n', dip.pos(1), dip.pos(2), dip.pos(3));
@@ -532,7 +524,7 @@ if strcmp(cfg.nonlinear, 'yes')
         success = 0;
         disp(lasterr);
       end
-
+      
     case 'moving'
       % perform the non-linear dipole fit for each latency independently
       % instead of using dip(t) = dipole_fit(dip(t),...), I am using temporary variables dipin and dipout
@@ -541,7 +533,7 @@ if strcmp(cfg.nonlinear, 'yes')
       for t=1:ntime
         % catch errors due to non-convergence
         try
-          dipout(t) = dipole_fit(dipin(t), sens, headmodel, Vdata(:,t), dipfitopt{:});
+          dipout(t) = dipole_fit(dipin(t), sens, headmodel, Vdata(:,t), dipfitopt{:}, leadfieldopt{:});
           success(t) = 1;
           if cfg.numdipoles==1
             fprintf('found minimum after non-linear optimization for topography %d on [%g %g %g]\n', t, dipout(t).pos(1), dipout(t).pos(2), dipout(t).pos(3));
@@ -573,7 +565,7 @@ if strcmp(cfg.nonlinear, 'no')
       success = ones(1,ntime);
     otherwise
       ft_error('unsupported cfg.model');
-
+      
   end % switch model
 end
 
@@ -658,7 +650,7 @@ elseif isfreq
   source.freq   = cfg.frequency;
   source.dimord = 'chan_freq';
   % FIXME assign Vdata to an output variable, idem for the model potential
-else
+elseif istimelock
   tbeg = nearest(data.time, cfg.latency(1));
   tend = nearest(data.time, cfg.latency(end));
   source.time   = data.time(tbeg:tend);
