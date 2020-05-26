@@ -206,25 +206,6 @@ else
   cfg.method = ft_getopt(cfg, 'method', []);
 end
 
-cfg.keepleadfield    = ft_getopt(cfg, 'keepleadfield', 'no');
-cfg.keeptrials       = ft_getopt(cfg, 'keeptrials', 'no');
-cfg.trialweight      = ft_getopt(cfg, 'trialweight', 'equal');
-cfg.jackknife        = ft_getopt(cfg, 'jackknife',   'no');
-cfg.pseudovalue      = ft_getopt(cfg, 'pseudovalue', 'no');
-cfg.bootstrap        = ft_getopt(cfg, 'bootstrap',   'no');
-cfg.singletrial      = ft_getopt(cfg, 'singletrial', 'no');
-cfg.rawtrial         = ft_getopt(cfg, 'rawtrial',    'no');
-cfg.randomization    = ft_getopt(cfg, 'randomization', 'no');
-cfg.numrandomization = ft_getopt(cfg, 'numrandomization', 100);
-cfg.permutation      = ft_getopt(cfg, 'permutation',      'no');
-cfg.numpermutation   = ft_getopt(cfg, 'numpermutation',   100);
-cfg.wakewulf         = ft_getopt(cfg, 'wakewulf', 'yes');
-cfg.killwulf         = ft_getopt(cfg, 'killwulf', 'yes');
-cfg.channel          = ft_getopt(cfg, 'channel',  'all');
-cfg.supdip           = ft_getopt(cfg, 'supdip',        []);
-cfg.latency          = ft_getopt(cfg, 'latency',   'all');
-cfg.frequency        = ft_getopt(cfg, 'frequency', 'all');
-
 % put the low-level options pertaining to the source reconstruction method in their own field
 cfg = ft_checkconfig(cfg, 'createsubcfg',  cfg.method);
 % move some fields from cfg.method back to the top-level configuration
@@ -257,6 +238,26 @@ cfg.backproject     = ft_getopt(cfg, 'backproject');
 cfg.normalize       = ft_getopt(cfg, 'normalize');
 cfg.normalizeparam  = ft_getopt(cfg, 'normalizeparam');
 cfg.weight          = ft_getopt(cfg, 'weight');
+
+% get any further options
+cfg.keepleadfield    = ft_getopt(cfg, 'keepleadfield', 'no');
+cfg.keeptrials       = ft_getopt(cfg, 'keeptrials', 'no');
+cfg.trialweight      = ft_getopt(cfg, 'trialweight', 'equal');
+cfg.jackknife        = ft_getopt(cfg, 'jackknife',   'no');
+cfg.pseudovalue      = ft_getopt(cfg, 'pseudovalue', 'no');
+cfg.bootstrap        = ft_getopt(cfg, 'bootstrap',   'no');
+cfg.singletrial      = ft_getopt(cfg, 'singletrial', 'no');
+cfg.rawtrial         = ft_getopt(cfg, 'rawtrial',    'no');
+cfg.randomization    = ft_getopt(cfg, 'randomization', 'no');
+cfg.numrandomization = ft_getopt(cfg, 'numrandomization', 100);
+cfg.permutation      = ft_getopt(cfg, 'permutation',      'no');
+cfg.numpermutation   = ft_getopt(cfg, 'numpermutation',   100);
+cfg.wakewulf         = ft_getopt(cfg, 'wakewulf', 'yes');
+cfg.killwulf         = ft_getopt(cfg, 'killwulf', 'yes');
+cfg.channel          = ft_getopt(cfg, 'channel',  'all');
+cfg.supdip           = ft_getopt(cfg, 'supdip',        []);
+cfg.latency          = ft_getopt(cfg, 'latency',   'all');
+cfg.frequency        = ft_getopt(cfg, 'frequency', 'all');
 
 if hasbaseline && (strcmp(cfg.randomization, 'no') && strcmp(cfg.permutation, 'no'))
   ft_error('input of two conditions only makes sense if you want to randomize or permute');
