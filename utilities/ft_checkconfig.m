@@ -305,6 +305,11 @@ if ~isempty(createtopcfg)
       case {'lcmv' 'sam' 'dics' 'pcc' 'mne' 'rv' 'music' 'sloreta' 'eloreta'}
         fieldname = {
           'keepleadfield'
+          'backproject'
+          'reducerank'
+          'normalize'
+          'normalizeparam'
+          'weight'
           };
     end % switch subname
     
