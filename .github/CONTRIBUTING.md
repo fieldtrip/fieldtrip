@@ -164,6 +164,10 @@ on the FieldTrip website.
    in a branch that is based off of the `master` branch, and the corresponding
    Pull Request should select `master` as the target branch for code merging.
 
+#### Documentation
+
+If you want to contribute to the documentation on the Fieldtrip website, please refer to the website's [Github repository](https://github.com/fieldtrip/website).
+
 #### Coding conventions
 
 Please follow the [code guidelines](http://www.fieldtriptoolbox.org/development/guideline/code/) and the [FieldTrip website guidelines pages](http://www.fieldtriptoolbox.org/tag/guidelines/) for guidelines on contributing to the FieldTrip code base.
