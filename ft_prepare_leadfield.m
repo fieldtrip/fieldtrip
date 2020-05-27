@@ -36,8 +36,8 @@ function [sourcemodel, cfg] = ft_prepare_leadfield(cfg, data)
 %   cfg.elec          = structure with electrode positions or filename, see FT_READ_SENS
 %   cfg.grad          = structure with gradiometer definition or filename, see FT_READ_SENS
 %
-% Optionally, you can modify the leadfields by reducing the rank (i.e.
-% remove the weakest orientation), or by normalizing each column.
+% Optionally, you can modify the leadfields by reducing the rank (i.e. remove the
+% weakest orientation), or by normalizing each column.
 %   cfg.reducerank      = 'no', or number (default = 3 for EEG, 2 for MEG)
 %   cfg.backproject     = 'yes' or 'no',  determines when reducerank is applied whether the 
 %                         lower rank leadfield is projected back onto the original linear 
@@ -139,11 +139,6 @@ cfg = ft_checkconfig(cfg, 'renamed', {'gradfile', 'grad'});
 cfg = ft_checkconfig(cfg, 'renamed', {'optofile', 'opto'});
 
 % set the defaults
-cfg.reducerank     = ft_getopt(cfg, 'reducerank');            % the default for this depends on EEG/MEG and is set below
-cfg.backproject    = ft_getopt(cfg, 'backproject',    'yes'); % determines whether after rank reduction the subspace projected leadfield is backprojected onto the original space
-cfg.normalize      = ft_getopt(cfg, 'normalize',      'no');
-cfg.normalizeparam = ft_getopt(cfg, 'normalizeparam', 0.5);
-cfg.weight         = ft_getopt(cfg, 'weight');
 cfg.lbex           = ft_getopt(cfg, 'lbex',           'no');
 cfg.sel50p         = ft_getopt(cfg, 'sel50p',         'no');
 cfg.feedback       = ft_getopt(cfg, 'feedback',       'text');
@@ -170,15 +165,6 @@ end
 
 % collect and preprocess the electrodes/gradiometer and head model
 [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
-
-if isempty(cfg.reducerank)
-  % set the default for reducing the rank of the leadfields
-  if ft_senstype(sens, 'eeg')
-    cfg.reducerank = ft_getopt(cfg, 'reducerank', 3);
-  else
-    cfg.reducerank = ft_getopt(cfg, 'reducerank', 2);
-  end
-end
 
 % construct the sourcemodel for which the leadfield will be computed
 tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo'});
@@ -208,11 +194,11 @@ end
 
 % construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD and DIPOLE_FIT
 leadfieldopt = {};
-leadfieldopt = ft_setopt(leadfieldopt, 'reducerank',     cfg.reducerank);
-leadfieldopt = ft_setopt(leadfieldopt, 'normalize',      cfg.normalize);
-leadfieldopt = ft_setopt(leadfieldopt, 'normalizeparam', cfg.normalizeparam);
-leadfieldopt = ft_setopt(leadfieldopt, 'weight',         cfg.weight);
-leadfieldopt = ft_setopt(leadfieldopt, 'backproject',    cfg.backproject);
+leadfieldopt = ft_setopt(leadfieldopt, 'reducerank',     ft_getopt(cfg, 'reducerank'));
+leadfieldopt = ft_setopt(leadfieldopt, 'backproject',    ft_getopt(cfg, 'backproject'));
+leadfieldopt = ft_setopt(leadfieldopt, 'normalize',      ft_getopt(cfg, 'normalize'));
+leadfieldopt = ft_setopt(leadfieldopt, 'normalizeparam', ft_getopt(cfg, 'normalizeparam'));
+leadfieldopt = ft_setopt(leadfieldopt, 'weight',         ft_getopt(cfg, 'weight'));
 
 if ft_headmodeltype(headmodel, 'openmeeg')
   
