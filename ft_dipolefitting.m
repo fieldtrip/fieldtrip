@@ -69,11 +69,10 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.dipfit.checkinside  = boolean, check that the dipole remains in the source compartment (default = false)
 %
 % Optionally, you can modify the leadfields by reducing the rank, i.e. remove the weakest orientation
-%   cfg.reducerank      = 'no', or number (default = 3 for EEG, 2 for MEG)
-%   cfg.normalize       = 'no', 'yes' or 'column'
-%   cfg.normalizeparam  = parameter for depth normalization (default = 0.5)
-%   cfg.weight          = number or Nx1 vector, weight for each dipole position to compensate for the size of the corresponding patch (default = 1)
-%   cfg.backproject     = 'yes' (default) or 'no', in the case of a rank reduction this parameter determines whether the result will be backprojected onto the original subspace
+%   cfg.reducerank    = 'no', or number (default = 3 for EEG, 2 for MEG)
+%   cfg.backproject   = 'yes' or 'no',  determines when reducerank is applied whether the 
+%                       lower rank leadfield is projected back onto the original linear 
+%                       subspace, or not (default = 'yes')
 %
 % The volume conduction model of the head should be specified as
 %   cfg.headmodel     = structure with volume conduction model, see FT_PREPARE_HEADMODEL
@@ -167,13 +166,6 @@ cfg.nonlinear       = ft_getopt(cfg, 'nonlinear', 'yes');
 cfg.symmetry        = ft_getopt(cfg, 'symmetry');
 cfg.dipfit          = ft_getopt(cfg, 'dipfit', []);     % the default for this is handled below
 
-% the following options are for on-the-fly leadfield computation
-cfg.reducerank      = ft_getopt(cfg, 'reducerank');     % the default for this is handled below
-cfg.backproject     = ft_getopt(cfg, 'backproject');    % this is better not used in dipole fitting
-cfg.normalize       = ft_getopt(cfg, 'normalize');      % this is better not used in dipole fitting
-cfg.normalizeparam  = ft_getopt(cfg, 'normalizeparam'); % this is better not used in dipole fitting
-cfg.weight          = ft_getopt(cfg, 'weight');         % this is better not used in dipole fitting
-
 cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
 cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.sourcemodel.unit by the subsequent createsubcfg
 
@@ -254,24 +246,13 @@ end
 % this will also update cfg.channel to match the electrodes/gradiometers
 [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
 
-% set the default for reducing the rank of the leadfields
-if isempty(cfg.reducerank)
-  if ft_senstype(sens, 'eeg')
-    cfg.reducerank = 'no';    % for EEG
-  elseif ft_senstype(sens, 'meg') && ft_headmodeltype(headmodel, 'infinite')
-    cfg.reducerank = 'no';    % for MEG with a magnetic dipole, e.g. a HPI coil
-  elseif ft_senstype(sens, 'meg')
-    cfg.reducerank = 'yes';   % for MEG with a current dipole in a volume conductor
-  end
-end
-
 % construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD and DIPOLE_FIT
 leadfieldopt = {};
-leadfieldopt = ft_setopt(leadfieldopt, 'reducerank',     cfg.reducerank);
-leadfieldopt = ft_setopt(leadfieldopt, 'backproject',    cfg.backproject);
-leadfieldopt = ft_setopt(leadfieldopt, 'normalize',      cfg.normalize);
-leadfieldopt = ft_setopt(leadfieldopt, 'normalizeparam', cfg.normalizeparam);
-leadfieldopt = ft_setopt(leadfieldopt, 'weight',         cfg.weight);
+leadfieldopt = ft_setopt(leadfieldopt, 'reducerank',     ft_getopt(cfg, 'reducerank'));
+leadfieldopt = ft_setopt(leadfieldopt, 'backproject',    ft_getopt(cfg, 'backproject'));
+leadfieldopt = ft_setopt(leadfieldopt, 'normalize',      ft_getopt(cfg, 'normalize'));
+leadfieldopt = ft_setopt(leadfieldopt, 'normalizeparam', ft_getopt(cfg, 'normalizeparam'));
+leadfieldopt = ft_setopt(leadfieldopt, 'weight',         ft_getopt(cfg, 'weight'));
 
 % construct the low-level options for the dipole fitting as key-value pairs, these are passed to DIPOLE_FIT
 dipfitopt = ft_cfg2keyval(cfg.dipfit);
