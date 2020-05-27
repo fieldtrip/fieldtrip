@@ -45,6 +45,13 @@ cfg = ft_checkconfig(cfg, 'required', 'headmodel');
 cfg.channel  = ft_getopt(cfg, 'channel', 'all');
 cfg.siunits  = ft_getopt(cfg, 'siunits', 'no');   % yes/no, ensure that SI units are used consistently
 
+% set the defaults for leadfield computation
+cfg.reducerank      = ft_getopt(cfg, 'reducerank');     % the default is handled below
+cfg.backproject     = ft_getopt(cfg, 'backproject');
+cfg.normalize       = ft_getopt(cfg, 'normalize');      % this is better not used in single dipole models
+cfg.normalizeparam  = ft_getopt(cfg, 'normalizeparam'); % this is better not used in single dipole models
+cfg.weight          = ft_getopt(cfg, 'weight');         % this is better not used in single dipole models
+
 hasdata = (nargin>1);
 
 if hasdata
@@ -75,6 +82,15 @@ if hasdata
   sens = ft_fetch_sens(cfg, data);
 else
   sens = ft_fetch_sens(cfg);
+end
+
+if isempty(cfg.reducerank)
+  % set the default for reducing the rank of the leadfields
+  if ft_senstype(sens, 'eeg')
+    cfg.reducerank = ft_getopt(cfg, 'reducerank', 3);
+  else
+    cfg.reducerank = ft_getopt(cfg, 'reducerank', 2);
+  end
 end
 
 if istrue(cfg.siunits)
