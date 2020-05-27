@@ -302,7 +302,8 @@ if ~isempty(createtopcfg)
           'warpmni'
           'template'
           };
-      case {'lcmv' 'sam' 'dics' 'pcc' 'mne' 'rv' 'music' 'sloreta' 'eloreta'}
+
+      case {'dics' 'eloreta' 'harmony' 'lcmv' 'mne' 'music' 'mvl' 'pcc' 'rv' 'sam' 'sloreta'}
         fieldname = {
           'keepleadfield'
           'backproject'
@@ -311,6 +312,9 @@ if ~isempty(createtopcfg)
           'normalizeparam'
           'weight'
           };
+        
+      otherwise
+        ft_error('unexpected name of the subfunction');
     end % switch subname
     
     for i=1:length(fieldname)
