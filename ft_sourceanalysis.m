@@ -345,7 +345,7 @@ cfg.channel = ft_channelselection(cfg.channel, data.label);
 
 if isfield(cfg.sourcemodel, 'filter')
   ft_notice('using precomputed filters, not computing any leadfields');
-  sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'inside', 'label', 'filter', 'filterdimord'});
+  sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'tri', 'dim', 'inside', 'filter', 'filterdimord', 'label'});
   
   % select the channels corresponding to the data and the user configuration
   tmpcfg = keepfields(cfg, 'channel');
@@ -370,7 +370,7 @@ if isfield(cfg.sourcemodel, 'filter')
   
 elseif isfield(cfg.sourcemodel, 'leadfield')
   ft_notice('using precomputed leadfields');
-  sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'inside', 'label', 'leadfield', 'fleadfielddimord'});
+  sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label'});
   
   % select the channels corresponding to the data and the user configuration
   tmpcfg = keepfields(cfg, 'channel');
@@ -396,8 +396,18 @@ elseif isfield(cfg.sourcemodel, 'leadfield')
 elseif istrue(cfg.keepleadfield) || istrue(cfg.permutation) || istrue(cfg.randomization) || istrue(cfg.bootstrap) || istrue(cfg.jackknife) || istrue(cfg.pseudovalue) || istrue(cfg.singletrial) || istrue(cfg.rawtrial)
   ft_notice('computing the leadfields in advance');
   
-  % FIXME make a selection of options
-  sourcemodel = ft_prepare_leadfield(cfg, data);
+  % collect and preprocess the electrodes/gradiometer and head model
+  [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
+  
+  % construct the dipole positions on which the source reconstruction will be done
+  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo'});
+  tmpcfg.headmodel = headmodel;
+  if ft_senstype(sens, 'eeg')
+    tmpcfg.elec = sens;
+  elseif ft_senstype(sens, 'meg')
+    tmpcfg.grad = sens;
+  end
+  sourcemodel = ft_prepare_leadfield(tmpcfg);
   
   % no further forward computations are needed, but keep them in the cfg
   headmodel = [];
@@ -419,7 +429,7 @@ else
   end
   sourcemodel = ft_prepare_sourcemodel(tmpcfg);
   
-end
+end % if precomputed filter, leadfield or not 
 
 % It might be that the number of channels in the data, the number of
 % channels in the electrode/gradiometer definition and the number of
@@ -1090,14 +1100,14 @@ end % if freq or timelock or comp data
 % clean up and collect the results
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-source = copyfields(sourcemodel, source, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label'}); %, 'filter'});
+source = copyfields(sourcemodel, source, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label'});
 
 if exist('dip', 'var')
   % the fields in the dip structure might be more recent than those in the sourcemodel structure
-  source = copyfields(dip, source, {'pos', 'inside', 'leadfield', 'leadfielddimord', 'label'}); %, 'filter'});
+  source = copyfields(dip, source, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label'});
   
   % prevent duplication of these fields when copying the content of dip into source.avg or source.trial
-  dip    = removefields(dip,       {'pos', 'inside', 'leadfield', 'leadfielddimord', 'label'}); %, 'filter'});
+  dip    = removefields(dip,       {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label'});
   
   if istrue(cfg.(cfg.method).keepfilter) && isfield(dip(1), 'filter')
     for k=1:numel(dip)

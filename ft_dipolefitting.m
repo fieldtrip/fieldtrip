@@ -22,10 +22,9 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.nonlinear   = 'yes' or 'no', perform nonlinear search for optimal
 %                     dipole parameters (default = 'yes')
 %
-% If you start with a grid search, the complete grid with dipole positions and
-% optionally precomputed leadfields is constructed using FT_PREPARE_SOURCEMODEL. It
-% can be specified as as a regular 3-D grid that is aligned with the axes of the head
-% coordinate system using
+% If you start with a grid search, the complete grid with dipole positions is
+% constructed using FT_PREPARE_SOURCEMODEL. It can be specified as as a regular 3-D
+% grid that is aligned with the axes of the head coordinate system using
 %   cfg.xgrid               = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
 %   cfg.ygrid               = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
 %   cfg.zgrid               = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
@@ -358,29 +357,42 @@ if strcmp(cfg.gridsearch, 'yes')
     ft_error('dipole scanning is only possible for a single dipole or a symmetric dipole pair');
   end
   
-  % copy all options that are potentially used in ft_prepare_sourcemodel
-  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo'});
-  tmpcfg.headmodel = headmodel;
-  if ft_senstype(sens, 'eeg')
-    tmpcfg.elec = sens;
-  elseif ft_senstype(sens, 'meg')
-    tmpcfg.grad = sens;
-  end
-  % construct the dipole grid on which the gridsearch will be done
-  sourcemodel = ft_prepare_sourcemodel(tmpcfg);
-  if ischar(cfg.sourcemodel)
-    % replace the file name with the actual source model
-    cfg.sourcemodel = sourcemodel;
-  end
-  
-  % ensure consistency of the channel order in the pre-computed leadfields and filters, see bugs 1746 and 3029
-  if (isfield(sourcemodel, 'filter') || isfield(sourcemodel, 'leadfield')) && ~isequal(sourcemodel.label, cfg.channel)
+  if isfield(cfg.sourcemodel, 'leadfield')
+    ft_notice('using precomputed leadfields for the gridsearch');
+
+    sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label'});
+    
+    % select the channels corresponding to the data and the user configuration
     tmpcfg = keepfields(cfg, 'channel');
     sourcemodel = ft_selectdata(tmpcfg, sourcemodel);
-    % the following will give an error in case the precomputed leadfield is only given for a subset of the channels
+    
+    % sort the channels to be consistent with the data
+    [dum, chansel] = match_str(data.label, sourcemodel.label);
+    sourcemodel.label = sourcemodel.label(chansel);
+    for i=1:numel(sourcemodel.leadfield)
+      if ~isempty(sourcemodel.leadfield{i})
+        sourcemodel.leadfield{i} = sourcemodel.leadfield{i}(chansel, :);
+      end
+    end
+    
+    % ensure that the channels are consistent with the data
     assert(isequal(sourcemodel.label, cfg.channel), 'cannot match the channels in the sourcemodel to those in the data')
-  end
-  
+    
+  else
+    ft_notice('computing the leadfields for the gridsearch on the fly');
+    
+    % construct the dipole positions on which the source reconstruction will be done
+    tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo'});
+    tmpcfg.headmodel = headmodel;
+    if ft_senstype(sens, 'eeg')
+      tmpcfg.elec = sens;
+    elseif ft_senstype(sens, 'meg')
+      tmpcfg.grad = sens;
+    end
+    sourcemodel = ft_prepare_sourcemodel(tmpcfg);
+    
+  end % if precomputed leadfield or not 
+
   ngrid = size(sourcemodel.pos,1);
   
   switch cfg.model

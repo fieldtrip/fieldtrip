@@ -361,7 +361,7 @@ perform_source_analysis
       
       % project through computed filter
       cfg.rawtrial = 'yes';
-      cfg.sourcemodel = keepfields(sourcelcmv3d1, {'pos', 'inside', 'label', 'leadfield', 'filter'});
+      cfg.sourcemodel = keepfields(sourcelcmv3d1, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label'});
       ft_sourceanalysis(cfg, MEG_tlck);
       
       % do MNE
@@ -376,7 +376,7 @@ perform_source_analysis
       sourcemne3d1 = ft_datatype_source(sourcemne3d1, 'version', 'latest');
       
       cfg.rawtrial = 'yes';
-      cfg.sourcemodel = keepfields(sourcemne3d1, {'pos', 'inside', 'label', 'leadfield', 'filter'});
+      cfg.sourcemodel = keepfields(sourcemne3d1, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label'});
       ft_sourceanalysis(cfg, MEG_tlck);
       
       % do DICS
@@ -393,7 +393,7 @@ perform_source_analysis
       sourcedics3d1 = ft_datatype_source(sourcedics3d1, 'version', 'latest');
       
       cfg.rawtrial = 'yes';
-      cfg.sourcemodel = keepfields(sourcedics3d1, {'pos', 'inside', 'label', 'leadfield', 'filter'});
+      cfg.sourcemodel = keepfields(sourcedics3d1, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label'});
       ft_sourceanalysis(cfg, MEG_freq);
       
       % do PCC
@@ -437,7 +437,7 @@ perform_source_analysis
       
       % project through computed filter
       cfg.rawtrial = 'yes';
-      cfg.sourcemodel = keepfields(sourcelcmv3d1, {'pos', 'inside', 'label', 'leadfield', 'filter'});
+      cfg.sourcemodel = keepfields(sourcelcmv3d1, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label'});
       ft_sourceanalysis(cfg, EEG_tlck);
       
       % do MNE
@@ -452,7 +452,7 @@ perform_source_analysis
       sourcemne3d1 = ft_datatype_source(sourcemne3d1, 'version', 'latest');
       
       cfg.rawtrial = 'yes';
-      cfg.sourcemodel = keepfields(sourcemne3d1, {'pos', 'inside', 'label', 'leadfield', 'filter'});
+      cfg.sourcemodel = keepfields(sourcemne3d1, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label'});
       ft_sourceanalysis(cfg, EEG_tlck);
       
       % do DICS
@@ -468,7 +468,7 @@ perform_source_analysis
       sourcedics3d1 = ft_sourceanalysis(cfg, EEG_freq);
       
       cfg.rawtrial = 'yes';
-      cfg.sourcemodel = keepfields(sourcedics3d1, {'pos', 'inside', 'label', 'leadfield', 'filter'});
+      cfg.sourcemodel = keepfields(sourcedics3d1, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label'});
       ft_sourceanalysis(cfg, EEG_freq);
       
       % do PCC
