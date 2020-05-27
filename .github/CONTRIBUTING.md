@@ -111,7 +111,7 @@ on the FieldTrip website.
 
    -  "[**Enhancement**](#enhancement)": If the proposed change improves the *performance* or extends the *functionality* of a particular command or process.
 
-   -  "[**Documentation**]": If you made some changes to the function description in the help section of the function.
+   -  "[**Documentation**](#documentation)": If you made some changes to the function description in the help section of the function.
 
 5. Check that your modified code does not prevent FieldTrip from
    passing existing tests, wherever possible (all test files are in the FieldTrip test directory).
