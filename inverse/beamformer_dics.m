@@ -38,9 +38,11 @@ function [dipout] = beamformer_dics(dip, grad, headmodel, dat, Cf, varargin)
 %  'keepcsd'          = remember the estimated cross-spectral density, can be 'yes' or 'no'
 %
 % These options influence the forward computation of the leadfield
-%  'reducerank'       = reduce the leadfield rank, can be 'no' or a number (e.g. 2)
-%  'normalize'        = normalize the leadfield
-%  'normalizeparam'   = parameter for depth normalization (default = 0.5)
+%   reducerank      = 'no', or number (default = 3 for EEG, 2 for MEG)
+%   backproject     = 'yes' or 'no',  determines when reducerank is applied whether the lower rank leadfield is projected back onto the original linear subspace, or not (default = 'yes')
+%   normalize       = 'yes' or 'no' (default = 'no')
+%   normalizeparam  = depth normalization parameter (default = 0.5)
+%   weight          = number or Nx1 vector, weight for each dipole position to compensate for the size of the corresponding patch (default = 1)
 %
 % If the dipole definition only specifies the dipole location, a rotating
 % dipole (regional source) is assumed on each location. If a dipole moment
@@ -531,7 +533,7 @@ switch submethod
     elseif isstruct(refdip) && isfield(refdip, 'pos') % check if only position of refdip is present
       assert(isnumeric(refdip.pos) && numel(refdip.pos)==3);
       lf1 = ft_compute_leadfield(refdip.pos, grad, headmodel, 'reducerank', reducerank, 'normalize', normalize);
-      if isfield(refdip,'mom'); % check for fixed orientation
+      if isfield(refdip,'mom') % check for fixed orientation
         lf1 = lf1.*refdip.mom(:); 
       end 
       filt1 = pinv(lf1' * invCf * lf1) * lf1' * invCf;       % use pinv/SVD to cover rank deficient leadfield
