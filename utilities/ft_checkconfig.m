@@ -426,6 +426,7 @@ if ~isempty(createsubcfg)
           'inside'
           'outside'
           'pos'
+          'tri'
           'dim'
           };
 

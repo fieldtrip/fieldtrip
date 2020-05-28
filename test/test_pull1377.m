@@ -24,6 +24,12 @@ function test_pull1377
 % workspaces of the functions that contain them.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+% prevent errors from cfg.mne.keepleadfield, etc
+global ft_default
+ft_default.checkconfig = 'loose';
+
+
 datameg = []; % touch these variables to make them shared between the main function and the nexted function
 dataeeg = [];
 
