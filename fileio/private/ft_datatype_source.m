@@ -173,7 +173,6 @@ switch version
         nrpt   = datsiz(1);
         datsiz = datsiz(2:end);
 
-
         if iscell(dat)
           datsiz(1) = nrpt; % swap the size of pos with the size of rpt
           val  = cell(npos,1);
@@ -227,6 +226,32 @@ switch version
 
     % ensure that it has a dimord (or multiple for the different fields)
     source = fixdimord(source);
+    
+    if isfield(source, 'leadfield') && isfield(source, 'inside')
+      % ensure that for positions outside the brain it is [], not nan
+      source.leadfield(~source.inside) = {[]};
+    end
+    
+    if isfield(source, 'filter') && isfield(source, 'inside')
+      % ensure that for positions outside the brain it is [], not nan
+      source.filter(~source.inside) = {[]};
+    end      
+    
+    if isfield(source, 'leadfield') && ~isfield(source, 'label') && isfield(source, 'cfg')
+      % try to determine the channel labels from the cfg
+      label = ft_findcfg(source.cfg, 'channel');
+      if ~isempty(label)
+        source.label = label;
+      end
+    end
+    
+    if isfield(source, 'filter') && ~isfield(source, 'label') && isfield(source, 'cfg')
+      % try to determine the channel labels from the cfg
+      label = ft_findcfg(source.cfg, 'channel');
+      if ~isempty(label)
+        source.label = label;
+      end
+    end
 
     % ensure that all data fields have the correct dimensions
     fn = getdatfield(source);
