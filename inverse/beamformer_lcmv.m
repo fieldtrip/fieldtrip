@@ -19,6 +19,7 @@ function [dipout] = beamformer_lcmv(dip, grad, headmodel, dat, Cy, varargin)
 % The input dipole model consists of
 %   dipin.pos   positions for dipole, e.g. regular grid, Npositions x 3
 %   dipin.mom   dipole orientation (optional), 3 x Npositions
+% and can additionally contain things like a precomputed filter.
 %
 % Additional options should be specified in key-value pairs and can be
 %  'lambda'           = regularisation parameter
@@ -187,14 +188,14 @@ if isfield(dip, 'subspace')
 elseif ~isempty(subspace)
   % TODO implement an "eigenspace beamformer" as described in Sekihara et al. 2002 in HBM
   fprintf('using data-specific subspace projection\n');
-  if numel(subspace)==1,
+  if numel(subspace)==1
     % interpret this as a truncation of the eigenvalue-spectrum
     % if <1 it is a fraction of the largest eigenvalue
     % if >=1 it is the number of largest eigenvalues
     dat_pre_subspace = dat;
     Cy_pre_subspace  = Cy;
     [u, s, v] = svd(real(Cy));
-    if subspace<1,
+    if subspace<1
       subspace = find(diag(s)./s(1,1) > subspace, 1, 'last');
     end
     Cy       = s(1:subspace,1:subspace);
@@ -265,7 +266,7 @@ for i=1:size(dip.pos,1)
         % optimal orientation calculation for unit-noise gain beamformer,
         % (also applies to similar NAI), based on equation 4.47 from Sekihara & Nagarajan (2008)
         [vv, dd] = eig(pinv(lf' * invCy_squared *lf)*(lf' * invCy *lf));
-        [dum,maxeig]=max(diag(dd));
+        [dum, maxeig]=max(diag(dd));
         eta = vv(:,maxeig);
         lf  = lf * eta;
         if ~isempty(subspace), lforig = lforig * eta; end

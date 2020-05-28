@@ -1,14 +1,17 @@
 function [channel] = ft_channelselection(desired, datachannel, senstype)
 
-% FT_CHANNELSELECTION makes a selection of EEG and/or MEG channel labels.
-% This function translates the user-specified list of channels into channel
-% labels as they occur in the data. This channel selection procedure can be
-% used throughout FieldTrip.
+% FT_CHANNELSELECTION makes a selection of EEG and/or MEG channel labels. This
+% function translates the user-specified list of channels into channel labels as they
+% occur in the data. This channel selection procedure can be used throughout
+% FieldTrip.
 %
-% You can specify a mixture of real channel labels and of special strings,
-% or index numbers that will be replaced by the corresponding channel
-% labels. Channels that are not present in the raw datafile are
-% automatically removed from the channel list.
+% You can specify a mixture of real channel labels and of special strings, or index
+% numbers that will be replaced by the corresponding channel labels. Channels that
+% are not present in the raw datafile are automatically removed from the channel
+% list.
+%
+% The order of the channels in the list that is returned corresponds to the order in
+% the data.
 %
 % E.g. the desired input specification can be:
 %   'all'        is replaced by all channels in the datafile
@@ -46,9 +49,6 @@ function [channel] = ft_channelselection(desired, datachannel, senstype)
 %
 % See also FT_PREPROCESSING, FT_SENSLABEL, FT_MULTIPLOTER, FT_MULTIPLOTTFR,
 % FT_SINGLEPLOTER, FT_SINGLEPLOTTFR
-
-% Note that the order of channels that is returned should correspond with
-% the order of the channels in the data.
 
 % Copyright (C) 2003-2016, Robert Oostenveld
 %

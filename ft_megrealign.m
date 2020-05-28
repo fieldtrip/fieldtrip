@@ -7,8 +7,9 @@ function [data] = ft_megrealign(cfg, data)
 %
 % Use as
 %   [interp] = ft_megrealign(cfg, data)
+% where the input data corresponds to the output from FT_PREPROCESSING.
 %
-% Required configuration options:
+% Required configuration options are
 %   cfg.template
 %   cfg.inwardshift
 %
@@ -29,7 +30,7 @@ function [data] = ft_megrealign(cfg, data)
 %
 % A source model (i.e. a superficial layer with distributed sources) can be
 % constructed from a headshape file, or from inner surface of the volume conduction
-% model using FT_PREPARE_SOIURCEMODEL using the following options
+% model using FT_PREPARE_SOURCEMODEL using the following options
 %   cfg.spheremesh  = number of dipoles in the source layer (default = 642)
 %   cfg.inwardshift = depth of the source layer relative to the headshape
 %                     surface or volume conduction model (no default
@@ -50,14 +51,14 @@ function [data] = ft_megrealign(cfg, data)
 % For a realistic single-shell volume conduction model based on the brain surface, you
 % should probably use an inward shift of about 1 cm.
 %
-% Other options are
-%   cfg.tolerance   = tolerance ratio for leadfield matrix inverse based on a truncated svd, 
-%                     reflects the relative magnitude of the largest singular value
-%                     to retain (default =s 1e-3)
+% Other configuration options are
+%  cfg.tolerance  = tolerance ratio for leadfield matrix inverse based on a truncated svd,
+%                   reflects the relative magnitude of the largest singular value
+%                   to retain (default =s 1e-3)
 % cfg.verify      = 'yes' or 'no', show the percentage difference (default = 'yes')
 % cfg.feedback    = 'yes' or 'no' (default = 'no')
 % cfg.channel     =  Nx1 cell-array with selection of channels (default = 'MEG'),
-%                      see FT_CHANNELSELECTION for details
+%                    see FT_CHANNELSELECTION for details
 % cfg.trials      = 'all' or a selection given as a 1xN vector (default = 'all')
 %
 % This implements the method described by T.R. Knosche, Transformation
@@ -216,7 +217,7 @@ template = [];
 template.grad = grad;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% FT_PREPARE_VOL_SENS will match the data labels, the gradiometer labels and the
+% PREPARE_HEADMODEL will match the data labels, the gradiometer labels and the
 % volume model labels (in case of a localspheres model) and result in a gradiometer
 % definition that only contains the gradiometers that are present in the data.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -226,20 +227,20 @@ volcfg.headmodel = cfg.headmodel;
 volcfg.grad      = data.grad;
 volcfg.channel   = data.label; % this might be a subset of the MEG channels
 
-% As of yet the next step is not entirely correct, because it does not keep track
-% of the balancing of the gradiometer array. FIXME this may require some
-% thought because the leadfields are computed with low level functions and
-% do not easily accommodate for matching the correct channels with each
-% other (in order to compute the projection matrix).
-[volold, data.grad] = prepare_headmodel(volcfg);
+% As of yet the next step is not entirely correct, because it does not keep track of
+% the balancing of the gradiometer array. FIXME this may require some thought because
+% the leadfields are computed with low level functions and do not easily accommodate
+% for matching the correct channels with each other (in order to compute the
+% projection matrix).
+[volold, data.grad] = prepare_headmodel(volcfg, []);
 
-% note that it is necessary to keep the two volume conduction models
-% separate, since the single-shell Nolte model contains gradiometer specific
-% precomputed parameters. Note that this is not guaranteed to result in a
-% good projection for local sphere models.
+% Note that it is necessary to keep the two volume conduction models separate, since
+% the single-shell Nolte model contains gradiometer specific precomputed parameters.
+% Also note that this is not guaranteed to result in a good projection for local
+% sphere models.
 volcfg.grad    = template.grad;
 volcfg.channel = 'MEG'; % include all MEG channels
-[volnew, template.grad] = prepare_headmodel(volcfg);
+[volnew, template.grad] = prepare_headmodel(volcfg, []);
 
 if strcmp(ft_senstype(data.grad), ft_senstype(template.grad))
   [id, it] = match_str(data.grad.label, template.grad.label);
@@ -260,7 +261,7 @@ pos = sourcemodel.pos;
 
 % sometimes some of the dipole positions are nan, due to problems with the headsurface triangulation
 % remove them to prevent problems with the forward computation
-sel = find(any(isnan(pos(:,1)),2));
+sel = any(isnan(pos(:,1)),2);
 pos(sel,:) = [];
 
 % compute the forward model for the new gradiometer positions
@@ -271,12 +272,12 @@ if ~pertrial
   lfold = ft_compute_leadfield(pos, data.grad, volold);
   [realign, noalign, bkalign] = computeprojection(lfold, lfnew, cfg.pruneratio, cfg.verify);
 else
-  %the forward model and realignment matrices have to be computed for each trial
-  %this also goes for the singleshell volume conductor model
-  %x = which('rigidbodyJM'); %this function is needed
-  %if isempty(x)
-  %  ft_error('you are trying out experimental code for which you need some extra functionality which is currently not in the release version of FieldTrip. if you are interested in trying it out, contact Jan-Mathijs');
-  %end
+  % the forward model and realignment matrices have to be computed for each trial
+  % this also goes for the singleshell volume conductor model
+  % x = which('rigidbodyJM'); % this function is needed
+  % if isempty(x)
+  %   ft_error('you are trying out experimental code for which you need some extra functionality which is currently not in the release version of FieldTrip. if you are interested in trying it out, contact Jan-Mathijs');
+  % end
 end
 
 % interpolate the data towards the template gradiometers
@@ -293,7 +294,7 @@ for i=1:Ntrials
       M    = ft_headcoordinates(hmdat(1:3,1),hmdat(4:6,1),hmdat(7:9,1));
       grad = ft_transform_geometry(M, data.grad);
     end
-
+    
     volcfg.grad = grad;
     %compute volume conductor
     [volold, grad] = prepare_headmodel(volcfg);
@@ -319,7 +320,7 @@ end
 
 % plot the topography before and after the realignment
 if strcmp(cfg.feedback, 'yes')
-
+  
   ft_warning('showing MEG topography (RMS value over time) in the first trial only');
   Nchan = length(data.grad.label);
   [id,it]   = match_str(data.grad.label, template.grad.label);
@@ -327,7 +328,7 @@ if strcmp(cfg.feedback, 'yes')
   pos2 = template.grad.chanpos(it,:);
   prj1 = elproj(pos1); tri1 = delaunay(prj1(:,1), prj1(:,2));
   prj2 = elproj(pos2); tri2 = delaunay(prj2(:,1), prj2(:,2));
-
+  
   switch cfg.topoparam
     case 'rms'
       p1 = sqrt(mean(data.trial{1}(id,:).^2, 2));
@@ -338,11 +339,11 @@ if strcmp(cfg.feedback, 'yes')
     otherwise
       ft_error('unsupported cfg.topoparam');
   end
-
+  
   X = [pos1(:,1) pos2(:,1)]';
   Y = [pos1(:,2) pos2(:,2)]';
   Z = [pos1(:,3) pos2(:,3)]';
-
+  
   % show figure with old an new helmets, volume model and source positions
   figure
   hold on
@@ -352,7 +353,7 @@ if strcmp(cfg.feedback, 'yes')
   plot3(pos2(:,1), pos2(:,2), pos2(:,3), 'g.') % template positions
   line(X,Y,Z, 'color', 'black');
   view(-90, 90);
-
+  
   % show figure with data on old helmet location
   figure
   hold on
@@ -366,7 +367,7 @@ if strcmp(cfg.feedback, 'yes')
   ft_plot_mesh(bnd1,'vertexcolor',p1,'edgecolor','none')
   title('RMS, before realignment')
   view(-90, 90)
-
+  
   % show figure with data on new helmet location
   figure
   hold on
