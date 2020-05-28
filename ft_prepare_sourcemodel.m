@@ -668,6 +668,9 @@ if strcmp(cfg.spherify, 'yes')
 end
 
 if ~isempty(cfg.moveinward)
+  if ~any([strcmp(cfg.method, 'basedonshape'), strcmp(cfg.method, 'basedoncortex'), strcmp(cfg.method, 'basedonvol'), strcmp(cfg.method, 'basedonfile')])
+      ft_warning('cfg.moveinward is designed to work with surface sourcemodels, not 3D grids.')
+  end
   % construct a triangulated boundary of the source compartment
   [pos1, tri1] = headsurface(headmodel, [], 'inwardshift', cfg.moveinward, 'surface', 'brain');
   inside = bounding_mesh(sourcemodel.pos, pos1, tri1);
@@ -685,7 +688,14 @@ end
 % volume conduction model, i.e. inside the brain
 if ~isfield(sourcemodel, 'inside')
   sourcemodel.inside = ft_inside_headmodel(sourcemodel.pos, headmodel, 'grad', sens, 'headshape', cfg.headshape, 'inwardshift', cfg.inwardshift); % this returns a boolean vector
+else
+  if isfield(cfg, 'inwardshift') && isfield(cfg, 'template')
+    % warn about inwardshift not having an effect as inside is already specified as well
+    % warning should only be issued for templates, inwardshift can also be present for surface meshes
+    ft_warning('Inside dipole locations already determined by a template, cfg.inwardshift has no effect.')
+  end
 end
+
 
 if strcmp(cfg.tight, 'yes')
   fprintf('%d dipoles inside, %d dipoles outside brain\n', sum(sourcemodel.inside), sum(~sourcemodel.inside));
