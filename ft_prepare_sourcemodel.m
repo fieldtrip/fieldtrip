@@ -174,7 +174,9 @@ end
 
 % the source model can be constructed in a number of ways
 if isempty(cfg.method)
-  if isfield(cfg, 'xgrid') && ~ischar(cfg.xgrid)
+  if isfield(cfg, 'sourcemodel') && ischar(cfg.sourcemodel)
+    cfg.method = 'basedonfile';
+  elseif isfield(cfg, 'xgrid') && ~ischar(cfg.xgrid)
     cfg.method = 'basedongrid'; % regular 3D grid with explicit specification
   elseif isfield(cfg.sourcemodel, 'pos')
     cfg.method = 'basedonpos'; % using user-supplied positions, which can be regular or irregular
@@ -190,8 +192,6 @@ if isempty(cfg.method)
     cfg.method = 'basedonresolution'; % regular 3D grid with specification of the resolution
   elseif ~isempty(cfg.headmodel)
     cfg.method = 'basedonvol'; % surface mesh based on inward shifted brain surface from volume conductor
-  elseif isfield(cfg, 'sourcemodel') && ischar(cfg.sourcemodel)
-    cfg.method = 'basedonfile';
   else
     ft_error('incorrect cfg specification for constructing a sourcemodel');
   end
@@ -650,6 +650,14 @@ if isfield(sourcemodel, 'unit')
 else
   % the units were specified by the user or determined automatically, assign them to the source model
   sourcemodel.unit = cfg.unit;
+end
+
+% do some sanity checks
+if isfield(sourcemodel, 'filter')
+  assert(numel(sourcemodel.filter) == size(sourcemodel.pos, 1), 'the number of precomputed filters does not match number of source positions');
+end
+if isfield(sourcemodel, 'leadfield')
+  assert(numel(sourcemodel.leadfield) == size(sourcemodel.pos, 1), 'the number of precomputed leadfields does not match number of source positions');
 end
 
 if strcmp(cfg.spherify, 'yes')
