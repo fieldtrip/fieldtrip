@@ -663,13 +663,13 @@ for k = 1:ndata
   if isfield(varargin{k}, 'opto') && isfield(varargin{k}.opto, 'type')
     % this makes channel selection more robust, e.g. when using wildcards in cfg.channel
     [selopto, dum] = match_str(varargin{k}.label, varargin{k}.opto.label);
-    selchannel     = cat(1, selchannel, ft_channelselection(cfg.channel, varargin{k}.label(selelec), varargin{k}.opto.type));
+    selchannel     = cat(1, selchannel, ft_channelselection(cfg.channel, varargin{k}.label(selopto), varargin{k}.opto.type));
   end
   selrest    = setdiff((1:numel(varargin{k}.label))', [selgrad; selelec; selopto]);
   selchannel = cat(1, selchannel, ft_channelselection(cfg.channel, varargin{k}.label(selrest)));
   label      = union(label, selchannel);
 end
-label = label(:);   % ensure column array
+label = label(:);   % ensure that this is a column array
 
 % this call to match_str ensures that that labels are always in the
 % order of the first input argument see bug_2917, but also temporarily keep
