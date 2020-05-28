@@ -91,19 +91,19 @@ keepcsd        = ft_getopt(varargin, 'keepcsd', 'no');
 keepfilter     = ft_getopt(varargin, 'keepfilter', 'no');
 keepleadfield  = ft_getopt(varargin, 'keepleadfield', 'no');
 lambda         = ft_getopt(varargin, 'lambda', 0);
-kappa          = ft_getopt(varargin, 'kappa',  []);
-tol            = ft_getopt(varargin, 'tol',    []);
-invmethod      = ft_getopt(varargin, 'invmethod',    []);
+kappa          = ft_getopt(varargin, 'kappa', []);
+tol            = ft_getopt(varargin, 'tol', []);
+invmethod      = ft_getopt(varargin, 'invmethod', []);
 projectnoise   = ft_getopt(varargin, 'projectnoise', 'yes');
 fixedori       = ft_getopt(varargin, 'fixedori', 'no');
 
 % convert the yes/no arguments to the corresponding logical values
-keepcsd        = strcmp(keepcsd,       'yes');
-keepfilter     = strcmp(keepfilter,    'yes');
-keepleadfield  = strcmp(keepleadfield, 'yes');
-projectnoise   = strcmp(projectnoise,  'yes');
-fixedori       = strcmp(fixedori,      'yes');
-dofeedback     = ~strcmp(feedback,     'none');
+keepcsd        = istrue(keepcsd);
+keepfilter     = istrue(keepfilter);
+keepleadfield  = istrue(keepleadfield);
+projectnoise   = istrue(projectnoise);
+fixedori       = istrue(fixedori);
+
 % FIXME besides regular/complex lambda1, also implement a real version
 
 % default is to use the largest singular value of the csd matrix, see Gross 2001
@@ -143,42 +143,33 @@ if any(dip.inside>1)
   dip.inside = tmp;
 end
 
+% flags to avoid calling isfield repeatedly in the loop over grid positions (saves a lot of time)
+hasmom        = isfield(dip, 'mom');
+hasleadfield  = isfield(dip, 'leadfield');
+hasfilter     = isfield(dip, 'filter');
+hassubspace   = isfield(dip, 'subspace');
+
 % keep the original details on inside and outside positions
 originside = dip.inside;
 origpos    = dip.pos;
 
-% flags to avoid calling isfield repeatedly in the loop over grid positions (saves a lot of time)
-hasmom        = false;
-hasleadfield  = false;
-hasfilter     = false;
-hassubspace   = false;
-
 % select only the dipole positions inside the brain for scanning
 dip.pos    = dip.pos(originside,:);
 dip.inside = true(size(dip.pos,1),1);
-if isfield(dip, 'mom')
-  hasmom = 1;
+
+if hasmom
   dip.mom = dip.mom(:,originside);
 end
-if isfield(dip, 'leadfield')
-  hasleadfield = 1;
-  if dofeedback
-    fprintf('using precomputed leadfields\n');
-  end
+if hasleadfield
+  ft_info('using precomputed leadfields\n');
   dip.leadfield = dip.leadfield(originside);
 end
-if isfield(dip, 'filter')
-  hasfilter = 1;
-  if dofeedback
-    fprintf('using precomputed filters\n');
-  end
+if hasfilter
+  ft_info('using precomputed filters\n');
   dip.filter = dip.filter(originside);
 end
-if isfield(dip, 'subspace')
-  hassubspace = 1;
-  if dofeedback
-    fprintf('using subspace projection\n');
-  end
+if hassubspace
+  ft_info('using subspace projection\n');
   dip.subspace = dip.subspace(originside);
 end
 
@@ -230,9 +221,7 @@ else
 end
 
 if hassubspace
-  if dofeedback
-    fprintf('using source-specific subspace projection\n');
-  end
+  ft_notice('using source-specific subspace projection\n');
   % remember the original data prior to the voxel dependent subspace projection
   dat_pre_subspace = dat;
   Cf_pre_subspace = Cf;
@@ -241,25 +230,22 @@ if hassubspace
     Pr_pre_subspace = Pr;
   end
 elseif ~isempty(subspace)
-  if dofeedback
-    fprintf('using data-specific subspace projection\n');
-  end
+  ft_notice('using data-specific subspace projection\n');
   % TODO implement an "eigenspace beamformer" as described in Sekihara et al. 2002 in HBM
-  if numel(subspace)==1,
+  if numel(subspace)==1
     % interpret this as a truncation of the eigenvalue-spectrum
     % if <1 it is a fraction of the largest eigenvalue
     % if >=1 it is the number of largest eigenvalues
     dat_pre_subspace = dat;
     Cf_pre_subspace  = Cf;
     [u, s, v] = svd(real(Cf));
-    if subspace<1,
+    if subspace<1
       sel      = find(diag(s)./s(1,1) > subspace);
       subspace = max(sel);
     end
     
     Cf       = s(1:subspace,1:subspace);
-    % this is equivalent to subspace*Cf*subspace' but behaves well numerically
-    % by construction.
+    % this is equivalent to subspace*Cf*subspace' but behaves well numerically by construction.
     invCf    = diag(1./diag(Cf + lambda * eye(size(Cf))));
     subspace = u(:,1:subspace)';
     if ~isempty(dat), dat = subspace*dat; end
@@ -294,7 +280,9 @@ switch submethod
   case 'dics_power'
     % only compute power of a dipole at the grid positions
     for i=1:size(dip.pos,1)
-      if hasleadfield && hasmom && size(dip.mom, 1)==size(dip.leadfield{i}, 2)
+      if hasfilter
+        % precomputed filter is provided, the leadfield is not needed
+      elseif hasleadfield && hasmom && size(dip.mom, 1)==size(dip.leadfield{i}, 2)
         % reuse the leadfield that was previously computed and project
         lf = dip.leadfield{i} * dip.mom(:,i);
       elseif  hasleadfield &&  hasmom
@@ -413,7 +401,9 @@ switch submethod
   case 'dics_refchan'
     % compute cortico-muscular coherence, using reference cross spectral density
     for i=1:size(dip.pos,1)
-      if hasleadfield
+      if hasfilter
+        % precomputed filter is provided, the leadfield is not needed
+      elseif hasleadfield
         % reuse the leadfield that was previously computed
         lf = dip.leadfield{i};
       elseif hasmom
@@ -549,7 +539,9 @@ switch submethod
       Pref = real(trace(filt1 * Cf * ctranspose(filt1)));  % compute the power at the first dipole location
     end
     for i=1:size(dip.pos,1)
-      if hasleadfield
+      if hasfilter
+        % precomputed filter is provided, the leadfield is not needed
+      elseif hasleadfield
         % reuse the leadfield that was previously computed
         lf2 = dip.leadfield{i};
       elseif hasmom

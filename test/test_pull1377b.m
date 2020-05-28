@@ -38,7 +38,7 @@ freq = ft_freqanalysis(cfg, data);
 %%
 
 timelockmethod = {'lcmv', 'sam', 'mne', 'rv', 'music', 'pcc', 'mvl', 'sloreta', 'eloreta'};
-timelockmethod = {'pcc'}; % this is the only one that works
+timelockmethod = {'lcmv', 'pcc'}; % these are the only one that work
 
 for i=1:numel(timelockmethod)
   tfdata = timelock;
@@ -47,7 +47,7 @@ for i=1:numel(timelockmethod)
 end
 
 freqmethod = {'dics', 'pcc', 'eloreta', 'mne','harmony', 'rv', 'music'};
-freqmethod = {}; % none of them works
+freqmethod = {'dics', 'pcc', }; % these are the only one that work
 
 for i=1:numel(freqmethod)
   tfdata = freq;
@@ -144,13 +144,20 @@ test_dipolefitting
     
     %%
     
-    switch method
-      case {'pcc' 'lcmv'}
-        % these should all be the same
-        assert(isequal(source1.avg.mom, source2a.avg.mom));
-        assert(isequal(source1.avg.mom, source2b.avg.mom));
-        assert(isequal(source1.avg.mom, source2c.avg.mom));
-        assert(isequal(source1.avg.mom, source2d.avg.mom));
+    if issubfield(source1, 'avg.mom')
+      % these should all be the same
+      assert(isequal(source1.avg.mom, source2a.avg.mom));
+      assert(isequal(source1.avg.mom, source2b.avg.mom));
+      assert(isequal(source1.avg.mom, source2c.avg.mom));
+      assert(isequal(source1.avg.mom, source2d.avg.mom));
+    end
+    
+    if issubfield(source1, 'avg.pow')
+      % these should all be the same
+      assert(isequal(source1.avg.pow, source2a.avg.pow));
+      assert(isequal(source1.avg.pow, source2b.avg.pow));
+      assert(isequal(source1.avg.pow, source2c.avg.pow));
+      assert(isequal(source1.avg.pow, source2d.avg.pow));
     end
     
   end % function test_sourceanalysis

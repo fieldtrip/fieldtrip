@@ -81,6 +81,7 @@ cfg.method = 'mne';
 cfg.sourcemodel.pos = pos;
 cfg.sourcemodel.inside = 1:size(cfg.sourcemodel.pos,1);
 cfg.sourcemodel.outside = [];
+cfg.sourcemodel.label = sens.label;
 cfg.sourcemodel.leadfield = cell(1,size(pos,1));
 for ii = 1:length(cfg.sourcemodel.leadfield)
     cfg.sourcemodel.leadfield{ii} = lf(:,(1:3) + (ii - 1) * 3);

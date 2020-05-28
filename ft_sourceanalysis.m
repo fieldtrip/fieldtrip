@@ -345,7 +345,7 @@ cfg.channel = ft_channelselection(cfg.channel, data.label);
 
 if isfield(cfg.sourcemodel, 'filter')
   ft_notice('using precomputed filters, not computing any leadfields');
-  sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'tri', 'dim', 'inside', 'filter', 'filterdimord', 'label'});
+  sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'tri', 'dim', 'inside', 'filter', 'filterdimord', 'label', 'cfg'});
   
   % select the channels corresponding to the data and the user configuration
   tmpcfg = keepfields(cfg, 'channel');
@@ -361,7 +361,7 @@ if isfield(cfg.sourcemodel, 'filter')
   end
   
   % ensure that the channels are consistent with the data
-  assert(isequal(sourcemodel.label, cfg.channel), 'cannot match the channels in the sourcemodel to those in the data')
+  assert(isequal(sourcemodel.label(:), cfg.channel(:)), 'cannot match the channels in the sourcemodel to those in the data')
   
   % no forward computations are needed
   headmodel = [];
@@ -370,7 +370,7 @@ if isfield(cfg.sourcemodel, 'filter')
   
 elseif isfield(cfg.sourcemodel, 'leadfield')
   ft_notice('using precomputed leadfields');
-  sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label'});
+  sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label', 'cfg'});
   
   % select the channels corresponding to the data and the user configuration
   tmpcfg = keepfields(cfg, 'channel');
@@ -386,7 +386,7 @@ elseif isfield(cfg.sourcemodel, 'leadfield')
   end
   
   % ensure that the channels are consistent with the data
-  assert(isequal(sourcemodel.label, cfg.channel), 'cannot match the channels in the sourcemodel to those in the data')
+  assert(isequal(sourcemodel.label(:), cfg.channel(:)), 'cannot match the channels in the sourcemodel to those in the data')
   
   % no forward computations are needed
   headmodel = [];
@@ -1100,22 +1100,22 @@ end % if freq or timelock or comp data
 % clean up and collect the results
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-source = copyfields(sourcemodel, source, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label'});
+source = copyfields(sourcemodel, source, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label', 'cfg'});
 
 if exist('dip', 'var')
   % the fields in the dip structure might be more recent than those in the sourcemodel structure
-  source = copyfields(dip, source, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label'});
+  source = copyfields(dip, source, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label', 'cfg'});
   
   % prevent duplication of these fields when copying the content of dip into source.avg or source.trial
-  dip    = removefields(dip,       {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label'});
+  dip    = removefields(dip,       {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label', 'cfg'});
   
   if istrue(cfg.(cfg.method).keepfilter) && isfield(dip(1), 'filter')
     for k=1:numel(dip)
-      if isfield(sourcemodel, 'leadfield')
-        % pre-computed leadfields were used
+      if isfield(sourcemodel, 'label')
+        % pre-computed leadfields or filters were used
         dip(k).label = sourcemodel.label;
       else
-        % leadfields were computed on the fly
+        % leadfields and filters were computed on the fly
         dip(k).label = sens.label;
       end
       dip(k).filterdimord = '{pos}_ori_chan';
@@ -1133,7 +1133,6 @@ cfg.headmodel = headmodel;
 % remove the precomputed leadfields from the cfg, regardless of what keepleadfield is saying
 % it should not be kept in cfg, since there it takes up too much space
 cfg.sourcemodel = removefields(sourcemodel, {'leadfield' 'leadfielddimord' 'filter' 'filterdimord' 'label'});
-
 
 if strcmp(cfg.jackknife, 'yes')
   source.method = 'jackknife';
