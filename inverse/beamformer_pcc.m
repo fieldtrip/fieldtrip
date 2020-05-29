@@ -218,12 +218,13 @@ for i=1:size(dip.pos,1)
     lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
   end
   
+  % determine the dimensionality of the source (usually 3, or 6 for a dipole pair)
   if hasfilter
-    Ndip = size(dip.filter{i},1);
+    sourcedim = size(dip.filter{i},1);
   else
     % concatenate scandip, refdip and supdip
     lfa = [lf rf sf];
-    Ndip = size(lfa,2);
+    sourcedim = size(lfa,2);
   end
   
   if fixedori
@@ -251,7 +252,7 @@ for i=1:size(dip.pos,1)
         dipout.ori{i} = maxpowori;
         dipout.eta(i) = eta;
         % update the number of dipole components
-        Ndip = size(lfa,2);
+        sourcedim = size(lfa,2);
       end
     else
       ft_warning('Ignoring ''fixedori''. The fixedori option is supported only if there is ONE dipole for location.')
@@ -267,11 +268,11 @@ for i=1:size(dip.pos,1)
   end
   
   % concatenate the source filters with the channel filters
-  filtn = zeros(Ndip+Nrefchan+Nsupchan, Nmegchan+Nrefchan+Nsupchan);
+  filtn = zeros(sourcedim+Nrefchan+Nsupchan, Nmegchan+Nrefchan+Nsupchan);
   % this part of the filter relates to the sources
-  filtn(1:Ndip,megchan) = filt;
+  filtn(1:sourcedim,megchan) = filt;
   % this part of the filter relates to the channels
-  filtn((Ndip+1):end,setdiff(1:(Nmegchan+Nrefchan+Nsupchan), megchan)) = eye(Nrefchan+Nsupchan);
+  filtn((sourcedim+1):end,setdiff(1:(Nmegchan+Nrefchan+Nsupchan), megchan)) = eye(Nrefchan+Nsupchan);
   filt = filtn;
   clear filtn
   
