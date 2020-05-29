@@ -143,12 +143,6 @@ hassubspace   = isfield(dip, 'subspace');
 originside = dip.inside;
 origpos    = dip.pos;
 
-% flags to avoid calling isfield repeatedly in the loop over grid positions (saves a lot of time)
-hasmom       = false;
-hasleadfield = false;
-hasfilter    = false;
-hassubspace  = false;
-
 % select only the dipole positions inside the brain for scanning
 dip.pos    = dip.pos(originside,:);
 dip.inside = true(size(dip.pos,1),1);
