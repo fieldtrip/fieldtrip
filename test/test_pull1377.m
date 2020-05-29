@@ -1,6 +1,6 @@
 function test_pull1377
 
-% MEM 6gb
+% MEM 10gb
 % WALLTIME 1:00:00
 % DEPENDENCY ft_prepare_sourcemodel headsurface ft_prepare_leadfield ft_freqanalysis ft_sourceanalysis
 
