@@ -20,17 +20,18 @@ function hs = ft_plot_sens(sens, varargin)
 % The following options apply to MEG magnetometers and/or gradiometers
 %   'coil'            = true/false, plot each individual coil (default = false)
 %   'orientation'     = true/false, plot a line for the orientation of each coil (default = false)
-%   'coilshape'       = 'point', 'circle', 'square', or 'sphere' (default is automatic)
+%   'coilshape'       = 'point', 'circle', 'square', 'sphere', or 'disc' (default is automatic)
 %   'coilsize'        = diameter or edge length of the coils (default is automatic)
 % The following options apply to EEG electrodes
 %   'elec'            = true/false, plot each individual electrode (default = false)
 %   'orientation'     = true/false, plot a line for the orientation of each electrode (default = false)
-%   'elecshape'       = 'point', 'circle', 'square', or 'sphere' (default is automatic)
+%   'elecshape'       = 'point', 'circle', 'square', 'sphere', or 'disc' (default is automatic)
 %   'elecsize'        = diameter of the electrodes (default is automatic)
+%   'headshape'       = headshape, required for elecshape 'disc'
 % The following options apply to NIRS optodes
 %   'opto'            = true/false, plot each individual optode (default = false)
 %   'orientation'     = true/false, plot a line for the orientation of each optode (default = false)
-%   'optoshape'       = 'point', 'circle', 'square', or 'sphere' (default is automatic)
+%   'optoshape'       = 'point', 'circle', 'square', 'sphere', or 'disc' (default is automatic)
 %   'optosize'        = diameter of the optodes (default is automatic)
 %
 % The following options apply when electrodes/coils/optodes are NOT plotted individually
@@ -43,7 +44,7 @@ function hs = ft_plot_sens(sens, varargin)
 %   'edgealpha'       = transparency, between 0 and 1 (default = 1)
 %
 % Example
-%   sens = ft_read_sens('Subject01.ds');
+%   sens = ft_read_sens('Subject01.ds', 'senstype', 'meg');
 %   figure; ft_plot_sens(sens, 'coilshape', 'point', 'style', 'r*')
 %   figure; ft_plot_sens(sens, 'coilshape', 'circle')
 %   figure; ft_plot_sens(sens, 'coilshape', 'circle', 'coil', true, 'chantype', 'meggrad')
@@ -96,6 +97,7 @@ coilsize        = ft_getopt(varargin, 'coilsize');  % default depends on the inp
 elec            = ft_getopt(varargin, 'elec', false);
 elecshape       = ft_getopt(varargin, 'elecshape'); % default depends on the input, see below
 elecsize        = ft_getopt(varargin, 'elecsize');  % default depends on the input, see below
+headshape       = ft_getopt(varargin, 'headshape', []); % for elecshape 'disc'
 % this is for NIRS optode arrays
 opto            = ft_getopt(varargin, 'opto', false);
 optoshape       = ft_getopt(varargin, 'optoshape'); % default depends on the input, see below
@@ -131,7 +133,7 @@ style           = ft_getopt(varargin, 'style');
 marker          = ft_getopt(varargin, 'marker', '.');
 
 % this is simply passed to ft_plot_mesh
-if strcmp(sensshape, 'sphere')
+if strcmp(sensshape, 'sphere') || strcmp(sensshape, 'disc')
   edgecolor     = ft_getopt(varargin, 'edgecolor', 'none');
 else
   edgecolor     = ft_getopt(varargin, 'edgecolor', 'k');
@@ -189,8 +191,8 @@ if isempty(senssize)
     case 'ctf275'
       senssize = 18;
     otherwise
-      if strcmp(sensshape, 'sphere')
-        senssize = 4; % assuming spheres are used for intracranial electrodes, diameter is about 4mm
+      if strcmp(sensshape, 'sphere') || strcmp(sensshape, 'disc')
+        senssize = 4; % assuming spheres/discs are used for intracranial electrodes, diameter is about 4mm
       elseif strcmp(sensshape, 'point')
         senssize = 30;
       else
@@ -207,7 +209,7 @@ if isempty(facecolor) % set default color depending on shape
     facecolor = 'k';
   elseif strcmp(sensshape, 'circle') || strcmp(sensshape, 'square')
     facecolor = 'none';
-  elseif strcmp(sensshape, 'sphere')
+  elseif strcmp(sensshape, 'sphere') || strcmp(sensshape, 'disc')
     facecolor = 'b';
   end
 end
@@ -297,27 +299,64 @@ else
   
 end % if istrue(individual)
 
-if isempty(ori) && ~isempty(pos)
-  if ~any(isnan(pos(:))) && size(pos,1)>2
-    % determine orientations based on surface triangulation
-    tri = projecttri(pos, 'delaunay');
-    ori = normals(pos, tri);
-  elseif size(pos,1)>4
-    % determine orientations by fitting a sphere to the sensors
-    try
-      tmp = pos(~any(isnan(pos), 2),:); % remove rows that contain a nan
-      center = fitsphere(tmp);
-    catch
-      center = [nan nan nan];
-    end
+if isempty(ori)
+  if ~isempty(headshape)
+    % how many local points on the headshape are used for estimating the local norm
+    npoints = 25;
+    
     for i=1:size(pos,1)
-      ori(i,:) = pos(i,:) - center;
-      ori(i,:) = ori(i,:)/norm(ori(i,:));
+      % calculate local norm vectors
+      d = sqrt( (pos(i,1)-headshape.pos(:,1)).^2 + ...
+        (pos(i,2)-headshape.pos(:,2)).^2 + (pos(i,3)-headshape.pos(:,3)).^2 );
+      [dum, idx] = sort(d);
+      x = headshape.pos(idx(1:npoints),1);
+      y = headshape.pos(idx(1:npoints),2);
+      z = headshape.pos(idx(1:npoints),3);
+      ptCloud = pointCloud([x y z]);
+      nrm = pcnormals(ptCloud);
+      u = nrm(:,1);
+      v = nrm(:,2);
+      w = nrm(:,3);
+      
+      % flip the normal vector if it is not pointing toward the center
+      C = mean(headshape.pos,1); % headshape center
+      for k = 1:numel(x)
+        p1 = C - [x(k),y(k),z(k)];
+        p2 = [u(k),v(k),w(k)];
+        angle = atan2(norm(cross(p1,p2)),p1*p2');
+        if angle > pi/2 || angle < -pi/2
+          u(k) = -u(k);
+          v(k) = -v(k);
+          w(k) = -w(k);
+        end
+      end
+      Fn = nanmean([u v w],1);
+      Fn = Fn * (1/sqrt(sum(Fn.^2,2))); % normalize
+      ori(i,:) = Fn;
+    end % for
+    
+  elseif ~isempty(pos)
+    if ~any(isnan(pos(:))) && size(pos,1)>2
+      % determine orientations based on surface triangulation
+      tri = projecttri(pos, 'delaunay');
+      ori = normals(pos, tri);
+    elseif size(pos,1)>4
+      % determine orientations by fitting a sphere to the sensors
+      try
+        tmp = pos(~any(isnan(pos), 2),:); % remove rows that contain a nan
+        center = fitsphere(tmp);
+      catch
+        center = [nan nan nan];
+      end
+      for i=1:size(pos,1)
+        ori(i,:) = pos(i,:) - center;
+        ori(i,:) = ori(i,:)/norm(ori(i,:));
+      end
+    else
+      ori = nan(size(pos));
     end
-  else
-    ori = nan(size(pos));
   end
-end
+end % if empty(ori)
 
 if any(isnan(ori(:)))
   if iseeg
@@ -365,9 +404,15 @@ switch sensshape
       hs = scatter3(pos(:,1), pos(:,2), pos(:,3), senssize.^2, facecolor, marker);
     end
     
+  case 'sphere'
+    plotsens(pos, ori, [], senssize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
+    
+  case 'disc'
+    plotsens(pos, ori, [], senssize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
+    
   case 'circle'
-    plotcoil(pos, ori, [], senssize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
-
+    plotsens(pos, ori, [], senssize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
+    
   case 'square'
     % determine the rotation-around-the-axis of each sensor
     % this is only applicable for neuromag planar gradiometers
@@ -392,16 +437,7 @@ switch sensshape
       chandir = [];
     end
     
-    plotcoil(pos, ori, chandir, senssize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
-
-  case 'sphere'
-    [xsp, ysp, zsp] = sphere(100);
-    rsp = senssize/2; % convert coilsenssize from diameter to radius
-    hold on
-    for i=1:size(pos,1)
-      hs = surf(rsp*xsp+pos(i,1), rsp*ysp+pos(i,2), rsp*zsp+pos(i,3));
-      set(hs, 'EdgeColor', edgecolor, 'FaceColor', facecolor, 'EdgeAlpha', edgealpha, 'FaceAlpha', facealpha);
-    end
+    plotsens(pos, ori, chandir, senssize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
     
   otherwise
     ft_error('incorrect shape');
@@ -462,44 +498,59 @@ ft_warning(ws); % revert to original state
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION all optional inputs are passed to ft_plot_mesh
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'%%%%%%%%%%%%%%%%%%
-function plotcoil(coilpos, coilori, chandir, coilsize, coilshape, varargin)
+function plotsens(senspos, sensori, sensdir, senssize, sensshape, varargin)
 
 % start with a single template coil at [0 0 0], oriented towards [0 0 1]
-switch coilshape
+switch sensshape
+  case 'sphere'
+    [pos, tri] = mesh_sphere(100);
+    pos(:,1) = pos(:,1)/2;  % unit diameter
+    pos(:,2) = pos(:,2)/2;  % unit diameter
+    pos(:,3) = pos(:,3)/2;  % unit diameter
+  case 'disc'
+    [pos, tri] = mesh_cylinder(36, 2);
+    pos(:,1) = pos(:,1)/2;  % unit diameter
+    pos(:,2) = pos(:,2)/2;  % unit diameter
+    pos(:,3) = pos(:,3)/10;
   case 'circle'
     pos = circle(24);
+    tri = [];
   case 'square'
     pos = square;
+    tri = [];
 end
-ncoil = size(coilpos,1);
+
+nsens = size(senspos,1);
 npos  = size(pos,1);
-mesh.pos  = nan(ncoil*npos,3);
-mesh.poly = nan(ncoil, npos);
+
+mesh.pos  = nan(nsens*npos,3);
+mesh.poly = nan(nsens, npos);   % this will be used for the edge of the coil or square
+mesh.tri  = nan(0, 3);          % this will be used for the discs
 
 % determine the scaling of the coil as homogenous transformation matrix
-s  = scale([coilsize coilsize coilsize]);
+s = scale([senssize senssize senssize]);
 
-for i=1:ncoil
-  x  = coilori(i,1);
-  y  = coilori(i,2);
-  z  = coilori(i,3);
+for i=1:nsens
+  x  = sensori(i,1);
+  y  = sensori(i,2);
+  z  = sensori(i,3);
   ph = atan2(y, x)*180/pi;
   th = atan2(sqrt(x^2+y^2), z)*180/pi;
   % determine the rotation and translation of the coil as homogenous transformation matrix
   r1 = rotate([0 th 0]);
   r2 = rotate([0 0 ph]);
-  t  = translate(coilpos(i,:));
+  t  = translate(senspos(i,:));
   
   % determine the initial rotation of the coil as homogenous transformation matrix
-  if isempty(chandir)
+  if isempty(sensdir)
     % none of the coils needs to be rotated around their axis, this applies to circular coils
     r0 = eye(4);
-  elseif ~all(isfinite(chandir(i,:)))
+  elseif ~all(isfinite(sensdir(i,:)))
     % the rotation around the axis of this coil is not known
     r0 = nan(4);
   else
     % express the direction of sensitivity of the planar channel relative to the orientation of the channel
-    dir = ft_warp_apply(inv(r2*r1), chandir(i,:));
+    dir = ft_warp_apply(inv(r2*r1), sensdir(i,:));
     x = dir(1);
     y = dir(2);
     % determine the rotation
@@ -507,12 +558,31 @@ for i=1:ncoil
     r0 = rotate([0 0 rh]);
   end
   
-  % construct a single mesh with separate polygons for all coils
-  sel = ((i-1)*npos+1):(i*npos);
-  mesh.pos(sel,:) = ft_warp_apply(t*r2*r1*r0*s, pos); % scale, rotate and translate the template coil vertices, skip the central vertex
-  mesh.poly(i,:)  = sel;                              % this is a polygon connecting all edge points
+  switch sensshape
+    case {'sphere' 'disc'}
+      % construct a single mesh with separate triangles for all sensors
+      sel = ((i-1)*npos+1):(i*npos);
+      mesh.pos(sel,:) = ft_warp_apply(t*r2*r1*r0*s, pos);
+      mesh.tri        = cat(1, mesh.tri, tri + (i-1)*npos);
+      mesh.poly       = [];
+    case {'circle' 'square'}
+      % construct a single mesh with separate polygons for all sensors
+      sel = ((i-1)*npos+1):(i*npos);
+      mesh.pos(sel,:) = ft_warp_apply(t*r2*r1*r0*s, pos); % scale, rotate and translate the template coil vertices, skip the central vertex
+      mesh.poly(i,:)  = sel;                              % this is a polygon connecting all edge points
+      mesh.tri        = [];
+  end
   
+end % for each sensor
+
+% use either poly or tri for plotting
+if isempty(mesh.tri)
+  mesh = rmfield(mesh, 'tri');
 end
+if isempty(mesh.poly)
+  mesh = rmfield(mesh, 'poly');
+end
+
 % plot all polygons together
 ft_plot_mesh(mesh, varargin{:});
 

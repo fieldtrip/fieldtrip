@@ -98,7 +98,8 @@ cfg.frequency         = freq_cmb.freq;
 cfg.grad              = freq_cmb.grad;
 cfg.method            = 'dics';
 cfg.keeptrials        = 'yes';
-cfg.sourcemodel              = sourcemodel_lf;
+cfg.channel           = 'MEG';
+cfg.sourcemodel       = sourcemodel_lf;
 cfg.headmodel         = hdm;
 cfg.keeptrials        = 'yes';
 cfg.dics.lambda       = '5%';
@@ -109,6 +110,7 @@ source                = ft_sourceanalysis(cfg, freq_cmb);
 
 % beam pre- and poststim by using the common filter
 cfg.sourcemodel.filter  = source.avg.filter;
+cfg.sourcemodel.filter  = source.avg.label; % this was added by Robert on 28 May 2020 to deal with the updates in pull #1377
 source_bsl       = ft_sourceanalysis(cfg, freq_bsl);
 source_exp       = ft_sourceanalysis(cfg, freq_exp);
 

@@ -123,7 +123,7 @@ switch dtype
     [corner_vox, corner_head] = cornerpoints(data.dim, data.transform);
     diagonal_head = norm(range(corner_head));
     diagonal_vox  = norm(range(corner_vox));
-    resolution    = diagonal_head/diagonal_vox; % this is in units of "data.unit"
+    resolution    = (diagonal_head+eps)/(diagonal_vox+eps); % this is in units of "data.unit"
     
     % scale funparam between 0 and 1
     if ~isa(funparam, 'double') % avoid integer datatypes to allow for scaling

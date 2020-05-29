@@ -7,9 +7,9 @@ function varargout = bids_tsv(filename, hdr, begsample, endsample, chanindx)
 %   dat = bids_tsv(filename, hdr, begsample, endsample, chanindx);
 %   evt = bids_tsv(filename, hdr);
 %
-% See also FT_FILETYPE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, QUALISYS_TSV, MOTION_C3D
+% See also FT_FILETYPE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, QUALISYS_TSV, MOTION_C3D, EVENTS_TSV
 
-% Copyright (C) 2019 Robert Oostenveld
+% Copyright (C) 2019, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

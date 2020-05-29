@@ -1,7 +1,7 @@
 function test_firwsfiltering
 
-% MEM 2gb
-% WALLTIME 00:10:00
+% MEM 3gb
+% WALLTIME 00:20:00
 
 % DEPENDENCY ft_preprocessing filter_with_correction ft_preproc_bandpassfilter
 % DEPENDENCY ft_preproc_highpassfilter ft_preproc_lowpassfilter firws

@@ -4,6 +4,8 @@ This directory contains the compiled mex files for https://github.com/pyomeca/ez
 
 I had to use the CMAKE_POSITION_INDEPENDENT_CODE option to revolve an issue as explained here https://stackoverflow.com/questions/38296756/what-is-the-idiomatic-way-in-cmake-to-add-the-fpic-compiler-option/38297422
 
+Initially I compiled the mex files with R2019a; however these would not work with R016b. Compiling with R2016b and R2017b failed due to an error with mxGetDoubles. I recompiled the linux mex files with R2018b. These work up to R2020b, but not with older versions.
+
 roboos@mentat001> module load cmake/3.11.3
 roboos@mentat001> cmake -fPIC -D BUILD_SHARED_LIBS=FALSE -D BINDER_MATLAB=ON -D Matlab_ROOT_DIR=/opt/matlab/R2019a -D CMAKE_POSITION_INDEPENDENT_CODE=ON .
 roboos@mentat001> make

@@ -147,12 +147,14 @@ switch cfg.method
   case {'linear_mix'}
     cfg.bpfilter = ft_getopt(cfg, 'bpfilter', 'yes');
     cfg.bpfreq   = ft_getopt(cfg, 'bpfreq',   [15 25]);
+    cfg.bpfilttype = ft_getopt(cfg, 'bpfilttype', 'firws');
     cfg.demean   = ft_getopt(cfg, 'demean',   'yes');
     cfg.absnoise = ft_getopt(cfg, 'absnoise', 1);
     cfg          = ft_checkconfig(cfg, 'required', {'mix' 'delay'});
   case {'mvnrnd'}
     cfg.bpfilter = ft_getopt(cfg, 'bpfilter', 'yes');
     cfg.bpfreq   = ft_getopt(cfg, 'bpfreq',   [15 25]);
+    cfg.bpfilttype = ft_getopt(cfg, 'bpfilttype', 'firws');
     cfg.demean   = ft_getopt(cfg, 'demean',   'yes');
     cfg.absnoise = ft_getopt(cfg, 'absnoise', 1);
     cfg          = ft_checkconfig(cfg, 'required', {'covmat' 'delay'});
@@ -216,7 +218,6 @@ switch cfg.method
     simulated.label   = label;
     
   case {'linear_mix'}
-    
     fltpad = 50; %hard coded to avoid filtering artifacts
     delay  = cfg.delay;
     delay  = delay - min(delay(:)); %make explicitly >= 0
@@ -253,13 +254,22 @@ switch cfg.method
     
     for tr = 1:cfg.ntrials
       mixsignal = randn(nmixsignal,  nsmp + 2*fltpad + maxdelay);
-      mixsignal = preproc(mixsignal, label, offset2time(-fltpad, cfg.fsample, size(mixsignal,2)), cfg, fltpad, fltpad);
+      if nmixsignal==size(cfg.bpfreq,1)
+        for sg = 1:nmixsignal
+          tmpcfg = cfg;
+          tmpcfg.bpfreq = cfg.bpfreq(sg,:);
+          newmixsignal(sg,:) = preproc(mixsignal(sg,:), label, offset2time(-fltpad, cfg.fsample, size(mixsignal,2)), tmpcfg, fltpad, fltpad);
+        end
+      else
+        % it can be done with a single set of cfg settings to preproc
+        newmixsignal = preproc(mixsignal, label, offset2time(-fltpad, cfg.fsample, size(mixsignal,2)), cfg, fltpad, fltpad);
+      end
       tmp       = zeros(cfg.nsignal, nsmp);
       for i=1:cfg.nsignal
         for j=1:nmixsignal
           begsmp   = 1    + delay(i,j);
           endsmp   = nsmp + delay(i,j);
-          tmpmix   = reshape(mix{tr}(i,j,:),[1 nsmp+maxdelay]) .* mixsignal(j,:);
+          tmpmix   = reshape(mix{tr}(i,j,:),[1 nsmp+maxdelay]) .* newmixsignal(j,:);
           tmp(i,:) = tmp(i,:) + tmpmix(begsmp:endsmp);
         end
       end

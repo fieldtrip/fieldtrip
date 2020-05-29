@@ -18,7 +18,7 @@ function [dipout] = beamformer_lcmv(dip, grad, headmodel, dat, C, varargin)
 %
 % The input dipole model consists of
 %   dipin.pos   positions for dipole, e.g. regular grid, Npositions x 3
-%   dipin.mom   dipole orientation (optional), 3 x Npositions,
+%   dipin.mom   dipole orientation (optional), 3 x Npositions
 % and can additionally contain things like a precomputed filter.
 %
 % Additional options should be specified in key-value pairs and can be
@@ -133,6 +133,12 @@ if any(dip.inside>1)
   dip.inside = tmp;
 end
 
+% flags to avoid calling isfield repeatedly in the loop over grid positions (saves a lot of time)
+hasmom        = isfield(dip, 'mom');
+hasleadfield  = isfield(dip, 'leadfield');
+hasfilter     = isfield(dip, 'filter');
+hassubspace   = isfield(dip, 'subspace');
+
 % keep the original details on inside and outside positions
 originside = dip.inside;
 origpos    = dip.pos;
@@ -146,29 +152,19 @@ hassubspace  = false;
 % select only the dipole positions inside the brain for scanning
 dip.pos    = dip.pos(originside,:);
 dip.inside = true(size(dip.pos,1),1);
-if isfield(dip, 'mom')
-  hasmom  = 1;
-  dip.mom = dip.mom(:, originside);
+if hasmom
+  dip.mom = dip.mom(:,originside);
 end
-if isfield(dip, 'leadfield')
-  hasleadfield = 1;
-  if dofeeback
-    fprintf('using precomputed leadfields\n');
-  end
+if hasleadfield
+  ft_info('using precomputed leadfields\n');
   dip.leadfield = dip.leadfield(originside);
 end
-if isfield(dip, 'filter')
-  hasfilter = 1;
-  if dofeedback
-    fprintf('using precomputed filters\n');
-  end
+if hasfilter
+  ft_info('using precomputed filters\n');
   dip.filter = dip.filter(originside);
 end
-if isfield(dip, 'subspace')
-  hassubspace = 1;
-  if dofeedback
-    fprintf('using subspace projection\n');
-  end
+if hassubspace
+  ft_info('using subspace projection\n');
   dip.subspace = dip.subspace(originside);
 end
 
@@ -195,20 +191,16 @@ if projectnoise || strcmp(weightnorm, 'nai')
     noise = max(noise, tmplambda);
 end
 
-% the inverse of the covariance matrix only has to be computed once for all dipoles
+% the inverse only has to be computed once for all dipoles
 if hassubspace
-  if dofeedback
-    fprintf('using source-specific subspace projection\n');
-  end
+  ft_notice('using source-specific subspace projection\n');
   % remember the original data prior to the voxel dependent subspace projection
   dat_pre_subspace = dat;
   C_pre_subspace  = C;
 elseif ~isempty(subspace)
-  if dofeedback
-    fprintf('using data-specific subspace projection\n');
-  end
   
   % TODO implement an "eigenspace beamformer" as described in Sekihara et al. 2002 in HBM
+  ft_notice('using data-specific subspace projection\n');
   if numel(subspace)==1
     % interpret this as a truncation of the eigenvalue-spectrum
     % if <1 it is a fraction of the largest eigenvalue
@@ -244,16 +236,18 @@ invC_squared = invC^2;
 % start the scanning with the proper metric
 ft_progress('init', feedback, 'scanning grid');
 for i=1:size(dip.pos,1)
-  if hasleadfield && hasmom && size(dip.mom, 1)==size(dip.leadfield{i}, 2)
+  if hasfilter
+    % precomputed filter is provided, the leadfield is not needed
+  elseif hasleadfield && isfield(dip, 'mom') && size(dip.mom, 1)==size(dip.leadfield{i}, 2)
     % reuse the leadfield that was previously computed and project
     lf = dip.leadfield{i} * dip.mom(:,i);
-  elseif  hasleadfield &&  hasmom
+  elseif  hasleadfield &&  isfield(dip, 'mom')
     % reuse the leadfield that was previously computed but don't project
     lf = dip.leadfield{i};
-  elseif  hasleadfield && ~hasmom
+  elseif  hasleadfield && ~isfield(dip, 'mom')
     % reuse the leadfield that was previously computed
     lf = dip.leadfield{i};    
-  elseif  ~hasleadfield && hasmom
+  elseif  ~hasleadfield && isfield(dip, 'mom')
     % compute the leadfield for a fixed dipole orientation
     lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
   else
@@ -266,8 +260,8 @@ for i=1:size(dip.pos,1)
     lf    = dip.subspace{i} * lf;
     % the data and the covariance become voxel dependent due to the projection
     dat   = dip.subspace{i} * dat_pre_subspace;
-    C    = dip.subspace{i} * C_pre_subspace * dip.subspace{i}';
-    invC = ft_inv(dip.subspace{i} * C_pre_subspace * dip.subspace{i}', 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
+    C     = dip.subspace{i} * C_pre_subspace * dip.subspace{i}';
+    invC  = ft_inv(dip.subspace{i} * C_pre_subspace * dip.subspace{i}', 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
   elseif ~isempty(subspace)
     % do subspace projection of the forward model only
     lforig = lf;

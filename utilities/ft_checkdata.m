@@ -1115,8 +1115,8 @@ elseif strcmp(current, 'sparsewithpow') && strcmp(desired, 'sparse')
 elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
   dimtok = tokenize(data.dimord, '_');
   if ~isempty(strmatch('rpt',   dimtok)), nrpt=size(data.cumtapcnt,1); else nrpt = 1; end
-  if ~isempty(strmatch('freq',  dimtok)), nfrq=numel(data.freq);      else nfrq = 1; end
-  if ~isempty(strmatch('time',  dimtok)), ntim=numel(data.time);      else ntim = 1; end
+  if ~isempty(strmatch('freq',  dimtok)), nfrq=numel(data.freq);       else nfrq = 1; end
+  if ~isempty(strmatch('time',  dimtok)), ntim=numel(data.time);       else ntim = 1; end
   
   if ~isfield(data, 'label')
     % ensure that the bivariate spectral factorization results can be
@@ -1144,9 +1144,9 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
   complete = all(cmbindx(:)~=0);
   
   % remove obsolete fields
-  try data      = rmfield(data, 'powspctrm');  end
-  try data      = rmfield(data, 'labelcmb');   end
-  try data      = rmfield(data, 'dof');        end
+  try, data = rmfield(data, 'powspctrm');  end
+  try, data = rmfield(data, 'labelcmb');   end
+  try, data = rmfield(data, 'dof');        end
   
   fn = fieldnames(data);
   for ii=1:numel(fn)
@@ -1588,9 +1588,11 @@ elseif sum(strcmp(dimord, 'subj_chan_time'))==1
 elseif sum(strcmp(dimord, 'chan_time'))==1
   fn = fn{strcmp(dimord, 'chan_time')};
   ft_info('constructing single trial from "%s"\n', fn);
-  data.time  = {data.time};
-  data.trial = {data.(fn)};
+  tmptime  = {data.time};
+  tmptrial = {data.(fn)};
   data = rmfield(data, fn);
+  data.trial = tmptrial;
+  data.time  = tmptime;
 else
   ft_error('unsupported data structure');
 end

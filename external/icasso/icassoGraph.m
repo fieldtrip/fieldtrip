@@ -338,8 +338,8 @@ if hull,
   colormap(clustercolor); 
   h_colorbar=colorbar('vert');
   set(h_colorbar,'ytick',[0:size(clustercolor,1)]',...
-		 'yticklabel',[0;clustercolorlimit(:); 1],'dataaspect',[1 1 ...
-		    1],'plotboxaspect',[1 1 1]);
+		 'yticklabel',[0;clustercolorlimit(:); 1]);%,'dataaspect',[1 1 ...
+		    %1],'plotboxaspect',[1 1 1]);
   set(get(h_colorbar,'ylabel'),'string','Averge intra-cluster similarity (cluster compactness)');
   % Set legend
 end

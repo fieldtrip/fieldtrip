@@ -19,7 +19,7 @@ function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin)
 %   'reducerank'      = 'no' or number
 %   'normalize'       = 'no', 'yes' or 'column'
 %   'normalizeparam'  = parameter for depth normalization (default = 0.5)
-%   'weight'          = number or 1xN vector, weight for each dipole position to compensate for the size of the corresponding patch (default = 1)
+%   'weight'          = number or Nx1 vector, weight for each dipole position to compensate for the size of the corresponding patch (default = 1)
 %   'backproject'     = 'yes' (default) or 'no', in the case of a rank reduction this parameter determines whether the result will be backprojected onto the original subspace
 %
 % The constraints on the source model are specified in a structure

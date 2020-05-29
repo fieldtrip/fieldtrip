@@ -270,6 +270,8 @@ elseif num==3
   tmpcfg = cfg;
   if strcmp(cfg. precondition, 'before'), tmpcfg.preconditionflag = 1; end
   [statobs, tmpcfg, dat]  = statfun(tmpcfg, dat, design);
+  tmpcfg.preconditionflag = 0;
+  cfg = tmpcfg;
 end
 
 if isstruct(statobs)

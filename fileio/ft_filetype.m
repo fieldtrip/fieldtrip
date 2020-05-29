@@ -1425,6 +1425,10 @@ elseif filetype_check_extension(filename, '.c3d') && filetype_check_header(filen
   type = 'motion_c3d';
   manufacturer = 'https://www.c3d.org';
   content = 'motion capture data';
+elseif filetype_check_extension(filename, '.mvnx') && filetype_check_header(filename, '<?xml')
+    type = 'xsens_mvnx';
+    manufacturer = 'https://www.xsens.com/motion-capture';
+    content = 'motion capture data';
 elseif filetype_check_extension(filename, '.mif')
   % this could be a mrtrix compatible image file
   type = 'mrtrix_mif';
@@ -1452,6 +1456,10 @@ elseif filetype_check_extension(filename, '.TextGrid')
   type = 'maus_textgrid';
   manufacturer = 'MAUS/WebMAUS';
   content = 'segmented text';
+elseif filetype_check_extension(filename, '.fcsv')
+  type = '3dslicer_fscv';
+  manufacturer = 'https://www.slicer.org/';
+  content = 'position information about Markups Fiducial Node';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

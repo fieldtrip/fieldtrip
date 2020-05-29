@@ -98,8 +98,8 @@ if isempty(db_blob)
 end
 
 if iscell(filename)
+  % use recursion to read the events from multiple files
   ft_warning('concatenating events from %d files', numel(filename));
-  % use recursion to read events from multiple files
   
   hdr = ft_getopt(varargin, 'header');
   if isempty(hdr)
@@ -1458,12 +1458,25 @@ switch eventformat
     % Add boundary events to indicate segments
     originalEventCount = length(hdr.orig.Events);
     boundaryEventCount = 1;
+    for i=1:length(hdr.orig.Segments)
+      sampleCountOfchannelsWithSameSampleRate(i,:) = hdr.orig.Segments(i).sampleCount;
+    end
     for i=2:length(hdr.orig.Segments)
       event(originalEventCount+boundaryEventCount).type = 'boundary';
       event(originalEventCount+boundaryEventCount).value = 'boundary';
       event(originalEventCount+boundaryEventCount).offset = 0;
-      event(originalEventCount+boundaryEventCount).duration = 0;
-      event(originalEventCount+boundaryEventCount).sample = sum([hdr.orig.Segments(1:(i-1)).sampleCount]);
+      gapDurationSeconds = seconds(hdr.orig.Segments(i).date-hdr.orig.Segments(i-1).date)-hdr.orig.Segments(i-1).duration;
+      event(originalEventCount+boundaryEventCount).duration = gapDurationSeconds*maxSampleRate;
+      event(originalEventCount+boundaryEventCount).sample = sum(sampleCountOfchannelsWithSameSampleRate(1:(i-1)));
+      
+      %move all non-boundary events later than this segment start
+      %back by the length of the gap, since the calculation for event
+      %sample start above assumes continuous sampling without gaps
+      for j=1:originalEventCount
+        if hdr.orig.Events(j).date > hdr.orig.Segments(i).date
+          event(j).sample = event(j).sample - gapDurationSeconds*maxSampleRate;
+        end
+      end
       boundaryEventCount = boundaryEventCount+1;
     end
     
@@ -2117,9 +2130,11 @@ switch eventformat
       % auto-detect the trigger channels
       chanindx = find(strcmp(hdr.chantype, 'trigger'));
     end
-    if ~isempty(chanindx)
-      % the "Digi" value goes down from 255 to 254
+    if isempty(detectflank)
+      % the "Digi" value goes down from 255 to 254, or to 251
       detectflank = 'downdiff';
+    end
+    if ~isempty(chanindx)
       event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift);
     end
     

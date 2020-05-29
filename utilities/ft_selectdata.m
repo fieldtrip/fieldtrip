@@ -646,18 +646,30 @@ chanindx = cell(ndata,1);
 label    = cell(1,0);
 
 for k = 1:ndata
+  selchannel      = cell(0,1);
+  selgrad         = [];
+  selelec         = [];
+  selopto         = [];
   if isfield(varargin{k}, 'grad') && isfield(varargin{k}.grad, 'type')
-    % this makes channel selection more robust
-    selchannel = ft_channelselection(cfg.channel, varargin{k}.label, varargin{k}.grad.type);
-  elseif isfield(varargin{k}, 'elec') && isfield(varargin{k}.elec, 'type')
-    % this makes channel selection more robust
-    selchannel = ft_channelselection(cfg.channel, varargin{k}.label, varargin{k}.elec.type);
-  else
-    selchannel = ft_channelselection(cfg.channel, varargin{k}.label);
+    % this makes channel selection more robust, e.g. when using wildcards in cfg.channel
+    [selgrad, dum] = match_str(varargin{k}.label, varargin{k}.grad.label);
+    selchannel     = cat(1, selchannel, ft_channelselection(cfg.channel, varargin{k}.label(selgrad), varargin{k}.grad.type));
   end
+  if isfield(varargin{k}, 'elec') && isfield(varargin{k}.elec, 'type')
+    % this makes channel selection more robust, e.g. when using wildcards in cfg.channel
+    [selelec, dum] = match_str(varargin{k}.label, varargin{k}.elec.label);
+    selchannel     = cat(1, selchannel, ft_channelselection(cfg.channel, varargin{k}.label(selelec), varargin{k}.elec.type));
+  end
+  if isfield(varargin{k}, 'opto') && isfield(varargin{k}.opto, 'type')
+    % this makes channel selection more robust, e.g. when using wildcards in cfg.channel
+    [selopto, dum] = match_str(varargin{k}.label, varargin{k}.opto.label);
+    selchannel     = cat(1, selchannel, ft_channelselection(cfg.channel, varargin{k}.label(selopto), varargin{k}.opto.type));
+  end
+  selrest    = setdiff((1:numel(varargin{k}.label))', [selgrad; selelec; selopto]);
+  selchannel = cat(1, selchannel, ft_channelselection(cfg.channel, varargin{k}.label(selrest)));
   label      = union(label, selchannel);
 end
-label = label(:);   % ensure column array
+label = label(:);   % ensure that this is a column array
 
 % this call to match_str ensures that that labels are always in the
 % order of the first input argument see bug_2917, but also temporarily keep

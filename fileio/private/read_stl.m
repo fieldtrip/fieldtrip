@@ -55,7 +55,7 @@ if printableascii(section)
   ntri = 0;
   while ~feof(fid)
     line = fgetl(fid);
-    ntri = ntri + contains('facet normal', line);
+    ntri = ntri + contains(line, 'facet normal');
   end
   fseek(fid, 0, 'bof');
 
