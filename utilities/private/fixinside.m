@@ -35,11 +35,18 @@ if nargin<2
 end
 
 if ~isfield(source, 'inside')
-  if isfield(source, 'pos')
+  if isfield(source, 'leadfield')
+    % determine the positions outside the brain on basis of the empty cells
+    source.inside = ~cellfun(@isempty, source.leadfield);
+  elseif isfield(source, 'filter')
+    % determine the positions outside the brain on basis of the empty cells
+    source.inside = ~cellfun(@isempty, source.filter);
+  elseif isfield(source, 'pos')
     % assume that all positions are inside the region of interest
     source.inside  = [1:size(source.pos,1)]';
     source.outside = [];
   elseif isfield(source, 'dim')
+    % assume that all positions are inside the region of interest
     source.inside  = [1:prod(source.dim)]';
     source.outside = [];
   end
