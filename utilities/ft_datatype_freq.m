@@ -142,7 +142,8 @@ switch version
     end
 
     % ensure that the structure has all required fields
-    for required={'dimord' 'freq'}
+    % note that dimord is listed as required field, but it might also be xxxdimord, or dynamically determined with GETDIMORD
+    for required={'freq'}
       assert(isfield(freq, required), 'required field "%s" is missing', required{:});
     end
     % either label or labelcmb should be present

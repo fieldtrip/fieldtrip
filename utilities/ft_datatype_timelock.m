@@ -139,6 +139,7 @@ switch version
       if isfield(timelock, 'dimord') && ~ismember(timelock.dimord, dimord(hasrpt))
         % the dimord does not apply to any of the existing fields any more
         timelock = rmfield(timelock, 'dimord');
+        timelock = fixdimord(timelock);
       end
     end
     
@@ -159,7 +160,8 @@ switch version
     timelock = removefields(timelock, {'fsample'});
     
     % ensure that the structure has all required fields
-    for required={'label' 'dimord' 'time'}
+    % note that dimord is listed as required field, but it might also be xxxdimord, or dynamically determined with GETDIMORD
+    for required={'label' 'time'}
       assert(isfield(timelock, required), 'required field "%s" is missing', required{:});
     end
     
