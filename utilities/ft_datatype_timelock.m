@@ -158,6 +158,11 @@ switch version
     % this field can be present in raw data, but is not desired in timelock data
     timelock = removefields(timelock, {'fsample'});
     
+    % ensure that the structure has all required fields
+    for required={'label' 'dimord' 'time'}
+      assert(isfield(timelock, required), 'required field "%s" is missing', required);
+    end
+    
   case '2011v2'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % ensure that the sensor structures are up to date

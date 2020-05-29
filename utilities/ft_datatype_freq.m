@@ -141,6 +141,11 @@ switch version
       freq.cumsumcnt = freq.cumsumcnt(:);
     end
 
+    % ensure that the structure has all required fields
+    for required={'label' 'dimord' 'freq'}
+      assert(isfield(freq, required), 'required field "%s" is missing', required);
+    end
+
   case '2008'
     % there are no known conversions for backward or forward compatibility support
 
