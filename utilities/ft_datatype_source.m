@@ -271,7 +271,7 @@ switch version
     
     % ensure that the structure has all required fields
     for required={'pos'}
-      assert(isfield(source, required), 'required field "%s" is missing', required);
+      assert(isfield(source, required), 'required field "%s" is missing', required{:});
     end
     
   case '2011'

@@ -27,10 +27,10 @@ function [freq] = ft_datatype_freq(freq, varargin)
 %          cfg: [1x1 struct]         the configuration used by the function that generated this data structure
 %
 % Required fields:
-%   - label, dimord, freq
+%   - freq, dimord, label or labelcmb
 %
 % Optional fields:
-%   - powspctrm, fouriesspctrm, csdspctrm, cohspctrm, time, labelcmb, grad, elec, cumsumcnt, cumtapcnt, trialinfo
+%   - powspctrm, fouriesspctrm, csdspctrm, cohspctrm, time, grad, elec, cumsumcnt, cumtapcnt, trialinfo
 %
 % Deprecated fields:
 %   - <none>
@@ -142,9 +142,11 @@ switch version
     end
 
     % ensure that the structure has all required fields
-    for required={'label' 'dimord' 'freq'}
-      assert(isfield(freq, required), 'required field "%s" is missing', required);
+    for required={'dimord' 'freq'}
+      assert(isfield(freq, required), 'required field "%s" is missing', required{:});
     end
+    % either label or labelcmb should be present
+    assert(any(ismember({'label', 'labelcmb'}, fieldnames(freq))), 'required field "label" or "labelcmb" is missing');
 
   case '2008'
     % there are no known conversions for backward or forward compatibility support
