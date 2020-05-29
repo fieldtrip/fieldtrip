@@ -304,6 +304,7 @@ ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble provenance neighbours
 ft_postamble history    neighbours
+ft_postamble savevar    neighbours
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
