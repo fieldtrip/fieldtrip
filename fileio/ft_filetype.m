@@ -1278,6 +1278,10 @@ elseif filetype_check_extension(filename, '.txt') && filetype_check_header(filen
   type = 'opensignals_txt';
   manufacturer = 'Bitalino';
   content = '';
+elseif filetype_check_extension(filename, '.txt') && filetype_check_header(filename, '%OpenBCI')
+  type = 'openbci_txt';
+  manufacturer = 'OpenBCI';
+  content = 'raw EEG data';
 elseif filetype_check_extension(filename, '.txt')
   type = 'ascii_txt';
   manufacturer = '';
