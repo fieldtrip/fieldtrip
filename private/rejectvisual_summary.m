@@ -216,10 +216,17 @@ for i=1:info.ntrl
           % Compute the residual using the GLM
           %   y = beta * x + residual
           % where y is a row vector, not a column vector as common with fMRI
-          y = dat(j,:);
           x = dat(nb, :);
-          residual = y - y / x * x;
-          level(j,i) = 1 - sum(residual.^2) / sum(y.^2);
+          y = dat(j,:);
+          % remove the mean and divide by the standard deviation
+          x = ft_preproc_standardize(x);
+          y = ft_preproc_standardize(y);
+          if all(x(:) == 0) || all(y(:) == 0)
+            level(j,i) = 0;
+          else
+            residual = y - y / x * x;
+            level(j,i) = 1 - sum(residual.^2) / sum(y.^2);
+          end
         end
       end
     otherwise
