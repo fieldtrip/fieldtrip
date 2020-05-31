@@ -237,7 +237,7 @@ info  = guidata(h);
 % work with a copy of the data
 level = info.level;
 
-[maxperchan, maxpertrl, maxperchan_all, maxpertrl_all] = set_maxper(level, info.chansel, info.trlsel, strcmp(info.metric, 'min'));
+[maxperchan, maxpertrl, maxperchan_all, maxpertrl_all] = set_maxper(level, info.chansel, info.trlsel, info.metric);
 
 % make the three figures
 if gcf~=h, figure(h); end
@@ -272,39 +272,34 @@ cla(info.axes(2));
 switch info.cfg.viewmode
   case 'remove'
     plot(maxperchan(info.chansel==1),     find(info.chansel==1), '.');
-    xmax = max(maxperchan);
     xmin = min(maxperchan);
+    xmax = max(maxperchan);
+    ymin = 1;
     ymax = info.nchan;
   case 'toggle'
     plot(maxperchan_all(info.chansel==1), find(info.chansel==1), '.');
     hold on;
     plot(maxperchan_all(info.chansel==0), find(info.chansel==0), 'o');
     hold off;
-    xmax = max(maxperchan_all);
     xmin = min(maxperchan_all);
+    xmax = max(maxperchan_all);
+    ymin = 1;
     ymax = info.nchan;
   case 'hide'
-    xmax = max(maxperchan);
     xmin = min(maxperchan);
+    xmax = max(maxperchan);
+    ymin = 1;
     ymax = sum(info.chansel==1);
     plot(maxperchan(info.chansel==1), 1:ymax, '.');
     if ~all(info.chansel)
       set(info.axes(2), 'Ytick', []);
     end
 end % switch
+% don't try to rescale the axes if they are empty
 if any(info.chansel) && any(info.trlsel)
-  % don't try to rescale the axes if they are empty
-  % have to use 0 as lower limit because in the single channel case ylim([1 1]) will be invalid
-  range = [0.8*xmin 1.2*xmax 0.5 ymax+0.5];
   % ensure that the horizontal and vertical range increase, also when negative
   % see https://github.com/fieldtrip/fieldtrip/issues/1150
-  if range(1)>range(2)
-    range = range([2 1 3 4]);
-  end
-  if range(3)>range(4)
-    range = range([1 2 4 3]);
-  end
-  axis(range);
+  axis(fixrange([0.8*xmin 1.2*xmax ymin-0.5 ymax+0.5]));
 end
 axis ij;
 set(info.axes(2), 'ButtonDownFcn', @toggle_visual);  % needs to be here; call to axis resets this property
@@ -315,31 +310,34 @@ cla(info.axes(3));
 switch info.cfg.viewmode
   case 'remove'
     plot(find(info.trlsel==1), maxpertrl(info.trlsel==1), '.');
+    xmin = 1;
     xmax = info.ntrl;
-    ymax = max(maxpertrl);
     ymin = min(maxpertrl);
+    ymax = max(maxpertrl);
   case 'toggle'
     plot(find(info.trlsel==1), maxpertrl_all(info.trlsel==1), '.');
     hold on;
     plot(find(info.trlsel==0), maxpertrl_all(info.trlsel==0), 'o');
     hold off;
+    xmin = 1;
     xmax = info.ntrl;
-    ymax = max(maxpertrl_all);
     ymin = min(maxpertrl_all);
+    ymax = max(maxpertrl_all);
   case 'hide'
+    xmin = 1;
     xmax = sum(info.trlsel==1);
-    ymax = max(maxpertrl);
     ymin = min(maxpertrl);
+    ymax = max(maxpertrl);
     plot(1:xmax, maxpertrl(info.trlsel==1), '.');
     if ~all(info.trlsel)
       set(info.axes(3), 'Xtick', []);
     end
 end % switch
+% don't try to rescale the axes if they are empty
 if any(info.chansel) && any(info.trlsel)
-  % don't try to rescale the axes if they are empty
-  % the 0.8-1.2 is needed to deal with the single trial case
-  % note that both ymin and ymax can be negative
-  axis([0.5 xmax+0.5 (1-sign(ymin)*0.2)*ymin (1+sign(ymax)*0.2)*ymax]);
+  % ensure that the horizontal and vertical range increase, also when negative
+  % see https://github.com/fieldtrip/fieldtrip/issues/1150
+  axis(fixrange([xmin-0.5 xmax+0.5 0.8*ymin 1.2*ymax]));
 end
 set(info.axes(3), 'ButtonDownFcn', @toggle_visual);  % needs to be here; call to axis resets this property
 xlabel('trial number');
@@ -456,7 +454,7 @@ y = sort([point1(2) point2(2)]);
 g     = get(gca, 'Parent');
 info  = guidata(g);
 
-[maxperchan, maxpertrl, maxperchan_all, maxpertrl_all] = set_maxper(info.level, info.chansel, info.trlsel, strcmp(info.metric, 'min'));
+[maxperchan, maxpertrl, maxperchan_all, maxpertrl_all] = set_maxper(info.level, info.chansel, info.trlsel, info.metric);
 
 switch gca
   case info.axes(1)
@@ -571,8 +569,8 @@ end
 set(h, 'String', [new_text; curr_text]);
 drawnow;
 
-function [maxperchan, maxpertrl, maxperchan_all, maxpertrl_all] = set_maxper(level, chansel, trlsel, minflag)
-if minflag
+function [maxperchan, maxpertrl, maxperchan_all, maxpertrl_all] = set_maxper(level, chansel, trlsel, metric)
+if strcmp(metric, 'min') || strcmp(metric, 'neighbcorr')
   % take the negative maximum, i.e. the minimum
   level = -1 * level;
 end
@@ -584,12 +582,11 @@ level(~chansel, :) = nan;
 level(:, ~trlsel)  = nan;
 maxperchan     = max(level, [], 2);
 maxpertrl      = max(level, [], 1);
-if minflag
+if any(strcmp(metric, {'min', 'neighbcorr'}))
   maxperchan     = -1 * maxperchan;
   maxpertrl      = -1 * maxpertrl;
   maxperchan_all = -1 * maxperchan_all;
   maxpertrl_all  = -1 * maxpertrl_all;
-  level          = -1 * level;
 end
 
 % function display_trial(h, eventdata)
@@ -666,3 +663,32 @@ end
 figure(currfig);
 update_log(info.output_box, 'Done.');
 return
+
+function range = fixrange(range)
+% ensure that the horizontal and vertical range always increase
+% also when both are negative, or both are the same, or both are or zero
+% see https://github.com/fieldtrip/fieldtrip/issues/1150
+if range(1)>range(2)
+  % swap them
+  range([1 2]) = range([2 1]);
+elseif range(1)==range(2)
+  if range(1)==0
+    % move them a little bit apart from each other
+    range([1 2]) = range([1 2]) + [-eps +eps];
+  else
+    % move them a little bit apart from each other, scaled with the value of interest
+    range([1 2]) = range([1 2]) + [-eps +eps]*range(1);
+  end
+end
+if range(3)>range(4)
+  % swap them
+  range([3 4]) = range([4 3]);
+elseif range(3)==range(4)
+  if range(3)==0
+    % move them a little bit apart from each other
+    range([3 4]) = range([3 4]) + [-eps +eps];
+  else
+    % move them a little bit apart from each other, scaled with the value of interest
+    range([3 4]) = range([3 4]) + [-eps +eps]*range(3);
+  end
+end
