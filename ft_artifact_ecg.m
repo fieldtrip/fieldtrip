@@ -31,16 +31,14 @@ function [cfg, artifact] = ft_artifact_ecg(cfg, data)
 %   cfg.artfctdef.ecg.cutoff  = 3; peak-threshold
 %   cfg.artfctdef.ecg.inspect = Nx1 list of channels which will be shown in a QRS-locked average
 %
-% The output argument "artifact" is a Nx2 matrix comparable to the
-% "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
-% beginsamples of an artifact period, the second column contains the
-% endsamples of the artifactperiods.
+% The output argument "artifact" is a Nx2 matrix comparable to the "trl" matrix of
+% FT_DEFINETRIAL. The first column of which specifying the beginsamples of an
+% artifact period, the second column contains the endsamples of the artifactperiods.
 %
-% To facilitate data-handling and distributed computing you can use
+% To facilitate data-handling and distributed computing, you can use
 %   cfg.inputfile   =  ...
-% If you specify this option the input data will be read from a *.mat
-% file on disk. This mat files should contain only a single variable named 'data',
-% corresponding to the input structure.
+% to read the input data from a *.mat file on disk. This mat files should contain
+% only a single variable named 'data', corresponding to the input structure.
 %
 % See also FT_REJECTARTIFACT, FT_REMOVETEMPLATEARTIFACT, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG,
 % FT_ARTIFACT_EOG, FT_ARTIFACT_JUMP, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_THRESHOLD,
