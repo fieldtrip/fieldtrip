@@ -57,6 +57,14 @@ info.fsample        = fsample;
 info.offset         = offset;
 info.quit           = 0;
 
+if isfield(cfg, 'neighbours')
+  % prepare the neighbours, load from disk, make channel selection, etc.
+  tmpcfg = keepfields(cfg, {'neighbours'});
+  info.cfg.neighbours = ft_prepare_neighbours(tmpcfg, data);
+  % creates a NxN matrix that describes whether channels are connected as neighbours
+  info.cfg.connectivity = channelconnectivity(info.cfg);
+end
+
 h = figure();
 guidata(h, info);
 
@@ -81,15 +89,16 @@ uicontrol(h, 'Units', 'normalized', 'position', [0.520 0.520 0.400 0.050], 'Styl
 % set up radio buttons for choosing metric
 bgcolor = get(h, 'color');
 g = uibuttongroup('Position', [0.520 0.220 0.375 0.250 ], 'bordertype', 'none', 'backgroundcolor', bgcolor);
-r(1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  8/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'string', 'var',       'HandleVisibility', 'off');
-r(2) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  7/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'min',       'HandleVisibility', 'off');
-r(3) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  6/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'max',       'HandleVisibility', 'off');
-r(4) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  5/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'maxabs',    'HandleVisibility', 'off');
-r(5) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  4/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'range',     'HandleVisibility', 'off');
-r(6) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  3/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'kurtosis',  'HandleVisibility', 'off');
-r(7) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  2/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', '1/var',     'HandleVisibility', 'off');
-r(8) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  1/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'zvalue',    'HandleVisibility', 'off');
-r(9) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  0/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'maxzvalue', 'HandleVisibility', 'off');
+r(1)  = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  8/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'string', 'var',       'HandleVisibility', 'off');
+r(2)  = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  7/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'min',       'HandleVisibility', 'off');
+r(3)  = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  6/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'max',       'HandleVisibility', 'off');
+r(4)  = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  5/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'maxabs',    'HandleVisibility', 'off');
+r(5)  = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  4/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'range',     'HandleVisibility', 'off');
+r(6)  = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  3/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'kurtosis',  'HandleVisibility', 'off');
+r(7)  = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  2/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', '1/var',     'HandleVisibility', 'off');
+r(8)  = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  1/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'zvalue',    'HandleVisibility', 'off');
+r(9)  = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  0/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'maxzvalue', 'HandleVisibility', 'off');
+r(10) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  0/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'neighbcorr', 'HandleVisibility', 'off');
 
 % pre-select appropriate metric, if defined
 set(g, 'SelectionChangeFcn', @change_metric);
@@ -196,6 +205,23 @@ for i=1:info.ntrl
       level(:, i) = nanmean( (dat-repmat(mval, 1, size(dat, 2)) )./repmat(sd, 1, size(dat, 2)) , 2);
     case 'maxzvalue'
       level(:, i) = nanmax( ( dat-repmat(mval, 1, size(dat, 2)) )./repmat(sd, 1, size(dat, 2)) , [], 2);
+    case 'neighbcorr'
+      assert(isfield(info.cfg, 'neighbours'), 'this requires cfg.neighbours, see FT_PREPARE_NEIGHBOURS');
+      % cfg.neighbours is used to compute cfg.connectivity, which is a nchan*nchan boolean matrix
+      for j=1:size(dat,1)
+        nb = info.cfg.connectivity(j,:);
+        if isempty(nb)
+          level(j,i) = 0;
+        else
+          % Compute the residual using the GLM
+          %   y = beta * x + residual
+          % where y is a row vector, not a column vector as common with fMRI
+          y = dat(j,:);
+          x = dat(nb, :);
+          residual = y - y / x * x;
+          level(j,i) = 1 - sum(residual.^2) / sum(y.^2);
+        end
+      end
     otherwise
       ft_error('unsupported method');
   end
