@@ -61,8 +61,8 @@ if isfield(cfg, 'neighbours')
   % prepare the neighbours, load from disk, make channel selection, etc.
   tmpcfg = keepfields(cfg, {'neighbours'});
   info.cfg.neighbours = ft_prepare_neighbours(tmpcfg, data);
-  % creates a NxN matrix that describes whether channels are connected as neighbours
-  info.cfg.connectivity = channelconnectivity(info.cfg);
+  % creates a NxN Boolean matrix that describes whether channels are connected as neighbours
+  info.cfg.connectivity = channelconnectivity(info.cfg, data);
 end
 
 h = figure();
