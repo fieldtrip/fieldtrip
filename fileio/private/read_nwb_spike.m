@@ -1,6 +1,6 @@
-function [spike] = nwb_read_spike(filename)
-% NWB_READ_SPIKE reads spike timestamps and waveforms (if present) from NWB files and 
-% converts them to fieldtrip spike data format. 
+function [spike] = read_nwb_spike(filename)
+% READ_NWB_SPIKE reads spike timestamps and waveforms (if present-not currently supported) 
+% from NWB files and converts them to fieldtrip spike data format. 
 %
 % INPUT: filename = (Path and) name of the .nwb file
 %
@@ -25,7 +25,7 @@ function [spike] = nwb_read_spike(filename)
 % https://github.com/NeurodataWithoutBorders/nwb-schema/releases
 % 
 % -----
-% Latest change: 14/05/2020
+% Latest change: 01/06/2020
 
 
 % Load data 
