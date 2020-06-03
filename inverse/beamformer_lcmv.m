@@ -326,18 +326,27 @@ for i=1:size(dip.pos,1)
         % filt = pinv(lf' * invC * lf) * lf' * invC; 
         % filt = filt/sqrt(noise*filt*filt'); 
         % the scaling term in the denominator is sqrt of projected noise, as per eqn. 2.67 of Sekihara & Nagarajan 2008 (S&N)
-        % FIXME this needs to be thought through for a vector based BF
-        filt = pinv(sqrtm(noise * lf' * invC_squared * lf)) * lf' *invC; % based on S&N eqn. 4.08
-
+        if fixedori
+          filt = pinv(sqrt(noise * lf' * invC_squared * lf)) * lf' *invC; % based on S&N eqn. 4.08
+        else
+          ft_error('vector version of nai weight normalization is not implemented');
+        end
       case 'unitnoisegain'
         % filt*filt' = I
         % Unit-noise gain minimum variance (aka Borgiotti-Kaplan) beamformer
         % below equation is equivalent to following:  
         % filt = pinv(lf' * invC * lf) * lf' * invC; 
         % filt = filt/sqrt(filt*filt');
-        % FIXME check validity for vector based BF, the sqrtm at least fulfills filt*filt'=I 
-        filt = pinv(sqrtm(lf' * invC_squared * lf)) * lf' *invC; % S&N eqn. 4.15
-
+        if fixedori
+          filt = pinv(sqrt(lf' * invC_squared * lf)) * lf' *invC; % S&N eqn. 4.15
+        else
+          % compute the matrix that is used for scaling of the filter's rows, as per eqn. 4.83
+          denom = pinv(lf' * invC * lf);
+          gamma = denom * (lf' * invC_squared * lf) * denom;
+          
+          % compute the spatial filter, as per eqn. 4.85
+          filt = diag(1./sqrt(diag(gamma))) * denom * lf' * invC;
+        end
       case 'arraygain'
         % filt*lf = ||lf||, applies to scalar leadfield, and to one of the possibilities of the vector version, eqn. 4.75
         lfn  = lf./norm(lf);
