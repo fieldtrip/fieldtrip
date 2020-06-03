@@ -628,8 +628,6 @@ for n = 1:length(trls)
   % that bug is hard to fix, hence it is solved here with a work-around
   cfg_sd = [];
   cfg_sd.trials = trls(n);
-  cfg_sd.avgoverrpt = 'yes';
-  cfg_sd.keeprpt = 'no';
   tmpdata = ft_selectdata(cfg_sd, info.data);
   
   figure()
