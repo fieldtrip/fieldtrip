@@ -116,7 +116,6 @@ projectnoise   = istrue(projectnoise);
 projectmom     = istrue(projectmom);
 fixedori       = istrue(fixedori);
 computekurt    = istrue(computekurt);
-dofeedback     = ~strcmp(feedback, 'none');
 
 % default is to use the trace of the covariance matrix, see Van Veen 1997
 if isempty(powmethod)

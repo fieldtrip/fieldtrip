@@ -116,7 +116,6 @@ keepfilter     = istrue(keepfilter);
 keepleadfield  = istrue(keepleadfield);
 projectnoise   = istrue(projectnoise);
 fixedori       = istrue(fixedori);
-dofeedback     = ~strcmp(feedback, 'none');
 
 % FIXME besides regular/complex lambda1, also implement a real version
 
