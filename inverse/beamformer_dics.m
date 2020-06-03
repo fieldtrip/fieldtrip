@@ -414,10 +414,10 @@ switch submethod
         lf = dip.leadfield{i};
       elseif hasmom
         % compute the leadfield for a fixed dipole orientation
-        lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize) .* dip.mom(i,:)';
+        lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) .* dip.mom(i,:)';
       else
         % compute the leadfield
-        lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize);
+        lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
       end
       if hassubspace
         % do subspace projection of the forward model
