@@ -38,9 +38,14 @@ function [dipout] = beamformer_lcmv(dip, grad, headmodel, dat, C, varargin)
 %  'weightnorm'       = normalize the beamformer weights,                can be 'no', 'unitnoisegain' or 'nai'
 %
 % These options influence the forward computation of the leadfield
-%  'reducerank'       = reduce the leadfield rank, can be 'no' or a number (e.g. 2)
-%  'normalize'        = normalize the leadfield
-%  'normalizeparam'   = parameter for depth normalization (default = 0.5)
+%   'reducerank'      = 'no', or number (default = 3 for EEG, 2 for MEG)
+%   'backproject'     = 'yes' or 'no',  determines when reducerank is applied whether the 
+%                        lower rank leadfield is projected back onto the original linear 
+%                        subspace, or not (default = 'yes')
+%   'normalize'       = 'yes' or 'no' (default = 'no')
+%   'normalizeparam'  = depth normalization parameter (default = 0.5)
+%   'weight'          = number or Nx1 vector, weight for each dipole position to compensate 
+%                        for the size of the corresponding patch (default = 1)
 %
 % If the dipole definition only specifies the dipole location, a rotating
 % dipole (regional source) is assumed on each location. If a dipole moment
@@ -75,25 +80,32 @@ end
 % these optional settings do not have defaults
 powmethod      = ft_getopt(varargin, 'powmethod'); % the default for this is set below
 subspace       = ft_getopt(varargin, 'subspace'); % used to implement an "eigenspace beamformer" as described in Sekihara et al. 2002 in HBM
-% these settings pertain to the forward model, the defaults are set in compute_leadfield
-reducerank     = ft_getopt(varargin, 'reducerank');
-normalize      = ft_getopt(varargin, 'normalize');
-normalizeparam = ft_getopt(varargin, 'normalizeparam');
 % these optional settings have defaults
 feedback       = ft_getopt(varargin, 'feedback',      'text');
 keepfilter     = ft_getopt(varargin, 'keepfilter',    'no');
 keepleadfield  = ft_getopt(varargin, 'keepleadfield', 'no');
 keepcov        = ft_getopt(varargin, 'keepcov',       'no');
 keepmom        = ft_getopt(varargin, 'keepmom',       'yes');
-lambda         = ft_getopt(varargin, 'lambda',        0);
-kappa          = ft_getopt(varargin, 'kappa',         []);
-tol            = ft_getopt(varargin, 'tol',           []);
-invmethod      = ft_getopt(varargin, 'invmethod',     []);
 projectnoise   = ft_getopt(varargin, 'projectnoise',  'yes');
 projectmom     = ft_getopt(varargin, 'projectmom',    'no');
 fixedori       = ft_getopt(varargin, 'fixedori',      'no');
 computekurt    = ft_getopt(varargin, 'kurtosis',      'no');
 weightnorm     = ft_getopt(varargin, 'weightnorm',    'no');
+
+% construct the low-level options for the covariance matrix inversion as key-value pairs, these are passed to FT_INV
+invopt = {};
+invopt = ft_setopt(invopt, 'lambda',    ft_getopt(varargin, 'lambda', 0));
+invopt = ft_setopt(invopt, 'kappa',     ft_getopt(varargin, 'kappa'));
+invopt = ft_setopt(invopt, 'tolerance', ft_getopt(varargin, 'tol'));
+invopt = ft_setopt(invopt, 'method',    ft_getopt(varargin, 'invmethod'));
+
+% construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD
+leadfieldopt = {};
+leadfieldopt = ft_setopt(leadfieldopt, 'reducerank',     ft_getopt(varargin, 'reducerank'));
+leadfieldopt = ft_setopt(leadfieldopt, 'backproject',    ft_getopt(varargin, 'backproject'));
+leadfieldopt = ft_setopt(leadfieldopt, 'normalize',      ft_getopt(varargin, 'normalize'));
+leadfieldopt = ft_setopt(leadfieldopt, 'normalizeparam', ft_getopt(varargin, 'normalizeparam'));
+leadfieldopt = ft_setopt(leadfieldopt, 'weight',         ft_getopt(varargin, 'weight'));
 
 % convert the yes/no arguments to the corresponding logical values
 keepfilter     = istrue(keepfilter);
@@ -221,11 +233,11 @@ elseif ~isempty(subspace)
     C                = subspace*C*subspace'; 
     % here the subspace can be different from the singular vectors of C, so we
     % have to do the sandwiching as opposed to line 223
-    invC = ft_inv(C, 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
+    invC = ft_inv(C, invopt{:});
     dat   = subspace*dat;
   end
 else
-  invC = ft_inv(C, 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
+  invC = ft_inv(C, invopt{:});
 end
 
 % compute the square of invC, which might be needed for unitnoisegain or NAI constraint
@@ -253,10 +265,10 @@ for i=1:size(dip.pos,1)
       lf = dip.leadfield{i};    
     elseif  ~hasleadfield && isfield(dip, 'mom')
       % compute the leadfield for a fixed dipole orientation
-      lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
+      lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, leadfieldopt{:}) * dip.mom(:,i);
     else
       % compute the leadfield
-      lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+      lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, leadfieldopt{:});
     end
   
     if hassubspace
@@ -265,7 +277,7 @@ for i=1:size(dip.pos,1)
       % the data and the covariance become voxel dependent due to the projection
       dat   = dip.subspace{i} * dat_pre_subspace;
       C     = dip.subspace{i} * C_pre_subspace * dip.subspace{i}';
-      invC  = ft_inv(dip.subspace{i} * C_pre_subspace * dip.subspace{i}', 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
+      invC  = ft_inv(dip.subspace{i} * C_pre_subspace * dip.subspace{i}', invopt{:});
     elseif ~isempty(subspace)
       % do subspace projection of the forward model only
       lforig = lf;

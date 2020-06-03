@@ -900,6 +900,16 @@ ARRAY+=(utilities/ft_headcoordinates.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# ft_headmodeltype.m
+
+ARRAY=()
+ARRAY+=(fileio/private/ft_headmodeltype.m)
+ARRAY+=(forward/ft_headmodeltype.m)
+ARRAY+=(inverse/private/ft_headmodeltype.m)
+ARRAY+=(plotting/private/ft_headmodeltype.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # ft_inside_headmodel.m
 
 ARRAY=()
@@ -1005,13 +1015,11 @@ ARRAY+=(plotting/private/ft_senstype.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# ft_headmodeltype.m
+# ft_setopt.m
 
 ARRAY=()
-ARRAY+=(fileio/private/ft_headmodeltype.m)
-ARRAY+=(forward/ft_headmodeltype.m)
-ARRAY+=(inverse/private/ft_headmodeltype.m)
-ARRAY+=(plotting/private/ft_headmodeltype.m)
+ARRAY+=(inverse/private/ft_setopt.m)
+ARRAY+=(utilities/ft_setopt.m)
 sync ${ARRAY[*]}
 
 ################################################################################
