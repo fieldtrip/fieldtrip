@@ -327,19 +327,19 @@ for i=1:size(dip.pos,1)
         % filt = filt/sqrt(noise*filt*filt'); 
         % the scaling term in the denominator is sqrt of projected noise, as per eqn. 2.67 of Sekihara & Nagarajan 2008 (S&N)
         % FIXME this needs to be thought through for a vector based BF
-        filt = pinv(sqrt(noise * lf' * invC_squared * lf)) * lf' *invC; % based on S&N eqn. 4.08
+        filt = pinv(sqrtm(noise * lf' * invC_squared * lf)) * lf' *invC; % based on S&N eqn. 4.08
 
       case 'unitnoisegain'
-        % filt*filt = I
+        % filt*filt' = I
         % Unit-noise gain minimum variance (aka Borgiotti-Kaplan) beamformer
         % below equation is equivalent to following:  
         % filt = pinv(lf' * invC * lf) * lf' * invC; 
         % filt = filt/sqrt(filt*filt');
-        % FIXME check validity for vector based BF
+        % FIXME check validity for vector based BF, the sqrtm at least fulfills filt*filt'=I 
         filt = pinv(sqrtm(lf' * invC_squared * lf)) * lf' *invC; % S&N eqn. 4.15
 
       case 'arraygain'
-        % filt*lf = ||lf||, applies to scalar leadfield, check generalizability to vector BF
+        % filt*lf = ||lf||, applies to scalar leadfield, and to one of the possibilities of the vector version, eqn. 4.75
         lfn  = lf./norm(lf);
         filt = pinv(lfn' * invC * lfn) * lfn' * invC; % S&N eqn. 4.09
  
