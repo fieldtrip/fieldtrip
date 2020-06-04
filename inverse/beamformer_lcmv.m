@@ -304,7 +304,7 @@ for i=1:size(dip.pos,1)
 
         case 'arraygain'
           % optimal orientation calculation for array-gain beamformer, Sekihara & Nagarajan eqn. 4.44
-          [vv, dd]      = eig(pinv(lf' * invC *lf)*)lf' * lf));
+          [vv, dd]      = eig(pinv(lf' * invC *lf)*(lf' * lf));
           [dum, maxeig] = max(diag(dd));
           arraygainori  = vv(:,maxeig);
           lf            = lf * arraygainori;
