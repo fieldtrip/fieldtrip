@@ -395,24 +395,24 @@ switch method
             % the following step is quite expensive computationally if it
             % needs to be done each time
             tmptarget  = copnorm(target(:,finitevals2)'); % allow for the original target variable to be kept
-            tmptarget  = bsxfun(@minus,tmptarget,mean(tmptarget,1));
+            tmptarget  = bsxfun(@minus,tmptarget,mean(tmptarget,1))';
           
             target_shifted = copnorm(target_shifted(:,finitevals2)');
-            target_shifted = bsxfun(@minus,target_shifted,mean(target_shifted,1));
+            target_shifted = bsxfun(@minus,target_shifted,mean(target_shifted,1))';
           
             % feature signal
             feature = copnorm(feature(:,finitevals2)');
-            feature = bsxfun(@minus,feature,mean(feature,1));
+            feature = bsxfun(@minus,feature,mean(feature,1))';
           else
-            tmptarget  = target(:,finitevals2)';
-            tmptarget  = bsxfun(@minus,tmptarget,mean(tmptarget,1));
+            tmptarget  = target(:,finitevals2);
+            tmptarget  = bsxfun(@minus,tmptarget,mean(tmptarget,2));
           
-            target_shifted = target_shifted(:,finitevals2)';
-            target_shifted = bsxfun(@minus,target_shifted,mean(target_shifted,1));
+            target_shifted = target_shifted(:,finitevals2);
+            target_shifted = bsxfun(@minus,target_shifted,mean(target_shifted,2));
           
             % feature signal
-            feature = feature(:,finitevals2)';
-            feature = bsxfun(@minus,feature,mean(feature,1));
+            feature = feature(:,finitevals2);
+            feature = bsxfun(@minus,feature,mean(feature,2));
           end
           
           % time-lagged version of the source signal,
@@ -426,10 +426,12 @@ switch method
             % versions, and the feature only once, and then reorganize into a (Ntarget x
             % Nref) x 4 x 4 matrix, this bypasses the use of the gcmi
             % toolbox
-            C = transpose([tmptarget, target_shifted, feature])*[tmptarget, target_shifted, feature];
+            dat = cat(1, tmptarget, target_shifted, feature);
+            C = dat*transpose(dat);
+            %C = transpose([tmptarget, target_shifted, feature])*[tmptarget, target_shifted, feature];
             C = C./(size(tmptarget,1)-1);
             
-            nt   = size(tmptarget,2);
+            nt   = size(tmptarget,1);
             ns   = numel(refindx);
             
             cT  = diag(C(1:nt,1:nt)); % variance of the target signals
