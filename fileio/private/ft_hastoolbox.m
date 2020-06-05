@@ -166,7 +166,8 @@ url = {
   'EZC3D'         'see https://github.com/pyomeca/ezc3d'
   'GCMI'          'see https://github.com/robince/gcmi'
   'XSENS'         'see https://www.xsens.com/motion-capture and http://www.fieldtriptoolbox.org/getting_started/xsens/'
-  'MatNWB'        'see https://neurodatawithoutborders.github.io/matnwb/'};
+  'MATNWB'        'see https://neurodatawithoutborders.github.io/matnwb/'
+  };
 
 if nargin<2
   % default is not to add the path automatically
