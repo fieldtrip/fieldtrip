@@ -8,22 +8,26 @@ function [dataout] = ft_heartrate(cfg, datain)
 %   dataout = ft_heartrate(cfg, data)
 % where the input data is a structure as obtained from FT_PREPROCESSING.
 %
-% The configuration structure has the following options
+% The configuration structure has the following general options
 %   cfg.channel          = selected channel for processing, see FT_CHANNELSELECTION
 %   cfg.feedback         = 'yes' or 'no'
 %   cfg.method           = string representing the method for heart rate detection
 %                          'findpeaks'  normalization with usual FINDPEAKS matlab algorithm (default)
 %                          'pantompkin' implementation of the Pan-Tompkin algorithm for ECG beat detection                          algorithm for ECG beat detection.
 % 
-% When cfg.method = 'findpeaks', the following options can be specified:
+% For the 'findpeaks' method the following additional options can be specified
 %   cfg.envelopewindow   = scalar, time in seconds
 %   cfg.peakseparation   = scalar, time in seconds
 %   cfg.threshold        = scalar, usually between 0 and 1 (default = 0.4)
 % and the data can be preprocessed on the fly using
 %   cfg.preproc.bpfilter = 'yes' or 'no'
 %   cfg.preproc.bpfreq   = [low high], filter frequency in Hz
+% This implementation performs some filtering and amplitude normalization, followed 
+% by the FINDPEAKS function. It works both for ECG as for PPG signals.
 % 
-% When cfg.method = 'pantompkin, there are no additional options.
+% For the 'pantompkin` method there are no additional options. This implements 
+% - J Pan, W J Tompkins, "A Real-Time QRS Detection Algorithm", IEEE Trans Biomed Eng, 1985. https://doi.org/10.1109/tbme.1985.325532
+% - H Sedghamiz, "Matlab Implementation of Pan Tompkins ECG QRS detector". https://doi.org/10.13140/RG.2.2.14202.59841
 %
 % See also FT_ELECTRODERMALACTIVITY, FT_HEADMOVEMENT, FT_REGRESSCONFOUND
 
