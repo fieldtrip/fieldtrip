@@ -145,9 +145,9 @@ while interactive && ishandle(h)
   end
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTIONS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function compute_metric(h)
 info = guidata(h);
@@ -205,6 +205,10 @@ update_log(info.output_box, 'Done.');
 info.level = level;
 info.previousmetric = info.metric;
 guidata(h, info);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function redraw(h)
 info  = guidata(h);
@@ -342,6 +346,10 @@ else
   set(info.excludechantxt, 'String', 'No channels to exclude', 'FontAngle', 'italic');
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 function toggle_trials(h, eventdata)
 info = guidata(h);
 % extract trials from string
@@ -417,8 +425,13 @@ compute_metric(h)
 guidata(h, info);
 uiresume;
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 function toggle_visual(h, eventdata)
-% copied from select2d, without waitforbuttonpress command
+% copied from FT_SELECT_BOX, but without the waitforbuttonpress command since this
+% toggle_visual callback is triggered by the ButtonDown event
 point1 = get(gca, 'CurrentPoint');    % button down detected
 finalRect = rbbox;                    % return figure units
 point2 = get(gca, 'CurrentPoint');    % button up detected
@@ -508,11 +521,19 @@ compute_metric(h);
 guidata(h, info);
 uiresume;
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 function quit(h, eventdata)
 info = guidata(h);
 info.quit = 1;
 guidata(h, info);
 uiresume;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function change_metric(h, eventdata)
 info = guidata(h);
@@ -520,6 +541,10 @@ info.metric = get(eventdata.NewValue, 'string');
 guidata(h, info);
 compute_metric(h);
 uiresume;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function toggle_rejected(h, eventdata)
 info = guidata(h);
@@ -531,6 +556,10 @@ else
 end
 guidata(h, info);
 uiresume;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function update_log(h, new_text)
 new_text        = [datestr(now, 13) '# ' new_text];
@@ -544,6 +573,10 @@ else
 end
 set(h, 'String', [new_text; curr_text]);
 drawnow;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [maxperchan, maxpertrl, maxperchan_all, maxpertrl_all] = set_maxper(level, chansel, trlsel, minflag)
 if minflag
@@ -566,41 +599,9 @@ if minflag
   level          = -1 * level;
 end
 
-% function display_trial(h, eventdata)
-% info = guidata(h);
-% rawtrls = get(h, 'string');
-% if ~isempty(rawtrls)
-%   spltrls = regexp(rawtrls, ' ', 'split');
-%   trls = [];
-%   for n = 1:length(spltrls)
-%     trls(n) = str2num(cell2mat(spltrls(n)));
-%   end
-% else
-%   update_log(info.output_box, sprintf('Please enter one or more trials'));
-%   uiresume;
-%   return;
-% end
-% if all(trls==0)
-%   % use visual selection
-%   update_log(info.output_box, sprintf('make visual selection of trials to be plotted separately...'));
-%   [x, y] = select2d;
-%   maxpertrl  = max(info.origlevel, [], 1);
-%   toggle = find(1:ntrl>=x(1) & ...
-%     1:ntrl<=x(2) & ...
-%     maxpertrl(:)'>=y(1) & ...
-%     maxpertrl(:)'<=y(2));
-% else
-%   toggle = trls;
-% end
-% for i=1:length(trls)
-%   figure
-%   % the data being displayed here is NOT filtered
-%   %plot(data.time{toggle(i)}, data.trial{toggle(i)}(chansel, :));
-%   tmp = info.data.trial{toggle(i)}(info.chansel, :);
-%   tmp = tmp - repmat(mean(tmp, 2), [1 size(tmp, 2)]);
-%   plot(info.data.time{toggle(i)}, tmp);
-%   title(sprintf('trial %d', toggle(i)));
-% end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function display_trial(h, eventdata)
 info = guidata(h);
@@ -637,4 +638,3 @@ for n = 1:length(trls)
 end
 figure(currfig);
 update_log(info.output_box, 'Done.');
-return
