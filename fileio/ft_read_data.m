@@ -725,7 +725,8 @@ switch dataformat
     
   case {'egi_mff_v3' 'egi_mff'} % this is the default
     ft_hastoolbox('mffmatlabio', 1);
-    dat = mff_fileio_read_data(filename, 'header', hdr, 'begtrial', begtrial, 'endtrial', endtrial, 'chanindx', chanindx);
+    dat = mff_fileio_read_data(filename, 'header', hdr);
+    dat = dat(chanindx, begsample:endsample);
     
   case 'edf'
     % this reader is largely similar to the one for bdf

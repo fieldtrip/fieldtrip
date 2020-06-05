@@ -361,7 +361,11 @@ switch eventformat
     else
       endsample = hdr.nSamples*hdr.nTrials;
     end
-    
+
+    if isempty(detectflank)
+      detectflank = 'up';
+    end
+
     if ~strcmp(detectflank, 'up')
       if strcmp(detectflank, 'both')
         ft_warning('only up-going flanks are supported for Biosemi');

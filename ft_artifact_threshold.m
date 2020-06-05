@@ -1,7 +1,7 @@
 function [cfg, artifact] = ft_artifact_threshold(cfg, data)
 
 % FT_ARTIFACT_THRESHOLD scans for trials in which the range, i.e. the minimum, the
-% maximum or the range (min-max difference) of the signal in any channel exceeds a
+% maximum, or the range (min-max difference) of the signal in any channel exceeds a
 % specified threshold.
 %
 % Use as
@@ -29,9 +29,8 @@ function [cfg, artifact] = ft_artifact_threshold(cfg, data)
 %   cfg.artfctdef.threshold.bpfreq    = [0.3 30]
 %   cfg.artfctdef.threshold.bpfiltord = 4
 %
-% It is also possible to use other filter (lpfilter, hpfilter,
-% bsfilter, dftfilter or medianfilter) instead of a bpfilter for
-% preprocessing, see FT_PREPROCESSING
+% It is also possible to use other filter (lpfilter, hpfilter, bsfilter, dftfilter or
+% medianfilter) instead of a bpfilter for preprocessing, see FT_PREPROCESSING.
 %
 % The detection of artifacts is done according to the following settings,
 % you should specify at least one of these thresholds
@@ -52,17 +51,14 @@ function [cfg, artifact] = ft_artifact_threshold(cfg, data)
 %
 % Note that this function does not support artifact- or filterpadding.
 %
-% The output argument "artifact" is a Nx2 matrix comparable to the
-% "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
-% beginsamples of an artifact period, the second column contains the
-% endsamples of the artifactperiods.
+% The output argument "artifact" is a Nx2 matrix comparable to the "trl" matrix of
+% FT_DEFINETRIAL. The first column of which specifying the beginsamples of an
+% artifact period, the second column contains the endsamples of the artifactperiods.
 %
-% To facilitate data-handling and distributed computing you can use
+% To facilitate data-handling and distributed computing, you can use
 %   cfg.inputfile   =  ...
-% If you specify one of these (or both) the input data will be read from a *.mat
-% file on disk and/or the output data will be written to a *.mat file. These mat
-% files should contain only a single variable, corresponding with the
-% input/output structure.
+% to read the input data from a *.mat file on disk. This mat files should contain
+% only a single variable named 'data', corresponding to the input structure.
 %
 % See also FT_REJECTARTIFACT, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG, FT_ARTIFACT_EOG,
 % FT_ARTIFACT_JUMP, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_ZVALUE

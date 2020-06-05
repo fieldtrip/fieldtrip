@@ -1,7 +1,7 @@
 function [cfg, artifact] = ft_artifact_muscle(cfg, data)
 
-% FT_ARTIFACT_MUSCLE reads the data segments of interest from file and
-% identifies muscle artifacts.
+% FT_ARTIFACT_MUSCLE reads the data segments of interest from file and identifies
+% muscle artifacts.
 %
 % Use as
 %   [cfg, artifact] = ft_artifact_muscle(cfg)
@@ -39,16 +39,14 @@ function [cfg, artifact] = ft_artifact_muscle(cfg, data)
 %   cfg.artfctdef.muscle.fltpadding  = 0.1
 %   cfg.artfctdef.muscle.artpadding  = 0.1
 %
-% The output argument "artifact" is a Nx2 matrix comparable to the
-% "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
-% beginsamples of an artifact period, the second column contains the
-% endsamples of the artifactperiods.
+% The output argument "artifact" is a Nx2 matrix comparable to the "trl" matrix of
+% FT_DEFINETRIAL. The first column of which specifying the beginsamples of an
+% artifact period, the second column contains the endsamples of the artifactperiods.
 %
-% To facilitate data-handling and distributed computing you can use
+% To facilitate data-handling and distributed computing, you can use
 %   cfg.inputfile   =  ...
-% If you specify this option the input data will be read from a *.mat
-% file on disk. This mat files should contain only a single variable named 'data',
-% corresponding to the input structure.
+% to read the input data from a *.mat file on disk. This mat files should contain
+% only a single variable named 'data', corresponding to the input structure.
 %
 % See also FT_REJECTARTIFACT, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG, FT_ARTIFACT_EOG,
 % FT_ARTIFACT_JUMP, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_ZVALUE

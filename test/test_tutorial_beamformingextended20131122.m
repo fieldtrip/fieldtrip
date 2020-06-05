@@ -87,7 +87,7 @@ freq_exp.cumtapcnt = freq_cmb.cumtapcnt(cfg.trials);
 freq_exp.cumsumcnt = freq_cmb.cumsumcnt(cfg.trials);
 
 cfg             = [];
-cfg.sourcemodel        = sourcemodel;
+cfg.sourcemodel = sourcemodel;
 cfg.headmodel   = hdm;
 cfg.channel     = {'MEG'};
 cfg.grad        = freq_cmb.grad;
@@ -98,7 +98,8 @@ cfg.frequency         = freq_cmb.freq;
 cfg.grad              = freq_cmb.grad;
 cfg.method            = 'dics';
 cfg.keeptrials        = 'yes';
-cfg.sourcemodel              = sourcemodel_lf;
+cfg.channel           = 'MEG';
+cfg.sourcemodel       = sourcemodel_lf;
 cfg.headmodel         = hdm;
 cfg.keeptrials        = 'yes';
 cfg.dics.lambda       = '5%';
@@ -108,7 +109,7 @@ cfg.dics.realfilter   = 'yes';
 source                = ft_sourceanalysis(cfg, freq_cmb);
 
 % beam pre- and poststim by using the common filter
-cfg.sourcemodel.filter  = source.avg.filter;
+cfg.sourcemodel.filter = source.avg.filter;
 source_bsl       = ft_sourceanalysis(cfg, freq_bsl);
 source_exp       = ft_sourceanalysis(cfg, freq_exp);
 
@@ -158,7 +159,7 @@ cfg.method          = 'dics';
 cfg.refchan         = 'EMGlft';
 cfg.frequency       = 20;
 cfg.headmodel       = hdm;
-cfg.sourcemodel            = sourcemodel;
+cfg.sourcemodel     = sourcemodel;
 source_coh_lft      = ft_sourceanalysis(cfg, freq_csd);
 
 source_coh_lft.pos = template.sourcemodel.pos;
