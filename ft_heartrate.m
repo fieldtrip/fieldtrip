@@ -8,19 +8,31 @@ function [dataout] = ft_heartrate(cfg, datain)
 %   dataout = ft_heartrate(cfg, data)
 % where the input data is a structure as obtained from FT_PREPROCESSING.
 %
-% The configuration structure has the following options
+% The configuration structure has the following general options
 %   cfg.channel          = selected channel for processing, see FT_CHANNELSELECTION
-%   cfg.envelopewindow   = scalar, time in seconds
+%   cfg.feedback         = 'yes' or 'no'
+%   cfg.method           = string representing the method for heart beat detection
+%                          'findpeaks'  filtering and normalization, followed by FINDPEAKS (default)
+%                          'pantompkin' implementation of the Pan-Tompkin algorithm for ECG beat detection
+%
+% For the 'findpeaks' method the following additional options can be specified
+%   cfg.envelopewindow   = scalar, time in seconds (default = 10)
 %   cfg.peakseparation   = scalar, time in seconds
 %   cfg.threshold        = scalar, usually between 0 and 1 (default = 0.4)
-%   cfg.feedback         = 'yes' or 'no'
-% The input data can be preprocessed on the fly using
+%   cfg.flipsignal       = 'yes' or 'no', whether to flip the polarity of the signal (default is automatic)
+% and the data can be preprocessed on the fly using
 %   cfg.preproc.bpfilter = 'yes' or 'no'
 %   cfg.preproc.bpfreq   = [low high], filter frequency in Hz
+% This implementation performs some filtering and amplitude normalization, followed
+% by the FINDPEAKS function. It works both for ECG as for PPG signals.
+%
+% For the 'pantompkin` method there are no additional options. This implements
+% - J Pan, W J Tompkins, "A Real-Time QRS Detection Algorithm", IEEE Trans Biomed Eng, 1985. https://doi.org/10.1109/tbme.1985.325532
+% - H Sedghamiz, "Matlab Implementation of Pan Tompkins ECG QRS detector". https://doi.org/10.13140/RG.2.2.14202.59841
 %
 % See also FT_ELECTRODERMALACTIVITY, FT_HEADMOVEMENT, FT_REGRESSCONFOUND
 
-% Copyright (C) 2018-2019, Robert Oostenveld, DCCN
+% Copyright (C) 2018-2020, Robert Oostenveld & Helena Cockx
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -73,11 +85,14 @@ cfg = ft_checkconfig(cfg, 'forbidden', 'medianwindow');
 
 % set the default options
 cfg.channel          = ft_getopt(cfg, 'channel', 'all');
+cfg.method           = ft_getopt(cfg, 'method', 'findpeaks');
 cfg.envelopewindow   = ft_getopt(cfg, 'envelopewindow', 10);  % in seconds
 cfg.peakseparation   = ft_getopt(cfg, 'peakseparation', []);  % in seconds
 cfg.threshold        = ft_getopt(cfg, 'threshold', 0.4);      % between 0 and 1
 cfg.feedback         = ft_getopt(cfg, 'feedback', 'yes');
 cfg.preproc          = ft_getopt(cfg, 'preproc', []);
+cfg.flipsignal       = ft_getopt(cfg, 'flipsignal', []);
+
 % the expected rate is around 80 bpm, which means 80/60=1.33 Hz
 cfg.preproc.bpfilter    = ft_getopt(cfg.preproc, 'bpfilter', 'yes');
 cfg.preproc.bpfilttype  = ft_getopt(cfg.preproc, 'bpfilttype', 'but');
@@ -100,107 +115,129 @@ assert(numel(cfg.channel)==1, 'you should specify exactly one channel');
 chansel = strcmp(datain.label, cfg.channel{1});
 fsample = datain.fsample;
 
-for trllop=1:numel(datain.trial)
-  dat   = datain.trial{trllop}(chansel,:);
-  label = datain.label(chansel);
-  time  = datain.time{trllop};
-  
-  if skewness(dat)<0
-    ft_notice('flipping signal polarity');
-    dat = -dat;
-  end
-  
-  if ~isempty(cfg.peakseparation)
-    [yupper,ylower] = envelope(dat, round(cfg.peakseparation*fsample), 'peaks');
-  elseif ~isempty(cfg.envelopewindow)
-    [yupper,ylower] = envelope(dat, round(cfg.envelopewindow*fsample), 'rms');
-  end
-  
-  if istrue(cfg.feedback)
-    figure
-    subplot(4,1,1)
-    hold on
-    plot(time, dat)
-    plot(time, yupper, 'g');
-    plot(time, ylower, 'g');
-    xlim([min(time) max(time)])
-    xlabel('time (s)');
-    title(sprintf('original, trial %d', trllop))
-  end
-  
-  if ~isempty(cfg.preproc)
-    % apply the preprocessing to the selected channel
-    [dat, label, time, cfg.preproc] = preproc(dat, label, time, cfg.preproc, 0, 0);
-  end
-  
-  if ~isempty(cfg.peakseparation)
-    [yupper,ylower] = envelope(dat, round(cfg.peakseparation*fsample), 'peaks');
-  elseif ~isempty(cfg.envelopewindow)
-    [yupper,ylower] = envelope(dat, round(cfg.envelopewindow*fsample), 'rms');
-  end
-  
-  if istrue(cfg.feedback)
-    subplot(4,1,2)
-    hold on
-    plot(time, dat)
-    plot(time, yupper, 'g');
-    plot(time, ylower, 'g');
-    xlim([min(time) max(time)])
-    xlabel('time (s)');
-    title('filtered')
-  end
-  
-  dat = (dat - ylower) ./ (yupper - ylower);
-  
-  if ~isempty(cfg.peakseparation)
-    [yupper,ylower] = envelope(dat, round(cfg.peakseparation*fsample), 'peaks');
-  elseif ~isempty(cfg.envelopewindow)
-    [yupper,ylower] = envelope(dat, round(cfg.envelopewindow*fsample), 'rms');
-  end
-  
-  % find the sample numbers where the filtered value increases above the threshold
-  [vals, peaks] = findpeaks(dat, 'MinPeakHeight', cfg.threshold);
-  
-  if istrue(cfg.feedback)
-    subplot(4,1,3)
-    hold on
-    plot(time, dat)
-    plot(time, yupper, 'g');
-    plot(time, ylower, 'g');
-    plot(time(peaks), vals, 'r*');
-    xlim([min(time) max(time)])
-    xlabel('time (s)');
-    title('locally rescaled')
-  end
-  
-  % construct a continuous channel with the rate and the phase
-  rate  = nan(size(dat));
-  phase = nan(size(dat));
-  for i=1:length(peaks)-1
-    begsample = peaks(i);
-    endsample = peaks(i+1);
-    rate(begsample:endsample)  = 60 * fsample/(endsample-begsample); % in bpm
-    phase(begsample:endsample) = linspace(-pi, pi, (endsample-begsample+1));
-  end
-  % also construct a boolean channel with a pulse at the beat onset
-  tmp = zeros(size(dat));
-  tmp(peaks) = 1;
-  
-  % add the continuous channels to the output structure
-  dataout.trial{trllop} = [rate; phase; tmp];
-  
-  if istrue(cfg.feedback)
-    subplot(4,1,4)
-    plot(time, rate)
-    ylim([0 160])
-    xlim([min(time) max(time)])
-    xlabel('time (s)');
-    ylabel('rate (bpm)');
-  end
-  
-  ft_info('heart rate in trial %d: mean=%.1f, min=%.1f, max=%.1f\n', trllop, nanmean(rate), nanmin(rate), nanmax(rate));
-  
-end % for trllop
+switch cfg.method
+  case 'findpeaks'
+    for trllop=1:numel(datain.trial)
+      dat   = datain.trial{trllop}(chansel,:);
+      label = datain.label(chansel);
+      time  = datain.time{trllop};
+      
+      if isempty(cfg.flipsignal)
+        if skewness(dat)<0
+          cfg.flipsignal = 'yes';
+        else
+          cfg.flipsignal = 'no';
+        end
+      end
+      
+      if istrue(cfg.flipsignal)
+        ft_notice('flipping signal polarity');
+        dat = -dat;
+      end
+      
+      if ~isempty(cfg.peakseparation)
+        [yupper,ylower] = envelope(dat, round(cfg.peakseparation*fsample), 'peaks');
+      elseif ~isempty(cfg.envelopewindow)
+        [yupper,ylower] = envelope(dat, round(cfg.envelopewindow*fsample), 'rms');
+      end
+      
+      if istrue(cfg.feedback)
+        figure
+        subplot(4,1,1)
+        hold on
+        plot(time, dat)
+        plot(time, yupper, 'g');
+        plot(time, ylower, 'g');
+        xlim([min(time) max(time)])
+        xlabel('time (s)');
+        title(sprintf('original, trial %d', trllop))
+      end
+      
+      if ~isempty(cfg.preproc)
+        % apply the preprocessing to the selected channel
+        [dat, label, time, cfg.preproc] = preproc(dat, label, time, cfg.preproc, 0, 0);
+      end
+      
+      if ~isempty(cfg.peakseparation)
+        [yupper,ylower] = envelope(dat, round(cfg.peakseparation*fsample), 'peaks');
+      elseif ~isempty(cfg.envelopewindow)
+        [yupper,ylower] = envelope(dat, round(cfg.envelopewindow*fsample), 'rms');
+      end
+      
+      if istrue(cfg.feedback)
+        subplot(4,1,2)
+        hold on
+        plot(time, dat)
+        plot(time, yupper, 'g');
+        plot(time, ylower, 'g');
+        xlim([min(time) max(time)])
+        xlabel('time (s)');
+        title('filtered')
+      end
+      
+      dat = (dat - ylower) ./ (yupper - ylower);
+      
+      if ~isempty(cfg.peakseparation)
+        [yupper,ylower] = envelope(dat, round(cfg.peakseparation*fsample), 'peaks');
+      elseif ~isempty(cfg.envelopewindow)
+        [yupper,ylower] = envelope(dat, round(cfg.envelopewindow*fsample), 'rms');
+      end
+      
+      % find the sample numbers where the filtered value increases above the threshold
+      [vals, peaks] = findpeaks(dat, 'MinPeakHeight', cfg.threshold);
+      
+      if istrue(cfg.feedback)
+        subplot(4,1,3)
+        hold on
+        plot(time, dat)
+        plot(time, yupper, 'g');
+        plot(time, ylower, 'g');
+        plot(time(peaks), vals, 'r*');
+        xlim([min(time) max(time)])
+        xlabel('time (s)');
+        title('locally rescaled')
+      end
+      
+      % construct a continuous channel with the rate and the phase
+      [rate, phase, tmp] = discr2ctu(peaks, size(dat), fsample);
+      
+      % add the continuous channels to the output structure
+      dataout.trial{trllop} = [rate; phase; tmp];
+      
+      if istrue(cfg.feedback)
+        subplot(4,1,4)
+        plot(time, rate)
+        ylim([0 160])
+        xlim([min(time) max(time)])
+        xlabel('time (s)');
+        ylabel('rate (bpm)');
+      end
+      
+      ft_info('heart rate in trial %d: mean=%.1f, min=%.1f, max=%.1f\n', trllop, nanmean(rate), nanmin(rate), nanmax(rate));
+      
+    end % for trllop
+    
+  case 'pantompkin'
+    ft_hastoolbox('fileexchange', 1);
+    for trllop=1:numel(datain.trial)
+      dat   = datain.trial{trllop}(chansel,:);
+      label = datain.label(chansel);
+      time  = datain.time{trllop};
+      
+      % pan-tompkin algorithm
+      [vals, peaks, delay] = pan_tompkin(dat, fsample, istrue(cfg.feedback));
+      
+      % construct a continuous channel with the rate and the phase
+      [rate, phase, tmp] = discr2ctu(peaks, size(dat), fsample);
+      
+      % add the continuous channels to the output structure
+      dataout.trial{trllop} = [rate; phase; tmp];
+    end
+    
+  otherwise
+    ft_error('unsupported method %s', cfg.method);
+    
+end % switch method
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % deal with the output
@@ -212,3 +249,19 @@ ft_postamble previous   datain
 ft_postamble provenance dataout
 ft_postamble history    dataout
 ft_postamble savevar    dataout
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [rate, phase, tmp] = discr2ctu(peaks, n, fsample)
+rate  = nan(n);
+phase = nan(n);
+for i=1:length(peaks)-1
+  begsample = peaks(i);
+  endsample = peaks(i+1);
+  rate(begsample:endsample)  = 60 * fsample/(endsample-begsample); % in bpm
+  phase(begsample:endsample) = linspace(-pi, pi, (endsample-begsample+1));
+end
+% also construct a boolean channel with a pulse at the beat onset
+tmp = zeros(n);
+tmp(peaks) = 1;
