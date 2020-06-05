@@ -1318,7 +1318,25 @@ switch dataformat
   case 'neuroprax_eeg'
     tmp = np_readdata(filename, hdr.orig, begsample - 1, endsample - begsample + 1, 'samples');
     dat = tmp.data(:,chanindx)';
-    
+   
+  case 'nwb'
+    ft_hastoolbox('MatNWB', 1);
+	tmp = nwbRead(filename);
+	es_key = tmp.searchFor('ElectricalSeries').keys; % find lfp data, which should be an ElectricalSeries object
+    if numel(es_key) > 1 % && isempty(additional_user_input) % TODO: Try to sort this out with the user's help
+        % Temporary fix: SpikeEventSeries is a daughter of ElectrialSeries but should not be found here (searchFor update on its way)
+        es_key = es_key(contains(es_key,'lfp','IgnoreCase',true)); 
+    end
+    if numel(es_key) > 1 % in case we weren't able to sort out a single
+		error('More than one ElectricalSeries present in data. Please specify which signal to use.')
+	else
+		eseries = io.resolvePath(tmp, es_key{1});
+	end
+    for iCh=1:numel(chanindx)
+        dat(iCh, :) = eseries.data.load([chanindx(iCh) begsample], [chanindx(iCh) endsample]); % TODO: function allows to load segments load([min_channel, min_sample],[max_channel, max_channel]) and one could subselect from there
+    end
+%     dat = dat(chanindx, begsample:endsample);
+
   case 'artinis_oxy3'
     ft_hastoolbox('artinis', 1);
     dat = read_artinis_oxy3(filename, hdr, begsample, endsample, chanindx);

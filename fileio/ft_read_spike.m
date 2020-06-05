@@ -22,6 +22,7 @@ function [spike] = ft_read_spike(filename, varargin)
 %   'neuroshare'
 %   'neurosim_spikes'
 %   'wave_clus'
+%   'nwb'
 %
 % The output spike structure usually contains
 %   spike.label     = 1xNchans cell-array, with channel labels
@@ -293,6 +294,10 @@ switch spikeformat
       spike.unit{k}      = c{k}(sel,3)';
       spike.label{k}     = sprintf('spikegroup%03d',k);
     end
+    
+  case 'nwb'
+    ft_hastoolbox('MatNWB', 1);
+    spike = read_nwb_spike(filename);
      
   otherwise
     ft_error(['unsupported data format (' spikeformat ')']);
