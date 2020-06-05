@@ -1,5 +1,6 @@
-% TEST_NWB.m
-%
+function inspect_pull1419
+
+
 % The code requires the MatNWB toolbox in a version => 
 % NeurodataWithoutBorders/matnwb@a1b1266 (19.05.2020).
 % 
@@ -47,7 +48,6 @@
 %
 % For examples of spike data structures in FieldTrip see
 % http://www.fieldtriptoolbox.org/tutorial/spike/
-
 
 
 %% Conversion Example 1. NWB data, Version 2.1.0
@@ -155,19 +155,5 @@ catch ME
 end
 
 
-
-
-
 % eof
-
-
-
-
-
-
-
-
-
-
-
 
