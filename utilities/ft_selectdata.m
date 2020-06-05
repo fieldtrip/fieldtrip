@@ -1339,6 +1339,18 @@ if iscell(x)
       x{i} = average(x{i}, seldim-1);
     end % for
   end
+elseif istable(x)
+  try
+    % try to convert to an array, depending on the table content this might fail
+    x = average(table2array(x), seldim);
+  catch
+    % construct an appropriately sized array with NaN values
+    s = size(x);
+    s(seldim) = 1;
+    x = nan(s);
+  end
+  % convert back to table
+  x = array2table(x);
 else
   x = average(x, seldim);
 end
