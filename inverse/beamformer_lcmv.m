@@ -297,36 +297,36 @@ for i=1:size(dip.pos,1)
           % optimal orientation calculation for unit-noise gain beamformer,
           % (also applies nai weightnorm constraint), based on equation 4.47 from Sekihara & Nagarajan (2008)
           % the following is a reformulation of the generalized eigenproblem 
-          [vv, dd]      = eig(pinv(lf' * invC_squared *lf)*(lf' * invC *lf));
-          [dum, maxeig] = max(diag(dd));
-          unitnoiseori  = vv(:,maxeig);
+          [v, d]        = eig(pinv(lf' * invC_squared *lf)*(lf' * invC *lf));
+          [d, iv]       = sort(diag(d), 'descend');
+          unitnoiseori  = v(:,iv(1));
           lf            = lf * unitnoiseori;
-          if hassubspace, lforig = lforig * unitnoiseori; end
           dipout.ori{i} = unitnoiseori;
+          dipout.eta{i} = d(1)./d(2); % ratio between largest and second largest eigenvalues 
+          if hassubspace, lforig = lforig * unitnoiseori; end
 
         case 'arraygain'
           % optimal orientation calculation for array-gain beamformer, Sekihara & Nagarajan eqn. 4.44
-          [vv, dd]      = eig(pinv(lf' * invC *lf)*(lf' * lf));
-          [dum, maxeig] = max(diag(dd));
-          arraygainori  = vv(:,maxeig);
+          [v, d]        = eig(pinv(lf' * invC *lf)*(lf' * lf));
+          [d, iv]       = sort(diag(d), 'descend');
+          arraygainori  = v(:,iv(1));
           lf            = lf * arraygainori;
-          if hassubspace, lforig = lforig * arraygainori; end
           dipout.ori{i} = arraygainori;
- 
+          dipout.eta{i} = d(1)./d(2); % ratio between largest and second largest eigenvalues
+          if hassubspace, lforig = lforig * arraygainori; end
+        
         otherwise
           % compute the leadfield for the optimal dipole orientation that maximizes spatial filter output
           % subsequently the leadfield for only that dipole orientation will be used for the final filter computation
           % filt = pinv(lf' * invC * lf) * lf' * invC;
           % [u, s, v] = svd(real(filt * C * ctranspose(filt)));
           % in this step the filter computation is not necessary, use the quick way to compute the voxel level covariance (cf. van Veen 1997)
-          [u, s, v] = svd(real(pinv(lf' * invC *lf)));
-          maxpowori = u(:,1);
-          eta = s(1,1)./s(2,2); % ratio between the first and second singular valu
-  
-          % and compute the leadfield for that orientation
-          lf  = lf * maxpowori;
+          [u, s, v]     = svd(real(pinv(lf' * invC *lf)));
+          maxpowori     = u(:,1);
+          lf            = lf * maxpowori;
           dipout.ori{i} = maxpowori;
           dipout.eta{i} = eta;
+          dipout.eta{i} = s(1,1)./s(2,2); % ratio between the first and second singular values
           if hassubspace, lforig = lforig * maxpowori; end
       end
     end
@@ -363,7 +363,7 @@ for i=1:size(dip.pos,1)
       case 'arraygain'
         % filt*lf = ||lf||, applies to scalar leadfield, and to one of the possibilities of the vector version, eqn. 4.75
         lfn  = lf./norm(lf);
-        filt = pinv(lfn' * invC * lfn) * lfn' * invC; % S&N eqn. 4.09
+        filt = pinv(lfn' * invC * lfn) * lfn' * invC; % S&N eqn. 4.09 (scalar version), and eqn. 4.75 (vector version)
  
       case {'unitgain' 'no'}
         % this is the 'standard' unit gain constraint spatial filter: filt*lf=I, applies both to vector and scalar leadfields
@@ -433,41 +433,21 @@ ft_progress('close');
 % reassign the scan values over the inside and outside grid positions
 dipout.pos     = origpos;
 dipout.inside  = originside;
-if isfield(dipout, 'leadfield')
-  dipout.leadfield( originside) = dipout.leadfield;
-  dipout.leadfield(~originside) = {[]};
+
+fnames_cell   = {'leadfield' 'filter' 'mom' 'ori' 'cov' 'noisecov'};
+for k = 1:numel(fnames_cell)
+  if isfield(dipout, fnames_cell{k})
+    dipout.(fnames_cell{k})( originside) = dipout.(fnames_cell{k});
+    dipout.(fnames_cell{k})(~originside) = {[]};
+  end
 end
-if isfield(dipout, 'filter')
-  dipout.filter( originside) = dipout.filter;
-  dipout.filter(~originside) = {[]};
-end
-if isfield(dipout, 'mom')
-  dipout.mom( originside) = dipout.mom;
-  dipout.mom(~originside) = {[]};
-end
-if isfield(dipout, 'ori')
-  dipout.ori( originside) = dipout.ori;
-  dipout.ori(~originside) = {[]};
-end
-if isfield(dipout, 'cov')
-  dipout.cov( originside) = dipout.cov;
-  dipout.cov(~originside) = {[]};
-end
-if isfield(dipout, 'noisecov')
-  dipout.noisecov( originside) = dipout.noisecov;
-  dipout.noisecov(~originside) = {[]};
-end
-if isfield(dipout, 'pow')
-  dipout.pow( originside) = dipout.pow;
-  dipout.pow(~originside) = nan;
-end
-if isfield(dipout, 'noise')
-  dipout.noise( originside) = dipout.noise;
-  dipout.noise(~originside) = nan;
-end
-if isfield(dipout, 'kurtosis')
-  dipout.kurtosis( originside) = dipout.kurtosis;
-  dipout.kurtosis(~originside) = nan;
+
+fnames_scalar = {'pow' 'noise' 'eta' 'kurtosis'};
+for k = 1:numel(fnames_scalar)
+  if isfield(dipout, fnames_scalar{k})
+    dipout.(fnames_scalar{k})( originside) = dipout.(fnames_scalar{k});
+    dipout.(fnames_scalar{k})(~originside) = nan;
+  end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
