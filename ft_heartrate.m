@@ -11,21 +11,22 @@ function [dataout] = ft_heartrate(cfg, datain)
 % The configuration structure has the following general options
 %   cfg.channel          = selected channel for processing, see FT_CHANNELSELECTION
 %   cfg.feedback         = 'yes' or 'no'
-%   cfg.method           = string representing the method for heart rate detection
-%                          'findpeaks'  normalization with usual FINDPEAKS matlab algorithm (default)
-%                          'pantompkin' implementation of the Pan-Tompkin algorithm for ECG beat detection                          algorithm for ECG beat detection.
-% 
+%   cfg.method           = string representing the method for heart beat detection
+%                          'findpeaks'  filtering and normalization, followed by FINDPEAKS (default)
+%                          'pantompkin' implementation of the Pan-Tompkin algorithm for ECG beat detection
+%
 % For the 'findpeaks' method the following additional options can be specified
-%   cfg.envelopewindow   = scalar, time in seconds
+%   cfg.envelopewindow   = scalar, time in seconds (default = 10)
 %   cfg.peakseparation   = scalar, time in seconds
 %   cfg.threshold        = scalar, usually between 0 and 1 (default = 0.4)
+%   cfg.flipsignal       = 'yes' or 'no', whether to flip the polarity of the signal (default is automatic)
 % and the data can be preprocessed on the fly using
 %   cfg.preproc.bpfilter = 'yes' or 'no'
 %   cfg.preproc.bpfreq   = [low high], filter frequency in Hz
-% This implementation performs some filtering and amplitude normalization, followed 
+% This implementation performs some filtering and amplitude normalization, followed
 % by the FINDPEAKS function. It works both for ECG as for PPG signals.
-% 
-% For the 'pantompkin` method there are no additional options. This implements 
+%
+% For the 'pantompkin` method there are no additional options. This implements
 % - J Pan, W J Tompkins, "A Real-Time QRS Detection Algorithm", IEEE Trans Biomed Eng, 1985. https://doi.org/10.1109/tbme.1985.325532
 % - H Sedghamiz, "Matlab Implementation of Pan Tompkins ECG QRS detector". https://doi.org/10.13140/RG.2.2.14202.59841
 %
@@ -90,6 +91,8 @@ cfg.peakseparation   = ft_getopt(cfg, 'peakseparation', []);  % in seconds
 cfg.threshold        = ft_getopt(cfg, 'threshold', 0.4);      % between 0 and 1
 cfg.feedback         = ft_getopt(cfg, 'feedback', 'yes');
 cfg.preproc          = ft_getopt(cfg, 'preproc', []);
+cfg.flipsignal       = ft_getopt(cfg, 'flipsignal', []);
+
 % the expected rate is around 80 bpm, which means 80/60=1.33 Hz
 cfg.preproc.bpfilter    = ft_getopt(cfg.preproc, 'bpfilter', 'yes');
 cfg.preproc.bpfilttype  = ft_getopt(cfg.preproc, 'bpfilttype', 'but');
@@ -113,13 +116,21 @@ chansel = strcmp(datain.label, cfg.channel{1});
 fsample = datain.fsample;
 
 switch cfg.method
-  case 'findpeaks'   
+  case 'findpeaks'
     for trllop=1:numel(datain.trial)
       dat   = datain.trial{trllop}(chansel,:);
       label = datain.label(chansel);
       time  = datain.time{trllop};
       
-      if skewness(dat)<0
+      if isempty(cfg.flipsignal)
+        if skewness(dat)<0
+          cfg.flipsignal = 'yes';
+        else
+          cfg.flipsignal = 'no';
+        end
+      end
+      
+      if istrue(cfg.flipsignal)
         ft_notice('flipping signal polarity');
         dat = -dat;
       end
@@ -205,7 +216,7 @@ switch cfg.method
       ft_info('heart rate in trial %d: mean=%.1f, min=%.1f, max=%.1f\n', trllop, nanmean(rate), nanmin(rate), nanmax(rate));
       
     end % for trllop
-
+    
   case 'pantompkin'
     ft_hastoolbox('fileexchange', 1);
     for trllop=1:numel(datain.trial)
@@ -220,10 +231,14 @@ switch cfg.method
       [rate, phase, tmp] = discr2ctu(peaks, size(dat), fsample);
       
       % add the continuous channels to the output structure
-      dataout.trial{trllop} = [rate; phase; tmp];     
+      dataout.trial{trllop} = [rate; phase; tmp];
     end
-end
-        
+    
+  otherwise
+    ft_error('unsupported method %s', cfg.method);
+    
+end % switch method
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % deal with the output
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -239,14 +254,14 @@ ft_postamble savevar    dataout
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [rate, phase, tmp] = discr2ctu(peaks, n, fsample)
-  rate  = nan(n);
-  phase = nan(n);
-  for i=1:length(peaks)-1
-    begsample = peaks(i);
-    endsample = peaks(i+1);
-    rate(begsample:endsample)  = 60 * fsample/(endsample-begsample); % in bpm
-    phase(begsample:endsample) = linspace(-pi, pi, (endsample-begsample+1));
-  end
-  % also construct a boolean channel with a pulse at the beat onset
-  tmp = zeros(n);
-  tmp(peaks) = 1;
+rate  = nan(n);
+phase = nan(n);
+for i=1:length(peaks)-1
+  begsample = peaks(i);
+  endsample = peaks(i+1);
+  rate(begsample:endsample)  = 60 * fsample/(endsample-begsample); % in bpm
+  phase(begsample:endsample) = linspace(-pi, pi, (endsample-begsample+1));
+end
+% also construct a boolean channel with a pulse at the beat onset
+tmp = zeros(n);
+tmp(peaks) = 1;
