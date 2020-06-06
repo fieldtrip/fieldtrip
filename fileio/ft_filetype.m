@@ -67,6 +67,7 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - Qualisys *.tsv
 %  - Mrtrix *.mif
 %  - MAUS *.TextGrid
+%  - Neurodata Without Borders *.nwb
 %  - PhysioNet *.hea and *.dat
 
 % Copyright (C) 2003-2020, Robert Oostenveld
@@ -1465,6 +1466,11 @@ elseif filetype_check_extension(filename, '.fcsv')
   type = '3dslicer_fscv';
   manufacturer = 'https://www.slicer.org/';
   content = 'position information about Markups Fiducial Node';
+elseif filetype_check_extension(filename, '.nwb')
+  % this could be a mrtrix compatible image file
+  type = 'nwb';
+  manufacturer = 'Neurodata Without Borders';
+  content = 'neurophysiology data';
 elseif filetype_check_extension(filename, '.hea') && exist(fullfile(p, [f '.dat']), 'file')
   type = 'physionet_hea';
   manufacturer = 'PhysioNet';
