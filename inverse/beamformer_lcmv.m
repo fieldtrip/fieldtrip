@@ -82,6 +82,7 @@ end
 % these optional settings do not have defaults
 powmethod      = ft_getopt(varargin, 'powmethod'); % the default for this is set below
 subspace       = ft_getopt(varargin, 'subspace'); % used to implement an "eigenspace beamformer" as described in Sekihara et al. 2002 in HBM
+
 % these optional settings have defaults
 feedback       = ft_getopt(varargin, 'feedback',      'text');
 keepfilter     = ft_getopt(varargin, 'keepfilter',    'no');
@@ -209,9 +210,8 @@ if hassubspace
   dat_pre_subspace = dat;
   C_pre_subspace  = C;
 elseif ~isempty(subspace)
-  
-  % TODO implement an "eigenspace beamformer" as described in Sekihara et al. 2002 in HBM
   ft_notice('using data-specific subspace projection\n');
+  % TODO implement an "eigenspace beamformer" as described in Sekihara et al. 2002 in HBM
   if numel(subspace)==1
     % interpret this as a truncation of the eigenvalue-spectrum
     % if <1 it is a fraction of the largest eigenvalue
@@ -233,7 +233,7 @@ elseif ~isempty(subspace)
     C_pre_subspace   = C;
     C                = subspace*C*subspace'; 
     % here the subspace can be different from the singular vectors of C, so we
-    % have to do the sandwiching as opposed to line 223
+    % have to do the sandwiching as opposed to line 226
     invC = ft_inv(C, invopt{:});
     dat   = subspace*dat;
   end
@@ -250,9 +250,8 @@ for i=1:size(dip.pos,1)
   if hasfilter
     % precomputed filter is provided, the leadfield is not needed, nor is the handling of
     % fixedori, weightnorm, or subspace functional
-    
-    % use the provided filter
     filt = dip.filter{i};
+  
   else
 
     if hasleadfield && isfield(dip, 'mom') && size(dip.mom, 1)==size(dip.leadfield{i}, 2)
@@ -434,7 +433,7 @@ ft_progress('close');
 dipout.pos     = origpos;
 dipout.inside  = originside;
 
-fnames_cell   = {'leadfield' 'filter' 'mom' 'ori' 'cov' 'noisecov'};
+fnames_cell   = {'leadfield' 'filter' 'mom' 'ori' 'cov' 'noisecov' 'subspace'};
 for k = 1:numel(fnames_cell)
   if isfield(dipout, fnames_cell{k})
     dipout.(fnames_cell{k})( originside) = dipout.(fnames_cell{k});
