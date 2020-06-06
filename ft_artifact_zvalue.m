@@ -170,7 +170,7 @@ cfg.artfctdef.zvalue = ft_checkconfig(cfg.artfctdef.zvalue, 'renamed', {'sgn',  
 cfg.artfctdef.zvalue = ft_checkconfig(cfg.artfctdef.zvalue, 'renamed', {'feedback', 'interactive'});
 
 if isfield(cfg.artfctdef.zvalue, 'artifact')
-  fprintf('zvalue artifact detection has already been done, retaining artifacts\n');
+  ft_notice('zvalue artifact detection has already been done, retaining artifacts\n');
   artifact = cfg.artfctdef.zvalue.artifact;
   return
 end
@@ -350,7 +350,7 @@ datavg = sumval./numsmp;
 datstd = sqrt(sumsqr./numsmp - (sumval./numsmp).^2);
 
 if strcmp(cfg.memory, 'low')
-  fprintf('\n');
+  ft_info('\n');
 end
 
 zmax = cell(1, numtrl);
@@ -367,7 +367,7 @@ else
 end
 for trlop = 1:numtrl
   if strcmp(cfg.memory, 'low') % store nothing in memory (note that we need to preproc AGAIN... *yawn*)
-    fprintf('.');
+    ft_info('.');
     if hasdata
       dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'));
     else
@@ -416,9 +416,9 @@ end
 %  sumval = 0;
 %  sumsqr = 0;
 %  numsmp = 0;
-%  fprintf('searching channel %s ', cfg.artfctdef.zvalue.channel{sgnlop});
+%  ft_info('searching channel %s ', cfg.artfctdef.zvalue.channel{sgnlop});
 %  for trlop = 1:numtrl
-%    fprintf('.');
+%    ft_info('.');
 %    if hasdata
 %      dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx(sgnlop), 'checkboundary', strcmp(cfg.continuous, 'no'));
 %    else
@@ -457,7 +457,7 @@ end
 %    %       end
 %    %     end
 %  end
-%  fprintf('\n');
+%  ft_info('\n');
 %end % for sgnlop
 
 for trlop = 1:numtrl
@@ -613,7 +613,7 @@ cfg.artfctdef.zvalue.artifact = artifact;
 cfg.artfctdef.zvalue.trl      = trl;              % remember where we have been looking for artifacts
 cfg.artfctdef.zvalue.cutoff   = opt.threshold;    % remember the threshold that was used
 
-fprintf('detected %d artifacts\n', size(artifact,1));
+ft_notice('detected %d artifacts\n', size(artifact,1));
 
 delete(h);
 
