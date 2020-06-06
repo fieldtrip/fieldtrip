@@ -107,7 +107,7 @@ if nargin>1 && ischar(varargin{1}) && strcmp(varargin{1}, 'init')
   case {'text', 'textnl', 'textcr', 'dial'}
     if ~isempty(s)
       % print the title to the screen and go to the next line
-      fprintf('%s\n', s)
+      ft_info('%s\n', s)
     end
   end
 
@@ -115,7 +115,7 @@ if nargin>1 && ischar(varargin{1}) && strcmp(varargin{1}, 'init')
 elseif nargin==1 && ischar(varargin{1}) && strcmp(varargin{1}, 'close')
   
   if ~isempty(lastArgin)
-    closing = 1;
+    closing = true;
     ft_progress(lastArgin{:});
   end
   
@@ -125,7 +125,7 @@ elseif nargin==1 && ischar(varargin{1}) && strcmp(varargin{1}, 'close')
     close(h);
   case {'text', 'etf', 'dial', 'textbar'}
     % finish by going to the next line
-    fprintf('\n');
+    ft_info('\n');
   end
   % reset these to the defaults
   a  = 0;
@@ -196,29 +196,33 @@ else
       
       varargin{2} = [repmat(sprintf('\b'),[1 strlen]) varargin{2}];
       
-      % include the specified string
-      strlentmp = fprintf(varargin{2:end});
-      strlentmp = strlentmp + fprintf(' - estimated time to finish is %d seconds', round(elapsed*(1-p)/(p-p0)));
+      part1 = sprintf(varargin{2:end});
+      part2 = sprintf(' - estimated time to finish is %d seconds', round(elapsed*(1-p)/(p-p0)));
+
+      ft_info(part1);
+      ft_info(part2);
       
-      % record actual string length that was printed (subtracting all the
-      % \b's)
-      strlen = strlentmp - strlen;
+      % record actual string length that was printed (subtracting all the \b's)
+      strlen = length(part1) + length(part2) - strlen;
     else
       % only print the estimated time to finish
-      strlentmp = fprintf([repmat(sprintf('\b'),[1 strlen]) ' - estimated time to finish is %d seconds'], round(elapsed*(1-p)/(p-p0)));
-      strlen = strlentmp - strlen;
+      part1 = sprintf([repmat(sprintf('\b'),[1 strlen]) ' - estimated time to finish is %d seconds'], round(elapsed*(1-p)/(p-p0)));
+      ft_info(part1);
+      strlen = length(part1) - strlen;
     end
 
   case 'dial'
     dial = '|/-\|/-\';
     if ~isempty(s)
       % print the title and draw a new hand of the rotating dial
-      strlentmp = fprintf([repmat(sprintf('\b'),[1 strlen]) '%s %s'], s, dial(1+a/45));
-      strlen = strlentmp - strlen;
+      part1 = sprintf([repmat(sprintf('\b'),[1 strlen]) '%s %s'], s, dial(1+a/45));
+      ft_info(part1);
+      strlen = length(part1) - strlen;
     else
       % draw a new hand of the rotating dial
-      strlentmp = fprintf([repmat(sprintf('\b'),[1 strlen]) '%s'], dial(1+a/45));
-      srtlen = strlentmp - strlen;
+      part1 = sprintf([repmat(sprintf('\b'),[1 strlen]) '%s'], dial(1+a/45));
+      ft_info(part1);
+      strlen = length(part1) - strlen;
     end
     % increment the angle with 45 degrees
     a = a + 45;
@@ -239,8 +243,8 @@ else
     else
       backline = '';
     end
-    fprintf([backline,'%s'], line);
-    %fprintf('\r%s', line); %carriage return sometimes leads to a new line
+    % don't use carriage return, it sometimes leads to a new line
+    ft_info([backline,'%s'], line);
     % increment the angle with 45 degrees
     a = a + 45;
     if a==360
@@ -265,46 +269,14 @@ else
         varargin{2} = [varargin{2} '\n'];
       end
       
-      strlentmp = fprintf(varargin{2:end});
-      strlen = strlentmp - strlen;
+      part1 = sprintf(varargin{2:end});
+      ft_info(part1);
+      strlen = length(part1) - strlen;
     else
-      strlentmp = fprintf([repmat(sprintf('\b'),[1 strlen]) '%6.2f %%'], 100*varargin{1});
-      strlen = strlentmp - strlen;
+      part1 = sprintf([repmat(sprintf('\b'),[1 strlen]) '%6.2f %%'], 100*varargin{1});
+      ft_info(part1);
+      strlen = length(part1) - strlen;
     end
-
-% the following options are unused in FieldTrip (as of April 17 2012), and seem
-% semantically incompatible with the implementation of the \b-ing, so I
-% think removal is appropriate.
-%
-%   case 'textnl'
-%     if nargin>1
-%       % ensure that the string ends with a newline
-%       if length(varargin{2})>1 && all(varargin{2}((end-1):end) == '\r')
-%         varargin{2}((end-1):end) = '\n';
-%       elseif length(varargin{2})>1 && ~all(varargin{2}((end-1):end) == '\n')
-%         varargin{2}((end+1):(end+2)) = '\n';
-%       elseif length(varargin{2})<2
-%         varargin{2}((end+1):(end+2)) = '\n';
-%       end
-%       fprintf(varargin{2:end});
-%     else
-%       fprintf('%6.2f %%\n', 100*varargin{1});
-%     end
-% 
-%   case 'textcr'
-%     if nargin>1
-%       % ensure that the string ends with a cariage return
-%       if length(varargin{2})>1 && all(varargin{2}((end-1):end) == '\n')
-%         varargin{2}((end-1):end) = '\r';
-%       elseif length(varargin{2})>1 && ~all(varargin{2}((end-1):end) == '\r')
-%         varargin{2}((end+1):(end+2)) = '\r';
-%       elseif length(varargin{2})<2
-%         varargin{2}((end+1):(end+2)) = '\r';
-%       end
-%       fprintf(varargin{2:end});
-%     else
-%       fprintf('%6.2f %%\r', 100*varargin{1});
-%     end
 
   end % case gui, dial, text
 end % updating the displayed value
