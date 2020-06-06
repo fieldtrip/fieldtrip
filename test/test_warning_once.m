@@ -2,6 +2,7 @@ function test_warning_once
 
 % MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 warning1 = 'hululu';
 warning2 = 'aloah hey';

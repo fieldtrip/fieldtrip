@@ -2,7 +2,6 @@ function test_bug1403
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_read_header
 
 cfg=[];

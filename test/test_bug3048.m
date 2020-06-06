@@ -2,10 +2,7 @@ function test_bug3048
 
 % MEM 2gb
 % WALLTIME 00:20:00
-
-% DEPENDENCY ft_preamble ft_preamble_randomseed ft_dipolesimulation
-% DEPENDENCY ft_freqsimulation ft_connectivitysimulation ft_statistics_montecarlo
-% DEPENDENCY ft_freqstatistics ft_timelockstatistics
+% DEPENDENCY ft_preamble ft_preamble_randomseed ft_dipolesimulation ft_freqsimulation ft_connectivitysimulation ft_statistics_montecarlo ft_freqstatistics ft_timelockstatistics
 
 %%
 % test ft_freqsimulation

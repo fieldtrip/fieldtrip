@@ -2,7 +2,6 @@ function test_bug1150
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_sourcestatistics
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1150.mat'));

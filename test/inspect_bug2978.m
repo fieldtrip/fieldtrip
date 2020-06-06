@@ -1,5 +1,9 @@
 function inspect_bug2978
 
+% WALLTIME 00:10:00
+% MEM 1gb
+% DEPENDENCY
+
 ntrial = 5;
 
 %%

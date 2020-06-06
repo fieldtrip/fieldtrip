@@ -1,4 +1,4 @@
-% function test_tutorial_beamformingextended
+function test_tutorial_beamformingextended
 
 % MEM 5gb
 % WALLTIME 00:30:00
@@ -54,19 +54,19 @@ freq_exp.cumsumcnt = freq_cmb.cumsumcnt(cfg.trials);
 mri = ft_read_mri(fullfile(mridir, 'subjectK.mri'));
 % cfg = [];
 % [segmentedmri] = ft_volumesegment(cfg, mri);
-% 
+%
 oldsegmented = load(fullfile(mridir, 'segmentedmri.mat'));
 segmentedmri = oldsegmented.segmentedmri;
-% 
+%
 % % check whether the segmentation gives results of more than 99% consistency
 % assert(max(abs(oldsegmented.segmentedmri.gray(:)-segmentedmri.gray(:))) < .01, 'Gray matter segmentation differs from stored data')
 % assert(max(abs(oldsegmented.segmentedmri.csf(:)-segmentedmri.csf(:))) < .01, 'CSF segmentation differs from stored data')
 % assert(max(abs(oldsegmented.segmentedmri.white(:)-segmentedmri.white(:))) < .01, 'White matter segmentation differs from stored data')
 % % transformation should be absolutely identical
 % assert(isequal(oldsegmented.segmentedmri.transform, segmentedmri.transform), 'Transform differs from stored data')
-% 
+%
 % %save segmentedmri segmentedmri
-% 
+%
 % % add anatomical information to the segmentation
 % segmentedmri.transform = mri.transform;
 % segmentedmri.anatomy   = mri.anatomy;
@@ -82,7 +82,7 @@ hdm = ft_prepare_headmodel(cfg, segmentedmri);
 
 
 template = load(fullfile(templatedir, 'standard_sourcemodel3d8mm'));
-% inverse-warp the subject specific grid to the template grid 
+% inverse-warp the subject specific grid to the template grid
 cfg = [];
 cfg.sourcemodel.warpmni   = 'yes';
 cfg.sourcemodel.template  = template.sourcemodel;
@@ -220,4 +220,3 @@ cfg.opacitymap    = 'rampup';
 cfg.atlas         = dccnpath('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii');
 
 ft_sourceplot(cfg, source_coh_int);
-

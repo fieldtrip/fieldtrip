@@ -2,6 +2,7 @@ function test_tutorial_natmeg_statistics
 
 % WALLTIME 00:20:00
 % MEM 4gb
+% DEPENDENCY
 
 % this script executes the MATLAB content from
 % http://www.fieldtriptoolbox.org/tutorial/natmeg/statistics

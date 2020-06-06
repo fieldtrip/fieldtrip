@@ -2,6 +2,7 @@ function test_tutorial_connectivity2
 
 % MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 % contains the code that is in the second part of the ocnnectivity
 % tutorial. Purpose: simulate linearly mixed data, and show that dependent

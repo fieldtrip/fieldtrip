@@ -1,3 +1,9 @@
+function test_issue1410
+
+% MEM 2gb
+% WALLTIME 00:10:00
+% DEPENDENCY
+
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat'), 'data');
 grad = data.grad;
 clear data

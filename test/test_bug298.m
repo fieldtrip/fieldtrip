@@ -2,7 +2,6 @@ function test_bug298
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY keyval keyvalx
 
 warning('this test has become obsolete because ot the ft_getopt implementation');
@@ -27,7 +26,7 @@ for k=1:1000;
 end
 toc
         
-disp('Timing of M-file and MEX-file *with* returning remaining key values:');        
+disp('Timing of M-file and MEX-file *with* returning remaining key values:');
         
 tic;
 for k=1:1000;

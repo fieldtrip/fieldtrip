@@ -2,7 +2,6 @@ function test_tutorial_tmseeg
 
 % MEM 16gb
 % WALLTIME 01:20:00
-
 % DEPENDENCY ft_math ft_interpolatenan
 
 triggers = {'S  1', 'S  3'}; % These values correspond to the markers placed in this dataset

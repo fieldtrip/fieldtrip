@@ -2,7 +2,6 @@ function test_bug2069
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_appendfreq ft_freqstatistics ft_timelockstatistics
 
 %% simulate some data

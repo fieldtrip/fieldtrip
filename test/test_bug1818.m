@@ -5,7 +5,6 @@ function test_bug1818
 
 % test the reading function of meshes used for constructing SIMBIO FEM head models
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1818
-
 % DEPENDENCY ft_read_headshape ft_datatype_parcellation
 
 filename = {

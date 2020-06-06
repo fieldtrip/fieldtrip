@@ -2,7 +2,6 @@ function test_datatype_segmentation
 
 % MEM 3gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_datatype_segmentation ft_datatype
 
 % See also http =//bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1652 which

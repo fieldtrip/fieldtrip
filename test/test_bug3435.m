@@ -2,7 +2,6 @@ function test_bug3435
 
 % WALLTIME 00:20:00
 % MEM 3gb
-
 % DEPENDENCY ft_prepare_mesh prepare_mesh_tetrahedral
 
 mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/template/anatomy/single_subj_T1.nii'));

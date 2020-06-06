@@ -2,7 +2,6 @@ function test_ft_connectivityanalysis
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_connectivityanalysis ft_connectivity_granger ft_connectivity_corr ft_connectivity_psi ft_mvaranalysis ft_connectivitysimulation ft_freqanalysis ft_connectivity_pdc ft_connectivity_dtf ft_connectivity_csd2transfer
 
 % this function tests the functionality of FT_CONNECTIVITYANALYSIS

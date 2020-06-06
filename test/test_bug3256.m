@@ -2,6 +2,7 @@ function test_bug3256
 
 % WALLTIME 00:10:00
 % MEM 1gb
+% DEPENDENCY
 
 
 % create some ramdom data
