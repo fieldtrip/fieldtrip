@@ -1,11 +1,12 @@
-function [ftver, ftpath] = ft_version(command)
+function varargout = ft_version(command)
 
 % FT_VERSION returns the version of FieldTrip and the path where it is installed
 %
 % FieldTrip is not released with version numbers as "2.0", "2.1", etc. Instead, we
-% share our development version on http://github.com/fieldtrip/fieldtrip. You can
-% use git to make a local version of the repository. Furthermore, we make daily
-% releases of the code available as zip file on our FTP server.
+% share our development version on http://github.com/fieldtrip/fieldtrip. You can use
+% git to make a local clone of the development version. Furthermore, we make
+% more-or-less daily releases of the code available on
+% https://github.com/fieldtrip/fieldtrip/releases and as zip file on our FTP server.
 %
 % If you use git with the development version, the version is labeled with the hash
 % of the latest commit like "128c693". You can access the specific version "XXXXXX"
@@ -50,6 +51,8 @@ function [ftver, ftpath] = ft_version(command)
 
 persistent issvn
 persistent isgit
+persistent ftver
+persistent ftpath
 
 if nargin<1
   % this is only supported for git
@@ -59,6 +62,13 @@ end
 ftpath = fileparts(mfilename('fullpath'));
 ftpath = ftpath(1:end-10); % strip away '/utilities' where this function is located
 
+if ispc
+  % this requires a file extension
+  ext = '.exe';
+else
+  ext = '';
+end
+
 if isempty(issvn)
   % are we dealing with an SVN working copy of FieldTrip?
   issvn = isfolder(fullfile(ftpath, '.svn'));
@@ -67,16 +77,23 @@ end
 if isempty(isgit)
   % are we dealing with an GIT working copy of FieldTrip?
   isgit = exist(fullfile(ftpath, '.git'), 'file');
+  % is the git command line executable available?
+  if isgit
+    [status, output] = system(sprintf('git%s --version', ext));
+    if status>0
+      if ~ispc
+        % the git command line executable will probably not be available on windows
+        ft_warning('you seem to have an GIT development copy of FieldTrip, yet ''git'' does not work as expected');
+      end
+      isgit = false;
+    end
+  end
 end
 
-if ispc
-  % this requires a file extension
-  ext = '.exe';
-else
-  ext = '';
-end
-
-if issvn
+if ~isempty(ftver) && ~isempty(ftpath)
+  % use the previously determined values
+  
+elseif issvn
   % use svn system call to determine latest revision
   olddir = pwd();
   cd(ftpath);
@@ -95,39 +112,27 @@ if issvn
   end
   
 elseif isgit
-  % test whether the git executable is available
-  [status, output] = system(sprintf('git%s --version', ext));
-  if status>0
-    if ~ispc
-      % the command line tools will probably not be available on windows
-      ft_warning('you seem to have an GIT development copy of FieldTrip, yet ''git'' does not work as expected');
-    end
-    ftver = 'unknown';
-    
-  else
-    % use git system call to determine latest revision
-    olddir = pwd();
-    cd(ftpath);
-    switch command
-      case 'branch'
-        [status, output] = system(sprintf('git%s rev-parse --abbrev-ref HEAD', ext));
-        ftver = strtrim(output); % remove trailing newline character
-      case 'revision'
-        [status, output] = system(sprintf('git%s rev-parse --short HEAD', ext));
-        ftver = strtrim(output); % remove trailing newline character
-      case 'clean'
-        [status, output] = system(sprintf('git%s diff --quiet --exit-code', ext));
-        if status
-          ftver = 'no';
-        else
-          ftver = 'yes';
-        end
-      otherwise
-        ft_error('unsupported command "%s"');
-    end
-    cd(olddir);
-    
-  end % if git available
+  % use git system call to determine latest revision
+  olddir = pwd();
+  cd(ftpath);
+  switch command
+    case 'branch'
+      [status, output] = system(sprintf('git%s rev-parse --abbrev-ref HEAD', ext));
+      ftver = strtrim(output); % remove trailing newline character
+    case 'revision'
+      [status, output] = system(sprintf('git%s rev-parse --short HEAD', ext));
+      ftver = strtrim(output); % remove trailing newline character
+    case 'clean'
+      [status, output] = system(sprintf('git%s diff --quiet --exit-code', ext));
+      if status
+        ftver = 'no';
+      else
+        ftver = 'yes';
+      end
+    otherwise
+      ft_error('unsupported command "%s"');
+  end
+  cd(olddir);
   
 elseif isequal(regexp(ftpath, ['.*' filesep 'fieldtrip-fieldtrip-[[0-9][a-z]]{7}']), 1)
   % this corresponds with being downloaded from the Mathworks file exchange link to github
@@ -152,5 +157,6 @@ end
 
 if nargout==0
   fprintf('\nThis is FieldTrip, %s %s.\n\n', command, ftver);
-  clear ftver ftpath
+else
+  varargout = {ftver, ftpath};
 end
