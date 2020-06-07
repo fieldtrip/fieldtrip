@@ -159,5 +159,12 @@ if ~nargout
       fprintf('\nThis is FieldTrip, clean %s.\n\n', clean);
   end
 else
-  varargout = {ftver, ftpath};
+  switch command
+    case 'revision'
+      varargout = {ftver, ftpath};
+    case 'branch'
+      varargout = {branch};
+    case 'clean'
+      varargout = {clean};
+  end
 end
