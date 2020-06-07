@@ -62,6 +62,10 @@ end
 ftpath = fileparts(mfilename('fullpath'));
 ftpath = ftpath(1:end-10); % strip away '/utilities' where this function is located
 
+% set the defaults
+clean = 'no';
+branch = 'unknown';
+
 if ispc
   % this requires a file extension
   ext = '.exe';
@@ -90,15 +94,12 @@ if isempty(isgit)
   end
 end
 
-if ~isempty(ftver) && ~isempty(ftpath)
+if ~isempty(ftver) && ~isempty(ftpath) && strcmp(command, 'revision')
   % use the previously determined values
   
 elseif issvn
   % use svn system call to determine latest revision
-  olddir = pwd();
-  cd(ftpath);
-  [status, output] = system(sprintf('svn%s info', ext));
-  cd(olddir);
+  [status, output] = system(sprintf('cd %s && svn%s info', ftpath, ext));
   if status > 0
     if ~ispc
       % the command line tools will probably not be available on windows
@@ -113,26 +114,23 @@ elseif issvn
   
 elseif isgit
   % use git system call to determine latest revision
-  olddir = pwd();
-  cd(ftpath);
   switch command
-    case 'branch'
-      [status, output] = system(sprintf('git%s rev-parse --abbrev-ref HEAD', ext));
-      ftver = strtrim(output); % remove trailing newline character
     case 'revision'
-      [status, output] = system(sprintf('git%s rev-parse --short HEAD', ext));
+      [status, output] = system(sprintf('cd %s && git%s rev-parse --short HEAD', ftpath, ext));
       ftver = strtrim(output); % remove trailing newline character
+    case 'branch'
+      [status, output] = system(sprintf('cd %s && git%s rev-parse --abbrev-ref HEAD', ftpath, ext));
+      branch = strtrim(output); % remove trailing newline character
     case 'clean'
-      [status, output] = system(sprintf('git%s diff --quiet --exit-code', ext));
+      [status, output] = system(sprintf('cd %s && git%s diff --quiet --exit-code', ftpath, ext));
       if status
-        ftver = 'no';
+        clean = 'no';
       else
-        ftver = 'yes';
+        clean = 'yes';
       end
     otherwise
       ft_error('unsupported command "%s"');
-  end
-  cd(olddir);
+  end % switch command
   
 elseif isequal(regexp(ftpath, ['.*' filesep 'fieldtrip-fieldtrip-[[0-9][a-z]]{7}']), 1)
   % this corresponds with being downloaded from the Mathworks file exchange link to github
@@ -151,12 +149,15 @@ else
   
 end % if issvn, isgit or otherwise
 
-if strcmp(command, 'clean') && strcmp(ftver, 'unknown')
-  ftver = 'no';
-end
-
-if nargout==0
-  fprintf('\nThis is FieldTrip, %s %s.\n\n', command, ftver);
+if ~nargout
+  switch command
+    case 'revision'
+      fprintf('\nThis is FieldTrip, revision %s.\n\n', ftver);
+    case 'branch'
+      fprintf('\nThis is FieldTrip, branch %s.\n\n', branch);
+    case 'clean'
+      fprintf('\nThis is FieldTrip, clean %s.\n\n', clean);
+  end
 else
   varargout = {ftver, ftpath};
 end
