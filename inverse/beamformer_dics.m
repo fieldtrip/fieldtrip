@@ -413,7 +413,7 @@ for i=1:size(dip.pos,1)
         unitnoiseori  = v(:,iv(1));
         lf            = lf * unitnoiseori;
         dipout.ori{i} = unitnoiseori;
-        dipout.eta{i} = d(1)./d(2); % ratio between largest and second largest eigenvalues 
+        dipout.eta(i) = d(1)./d(2); % ratio between largest and second largest eigenvalues 
         if hassubspace, lforig = lforig * unitnoiseori; end
 
       case 'arraygain'
@@ -423,7 +423,7 @@ for i=1:size(dip.pos,1)
         arraygainori  = v(:,iv(1));
         lf            = lf * arraygainori;
         dipout.ori{i} = arraygainori;
-        dipout.eta{i} = d(1)./d(2); % ratio between largest and second largest eigenvalues
+        dipout.eta(i) = d(1)./d(2); % ratio between largest and second largest eigenvalues
         if hassubspace, lforig = lforig * arraygainori; end
 
       otherwise
@@ -436,7 +436,7 @@ for i=1:size(dip.pos,1)
         maxpowori     = u(:,1);
         lf            = lf * maxpowori;
         dipout.ori{i} = maxpowori;
-        dipout.eta{i} = s(1,1)./s(2,2); % ratio between the first and second singular values
+        dipout.eta(i) = s(1,1)./s(2,2); % ratio between the first and second singular values
         if hassubspace, lforig = lforig * maxpowori; end
     end
   end
