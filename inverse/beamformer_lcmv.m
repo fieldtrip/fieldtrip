@@ -153,7 +153,7 @@ hasleadfield  = isfield(dip, 'leadfield');
 hasfilter     = isfield(dip, 'filter');
 hassubspace   = isfield(dip, 'subspace');
 
-if hasfilter && (fixedori || ~isequal(weightnorm, 'no')
+if hasfilter && (fixedori || ~isequal(weightnorm, 'no'))
   ft_warning('with precomputed spatial filters a fixed orientation constraint or weight normalisation options are not applied');
 end
 
