@@ -436,7 +436,6 @@ for i=1:size(dip.pos,1)
         maxpowori     = u(:,1);
         lf            = lf * maxpowori;
         dipout.ori{i} = maxpowori;
-        dipout.eta{i} = eta;
         dipout.eta{i} = s(1,1)./s(2,2); % ratio between the first and second singular values
         if hassubspace, lforig = lforig * maxpowori; end
     end
