@@ -180,27 +180,24 @@ if hassubspace
   dip.subspace = dip.subspace(originside);
 end
 
-rankC = rank(C);
-
 % it is difficult to give a quantitative estimate of lambda, therefore also
 % support relative (percentage) measure that can be specified as string (e.g. '10%')
+% the converted value needs to be passed on to ft_inv
+lambda = ft_getopt(invopt, 'lambda');
 if ~isempty(lambda) && ischar(lambda) && lambda(end)=='%'
-  ratio = sscanf(lambda, '%f%%');
-  ratio = ratio/100;
-  tmplambda = ratio * trace(C)/size(C,1);
-elseif ~isempty(lambda)
-  tmplambda = lambda;
-else
-  tmplambda = 0;
+  ratio  = sscanf(lambda, '%f%%');
+  ratio  = ratio/100;
+  lambda = ratio * trace(C)/size(C,1);
+  invopt = ft_setopt(invopt, 'lambda', lambda);
 end
 
 if projectnoise || strcmp(weightnorm, 'nai')
     % estimate the noise level in the covariance matrix by the smallest singular (non-zero) value
     % always needed for the NAI weight normalization case
     noise = svd(C);
-    noise = noise(rankC);
+    noise = noise(rank(C));
     % estimated noise floor is equal to or higher than lambda
-    noise = max(noise, tmplambda);
+    noise = max(noise, lambda);
 end
 
 % the inverse only has to be computed once for all dipoles
