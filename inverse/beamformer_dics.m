@@ -376,7 +376,7 @@ for i=1:size(dip.pos,1)
       lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, leadfieldopt{:}) * dip.mom(:,i);
     else
       % compute the leadfield
-      lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, leadifeldopt{:});
+      lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, leadfieldopt{:});
     end
 
     if hassubspace
