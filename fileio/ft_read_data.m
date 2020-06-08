@@ -1390,6 +1390,69 @@ switch dataformat
       ft_warning('data has been padded with NaNs');
     end
     
+  case 'plexon_nex5' % this is the default reader for nex5 files
+    dat = zeros(length(chanindx), endsample-begsample+1);
+    for i=1:length(chanindx)
+      vh = hdr.orig.VarHeaders(chanindx(i));
+      if vh.Type==5
+        % this is a continuous channel
+        if vh.Count==1
+          [nex, chanhdr] = read_nex5(filename, 'header', hdr.orig, 'channel', chanindx(i), 'tsonly', 1);
+          % the AD channel contains a single fragment
+          % determine the sample offset into this fragment
+          offset     = round(double(nex.ts-hdr.FirstTimeStamp)./hdr.TimeStampPerSample);
+          chanbegsmp = begsample - offset;
+          chanendsmp = endsample - offset;
+          if chanbegsmp<1
+            % the first sample of this channel is later than the beginning of the dataset
+            % and we are trying to read the beginning of the dataset
+            [nex, chanhdr] = read_nex5(filename, 'header', hdr.orig, 'channel', chanindx(i), 'tsonly', 0, 'begsample', 1, 'endsample', chanendsmp);
+            % padd the beginning of this channel with NaNs
+            nex.dat = [nan(1,offset) nex.dat];
+          else
+            [nex, chanhdr] = read_nex5(filename, 'header', hdr.orig, 'channel', chanindx(i), 'tsonly', 0, 'begsample', chanbegsmp, 'endsample', chanendsmp);
+          end
+          % copy the desired samples into the output matrix
+          % pad with nans if nex.dat is shorter than endsample-begsample+1
+          nummissing = endsample-begsample+1 - length(nex.dat);
+          if nummissing > 0
+            nex.dat = [nex.dat nan(1, nummissing)];	
+          end
+          dat(i,:) = nex.dat;
+        else
+          % the AD channel contains multiple fragments
+          [nex, chanhdr] = read_nex5(filename, 'header', hdr.orig, 'channel', chanindx(i), 'tsonly', 0);
+          % reconstruct the full AD timecourse with NaNs at all missing samples
+          offset     = round(double(nex.ts-hdr.FirstTimeStamp)./hdr.TimeStampPerSample); % of each fragment, in AD samples
+          nsample    = diff([nex.indx length(nex.dat)]);                                 % of each fragment, in AD samples
+          % allocate memory to hold the complete continuous record
+          cnt = nan(1, max(offset(end)+nsample(end), endsample-begsample+1));
+          for j=1:length(offset)
+            cntbegsmp  = offset(j)   + 1;
+            cntendsmp  = offset(j)   + nsample(j);
+            fragbegsmp = nex.indx(j) + 1;
+            fragendsmp = nex.indx(j) + nsample(j);
+            cnt(cntbegsmp:cntendsmp) = nex.dat(fragbegsmp:fragendsmp);
+          end
+          % copy the desired samples into the output matrix
+          dat(i,:) = cnt(begsample:endsample);
+        end
+      elseif any(vh.Type==[0 1 3])
+        % it is a neuron(0), event(1) or waveform(3) channel and therefore it has timestamps
+        [nex, chanhdr] = read_nex5(filename, 'header', hdr.orig, 'channel', chanindx(i), 'tsonly', 1);
+        % convert the timestamps to samples
+        sample = round(double(nex.ts - hdr.FirstTimeStamp)./hdr.TimeStampPerSample) + 1;
+        % select only timestamps that are between begin and endsample
+        sample = sample(sample>=begsample & sample<=endsample) - begsample + 1;
+        for j=sample(:)'
+          dat(i,j) = dat(i,j) + 1;
+        end
+      end
+    end
+    if any(isnan(dat(:)))
+      ft_warning('data has been padded with NaNs');
+    end
+    
   case 'plexon_plx'
     % determine the continuous channels
     contlabel = {hdr.orig.SlowChannelHeader.Name};

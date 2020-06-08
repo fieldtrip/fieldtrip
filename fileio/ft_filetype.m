@@ -754,6 +754,10 @@ elseif isfolder(filename) && most(filetype_check_extension({ls.name}, '.nex')) &
   type = 'plexon_ds';
   manufacturer = 'Plexon';
   content = 'electrophysiological data';
+elseif filetype_check_extension(filename, '.nex5')  && filetype_check_header(filename, 'NEX5')
+  type = 'plexon_nex5';
+  manufacturer = 'Nex Technologies';
+  content = 'electrophysiological data';  
   
   % known Cambridge Electronic Design file types
 elseif filetype_check_extension(filename, '.smr')

@@ -247,6 +247,10 @@ elseif isfield(input, 'nChans') && input.nChans==1 && isfield(input, 'label') &&
 elseif issubfield(input, 'orig.FileHeader') &&  issubfield(input, 'orig.VarHeader')
   % this is a complete header that was read from a Plexon *.nex file using read_plexon_nex
   type = 'plexon';
+
+elseif issubfield(input, 'orig.FileHeader') &&  issubfield(input, 'orig.VarHeaders')
+  % this is a complete header that was read from a Plexon *.nex file using read_plexon_nex
+  type = 'nex5';
   
 elseif issubfield(input, 'orig.stname')
   % this is a complete header that was read from an ITAB dataset
