@@ -71,35 +71,40 @@ refchan        = ft_getopt(varargin, 'refchan',       []);
 refdip         = ft_getopt(varargin, 'refdip',        []);
 supchan        = ft_getopt(varargin, 'supchan',       []);
 supdip         = ft_getopt(varargin, 'supdip',        []);
-% these settings pertain to the forward model, the defaults are set in compute_leadfield
-reducerank     = ft_getopt(varargin, 'reducerank',     []);
-normalize      = ft_getopt(varargin, 'normalize',      []);
-normalizeparam = ft_getopt(varargin, 'normalizeparam', []);
+
 % these optional settings have defaults
 feedback       = ft_getopt(varargin, 'feedback',      'text');
-keepcsd        = ft_getopt(varargin, 'keepcsd',       'no');
+keepcsd        = ft_getopt(varargin, 'keepcsd',       'yes');
 keepfilter     = ft_getopt(varargin, 'keepfilter',    'no');
 keepleadfield  = ft_getopt(varargin, 'keepleadfield', 'no');
 keepmom        = ft_getopt(varargin, 'keepmom',       'yes');
-lambda         = ft_getopt(varargin, 'lambda',        0);
-kappa          = ft_getopt(varargin, 'kappa',         []);
-tol            = ft_getopt(varargin, 'tol',           []);
-invmethod      = ft_getopt(varargin, 'invmethod',     []);
 projectnoise   = ft_getopt(varargin, 'projectnoise',  'yes');
 realfilter     = ft_getopt(varargin, 'realfilter',    'yes');
 fixedori       = ft_getopt(varargin, 'fixedori',      'no');
 
-% convert the yes/no arguments to the corresponding logical values
-fixedori       = strcmp(fixedori,      'yes');
-keepcsd        = strcmp(keepcsd,       'yes');  % see below
-keepfilter     = strcmp(keepfilter,    'yes');
-keepleadfield  = strcmp(keepleadfield, 'yes');
-keepmom        = strcmp(keepmom,       'yes');
-projectnoise   = strcmp(projectnoise,  'yes');
-realfilter     = strcmp(realfilter,    'yes');
+% construct the low-level options for the covariance matrix inversion as key-value pairs, these are passed to FT_INV
+invopt = {};
+invopt = ft_setopt(invopt, 'lambda',    ft_getopt(varargin, 'lambda', 0));
+invopt = ft_setopt(invopt, 'kappa',     ft_getopt(varargin, 'kappa'));
+invopt = ft_setopt(invopt, 'tolerance', ft_getopt(varargin, 'tol'));
+invopt = ft_setopt(invopt, 'method',    ft_getopt(varargin, 'invmethod'));
 
-% the postprocessing of the pcc beamformer always requires the csd matrix
-keepcsd = true;
+% construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD
+leadfieldopt = {};
+leadfieldopt = ft_setopt(leadfieldopt, 'reducerank',     ft_getopt(varargin, 'reducerank'));
+leadfieldopt = ft_setopt(leadfieldopt, 'backproject',    ft_getopt(varargin, 'backproject'));
+leadfieldopt = ft_setopt(leadfieldopt, 'normalize',      ft_getopt(varargin, 'normalize'));
+leadfieldopt = ft_setopt(leadfieldopt, 'normalizeparam', ft_getopt(varargin, 'normalizeparam'));
+leadfieldopt = ft_setopt(leadfieldopt, 'weight',         ft_getopt(varargin, 'weight'));
+
+% convert the yes/no arguments to the corresponding logical values
+fixedori       = istrue(fixedori);
+keepcsd        = istrue(keepcsd);  % see below
+keepfilter     = istrue(keepfilter);
+keepleadfield  = istrue(keepleadfield);
+keepmom        = istrue(keepmom);
+projectnoise   = istrue(projectnoise);
+realfilter     = istrue(realfilter);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % find the dipole positions that are inside/outside the brain
@@ -141,13 +146,13 @@ if hasfilter
 end
 
 if ~isempty(refdip)
-  rf = ft_compute_leadfield(refdip, grad, headmodel, 'reducerank', reducerank, 'normalize', normalize);
+  rf = ft_compute_leadfield(refdip, grad, headmodel, leadfieldopt{:});
 else
   rf = [];
 end
 
 if ~isempty(supdip)
-  sf = ft_compute_leadfield(supdip, grad, headmodel, 'reducerank', reducerank, 'normalize', normalize);
+  sf = ft_compute_leadfield(supdip, grad, headmodel, leadfieldopt{:});
 else
   sf = [];
 end
@@ -215,10 +220,10 @@ for i=1:size(dip.pos,1)
     lf = dip.leadfield{i};
   elseif ~hasleadfield && isfield(dip, 'mom')
     % compute the leadfield for a fixed dipole orientation
-    lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
+    lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, leadfieldopt{:}) * dip.mom(:,i);
   else
     % compute the leadfield
-    lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+    lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, leadfieldopt{:});
   end
   
   if hasfilter
@@ -313,38 +318,20 @@ ft_progress('close');
 dipout.inside  = originside;
 dipout.pos     = origpos;
 
-% reassign the scan values over the inside and outside grid positions
-if isfield(dipout, 'leadfield')
-  dipout.leadfield( originside) = dipout.leadfield;
-  dipout.leadfield(~originside) = {[]};
+fnames_cell   = {'leadfield' 'filter' 'ori' 'csd' 'noisecsd' 'subspace' 'mom' 'csdlabel'};
+for k = 1:numel(fnames_cell)
+  if isfield(dipout, fnames_cell{k})
+    dipout.(fnames_cell{k})( originside) = dipout.(fnames_cell{k});
+    dipout.(fnames_cell{k})(~originside) = {[]};
+  end
 end
-if isfield(dipout, 'filter')
-  dipout.filter( originside) = dipout.filter;
-  dipout.filter(~originside) = {[]};
-end
-if isfield(dipout, 'mom')
-  dipout.mom( originside) = dipout.mom;
-  dipout.mom(~originside) = {[]};
-end
-if isfield(dipout, 'csd')
-  dipout.csd( originside) = dipout.csd;
-  dipout.csd(~originside) = {[]};
-end
-if isfield(dipout, 'noisecsd')
-  dipout.noisecsd( originside) = dipout.noisecsd;
-  dipout.noisecsd(~originside) = {[]};
-end
-if isfield(dipout, 'csdlabel')
-  dipout.csdlabel( originside) = dipout.csdlabel;
-  dipout.csdlabel(~originside) = {[]};
-end
-if isfield(dipout, 'ori')
-  dipout.ori( originside) = dipout.ori;
-  dipout.ori(~originside) = {[]};
-end
-if isfield(dipout, 'eta')
-  dipout.eta( originside) = dipout.eta;
-  dipout.eta(~originside) = nan;
+
+fnames_scalar = {'pow' 'noise' 'eta' 'coh'};
+for k = 1:numel(fnames_scalar)
+  if isfield(dipout, fnames_scalar{k})
+    dipout.(fnames_scalar{k})( originside) = dipout.(fnames_scalar{k});
+    dipout.(fnames_scalar{k})(~originside) = nan;
+  end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
