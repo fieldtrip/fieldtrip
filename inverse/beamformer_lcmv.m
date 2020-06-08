@@ -370,7 +370,7 @@ for i=1:size(dip.pos,1)
 
   end
 
-  cfilt = filt * C * ctranpose(filt);
+  cfilt = filt * C * ctranspose(filt);
   if projectmom
     [u, s, v] = svd(cfilt);
     mom = u(:,1); % dominant dipole direction
