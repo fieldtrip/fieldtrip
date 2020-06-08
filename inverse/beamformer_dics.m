@@ -400,88 +400,88 @@ for i=1:size(dip.pos,1)
       % however, even though it seems that the shape of the filter is identical to
       % the shape it is obtained with the following code, the w*lf=I does not hold.
     end
-  end
 
-  if fixedori
-    switch(weightnorm)
-      case {'unitnoisegain','nai'}
-        % optimal orientation calculation for unit-noise gain beamformer,
-        % (also applies nai weightnorm constraint), based on equation 4.47 from Sekihara & Nagarajan (2008)
-        % the following is a reformulation of the generalized eigenproblem 
-        [v, d]        = eig(pinv(lf' * invC_squared *lf)*(lf' * invC *lf));
-        [d, iv]       = sort(diag(d), 'descend');
-        unitnoiseori  = v(:,iv(1));
-        lf            = lf * unitnoiseori;
-        dipout.ori{i} = unitnoiseori;
-        dipout.eta(i) = d(1)./d(2); % ratio between largest and second largest eigenvalues 
-        if hassubspace, lforig = lforig * unitnoiseori; end
-
-      case 'arraygain'
-        % optimal orientation calculation for array-gain beamformer, Sekihara & Nagarajan eqn. 4.44
-        [v, d]        = eig(pinv(lf' * invC *lf)*(lf' * lf));
-        [d, iv]       = sort(diag(d), 'descend');
-        arraygainori  = v(:,iv(1));
-        lf            = lf * arraygainori;
-        dipout.ori{i} = arraygainori;
-        dipout.eta(i) = d(1)./d(2); % ratio between largest and second largest eigenvalues
-        if hassubspace, lforig = lforig * arraygainori; end
-
-      otherwise
-        % compute the leadfield for the optimal dipole orientation that maximizes spatial filter output
-        % subsequently the leadfield for only that dipole orientation will be used for the final filter computation
+    if fixedori
+      switch(weightnorm)
+        case {'unitnoisegain','nai'}
+          % optimal orientation calculation for unit-noise gain beamformer,
+          % (also applies nai weightnorm constraint), based on equation 4.47 from Sekihara & Nagarajan (2008)
+          % the following is a reformulation of the generalized eigenproblem
+          [v, d]        = eig(pinv(lf' * invC_squared *lf)*(lf' * invC *lf));
+          [d, iv]       = sort(diag(d), 'descend');
+          unitnoiseori  = v(:,iv(1));
+          lf            = lf * unitnoiseori;
+          dipout.ori{i} = unitnoiseori;
+          dipout.eta(i) = d(1)./d(2); % ratio between largest and second largest eigenvalues
+          if hassubspace, lforig = lforig * unitnoiseori; end
+          
+        case 'arraygain'
+          % optimal orientation calculation for array-gain beamformer, Sekihara & Nagarajan eqn. 4.44
+          [v, d]        = eig(pinv(lf' * invC *lf)*(lf' * lf));
+          [d, iv]       = sort(diag(d), 'descend');
+          arraygainori  = v(:,iv(1));
+          lf            = lf * arraygainori;
+          dipout.ori{i} = arraygainori;
+          dipout.eta(i) = d(1)./d(2); % ratio between largest and second largest eigenvalues
+          if hassubspace, lforig = lforig * arraygainori; end
+          
+        otherwise
+          % compute the leadfield for the optimal dipole orientation that maximizes spatial filter output
+          % subsequently the leadfield for only that dipole orientation will be used for the final filter computation
+          % filt = pinv(lf' * invC * lf) * lf' * invC;
+          % [u, s, v] = svd(real(filt * C * ctranspose(filt)));
+          % in this step the filter computation is not necessary, use the quick way to compute the voxel level covariance (cf. van Veen 1997)
+          [u, s, v]     = svd(real(pinv(lf' * invC *lf)));
+          maxpowori     = u(:,1);
+          lf            = lf * maxpowori;
+          dipout.ori{i} = maxpowori;
+          dipout.eta(i) = s(1,1)./s(2,2); % ratio between the first and second singular values
+          if hassubspace, lforig = lforig * maxpowori; end
+      end
+    end
+    
+    % construct the spatial filter
+    switch weightnorm
+      case 'nai'
+        % Van Veen's Neural Activity Index
+        % below equation is equivalent to following:
         % filt = pinv(lf' * invC * lf) * lf' * invC;
-        % [u, s, v] = svd(real(filt * C * ctranspose(filt)));
-        % in this step the filter computation is not necessary, use the quick way to compute the voxel level covariance (cf. van Veen 1997)
-        [u, s, v]     = svd(real(pinv(lf' * invC *lf)));
-        maxpowori     = u(:,1);
-        lf            = lf * maxpowori;
-        dipout.ori{i} = maxpowori;
-        dipout.eta(i) = s(1,1)./s(2,2); % ratio between the first and second singular values
-        if hassubspace, lforig = lforig * maxpowori; end
+        % filt = filt/sqrt(noise*filt*filt');
+        % the scaling term in the denominator is sqrt of projected noise, as per eqn. 2.67 of Sekihara & Nagarajan 2008 (S&N)
+        if fixedori
+          filt = pinv(sqrt(noise * lf' * invC_squared * lf)) * lf' *invC; % based on S&N eqn. 4.08
+        else
+          ft_error('vector version of nai weight normalization is not implemented');
+        end
+      case 'unitnoisegain'
+        % filt*filt' = I
+        % Unit-noise gain minimum variance (aka Borgiotti-Kaplan) beamformer
+        % below equation is equivalent to following:
+        % filt = pinv(lf' * invC * lf) * lf' * invC;
+        % filt = filt/sqrt(filt*filt');
+        if fixedori
+          filt = pinv(sqrt(lf' * invC_squared * lf)) * lf' *invC; % S&N eqn. 4.15
+        else
+          % compute the matrix that is used for scaling of the filter's rows, as per eqn. 4.83
+          denom = pinv(lf' * invC * lf);
+          gamma = denom * (lf' * invC_squared * lf) * denom;
+          
+          % compute the spatial filter, as per eqn. 4.85
+          filt = diag(1./sqrt(diag(gamma))) * denom * lf' * invC;
+        end
+      case 'arraygain'
+        % filt*lf = ||lf||, applies to scalar leadfield, and to one of the possibilities of the vector version, eqn. 4.75
+        lfn  = lf./norm(lf);
+        filt = pinv(lfn' * invC * lfn) * lfn' * invC; % S&N eqn. 4.09 (scalar version), and eqn. 4.75 (vector version)
+        
+      case {'unitgain' 'no'}
+        % this is the 'standard' unit gain constraint spatial filter: filt*lf=I, applies both to vector and scalar leadfields
+        filt = pinv(lf' * invC * lf) * lf' * invC; % Gross eqn. 3 & van Veen eqn. 23, use PINV/SVD to cover rank deficient leadfield
+        
+      otherwise
     end
   end
-
-  % construct the spatial filter
-  switch weightnorm
-    case 'nai'
-      % Van Veen's Neural Activity Index
-      % below equation is equivalent to following:  
-      % filt = pinv(lf' * invC * lf) * lf' * invC; 
-      % filt = filt/sqrt(noise*filt*filt'); 
-      % the scaling term in the denominator is sqrt of projected noise, as per eqn. 2.67 of Sekihara & Nagarajan 2008 (S&N)
-      if fixedori
-        filt = pinv(sqrt(noise * lf' * invC_squared * lf)) * lf' *invC; % based on S&N eqn. 4.08
-      else
-        ft_error('vector version of nai weight normalization is not implemented');
-      end
-    case 'unitnoisegain'
-      % filt*filt' = I
-      % Unit-noise gain minimum variance (aka Borgiotti-Kaplan) beamformer
-      % below equation is equivalent to following:  
-      % filt = pinv(lf' * invC * lf) * lf' * invC; 
-      % filt = filt/sqrt(filt*filt');
-      if fixedori
-        filt = pinv(sqrt(lf' * invC_squared * lf)) * lf' *invC; % S&N eqn. 4.15
-      else
-        % compute the matrix that is used for scaling of the filter's rows, as per eqn. 4.83
-        denom = pinv(lf' * invC * lf);
-        gamma = denom * (lf' * invC_squared * lf) * denom;
-
-        % compute the spatial filter, as per eqn. 4.85
-        filt = diag(1./sqrt(diag(gamma))) * denom * lf' * invC;
-      end
-    case 'arraygain'
-      % filt*lf = ||lf||, applies to scalar leadfield, and to one of the possibilities of the vector version, eqn. 4.75
-      lfn  = lf./norm(lf);
-      filt = pinv(lfn' * invC * lfn) * lfn' * invC; % S&N eqn. 4.09 (scalar version), and eqn. 4.75 (vector version)
-
-    case {'unitgain' 'no'}
-      % this is the 'standard' unit gain constraint spatial filter: filt*lf=I, applies both to vector and scalar leadfields
-      filt = pinv(lf' * invC * lf) * lf' * invC; % Gross eqn. 3 & van Veen eqn. 23, use PINV/SVD to cover rank deficient leadfield
-
-  otherwise
-  end
-
+  
   cfilt = filt * C * ctranspose(filt);    % Gross eqn. 4 and 5
   if powlambda1
     if size(cfilt,1) == 1
