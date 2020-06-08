@@ -1,4 +1,4 @@
-function [dipout] = beamformer_pcc(dip, grad, headmodel, dat, Cf, varargin)
+function [dipout] = beamformer_pcc(dip, grad, headmodel, dat, C, varargin)
 
 % BEAMFORMER_PCC implements a linearly-constrained miminum variance  beamformer
 % that allows for post-hoc computation of canonical or partial coherence or
@@ -81,6 +81,7 @@ keepmom        = ft_getopt(varargin, 'keepmom',       'yes');
 projectnoise   = ft_getopt(varargin, 'projectnoise',  'yes');
 realfilter     = ft_getopt(varargin, 'realfilter',    'yes');
 fixedori       = ft_getopt(varargin, 'fixedori',      'no');
+weightnorm     = ft_getopt(varargin, 'weightnorm',    'no');
 
 % construct the low-level options for the covariance matrix inversion as key-value pairs, these are passed to FT_INV
 invopt = {};
@@ -105,6 +106,10 @@ keepleadfield  = istrue(keepleadfield);
 keepmom        = istrue(keepmom);
 projectnoise   = istrue(projectnoise);
 realfilter     = istrue(realfilter);
+
+if ~isequal(weightnorm, 'no')
+  ft_error('weight normalization is not supported');
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % find the dipole positions that are inside/outside the brain
@@ -162,45 +167,38 @@ if (~isempty(rf) || ~isempty(sf)) && hasfilter
   ft_error('precomputed filters cannot be used in combination with a refdip or supdip')
 end
 
-refchan  = refchan;               % these can be passed as optional inputs
-supchan  = supchan;               % these can be passed as optional inputs
-megchan  = setdiff(1:size(Cf,1), [refchan supchan]);
+megchan  = setdiff(1:size(C,1), [refchan supchan]);
 Nrefchan = length(refchan);
 Nsupchan = length(supchan);
 Nmegchan = length(megchan);
-Nchan    = size(Cf,1);            % should equal Nmegchan + Nrefchan + Nsupchan
-Cmeg     = Cf(megchan,megchan);   %  the filter uses the csd between all MEG channels
-
-isrankdeficient = (rank(Cmeg)<size(Cmeg,1));
-rankCmeg = rank(Cmeg);
+Cmeg     = C(megchan,megchan);   %  the filter uses the csd between all MEG channels
 
 % it is difficult to give a quantitative estimate of lambda, therefore also
 % support relative (percentage) measure that can be specified as string (e.g. '10%')
+% the converted value needs to be passed on to ft_inv
+lambda = ft_getopt(invopt, 'lambda');
 if ~isempty(lambda) && ischar(lambda) && lambda(end)=='%'
-  ratio = sscanf(lambda, '%f%%');
-  ratio = ratio/100;
-  tmplambda = ratio * trace(Cmeg)/size(Cmeg,1);
-elseif ~isempty(lambda)
-  tmplambda = lambda;
-else
-  tmplambda = 0;
+  ratio  = sscanf(lambda, '%f%%');
+  ratio  = ratio/100;
+  lambda = ratio * trace(C)/size(C,1);
+  invopt = ft_setopt(invopt, 'lambda', lambda);
 end
 
 if projectnoise
   % estimate the noise level in the covariance matrix by the smallest singular (non-zero) value
   noise = svd(Cmeg);
-  noise = noise(rankCmeg);
+  noise = noise(rank(Cmeg));
   % estimated noise floor is equal to or higher than a numeric lambda
-  noise = max(noise, tmplambda);
+  noise = max(noise, lambda);
 end
 
 if realfilter
   % construct the filter only on the real part of the CSD matrix, i.e. filter is real
-  invCmeg = ft_inv(real(Cmeg), 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
+  invCmeg = ft_inv(real(Cmeg), invopt{:});
 else
   % construct the filter on the complex CSD matrix, i.e. filter contains imaginary component as well
   % this results in a phase rotation of the channel data if the filter is applied to the data
-  invCmeg = ft_inv(Cmeg, 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
+  invCmeg = ft_inv(Cmeg, invopt{:});
 end
 
 % start the scanning with the proper metric
@@ -284,7 +282,7 @@ for i=1:size(dip.pos,1)
   clear filtn
   
   if keepcsd
-    dipout.csd{i,1} = filt * Cf * ctranspose(filt);
+    dipout.csd{i,1} = filt * C * ctranspose(filt);
   end
   if projectnoise
     dipout.noisecsd{i,1} = noise * (filt * ctranspose(filt));
