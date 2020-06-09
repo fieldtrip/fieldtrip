@@ -77,3 +77,6 @@ mesh.pos = ft_warp_apply(mri.transform, node);
 mesh.tet = elem(:,1:4);
 mesh.tissue = elem(:,5);
 mesh.tissuelabel = mri.seglabel;
+% re-order elements
+mesh.tet(:,3) = elem(:,4);
+mesh.tet(:,4) = elem(:,3);
