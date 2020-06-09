@@ -2,6 +2,7 @@ function test_bug1309
 
 % MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 % This tests for the reliability of the ft_convert_units function when dealing
 % with different input types (vol,sens,etc.)
@@ -33,6 +34,13 @@ cfg.sourcemodel.unit = 'cm';
 elecunit      = {'mm', 'cm', 'm', 'inch'};
 headmodelunit = {'mm', 'cm', 'm', 'feet'};
 
+fprintf('=================================================================================\n');
+fprintf('first run to warm-up and precompile\n');
+fprintf('=================================================================================\n');
+cfg.elec      = ft_convert_units(elec,      elecunit{1});
+cfg.headmodel = ft_convert_units(headmodel, headmodelunit{1});
+ft_dipolefitting(cfg, timelock_data);
+
 for i=1:numel(elecunit)
   for j=1:numel(headmodelunit)
     stopwatch = tic;
@@ -62,4 +70,3 @@ for i=1:numel(elecunit)
     end
   end
 end
-

@@ -71,6 +71,8 @@ function [hdr] = ft_read_header(filename, varargin)
 %   Mega Neurone (directory)
 %   Natus/Nicolet/Nervus (.e files)
 %   Nihon Kohden (*.m00, *.EEG)
+%   Bitalino OpenSignals (*.txt)
+%   OpenBCI (*.txt)
 %
 % The following spike and LFP dataformats are supported
 %   Neuralynx (*.ncs, *.nse, *.nts, *.nev, *.nrd, *.dma, *.log)
@@ -79,6 +81,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   MPI - Max Planck Institute (*.dap)
 %   Neurosim  (neurosim_spikes, neurosim_signals, neurosim_ds)
 %   Windaq (*.wdq)
+%   Neurodata Without Borders: Neurophysiology (*.nwb)
 %
 % The following NIRS dataformats are supported
 %   BUCN - Birkbeck college, London (*.txt)
@@ -2295,7 +2298,6 @@ switch headerformat
   case 'neuroshare' % NOTE: still under development
     % check that the required neuroshare toolbox is available
     ft_hastoolbox('neuroshare', 1);
-    
     tmp = read_neuroshare(filename);
     hdr.Fs          = tmp.hdr.analoginfo(end).SampleRate; % take the sampling freq from the last analog channel (assuming this is the same for all chans)
     hdr.nChans      = length(tmp.list.analog(tmp.analog.contcount~=0)); % get the analog channels, only the ones that are not empty
@@ -2305,18 +2307,88 @@ switch headerformat
     hdr.label       = {tmp.hdr.entityinfo(tmp.list.analog(tmp.analog.contcount~=0)).EntityLabel}; %%% contains non-unique chans?
     hdr.orig        = tmp; % remember the original header
     
-  case 'artinis_oxy3'
-    ft_hastoolbox('artinis', 1);
-    hdr = read_artinis_oxy3(filename);
+  case 'nwb'
+    ft_hastoolbox('MatNWB', 1);	% when I run this locally outside of ft_read_header it does not work for me
+    try
+        c = load('core.mat'); % might be needed later on - I don't have this file
+        nwb_version = c.version;
+        nwb_fileversion = util.getSchemaVersion(filename);
+        if ~strcmp(nwb_version, nwb_fileversion)
+            warning(['Installed NWB:N schema version (' nwb_version ') does not match the file''s schema (' nwb_fileversion{1} '). This might result in an error. If so, try to install the matching schema from here: https://github.com/NeurodataWithoutBorders/nwb-schema/releases'])
+        end
+    catch
+        warning('Something might not be alright with your MatNWB path. Will try anyways.')
+    end
+    tmp = nwbRead(filename); % is lazy, so should not be too costly
+	es_key = tmp.searchFor('ElectricalSeries').keys; % find lfp data, which should be an ElectricalSeries object
+    if isempty(es_key)
+        error('Dataset does not contain an LFP signal (i.e., no object of the class ''ElectricalSeries''.')
+    elseif numel(es_key) > 1 % && isempty(additional_user_input) % TODO: Try to sort this out with the user's help
+        % Temporary fix: SpikeEventSeries is a daughter of ElectrialSeries but should not be found here (searchFor update on its way)
+        es_key = es_key(contains(es_key,'lfp','IgnoreCase',true)); 
+    end
+    if numel(es_key) > 1 % in case we weren't able to sort out a single
+		error('More than one ElectricalSeries present in data. Please specify which signal to use.')
+	else
+		eseries = io.resolvePath(tmp, es_key{1});
+    end
+    if isa(eseries.data, 'types.untyped.DataStub')
+        hdr.nSamples = eseries.data.dims(2);
+    elseif isa(eseries.data, 'types.untyped.DataPipe')
+        hdr.nSamples = eseries.data.internal.maxSize(2);
+    else
+        warning('Cannot determine number of samples in the data.')
+        hdr.nSamples = []; 
+    end
+    hdr.Fs          = eseries.starting_time_rate;
+    hdr.nSamplesPre = 0; % for now: hardcoded continuous data
+    hdr.nTrials     = 1; % for now: hardcoded continuous data
+    hdr.label       = {};
+    tmp_ch          = io.resolvePath(tmp, eseries.electrodes.table.path).id.data.load; % electrode names
+    for iCh=1:numel(tmp_ch) % TODO: does that work if nwb ids are strings?
+        if isnumeric(tmp_ch(iCh))
+            hdr.label(iCh,1) = {num2str(tmp_ch(iCh))};
+        else
+            hdr.label(iCh,1) = tmp_ch(iCh);
+        end
+    end
+    hdr.nChans      = numel(hdr.label);
+    [hdr.chanunit{1:hdr.nChans,1}] = deal(eseries.data_unit);
+    hdr.chanunit    = strrep(hdr.chanunit, 'volt', 'V');
+    hdr.chanunit    = strrep(hdr.chanunit, 'micro', 'u');
+    % TODO: hdr.FirstTimeStamp
+    % TODO: hdr.TimeStampPerSample
     
-  case 'artinis_oxy4'
-    ft_hastoolbox('artinis', 1);
-    hdr = read_artinis_oxy4(filename);
-    
-  case 'artinis_oxyproj'
-    ft_hastoolbox('artinis', 1);
-    hdr = read_oxyproj_header(filename);
-    
+    % carry over some metadata
+    hdr.orig        = [];
+    fn = {'general_experimenter', ...
+        'general_institution', ...
+        'general_keywords', ...
+        'general_lab', ...
+        'general_notes', ...
+        'general_related_publications', ...
+        'general_session_id', ...
+        'identifier', ...
+        'session_description', ...
+        'nwb_version', ...
+        'help'};
+    for iFn = 1:numel(fn)
+        if isprop(tmp, fn{iFn}) && ~isempty(tmp.(fn{iFn}))
+            hdr.orig.(fn{iFn}) = tmp.(fn{iFn});
+        end
+    end
+    case 'artinis_oxy3'
+        ft_hastoolbox('artinis', 1);
+        hdr = read_artinis_oxy3(filename);
+        
+    case 'artinis_oxy4'
+        ft_hastoolbox('artinis', 1);
+        hdr = read_artinis_oxy4(filename);
+        
+    case 'artinis_oxyproj'
+        ft_hastoolbox('artinis', 1);
+        hdr = read_oxyproj_header(filename);
+        
   case 'plexon_ds'
     hdr = read_plexon_ds(filename);
     

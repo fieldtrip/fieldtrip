@@ -67,8 +67,10 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - Qualisys *.tsv
 %  - Mrtrix *.mif
 %  - MAUS *.TextGrid
+%  - Neurodata Without Borders *.nwb
+%  - PhysioNet *.hea and *.dat
 
-% Copyright (C) 2003-2019 Robert Oostenveld
+% Copyright (C) 2003-2020, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -1312,6 +1314,10 @@ elseif filetype_check_extension(filename, '.txt') && filetype_check_header(filen
   type = 'opensignals_txt';
   manufacturer = 'Bitalino';
   content = '';
+elseif filetype_check_extension(filename, '.txt') && filetype_check_header(filename, '%OpenBCI')
+  type = 'openbci_txt';
+  manufacturer = 'OpenBCI';
+  content = 'raw EEG data';
 elseif filetype_check_extension(filename, '.txt')
   type = 'ascii_txt';
   manufacturer = '';
@@ -1494,6 +1500,19 @@ elseif filetype_check_extension(filename, '.fcsv')
   type = '3dslicer_fscv';
   manufacturer = 'https://www.slicer.org/';
   content = 'position information about Markups Fiducial Node';
+elseif filetype_check_extension(filename, '.nwb')
+  % this could be a mrtrix compatible image file
+  type = 'nwb';
+  manufacturer = 'Neurodata Without Borders';
+  content = 'neurophysiology data';
+elseif filetype_check_extension(filename, '.hea') && exist(fullfile(p, [f '.dat']), 'file')
+  type = 'physionet_hea';
+  manufacturer = 'PhysioNet';
+  content = 'continuous physiological signals';
+elseif filetype_check_extension(filename, '.dat') && exist(fullfile(p, [f '.hea']), 'file')
+  type = 'physionet_dat';
+  manufacturer = 'PhysioNet';
+  content = 'continuous physiological signals';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

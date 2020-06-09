@@ -1,4 +1,3 @@
-
 function [trl, event] = trialfun_affcog(cfg)
 
 %% the first part is common to all trial functions

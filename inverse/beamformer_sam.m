@@ -44,6 +44,7 @@ meansphereorigin  = ft_getopt(varargin, 'meansphereorigin');
 feedback          = ft_getopt(varargin, 'feedback', 'text');
 lambda            = ft_getopt(varargin, 'lambda', 0);
 fixedori          = ft_getopt(varargin, 'fixedori', 'spinning');
+
 % these settings pertain to the forward model, the defaults are set in ft_compute_leadfield
 reducerank        = ft_getopt(varargin, 'reducerank');
 normalize         = ft_getopt(varargin, 'normalize');

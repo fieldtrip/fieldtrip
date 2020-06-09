@@ -1,5 +1,4 @@
 function test_bug2800
-
 % DEPENDENCY project_elec
 
 % WALLTIME 00:10:00

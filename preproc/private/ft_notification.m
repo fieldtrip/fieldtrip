@@ -327,6 +327,11 @@ switch varargin{1}
       msgId = defaultId;
     end
     
+    if varargin{1}(end) =='\'
+      % a lone trailing backslash, '\' , is not a valid control character
+      varargin{1}(end+1) = '\';
+    end
+    
     % store the last notification
     state.message    = strtrim(sprintf(varargin{:})); % remove the trailing newline
     state.identifier = msgId;

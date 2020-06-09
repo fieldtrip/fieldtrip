@@ -159,7 +159,8 @@ switch version
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case '2019'
     % update it to the previous standard version
-    sens = ft_datatype_sens(sens, 'version', '2016');
+    new_argin = ft_setopt(varargin, 'version', '2016');
+    sens      = ft_datatype_sens(sens, new_argin{:});
     
     if isfield(sens, 'fiberpos') || isfield(sens, 'optopos')
       % rename some NIRS field names

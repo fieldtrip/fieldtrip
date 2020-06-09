@@ -149,6 +149,12 @@ if isfield(data, 'pos')
   npos = size(data.pos,1);
 elseif isfield(data, 'dim')
   npos = prod(data.dim);
+elseif isfield(data, 'leadfield')
+  npos = numel(data.leadfield);
+elseif isfield(data, 'filter')
+  npos = numel(data.filter);
+elseif isfield(data, 'inside')
+  npos = numel(data.inside);
 end
 
 if isfield(data, 'dim')

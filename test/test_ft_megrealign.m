@@ -2,7 +2,6 @@ function test_ft_megrealign
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_megrealign ft_prepare_neighbours ft_transform_geometry
 
 datainfo = ref_datasets;

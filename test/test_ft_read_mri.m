@@ -2,9 +2,7 @@ function test_ft_read_mri
 
 % WALLTIME 00:10:00
 % MEM 2gb
-
-% DEPENDENCY TEST_FT_READ_MRI
-% DEPENDENCY FT_READ_MRI
+% DEPENDENCY ft_read_mri
 
 files = {
   'afni/anat+orig.BRIK'

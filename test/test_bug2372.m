@@ -2,7 +2,6 @@ function test_bug2372
 
 % WALLTIME 00:10:00
 % MEM 2gb
-
 % DEPENDENCY ft_timelockgrandaverage ft_timelockanalysis
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFC_LP.mat'));

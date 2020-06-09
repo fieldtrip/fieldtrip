@@ -2,7 +2,6 @@ function test_csp
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_component_analysis
 
 % Please beware of notations mistakes in [1]. For example equation (1) does not

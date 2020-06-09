@@ -1,9 +1,9 @@
 function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 
 % FT_ARTIFACT_ZVALUE reads the interesting segments of data from file and identifies
-% artifacts by means of thresholding the z-transformed value of the preprocessed raw data.
-% Depending on the preprocessing options, this method will be sensitive to EOG, muscle or
-% jump artifacts.  This procedure only works on continuously recorded data.
+% artifacts by means of thresholding the z-transformed value of the preprocessed raw
+% data. Depending on the preprocessing options, this method will be sensitive to EOG,
+% muscle or jump artifacts.  This procedure only works on continuously recorded data.
 %
 % Use as
 %   [cfg, artifact] = ft_artifact_zvalue(cfg)
@@ -97,10 +97,14 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %   cfg.artfctdef.zvalue.hilbert       = 'no' or 'yes'
 %   cfg.artfctdef.zvalue.rectify       = 'no' or 'yes'
 %
-% The output argument "artifact" is a Nx2 matrix comparable to the
-% "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
-% beginsamples of an artifact period, the second column contains the
-% endsamples of the artifactperiods.
+% The output argument "artifact" is a Nx2 matrix comparable to the "trl" matrix of
+% FT_DEFINETRIAL. The first column of which specifying the beginsamples of an
+% artifact period, the second column contains the endsamples of the artifactperiods.
+%
+% To facilitate data-handling and distributed computing, you can use
+%   cfg.inputfile   =  ...
+% to read the input data from a *.mat file on disk. This mat files should contain
+% only a single variable named 'data', corresponding to the input structure.
 %
 % See also FT_REJECTARTIFACT, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG, FT_ARTIFACT_EOG,
 % FT_ARTIFACT_JUMP, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_ZVALUE
@@ -166,7 +170,7 @@ cfg.artfctdef.zvalue = ft_checkconfig(cfg.artfctdef.zvalue, 'renamed', {'sgn',  
 cfg.artfctdef.zvalue = ft_checkconfig(cfg.artfctdef.zvalue, 'renamed', {'feedback', 'interactive'});
 
 if isfield(cfg.artfctdef.zvalue, 'artifact')
-  fprintf('zvalue artifact detection has already been done, retaining artifacts\n');
+  ft_notice('zvalue artifact detection has already been done, retaining artifacts\n');
   artifact = cfg.artfctdef.zvalue.artifact;
   return
 end
@@ -346,7 +350,7 @@ datavg = sumval./numsmp;
 datstd = sqrt(sumsqr./numsmp - (sumval./numsmp).^2);
 
 if strcmp(cfg.memory, 'low')
-  fprintf('\n');
+  ft_info('\n');
 end
 
 zmax = cell(1, numtrl);
@@ -363,7 +367,7 @@ else
 end
 for trlop = 1:numtrl
   if strcmp(cfg.memory, 'low') % store nothing in memory (note that we need to preproc AGAIN... *yawn*)
-    fprintf('.');
+    ft_info('.');
     if hasdata
       dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'));
     else
@@ -412,9 +416,9 @@ end
 %  sumval = 0;
 %  sumsqr = 0;
 %  numsmp = 0;
-%  fprintf('searching channel %s ', cfg.artfctdef.zvalue.channel{sgnlop});
+%  ft_info('searching channel %s ', cfg.artfctdef.zvalue.channel{sgnlop});
 %  for trlop = 1:numtrl
-%    fprintf('.');
+%    ft_info('.');
 %    if hasdata
 %      dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx(sgnlop), 'checkboundary', strcmp(cfg.continuous, 'no'));
 %    else
@@ -453,7 +457,7 @@ end
 %    %       end
 %    %     end
 %  end
-%  fprintf('\n');
+%  ft_info('\n');
 %end % for sgnlop
 
 for trlop = 1:numtrl
@@ -609,7 +613,7 @@ cfg.artfctdef.zvalue.artifact = artifact;
 cfg.artfctdef.zvalue.trl      = trl;              % remember where we have been looking for artifacts
 cfg.artfctdef.zvalue.cutoff   = opt.threshold;    % remember the threshold that was used
 
-fprintf('detected %d artifacts\n', size(artifact,1));
+ft_notice('detected %d artifacts\n', size(artifact,1));
 
 delete(h);
 

@@ -2,7 +2,6 @@ function test_tutorial_networkanalysis(datadirs)
 
 % WALLTIME 00:30:00
 % MEM 10gb
-
 % DEPENDENCY ft_networkanalysis
 
 if nargin==0,

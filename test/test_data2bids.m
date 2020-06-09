@@ -2,7 +2,6 @@ function test_data2bids
 
 % WALLTIME 00:20:00
 % MEM 5gb
-
 % DEPENDENCY data2bids
 
 %% Example with only behavioural data

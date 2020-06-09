@@ -2,9 +2,7 @@ function test_triangulate_seg
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
-% DEPENDENCY: test_triangulate_seg
-% DEPENDENCY: triangulate_seg
+% DEPENDENCY triangulate_seg
 
 % since the function to test is in a private directory, we explicitely have to cd into that directory
 [ftver, ftpath] = ft_version;

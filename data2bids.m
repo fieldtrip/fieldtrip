@@ -1415,7 +1415,7 @@ if need_events_tsv
     else
       events_tsv = event2table([], cfg.events);
     end
-  elseif ismatrix(cfg.events) && ~isempty(cfg.events)
+  elseif isnumeric(cfg.events) && ~isempty(cfg.events)
     % it is a "trl" matrix formatted as numeric array, convert it to an events table
     begsample = cfg.events(:,1);
     endsample = cfg.events(:,2);

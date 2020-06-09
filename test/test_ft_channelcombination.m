@@ -2,7 +2,6 @@ function test_ft_channelcombination
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_channelcombination
 
 % this function tests the new implementation of ft_channelcombination

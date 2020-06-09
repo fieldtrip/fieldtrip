@@ -4,7 +4,7 @@ function [dipout] = harmony(dip, grad, headmodel, dat, varargin)
 % using a mesh harmonic based low-pass filter.
 %
 % Use as
-%   [dipout] = minimumnormestimate(dip, grad, headmodel, dat, ...)
+%   [dipout] = harmony(dip, grad, headmodel, dat, ...)
 %
 % Optional input arguments should come in key-value pairs and can include
 %  'noisecov'             = Nchan x Nchan matrix with noise covariance
@@ -129,7 +129,7 @@ else
       dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
     end
   else
-      
+    
     for i=1:size(dip.pos,1)
       % compute the leadfield
       dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
@@ -148,21 +148,21 @@ lc           = ft_getopt(varargin, 'filter_bs');
 %% Create the leadfield matrix
 
 % count the number of channels and leadfield components
-  Nchan   = size(dip.leadfield{1},1);
-  Nsource = 0;
-  for i=1:size(dip.pos,1)
-    Nsource = Nsource + size(dip.leadfield{i}, 2);
-  end
-  
-  % concatenate the leadfield components of all sources into one large matrix
-  lf = zeros(Nchan, Nsource);
-  n = 1;
-  for i=1:size(dip.pos,1)
-    cbeg = n;
-    cend = n + num_dip - 1;
-    lf(:,cbeg:cend) = dip.leadfield{i};
-    n = n + size(dip.leadfield{i}, 2);
-  end
+Nchan   = size(dip.leadfield{1},1);
+Nsource = 0;
+for i=1:size(dip.pos,1)
+  Nsource = Nsource + size(dip.leadfield{i}, 2);
+end
+
+% concatenate the leadfield components of all sources into one large matrix
+lf = zeros(Nchan, Nsource);
+n = 1;
+for i=1:size(dip.pos,1)
+  cbeg = n;
+  cend = n + num_dip - 1;
+  lf(:,cbeg:cend) = dip.leadfield{i};
+  n = n + size(dip.leadfield{i}, 2);
+end
 
 %% Create brain harmonics matrix
 
@@ -207,10 +207,10 @@ end
 lf_h = zeros(size(lf,1),num_harm,num_comp,num_dip); %leadifield in the harmonic domain
 
 for k = 1:num_comp
-    for j = 1:num_dip
-        ind = (j-1) + 1:num_dip:num_dip*num_pos;
-        lf_h(:,:,k,j) = lf(:,ind)*H{k};
-    end
+  for j = 1:num_dip
+    ind = (j-1) + 1:num_dip:num_dip*num_pos;
+    lf_h(:,:,k,j) = lf(:,ind)*H{k};
+  end
 end
 
 lf_h = reshape(lf_h,size(lf,1),num_comp*num_harm*num_dip);
@@ -222,12 +222,12 @@ sourcecov = diag(q);
 
 %% Compute the Harmony spatial filters
 
-  
+
 % count the number of channels and leadfield components
 Nchan   = size(dip.leadfield{1},1);
 Nsource = 0;
 for i=1:size(dip.pos,1)
-Nsource = Nsource + size(dip.leadfield{i}, 2);
+  Nsource = Nsource + size(dip.leadfield{i}, 2);
 end
 
 % Take the rieal part of the noise cross-spectral density matrix
@@ -239,113 +239,113 @@ end
 % compute the inverse of the forward model, this is where prior information
 % on source and noise covariance would be useful
 if isempty(noisecov)
-% use an unregularised minimum norm solution, i.e. using the Moore-Penrose pseudoinverse
-warning('computing a unregularised minimum norm solution. This typically does not work due to numerical accuracy problems');
-w = pinv(lf_h);
+  % use an unregularised minimum norm solution, i.e. using the Moore-Penrose pseudoinverse
+  warning('computing a unregularised minimum norm solution. This typically does not work due to numerical accuracy problems');
+  w = pinv(lf_h);
 elseif ~isempty(noisecov)
-fprintf('computing the solution where the noise covariance is used for regularisation\n');
-% the noise covariance has been given and can be used to regularise the solution
-if isempty(sourcecov)
-  sourcecov = speye(Nsource);
-end
-% rename some variables for consistency with the publications
-A = lf_h;
-R = sourcecov;
-C = noisecov;
-
-if dowhiten,
-  fprintf('prewhitening the leadfields using the noise covariance\n');
-
-  % compute the prewhitening matrix
-  if ~isempty(noiselambda)
-    fprintf('using a regularized noise covariance matrix\n');
-    % note: if different channel types are present, one should probably load the diagonal with channel-type specific stuff
-    [U,S,V] = svd(C+eye(size(C))*noiselambda);
-  else
-    [U,S,V] = svd(C);
+  fprintf('computing the solution where the noise covariance is used for regularisation\n');
+  % the noise covariance has been given and can be used to regularise the solution
+  if isempty(sourcecov)
+    sourcecov = speye(Nsource);
   end
-
-  Tol     = 1e-12;
-  diagS   = diag(S);
-  sel     = find(diagS>Tol.*diagS(1));
-  P       = diag(1./sqrt(diag(S(sel,sel))))*U(:,sel)'; % prewhitening matrix
-  A       = P*A; % prewhitened leadfields
-  C       = eye(size(P,1)); % prewhitened noise covariance matrix
-end
-
-if doscale
-  % estimate sourcecov such that trace(ARA')/trace(C) = 1 (see
-  % http://martinos.org/mne/manual/mne.html. In the case of prewhitening
-  % C reduces to I (and then lambda^2 ~ 1/SNR); note that in mixed
-  % channel type covariance matrices prewhitening should be applied in
-  % order for this to make sense (otherwise the diagonal elements of C
-  % have different units)
-  fprintf('scaling the source covariance\n');
-  scale = trace(A*(R*A'))/trace(C);
-  R     = R./scale;
-end
-
-if ~isempty(snr)
-  % the regularisation parameter can be estimated from the noise covariance,
-  % see equation 6 in Lin et al. 2004
-  lambda = trace(A * R * A')/(trace(C)*snr^2);
-end
-
-if dowhiten,
-  % as documented on MNE website, this is replacing the part of the code below, it gives
-  % more stable results numerically.
-  Rc      = chol(R, 'lower');
-  [U,S,V] = svd(A * Rc, 'econ');
-  s  = diag(S);
-  ss = s ./ (s.^2 + lambda);
-  w  = Rc * V * diag(ss) * U';
-
-  % unwhiten the filters to bring them back into signal subspace
-  w = w*P;
-
-else
-  %% equation 5 from Lin et al 2004 (this implements Dale et al 2000, and Liu et al. 2002)
-  denom = (A*R*A'+(lambda^2)*C);
-  if cond(denom)<1e12
-    w = R * A' / denom;
-  else
-    fprintf('taking pseudo-inverse due to large condition number\n');
-    w = R * A' * pinv(denom);
-  end
-end
-
-end % if empty noisecov
+  % rename some variables for consistency with the publications
+  A = lf_h;
+  R = sourcecov;
+  C = noisecov;
   
+  if dowhiten,
+    fprintf('prewhitening the leadfields using the noise covariance\n');
+    
+    % compute the prewhitening matrix
+    if ~isempty(noiselambda)
+      fprintf('using a regularized noise covariance matrix\n');
+      % note: if different channel types are present, one should probably load the diagonal with channel-type specific stuff
+      [U,S,V] = svd(C+eye(size(C))*noiselambda);
+    else
+      [U,S,V] = svd(C);
+    end
+    
+    Tol     = 1e-12;
+    diagS   = diag(S);
+    sel     = find(diagS>Tol.*diagS(1));
+    P       = diag(1./sqrt(diag(S(sel,sel))))*U(:,sel)'; % prewhitening matrix
+    A       = P*A; % prewhitened leadfields
+    C       = eye(size(P,1)); % prewhitened noise covariance matrix
+  end
+  
+  if doscale
+    % estimate sourcecov such that trace(ARA')/trace(C) = 1 (see
+    % http://martinos.org/mne/manual/mne.html. In the case of prewhitening
+    % C reduces to I (and then lambda^2 ~ 1/SNR); note that in mixed
+    % channel type covariance matrices prewhitening should be applied in
+    % order for this to make sense (otherwise the diagonal elements of C
+    % have different units)
+    fprintf('scaling the source covariance\n');
+    scale = trace(A*(R*A'))/trace(C);
+    R     = R./scale;
+  end
+  
+  if ~isempty(snr)
+    % the regularisation parameter can be estimated from the noise covariance,
+    % see equation 6 in Lin et al. 2004
+    lambda = trace(A * R * A')/(trace(C)*snr^2);
+  end
+  
+  if dowhiten
+    % as documented on MNE website, this is replacing the part of the code below, it gives
+    % more stable results numerically.
+    Rc      = chol(R, 'lower');
+    [U,S,V] = svd(A * Rc, 'econ');
+    s  = diag(S);
+    ss = s ./ (s.^2 + lambda);
+    w  = Rc * V * diag(ss) * U';
+    
+    % unwhiten the filters to bring them back into signal subspace
+    w = w*P;
+    
+  else
+    %% equation 5 from Lin et al 2004 (this implements Dale et al 2000, and Liu et al. 2002)
+    denom = (A*R*A'+(lambda^2)*C);
+    if cond(denom)<1e12
+      w = R * A' / denom;
+    else
+      fprintf('taking pseudo-inverse due to large condition number\n');
+      w = R * A' * pinv(denom);
+    end
+  end
+  
+end % if empty noisecov
+
 %% for each of the timebins, estimate the source strength
 w_x = H_tot*w; % The Harm matrix project the Harmony level filters back to the source locations
 
-if isreal(dat) == 1
-    fprintf('The input are sensors time-series: Computing the dipole moments\n')
-    mom = w_x * dat; 
-    mom_ind = 1;
+if isreal(dat)
+  fprintf('The input are sensors time-series: Computing the dipole moments\n')
+  mom = w_x * dat;
+  mom_ind = 1;
 elseif size(dat,1)==size(dat,2)&&sum(sum(dat-dat'))<10^-5*sum(diag(dat))
-    fprintf('The input is a sensor level cross-spectral density: Computing source level power\n')
-    pow_tot = real(sum((w_x*dat).*w_x,2));
-    pow = 0;
-    for j = 1:num_dip
-        pow = pow + pow_tot((1 + (j-1)*end/num_dip):(j*end/num_dip));
-        mom_ind = 0;
-    end
+  fprintf('The input is a sensor level cross-spectral density: Computing source level power\n')
+  pow_tot = real(sum((w_x*dat).*w_x,2));
+  pow = 0;
+  for j = 1:num_dip
+    pow = pow + pow_tot((1 + (j-1)*end/num_dip):(j*end/num_dip));
+    mom_ind = 0;
+  end
 else
-    fprintf('The input is are sensor level Fourier-coefficients: Computing source level Fourier coefficients\n')
-    mom = w_x*dat; % The Harm matrix project the Harmonic activity back to the source locations
-    mom_ind = 1;
+  fprintf('The input is are sensor level Fourier-coefficients: Computing source level Fourier coefficients\n')
+  mom = w_x*dat; % The Harm matrix project the Harmonic activity back to the source locations
+  mom_ind = 1;
 end
 
 % assign the estimated source strength to each dipole
 if mom_ind == 1
-n = 1;
-for i=1:size(dip.pos,1)
-  cbeg = n;
-  cend = n + size(dip.leadfield{i}, 2) - 1;
-  dipout.mom{i} = mom(cbeg:cend,:);
-  n = n + size(dip.leadfield{i}, 2);
-end
+  n = 1;
+  for i=1:size(dip.pos,1)
+    cbeg = n;
+    cend = n + size(dip.leadfield{i}, 2) - 1;
+    dipout.mom{i} = mom(cbeg:cend,:);
+    n = n + size(dip.leadfield{i}, 2);
+  end
 end
 
 %% compute power (over the three orientations) at each location and for each time
@@ -356,7 +356,7 @@ if mom_ind == 1
     dipout.pow(i,:) = sum(abs(dipout.mom{i}).^2, 1);
   end
 else
-    dipout.pow = pow;
+  dipout.pow = pow;
 end
 
 % deal with keepfilter option
@@ -411,25 +411,4 @@ if isfield(dipout, 'filter')
   dipout.filter( originside) = dipout.filter;
   dipout.filter(~originside) = {[]};
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

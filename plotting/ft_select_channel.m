@@ -12,7 +12,7 @@ function ft_select_channel(handle, eventdata, varargin)
 % Additional options should be specified in key-value pairs and can be
 %   'callback'  = function handle to be executed after channels have been selected
 %
-% You can pass additional arguments to the callback function in a cell-array
+% You can pass additional arguments to the callback function in a cell-array 
 % like {@function_handle,arg1,arg2}
 %
 % Example 1
@@ -25,11 +25,11 @@ function ft_select_channel(handle, eventdata, varargin)
 %   ft_plot_layout(lay)
 %
 %   % add the required guidata
-%   info       = guidata(gcf)
+%   info       = guidata(gcf);
 %   info.x     = lay.pos(:,1);
 %   info.y     = lay.pos(:,2);
-%   info.label = lay.label
-%   guidata(gcf, info)
+%   info.label = lay.label;
+%   guidata(gcf, info);
 %
 %   % add this function as the callback to make a single selection
 %   set(gcf, 'WindowButtonDownFcn', {@ft_select_channel, 'callback', @disp})
@@ -39,7 +39,7 @@ function ft_select_channel(handle, eventdata, varargin)
 %   set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', @disp, 'event', 'WindowButtonDownFcn'})
 %   set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', @disp, 'event', 'WindowButtonDownFcn'})
 %
-% Example 2 (executed from within a subplot
+% Example 2, executed from within a subplot
 %   % create a figure
 %   figure
 %   subplot(2,2,1)
@@ -47,7 +47,7 @@ function ft_select_channel(handle, eventdata, varargin)
 %   cfg.channel = {'chan1', 'chan2', 'chan3', 'chan4'};
 %   cfg.layout  = 'ordered';
 %   lay = ft_prepare_layout(cfg);
-%   ft_plot_layout(lay) 
+%   ft_plot_layout(lay)
 %
 %   % add the channel information to guidata under identifier linked to this axis
 %   ident              = ['axh' num2str(round(sum(clock.*1e6)))]; % unique identifier for this axis
@@ -56,7 +56,7 @@ function ft_select_channel(handle, eventdata, varargin)
 %   info.(ident).x     = lay.pos(:, 1);
 %   info.(ident).y     = lay.pos(:, 2);
 %   info.(ident).label = lay.label;
-%   guidata(gcf, info)
+%   guidata(gcf, info);
 %
 %   % add this function as the callback to make a single selection
 %   set(gcf, 'WindowButtonDownFcn', {@ft_select_channel, 'callback', @disp})
@@ -65,13 +65,12 @@ function ft_select_channel(handle, eventdata, varargin)
 %   set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', @disp, 'event', 'WindowButtonDownFcn'})
 %   set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', @disp, 'event', 'WindowButtonDownFcn'})
 %   set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', @disp, 'event', 'WindowButtonDownFcn'})
-%      
 %
 % Subsequently you can click in the figure and you'll see that the disp
 % function is executed as callback and that it displays the selected
 % channels.
 %
-% See also FT_SELECT_BOX, FT_SELECT_POINT, FT_SELECT_POINT3D, FT_SELECT_RANGE, FT_SELECT_VOXEL 
+% See also FT_SELECT_BOX, FT_SELECT_POINT, FT_SELECT_POINT3D, FT_SELECT_RANGE, FT_SELECT_VOXEL
 
 % Copyright (C) 2009, Robert Oostenveld
 %
@@ -117,7 +116,7 @@ function select_channel_single(pos, callback)
 % If this function is called from a plotting function that supports interactive subplots,
 % then the current axis, which was used for selection, was given a tag that starts with 'axh' followed by a unique ID.
 % If so, then the data (e.g. channel info) that should be used is contained in a subfield of the info (guidata)
-% structure, with field name being the 'tag' in question. 
+% structure, with field name being the 'tag' in question.
 % If no such tag is found, then the simple situation is assumed, where the data is contained in the 'root' field
 tag = get(gca,'tag');
 % in case subplots were used
@@ -125,7 +124,7 @@ if strncmp(tag,'axh',3)
   info   = guidata(gcf);
   x      = info.(tag).x(:);
   y      = info.(tag).y(:);
-  label  = info.(tag).label(:);  
+  label  = info.(tag).label(:);
 else % no subplots were used
   info   = guidata(gcf);
   x      = info.x(:);
@@ -148,10 +147,10 @@ dd = sqrt(dx.^2 + dy.^2);
 [d, i] = min(dd);
 if d<tolerance
   label = label{i};
-  fprintf('channel "%s" selected\n', label);
+  ft_debug('channel "%s" selected\n', label);
 else
   label = {};
-  fprintf('no channel selected\n');
+  ft_debug('no channel selected\n');
 end
 
 % execute the original callback with the selected channel as input argument
@@ -175,7 +174,7 @@ function select_channel_multiple(callback,range,cmenulab) % last input is contex
 % If this function is called from a plotting function that supports interactive subplots,
 % then the current axis, which was used for selection, was given a tag that starts with 'axh' followed by a unique ID.
 % If so, then the data (e.g. channel info) that should be used is contained in a subfield of the info (guidata)
-% structure, with field name being the 'tag' in question. 
+% structure, with field name being the 'tag' in question.
 % If no such tag is found, then the simple situation is assumed, where the data is contained in the 'root' field
 tag = get(gca,'tag');
 % in case subplots were used
@@ -183,7 +182,7 @@ if strncmp(tag,'axh',3)
   info   = guidata(gcf);
   x      = info.(tag).x(:);
   y      = info.(tag).y(:);
-  label  = info.(tag).label(:);  
+  label  = info.(tag).label(:);
 else % no subplots were used
   info   = guidata(gcf);
   x      = info.x(:);
