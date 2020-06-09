@@ -167,7 +167,7 @@ url = {
   'GCMI'          'see https://github.com/robince/gcmi'
   'XSENS'         'see https://www.xsens.com/motion-capture and http://www.fieldtriptoolbox.org/getting_started/xsens/'
   'MAYO_MEF'      'see https://github.com/MultimodalNeuroimagingLab/mef_reader_fieldtrip and https://msel.mayo.edu/codes.html'
-  'MATNWB'        'see https://neurodatawithoutborders.github.io/matnwb/'};
+  'MATNWB'        'see https://neurodatawithoutborders.github.io/matnwb/'
   };
 
 if nargin<2
