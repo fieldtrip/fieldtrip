@@ -166,7 +166,9 @@ url = {
   'EZC3D'         'see https://github.com/pyomeca/ezc3d'
   'GCMI'          'see https://github.com/robince/gcmi'
   'XSENS'         'see https://www.xsens.com/motion-capture and http://www.fieldtriptoolbox.org/getting_started/xsens/'
-  'MatNWB'        'see https://neurodatawithoutborders.github.io/matnwb/'};
+  'MAYO_MEF'      'see https://github.com/MultimodalNeuroimagingLab/mef_reader_fieldtrip and https://msel.mayo.edu/codes.html'
+  'MATNWB'        'see https://neurodatawithoutborders.github.io/matnwb/'};
+  };
 
 if nargin<2
   % default is not to add the path automatically
@@ -413,6 +415,8 @@ switch toolbox
     dependency = {'copnorm' 'mi_gg'};
   case 'XSENS'
     dependency = {'load_mvnx'};
+  case 'MAYO_MEF' % MEF 2.1 and MEF 3.0
+    dependency = {'MEFFieldTrip_2p1', 'MEFFieldTrip_3p0'};
   case 'MATNWB'
     dependency = {'nwbRead', 'generateCore'};
     

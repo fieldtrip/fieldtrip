@@ -23,6 +23,7 @@ function [dat] = ft_read_data(filename, varargin)
 %   'fallback'       can be empty or 'biosig' (default = [])
 %   'blocking'       wait for the selected number of events (default = 'no')
 %   'timeout'        amount of time in seconds to wait when blocking (default = 5)
+%   'password'       password structure for encrypted data set (only for mayo_mef30 and mayo_mef21)
 %
 % This function returns a 2-D matrix of size Nchans*Nsamples for continuous
 % data when begevent and endevent are specified, or a 3-D matrix of size
@@ -140,6 +141,7 @@ cache           = ft_getopt(varargin, 'cache', false);
 dataformat      = ft_getopt(varargin, 'dataformat');
 chanunit        = ft_getopt(varargin, 'chanunit');
 timestamp       = ft_getopt(varargin, 'timestamp');
+password        = ft_getopt(varargin, 'password', struct([]));
 
 % this allows blocking reads to avoid having to poll many times for online processing
 blocking         = ft_getopt(varargin, 'blocking', false);  % true or false
@@ -211,7 +213,7 @@ end
 
 % read the header if it is not provided
 if isempty(hdr)
-  hdr = ft_read_header(filename, 'headerformat', headerformat, 'chanindx', chanindx, 'checkmaxfilter', checkmaxfilter);
+  hdr = ft_read_header(filename, 'headerformat', headerformat, 'chanindx', chanindx, 'checkmaxfilter', checkmaxfilter, 'password', password);
   if isempty(chanindx)
     chanindx = 1:hdr.nChans;
   end
@@ -995,6 +997,14 @@ switch dataformat
         sum(trlind==iEpoch(i) & (1:length(trlind))<=endsample)-1]);
     end
     dat = dat(chanindx, :);
+    
+  case 'mayo_mef30'
+    hdr.sampleunit = 'index';
+    dat = read_mayo_mef30(filename, password, sortchannel, hdr, begsample, endsample, chanindx);
+    
+  case 'mayo_mef21'
+    hdr.sampleunit = 'index';
+    dat = read_mayo_mef21(filename, password, hdr, begsample, endsample, chanindx);
     
   case 'mega_neurone'
     % this is fast but memory inefficient, since the header contains all data and events
