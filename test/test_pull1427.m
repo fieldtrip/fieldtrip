@@ -1,4 +1,4 @@
-function test_simbio_tetra
+function test_pull1427
 %
 % MEM 6gb
 % WALLTIME 1:00:00
