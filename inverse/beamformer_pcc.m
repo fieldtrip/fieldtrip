@@ -1,8 +1,11 @@
-function [dipout] = beamformer_pcc(dip, grad, headmodel, dat, Cf, varargin)
+function [dipout] = beamformer_pcc(dip, grad, headmodel, dat, C, varargin)
 
-% BEAMFORMER_PCC implements an experimental beamformer based on partial
-% canonical correlations or coherences. Dipole locations that are outside
-% the head will return a NaN value.
+% BEAMFORMER_PCC implements a linearly-constrained miminum variance  beamformer
+% that allows for post-hoc computation of canonical or partial coherence or
+% correlation. Moreover, if cortico-cortical interactions are computed, the
+% spatial filters are computed with a paired dipole as sourcemodel, thus
+% suppressing the distortive effect of correlated activity from the seed region.
+% Dipole locations that are outside the head will return a NaN value.
 %
 % Use as
 %   [dipout] = beamformer_pcc(dipin, grad, headmodel, dat, cov, ...)
@@ -38,7 +41,7 @@ function [dipout] = beamformer_pcc(dip, grad, headmodel, dat, Cf, varargin)
 %   realfilter
 %   fixedori
 
-% Copyright (C) 2005-2014, Robert Oostenveld & Jan-Mathijs Schoffelen
+% Copyright (C) 2005-2020, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -68,35 +71,50 @@ refchan        = ft_getopt(varargin, 'refchan',       []);
 refdip         = ft_getopt(varargin, 'refdip',        []);
 supchan        = ft_getopt(varargin, 'supchan',       []);
 supdip         = ft_getopt(varargin, 'supdip',        []);
-% these settings pertain to the forward model, the defaults are set in compute_leadfield
-reducerank     = ft_getopt(varargin, 'reducerank',     []);
-normalize      = ft_getopt(varargin, 'normalize',      []);
-normalizeparam = ft_getopt(varargin, 'normalizeparam', []);
+
 % these optional settings have defaults
 feedback       = ft_getopt(varargin, 'feedback',      'text');
-keepcsd        = ft_getopt(varargin, 'keepcsd',       'no');
+keepcsd        = ft_getopt(varargin, 'keepcsd',       'yes');
 keepfilter     = ft_getopt(varargin, 'keepfilter',    'no');
 keepleadfield  = ft_getopt(varargin, 'keepleadfield', 'no');
 keepmom        = ft_getopt(varargin, 'keepmom',       'yes');
-lambda         = ft_getopt(varargin, 'lambda',        0);
-kappa          = ft_getopt(varargin, 'kappa',         []);
-tol            = ft_getopt(varargin, 'tol',           []);
-invmethod      = ft_getopt(varargin, 'invmethod',     []);
 projectnoise   = ft_getopt(varargin, 'projectnoise',  'yes');
 realfilter     = ft_getopt(varargin, 'realfilter',    'yes');
 fixedori       = ft_getopt(varargin, 'fixedori',      'no');
+weightnorm     = ft_getopt(varargin, 'weightnorm',    'no');
+
+% construct the low-level options for the covariance matrix inversion as key-value pairs, these are passed to FT_INV
+invopt = {};
+invopt = ft_setopt(invopt, 'lambda',    ft_getopt(varargin, 'lambda', 0));
+invopt = ft_setopt(invopt, 'kappa',     ft_getopt(varargin, 'kappa'));
+invopt = ft_setopt(invopt, 'tolerance', ft_getopt(varargin, 'tol'));
+invopt = ft_setopt(invopt, 'method',    ft_getopt(varargin, 'invmethod'));
+
+% construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD
+leadfieldopt = {};
+leadfieldopt = ft_setopt(leadfieldopt, 'reducerank',     ft_getopt(varargin, 'reducerank'));
+leadfieldopt = ft_setopt(leadfieldopt, 'backproject',    ft_getopt(varargin, 'backproject'));
+leadfieldopt = ft_setopt(leadfieldopt, 'normalize',      ft_getopt(varargin, 'normalize'));
+leadfieldopt = ft_setopt(leadfieldopt, 'normalizeparam', ft_getopt(varargin, 'normalizeparam'));
+leadfieldopt = ft_setopt(leadfieldopt, 'weight',         ft_getopt(varargin, 'weight'));
 
 % convert the yes/no arguments to the corresponding logical values
-fixedori       = strcmp(fixedori,      'yes');
-keepcsd        = strcmp(keepcsd,       'yes');  % see below
-keepfilter     = strcmp(keepfilter,    'yes');
-keepleadfield  = strcmp(keepleadfield, 'yes');
-keepmom        = strcmp(keepmom,       'yes');
-projectnoise   = strcmp(projectnoise,  'yes');
-realfilter     = strcmp(realfilter,    'yes');
+fixedori       = istrue(fixedori);
+keepcsd        = istrue(keepcsd);  % see below
+keepfilter     = istrue(keepfilter);
+keepleadfield  = istrue(keepleadfield);
+keepmom        = istrue(keepmom);
+projectnoise   = istrue(projectnoise);
+realfilter     = istrue(realfilter);
 
-% the postprocessing of the pcc beamformer always requires the csd matrix
-keepcsd = true;
+if ~isequal(weightnorm, 'no')
+  ft_error('weight normalization is not supported');
+end
+
+if ~keepcsd
+  ft_warning('setting keepcsd to ''yes'', overruling specified option');
+  keepcsd = true; % this needs to be true by definition
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % find the dipole positions that are inside/outside the brain
@@ -138,13 +156,13 @@ if hasfilter
 end
 
 if ~isempty(refdip)
-  rf = ft_compute_leadfield(refdip, grad, headmodel, 'reducerank', reducerank, 'normalize', normalize);
+  rf = ft_compute_leadfield(refdip, grad, headmodel, leadfieldopt{:});
 else
   rf = [];
 end
 
 if ~isempty(supdip)
-  sf = ft_compute_leadfield(supdip, grad, headmodel, 'reducerank', reducerank, 'normalize', normalize);
+  sf = ft_compute_leadfield(supdip, grad, headmodel, leadfieldopt{:});
 else
   sf = [];
 end
@@ -154,45 +172,38 @@ if (~isempty(rf) || ~isempty(sf)) && hasfilter
   ft_error('precomputed filters cannot be used in combination with a refdip or supdip')
 end
 
-refchan  = refchan;               % these can be passed as optional inputs
-supchan  = supchan;               % these can be passed as optional inputs
-megchan  = setdiff(1:size(Cf,1), [refchan supchan]);
+megchan  = setdiff(1:size(C,1), [refchan supchan]);
 Nrefchan = length(refchan);
 Nsupchan = length(supchan);
 Nmegchan = length(megchan);
-Nchan    = size(Cf,1);            % should equal Nmegchan + Nrefchan + Nsupchan
-Cmeg     = Cf(megchan,megchan);   %  the filter uses the csd between all MEG channels
-
-isrankdeficient = (rank(Cmeg)<size(Cmeg,1));
-rankCmeg = rank(Cmeg);
+Cmeg     = C(megchan,megchan);   %  the filter uses the csd between all MEG channels
 
 % it is difficult to give a quantitative estimate of lambda, therefore also
 % support relative (percentage) measure that can be specified as string (e.g. '10%')
+% the converted value needs to be passed on to ft_inv
+lambda = ft_getopt(invopt, 'lambda');
 if ~isempty(lambda) && ischar(lambda) && lambda(end)=='%'
-  ratio = sscanf(lambda, '%f%%');
-  ratio = ratio/100;
-  tmplambda = ratio * trace(Cmeg)/size(Cmeg,1);
-elseif ~isempty(lambda)
-  tmplambda = lambda;
-else
-  tmplambda = 0;
+  ratio  = sscanf(lambda, '%f%%');
+  ratio  = ratio/100;
+  lambda = ratio * trace(C)/size(C,1);
+  invopt = ft_setopt(invopt, 'lambda', lambda);
 end
 
 if projectnoise
   % estimate the noise level in the covariance matrix by the smallest singular (non-zero) value
   noise = svd(Cmeg);
-  noise = noise(rankCmeg);
+  noise = noise(rank(Cmeg));
   % estimated noise floor is equal to or higher than a numeric lambda
-  noise = max(noise, tmplambda);
+  noise = max(noise, lambda);
 end
 
 if realfilter
   % construct the filter only on the real part of the CSD matrix, i.e. filter is real
-  invCmeg = ft_inv(real(Cmeg), 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
+  invCmeg = ft_inv(real(Cmeg), invopt{:});
 else
   % construct the filter on the complex CSD matrix, i.e. filter contains imaginary component as well
   % this results in a phase rotation of the channel data if the filter is applied to the data
-  invCmeg = ft_inv(Cmeg, 'lambda', lambda, 'kappa', kappa, 'tolerance', tol, 'method', invmethod);
+  invCmeg = ft_inv(Cmeg, invopt{:});
 end
 
 % start the scanning with the proper metric
@@ -212,10 +223,10 @@ for i=1:size(dip.pos,1)
     lf = dip.leadfield{i};
   elseif ~hasleadfield && isfield(dip, 'mom')
     % compute the leadfield for a fixed dipole orientation
-    lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
+    lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, leadfieldopt{:}) * dip.mom(:,i);
   else
     % compute the leadfield
-    lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+    lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, leadfieldopt{:});
   end
   
   % determine the dimensionality of the source (usually 3, or 6 for a dipole pair)
@@ -277,7 +288,7 @@ for i=1:size(dip.pos,1)
   clear filtn
   
   if keepcsd
-    dipout.csd{i,1} = filt * Cf * ctranspose(filt);
+    dipout.csd{i,1} = filt * C * ctranspose(filt);
   end
   if projectnoise
     dipout.noisecsd{i,1} = noise * (filt * ctranspose(filt));
@@ -311,38 +322,20 @@ ft_progress('close');
 dipout.inside  = originside;
 dipout.pos     = origpos;
 
-% reassign the scan values over the inside and outside grid positions
-if isfield(dipout, 'leadfield')
-  dipout.leadfield( originside) = dipout.leadfield;
-  dipout.leadfield(~originside) = {[]};
+fnames_cell   = {'leadfield' 'filter' 'ori' 'csd' 'noisecsd' 'subspace' 'mom' 'csdlabel'};
+for k = 1:numel(fnames_cell)
+  if isfield(dipout, fnames_cell{k})
+    dipout.(fnames_cell{k})( originside) = dipout.(fnames_cell{k});
+    dipout.(fnames_cell{k})(~originside) = {[]};
+  end
 end
-if isfield(dipout, 'filter')
-  dipout.filter( originside) = dipout.filter;
-  dipout.filter(~originside) = {[]};
-end
-if isfield(dipout, 'mom')
-  dipout.mom( originside) = dipout.mom;
-  dipout.mom(~originside) = {[]};
-end
-if isfield(dipout, 'csd')
-  dipout.csd( originside) = dipout.csd;
-  dipout.csd(~originside) = {[]};
-end
-if isfield(dipout, 'noisecsd')
-  dipout.noisecsd( originside) = dipout.noisecsd;
-  dipout.noisecsd(~originside) = {[]};
-end
-if isfield(dipout, 'csdlabel')
-  dipout.csdlabel( originside) = dipout.csdlabel;
-  dipout.csdlabel(~originside) = {[]};
-end
-if isfield(dipout, 'ori')
-  dipout.ori( originside) = dipout.ori;
-  dipout.ori(~originside) = {[]};
-end
-if isfield(dipout, 'eta')
-  dipout.eta( originside) = dipout.eta;
-  dipout.eta(~originside) = nan;
+
+fnames_scalar = {'pow' 'noise' 'eta' 'coh'};
+for k = 1:numel(fnames_scalar)
+  if isfield(dipout, fnames_scalar{k})
+    dipout.(fnames_scalar{k})( originside) = dipout.(fnames_scalar{k});
+    dipout.(fnames_scalar{k})(~originside) = nan;
+  end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
