@@ -3,7 +3,7 @@ function [connectivity] = channelconnectivity(cfg, data)
 % CHANNELCONNECTIVIY creates a NxN matrix that describes whether channels
 % are connected as neighbours
 %
-% See also FT_PREPARE_NEIGHBOURS
+% See also FT_PREPARE_NEIGHBOURS, TRIANGLE2CONNECTIVITY
 
 if (isfield(cfg, 'avgoverchan') && strcmp(cfg.avgoverchan, 'yes')) || isempty(cfg.neighbours)
   if nargin < 2
