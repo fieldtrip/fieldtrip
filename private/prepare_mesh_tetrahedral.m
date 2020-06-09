@@ -75,3 +75,5 @@ ft_hastoolbox('iso2mesh', 1);
 mesh = keepfields(mri, {'coordsys', 'unit'});
 mesh.pos = ft_warp_apply(mri.transform, node);
 mesh.tet = elem(:,1:4);
+mesh.tissue = elem(:,5);
+mesh.tissuelabel = mri.seglabel;
