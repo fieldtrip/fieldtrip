@@ -464,9 +464,9 @@ switch method
             end
             % compute the three information components, exclude the source
             % and feature 'channels' to avoid potential numerical issues
-            I1 = cov2cmi_ggg(Cxyz(:,[1 4 3],[1 4 3]), size(tmptarget,1), true, [1 1 1]); % T,F
-            I2 = cov2cmi_ggg(Cxyz(:,[2 4 3],[2 4 3]), size(tmptarget,1), true, [1 1 1]); % S,F
-            I3 = cov2cmi_ggg(Cxyz(:,[1 2 4 3],[1 2 4 3]), size(tmptarget,1), true, [2 1 1]);
+            I1 = cov2cmi_ggg(Cxyz(:,[1 4 3],[1 4 3]), size(tmptarget,2), true, [1 1 1]); % T,F
+            I2 = cov2cmi_ggg(Cxyz(:,[2 4 3],[2 4 3]), size(tmptarget,2), true, [1 1 1]); % S,F
+            I3 = cov2cmi_ggg(Cxyz(:,[1 2 4 3],[1 2 4 3]), size(tmptarget,2), true, [2 1 1]);
             output(:,:,mm,m) = reshape(I1+I2-I3,[],ns).'; % equation 4 in Robin Ince's scientific reports paper.
           
 %             % compute the three information components, exclude the source
@@ -475,7 +475,7 @@ switch method
 %             I1  = cmi_ggg_vec(source,           feature, target_shifted(:,sel), true, true);
 %             I2  = cmi_ggg_vec(tmptarget(:,sel), feature, target_shifted(:,sel), true, true);
 %             I3  = cmi_ggg_vec(cat(3, tmptarget(:,sel), repmat(source, 1, sum(sel))), feature, target_shifted(:,sel), true, true);
-            end
+          end
         end
         
       elseif ~conditional && ~isempty(featureindx)
