@@ -2,6 +2,7 @@ function test_ft_connectivity_corr
 
 % WALLTIME 00:20:00
 % MEM 3gb
+% DEPENDENCY
 
 tmp.powspctrm = rand(10,3,1);
 tmp.freq = 1;

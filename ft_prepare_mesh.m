@@ -20,7 +20,7 @@ function [mesh, cfg] = ft_prepare_mesh(cfg, data)
 %
 % When providing an anatomical MRI or a segmentation, you should specify
 %   cfg.downsample  = integer number (default = 1, i.e. no downsampling), see FT_VOLUMEDOWNSAMPLE
-%   cfg.spmversion  = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
+%   cfg.spmversion  = string, 'spm2', 'spm8', 'spm12' (default = 'spm12')
 %
 % For method 'headshape' you should specify
 %   cfg.headshape   = a filename containing headshape, a Nx3 matrix with surface
@@ -124,7 +124,7 @@ cfg = ft_checkconfig(cfg, 'forbidden', {'numcompartments', 'outputfile', 'source
 cfg.downsample  = ft_getopt(cfg, 'downsample', 1);      % default is no downsampling
 cfg.numvertices = ft_getopt(cfg, 'numvertices', 3000);  % set the default
 cfg.smooth      = ft_getopt(cfg, 'smooth');             % no default
-cfg.spmversion  = ft_getopt(cfg, 'spmversion', 'spm8');
+cfg.spmversion  = ft_getopt(cfg, 'spmversion', 'spm12');
 
 % Translate the input options in the appropriate default for cfg.method
 if isfield(cfg, 'headshape') && ~isempty(cfg.headshape)
@@ -223,9 +223,10 @@ end
 
 % smooth the mesh
 if ~isempty(cfg.smooth)
-  cfg.headshape = mesh;
-  cfg.numvertices = [];
-  mesh = prepare_mesh_headshape(cfg);
+  tmpcfg = keepfields(cfg, {'smooth', 'showcallinfo'});
+  tmpcfg.numvertices = []; % the number of vertices should not be changed
+  tmpcfg.headshape = mesh;
+  mesh = prepare_mesh_headshape(tmpcfg);
 end
 
 % do the general cleanup and bookkeeping at the end of the function

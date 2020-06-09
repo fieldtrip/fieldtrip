@@ -1,17 +1,15 @@
 function test_bug1828
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY ft_convert_coordsys align_ctf2acpc
 
-% DEPENDENCY ft_convert_coordsys
-% DEPENDENCY align_ctf2acpc
-
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1828'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1828.mat'));
 
 acvox = [89 135 125]; % voxel that is identified as ~ AC, i.e. the origin of the coordinate system
 
 % make sure a version of SPM is on the path
-ft_hastoolbox('SPM8',1);
+ft_hastoolbox('SPM12',1);
 
 mri0 = ft_convert_coordsys(mri, 'spm', 0);
 mri1 = ft_convert_coordsys(mri, 'spm', 1);

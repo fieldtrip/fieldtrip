@@ -2,6 +2,35 @@ function sens = homer2opto(SD)
 
 % HOMER2OPTO converts the Homer SD structure to a FieldTrip optode structure
 %
+% The Homer SD structure contains
+%          Lambda: [780 850]
+%          SrcPos: [16x3 double]
+%          DetPos: [16x3 double]
+%        DummyPos: []
+%           nSrcs: 16
+%           nDets: 16
+%         nDummys: 0
+%        MeasList: [76x4 double]
+%      SpringList: []
+%      AnchorList: {}
+%          SrcMap: [2x16 double]
+%           vrnum: {'1.0'  '2'}
+%            xmin: -14.5263
+%            xmax: 254.5263
+%            ymin: -14.5263
+%            ymax: 224.5263
+%     MeasListAct: [76x1 double]
+%     MeasListVis: [76x1 double]
+%     SpatialUnit: 'mm'
+%
+% where
+%     SD.MeasList  column 1 = transmitter index
+%     SD.MeasList  column 2 = receiver index
+%     SD.MeasList  column 3 = ?
+%     SD.MeasList  column 4 = wavelength index
+%
+% The FieldTrip optode structure is defined in FT_DATATYPE_SENS
+%
 % See also BTI2GRAD, CTF2GRAD, FIF2GRAD, ITAB2GRAD, MNE2GRAD, NETMEG2GRAD, YOKOGAWA2GRAD
 
 % Copyright (C) 2004-2016, Robert Oostenveld
@@ -24,46 +53,9 @@ function sens = homer2opto(SD)
 %
 % $Id$
 
-% The Homer SD structure contains
-%          Lambda: [780 850]
-%          SrcPos: [16?3 double]
-%          DetPos: [16?3 double]
-%        DummyPos: []
-%           nSrcs: 16
-%           nDets: 16
-%         nDummys: 0
-%        MeasList: [76?4 double]
-%      SpringList: []
-%      AnchorList: {}
-%          SrcMap: [2?16 double]
-%           vrnum: {'1.0'  '2'}
-%            xmin: -14.5263
-%            xmax: 254.5263
-%            ymin: -14.5263
-%            ymax: 224.5263
-%     MeasListAct: [76?1 double]
-%     MeasListVis: [76?1 double]
-%     SpatialUnit: 'mm'
-%
-% where
-%     SD.MeasList  column 1 = transmitter index
-%     SD.MeasList  column 2 = receiver index
-%     SD.MeasList  column 3 = ?
-%     SD.MeasList  column 4 = wavelength index
-
-% The FieldTrip optode structure for NIRS channels contains
-%   sens.label          = Cx1 cell-array with channel labels
-%   sens.chanpos        = contains information about the position of the channels (i.e. average of optopos)
-%   sens.optopos        = contains information about the position of the optodes
-%   sens.optotype       = contains information about the type of optode (receiver or transmitter)
-%   sens.wavelength     = 1xM vector of all wavelengths that were used
-%   sens.transmits      = NxM matrix, boolean, where N is the number of optodes and M the number of wavelengths per transmitter. Specifies what optode is transmitting at what wavelength (or nothing at all, which indicates that it is a receiver)
-%   sens.laserstrength  = 1xM vector of the strength of the emitted light of the lasers
-%   sens.tra            = NxC matrix, boolean, contains information about how receiver and transmitter form channels
-
+M = size(SD.MeasList,1);  % number of channels
 N = SD.nSrcs + SD.nDets;  % number of optodes
-C = size(SD.MeasList,1);  % number of channels
-M = numel(SD.Lambda);     % number of wavelengths
+K = numel(SD.Lambda);     % number of wavelengths
 
 sens.optopos    = cat(1, SD.SrcPos, SD.DetPos);
 sens.optotype   = cat(1, repmat({'transmitter'}, [SD.nSrcs, 1]), repmat({'receiver'}, [SD.nDets, 1]));
@@ -77,9 +69,9 @@ if isfield(SD, 'SpatialUnit')
 end
 
 % laser strength is not known, this probably does not apply to diode based systems anyway
-sens.laserstrength = nan(1,M);
+sens.laserstrength = nan(1,K);
 
-sens.transmits = false(N, M);
+sens.transmits = false(N, K);
 % the optodes are sorted: first transmitters, then receivers
 for transmitter=1:SD.SrcPos
   sel = SD.MeasList(:,1)==transmitter;
@@ -90,8 +82,8 @@ for transmitter=1:SD.SrcPos
   end % for all wavelengths
 end % for all transmitters
 
-sens.tra = false(N, C);
-for chan=1:C
+sens.tra = false(N, M);
+for chan=1:M
   transmitter = SD.MeasList(chan, 1);
   receiver    = SD.MeasList(chan, 2);
   sens.tra(transmitter, chan) = true;

@@ -1,9 +1,8 @@
 function test_bug2647
-
 % DEPENDENCY ft_freqstatistics
 
 % WALLTIME 00:10:00
-% MEM 1gb
+% MEM 2gb
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2647.mat'));
 stat = ft_freqstatistics(cfg,data,BL);

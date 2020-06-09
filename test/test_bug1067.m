@@ -1,8 +1,8 @@
 function test_bug1067
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
+% DEPENDENCY
 
 % tests whether parameters that are in ft_freq* but not in ft_source* will
 % be caught by ft_source* (and vice versa)

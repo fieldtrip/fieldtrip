@@ -1,8 +1,7 @@
 function test_bug2235
 
-% MEM 1gb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_denoise_synthetic
 
 fname = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2235');

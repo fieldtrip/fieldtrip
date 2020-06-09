@@ -139,21 +139,37 @@ else
 end
 
 % zero out the off-diagonal elements for the specified channel types
-for i=1:numel(chantype)
-  sel = strcmp(noise.chantype, chantype{i});
-  noisecov(sel,~sel) = 0;
-  noisecov(~sel,sel) = 0;
+if numel(chantype)>0
+  invnoise = zeros(size(noisecov));
+  tra      = zeros(size(noisecov));
+  for i=1:numel(chantype)
+    sel = strcmp(noise.chantype, chantype{i});
+    %noisecov(sel,~sel) = 0;
+    %noisecov(~sel,sel) = 0;
+    invnoise(sel,sel) = ft_inv(noisecov(sel,sel), 'lambda', cfg.lambda, 'kappa', cfg.kappa, 'tolerance', cfg.tol, 'method', cfg.invmethod);
+    [U,S,V]           = svd(invnoise(sel,sel), 'econ');
+    diagS             = diag(S)./numel(chantype);
+    selS              = 1:rank(invnoise(sel,sel));
+    tra(sel,sel)      = U(:,selS)*diag(sqrt(diagS(selS)))*U(:,selS)';
+  end
+  %invnoise = ft_inv(noisecov, 'lambda', cfg.lambda, 'kappa', cfg.kappa, 'tolerance', cfg.tol, 'method', cfg.invmethod);
+
+else
+  % invert the noise covariance matrix
+  invnoise = ft_inv(noisecov, 'lambda', cfg.lambda, 'kappa', cfg.kappa, 'tolerance', cfg.tol, 'method', cfg.invmethod);
+  [U,S,V]  = svd(invnoise,'econ');
+  diagS    = diag(S);
+  %sel     = diagS./diagS(1)>1e-12;
+  sel      = 1:rank(invnoise);
+  
+  
+  % the prewhitening projection first rotates to orthogonal channels,
+  % then scales, and then rotates the channels back to (more or less)
+  % their original MEG-channel representation
+  tra      = U(:,sel)*diag(sqrt(diagS(sel)))*U(:,sel)';
 end
-
-% invert the noise covariance matrix
-invnoise = ft_inv(noisecov, 'lambda', cfg.lambda, 'kappa', cfg.kappa, 'tolerance', cfg.tol, 'method', cfg.invmethod);
-[U,S,V]  = svd(invnoise,'econ');
-
-% the prewhitening projection first rotates to orthogonal channels,
-% then scales, and then rotates the channels back to (more or less)
-% their original MEG-channel representation
 prewhiten             = [];
-prewhiten.tra         = U*sqrt(S)*U';
+prewhiten.tra         = tra;
 prewhiten.labelold    = noise.label;
 prewhiten.labelnew    = noise.label;
 prewhiten.chantypeold = noise.chantype;

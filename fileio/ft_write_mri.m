@@ -45,7 +45,7 @@ function [V] = ft_write_mri(filename, dat, varargin)
 
 % get the options
 transform     = ft_getopt(varargin, 'transform', eye(4));
-spmversion    = ft_getopt(varargin, 'spmversion', 'SPM8');
+spmversion    = ft_getopt(varargin, 'spmversion', 'spm12');
 dataformat    = ft_getopt(varargin, 'dataformat'); % FIXME this is inconsistent with ft_read_mri, which uses 'format'
 
 if isstruct(dat) && isfield(dat, 'anatomy') && isequal(transform, eye(4))
@@ -64,12 +64,14 @@ if nargout>0
   V = [];
 end
 
-% ensure that the directory exists
-isdir_or_mkdir(fileparts(filename));
+% ensure that the directory exists if we want to write to a file
+if ~ismember(dataformat, {'empty', 'fcdc_global', 'fcdc_buffer', 'fcdc_mysql'})
+  isdir_or_mkdir(fileparts(filename));
+end
 
 switch dataformat
 
-  case {'analyze_img' 'analyze_hdr' 'analyze' 'nifti_spm'}
+  case {'analyze_img' 'analyze_hdr' 'analyze' 'nifti_img' 'nifti_spm'}
     % analyze data, using SPM
     V = volumewrite_spm(filename, dat, transform, spmversion);
     

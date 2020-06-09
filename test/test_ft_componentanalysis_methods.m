@@ -1,10 +1,8 @@
 function test_ft_componentanalysis_methods
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% DEPENDENCY ft_componentanalysis, ft_rejectcomponent, ft_checkdata
-% DEPENDENCY runica, fastica, sobi, jader, dss, parafac
+% DEPENDENCY ft_componentanalysis ft_rejectcomponent ft_checkdata runica fastica sobi jader dss parafac
 
 % note 3) binica does not run on all computers, which is why it is disabled
 % note 9) parafac depends on an external toolbox, which I don't have access to at the moment 

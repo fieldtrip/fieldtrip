@@ -764,7 +764,8 @@ switch cfg.method
     [unmixing, mixing, rho, compdata, time] = bsscca(dat, optarg{:});
     data.trial = mixing*compdata;
     data.time  = time;
-    
+    data       = removefields(data, 'sampleinfo');
+ 
     if size(mixing,1)>numel(data.label)
       for m = 1:(size(mixing,1)-numel(data.label))
         data.label{end+1} = sprintf('refchan%03d',m);

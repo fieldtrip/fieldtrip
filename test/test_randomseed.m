@@ -1,7 +1,8 @@
 function test_randomseed
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 
 % this is related to bug 1205

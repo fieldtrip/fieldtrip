@@ -14,9 +14,8 @@ function atlas = ft_read_atlas(filename, varargin)
 % Additional options should be specified in key-value pairs and can include
 %   'format'      = string, see below
 %   'unit'        = string, e.g. 'mm' (default is to keep it in the native units of the file)
-%   'map'         = string, 'maxprob' (default), or 'prob', for fsl-based
-%                     atlases, providing either a probabilistic
-%                     segmentation or a maximum a posterior probability map
+%   'map'         = string, 'maxprob' (default), or 'prob', for FSL-based atlases, providing 
+%                   either a probabilistic segmentation or a maximum a posterior probability map
 %
 % For individual surface-based atlases from FreeSurfer you should specify two
 % filenames as a cell-array: the first points to the file that contains information
@@ -31,8 +30,7 @@ function atlas = ft_read_atlas(filename, varargin)
 %
 % See also FT_READ_MRI, FT_READ_HEADSHAPE, FT_PREPARE_SOURCEMODEL, FT_SOURCEPARCELLATE, FT_PLOT_MESH
 
-% Copyright (C) 2005-2019, Robert Oostenveld, Ingrid Nieuwenhuis,
-% Jan-Mathijs Schoffelen, Arjen Stolk
+% Copyright (C) 2005-2019, Robert Oostenveld, Ingrid Nieuwenhuis, Jan-Mathijs Schoffelen, Arjen Stolk
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -1848,10 +1846,10 @@ switch fileformat
     g = gifti(filename);
     
     rgba = [];
-    if isfield(g, 'labels'),
+    if isfield(g, 'labels')
       label = g.labels.name(:);
       key   = g.labels.key(:);
-      if isfield(g.labels, 'rgba'),
+      if isfield(g.labels, 'rgba')
         rgba = g.labels.rgba; % I'm not sure whether this always exists
       end
     else

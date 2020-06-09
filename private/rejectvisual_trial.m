@@ -3,12 +3,22 @@ function [chansel, trlsel, cfg] = rejectvisual_trial(cfg, data)
 % SUBFUNCTION for ft_rejectvisual
 
 % determine the initial selection of trials
-ntrl   = numel(data.trial);
-trlsel = true(1, ntrl);
+ntrl = length(data.trial);
+if isequal(cfg.trials, 'all') % support specification like 'all'
+  cfg.trials = 1:ntrl;
+elseif isempty(cfg.trials)
+  cfg.trials = 1:ntrl;
+elseif isnumeric(cfg.trials)
+  % use the selection as it is
+end
+trlsel = false(1, ntrl);
+trlsel(cfg.trials) = true;
 
 % determine the initial selection of channels
-nchan   = numel(data.label);
-chansel = true(1, nchan);
+nchan = length(data.label);
+cfg.channel = ft_channelselection(cfg.channel, data.label); % support specification like 'all'
+chansel = false(1, nchan);
+chansel(match_str(data.label, cfg.channel)) = true;
 
 % compute the sampling frequency from the first two timepoints
 fsample = 1/mean(diff(data.time{1}));
@@ -33,77 +43,49 @@ if ischar(cfg.latency)
   cfg.latency(2) = max(cellfun(@max, data.time));
 end
 
-h = figure;
-axis([0 1 0 1]);
-axis off
 
 % the info structure will be attached to the figure
 % and passed around between the callback functions
-if strcmp(cfg.plotlayout,'1col') % hidden config option for plotting trials differently
-  info         = [];
-  info.ncols   = 1;
-  info.nrows   = nchan;
-  info.chanlop = 1;
-  info.trlop   = 1;
-  info.ltrlop  = 0;
-  info.quit    = 0;
-  info.ntrl    = ntrl;
-  info.nchan   = nchan;
-  info.data    = data;
-  info.cfg     = cfg;
-  info.offset  = offset;
-  info.chansel = chansel;
-  info.trlsel  = trlsel;
-  % determine the position of each subplot within the axis
-  for row=1:info.nrows
-    for col=1:info.ncols
-      indx = (row-1)*info.ncols + col;
-      if indx>info.nchan
-        continue
-      end
-      info.x(indx)     = (col-0.9)/info.ncols;
-      info.y(indx)     = 1 - (row-0.45)/(info.nrows+1);
-    end
-  end
-  info.label = info.data.label;
-elseif strcmp(cfg.plotlayout,'square')
-  info         = [];
-  info.ncols   = ceil(sqrt(nchan));
-  info.nrows   = ceil(sqrt(nchan));
-  info.chanlop = 1;
-  info.trlop   = 1;
-  info.ltrlop  = 0;
-  info.quit    = 0;
-  info.ntrl    = ntrl;
-  info.nchan   = nchan;
-  info.data    = data;
-  info.cfg     = cfg;
-  info.offset  = offset;
-  info.chansel = chansel;
-  info.trlsel  = trlsel;
-  % determine the position of each subplot within the axis
-  for row=1:info.nrows
-    for col=1:info.ncols
-      indx = (row-1)*info.ncols + col;
-      if indx>info.nchan
-        continue
-      end
-      info.x(indx)     = (col-0.9)/info.ncols;
-      info.y(indx)     = 1 - (row-0.45)/(info.nrows+1);
-    end
-  end
-  info.label = info.data.label;
+info         = [];
+info.chanlop = 1;
+info.trlop   = 1;
+info.ltrlop  = 0;
+info.quit    = 0;
+info.ntrl    = ntrl;
+info.nchan   = nchan;
+info.data    = data;
+info.cfg     = cfg;
+info.offset  = offset;
+info.chansel = chansel;
+info.trlsel  = trlsel;
+
+tmpcfg = [];
+tmpcfg.layout = 'ordered';
+tmpcfg.skipscale = 'yes';
+tmpcfg.skipcomnt = 'yes';
+for i=1:nchan
+  tmpcfg.channel{i} = sprintf('channel %s', data.label{i});
 end
+info.layout = ft_prepare_layout(tmpcfg);
+
+minx = min(info.layout.pos(:,1) - info.layout.width/2);
+maxx = max(info.layout.pos(:,1) + info.layout.width/2);
+miny = min(info.layout.pos(:,2) - info.layout.height/2);
+maxy = max(info.layout.pos(:,2) + info.layout.height/2);
+
+h = figure;
+axis off
+axis([minx maxx miny maxy]);
 
 info.ui.quit        = uicontrol(h,'units','pixels','position',[  5 5 40 18],'String','quit','Callback',@stop);
 info.ui.prev        = uicontrol(h,'units','pixels','position',[ 50 5 25 18],'String','<','Callback',@prev);
 info.ui.next        = uicontrol(h,'units','pixels','position',[ 75 5 25 18],'String','>','Callback',@next);
 info.ui.prev10      = uicontrol(h,'units','pixels','position',[105 5 25 18],'String','<<','Callback',@prev10);
 info.ui.next10      = uicontrol(h,'units','pixels','position',[130 5 25 18],'String','>>','Callback',@next10);
-info.ui.bad         = uicontrol(h,'units','pixels','position',[160 5 50 18],'String','bad','Callback',@markbad);
-info.ui.good        = uicontrol(h,'units','pixels','position',[210 5 50 18],'String','good','Callback',@markgood);
-info.ui.badnext     = uicontrol(h,'units','pixels','position',[270 5 50 18],'String','bad>','Callback',@markbad_next);
-info.ui.goodnext    = uicontrol(h,'units','pixels','position',[320 5 50 18],'String','good>','Callback',@markgood_next);
+info.ui.exclude     = uicontrol(h,'units','pixels','position',[160 5 70 18],'String','exclude','Callback',@markexclude);
+info.ui.include     = uicontrol(h,'units','pixels','position',[230 5 70 18],'String','include','Callback',@markinclude);
+info.ui.excludenext = uicontrol(h,'units','pixels','position',[310 5 70 18],'String','exclude >','Callback',@markexclude_next);
+info.ui.includenext = uicontrol(h,'units','pixels','position',[380 5 70 18],'String','include >','Callback',@markinclude_next);
 set(gcf, 'WindowButtonUpFcn', @button);
 set(gcf, 'KeyPressFcn', @key);
 
@@ -113,8 +95,8 @@ interactive = 1;
 while interactive && ishandle(h)
   redraw(h);
   info = guidata(h);
-  if info.quit == 0,
-    uiwait;
+  if info.quit == 0
+    uiwait(h);
   else
     chansel = info.chansel;
     trlsel = info.trlsel;
@@ -127,69 +109,69 @@ end % while interactive
 % SUBFUNCTIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function varargout = markbad_next(varargin)
-markbad(varargin{:});
+function varargout = markexclude_next(varargin)
+markexclude(varargin{:});
 next(varargin{:});
 
-function varargout = markgood_next(varargin)
-markgood(varargin{:});
+function varargout = markinclude_next(varargin)
+markinclude(varargin{:});
 next(varargin{:});
 
 function varargout = next(h, eventdata, handles, varargin)
 info = guidata(h);
 info.ltrlop = info.trlop;
-if info.trlop < info.ntrl,
+if info.trlop < info.ntrl
   info.trlop = info.trlop + 1;
-end;
+end
 guidata(h,info);
 uiresume;
 
 function varargout = prev(h, eventdata, handles, varargin)
 info = guidata(h);
 info.ltrlop = info.trlop;
-if info.trlop > 1,
+if info.trlop > 1
   info.trlop = info.trlop - 1;
-end;
+end
 guidata(h,info);
 uiresume;
 
 function varargout = next10(h, eventdata, handles, varargin)
 info = guidata(h);
 info.ltrlop = info.trlop;
-if info.trlop < info.ntrl - 10,
+if info.trlop < info.ntrl - 10
   info.trlop = info.trlop + 10;
 else
   info.trlop = info.ntrl;
-end;
+end
 guidata(h,info);
 uiresume;
 
 function varargout = prev10(h, eventdata, handles, varargin)
 info = guidata(h);
 info.ltrlop = info.trlop;
-if info.trlop > 10,
+if info.trlop > 10
   info.trlop = info.trlop - 10;
 else
   info.trlop = 1;
-end;
+end
 guidata(h,info);
 uiresume;
 
-function varargout = markgood(h, eventdata, handles, varargin)
+function varargout = markinclude(h, eventdata, handles, varargin)
 info = guidata(h);
 info.trlsel(info.trlop) = 1;
 fprintf(description_trial(info));
 title(description_trial(info));
 guidata(h,info);
-% uiresume;
+uiresume;
 
-function varargout = markbad(h, eventdata, handles, varargin)
+function varargout = markexclude(h, eventdata, handles, varargin)
 info = guidata(h);
 info.trlsel(info.trlop) = 0;
 fprintf(description_trial(info));
 title(description_trial(info));
 guidata(h,info);
-% uiresume;
+uiresume;
 
 function varargout = key(h, eventdata, handles, varargin)
 info = guidata(h);
@@ -207,9 +189,9 @@ switch lower(eventdata.Key)
       fprintf('at first trial\n');
     end
   case 'g'
-    markgood(h);
+    markinclude(h);
   case 'b'
-    markbad(h);
+    markexclude(h);
   case 'q'
     stop(h);
   otherwise
@@ -221,11 +203,12 @@ pos = get(gca, 'CurrentPoint');
 x = pos(1,1);
 y = pos(1,2);
 info = guidata(h);
-dx = info.x - x;
-dy = info.y - y;
+dx = info.layout.pos(:,1) - x;
+dy = info.layout.pos(:,2) - y;
 dd = sqrt(dx.^2 + dy.^2);
 [d, i] = min(dd);
-if d<0.5/max(info.nrows, info.ncols) && i<=info.nchan
+threshold = median(sqrt(info.layout.width.^2 + info.layout.height.^2)/2);
+if d<threshold && i<=info.nchan
   info.chansel(i) = ~info.chansel(i); % toggle
   info.chanlop = i;
   fprintf(description_channel(info));
@@ -244,16 +227,16 @@ uiresume;
 
 function str = description_channel(info)
 if info.chansel(info.chanlop)
-  str = sprintf('channel %s marked as GOOD\n', info.data.label{info.chanlop});
+  str = sprintf('channel %s marked to INCLUDE\n', info.data.label{info.chanlop});
 else
-  str = sprintf('channel %s marked as BAD\n', info.data.label{info.chanlop});
+  str = sprintf('channel %s marked to EXCLUDE\n', info.data.label{info.chanlop});
 end
 
 function str = description_trial(info)
 if info.trlsel(info.trlop)
-  str = sprintf('trial %d marked as GOOD\n', info.trlop);
+  str = sprintf('trial %d marked to INCLUDE\n', info.trlop);
 else
-  str = sprintf('trial %d marked as BAD\n', info.trlop);
+  str = sprintf('trial %d marked to EXCLUDE\n', info.trlop);
 end
 
 function redraw(h)
@@ -261,61 +244,68 @@ if ~ishandle(h)
   return
 end
 info = guidata(h);
-fprintf(description_trial(info));
 cla;
 title('');
 drawnow
 hold on
-dat  = info.data.trial{info.trlop};
-time = info.data.time{info.trlop};
-if ~isempty(info.cfg.alim)
-  % use fixed amplitude limits for amplitude scaling
-  amax = info.cfg.alim;
-else
-  % use automatic amplitude limits for scaling, these are different for each trial
-  amax = max(max(abs(dat(info.chansel,:))));
-end
-tmin = time(1);
-tmax = time(end);
-% scale the time values between 0.1 and 0.9
-time = 0.1 + 0.8*(time-tmin)/(tmax-tmin);
-% scale the amplitude values between -0.5 and 0.5, offset should not be removed
-dat = dat ./ (2*amax);
-for row=1:info.nrows
-  for col=1:info.ncols
-    chanindx = (row-1)*info.ncols + col;
-    if chanindx>info.nchan || ~info.chansel(chanindx)
+
+if ~isnumeric(info.cfg.ylim)
+  ymin = [];
+  ymax = [];
+  for chanindx=1:info.nchan
+    if ~info.chansel(chanindx)
+      % do not consider excluded channels in vertical scaling estimate
       continue
     end
-    % scale the time values for this subplot
-    tim = (col-1)/info.ncols + time/info.ncols;
-    % scale the amplitude values for this subplot
-    amp = dat(chanindx,:)./info.nrows + 1 - row/(info.nrows+1);
-    plot(tim, amp, 'k')
+    dat = info.data.trial{info.trlop}(chanindx,:);
+    ymin = min(ymin, min(dat));
+    ymax = max(ymax, max(dat));
   end
+  if strcmp(info.cfg.ylim, 'maxabs') % handle maxabs, make y-axis center on 0
+    ymax = max(abs(ymax), abs(ymin));
+    ymin = -ymax;
+  elseif strcmp(info.cfg.ylim, 'zeromax')
+    ymin = 0;
+  elseif strcmp(info.cfg.ylim, 'minzero')
+    ymax = 0;
+  end
+else
+  ymin = info.cfg.ylim(1);
+  ymax = info.cfg.ylim(2);
 end
+
+for chanindx=1:info.nchan
+  tim = info.data.time{info.trlop};
+  dat = info.data.trial{info.trlop}(chanindx,:);
+  if info.chansel(chanindx) && info.trlsel(info.trlop)
+    color = 'k';
+  else
+    color = 'none';
+  end
+  ft_plot_vector(tim, dat, 'hpos', info.layout.pos(chanindx,1), 'vpos', info.layout.pos(chanindx,2), 'width', info.layout.width(chanindx), 'height', info.layout.height(chanindx), 'vlim', [ymin ymax], 'box', istrue(info.cfg.box), 'color', color, 'label', info.layout.label{chanindx}, 'labelpos', 'lowerleft');
+end
+
 % enable or disable buttons as appropriate
 if info.trlop == 1
-    set(info.ui.prev,   'Enable', 'off');
-    set(info.ui.prev10, 'Enable', 'off');
+  set(info.ui.prev,   'Enable', 'off');
+  set(info.ui.prev10, 'Enable', 'off');
 else
-    set(info.ui.prev,   'Enable', 'on');
-    set(info.ui.prev10, 'Enable', 'on');
+  set(info.ui.prev,   'Enable', 'on');
+  set(info.ui.prev10, 'Enable', 'on');
 end
 if info.trlop == info.ntrl
-    set(info.ui.next,   'Enable', 'off');
-    set(info.ui.next10, 'Enable', 'off');
+  set(info.ui.next,   'Enable', 'off');
+  set(info.ui.next10, 'Enable', 'off');
 else
-    set(info.ui.next,   'Enable', 'on');
-    set(info.ui.next10, 'Enable', 'on');
+  set(info.ui.next,   'Enable', 'on');
+  set(info.ui.next10, 'Enable', 'on');
 end
 if info.ltrlop == info.trlop && info.trlop == info.ntrl
-    set(info.ui.badnext,'Enable', 'off');
-    set(info.ui.goodnext,'Enable', 'off');
+  set(info.ui.excludenext,'Enable', 'off');
+  set(info.ui.includenext,'Enable', 'off');
 else
-    set(info.ui.badnext,'Enable', 'on');
-    set(info.ui.goodnext,'Enable', 'on');
+  set(info.ui.excludenext,'Enable', 'on');
+  set(info.ui.includenext,'Enable', 'on');
 end
-text(info.x, info.y, info.label);
 title(description_trial(info));
 hold off

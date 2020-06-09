@@ -1,7 +1,8 @@
 function inspect_bug1230
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 % this is not really pertaining to a bug, but to a feature request.
 

@@ -1625,7 +1625,7 @@ elseif isempty(eval(type))
         'MEG2632'  'MEG2633'  'MEG2631'  'MEG2632+2633'
         'MEG2642'  'MEG2643'  'MEG2641'  'MEG2642+2643'
         };
-      neuromag306_mag      = label(:,1);
+      neuromag306_mag      = label(:,3);
       neuromag306_planar   = label(:,[1 2]);
       neuromag306_combined = label(:,[3 4]); % magnetometers and combined channels
       label                = label(:,1:3);

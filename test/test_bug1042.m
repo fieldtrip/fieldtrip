@@ -1,6 +1,6 @@
 function test_bug1042
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:45:00
 % DEPENDENCY ft_convert_units ft_prepare_headmodel ft_compute_leadfield ft_prepare_sourcemodel ft_headmodel_openmeeg
 

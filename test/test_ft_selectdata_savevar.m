@@ -1,7 +1,8 @@
-% function test_ft_selectdata_savevar
+function test_ft_selectdata_savevar
 
 % WALLTIME 00:10:00
 % MEM 2gb
+% DEPENDENCY
 
 %%
 
@@ -53,4 +54,3 @@ delete(filename1);
 delete(filename2);
 assert(isequal(tmp1.data, timelock1sel));
 assert(isequal(tmp2.data, timelock2sel));
-

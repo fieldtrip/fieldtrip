@@ -2,7 +2,6 @@ function inspect_qsubcellfun
 
 % MEM 3gb
 % WALLTIME 00:31:04
-
 % DEPENDENCY qsubcellfun qsubfeval qsubget
 
 if isempty(which('qsubcellfun'))

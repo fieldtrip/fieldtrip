@@ -134,7 +134,7 @@ if strcmp(cfg.method, 'distance') || strcmp(cfg.method, 'triangulation')
   
   if isfield(cfg, 'layout') && ~isempty(cfg.layout)
     % get 2D positions from the layout
-    tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
+    tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
     tmpcfg.skipscale = 'yes';
     tmpcfg.skipcomnt = 'yes';
     layout = ft_prepare_layout(tmpcfg);
@@ -254,22 +254,32 @@ switch cfg.method
 end
 
 % only select those channels that are in the data
-neighb_chans = {neighbours(:).label};
 if isfield(cfg, 'channel') && ~isempty(cfg.channel)
   if hasdata
     desired = ft_channelselection(cfg.channel, data.label);
   else
-    desired = ft_channelselection(cfg.channel, neighb_chans);
+    desired = ft_channelselection(cfg.channel, {neighbours(:).label});
   end
 elseif (hasdata)
   desired = data.label;
 else
-  desired = neighb_chans;
+  desired = {neighbours(:).label};
 end
 
 if ~isempty(desired)
-  neighb_idx = ismember(neighb_chans, desired);
-  neighbours = neighbours(neighb_idx);
+  complete = struct;
+  for i=1:numel(desired)
+    complete(i).label = desired{i};
+    sel = find(strcmp({neighbours(:).label}, desired{i}));
+    if numel(sel)==1
+      % take the set of neighbours from the definition
+      complete(i).neighblabel = neighbours(sel).neighblabel;
+    else
+      % there are no neighbours defined for this channel
+      complete(i).neighblabel = {};
+    end
+  end
+  neighbours = complete;
 end
 
 k = 0;
@@ -288,7 +298,7 @@ end
 
 if strcmp(cfg.feedback, 'yes')
   % give some graphical feedback
-  tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
   tmpcfg.neighbours = neighbours;
   if hasdata
     tmpcfg.senstype = cfg.senstype;
@@ -304,6 +314,7 @@ ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble provenance neighbours
 ft_postamble history    neighbours
+ft_postamble savevar    neighbours
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

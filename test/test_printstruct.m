@@ -1,7 +1,8 @@
 function test_printstruct
 
-% MEM 4096mb
+% MEM 4gb
 % WALLTIME 00:20:00
+% DEPENDENCY
 
 % the above requirements are quite big, but this script is inherently
 % unpredictable

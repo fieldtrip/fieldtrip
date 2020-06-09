@@ -1,5 +1,4 @@
 function cfgnew = test_bug1093
-
 % DEPENDENCY ft_artifact_zvalue
 
 % the original bug was that ft_artifact_zvalue does not adjust the detected

@@ -1,8 +1,7 @@
 function test_tutorial_coherence
 
-% MEM 4500mb
+% MEM 5gb
 % WALLTIME 00:20:00
-
 % DEPENDENCY ft_freqanalysis ft_connectivityanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_sourceanalysis ft_sourceinterpolate ft_prepare_sourcemodel headsurface
 
 addpath(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/coherence'));

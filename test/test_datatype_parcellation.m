@@ -1,8 +1,7 @@
 function test_datatype_parcellation
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_datatype_parcellation ft_datatype
 
 % See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1652 which

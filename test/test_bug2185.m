@@ -2,7 +2,6 @@ function test_bug2185
 
 % WALLTIME 00:20:00
 % MEM 6gb
-
 % DEPENDENCY ft_sourcegrandaverage ft_selectdata ft_selectdata_new ft_datatype_source ft_math
 
 %% load the end-user provided test data

@@ -1,7 +1,8 @@
 function test_old_appenddata_2datasets
 
-% MEM 1gb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 
 % this script tests ft_appenddata when the input is obtained from 2

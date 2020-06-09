@@ -1,8 +1,7 @@
 function test_headmodel_singlesphere_new_old
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_prepare_headmodel ft_headmodel_singlesphere ft_prepare_concentricspheres
 
 % generate a unit sphere

@@ -1,8 +1,7 @@
 function test_bug2524
 
 % WALLTIME 00:10:00
-% MEM 1024mb
-
+% MEM 1gb
 % DEPENDENCY ft_write_mri
 
 data = zeros(5,5,5);

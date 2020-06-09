@@ -1,8 +1,7 @@
 function test_bug2338
 
-% MEM 2000mb
+% MEM 2gb
 % WALLTIME 00:20:00
-
 % DEPENDENCY ft_prepare_bemmodel ft_prepare_headmodel ft_prepare_leadfield ft_compute_leadfield ft_headmodel_openmeeg 
 
 % 4 Layers

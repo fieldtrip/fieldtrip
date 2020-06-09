@@ -2,7 +2,6 @@ function test_issue627
 
 % WALLTIME 00:10:00
 % MEM 2gb
-
 % DEPENDENCY ft_preprocessing preproc ft_apply_montage
 
 %%

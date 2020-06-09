@@ -1,7 +1,8 @@
 function test_bug1759
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 
 % Sparse matrix multplication results in slightly different results than nonsparse

@@ -1,8 +1,7 @@
 function test_bug1976
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_sourceanalysis test_ft_sourceanalysis
 
 % clear all
@@ -81,6 +80,7 @@ cfg.method = 'mne';
 cfg.sourcemodel.pos = pos;
 cfg.sourcemodel.inside = 1:size(cfg.sourcemodel.pos,1);
 cfg.sourcemodel.outside = [];
+cfg.sourcemodel.label = sens.label;
 cfg.sourcemodel.leadfield = cell(1,size(pos,1));
 for ii = 1:length(cfg.sourcemodel.leadfield)
     cfg.sourcemodel.leadfield{ii} = lf(:,(1:3) + (ii - 1) * 3);

@@ -1,11 +1,10 @@
 function test_bug1818
 
-% MEM 2gb
+% MEM 3gb
 % WALLTIME 00:10:00
 
 % test the reading function of meshes used for constructing SIMBIO FEM head models
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1818
-
 % DEPENDENCY ft_read_headshape ft_datatype_parcellation
 
 filename = {

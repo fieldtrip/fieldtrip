@@ -1,8 +1,7 @@
 function test_bug1163
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_timelockbaseline
 
 % the problem seems to be that ft_timelockbaseline explicitly only checks

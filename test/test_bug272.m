@@ -1,9 +1,8 @@
-% function test_bug272
+function test_bug272
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% DEPENDENCY ft_timelockanalysis ft_prepare_layout ft_multiplotER ft_topoplotER 
+% DEPENDENCY ft_timelockanalysis ft_prepare_layout ft_multiplotER ft_topoplotER
 
 % this script tests bug 272, i.e. incompatibility of ft_multiplotER with
 % cfg.inputfile and tests the fix.
@@ -41,4 +40,3 @@ ft_topoplotER(cfg); % should give an error
 
 delete([tname1,'.mat']);
 delete([tname2,'.mat']);
-

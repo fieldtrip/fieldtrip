@@ -2,7 +2,6 @@ function test_tutorial_beamformer(datadir)
 
 % MEM 8gb
 % WALLTIME 03:30:00
-
 % DEPENDENCY ft_redefinetrial ft_freqanalysis ft_volumesegment ft_prepare_singleshell ft_sourceanalysis ft_prepare_leadfield ft_sourceinterpolate ft_sourceplot ft_volumenormalise
 
 if nargin==0
@@ -10,7 +9,8 @@ if nargin==0
   datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer');
 end
 
-load(fullfile(datadir, 'dataFIC.mat'));
+%load(fullfile(datadir, 'dataFIC.mat'));
+load(fullfile(datadir, 'data_all.mat'));
 load(fullfile(datadir, 'segmentedmri.mat'));
 mri = ft_read_mri(fullfile(datadir, 'Subject01.mri'));
 
@@ -18,10 +18,10 @@ mri = ft_read_mri(fullfile(datadir, 'Subject01.mri'));
 
 cfg = [];
 cfg.toilim = [-0.5 0];
-dataPre = ft_redefinetrial(cfg, dataFIC);
+dataPre = ft_redefinetrial(cfg, data_all);
 
 cfg.toilim = [0.8 1.3];
-dataPost = ft_redefinetrial(cfg, dataFIC);
+dataPost = ft_redefinetrial(cfg, data_all);
 
 %% Cross-spectral density
 

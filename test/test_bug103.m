@@ -1,7 +1,7 @@
 function test_bug103
 
+% MEM 2gb
 % WALLTIME 00:10:00
-% MEM 1500mb
 % DEPENDENCY ft_singleplotER
 
 freq.freq       = 1:1:100;
@@ -12,14 +12,16 @@ freq.dimord     = 'chan_freq';
 cfg = [];
 figure; ft_singleplotER(cfg, freq);
 
-save /tmp/test_bug103.mat freq
+% save to a temporary file
+filename = [tempname,'.mat'];
+save(filename, 'freq');
 
 try
   cfg = [];
-  cfg.inputfile = '/tmp/test_bug103.mat';
+  cfg.inputfile = filename;
   figure; ft_singleplotER(cfg);
-  delete /tmp/test_bug103.mat
+  delete(filename);
 catch ME
-  delete /tmp/test_bug103.mat
+  delete(filename);
   rethrow(ME);
 end

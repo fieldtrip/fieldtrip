@@ -7,10 +7,10 @@ function [data, powindx, hasrpt] = univariate2bivariate(data, inparam, outparam,
 % where
 %   data        = FieldTrip structure according to dtype (see below)
 %   inparam     = string
-%   inparam     = string
+%   outparam     = string
 %   dtype       = string, can be 'freq', 'source', 'raw'
 % and additional options come in key-value pairs and can include
-%   cmb         = 
+%   channelcmb  = 
 %   demeanflag  = 
 %   keeprpt     = 
 %   sqrtflag    = 
@@ -35,7 +35,7 @@ function [data, powindx, hasrpt] = univariate2bivariate(data, inparam, outparam,
 %
 % $Id$
 
-cmb         = ft_getopt(varargin, 'cmb');
+cmb         = ft_getopt(varargin, 'channelcmb');
 demeanflag  = ft_getopt(varargin, 'demeanflag', false);
 keeprpt     = ft_getopt(varargin, 'keeprpt',    true);
 sqrtflag    = ft_getopt(varargin, 'sqrtflag',   false);
@@ -49,15 +49,15 @@ switch dtype
       ncmb = size(cmb,1);
     end
     getpowindx = 0;
-    if ncmb==0,
+    if ncmb==0
       ft_error('no channel combinations are specified');
-    elseif ncmb==nchan^2 || ncmb==(nchan+1)*nchan*0.5,
+    elseif ncmb==nchan^2 || ncmb==(nchan+1)*nchan*0.5
       dofull = 1;
     else
       dofull = 0;
     end
     
-    if strcmp(inparam, 'fourierspctrm') && strcmp(outparam, 'crsspctrm'),
+    if strcmp(inparam, 'fourierspctrm') && strcmp(outparam, 'crsspctrm')
       % fourier coefficients -> cross-spectral density
       if dofull
         data = ft_checkdata(data, 'cmbrepresentation', 'full');
@@ -65,9 +65,11 @@ switch dtype
         data = ft_checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
         getpowindx = 1;
       end
-      
-    elseif strcmp(inparam, 'powandcsd') && strcmp(outparam, 'crsspctrm'),
-      if ~isempty(cmb),
+    elseif strcmp(inparam, 'fourierspctrm') && strcmp(outparam, 'lcrsspctrm')
+      data = fourierspctrm2lcrsspctrm(data, varargin{:});
+      getpowindx = 1;
+    elseif strcmp(inparam, 'powandcsd') && strcmp(outparam, 'crsspctrm')
+      if ~isempty(cmb)
         data = ft_checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
         % ensure getting powindx later on to prevent crash
         getpowindx = 1;
@@ -77,12 +79,12 @@ switch dtype
         ft_error('cannot convert to a full csd representation');
       end
       
-    elseif strcmp(inparam, 'fourierspctrm') && strcmp(outparam, 'powcovspctrm'),
+    elseif strcmp(inparam, 'fourierspctrm') && strcmp(outparam, 'powcovspctrm')
       % fourier coefficients -> power covariance
       data = ft_checkdata(data, 'cmbrepresentation', 'sparsewithpow', 'channelcmb', {});
       if sqrtflag, data.powspctrm = sqrt(data.powspctrm); end
       % get covariance by using ft_checkdata
-      if demeanflag,
+      if demeanflag
         nrpt = size(data.powspctrm,1);
         mdat = nanmean(data.powspctrm,1);
         data.powspctrm = data.powspctrm - mdat(ones(1,nrpt),:,:,:,:,:);
@@ -92,7 +94,7 @@ switch dtype
       data = rmfield(data, 'powspctrm');
       data.cumtapcnt(:) = 1;
       data.cumsumcnt(:) = 1;
-      if ncmb < (nchan-1)*nchan*0.5,
+      if ncmb < (nchan-1)*nchan*0.5
         data = ft_checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
       else
         data = ft_checkdata(data, 'cmbrepresentation', 'full');
@@ -100,7 +102,7 @@ switch dtype
       data.powcovspctrm = data.crsspctrm;
       data = rmfield(data, 'crsspctrm');
       
-    elseif strcmp(inparam, 'powspctrm') && strcmp(outparam, 'powcovspctrm'),
+    elseif strcmp(inparam, 'powspctrm') && strcmp(outparam, 'powcovspctrm')
       % power-spectral density -> power covariance
       if sqrtflag, data.powspctrm = sqrt(data.powspctrm); end
       % get covariance by using ft_checkdata
@@ -114,7 +116,7 @@ switch dtype
       data = rmfield(data, 'powspctrm');
       data.cumtapcnt(:) = 1;
       data.cumsumcnt(:) = 1;
-      if ncmb < (nchan-1)*nchan*0.5,
+      if ncmb < (nchan-1)*nchan*0.5
         data = ft_checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
       else
         data = ft_checkdata(data, 'cmbrepresentation', 'full');
@@ -126,7 +128,7 @@ switch dtype
       ft_error('unknown conversion from univariate to bivariate representation');
     end % if inparam is fourierspctrm or crsspctrm
     
-    if ~isempty(cmb) && (ncmb < (nchan-1)*nchan*0.5 || getpowindx==1),
+    if ~isempty(cmb) && (ncmb < (nchan-1)*nchan*0.5 || getpowindx==1)
       powindx = labelcmb2indx(data.labelcmb);
     else
       powindx = [];
@@ -138,7 +140,7 @@ switch dtype
     % the code further down requires this to be a vector with indices
     data = fixinside(data, 'index');
     
-    if strcmp(inparam, 'pow') && strcmp(outparam, 'powcov'),
+    if strcmp(inparam, 'pow') && strcmp(outparam, 'powcov')
       [nvox,nrpt] = size(data.pow);
       if sqrtflag, data.pow = sqrt(data.pow); end
       if demeanflag,
@@ -165,7 +167,7 @@ switch dtype
         % data.dim(2) = size(data.pos,1);
       end
     
-    elseif strcmp(inparam, 'mom') && strcmp(outparam, 'powcov'),
+    elseif strcmp(inparam, 'mom') && strcmp(outparam, 'powcov')
       
       nvox = size(data.pos,1);
       if isfield(data, 'cumtapcnt')
@@ -193,7 +195,7 @@ switch dtype
       end
       
       if sqrtflag, pow = sqrt(pow); end
-      if demeanflag,
+      if demeanflag
         mdat = nanmean(pow,2);
         pow  = pow - mdat(:,ones(1,nrpt)); % FIXME only works for 1 frequency
       end
@@ -204,7 +206,7 @@ switch dtype
         powindx = [];
       else
         data.powcov = [reshape(pow * pow(cmb,:)', [ncmb*nvox 1]); sum(pow.^2,2)];
-        try,
+        try
           data = rmfield(data, 'pow');
           data = rmfield(data, 'powdimord');
         end
@@ -219,16 +221,16 @@ switch dtype
         % data.dim(2) = size(data.pos,1);
       end
     
-    elseif strcmp(inparam, 'mom') && strcmp(outparam, 'crsspctrm'),
+    elseif strcmp(inparam, 'mom') && strcmp(outparam, 'crsspctrm')
       % get mom as rpttap_pos_freq matrix
       % FIXME this assumes only 1 freq bin
       sizmom = size(data.mom{data.inside(1)});
       
-      if sizmom(1)==1,
+      if sizmom(1)==1
         mom = zeros(size(data.pos,1), sizmom(2));
         mom(data.inside, :) = cat(1, data.mom{data.inside});
         
-        if keeprpt,
+        if keeprpt
           [nvox, nrpt]   = size(mom);
           data.crsspctrm = transpose([mom.*conj(mom(ones(1,nvox)*cmb,:));abs(mom).^2]);
           data = rmfield(data, 'mom');
@@ -276,7 +278,7 @@ switch dtype
         mom = zeros(sizmom(1), sizmom(2)*size(data.pos,1));
         mom(:, tmpinside(:)) = cat(2, data.mom{data.inside});
         
-        if keeprpt,
+        if keeprpt
           ft_error('keeprpt with multivariate dipole moments is not supported');
           % FIXME should this be supported
         elseif tmpncmb<size(mom,2)

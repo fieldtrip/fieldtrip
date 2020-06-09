@@ -138,7 +138,7 @@ switch cfg.appenddim
             data.(cfg.parameter{i})(chansel,:) = varargin{j}.(cfg.parameter{i})(chansel,:);
           end
           
-        case {'rpt_chan_time' 'subj_chan_time' 'rpt_chan_freq' 'subj_chan_freq'}
+        case {'rpt_chan_time' 'subj_chan_time' 'rpt_chan_freq' 'rpttap_chan_freq' 'subj_chan_freq'}
           data.(cfg.parameter{i}) = nan(dimsiz);
           for j=1:numel(varargin)
             chansel = match_str(varargin{j}.label, oldlabel{j});

@@ -1,8 +1,7 @@
 function test_bug1450
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY mergeconfig
 
 % ft_checkconfig used to be responsible for mergeconfig, but on 19-10-2015

@@ -1,8 +1,7 @@
 function test_bug1027
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_artifact_zvalue
 
 % the original bug was that ft_artifact_zvalue could not deal with variable

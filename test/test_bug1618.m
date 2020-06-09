@@ -1,7 +1,8 @@
 function test_bug1618
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1618/bug1618.dat');

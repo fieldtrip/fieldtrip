@@ -2,6 +2,7 @@ function test_bug1482
 
 % WALLTIME 00:10:00
 % MEM 1gb
+% DEPENDENCY
 
 %%
 % the first section is a test script that Robert wrote

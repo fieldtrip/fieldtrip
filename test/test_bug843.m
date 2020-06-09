@@ -1,8 +1,7 @@
 function test_bug843
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_topoplotTFR
 
 % it has been reported that the linearly indexed connectivity metrics don't
@@ -48,5 +47,3 @@ cfg.directionality = 'inflow';
 figure;ft_topoplotTFR(cfg,freq);
 cfg.directionality = 'outflow';
 figure;ft_topoplotTFR(cfg,freq);
-
-

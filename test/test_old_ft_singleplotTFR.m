@@ -1,8 +1,8 @@
 function test_old_ft_singleplotTFR
 
-% MEM 1gb
+% MEM 2gb
 % WALLTIME 00:10:00
-
+% DEPENDENCY
 
 % this script tests the functionality of ft_singleplotTFR with respect to the 
 % different input datatypes. no other functionality is tested.

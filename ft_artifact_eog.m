@@ -38,16 +38,14 @@ function [cfg, artifact] = ft_artifact_eog(cfg, data)
 %   cfg.artfctdef.eog.fltpadding   = 0.1
 %   cfg.artfctdef.eog.artpadding   = 0.1
 %
-% The output argument "artifact" is a Nx2 matrix comparable to the
-% "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
-% beginsamples of an artifact period, the second column contains the
-% endsamples of the artifactperiods.
+% The output argument "artifact" is a Nx2 matrix comparable to the "trl" matrix of
+% FT_DEFINETRIAL. The first column of which specifying the beginsamples of an
+% artifact period, the second column contains the endsamples of the artifactperiods.
 %
-% To facilitate data-handling and distributed computing you can use
+% To facilitate data-handling and distributed computing, you can use
 %   cfg.inputfile   =  ...
-% If you specify this option the input data will be read from a *.mat
-% file on disk. This mat files should contain only a single variable named 'data',
-% corresponding to the input structure.
+% to read the input data from a *.mat file on disk. This mat files should contain
+% only a single variable named 'data', corresponding to the input structure.
 %
 % See also FT_REJECTARTIFACT, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG, FT_ARTIFACT_EOG,
 % FT_ARTIFACT_JUMP, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_ZVALUE
@@ -131,7 +129,7 @@ cfg.artfctdef.eog.fltpadding = ft_getopt(cfg.artfctdef.eog, 'fltpadding', 0.1);
 cfg.artfctdef.eog.artpadding = max(ft_getopt(cfg.artfctdef.eog, 'artpadding', 0.1), artpadding_oldstyle);
 cfg.artfctdef.eog.cutoff     = ft_getopt(cfg.artfctdef.eog, 'cutoff',     4);
 
-% construct a temporary configuration that can be passed onto artifact_zvalue
+% construct a temporary configuration that can be passed onto FT_ARTIFACT_ZVALUE
 tmpcfg                  = cfg;
 tmpcfg.artfctdef.zvalue = cfg.artfctdef.eog;
 tmpcfg.artfctdef        = rmfield(tmpcfg.artfctdef, 'eog');

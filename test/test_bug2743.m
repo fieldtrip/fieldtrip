@@ -1,8 +1,7 @@
 function test_bug2743
 
-% MEM 300mb
+% MEM 1gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_mvaranalysis
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/test_bug2743.mat'));

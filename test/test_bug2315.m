@@ -1,8 +1,7 @@
 function test_bug2315
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_databrowser ft_prepare_layout
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/dataFIC.mat'));

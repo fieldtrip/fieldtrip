@@ -1,6 +1,6 @@
 function test_bug3089
 
-% MEM 4000mb
+% MEM 4gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_dipolefitting ft_compute_leadfield ft_apply_transform
 

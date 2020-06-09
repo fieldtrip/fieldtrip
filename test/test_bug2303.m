@@ -1,8 +1,7 @@
 function test_bug2303
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_read_header read_eeglabheader
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2303/Dopa2_Quart2_Av.set');

@@ -1,21 +1,21 @@
 function [status] = ft_hastoolbox(toolbox, autoadd, silent)
 
-% FT_HASTOOLBOX tests whether an external toolbox is installed. Optionally
-% it will try to determine the path to the toolbox and install it
-% automatically.
+% FT_HASTOOLBOX tests whether an external toolbox is installed. Optionally it will
+% try to determine the path to the toolbox and install it automatically.
 %
 % Use as
 %   [status] = ft_hastoolbox(toolbox, autoadd, silent)
 %
-% autoadd = 0 means that it will not be added
-% autoadd = 1 means that give an error if it cannot be added
-% autoadd = 2 means that give a warning if it cannot be added
-% autoadd = 3 means that it remains silent if it cannot be added
+% autoadd = -1 means that it will check and give an error when not yet installed
+% autoadd =  0 means that it will check and give a warning when not yet installed
+% autoadd =  1 means that it will check and give an error if it cannot be added
+% autoadd =  2 means that it will check and give a warning if it cannot be added
+% autoadd =  3 means that it will check but remain silent if it cannot be added
 %
 % silent = 0 means that it will give some feedback about adding the toolbox
 % silent = 1 means that it will not give feedback
 
-% Copyright (C) 2005-2017, Robert Oostenveld
+% Copyright (C) 2005-2019, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -62,6 +62,7 @@ url = {
   'DSS'        'see http://www.cis.hut.fi/projects/dss'
   'EEGLAB'     'see http://www.sccn.ucsd.edu/eeglab'
   'NWAY'       'see http://www.models.kvl.dk/source/nwaytoolbox'
+  'SPM'        'see http://www.fil.ion.ucl.ac.uk/spm'
   'SPM99'      'see http://www.fil.ion.ucl.ac.uk/spm'
   'SPM2'       'see http://www.fil.ion.ucl.ac.uk/spm'
   'SPM5'       'see http://www.fil.ion.ucl.ac.uk/spm'
@@ -132,7 +133,7 @@ url = {
   'MYSQL'         'see http://www.mathworks.com/matlabcentral/fileexchange/8663-mysql-database-connector'
   'ISO2MESH'      'see http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Home or contact Qianqian Fang'
   'DATAHASH'      'see http://www.mathworks.com/matlabcentral/fileexchange/31272'
-  'IBTB'          'see https://github.com/selimonat/InformationBreakdownToolbox'
+  'IBTB'          'see Magri et al. BMC Neurosci 2009, 10:81'
   'ICASSO'        'see http://www.cis.hut.fi/projects/ica/icasso'
   'XUNIT'         'see http://www.mathworks.com/matlabcentral/fileexchange/22846-matlab-xunit-test-framework'
   'PLEXON'        'available from http://www.plexon.com/assets/downloads/sdk/ReadingPLXandDDTfilesinMatlab-mexw.zip'
@@ -153,6 +154,7 @@ url = {
   'BREWERMAP'     'see https://nl.mathworks.com/matlabcentral/fileexchange/45208-colorbrewer--attractive-and-distinctive-colormaps'
   'CELLFUNCTION'  'see https://github.com/schoffelen/cellfunction'
   'MARS'          'see http://www.parralab.org/mars'
+  'LAGEXTRACTION' 'see https://github.com/agramfort/eeglab-plugin-ieee-tbme-2010'
   'JSONLAB'       'see https://se.mathworks.com/matlabcentral/fileexchange/33381-jsonlab--a-toolbox-to-encode-decode-json-files'
   'MFFMATLABIO'   'see https://github.com/arnodelorme/mffmatlabio'
   'JSONIO'        'see https://github.com/gllmflndn/JSONio'
@@ -160,7 +162,11 @@ url = {
   'MVPA-LIGHT'    'see https://github.com/treder/MVPA-Light'
   'XDF'           'see https://github.com/xdf-modules/xdf-Matlab'
   'MRTRIX'        'see https://mrtrix.org'
-  };
+  'BAYESFACTOR'   'see https://klabhub.github.io/bayesFactor'
+  'EZC3D'         'see https://github.com/pyomeca/ezc3d'
+  'GCMI'          'see https://github.com/robince/gcmi'
+  'XSENS'         'see https://www.xsens.com/motion-capture and http://www.fieldtriptoolbox.org/getting_started/xsens/'
+  'MatNWB'        'see https://neurodatawithoutborders.github.io/matnwb/'};
 
 if nargin<2
   % default is not to add the path automatically
@@ -331,7 +337,7 @@ switch toolbox
     dependency = {'netcdf'};
   case 'MYSQL'
     % this only consists of a single mex file
-    dependency = has_mex('mysql'); 
+    dependency = has_mex('mysql');
   case 'ISO2MESH'
     dependency = {'vol2surf', 'qmeshcut'};
   case 'QSUB'
@@ -385,6 +391,8 @@ switch toolbox
     dependency = {'ghdf5read' 'ghdf5fileimport'};
   case 'MARS'
     dependency = {'spm_mars_mrf'};
+  case 'LAGEXTRACTION'
+    dependency = {'extractlag' 'perform_realign'};
   case 'JSONLAB'
     dependency = {'loadjson' 'savejson'};
   case 'PLOTLY'
@@ -397,7 +405,17 @@ switch toolbox
     dependency = {'load_xdf', 'load_xdf_innerloop'};
   case 'MRTRIX'
     dependency = {'read_mrtrix'};
-
+  case 'BAYESFACTOR'
+    dependency = {'bf.ttest', 'bf.ttest2'};
+  case 'EZC3D'
+    dependency = {'ezc3dRead', 'ezc3dWrite'};
+  case 'GCMI'
+    dependency = {'copnorm' 'mi_gg'};
+  case 'XSENS'
+    dependency = {'load_mvnx'};
+  case 'MATNWB'
+    dependency = {'nwbRead', 'generateCore'};
+    
     % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
     dependency = {'ft_read_header', 'ft_read_data', 'ft_read_event', 'ft_read_sens'};
@@ -433,8 +451,8 @@ if ~status && ~isempty(fallback_toolbox)
   toolbox = fallback_toolbox;
 end
 
-% try to determine the path of the requested toolbox
-if autoadd>0 && ~status
+% try to determine the path of the requested toolbox and add it
+if ~status && autoadd>0
   
   % for core FieldTrip modules
   prefix = fileparts(which('ft_defaults'));
@@ -500,6 +518,16 @@ if autoadd>0 && ~status
       % fail silently
     end
   end
+  
+elseif ~status && autoadd<0
+  % the toolbox is not on the path and should not be added
+  sel = find(strcmp(url(:,1), toolbox));
+  if ~isempty(sel)
+    msg = sprintf('the %s toolbox is not installed, %s', toolbox, url{sel, 2});
+  else
+    msg = sprintf('the %s toolbox is not installed', toolbox);
+  end
+  ft_error(msg);
 end
 
 % this function is called many times in FieldTrip and associated toolboxes
@@ -527,7 +555,7 @@ if ~isfolder(toolbox)
     toolbox = fullfile(p, dirlist(sel).name);
   end
 end
-  
+
 if isdeployed
   ft_warning('cannot change path settings for %s in a compiled application', toolbox);
   status = true;
@@ -690,4 +718,3 @@ status = ~isempty(w) && ~isequal(w, 'variable');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function tf = isfolder(dirpath)
 tf = exist(dirpath,'dir') == 7;
-

@@ -1,8 +1,7 @@
 function test_example_incorporate_head_movements
 
-% MEM 1gb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_definetrial ft_preprocessing ft_timelockanalysis ft_regressconfound
 
 dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/regressconfound/TacStimRegressConfound.ds');

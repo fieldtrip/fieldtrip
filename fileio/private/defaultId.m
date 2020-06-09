@@ -57,3 +57,8 @@ else
   % it is called from the command line
   id = 'FieldTrip:commandline';
 end
+
+% slashes occur when using nested functions, but are not allowed in the identifier
+id(id=='/') = ':';
+id(id=='\') = ':';
+

@@ -1,8 +1,7 @@
 function test_bug1125
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_preprocessing ft_preproc_bandpassfilter ft_preproc_bandstopfilter ft_preproc_lowpassfilter ft_preproc_highpassfilter
 
 N = 1000;
@@ -61,4 +60,3 @@ cfg.bsfreq = [15 25];
 cfg.bsfilter = 'yes';
 so = ft_preprocessing(cfg,raw3);
 sn = ft_preprocessing(cfg,raw3);
-

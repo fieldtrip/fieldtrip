@@ -2,7 +2,6 @@ function test_bug3275
 
 % WALLTIME 00:10:00
 % MEM 2gb
-
 % DEPENDENCY ft_sourceplot ft_checkdata
 
 mri = ft_read_mri('single_subj_T1.nii');

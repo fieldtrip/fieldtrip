@@ -1,8 +1,7 @@
 function test_headmodel_bemcp
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_headmodel_bemcp ft_prepare_vol_sens ft_compute_leadfield
 
 % generate a unit sphere

@@ -1,8 +1,7 @@
 function test_old_buffer_latency_bandwidth
 
-% MEM 1gb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_create_buffer
 
 is_octave=~ft_platform_supports('matlabversion',1,inf);

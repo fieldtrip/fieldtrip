@@ -2,7 +2,6 @@ function test_bug3207
 
 % MEM 16gb
 % WALLTIME 00:20:00
-
 % DEPENDENCY ft_read_event read_edf
 
 %% read data and annotations from a 2-channel test file

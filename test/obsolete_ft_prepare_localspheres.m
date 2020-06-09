@@ -1,8 +1,7 @@
 function test_ft_prepare_localspheres
 
-% MEM 2500mb
+% MEM 3gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_headmodel_localspheres ft_prepare_headmodel ft_prepare_localspheres
 
 % function to test ft_headmodel_localspheres. this function is called

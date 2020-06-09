@@ -1,8 +1,7 @@
 function test_bug1881
 
 % WALLTIME 00:10:00
-% MEM 1024mb
-
+% MEM 1gb
 % DEPENDENCY ft_selectdata
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1881.mat');

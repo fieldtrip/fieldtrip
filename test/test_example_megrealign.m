@@ -1,8 +1,7 @@
 function test_example_megrealign
 
-% MEM 1gb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_read_sens ft_dipolesimulation ft_timelockanalysis 
 
 grad151 = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/megrealign/ctf151.mat'));

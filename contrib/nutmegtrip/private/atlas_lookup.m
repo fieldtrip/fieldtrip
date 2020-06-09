@@ -9,13 +9,13 @@ function [label] = atlas_lookup(atlas, pos, varargin)
 %   'method'       = 'sphere' (default) searches surrounding voxels in a sphere
 %                    'cube' searches surrounding voxels in a cube
 %   'queryrange'   = number, should be 1, 3, 5, 7, 9 or 11 (default = 3)
-%   'inputcoord'   = 'mni' or 'tal' (default = [])
-% 
-% Dependent on the input coordinates and the coordinates of the atlas, the
-% input positions are transformed betweem MNI and Talairach-Tournoux coordinates.
+%   'coordsys'     = 'mni' or 'tal' (default = [])
+%
+% Dependent on the coordinates if the input points and the coordinates of the atlas,
+% the input positions are transformed betweem MNI and Talairach-Tournoux coordinates.
 % See http://www.mrc-cbu.cam.ac.uk/Imaging/Common/mnispace.shtml for more details.
 
-% Copyright (C) 2005-2008, Robert Oostenveld
+% Copyright (C) 2005-2020, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -38,10 +38,10 @@ function [label] = atlas_lookup(atlas, pos, varargin)
 % get the optional input arguments
 method      = ft_getopt(varargin, 'method', 'sphere');
 queryrange  = ft_getopt(varargin, 'queryrange', 3);
-inputcoord  = ft_getopt(varargin, 'inputcoord');
+coordsys    = ft_getopt(varargin, 'coordsys');
 
-if isempty(inputcoord)
-  ft_error('you must specify inputcoord');
+if isempty(coordsys)
+  ft_error('you must specify coordsys');
 end
 
 if isempty(intersect(queryrange, 1:2:queryrange))
@@ -77,18 +77,16 @@ end
 
 % convert between MNI head coordinates and TAL head coordinates
 % coordinates should be expressed compatible with the atlas
-if     strcmp(inputcoord, 'mni') && strcmp(atlas.coordsys, 'tal')
-  pos = mni2tal(pos')'; % this function likes 3xN 
-elseif strcmp(inputcoord, 'mni') && strcmp(atlas.coordsys, 'mni')
+if     strcmp(coordsys, 'mni') && strcmp(atlas.coordsys, 'tal')
+  pos = mni2tal(pos')'; % this function likes 3xN
+elseif strcmp(coordsys, 'mni') && strcmp(atlas.coordsys, 'mni')
   % nothing to do
-elseif strcmp(inputcoord, 'tal') && strcmp(atlas.coordsys, 'tal')
+elseif strcmp(coordsys, 'tal') && strcmp(atlas.coordsys, 'tal')
   % nothing to do
-elseif strcmp(inputcoord, 'tal') && strcmp(atlas.coordsys, 'mni')
-  pos = tal2mni(pos')'; % this function likes 3xN 
-elseif (strcmp(inputcoord, 'spm') && strcmp(atlas.coordsys, 'mni')) || (strcmp(inputcoord, 'mni') && strcmp(atlas.coordsys, 'spm'))
-  %fprintf('coordinate system of input data ''spm'' is assume to represent the same coordinate system as the atlas, which is ''mni''\n');
-elseif ~strcmp(inputcoord, atlas.coordsys)
-  ft_error('there is a mismatch between the coordinate system in the atlas and the coordinate system in the data, which cannot be resolved');
+elseif strcmp(coordsys, 'tal') && strcmp(atlas.coordsys, 'mni')
+  pos = tal2mni(pos')'; % this function likes 3xN
+elseif ~strcmp(coordsys, atlas.coordsys)
+  ft_error('the mismatch between the coordinate system in the atlas and the coordinate system in the data cannot be resolved');
 end
 
 num = size(pos,1);
@@ -99,12 +97,12 @@ label = {};
 vox  = ft_warp_apply(inv(atlas.transform), pos);
 
 for i=1:num
-
+  
   % this is the center voxel
   ijk_center = vox(i,:);
-
+  
   if isindexed
-    if strcmp(method, 'sphere');
+    if strcmp(method, 'sphere')
       % search in a sphere around the center voxel
       
       % first, identify the voxels (x,y,z) in a sphere around the center voxel
@@ -147,7 +145,7 @@ for i=1:num
         end
       end
       
-    elseif strcmp(method, 'cube');
+    elseif strcmp(method, 'cube')
       % search in a cube around the center voxel
       for di=(-(queryrange-1)/2):1:((queryrange-1)/2)
         for dj=(-(queryrange-1)/2):1:((queryrange-1)/2)
@@ -179,7 +177,7 @@ for i=1:num
       if ~isempty(sel{k})
         % Get rid of zeros in sel{k}
         for t = numel(sel{k}):-1:1
-          if sel{k}(t) == 0;
+          if sel{k}(t) == 0
             sel{k}(t) = [];
           end
         end

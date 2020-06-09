@@ -1,8 +1,7 @@
 function test_bug70
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:20:00
-
 % DEPENDENCY ft_prepare_headmodel ft_prepare_leadfield ft_headmodel_openmeeg
 
 % this is the output of mesh_sphere(162), including it like this
@@ -541,4 +540,3 @@ assert(rank(lf2.leadfield{1})==2);
 assert(rank(lf3.leadfield{1})==3);
 
 sprintf('the norm of the difference of the two solutions is: %f' , norm(lf.leadfield{1}-lf3.leadfield{1}))
-

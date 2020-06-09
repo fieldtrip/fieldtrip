@@ -323,7 +323,7 @@ elseif ft_senstype(input, 'ctf') && isheader
   end
 
   if isempty(origSensType)
-    ft_warning('could not determine channel chantype from the CTF header');
+    ft_warning('could not determine chantype from the CTF header');
   end
 
   for sel=find(origSensType(:)==0)'

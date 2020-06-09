@@ -26,8 +26,8 @@ function data = read_artinis_oxy4(filename, header, begsample, endsample, chanin
 % -----------------------------------
 % You are free to:
 % 
-%     Share � copy and redistribute the material in any medium or format
-%     Adapt � remix, transform, and build upon the material
+%     Share - copy and redistribute the material in any medium or format
+%     Adapt - remix, transform, and build upon the material
 %     for any purpose, even commercially.
 % 
 %     The licensor cannot revoke these freedoms as long as you follow the 
@@ -35,16 +35,16 @@ function data = read_artinis_oxy4(filename, header, begsample, endsample, chanin
 % 
 % Under the following terms:
 % 
-%     Attribution � You must give appropriate credit, provide a link to 
+%     Attribution - You must give appropriate credit, provide a link to 
 %                    the license, and indicate if changes were made. You 
 %                    may do so in any reasonable manner, but not in any way 
 %                    that suggests the licensor endorses you or your use.
 % 
-%     ShareAlike � If you remix, transform, or build upon the material, 
+%     ShareAlike - If you remix, transform, or build upon the material, 
 %                   you must distribute your contributions under the same 
 %                   license as the original.
 % 
-%     No additional restrictions � You may not apply legal terms or 
+%     No additional restrictions - You may not apply legal terms or 
 %                                   technological measures that legally 
 %                                   restrict others from doing anything the 
 %                                   license permits.
@@ -65,18 +65,22 @@ if nargin == 1 || nargin == 2 && islogical(header) && ~header
   data = read_oxy4_header(filename);
 elseif nargin == 2  && islogical(header) && header
   data = read_oxy3_event(filename);
-else % nargin > 1 && ~islogical(header)
-  data = read_oxy4_data(filename);
-  
+else % nargin > 1 && ~islogical(header)  
   if nargin < 5
-    chanindx = 1:size(data, 1);
+    chanindx = 1:header.nChans;
     if nargin < 4
-      endsample = size(data, 2);    
+      endsample = header.nSamples;
       if nargin < 3
         begsample = 1;
       end
     end
+  end  
+  data = read_oxy4_data(filename, 0, header.nSamples); % sample subselection does not work yet
+  
+  if endsample > size(data, 2)
+    warning('Cannot deliver all requested samples, nan''ing %d sample(s)', endsample-size(data, 2));
+    data(:, end:endsample) = nan;
   end
-        
+  
   data = data(chanindx, begsample:endsample);
 end
