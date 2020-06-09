@@ -2,7 +2,7 @@ function [dataout] = ft_heartrate(cfg, datain)
 
 % FT_HEARTRATE estimates the heart rate from a continuous PPG or ECG channel. It
 % returns a new data structure with a continuous representation of the heartrate in
-% beats per minute.
+% beats per minute, the heart period (RR interval) in seconds per interval, the heartbeat phase and heartbeat onsets.
 %
 % Use as
 %   dataout = ft_heartrate(cfg, data)
@@ -102,7 +102,7 @@ cfg.preproc.bpfreq      = ft_getopt(cfg.preproc, 'bpfreq', [1/3 10] * 1.33);  % 
 
 % copy some of the fields over to the new data structure
 dataout = keepfields(datain, {'time', 'fsample', 'sampleinfo', 'trialinfo'});
-dataout.label = {'heartrate', 'heartbeatphase', 'heartbeatonset'};
+dataout.label = {'heartrate', 'heartperiod', 'heartbeatphase', 'heartbeatonset'};
 dataout.trial = {};  % this is to be determined in the main code
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -198,11 +198,11 @@ switch cfg.method
         title('locally rescaled')
       end
       
-      % construct a continuous channel with the rate and the phase
-      [rate, phase, tmp] = discr2ctu(peaks, size(dat), fsample);
+      % construct a continuous channel with the rate, period and the phase
+      [rate, period, phase, tmp] = discr2ctu(peaks, size(dat), fsample);
       
       % add the continuous channels to the output structure
-      dataout.trial{trllop} = [rate; phase; tmp];
+      dataout.trial{trllop} = [rate; period; phase; tmp];
       
       if istrue(cfg.feedback)
         subplot(4,1,4)
@@ -228,10 +228,10 @@ switch cfg.method
       [vals, peaks, delay] = pan_tompkin(dat, fsample, istrue(cfg.feedback));
       
       % construct a continuous channel with the rate and the phase
-      [rate, phase, tmp] = discr2ctu(peaks, size(dat), fsample);
+      [rate, period, phase, tmp] = discr2ctu(peaks, size(dat), fsample);
       
       % add the continuous channels to the output structure
-      dataout.trial{trllop} = [rate; phase; tmp];
+      dataout.trial{trllop} = [rate; period; phase; tmp];
     end
     
   otherwise
@@ -253,13 +253,15 @@ ft_postamble savevar    dataout
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [rate, phase, tmp] = discr2ctu(peaks, n, fsample)
+function [rate, period, phase, tmp] = discr2ctu(peaks, n, fsample)
 rate  = nan(n);
+period = nan(n);
 phase = nan(n);
 for i=1:length(peaks)-1
   begsample = peaks(i);
   endsample = peaks(i+1);
   rate(begsample:endsample)  = 60 * fsample/(endsample-begsample); % in bpm
+  period(begsample:endsample) = (endsample-begsample)/fsample; % in seconds per interval
   phase(begsample:endsample) = linspace(-pi, pi, (endsample-begsample+1));
 end
 % also construct a boolean channel with a pulse at the beat onset
