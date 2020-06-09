@@ -111,6 +111,11 @@ if ~isequal(weightnorm, 'no')
   ft_error('weight normalization is not supported');
 end
 
+if ~keepcsd
+  ft_warning('setting keepcsd to ''yes'', overruling specified option');
+  keepcsd = true; % this needs to be true by definition
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
