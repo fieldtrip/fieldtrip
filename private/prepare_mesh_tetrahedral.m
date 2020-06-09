@@ -63,7 +63,7 @@ else
   % the code below assumes that it is an indexed representation
   mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
   % combine all tissue types
-  seg = (mri.seg>0);
+  seg = mri.seg;
 end
 
 % this requires the external iso2mesh toolbox
