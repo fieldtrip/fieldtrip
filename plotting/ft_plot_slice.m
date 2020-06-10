@@ -513,7 +513,7 @@ if dointersect
 end
 
 if ~isempty(cmap) && ~isequal(cmap, 'rgb')
-  colormap(cmap);
+  ft_colormap(cmap);
   if ~isempty(clim)
     caxis(clim);
   end
