@@ -411,7 +411,7 @@ end
 if isfield(cfg, 'colormap')
   if ischar(cfg.colormap)
     cfg.colormap = ft_colormap(cfg.colormap);
-  elseif isstruct(cfg.colormap)
+  elseif iscell(cfg.colormap)
     cfg.colormap = ft_colormap(cfg.colormap{:});
   end
   if size(cfg.colormap,2)~=3
