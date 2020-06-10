@@ -23,7 +23,7 @@ function cmap = ft_colormap(varargin)
 % 'tab10', 'tab20', 'tab20b', 'tab20c', 'twilight', and 'viridis'.
 %
 % The colormaps from BREWERMAP can be specified as a string, e.g. 'RdBu' or with an
-% asterix to reverse the colormap, like '*RdBu'. See BREWERMAP for more information,
+% asterisk to reverse the colormap, like '*RdBu'. See BREWERMAP for more information,
 % or execute the interactive BREWERMAP_VIEW function to see them in detail.
 %
 % See also COLORMAP, COLORMAPEDITOR, BREWERMAP, MATPLOTLIB
