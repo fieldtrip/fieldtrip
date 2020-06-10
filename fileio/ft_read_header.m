@@ -2300,7 +2300,7 @@ switch headerformat
   case 'nwb'
     ft_hastoolbox('MatNWB', 1);	% when I run this locally outside of ft_read_header it does not work for me
     try
-        c = load('core.mat'); % might be needed later on - I don't have this file
+        c = load('namespaces/core.mat');
         nwb_version = c.version;
         nwb_fileversion = util.getSchemaVersion(filename);
         if ~strcmp(nwb_version, nwb_fileversion)
