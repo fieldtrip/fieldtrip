@@ -200,7 +200,7 @@ switch cfg.method
       end
       
       % construct a continuous channel with the rate, period and the phase
-      [rate, period, phase, tmp] = discr2ctu(peaks, size(dat), fsample, cfg);
+      [rate, period, phase, tmp] = discr2ctu(peaks, size(dat), fsample);
       
       % add the continuous channels to the output structure
       dataout.trial{trllop} = [rate; period; phase; tmp];
@@ -229,7 +229,7 @@ switch cfg.method
       [vals, peaks, delay] = pan_tompkin(dat, fsample, istrue(cfg.feedback));
       
       % construct a continuous channel with the rate and the phase
-      [rate, period, phase, tmp] = discr2ctu(peaks, size(dat), fsample, cfg);
+      [rate, period, phase, tmp] = discr2ctu(peaks, size(dat), fsample);
       
       % add the continuous channels to the output structure
       dataout.trial{trllop} = [rate; period; phase; tmp];
@@ -256,7 +256,7 @@ if istrue(cfg.ectopicbeat_corr)
         peaks(i+1)=round(mean([peaks(i), peaks(i+2)]));
         % reconstruct the continuous channels and update the output
         % structure
-        [rate, period, phase, tmp] = discr2ctu(peaks, size(dataout.trial{trllop}(1,:)), fsample, cfg);
+        [rate, period, phase, tmp] = discr2ctu(peaks, size(dataout.trial{trllop}(1,:)), fsample);
         dataout.trial{trllop} = [rate; period; phase; tmp];
       end
     end
@@ -284,7 +284,7 @@ ft_postamble savevar    dataout
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [rate, period, phase, tmp] = discr2ctu(peaks, n, fsample, cfg)
+function [rate, period, phase, tmp] = discr2ctu(peaks, n, fsample)
 rate  = nan(n);
 period = nan(n);
 phase = nan(n);
@@ -294,21 +294,6 @@ for i=1:length(peaks)-1
   rate(begsample:endsample)  = 60 * fsample/(endsample-begsample); % in bpm
   period(begsample:endsample) = (endsample-begsample)/fsample; % in seconds per interval
   phase(begsample:endsample) = linspace(-pi, pi, (endsample-begsample+1));
-%   if istrue(cfg.ectopicbeat_corr)
-%     % if the RR-interval of the current to the next peak and the one after that (refractory perod) differs with more than 20%
-%     % of the previous peak-to-peak interval, interpolate the next peak to
-%     % fall exactly in between its neighbouring peaks
-%     if i==1 | i==length(peaks)-1
-%       continue
-%     end
-%     if period(peaks(i))<0.8*period(peaks(i-1)) % ectopic beat detection
-%       peaks(i+1)=round(mean([peaks(i), peaks(i+2)]));
-%       endsample = peaks(i+1);
-%       rate(begsample:endsample)  = 60 * fsample/(endsample-begsample); % in bpm
-%       period(begsample:endsample) = (endsample-begsample)/fsample; % in seconds per interval
-%       phase(begsample:endsample) = linspace(-pi, pi, (endsample-begsample+1));
-%     end
-%   end
 end
 % also construct a boolean channel with a pulse at the beat onset
 tmp = zeros(n);
