@@ -92,6 +92,7 @@ cfg.threshold        = ft_getopt(cfg, 'threshold', 0.4);      % between 0 and 1
 cfg.feedback         = ft_getopt(cfg, 'feedback', 'yes');
 cfg.preproc          = ft_getopt(cfg, 'preproc', []);
 cfg.flipsignal       = ft_getopt(cfg, 'flipsignal', []);
+cfg.ectopicbeat_corr = ft_getopt(cfg, 'ectopicbeat_corr', 'no');
 
 % the expected rate is around 80 bpm, which means 80/60=1.33 Hz
 cfg.preproc.bpfilter    = ft_getopt(cfg.preproc, 'bpfilter', 'yes');
@@ -199,7 +200,7 @@ switch cfg.method
       end
       
       % construct a continuous channel with the rate, period and the phase
-      [rate, period, phase, tmp] = discr2ctu(peaks, size(dat), fsample);
+      [rate, period, phase, tmp] = discr2ctu(peaks, size(dat), fsample, cfg);
       
       % add the continuous channels to the output structure
       dataout.trial{trllop} = [rate; period; phase; tmp];
@@ -228,7 +229,7 @@ switch cfg.method
       [vals, peaks, delay] = pan_tompkin(dat, fsample, istrue(cfg.feedback));
       
       % construct a continuous channel with the rate and the phase
-      [rate, period, phase, tmp] = discr2ctu(peaks, size(dat), fsample);
+      [rate, period, phase, tmp] = discr2ctu(peaks, size(dat), fsample, cfg);
       
       % add the continuous channels to the output structure
       dataout.trial{trllop} = [rate; period; phase; tmp];
@@ -238,6 +239,36 @@ switch cfg.method
     ft_error('unsupported method %s', cfg.method);
     
 end % switch method
+
+if istrue(cfg.ectopicbeat_corr)
+  for trllop=1:numel(datain.trial)
+    chan_onset=find(strcmp(dataout.label, 'heartbeatonset'));
+    chan_period=find(strcmp(dataout.label, 'heartperiod'));
+    peaks=find(dataout.trial{trllop}(chan_onset,:));
+    for i=1:length(peaks)
+      if i==1 | i>=length(peaks)-1
+        continue
+      end
+      % if the RR-interval of the current to the next peak is 15% smaller than  
+      % the previous peak-to-peak interval and is followed by an interval that is 15% larger (refractory period),
+      % then interpolate the next peak to fall exactly in between its neighbouring peaks
+      if dataout.trial{trllop}(chan_period, peaks(i))<0.85*dataout.trial{trllop}(chan_period, peaks(i-1)) && dataout.trial{trllop}(chan_period, peaks(i+1))>1.15*dataout.trial{trllop}(chan_period, peaks(i-1))
+        peaks(i+1)=round(mean([peaks(i), peaks(i+2)]));
+        % reconstruct the continuous channels and update the output
+        % structure
+        [rate, period, phase, tmp] = discr2ctu(peaks, size(dataout.trial{trllop}(1,:)), fsample, cfg);
+        dataout.trial{trllop} = [rate; period; phase; tmp];
+      end
+    end
+    if istrue(cfg.feedback)
+      figure; title('heart beat onset and heart period before and after correction');
+      subplot(2,1,1); plot(dataout.trial{trllop}(chan_onset,:)); ylim([0 2]);
+      hold on; plot(tmp);
+      subplot(2,1,2); plot(dataout.trial{trllop}(chan_period,:));
+      hold on; plot(period);
+    end
+  end
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % deal with the output
@@ -253,7 +284,7 @@ ft_postamble savevar    dataout
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [rate, period, phase, tmp] = discr2ctu(peaks, n, fsample)
+function [rate, period, phase, tmp] = discr2ctu(peaks, n, fsample, cfg)
 rate  = nan(n);
 period = nan(n);
 phase = nan(n);
@@ -263,6 +294,21 @@ for i=1:length(peaks)-1
   rate(begsample:endsample)  = 60 * fsample/(endsample-begsample); % in bpm
   period(begsample:endsample) = (endsample-begsample)/fsample; % in seconds per interval
   phase(begsample:endsample) = linspace(-pi, pi, (endsample-begsample+1));
+%   if istrue(cfg.ectopicbeat_corr)
+%     % if the RR-interval of the current to the next peak and the one after that (refractory perod) differs with more than 20%
+%     % of the previous peak-to-peak interval, interpolate the next peak to
+%     % fall exactly in between its neighbouring peaks
+%     if i==1 | i==length(peaks)-1
+%       continue
+%     end
+%     if period(peaks(i))<0.8*period(peaks(i-1)) % ectopic beat detection
+%       peaks(i+1)=round(mean([peaks(i), peaks(i+2)]));
+%       endsample = peaks(i+1);
+%       rate(begsample:endsample)  = 60 * fsample/(endsample-begsample); % in bpm
+%       period(begsample:endsample) = (endsample-begsample)/fsample; % in seconds per interval
+%       phase(begsample:endsample) = linspace(-pi, pi, (endsample-begsample+1));
+%     end
+%   end
 end
 % also construct a boolean channel with a pulse at the beat onset
 tmp = zeros(n);
