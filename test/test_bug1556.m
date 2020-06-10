@@ -109,7 +109,7 @@ nb_conditions =3;
 Subjects = repmat(eye(nb_subjects),nb_conditions,1); % error
 x = kron(eye(nb_conditions),ones(nb_subjects,1));  % effect
 X = [x Subjects]; % no more ones for the grand mean but a subject specific mean
-figure; imagesc(X); ft_colormap('gray'); title('Repearted measure design','Fontsize',14)
+figure; imagesc(X); colormap('gray'); title('Repearted measure design','Fontsize',14)
 
 % Compute as usual
 df  = nb_conditions -1;

@@ -1,53 +1,137 @@
 function cmap = ft_colormap(varargin)
 
-% FT_COLORMAP is a wrapper around the MATLAB COLORMAP function. It has the same
-% usage as COLORMAP, but also knows about the colormaps returned by BREWERMAP.
-% The latter can be specified as a string, e.g. 'RdBu', or as a 2-element cell,
-% e.g. {'RdBu', 15} or {'*RdBu', 15}, where the second element specifies the number of colors. See BREWERMAP for more information.
+% FT_COLORMAP is a wrapper function with the same usage as the normal COLORMAP
+% function, but it also knows about the colormaps from BREWERMAP and some colormaps
+% from MATPLOTLIB.
+%
+% Use as
+%   ft_colormap(name)
+%   ft_colormap(name, n)
+%   ft_colormap(handle, name)
+%   ft_colormap(handle, name, n)
+%
+% The name is a string that specifies the colormap (see below). The optional handle
+% can be used to specify the current figure (which is the default, see GCF) or the
+% current axes (see GCA). The optional parameter n determines the number of steps or
+% unique colors in the map (by default 64).
+%
+% The colormaps from MATLAB include 'parula', 'jet', 'hsv', 'hot', 'cool', 'spring',
+% 'summer', 'autumn', 'winter', 'gray', 'bone', 'copper', 'pink', 'lines',
+% 'colorcube', 'prism', and 'flag'.
+%
+% The colormaps from MATPLOTLIB include 'cividis', 'inferno', 'magma', 'plasma',
+% 'tab10', 'tab20', 'tab20b', 'tab20c', 'twilight', and 'viridis'.
+%
+% The colormaps from BREWERMAP can be specified as a string, e.g. 'RdBu' or with an
+% asterisk to reverse the colormap, like '*RdBu'. See BREWERMAP for more information,
+% or execute the interactive BREWERMAP_VIEW function to see them in detail.
+%
+% See also COLORMAP, COLORMAPEDITOR, BREWERMAP, MATPLOTLIB
 
-switch nargin
-  case 0
-    cmap = colormap;
-  case 1
-    if ishandle(varargin{1})
-      cmap = colormap(varargin{1});
-    else
-      if iscell(varargin{1})
-        assert(numel(varargin{1})==2&&ischar(varargin{1}{1})&&isscalar(varargin{1}{2}));
-         
-        % this is assumed to be a pair of arguments, where the first one specifies the brewermap scheme,
-        % and the second scalar the number of colors
-        ft_hastoolbox('brewermap', 1);
-        cmap = brewermap(varargin{1}{2}, varargin{1}{1});
-      elseif ischar(varargin{1})
-        % this can be a situation, where the string argument is either a permitted string for MATLAB's colormap, 
-        % or for the brewermap, explicitly check the brewermap ones, assume a permitted string for colormap otherwise
-        ft_hastoolbox('brewermap', 1);
-        list = repmat(brewermap('list'), [2 1]);
-        for k = 1:numel(list)/2, list{k} = sprintf('*%s',list{k}); end
-                
-        if any(strcmp(list, varargin{1}))
-          cmap = brewermap(64, varargin{1});
-        else    
-          cmap = colormap(varargin{1});
-        end
-      else
-        cmap = colormap(varargin{1});
-      end
-    end
-  case 2
-    if ishandle(varargin{1}) 
-      cmap = ft_colormap(varargin{2});
-    else
-      ft_error('unexpected input to ft_colormap');
-    end
-  otherwise
-    ft_error('wrong number of input arguments for ft_colormap');
-end
+% Copyright (C) 2020, Jan-Mathijs Schoffelen, Robert Oostenveld
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
-if nargin==2
-  colormap(varargin{1}, cmap);
+ft_hastoolbox('brewermap', 2);  % check and give a warning if it cannot be added
+ft_hastoolbox('matplotlib', 2); % check and give a warning if it cannot be added
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% interpret the input arguments
+
+% please note that ishandle('parula') returns a logical array
+% hence the all(ishandle(...)), which in that case returns false
+
+if nargin==0
+  % apply the default colormap
+  handle = gcf;
+  name   = 'default';
+  n      = 64;
+  
+elseif nargin==1 && isnumeric(varargin{1})
+  % the user specified an Nx3 array as colormap
+  handle = gcf;
+  name   = varargin{1}; % note that this is not a string, it is dealt with below
+  n      = nan;
+  
+elseif nargin==1 && all(ishandle(varargin{1}))
+  % apply the default colormap on the specified handle
+  handle = varargin{1};
+  name   = 'default';
+  n      = 64;
+  
+elseif nargin==1 && ischar(varargin{1})
+  % apply the specified colormap on the current figure
+  handle = gcf;
+  name   = varargin{1};
+  n      = 64;
+  
+elseif nargin==2 && all(ishandle(varargin{1}))
+  % apply the specified colormap on the specified handle
+  handle = varargin{1};
+  name   = varargin{2};
+  n      = 64;
+  
+elseif nargin==2 && ischar(varargin{1})
+  % apply the specified colormap with specified N on the current figure
+  handle = gcf;
+  name   = varargin{1};
+  n      = varargin{2};
+  
+elseif nargin==3 && all(ishandle(varargin{1}))
+  % apply the specified colormap with specified N on the specified handle
+  handle = varargin{1};
+  name   = varargin{2};
+  n      = varargin{3};
+  
 else
-  colormap(cmap);
+  ft_error('incorrect input arguments');
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% construct the colormap
+
+% the ones from brewermap are not m-files on disk
+brewerlist = repmat(brewermap('list'), [2 1]);
+% also include the reverse ones
+for k = 1:numel(brewerlist)/2
+  brewerlist{k} = sprintf('*%s',brewerlist{k});
+end
+
+if isnumeric(name)
+  % the user specified an Nx3 array as colormap
+  cmap = name;
+elseif ismember(name, brewerlist)
+  cmap = brewermap(n, name);
+else
+  % this works both for the MATLAB and the MATPLOTLIB colormaps
+  % which have the different colormaps available as an m-file
+  cmap = feval(name, n);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% apply the colormap and/or return it
+
+if nargout>0
+  % apply it to the specified figure or axis and return it as a Nx3 array
+  colormap(handle, cmap)
+else
+  % only apply it to the current figure
+  colormap(handle, cmap)
+  clear cmap
+end

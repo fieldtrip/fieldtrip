@@ -723,11 +723,9 @@ end
 %% set color and opacity mapping for this figure
 if hasfun
   if ischar(cfg.funcolormap) && ~strcmp(cfg.funcolormap, 'rgb')
-    ft_colormap(cfg.funcolormap);
-    cfg.funcolormap = colormap;
+    cfg.funcolormap = ft_colormap(cfg.funcolormap);
   elseif ~ischar(cfg.funcolormap)
-    ft_colormap(cfg.funcolormap);
-    cfg.funcolormap = colormap;
+    cfg.funcolormap = ft_colormap(cfg.funcolormap{:});
   end
 end
 if hasmsk
