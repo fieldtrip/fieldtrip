@@ -21,7 +21,7 @@ function [event] = read_nex5_event(filename)
 %
 % See also READ_NEX5_HEADER, READ_NEX5
 
-% Copyright (C) 2020, Robert Oostenveld
+% Copyright (C) 2020, Robert Oostenveld, Alex Kirillov
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -42,12 +42,12 @@ function [event] = read_nex5_event(filename)
 % $Id$
 
 hdr = read_nex5_header(filename);
-adindx = find(cell2mat({hdr.VarHeaders.Type})==5);
+adindx = find(cell2mat({hdr.VarHeader.Type})==5);
 if isempty(adindx)  % this would otherwise produce an error
   ft_warning('No continuous variables found - using hdr.FileHeader.Frequency');
   samplingFreq = hdr.FileHeader.Frequency;
 else
-  samplingFreq = hdr.VarHeaders(adindx(1)).WFrequency;
+  samplingFreq = hdr.VarHeader(adindx(1)).WFrequency;
 end
 
 divisorToSampleNumber = hdr.FileHeader.Frequency./samplingFreq;
@@ -57,10 +57,10 @@ event = struct('sample',{},'value',{},'timestamp',{},'type',{}, ...
   'duration',{},'offset',{});
 
 % find any channels with strobed triggers ("markers")
-mrkvarnum = find([hdr.VarHeaders.Type] == 6);
+mrkvarnum = find([hdr.VarHeader.Type] == 6);
 
 for mrkn = 1:numel(mrkvarnum)
-  vh = hdr.VarHeaders(mrkvarnum(mrkn));
+  vh = hdr.VarHeader(mrkvarnum(mrkn));
   status = fseek(fid,vh.DataOffset,'bof');
   if status < 0;  ft_error('error with fseek');  end
   
@@ -109,10 +109,10 @@ for mrkn = 1:numel(mrkvarnum)
 end
 
 % find interval channels
-intvarnum = find([hdr.VarHeaders.Type] == 2);
+intvarnum = find([hdr.VarHeader.Type] == 2);
 
 for intVarIndex = 1:numel(intvarnum)
-  vh = hdr.VarHeaders(intvarnum(intVarIndex));
+  vh = hdr.VarHeader(intvarnum(intVarIndex));
   status = fseek(fid, vh.DataOffset,'bof');
   if status < 0;  ft_error('error with fseek');  end
 
@@ -144,10 +144,10 @@ for intVarIndex = 1:numel(intvarnum)
 end
 
 % find event channels
-evtvarnum = find([hdr.VarHeaders.Type] == 1);
+evtvarnum = find([hdr.VarHeader.Type] == 1);
 
 for ev = 1:numel(evtvarnum)
-  vh = hdr.VarHeaders(evtvarnum(ev));
+  vh = hdr.VarHeader(evtvarnum(ev));
   status = fseek(fid, vh.DataOffset, 'bof');
   if status < 0;  ft_error('error with fseek');  end
 

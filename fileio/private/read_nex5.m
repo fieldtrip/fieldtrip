@@ -23,7 +23,7 @@ function [varargout] = read_nex5(filename, varargin)
 %
 % See also READ_NEX5_HEADER
 %
-% Copyright (C) 2020 Robert Oostenveld
+% Copyright (C) 2020 Robert Oostenveld, Alex Kirillov
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -67,7 +67,7 @@ fid = fopen_or_error(filename, 'r', 'ieee-le');
 
 for i=1:length(channel)
   chan = channel(i);
-  vh = hdr.VarHeaders(chan);
+  vh = hdr.VarHeader(chan);
   clear buf
   status = fseek(fid, vh.DataOffset, 'bof');
   if status < 0;  ft_error('error with fseek');  end
@@ -87,6 +87,7 @@ for i=1:length(channel)
 
     case 3
       % Waveform variables
+      % only wave timestamps are used, waveform values are not actually used. see ft_read_data
       buf.ts = Nex5ReadTimestamps(fid, vh);
       if ~tsonly
         if vh.ContDataType == 0

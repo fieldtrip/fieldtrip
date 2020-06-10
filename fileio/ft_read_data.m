@@ -1393,7 +1393,7 @@ switch dataformat
   case 'plexon_nex5' % this is the default reader for nex5 files
     dat = zeros(length(chanindx), endsample-begsample+1);
     for i=1:length(chanindx)
-      vh = hdr.orig.VarHeaders(chanindx(i));
+      vh = hdr.orig.VarHeader(chanindx(i));
       if vh.Type==5
         % this is a continuous channel
         if vh.Count==1

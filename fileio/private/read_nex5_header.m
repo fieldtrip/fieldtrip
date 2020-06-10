@@ -7,7 +7,7 @@ function [hdr] = read_nex5_header(filename)
 %
 % See also RAD_NEX5_DATA, READ_NEX5_EVENT
 
-% Copyright (C) 2020, Robert Oostenveld
+% Copyright (C) 2020, Robert Oostenveld, Alex Kirillov
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -36,7 +36,7 @@ status = fclose(fid);
 
 % put them together into one struct
 hdr.FileHeader = fileheader;
-hdr.VarHeaders = varheaders;
+hdr.VarHeader = varheaders;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -48,9 +48,9 @@ hdr.Version        = fread(fid,1,'int32');
 hdr.Comment        = fread(fid,256,'uint8=>char')';
 hdr.Frequency      = fread(fid,1,'double');         % timestamped freq. - tics per second
 hdr.Beg            = fread(fid,1,'int64');          % usually 0
-hdr.NumVars        = fread(fid,1,'int32');          % number of variables in the first batch
+hdr.NumVars        = fread(fid,1,'int32');          % number of variables
 hdr.MetaStart      = fread(fid,1,'uint64');         % position of metadata at the end of the file
-hdr.End            = fread(fid,1,'int64');          % maximum timestamp + 1
+hdr.End            = fread(fid,1,'int64');          % maximum timestamp
 Padding = fread(fid,56,'uint8=>char')';             % future expansion
 end
 

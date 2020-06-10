@@ -2371,19 +2371,19 @@ switch headerformat
     
   case 'plexon_nex5' % this is the default reader for nex5 files
     orig = read_nex5(filename);
-    numsmp = cell2mat({orig.VarHeaders.NumberOfDataPoints});
-    adindx = find(cell2mat({orig.VarHeaders.Type})==5);
+    numsmp = cell2mat({orig.VarHeader.NumberOfDataPoints});
+    adindx = find(cell2mat({orig.VarHeader.Type})==5);
     if isempty(adindx)
       ft_error('file does not contain continuous channels');
     end
     % check that all continuous channels have the same sampling rate
-    samplingRates = cell2mat({orig.VarHeaders.WFrequency});
+    samplingRates = cell2mat({orig.VarHeader.WFrequency});
     contSamplingRates = samplingRates(adindx);
     if any(contSamplingRates~=contSamplingRates(1))
       ft_error('different sampling rates in continuous data not supported');
     end
-    hdr.nChans      = length(orig.VarHeaders);
-    hdr.Fs          = orig.VarHeaders(adindx(1)).WFrequency;    % take the sampling frequency from the first A/D channel
+    hdr.nChans      = length(orig.VarHeader);
+    hdr.Fs          = orig.VarHeader(adindx(1)).WFrequency;    % take the sampling frequency from the first A/D channel
     hdr.TimeStampPerSample = orig.FileHeader.Frequency ./ hdr.Fs;
     % for hdr.nSamples, we need to calculate the last timestamp for every continuous channel
     maxTimestamp = 0;
@@ -2397,7 +2397,7 @@ switch headerformat
     hdr.nTrials     = 1;                                        % it can always be interpreted as continuous data
     hdr.nSamplesPre = 0;                                        % and therefore it is not trial based
     for i=1:hdr.nChans
-      hdr.label{i} = deblank(char(orig.VarHeaders(i).Name));
+      hdr.label{i} = deblank(char(orig.VarHeader(i).Name));
     end
     hdr.label = hdr.label(:);
     hdr.FirstTimeStamp     = orig.FileHeader.Beg;
