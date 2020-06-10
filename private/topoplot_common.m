@@ -239,8 +239,10 @@ end
 
 % check colormap is proper format and set it
 if isfield(cfg, 'colormap')
-  if ~isnumeric(cfg.colormap)
+  if ischar(cfg.colormap)
     cfg.colormap = ft_colormap(cfg.colormap);
+  elseif isstruct(cfg.colormap)
+    cfg.colormap = ft_colormap(cfg.colormap{:});
   end
   if size(cfg.colormap,2)~=3
     ft_error('cfg.colormap must be Nx3');
