@@ -1010,11 +1010,11 @@ cmap = feval(maps{val}, size(colormap, 1));
 % elseif strcmp(maps{val}, 'kelvin')
 %   cmap = kelvin(size(colormap, 1));
 % else  
-%   cmap = colormap(opt.handles.axes.movie, maps{val});
+%   cmap = ft_colormap(opt.handles.axes.movie, maps{val});
 % end
 
 if get(opt.handles.checkbox.automatic, 'Value')
-  colormap(opt.handles.axes.movie_subplot{1}, cmap);
+  ft_colormap(opt.handles.axes.movie_subplot{1}, cmap);
 end
 
 adjust_colorbar(opt);
@@ -1127,7 +1127,7 @@ end % incr, decr, automatic, else
 maps = get(opt.handles.menu.colormap, 'String');
 cmap = feval(maps{get(opt.handles.menu.colormap, 'Value')}, size(colormap, 1));
 for i=1:numel(opt.dat)
-  colormap(opt.handles.axes.movie_subplot{i}, cmap);
+  ft_colormap(opt.handles.axes.movie_subplot{i}, cmap);
 end
 
 adjust_colorbar(opt);
@@ -1293,7 +1293,7 @@ function adjust_colorbar(opt)
   cmap = feval(maps{get(opt.handles.menu.colormap, 'Value')}, size(colormap, 1));
   cmap(round(lower(1)):round(upper(1)), :) = repmat(cmap(round(lower(1)), :), 1+round(upper(1))-round(lower(1)), 1);
   for i=1:numel(opt.dat)
-    colormap(opt.handles.axes.movie_subplot{i}, cmap);
+    ft_colormap(opt.handles.axes.movie_subplot{i}, cmap);
   end
 end
 
