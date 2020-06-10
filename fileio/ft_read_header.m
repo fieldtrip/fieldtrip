@@ -70,6 +70,8 @@ function [hdr] = ft_read_header(filename, varargin)
 %   Mega Neurone (directory)
 %   Natus/Nicolet/Nervus (.e files)
 %   Nihon Kohden (*.m00, *.EEG)
+%   Bitalino OpenSignals (*.txt)
+%   OpenBCI (*.txt)
 %
 % The following spike and LFP dataformats are supported
 %   Neuralynx (*.ncs, *.nse, *.nts, *.nev, *.nrd, *.dma, *.log)
@@ -2298,7 +2300,7 @@ switch headerformat
   case 'nwb'
     ft_hastoolbox('MatNWB', 1);	% when I run this locally outside of ft_read_header it does not work for me
     try
-        c = load('core.mat'); % might be needed later on - I don't have this file
+        c = load('namespaces/core.mat');
         nwb_version = c.version;
         nwb_fileversion = util.getSchemaVersion(filename);
         if ~strcmp(nwb_version, nwb_fileversion)

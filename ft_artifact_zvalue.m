@@ -1,9 +1,9 @@
 function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 
 % FT_ARTIFACT_ZVALUE reads the interesting segments of data from file and identifies
-% artifacts by means of thresholding the z-transformed value of the preprocessed raw data.
-% Depending on the preprocessing options, this method will be sensitive to EOG, muscle or
-% jump artifacts.  This procedure only works on continuously recorded data.
+% artifacts by means of thresholding the z-transformed value of the preprocessed raw
+% data. Depending on the preprocessing options, this method will be sensitive to EOG,
+% muscle or jump artifacts.  This procedure only works on continuously recorded data.
 %
 % Use as
 %   [cfg, artifact] = ft_artifact_zvalue(cfg)
@@ -97,10 +97,14 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %   cfg.artfctdef.zvalue.hilbert       = 'no' or 'yes'
 %   cfg.artfctdef.zvalue.rectify       = 'no' or 'yes'
 %
-% The output argument "artifact" is a Nx2 matrix comparable to the
-% "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
-% beginsamples of an artifact period, the second column contains the
-% endsamples of the artifactperiods.
+% The output argument "artifact" is a Nx2 matrix comparable to the "trl" matrix of
+% FT_DEFINETRIAL. The first column of which specifying the beginsamples of an
+% artifact period, the second column contains the endsamples of the artifactperiods.
+%
+% To facilitate data-handling and distributed computing, you can use
+%   cfg.inputfile   =  ...
+% to read the input data from a *.mat file on disk. This mat files should contain
+% only a single variable named 'data', corresponding to the input structure.
 %
 % See also FT_REJECTARTIFACT, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG, FT_ARTIFACT_EOG,
 % FT_ARTIFACT_JUMP, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_ZVALUE

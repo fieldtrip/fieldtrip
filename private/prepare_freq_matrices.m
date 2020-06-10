@@ -79,8 +79,8 @@ if isfield(freq, 'crsspctrm')
 	dimtok  = tokenize(getdimord(freq, 'crsspctrm'),'_');
 	hasfull = sum(strcmp(dimtok, 'chan'))==2;
 end
-if ~hasfull,
-	if keeptrials,
+if ~hasfull
+	if keeptrials
 		freq = ft_checkdata(freq, 'cmbrepresentation', 'full');
 	else
 		freq = ft_checkdata(freq, 'cmbrepresentation', 'fullfast');
