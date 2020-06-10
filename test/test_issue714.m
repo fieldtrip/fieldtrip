@@ -74,7 +74,7 @@ ft_plot_layout(layout)
 cfg = [];
 cfg.checkconfig = 'loose'; % this uses an old option
 cfg.viewmode = 'vertical';
-cfg.channelcolormap = colormap('lines');
+cfg.channelcolormap = ft_colormap('lines');
 
 cfg.colorgroups = 'sequential';
 ft_databrowser(cfg, data);
@@ -103,7 +103,7 @@ cfg.colorgroups = 'sequential';
 cfg.linewidth = 2;
 cfg.linestyle = '-';
 
-% cfg.linecolor = colormap('lines');
+% cfg.linecolor = ft_colormap('lines');
 ft_databrowser(cfg, data);
 
 cfg.linecolor = 'brgymc';

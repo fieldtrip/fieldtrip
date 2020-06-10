@@ -286,13 +286,13 @@ switch maskstyle
       set(hs, 'FaceVertexCData', vertexcolor, 'FaceColor', 'interp');
       if numel(vertexcolor)==size(pos,1)
         if ~isempty(clim), set(gca, 'clim', clim); end
-        if ~isempty(cmap), colormap(cmap); end
+        if ~isempty(cmap), ft_colormap(cmap); end
       end
     elseif facepotential
       set(hs, 'FaceVertexCData', facecolor, 'FaceColor', 'flat');
       if numel(facecolor)==size(tri,1)
         if ~isempty(clim), set(gca, 'clim', clim); end
-        if ~isempty(cmap), colormap(cmap); end
+        if ~isempty(cmap), ft_colormap(cmap); end
       end
     else
       % the color is indicated as a single character or as a single RGB triplet

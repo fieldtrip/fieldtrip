@@ -108,7 +108,7 @@ classdef ft_plot_mesh_interactive<handle
       % INIT_SURFACE_PLOTS initializes a single figure that displays
       % surface plots for all the functional data at a single time point.
       self.fig_surface = figure('Color', 'w');
-      colormap(self.fig_surface, self.colourmap);
+      ft_colormap(self.fig_surface, self.colourmap);
       for k = 1:self.ncond
         % initialize axes and surface
         self.axes_surface(k) = subtightplot(1, numel(self.data), k);        
@@ -132,7 +132,7 @@ classdef ft_plot_mesh_interactive<handle
           tmp = self.data{k};
           lims = max(tmp(:)) * 0.75;
           set(self.axes_surface(k), 'CLim', [-lims lims]);
-          colormap(self.axes_surface(k), brewermap(64, '*RdBu'));
+          ft_colormap(self.axes_surface(k), brewermap(64, '*RdBu'));
         end
         
         title(self.axes_surface(k), self.data_labels{k});

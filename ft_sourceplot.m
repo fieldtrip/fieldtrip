@@ -723,10 +723,10 @@ end
 %% set color and opacity mapping for this figure
 if hasfun
   if ischar(cfg.funcolormap) && ~strcmp(cfg.funcolormap, 'rgb')
-    colormap(cfg.funcolormap);
+    ft_colormap(cfg.funcolormap);
     cfg.funcolormap = colormap;
   elseif ~ischar(cfg.funcolormap)
-    colormap(cfg.funcolormap);
+    ft_colormap(cfg.funcolormap);
     cfg.funcolormap = colormap;
   end
 end
@@ -1474,7 +1474,7 @@ switch cfg.method
       end
       
       % color settings
-      colormap(cmap);
+      ft_colormap(cmap);
       if ~isempty(clim) && clim(2)>clim(1)
         caxis(gca, clim);
       end
@@ -1778,7 +1778,7 @@ elseif opt.hastime && opt.hasfun
 elseif strcmp(opt.colorbar,  'yes') && ~isfield(opt, 'hc')
   if opt.hasfun
     % vectorcolorbar = linspace(fscolmin, fcolmax,length(cfg.funcolormap));
-    % imagesc(vectorcolorbar,1,vectorcolorbar);colormap(cfg.funcolormap);
+    % imagesc(vectorcolorbar,1,vectorcolorbar);ft_colormap(cfg.funcolormap);
     % use a normal MATLAB colorbar, attach it to the invisible 4th subplot
     try
       caxis([opt.fcolmin opt.fcolmax]);

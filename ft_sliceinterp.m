@@ -370,7 +370,7 @@ end
 fprintf('constructing overlay...');
 if ischar(cfg.colormap)
   % replace string by colormap using standard MATLAB function
-  cfg.colormap = colormap(cfg.colormap);
+  cfg.colormap = ft_colormap(cfg.colormap);
 end
 cmap = cfg.colormap;
 cmaplength = size(cmap,1);
