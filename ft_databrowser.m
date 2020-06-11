@@ -1776,11 +1776,11 @@ if strcmp(cfg.plotevents, 'yes')
       fprintf(eventlabellegend);
     end
     
-    % save stuff to able to shift event labels downwards when they occur at the same time-point
+    % save stuff to able to shift event labels downwards when they occur at a similar time-point
     eventcol = cell(1,numel(event));
     eventstr = cell(1,numel(event));
     eventtim = NaN(1,numel(event));
-    concount = NaN(1,numel(event));
+    shift=zeros(1,numel(event));
     
     % gather event info and plot lines
     for ievent = 1:numel(event)
@@ -1813,11 +1813,21 @@ if strcmp(cfg.plotevents, 'yes')
       setappdata(lh, 'ft_databrowser_eventtype', event(ievent).type);
       setappdata(lh, 'ft_databrowser_eventvalue', event(ievent).value);
       
-      % count the consecutive occurrence of each time point, this is used for the vertical shift of the event label
-      concount(ievent) = sum(eventtim(ievent)==eventtim(1:ievent-1));
-      
+      % find the close events (i.e. within 1/10th of the horizontal time axis) and calculate shift for the event labels.
+      closeevent=find(eventtim(ievent)>eventtim(1:ievent-1)-0.1*diff(opt.hlim) & eventtim(ievent)<eventtim(1:ievent-1)+0.1*diff(opt.hlim));
+      emptyshift=find(diff(sort(shift(closeevent)))>1,1); % find a shift that has not been used by other close events
+      if ~isempty(emptyshift)
+        shift(ievent)=emptyshift;
+      elseif ~any(shift(closeevent)==0) % restart at 0 when no other close event is plotted at the highest level
+        shift(ievent)=0;
+      elseif closeevent
+        shift(ievent)=max(shift(closeevent))+1;
+      else
+        shift(ievent)=0;
+      end
+
       % plot the event label
-      ft_plot_text(eventtim(ievent), 0.9-concount(ievent)*.06, eventstr{ievent}, 'tag', 'event', 'Color', eventcol{ievent}, 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1], 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits, 'horizontalalignment', 'left');
+      ft_plot_text(eventtim(ievent), 0.9-shift(ievent)*.06, eventstr{ievent}, 'tag', 'event', 'Color', eventcol{ievent}, 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1], 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits, 'horizontalalignment', 'left');
     end
     
   end % if viewmode appropriate for events
