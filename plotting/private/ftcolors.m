@@ -10,6 +10,10 @@ function rgb = ftcolors(N)
 %
 % Without input arguments, N will be set to 64
 
+if nargin==0
+  N = 64;
+end
+
 top    = [172 27 42];
 bottom = [18 140 120];
 middle = [255 255 255];
