@@ -1,6 +1,6 @@
 function [hdr] = read_nex5_header(filename)
 
-% READ_NEX_HEADER for Nex Technologies *.nex5 file
+% READ_NEX5_HEADER for Nex Technologies *.nex5 file
 %
 % Use as
 %   [hdr] = read_nex5_header(filename)
