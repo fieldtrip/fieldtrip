@@ -22,11 +22,16 @@ function cmap = ft_colormap(varargin)
 % The colormaps from MATPLOTLIB include 'cividis', 'inferno', 'magma', 'plasma',
 % 'tab10', 'tab20', 'tab20b', 'tab20c', 'twilight', and 'viridis'.
 %
-% The colormaps from BREWERMAP can be specified as a string, e.g. 'RdBu' or with an
-% asterisk to reverse the colormap, like '*RdBu'. See BREWERMAP for more information,
-% or execute the interactive BREWERMAP_VIEW function to see them in detail.
+% The colormaps from CMOCEAN include 'thermal', 'haline', 'solar', 'ice', 'oxy',
+% 'deep', 'dense' 'algae', 'matter', 'turbid', 'speed', 'amp', 'tempo', 'rain', 
+% 'delta', 'curl', 'diff', 'tarn', 'phase', and 'topo'. To reverse these
+% colormaps, specify them with minus sign in front, e.g. '-topo'
 %
-% See also COLORMAP, COLORMAPEDITOR, BREWERMAP, MATPLOTLIB
+% The colormaps from BREWERMAP can be specified as a string, e.g. 'RdBu' or with an
+% asterisk (e.g. '*RdBu' to reverse the colormap, like '*RdBu'. See BREWERMAP for more 
+% information, or execute the interactive BREWERMAP_VIEW function to see them in detail.
+%
+% See also COLORMAP, COLORMAPEDITOR, BREWERMAP, MATPLOTLIB, CMOCEAN
 
 % Copyright (C) 2020, Jan-Mathijs Schoffelen, Robert Oostenveld
 %
@@ -50,6 +55,7 @@ function cmap = ft_colormap(varargin)
 
 ft_hastoolbox('brewermap', 2);  % check and give a warning if it cannot be added
 ft_hastoolbox('matplotlib', 2); % check and give a warning if it cannot be added
+ft_hastoolbox('cmocean', 2);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % interpret the input arguments
@@ -113,11 +119,22 @@ for k = 1:numel(brewerlist)/2
   brewerlist{k} = sprintf('*%s',brewerlist{k});
 end
 
+% the ones from cmocean are not m-files on disk
+cmoceanlist = {'thermal', 'haline', 'solar', 'ice', 'oxy', ...
+               'deep', 'dense' 'algae', 'matter', 'turbid',...
+               'speed', 'amp', 'tempo', 'rain', 'delta',   ...
+               'curl', 'diff', 'tarn', 'phase', 'topo'};
+for k = 1:numel(cmoceanlist)/2
+  cmoceanlist{k} = sprintf('-%s',cmoceanlist{k});
+end
+
 if isnumeric(name)
   % the user specified an Nx3 array as colormap
   cmap = name;
 elseif ismember(name, brewerlist)
   cmap = brewermap(n, name);
+elseif ismember(name, cmoceanlist)
+  cmap = cmocean(name, n);
 else
   % this works both for the MATLAB and the MATPLOTLIB colormaps
   % which have the different colormaps available as an m-file

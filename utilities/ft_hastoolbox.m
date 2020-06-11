@@ -169,6 +169,7 @@ url = {
   'MAYO_MEF'      'see https://github.com/MultimodalNeuroimagingLab/mef_reader_fieldtrip and https://msel.mayo.edu/codes.html'
   'MATNWB'        'see https://neurodatawithoutborders.github.io/matnwb/'
   'MATPLOTLIB'    'see https://nl.mathworks.com/matlabcentral/fileexchange/62729-matplotlib-perceptually-uniform-colormaps'
+  'CMOCEAN'       'see https://nl.mathworks.com/matlabcentral/fileexchange/57773-matplotlib-perceptually-uniform-colormaps'
   };
 
 if nargin<2
