@@ -423,6 +423,8 @@ switch toolbox
     dependency = {'nwbRead', 'generateCore'};
   case 'MATPLOTLIB'
     dependency = {'cividis', 'inferno', 'magma', 'plasma', 'tab10', 'tab20', 'tab20b', 'tab20c', 'twilight', 'viridis'};
+  case 'CMOCEAN'
+    dependency = {'cmocean'};
     
     % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
