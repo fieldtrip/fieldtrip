@@ -14,6 +14,11 @@ function [dataout] = ft_heartrate(cfg, datain)
 %   cfg.method           = string representing the method for heart beat detection
 %                          'findpeaks'  filtering and normalization, followed by FINDPEAKS (default)
 %                          'pantompkin' implementation of the Pan-Tompkin algorithm for ECG beat detection
+%   cfg.ectopicbeat_corr = replace an ectopic beat (e.g. a premature ventricual contraction) by a beat that falls
+%   exactly in between its neighbouring beats. An ectopic beat is registrated if the RR-interval of a beat is 20% (default) smaller than 
+%   the previous beat-to-beat interval and is followed by an interval that
+%   is 20% (default) larger (i.e. refractory period). The default threshold of 0.2 can be modified
+%   with cfg.corr_threshold.
 %
 % For the 'findpeaks' method the following additional options can be specified
 %   cfg.envelopewindow   = scalar, time in seconds (default = 10)
@@ -93,6 +98,7 @@ cfg.feedback         = ft_getopt(cfg, 'feedback', 'yes');
 cfg.preproc          = ft_getopt(cfg, 'preproc', []);
 cfg.flipsignal       = ft_getopt(cfg, 'flipsignal', []);
 cfg.ectopicbeat_corr = ft_getopt(cfg, 'ectopicbeat_corr', 'no');
+cfg.corr_threshold   = ft_getopt(cfg, 'corr_threshold', 0.2);
 
 % the expected rate is around 80 bpm, which means 80/60=1.33 Hz
 cfg.preproc.bpfilter    = ft_getopt(cfg.preproc, 'bpfilter', 'yes');
@@ -226,6 +232,9 @@ switch cfg.method
       time  = datain.time{trllop};
       
       % pan-tompkin algorithm
+      if istrue(cfg.feedback)
+        figure();
+      end
       [vals, peaks, delay] = pan_tompkin(dat, fsample, istrue(cfg.feedback));
       
       % construct a continuous channel with the rate and the phase
@@ -240,33 +249,36 @@ switch cfg.method
     
 end % switch method
 
+% ectopic beat correction
 if istrue(cfg.ectopicbeat_corr)
   for trllop=1:numel(datain.trial)
     chan_onset=find(strcmp(dataout.label, 'heartbeatonset'));
     chan_period=find(strcmp(dataout.label, 'heartperiod'));
     peaks=find(dataout.trial{trllop}(chan_onset,:));
+    period=dataout.trial{trllop}(chan_period, :);
     for i=1:length(peaks)
       if i==1 | i>=length(peaks)-1
         continue
       end
-      % if the RR-interval of the current to the next peak is 15% smaller than  
-      % the previous peak-to-peak interval and is followed by an interval that is 15% larger (refractory period),
-      % then interpolate the next peak to fall exactly in between its neighbouring peaks
-      if dataout.trial{trllop}(chan_period, peaks(i))<0.85*dataout.trial{trllop}(chan_period, peaks(i-1)) && dataout.trial{trllop}(chan_period, peaks(i+1))>1.15*dataout.trial{trllop}(chan_period, peaks(i-1))
+      % if the RR-interval of the current to the next peak is e.g. 20% (default) smaller than  
+      % the previous peak-to-peak interval and is followed by an interval that is 20% (default) larger (refractory period),
+      % then replace the next peak to fall exactly in between its neighbouring peaks
+      if period(peaks(i))<(1-cfg.corr_threshold)*period(peaks(i-1)) && period(peaks(i+1))>(1+cfg.corr_threshold)*period(peaks(i-1))
         peaks(i+1)=round(mean([peaks(i), peaks(i+2)]));
-        % reconstruct the continuous channels and update the output
-        % structure
+        % reconstruct the continuous channels
         [rate, period, phase, tmp] = discr2ctu(peaks, size(dataout.trial{trllop}(1,:)), fsample);
-        dataout.trial{trllop} = [rate; period; phase; tmp];
       end
     end
+    % visualization
     if istrue(cfg.feedback)
-      figure; title('heart beat onset and heart period before and after correction');
-      subplot(2,1,1); plot(dataout.trial{trllop}(chan_onset,:)); ylim([0 2]);
-      hold on; plot(tmp);
-      subplot(2,1,2); plot(dataout.trial{trllop}(chan_period,:));
-      hold on; plot(period);
+      figure; title('heart period before and after correction');
+      plot(dataout.trial{trllop}(chan_period,:), '--');
+      hold on; plot(period, '-');
+      legend('original', 'corrected')
+      xlabel('samples'); ylabel('heart period (sec. per interval)')
     end
+    % update the output structure
+    dataout.trial{trllop} = [rate; period; phase; tmp];
   end
 end
 
