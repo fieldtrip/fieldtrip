@@ -1776,7 +1776,7 @@ if strcmp(cfg.plotevents, 'yes')
       fprintf(eventlabellegend);
     end
     
-    % save stuff to able to shift event labels downwards when they occur at the same time-point
+    % save stuff to able to shift event labels downwards when they occur at a similar time-point
     eventcol = cell(1,numel(event));
     eventstr = cell(1,numel(event));
     eventtim = NaN(1,numel(event));
@@ -1814,7 +1814,7 @@ if strcmp(cfg.plotevents, 'yes')
       setappdata(lh, 'ft_databrowser_eventvalue', event(ievent).value);
       
       % count the consecutive occurrence of each time point, this is used for the vertical shift of the event label
-      concount(ievent) = sum(eventtim(ievent)==eventtim(1:ievent-1));
+      concount(ievent)=sum(eventtim(ievent)>eventtim(1:ievent-1) & eventtim(ievent)<eventtim(1:ievent-1)+0.1*diff(opt.hlim));
       
       % plot the event label
       ft_plot_text(eventtim(ievent), 0.9-concount(ievent)*.06, eventstr{ievent}, 'tag', 'event', 'Color', eventcol{ievent}, 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1], 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits, 'horizontalalignment', 'left');
