@@ -44,13 +44,16 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function hdr = Nex5ReadFileHeader(fid)
 hdr.NexFileHeader  = fread(fid,4,'uint8=>char')';   % string NEX5
-hdr.Version        = fread(fid,1,'int32');
-hdr.Comment        = fread(fid,256,'uint8=>char')';
-hdr.Frequency      = fread(fid,1,'double');         % timestamped freq. - tics per second
-hdr.Beg            = fread(fid,1,'int64');          % usually 0
+hdr.Version        = fread(fid,1,'int32');          % valid values are 500, 501 or 502
+                                                    % if 500, hdr.End is not specified
+                                                    % if 501 or greater, hdr.End is specified
+                                                    % if 502 or greater, timestamps can be saved as 64-bit integers
+hdr.Comment        = fread(fid,256,'uint8=>char')'; % file comment; UTF-8 encoded
+hdr.Frequency      = fread(fid,1,'double');         % timestamped freq. - tics per second; timestamp values are stored in ticks, where tick = 1/Frequency
+hdr.Beg            = fread(fid,1,'int64');          % first timestamp of the recording session
 hdr.NumVars        = fread(fid,1,'int32');          % number of variables
 hdr.MetaStart      = fread(fid,1,'uint64');         % position of metadata at the end of the file
-hdr.End            = fread(fid,1,'int64');          % maximum timestamp
+hdr.End            = fread(fid,1,'int64');          % maximum timestamp of the data in the file
 Padding = fread(fid,56,'uint8=>char')';             % future expansion
 end
 
@@ -59,22 +62,22 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function hdr = Nex5ReadVarHeaders(fid, numvar)
 for varindex=1:numvar
-  hdr(varindex).Type         = fread(fid,1,'int32');        % 0 - neuron, 1 event, 2- interval, 3 - waveform, 4 - pop. vector, 5 - continuously recorded
-  hdr(varindex).Version      = fread(fid,1,'int32');        % 100
-  hdr(varindex).Name         = fread(fid,64,'uint8=>char')'; % variable name
-  hdr(varindex).DataOffset   = fread(fid,1,'uint64');       % where the data array for this variable is located in the file
-  hdr(varindex).Count        = fread(fid,1,'uint64');       % number of events, intervals, waveforms or weights
-  hdr(varindex).TimestampDataType = fread(fid,1,'int32');   % if 0, timestamps are stored as 32-bit integers; if 1, 64-bit integers
-  hdr(varindex).ContDataType = fread(fid,1,'int32');        % waveforms and continuous variables only; if 0, waveform and continuous values are stored as 16-bit integers; if 1, stored as 32-bit floats
-  hdr(varindex).WFrequency   = fread(fid,1,'double');       % waveform and continuous vars only, w/f sampling frequency
-  hdr(varindex).Units        = fread(fid,32,'uint8=>char')'; % waveforms and continuous variables only, signal values units, not supported
+  hdr(varindex).Type         = fread(fid,1,'int32');         % 0 - neuron, 1 event, 2- interval, 3 - waveform, 4 - pop. vector, 5 - continuously recorded, 6 - marker
+  hdr(varindex).Version      = fread(fid,1,'int32');         % 500
+  hdr(varindex).Name         = fread(fid,64,'uint8=>char')'; % variable name; UFT-8 encoded
+  hdr(varindex).DataOffset   = fread(fid,1,'uint64');        % where the data array for this variable is located in the file
+  hdr(varindex).Count        = fread(fid,1,'uint64');        % number of events, intervals, waveforms or weights
+  hdr(varindex).TimestampDataType = fread(fid,1,'int32');    % if 0, timestamps are stored as 32-bit integers; if 1, as 64-bit integers
+  hdr(varindex).ContDataType = fread(fid,1,'int32');         % waveforms and continuous variables only; if 0, waveform and continuous values are stored as 16-bit integers; if 1, stored as 32-bit floats
+  hdr(varindex).WFrequency   = fread(fid,1,'double');        % waveform and continuous vars only, w/f sampling frequency
+  hdr(varindex).Units        = fread(fid,32,'uint8=>char')'; % waveforms and continuous variables only, signal values units, not supported. units are milliVolts
   hdr(varindex).ADtoUnitsCoefficient = fread(fid,1,'double'); % waveforms and continuous variables only, coefficient to convert from A/D values to units.
-  hdr(varindex).UnitsOffset = fread(fid,1,'double');        % waveforms and continuous variables only, this offset is used to convert A/D values in units: value_in_units = raw * ADtoUnitsCoefficient + UnitsOffset; ignored if ContinuousDataType == 1
-  hdr(varindex).NumberOfDataPoints = fread(fid,1,'uint64'); % waveform variable: number of data points in each wave; continuous variable: overall number of data points in the variable
+  hdr(varindex).UnitsOffset = fread(fid,1,'double');         % waveforms and continuous variables only, this offset is used to convert A/D values in units: value_in_units = raw * ADtoUnitsCoefficient + UnitsOffset; ignored if ContinuousDataType == 1
+  hdr(varindex).NumberOfDataPoints = fread(fid,1,'uint64');  % waveform variable: number of data points in each wave; continuous variable: overall number of data points in the variable
   hdr(varindex).PrethresholdTimeInSeconds = fread(fid,1,'double'); % waveform variables only, pre-threshold time in seconds
-  hdr(varindex).MarkerDataType = fread(fid,1,'int32');      % marker events only; if 0, marker values are stored as strings; if 1, marker values are stored as 32-bit integers
+  hdr(varindex).MarkerDataType = fread(fid,1,'int32');       % marker events only; if 0, marker values are stored as strings; if 1, marker values are stored as 32-bit integers
   hdr(varindex).NumberOfMarkerFields = fread(fid,1,'int32'); % marker events only, how many values are associated with each marker
-  hdr(varindex).MarkerLength = fread(fid,1,'int32');        % marker events only, how many characters are in each marker value; ignored if MarkerDataType is 1
+  hdr(varindex).MarkerLength = fread(fid,1,'int32');         % marker events only, how many characters are in each marker value; ignored if MarkerDataType is 1
   hdr(varindex).ContIndexOfFirstPointInFragmentDataType = fread(fid,1,'int32'); % continuous variables only; if 0, indexes are stored as unsigned 32-bit integers; if 1, as unsigned 64-bit integers
   Padding = fread(fid,60,'uint8=>char')';                   % future expansion
 end

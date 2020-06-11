@@ -246,7 +246,7 @@ elseif isfield(input, 'nChans') && input.nChans==1 && isfield(input, 'label') &&
   type = 'neuralynx';
   
 elseif issubfield(input, 'orig.FileHeader') && issubfield(input, 'orig.VarHeader')
-  fh = input.orig.FileHeader
+  fh = input.orig.FileHeader;
   if issubfield(fh, 'NexFileHeader') && ischar(fh.NexFileHeader) && strcmp(fh.NexFileHeader, 'NEX5')
     % this is a complete header that was read from a Nex Technologies *.nex5 file using read_nex5
     type = 'nex5';
