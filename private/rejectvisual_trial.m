@@ -250,17 +250,19 @@ drawnow
 hold on
 
 if ~isnumeric(info.cfg.ylim)
-  ymin = [];
-  ymax = [];
+  ymin = nan(1,info.nchan);
+  ymax = nan(1,info.nchan);
   for chanindx=1:info.nchan
     if ~info.chansel(chanindx)
       % do not consider excluded channels in vertical scaling estimate
       continue
     end
     dat = info.data.trial{info.trlop}(chanindx,:);
-    ymin = min(ymin, min(dat));
-    ymax = max(ymax, max(dat));
+    ymin(chanindx) = min(dat);
+    ymax(chanindx) = max(dat);
   end
+  ymin = min(ymin);
+  ymax = max(ymax);
   if strcmp(info.cfg.ylim, 'maxabs') % handle maxabs, make y-axis center on 0
     ymax = max(abs(ymax), abs(ymin));
     ymin = -ymax;
