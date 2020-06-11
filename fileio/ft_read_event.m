@@ -678,7 +678,25 @@ switch eventformat
       evt = typecast(int16(evt), 'uint8');
       % construct the Time-stamped Annotations Lists (TAL), see http://www.edfplus.info/specs/edfplus.html#tal
       tal  = tokenize(char(evt), char(0), true);
-      
+
+      % the startdate/time of a file is specified in the EDF+ header
+      % fields 'startdate of recording' and 'starttime of recording'.
+      % These fields must indicate the absolute second in which the
+      % start of the first data record falls. So, the first TAL in
+      % the first data record always starts with +0.X, indicating
+      % that the first data record starts a fraction, X, of a second
+      % after the startdate/time that is specified in the EDF+
+      % header. If X=0, then the .X may be omitted. Onset must start
+      % with a '+' or a '-' character and specifies the amount of
+      % seconds by which the onset of the annotated event follows
+      % ('+') or precedes ('-') the startdate/time of the file,
+      % that is specified in the header.
+
+      % determine millisecond aspect of starttime (always within
+      % first data record), remove from remaining timestamps
+      tok = tokenize(tal{1}, char(20));
+      millisecond_start = -1*str2double(tok{1});
+
       for i=1:length(tal)
         % the unprintable characters 20 and 21 are used as separators between time, duration and the annotation
         % duration can be skipped in which case its preceding 21 must also be skipped
@@ -687,11 +705,11 @@ switch eventformat
         if any(tok{1}==21)
           % the time and duration are specified
           dum = tokenize(tok{1}, char(21)); % split time and duration
-          time     = str2double(dum{1});
-          duration = str2double(dum{2});
+          time     = str2double(dum{1}) + millisecond_start;
+          duration = str2double(dum{2}) + millisecond_start;
         else
           % only the time is specified
-          time     = str2double(tok{1});
+          time     = str2double(tok{1}) + millisecond_start;
           duration = [];
         end
         % there can be multiple annotations per time, the last cell is always empty
