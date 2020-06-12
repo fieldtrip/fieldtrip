@@ -2141,6 +2141,9 @@ switch eventformat
     
   case 'plexon_nex'
     event = read_nex_event(filename);
+
+  case 'plexon_nex5'
+    event = read_nex5_event(filename);
     
   case {'ricoh_ave', 'ricoh_con'}
     % use the Ricoh MEG Reader toolbox for the file reading

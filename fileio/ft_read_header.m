@@ -2449,6 +2449,42 @@ switch headerformat
     % also remember the original header details
     hdr.orig = orig;
     
+  case 'plexon_nex5' % this is the default reader for nex5 files
+    orig = read_nex5(filename);
+    numsmp = cell2mat({orig.VarHeader.NumberOfDataPoints});
+    adindx = find(cell2mat({orig.VarHeader.Type})==5);
+    if isempty(adindx)
+      ft_error('file does not contain continuous channels');
+    end
+    % check that all continuous channels have the same sampling rate
+    samplingRates = cell2mat({orig.VarHeader.WFrequency});
+    contSamplingRates = samplingRates(adindx);
+    if any(contSamplingRates~=contSamplingRates(1))
+      ft_error('different sampling rates in continuous data not supported');
+    end
+    hdr.nChans      = length(orig.VarHeader);
+    hdr.Fs          = orig.VarHeader(adindx(1)).WFrequency;    % take the sampling frequency from the first A/D channel
+    hdr.TimeStampPerSample = orig.FileHeader.Frequency ./ hdr.Fs;
+    % for hdr.nSamples, we need to calculate the last timestamp for every continuous channel
+    maxTimestamp = 0;
+    for i = 1:length(adindx)
+      [nex, chanhdr] = read_nex5(filename, 'header', orig, 'channel', adindx(i), 'tsonly', 1);
+      numPointsInLastFragment = numsmp(adindx(i)) - nex.indx(end) - 1;
+      maxTimestamp = max(maxTimestamp, nex.ts(end)+hdr.TimeStampPerSample*(numPointsInLastFragment-1));
+    end
+
+    hdr.nSamples    = maxTimestamp/hdr.TimeStampPerSample;                      
+    hdr.nTrials     = 1;                                        % it can always be interpreted as continuous data
+    hdr.nSamplesPre = 0;                                        % and therefore it is not trial based
+    for i=1:hdr.nChans
+      hdr.label{i} = deblank(char(orig.VarHeader(i).Name));
+    end
+    hdr.label = hdr.label(:);
+    hdr.FirstTimeStamp     = orig.FileHeader.Beg;
+    hdr.TimeStampPerSample = orig.FileHeader.Frequency ./ hdr.Fs;
+    % also remember the original header details
+    hdr.orig = orig;
+    
   case 'plexon_plx'
     orig = read_plexon_plx(filename);
     if orig.NumSlowChannels==0
