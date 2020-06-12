@@ -58,9 +58,9 @@ cfg = [];
 cfg.trials = data_all.trialinfo == 9;
 dataFC_LP = ft_redefinetrial(cfg, data_all);
 
-save dataFIC_LP dataFIC_LP
-save dataFC_LP dataFC_LP
-save dataIC_LP dataIC_LP
+%save dataFIC_LP dataFIC_LP
+%save dataFC_LP dataFC_LP
+%save dataIC_LP dataIC_LP
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -74,14 +74,14 @@ avgIC = ft_timelockanalysis(cfg, dataIC_LP);
 cfg = [];
 cfg.showlabels = 'yes';
 cfg.fontsize = 6;
-cfg.layout = 'CTF151.lay';
+cfg.layout = 'CTF151_helmet.mat';
 cfg.ylim = [-3e-13 3e-13];
 ft_multiplotER(cfg, avgFIC);
 
 cfg = [];
 cfg.showlabels = 'no';
 cfg.fontsize = 6;
-cfg.layout = 'CTF151.lay';
+cfg.layout = 'CTF151_helmet.mat';
 cfg.baseline = [-0.2 0];
 cfg.xlim = [-0.2 1.0];
 cfg.ylim = [-3e-13 3e-13];
@@ -125,11 +125,11 @@ subplot(121);
 cfg.xlim = [0.3 0.5];
 cfg.zlim = 'maxmin';
 cfg.colorbar = 'yes';
-cfg.layout = 'CTF151.lay';
+cfg.layout = 'CTF151_helmet.mat';
 ft_topoplotER(cfg,avgFIC)
 colorbar;
 subplot(122);
 cfg.zlim = 'maxabs';
-cfg.layout = 'CTF151.lay';
+cfg.layout = 'CTF151_helmet.mat';
 ft_topoplotER(cfg,avgFICplanarComb);
 
