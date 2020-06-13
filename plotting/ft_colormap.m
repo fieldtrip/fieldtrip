@@ -136,6 +136,10 @@ elseif ismember(name, brewerlist)
   cmap = brewermap(n, name);
 elseif ismember(name, cmoceanlist)
   cmap = cmocean(name, n);
+elseif isequal(name, 'default')
+  % requires separate handling, because there's no function called default,
+  % the default is taken care of by colormap
+  cmap = name;
 else
   % this works both for the MATLAB and the MATPLOTLIB colormaps
   % which have the different colormaps available as an m-file
