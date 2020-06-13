@@ -211,6 +211,8 @@ end
 cfg.artfctdef.clip          = artfctdef;
 cfg.artfctdef.clip.artifact = artifact;
 
+ft_notice('detected %d artifacts\n', size(artifact,1));
+
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
 ft_postamble previous data
