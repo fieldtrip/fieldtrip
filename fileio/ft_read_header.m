@@ -2310,7 +2310,7 @@ switch headerformat
   case 'nwb'
     ft_hastoolbox('MatNWB', 1);	% when I run this locally outside of ft_read_header it does not work for me
     try
-        c = load('core.mat'); % might be needed later on - I don't have this file
+        c = load('namespaces/core.mat');
         nwb_version = c.version;
         nwb_fileversion = util.getSchemaVersion(filename);
         if ~strcmp(nwb_version, nwb_fileversion)
@@ -2321,6 +2321,7 @@ switch headerformat
     end
     tmp = nwbRead(filename); % is lazy, so should not be too costly
 	es_key = tmp.searchFor('ElectricalSeries').keys; % find lfp data, which should be an ElectricalSeries object
+    es_key = es_key(~contains(es_key, 'acquisition'));
     if isempty(es_key)
         error('Dataset does not contain an LFP signal (i.e., no object of the class ''ElectricalSeries''.')
     elseif numel(es_key) > 1 % && isempty(additional_user_input) % TODO: Try to sort this out with the user's help
