@@ -267,7 +267,7 @@ for k = 1:20
 end
 
 %% # Within-subjects experiments
-load(dccnapth('/home/common/matlab/fieldtrip/data/ftp/tutorial/cluster_permutation_timelock/ERF_orig'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/cluster_permutation_timelock/ERF_orig'));
 
 % The configuration looks as follows:
 cfg         = [];
