@@ -502,6 +502,7 @@ for itrial = 1:ntrials
   
   % Perform specest call and set some specifics
   clear spectrum % in case of very large trials, this lowers peak mem usage a bit
+  trlcnt = []; % only some methods need that variable
   switch cfg.method
     
     case 'mtmconvol'
@@ -705,7 +706,7 @@ for itrial = 1:ntrials
       switch keeprpt
         
         case 1 % cfg.keeptrials, 'no' &&  cfg.keeptapers, 'no'
-          if exist('trlcnt', 'var')
+          if ~isempty(trlcnt)
             trlcnt(1, ifoi, :) = trlcnt(1, ifoi, :) + shiftdim(double(acttboi(:)'),-1);
           end
           
