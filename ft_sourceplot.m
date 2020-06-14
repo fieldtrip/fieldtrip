@@ -724,7 +724,7 @@ end
 if hasfun
   if ischar(cfg.funcolormap) && ~strcmp(cfg.funcolormap, 'rgb')
     cfg.funcolormap = ft_colormap(cfg.funcolormap);
-  elseif ~ischar(cfg.funcolormap)
+  elseif iscell(cfg.funcolormap)
     cfg.funcolormap = ft_colormap(cfg.funcolormap{:});
   end
 end
