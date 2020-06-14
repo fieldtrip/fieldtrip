@@ -650,7 +650,7 @@ elseif strcmpi(f, 'logfile') && strcmpi(x, '.txt')  % case insensitive
   type = 'neuralynx_log';
   manufacturer = 'Neuralynx';
   content = 'log information in ASCII format';
-elseif ~isempty(strfind(lower(f), 'dma')) && strcmpi(x, '.log')  % this is not a very strong detection
+elseif contains(lower(f), 'dma') && strcmpi(x, '.log')  % this is not a very strong detection
   type = 'neuralynx_dma';
   manufacturer = 'Neuralynx';
   content = 'raw aplifier data directly from DMA';
@@ -1208,33 +1208,19 @@ elseif filetype_check_extension(filename, '.minf') && filetype_check_ascii(filen
   % known Multiscale Electrophysiology Format (or Mayo EEG File, MEF)
   % MEF 2.1, see: https://github.com/benbrinkmann/mef_lib_2_1
   % MEF 3.0, see: https://msel.mayo.edu/codes.html
-elseif isfolder(filename)...
-    && any(filetype_check_extension(filename, {'.mefd', '.timd', '.segd'}))
+elseif isfolder(filename) && any(filetype_check_extension(filename, {'.mefd', '.timd', '.segd'}))
   type = 'mayo_mef30';
   manufacturer = 'Mayo Clinic';
   content = 'Multiscale Electrophysiology Format 3.0';
-elseif isfile(filename)...
-    && any(filetype_check_extension(filename, {'.tdat', '.tidx', '.tmet'}))...
-    && filetype_check_header(filename, uint8(3), 13)... % check major ver
-    && filetype_check_header(filename, uint8(0), 14) % check minor ver
+elseif isfile(filename) && any(filetype_check_extension(filename, {'.tdat', '.tidx', '.tmet'})) && filetype_check_header(filename, uint8(3), 13) && filetype_check_header(filename, uint8(0), 14) 
   type = 'mayo_mef30';
   manufacturer = 'Mayo Clinic';
   content = 'Multiscale Electrophysiology Format 3.0';
-elseif isfolder(filename)
-  listing = dir(fullfile(filename, '*.mef'));
-  if ~isempty(listing)
-    filemef = fullfile(listing(1).folder, listing(1).name);
-    if filetype_check_header(filemef, uint8(2), 164)... % check major ver
-        && filetype_check_header(filemef, uint8(1), 165) % check minor ver
-      type = 'mayo_mef21';
-      manufacturer = 'Mayo Clinic';
-      content = 'Multiscale Electrophysiology Format 2.1';
-    end % if
-  end % if
-elseif isfile(filename)...
-    && filetype_check_extension(filename, '.mef')...
-    && filetype_check_header(filename, uint8(2), 164)...
-    && filetype_check_header(filename, uint8(1), 165)
+elseif isfolder(filename) && any(endsWith({ls.name}, '.mef'))
+  type = 'mayo_mef21';
+  manufacturer = 'Mayo Clinic';
+  content = 'Multiscale Electrophysiology Format 2.1';
+elseif isfile(filename) && filetype_check_extension(filename, '.mef') && filetype_check_header(filename, uint8(2), 164) && filetype_check_header(filename, uint8(1), 165)
   type = 'mayo_mef21';
   manufacturer = 'Mayo Clinic';
   content = 'Multiscale Electrophysiology Format 2.1';
