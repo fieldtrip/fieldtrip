@@ -493,16 +493,16 @@ end
 ft_progress('init', cfg.feedback, 'processing trials');
 for itrial = 1:ntrials
   
-  %disp(['processing trial ' num2str(itrial) ': ' num2str(size(data.trial{itrial},2)) ' samples']);
   fbopt.i = itrial;
   fbopt.n = ntrials;
   
   dat = data.trial{itrial}; % chansel has already been performed
   time = data.time{itrial};
   
-  % Perform specest call and set some specifics
   clear spectrum % in case of very large trials, this lowers peak mem usage a bit
-  trlcnt = []; % only some methods need that variable
+  trlcnt = []; % only some methods need this variable
+
+  % Perform specest call and set some specifics
   switch cfg.method
     
     case 'mtmconvol'
