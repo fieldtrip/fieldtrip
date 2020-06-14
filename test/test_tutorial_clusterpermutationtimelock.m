@@ -1,4 +1,4 @@
-function test_tutorial_clusterpermutationtimelock(dataset, datadir)
+function test_tutorial_clusterpermutationtimelock(dataset)
 
 % MEM 3gb
 % WALLTIME 00:10:00
@@ -6,7 +6,6 @@ function test_tutorial_clusterpermutationtimelock(dataset, datadir)
 
 if nargin==0
   dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
-  datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/cluster_permutation_timelock');
 end
 
 cfg                         = [];
@@ -229,7 +228,7 @@ avgFC_planar_cmb  = ft_combineplanar(cfg, avgFC_planar);
 
 % subtract avgFC from avgFIC
 cfg = [];
-cfg.operation    = 'subtract'
+cfg.operation    = 'subtract';
 cfg.parameter    = 'avg';
 raweffectFICvsFC = ft_math(cfg, avgFIC_planar_cmb, avgFC_planar_cmb);
 
@@ -268,7 +267,7 @@ for k = 1:20
 end
 
 %% # Within-subjects experiments
-load ERF_orig;
+load(dccnapth('/home/common/matlab/fieldtrip/data/ftp/tutorial/cluster_permutation_timelock/ERF_orig'));
 
 % The configuration looks as follows:
 cfg         = [];
