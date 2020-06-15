@@ -1,19 +1,25 @@
-
+function test_beamformer_sam(dataset)
  
-% DEPENDENCY ft_prepare_sourcemodel headsurface ft_prepare_leadfield ft_freqanalysis ft_sourceanalysis
+% MEM 3gb
+% WALLTIME 00:20:00
+% DEPENDENCY ft_prepare_sourcemodel headsurface ft_prepare_leadfield
+% ft_freqanalysis ft_sourceanalysis beamformer_sam
 
 % this function creates a set of source-structures to be used for testing
 
+if nargin==0
+  dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
+end
+
 % get volume conductor model
-volname = dccnpath('../../fieldtrip_data/Subject01/Subject01.ds/default.hdm');
+volname = fullfile(dataset, 'default.hdm');
 vol     = ft_read_headmodel(volname);
 
 % get data + sensor info
-dataname = '../../fieldtrip_data/Subject01/Subject01.ds';
-cfg = [];
-cfg.dataset  = dataname;
-cfg.channel      = 'meg';
-data = ft_preprocessing(cfg);
+cfg         = [];
+cfg.dataset = dataset;
+cfg.channel = 'meg';
+data        = ft_preprocessing(cfg);
 
 %% get only the intertrial period
 
@@ -94,10 +100,9 @@ tlck_S          = ft_timelockanalysis(cfg, data_signal);
 cfg.keeptrials  = 'no';
 tlck_N          = ft_timelockanalysis(cfg, data_noise);
 
-% do LCMV beamforming
+% do SAM beamforming
 cfg            = [];
 cfg.method              = 'sam';
-cfg.fixedori            = 'moiseev';
 cfg.grid                = grid;
 cfg.headmodel           = vol;
 cfg.grad                = data_signal.grad;
@@ -107,15 +112,17 @@ cfg.sam.projectmom      = 'no';
 cfg.sam.keepfilter      = 'yes';
 cfg.sam.keepori         = 'yes';
 cfg.sam.projectnoise    = 'yes';
-source_new_ft              = ft_sourceanalysis(cfg, tlck_S,tlck_N );
+cfg.sam.noisecov        = tlck_N.cov;
+cfg.sam.fixedori        = 'moiseev';
+source_new_ft           = ft_sourceanalysis(cfg, tlck_S);
 ori_newImpl             = cat(2,source_new_ft.avg.ori{:});
 
-cfg.fixedori            = 'gareth';
-source_gar_ft              = ft_sourceanalysis(cfg, tlck_S );
+cfg.sam.fixedori            = 'gareth';
+source_gar_ft           = ft_sourceanalysis(cfg, tlck_S);
 ori_gar                 = cat(2,source_gar_ft.avg.ori{:});
 
-cfg.fixedori            = 'robert';
-source_rob_ft              = ft_sourceanalysis(cfg, tlck_S );
+cfg.sam.fixedori            = 'robert';
+source_rob_ft           = ft_sourceanalysis(cfg, tlck_S);
 ori_rob                 = cat(2,source_rob_ft.avg.ori{:});
 
 ori_All = [ori_newImpl; ori_gar; ori_rob];
@@ -138,22 +145,23 @@ cfg.sam.keeptrials      = 'yes'; %'no' or 'yes
 cfg.sam.keepleadfield   = 'no';
 cfg.sam.keepfilter      = 'no';
 cfg.sam.fixedori        = 'moiseev';
+cfg.sam.noisecov        = tlck_N.cov;
 cfg.grid.filter         = source_new_ft.avg.filter;
-source_new_mom          = ft_sourceanalysis(cfg, tlck_S,tlck_N );
+source_new_mom          = ft_sourceanalysis(cfg, tlck_S);
  
-cfg.fixedori            = 'gareth';
+cfg.sam.fixedori        = 'gareth';
 cfg.grid.filter         = source_gar_ft.avg.filter;
-source_gar_mom   = ft_sourceanalysis(cfg, tlck_S );
+source_gar_mom          = ft_sourceanalysis(cfg, tlck_S);
 
-cfg.fixedori            = 'robert';
-source_rob_mom   = ft_sourceanalysis(cfg, tlck_S );
+cfg.sam.fixedori        = 'robert';
+source_rob_mom          = ft_sourceanalysis(cfg, tlck_S);
 
-% make ft dataset with original simulated signals 
+% make ft data structure with original simulated signals
 source_ori_mom = source_new_mom;
 for ith = 1:numel(source_ori_mom.trial)
-    for iSrc = 1:numel(inx_in)
-        source_ori_mom.trial(ith).mom{inx_in(iSrc)} = data_sinSig_c(iSrc,:);
-    end
+  for iSrc = 1:numel(inx_in)
+    source_ori_mom.trial(ith).mom{inx_in(iSrc)} = data_sinSig_c(iSrc,:);
+  end
 end
 
 %% make FT dataset
@@ -162,22 +170,22 @@ source_new_ft            = struct();
 source_new_ft.fsample    = data_signal.fsample;
 source_new_ft.time       = {source_new_mom.time};
 source_new_ft.label      = cellfun( @num2str, num2cell([1:numel(inx_in)]'), 'un', 0);
-nsrc                    = numel(source_new_ft.label);
+nsrc                     = numel(source_new_ft.label);
 source_gar_ft            = source_new_ft;
 source_rob_ft            = source_new_ft;
 source_ori_ft            = source_new_ft;
 
 for d = 1:ntrials
-    
-    source_new_ft.trial{d} = cat(1,source_new_mom.trial(d).mom{inx_in}); % data_ori(:,:,d);%  Noise_dat_o(:,:,d);%
-    source_gar_ft.trial{d} = cat(1,source_gar_mom.trial(d).mom{inx_in}); % data_ori(:,:,d);%  Noise_dat_o(:,:,d);%
-    source_rob_ft.trial{d} = cat(1,source_rob_mom.trial(d).mom{inx_in});
-    source_ori_ft.trial{d} = cat(1,source_ori_mom.trial(d).mom{inx_in});
-    
-    source_new_ft.time{d} = source_new_ft.time{1};
-    source_gar_ft.time{d} = source_gar_ft.time{1};    
-    source_rob_ft.time{d} = source_rob_ft.time{1};
-    source_ori_ft.time{d} = source_ori_ft.time{1};
+  
+  source_new_ft.trial{d} = cat(1,source_new_mom.trial(d).mom{inx_in}); % data_ori(:,:,d);%  Noise_dat_o(:,:,d);%
+  source_gar_ft.trial{d} = cat(1,source_gar_mom.trial(d).mom{inx_in}); % data_ori(:,:,d);%  Noise_dat_o(:,:,d);%
+  source_rob_ft.trial{d} = cat(1,source_rob_mom.trial(d).mom{inx_in});
+  source_ori_ft.trial{d} = cat(1,source_ori_mom.trial(d).mom{inx_in});
+  
+  source_new_ft.time{d} = source_new_ft.time{1};
+  source_gar_ft.time{d} = source_gar_ft.time{1};
+  source_rob_ft.time{d} = source_rob_ft.time{1};
+  source_ori_ft.time{d} = source_ori_ft.time{1};
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
