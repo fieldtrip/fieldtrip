@@ -65,6 +65,10 @@ if strcmp(fixedori, 'moiseev') && isempty(noisecov)
   ft_error('fixedori method ''moiseev'' requires a noise covariance matrix to be specified');
 end
 
+if ~strcmp(fixedori, 'spinning')
+  leadfieldopt = ft_setopt(leadfieldopt, 'backproject', 'no');
+end
+
 if strcmp(fixedori, 'spinning')
   % determine the mean sphere origin, required for spinning
   % FIXME this currently does not work with precomputed leadfields, since
@@ -109,24 +113,28 @@ if isfield(dip, 'mom')
   dip.mom = dip.mom(:, dip.inside);
 end
 if isfield(dip, 'leadfield')
+  ft_info('using precomputed leadfields\n');
+  dip.leadfield = dip.leadfield(dip.inside);
+  
   % check that LF backprojection is not used
-  lfdim  = size(dip.leadfield{find(dip.inside,1)},2);
-  lfrank = rank(dip.leadfield{find(dip.inside,1)});
-  if ~strcmp(fixedori, 'spinning') && lfdim > lfrank
+  lfdim  = cellfun('size', dip.leadfield, 2);
+  lfrank = cellfun(@rank,  dip.leadfield);
+  if ~strcmp(fixedori, 'spinning') && any(lfdim > lfrank)
     % case analytical method used, check that LF are full rank or remove it
-    dip = rmfield(dip, 'leadfield');
     ft_warning('SAM with one of the analytical methods for dipole orientation estimation does not support backprojected leadfields\n');
-    leadfieldopt = ft_setopt(leadfieldopt, 'backproject', 'no');   
-  else
-    fprintf('using precomputed leadfields\n');
-    dip.leadfield = dip.leadfield(dip.inside);
+    
+    for i=1:numel(dip.leadfield)
+      lf      = dip.leadfield{i};
+      [U,S,V] = svd(lf, 'econ');
+      dip.leadfield{i} = lf*V(:,1:2);
+    end
   end
 end
 if isfield(dip, 'filter')
-  fprintf('using precomputed filters\n');
+  ft_info('using precomputed filters\n');
   dip.filter = dip.filter(dip.inside);
 elseif strcmp(fixedori,'moiseev')  && ~isempty(toi)
-  fprintf('Computing an Event Related SAM beamformer... \n')
+  ft_info('Computing an Event Related SAM beamformer... \n')
 end
 dip.inside = true(size(dip.pos,1),1);
 
