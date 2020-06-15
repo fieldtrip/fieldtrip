@@ -49,7 +49,8 @@ fixedori          = ft_getopt(varargin, 'fixedori', 'spinning');
 reducerank        = ft_getopt(varargin, 'reducerank');
 normalize         = ft_getopt(varargin, 'normalize');
 normalizeparam    = ft_getopt(varargin, 'normalizeparam');
-
+BL_noise_Cov      = ft_getopt(varargin, 'BL_noise_Cov');
+toi               = ft_getopt(varargin, 'toi');
 % determine the mean sphere origin, required for spinning
 if isempty(meansphereorigin)
   switch ft_headmodeltype(headmodel)
@@ -104,6 +105,8 @@ end
 if isfield(dip, 'filter')
   fprintf('using precomputed filters\n');
   dip.filter = dip.filter(dip.inside);
+elseif strcmp(fixedori,'moiseev')  && ~isempty(toi)
+    fprintf('Computing an Event Related SAM beamformer... \n')
 end
 dip.inside = true(size(dip.pos,1),1);
 
@@ -193,51 +196,73 @@ for diplop=1:size(dip.pos,1)
         Y1 = L' * inv_cov * L;
         Y2 = L' * (inv_cov * inv_cov) * L;
         % find the eigenvalues and eigenvectors
-        [U,S] = eig(Y2,Y1);
+        [U,S] = eig(Y1,Y2);
 
       case 'robert'
-        [U,S] = svd(real(pinv(L' * inv_cov * L)));
+        [U,S] = svd(L' * inv_cov * L);
 
-      case 'stephen'
-        %% Stephen Robinsons stuff? this did not work!
-        L2_inv = inv(L2);
-        Z2 = L2_inv * L1 * L2_inv;
-        [U,S] = svds(Z2,1,0);
-        % find the smallest eigenvalue and eigenvector
-        Y = L2_inv*U;
-        Y = Y./sqrt(dot(Y,Y));
-        U = Y;
+      case'moiseev'
+        if ~isempty(toi)
+          % use trial averaged variance matrix within a time of interest
+          Avg  = dat(:,toi(1):toi(2));
+          Cavg = Avg*Avg'/size(Avg,2);
+          Sproj = inv_cov * Cavg * inv_cov';
+        else
+          % in case of induced data, just use the Singal cov only
+          Sproj = inv_cov;
+        end
 
+        if ~isempty(BL_noise_Cov)
+          % use baseline interval as noise cov
+          Nproj = inv_cov * BL_noise_Cov * inv_cov';
+        else
+          % use smallest singular value or lambda as diagonal noise
+          Nproj = inv_cov * noise_cov * inv_cov';
+        end
+
+        Y1 = L' * Sproj * L;
+        Y2 = L' * Nproj * L;
+        % find the eigenvalues and eigenvectors
+        [U,S] = eig(Y1,Y2);
+         
       otherwise
         ft_error('unknown orimethod');
     end
 
     % The optimum orientation is the eigenvector that corresponds to the
-    % smallest eigenvalue.
+    % biggest eigenvalue (biggest value is more logical, as it relates to SNR).
 
-    % Double check that this is the case, because for single sphere head
-    % model, one of the eigenvectors corresponds to the radial direction,
-    % giving lead fields that are zero (to within machine precission).
-    % The eigenvalue corresponding to this eigenvector can actually be
-    % the smallest and can give the optimum (but wrong) Z-value!)
+    if isfield(headmodel,'singlesphere') && isempty(BL_noise_Cov) && ~strcmp(fixedori,'moiseev') 
+      % If baseline noise covariance is not used, for single sphere head
+      % model, one of the eigenvectors corresponds to the radial direction,
+      % giving lead fields that are zero (to within machine precission).
+      % The eigenvalue corresponding to this eigenvector can actually be
+      % the biggest and can give the optimum (but wrong) Z-value!)  
+      ori1 = U(:,1); ori1 = ori1/norm(ori1);
+      ori2 = U(:,2); ori2 = ori2/norm(ori2);
+      % ori3 = U(:,3); ori3 = ori3/norm(ori3);
 
-    ori1 = U(:,1); ori1 = ori1/norm(ori1);
-    ori2 = U(:,2); ori2 = ori2/norm(ori2);
-    % ori3 = U(:,3); ori3 = ori3/norm(ori3);
+      L1 = L * ori1;
+      L2 = L * ori2;
+      % L3 = L * ori3;
 
-    L1 = L * ori1;
-    L2 = L * ori2;
-    % L3 = L * ori3;
-
-    if (norm(L1)/norm(L2)) < 1e-6
-      % the first orientation seems to be the silent orientation
-      % use the second orientation instead
-      opt_vox_or = ori2;
+      if (norm(L1)/norm(L2)) < 1e-6
+        % the first orientation seems to be the silent orientation
+        % use the second orientation instead
+        opt_vox_or = ori2;
+      else
+        opt_vox_or = ori1;
+      end
+      
     else
-      opt_vox_or = ori1;
+      % select eigenvector with biggest eigenvalue
+      [~, ori_inx] = sort(diag(S), 'descend');
+      ori = U(:,ori_inx(1)); 
+      opt_vox_or = ori/norm(ori);
     end
+ 
 
-  end, % if fixedori
+  end % if fixedori
 
   % compute the spatial filter for the optimal source orientation
   gain        = lf * opt_vox_or;
