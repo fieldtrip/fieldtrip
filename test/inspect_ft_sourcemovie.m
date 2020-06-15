@@ -2,7 +2,6 @@ function inspect_ft_sourcemovie
 
 % MEM 24gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_sourcemovie ft_sourceanalysis ft_sourceinterpolate ft_volumenormalize ft_prepare_singleshell ft_prepare_leadfield qsubcellfun qsubfeval qsubget
 
 % the frequency and source analysis is based on the tutorials

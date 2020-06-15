@@ -2,6 +2,7 @@ function test_ft_artifact_threshold
 
 % WALLTIME 00:10:00
 % MEM 1gb
+% DEPENDENCY
 
 % this script serves to test the asymetric onset/offset and the peak-detection
 

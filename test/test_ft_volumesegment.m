@@ -2,7 +2,6 @@ function test_ft_volumesegment
 
 % MEM 2gb
 % WALLTIME 01:00:00
-
 % DEPENDENCY ft_volumesegment  ft_read_mri
 
 % initial version by Lilla Magyari 2012

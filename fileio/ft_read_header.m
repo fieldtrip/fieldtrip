@@ -15,6 +15,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   'coordsys'       = string, 'head' or 'dewar' (default = 'head')
 %   'chantype'       = string or cell of strings, channel types to be read (NeuroOmega, BlackRock).
 %   'headerformat'   = name of a MATLAB function that takes the filename as input (default is automatic)
+%   'password'       = password structure for encrypted data set (only for mayo_mef30 and mayo_mef21)
 %
 % This returns a header structure with the following elements
 %   hdr.Fs                  sampling frequency
@@ -80,6 +81,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   MPI - Max Planck Institute (*.dap)
 %   Neurosim  (neurosim_spikes, neurosim_signals, neurosim_ds)
 %   Windaq (*.wdq)
+%   Neurodata Without Borders: Neurophysiology (*.nwb)
 %
 % The following NIRS dataformats are supported
 %   BUCN - Birkbeck college, London (*.txt)
@@ -126,7 +128,7 @@ end
 if iscell(filename)
   % use recursion to read the header from multiple files
   ft_warning('concatenating header from %d files', numel(filename));
-
+  
   hdr = cell(size(filename));
   for i=1:numel(filename)
     hdr{i} = ft_read_header(filename{i}, varargin{:});
@@ -183,6 +185,7 @@ chanindx       = ft_getopt(varargin, 'chanindx');         % this is used for EDF
 coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
 coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0-2
 chantype       = ft_getopt(varargin, 'chantype', {});
+password       = ft_getopt(varargin, 'password', struct([]));
 if ~iscell(chantype); chantype = {chantype}; end
 
 % optionally get the data from the URL and make a temporary local copy
@@ -299,7 +302,7 @@ switch headerformat
     %hdr.label       = {orig.channel_data(:).chan_label}';
     hdr.label       = orig.Channel;
     [hdr.grad, elec] = bti2grad(orig);
-    if ~isempty(elec),
+    if ~isempty(elec)
       hdr.elec = elec;
     end
     
@@ -1642,6 +1645,14 @@ switch headerformat
     end
     hdr.orig = orig;
     
+  case 'mayo_mef30'
+    ft_hastoolbox('mayo_mef', 1); % make sure mayo_mef exists
+    hdr = read_mayo_mef30(filename, password, sortchannel);
+    
+  case 'mayo_mef21'
+    ft_hastoolbox('mayo_mef', 1); % make sure mayo_mef exists
+    hdr = read_mayo_mef21(filename, password);
+    
   case 'mega_neurone'
     % ensure that this external toolbox is on the path
     ft_hastoolbox('neurone', 1);
@@ -2287,7 +2298,6 @@ switch headerformat
   case 'neuroshare' % NOTE: still under development
     % check that the required neuroshare toolbox is available
     ft_hastoolbox('neuroshare', 1);
-    
     tmp = read_neuroshare(filename);
     hdr.Fs          = tmp.hdr.analoginfo(end).SampleRate; % take the sampling freq from the last analog channel (assuming this is the same for all chans)
     hdr.nChans      = length(tmp.list.analog(tmp.analog.contcount~=0)); % get the analog channels, only the ones that are not empty
@@ -2297,6 +2307,77 @@ switch headerformat
     hdr.label       = {tmp.hdr.entityinfo(tmp.list.analog(tmp.analog.contcount~=0)).EntityLabel}; %%% contains non-unique chans?
     hdr.orig        = tmp; % remember the original header
     
+  case 'nwb'
+    ft_hastoolbox('MatNWB', 1);	% when I run this locally outside of ft_read_header it does not work for me
+    try
+        c = load('namespaces/core.mat');
+        nwb_version = c.version;
+        nwb_fileversion = util.getSchemaVersion(filename);
+        if ~strcmp(nwb_version, nwb_fileversion)
+            warning(['Installed NWB:N schema version (' nwb_version ') does not match the file''s schema (' nwb_fileversion{1} '). This might result in an error. If so, try to install the matching schema from here: https://github.com/NeurodataWithoutBorders/nwb-schema/releases'])
+        end
+    catch
+      warning('Something might not be alright with your MatNWB path. Will try anyways.')
+    end
+    tmp = nwbRead(filename); % is lazy, so should not be too costly
+    es_key = tmp.searchFor('ElectricalSeries').keys; % find lfp data, which should be an ElectricalSeries object
+    es_key = es_key(~contains(es_key, 'acquisition'));
+    if isempty(es_key)
+      error('Dataset does not contain an LFP signal (i.e., no object of the class ''ElectricalSeries''.')
+    elseif numel(es_key) > 1 % && isempty(additional_user_input) % TODO: Try to sort this out with the user's help
+      % Temporary fix: SpikeEventSeries is a daughter of ElectrialSeries but should not be found here (searchFor update on its way)
+      es_key = es_key(contains(es_key,'lfp','IgnoreCase',true));
+    end
+    if numel(es_key) > 1 % in case we weren't able to sort out a single
+      error('More than one ElectricalSeries present in data. Please specify which signal to use.')
+    else
+      eseries = io.resolvePath(tmp, es_key{1});
+    end
+    if isa(eseries.data, 'types.untyped.DataStub')
+      hdr.nSamples = eseries.data.dims(2);
+    elseif isa(eseries.data, 'types.untyped.DataPipe')
+      hdr.nSamples = eseries.data.internal.maxSize(2);
+    else
+      warning('Cannot determine number of samples in the data.')
+      hdr.nSamples = [];
+    end
+    hdr.Fs          = eseries.starting_time_rate;
+    hdr.nSamplesPre = 0; % for now: hardcoded continuous data
+    hdr.nTrials     = 1; % for now: hardcoded continuous data
+    hdr.label       = {};
+    tmp_ch          = io.resolvePath(tmp, eseries.electrodes.table.path).id.data.load; % electrode names
+    for iCh=1:numel(tmp_ch) % TODO: does that work if nwb ids are strings?
+      if isnumeric(tmp_ch(iCh))
+        hdr.label(iCh,1) = {num2str(tmp_ch(iCh))};
+      else
+        hdr.label(iCh,1) = tmp_ch(iCh);
+      end
+    end
+    hdr.nChans      = numel(hdr.label);
+    [hdr.chanunit{1:hdr.nChans,1}] = deal(eseries.data_unit);
+    hdr.chanunit    = strrep(hdr.chanunit, 'volt', 'V');
+    hdr.chanunit    = strrep(hdr.chanunit, 'micro', 'u');
+    % TODO: hdr.FirstTimeStamp
+    % TODO: hdr.TimeStampPerSample
+    
+    % carry over some metadata
+    hdr.orig        = [];
+    fn = {'general_experimenter', ...
+      'general_institution', ...
+      'general_keywords', ...
+      'general_lab', ...
+      'general_notes', ...
+      'general_related_publications', ...
+      'general_session_id', ...
+      'identifier', ...
+      'session_description', ...
+      'nwb_version', ...
+      'help'};
+    for iFn = 1:numel(fn)
+      if isprop(tmp, fn{iFn}) && ~isempty(tmp.(fn{iFn}))
+        hdr.orig.(fn{iFn}) = tmp.(fn{iFn});
+      end
+    end
   case 'artinis_oxy3'
     ft_hastoolbox('artinis', 1);
     hdr = read_artinis_oxy3(filename);
@@ -2392,8 +2473,8 @@ switch headerformat
       numPointsInLastFragment = numsmp(adindx(i)) - nex.indx(end) - 1;
       maxTimestamp = max(maxTimestamp, nex.ts(end)+hdr.TimeStampPerSample*(numPointsInLastFragment-1));
     end
-
-    hdr.nSamples    = maxTimestamp/hdr.TimeStampPerSample;                      
+    
+    hdr.nSamples    = maxTimestamp/hdr.TimeStampPerSample;
     hdr.nTrials     = 1;                                        % it can always be interpreted as continuous data
     hdr.nSamplesPre = 0;                                        % and therefore it is not trial based
     for i=1:hdr.nChans

@@ -2,7 +2,6 @@ function test_bug1637
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY megplanar_sincos channelconnectivity ft_prepare_neighbours ft_channelselection
 
 % this function checks whether megplanar_sincos relies on a fixed channel

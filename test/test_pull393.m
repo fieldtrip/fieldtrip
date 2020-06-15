@@ -2,6 +2,7 @@ function test_pull393
 
 % WALLTIME 00:10:00
 % MEM 2gb
+% DEPENDENCY
 
 %% construct some data
 % data_eeg

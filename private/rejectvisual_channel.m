@@ -260,17 +260,19 @@ end
 
 
 if ~isnumeric(info.cfg.ylim)
-  ymin = [];
-  ymax = [];
+  ymin = nan(1,info.ntrl);
+  ymax = nan(1,info.ntrl);
   for trlindx=1:info.ntrl
     if ~info.trlsel(trlindx)
       % do not consider excluded trials in vertical scaling estimate
       continue
     end
     dat = info.data.trial{trlindx}(info.chanlop,:);
-    ymin = min(ymin, min(dat));
-    ymax = max(ymax, max(dat));
+    ymin(trlindx) = min(dat);
+    ymax(trlindx) = max(dat);
   end
+  ymin = min(ymin);
+  ymax = max(ymax);
   if strcmp(info.cfg.ylim, 'maxabs') % handle maxabs, make y-axis center on 0
     ymax = max(abs(ymax), abs(ymin));
     ymin = -ymax;

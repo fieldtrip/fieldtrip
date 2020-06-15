@@ -1,4 +1,3 @@
-
 function [data] = ft_rejectvisual(cfg, data)
 
 % FT_REJECTVISUAL shows the preprocessed data in all channels and/or trials to allow

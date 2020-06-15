@@ -2,7 +2,6 @@ function test_ft_spike_isi()
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_spike_isi
 
 clear

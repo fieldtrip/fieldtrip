@@ -2,7 +2,6 @@ function test_bug182
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_preprocessing ft_componentanalysis ft_rejectcomponent ft_componentbrowser ft_databrowser
 
 % this script addresses bug 182.

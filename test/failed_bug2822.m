@@ -2,6 +2,7 @@ function failed_bug2822
 
 % WALLTIME 00:45:00
 % MEM 6gb
+% DEPENDENCY
 
 % this is to test the implementation of the frequency domain MNE reconstruction
 

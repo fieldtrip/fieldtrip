@@ -2,7 +2,6 @@ function test_bug950
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_megrealign test_bug950
 
 % the issue explored here is a reputed crash in megrealign due to a problem

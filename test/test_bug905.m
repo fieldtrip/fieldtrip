@@ -2,7 +2,6 @@ function test_bug905
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_freqanalysis ft_specest_mtmfft
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug905.mat'));
@@ -85,5 +84,3 @@ for freqbinindx=1:nfreqbins
   freqdescrcfg.trials=trialindcs;
   freqdescrout_mtmfft{freqbinindx}=ft_freqdescriptives(freqdescrcfg,freqout_mtmfft{freqbinindx});
 end;
-
-

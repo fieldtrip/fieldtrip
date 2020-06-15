@@ -2,7 +2,6 @@ function test_bug3078
 
 % MEM 1gb
 % WALLTIME 00:15:00
-
 % DEPENDENCY ft_sourceanalysis
 
 % there's something obscure going on with the channel order in the spatial filters,
