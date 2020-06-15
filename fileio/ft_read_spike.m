@@ -196,42 +196,6 @@ switch spikeformat
     end
     spike.hdr = hdr;
 
-  case 'plexon_nex5'
-    % a single file can contain multiple channels of different types
-    hdr  = read_nex5(filename);
-    typ  = [hdr.VarHeader.Type];
-    chan = 0;
-
-    spike.label     = {};
-    spike.timestamp = {};
-    spike.waveform  = {};
-    spike.unit      = {};
-
-    for i=1:length(typ)
-      if typ(i)==0
-        % neurons, only timestamps
-        nex = read_nex5(filename, 'channel', i);
-        nspike = length(nex.ts);
-        chan = chan + 1;
-        spike.label{chan}     = deblank(hdr.VarHeader(i).Name);
-        spike.waveform{chan}  = zeros(0, nspike);
-        spike.unit{chan}      = nan(1,nspike);
-        % spike.timestamp are the raw timestamps as recorded by the hardware system
-        spike.timestamp{chan} = nex.ts;
-      elseif typ(i)==3
-        % waveform variables: timestamps and waveforms
-        nex = read_nex5(filename, 'channel', i);
-        chan = chan + 1;
-        nspike = length(nex.ts);
-        spike.label{chan}     = deblank(hdr.VarHeader(i).Name);
-        spike.waveform{chan}  = permute(nex.dat,[3 1 2]);
-        spike.unit{chan}      = nan(1,nspike);
-        % spike.timestamp are the raw timestamps as recorded by the hardware system
-        spike.timestamp{chan} = nex.ts;
-      end
-    end
-    spike.hdr = hdr;
-
   case 'plexon_plx'
     % read the header information
     hdr   = read_plexon_plx(filename);
