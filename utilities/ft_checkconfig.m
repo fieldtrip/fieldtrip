@@ -571,6 +571,9 @@ if ~isempty(createsubcfg)
           'reducerank'
           'normalize'
           'normalizeparam'
+          'noisecov'
+          'toi'
+          'latency_ori'
           };
 
       case 'mvl'

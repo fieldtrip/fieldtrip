@@ -257,7 +257,7 @@ cfg.supdip           = ft_getopt(cfg, 'supdip',        []);
 cfg.latency          = ft_getopt(cfg, 'latency',   'all');
 cfg.frequency        = ft_getopt(cfg, 'frequency', 'all');
 
-if hasbaseline && (strcmp(cfg.randomization, 'no') && strcmp(cfg.permutation, 'no') && ~strcmp(cfg.(cfg.method).fixedori, 'moiseev'))
+if hasbaseline && (strcmp(cfg.randomization, 'no') && strcmp(cfg.permutation, 'no'))
   ft_error('input of two conditions only makes sense if you want to randomize or permute');
 elseif ~hasbaseline && (strcmp(cfg.randomization, 'yes') || strcmp(cfg.permutation, 'yes'))
   ft_error('randomization or permutation requires that you give two conditions as input');
@@ -838,13 +838,13 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
     % or as a noise covariance for SAM beamforming
     % hence I assume here that there are multiple trials in both
     if isfield(baseline, 'avg')
-        baseline.avg   = baseline.avg(datchanindx,:);
-        baseline.cov   = baseline.cov(datchanindx,datchanindx);
+      baseline.avg   = baseline.avg(datchanindx,:);
+      baseline.cov   = baseline.cov(datchanindx,datchanindx);
     else
-         baseline.cov   = baseline.cov(:,datchanindx,datchanindx);
-         baseline.trial = baseline.trial(:,datchanindx,:);
+      baseline.cov   = baseline.cov(:,datchanindx,datchanindx);
+      baseline.trial = baseline.trial(:,datchanindx,:);
     end
-   
+    
     % this is required for averaging 2 conditions using prepare_resampled_data
     cfg2 = [];
     cfg2.numcondition = 2;
@@ -1038,23 +1038,19 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
     end
   elseif strcmp(cfg.method, 'sam')   
     % convert time in samples for Evoked Related SAM
-    toi_ix = find(strcmp('toi', optarg));
-    if ~isempty(toi_ix)
-      toi    = ft_getopt(optarg, 'toi');
-      toi(1) = find(data.time>toi(1),1);
-      toi(2) = find(data.time>toi(2),1);
-      optarg{toi_ix+1} = toi;
+    latency = ft_getopt(methodopt, 'latency_toi');
+    toi     = ft_getopt(methodopt, 'toi');
+    if isempty(toi) && ~isempty(latency) && ~isequal(latency, 'all')
+      toi(1) = nearest(data.time, latency(1));
+      toi(2) = nearest(data.time, latency(2));
+      methodopt = ft_setopt(methodopt, 'toi', toi);
     end
+    
     for i=1:Nrepetitions
-      squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
       squeeze_Cy  = reshape(Cy(i,:,:), [size_Cy(2)  size_Cy(3)]);
+      squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
       fprintf('scanning repetition %d\n', i);
-      squeeze_avg=reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
-      if hasbaseline
-        dip(i) = beamformer_sam(sourcemodel, sens, headmodel, squeeze_avg, squeeze_Cy, methodopt{:}, leadfieldopt{:}, 'BL_noise_Cov',baseline.cov);    
-      else
-        dip(i) = beamformer_sam(sourcemodel, sens, headmodel, squeeze_avg, squeeze_Cy, methodopt{:}, leadfieldopt{:});
-      end
+      dip(i) = beamformer_sam(sourcemodel, sens, headmodel, squeeze_avg, squeeze_Cy, methodopt{:}, leadfieldopt{:});    
     end
   elseif strcmp(cfg.method, 'pcc')
     for i=1:Nrepetitions

@@ -49,8 +49,13 @@ fixedori          = ft_getopt(varargin, 'fixedori', 'spinning');
 reducerank        = ft_getopt(varargin, 'reducerank');
 normalize         = ft_getopt(varargin, 'normalize');
 normalizeparam    = ft_getopt(varargin, 'normalizeparam');
-BL_noise_Cov      = ft_getopt(varargin, 'BL_noise_Cov');
+noisecov          = ft_getopt(varargin, 'noisecov');
 toi               = ft_getopt(varargin, 'toi');
+
+if strcmp(fixedori, 'moiseev') && isempty(noisecov)
+  ft_error('fixedori method ''moiseev'' requires a noise covariance matrix to be specified');
+end
+
 % determine the mean sphere origin, required for spinning
 if isempty(meansphereorigin)
   switch ft_headmodeltype(headmodel)
@@ -91,12 +96,12 @@ if isfield(dip, 'mom')
 end
 if isfield(dip, 'leadfield')
   % check that LF backprojection is not used
-  lfdim = size(dip.leadfield{find(dip.inside,1)},2);
+  lfdim  = size(dip.leadfield{find(dip.inside,1)},2);
   lfrank = rank(dip.leadfield{find(dip.inside,1)});
   if ~strcmp(fixedori, 'spinning') && lfdim > lfrank
     % case analytical method used, check that LF are full rank or remove it
     dip = rmfield(dip, 'leadfield');
-    fprintf('This SAM method does not support backprojected leadfields\n');
+    ft_error('SAM with the ''spinning'' method for dipole orientation estimation does not support backprojected leadfields\n');
   else
     fprintf('using precomputed leadfields\n');
     dip.leadfield = dip.leadfield(dip.inside);
@@ -106,7 +111,7 @@ if isfield(dip, 'filter')
   fprintf('using precomputed filters\n');
   dip.filter = dip.filter(dip.inside);
 elseif strcmp(fixedori,'moiseev')  && ~isempty(toi)
-    fprintf('Computing an Event Related SAM beamformer... \n')
+  fprintf('Computing an Event Related SAM beamformer... \n')
 end
 dip.inside = true(size(dip.pos,1),1);
 
@@ -133,8 +138,10 @@ else
 end
 
 % the inverse only has to be computed once for all dipoles
-inv_cov = pinv(all_cov + lambda * eye(size(all_cov)));
-noise_cov = noise * eye(size(all_cov));
+inv_cov   = pinv(all_cov + lambda * eye(size(all_cov)));
+if isempty(noisecov)
+  noisecov = noise * eye(size(all_cov));
+end
 
 % start the scanning with the proper metric
 ft_progress('init', feedback, 'scanning grid');
@@ -143,9 +150,9 @@ ft_progress('init', feedback, 'scanning grid');
 all_angles = 0:pi/72:pi;
 
 for diplop=1:size(dip.pos,1)
-
+  
   vox_pos = dip.pos(diplop,:);
-
+  
   if isfield(dip, 'leadfield')
     % reuse the leadfield that was previously computed
     lf = dip.leadfield{diplop};
@@ -157,95 +164,85 @@ for diplop=1:size(dip.pos,1)
     % compute the leadfield
     lf = ft_compute_leadfield(vox_pos, sens, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam, 'backproject', 'no');
   end
-
+  
   if strcmp(fixedori, 'spinning')
     % perform a non-linear search for the optimum orientation
     [tanu, tanv] = calctangent(vox_pos - meansphereorigin); % get tangential components
     % get a decent starting guess
     all_costfun_val = zeros(size(all_angles));
     for i=1:length(all_angles)
-      costfun_val        = SAM_costfun(all_angles(i), vox_pos, tanu, tanv, lf, all_cov, inv_cov, noise_cov);
+      costfun_val        = SAM_costfun(all_angles(i), vox_pos, tanu, tanv, lf, all_cov, inv_cov, noisecov);
       all_costfun_val(i) = costfun_val;
     end
     [junk, min_ind] = min(all_costfun_val);
-
+    
     optim_options = optimset('Display', 'final', 'TolX', 1e-3, 'Display', 'off');
-    [opt_angle, fval, exitflag, output] = fminsearch(@SAM_costfun, all_angles(min_ind), optim_options, vox_pos, tanu, tanv, lf, all_cov, inv_cov, noise_cov);
+    [opt_angle, fval, exitflag, output] = fminsearch(@SAM_costfun, all_angles(min_ind), optim_options, vox_pos, tanu, tanv, lf, all_cov, inv_cov, noisecov);
     MDip        = settang(opt_angle, tanu, tanv);
     MagDip      = sqrt(dot(MDip,MDip));
     opt_vox_or  = (MDip/MagDip)';
-
+    
     % figure
     % plot(all_angles, all_costfun_val, 'k-'); hold on; plot(opt_angle, fval, 'g*')
     % drawnow
-
+    
   else
-    % Use Sekihara's method of finding the optimum orientation
-    %
-    % Sekihara et al. Asymptotic SNR of scalar and vector minimum-variance
-    % beamformers for neuromagnetic source reconstruction. IEEE Trans. Biomed.
-    % Eng, No 10, Vol. 51, 2004, pp 1726-1734
-
-    % Compute the lead field for 3 orthogonal components
-    L = lf; % see above
-
+     
     switch fixedori
       case 'gareth'
-        % Compute Y1 = L' R(^-1) * L
-        % and     Y2 = L' R(^-2) * L
-        Y1 = L' * inv_cov * L;
-        Y2 = L' * (inv_cov * inv_cov) * L;
+        % Compute Y1 = lf' R(^-1) * lf
+        % and     Y2 = lf' R(^-2) * lf
+        Y1 = lf' * inv_cov * lf;
+        Y2 = lf' * (inv_cov * inv_cov) * lf;
         % find the eigenvalues and eigenvectors
         [U,S] = eig(Y1,Y2);
-
+        
       case 'robert'
-        [U,S] = svd(L' * inv_cov * L);
-
+        % Use Sekihara's method of finding the optimum orientation
+        %
+        % Sekihara et al. Asymptotic SNR of scalar and vector minimum-variance
+        % beamformers for neuromagnetic source reconstruction. IEEE Trans. Biomed.
+        % Eng, No 10, Vol. 51, 2004, pp 1726-1734
+        [U,S] = svd(lf' * inv_cov * lf);
+        
       case'moiseev'
         if ~isempty(toi)
           % use trial averaged variance matrix within a time of interest
-          Avg  = dat(:,toi(1):toi(2));
-          Cavg = Avg*Avg'/size(Avg,2);
+          Avg   = dat(:,toi(1):toi(2));
+          Cavg  = Avg*Avg'/size(Avg,2);
           Sproj = inv_cov * Cavg * inv_cov';
         else
-          % in case of induced data, just use the Singal cov only
+          % in case of induced data, just use the Signal cov only
           Sproj = inv_cov;
         end
-
-        if ~isempty(BL_noise_Cov)
-          % use baseline interval as noise cov
-          Nproj = inv_cov * BL_noise_Cov * inv_cov';
-        else
-          % use smallest singular value or lambda as diagonal noise
-          Nproj = inv_cov * noise_cov * inv_cov';
-        end
-
-        Y1 = L' * Sproj * L;
-        Y2 = L' * Nproj * L;
+        
+        Nproj = inv_cov * noisecov * inv_cov';
+        
+        Y1 = lf' * Sproj * lf;
+        Y2 = lf' * Nproj * lf;
         % find the eigenvalues and eigenvectors
         [U,S] = eig(Y1,Y2);
-         
+        
       otherwise
-        ft_error('unknown orimethod');
+        ft_error(sprintf('unknown fixedori method %s', fixedori));
     end
-
+    
     % The optimum orientation is the eigenvector that corresponds to the
     % biggest eigenvalue (biggest value is more logical, as it relates to SNR).
-
-    if isfield(headmodel,'singlesphere') && isempty(BL_noise_Cov) && ~strcmp(fixedori,'moiseev') 
+    
+    if isfield(headmodel,'singlesphere') && isempty(noisecov) && ~strcmp(fixedori,'moiseev')
       % If baseline noise covariance is not used, for single sphere head
       % model, one of the eigenvectors corresponds to the radial direction,
       % giving lead fields that are zero (to within machine precission).
       % The eigenvalue corresponding to this eigenvector can actually be
-      % the biggest and can give the optimum (but wrong) Z-value!)  
+      % the biggest and can give the optimum (but wrong) Z-value!)
       ori1 = U(:,1); ori1 = ori1/norm(ori1);
       ori2 = U(:,2); ori2 = ori2/norm(ori2);
       % ori3 = U(:,3); ori3 = ori3/norm(ori3);
-
-      L1 = L * ori1;
-      L2 = L * ori2;
-      % L3 = L * ori3;
-
+      
+      L1 = lf * ori1;
+      L2 = lf * ori2;
+      
       if (norm(L1)/norm(L2)) < 1e-6
         % the first orientation seems to be the silent orientation
         % use the second orientation instead
@@ -257,27 +254,27 @@ for diplop=1:size(dip.pos,1)
     else
       % select eigenvector with biggest eigenvalue
       [~, ori_inx] = sort(diag(S), 'descend');
-      ori = U(:,ori_inx(1)); 
+      ori = U(:,ori_inx(1));
       opt_vox_or = ori/norm(ori);
     end
- 
-
+    
+    
   end % if fixedori
-
+  
   % compute the spatial filter for the optimal source orientation
   gain        = lf * opt_vox_or;
   trgain_invC = gain' * inv_cov;
   SAMweights  = trgain_invC / (trgain_invC * gain);
-
+  
   % remember all output details for this dipole
-  dipout.pow(diplop)    = SAMweights * all_cov * SAMweights';
-  dipout.noise(diplop)  = SAMweights * noise_cov * SAMweights';
+  dipout.pow(diplop)    = SAMweights * all_cov  * SAMweights';
+  dipout.noise(diplop)  = SAMweights * noisecov * SAMweights';
   dipout.ori{diplop}    = opt_vox_or;
   dipout.filter{diplop} = SAMweights;
   if ~isempty(dat)
     dipout.mom{diplop} = SAMweights * dat;
   end
-
+  
   ft_progress(diplop/size(dip.pos,1), 'scanning grid %d/%d\n', diplop, size(dip.pos,1));
 end % for each dipole position
 
