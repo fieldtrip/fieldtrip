@@ -222,7 +222,8 @@ cfg.coilaccuracy   = ft_getopt(cfg, 'coilaccuracy');        % is passed to low-l
 cfg.checkmaxfilter = ft_getopt(cfg, 'checkmaxfilter');      % this allows to read non-maxfiltered neuromag data recorded with internal active shielding
 cfg.montage        = ft_getopt(cfg, 'montage', 'no');
 cfg.updatesens     = ft_getopt(cfg, 'updatesens', 'no');    % in case a montage or rereferencing is specified
-cfg.chantype       = ft_getopt(cfg, 'chantype', {});        %2017.10.10 AB required for NeuroOmega files
+cfg.chantype       = ft_getopt(cfg, 'chantype', {});        % 2017.10.10 AB required for NeuroOmega files
+cfg.password       = ft_getopt(cfg, 'password', []);        % is necessary to read MEF dataset
 
 % these options relate to the actual preprocessing, it is necessary to specify here because of padding
 cfg.dftfilter      = ft_getopt(cfg, 'dftfilter', 'no');
@@ -403,7 +404,8 @@ else
   % read the header
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat,...
     'coordsys', cfg.coordsys, 'coilaccuracy', cfg.coilaccuracy,...
-    'checkmaxfilter', istrue(cfg.checkmaxfilter), 'chantype', cfg.chantype);
+    'checkmaxfilter', istrue(cfg.checkmaxfilter), 'chantype', cfg.chantype,...
+    'password', cfg.password);
   
   % this option relates to reading over trial boundaries in a pseudo-continuous dataset
   if ~isfield(cfg, 'continuous')
@@ -589,7 +591,10 @@ else
       
       % read the raw data with padding on both sides of the trial - this
       % includes datapadding
-      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', rawindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
+      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', begsample,...
+          'endsample', endsample, 'chanindx', rawindx,...
+          'checkboundary', strcmp(cfg.continuous, 'no'),...
+          'dataformat', cfg.dataformat, 'password', cfg.password);
       
       % convert the data to another numeric precision, i.e. double, single or int32
       if ~isempty(cfg.precision)
