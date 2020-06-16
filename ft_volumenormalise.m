@@ -13,7 +13,9 @@ function [normalised] = ft_volumenormalise(cfg, mri)
 %   cfg.opts        = structure with configurable normalisation options,
 %                       see spm documentation for details.
 %   cfg.template    = string, filename of the template anatomical MRI (default = 'T1.mnc'
-%                     for spm2 or 'T1.nii' for spm8)
+%                     for spm2 or 'T1.nii' for spm8/spm12). If you use your
+%                     own templete you must specify the template coordsys
+%                     in cfg.templatecoordsys.
 %   cfg.parameter   = cell-array with the functional data to be normalised (default = 'all')
 %   cfg.downsample  = integer number (default = 1, i.e. no downsampling)
 %   cfg.name        = string for output filename
@@ -43,9 +45,11 @@ function [normalised] = ft_volumenormalise(cfg, mri)
 %   cfg.intermediatename = prefix of the the coregistered images and of the
 %                          original images in the original headcoordinate system
 %   cfg.spmparams        = one can feed in parameters from a prior normalisation
-%   cfg.spmmethod        = 'old' or 'new', to switch between the different
-%                           spm12 implementations
+%   cfg.spmmethod        = 'old', 'new' or 'mars', to switch between the different
+%                          spm12 implementations
 %   cfg.templatecoordsys = the coordinate system of the template (default = 'spm').
+%   cfg.tpm              = SPM tissue probablility map to use (for spm12 and 
+%                          spmmethod is 'new' or 'mars').
 
 % Copyright (C) 2004-2014, Jan-Mathijs Schoffelen
 %
@@ -97,6 +101,15 @@ cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'coordsys', 'inputcoord', 'inpu
 % check if the input data is valid for this function
 mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
 
+% Check coordsys consistency
+if isfield(cfg, 'template') && ~isfield(cfg, 'templatecoordsys')
+  ft_error('You must specify cfg.templatecoordsys when using your own template')
+elseif ~isfield(cfg, 'template') && isfield(cfg, 'templatecoordsys')
+  if ~strcmp(cfg.templatecoordsys, 'spm')
+    ft_error('Default template must have templatecoordsys=spm')
+  end  
+end   
+
 % set the defaults
 cfg.spmversion       = ft_getopt(cfg, 'spmversion',       'spm12');
 cfg.spmmethod        = ft_getopt(cfg, 'spmmethod',        'old'); % in case of spm12, use the old-style normalisation by default
@@ -110,6 +123,11 @@ cfg.nonlinear        = ft_getopt(cfg, 'nonlinear',        'yes');
 cfg.smooth           = ft_getopt(cfg, 'smooth',           'no');
 cfg.templatecoordsys = ft_getopt(cfg, 'templatecoordsys', 'spm'); % the assumption is here that the template is one from SPM
 
+% Warning when using new spmmethod
+if isfield(cfg, 'template') && (strcmp(cfg.spmversion, 'spm12') && (strcmp(cfg.spmmethod, 'new') || strcmp(cfg.spmmethod, 'mars')))
+  ft_warning('spmmethod %s only workds with spm default tpm template', cfg.spmmethod)
+end
+
 % check that the preferred SPM version is on the path
 ft_hastoolbox(cfg.spmversion, 1);
 
@@ -117,18 +135,6 @@ ft_hastoolbox(cfg.spmversion, 1);
 if ~isfield(mri, 'anatomy')
   ft_error('no anatomical information available, this is required for normalisation');
 end
-
-% ensure that the input MRI has interpretable units and that the input MRI is expressed in
-% a coordinate system which is in approximate agreement with the template
-mri  = ft_convert_units(mri, 'mm');
-orig = mri.transform;
-if isdeployed
-  mri = ft_convert_coordsys(mri, cfg.templatecoordsys, 2, cfg.template);
-else
-  mri = ft_convert_coordsys(mri, cfg.templatecoordsys);
-end
-% keep track of an initial transformation matrix that does the approximate co-registration
-initial = mri.transform / orig;
 
 if isdeployed
   % in deployed mode, FieldTrip cannot use the template in the release version, because these are not compiled
@@ -144,6 +150,19 @@ else
     end
   end
 end
+
+% ensure that the input MRI has interpretable units and that the input MRI is expressed in
+% a coordinate system which is in approximate agreement with the template
+disp('Doing initial alignment...')
+mri  = ft_convert_units(mri, 'mm');
+orig = mri.transform;
+if isdeployed
+  mri = ft_convert_coordsys(mri, cfg.templatecoordsys, 2, cfg.template);
+else    
+  mri = ft_convert_coordsys(mri, cfg.templatecoordsys);
+end
+% keep track of an initial transformation matrix that does the approximate co-registration
+initial = mri.transform / orig;
 
 if strcmp(cfg.keepinside, 'yes')
   % add inside to the list of parameters
@@ -239,12 +258,12 @@ oldparams = true;
 newparams = false;
 fprintf('performing the normalisation\n');
 if ~isfield(cfg, 'spmparams')
-  if strcmp(cfg.nonlinear, 'yes') && ~(strcmp(cfg.spmversion, 'spm12') && strcmp(cfg.spmmethod, 'new'))
+  if strcmp(cfg.nonlinear, 'yes') && ~(strcmp(cfg.spmversion, 'spm12') && (strcmp(cfg.spmmethod, 'new') || strcmp(cfg.spmmethod, 'mars')))
     fprintf('warping the individual anatomy to the template anatomy\n');
     % compute the parameters by warping the individual anatomy
     %VF        = spm_vol([cfg.intermediatename '_anatomy' ext]);
     params    = spm_normalise(VG, VF(1));
-  elseif strcmp(cfg.nonlinear, 'no') && ~(strcmp(cfg.spmversion, 'spm12') && strcmp(cfg.spmmethod, 'new'))
+  elseif strcmp(cfg.nonlinear, 'no') && ~(strcmp(cfg.spmversion, 'spm12') && (strcmp(cfg.spmmethod, 'new') || strcmp(cfg.spmmethod, 'mars')))
     fprintf('warping the individual anatomy to the template anatomy, using only linear transformations\n');
     % compute the parameters by warping the individual anatomy
     %VF         = spm_vol([cfg.intermediatename '_anatomy' ext]);
@@ -255,7 +274,7 @@ if ~isfield(cfg, 'spmparams')
       cfg.tpm = fullfile(spm('dir'),'tpm','TPM.nii');
     end
     
-    fprintf('warping the individual anatomy to the template anatomy, using the new-style segmentation\n');
+    fprintf('warping the individual anatomy to the template anatomy, using the %s-style segmentation\n', cfg.spmmethod);
     
     % create the structure that is required for spm_preproc8
     opts          = ft_getopt(cfg, 'opts');
