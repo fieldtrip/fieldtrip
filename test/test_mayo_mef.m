@@ -13,10 +13,8 @@ function test_mayo_mef
 
 %% set path to sample dataset
 % please set the path to sample dataset
-% mef21_data = '/path/to/sample_mef/mef_2p1';
-mef21_data = '/Users/Jie/Downloads/sample_mef/mef_2p1';
-% mef30_data = '/path/to/sample_mef/mef_3p0.mefd';
-mef30_data = '/Users/Jie/Downloads/sample_mef/mef_3p0.mefd';
+mef21_data = '/path/to/sample_mef/mef_2p1';
+mef30_data = '/path/to/sample_mef/mef_3p0.mefd';
 
 
 %% install toolbox and build mex files
