@@ -166,7 +166,7 @@ url = {
   'EZC3D'         'see https://github.com/pyomeca/ezc3d'
   'GCMI'          'see https://github.com/robince/gcmi'
   'XSENS'         'see https://www.xsens.com/motion-capture and http://www.fieldtriptoolbox.org/getting_started/xsens/'
-  'MAYO_MEF'      'see https://github.com/MultimodalNeuroimagingLab/mef_reader_fieldtrip and https://msel.mayo.edu/codes.html'
+  'MAYO_MEF'      'see https://github.com/MultimodalNeuroimagingLab/mef_reader_fieldtrip'
   'MATNWB'        'see https://neurodatawithoutborders.github.io/matnwb/'
   'MATPLOTLIB'    'see https://nl.mathworks.com/matlabcentral/fileexchange/62729-matplotlib-perceptually-uniform-colormaps'
   'CMOCEAN'       'see https://nl.mathworks.com/matlabcentral/fileexchange/57773-matplotlib-perceptually-uniform-colormaps'
