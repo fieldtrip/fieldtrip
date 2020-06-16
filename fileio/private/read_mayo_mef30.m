@@ -1,27 +1,32 @@
 function mayo_out = read_mayo_mef30(varargin)
-
 % READ_MAYO_MEF30 read header, event and data from the files formatted in MEF 3.0
 %
 % Syntax:
-%   hdr = mayo_mef30(filename)
-%   hdr = mayo_mef30(filename, password)
-%   hdr = mayo_mef30(filename, password, sortchannel)
-%   evt = mayo_mef30(filename, password, sortchannel, hdr)
-%   dat = mayo_mef30(filename, password, sortchannel, hdr, begsample, endsample, chanindx)
+%   hdr = read_mayo_mef30(filename)
+%   hdr = read_mayo_mef30(filename, password)
+%   hdr = read_mayo_mef30(filename, password, sortchannel)
+%   evt = read_mayo_mef30(filename, password, sortchannel, hdr)
+%   dat = read_mayo_mef30(filename, password, sortchannel, hdr, begsample, endsample, chanindx)
 %
 % Input(s):
 %   filename        - [char] name of the file or folder of the dataset
-%   password        - [struct] (opt) password structure of MEF 3.0 data (see MEFSession_3p0)
-%   sortchannel     - [char] (opt) sort channel order either alphabetically 'alphabet' or 
-%                     numerically 'number' (default = 'alphabet')
-%   hdr             - [struct] (opt) header structure of the dataset (see FT_READ_HEADER; default = struct([]))
+%   password        - [struct] (opt) password structure of MEF 3.0 data (see
+%                     MEFSession_3p0)
+%   sortchannel     - [char] (opt) sort channel order either alphabetically
+%                     'alphabet' or or numerically 'number' (default =
+%                     'alphabet')
+%   hdr             - [struct] (opt) header structure of the dataset (see
+%                     ft_read_header; default = struct([]))
 %   begsample       - [num] (opt) first sample to read (default = [])
 %   endsample       - [num] (opt) last smaple to read (default = [])
-%   chanindx        - [num] (opt) list of channel indices to read (default = [])
+%   chanindx        - [num] (opt) list of channel indices to read (default
+%                     = [])
 %
 % Output(s):
-%   hdr             - [struct] header structure of the dataset (see FT_READ_HEADER)
-%   evt             - [struct] event structure of the dataset (see FT_READ_EVENT)
+%   hdr             - [struct] header structure of the dataset (see 
+%                     FT_READ_HEADER)
+%   evt             - [struct] event structure of the dataset (see
+%                     FT_READ_EVENT)
 %   dat             - [num] data read in
 %
 % Example:
@@ -30,16 +35,16 @@ function mayo_out = read_mayo_mef30(varargin)
 %
 % References:
 %
-% See also FT_FILETYPE, FT_READ_HEADER, FT_READ_EVENT, FT_READ_DATA
+% See also ft_filetype, ft_read_header, ft_read_event, ft_read_data.
 
 % Copyright 2020 Richard J. Cui. Created: Sat 03/21/2020  5:26:02.846 PM
-% $Revision: 0.5 $  $Date: Thu 04/09/2020 10:44:31.535 PM $
+% $Revision: 0.6 $  $Date: Fri 05/15/2020 12:32:49.067 AM $
 %
 % Multimodel Neuroimaging Lab (Dr. Dora Hermes)
 % Mayo Clinic St. Mary Campus
 % Rochester, MN 55905
 %
-% Email: richard.cui@utoronto.ca
+% Email: richard.cui@utoronto.ca (permanent), Cui.Jie@mayo.edu (official)
 
 % =========================================================================
 % parse inputs
@@ -124,7 +129,7 @@ default_ci = [];
 p = inputParser;
 p.addRequired('filename', @ischar);
 p.addOptional('password', default_pw, @(x) isstruct(x) || isempty(x));
-p.addOptional('sortchannel', default_sc, @ischar);
+p.addOptional('sortchannel', default_sc, @(x) ischar(x) || isempty(x));
 p.addOptional('hdr', default_hr, @isstruct);
 p.addOptional('begsample', default_bs, @isnumeric);
 p.addOptional('endsample', default_es, @isnumeric);

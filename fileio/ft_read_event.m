@@ -154,10 +154,10 @@ detectflank      = ft_getopt(varargin, 'detectflank', 'up', true);   % note that
 trigshift        = ft_getopt(varargin, 'trigshift');                 % default is assigned in subfunction
 headerformat     = ft_getopt(varargin, 'headerformat');
 dataformat       = ft_getopt(varargin, 'dataformat');
-eventformat      = ft_getopt(varargin, 'eventformat');
 threshold        = ft_getopt(varargin, 'threshold');                 % this is used for analog channels
 tolerance        = ft_getopt(varargin, 'tolerance', 1);
 checkmaxfilter   = ft_getopt(varargin, 'checkmaxfilter');            % will be passed to ft_read_header
+eventformat      = ft_getopt(varargin, 'eventformat');
 chanindx         = ft_getopt(varargin, 'chanindx');                  % this allows to override the automatic trigger channel detection (useful for Yokogawa & Ricoh, and for EDF with variable sampling rate)
 trigindx         = ft_getopt(varargin, 'trigindx');                  % deprecated, use chanindx instead
 triglabel        = ft_getopt(varargin, 'triglabel');                 % deprecated, use chanindx instead
@@ -363,11 +363,11 @@ switch eventformat
     else
       endsample = hdr.nSamples*hdr.nTrials;
     end
-    
+
     if isempty(detectflank)
       detectflank = 'up';
     end
-    
+
     if ~strcmp(detectflank, 'up')
       if strcmp(detectflank, 'both')
         ft_warning('only up-going flanks are supported for Biosemi');
@@ -499,7 +499,7 @@ switch eventformat
         end
       end
       fclose(fid);
-    end
+    end;
     
   case 'bucn_nirs'
     event = read_bucn_nirsevent(filename);
@@ -662,10 +662,10 @@ switch eventformat
   case 'edf'
     % read the header
     if isempty(hdr)
-      hdr = ft_read_header(filename, 'headerformat', headerformat);
+      hdr = ft_read_header(filename);
     end
     
-    if ~isempty(detectflank) && ~isempty(chanindx) % parse the trigger channels for events
+    if ~isempty(detectflank) % parse the trigger channel (indicated by chanindx) for events
       event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift, 'threshold', threshold);
     else
       event = [];
@@ -681,24 +681,6 @@ switch eventformat
       % construct the Time-stamped Annotations Lists (TAL), see http://www.edfplus.info/specs/edfplus.html#tal
       tal  = tokenize(char(evt), char(0), true);
       
-      % the startdate/time of a file is specified in the EDF+ header
-      % fields 'startdate of recording' and 'starttime of recording'.
-      % These fields must indicate the absolute second in which the
-      % start of the first data record falls. So, the first TAL in
-      % the first data record always starts with +0.X, indicating
-      % that the first data record starts a fraction, X, of a second
-      % after the startdate/time that is specified in the EDF+
-      % header. If X=0, then the .X may be omitted. Onset must start
-      % with a '+' or a '-' character and specifies the amount of
-      % seconds by which the onset of the annotated event follows
-      % ('+') or precedes ('-') the startdate/time of the file,
-      % that is specified in the header.
-      
-      % determine millisecond aspect of starttime (always within
-      % first data record), remove from remaining timestamps
-      tok = tokenize(tal{1}, char(20));
-      millisecond_start = -1*str2double(tok{1});
-      
       for i=1:length(tal)
         % the unprintable characters 20 and 21 are used as separators between time, duration and the annotation
         % duration can be skipped in which case its preceding 21 must also be skipped
@@ -707,11 +689,11 @@ switch eventformat
         if any(tok{1}==21)
           % the time and duration are specified
           dum = tokenize(tok{1}, char(21)); % split time and duration
-          time     = str2double(dum{1}) + millisecond_start;
-          duration = str2double(dum{2}) + millisecond_start;
+          time     = str2double(dum{1});
+          duration = str2double(dum{2});
         else
           % only the time is specified
-          time     = str2double(tok{1}) + millisecond_start;
+          time     = str2double(tok{1});
           duration = [];
         end
         % there can be multiple annotations per time, the last cell is always empty
@@ -726,6 +708,8 @@ switch eventformat
           event(end ).offset    = 0;
         end
       end
+    else
+      event = [];
     end
     
   case 'eeglab_set'
@@ -2141,9 +2125,6 @@ switch eventformat
     
   case 'plexon_nex'
     event = read_nex_event(filename);
-    
-  case 'plexon_nex5'
-    event = read_nex5_event(filename);
     
   case {'ricoh_ave', 'ricoh_con'}
     % use the Ricoh MEG Reader toolbox for the file reading
