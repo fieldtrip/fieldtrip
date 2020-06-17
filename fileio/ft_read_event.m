@@ -2141,7 +2141,7 @@ switch eventformat
     
   case 'plexon_nex'
     event = read_nex_event(filename);
-
+    
   case 'plexon_nex5'
     event = read_nex5_event(filename);
     
