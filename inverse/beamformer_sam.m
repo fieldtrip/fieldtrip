@@ -270,7 +270,7 @@ for diplop=1:size(dip.pos,1)
         % The optimum orientation is the eigenvector that corresponds to the
         % biggest eigenvalue (biggest value is more logical, as it relates to SNR).
         
-        if isfield(headmodel,'singlesphere') && isempty(noisecov) && ~strcmp(fixedori,'moiseev')
+        if isfield(headmodel,'singlesphere') && ~strcmp(fixedori,'moiseev')
           % If baseline noise covariance is not used, for single sphere head
           % model, one of the eigenvectors corresponds to the radial direction,
           % giving lead fields that are zero (to within machine precission).
