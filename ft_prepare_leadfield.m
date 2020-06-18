@@ -244,7 +244,7 @@ if ft_headmodeltype(headmodel, 'openmeeg')
   if istrue(keepdsm) && ~isempty(dsm)
     % dsm needs to be computed outside ft_compute_leadfield, because it
     % needs to be passed on in the output
-    dsm          = ft_sysmat_openmeeg(dippos, headmodel, sens, nonadaptive);
+    dsm          = ft_sysmat_openmeeg(dippos, headmodel, sens, ft_getopt(leadfieldopt, 'nonadaptive'));
     leadfieldopt = ft_setopt(leadfieldopt, 'dsm', dsm);
   end
     
