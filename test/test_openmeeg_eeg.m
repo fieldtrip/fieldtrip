@@ -95,7 +95,7 @@ assert(norm(mags-[1.3584 1.3583 1.2138])<thr)
     cfg.sourcemodel.pos = dippos;
     cfg.sourcemodel.unit = 'mm';
     cfg.elec = sens;
-    [grid,cfg] = ft_prepare_leadfield(cfg);
+    [sourcemodel, cfg] = ft_prepare_leadfield(cfg);
     
     lf_openmeeg = sourcemodel.leadfield{1};
     
@@ -118,4 +118,4 @@ assert(norm(mags-[1.3584 1.3583 1.2138])<thr)
     disp(['RDMs: ',num2str(rdms)]);
     disp(['MAGs: ',num2str(mags)]);
     
-  end %  function
+  %  function

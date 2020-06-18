@@ -267,11 +267,15 @@ elseif ismeg
       end
 
     case 'openmeeg'
-        % OpenMEEG lead field already computed in ft_prepare_leadfield;
-        % load here so any post-processing options (e.g. normalization) may
-        % be applied
-        lf = ft_getopt(varargin, 'lf');
-
+      dsm         = ft_getopt(varargin, 'dsm');
+      nonadaptive = ft_getopt(varargin, 'nonadaptive');
+      
+      [h2sens,ds2sens] = ft_sensinterp_openmeeg(dippos, headmodel, sens);
+      if isempty(dsm)
+        dsm            = ft_sysmat_openmeeg(dippos, headmodel, sens, nonadaptive);
+      end
+      lf               = ds2sens + h2sens*headmodel.mat*dsm;
+     
     case {'infinite_magneticdipole', 'infinite'}
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % magnetic dipole instead of electric (current) dipole in an infinite vacuum
@@ -426,11 +430,15 @@ elseif iseeg
       lf = eeg_leadfieldb(dippos, sens.elecpos, headmodel);
 
     case 'openmeeg'
-        % OpenMEEG lead field already computed in ft_prepare_leadfield;
-        % load here so any post-processing options (e.g. normalization) may
-        % be applied
-        lf = ft_getopt(varargin, 'lf');
-
+      dsm         = ft_getopt(varargin, 'dsm');
+      nonadaptive = ft_getopt(varargin, 'nonadaptive');
+      
+      [h2sens,ds2sens] = ft_sensinterp_openmeeg(dippos, headmodel, sens);
+      if isempty(dsm)
+        dsm            = ft_sysmat_openmeeg(dippos, headmodel, sens, nonadaptive);
+      end
+      lf               = ds2sens + h2sens*headmodel.mat*dsm;
+      
     case {'infinite_currentdipole' 'infinite'}
       lf = eeg_infinite_dipole(dippos, sens.elecpos, headmodel);
 
