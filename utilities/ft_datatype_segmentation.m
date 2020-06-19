@@ -257,3 +257,47 @@ segmentation = ft_datatype_volume(segmentation, 'version', volversion);
 % the fields that are specific for the segmentation and add them later again.
 % At this moment ft_datatype_volume nicely passes all fields, so there is no
 % special handling of the segmentation fields needed.
+
+if all(indexed)
+  % get the volume of a cubic element
+  v = det(segmentation.transform(1:3,1:3));
+  u = sprintf('%s^3', segmentation.unit);
+  for k = 1:numel(fn)
+    V(k,1) = sum(segmentation.(fn)(:));
+  end
+  V = V.*v;
+  
+  % create message to give some feedback about the volume of the tissue
+  % compartments
+  botschaft = 'Volume of the indexed compartments:';
+  for k = 1:numel(fn)
+    botschaft = strcat(botschaft, ' \n', sprintf('%s: %1.2f %s\n', fn{k}, V(k), u));
+  end
+  ft_info(botschaft);
+  
+elseif all(probabilistic)
+  % get the volume of a cubic element
+  v = det(segmentation.transform(1:3,1:3));
+  u = sprintf('%s^3', segmentation.unit);
+  
+  % attempt a memory efficient max extraction
+  tmp = repmat(segmentation.inside, [1 1 1 numel(fn)]);
+  for k = 1:numel(fn)
+    for m = setdiff(1:numel(fn),k)
+      tmp(:,:,:,k) = tmp(:,:,:,k)&segmentation.(fn{k})>segmentation.(fn{m});
+    end
+  end
+  
+  % get the number of elements per compartment
+  V = sum(reshape(tmp,[],3));
+  V = V.*v;
+  
+  % create message to give some feedback about the volume of the tissue
+  % compartments
+  botschaft = 'Volume of the probabilistic compartments, based on the maxprob:';
+  for k = 1:numel(fn)
+    botschaft = strcat(botschaft, ' \n ', sprintf('%s: %1.2f %s', fn{k}, V(k), u));
+  end
+  ft_info(botschaft);
+  
+end
