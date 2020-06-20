@@ -27,15 +27,16 @@ cfg.headmodel   = vol.vol;
 % source_eloreta2     = ft_sourceanalysis(cfg, data_eloreta2);  % compute the source model
 % i1 = find(source_eloreta2.inside,1,'first');
 % assert(isequal(size(source_eloreta2.avg.mom{i1}),[3 80 193]));
-
+% 
 cfg.snr    = 10;
-cfg.method = 'mne';
-source_mne1 = ft_sourceanalysis(cfg, dataFreq1);
-source_mne2 = ft_sourceanalysis(cfg, dataFreq2);
+% cfg.method = 'mne';
+% source_mne1 = ft_sourceanalysis(cfg, dataFreq1);
+% source_mne2 = ft_sourceanalysis(cfg, dataFreq2);
 
-cfg.method = 'harmony';
-source_harmony1 = ft_sourceanalysis(cfg, dataFreq1);
-source_harmony2 = ft_sourceanalysis(cfg, dataFreq2);
+% -> this does not work. AT ALLedit f
+%cfg.method = 'harmony';
+%source_harmony1 = ft_sourceanalysis(cfg, dataFreq1);
+%source_harmony2 = ft_sourceanalysis(cfg, dataFreq2);
 
 cfg.method = 'music';
 source_music1 = ft_sourceanalysis(cfg, dataFreq1);

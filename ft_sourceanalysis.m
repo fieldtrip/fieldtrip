@@ -211,6 +211,10 @@ else
   cfg.method = ft_getopt(cfg, 'method', []);
 end
 
+if isequal(cfg.method, 'harmony')
+  ft_error('Harmony does not work at present. Please contact the main developer of this method directly');
+end
+
 % put the low-level options pertaining to the source reconstruction method in their own field
 cfg = ft_checkconfig(cfg, 'createsubcfg',  cfg.method);
 % move some fields from cfg.method back to the top-level configuration
