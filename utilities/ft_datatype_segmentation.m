@@ -274,7 +274,7 @@ probabilistic = probabilistic(sel);
 
 if all(indexed)
   % get the volume of a cubic element
-  v = det(segmentation.transform(1:3,1:3));
+  v = abs(det(segmentation.transform(1:3,1:3)));
   u = sprintf('%s^3', segmentation.unit);
   for k = 1:numel(fn)
     lab = segmentation.([fn{k},'label']);
