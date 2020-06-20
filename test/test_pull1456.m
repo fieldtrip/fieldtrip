@@ -6,8 +6,6 @@ function test_pull1456
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/test_pull1456.mat'));
 
-
-keyboard
 % Compute spectrum
 cfg                  = [];
 cfg.output  = 'powandcsd';

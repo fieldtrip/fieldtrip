@@ -452,6 +452,16 @@ end % if precomputed filter, leadfield or not
 % channels in the localspheres volume conduction model are different.
 % Hence a subset of the data channels will be used.
 Nchans = length(cfg.channel);
+if contains(data.dimord, 'freq')
+  Nfreq = numel(data.freq);
+else
+  Nfreq = 1;
+end
+if contains(data.dimord, 'time')
+  Ntime = numel(data.time);
+else
+  Ntime = 1;
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % do frequency domain source reconstruction
@@ -561,8 +571,8 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
   end
   
   % fill these with NaNs, so that I dont have to treat them separately
-  if isempty(Cr), Cr = nan(Ntrials, Nchans, 1); end
-  if isempty(Pr), Pr = nan(Ntrials, 1, 1); end
+  if isempty(Cr), Cr = nan(Ntrials, Nchans, Nfreq, Ntime); end
+  if isempty(Pr), Pr = nan(Ntrials, Nfreq,  Ntime); end
   
   if hasbaseline
     % repeat the conversion for the baseline condition
@@ -673,9 +683,9 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
   
   % reshape so that it also looks like one trial (out of many)
   if Nrepetitions==1
-    Cf  = reshape(Cf , [1 Nchans Nchans]);
-    Cr  = reshape(Cr , [1 Nchans 1]);
-    Pr  = reshape(Pr , [1 1 1]);
+    Cf  = reshape(Cf , [1 Nchans Nchans Nfreq Ntime]);
+    Cr  = reshape(Cr , [1 Nchans Nfreq Ntime]);
+    Pr  = reshape(Pr , [1 Nfreq Ntime]);
   end
   
   % get the relevant low level options from the cfg and convert into key-value pairs

@@ -49,29 +49,29 @@ else
   Ntrials = 1;
 end
 
-% select from the frequency dimension
-if any(strcmp(tok, 'freq'))
-  % select the frequency of interest
-  tmpcfg             = [];
-  tmpcfg.frequency   = cfg.frequency;
-  tmpcfg.avgoverfreq = 'yes';
-  freq               = ft_selectdata(tmpcfg, freq);
-
-  % update the cfg
-  cfg.frequency      = freq.freq;
-end
-
-% select from the time dimension
-if any(strcmp(tok, 'time'))
-  % select the latency of interest for time-frequency data
-  tmpcfg         = [];
-  tmpcfg.latency = cfg.latency;
-  tmpcfg.avgovertime = 'yes';
-  freq           = ft_selectdata(tmpcfg, freq);
-  
-  % update the cfg
-  cfg.latency    = freq.time;
-end  
+% % select from the frequency dimension
+% if any(strcmp(tok, 'freq'))
+%   % select the frequency of interest
+%   tmpcfg             = [];
+%   tmpcfg.frequency   = cfg.frequency;
+%   tmpcfg.avgoverfreq = 'yes';
+%   freq               = ft_selectdata(tmpcfg, freq);
+% 
+%   % update the cfg
+%   cfg.frequency      = freq.freq;
+% end
+% 
+% % select from the time dimension
+% if any(strcmp(tok, 'time'))
+%   % select the latency of interest for time-frequency data
+%   tmpcfg         = [];
+%   tmpcfg.latency = cfg.latency;
+%   tmpcfg.avgovertime = 'yes';
+%   freq           = ft_selectdata(tmpcfg, freq);
+%   
+%   % update the cfg
+%   cfg.latency    = freq.time;
+% end  
 
 % create a square csd-matrix, if necessary
 hasfull = false;
@@ -95,9 +95,9 @@ tok = tokenize(freq.dimord, '_');
 % update the cfg
 cfg.channel     = freq.label(chanindx);
 if any(strncmp(tok, 'rpt', 3))
-  Cf = freq.crsspctrm(:,chanindx,chanindx);
+  Cf = freq.crsspctrm(:,chanindx,chanindx,:,:);
 else
-  Cf = freq.crsspctrm(chanindx,chanindx);
+  Cf = freq.crsspctrm(chanindx,chanindx,:,:);
 end
 
 if isfield(cfg, 'refchan') && ~isempty(cfg.refchan)
@@ -106,11 +106,11 @@ if isfield(cfg, 'refchan') && ~isempty(cfg.refchan)
     ft_error('the requested reference channel is not found in the data');
   end
   if any(strncmp(tok, 'rpt', 3))
-    Cr = freq.crsspctrm(:,chanindx,refindx);
-    Pr = freq.crsspctrm(:,refindx,refindx);
+    Cr = freq.crsspctrm(:,chanindx,refindx,:,:);
+    Pr = freq.crsspctrm(:,refindx,refindx,:,:);
   else
-    Cr = freq.crsspctrm(chanindx,refindx);
-    Pr = freq.crsspctrm(refindx,refindx);
+    Cr = freq.crsspctrm(chanindx,refindx,:,:);
+    Pr = freq.crsspctrm(refindx,refindx,:,:);
   end
 end  
 
