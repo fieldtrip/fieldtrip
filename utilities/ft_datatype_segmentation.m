@@ -258,20 +258,40 @@ segmentation = ft_datatype_volume(segmentation, 'version', volversion);
 % At this moment ft_datatype_volume nicely passes all fields, so there is no
 % special handling of the segmentation fields needed.
 
+% give feedback about the volume of tissue compartments
+% the indexed/probabilistic needs to be recomputed because it can have
+% changed
+fn = fieldnames(segmentation);
+%fn = setdiff(fn, 'inside'); % exclude the inside field from any conversions
+fn(strcmp(fn, 'inside')) = [];
+[indexed, probabilistic] = determine_segmentationstyle(segmentation, fn, segmentation.dim);
+
+% ignore the fields that do not contain a segmentation
+sel = indexed | probabilistic;
+fn            = fn(sel);
+indexed       = indexed(sel);
+probabilistic = probabilistic(sel);
+
 if all(indexed)
   % get the volume of a cubic element
   v = det(segmentation.transform(1:3,1:3));
   u = sprintf('%s^3', segmentation.unit);
   for k = 1:numel(fn)
-    V(k,1) = sum(segmentation.(fn)(:));
+    lab = segmentation.([fn{k},'label']);
+    V{k} = nan(numel(lab),1);
+    for m = 1:numel(lab)
+      V{k}(m,1) = sum(segmentation.(fn{k})(:)==m);
+    end
+    if ~isempty(V{k}), V{k} = V{k}.*v; end
   end
-  V = V.*v;
   
   % create message to give some feedback about the volume of the tissue
   % compartments
   botschaft = 'Volume of the indexed compartments:';
   for k = 1:numel(fn)
-    botschaft = strcat(botschaft, ' \n', sprintf('%s: %1.2f %s\n', fn{k}, V(k), u));
+    for m = 1:numel(V{k})
+      botschaft = strcat(botschaft, ' \n', sprintf('%s: %1.2f %s\n', segmentation.([fn{k},'label']){m}, V{k}(m), u));
+    end
   end
   ft_info(botschaft);
   
