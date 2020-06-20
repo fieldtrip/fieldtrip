@@ -309,7 +309,7 @@ elseif all(probabilistic)
   end
   
   % get the number of elements per compartment
-  V = sum(reshape(tmp,[],3));
+  V = sum(reshape(tmp,[],numel(fn)));
   V = V.*v;
   
   % create message to give some feedback about the volume of the tissue
