@@ -319,7 +319,9 @@ elseif isfreq
   % copy the descriptive fields to the output
   source = copyfields(data, source, {'time', 'freq', 'cumtapcnt'});
   
-  % HACK the remainder of the code expects a single number
+  % HACK the remainder of the code expects a single number -> JM QUESTION:
+  % why is this not data.freq and data.time, since ft_selectdata performs
+  % the frequency/latency selection + it does the averaging.
   cfg.frequency = mean(cfg.frequency);
   if isfield(data, 'time')
     cfg.latency   = mean(cfg.latency);
@@ -456,8 +458,8 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
     case 'pcc'
       % this can handle both a csd matrix and a fourier matrix, but needs
       % special handling of the refdip etc.
-      cfg.refdip = ft_getopt(cfg, 'refdip', []);
-      cfg.supdip = ft_getopt(cfg, 'supdip', []);
+      cfg.refdip  = ft_getopt(cfg, 'refdip',  []);
+      cfg.supdip  = ft_getopt(cfg, 'supdip',  []);
       cfg.refchan = ft_getopt(cfg, 'refchan', []);
       cfg.supchan = ft_getopt(cfg, 'supchan', []);
       cfg.refchan = ft_channelselection(cfg.refchan, data.label);
@@ -534,7 +536,8 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
           avg  = transpose(data.fourierspctrm(:, datchanindx, fbin, tbin));
         end
       else % The input data is a CSD matrix, this is enough for computing source power, coherence and residual power.
-        avg = Cf;
+        ft_warning('no fourierspctra in the input data, so the frequency domain dipole moments cannot be computed');
+        avg = [];
       end
       
     case 'dics'
