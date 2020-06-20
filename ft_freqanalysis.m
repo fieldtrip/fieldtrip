@@ -491,17 +491,18 @@ end
 % this is done on trial basis to save memory
 
 ft_progress('init', cfg.feedback, 'processing trials');
+trlcnt = []; % only some methods need this variable, but it needs to be defined outside the trial loop
 for itrial = 1:ntrials
   
-  %disp(['processing trial ' num2str(itrial) ': ' num2str(size(data.trial{itrial},2)) ' samples']);
   fbopt.i = itrial;
   fbopt.n = ntrials;
   
   dat = data.trial{itrial}; % chansel has already been performed
   time = data.time{itrial};
   
-  % Perform specest call and set some specifics
   clear spectrum % in case of very large trials, this lowers peak mem usage a bit
+  
+  % Perform specest call and set some specifics
   switch cfg.method
     
     case 'mtmconvol'
@@ -705,7 +706,7 @@ for itrial = 1:ntrials
       switch keeprpt
         
         case 1 % cfg.keeptrials, 'no' &&  cfg.keeptapers, 'no'
-          if exist('trlcnt', 'var')
+          if ~isempty(trlcnt)
             trlcnt(1, ifoi, :) = trlcnt(1, ifoi, :) + shiftdim(double(acttboi(:)'),-1);
           end
           
