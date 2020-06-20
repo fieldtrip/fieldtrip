@@ -538,16 +538,19 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
       if isfield(data, 'fourierspctrm')
         [dum, datchanindx] = match_str(cfg.channel, data.label);
         fbin = nearest(data.freq, cfg.frequency);
+        if numel(fbin)==1, fbin = fbin.*[1 1]; end
         if strcmp(data.dimord, 'chan_freq')
           avg = data.fourierspctrm(datchanindx, fbin);
         elseif strcmp(data.dimord, 'rpt_chan_freq') || strcmp(data.dimord, 'rpttap_chan_freq')
-          avg = transpose(data.fourierspctrm(:, datchanindx, fbin));
+          avg = permute(data.fourierspctrm(:, datchanindx, fbin(1):fbin(2)), [2 1 3]);
         elseif strcmp(data.dimord, 'chan_freq_time')
           tbin = nearest(data.time, cfg.latency);
-          avg = data.fourierspctrm(datchanindx, fbin, tbin);
+          if numel(tbin)==1, tbin = tbin.*[1 1]; end
+          avg = data.fourierspctrm(datchanindx, fbin(1):fbin(2), tbin(1):tbin(2));
         elseif strcmp(data.dimord, 'rpt_chan_freq_time') || strcmp(data.dimord, 'rpttap_chan_freq_time')
           tbin = nearest(data.time, cfg.latency);
-          avg  = transpose(data.fourierspctrm(:, datchanindx, fbin, tbin));
+          if numel(tbin)==1, tbin = tbin.*[1 1]; end
+          avg  = permute(data.fourierspctrm(:, datchanindx, fbin(1):fbin(2), tbin(1):tbin(2)), [2 1 3 4]);
         end
       else % The input data is a CSD matrix, this is enough for computing source power, coherence and residual power.
         ft_warning('no fourierspctra in the input data, so the frequency domain dipole moments cannot be computed');

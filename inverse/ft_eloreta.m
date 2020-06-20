@@ -176,12 +176,13 @@ end
 
 % get the dipole moment
 if keepmom && ~isempty(dat)
+  siz = [size(dat) 1];
   % remove the dipole moment from the input
   if isfield(dip, 'mom')
     dip = rmfield(dip, 'mom');
   end
   for i=1:size(dip.pos,1)
-    dip.mom{i} = dip.filter{i}*dat;
+    dip.mom{i} = reshape(dip.filter{i}*dat(:,:), [size(dip.filter{i},1) siz(2:end)]);
   end
 end
 
