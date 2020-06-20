@@ -306,9 +306,11 @@ elseif isfreq
     tmpcfg         = rmfield(tmpcfg, 'refchan');
   end
   
-  tmpcfg.avgoverfreq = 'yes';
-  if isfield(data, 'time')
-    tmpcfg.avgovertime = 'yes';
+  if ismember(cfg.method, {'pcc' 'dics'})
+    tmpcfg.avgoverfreq = 'yes';
+    if isfield(data, 'time')
+      tmpcfg.avgovertime = 'yes';
+    end
   end
   data = ft_selectdata(tmpcfg, data);
   % restore the provenance information
@@ -319,12 +321,14 @@ elseif isfreq
   % copy the descriptive fields to the output
   source = copyfields(data, source, {'time', 'freq', 'cumtapcnt'});
   
-  % HACK the remainder of the code expects a single number -> JM QUESTION:
-  % why is this not data.freq and data.time, since ft_selectdata performs
-  % the frequency/latency selection + it does the averaging.
-  cfg.frequency = mean(cfg.frequency);
-  if isfield(data, 'time')
-    cfg.latency   = mean(cfg.latency);
+  if ismember(cfg.method, {'pcc' 'dics'})
+    % HACK the remainder of the code expects a single number -> JM QUESTION:
+    % why is this not data.freq and data.time, since ft_selectdata performs
+    % the frequency/latency selection + it does the averaging.
+    cfg.frequency = mean(cfg.frequency);
+    if isfield(data, 'time')
+      cfg.latency   = mean(cfg.latency);
+    end
   end
 end
 
