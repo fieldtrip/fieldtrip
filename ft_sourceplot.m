@@ -981,6 +981,10 @@ switch cfg.method
       zi = nearest(1:dim(3), loc(3));
     end
     
+    if numel(dim)<3
+      ft_error('the input source structure cannot be reshaped into a volumetric 3D representation');
+    end
+    
     xi = round(xi); xi = max(xi, 1); xi = min(xi, dim(1));
     yi = round(yi); yi = max(yi, 1); yi = min(yi, dim(2));
     zi = round(zi); zi = max(zi, 1); zi = min(zi, dim(3));
