@@ -39,12 +39,12 @@ function [sourcemodel, cfg] = ft_prepare_leadfield(cfg, data)
 % Optionally, you can modify the leadfields by reducing the rank (i.e. remove the
 % weakest orientation), or by normalizing each column.
 %   cfg.reducerank      = 'no', or number (default = 3 for EEG, 2 for MEG)
-%   cfg.backproject     = 'yes' or 'no',  determines when reducerank is applied whether the 
-%                         lower rank leadfield is projected back onto the original linear 
+%   cfg.backproject     = 'yes' or 'no',  determines when reducerank is applied whether the
+%                         lower rank leadfield is projected back onto the original linear
 %                         subspace, or not (default = 'yes')
 %   cfg.normalize       = 'yes' or 'no' (default = 'no')
 %   cfg.normalizeparam  = depth normalization parameter (default = 0.5)
-%   cfg.weight          = number or Nx1 vector, weight for each dipole position to compensate 
+%   cfg.weight          = number or Nx1 vector, weight for each dipole position to compensate
 %                         for the size of the corresponding patch (default = 1)
 %
 % Depending on the type of headmodel, some additional options may be
@@ -204,63 +204,55 @@ if ft_headmodeltype(headmodel, 'openmeeg')
   
   ft_hastoolbox('openmeeg', 1);  % add to path (if not yet on path)
   
-  % repeated system calls to the openmeeg executable makes it rather slow
-  % calling it once is much more efficient
-  fprintf('calculating leadfield for all positions at once, this may take a while...\n');
-
-  if(~isfield(cfg,'openmeeg'))
-    cfg.openmeeg = [];
-  end
-  batchsize   = ft_getopt(cfg.openmeeg, 'batchsize',1e4);   % number of voxels per DSM batch; set to e.g. 1000 if not much RAM available
-  keepdsm     = ft_getopt(cfg.openmeeg, 'keepdsm',     'no'); % retain DSM
+  cfg.openmeeg = ft_getopt(cfg, 'openmeeg', []);
+  batchsize    = ft_getopt(cfg.openmeeg, 'batchsize', 1e4);  % number of voxels per DSM batch; set to e.g. 1000 if not much RAM available
+  keepdsm      = ft_getopt(cfg.openmeeg, 'keepdsm', 'no');   % retain DSM
   
   leadfieldopt = ft_setopt(leadfieldopt, 'dsm',         ft_getopt(cfg.openmeeg, 'dsm')); % reuse existing DSM if provided
   leadfieldopt = ft_setopt(leadfieldopt, 'nonadaptive', ft_getopt(cfg.openmeeg, 'nonadaptive', 'no'));
-
-  % a dsm in the input cfg currently assumes that the 'content' of the dsm matches exactly
-  % the positions that were passed in sourcemodel.pos. This is not
-  % guaranteed of course. If anything, it would make sense to represent
-  % the dsm in the input sourcemodel, so that the pos, and dsm are bound
-  % together. Still no guarantee, but better than nothing. This means
-  % that the cfg.openmeeg.dsm option should be deprecated
+  
+  % repeated system calls to the openmeeg executable makes it rather slow, calling it once is much more efficient
+  fprintf('calculating leadfield for %d positions at a time, this may take a while...\n', batchsize);
+  
+  % a dsm in the input cfg currently assumes that the 'content' of the dsm matches
+  % exactly the positions that were passed in sourcemodel.pos. This is not guaranteed
+  % of course. If anything, it would make sense to represent the dsm in the input
+  % sourcemodel, so that the pos, and dsm are bound together. Still no guarantee, but
+  % better than nothing. This means that the cfg.openmeeg.dsm option should be
+  % deprecated
   
   ndip       = length(insideindx);
   numchunks  = ceil(ndip/batchsize);
   dippos     = sourcemodel.pos(insideindx,:);
-    
+  
   if(numchunks > 1)
     if istrue(keepdsm)
       ft_warning('Keeping DSM output not supported when the computation is split into batches')
     end
     keepdsm = false;
   end
-
-  % DSM computation is computationally intensive:
-  % As it can be reused with same voxel sourcemodel (i.e. if voxels are defined in
-  % MRI coordinates rather than MEG coordinates), optionally save result.
-  % Dense voxel grids may require several gigabytes of RAM, so optionally
-  % split into smaller batches
+  
+  % DSM computation is computationally intensive: As it can be reused with same voxel
+  % sourcemodel (i.e. if voxels are defined in MRI coordinates rather than MEG
+  % coordinates), optionally save result. Dense voxel grids may require several
+  % gigabytes of RAM, so optionally split into smaller batches
   dsm = ft_getopt(leadfieldopt, 'dsm');
   if istrue(keepdsm) && ~isempty(dsm)
-    % dsm needs to be computed outside ft_compute_leadfield, because it
-    % needs to be passed on in the output
+    % dsm needs to be computed outside ft_compute_leadfield, because it needs to be passed on in the output
     dsm          = ft_sysmat_openmeeg(dippos, headmodel, sens, ft_getopt(leadfieldopt, 'nonadaptive'));
     leadfieldopt = ft_setopt(leadfieldopt, 'dsm', dsm);
   end
-    
+  
+  sourcemodel.leadfield = cell(size(sourcemodel.pos,1),1);
   ft_progress('init', cfg.feedback, 'computing leadfield');
   for k = 1:numchunks
     ft_progress(k/numchunks, 'computing leadfield %d/%d\n', k, numchunks);
     diprange = (((k-1)*batchsize + 1):(min(k*batchsize,ndip)));
     tmp      = ft_compute_leadfield(dippos(diprange,:), sens, headmodel, leadfieldopt{:});
-    for i=1:length(diprange)
-      thisindx = insideindx(diprange(i));
-      if istrue(cfg.backproject)
-        sourcemodel.leadfield{thisindx} = tmp(:,(i-1)*3+(1:3));
-      else
-        sourcemodel.leadfield{thisindx} = tmp(:,(i-1)*cfg.reducerank+(1:cfg.reducerank));
-      end
-    end
+    % distribute the columns of the leadfield matrix over the individual dipole positions
+    % avoid using the options reducerank and backproject, see https://github.com/fieldtrip/fieldtrip/issues/1410#issuecomment-646994620
+    [m, n] = size(tmp);
+    sourcemodel.leadfield(insideindx(diprange)) = mat2cell(tmp, m, repmat(n/numel(diprange), 1, numel(diprange)));
   end
   ft_progress('close');
   
@@ -277,27 +269,24 @@ elseif ft_headmodeltype(headmodel, 'singleshell')
   if ischar(batchsize) && strcmp(batchsize, 'all')
     batchsize = length(insideindx);
   end
-
+  
   dippos     = sourcemodel.pos(insideindx,:);
   ndip       = length(insideindx);
   numchunks  = ceil(ndip/batchsize);
-
+  
+  sourcemodel.leadfield = cell(size(sourcemodel.pos,1),1);
   ft_progress('init', cfg.feedback, 'computing leadfield');
   for k = 1:numchunks
     ft_progress(k/numchunks, 'computing leadfield %d/%d\n', k, numchunks);
     diprange = (((k-1)*batchsize + 1):(min(k*batchsize,ndip)));
     tmp      = ft_compute_leadfield(dippos(diprange,:), sens, headmodel, leadfieldopt{:});
-    for i=1:length(diprange)
-      thisindx = insideindx(diprange(i));
-      if istrue(cfg.backproject)
-        sourcemodel.leadfield{thisindx} = tmp(:,(i-1)*3+(1:3));
-      else
-        sourcemodel.leadfield{thisindx} = tmp(:,(i-1)*cfg.reducerank+(1:cfg.reducerank));
-      end
-    end
+    % distribute the columns of the leadfield matrix over the individual dipole positions
+    % avoid using the options reducerank and backproject, see https://github.com/fieldtrip/fieldtrip/issues/1410#issuecomment-646994620
+    [m, n] = size(tmp);
+    sourcemodel.leadfield(insideindx(diprange)) = mat2cell(tmp, m, repmat(n/numel(diprange), 1, numel(diprange)));
   end
   ft_progress('close');
-
+  
 else
   ft_progress('init', cfg.feedback, 'computing leadfield');
   for i=1:length(insideindx)
