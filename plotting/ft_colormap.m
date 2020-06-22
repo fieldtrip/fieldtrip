@@ -124,9 +124,8 @@ cmoceanlist = {'thermal', 'haline', 'solar', 'ice', 'oxy', ...
                'deep', 'dense' 'algae', 'matter', 'turbid',...
                'speed', 'amp', 'tempo', 'rain', 'delta',   ...
                'curl', 'diff', 'tarn', 'phase', 'topo'};
-n = numel(cmoceanlist);
 for k = 1:numel(cmoceanlist)
-  cmoceanlist{k} = sprintf('-%s',cmoceanlist{k});
+  cmoceanlist{end+1} = sprintf('-%s',cmoceanlist{k});
 end
 
 if isnumeric(name)
