@@ -212,12 +212,22 @@ if ft_headmodeltype(headmodel, 'openmeeg')
     cfg.openmeeg = [];
   end
   batchsize   = ft_getopt(cfg.openmeeg, 'batchsize',1e4);   % number of voxels per DSM batch; set to e.g. 1000 if not much RAM available
-  dsm         = ft_getopt(cfg.openmeeg, 'dsm');             % reuse existing DSM if provided
-  keepdsm     = ft_getopt(cfg.openmeeg, 'keepdsm', 'no');   % retain DSM
-  nonadaptive = ft_getopt(cfg.openmeeg, 'nonadaptive', 'no');
+  keepdsm     = ft_getopt(cfg.openmeeg, 'keepdsm',     'no'); % retain DSM
+  
+  leadfieldopt = ft_setopt(leadfieldopt, 'dsm',         ft_getopt(cfg.openmeeg, 'dsm')); % reuse existing DSM if provided
+  leadfieldopt = ft_setopt(leadfieldopt, 'nonadaptive', ft_getopt(cfg.openmeeg, 'nonadaptive', 'no'));
 
+  % a dsm in the input cfg currently assumes that the 'content' of the dsm matches exactly
+  % the positions that were passed in sourcemodel.pos. This is not
+  % guaranteed of course. If anything, it would make sense to represent
+  % the dsm in the input sourcemodel, so that the pos, and dsm are bound
+  % together. Still no guarantee, but better than nothing. This means
+  % that the cfg.openmeeg.dsm option should be deprecated
+  
   ndip       = length(insideindx);
   numchunks  = ceil(ndip/batchsize);
+  dippos     = sourcemodel.pos(insideindx,:);
+    
   if(numchunks > 1)
     if istrue(keepdsm)
       ft_warning('Keeping DSM output not supported when the computation is split into batches')
@@ -230,47 +240,37 @@ if ft_headmodeltype(headmodel, 'openmeeg')
   % MRI coordinates rather than MEG coordinates), optionally save result.
   % Dense voxel grids may require several gigabytes of RAM, so optionally
   % split into smaller batches
-  
-  [h2sens,ds2sens] = ft_sensinterp_openmeeg(sourcemodel.pos(insideindx,:), headmodel, sens);
-  
-  % use pre-existing DSM if present
-  if(~isempty(dsm))
-    lf = ds2sens + h2sens*headmodel.mat*dsm;
-  else
-    lf = zeros(size(ds2sens)); % pre-allocate Msensors x Nvoxels
+  dsm = ft_getopt(leadfieldopt, 'dsm');
+  if istrue(keepdsm) && ~isempty(dsm)
+    % dsm needs to be computed outside ft_compute_leadfield, because it
+    % needs to be passed on in the output
+    dsm          = ft_sysmat_openmeeg(dippos, headmodel, sens, ft_getopt(leadfieldopt, 'nonadaptive'));
+    leadfieldopt = ft_setopt(leadfieldopt, 'dsm', dsm);
+  end
     
-    for ii = 1:numchunks
-      % select sourcemodel positions for this batch
-      diprange = (((ii-1)*batchsize + 1):(min((ii)*batchsize,ndip)));
-      % remap with 3 orientations per position
-      diprangeori = [((ii-1)*3*batchsize + 1):(min((ii)*3*batchsize,3*ndip))];
-      dsm = ft_sysmat_openmeeg(sourcemodel.pos(insideindx(diprange),:), headmodel, sens, nonadaptive);
-      lf(:,diprangeori) = ds2sens(:,diprangeori) + h2sens*headmodel.mat*dsm;
-      
-      if istrue(keepdsm)
-        % retain DSM in cfg if desired
-        cfg.openmeeg.dsm = dsm;
+  ft_progress('init', cfg.feedback, 'computing leadfield');
+  for k = 1:numchunks
+    ft_progress(k/numchunks, 'computing leadfield %d/%d\n', k, numchunks);
+    diprange = (((k-1)*batchsize + 1):(min(k*batchsize,ndip)));
+    tmp      = ft_compute_leadfield(dippos(diprange,:), sens, headmodel, leadfieldopt{:});
+    for i=1:length(diprange)
+      thisindx = insideindx(diprange(i));
+      if istrue(cfg.backproject)
+        sourcemodel.leadfield{thisindx} = tmp(:,(i-1)*3+(1:3));
+      else
+        sourcemodel.leadfield{thisindx} = tmp(:,(i-1)*cfg.reducerank+(1:cfg.reducerank));
       end
-      
-      dipindx = insideindx(diprange);
     end
   end
+  ft_progress('close');
   
-  % apply montage, if applicable
-  if isfield(sens, 'tra')
-    lf = sens.tra * lf;
+  if istrue(keepdsm)
+    % retain DSM in cfg if desired -> FIXME this should not be kept in
+    % the cfg. If anything, it is sourcemodel specific, so it should be
+    % retained in the output sourcemodel
+    cfg.openmeeg.dsm = dsm;
   end
-
-  % lead field computation already done, but pass to ft_compute_leadfield so that
-  % any post-computation options can be applied (e.g., normalization, etc.)
-  lf = ft_compute_leadfield(sourcemodel.pos(diprange,:), sens, headmodel, 'lf', lf, leadfieldopt{:});
-
-  % reshape result into sourcemodel.leadfield cell-array
-  for i=1:ndip
-    sourcemodel.leadfield{insideindx(i)} = lf(:,3*(i-1) + [1:3]);
-  end
-  clear lf
-
+  
 elseif ft_headmodeltype(headmodel, 'singleshell')
   cfg.singleshell = ft_getopt(cfg, 'singleshell', []);
   batchsize       = ft_getopt(cfg.singleshell, 'batchsize', 1);
