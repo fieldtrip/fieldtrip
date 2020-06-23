@@ -65,8 +65,9 @@ end
 
 for i=1:numel(elecunit)
   for j=1:numel(headmodelunit)
-    if norm(source{i,j}.dip.pos - source{1,1}.dip.pos)>0.1 % cm
+    if norm(source{i,j}.dip.pos - source{1,1}.dip.pos)>0.2 % cm
       error('difference in dipole fit results, please check the handling of geometrical units');
     end
   end
 end
+
