@@ -1808,7 +1808,10 @@ probabilistic = probabilistic(sel);
 % get the volume of a cubic element
 if isfield(segmentation, 'unit')
   voxelvolume = abs(det(segmentation.transform(1:3,1:3)));
-  voxelunit = sprintf('%s^3', segmentation.unit);
+  voxelunit   = sprintf('%s^3', segmentation.unit);
+  % convert to cubic centimeter, which corresponds to milliliter
+  voxelvolume = voxelvolume*ft_scalingfactor(voxelunit, 'cm^3');
+  voxelunit   = 'ml';
 else
   voxelvolume = 1;
   voxelunit = 'voxels';
@@ -1820,27 +1823,40 @@ if all(indexed)
   totalvolume = prod(segmentation.dim)*voxelvolume;
   for k = 1:numel(fn)
     ft_info('The volume of each of the segmented compartments in "%s" is:', fn{k});
+    if ~isfield(segmentation, [fn{k} 'label'])
+      % this will add the xxxlabel field with default labels
+      segmentation = fixsegmentation(segmentation, fn(k), 'indexed');
+    end
     tissuelabel = segmentation.([fn{k} 'label']);
-    width = max(cellfun(@length, tissuelabel));
     tissueindex = segmentation.(fn{k});
-    ft_info('%s : %8.0f %s (%6.2f %%)', pad('total', width), totalvolume, voxelunit, 100);
+    width = max(cellfun(@length, tissuelabel)); width = max(width, 15);
+    summedvolume = 0;
     for m = 1:numel(tissuelabel)
       volume = sum(tissueindex(:)==m)*voxelvolume;
+      summedvolume = summedvolume + volume;
       ft_info('%s : %8.0f %s (%6.2f %%)', pad(tissuelabel{m}, width), volume, voxelunit, 100*volume/totalvolume);
     end
+    % print the summary of the totals
+    ft_info('%s : %8.0f %s (%6.2f %%)', pad('total segmented', width), summedvolume, voxelunit, 100*summedvolume/totalvolume);
+    ft_info('%s : %8.0f %s (%6.2f %%)', pad('total volume',    width), totalvolume, voxelunit, 100*totalvolume/totalvolume);
+    
   end
   
 elseif all(probabilistic)
   
   % give feedback about each of the tissues in each of the volumnes
-  width = max(cellfun(@length, fn));
-  totalvolume = prod(segmentation.dim)*voxelvolume;
-  ft_info('%s : %8.0f %s (%6.2f %%)', pad('total', width), totalvolume, voxelunit, 100);
+  width = max(cellfun(@length, fn)); width = max(width, 15);
+  totalvolume  = prod(segmentation.dim)*voxelvolume;
+  summedvolume = 0;
   for k = 1:numel(fn)
     tissuelabel = fn{k};
     tissueprobability = segmentation.(tissuelabel);
     volume = sum(tissueprobability(:)*voxelvolume);
+    summedvolume = summedvolume + volume;
     ft_info('%s : %8.0f %s (%6.2f %%)', pad(tissuelabel, width), volume, voxelunit, 100*volume/totalvolume);
   end
+  % print the summary of the totals
+  ft_info('%s : %8.0f %s (%6.2f %%)', pad('total segmented', width), summedvolume, voxelunit, 100*summedvolume/totalvolume);
+  ft_info('%s : %8.0f %s (%6.2f %%)', pad('total volume',    width), totalvolume, voxelunit, 100*totalvolume/totalvolume);
   
 end % if all inxexed or probabilistic
