@@ -257,3 +257,67 @@ segmentation = ft_datatype_volume(segmentation, 'version', volversion);
 % the fields that are specific for the segmentation and add them later again.
 % At this moment ft_datatype_volume nicely passes all fields, so there is no
 % special handling of the segmentation fields needed.
+
+% give feedback about the volume of tissue compartments
+% the indexed/probabilistic needs to be recomputed because it can have
+% changed
+fn = fieldnames(segmentation);
+%fn = setdiff(fn, 'inside'); % exclude the inside field from any conversions
+fn(strcmp(fn, 'inside')) = [];
+[indexed, probabilistic] = determine_segmentationstyle(segmentation, fn, segmentation.dim);
+
+% ignore the fields that do not contain a segmentation
+sel = indexed | probabilistic;
+fn            = fn(sel);
+indexed       = indexed(sel);
+probabilistic = probabilistic(sel);
+
+if all(indexed)
+  % get the volume of a cubic element
+  v = abs(det(segmentation.transform(1:3,1:3)));
+  u = sprintf('%s^3', segmentation.unit);
+  for k = 1:numel(fn)
+    lab = segmentation.([fn{k},'label']);
+    V{k} = nan(numel(lab),1);
+    for m = 1:numel(lab)
+      V{k}(m,1) = sum(segmentation.(fn{k})(:)==m);
+    end
+    if ~isempty(V{k}), V{k} = V{k}.*v; end
+  end
+  
+  % create message to give some feedback about the volume of the tissue
+  % compartments
+  botschaft = 'Volume of the indexed compartments:';
+  for k = 1:numel(fn)
+    for m = 1:numel(V{k})
+      botschaft = strcat(botschaft, ' \n', sprintf('%s: %1.2f %s\n', segmentation.([fn{k},'label']){m}, V{k}(m), u));
+    end
+  end
+  ft_info(botschaft);
+  
+elseif all(probabilistic)
+  % get the volume of a cubic element
+  v = abs(det(segmentation.transform(1:3,1:3)));
+  u = sprintf('%s^3', segmentation.unit);
+  
+  % attempt a memory efficient max extraction
+  tmp = repmat(segmentation.inside, [1 1 1 numel(fn)]);
+  for k = 1:numel(fn)
+    for m = setdiff(1:numel(fn),k)
+      tmp(:,:,:,k) = tmp(:,:,:,k)&segmentation.(fn{k})>segmentation.(fn{m});
+    end
+  end
+  
+  % get the number of elements per compartment
+  V = sum(reshape(tmp,[],numel(fn)));
+  V = V.*v;
+  
+  % create message to give some feedback about the volume of the tissue
+  % compartments
+  botschaft = 'Volume of the probabilistic compartments, based on the maxprob:';
+  for k = 1:numel(fn)
+    botschaft = strcat(botschaft, ' \n ', sprintf('%s: %1.2f %s', fn{k}, V(k), u));
+  end
+  ft_info(botschaft);
+  
+end

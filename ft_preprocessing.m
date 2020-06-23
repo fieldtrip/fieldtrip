@@ -403,7 +403,7 @@ else
   % read the header
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat,...
     'coordsys', cfg.coordsys, 'coilaccuracy', cfg.coilaccuracy,...
-    'checkmaxfilter', istrue(cfg.checkmaxfilter), 'chantype', cfg.chantype);
+    'checkmaxfilter', cfg.checkmaxfilter, 'chantype', cfg.chantype);
   
   % this option relates to reading over trial boundaries in a pseudo-continuous dataset
   if ~isfield(cfg, 'continuous')

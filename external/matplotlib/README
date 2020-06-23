@@ -1,0 +1,5 @@
+This directory contains a subset of colormaps from matplotlib. 
+
+See also 
+-  https://nl.mathworks.com/matlabcentral/fileexchange/62729-matplotlib-perceptually-uniform-colormaps
+-  https://matplotlib.org/3.2.1/tutorials/colors/colormaps.html

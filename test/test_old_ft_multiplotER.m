@@ -2,6 +2,7 @@ function test_old_ft_multiplotER
 
 % MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 
 % this script tests the functionality of ft_multiplotER with respect to the

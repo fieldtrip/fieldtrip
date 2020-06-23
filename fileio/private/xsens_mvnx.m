@@ -320,7 +320,7 @@ elseif needevt
   %% parse the events
   ft_warning('reading of events is not yet implemented');
   
-  evt = struct();
+  evt = [];
   
   % return the events
   varargout = {evt};

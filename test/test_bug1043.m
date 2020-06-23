@@ -2,7 +2,6 @@ function test_bug1043
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_megplanar ft_apply_montage yokogawa2grad channelposition ft_apply_transform
 
 % the bug consists of ft_apply_montage not adequately dealing with

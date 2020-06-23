@@ -2,7 +2,6 @@ function failed_bug1049
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_prepare_sourcemodel headsurface ft_prepare_leadfield ft_freqanalysis ft_sourceanalysis
 
 % this function creates a set of source-structures to be used for testing

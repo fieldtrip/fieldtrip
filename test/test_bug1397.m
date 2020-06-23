@@ -2,7 +2,6 @@ function test_bug1397
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_preprocessing ft_appenddata
 
 % the following code was obtained from http://www.fieldtriptoolbox.org/tutorial/coherence

@@ -2,7 +2,6 @@ function test_bug1901
 
 % MEM 3gb
 % WALLTIME 00:15:00
-
 % DEPENDENCY ft_prepare_leadfield ft_prepare_sourcemodel prepare_headmodel ft_convert_units
 
 % this is some data that should be relatively compatible with the original data

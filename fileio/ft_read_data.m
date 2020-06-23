@@ -23,6 +23,7 @@ function [dat] = ft_read_data(filename, varargin)
 %   'fallback'       can be empty or 'biosig' (default = [])
 %   'blocking'       wait for the selected number of events (default = 'no')
 %   'timeout'        amount of time in seconds to wait when blocking (default = 5)
+%   'password'       password structure for encrypted data set (only for mayo_mef30 and mayo_mef21)
 %
 % This function returns a 2-D matrix of size Nchans*Nsamples for continuous
 % data when begevent and endevent are specified, or a 3-D matrix of size
@@ -64,7 +65,9 @@ if isempty(db_blob)
 end
 
 if iscell(filename)
+  % use recursion to read the data from multiple files
   ft_warning('concatenating data from %d files', numel(filename));
+
   % this only works if the data is indexed by means of samples, not trials
   assert(isempty(ft_getopt(varargin, 'begtrial')));
   assert(isempty(ft_getopt(varargin, 'endtrial')));
@@ -137,7 +140,8 @@ fallback        = ft_getopt(varargin, 'fallback');
 cache           = ft_getopt(varargin, 'cache', false);
 dataformat      = ft_getopt(varargin, 'dataformat');
 chanunit        = ft_getopt(varargin, 'chanunit');
-timestamp       = ft_getopt(varargin, 'timestamp');
+timestamp       = ft_getopt(varargin, 'timestamp', false); % return Neuralynx NSC timestamps instead of actual data
+password        = ft_getopt(varargin, 'password', struct([]));
 
 % this allows blocking reads to avoid having to poll many times for online processing
 blocking         = ft_getopt(varargin, 'blocking', false);  % true or false
@@ -209,7 +213,7 @@ end
 
 % read the header if it is not provided
 if isempty(hdr)
-  hdr = ft_read_header(filename, 'headerformat', headerformat, 'chanindx', chanindx, 'checkmaxfilter', checkmaxfilter);
+  hdr = ft_read_header(filename, 'headerformat', headerformat, 'chanindx', chanindx, 'checkmaxfilter', checkmaxfilter, 'password', password);
   if isempty(chanindx)
     chanindx = 1:hdr.nChans;
   end
@@ -723,7 +727,8 @@ switch dataformat
     
   case {'egi_mff_v3' 'egi_mff'} % this is the default
     ft_hastoolbox('mffmatlabio', 1);
-    dat = mff_fileio_read_data(filename, 'header', hdr, 'begtrial', begtrial, 'endtrial', endtrial, 'chanindx', chanindx);
+    dat = mff_fileio_read_data(filename, 'header', hdr);
+    dat = dat(chanindx, begsample:endsample);
     
   case 'edf'
     % this reader is largely similar to the one for bdf
@@ -992,6 +997,14 @@ switch dataformat
         sum(trlind==iEpoch(i) & (1:length(trlind))<=endsample)-1]);
     end
     dat = dat(chanindx, :);
+    
+  case 'mayo_mef30'
+    hdr.sampleunit = 'index';
+    dat = read_mayo_mef30(filename, password, sortchannel, hdr, begsample, endsample, chanindx);
+    
+  case 'mayo_mef21'
+    hdr.sampleunit = 'index';
+    dat = read_mayo_mef21(filename, password, hdr, begsample, endsample, chanindx);
     
   case 'mega_neurone'
     % this is fast but memory inefficient, since the header contains all data and events
@@ -1315,7 +1328,25 @@ switch dataformat
   case 'neuroprax_eeg'
     tmp = np_readdata(filename, hdr.orig, begsample - 1, endsample - begsample + 1, 'samples');
     dat = tmp.data(:,chanindx)';
-    
+   
+  case 'nwb'
+    ft_hastoolbox('MatNWB', 1);
+	tmp = nwbRead(filename);
+	es_key = tmp.searchFor('ElectricalSeries').keys; % find lfp data, which should be an ElectricalSeries object
+    if numel(es_key) > 1 % && isempty(additional_user_input) % TODO: Try to sort this out with the user's help
+        % Temporary fix: SpikeEventSeries is a daughter of ElectrialSeries but should not be found here (searchFor update on its way)
+        es_key = es_key(contains(es_key,'lfp','IgnoreCase',true)); 
+    end
+    if numel(es_key) > 1 % in case we weren't able to sort out a single
+		error('More than one ElectricalSeries present in data. Please specify which signal to use.')
+	else
+		eseries = io.resolvePath(tmp, es_key{1});
+	end
+    for iCh=1:numel(chanindx)
+        dat(iCh, :) = eseries.data.load([chanindx(iCh) begsample], [chanindx(iCh) endsample]); % TODO: function allows to load segments load([min_channel, min_sample],[max_channel, max_channel]) and one could subselect from there
+    end
+%     dat = dat(chanindx, begsample:endsample);
+
   case 'artinis_oxy3'
     ft_hastoolbox('artinis', 1);
     dat = read_artinis_oxy3(filename, hdr, begsample, endsample, chanindx);
@@ -1375,6 +1406,69 @@ switch dataformat
       elseif any(hdr.orig.VarHeader(chanindx(i)).Type==[0 1 3])
         % it is a neuron(0), event(1) or waveform(3) channel and therefore it has timestamps
         [nex, chanhdr] = read_plexon_nex(filename, 'header', hdr.orig, 'channel', chanindx(i), 'tsonly', 1);
+        % convert the timestamps to samples
+        sample = round(double(nex.ts - hdr.FirstTimeStamp)./hdr.TimeStampPerSample) + 1;
+        % select only timestamps that are between begin and endsample
+        sample = sample(sample>=begsample & sample<=endsample) - begsample + 1;
+        for j=sample(:)'
+          dat(i,j) = dat(i,j) + 1;
+        end
+      end
+    end
+    if any(isnan(dat(:)))
+      ft_warning('data has been padded with NaNs');
+    end
+    
+  case 'plexon_nex5' % this is the default reader for nex5 files
+    dat = zeros(length(chanindx), endsample-begsample+1);
+    for i=1:length(chanindx)
+      vh = hdr.orig.VarHeader(chanindx(i));
+      if vh.Type==5
+        % this is a continuous channel
+        if vh.Count==1
+          [nex, chanhdr] = read_nex5(filename, 'header', hdr.orig, 'channel', chanindx(i), 'tsonly', 1);
+          % the AD channel contains a single fragment
+          % determine the sample offset into this fragment
+          offset     = round(double(nex.ts-hdr.FirstTimeStamp)./hdr.TimeStampPerSample);
+          chanbegsmp = begsample - offset;
+          chanendsmp = endsample - offset;
+          if chanbegsmp<1
+            % the first sample of this channel is later than the beginning of the dataset
+            % and we are trying to read the beginning of the dataset
+            [nex, chanhdr] = read_nex5(filename, 'header', hdr.orig, 'channel', chanindx(i), 'tsonly', 0, 'begsample', 1, 'endsample', chanendsmp);
+            % padd the beginning of this channel with NaNs
+            nex.dat = [nan(1,offset) nex.dat];
+          else
+            [nex, chanhdr] = read_nex5(filename, 'header', hdr.orig, 'channel', chanindx(i), 'tsonly', 0, 'begsample', chanbegsmp, 'endsample', chanendsmp);
+          end
+          % copy the desired samples into the output matrix
+          % pad with nans if nex.dat is shorter than endsample-begsample+1
+          nummissing = endsample-begsample+1 - length(nex.dat);
+          if nummissing > 0
+            nex.dat = [nex.dat nan(1, nummissing)];	
+          end
+          dat(i,:) = nex.dat;
+        else
+          % the AD channel contains multiple fragments
+          [nex, chanhdr] = read_nex5(filename, 'header', hdr.orig, 'channel', chanindx(i), 'tsonly', 0);
+          % reconstruct the full AD timecourse with NaNs at all missing samples
+          offset     = round(double(nex.ts-hdr.FirstTimeStamp)./hdr.TimeStampPerSample); % of each fragment, in AD samples
+          nsample    = diff([nex.indx length(nex.dat)]);                                 % of each fragment, in AD samples
+          % allocate memory to hold the complete continuous record
+          cnt = nan(1, max(offset(end)+nsample(end), endsample-begsample+1));
+          for j=1:length(offset)
+            cntbegsmp  = offset(j)   + 1;
+            cntendsmp  = offset(j)   + nsample(j);
+            fragbegsmp = nex.indx(j) + 1;
+            fragendsmp = nex.indx(j) + nsample(j);
+            cnt(cntbegsmp:cntendsmp) = nex.dat(fragbegsmp:fragendsmp);
+          end
+          % copy the desired samples into the output matrix
+          dat(i,:) = cnt(begsample:endsample);
+        end
+      elseif any(vh.Type==[0 1 3])
+        % it is a neuron(0), event(1) or waveform(3) channel and therefore it has timestamps
+        [nex, chanhdr] = read_nex5(filename, 'header', hdr.orig, 'channel', chanindx(i), 'tsonly', 1);
         % convert the timestamps to samples
         sample = round(double(nex.ts - hdr.FirstTimeStamp)./hdr.TimeStampPerSample) + 1;
         % select only timestamps that are between begin and endsample

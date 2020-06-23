@@ -2,6 +2,7 @@ function test_checkcode
 
 % WALLTIME 00:20:00
 % MEM 2gb
+% DEPENDENCY
 
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3309
 

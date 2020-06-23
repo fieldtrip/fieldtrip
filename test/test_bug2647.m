@@ -1,5 +1,4 @@
 function test_bug2647
-
 % DEPENDENCY ft_freqstatistics
 
 % WALLTIME 00:10:00

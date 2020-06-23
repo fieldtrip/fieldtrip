@@ -2,7 +2,6 @@ function test_bug2443
 
 % WALLTIME 00:20:00
 % MEM 4gb
-
 % DEPENDENCY ft_multiplotER
 
 % get some data

@@ -2,7 +2,6 @@ function test_bug1599(datainfo, version)
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_sourceanalysis beamformer_lcmv
 
 % fixedori is set correctly in beamformer_lcmv, the only problem is
@@ -30,28 +29,24 @@ vol.r = 12;
 vol.unit = 'cm';
 vol.type = 'singlesphere';
 
-grid = [];
-grid.resolution = 2.5;
-sourcemodel.xgrid = 'auto';
-sourcemodel.ygrid = 'auto';
-sourcemodel.zgrid = 'auto';
+sourcemodel = [];
+sourcemodel.resolution = 2.5;
 
 % compute filter
 cfg                 = [];
 cfg.headmodel       = vol;
-cfg.sourcemodel            = grid;
+cfg.sourcemodel     = sourcemodel;
 cfg.method          = 'lcmv';
 cfg.lcmv.keepfilter = 'yes';
-cfg.lcmv.fixedori   ='no'; 
+cfg.lcmv.fixedori   = 'no'; 
 filter              = ft_sourceanalysis(cfg, timelock); 
 
 cfg               = [];
 cfg.headmodel     = vol;
-cfg.sourcemodel          = grid;
 cfg.method        = 'lcmv';
-% cfg.rawtrial      = 'yes';
-cfg.sourcemodel.filter   = filter.avg.filter;
-cfg.lcmv.fixedori ='yes'; 
+% cfg.rawtrial    = 'yes';
+cfg.sourcemodel   = keepfields(filter, {'pos', 'filter', 'filterdimord', 'label'});
+cfg.lcmv.fixedori = 'yes'; 
 oriyes            = ft_sourceanalysis(cfg, timelock); 
 cfg.lcmv.fixedori = 'no'; 
 orino             = ft_sourceanalysis(cfg, timelock); 

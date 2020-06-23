@@ -2,9 +2,7 @@ function test_ft_connectivity_powcorr_ortho
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
-% DEPENDENCY: test_ft_connectivity_powcorr_ortho
-% DEPENDENCY: ft_connectivity_powcorr_ortho
+% DEPENDENCY test_ft_connectivity_powcorr_ortho ft_connectivity_powcorr_ortho
 
 mom1 = randn(1,100)+1i*randn(1,100);
 mom2 = randn(1,100)+1i*randn(1,100);

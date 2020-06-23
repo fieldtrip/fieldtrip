@@ -2,7 +2,6 @@ function test_ft_apply_montage
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_apply_montage
 
 pwdir = pwd;

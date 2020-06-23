@@ -2,7 +2,6 @@ function test_bug1956
 
 % WALLTIME 02:00:00
 % MEM 3gb
-
 % DEPENDENCY ft_volumesegment ft_prepare_sourcemodel volumesmooth
 
 mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri'));

@@ -722,6 +722,29 @@ elseif ft_senstype(input, 'plexon') && isheader
         % keep the default 'unknown' chantype
     end
   end
+  
+elseif ft_senstype(input, 'nex5') && isheader
+  % this is a complete header that was read from a Nex Technologies *.nex5 file using read_plexon_nex
+  for i=1:numchan
+    switch input.orig.VarHeader(i).Type
+      case 0
+        chantype{i} = 'spike';
+      case 1
+        chantype{i} = 'event';
+      case 2
+        chantype{i} = 'interval';  % Interval variables
+      case 3
+        chantype{i} = 'waveform';
+      case 4
+        chantype{i} = 'population'; % Population variables. Identify linear combinations of neuron and event histograms. Not used in FieldTrip.
+      case 5
+        chantype{i} = 'analog';
+      case 6
+        chantype{i} = 'marker';
+      otherwise
+        % keep the default 'unknown' chantype
+    end
+  end
 
 end % ft_senstype
 

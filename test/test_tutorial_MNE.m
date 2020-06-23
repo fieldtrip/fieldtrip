@@ -2,7 +2,6 @@ function test_tutorial_MNE
 
 % MEM 4gb
 % WALLTIME 00:30:00
-
 % DEPENDENCY ft_volumereslice ft_volumerealign ft_volumesegment
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data'));

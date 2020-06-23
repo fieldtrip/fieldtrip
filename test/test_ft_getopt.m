@@ -2,7 +2,6 @@ function test_ft_getopt
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_getopt
 
 success = true;

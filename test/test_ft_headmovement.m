@@ -2,7 +2,6 @@ function test_ft_headmovement
 
 % MEM 3gb
 % WALLTIME 00:20:00
-
 % DEPENDENCY ft_headmovement
 
 dataset = dccnpath('/home/common/matlab/fieldtrip/data/SubjectRest.ds');

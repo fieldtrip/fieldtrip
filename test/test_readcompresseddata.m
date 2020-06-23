@@ -2,7 +2,6 @@ function test_readcompresseddata
 
 % MEM 4gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY inflate_file ft_read_data ft_read_header test_readcompresseddata
 
 % test these data sets

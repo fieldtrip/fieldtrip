@@ -174,7 +174,7 @@ function ft_sourceplot(cfg, functional, anatomical)
 % a single or multiple triangulated surface mesh(es) in an Nx1 cell-array
 % to be plotted with the interpolated functional data (see FT_PLOT_CLOUD)
 %
-% The following parameters apply to cfg.method='elec'
+% The following parameters apply to cfg.method='cloud'
 %   cfg.cloudtype       = 'point' plots a single point at each sensor position
 %                         'cloud' (default) plots each a group of spherically arranged points at each sensor position
 %                         'surf' plots a single spherical surface mesh at each sensor position
@@ -336,7 +336,7 @@ if isfield(functional, 'time') || isfield(functional, 'freq')
 end
 
 % the data can be passed as input argument or can be read from disk
-hasanatomical = exist('anatomical', 'var') && isfield(anatomical, 'anatomy');
+hasanatomical = exist('anatomical', 'var');
 
 if hasanatomical && ~strcmp(cfg.method, 'cloud') % cloud method should be able to take multiple surfaces and does not require interpolation
   % interpolate on the fly, this also does the downsampling if requested
@@ -723,11 +723,9 @@ end
 %% set color and opacity mapping for this figure
 if hasfun
   if ischar(cfg.funcolormap) && ~strcmp(cfg.funcolormap, 'rgb')
-    colormap(cfg.funcolormap);
-    cfg.funcolormap = colormap;
-  elseif ~ischar(cfg.funcolormap)
-    colormap(cfg.funcolormap);
-    cfg.funcolormap = colormap;
+    cfg.funcolormap = ft_colormap(cfg.funcolormap);
+  elseif iscell(cfg.funcolormap)
+    cfg.funcolormap = ft_colormap(cfg.funcolormap{:});
   end
 end
 if hasmsk
@@ -981,6 +979,10 @@ switch cfg.method
       xi = nearest(1:dim(1), loc(1));
       yi = nearest(1:dim(2), loc(2));
       zi = nearest(1:dim(3), loc(3));
+    end
+    
+    if numel(dim)<3
+      ft_error('the input source structure cannot be reshaped into a volumetric 3D representation');
     end
     
     xi = round(xi); xi = max(xi, 1); xi = min(xi, dim(1));
@@ -1474,7 +1476,7 @@ switch cfg.method
       end
       
       % color settings
-      colormap(cmap);
+      ft_colormap(cmap);
       if ~isempty(clim) && clim(2)>clim(1)
         caxis(gca, clim);
       end
@@ -1778,7 +1780,7 @@ elseif opt.hastime && opt.hasfun
 elseif strcmp(opt.colorbar,  'yes') && ~isfield(opt, 'hc')
   if opt.hasfun
     % vectorcolorbar = linspace(fscolmin, fcolmax,length(cfg.funcolormap));
-    % imagesc(vectorcolorbar,1,vectorcolorbar);colormap(cfg.funcolormap);
+    % imagesc(vectorcolorbar,1,vectorcolorbar);ft_colormap(cfg.funcolormap);
     % use a normal MATLAB colorbar, attach it to the invisible 4th subplot
     try
       caxis([opt.fcolmin opt.fcolmax]);

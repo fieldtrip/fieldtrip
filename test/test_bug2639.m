@@ -1,5 +1,4 @@
 function test_bug2639
-
 % DEPENDENCY ft_checkdata
 
 % MEM 2gb

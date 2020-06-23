@@ -102,6 +102,15 @@ if ~isfield(ft_default, 'outputfilepresent'), ft_default.outputfilepresent = 'ov
 % These options allow to disable parts of the provenance
 if ~isfield(ft_default, 'trackcallinfo'),  ft_default.trackcallinfo  = 'yes';    end % yes or no
 if ~isfield(ft_default, 'trackdatainfo'),  ft_default.trackdatainfo  = 'no';     end % yes or no
+if ~isfield(ft_default, 'tracktimeinfo'),  ft_default.tracktimeinfo  = 'yes';    end % yes or no
+if ~isfield(ft_default, 'trackmeminfo')
+  if ispc()
+    % don't track memory usage info under Windows; this does not work (yet)
+    ft_default.trackmeminfo   = 'no';
+  else
+    ft_default.trackmeminfo   = 'yes';
+  end
+end
 
 % These options allow to prefer the MATLAB toolbox implementations ('matlab') over the drop-in replacements ('compat').
 if ~isfield(ft_default, 'toolbox'), ft_default.toolbox  = []; end

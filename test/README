@@ -1,0 +1,15 @@
+This is the FieldTrip TEST directory. It contains a whole bunch of
+m-files that we use during development to test that new functionality
+works as expected, but also to test that changes to the code do not
+break existing functionality.
+
+The files in this directory can be split in multiple categories
+
+-  Files named `test_xxx.m` are automatically executed with the whole test batch
+-  Files named `inspect_xxx.m` are not automatically executed, but require manual execution and interaction (e.g. clicking on a button)
+-  Files named `failed_xxx.m` are not automatically executed, since they are known to be broken
+-  Files named `obsolete_xxx.m` are not automatically executed, since they contain code that is obsolete
+
+More details on the FieldTrip test scripts, how to add to them
+and/or how to execute them, and how they are used for releases can
+be found on http://www.fieldtriptoolbox.org/development/testing/

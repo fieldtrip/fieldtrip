@@ -2,7 +2,6 @@ function test_ft_spike_xcorr()
 
 % MEM 1gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_spike_xcorr
 
 data = [];

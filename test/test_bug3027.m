@@ -2,7 +2,6 @@ function test_bug3027
 
 % WALLTIME 00:10:00
 % MEM 2gb
-
 % DEPENDENCY ft_filetype ft_read_header ft_read_data ft_read_event homer2opto
 
 %%

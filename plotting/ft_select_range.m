@@ -44,7 +44,7 @@ function ft_select_range(handle, eventdata, varargin)
 %
 % See also FT_SELECT_BOX, FT_SELECT_CHANNEL, FT_SELECT_POINT, FT_SELECT_POINT3D, FT_SELECT_VOXEL
 
-% Copyright (C) 2009-2012, Robert Oostenveld
+% Copyright (C) 2009-2020, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -82,14 +82,11 @@ clear     = istrue(clear);
 % get the figure handle, dependent on MATLAB version
 if ft_platform_supports('graphics_objects')
   while ~isa(handle, 'matlab.ui.Figure')
-    handle = p;
-    p = get(handle, 'parent');
+    handle = get(handle, 'parent');
   end
 else
-  p = handle;
-  while ~isequal(p, 0)
-    handle = p;
-    p = get(handle, 'parent');
+  while ~isequal(handle, 0)
+    handle = get(handle, 'parent');
   end
 end
 

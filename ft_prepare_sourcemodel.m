@@ -19,30 +19,30 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 %                'basedonresolution'  regular 3D grid with specification of the resolution
 %                'basedonvol'         surface mesh based on inward shifted brain surface from volume conductor
 %                'basedonfile'        the sourcemodel should be read from file
-% The default for cfg.method is to determine the approach automatically, based on 
+% The default for cfg.method is to determine the approach automatically, based on
 % the configuration options that you specify.
 %
-% BASEDONRESOLUTION - uses an explicitly specified grid, or with the desired 
+% BASEDONRESOLUTION - uses an explicitly specified grid, or with the desired
 % resolution, according to the following configuration options:
 %   cfg.xgrid         = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
 %   cfg.ygrid         = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
 %   cfg.zgrid         = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
 %   cfg.resolution    = number (e.g. 1 cm) for automatic grid generation
 %
-% BASEDONPOS - places sources on positions that you explicitly specify, 
+% BASEDONPOS - places sources on positions that you explicitly specify,
 % according to the following configuration options:
 %   cfg.sourcemodel.pos       = N*3 matrix with position of each source
 %   cfg.sourcemodel.inside    = N*1 vector with boolean value whether position is inside brain (optional)
 %   cfg.sourcemodel.dim       = [Nx Ny Nz] vector with dimensions in case of 3D grid (optional)
-% The following fields (from FT_PRERARE_LEADFIELD or FT_SOURCEANALYSIS) are 
+% The following fields (from FT_PRERARE_LEADFIELD or FT_SOURCEANALYSIS) are
 % not used in this function, but will be copied along to the output:
 %   cfg.sourcemodel.leadfield = cell-array
 %   cfg.sourcemodel.filter    = cell-array
 %   cfg.sourcemodel.subspace
 %   cfg.sourcemodel.lbex
 %
-% BASEDONMNI - uses source positions from a template sourcemodel that is 
-% inversely warped from MNI coordinates to the individual subjects MRI. 
+% BASEDONMNI - uses source positions from a template sourcemodel that is
+% inversely warped from MNI coordinates to the individual subjects MRI.
 % It uses the following configuration options:
 %   cfg.mri           = structure with anatomical MRI model or filename, see FT_READ_MRI
 %   cfg.warpmni       = 'yes'
@@ -51,7 +51,7 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 %   cfg.template      = specification of a template sourcemodel as structure, or the filename of a template sourcemodel (defined in MNI space)
 % Either cfg.resolution or cfg.template needs to be defined; if both are defined, cfg.template prevails.
 %
-% BASEDONMRI - makes a segmentation of the individual anatomical MRI and places 
+% BASEDONMRI - makes a segmentation of the individual anatomical MRI and places
 % sources in the grey matter. It uses the following configuration options:
 %   cfg.mri           = can be filename, MRI structure or segmented MRI structure
 %   cfg.threshold     = 0.1, relative to the maximum value in the segmentation
@@ -72,7 +72,7 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 %   cfg.symmetry      = 'x', 'y' or 'z' symmetry for two dipoles, can be empty (default = [])
 %   cfg.headshape     = a filename for the headshape, a structure containing a single surface,
 %                       or a Nx3 matrix with headshape surface points (default = [])
-%   cfg.spmversion    = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
+%   cfg.spmversion    = string, 'spm2', 'spm8', 'spm12' (default = 'spm12')
 %
 % The EEG or MEG sensor positions can be present in the data or can be specified as
 %   cfg.elec          = structure with electrode positions or filename, see FT_READ_SENS
@@ -147,7 +147,7 @@ cfg.moveinward        = ft_getopt(cfg, 'moveinward'); % the default is automatic
 cfg.spherify          = ft_getopt(cfg, 'spherify', 'no');
 cfg.headshape         = ft_getopt(cfg, 'headshape');
 cfg.symmetry          = ft_getopt(cfg, 'symmetry');
-cfg.spmversion        = ft_getopt(cfg, 'spmversion', 'spm8');
+cfg.spmversion        = ft_getopt(cfg, 'spmversion', 'spm12');
 cfg.headmodel         = ft_getopt(cfg, 'headmodel');
 cfg.sourcemodel       = ft_getopt(cfg, 'sourcemodel');
 cfg.unit              = ft_getopt(cfg, 'unit');
@@ -174,7 +174,9 @@ end
 
 % the source model can be constructed in a number of ways
 if isempty(cfg.method)
-  if isfield(cfg, 'xgrid') && ~ischar(cfg.xgrid)
+  if isfield(cfg, 'sourcemodel') && ischar(cfg.sourcemodel)
+    cfg.method = 'basedonfile';
+  elseif isfield(cfg, 'xgrid') && ~ischar(cfg.xgrid)
     cfg.method = 'basedongrid'; % regular 3D grid with explicit specification
   elseif isfield(cfg.sourcemodel, 'pos')
     cfg.method = 'basedonpos'; % using user-supplied positions, which can be regular or irregular
@@ -190,8 +192,6 @@ if isempty(cfg.method)
     cfg.method = 'basedonresolution'; % regular 3D grid with specification of the resolution
   elseif ~isempty(cfg.headmodel)
     cfg.method = 'basedonvol'; % surface mesh based on inward shifted brain surface from volume conductor
-  elseif isfield(cfg, 'sourcemodel') && ischar(cfg.sourcemodel)
-    cfg.method = 'basedonfile';
   else
     ft_error('incorrect cfg specification for constructing a sourcemodel');
   end
@@ -650,6 +650,14 @@ if isfield(sourcemodel, 'unit')
 else
   % the units were specified by the user or determined automatically, assign them to the source model
   sourcemodel.unit = cfg.unit;
+end
+
+% do some sanity checks
+if isfield(sourcemodel, 'filter')
+  assert(numel(sourcemodel.filter) == size(sourcemodel.pos, 1), 'the number of precomputed filters does not match number of source positions');
+end
+if isfield(sourcemodel, 'leadfield')
+  assert(numel(sourcemodel.leadfield) == size(sourcemodel.pos, 1), 'the number of precomputed leadfields does not match number of source positions');
 end
 
 if strcmp(cfg.spherify, 'yes')

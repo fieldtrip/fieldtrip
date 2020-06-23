@@ -2,6 +2,7 @@ function test_bug1448
 
 % MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 
 % this function tests whether the mask is kept inside the call to singleplotTFR
