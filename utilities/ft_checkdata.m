@@ -1808,7 +1808,10 @@ probabilistic = probabilistic(sel);
 % get the volume of a cubic element
 if isfield(segmentation, 'unit')
   voxelvolume = abs(det(segmentation.transform(1:3,1:3)));
-  voxelunit = sprintf('%s^3', segmentation.unit);
+  voxelunit   = sprintf('%s^3', segmentation.unit);
+  % convert to cubic centimeter, which corresponds to milliliter
+  voxelvolume = voxelvolume*ft_scalingfactor(voxelunit, 'cm^3');
+  voxelunit   = 'ml';
 else
   voxelvolume = 1;
   voxelunit = 'voxels';
