@@ -132,9 +132,7 @@ elseif nargin==1 && ischar(varargin{1}) && strcmp(varargin{1}, 'close')
     case 'gui'
       % close the waitbar dialog
       close(h);
-    case {'text'}
-      % do not go to the next line
-    case {'etf', 'dial', 'textbar'}
+    case {'text', 'etf', 'dial', 'textbar'}
       % finish by going to the next line
       fprintf('\n');
   end
@@ -155,9 +153,7 @@ elseif nargin==1 && ischar(varargin{1}) && strcmp(varargin{1}, 'close')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 else
   
-  if isfield(ft_default, 'progress') &&...
-      isfield(ft_default.progress, 'noerase') &&...
-      ft_default.progress.noerase
+  if isfield(ft_default, 'progress') && isfield(ft_default.progress, 'noerase') && ft_default.progress.noerase
     strlen = 0;
     ft_default.progress.noerase = 0;
   end
@@ -182,7 +178,7 @@ else
     return;
   elseif (varargin{1}-p)<0.01 && strcmp(t, 'etf')
     % display should not be updated it the difference is less than one percent
-    % return;
+    return;
   end
   
   % count the number of updates, for debugging
