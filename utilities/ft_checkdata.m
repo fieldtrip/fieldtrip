@@ -1822,7 +1822,7 @@ if all(indexed)
   % give feedback about each of the tissues in each of the volumnes
   totalvolume = prod(segmentation.dim)*voxelvolume;
   for k = 1:numel(fn)
-    ft_info('The volume of each of the segmented compartments in "%s" is:', fn{k});
+    ft_info('the volume of each of the segmented compartments in "%s" is', fn{k});
     if ~isfield(segmentation, [fn{k} 'label'])
       % this will add the xxxlabel field with default labels
       segmentation = fixsegmentation(segmentation, fn(k), 'indexed');
@@ -1848,6 +1848,7 @@ elseif all(probabilistic)
   width = max(cellfun(@length, fn)); width = max(width, 15);
   totalvolume  = prod(segmentation.dim)*voxelvolume;
   summedvolume = 0;
+  ft_info('the volume of each of the segmented compartments is');
   for k = 1:numel(fn)
     tissuelabel = fn{k};
     tissueprobability = segmentation.(tissuelabel);
