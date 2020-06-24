@@ -2,7 +2,7 @@ function [Cf, Cr, Pr, Ntrials, cfg] = prepare_freq_matrices(cfg, freq)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that converts a freq structure into Cf, Cr and Pr
-% this is used in sourecanalysis
+% this is used in FT_SOURCEANALYSIS
 %
 % This function returns data matrices with a channel order that is consistent
 % with the original channel order in the data.

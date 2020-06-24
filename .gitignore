@@ -28,3 +28,5 @@ realtime/bin/*/test_gethdr
 realtime/bin/*/test_nslookup
 realtime/bin/*/test_pthread
 realtime/bin/*/test_waitdat
+
+external/npmk/NPMKverChecker.dat

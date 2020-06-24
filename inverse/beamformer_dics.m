@@ -37,12 +37,12 @@ function [dipout] = beamformer_dics(dip, grad, headmodel, dat, C, varargin)
 %
 % These options influence the forward computation of the leadfield
 %   'reducerank'      = 'no', or number (default = 3 for EEG, 2 for MEG)
-%   'backproject'     = 'yes' or 'no',  determines when reducerank is applied whether the 
-%                        lower rank leadfield is projected back onto the original linear 
+%   'backproject'     = 'yes' or 'no',  determines when reducerank is applied whether the
+%                        lower rank leadfield is projected back onto the original linear
 %                        subspace, or not (default = 'yes')
 %   'normalize'       = 'yes' or 'no' (default = 'no')
 %   'normalizeparam'  = depth normalization parameter (default = 0.5)
-%   'weight'          = number or Nx1 vector, weight for each dipole position to compensate 
+%   'weight'          = number or Nx1 vector, weight for each dipole position to compensate
 %                        for the size of the corresponding patch (default = 1)
 %
 % These options influence the mathematical inversion of the cross-spectral density matrix
@@ -199,7 +199,6 @@ if ~isempty(Cr) && ~isempty(Pr) && isempty(refdip)
 elseif isempty(Cr) && isempty(Pr) && ~isempty(refdip)
   % compute cortico-cortical coherence with a dipole at the reference position
   submethod = 'dics_refdip';
-  
   % check for forbidden options in combination with this submethod
   if hassubspace || ~isempty(subspace)
     ft_error('subspace projections are not supported for beaming cortico-cortical coherence');
@@ -272,7 +271,7 @@ elseif ~isempty(subspace)
   else
     C_pre_subspace  = C;
     C               = subspace*C*subspace';
-    % here the subspace can be different from the singular vectors of C, so we 
+    % here the subspace can be different from the singular vectors of C, so we
     % have to do the sandwiching as opposed to line 256
     if strcmp(realfilter, 'yes')
       invC = ft_inv(real(C), invopt{:});
@@ -308,19 +307,19 @@ if strcmp(submethod, 'dics_refdip')
       % this is very old behavior: refdip is assumed to be a 1x3 position vector
       refpos     = refdip; clear refdip;
       refdip.pos = refpos;
-    end 
-    % now refdip is always a struct 
+    end
+    % now refdip is always a struct
     if isfield(refdip, 'leadfield') % check if precomputed leadfield is present
       assert(iscell(refdip.leadfield) && numel(refdip.leadfield)==1);
       lf1 = refdip.leadfield{1};
-    elseif isfield(refdip, 'pos') 
+    elseif isfield(refdip, 'pos')
       assert(isnumeric(refdip.pos) && numel(refdip.pos)==3);
       lf1 = ft_compute_leadfield(refdip.pos, grad, headmodel, leadfieldopt{:});
     end
     if isfield(refdip, 'mom') % check for fixed orientation
       lf1 = lf1 * refdip.mom(:);
     end
-      
+    
     % construct the spatial filter
     switch weightnorm
       case 'nai'
@@ -331,7 +330,7 @@ if strcmp(submethod, 'dics_refdip')
         % Unit-noise gain minimum variance (aka Borgiotti-Kaplan) beamformer
         denom = pinv(lf1' * invC * lf1);
         gamma = denom * (lf1' * invC_squared * lf1) * denom;
-  
+        
         % compute the spatial filter, as per eqn. 4.85
         filt1 = diag(1./sqrt(diag(gamma))) * denom * lf1' * invC;
       case 'arraygain'
@@ -341,17 +340,18 @@ if strcmp(submethod, 'dics_refdip')
       case {'unitgain' 'no'}
         % this is the 'standard' unit gain constraint spatial filter: filt*lf=I, applies both to vector and scalar leadfields
         filt1 = pinv(lf1' * invC * lf1) * lf1' * invC; % Gross eqn. 3 & van Veen eqn. 23, use PINV/SVD to cover rank deficient leadfield
-    otherwise
+      otherwise
+        ft_error('unsupported option for weightnorm');
     end
   end
   
   % compute the power of the reference dipole location
   if powlambda1
-    P = lambda1(filt1 * C * ctranspose(filt1));      % compute the power at the first dipole location, Gross eqn. 8
+    Pr = lambda1(filt1 * C * ctranspose(filt1));      % compute the power at the first dipole location, Gross eqn. 8
   elseif powtrace
     Pr = real(trace(filt1 * C * ctranspose(filt1)));  % compute the power at the first dipole location
   end
-end
+end % if dics_refdip
 
 % start the scanning with the proper metric
 ft_progress('init', feedback, 'scanning grid');
@@ -359,9 +359,9 @@ for i=1:size(dip.pos,1)
   if hasfilter
     % precomputed filter is provided, the leadfield is not needed
     filt = dip.filter{i};
-
+    
   else
-
+    
     if hasleadfield && hasmom && size(dip.mom, 1)==size(dip.leadfield{i}, 2)
       % reuse the leadfield that was previously computed and project
       lf = dip.leadfield{i} * dip.mom(:,i);
@@ -378,7 +378,7 @@ for i=1:size(dip.pos,1)
       % compute the leadfield
       lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, leadfieldopt{:});
     end
-
+    
     if hassubspace
       % do subspace projection of the forward model
       lf = dip.subspace{i} * lf;
@@ -393,14 +393,14 @@ for i=1:size(dip.pos,1)
       % do subspace projection of the forward model only
       lforig = lf;
       lf     = subspace * lf;
-    
+      
       % according to Kensuke's paper, the eigenspace bf boils down to projecting
       % the 'traditional' filter onto the subspace spanned by the first k eigenvectors
       % [u,s,v] = svd(Cy); filt = ESES*filt; ESES = u(:,1:k)*u(:,1:k)';
       % however, even though it seems that the shape of the filter is identical to
       % the shape it is obtained with the following code, the w*lf=I does not hold.
     end
-
+    
     if fixedori
       switch(weightnorm)
         case {'unitnoisegain','nai'}
@@ -493,29 +493,32 @@ for i=1:size(dip.pos,1)
   elseif powtrace
     dipout.pow(i,1) = real(trace(cfilt)); % compute the power at the dipole location
   end
+  
   if strcmp(submethod, 'dics_refchan')
     % compute the cross-spectrum between the dipole and the reference channel
     cfilt = filt*Cr; % Gross eqn. 6, replaces cfilt computed above
     if powlambda1
       coh = lambda1(cfilt)^2 / (dipout.pow(i,1) * Pr); % Gross eqn. 9
     elseif powtrace
-      coh = norm(cfilt)^2 / (dipout.pow(i,1) * Pr); 
+      coh = norm(cfilt)^2 / (dipout.pow(i,1) * Pr);
     end
-    dipout.coh(i,1) = coh;      
+    dipout.coh(i,1) = coh;
   elseif strcmp(submethod, 'dics_refdip')
     % compute the cross-spectrum between the reference dipole and the dipole
     cfilt = filt1 * C * ctranspose(filt); % Gross eqn. 6, replaces cfilt computed above
     if powlambda1
       coh = lambda1(cfilt)^2 / (dipout.pow(i,1) * Pr); % Gross eqn. 9
     elseif powtrace
-      coh = norm(cfilt)^2 / (dipout.pow(i,1) * Pr); 
+      coh = norm(cfilt)^2 / (dipout.pow(i,1) * Pr);
     end
-    dipout.coh(i,1) = coh;      
+    dipout.coh(i,1) = coh;
   end
+  
   if keepcsd
     % keep the dipole's csd or the dipole-ref cross-spectrum in the output
     dipout.csd{i,1} = cfilt;
   end
+  
   if projectnoise
     if powlambda1
       dipout.noise(i,1) = noise * lambda1(filt * ctranspose(filt));
@@ -526,6 +529,7 @@ for i=1:size(dip.pos,1)
       dipout.noisecsd{i,1} = noise * filt * ctranspose(filt);
     end
   end
+  
   if keepfilter
     if ~isempty(subspace)
       dipout.filter{i,1} = filt*subspace; %FIXME should this be subspace, or pinv(subspace)?
@@ -533,6 +537,7 @@ for i=1:size(dip.pos,1)
       dipout.filter{i,1} = filt;
     end
   end
+  
   if keepleadfield
     if ~isempty(subspace)
       dipout.leadfield{i,1} = lforig;
@@ -541,7 +546,7 @@ for i=1:size(dip.pos,1)
     end
   end
   ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
-end
+end % for each dipole position
 ft_progress('close');
 
 % reassign the scan values over the inside and outside grid positions
@@ -604,4 +609,3 @@ else
     X = V(:,1:r)*s*U(:,1:r)';
   end
 end
-

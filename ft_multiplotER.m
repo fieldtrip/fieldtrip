@@ -520,7 +520,7 @@ for m=1:length(selchan)
 end % for number of channels
 
 % plot the layout, labels and outline
-ft_plot_layout(cfg.layout, 'box', istrue(cfg.box), 'label', istrue(cfg.showlabels), 'outline', istrue(cfg.showoutline), 'point', 'no', 'mask', 'no', 'fontsize', cfg.fontsize, 'labelyoffset', 1.4*median(cfg.layout.height/2), 'labelalignh', 'center', 'chanindx', find(~ismember(cfg.layout.label, {'COMNT', 'SCALE'})), 'interpreter', cfg.interpreter);
+ft_plot_layout(cfg.layout, 'box', cfg.box, 'label', cfg.showlabels, 'outline', cfg.showoutline, 'point', 'no', 'mask', 'no', 'fontsize', cfg.fontsize, 'labelyoffset', 1.4*median(cfg.layout.height/2), 'labelalignh', 'center', 'chanindx', find(~ismember(cfg.layout.label, {'COMNT', 'SCALE'})), 'interpreter', cfg.interpreter);
 
 % write comment
 if istrue(cfg.showcomment)
