@@ -2,7 +2,7 @@ function [Cf, Cr, Pr, Ntrials, cfg] = prepare_freq_matrices(cfg, freq)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that converts a freq structure into Cf, Cr and Pr
-% this is used in sourecanalysis
+% this is used in FT_SOURCEANALYSIS
 %
 % This function returns data matrices with a channel order that is consistent
 % with the original channel order in the data.
@@ -50,7 +50,7 @@ else
 end
 
 % select from the frequency dimension
-if any(strcmp(tok, 'freq')),
+if any(strcmp(tok, 'freq'))
   % select the frequency of interest
   tmpcfg             = [];
   tmpcfg.frequency   = cfg.frequency;
@@ -62,7 +62,7 @@ if any(strcmp(tok, 'freq')),
 end
 
 % select from the time dimension
-if any(strcmp(tok, 'time')),
+if any(strcmp(tok, 'time'))
   % select the latency of interest for time-frequency data
   tmpcfg         = [];
   tmpcfg.latency = cfg.latency;
@@ -94,7 +94,7 @@ tok = tokenize(freq.dimord, '_');
 
 % update the cfg
 cfg.channel     = freq.label(chanindx);
-if any(strncmp(tok, 'rpt', 3)),
+if any(strncmp(tok, 'rpt', 3))
   Cf = freq.crsspctrm(:,chanindx,chanindx);
 else
   Cf = freq.crsspctrm(chanindx,chanindx);
@@ -102,10 +102,10 @@ end
 
 if isfield(cfg, 'refchan') && ~isempty(cfg.refchan)
   refindx = match_str(freq.label, cfg.refchan);
-  if isempty(refindx),
+  if isempty(refindx)
     ft_error('the requested reference channel is not found in the data');
   end
-  if any(strncmp(tok, 'rpt', 3)),
+  if any(strncmp(tok, 'rpt', 3))
     Cr = freq.crsspctrm(:,chanindx,refindx);
     Pr = freq.crsspctrm(:,refindx,refindx);
   else
