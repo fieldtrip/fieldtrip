@@ -40,10 +40,7 @@ Cf = [];
 Cr = [];
 Pr = [];
 
-tok = tokenize(freq.dimord, '_');
-if any(strcmp(tok, 'rpttap'))
-  Ntrials = size(freq.cumtapcnt,1);
-elseif any(strcmp(tok, 'rpt'))
+if startsWith(freq.dimord, 'rpt')
   Ntrials = size(freq.cumtapcnt,1);
 else
   Ntrials = 1;
@@ -87,14 +84,13 @@ if ~hasfull
 		Ntrials = 1;
 	end
 end
-tok = tokenize(freq.dimord, '_');
 
 % extract the csd-matrix for the channels-of-interest
 [dum, chanindx] = match_str(cfg.channel, freq.label);
 
 % update the cfg
 cfg.channel     = freq.label(chanindx);
-if any(strncmp(tok, 'rpt', 3))
+if startsWith(freq.dimord, 'rpt')
   Cf = freq.crsspctrm(:,chanindx,chanindx,:,:);
 else
   Cf = freq.crsspctrm(chanindx,chanindx,:,:);
@@ -105,7 +101,7 @@ if isfield(cfg, 'refchan') && ~isempty(cfg.refchan)
   if isempty(refindx)
     ft_error('the requested reference channel is not found in the data');
   end
-  if any(strncmp(tok, 'rpt', 3))
+  if startsWith(freq.dimord, 'rpt')
     Cr = freq.crsspctrm(:,chanindx,refindx,:,:);
     Pr = freq.crsspctrm(:,refindx,refindx,:,:);
   else
