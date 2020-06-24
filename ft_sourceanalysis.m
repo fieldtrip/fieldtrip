@@ -328,12 +328,9 @@ elseif isfreq
   source = copyfields(data, source, {'time', 'freq', 'cumtapcnt'});
   
   if ismember(cfg.method, {'pcc' 'dics'})
-    % HACK the remainder of the code expects a single number -> JM QUESTION:
-    % why is this not data.freq and data.time, since ft_selectdata performs
-    % the frequency/latency selection + it does the averaging.
-    cfg.frequency = mean(cfg.frequency);
+    cfg.frequency = data.freq; % should be a single number here
     if isfield(data, 'time')
-      cfg.latency   = mean(cfg.latency);
+      cfg.latency   = data.time; % should be a single number here
     end
 
   end
