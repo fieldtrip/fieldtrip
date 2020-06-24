@@ -137,13 +137,13 @@ for i=1:ntrl
       % methods.
       
       if begsample==1
-        % there may be nans at the beginning, replace the data with the first value that is not nan
+        % there may be nans at the beginning, replace the data with mean of the values that are not nan
         f = find(~isnan(yy), 1, 'first');
-        yy(1:f-1) = yy(f);
+        yy(1:f-1) = nanmean(yy);
       elseif endsample==numel(dat)
-        % there may be nans at the end, replace the data with the first value that is not nan
+        % there may be nans at the end, replace the data with mean of the values that are not nan
         f = find(~isnan(yy), 1, 'last');
-        yy(f+1:end) = yy(f);
+        yy(f+1:end) = nanmean(yy);
       end
       
       % insert the interpolated data

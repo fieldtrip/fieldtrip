@@ -98,6 +98,10 @@ method = {
   'makima'
   };
 
+figure
+plot(heartrate_rej.time{1}, heartrate_rej.trial{1}(1,:))
+title('original');
+
 for i=1:numel(method)
   cfg = [];
   cfg.prewindow = 0.005;
