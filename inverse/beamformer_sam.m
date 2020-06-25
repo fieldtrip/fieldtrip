@@ -314,7 +314,7 @@ for diplop=1:size(dip.pos,1)
   if ~isempty(dat)
     dipout.mom{diplop} = SAMweights * dat;
   end
-  if strcmp(fixedori,'moiseev')
+  if strcmp(fixedori,'moiseev') && exist('gain', 'var')
     % get pseudoZ
     Ng                      = gain' * Nproj * gain;
     Sg                      = gain' * Sproj * gain; 
