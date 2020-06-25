@@ -304,6 +304,7 @@ for diplop=1:size(dip.pos,1)
     gain        = lf * opt_vox_or;
     trgain_invC = gain' * inv_cov;
     SAMweights  = trgain_invC / (trgain_invC * gain);  
+    
   end
  
   % remember all output details for this dipole
@@ -312,6 +313,12 @@ for diplop=1:size(dip.pos,1)
   dipout.filter{diplop} = SAMweights;
   if ~isempty(dat)
     dipout.mom{diplop} = SAMweights * dat;
+  end
+  if strcmp(fixedori,'moiseev')
+    % get pseudoZ
+    Ng                      = gain' * Nproj * gain;
+    Sg                      = gain' * Sproj * gain; 
+    dipout.pseudoZ(diplop)  = Sg / Ng;  
   end
   
   ft_progress(diplop/size(dip.pos,1), 'scanning grid %d/%d\n', diplop, size(dip.pos,1));
@@ -348,5 +355,7 @@ if isfield(dipout, 'noise')
   dipout.noise( originside) = dipout.noise;
   dipout.noise(~originside) = nan;
 end
-
-return % end of beamformer_sam() main function
+if isfield(dipout, 'pseudoZ')
+  dipout.pseudoZ( originside) = dipout.pseudoZ;
+  dipout.pseudoZ(~originside) = nan;
+end
