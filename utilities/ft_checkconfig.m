@@ -553,6 +553,9 @@ if ~isempty(createsubcfg)
           'tolerance'
           'invmethod'
           'fixedori'
+          'noisecov'
+          'toi'
+          'latency_ori'
           };
 
       case 'mvl'

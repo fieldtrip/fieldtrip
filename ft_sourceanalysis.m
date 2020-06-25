@@ -884,10 +884,16 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
   
   if hasbaseline
     % baseline and active are only available together for resampling purposes,
+    % or as a noise covariance for SAM beamforming
     % hence I assume here that there are multiple trials in both
-    baseline.avg   = baseline.avg(datchanindx,:);
-    baseline.cov   = baseline.cov(:,datchanindx,datchanindx);
-    baseline.trial = baseline.trial(:,datchanindx,:);
+    if isfield(baseline, 'avg')
+      baseline.avg   = baseline.avg(datchanindx,:);
+      baseline.cov   = baseline.cov(datchanindx,datchanindx);
+    else
+      baseline.cov   = baseline.cov(:,datchanindx,datchanindx);
+      baseline.trial = baseline.trial(:,datchanindx,:);
+    end
+    
     % this is required for averaging 2 conditions using prepare_resampled_data
     cfg2 = [];
     cfg2.numcondition = 2;
@@ -1079,13 +1085,21 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
       fprintf('scanning repetition %d\n', i);
       dip(i) = ft_eloreta(sourcemodel, sens, headmodel, squeeze_avg, squeeze_Cy, methodopt{:}, leadfieldopt{:});
     end
-  elseif strcmp(cfg.method, 'sam')
+  elseif strcmp(cfg.method, 'sam')   
+    % convert time in samples for Evoked Related SAM
+    latency = ft_getopt(methodopt, 'latency_toi');
+    toi     = ft_getopt(methodopt, 'toi');
+    if isempty(toi) && ~isempty(latency) && ~isequal(latency, 'all')
+      toi(1) = nearest(data.time, latency(1));
+      toi(2) = nearest(data.time, latency(2));
+      methodopt = ft_setopt(methodopt, 'toi', toi);
+    end
+    
     for i=1:Nrepetitions
-      squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
       squeeze_Cy  = reshape(Cy(i,:,:), [size_Cy(2)  size_Cy(3)]);
+      squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
       fprintf('scanning repetition %d\n', i);
-      squeeze_avg=reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
-      dip(i) = beamformer_sam(sourcemodel, sens, headmodel, squeeze_avg, squeeze_Cy, methodopt{:}, leadfieldopt{:});
+      dip(i) = beamformer_sam(sourcemodel, sens, headmodel, squeeze_avg, squeeze_Cy, methodopt{:}, leadfieldopt{:});    
     end
   elseif strcmp(cfg.method, 'pcc')
     for i=1:Nrepetitions
