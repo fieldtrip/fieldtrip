@@ -104,7 +104,7 @@ origpos    = dip.pos;
 % select only the dipole positions inside the brain for scanning
 dip.pos    = dip.pos(originside,:);
 dip.inside = true(size(dip.pos,1),1);
-if isfield(dip, 'mom'),
+if isfield(dip, 'mom')
   dip.mom = dip.mom(:,originside);
 end
 if isfield(dip, 'leadfield')
@@ -123,12 +123,12 @@ end
 % compute leadfield
 if hasfilter
   % it does not matter whether the leadfield is there or not, it will not be used
-  fprintf('using pre-computed spatial filter: some of the specified options will not have an effect\n');
+  ft_info('using pre-computed spatial filter: some of the specified options will not have an effect\n');
 elseif hasleadfield
   % using the computed leadfields
-  fprintf('using pre-computed leadfields: some of the specified options will not have an effect\n');
+  ft_info('using pre-computed leadfields: some of the specified options will not have an effect\n');
 else
-  fprintf('computing forward model\n');
+  ft_info('computing forward model\n');
   if isfield(dip, 'mom')
     for i=size(dip.pos,1)
       % compute the leadfield for a fixed dipole orientation
@@ -141,14 +141,6 @@ else
       dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
     end
   end
-end
-
-if size(dat,1)==size(dat,2)&&sum(sum(dat-dat'))<10^-5*sum(diag(dat))
-  % the data is a COV or CSD matrix, compute source power
-  regulardata = false;
-else
-  % it is regular data, compute dipole moment time-series or Fourier coefficients
-  regulardata = true;
 end
 
 %% compute the spatial filter
@@ -173,7 +165,7 @@ if ~hasfilter
   
   % Take the rieal part of the noise cross-spectral density matrix
   if isreal(noisecov) == 0
-    fprintf('Taking the real part of the noise cross-spectral density matrix\n');
+    ft_info('Taking the real part of the noise cross-spectral density matrix\n');
     noisecov = real(noisecov);
   end
   
@@ -185,7 +177,7 @@ if ~hasfilter
     w = pinv(lf);
     
   elseif ~isempty(noisecov)
-    fprintf('computing the solution where the noise covariance is used for regularisation\n');
+    ft_info('computing the solution where the noise covariance is used for regularisation\n');
     % the noise covariance has been given and can be used to regularise the solution
     if isempty(sourcecov)
       sourcecov = speye(Nsource);
@@ -195,12 +187,12 @@ if ~hasfilter
     R = sourcecov;
     C = noisecov;
     
-    if dowhiten,
-      fprintf('prewhitening the leadfields using the noise covariance\n');
+    if dowhiten
+      ft_info('prewhitening the leadfields using the noise covariance\n');
       
       % compute the prewhitening matrix
       if ~isempty(noiselambda)
-        fprintf('using a regularized noise covariance matrix\n');
+        ft_info('using a regularized noise covariance matrix\n');
         % note: if different channel types are present, one should probably load the diagonal with channel-type specific stuff
         [U,S,V] = svd(C+eye(size(C))*noiselambda);
       else
@@ -222,7 +214,7 @@ if ~hasfilter
       % channel type covariance matrices prewhitening should be applied in
       % order for this to make sense (otherwise the diagonal elements of C
       % have different units)
-      fprintf('scaling the source covariance\n');
+      ft_info('scaling the source covariance\n');
       scale = trace(A*(R*A'))/trace(C);
       R     = R./scale;
     end
@@ -233,7 +225,7 @@ if ~hasfilter
       lambda = trace(A * R * A')/(trace(C)*snr^2);
     end
     
-    if dowhiten,
+    if dowhiten
       % as documented on MNE website, this is replacing the part of the code below, it gives
       % more stable results numerically.
       Rc      = chol(R, 'lower');
@@ -251,7 +243,7 @@ if ~hasfilter
       if cond(denom)<1e12
         w = R * A' / denom;
       else
-        fprintf('taking pseudo-inverse due to large condition number\n');
+        ft_info('taking pseudo-inverse due to large condition number\n');
         w = R * A' * pinv(denom);
       end
     end
@@ -259,24 +251,25 @@ if ~hasfilter
   end % if empty noisecov
   
   %% for each of the timebins, estimate the source strength
-  if isreal(dat) == 1
-    fprintf('The input are sensors time-series: Computing the dipole moments\n')
+  if isempty(dat)
+    ft_info('The input data is empty, dipole moment cannot be computed');
+    mom = [];
+  elseif isreal(dat)
+    ft_info('The input data are real-valued, assuming sensor time-series: Computing the dipole moments\n')
     mom = w * dat;
-  elseif size(dat,1)==size(dat,2)&&sum(sum(dat-dat'))<10^-5*sum(diag(dat))
-    fprintf('The input is a sensor level cross-spectral density: Computing source level power\n')
-    pow = real(sum((w*dat).*w,2));
   else
-    fprintf('The input is are sensor level Fourier-coefficients: Computing source level Fourier coefficients\n')
-    mom = w * dat;
+    ft_info('The input data are complex-valued, assuming sensor level Fourier-coefficients: Computing source level Fourier coefficients\n')
+    siz = [size(dat) 1 1];
+    mom = reshape(w * dat(:,:), [size(w,1) siz(2:end)]);
   end
   
   % assign the estimated source strength to each dipole
-  if regulardata == 1
+  if ~isempty(mom)
     n = 1;
     for i=1:size(dip.pos,1)
       cbeg = n;
       cend = n + size(dip.leadfield{i}, 2) - 1;
-      dipout.mom{i} = mom(cbeg:cend,:);
+      dipout.mom{i,1} = mom(cbeg:cend,:,:,:);
       n = n + size(dip.leadfield{i}, 2);
     end
   end
@@ -294,19 +287,20 @@ elseif hasfilter
 end % if hasfilter
 
 % for convenience also compute power (over the three orientations) at each location and for each time
-if regulardata == 1
+if isempty(dat)
+  dipout.pow = nan(size(dip.pos,1), 1);
+elseif isreal(dat)
   dipout.pow = nan(size(dip.pos,1), size(dat,2));
   for i=1:size(dip.pos,1)
     dipout.pow(i,:) = sum(abs(dipout.mom{i}).^2, 1);
   end
 else
-  dipout.pow = nan(size(dip.pos,1), 1);
-  n = 1;
+  siz = [size(dipout.mom{1}) 1];
+  dipout.pow = nan([size(dip.pos,1), siz(3:end)]);
   for i=1:size(dip.pos,1)
-    cbeg = n;
-    cend = n + size(dip.leadfield{i}, 2) - 1;
-    dipout.pow(i,:) = sum(pow(cbeg:cend),1);
-    n = n + size(dip.leadfield{i}, 2);
+    thismom = dipout.mom{i};
+    thispow = shiftdim(sum(mean(abs(thismom).^2,2)),1);
+    dipout.pow(i,:,:,:) = thispow; % NOTE that this does not account for different numbers of tapers per trial
   end
 end
 

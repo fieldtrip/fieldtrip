@@ -680,10 +680,12 @@ switch fileformat
       
     else
       % the file does not exist
-      ft_warning('cannot locate %s, making fake tissue labels', filename2);
+      ft_warning('cannot locate %s, making default tissue labels', filename2);
+      
       value = [];
       label = {};
       for i=1:max(brick0(:))
+        % this is consistent with FIXSEGMENTATION
         value(i) = i;
         label{i} = sprintf('tissue %d', i);
       end

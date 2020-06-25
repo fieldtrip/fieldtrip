@@ -158,23 +158,31 @@ if ~isfield(dip, 'filter')
 end
 
 % get the power
-dip.pow = zeros(size(dip.pos,1),1);
+siz_Cf  = [size(Cf) 1 1]; % Cf can have both a freq and time dimension
+dip.pow = zeros([size(dip.pos,1),siz_Cf(3:4)]);
 dip.ori = cell(size(dip.pos,1),1);
 for i=1:size(dip.pos,1)
-  csd        = dip.filter{i}*Cf*dip.filter{i}';
-  [u,s,vv]    = svd(real(csd));
-  dip.pow(i) = s(1);
-  dip.ori{i} = u(:,1);
+  dip.ori{i} = zeros([size(dip.filter{i},1) siz_Cf(3:4)]);   
+  for j=1:siz_Cf(3)
+    for k=1:siz_Cf(4)
+      csd               = dip.filter{i}*Cf(:,:,j,k)*dip.filter{i}';
+      [u,s,v]           = svd(real(csd));
+      dip.pow(i,j,k)    = s(1);
+      dip.ori{i}(:,j,k) = u(:,1);
+    end
+  end
+
 end
 
 % get the dipole moment
 if keepmom && ~isempty(dat)
+  siz = [size(dat) 1];
   % remove the dipole moment from the input
   if isfield(dip, 'mom')
     dip = rmfield(dip, 'mom');
   end
   for i=1:size(dip.pos,1)
-    dip.mom{i} = dip.filter{i}*dat;
+    dip.mom{i} = reshape(dip.filter{i}*dat(:,:), [size(dip.filter{i},1) siz(2:end)]);
   end
 end
 
@@ -184,8 +192,8 @@ dipout.pos     = origpos;
 
 % reassign the scan values over the inside and outside grid positions
 if isfield(dip, 'pow') % here pow is cell
-  dipout.pow( originside) = dip.pow;
-  dipout.pow(~originside) = nan;
+  dipout.pow( originside,:) = dip.pow;
+  dipout.pow(~originside,:) = nan;
 end
 if isfield(dip, 'ori') % here ori is cell
   dipout.ori( originside) = dip.ori;

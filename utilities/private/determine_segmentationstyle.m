@@ -14,7 +14,7 @@ for i=1:numel(fn)
   if numel(segmentation.(fn{i}))~=prod(dim)
     % this does not look like a segmentation
     continue
-  elseif strcmp(fn{i}, 'anatomy') || strcmp(fn{i}, 'posclusterslabelmat') || strcmp(fn{i}, 'negclusterslabelmat'),
+  elseif strcmp(fn{i}, 'anatomy') || strcmp(fn{i}, 'posclusterslabelmat') || strcmp(fn{i}, 'negclusterslabelmat')
     % these should not be interpreted as segmentation, also not when it is a uint8 or uint16 representation
     continue
   elseif iscell(segmentation.(fn{i}))

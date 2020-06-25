@@ -491,6 +491,7 @@ end
 % this is done on trial basis to save memory
 
 ft_progress('init', cfg.feedback, 'processing trials');
+trlcnt = []; % only some methods need this variable, but it needs to be defined outside the trial loop
 for itrial = 1:ntrials
   
   fbopt.i = itrial;
@@ -500,8 +501,7 @@ for itrial = 1:ntrials
   time = data.time{itrial};
   
   clear spectrum % in case of very large trials, this lowers peak mem usage a bit
-  trlcnt = []; % only some methods need this variable
-
+  
   % Perform specest call and set some specifics
   switch cfg.method
     

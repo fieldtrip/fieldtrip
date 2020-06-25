@@ -16,7 +16,7 @@ function [event] = ft_read_event(filename, varargin)
 %   'trigshift'      integer, number of samples to shift from flank to detect trigger value (default = 0)
 %   'chanindx'       list with channel numbers for trigger detection, specify -1 in case you don't want to detect triggers (default is automatic)
 %   'threshold'      threshold for analog trigger channels (default is system specific)
-%   'tolerance'      tolerance in samples when merging Neuromag analogue trigger channels (default = 1, meaning that an shift of one sample in both directions is compensated for)
+%   'tolerance'      tolerance in samples when merging Neuromag analogue trigger channels (default = 1, meaning that a shift of one sample in both directions is compensated for)
 %   'blocking'       wait for the selected number of events (default = 'no')
 %   'timeout'        amount of time in seconds to wait when blocking (default = 5)
 %   'password'       password structure for encrypted data set (only for mayo_mef30 and mayo_mef21)
@@ -1871,37 +1871,52 @@ switch eventformat
     
   case 'neuroomega_mat'
     
-    hdr = ft_read_header(filename, 'headerformat', eventformat, 'chantype', 'chaninfo');
+    hdr = ft_read_header(filename, 'headerformat', eventformat);
+    hdr_orig = hdr.orig.orig;
+    fields_orig=hdr.orig.fields; %getting digital event channels
     
-    fields_orig=who(hdr.orig); %getting digital event channels
+    % extracting time begin
+    if ismember('CANALOG_IN_1_TimeBegin',fields_orig)
+      TimeBegin = hdr_orig.('CANALOG_IN_1_TimeBegin');
+    else
+      ft_error('CANALOG_IN_1_TimeBegin required to load events');
+    end
+    
     fields_orig=fields_orig(startsWith(fields_orig,'CDIG_IN')); %compat/matlablt2016b/startsWidth.m
+    
+    if isempty(fields_orig)
+      ft_error('No NeuroOmega events in file %s',filename);
+    end
     
     rx=regexp(fields_orig,'^CDIG_IN_{1}(\d+)[a-zA-Z_]*','tokens');
     dig_channels=unique(cellfun(@(x) str2num(x{1}), [rx{:}]));
     
-    event.type=[]; event.sample=[]; event.value=[];
     if ~ismember(detectflank,{'up','down','both'})
-      ft_error('incorrect specification of ''detectflank''');
+      ft_error('incorrect specification of detectflank. Use up, down or both');
     end
     if ismember(detectflank,{'up','both'})
       for i=1:length(dig_channels)
         channel = ['CDIG_IN_' num2str(dig_channels(i)) '_Up'];
-        data = hdr.orig.(channel);
-        for j=1:length(hdr.orig.(channel))
+        data = hdr_orig.(channel);
+        t0 = hdr_orig.(['CDIG_IN_' num2str(dig_channels(i)) '_TimeBegin']) - TimeBegin;
+        Fs = hdr_orig.(['CDIG_IN_' num2str(dig_channels(i)) '_KHz']) * 1000;
+        for j=1:length(hdr_orig.(channel))
           event(end+1).type = channel;
           event(end  ).value = dig_channels(i);
-          event(end  ).sample = data(j);
+          event(end  ).sample = t0 + data(j) ./ Fs; %events in seconds from begging of file
         end
       end
     end
     if ismember(detectflank,{'down','both'})
       for i=1:length(dig_channels)
         channel = ['CDIG_IN_' num2str(dig_channels(i)) '_Down'];
-        data = hdr.orig.(channel);
-        for j=1:length(hdr.orig.(channel))
+        data = hdr_orig.(channel);
+        t0 = hdr_orig.(['CDIG_IN_' num2str(dig_channels(i)) '_TimeBegin']) - TimeBegin;
+        Fs = hdr_orig.(['CDIG_IN_' num2str(dig_channels(i)) '_KHz']) * 1000;
+        for j=1:length(hdr_orig.(channel))
           event(end+1).type = channel;
           event(end  ).value = dig_channels(i);
-          event(end  ).sample = data(j);
+          event(end  ).sample = t0 + data(j) ./ Fs; %events in seconds from begging of file
         end
       end
     end
@@ -2248,7 +2263,7 @@ switch eventformat
     
     % ensure that the filename contains a full path specification,
     % otherwise the low-level function fails
-    [p,f,e] = fileparts(filename);
+    [p,~,~] = fileparts(filename);
     if ~isempty(p)
       % this is OK
     elseif isempty(p)
@@ -2259,11 +2274,6 @@ switch eventformat
     % 'nosave' prevents the automatic conversion of
     % the .nev file as a .mat file
     orig = openNEV(filename, 'noread', 'nosave');
-    
-    if orig.MetaTags.SampleRes ~= 30000
-      error('sampling rate is different from 30 kHz');
-      % FIXME: why would this be a problem?
-    end
     
     fs             = orig.MetaTags.SampleRes; % sampling rate
     timestamps     = orig.Data.SerialDigitalIO.TimeStamp;

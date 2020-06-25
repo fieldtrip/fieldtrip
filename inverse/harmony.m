@@ -140,10 +140,10 @@ end
 %% harmony Parameters
 num_dip      = size(dip.leadfield{1}, 2);
 num_pos      = size(dip.leadfield, 2);
-num_comp     = ft_getopt(varargin, 'connected_components');
-num_harm     = ft_getopt(varargin, 'number_harmonics');
-filt_ord     = ft_getopt(varargin, 'filter_order');
-lc           = ft_getopt(varargin, 'filter_bs');
+num_comp     = ft_getopt(varargin, 'connected_components', 1);
+num_harm     = ft_getopt(varargin, 'number_harmonics',     5);
+filt_ord     = ft_getopt(varargin, 'filter_order',         5);
+lc           = ft_getopt(varargin, 'filter_bs',            5);
 
 %% Create the leadfield matrix
 
@@ -167,7 +167,7 @@ end
 %% Create brain harmonics matrix
 
 % Mesh harmonics
-[dum,H,d] = ct_mesh_spectrum(dip,num_harm,num_comp);
+[dum,H,d] = mesh_spectrum(dip,num_harm,num_comp);
 
 % Elimination of pathological zeroth frequencies and concatenating
 % harmonics numbers
@@ -253,7 +253,7 @@ elseif ~isempty(noisecov)
   R = sourcecov;
   C = noisecov;
   
-  if dowhiten,
+  if dowhiten
     fprintf('prewhitening the leadfields using the noise covariance\n');
     
     % compute the prewhitening matrix

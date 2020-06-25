@@ -75,12 +75,12 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 % the leadfields by reducing the rank (i.e. remove the weakest orientation), or by
 % normalizing each column.
 %   cfg.reducerank      = 'no', or number (default = 3 for EEG, 2 for MEG)
-%   cfg.backproject     = 'yes' or 'no',  determines when reducerank is applied whether the 
-%                         lower rank leadfield is projected back onto the original linear 
+%   cfg.backproject     = 'yes' or 'no',  determines when reducerank is applied whether the
+%                         lower rank leadfield is projected back onto the original linear
 %                         subspace, or not (default = 'yes')
 %   cfg.normalize       = 'yes' or 'no' (default = 'no')
 %   cfg.normalizeparam  = depth normalization parameter (default = 0.5)
-%   cfg.weight          = number or Nx1 vector, weight for each dipole position to compensate 
+%   cfg.weight          = number or Nx1 vector, weight for each dipole position to compensate
 %                         for the size of the corresponding patch (default = 1)
 %
 % Other configuration options are
@@ -211,6 +211,10 @@ else
   cfg.method = ft_getopt(cfg, 'method', []);
 end
 
+if isequal(cfg.method, 'harmony')
+  ft_error('Harmony does not work at present. Please contact the main developer of this method directly');
+end
+
 % put the low-level options pertaining to the source reconstruction method in their own field
 cfg = ft_checkconfig(cfg, 'createsubcfg',  cfg.method);
 % move some fields from cfg.method back to the top-level configuration
@@ -226,6 +230,7 @@ cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
 cfg = ft_checkconfig(cfg, 'createtopcfg', {'sourcemodel'});
 
 % get the low-level options for the inverse estimation method, these are method specific
+cfg.(cfg.method)               = ft_getopt(cfg, cfg.method);
 cfg.(cfg.method).keepfilter    = ft_getopt(cfg.(cfg.method), 'keepfilter',    'no');
 cfg.(cfg.method).keepcsd       = ft_getopt(cfg.(cfg.method), 'keepcsd',       'no');
 cfg.(cfg.method).keepmom       = ft_getopt(cfg.(cfg.method), 'keepmom',       'yes');
@@ -253,18 +258,18 @@ cfg.numpermutation   = ft_getopt(cfg, 'numpermutation',   100);
 cfg.wakewulf         = ft_getopt(cfg, 'wakewulf', 'yes');
 cfg.killwulf         = ft_getopt(cfg, 'killwulf', 'yes');
 cfg.channel          = ft_getopt(cfg, 'channel',  'all');
-cfg.supdip           = ft_getopt(cfg, 'supdip',        []);
 cfg.latency          = ft_getopt(cfg, 'latency',   'all');
 cfg.frequency        = ft_getopt(cfg, 'frequency', 'all');
+% these only apply to DICS and PCC
+cfg.refdip           = ft_getopt(cfg, 'refdip', []);
+cfg.supdip           = ft_getopt(cfg, 'supdip', []);
+cfg.refchan          = ft_getopt(cfg, 'refchan', []);
+cfg.supchan          = ft_getopt(cfg, 'supchan', []);
 
 if hasbaseline && (strcmp(cfg.randomization, 'no') && strcmp(cfg.permutation, 'no'))
   ft_error('input of two conditions only makes sense if you want to randomize or permute');
 elseif ~hasbaseline && (strcmp(cfg.randomization, 'yes') || strcmp(cfg.permutation, 'yes'))
   ft_error('randomization or permutation requires that you give two conditions as input');
-end
-
-if isfield(cfg, 'latency') && ischar(cfg.latency) && strcmp(cfg.latency, 'all') && istimelock
-  %error('specification of cfg.latency is only required for time-frequency data');
 end
 
 if sum([strcmp(cfg.jackknife, 'yes'), strcmp(cfg.bootstrap, 'yes'), strcmp(cfg.pseudovalue, 'yes'), strcmp(cfg.singletrial, 'yes'), strcmp(cfg.rawtrial, 'yes'), strcmp(cfg.randomization, 'yes'), strcmp(cfg.permutation, 'yes')])>1
@@ -275,12 +280,27 @@ if strcmp(cfg.rawtrial, 'yes') && isfield(cfg, 'sourcemodel') && ~isfield(cfg.so
   ft_warning('Using each trial to compute its own filter is not currently recommended. Use this option only with precomputed filters in cfg.sourcemodel.filter');
 end
 
+if ~isempty(cfg.refchan)
+  cfg.refchan = ft_channelselection(cfg.refchan, data.label);
+  assert(numel(cfg.refchan)>0, 'cfg.refchan is not present in the data');
+end
+if ~isempty(cfg.supchan)
+  cfg.supchan = ft_channelselection(cfg.supchan, data.label);
+  assert(numel(cfg.supchan)>0, 'cfg.supchan is not present in the data');
+end
+
+% make the selection of channels consistent with the data
+cfg.channel = ft_channelselection(cfg.channel, data.label);
+% keep the refchan and supchan
+cfg.channel = ft_channelselection([cfg.channel(:); cfg.refchan(:)], data.label);
+cfg.channel = ft_channelselection([cfg.channel(:); cfg.supchan(:)], data.label);
+
 % start with an empty output structure
 source = [];
 
 if istimelock
-  % add the time axis to the output
   tmpcfg = keepfields(cfg, {'channel', 'latency', 'showcallinfo'});
+  % keep the time axis in the output
   tmpcfg.avgovertime = 'no';
   data = ft_selectdata(tmpcfg, data);
   % restore the provenance information
@@ -290,39 +310,29 @@ if istimelock
   source = copyfields(data, source, {'time'});
   
 elseif isfreq
-  tmpcfg = keepfields(cfg, {'channel', 'latency', 'frequency', 'refchan', 'nanmean', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'channel', 'latency', 'frequency', 'nanmean', 'showcallinfo'});
   
-  % ensure that the refchan is kept, if present
-  if isfield(tmpcfg, 'refchan') && ~isempty(tmpcfg.refchan) && isempty(match_str(tmpcfg.channel, tmpcfg.refchan))
-    hasrefchan = true;
-  else
-    hasrefchan = false;
+  if ismember(cfg.method, {'pcc' 'dics'})
+    tmpcfg.avgoverfreq = 'yes';
+    if isfield(data, 'time')
+      tmpcfg.avgovertime = 'yes';
+    end
   end
-  
-  if hasrefchan
-    if ischar(tmpcfg.refchan), tmpcfg.refchan = {tmpcfg.refchan}; end
-    tmpchannel     = ft_channelselection(tmpcfg.channel, data.label); % the channels needed for the spatial filter
-    tmpcfg.channel = cat(1, tmpchannel, tmpcfg.refchan);
-    tmpcfg         = rmfield(tmpcfg, 'refchan');
-  end
-  
-  tmpcfg.avgoverfreq = 'yes';
-  if isfield(data, 'time')
-    tmpcfg.avgovertime = 'yes';
-  end
+  % include the refchan and supchan if specified
+  tmpcfg.channel = ft_channelselection([cfg.channel(:); cfg.refchan(:); cfg.supchan(:)], data.label);
   data = ft_selectdata(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
   
-  if hasrefchan, cfg.channel = match_str(data.label, tmpchannel); end
-  
   % copy the descriptive fields to the output
   source = copyfields(data, source, {'time', 'freq', 'cumtapcnt'});
   
-  % HACK the remainder of the code expects a single number
-  cfg.frequency = mean(cfg.frequency);
-  if isfield(data, 'time')
-    cfg.latency   = mean(cfg.latency);
+  if ismember(cfg.method, {'pcc' 'dics'})
+    cfg.frequency = data.freq; % should be a single number here
+    if isfield(data, 'time')
+      cfg.latency   = data.time; % should be a single number here
+    end
+
   end
 end
 
@@ -336,14 +346,40 @@ if isfreq && isfield(data, 'labelcmb')
   data = ft_checkdata(data, 'cmbrepresentation', 'full');
 end
 
-% ensure that a selection of channels is made consistent with the data
-cfg.channel = ft_channelselection(cfg.channel, data.label);
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % prepare the sourcemodel, headmodel, sensors and/or leadfields
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if isfield(cfg.sourcemodel, 'filter')
+if ~isempty(cfg.refdip) || ~isempty(cfg.supdip)
+  ft_notice('computing the leadfields on the fly');
+  
+  % the leadfields for refdip and supdip have to be computed on the fly; to ensure
+  % that the leadfields for the grid are consistent, these will also be computed on
+  % the fly
+  
+  if isfield(cfg.sourcemodel, 'leadfield')
+    ft_warning('ignoring the precomputed leadfield that are provided');
+    cfg.sourcemodel = rmfield(cfg.sourcemodel, 'leadfield');
+  end
+  if isfield(cfg.sourcemodel, 'filter')
+    ft_warning('ignoring the precomputed filters that are provided');
+    cfg.sourcemodel = rmfield(cfg.sourcemodel, 'filter');
+  end
+  
+  % collect and preprocess the electrodes/gradiometer and head model
+  [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
+  
+  % construct the dipole positions on which the source reconstruction will be done
+  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid', 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'reducerank', 'backproject', 'normalize', 'normalizeparam', 'weight', 'showcallinfo'});
+  tmpcfg.headmodel = headmodel;
+  if ft_senstype(sens, 'eeg')
+    tmpcfg.elec = sens;
+  elseif ft_senstype(sens, 'meg')
+    tmpcfg.grad = sens;
+  end
+  sourcemodel = ft_prepare_sourcemodel(tmpcfg);
+  
+elseif isfield(cfg.sourcemodel, 'filter')
   ft_notice('using precomputed filters, not computing any leadfields');
   sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'tri', 'dim', 'inside', 'filter', 'filterdimord', 'label', 'cfg'});
   
@@ -366,7 +402,12 @@ if isfield(cfg.sourcemodel, 'filter')
   end
   
   % ensure that the channels are consistent with the data
-  assert(isequal(sourcemodel.label(:), cfg.channel(:)), 'cannot match the channels in the sourcemodel to those in the data')
+  if isempty(ft_getopt(cfg, 'refchan')) && isempty(ft_getopt(cfg, 'supchan'))
+    assert(isequal(sourcemodel.label(:), cfg.channel(:)), 'cannot match the channels in the sourcemodel to those in the data');
+  else
+    % the data and cfg also includes the recfchan or supchan
+    assert(all(ismember(sourcemodel.label, cfg.channel)), 'cannot match the channels in the sourcemodel to those in the data');
+  end
   
   % no forward computations are needed
   headmodel = [];
@@ -396,7 +437,12 @@ elseif isfield(cfg.sourcemodel, 'leadfield')
   end
   
   % ensure that the channels are consistent with the data
-  assert(isequal(sourcemodel.label(:), cfg.channel(:)), 'cannot match the channels in the sourcemodel to those in the data')
+  if isempty(ft_getopt(cfg, 'refchan')) && isempty(ft_getopt(cfg, 'supchan'))
+    assert(isequal(sourcemodel.label(:), cfg.channel(:)), 'cannot match the channels in the sourcemodel to those in the data');
+  else
+    % the data and cfg also includes the recfchan or supchan
+    assert(all(ismember(sourcemodel.label, cfg.channel)), 'cannot match the channels in the sourcemodel to those in the data');
+  end
   
   % no forward computations are needed
   headmodel = [];
@@ -410,7 +456,7 @@ elseif istrue(cfg.keepleadfield) || istrue(cfg.permutation) || istrue(cfg.random
   [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
   
   % construct the dipole positions on which the source reconstruction will be done
-  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo'});
+  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid', 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'reducerank', 'backproject', 'normalize', 'normalizeparam', 'weight', 'showcallinfo'});
   tmpcfg.headmodel = headmodel;
   if ft_senstype(sens, 'eeg')
     tmpcfg.elec = sens;
@@ -420,6 +466,7 @@ elseif istrue(cfg.keepleadfield) || istrue(cfg.permutation) || istrue(cfg.random
   sourcemodel = ft_prepare_leadfield(tmpcfg);
   
   % no further forward computations are needed, but keep them in the cfg
+  needheadmodel = false;
   headmodel = [];
   sens = [];
   
@@ -430,7 +477,7 @@ else
   [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
   
   % construct the dipole positions on which the source reconstruction will be done
-  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo'});
+  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid', 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'reducerank', 'backproject', 'normalize', 'normalizeparam', 'weight', 'showcallinfo'});
   tmpcfg.headmodel = headmodel;
   if ft_senstype(sens, 'eeg')
     tmpcfg.elec = sens;
@@ -439,13 +486,24 @@ else
   end
   sourcemodel = ft_prepare_sourcemodel(tmpcfg);
   
-end % if precomputed filter, leadfield or not 
+end % if refdip/supdip, precomputed filter, leadfield, keepfilter, keepleadfield, or so
+
 
 % It might be that the number of channels in the data, the number of
 % channels in the electrode/gradiometer definition and the number of
 % channels in the localspheres volume conduction model are different.
 % Hence a subset of the data channels will be used.
 Nchans = length(cfg.channel);
+if contains(data.dimord, 'freq')
+  Nfreq = numel(data.freq);
+else
+  Nfreq = 1;
+end
+if contains(data.dimord, 'time')
+  Ntime = numel(data.time);
+else
+  Ntime = 1;
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % do frequency domain source reconstruction
@@ -454,48 +512,31 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
   
   switch cfg.method
     case 'pcc'
-      % this can handle both a csd matrix and a fourier matrix, but needs
-      % special handling of the refdip etc.
-      cfg.refdip = ft_getopt(cfg, 'refdip', []);
-      cfg.supdip = ft_getopt(cfg, 'supdip', []);
-      cfg.refchan = ft_getopt(cfg, 'refchan', []);
-      cfg.supchan = ft_getopt(cfg, 'supchan', []);
-      cfg.refchan = ft_channelselection(cfg.refchan, data.label);
-      cfg.supchan = ft_channelselection(cfg.supchan, data.label);
-      
-      % HACK: use some experimental code
+
       if hasbaseline
         ft_error('not supported')
       end
       
       tmpcfg         = cfg;
-      tmpcfg.refchan = ''; % prepare_freq_matrices should not know explicitly about the refchan
-      tmpcfg.channel = cfg.channel(:)';
-      if isfield(cfg, 'refchan')
-        % add the refchan implicitely
-        tmpcfg.channel = [tmpcfg.channel cfg.refchan(:)'];
-      end
-      if isfield(cfg, 'supchan')
-        % add the supchan implicitely
-        tmpcfg.channel = [tmpcfg.channel cfg.supchan(:)'];
-      end
+      tmpcfg.refchan = [];          % for PCC prepare_freq_matrices should not know explicitly about the refchan
+      tmpcfg.channel = cfg.channel; % this includes refchan and supchan
       
       % select the data in the channels and the frequency of interest
       [Cf, Cr, Pr, Ntrials, tmpcfg] = prepare_freq_matrices(tmpcfg, data);
       
-      if isfield(cfg, 'refchan') && ~isempty(cfg.refchan)
+      if ~isempty(cfg.refchan)
         [dum, refchanindx] = match_str(cfg.refchan, tmpcfg.channel);
       else
         refchanindx = [];
       end
-      if isfield(cfg, 'supchan') && ~isempty(cfg.supchan)
+      if ~isempty(cfg.supchan)
         [dum, supchanindx] = match_str(cfg.supchan, tmpcfg.channel);
       else
         supchanindx = [];
       end
       Nchans = length(tmpcfg.channel); % update the number of channels
       
-      % if the input data has a complete fourier spectrum, it can be projected through the filters
+      % if the input data has a complete Fourier spectrum, it can be projected through the filters
       if isfield(data, 'fourierspctrm')
         [dum, datchanindx] = match_str(tmpcfg.channel, data.label);
         fbin = nearest(data.freq, cfg.frequency);
@@ -522,40 +563,51 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
       if isfield(data, 'fourierspctrm')
         [dum, datchanindx] = match_str(cfg.channel, data.label);
         fbin = nearest(data.freq, cfg.frequency);
+        if numel(fbin)==1, fbin = fbin.*[1 1]; end
         if strcmp(data.dimord, 'chan_freq')
           avg = data.fourierspctrm(datchanindx, fbin);
         elseif strcmp(data.dimord, 'rpt_chan_freq') || strcmp(data.dimord, 'rpttap_chan_freq')
-          avg = transpose(data.fourierspctrm(:, datchanindx, fbin));
+          avg = permute(data.fourierspctrm(:, datchanindx, fbin(1):fbin(2)), [2 1 3]);
         elseif strcmp(data.dimord, 'chan_freq_time')
           tbin = nearest(data.time, cfg.latency);
-          avg = data.fourierspctrm(datchanindx, fbin, tbin);
+          if numel(tbin)==1, tbin = tbin.*[1 1]; end
+          avg = data.fourierspctrm(datchanindx, fbin(1):fbin(2), tbin(1):tbin(2));
         elseif strcmp(data.dimord, 'rpt_chan_freq_time') || strcmp(data.dimord, 'rpttap_chan_freq_time')
           tbin = nearest(data.time, cfg.latency);
-          avg  = transpose(data.fourierspctrm(:, datchanindx, fbin, tbin));
+          if numel(tbin)==1, tbin = tbin.*[1 1]; end
+          avg  = permute(data.fourierspctrm(:, datchanindx, fbin(1):fbin(2), tbin(1):tbin(2)), [2 1 3 4]);
         end
       else % The input data is a CSD matrix, this is enough for computing source power, coherence and residual power.
-        avg = Cf;
+        ft_warning('no fourierspctra in the input data, so the frequency domain dipole moments cannot be computed');
+        avg = [];
       end
       
     case 'dics'
+      tmpcfg         = cfg;
+      tmpcfg.refchan = cfg.refchan;                       % for DICS prepare_freq_matrices should know explicitly about the refchan
+      tmpcfg.channel = setdiff(cfg.channel, cfg.refchan); % remove the refchan
       
-      [Cf, Cr, Pr, Ntrials, cfg] = prepare_freq_matrices(cfg, data);
+      % select the data in the channels and the frequency of interest
+      [Cf, Cr, Pr, Ntrials, tmpcfg] = prepare_freq_matrices(tmpcfg, data);
+      
+      Nchans = length(tmpcfg.channel); % update the number of channels
       
       % assign a descriptive name to each of the dics sub-methods, the default is power only
-      if isfield(cfg, 'refdip') && ~isempty(cfg.refdip)
+      if ~isempty(cfg.refdip)
         submethod = 'dics_refdip';
-      elseif isfield(cfg, 'refchan') && ~isempty(cfg.refchan)
+      elseif ~isempty(cfg.refchan)
         submethod = 'dics_refchan';
       else
         submethod = 'dics_power';
       end
       
     otherwise
+      ft_error('unsupported cfg.method');
   end
   
   % fill these with NaNs, so that I dont have to treat them separately
-  if isempty(Cr), Cr = nan(Ntrials, Nchans, 1); end
-  if isempty(Pr), Pr = nan(Ntrials, 1, 1); end
+  if isempty(Cr), Cr = nan(Ntrials, Nchans, Nfreq, Ntime); end
+  if isempty(Pr), Pr = nan(Ntrials, Nfreq,  Ntime); end
   
   if hasbaseline
     % repeat the conversion for the baseline condition
@@ -666,9 +718,9 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
   
   % reshape so that it also looks like one trial (out of many)
   if Nrepetitions==1
-    Cf  = reshape(Cf , [1 Nchans Nchans]);
-    Cr  = reshape(Cr , [1 Nchans 1]);
-    Pr  = reshape(Pr , [1 1 1]);
+    Cf  = reshape(Cf , [1 Nchans Nchans Nfreq Ntime]);
+    Cr  = reshape(Cr , [1 Nchans Nfreq Ntime]);
+    Pr  = reshape(Pr , [1 Nfreq Ntime]);
   end
   
   % get the relevant low level options from the cfg and convert into key-value pairs
@@ -729,6 +781,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
       case {'music'}
         ft_error('method ''%s'' is currently unsupported for source reconstruction in the frequency domain', cfg.method);
       otherwise
+        ft_error('unsupported cfg.method');
     end
     
   end
@@ -771,21 +824,17 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
   end
   
   if strcmp(cfg.method, 'pcc')
-    % HACK: requires some extra defaults
-    if ~isfield(cfg, 'refdip'), cfg.refdip = []; end
-    if ~isfield(cfg, 'supdip'), cfg.supdip = []; end
     
-    % HACK: experimental code
     if hasbaseline
       ft_error('not supported')
     end
     
     tmpcfg = [];
-    tmpcfg.channel = cfg.channel(:)';
-    if isfield(cfg, 'refchan')
-      tmpcfg.channel = [tmpcfg.channel cfg.refchan(:)'];
+    tmpcfg.channel = cfg.channel;
+    if ~isempty(cfg.refchan)
+      tmpcfg.channel = [tmpcfg.channel(:); cfg.refchan(:)];
     end
-    if isfield(cfg, 'supchan')
+    if ~isempty(cfg.supchan)
       tmpcfg.channel = [tmpcfg.channel cfg.supchan(:)'];
     end
     
@@ -800,12 +849,12 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
     end
     data.label = data.label(datchanindx);
     
-    if isfield(cfg, 'refchan') && ~isempty(cfg.refchan)
+    if ~isempty(cfg.refchan)
       [dum, refchanindx] = match_str(cfg.refchan, data.label);
     else
       refchanindx = [];
     end
-    if isfield(cfg, 'supchan') && ~isempty(cfg.supchan)
+    if ~isempty(cfg.supchan)
       [dum, supchanindx] = match_str(cfg.supchan, data.label);
     else
       supchanindx = [];
