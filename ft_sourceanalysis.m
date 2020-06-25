@@ -211,6 +211,10 @@ else
   cfg.method = ft_getopt(cfg, 'method', []);
 end
 
+if isequal(cfg.method, 'harmony')
+  ft_error('Harmony does not work at present. Please contact the main developer of this method directly');
+end
+
 % put the low-level options pertaining to the source reconstruction method in their own field
 cfg = ft_checkconfig(cfg, 'createsubcfg',  cfg.method);
 % move some fields from cfg.method back to the top-level configuration
@@ -307,11 +311,12 @@ if istimelock
   
 elseif isfreq
   tmpcfg = keepfields(cfg, {'channel', 'latency', 'frequency', 'nanmean', 'showcallinfo'});
-  % average over the frequency axis in the output
-  tmpcfg.avgoverfreq = 'yes';
-  if isfield(data, 'time')
-    % average over the time axis in the output
-    tmpcfg.avgovertime = 'yes';
+  
+  if ismember(cfg.method, {'pcc' 'dics'})
+    tmpcfg.avgoverfreq = 'yes';
+    if isfield(data, 'time')
+      tmpcfg.avgovertime = 'yes';
+    end
   end
   % include the refchan and supchan if specified
   tmpcfg.channel = ft_channelselection([cfg.channel(:); cfg.refchan(:); cfg.supchan(:)], data.label);
@@ -322,10 +327,12 @@ elseif isfreq
   % copy the descriptive fields to the output
   source = copyfields(data, source, {'time', 'freq', 'cumtapcnt'});
   
-  % HACK the remainder of the code expects a single number for the frequency and/or latency
-  cfg.frequency = mean(cfg.frequency);
-  if isfield(data, 'time')
-    cfg.latency = mean(cfg.latency);
+  if ismember(cfg.method, {'pcc' 'dics'})
+    cfg.frequency = data.freq; % should be a single number here
+    if isfield(data, 'time')
+      cfg.latency   = data.time; % should be a single number here
+    end
+
   end
 end
 
@@ -487,6 +494,16 @@ end % if refdip/supdip, precomputed filter, leadfield, keepfilter, keepleadfield
 % channels in the localspheres volume conduction model are different.
 % Hence a subset of the data channels will be used.
 Nchans = length(cfg.channel);
+if contains(data.dimord, 'freq')
+  Nfreq = numel(data.freq);
+else
+  Nfreq = 1;
+end
+if contains(data.dimord, 'time')
+  Ntime = numel(data.time);
+else
+  Ntime = 1;
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % do frequency domain source reconstruction
@@ -495,6 +512,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
   
   switch cfg.method
     case 'pcc'
+
       if hasbaseline
         ft_error('not supported')
       end
@@ -545,19 +563,23 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
       if isfield(data, 'fourierspctrm')
         [dum, datchanindx] = match_str(cfg.channel, data.label);
         fbin = nearest(data.freq, cfg.frequency);
+        if numel(fbin)==1, fbin = fbin.*[1 1]; end
         if strcmp(data.dimord, 'chan_freq')
           avg = data.fourierspctrm(datchanindx, fbin);
         elseif strcmp(data.dimord, 'rpt_chan_freq') || strcmp(data.dimord, 'rpttap_chan_freq')
-          avg = transpose(data.fourierspctrm(:, datchanindx, fbin));
+          avg = permute(data.fourierspctrm(:, datchanindx, fbin(1):fbin(2)), [2 1 3]);
         elseif strcmp(data.dimord, 'chan_freq_time')
           tbin = nearest(data.time, cfg.latency);
-          avg = data.fourierspctrm(datchanindx, fbin, tbin);
+          if numel(tbin)==1, tbin = tbin.*[1 1]; end
+          avg = data.fourierspctrm(datchanindx, fbin(1):fbin(2), tbin(1):tbin(2));
         elseif strcmp(data.dimord, 'rpt_chan_freq_time') || strcmp(data.dimord, 'rpttap_chan_freq_time')
           tbin = nearest(data.time, cfg.latency);
-          avg  = transpose(data.fourierspctrm(:, datchanindx, fbin, tbin));
+          if numel(tbin)==1, tbin = tbin.*[1 1]; end
+          avg  = permute(data.fourierspctrm(:, datchanindx, fbin(1):fbin(2), tbin(1):tbin(2)), [2 1 3 4]);
         end
       else % The input data is a CSD matrix, this is enough for computing source power, coherence and residual power.
-        avg = Cf;
+        ft_warning('no fourierspctra in the input data, so the frequency domain dipole moments cannot be computed');
+        avg = [];
       end
       
     case 'dics'
@@ -584,8 +606,8 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
   end
   
   % fill these with NaNs, so that I dont have to treat them separately
-  if isempty(Cr), Cr = nan(Ntrials, Nchans, 1); end
-  if isempty(Pr), Pr = nan(Ntrials, 1, 1); end
+  if isempty(Cr), Cr = nan(Ntrials, Nchans, Nfreq, Ntime); end
+  if isempty(Pr), Pr = nan(Ntrials, Nfreq,  Ntime); end
   
   if hasbaseline
     % repeat the conversion for the baseline condition
@@ -696,9 +718,9 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
   
   % reshape so that it also looks like one trial (out of many)
   if Nrepetitions==1
-    Cf  = reshape(Cf , [1 Nchans Nchans]);
-    Cr  = reshape(Cr , [1 Nchans 1]);
-    Pr  = reshape(Pr , [1 1 1]);
+    Cf  = reshape(Cf , [1 Nchans Nchans Nfreq Ntime]);
+    Cr  = reshape(Cr , [1 Nchans Nfreq Ntime]);
+    Pr  = reshape(Pr , [1 Nfreq Ntime]);
   end
   
   % get the relevant low level options from the cfg and convert into key-value pairs
@@ -862,10 +884,16 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
   
   if hasbaseline
     % baseline and active are only available together for resampling purposes,
+    % or as a noise covariance for SAM beamforming
     % hence I assume here that there are multiple trials in both
-    baseline.avg   = baseline.avg(datchanindx,:);
-    baseline.cov   = baseline.cov(:,datchanindx,datchanindx);
-    baseline.trial = baseline.trial(:,datchanindx,:);
+    if isfield(baseline, 'avg')
+      baseline.avg   = baseline.avg(datchanindx,:);
+      baseline.cov   = baseline.cov(datchanindx,datchanindx);
+    else
+      baseline.cov   = baseline.cov(:,datchanindx,datchanindx);
+      baseline.trial = baseline.trial(:,datchanindx,:);
+    end
+    
     % this is required for averaging 2 conditions using prepare_resampled_data
     cfg2 = [];
     cfg2.numcondition = 2;
@@ -1057,13 +1085,21 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
       fprintf('scanning repetition %d\n', i);
       dip(i) = ft_eloreta(sourcemodel, sens, headmodel, squeeze_avg, squeeze_Cy, methodopt{:}, leadfieldopt{:});
     end
-  elseif strcmp(cfg.method, 'sam')
+  elseif strcmp(cfg.method, 'sam')   
+    % convert time in samples for Evoked Related SAM
+    latency = ft_getopt(methodopt, 'latency_toi');
+    toi     = ft_getopt(methodopt, 'toi');
+    if isempty(toi) && ~isempty(latency) && ~isequal(latency, 'all')
+      toi(1) = nearest(data.time, latency(1));
+      toi(2) = nearest(data.time, latency(2));
+      methodopt = ft_setopt(methodopt, 'toi', toi);
+    end
+    
     for i=1:Nrepetitions
-      squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
       squeeze_Cy  = reshape(Cy(i,:,:), [size_Cy(2)  size_Cy(3)]);
+      squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
       fprintf('scanning repetition %d\n', i);
-      squeeze_avg=reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
-      dip(i) = beamformer_sam(sourcemodel, sens, headmodel, squeeze_avg, squeeze_Cy, methodopt{:}, leadfieldopt{:});
+      dip(i) = beamformer_sam(sourcemodel, sens, headmodel, squeeze_avg, squeeze_Cy, methodopt{:}, leadfieldopt{:});    
     end
   elseif strcmp(cfg.method, 'pcc')
     for i=1:Nrepetitions
