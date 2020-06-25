@@ -29,7 +29,7 @@ function [data] = ft_megplanar(cfg, data)
 %   cfg.inwardshift = depth of the source layer relative to the head model surface ,
 %                     (default = 2.5 cm, which is appropriate for a skin-based head model)
 %   cfg.spheremesh  = number of dipoles in the source layer (default = 642)
-%   cfg.tolerance   = tolerance ratio for leadfield matrix inverse based on a truncated svd, 
+%   cfg.tolerance   = tolerance ratio for leadfield matrix inverse based on a truncated svd,
 %                     reflects the relative magnitude of the largest singular value
 %                     to retain (default =s 1e-3)
 %   cfg.headshape   = a filename containing headshape, a structure containing a
@@ -256,8 +256,8 @@ else
   cfg.neighbours = cfg.neighbours(neighbsel);
   cfg.neighbsel = channelconnectivity(cfg);
   
-  % determine
-  fprintf('average number of neighbours is %.2f\n', mean(sum(cfg.neighbsel)));
+  assert(any(cfg.neighbsel(:)), 'no neighbours found')
+  ft_info('average number of neighbours is %.2f\n', mean(sum(cfg.neighbsel)));
   
   Ngrad = length(sens.label);
   distance = zeros(Ngrad,Ngrad);
@@ -269,8 +269,8 @@ else
     distance(j,i) = d;
   end
   
-  fprintf('minimum distance between neighbours is %6.2f %s\n', min(distance(distance~=0)), sens.unit);
-  fprintf('maximum distance between gradiometers is %6.2f %s\n', max(distance(distance~=0)), sens.unit);
+  ft_info('minimum distance between neighbours is %6.2f %s\n', min(distance(distance~=0)), sens.unit);
+  ft_info('maximum distance between gradiometers is %6.2f %s\n', max(distance(distance~=0)), sens.unit);
   
   % The following does not work when running in deployed mode because the
   % private functions that compute the planar montage are not recognized as
