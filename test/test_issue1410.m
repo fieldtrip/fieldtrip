@@ -1,6 +1,6 @@
 function test_issue1410
 
-% MEM 2gb
+% MEM 6gb
 % WALLTIME 00:20:00
 % DEPENDENCY
 
@@ -271,7 +271,7 @@ ft_sourceplot(cfg, source_coh_int);
 
 %%
 % let's also try dics_refdip
-
+vi 
 % these are approximately in the motor cortex
 diplft = [4  3 10];
 diprgt = [4 -3 10];
