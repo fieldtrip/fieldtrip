@@ -331,19 +331,20 @@ if hasgrad || haselec || hasopto
       opto{j} = varargin{j}.opto;
     end
   end
-  % see test_pull393.m for a description of the expected behavior
+  % see TEST_PULL393 for a description of the expected behavior
   if strcmp(cfg.appendsens, 'yes')
-    fprintf('concatenating sensor information across input arguments\n');
+    ft_notice('concatenating sensor information across input arguments\n');
     % append the sensor descriptions, skip the empty ones
     if hasgrad, data.grad = ft_appendsens([], grad{~cellfun(@isempty, grad)}); end
     if haselec, data.elec = ft_appendsens([], elec{~cellfun(@isempty, elec)}); end
     if hasopto, data.opto = ft_appendsens([], opto{~cellfun(@isempty, opto)}); end
   else
-    % discard sensor information when it is inconsistent across the input arguments
+    % discard sensor information when any of the input arguments does not have it
     removegrad = any(cellfun(@isempty, grad));
     removeelec = any(cellfun(@isempty, elec));
     removeopto = any(cellfun(@isempty, opto));
     for j=2:length(varargin)
+      % discard sensor information when it is inconsistent across the input arguments
       removegrad = removegrad || ~isequaln(grad{j}, grad{1});
       removeelec = removeelec || ~isequaln(elec{j}, elec{1});
       removeopto = removeopto || ~isequaln(opto{j}, opto{1});
@@ -351,5 +352,8 @@ if hasgrad || haselec || hasopto
     if hasgrad && ~removegrad, data.grad = grad{1}; end
     if haselec && ~removeelec, data.elec = elec{1}; end
     if hasopto && ~removeopto, data.opto = opto{1}; end
+    if hasgrad && removegrad, ft_notice('discarding inconsistent grad structure\n'); end
+    if haselec && removeelec, ft_notice('discarding inconsistent elec structure\n'); end
+    if hasopto && removeopto, ft_notice('discarding inconsistent opto structure\n'); end
   end
 end
