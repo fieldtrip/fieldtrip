@@ -289,6 +289,13 @@ if ~isempty(cfg.supchan)
   assert(numel(cfg.supchan)>0, 'cfg.supchan is not present in the data');
 end
 
+% spectrally decomposed data can have label and/or labelcmb
+if ~isfield(data, 'label') && isfield(data, 'labelcmb')
+  % the code further down assumes that data.label is present
+  % we can construct it from all channel combinations
+  data.label = unique(data.labelcmb(:));
+end
+
 % make the selection of channels consistent with the data
 cfg.channel = ft_channelselection(cfg.channel, data.label);
 % keep the refchan and supchan
