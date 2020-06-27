@@ -103,20 +103,20 @@ if iscell(filename)
   else
     % each file has the same channels, concatenate along the time dimension
     % this requires careful bookkeeping of the sample indices
-    nsmp = nan(size(filename));
+    offset = 0;
     for i=1:numel(filename)
-      nsmp(i) = hdr{i}.nSamples*hdr{i}.nTrials;
-    end
-    offset = [0 cumsum(nsmp(1:end-1))];
-    thisbegsample = begsample - offset(i);
-    thisendsample = endsample - offset(i);
-    if thisbegsample<=nsmp(i) && thisendsample>=1
-      varargin = ft_setopt(varargin, 'header', hdr{i});
-      varargin = ft_setopt(varargin, 'begsample', max(thisbegsample,1));
-      varargin = ft_setopt(varargin, 'endsample', min(thisendsample,nsmp(i)));
-      dat{i} = ft_read_data(filename{i}, varargin{:});
-    else
-      dat{i} = [];
+      thisbegsample = begsample - offset;
+      thisendsample = endsample - offset;
+      nsmp = hdr{i}.nSamples*hdr{i}.nTrials;
+      offset = offset + nsmp; % this is for the next file
+      if thisbegsample<=nsmp && thisendsample>=1
+        varargin = ft_setopt(varargin, 'header', hdr{i});
+        varargin = ft_setopt(varargin, 'begsample', max(thisbegsample,1));
+        varargin = ft_setopt(varargin, 'endsample', min(thisendsample,nsmp));
+        dat{i} = ft_read_data(filename{i}, varargin{:});
+      else
+        dat{i} = [];
+      end
     end
     dat = cat(2, dat{:}); % along the 2nd dimension
   end
