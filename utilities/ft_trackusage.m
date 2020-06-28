@@ -28,7 +28,7 @@ function ft_trackusage(event, varargin)
 %
 % See also FT_DEFAULTS
 
-% Copyright (C) 2015, Robert oostenveld
+% Copyright (C) 2015, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/donders/fieldtrip
 % for the documentation and details.
