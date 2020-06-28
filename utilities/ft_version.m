@@ -129,7 +129,7 @@ elseif isgit
         clean = 'yes';
       end
     otherwise
-      ft_error('unsupported command "%s"');
+      ft_error('unsupported command "%s"', command);
   end % switch command
   
 elseif isequal(regexp(ftpath, ['.*' filesep 'fieldtrip-fieldtrip-[[0-9][a-z]]{7}']), 1)
