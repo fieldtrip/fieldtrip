@@ -4,10 +4,10 @@
 
 #define LINELENGTH 100
 
-/* this is a linked list that contains the peerslave configuration 
+/* this is a linked list that contains the peerworker configuration 
  * after it has been read from the configuration file */
 typedef struct config_s {
-		unsigned int pid;   /* PID of peerslave, to be set/used by its parent    */
+		unsigned int pid;   /* PID of peerworker, to be set/used by its parent    */
 		char *memavail;
 		char *cpuavail;
 		char *timavail;

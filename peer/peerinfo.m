@@ -38,11 +38,11 @@ if nargout==0
   case 0
     status = 'zombie';
   case 1
-    status = 'master';
+    status = 'controller';
   case 2
-    status = 'idle slave';
+    status = 'idle worker';
   case 3
-    status = 'busy slave';
+    status = 'busy worker';
   otherwise
     status = 'unknown';
   end
