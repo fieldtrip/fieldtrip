@@ -65,6 +65,7 @@ cfg.sourcemodel.filter = source1.avg.filter;
 cfg.channel = 'MEG';
 source2 = ft_sourceanalysis(cfg, tfdata);
 
+clear source1 source2
 
 %%
 % this is mostly from http://www.fieldtriptoolbox.org/tutorial/beamformingextended/
@@ -177,6 +178,7 @@ cfg.opacitylim    = [0.0 1.2];
 cfg.opacitymap    = 'rampup';
 ft_sourceplot(cfg, source_diff_int);
 
+clear source_bsl source_exp source_diff source_diff_int
 
 %%
 % now for the EMG coherence
@@ -241,6 +243,7 @@ assert(isalmostequal(source3.avg.coh, source2.avg.coh, 'reltol', 1e-6));
 assert(~isequal(source3.leadfield, source2.leadfield)); % should have different number of columns
 assert(~isequal(source3.avg.filter, source2.avg.filter)); % should have different number of rows
 
+clear source3 source2
 
 %%
 
@@ -271,7 +274,7 @@ ft_sourceplot(cfg, source_coh_int);
 
 %%
 % let's also try dics_refdip
-vi 
+
 % these are approximately in the motor cortex
 diplft = [4  3 10];
 diprgt = [4 -3 10];

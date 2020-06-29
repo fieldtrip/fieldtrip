@@ -1,6 +1,6 @@
 function test_pull1456
 
-% MEM 4gb
+% MEM 8gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_sourceanalysis ft_eloreta
 
@@ -22,10 +22,12 @@ cfg.method = 'eloreta';
 cfg.sourcemodel = sourcemodel;
 cfg.headmodel = vol.vol;
 source_eloreta1 = ft_sourceanalysis(cfg, dataFreq1); % compute the source model
+
 assert(isequal(size(source_eloreta1.avg.pow),[size(source_eloreta1.pos,1) numel(source_eloreta1.freq)]));
 
 source_eloreta2 = ft_sourceanalysis(cfg, dataFreq2); % compute the source model
 i1 = find(source_eloreta2.inside,1,'first');
+
 assert(isequal(size(source_eloreta2.avg.mom{i1}),[3 80 193]));
 
 cfg.mne.snr = 10;
