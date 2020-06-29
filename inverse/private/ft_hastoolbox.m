@@ -434,7 +434,7 @@ switch toolbox
   case 'PLOTTING'
     dependency = {'ft_plot_topo', 'ft_plot_mesh', 'ft_plot_matrix'};
   case 'PEER'
-    dependency = {'peerslave', 'peermaster'};
+    dependency = {'peercontroller', 'peerworker'};
   case 'CONNECTIVITY'
     dependency = {'ft_connectivity_corr', 'ft_connectivity_granger'};
   case 'SPIKE'
