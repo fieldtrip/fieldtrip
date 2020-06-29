@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
 		pthread_t expireThread;
 
 #if SYSLOG==1
-		openlog("peerslave", LOG_PID | LOG_PERROR, LOG_USER);
+		openlog("peerworker", LOG_PID | LOG_PERROR, LOG_USER);
 		/* this corresponds to verbose level 4 */
 		setlogmask(LOG_MASK(LOG_EMERG) | LOG_MASK(LOG_ALERT) | LOG_MASK(LOG_CRIT) | LOG_MASK(LOG_ERR));
 #endif
@@ -80,10 +80,10 @@ int main(int argc, char *argv[]) {
 		{
 				/* display the help message and return to the command line */
 				printf("\n");
-				printf("PEERSLAVE starts a FieldTrip peer-to-peer distributed computing peer.\n");
+				printf("PEERWORKER starts a FieldTrip peer-to-peer distributed computing peer.\n");
 				printf("The peer will announce itself over the network and automatically discover\n");
-				printf("all other peers. The peerslave starts the TCP and UDS servers and waits\n");
-				printf("for a job from a peermaster. Once an incoming job arrives, it starts\n");
+				printf("all other peers. The peerworker starts the TCP and UDS servers and waits\n");
+				printf("for a job from a peercontroller. Once an incoming job arrives, it starts\n");
 				printf("the MATLAB engine and evaluates the job.\n");
 				printf("\n");
 				printf("Use as\n");
@@ -107,12 +107,12 @@ int main(int argc, char *argv[]) {
 				printf("  --smartcpu    = 0|1\n");
 				printf("  --verbose     = number, between 0 and 7 (default = 4)\n");
 				printf("\n");
-				printf("Using the configuration file, you can start multiple peerslaves at once.\n");
-				printf("The peerslaves will be forked where the parent will ensure that the\n");
+				printf("Using the configuration file, you can start multiple peerworkers at once.\n");
+				printf("The peerworkers will be forked where the parent will ensure that the\n");
 				printf("forked children keep running or restart them if they exit (which happens\n");
 				printf("upon a MATLAB engine error). The configuration file contains the same\n");
 				printf("options as on the command line and should be formatted like the following\n");
-				printf("example, which starts 4 slaves on a quad-core computer.\n");
+				printf("example, which starts 4 workers on a quad-core computer.\n");
 				printf("\n");
 				printf("  [peer]\n");
 				printf("  # allow jobs of up to 12 hours with no more than 1GB memory required\n");
@@ -340,7 +340,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		/*************************************************************************************
-		 * the following section deals with starting multiple peerslaves
+		 * the following section deals with starting multiple peerworkers
 		 * and ensuring that they are restarted if any of them exits  
 		 ************************************************************************************/
 
@@ -383,12 +383,12 @@ int main(int argc, char *argv[]) {
 						if (childpid >= 0) /* fork succeeded */
 						{
 								if (childpid == 0) {
-										/* the child continues as the actual slave */
+										/* the child continues as the actual worker */
 										break;
 								}
 								else {
 										DEBUG(LOG_NOTICE, "started child process %d", childpid);
-										/* the parent keeps monitoring the slaves */ 
+										/* the parent keeps monitoring the workers */ 
 										cconf->pid = childpid;
 								}
 						}
@@ -412,14 +412,14 @@ int main(int argc, char *argv[]) {
 
 #else
 		if (numpeer!=1)
-				PANIC("more than one slave not supported on windows");
+				PANIC("more than one worker not supported on windows");
 		else
-				/* continue with the first and only peerslave configuration */
+				/* continue with the first and only peerworker configuration */
 				cconf = pconf;
 #endif
 
 		/*************************************************************************************
-		 * from here onward the code deals with starting a single peer in slave mode
+		 * from here onward the code deals with starting a single peer in worker mode
 		 ************************************************************************************/
 
 		/* get the values from the configuration structure */
@@ -651,7 +651,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		pthread_mutex_lock(&mutexhost);
-		/* switch the peer to idle slave, note that this should be followed by an announce_once() */
+		/* switch the peer to idle worker, note that this should be followed by an announce_once() */
 		host->status = STATUS_IDLE;
 		/* update the current job description */
 		bzero(&(host->current), sizeof(current_t));
@@ -659,7 +659,7 @@ int main(int argc, char *argv[]) {
 		/* inform the other peers of the updated status */
 		announce_once();
 
-		/* engine aborted indicates that matlab crashed, in which case the peerslave should exit */
+		/* engine aborted indicates that matlab crashed, in which case the peerworker should exit */
 		while (!engineAborted) {
 
 				/* switch the engine off after being idle for a certain time */
@@ -674,11 +674,11 @@ int main(int argc, char *argv[]) {
 						}
 				}
 
-				/* switch from zombie to idle slave after waiting a certain time */
+				/* switch from zombie to idle worker after waiting a certain time */
 				if ((engineFailed!=0) && (difftime(time(NULL), engineFailed)>zombietimeout)) {
 						DEBUG(LOG_NOTICE, "switching back to idle mode");
 						pthread_mutex_lock(&mutexhost);
-						/* make the slave available again, note that this should be followed by an announce_once() */
+						/* make the worker available again, note that this should be followed by an announce_once() */
 						host->status = STATUS_IDLE;
 						/* update the current job description */
 						bzero(&(host->current), sizeof(current_t));
@@ -703,7 +703,7 @@ int main(int argc, char *argv[]) {
 										matlabRunning = 0;
 
 										pthread_mutex_lock(&mutexhost);
-										/* switch the mode to busy slave, note that this should be followed by an announce_once() */
+										/* switch the mode to busy worker, note that this should be followed by an announce_once() */
 										host->status = STATUS_ZOMBIE;
 										/* update the current job description */
 										bzero(&(host->current), sizeof(current_t));
@@ -723,7 +723,7 @@ int main(int argc, char *argv[]) {
 								job = joblist;
 
 								pthread_mutex_lock(&mutexhost);
-								/* switch the mode to busy slave, note that this should be followed by an announce_once() */
+								/* switch the mode to busy worker, note that this should be followed by an announce_once() */
 								host->status = STATUS_BUSY;
 								/* update the current job description */
 								bzero(&(host->current), sizeof(current_t));
@@ -766,8 +766,8 @@ int main(int argc, char *argv[]) {
 								optin    = mxCreateCellMatrix(1, n+6);
 								for (i=0; i<n; i++)
 										mxSetCell(optin, i, mxGetCell(previous, i));
-								/* add the masterid, timallow and memallow options, these are used for the watchdog */
-								mxSetCell(optin, n+0, mxCreateString("masterid\0"));
+								/* add the controllerid, timallow and memallow options, these are used for the watchdog */
+								mxSetCell(optin, n+0, mxCreateString("controllerid\0"));
 								mxSetCell(optin, n+1, mxCreateDoubleScalar(peerid));
 								mxSetCell(optin, n+2, mxCreateString("timallow\0"));
 								mxSetCell(optin, n+3, mxCreateDoubleScalar(timallow));
@@ -794,14 +794,14 @@ int main(int argc, char *argv[]) {
 								optin = NULL;
 
 #ifdef WATCHDOG
-								/* enable the watchdog for the peerslave command-line executable */
+								/* enable the watchdog for the peerworker command-line executable */
 								/* the watchdog also will be running as mex file inside the MATLAB engine */
 								pthread_mutex_lock(&mutexwatchdog);
-								watchdog.masterid = peerid;              /* keep an eye on the master for which we are working */
+								watchdog.controllerid = peerid;              /* keep an eye on the controller for which we are working */
 								watchdog.time     = time(NULL)+timallow; /* don't exceed the maximum allowed execution time */
-								watchdog.memory   = 0;                   /* don't watch the memory of the peerslave executable */
+								watchdog.memory   = 0;                   /* don't watch the memory of the peerworker executable */
 								watchdog.enabled  = 0;
-								DEBUG(LOG_ERR, "watchdog enabled for masterid = %u, time = %d, memory = %lu", watchdog.masterid, watchdog.time, watchdog.memory);
+								DEBUG(LOG_ERR, "watchdog enabled for controllerid = %u, time = %d, memory = %lu", watchdog.controllerid, watchdog.time, watchdog.memory);
 								pthread_mutex_unlock(&mutexwatchdog);
 #endif
 
@@ -815,7 +815,7 @@ int main(int argc, char *argv[]) {
 #ifdef WATCHDOG
 								/* the job has copleted (either succesful ot not), disable the watchdog */
 								pthread_mutex_lock(&mutexwatchdog);
-								watchdog.masterid = 0;
+								watchdog.controllerid = 0;
 								watchdog.time     = 0;
 								watchdog.memory   = 0;
 								watchdog.enabled  = 0;
@@ -908,7 +908,7 @@ int main(int argc, char *argv[]) {
 						}
 
 						/*****************************************************************************
-						 * send the results back to the master
+						 * send the results back to the controller
 						 * the following code is largely shared with the put-option in the peer mex file
 						 *****************************************************************************/
 						found = 0;
@@ -1004,7 +1004,7 @@ int main(int argc, char *argv[]) {
 						def->optsize  = mxGetNumberOfElements(opt);
 
 						/* write the message  (hostdef, jobdef, arg, opt) with handshakes in between */
-						/* the slave may close the connection between the message segments in case the job is refused */
+						/* the worker may close the connection between the message segments in case the job is refused */
 						success = 1;
 
 						pthread_mutex_lock(&mutexhost);
@@ -1102,7 +1102,7 @@ cleanup:
 
 						if (!engineFailed) {
 								pthread_mutex_lock(&mutexhost);
-								/* make the slave available again, note that this should be followed by an announce_once() */
+								/* make the worker available again, note that this should be followed by an announce_once() */
 								host->status = STATUS_IDLE;
 								/* update the current job description */
 								bzero(&(host->current), sizeof(current_t));

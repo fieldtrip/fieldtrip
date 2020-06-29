@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
 		pthread_t discoverThread;
 		pthread_t expireThread;
 
-		openlog("peerslave", LOG_PID | LOG_PERROR, LOG_USER);
+		openlog("peerworker", LOG_PID | LOG_PERROR, LOG_USER);
 		setlogmask(LOG_MASK(LOG_EMERG) | LOG_MASK(LOG_ALERT) | LOG_MASK(LOG_CRIT));
 		peerinit(NULL);
 
@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		pthread_mutex_lock(&mutexhost);
-		/* switch the peer to idle slave */
+		/* switch the peer to idle worker */
 		host->status = STATUS_IDLE;
 		pthread_mutex_unlock(&mutexhost);
 

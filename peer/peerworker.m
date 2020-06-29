@@ -1,10 +1,10 @@
-function peerslave(varargin)
+function peerworker(varargin)
 
-% PEERSLAVE starts the low-level peer services and switches to slave mode.
+% PEERWORKER starts the low-level peer services and switches to worker mode.
 % Subsequently it will wait untill a job comes in and execute it.
 %
 % Use as
-%   peerslave(...)
+%   peerworker(...)
 %
 % Optional input arguments should be passed as key-value pairs. The
 % following options are available to limit the peer network, i.e. to
@@ -18,12 +18,12 @@ function peerslave(varargin)
 %   refusehost   = {...}
 % The allow options will prevent peers that do not match the requirements
 % to be added to the (dynamic) list of known peers. Consequently, these
-% options limit which peers know each other. A master will not send jobs
-% to peers that it does not know. A slave will not accept jobs from a peer
+% options limit which peers know each other. A controller will not send jobs
+% to peers that it does not know. A worker will not accept jobs from a peer
 % that it does not know.
 %
 % The following options are available to limit the number and duration
-% of the jobs that the slave will execute.
+% of the jobs that the worker will execute.
 %   maxnum      = number (default = inf)
 %   maxtime     = number (default = inf)
 %   maxidle     = number (default = inf)
@@ -34,7 +34,7 @@ function peerslave(varargin)
 %   cpuavail    = number, speed of the CPU                 (default = inf)
 %   timavail    = number, maximum duration of a single job (default = inf)
 %
-% See also PEERMASTER, PEERRESET, PEERFEVAL, PEERCELLFUN
+% See also PEERCONTROLLER, PEERRESET, PEERFEVAL, PEERCELLFUN
 
 % Undocumented options
 %   sleep       = number in seconds (default = 0.01)
@@ -125,7 +125,7 @@ if ~isempty(group)
   peer('group', group);
 end
 
-% switch to idle slave mode
+% switch to idle worker mode
 peer('status', 2);
 
 % check the current access restrictions
@@ -181,17 +181,17 @@ jobnum    = 0;
 while true
 
   if (toc(stopwatch)-idlestart) >= maxidle
-    fprintf('maxidle exceeded, stopping as slave\n');
+    fprintf('maxidle exceeded, stopping as worker\n');
     break;
   end
 
   if toc(stopwatch)>=maxtime
-    fprintf('maxtime exceeded, stopping as slave\n');
+    fprintf('maxtime exceeded, stopping as worker\n');
     break;
   end
 
   if jobnum>=maxnum
-    fprintf('maxnum exceeded, stopping as slave\n');
+    fprintf('maxnum exceeded, stopping as worker\n');
     break;
   end
 
@@ -209,7 +209,7 @@ while true
     end
 
   else
-    % set the status to "busy slave"
+    % set the status to "busy worker"
     peer('status', 3);
 
     % increment the job counter
@@ -228,26 +228,26 @@ while true
     [argin, options] = peer('get', joblist.jobid);
 
     % set the options that will be used in the watchdog
-    % options = {options{:}, 'masterid', joblist.hostid}; % add the masterid as option
+    % options = {options{:}, 'controllerid', joblist.hostid}; % add the controllerid as option
     % options = {options{:}, 'timavail', 2*(timavail+1)}; % add the timavail as option, empty is ok
 
     % evaluate the job
     [argout, options] = peerexec(argin, options);
 
-    % write the results back to the master
+    % write the results back to the controller
     try
       peer('put', joblist.hostid, argout, options, 'jobid', joblist.jobid);
     catch
-      warning('failed to return job results to the master');
+      warning('failed to return job results to the controller');
     end
 
     % remove the job from the tcpserver
     peer('clear', joblist.jobid);
 
-    % remember when the slave becomes idle
+    % remember when the worker becomes idle
     idlestart = toc(stopwatch);
 
-    % set the status to "idle slave"
+    % set the status to "idle worker"
     peer('status', 2);
 
   end % isempty(joblist)

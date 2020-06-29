@@ -43,7 +43,7 @@ void exitFun(void) {
 		pthread_mutex_lock(&mutexwatchdog);
 		watchdog.enabled  = 0;
 		watchdog.evidence = 0;
-		watchdog.masterid = 0;
+		watchdog.controllerid = 0;
 		watchdog.memory   = 0;
 		watchdog.time     = 0;
 		mexPrintf("watchdog: disabled\n");
@@ -83,7 +83,7 @@ void exitFun(void) {
 
 void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) {
 		int rc, enabled;
-		UINT32_T masterid = 0;
+		UINT32_T controllerid = 0;
 		time_t timallow = 0;
 		UINT64_T memallow = 0;
 		UINT64_T rss, vs;
@@ -95,9 +95,9 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				mexErrMsgTxt ("invalid number of input arguments");
 
 		if (mxIsScalar(prhs[0]))
-				masterid = mxGetScalar(prhs[0]);
+				controllerid = mxGetScalar(prhs[0]);
 		else if (mxIsEmpty(prhs[0]))
-				masterid = 0;
+				controllerid = 0;
 		else
 				mexErrMsgTxt ("invalid input argument #1");
 
@@ -115,14 +115,14 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		else
 				mexErrMsgTxt ("invalid input argument #3");
 
-		if (masterid!=0 || timallow!=0 || memallow!=0) {
+		if (controllerid!=0 || timallow!=0 || memallow!=0) {
 				enabled = 1;
 				/* in this case the mex file is not allowed to be cleared from memory */
 				if (!mexIsLocked())
 						mexLock(); 
 		}
 
-		if (masterid==0 && timallow==0 && memallow==0) {
+		if (controllerid==0 && timallow==0 && memallow==0) {
 				enabled = 0;
 				/* in this case the mex file is allowed to be cleared from memory */
 #ifdef SOLUTION_FOR_UNEXPLAINED_CRASH
@@ -188,19 +188,19 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				memallow += rss;
 		}
 
-		/* enable the watchdog: the expire thread will exit if the master is not seen any more */
+		/* enable the watchdog: the expire thread will exit if the controller is not seen any more */
 		pthread_mutex_lock(&mutexwatchdog);
 		watchdog.enabled  = enabled;
 		watchdog.evidence = 0;
-		watchdog.masterid = masterid;
+		watchdog.controllerid = controllerid;
 		watchdog.memory   = memallow;
 		watchdog.time     = timallow;
 		pthread_mutex_unlock(&mutexwatchdog);
 
 		if (enabled)
-				mexPrintf("watchdog: enabled for masterid = %lu, time = %d, memory = %lu\n", masterid, timallow, memallow);
+				mexPrintf("watchdog: enabled for controllerid = %lu, time = %d, memory = %lu\n", controllerid, timallow, memallow);
 		else
-				mexPrintf("watchdog: disabled for masterid = %lu, time = %d, memory = %lu\n", masterid, timallow, memallow);
+				mexPrintf("watchdog: disabled for controllerid = %lu, time = %d, memory = %lu\n", controllerid, timallow, memallow);
 
 		return;
 } /* main */
