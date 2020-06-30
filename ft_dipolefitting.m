@@ -302,8 +302,8 @@ end
 nchans = size(Vdata,1);
 ntime  = size(Vdata,2);
 Vmodel = zeros(nchans, ntime);
-fprintf('selected %d channels\n', nchans);
-fprintf('selected %d topographies\n', ntime);
+ft_info('selected %d channels\n', nchans);
+ft_info('selected %d topographies\n', ntime);
 
 if nchans<cfg.numdipoles*3
   ft_warning('not enough channels to perform a dipole fit');
@@ -444,9 +444,9 @@ if strcmp(cfg.gridsearch, 'yes')
       dip.pos = reshape(dip.pos,3,cfg.numdipoles)';     % convert to a Nx3 array
       dip.mom = zeros(cfg.numdipoles*3,1);              % set the dipole moment to zero
       if cfg.numdipoles==1
-        fprintf('found minimum after scanning on grid point [%g %g %g]\n', dip.pos(1), dip.pos(2), dip.pos(3));
+        ft_info('found minimum after scanning on grid point [%g %g %g]\n', dip.pos(1), dip.pos(2), dip.pos(3));
       elseif cfg.numdipoles==2
-        fprintf('found minimum after scanning on grid point [%g %g %g; %g %g %g]\n', dip.pos(1), dip.pos(2), dip.pos(3), dip.pos(4), dip.pos(5), dip.pos(6));
+        ft_info('found minimum after scanning on grid point [%g %g %g; %g %g %g]\n', dip.pos(1), dip.pos(2), dip.pos(3), dip.pos(4), dip.pos(5), dip.pos(6));
       end
       
     case 'moving'
@@ -457,9 +457,9 @@ if strcmp(cfg.gridsearch, 'yes')
         dip(t).pos = reshape(dip(t).pos,3,cfg.numdipoles)';   % convert to a Nx3 array
         dip(t).mom = zeros(cfg.numdipoles*3,1);               % set the dipole moment to zero
         if cfg.numdipoles==1
-          fprintf('found minimum after scanning for topography %d on grid point [%g %g %g]\n', t, dip(t).pos(1), dip(t).pos(2), dip(t).pos(3));
+          ft_info('found minimum after scanning for topography %d on grid point [%g %g %g]\n', t, dip(t).pos(1), dip(t).pos(2), dip(t).pos(3));
         elseif cfg.numdipoles==2
-          fprintf('found minimum after scanning for topography %d on grid point [%g %g %g; %g %g %g]\n', t, dip(t).pos(1), dip(t).pos(2), dip(t).pos(3), dip(t).pos(4), dip(t).pos(5), dip(t).pos(6));
+          ft_info('found minimum after scanning for topography %d on grid point [%g %g %g; %g %g %g]\n', t, dip(t).pos(1), dip(t).pos(2), dip(t).pos(3), dip(t).pos(4), dip(t).pos(5), dip(t).pos(6));
         end
       end
       
@@ -509,9 +509,9 @@ if strcmp(cfg.nonlinear, 'yes')
         dip = dipole_fit(dip, sens, headmodel, Vdata, dipfitopt{:}, leadfieldopt{:});
         success = 1;
         if cfg.numdipoles==1
-          fprintf('found minimum after non-linear optimization on [%g %g %g]\n', dip.pos(1), dip.pos(2), dip.pos(3));
+          ft_info('found minimum after non-linear optimization on [%g %g %g]\n', dip.pos(1), dip.pos(2), dip.pos(3));
         elseif cfg.numdipoles==2
-          fprintf('found minimum after non-linear optimization on [%g %g %g; %g %g %g]\n', dip.pos(1,1), dip.pos(1,2), dip.pos(1,3), dip.pos(2,1), dip.pos(2,2), dip.pos(2,3));
+          ft_info('found minimum after non-linear optimization on [%g %g %g; %g %g %g]\n', dip.pos(1,1), dip.pos(1,2), dip.pos(1,3), dip.pos(2,1), dip.pos(2,2), dip.pos(2,3));
         end
       catch
         success = 0;
@@ -529,9 +529,9 @@ if strcmp(cfg.nonlinear, 'yes')
           dipout(t) = dipole_fit(dipin(t), sens, headmodel, Vdata(:,t), dipfitopt{:}, leadfieldopt{:});
           success(t) = 1;
           if cfg.numdipoles==1
-            fprintf('found minimum after non-linear optimization for topography %d on [%g %g %g]\n', t, dipout(t).pos(1), dipout(t).pos(2), dipout(t).pos(3));
+            ft_info('found minimum after non-linear optimization for topography %d on [%g %g %g]\n', t, dipout(t).pos(1), dipout(t).pos(2), dipout(t).pos(3));
           elseif cfg.numdipoles==2
-            fprintf('found minimum after non-linear optimization for topography %d on [%g %g %g; %g %g %g]\n', t, dipout(t).pos(1,1), dipout(t).pos(1,2), dipout(t).pos(1,3), dipout(t).pos(2,1), dipout(t).pos(2,2), dipout(t).pos(2,3));
+            ft_info('found minimum after non-linear optimization for topography %d on [%g %g %g; %g %g %g]\n', t, dipout(t).pos(1,1), dipout(t).pos(1,2), dipout(t).pos(1,3), dipout(t).pos(2,1), dipout(t).pos(2,2), dipout(t).pos(2,3));
           end
         catch
           % keep the position and moment according to the initial guess

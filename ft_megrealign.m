@@ -178,7 +178,7 @@ Ntrials = length(data.trial);
 % dataindx = match_str(data.label, cfg.channel);
 % restindx = setdiff(1:length(data.label),dataindx);
 % if ~isempty(restindx)
-%   fprintf('removing %d non-MEG channels from the data\n', length(restindx));
+%   ft_info('removing %d non-MEG channels from the data\n', length(restindx));
 %   rest.label = data.label(restindx);    % first remember the rest
 %   data.label = data.label(dataindx);    % then reduce the data
 %   for i=1:Ntrials
@@ -196,7 +196,7 @@ Ntrials = length(data.trial);
 template = struct([]); % initialize as 0x0 empty struct array with no fields
 for i=1:length(cfg.template)
   if ischar(cfg.template{i})
-    fprintf('reading template sensor position from %s\n', cfg.template{i});
+    ft_info('reading template sensor position from %s\n', cfg.template{i});
     tmp = ft_read_sens(cfg.template{i}, 'senstype', 'meg');
   elseif isstruct(cfg.template{i}) && isfield(cfg.template{i}, 'coilpos') && isfield(cfg.template{i}, 'coilori') && isfield(cfg.template{i}, 'tra')
     tmp = cfg.template{i};
@@ -256,7 +256,7 @@ leadfieldopt = ft_setopt(leadfieldopt, 'weight',         ft_getopt(cfg, 'weight'
 
 if strcmp(ft_senstype(data.grad), ft_senstype(template.grad))
   [id, it] = match_str(data.grad.label, template.grad.label);
-  fprintf('mean distance towards template gradiometers is %.2f %s\n', mean(sum((data.grad.chanpos(id,:)-template.grad.chanpos(it,:)).^2, 2).^0.5), template.grad.unit);
+  ft_info('mean distance towards template gradiometers is %.2f %s\n', mean(sum((data.grad.chanpos(id,:)-template.grad.chanpos(it,:)).^2, 2).^0.5), template.grad.unit);
 else
   % the projection is from one MEG system to another MEG system, which makes a comparison of the data difficult
   cfg.feedback = 'no';
@@ -271,7 +271,7 @@ tmpcfg.grad      = data.grad;
 sourcemodel = ft_prepare_sourcemodel(tmpcfg);
 
 % compute the forward model for the new gradiometer positions
-fprintf('computing forward model for %d dipoles\n', size(sourcemodel.pos,1));
+ft_info('computing forward model for %d dipoles\n', size(sourcemodel.pos,1));
 lfnew = ft_compute_leadfield(sourcemodel.pos, template.grad, volnew, leadfieldopt{:});
 if ~pertrial
   % this needs to be done only once
@@ -281,7 +281,7 @@ end
 
 % interpolate the data towards the template gradiometers
 for i=1:Ntrials
-  fprintf('realigning trial %d\n', i);
+  ft_info('realigning trial %d\n', i);
   if pertrial
     %warp the gradiometer array according to the motiontracking data
     sel   = match_str(rest.label, {'nasX';'nasY';'nasZ';'lpaX';'lpaY';'lpaZ';'rpaX';'rpaY';'rpaZ'});
@@ -306,13 +306,13 @@ for i=1:Ntrials
     % also compute the residual variance when interpolating
     [id,it]   = match_str(data.grad.label, template.grad.label);
     rvrealign = rv(data.trial{i}(id,:), data.realign{i}(it,:));
-    fprintf('original -> template             RV %.2f %%\n', 100 * mean(rvrealign));
+    ft_info('original -> template             RV %.2f %%\n', 100 * mean(rvrealign));
     datnoalign = noalign * data.trial{i};
     datbkalign = bkalign * data.trial{i};
     rvnoalign = rv(data.trial{i}, datnoalign);
     rvbkalign = rv(data.trial{i}, datbkalign);
-    fprintf('original             -> original RV %.2f %%\n', 100 * mean(rvnoalign));
-    fprintf('original -> template -> original RV %.2f %%\n', 100 * mean(rvbkalign));
+    ft_info('original             -> original RV %.2f %%\n', 100 * mean(rvnoalign));
+    ft_info('original -> template -> original RV %.2f %%\n', 100 * mean(rvbkalign));
   end
 end
 
@@ -390,9 +390,9 @@ interp.time    = data.time;
 
 % add the rest channels back to the data, these were not interpolated
 if ~isempty(rest.label)
-  fprintf('adding %d non-MEG channels back to the data (', length(rest.label));
-  fprintf('%s, ', rest.label{1:end-1});
-  fprintf('%s)\n', rest.label{end});
+  ft_info('adding %d non-MEG channels back to the data (', length(rest.label));
+  ft_info('%s, ', rest.label{1:end-1});
+  ft_info('%s)\n', rest.label{end});
   for trial=1:length(rest.trial)
     interp.trial{trial} = [interp.trial{trial}; rest.trial{trial}];
   end
@@ -438,12 +438,12 @@ function [realign, noalign, bkalign] = computeprojection(lfold, lfnew, tolerance
 % compute this inverse only once, although it is used twice
 tmp = ft_inv(lfold, 'method', 'tsvd', 'tolerance', tolerance);
 % compute the three interpolation matrices
-fprintf('computing interpolation matrix #1\n');
+ft_info('computing interpolation matrix #1\n');
 realign = lfnew * tmp;
 if strcmp(verify, 'yes')
-  fprintf('computing interpolation matrix #2\n');
+  ft_info('computing interpolation matrix #2\n');
   noalign = lfold * tmp;
-  fprintf('computing interpolation matrix #3\n');
+  ft_info('computing interpolation matrix #3\n');
   bkalign = (lfold * ft_inv(lfnew, 'method', 'tsvd', 'tolerance', tolerance)) * realign;
 else
   noalign = [];

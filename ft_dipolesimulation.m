@@ -264,7 +264,7 @@ for trial=1:cfg.numtrl
   sc = sc + length(data.trial{trial}(:));
 end
 rms = sqrt(ss/sc);
-fprintf('RMS value of data data is %g\n', rms);
+ft_info('RMS value of data data is %g\n', rms);
 
 % add noise to the data data
 for trial=1:cfg.numtrl

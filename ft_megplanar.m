@@ -195,7 +195,7 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   sourcemodel = ft_prepare_sourcemodel(tmpcfg);
   
   % compute the forward model for the axial gradiometers
-  fprintf('computing forward model for %d dipoles\n', size(sourcemodel.pos,1));
+  ft_info('computing forward model for %d dipoles\n', size(sourcemodel.pos,1));
   lfold = ft_compute_leadfield(sourcemodel.pos, axial.grad, headmodel, leadfieldopt{:});
   
   % construct the planar gradient definition and compute its forward model
@@ -227,7 +227,7 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   
   %   % interpolate the data towards the planar gradiometers
   %   for i=1:Ntrials
-  %     fprintf('interpolating trial %d to planar gradiometer\n', i);
+  %     ft_info('interpolating trial %d to planar gradiometer\n', i);
   %     interp.trial{i} = transform * data.trial{i}(dataindx,:);
   %   end % for Ntrials
   %
