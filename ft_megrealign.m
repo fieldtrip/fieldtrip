@@ -227,11 +227,15 @@ volcfg.headmodel = cfg.headmodel;
 volcfg.grad      = data.grad;
 volcfg.channel   = data.label; % this might be a subset of the MEG channels
 
-% As of yet the next step is not entirely correct, because it does not keep track of
-% the balancing of the gradiometer array. FIXME this may require some thought because
-% the leadfields are computed with low level functions and do not easily accommodate
-% for matching the correct channels with each other (in order to compute the
-% projection matrix).
+% FIXME As of yet the next steps might not entirely correct, because it does not keep
+% track of the balancing of the gradiometer array. This may require some thought
+% because the leadfields are computed with low level functions and do not easily
+% accommodate for matching the correct channels with each other (in order to compute
+% the projection matrix).
+
+% PREPARE_HEADMODEL will match the data labels, the gradiometer labels and the
+% volume model labels (in case of a localspheres model) and result in a gradiometer
+% definition that only contains the gradiometers that are present in the data.
 [volold, data.grad] = prepare_headmodel(volcfg, []);
 
 % Note that it is necessary to keep the two volume conduction models separate, since
@@ -241,6 +245,14 @@ volcfg.channel   = data.label; % this might be a subset of the MEG channels
 volcfg.grad    = template.grad;
 volcfg.channel = 'MEG'; % include all MEG channels
 [volnew, template.grad] = prepare_headmodel(volcfg, []);
+
+% construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD
+leadfieldopt = {};
+leadfieldopt = ft_setopt(leadfieldopt, 'reducerank',     ft_getopt(cfg, 'reducerank'));
+leadfieldopt = ft_setopt(leadfieldopt, 'backproject',    ft_getopt(cfg, 'backproject'));
+leadfieldopt = ft_setopt(leadfieldopt, 'normalize',      ft_getopt(cfg, 'normalize'));
+leadfieldopt = ft_setopt(leadfieldopt, 'normalizeparam', ft_getopt(cfg, 'normalizeparam'));
+leadfieldopt = ft_setopt(leadfieldopt, 'weight',         ft_getopt(cfg, 'weight'));
 
 if strcmp(ft_senstype(data.grad), ft_senstype(template.grad))
   [id, it] = match_str(data.grad.label, template.grad.label);
@@ -257,27 +269,14 @@ tmpcfg.headmodel = volold;
 tmpcfg.grad      = data.grad;
 % create the source positions on which the data will be projected
 sourcemodel = ft_prepare_sourcemodel(tmpcfg);
-pos = sourcemodel.pos;
-
-% sometimes some of the dipole positions are nan, due to problems with the headsurface triangulation
-% remove them to prevent problems with the forward computation
-sel = any(isnan(pos(:,1)),2);
-pos(sel,:) = [];
 
 % compute the forward model for the new gradiometer positions
-fprintf('computing forward model for %d dipoles\n', size(pos,1));
-lfnew = ft_compute_leadfield(pos, template.grad, volnew);
+fprintf('computing forward model for %d dipoles\n', size(sourcemodel.pos,1));
+lfnew = ft_compute_leadfield(sourcemodel.pos, template.grad, volnew, leadfieldopt{:});
 if ~pertrial
-  %this needs to be done only once
-  lfold = ft_compute_leadfield(pos, data.grad, volold);
+  % this needs to be done only once
+  lfold = ft_compute_leadfield(sourcemodel.pos, data.grad, volold, leadfieldopt{:});
   [realign, noalign, bkalign] = computeprojection(lfold, lfnew, cfg.pruneratio, cfg.verify);
-else
-  % the forward model and realignment matrices have to be computed for each trial
-  % this also goes for the singleshell volume conductor model
-  % x = which('rigidbodyJM'); % this function is needed
-  % if isempty(x)
-  %   ft_error('you are trying out experimental code for which you need some extra functionality which is currently not in the release version of FieldTrip. if you are interested in trying it out, contact Jan-Mathijs');
-  % end
 end
 
 % interpolate the data towards the template gradiometers
@@ -290,17 +289,16 @@ for i=1:Ntrials
     if ~all(hmdat==repmat(hmdat(:,1),[1 size(hmdat,2)]))
       ft_error('only one position per trial is at present allowed');
     else
-      %M    = rigidbodyJM(hmdat(:,1))
       M    = ft_headcoordinates(hmdat(1:3,1),hmdat(4:6,1),hmdat(7:9,1));
       grad = ft_transform_geometry(M, data.grad);
     end
     
     volcfg.grad = grad;
-    %compute volume conductor
-    [volold, grad] = prepare_headmodel(volcfg);
-    %compute forward model
-    lfold = ft_compute_leadfield(pos, grad, volold);
-    %compute projection matrix
+    % compute volume conductor
+    [volold, grad] = prepare_headmodel(volcfg, []);
+    % compute forward model
+    lfold = ft_compute_leadfield(sourcemodel.pos, grad, volold, leadfieldopt{:});
+    % compute projection matrix
     [realign, noalign, bkalign] = computeprojection(lfold, lfnew, cfg.pruneratio, cfg.verify);
   end
   data.realign{i} = realign * data.trial{i};
