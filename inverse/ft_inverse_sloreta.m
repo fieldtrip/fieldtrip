@@ -1,12 +1,12 @@
-function [dipout] = ft_sloreta(dip, grad, headmodel, dat, Cy, varargin)
+function [dipout] = ft_inverse_sloreta(dip, grad, headmodel, dat, Cy, varargin)
 
-% ft_sloreta scans on pre-defined dipole locations with a single dipole
+% FT_INVERSE_SLORETA scans on pre-defined dipole locations with a single dipole
 % and returns the sLORETA spatial filter output for a dipole on every
 % location. Dipole locations that are outside the head will return a
-% NaN value. Adapted from beamformer_lcmv.m
+% NaN value.
 %
 % Use as
-%   [dipout] = beamformer_lcmv(dipin, grad, headmodel, dat, cov, varargin)
+%   [dipout] = ft_inverse_lcmv(dipin, grad, headmodel, dat, cov, varargin)
 % where
 %   dipin       is the input dipole model
 %   grad        is the gradiometer definition
@@ -44,7 +44,7 @@ function [dipout] = ft_sloreta(dip, grad, headmodel, dat, Cy, varargin)
 % be fitted to the data.
 
 % Copyright (C) 2016, Sarang Dalal
-% based on code Copyright (C) 2003-2014, Robert Oostenveld
+% Copyright (C) 2003-2014, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -200,7 +200,7 @@ elseif ~isempty(subspace)
   else
     dat_pre_subspace = dat;
     Cy_pre_subspace  = Cy;
-    Cy    = subspace*Cy*subspace'; 
+    Cy    = subspace*Cy*subspace';
     % here the subspace can be different from the singular vectors of Cy, so we
     % have to do the sandwiching as opposed to line 216
     invCy = pinv(Cy);
@@ -224,7 +224,7 @@ for i=1:size(dip.pos,1)
     lf = dip.leadfield{i};
   elseif  isfield(dip, 'leadfield') && ~isfield(dip, 'mom')
     % reuse the leadfield that was previously computed
-    lf = dip.leadfield{i};    
+    lf = dip.leadfield{i};
   elseif  ~isfield(dip, 'leadfield') && isfield(dip, 'mom')
     % compute the leadfield for a fixed dipole orientation
     lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
@@ -252,7 +252,7 @@ for i=1:size(dip.pos,1)
     % sLORETA: if orthogonal components are retained (i.e., fixedori = 'no')
     %          then weight for each lead field column must be calculated separately
     for ii=1:size(lf,2)
-        filt(ii,:) = pinv(sqrt(lf(:,ii)' * invG * lf(:,ii))) * lf(:,ii)' * invG;  
+        filt(ii,:) = pinv(sqrt(lf(:,ii)' * invG * lf(:,ii))) * lf(:,ii)' * invG;
     end
   end
   if(any(~isreal(filt)))
@@ -281,7 +281,7 @@ for i=1:size(dip.pos,1)
   if computekurt && ~isempty(dat)
     % compute the kurtosis of the dipole time series
     dipout.kurtosis(i,:) = kurtosis((filt*dat)');
-  end    
+  end
   if projectnoise
     % estimate the power of the noise that is projected through the filter
     if powlambda1
@@ -392,4 +392,3 @@ else
     X = V(:,1:r)*s*U(:,1:r)';
   end
 end
-

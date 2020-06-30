@@ -200,17 +200,17 @@ if ~isempty(cfg.symmetry)
   if cfg.numdipoles~=2
     ft_error('symmetry constraints are only supported for two-dipole models');
   elseif strcmp(cfg.symmetry, 'x')
-    % this structure is passed onto the low-level ft_ft_inverse_dipolefit function
+    % this structure is passed onto the low-level FT_INVERSE_DIPOLEFIT function
     cfg.dipfit.constr.reduce = [1 2 3];         % select the parameters [x1 y1 z1]
     cfg.dipfit.constr.expand = [1 2 3 1 2 3];   % repeat them as [x1 y1 z1 x1 y1 z1]
     cfg.dipfit.constr.mirror = [1 1 1 -1 1 1];  % multiply each of them with 1 or -1, resulting in [x1 y1 z1 -x1 y1 z1]
   elseif strcmp(cfg.symmetry, 'y')
-    % this structure is passed onto the low-level ft_ft_inverse_dipolefit function
+    % this structure is passed onto the low-level FT_INVERSE_DIPOLEFIT function
     cfg.dipfit.constr.reduce = [1 2 3];         % select the parameters [x1 y1 z1]
     cfg.dipfit.constr.expand = [1 2 3 1 2 3];   % repeat them as [x1 y1 z1 x1 y1 z1]
     cfg.dipfit.constr.mirror = [1 1 1 1 -1 1];  % multiply each of them with 1 or -1, resulting in [x1 y1 z1 x1 -y1 z1]
   elseif strcmp(cfg.symmetry, 'z')
-    % this structure is passed onto the low-level ft_ft_inverse_dipolefit function
+    % this structure is passed onto the low-level FT_INVERSE_DIPOLEFIT function
     cfg.dipfit.constr.reduce = [1 2 3];         % select the parameters [x1 y1 z1]
     cfg.dipfit.constr.expand = [1 2 3 1 2 3];   % repeat them as [x1 y1 z1 x1 y1 z1]
     cfg.dipfit.constr.mirror = [1 1 1 1 1 -1];  % multiply each of them with 1 or -1, resulting in [x1 y1 z1 x1 y1 -z1]
@@ -245,7 +245,7 @@ end
 % this will also update cfg.channel to match the electrodes/gradiometers
 [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
 
-% construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD and ft_inverse_dipolefit
+% construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD and FT_INVERSE_DIPOLEFIT
 leadfieldopt = {};
 leadfieldopt = ft_setopt(leadfieldopt, 'reducerank',     ft_getopt(cfg, 'reducerank'));
 leadfieldopt = ft_setopt(leadfieldopt, 'backproject',    ft_getopt(cfg, 'backproject'));
@@ -253,7 +253,7 @@ leadfieldopt = ft_setopt(leadfieldopt, 'normalize',      ft_getopt(cfg, 'normali
 leadfieldopt = ft_setopt(leadfieldopt, 'normalizeparam', ft_getopt(cfg, 'normalizeparam'));
 leadfieldopt = ft_setopt(leadfieldopt, 'weight',         ft_getopt(cfg, 'weight'));
 
-% construct the low-level options for the dipole fitting as key-value pairs, these are passed to ft_inverse_dipolefit
+% construct the low-level options for the dipole fitting as key-value pairs, these are passed to FT_INVERSE_DIPOLEFIT
 dipfitopt = ft_cfg2keyval(cfg.dipfit);
 
 % select the desired channels, ordered according to the sensor structure or configuration

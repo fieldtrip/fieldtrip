@@ -1,10 +1,10 @@
-function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin)
+function [dipout] = ft_inverse_dipolefit(dip, sens, headmodel, dat, varargin)
 
-% DIPOLE_FIT performs an equivalent current dipole fit with a single
+% FT_INVERSE_DIPOLEFIT performs an equivalent current dipole fit with a single
 % or a small number of dipoles to explain an EEG or MEG scalp topography.
 %
 % Use as
-%   [dipout] = dipole_fit(dip, sens, headmodel, dat, ...)
+%   [dipout] = ft_inverse_dipolefit(dip, sens, headmodel, dat, ...)
 %
 % Additional input arguments should be specified as key-value pairs and can include
 %   'display'     = Level of display [ off | iter | notify | final ]
@@ -58,8 +58,8 @@ function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin)
 
 % It is necessary to provide backward compatibility support for the old function call
 % in case people want to use it in conjunction with EEGLAB and the dipfit1 plugin.
-% old style: function [dipout] = dipole_fit(dip, dat, sens, headmodel, constr), where constr is optional
-% new style: function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin), where varargin is in key-value pairs
+% old style: function [dipout] = ft_inverse_dipolefit(dip, dat, sens, headmodel, constr), where constr is optional
+% new style: function [dipout] = ft_inverse_dipolefit(dip, sens, headmodel, dat, varargin), where varargin is in key-value pairs
 if nargin==4 && ~isstruct(sens) && isstruct(dat)
   % looks like old style, the order of the input arguments has to be changed
   ft_warning('converting from old style input\n');

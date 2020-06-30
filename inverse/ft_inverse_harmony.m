@@ -1,10 +1,10 @@
-function [dipout] = harmony(dip, grad, headmodel, dat, varargin)
+function [dipout] = ft_inverse_harmony(dip, grad, headmodel, dat, varargin)
 
-% HARMONY computes a linear estimate of the current in a distributed source model
+% FT_INVERSE_HARMONY computes a linear estimate of the current in a distributed source model
 % using a mesh harmonic based low-pass filter.
 %
 % Use as
-%   [dipout] = harmony(dip, grad, headmodel, dat, ...)
+%   [dipout] = ft_inverse_harmony(dip, grad, headmodel, dat, ...)
 %
 % Optional input arguments should come in key-value pairs and can include
 %  'noisecov'             = Nchan x Nchan matrix with noise covariance
@@ -52,7 +52,7 @@ function [dipout] = harmony(dip, grad, headmodel, dat, varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: harmony.m 10972 2015-12-08 13:09:48Z lucamb $
+% $Id$
 
 %% get the optional inputs for the MNE method according to Dale et al 2000, and Liu et al. 2002
 noisecov       = ft_getopt(varargin, 'noisecov');
@@ -137,7 +137,7 @@ else
   end
 end
 
-%% harmony Parameters
+%% ft_inverse_harmony Parameters
 num_dip      = size(dip.leadfield{1}, 2);
 num_pos      = size(dip.leadfield, 2);
 num_comp     = ft_getopt(varargin, 'connected_components', 1);
@@ -411,4 +411,3 @@ if isfield(dipout, 'filter')
   dipout.filter( originside) = dipout.filter;
   dipout.filter(~originside) = {[]};
 end
-

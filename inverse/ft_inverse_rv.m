@@ -1,10 +1,10 @@
-function [dipout] = residualvariance(dip, grad, headmodel, dat, varargin)
+function [dipout] = ft_inverse_rv(dip, grad, headmodel, dat, varargin)
 
-% RESIDUALVARIANCE scan with a single dipole and computes the RV
-% at each grid location.
+% FT_INVERSE_RV scan with a single dipole and computes the residual variance
+% at each dipole location.
 %
 % Use as
-%   [dipout] = residualvariance(dip, grad, headmodel, dat, ...)
+%   [dipout] = ft_inverse_rv(dip, grad, headmodel, dat, ...)
 
 % Copyright (C) 2004-2006, Robert Oostenveld
 %
@@ -104,17 +104,17 @@ for i=1:size(dip.pos,1)
     lf = dip.subspace{i} * lf;
     
     % the data and the covariance (or cross-spectral density) become voxel dependent due to the projection
-    if strcmp(datatype, 'time') || strcmp(datatype, 'csd') 
+    if strcmp(datatype, 'time') || strcmp(datatype, 'csd')
       dat = dip.subspace{i} * dat_pre_subspace*dip.subspace{i}'; %Subspace cross-spectral density
     else
       dat = dip.subspace{i} * dat_pre_subspace; %Subspace time-series or fourier coefficients
     end
   end
   
-  % Projection matrix (Pseudoinverse) 
-  lfi    = pinv(lf); 
+  % Projection matrix (Pseudoinverse)
+  lfi    = pinv(lf);
     
-  if strcmp(datatype, 'time') || strcmp(datatype, 'fourier') 
+  if strcmp(datatype, 'time') || strcmp(datatype, 'fourier')
     % Compute dipole moment and residual variance
     mom{i} = lfi * dat;
     rv(i)  = sum(sum(abs(dat - lf*mom{i}).^2, 1), 2)./sum(sum(abs(dat).^2, 1), 2);

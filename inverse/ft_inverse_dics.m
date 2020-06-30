@@ -1,12 +1,12 @@
-function [dipout] = beamformer_dics(dip, grad, headmodel, dat, C, varargin)
+function [dipout] = ft_inverse_dics(dip, grad, headmodel, dat, C, varargin)
 
-% BEAMFORMER_DICS scans on pre-defined dipole locations with a single dipole
+% FT_INVERSE_DICS scans on pre-defined dipole locations with a single dipole
 % and returns the beamformer spatial filter output for a dipole on every
 % location. Dipole locations that are outside the head will return a
 % NaN value.
 %
 % Use as
-%   [dipout] = beamformer_dics(dipin, grad, headmodel, dat, cov, varargin)
+%   [dipout] = ft_inverse_dics(dipin, grad, headmodel, dat, cov, varargin)
 % where
 %   dipin       is the input dipole model
 %   grad        is the gradiometer definition

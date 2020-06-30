@@ -1,12 +1,12 @@
-function [dipout] = beamformer_lcmv(dip, grad, headmodel, dat, C, varargin)
+function [dipout] = ft_inverse_lcmv(dip, grad, headmodel, dat, C, varargin)
 
-% BEAMFORMER_LCMV scans on pre-defined dipole locations with a single dipole
-% and returns the beamformer spatial filter output for a dipole on every
-% location. Dipole locations that are outside the head will return a
-% NaN value.
+% FT_INVERSE_LCMV scans on pre-defined dipole locations with a single dipole
+% and returns the linear constrained minimum variance beamformer spatial filter
+% output for a dipole on every location. Dipole locations that are outside the
+% head will return a NaN value.
 %
 % Use as
-%   [dipout] = beamformer_lcmv(dipin, grad, headmodel, dat, cov, varargin)
+%   [dipout] = ft_inverse_lcmv(dipin, grad, headmodel, dat, cov, varargin)
 % where
 %   dipin       is the input dipole model
 %   grad        is the gradiometer definition
@@ -36,12 +36,12 @@ function [dipout] = beamformer_lcmv(dip, grad, headmodel, dat, C, varargin)
 %
 % These options influence the forward computation of the leadfield
 %   'reducerank'      = 'no', or number (default = 3 for EEG, 2 for MEG)
-%   'backproject'     = 'yes' or 'no',  determines when reducerank is applied whether the 
-%                        lower rank leadfield is projected back onto the original linear 
+%   'backproject'     = 'yes' or 'no',  determines when reducerank is applied whether the
+%                        lower rank leadfield is projected back onto the original linear
 %                        subspace, or not (default = 'yes')
 %   'normalize'       = 'yes' or 'no' (default = 'no')
 %   'normalizeparam'  = depth normalization parameter (default = 0.5)
-%   'weight'          = number or Nx1 vector, weight for each dipole position to compensate 
+%   'weight'          = number or Nx1 vector, weight for each dipole position to compensate
 %                        for the size of the corresponding patch (default = 1)
 %
 % These options influence the mathematical inversion of the covariance matrix
@@ -228,7 +228,7 @@ elseif ~isempty(subspace)
   else
     dat_pre_subspace = dat;
     C_pre_subspace   = C;
-    C                = subspace*C*subspace'; 
+    C                = subspace*C*subspace';
     % here the subspace can be different from the singular vectors of C, so we
     % have to do the sandwiching as opposed to line 226
     invC = ft_inv(C, invopt{:});
@@ -259,7 +259,7 @@ for i=1:size(dip.pos,1)
       lf = dip.leadfield{i};
     elseif  hasleadfield && ~isfield(dip, 'mom')
       % reuse the leadfield that was previously computed
-      lf = dip.leadfield{i};    
+      lf = dip.leadfield{i};
     elseif  ~hasleadfield && isfield(dip, 'mom')
       % compute the leadfield for a fixed dipole orientation
       lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, leadfieldopt{:}) * dip.mom(:,i);
@@ -281,7 +281,7 @@ for i=1:size(dip.pos,1)
       lf     = subspace * lf;
     
       % according to Kensuke's paper, the eigenspace bf boils down to projecting
-      % the 'traditional' filter onto the subspace spanned by the first k eigenvectors 
+      % the 'traditional' filter onto the subspace spanned by the first k eigenvectors
       % [u,s,v] = svd(C); filt = ESES*filt; ESES = u(:,1:k)*u(:,1:k)';
       % however, even though it seems that the shape of the filter is identical to
       % the shape it is obtained with the following code, the w*lf=I does not hold.
@@ -292,13 +292,13 @@ for i=1:size(dip.pos,1)
         case {'unitnoisegain','nai'}
           % optimal orientation calculation for unit-noise gain beamformer,
           % (also applies nai weightnorm constraint), based on equation 4.47 from Sekihara & Nagarajan (2008)
-          % the following is a reformulation of the generalized eigenproblem 
+          % the following is a reformulation of the generalized eigenproblem
           [v, d]        = eig(pinv(lf' * invC_squared *lf)*(lf' * invC *lf));
           [d, iv]       = sort(diag(d), 'descend');
           unitnoiseori  = v(:,iv(1));
           lf            = lf * unitnoiseori;
           dipout.ori{i} = unitnoiseori;
-          dipout.eta(i) = d(1)./d(2); % ratio between largest and second largest eigenvalues 
+          dipout.eta(i) = d(1)./d(2); % ratio between largest and second largest eigenvalues
           if hassubspace, lforig = lforig * unitnoiseori; end
 
         case 'arraygain'
@@ -330,9 +330,9 @@ for i=1:size(dip.pos,1)
     switch weightnorm
       case 'nai'
         % Van Veen's Neural Activity Index
-        % below equation is equivalent to following:  
-        % filt = pinv(lf' * invC * lf) * lf' * invC; 
-        % filt = filt/sqrt(noise*filt*filt'); 
+        % below equation is equivalent to following:
+        % filt = pinv(lf' * invC * lf) * lf' * invC;
+        % filt = filt/sqrt(noise*filt*filt');
         % the scaling term in the denominator is sqrt of projected noise, as per eqn. 2.67 of Sekihara & Nagarajan 2008 (S&N)
         if fixedori
           filt = pinv(sqrt(noise * lf' * invC_squared * lf)) * lf' *invC; % based on S&N eqn. 4.08
@@ -342,8 +342,8 @@ for i=1:size(dip.pos,1)
       case 'unitnoisegain'
         % filt*filt' = I
         % Unit-noise gain minimum variance (aka Borgiotti-Kaplan) beamformer
-        % below equation is equivalent to following:  
-        % filt = pinv(lf' * invC * lf) * lf' * invC; 
+        % below equation is equivalent to following:
+        % filt = pinv(lf' * invC * lf) * lf' * invC;
         % filt = filt/sqrt(filt*filt');
         if fixedori
           filt = pinv(sqrt(lf' * invC_squared * lf)) * lf' *invC; % S&N eqn. 4.15
@@ -393,7 +393,7 @@ for i=1:size(dip.pos,1)
   if computekurt && ~isempty(dat)
     % compute the kurtosis of the dipole time series
     dipout.kurtosis(i,:) = kurtosis((filt*dat)');
-  end    
+  end
   if projectnoise
     % estimate the power of the noise that is projected through the filter
     if powlambda1
@@ -484,4 +484,3 @@ else
     X = V(:,1:r)*s*U(:,1:r)';
   end
 end
-

@@ -1,13 +1,12 @@
-function [dipout] = music(dip, grad, headmodel, dat, varargin)
+function [dipout] = ft_inverse_music(dip, grad, headmodel, dat, varargin)
 
-% MUSIC source localization using MUltiple SIgnal Classification
-%
+% FT_INVERSE_MUSIC source localization using MUltiple SIgnal Classification.
 % This is a signal subspace method, which covers the techniques for
-% multiple source localization by using the eigen structure of the
+% multiple source localization by using the eigen-structure of the
 % measured data matrix.
 %
 % Use as
-%   [dipout] = music(dip, grad, headmodel, dat, ...)
+%   [dipout] = ft_inverse_music(dip, grad, headmodel, dat, ...)
 %
 % Optional input arguments should be specified as key-value pairs and can be
 %   'cov'              = data covariance matrix
@@ -97,10 +96,10 @@ ps = us * us';
 % allocate space to hold the result
 dipout.jr = nan(size(dip.pos,1),1);
 
-ft_progress('init', feedback, 'computing music metric');
+ft_progress('init', feedback, 'computing music');
 for i=1:size(dip.pos,1)
   
-  ft_progress(i/size(dip.pos,1), 'computing music metric %d/%d\n', i, size(dip.pos,1));
+  ft_progress(i/size(dip.pos,1), 'computing music %d/%d\n', i, size(dip.pos,1));
   
   if isfield(dip, 'leadfield')
     % reuse the leadfield that was previously computed
@@ -113,7 +112,7 @@ for i=1:size(dip.pos,1)
     lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
   end
   
-  % compute the MUSIC metric, c.f. equation 26
+  % compute the misic metric, c.f. equation 26
   dipout.jr(i) = (norm(ps * lf)./norm(lf)).^2;
   % as described in the Mosher 1992 paper on page 550, "...the general approach is to
   % evaluare Jr(i) over a fine three-dimensional grid, plot its inverse,
@@ -134,4 +133,3 @@ if isfield(dipout, 'jr')
   dipout.jr( originside) = dipout.jr;
   dipout.jr(~originside) = nan;
 end
-

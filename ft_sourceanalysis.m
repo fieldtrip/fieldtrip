@@ -738,7 +738,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
   end
   methodopt = ft_cfg2keyval(tmpcfg);
   
-  % construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD and ft_inverse_dipolefit
+  % construct the low-level options for the leadfield computation as key-value pairs, these are passed to the inverse function and FT_COMPUTE_LEADFIELD
   leadfieldopt = {};
   leadfieldopt = ft_setopt(leadfieldopt, 'reducerank',     ft_getopt(cfg, 'reducerank'));
   leadfieldopt = ft_setopt(leadfieldopt, 'backproject',    ft_getopt(cfg, 'backproject'));
@@ -1009,7 +1009,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'harmony', 'r
   end
   methodopt = ft_cfg2keyval(tmpcfg);
   
-  % construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD and ft_inverse_dipolefit
+  % construct the low-level options for the leadfield computation as key-value pairs, these are passed to the inverse function and FT_COMPUTE_LEADFIELD
   leadfieldopt = {};
   leadfieldopt = ft_setopt(leadfieldopt, 'reducerank',     ft_getopt(cfg, 'reducerank'));
   leadfieldopt = ft_setopt(leadfieldopt, 'backproject',    ft_getopt(cfg, 'backproject'));

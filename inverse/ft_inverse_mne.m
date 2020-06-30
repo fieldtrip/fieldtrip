@@ -1,10 +1,10 @@
-function [dipout] = minimumnormestimate(dip, grad, headmodel, dat, varargin)
+function [dipout] = ft_inverse_mne(dip, grad, headmodel, dat, varargin)
 
-% MINIMUMNORMESTIMATE computes a linear estimate of the current in a
+% FT_INVERSE_MNE computes a minimum norm linear estimate of the current in a
 % distributed source model.
 %
 % Use as
-%   [dipout] = minimumnormestimate(dip, grad, headmodel, dat, ...)
+%   [dipout] = ft_inverse_mne(dip, grad, headmodel, dat, ...)
 %
 % Optional input arguments should come in key-value pairs and can include
 %   'noisecov'         = Nchan x Nchan matrix with noise covariance
@@ -356,4 +356,3 @@ if isfield(dipout, 'filter')
   dipout.filter( originside) = dipout.filter;
   dipout.filter(~originside) = {[]};
 end
-
