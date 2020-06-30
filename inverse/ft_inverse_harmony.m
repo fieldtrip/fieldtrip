@@ -137,7 +137,7 @@ else
   end
 end
 
-%% ft_inverse_harmony Parameters
+%% Harmony parameters
 num_dip      = size(dip.leadfield{1}, 2);
 num_pos      = size(dip.leadfield, 2);
 num_comp     = ft_getopt(varargin, 'connected_components', 1);

@@ -112,7 +112,7 @@ for i=1:size(dip.pos,1)
     lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
   end
   
-  % compute the misic metric, c.f. equation 26
+  % compute the music metric, c.f. equation 26
   dipout.jr(i) = (norm(ps * lf)./norm(lf)).^2;
   % as described in the Mosher 1992 paper on page 550, "...the general approach is to
   % evaluare Jr(i) over a fine three-dimensional grid, plot its inverse,

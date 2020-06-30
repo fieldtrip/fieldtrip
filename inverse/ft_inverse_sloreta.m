@@ -6,7 +6,7 @@ function [dipout] = ft_inverse_sloreta(dip, grad, headmodel, dat, Cy, varargin)
 % NaN value.
 %
 % Use as
-%   [dipout] = ft_inverse_lcmv(dipin, grad, headmodel, dat, cov, varargin)
+%   [dipout] = ft_inverse_sloreta(dipin, grad, headmodel, dat, cov, varargin)
 % where
 %   dipin       is the input dipole model
 %   grad        is the gradiometer definition
