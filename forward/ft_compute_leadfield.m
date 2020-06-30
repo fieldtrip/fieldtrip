@@ -267,6 +267,8 @@ elseif ismeg
       end
 
     case 'openmeeg'
+      ft_hastoolbox('openmeeg', 1);
+
       dsm         = ft_getopt(varargin, 'dsm');
       nonadaptive = ft_getopt(varargin, 'nonadaptive');
       
@@ -430,6 +432,8 @@ elseif iseeg
       lf = eeg_leadfieldb(dippos, sens.elecpos, headmodel);
 
     case 'openmeeg'
+      ft_hastoolbox('openmeeg', 1);
+
       dsm         = ft_getopt(varargin, 'dsm');
       nonadaptive = ft_getopt(varargin, 'nonadaptive');
       
