@@ -10,13 +10,13 @@ function test_pull1377
 % analysis steps prior to inverse solution. The structure of this script is more or less
 % 1. get the data (MEG and EEG)
 % 2. preprocess the data (MEG and EEG)
-%   a. timelock with covariance for lcmv beamforming and minimumnormestimate
+%   a. timelock with covariance for lcmv and mne
 %   b. timelock without keeptrials for dipolefitting
-%   c. freq for dics beamforming and pcc beamforming
+%   c. freq for dics and pcc
 % 3. create leadfield
 %   a. internally computed leadfield (prepare volume conductor first and leadfield afterwards (MEG localspheres, EEG single sphere))
 %   b. load externally computed leadfield and convert to appropriate format
-% 4. perform source analysis (MEG and EEG): LCMV beamforming, MNE, DICS, PCC, dipolefitting
+% 4. perform source analysis (MEG and EEG): LCMV, MNE, DICS, PCC, dipolefitting
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % In general, variables in one function workspace are not available to other
@@ -169,8 +169,8 @@ perform_source_analysis
     clc
     disp('2: preprocess the data')
     
-    % create timelock structure with covariance for lcmv beamforming and minimumnormestimate,
-    % and timeloch without keeptrials fro dipolefitting
+    % create timelock structure with covariance for lcmv and mne
+    % and timeloch without keeptrials for dipolefitting
     
     % for MEG
     cfg = [];

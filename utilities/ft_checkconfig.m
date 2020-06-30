@@ -275,7 +275,7 @@ end
 % them from the separate substructure to the top level.
 %
 % This is to ensure backward compatibility of end-user scripts, FieldTrip functions
-% and documentation that use an obsolete nested configuration where a flat 
+% and documentation that use an obsolete nested configuration where a flat
 % configuration should be used.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(createtopcfg)

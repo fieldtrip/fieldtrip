@@ -2,8 +2,7 @@ function test_beamformer_sam(dataset)
  
 % MEM 3gb
 % WALLTIME 00:20:00
-% DEPENDENCY ft_prepare_sourcemodel headsurface ft_prepare_leadfield
-% ft_freqanalysis ft_sourceanalysis beamformer_sam
+% DEPENDENCY ft_prepare_sourcemodel headsurface ft_prepare_leadfield ft_freqanalysis ft_sourceanalysis ft_inverse_sam
 
 % this function creates a set of source-structures to be used for testing
 
@@ -84,14 +83,11 @@ SNR = 4;
 ts_s = ts_s/SNR;
 
 for ith = 1:numel(data_signal.trial)
-    
- data_signal.trial{ith} =   ts_s(:,:,ith) + ts_n(:,:,ith); 
-   
+  data_signal.trial{ith} =   ts_s(:,:,ith) + ts_n(:,:,ith);
 end
 
 
-% create timelock structure with covariance for lcmv beamforming and
-% minimumnormestimate
+% create timelock structure with covariance for lcmv and mne
 cfg             = [];
 cfg.covariance  = 'yes';
 cfg.keeptrials  = 'yes';
@@ -207,7 +203,7 @@ freq_ori         = ft_freqanalysis(cfg, source_ori_ft);
 conn = {  'coh'  'plv' };
 connout = { 'cohspctrm'  'plvspctrm' };
 
-c = 1;    
+c = 1;
 cfg           = [];
 cfg.method    = conn{c};
       

@@ -39,15 +39,14 @@ cfg.sourcemodel = grid2;
 cfg.channel = 'MEG';
 grid2 = ft_prepare_leadfield(cfg);
 
-% create timelock structure with covariance for lcmv beamforming and
-% minimumnormestimate
+% create timelock structure with covariance for lcmv and mne
 cfg  = [];
 cfg.covariance = 'yes';
 cfg.keeptrials = 'yes';
 cfg.channel    = 'MEG';
 tlck = ft_timelockanalysis(cfg, data);
 
-% create freq structure for dics beamforming and pcc beamforming
+% create freq structure for dics and pcc
 cfg  = [];
 cfg.method = 'mtmfft';
 cfg.output = 'fourier';
@@ -132,7 +131,6 @@ cfg.sourcemodel        = grid2;
 cfg.sourcemodel.filter = sourcedics2d1.avg.filter;
 cfg.outputfile  = fullfile(outputdir, 'ctf151_dics2d_trial');
 ft_sourceanalysis(cfg, freq);
-
 
 % do PCC
 cfg = [];
