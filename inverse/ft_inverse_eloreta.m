@@ -1,7 +1,9 @@
-function [dipout] = ft_eloreta(dip, grad, headmodel, dat, Cf, varargin)
+function [dipout] = ft_inverse_eloreta(dip, grad, headmodel, dat, Cf, varargin)
+
+% FT_INVERSE_ELORETA estimates the source activity using eLORETA
 %
 % Use as
-%   [dipout] = ft_eloreta(dipin, grad, headmodel, dat, cov, varargin)
+%   [dipout] = ft_inverse_eloreta(dipin, grad, headmodel, dat, cov, varargin)
 % where
 %   dipin       is the input dipole model
 %   grad        is the gradiometer definition
@@ -162,7 +164,7 @@ siz_Cf  = [size(Cf) 1 1]; % Cf can have both a freq and time dimension
 dip.pow = zeros([size(dip.pos,1),siz_Cf(3:4)]);
 dip.ori = cell(size(dip.pos,1),1);
 for i=1:size(dip.pos,1)
-  dip.ori{i} = zeros([size(dip.filter{i},1) siz_Cf(3:4)]);   
+  dip.ori{i} = zeros([size(dip.filter{i},1) siz_Cf(3:4)]);
   for j=1:siz_Cf(3)
     for k=1:siz_Cf(4)
       csd               = dip.filter{i}*Cf(:,:,j,k)*dip.filter{i}';

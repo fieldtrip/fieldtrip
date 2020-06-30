@@ -1,6 +1,6 @@
-function [dipout] = beamformer_pcc(dip, grad, headmodel, dat, C, varargin)
+function [dipout] = ft_inverse_pcc(dip, grad, headmodel, dat, C, varargin)
 
-% BEAMFORMER_PCC implements a linearly-constrained miminum variance  beamformer
+% FT_INVERSE_PCC implements a linearly-constrained miminum variance beamformer
 % that allows for post-hoc computation of canonical or partial coherence or
 % correlation. Moreover, if cortico-cortical interactions are computed, the
 % spatial filters are computed with a paired dipole as sourcemodel, thus
@@ -8,7 +8,7 @@ function [dipout] = beamformer_pcc(dip, grad, headmodel, dat, C, varargin)
 % Dipole locations that are outside the head will return a NaN value.
 %
 % Use as
-%   [dipout] = beamformer_pcc(dipin, grad, headmodel, dat, cov, ...)
+%   [dipout] = ft_inverse_pcc(dipin, grad, headmodel, dat, cov, ...)
 % where
 %   dipin       is the input dipole model
 %   grad        is the gradiometer definition

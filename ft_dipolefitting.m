@@ -200,17 +200,17 @@ if ~isempty(cfg.symmetry)
   if cfg.numdipoles~=2
     ft_error('symmetry constraints are only supported for two-dipole models');
   elseif strcmp(cfg.symmetry, 'x')
-    % this structure is passed onto the low-level ft_dipole_fit function
+    % this structure is passed onto the low-level FT_INVERSE_DIPOLEFIT function
     cfg.dipfit.constr.reduce = [1 2 3];         % select the parameters [x1 y1 z1]
     cfg.dipfit.constr.expand = [1 2 3 1 2 3];   % repeat them as [x1 y1 z1 x1 y1 z1]
     cfg.dipfit.constr.mirror = [1 1 1 -1 1 1];  % multiply each of them with 1 or -1, resulting in [x1 y1 z1 -x1 y1 z1]
   elseif strcmp(cfg.symmetry, 'y')
-    % this structure is passed onto the low-level ft_dipole_fit function
+    % this structure is passed onto the low-level FT_INVERSE_DIPOLEFIT function
     cfg.dipfit.constr.reduce = [1 2 3];         % select the parameters [x1 y1 z1]
     cfg.dipfit.constr.expand = [1 2 3 1 2 3];   % repeat them as [x1 y1 z1 x1 y1 z1]
     cfg.dipfit.constr.mirror = [1 1 1 1 -1 1];  % multiply each of them with 1 or -1, resulting in [x1 y1 z1 x1 -y1 z1]
   elseif strcmp(cfg.symmetry, 'z')
-    % this structure is passed onto the low-level ft_dipole_fit function
+    % this structure is passed onto the low-level FT_INVERSE_DIPOLEFIT function
     cfg.dipfit.constr.reduce = [1 2 3];         % select the parameters [x1 y1 z1]
     cfg.dipfit.constr.expand = [1 2 3 1 2 3];   % repeat them as [x1 y1 z1 x1 y1 z1]
     cfg.dipfit.constr.mirror = [1 1 1 1 1 -1];  % multiply each of them with 1 or -1, resulting in [x1 y1 z1 x1 y1 -z1]
@@ -245,7 +245,7 @@ end
 % this will also update cfg.channel to match the electrodes/gradiometers
 [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
 
-% construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD and DIPOLE_FIT
+% construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD and FT_INVERSE_DIPOLEFIT
 leadfieldopt = {};
 leadfieldopt = ft_setopt(leadfieldopt, 'reducerank',     ft_getopt(cfg, 'reducerank'));
 leadfieldopt = ft_setopt(leadfieldopt, 'backproject',    ft_getopt(cfg, 'backproject'));
@@ -253,7 +253,7 @@ leadfieldopt = ft_setopt(leadfieldopt, 'normalize',      ft_getopt(cfg, 'normali
 leadfieldopt = ft_setopt(leadfieldopt, 'normalizeparam', ft_getopt(cfg, 'normalizeparam'));
 leadfieldopt = ft_setopt(leadfieldopt, 'weight',         ft_getopt(cfg, 'weight'));
 
-% construct the low-level options for the dipole fitting as key-value pairs, these are passed to DIPOLE_FIT
+% construct the low-level options for the dipole fitting as key-value pairs, these are passed to FT_INVERSE_DIPOLEFIT
 dipfitopt = ft_cfg2keyval(cfg.dipfit);
 
 % select the desired channels, ordered according to the sensor structure or configuration
@@ -506,7 +506,7 @@ if strcmp(cfg.nonlinear, 'yes')
       % perform the non-linear dipole fit for all latencies together
       % catch errors due to non-convergence
       try
-        dip = dipole_fit(dip, sens, headmodel, Vdata, dipfitopt{:}, leadfieldopt{:});
+        dip = ft_inverse_dipolefit(dip, sens, headmodel, Vdata, dipfitopt{:}, leadfieldopt{:});
         success = 1;
         if cfg.numdipoles==1
           ft_info('found minimum after non-linear optimization on [%g %g %g]\n', dip.pos(1), dip.pos(2), dip.pos(3));
@@ -520,13 +520,13 @@ if strcmp(cfg.nonlinear, 'yes')
       
     case 'moving'
       % perform the non-linear dipole fit for each latency independently
-      % instead of using dip(t) = dipole_fit(dip(t),...), I am using temporary variables dipin and dipout
+      % instead of using dip(t) = ft_inverse_dipolefit(dip(t),...), I am using temporary variables dipin and dipout
       % to prevent errors like "Subscripted assignment between dissimilar structures"
       dipin = dip;
       for t=1:ntime
         % catch errors due to non-convergence
         try
-          dipout(t) = dipole_fit(dipin(t), sens, headmodel, Vdata(:,t), dipfitopt{:}, leadfieldopt{:});
+          dipout(t) = ft_inverse_dipolefit(dipin(t), sens, headmodel, Vdata(:,t), dipfitopt{:}, leadfieldopt{:});
           success(t) = 1;
           if cfg.numdipoles==1
             ft_info('found minimum after non-linear optimization for topography %d on [%g %g %g]\n', t, dipout(t).pos(1), dipout(t).pos(2), dipout(t).pos(3));

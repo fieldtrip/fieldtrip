@@ -117,7 +117,7 @@ cfg.fwhmmaxdist      = ft_getopt(cfg, 'fwhmmaxdist',      []);
 cfg.fixedori         = ft_getopt(cfg, 'fixedori',         'over_trials');
 cfg.flipori          = ft_getopt(cfg, 'flipori',          'no');
 
-% only works for minimumnormestimate
+% only works for mne
 cfg.demean         = ft_getopt(cfg, 'demean',         'yes');
 cfg.baselinewindow = ft_getopt(cfg, 'baselinewindow', [-inf 0]);
 cfg.zscore         = ft_getopt(cfg, 'zscore',         'yes');
@@ -585,7 +585,7 @@ if ispccdata
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif ismneavg
-  % the source reconstruction was computed using the minimumnormestimate and contains an average timecourse
+  % the source reconstruction was computed using mne and contains an average timecourse
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   if demean

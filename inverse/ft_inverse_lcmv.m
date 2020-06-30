@@ -1,12 +1,12 @@
-function [dipout] = beamformer_dics(dip, grad, headmodel, dat, C, varargin)
+function [dipout] = ft_inverse_lcmv(dip, grad, headmodel, dat, C, varargin)
 
-% BEAMFORMER_DICS scans on pre-defined dipole locations with a single dipole
-% and returns the beamformer spatial filter output for a dipole on every
-% location. Dipole locations that are outside the head will return a
-% NaN value.
+% FT_INVERSE_LCMV scans on pre-defined dipole locations with a single dipole
+% and returns the linear constrained minimum variance beamformer spatial filter
+% output for a dipole on every location. Dipole locations that are outside the
+% head will return a NaN value.
 %
 % Use as
-%   [dipout] = beamformer_dics(dipin, grad, headmodel, dat, cov, varargin)
+%   [dipout] = ft_inverse_lcmv(dipin, grad, headmodel, dat, cov, varargin)
 % where
 %   dipin       is the input dipole model
 %   grad        is the gradiometer definition
@@ -18,22 +18,21 @@ function [dipout] = beamformer_dics(dip, grad, headmodel, dat, C, varargin)
 %
 % The input dipole model consists of
 %   dipin.pos   positions for dipole, e.g. regular grid, Npositions x 3
-%   dipin.mom   dipole orientation (optional), 3 x Npositions,
+%   dipin.mom   dipole orientation (optional), 3 x Npositions
 % and can additionally contain things like a precomputed filter.
 %
 % Additional options should be specified in key-value pairs and can be
-%  'Pr'               = power of the external reference channel
-%  'Cr'               = cross spectral density between all data channels and the external reference channel
-%  'refdip'           = location of dipole with which coherence is computed
 %  'powmethod'        = can be 'trace' or 'lambda1'
-%  'feedback'         = give ft_progress indication, can be 'text', 'gui' or 'none'
-%  'fixedori'         = use fixed or free orientation,                 can be 'yes' or 'no'
-%  'projectnoise'     = project noise estimate through filter,         can be 'yes' or 'no'
-%  'realfilter'       = construct a real-valued filter,                can be 'yes' or 'no'
-%  'keepfilter'       = remember the beamformer filter,                can be 'yes' or 'no'
-%  'keepleadfield'    = remember the forward computation,              can be 'yes' or 'no'
-%  'keepcsd'          = remember the estimated cross-spectral density, can be 'yes' or 'no'
-%  'weightnorm'       = normalize the beamformer weights,              can be 'no', 'unitnoisegain' or 'nai'
+%  'feedback'         = give ft_progress indication, can be 'text', 'gui' or 'none' (default)
+%  'fixedori'         = use fixed or free orientation,                   can be 'yes' or 'no'
+%  'projectnoise'     = project noise estimate through filter,           can be 'yes' or 'no'
+%  'projectmom'       = project the dipole moment timecourse on the direction of maximal power, can be 'yes' or 'no'
+%  'keepfilter'       = remember the beamformer filter,                  can be 'yes' or 'no'
+%  'keepleadfield'    = remember the forward computation,                can be 'yes' or 'no'
+%  'keepmom'          = remember the estimated dipole moment timeseries, can be 'yes' or 'no'
+%  'keepcov'          = remember the estimated dipole covariance,        can be 'yes' or 'no'
+%  'kurtosis'         = compute the kurtosis of the dipole timeseries,   can be 'yes' or 'no'
+%  'weightnorm'       = normalize the beamformer weights,                can be 'no', 'unitnoisegain', 'arraygain' or 'nai'
 %
 % These options influence the forward computation of the leadfield
 %   'reducerank'      = 'no', or number (default = 3 for EEG, 2 for MEG)
@@ -45,7 +44,7 @@ function [dipout] = beamformer_dics(dip, grad, headmodel, dat, C, varargin)
 %   'weight'          = number or Nx1 vector, weight for each dipole position to compensate
 %                        for the size of the corresponding patch (default = 1)
 %
-% These options influence the mathematical inversion of the cross-spectral density matrix
+% These options influence the mathematical inversion of the covariance matrix
 %  'lambda'           = regularisation parameter
 %  'kappa'            = parameter for covariance matrix inversion
 %  'tol'              = parameter for covariance matrix inversion
@@ -81,20 +80,19 @@ if mod(nargin-5,2)
 end
 
 % these optional settings do not have defaults
-Pr             = ft_getopt(varargin, 'Pr');
-Cr             = ft_getopt(varargin, 'Cr');
-refdip         = ft_getopt(varargin, 'refdip');
-powmethod      = ft_getopt(varargin, 'powmethod');  % the default for this is set below
-realfilter     = ft_getopt(varargin, 'realfilter'); % the default for this is set below
-subspace       = ft_getopt(varargin, 'subspace');
+powmethod      = ft_getopt(varargin, 'powmethod'); % the default for this is set below
+subspace       = ft_getopt(varargin, 'subspace'); % used to implement an "eigenspace beamformer" as described in Sekihara et al. 2002 in HBM
 
 % these optional settings have defaults
 feedback       = ft_getopt(varargin, 'feedback',      'text');
-keepcsd        = ft_getopt(varargin, 'keepcsd',       'no');
 keepfilter     = ft_getopt(varargin, 'keepfilter',    'no');
 keepleadfield  = ft_getopt(varargin, 'keepleadfield', 'no');
+keepcov        = ft_getopt(varargin, 'keepcov',       'no');
+keepmom        = ft_getopt(varargin, 'keepmom',       'yes');
 projectnoise   = ft_getopt(varargin, 'projectnoise',  'yes');
+projectmom     = ft_getopt(varargin, 'projectmom',    'no');
 fixedori       = ft_getopt(varargin, 'fixedori',      'no');
+computekurt    = ft_getopt(varargin, 'kurtosis',      'no');
 weightnorm     = ft_getopt(varargin, 'weightnorm',    'no');
 
 % construct the low-level options for the covariance matrix inversion as key-value pairs, these are passed to FT_INV
@@ -115,30 +113,21 @@ leadfieldopt = ft_setopt(leadfieldopt, 'weight',         ft_getopt(varargin, 'we
 % convert the yes/no arguments to the corresponding logical values
 keepfilter     = istrue(keepfilter);
 keepleadfield  = istrue(keepleadfield);
-keepcsd        = istrue(keepcsd);
+keepcov        = istrue(keepcov);
+keepmom        = istrue(keepmom);
 projectnoise   = istrue(projectnoise);
+projectmom     = istrue(projectmom);
 fixedori       = istrue(fixedori);
+computekurt    = istrue(computekurt);
 
-% FIXME besides regular/complex lambda1, also implement a real version
-
-% default is to use the largest singular value of the csd matrix, see Gross 2001
+% default is to use the trace of the covariance matrix, see Van Veen 1997
 if isempty(powmethod)
-  powmethod = 'lambda1';
-end
-
-% default is to be consistent with the original description of DICS in Gross 2001
-if isempty(realfilter)
-  realfilter = 'no';
+  powmethod = 'trace';
 end
 
 % use these two logical flags instead of doing the string comparisons each time again
 powtrace   = strcmp(powmethod, 'trace');
 powlambda1 = strcmp(powmethod, 'lambda1');
-
-if ~isempty(Cr)
-  % ensure that the cross-spectral density with the reference signal is a column matrix
-  Cr = Cr(:);
-end
 
 if isfield(dip, 'mom') && fixedori
   ft_error('you cannot specify a dipole orientation and fixedmom simultaneously');
@@ -191,28 +180,6 @@ if hassubspace
   dip.subspace = dip.subspace(originside);
 end
 
-% dics has the following sub-methods, which depend on the function input arguments
-% power only, cortico-muscular coherence and cortico-cortical coherence
-if ~isempty(Cr) && ~isempty(Pr) && isempty(refdip)
-  % compute cortico-muscular coherence, using reference cross spectral density
-  submethod = 'dics_refchan';
-elseif isempty(Cr) && isempty(Pr) && ~isempty(refdip)
-  % compute cortico-cortical coherence with a dipole at the reference position
-  submethod = 'dics_refdip';
-  % check for forbidden options in combination with this submethod
-  if hassubspace || ~isempty(subspace)
-    ft_error('subspace projections are not supported for beaming cortico-cortical coherence');
-  end
-  if fixedori
-    ft_error('fixed orientations are not supported for beaming cortico-cortical coherence');
-  end
-elseif isempty(Cr) && isempty(Pr) && isempty(refdip)
-  % only compute power of a dipole at the grid positions
-  submethod = 'dics_power';
-else
-  ft_error('invalid combination of input arguments for dics');
-end
-
 % it is difficult to give a quantitative estimate of lambda, therefore also
 % support relative (percentage) measure that can be specified as string (e.g. '10%')
 % the converted value needs to be passed on to ft_inv
@@ -225,24 +192,20 @@ if ~isempty(lambda) && ischar(lambda) && lambda(end)=='%'
 end
 
 if projectnoise || strcmp(weightnorm, 'nai')
-  % estimate the noise level in the covariance matrix by the smallest (non-zero) singular value
-  % always needed for the NAI weight normalization case
-  noise = svd(C);
-  noise = noise(rank(C));
-  % estimated noise floor is equal to or higher than lambda
-  noise = max(noise, lambda);
+    % estimate the noise level in the covariance matrix by the smallest singular (non-zero) value
+    % always needed for the NAI weight normalization case
+    noise = svd(C);
+    noise = noise(rank(C));
+    % estimated noise floor is equal to or higher than lambda
+    noise = max(noise, lambda);
 end
 
-% the inverse of the cross-spectral density matrix only has to be computed once for all dipoles
+% the inverse only has to be computed once for all dipoles
 if hassubspace
   ft_notice('using source-specific subspace projection\n');
   % remember the original data prior to the voxel dependent subspace projection
   dat_pre_subspace = dat;
-  C_pre_subspace = C;
-  if strcmp(submethod, 'dics_refchan')
-    Cr_pre_subspace = Cr;
-    Pr_pre_subspace = Pr;
-  end
+  C_pre_subspace  = C;
 elseif ~isempty(subspace)
   ft_notice('using data-specific subspace projection\n');
   % TODO implement an "eigenspace beamformer" as described in Sekihara et al. 2002 in HBM
@@ -254,153 +217,76 @@ elseif ~isempty(subspace)
     C_pre_subspace  = C;
     [u, s, v] = svd(real(C));
     if subspace<1
-      subspace  = find(diag(s)./s(1,1) > subspace, 1, 'last');
+      subspace = find(diag(s)./s(1,1) > subspace, 1, 'last');
     end
     
     C       = s(1:subspace,1:subspace);
-    % this is equivalent to subspace*C*subspace' but behaves well numerically
-    % by construction.
+    % this is equivalent to subspace*C*subspace' but behaves well numerically by construction.
     invC     = diag(1./diag(C + lambda * eye(size(C))));
     subspace = u(:,1:subspace)';
-    if ~isempty(dat), dat = subspace*dat; end
-    
-    if strcmp(submethod, 'dics_refchan')
-      Cr = subspace*Cr;
-    end
-    
+    dat      = subspace*dat;
   else
-    C_pre_subspace  = C;
-    C               = subspace*C*subspace';
+    dat_pre_subspace = dat;
+    C_pre_subspace   = C;
+    C                = subspace*C*subspace';
     % here the subspace can be different from the singular vectors of C, so we
-    % have to do the sandwiching as opposed to line 256
-    if strcmp(realfilter, 'yes')
-      invC = ft_inv(real(C), invopt{:});
-    else
-      invC = ft_inv(C, invopt{:});
-    end
-    
-    if strcmp(submethod, 'dics_refchan')
-      Cr = subspace*Cr;
-    end
+    % have to do the sandwiching as opposed to line 226
+    invC = ft_inv(C, invopt{:});
+    dat   = subspace*dat;
   end
 else
-  if strcmp(realfilter, 'yes')
-    % the filter is computed using only the leadfield and the inverse covariance or CSD matrix
-    % therefore using the real-valued part of the CSD matrix here ensures a real-valued filter
-    invC = ft_inv(real(C), invopt{:});
-  else
-    invC = ft_inv(C, invopt{:});
-  end
+  invC = ft_inv(C, invopt{:});
 end
 
 % compute the square of invC, which might be needed for unitnoisegain or NAI constraint
 invC_squared = invC^2;
 
-if strcmp(submethod, 'dics_refdip')
-  % handle the reference dipole, this needs to be done only once, since in this implementation
-  % no fancy pairwise dipole source model is assumed
-  if isstruct(refdip) && isfield(refdip, 'filter') % check if precomputed filter is present
-    assert(iscell(refdip.filter) && numel(refdip.filter)==1);
-    filt1 = refdip.filter{1};
-  else
-    if ~isstruct(refdip)
-      % this is very old behavior: refdip is assumed to be a 1x3 position vector
-      refpos     = refdip; clear refdip;
-      refdip.pos = refpos;
-    end
-    % now refdip is always a struct
-    if isfield(refdip, 'leadfield') % check if precomputed leadfield is present
-      assert(iscell(refdip.leadfield) && numel(refdip.leadfield)==1);
-      lf1 = refdip.leadfield{1};
-    elseif isfield(refdip, 'pos')
-      assert(isnumeric(refdip.pos) && numel(refdip.pos)==3);
-      lf1 = ft_compute_leadfield(refdip.pos, grad, headmodel, leadfieldopt{:});
-    end
-    if isfield(refdip, 'mom') % check for fixed orientation
-      lf1 = lf1 * refdip.mom(:);
-    end
-    
-    % construct the spatial filter
-    switch weightnorm
-      case 'nai'
-        % Van Veen's Neural Activity Index
-        ft_error('vector version of nai weight normalization is not implemented');
-      case 'unitnoisegain'
-        % filt*filt' = I
-        % Unit-noise gain minimum variance (aka Borgiotti-Kaplan) beamformer
-        denom = pinv(lf1' * invC * lf1);
-        gamma = denom * (lf1' * invC_squared * lf1) * denom;
-        
-        % compute the spatial filter, as per eqn. 4.85
-        filt1 = diag(1./sqrt(diag(gamma))) * denom * lf1' * invC;
-      case 'arraygain'
-        % filt*lf = ||lf||, applies to scalar leadfield, and to one of the possibilities of the vector version, eqn. 4.75
-        lfn   = lf1./norm(lf1);
-        filt1 = pinv(lfn' * invC * lfn) * lfn' * invC; % S&N eqn. 4.09 (scalar version), and eqn. 4.75 (vector version)
-      case {'unitgain' 'no'}
-        % this is the 'standard' unit gain constraint spatial filter: filt*lf=I, applies both to vector and scalar leadfields
-        filt1 = pinv(lf1' * invC * lf1) * lf1' * invC; % Gross eqn. 3 & van Veen eqn. 23, use PINV/SVD to cover rank deficient leadfield
-      otherwise
-        ft_error('unsupported option for weightnorm');
-    end
-  end
-  
-  % compute the power of the reference dipole location
-  if powlambda1
-    Pr = lambda1(filt1 * C * ctranspose(filt1));      % compute the power at the first dipole location, Gross eqn. 8
-  elseif powtrace
-    Pr = real(trace(filt1 * C * ctranspose(filt1)));  % compute the power at the first dipole location
-  end
-end % if dics_refdip
-
 % start the scanning with the proper metric
 ft_progress('init', feedback, 'scanning grid');
 for i=1:size(dip.pos,1)
   if hasfilter
-    % precomputed filter is provided, the leadfield is not needed
+    % precomputed filter is provided, the leadfield is not needed, nor is the handling of
+    % fixedori, weightnorm, or subspace functional
     filt = dip.filter{i};
-    
+  
   else
-    
-    if hasleadfield && hasmom && size(dip.mom, 1)==size(dip.leadfield{i}, 2)
+
+    if hasleadfield && isfield(dip, 'mom') && size(dip.mom, 1)==size(dip.leadfield{i}, 2)
       % reuse the leadfield that was previously computed and project
       lf = dip.leadfield{i} * dip.mom(:,i);
-    elseif  hasleadfield &&  hasmom
+    elseif  hasleadfield &&  isfield(dip, 'mom')
       % reuse the leadfield that was previously computed but don't project
       lf = dip.leadfield{i};
-    elseif  hasleadfield && ~hasmom
+    elseif  hasleadfield && ~isfield(dip, 'mom')
       % reuse the leadfield that was previously computed
       lf = dip.leadfield{i};
-    elseif ~hasleadfield && hasmom
+    elseif  ~hasleadfield && isfield(dip, 'mom')
       % compute the leadfield for a fixed dipole orientation
       lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, leadfieldopt{:}) * dip.mom(:,i);
     else
       % compute the leadfield
       lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, leadfieldopt{:});
     end
-    
+  
     if hassubspace
       % do subspace projection of the forward model
-      lf = dip.subspace{i} * lf;
-      % the cross-spectral density becomes voxel dependent due to the projection
-      C    = dip.subspace{i} * C_pre_subspace * dip.subspace{i}';
-      if strcmp(realfilter, 'yes')
-        invC = ft_inv(dip.subspace{i} * real(C_pre_subspace) * dip.subspace{i}', invopt{:});
-      else
-        invC = ft_inv(dip.subspace{i} * C_pre_subspace * dip.subspace{i}', invopt{:});
-      end
+      lf    = dip.subspace{i} * lf;
+      % the data and the covariance become voxel dependent due to the projection
+      dat   = dip.subspace{i} * dat_pre_subspace;
+      C     = dip.subspace{i} * C_pre_subspace * dip.subspace{i}';
+      invC  = ft_inv(dip.subspace{i} * C_pre_subspace * dip.subspace{i}', invopt{:});
     elseif ~isempty(subspace)
       % do subspace projection of the forward model only
       lforig = lf;
       lf     = subspace * lf;
-      
+    
       % according to Kensuke's paper, the eigenspace bf boils down to projecting
       % the 'traditional' filter onto the subspace spanned by the first k eigenvectors
-      % [u,s,v] = svd(Cy); filt = ESES*filt; ESES = u(:,1:k)*u(:,1:k)';
+      % [u,s,v] = svd(C); filt = ESES*filt; ESES = u(:,1:k)*u(:,1:k)';
       % however, even though it seems that the shape of the filter is identical to
       % the shape it is obtained with the following code, the w*lf=I does not hold.
     end
-    
+
     if fixedori
       switch(weightnorm)
         case {'unitnoisegain','nai'}
@@ -414,7 +300,7 @@ for i=1:size(dip.pos,1)
           dipout.ori{i} = unitnoiseori;
           dipout.eta(i) = d(1)./d(2); % ratio between largest and second largest eigenvalues
           if hassubspace, lforig = lforig * unitnoiseori; end
-          
+
         case 'arraygain'
           % optimal orientation calculation for array-gain beamformer, Sekihara & Nagarajan eqn. 4.44
           [v, d]        = eig(pinv(lf' * invC *lf)*(lf' * lf));
@@ -424,7 +310,7 @@ for i=1:size(dip.pos,1)
           dipout.ori{i} = arraygainori;
           dipout.eta(i) = d(1)./d(2); % ratio between largest and second largest eigenvalues
           if hassubspace, lforig = lforig * arraygainori; end
-          
+        
         otherwise
           % compute the leadfield for the optimal dipole orientation that maximizes spatial filter output
           % subsequently the leadfield for only that dipole orientation will be used for the final filter computation
@@ -439,7 +325,7 @@ for i=1:size(dip.pos,1)
           if hassubspace, lforig = lforig * maxpowori; end
       end
     end
-    
+  
     % construct the spatial filter
     switch weightnorm
       case 'nai'
@@ -473,71 +359,60 @@ for i=1:size(dip.pos,1)
         % filt*lf = ||lf||, applies to scalar leadfield, and to one of the possibilities of the vector version, eqn. 4.75
         lfn  = lf./norm(lf);
         filt = pinv(lfn' * invC * lfn) * lfn' * invC; % S&N eqn. 4.09 (scalar version), and eqn. 4.75 (vector version)
-        
+ 
       case {'unitgain' 'no'}
         % this is the 'standard' unit gain constraint spatial filter: filt*lf=I, applies both to vector and scalar leadfields
-        filt = pinv(lf' * invC * lf) * lf' * invC; % Gross eqn. 3 & van Veen eqn. 23, use PINV/SVD to cover rank deficient leadfield
-        
-      otherwise
+        filt = pinv(lf' * invC * lf) * lf' * invC; % van Veen eqn. 23, use PINV/SVD to cover rank deficient leadfield
+    
+    otherwise
     end
+
   end
-  
-  cfilt = filt * C * ctranspose(filt);    % Gross eqn. 4 and 5
+
+  cfilt = filt * C * ctranspose(filt);
+  if projectmom
+    [u, s, v] = svd(cfilt);
+    mom = u(:,1); % dominant dipole direction
+    filt = (mom') * filt;
+  end
   if powlambda1
-    if size(cfilt,1) == 1
-      % only 1 orientation, no need to do svd
-      dipout.pow(i,1) = real(cfilt);
-    else
-      dipout.pow(i,1) = lambda1(cfilt);   % compute the power at the dipole location, Gross eqn. 8
-    end
+    % dipout.pow(i) = lambda1(pinv(lf' * invC * lf)); % this is more efficient if the filters are not present
+    dipout.pow(i,1) = lambda1(cfilt);                 % this is more efficient if the filters are present
   elseif powtrace
-    dipout.pow(i,1) = real(trace(cfilt)); % compute the power at the dipole location
+    % dipout.pow(i) = trace(pinv(lf' * invC * lf));   % this is more efficient if the filters are not present, van Veen eqn. 24, but will give different results, based on the regularisation
+    dipout.pow(i,1) = trace(cfilt);                   % this is more efficient if the filters are present
   end
-  
-  if strcmp(submethod, 'dics_refchan')
-    % compute the cross-spectrum between the dipole and the reference channel
-    cfilt = filt*Cr; % Gross eqn. 6, replaces cfilt computed above
-    if powlambda1
-      coh = lambda1(cfilt)^2 / (dipout.pow(i,1) * Pr); % Gross eqn. 9
-    elseif powtrace
-      coh = norm(cfilt)^2 / (dipout.pow(i,1) * Pr);
-    end
-    dipout.coh(i,1) = coh;
-  elseif strcmp(submethod, 'dics_refdip')
-    % compute the cross-spectrum between the reference dipole and the dipole
-    cfilt = filt1 * C * ctranspose(filt); % Gross eqn. 6, replaces cfilt computed above
-    if powlambda1
-      coh = lambda1(cfilt)^2 / (dipout.pow(i,1) * Pr); % Gross eqn. 9
-    elseif powtrace
-      coh = norm(cfilt)^2 / (dipout.pow(i,1) * Pr);
-    end
-    dipout.coh(i,1) = coh;
+  if keepcov
+    % compute the source covariance matrix
+    dipout.cov{i,1} = cfilt;
   end
-  
-  if keepcsd
-    % keep the dipole's csd or the dipole-ref cross-spectrum in the output
-    dipout.csd{i,1} = cfilt;
+  if keepmom && ~isempty(dat)
+    % estimate the instantaneous dipole moment at the current position
+    dipout.mom{i,1} = filt * dat;
   end
-  
+  if computekurt && ~isempty(dat)
+    % compute the kurtosis of the dipole time series
+    dipout.kurtosis(i,:) = kurtosis((filt*dat)');
+  end
   if projectnoise
+    % estimate the power of the noise that is projected through the filter
     if powlambda1
       dipout.noise(i,1) = noise * lambda1(filt * ctranspose(filt));
     elseif powtrace
-      dipout.noise(i,1) = noise * real(trace(filt * ctranspose(filt)));
+      dipout.noise(i,1) = noise * trace(filt * ctranspose(filt));
     end
-    if keepcsd
-      dipout.noisecsd{i,1} = noise * filt * ctranspose(filt);
+    if keepcov
+      dipout.noisecov{i,1} = noise * filt * ctranspose(filt);
     end
   end
-  
   if keepfilter
     if ~isempty(subspace)
-      dipout.filter{i,1} = filt*subspace; %FIXME should this be subspace, or pinv(subspace)?
+      dipout.filter{i,1} = filt*subspace;
+      %dipout.filter{i} = filt*pinv(subspace);
     else
       dipout.filter{i,1} = filt;
     end
   end
-  
   if keepleadfield
     if ~isempty(subspace)
       dipout.leadfield{i,1} = lforig;
@@ -546,14 +421,15 @@ for i=1:size(dip.pos,1)
     end
   end
   ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
-end % for each dipole position
+end
+
 ft_progress('close');
 
 % reassign the scan values over the inside and outside grid positions
-dipout.inside  = originside;
 dipout.pos     = origpos;
+dipout.inside  = originside;
 
-fnames_cell   = {'leadfield' 'filter' 'ori' 'csd' 'noisecsd' 'subspace'};
+fnames_cell   = {'leadfield' 'filter' 'mom' 'ori' 'cov' 'noisecov' 'subspace'};
 for k = 1:numel(fnames_cell)
   if isfield(dipout, fnames_cell{k})
     dipout.(fnames_cell{k})( originside) = dipout.(fnames_cell{k});
@@ -561,7 +437,7 @@ for k = 1:numel(fnames_cell)
   end
 end
 
-fnames_scalar = {'pow' 'noise' 'eta' 'coh'};
+fnames_scalar = {'pow' 'noise' 'eta' 'kurtosis'};
 for k = 1:numel(fnames_scalar)
   if isfield(dipout, fnames_scalar{k})
     dipout.(fnames_scalar{k})( originside) = dipout.(fnames_scalar{k});
@@ -572,18 +448,17 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function to obtain the largest singular value
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [s, ori] = lambda1(x)
+function s = lambda1(x)
 % determine the largest singular value, which corresponds to the power along the dominant direction
-[u, s, v] = svd(x);
-s   = s(1);
-ori = u(:,1);
+s = svd(x);
+s = s(1);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function to compute the pseudo inverse. This is the same as the
 % standard MATLAB function, except that the default tolerance is twice as
 % high.
 %   Copyright 1984-2004 The MathWorks, Inc.
-%   $Revision$  $Date: 2009/06/17 13:40:37 $
+%   $Revision$  $Date: 2009/03/23 21:14:42 $
 %   default tolerance increased by factor 2 (Robert Oostenveld, 7 Feb 2004)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function X = pinv(A,varargin)

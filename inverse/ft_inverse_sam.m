@@ -1,12 +1,12 @@
-function [dipout] = beamformer_sam(dip, sens, headmodel, dat, C, varargin)
+function [dipout] = ft_inverse_sam(dip, sens, headmodel, dat, C, varargin)
 
-% BEAMFORMER_SAM scans on pre-defined dipole locations with a single
+% ft_inverse_sam scans on pre-defined dipole locations with a single
 % dipole and returns the CTF Synthetic Aperture Magnetometry (SAM)
 % beamformer estimates. location. Dipole locations that are outside
 % the head will return a NaN value.
 %
 % Use as
-%   [dipout] = beamformer_sam(dipin, sens, headmodel, dat, cov, varargin)
+%   [dipout] = ft_inverse_sam(dipin, sens, headmodel, dat, cov, varargin)
 % where
 %   dipin       is the input dipole model
 %   sens        is the gradiometer definition
