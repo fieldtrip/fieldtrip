@@ -40,6 +40,12 @@ function [data] = ft_dipolesimulation(cfg)
 %   cfg.dipoleunit = units for dipole amplitude (default nA*m)
 %   cfg.chanunit   = units for the channel data
 %
+% Optionally, you can modify the leadfields by reducing the rank, i.e. remove the weakest orientation
+%   cfg.reducerank    = 'no', or number (default = 3 for EEG, 2 for MEG)
+%   cfg.backproject   = 'yes' or 'no',  determines when reducerank is applied whether the 
+%                       lower rank leadfield is projected back onto the original linear 
+%                       subspace, or not (default = 'yes')
+%
 % The volume conduction model of the head should be specified as
 %   cfg.headmodel     = structure with volume conduction model, see FT_PREPARE_HEADMODEL
 %
@@ -119,8 +125,17 @@ cfg.channel     = ft_getopt(cfg, 'channel',  'all');
 cfg.dipoleunit  = ft_getopt(cfg, 'dipoleunit', 'nA*m');
 cfg.chanunit    = ft_getopt(cfg, 'chanunit', {});
 
-% prepare the volume conductor and the sensor array
+% collect and preprocess the electrodes/gradiometer and head model
+% this will also update cfg.channel to match the electrodes/gradiometers
 [headmodel, sens, cfg] = prepare_headmodel(cfg, []);
+
+% construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD
+leadfieldopt = {};
+leadfieldopt = ft_setopt(leadfieldopt, 'reducerank',     ft_getopt(cfg, 'reducerank'));
+leadfieldopt = ft_setopt(leadfieldopt, 'backproject',    ft_getopt(cfg, 'backproject'));
+leadfieldopt = ft_setopt(leadfieldopt, 'normalize',      ft_getopt(cfg, 'normalize'));
+leadfieldopt = ft_setopt(leadfieldopt, 'normalizeparam', ft_getopt(cfg, 'normalizeparam'));
+leadfieldopt = ft_setopt(leadfieldopt, 'weight',         ft_getopt(cfg, 'weight'));
 
 cfg.dip = fixdipole(cfg.dip);
 Ndipoles = size(cfg.dip.pos,1);
@@ -221,9 +236,9 @@ ft_progress('init', cfg.feedback, 'computing data data');
 for trial=1:cfg.numtrl
   ft_progress(trial/cfg.numtrl, 'computing data data for trial %d\n', trial);
   if numel(cfg.chanunit) == numel(cfg.channel)
-    lf = ft_compute_leadfield(dippos{trial}, sens, headmodel, 'dipoleunit', cfg.dipoleunit, 'chanunit', cfg.chanunit);
+    lf = ft_compute_leadfield(dippos{trial}, sens, headmodel, 'dipoleunit', cfg.dipoleunit, 'chanunit', cfg.chanunit, leadfieldopt{:});
   else
-    lf = ft_compute_leadfield(dippos{trial}, sens, headmodel);
+    lf = ft_compute_leadfield(dippos{trial}, sens, headmodel, leadfieldopt{:});
   end
   nsamples = size(dipsignal{trial},2);
   nchannels = size(lf,1);
@@ -249,7 +264,7 @@ for trial=1:cfg.numtrl
   sc = sc + length(data.trial{trial}(:));
 end
 rms = sqrt(ss/sc);
-fprintf('RMS value of data data is %g\n', rms);
+ft_info('RMS value of data data is %g\n', rms);
 
 % add noise to the data data
 for trial=1:cfg.numtrl
