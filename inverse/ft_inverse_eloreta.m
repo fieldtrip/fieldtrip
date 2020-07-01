@@ -84,6 +84,7 @@ keepleadfield  = istrue(keepleadfield);
 % flags to avoid calling isfield repeatedly in the loop over grid positions (saves a lot of time)
 hasmom        = isfield(sourcemodel, 'mom');
 hasleadfield  = isfield(sourcemodel, 'leadfield');
+hasfilter     = isfield(sourcemodel, 'filter');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % find the dipole positions that are inside/outside the brain
