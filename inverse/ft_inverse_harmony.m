@@ -1,35 +1,43 @@
-function [dipout] = ft_inverse_harmony(dip, grad, headmodel, dat, varargin)
+function [estimate] = ft_inverse_harmony(sourcemodel, sens, headmodel, dat, varargin)
 
-% FT_INVERSE_HARMONY computes a linear estimate of the current in a distributed source model
-% using a mesh harmonic based low-pass filter.
+% FT_INVERSE_HARMONY computes a linear estimate of the current in a distributed
+% source model using a mesh harmonic based low-pass filter.
 %
 % Use as
-%   [dipout] = ft_inverse_harmony(dip, grad, headmodel, dat, ...)
+%   [estimate] = ft_inverse_harmony(sourcemodel, sens, headmodel, dat, ...)
+% where
+%   sourcemodel is the input source model, see FT_PREPARE_SOURCEMODEL
+%   sens        is the gradiometer or electrode definition, see FT_DATATYPE_SENS
+%   headmodel   is the volume conductor definition, see FT_PREPARE_HEADMODEL
+%   dat         is the data matrix with the ERP or ERF
+% and
+%   estimate    contains the estimated source parameters
 %
-% Optional input arguments should come in key-value pairs and can include
-%  'noisecov'             = Nchan x Nchan matrix with noise covariance
-%  'noiselambda'          = scalar value, regularisation parameter for the noise covariance matrix (default=0)
-%  'filter_order'         = scalar, order of the mesh Butterwirth filter
-%  'filter_bs'            = scalar, stop-band of the mesh Butterworth filter
-%  'number_harmonics'     = Integer, number of mesh harmonics used (can be empty, the default will then be identity)
-%  'lambda'               = scalar, regularisation parameter (can be empty, it will then be estimated from snr)
-%  'snr'                  = scalar, signal to noise ratio
-%  'reducerank'           = reduce the leadfield rank, can be 'no' or a number (e.g. 2)
-%  'normalize'            = normalize the leadfield
-%  'normalizeparam'       = parameter for depth normalization (default = 0.5)
-%  'keepfilter'           = 'no' or 'yes', keep the spatial filter in the output
-%  'prewhiten'            = 'no' or 'yes', prewhiten the leadfield matrix with the noise covariance matrix C
-%  'scalesourcecov'       = 'no' or 'yes', scale the source covariance matrix R such that trace(leadfield*R*leadfield')/trace(C)=1
-%  'connected_components' = number of connected components of the source mesh (1 or 2)
+% Additional input arguments should be specified as key-value pairs and can include
+%   'noisecov'             = Nchan x Nchan matrix with noise covariance
+%   'noiselambda'          = scalar value, regularisation parameter for the noise covariance matrix (default=0)
+%   'filter_order'         = scalar, order of the mesh Butterwirth filter
+%   'filter_bs'            = scalar, stop-band of the mesh Butterworth filter
+%   'number_harmonics'     = Integer, number of mesh harmonics used (can be empty, the default will then be identity)
+%   'lambda'               = scalar, regularisation parameter (can be empty, it will then be estimated from snr)
+%   'snr'                  = scalar, signal to noise ratio
+%   'scalesourcecov'       = 'no' or 'yes', scale the source covariance matrix R such that trace(leadfield*R*leadfield')/trace(C)=1
+%   'connected_components' = number of connected components of the source mesh (1 or 2)
+%   'prewhiten'            = 'no' or 'yes', prewhiten the leadfield matrix with the noise covariance matrix C
 %
-% Note that leadfield normalization (depth regularisation) should be done by scaling
-% the leadfields outside this function, e.g. in prepare_leadfield. Note also that
-% with precomputed leadfields the normalization parameters will not have an effect.
+% These options influence the forward computation of the leadfield
+%   'reducerank'      = 'no' or number  (default = 3 for EEG, 2 for MEG)
+%   'backproject'     = 'yes' or 'no', in the case of a rank reduction this parameter determines whether the result will be backprojected onto the original subspace (default = 'yes')
+%   'normalize'       = 'no', 'yes' or 'column' (default = 'no')
+%   'normalizeparam'  = parameter for depth normalization (default = 0.5)
+%   'weight'          = number or Nx1 vector, weight for each dipole position to compensate for the size of the corresponding patch (default = 1)
 %
 % This implements
-%   Petrov Y (2012) Harmony: EEG/MEG Linear Inverse Source Reconstruction in the
+% - Petrov Y (2012) Harmony: EEG/MEG Linear Inverse Source Reconstruction in the
 %   Anatomical Basis of Spherical Harmonics. PLoS ONE 7(10): e44439.
 %   doi:10.1371/journal.pone.0044439
+%
+% See also FT_SOURCEANALYSIS, FT_PREPARE_HEADMODEL, FT_PREPARE_SOURCEMODEL
 
 % TODO implement the following options
 % - keepleadfield
@@ -54,60 +62,71 @@ function [dipout] = ft_inverse_harmony(dip, grad, headmodel, dat, varargin)
 %
 % $Id$
 
-%% get the optional inputs for the MNE method according to Dale et al 2000, and Liu et al. 2002
+if mod(nargin-4,2)
+  % the first 4 arguments are fixed, the other arguments should come in pairs
+  ft_error('invalid number of optional arguments');
+end
+
+% get the optional input arguments, or use defaults
 noisecov       = ft_getopt(varargin, 'noisecov');
 lambda         = ft_getopt(varargin, 'lambda');  % can be empty, it will then be estimated based on SNR
 noiselambda    = ft_getopt(varargin, 'noiselambda', []);
 snr            = ft_getopt(varargin, 'snr');     % is used to estimate lambda if lambda is not specified
-
-% these settings pertain to the forward model, the defaults are set in compute_leadfield
-reducerank     = ft_getopt(varargin, 'reducerank');
-normalize      = ft_getopt(varargin, 'normalize');
-normalizeparam = ft_getopt(varargin, 'normalizeparam', 0.5);
 keepfilter     = istrue(ft_getopt(varargin, 'keepfilter', false));
 dowhiten       = istrue(ft_getopt(varargin, 'prewhiten',  false));
 doscale        = istrue(ft_getopt(varargin, 'scalesourcecov', false));
-hasleadfield   = isfield(dip, 'leadfield');
-hasfilter      = isfield(dip, 'filter');
 
-if isempty(lambda) && isempty(snr) && ~isfield(dip, 'filter')
+% construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD
+leadfieldopt = {};
+leadfieldopt = ft_setopt(leadfieldopt, 'reducerank',     ft_getopt(varargin, 'reducerank'));
+leadfieldopt = ft_setopt(leadfieldopt, 'backproject',    ft_getopt(varargin, 'backproject'));
+leadfieldopt = ft_setopt(leadfieldopt, 'normalize',      ft_getopt(varargin, 'normalize'));
+leadfieldopt = ft_setopt(leadfieldopt, 'normalizeparam', ft_getopt(varargin, 'normalizeparam'));
+leadfieldopt = ft_setopt(leadfieldopt, 'weight',         ft_getopt(varargin, 'weight'));
+
+% flags to avoid calling isfield repeatedly in the loop over grid positions (saves a lot of time)
+hasmom        = isfield(sourcemodel, 'mom');
+hasleadfield  = isfield(sourcemodel, 'leadfield');
+hasfilter     = isfield(sourcemodel, 'filter');
+
+if isempty(lambda) && isempty(snr) && ~hasfilter
   ft_error('either lambda or snr should be specified');
 elseif ~isempty(lambda) && ~isempty(snr)
   ft_error('either lambda or snr should be specified, not both');
 end
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~isfield(dip, 'inside')
-  dip.inside = ft_inside_headmodel(dip.pos, headmodel);
+if ~isfield(sourcemodel, 'inside')
+  sourcemodel.inside = ft_inside_headmodel(sourcemodel.pos, headmodel);
 end
 
-if any(dip.inside>1)
+if any(sourcemodel.inside>1)
   % convert to logical representation
-  tmp = false(size(dip.pos,1),1);
-  tmp(dip.inside) = true;
-  dip.inside = tmp;
+  tmp = false(size(sourcemodel.pos,1),1);
+  tmp(sourcemodel.inside) = true;
+  sourcemodel.inside = tmp;
 end
 
 % keep the original details on inside and outside positions
-originside = dip.inside;
-origpos    = dip.pos;
+originside = sourcemodel.inside;
+origpos    = sourcemodel.pos;
 
 % select only the dipole positions inside the brain for scanning
-dip.pos    = dip.pos(originside,:);
-dip.inside = true(size(dip.pos,1),1);
-if isfield(dip, 'mom'),
-  dip.mom = dip.mom(:,originside);
+sourcemodel.pos    = sourcemodel.pos(originside,:);
+sourcemodel.inside = true(size(sourcemodel.pos,1),1);
+
+if hasmom
+  sourcemodel.mom = sourcemodel.mom(:,originside);
 end
-if isfield(dip, 'leadfield')
-  hasleadfield = 1;
-  dip.leadfield = dip.leadfield(originside);
+
+if hasleadfield
+  sourcemodel.leadfield = sourcemodel.leadfield(originside);
 end
-if isfield(dip, 'filter')
-  hasfilter = 1;
-  dip.filter = dip.filter(originside);
+
+if hasfilter
+  sourcemodel.filter = sourcemodel.filter(originside);
 end
 
 %if ~isempty(snr) && doscale
@@ -122,24 +141,23 @@ elseif hasleadfield
   % using the computed leadfields
   fprintf('using pre-computed leadfields: some of the specified options will not have an effect\n');
 else
-  fprintf('computing forward model\n');
-  if isfield(dip, 'mom')
-    for i=size(dip.pos,1)
+  ft_info('computing forward model\n');
+  if hasmom
+    for i=size(sourcemodel.pos,1)
       % compute the leadfield for a fixed dipole orientation
-      dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
+      sourcemodel.leadfield{i} = ft_compute_leadfield(sourcemodel.pos(i,:), sens, headmodel, leadfieldopt{:}) * sourcemodel.mom(:,i);
     end
   else
-    
-    for i=1:size(dip.pos,1)
+    for i=1:size(sourcemodel.pos,1)
       % compute the leadfield
-      dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+      sourcemodel.leadfield{i} = ft_compute_leadfield(sourcemodel.pos(i,:), sens, headmodel, leadfieldopt{:});
     end
   end
 end
 
 %% Harmony parameters
-num_dip      = size(dip.leadfield{1}, 2);
-num_pos      = size(dip.leadfield, 2);
+num_dip      = size(sourcemodel.leadfield{1}, 2);
+num_pos      = size(sourcemodel.leadfield, 2);
 num_comp     = ft_getopt(varargin, 'connected_components', 1);
 num_harm     = ft_getopt(varargin, 'number_harmonics',     5);
 filt_ord     = ft_getopt(varargin, 'filter_order',         5);
@@ -148,26 +166,26 @@ lc           = ft_getopt(varargin, 'filter_bs',            5);
 %% Create the leadfield matrix
 
 % count the number of channels and leadfield components
-Nchan   = size(dip.leadfield{1},1);
+Nchan   = size(sourcemodel.leadfield{1},1);
 Nsource = 0;
-for i=1:size(dip.pos,1)
-  Nsource = Nsource + size(dip.leadfield{i}, 2);
+for i=1:size(sourcemodel.pos,1)
+  Nsource = Nsource + size(sourcemodel.leadfield{i}, 2);
 end
 
 % concatenate the leadfield components of all sources into one large matrix
 lf = zeros(Nchan, Nsource);
 n = 1;
-for i=1:size(dip.pos,1)
+for i=1:size(sourcemodel.pos,1)
   cbeg = n;
   cend = n + num_dip - 1;
-  lf(:,cbeg:cend) = dip.leadfield{i};
-  n = n + size(dip.leadfield{i}, 2);
+  lf(:,cbeg:cend) = sourcemodel.leadfield{i};
+  n = n + size(sourcemodel.leadfield{i}, 2);
 end
 
 %% Create brain harmonics matrix
 
 % Mesh harmonics
-[dum,H,d] = mesh_spectrum(dip,num_harm,num_comp);
+[dum,H,d] = mesh_spectrum(sourcemodel,num_harm,num_comp);
 
 % Elimination of pathological zeroth frequencies and concatenating
 % harmonics numbers
@@ -224,10 +242,10 @@ sourcecov = diag(q);
 
 
 % count the number of channels and leadfield components
-Nchan   = size(dip.leadfield{1},1);
+Nchan   = size(sourcemodel.leadfield{1},1);
 Nsource = 0;
-for i=1:size(dip.pos,1)
-  Nsource = Nsource + size(dip.leadfield{i}, 2);
+for i=1:size(sourcemodel.pos,1)
+  Nsource = Nsource + size(sourcemodel.leadfield{i}, 2);
 end
 
 % Take the rieal part of the noise cross-spectral density matrix
@@ -340,23 +358,23 @@ end
 % assign the estimated source strength to each dipole
 if mom_ind == 1
   n = 1;
-  for i=1:size(dip.pos,1)
+  for i=1:size(sourcemodel.pos,1)
     cbeg = n;
-    cend = n + size(dip.leadfield{i}, 2) - 1;
-    dipout.mom{i} = mom(cbeg:cend,:);
-    n = n + size(dip.leadfield{i}, 2);
+    cend = n + size(sourcemodel.leadfield{i}, 2) - 1;
+    estimate.mom{i} = mom(cbeg:cend,:);
+    n = n + size(sourcemodel.leadfield{i}, 2);
   end
 end
 
 %% compute power (over the three orientations) at each location and for each time
 
 if mom_ind == 1
-  dipout.pow = nan(size(dip.pos,1), size(dat,2));
-  for i=1:size(dip.pos,1)
-    dipout.pow(i,:) = sum(abs(dipout.mom{i}).^2, 1);
+  estimate.pow = nan(size(sourcemodel.pos,1), size(dat,2));
+  for i=1:size(sourcemodel.pos,1)
+    estimate.pow(i,:) = sum(abs(estimate.mom{i}).^2, 1);
   end
 else
-  dipout.pow = pow;
+  estimate.pow = pow;
 end
 
 % deal with keepfilter option
@@ -364,50 +382,50 @@ if keepfilter && ~hasfilter
   % spatial filters have been computed, store them in the output
   % re-assign spatial filter to conventional 1 cell per dipole location
   n = 1;
-  for i=1:size(dip.pos,1)
+  for i=1:size(sourcemodel.pos,1)
     cbeg = n;
-    cend = n + size(dip.leadfield{i}, 2) - 1;
-    dipout.filter{i} = w(cbeg:cend,:);
-    n    = n + size(dip.leadfield{i}, 2);
+    cend = n + size(sourcemodel.leadfield{i}, 2) - 1;
+    estimate.filter{i} = w(cbeg:cend,:);
+    n    = n + size(sourcemodel.leadfield{i}, 2);
   end
 elseif keepfilter
-  dipout.filter = dip.filter;
+  estimate.filter = sourcemodel.filter;
 end
 
 % deal with noise covariance
 % if ~isempty(noisecov) && ~hasfilter
 %   % compute estimate of the projected noise
 %   n = 1;
-%   for i=1:size(dip.pos,1)
+%   for i=1:size(sourcemodel.pos,1)
 %     cbeg = n;
-%     cend = n + size(dip.leadfield{i}, 2) - 1;
-%     dipout.noisecov{i} = w(cbeg:cend,:)*noisecov*w(cbeg:cend,:)';
-%     n    = n + size(dip.leadfield{i}, 2);
+%     cend = n + size(sourcemodel.leadfield{i}, 2) - 1;
+%     estimate.noisecov{i} = w(cbeg:cend,:)*noisecov*w(cbeg:cend,:)';
+%     n    = n + size(sourcemodel.leadfield{i}, 2);
 %   end
 % elseif ~isempty(noisecov)
 %   % compute estimate of the projected noise
-%   for i=1:size(dip.pos,1)
-%     dipout.noisecov{i} = dip.filter{i}*noisecov*dip.filter{i}';
+%   for i=1:size(sourcemodel.pos,1)
+%     estimate.noisecov{i} = sourcemodel.filter{i}*noisecov*sourcemodel.filter{i}';
 %   end
 %end
 
 % wrap it all up, prepare the complete output
-dipout.inside  = originside;
-dipout.pos     = origpos;
+estimate.inside  = originside;
+estimate.pos     = origpos;
 
-if isfield(dipout, 'mom')
-  dipout.mom( originside) = dipout.mom;
-  dipout.mom(~originside) = {[]};
+if isfield(estimate, 'mom')
+  estimate.mom( originside) = estimate.mom;
+  estimate.mom(~originside) = {[]};
 end
-if isfield(dipout, 'pow')
-  dipout.pow( originside,:) = dipout.pow;
-  dipout.pow(~originside,:) = nan;
+if isfield(estimate, 'pow')
+  estimate.pow( originside,:) = estimate.pow;
+  estimate.pow(~originside,:) = nan;
 end
-if isfield(dipout, 'noisecov')
-  dipout.noisecov( originside) = dipout.noisecov;
-  dipout.noisecov(~originside) = {[]};
+if isfield(estimate, 'noisecov')
+  estimate.noisecov( originside) = estimate.noisecov;
+  estimate.noisecov(~originside) = {[]};
 end
-if isfield(dipout, 'filter')
-  dipout.filter( originside) = dipout.filter;
-  dipout.filter(~originside) = {[]};
+if isfield(estimate, 'filter')
+  estimate.filter( originside) = estimate.filter;
+  estimate.filter(~originside) = {[]};
 end

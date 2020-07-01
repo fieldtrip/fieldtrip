@@ -1,10 +1,17 @@
-function [dipout] = ft_inverse_dipolefit(dip, sens, headmodel, dat, varargin)
+function [estimate] = ft_inverse_dipolefit(sourcemodel, sens, headmodel, dat, varargin)
 
 % FT_INVERSE_DIPOLEFIT performs an equivalent current dipole fit with a single
 % or a small number of dipoles to explain an EEG or MEG scalp topography.
 %
 % Use as
-%   [dipout] = ft_inverse_dipolefit(dip, sens, headmodel, dat, ...)
+%   [estimate] = ft_inverse_dipolefit(sourcemodel, sens, headmodel, dat, ...)
+% where
+%   sourcemodel is the input source model with a single or a few dipoles
+%   sens        is the gradiometer or electrode definition, see FT_DATATYPE_SENS
+%   headmodel   is the volume conductor definition, see FT_PREPARE_HEADMODEL
+%   dat         is the data matrix with the ERP or ERF
+% and
+%   estimate    contains the estimated source parameters
 %
 % Additional input arguments should be specified as key-value pairs and can include
 %   'display'     = Level of display [ off | iter | notify | final ]
@@ -15,12 +22,12 @@ function [dipout] = ft_inverse_dipolefit(dip, sens, headmodel, dat, varargin)
 %   'checkinside' = Boolean flag to check whether dipole is inside source compartment [ 0 | 1 ]
 %   'mleweight'   = weight matrix for maximum likelihood estimation, e.g. inverse noise covariance
 %
-% The following optional input arguments are for the computation of leadfields
-%   'reducerank'      = 'no' or number
-%   'normalize'       = 'no', 'yes' or 'column'
+% These options influence the forward computation of the leadfield
+%   'reducerank'      = 'no' or number  (default = 3 for EEG, 2 for MEG)
+%   'backproject'     = 'yes' or 'no', in the case of a rank reduction this parameter determines whether the result will be backprojected onto the original subspace (default = 'yes')
+%   'normalize'       = 'no', 'yes' or 'column' (default = 'no')
 %   'normalizeparam'  = parameter for depth normalization (default = 0.5)
 %   'weight'          = number or Nx1 vector, weight for each dipole position to compensate for the size of the corresponding patch (default = 1)
-%   'backproject'     = 'yes' (default) or 'no', in the case of a rank reduction this parameter determines whether the result will be backprojected onto the original subspace
 %
 % The constraints on the source model are specified in a structure
 %   constr.symmetry   = boolean, dipole positions are symmetrically coupled to each other
@@ -32,9 +39,11 @@ function [dipout] = ft_inverse_dipolefit(dip, sens, headmodel, dat, varargin)
 %   constr.sequential = boolean, fit different dipoles to sequential slices of the data
 %
 % The maximum likelihood estimation implements
-%   Lutkenhoner B. "Dipole source localization by means of maximum
-%   likelihood estimation I. Theory and simulations" Electroencephalogr Clin
-%   Neurophysiol. 1998 Apr;106(4):314-21.
+% - Lutkenhoner B. "Dipole source localization by means of maximum likelihood
+%   estimation I. Theory and simulations" Electroencephalogr Clin Neurophysiol. 1998
+%   Apr;106(4):314-21.
+%
+% See also FT_DIPOLEFITTING, FT_SOURCEANALYSIS, FT_PREPARE_HEADMODEL, FT_PREPARE_SOURCEMODEL
 
 % Copyright (C) 2003-2016, Robert Oostenveld
 %
@@ -58,8 +67,8 @@ function [dipout] = ft_inverse_dipolefit(dip, sens, headmodel, dat, varargin)
 
 % It is necessary to provide backward compatibility support for the old function call
 % in case people want to use it in conjunction with EEGLAB and the dipfit1 plugin.
-% old style: function [dipout] = ft_inverse_dipolefit(dip, dat, sens, headmodel, constr), where constr is optional
-% new style: function [dipout] = ft_inverse_dipolefit(dip, sens, headmodel, dat, varargin), where varargin is in key-value pairs
+% old style: function [estimate] = ft_inverse_dipolefit(sourcemodel, dat, sens, headmodel, constr), where constr is optional
+% new style: function [estimate] = ft_inverse_dipolefit(sourcemodel, sens, headmodel, dat, varargin), where varargin is in key-value pairs
 if nargin==4 && ~isstruct(sens) && isstruct(dat)
   % looks like old style, the order of the input arguments has to be changed
   ft_warning('converting from old style input\n');
@@ -85,6 +94,7 @@ else
   % this is dealt with below
 end
 
+% get the optional input arguments, or use defaults
 % these are for the optimization function
 display        = ft_getopt(varargin, 'display', 'iter');
 optimfun       = ft_getopt(varargin, 'optimfun'       ); if isa(optimfun, 'char'),  optimfun = str2func(optimfun); end
@@ -94,12 +104,13 @@ constr         = ft_getopt(varargin, 'constr'         ); % default is not to hav
 metric         = ft_getopt(varargin, 'metric', 'rv'   );
 checkinside    = ft_getopt(varargin, 'checkinside', false);
 mleweight      = ft_getopt(varargin, 'mleweight'      ); % for maximum likelihood estimation
-% these are for leadfield computation
-reducerank     = ft_getopt(varargin, 'reducerank'     );
-normalize      = ft_getopt(varargin, 'normalize'      );
-normalizeparam = ft_getopt(varargin, 'normalizeparam' );
-weight         = ft_getopt(varargin, 'weight'         );
-backproject    = ft_getopt(varargin, 'backproject'    );
+
+% these options are passed to OPTIMFUN and DIPFIT_ERROR, which pass them on to FT_COMPUTE_LEADFIELD
+reducerank     = ft_getopt(varargin, 'reducerank');
+backproject    = ft_getopt(varargin, 'backproject');
+normalize      = ft_getopt(varargin, 'normalize');
+normalizeparam = ft_getopt(varargin, 'normalizeparam');
+weight          = ft_getopt(varargin, 'weight');
 
 if isfield(constr, 'mirror')
   % for backward compatibility
@@ -141,10 +152,10 @@ elseif iseeg
 end
 
 % ensure correct dipole position and moment specification
-dip = fixdipole(dip);
+sourcemodel = fixdipole(sourcemodel);
 
 % convert the dipole model parameters into the non-linear parameter vector that will be optimized
-[param, constr] = dipolemodel2param(dip.pos, dip.mom, constr);
+[param, constr] = dipolemodel2param(sourcemodel.pos, sourcemodel.mom, constr);
 
 % determine the scale for a typical step size of 1 cm
 scale = ft_scalingfactor('cm', sens.unit);
@@ -186,17 +197,17 @@ end
 [pos, ori] = param2dipolemodel(param, constr);
 
 % return the optimal dipole parameters
-dipout.pos = pos;
+estimate.pos = pos;
 % return the optimal dipole moment and (optionally) the orientation
 if ~isempty(ori)
-  dipout.mom  = ori;  % dipole orientation as vector
-  dipout.ampl = mom;  % dipole strength
+  estimate.mom  = ori;  % dipole orientation as vector
+  estimate.ampl = mom;  % dipole strength
 else
-  dipout.mom  = mom;  % dipole moment as vector or matrix, which represents both the orientation and strength as vector
+  estimate.mom  = mom;  % dipole moment as vector or matrix, which represents both the orientation and strength as vector
 end
 
-% ensure correct dipole position and moment specification
-dipout = fixdipole(dipout);
+% ensure correct specification of dipole position and moment
+estimate = fixdipole(estimate);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

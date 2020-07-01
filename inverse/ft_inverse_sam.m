@@ -1,32 +1,34 @@
-function [dipout] = ft_inverse_sam(dip, sens, headmodel, dat, C, varargin)
+function [estimate] = ft_inverse_sam(sourcemodel, sens, headmodel, dat, C, varargin)
 
-% ft_inverse_sam scans on pre-defined dipole locations with a single
-% dipole and returns the CTF Synthetic Aperture Magnetometry (SAM)
-% beamformer estimates. location. Dipole locations that are outside
-% the head will return a NaN value.
+% FT_INVERSE_SAM scans on pre-defined dipole locations with a single dipole and
+% returns the Synthetic Aperture Magnetometry (SAM) beamformer estimates.
 %
 % Use as
-%   [dipout] = ft_inverse_sam(dipin, sens, headmodel, dat, cov, varargin)
+%   [estimate] = ft_inverse_sam(sourcemodel, sens, headmodel, dat, cov, ...)
 % where
-%   dipin       is the input dipole model
-%   sens        is the gradiometer definition
-%   headmodel   is the volume conductor definition
+%   sourcemodel is the input source model, see FT_PREPARE_SOURCEMODEL
+%   sens        is the gradiometer or electrode definition, see FT_DATATYPE_SENS
+%   headmodel   is the volume conductor definition, see FT_PREPARE_HEADMODEL
 %   dat         is the data matrix with the ERP or ERF
 %   cov         is the data covariance or cross-spectral density matrix
 % and
-%   dipout      is the resulting dipole model with all details
+%   estimate    contains the estimated source parameters
 %
-% The input dipole model consists of
-%   dipin.pos   positions for dipole, e.g. regular grid
-%   dipin.mom   dipole orientation (optional)
-%
-% Additional options should be specified in key-value pairs and can be
-%   ...
+% Additional input arguments should be specified as key-value pairs and can include
+%   'meansphereorigin'
+%   'feedback'
+%   'fixedori'
+%   'noisecov'
+%   'toi'
 %
 % These options influence the forward computation of the leadfield
-%   'reducerank'      = reduce the leadfield rank, can be 'no' or a number (e.g. 2)
-%   'normalize'       = normalize the leadfield
+%   'reducerank'      = 'no' or number  (default = 3 for EEG, 2 for MEG)
+%   'backproject'     = 'yes' or 'no', in the case of a rank reduction this parameter determines whether the result will be backprojected onto the original subspace (default = 'yes')
+%   'normalize'       = 'no', 'yes' or 'column' (default = 'no')
 %   'normalizeparam'  = parameter for depth normalization (default = 0.5)
+%   'weight'          = number or Nx1 vector, weight for each dipole position to compensate for the size of the corresponding patch (default = 1)
+%
+% See also FT_SOURCEANALYSIS, FT_PREPARE_HEADMODEL, FT_PREPARE_SOURCEMODEL
 
 % Copyright (C) 2009,      Robert Oostenveld
 % Copyright (C) 2005-2009, Arjan Hillebrand
@@ -39,7 +41,7 @@ if mod(nargin-5,2)
   ft_error('invalid number of optional arguments');
 end
 
-% get the optional input arguments
+% get the optional input arguments, or use defaults
 meansphereorigin  = ft_getopt(varargin, 'meansphereorigin');
 feedback          = ft_getopt(varargin, 'feedback', 'text');
 fixedori          = ft_getopt(varargin, 'fixedori', 'spinning');
@@ -88,55 +90,61 @@ if strcmp(fixedori, 'spinning')
   end
 end
 
+% flags to avoid calling isfield repeatedly in the loop over grid positions (saves a lot of time)
+hasmom        = isfield(sourcemodel, 'mom');
+hasleadfield  = isfield(sourcemodel, 'leadfield');
+hasfilter     = isfield(sourcemodel, 'filter');
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~isfield(dip, 'inside')
-  dip.inside = ft_inside_headmodel(dip.pos, headmodel);
+if ~isfield(sourcemodel, 'inside')
+  sourcemodel.inside = ft_inside_headmodel(sourcemodel.pos, headmodel);
 end
 
-if any(dip.inside>1)
+if any(sourcemodel.inside>1)
   % convert to logical representation
-  tmp = false(size(dip.pos,1),1);
-  tmp(dip.inside) = true;
-  dip.inside = tmp;
+  tmp = false(size(sourcemodel.pos,1),1);
+  tmp(sourcemodel.inside) = true;
+  sourcemodel.inside = tmp;
 end
 
 % keep the original details on inside and outside positions
-originside = dip.inside;
-origpos    = dip.pos;
+originside = sourcemodel.inside;
+origpos    = sourcemodel.pos;
 
 % select only the dipole positions inside the brain for scanning
-dip.pos    = dip.pos(originside,:);
+sourcemodel.pos = sourcemodel.pos(originside,:);
 
-if isfield(dip, 'mom')
-  dip.mom = dip.mom(:, dip.inside);
+if hasmom
+  sourcemodel.mom = sourcemodel.mom(:, sourcemodel.inside);
 end
-if isfield(dip, 'leadfield')
+
+if hasleadfield
   ft_info('using precomputed leadfields\n');
-  dip.leadfield = dip.leadfield(dip.inside);
+  sourcemodel.leadfield = sourcemodel.leadfield(sourcemodel.inside);
   
   % check that LF backprojection is not used
-  lfdim  = cellfun('size', dip.leadfield, 2);
-  lfrank = cellfun(@rank,  dip.leadfield);
+  lfdim  = cellfun('size', sourcemodel.leadfield, 2);
+  lfrank = cellfun(@rank,  sourcemodel.leadfield);
   if ~strcmp(fixedori, 'spinning') && any(lfdim > lfrank)
     % case analytical method used, check that LF are full rank or remove it
     ft_warning('SAM with one of the analytical methods for dipole orientation estimation does not support backprojected leadfields\n');
     
-    for i=1:numel(dip.leadfield)
-      lf      = dip.leadfield{i};
+    for i=1:numel(sourcemodel.leadfield)
+      lf      = sourcemodel.leadfield{i};
       [U,S,V] = svd(lf, 'econ');
-      dip.leadfield{i} = lf*V(:,1:2);
+      sourcemodel.leadfield{i} = lf*V(:,1:2);
     end
   end
 end
-if isfield(dip, 'filter')
+
+if hasfilter
   ft_info('using precomputed filters\n');
-  dip.filter = dip.filter(dip.inside);
+  sourcemodel.filter = sourcemodel.filter(sourcemodel.inside);
 elseif strcmp(fixedori,'moiseev')  && ~isempty(toi)
   ft_info('Computing an Event Related SAM beamformer... \n')
 end
-dip.inside = true(size(dip.pos,1),1);
 
 isrankdeficient = (rank(C)<size(C,1));
 
@@ -168,22 +176,19 @@ if isempty(noisecov)
   noisecov = noise * eye(size(C));
 end
 
-% start the scanning with the proper metric
-ft_progress('init', feedback, 'scanning grid');
 
 % the angles are the same for all dipole locations
 all_angles = 0:pi/72:pi;
 
-hasfilter    = isfield(dip, 'filter');
-hasleadfield = isfield(dip, 'leadfield');
-hasmom       = isfield(dip, 'hasmom');
-
-for diplop=1:size(dip.pos,1)
+% start the scanning
+ft_progress('init', feedback, 'scanning grid');
+for diplop=1:size(sourcemodel.pos,1)
+  ft_progress(diplop/size(sourcemodel.pos,1), 'scanning grid %d/%d\n', diplop, size(sourcemodel.pos,1));
   
-  vox_pos = dip.pos(diplop,:);
+  vox_pos = sourcemodel.pos(diplop,:);
   
   if hasfilter
-    SAMweights = dip.filter{diplop};
+    SAMweights = sourcemodel.filter{diplop};
     if size(SAMweights,1)>1
       ft_error('unsupported dimensionality of precomputed spatial filters');
     end
@@ -191,11 +196,11 @@ for diplop=1:size(dip.pos,1)
     
     if hasleadfield
       % reuse the leadfield that was previously computed
-      lf = dip.leadfield{diplop};
+      lf = sourcemodel.leadfield{diplop};
     elseif hasmom
       % compute the leadfield for a fixed dipole orientation
       % FIXME this probably won't work because of the spinning/nonspinning source orientation estimate being part of this code
-      lf = ft_compute_leadfield(vox_pos, sens, headmodel, leadfieldopt{:}) * dip.mom(:,diplop);
+      lf = ft_compute_leadfield(vox_pos, sens, headmodel, leadfieldopt{:}) * sourcemodel.mom(:,diplop);
     else
       % compute the leadfield
       lf = ft_compute_leadfield(vox_pos, sens, headmodel, leadfieldopt{:});
@@ -216,7 +221,7 @@ for diplop=1:size(dip.pos,1)
         optim_options = optimset('Display', 'final', 'TolX', 1e-3, 'Display', 'off');
         [opt_angle, fval, exitflag, output] = fminsearch(@SAM_costfun, all_angles(min_ind), optim_options, vox_pos, tanu, tanv, lf, C, inv_cov, noisecov);
         MDip        = settang(opt_angle, tanu, tanv);
-        MagDip      = sqrt(dot(MDip,MDip));
+        MagDip      = sqrt(dot(Msourcemodel,MDip));
         opt_vox_or  = (MDip/MagDip)';
         
         % figure
@@ -238,7 +243,7 @@ for diplop=1:size(dip.pos,1)
         % beamformers for neuromagnetic source reconstruction. IEEE Trans. Biomed.
         % Eng, No 10, Vol. 51, 2004, pp 1726-1734
         [U,S] = svd(pinv(lf' * inv_cov * lf)); % JM added pinv, in order to take the orientation that belong to the maximum S
-         
+        
       case'moiseev'
         if ~isempty(toi)
           % use trial averaged variance matrix within a time of interest
@@ -260,7 +265,7 @@ for diplop=1:size(dip.pos,1)
       otherwise
         ft_error(sprintf('unknown fixedori method %s', fixedori));
     end
-      
+    
     % convert the U matrix into the optimal orientation vector
     switch fixedori
       case 'spinning'
@@ -298,64 +303,62 @@ for diplop=1:size(dip.pos,1)
           opt_vox_or = ori/norm(ori);
         end
     end
-    dipout.ori{diplop}    = opt_vox_or;
-       
+    estimate.ori{diplop}    = opt_vox_or;
+    
     % compute the spatial filter for the optimal source orientation
     gain        = lf * opt_vox_or;
     trgain_invC = gain' * inv_cov;
-    SAMweights  = trgain_invC / (trgain_invC * gain);  
+    SAMweights  = trgain_invC / (trgain_invC * gain);
     
   end
- 
+  
   % remember all output details for this dipole
-  dipout.pow(diplop)    = SAMweights * C  * SAMweights';
-  dipout.noise(diplop)  = SAMweights * noisecov * SAMweights'; 
-  dipout.filter{diplop} = SAMweights;
+  estimate.pow(diplop)    = SAMweights * C  * SAMweights';
+  estimate.noise(diplop)  = SAMweights * noisecov * SAMweights';
+  estimate.filter{diplop} = SAMweights;
   if ~isempty(dat)
-    dipout.mom{diplop} = SAMweights * dat;
+    estimate.mom{diplop} = SAMweights * dat;
   end
   if strcmp(fixedori,'moiseev') && exist('gain', 'var')
     % get pseudoZ
     Ng                      = gain' * Nproj * gain;
-    Sg                      = gain' * Sproj * gain; 
-    dipout.pseudoZ(diplop)  = Sg / Ng;  
+    Sg                      = gain' * Sproj * gain;
+    estimate.pseudoZ(diplop)  = Sg / Ng;
   end
   
-  ft_progress(diplop/size(dip.pos,1), 'scanning grid %d/%d\n', diplop, size(dip.pos,1));
 end % for each dipole position
-
 ft_progress('close');
 
 % wrap it all up, prepare the complete output
-dipout.inside   = originside;
-dipout.pos      = origpos;
+estimate.inside   = originside;
+estimate.pos      = origpos;
 
-% reassign the scan values over the inside and outside grid positions
-if isfield(dipout, 'leadfield')
-  dipout.leadfield( originside) = dipout.leadfield;
-  dipout.leadfield(~originside) = {[]};
+% reassign the estimated values over the inside and outside grid positions
+if isfield(estimate, 'leadfield')
+  estimate.leadfield( originside) = estimate.leadfield;
+  estimate.leadfield(~originside) = {[]};
 end
-if isfield(dipout, 'filter')
-  dipout.filter( originside) = dipout.filter;
-  dipout.filter(~originside) = {[]};
+if isfield(estimate, 'filter')
+  estimate.filter( originside) = estimate.filter;
+  estimate.filter(~originside) = {[]};
 end
-if isfield(dipout, 'mom')
-  dipout.mom( originside) = dipout.mom;
-  dipout.mom(~originside) = {[]};
+if isfield(estimate, 'mom')
+  estimate.mom( originside) = estimate.mom;
+  estimate.mom(~originside) = {[]};
 end
-if isfield(dipout, 'ori')
-  dipout.ori( originside) = dipout.ori;
-  dipout.ori(~originside) = {[]};
+if isfield(estimate, 'ori')
+  estimate.ori( originside) = estimate.ori;
+  estimate.ori(~originside) = {[]};
 end
-if isfield(dipout, 'pow')
-  dipout.pow( originside) = dipout.pow;
-  dipout.pow(~originside) = nan;
+if isfield(estimate, 'pow')
+  estimate.pow( originside) = estimate.pow;
+  estimate.pow(~originside) = nan;
 end
-if isfield(dipout, 'noise')
-  dipout.noise( originside) = dipout.noise;
-  dipout.noise(~originside) = nan;
+if isfield(estimate, 'noise')
+  estimate.noise( originside) = estimate.noise;
+  estimate.noise(~originside) = nan;
 end
-if isfield(dipout, 'pseudoZ')
-  dipout.pseudoZ( originside) = dipout.pseudoZ;
-  dipout.pseudoZ(~originside) = nan;
+if isfield(estimate, 'pseudoZ')
+  estimate.pseudoZ( originside) = estimate.pseudoZ;
+  estimate.pseudoZ(~originside) = nan;
 end
