@@ -129,6 +129,10 @@ if isfield(cfg, 'template') && (strcmp(cfg.spmversion, 'spm12') && (strcmp(cfg.s
   ft_error('spmmethod %s only workds with spm default tpm template', cfg.spmmethod)
 end
 
+if ~strcmp(cfg.spmversion, 'spm12') && (strcmp(cfg.spmmethod, 'new') || strcmp(cfg.spmmethod, 'mars'))
+    ft_warning('spmmethod %s is only available with spmversion=12. Will ose old methos', cfg.spmmethod)
+end
+
 % check that the preferred SPM version is on the path
 ft_hastoolbox(cfg.spmversion, 1);
 
@@ -152,16 +156,14 @@ else
   end
 end
 
-% ensure that the input MRI has interpretable units and that the input MRI is expressed in
-% a coordinate system which is in approximate agreement with the template
+% Ensure that the input MRI has interpretable units and that the input MRI is expressed in
+% a coordinate system which is in approximate agreement with the template.
 ft_notice('Doing initial alignment...')
 mri  = ft_convert_units(mri, 'mm');
 orig = mri.transform;
-if isdeployed
-  mri = ft_convert_coordsys(mri, cfg.templatecoordsys, 2, cfg.template);
-else    
-  mri = ft_convert_coordsys(mri, cfg.templatecoordsys);
-end
+
+mri = ft_convert_coordsys(mri, cfg.templatecoordsys, 2, cfg.template);
+
 % keep track of an initial transformation matrix that does the approximate co-registration
 initial = mri.transform / orig;
 
@@ -339,10 +341,12 @@ normalised = [];
 ft_notice('creating the normalized volumes');
 if oldparams
   cfg.opts.interp = ft_getopt(cfg.opts, 'interp', 1); % set to 0 for nearest interpolation
-  
+  cfg.opts.bb     = ft_getopt(cfg.opts, 'bb',   inf); % set to inf to use template bounding box
+
   % apply the normalisation parameters to each of the volumes
   flags.vox    = cfg.downsample.*[1 1 1];
   flags.interp = cfg.opts.interp;
+  flags.bb     = cfg.opts.bb;
   spm_write_sn(char({VF.fname}), params, flags);  % this creates the 'w' prefixed files
   for k = 1:numel(VF)
     [p, f, x] = fileparts(VF(k).fname);
