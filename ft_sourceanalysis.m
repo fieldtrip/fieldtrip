@@ -524,9 +524,8 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
         ft_error('not supported')
       end
       
-      tmpcfg         = cfg;
-      tmpcfg.refchan = [];          % for PCC prepare_freq_matrices should not know explicitly about the refchan
-      tmpcfg.channel = cfg.channel; % this includes refchan and supchan
+      tmpcfg         = keepfields(cfg, {'keeptrials', 'rawtrial', 'refchan', 'channel'});
+      tmpcfg.refchan = []; % for PCC prepare_freq_matrices should not know explicitly about the refchan
       
       % select the data in the channels and the frequency of interest
       [Cf, Cr, Pr, Ntrials, tmpcfg] = prepare_freq_matrices(tmpcfg, data);
@@ -564,11 +563,12 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
       
     case {'eloreta' 'mne' 'rv' 'music' 'harmony'}
       % these can handle both a csd matrix and a fourier matrix
-      [Cf, Cr, Pr, Ntrials, cfg] = prepare_freq_matrices(cfg, data);
+      tmpcfg = keepfields(cfg, {'keeptrials', 'rawtrial', 'refchan', 'channel'});
+      [Cf, Cr, Pr, Ntrials, tmpcfg] = prepare_freq_matrices(tmpcfg, data);
       
       % if the input data has a complete fourier spectrum, it can be projected through the filters
       if isfield(data, 'fourierspctrm')
-        [dum, datchanindx] = match_str(cfg.channel, data.label);
+        [dum, datchanindx] = match_str(tmpcfg.channel, data.label);
         fbin = nearest(data.freq, cfg.frequency);
         if numel(fbin)==1, fbin = fbin.*[1 1]; end
         if strcmp(data.dimord, 'chan_freq')
@@ -590,8 +590,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
       end
       
     case 'dics'
-      tmpcfg         = cfg;
-      tmpcfg.refchan = cfg.refchan;                       % for DICS prepare_freq_matrices should know explicitly about the refchan
+      tmpcfg         = keepfields(cfg, {'keeptrials', 'rawtrial', 'refchan', 'channel'});
       tmpcfg.channel = setdiff(cfg.channel, cfg.refchan); % remove the refchan
       
       % select the data in the channels and the frequency of interest
@@ -618,7 +617,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
   
   if hasbaseline
     % repeat the conversion for the baseline condition
-    [bCf, bCr, bPr, Nbaseline, cfg] = prepare_freq_matrices(cfg, baseline);
+    [bCf, bCr, bPr, Nbaseline, tmpcfg] = prepare_freq_matrices(tmpcfg, baseline);
     % fill these with NaNs, so that I dont have to treat them separately
     if isempty(bCr), bCr = nan(Nbaseline, Nchans, 1); end
     if isempty(bPr), bPr = nan(Nbaseline, 1, 1); end

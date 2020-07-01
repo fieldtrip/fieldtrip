@@ -30,9 +30,11 @@ function [Cf, Cr, Pr, Ntrials, cfg] = prepare_freq_matrices(cfg, freq)
 
 % set the defaults
 cfg = ft_checkconfig(cfg, 'deprecated', 'dicsfix');
-if ~isfield(cfg, 'keeptrials'), cfg.keeptrials = 1;     end
-if ~isfield(cfg, 'refchan'),    cfg.refchan    = [];    end
-if ~isfield(cfg, 'rawtrial'),   cfg.rawtrial   = [];    end
+cfg = ft_checkconfig(cfg, 'forbidden', {'frequency' 'latency'});
+cfg.channel    = ft_getopt(cfg, 'channel',    'all');
+cfg.keeptrials = ft_getopt(cfg, 'keeptrials', 1);
+cfg.rawtrial   = ft_getopt(cfg, 'rawtrial',   0);
+cfg.refchan    = ft_getopt(cfg, 'refchan'      );
 
 keeptrials = istrue(cfg.keeptrials) || istrue(cfg.rawtrial);
 
@@ -46,57 +48,33 @@ else
   Ntrials = 1;
 end
 
-% % select from the frequency dimension
-% if any(strcmp(tok, 'freq'))
-%   % select the frequency of interest
-%   tmpcfg             = [];
-%   tmpcfg.frequency   = cfg.frequency;
-%   tmpcfg.avgoverfreq = 'yes';
-%   freq               = ft_selectdata(tmpcfg, freq);
-% 
-%   % update the cfg
-%   cfg.frequency      = freq.freq;
-% end
-% 
-% % select from the time dimension
-% if any(strcmp(tok, 'time'))
-%   % select the latency of interest for time-frequency data
-%   tmpcfg         = [];
-%   tmpcfg.latency = cfg.latency;
-%   tmpcfg.avgovertime = 'yes';
-%   freq           = ft_selectdata(tmpcfg, freq);
-%   
-%   % update the cfg
-%   cfg.latency    = freq.time;
-% end  
-
 % create a square csd-matrix, if necessary
 hasfull = false;
 if isfield(freq, 'crsspctrm')
-	dimtok  = tokenize(getdimord(freq, 'crsspctrm'),'_');
-	hasfull = sum(strcmp(dimtok, 'chan'))==2;
+  dimtok  = tokenize(getdimord(freq, 'crsspctrm'),'_');
+  hasfull = sum(strcmp(dimtok, 'chan'))==2;
 end
 if ~hasfull
-	if keeptrials
-		freq = ft_checkdata(freq, 'cmbrepresentation', 'full');
-	else
-		freq = ft_checkdata(freq, 'cmbrepresentation', 'fullfast');
-		Ntrials = 1;
-	end
+  if keeptrials
+    freq = ft_checkdata(freq, 'cmbrepresentation', 'full');
+  else
+    freq = ft_checkdata(freq, 'cmbrepresentation', 'fullfast');
+    Ntrials = 1;
+  end
 end
 
 % extract the csd-matrix for the channels-of-interest
 [dum, chanindx] = match_str(cfg.channel, freq.label);
 
 % update the cfg
-cfg.channel     = freq.label(chanindx);
+cfg.channel = freq.label(chanindx);
 if startsWith(freq.dimord, 'rpt')
   Cf = freq.crsspctrm(:,chanindx,chanindx,:,:);
 else
   Cf = freq.crsspctrm(chanindx,chanindx,:,:);
 end
 
-if isfield(cfg, 'refchan') && ~isempty(cfg.refchan)
+if ~isempty(cfg.refchan)
   refindx = match_str(freq.label, cfg.refchan);
   if isempty(refindx)
     ft_error('the requested reference channel is not found in the data');
