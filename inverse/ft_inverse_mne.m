@@ -152,7 +152,7 @@ else
   end
 end
 
-%% compute the spatial filter
+% compute the spatial filter
 if ~hasfilter
   
   % count the number of channels and leadfield components
@@ -247,7 +247,7 @@ if ~hasfilter
       w = w*P;
       
     else
-      %% equation 5 from Lin et al 2004 (this implements Dale et al 2000, and Liu et al. 2002)
+      % equation 5 from Lin et al 2004 (this implements Dale et al 2000, and Liu et al. 2002)
       denom = (A*R*A'+(lambda^2)*C);
       if cond(denom)<1e12
         w = R * A' / denom;
@@ -259,7 +259,7 @@ if ~hasfilter
     
   end % if empty noisecov
   
-  %% for each of the timebins, estimate the source strength
+  % for each of the timebins, estimate the source strength
   if isempty(dat)
     ft_info('The input data is empty, dipole moment cannot be computed');
     mom = [];
@@ -345,17 +345,16 @@ elseif ~isempty(noisecov)
   end
 end
 
-% wrap it all up, prepare the complete output
+% reassign the estimated values over the inside and outside grid positions
 estimate.inside  = originside;
 estimate.pos     = origpos;
-
-if isfield(estimate, 'mom')
-  estimate.mom( originside) = estimate.mom;
-  estimate.mom(~originside) = {[]};
-end
 if isfield(estimate, 'pow')
   estimate.pow( originside,:) = estimate.pow;
   estimate.pow(~originside,:) = nan;
+end
+if isfield(estimate, 'mom')
+  estimate.mom( originside) = estimate.mom;
+  estimate.mom(~originside) = {[]};
 end
 if isfield(estimate, 'noisecov')
   estimate.noisecov( originside) = estimate.noisecov;

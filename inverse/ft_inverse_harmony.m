@@ -142,7 +142,7 @@ else
   end
 end
 
-%% Harmony parameters
+% Harmony parameters
 num_dip      = size(sourcemodel.leadfield{1}, 2);
 num_pos      = size(sourcemodel.leadfield, 2);
 num_comp     = ft_getopt(varargin, 'connected_components', 1);
@@ -150,7 +150,7 @@ num_harm     = ft_getopt(varargin, 'number_harmonics',     5);
 filt_ord     = ft_getopt(varargin, 'filter_order',         5);
 lc           = ft_getopt(varargin, 'filter_bs',            5);
 
-%% Create the leadfield matrix
+% Create the leadfield matrix
 
 % count the number of channels and leadfield components
 Nchan   = size(sourcemodel.leadfield{1},1);
@@ -169,7 +169,7 @@ for i=1:size(sourcemodel.pos,1)
   n = n + size(sourcemodel.leadfield{i}, 2);
 end
 
-%% Create brain harmonics matrix
+% Create brain harmonics matrix
 
 % Mesh harmonics
 [dum,H,d] = mesh_spectrum(sourcemodel,num_harm,num_comp);
@@ -206,9 +206,7 @@ else
   ft_error('this function only supports source model with 1, 2 or 3 dimensional source values')
 end
 
-
-
-%% Create harmonic leadifield
+% Create harmonic leadfield
 lf_h = zeros(size(lf,1),num_harm,num_comp,num_dip); %leadifield in the harmonic domain
 
 for k = 1:num_comp
@@ -220,13 +218,11 @@ end
 
 lf_h = reshape(lf_h,size(lf,1),num_comp*num_harm*num_dip);
 
-%% Create harmonic source covariance matrix
-
+% Create harmonic source covariance matrix
 q = 1./sqrt(1 + (l/lc).^(2*filt_ord));
 sourcecov = diag(q);
 
-%% Compute the Harmony spatial filters
-
+% Compute the Harmony spatial filters
 
 % count the number of channels and leadfield components
 Nchan   = size(sourcemodel.leadfield{1},1);
@@ -309,7 +305,7 @@ elseif ~isempty(noisecov)
     w = w*P;
     
   else
-    %% equation 5 from Lin et al 2004 (this implements Dale et al 2000, and Liu et al. 2002)
+    % equation 5 from Lin et al 2004 (this implements Dale et al 2000, and Liu et al. 2002)
     denom = (A*R*A'+(lambda^2)*C);
     if cond(denom)<1e12
       w = R * A' / denom;
@@ -321,7 +317,7 @@ elseif ~isempty(noisecov)
   
 end % if empty noisecov
 
-%% for each of the timebins, estimate the source strength
+% for each of the timebins, estimate the source strength
 w_x = H_tot*w; % The Harm matrix project the Harmony level filters back to the source locations
 
 if isreal(dat)
@@ -353,7 +349,7 @@ if mom_ind == 1
   end
 end
 
-%% compute power (over the three orientations) at each location and for each time
+% compute power (over the three orientations) at each location and for each time
 
 if mom_ind == 1
   estimate.pow = nan(size(sourcemodel.pos,1), size(dat,2));
@@ -396,17 +392,16 @@ end
 %   end
 %end
 
-% wrap it all up, prepare the complete output
+% reassign the estimated values over the inside and outside grid positions
 estimate.inside  = originside;
 estimate.pos     = origpos;
-
-if isfield(estimate, 'mom')
-  estimate.mom( originside) = estimate.mom;
-  estimate.mom(~originside) = {[]};
-end
 if isfield(estimate, 'pow')
   estimate.pow( originside,:) = estimate.pow;
   estimate.pow(~originside,:) = nan;
+end
+if isfield(estimate, 'mom')
+  estimate.mom( originside) = estimate.mom;
+  estimate.mom(~originside) = {[]};
 end
 if isfield(estimate, 'noisecov')
   estimate.noisecov( originside) = estimate.noisecov;

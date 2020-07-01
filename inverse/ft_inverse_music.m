@@ -125,6 +125,7 @@ us = u(:,(numcomponent+1):end);
 ps = us * us';
 
 % allocate space to hold the result
+estimate = [];
 estimate.jr = nan(size(sourcemodel.pos,1),1);
 
 ft_progress('init', feedback, 'scanning grid');
@@ -157,15 +158,14 @@ for i=1:size(sourcemodel.pos,1)
 end % for each dipole position
 ft_progress('close');
 
-% wrap it all up, prepare the complete output
+% reassign the estimated values over the inside and outside grid positions
 estimate.inside   = originside;
 estimate.pos      = origpos;
-if hasleadfield
-  estimate.leadfield = origleadfield;
-end
-
-% reassign the estimated values over the inside and outside grid positions
 if isfield(estimate, 'jr')
   estimate.jr( originside) = estimate.jr;
   estimate.jr(~originside) = nan;
+end
+if isfield(estimate, 'leadfield')
+  estimate.leadfield( originside) = estimate.leadfield;
+  estimate.leadfield(~originside) = {[]};
 end

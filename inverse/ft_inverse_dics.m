@@ -478,7 +478,7 @@ for i=1:size(sourcemodel.pos,1)
     end
   end
   
-  cfilt = filt * C * ctranspose(filt);    % Gross eqn. 4 and 5
+  cfilt = filt * C * ctranspose(filt); % Gross eqn. 4 and 5
   if powlambda1
     if size(cfilt,1) == 1
       % only 1 orientation, no need to do svd
@@ -528,7 +528,7 @@ for i=1:size(sourcemodel.pos,1)
   
   if keepfilter
     if ~isempty(subspace)
-      estimate.filter{i,1} = filt*subspace; %FIXME should this be subspace, or pinv(subspace)?
+      estimate.filter{i,1} = filt*subspace; % FIXME should this be subspace, or pinv(subspace)?
     else
       estimate.filter{i,1} = filt;
     end

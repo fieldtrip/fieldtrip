@@ -120,9 +120,11 @@ else
   datatype = 'fourier';
 end
 
-rv  = nan(size(sourcemodel.pos,1),1);
-pow = nan(size(sourcemodel.pos,1),1);
-mom = cell(size(sourcemodel.pos,1),1);
+% allocate space to hold the result
+estimate = [];
+estimate.rv  = nan(size(sourcemodel.pos,1),1);
+estimate.pow = nan(size(sourcemodel.pos,1),1);
+estimate.mom = cell(size(sourcemodel.pos,1),1);
 
 ft_progress('init', feedback, 'scanning grid');
 for i=1:size(sourcemodel.pos,1)
@@ -158,40 +160,34 @@ for i=1:size(sourcemodel.pos,1)
   end
   
   % Projection matrix (Pseudoinverse)
-  lfi    = pinv(lf);
+  lfi = pinv(lf);
     
   if strcmp(datatype, 'time') || strcmp(datatype, 'fourier')
     % Compute dipole moment and residual variance
-    mom{i} = lfi * dat;
-    rv(i)  = sum(sum(abs(dat - lf*mom{i}).^2, 1), 2)./sum(sum(abs(dat).^2, 1), 2);
-  
-    % for plotting convenience also compute power at each location
-    % FIXME is this normalization correct?
-    pow(i) = mean(sum(abs(mom{i}(:)).^2, 1));
+    estimate.mom{i} = lfi * dat;
+    estimate.rv(i)  = sum(sum(abs(dat - lf*mom{i}).^2, 1), 2)./sum(sum(abs(dat).^2, 1), 2);
+    % Compute power at each location, this is convenient for plotting
+    estimate.pow(i) = mean(sum(abs(mom{i}(:)).^2, 1));  % FIXME is this normalization correct?
   else
-    % Compute power
-    pow(i) = sum(real(sum((lfi*dat).*lfi,2)));
+    % Compute power, the data represents a covariance or CSD matrix
+    estimate.pow(i) = sum(real(sum((lfi*dat).*lfi,2)));
     % Compute residual power (variance)
     Prj = eye(size(lf,1)) - lf*lfi; % Projector to the orthogonal complement of the model space
-    rv(i)  = sum(real(sum((Prj*dat).*Prj,2)));
+    estimate.rv(i)  = sum(real(sum((Prj*dat).*Prj,2)));
   end
 
 end % for each dipole position
 ft_progress('close');
 
-% wrap it all up, prepare the complete output
+% reassign the estimated values over the inside and outside grid positions
 estimate.inside  = originside;
 estimate.pos     = origpos;
-
-estimate.rv  = nan(size(originside));
-estimate.pow = nan(size(originside));
-
-% assign the output data
-estimate.rv(originside)  = rv(:);   % ensure that it is a column vector
-estimate.pow(originside) = pow(:);  % ensure that it is a column vector
-
-if strcmp(datatype, 'time') || strcmp(datatype, 'fourier')
-  estimate.mom = cell(size(originside));
-  estimate.mom( originside) = mom;
+if isfield(sourcemodel, 'mom')
+  estimate.mom( originside) = estimate.mom;
   estimate.mom(~originside) = {[]};
 end
+estimate.rv( originside) = estimate.rv;
+estimate.rv(~originside) = nan;
+estimate.pow( originside) = estimate.pow;
+estimate.pow(~originside) = nan;
+

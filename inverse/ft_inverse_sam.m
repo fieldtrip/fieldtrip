@@ -337,11 +337,9 @@ for i=1:size(sourcemodel.pos,1)
 end % for each dipole position
 ft_progress('close');
 
-% wrap it all up, prepare the complete output
+% reassign the estimated values over the inside and outside grid positions
 estimate.inside   = originside;
 estimate.pos      = origpos;
-
-% reassign the estimated values over the inside and outside grid positions
 if isfield(estimate, 'leadfield')
   estimate.leadfield( originside) = estimate.leadfield;
   estimate.leadfield(~originside) = {[]};
