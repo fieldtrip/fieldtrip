@@ -63,9 +63,9 @@ if mod(nargin-5,2)
 end
 
 % get the optional input arguments, or use defaults
-keepfilter      = ft_getopt(varargin, 'keepfilter',      'no');
-keepmom         = ft_getopt(varargin, 'keepmom',         'no');
-keepleadfield   = ft_getopt(varargin, 'keepleadfield',   'no');
+keepfilter      = ft_getopt(varargin, 'keepfilter', 'no');
+keepmom         = ft_getopt(varargin, 'keepmom', 'yes');
+keepleadfield   = ft_getopt(varargin, 'keepleadfield', 'no');
 lambda          = ft_getopt(varargin, 'lambda', 0.05);
 
 % construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD
@@ -194,11 +194,9 @@ if keepmom && ~isempty(dat)
   end
 end
 
-% wrap it all up, prepare the complete output
+% reassign the estimated values over the inside and outside grid positions
 estimate.inside  = originside;
 estimate.pos     = origpos;
-
-% reassign the estimated values over the inside and outside grid positions
 if isfield(sourcemodel, 'pow') % here pow is cell
   estimate.pow( originside,:) = sourcemodel.pow;
   estimate.pow(~originside,:) = nan;
@@ -207,15 +205,15 @@ if isfield(sourcemodel, 'ori') % here ori is cell
   estimate.ori( originside) = sourcemodel.ori;
   estimate.ori(~originside) = {[]};
 end
-if hasleadfield && keepleadfield
+if isfield(sourcemodel, 'leadfield') && keepleadfield
   estimate.leadfield( originside) = sourcemodel.leadfield;
   estimate.leadfield(~originside) = {[]};
 end
-if hasfilter && keepfilter
+if isfield(sourcemodel, 'filter') && keepfilter
   estimate.filter( originside) = sourcemodel.filter;
   estimate.filter(~originside) = {[]};
 end
-if hasmom && keepmom
+if isfield(sourcemodel, 'mom') && keepmom
   estimate.mom( originside) = sourcemodel.mom;
   estimate.mom(~originside) = {[]};
 end
