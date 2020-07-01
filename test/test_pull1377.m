@@ -198,7 +198,7 @@ perform_source_analysis
     EEG_tlck_df = ft_timelockanalysis(cfg, dataeeg);
     
     % create freq structure for dics beamforming and pcc beamforming
-    % for MEG,
+    % for MEG
     cfg = [];
     cfg.method = 'mtmfft';
     cfg.output = 'fourier';
@@ -313,7 +313,7 @@ perform_source_analysis
     
     cfg = [];
     cfg.method ='simbio';
-    cfg.conductivity = [0.33]; % order follows mesh.tissuelabel
+    cfg.conductivity = 0.33; % order follows mesh.tissuelabel
     headmodel_simbio = ft_prepare_headmodel(cfg, mesh_vol);
     
     cfg = [];
@@ -329,7 +329,7 @@ perform_source_analysis
     bnd_openmeeg = vol;
     
     cfg = [];
-    cfg.conductivity = [0.33];
+    cfg.conductivity = 0.33;
     cfg.method = 'openmeeg';
     headmodel_openmeeg = ft_prepare_headmodel(cfg, bnd_openmeeg);
     

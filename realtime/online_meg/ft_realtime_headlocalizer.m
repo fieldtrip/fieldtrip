@@ -343,7 +343,7 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
       endsample  = info.hdr.nSamples*info.hdr.nTrials;
     elseif strcmp(info.cfg.bufferdata, 'first')
       begsample  = prevSample + 1;
-      endsample  = prevSample + info.blocksize ;
+      endsample  = prevSample + info.blocksize;
     else
       ft_error('unsupported value for cfg.bufferdata');
     end

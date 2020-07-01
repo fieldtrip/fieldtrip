@@ -49,7 +49,7 @@ load(dccnpath([path_to_load, '/template/headmodel/standard_singleshell.mat']))
 % use 'icosahedron' private function to generate the mash
 mesh = [];
 [mesh.pnt, mesh.tri] = icosahedron642;
-mesh.pnt = 5*mesh.pnt - repmat([ 0 3 -1.5],size(mesh.pnt,1),1) ;
+mesh.pnt = 5*mesh.pnt - repmat([ 0 3 -1.5],size(mesh.pnt,1),1);
 
 %% Plot head model
 

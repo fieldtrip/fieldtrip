@@ -116,8 +116,8 @@ for i = 1 : lChIdx
       range(2), cSectionLengths(lastSectionForSegment+1), chIdx(i));
   end
   
-  useSections = allSections(firstSection: lastSection) ;
-  useSectionL = sectionLengths(firstSection: lastSection) ;
+  useSections = allSections(firstSection: lastSection);
+  useSectionL = sectionLengths(firstSection: lastSection);
   
   % First Partial Segment
   curIdx = 1;

@@ -19,7 +19,7 @@ for i=1:numel(datasets)
   cfg.dataset = fullfile(homedir, datasets{i});
   
   data{i} = ft_preprocessing(cfg);
-end;
+end
 
 
 tolerance = 1;
@@ -28,7 +28,7 @@ for i=1:numel(data)
   for j=1:numel(data)
     assert(sum(abs(data{i}.trial{1}(:)-data{j}.trial{1}(:)))<tolerance);
   end
-end;
+end
 
 end
 

@@ -231,7 +231,7 @@ for i=chansel(:)'
       end
       % apply preprocessing
       fprintf('applying preprocessing options\n');
-      dat = preproc(org, hdr.label(i), offset2time(0, hdr.Fs, size(org,2)), cfg.preproc);      
+      dat = preproc(org, hdr.label(i), offset2time(0, hdr.Fs, size(org,2)), cfg.preproc);
     end % if newdata
 
     peaks = [];
@@ -358,7 +358,7 @@ for i=chansel(:)'
       spike            = [];
       if isempty(cfg.channelprefix)
         % the label should be a cell-array of length one
-        spike.label     = hdr.label(i); 
+        spike.label     = hdr.label(i);
       else
         % add a prefix to the channel name
         spike.label     = {[cfg.channelprefix '_' hdr.label{i}]};
@@ -478,4 +478,3 @@ end % for each file
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble provenance
-

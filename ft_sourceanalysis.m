@@ -783,7 +783,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
         dip(i) = ft_inverse_harmony(sourcemodel, sens, headmodel, avg, methodopt{:}, leadfieldopt{:});
         % ft_error(sprintf('method ''%s'' is unsupported for source reconstruction in the frequency domain', cfg.method));
       case {'rv'}
-        dip(i) = ft_inverse_rv(sourcemodel, sens, headmodel, avg, methodopt{:}, leadfieldopt{:}) ;
+        dip(i) = ft_inverse_rv(sourcemodel, sens, headmodel, avg, methodopt{:}, leadfieldopt{:});
       case {'music'}
         ft_error('method ''%s'' is currently unsupported for source reconstruction in the frequency domain', cfg.method);
       otherwise
