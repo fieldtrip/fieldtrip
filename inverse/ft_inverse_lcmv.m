@@ -1,48 +1,39 @@
-function [dipout] = ft_inverse_lcmv(dip, grad, headmodel, dat, C, varargin)
+function [estimate] = ft_inverse_lcmv(sourcemodel, sens, headmodel, dat, C, varargin)
 
 % FT_INVERSE_LCMV scans on pre-defined dipole locations with a single dipole
 % and returns the linear constrained minimum variance beamformer spatial filter
-% output for a dipole on every location. Dipole locations that are outside the
-% head will return a NaN value.
+% output for a dipole on every location.
 %
 % Use as
-%   [dipout] = ft_inverse_lcmv(dipin, grad, headmodel, dat, cov, varargin)
+%   [estimate] = ft_inverse_lcmv(sourcemodel, sens, headmodel, dat, cov, ...)
 % where
-%   dipin       is the input dipole model
-%   grad        is the gradiometer definition
-%   headmodel   is the volume conductor definition
+%   sourcemodel is the input source model, see FT_PREPARE_SOURCEMODEL
+%   sens        is the gradiometer or electrode definition, see FT_DATATYPE_SENS
+%   headmodel   is the volume conductor definition, see FT_PREPARE_HEADMODEL
 %   dat         is the data matrix with the ERP or ERF
 %   cov         is the data covariance or cross-spectral density matrix
 % and
-%   dipout      is the resulting dipole model with all details
+%   estimate    contains the estimated source parameters
 %
-% The input dipole model consists of
-%   dipin.pos   positions for dipole, e.g. regular grid, Npositions x 3
-%   dipin.mom   dipole orientation (optional), 3 x Npositions
-% and can additionally contain things like a precomputed filter.
-%
-% Additional options should be specified in key-value pairs and can be
-%  'powmethod'        = can be 'trace' or 'lambda1'
-%  'feedback'         = give ft_progress indication, can be 'text', 'gui' or 'none' (default)
-%  'fixedori'         = use fixed or free orientation,                   can be 'yes' or 'no'
-%  'projectnoise'     = project noise estimate through filter,           can be 'yes' or 'no'
-%  'projectmom'       = project the dipole moment timecourse on the direction of maximal power, can be 'yes' or 'no'
-%  'keepfilter'       = remember the beamformer filter,                  can be 'yes' or 'no'
-%  'keepleadfield'    = remember the forward computation,                can be 'yes' or 'no'
-%  'keepmom'          = remember the estimated dipole moment timeseries, can be 'yes' or 'no'
-%  'keepcov'          = remember the estimated dipole covariance,        can be 'yes' or 'no'
-%  'kurtosis'         = compute the kurtosis of the dipole timeseries,   can be 'yes' or 'no'
-%  'weightnorm'       = normalize the beamformer weights,                can be 'no', 'unitnoisegain', 'arraygain' or 'nai'
+% Additional input arguments should be specified as key-value pairs and can include
+%   'powmethod'        = can be 'trace' or 'lambda1'
+%   'feedback'         = can be 'none', 'gui', 'dial', 'textbar', 'text', 'textcr', 'textnl' (default = 'text')
+%   'fixedori'         = use fixed or free orientation,                   can be 'yes' or 'no'
+%   'projectnoise'     = project noise estimate through filter,           can be 'yes' or 'no'
+%   'projectmom'       = project the dipole moment timecourse on the direction of maximal power, can be 'yes' or 'no'
+%   'keepfilter'       = remember the beamformer filter,                  can be 'yes' or 'no'
+%   'keepleadfield'    = remember the forward computation,                can be 'yes' or 'no'
+%   'keepmom'          = remember the estimated dipole moment timeseries, can be 'yes' or 'no'
+%   'keepcov'          = remember the estimated dipole covariance,        can be 'yes' or 'no'
+%   'kurtosis'         = compute the kurtosis of the dipole timeseries,   can be 'yes' or 'no'
+%   'weightnorm'       = normalize the beamformer weights,                can be 'no', 'unitnoisegain', 'arraygain' or 'nai'
 %
 % These options influence the forward computation of the leadfield
-%   'reducerank'      = 'no', or number (default = 3 for EEG, 2 for MEG)
-%   'backproject'     = 'yes' or 'no',  determines when reducerank is applied whether the
-%                        lower rank leadfield is projected back onto the original linear
-%                        subspace, or not (default = 'yes')
-%   'normalize'       = 'yes' or 'no' (default = 'no')
-%   'normalizeparam'  = depth normalization parameter (default = 0.5)
-%   'weight'          = number or Nx1 vector, weight for each dipole position to compensate
-%                        for the size of the corresponding patch (default = 1)
+%   'reducerank'      = 'no' or number  (default = 3 for EEG, 2 for MEG)
+%   'backproject'     = 'yes' or 'no', in the case of a rank reduction this parameter determines whether the result will be backprojected onto the original subspace (default = 'yes')
+%   'normalize'       = 'no', 'yes' or 'column' (default = 'no')
+%   'normalizeparam'  = parameter for depth normalization (default = 0.5)
+%   'weight'          = number or Nx1 vector, weight for each dipole position to compensate for the size of the corresponding patch (default = 1)
 %
 % These options influence the mathematical inversion of the covariance matrix
 %  'lambda'           = regularisation parameter
@@ -53,6 +44,8 @@ function [dipout] = ft_inverse_lcmv(dip, grad, headmodel, dat, C, varargin)
 % dipole (regional source) is assumed on each location. If a dipole moment
 % is specified, its orientation will be used and only the strength will
 % be fitted to the data.
+%
+% See also FT_SOURCEANALYSIS, FT_PREPARE_HEADMODEL, FT_PREPARE_SOURCEMODEL
 
 % Copyright (C) 2003-2020, Robert Oostenveld and Jan-Mathijs Schoffelen
 %
@@ -79,11 +72,9 @@ if mod(nargin-5,2)
   ft_error('invalid number of optional arguments');
 end
 
-% these optional settings do not have defaults
+% get the optional input arguments, or use defaults
 powmethod      = ft_getopt(varargin, 'powmethod'); % the default for this is set below
 subspace       = ft_getopt(varargin, 'subspace'); % used to implement an "eigenspace beamformer" as described in Sekihara et al. 2002 in HBM
-
-% these optional settings have defaults
 feedback       = ft_getopt(varargin, 'feedback',      'text');
 keepfilter     = ft_getopt(varargin, 'keepfilter',    'no');
 keepleadfield  = ft_getopt(varargin, 'keepleadfield', 'no');
@@ -129,55 +120,60 @@ end
 powtrace   = strcmp(powmethod, 'trace');
 powlambda1 = strcmp(powmethod, 'lambda1');
 
-if isfield(dip, 'mom') && fixedori
+% flags to avoid calling isfield repeatedly in the loop over grid positions (saves a lot of time)
+hasmom        = isfield(sourcemodel, 'mom');
+hasleadfield  = isfield(sourcemodel, 'leadfield');
+hasfilter     = isfield(sourcemodel, 'filter');
+hassubspace   = isfield(sourcemodel, 'subspace');
+
+if hasmom && fixedori
   ft_error('you cannot specify a dipole orientation and fixedmom simultaneously');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~isfield(dip, 'inside')
-  dip.inside = ft_inside_headmodel(dip.pos, headmodel);
+if ~isfield(sourcemodel, 'inside')
+  sourcemodel.inside = ft_inside_headmodel(sourcemodel.pos, headmodel);
 end
 
-if any(dip.inside>1)
+if any(sourcemodel.inside>1)
   % convert to logical representation
-  tmp = false(size(dip.pos,1),1);
-  tmp(dip.inside) = true;
-  dip.inside = tmp;
+  tmp = false(size(sourcemodel.pos,1),1);
+  tmp(sourcemodel.inside) = true;
+  sourcemodel.inside = tmp;
 end
 
-% flags to avoid calling isfield repeatedly in the loop over grid positions (saves a lot of time)
-hasmom        = isfield(dip, 'mom');
-hasleadfield  = isfield(dip, 'leadfield');
-hasfilter     = isfield(dip, 'filter');
-hassubspace   = isfield(dip, 'subspace');
 
 if hasfilter && (fixedori || ~isequal(weightnorm, 'no'))
   ft_warning('with precomputed spatial filters a fixed orientation constraint or weight normalisation options are not applied');
 end
 
 % keep the original details on inside and outside positions
-originside = dip.inside;
-origpos    = dip.pos;
+originside = sourcemodel.inside;
+origpos    = sourcemodel.pos;
 
 % select only the dipole positions inside the brain for scanning
-dip.pos    = dip.pos(originside,:);
-dip.inside = true(size(dip.pos,1),1);
+sourcemodel.pos    = sourcemodel.pos(originside,:);
+sourcemodel.inside = true(size(sourcemodel.pos,1),1);
+
 if hasmom
-  dip.mom = dip.mom(:,originside);
+  sourcemodel.mom = sourcemodel.mom(:,originside);
 end
-if hasleadfield
-  ft_info('using precomputed leadfields\n');
-  dip.leadfield = dip.leadfield(originside);
-end
+
 if hasfilter
   ft_info('using precomputed filters\n');
-  dip.filter = dip.filter(originside);
+  sourcemodel.filter = sourcemodel.filter(originside);
+elseif hasleadfield
+  ft_info('using precomputed leadfields\n');
+  sourcemodel.leadfield = sourcemodel.leadfield(originside);
+else
+  ft_info('computing forward model on the fly\n');
 end
+
 if hassubspace
   ft_info('using subspace projection\n');
-  dip.subspace = dip.subspace(originside);
+  sourcemodel.subspace = sourcemodel.subspace(originside);
 end
 
 % it is difficult to give a quantitative estimate of lambda, therefore also
@@ -243,38 +239,39 @@ invC_squared = invC^2;
 
 % start the scanning with the proper metric
 ft_progress('init', feedback, 'scanning grid');
-for i=1:size(dip.pos,1)
+for i=1:size(sourcemodel.pos,1)
+  ft_progress(i/size(sourcemodel.pos,1), 'scanning grid %d/%d\n', i, size(sourcemodel.pos,1));
+
   if hasfilter
     % precomputed filter is provided, the leadfield is not needed, nor is the handling of
     % fixedori, weightnorm, or subspace functional
-    filt = dip.filter{i};
+    filt = sourcemodel.filter{i};
   
   else
-
-    if hasleadfield && isfield(dip, 'mom') && size(dip.mom, 1)==size(dip.leadfield{i}, 2)
+    if hasleadfield && hasmom && size(sourcemodel.mom, 1)==size(sourcemodel.leadfield{i}, 2)
       % reuse the leadfield that was previously computed and project
-      lf = dip.leadfield{i} * dip.mom(:,i);
-    elseif  hasleadfield &&  isfield(dip, 'mom')
+      lf = sourcemodel.leadfield{i} * sourcemodel.mom(:,i);
+    elseif  hasleadfield &&  hasmom
       % reuse the leadfield that was previously computed but don't project
-      lf = dip.leadfield{i};
-    elseif  hasleadfield && ~isfield(dip, 'mom')
+      lf = sourcemodel.leadfield{i};
+    elseif  hasleadfield && ~hasmom
       % reuse the leadfield that was previously computed
-      lf = dip.leadfield{i};
-    elseif  ~hasleadfield && isfield(dip, 'mom')
+      lf = sourcemodel.leadfield{i};
+    elseif ~hasleadfield &&  hasmom
       % compute the leadfield for a fixed dipole orientation
-      lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, leadfieldopt{:}) * dip.mom(:,i);
+      lf = ft_compute_leadfield(sourcemodel.pos(i,:), sens, headmodel, leadfieldopt{:}) * sourcemodel.mom(:,i);
     else
       % compute the leadfield
-      lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, leadfieldopt{:});
+      lf = ft_compute_leadfield(sourcemodel.pos(i,:), sens, headmodel, leadfieldopt{:});
     end
-  
+
     if hassubspace
       % do subspace projection of the forward model
-      lf    = dip.subspace{i} * lf;
+      lf    = sourcemodel.subspace{i} * lf;
       % the data and the covariance become voxel dependent due to the projection
-      dat   = dip.subspace{i} * dat_pre_subspace;
-      C     = dip.subspace{i} * C_pre_subspace * dip.subspace{i}';
-      invC  = ft_inv(dip.subspace{i} * C_pre_subspace * dip.subspace{i}', invopt{:});
+      dat   = sourcemodel.subspace{i} * dat_pre_subspace;
+      C     = sourcemodel.subspace{i} * C_pre_subspace * sourcemodel.subspace{i}';
+      invC  = ft_inv(sourcemodel.subspace{i} * C_pre_subspace * sourcemodel.subspace{i}', invopt{:});
     elseif ~isempty(subspace)
       % do subspace projection of the forward model only
       lforig = lf;
@@ -297,8 +294,8 @@ for i=1:size(dip.pos,1)
           [d, iv]       = sort(diag(d), 'descend');
           unitnoiseori  = v(:,iv(1));
           lf            = lf * unitnoiseori;
-          dipout.ori{i} = unitnoiseori;
-          dipout.eta(i) = d(1)./d(2); % ratio between largest and second largest eigenvalues
+          estimate.ori{i} = unitnoiseori;
+          estimate.eta(i) = d(1)./d(2); % ratio between largest and second largest eigenvalues
           if hassubspace, lforig = lforig * unitnoiseori; end
 
         case 'arraygain'
@@ -307,8 +304,8 @@ for i=1:size(dip.pos,1)
           [d, iv]       = sort(diag(d), 'descend');
           arraygainori  = v(:,iv(1));
           lf            = lf * arraygainori;
-          dipout.ori{i} = arraygainori;
-          dipout.eta(i) = d(1)./d(2); % ratio between largest and second largest eigenvalues
+          estimate.ori{i} = arraygainori;
+          estimate.eta(i) = d(1)./d(2); % ratio between largest and second largest eigenvalues
           if hassubspace, lforig = lforig * arraygainori; end
         
         otherwise
@@ -320,8 +317,8 @@ for i=1:size(dip.pos,1)
           [u, s, v]     = svd(real(pinv(lf' * invC *lf)));
           maxpowori     = u(:,1);
           lf            = lf * maxpowori;
-          dipout.ori{i} = maxpowori;
-          dipout.eta(i) = s(1,1)./s(2,2); % ratio between the first and second singular values
+          estimate.ori{i} = maxpowori;
+          estimate.eta(i) = s(1,1)./s(2,2); % ratio between the first and second singular values
           if hassubspace, lforig = lforig * maxpowori; end
       end
     end
@@ -376,72 +373,71 @@ for i=1:size(dip.pos,1)
     filt = (mom') * filt;
   end
   if powlambda1
-    % dipout.pow(i) = lambda1(pinv(lf' * invC * lf)); % this is more efficient if the filters are not present
-    dipout.pow(i,1) = lambda1(cfilt);                 % this is more efficient if the filters are present
+    % estimate.pow(i) = lambda1(pinv(lf' * invC * lf)); % this is more efficient if the filters are not present
+    estimate.pow(i,1) = lambda1(cfilt);                 % this is more efficient if the filters are present
   elseif powtrace
-    % dipout.pow(i) = trace(pinv(lf' * invC * lf));   % this is more efficient if the filters are not present, van Veen eqn. 24, but will give different results, based on the regularisation
-    dipout.pow(i,1) = trace(cfilt);                   % this is more efficient if the filters are present
+    % estimate.pow(i) = trace(pinv(lf' * invC * lf));   % this is more efficient if the filters are not present, van Veen eqn. 24, but will give different results, based on the regularisation
+    estimate.pow(i,1) = trace(cfilt);                   % this is more efficient if the filters are present
   end
   if keepcov
     % compute the source covariance matrix
-    dipout.cov{i,1} = cfilt;
+    estimate.cov{i,1} = cfilt;
   end
   if keepmom && ~isempty(dat)
     % estimate the instantaneous dipole moment at the current position
-    dipout.mom{i,1} = filt * dat;
+    estimate.mom{i,1} = filt * dat;
   end
   if computekurt && ~isempty(dat)
     % compute the kurtosis of the dipole time series
-    dipout.kurtosis(i,:) = kurtosis((filt*dat)');
+    estimate.kurtosis(i,:) = kurtosis((filt*dat)');
   end
   if projectnoise
     % estimate the power of the noise that is projected through the filter
     if powlambda1
-      dipout.noise(i,1) = noise * lambda1(filt * ctranspose(filt));
+      estimate.noise(i,1) = noise * lambda1(filt * ctranspose(filt));
     elseif powtrace
-      dipout.noise(i,1) = noise * trace(filt * ctranspose(filt));
+      estimate.noise(i,1) = noise * trace(filt * ctranspose(filt));
     end
     if keepcov
-      dipout.noisecov{i,1} = noise * filt * ctranspose(filt);
+      estimate.noisecov{i,1} = noise * filt * ctranspose(filt);
     end
   end
   if keepfilter
     if ~isempty(subspace)
-      dipout.filter{i,1} = filt*subspace;
-      %dipout.filter{i} = filt*pinv(subspace);
+      estimate.filter{i,1} = filt*subspace;
+      %estimate.filter{i} = filt*pinv(subspace);
     else
-      dipout.filter{i,1} = filt;
+      estimate.filter{i,1} = filt;
     end
   end
   if keepleadfield
     if ~isempty(subspace)
-      dipout.leadfield{i,1} = lforig;
+      estimate.leadfield{i,1} = lforig;
     else
-      dipout.leadfield{i,1} = lf;
+      estimate.leadfield{i,1} = lf;
     end
   end
-  ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
-end
-
+  
+end % for each dipole position
 ft_progress('close');
 
-% reassign the scan values over the inside and outside grid positions
-dipout.pos     = origpos;
-dipout.inside  = originside;
+% reassign the estimated values over the inside and outside grid positions
+estimate.pos     = origpos;
+estimate.inside  = originside;
 
 fnames_cell   = {'leadfield' 'filter' 'mom' 'ori' 'cov' 'noisecov' 'subspace'};
 for k = 1:numel(fnames_cell)
-  if isfield(dipout, fnames_cell{k})
-    dipout.(fnames_cell{k})( originside) = dipout.(fnames_cell{k});
-    dipout.(fnames_cell{k})(~originside) = {[]};
+  if isfield(estimate, fnames_cell{k})
+    estimate.(fnames_cell{k})( originside) = estimate.(fnames_cell{k});
+    estimate.(fnames_cell{k})(~originside) = {[]};
   end
 end
 
 fnames_scalar = {'pow' 'noise' 'eta' 'kurtosis'};
 for k = 1:numel(fnames_scalar)
-  if isfield(dipout, fnames_scalar{k})
-    dipout.(fnames_scalar{k})( originside) = dipout.(fnames_scalar{k});
-    dipout.(fnames_scalar{k})(~originside) = nan;
+  if isfield(estimate, fnames_scalar{k})
+    estimate.(fnames_scalar{k})( originside) = estimate.(fnames_scalar{k});
+    estimate.(fnames_scalar{k})(~originside) = nan;
   end
 end
 

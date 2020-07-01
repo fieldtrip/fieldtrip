@@ -26,9 +26,9 @@ function [lf] = ft_compute_leadfield(dippos, sens, headmodel, varargin)
 %
 % Additional input arguments can be specified as key-value pairs, supported
 % optional arguments are
-%   'reducerank'      = 'no' or number
+%   'reducerank'      = 'no' or number (default = 3 for EEG, 2 for MEG)
 %   'backproject'     = 'yes' or 'no', in the case of a rank reduction this parameter determines whether the result will be backprojected onto the original subspace (default = 'yes')
-%   'normalize'       = 'no', 'yes' or 'column'
+%   'normalize'       = 'no', 'yes' or 'column' (default = 'no')
 %   'normalizeparam'  = parameter for depth normalization (default = 0.5)
 %   'weight'          = number or Nx1 vector, weight for each dipole position to compensate for the size of the corresponding patch (default = 1)
 %

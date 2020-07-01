@@ -1,4 +1,4 @@
-function [dipout] = ft_inverse_music(dip, grad, headmodel, dat, varargin)
+function [estimate] = ft_inverse_music(sourcemodel, sens, headmodel, dat, varargin)
 
 % FT_INVERSE_MUSIC source localization using MUltiple SIgnal Classification.
 % This is a signal subspace method, which covers the techniques for
@@ -6,20 +6,33 @@ function [dipout] = ft_inverse_music(dip, grad, headmodel, dat, varargin)
 % measured data matrix.
 %
 % Use as
-%   [dipout] = ft_inverse_music(dip, grad, headmodel, dat, ...)
+%   [estimate] = ft_inverse_music(sourcemodel, sens, headmodel, dat, ...)
+% where
+%   sourcemodel is the input source model, see FT_PREPARE_SOURCEMODEL
+%   sens        is the gradiometer or electrode definition, see FT_DATATYPE_SENS
+%   headmodel   is the volume conductor definition, see FT_PREPARE_HEADMODEL
+%   dat         is the data matrix with the ERP or ERF
+% and
+%   estimate    contains the estimated source parameters
 %
-% Optional input arguments should be specified as key-value pairs and can be
+% Additional input arguments should be specified as key-value pairs and can include
 %   'cov'              = data covariance matrix
 %   'numcomponent'     = integer number
-%   'feedback'         = 'none', 'gui', 'dial', 'textbar', 'text', 'textcr', 'textnl'
-%   'reducerank'       = reduce the leadfield rank, can be 'no' or a number (e.g. 2)
-%   'normalize'        = normalize the leadfield
-%   'normalizeparam'   = parameter for depth normalization (default = 0.5)
+%   'feedback'         = can be 'none', 'gui', 'dial', 'textbar', 'text', 'textcr', 'textnl' (default = 'text')
 %
-% The original reference is
-%   J.C. Mosher, P.S. Lewis and R.M. Leahy, "Multiple dipole modeling and
-%   localization from spatiotemporal MEG data", IEEE Trans. Biomed.
-%   Eng., pp 541-557, June, 1992.
+% These options influence the forward computation of the leadfield
+%   'reducerank'      = 'no' or number  (default = 3 for EEG, 2 for MEG)
+%   'backproject'     = 'yes' or 'no', in the case of a rank reduction this parameter determines whether the result will be backprojected onto the original subspace (default = 'yes')
+%   'normalize'       = 'no', 'yes' or 'column' (default = 'no')
+%   'normalizeparam'  = parameter for depth normalization (default = 0.5)
+%   'weight'          = number or Nx1 vector, weight for each dipole position to compensate for the size of the corresponding patch (default = 1)
+%
+% This implements
+% - J.C. Mosher, P.S. Lewis and R.M. Leahy, "Multiple dipole modeling and
+%   localization from spatiotemporal MEG data", IEEE Trans. Biomed. Eng., 
+%   pp 541-557, June, 1992.
+%
+% See also FT_SOURCEANALYSIS, FT_PREPARE_HEADMODEL, FT_PREPARE_SOURCEMODEL
 
 % Copyright (C) 2004-2008, Robert Oostenveld
 %
@@ -41,45 +54,63 @@ function [dipout] = ft_inverse_music(dip, grad, headmodel, dat, varargin)
 %
 % $Id$
 
-% get the optional settings, or use the default value
+if mod(nargin-4,2)
+  % the first 4 arguments are fixed, the other arguments should come in pairs
+  ft_error('invalid number of optional arguments');
+end
+
+% get the optional input arguments, or use defaults
 cov            = ft_getopt(varargin, 'cov');
 numcomponent   = ft_getopt(varargin, 'numcomponent');     % this is required, see below
 feedback       = ft_getopt(varargin, 'feedback', 'text');
-% these settings pertain to the forward model, the defaults are set in compute_leadfield
-reducerank     = ft_getopt(varargin, 'reducerank');
-normalize      = ft_getopt(varargin, 'normalize');
-normalizeparam = ft_getopt(varargin, 'normalizeparam');
+
+% construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD
+leadfieldopt = {};
+leadfieldopt = ft_setopt(leadfieldopt, 'reducerank',     ft_getopt(varargin, 'reducerank'));
+leadfieldopt = ft_setopt(leadfieldopt, 'backproject',    ft_getopt(varargin, 'backproject'));
+leadfieldopt = ft_setopt(leadfieldopt, 'normalize',      ft_getopt(varargin, 'normalize'));
+leadfieldopt = ft_setopt(leadfieldopt, 'normalizeparam', ft_getopt(varargin, 'normalizeparam'));
+leadfieldopt = ft_setopt(leadfieldopt, 'weight',         ft_getopt(varargin, 'weight'));
 
 if isempty(numcomponent)
   ft_error('you must specify the number of signal components');
 end
 
+% flags to avoid calling isfield repeatedly in the loop over grid positions (saves a lot of time)
+hasmom        = isfield(sourcemodel, 'mom');
+hasleadfield  = isfield(sourcemodel, 'leadfield');
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~isfield(dip, 'inside')
-  dip.inside = ft_inside_headmodel(dip.pos, headmodel);
+if ~isfield(sourcemodel, 'inside')
+  sourcemodel.inside = ft_inside_headmodel(sourcemodel.pos, headmodel);
 end
 
-if any(dip.inside>1)
+if any(sourcemodel.inside>1)
   % convert to logical representation
-  tmp = false(size(dip.pos,1),1);
-  tmp(dip.inside) = true;
-  dip.inside = tmp;
+  tmp = false(size(sourcemodel.pos,1),1);
+  tmp(sourcemodel.inside) = true;
+  sourcemodel.inside = tmp;
 end
 
 % keep the original details on inside and outside positions
-originside = dip.inside;
-origpos    = dip.pos;
+originside = sourcemodel.inside;
+origpos    = sourcemodel.pos;
 
 % select only the dipole positions inside the brain for scanning
-dip.pos    = dip.pos(originside,:);
-dip.inside = true(size(dip.pos,1),1);
+sourcemodel.pos    = sourcemodel.pos(originside,:);
+sourcemodel.inside = true(size(sourcemodel.pos,1),1);
 
-% also deal with the inside locations of the leadfield, if present
-if isfield(dip, 'leadfield')
-  origleadfield = dip.leadfield;
-  dip.leadfield = dip.leadfield(originside);
+if hasmom
+  sourcemodel.mom = sourcemodel.mom(:,originside);
+end
+
+if hasleadfield
+  ft_info('using precomputed leadfields\n');
+  sourcemodel.leadfield = sourcemodel.leadfield(originside);
+else
+  ft_info('computing forward model on the fly\n');
 end
 
 if ~isempty(cov)
@@ -94,42 +125,47 @@ us = u(:,(numcomponent+1):end);
 ps = us * us';
 
 % allocate space to hold the result
-dipout.jr = nan(size(dip.pos,1),1);
+estimate = [];
+estimate.jr = nan(size(sourcemodel.pos,1),1);
 
-ft_progress('init', feedback, 'computing music');
-for i=1:size(dip.pos,1)
+ft_progress('init', feedback, 'scanning grid');
+for i=1:size(sourcemodel.pos,1)
+  ft_progress(i/size(sourcemodel.pos,1), 'scanning grid %d/%d\n', i, size(sourcemodel.pos,1));
   
-  ft_progress(i/size(dip.pos,1), 'computing music %d/%d\n', i, size(dip.pos,1));
-  
-  if isfield(dip, 'leadfield')
+  if hasleadfield && hasmom && size(sourcemodel.mom, 1)==size(sourcemodel.leadfield{i}, 2)
+    % reuse the leadfield that was previously computed and project
+    lf = sourcemodel.leadfield{i} * sourcemodel.mom(:,i);
+  elseif  hasleadfield &&  hasmom
+    % reuse the leadfield that was previously computed but don't project
+    lf = sourcemodel.leadfield{i};
+  elseif  hasleadfield && ~hasmom
     % reuse the leadfield that was previously computed
-    lf = dip.leadfield{i};
-  elseif isfield(dip, 'mom')
+    lf = sourcemodel.leadfield{i};
+  elseif ~hasleadfield &&  hasmom
     % compute the leadfield for a fixed dipole orientation
-    lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
+    lf = ft_compute_leadfield(sourcemodel.pos(i,:), sens, headmodel, leadfieldopt{:}) * sourcemodel.mom(:,i);
   else
     % compute the leadfield
-    lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+    lf = ft_compute_leadfield(sourcemodel.pos(i,:), sens, headmodel, leadfieldopt{:});
   end
   
   % compute the music metric, c.f. equation 26
-  dipout.jr(i) = (norm(ps * lf)./norm(lf)).^2;
+  estimate.jr(i) = (norm(ps * lf)./norm(lf)).^2;
   % as described in the Mosher 1992 paper on page 550, "...the general approach is to
   % evaluare Jr(i) over a fine three-dimensional grid, plot its inverse,
   % and look for p sharp spikes..."
   
-end
+end % for each dipole position
 ft_progress('close');
 
-% wrap it all up, prepare the complete output
-dipout.inside   = originside;
-dipout.pos      = origpos;
-if isfield(dip, 'leadfield')
-  dipout.leadfield = origleadfield;
+% reassign the estimated values over the inside and outside grid positions
+estimate.inside   = originside;
+estimate.pos      = origpos;
+if isfield(estimate, 'jr')
+  estimate.jr( originside) = estimate.jr;
+  estimate.jr(~originside) = nan;
 end
-
-% reassign the scan values over the inside and outside grid positions
-if isfield(dipout, 'jr')
-  dipout.jr( originside) = dipout.jr;
-  dipout.jr(~originside) = nan;
+if isfield(estimate, 'leadfield')
+  estimate.leadfield( originside) = estimate.leadfield;
+  estimate.leadfield(~originside) = {[]};
 end

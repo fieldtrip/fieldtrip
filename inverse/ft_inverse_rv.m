@@ -1,10 +1,29 @@
-function [dipout] = ft_inverse_rv(dip, grad, headmodel, dat, varargin)
+function [estimate] = ft_inverse_rv(sourcemodel, sens, headmodel, dat, varargin)
 
 % FT_INVERSE_RV scan with a single dipole and computes the residual variance
 % at each dipole location.
 %
 % Use as
-%   [dipout] = ft_inverse_rv(dip, grad, headmodel, dat, ...)
+%   [estimate] = ft_inverse_rv(sourcemodel, sens, headmodel, dat, ...)
+% where
+%   sourcemodel is the input source model, see FT_PREPARE_SOURCEMODEL
+%   sens        is the gradiometer or electrode definition, see FT_DATATYPE_SENS
+%   headmodel   is the volume conductor definition, see FT_PREPARE_HEADMODEL
+%   dat         is the data matrix with the ERP or ERF
+% and
+%   estimate    contains the estimated source parameters
+%
+% Additional input arguments should be specified as key-value pairs and can include
+%   'feedback'         = can be 'none', 'gui', 'dial', 'textbar', 'text', 'textcr', 'textnl' (default = 'text')
+%
+% These options influence the forward computation of the leadfield
+%   'reducerank'      = 'no' or number  (default = 3 for EEG, 2 for MEG)
+%   'backproject'     = 'yes' or 'no', in the case of a rank reduction this parameter determines whether the result will be backprojected onto the original subspace (default = 'yes')
+%   'normalize'       = 'no', 'yes' or 'column' (default = 'no')
+%   'normalizeparam'  = parameter for depth normalization (default = 0.5)
+%   'weight'          = number or Nx1 vector, weight for each dipole position to compensate for the size of the corresponding patch (default = 1)
+%
+% See also FT_SOURCEANALYSIS, FT_PREPARE_HEADMODEL, FT_PREPARE_SOURCEMODEL
 
 % Copyright (C) 2004-2006, Robert Oostenveld
 %
@@ -26,125 +45,149 @@ function [dipout] = ft_inverse_rv(dip, grad, headmodel, dat, varargin)
 %
 % $Id$
 
-% get the optional settings, or use default value
+if mod(nargin-4,2)
+  % the first 4 arguments are fixed, the other arguments should come in pairs
+  ft_error('invalid number of optional arguments');
+end
+
+% get the optional input arguments, or use defaults
 feedback = ft_getopt(varargin, 'feedback', 'text');
+
+% construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD
+leadfieldopt = {};
+leadfieldopt = ft_setopt(leadfieldopt, 'reducerank',     ft_getopt(varargin, 'reducerank'));
+leadfieldopt = ft_setopt(leadfieldopt, 'backproject',    ft_getopt(varargin, 'backproject'));
+leadfieldopt = ft_setopt(leadfieldopt, 'normalize',      ft_getopt(varargin, 'normalize'));
+leadfieldopt = ft_setopt(leadfieldopt, 'normalizeparam', ft_getopt(varargin, 'normalizeparam'));
+leadfieldopt = ft_setopt(leadfieldopt, 'weight',         ft_getopt(varargin, 'weight'));
+
+% flags to avoid calling isfield repeatedly in the loop over grid positions (saves a lot of time)
+hasmom        = isfield(sourcemodel, 'mom');
+hasleadfield  = isfield(sourcemodel, 'leadfield');
+hassubspace   = isfield(sourcemodel, 'subspace');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~isfield(dip, 'inside')
-  dip.inside = ft_inside_headmodel(dip.pos, headmodel);
+if ~isfield(sourcemodel, 'inside')
+  sourcemodel.inside = ft_inside_headmodel(sourcemodel.pos, headmodel);
 end
 
-if any(dip.inside>1)
+if any(sourcemodel.inside>1)
   % convert to logical representation
-  tmp = false(size(dip.pos,1),1);
-  tmp(dip.inside) = true;
-  dip.inside = tmp;
+  tmp = false(size(sourcemodel.pos,1),1);
+  tmp(sourcemodel.inside) = true;
+  sourcemodel.inside = tmp;
 end
 
 % keep the original details on inside and outside positions
-originside = dip.inside;
-origpos    = dip.pos;
+originside = sourcemodel.inside;
+origpos    = sourcemodel.pos;
 
 % select only the dipole positions inside the brain for scanning
-dip.pos    = dip.pos(originside,:);
-dip.inside = true(size(dip.pos,1),1);
-if isfield(dip, 'mom')
-  dip.mom = dip.mom(:,originside);
-end
-if isfield(dip, 'subspace')
-  dip.subspace = dip.subspace(originside);
+sourcemodel.pos    = sourcemodel.pos(originside,:);
+sourcemodel.inside = true(size(sourcemodel.pos,1),1);
+
+if hasmom
+  sourcemodel.mom = sourcemodel.mom(:,originside);
 end
 
-if isfield(dip, 'leadfield')
-  dip.leadfield = dip.leadfield(originside);
+if hasleadfield
+  ft_info('using precomputed leadfields\n');
+  sourcemodel.leadfield = sourcemodel.leadfield(originside);
+else
+  ft_info('computing forward model on the fly\n');
 end
 
-if isfield(dip, 'subspace')
+if hassubspace
+  ft_info('using subspace projection\n');
+  sourcemodel.subspace = sourcemodel.subspace(originside);
   % remember the original data prior to the voxel dependant subspace projection
   dat_pre_subspace = dat;
-  fprintf('using subspace projection\n');
 end
 
 % Check whether the data is a time series, fourier coefficients or a
 % cross-spectral density
 
-if isreal(dat)==1
-  fprintf('The input is a time series: computing source level time series and variance')
+if isreal(dat)
+  ft_notice('the input consists of time-series data: computing computing the dipole moments and variance')
   datatype = 'time';
-elseif size(dat,1)==size(dat,2)&&sum(sum((abs(dat - dat')<10^-10)))==numel(dat)
-  fprintf('The input is a cross-spectral density: computing source level power')
+elseif size(dat,1)==size(dat,2) && sum(sum((abs(dat - dat')<10^-10)))==numel(dat)
+  ft_notice('the input consists of a cross-spectral density: computing source-level power')
   datatype = 'csd';
 else
-  fprintf('The input are fourier coeffiecients: computing source level fourier coefficients and power')
+  ft_notice('the input consists of Fourier coefficients: computing source-level Fourier coefficients and power')
   datatype = 'fourier';
 end
 
-rv  = nan(size(dip.pos,1),1);
-pow = nan(size(dip.pos,1),1);
-mom = cell(size(dip.pos,1),1);
+% allocate space to hold the result
+estimate = [];
+estimate.rv  = nan(size(sourcemodel.pos,1),1);
+estimate.pow = nan(size(sourcemodel.pos,1),1);
+estimate.mom = cell(size(sourcemodel.pos,1),1);
 
-ft_progress('init', feedback, 'computing inverse');
-for i=1:size(dip.pos,1)
+ft_progress('init', feedback, 'scanning grid');
+for i=1:size(sourcemodel.pos,1)
+  ft_progress(i/size(sourcemodel.pos,1), 'scanning grid %d/%d\n', i, size(sourcemodel.pos,1));
   
-  ft_progress(i/size(dip.pos,1), 'computing inverse %d/%d\n', i, size(dip.pos,1));
-  
-  if isfield(dip, 'leadfield')
+  if hasleadfield && hasmom && size(sourcemodel.mom, 1)==size(sourcemodel.leadfield{i}, 2)
+    % reuse the leadfield that was previously computed and project
+    lf = sourcemodel.leadfield{i} * sourcemodel.mom(:,i);
+  elseif  hasleadfield &&  hasmom
+    % reuse the leadfield that was previously computed but don't project
+    lf = sourcemodel.leadfield{i};
+  elseif  hasleadfield && ~hasmom
     % reuse the leadfield that was previously computed
-    lf = dip.leadfield{i};
+    lf = sourcemodel.leadfield{i};
+  elseif ~hasleadfield &&  hasmom
+    % compute the leadfield for a fixed dipole orientation
+    lf = ft_compute_leadfield(sourcemodel.pos(i,:), sens, headmodel, leadfieldopt{:}) * sourcemodel.mom(:,i);
   else
     % compute the leadfield
-    lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel);
+    lf = ft_compute_leadfield(sourcemodel.pos(i,:), sens, headmodel, leadfieldopt{:});
   end
   
-  if isfield(dip, 'subspace')
-    % do subspace projection of the forward model
-    % Leadfield matrix
-    lf = dip.subspace{i} * lf;
+  if hassubspace
+    % do subspace projection of the forward model leadfield matrix
+    lf = sourcemodel.subspace{i} * lf;
     
     % the data and the covariance (or cross-spectral density) become voxel dependent due to the projection
     if strcmp(datatype, 'time') || strcmp(datatype, 'csd')
-      dat = dip.subspace{i} * dat_pre_subspace*dip.subspace{i}'; %Subspace cross-spectral density
+      dat = sourcemodel.subspace{i} * dat_pre_subspace*sourcemodel.subspace{i}'; % Subspace cross-spectral density
     else
-      dat = dip.subspace{i} * dat_pre_subspace; %Subspace time-series or fourier coefficients
+      dat = sourcemodel.subspace{i} * dat_pre_subspace; % Subspace time-series or fourier coefficients
     end
   end
   
   % Projection matrix (Pseudoinverse)
-  lfi    = pinv(lf);
+  lfi = pinv(lf);
     
   if strcmp(datatype, 'time') || strcmp(datatype, 'fourier')
     % Compute dipole moment and residual variance
-    mom{i} = lfi * dat;
-    rv(i)  = sum(sum(abs(dat - lf*mom{i}).^2, 1), 2)./sum(sum(abs(dat).^2, 1), 2);
-  
-    % for plotting convenience also compute power at each location
-    % FIXME is this normalization correct?
-    pow(i) = mean(sum(abs(mom{i}(:)).^2, 1));
+    estimate.mom{i} = lfi * dat;
+    estimate.rv(i)  = sum(sum(abs(dat - lf*mom{i}).^2, 1), 2)./sum(sum(abs(dat).^2, 1), 2);
+    % Compute power at each location, this is convenient for plotting
+    estimate.pow(i) = mean(sum(abs(mom{i}(:)).^2, 1));  % FIXME is this normalization correct?
   else
-    % Compute power
-    pow(i) = sum(real(sum((lfi*dat).*lfi,2)));
+    % Compute power, the data represents a covariance or CSD matrix
+    estimate.pow(i) = sum(real(sum((lfi*dat).*lfi,2)));
     % Compute residual power (variance)
-    Prj = eye(size(lf,1)) - lf*lfi; %Projector to the orthogonal complement of the model space
-    rv(i)  = sum(real(sum((Prj*dat).*Prj,2)));
+    Prj = eye(size(lf,1)) - lf*lfi; % Projector to the orthogonal complement of the model space
+    estimate.rv(i)  = sum(real(sum((Prj*dat).*Prj,2)));
   end
-end
+
+end % for each dipole position
 ft_progress('close');
 
-% wrap it all up, prepare the complete output
-dipout.inside  = originside;
-dipout.pos     = origpos;
-
-dipout.rv  = nan(size(originside));
-dipout.pow = nan(size(originside));
-
-% assign the output data
-dipout.rv(originside)  = rv(:);   % ensure that it is a column vector
-dipout.pow(originside) = pow(:);  % ensure that it is a column vector
-
-if strcmp(datatype, 'time') || strcmp(datatype, 'fourier')
-  dipout.mom = cell(size(originside));
-  dipout.mom( originside) = mom;
-  dipout.mom(~originside) = {[]};
+% reassign the estimated values over the inside and outside grid positions
+estimate.inside  = originside;
+estimate.pos     = origpos;
+if isfield(sourcemodel, 'mom')
+  estimate.mom( originside) = estimate.mom;
+  estimate.mom(~originside) = {[]};
 end
+estimate.rv( originside) = estimate.rv;
+estimate.rv(~originside) = nan;
+estimate.pow( originside) = estimate.pow;
+estimate.pow(~originside) = nan;
+
