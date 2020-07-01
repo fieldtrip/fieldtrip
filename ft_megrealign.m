@@ -52,14 +52,14 @@ function [data] = ft_megrealign(cfg, data)
 % should probably use an inward shift of about 1 cm.
 %
 % Other configuration options are
-%  cfg.tolerance  = tolerance ratio for leadfield matrix inverse based on a truncated svd,
-%                   reflects the relative magnitude of the largest singular value
-%                   to retain (default =s 1e-3)
-% cfg.verify      = 'yes' or 'no', show the percentage difference (default = 'yes')
-% cfg.feedback    = 'yes' or 'no' (default = 'no')
-% cfg.channel     =  Nx1 cell-array with selection of channels (default = 'MEG'),
-%                    see FT_CHANNELSELECTION for details
-% cfg.trials      = 'all' or a selection given as a 1xN vector (default = 'all')
+%   cfg.tolerance  = tolerance ratio for leadfield matrix inverse based on a truncated svd,
+%                    reflects the relative magnitude of the largest singular value
+%                    to retain (default =s 1e-3)
+%   cfg.verify     = 'yes' or 'no', show the percentage difference (default = 'yes')
+%   cfg.feedback   = 'yes' or 'no' (default = 'no')
+%   cfg.channel    =  Nx1 cell-array with selection of channels (default = 'MEG'),
+%                     see FT_CHANNELSELECTION for details
+%   cfg.trials     = 'all' or a selection given as a 1xN vector (default = 'all')
 %
 % This implements the method described by T.R. Knosche, Transformation
 % of whole-head MEG recordings between different sensor positions.
