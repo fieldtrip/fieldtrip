@@ -14,7 +14,7 @@ function [estimate] = ft_inverse_eloreta(sourcemodel, sens, headmodel, dat, C, v
 %   estimate    contains the estimated source parameters
 %
 % Additional input arguments should be specified as key-value pairs and can include
-%   'keepfilter'       = remember the beamformer filter,    can be 'yes' or 'no'
+%   'keepfilter'       = remember the spatial filter,    can be 'yes' or 'no'
 %   'keepleadfield'    = remember the forward computation,  can be 'yes' or 'no'
 %   'keepmom'          = remember the dipole moment,        can be 'yes' or 'no'
 %   'lambda'           = scalar, regularisation parameter (default = 0.05)
