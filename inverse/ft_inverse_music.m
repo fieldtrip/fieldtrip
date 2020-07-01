@@ -102,10 +102,15 @@ origpos    = sourcemodel.pos;
 sourcemodel.pos    = sourcemodel.pos(originside,:);
 sourcemodel.inside = true(size(sourcemodel.pos,1),1);
 
-% also deal with the inside locations of the leadfield, if present
+if hasmom
+  sourcemodel.mom = sourcemodel.mom(:,originside);
+end
+
 if hasleadfield
-  origleadfield = sourcemodel.leadfield;
+  ft_info('using precomputed leadfields\n');
   sourcemodel.leadfield = sourcemodel.leadfield(originside);
+else
+  ft_info('computing forward model on the fly\n');
 end
 
 if ~isempty(cov)
@@ -126,10 +131,16 @@ ft_progress('init', feedback, 'scanning grid');
 for i=1:size(sourcemodel.pos,1)
   ft_progress(i/size(sourcemodel.pos,1), 'scanning grid %d/%d\n', i, size(sourcemodel.pos,1));
   
-  if hasleadfield
+  if hasleadfield && hasmom && size(sourcemodel.mom, 1)==size(sourcemodel.leadfield{i}, 2)
+    % reuse the leadfield that was previously computed and project
+    lf = sourcemodel.leadfield{i} * sourcemodel.mom(:,i);
+  elseif  hasleadfield &&  hasmom
+    % reuse the leadfield that was previously computed but don't project
+    lf = sourcemodel.leadfield{i};
+  elseif  hasleadfield && ~hasmom
     % reuse the leadfield that was previously computed
     lf = sourcemodel.leadfield{i};
-  elseif hasmom
+  elseif ~hasleadfield &&  hasmom
     % compute the leadfield for a fixed dipole orientation
     lf = ft_compute_leadfield(sourcemodel.pos(i,:), sens, headmodel, leadfieldopt{:}) * sourcemodel.mom(:,i);
   else

@@ -129,27 +129,16 @@ if hasmom
   sourcemodel.mom = sourcemodel.mom(:,originside);
 end
 
-if hasleadfield
-  sourcemodel.leadfield = sourcemodel.leadfield(originside);
-end
-
-if hasfilter
-  sourcemodel.filter = sourcemodel.filter(originside);
-end
-
-%if ~isempty(snr) && doscale
-%  ft_error('scaling of the source covariance in combination with a specified snr parameter is not allowed');
-%end
-
 % compute leadfield
 if hasfilter
-  % it does not matter whether the leadfield is there or not, it will not be used
-  ft_info('using pre-computed spatial filter: some of the specified options will not have an effect\n');
+  ft_info('using precomputed filters\n');
+  sourcemodel.filter = sourcemodel.filter(originside);
 elseif hasleadfield
   % using the computed leadfields
-  ft_info('using pre-computed leadfields: some of the specified options will not have an effect\n');
+  ft_info('using precomputed leadfields\n');
+  sourcemodel.leadfield = sourcemodel.leadfield(originside);
 else
-  ft_info('computing forward model\n');
+  ft_info('computing forward model on the fly\n');
   if hasmom
     for i=size(sourcemodel.pos,1)
       % compute the leadfield for a fixed dipole orientation

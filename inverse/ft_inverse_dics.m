@@ -132,7 +132,7 @@ if ~isempty(Cr)
 end
 
 if isfield(sourcemodel, 'mom') && fixedori
-  ft_error('you cannot specify a dipole orientation and fixedmom simultaneously');
+  ft_error('you cannot specify a dipole orientation and fixedori simultaneously');
 end
 
 % flags to avoid calling isfield repeatedly in the loop over grid positions (saves a lot of time)
@@ -171,14 +171,14 @@ if hasmom
   sourcemodel.mom = sourcemodel.mom(:,originside);
 end
 
-if hasleadfield
-  ft_info('using precomputed leadfields\n');
-  sourcemodel.leadfield = sourcemodel.leadfield(originside);
-end
-
 if hasfilter
   ft_info('using precomputed filters\n');
   sourcemodel.filter = sourcemodel.filter(originside);
+elseif hasleadfield
+  ft_info('using precomputed leadfields\n');
+  sourcemodel.leadfield = sourcemodel.leadfield(originside);
+else
+  ft_info('computing forward model on the fly\n');
 end
 
 if hassubspace
@@ -367,7 +367,7 @@ for i=1:size(sourcemodel.pos,1)
     elseif  hasleadfield && ~hasmom
       % reuse the leadfield that was previously computed
       lf = sourcemodel.leadfield{i};
-    elseif ~hasleadfield && hasmom
+    elseif ~hasleadfield &&  hasmom
       % compute the leadfield for a fixed dipole orientation
       lf = ft_compute_leadfield(sourcemodel.pos(i,:), sens, headmodel, leadfieldopt{:}) * sourcemodel.mom(:,i);
     else

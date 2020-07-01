@@ -161,14 +161,14 @@ if hasmom
   sourcemodel.mom = sourcemodel.mom(:,originside);
 end
 
-if hasleadfield
-  ft_info('using precomputed leadfields\n');
-  sourcemodel.leadfield = sourcemodel.leadfield(originside);
-end
-
 if hasfilter
   ft_info('using precomputed filters\n');
   sourcemodel.filter = sourcemodel.filter(originside);
+elseif hasleadfield
+  ft_info('using precomputed leadfields\n');
+  sourcemodel.leadfield = sourcemodel.leadfield(originside);
+else
+  ft_info('computing forward model on the fly\n');
 end
 
 if hassubspace
@@ -248,7 +248,6 @@ for i=1:size(sourcemodel.pos,1)
     filt = sourcemodel.filter{i};
   
   else
-
     if hasleadfield && hasmom && size(sourcemodel.mom, 1)==size(sourcemodel.leadfield{i}, 2)
       % reuse the leadfield that was previously computed and project
       lf = sourcemodel.leadfield{i} * sourcemodel.mom(:,i);
@@ -258,14 +257,14 @@ for i=1:size(sourcemodel.pos,1)
     elseif  hasleadfield && ~hasmom
       % reuse the leadfield that was previously computed
       lf = sourcemodel.leadfield{i};
-    elseif  ~hasleadfield && hasmom
+    elseif ~hasleadfield &&  hasmom
       % compute the leadfield for a fixed dipole orientation
       lf = ft_compute_leadfield(sourcemodel.pos(i,:), sens, headmodel, leadfieldopt{:}) * sourcemodel.mom(:,i);
     else
       % compute the leadfield
       lf = ft_compute_leadfield(sourcemodel.pos(i,:), sens, headmodel, leadfieldopt{:});
     end
-  
+
     if hassubspace
       % do subspace projection of the forward model
       lf    = sourcemodel.subspace{i} * lf;

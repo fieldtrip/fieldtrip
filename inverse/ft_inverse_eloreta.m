@@ -111,21 +111,14 @@ if hasmom
   sourcemodel.mom = sourcemodel.mom(:,originside);
 end
 
-if hasleadfield
-  fprintf('using precomputed leadfields\n');
-  sourcemodel.leadfield = sourcemodel.leadfield(originside);
-end
-
 if hasfilter
-  fprintf('using precomputed filters\n');
+  ft_info('using precomputed filters\n');
   sourcemodel.filter = sourcemodel.filter(originside);
-end
-
-if hasleadfield
-  % using the computed leadfields
-  ft_info('using pre-computed leadfields: some of the specified options will not have an effect\n');
+elseif hasleadfield
+  ft_info('using precomputed leadfields\n');
+  sourcemodel.leadfield = sourcemodel.leadfield(originside);
 else
-  ft_info('computing forward model\n');
+  ft_info('computing forward model on the fly\n');
   if hasmom
     for i=size(sourcemodel.pos,1)
       % compute the leadfield for a fixed dipole orientation
@@ -151,8 +144,8 @@ if ~all(rank_lf==rank_lf(1))
   ft_error('the forward solutions have a different rank for each location, which is not supported');
 end
 if rank_lf(1)<size(sourcemodel.leadfield{1})
-  fprintf('the forward solutions have a rank of %d, but %d orientations\n',rank_lf(1),size(sourcemodel.leadfield{1},2));
-  fprintf('projecting the forward solutions on the lower dimensional subspace\n');
+  ft_notice('the forward solutions have a rank of %d, but %d orientations\n',rank_lf(1),size(sourcemodel.leadfield{1},2));
+  ft_notice('projecting the forward solutions on the lower dimensional subspace\n');
   for i=1:size(sourcemodel.pos,1)
     [u,s,v{i}] = svd(sourcemodel.leadfield{i}, 'econ');
     sourcemodel.leadfield{i} = sourcemodel.leadfield{i}*v{i}(:,1:rank_lf(i));

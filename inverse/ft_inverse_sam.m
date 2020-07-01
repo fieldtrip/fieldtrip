@@ -117,10 +117,14 @@ origpos    = sourcemodel.pos;
 sourcemodel.pos = sourcemodel.pos(originside,:);
 
 if hasmom
+  ft_warning('this probably will not work because of the spinning/nonspinning source orientation estimate being part of this code');
   sourcemodel.mom = sourcemodel.mom(:, sourcemodel.inside);
 end
 
-if hasleadfield
+if hasfilter
+  ft_info('using precomputed filters\n');
+  sourcemodel.filter = sourcemodel.filter(sourcemodel.inside);
+elseif hasleadfield
   ft_info('using precomputed leadfields\n');
   sourcemodel.leadfield = sourcemodel.leadfield(sourcemodel.inside);
   
@@ -137,13 +141,12 @@ if hasleadfield
       sourcemodel.leadfield{i} = lf*V(:,1:2);
     end
   end
+else
+  ft_info('computing forward model on the fly\n');
 end
 
-if hasfilter
-  ft_info('using precomputed filters\n');
-  sourcemodel.filter = sourcemodel.filter(sourcemodel.inside);
-elseif strcmp(fixedori,'moiseev')  && ~isempty(toi)
-  ft_info('Computing an Event Related SAM beamformer... \n')
+if strcmp(fixedori, 'moiseev')  && ~isempty(toi)
+  ft_info('computing an event-related SAM beamformer... \n')
 end
 
 isrankdeficient = (rank(C)<size(C,1));
@@ -182,28 +185,33 @@ all_angles = 0:pi/72:pi;
 
 % start the scanning
 ft_progress('init', feedback, 'scanning grid');
-for diplop=1:size(sourcemodel.pos,1)
-  ft_progress(diplop/size(sourcemodel.pos,1), 'scanning grid %d/%d\n', diplop, size(sourcemodel.pos,1));
+for i=1:size(sourcemodel.pos,1)
+  ft_progress(i/size(sourcemodel.pos,1), 'scanning grid %d/%d\n', i, size(sourcemodel.pos,1));
   
-  vox_pos = sourcemodel.pos(diplop,:);
+  vox_pos = sourcemodel.pos(i,:);
   
   if hasfilter
-    SAMweights = sourcemodel.filter{diplop};
+    SAMweights = sourcemodel.filter{i};
     if size(SAMweights,1)>1
       ft_error('unsupported dimensionality of precomputed spatial filters');
     end
-  else
     
-    if hasleadfield
+  else
+    if hasleadfield && hasmom && size(sourcemodel.mom, 1)==size(sourcemodel.leadfield{i}, 2)
+      % reuse the leadfield that was previously computed and project
+      lf = sourcemodel.leadfield{i} * sourcemodel.mom(:,i);
+    elseif  hasleadfield &&  hasmom
+      % reuse the leadfield that was previously computed but don't project
+      lf = sourcemodel.leadfield{i};
+    elseif  hasleadfield && ~hasmom
       % reuse the leadfield that was previously computed
-      lf = sourcemodel.leadfield{diplop};
-    elseif hasmom
+      lf = sourcemodel.leadfield{i};
+    elseif ~hasleadfield &&  hasmom
       % compute the leadfield for a fixed dipole orientation
-      % FIXME this probably won't work because of the spinning/nonspinning source orientation estimate being part of this code
-      lf = ft_compute_leadfield(vox_pos, sens, headmodel, leadfieldopt{:}) * sourcemodel.mom(:,diplop);
+      lf = ft_compute_leadfield(sourcemodel.pos(i,:), sens, headmodel, leadfieldopt{:}) * sourcemodel.mom(:,i);
     else
       % compute the leadfield
-      lf = ft_compute_leadfield(vox_pos, sens, headmodel, leadfieldopt{:});
+      lf = ft_compute_leadfield(sourcemodel.pos(i,:), sens, headmodel, leadfieldopt{:});
     end
     
     switch fixedori
@@ -212,9 +220,9 @@ for diplop=1:size(sourcemodel.pos,1)
         [tanu, tanv] = calctangent(vox_pos - meansphereorigin); % get tangential components
         % get a decent starting guess
         all_costfun_val = zeros(size(all_angles));
-        for i=1:length(all_angles)
-          costfun_val        = SAM_costfun(all_angles(i), vox_pos, tanu, tanv, lf, C, inv_cov, noisecov);
-          all_costfun_val(i) = costfun_val;
+        for j=1:length(all_angles)
+          costfun_val        = SAM_costfun(all_angles(j), vox_pos, tanu, tanv, lf, C, inv_cov, noisecov);
+          all_costfun_val(j) = costfun_val;
         end
         [junk, min_ind] = min(all_costfun_val);
         
@@ -270,8 +278,8 @@ for diplop=1:size(sourcemodel.pos,1)
     switch fixedori
       case 'spinning'
         % do nothing, optimum orientation is already computed above
-      otherwise
         
+      otherwise
         % The optimum orientation is the eigenvector that corresponds to the
         % biggest eigenvalue (biggest value is more logical, as it relates to SNR).
         
@@ -303,27 +311,27 @@ for diplop=1:size(sourcemodel.pos,1)
           opt_vox_or = ori/norm(ori);
         end
     end
-    estimate.ori{diplop}    = opt_vox_or;
+    estimate.ori{i} = opt_vox_or;
     
     % compute the spatial filter for the optimal source orientation
     gain        = lf * opt_vox_or;
     trgain_invC = gain' * inv_cov;
     SAMweights  = trgain_invC / (trgain_invC * gain);
     
-  end
+  end % if hasfilter or not
   
   % remember all output details for this dipole
-  estimate.pow(diplop)    = SAMweights * C  * SAMweights';
-  estimate.noise(diplop)  = SAMweights * noisecov * SAMweights';
-  estimate.filter{diplop} = SAMweights;
+  estimate.pow(i)    = SAMweights * C  * SAMweights';
+  estimate.noise(i)  = SAMweights * noisecov * SAMweights';
+  estimate.filter{i} = SAMweights;
   if ~isempty(dat)
-    estimate.mom{diplop} = SAMweights * dat;
+    estimate.mom{i}  = SAMweights * dat;
   end
   if strcmp(fixedori,'moiseev') && exist('gain', 'var')
     % get pseudoZ
-    Ng                      = gain' * Nproj * gain;
-    Sg                      = gain' * Sproj * gain;
-    estimate.pseudoZ(diplop)  = Sg / Ng;
+    Ng                  = gain' * Nproj * gain;
+    Sg                  = gain' * Sproj * gain;
+    estimate.pseudoZ(i) = Sg / Ng;
   end
   
 end % for each dipole position

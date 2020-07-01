@@ -93,11 +93,14 @@ if hasmom
 end
 
 if hasleadfield
+  ft_info('using precomputed leadfields\n');
   sourcemodel.leadfield = sourcemodel.leadfield(originside);
+else
+  ft_info('computing forward model on the fly\n');
 end
 
 if hassubspace
-  fprintf('using subspace projection\n');
+  ft_info('using subspace projection\n');
   sourcemodel.subspace = sourcemodel.subspace(originside);
   % remember the original data prior to the voxel dependant subspace projection
   dat_pre_subspace = dat;
@@ -107,13 +110,13 @@ end
 % cross-spectral density
 
 if isreal(dat)
-  fprintf('The input is a time series: computing source level time series and variance')
+  ft_notice('the input consists of time-series data: computing computing the dipole moments and variance')
   datatype = 'time';
 elseif size(dat,1)==size(dat,2) && sum(sum((abs(dat - dat')<10^-10)))==numel(dat)
-  fprintf('The input is a cross-spectral density: computing source level power')
+  ft_notice('the input consists of a cross-spectral density: computing source-level power')
   datatype = 'csd';
 else
-  fprintf('The input are fourier coeffiecients: computing source level fourier coefficients and power')
+  ft_notice('the input consists of Fourier coefficients: computing source-level Fourier coefficients and power')
   datatype = 'fourier';
 end
 
@@ -125,10 +128,16 @@ ft_progress('init', feedback, 'scanning grid');
 for i=1:size(sourcemodel.pos,1)
   ft_progress(i/size(sourcemodel.pos,1), 'scanning grid %d/%d\n', i, size(sourcemodel.pos,1));
   
-  if hasleadfield
+  if hasleadfield && hasmom && size(sourcemodel.mom, 1)==size(sourcemodel.leadfield{i}, 2)
+    % reuse the leadfield that was previously computed and project
+    lf = sourcemodel.leadfield{i} * sourcemodel.mom(:,i);
+  elseif  hasleadfield &&  hasmom
+    % reuse the leadfield that was previously computed but don't project
+    lf = sourcemodel.leadfield{i};
+  elseif  hasleadfield && ~hasmom
     % reuse the leadfield that was previously computed
     lf = sourcemodel.leadfield{i};
-  elseif hasmom
+  elseif ~hasleadfield &&  hasmom
     % compute the leadfield for a fixed dipole orientation
     lf = ft_compute_leadfield(sourcemodel.pos(i,:), sens, headmodel, leadfieldopt{:}) * sourcemodel.mom(:,i);
   else
@@ -142,9 +151,9 @@ for i=1:size(sourcemodel.pos,1)
     
     % the data and the covariance (or cross-spectral density) become voxel dependent due to the projection
     if strcmp(datatype, 'time') || strcmp(datatype, 'csd')
-      dat = sourcemodel.subspace{i} * dat_pre_subspace*sourcemodel.subspace{i}'; %Subspace cross-spectral density
+      dat = sourcemodel.subspace{i} * dat_pre_subspace*sourcemodel.subspace{i}'; % Subspace cross-spectral density
     else
-      dat = sourcemodel.subspace{i} * dat_pre_subspace; %Subspace time-series or fourier coefficients
+      dat = sourcemodel.subspace{i} * dat_pre_subspace; % Subspace time-series or fourier coefficients
     end
   end
   
@@ -163,7 +172,7 @@ for i=1:size(sourcemodel.pos,1)
     % Compute power
     pow(i) = sum(real(sum((lfi*dat).*lfi,2)));
     % Compute residual power (variance)
-    Prj = eye(size(lf,1)) - lf*lfi; %Projector to the orthogonal complement of the model space
+    Prj = eye(size(lf,1)) - lf*lfi; % Projector to the orthogonal complement of the model space
     rv(i)  = sum(real(sum((Prj*dat).*Prj,2)));
   end
 

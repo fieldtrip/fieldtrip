@@ -143,18 +143,18 @@ if hasmom
   sourcemodel.mom = sourcemodel.mom(:, originside);
 end
 
-if hasleadfield
-  fprintf('using precomputed leadfields\n');
-  sourcemodel.leadfield = sourcemodel.leadfield(originside);
-end
-
 if hasfilter
-  fprintf('using precomputed filters\n');
+  ft_info('using precomputed filters\n');
   sourcemodel.filter = sourcemodel.filter(originside);
+elseif hasleadfield
+  ft_info('using precomputed leadfields\n');
+  sourcemodel.leadfield = sourcemodel.leadfield(originside);
+else
+  ft_info('computing forward model on the fly\n');
 end
 
 if hassubspace
-  fprintf('using subspace projection\n');
+  ft_info('using subspace projection\n');
   sourcemodel.subspace = sourcemodel.subspace(originside);
 end
 
@@ -185,13 +185,13 @@ end
 % the inverse only has to be computed once for all dipoles
 invC = pinv(C + lambda * eye(size(C)));
 if hassubspace
-  fprintf('using source-specific subspace projection\n');
+  ft_info('using source-specific subspace projection\n');
   % remember the original data prior to the voxel dependent subspace projection
   dat_pre_subspace = dat;
   C_pre_subspace   = C;
 elseif ~isempty(subspace)
   % TODO implement an "eigenspace beamformer" as described in Sekihara et al. 2002 in HBM
-  fprintf('using data-specific subspace projection\n');
+  ft_info('using data-specific subspace projection\n');
   if numel(subspace)==1
     % interpret this as a truncation of the eigenvalue-spectrum
     % if <1 it is a fraction of the largest eigenvalue
@@ -235,7 +235,7 @@ for i=1:size(sourcemodel.pos,1)
   elseif  hasleadfield && ~hasmom
     % reuse the leadfield that was previously computed
     lf = sourcemodel.leadfield{i};
-  elseif  ~hasleadfield && hasmom
+  elseif ~hasleadfield &&  hasmom
     % compute the leadfield for a fixed dipole orientation
     lf = ft_compute_leadfield(sourcemodel.pos(i,:), sens, headmodel, leadfieldopt{:}) * sourcemodel.mom(:,i);
   else
@@ -263,7 +263,7 @@ for i=1:size(sourcemodel.pos,1)
       filt(ii,:) = pinv(sqrt(lf(:,ii)' * invG * lf(:,ii))) * lf(:,ii)' * invG;
     end
   end
-  if(any(~isreal(filt)))
+  if ~all(isreal(filt))
     ft_error('spatial filter has complex values -- did you set lambda properly?');
   end
   if projectmom
@@ -272,10 +272,10 @@ for i=1:size(sourcemodel.pos,1)
     filt = (mom') * filt;
   end
   if powlambda1
-    % estimate.pow(i) = lambda1(pinv(lf' * invC * lf));        % this is more efficient if the filters are not present
+    % estimate.pow(i) = lambda1(pinv(lf' * invC * lf));          % this is more efficient if the filters are not present
     estimate.pow(i,1) = lambda1(filt * C * ctranspose(filt));    % this is more efficient if the filters are present
   elseif powtrace
-    % estimate.pow(i) = trace(pinv(lf' * invC * lf));          % this is more efficient if the filters are not present, van Veen eqn. 24
+    % estimate.pow(i) = trace(pinv(lf' * invC * lf));            % this is more efficient if the filters are not present, van Veen eqn. 24
     estimate.pow(i,1) = trace(filt * C * ctranspose(filt));      % this is more efficient if the filters are present
   end
   if keepcov
@@ -303,8 +303,8 @@ for i=1:size(sourcemodel.pos,1)
   end
   if keepfilter
     if ~isempty(subspace)
+      % estimate.filter{i} = filt*pinv(subspace);
       estimate.filter{i,1} = filt*subspace;
-      %estimate.filter{i} = filt*pinv(subspace);
     else
       estimate.filter{i,1} = filt;
     end

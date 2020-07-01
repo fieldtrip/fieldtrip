@@ -121,27 +121,14 @@ if hasmom
   sourcemodel.mom = sourcemodel.mom(:,originside);
 end
 
-if hasleadfield
-  sourcemodel.leadfield = sourcemodel.leadfield(originside);
-end
-
 if hasfilter
+  ft_info('using precomputed filters\n');
   sourcemodel.filter = sourcemodel.filter(originside);
-end
-
-%if ~isempty(snr) && doscale
-%  ft_error('scaling of the source covariance in combination with a specified snr parameter is not allowed');
-%end
-
-% compute leadfield
-if hasfilter
-  % it does not matter whether the leadfield is there or not, it will not be used
-  fprintf('using pre-computed spatial filter: some of the specified options will not have an effect\n');
 elseif hasleadfield
-  % using the computed leadfields
-  fprintf('using pre-computed leadfields: some of the specified options will not have an effect\n');
+  ft_info('using precomputed leadfields\n');
+  sourcemodel.leadfield = sourcemodel.leadfield(originside);
 else
-  ft_info('computing forward model\n');
+  ft_info('computing forward model on the fly\n');
   if hasmom
     for i=size(sourcemodel.pos,1)
       % compute the leadfield for a fixed dipole orientation
@@ -206,7 +193,7 @@ if num_comp == 1
 elseif num_comp == 2
   H_blk = blkdiag(H{1},H{2});
 else
-  ft_error('This function only supports meshes with 1 or 2 connected components')
+  ft_error('this function only supports meshes with 1 or 2 connected components')
 end
 
 if num_dip == 1
@@ -216,7 +203,7 @@ elseif num_dip == 2
 elseif num_dip == 3
   H_tot = blkdiag(H_blk,H_blk,H_blk);
 else
-  ft_error('This function only supports source model with 1,2 or 3 dimensional source values')
+  ft_error('this function only supports source model with 1, 2 or 3 dimensional source values')
 end
 
 
@@ -249,8 +236,8 @@ for i=1:size(sourcemodel.pos,1)
 end
 
 % Take the rieal part of the noise cross-spectral density matrix
-if isreal(noisecov) == 0
-  fprintf('Taking the real part of the noise cross-spectral density matrix\n');
+if isreal(noisecov)
+  ft_info('taking the real part of the noise cross-spectral density matrix\n');
   noisecov = real(noisecov);
 end
 
@@ -258,10 +245,10 @@ end
 % on source and noise covariance would be useful
 if isempty(noisecov)
   % use an unregularised minimum norm solution, i.e. using the Moore-Penrose pseudoinverse
-  warning('computing a unregularised minimum norm solution. This typically does not work due to numerical accuracy problems');
+  ft_warning('computing a unregularised minimum norm solution. This typically does not work due to numerical accuracy problems');
   w = pinv(lf_h);
 elseif ~isempty(noisecov)
-  fprintf('computing the solution where the noise covariance is used for regularisation\n');
+  ft_info('using the noise covariance for regularisation\n');
   % the noise covariance has been given and can be used to regularise the solution
   if isempty(sourcecov)
     sourcecov = speye(Nsource);
@@ -272,11 +259,11 @@ elseif ~isempty(noisecov)
   C = noisecov;
   
   if dowhiten
-    fprintf('prewhitening the leadfields using the noise covariance\n');
+    ft_info('prewhitening the leadfields using the noise covariance\n');
     
     % compute the prewhitening matrix
     if ~isempty(noiselambda)
-      fprintf('using a regularized noise covariance matrix\n');
+      ft_info('using a regularized noise covariance matrix\n');
       % note: if different channel types are present, one should probably load the diagonal with channel-type specific stuff
       [U,S,V] = svd(C+eye(size(C))*noiselambda);
     else
@@ -298,7 +285,7 @@ elseif ~isempty(noisecov)
     % channel type covariance matrices prewhitening should be applied in
     % order for this to make sense (otherwise the diagonal elements of C
     % have different units)
-    fprintf('scaling the source covariance\n');
+    ft_info('scaling the source covariance\n');
     scale = trace(A*(R*A'))/trace(C);
     R     = R./scale;
   end
@@ -327,7 +314,7 @@ elseif ~isempty(noisecov)
     if cond(denom)<1e12
       w = R * A' / denom;
     else
-      fprintf('taking pseudo-inverse due to large condition number\n');
+      ft_info('taking pseudo-inverse due to large condition number\n');
       w = R * A' * pinv(denom);
     end
   end
@@ -338,11 +325,11 @@ end % if empty noisecov
 w_x = H_tot*w; % The Harm matrix project the Harmony level filters back to the source locations
 
 if isreal(dat)
-  fprintf('The input are sensors time-series: Computing the dipole moments\n')
+  ft_info('the input consists of time-series: computing the dipole moments\n')
   mom = w_x * dat;
   mom_ind = 1;
 elseif size(dat,1)==size(dat,2)&&sum(sum(dat-dat'))<10^-5*sum(diag(dat))
-  fprintf('The input is a sensor level cross-spectral density: Computing source level power\n')
+  ft_info('the input consists of a cross-spectral density: computing source-level power\n')
   pow_tot = real(sum((w_x*dat).*w_x,2));
   pow = 0;
   for j = 1:num_dip
@@ -350,7 +337,7 @@ elseif size(dat,1)==size(dat,2)&&sum(sum(dat-dat'))<10^-5*sum(diag(dat))
     mom_ind = 0;
   end
 else
-  fprintf('The input is are sensor level Fourier-coefficients: Computing source level Fourier coefficients\n')
+  ft_info('the input consists of Fourier coefficients: computing source-level Fourier coefficients\n')
   mom = w_x*dat; % The Harm matrix project the Harmonic activity back to the source locations
   mom_ind = 1;
 end
