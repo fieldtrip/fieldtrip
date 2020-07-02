@@ -665,22 +665,22 @@ switch cfg.method
     end
 
     % determine the size of the relevant elements
-    numhex = length(headmodel.hex);
+    numhex = size(headmodel.hex,1);
     numelem = length(headmodel.hex(1,:));
 
     sourcemodel.pos = zeros(numhex,3);
 
-    for i=1:length(headmodel.hex)
+    for i=1:numhex
         matr_help = zeros(numelem,3);
         for j=1:numelem
             matr_help(j,:) = headmodel.pos(headmodel.hex(i,j),:);
         end
-        sourcemodel.pos(i,:) = mean(matr_help);
+        sourcemodel.pos(i,:) = mean(matr_help,1);
     end
 
     sourcemodel.tissue = headmodel.tissue;
     sourcemodel.tissuelabel = headmodel.tissuelabel;
-    sourcemodel.unit    = cfg.unit;
+    sourcemodel.unit    = headmodel.unit;
     sourcemodel.inside  = true(size(sourcemodel.pos,1),1);
 end
 
