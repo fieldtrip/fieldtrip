@@ -446,7 +446,7 @@ if strcmp(cfg.gridsearch, 'yes')
       if cfg.numdipoles==1
         ft_info('found minimum after scanning on grid point [%g %g %g]\n', dip.pos(1), dip.pos(2), dip.pos(3));
       elseif cfg.numdipoles==2
-        ft_info('found minimum after scanning on grid point [%g %g %g; %g %g %g]\n', dip.pos(1), dip.pos(2), dip.pos(3), dip.pos(4), dip.pos(5), dip.pos(6));
+        ft_info('found minimum after scanning on grid point [%g %g %g; %g %g %g]\n', dip.pos(1,1), dip.pos(1,2), dip.pos(1,3), dip.pos(2,1), dip.pos(2,2), dip.pos(2,3));
       end
       
     case 'moving'
@@ -459,7 +459,7 @@ if strcmp(cfg.gridsearch, 'yes')
         if cfg.numdipoles==1
           ft_info('found minimum after scanning for topography %d on grid point [%g %g %g]\n', t, dip(t).pos(1), dip(t).pos(2), dip(t).pos(3));
         elseif cfg.numdipoles==2
-          ft_info('found minimum after scanning for topography %d on grid point [%g %g %g; %g %g %g]\n', t, dip(t).pos(1), dip(t).pos(2), dip(t).pos(3), dip(t).pos(4), dip(t).pos(5), dip(t).pos(6));
+          ft_info('found minimum after scanning for topography %d on grid point [%g %g %g; %g %g %g]\n', t, dip(t).pos(1,1), dip(t).pos(1,2), dip(t).pos(1,3), dip(t).pos(2,1), dip(t).pos(2,2), dip(t).pos(2,3));
         end
       end
       
