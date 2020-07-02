@@ -135,7 +135,7 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'unit', 'auto', []});
 cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'});  % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
 cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.unit by the subsequent createsubcfg
 cfg = ft_checkconfig(cfg, 'allowedval', {'method', 'basedongrid', 'basedonpos', 'basedonshape', ...
-        'basedonmri', 'basedonmni', 'basedoncortex', 'basedonresolution', 'basedonvol', 'basedonfile'});
+        'basedonmri', 'basedonmni', 'basedoncortex', 'basedonresolution', 'basedonvol', 'basedonfile','basedoncentroids'});
         
 % put the low-level options pertaining to the sourcemodel in their own field
 cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
@@ -248,6 +248,10 @@ switch cfg.method
   case 'basedonmni'
     cfg.tight       = ft_getopt(cfg.sourcemodel, 'tight',       'no');
     cfg.nonlinear   = ft_getopt(cfg.sourcemodel, 'nonlinear',   'no');
+
+  case 'basedoncentroids'
+    fprintf('creating sourcemodel based on volumetric mesh centroids\n');
+    cfg.tight       = ft_getopt(cfg.sourcemodel, 'tight',       'no');
 end
 
 if (isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no')) || strcmp(cfg.method, 'basedonmni')
@@ -642,6 +646,37 @@ switch cfg.method
       % copy the boolean fields over
       sourcemodel = copyfields(mnigrid, sourcemodel, booleanfields(mnigrid));
     end
+
+  case 'basedoncentroids'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % compute the centroids of each element of a volumetric mesh and use
+    % them as sources. assume all inside.
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % this is a model with hexaheders or tetraheders
+    if isfield(headmodel, 'tet')
+      % the subsequent code works both for tetraheders or hexaheders, but assumes the volume elements to be called "hex"
+      headmodel.hex = headmodel.tet;
+      headmodel = rmfield(headmodel, 'tet');
+    end
+
+    % determine the size of the relevant elements
+    numhex = length(headmodel.hex);
+    numelem = length(headmodel.hex(1,:));
+
+    sourcemodel.pos = zeros(numhex,3);
+
+    for i=1:length(headmodel.hex)
+        matr_help = zeros(numelem,3);
+        for j=1:numelem
+            matr_help(j,:) = headmodel.pos(headmodel.hex(i,j),:);
+        end
+        sourcemodel.pos(i,:) = mean(matr_help);
+    end
+
+    sourcemodel.tissue = headmodel.tissue;
+    sourcemodel.tissuelabel = headmodel.tissuelabel;
+    sourcemodel.unit    = cfg.unit;
+    sourcemodel.inside  = true(size(sourcemodel.pos,1),1);
 end
 
 if isfield(sourcemodel, 'unit')
