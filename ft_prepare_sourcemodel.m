@@ -679,8 +679,12 @@ switch cfg.method
         sourcemodel.pos(i,:) = mean(matr_help,1);
     end
 
-    sourcemodel.tissue = headmodel.tissue;
-    sourcemodel.tissuelabel = headmodel.tissuelabel;
+    if isfield(headmodel,'tissue')
+        sourcemodel.tissue = headmodel.tissue;
+    end
+    if isfield(headmodel,'tissuelabel')
+        sourcemodel.tissuelabel = headmodel.tissuelabel;
+    end
     sourcemodel.unit    = headmodel.unit;
 end
 
