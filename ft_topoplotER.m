@@ -1,18 +1,18 @@
 function [cfg] = ft_topoplotER(cfg, varargin)
 
-% FT_TOPOPLOTER plots the topographic distribution over the head
-% of a 2-dimensional data representations such as the event-related
-% fields or potentials or the power- or coherence spectrum.
+% FT_TOPOPLOTER plots the topographic distribution over the head of a 2-dimensional
+% data representations such as the event-related potentials or fields, or a power
+% or connectivity spectrum.
 %
 % Use as
 %   ft_topoplotER(cfg, timelock)
 % or
 %   ft_topoplotER(cfg, freq)
 %
-% The data can be an erp/erf produced by FT_TIMELOCKANALYSIS, a powerspectrum
-% (without time dimension) produced by FT_FREQANALYSIS or a connectivityspectrum
-% produced by FT_CONNECTIVITYANALYSIS.  Also, the output to FT_FREQSTATISTICS
-% and FT_TIMELOCKSTATISTICS can be visualised.
+% The data can be an ERP/ERF produced by FT_TIMELOCKANALYSIS, a power spectrum
+% (without time dimension) produced by FT_FREQANALYSIS or a connectivity spectrum
+% produced by FT_CONNECTIVITYANALYSIS. Also, the output to FT_FREQSTATISTICS and
+% FT_TIMELOCKSTATISTICS can be visualised.
 %
 % The configuration can have the following parameters
 %   cfg.parameter          = field that contains the data to be plotted as color, for example 'avg', 'powspctrm' or 'cohspctrm' (default is automatic)
@@ -83,23 +83,21 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %   cfg.interpolatenan     = string 'yes', 'no' (default = 'yes')
 %                            interpolate over channels containing NaNs
 %
-% For the plotting of directional connectivity data the cfg.directionality
-% option determines what is plotted. The default value and the supported
-% functionality depend on the dimord of the input data. If the input data
-% is of dimord 'chan_chan_XXX', the value of directionality determines
-% whether, given the reference channel(s), the columns (inflow), or rows
-% (outflow) are selected for plotting. In this situation the default is
-% 'inflow'. Note that for undirected measures, inflow and outflow should
-% give the same output. If the input data is of dimord 'chancmb_XXX', the
-% value of directionality determines whether the rows in data.labelcmb are
-% selected. With 'inflow' the rows are selected if the refchannel(s) occur in
-% the right column, with 'outflow' the rows are selected if the
-% refchannel(s) occur in the left column of the labelcmb-field. Default in
-% this case is '', which means that all rows are selected in which the
-% refchannel(s) occur. This is to robustly support linearly indexed
-% undirected connectivity metrics. In the situation where undirected
-% connectivity measures are linearly indexed, specifying 'inflow' or
-% 'outflow' can result in unexpected behavior.
+% For the plotting of directional connectivity data the cfg.directionality option
+% determines what is plotted. The default value and the supported functionality
+% depend on the dimord of the input data. If the input data is of dimord
+% 'chan_chan_XXX', the value of directionality determines whether, given the
+% reference channel(s), the columns (inflow), or rows (outflow) are selected for
+% plotting. In this situation the default is 'inflow'. Note that for undirected
+% measures, inflow and outflow should give the same output. If the input data is of
+% dimord 'chancmb_XXX', the value of directionality determines whether the rows in
+% data.labelcmb are selected. With 'inflow' the rows are selected if the
+% refchannel(s) occur in the right column, with 'outflow' the rows are selected if
+% the refchannel(s) occur in the left column of the labelcmb-field. Default in this
+% case is '', which means that all rows are selected in which the refchannel(s)
+% occur. This is to robustly support linearly indexed undirected connectivity
+% metrics. In the situation where undirected connectivity measures are linearly
+% indexed, specifying 'inflow' or 'outflow' can result in unexpected behavior.
 %
 % The layout defines how the channels are arranged. You can specify the
 % layout in a variety of ways:
@@ -135,7 +133,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 % Other options:
 % cfg.labeloffset (offset of labels to their marker, default = 0.005)
 
-% Copyright (C) 2005-2017, F.C. Donders Centre
+% Copyright (C) 2005-2020, F.C. Donders Centre
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

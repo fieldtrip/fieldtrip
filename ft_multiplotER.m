@@ -118,7 +118,6 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 % Copyright (C) 2003-2006, Ole Jensen
 % Copyright (C) 2007-2011, Roemer van der Meij & Jan-Mathijs Schoffelen
 % Copyright (C) 2012-2017, F.C. Donders Centre
-
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

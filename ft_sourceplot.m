@@ -50,7 +50,9 @@ function ft_sourceplot(cfg, functional, anatomical)
 %   cfg.downsample    = downsampling for resolution reduction, integer value (default = 1) (orig: from surface)
 %   cfg.atlas         = string, filename of atlas to use (default = []) see FT_READ_ATLAS
 %                        for ROI masking (see 'masking' below) or for orthogonal plots (see method='ortho' below)
-%   cfg.visible       = string, 'on' or 'off', whether figure will be visible (default = 'on')
+%   cfg.visible       = string, 'on' or 'off' whether figure will be visible (default = 'on')
+%   cfg.position      = location and size of the figure, specified as a vector of the form [left bottom width height]
+%   cfg.renderer      = string, 'opengl', 'zbuffer', 'painters', see MATLAB Figure Properties. If this function crashes, you should try 'painters'.
 %
 % The following parameters can be used for the functional data:
 %   cfg.funcolormap   = colormap for functional data, see COLORMAP (default = 'auto')
@@ -708,17 +710,8 @@ if ~hasroi
 end
 
 %% start building the figure
-h = figure('visible', cfg.visible);
+h = open_figure(keepfields(cfg, {'newfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
 set(h, 'color', [1 1 1]);
-set(h, 'renderer', cfg.renderer);
-if ~isempty(cfg.figurename)
-  % this appears as the name of the window
-  set(h, 'name', cfg.figurename);
-end
-if ~isempty(cfg.title)
-  % this appears above the axes
-  title(cfg.title);
-end
 
 %% set color and opacity mapping for this figure
 if hasfun
