@@ -257,6 +257,7 @@ switch cfg.method
   case 'basedoncentroids'
     fprintf('creating sourcemodel based on volumetric mesh centroids\n');
     cfg.tight       = ft_getopt(cfg.sourcemodel, 'tight',       'no');
+    cfg.inwardshift = ft_getopt(cfg, 'inwardshift', 0); % in this case for inside detection
 end
 
 if (isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no')) || strcmp(cfg.method, 'basedonmni')
@@ -681,7 +682,6 @@ switch cfg.method
     sourcemodel.tissue = headmodel.tissue;
     sourcemodel.tissuelabel = headmodel.tissuelabel;
     sourcemodel.unit    = headmodel.unit;
-    sourcemodel.inside  = true(size(sourcemodel.pos,1),1);
 end
 
 if isfield(sourcemodel, 'unit')
