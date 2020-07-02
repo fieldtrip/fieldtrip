@@ -2,7 +2,7 @@ function [dataout] = ft_heartrate(cfg, datain)
 
 % FT_HEARTRATE estimates the heart rate from a continuous PPG or ECG channel. It
 % returns a new data structure with a continuous representation of the heartrate in
-% beats per minute.
+% beats per minute, the heart period (RR interval) in seconds per interval, the heartbeat phase and heartbeat onsets.
 %
 % Use as
 %   dataout = ft_heartrate(cfg, data)
@@ -14,6 +14,11 @@ function [dataout] = ft_heartrate(cfg, datain)
 %   cfg.method           = string representing the method for heart beat detection
 %                          'findpeaks'  filtering and normalization, followed by FINDPEAKS (default)
 %                          'pantompkin' implementation of the Pan-Tompkin algorithm for ECG beat detection
+%   cfg.ectopicbeat_corr = replace a single ectopic beat (e.g. a premature ventricual contraction) by a beat that falls
+%   exactly in between its neighbouring beats. An ectopic beat is registrated if the RR-interval of a beat is 20% (default) smaller than 
+%   the previous beat-to-beat interval and is followed by an interval that
+%   is 20% (default) larger (i.e. refractory period). The default threshold of 0.2 can be modified
+%   with cfg.corr_threshold.
 %
 % For the 'findpeaks' method the following additional options can be specified
 %   cfg.envelopewindow   = scalar, time in seconds (default = 10)
@@ -92,6 +97,8 @@ cfg.threshold        = ft_getopt(cfg, 'threshold', 0.4);      % between 0 and 1
 cfg.feedback         = ft_getopt(cfg, 'feedback', 'yes');
 cfg.preproc          = ft_getopt(cfg, 'preproc', []);
 cfg.flipsignal       = ft_getopt(cfg, 'flipsignal', []);
+cfg.ectopicbeat_corr = ft_getopt(cfg, 'ectopicbeat_corr', 'no');
+cfg.corr_threshold   = ft_getopt(cfg, 'corr_threshold', 0.2);
 
 % the expected rate is around 80 bpm, which means 80/60=1.33 Hz
 cfg.preproc.bpfilter    = ft_getopt(cfg.preproc, 'bpfilter', 'yes');
@@ -102,7 +109,7 @@ cfg.preproc.bpfreq      = ft_getopt(cfg.preproc, 'bpfreq', [1/3 10] * 1.33);  % 
 
 % copy some of the fields over to the new data structure
 dataout = keepfields(datain, {'time', 'fsample', 'sampleinfo', 'trialinfo'});
-dataout.label = {'heartrate', 'heartbeatphase', 'heartbeatonset'};
+dataout.label = {'heartrate', 'heartperiod', 'heartbeatphase', 'heartbeatonset'};
 dataout.trial = {};  % this is to be determined in the main code
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -198,11 +205,11 @@ switch cfg.method
         title('locally rescaled')
       end
       
-      % construct a continuous channel with the rate and the phase
-      [rate, phase, tmp] = discr2ctu(peaks, size(dat), fsample);
+      % construct a continuous channel with the rate, period and the phase
+      [rate, period, phase, tmp] = discr2ctu(peaks, size(dat), fsample);
       
       % add the continuous channels to the output structure
-      dataout.trial{trllop} = [rate; phase; tmp];
+      dataout.trial{trllop} = [rate; period; phase; tmp];
       
       if istrue(cfg.feedback)
         subplot(4,1,4)
@@ -225,19 +232,55 @@ switch cfg.method
       time  = datain.time{trllop};
       
       % pan-tompkin algorithm
+      if istrue(cfg.feedback)
+        figure();
+      end
       [vals, peaks, delay] = pan_tompkin(dat, fsample, istrue(cfg.feedback));
       
       % construct a continuous channel with the rate and the phase
-      [rate, phase, tmp] = discr2ctu(peaks, size(dat), fsample);
+      [rate, period, phase, tmp] = discr2ctu(peaks, size(dat), fsample);
       
       % add the continuous channels to the output structure
-      dataout.trial{trllop} = [rate; phase; tmp];
+      dataout.trial{trllop} = [rate; period; phase; tmp];
     end
     
   otherwise
     ft_error('unsupported method %s', cfg.method);
     
 end % switch method
+
+% ectopic beat correction
+if istrue(cfg.ectopicbeat_corr)
+  for trllop=1:numel(datain.trial)
+    chan_onset=find(strcmp(dataout.label, 'heartbeatonset'));
+    chan_period=find(strcmp(dataout.label, 'heartperiod'));
+    peaks=find(dataout.trial{trllop}(chan_onset,:));
+    period=dataout.trial{trllop}(chan_period, :);
+    for i=1:length(peaks)
+      if i==1 | i>=length(peaks)-1
+        continue
+      end
+      % if the RR-interval of the current to the next peak is e.g. 20% (default) smaller than  
+      % the previous peak-to-peak interval and is followed by an interval that is 20% (default) larger (refractory period),
+      % then replace the next peak to fall exactly in between its neighbouring peaks
+      if period(peaks(i))<(1-cfg.corr_threshold)*period(peaks(i-1)) && period(peaks(i+1))>(1+cfg.corr_threshold)*period(peaks(i-1))
+        peaks(i+1)=round(mean([peaks(i), peaks(i+2)]));
+        % reconstruct the continuous channels
+        [rate, period, phase, tmp] = discr2ctu(peaks, size(dataout.trial{trllop}(1,:)), fsample);
+      end
+    end
+    % visualization
+    if istrue(cfg.feedback)
+      figure; title('heart period before and after correction');
+      plot(dataout.trial{trllop}(chan_period,:), '--');
+      hold on; plot(period, '-');
+      legend('original', 'corrected')
+      xlabel('samples'); ylabel('heart period (sec. per interval)')
+    end
+    % update the output structure
+    dataout.trial{trllop} = [rate; period; phase; tmp];
+  end
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % deal with the output
@@ -253,13 +296,15 @@ ft_postamble savevar    dataout
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [rate, phase, tmp] = discr2ctu(peaks, n, fsample)
+function [rate, period, phase, tmp] = discr2ctu(peaks, n, fsample)
 rate  = nan(n);
+period = nan(n);
 phase = nan(n);
 for i=1:length(peaks)-1
   begsample = peaks(i);
   endsample = peaks(i+1);
   rate(begsample:endsample)  = 60 * fsample/(endsample-begsample); % in bpm
+  period(begsample:endsample) = (endsample-begsample)/fsample; % in seconds per interval
   phase(begsample:endsample) = linspace(-pi, pi, (endsample-begsample+1));
 end
 % also construct a boolean channel with a pulse at the beat onset
