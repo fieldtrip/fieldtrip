@@ -19,6 +19,7 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 %                'basedonresolution'  regular 3D grid with specification of the resolution
 %                'basedonvol'         surface mesh based on inward shifted brain surface from volume conductor
 %                'basedonfile'        the sourcemodel should be read from file
+%                'basedoncentroids'   irregular 3D grid based on volumetric mesh
 % The default for cfg.method is to determine the approach automatically, based on
 % the configuration options that you specify.
 %
@@ -59,6 +60,10 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 %
 % BASEDONCORTEX - places sources on the vertices of a cortical surface description
 %   cfg.headshape     = string, should be a *.fif file
+%
+% BASEDONCENTROIDS - places sources on the centroids of a volumetric mesh
+%   cfg.headmodel      = volumetric mesh
+%   cfg.headmodel.type = 'simbio';
 %
 % Other configuration options include
 %   cfg.unit          = string, can be 'mm', 'cm', 'm' (default is automatic)
@@ -135,7 +140,7 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'unit', 'auto', []});
 cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'});  % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
 cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.unit by the subsequent createsubcfg
 cfg = ft_checkconfig(cfg, 'allowedval', {'method', 'basedongrid', 'basedonpos', 'basedonshape', ...
-        'basedonmri', 'basedonmni', 'basedoncortex', 'basedonresolution', 'basedonvol', 'basedonfile'});
+        'basedonmri', 'basedonmni', 'basedoncortex', 'basedonresolution', 'basedonvol', 'basedonfile','basedoncentroids'});
         
 % put the low-level options pertaining to the sourcemodel in their own field
 cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
@@ -248,6 +253,11 @@ switch cfg.method
   case 'basedonmni'
     cfg.tight       = ft_getopt(cfg.sourcemodel, 'tight',       'no');
     cfg.nonlinear   = ft_getopt(cfg.sourcemodel, 'nonlinear',   'no');
+
+  case 'basedoncentroids'
+    fprintf('creating sourcemodel based on volumetric mesh centroids\n');
+    cfg.tight       = ft_getopt(cfg.sourcemodel, 'tight',       'no');
+    cfg.inwardshift = ft_getopt(cfg, 'inwardshift', 0); % in this case for inside detection
 end
 
 if (isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no')) || strcmp(cfg.method, 'basedonmni')
@@ -642,6 +652,32 @@ switch cfg.method
       % copy the boolean fields over
       sourcemodel = copyfields(mnigrid, sourcemodel, booleanfields(mnigrid));
     end
+
+  case 'basedoncentroids'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % compute the centroids of each volume element of a FEM mesh
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % the FEM model should have tetraheders or hexaheders
+    if isfield(headmodel, 'tet')
+      numtet = size(headmodel.tet, 1);
+      sourcemodel.pos = zeros(numtet, 3);
+      for i=1:numtet
+        % compute the mean of the 4 corner points of the tetraheder
+        sourcemodel.pos(i,:) = mean(headmodel.pos(headmodel.tet(i,:),:), 1);
+      end
+    elseif isfield(headmodel, 'hex')
+      numhex = size(headmodel.hex, 1);
+      sourcemodel.pos = zeros(numhex, 3);
+      for i=1:numhex
+        % compute the mean of the 8 corner points of the hexaheder
+        sourcemodel.pos(i,:) = mean(headmodel.pos(headmodel.hex(i,:),:), 1);
+      end
+    else
+      ft_error('the headmodel does not contain tetraheders or hexaheders');
+    end
+
+    % copy the specified fields, fields that are specified but not present will be silently ignored
+    sourcemodel = copyfields(headmodel, sourcemodel, {'tissue', 'tissuelabel', 'unit', 'coordsys'});
 end
 
 if isfield(sourcemodel, 'unit')
