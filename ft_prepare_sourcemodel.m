@@ -655,37 +655,29 @@ switch cfg.method
 
   case 'basedoncentroids'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % compute the centroids of each element of a volumetric mesh and use
-    % them as sources. assume all inside.
+    % compute the centroids of each volume element of a FEM mesh
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % this is a model with hexaheders or tetraheders
+    % the FEM model should have tetraheders or hexaheders
     if isfield(headmodel, 'tet')
-      % the subsequent code works both for tetraheders or hexaheders, but assumes the volume elements to be called "hex"
-      headmodel.hex = headmodel.tet;
-      headmodel = rmfield(headmodel, 'tet');
+      numtet = size(headmodel.tet, 1);
+      sourcemodel.pos = zeros(numtet, 3);
+      for i=1:numtet
+        % compute the mean of the 4 corner points of the tetraheder
+        sourcemodel.pos(i,:) = mean(headmodel.pos(headmodel.tet(i,:),:), 1);
+      end
+    elseif isfield(headmodel, 'hex')
+      numhex = size(headmodel.hex, 1);
+      sourcemodel.pos = zeros(numhex, 3);
+      for i=1:numhex
+        % compute the mean of the 8 corner points of the hexaheder
+        sourcemodel.pos(i,:) = mean(headmodel.pos(headmodel.hex(i,:),:), 1);
+      end
+    else
+      ft_error('the headmodel does not contain tetraheders or hexaheders');
     end
 
-    % determine the size of the relevant elements
-    numhex = size(headmodel.hex,1);
-    numelem = length(headmodel.hex(1,:));
-
-    sourcemodel.pos = zeros(numhex,3);
-
-    for i=1:numhex
-        matr_help = zeros(numelem,3);
-        for j=1:numelem
-            matr_help(j,:) = headmodel.pos(headmodel.hex(i,j),:);
-        end
-        sourcemodel.pos(i,:) = mean(matr_help,1);
-    end
-
-    if isfield(headmodel,'tissue')
-        sourcemodel.tissue = headmodel.tissue;
-    end
-    if isfield(headmodel,'tissuelabel')
-        sourcemodel.tissuelabel = headmodel.tissuelabel;
-    end
-    sourcemodel.unit    = headmodel.unit;
+    % copy the specified fields, fields that are specified but not present will be silently ignored
+    sourcemodel = copyfields(headmodel, sourcemodel, {'tissue', 'tissuelabel', 'unit', 'coordsys'});
 end
 
 if isfield(sourcemodel, 'unit')
