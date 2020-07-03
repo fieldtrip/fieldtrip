@@ -86,6 +86,7 @@ data = ft_checkdata(data, 'datatype', 'timelock');
 cfg.parameter   = ft_getopt(cfg, 'parameter', 'avg');
 cfg.interactive = ft_getopt(cfg, 'interactive', 'yes');
 cfg.baseline    = ft_getopt(cfg, 'baseline', 'no');
+cfg.visible     = ft_getopt(cfg, 'visible', 'on');
 cfg.renderer    = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 
 % apply optional baseline correction

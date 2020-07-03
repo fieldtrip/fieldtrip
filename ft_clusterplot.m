@@ -397,7 +397,8 @@ else
 
   % make plots
   for iPl = 1:Nfig
-    open_figure(keepfields(cfg, {'position', 'visible', 'renderer'})); % it must always open a new figure
+    % open a new figure with the specified settings, note that here it must always open a new figure
+    open_figure(keepfields(cfg, {'position', 'visible', 'renderer'}));
     if is2D
       if iPl < Nfig
         for iT = 1:numSubplots
@@ -473,11 +474,6 @@ else
   set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
 end
 set(gcf, 'NumberTitle', 'off');
-
-% set renderer if specified
-if ~isempty(cfg.renderer)
-  set(gcf, 'renderer', cfg.renderer)
-end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

@@ -87,6 +87,8 @@ cfg = ft_checkconfig(cfg, 'renamed', {'optofile', 'opto'});
 
 % set the defaults
 cfg.enableedit = ft_getopt(cfg, 'enableedit', 'no');
+cfg.visible    = ft_getopt(cfg, 'visible', 'on');
+cfg.renderer   = ft_getopt(cfg, 'renderer', []); % let MATLAB decide on the default
 
 if isfield(cfg, 'neighbours')
   cfg.neighbours = cfg.neighbours;
@@ -249,11 +251,6 @@ else
   set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
 end
 set(gcf, 'NumberTitle', 'off');
-
-% set renderer if specified
-if ~isempty(cfg.renderer)
-  set(gcf, 'renderer', cfg.renderer)
-end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

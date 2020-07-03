@@ -295,7 +295,6 @@ cfg.atlas         = ft_getopt(cfg, 'atlas',         []);
 cfg.marker        = ft_getopt(cfg, 'marker',        []);
 cfg.markersize    = ft_getopt(cfg, 'markersize',    5);
 cfg.markercolor   = ft_getopt(cfg, 'markercolor',   [1 1 1]);
-cfg.renderer      = ft_getopt(cfg, 'renderer',      'opengl');
 cfg.colorbar      = ft_getopt(cfg, 'colorbar',      'yes');
 cfg.colorbartext  = ft_getopt(cfg, 'colorbartext',  '');
 cfg.voxelratio    = ft_getopt(cfg, 'voxelratio',    'data'); % display size of the voxel, 'data' or 'square'
@@ -303,6 +302,7 @@ cfg.axisratio     = ft_getopt(cfg, 'axisratio',     'data'); % size of the axes 
 cfg.visible       = ft_getopt(cfg, 'visible',       'on');
 cfg.clim          = ft_getopt(cfg, 'clim',          [0 1]); % this is used to scale the orthoplot
 cfg.intersectmesh = ft_getopt(cfg, 'intersectmesh');
+cfg.renderer      = ft_getopt(cfg, 'renderer',      'opengl');
 
 if ~isfield(cfg, 'anaparameter')
   if isfield(functional, 'anatomy')
@@ -710,6 +710,8 @@ if ~hasroi
 end
 
 %% start building the figure
+
+% open a new figure with the specified settings
 h = open_figure(keepfields(cfg, {'newfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
 set(h, 'color', [1 1 1]);
 
@@ -1026,9 +1028,6 @@ switch cfg.method
     set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
     set(h, 'windowkeypressfcn',   @cb_keyboard);
     set(h, 'CloseRequestFcn',     @cb_quit);
-    
-    % ensure that this is done in interactive mode
-    set(h, 'renderer', cfg.renderer);
     
     %% create figure handles
     

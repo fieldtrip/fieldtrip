@@ -109,9 +109,11 @@ cfg.movierpt      = ft_getopt(cfg, 'movierpt',      1);
 cfg.baseline      = ft_getopt(cfg, 'baseline',      'no');
 cfg.colorbar      = ft_getopt(cfg, 'colorbar',      'no');
 cfg.colorbartext  = ft_getopt(cfg, 'colorbartext',  '');
-cfg.renderer      = ft_getopt(cfg, 'renderer',      []); % let MATLAB decide on the default
 cfg.interactive   = ft_getopt(cfg, 'interactive',   'yes');
-dointeractive     = istrue(cfg.interactive);
+cfg.visible       = ft_getopt(cfg, 'visible',       'on');
+cfg.renderer      = ft_getopt(cfg, 'renderer',      []); % let MATLAB decide on the default
+
+dointeractive = istrue(cfg.interactive);
 
 xparam = 'time';
 if isfield(data, 'freq')
@@ -230,8 +232,8 @@ elseif ischar(cfg.zlim) && strcmp(cfg.zlim,'minzero')
   cfg.zlim(2)  = 0;
 end
 
-h = gcf;
-pos = get(gcf, 'position');
+% open a new figure with the specified settings
+h = open_figure(keepfields(cfg, {'newfigure', 'position', 'visible', 'renderer'}));
 set(h, 'toolbar', 'figure');
 
 if dointeractive
@@ -261,6 +263,8 @@ if dointeractive
   set(button_faster, 'position', [100 100 20 20]);
   set(button_faster, 'string', '+')
   set(button_faster, 'callback', @cb_zlim);
+
+  pos = get(h, 'position');
 
   sx = uicontrol('style', 'slider');
   set(sx, 'position', [20 5 pos(3)-160 20]);
@@ -414,11 +418,6 @@ else
   set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
 end
 set(gcf, 'NumberTitle', 'off');
-
-% set renderer if specified
-if ~isempty(cfg.renderer)
-  set(gcf, 'renderer', cfg.renderer)
-end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

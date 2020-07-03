@@ -208,7 +208,6 @@ cfg.fontsize       = ft_getopt(cfg, 'fontsize', 8);
 cfg.fontweight     = ft_getopt(cfg, 'fontweight');
 cfg.interactive    = ft_getopt(cfg, 'interactive', 'yes');
 cfg.hotkeys        = ft_getopt(cfg, 'hotkeys', 'yes');
-cfg.renderer       = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 cfg.orient         = ft_getopt(cfg, 'orient', 'landscape');
 cfg.maskalpha      = ft_getopt(cfg, 'maskalpha', 1);
 cfg.masknans       = ft_getopt(cfg, 'masknans', 'yes');
@@ -218,6 +217,7 @@ cfg.directionality = ft_getopt(cfg, 'directionality', '');
 cfg.figurename     = ft_getopt(cfg, 'figurename');
 cfg.commentpos     = ft_getopt(cfg, 'commentpos', 'layout');
 cfg.scalepos       = ft_getopt(cfg, 'scalepos', 'layout');
+cfg.renderer       = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 
 if ~isfield(cfg, 'box')
   if ~isempty(cfg.maskparameter)
@@ -593,11 +593,6 @@ else
   set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
 end
 set(gcf, 'NumberTitle', 'off');
-
-% Set renderer if specified
-if ~isempty(cfg.renderer)
-  set(gcf, 'renderer', cfg.renderer)
-end
 
 % Make the figure interactive:
 if strcmp(cfg.interactive, 'yes')
