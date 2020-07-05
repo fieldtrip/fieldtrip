@@ -23,7 +23,7 @@
 % You should have received a copy of the GNU General Public License
 % along with mffmatlabio.  If not, see <https://www.gnu.org/licenses/>.
 
-function mff_exportinfo(EEG, mffFile)
+function EEG = mff_exportinfo(EEG, mffFile)
 
 p = fileparts(which('mff_importsignal.m'));
 warning('off', 'MATLAB:Java:DuplicateClass');
@@ -42,10 +42,9 @@ end
 info = mfffactory.openResourceAtURI( fullfile(mffFile, 'info.xml'), infoType);
 
 info.setMFFVersion(3);
-if isfield(EEG.etc, 'recordingtime')
-    begTime = mff_encodetime(EEG.etc.recordingtime, EEG.etc.timezone);
-else
-    begTime = mff_encodetime(now, '00:00');
+if ~isfield(EEG.etc, 'recordingtime')
+    error('Unknow record time');
 end
+begTime = mff_encodetime(EEG.etc.recordingtime, EEG.etc.timezone);
 info.setRecordTime(begTime);
 info.saveResource();
