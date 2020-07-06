@@ -878,7 +878,7 @@ switch typ
     elseif isequal(cfg.datatype, 'events')
       need_events_tsv = true;
     else
-      ft_error('cannot determine the type of the data, please specify cfg.dataype');
+      ft_error('cannot determine the type of the data, please specify cfg.datatype');
     end
 
     if ~isempty(cfg.dataset)
