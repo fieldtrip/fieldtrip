@@ -2899,6 +2899,14 @@ ARRAY+=(utilities/private/refine.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# remove_vertices.m
+
+ARRAY=()
+ARRAY+=(private/remove_vertices.m)
+ARRAY+=(fileio/private/remove_vertices.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # rename.mexa64
 
 ARRAY=()
