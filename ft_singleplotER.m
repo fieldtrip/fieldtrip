@@ -461,11 +461,11 @@ mask = maskmatrix;
 
 if strcmp(cfg.maskstyle, 'difference')
   % combine the conditions in a single plot, highlight the difference
-  ft_plot_vector(xval, yval, 'color', linecolor, 'linewidth', cfg.linewidth, 'style', cfg.linestyle{1}, 'linewidth', cfg.linewidth, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
+  ft_plot_vector(xval, yval, 'color', linecolor, 'style', cfg.linestyle{1}, 'linewidth', cfg.linewidth, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
 else
   % loop over the conditions, plot them on top of each other
   for i=1:Ndata
-    ft_plot_vector(xval, yval(i,:), 'color', linecolor(i,:), 'linewidth', cfg.linewidth, 'style', cfg.linestyle{i}, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
+    ft_plot_vector(xval, yval(i,:), 'color', linecolor(i,:), 'style', cfg.linestyle{i}, 'linewidth', cfg.linewidth, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
   end
 end
 
