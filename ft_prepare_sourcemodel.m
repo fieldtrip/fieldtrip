@@ -719,7 +719,11 @@ if ~isempty(cfg.movetocentroid) && strcmp(cfg.movetocentroid, 'yes')
     % eliminate duplicates (if, e.g., cfg.resolution is smaller than the
     % mesh resolution)
     sourcemodel.pos = unique(grid_shifted,'rows','stable');
-    cfg.tight       = ft_getopt(cfg.sourcemodel, 'tight',       'no');
+    if isfield(sourcemodel,'dim')
+        sourcemodel = rmfield(sourcemodel,'dim');
+    end
+
+%     cfg.tight       = ft_getopt(cfg.sourcemodel, 'tight',       'no');
 
 end
 
