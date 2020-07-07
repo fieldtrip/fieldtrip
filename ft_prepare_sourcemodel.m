@@ -725,6 +725,44 @@ if ~isempty(cfg.moveinward)
   end
 end
 
+if strcmp(cfg.movetocentroid, 'yes')
+    % 1. compute centroids
+    % the FEM model should have tetraheders or hexaheders
+    centroids=[];
+    if isfield(headmodel, 'tet')
+      numtet = size(headmodel.tet, 1);
+      centroids.pos = zeros(numtet, 3);
+      for i=1:numtet
+        % compute the mean of the 4 corner points of the tetraheder
+        centroids.pos(i,:) = mean(headmodel.pos(headmodel.tet(i,:),:), 1);
+      end
+    elseif isfield(headmodel, 'hex')
+      numhex = size(headmodel.hex, 1);
+      centroids.pos = zeros(numhex, 3);
+      for i=1:numhex
+        % compute the mean of the 8 corner points of the hexaheder
+        centroids.pos(i,:) = mean(headmodel.pos(headmodel.hex(i,:),:), 1);
+      end
+    else
+      ft_error('the headmodel does not contain tetraheders or hexaheders');
+    end
+
+    % copy the specified fields, fields that are specified but not present will be silently ignored
+    centroids = copyfields(headmodel, centroids, {'tissue', 'tissuelabel', 'unit', 'coordsys'});
+
+    % 2. move the sourcemodel to the closest centroids
+    grid_shifted = zeros(size(sourcemodel.pos));
+    for i = 1:length(sourcemodel.pos)
+        [~, amin] = min(sum((sourcemodel.pos(i,:) - centroids.pos).^2,2));
+        grid_shifted(i,:) = centroids.pos(amin,:);
+    end
+    % eliminate duplicates (if, e.g., cfg.resolution is smaller than the
+    % mesh resolution)
+    sourcemodel.pos = unique(grid_shifted,'rows','stable');
+    cfg.tight       = ft_getopt(cfg.sourcemodel, 'tight',       'no');
+
+end
+
 % determine the dipole locations that are inside the source compartment of the
 % volume conduction model, i.e. inside the brain
 if ~isfield(sourcemodel, 'inside')
