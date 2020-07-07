@@ -157,6 +157,7 @@ cfg.headmodel         = ft_getopt(cfg, 'headmodel');
 cfg.sourcemodel       = ft_getopt(cfg, 'sourcemodel');
 cfg.unit              = ft_getopt(cfg, 'unit');
 cfg.method            = ft_getopt(cfg, 'method'); % empty will lead to attempted automatic detection
+cfg.movetocentroids   = ft_getopt(cfg, 'movetocentroids', 'no');
 
 % this code expects the inside to be represented as a logical array
 cfg = ft_checkconfig(cfg, 'inside2logical', 'yes');
@@ -657,27 +658,7 @@ switch cfg.method
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % compute the centroids of each volume element of a FEM mesh
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % the FEM model should have tetraheders or hexaheders
-    if isfield(headmodel, 'tet')
-      numtet = size(headmodel.tet, 1);
-      sourcemodel.pos = zeros(numtet, 3);
-      for i=1:numtet
-        % compute the mean of the 4 corner points of the tetraheder
-        sourcemodel.pos(i,:) = mean(headmodel.pos(headmodel.tet(i,:),:), 1);
-      end
-    elseif isfield(headmodel, 'hex')
-      numhex = size(headmodel.hex, 1);
-      sourcemodel.pos = zeros(numhex, 3);
-      for i=1:numhex
-        % compute the mean of the 8 corner points of the hexaheder
-        sourcemodel.pos(i,:) = mean(headmodel.pos(headmodel.hex(i,:),:), 1);
-      end
-    else
-      ft_error('the headmodel does not contain tetraheders or hexaheders');
-    end
-
-    % copy the specified fields, fields that are specified but not present will be silently ignored
-    sourcemodel = copyfields(headmodel, sourcemodel, {'tissue', 'tissuelabel', 'unit', 'coordsys'});
+    sourcemodel = compute_centroids(headmodel);
 end
 
 if isfield(sourcemodel, 'unit')
@@ -725,30 +706,9 @@ if ~isempty(cfg.moveinward)
   end
 end
 
-if strcmp(cfg.movetocentroid, 'yes')
+if ~isempty(cfg.movetocentroid) && strcmp(cfg.movetocentroid, 'yes')
     % 1. compute centroids
-    % the FEM model should have tetraheders or hexaheders
-    centroids=[];
-    if isfield(headmodel, 'tet')
-      numtet = size(headmodel.tet, 1);
-      centroids.pos = zeros(numtet, 3);
-      for i=1:numtet
-        % compute the mean of the 4 corner points of the tetraheder
-        centroids.pos(i,:) = mean(headmodel.pos(headmodel.tet(i,:),:), 1);
-      end
-    elseif isfield(headmodel, 'hex')
-      numhex = size(headmodel.hex, 1);
-      centroids.pos = zeros(numhex, 3);
-      for i=1:numhex
-        % compute the mean of the 8 corner points of the hexaheder
-        centroids.pos(i,:) = mean(headmodel.pos(headmodel.hex(i,:),:), 1);
-      end
-    else
-      ft_error('the headmodel does not contain tetraheders or hexaheders');
-    end
-
-    % copy the specified fields, fields that are specified but not present will be silently ignored
-    centroids = copyfields(headmodel, centroids, {'tissue', 'tissuelabel', 'unit', 'coordsys'});
+    centroids = compute_centroids(headmodel);
 
     % 2. move the sourcemodel to the closest centroids
     grid_shifted = zeros(size(sourcemodel.pos));
@@ -861,3 +821,29 @@ for i=1:numel(fn)
   end
 end
 fn  = fn(isboolean);
+
+%helper function to compute the centroids of the elements of a volumetric
+%mesh
+function centr = compute_centroids(hm)
+    centr = [];
+    % the FEM model should have tetraheders or hexaheders
+    if isfield(hm, 'tet')
+      numtet = size(hm.tet, 1);
+      centr.pos = zeros(numtet, 3);
+      for i=1:numtet
+        % compute the mean of the 4 corner points of the tetraheder
+        centr.pos(i,:) = mean(hm.pos(hm.tet(i,:),:), 1);
+      end
+    elseif isfield(hm, 'hex')
+      numhex = size(hm.hex, 1);
+      centr.pos = zeros(numhex, 3);
+      for i=1:numhex
+        % compute the mean of the 8 corner points of the hexaheder
+        centr.pos(i,:) = mean(hm.pos(hm.hex(i,:),:), 1);
+      end
+    else
+      ft_error('the headmodel does not contain tetraheders or hexaheders');
+    end
+
+    % copy the specified fields, fields that are specified but not present will be silently ignored
+    centr = copyfields(hm, centr, {'tissue', 'tissuelabel', 'unit', 'coordsys'});
