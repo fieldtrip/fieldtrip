@@ -706,25 +706,21 @@ if ~isempty(cfg.moveinward)
   end
 end
 
-if ~isempty(cfg.movetocentroid) && strcmp(cfg.movetocentroid, 'yes')
-    % 1. compute centroids
+if strcmp(cfg.movetocentroid, 'yes')
+    % compute centroids of the tetrahedral or hexahedral mesh
     centroids = compute_centroids(headmodel);
 
-    % 2. move the sourcemodel to the closest centroids
+    % move the dipole positions in the sourcemodel to the closest centroid
     grid_shifted = zeros(size(sourcemodel.pos));
     for i = 1:length(sourcemodel.pos)
-        [~, amin] = min(sum((sourcemodel.pos(i,:) - centroids.pos).^2,2));
+        [dum, amin] = min(sum((sourcemodel.pos(i,:) - centroids.pos).^2,2));
         grid_shifted(i,:) = centroids.pos(amin,:);
     end
-    % eliminate duplicates (if, e.g., cfg.resolution is smaller than the
-    % mesh resolution)
-    sourcemodel.pos = unique(grid_shifted,'rows','stable');
-    if isfield(sourcemodel,'dim')
-        sourcemodel = rmfield(sourcemodel,'dim');
-    end
-
-%     cfg.tight       = ft_getopt(cfg.sourcemodel, 'tight',       'no');
-
+    % eliminate duplicates, this applies for example if cfg.resolution is smaller than the mesh resolution
+    sourcemodel.pos = unique(grid_shifted, 'rows', 'stable');
+    
+    % the positions are not on a regular 3D grid any more, hence dim does not apply
+    sourcemodel = removefields(sourcemodel, {'dim'});
 end
 
 % determine the dipole locations that are inside the source compartment of the
@@ -734,6 +730,9 @@ if ~isfield(sourcemodel, 'inside')
 end
 
 if strcmp(cfg.tight, 'yes')
+  if ~isfield(sourcemodel, 'dim')
+    ft_error('tightgrid only works for positions on a regular 3D grid');
+  end
   fprintf('%d dipoles inside, %d dipoles outside brain\n', sum(sourcemodel.inside), sum(~sourcemodel.inside));
   fprintf('making tight grid\n');
   boolvol = reshape(sourcemodel.inside, sourcemodel.dim);
@@ -752,8 +751,8 @@ if strcmp(cfg.tight, 'yes')
   % update the grid locations that are marked as inside the brain
   sourcemodel.pos   = sourcemodel.pos(sel,:);
   sourcemodel.dim   = [sum(xsel) sum(ysel) sum(zsel)];
-  
 end
+
 fprintf('%d dipoles inside, %d dipoles outside brain\n', sum(sourcemodel.inside), sum(~sourcemodel.inside));
 
 % apply the symmetry constraint, i.e. add a symmetric dipole for each location that was defined sofar
@@ -790,9 +789,10 @@ ft_postamble provenance sourcemodel
 ft_postamble history    sourcemodel
 ft_postamble savevar    sourcemodel
 
-%--------------------------------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function for basedonmri method to determine the inside
 % returns a boolean vector
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function inside = getinside(pos, mask)
 
 % it might be that the box with the points does not completely fit into the
@@ -812,9 +812,10 @@ else
   end
 end
 
-%--------------------------------------------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function to return the fieldnames of the boolean fields in a
 % segmentation, should work both for volumetric and for source
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function fn = booleanfields(mri)
 
 fn = fieldnames(mri);
@@ -826,28 +827,29 @@ for i=1:numel(fn)
 end
 fn  = fn(isboolean);
 
-%helper function to compute the centroids of the elements of a volumetric
-%mesh
-function centr = compute_centroids(hm)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% helper function to compute the centroids of the elements of a volumetric mesh
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function centr = compute_centroids(headmodel)
     centr = [];
     % the FEM model should have tetraheders or hexaheders
-    if isfield(hm, 'tet')
-      numtet = size(hm.tet, 1);
+    if isfield(headmodel, 'tet')
+      numtet = size(headmodel.tet, 1);
       centr.pos = zeros(numtet, 3);
       for i=1:numtet
         % compute the mean of the 4 corner points of the tetraheder
-        centr.pos(i,:) = mean(hm.pos(hm.tet(i,:),:), 1);
+        centr.pos(i,:) = mean(headmodel.pos(hm.tet(i,:),:), 1);
       end
-    elseif isfield(hm, 'hex')
-      numhex = size(hm.hex, 1);
+    elseif isfield(headmodel, 'hex')
+      numhex = size(headmodel.hex, 1);
       centr.pos = zeros(numhex, 3);
       for i=1:numhex
         % compute the mean of the 8 corner points of the hexaheder
-        centr.pos(i,:) = mean(hm.pos(hm.hex(i,:),:), 1);
+        centr.pos(i,:) = mean(headmodel.pos(headmodel.hex(i,:),:), 1);
       end
     else
       ft_error('the headmodel does not contain tetraheders or hexaheders');
     end
 
     % copy the specified fields, fields that are specified but not present will be silently ignored
-    centr = copyfields(hm, centr, {'tissue', 'tissuelabel', 'unit', 'coordsys'});
+    centr = copyfields(headmodel, centr, {'tissue', 'tissuelabel', 'unit', 'coordsys'});
