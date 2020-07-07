@@ -151,7 +151,7 @@ filename = fetch_url(filename);
 % get the options
 hdr              = ft_getopt(varargin, 'header');
 detectflank      = ft_getopt(varargin, 'detectflank', 'up', true);   % note that emptymeaningful=true
-denoise          = ft_getopt(varargin, 'denoise',      true );
+denoise          = ft_getopt(varargin, 'denoise', []);
 trigshift        = ft_getopt(varargin, 'trigshift');                 % default is assigned in subfunction
 headerformat     = ft_getopt(varargin, 'headerformat');
 dataformat       = ft_getopt(varargin, 'dataformat');
