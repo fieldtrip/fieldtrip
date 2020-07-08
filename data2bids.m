@@ -66,10 +66,9 @@ function cfg = data2bids(cfg, varargin)
 % When specifying the output directory in cfg.bidsroot, you can also specify
 % additional information to be added as extra columns in the participants.tsv and
 % scans.tsv files. For example:
-%   cfg.participants.age         = scalar
-%   cfg.participants.sex         = string, 'm' or 'f'
+%   cfg.participants.age        = scalar
+%   cfg.participants.sex        = string, 'm' or 'f'
 %   cfg.scans.acq_time          = string, should be formatted according to  RFC3339 as '2019-05-22T15:13:38'
-%   cfg.dataset_description     = structure with additional fields, see below
 % In case any of these values is specified as empty (i.e. []) or as nan, it will be
 % written to the tsv file as 'n/a'.
 %
@@ -139,15 +138,16 @@ function cfg = data2bids(cfg, varargin)
 % There are more BIDS options for the mri/meg/eeg/ieeg data type specific sidecars.
 % Rather than listing them all here, please open this function in the MATLAB editor,
 % and scroll down a bit to see what those are. In general the information in the JSON
-% files is specified in CamelCase, whereas the information for TSV files is in
-% lowercase.
-%   cfg.mri.SomeOption              = string in CamelCase, please check the MATLAB code
-%   cfg.meg.SomeOption              = string in CamelCase, please check the MATLAB code
-%   cfg.eeg.SomeOption              = string in CamelCase, please check the MATLAB code
-%   cfg.ieeg.SomeOption             = string in CamelCase, please check the MATLAB code
-%   cfg.channels.someoption         = string in lowercase, please check the MATLAB code
-%   cfg.events.someoption           = string in lowercase, please check the MATLAB code
-%   cfg.coordsystem.someoption      = string in lowercase, please check the MATLAB code
+% files is specified by a field that is specified in CamelCase
+%   cfg.mri.SomeOption              = string, please check the MATLAB code
+%   cfg.meg.SomeOption              = string, please check the MATLAB code
+%   cfg.eeg.SomeOption              = string, please check the MATLAB code
+%   cfg.ieeg.SomeOption             = string, please check the MATLAB code
+%   cfg.coordsystem.someoption      = string, please check the MATLAB code
+% The information for TSV files is specified with a column header in lowercase or
+% snake_case and represents a list of items
+%   cfg.channels.someoption         = cell-array, please check the MATLAB code
+%   cfg.events.someoption           = cell-array, please check the MATLAB code
 %
 % The implementation in this function corresponds to BIDS version 1.2.0. See
 % https://bids-specification.readthedocs.io/ for the full specification and
