@@ -148,10 +148,10 @@ elseif isequal(regexp(ftpath, ['.*' filesep '[fF]ieldtrip-lite20[0-9]{6}']), 1)
   ftver = ftpath(end-7:end);
   
 else
-  % get it from the Contents.m file in the FieldTrip release
+  % get it from the Contents.m file in the FieldTrip directory
   if ~isdeployed
-       eval( 'a = ver(ftpath);');
-       ftver = a.Version;
+       tmp = ver(ftpath);
+       ftver = tmp.Version;
   else
        ftver = 'deployed';
   end
