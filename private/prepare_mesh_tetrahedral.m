@@ -62,16 +62,17 @@ if iscell(cfg.tissue)
 else
   % the code below assumes that it is an indexed representation
   mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
-  % combine all tissue types
-  seg = (mri.seg>0);
+  % keep the tissue types as they are
+  seg = mri.seg;
 end
 
 % this requires the external iso2mesh toolbox
 ft_hastoolbox('iso2mesh', 1);
 
-
-[node, elem, face] = vol2mesh(seg, 1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3), 2, 2, 0,'cgalsurf');
+[node, elem, face] = vol2mesh(seg, 1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3), 2, 2, 0, 'cgalsurf');
 
 mesh = keepfields(mri, {'coordsys', 'unit'});
 mesh.pos = ft_warp_apply(mri.transform, node);
-mesh.tet = elem(:,1:4);
+mesh.tet = elem(:,[1 2 4 3]); % re-order elements
+mesh.tissue = elem(:,5);
+mesh.tissuelabel = mri.seglabel;
