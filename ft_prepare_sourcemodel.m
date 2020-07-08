@@ -566,7 +566,7 @@ switch cfg.method
     % ensure that the headshape is in the same units as the source model
     headshape = ft_convert_units(headshape, cfg.unit);
     
-    % note that cfg.inwardshift should be expressed in the units consistent with cfg.unit
+    % note that cfg.inwardshift should be expressed in the units consistent with the data
     sourcemodel.pos     = headsurface([], [], 'headshape', headshape, 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);
     sourcemodel.tri     = headshape.tri;
     sourcemodel.unit    = headshape.unit;
