@@ -2,6 +2,7 @@ function test_old_connectivityanalysis
 
 % MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 
 % this script tests the functionality of connectivityanalysis

@@ -40,7 +40,7 @@ function dat = read_erplabdata(filename, varargin)
 if nargin < 1
   help read_erplabdata;
   return;
-end;
+end
 
 header    = ft_getopt(varargin, 'header');
 begsample = ft_getopt(varargin, 'begsample');
@@ -55,10 +55,10 @@ end
 
 dat = header.orig.bindata;
 
-if isempty(begtrial), begtrial = 1; end;
-if isempty(endtrial), endtrial = header.nTrials; end;
-if isempty(begsample), begsample = 1; end;
-if isempty(endsample), endsample = header.nSamples; end;
+if isempty(begtrial), begtrial = 1; end
+if isempty(endtrial), endtrial = header.nTrials; end
+if isempty(begsample), begsample = 1; end
+if isempty(endsample), endsample = header.nSamples; end
 dat = dat(:,begsample:endsample,begtrial:endtrial);
 
 if ~isempty(chanindx)

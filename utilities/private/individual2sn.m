@@ -38,7 +38,7 @@ function [warped]= individual2sn(P, input)
 % $Id$
 
 if isfield(P, 'Tr')
-  % this is an old-style representation of the parameters, 
+  % this is an old-style representation of the parameters,
   
   % check for a sufficiently recent version of SPM
   if ~ft_hastoolbox('spm')
@@ -145,7 +145,7 @@ else
     basX = spm_dctmtx(sn.VG(1).dim(1),st(1),x-1);
     basY = spm_dctmtx(sn.VG(1).dim(2),st(2),y-1);
     basZ = spm_dctmtx(sn.VG(1).dim(3),st(3),z-1);
-end,
+end
 
 Def = single(0);
 Def(numel(x),numel(y),numel(z)) = 0;
@@ -176,5 +176,5 @@ for j=1:length(z)
     Def{1}(:,:,j) = single(X2);
     Def{2}(:,:,j) = single(Y2);
     Def{3}(:,:,j) = single(Z2);
-end;
+end
 %_______________________________________________________________________

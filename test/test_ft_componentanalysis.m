@@ -2,6 +2,7 @@ function test_ft_componentanalysis(datainfo, writeflag, version)
 
 % MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 % ft_componentanalysis ref_datasets
 

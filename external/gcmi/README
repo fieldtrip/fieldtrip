@@ -1,0 +1,4 @@
+This version of the gcmi toolbox is a copy of Jan-Mathijs' fork, and contains
+the 'vec'-branch of Robin's gcmi, merged with 'master', version 0.3. The files
+from the matlab folder have been moved one level up, in order for ft_hastoolbox
+to automatically detect them, and deal with the path smoothly. 

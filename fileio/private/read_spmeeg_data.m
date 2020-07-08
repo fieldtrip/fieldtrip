@@ -23,7 +23,7 @@ function dat = read_spmeeg_data(filename, varargin)
 if nargin < 1
     help read_spmeeg_data;
     return;
-end;
+end
 
 typenames = {'uint8','int16','int32','float32','float64','int8','uint16','uint32'};
 typesizes   = [1  2  4  4 8 1 2 4];
@@ -37,8 +37,8 @@ if isempty(header)
     header = read_spmeeg_header([filename(1:(end-3)) 'mat']);
 end
 
-if isempty(begsample), begsample = 1; end;
-if isempty(endsample), endsample = header.nSamples; end;
+if isempty(begsample), begsample = 1; end
+if isempty(endsample), endsample = header.nSamples; end
 
 datatype = 'float32-le';
 scale = [];

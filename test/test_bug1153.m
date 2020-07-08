@@ -2,7 +2,6 @@ function test_bug1153
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_redefinetrial
 
 % problem: ft_redefinetrial loses the cfg in the output when specifying

@@ -157,7 +157,6 @@ cfg.colorbar       = ft_getopt(cfg, 'colorbar',      'yes');
 cfg.colorbartext   = ft_getopt(cfg, 'colorbartext',   '');
 cfg.interactive    = ft_getopt(cfg, 'interactive',   'yes');
 cfg.hotkeys        = ft_getopt(cfg, 'hotkeys',       'yes');
-cfg.renderer       = ft_getopt(cfg, 'renderer',       []); % let MATLAB decide on the default
 cfg.maskalpha      = ft_getopt(cfg, 'maskalpha',      1);
 cfg.maskparameter  = ft_getopt(cfg, 'maskparameter',  []);
 cfg.maskstyle      = ft_getopt(cfg, 'maskstyle',     'opacity');
@@ -167,6 +166,7 @@ cfg.masknans       = ft_getopt(cfg, 'masknans',      'yes');
 cfg.directionality = ft_getopt(cfg, 'directionality', []);
 cfg.figurename     = ft_getopt(cfg, 'figurename',     []);
 cfg.parameter      = ft_getopt(cfg, 'parameter',     'powspctrm');
+cfg.renderer       = ft_getopt(cfg, 'renderer',       []); % let MATLAB decide on the default
 
 % this is needed for the figure title
 if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
@@ -409,19 +409,16 @@ end
 
 % set colormap
 if isfield(cfg, 'colormap')
-  if ~isnumeric(cfg.colormap)
-    cfg.colormap = colormap(cfg.colormap);
+  if ischar(cfg.colormap)
+    cfg.colormap = ft_colormap(cfg.colormap);
+  elseif iscell(cfg.colormap)
+    cfg.colormap = ft_colormap(cfg.colormap{:});
   end
   if size(cfg.colormap,2)~=3
     ft_error('colormap must be a Nx3 matrix');
   else
     set(gcf, 'colormap', cfg.colormap);
   end
-end
-
-% Set renderer if specified
-if ~isempty(cfg.renderer)
-  set(gcf, 'renderer', cfg.renderer)
 end
 
 axis xy

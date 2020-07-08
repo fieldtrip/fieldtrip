@@ -42,9 +42,16 @@ if exist(outputFile)
 end
 
 mff_createmff(outputFile);
+if ~isfield(EEG.etc, 'recordingtime')
+    EEG.etc.recordingtime = now;
+    EEG.etc.timezone = '00:00';
+end
 mff_exportinfo(EEG, outputFile);
 mff_exportsubject(EEG, outputFile);
-mff_exportinfon(EEG, outputFile);
+mff_exportinfon(EEG, outputFile,1);
+if isfield(EEG.etc, 'info2')
+    mff_exportinfon(EEG, outputFile, 2);
+end
 mff_exportsignal(EEG, outputFile);
 indtle = mff_exportcategories(EEG, outputFile);
 EEG.event(indtle) = []; % remove time locking events
@@ -54,3 +61,4 @@ mff_exportsensorlayout(EEG, outputFile);
 mff_exportpnsset(EEG, outputFile);
 mff_exportepochs(EEG, outputFile);
 mff_exportsensorlayout(EEG, outputFile);
+disp('Done');

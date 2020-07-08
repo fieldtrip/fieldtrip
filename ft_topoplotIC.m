@@ -201,11 +201,6 @@ cfg = removefields(cfg, 'funcname');
 % show the callinfo for all components together
 cfg.showcallinfo = tmpshowcallinfo;
 
-% set renderer if specified
-if ~isempty(cfg.renderer)
-  set(gcf, 'renderer', cfg.renderer)
-end
-
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig

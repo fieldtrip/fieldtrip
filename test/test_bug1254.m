@@ -6,7 +6,6 @@ function test_bug1254
 % the bug has not been fixed yet, so there is no point in automatically
 % executing this test
 return
-
 % DEPENDENCY qsubcompile qsubcellfun
 
 dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');

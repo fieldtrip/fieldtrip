@@ -163,7 +163,7 @@ statmethod = ft_getuserfun(cfg.method, 'statistics');
 if isempty(statmethod)
   ft_error('could not find the corresponding function for cfg.method="%s"\n', cfg.method);
 else
-  fprintf('using "%s" for the statistical testing\n', func2str(statmethod));
+  ft_info('using "%s" for the statistical testing\n', func2str(statmethod));
 end
 
 % check that the design completely describes the data
@@ -206,6 +206,18 @@ end
 
 % the statistical output contains multiple elements, e.g. F-value, beta-weights and probability
 fn = fieldnames(stat);
+
+% JM HACK:
+if ~isequal(datsiz, cfg.dim),
+  % the cfg.dim has been updated by the low-level function, let this one
+  % take precedence
+  datsiz = cfg.dim;
+end
+if ~isequal(varargin{1}.label, cfg.channel)
+  % the cfg.channel has been updated by the low-level function, let this
+  % one take precedence
+  varargin{1}.label = cfg.channel;
+end
 
 for i=1:length(fn)
   if numel(stat.(fn{i}))==prod(datsiz)

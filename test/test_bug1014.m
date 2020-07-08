@@ -2,7 +2,6 @@ function test_bug1014
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_checkdata ft_appendtimelock ft_selectdata
 
 a.time   = [1 2];

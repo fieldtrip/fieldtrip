@@ -2,7 +2,7 @@ function peercompile(cc)
 
 % PEERCOMPILE  This script/function is used for compiling and linking the 'peer' MEX file.
 %
-% On Linux and MacOS X, you should just be able to call this function without arguments.
+% On Linux and macOS, you should just be able to call this function without arguments.
 %
 % On Windows, you need to select a compiler using one of the following options:
 %   compile('bcb')   - Borland C++ Builder
@@ -72,7 +72,7 @@ if ispc
             if strcmp(computer, 'PCWIN')
                 ldflags = '../pthreads-win32/lib/libpthreadGC2.a C:/mingw/lib/libws2_32.a';
             elseif strcmp(computer, 'PCWIN64')
-                ldflags = '../pthreads-win64/lib/libpthread.a C:/MinGW64/x86_64-w64-mingw32/lib/libws2_32.a';            
+                ldflags = '../pthreads-win64/lib/libpthread.a C:/MinGW64/x86_64-w64-mingw32/lib/libws2_32.a';
             end
         case 'VC'
             if strcmp(computer, 'PCWIN')
@@ -164,4 +164,3 @@ eval(cmd);
 
 % change back to the original directory
 cd(cwd);
-

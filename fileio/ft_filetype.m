@@ -67,8 +67,10 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - Qualisys *.tsv
 %  - Mrtrix *.mif
 %  - MAUS *.TextGrid
+%  - Neurodata Without Borders *.nwb
+%  - PhysioNet *.hea and *.dat
 
-% Copyright (C) 2003-2019 Robert Oostenveld
+% Copyright (C) 2003-2020, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -648,7 +650,7 @@ elseif strcmpi(f, 'logfile') && strcmpi(x, '.txt')  % case insensitive
   type = 'neuralynx_log';
   manufacturer = 'Neuralynx';
   content = 'log information in ASCII format';
-elseif ~isempty(strfind(lower(f), 'dma')) && strcmpi(x, '.log')  % this is not a very strong detection
+elseif contains(lower(f), 'dma') && strcmpi(x, '.log')  % this is not a very strong detection
   type = 'neuralynx_dma';
   manufacturer = 'Neuralynx';
   content = 'raw aplifier data directly from DMA';
@@ -754,6 +756,10 @@ elseif isfolder(filename) && most(filetype_check_extension({ls.name}, '.nex')) &
   type = 'plexon_ds';
   manufacturer = 'Plexon';
   content = 'electrophysiological data';
+elseif filetype_check_extension(filename, '.nex5')  && filetype_check_header(filename, 'NEX5')
+  type = 'plexon_nex5';
+  manufacturer = 'Nex Technologies';
+  content = 'electrophysiological data';  
   
   % known Cambridge Electronic Design file types
 elseif filetype_check_extension(filename, '.smr')
@@ -1199,6 +1205,26 @@ elseif filetype_check_extension(filename, '.minf') && filetype_check_ascii(filen
   manufacturer = 'BrainVISA';
   content = 'annotation/metadata';
   
+  % known Multiscale Electrophysiology Format (or Mayo EEG File, MEF)
+  % MEF 2.1, see: https://github.com/benbrinkmann/mef_lib_2_1
+  % MEF 3.0, see: https://msel.mayo.edu/codes.html
+elseif isfolder(filename) && any(filetype_check_extension(filename, {'.mefd', '.timd', '.segd'}))
+  type = 'mayo_mef30';
+  manufacturer = 'Mayo Clinic';
+  content = 'Multiscale Electrophysiology Format 3.0';
+elseif isfile(filename) && any(filetype_check_extension(filename, {'.tdat', '.tidx', '.tmet'})) && filetype_check_header(filename, uint8(3), 13) && filetype_check_header(filename, uint8(0), 14) 
+  type = 'mayo_mef30';
+  manufacturer = 'Mayo Clinic';
+  content = 'Multiscale Electrophysiology Format 3.0';
+elseif isfolder(filename) && any(endsWith({ls.name}, '.mef'))
+  type = 'mayo_mef21';
+  manufacturer = 'Mayo Clinic';
+  content = 'Multiscale Electrophysiology Format 2.1';
+elseif isfile(filename) && filetype_check_extension(filename, '.mef') && filetype_check_header(filename, uint8(2), 164) && filetype_check_header(filename, uint8(1), 165)
+  type = 'mayo_mef21';
+  manufacturer = 'Mayo Clinic';
+  content = 'Multiscale Electrophysiology Format 2.1';
+  
   % some other known file types
 elseif filetype_check_extension(filename, '.hdf5')
   type = 'gtec_hdf5';
@@ -1278,6 +1304,10 @@ elseif filetype_check_extension(filename, '.txt') && filetype_check_header(filen
   type = 'opensignals_txt';
   manufacturer = 'Bitalino';
   content = '';
+elseif filetype_check_extension(filename, '.txt') && filetype_check_header(filename, '%OpenBCI')
+  type = 'openbci_txt';
+  manufacturer = 'OpenBCI';
+  content = 'raw EEG data';
 elseif filetype_check_extension(filename, '.txt')
   type = 'ascii_txt';
   manufacturer = '';
@@ -1425,6 +1455,10 @@ elseif filetype_check_extension(filename, '.c3d') && filetype_check_header(filen
   type = 'motion_c3d';
   manufacturer = 'https://www.c3d.org';
   content = 'motion capture data';
+elseif filetype_check_extension(filename, '.mvnx') && filetype_check_header(filename, '<?xml')
+    type = 'xsens_mvnx';
+    manufacturer = 'https://www.xsens.com/motion-capture';
+    content = 'motion capture data';
 elseif filetype_check_extension(filename, '.mif')
   % this could be a mrtrix compatible image file
   type = 'mrtrix_mif';
@@ -1452,6 +1486,23 @@ elseif filetype_check_extension(filename, '.TextGrid')
   type = 'maus_textgrid';
   manufacturer = 'MAUS/WebMAUS';
   content = 'segmented text';
+elseif filetype_check_extension(filename, '.fcsv')
+  type = '3dslicer_fscv';
+  manufacturer = 'https://www.slicer.org/';
+  content = 'position information about Markups Fiducial Node';
+elseif filetype_check_extension(filename, '.nwb')
+  % this could be a mrtrix compatible image file
+  type = 'nwb';
+  manufacturer = 'Neurodata Without Borders';
+  content = 'neurophysiology data';
+elseif filetype_check_extension(filename, '.hea') && exist(fullfile(p, [f '.dat']), 'file')
+  type = 'physionet_hea';
+  manufacturer = 'PhysioNet';
+  content = 'continuous physiological signals';
+elseif filetype_check_extension(filename, '.dat') && exist(fullfile(p, [f '.hea']), 'file')
+  type = 'physionet_dat';
+  manufacturer = 'PhysioNet';
+  content = 'continuous physiological signals';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

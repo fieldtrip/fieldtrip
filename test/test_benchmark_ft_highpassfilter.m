@@ -2,6 +2,7 @@ function test_benchmark_ft_highpassfilter
 
 % MEM 1gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % these are the data specific parameters

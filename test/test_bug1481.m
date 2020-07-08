@@ -2,7 +2,6 @@ function test_bug1481
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_componentanalysis ft_rejectcomponent ft_apply_montage
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/preproc_brainvision.mat'));

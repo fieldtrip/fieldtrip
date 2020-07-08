@@ -2,9 +2,7 @@ function test_ft_electroderealign
 
 % MEM 3gb
 % WALLTIME 00:10:00
-
-% DEPENDENCY ft_electroderealign
-% DEPENDENCY ft_read_mri ft_read_sens ft_prepare_mesh ft_warp_apply
+% DEPENDENCY ft_electroderealign ft_read_mri ft_read_sens ft_prepare_mesh ft_warp_apply
 
 %% load mri, segmentation and electrode definition
 mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri'));

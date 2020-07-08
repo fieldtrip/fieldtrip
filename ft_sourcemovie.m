@@ -1,16 +1,16 @@
 function [cfg, M] = ft_sourcemovie(cfg, source, source2)
 
 % FT_SOURCEMOVIE displays the source reconstruction on a cortical mesh
-% and allows the user to scroll through time with a movie. 
+% and allows the user to scroll through time with a movie.
 %
 % Use as
 %   ft_sourcemovie(cfg, source)
-% where the input source data is obtained from FT_SOURCEANALYSIS, or a 
-% a parcellated source structure (i.e. contains a brainordinate field) and 
+% where the input source data is obtained from FT_SOURCEANALYSIS, or a
+% a parcellated source structure (i.e. contains a brainordinate field) and
 % cfg is a configuration structure that should contain
 %
-%  cfg.funparameter    = string, functional parameter that is color coded (default = 'avg.pow')
-%  cfg.maskparameter   = string, functional parameter that is used for opacity (default = [])
+%   cfg.funparameter    = string, functional parameter that is color coded (default = 'avg.pow')
+%   cfg.maskparameter   = string, functional parameter that is used for opacity (default = [])
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -75,7 +75,7 @@ if nargin==2
 elseif nargin>2 && isfield(source2, 'pos')
   % in this case two conditions of data seem to have been inputted
   fun  = getsubfield(source, cfg.funparameter); % might be avg.pow
-  fun2 = getsubfield(source2, cfg.funparameter); 
+  fun2 = getsubfield(source2, cfg.funparameter);
 elseif nargin>2
   % assume the first data argument to be a parcellation, and the second a
   % parcellated structure
@@ -144,7 +144,7 @@ xparam  = xparam(xbeg:xend);
 yparam  = yparam(ybeg:yend);
 fun     = fun(:,xbeg:xend,ybeg:yend);
 if exist('fun2', 'var')
-  fun2 = fun2(:,xbeg:xend,ybeg:yend); 
+  fun2 = fun2(:,xbeg:xend,ybeg:yend);
 end
 mask    = mask(:,xbeg:xend,ybeg:yend);
 clear xbeg xend ybeg yend
@@ -202,7 +202,7 @@ set(h, 'toolbar', 'figure');
 set(h, 'visible', 'on');
 set(h, 'CloseRequestFcn', @cb_quitbutton);
 set(h, 'position', [100 50 1000 600]);
-set(h, 'windowbuttondownfcn', @cb_getposition); 
+set(h, 'windowbuttondownfcn', @cb_getposition);
 
 % get timer object
 t = timer;
@@ -295,7 +295,7 @@ if ~hasyparam
   end
   
 else
-  error('not yet implemented');  
+  error('not yet implemented');
 end
 set(hy, 'tag', 'timecourse');
 
@@ -308,7 +308,7 @@ opt.cam = [cam1 cam2]; % handles to the light objects
 opt.vline = vline; % handle to the vertical line in the ERF plot
 opt.tline = tline; % handle to the ERF
 if nargin>2 && isfield(source2, 'pos')
-  opt.tline2 = tline2; 
+  opt.tline2 = tline2;
 end
 opt.hline1 = hline1; % handle for the horizontal line for upper threshold
 opt.hline2 = hline2; % handle for hte horizontal line for lower threshold
@@ -395,7 +395,7 @@ if previous_valx~=valx || previous_valy~=valy || ~isequal(previous_clim, opt.cfg
   
   % convert the color-data + opacity into rgb for robust rendering
   bgcolor = repmat([0.5 0.5 0.5], [numel(mask) 1]);
-  rgb     = bg_rgba2rgb(bgcolor, dat, opt.cfg.funcolormap, opt.cfg.funcolorlim, mask, 'rampup', opt.cfg.opacitylim); 
+  rgb     = bg_rgba2rgb(bgcolor, dat, opt.cfg.funcolormap, opt.cfg.funcolorlim, mask, 'rampup', opt.cfg.opacitylim);
   
   % update data in mesh
   set(opt.hs, 'FaceVertexCData', rgb, 'facecolor', 'interp');
@@ -519,7 +519,7 @@ opt = getappdata(h, 'opt');
 if strcmp(get(get(h, 'currentaxes'), 'tag'), 'timecourse')
   % get the current point
   %pos = get(opt.hy, 'currentpoint');
-  %set(opt.sliderx, 'value', nearest(opt.xparam, pos(1)));  
+  %set(opt.sliderx, 'value', nearest(opt.xparam, pos(1)));
 elseif strcmp(get(get(h, 'currentaxes'), 'tag'), 'mesh')
   % get the current point, which is defined as the intersection through the
   % axis-box (in 3D)
@@ -678,7 +678,7 @@ switch key
       for k = 1:numel(tok)
         opt.threshold(1,k) = str2double(tok{k});
       end
-      setappdata(h, 'opt', opt);      
+      setappdata(h, 'opt', opt);
     end
     set(opt.hline1, 'YData', [1 1].*opt.threshold(2));
     set(opt.hline2, 'YData', [1 1].*opt.threshold(1));
@@ -716,4 +716,3 @@ while p~=0
   h = p;
   p = get(h, 'parent');
 end
-

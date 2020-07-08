@@ -109,7 +109,7 @@ void *tcpsocket(void *arg) {
 		pthread_mutex_unlock(&mutexjoblist);
 
 		pthread_mutex_lock(&mutexhost);
-		if (host->status==STATUS_MASTER) {
+		if (host->status==STATUS_CONTROLLER) {
 				connect_accept = 1;
 		}
 		else if (host->status==STATUS_IDLE && jobcount==0) {

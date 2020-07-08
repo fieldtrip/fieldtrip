@@ -2,7 +2,6 @@ function test_spm_ft_integration
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_prepare_layout ft_prepare_headmodel ft_compute_leadfield ft_prepare_vol_sens
 
 load test_spm_ft_integration.mat

@@ -4,8 +4,9 @@ function [sens] = ft_read_sens(filename, varargin)
 % further down for the list of file types that are supported.
 %
 % Use as
-%   grad = ft_read_sens(filename, ...)  % for gradiometers
-%   elec = ft_read_sens(filename, ...)  % for electrodes
+%   elec = ft_read_sens(filename, 'senstype', 'eeg', ...)  % for EEG electrodes
+%   grad = ft_read_sens(filename, 'senstype', 'meg', ...)  % for MEG gradiometers
+%   opto = ft_read_sens(filename, 'senstype', 'nirs', ...) % for NIRS optodes
 %
 % Additional options should be specified in key-value pairs and can be
 %   'fileformat'     = string, see the list of supported file formats (the default is determined automatically)
@@ -50,7 +51,7 @@ filename = fetch_url(filename);
 
 % get the options
 fileformat     = ft_getopt(varargin, 'fileformat', ft_filetype(filename));
-senstype       = ft_getopt(varargin, 'senstype');         % can be eeg or meg, default is automatic when []
+senstype       = ft_getopt(varargin, 'senstype');         % can be eeg/meg/nirs, default is automatic and eeg when both meg+eeg are present
 coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
 coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0 to 2
 
@@ -158,7 +159,7 @@ switch fileformat
     end
     sens.label   = sens.label(sel);
     sens.elecpos = sens.elecpos(sel,:);
-
+  
   case 'besa_sfp'
     [lab, pos] = read_besa_sfp(filename);
     sens.label   = lab;
@@ -458,6 +459,12 @@ switch fileformat
     % it would be possible to use coil_def.dat to construct the coil positions
     sens.label = label;
     sens.chanpos = [x y z];
+    
+  case '3dslicer_fscv'
+    csvData = readtable(filename,'FileType','text');
+    sens.label = csvData.label;
+    sens.elecpos = [csvData.x,csvData.y,csvData.z];
+
 
   otherwise
     ft_error('unknown fileformat for electrodes or gradiometers');

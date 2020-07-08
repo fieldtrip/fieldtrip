@@ -2,7 +2,6 @@ function test_bug996
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_multiplotER ft_singleplotER
 
 % function to reproduce bug 996 and test the fix

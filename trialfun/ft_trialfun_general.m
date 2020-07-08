@@ -10,6 +10,13 @@ function [trl, event] = ft_trialfun_general(cfg)
 %   cfg.trialdef.prestim    = latency in seconds (optional)
 %   cfg.trialdef.poststim   = latency in seconds (optional)
 %
+% You can specify these options that are passed to FT_READ_EVENT for trigger detection
+%   cfg.trialdef.detectflank    string, can be 'bit', 'up', 'down', 'both', 'peak' or 'trough'
+%   cfg.trialdef.trigshift      integer, number of samples to shift from flank to detect trigger value 
+%   cfg.trialdef.chanindx       list with channel numbers for the trigger detection, specify -1 in case you don't want to detect triggers
+%   cfg.trialdef.threshold      threshold for analog trigger channels
+%   cfg.trialdef.tolerance      tolerance in samples when merging analogue trigger channels, only for Neuromag
+%
 % If you want to read all data from a continuous file in segments, you can specify
 %    cfg.trialdef.triallength = duration in seconds (can be Inf)
 %    cfg.trialdef.ntrials     = number of trials
@@ -22,9 +29,9 @@ function [trl, event] = ft_trialfun_general(cfg)
 %   cfg.trialdef.eventtype = 'gui'
 % a graphical user interface will allow you to select events of interest.
 %
-% See also FT_DEFINETRIAL, FT_PREPROCESSING
+% See also FT_DEFINETRIAL, FT_PREPROCESSING, FT_READ_EVENT
 
-% Copyright (C) 2005-2018, Robert Oostenveld
+% Copyright (C) 2005-2020, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -57,9 +64,7 @@ if isfield(cfg.trialdef, 'ntrials')     && isempty(cfg.trialdef.ntrials      ), 
 
 if isfield(cfg.trialdef, 'triallength')
   % reading all segments from a continuous file is incompatible with any other option
-  try, cfg.trialdef = rmfield(cfg.trialdef, 'eventvalue'); end
-  try, cfg.trialdef = rmfield(cfg.trialdef, 'prestim'   ); end
-  try, cfg.trialdef = rmfield(cfg.trialdef, 'poststim'  ); end
+  cfg.trialdef = removefields(cfg.trialdef, {'eventvalue', 'prestim', 'poststim'});
   if ~isfield(cfg.trialdef, 'ntrials')
     if isinf(cfg.trialdef.triallength)
       cfg.trialdef.ntrials = 1;
@@ -69,10 +74,17 @@ if isfield(cfg.trialdef, 'triallength')
   end
 end
 
-% default file formats
+% default file formats and chanindx for trigger detection
 cfg.eventformat   = ft_getopt(cfg, 'eventformat');
 cfg.headerformat  = ft_getopt(cfg, 'headerformat');
 cfg.dataformat    = ft_getopt(cfg, 'dataformat');
+
+% these options get passed to FT_READ_EVENT
+cfg.trialdef.detectflank = ft_getopt(cfg.trialdef, 'detectflank');
+cfg.trialdef.trigshift   = ft_getopt(cfg.trialdef, 'trigshift');
+cfg.trialdef.chanindx    = ft_getopt(cfg.trialdef, 'chanindx');
+cfg.trialdef.threshold   = ft_getopt(cfg.trialdef, 'threshold');
+cfg.trialdef.tolerance   = ft_getopt(cfg.trialdef, 'tolerance');
 
 % get the header, among others for the sampling frequency
 if isfield(cfg, 'hdr')
@@ -90,7 +102,7 @@ if isfield(cfg, 'event')
   event = cfg.event;
 else
   ft_info('reading the events from ''%s''\n', cfg.headerfile);
-  event = ft_read_event(cfg.headerfile, 'headerformat', cfg.headerformat, 'eventformat', cfg.eventformat, 'dataformat', cfg.dataformat);
+  event = ft_read_event(cfg.headerfile, 'headerformat', cfg.headerformat, 'eventformat', cfg.eventformat, 'dataformat', cfg.dataformat,  'detectflank', cfg.trialdef.detectflank, 'trigshift', cfg.trialdef.trigshift, 'chanindx', cfg.trialdef.chanindx, 'threshold', cfg.trialdef.threshold, 'tolerance', cfg.trialdef.tolerance);
 end
 
 % for the following, the trials do not depend on the events in the data

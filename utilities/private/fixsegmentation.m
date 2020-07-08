@@ -9,17 +9,19 @@ switch style
   case 'indexed'
     
     for i=1:length(fn)
-      indexval = unique(segmentation.(fn{i})(:));  % find the unique tissue types
-      indexval = indexval(indexval~=0&isfinite(indexval));            % these are the only ones that matter
+      indexval = unique(segmentation.(fn{i})(:));           % find the unique tissue types
+      indexval = indexval(indexval~=0&isfinite(indexval));  % these are the only ones that matter
       
       if any(indexval<0)
         ft_error('an indexed representation cannot contain negative numbers');
       end
       
       if ~isfield(segmentation, [fn{i} 'label'])
+        ft_warning('creating default labels for "%s"', fn{i});
         % ensure that the tissues have labels
         indexlabel = cell(size(indexval));
         for j=1:length(indexval)
+          % this is consistent with FT_READ_ATLAS
           indexlabel{indexval(j)} = sprintf('tissue %d', indexval(j));
         end
         segmentation.([fn{i} 'label']) = indexlabel;

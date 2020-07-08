@@ -174,7 +174,6 @@ cfg.fontsize        = ft_getopt(cfg, 'fontsize',       8);
 cfg.interpreter     = ft_getopt(cfg, 'interpreter', 'none');  % none, tex or latex
 cfg.hotkeys         = ft_getopt(cfg, 'hotkeys',       'yes');
 cfg.interactive     = ft_getopt(cfg, 'interactive',   'yes');
-cfg.renderer        = ft_getopt(cfg, 'renderer',       []); % let MATLAB decide on the default
 cfg.maskparameter   = ft_getopt(cfg, 'maskparameter',  []);
 cfg.colorgroups     = ft_getopt(cfg, 'colorgroups',   'condition'); % this is the only supported option
 cfg.linecolor       = ft_getopt(cfg, 'linecolor',     'brgkywrgbkywrgbkywrgbkyw');
@@ -190,6 +189,7 @@ cfg.preproc         = ft_getopt(cfg, 'preproc',        []);
 cfg.frequency       = ft_getopt(cfg, 'frequency',     'all'); % needed for frequency selection with TFR data
 cfg.latency         = ft_getopt(cfg, 'latency',       'all'); % needed for latency selection with TFR data, FIXME, probably not used
 cfg.showlegend      = ft_getopt(cfg, 'showlegend',    'no');
+cfg.renderer        = ft_getopt(cfg, 'renderer',       []); % let MATLAB decide on the default
 
 % check for linestyle being a cell-array
 if ischar(cfg.linestyle)
@@ -403,8 +403,8 @@ xval = varargin{1}.(xparam)(selx);
 % get physical y-axis range, i.e. parameter to be plotted
 if ~isnumeric(cfg.ylim)
   % find maxmin throughout all varargins
-  ymin = [];
-  ymax = [];
+  ymin = +inf;
+  ymax = -inf;
   for i=1:Ndata
     % select the channels in the data that match with the layout and that are selected for plotting
     switch cfg.viewmode
@@ -413,16 +413,21 @@ if ~isnumeric(cfg.ylim)
       case 'butterfly'
         dat = varargin{i}.(cfg.parameter)(selchan,selx);
     end
-    ymin = nanmin([ymin nanmin(nanmin(nanmin(dat(:))))]);
-    ymax = nanmax([ymax nanmax(nanmax(nanmax(dat(:))))]);
+    ymin = min(ymin, min(dat(:)));
+    ymax = max(ymax, max(dat(:)));
   end
-  if strcmp(cfg.ylim, 'maxabs') % handle maxabs, make y-axis center on 0
-    ymax = max([abs(ymax) abs(ymin)]);
-    ymin = -ymax;
-  elseif strcmp(cfg.ylim, 'zeromax')
-    ymin = 0;
-  elseif strcmp(cfg.ylim, 'minzero')
-    ymax = 0;
+  switch cfg.ylim
+    case 'maxmin'
+      % keep them as they are
+    case 'maxabs'
+      ymax = max(abs(ymax), abs(ymin));
+      ymin = -ymax;
+    case 'zeromax'
+      ymin = 0;
+    case 'minzero'
+      ymax = 0;
+    otherwise
+      ft_error('invalid specification of cfg.ylim');
   end
 else
   ymin = cfg.ylim(1);
@@ -556,11 +561,6 @@ if strcmp(cfg.interactive, 'yes')
   set(gcf, 'windowbuttonupfcn',     {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttonupfcn'});
   set(gcf, 'windowbuttondownfcn',   {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttondownfcn'});
   set(gcf, 'windowbuttonmotionfcn', {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttonmotionfcn'});
-end
-
-% set renderer if specified
-if ~isempty(cfg.renderer)
-  set(gcf, 'renderer', cfg.renderer)
 end
 
 hold off

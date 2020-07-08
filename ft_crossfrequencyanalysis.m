@@ -124,7 +124,7 @@ switch cfg.method
 
   case 'coh'
     % coherence
-    cohdatas = zeros(ntrial,nchan,numel(LF),numel(HF)) ;
+    cohdatas = zeros(ntrial,nchan,numel(LF),numel(HF));
     for  i =1:nchan
       chandataLF = freqlow.fourierspctrm(:,i,:,:);
       chandataHF = freqhigh.fourierspctrm(:,i,:,:);
@@ -136,7 +136,7 @@ switch cfg.method
 
   case 'plv'
     % phase locking value
-    plvdatas = zeros(ntrial,nchan,numel(LF),numel(HF)) ;
+    plvdatas = zeros(ntrial,nchan,numel(LF),numel(HF));
     for  i =1:nchan
       chandataLF = freqlow.fourierspctrm(:,i,:,:);
       chandataHF = freqhigh.fourierspctrm(:,i,:,:);
@@ -161,7 +161,7 @@ switch cfg.method
   case  'mi'
     % modulation index
     nbin       = 20; % number of phase bin
-    pacdatas   = zeros(ntrial,nchan,numel(LF),numel(HF),nbin) ;
+    pacdatas   = zeros(ntrial,nchan,numel(LF),numel(HF),nbin);
     for  i =1:nchan
       chandataLF = freqlow.fourierspctrm(:,i,:,:);
       chandataHF = freqhigh.fourierspctrm(:,i,:,:);

@@ -50,10 +50,10 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %   See https://github.com/treder/MVPA-Light for an overview of all
 %   classifiers and metrics.
 %
-%   cfg.mvpa.param           = struct, structure with hyperparameters for the
+%   cfg.mvpa.param      = struct, structure with hyperparameters for the
 %                         classifier (see HYPERPARAMETERS below)
 %
-%   cfg.mvpa.balance         = string, for imbalanced data that does not have
+%   cfg.mvpa.balance    = string, for imbalanced data that does not have
 %                         the same number of instances in each class
 %                         'oversample'     oversamples the minority classes
 %                         'undersample'    undersamples the minority classes
@@ -66,26 +66,26 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %                         concurrent over/undersampling (oversampling of the
 %                         smaller class, undersampling of the larger class) is not
 %                         supported at the moment
-%  cfg.mvpa.replace          = bool, if balance is set to 'oversample' or 'undersample',
+%   cfg.mvpa.replace    = bool, if balance is set to 'oversample' or 'undersample',
 %                         replace determines whether data is drawn with
 %                         replacement (default 1)
-%  cfg.mvpa.normalise        = string, normalises the data across samples, for each time point
+%   cfg.mvpa.normalise  = string, normalises the data across samples, for each time point
 %                         and each feature separately, using 'zscore' or 'demean'
 %                         (default 'zscore'). Set to 'none' or [] to avoid normalisation.
-%  cfg.mvpa.feedback         = 'yes' or 'no', whether or not to print feedback on the console (default 'yes')
+%   cfg.mvpa.feedback   = 'yes' or 'no', whether or not to print feedback on the console (default 'yes')
 %
 % To obtain a realistic estimate of classification performance,
 % cross-validation is used. It is controlled by the following parameters:
-%   cfg.mvpa.cv              = string, cross-validation type, either 'kfold', 'leaveout'
+%   cfg.mvpa.cv         = string, cross-validation type, either 'kfold', 'leaveout'
 %                         or 'holdout'. If 'none', no cross-validation is
 %                         used and the classifier is tested on the training
 %                         set. (default 'kfold')
-%   cfg.mvpa.k               = number of folds in k-fold cross-validation (default 5)
-%   cfg.mvpa.repeat          = number of times the cross-validation is repeated
+%   cfg.mvpa.k          = number of folds in k-fold cross-validation (default 5)
+%   cfg.mvpa.repeat     = number of times the cross-validation is repeated
 %                         with new randomly assigned folds (default 5)
-%   cfg.mvpa.p               = if cfg.cv is 'holdout', p is the fraction of test
+%   cfg.mvpa.p          = if cfg.cv is 'holdout', p is the fraction of test
 %                         samples (default 0.1)
-%   cfg.mvpa.stratify        = if 1, the class proportions are approximately
+%   cfg.mvpa.stratify   = if 1, the class proportions are approximately
 %                         preserved in each test fold (default 1)
 %
 %
@@ -108,32 +108,32 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 % each feature separately. However, neighbouring features can enter the
 % classification together when specified. Optional parameters:
 %
-% cfg.mvpa.neighbours   = neighbourhood structure, see FT_PREPARE_NEIGHBOURS
-%                         Alternatively, a [features x features] matrix specifying
-%                         which features are neighbours of each other. This
-%                         matrix can be either
-%                         a GRAPH consisting of 0's and 1's. A 1 in the
-%                         (i,j)-th element signifies that feature i and feature j
-%                         are neighbours, and a 0 means they are not neighbours
-%                         or a DISTANCE MATRIX, where larger values mean larger distance.
-%                         If no matrix is provided, every feature is only neighbour
-%                         to itself and classification is performed for each feature
-%                         separately.
-% cfg.mvpa.size         = size of the 'neighbourhood' of a feature.
-%                         number of steps taken through the neighbourhood
-%                         to include neighbours
-%                         0: only the feature itself is considered (no neighbours)
-%                         1: the feature and its immediate neighbours
-%                         2: the feature, its neighbours, and its neighbours'
-%                         neighbours
-%                         3+: neighbours of neighbours of neighbours etc
-%                         (default 1)
-%                         if cfg.neighbours is a distance matrix, size defines the number of
-%                         neighbouring features that enter the classification
-%                         0: only the feature itself is considered (no neighbours)
-%                         1: the feature and its first closest neighbour
-%                            according to the distance matrix
-%                         2+: the 2 closest neighbours etc.
+%   cfg.mvpa.neighbours   = neighbourhood structure, see FT_PREPARE_NEIGHBOURS
+%                           Alternatively, a [features x features] matrix specifying
+%                           which features are neighbours of each other. This
+%                           matrix can be either
+%                           a GRAPH consisting of 0's and 1's. A 1 in the
+%                           (i,j)-th element signifies that feature i and feature j
+%                           are neighbours, and a 0 means they are not neighbours
+%                           or a DISTANCE MATRIX, where larger values mean larger distance.
+%                           If no matrix is provided, every feature is only neighbour
+%                           to itself and classification is performed for each feature
+%                           separately.
+%   cfg.mvpa.size         = size of the 'neighbourhood' of a feature.
+%                           number of steps taken through the neighbourhood
+%                           to include neighbours
+%                           0: only the feature itself is considered (no neighbours)
+%                           1: the feature and its immediate neighbours
+%                           2: the feature, its neighbours, and its neighbours'
+%                           neighbours
+%                           3+: neighbours of neighbours of neighbours etc
+%                           (default 1)
+%                           if cfg.neighbours is a distance matrix, size defines the number of
+%                           neighbouring features that enter the classification
+%                           0: only the feature itself is considered (no neighbours)
+%                           1: the feature and its first closest neighbour
+%                              according to the distance matrix
+%                           2+: the 2 closest neighbours etc.
 %
 % -- TODO: for time x time generalisation, in MVPA light we can use two
 % different datasets (one for training the classifier, the other one for

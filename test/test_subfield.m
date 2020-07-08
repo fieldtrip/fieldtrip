@@ -2,7 +2,6 @@ function test_subfield
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY issubfield getsubfield setsubfield
 
 a.b.c = 1;

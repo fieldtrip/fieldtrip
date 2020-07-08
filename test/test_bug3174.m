@@ -2,7 +2,6 @@ function test_bug3174
 
 % WALLTIME 00:20:00
 % MEM 3gb
-
 % DEPENDENCY ft_volumerealign
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3174.mat'));
