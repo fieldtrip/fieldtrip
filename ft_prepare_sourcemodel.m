@@ -66,18 +66,20 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 %   cfg.headmodel.type = 'simbio';
 %
 % Other configuration options include
-%   cfg.unit          = string, can be 'mm', 'cm', 'm' (default is automatic)
-%   cfg.tight         = 'yes' or 'no' (default is automatic)
-%   cfg.inwardshift   = number, how much should the innermost surface be moved inward to constrain
-%                       sources to be considered inside the source compartment (default = 0)
-%   cfg.moveinward    = number, move dipoles inward to ensure a certain distance to the innermost
-%                       surface of the source compartment (default = 0)
-%   cfg.spherify      = 'yes' or 'no', scale the source model so that it fits inside a sperical
-%                       volume conduction model (default = 'no')
-%   cfg.symmetry      = 'x', 'y' or 'z' symmetry for two dipoles, can be empty (default = [])
-%   cfg.headshape     = a filename for the headshape, a structure containing a single surface,
-%                       or a Nx3 matrix with headshape surface points (default = [])
-%   cfg.spmversion    = string, 'spm2', 'spm8', 'spm12' (default = 'spm12')
+%   cfg.unit            = string, can be 'mm', 'cm', 'm' (default is automatic)
+%   cfg.tight           = 'yes' or 'no' (default is automatic)
+%   cfg.inwardshift     = number, how much should the innermost surface be moved inward to constrain
+%                         sources to be considered inside the source compartment (default = 0)
+%   cfg.moveinward      = number, move dipoles inward to ensure a certain distance to the innermost
+%                         surface of the source compartment (default = 0)
+%   cfg.movetocentroids = 'yes' or 'no', move the dipoles to the centroids of the hexahedral 
+%                         or tetrahedral mesh (default = 'no')
+%   cfg.spherify        = 'yes' or 'no', scale the source model so that it fits inside a sperical
+%                         volume conduction model (default = 'no')
+%   cfg.symmetry        = 'x', 'y' or 'z' symmetry for two dipoles, can be empty (default = [])
+%   cfg.headshape       = a filename for the headshape, a structure containing a single surface,
+%                         or a Nx3 matrix with headshape surface points (default = [])
+%   cfg.spmversion      = string, 'spm2', 'spm8', 'spm12' (default = 'spm12')
 %
 % The EEG or MEG sensor positions can be present in the data or can be specified as
 %   cfg.elec          = structure with electrode positions or filename, see FT_READ_SENS
@@ -140,8 +142,8 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'unit', 'auto', []});
 cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'});  % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
 cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.unit by the subsequent createsubcfg
 cfg = ft_checkconfig(cfg, 'allowedval', {'method', 'basedongrid', 'basedonpos', 'basedonshape', ...
-        'basedonmri', 'basedonmni', 'basedoncortex', 'basedonresolution', 'basedonvol', 'basedonfile','basedoncentroids'});
-        
+  'basedonmri', 'basedonmni', 'basedoncortex', 'basedonresolution', 'basedonvol', 'basedonfile','basedoncentroids'});
+
 % put the low-level options pertaining to the sourcemodel in their own field
 cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
 % move some fields from cfg.sourcemodel back to the top-level configuration
@@ -211,7 +213,7 @@ switch cfg.method
     fprintf('reading sourcemodel from file\n');
     cfg.tight       = ft_getopt(cfg, 'tight',   'no');
     cfg.inwardshift = ft_getopt(cfg, 'inwardshift', 0); % in this case for inside detection
-
+    
   case 'basedonresolution'
     fprintf('creating sourcemodel based on automatic 3D grid with specified resolution\n');
     cfg.xgrid       = ft_getopt(cfg, 'xgrid',  'auto');
@@ -254,7 +256,7 @@ switch cfg.method
   case 'basedonmni'
     cfg.tight       = ft_getopt(cfg.sourcemodel, 'tight',       'no');
     cfg.nonlinear   = ft_getopt(cfg.sourcemodel, 'nonlinear',   'no');
-
+    
   case 'basedoncentroids'
     fprintf('creating sourcemodel based on volumetric mesh centroids\n');
     cfg.tight       = ft_getopt(cfg.sourcemodel, 'tight',       'no');
@@ -653,7 +655,7 @@ switch cfg.method
       % copy the boolean fields over
       sourcemodel = copyfields(mnigrid, sourcemodel, booleanfields(mnigrid));
     end
-
+    
   case 'basedoncentroids'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % compute the centroids of each volume element of a FEM mesh
@@ -707,21 +709,21 @@ if ~isempty(cfg.moveinward)
   end
 end
 
-if strcmp(cfg.movetocentroid, 'yes')
-    % compute centroids of the tetrahedral or hexahedral mesh
-    centroids = compute_centroids(headmodel);
-
-    % move the dipole positions in the sourcemodel to the closest centroid
-    grid_shifted = zeros(size(sourcemodel.pos));
-    for i = 1:length(sourcemodel.pos)
-        [dum, amin] = min(sum((sourcemodel.pos(i,:) - centroids.pos).^2,2));
-        grid_shifted(i,:) = centroids.pos(amin,:);
-    end
-    % eliminate duplicates, this applies for example if cfg.resolution is smaller than the mesh resolution
-    sourcemodel.pos = unique(grid_shifted, 'rows', 'stable');
-    
-    % the positions are not on a regular 3D grid any more, hence dim does not apply
-    sourcemodel = removefields(sourcemodel, {'dim'});
+if strcmp(cfg.movetocentroids, 'yes')
+  % compute centroids of the tetrahedral or hexahedral mesh
+  centroids = compute_centroids(headmodel);
+  
+  % move the dipole positions in the sourcemodel to the closest centroid
+  grid_shifted = zeros(size(sourcemodel.pos));
+  for i = 1:length(sourcemodel.pos)
+    [dum, amin] = min(sum((sourcemodel.pos(i,:) - centroids.pos).^2,2));
+    grid_shifted(i,:) = centroids.pos(amin,:);
+  end
+  % eliminate duplicates, this applies for example if cfg.resolution is smaller than the mesh resolution
+  sourcemodel.pos = unique(grid_shifted, 'rows', 'stable');
+  
+  % the positions are not on a regular 3D grid any more, hence dim does not apply
+  sourcemodel = removefields(sourcemodel, {'dim'});
 end
 
 % determine the dipole locations that are inside the source compartment of the
@@ -832,25 +834,25 @@ fn  = fn(isboolean);
 % helper function to compute the centroids of the elements of a volumetric mesh
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function centr = compute_centroids(headmodel)
-    centr = [];
-    % the FEM model should have tetraheders or hexaheders
-    if isfield(headmodel, 'tet')
-      numtet = size(headmodel.tet, 1);
-      centr.pos = zeros(numtet, 3);
-      for i=1:numtet
-        % compute the mean of the 4 corner points of the tetraheder
-        centr.pos(i,:) = mean(headmodel.pos(hm.tet(i,:),:), 1);
-      end
-    elseif isfield(headmodel, 'hex')
-      numhex = size(headmodel.hex, 1);
-      centr.pos = zeros(numhex, 3);
-      for i=1:numhex
-        % compute the mean of the 8 corner points of the hexaheder
-        centr.pos(i,:) = mean(headmodel.pos(headmodel.hex(i,:),:), 1);
-      end
-    else
-      ft_error('the headmodel does not contain tetraheders or hexaheders');
-    end
+centr = [];
+% the FEM model should have tetraheders or hexaheders
+if isfield(headmodel, 'tet')
+  numtet = size(headmodel.tet, 1);
+  centr.pos = zeros(numtet, 3);
+  for i=1:numtet
+    % compute the mean of the 4 corner points of the tetraheder
+    centr.pos(i,:) = mean(headmodel.pos(hm.tet(i,:),:), 1);
+  end
+elseif isfield(headmodel, 'hex')
+  numhex = size(headmodel.hex, 1);
+  centr.pos = zeros(numhex, 3);
+  for i=1:numhex
+    % compute the mean of the 8 corner points of the hexaheder
+    centr.pos(i,:) = mean(headmodel.pos(headmodel.hex(i,:),:), 1);
+  end
+else
+  ft_error('the headmodel does not contain tetraheders or hexaheders');
+end
 
-    % copy the specified fields, fields that are specified but not present will be silently ignored
-    centr = copyfields(headmodel, centr, {'tissue', 'tissuelabel', 'unit', 'coordsys'});
+% copy the specified fields, fields that are specified but not present will be silently ignored
+centr = copyfields(headmodel, centr, {'tissue', 'tissuelabel', 'unit', 'coordsys'});
