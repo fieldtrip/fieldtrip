@@ -245,7 +245,7 @@ for i=1:numel(functionlist)
     catch
       options = [];
     end
-    url = 'http://dashboard.fieldtriptoolbox.org/api/';
+    url = 'https://dashboard.fieldtriptoolbox.org/api/';
     webwrite(url, result(i), options);
   end
   
