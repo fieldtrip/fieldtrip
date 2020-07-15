@@ -70,8 +70,8 @@ if isempty(cfg.uvar)
   x1 = dat(:,sel1);
   x2 = dat(:,sel2);
 
-  pooled_sd = sqrt(((n1-1)*std(x1, w, 2)^2 + (n2-1)*std(x2, w, 2)^2) / (n1+n2-1));
-  cohensd   = (mean(x1, 2) - mean(x2, 2)) / pooled_sd;
+  pooled_sd = sqrt(((n1-1)*std(x1, w, 2).^2 + (n2-1)*std(x2, w, 2).^2) / (n1+n2-1));
+  cohensd   = (mean(x1, 2) - mean(x2, 2)) ./ pooled_sd;
 
 else
   subj = unique(design(cfg.uvar,:)); % it can also be paired over trials
@@ -98,7 +98,7 @@ stat.cohensd = cohensd;
 
 % also return the difference for all channel-time-frequency points or for all voxels
 if isempty(cfg.uvar)
-  stat.difference = mean(x1-x2,2);
-else
   stat.difference = mean(x1,2)-mean(x2,2);
+else
+  stat.difference = mean(x1-x2,2);
 end
