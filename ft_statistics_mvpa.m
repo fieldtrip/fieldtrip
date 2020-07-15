@@ -171,15 +171,16 @@ ft_hastoolbox('mvpa-light', 1);
 assert(isnumeric(dat),    'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 assert(isnumeric(design), 'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 
-% cfg: set defaults
-cfg.searchlight     = ft_getopt(cfg, 'searchlight', 'no');
-cfg.timextime       = ft_getopt(cfg, 'timextime',   'no');
-cfg.connectivity    = ft_getopt(cfg,      'connectivity', []); % the default is dealt with below
-cfg.mvpa            = ft_getopt(cfg,      'mvpa',     []);
-cfg.mvpa.metric     = ft_getopt(cfg.mvpa, 'metric',   'accuracy');
-cfg.mvpa.feedback   = ft_getopt(cfg.mvpa, 'feedback', 'yes');
+% cfg: set defaults 
+cfg.searchlight     = ft_getopt(cfg, 'searchlight',  'no');
+cfg.timextime       = ft_getopt(cfg, 'timextime',    'no');
+cfg.reshape3D       = ft_getopt(cfg, 'reshape3D',    'yes');
+cfg.connectivity    = ft_getopt(cfg, 'connectivity', []); % the default is dealt with below
+cfg.mvpa            = ft_getopt(cfg, 'mvpa',         []);
+cfg.mvpa.metric     = ft_getopt(cfg.mvpa, 'metric',     'accuracy');
+cfg.mvpa.feedback   = ft_getopt(cfg.mvpa, 'feedback',   'yes');
 cfg.mvpa.neighbours = ft_getopt(cfg.mvpa, 'neighbours', []);
-cfg.mvpa.timwin     = ft_getopt(cfg.mvpa, 'timwin', []); % in samples because time axis might not be known
+cfg.mvpa.timwin     = ft_getopt(cfg.mvpa, 'timwin',     []); % in samples because time axis might not be known
 
 % deal with the neighbourhood of the channels/triangulation/voxels
 if isempty(cfg.connectivity)
@@ -217,6 +218,11 @@ if isfield(cfg, 'dim') && isfield(cfg, 'dimord') && contains(cfg.dimord, 'time')
   timdim = find(strcmp(dimtok, 'time'));
   T = ones(cfg.dim(timdim));
   T = T - triu(T, floor(cfg.mvpa.timwin./2)) - tril(T, -ceil(cfg.mvpa.timwin./2)) > 0;
+  if isfield(cfg.mvpa, 'time')&&~isempty(cfg.mvpa.time)
+    % this cannot be dealt with by ft_getopt, because the lower level code
+    % will in that case not properly set the default value
+    T = T(cfg.mvpa.time,:);
+  end
 else
   T = [];
 end
@@ -231,7 +237,7 @@ dat = dat.';
 
 % if cfg.dim has two entries which are non-singleton then the data has been
 % 3D before. We must reshape it from 2D to 3D to run it in MVPA-Light
-data_is_3D = (numel(cfg.dim) > 1 && all(cfg.dim > 1));  % checks whether data was 3D before being reshaped
+data_is_3D = (numel(cfg.dim) > 1 && all(cfg.dim > 1)) && istrue(cfg.reshape3D);  % checks whether data was 3D before being reshaped
 if data_is_3D
   if isfield(cfg, 'dimord')
     dimtok = tokenize(cfg.dimord, '_');
@@ -305,25 +311,53 @@ elseif data_is_3D && ~istrue(cfg.searchlight)
   adj_dim = [true false(1,numel(cfg.dim)-1)];
   
 else
-  % --- data has no time dimension, perform only cross-validation ---
+  if ~isempty(T) && ~isequal(cfg.connectivity, false(size(cfg.connectivity))) && ~isempty(cfg.connectivity)
+    cfg.mvpa.hyperparameter.neighbours = {cfg.connectivity T};
+    adj_dim = false(size(cfg.dim));
+  elseif ~isempty(T)
+    cfg.mvpa.hyperparameter.neighbours = {eye(cfg.dim(1)) T};
+    adj_dim = false(size(cfg.dim));
+  else
+    adj_dim = true(size(cfg.dim));
+  end
   [perf, result] = mv_crossvalidate(cfg.mvpa, dat, y);
-
-  % this does note preserve any spatial dimension, so label should be
-  % adjusted
-  label = sprintf('combined(%s)', sprintf('%s',cfg.channel{:}));
-  dim   = squeezedim(cfg.dim);
-
+  
+  if numel(perf)~=prod(cfg.dim) && all(~adj_dim)
+    dimorig = cfg.dim;
+    cfg.dim = [size(cfg.mvpa.hyperparameter.neighbours{1},1), ...
+               size(cfg.mvpa.hyperparameter.neighbours{2},1)];
+    perf    = reshape(perf, cfg.dim);
+    result.perf_std = reshape(result.perf_std, cfg.dim);
+    
+    if dimorig(1)~=cfg.dim(1)
+      label = cell(cfg.dim(1),1);
+      for k = 1:cfg.dim(1)
+        label{k} = sprintf('feature%04d',k);
+      end
+    end
+    if dimorig(2)~=cfg.dim(2)&&cfg.dim(2)&&isfield(cfg,'latency')
+      timeorig = linspace(cfg.latency(1),cfg.latency(2),size(T,2));
+      time = zeros(1,size(T,1));
+      for k = 1:numel(time)
+        time(k) = mean(timeorig(T(k,:)));
+      end
+    end
+  end
 end
+if ~iscell(cfg.mvpa.metric), cfg.mvpa.metric = {cfg.mvpa.metric}; end
+if ~iscell(perf),            perf            = {perf};            end
 
 %% check which data dim descriptors need to be updated 
-shiftflag = 0;
+shiftflag = zeros(1,numel(perf));
 if ~exist('label', 'var') && (isfield(cfg, 'channel') && adj_dim(1))
   label = sprintf('combined(%s)', sprintf('%s',cfg.channel{:}));
   % for consistency higher up, the first dimension of perf should be
   % singleton
-  siz = size(perf);
-  if siz(end) == 1 && siz(1) ~=1
-    shiftflag = -1;
+  for k = 1:numel(perf)
+    siz = size(perf{k});
+    if siz(end) == 1 && siz(1) ~=1
+      shiftflag(k) = -1;
+    end
   end
 end
 
@@ -348,8 +382,6 @@ end
 
 %% setup stat struct
 stat = [];
-if ~iscell(cfg.mvpa.metric), cfg.mvpa.metric = {cfg.mvpa.metric}; end
-if ~iscell(perf),            perf            = {perf};            end
 for mm=1:numel(perf)
 
   % Performance metric
@@ -376,5 +408,4 @@ if exist('time', 'var'),      stat.time   = time; end
 
 function dim = squeezedim(dim)
 
-dim = cfg.dim;
 dim(1) = 1;
