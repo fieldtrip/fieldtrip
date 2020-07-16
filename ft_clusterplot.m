@@ -7,15 +7,17 @@ function [cfg] = ft_clusterplot(cfg, stat)
 % where the input data is obtained from FT_TIMELOCKSTATISTICS or FT_FREQSTATISTICS.
 %
 % The configuration options can be
-%   cfg.alpha                     = number, highest cluster p-value to be plotted max 0.3 (default = 0.05)
-%   cfg.highlightseries           = 1x5 cell-array, highlight option series  with 'on', 'labels' or 'numbers' (default {'on', 'on', 'on', 'on', 'on'} for p < [0.01 0.05 0.1 0.2 0.3]
-%   cfg.highlightsymbolseries     = 1x5 vector, highlight marker symbol series (default ['*', 'x', '+', 'o', '.'] for p < [0.01 0.05 0.1 0.2 0.3]
-%   cfg.highlightsizeseries       = 1x5 vector, highlight marker size series   (default [6 6 6 6 6] for p < [0.01 0.05 0.1 0.2 0.3])
-%   cfg.highlightcolorpos         = color of highlight marker for positive clusters (default = [0 0 0])
-%   cfg.highlightcolorneg         = color of highlight marker for negative clusters (default = [0 0 0])
-%   cfg.subplotsize               = layout of subplots ([h w], default [3 5])
-%   cfg.saveaspng                 = string, filename of the output figures (default = 'no')
-%   cfg.visible                   = string, 'on' or 'off' whether figure will be visible (default = 'on')
+%   cfg.alpha                   = number, highest cluster p-value to be plotted max 0.3 (default = 0.05)
+%   cfg.highlightseries         = 1x5 cell-array, highlight option series  with 'on', 'labels' or 'numbers' (default {'on', 'on', 'on', 'on', 'on'} for p < [0.01 0.05 0.1 0.2 0.3]
+%   cfg.highlightsymbolseries   = 1x5 vector, highlight marker symbol series (default ['*', 'x', '+', 'o', '.'] for p < [0.01 0.05 0.1 0.2 0.3]
+%   cfg.highlightsizeseries     = 1x5 vector, highlight marker size series   (default [6 6 6 6 6] for p < [0.01 0.05 0.1 0.2 0.3])
+%   cfg.highlightcolorpos       = color of highlight marker for positive clusters (default = [0 0 0])
+%   cfg.highlightcolorneg       = color of highlight marker for negative clusters (default = [0 0 0])
+%   cfg.subplotsize             = layout of subplots ([h w], default [3 5])
+%   cfg.saveaspng               = string, filename of the output figures (default = 'no')
+%   cfg.visible                 = string, 'on' or 'off' whether figure will be visible (default = 'on')
+%   cfg.position                = location and size of the figure, specified as a vector of the form [left bottom width height]
+%   cfg.renderer                = string, 'opengl', 'zbuffer', 'painters', see MATLAB Figure Properties. If this function crashes, you should try 'painters'.
 %
 % You can also specify most configuration options that apply to FT_TOPOPLOTER or FT_TOPOPLOTTFR,
 % except for cfg.xlim, any of the highlight options, cfg.comment and cfg.commentpos.
@@ -395,7 +397,8 @@ else
 
   % make plots
   for iPl = 1:Nfig
-    figure('visible', cfg.visible);
+    % open a new figure with the specified settings, note that here it must always open a new figure
+    open_figure(keepfields(cfg, {'position', 'visible', 'renderer'}));
     if is2D
       if iPl < Nfig
         for iT = 1:numSubplots
@@ -471,11 +474,6 @@ else
   set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
 end
 set(gcf, 'NumberTitle', 'off');
-
-% set renderer if specified
-if ~isempty(cfg.renderer)
-  set(gcf, 'renderer', cfg.renderer)
-end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

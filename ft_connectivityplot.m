@@ -72,10 +72,11 @@ cfg.parameter   = ft_getopt(cfg, 'parameter', 'cohspctrm');
 cfg.zlim        = ft_getopt(cfg, 'zlim',      'maxmin');
 cfg.ylim        = ft_getopt(cfg, 'ylim',      'maxmin');
 cfg.xlim        = ft_getopt(cfg, 'xlim',      'maxmin');
-cfg.renderer    = ft_getopt(cfg, 'renderer',  []); % let MATLAB decide on the default
 cfg.linecolor   = ft_getopt(cfg, 'linecolor', 'brgkywrgbkywrgbkywrgbkyw');
 cfg.linestyle   = ft_getopt(cfg, 'linestyle', '-');
 cfg.linewidth   = ft_getopt(cfg, 'linewidth', 0.5);
+cfg.visible     = ft_getopt(cfg, 'visible',   'on');
+cfg.renderer    = ft_getopt(cfg, 'renderer',  []); % let MATLAB decide on the default
 
 % check if the input data is valid for this function
 % ensure that the input is correct
@@ -363,11 +364,6 @@ else
   set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
 end
 set(gcf, 'NumberTitle', 'off');
-
-% set renderer if specified
-if ~isempty(cfg.renderer)
-  set(gcf, 'renderer', cfg.renderer)
-end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

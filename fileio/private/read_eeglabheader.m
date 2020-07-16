@@ -72,7 +72,7 @@ end
 %if isfield(EEG, 'datfile')
 %    if ~isempty(EEG.datfile)
 %        EEG.data = EEG.datfile;
-%    end;
+%    end
 %else
 %    EEG.data = 'in set file';
 %end;

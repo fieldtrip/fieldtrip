@@ -363,24 +363,9 @@ elseif isequal(cfg.layout, 'butterfly')
   layout.outline = {};
   
 elseif isequal(cfg.layout, 'vertical') || isequal(cfg.layout, 'horizontal')
-  if hasdata && ~isempty(data)
-    % look at the data to determine the overlapping channels
-    originalorder = cfg.channel;
-    cfg.channel = ft_channelselection(cfg.channel, data.label);
-    if iscell(originalorder) && length(originalorder)==length(cfg.channel)
-      % try to keep the order identical to that specified in the configuration
-      [~, sel] = match_str(originalorder, cfg.channel);
-      % re-order them according to the cfg specified by the user
-      cfg.channel  = cfg.channel(sel);
-    end
-    assert(iscell(cfg.channel), 'cfg.channel should be a cell-array of strings');
-    nchan        = length(cfg.channel);
-    layout.label = cfg.channel;
-  else
-    assert(iscell(cfg.channel), 'cfg.channel should be a cell-array of strings');
-    nchan        = length(cfg.channel);
-    layout.label = cfg.channel;
-  end
+  assert(iscell(cfg.channel), 'cfg.channel should be a cell-array of strings');
+  nchan        = length(cfg.channel);
+  layout.label = cfg.channel;
   
   % the width and height of the box are as specified
   % the distance between the channels is slightly larger
@@ -430,17 +415,9 @@ elseif isequal(cfg.layout, 'vertical') || isequal(cfg.layout, 'horizontal')
   end
   
 elseif isequal(cfg.layout, 'ordered')
-  if hasdata
-    % look at the data to determine the overlapping channels
-    cfg.channel   = ft_channelselection(cfg.channel, data.label);
-    chanindx      = match_str(data.label, cfg.channel);
-    nchan         = length(data.label(chanindx));
-    layout.label  = data.label(chanindx);
-  else
-    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
-    nchan        = length(cfg.channel);
-    layout.label = cfg.channel;
-  end
+  assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
+  nchan        = length(cfg.channel);
+  layout.label = cfg.channel;
   
   % the user can specify the number of columns and rows
   if isfield(cfg, 'columns') && ~isempty(cfg.columns)
@@ -535,16 +512,17 @@ elseif ischar(cfg.layout)
   
   if isempty(strfind(cfg.layout, '.'))
     
-    % check the file name that is specified
-    cfg.layout = [cfg.layout '.mat'];
-    if exist(cfg.layout, 'file')
-      ft_info('layout file without .mat (or .lay) extension specified, appending .mat\n');
+    % check whether a corresponding mat or lay exists
+    if exist([cfg.layout '.mat'], 'file')
+      ft_info('appending .mat to layout file\n');
+      cfg.layout = [cfg.layout '.mat'];
       layout = ft_prepare_layout(cfg);
-      return;
+      return
     else
-      cfg.layout = [cfg.layout(1:end-3) 'lay'];
+      ft_info('appending .lay to layout file\n');
+      cfg.layout = [cfg.layout '.lay'];
       layout = ft_prepare_layout(cfg);
-      return;
+      return
     end
     
   elseif ft_filetype(cfg.layout, 'matlab')

@@ -261,7 +261,7 @@ else
   % how many Planar gradiometers?
   nPlaGrad = 0;
   for i = 1:orig.nchan
-    nPlaGrad = nPlaGrad +(orig.chs(i).coil_type==3012 | orig.chs(i).coil_type==3013 | orig.chs(i).coil_type==3014 | orig.chs(i).coil_type==2) ;
+    nPlaGrad = nPlaGrad +(orig.chs(i).coil_type==3012 | orig.chs(i).coil_type==3013 | orig.chs(i).coil_type==3014 | orig.chs(i).coil_type==2);
   end
   
   % how many Magnetometers?

@@ -52,14 +52,14 @@ function [data] = ft_megrealign(cfg, data)
 % should probably use an inward shift of about 1 cm.
 %
 % Other configuration options are
-%  cfg.tolerance  = tolerance ratio for leadfield matrix inverse based on a truncated svd,
-%                   reflects the relative magnitude of the largest singular value
-%                   to retain (default =s 1e-3)
-% cfg.verify      = 'yes' or 'no', show the percentage difference (default = 'yes')
-% cfg.feedback    = 'yes' or 'no' (default = 'no')
-% cfg.channel     =  Nx1 cell-array with selection of channels (default = 'MEG'),
-%                    see FT_CHANNELSELECTION for details
-% cfg.trials      = 'all' or a selection given as a 1xN vector (default = 'all')
+%   cfg.tolerance  = tolerance ratio for leadfield matrix inverse based on a truncated svd,
+%                    reflects the relative magnitude of the largest singular value
+%                    to retain (default =s 1e-3)
+%   cfg.verify     = 'yes' or 'no', show the percentage difference (default = 'yes')
+%   cfg.feedback   = 'yes' or 'no' (default = 'no')
+%   cfg.channel    =  Nx1 cell-array with selection of channels (default = 'MEG'),
+%                     see FT_CHANNELSELECTION for details
+%   cfg.trials     = 'all' or a selection given as a 1xN vector (default = 'all')
 %
 % This implements the method described by T.R. Knosche, Transformation
 % of whole-head MEG recordings between different sensor positions.
@@ -178,7 +178,7 @@ Ntrials = length(data.trial);
 % dataindx = match_str(data.label, cfg.channel);
 % restindx = setdiff(1:length(data.label),dataindx);
 % if ~isempty(restindx)
-%   fprintf('removing %d non-MEG channels from the data\n', length(restindx));
+%   ft_info('removing %d non-MEG channels from the data\n', length(restindx));
 %   rest.label = data.label(restindx);    % first remember the rest
 %   data.label = data.label(dataindx);    % then reduce the data
 %   for i=1:Ntrials
@@ -196,7 +196,7 @@ Ntrials = length(data.trial);
 template = struct([]); % initialize as 0x0 empty struct array with no fields
 for i=1:length(cfg.template)
   if ischar(cfg.template{i})
-    fprintf('reading template sensor position from %s\n', cfg.template{i});
+    ft_info('reading template sensor position from %s\n', cfg.template{i});
     tmp = ft_read_sens(cfg.template{i}, 'senstype', 'meg');
   elseif isstruct(cfg.template{i}) && isfield(cfg.template{i}, 'coilpos') && isfield(cfg.template{i}, 'coilori') && isfield(cfg.template{i}, 'tra')
     tmp = cfg.template{i};
@@ -227,11 +227,15 @@ volcfg.headmodel = cfg.headmodel;
 volcfg.grad      = data.grad;
 volcfg.channel   = data.label; % this might be a subset of the MEG channels
 
-% As of yet the next step is not entirely correct, because it does not keep track of
-% the balancing of the gradiometer array. FIXME this may require some thought because
-% the leadfields are computed with low level functions and do not easily accommodate
-% for matching the correct channels with each other (in order to compute the
-% projection matrix).
+% FIXME As of yet the next steps might not entirely correct, because it does not keep
+% track of the balancing of the gradiometer array. This may require some thought
+% because the leadfields are computed with low level functions and do not easily
+% accommodate for matching the correct channels with each other (in order to compute
+% the projection matrix).
+
+% PREPARE_HEADMODEL will match the data labels, the gradiometer labels and the
+% volume model labels (in case of a localspheres model) and result in a gradiometer
+% definition that only contains the gradiometers that are present in the data.
 [volold, data.grad] = prepare_headmodel(volcfg, []);
 
 % Note that it is necessary to keep the two volume conduction models separate, since
@@ -242,9 +246,17 @@ volcfg.grad    = template.grad;
 volcfg.channel = 'MEG'; % include all MEG channels
 [volnew, template.grad] = prepare_headmodel(volcfg, []);
 
+% construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD
+leadfieldopt = {};
+leadfieldopt = ft_setopt(leadfieldopt, 'reducerank',     ft_getopt(cfg, 'reducerank'));
+leadfieldopt = ft_setopt(leadfieldopt, 'backproject',    ft_getopt(cfg, 'backproject'));
+leadfieldopt = ft_setopt(leadfieldopt, 'normalize',      ft_getopt(cfg, 'normalize'));
+leadfieldopt = ft_setopt(leadfieldopt, 'normalizeparam', ft_getopt(cfg, 'normalizeparam'));
+leadfieldopt = ft_setopt(leadfieldopt, 'weight',         ft_getopt(cfg, 'weight'));
+
 if strcmp(ft_senstype(data.grad), ft_senstype(template.grad))
   [id, it] = match_str(data.grad.label, template.grad.label);
-  fprintf('mean distance towards template gradiometers is %.2f %s\n', mean(sum((data.grad.chanpos(id,:)-template.grad.chanpos(it,:)).^2, 2).^0.5), template.grad.unit);
+  ft_info('mean distance towards template gradiometers is %.2f %s\n', mean(sum((data.grad.chanpos(id,:)-template.grad.chanpos(it,:)).^2, 2).^0.5), template.grad.unit);
 else
   % the projection is from one MEG system to another MEG system, which makes a comparison of the data difficult
   cfg.feedback = 'no';
@@ -257,32 +269,19 @@ tmpcfg.headmodel = volold;
 tmpcfg.grad      = data.grad;
 % create the source positions on which the data will be projected
 sourcemodel = ft_prepare_sourcemodel(tmpcfg);
-pos = sourcemodel.pos;
-
-% sometimes some of the dipole positions are nan, due to problems with the headsurface triangulation
-% remove them to prevent problems with the forward computation
-sel = any(isnan(pos(:,1)),2);
-pos(sel,:) = [];
 
 % compute the forward model for the new gradiometer positions
-fprintf('computing forward model for %d dipoles\n', size(pos,1));
-lfnew = ft_compute_leadfield(pos, template.grad, volnew);
+ft_info('computing forward model for %d dipoles\n', size(sourcemodel.pos,1));
+lfnew = ft_compute_leadfield(sourcemodel.pos, template.grad, volnew, leadfieldopt{:});
 if ~pertrial
-  %this needs to be done only once
-  lfold = ft_compute_leadfield(pos, data.grad, volold);
+  % this needs to be done only once
+  lfold = ft_compute_leadfield(sourcemodel.pos, data.grad, volold, leadfieldopt{:});
   [realign, noalign, bkalign] = computeprojection(lfold, lfnew, cfg.pruneratio, cfg.verify);
-else
-  % the forward model and realignment matrices have to be computed for each trial
-  % this also goes for the singleshell volume conductor model
-  % x = which('rigidbodyJM'); % this function is needed
-  % if isempty(x)
-  %   ft_error('you are trying out experimental code for which you need some extra functionality which is currently not in the release version of FieldTrip. if you are interested in trying it out, contact Jan-Mathijs');
-  % end
 end
 
 % interpolate the data towards the template gradiometers
 for i=1:Ntrials
-  fprintf('realigning trial %d\n', i);
+  ft_info('realigning trial %d\n', i);
   if pertrial
     %warp the gradiometer array according to the motiontracking data
     sel   = match_str(rest.label, {'nasX';'nasY';'nasZ';'lpaX';'lpaY';'lpaZ';'rpaX';'rpaY';'rpaZ'});
@@ -290,17 +289,16 @@ for i=1:Ntrials
     if ~all(hmdat==repmat(hmdat(:,1),[1 size(hmdat,2)]))
       ft_error('only one position per trial is at present allowed');
     else
-      %M    = rigidbodyJM(hmdat(:,1))
       M    = ft_headcoordinates(hmdat(1:3,1),hmdat(4:6,1),hmdat(7:9,1));
       grad = ft_transform_geometry(M, data.grad);
     end
     
     volcfg.grad = grad;
-    %compute volume conductor
-    [volold, grad] = prepare_headmodel(volcfg);
-    %compute forward model
-    lfold = ft_compute_leadfield(pos, grad, volold);
-    %compute projection matrix
+    % compute volume conductor
+    [volold, grad] = prepare_headmodel(volcfg, []);
+    % compute forward model
+    lfold = ft_compute_leadfield(sourcemodel.pos, grad, volold, leadfieldopt{:});
+    % compute projection matrix
     [realign, noalign, bkalign] = computeprojection(lfold, lfnew, cfg.pruneratio, cfg.verify);
   end
   data.realign{i} = realign * data.trial{i};
@@ -308,13 +306,13 @@ for i=1:Ntrials
     % also compute the residual variance when interpolating
     [id,it]   = match_str(data.grad.label, template.grad.label);
     rvrealign = rv(data.trial{i}(id,:), data.realign{i}(it,:));
-    fprintf('original -> template             RV %.2f %%\n', 100 * mean(rvrealign));
+    ft_info('original -> template             RV %.2f %%\n', 100 * mean(rvrealign));
     datnoalign = noalign * data.trial{i};
     datbkalign = bkalign * data.trial{i};
     rvnoalign = rv(data.trial{i}, datnoalign);
     rvbkalign = rv(data.trial{i}, datbkalign);
-    fprintf('original             -> original RV %.2f %%\n', 100 * mean(rvnoalign));
-    fprintf('original -> template -> original RV %.2f %%\n', 100 * mean(rvbkalign));
+    ft_info('original             -> original RV %.2f %%\n', 100 * mean(rvnoalign));
+    ft_info('original -> template -> original RV %.2f %%\n', 100 * mean(rvbkalign));
   end
 end
 
@@ -392,9 +390,9 @@ interp.time    = data.time;
 
 % add the rest channels back to the data, these were not interpolated
 if ~isempty(rest.label)
-  fprintf('adding %d non-MEG channels back to the data (', length(rest.label));
-  fprintf('%s, ', rest.label{1:end-1});
-  fprintf('%s)\n', rest.label{end});
+  ft_info('adding %d non-MEG channels back to the data (', length(rest.label));
+  ft_info('%s, ', rest.label{1:end-1});
+  ft_info('%s)\n', rest.label{end});
   for trial=1:length(rest.trial)
     interp.trial{trial} = [interp.trial{trial}; rest.trial{trial}];
   end
@@ -440,12 +438,12 @@ function [realign, noalign, bkalign] = computeprojection(lfold, lfnew, tolerance
 % compute this inverse only once, although it is used twice
 tmp = ft_inv(lfold, 'method', 'tsvd', 'tolerance', tolerance);
 % compute the three interpolation matrices
-fprintf('computing interpolation matrix #1\n');
+ft_info('computing interpolation matrix #1\n');
 realign = lfnew * tmp;
 if strcmp(verify, 'yes')
-  fprintf('computing interpolation matrix #2\n');
+  ft_info('computing interpolation matrix #2\n');
   noalign = lfold * tmp;
-  fprintf('computing interpolation matrix #3\n');
+  ft_info('computing interpolation matrix #3\n');
   bkalign = (lfold * ft_inv(lfnew, 'method', 'tsvd', 'tolerance', tolerance)) * realign;
 else
   noalign = [];

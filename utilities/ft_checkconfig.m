@@ -76,9 +76,9 @@ renamedval      = ft_getopt(varargin, 'renamedval');
 allowedval      = ft_getopt(varargin, 'allowedval');
 createsubcfg    = ft_getopt(varargin, 'createsubcfg');
 createtopcfg    = ft_getopt(varargin, 'createtopcfg');
-checkfilenames  = ft_getopt(varargin, 'dataset2files');
-checkinside     = ft_getopt(varargin, 'inside2logical', 'off');
-checksize       = ft_getopt(varargin, 'checksize', 'off');
+checkfilenames  = ft_getopt(varargin, 'dataset2files', 'no');
+checkinside     = ft_getopt(varargin, 'inside2logical', 'no');
+checksize       = ft_getopt(varargin, 'checksize', 'no');
 trackconfig     = ft_getopt(varargin, 'trackconfig');
 
 if ~isempty(trackconfig) && strcmp(trackconfig, 'on')
@@ -275,7 +275,7 @@ end
 % them from the separate substructure to the top level.
 %
 % This is to ensure backward compatibility of end-user scripts, FieldTrip functions
-% and documentation that use an obsolete nested configuration where a flat 
+% and documentation that use an obsolete nested configuration where a flat
 % configuration should be used.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(createtopcfg)
@@ -442,11 +442,8 @@ if ~isempty(createsubcfg)
           'kappa'
           'tolerance'
           'invmethod'
-          'normalize'
-          'normalizeparam'
           'powmethod'
           'projectnoise'
-          'reducerank'
           'realfilter'
           'subspace'
           };
@@ -457,9 +454,6 @@ if ~isempty(createsubcfg)
           'keepmom'
           'lambda'
           'kappa'
-          'normalize'
-          'normalizeparam'
-          'reducerank'
           };
 
       case 'sloreta'
@@ -474,12 +468,9 @@ if ~isempty(createsubcfg)
           'kappa'
           'tolerance'
           'invmethod'
-          'normalize'
-          'normalizeparam'
           'powmethod'
           'projectnoise'
           'projectmom'
-          'reducerank'
           'subspace'
           };
 
@@ -495,12 +486,9 @@ if ~isempty(createsubcfg)
           'kappa'
           'tolerance'
           'invmethod'
-          'normalize'
-          'normalizeparam'
           'powmethod'
           'projectnoise'
           'projectmom'
-          'reducerank'
           'subspace'
           };
 
@@ -513,11 +501,8 @@ if ~isempty(createsubcfg)
           'kappa'
           'tolerance'
           'invmethod'
-          'normalize'
-          'normalizeparam'
           %'powmethod'
           'projectnoise'
-          'reducerank'
           'keepcsd'
           'realfilter'
           'fixedori'
@@ -568,9 +553,9 @@ if ~isempty(createsubcfg)
           'tolerance'
           'invmethod'
           'fixedori'
-          'reducerank'
-          'normalize'
-          'normalizeparam'
+          'noisecov'
+          'toi'
+          'latency_ori'
           };
 
       case 'mvl'

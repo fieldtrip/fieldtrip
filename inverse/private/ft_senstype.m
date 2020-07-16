@@ -164,14 +164,17 @@ if ~(isdata || isheader || isgrad || iselec || isnirs || islabel || haslabel) &&
 end
 
 if isdata
-  % the input may be a data structure which then contains a grad/elec structure, a header or only the labels
-  % preferably look at the data and not the header for the grad, because it might be re-balanced and/or planar
+  % the input may be a data structure which then contains a grad/elec/opto structure, a header or only the labels
+  % preferably look at the data and not the header for the sensors, because it might be re-balanced and/or planar
   if isfield(input, 'grad')
     sens   = input.grad;
     isgrad = true;
   elseif isfield(input, 'elec')
     sens   = input.elec;
     iselec = true;
+  elseif isfield(input, 'opto')
+    sens   = input.opto;
+    isnirs = true;
   elseif issubfield(input, 'hdr.grad')
     sens   = input.hdr.grad;
     isgrad = true;

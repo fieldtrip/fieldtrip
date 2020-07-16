@@ -205,25 +205,25 @@ switch toolbox
     dependency = {'spm', get_spm_version()==2};
   case 'SPM2UP' % version 2 or later, but not SPM 9X
     dependency = {'spm', get_spm_version()>=2, get_spm_version()<95};
-    %This is to avoid crashes when trying to add SPM to the path
+    % this is to avoid crashes when trying to add SPM to the path
     fallback_toolbox = 'SPM8';
   case 'SPM5'
     dependency = {'spm', get_spm_version()==5};
   case 'SPM5UP' % version 5 or later, but not SPM 9X
     dependency = {'spm', get_spm_version()>=5, get_spm_version()<95};
-    %This is to avoid crashes when trying to add SPM to the path
+    % this is to avoid crashes when trying to add SPM to the path
     fallback_toolbox = 'SPM5';
   case 'SPM8'
     dependency = {'spm', get_spm_version()==8};
   case 'SPM8UP' % version 8 or later, but not SPM 9X
     dependency = {'spm', get_spm_version()>=8, get_spm_version()<95};
-    %This is to avoid crashes when trying to add SPM to the path
+    % this is to avoid crashes when trying to add SPM to the path
     fallback_toolbox = 'SPM8';
   case 'SPM12'
     dependency = {'spm', get_spm_version()==12};
   case 'SPM12UP' % version 12 or later, but not SPM 9X
     dependency = {'spm', get_spm_version()>=12, get_spm_version()<95};
-    %This is to avoid crashes when trying to add SPM to the path
+    % this is to avoid crashes when trying to add SPM to the path
     fallback_toolbox = 'SPM12';
   case 'MEG-PD'
     dependency = {'rawdata', 'channames'};
@@ -344,10 +344,6 @@ switch toolbox
     dependency = has_mex('mysql');
   case 'ISO2MESH'
     dependency = {'vol2surf', 'qmeshcut'};
-  case 'QSUB'
-    dependency = {'qsubfeval', 'qsubcellfun'};
-  case 'ENGINE'
-    dependency = {'enginefeval', 'enginecellfun'};
   case 'DATAHASH'
     dependency = {'DataHash'};
   case 'IBTB'
@@ -425,30 +421,35 @@ switch toolbox
     dependency = {'cividis', 'inferno', 'magma', 'plasma', 'tab10', 'tab20', 'tab20b', 'tab20c', 'twilight', 'viridis'};
   case 'CMOCEAN'
     dependency = {'cmocean'};
+  case 'FILEEXCHANGE'
+    dependency = is_subdir_in_fieldtrip_path('/external/fileexchange');
     
-    % the following are FieldTrip modules/toolboxes
+    % the following are FieldTrip modules or toolboxes
   case 'FILEIO'
     dependency = {'ft_read_header', 'ft_read_data', 'ft_read_event', 'ft_read_sens'};
   case 'FORWARD'
     dependency = {'ft_compute_leadfield', 'ft_prepare_vol_sens'};
+  case 'INVERSE'
+    dependency = {'ft_inverse_dics', 'ft_inverse_dipolefit', 'ft_inverse_lcmv', 'ft_inverse_mne', 'ft_inverse_pcc'};
   case 'PLOTTING'
     dependency = {'ft_plot_topo', 'ft_plot_mesh', 'ft_plot_matrix'};
+  case 'QSUB'
+    dependency = {'qsubcellfun', 'qsubfeval', 'qsubget'};
   case 'PEER'
-    dependency = {'peerslave', 'peermaster'};
+    dependency = {'peercellfun', 'peerfeval', 'peerget'};
+  case 'ENGINE'
+    dependency = {'enginecellfun', 'enginefeval', 'engineget'};
   case 'CONNECTIVITY'
     dependency = {'ft_connectivity_corr', 'ft_connectivity_granger'};
   case 'SPIKE'
     dependency = {'ft_spiketriggeredaverage', 'ft_spiketriggeredspectrum'};
-  case 'FILEEXCHANGE'
-    dependency = is_subdir_in_fieldtrip_path('/external/fileexchange');
   case 'CELLFUNCTION'
     dependency = {'cellmean', 'cellvecadd', 'cellcat'};
-  case {'INVERSE', 'REALTIME', 'SPECEST', 'PREPROC', ...
-      'COMPAT', 'STATFUN', 'TRIALFUN', 'UTILITIES/COMPAT', ...
-      'FILEIO/COMPAT', 'PREPROC/COMPAT', 'FORWARD/COMPAT', ...
-      'PLOTTING/COMPAT', 'TEMPLATE/LAYOUT', 'TEMPLATE/ANATOMY' ,...
-      'TEMPLATE/HEADMODEL', 'TEMPLATE/ELECTRODE', ...
-      'TEMPLATE/NEIGHBOURS', 'TEMPLATE/SOURCEMODEL'}
+  case 'SPECEST'
+    dependency = {'ft_specest_mtmconvol', 'ft_specest_mtmfft', 'ft_specest_wavelet'};
+  case 'PREPROC'
+    dependency = {'ft_preproc_detrend', 'ft_preproc_baselinecorrect', 'ft_preproc_bandpassfilter', 'ft_preproc_bandstopfilter'};
+  case {'REALTIME', 'STATFUN', 'TRIALFUN', 'TEMPLATE/LAYOUT', 'TEMPLATE/ANATOMY', 'TEMPLATE/ATLAS', 'TEMPLATE/DEWAR', 'TEMPLATE/HEADMODEL', 'TEMPLATE/ELECTRODE', 'TEMPLATE/NEIGHBOURS', 'TEMPLATE/SOURCEMODEL'}
     dependency = is_subdir_in_fieldtrip_path(toolbox);
   otherwise
     if ~silent, ft_warning('cannot determine whether the %s toolbox is present', toolbox); end

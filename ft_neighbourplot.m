@@ -12,8 +12,10 @@ function [cfg] = ft_neighbourplot(cfg, data)
 % Where the configuration can contain
 %   cfg.verbose       = string, 'yes' or 'no', whether the function will print feedback text in the command window
 %   cfg.neighbours    = neighbourhood structure, see FT_PREPARE_NEIGHBOURS (optional)
-%   cfg.visible       = string, 'on' or 'off', whether figure will be visible (default = 'on')
 %   cfg.enableedit    = string, 'yes' or 'no', allows you to interactively add or remove edges between vertices (default = 'no')
+%   cfg.visible       = string, 'on' or 'off' whether figure will be visible (default = 'on')
+%   cfg.position      = location and size of the figure, specified as a vector of the form [left bottom width height]
+%   cfg.renderer      = string, 'opengl', 'zbuffer', 'painters', see MATLAB Figure Properties. If this function crashes, you should try 'painters'.
 %
 % and either one of the following options
 %   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
@@ -86,7 +88,7 @@ cfg = ft_checkconfig(cfg, 'renamed', {'optofile', 'opto'});
 % set the defaults
 cfg.enableedit = ft_getopt(cfg, 'enableedit', 'no');
 cfg.visible    = ft_getopt(cfg, 'visible', 'on');
-cfg.renderer   = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
+cfg.renderer   = ft_getopt(cfg, 'renderer', []); % let MATLAB decide on the default
 
 if isfield(cfg, 'neighbours')
   cfg.neighbours = cfg.neighbours;
@@ -132,11 +134,15 @@ else
   % use 3-dimensional data for plotting
   proj = sens.chanpos;
 end
-hf = figure('visible', cfg.visible);
+
+% open a new figure with the specified settings
+hf = open_figure(keepfields(cfg, {'newfigure', 'position', 'visible', 'renderer'}));
+
 axis equal
 axis vis3d
 axis off
-hold on;
+hold on
+
 hl = [];
 for i=1:length(cfg.neighbours)
   this = cfg.neighbours(i);
@@ -245,11 +251,6 @@ else
   set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
 end
 set(gcf, 'NumberTitle', 'off');
-
-% set renderer if specified
-if ~isempty(cfg.renderer)
-  set(gcf, 'renderer', cfg.renderer)
-end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

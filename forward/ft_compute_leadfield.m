@@ -26,9 +26,9 @@ function [lf] = ft_compute_leadfield(dippos, sens, headmodel, varargin)
 %
 % Additional input arguments can be specified as key-value pairs, supported
 % optional arguments are
-%   'reducerank'      = 'no' or number
+%   'reducerank'      = 'no' or number (default = 3 for EEG, 2 for MEG)
 %   'backproject'     = 'yes' or 'no', in the case of a rank reduction this parameter determines whether the result will be backprojected onto the original subspace (default = 'yes')
-%   'normalize'       = 'no', 'yes' or 'column'
+%   'normalize'       = 'no', 'yes' or 'column' (default = 'no')
 %   'normalizeparam'  = parameter for depth normalization (default = 0.5)
 %   'weight'          = number or Nx1 vector, weight for each dipole position to compensate for the size of the corresponding patch (default = 1)
 %
@@ -267,11 +267,17 @@ elseif ismeg
       end
 
     case 'openmeeg'
-        % OpenMEEG lead field already computed in ft_prepare_leadfield;
-        % load here so any post-processing options (e.g. normalization) may
-        % be applied
-        lf = ft_getopt(varargin, 'lf');
+      ft_hastoolbox('openmeeg', 1);
 
+      dsm         = ft_getopt(varargin, 'dsm');
+      nonadaptive = ft_getopt(varargin, 'nonadaptive');
+      
+      [h2sens,ds2sens] = ft_sensinterp_openmeeg(dippos, headmodel, sens);
+      if isempty(dsm)
+        dsm            = ft_sysmat_openmeeg(dippos, headmodel, sens, nonadaptive);
+      end
+      lf               = ds2sens + h2sens*headmodel.mat*dsm;
+     
     case {'infinite_magneticdipole', 'infinite'}
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % magnetic dipole instead of electric (current) dipole in an infinite vacuum
@@ -426,11 +432,17 @@ elseif iseeg
       lf = eeg_leadfieldb(dippos, sens.elecpos, headmodel);
 
     case 'openmeeg'
-        % OpenMEEG lead field already computed in ft_prepare_leadfield;
-        % load here so any post-processing options (e.g. normalization) may
-        % be applied
-        lf = ft_getopt(varargin, 'lf');
+      ft_hastoolbox('openmeeg', 1);
 
+      dsm         = ft_getopt(varargin, 'dsm');
+      nonadaptive = ft_getopt(varargin, 'nonadaptive');
+      
+      [h2sens,ds2sens] = ft_sensinterp_openmeeg(dippos, headmodel, sens);
+      if isempty(dsm)
+        dsm            = ft_sysmat_openmeeg(dippos, headmodel, sens, nonadaptive);
+      end
+      lf               = ds2sens + h2sens*headmodel.mat*dsm;
+      
     case {'infinite_currentdipole' 'infinite'}
       lf = eeg_infinite_dipole(dippos, sens.elecpos, headmodel);
 

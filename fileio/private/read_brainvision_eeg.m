@@ -115,8 +115,8 @@ elseif strcmpi(hdr.DataFormat, 'ascii') && strcmpi(hdr.DataOrientation, 'multipl
   if isfield(hdr,'skipLines') && hdr.skipLines > 0
     for line=1:hdr.skipLines
       str = fgets(fid);
-    end;
-  end;
+    end
+  end
   
   for line=1:(begsample-1)
     % read first lines and discard the data in them
@@ -143,7 +143,7 @@ elseif strcmpi(hdr.DataFormat, 'ascii') && strcmpi(hdr.DataOrientation, 'vectori
     fprintf('reading channel %d from ascii file to get data from sample %d to %d\n', chan, begsample, endsample);
     
     % check whether columns have to be skipped
-    if isfield(hdr,'skipColumns'); skipColumns = hdr.skipColumns; end;
+    if isfield(hdr,'skipColumns'); skipColumns = hdr.skipColumns; end
     
     str = fgets(fid);             % read all samples of a single channel
     str(str==',') = '.';          % replace comma with point

@@ -359,16 +359,14 @@ switch cfg.method
     
   case 'headshape'
     % start building the figure
-    h = figure(...
-      'Name', mfilename,...
-      'Units', 'normalized', ...
-      'Color', [1 1 1], ...
-      'Visible', 'on');
+    h = open_figure(keepfields(cfg, {'newfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
+    set(h, 'Name', mfilename);
+    set(h, 'Units', 'normalized');
+    set(h, 'Color', [1 1 1]);
     set(h, 'windowbuttondownfcn', @cb_buttonpress);
     set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
     set(h, 'windowkeypressfcn',   @cb_keyboard);
     set(h, 'CloseRequestFcn',     @cb_quit);
-    set(h, 'renderer', cfg.renderer);
     
     % electrode listbox
     h1 = uicontrol('Style', 'listbox', ...
@@ -463,17 +461,15 @@ switch cfg.method
   case 'volume'
     
     % start building the figure
-    h = figure(...
-      'MenuBar', 'none',...
-      'Name', mfilename,...
-      'Units', 'normalized', ...
-      'Color', [1 1 1], ...
-      'Visible', 'on');
+    h = open_figure(keepfields(cfg, {'newfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
+    set(h, 'Name', mfilename);
+    set(h, 'Units', 'normalized');
+    set(h, 'Color', [1 1 1]);
+    set(h, 'MenuBar', 'none');
     set(h, 'windowbuttondownfcn', @cb_buttonpress);
     set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
     set(h, 'windowkeypressfcn',   @cb_keyboard);
     set(h, 'CloseRequestFcn',     @cb_quit);
-    set(h, 'renderer', cfg.renderer);
     
     % volume-dependent axis settings
     for v = 1:numel(mri)

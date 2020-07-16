@@ -76,7 +76,7 @@ for i=1:numel(cosEE);
    for n=2:500; % do the sum
       Pns2=Pns1; Pns1=Pn; Pn=((2*n-1)*x*Pns1 - (n-1)*Pns2)./n; % legendre poly recurance
       oGi=G(i);  oHi=H(i);
-      tmp  = ((2*n+1) * Pn) / ((n*n+n).^order) ;
+      tmp  = ((2*n+1) * Pn) / ((n*n+n).^order);
       G(i) = G(i) + tmp;                     % update function estimate, spline interp     
       H(i) = H(i) + (n*n+n)*tmp;             % update function estimate, SLAP
       dG   = (abs(oGi-G(i))+dG)/2; dH=(abs(oHi-H(i))+dH)/2; % moving ave gradient est for convergence

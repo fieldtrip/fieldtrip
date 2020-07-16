@@ -68,7 +68,7 @@ if ~isempty(vhdr.MarkerFile)
     [dum, dum, markerExt] = fileparts(vhdr.MarkerFile);
 else
     markerExt=dataExt;
-end;
+end
 dataFileSameName = fullfile(p,[f dataExt]);
 markerFileSameName = fullfile(p,[f markerExt]);
 

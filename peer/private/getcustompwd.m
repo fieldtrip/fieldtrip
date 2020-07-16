@@ -35,7 +35,7 @@ if isequal(t, previous_pwd)
 end
 
 % don't use the present directory if it contains the peer code
-% it will confuse the slave with a potentially different mex file
+% it will confuse the worker with a potentially different mex file
 if strcmp(pwd, fileparts(mfilename('fullpath')))
   warning('will not change directory to %s', t);
   p = [];

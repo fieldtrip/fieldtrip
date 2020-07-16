@@ -304,7 +304,7 @@ cfg.ivar   = 2;
 
 %% ## Plotting the results
 % load individual subject data
-load('ERF_orig');
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/cluster_permutation_timelock/ERF_orig.mat'));
 
 % calculate the grand average for each condition
 cfg = [];

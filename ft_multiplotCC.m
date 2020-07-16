@@ -118,8 +118,7 @@ Ypos = 0.9*yScaleFac*(Y-min(Y));
 
 for k=1:length(chNum) - 2
   subplotOL('position',[Xpos(k) Ypos(k)+(Height(k)*yScaleFac) Width(k)*xScaleFac*2 Height(k)*yScaleFac*2])
-  tmpcfg = [];
-  tmpcfg.layout = layout;
+  tmpcfg = keepfields(cfg, {'parameter', 'layout', 'renderer', 'visible'});
   if exist('tmpdata', 'var')
     tmpcfg.style      = 'straight';
     tmpcfg.marker     = 'off';
@@ -136,7 +135,6 @@ for k=1:length(chNum) - 2
       tmpcfg.xparam = 'freq';
       tmpcfg.xlim   = [k-0.5 k+0.5];
     end
-    tmpcfg.parameter  = cfg.parameter;
     tmpcfg.refchannel = Lbl(k);
     tmpcfg.colorbar   = 'no';
     tmpcfg.zlim       = scale;
@@ -164,11 +162,6 @@ else
   set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
 end
 set(gcf, 'NumberTitle', 'off');
-
-% set renderer if specified
-if ~isempty(cfg.renderer)
-  set(gcf, 'renderer', cfg.renderer)
-end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

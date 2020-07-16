@@ -24,7 +24,7 @@ function [cfg] = ft_databrowser(cfg, data)
 % The following configuration options are supported:
 %   cfg.ylim                    = vertical scaling, can be 'maxmin', 'maxabs' or [ymin ymax] (default = 'maxabs')
 %   cfg.zlim                    = color scaling to apply to component topographies, 'minmax', 'maxabs' (default = 'maxmin')
-%   cfg.blocksize               = duration in seconds for cutting the data up
+%   cfg.blocksize               = duration in seconds for cutting continuous data in segments
 %   cfg.trl                     = structure that defines the data segments of interest, only applicable for trial-based data
 %   cfg.continuous              = 'yes' or 'no', whether the data should be interpreted as continuous or trial-based
 %   cfg.allowoverlap            = 'yes' or 'no', whether data that is overlapping in multiple trials is allowed (default = 'no')
@@ -46,8 +46,9 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.selfun                  = string, name of function that is evaluated using the right-click context menu. The selected data and cfg.selcfg are passed on to this function.
 %   cfg.selcfg                  = configuration options for function in cfg.selfun
 %   cfg.seldat                  = 'selected' or 'all', specifies whether only the currently selected or all channels will be passed to the selfun (default = 'selected')
+%   cfg.visible                 = string, 'on' or 'off' whether figure will be visible (default = 'on')
+%   cfg.position                = location and size of the figure, specified as a vector of the form [left bottom width height]
 %   cfg.renderer                = string, 'opengl', 'zbuffer', 'painters', see MATLAB Figure Properties. If this function crashes, you should try 'painters'.
-%   cfg.position                = location and size of the figure, specified as a vector of the form [left bottom width height].
 %
 % The following options for the scaling of the EEG, EOG, ECG, EMG, MEG and NIRS channels
 % is optional and can be used to bring the absolute numbers of the different
@@ -131,9 +132,6 @@ function [cfg] = ft_databrowser(cfg, data)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
-% FIXME these should be removed or documented
-% cfg.preproc
 
 % these are used by the ft_preamble/ft_postamble function and scripts
 ft_revision = '$Id$';
@@ -243,7 +241,7 @@ if ~isempty(cfg.chanscale)
   end
   
   % make sure chanscale is a column vector, not a row vector
-   cfg.chanscale = cfg.chanscale(:);
+  cfg.chanscale = cfg.chanscale(:);
 end
 
 if ~isempty(cfg.mychanscale) && ~isfield(cfg, 'mychan')
@@ -327,7 +325,7 @@ if hasdata
   
   % this is how the input data is segmented
   trlorg = sampleinfo2trl(data);
- 
+  
 else
   % check if the input cfg is valid for this function
   cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
@@ -596,7 +594,6 @@ opt.eventtypecolorlabels = {'black', 'red', 'blue', 'green', 'cyan', 'grey', 'li
 opt.nanpaddata  = []; % this is used to allow horizontal scaling to be constant (when looking at last segment continuous data, or when looking at segmented/zoomed-out non-continuous data)
 opt.trllock     = []; % this is used when zooming into trial based data
 
-
 % save original layout when viewmode = component
 if strcmp(cfg.viewmode, 'component')
   opt.layorg = cfg.layout;
@@ -614,19 +611,12 @@ end
 % set changedchanflg as true for initialization
 opt.changedchanflg = true; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
 
-% create fig
-if isfield(cfg, 'position')
-  h = figure('Position', cfg.position);
-else
-  h = figure;
-end
+% open a new figure with the specified settings
+h = open_figure(keepfields(cfg, {'newfigure', 'position', 'visible', 'renderer'}));
 
 % put appdata in figure
 setappdata(h, 'opt', opt);
 setappdata(h, 'cfg', cfg);
-if ~isempty(cfg.renderer)
-  set(h, 'renderer', cfg.renderer);
-end
 
 % set interruptible to off, see bug 3123
 set(h, 'Interruptible', 'off', 'BusyAction', 'queue'); % enforce busyaction to queue to be sure
@@ -1625,7 +1615,7 @@ end
 if isempty(opt.orgdata)
   dat = ft_read_data(cfg.datafile, 'header', opt.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', ~istrue(cfg.continuous), 'dataformat', cfg.dataformat, 'headerformat', cfg.headerformat);
 else
-  dat = ft_fetch_data(opt.orgdata, 'header', opt.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'allowoverlap', istrue(cfg.allowoverlap));
+  dat = ft_fetch_data(opt.orgdata, 'header', opt.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'allowoverlap', cfg.allowoverlap);
 end
 art = ft_fetch_data(opt.artdata, 'begsample', begsample, 'endsample', endsample);
 
@@ -1825,7 +1815,7 @@ if strcmp(cfg.plotevents, 'yes')
       else
         shift(ievent)=0;
       end
-
+      
       % plot the event label
       ft_plot_text(eventtim(ievent), 0.9-shift(ievent)*.06, eventstr{ievent}, 'tag', 'event', 'Color', eventcol{ievent}, 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1], 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits, 'horizontalalignment', 'left');
     end
