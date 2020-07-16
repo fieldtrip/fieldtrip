@@ -337,19 +337,12 @@ switch highlightstyle
         % plot each line with its own color
         h = plot(hdat, vdat(i,:), style, 'LineWidth', linewidth, 'Color', color(i), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
       end
-      if ~isempty(parent)
-        set(h, 'Parent', parent);
-      end
       linecolor = get(h, 'color');
       linecolor = (linecolor * 0.2) + 0.8; % change saturation of color
       for j=1:length(begsample)
         hor = hdat(   begsample(j):endsample(j));
         ver = vdat(i, begsample(j):endsample(j));
         h = plot(hor,ver,'color',linecolor);
-        
-        if ~isempty(parent)
-          set(h, 'Parent', parent);
-        end
       end
     end
     
@@ -371,9 +364,6 @@ switch highlightstyle
       end
       h = patch(X, Y, [.6 .6 .6], 'FaceColor', facecolor, 'FaceAlpha', facealpha);
       set(h, 'linestyle', 'no');
-      if ~isempty(parent)
-        set(h, 'Parent', parent);
-      end
     end
     
   otherwise
@@ -419,26 +409,20 @@ switch highlightstyle
       ft_warning('do not know how to plot the lines in the appropriate color');
       h = [];
     end
-    if ~isempty(parent)
-      set(h, 'Parent', parent);
-    end
 end % switch highlightstyle
 
 if ~isempty(label)
   switch labelpos
     case 'upperleft'
-      h = text(hpos - width/2, vpos + height/2, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+      text(hpos - width/2, vpos + height/2, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
     case 'upperright'
-      h = text(hpos + width/2, vpos + height/2, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+      text(hpos + width/2, vpos + height/2, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
     case 'lowerleft'
-      h = text(hpos - width/2, vpos - height/2, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+      text(hpos - width/2, vpos - height/2, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
     case 'lowerright'
-      h = text(hpos + width/2, vpos - height/2, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+      text(hpos + width/2, vpos - height/2, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
     case 'center'
-      h = text(hpos, vpos, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
-  end
-  if ~isempty(parent)
-    set(h, 'Parent', parent);
+      text(hpos, vpos, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
   end
 end
 
