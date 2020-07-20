@@ -33,7 +33,7 @@ if (isfield(cfg, 'preproc') && ~isempty(cfg.preproc))
   ft_progress('init', cfg.feedback, 'filtering data');
   for i=1:ntrl
     ft_progress(i/ntrl, 'filtering data in trial %d of %d\n', i, ntrl);
-    [data.trial{i}, ~, ~, cfg.preproc] = preproc(data.trial{i}, data.label, data.time{i}, cfg.preproc);
+    [data.trial{i}, label, time, cfg.preproc] = preproc(data.trial{i}, data.label, data.time{i}, cfg.preproc);
   end
   ft_progress('close');
 end
@@ -93,69 +93,33 @@ end
 % SUBFUNCTIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function markexclude_next(varargin)
-markexclude(varargin{1});
-next(varargin{1});
+function markexclude_next(h, event)
+markexclude(h, event);
+step_channel(h, event, 1);
 end
 
-function markinclude_next(varargin)
-markinclude(varargin{1});
-next(varargin{1});
+function markinclude_next(h, event)
+markinclude(h, event);
+step_channel(h, event, 1);
 end
 
-function next(h, ~, ~, varargin)
+function step_channel(h, event, step)
 info = guidata(h);
-if info.chanlop < info.nchan
-  info.chanlop = info.chanlop + 1;
+if info.chanlop == 1 && step < 0
+  fprintf('At first channel\n');
+elseif info.chanlop == info.nchan && step > 0
+  fprintf('At last channel\n');
+else
+  chans = (1:info.nchan);
+  info.chanlop = chans(nearest(chans, info.chanlop + step));  
   % Update plots
   new_plots(info);
-else
-  fprintf('at last channel\n');
 end
-guidata(h,info);
+guidata(h, info);
 uiresume;
 end
 
-function prev(h, ~, ~, varargin)
-info = guidata(h);
-if info.chanlop > 1
-  info.chanlop = info.chanlop - 1;
-  % Update plots
-  new_plots(info);
-else
-  fprintf('at first channel\n');
-end
-guidata(h,info);
-uiresume;
-end
-
-function next10(h, ~, ~, varargin)
-info = guidata(h);
-if info.chanlop < info.nchan
-  info.chanlop = min(info.chanlop + 10, info.nchan);
-  % Update plots
-  new_plots(info);
-else
-  fprintf('at last channel\n');
-end
-guidata(h,info);
-uiresume;
-end
-
-function prev10(h, ~, ~, varargin)
-info = guidata(h);
-if info.chanlop > 1
-  info.chanlop = max(info.chanlop - 10, 1);
-  % Update plots
-  new_plots(info);
-else
-  fprintf('at first channel\n');
-end
-guidata(h,info);
-uiresume;
-end
-
-function markinclude(h, ~, ~, varargin)
+function markinclude(h, event)
 info = guidata(h);
 % Include channel if it's not already included
 if ~info.chansel(info.chanlop)
@@ -169,7 +133,7 @@ end
 uiresume;
 end
 
-function markexclude(h, ~, ~, varargin)
+function markexclude(h, event)
 info = guidata(h);
 % Exclude channel if it's not already excluded
 if info.chansel(info.chanlop)
@@ -183,17 +147,17 @@ end
 uiresume;
 end
 
-function key(h, eventdata, ~, varargin)
+function key(h, event)
 
-switch lower(eventdata.Key)
+switch lower(event.Key)
   case 'rightarrow'
-    next(h);
+    step_channel(h, event, 1);
   case 'leftarrow'
-    prev(h);
+    step_channel(h, event, -1);
   case 'g'
-    markinclude(h);
+    markinclude(h, event);
   case 'b'
-    markexclude(h);
+    markexclude(h, event);
   case 'q'
     stop(h);
   otherwise
@@ -201,7 +165,7 @@ switch lower(eventdata.Key)
 end
 end
 
-function button(h, ~, ~, varargin)
+function button(h, event)
 % Find selected trial
 pos = get(gca, 'CurrentPoint');
 x = pos(1,1);
@@ -239,7 +203,7 @@ end
 uiresume;
 end
 
-function stop(h, ~, ~, varargin)
+function stop(h, event)
 info = guidata(h);
 info.quit = 1;
 guidata(h,info);
@@ -278,10 +242,10 @@ axis(limits);
 
 % Set buttons and callback functions
 info.ui.quit        = uicontrol(h,'units','pixels','position',[  5 5 40 18],'String','quit','Callback',@stop);
-info.ui.prev        = uicontrol(h,'units','pixels','position',[ 50 5 25 18],'String','<','Callback',@prev);
-info.ui.next        = uicontrol(h,'units','pixels','position',[ 75 5 25 18],'String','>','Callback',@next);
-info.ui.prev10      = uicontrol(h,'units','pixels','position',[105 5 25 18],'String','<<','Callback',@prev10);
-info.ui.next10      = uicontrol(h,'units','pixels','position',[130 5 25 18],'String','>>','Callback',@next10);
+info.ui.prev        = uicontrol(h,'units','pixels','position',[ 50 5 25 18],'String','<','Callback',{@step_channel, -1});
+info.ui.next        = uicontrol(h,'units','pixels','position',[ 75 5 25 18],'String','>','Callback',{@step_channel, 1});
+info.ui.prev10      = uicontrol(h,'units','pixels','position',[105 5 25 18],'String','<<','Callback',{@step_channel, -10});
+info.ui.next10      = uicontrol(h,'units','pixels','position',[130 5 25 18],'String','>>','Callback',{@step_channel, 10});
 info.ui.exclude     = uicontrol(h,'units','pixels','position',[160 5 70 18],'String','exclude','Callback',@markexclude);
 info.ui.include     = uicontrol(h,'units','pixels','position',[230 5 70 18],'String','include','Callback',@markinclude);
 info.ui.excludenext = uicontrol(h,'units','pixels','position',[310 5 70 18],'String','exclude >','Callback',@markexclude_next);
