@@ -177,18 +177,16 @@ dd = sqrt(dx.^2 + dy.^2);
 [d, i] = min(dd);
 threshold = median(sqrt(info.layout.width.^2 + info.layout.height.^2)/2);
 if d<threshold && i<=info.ntrl
-  % Get current amplitude scale
-  [old_ymin, old_ymax] = get_ylim(info);
-  
   % Toggle
   info.trlsel(i) = ~info.trlsel(i); % toggle
   info.trlop = i;
+  guidata(h,info);
   
   % Print to command window
   fprintf(description_trial(info));
   
   % Update plots
-  update_plots(info, old_ymin, old_ymax);
+  update_plots(info);
   
   % Update trial color
   if strcmp(info.h_trial(i).Color, 'none') % channel is toggled to include
@@ -196,7 +194,6 @@ if d<threshold && i<=info.ntrl
   else % channel is toggled to exclude
     info.h_trial(i).Color = 'none';
   end
-  guidata(h,info);
 else
   fprintf('button clicked\n');
 end
@@ -310,13 +307,11 @@ else
 end
 end
 
-function update_plots(info, old_ymin, old_ymax)
+function update_plots(info)
 % Updates the trial plots after inclusion/exclusion of trials
 %
 % Input:
 % info     - info struct with all the data attched to the GUI
-% old_ymin - the minimum of the data before trial exclusion/inclusion
-% old_ymax - the maximum of the data before trial exclusion/inclusion
 
 [ymin, ymax] = get_ylim(info);
 
@@ -326,15 +321,7 @@ heights   = info.layout.height;
 
 for trlindx = find(info.trlsel)
   % Shift the vertical axis to zero
-  vdat = info.h_trial(trlindx).YData - v_centers(trlindx);
-  % Scale back by availabe plot area
-  vdat = vdat ./ heights(trlindx);
-  % Scale back to length 1
-  vdat = vdat .* (old_ymax - old_ymin);
-  % Shift back the vertical axis to zero
-  vdat = vdat + (old_ymin + old_ymax)/2;
-  % Shift back the vertical axis to new zero
-  vdat = vdat - (ymin + ymax)/2;
+  vdat = info.data.trial{trlindx}(info.chanlop, :) - v_centers(trlindx);
   % Scale to length 1 of the new data
   vdat = vdat ./ (ymax - ymin);
   % Scale by availabe plot area
