@@ -964,6 +964,7 @@ switch cfg.method
         elseif numel(cfg.refindx)==1 || numel(cfg.refchannel)==1,
           outdimord = 'chan';
         else
+          outdimord = 'chan';
           %ft_error('at present cfg.refindx should be either ''all'', or scalar');
         end
         if numel(cfg.(cfg.method).lags)>1 && ~istrue(cfg.(cfg.method).combinelags)
