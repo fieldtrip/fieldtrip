@@ -234,6 +234,11 @@ istimelock = ft_datatype(data, 'timelock');   % it might also be timelock+comp, 
 if iscomp
   % transform the data into a representation on which the timelocked dipole fit can perform its trick
   data = comp2timelock(cfg, data);
+  
+  % default component selection is all components
+  if isempty(cfg.component)
+    cfg.component = (1:size(data.avg, 2));
+  end
 elseif isfreq
   % transform the data into a representation on which the timelocked dipole fit can perform its trick
   data = freq2timelock(cfg, data);
