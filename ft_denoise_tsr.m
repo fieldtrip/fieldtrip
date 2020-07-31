@@ -270,7 +270,7 @@ end
 ft_hastoolbox('cellfunction', 1);
 
 timestep = mean(diff(data.time{1}));
-reflags  = -round(cfg.reflags./timestep);
+reflags  = -unique(round(cfg.reflags./timestep));
 reflabel = refdata.label; % to be used later
 % the convention is to have a positive cfg.reflags defined as a delay of the ref w.r.t. the chan
 % cellshift has an opposite convention with respect to the sign of the
@@ -415,7 +415,7 @@ else
 end
 
 % create output data structure
-dataout   = keepfields(data, {'cfg' 'label' 'grad' 'elec' 'opto' 'trialinfo' 'fsample'});
+dataout   = keepfields(testdata, {'cfg' 'label' 'grad' 'elec' 'opto' 'fsample' 'trialinfo'});
 dataout.time = time;
 switch cfg.output
   case 'model'
