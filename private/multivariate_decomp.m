@@ -1,4 +1,4 @@
-function [E, D] = multivariate_decomp(C,x,y,method,realflag,thr)
+function [E, D] = multivariate_decomp(C,x,y,method,realflag,thr,fastflag)
 
 % MULTIVARIATE_DECOMP does a linear decomposition of multivariate time series,
 % based on the covariance matrix.
@@ -16,6 +16,8 @@ function [E, D] = multivariate_decomp(C,x,y,method,realflag,thr)
 %             the indices for x reflect the independent variable)
 %   realflag = true (default) or false. Do the operation on the real part
 %              of the matrix if the input matrix is complex-valued
+%   fastflag = true (default) or false. Compute the solution without an
+%              eigenvalue decomposition (only when numel(x)==1)
 %
 % The implementation is based on Borga 2001, Canonical correlation, a
 % tutorial (can be found online).
@@ -24,6 +26,10 @@ function [E, D] = multivariate_decomp(C,x,y,method,realflag,thr)
 %   E = projection matrix (not necessarily normalized). to get the orientation,
 %       do orix = E(x,1)./norm(E(x,1)), and oriy = E(y,1)./norm(E(y,1));
 %   D = diagonal matrix with eigenvalues
+
+if nargin<7
+  fastflag = true;
+end
 
 if nargin<6
   thr = 0.9; % percentage of variance to account for when doing ccasvd
@@ -65,8 +71,8 @@ switch method
 end
 
 % regularize with a ridge
-if ~isempty(strfind(method, 'ridge'))
-  if ~isempty(strfind(method, 'qridge'))
+if contains(method, 'ridge')
+  if contains(method, 'qridge')
     type = 'qridge';
   else
     type = 'ridge';
@@ -77,7 +83,7 @@ if ~isempty(strfind(method, 'ridge'))
 end
 
 % perform the decomposition in a svd-based subspace
-if ~isempty(strfind(method, 'svd'))
+if contains(method, 'svd')
   [ux,sx] = svd(B(x,x));
   [uy,sy] = svd(B(y,y));
   
@@ -107,17 +113,28 @@ if ~isempty(strfind(method, 'svd'))
   C = (C+C')./2;
 end
 
-% ad hoc check for well-behavedness of the matrix, and do the decomposition
-if cond(B)>1e8
-  [E,D] = eig(pinv(B)*A);
+if numel(y)==1 && fastflag
+  % a full eigenvalue decomposition is an overkill, this solution is
+  % probably correct (and much faster than eig, or even eigs(..,..,1)
+  E(x,1) = (A(y,x)/B(x,x));
+  E(y) = sqrt((A(y,x)*E(x))./B(y,y));
+  D    = (B*E)\(A*E);
 else
+  % ad hoc check for well-behavedness of the matrix, and do the decomposition
+  % the call to cond takes quite some time, here make the user responsible
+  % for inputting well-behaved matrices
+  %if cond(B)>1e8
+  %  [E,D] = eig(pinv(B)*A);
+  %else
+  
   if realflag
-   [E,D] = eig(real(B\A));
-   E = real(E);
-   D = real(D);
+    [E,D] = eig(real(A),real(B));%eig(real(B\A));
+    E = real(E);
+    D = real(D);
   else
-   [E,D] = eig(B\A);
+    [E,D] = eig(A,B);%eig(B\A); % not using the backslash is faster
   end
+  %end
 end
 
 n          = min(numel(x),numel(y));
@@ -126,10 +143,10 @@ n          = min(n, numel(diag(D)));
 E          = E(:, order(1:n));
 D          = D(1:n);
 
-if isempty(strfind(method, 'svd'))
+if ~contains(method, 'svd')
   [E(x,:),norm_x] = normc(E(x,:)); % norm normalise the coefficients per block
   [E(y,:),norm_y] = normc(E(y,:));
-  if ~isempty(strfind(method, 'mlr'))
+  if contains(method, 'mlr')
     % scale the weights for the independent variable, such that they reflect
     % proper beta weights
     %E(x,:) = E(x,:).*D(:)'.*(norm_x./norm_y);
@@ -145,7 +162,7 @@ else
   [E(indx_x,:), norm_x] = normc(E(indx_x,:));
   [E(indx_y,:), norm_y] = normc(E(indx_y,:));
   
-  if ~isempty(strfind(method, 'mlr'))
+  if contains(method, 'mlr')
     % scale the weights for the independent variable, such that they reflect
     % proper beta weights
     E(x,:) = E(x,:)*diag(norm_x./norm_y)*diag(D(:));
@@ -171,7 +188,7 @@ nx = numel(x);
 ny = numel(y);
 switch type
   case 'ridge'
-    R = eye(nx+ny);
+    R = thr;%eye(nx+ny);
   case 'qridge'
     rix = eye(nx).*2 + diag(ones(nx-1,1).*-1,1) + diag(ones(nx-1,1).*-1,-1);
     rix(1)   = 1;
@@ -182,8 +199,8 @@ switch type
     R        = zeros(nx+ny);
     R(x,x)   = rix;
     R(y,y)   = riy;
+    R        = R*thr;
 end
-R = R*thr;
 
 function [y, x_norm] = normc(x)
 
