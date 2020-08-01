@@ -247,7 +247,7 @@ switch method
             tmpsource = nan(sum(tra(refindx(p),:)),n);
             tmpsource(:, beg1:end1) = input(tra(refindx(p),:), beg2:end2);
           else 
-            tmpsource = nan(numel(refindx),n);
+            tmpsource = nan(size(refindx,2),n);
             tmpsource(:, beg1:end1) = input(refindx(p,:), beg2:end2);
           end
             
