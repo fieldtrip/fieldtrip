@@ -386,6 +386,14 @@ ARRAY+=(src/det3x3.mexw64)
 sync ${ARRAY[*]}
 
 ################################################################################
+# determine_segmentationstyle.m
+
+ARRAY=()
+ARRAY+=(private/determine_segmentationstyle.m)
+ARRAY+=(utilities/private/determine_segmentationstyle.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # dimindex.m
 
 ARRAY=()
