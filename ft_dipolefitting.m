@@ -156,7 +156,7 @@ cfg = ft_checkconfig(cfg, 'renamed', {'grid',    'sourcemodel'});
 
 % get the defaults
 cfg.channel         = ft_getopt(cfg, 'channel', 'all');
-cfg.component       = ft_getopt(cfg, 'component');        % for comp input
+cfg.component       = ft_getopt(cfg, 'component', 'all');        % for comp input
 cfg.frequency       = ft_getopt(cfg, 'frequency');        % for freq input
 cfg.latency         = ft_getopt(cfg, 'latency', 'all');   % for timeclock input
 cfg.feedback        = ft_getopt(cfg, 'feedback', 'text');
@@ -173,15 +173,20 @@ cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
 % move some fields from cfg.sourcemodel back to the top-level configuration
 cfg = ft_checkconfig(cfg, 'createtopcfg', {'sourcemodel'});
 
+% determine data type
+iscomp = ft_datatype(data, 'comp');           % it can also be raw+comp, timelock+comp or freq+comp
+isfreq = ft_datatype(data, 'freq');           % it might also be freq+comp, in that case it should be treated as component data
+istimelock = ft_datatype(data, 'timelock');   % it might also be timelock+comp, in that case it should be treated as component data
+
 % the default for this depends on the data type
 if ~isfield(cfg, 'model')
-  if ~isempty(cfg.component)
+  if iscomp
     % each component is fitted independently
     cfg.model = 'moving';
-  elseif ~isempty(cfg.frequency)
+  elseif isfreq
     % fit the data with a dipole at one location
     cfg.model = 'regional';
-  elseif ~isempty(cfg.latency)
+  elseif istimelock
     % fit the data with a dipole at one location
     cfg.model = 'regional';
   end
@@ -227,13 +232,14 @@ if ft_getopt(cfg.dipfit.constr, 'sequential', false) && strcmp(cfg.model, 'movin
   % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3119
 end
 
-iscomp = ft_datatype(data, 'comp');           % it can also be raw+comp, timelock+comp or freq+comp
-isfreq = ft_datatype(data, 'freq');           % it might also be freq+comp, in that case it should be treated as component data
-istimelock = ft_datatype(data, 'timelock');   % it might also be timelock+comp, in that case it should be treated as component data
-
 if iscomp
   % transform the data into a representation on which the timelocked dipole fit can perform its trick
   data = comp2timelock(cfg, data);
+  
+  % default component selection is all components
+  if ischar(cfg.component) && strcmp(cfg.component, 'all')
+    cfg.component = (1:size(data.avg, 2));
+  end
 elseif isfreq
   % transform the data into a representation on which the timelocked dipole fit can perform its trick
   data = freq2timelock(cfg, data);
