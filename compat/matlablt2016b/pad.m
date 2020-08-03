@@ -82,9 +82,7 @@ else
   assert(numel(c)==1);
   assert(ischar(c));
 
-  if length(s)>=n
-    return
-  else
+  if length(s)<n
     c = repmat(c, 1, n-length(s));
     switch (side)
       case 'left'

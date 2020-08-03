@@ -1829,7 +1829,7 @@ if all(indexed)
     end
     tissuelabel = segmentation.([fn{k} 'label']);
     tissueindex = segmentation.(fn{k});
-    width = max(cellfun(@length, tissuelabel))+1; width = max(width, 15)+1;
+    width = max(cellfun(@length, tissuelabel)); width = max(width, 15);
     summedvolume = 0;
     for m = 1:numel(tissuelabel)
       volume = sum(tissueindex(:)==m)*voxelvolume;
