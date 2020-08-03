@@ -87,10 +87,11 @@ end
 ft_hastoolbox('iso2mesh', 1);
 
 [node, elem, face] = vol2mesh(uint8(seg), 1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3), 2, 2, 0, 'cgalmesh');
+elem(:,1:4)        = meshreorient(node(:,1:3), elem(:,1:4));
 
 mesh = keepfields(mri, {'coordsys', 'unit'});
 mesh.pos = ft_warp_apply(mri.transform, node(:,1:3)+1);
-mesh.tet = elem(:,[1 2 4 3]); % re-order elements
+mesh.tet = elem(:,1:4);
 mesh.tissue = elem(:,5);
 if exist('seglabel', 'var')
   mesh.tissuelabel = seglabel;
