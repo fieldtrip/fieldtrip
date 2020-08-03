@@ -32,13 +32,23 @@ mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'}, 'hasunit', 'yes'
 cfg.tissue = ft_getopt(cfg, 'tissue');
 
 if isempty(cfg.tissue)
+  % this requires an indexed segmentation, in which case cfg.tissue will be
+  % a numeric vector, that will be defined below
   mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
-  fn = fieldnames(mri);
-  for i = 1:numel(fn)
-    if (numel(mri.(fn{i})) == prod(mri.dim)) && (~strcmp(fn{i}, 'inside'))
-      segfield = fn{i};
-    end
-  end
+end
+
+fn = fieldnames(mri);
+fn(strcmp(fn, 'inside')) = [];
+[indexed, probabilistic] = determine_segmentationstyle(mri, fn, mri.dim);
+if sum(indexed)==0
+  % what to do?
+elseif sum(indexed)==1
+  segfield = fn{indexed};
+elseif sum(indexed)>1
+  ft_error('The input segmentation contains more than indexed segmented volume. Unsupported');
+end
+
+if isempty(cfg.tissue)
   cfg.tissue = setdiff(unique(mri.(segfield)(:)), 0);
 end
 
@@ -47,6 +57,7 @@ if ischar(cfg.tissue)
   cfg.tissue = {cfg.tissue};
 end
 
+% from here, cfg.tissue is either a cell-array of strings, or a numeric vector
 if iscell(cfg.tissue)
   % the code below assumes that it is a probabilistic representation
   if any(strcmp(cfg.tissue, 'brain'))
@@ -55,15 +66,21 @@ if iscell(cfg.tissue)
     mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'probabilistic');
   end
   % combine all tissue types
-  seg = false(mri.dim);
+  seg      = false(mri.dim);
+  seglabel = cell(numel(cfg.tissue),1); 
   for i=1:numel(cfg.tissue)
-    seg = seg | mri.(cfg.tissue{i});
+    seg = seg + double(mri.(cfg.tissue{i})).*i;
+    seglabel{i} = cfg.tissue{i};
   end
 else
-  % the code below assumes that it is an indexed representation
+  % the code below assumes that it is an indexed representation and that
+  % cfg.tissue is numeric. FIXME: it also assumes that the indexed volume
+  % is called 'seg', and that the label is called 'seglabel'. This is
+  % probably a remnant of old code.
   mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
   % keep the tissue types as they are
-  seg = mri.seg;
+  seg      = mri.seg;
+  seglabel = mri.seglabel;
 end
 
 % this requires the external iso2mesh toolbox
@@ -75,4 +92,6 @@ mesh = keepfields(mri, {'coordsys', 'unit'});
 mesh.pos = ft_warp_apply(mri.transform, node);
 mesh.tet = elem(:,[1 2 4 3]); % re-order elements
 mesh.tissue = elem(:,5);
-mesh.tissuelabel = mri.seglabel;
+if exist('seglabel', 'var')
+  mesh.tissuelabel = seglabel;
+end
