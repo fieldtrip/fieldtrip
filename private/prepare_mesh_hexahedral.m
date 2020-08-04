@@ -227,6 +227,7 @@ mesh.hex(:) = ic;
 
 end % subfunction
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function creating elements from a MRI-Image with the dimensions x_dim,
 % y_dim, z_dim. Each voxel of the MRI-Image corresponds to one element in
 % the hexahedral mesh. The numbering of the elements is as follows:
@@ -241,13 +242,17 @@ end % subfunction
 % in the same manner as described above for the element numbering(note the
 % different dimensionalities: x_dim+1 instead of x_dim etc.).
 function elements = create_elements(x_dim, y_dim, z_dim)
+
 elements = zeros(x_dim*y_dim*z_dim, 8);
+
 % create an offset vector for the bottom-left nodes in each element
 b = 1:((x_dim+1)*(y_dim));
+
 % delete the entries where the node does not correspond to an element's
 % bottom-left node(i.e. where the x-component of the node is equal to
 % x_dim+1)
 b = b(mod(b, (x_dim+1)) ~= 0);
+
 % repeat offset to make it fit the number of elements
 b = repmat(b, 1, z_dim);
 
@@ -265,29 +270,29 @@ elements(:, 5) = b + c + (x_dim+1) * (y_dim+1);
 elements(:, 6) = b + c + (x_dim+1) * (y_dim+1) + 1;
 elements(:, 7) = b + c + (x_dim+1) * (y_dim+1) + (x_dim+1) + 1;
 elements(:, 8) = b + c + (x_dim+1) * (y_dim+1) + (x_dim+1);
-clear b;
-clear c;
 end % subfunction
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function creating the nodes and assigning coordinates in the
 % [0, x_dim]x[0, y_dim]x[0, z_dim] box. for details on the node-numbering see
 % comments for create_elements.
 function nodes = create_nodes(x_dim, y_dim, z_dim)
-nodes = zeros(((x_dim+1)*(y_dim+1)*(z_dim + 1)), 3);
+
+nodes = zeros(((x_dim + 1)*(y_dim + 1)*(z_dim + 1)), 3);
 % offset vector for node coordinates
-b = 0:((x_dim+1)*(y_dim+1)*(z_dim+1)-1);
+b = 0:((x_dim + 1)*(y_dim + 1)*(z_dim + 1)-1);
 
 % assign coordinates within the box
 nodes(:, 1) = mod(b, (x_dim+1));
 nodes(:, 2) = mod(fix(b/(x_dim+1)), (y_dim+1));
 nodes(:, 3) = fix(b/((x_dim + 1)*(y_dim+1)));
 
-clear b
-
 end % subfunction
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function shifting the nodes
 function nodes = shift_nodes(points, hex, labels, sh, x_dim, y_dim, z_dim)
+
 fprintf('Applying shift %f\n', sh);
 nodes = points;
 
