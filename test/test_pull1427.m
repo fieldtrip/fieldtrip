@@ -55,7 +55,7 @@ cfg_reslice.yrange     = minmaxpos(2,:);
 cfg_reslice.zrange     = minmaxpos(3,:);
 cfg_reslice.method     = 'nearest';
 segprob2               = ft_volumereslice(cfg_reslice, segprob);
-
+segindx2               = ft_volumereslice(cfg_reslice, segindx);
 
 mesh_vol_hex05b = ft_prepare_mesh(cfg, segprob2);
 
@@ -65,14 +65,16 @@ hold on
 ft_plot_mesh(mesh_vol_hex1, 'surfaceonly', false, 'facecolor', 'none', 'edgecolor', 'm');
 view(120, 30)
 
+% this one doe snot look OK
 figure
 ft_plot_ortho(segindx.seg, 'transform', segindx.transform, 'location', [5.5 5.5 5.5], 'style', 'intersect');
 hold on
 ft_plot_mesh(mesh_vol_hex05, 'surfaceonly', false, 'facecolor', 'none', 'edgecolor', 'm');
 view(120, 30)
 
+% this one looks OK in terms of alginment
 figure
-ft_plot_ortho(segindx.seg, 'transform', segindx.transform, 'location', [5.5 5.5 5.5], 'style', 'intersect');
+ft_plot_ortho(segindx2.seg, 'transform', segindx2.transform, 'location', [5.5 5.5 5.5], 'style', 'intersect');
 hold on
 ft_plot_mesh(mesh_vol_hex05b, 'surfaceonly', false, 'facecolor', 'none', 'edgecolor', 'm');
 view(120, 30)
