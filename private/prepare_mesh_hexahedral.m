@@ -98,58 +98,67 @@ end
 
 % reslice to desired resolution
 
-if (cfg.resolution ~= 1)
-  % this should be done like this: split seg into probabilistic, reslice single compartments, take maximum values
-  seg_array = [];
-  
-  seg_indices = unique(seg);
-  
-  for i = 1:(length(unique(seg)))
-    seg_reslice.anatomy   = double(seg == (i-1));
-    seg_reslice.dim       = mri.dim;
-    seg_reslice.transform = eye(4);
-    seg_reslice.transform(1:3, 4) = -ceil(mri.dim/2);
-    
-    cfg_reslice = [];
-    cfg_reslice.resolution = cfg.resolution;
-    cfg_reslice.dim = ceil(mri.dim/cfg.resolution);
-    
-    seg_build = ft_volumereslice(cfg_reslice, seg_reslice);
-    
-    seg_array = [seg_array, seg_build.anatomy(:)];
-    
-    clear seg_reslice
-  end
-  
-  [max_seg, seg_build.seg] = max(seg_array, [], 2);
-  
-  clear max_seg seg_array;
-  
-  seg_build.seg = reshape(seg_build.seg, seg_build.dim);
-  seg_build.seg = seg_indices(seg_build.seg);
-  seg_build.transform = mri.transform;
-  
-  clear seg_build.anatomy
+if 1
+%   % this should be done like this: split seg into probabilistic, reslice single compartments, take maximum values
+%   seg_array = [];
+%   
+%   seg_indices = unique(seg);
+%   
+%   for i = 1:(length(unique(seg)))
+%     seg_reslice.anatomy   = double(seg == (i-1));
+%     seg_reslice.dim       = mri.dim;
+%     seg_reslice.transform = eye(4);
+%     seg_reslice.transform(1:3, 4) = -(mri.dim/2);
+%     
+%     minpos = seg_reslice.transform*([ones(1,3)-0.5 1])';
+%     maxpos = seg_reslice.transform*[mri.dim 1]';
+%     
+%     cfg_reslice            = [];
+%     cfg_reslice.resolution = cfg.resolution;
+%     cfg_reslice.dim        = ceil(mri.dim/cfg.resolution);
+%     
+%     seg_build = ft_volumereslice(cfg_reslice, seg_reslice);
+%     
+%     seg_array = [seg_array, seg_build.anatomy(:)];
+%     
+%     clear seg_reslice
+%   end
+%   
+%   [max_seg, seg_build.seg] = max(seg_array, [], 2);
+%   
+%   clear max_seg seg_array;
+%   
+%   seg_build.seg = reshape(seg_build.seg, seg_build.dim);
+%   seg_build.seg = seg_indices(seg_build.seg);
+%   %seg_build.transform = mri.transform;
+%   
+%   clear seg_build.anatomy
+
+  minmaxpos(:,1) = mri.transform*([0 0 0 1])';
+  minmaxpos(:,2) = mri.transform*[mri.dim+1 1]';
+
+  cfg_reslice = [];
+  cfg_reslice.resolution = cfg.resolution;
+  %cfg_reslice.dim        = ceil(mri.dim./cfg.resolution);
+  cfg_reslice.xrange     = minmaxpos(1,:); % this is more robust than the dim, in case the origin is not inside the volume
+  cfg_reslice.yrange     = minmaxpos(2,:);
+  cfg_reslice.zrange     = minmaxpos(3,:);
+  cfg_reslice.method     = 'nearest';
+  seg_build              = ft_volumereslice(cfg_reslice, mri);
 else
-  seg_build.seg = seg;
-  seg_build.dim = mri.dim;
+  seg_build = mri;
+  
+  %seg_build.seg = seg;
+  %seg_build.dim = mri.dim;
   
   clear seg
 end
 
-% ensure that the segmentation is binary and that there is a single contiguous region
-% FIXME is this still needed when it is already binary?
-%seg = volumethreshold(seg, 0.5, tissue);
-
 % build the mesh
 mesh = build_mesh_hexahedral(cfg, seg_build);
 
-if (cfg.resolution ~= 1)
-  mesh.pos = cfg.resolution * mesh.pos;
-end
-
 % converting position of meshpoints to the head coordinate system
-mesh.pos = ft_warp_apply(mri.transform, mesh.pos, 'homogeneous');
+mesh.pos = ft_warp_apply(seg_build.transform, mesh.pos, 'homogeneous');
 
 labels = mesh.labels;
 mesh = rmfield(mesh, 'labels');
@@ -172,41 +181,40 @@ end % function
 function mesh = build_mesh_hexahedral(cfg, mri)
 
 background = cfg.background;
-shift = cfg.shift;
-% extract number of voxels in each direction
-% x_dim = mri.dim(1);
-% y_dim = mri.dim(2);
-% z_dim = mri.dim(3);
-%labels = mri.seg;
-fprintf('Dimensions of the segmentation before restriction to bounding-box: %i %i %i\n', mri.dim(1), mri.dim(2), mri.dim(3));
+shift      = cfg.shift;
 
-[bb_x, bb_y, bb_z] = ind2sub(size(mri.seg), find(mri.seg));
-shift_coord = [min(bb_x) - 2, min(bb_y) - 2, min(bb_z) - 2];
-bb_x = [min(bb_x), max(bb_x)];
-bb_y = [min(bb_y), max(bb_y)];
-bb_z = [min(bb_z), max(bb_z)];
-x_dim = size(bb_x(1)-1:bb_x(2)+1, 2);
-y_dim = size(bb_y(1)-1:bb_y(2)+1, 2);
-z_dim = size(bb_z(1)-1:bb_z(2)+1, 2);
-labels = zeros(x_dim, y_dim, z_dim);
-labels(2:(x_dim-1), 2:(y_dim-1), 2:(z_dim-1)) = mri.seg(bb_x(1):bb_x(2), bb_y(1):bb_y(2), bb_z(1):bb_z(2));
+% fprintf('Dimensions of the segmentation before restriction to bounding-box: %i %i %i\n', mri.dim(1), mri.dim(2), mri.dim(3));
+% 
+% [bb_x, bb_y, bb_z] = ind2sub(size(mri.seg), find(mri.seg));
+% shift_coord = [min(bb_x) - 2, min(bb_y) - 2, min(bb_z) - 2];
+% bb_x = [min(bb_x), max(bb_x)];
+% bb_y = [min(bb_y), max(bb_y)];
+% bb_z = [min(bb_z), max(bb_z)];
+% 
+% % the segmentation is constrained to the bounding-box, with one layer of
+% % zeros surrounding it. the shift_coord is needed to correct the voxel
+% % indices w.r.t. the original volume.
+% x_dim = size(bb_x(1)-1:bb_x(2)+1, 2);
+% y_dim = size(bb_y(1)-1:bb_y(2)+1, 2);
+% z_dim = size(bb_z(1)-1:bb_z(2)+1, 2);
+% labels = zeros(x_dim, y_dim, z_dim);
+% labels(2:(x_dim-1), 2:(y_dim-1), 2:(z_dim-1)) = mri.seg(bb_x(1):bb_x(2), bb_y(1):bb_y(2), bb_z(1):bb_z(2));
+labels = mri.seg;
 
-fprintf('Dimensions of the segmentation after restriction to bounding-box: %i %i %i\n', x_dim, y_dim, z_dim);
+fprintf('Dimensions of the segmentation after restriction to bounding-box: %i %i %i\n', mri.dim(1), mri.dim(2), mri.dim(3));
 
-% create elements
-
-mesh.hex = create_elements(x_dim, y_dim, z_dim);
+% create hexahedra
+mesh.hex = create_elements(mri.dim);
 fprintf('Created elements...\n' )
 
-% create nodes
-
-mesh.pos = create_nodes(x_dim, y_dim, z_dim);
+% create nodes, these are corner points of the voxels expressed in voxel indices
+mesh.pos = create_nodes(mri.dim);
 fprintf('Created nodes...\n' )
 
 if shift < 0 || shift > 0.3
   ft_error('Please choose a shift parameter between 0 and 0.3!');
 elseif shift > 0
-  mesh.pos = shift_nodes(mesh.pos, mesh.hex, labels, shift, x_dim, y_dim, z_dim);
+  mesh.pos = shift_nodes(mesh.pos, mesh.hex, labels, shift, mri.dim);
 end
 
 %background = 1;
@@ -221,8 +229,8 @@ end
 
 % delete unused nodes
 [C, ia, ic] = unique(mesh.hex(:));
-mesh.pos = mesh.pos(C, :, :, :);
-mesh.pos = mesh.pos + repmat(shift_coord, size(mesh.pos, 1), 1);
+mesh.pos = mesh.pos(C, :, :, :) + 0.5; % voxel indexing offset
+%mesh.pos = mesh.pos + repmat(shift_coord, size(mesh.pos, 1), 1);
 mesh.hex(:) = ic;
 
 end % subfunction
@@ -241,8 +249,11 @@ end % subfunction
 % has number i in the node-numbering. All the remaining nodes are numbered
 % in the same manner as described above for the element numbering(note the
 % different dimensionalities: x_dim+1 instead of x_dim etc.).
-function elements = create_elements(x_dim, y_dim, z_dim)
+function elements = create_elements(dim)
 
+x_dim    = dim(1);
+y_dim    = dim(2);
+z_dim    = dim(3);
 elements = zeros(x_dim*y_dim*z_dim, 8);
 
 % create an offset vector for the bottom-left nodes in each element
@@ -276,8 +287,11 @@ end % subfunction
 % function creating the nodes and assigning coordinates in the
 % [0, x_dim]x[0, y_dim]x[0, z_dim] box. for details on the node-numbering see
 % comments for create_elements.
-function nodes = create_nodes(x_dim, y_dim, z_dim)
+function nodes = create_nodes(dim)
 
+x_dim = dim(1);
+y_dim = dim(2);
+z_dim = dim(3);
 nodes = zeros(((x_dim + 1)*(y_dim + 1)*(z_dim + 1)), 3);
 % offset vector for node coordinates
 b = 0:((x_dim + 1)*(y_dim + 1)*(z_dim + 1)-1);
@@ -291,9 +305,12 @@ end % subfunction
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function shifting the nodes
-function nodes = shift_nodes(points, hex, labels, sh, x_dim, y_dim, z_dim)
+function nodes = shift_nodes(points, hex, labels, sh, dim)
 
 fprintf('Applying shift %f\n', sh);
+x_dim = dim(1);
+y_dim = dim(2);
+z_dim = dim(3);
 nodes = points;
 
 % helper vector for indexing the nodes
