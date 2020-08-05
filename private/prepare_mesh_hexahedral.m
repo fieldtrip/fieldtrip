@@ -54,11 +54,13 @@ end
 if isempty(cfg.shift)
   ft_warning('No node-shift selected')
   cfg.shift = 0;
+elseif cfg.shift < 0
+  ft_warning('Node-shift should be >=0, setting to 0');
+  cfg.shift = 0;
 elseif cfg.shift > 0.3
-  ft_warning('Node-shift should not be larger than 0.3')
+  ft_warning('Node-shift should not be larger than 0.3, setting to 0.3')
   cfg.shift = 0.3;
 end
-
 
 % do the mesh extraction
 % this has to be adjusted for FEM!!!
@@ -108,10 +110,33 @@ cfg_reslice.zrange     = minmaxpos(3,:);
 cfg_reslice.method     = 'nearest';
 seg_build              = ft_volumereslice(cfg_reslice, mri);
 
-% build the mesh
-mesh = build_mesh_hexahedral(cfg, seg_build);
+% create hexahedra
+mesh.hex = create_elements(seg_build.dim);
+fprintf('Created elements...\n' )
 
-% converting position of meshpoints to the head coordinate system
+% create nodes, these are corner points of the voxels expressed in voxel indices
+mesh.pos = create_nodes(seg_build.dim);
+fprintf('Created nodes...\n' )
+
+if cfg.shift > 0
+  mesh.pos = shift_nodes(mesh.pos, mesh.hex, seg_build.seg, cfg.shift, seg_build.dim);
+end
+
+% add the tissue labels
+mesh.labels = seg_build.seg(:);
+
+% delete background voxels(if desired)
+if cfg.background==0
+  mesh.hex    = mesh.hex(mesh.labels~=0, :);
+  mesh.labels = mesh.labels(mesh.labels~=0);
+end
+
+% delete unused nodes and ensure correct offset
+[C, ia, ic] = unique(mesh.hex(:));
+mesh.pos    = mesh.pos(C, :, :, :) + 0.5; % voxel indexing offset
+mesh.hex(:) = ic;
+
+% converting position of mesh points to the head coordinate system
 mesh.pos = ft_warp_apply(seg_build.transform, mesh.pos, 'homogeneous');
 
 labels = mesh.labels;
@@ -127,67 +152,6 @@ for i = 1:numlabels
 end
 
 end % function
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTIONS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function mesh = build_mesh_hexahedral(cfg, mri)
-
-background = cfg.background;
-shift      = cfg.shift;
-
-% fprintf('Dimensions of the segmentation before restriction to bounding-box: %i %i %i\n', mri.dim(1), mri.dim(2), mri.dim(3));
-% 
-% [bb_x, bb_y, bb_z] = ind2sub(size(mri.seg), find(mri.seg));
-% shift_coord = [min(bb_x) - 2, min(bb_y) - 2, min(bb_z) - 2];
-% bb_x = [min(bb_x), max(bb_x)];
-% bb_y = [min(bb_y), max(bb_y)];
-% bb_z = [min(bb_z), max(bb_z)];
-% 
-% % the segmentation is constrained to the bounding-box, with one layer of
-% % zeros surrounding it. the shift_coord is needed to correct the voxel
-% % indices w.r.t. the original volume.
-% x_dim = size(bb_x(1)-1:bb_x(2)+1, 2);
-% y_dim = size(bb_y(1)-1:bb_y(2)+1, 2);
-% z_dim = size(bb_z(1)-1:bb_z(2)+1, 2);
-% labels = zeros(x_dim, y_dim, z_dim);
-% labels(2:(x_dim-1), 2:(y_dim-1), 2:(z_dim-1)) = mri.seg(bb_x(1):bb_x(2), bb_y(1):bb_y(2), bb_z(1):bb_z(2));
-labels = mri.seg;
-
-fprintf('Dimensions of the segmentation after restriction to bounding-box: %i %i %i\n', mri.dim(1), mri.dim(2), mri.dim(3));
-
-% create hexahedra
-mesh.hex = create_elements(mri.dim);
-fprintf('Created elements...\n' )
-
-% create nodes, these are corner points of the voxels expressed in voxel indices
-mesh.pos = create_nodes(mri.dim);
-fprintf('Created nodes...\n' )
-
-if shift < 0 || shift > 0.3
-  ft_error('Please choose a shift parameter between 0 and 0.3!');
-elseif shift > 0
-  mesh.pos = shift_nodes(mesh.pos, mesh.hex, labels, shift, mri.dim);
-end
-
-%background = 1;
-% delete background voxels(if desired)
-if(background == 0)
-  mesh.hex = mesh.hex(labels ~= 0, :);
-  mesh.labels = labels(labels ~= 0);
-else
-  mesh.labels = labels(:);
-end
-
-
-% delete unused nodes
-[C, ia, ic] = unique(mesh.hex(:));
-mesh.pos = mesh.pos(C, :, :, :) + 0.5; % voxel indexing offset
-%mesh.pos = mesh.pos + repmat(shift_coord, size(mesh.pos, 1), 1);
-mesh.hex(:) = ic;
-
-end % subfunction
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function creating elements from a MRI-Image with the dimensions x_dim,
@@ -322,7 +286,7 @@ clear distribution;
 % calculate the centroid for each element
 centroids = zeros(size(hex, 1), 3);
 for l = 1:3
-  centroids(:, l) = sum(reshape(nodes(hex(:, :), l), size(hex, 1), 8)')'/8;
+  centroids(:, l) = sum(reshape(nodes(hex(:, :), l), size(hex, 1), 8),2)./8;
 end
 
 % set a dummy centroid
