@@ -232,11 +232,7 @@ z_dim = dim(3);
 nodes = points;
 
 % helper vector for indexing the nodes
-b = 1:prod(dim+1);
-
-% create an expanded labels matrix, with a rim of 0's around the edges
-labels2 = zeros(dim+2);
-labels2(2:end-1,2:end-1,2:end-1) = labels;
+b = 1:(x_dim+1)*(y_dim+1)*(z_dim+1);
 
 % vector which gives the corresponding element to a node(in the sense
 % of how the node-numbering was done, see comment for create_elements).
@@ -247,30 +243,71 @@ offset = (b - nodes(b, 2)' - (nodes(b, 3))'*(y_dim+1+x_dim))';
 offset(offset <= 0) = size(labels, 1)+1;
 offset(offset > size(hex, 1)) = size(labels, 1)+1;
 
-% matrix holding the label of each surrounding element
+% create array containing the surrounding elements for each node
+%surrounding = zeros((x_dim+1)*(y_dim+1)*(z_dim+1), 8);
+
+% find out the surrounding of each node(if there is any)
+% find element to which the node is bottom left front
+%surrounding((nodes(b, 1) < x_dim) & (nodes(b, 3) < z_dim), 1) = offset((nodes(b, 1) < x_dim) & (nodes(b, 3) < z_dim));
+% bottom right front
+%surrounding(nodes(b, 1) > 0, 2) = offset(nodes(b, 1) > 0, 1) -1;
+% bottom left back
+%surrounding(nodes(b, 2) > 0, 3) = offset(nodes(b, 2) > 0, 1) - x_dim;
+% bottom right back
+%surrounding((nodes(b, 2) > 0) & (nodes(b, 1) > 0), 4) = offset((nodes(b, 2) > 0) & (nodes(b, 1) > 0), 1) - (x_dim) - 1;
+% top left front
+%surrounding(nodes(b, 3) > 0, 5) = offset(nodes(b, 3) > 0, 1) - (x_dim)*(y_dim);
+% top right front
+%surrounding(nodes(b, 3) > 0, 6) = offset(nodes(b, 3) > 0, 1) - (x_dim)*(y_dim) - 1;
+% top left back
+%surrounding(nodes(b, 3) > 0, 7) = offset(nodes(b, 3) > 0, 1) - (x_dim)*(y_dim) - x_dim;
+% top right back
+%surrounding((nodes(b, 3) > 0) & (nodes(b, 2) > 0), 8) = offset((nodes(b, 3) > 0) & (nodes(b, 2) > 0), 1) - (x_dim)*(y_dim) - (x_dim) -1;
+%clear offset;
+%clear b;
+
+% those entries in the surrounding matrix which point to non-existing
+% elements(> size(hex, 1) or <= 0) we overwrite with a
+% dummy element
+%surrounding(surrounding <= 0) = size(labels, 1) + 1;
+%surrounding(surrounding > size(hex, 1)) = size(labels, 1)+1;
+
+% set the label of the dummy element to be zero(background)
+labels(size(labels, 1)+1) = 0;
+
+% matrixs holding the label of each surrounding element
 %surroundinglabels = labels(surrounding);
-surroundinglabels = zeros(prod(dim+1), 8);
-surroundinglabels(:,1) = reshape(labels2(1:end-1, 1:end-1, 1:end-1), prod(dim+1), []);
-surroundinglabels(:,2) = reshape(labels2(1:end-1, 1:end-1, 2:end),   prod(dim+1), []);
-surroundinglabels(:,3) = reshape(labels2(1:end-1, 2:end,   1:end-1), prod(dim+1), []);
-surroundinglabels(:,4) = reshape(labels2(1:end-1, 2:end,   2:end),   prod(dim+1), []);
-surroundinglabels(:,5) = reshape(labels2(2:end,   1:end-1, 1:end-1), prod(dim+1), []);
-surroundinglabels(:,6) = reshape(labels2(2:end,   1:end-1, 2:end),   prod(dim+1), []);
-surroundinglabels(:,7) = reshape(labels2(2:end,   2:end,   1:end-1), prod(dim+1), []);
-surroundinglabels(:,8) = reshape(labels2(2:end,   2:end,   2:end),   prod(dim+1), []);
+surroundinglabels = zeros((x_dim+1)*(y_dim+1)*(z_dim+1), 8);
+surroundinglabels((nodes(b, 1) < x_dim) & (nodes(b, 3) < z_dim), 1) = labels(offset((nodes(b, 1) < x_dim) & (nodes(b, 3) < z_dim)));
+surroundinglabels(nodes(b, 1) > 0, 2) = labels(offset(nodes(b, 1) > 0, 1) -1);
+surroundinglabels(nodes(b, 2) > 0, 3) = labels(offset(nodes(b, 2) > 0, 1) - x_dim);
+offsetnow = offset((nodes(b, 2) > 0) & (nodes(b, 1) > 0), 1) - (x_dim) - 1;
+offsetnow(offsetnow <= 0) = size(labels, 1)+1;
+surroundinglabels((nodes(b, 2) > 0) & (nodes(b, 1) > 0), 4) = labels(offsetnow);
+offsetnow = offset(nodes(b, 3) > 0, 1) - (x_dim)*(y_dim);
+offsetnow(offsetnow <= 0) = size(labels, 1)+1;
+surroundinglabels(nodes(b, 3) > 0, 5) = labels(offsetnow);
+offsetnow = offset(nodes(b, 3) > 0, 1) - (x_dim)*(y_dim) - 1;
+offsetnow(offsetnow <= 0) = size(labels, 1)+1;
+surroundinglabels(nodes(b, 3) > 0, 6) = labels(offsetnow);
+offsetnow = offset(nodes(b, 3) > 0, 1) - (x_dim)*(y_dim) - x_dim;
+offsetnow(offsetnow <= 0) = size(labels, 1)+1;
+surroundinglabels(nodes(b, 3) > 0, 7) = labels(offsetnow);
+offsetnow = offset((nodes(b, 3) > 0) & (nodes(b, 2) > 0), 1) - (x_dim)*(y_dim) - (x_dim) -1;
+offsetnow(offsetnow <= 0) = size(labels, 1)+1;
+surroundinglabels((nodes(b, 3) > 0) & (nodes(b, 2) > 0), 8) = labels(offsetnow);
 
 % matrix showing how many types of each label are around a given node
-nlabels      = numel(unique(labels(:)));
-distribution = zeros(size(nodes, 1), nlabels);
+distribution = zeros(size(nodes, 1), size(unique(labels), 1));
 % the following assumes that the labels are 1, 2, ...
-for l = 1:nlabels
+for l = 1:size(unique(labels), 1)
   for k = 1:8
     distribution(:, l) = distribution(:, l) + (surroundinglabels(:, k) == l);
   end
 end
 
 % fill up the last column with the amount of background labels
-distribution(:, nlabels) = 8 - sum(distribution(:, 1:nlabels),2);
+distribution(:, (size(unique(labels), 1))) = 8 - sum(distribution(:, 1:size(unique(labels), 1)),2);
 
 % how many different labels are there around each node
 distsum = sum(distribution>0, 2);
@@ -286,7 +323,7 @@ clear distribution;
 % calculate the centroid for each element
 centroids = zeros(size(hex, 1), 3);
 for l = 1:3
-  centroids(:, l) = sum(reshape(nodes(hex(:, :), l), size(hex, 1), 8),2)./8;
+  centroids(:, l) = sum(reshape(nodes(hex(:, :), l), size(hex, 1), 8)')'/8;
 end
 
 % set a dummy centroid
@@ -302,6 +339,26 @@ for i = 1:size(unique(labels), 1)+1
   end
   tbc(ismember(minpos, i) == 1, :) = c(ismember(minpos, i) == 1, :);
 end
+
+%     % matrix that shows which elements are to be considered as minority
+%     % around a given node
+%     clear surroundinglabels;
+%      % helper matrix, c(i, j, k) is one when surroundinglabels(i, j) == k
+%     c = zeros(size(surroundinglabels, 1), size(surroundinglabels, 2), size(unique(labels), 1)+1);
+%     for i = 1:size(unique(labels), 1)
+%         c(:, :, i) = surroundinglabels == i;
+%     end
+%     c(:, :, size(unique(labels), 1)+1) = surroundinglabels == 0;
+%
+%
+%     % matrix that shows which elements are to be considered as minority
+%     % around a given node
+%     tbc = zeros(size(surroundinglabels));
+%     clear surroundinglabels;
+%     for i = 1:size(unique(labels), 1)+1
+%     tbc(ismember(minpos, i) == 1, :) = c(ismember(minpos, i) == 1, :, i);
+%     end
+
 clear c
 
 % delete cases in which we don't have a real minimum
@@ -323,6 +380,7 @@ surroundingconsidered(nodes(b, 3) > 0, 5) = (offset(nodes(b, 3) > 0, 1) - (x_dim
 surroundingconsidered(nodes(b, 3) > 0, 6) = (offset(nodes(b, 3) > 0, 1) - (x_dim)*(y_dim) - 1).*tbc(nodes(b, 3) > 0, 6);
 surroundingconsidered(nodes(b, 3) > 0, 7) = (offset(nodes(b, 3) > 0, 1) - (x_dim)*(y_dim) - x_dim).*tbc(nodes(b, 3) > 0, 7);
 surroundingconsidered((nodes(b, 3) > 0) & (nodes(b, 2) > 0), 8) = (offset((nodes(b, 3) > 0) & (nodes(b, 2) > 0), 1) - (x_dim)*(y_dim) - (x_dim) -1).*tbc((nodes(b, 3) > 0) & (nodes(b, 2) > 0), 8);
+%clear surrounding
 clear tbc
 
 tbcsum(tbcsum == 8) = 0;
@@ -341,6 +399,7 @@ centroidcomb = zeros(size(nodes));
 centroidcomb(:, 1) = sum(reshape(centroids(surroundingconsidered, 1), [], 8), 2);
 centroidcomb(:, 2) = sum(reshape(centroids(surroundingconsidered, 2), [], 8), 2);
 centroidcomb(:, 3) = sum(reshape(centroids(surroundingconsidered, 3), [], 8), 2);
+clear surroundingconsidered;
 centroidcomb(tbcsum ~= 0, 1) = centroidcomb(tbcsum ~= 0, 1)./tbcsum(tbcsum ~= 0);
 centroidcomb(tbcsum ~= 0, 2) = centroidcomb(tbcsum ~= 0, 2)./tbcsum(tbcsum ~= 0);
 centroidcomb(tbcsum ~= 0, 3) = centroidcomb(tbcsum ~= 0, 3)./tbcsum(tbcsum ~= 0);
