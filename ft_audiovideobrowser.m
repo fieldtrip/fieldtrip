@@ -16,7 +16,7 @@ function ft_audiovideobrowser(cfg, data)
 %   cfg.audiofile   = string with the filename
 %   cfg.videofile   = string with the filename
 %   cfg.trl         = Nx3 matrix, expressed in the MEG/EEG data samples, see FT_DEFINETRIAL
-%   cfg.anonimize   = [x1 x2 y1 y2], range in pixels for placing a bar over the eyes (default = [])
+%   cfg.anonymize   = [x1 x2 y1 y2], range in pixels for placing a bar over the eyes (default = [])
 %   cfg.interactive = 'yes' or 'no' (default = 'yes')
 %
 % If you do NOT specify cfg.datahdr, the header must be present in the input data.
@@ -73,9 +73,13 @@ if hasdata
   data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 end
 
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'renamed', {'anonimize', 'anonymize'}); % fix typo in previous version of the code
+cfg = ft_checkconfig(cfg, 'renamed', {'anonymise', 'anonymize'}); % use North American and Oxford British spelling
+
 % get the options from the user or set defaults
 cfg.interactive = ft_getopt(cfg, 'interactive', 'yes');
-cfg.anonimize   = ft_getopt(cfg, 'anonimize');
+cfg.anonymize   = ft_getopt(cfg, 'anonymize');
 % the headers contain the information required for synchronization
 cfg.datahdr     = ft_getopt(cfg, 'datahdr');
 cfg.audiohdr    = ft_getopt(cfg, 'audiohdr');
@@ -238,9 +242,9 @@ while (true)
     videodat = uint8(videodat);
     videodat = reshape(videodat, dim);
     
-    if ~isempty(cfg.anonimize)
+    if ~isempty(cfg.anonymize)
       % place a bar over the eyes
-      videodat(cfg.anonimize(1):cfg.anonimize(2), cfg.anonimize(3):cfg.anonimize(4), :) = 0;
+      videodat(cfg.anonymize(1):cfg.anonymize(2), cfg.anonymize(3):cfg.anonymize(4), :) = 0;
     end
     
     % remember the header details to speed up subsequent calls
