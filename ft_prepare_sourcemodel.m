@@ -668,8 +668,8 @@ if strcmp(cfg.spherify, 'yes')
 end
 
 if ~isempty(cfg.moveinward)
-  if ~any([strcmp(cfg.method, 'basedonshape'), strcmp(cfg.method, 'basedoncortex'), strcmp(cfg.method, 'basedonvol'), strcmp(cfg.method, 'basedonfile')])
-      ft_warning('cfg.moveinward is designed to work with surface sourcemodels, not 3D grids.')
+  if ~ismember(cfg.method, {'basedonshape', 'basedoncortex', 'basedonvol', 'basedonfile'})
+      ft_warning('cfg.moveinward is designed to work with surface based sourcemodels, not with 3D grid sourcemodels.')
   end
   % construct a triangulated boundary of the source compartment
   [pos1, tri1] = headsurface(headmodel, [], 'inwardshift', cfg.moveinward, 'surface', 'brain');
