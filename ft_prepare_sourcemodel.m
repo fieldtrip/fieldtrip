@@ -63,10 +63,10 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 % Other configuration options include
 %   cfg.unit          = string, can be 'mm', 'cm', 'm' (default is automatic)
 %   cfg.tight         = 'yes' or 'no' (default is automatic)
-%   cfg.inwardshift   = number, how much should the innermost surface be moved inward to constrain
-%                       sources to be considered inside the source compartment (default = 0)
-%   cfg.moveinward    = number, move dipoles inward to ensure a certain distance to the innermost
-%                       surface of the source compartment (default = 0)
+%   cfg.inwardshift   = number, amount to shift the innermost surface of the headmodel inward when determining 
+%                       whether sources are inside or outside the source compartment (default = 0)
+%   cfg.moveinward    = number, move sources inward to ensure a certain minimal distance to the innermost
+%                       surface of the headmodel (default = 0)
 %   cfg.spherify      = 'yes' or 'no', scale the source model so that it fits inside a sperical
 %                       volume conduction model (default = 'no')
 %   cfg.symmetry      = 'x', 'y' or 'z' symmetry for two dipoles, can be empty (default = [])
@@ -80,6 +80,20 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 %
 % The headmodel or volume conduction model can be specified as
 %   cfg.headmodel     = structure with volume conduction model or filename, see FT_PREPARE_HEADMODEL
+%
+% The cfg.inwardshift option can be used for 3D grids to specify a positive (inward)
+% or negative (outward) number to shift the innermost surface of the headmodel
+% (usually the skull) when determining whether sources are to be flagged as inside or
+% outside the source compartment. Only sources flagged as inside will be considered
+% for subsequent source reconstructions. An ourward shift can be useful for a
+% spherical or singleshell MEG headmodel. For a source model based on a cortical
+% sheet in general you want all sources to be considered inside. For a BEM headmodel
+% (EEG or MEG), there should never be any sources outside the actual source
+% compartment.
+%
+% The cfg.moveinward option can be used for a source model based on a cortical sheet
+% to push the sources inward a little bit to ensure sufficient distance to the
+% innermost surface of a BEM headmodel (EEG or MEG).
 %
 % See also FT_PREPARE_LEADFIELD, FT_PREPARE_HEADMODEL, FT_SOURCEANALYSIS,
 % FT_DIPOLEFITTING, FT_MEGREALIGN
