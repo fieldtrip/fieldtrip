@@ -6,7 +6,7 @@ function test_issue1161
 
 %%
 
-% cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/nirs/snirf'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/nirs/snirf'));
 
 filename = {
   'SNIRF_example.snirf'
