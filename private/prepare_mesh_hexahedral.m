@@ -17,11 +17,6 @@ function mesh = prepare_mesh_hexahedral(cfg, mri)
 % ensure that the input is consistent with what this function expects
 mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'}, 'hasunit', 'yes');
 
-% get the default options
-cfg.tissue      = ft_getopt(cfg, 'tissue');
-cfg.shift       = ft_getopt(cfg, 'shift');
-cfg.background  = ft_getopt(cfg, 'background', 0);
-
 % The support for cfg.resolution was discontinued on Aug 2020, due to interpolation
 % issues. When you do a nearest-neighbour interpolation of a segmented volume with a
 % non-integer amount (i.e. not a decimation or an n-fold upsampling), the
@@ -31,6 +26,11 @@ cfg.background  = ft_getopt(cfg, 'background', 0);
 % segmentation prior to creating the mesh, or better by doing FT_VOLUMERESLICE on the
 % anatomy before making the segmentation.
 cfg = ft_checkconfig(cfg, 'forbidden', 'resolution');
+
+% get the default options
+cfg.tissue      = ft_getopt(cfg, 'tissue');
+cfg.shift       = ft_getopt(cfg, 'shift');
+cfg.background  = ft_getopt(cfg, 'background', 0);
 
 if isempty(cfg.tissue)
   mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
@@ -148,22 +148,22 @@ for i = 1:numlabels
   mesh.tissuelabel{i} = tissue{i};
 end
 
-end % function
+end % function prepare_mesh_hexahedral
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% function creating elements from a MRI-Image with the dimensions x_dim,
-% y_dim, z_dim. Each voxel of the MRI-Image corresponds to one element in
-% the hexahedral mesh. The numbering of the elements is as follows:
-% the first x-y-plane(z == 1) is numbered by incrementing in x-direction
-% first until x_dim is reached. This is done for each row in y-direction
-% until y_dim is reached. Using the resulting x_dim-by-y_dim numbering as
-% an overlay and adding (i-1)*(x_dim*y_dim) to the overlay while i is
-% iterating through the z-dimension(until i == z_dim) we obtain a numbering
-% for all the elements.
-% The node-numbering is done accordingly: the bottom left node in element i
-% has number i in the node-numbering. All the remaining nodes are numbered
-% in the same manner as described above for the element numbering(note the
-% different dimensionalities: x_dim+1 instead of x_dim etc.).
+% function for creating elements from a MRI-Image with the dimensions x_dim, y_dim,
+% z_dim. Each voxel of the MRI-Image corresponds to one element in the hexahedral
+% mesh. The numbering of the elements is as follows: the first x-y-plane(z == 1) is
+% numbered by incrementing in x-direction first until x_dim is reached. This is done
+% for each row in y-direction until y_dim is reached. Using the resulting
+% x_dim-by-y_dim numbering as an overlay and adding (i-1)*(x_dim*y_dim) to the
+% overlay while i is iterating through the z-dimension(until i == z_dim) we obtain a
+% numbering for all the elements.
+% The node-numbering is done accordingly: the bottom left node in element i has
+% number i in the node-numbering. All the remaining nodes are numbered in the same
+% manner as described above for the element numbering(note the different
+% dimensionalities: x_dim+1 instead of x_dim etc.).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function elements = create_elements(dim)
 
 x_dim    = dim(1);
@@ -196,12 +196,13 @@ elements(:, 5) = b + c + (x_dim+1) * (y_dim+1);
 elements(:, 6) = b + c + (x_dim+1) * (y_dim+1) + 1;
 elements(:, 7) = b + c + (x_dim+1) * (y_dim+1) + (x_dim+1) + 1;
 elements(:, 8) = b + c + (x_dim+1) * (y_dim+1) + (x_dim+1);
-end % subfunction
+end % subfunction create_elements
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% function creating the nodes and assigning coordinates in the
-% [0, x_dim]x[0, y_dim]x[0, z_dim] box. for details on the node-numbering see
-% comments for create_elements.
+% function creating the nodes and assigning coordinates in the [0, x_dim]x[0,
+% y_dim]x[0, z_dim] box. for details on the node-numbering see comments for
+% create_elements.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function nodes = create_nodes(dim)
 
 x_dim = dim(1);
@@ -216,10 +217,11 @@ nodes(:, 1) = mod(b, (x_dim+1));
 nodes(:, 2) = mod(fix(b/(x_dim+1)), (y_dim+1));
 nodes(:, 3) = fix(b/((x_dim + 1)*(y_dim+1)));
 
-end % subfunction
+end % subfunction create_nodes
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% function shifting the nodes:
+% function for shifting the nodes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function nodes = shift_nodes(points, hex, labels, sh, dim)
 
 fprintf('Applying shift %f\n', sh);
@@ -405,4 +407,4 @@ centroidcomb(tbcsum ~= 0, 3) = centroidcomb(tbcsum ~= 0, 3)./tbcsum(tbcsum ~= 0)
 nodes(tbcsum == 0, :) = points(tbcsum == 0, :);
 nodes(tbcsum ~= 0, :) = (1-sh)*nodes(tbcsum ~= 0, :) + sh*centroidcomb(tbcsum ~= 0, :);
 
-end % subfunction
+end % subfunction shift_nodes
