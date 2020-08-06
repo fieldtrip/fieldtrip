@@ -38,11 +38,10 @@ ft_sourceplot(cfg, segindx);
 cfg = [];
 cfg.shift = 0.3;
 cfg.method = 'hexahedral';
-cfg.resolution = 1;
 mesh_vol_hex1 = ft_prepare_mesh(cfg, segprob);
 
-cfg.resolution = 0.5;
-mesh_vol_hex05 = ft_prepare_mesh(cfg, segprob);
+%cfg.resolution = 0.5;
+%mesh_vol_hex05 = ft_prepare_mesh(cfg, segprob);
 
 minmaxpos(:,1) = segprob.transform*([0 0 0 1])';
 minmaxpos(:,2) = segprob.transform*[segprob.dim+1 1]';
@@ -65,12 +64,12 @@ hold on
 ft_plot_mesh(mesh_vol_hex1, 'surfaceonly', false, 'facecolor', 'none', 'edgecolor', 'm');
 view(120, 30)
 
-% this one doe snot look OK
-figure
-ft_plot_ortho(segindx.seg, 'transform', segindx.transform, 'location', [5.5 5.5 5.5], 'style', 'intersect');
-hold on
-ft_plot_mesh(mesh_vol_hex05, 'surfaceonly', false, 'facecolor', 'none', 'edgecolor', 'm');
-view(120, 30)
+% % this one does not look OK
+% figure
+% ft_plot_ortho(segindx.seg, 'transform', segindx.transform, 'location', [5.5 5.5 5.5], 'style', 'intersect');
+% hold on
+% ft_plot_mesh(mesh_vol_hex05, 'surfaceonly', false, 'facecolor', 'none', 'edgecolor', 'm');
+% view(120, 30)
 
 % this one looks OK in terms of alginment
 figure

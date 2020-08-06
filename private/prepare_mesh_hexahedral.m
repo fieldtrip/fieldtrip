@@ -19,9 +19,16 @@ mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'}, 'hasunit', 'yes'
 
 % get the default options
 cfg.tissue      = ft_getopt(cfg, 'tissue');
-cfg.resolution  = ft_getopt(cfg, 'resolution', 1); % in mm
 cfg.shift       = ft_getopt(cfg, 'shift');
 cfg.background  = ft_getopt(cfg, 'background', 0);
+
+cfg = ft_checkconfig(cfg, 'forbidden', 'resolution');
+% the support for resolution is discontinued Aug 2020, due to interpolation
+% issues (i.e. with a nearest-interpolation, the interpolated segmentation
+% will be slightly shifted w.r.t. to the original). Different resolutions 
+% will be at the user's responsibility. This can be achieved by a call to
+% ft_volumereslice prior to creating the mesh, or better still reslice the
+% anatomy before segmentation.
 
 if isempty(cfg.tissue)
   mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
@@ -98,32 +105,20 @@ else
   end
 end
 
-% reslice to desired resolution, and add a layer of voxels around the edges
-minmaxpos(:,1) = mri.transform*([0 0 0 1])';
-minmaxpos(:,2) = mri.transform*[mri.dim+1 1]';
-
-cfg_reslice = [];
-cfg_reslice.resolution = cfg.resolution;
-cfg_reslice.xrange     = minmaxpos(1,:); % this is more robust than the dim, in case the origin is not inside the volume
-cfg_reslice.yrange     = minmaxpos(2,:);
-cfg_reslice.zrange     = minmaxpos(3,:);
-cfg_reslice.method     = 'nearest';
-seg_build              = ft_volumereslice(cfg_reslice, mri);
-
 % create hexahedra
-mesh.hex = create_elements(seg_build.dim);
+mesh.hex = create_elements(mri.dim);
 fprintf('Created elements...\n' )
 
 % create nodes, these are corner points of the voxels expressed in voxel indices
-mesh.pos = create_nodes(seg_build.dim);
+mesh.pos = create_nodes(mri.dim);
 fprintf('Created nodes...\n' )
 
 if cfg.shift > 0
-  mesh.pos = shift_nodes(mesh.pos, mesh.hex, seg_build.seg, cfg.shift, seg_build.dim);
+  mesh.pos = shift_nodes(mesh.pos, mesh.hex, mri.seg, cfg.shift, mri.dim);
 end
 
 % add the tissue labels
-mesh.labels = seg_build.seg(:);
+mesh.labels = mri.seg(:);
 
 % delete background voxels(if desired)
 if cfg.background==0
@@ -137,7 +132,7 @@ mesh.pos    = mesh.pos(C, :, :, :) + 0.5; % voxel indexing offset
 mesh.hex(:) = ic;
 
 % converting position of mesh points to the head coordinate system
-mesh.pos = ft_warp_apply(seg_build.transform, mesh.pos, 'homogeneous');
+mesh.pos = ft_warp_apply(mri.transform, mesh.pos, 'homogeneous');
 
 labels = mesh.labels;
 mesh = rmfield(mesh, 'labels');
