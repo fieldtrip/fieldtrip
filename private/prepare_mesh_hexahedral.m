@@ -4,13 +4,13 @@ function mesh = prepare_mesh_hexahedral(cfg, mri)
 %
 % Configuration options for generating a regular 3-D grid
 %   cfg.tissue     = cell with the names of the compartments that should be meshed
-%   cfg.resolution = desired resolution of the mesh (default = 1 mm)
 %   cfg.shift
 %   cfg.background
 %
 % See also PREPARE_MESH_SEGMENTATION, PREPARE_MESH_MANUAL, PREPARE_MESH_HEADSHAPE
 
 % Copyrights (C) 2012-2013, Johannes Vorwerk
+% Copyrights (C) 2020, Jan-Mathijs Schoffelen
 %
 % $Id$
 
@@ -22,13 +22,15 @@ cfg.tissue      = ft_getopt(cfg, 'tissue');
 cfg.shift       = ft_getopt(cfg, 'shift');
 cfg.background  = ft_getopt(cfg, 'background', 0);
 
+% The support for cfg.resolution was discontinued on Aug 2020, due to interpolation
+% issues. When you do a nearest-neighbour interpolation of a segmented volume with a
+% non-integer amount (i.e. not a decimation or an n-fold upsampling), the
+% interpolated segmentation will become slightly shifted w.r.t. the original
+% segmentation. From now on the handling of different mesh resolutions will be at the
+% user's responsibility. This can be achieved by using FT_VOLUMERESLICE on the
+% segmentation prior to creating the mesh, or better by doing FT_VOLUMERESLICE on the
+% anatomy before making the segmentation.
 cfg = ft_checkconfig(cfg, 'forbidden', 'resolution');
-% the support for resolution is discontinued Aug 2020, due to interpolation
-% issues (i.e. with a nearest-interpolation, the interpolated segmentation
-% will be slightly shifted w.r.t. to the original). Different resolutions 
-% will be at the user's responsibility. This can be achieved by a call to
-% ft_volumereslice prior to creating the mesh, or better still reslice the
-% anatomy before segmentation.
 
 if isempty(cfg.tissue)
   mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
