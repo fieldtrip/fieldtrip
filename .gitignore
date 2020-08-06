@@ -12,6 +12,11 @@ external/iso2mesh/sample
 odmTest
 utilities/buildtimestamp.m
 
+bin/fieldtrip.app
+bin/readme.txt
+bin/requiredMCRProducts.txt
+bin/run_fieldtrip.sh
+
 realtime/bin/*/demo_combined
 realtime/bin/*/demo_event
 realtime/bin/*/demo_sinewave
@@ -28,3 +33,5 @@ realtime/bin/*/test_gethdr
 realtime/bin/*/test_nslookup
 realtime/bin/*/test_pthread
 realtime/bin/*/test_waitdat
+
+external/npmk/NPMKverChecker.dat

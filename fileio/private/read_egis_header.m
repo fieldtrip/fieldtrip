@@ -50,22 +50,22 @@ if fhdr(1)==16909060
     endian = 'ieee-be';
   elseif cEndian == 'L'
     endian = 'ieee-le';
-  end;
+  end
 elseif fhdr(1)==67305985
   if cEndian == 'B'
     endian = 'ieee-le';
   elseif cEndian == 'L'
     endian = 'ieee-be';
-  end;
+  end
 else
   ft_error('This is not an EGIS average file.');
-end;
+end
 
 fhdr(2)=fread(fh,1,'int16',endian); %HdrVer
 
 if (fhdr(2) ~= -1) && (fhdr(2) ~= 3)
   ft_error('This is not an EGIS average file.');
-end;
+end
 
 fhdr(3)=fread(fh,1,'uint16',endian); %LHeader
 fhdr(4)=fread(fh,1,'uint32',endian); %LData

@@ -1,10 +1,9 @@
 function [lf] = ft_compute_leadfield(dippos, sens, headmodel, varargin)
 
 % FT_COMPUTE_LEADFIELD computes a forward solution for a dipole in a a volume
-% conductor model. The forward solution is expressed as the leadfield
-% matrix (Nchan*3), where each column corresponds with the potential or field
-% distributions on all sensors for one of the x,y,z-orientations of the
-% dipole.
+% conductor model. The forward solution is expressed as the leadfield matrix
+% (Nchan*3), where each column corresponds with the potential or field distributions
+% on all sensors for one of the x,y,z-orientations of the dipole.
 %
 % Use as
 %   [lf] = ft_compute_leadfield(dippos, sens, headmodel, ...)
@@ -27,20 +26,19 @@ function [lf] = ft_compute_leadfield(dippos, sens, headmodel, varargin)
 %
 % Additional input arguments can be specified as key-value pairs, supported
 % optional arguments are
-%   'reducerank'      = 'no' or number
-%   'normalize'       = 'no', 'yes' or 'column'
+%   'reducerank'      = 'no' or number (default = 3 for EEG, 2 for MEG)
+%   'backproject'     = 'yes' or 'no', in the case of a rank reduction this parameter determines whether the result will be backprojected onto the original subspace (default = 'yes')
+%   'normalize'       = 'no', 'yes' or 'column' (default = 'no')
 %   'normalizeparam'  = parameter for depth normalization (default = 0.5)
-%   'weight'          = number or 1xN vector, weight for each dipole position to compensate for the size of the corresponding patch (default = 1)
-%   'backproject'     = 'yes' (default) or 'no', in the case of a rank reduction this parameter determines whether the result will be backprojected onto the original subspace
+%   'weight'          = number or Nx1 vector, weight for each dipole position to compensate for the size of the corresponding patch (default = 1)
 %
-% The leadfield weight may be used to specify a (normalized)
-% corresponding surface area for each dipole, e.g. when the dipoles
-% represent a folded cortical surface with varying triangle size.
+% The leadfield weight may be used to specify a (normalized) corresponding surface
+% area for each dipole, e.g. when the dipoles represent a folded cortical surface
+% with varying triangle size.
 %
-% Depending on the specific input arguments for the sensor and volume, this
-% function will select the appropriate low-level EEG or MEG forward model.
-% The leadfield matrix for EEG will have an average reference over all the
-% electrodes.
+% Depending on the specific input arguments for the sensor and volume, this function
+% will select the appropriate low-level EEG or MEG forward model. The leadfield
+% matrix for EEG will have an average reference over all the electrodes.
 %
 % The supported forward solutions for MEG are
 %   infinite homogenous medium
@@ -64,7 +62,7 @@ function [lf] = ft_compute_leadfield(dippos, sens, headmodel, varargin)
 % FT_HEADMODEL_SINGLESHELL, FT_HEADMODEL_SINGLESPHERE,
 % FT_HEADMODEL_HALFSPACE
 
-% Copyright (C) 2004-2016, Robert Oostenveld
+% Copyright (C) 2004-2020, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -142,6 +140,10 @@ end
 Ndipoles = numel(dippos)/3;
 if all(size(dippos)==[1 3*Ndipoles])
   dippos = reshape(dippos, 3, Ndipoles)';
+end
+
+if isscalar(weight)
+  weight = weight * ones(Ndipoles, 1);
 end
 
 if isfield(headmodel, 'unit') && isfield(sens, 'unit') && ~strcmp(headmodel.unit, sens.unit)
@@ -265,11 +267,17 @@ elseif ismeg
       end
 
     case 'openmeeg'
-        % OpenMEEG lead field already computed in ft_prepare_leadfield;
-        % load here so any post-processing options (e.g. normalization) may
-        % be applied
-        lf = ft_getopt(varargin, 'lf');
+      ft_hastoolbox('openmeeg', 1);
 
+      dsm         = ft_getopt(varargin, 'dsm');
+      nonadaptive = ft_getopt(varargin, 'nonadaptive');
+      
+      [h2sens,ds2sens] = ft_sensinterp_openmeeg(dippos, headmodel, sens);
+      if isempty(dsm)
+        dsm            = ft_sysmat_openmeeg(dippos, headmodel, sens, nonadaptive);
+      end
+      lf               = ds2sens + h2sens*headmodel.mat*dsm;
+     
     case {'infinite_magneticdipole', 'infinite'}
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % magnetic dipole instead of electric (current) dipole in an infinite vacuum
@@ -424,11 +432,17 @@ elseif iseeg
       lf = eeg_leadfieldb(dippos, sens.elecpos, headmodel);
 
     case 'openmeeg'
-        % OpenMEEG lead field already computed in ft_prepare_leadfield;
-        % load here so any post-processing options (e.g. normalization) may
-        % be applied
-        lf = ft_getopt(varargin, 'lf');
+      ft_hastoolbox('openmeeg', 1);
 
+      dsm         = ft_getopt(varargin, 'dsm');
+      nonadaptive = ft_getopt(varargin, 'nonadaptive');
+      
+      [h2sens,ds2sens] = ft_sensinterp_openmeeg(dippos, headmodel, sens);
+      if isempty(dsm)
+        dsm            = ft_sysmat_openmeeg(dippos, headmodel, sens, nonadaptive);
+      end
+      lf               = ds2sens + h2sens*headmodel.mat*dsm;
+      
     case {'infinite_currentdipole' 'infinite'}
       lf = eeg_infinite_dipole(dippos, sens.elecpos, headmodel);
 
@@ -574,8 +588,8 @@ end
 if ~isempty(weight)
   for i=1:Ndipoles
     lf(:, 3*(i-1)+1) = lf(:, 3*(i-1)+1) * weight(i); % the leadfield for the x-direction
-    lf(:, 3*(i-1)+2) = lf(:, 3*(i-2)+1) * weight(i); % the leadfield for the y-direction
-    lf(:, 3*(i-1)+3) = lf(:, 3*(i-3)+1) * weight(i); % the leadfield for the z-direction
+    lf(:, 3*(i-1)+2) = lf(:, 3*(i-1)+2) * weight(i); % the leadfield for the y-direction
+    lf(:, 3*(i-1)+3) = lf(:, 3*(i-1)+3) * weight(i); % the leadfield for the z-direction
   end
 end
 

@@ -43,7 +43,7 @@ while(1)
     % Reached the end of the file: exit the loop
     if feof(fid)
         break; 
-    end;
+    end
     % Read one line
     buf = fgetl(fid);
     if isempty(buf)

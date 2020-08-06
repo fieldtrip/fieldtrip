@@ -2,7 +2,6 @@ function test_bug1911
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_databrowser
 
 % When ft_movieplotER is called within ft_databrowser by right-clicking on a

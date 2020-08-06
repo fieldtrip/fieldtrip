@@ -1165,7 +1165,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				def->optsize  = mxGetNumberOfElements(opt);
 
 				/* write the message  (hostdef, jobdef, arg, opt) with handshakes in between */
-				/* the slave may close the connection between the message segments in case the job is refused */
+				/* the worker may close the connection between the message segments in case the job is refused */
 				success = 1;
 
 				pthread_mutex_lock(&mutexhost);

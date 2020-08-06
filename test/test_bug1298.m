@@ -2,7 +2,6 @@ function test_bug1298
 
 % MEM 3gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_timelockanalysis ft_prepare_leadfield ft_sourceanalysis 
 
 megraw = load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/data_all.mat'));

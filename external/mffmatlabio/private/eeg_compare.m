@@ -44,7 +44,7 @@ if length(chanlocs1) == length(chanlocs2)
         disp('All channel coordinates are OK');
     end
     if differLabel
-        fprintf('%d channel lables differ\n', differLabel);
+        fprintf('%d channel label(s) differ\n', differLabel);
     else
         disp('All channel labels are OK');
     end

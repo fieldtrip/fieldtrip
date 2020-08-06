@@ -20,7 +20,7 @@ function [volume] = ft_datatype_volume(volume, varargin)
 %
 % Optional fields:
 %   - anatomy, prob, stat, grey, white, csf, or any other field with dimensions that are consistent with dim
-%   - size, coordsys
+%   - unit, size, coordsys
 %
 % Deprecated fields:
 %   - dimord

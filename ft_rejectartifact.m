@@ -251,7 +251,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for type=1:length(cfg.artfctdef.type)
   funhandle = ft_getuserfun(cfg.artfctdef.type{type}, 'artifact');
-  fprintf('evaluating %s\n', func2str(funhandle));
+  ft_info('evaluating %s\n', func2str(funhandle));
   % each call to artifact_xxx adds cfg.artfctdef.xxx.artifact
   if hasdata
     cfg = feval(funhandle, cfg, data);
@@ -272,7 +272,7 @@ for i=1:length(dum)
     if isempty(num)
       num = 0;
     end
-    fprintf('detected %3d %s artifacts\n', num, dum{i});
+    ft_info('detected %3d %s artifacts\n', num, dum{i});
   end
 end
 
@@ -373,7 +373,7 @@ rejectall = (rejectall~=0);
 
 % invert the artifact selection
 if istrue(cfg.artfctdef.invert)
-  fprintf('inverting selection of clean/artifactual data\n');
+  ft_info('inverting selection of clean/artifactual data\n');
   rejectall = ~rejectall;
 end
 
@@ -392,7 +392,7 @@ if isfield(cfg.artfctdef, 'writerej') && ~isempty(cfg.artfctdef.writerej)
     rejectonset = (rejectonset-1)/hdr.Fs;
     rejectofset = (rejectofset-1)/hdr.Fs;
     for rejlop=1:length(rejectonset)
-      fprintf(fid, '%f-%f\n', rejectonset(rejlop), rejectofset(rejlop));
+      ft_info(fid, '%f-%f\n', rejectonset(rejlop), rejectofset(rejlop));
     end
     fclose(fid);
   end
@@ -491,33 +491,33 @@ if any(strcmp(cfg.artfctdef.reject, {'partial', 'complete', 'nan', 'value'}))
     end
   end % for each trial
   
-  fprintf('rejected %3d trials completely\n', count_complete_reject);
-  fprintf('rejected %3d trials partially\n', count_partial_reject);
-  fprintf('filled parts of %3d trials with NaNs\n', count_nan);
-  fprintf('filled parts of %3d trials with the specified value\n', count_value);
+  ft_info('rejected %3d trials completely\n', count_complete_reject);
+  ft_info('rejected %3d trials partially\n', count_partial_reject);
+  ft_info('filled parts of %3d trials with NaNs\n', count_nan);
+  ft_info('filled parts of %3d trials with the specified value\n', count_value);
   if (checkCritToi)
-    fprintf('retained %3d trials with artifacts outside critical window\n', count_outsidecrit);
+    ft_info('retained %3d trials with artifacts outside critical window\n', count_outsidecrit);
   end
-  fprintf('resulting %3d trials\n', size(trialok,1));
+  ft_info('resulting %3d trials\n', size(trialok,1));
   cfg.trlold = trl;      % return the original trial definition in the configuration
   cfg.trl    = trialok;  % return the cleaned trial definition in the configuration
   
   if strcmp(cfg.artfctdef.feedback, 'yes')
-    fprintf('the following trials were completely removed: ');
+    ft_info('the following trials were completely removed: ');
     for k = trlCompletelyRemovedInd
-      fprintf('%d ', k);
+      ft_info('%d ', k);
     end
-    fprintf('\nthe following trials were partially removed: ');
+    ft_info('\nthe following trials were partially removed: ');
     for k = trlPartiallyRemovedInd
-      fprintf('%d ', k);
+      ft_info('%d ', k);
     end
-    fprintf('\n');
+    ft_info('\n');
   end
   
 else
   cfg.trlold = trl;
   cfg.trl    = trl;
-  fprintf('not rejecting any data, only marking the artifacts\n');
+  ft_info('not rejecting any data, only marking the artifacts\n');
 end
 
 if isempty(cfg.trl)

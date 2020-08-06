@@ -115,10 +115,10 @@ for slice = 1:256
     slicedata = uint16(fread(fid, [256 256], 'uint16'));
   else
     ft_error('Unknown datasize in CTF MRI file');
-  end;
+  end
 
   mri(:, :, slice) = slicedata;
-end;
+end
 
 %mri = reshape(mri, [256 256 256]);
 fclose(fid);
@@ -191,7 +191,7 @@ hdr.fiducial.head.rpa = ft_warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.rp
 % @return values matrix Array containing the numbers found
 %
   function [values] = split_nvalue(input, delim)
-    if(nargin < 2), delim = '\\'; end;
+    if(nargin < 2), delim = '\\'; end
 
     remain = input;
     values = [];
@@ -199,7 +199,7 @@ hdr.fiducial.head.rpa = ft_warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.rp
     while(numel(remain > 0))
       [value, remain] = strtok(remain, delim);
       values(end + 1) = str2num(value);
-    end;
+    end
   end
 
 %
@@ -213,8 +213,8 @@ hdr.fiducial.head.rpa = ft_warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.rp
   function [value] = get_value(cpersist, key)
     idx = find(strcmp({cpersist.key}, key));
 
-    if(numel(idx) < 1), ft_error('Specified key does not exist.'); end;
-    if(numel(idx) > 1), ft_error('Specified key is not unique.'); end;
+    if(numel(idx) < 1), ft_error('Specified key does not exist.'); end
+    if(numel(idx) > 1), ft_error('Specified key is not unique.'); end
 
     value = cpersist(idx).value;
   end
@@ -228,7 +228,7 @@ hdr.fiducial.head.rpa = ft_warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.rp
   function [cpersist] = read_cpersist(fid)
     magic = char(fread(fid, 4, 'char'))';
 
-    if(~strcmp(magic, 'WS1_')), ft_error('Invalid CPersist header'); end;
+    if(~strcmp(magic, 'WS1_')), ft_error('Invalid CPersist header'); end
 
     cpersist = struct('key', {}, 'value', {});
 
@@ -238,7 +238,7 @@ hdr.fiducial.head.rpa = ft_warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.rp
       ltext = char(fread(fid, lsize, 'char'))';
 
       % Last label in file is always EndOfParameters
-      if(strcmp(ltext, 'EndOfParameters')), return; end;
+      if(strcmp(ltext, 'EndOfParameters')), return; end
 
       % Read value
       vtype = fread(fid, 1, 'int32');

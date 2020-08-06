@@ -138,7 +138,7 @@ switch fileformat
     % important to keep the original numbers or to make the list with
     % labels compact. This could be made optional.
     compact = true;
-    if compact
+    if compact && ~isempty(atlas.tissuelabel)
       [a, i, j] = unique(atlas.tissue);
       atlas.tissue = reshape(j-1, atlas.dim);
       atlas.tissuelabel = atlas.tissuelabel(a(a~=0));
@@ -163,7 +163,7 @@ switch fileformat
     % important to keep the original numbers or to make the list with
     % labels compact. This could be made optional.
     compact = true;
-    if compact
+    if compact && ~isempty(atlas.tissuelabel)
       [a, i, j] = unique(atlas.tissue);
       atlas.tissue = reshape(j-1, atlas.dim);
       atlas.tissuelabel = atlas.tissuelabel(a(a~=0));
@@ -680,10 +680,12 @@ switch fileformat
       
     else
       % the file does not exist
-      ft_warning('cannot locate %s, making fake tissue labels', filename2);
+      ft_warning('cannot locate %s, making default tissue labels', filename2);
+      
       value = [];
       label = {};
       for i=1:max(brick0(:))
+        % this is consistent with FIXSEGMENTATION
         value(i) = i;
         label{i} = sprintf('tissue %d', i);
       end

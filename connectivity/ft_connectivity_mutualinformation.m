@@ -80,8 +80,17 @@ if (ischar(refindx) && strcmp(refindx, 'all')) || isempty(refindx)
 end
 
 % do not allow anything else than a scalar, or 1:nchan as refindx
-if numel(refindx)~=1 && numel(refindx)~=size(tra,1)
-  error('mi can only be computed using a single, or all channels as reference');
+if numel(refindx)~=1 && numel(refindx)==size(tra,1)
+  % ensure column
+  refindx = refindx(:);
+elseif numel(refindx)~=1 && numel(refindx)~=size(tra,1)
+  if ~conditional && isempty(featureindx)
+    % this is for plain mi, which currently allows for more than 1 single
+    % ref
+    refindx = refindx(:)'; % ensure row
+  else
+    error('this variant of mi can only be computed using a single, or all channels as reference');
+  end
 end
 
 switch method
@@ -205,15 +214,16 @@ switch method
       if isempty(sourcelags)
         sourcelags = lags;
       end
-      output = zeros(numel(refindx), nchans, numel(sourcelags), numel(lags)) + nan;  
+      output = zeros(size(refindx,1), nchans, numel(sourcelags), numel(lags)) + nan;  
     else
-      output = zeros(numel(refindx), nchans, numel(lags)) + nan;
+      output = zeros(size(refindx,1), nchans, numel(lags)) + nan;
     end
     
     if precondition
       finitevalstmp = sum(isfinite(input))==size(input,1);
       input(:,finitevalstmp) = copnorm(input(:,finitevalstmp)')';
       input(:,~finitevalstmp) = nan;
+      finitevals = isfinite(input);
     end
     
     % for each lag if combinelags is false
@@ -231,10 +241,16 @@ switch method
         
         end1 = beg1+n1-1;
         end2 = beg2+n1-1;
-        for p = 1:numel(refindx)
-          tmpsource = nan(sum(tra(refindx(p),:)),n);
-          tmpsource(:, beg1:end1) = input(tra(refindx(p),:), beg2:end2);
+        for p = 1:size(refindx,1)
           
+          if ~isequal(tra, eye(size(tra,1)))
+            tmpsource = nan(sum(tra(refindx(p),:)),n);
+            tmpsource(:, beg1:end1) = input(tra(refindx(p),:), beg2:end2);
+          else 
+            tmpsource = nan(size(refindx,2),n);
+            tmpsource(:, beg1:end1) = input(refindx(p,:), beg2:end2);
+          end
+            
           finitevals2 = sum(finitevals,1)&sum(isfinite(tmpsource),1); % this conservatively takes only the non-nan samples across all input data channels
           
           if ~precondition
@@ -395,24 +411,24 @@ switch method
             % the following step is quite expensive computationally if it
             % needs to be done each time
             tmptarget  = copnorm(target(:,finitevals2)'); % allow for the original target variable to be kept
-            tmptarget  = bsxfun(@minus,tmptarget,mean(tmptarget,1));
+            tmptarget  = bsxfun(@minus,tmptarget,mean(tmptarget,1))';
           
             target_shifted = copnorm(target_shifted(:,finitevals2)');
-            target_shifted = bsxfun(@minus,target_shifted,mean(target_shifted,1));
+            target_shifted = bsxfun(@minus,target_shifted,mean(target_shifted,1))';
           
             % feature signal
             feature = copnorm(feature(:,finitevals2)');
-            feature = bsxfun(@minus,feature,mean(feature,1));
+            feature = bsxfun(@minus,feature,mean(feature,1))';
           else
-            tmptarget  = target(:,finitevals2)';
-            tmptarget  = bsxfun(@minus,tmptarget,mean(tmptarget,1));
+            tmptarget  = target(:,finitevals2);
+            tmptarget  = bsxfun(@minus,tmptarget,mean(tmptarget,2));
           
-            target_shifted = target_shifted(:,finitevals2)';
-            target_shifted = bsxfun(@minus,target_shifted,mean(target_shifted,1));
+            target_shifted = target_shifted(:,finitevals2);
+            target_shifted = bsxfun(@minus,target_shifted,mean(target_shifted,2));
           
             % feature signal
-            feature = feature(:,finitevals2)';
-            feature = bsxfun(@minus,feature,mean(feature,1));
+            feature = feature(:,finitevals2);
+            feature = bsxfun(@minus,feature,mean(feature,2));
           end
           
           % time-lagged version of the source signal,
@@ -426,10 +442,12 @@ switch method
             % versions, and the feature only once, and then reorganize into a (Ntarget x
             % Nref) x 4 x 4 matrix, this bypasses the use of the gcmi
             % toolbox
-            C = transpose([tmptarget, target_shifted, feature])*[tmptarget, target_shifted, feature];
+            dat = cat(1, tmptarget, target_shifted, feature);
+            C = dat*transpose(dat);
+            %C = transpose([tmptarget, target_shifted, feature])*[tmptarget, target_shifted, feature];
             C = C./(size(tmptarget,1)-1);
             
-            nt   = size(tmptarget,2);
+            nt   = size(tmptarget,1);
             ns   = numel(refindx);
             
             cT  = diag(C(1:nt,1:nt)); % variance of the target signals
@@ -462,9 +480,9 @@ switch method
             end
             % compute the three information components, exclude the source
             % and feature 'channels' to avoid potential numerical issues
-            I1 = cov2cmi_ggg(Cxyz(:,[1 4 3],[1 4 3]), size(tmptarget,1), true, [1 1 1]); % T,F
-            I2 = cov2cmi_ggg(Cxyz(:,[2 4 3],[2 4 3]), size(tmptarget,1), true, [1 1 1]); % S,F
-            I3 = cov2cmi_ggg(Cxyz(:,[1 2 4 3],[1 2 4 3]), size(tmptarget,1), true, [2 1 1]);
+            I1 = cov2cmi_ggg(Cxyz(:,[1 4 3],[1 4 3]), size(tmptarget,2), true, [1 1 1]); % T,F
+            I2 = cov2cmi_ggg(Cxyz(:,[2 4 3],[2 4 3]), size(tmptarget,2), true, [1 1 1]); % S,F
+            I3 = cov2cmi_ggg(Cxyz(:,[1 2 4 3],[1 2 4 3]), size(tmptarget,2), true, [2 1 1]);
             output(:,:,mm,m) = reshape(I1+I2-I3,[],ns).'; % equation 4 in Robin Ince's scientific reports paper.
           
 %             % compute the three information components, exclude the source
@@ -473,7 +491,7 @@ switch method
 %             I1  = cmi_ggg_vec(source,           feature, target_shifted(:,sel), true, true);
 %             I2  = cmi_ggg_vec(tmptarget(:,sel), feature, target_shifted(:,sel), true, true);
 %             I3  = cmi_ggg_vec(cat(3, tmptarget(:,sel), repmat(source, 1, sum(sel))), feature, target_shifted(:,sel), true, true);
-            end
+          end
         end
         
       elseif ~conditional && ~isempty(featureindx)
@@ -612,7 +630,7 @@ switch method
   otherwise
 end
 
-if numel(refindx)==1 %&& ~(~conditional && ~isempty(featureindx))
+if size(refindx,1)==1 %&& ~(~conditional && ~isempty(featureindx))
   siz    = [size(output) 1];
   output = reshape(output,[siz(2:end)]);
 end

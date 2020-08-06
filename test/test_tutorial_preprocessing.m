@@ -2,7 +2,6 @@ function test_tutorial_preprocessing
 
 % WALLTIME 00:10:00
 % MEM 2gb
-
 % DEPENDENCY ft_definetrial ft_preprocessing
 
 dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');

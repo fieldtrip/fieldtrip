@@ -79,11 +79,14 @@ nchancmb  = inf;
 nsubj     = nan;
 nrpt      = nan;
 nrpttap   = nan;
-npos      = inf;
-nori      = nan; % this will be 3 in many cases, 1 after projectmom, and can be >3 for parcels
 ntopochan = inf;
 nspike    = inf; % this is only for the first spike channel
 nlag      = nan;
+npos      = inf;
+nori      = nan; % this will be 3 in many cases, 1 after projectmom, and can be >3 for parcels
+ntri      = nan;
+ntet      = nan;
+nhex      = nan;
 ndim1     = nan;
 ndim2     = nan;
 ndim3     = nan;
@@ -149,6 +152,24 @@ if isfield(data, 'pos')
   npos = size(data.pos,1);
 elseif isfield(data, 'dim')
   npos = prod(data.dim);
+elseif isfield(data, 'leadfield')
+  npos = numel(data.leadfield);
+elseif isfield(data, 'filter')
+  npos = numel(data.filter);
+elseif isfield(data, 'inside')
+  npos = numel(data.inside);
+end
+
+if isfield(data, 'tri')
+  ntri = size(data.tri,1);
+end
+
+if isfield(data, 'tet')
+  ntet = size(data.tet,1);
+end
+
+if isfield(data, 'hex')
+  nhex = size(data.hex,1);
 end
 
 if isfield(data, 'dim')
@@ -201,8 +222,8 @@ end
 % determine the size of the actual data
 datsiz = getdimsiz(data, field);
 
-tok = {'subj' 'rpt' 'rpttap' 'chan' 'chancmb' 'freq' 'time' 'pos' 'ori' 'topochan' 'lag' 'dim1' 'dim2' 'dim3'};
-siz = [nsubj nrpt nrpttap nchan nchancmb nfreq ntime npos nori ntopochan nlag ndim1 ndim2 ndim3];
+tok = {'subj' 'rpt' 'rpttap' 'chan' 'chancmb' 'freq' 'time' 'topochan' 'lag' 'pos' 'ori' 'tri' 'tet' 'hex' 'dim1' 'dim2' 'dim3'};
+siz = [nsubj nrpt nrpttap nchan nchancmb nfreq ntime ntopochan nlag npos nori ntri ntet nhex ndim1 ndim2 ndim3];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ATTEMPT 2: a general dimord is present and might apply
@@ -253,17 +274,17 @@ switch field
     end
     
   case {'tri'}
-    if datsiz(2)==3
+    if isequalwithoutnans(datsiz, [ntri 3])
       dimord = 'tri_unknown';
     end
     
   case {'tet'}
-    if datsiz(2)==4
+    if isequalwithoutnans(datsiz, [ntet 4])
       dimord = 'tet_unknown';
     end
     
   case {'hex'}
-    if datsiz(2)==8
+    if isequalwithoutnans(datsiz, [nhex 8])
       dimord = 'hex_unknown';
     end
     
@@ -556,11 +577,16 @@ if ~exist('dimord', 'var')
   end
   
   if all(~cellfun(@isempty, dimtok))
+    % each of the dimensions matches uniquely with a single known size
     if iscell(data.(field))
       dimtok{1} = ['{' dimtok{1} '}'];
     end
     dimord = sprintf('%s_', dimtok{:});
     dimord = dimord(1:end-1);
+    return
+  elseif ~isempty(dimtok{1}) && numel(datsiz)==2 && datsiz(2)==1
+    % it is often impossible to determine or specify what the 2nd dimension is in a Nx1 matrix
+    dimord = dimtok{1};
     return
   end
 end % if dimord does not exist
@@ -613,8 +639,10 @@ if ~exist('dimord', 'var')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   if isequal(datsiz, [ndim1 ndim2 ndim3])
     dimord = 'dim1_dim2_dim3';
+    return
   elseif isfield(data, 'pos') && prod(datsiz)==size(data.pos, 1)
     dimord = 'dim1_dim2_dim3';
+    return
   end
 end % if dimord does not exist
 

@@ -386,6 +386,14 @@ ARRAY+=(src/det3x3.mexw64)
 sync ${ARRAY[*]}
 
 ################################################################################
+# determine_segmentationstyle.m
+
+ARRAY=()
+ARRAY+=(private/determine_segmentationstyle.m)
+ARRAY+=(utilities/private/determine_segmentationstyle.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # dimindex.m
 
 ARRAY=()
@@ -900,6 +908,16 @@ ARRAY+=(utilities/ft_headcoordinates.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# ft_headmodeltype.m
+
+ARRAY=()
+ARRAY+=(fileio/private/ft_headmodeltype.m)
+ARRAY+=(forward/ft_headmodeltype.m)
+ARRAY+=(inverse/private/ft_headmodeltype.m)
+ARRAY+=(plotting/private/ft_headmodeltype.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # ft_inside_headmodel.m
 
 ARRAY=()
@@ -1005,13 +1023,11 @@ ARRAY+=(plotting/private/ft_senstype.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# ft_headmodeltype.m
+# ft_setopt.m
 
 ARRAY=()
-ARRAY+=(fileio/private/ft_headmodeltype.m)
-ARRAY+=(forward/ft_headmodeltype.m)
-ARRAY+=(inverse/private/ft_headmodeltype.m)
-ARRAY+=(plotting/private/ft_headmodeltype.m)
+ARRAY+=(inverse/private/ft_setopt.m)
+ARRAY+=(utilities/ft_setopt.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -2888,6 +2904,14 @@ ARRAY+=(fileio/private/refine.m)
 ARRAY+=(private/refine.m)
 ARRAY+=(test/private/refine.m)
 ARRAY+=(utilities/private/refine.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# remove_vertices.m
+
+ARRAY=()
+ARRAY+=(private/remove_vertices.m)
+ARRAY+=(fileio/private/remove_vertices.m)
 sync ${ARRAY[*]}
 
 ################################################################################

@@ -97,7 +97,7 @@ switch cfg.method
     dataout.avg = std(dataout.avg,1);
   case 'power'
     dataout.avg = std(dataout.avg,1).^2;
-end;
+end
 
 dataout.label = {'gmfp'};
 

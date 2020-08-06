@@ -1,4 +1,4 @@
-% function test_tutorial_nirs_multichannel20191023
+function test_tutorial_nirs_multichannel20191023
 
 % WALLTIME 00:10:00
 % MEM 4gb

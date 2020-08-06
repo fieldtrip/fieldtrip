@@ -19,20 +19,20 @@ function [spike] = ft_spike_maketrials(cfg,spike)
 %
 %   cfg.trl  = is an nTrials-by-M matrix, with at least 3 columns:
 %     Every row contains start (col 1), end (col 2) and offset of the event
-%     trigger in the trial in timestamp or sample units (cfg.trlunit). 
-%     For example, an offset of -1000 means that the trigger (t = 0 sec) 
+%     trigger in the trial in timestamp or sample units (cfg.trlunit).
+%     For example, an offset of -1000 means that the trigger (t = 0 sec)
 %     occurred 1000 timestamps or samples after the
 %     trial start.
 %     If more columns are added than 3, these are used to construct the
 %     spike.trialinfo field having information about the trial.
-%     Note that values in cfg.trl get inaccurate above 2^53 (in that case 
+%     Note that values in cfg.trl get inaccurate above 2^53 (in that case
 %     it is better to use the original uint64 representation)
 %
-%   cfg.trlunit = 'timestamps' (default) or 'samples'. 
-%     If 'samples', cfg.trl should 
+%   cfg.trlunit = 'timestamps' (default) or 'samples'.
+%     If 'samples', cfg.trl should
 %     be specified in samples, and cfg.hdr = data.hdr should be specified.
 %     This option can be used to reuse a cfg.trl that was used for
-%     preprocessing LFP data. 
+%     preprocessing LFP data.
 %     If 'timestamps', cfg.timestampspersecond should be
 %     specified, but cfg.hdr should not.
 %
@@ -98,7 +98,7 @@ cfg = ft_checkopt(cfg,'trlunit', 'char', {'timestamps', 'samples'});
 % process the trl field, which is required
 cfg = ft_checkconfig(cfg, 'required', {'trl'});
 cfg = ft_checkopt(cfg,'trl', {'numericvector', 'numericmatrix'});
-if size(cfg.trl,2)<3,
+if size(cfg.trl,2)<3
   warning('cfg.trl should contain at least 3 columns, 1st column start of trial, 2nd column end, 3rd offset, in timestamp or sample units')
 end
 
@@ -107,7 +107,7 @@ if strcmp(cfg.trlunit, 'timestamps') && ~all(cfg.trl(:,2)>cfg.trl(:,1))
   warning('the end of some trials does not occur after the beginning of some trials in cfg.trl'); %#ok<*WNTAG>
 elseif strcmp(cfg.trlunit, 'samples') && ~all((cfg.trl(:,2))>=cfg.trl(:,1))
   warning('the end of some trials does not occur after the beginning of some trials in cfg.trl'); %#ok<*WNTAG>
-end  
+end
   
 if size(cfg.trl,1)>1
   if ~all(cfg.trl(2:end,1)>cfg.trl(1:end-1,2))
@@ -118,15 +118,15 @@ end
 % check if the inputs are congruent: hdr should not be there if unit is timestamps
 if strcmp(cfg.trlunit,'timestamps')
   cfg = ft_checkconfig(cfg,'forbidden', 'hdr');
-  cfg = ft_checkconfig(cfg, 'required', {'timestampspersecond'});  
-  cfg.timestampspersecond = double(cfg.timestampspersecond);  
+  cfg = ft_checkconfig(cfg, 'required', {'timestampspersecond'});
+  cfg.timestampspersecond = double(cfg.timestampspersecond);
 else
-  cfg = ft_checkconfig(cfg, 'required', {'hdr'});      
+  cfg = ft_checkconfig(cfg, 'required', {'hdr'});
   if ~isfield(cfg.hdr, 'FirstTimeStamp'), error('cfg.hdr.FirstTimeStamp must be specified'); end
   if ~isfield(cfg.hdr, 'TimeStampPerSample'), error('cfg.hdr.TimeStampPerSample must be specified'); end
   if ~isfield(cfg.hdr, 'Fs'), error('cfg.hdr.Fs, the sampling frequency of the LFP must be specified'); end
 end
-trlDouble = double(cfg.trl); % this is to compute trial lengths etc.  
+trlDouble = double(cfg.trl); % this is to compute trial lengths etc.
 cfg = ft_checkconfig(cfg, 'allowed', {'datafile', 'dataformat', 'dataset', 'event', 'headerfile', 'headerformat', 'trialfun', 'trlunit', 'timestampspersecond', 'hdr', 'trl'});
 
 if strcmp(cfg.trlunit,'timestamps')
@@ -134,7 +134,7 @@ if strcmp(cfg.trlunit,'timestamps')
   % make a loop through the spike units and make the necessary conversions
   nTrials = size(cfg.trl,1);
   for iUnit = 1:nUnits
-    ts = spike.timestamp{iUnit}(:);            
+    ts = spike.timestamp{iUnit}(:);
     classTs = class(ts);
     
     % put a warning message if timestamps are doubles but not the right precision
@@ -155,8 +155,8 @@ if strcmp(cfg.trlunit,'timestamps')
           mx = 2^24; % largest precision number
           flag = 0;
         end
-        % issue a warning if the class is actually a problem        
-        if iUnit==1 && flag==0 && any(cfg.trl(:)>cast(mx, classTrl)) 
+        % issue a warning if the class is actually a problem
+        if iUnit==1 && flag==0 && any(cfg.trl(:)>cast(mx, classTrl))
           warning('timestamps are of class %s and cfg.trl is of class %s, rounding errors are expected because of high timestamps, converting %s to %s', class(ts), class(cfg.trl), class(cfg.trl), class(ts));
         end
         trlEvent = cast(trlEvent, classTs);
@@ -173,7 +173,7 @@ if strcmp(cfg.trlunit,'timestamps')
       if ~isempty(isVld)
         trialNum = [trialNum; iTrial*ones(length(isVld),1)];  %#ok<*AGROW>
       end
-      sel   = [sel; isVld(:)]; 
+      sel   = [sel; isVld(:)];
     end
 
     % subtract the event (t=0) from the timestamps directly
@@ -200,7 +200,7 @@ if strcmp(cfg.trlunit,'timestamps')
 
 elseif strcmp(cfg.trlunit,'samples')
    
-  nTrials            = size(cfg.trl,1);    
+  nTrials            = size(cfg.trl,1);
   FirstTimeStamp     = cfg.hdr.FirstTimeStamp;
   TimeStampPerSample = double(cfg.hdr.TimeStampPerSample);
   Fs                 = double(cfg.hdr.Fs);
@@ -211,8 +211,8 @@ elseif strcmp(cfg.trlunit,'samples')
   for iUnit = 1:nUnits
     
     % determine the corresponding sample numbers for each timestamp
-    ts      = spike.timestamp{iUnit}(:);    
-    classTs = class(ts);        
+    ts      = spike.timestamp{iUnit}(:);
+    classTs = class(ts);
     if (strcmp(classTs, 'double') && any(ts>(2^53))) || (strcmp(classTs, 'single') && any(ts>(2^24)))
       warning('timestamps are of class double but larger than 2^53 or single but larger than 2^24, expecting round-off errors due to precision limitation of doubles');
     end
@@ -223,7 +223,7 @@ elseif strcmp(cfg.trlunit,'samples')
           mx = 2^53;
           flag = 0;
         end
-        if strcmp(classTs, 'single') || strcmp(class(FirstTimeStamp), 'single')          
+        if strcmp(classTs, 'single') || strcmp(class(FirstTimeStamp), 'single')
           mx = 2^24; % largest precision number
           flag = 0;
         end
@@ -240,31 +240,31 @@ elseif strcmp(cfg.trlunit,'samples')
     end
     
     % see which spikes fall into the trials
-    waveSel = [];        
+    waveSel = [];
     for iTrial = 1:nTrials
       begsample = cfg.trl(iTrial,1) - 1/2;
       endsample = cfg.trl(iTrial,2) + 1/2;
       sel       = find((sample>=begsample) & (sample<endsample));
       dSample   = sample(sel)-begsample;
-      offset    = cfg.trl(iTrial,3)/Fs;               
+      offset    = cfg.trl(iTrial,3)/Fs;
       tTrial    = dSample/Fs + offset;
       trialNum  = ones(1,length(tTrial))*iTrial;
       trialDur  = (1 + cfg.trl(iTrial,2)-cfg.trl(iTrial,1))/Fs;
       
       spike.time{iUnit}         = [spike.time{iUnit} tTrial(:)'];
       spike.trial{iUnit}        = [spike.trial{iUnit} trialNum];
-      if iUnit==1, 
-        spike.trialtime(iTrial,:) = [offset offset+trialDur]; 
+      if iUnit==1,
+        spike.trialtime(iTrial,:) = [offset offset+trialDur];
       end
       waveSel  = [waveSel; sel(:)];
-    end     
+    end
     
     % select the other fields
     try, spike.waveform{iUnit}      = spike.waveform{iUnit}(:,:,waveSel);      end %#ok<*NOCOM>
     spike.timestamp{iUnit}          = spike.timestamp{iUnit}(waveSel);
     try, spike.unit{iUnit}          = spike.unit{iUnit}(waveSel);              end
     try, spike.fourierspctrm{iUnit} = spike.fourierspctrm{iUnit}(waveSel,:,:); end
-  end 
+  end
 end
 
 if size(cfg.trl,2) > 3
@@ -277,4 +277,3 @@ ft_postamble trackconfig      % this converts the config object back into a stru
 ft_postamble provenance       % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and matlab version etc. to the output cfg
 ft_postamble previous spike
 ft_postamble history spike
-

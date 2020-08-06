@@ -163,7 +163,7 @@ statmethod = ft_getuserfun(cfg.method, 'statistics');
 if isempty(statmethod)
   ft_error('could not find the corresponding function for cfg.method="%s"\n', cfg.method);
 else
-  fprintf('using "%s" for the statistical testing\n', func2str(statmethod));
+  ft_info('using "%s" for the statistical testing\n', func2str(statmethod));
 end
 
 % check that the design completely describes the data

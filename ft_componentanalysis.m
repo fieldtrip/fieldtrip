@@ -374,20 +374,25 @@ elseif ~strcmp(cfg.method, 'predetermined unmixing matrix') && strcmp(cfg.cellmo
   ft_info('concatenating data');
   
   dat = zeros(Nchans, sum(Nsamples));
+  ft_progress('init', cfg.feedback, 'concatenating trials...');
   for trial=1:Ntrials
-    ft_info('.');
+    ft_progress(trial/Ntrials, 'Concatenating trial %d from %d', trial, Ntrials);
     begsample = sum(Nsamples(1:(trial-1))) + 1;
     endsample = sum(Nsamples(1:trial));
     dat(:,begsample:endsample) = data.trial{trial};
   end
-  ft_info('\n');
+  ft_progress('close')
   ft_info('concatenated data matrix size %dx%d\n', size(dat,1), size(dat,2));
   
   hasdatanans = any(~isfinite(dat(:)));
   if hasdatanans
-    ft_info('data contains nans, only using the non-nan samples\n');
+    ft_info('data contains nan or inf, only using the samples without nan or inf\n');
     finitevals = sum(~isfinite(dat))==0;
-    dat        = dat(:,finitevals);
+    if ~any(finitevals)
+      ft_error('no samples remaining');
+    else
+      dat = dat(:,finitevals);
+    end
   end
 else
   ft_info('not concatenating data\n');

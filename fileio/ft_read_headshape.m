@@ -202,13 +202,19 @@ end % if iscell
 
 % checks if there exists a .jpg file of 'filename'
 [pathstr,name]  = fileparts(filename);
-if exist(fullfile(pathstr,[name,'.jpg'])) && useimage
-  image    = fullfile(pathstr,[name,'.jpg']);
-  hasimage = true;
+if useimage
+  if exist(fullfile(pathstr,[name,'.jpg']), 'file')
+    image    = fullfile(pathstr,[name,'.jpg']);
+    hasimage = true;
+  elseif exist(fullfile(pathstr,[name,'.png']), 'file')
+    image    = fullfile(pathstr,[name,'.png']);
+    hasimage = true;
+  else
+    hasimage = false;
+  end
 else
   hasimage = false;
 end
-
 
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
@@ -950,23 +956,77 @@ switch fileformat
   case 'obj'
     ft_hastoolbox('wavefront', 1);
     % Only tested for structure.io .obj thus far
-    [vertex, faces, texture, ~] = read_obj_new(filename);
+    [vertex, faces, texture, textureIdx] = read_obj_new(filename);
+    
+    % the rest of the code assumes the texture to be defined on the vertices
+    % and the faces/vertices to be self contained, i.e. not more vertices
+    % than faces
+    if size(texture,1)==size(vertex,1)
+      texture_per_vert = true;
+    else
+      texture_per_vert = false;
+    end
+    
+    % prune the vertices and keep the faces consistent, remove the faces
+    % with 0's first
+    allzeros = sum(faces==0,2)==3;
+    faces(allzeros, :)      = [];
+    textureIdx(allzeros, :) = [];
+    ufacesIdx = unique(faces(:));
+    remove = setdiff((1:size(vertex,1))', ufacesIdx);
+    if ~isempty(remove)
+      [vertex, faces] = remove_vertices(vertex, faces, remove);
+    end
+    
+%     if fixtexture
+%       texture_old = texture;
+%       texture     = zeros(size(vertex,1), size(texture_old,2));
+%       
+%       % create the vertex-based texture as an average across the faces that
+%       % contain the vertex
+%       for k = 1:size(vertex,1)
+%         sel = textureIdx(faces==k);
+%         texture(k,:) = mean(texture_old(mode(sel),:));
+%       end
+%     end
     
     shape.pos   = vertex;
     shape.pos   = shape.pos - repmat(sum(shape.pos)/length(shape.pos),...
         [length(shape.pos),1]); %centering vertices
-    shape.tri   = faces(1:end-1,:,:); % remove the last row which is zeros
+    shape.tri   = faces; % remove the last row which is zeros
     
     if hasimage      
-      % Refines the mesh and textures to increase resolution of the colormapping
-      [shape.pos, shape.tri, texture] = refine(shape.pos, shape.tri,...
+      if texture_per_vert
+        % Refines the mesh and textures to increase resolution of the colormapping
+        [shape.pos, shape.tri, texture] = refine(shape.pos, shape.tri,...
           'banks', texture);
-      
-      picture = imread(image);
-      color   = (zeros(length(shape.pos),3));
-      for i=1:length(shape.pos)
-        color(i,1:3) = picture(floor((1-texture(i,2))*length(picture)),...
+        
+        picture = imread(image);
+        color   = (zeros(length(shape.pos),3));
+        for i=1:length(shape.pos)
+          color(i,1:3) = picture(floor((1-texture(i,2))*length(picture)),...
             1+floor(texture(i,1)*length(picture)),1:3);
+        end
+      else
+        % do the texture to color mapping in a different way, without
+        % additional refinement
+        picture = flip(imread(image),1);
+        [sy, sx, sz] = size(picture);
+        picture = reshape(picture, sy*sx, sz);
+        
+        % make image 3D if grayscale
+        if sz == 1
+          picture = repmat(picture, 1, 3);
+        end
+        [uniq_vert, ix] = unique(shape.tri);
+        texture_ix = textureIdx(ix);
+
+        % get the indices into the image
+        x   = abs(round(texture(:,1)*(sx-1)))+1;
+        y   = abs(round(texture(:,2)*(sy-1)))+1;
+        xy  = sub2ind([sy sx],y,x);
+        sel = xy(texture_ix);
+        color = double(picture(sel,:))/255;
       end
       
       % If color is specified as 0-255 rather than 0-1 correct by dividing

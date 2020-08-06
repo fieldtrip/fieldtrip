@@ -65,7 +65,7 @@ for ii=1:Ns % treat each mesh one at a time
       tmp = pos_c-center;
       vd = tmp/norm(tmp);
       % unit vector from sphere center in direction of middle triangle
-      pnt4(jj,:) = center+vd*radius ;
+      pnt4(jj,:) = center+vd*radius;
       % projection of the centroid, at 'radius' from the center
     else
       % radius at infinite, i.e. flat surface

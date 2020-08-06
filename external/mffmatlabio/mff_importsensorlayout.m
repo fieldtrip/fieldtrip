@@ -61,7 +61,7 @@ sLayout = mfffactory.openResourceAtURI(sLayoutURI, sensorLayoutType);
 % 
 %         sensors = sLayout.getSensors();
 %         neighbors = sLayout.getNeighbors();
-%         threads = sLayout.getThreads(); %Not CPU threads.
+%         threads = sLayout.getThreads();%Not CPU threads.
 %         tilingSets = sLayout.getTilingSets();
 % 
 %         % Accessing the sensors.

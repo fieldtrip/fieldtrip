@@ -46,7 +46,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [DAT,S]=readbdf(DAT,Records,Mode)
-if nargin<3 Mode=0; end;
+if nargin<3 Mode=0; end
  
 EDF=DAT.Head; 
 RecLen=max(EDF.SPR);
@@ -68,7 +68,7 @@ for nrec=1:length(Records),
         S(EDF.AS.IDX2)=s;
     catch,
         ft_error('File is incomplete (try reading begining of file)');
-    end;
+    end
 
     %%%%% Test on  Over- (Under-) Flow
 %   V=sum([(S'==EDF.DigMax(:,ones(RecLen,1))) + (S'==EDF.DigMin(:,ones(RecLen,1)))])==0;
@@ -80,13 +80,13 @@ for nrec=1:length(Records),
     if floor(Mode/2)==1
         for k=1:EDF.NS,
             DAT.Record(nrec*EDF.SPR(k)+(1-EDF.SPR(k):0),k)=S(1:EDF.SPR(k),k);
-        end;
+        end
     else
         DAT.Record(nrec*RecLen+(1-RecLen:0),:)=S;
-    end;
+    end
 
     DAT.Valid(nrec*RecLen+(1-RecLen:0))=V;
-end;
+end
 if rem(Mode,2)==0   % Autocalib
     DAT.Record=[ones(RecLen*length(Records),1) DAT.Record]*EDF.Calib;
 end;                   

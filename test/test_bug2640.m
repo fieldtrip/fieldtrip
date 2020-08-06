@@ -1,5 +1,4 @@
 function test_bug2640
-
 % DEPENDENCY ft_plot_slice ft_plot_ortho
 
 % WALLTIME 00:10:00

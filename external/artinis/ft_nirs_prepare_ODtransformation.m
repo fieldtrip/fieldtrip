@@ -16,16 +16,16 @@ function [montage, cfg] = ft_nirs_prepare_ODtransformation(cfg, data)
 % in transformation.
 %
 % The configuration should contain
-%  cfg.channel            = Nx1 cell-array with selection of channels
-%                           (default = 'nirs'), see FT_CHANNELSELECTION for
-%                           more details
+%   cfg.channel            = Nx1 cell-array with selection of channels
+%                            (default = 'nirs'), see FT_CHANNELSELECTION for
+%                            more details
 %
 % Optional configuration settings are
-%  cfg.age                = scalar, age of the subject (necessary to
-%                           automatically select the appropriate DPF, or
-%  cfg.dpf                = scalar, differential path length factor
-%  cfg.dpffile            = string, location to a lookup table for the
-%                           relation between participant age and DPF
+%   cfg.age                = scalar, age of the subject (necessary to
+%                            automatically select the appropriate DPF, or
+%   cfg.dpf                = scalar, differential path length factor
+%   cfg.dpffile            = string, location to a lookup table for the
+%                            relation between participant age and DPF
 %
 % Note that the DPF might be different across channels, and is usually
 % contained in the optode structure contained in the data.

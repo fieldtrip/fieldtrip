@@ -2,7 +2,6 @@ function test_issue1385
 
 % MEM 4gb
 % WALLTIME 00:20:00
-
 % DEPENDENCY ft_sourceplot
 
 datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog');
