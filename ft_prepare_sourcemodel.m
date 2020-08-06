@@ -45,33 +45,33 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 % BASEDONMNI - uses source positions from a template sourcemodel that is
 % inversely warped from MNI coordinates to the individual subjects MRI.
 % It uses the following configuration options:
-%   cfg.mri           = structure with anatomical MRI model or filename, see FT_READ_MRI
-%   cfg.warpmni       = 'yes'
-%   cfg.nonlinear     = 'no' (or 'yes'), use non-linear normalization
-%   cfg.resolution    = number (e.g. 6) of the resolution of the template MNI grid, defined in mm
-%   cfg.template      = specification of a template sourcemodel as structure, or the filename of a template sourcemodel (defined in MNI space)
+%   cfg.mri             = structure with anatomical MRI model or filename, see FT_READ_MRI
+%   cfg.warpmni         = 'yes'
+%   cfg.nonlinear       = 'no' (or 'yes'), use non-linear normalization
+%   cfg.resolution      = number (e.g. 6) of the resolution of the template MNI grid, defined in mm
+%   cfg.template        = specification of a template sourcemodel as structure, or the filename of a template sourcemodel (defined in MNI space)
 % Either cfg.resolution or cfg.template needs to be defined; if both are defined, cfg.template prevails.
 %
 % BASEDONMRI - makes a segmentation of the individual anatomical MRI and places
 % sources in the grey matter. It uses the following configuration options:
-%   cfg.mri           = can be filename, MRI structure or segmented MRI structure
-%   cfg.threshold     = 0.1, relative to the maximum value in the segmentation
-%   cfg.smooth        = 5, smoothing in voxels
+%   cfg.mri             = can be filename, MRI structure or segmented MRI structure
+%   cfg.threshold       = 0.1, relative to the maximum value in the segmentation
+%   cfg.smooth          = 5, smoothing in voxels
 %
 % BASEDONCORTEX - places sources on the vertices of a cortical surface description
-%   cfg.headshape     = string, should be a *.fif file
+%   cfg.headshape       = string, should be a *.fif file
 %
 % BASEDONCENTROIDS - places sources on the centroids of a volumetric mesh
-%   cfg.headmodel      = volumetric mesh
-%   cfg.headmodel.type = 'simbio';
+%   cfg.headmodel       = volumetric mesh
+%   cfg.headmodel.type  = 'simbio';
 %
 % Other configuration options include
 %   cfg.unit            = string, can be 'mm', 'cm', 'm' (default is automatic)
 %   cfg.tight           = 'yes' or 'no' (default is automatic)
-%   cfg.inwardshift     = number, how much should the innermost surface be moved inward to constrain
-%                         sources to be considered inside the source compartment (default = 0)
-%   cfg.moveinward      = number, move dipoles inward to ensure a certain distance to the innermost
-%                         surface of the source compartment (default = 0)
+%   cfg.inwardshift     = number, amount to shift the innermost surface of the headmodel inward when determining 
+%                         whether sources are inside or outside the source compartment (default = 0)
+%   cfg.moveinward      = number, amount to move sources inward to ensure a certain minimal distance to the innermost
+%                         surface of the headmodel (default = 0)
 %   cfg.movetocentroids = 'yes' or 'no', move the dipoles to the centroids of the hexahedral 
 %                         or tetrahedral mesh (default = 'no')
 %   cfg.spherify        = 'yes' or 'no', scale the source model so that it fits inside a sperical
@@ -87,6 +87,20 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 %
 % The headmodel or volume conduction model can be specified as
 %   cfg.headmodel     = structure with volume conduction model or filename, see FT_PREPARE_HEADMODEL
+%
+% The cfg.inwardshift option can be used for 3D grids to specify a positive (inward)
+% or negative (outward) number to shift the innermost surface of the headmodel
+% (usually the skull) when determining whether sources are to be flagged as inside or
+% outside the source compartment. Only sources flagged as inside will be considered
+% for subsequent source reconstructions. An ourward shift can be useful for a
+% spherical or singleshell MEG headmodel. For a source model based on a cortical
+% sheet in general you want all sources to be considered inside. For a BEM headmodel
+% (EEG or MEG), there should never be any sources outside the actual source
+% compartment.
+%
+% The cfg.moveinward option can be used for a source model based on a cortical sheet
+% to push the sources inward a little bit to ensure sufficient distance to the
+% innermost surface of a BEM headmodel (EEG or MEG).
 %
 % See also FT_PREPARE_LEADFIELD, FT_PREPARE_HEADMODEL, FT_SOURCEANALYSIS,
 % FT_DIPOLEFITTING, FT_MEGREALIGN
@@ -696,6 +710,9 @@ if strcmp(cfg.spherify, 'yes')
 end
 
 if ~isempty(cfg.moveinward)
+  if ~ismember(cfg.method, {'basedonshape', 'basedoncortex', 'basedonvol', 'basedonfile'})
+      ft_warning('cfg.moveinward is designed to work with surface based sourcemodels, not with 3D grid sourcemodels.')
+  end
   % construct a triangulated boundary of the source compartment
   [pos1, tri1] = headsurface(headmodel, [], 'inwardshift', cfg.moveinward, 'surface', 'brain');
   inside = bounding_mesh(sourcemodel.pos, pos1, tri1);
@@ -730,7 +747,14 @@ end
 % volume conduction model, i.e. inside the brain
 if ~isfield(sourcemodel, 'inside')
   sourcemodel.inside = ft_inside_headmodel(sourcemodel.pos, headmodel, 'grad', sens, 'headshape', cfg.headshape, 'inwardshift', cfg.inwardshift); % this returns a boolean vector
+else
+  if isfield(cfg, 'inwardshift') && isfield(cfg, 'template')
+    % warn about inwardshift not having an effect as inside is already specified as well
+    % warning should only be issued for templates, inwardshift can also be present for surface meshes
+    ft_warning('Inside dipole locations already determined by a template, cfg.inwardshift has no effect.')
+  end
 end
+
 
 if strcmp(cfg.tight, 'yes')
   if ~isfield(sourcemodel, 'dim')
