@@ -82,13 +82,14 @@ function [hdr] = ft_read_header(filename, varargin)
 %   Neurodata Without Borders: Neurophysiology (*.nwb)
 %
 % The following NIRS dataformats are supported
-%   BUCN - Birkbeck college, London (*.txt)
 %   Artinis - Artinis Medical Systems B.V. (*.oxy3, *.oxy4, *.oxyproj)
+%   BUCN - Birkbeck college, London (*.txt)
+%   SNIRF - Society for functional near-infrared spectroscopy (*.snirf)
 %
 % The following Eyetracker dataformats are supported
 %   EyeLink - SR Research (*.asc)
-%   Tobii - (*.tsv)
 %   SensoMotoric Instruments - (*.txt)
+%   Tobii - (*.tsv)
 %
 % See also FT_READ_DATA, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT,
 % FT_CHANTYPE, FT_CHANUNIT
