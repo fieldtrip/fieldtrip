@@ -86,11 +86,12 @@ end
 % this requires the external iso2mesh toolbox
 ft_hastoolbox('iso2mesh', 1);
 
-[node, elem, face] = vol2mesh(seg, 1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3), 2, 2, 0, 'cgalsurf');
+[node, elem, face] = vol2mesh(uint8(seg), 1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3), 1, 1, 0, 'cgalmesh');
+elem(:,1:4)        = meshreorient(node(:,1:3), elem(:,1:4));
 
 mesh = keepfields(mri, {'coordsys', 'unit'});
-mesh.pos = ft_warp_apply(mri.transform, node);
-mesh.tet = elem(:,[1 2 4 3]); % re-order elements
+mesh.pos = ft_warp_apply(mri.transform, node(:,1:3)+1); % offset of 1 is needed because indexing is 0-based?
+mesh.tet = elem(:,1:4);
 mesh.tissue = elem(:,5);
 if exist('seglabel', 'var')
   mesh.tissuelabel = seglabel;

@@ -4,22 +4,31 @@ function mesh = prepare_mesh_hexahedral(cfg, mri)
 %
 % Configuration options for generating a regular 3-D grid
 %   cfg.tissue     = cell with the names of the compartments that should be meshed
-%   cfg.resolution = desired resolution of the mesh (default = 1)
 %   cfg.shift
 %   cfg.background
 %
 % See also PREPARE_MESH_SEGMENTATION, PREPARE_MESH_MANUAL, PREPARE_MESH_HEADSHAPE
 
 % Copyrights (C) 2012-2013, Johannes Vorwerk
+% Copyrights (C) 2020, Jan-Mathijs Schoffelen
 %
 % $Id$
 
 % ensure that the input is consistent with what this function expects
 mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'}, 'hasunit', 'yes');
 
+% The support for cfg.resolution was discontinued on Aug 2020, due to interpolation
+% issues. When you do a nearest-neighbour interpolation of a segmented volume with a
+% non-integer amount (i.e. not a decimation or an n-fold upsampling), the
+% interpolated segmentation will become slightly shifted w.r.t. the original
+% segmentation. From now on the handling of different mesh resolutions will be at the
+% user's responsibility. This can be achieved by using FT_VOLUMERESLICE on the
+% segmentation prior to creating the mesh, or better by doing FT_VOLUMERESLICE on the
+% anatomy before making the segmentation.
+cfg = ft_checkconfig(cfg, 'forbidden', 'resolution');
+
 % get the default options
 cfg.tissue      = ft_getopt(cfg, 'tissue');
-cfg.resolution  = ft_getopt(cfg, 'resolution', 1);  % this is in mm
 cfg.shift       = ft_getopt(cfg, 'shift');
 cfg.background  = ft_getopt(cfg, 'background', 0);
 
@@ -54,11 +63,13 @@ end
 if isempty(cfg.shift)
   ft_warning('No node-shift selected')
   cfg.shift = 0;
+elseif cfg.shift < 0
+  ft_warning('Node-shift should be >=0, setting to 0');
+  cfg.shift = 0;
 elseif cfg.shift > 0.3
-  ft_warning('Node-shift should not be larger than 0.3')
+  ft_warning('Node-shift should not be larger than 0.3, setting to 0.3')
   cfg.shift = 0.3;
 end
-
 
 % do the mesh extraction
 % this has to be adjusted for FEM!!!
@@ -66,9 +77,9 @@ if iscell(cfg.tissue)
   % this assumes that it is a probabilistic representation
   % for example {'brain', 'skull', scalp'}
   try
-    temp = zeros(size(mri.(cfg.tissue{1})(:)));
+    temp = zeros(size(mri.(cfg.tissue{1})(:)), numel(cfg.tissue));
     for i = 1:numel(cfg.tissue)
-      temp = [temp, mri.(cfg.tissue{i})(:)];
+      temp(:,i) = [temp, mri.(cfg.tissue{i})(:)];
     end
     [val, seg] = max(temp, [], 2);
     seg = seg - 1;
@@ -96,59 +107,33 @@ else
   end
 end
 
-% reslice to desired resolution
+% create hexahedra
+mesh.hex = create_elements(mri.dim);
+fprintf('Created elements...\n' )
 
-if (cfg.resolution ~= 1)
-  % this should be done like this: split seg into probabilistic, reslice single compartments, take maximum values
-  seg_array = [];
-  
-  seg_indices = unique(seg);
-  
-  for i = 1:(length(unique(seg)))
-    seg_reslice.anatomy   = double(seg == (i-1));
-    seg_reslice.dim       = mri.dim;
-    seg_reslice.transform = eye(4);
-    seg_reslice.transform(1:3, 4) = -ceil(mri.dim/2);
-    
-    cfg_reslice = [];
-    cfg_reslice.resolution = cfg.resolution;
-    cfg_reslice.dim = ceil(mri.dim/cfg.resolution);
-    
-    seg_build = ft_volumereslice(cfg_reslice, seg_reslice);
-    
-    seg_array = [seg_array, seg_build.anatomy(:)];
-    
-    clear seg_reslice
-  end
-  
-  [max_seg, seg_build.seg] = max(seg_array, [], 2);
-  
-  clear max_seg seg_array;
-  
-  seg_build.seg = reshape(seg_build.seg, seg_build.dim);
-  seg_build.seg = seg_indices(seg_build.seg);
-  seg_build.transform = mri.transform;
-  
-  clear seg_build.anatomy
-else
-  seg_build.seg = seg;
-  seg_build.dim = mri.dim;
-  
-  clear seg
+% create nodes, these are corner points of the voxels expressed in voxel indices
+mesh.pos = create_nodes(mri.dim);
+fprintf('Created nodes...\n' )
+
+if cfg.shift > 0
+  mesh.pos = shift_nodes(mesh.pos, mesh.hex, mri.seg, cfg.shift, mri.dim);
 end
 
-% ensure that the segmentation is binary and that there is a single contiguous region
-% FIXME is this still needed when it is already binary?
-%seg = volumethreshold(seg, 0.5, tissue);
+% add the tissue labels
+mesh.labels = mri.seg(:);
 
-% build the mesh
-mesh = build_mesh_hexahedral(cfg, seg_build);
-
-if (cfg.resolution ~= 1)
-  mesh.pos = cfg.resolution * mesh.pos;
+% delete background voxels(if desired)
+if cfg.background==0
+  mesh.hex    = mesh.hex(mesh.labels~=0, :);
+  mesh.labels = mesh.labels(mesh.labels~=0);
 end
 
-% converting position of meshpoints to the head coordinate system
+% delete unused nodes and ensure correct offset
+[C, ia, ic] = unique(mesh.hex(:));
+mesh.pos    = mesh.pos(C, :, :, :) + 0.5; % voxel indexing offset
+mesh.hex(:) = ic;
+
+% converting position of mesh points to the head coordinate system
 mesh.pos = ft_warp_apply(mri.transform, mesh.pos, 'homogeneous');
 
 labels = mesh.labels;
@@ -163,91 +148,37 @@ for i = 1:numlabels
   mesh.tissuelabel{i} = tissue{i};
 end
 
-end % function
+end % function prepare_mesh_hexahedral
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTIONS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% function for creating elements from a MRI-Image with the dimensions x_dim, y_dim,
+% z_dim. Each voxel of the MRI-Image corresponds to one element in the hexahedral
+% mesh. The numbering of the elements is as follows: the first x-y-plane(z == 1) is
+% numbered by incrementing in x-direction first until x_dim is reached. This is done
+% for each row in y-direction until y_dim is reached. Using the resulting
+% x_dim-by-y_dim numbering as an overlay and adding (i-1)*(x_dim*y_dim) to the
+% overlay while i is iterating through the z-dimension(until i == z_dim) we obtain a
+% numbering for all the elements.
+% The node-numbering is done accordingly: the bottom left node in element i has
+% number i in the node-numbering. All the remaining nodes are numbered in the same
+% manner as described above for the element numbering(note the different
+% dimensionalities: x_dim+1 instead of x_dim etc.).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function elements = create_elements(dim)
 
-function mesh = build_mesh_hexahedral(cfg, mri)
-
-background = cfg.background;
-shift = cfg.shift;
-% extract number of voxels in each direction
-% x_dim = mri.dim(1);
-% y_dim = mri.dim(2);
-% z_dim = mri.dim(3);
-%labels = mri.seg;
-fprintf('Dimensions of the segmentation before restriction to bounding-box: %i %i %i\n', mri.dim(1), mri.dim(2), mri.dim(3));
-
-[bb_x, bb_y, bb_z] = ind2sub(size(mri.seg), find(mri.seg));
-shift_coord = [min(bb_x) - 2, min(bb_y) - 2, min(bb_z) - 2];
-bb_x = [min(bb_x), max(bb_x)];
-bb_y = [min(bb_y), max(bb_y)];
-bb_z = [min(bb_z), max(bb_z)];
-x_dim = size(bb_x(1)-1:bb_x(2)+1, 2);
-y_dim = size(bb_y(1)-1:bb_y(2)+1, 2);
-z_dim = size(bb_z(1)-1:bb_z(2)+1, 2);
-labels = zeros(x_dim, y_dim, z_dim);
-labels(2:(x_dim-1), 2:(y_dim-1), 2:(z_dim-1)) = mri.seg(bb_x(1):bb_x(2), bb_y(1):bb_y(2), bb_z(1):bb_z(2));
-
-fprintf('Dimensions of the segmentation after restriction to bounding-box: %i %i %i\n', x_dim, y_dim, z_dim);
-
-% create elements
-
-mesh.hex = create_elements(x_dim, y_dim, z_dim);
-fprintf('Created elements...\n' )
-
-% create nodes
-
-mesh.pos = create_nodes(x_dim, y_dim, z_dim);
-fprintf('Created nodes...\n' )
-
-if shift < 0 || shift > 0.3
-  ft_error('Please choose a shift parameter between 0 and 0.3!');
-elseif shift > 0
-  mesh.pos = shift_nodes(mesh.pos, mesh.hex, labels, shift, x_dim, y_dim, z_dim);
-end
-
-%background = 1;
-% delete background voxels(if desired)
-if(background == 0)
-  mesh.hex = mesh.hex(labels ~= 0, :);
-  mesh.labels = labels(labels ~= 0);
-else
-  mesh.labels = labels(:);
-end
-
-
-% delete unused nodes
-[C, ia, ic] = unique(mesh.hex(:));
-mesh.pos = mesh.pos(C, :, :, :);
-mesh.pos = mesh.pos + repmat(shift_coord, size(mesh.pos, 1), 1);
-mesh.hex(:) = ic;
-
-end % subfunction
-
-% function creating elements from a MRI-Image with the dimensions x_dim,
-% y_dim, z_dim. Each voxel of the MRI-Image corresponds to one element in
-% the hexahedral mesh. The numbering of the elements is as follows:
-% the first x-y-plane(z == 1) is numbered by incrementing in x-direction
-% first until x_dim is reached. This is done for each row in y-direction
-% until y_dim is reached. Using the resulting x_dim-by-y_dim numbering as
-% an overlay and adding (i-1)*(x_dim*y_dim) to the overlay while i is
-% iterating through the z-dimension(until i == z_dim) we obtain a numbering
-% for all the elements.
-% The node-numbering is done accordingly: the bottom left node in element i
-% has number i in the node-numbering. All the remaining nodes are numbered
-% in the same manner as described above for the element numbering(note the
-% different dimensionalities: x_dim+1 instead of x_dim etc.).
-function elements = create_elements(x_dim, y_dim, z_dim)
+x_dim    = dim(1);
+y_dim    = dim(2);
+z_dim    = dim(3);
 elements = zeros(x_dim*y_dim*z_dim, 8);
+
 % create an offset vector for the bottom-left nodes in each element
 b = 1:((x_dim+1)*(y_dim));
+
 % delete the entries where the node does not correspond to an element's
 % bottom-left node(i.e. where the x-component of the node is equal to
 % x_dim+1)
 b = b(mod(b, (x_dim+1)) ~= 0);
+
 % repeat offset to make it fit the number of elements
 b = repmat(b, 1, z_dim);
 
@@ -265,30 +196,38 @@ elements(:, 5) = b + c + (x_dim+1) * (y_dim+1);
 elements(:, 6) = b + c + (x_dim+1) * (y_dim+1) + 1;
 elements(:, 7) = b + c + (x_dim+1) * (y_dim+1) + (x_dim+1) + 1;
 elements(:, 8) = b + c + (x_dim+1) * (y_dim+1) + (x_dim+1);
-clear b;
-clear c;
-end % subfunction
+end % subfunction create_elements
 
-% function creating the nodes and assigning coordinates in the
-% [0, x_dim]x[0, y_dim]x[0, z_dim] box. for details on the node-numbering see
-% comments for create_elements.
-function nodes = create_nodes(x_dim, y_dim, z_dim)
-nodes = zeros(((x_dim+1)*(y_dim+1)*(z_dim + 1)), 3);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% function creating the nodes and assigning coordinates in the [0, x_dim]x[0,
+% y_dim]x[0, z_dim] box. for details on the node-numbering see comments for
+% create_elements.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function nodes = create_nodes(dim)
+
+x_dim = dim(1);
+y_dim = dim(2);
+z_dim = dim(3);
+nodes = zeros(((x_dim + 1)*(y_dim + 1)*(z_dim + 1)), 3);
 % offset vector for node coordinates
-b = 0:((x_dim+1)*(y_dim+1)*(z_dim+1)-1);
+b = 0:((x_dim + 1)*(y_dim + 1)*(z_dim + 1)-1);
 
 % assign coordinates within the box
 nodes(:, 1) = mod(b, (x_dim+1));
 nodes(:, 2) = mod(fix(b/(x_dim+1)), (y_dim+1));
 nodes(:, 3) = fix(b/((x_dim + 1)*(y_dim+1)));
 
-clear b
+end % subfunction create_nodes
 
-end % subfunction
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% function for shifting the nodes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function nodes = shift_nodes(points, hex, labels, sh, dim)
 
-% function shifting the nodes
-function nodes = shift_nodes(points, hex, labels, sh, x_dim, y_dim, z_dim)
 fprintf('Applying shift %f\n', sh);
+x_dim = dim(1);
+y_dim = dim(2);
+z_dim = dim(3);
 nodes = points;
 
 % helper vector for indexing the nodes
@@ -468,4 +407,4 @@ centroidcomb(tbcsum ~= 0, 3) = centroidcomb(tbcsum ~= 0, 3)./tbcsum(tbcsum ~= 0)
 nodes(tbcsum == 0, :) = points(tbcsum == 0, :);
 nodes(tbcsum ~= 0, :) = (1-sh)*nodes(tbcsum ~= 0, :) + sh*centroidcomb(tbcsum ~= 0, :);
 
-end % subfunction
+end % subfunction shift_nodes
