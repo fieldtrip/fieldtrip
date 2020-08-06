@@ -11,10 +11,13 @@ function [mesh, cfg] = ft_prepare_mesh(cfg, data)
 %   mesh = ft_prepare_mesh(cfg)
 %   mesh = ft_prepare_mesh(cfg, mri)
 %   mesh = ft_prepare_mesh(cfg, seg)
+% where the mri input argument is the result from FT_READ_MRI, FT_VOLUMEREALIGN or
+% FT_VOLUMERESLICE and the seg input argument is from FT_VOLUMESEGMENT. If you
+% specify an anatomical MRI, it will be segmented on the fly.
 %
-% Configuration options:
+% The cfg argument is a structure that can contain:
 %   cfg.method      = string, can be 'interactive', 'projectmesh', 'iso2mesh', 'isosurface',
-%                     'headshape', 'hexahedral', 'tetrahedral','cortexhull', 'fittemplate'
+%                     'headshape', 'hexahedral', 'tetrahedral', 'cortexhull' or 'fittemplate'
 %   cfg.tissue      = cell-array with strings representing the tissue types, or numeric vector with integer values
 %   cfg.numvertices = numeric vector, should have same number of elements as the number of tissues
 %
@@ -35,7 +38,6 @@ function [mesh, cfg] = ft_prepare_mesh(cfg, data)
 % With this method you are fitting the headshape from the configuration to the template;
 % the resulting affine transformation is applied to the input mesh (or set of meshes),
 % which is subsequently returned as output variable.
-%
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...

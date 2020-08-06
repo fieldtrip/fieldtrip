@@ -1,14 +1,14 @@
 function [downsample] = ft_volumedownsample(cfg, source)
 
-% FT_VOLUMEDOWNSAMPLE downsamples an anatomical MRI or source reconstruction
-% and optionally normalizes its coordinate axes, keeping the homogenous
-% transformation matrix correct.
+% FT_VOLUMEDOWNSAMPLE downsamples, or more precisely decimates an anatomical MRI or
+% source reconstruction and optionally normalizes its coordinate axes, keeping the
+% homogenous transformation matrix correct.
 %
 % Use as
-%   [volume] = ft_volumedownsample(cfg, mri)
-% where the input mri should be a single anatomical volume that was
-% for example read with FT_READ_MRI or should be a volumetric source
-% reconstruction resulting from FT_SOURCEANALYSIS or FT_SOURCEINTERPOLATE.
+%   [downsampled] = ft_volumedownsample(cfg, data)
+% where the input data structure should be an anatomical MRI that was for example
+% read with FT_READ_MRI or should be a volumetric source reconstruction from
+% FT_SOURCEANALYSIS or FT_SOURCEINTERPOLATE.
 %
 % The configuration can contain
 %   cfg.downsample = integer number (default = 1, i.e. no downsampling)
