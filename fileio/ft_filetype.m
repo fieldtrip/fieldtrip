@@ -759,7 +759,7 @@ elseif isfolder(filename) && most(filetype_check_extension({ls.name}, '.nex')) &
 elseif filetype_check_extension(filename, '.nex5')  && filetype_check_header(filename, 'NEX5')
   type = 'plexon_nex5';
   manufacturer = 'Nex Technologies';
-  content = 'electrophysiological data';  
+  content = 'electrophysiological data';
   
   % known Cambridge Electronic Design file types
 elseif filetype_check_extension(filename, '.smr')
@@ -1113,17 +1113,22 @@ elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'_nr
   % types could be made
   type = 'bucn_nirs';
   manufacturer = 'BUCN';
-  content = 'ascii formatted nirs data';
+  content = 'ascii formatted NIRS data';
 elseif filetype_check_extension(filename, '.nirs') && filetype_check_header(filename, 'MATLAB')
   % Homer is MATLAB software for NIRS processing, see http://www.nmr.mgh.harvard.edu/DOT/resources/homer2/home.htm
   type = 'homer_nirs';
   manufacturer = 'Homer';
-  content = '(f)NIRS data';
+  content = 'NIRS data';
 elseif filetype_check_extension(filename, '.sd') && filetype_check_header(filename, 'MATLAB')
   % Homer is MATLAB software for NIRS processing, see http://www.nmr.mgh.harvard.edu/DOT/resources/homer2/home.htm
   type = 'homer_sd';
   manufacturer = 'Homer';
   content = 'source detector information';
+elseif filetype_check_extension(filename, '.snirf') && filetype_check_header(filename, [137 72 68 70 13 10 26 10])
+  % this is a HDF5 file, see also https://support.hdfgroup.org/HDF5/doc/H5.format.html#Superblock
+  type = 'snirf';
+  manufacturer = 'The society for functional near-infrared spectroscopy (SfNIRS)';
+  content = 'NIRS data';
   
   % known Artinis file formats
 elseif filetype_check_extension(filename, '.oxy3')
@@ -1212,7 +1217,7 @@ elseif isfolder(filename) && any(filetype_check_extension(filename, {'.mefd', '.
   type = 'mayo_mef30';
   manufacturer = 'Mayo Clinic';
   content = 'Multiscale Electrophysiology Format 3.0';
-elseif isfile(filename) && any(filetype_check_extension(filename, {'.tdat', '.tidx', '.tmet'})) && filetype_check_header(filename, uint8(3), 13) && filetype_check_header(filename, uint8(0), 14) 
+elseif isfile(filename) && any(filetype_check_extension(filename, {'.tdat', '.tidx', '.tmet'})) && filetype_check_header(filename, uint8(3), 13) && filetype_check_header(filename, uint8(0), 14)
   type = 'mayo_mef30';
   manufacturer = 'Mayo Clinic';
   content = 'Multiscale Electrophysiology Format 3.0';
@@ -1456,9 +1461,9 @@ elseif filetype_check_extension(filename, '.c3d') && filetype_check_header(filen
   manufacturer = 'https://www.c3d.org';
   content = 'motion capture data';
 elseif filetype_check_extension(filename, '.mvnx') && filetype_check_header(filename, '<?xml')
-    type = 'xsens_mvnx';
-    manufacturer = 'https://www.xsens.com/motion-capture';
-    content = 'motion capture data';
+  type = 'xsens_mvnx';
+  manufacturer = 'https://www.xsens.com/motion-capture';
+  content = 'motion capture data';
 elseif filetype_check_extension(filename, '.mif')
   % this could be a mrtrix compatible image file
   type = 'mrtrix_mif';
