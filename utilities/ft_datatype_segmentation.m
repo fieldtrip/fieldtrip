@@ -123,8 +123,7 @@ switch segversion
   case '2012'
     % determine whether the style of the input fields is probabilistic or indexed
     fn = fieldnames(segmentation);
-    %fn = setdiff(fn, 'inside'); % exclude the inside field from any conversions
-    fn(strcmp(fn, 'inside')) = [];
+    fn = setdiff(fn, 'inside'); % exclude the inside field from any conversions
     [indexed, probabilistic] = determine_segmentationstyle(segmentation, fn, segmentation.dim);
 
     % ignore the fields that do not contain a segmentation
