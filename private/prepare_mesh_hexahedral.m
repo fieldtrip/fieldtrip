@@ -32,6 +32,11 @@ cfg.tissue      = ft_getopt(cfg, 'tissue'); % default is handled further down
 cfg.shift       = ft_getopt(cfg, 'shift');  % default is handled further down
 cfg.background  = ft_getopt(cfg, 'background', 0, true); % when specified as empty it means the background should not be removed
 
+if ischar(cfg.tissue)
+  % it must be a cell array
+  cfg.tissue = {cfg.tissue};
+end
+
 if isempty(cfg.shift)
   ft_warning('No node-shift selected')
   cfg.shift = 0;
@@ -58,10 +63,16 @@ if isempty(cfg.tissue)
   % use the same tissue labels as in the data
   cfg.tissue = segmentationlabel;
 else
+  if isnumeric(cfg.tissue)
+    % it should be specified as a cell-array of strings
+    cfg.tissue = segmentationlabel(cfg.tissue);
+  end
   % sort the tissues in the order specified by the user in the cfg
   reordered = zeros(size(segmentation));
   for i=1:numel(cfg.tissue)
-    oldindex = find(strcmp(segmentationlabel, cfg.tissue{i}));
+    % an indexed representation with tissuelabel can contain spaces, but a probabilistic one cannot have spaces in the name of fields in the structure
+    % in the conversion between them, the space gets converted to an underscore
+    oldindex = find(strcmp(segmentationlabel, cfg.tissue{i}) | strcmp(segmentationlabel, strrep(cfg.tissue{i}, '_', ' ')) | strcmp(segmentationlabel, strrep(cfg.tissue{i}, ' ', '_')));
     assert(numel(oldindex)==1, 'incorrect tissue type %s for segmentation', cfg.tissue{i});
     reordered(segmentation==oldindex) = i;
   end
