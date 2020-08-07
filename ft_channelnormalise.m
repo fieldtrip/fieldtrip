@@ -85,7 +85,7 @@ data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
 if ~strcmp(cfg.channel, 'all') || ~strcmp(cfg.trials, 'all')
   % select channels and trials of interest
-  tmpcfg = keepfields(cfg, {'channel', 'trials', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo'});
   data   = ft_selectdata(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);

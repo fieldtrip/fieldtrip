@@ -160,12 +160,10 @@ end
 % retain only the MEG channels in the data and temporarily store
 % the rest, these will be added back to the transformed data later.
 
-% select trials and channels of interest
-tmpcfg = [];
-tmpcfg.trials  = cfg.trials;
+% select trials and channels of interest, first of the non-MEG channels, then of the MEG channels
+tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'}); % don't keep tolerance, it is used differently here
 tmpcfg.channel = setdiff(data.label, ft_channelselection(cfg.channel, data.label));
 rest = ft_selectdata(tmpcfg, data);
-
 tmpcfg.channel = ft_channelselection(cfg.channel, data.label);
 data = ft_selectdata(tmpcfg, data);
 
@@ -173,22 +171,6 @@ data = ft_selectdata(tmpcfg, data);
 [cfg, data] = rollback_provenance(cfg, data);
 
 Ntrials = length(data.trial);
-
-% cfg.channel = ft_channelselection(cfg.channel, data.label);
-% dataindx = match_str(data.label, cfg.channel);
-% restindx = setdiff(1:length(data.label),dataindx);
-% if ~isempty(restindx)
-%   ft_info('removing %d non-MEG channels from the data\n', length(restindx));
-%   rest.label = data.label(restindx);    % first remember the rest
-%   data.label = data.label(dataindx);    % then reduce the data
-%   for i=1:Ntrials
-%     rest.trial{i} = data.trial{i}(restindx,:);  % first remember the rest
-%     data.trial{i} = data.trial{i}(dataindx,:);  % then reduce the data
-%   end
-% else
-%   rest.label = {};
-%   rest.trial = {};
-% end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % construct the average template gradiometer array
