@@ -18,7 +18,7 @@ function [dataout] = ft_laggedcoherence(cfg, datain)
 %   cfg.numcycles = integer, number of cycles of the Fourier basis functions that
 %                   are used to calculate the Fourier coefficients that are the
 %                   basis for calculating lagged coherence
-% 
+%
 %
 % When using the results of this function in a publication, please cite:
 %   Fransen, A. M., van Ede, F., & Maris, E. (2015). Identifying neuronal
@@ -85,7 +85,7 @@ cfg.channel = ft_getopt(cfg, 'channel', 'all');
 cfg.trials = ft_getopt(cfg, 'trials', 'all');
 
 % select channels and trials of interest, by default this will select all channels and trials
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo'});
 datain = ft_selectdata(tmpcfg, datain);
 % restore the provenance information
 [cfg, datain] = rollback_provenance(cfg, datain);
@@ -189,7 +189,7 @@ for freqindx = 1:length(freq)
 %
 % Code for checking whether the requested cfg_freq.t_ftimwin (calculated as t_ftimwin) allows for the
 % requested cfg_freq.foi (calculated as freq) using the requested number of cycles (cfg.numcycles).
-% 
+%
 % cyclelengths=t_ftimwin/cfg.numcycles
 % correspondingfreqs=ones(size(cyclelengths))./cyclelengths
 % freq % compare with correspondingfreqs

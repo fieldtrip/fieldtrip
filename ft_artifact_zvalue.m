@@ -202,7 +202,7 @@ if ~hasdata
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
 else
   data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
-  cfg  = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
+  cfg  = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile', 'headerformat', 'dataformat'});
   hdr  = ft_fetch_header(data);
 end
 

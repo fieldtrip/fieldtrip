@@ -93,8 +93,9 @@ switch cfg.appenddim
     tmpcfg.select = 'union';
     [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
     for i=1:numel(varargin)
-      [cfg, varargin{i}] = rollback_provenance(cfg, varargin{i});
+      [cfg_rolledback, varargin{i}] = rollback_provenance(cfg, varargin{i});
     end
+    cfg = cfg_rolledback;
     
     % start with the union of all input data
     data = keepfields(varargin{1}, {'label', 'time', 'freq', 'dimord'});
