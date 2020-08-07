@@ -303,7 +303,6 @@ perform_source_analysis
     segm.transform = eye(4);
     
     cfg = [];
-    cfg.shift = 0.3;
     cfg.method = 'hexahedral';
     cfg.resolution = 1; % this is in mm
     mesh_vol = ft_prepare_mesh(cfg, segm);
