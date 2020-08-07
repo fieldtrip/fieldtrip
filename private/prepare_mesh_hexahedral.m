@@ -15,7 +15,7 @@ function mesh = prepare_mesh_hexahedral(cfg, mri)
 % $Id$
 
 % ensure that the input is consistent with what this function expects
-mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'}, 'hasunit', 'yes');
+mri = ft_checkdata(mri, 'datatype', {'segmentation'}, 'segmentationstyle', 'indexed', 'hasunit', 'yes');
 
 % The support for cfg.resolution was discontinued on Aug 2020, due to interpolation
 % issues. When you do a nearest-neighbour interpolation of a segmented volume with a
@@ -28,37 +28,9 @@ mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'}, 'hasunit', 'yes'
 cfg = ft_checkconfig(cfg, 'forbidden', 'resolution');
 
 % get the default options
-cfg.tissue      = ft_getopt(cfg, 'tissue');
-cfg.shift       = ft_getopt(cfg, 'shift');
-cfg.background  = ft_getopt(cfg, 'background', 0);
-
-if isempty(cfg.tissue)
-  mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
-  fn = fieldnames(mri);
-  for i = 1:numel(fn)
-    if (numel(mri.(fn{i})) == prod(mri.dim)) && (~strcmp(fn{i}, 'inside'))
-      segfield = fn{i};
-    end
-  end
-  cfg.tissue = setdiff(unique(mri.(segfield)(:)), 0);
-end
-
-if ischar(cfg.tissue)
-  % it should either be something like {'brain', 'skull', 'scalp'}, or something like [1 2 3]
-  cfg.tissue = {cfg.tissue};
-end
-
-if iscell(cfg.tissue)
-  % the code below assumes that it is a probabilistic representation
-  if any(strcmp(cfg.tissue, 'brain'))
-    mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'probabilistic', 'hasbrain', 'yes');
-  else
-    mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'probabilistic');
-  end
-else
-  % the code below assumes that it is an indexed representation
-  mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
-end
+cfg.tissue      = ft_getopt(cfg, 'tissue'); % default is handled further down
+cfg.shift       = ft_getopt(cfg, 'shift');  % default is handled further down
+cfg.background  = ft_getopt(cfg, 'background', 0, true); % when specified as empty it means the background should not be removed
 
 if isempty(cfg.shift)
   ft_warning('No node-shift selected')
@@ -71,40 +43,30 @@ elseif cfg.shift > 0.3
   cfg.shift = 0.3;
 end
 
-% do the mesh extraction
-% this has to be adjusted for FEM!!!
-if iscell(cfg.tissue)
-  % this assumes that it is a probabilistic representation
-  % for example {'brain', 'skull', scalp'}
-  try
-    temp = zeros(size(mri.(cfg.tissue{1})(:)), numel(cfg.tissue));
-    for i = 1:numel(cfg.tissue)
-      temp(:,i) = [temp, mri.(cfg.tissue{i})(:)];
-    end
-    [val, seg] = max(temp, [], 2);
-    seg = seg - 1;
-    seg = reshape(seg, mri.dim);
-  catch
-    ft_error('Please specify cfg.tissue to correspond to tissue types in the segmented MRI')
-  end
-  tissue = cfg.tissue;
+% determine the field from the input data that represents the segmentation
+fn = fieldnames(mri);
+sel = find(~cellfun(@isempty, regexp(fn, 'label$')));
+if numel(sel)~=1
+  ft_error('cannot determine the field that represents the segmentation');
+end
+tissue = fn{sel}(1:end-5);
+segmentationlabel = mri.([tissue 'label']);
+segmentation      = mri.( tissue         );
+ft_info('using the field "%s" with the segmented tissue types %s', tissue, prettyformat(segmentationlabel));
+
+if isempty(cfg.tissue)
+  % use the same tissue labels as in the data
+  cfg.tissue = segmentationlabel;
 else
-  % this assumes that it is an indexed representation
-  % for example [3 2 1]
-  seg = zeros(mri.dim);
-  tissue = {};
-  for i = 1:numel(cfg.tissue)
-    seg = seg + i*(mri.seg == cfg.tissue(i));
-    if isfield(mri, 'seglabel')
-      try
-        tissue{i} = mri.seglabel{cfg.tissue(i)};
-      catch
-        ft_error('Please specify cfg.tissue to correspond to (the name or number of) tissue types in the segmented MRI')
-      end
-    else
-      tissue{i} = sprintf('tissue %d', i);
-    end
+  % sort the tissues in the order specified by the user in the cfg
+  reordered = zeros(size(segmentation));
+  for i=1:numel(cfg.tissue)
+    oldindex = find(strcmp(segmentationlabel, cfg.tissue{i}));
+    assert(numel(oldindex)==1, 'incorrect tissue type %s for segmentation', cfg.tissue{i});
+    reordered(segmentation==oldindex) = i;
   end
+  segmentation      = reordered;
+  segmentationlabel = cfg.tissue;
 end
 
 % create hexahedra
@@ -116,16 +78,19 @@ mesh.pos = create_nodes(mri.dim);
 fprintf('Created nodes...\n' )
 
 if cfg.shift > 0
-  mesh.pos = shift_nodes(mesh.pos, mesh.hex, mri.seg, cfg.shift, mri.dim);
+  mesh.pos = shift_nodes(mesh.pos, mesh.hex, segmentation, cfg.shift, mri.dim);
 end
 
-% add the tissue labels
-mesh.labels = mri.seg(:);
-
-% delete background voxels(if desired)
-if cfg.background==0
-  mesh.hex    = mesh.hex(mesh.labels~=0, :);
-  mesh.labels = mesh.labels(mesh.labels~=0);
+if ~isempty(cfg.background)
+  % delete background voxels
+  keep = (segmentation(:)~=cfg.background);
+  mesh.hex    = mesh.hex(keep, :);
+  mesh.tissue = segmentation(keep);
+  mesh.tissuelabel = segmentationlabel; % this might include tissues that do not occur in the mesh
+else
+  % keep background voxels
+  mesh.tissue = segmentation(:);
+  mesh.tissuelabel = segmentationlabel;
 end
 
 % delete unused nodes and ensure correct offset
@@ -135,18 +100,6 @@ mesh.hex(:) = ic;
 
 % converting position of mesh points to the head coordinate system
 mesh.pos = ft_warp_apply(mri.transform, mesh.pos, 'homogeneous');
-
-labels = mesh.labels;
-mesh = rmfield(mesh, 'labels');
-
-mesh.tissue = zeros(size(labels));
-numlabels = size(unique(labels), 1);
-mesh.tissuelabel = {};
-ulabel = sort(unique(labels));
-for i = 1:numlabels
-  mesh.tissue(labels == ulabel(i)) = i;
-  mesh.tissuelabel{i} = tissue{i};
-end
 
 end % function prepare_mesh_hexahedral
 
@@ -408,3 +361,15 @@ nodes(tbcsum == 0, :) = points(tbcsum == 0, :);
 nodes(tbcsum ~= 0, :) = (1-sh)*nodes(tbcsum ~= 0, :) + sh*centroidcomb(tbcsum ~= 0, :);
 
 end % subfunction shift_nodes
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% format a list for printing
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function s = prettyformat(list)
+if numel(list)>1
+  s = sprintf('%s, ', list{1:end-1});
+  s = sprintf('%s and %s', s(1:end-2), list{end});
+else
+  s = list{1};
+end
+end % subfunction prettyformat
