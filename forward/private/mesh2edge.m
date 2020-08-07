@@ -1,4 +1,4 @@
-function [edge] = mesh2edge(mesh)
+function [output] = mesh2edge(mesh)
 
 % MESH2EDGE finds the edge lines from a triangulated mesh or the edge
 % surfaces from a tetrahedral or hexahedral mesh. An edge is defined as an
@@ -86,16 +86,16 @@ edge = edge(indx, :);
 mesh = fixpos(mesh);
 
 % the naming of the edges in the output depends on what they represent
-edge.pos = mesh.pos;
+output.pos = mesh.pos;
 if isfield(mesh, 'tri')
   % these have two vertices in each edge element
-  edge.line = edge;
+  output.line = edge;
 elseif isfield(mesh, 'tet')
   % these have three vertices in each edge element
-  edge.tri = edge;
+  output.tri = edge;
 elseif isfield(mesh, 'hex')
   % these have four vertices in each edge element
-  edge.poly = edge;
+  output.poly = edge;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
