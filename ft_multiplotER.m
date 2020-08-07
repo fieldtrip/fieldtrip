@@ -214,7 +214,6 @@ cfg.channel        = ft_getopt(cfg, 'channel', 'all');
 cfg.directionality = ft_getopt(cfg, 'directionality', '');
 cfg.figurename     = ft_getopt(cfg, 'figurename');
 cfg.preproc        = ft_getopt(cfg, 'preproc');
-cfg.tolerance      = ft_getopt(cfg, 'tolerance', 1e-5);
 cfg.frequency      = ft_getopt(cfg, 'frequency', 'all'); % needed for frequency selection with TFR data
 cfg.latency        = ft_getopt(cfg, 'latency', 'all'); % needed for latency selection with TFR data, FIXME, probably not used
 cfg.renderer       = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
@@ -394,7 +393,7 @@ if ~isempty(tmpcfg)
   cfg = removefields(cfg, setdiff(fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan')), {'gridscale' 'showscale'}));
 else
   % do nothing
-end  
+end
 
 %% Section 3: select the data to be plotted and determine min/max range
 
