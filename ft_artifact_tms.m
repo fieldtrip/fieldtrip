@@ -134,7 +134,7 @@ switch cfg.method
     
     % the data is either passed into the function by the user or read from file with cfg.inputfile
     hasdata = exist('data', 'var');
-
+    
     % construct a temporary configuration that can be passed onto artifact_zvalue
     tmpcfg = keepfields(cfg, {'trl', 'continuous', 'dataset', 'datafile', 'headerfile', 'dataformat', 'headerformat'});
     tmpcfg.artfctdef.zvalue = cfg.artfctdef.tms;
@@ -143,9 +143,10 @@ switch cfg.method
       fsample = data.fsample; % get the sampling rate from the data structure
       [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg, data);
     else
-      hdr = ft_read_header(cfg.dataset, 'headerformat', cfg.headerformat);
-      fsample = hdr.Fs; % get the sampling rate from the file on disk
       [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg);
+      % FT_ARTIFACT_ZVALUE will call FT_CHECKCONFIG with the dataset2files option
+      hdr = ft_read_header(tmpcfg.headerfile, 'headerformat', tmpcfg.headerformat);
+      fsample = hdr.Fs; % get the sampling rate from the file on disk
     end
     cfg.artfctdef.tms = tmpcfg.artfctdef.zvalue;
     
