@@ -67,11 +67,11 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 % Other configuration options include
 %   cfg.unit            = string, can be 'mm', 'cm', 'm' (default is automatic)
 %   cfg.tight           = 'yes' or 'no' (default is automatic)
-%   cfg.inwardshift     = number, amount to shift the innermost surface of the headmodel inward when determining 
+%   cfg.inwardshift     = number, amount to shift the innermost surface of the headmodel inward when determining
 %                         whether sources are inside or outside the source compartment (default = 0)
 %   cfg.moveinward      = number, amount to move sources inward to ensure a certain minimal distance to the innermost
 %                         surface of the headmodel (default = 0)
-%   cfg.movetocentroids = 'yes' or 'no', move the dipoles to the centroids of the hexahedral 
+%   cfg.movetocentroids = 'yes' or 'no', move the dipoles to the centroids of the hexahedral
 %                         or tetrahedral mesh (default = 'no')
 %   cfg.spherify        = 'yes' or 'no', scale the source model so that it fits inside a sperical
 %                         volume conduction model (default = 'no')
@@ -646,9 +646,9 @@ switch cfg.method
     mnigrid = fixinside(mnigrid);
     
     % spatial normalisation of mri and construction of subject specific sourcemodel positions
-    tmpcfg           = keepfields(cfg, {'spmversion', 'spmmethod'});
-    tmpcfg.nonlinear = cfg.nonlinear;
+    tmpcfg           = keepfields(cfg, {'spmversion', 'spmmethod', 'nonlinear'});
     if isfield(cfg, 'templatemri')
+      % this option is called differently for the two functions
       tmpcfg.template = cfg.templatemri;
     end
     normalise = ft_volumenormalise(tmpcfg, mri);
@@ -712,7 +712,7 @@ end
 
 if ~isempty(cfg.moveinward)
   if ~ismember(cfg.method, {'basedonshape', 'basedoncortex', 'basedonvol', 'basedonfile'})
-      ft_warning('cfg.moveinward is designed to work with surface based sourcemodels, not with 3D grid sourcemodels.')
+    ft_warning('cfg.moveinward is designed to work with surface based sourcemodels, not with 3D grid sourcemodels.')
   end
   % construct a triangulated boundary of the source compartment
   [pos1, tri1] = headsurface(headmodel, [], 'inwardshift', cfg.moveinward, 'surface', 'brain');
