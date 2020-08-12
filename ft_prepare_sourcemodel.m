@@ -174,6 +174,7 @@ cfg.unit              = ft_getopt(cfg, 'unit');
 cfg.method            = ft_getopt(cfg, 'method'); % empty will lead to attempted automatic detection
 cfg.movetocentroids   = ft_getopt(cfg, 'movetocentroids', 'no');
 
+% this option was deprecated on 12 Aug 2020
 if isfield(cfg, 'warpmni')
   % prior to the introduction of cfg.method we used cfg.warpmni to separate between
   % basedonmni and basedonmri, which both require cfg.mri to be present
@@ -182,7 +183,7 @@ if isfield(cfg, 'warpmni')
     cfg.method = 'basedonmni';
   elseif isfield(cfg, 'mri') && ~istrue(cfg.warpmni)
     ft_warning('please specify cfg.method=''basedonmri'' instead of cfg.warpmni=''no''');
-    cfg.method = 'basedonmni';
+    cfg.method = 'basedonmri';
   end
   cfg = rmfield(cfg, 'warpmni');
 end
@@ -216,6 +217,8 @@ if isempty(cfg.method)
     cfg.method = 'basedonpos'; % using user-supplied positions, which can be regular or irregular
   elseif ~isempty(cfg.headshape)
     cfg.method = 'basedonshape'; % surface mesh based on inward shifted head surface from external file
+  elseif isfield(cfg, 'mri')
+    cfg.method = 'basedonmri'; % regular 3D grid, based on segmented MRI, restricted to gray matter
   elseif isfield(cfg, 'headshape') && (iscell(cfg.headshape) || any(ft_filetype(cfg.headshape, {'neuromag_fif', 'freesurfer_triangle_binary', 'caret_surf', 'gifti'})))
     cfg.method = 'basedoncortex'; % cortical sheet from external software such as Caret or FreeSurfer, can also be two separate hemispheres
   elseif isfield(cfg, 'resolution')
