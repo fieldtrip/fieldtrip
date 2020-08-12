@@ -310,25 +310,21 @@ if strcmp(cfg.method, 'basedonfile')
 end
 
 if isempty(cfg.unit)
-  if strcmp(cfg.method, 'basedonfile') && isfield(sourcemodel, 'unit') && ~isempty(sourcemodel.unit)
-    % take the existing source model units
-    cfg.unit = sourcemodel.unit;
-  elseif strcmp(cfg.method, 'basedonfile') && isfield(sourcemodel, 'pos') && size(sourcemodel.pos,1)>10
-    % estimate the units based on the existing source positions
-    sourcemodel = ft_determine_units(cfg.sourcemodel);
-    cfg.unit = sourcemodel.unit;
-  elseif isfield(cfg.sourcemodel, 'unit') && ~isempty(cfg.sourcemodel.unit)
+  if isfield(cfg.sourcemodel, 'unit') && ~isempty(cfg.sourcemodel.unit)
     % take the existing source model units
     cfg.unit = cfg.sourcemodel.unit;
   elseif isfield(cfg.sourcemodel, 'pos') && size(cfg.sourcemodel.pos,1)>10
     % estimate the units based on the existing source positions
     cfg.sourcemodel = ft_determine_units(cfg.sourcemodel);
     cfg.unit = cfg.sourcemodel.unit;
+  elseif strcmp(cfg.method, 'basedonmni') && ~isempty(cfg.mri.unit)
+    % take the existing MRI units
+    cfg.unit = cfg.mri.unit;
   elseif ~isempty(sens)
-    % copy the units from the sensor array
+    % take the units from the gradiometer or electrode array
     cfg.unit = sens.unit;
   elseif ~isempty(headmodel)
-    % copy the units from the volume conduction model
+    % take the units from the volume conduction model
     cfg.unit = headmodel.unit;
   else
     ft_warning('assuming "cm" as default units for source model');
@@ -650,23 +646,18 @@ switch cfg.method
     normalise = ft_volumenormalise(tmpcfg, mri);
     
     if ~isfield(normalise, 'params') && ~isfield(normalise, 'initial')
+      % this is for older implementations of FT_VOLUMENORMALISE
       fprintf('applying an inverse warp based on a linear transformation only\n');
       sourcemodel.pos = ft_warp_apply(inv(normalise.cfg.final), mnigrid.pos);
     else
       sourcemodel.pos = ft_warp_apply(inv(normalise.initial), ft_warp_apply(normalise.params, mnigrid.pos, 'sn2individual'));
     end
-    if isfield(mnigrid, 'dim')
-      sourcemodel.dim   = mnigrid.dim;
-    end
-    if isfield(mnigrid, 'tri')
-      sourcemodel.tri   = mnigrid.tri;
-    end
-    sourcemodel.unit    = mnigrid.unit;
-    sourcemodel.inside  = mnigrid.inside;
-    sourcemodel.params  = normalise.params;
-    sourcemodel.initial = normalise.initial;
+    % copy some of the fields over from the input arguments
+    sourcemodel = copyfields(mri,       sourcemodel, {'unit', 'coordsys'});
+    sourcemodel = copyfields(mnigrid,   sourcemodel, {'dim', 'tri', 'inside'});
+    sourcemodel = copyfields(normalise, sourcemodel, {'params', 'initial'});
     if ft_datatype(mnigrid, 'parcellation')
-      % copy the boolean fields over
+      % copy the boolean fields over from the template MNI grid
       sourcemodel = copyfields(mnigrid, sourcemodel, booleanfields(mnigrid));
     end
     
@@ -679,7 +670,9 @@ switch cfg.method
 end
 
 if isfield(sourcemodel, 'unit')
-  % in most cases the source model will already be in the desired units, but e.g. for "basedonmni" it will be in 'mm'
+  % in most cases the source model will already be in the desired units, but e.g. for
+  % "basedonmni" it will be in 'mm' since in the spatial normalization the MRI and
+  % the MNI template are converted to 'mm'
   sourcemodel = ft_convert_units(sourcemodel, cfg.unit);
 else
   % the units were specified by the user or determined automatically, assign them to the source model
