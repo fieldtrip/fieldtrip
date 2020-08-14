@@ -191,9 +191,9 @@ fallback_toolbox='';
 
 switch toolbox
   case 'AFNI'
-    dependency={'BrikLoad', 'BrikInfo'};
+    dependency= {'BrikLoad', 'BrikInfo'};
   case 'DSS'
-    dependency={'denss', 'dss_create_state'};
+    dependency= {'denss', 'dss_create_state'};
   case 'EEGLAB'
     dependency = 'runica';
   case 'NWAY'
