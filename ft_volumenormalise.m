@@ -344,7 +344,7 @@ for k=1:length(Vout)
   normalised = setsubfield(normalised, cfg.parameter{k}, spm_read_vols(Vout(k)));
 end
 
-% determine the affine source->template coordinate transformation
+% determine the affine coordinate transformation from individual head coordinates to template coordinates
 final = VG.mat * inv(params.Affine) * inv(VF(1).mat) * initial;
 
 normalised.transform = Vout(1).mat;
