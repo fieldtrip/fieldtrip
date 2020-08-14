@@ -1,16 +1,20 @@
 function varargout = snirf(filename, hdr, begsample, endsample, chanindx)
 
 % SNIRF reads data from a SNIRF file and returns it in a format that FieldTrip understands.
-% See https://github.com/fNIRS
+% See https://github.com/fNIRS/snirf/blob/master/snirf_specification.md
 %
 % Use as
 %   hdr = snirf(filename);
 %   dat = snirf(filename, hdr, begsample, endsample, chanindx);
 %   evt = snirf(filename, hdr);
 %
+% The SNIRF format allows for multiple blocks of data channels anx aux channels, each
+% with a different sampling frequency. That is not allowed in this code; all channels
+% must have the same sampling rate and be sampled at the same time.
+%
 % See also FT_FILETYPE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, QUALISYS_TSV, MOTION_C3D
 
-% Copyright (C) 2020 Robert Oostenveld
+% Copyright (C) 2020, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -40,44 +44,68 @@ needdat = (nargin==5);
 snirf = SnirfClass;
 snirf.Load(filename);
 
-hasdata = ~isempty(snirf.data) && ~isempty(snirf.data.dataTimeSeries);
-hasaux = ~isempty(snirf.aux)   && ~isempty(snirf.aux.dataTimeSeries);
+hasdata = ~isempty(snirf.data) && ~isempty(snirf.data(1).dataTimeSeries);
+hasaux = ~isempty(snirf.aux)   && ~isempty(snirf.aux(1).dataTimeSeries);
 
-if      hasdata &&  hasaux
-  ndata    = length(snirf.data.measurementList);
-  naux     = min(size(snirf.aux.dataTimeSeries)); % assume there are more samples than AUX channels
-  nsamples = length(snirf.data.time);
-  assert(isequal(length(snirf.aux.time), nsamples), 'the number of samples does not match');
-elseif ~hasdata &&  hasaux
-  ndata    = 0;
-  naux     = min(size(snirf.aux.dataTimeSeries)); % assume there are more samples than AUX channels
-  nsamples = length(snirf.aux.time);
-elseif  hasdata && ~hasaux
-  ndata    = length(snirf.data.measurementList);
-  naux     = 0;
-  nsamples = length(snirf.data.time);
+ndata = 0;
+if hasdata
+  for i=1:length(snirf.data)
+    ndata = ndata + length(snirf.data(i).measurementList);
+    assert(isequal(snirf.data(i).time, snirf.data(1).time), 'different sampling rates are not supported');
+  end
 else
-  ft_error('this file contains no data');
+  % code it as empty, not as 0x1 or 1x0
+  snirf.data = [];
+end
+
+naux = 0;
+if hasaux
+  for i=1:length(snirf.aux)
+    naux = naux + 1; % each aux channel is stored separately
+    assert(isequal(snirf.aux(i).time, snirf.aux(1).time), 'different sampling rates are not supported');
+  end
+else
+  % code it as empty, not as 0x1 or 1x0
+  snirf.aux = [];
+end
+
+if hasdata && hasaux
+  assert(isequal(snirf.data(1).time, snirf.aux(1).time), 'different sampling rates are not supported');
+  nsamples = length(snirf.data(1).time);
+elseif hasdata
+  nsamples = length(snirf.data(1).time);
+elseif hasaux
+  nsamples = length(snirf.aux(1).time);
+else
+  ft_error('incorrect data format');
 end
 
 if hasdata
   % the code below expects the timeseries data to be organized as nsamples*nchans
-  if ~isequal(size(snirf.data.dataTimeSeries), [nsamples, ndata])
-    snirf.data.dataTimeSeries = snirf.data.dataTimeSeries';
+  for i=1:length(snirf.data)
+    if ~isequal(size(snirf.data(i).dataTimeSeries), [nsamples, ndata])
+      snirf.data(i).dataTimeSeries = snirf.data(i).dataTimeSeries';
+    end
   end
 end
 
 if hasaux
   % the code below expects the timeseries data to be organized as nsamples*nchans
-  if ~isequal(size(snirf.aux.dataTimeSeries), [nsamples, naux])
-    snirf.aux.dataTimeSeries = snirf.aux.dataTimeSeries';
+  for i=1:length(snirf.aux)
+    if ~isequal(size(snirf.aux(i).dataTimeSeries), [nsamples, 1])
+      snirf.aux(i).dataTimeSeries = snirf.aux(i).dataTimeSeries';
+    end
   end
 end
 
 if needhdr
   %% read the header
   
-  hdr.Fs       = 1/median(diff(snirf.data.time));
+  if hasdata
+    hdr.Fs     = 1/median(diff(snirf.data(1).time));
+  elseif hasaux
+    hdr.Fs     = 1/median(diff(snirf.aux(1).time));
+  end
   hdr.nChans   = ndata + naux;
   hdr.nSamples = nsamples;
   hdr.nSamplesPre = 0;  % assume it is continuous
@@ -85,25 +113,28 @@ if needhdr
   hdr.label    = {};
   hdr.chantype = {};
   hdr.chanunit = {};
-  for i=1:ndata
-    % construct the channel name using the source, detector and wavelength
-    try
-      d = snirf.probe.detectorLabels{snirf.data.measurementList(i).detectorIndex}; % receiver
-      s = snirf.probe.sourceLabels{snirf.data.measurementList(i).sourceIndex};     % transmitter
-      w = snirf.probe.wavelengths(snirf.data.measurementList(i).wavelengthIndex);
-      hdr.label   {end+1} = sprintf('%s-%s [%dnm]', d, s, w);
-    catch
-      % it is apparently possible that the probe information is not specified
-      d = snirf.data.measurementList(i).detectorIndex;   % receiver
-      s = snirf.data.measurementList(i).sourceIndex;     % transmitter
-      w = snirf.data.measurementList(i).wavelengthIndex;
-      hdr.label   {end+1} = sprintf('D%d-S%d [%d]', d, s, w);
+  for i=1:length(snirf.data)
+    for j=1:length(snirf.data(i).measurementList)
+      % construct the channel name using the source, detector and wavelength
+      try
+        d = snirf.probe.detectorLabels{snirf.data(i).measurementList(j).detectorIndex};     % receiver
+        s = snirf.probe.sourceLabels  {snirf.data(i).measurementList(j).sourceIndex};       % transmitter
+        w = snirf.probe.wavelengths   (snirf.data(i).measurementList(j).wavelengthIndex);
+        hdr.label   {end+1} = sprintf('%s-%s [%dnm]', d, s, round(w));
+      catch
+        % it is apparently possible that the probe information is not specified
+        d = snirf.data(i).measurementList(j).detectorIndex;   % receiver
+        s = snirf.data(i).measurementList(j).sourceIndex;     % transmitter
+        w = snirf.data(i).measurementList(j).wavelengthIndex;
+        hdr.label   {end+1} = sprintf('D%d-S%d [%d]', d, s, w);
+      end
+      hdr.chantype{end+1} = 'nirs';
+      hdr.chanunit{end+1} = 'unknown';
     end
-    hdr.chantype{end+1} = 'nirs';
-    hdr.chanunit{end+1} = 'unknown';
   end
-  for i=1:naux
-    hdr.label   {end+1} = sprintf('aux%d', i);
+  
+  for i=1:length(snirf.aux)
+    hdr.label   {end+1} = snirf.aux(i).name;
     hdr.chantype{end+1} = 'aux';
     hdr.chanunit{end+1} = 'unknown';
   end
@@ -113,15 +144,20 @@ if needhdr
   
 elseif needdat
   %% read the data
+  % https://github.com/fNIRS/snirf/blob/master/snirf_specification.md#nirsidataj
   
   % concatenate the different types of data
   if      hasdata &&  hasaux
-    dat = cat(1, snirf.data.dataTimeSeries', snirf.aux.dataTimeSeries');
+    dat = {snirf.data.dataTimeSeries};
+    aux = {snirf.aux.dataTimeSeries};
   elseif ~hasdata &&  hasaux
-    dat = snirf.aux.dataTimeSeries';
+    dat = {};
+    aux = {snirf.aux.dataTimeSeries};
   elseif  hasdata && ~hasaux
-    dat = snirf.data.dataTimeSeries';
+    dat = {snirf.data.dataTimeSeries};
+    aux = {};
   end
+  dat = cat(2, dat{:}, aux{:})';
   
   % make selection of channels and samples
   dat = dat(chanindx, begsample:endsample);
@@ -131,9 +167,22 @@ elseif needdat
   
 elseif needevt
   %% read the events
+  % see https://github.com/fNIRS/snirf/blob/master/snirf_specification.md#nirsistimj
   
-  ft_warning('reading events from a SNIRF file is not yet implemented');
   evt = [];
+  
+  if isfield(snirf, 'stim') && ~isempty(snirf.stim)
+    for i=1:numel(snirf.stim)
+      for j=1:size(snirf.stim(i).data,1)
+        evt(end+1).type      = snirf.stim(i).name;
+        evt(end  ).sample    = round(snirf.stim(i).data(j,1) * hdr.Fs + 1); % time 0 corresponds to sample 1
+        evt(end  ).duration  = round(snirf.stim(i).data(j,2) * hdr.Fs);
+        evt(end  ).value     = snirf.stim(i).data(j,3);
+      end
+    end
+  else
+    % there are no events
+  end
   
   % return the events
   varargout = {evt};
