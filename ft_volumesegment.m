@@ -168,13 +168,18 @@ if ischar(mri)
   ft_error('please use cfg.inputfile instead of specifying the input variable as a string');
 end
 
+% check if the input data is valid for this function
+mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
+
+% check whether the input has an anatomy
+if ~isfield(mri, 'anatomy')
+  ft_error('this function requires an anatomical MRI as input');
+end
+
 % ensure that old and unsupported options are not being relied on by the end-user's script
 % instead of specifying cfg.coordsys, the user should specify the coordsys in the data
 cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'coordsys', 'inputcoord', 'inputcoordsys', 'coordinates'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'output', 'skin', 'scalp'});
-
-% check if the input data is valid for this function
-mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
 
 % set the defaults
 cfg.output           = ft_getopt(cfg, 'output',         'tpm');
