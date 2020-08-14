@@ -19,7 +19,7 @@ function ft_write_headshape(filename, bnd, varargin)
 % Optional input arguments should be specified as key-value pairs and
 % can include
 %   'data'        = data matrix, size(1) should be number of vertices
-%   'unit'        = string, e.g. 'mm'
+%   'unit'        = string, desired units for the data on disk, for example 'mm'
 %
 % Supported output formats are
 %   'mne_tri'		MNE surface desciption in ascii format
@@ -81,7 +81,7 @@ if ~isstruct(bnd)
 end
 
 if ~isempty(unit)
-  % convert to the desired units prior to writing to disk
+  % convert the input to the desired units prior to writing to disk
   bnd = ft_convert_units(bnd, unit);
 end
 
