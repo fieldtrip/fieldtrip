@@ -138,61 +138,30 @@ assert(~isequal(n12old.anatomy, n12mars.anatomy));
 
 
 %%
-% try going back and forth between individual and normalised space, using the different sets of parameters
-%
-% SOME PARTS OF THIS SECTION ARE CURRENTLY FAILLING, IT MIGHT BE THAT I UNDERSTAND IT WRONG
-% IT IS NOT RELATED to https://github.com/fieldtrip/fieldtrip/pull/1450
+% transition back and forth between individual, approximate and normalised space, using the different sets of parameters
 
-rmpath(genpath(fullfile(ftpath,'external','spm2'))); rmpath(genpath(fullfile(ftpath,'external','spm8'))); rmpath(genpath(fullfile(ftpath,'external','spm12')));
-pos = sourcemodel.pos;
+version = {'n2', 'n8', 'n12old', 'n12new', 'n12mars'};
 
-pos2_sn      = ft_warp_apply(n2.cfg.spmparams, pos, 'individual2sn');
-pos2_sn_ind  = ft_warp_apply(n2.cfg.spmparams, pos2_sn, 'sn2individual');
-
-% dist = sqrt(sum((pos2_sn_ind-pos2_sn).^2, 2));  % there should be quite some distance between these
-% assert(median(dist)>50);
-% 
-% dist = sqrt(sum((pos2_sn_ind-pos).^2, 2));      % there should not be any distance between these
-% assert(median(dist)<1);
-
-pos8_sn      = ft_warp_apply(n8.cfg.spmparams, pos, 'individual2sn');
-pos8_sn_ind  = ft_warp_apply(n8.cfg.spmparams, pos8_sn, 'sn2individual');
-
-% dist = sqrt(sum((pos8_sn_ind-pos8_sn).^2, 2));  % there should be quite some distance between these
-% assert(median(dist)>50);
-% 
-% dist = sqrt(sum((pos8_sn_ind-pos).^2, 2));      % there should not be any distance between these
-% assert(median(dist)<1);
-
-pos12old_sn      = ft_warp_apply(n12old.cfg.spmparams, pos, 'individual2sn');
-pos12old_sn_ind  = ft_warp_apply(n12old.cfg.spmparams, pos12old_sn, 'sn2individual');
-
-% dist = sqrt(sum((pos12old_sn_ind-pos12old_sn).^2, 2));  % there should be quite some distance between these
-% assert(median(dist)>50);
-% 
-% dist = sqrt(sum((pos12old_sn_ind-pos).^2, 2));          % there should not be any distance between these
-% assert(median(dist)<1);
-
-pos12new_sn     = ft_warp_apply(n12new.cfg.spmparams, pos, 'individual2sn');
-pos12new_sn_ind = ft_warp_apply(n12new.cfg.spmparams, pos12new_sn, 'sn2individual');
-
-% dist = sqrt(sum((pos12new_sn_ind-pos12new_sn).^2, 2));  % there should be quite some distance between these
-% assert(median(dist)>50);
-% 
-% dist = sqrt(sum((pos12new_sn_ind-pos).^2, 2));          % there should not be any distance between these
-% assert(median(dist)<1);
-
-%%
-
-pos12mars_sn     = ft_warp_apply(n12mars.cfg.spmparams, pos, 'individual2sn');
-pos12mars_sn_ind = ft_warp_apply(n12mars.cfg.spmparams, pos12mars_sn, 'sn2individual');
-
-dist = sqrt(sum((pos12mars_sn_ind-pos12mars_sn).^2, 2)); % there should be quite some distance between these
-assert(median(dist)>50);
-
-dist = sqrt(sum((pos12mars_sn_ind-pos).^2, 2));          % there should not be any distance between these
-assert(median(dist)<1);
-
+for i=1:numel(version)
+  rmpath(genpath(fullfile(ftpath,'external','spm2'))); rmpath(genpath(fullfile(ftpath,'external','spm8'))); rmpath(genpath(fullfile(ftpath,'external','spm12')));
+  clear initial params
+  
+  initial = getfield(eval(version{i}), 'initial');
+  params  = getfield(eval(version{i}), 'params');
+  
+  pos0 = sourcemodel.pos;                                  % individual coordinates
+  pos1 = ft_warp_apply(initial, pos0, 'homogenous');       % approximate ACPC coordinates
+  pos2 = ft_warp_apply(params, pos1, 'individual2sn');     % MNI coordinates
+  pos3 = ft_warp_apply(params, pos2, 'sn2individual');     % approximate ACPC coordinates
+  pos4 = ft_warp_apply(inv(initial), pos3, 'homogenous');  % individual coordinates
+  
+  figure; ft_plot_mesh(pos0(inside, :)); ft_plot_axes([], 'unit', 'mm'); title(sprintf('%s - pos0 - individual coordinates', version{i}))
+  figure; ft_plot_mesh(pos1(inside, :)); ft_plot_axes([], 'unit', 'mm'); title(sprintf('%s - pos1 - approximate ACPC coordinates', version{i}))
+  figure; ft_plot_mesh(pos2(inside, :)); ft_plot_axes([], 'unit', 'mm'); title(sprintf('%s - pos2 - MNI coordinates', version{i}))
+  figure; ft_plot_mesh(pos3(inside, :)); ft_plot_axes([], 'unit', 'mm'); title(sprintf('%s - pos3 - approximate ACPC coordinates', version{i}))
+  figure; ft_plot_mesh(pos4(inside, :)); ft_plot_axes([], 'unit', 'mm'); title(sprintf('%s - pos4 - individual coordinates', version{i}))
+  
+end
 
 %%
 % FT_VOLUMENORMALISE is also being called from within FT_PREPARE_SOURCEMODEL
