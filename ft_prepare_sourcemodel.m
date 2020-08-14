@@ -617,6 +617,9 @@ switch cfg.method
       else
         fname = sprintf('standard_sourcemodel3d%dpoint%dmm.mat', floor(cfg.resolution), round(10*(cfg.resolution-floor(cfg.resolution))));
       end
+      if ~exist(fname, 'file')
+        ft_error('the MNI template grid based on the specified resolution does not exist');
+      end
     end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -626,9 +629,6 @@ switch cfg.method
     
     % get the mri
     if ischar(cfg.mri)
-      if ~exist(fname, 'file')
-        ft_error('the MNI template grid based on the specified resolution does not exist');
-      end
       mri = ft_read_mri(cfg.mri);
     else
       mri = cfg.mri;
@@ -636,8 +636,7 @@ switch cfg.method
     
     % get the template grid
     if ischar(fname)
-      mnigrid = load(fname, 'sourcemodel');
-      mnigrid = mnigrid.sourcemodel;
+      mnigrid = loadvar(fname, 'sourcemodel');
     else
       mnigrid = cfg.template;
     end
@@ -662,6 +661,9 @@ switch cfg.method
       fprintf('applying an inverse warp based on a linear transformation only\n');
       sourcemodel.pos = ft_warp_apply(inv(normalise.cfg.final), mnigrid.pos);
     else
+      % the normalisation from original subject head coordinates to MNI consists of an initial linear, followed by a nonlinear transformation
+      % the reverse transformations need to be done to get from MNI to the original subject head coordinates
+      % first apply the inverse of the nonlinear transformation, followed by the inverse of the initial linear transformation
       sourcemodel.pos = ft_warp_apply(inv(normalise.initial), ft_warp_apply(normalise.params, mnigrid.pos, 'sn2individual'));
     end
     % copy some of the fields over from the input arguments
@@ -759,7 +761,6 @@ else
     ft_warning('Inside dipole locations already determined by a template, cfg.inwardshift has no effect.')
   end
 end
-
 
 if strcmp(cfg.tight, 'yes')
   if ~isfield(sourcemodel, 'dim')
