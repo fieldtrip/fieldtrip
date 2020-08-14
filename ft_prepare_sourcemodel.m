@@ -154,8 +154,6 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'unit', 'auto', []});
 
 cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'});  % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
 cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.unit by the subsequent createsubcfg
-cfg = ft_checkconfig(cfg, 'allowedval', {'method', 'basedongrid', 'basedonpos', 'basedonshape', ...
-  'basedonmri', 'basedonmni', 'basedoncortex', 'basedonresolution', 'basedonvol', 'basedonfile','basedoncentroids'});
 
 % put the low-level options pertaining to the sourcemodel in their own field
 cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
@@ -171,7 +169,7 @@ cfg.spmversion        = ft_getopt(cfg, 'spmversion', 'spm12');
 cfg.headmodel         = ft_getopt(cfg, 'headmodel');
 cfg.sourcemodel       = ft_getopt(cfg, 'sourcemodel');
 cfg.unit              = ft_getopt(cfg, 'unit');
-cfg.method            = ft_getopt(cfg, 'method'); % empty will lead to attempted automatic detection
+cfg.method            = ft_getopt(cfg, 'method'); % the default is to do automatic detection further down
 cfg.movetocentroids   = ft_getopt(cfg, 'movetocentroids', 'no');
 
 % this option was deprecated on 12 Aug 2020
@@ -228,6 +226,9 @@ if isempty(cfg.method)
   else
     ft_error('incorrect cfg specification for constructing a sourcemodel');
   end
+else
+  cfg = ft_checkconfig(cfg, 'allowedval', {'method', 'basedongrid', 'basedonpos', 'basedonshape', ...
+    'basedonmri', 'basedonmni', 'basedoncortex', 'basedonresolution', 'basedonvol', 'basedonfile','basedoncentroids'});
 end
 
 % these are mutually exclusive, but printing all requested methods here
