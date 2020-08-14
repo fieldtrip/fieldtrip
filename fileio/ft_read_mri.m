@@ -56,12 +56,10 @@ function [mri] = ft_read_mri(filename, varargin)
 %
 % See also FT_DATATYPE_VOLUME, FT_WRITE_MRI, FT_READ_DATA, FT_READ_HEADER, FT_READ_EVENT
 
-% Undocumented key-value pairs:
-%   'fixel2voxel' = string, operation to apply to the fixels belonging to 
-%   the same voxel (only for *.mif). 'max' (default), 'min', 'mean'
-%   'indexfile'   = string, pointing to a fixel index file, if not present in
-%                    the same directory as the functional data
-%
+% Undocumented options
+%   'fixel2voxel' = string, operation to apply to the fixels belonging to  the same voxel (only for *.mif). 'max' (default), 'min', 'mean'
+%   'indexfile'   = string, pointing to a fixel index file, if not present in the same directory as the functional data
+
 % Copyright (C) 2008-2020, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
