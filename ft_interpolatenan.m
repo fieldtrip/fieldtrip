@@ -74,12 +74,11 @@ end
 datain = ft_checkdata(datain, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
 % check if the input is valid
-cfg = ft_checkconfig(cfg, 'allowedval', {'method', 'nearest', 'linear', 'spline', 'pchip', 'cubic', 'v5cubic', 'makima'});
 cfg = ft_checkopt(cfg, 'prewindow', 'numericscalar');
 cfg = ft_checkopt(cfg, 'postwindow', 'numericscalar');
 
 % get the options
-cfg.method      = ft_getopt(cfg, 'method',    'linear'); % default is linear
+cfg.method      = ft_getopt(cfg, 'method',    'linear'); % default is linear, can be 'nearest', 'linear', 'spline', 'pchip', 'cubic', 'v5cubic', 'makima'
 cfg.prewindow   = ft_getopt(cfg, 'prewindow',  1);       % default is 1 second
 cfg.postwindow  = ft_getopt(cfg, 'postwindow', 1);       % default is 1 seconds
 cfg.feedback    = ft_getopt(cfg, 'feedback', 'etf');
