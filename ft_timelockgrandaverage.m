@@ -185,12 +185,14 @@ else % ~strcmp(cfg.keepindividual, 'yes')
         ft_error('unsupported value for cfg.method')
     end % switch
   end
+  % update avgdof when avgmat is containing nan's 
+  avgdof(find(isnan(avgmat)))=0;
   % average across subject dimension
   ResultDOF      = reshape(sum(avgdof, 1), datsiz);
-  grandavg.avg   = reshape(sum(avgmat, 1), datsiz)./ResultDOF; % computes both means (plain and weighted)
+  grandavg.avg   = reshape(nansum(avgmat, 1), datsiz)./ResultDOF; % computes both means (plain and weighted)
   % Nchan x Nsamples, skips the singleton
   % if strcmp(cfg.method, 'across')
-  ResultVar      = reshape(sum(avgvar,1), datsiz)-reshape(sum(avgmat,1), datsiz).^2./ResultDOF;
+  ResultVar      = reshape(nansum(avgvar,1), datsiz)-reshape(nansum(avgmat,1), datsiz).^2./ResultDOF;
   % else  % cfg.method = 'within'
   % ResultVar      = reshape(sum(avgvar, 1), datsiz); % subtraction of means was done for each block already
   % end
