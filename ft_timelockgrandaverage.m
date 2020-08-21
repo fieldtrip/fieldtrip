@@ -20,17 +20,17 @@ function [grandavg] = ft_timelockgrandaverage(cfg, varargin)
 %                        parameter to average. default is set to
 %                        'avg', if it is present in the data.
 %
-% If cfg.method = 'across', a plain average is performed, i.e. the
-% requested parameter in each input argument is weighted equally in the
-% average. This is useful when averaging across subjects. The
-% variance-field will contain the variance across the parameter of
-% interest, and the dof-field will contain the number of input arguments.
+% If cfg.method = 'across', a plain average is performed, i.e. the requested
+% parameter in each input argument is weighted equally in the average. This is useful
+% when averaging across subjects. The variance-field will contain the variance across
+% the parameter of interest, and the output dof-field will contain the number of
+% input arguments.
 %
-% If cfg.method = 'within', a weighted average is performed, i.e. the
-% requested parameter in each input argument is weighted according to the
-% dof-field. This is useful when averaging across blocks within subjects.
-% The variance-field will contain the variance across all input
-% observations, and the dof-field will contain the number of observations.
+% If cfg.method = 'within', a weighted average is performed, i.e. the requested
+% parameter in each input argument is weighted according to the dof-field. This is
+% useful when averaging across blocks within subjects. The variance-field will
+% contain the variance across all input observations, and the output dof-field will
+% contain the total number of observations.
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
