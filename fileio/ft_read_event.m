@@ -1314,15 +1314,19 @@ switch eventformat
     % each of the columns of orig.s represents an event type
     % negative values have been editted in Homer and should be ignored
     event = [];
-    for i=1:size(orig.s,2)
-      smp = find(orig.s(:,i)==1);
-      for j=1:numel(smp)
-        event(end+1).type     = 'trigger';
-        event(end  ).value    = i;
-        event(end  ).sample   = smp(j);
-        event(end  ).duration = [];
-        event(end  ).offset   = [];
+    if isfield(orig, 's')
+      for i=1:size(orig.s,2)
+        smp = find(orig.s(:,i)==1);
+        for j=1:numel(smp)
+          event(end+1).type     = 'trigger';
+          event(end  ).value    = i;
+          event(end  ).sample   = smp(j);
+          event(end  ).duration = [];
+          event(end  ).offset   = [];
+        end
       end
+    else
+      % there are no events in this file
     end
     
   case {'itab_raw' 'itab_mhd'}

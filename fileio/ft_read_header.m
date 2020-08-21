@@ -1534,6 +1534,12 @@ switch headerformat
     hdr.Fs          = 1/median(diff(orig.t));
     
     % number of wavelengths times sources times detectors
+    if ~isfield(orig.SD, 'nSrcs')
+      orig.SD.nSrcs = size(orig.SD.SrcPos,1);
+    end      
+    if ~isfield(orig.SD, 'nDets')
+      orig.SD.nDets = size(orig.SD.DetPos,1);
+    end      
     assert(numel(orig.SD.Lambda)*orig.SD.nSrcs*orig.SD.nDets >= hdr.nChans);
     
     for i=1:hdr.nChans
