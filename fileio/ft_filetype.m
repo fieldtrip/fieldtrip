@@ -69,6 +69,7 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - MAUS *.TextGrid
 %  - Neurodata Without Borders *.nwb
 %  - PhysioNet *.hea and *.dat
+%  - NIRx *.tpl, *.wl1 and *.wl2
 
 % Copyright (C) 2003-2020, Robert Oostenveld
 %
@@ -1148,6 +1149,20 @@ elseif isequal([f x], 'optodetemplates.xml')
   manufacturer = 'Artinis Medical Systems';
   content = '(f)NIRS optode layout';
   
+  % known NIRx file formats
+elseif filetype_check_extension(filename, '.tpl') && exist(fullfile(p, [f '.wl1']), 'file') && exist(fullfile(p, [f '.wl2']), 'file')
+  type = 'nirx_tpl';
+  manufacturer = 'NIRx';
+  content = 'NIRS data';
+elseif filetype_check_extension(filename, '.wl1') && exist(fullfile(p, [f '.wl2']), 'file') && exist(fullfile(p, [f '.tpl']), 'file')
+  type = 'nirx_wl1';
+  manufacturer = 'NIRx';
+  content = 'NIRS data';
+elseif filetype_check_extension(filename, '.wl2') && exist(fullfile(p, [f '.tpl']), 'file') && exist(fullfile(p, [f '.wl1']), 'file')
+  type = 'nirx_wl2';
+  manufacturer = 'NIRx';
+  content = 'NIRS data';
+
   % known TETGEN file types, see http://tetgen.berlios.de/fformats.html
 elseif any(filetype_check_extension(filename, {'.node' '.poly' '.smesh' '.ele' '.face' '.edge' '.vol' '.var' '.neigh'})) && exist(fullfile(p, [f '.node']), 'file') && filetype_check_ascii(fullfile(p, [f '.node']), 100) && exist(fullfile(p, [f '.poly']), 'file')
   type = 'tetgen_poly';
