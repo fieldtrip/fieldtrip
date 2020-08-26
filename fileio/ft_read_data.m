@@ -920,7 +920,13 @@ switch dataformat
   case {'homer_nirs'}
     % Homer files are MATLAB files in disguise
     orig = load(filename, '-mat');
-    dat = orig.d(begsample:endsample, chanindx);
+    if isfield(orig, 'aux')
+      % concatenate the AUX channel at the end, consistent with FT_READ_HEADER
+      dat = [orig.d orig.aux];
+    else
+      dat = orig.d;
+    end
+    dat = dat(begsample:endsample, chanindx);
     dimord = 'samples_chans';
     
   case 'itab_raw'

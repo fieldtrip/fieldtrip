@@ -1532,6 +1532,7 @@ switch headerformat
     hdr.nSamplesPre = 0;
     hdr.nTrials     = 1; % assume continuous data, not epoched
     hdr.Fs          = 1/median(diff(orig.t));
+
     
     % number of wavelengths times sources times detectors
     if ~isfield(orig.SD, 'nSrcs')
@@ -1539,7 +1540,7 @@ switch headerformat
     end      
     if ~isfield(orig.SD, 'nDets')
       orig.SD.nDets = size(orig.SD.DetPos,1);
-    end      
+    end
     assert(numel(orig.SD.Lambda)*orig.SD.nSrcs*orig.SD.nDets >= hdr.nChans);
     
     for i=1:hdr.nChans
@@ -1549,6 +1550,14 @@ switch headerformat
     hdr.chantype = repmat({'nirs'}, hdr.nChans, 1);
     hdr.chanunit = repmat({'unknown'}, hdr.nChans, 1);
     
+    if isfield(orig, 'aux')
+      % concatenate the AUX channel at the end, consistent with FT_READ_DATA
+      hdr.nChans = hdr.nChans + 1;
+      hdr.label{end+1} = 'AUX';
+      hdr.chantype{end+1} = 'aux';
+      hdr.chanunit{end+1} = 'unknown';
+    end
+
     % convert the measurement configuration details to an optode structure
     hdr.opto = homer2opto(orig.SD);
     
