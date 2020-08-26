@@ -265,9 +265,9 @@ switch fileformat
     orig = read_ctf_shape(filename);
     shape.pos = orig.pos;
     
-    % The file also contains fiducial information, but those are in MRI voxels and 
+    % The file also contains fiducial information, but those are in MRI voxels and
     % inconsistent with the headshape itself.
-    % 
+    %
     % shape.fid.label = {'NASION', 'LEFT_EAR', 'RIGHT_EAR'};
     % shape.fid.pos = zeros(0,3); % start with an empty array
     % for i = 1:numel(shape.fid.label)
@@ -352,7 +352,7 @@ switch fileformat
     filename    = strrep(filename, '.surf.', '.shape.');
     filename    = strrep(filename, '.topo.', '.shape.');
     filename    = strrep(filename, '.coord.', '.shape.');
-
+    
     [p,f,e]     = fileparts(filename);
     tok         = tokenize(f, '.');
     if length(tok)>2
@@ -390,7 +390,7 @@ switch fileformat
     else
       seltopo = 1;
     end
-      
+    
     % recursively call ft_read_headshape
     tmp1 = ft_read_headshape(coordfiles{selcoord});
     tmp2 = ft_read_headshape(topofiles{seltopo});
@@ -978,24 +978,24 @@ switch fileformat
       [vertex, faces] = remove_vertices(vertex, faces, remove);
     end
     
-%     if fixtexture
-%       texture_old = texture;
-%       texture     = zeros(size(vertex,1), size(texture_old,2));
-%       
-%       % create the vertex-based texture as an average across the faces that
-%       % contain the vertex
-%       for k = 1:size(vertex,1)
-%         sel = textureIdx(faces==k);
-%         texture(k,:) = mean(texture_old(mode(sel),:));
-%       end
-%     end
+    %     if fixtexture
+    %       texture_old = texture;
+    %       texture     = zeros(size(vertex,1), size(texture_old,2));
+    %
+    %       % create the vertex-based texture as an average across the faces that
+    %       % contain the vertex
+    %       for k = 1:size(vertex,1)
+    %         sel = textureIdx(faces==k);
+    %         texture(k,:) = mean(texture_old(mode(sel),:));
+    %       end
+    %     end
     
     shape.pos   = vertex;
     shape.pos   = shape.pos - repmat(sum(shape.pos)/length(shape.pos),...
-        [length(shape.pos),1]); %centering vertices
+      [length(shape.pos),1]); %centering vertices
     shape.tri   = faces; % remove the last row which is zeros
     
-    if hasimage      
+    if hasimage
       if texture_per_vert
         % Refines the mesh and textures to increase resolution of the colormapping
         [shape.pos, shape.tri, texture] = refine(shape.pos, shape.tri,...
@@ -1020,7 +1020,7 @@ switch fileformat
         end
         [uniq_vert, ix] = unique(shape.tri);
         texture_ix = textureIdx(ix);
-
+        
         % get the indices into the image
         x   = abs(round(texture(:,1)*(sx-1)))+1;
         y   = abs(round(texture(:,2)*(sy-1)))+1;
@@ -1032,11 +1032,11 @@ switch fileformat
       % If color is specified as 0-255 rather than 0-1 correct by dividing
       % by 255
       if range(color(:)) > 1
-          color = color./255;
+        color = color./255;
       end
       
       shape.color = color;
-
+      
     elseif size(vertex,2)==6
       % the vertices also contain RGB colors
       
@@ -1044,7 +1044,7 @@ switch fileformat
       % If color is specified as 0-255 rather than 0-1 correct by dividing
       % by 255
       if range(color(:)) > 1
-          color = color./255;
+        color = color./255;
       end
       
       shape.color = color;
@@ -1054,7 +1054,7 @@ switch fileformat
     [pos, tri] = read_vtk(filename);
     shape.pos = pos;
     shape.tri = tri;
-  
+    
   case 'vtk_xml'
     data = read_vtk_xml(filename);
     shape.orig = data;
@@ -1062,14 +1062,14 @@ switch fileformat
     if isfield(data, 'Lines')
       shape.line = data.Lines;
     end
-  
+    
   case 'mrtrix_tck'
     ft_hastoolbox('mrtrix', 1);
     shape = read_tck(filename);
-  
+    
   case 'trackvis_trk'
     shape = read_trk(filename);
-  
+    
   case 'off'
     [pos, plc] = read_off(filename);
     shape.pos  = pos;
@@ -1278,10 +1278,9 @@ switch fileformat
     success = false;
     
     if ~success
-      % try reading it as electrode positions
-      % and treat those as fiducials
+      % try reading it as electrode positions and treat those as fiducials
       try
-        elec = ft_read_sens(filename);
+        elec = ft_read_sens(filename, 'senstype', 'eeg');
         if ~ft_senstype(elec, 'eeg')
           ft_error('headshape information can not be read from MEG gradiometer file');
         else
@@ -1344,4 +1343,3 @@ shape = fixpos(shape);
 
 % ensure that the numerical arrays are represented in double precision and not as integers
 shape = ft_struct2double(shape);
-end
