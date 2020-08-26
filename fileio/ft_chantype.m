@@ -322,7 +322,8 @@ elseif ft_senstype(input, 'ctf') && isheader
     end
   end
 
-  if isempty(origSensType)
+  if isempty(origSensType) && mean(strcmp(chantype, 'unknown'))>0.5
+    % only warn in case most of the channels are still unknown
     ft_warning('could not determine chantype from the CTF header');
   end
 

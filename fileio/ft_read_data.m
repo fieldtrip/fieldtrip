@@ -189,6 +189,12 @@ if ~isempty(endtrial) && mod(endtrial, 1)
   endtrial = round(endtrial);
 end
 
+if endsample<begsample
+  ft_warning('endsample is before begsample, returning empty data');
+  dat = zeros(length(chanindx), 0);
+  return
+end
+
 if strcmp(dataformat, 'compressed')
   % the file is compressed, unzip on the fly
   inflated   = true;

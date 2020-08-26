@@ -197,6 +197,11 @@ if ~isempty(threshold)
   end
 end
 
+if isempty(dat)
+  % either no trigger channels were selected, or no samples
+  return
+end
+
 if isempty(detectflank)
   % look at the first value in the trigger channel to determine whether the trigger is pulled up or down
   % this fails if the first sample is zero and if the trigger values are negative
