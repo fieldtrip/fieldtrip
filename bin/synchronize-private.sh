@@ -758,6 +758,14 @@ ARRAY+=(utilities/ft_fetch_header.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# ft_fetch_sens.m
+
+ARRAY=()
+ARRAY+=(private/ft_fetch_sens.m)
+ARRAY+=(test/private/ft_fetch_sens.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # ft_findcfg.m
 
 ARRAY=()
