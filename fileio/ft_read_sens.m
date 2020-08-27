@@ -68,8 +68,49 @@ end
 
 switch fileformat
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % read the content from various files that contain EEG electrode positions
+  % gradiometer information is always stored in the header of the MEG dataset
+  % hence we use the standard fieldtrip/fileio ft_read_header function
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  case {'ctf_ds', 'ctf_res4', 'ctf_old', 'neuromag_fif', 'neuromag_mne', '4d', '4d_pdf', '4d_m4d', '4d_xyz', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'ricoh_ave', 'ricoh_con', 'itab_raw' 'itab_mhd', 'netmeg'}
+    hdr = ft_read_header(filename, 'headerformat', fileformat, 'coordsys', coordsys, 'coilaccuracy', coilaccuracy);
+    % sometimes there can also be electrode position information in the header
+    if isfield(hdr, 'elec') && isfield(hdr, 'grad')
+      if isempty(senstype)
+        % set the default
+        ft_warning('both electrode and gradiometer information is present, returning the electrode information by default');
+        senstype = 'eeg';
+      end
+      switch lower(senstype)
+        case 'eeg'
+          sens = hdr.elec;
+        case 'meg'
+          sens = hdr.grad;
+        otherwise
+          ft_error('incorrect specification of senstype');
+      end
+    elseif isfield(hdr, 'grad')
+      sens = hdr.grad;
+    elseif isfield(hdr, 'elec')
+      sens = hdr.elec;
+    else
+      ft_error('there is no electrode nor gradiometer information present in the header');
+    end
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % optode information is mostly stored in the header of the NIRS dataset
+    % hence we use the standard fieldtrip/fileio ft_read_header function
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  case {'homer_nirs', 'snirf', 'artinis_oxy3', 'artinis_oxy4', 'artinis_oxyproj', 'nirx_wl1', 'nirx_wl2', 'nirx_tpl'}
+    hdr = ft_read_header(filename, 'headerformat', fileformat, 'coordsys', coordsys);
+    if isfield(hdr, 'opto')
+      sens = hdr.opto;
+    else
+      ft_error('there is no optode information present in the header');
+    end
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % read the content from various files that contain EEG electrode positions
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case 'asa_elc'
     sens = read_asa_elc(filename);
     
@@ -167,32 +208,6 @@ switch fileformat
     
   case 'bioimage_mgrid'
     sens = read_bioimage_mgrid(filename);
-    
-  case {'ctf_ds', 'ctf_res4', 'ctf_old', 'neuromag_fif', 'neuromag_mne', '4d', '4d_pdf', '4d_m4d', '4d_xyz', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'ricoh_ave', 'ricoh_con', 'itab_raw' 'itab_mhd', 'netmeg'}
-    % gradiometer information is always stored in the header of the MEG dataset, hence uses the standard fieldtrip/fileio ft_read_header function
-    hdr = ft_read_header(filename, 'headerformat', fileformat, 'coordsys', coordsys, 'coilaccuracy', coilaccuracy);
-    % sometimes there can also be electrode position information in the header
-    if isfield(hdr, 'elec') && isfield(hdr, 'grad')
-      if isempty(senstype)
-        % set the default
-        ft_warning('both electrode and gradiometer information is present, returning the electrode information by default');
-        senstype = 'eeg';
-      end
-      switch lower(senstype)
-        case 'eeg'
-          sens = hdr.elec;
-        case 'meg'
-          sens = hdr.grad;
-        otherwise
-          ft_error('incorrect specification of senstype');
-      end
-    elseif isfield(hdr, 'grad')
-      sens = hdr.grad;
-    elseif isfield(hdr, 'elec')
-      sens = hdr.elec;
-    else
-      ft_error('neither electrode nor gradiometer information is present');
-    end
     
   case {'curry_dat', 'curry_cdt'}
     hdr = ft_read_header(filename);
@@ -469,7 +484,7 @@ switch fileformat
     warning(ws); % revert to the previous warning state
     sens.label   = txtData{:,1};
     sens.elecpos = [txtData.Loc_X txtData.Loc_Y txtData.Loc_Z];
-        
+    
   otherwise
     ft_error('unknown fileformat for electrodes or gradiometers');
 end % switch fileformat
