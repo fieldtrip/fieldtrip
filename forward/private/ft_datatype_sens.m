@@ -38,10 +38,9 @@ function [sens] = ft_datatype_sens(sens, varargin)
 %    sens.optopos       = Nx3 matrix with the position of individual optodes
 %    sens.optotype      = Nx1 cell-array with information about the type of optode (receiver or transmitter)
 %    sens.optolabel     = Nx1 cell-array with optode labels
-%    sens.transmits     = NxK matrix, boolean, where N is the number of optodes and K the number of wavelengths. Specifies what optode is transmitting at what wavelength (or nothing at all, which indicates that it is a receiver).
 %    sens.wavelength    = 1xK vector of all wavelengths that were used
 %    sens.laserstrength = 1xK vector of the strength of the emitted light of the lasers
-%    sens.tra           = MxN matrix, boolean, contains information about how receiver and transmitter are combined to form channels
+%    sens.transmits     = MxN matrix, specifies for each of the M channels at which wavelength each of the N optodes transmits (positive integer from 1 to K), or receives (negative ingeger from 1 to K), or does not contribute at all (zeros)
 %
 % The following fields apply to MEG, EEG, sEEG and ECoG
 %    sens.chantype = Mx1 cell-array with the type of the channel, see FT_CHANTYPE
@@ -369,7 +368,7 @@ switch version
         sens.coilpos = sens.pnt; sens = rmfield(sens, 'pnt');
         sens.coilori = sens.ori; sens = rmfield(sens, 'ori');
       else
-        % sensor description is something else, EEG/ECoG etc
+        % sensor description is something else, EEG/ECoG/sEEG, etc
         sens.elecpos = sens.pnt; sens = rmfield(sens, 'pnt');
       end
     end
