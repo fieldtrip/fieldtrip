@@ -378,11 +378,11 @@ switch backend
     end
 
     if ~isempty(timreq) && ~isnan(timreq) && ~isinf(timreq)
-      submitoptions = [submitoptions sprintf('--time=%d ', round((timreq+timoverhead)/60))];
+      submitoptions = [submitoptions sprintf(' --time=%d ', round((timreq+timoverhead)/60))];
     end
 
     if ~isempty(memreq) && ~isnan(memreq) && ~isinf(memreq)
-      submitoptions = [submitoptions sprintf('--mem=%.0f ', round((memreq+memoverhead)./1024^2))];
+      submitoptions = [submitoptions sprintf(' --mem=%.0f ', round((memreq+memoverhead)./1024^2))];
     end
 
     % specifying the o and e names might be useful for the others as well
