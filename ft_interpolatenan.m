@@ -9,7 +9,7 @@ function [dataout] = ft_interpolatenan(cfg, datain)
 % where cfg is a configuration structure and the input data is obtained from FT_PREPROCESSING.
 %
 % The configuration should contain
-%   cfg.method      = string, interpolation method, see HELP INTERP1 (default = 'linear')
+%   cfg.method      = string, interpolation method, see INTERP1 (default = 'linear')
 %   cfg.prewindow   = value, length of data prior to interpolation window, in seconds (default = 1)
 %   cfg.postwindow  = value, length of data after interpolation window, in seconds (default = 1)
 %   cfg.feedback    = string, 'no', 'text', 'textbar', 'gui' (default = 'text')

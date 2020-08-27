@@ -1,6 +1,6 @@
 function [sens] = ft_fetch_sens(cfg, data)
 
-% FT_FETCH_SENS mimics the behaviour of FT_READ_SENS, but for a FieldTrip
+% FT_FETCH_SENS mimics the behavior of FT_READ_SENS, but for a FieldTrip
 % data structure or a FieldTrip configuration instead of a file on disk.
 %
 % Use as
