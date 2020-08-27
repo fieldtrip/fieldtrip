@@ -157,8 +157,7 @@ illegalidx = cellfun(@isempty, typeidx);
 cfg.channel(illegalidx) = [];
 
 if isempty(cfg.channel)
-  warning('no valid NIRS channels found')
-  return;
+  ft_error('no valid NIRS channels found')
 end
 
 % channel indices wrt optode structure
