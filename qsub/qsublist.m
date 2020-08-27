@@ -170,6 +170,7 @@ switch cmd
             retval = 1;
           else
             retval = strcmp(strtrim(jobstatus) ,'C');
+            retval = retval | ~isempty(strfind(jobstatus, 'Unknown Job Id'));
           end
         case 'lsf'
           [dum, jobstatus] = system(['bjobs ' pbsid ' | awk ''NR==2'' | awk ''{print $3}'' ']);
