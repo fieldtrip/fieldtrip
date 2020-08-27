@@ -1309,24 +1309,39 @@ switch eventformat
     event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'denoise', denoise, 'trigshift', trigshift);
     
   case {'homer_nirs'}
-    % Homer files are MATLAB files in disguise
+    % Homer files are MATLAB files in disguise, see https://www.nitrc.org/plugins/mwiki/index.php/homer2:Homer_Input_Files#NIRS_data_file_format
     orig = load(filename, '-mat');
-    % each of the columns of orig.s represents an event type
+    % each of the columns of orig.s represents an event type, 1 means on, 0 means off
     % negative values have been editted in Homer and should be ignored
     event = [];
     if isfield(orig, 's')
+      % each column is a condition
       for i=1:size(orig.s,2)
-        smp = find(orig.s(:,i)==1);
-        for j=1:numel(smp)
+        onset  = find(diff([0 orig.s(:,i)'])==+1); % rising flank
+        offset = find(diff([orig.s(:,i)' 0])==-1); % falling flank
+        for j=1:numel(onset)
           event(end+1).type     = 'trigger';
           event(end  ).value    = i;
-          event(end  ).sample   = smp(j);
-          event(end  ).duration = [];
+          event(end  ).sample   = onset(j);
+          event(end  ).duration = offset(j)-onset(j)+1;
           event(end  ).offset   = [];
         end
       end
-    else
-      % there are no events in this file
+    end
+    
+    if isempty(event) && isfield(orig, 'aux')
+      ft_warning('no events found in the stimulus onsets table, parsing the AUX channel for triggers');
+      
+      if isempty(hdr)
+        hdr = ft_read_header(filename);
+      end
+      
+      % override the user specified settings (or defaults, which are probably empty)
+      chanindx = match_str(hdr.label, 'AUX');
+      threshold = 'nanmean';
+      
+      trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'denoise', denoise, 'trigshift', trigshift, 'threshold', threshold);
+      event   = appendstruct(event, trigger);
     end
     
   case {'itab_raw' 'itab_mhd'}
