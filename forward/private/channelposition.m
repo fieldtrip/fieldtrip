@@ -1,11 +1,11 @@
 function [pnt, ori, lab] = channelposition(sens)
 
 % CHANNELPOSITION computes the channel positions and orientations from the
-% coils or electrodes
+% MEG coils, EEG electrodes or NIRS optodes
 %
 % Use as
 %   [pos, ori, lab] = channelposition(sens)
-% where sens is an electrode,  gradiometer or optode array.
+% where sens is an gradiometer, electrode, or optode array.
 %
 % See also FT_DATATYPE_SENS
 
@@ -42,6 +42,12 @@ end
 if isfield(sens, 'pnt')
   sens.coilpos = sens.pnt;
   sens = rmfield(sens, 'pnt');
+end
+
+if isfield(sens, 'transmits') && ~isfield(sens, 'tra')
+  % this applies to optode definitions, the transmits matrix also codes for the wavelengths
+  % make a tra matrix where each optode weights in with the same amount
+  sens.tra = (sens.transmits~=0);
 end
 
 % treat all sensor arrays similar, i.e. as gradiometer systems
