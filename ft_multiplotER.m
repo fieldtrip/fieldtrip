@@ -480,8 +480,8 @@ chanLabel  = cfg.layout.label(sellay);
 % determine the coloring of channels/conditions
 linecolor = linecolor_common(cfg, varargin{:});
 
-cla
-hold on
+% open a new figure, or add it to the existing one
+open_figure(keepfields(cfg, {'newfigure', 'clearfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
 
 if ischar(linecolor)
   set(gca, 'ColorOrder', char2rgb(linecolor))
@@ -567,7 +567,6 @@ end
 
 axis tight
 axis off
-hold off
 
 % Make the axis a little wider when boxes are shown
 if strcmp(cfg.box, 'yes')

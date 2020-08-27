@@ -453,8 +453,8 @@ end
 % determine the coloring of channels/conditions
 linecolor = linecolor_common(cfg, varargin{:});
 
-cla
-hold on
+% open a new figure, or add it to the existing one
+open_figure(keepfields(cfg, {'newfigure', 'clearfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
 
 yval = datamatrix;
 mask = maskmatrix;
@@ -562,8 +562,6 @@ if strcmp(cfg.interactive, 'yes')
   set(gcf, 'windowbuttondownfcn',   {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttondownfcn'});
   set(gcf, 'windowbuttonmotionfcn', {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttonmotionfcn'});
 end
-
-hold off
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

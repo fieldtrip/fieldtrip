@@ -446,8 +446,9 @@ chanHeight = cfg.layout.height(sellay);
 
 %% Section 4: do the actual plotting
 
-cla
-hold on
+% open a new figure, or add it to the existing one
+% note that in general adding a TFR to an existing one does not make sense, since they will overlap
+open_figure(keepfields(cfg, {'newfigure', 'clearfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
 
 % Get physical z-axis range (color axis):
 if strcmp(cfg.zlim, 'maxmin')
@@ -573,7 +574,6 @@ end
 
 axis tight
 axis off
-hold off
 
 % Make the axis a little wider when boxes are shown
 if strcmp(cfg.box, 'yes')
