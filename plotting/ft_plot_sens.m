@@ -464,21 +464,35 @@ if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
     offset = ft_scalingfactor('mm', sens.unit)*10; % displace the label by 10 mm
   end
   
-  for i=1:length(sens.label)
+  for i=1:size(pos,1)
     switch label
-      case {'on', 'yes'}
-        str = sens.label{i};
-      case {'label' 'labels'}
-        str = sens.label{i};
+      case {'on', 'yes', 'label', 'labels'}
+        if ~individual
+          str = sens.label{i};
+        elseif ismeg
+          % individual MEG coils never have a label
+          str = '';
+        elseif iseeg
+          if isequal(sens.chanpos, sens.elecpos)
+            % the names of the electrodes and channels can be interchanged
+            str = sens.label{i};
+          else
+            % the names of the individual electrodes are not known
+            str = '';
+          end
+        elseif isnirs
+          % optodes have individual names
+          str = sens.optolabel{i};
+        end
       case {'number' 'numbers'}
         str = num2str(i);
       otherwise
         ft_error('unsupported value for option ''label''');
     end % switch
     % shift the label with a certain offset
-    x = sens.chanpos(i,1) + offset * ori(i,1);
-    y = sens.chanpos(i,2) + offset * ori(i,2);
-    z = sens.chanpos(i,3) + offset * ori(i,3);
+    x = pos(i,1) + offset * ori(i,1);
+    y = pos(i,2) + offset * ori(i,2);
+    z = pos(i,3) + offset * ori(i,3);
     text(x, y, z, str, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight, 'horizontalalignment', 'center', 'verticalalignment', 'middle');
   end % for each channel
 end % if label
