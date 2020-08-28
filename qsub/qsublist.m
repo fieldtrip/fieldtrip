@@ -178,9 +178,16 @@ switch cmd
           [dum, jobstatus] = system(['qstat -s z | grep ' pbsid ' | awk ''{print $5}''']);
           retval = strcmp(strtrim(jobstatus), 'z') | strcmp(strtrim(jobstatus), 'qw');
         case 'slurm'
-          % only return the status based on the presence of the output files
-          % FIXME it would be good to implement a proper check for slurm as well
-          retval = 1;
+          if ~isfile(outputfile)
+            % with Slurm log output and error are created upon job submission
+            % and are not a viable test to see if the job completed, so we
+            % check for the outputfile first
+            retval = 0;
+          else
+            % if the file is there, we can use squeue to verify that the job really left the queue
+            [dum, jobstatus] = system(['squeue -j ' pbsid ' -h -o %T']);
+            retval = isempty(jobstatus);
+          end
         case {'local','system'}
           % only return the status based on the presence of the output files
           % there is no way polling the batch execution system
