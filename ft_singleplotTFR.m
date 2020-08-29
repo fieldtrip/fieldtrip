@@ -273,11 +273,20 @@ if startsWith(dimord, 'chan_chan_') || startsWith(dimord, 'chancmb_')
   return
 end
 
+
 % Apply channel-type specific scaling
 fn = fieldnames(cfg);
-tmpcfg = keepfields(cfg, fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan') | strcmp(fn, 'channel') | strcmp(fn, 'parameter')));
-[data] = chanscale_common(tmpcfg, data);
-
+fn = setdiff(fn, {'skipscale', 'showscale', 'gridscale'}); % these are for the layout and plotting, not for CHANSCALE_COMMON
+fn = fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan') | strcmp(fn, 'channel') | strcmp(fn, 'parameter'));
+tmpcfg = keepfields(cfg, fn);
+if ~isempty(tmpcfg)
+  data = chanscale_common(tmpcfg, data);
+  % remove the scaling fields from the configuration, to prevent them from being called again in interactive mode
+  % but keep the parameter and channel field
+  cfg = removefields(cfg, setdiff(fn, {'parameter', 'channel'}));
+else
+  % do nothing
+end
 
 %% Section 3: select the data to be plotted and determine min/max range
 

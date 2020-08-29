@@ -381,16 +381,18 @@ if startsWith(dimord, 'chan_chan_') || startsWith(dimord, 'chancmb_')
   return
 end
 
-% apply channel-type specific scaling
+% Apply channel-type specific scaling
 fn = fieldnames(cfg);
-tmpcfg = keepfields(cfg, fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan') | strcmp(fn, 'channel') | strcmp(fn, 'parameter')));
+fn = setdiff(fn, {'skipscale', 'showscale', 'gridscale'}); % these are for the layout and plotting, not for CHANSCALE_COMMON
+fn = fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan') | strcmp(fn, 'channel') | strcmp(fn, 'parameter'));
+tmpcfg = keepfields(cfg, fn);
 if ~isempty(tmpcfg)
   for i=1:Ndata
     varargin{i} = chanscale_common(tmpcfg, varargin{i});
   end
-  % remove the scaling fields from the, to prevent them from being called
-  % again
-  cfg = removefields(cfg, setdiff(fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan')), {'gridscale' 'showscale'}));
+  % remove the scaling fields from the configuration, to prevent them from being called again in interactive mode
+  % but keep the parameter and channel field
+  cfg = removefields(cfg, setdiff(fn, {'parameter', 'channel'}));
 else
   % do nothing
 end
@@ -398,7 +400,7 @@ end
 %% Section 3: select the data to be plotted and determine min/max range
 
 % Read or create the layout that will be used for plotting
-tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
 cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
 
 % Take the subselection of channels that is contained in the layout, this is the same in all datasets
