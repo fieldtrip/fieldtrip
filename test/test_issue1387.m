@@ -8,15 +8,14 @@ function test_issue1387
 % load data and parse the events using '5*nanmedian' threshold on 8 channels
 fileName       = dccnpath('/home/common/matlab/fieldtrip/data/test/issue1387/Test_4.edf');
 bitChannels    = 3:10;
-cfg            = [];
-cfg.dataset    = fileName;
-cfg.header     = ft_read_header(cfg.dataset);
-labels         = cfg.header.label(bitChannels);
-data_events	   = ft_read_event(cfg.dataset,'header',cfg.header,...
-	'detectflank','up','chanindx',bitChannels,'threshold','5*nanmedian');
+header         = ft_read_header(fileName);
+labels         = header.label(bitChannels);
+data_events	   = ft_read_event(fileName,'header',header,'detectflank','up','chanindx',bitChannels,'threshold','5*nanmedian');
 
 %%
 % load the raw data
+cfg            = [];
+cfg.dataset    = fileName;
 cfg.continuous = 'yes';
 cfg.channel    = 'all';
 data           = ft_preprocessing(cfg);
@@ -31,8 +30,7 @@ event.samples  = [event.evnt.sample];
 event.times	   = data.time{1}(event.samples);
 
 %% 
-% ASSERT: There were 78 TTLs on the first channel, make sure this is the case, error 
-% otherwise.
+% ASSERT: There were 78 TTLs on the first channel, make sure this is the case, error otherwise.
 assert(length(event.times)==78,'Number of events should be 78!')
 
 %%
