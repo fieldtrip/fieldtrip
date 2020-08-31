@@ -50,6 +50,7 @@ fix4d8192    = ft_getopt(varargin, 'fix4d8192',    false);
 fixbiosemi   = ft_getopt(varargin, 'fixbiosemi',   false);
 fixartinis   = ft_getopt(varargin, 'fixartinis',   false);
 fixstaircase = ft_getopt(varargin, 'fixstaircase', false);
+fixhomer     = ft_getopt(varargin, 'fixhomer',     false);
 threshold    = ft_getopt(varargin, 'threshold'          );
 
 if isempty(hdr)
@@ -84,7 +85,21 @@ end
 % detect situations where the channel value changes almost at every sample, which are likely to be noise
 if istrue(denoise)
   for i=1:length(chanindx)
-    if (sum(diff(find(diff(dat(i,:))~=0)) == 1)/length(dat(i,:))) > 0.8
+    % look at how often the value changes, for a clean (i.e. binary) channel this will not be very often
+    flanks = find(diff(dat(i,:))~=0);
+    if length(flanks) < 0.3 * size(dat,2)
+      continue
+    end
+    % look at the distance between the flanks, for a clean (i.e. binary) channel there will be quite some time between subsequent flanks
+    if median(diff(flanks)) > 5
+      continue
+    end
+    % look at the skewness of derivative of the channel, it will be large for a channel with an occasional TTL pulse
+    % taking the derivative makes it sensitive for upgoing and downgoing flanks of long TTL pulses
+    if skewness(abs(diff(dat(i,:))))>5
+      ft_warning(['trigger channel ' hdr.label{chanindx(i)} ' looks like analog TTL pulses and will be thresholded']);
+      dat(i,:) = dat(i,:) > midrange(dat(i,:));
+    else
       ft_warning(['trigger channel ' hdr.label{chanindx(i)} ' looks like noise and will be ignored']);
       dat(i,:) = 0;
     end
@@ -170,6 +185,16 @@ if fixartinis
   dat = round(10*dat)/10; % steps of 0.1V are to be assumed
 end
 
+if fixhomer
+  for i=1:numel(chanindx)
+    if strcmp(hdr.chantype{chanindx(i)}, 'stimulus')
+      % each of the columns of orig.s represents a stimulus type, 1 means on, 0 means off
+      % negative values have been editted in Homer and should be ignored
+      dat(i,:) = dat(i,:)>0;
+    end
+  end % for each channel
+end
+
 if fixstaircase
   for i=1:numel(chanindx)
     onset  = find(diff([0 dat]>0));
@@ -183,16 +208,16 @@ end
 
 if ~isempty(threshold)
   % the trigger channels contain an analog (and hence noisy) TTL signal and should be thresholded
-  if ischar(threshold) % evaluate string (e.g., threshold = 'nanmedian')
+  if ischar(threshold) % evaluate string (e.g., threshold = 'nanmedian' or 'midrange')
     for i = 1:size(dat,1)
-      threshold_value = eval([threshold '(dat(i,:))']);
+      threshold_value = feval(threshold, dat(i,:));
       % discretize the signal
-      dat(i,dat(i,:)<threshold_value) = 0;
+      dat(i,dat(i,:)< threshold_value) = 0;
       dat(i,dat(i,:)>=threshold_value) = 1;
     end
   else
     % discretize the signal
-    dat(dat<threshold) = 0;
+    dat(dat< threshold) = 0;
     dat(dat>=threshold) = 1;
   end
 end
@@ -223,8 +248,8 @@ for i=1:length(chanindx)
     pad = 0;
   end
   
-  upflank   = find(diff([pad trig(:)' pad])>0);
-  downflank = find(diff([pad trig(:)' pad])<0);
+  upflank   = find(diff([pad trig(:)'])>0);
+  downflank = find(diff([pad trig(:)'])<0);
   
   switch detectflank
     case 'up'
@@ -284,3 +309,10 @@ for i=1:length(chanindx)
       ft_error('incorrect specification of ''detectflank''');
   end
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION to determine the value that is halfway between the minimum and maximum
+% this can be used to threshold, e.g. by specifying this as 'threshold'
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function m = midrange(x)
+m = mean(range(x));
