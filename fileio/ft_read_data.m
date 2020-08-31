@@ -919,13 +919,19 @@ switch dataformat
     
   case {'homer_nirs'}
     % Homer files are MATLAB files in disguise
+    % see https://www.nitrc.org/plugins/mwiki/index.php/homer2:Homer_Input_Files#NIRS_data_file_format
     orig = load(filename, '-mat');
+    % copy the data from the raw intensity time courses
+    dat = orig.d;
     if isfield(orig, 'aux')
       % concatenate the AUX channel at the end, consistent with FT_READ_HEADER
-      dat = [orig.d orig.aux];
-    else
-      dat = orig.d;
+      dat = [dat orig.aux];
     end
+    if isfield(orig, 's')
+      % concatenate the stimulus channel at the end, consistent with FT_READ_HEADER
+      dat = [dat orig.s];
+    end
+    
     dat = dat(begsample:endsample, chanindx);
     dimord = 'samples_chans';
     
