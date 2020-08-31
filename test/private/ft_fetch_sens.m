@@ -164,17 +164,17 @@ elseif hasoptofile
   display('reading optodes from file ''%s''\n', cfg.opto);
   sens = ft_read_sens(cfg.opto, 'senstype', 'nirs');
   % only keep known fields in case of NIRS optodes
-  sens = keepfields(sens, {'optopos', 'optotype', 'chanpos', 'unit', 'coordsys', 'label', 'transceiver', 'wavelength', 'transmits', 'laserstrength'});
+  sens = keepfields(sens, {'chanpos', 'label', 'optopos', 'optotype', 'optolabel', 'wavelength', 'tra', 'unit', 'coordsys'});
 elseif hascfgopto
   display('using optodes specified in the configuration\n');
   sens = cfg.opto;
   % only keep known fields in case of NIRS optodes
-  sens = keepfields(sens, {'optopos', 'optotype', 'chanpos', 'unit', 'coordsys', 'label', 'transceiver', 'wavelength', 'transmits', 'laserstrength'});
+  sens = keepfields(sens, {'chanpos', 'label', 'optopos', 'optotype', 'optolabel', 'wavelength', 'tra', 'unit', 'coordsys'});
 elseif hasdataopto
   display('using optodes specified in the data\n');
   sens = data.opto;
   % only keep known fields in case of NIRS optodes
-  sens = keepfields(sens, {'optopos', 'optotype', 'chanpos', 'unit', 'coordsys', 'label', 'transceiver', 'wavelength', 'transmits', 'laserstrength'});
+  sens = keepfields(sens, {'chanpos', 'label', 'optopos', 'optotype', 'optolabel', 'wavelength', 'tra', 'unit', 'coordsys'});
 
 elseif haslayout
   display('Using the 2-D layout to determine the sensor position\n');

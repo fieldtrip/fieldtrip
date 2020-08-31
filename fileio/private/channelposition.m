@@ -44,12 +44,6 @@ if isfield(sens, 'pnt')
   sens = rmfield(sens, 'pnt');
 end
 
-if isfield(sens, 'transmits') && ~isfield(sens, 'tra')
-  % this applies to optode definitions, the transmits matrix also codes for the wavelengths
-  % make a tra matrix where each optode weights in with the same amount
-  sens.tra = (sens.transmits~=0);
-end
-
 % treat all sensor arrays similar, i.e. as gradiometer systems
 if     ~isfield(sens, 'coilori') && isfield(sens, 'coilpos')
   sens.coilori = nan(size(sens.coilpos));
