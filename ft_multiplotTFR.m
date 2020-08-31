@@ -186,6 +186,7 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedback', 'inflow'}
 cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedforward', 'outflow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim', 'absmax', 'maxabs'});
 cfg = ft_checkconfig(cfg, 'unused', {'cohtargetchannel'});
+cfg = ft_checkconfig(cfg, 'renamed', {'newfigure', 'figure'});
 
 % set the defaults
 cfg.parameter      = ft_getopt(cfg, 'parameter', 'powspctrm');
@@ -346,14 +347,23 @@ end
 
 % Apply channel-type specific scaling
 fn = fieldnames(cfg);
-tmpcfg = keepfields(cfg, fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan') | strcmp(fn, 'channel') | strcmp(fn, 'parameter')));
-data = chanscale_common(tmpcfg, data);
+fn = setdiff(fn, {'skipscale', 'showscale', 'gridscale'}); % these are for the layout and plotting, not for CHANSCALE_COMMON
+fn = fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan') | strcmp(fn, 'channel') | strcmp(fn, 'parameter'));
+tmpcfg = keepfields(cfg, fn);
+if ~isempty(tmpcfg)
+  data = chanscale_common(tmpcfg, data);
+  % remove the scaling fields from the configuration, to prevent them from being called again in interactive mode
+  % but keep the parameter and channel field
+  cfg = removefields(cfg, setdiff(fn, {'parameter', 'channel'}));
+else
+  % do nothing
+end
 
 
 %% Section 3: select the data to be plotted and determine min/max range
 
 % Read or create the layout that will be used for plotting
-tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
 cfg.layout = ft_prepare_layout(tmpcfg, data);
 
 % Take the subselection of channels that is contained in the layout, this is the same in all datasets
@@ -446,8 +456,9 @@ chanHeight = cfg.layout.height(sellay);
 
 %% Section 4: do the actual plotting
 
-cla
-hold on
+% open a new figure, or add it to the existing one
+% note that in general adding a TFR to an existing one does not make sense, since they will overlap
+open_figure(keepfields(cfg, {'figure', 'clearfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
 
 % Get physical z-axis range (color axis):
 if strcmp(cfg.zlim, 'maxmin')
@@ -573,7 +584,6 @@ end
 
 axis tight
 axis off
-hold off
 
 % Make the axis a little wider when boxes are shown
 if strcmp(cfg.box, 'yes')

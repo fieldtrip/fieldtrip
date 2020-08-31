@@ -134,6 +134,7 @@ end
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2837
 cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'mri', 'volume'});
+cfg = ft_checkconfig(cfg, 'renamed', {'newfigure', 'figure'});
 
 % set the defaults
 cfg.method        = ft_getopt(cfg, 'method');                  % volume, headshape, 1020, shaft
@@ -359,7 +360,7 @@ switch cfg.method
     
   case 'headshape'
     % start building the figure
-    h = open_figure(keepfields(cfg, {'newfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
+    h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
     set(h, 'Name', mfilename);
     set(h, 'Units', 'normalized');
     set(h, 'Color', [1 1 1]);
@@ -461,7 +462,7 @@ switch cfg.method
   case 'volume'
     
     % start building the figure
-    h = open_figure(keepfields(cfg, {'newfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
+    h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
     set(h, 'Name', mfilename);
     set(h, 'Units', 'normalized');
     set(h, 'Color', [1 1 1]);

@@ -1399,39 +1399,56 @@ function layout = opto2lay(opto, label, rotatez, projmethod, viewpoint)
 if isempty(rotatez)
   rotatez = 90;
 end
-
-% NIRS channels are named 'RxY - TxZ [wavelength]'
+  
+% NIRS channels are named as 'RxY-TxZ [wavelength]' or as 'RxY-TxZ [chromophore]'
 [rxnames, rem] = strtok(label, {'-', ' '});
 [txnames, rem] = strtok(rem,   {'-', ' '});
 
-% start with an empty layout
-layout = [];
-
+pos = nan(numel(label),3);
 for i=1:numel(label)
-  % create positions halfway between transmitter and receiver
-  rxid = ismember(opto.optolabel, rxnames(i));
-  txid = ismember(opto.optolabel, txnames(i));
-  layout.pos(i, :) = opto.optopos(rxid, :)/2 + opto.optopos(txid, :)/2;
+  if isfield(opto, 'chanpos') && ismember(label{i}, opto.label)
+    % there is an exact match
+    chanid = strcmp(opto.label, label{i});
+    pos(i,:) = opto.chanpos(chanid,:);
+  elseif isfield(opto, 'chanpos') && any(startsWith(opto.label, [rxnames{i} '-' txnames{i}]))
+    % the first part matches with 'RxY-TxZ'
+    chanid = startsWith(opto.label, [rxnames{i} '-' txnames{i}]);
+    pos(i,:) = mean(opto.chanpos(chanid,:), 1); % there will usually be two matches
+  elseif isfield(opto, 'chanpos') && any(startsWith(opto.label, [txnames{i} '-' rxnames{i}]))
+    % the first part matches with 'TxY-RxZ'
+    chanid = startsWith(opto.label, [txnames{i} '-' rxnames{i}]);
+    pos(i,:) = mean(opto.chanpos(chanid,:), 1); % there will usually be two matches
+  elseif ismember(rxnames(i), opto.optolabel) && ismember(txnames{i}, opto.optolabel)
+    % create positions halfway between the transmitter and receiver
+    rxid = strcmp(opto.optolabel, rxnames(i));
+    txid = strcmp(opto.optolabel, txnames(i));
+    pos(i, :) = opto.optopos(rxid, :)/2 + opto.optopos(txid, :)/2;
+  end
 end
 
+% remove the channels without position, like AUX
+sel = ~any(isnan(pos), 2);
+pos = pos(sel,:);
+label = label(sel);
+
 % apply the rotation around the z-axis
-layout.pos = ft_warp_apply(rotate([0 0 rotatez]), layout.pos, 'homogenous');
+pos = ft_warp_apply(rotate([0 0 rotatez]), pos, 'homogenous');
 
 % project 3D points onto 2D plane
-if all(layout.pos(:,3)==0)
+if all(pos(:,3)==0)
   ft_notice('not applying 2D projection');
-  layout.pos = layout.pos(:,1:2);
+  pos = pos(:,1:2);
 elseif isempty(viewpoint)
-  layout.pos = elproj(layout.pos, projmethod);
+  pos = elproj(pos, projmethod);
 else
-  layout.pos = getorthoviewpos(layout.pos, opto.coordsys, viewpoint);
+  pos = getorthoviewpos(pos, opto.coordsys, viewpoint);
 end
 
 % compute the distances between all channel pairs
 dist = zeros(numel(label));
 for i=1:numel(label)
   for j=1:numel(label)
-    dist(i,j) = norm(layout.pos(i,:)-layout.pos(j,:));
+    dist(i,j) = norm(pos(i,:)-pos(j,:));
   end
 end
 dist(dist==0) = inf; % ignore all zeros
@@ -1445,6 +1462,9 @@ end
 % note that the width and height can be overruled elsewhere with cfg.width and cfg.height
 ft_notice('estimated channel width and height is %.4f', mindist);
 
+% start with an empty layout
+layout = [];
+layout.pos    = pos;
 layout.label  = label;
 layout.width  = mindist*ones(numel(label),1);
 layout.height = mindist*ones(numel(label),1);
@@ -1458,6 +1478,7 @@ pos2 = layout.pos; pos2(:,1) = pos2(:,1) - layout.width; pos2(:,2) = pos2(:,2) +
 pos3 = layout.pos; pos3(:,1) = pos3(:,1) + layout.width; pos3(:,2) = pos3(:,2) - layout.height;
 pos4 = layout.pos; pos4(:,1) = pos4(:,1) + layout.width; pos4(:,2) = pos4(:,2) + layout.height;
 pos = [pos1; pos2; pos3; pos4];
+
 indx = convhull(pos);
 layout.mask{1} = pos(indx,:);
 

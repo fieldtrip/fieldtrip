@@ -47,7 +47,6 @@ source = ft_sourceinterpolate(cfg, sourcemodel, mri);
 %%
 
 cfg = [];
-cfg.newfigure = 'yes';
 cfg.funparameter = 'pow';
 cfg.location = [0 0 0];
 cfg.locationcoordinates = 'head';
@@ -81,7 +80,6 @@ n12mars = ft_volumenormalise(cfg, source);
 %%
 
 cfg = [];
-cfg.newfigure = 'yes';
 cfg.funparameter = 'pow';
 cfg.location = [0 0 0];
 cfg.locationcoordinates = 'head';

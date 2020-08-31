@@ -198,7 +198,7 @@ cfg.funcname = mfilename;
 cfg.dataname = dataname;
 
 % prepare the layout, this should be done only once
-tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
 cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
 
 % call the common function that is shared between ft_topoplotER and ft_topoplotTFR
