@@ -57,35 +57,49 @@ M = size(SD.MeasList,1);  % number of channels
 N = SD.nSrcs + SD.nDets;  % number of optodes
 K = numel(SD.Lambda);     % number of wavelengths
 
-sens.optopos    = cat(1, SD.SrcPos, SD.DetPos);
-sens.optotype   = cat(1, repmat({'transmitter'}, [SD.nSrcs, 1]), repmat({'receiver'}, [SD.nDets, 1]));
-sens.wavelength = SD.Lambda;
+% FIXME positions seem to be in degrees or so, not in mm or cm
+if isfield(SD, 'SrcPos3D') && isfield(SD, 'DetPos3D')
+  % use the 3D positions if available
+  sens.optopos = cat(1, SD.SrcPos3D, SD.DetPos3D);
+else
+  % use the 2D positions
+  sens.optopos = cat(1, SD.SrcPos, SD.DetPos);
+end
 
-% FIXME positions seem to be in degrees, not in mm
+% give each transmitter and receiver a unique name
+sens.optolabel = {};
+for i=1:SD.nSrcs
+  sens.optolabel{end+1} = sprintf('Tx%d', i);
+end
+for i=1:SD.nDets
+  sens.optolabel{end+1} = sprintf('Rx%d', i);
+end
+
+sens.label = {};
+% use the transmitter and receiver numbers and the wavelength to form the the channel names
+for i=1:M
+  tx = SD.MeasList(i,1);            % transmitter
+  rx = SD.MeasList(i,2);            % receiver
+  wl = SD.Lambda(SD.MeasList(i,4)); % wavelength in nm
+  sens.label{i} = sprintf('Rx%d-Tx%d [%dnm]', rx, tx, round(wl));
+end
+
+sens.optotype   = cat(1, repmat({'transmitter'}, [SD.nSrcs, 1]), repmat({'receiver'}, [SD.nDets, 1]));
+sens.wavelength = SD.Lambda(:)'; % this is an 1xK row vector
 
 if isfield(SD, 'SpatialUnit')
   % not sure whether this is always present
   sens.unit = SD.SpatialUnit;
 end
 
-% laser strength is not known, this probably does not apply to diode based systems anyway
-sens.laserstrength = nan(1,K);
+% the following specifies for each of the M channels at which wavelength each of the
+% N optodes transmits (positive integer from 1 to K), or receives (negative ingeger
+% from 1 to K), or does not contribute at all (zeros)
 
-sens.transmits = false(N, K);
-% the optodes are sorted: first transmitters, then receivers
-for transmitter=1:SD.SrcPos
-  sel = SD.MeasList(:,1)==transmitter;
-  for wavelength=1:numel(SD.Lambda)
-    if any(SD.MeasList(sel,4)==wavelength)
-      sens.transmits(transmitter,wavelength) = true;
-    end
-  end % for all wavelengths
-end % for all transmitters
-
-sens.tra = false(N, M);
+sens.tra = zeros(M, N);
 for chan=1:M
   transmitter = SD.MeasList(chan, 1);
-  receiver    = SD.MeasList(chan, 2);
-  sens.tra(transmitter, chan) = true;
-  sens.tra(receiver,    chan) = true;
+  receiver    = SD.MeasList(chan, 2) + SD.nSrcs; % the transmitters are first in the list of optodes
+  sens.tra(chan, transmitter) = SD.MeasList(chan, 4);
+  sens.tra(chan, receiver   ) = SD.MeasList(chan, 4);
 end

@@ -1328,6 +1328,10 @@ elseif filetype_check_extension(filename, '.txt') && filetype_check_header(filen
   type = 'openbci_txt';
   manufacturer = 'OpenBCI';
   content = 'raw EEG data';
+elseif filetype_check_extension(filename, '.txt') && filetype_check_header(filename, '# Version:')
+  type = 'brainsight_txt';
+  manufacturer = 'Rogue Research';
+  content = '3D positions';
 elseif filetype_check_extension(filename, '.txt')
   type = 'ascii_txt';
   manufacturer = '';

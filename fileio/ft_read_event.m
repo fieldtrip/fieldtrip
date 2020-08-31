@@ -1310,23 +1310,25 @@ switch eventformat
     
   case {'homer_nirs'}
     % Homer files are MATLAB files in disguise
-    orig = load(filename, '-mat');
-    % each of the columns of orig.s represents an event type
-    % negative values have been editted in Homer and should be ignored
-    event = [];
-    if isfield(orig, 's')
-      for i=1:size(orig.s,2)
-        smp = find(orig.s(:,i)==1);
-        for j=1:numel(smp)
-          event(end+1).type     = 'trigger';
-          event(end  ).value    = i;
-          event(end  ).sample   = smp(j);
-          event(end  ).duration = [];
-          event(end  ).offset   = [];
-        end
+    % see https://www.nitrc.org/plugins/mwiki/index.php/homer2:Homer_Input_Files#NIRS_data_file_format
+    if isempty(hdr)
+      hdr = ft_read_header(filename);
+    end
+    if isempty(chanindx)
+      % look in nirs.s for events, this corresponds to the stimulus channels
+      chanindx = find(ft_chantype(hdr, 'stimulus'));
+      trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'denoise', denoise, 'trigshift', trigshift, 'threshold', threshold, 'denoise', denoise, 'fixhomer', true);
+      event = appendstruct(event, trigger);
+      if isempty(event)
+        % also look in nirs.aux for channels with analog TTL values
+        chanindx = find(ft_chantype(hdr, 'aux'));
+        trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'denoise', denoise, 'trigshift', trigshift, 'threshold', threshold, 'denoise', denoise, 'fixhomer', true);
+        event = appendstruct(event, trigger);
       end
     else
-      % there are no events in this file
+      % use the user-supplied list of channels
+      trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'denoise', denoise, 'trigshift', trigshift, 'threshold', threshold, 'denoise', denoise, 'fixhomer', true);
+      event = appendstruct(event, trigger);
     end
     
   case {'itab_raw' 'itab_mhd'}
@@ -1346,7 +1348,7 @@ switch eventformat
         % auto-detect the trigger channels
         chanindx = find(ft_chantype(hdr, 'flag'));
       end
-      trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'denoise', denoise, 'trigshift', trigshift);
+      trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'denoise', denoise, 'trigshift', trigshift, 'threshold', threshold, 'denoise', denoise);
       event   = appendstruct(event, trigger);
     end
     

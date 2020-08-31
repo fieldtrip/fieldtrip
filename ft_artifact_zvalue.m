@@ -147,8 +147,6 @@ end
 
 % set default rejection parameters
 cfg.feedback                     = ft_getopt(cfg,                  'feedback',     'text');
-cfg.headerformat                 = ft_getopt(cfg,                  'headerformat', []);
-cfg.dataformat                   = ft_getopt(cfg,                  'dataformat',   []);
 cfg.memory                       = ft_getopt(cfg,                  'memory',       'high');
 cfg.artfctdef                    = ft_getopt(cfg,                  'artfctdef',    []);
 cfg.artfctdef.zvalue             = ft_getopt(cfg.artfctdef,        'zvalue',       []);
