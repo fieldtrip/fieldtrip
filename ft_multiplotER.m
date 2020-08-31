@@ -183,6 +183,7 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedback', 'inflow'}
 cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedforward', 'outflow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim', 'absmax', 'maxabs'});
 cfg = ft_checkconfig(cfg, 'unused',  {'cohtargetchannel'});
+cfg = ft_checkconfig(cfg, 'renamed', {'newfigure', 'figure'});
 % cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
 
 % set the defaults
@@ -483,7 +484,7 @@ chanLabel  = cfg.layout.label(sellay);
 linecolor = linecolor_common(cfg, varargin{:});
 
 % open a new figure, or add it to the existing one
-open_figure(keepfields(cfg, {'newfigure', 'clearfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
+open_figure(keepfields(cfg, {'figure', 'clearfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
 
 if ischar(linecolor)
   set(gca, 'ColorOrder', char2rgb(linecolor))

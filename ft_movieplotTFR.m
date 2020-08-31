@@ -93,6 +93,7 @@ data = ft_checkdata(data, 'datatype', {'timelock', 'freq'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim',  'absmax',  'maxabs'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'zparam', 'parameter'});
 cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
+cfg = ft_checkconfig(cfg, 'renamed', {'newfigure', 'figure'});
 
 % set the defaults
 cfg.xlim          = ft_getopt(cfg, 'xlim',          'maxmin');
@@ -233,7 +234,7 @@ elseif ischar(cfg.zlim) && strcmp(cfg.zlim,'minzero')
 end
 
 % open a new figure with the specified settings
-h = open_figure(keepfields(cfg, {'newfigure', 'position', 'visible', 'renderer'}));
+h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer'}));
 set(h, 'toolbar', 'figure');
 
 if dointeractive

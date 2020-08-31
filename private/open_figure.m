@@ -4,14 +4,14 @@ function h = open_figure(cfg)
 % consistent over all FieldTrip functions that do plotting and/or that show a
 % graphical user interface.
 
-cfg.newfigure   = ft_getopt(cfg, 'newfigure', 'yes');
+cfg.figure      = ft_getopt(cfg, 'figure', 'yes');
 cfg.visible     = ft_getopt(cfg, 'visible', 'yes');
 cfg.position    = ft_getopt(cfg, 'position'); % use the default position
 cfg.renderer    = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 cfg.figurename  = ft_getopt(cfg, 'figurename');
 cfg.title       = ft_getopt(cfg, 'title');
 
-switch cfg.newfigure
+switch cfg.figure
   case {'new', 'yes'}
     figopt = {};
     if ~istrue(cfg.visible)
@@ -31,7 +31,7 @@ switch cfg.newfigure
     h = gcf;
   otherwise
     % assume that it specifies a figure handle
-    h = cfg.newfigure;
+    h = cfg.figure;
 end
 
 assert(ishandle(h), 'failed to open figure');

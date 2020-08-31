@@ -166,6 +166,7 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'optofile', 'opto'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'channelcolormap', 'linecolor'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'anonimize', 'anonymize'}); % fix typo in previous version of the code
 cfg = ft_checkconfig(cfg, 'renamed',    {'anonymise', 'anonymize'}); % use North American and Oxford British spelling
+cfg = ft_checkconfig(cfg, 'renamed',    {'newfigure', 'figure'});
 
 % ensure that the preproc specific options are located in the cfg.preproc substructure
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
@@ -614,7 +615,7 @@ end
 opt.changedchanflg = true; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
 
 % open a new figure with the specified settings
-h = open_figure(keepfields(cfg, {'newfigure', 'position', 'visible', 'renderer'}));
+h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer'}));
 
 % put appdata in figure
 setappdata(h, 'opt', opt);

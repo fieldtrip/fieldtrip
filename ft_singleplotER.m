@@ -158,8 +158,9 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'channelindex',   'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'channelname',    'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'cohrefchannel',  'refchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',	  {'zparam',         'parameter'});
-cfg = ft_checkconfig(cfg, 'renamed',    {'graphcolor', 'linecolor'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'graphcolor',     'linecolor'});
 cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'newfigure',      'figure'});
 
 % set the defaults
 cfg.viewmode        = ft_getopt(cfg, 'viewmode',      'average'); % average or butterfly
@@ -456,7 +457,7 @@ end
 linecolor = linecolor_common(cfg, varargin{:});
 
 % open a new figure, or add it to the existing one
-open_figure(keepfields(cfg, {'newfigure', 'clearfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
+open_figure(keepfields(cfg, {'figure', 'clearfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
 
 yval = datamatrix;
 mask = maskmatrix;

@@ -106,6 +106,7 @@ end
 cfg = ft_checkconfig(cfg, 'renamed', {'elecfile', 'elec'});
 cfg = ft_checkconfig(cfg, 'renamed', {'gradfile', 'grad'});
 cfg = ft_checkconfig(cfg, 'renamed', {'optofile', 'opto'});
+cfg = ft_checkconfig(cfg, 'renamed', {'newfigure', 'figure'});
 
 % set the defaults
 cfg.box       = ft_getopt(cfg, 'box', 'yes');
@@ -127,7 +128,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % open a new figure with the specified settings
-h = open_figure(keepfields(cfg, {'newfigure', 'position', 'visible', 'renderer'}));
+h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer'}));
 
 if isfield(cfg, 'image') && ~isempty(cfg.image)
   % start with the background image

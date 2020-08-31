@@ -186,6 +186,7 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedback', 'inflow'}
 cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedforward', 'outflow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim', 'absmax', 'maxabs'});
 cfg = ft_checkconfig(cfg, 'unused', {'cohtargetchannel'});
+cfg = ft_checkconfig(cfg, 'renamed', {'newfigure', 'figure'});
 
 % set the defaults
 cfg.parameter      = ft_getopt(cfg, 'parameter', 'powspctrm');
@@ -457,7 +458,7 @@ chanHeight = cfg.layout.height(sellay);
 
 % open a new figure, or add it to the existing one
 % note that in general adding a TFR to an existing one does not make sense, since they will overlap
-open_figure(keepfields(cfg, {'newfigure', 'clearfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
+open_figure(keepfields(cfg, {'figure', 'clearfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
 
 % Get physical z-axis range (color axis):
 if strcmp(cfg.zlim, 'maxmin')

@@ -81,6 +81,7 @@ cfg = ft_checkconfig(cfg, 'renamed',     {'hlcolorneg',           'highlightcolo
 cfg = ft_checkconfig(cfg, 'renamed',     {'zparam', 'parameter'});
 cfg = ft_checkconfig(cfg, 'deprecated',  {'hllinewidthseries'});
 cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam', 'yparam'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'newfigure', 'figure'});
 
 % added several forbidden options
 cfg = ft_checkconfig(cfg, 'forbidden',  {'highlight', ...
