@@ -2,9 +2,9 @@
 function ft_realtime_headlocalizer(cfg)
 
 % FT_REALTIME_HEADLOCALIZER is a real-time application for online visualization of
-% the head position for the CTF275 and the Neuromag/Elekta systems. This uses the
+% the head position for the CTF275 and the Neuromag/Elekta/Megin systems. This uses the
 % continuous head localization (in CTF terminology, i.e. CHL) or position indicator
-% (in Neuromag/Elekta terminology, i.e. cHPI) information.
+% (in Neuromag/Elekta/Megin terminology, i.e. cHPI) information.
 %
 % Repositioning the subject to a previous recording session can be done by specifying
 % the previous dataset as cfg.template = 'subject01xxx.ds', or by pointing to a text
@@ -35,7 +35,7 @@ function ft_realtime_headlocalizer(cfg)
 %   cfg.polhemus        = filename or mesh, description of the head shape recorded with the Polhemus (default is automatic)
 %   cfg.headshape       = filename or mesh, description of the head shape recorded with the Structure Sensor
 %
-% The following options only apply to data from the Neuromag/Elekta system
+% The following options only apply to data from the Neuromag/Elekta/Megin system
 %   cfg.headmovement    = string, name or location of the .pos file created by MaxFilter which describes the location of the head relative to the dewar
 %   cfg.coilfreq        = single number in Hz or list of numbers (default = [293, 307, 314, 321, 328])
 %
@@ -146,7 +146,7 @@ if ischar(cfg.polhemus) && exist(cfg.polhemus, 'file')
   cfg.polhemus = ft_read_headshape(cfg.polhemus);
 elseif isneuromag
   fprintf('reading polhemus data from file %s\n', cfg.dataset);
-  % Neuromag/Elekta dataset will contain head shape
+  % Neuromag/Elekta/Megin dataset will contain head shape
   cfg.polhemus = ft_read_headshape(cfg.dataset);
 elseif isctf
   fprintf('reading polhemus data from file %s\n', cfg.dataset);
