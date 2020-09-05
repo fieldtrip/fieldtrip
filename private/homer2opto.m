@@ -57,19 +57,10 @@ end
 % give each transmitter and receiver a unique name
 opto.optolabel = {};
 for i=1:SD.nSrcs
-  opto.optolabel{end+1} = sprintf('Tx%d', i);
+  opto.optolabel{end+1} = sprintf('S%d', i);
 end
 for i=1:SD.nDets
-  opto.optolabel{end+1} = sprintf('Rx%d', i);
-end
-
-opto.label = {};
-% use the transmitter and receiver numbers and the wavelength to form the the channel names
-for i=1:M
-  tx = SD.MeasList(i,1);            % transmitter
-  rx = SD.MeasList(i,2);            % receiver
-  wl = SD.Lambda(SD.MeasList(i,4)); % wavelength in nm
-  opto.label{i} = sprintf('Rx%d-Tx%d [%dnm]', rx, tx, round(wl));
+  opto.optolabel{end+1} = sprintf('D%d', i);
 end
 
 opto.optotype   = cat(1, repmat({'transmitter'}, [SD.nSrcs, 1]), repmat({'receiver'}, [SD.nDets, 1]));
@@ -80,14 +71,23 @@ if isfield(SD, 'SpatialUnit')
   opto.unit = SD.SpatialUnit;
 end
 
+opto.label = cell(M,1);
+% use the transmitter and receiver numbers and the wavelength to form the the channel names
+for i=1:M
+  tx = SD.MeasList(i,1);            % transmitter
+  rx = SD.MeasList(i,2);            % receiver
+  wl = SD.Lambda(SD.MeasList(i,4)); % wavelength in nm
+  opto.label{i} = sprintf('D%d-S%d [%dnm]', rx, tx, round(wl));
+end
+
 % the following specifies for each of the M channels at which wavelength each of the
 % N optodes transmits (positive integer from 1 to K), or receives (negative ingeger
 % from 1 to K), or does not contribute at all (zeros)
 
 opto.tra = zeros(M, N);
-for chan=1:M
-  transmitter = SD.MeasList(chan, 1);
-  receiver    = SD.MeasList(chan, 2) + SD.nSrcs; % the transmitters are first in the list of optodes
-  opto.tra(chan, transmitter) = +SD.MeasList(chan, 4);
-  opto.tra(chan, receiver   ) = -SD.MeasList(chan, 4);
+for i=1:M
+  tx = SD.MeasList(i, 1);
+  rx = SD.MeasList(i, 2) + SD.nSrcs; % the transmitters are first in the list of optodes
+  opto.tra(i, tx) = +SD.MeasList(i, 4);
+  opto.tra(i, rx) = -SD.MeasList(i, 4);
 end
