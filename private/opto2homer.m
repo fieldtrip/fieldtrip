@@ -58,5 +58,5 @@ for i=1:nchan
   optodes = opto.tra(i,:);
   SD.MeasList(i,1) = find(transmitters==find(optodes>0));     % the number of the transmitter
   SD.MeasList(i,2) = find(receivers==find(optodes<0));        % the number of the receiver
-  SD.MeasList(i,4) = optodes(transmitters==find(optodes>0));  % the wavelength
+  SD.MeasList(i,4) = optodes(optodes>0);                      % the wavelength
 end
