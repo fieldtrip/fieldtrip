@@ -1125,7 +1125,7 @@ elseif filetype_check_extension(filename, '.sd') && filetype_check_header(filena
   type = 'homer_sd';
   manufacturer = 'Homer';
   content = 'source detector information';
-elseif filetype_check_extension(filename, '.snirf') && filetype_check_header(filename, [137 72 68 70 13 10 26 10])
+elseif filetype_check_extension(filename, '.snirf') && (filetype_check_header(filename, [137 72 68 70 13 10 26 10]) || ~exist(filename, 'file'))
   % this is a HDF5 file, see also https://support.hdfgroup.org/HDF5/doc/H5.format.html#Superblock
   type = 'snirf';
   manufacturer = 'The society for functional near-infrared spectroscopy (SfNIRS)';
