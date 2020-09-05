@@ -53,12 +53,13 @@ delete(f2)
 %% compare all fields
 
 % do not compare the hdr field, it is different in hdr.orig
-fn = {'time', 'trial', 'label', 'opto', 'fsample', 'sampleinfo'};
+% do not compare the label field, it differs in Tx/Rx versus S/D
+% do not compare the data itself, after homer-> snirf the stimulus channel is missing
 
-% FIXME at this moment the comparisons below still fail too much to bother trying to fix them
+fn = {'time', 'fsample', 'sampleinfo'};
 
 for i=1:numel(fn)
   field = fn{i};
-  % assert(isalmostequal(data1.(field), data1a.(field), 'abstol', 1e-8), sprintf('%s is different between data1 and data1a', field));
-  % assert(isalmostequal(data2.(field), data2a.(field), 'abstol', 1e-8), sprintf('%s is different between data2 and data2a', field));
+  assert(isalmostequal(data1.(field), data1a.(field), 'abstol', 1e-8), sprintf('%s is different between data1 and data1a', field));
+  assert(isalmostequal(data2.(field), data2a.(field), 'abstol', 1e-8), sprintf('%s is different between data2 and data2a', field));
 end

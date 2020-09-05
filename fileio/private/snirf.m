@@ -1,6 +1,7 @@
 function varargout = snirf(filename, hdr, begsample, endsample, chanindx)
 
 % SNIRF reads data from a SNIRF file and returns it in a format that FieldTrip understands.
+%
 % See https://github.com/fNIRS/snirf/blob/master/snirf_specification.md
 %
 % Use as
@@ -12,7 +13,7 @@ function varargout = snirf(filename, hdr, begsample, endsample, chanindx)
 % with a different sampling frequency. That is not allowed in this code; all channels
 % must have the same sampling rate and be sampled at the same time.
 %
-% See also FT_FILETYPE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, QUALISYS_TSV, MOTION_C3D
+% See also SNIRF2OPTO, FT_FILETYPE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, QUALISYS_TSV, MOTION_C3D
 
 % Copyright (C) 2020, Robert Oostenveld
 %
@@ -138,6 +139,9 @@ if needhdr
     hdr.chantype{end+1} = 'aux';
     hdr.chanunit{end+1} = 'unknown';
   end
+  
+  % convert the probe and measurementList to a FieldTrip opto structure
+  hdr.opto = snirf2opto(snirf.probe, snirf.data.measurementList);
   
   % return the header details
   varargout = {hdr};
