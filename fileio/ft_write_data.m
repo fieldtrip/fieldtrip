@@ -790,7 +790,39 @@ switch dataformat
     % Homer files are MATLAB files in disguise
     % see https://www.nitrc.org/plugins/mwiki/index.php/homer2:Homer_Input_Files#NIRS_data_file_format
     save(filename, '-struct', 'nirs'); % save the fields as individual variables in the file
+
+  case 'snirf'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % https://github.com/fNIRS/snirf
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if append
+      ft_error('appending data is not yet supported for this data format');
+    end
+    if ~isempty(chanindx)
+      % assume that the header corresponds to the original multichannel
+      % file and that the data represents a subset of channels
+      hdr.label  = hdr.label(chanindx);
+      hdr.nChans = length(chanindx);
+    end
     
+    % this uses the SNIRF reading functions from the Homer3 toolbox
+    ft_hastoolbox('homer3', 1);
+    
+    % convert the input arguments into a FieldTrip raw data structure
+    data = [];
+    data.hdr = hdr;
+    data.trial{1} = dat;
+    data.time{1} = ((1:hdr.nSamples*hdr.nTrials)-1)/hdr.Fs;
+    data.label = hdr.label;
+    data.sampleinfo = [1 size(dat,2)];
+    
+    % convert the raw data structure to Homer format
+    nirs = fieldtrip2homer(data);
+    
+    % convert the Homer structure to Snirf and write it to disk
+    snirf = SnirfClass(nirs);
+    snirf.Save(filename);
+        
   otherwise
     ft_error('unsupported data format');
 end % switch dataformat

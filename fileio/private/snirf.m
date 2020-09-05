@@ -41,7 +41,7 @@ needhdr = (nargin==1);
 needevt = (nargin==2);
 needdat = (nargin==5);
 
-snirf = SnirfClass;
+snirf = SnirfClass; % this is from Homer3
 snirf.Load(filename);
 
 hasdata = ~isempty(snirf.data) && ~isempty(snirf.data(1).dataTimeSeries);
