@@ -39,9 +39,13 @@ data = ft_checkdata(data, 'datatype', 'raw', 'feedback', true);
 hdr = ft_fetch_header(data);
 dat = ft_fetch_data(data);
 
+seldat  = startsWith(hdr.chantype, 'nirs');
+selstim = strcmp(hdr.chantype, 'stimulus');
+selaux  = ~seldat & ~selstim;
+
 nirs.t = data.time{1};
-nirs.d = dat(strcmp(hdr.chantype, 'nirs'), :)';
-nirs.s = dat(strcmp(hdr.chantype, 'stimulus'), :)';
-nirs.aux = dat(strcmp(hdr.chantype, 'aux'), :)';
+nirs.d = dat(seldat, :)';
+nirs.s = dat(selstim, :)';
+nirs.aux = dat(selaux, :)';
 nirs.CondNames = hdr.label(strcmp(hdr.chantype, 'stimulus'));
 nirs.SD = opto2homer(hdr.opto);
