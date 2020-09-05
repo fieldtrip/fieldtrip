@@ -1526,80 +1526,10 @@ switch headerformat
     % Homer files are MATLAB files in disguise
     % see https://www.nitrc.org/plugins/mwiki/index.php/homer2:Homer_Input_Files#NIRS_data_file_format
     nirs = load(filename, '-mat');
-    
-    hdr.label       = {};
-    hdr.nChans      = size(nirs.d,2);
-    hdr.nSamples    = size(nirs.d,1);
-    hdr.nSamplesPre = 0;
-    hdr.nTrials     = 1; % assume continuous data, not epoched
-    hdr.Fs          = 1/median(diff(nirs.t));
-    
-    % number of wavelengths times sources times detectors
-    if ~isfield(nirs.SD, 'nSrcs')
-      nirs.SD.nSrcs = size(nirs.SD.SrcPos,1);
-    end
-    if ~isfield(nirs.SD, 'nDets')
-      nirs.SD.nDets = size(nirs.SD.DetPos,1);
-    end
-    assert(numel(nirs.SD.Lambda)*nirs.SD.nSrcs*nirs.SD.nDets >= hdr.nChans);
-    
-    try
-      % use the transmitter and receiver numbers and the wavelength to form the the channel names
-      for i=1:hdr.nChans
-        tx = nirs.SD.MeasList(i,1); % transmitter
-        rx = nirs.SD.MeasList(i,2); % receiver
-        wl = nirs.SD.Lambda(nirs.SD.MeasList(i,4)); % wavelength in nm
-        hdr.label{i} = sprintf('Rx%d-Tx%d [%dnm]', rx, tx, round(wl));
-      end
-    catch
-      ft_warning('creating default channel names');
-      for i=1:hdr.nChans
-        hdr.label{i} = num2str(i);
-      end
-    end
-    
-    hdr.chantype = repmat({'nirs'}, hdr.nChans, 1);
-    hdr.chanunit = repmat({'unknown'}, hdr.nChans, 1);
-
-    if isfield(nirs, 'aux')
-      % concatenate the AUX channel(s) at the end, consistent with FT_READ_DATA
-      if size(nirs.aux,2)==1
-        hdr.nChans = hdr.nChans + 1;
-        hdr.label{end+1} = 'aux';
-        hdr.chantype{end+1} = 'aux';
-        hdr.chanunit{end+1} = 'unknown';
-      else
-        for i=1:size(nirs.aux,2)
-          hdr.nChans = hdr.nChans + 1;
-          hdr.label{end+1} = sprintf('aux%d', i);
-          hdr.chantype{end+1} = 'aux';
-          hdr.chanunit{end+1} = 'unknown';
-        end
-      end % if single or multiple
-    end % if aux channels present
-    
-    if isfield(nirs, 's')
-      % concatenate the stimulus channel(s) at the end, consistent with FT_READ_DATA
-      if size(nirs.s,2)==1
-        hdr.nChans = hdr.nChans + 1;
-        hdr.label{end+1} = 's';
-        hdr.chantype{end+1} = 'stimulus';
-        hdr.chanunit{end+1} = 'unknown';
-      else
-        for i=1:size(nirs.s,2)
-          hdr.nChans = hdr.nChans + 1;
-          hdr.label{end+1} = sprintf('s%d', i);
-          hdr.chantype{end+1} = 'stimulus';
-          hdr.chanunit{end+1} = 'unknown';
-        end
-      end % if single or multiple
-    end % if stimulus channels present
-    
-    % convert the measurement configuration details to an optode structure
-    hdr.opto = homer2opto(nirs.SD);
-    
-    % keep all details except the data
-    hdr.orig = removefields(nirs, {'d', 't', 's', 'aux'});
+    % convert it to a raw data structure according to FT_DATATYPE_RAW
+    data = homer2fieldtrip(nirs);
+    % get the header information as structure
+    hdr = ft_fetch_header(data);
     
   case {'itab_raw' 'itab_mhd'}
     % read the full header information frtom the binary header structure

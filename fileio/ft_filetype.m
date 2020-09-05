@@ -1115,7 +1115,7 @@ elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'_nr
   type = 'bucn_nirs';
   manufacturer = 'BUCN';
   content = 'ascii formatted NIRS data';
-elseif filetype_check_extension(filename, '.nirs') && filetype_check_header(filename, 'MATLAB')
+elseif filetype_check_extension(filename, '.nirs') && (filetype_check_header(filename, 'MATLAB') || ~exist(filename, 'file'))
   % Homer is MATLAB software for NIRS processing, see http://www.nmr.mgh.harvard.edu/DOT/resources/homer2/home.htm
   type = 'homer_nirs';
   manufacturer = 'Homer';
