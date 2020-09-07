@@ -9,11 +9,11 @@ function ft_write_data(filename, dat, varargin)
 % extension not, it will be added automatically.
 %
 % Additional options should be specified in key-value pairs and can be
-%   'header'         header structure that describes the data, see FT_READ_HEADER
-%   'event'          event structure that corresponds to the data, see FT_READ_EVENT
-%   'chanindx'       1xN array, for selecting a subset of channels from header and data
-%   'dataformat'     string, see below
-%   'append'         boolean, not supported for all formats
+%   'header'       = header structure that describes the data, see FT_READ_HEADER
+%   'event'        = event structure that corresponds to the data, see FT_READ_EVENT
+%   'chanindx'     = 1xN array, for selecting a subset of channels from header and data
+%   'dataformat'   = string, see below
+%   'append'       = boolean, not supported for all formats
 %
 % The supported dataformats for writing are
 %   edf
@@ -33,7 +33,7 @@ function ft_write_data(filename, dat, varargin)
 %
 % See also FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, FT_WRITE_EVENT
 
-% Copyright (C) 2007-2014, Robert Oostenveld
+% Copyright (C) 2007-2020, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -96,7 +96,7 @@ switch dataformat
     % just pretend that we are writing the data, this is only for debugging
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     [numC, numS] = size(dat);
-    fprintf(1,'Pretending to write %i samples from %i channels...\n',numS,numC);
+    ft_info('Pretending to write %i samples from %i channels...\n',numS,numC);
     % Insert a small delay to make this more realitic for testing purposes
     % The time for writing to an actual location will differ and depend on
     % the amount of data
@@ -106,9 +106,14 @@ switch dataformat
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % store it in a global variable, this is only for debugging
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if ~isempty(evt)
+      ft_error('writing events is not supported here, please see FT_WRITE_EVENT');
+    end
+    
     if ~isempty(hdr)
       header_queue = hdr;
     end
+    
     if isempty(data_queue) || ~append
       data_queue = dat;
     else
@@ -117,8 +122,12 @@ switch dataformat
     
   case 'fcdc_buffer'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % network transparent buffer
+    % write to a network transparent buffer for realtime analysis
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if ~isempty(evt)
+      ft_error('writing events is not supported here, please see FT_WRITE_EVENT');
+    end
+    
     if ~isempty(chanindx)
       % assume that the header corresponds to the original multichannel
       % file and that the data represents a subset of channels
@@ -302,12 +311,13 @@ switch dataformat
       hdr          = old.hdr;
       hdr.nSamples = hdr.nSamples + nsamples;
       
-      % there are no new events
       if isfield(old, 'event')
         event = old.event;
       else
         event = [];
       end
+      % append the existing and the new events
+      event = appendstruct(event, evt);
       
       save(headerfile, 'hdr', 'event', '-v6');
       
@@ -328,9 +338,11 @@ switch dataformat
       if ~isfield(hdr, 'precision')
         hdr.precision = 'double';
       end
-      % there are no events
-      event = [];
-      % write the header file
+      
+      % rename the variable name for the new events
+      event = evt;
+      
+      % write the header and events to the file
       save(headerfile, 'hdr', 'event', '-v6');
       
       % write the data file
@@ -344,9 +356,14 @@ switch dataformat
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % write to a MySQL server listening somewhere else on the network
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if ~isempty(evt)
+      ft_error('writing events is not supported here, please see FT_WRITE_EVENT');
+    end
+    
     % check that the required low-level toolbox is available
     ft_hastoolbox('mysql', 1);
     db_open(filename);
+    
     if ~isempty(hdr) && isempty(dat)
       % insert the header information into the database
       if db_blob
@@ -406,24 +423,44 @@ switch dataformat
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     [path, file, ext] = fileparts(filename);
     filename = fullfile(path, [file '.mat']);
-    if      append &&  exist(filename, 'file')
+    
+    if  append &&  exist(filename, 'file')
       % read the previous header and data from MATLAB file
       prev = load(filename);
+      % do a sanity chjeck to ensure that the file content is consistent with the new data
       if ~isempty(hdr) && ~isequal(hdr, prev.hdr)
         ft_error('inconsistent header');
-      else
-        % append the new data to that from the MATLAB file
-        dat = cat(2, prev.dat, dat);
       end
-    elseif  append && ~exist(filename, 'file')
+      
+    elseif append && ~exist(filename, 'file')
       % file does not yet exist, which is not a problem
+      prev = [];
+      
     elseif ~append &&  exist(filename, 'file')
+      % file already exists, delete it and make a new one further down
       ft_warning('deleting existing file ''%s''', filename);
       delete(filename);
+      prev = [];
+      
     elseif ~append && ~exist(filename, 'file')
       % file does not yet exist, which is not a problem
+      prev = [];
     end
-    save(filename, 'dat', 'hdr');
+    
+    if isfield(prev, 'dat')
+      % append the new data to the previous data from from the MATLAB file
+      dat = cat(2, prev.dat, dat);
+    end
+    if isfield(prev, 'event')
+      % append the new events to the previous events from from the MATLAB file
+      event = cat(2, prev.event, evt);
+    else
+      % rename the variable name for the new events
+      event = evt;
+    end
+    
+    % write the data, header and events to the file
+    save(filename, 'dat', 'hdr', 'event');
     
   case 'mff'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -448,6 +485,9 @@ switch dataformat
     % the number of bits to shift. The channel label is contained in the
     % filename as dataset.chanlabel.bin.
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if ~isempty(evt)
+      ft_error('writing events is not supported');
+    end
     
     statuschannel = {
       'stx'
@@ -547,6 +587,9 @@ switch dataformat
     if append
       ft_error('appending data is not supported for this data format');
     end
+    if ~isempty(evt)
+      ft_error('writing events is not supported');
+    end
     
     if nchans~=hdr.nChans && length(chanindx)==nchans
       % assume that the header corresponds to the original multichannel
@@ -573,6 +616,9 @@ switch dataformat
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if append
       ft_error('appending data is not yet supported for this data format');
+    end
+    if ~isempty(evt)
+      ft_error('writing events is not supported');
     end
     
     [path, file] = fileparts(filename);
@@ -609,7 +655,9 @@ switch dataformat
     if append
       ft_error('appending data is not yet supported for this data format');
     end
-    
+    if ~isempty(evt)
+      ft_error('writing events is not supported');
+    end
     if nchans>1
       ft_error('only supported for single-channel data');
     end
@@ -683,6 +731,9 @@ switch dataformat
     if append
       ft_error('appending data is not yet supported for this data format');
     end
+    if ~isempty(evt)
+      ft_error('writing events is not supported');
+    end
     if ~isempty(chanindx)
       % assume that the header corresponds to the original multichannel
       % file and that the data represents a subset of channels
@@ -698,6 +749,9 @@ switch dataformat
     if append
       ft_error('appending data is not yet supported for this data format');
     end
+    if ~isempty(evt)
+      ft_error('writing events is not supported');
+    end
     if ~isempty(chanindx)
       % assume that the header corresponds to the original multichannel
       % file and that the data represents a subset of channels
@@ -712,6 +766,9 @@ switch dataformat
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if append
       ft_error('appending data is not yet supported for this data format');
+    end
+    if ~isempty(evt)
+      ft_error('writing events is not supported');
     end
     if ~isempty(chanindx)
       % assume that the header corresponds to the original multichannel
@@ -769,6 +826,11 @@ switch dataformat
     if append
       ft_error('appending data is not yet supported for this data format');
     end
+    if ~isempty(evt)
+      % events are represented as continuous stimuls channel in the Homer nirs structure, and as a table in FieldTrip
+      % in principle it would be possible to them into a continuous representation using CONVERT_EVENT
+      ft_error('writing events is not yet supported');
+    end
     if ~isempty(chanindx)
       % assume that the header corresponds to the original multichannel
       % file and that the data represents a subset of channels
@@ -790,13 +852,18 @@ switch dataformat
     % Homer files are MATLAB files in disguise
     % see https://www.nitrc.org/plugins/mwiki/index.php/homer2:Homer_Input_Files#NIRS_data_file_format
     save(filename, '-struct', 'nirs'); % save the fields as individual variables in the file
-
+    
   case 'snirf'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % https://github.com/fNIRS/snirf
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if append
       ft_error('appending data is not yet supported for this data format');
+    end
+    if ~isempty(evt)
+      % events are represented as continuous stimuls channel in the Homer nirs structure, and as a table in FieldTrip
+      % in principle it would be possible to them into a continuous representation using CONVERT_EVENT
+      ft_error('writing events is not yet supported');
     end
     if ~isempty(chanindx)
       % assume that the header corresponds to the original multichannel
@@ -822,7 +889,7 @@ switch dataformat
     % convert the Homer structure to Snirf and write it to disk
     snirf = SnirfClass(nirs);
     snirf.Save(filename);
-        
+    
   otherwise
     ft_error('unsupported data format');
 end % switch dataformat
