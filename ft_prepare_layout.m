@@ -10,16 +10,24 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   layout = ft_prepare_layout(cfg, data)
 % where the optional data input argument is any of the FieldTrip data structures.
 %
-% There are several ways in which a 2-D layout can be made: 1) it can be read
-% directly from a layout file, 2) it can be created on basis of an image or photo, 3)
-% it can be created based on 3-D sensor positions in the configuration, in the data,
-% or in an electrode or gradiometer file.
+% This returns a layout structure with the following elements
+%   layout.pos     = Nx2 matrix with the position where each channel should be plotted
+%   layout.label   = Nx1 cell-array with the channel labels
+%   layout.width   = Nx1 vector with the width of each box for multiplotting
+%   layout.height  = Nx1 vector with the height of each box for multiplotting
+%   layout.mask    = optional cell-array with line segments that determine the area for topographic interpolation
+%   layout.outline = optional cell-array with line segments that represent the head, nose, ears, sulci or other anatomical features
 %
-% Layout files are MATLAB *.mat files with a single variable representing the layout
-% (see below). The layout file can also be an ASCII *.lay file, although this type of
-% layout is no longer recommended, since the outline of the head and the mask within
-% which the interpolation is done is less refined. A large number of template layout
-% files is provided in the fieldtrip/template/layout directory. See also
+% There are several ways in which a 2-D layout can be made: 
+% 1) it can be read directly from a layout file
+% 2) it can be created on basis of an image or photo, 
+% 3) it can be created from a projection of the 3-D sensor positions in the data, in the configuration, or in an electrode, gradiometer or optode file.
+%
+% Layout files are MATLAB *.mat files containing a single structure representing the layout 
+% (see above). The layout file can also be an ASCII file with the extension *.lay, although 
+% this file format is no longer recommended, since there is less control over the outline 
+% of the head and the mask within which the interpolation is done. A large number of 
+% template layout files is provided in the fieldtrip/template/layout directory. See 
 % also http://www.fieldtriptoolbox.org/template/layout
 %
 % You can specify any one of the following configuration options
@@ -28,7 +36,7 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   cfg.output      = filename (ending in .mat or .lay) to which the layout will be written (default = [])
 %   cfg.elec        = structure with electrode positions or filename, see FT_READ_SENS
 %   cfg.grad        = structure with gradiometer definition or filename, see FT_READ_SENS
-%   cfg.opto        = sstructure with optode definition or filename, see FT_READ_SENS
+%   cfg.opto        = structure with optode definition or filename, see FT_READ_SENS
 %   cfg.rotate      = number, rotation around the z-axis in degrees (default = [], which means automatic)
 %   cfg.center      = string, center and scale the electrodes in the sphere that represents the head, can be 'yes' or 'no' (default = 'no')
 %   cfg.projection  = string, 2D projection method can be 'stereographic', 'orthographic', 'polar' or 'gnomic' (default = 'polar')
@@ -83,33 +91,26 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   cfg.width  = scalar (default is automatic)
 %   cfg.height = scalar (default is automatic)
 %
-% For an sEEG shaft the option cfg.layout='vertical' or 'horizontal' is useful. In
-% this case you can also specify the direction of the shaft as going from left-to-right,
-% top-to-bottom, etc.
+% For an sEEG shaft the option cfg.layout='vertical' or 'horizontal' is useful to
+% represent the channels in a linear sequence . In this case you can also specify the
+% direction of the shaft as going from left-to-right, top-to-bottom, etc.
 %   cfg.direction = string, can be any of 'LR', 'RL' (for horizontal), 'TB', 'BT' (for vertical)
 %
-% For an ECoG grid the option cfg.layout='ordered' is useful. In this case you can
-% also specify the number of rows and/or columns and hwo the channels increment over
-% the grid (e.g. first left-to-right, then top-to-bottom). You can check the channel
-% order of your grid using FT_PLOT_LAYOUT.
+% For an ECoG grid the option cfg.layout='ordered' is useful to represent the
+% channels in a grid array. In this case you can also specify the number of rows
+% and/or columns and hwo the channels increment over the grid (e.g. first
+% left-to-right, then top-to-bottom). You can check the channel order of your grid
+% using FT_PLOT_LAYOUT.
 %   cfg.rows      = number of rows (default is automatic)
 %   cfg.columns   = number of columns (default is automatic)
 %   cfg.direction = string, can be any of 'LRTB', 'RLTB', 'LRBT', 'RLBT', 'TBLR', 'TBRL', 'BTLR', 'BTRL' (default = 'LRTB')
-%
-% The output layout structure will contain the following fields
-%   layout.label   = Nx1 cell-array with channel labels
-%   layout.pos     = Nx2 matrix with the channel positions
-%   layout.width   = Nx1 vector with the width of each box for multiplotting
-%   layout.height  = Nx1 vector with the height of each box for multiplotting
-%   layout.mask    = optional cell-array with line segments that determine the area for topographic interpolation
-%   layout.outline = optional cell-array with line segments that represent the head, nose, ears, sulci or other anatomical features
 %
 % See also FT_TOPOPLOTER, FT_TOPOPLOTTFR, FT_MULTIPLOTER, FT_MULTIPLOTTFR, FT_PLOT_LAYOUT
 
 % undocumented and non-recommended option (for SPM only)
 %   cfg.style       string, '2d' or '3d' (default = '2d')
 
-% Copyright (C) 2007-2019, Robert Oostenveld
+% Copyright (C) 2007-2020, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

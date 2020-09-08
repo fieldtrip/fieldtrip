@@ -2367,8 +2367,8 @@ if ~isempty(event)
 end
 
 if ~isempty(event)
-  % sort the events on the sample on which they occur
-  % this has the side effect that events without a sample number are discarded
+  % sort the events on their sample number
+  % this has the desired side effect that events without a sample number are discarded
   sample = [event.sample];
   if ~all(isnan(sample))
     [dum, indx] = sort(sample);
