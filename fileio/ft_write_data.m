@@ -855,11 +855,6 @@ switch dataformat
     if append
       ft_error('appending data is not yet supported for this data format');
     end
-    if ~isempty(evt)
-      % events are represented as continuous stimuls channel in the Homer nirs structure, and as a table in FieldTrip
-      % in principle it would be possible to them into a continuous representation using CONVERT_EVENT
-      ft_error('writing events is not yet supported');
-    end
     if ~isempty(chanindx)
       % assume that the header corresponds to the original multichannel
       % file and that the data represents a subset of channels
@@ -879,7 +874,7 @@ switch dataformat
     data.sampleinfo = [1 size(dat,2)];
     
     % convert the raw data structure to Homer format
-    nirs = fieldtrip2homer(data);
+    nirs = fieldtrip2homer(data, 'event', evt);
     
     % convert the Homer structure to Snirf and write it to disk
     snirf = SnirfClass(nirs);
