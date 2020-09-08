@@ -11,21 +11,24 @@ f2 = fullfile(p, 'data2.snirf');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% test the conversion of a Homer file to snirf
 
+% the Homer nirs file has the 's' channel, which is not present in the snirf representation
+
 % read the original data
 cfg = [];
 cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/test/original/nirs/homer/S1001_run01.nirs');
+cfg.channel = {'all', '-s*'};
 data1 = ft_preprocessing(cfg);
+event1 = ft_read_event(cfg.dataset);
 
 % write the data to disk and convert to snirf
-ft_write_data(f1, data1.trial{1}, 'header', data1.hdr)
+chanindx = find(ismember(data1.hdr.label, data1.label));
+ft_write_data(f1, data1.trial{1}, 'header', data1.hdr, 'chanindx', chanindx, 'event', event1)
 
 % read the converted data
 cfg = [];
 cfg.dataset = f1;
 data1a = ft_preprocessing(cfg);
-
-% clean up
-delete(f1)
+event1a = ft_read_event(cfg.dataset);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% test the conversion of an Artinis file to snirf
@@ -34,14 +37,16 @@ delete(f1)
 cfg = [];
 cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/test/original/nirs/artinis/Helena/190528_fingertap_L.oxy3');
 data2 = ft_preprocessing(cfg);
+event2 = ft_read_event(cfg.dataset, 'chanindx', -1); % do not parse the ADC channels
 
 % write the data to disk and convert to snirf
-ft_write_data(f2, data2.trial{1}, 'header', data2.hdr)
+ft_write_data(f2, data2.trial{1}, 'header', data2.hdr, 'event', event2)
 
 % read the converted data
 cfg = [];
 cfg.dataset = f2;
 data2a = ft_preprocessing(cfg);
+event2a = ft_read_event(cfg.dataset);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% clean up
@@ -52,14 +57,27 @@ delete(f2)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% compare all fields
 
-% do not compare the hdr field, it is different in hdr.orig
-% do not compare the label field, it differs in Tx/Rx versus S/D
-% do not compare the data itself, after homer-> snirf the stimulus channel is missing
+assert(isalmostequal(data1.time,        data1a.time, 'abstol', 1e-8));
+assert(isalmostequal(data1.fsample,     data1a.fsample, 'abstol', 1e-8));
+assert(isalmostequal(data1.sampleinfo,  data1a.sampleinfo, 'abstol', 1e-8));
+assert(isequal(data1.label, data1a.label));
+assert(isalmostequal(data1.trial,       data1a.trial, 'abstol', 1e-8));
 
-fn = {'time', 'fsample', 'sampleinfo'};
+% the duration of the Homer and snirf events is not the same
+assert(isequal({event1.type},   {event1a.type}));
+assert(isequal([event1.sample], [event1a.sample]));
+assert(isequal([event1.value],  [event1a.value]));
 
-for i=1:numel(fn)
-  field = fn{i};
-  assert(isalmostequal(data1.(field), data1a.(field), 'abstol', 1e-8), sprintf('%s is different between data1 and data1a', field));
-  assert(isalmostequal(data2.(field), data2a.(field), 'abstol', 1e-8), sprintf('%s is different between data2 and data2a', field));
-end
+%%
+
+% do not compare the label field for Artinis, it differs in Tx/Rx versus S/D
+assert(isalmostequal(data2.time,        data2a.time, 'abstol', 1e-8));
+assert(isalmostequal(data2.fsample,     data2a.fsample, 'abstol', 1e-8));
+assert(isalmostequal(data2.sampleinfo,  data2a.sampleinfo, 'abstol', 1e-8));
+assert(isalmostequal(data2.trial,       data2a.trial, 'abstol', 1e-8));
+
+% the channel names are not the same, neither for the nirs channels, not for the ADC/AUX channels
+% assert(isequal(data2.label, data2a.label));
+
+% the type and value of the Artinis and snirf events are not the same
+assert(isequal([event2.sample], [event2a.sample]));
