@@ -61,7 +61,7 @@ end
 % transpose the data, FieldTrip expects nchan*ntime
 dat = dat';
 
-% the Homer structure includes the time axis
+% the Homer structure includes the time axis, ensure it is a row vector
 time = nirs.t(:)';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -89,7 +89,7 @@ try
     tx = nirs.SD.MeasList(i,1); % transmitter
     rx = nirs.SD.MeasList(i,2); % receiver
     wl = nirs.SD.Lambda(nirs.SD.MeasList(i,4)); % wavelength in nm
-    hdr.label{i} = sprintf('Rx%d-Tx%d [%dnm]', rx, tx, round(wl));
+    hdr.label{i} = sprintf('S%d-D%d [%dnm]', tx, rx, round(wl));
   end
 catch
   ft_warning('creating default channel names');
@@ -122,13 +122,13 @@ if isfield(nirs, 's')
   % concatenate the stimulus channel(s) at the end, consistent with FT_READ_DATA
   if size(nirs.s,2)==1
     hdr.nChans = hdr.nChans + 1;
-    hdr.label{end+1} = 's';
+    hdr.label{end+1} = 's';	% do not include the column number, there is only one
     hdr.chantype{end+1} = 'stimulus';
     hdr.chanunit{end+1} = 'unknown';
   else
     for i=1:size(nirs.s,2)
       hdr.nChans = hdr.nChans + 1;
-      hdr.label{end+1} = sprintf('s%d', i);
+      hdr.label{end+1} = sprintf('s%d', i); % include the column number
       hdr.chantype{end+1} = 'stimulus';
       hdr.chanunit{end+1} = 'unknown';
     end

@@ -77,7 +77,7 @@ for i=1:M
   tx = SD.MeasList(i,1);            % transmitter
   rx = SD.MeasList(i,2);            % receiver
   wl = SD.Lambda(SD.MeasList(i,4)); % wavelength in nm
-  opto.label{i} = sprintf('D%d-S%d [%dnm]', rx, tx, round(wl));
+  opto.label{i} = sprintf('S%d-D%d [%dnm]', tx, rx, round(wl));
 end
 
 % the following specifies for each of the M channels at which wavelength each of the
