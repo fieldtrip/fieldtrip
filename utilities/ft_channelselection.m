@@ -216,7 +216,12 @@ labelemg    = datachannel(strncmp('EMG', datachannel, length('EMG')));
 labellfp    = datachannel(strncmp('lfp', datachannel, length('lfp')));
 labelmua    = datachannel(strncmp('mua', datachannel, length('mua')));
 labelspike  = datachannel(strncmp('spike', datachannel, length('spike')));
-labelnirs   = datachannel(~cellfun(@isempty, regexp(datachannel, sprintf('%s%s', regexptranslate('wildcard','Rx*-Tx*[*]'), '$'))));
+% for NIRS there are multiple options, either using the terminology transmitter/receiver versus source/detector, and then with either order of the two
+option1 = ~cellfun(@isempty, regexp(datachannel, sprintf('%s%s', regexptranslate('wildcard','Rx*-Tx*[*]'), '$')));
+option2 = ~cellfun(@isempty, regexp(datachannel, sprintf('%s%s', regexptranslate('wildcard','Tx*-Rx*[*]'), '$')));
+option3 = ~cellfun(@isempty, regexp(datachannel, sprintf('%s%s', regexptranslate('wildcard','D*-S*[*]'), '$')));
+option4 = ~cellfun(@isempty, regexp(datachannel, sprintf('%s%s', regexptranslate('wildcard','S*-D*[*]'), '$')));
+labelnirs = datachannel(option1 | option2 | option3 | option4);
 
 % use regular expressions to deal with the wildcards
 labelreg = false(size(datachannel));

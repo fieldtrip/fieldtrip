@@ -1,6 +1,7 @@
 function varargout = snirf(filename, hdr, begsample, endsample, chanindx)
 
 % SNIRF reads data from a SNIRF file and returns it in a format that FieldTrip understands.
+%
 % See https://github.com/fNIRS/snirf/blob/master/snirf_specification.md
 %
 % Use as
@@ -12,7 +13,7 @@ function varargout = snirf(filename, hdr, begsample, endsample, chanindx)
 % with a different sampling frequency. That is not allowed in this code; all channels
 % must have the same sampling rate and be sampled at the same time.
 %
-% See also FT_FILETYPE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, QUALISYS_TSV, MOTION_C3D
+% See also SNIRF2OPTO, FT_FILETYPE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, QUALISYS_TSV, MOTION_C3D
 
 % Copyright (C) 2020, Robert Oostenveld
 %
@@ -41,7 +42,7 @@ needhdr = (nargin==1);
 needevt = (nargin==2);
 needdat = (nargin==5);
 
-snirf = SnirfClass;
+snirf = SnirfClass; % this is from Homer3
 snirf.Load(filename);
 
 hasdata = ~isempty(snirf.data) && ~isempty(snirf.data(1).dataTimeSeries);
@@ -120,13 +121,13 @@ if needhdr
         d = snirf.probe.detectorLabels{snirf.data(i).measurementList(j).detectorIndex};     % receiver
         s = snirf.probe.sourceLabels  {snirf.data(i).measurementList(j).sourceIndex};       % transmitter
         w = snirf.probe.wavelengths   (snirf.data(i).measurementList(j).wavelengthIndex);
-        hdr.label   {end+1} = sprintf('%s-%s [%dnm]', d, s, round(w));
+        hdr.label   {end+1} = sprintf('%s-%s [%dnm]', s, d, round(w));
       catch
         % it is apparently possible that the probe information is not specified
         d = snirf.data(i).measurementList(j).detectorIndex;   % receiver
         s = snirf.data(i).measurementList(j).sourceIndex;     % transmitter
         w = snirf.data(i).measurementList(j).wavelengthIndex;
-        hdr.label   {end+1} = sprintf('D%d-S%d [%d]', d, s, w);
+        hdr.label   {end+1} = sprintf('S%d-D%d [%d]', s, d, w);
       end
       hdr.chantype{end+1} = 'nirs';
       hdr.chanunit{end+1} = 'unknown';
@@ -138,6 +139,9 @@ if needhdr
     hdr.chantype{end+1} = 'aux';
     hdr.chanunit{end+1} = 'unknown';
   end
+  
+  % convert the probe and measurementList to a FieldTrip opto structure
+  hdr.opto = snirf2opto(snirf.probe, snirf.data.measurementList);
   
   % return the header details
   varargout = {hdr};
@@ -171,7 +175,7 @@ elseif needevt
   
   evt = [];
   
-  if isfield(snirf, 'stim') && ~isempty(snirf.stim)
+  try
     for i=1:numel(snirf.stim)
       for j=1:size(snirf.stim(i).data,1)
         evt(end+1).type      = snirf.stim(i).name;
@@ -180,7 +184,10 @@ elseif needevt
         evt(end  ).value     = snirf.stim(i).data(j,3);
       end
     end
-  else
+    % sort the events on their sample number, this is consistent with FT_READ_EVENT
+    [~, indx] = sort([evt.sample]);
+    evt = evt(indx);
+  catch
     % there are no events
   end
   
