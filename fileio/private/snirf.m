@@ -121,13 +121,13 @@ if needhdr
         d = snirf.probe.detectorLabels{snirf.data(i).measurementList(j).detectorIndex};     % receiver
         s = snirf.probe.sourceLabels  {snirf.data(i).measurementList(j).sourceIndex};       % transmitter
         w = snirf.probe.wavelengths   (snirf.data(i).measurementList(j).wavelengthIndex);
-        hdr.label   {end+1} = sprintf('%s-%s [%dnm]', d, s, round(w));
+        hdr.label   {end+1} = sprintf('%s-%s [%dnm]', s, d, round(w));
       catch
         % it is apparently possible that the probe information is not specified
         d = snirf.data(i).measurementList(j).detectorIndex;   % receiver
         s = snirf.data(i).measurementList(j).sourceIndex;     % transmitter
         w = snirf.data(i).measurementList(j).wavelengthIndex;
-        hdr.label   {end+1} = sprintf('D%d-S%d [%d]', d, s, w);
+        hdr.label   {end+1} = sprintf('S%d-D%d [%d]', s, d, w);
       end
       hdr.chantype{end+1} = 'nirs';
       hdr.chanunit{end+1} = 'unknown';
@@ -175,7 +175,7 @@ elseif needevt
   
   evt = [];
   
-  if isfield(snirf, 'stim') && ~isempty(snirf.stim)
+  try
     for i=1:numel(snirf.stim)
       for j=1:size(snirf.stim(i).data,1)
         evt(end+1).type      = snirf.stim(i).name;
@@ -184,7 +184,10 @@ elseif needevt
         evt(end  ).value     = snirf.stim(i).data(j,3);
       end
     end
-  else
+    % sort the events on their sample number, this is consistent with FT_READ_EVENT
+    [~, indx] = sort([evt.sample]);
+    evt = evt(indx);
+  catch
     % there are no events
   end
   
