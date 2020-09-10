@@ -88,6 +88,10 @@ if isempty(freq)
   return;
 end
 
+% do some sanity checks
+assert(isfield(freq, 'freq') && (isfield(freq, 'label') || isfield(freq, 'labelcmb')), 'inconsistent freq data structure, some field is missing');
+assert(isfield(freq, 'label') && length(unique(freq.label))==length(freq.label), 'channel labels must be unique');
+
 % ensure consistency between the dimord string and the axes that describe the data dimensions
 freq = fixdimord(freq);
 
