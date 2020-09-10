@@ -45,7 +45,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %
 % The following MEG dataformats are supported
 %   CTF (*.ds, *.res4, *.meg4)
-%   Neuromag/Elekta (*.fif)
+%   Neuromag/Elekta/Megin (*.fif)
 %   BTi/4D (*.m4d, *.pdf, *.xyz)
 %   Yokogawa/Ricoh (*.ave, *.con, *.raw)
 %   NetMEG (*.nc)
