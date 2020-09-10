@@ -141,7 +141,11 @@ if needhdr
   end
   
   % convert the probe and measurementList to a FieldTrip opto structure
-  hdr.opto = snirf2opto(snirf.probe, snirf.data.measurementList);
+  try
+    hdr.opto = snirf2opto(snirf.probe, snirf.data.measurementList);
+  catch
+    ft_warning('SNIRF probe and measurementList are inconsistent');
+  end
   
   % return the header details
   varargout = {hdr};

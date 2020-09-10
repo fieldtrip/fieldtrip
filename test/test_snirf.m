@@ -36,6 +36,7 @@ event1a = ft_read_event(cfg.dataset);
 % read the original data
 cfg = [];
 cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/test/original/nirs/artinis/Helena/190528_fingertap_L.oxy3');
+cd(fileparts(cfg.dataset)); % we should be located in the directory with the optodetemplates.xml
 data2 = ft_preprocessing(cfg);
 event2 = ft_read_event(cfg.dataset, 'chanindx', -1); % do not parse the ADC channels
 

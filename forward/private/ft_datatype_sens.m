@@ -169,17 +169,19 @@ switch version
       sens = renamefields(sens, 'transmits', 'tra'); % this makes it more consistent with EEG and MEG
       sens = removefields(sens, {'laserstrength'});
       
-      % the read_artinis_oxy3 file returns the wrong values
-      % but since it is p-code, it cannot be fixed
-      correctT = all(sens.tra(:, strcmp(sens.optotype, 'transmitter'))>=0, 'all');
-      correctR = all(sens.tra(:, strcmp(sens.optotype, 'receiver'   ))<=0, 'all');
-      if ~correctT
-        ft_warning('flipping sign for transmitters');
-        sens.tra(:, strcmp(sens.optotype, 'transmitter')) = -sens.tra(:, strcmp(sens.optotype, 'transmitter'));
-      end
-      if ~correctR
-        ft_warning('flipping sign for receivers');
-        sens.tra(:, strcmp(sens.optotype, 'receiver')) = -sens.tra(:, strcmp(sens.optotype, 'receiver'));
+      if isfield(sens, 'optotype') && isfield(sens, 'tra')
+        % the read_artinis_oxy3 file returns the wrong sign for the receivers and transmitters
+        % but since it is p-code, it cannot be fixed
+        correctT = all(sens.tra(:, strcmp(sens.optotype, 'transmitter'))>=0, 'all');
+        correctR = all(sens.tra(:, strcmp(sens.optotype, 'receiver'   ))<=0, 'all');
+        if ~correctT
+          ft_warning('flipping sign for transmitters');
+          sens.tra(:, strcmp(sens.optotype, 'transmitter')) = -sens.tra(:, strcmp(sens.optotype, 'transmitter'));
+        end
+        if ~correctR
+          ft_warning('flipping sign for receivers');
+          sens.tra(:, strcmp(sens.optotype, 'receiver')) = -sens.tra(:, strcmp(sens.optotype, 'receiver'));
+        end
       end
       
     end % ifnirs
