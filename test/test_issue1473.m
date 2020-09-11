@@ -67,7 +67,7 @@ leadfield_white = ft_prepare_leadfield(cfg, data_white);
 
 
 
-%% Source analysis MNE
+%% Source analysis MNE -> these give the same results (on september 11, 2020, using the master branch of FT)
 cfg             = [];
 cfg.method      = 'mne';
 cfg.sourcemodel = leadfield;
@@ -79,4 +79,8 @@ source          = ft_sourceanalysis(cfg, tlck);
 cfg.sourcemodel = leadfield_white;
 source_white    = ft_sourceanalysis(cfg, tlck_white);
 
-keyboard
+cfg.mne.prewhiten = 'no';
+cfg.mne.lambda    = sqrt(cfg.mne.lambda); % the current state of affairs is an inconsistent treatment of lambda in the whitened, as compared to the non-whitened case, see issue 1307
+source_white2     = ft_sourceanalysis(cfg, tlck_white);
+
+
