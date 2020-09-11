@@ -1,15 +1,34 @@
 function result = events_tsv(filename, hdr)
 
-% BIDS_TSV reads events from a BIDS _events.tsv file
+% EVENTS_TSV reads events from a BIDS _events.tsv file
 %
 % Use as
-%   hdr = bids_tsv(filename)
+%   hdr = events_tsv(filename)
 % to read the header information, or use as
-%   evt = bids_tsv(filename, hdr)
+%   evt = events_tsv(filename, hdr)
 % to read the event information.
 %
-% See also FT_FILETYPE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT,
-% QUALISYS_TSV, MOTION_C3D
+% See also FT_FILETYPE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, QUALISYS_TSV, MOTION_C3D, BIDS_TSV
+
+% Copyright (C) 2018-2020, Robert Oostenveld
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 opts = detectImportOptions(filename,'filetype','text', 'Delimiter', {'\t'} );
 
@@ -28,7 +47,7 @@ if needhdr
   elseif exist(ieegjson, 'file')
     jsonfile = ieegjson;
   elseif exist(nirsjson, 'file')
-      jsonfile = nirsjson;
+    jsonfile = nirsjson;
   else
     ft_error('cannot find header information correspoding to %s', filename);
   end
