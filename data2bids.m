@@ -1552,7 +1552,7 @@ switch cfg.method
           case {'nirs'}
             % write the data in SNIRF file format
             [p, f, x] = fileparts(cfg.outputfile);
-            cfg.outputfile = fullfile(p, [f '.vhdr']);
+            cfg.outputfile = fullfile(p, [f '.snirf']);
             ft_info('writing %s\n', cfg.outputfile);
             ft_write_data(cfg.outputfile, dat, 'dataformat', 'snirf', 'header', hdr, 'event', trigger);
           case {'physio', 'stim', 'eyetracker', 'motion'}
