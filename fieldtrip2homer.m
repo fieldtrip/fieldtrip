@@ -50,30 +50,46 @@ seldat  = startsWith(hdr.chantype, 'nirs');
 selstim = strcmp(hdr.chantype, 'stimulus');
 selaux  = ~seldat & ~selstim;
 
-if ~isempty(event) && any(selstim)
-  ft_error('you can either specify events in a stimulus channel, or as event structure, but not both');
-end
 
 nirs.t = data.time{1};
 nirs.d = dat(seldat, :)';
-nirs.s = dat(selstim, :)';
 nirs.aux = dat(selaux, :)';
-nirs.CondNames = hdr.label(strcmp(hdr.chantype, 'stimulus'));
 nirs.SD = opto2homer(hdr.opto);
 
 if ~isempty(event)
   % convert the event structure into Boolean or integer stimulus channels
-  if all(cellfun(@ischar, {event.value}))
-    % it has string values, the type is not interesting
-    CondNames = unique({event.value});
-    boolvec = convert_event(event, 'boolvec', 'valuenames', CondNames, 'endsample', length(nirs.t));
-  elseif all(cellfun(@isnumeric, {event.value}))
-    % it has numeric values, the type will be a string
-    CondNames = unique({event.type});
-    boolvec = convert_event(event, 'boolvec', 'typenames', CondNames, 'endsample', length(nirs.t));
-  else
-    ft_error('this only works when event.type is all numeric or all strings');
+  if any(selstim)
+    ft_notice('converting event structure to stimulus channel(s), discarding original stimulus channel');
   end
-  nirs.s = boolvec';
-  nirs.CondNames = CondNames;
+  
+  % start with an empty stimulus description
+  nirs.s = zeros(length(nirs.t), 0);
+  nirs.CondNames = {};
+  
+  % select events with a string value, the type will be a string
+  sel = cellfun(@ischar, {event.value});
+  if any(sel)
+    for i=find(sel)
+      % the type and value need to be combined in the condition name
+      event(i).value = sprintf('%s %s', event(i).type, event(i).value);
+    end
+    CondNames = unique({event(sel).value});
+    boolvec   = convert_event(event(sel), 'boolvec', 'valuenames', CondNames, 'endsample', length(nirs.t));
+    nirs.s          = cat(2, nirs.s, boolvec');
+    nirs.CondNames  = cat(2, nirs.CondNames, CondNames);
+  end
+  
+  % select events with a numeric value, the type will be a string
+  sel = cellfun(@isnumeric, {event.value});
+  if any(sel)
+    % use the event type as the condition name
+    CondNames = unique({event(sel).type});
+    boolvec   = convert_event(event(sel), 'boolvec', 'typenames', CondNames, 'endsample', length(nirs.t));
+    nirs.s          = cat(2, nirs.s, boolvec');
+    nirs.CondNames  = cat(2, nirs.CondNames, CondNames);
+  end
+  
+else
+  nirs.s = dat(selstim, :)';
+  nirs.CondNames = hdr.label(strcmp(hdr.chantype, 'stimulus'));
 end
