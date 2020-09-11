@@ -23,7 +23,7 @@ cfg.trl([15, 36, 39, 42, 43, 49, 50, 81, 82, 84],:) = [];
 % preprocess the data
 cfg.channel   = {'MEG', '-MLP31', '-MLO12'};        % read all MEG channels except MLP31 and MLO12
 cfg.demean    = 'yes';                              % do baseline correction with the complete trial
-cfg.baselinewindow = [-inf 0];
+cfg.baselinewindow = [-0.2 0];
 cfg.bpfilter  = 'yes';
 cfg.bpfreq    = [0.5 40];
 cfg.bpfilttype = 'firws';
@@ -70,12 +70,13 @@ leadfield_white = ft_prepare_leadfield(cfg, data_white);
 %% Source analysis MNE
 cfg             = [];
 cfg.method      = 'mne';
-cfg.frequency   = 18;
 cfg.sourcemodel = leadfield;
 cfg.mne.lambda  = 2;
 cfg.mne.prewhiten = 'yes';
+cfg.mne.scalesourcecov = 'yes';
 source          = ft_sourceanalysis(cfg, tlck);
 
+cfg.sourcemodel = leadfield_white;
 source_white    = ft_sourceanalysis(cfg, tlck_white);
 
-
+keyboard
