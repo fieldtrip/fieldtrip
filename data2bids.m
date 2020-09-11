@@ -300,7 +300,7 @@ cfg.dataset_description.Authors             = ft_getopt(cfg.dataset_description,
 cfg.dataset_description.Acknowledgements    = ft_getopt(cfg.dataset_description, 'Acknowledgements'      ); % OPTIONAL. Text acknowledging contributions of individuals or institutions beyond those listed in Authors or Funding.
 cfg.dataset_description.HowToAcknowledge    = ft_getopt(cfg.dataset_description, 'HowToAcknowledge'      ); % OPTIONAL. Instructions how researchers using this dataset should acknowledge the original authors. This field can also be used to define a publication that should be cited in publications that use the dataset.
 cfg.dataset_description.Funding             = ft_getopt(cfg.dataset_description, 'Funding'               ); % OPTIONAL. List of sources of funding (grant numbers)
-cfg.dataset_description.EthicsApprovals     = ft_getopto(cfg.dataset_description, 'EthicsApprovals'      ); % OPTIONAL. List of ethics committee approvals of the research protocols and/or protocol identifiers.
+cfg.dataset_description.EthicsApprovals     = ft_getopt(cfg.dataset_description, 'EthicsApprovals'      ); % OPTIONAL. List of ethics committee approvals of the research protocols and/or protocol identifiers.
 cfg.dataset_description.ReferencesAndLinks  = ft_getopt(cfg.dataset_description, 'ReferencesAndLinks'    ); % OPTIONAL. List of references to publication that contain information on the dataset, or links.
 cfg.dataset_description.DatasetDOI          = ft_getopt(cfg.dataset_description, 'DatasetDOI'            ); % OPTIONAL. The Document Object Identifier of the dataset (not the corresponding paper).
 
@@ -482,7 +482,19 @@ cfg.exg.RecordingType                     = ft_getopt(cfg.exg, 'RecordingType'  
 %% NIRS is not part of the official BIDS specification
 cfg.nirs.SamplingFrequency                 = ft_getopt(cfg.nirs, 'SamplingFrequency'                 );
 cfg.nirs.RecordingDuration                 = ft_getopt(cfg.nirs, 'RecordingDuration'                 );
-cfg.nirs.RecordingType                     = ft_getopt(cfg.nirs, 'RecordingType'                     );
+% cfg.nirs.RecordingType                     = ft_getopt(cfg.nirs, 'RecordingType'                     ); % not integrated yet 
+cfg.nirs.SourceType                        = ft_getopt(cfg.nirs, 'SourceType'                        );
+cfg.nirs.DetectorType                      = ft_getopt(cfg.nirs, 'DetectorType'                      );
+cfg.nirs.NIRSChannelCount                  = ft_getopt(cfg.nirs, 'NIRSChannelCount'                  );
+cfg.nirs.NIRSSourceCount                   = ft_getopt(cfg.nirs, 'NIRSSourceCount'                   );
+cfg.nirs.NIRSDetectorCount                 = ft_getopt(cfg.nirs, 'NIRSDetectorCount'                 );
+cfg.nirs.HeadCircumference                 = ft_getopt(cfg.nirs, 'HeadCircumference'                 );
+cfg.nirs.NIRSPlacementScheme               = ft_getopt(cfg.nirs, 'NIRSPlacementScheme'               );
+cfg.nirs.SubjectArtefactDescription        = ft_getopt(cfg.nirs, 'SubjectArtefactDescription'        );
+cfg.nirs.CapManufacturer                   = ft_getopt(cfg.nirs, 'CapManufacturer'                   );
+cfg.nirs.CapManufacturersModelName         = ft_getopt(cfg.nirs, 'CapManufacturersModelName'         );
+cfg.nirs.HardwareFilters                   = ft_getopt(cfg.nirs, 'HardwareFilters'                   );
+cfg.nirs.SoftwareFilters                   = ft_getopt(cfg.nirs, 'SoftwareFilters'                   );
 
 %% audio is not part of the official BIDS specification
 cfg.audio.SampleRate                      = ft_getopt(cfg.audio, 'SampleRate'        );
@@ -1145,11 +1157,15 @@ end
 if need_nirs_json
   nirs_json.SamplingFrequency         = hdr.Fs;
   nirs_json.RecordingDuration         = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-  nirs_json.EpochLength               = hdr.nSamples/hdr.Fs;
+%   nirs_json.EpochLength               = hdr.nSamples/hdr.Fs; % not yet
+%   supported
   nirs_json.NIRSChannelCount          = sum(strcmpi(hdr.chantype, 'nirs'));
-  nirs_json.AUXChannelCount           = sum(strcmpi(hdr.chantype, 'aux'));
+  nirs_json.AUXChannelCount           = sum(strcmpi(hdr.chantype, 'aux')); % not yet supported
   nirs_json.MiscChannelCount          = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
-
+  [opto_labels, opto_idx]             = unique(hdr.opto.optolabel); % select unique optodes
+  nirs_json.NIRSSourceCount           = sum(strcmpi(hdr.opto.optotype(opto_idx), 'transmitter'));
+  nirs_json.NIRSDetectorCount         = sum (strcmpi(hdr.opto.optotype(opto_idx), 'receiver'));  
+  
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
   nirs_json = mergeconfig(nirs_settings,    nirs_json, false);
