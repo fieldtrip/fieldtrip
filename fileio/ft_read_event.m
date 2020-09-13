@@ -20,6 +20,7 @@ function [event] = ft_read_event(filename, varargin)
 %   'blocking'       wait for the selected number of events (default = 'no')
 %   'timeout'        amount of time in seconds to wait when blocking (default = 5)
 %   'password'       password structure for encrypted data set (only for mayo_mef30 and mayo_mef21)
+%   'readbids'       boolean, whether to read information from the BIDS sidecar files (default = true)
 %
 % This function returns an event structure with the following fields
 %   event.type      = string
@@ -164,6 +165,7 @@ chanindx         = ft_getopt(varargin, 'chanindx');                  % this allo
 trigindx         = ft_getopt(varargin, 'trigindx');                  % deprecated, use chanindx instead
 triglabel        = ft_getopt(varargin, 'triglabel');                 % deprecated, use chanindx instead
 password         = ft_getopt(varargin, 'password', struct([]));
+readbids         = ft_getopt(varargin, 'readbids', true);
 
 % for backward compatibility, added by Robert in Sept 2019
 if ~isempty(trigindx)
@@ -229,6 +231,22 @@ if strcmp(eventformat, 'brainvision_vhdr')
   else
     [p, ~, ~] = fileparts(filename);
     filename = fullfile(p, vhdr.MarkerFile);
+  end
+end
+
+if readbids
+  % deal with data that is organized according to BIDS
+  % data in a BIDS tsv file (like physio and stim) will be explicitly dealt with in BIDS_TSV
+  [p, f, x] = fileparts(filename);
+  isbids = startsWith(f, 'sub-') && ~strcmp(x, '.tsv');
+  if isbids
+    % find the corresponding events.tsv file, due to inheritance it can be at a higher level
+    eventsfile = bids_sidecar(filename, 'events');
+    if ~isempty(eventsfile)
+      % read the events from the BIDS events.tsv file rather than from the datafile
+      filename    = eventsfile;
+      eventformat = 'events_tsv';
+    end
   end
 end
 
@@ -2312,7 +2330,7 @@ switch eventformat
   otherwise
     if exist(eventformat, 'file')
       % attempt to run "eventformat" as a function, this allows the user to specify an external reading function
-      % this is also used for bids_tsv, biopac_acq, motion_c3d, opensignals_txt, qualisys_tsv, sccn_xdf, and possibly others
+      % this is also used for bids_tsv, events_tsv, biopac_acq, motion_c3d, opensignals_txt, qualisys_tsv, sccn_xdf, and possibly others
       if isempty(hdr)
         hdr = feval(eventformat, filename);
       end
@@ -2345,11 +2363,39 @@ if ~isempty(event)
   if ~isfield(event, 'duration'), for i=1:length(event), event(i).duration = []; end; end
 end
 
-% check whether string event values can be converted to numeric
+% make sure that all fields have the required type, i.e. string, numeric or empty
 if ~isempty(event)
-  if all(cellfun(@ischar, {event.value})) &&  ~any(isnan(cellfun(@str2double, {event.value})))
-    for i=1:length(event)
-      event(i).value = str2double(event(i).value);
+  for i=1:length(event)
+    % event type should not be a cell-array of length 1 but rather a string
+    if iscell(event(i).type) && numel(event(i).type)==1
+      event(i).type = event(i).type{1};
+    end
+    % event value should not be a cell-array of length 1 but rather a string
+    if iscell(event(i).value) && numel(event(i).value)==1
+      event(i).value = event(i).value{1};
+    end
+    % check whether string event values can be converted to numeric values
+    if ischar(event(i).value)
+      value = str2double(event(i).value);
+      if ~isnan(value)
+        event(i).value = value;
+      end
+    end
+    % samples can be either empty or should be numeric values
+    if ischar(event(i).sample)
+      event(i).sample = str2double(event(i).sample);
+    end
+    % offsets can be either empty or should be numeric values
+    if ischar(event(i).offset)
+      event(i).offset = str2double(event(i).offset);
+    end
+    % durations can be either empty or should be numeric values
+    if ischar(event(i).duration)
+      event(i).duration = str2double(event(i).duration);
+    end
+    % optional timestamps durations can be either empty or should be numeric values
+    if isfield(event, 'timestamp') && ischar(event(i).duration)
+      event(i).timestamp = str2double(event(i).timestamp);
     end
   end
 end
