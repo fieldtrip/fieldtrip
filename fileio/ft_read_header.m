@@ -16,6 +16,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   'coordsys'       = string, 'head' or 'dewar' (default = 'head')
 %   'headerformat'   = name of a MATLAB function that takes the filename as input (default is automatic)
 %   'password'       = password structure for encrypted data set (only for mayo_mef30 and mayo_mef21)
+%   'readbids'       = boolean, whether to read information from the BIDS sidecar files (default = true)
 %
 % This returns a header structure with the following elements
 %   hdr.Fs                  sampling frequency
@@ -185,6 +186,9 @@ coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf
 coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0-2
 chantype       = ft_getopt(varargin, 'chantype', {});
 password       = ft_getopt(varargin, 'password', struct([]));
+readbids       = ft_getopt(varargin, 'readbids', true);
+
+% this should be a cell array
 if ~iscell(chantype); chantype = {chantype}; end
 
 % optionally get the data from the URL and make a temporary local copy
@@ -280,6 +284,32 @@ end % if cache
 % the support for head/dewar coordinates is still limited
 if strcmp(coordsys, 'dewar') && ~any(strcmp(headerformat, {'fcdc_buffer', 'ctf_ds', 'ctf_meg4', 'ctf_res4', 'neuromag_fif', 'neuromag_mne'}))
   ft_error('dewar coordinates are not supported for %s', headerformat);
+end
+
+if readbids
+  % deal with data that is organized according to BIDS
+  % data in a BIDS tsv file (like physio and stim) will be explicitly dealt with in BIDS_TSV 
+  [p, f, x] = fileparts(filename);
+  isbids = startsWith(f, 'sub-') && ~strcmp(x, '.tsv');
+  if isbids
+    % try to read the BIDS sidecar files
+    sidecar = bids_sidecar(filename);
+    if ~isempty(sidecar)
+      data_json = read_json(sidecar);
+    end
+    sidecar = bids_sidecar(filename, 'channels');
+    if ~isempty(sidecar)
+      channels_tsv = read_tsv(sidecar);
+    end
+    sidecar = bids_sidecar(filename, 'electrodes');
+    if ~isempty(sidecar)
+      electrodes_tsv = read_tsv(sidecar);
+    end
+    sidecar = bids_sidecar(filename, 'optodes');
+    if ~isempty(sidecar)
+      optodes_tsv = read_tsv(sidecar);
+    end
+  end
 end
 
 % start with an empty header
@@ -2715,18 +2745,16 @@ switch headerformat
 end % switch headerformat
 
 
-% Sometimes, the not all labels are correctly filled in by low-level reading
-% functions. See for example bug #1572.
+% Sometimes, the not all labels are correctly filled in by low-level reading functions. See for example bug #1572.
 % First, make sure that there are enough (potentially empty) labels:
 if numel(hdr.label) < hdr.nChans
   ft_warning('low-level reading function did not supply enough channel labels');
   hdr.label{hdr.nChans} = [];
 end
-
 % Now, replace all empty labels with new name:
 if any(cellfun(@isempty, hdr.label))
   ft_warning('channel labels should not be empty, creating unique labels');
-  hdr.label = fix_empty(hdr.label);
+  hdr.label = fixlabels(hdr.label);
 end
 
 if checkUniqueLabels
@@ -2789,10 +2817,36 @@ if isfield(hdr, 'opto')
   end
 end
 
-% ensure that these are column arrays
-hdr.label    = hdr.label(:);
-if isfield(hdr, 'chantype'), hdr.chantype = hdr.chantype(:); end
-if isfield(hdr, 'chanunit'), hdr.chanunit = hdr.chanunit(:); end
+if readbids && isbids
+  % the BIDS sidecar files overrule the information present in the file header itself
+  try, hdr.label     = channels_tsv.name;            end
+  try, hdr.chantype  = channels_tsv.type;            end
+  try, hdr.chanunit  = channels_tsv.units;           end
+  try, hdr.Fs        = data_json.SamplingFrequency;  end
+  if exist('electrodes_tsv', 'var')
+    if isfield(hdr, 'elec')
+      ft_warning('updating the electrode structure with the BIDS sidecar is not yet implemented');
+    else
+      hdr.elec = [];
+      hdr.eleclabel = electrodes_tsv.name;
+      hdr.elecpos   = [electrodes_tsv.x electrodes_tsv.y electrodes_tsv.z];
+    end
+  end
+  if exist('optodes_tsv', 'var')
+    if isfield(hdr, 'opto')
+      ft_warning('updating the optode structure with the BIDS sidecar is not yet implemented');
+    else
+      hdr.opto = [];
+      hdr.optolabel = optodes_tsv.name;
+      hdr.optopos   = [optodes_tsv.x optodes_tsv.y optodes_tsv.z];
+    end
+  end
+end % if readbids and isbids
+
+% ensure that these are column arrays and that they do not have empty entries
+hdr.label = fixlabels(hdr.label);
+if isfield(hdr, 'chantype'), hdr.chantype = fixchantype(hdr.chantype); end
+if isfield(hdr, 'chanunit'), hdr.chanunit = fixchanunit(hdr.chanunit); end
 
 % ensure that these are double precision and not integers, otherwise
 % subsequent computations that depend on these might be messed up
@@ -2876,11 +2930,41 @@ for i=1:length(hdr)
 end
 hdr = tmp;
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION to fill in empty labels
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function labels = fix_empty(labels)
+function labels = fixlabels(labels)
 for i = find(cellfun(@isempty, {labels{:}}))
   labels{i} = sprintf('%d', i);
 end
+labels = labels(:);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION to fill in empty chantype
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function labels = fixchantype(labels)
+sel = cellfun(@isempty, labels);
+labels(sel) = {'unknown'};
+labels = labels(:);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION to fill in empty chanunit
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function labels = fixchanunit(labels)
+sel = cellfun(@isempty, labels);
+labels(sel) = {'unknown'};
+labels = labels(:);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION this is shared with DATA2BIDS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function tsv = read_tsv(filename)
+tsv = readtable(filename, 'Delimiter', 'tab', 'FileType', 'text', 'TreatAsEmpty', 'n/a', 'ReadVariableNames', true);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION this is shared with DATA2BIDS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function json = read_json(filename)
+ft_hastoolbox('jsonlab', 1);
+json = loadjson(filename);
+json = ft_struct2char(json); % convert strings into char-arrays
