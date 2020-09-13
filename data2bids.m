@@ -1958,14 +1958,14 @@ end
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function tsv = read_tsv(filename)
-ft_info('reading %s\n', filename);
+ft_info('reading ''%s''\n', filename);
 tsv = readtable(filename, 'Delimiter', 'tab', 'FileType', 'text', 'TreatAsEmpty', 'n/a', 'ReadVariableNames', true);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function write_tsv(filename, tsv)
-ft_info('writing %s\n', filename);
+ft_info('writing ''%s''\n', filename);
 fn = tsv.Properties.VariableNames;
 for i=1:numel(fn)
   % write [] as 'n/a'
@@ -1979,7 +1979,7 @@ writetable(tsv, filename, 'Delimiter', 'tab', 'FileType', 'text');
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function json = read_json(filename)
-ft_info('reading %s\n', filename);
+ft_info('reading ''%s''\n', filename);
 ft_hastoolbox('jsonlab', 1);
 json = loadjson(filename);
 json = ft_struct2char(json); % convert strings into char-arrays
@@ -1988,7 +1988,7 @@ json = ft_struct2char(json); % convert strings into char-arrays
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function write_json(filename, json)
-ft_info('writing %s\n', filename);
+ft_info('writing ''%s''\n', filename);
 json = remove_empty(json);
 json = sort_fields(json);
 json = ft_struct2char(json); % convert strings into char-arrays
@@ -2104,7 +2104,7 @@ switch typ
   case {'nirs'} % this is not part of the official specification
     dir = 'nirs';
   otherwise
-    ft_error('unrecognized data type "%s"', typ);
+    ft_error('unrecognized data type ''%s''', typ);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
