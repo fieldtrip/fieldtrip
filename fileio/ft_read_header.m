@@ -286,9 +286,9 @@ if strcmp(coordsys, 'dewar') && ~any(strcmp(headerformat, {'fcdc_buffer', 'ctf_d
   ft_error('dewar coordinates are not supported for %s', headerformat);
 end
 
-if readbids
+if istrue(readbids)
   % deal with data that is organized according to BIDS
-  % data in a BIDS tsv file (like physio and stim) will be explicitly dealt with in BIDS_TSV 
+  % data in a BIDS tsv file (like physio and stim) will be explicitly dealt with in BIDS_TSV
   [p, f, x] = fileparts(filename);
   isbids = startsWith(f, 'sub-') && ~strcmp(x, '.tsv');
   if isbids
@@ -2817,7 +2817,7 @@ if isfield(hdr, 'opto')
   end
 end
 
-if readbids && isbids
+if istrue(readbids) && isbids
   % the BIDS sidecar files overrule the information present in the file header itself
   try, hdr.label     = channels_tsv.name;            end
   try, hdr.chantype  = channels_tsv.type;            end
