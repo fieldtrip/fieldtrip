@@ -34,6 +34,8 @@ asc.efix    = {};
 asc.ssacc   = {};
 asc.esacc   = {};
 asc.dat     = [];
+asc.sblink   = {}; % blink parsing added
+asc.eblink   = {};
 current   = 0;
 
 % read the whole file at once
@@ -46,28 +48,28 @@ aline = tokenize(aline, uint8(newline));        % split on newline
 
 for i=1:numel(aline)
   tline = aline{i};
-
+  
   if numel(tline) && any(tline(1)=='0':'9')
-  % if regexp(tline, '^[0-9]')
+    % if regexp(tline, '^[0-9]')
     tline   = strrep(tline, ' . ', ' NaN '); % replace missing values
     tmp     = sscanf(tline, '%f');
     nchan   = numel(tmp);
     current = current + 1;
-
+    
     if size(asc.dat, 1)<nchan
       % increase the allocated number of channels
       asc.dat(nchan,:) = 0;
     end
-
+    
     if size(asc.dat, 2)<current
       % increase the allocated number of samples
       asc.dat(:,end+10000) = 0;
     end
-
+    
     % add the current sample to the data matrix
     asc.dat(1:nchan, current) = tmp;
-
-
+    
+    
   elseif regexp(tline, '^INPUT')
     [val, num] = sscanf(tline, 'INPUT %d %d');
     this.timestamp = val(1);
@@ -77,35 +79,43 @@ for i=1:numel(aline)
     else
       asc.input = cat(1, asc.input, this);
     end
-
-
+    
+    
   elseif regexp(tline, '\*\*.*')
     asc.header = cat(1, asc.header, {tline});
-
-
+    
+    
   elseif regexp(tline, '^MSG')
     asc.msg = cat(1, asc.msg, {tline});
-
-
+    
+    
   elseif regexp(tline, '^SFIX')
     asc.sfix = cat(1, asc.sfix, {tline});
-
-
+    
+    
   elseif regexp(tline, '^EFIX')
     asc.efix = cat(1, asc.efix, {tline});
-
-
+    
+    
   elseif regexp(tline, '^SSACC')
     asc.ssacc = cat(1, asc.ssacc, {tline});
-
-
+    
+    
   elseif regexp(tline, '^ESACC')
     asc.esacc = cat(1, asc.esacc, {tline});
-
+    
+    
+  elseif regexp(tline, '^SBLINK')
+    asc.sblink = cat(1, asc.sblink, {tline});
+    
+    
+  elseif regexp(tline, '^EBLINK')
+    asc.eblink = cat(1, asc.eblink, {tline});
+    
   else
     % all other lines are not parsed
   end
-
+  
 end
 
 % remove the samples that were not filled with real data
