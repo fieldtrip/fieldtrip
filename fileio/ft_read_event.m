@@ -234,7 +234,7 @@ if strcmp(eventformat, 'brainvision_vhdr')
   end
 end
 
-if readbids
+if readbids && ~isempty(filename)
   % deal with data that is organized according to BIDS
   % data in a BIDS tsv file (like physio and stim) will be explicitly dealt with in BIDS_TSV
   [p, f, x] = fileparts(filename);

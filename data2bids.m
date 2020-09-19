@@ -751,24 +751,24 @@ switch typ
     
   case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275', 'neuromag_fif', 'neuromag122', 'neuromag306'}
     % it is MEG data from disk and in a supported format
-    hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false);
+    hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false, 'readbids', false);
     if strcmp(cfg.method, 'convert')
       % the data should be converted and written to disk
       dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
     end
     % read the triggers from disk
-    trigger = ft_read_event(cfg.datafile, 'header', hdr);
+    trigger = ft_read_event(cfg.datafile, 'header', hdr, 'readbids', false);
     need_meg_json = true;
     
-  case {'brainvision_vhdr', 'edf', 'eeglab_set'}
+  case {'brainvision_vhdr', 'edf', 'eeglab_set', 'biosemi_bdf'}
     % the file on disk contains ExG data in a BIDS compiant format
-    hdr = ft_read_header(cfg.headerfile);
+    hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false, 'readbids', false);
     if strcmp(cfg.method, 'convert')
       % the data should be converted and written to disk
       dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
     end
     % read the triggers from disk
-    trigger = ft_read_event(cfg.datafile, 'header', hdr);
+    trigger = ft_read_event(cfg.datafile, 'header', hdr, 'readbids', false);
     if isequal(cfg.datatype, 'eeg')
       need_eeg_json = true;
     elseif isequal(cfg.datatype, 'ieeg')
@@ -890,11 +890,11 @@ switch typ
     end
     
     if ~isempty(cfg.dataset)
-      hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false);
+      hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false, 'readbids', false);
       if strcmp(cfg.method, 'convert')
         % the data should be converted and written to disk
         dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
-        trigger = ft_read_event(cfg.datafile, 'header', hdr);
+        trigger = ft_read_event(cfg.datafile, 'header', hdr, 'readbids', false);
       end
       % FIXME try to get the electrode definition, either from the data or from the configuration
     end
