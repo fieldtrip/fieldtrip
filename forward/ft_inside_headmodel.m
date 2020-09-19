@@ -119,7 +119,7 @@ switch ft_headmodeltype(headmodel)
     [pos, tri] = headsurface(headmodel, [], 'inwardshift', inwardshift, 'surface', 'brain');
     inside = bounding_mesh(dippos, pos, tri);
 
-  case {'simbio'}
+  case {'simbio', 'duneuro'}
     % this is a model with hexaheders or tetraheders
     if isfield(headmodel, 'tet')
       % the subsequent code works both for tetraheders or hexaheders, but assumes the volume elements to be called "hex"
@@ -133,7 +133,8 @@ switch ft_headmodeltype(headmodel)
     numdip = size(dippos,1);
 
     % FIXME we have to rethink which tissue types should be flagged as inside
-    tissue = intersect({'gray', 'white', 'csf', 'brain'}, headmodel.tissuelabel);
+    %tissue = intersect({'gray', 'white', 'csf', 'brain'}, headmodel.tissuelabel);
+    tissue = intersect({'gm', 'gray', 'brain'}, headmodel.tissuelabel);
 
     % determine all hexaheders that are labeled as brain
     insidehex = false(size(headmodel.tissue));
@@ -186,7 +187,7 @@ switch ft_headmodeltype(headmodel)
 
     % The following code is only guaranteed to work with convex elements. Regular
     % hexahedra and tetrahedra are convex, and the adapted hexahedra we can use with
-    % SIMBIO have to be convex as well.
+    % SIMBIO/Duneuro have to be convex as well.
 
     inside = false(1, numdip);
     % for each dipole determine whether it is inside one of the neighbouring hexaheders

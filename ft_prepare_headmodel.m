@@ -43,6 +43,7 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 %   dipoli             boundary element method, based on the implementation from Thom Oostendorp
 %   asa                boundary element method, based on the (commercial) ASA software
 %   simbio             finite element method, based on the SimBio software
+%   duneuro            finite element method, based on duneuro software
 %   fns                finite difference method, based on the FNS software
 %   infinite           electric dipole in an infinite homogenous medium
 %   halfspace          infinite homogenous medium on one side, vacuum on the other
@@ -183,20 +184,22 @@ cfg.threshold       = ft_getopt(cfg, 'threshold');
 
 % other options
 cfg.numvertices     = ft_getopt(cfg, 'numvertices');
-cfg.isolatedsource  = ft_getopt(cfg, 'isolatedsource'); % used for dipoli and openmeeg
-cfg.point           = ft_getopt(cfg, 'point');          % used for halfspace
-cfg.submethod       = ft_getopt(cfg, 'submethod');      % used for halfspace
+cfg.isolatedsource  = ft_getopt(cfg, 'isolatedsource');   % used for dipoli and openmeeg
+cfg.point           = ft_getopt(cfg, 'point');            % used for halfspace
+cfg.submethod       = ft_getopt(cfg, 'submethod');        % used for halfspace
 cfg.feedback        = ft_getopt(cfg, 'feedback');
 cfg.radius          = ft_getopt(cfg, 'radius');
 cfg.maxradius       = ft_getopt(cfg, 'maxradius');
 cfg.baseline        = ft_getopt(cfg, 'baseline');
 cfg.singlesphere    = ft_getopt(cfg, 'singlesphere');
-cfg.tissueval       = ft_getopt(cfg, 'tissueval');      % used for simbio
+cfg.grid_filename   = ft_getopt(cfg, 'grid_filename');    % used for duneuro
+cfg.tensors_filename= ft_getopt(cfg, 'tensors_filename'); % used for duneuro
+cfg.tissueval       = ft_getopt(cfg, 'tissueval');        % used for simbio
 cfg.transform       = ft_getopt(cfg, 'transform');
-cfg.siunits         = ft_getopt(cfg, 'siunits', 'no');  % yes/no, convert the input and continue with SI units
+cfg.siunits         = ft_getopt(cfg, 'siunits', 'no');    % yes/no, convert the input and continue with SI units
 cfg.unit            = ft_getopt(cfg, 'unit');
-cfg.smooth          = ft_getopt(cfg, 'smooth');         % used for interpolate
-cfg.headmodel       = ft_getopt(cfg, 'headmodel');      % can contain CTF localspheres model
+cfg.smooth          = ft_getopt(cfg, 'smooth');           % used for interpolate
+cfg.headmodel       = ft_getopt(cfg, 'headmodel');        % can contain CTF localspheres model
 
 % the data can be passed as input arguments or can be read from disk
 hasdata = exist('data', 'var');
@@ -465,6 +468,15 @@ switch cfg.method
       ft_error('you must provide a mesh with tetrahedral or hexahedral elements, where each element has a scalar or tensor conductivity');
     end
     headmodel = ft_headmodel_simbio(geometry, 'conductivity', cfg.conductivity);
+
+  case {'duneuro'}
+    if input_mesh
+      geometry = data; % more serious checks of validity of the mesh occur inside ft_headmodel_duneuro
+    else
+      error('You must provide a mesh with tetrahedral or hexahedral elements, where each element has a scalar or tensor conductivity');
+    end
+    headmodel = ft_headmodel_duneuro(geometry, 'grid_filename', cfg.grid_filename, 'tensors_filename', cfg.tensors_filename,...
+      'conductivity', cfg.conductivity);
 
   case {'fns'}
     if input_seg
