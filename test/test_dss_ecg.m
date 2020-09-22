@@ -1,6 +1,6 @@
 function test_dss_ecg
 
-% MEM 2gb
+% MEM 8gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_artifact_zvalue ft_componentanalysis 
 
