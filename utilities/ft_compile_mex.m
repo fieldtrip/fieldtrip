@@ -61,7 +61,8 @@ L = add_mex_source(L,'@config/private','increment');
 L = add_mex_source(L,'@config/private','setzero');
 
 L = add_mex_source(L,'realtime/online_mri','ft_omri_smooth_volume');
-L = add_mex_source(L,'realtime/src/acquisition/siemens/src', 'sap2matlab', [], [], 'siemensap.c -I../include');
+L = add_mex_source(L,'realtime/src/acquisition/siemens/src', 'sap2matlab', [], [], ...
+  {'realtime/src/acquisition/siemens/src/siemensap.c' '-Irealtime/src/acquisition/siemens/include'});
 
 L = add_mex_source(L,'src','ft_getopt');
 L = add_mex_source(L,'src','read_16bit');
@@ -69,13 +70,13 @@ L = add_mex_source(L,'src','read_24bit');
 L = add_mex_source(L,'src','read_ctf_shm', {'GLNX86'});  % only compile on GLNX86
 L = add_mex_source(L,'src','write_ctf_shm', {'GLNX86'}); % only compile on GLNX86
 
-L = add_mex_source(L,'src','lmoutr',[],[],'geometry.c -I.');
-L = add_mex_source(L,'src','ltrisect',[],[],'geometry.c -I.');
-L = add_mex_source(L,'src','plinproj',[],[],'geometry.c -I.');
-L = add_mex_source(L,'src','ptriproj',[],[],'geometry.c -I.');
-L = add_mex_source(L,'src','routlm',[],[],'geometry.c -I.');
-L = add_mex_source(L,'src','solid_angle',[],[],'geometry.c -I.');
-L = add_mex_source(L,'src','rfbevent',[],{'PCWIN', 'PCWIN64'},'d3des.c -I.'); % do not compile on WIN32 and WIN64
+L = add_mex_source(L,'src','lmoutr',[],[],'src/geometry.c');
+L = add_mex_source(L,'src','ltrisect',[],[],'src/geometry.c');
+L = add_mex_source(L,'src','plinproj',[],[],'src/geometry.c');
+L = add_mex_source(L,'src','ptriproj',[],[],'src/geometry.c');
+L = add_mex_source(L,'src','routlm',[],[],'src/geometry.c');
+L = add_mex_source(L,'src','solid_angle',[],[],'src/geometry.c');
+L = add_mex_source(L,'src','rfbevent',[],{'PCWIN', 'PCWIN64'}, 'src/d3des.c'); % do not compile on WIN32 and WIN64
 L = add_mex_source(L,'src','meg_leadfield1');
 L = add_mex_source(L,'src','splint_gh');
 L = add_mex_source(L,'src','plgndr');
@@ -96,7 +97,13 @@ L = add_mex_source(L,'src','sandwich2x2');
 L = add_mex_source(L,'src','combineClusters');
 
 % this one is located elsewhere
-L = add_mex_source(L,'external/fileexchange','CalcMD5',[],[],'CFLAGS=''-std=c99 -fPIC''');
+if is_octave
+  % Octave mex() does not support CFLAGS. Just hope this works without it.
+  % Newer Octaves seem to use -fPIC and -std=gnu++11 by default, so it might be okay.
+  L = add_mex_source(L,'external/fileexchange','CalcMD5');
+else
+  L = add_mex_source(L,'external/fileexchange','CalcMD5',[],[],{'CFLAGS=''-std=c99 -fPIC'''});
+end
 
 % this one depends on the MATLAB version
 if ft_platform_supports('libmx_c_interface')
@@ -167,8 +174,10 @@ end
 L(end+1).dir   = directory;
 L(end).relName = relName;
 if nargin>5
+  extra = cellstr(extras);
   L(end).extras = extras;
 end
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -184,6 +193,8 @@ end
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function compile_mex_list(L, baseDir, force)
+
+cd(baseDir);
 
 for i=1:length(L)
   [relDir, name] = fileparts(L(i).relName);
@@ -212,7 +223,28 @@ for i=1:length(L)
     end
   end
   fprintf(1,'Compiling MEX file %s/%s ...\n', L(i).dir, name);
-  cd([baseDir '/' L(i).dir]);
-  cmd = sprintf('mex %s.%s %s', L(i).relName, L(i).ext, L(i).extras);
-  eval(cmd);
+  src_dir = fullfile(baseDir, L(i).dir);
+  src_file = fullfile(baseDir, L(i).dir, [L(i).relName '.' L(i).ext]);
+  if is_octave
+    mex_args = [{src_file ['-I' src_dir] '--output', fullfile(baseDir, L(i).dir, L(i).relName)} L(i).extras];
+  else
+    mex_args = [{src_file ['-I' src_dir] '-outdir', src_dir} L(i).extras];
+  end
+  my_mex(mex_args{:});
 end
+
+function my_mex(varargin)
+% Octave compatibility wrapper for mex()
+if is_octave
+  status = mex(varargin{:});
+  if status ~= 0
+    error('mex compilation failed: %s', strjoin(varargin, ' '));
+  end
+else
+  mex(varargin{:});
+end
+
+function out = is_octave
+v = ver;
+val = ismember('Octave', {v.Name});
+out = val;
