@@ -97,7 +97,7 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.precision     = 'single' or 'double' (default = 'double')
 %   cfg.absdiff       = 'no' or 'yes', computes absolute derivative (i.e. first derivative then rectify)
 %
-% Prperocessing options that only apply to MEG data are
+% Preprocessing options that only apply to MEG data are
 %   cfg.coordsys      = string, 'head' or 'dewar' (default = 'head')
 %   cfg.coilaccuracy  = can be empty or a number (0, 1 or 2) to specify the accuracy (default = [])
 %
