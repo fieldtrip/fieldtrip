@@ -335,6 +335,9 @@ switch cfg.method
     
     % remove the temporary fields from the configuration, keep the rest for provenance
     cfg = removefields(cfg, {'R', 'S', 'T'});
+
+  otherwise
+    ft_error('unsupported method');
 end
 
 % do the general cleanup and bookkeeping at the end of the function
