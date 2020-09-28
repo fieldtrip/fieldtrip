@@ -145,7 +145,7 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %                   requested metrics
 %
 
-% Copyright (C) 2019, Matthias Treder
+% Copyright (C) 2019-2020, Matthias Treder and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -176,10 +176,10 @@ cfg.searchlight     = ft_getopt(cfg, 'searchlight',  'no');
 cfg.timextime       = ft_getopt(cfg, 'timextime',    'no');
 cfg.reshape3D       = ft_getopt(cfg, 'reshape3D',    'yes');
 cfg.connectivity    = ft_getopt(cfg, 'connectivity', []); % the default is dealt with below
+cfg.neighbours      = ft_getopt(cfg, 'neighbours', []);
 cfg.mvpa            = ft_getopt(cfg, 'mvpa',         []);
 cfg.mvpa.metric     = ft_getopt(cfg.mvpa, 'metric',     'accuracy');
 cfg.mvpa.feedback   = ft_getopt(cfg.mvpa, 'feedback',   'yes');
-cfg.mvpa.neighbours = ft_getopt(cfg.mvpa, 'neighbours', []);
 cfg.mvpa.timwin     = ft_getopt(cfg.mvpa, 'timwin',     []); % in samples because time axis might not be known
 
 % deal with the neighbourhood of the channels/triangulation/voxels
@@ -280,6 +280,7 @@ elseif istrue(cfg.searchlight) && ~isempty(T) && data_is_3D
     cfg.mvpa.neighbours        = {cfg.connectivity T};
     cfg.mvpa.sample_dimension  = 1;
     cfg.mvpa.feature_dimension = [];
+    cfg.mvpa.append            = true;
   else
     cfg.mvpa.neighbours        = T;
     cfg.mvpa.sample_dimension  = 1;
