@@ -252,7 +252,7 @@ switch cfg.method
     % additional options, see BINICA for details
     cfg.binica       = ft_getopt(cfg,        'binica',  []);
     cfg.binica.lrate = ft_getopt(cfg.binica, 'lrate',   0.001);
-  case {'dss' 'dss2'} % JM at present has his own dss, that can deal with cell-array input, specify as dds2
+  case 'dss'
     % additional options, see DSS for details
     cfg.dss               = ft_getopt(cfg,          'dss',      []);
     cfg.dss.denf          = ft_getopt(cfg.dss,      'denf',     []);
@@ -649,7 +649,7 @@ switch cfg.method
     % see http://www.cis.hut.fi/projects/dss
     ft_hastoolbox('dss', 1);
     
-    params         = struct(cfg.dss);
+    params         = removefields(struct(cfg.dss), {'V' 'dV' 'W'});
     params.denf.h  = str2func(cfg.dss.denf.function);
     params.preprocf.h = str2func(cfg.dss.preprocf.function);
     if ~ischar(cfg.numcomponent)
@@ -658,23 +658,23 @@ switch cfg.method
     if isfield(cfg.dss, 'wdim') && ~isempty(cfg.dss.wdim)
       params.wdim = cfg.dss.wdim;
     end
-    if isfield(cfg.dss, 'V') && ~isempty(cfg.dss.V)
-      params.Y = params.V*dat;
-    end
     
     % create the state
     state   = dss_create_state(dat, params);
     if isfield(cfg.dss, 'V') && ~isempty(cfg.dss.V)
       state.V = cfg.dss.V;
+      state.Y = cfg.dss.V*dat;
     end
     if isfield(cfg.dss, 'dV') && ~isempty(cfg.dss.dV)
       state.dV = cfg.dss.dV;
+    end
+    if isfield(cfg.dss, 'W') && ~isempty(cfg.dss.W)
+      state.W = cfg.dss.W;
     end
     
     % increase the amount of information that is displayed on screen
     % state.verbose = 3;
     % start the decomposition
-    % state   = dss(state);  % this is for the DSS toolbox version 0.6 beta
     state   = denss(state);  % this is for the DSS toolbox version 1.0
     
     mixing   = state.A;
