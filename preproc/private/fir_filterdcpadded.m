@@ -42,15 +42,15 @@
 function [ data ] = fir_filterdcpadded(b, a, data, causal, usefftfilt)
 
 % Defaults
-if nargin < 4 || isempty(usefftfilt)
+if nargin <= 4 || isempty(usefftfilt)
     usefftfilt = 0;
 end
-if nargin < 3 || isempty(causal)
+if nargin <= 3 || isempty(causal)
     causal = 0;
 end
 
 % Check arguments
-if nargin < 2
+if nargin < 3
     ft_error('Not enough input arguments.');
 end
 
