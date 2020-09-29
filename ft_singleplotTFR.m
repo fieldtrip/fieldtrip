@@ -144,6 +144,7 @@ cfg = ft_checkconfig(cfg, 'renamed',     {'channelindex',   'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'channelname',    'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'cohrefchannel',  'refchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',	   {'zparam',         'parameter'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'newfigure',      'figure'});
 
 % Set the defaults
 cfg.baseline       = ft_getopt(cfg, 'baseline',      'no');
@@ -273,11 +274,20 @@ if startsWith(dimord, 'chan_chan_') || startsWith(dimord, 'chancmb_')
   return
 end
 
+
 % Apply channel-type specific scaling
 fn = fieldnames(cfg);
-tmpcfg = keepfields(cfg, fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan') | strcmp(fn, 'channel') | strcmp(fn, 'parameter')));
-[data] = chanscale_common(tmpcfg, data);
-
+fn = setdiff(fn, {'skipscale', 'showscale', 'gridscale'}); % these are for the layout and plotting, not for CHANSCALE_COMMON
+fn = fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan') | strcmp(fn, 'channel') | strcmp(fn, 'parameter'));
+tmpcfg = keepfields(cfg, fn);
+if ~isempty(tmpcfg)
+  data = chanscale_common(tmpcfg, data);
+  % remove the scaling fields from the configuration, to prevent them from being called again in interactive mode
+  % but keep the parameter and channel field
+  cfg = removefields(cfg, setdiff(fn, {'parameter', 'channel'}));
+else
+  % do nothing
+end
 
 %% Section 3: select the data to be plotted and determine min/max range
 
@@ -365,8 +375,9 @@ end
 
 %% Section 4: do the actual plotting
 
-cla
-hold on
+% open a new figure, or add it to the existing one
+% note that in general adding a TFR to an existing one does not make sense, since they will overlap
+open_figure(keepfields(cfg, {'figure', 'clearfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
 
 zval = mean(datamatrix, 1); % over channels
 zval = reshape(zval, size(zval,2), size(zval,3));
@@ -466,7 +477,6 @@ if isempty(get(gcf, 'Name'))
 end
 
 axis tight
-hold off
 
 % Make the figure interactive
 if strcmp(cfg.interactive, 'yes')

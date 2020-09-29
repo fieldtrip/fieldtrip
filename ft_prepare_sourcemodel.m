@@ -45,34 +45,33 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 % BASEDONMNI - uses source positions from a template sourcemodel that is
 % inversely warped from MNI coordinates to the individual subjects MRI.
 % It uses the following configuration options:
-%   cfg.mri           = structure with anatomical MRI model or filename, see FT_READ_MRI
-%   cfg.warpmni       = 'yes'
-%   cfg.nonlinear     = 'no' (or 'yes'), use non-linear normalization
-%   cfg.resolution    = number (e.g. 6) of the resolution of the template MNI grid, defined in mm
-%   cfg.template      = specification of a template sourcemodel as structure, or the filename of a template sourcemodel (defined in MNI space)
+%   cfg.mri             = structure with anatomical MRI model or filename, see FT_READ_MRI
+%   cfg.nonlinear       = 'no' (or 'yes'), use non-linear normalization
+%   cfg.resolution      = number (e.g. 6) of the resolution of the template MNI grid, defined in mm
+%   cfg.template        = specification of a template sourcemodel as structure, or the filename of a template sourcemodel (defined in MNI space)
 % Either cfg.resolution or cfg.template needs to be defined; if both are defined, cfg.template prevails.
 %
 % BASEDONMRI - makes a segmentation of the individual anatomical MRI and places
 % sources in the grey matter. It uses the following configuration options:
-%   cfg.mri           = can be filename, MRI structure or segmented MRI structure
-%   cfg.threshold     = 0.1, relative to the maximum value in the segmentation
-%   cfg.smooth        = 5, smoothing in voxels
+%   cfg.mri             = can be filename, MRI structure or segmented MRI structure
+%   cfg.threshold       = 0.1, relative to the maximum value in the segmentation
+%   cfg.smooth          = 5, smoothing in voxels
 %
 % BASEDONCORTEX - places sources on the vertices of a cortical surface description
-%   cfg.headshape     = string, should be a *.fif file
+%   cfg.headshape       = string, should be a *.fif file
 %
 % BASEDONCENTROIDS - places sources on the centroids of a volumetric mesh
-%   cfg.headmodel      = volumetric mesh
-%   cfg.headmodel.type = 'simbio';
+%   cfg.headmodel       = volumetric mesh
+%   cfg.headmodel.type  = 'simbio';
 %
 % Other configuration options include
 %   cfg.unit            = string, can be 'mm', 'cm', 'm' (default is automatic)
 %   cfg.tight           = 'yes' or 'no' (default is automatic)
-%   cfg.inwardshift     = number, how much should the innermost surface be moved inward to constrain
-%                         sources to be considered inside the source compartment (default = 0)
-%   cfg.moveinward      = number, move dipoles inward to ensure a certain distance to the innermost
-%                         surface of the source compartment (default = 0)
-%   cfg.movetocentroids = 'yes' or 'no', move the dipoles to the centroids of the hexahedral 
+%   cfg.inwardshift     = number, amount to shift the innermost surface of the headmodel inward when determining
+%                         whether sources are inside or outside the source compartment (default = 0)
+%   cfg.moveinward      = number, amount to move sources inward to ensure a certain minimal distance to the innermost
+%                         surface of the headmodel (default = 0)
+%   cfg.movetocentroids = 'yes' or 'no', move the dipoles to the centroids of the hexahedral
 %                         or tetrahedral mesh (default = 'no')
 %   cfg.spherify        = 'yes' or 'no', scale the source model so that it fits inside a sperical
 %                         volume conduction model (default = 'no')
@@ -87,6 +86,20 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 %
 % The headmodel or volume conduction model can be specified as
 %   cfg.headmodel     = structure with volume conduction model or filename, see FT_PREPARE_HEADMODEL
+%
+% The cfg.inwardshift option can be used for 3D grids to specify a positive (inward)
+% or negative (outward) number to shift the innermost surface of the headmodel
+% (usually the skull) when determining whether sources are to be flagged as inside or
+% outside the source compartment. Only sources flagged as inside will be considered
+% for subsequent source reconstructions. An ourward shift can be useful for a
+% spherical or singleshell MEG headmodel. For a source model based on a cortical
+% sheet in general you want all sources to be considered inside. For a BEM headmodel
+% (EEG or MEG), there should never be any sources outside the actual source
+% compartment.
+%
+% The cfg.moveinward option can be used for a source model based on a cortical sheet
+% to push the sources inward a little bit to ensure sufficient distance to the
+% innermost surface of a BEM headmodel (EEG or MEG).
 %
 % See also FT_PREPARE_LEADFIELD, FT_PREPARE_HEADMODEL, FT_SOURCEANALYSIS,
 % FT_DIPOLEFITTING, FT_MEGREALIGN
@@ -141,8 +154,6 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'unit', 'auto', []});
 
 cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'});  % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
 cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.unit by the subsequent createsubcfg
-cfg = ft_checkconfig(cfg, 'allowedval', {'method', 'basedongrid', 'basedonpos', 'basedonshape', ...
-  'basedonmri', 'basedonmni', 'basedoncortex', 'basedonresolution', 'basedonvol', 'basedonfile','basedoncentroids'});
 
 % put the low-level options pertaining to the sourcemodel in their own field
 cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
@@ -158,8 +169,22 @@ cfg.spmversion        = ft_getopt(cfg, 'spmversion', 'spm12');
 cfg.headmodel         = ft_getopt(cfg, 'headmodel');
 cfg.sourcemodel       = ft_getopt(cfg, 'sourcemodel');
 cfg.unit              = ft_getopt(cfg, 'unit');
-cfg.method            = ft_getopt(cfg, 'method'); % empty will lead to attempted automatic detection
+cfg.method            = ft_getopt(cfg, 'method'); % the default is to do automatic detection further down
 cfg.movetocentroids   = ft_getopt(cfg, 'movetocentroids', 'no');
+
+% this option was deprecated on 12 Aug 2020
+if isfield(cfg, 'warpmni')
+  % prior to the introduction of cfg.method we used cfg.warpmni to separate between
+  % basedonmni and basedonmri, which both require cfg.mri to be present
+  if isfield(cfg, 'mri') && istrue(cfg.warpmni)
+    ft_warning('please specify cfg.method=''basedonmni'' instead of cfg.warpmni=''yes''');
+    cfg.method = 'basedonmni';
+  elseif isfield(cfg, 'mri') && ~istrue(cfg.warpmni)
+    ft_warning('please specify cfg.method=''basedonmri'' instead of cfg.warpmni=''no''');
+    cfg.method = 'basedonmri';
+  end
+  cfg = rmfield(cfg, 'warpmni');
+end
 
 % this code expects the inside to be represented as a logical array
 cfg = ft_checkconfig(cfg, 'inside2logical', 'yes');
@@ -190,10 +215,8 @@ if isempty(cfg.method)
     cfg.method = 'basedonpos'; % using user-supplied positions, which can be regular or irregular
   elseif ~isempty(cfg.headshape)
     cfg.method = 'basedonshape'; % surface mesh based on inward shifted head surface from external file
-  elseif isfield(cfg, 'mri') && ~(isfield(cfg, 'warpmni') && istrue(cfg.warpmni))
+  elseif isfield(cfg, 'mri')
     cfg.method = 'basedonmri'; % regular 3D grid, based on segmented MRI, restricted to gray matter
-  elseif isfield(cfg, 'mri') &&  (isfield(cfg, 'warpmni') && istrue(cfg.warpmni))
-    cfg.method = 'basedonmni'; % regular 3D grid, based on warped MNI template
   elseif isfield(cfg, 'headshape') && (iscell(cfg.headshape) || any(ft_filetype(cfg.headshape, {'neuromag_fif', 'freesurfer_triangle_binary', 'caret_surf', 'gifti'})))
     cfg.method = 'basedoncortex'; % cortical sheet from external software such as Caret or FreeSurfer, can also be two separate hemispheres
   elseif isfield(cfg, 'resolution')
@@ -203,6 +226,9 @@ if isempty(cfg.method)
   else
     ft_error('incorrect cfg specification for constructing a sourcemodel');
   end
+else
+  cfg = ft_checkconfig(cfg, 'allowedval', {'method', 'basedongrid', 'basedonpos', 'basedonshape', ...
+    'basedonmri', 'basedonmni', 'basedoncortex', 'basedonresolution', 'basedonvol', 'basedonfile','basedoncentroids'});
 end
 
 % these are mutually exclusive, but printing all requested methods here
@@ -296,25 +322,21 @@ if strcmp(cfg.method, 'basedonfile')
 end
 
 if isempty(cfg.unit)
-  if strcmp(cfg.method, 'basedonfile') && isfield(sourcemodel, 'unit') && ~isempty(sourcemodel.unit)
-    % take the existing source model units
-    cfg.unit = sourcemodel.unit;
-  elseif strcmp(cfg.method, 'basedonfile') && isfield(sourcemodel, 'pos') && size(sourcemodel.pos,1)>10
-    % estimate the units based on the existing source positions
-    sourcemodel = ft_determine_units(cfg.sourcemodel);
-    cfg.unit = sourcemodel.unit;
-  elseif isfield(cfg.sourcemodel, 'unit') && ~isempty(cfg.sourcemodel.unit)
+  if isfield(cfg.sourcemodel, 'unit') && ~isempty(cfg.sourcemodel.unit)
     % take the existing source model units
     cfg.unit = cfg.sourcemodel.unit;
   elseif isfield(cfg.sourcemodel, 'pos') && size(cfg.sourcemodel.pos,1)>10
     % estimate the units based on the existing source positions
     cfg.sourcemodel = ft_determine_units(cfg.sourcemodel);
     cfg.unit = cfg.sourcemodel.unit;
+  elseif strcmp(cfg.method, 'basedonmni') && ~isempty(cfg.mri.unit)
+    % take the existing MRI units
+    cfg.unit = cfg.mri.unit;
   elseif ~isempty(sens)
-    % copy the units from the sensor array
+    % take the units from the gradiometer or electrode array
     cfg.unit = sens.unit;
   elseif ~isempty(headmodel)
-    % copy the units from the volume conduction model
+    % take the units from the volume conduction model
     cfg.unit = headmodel.unit;
   else
     ft_warning('assuming "cm" as default units for source model');
@@ -595,6 +617,9 @@ switch cfg.method
       else
         fname = sprintf('standard_sourcemodel3d%dpoint%dmm.mat', floor(cfg.resolution), round(10*(cfg.resolution-floor(cfg.resolution))));
       end
+      if ~exist(fname, 'file')
+        ft_error('the MNI template grid based on the specified resolution does not exist');
+      end
     end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -604,9 +629,6 @@ switch cfg.method
     
     % get the mri
     if ischar(cfg.mri)
-      if ~exist(fname, 'file')
-        ft_error('the MNI template grid based on the specified resolution does not exist');
-      end
       mri = ft_read_mri(cfg.mri);
     else
       mri = cfg.mri;
@@ -614,8 +636,7 @@ switch cfg.method
     
     % get the template grid
     if ischar(fname)
-      mnigrid = load(fname, 'sourcemodel');
-      mnigrid = mnigrid.sourcemodel;
+      mnigrid = loadvar(fname, 'sourcemodel');
     else
       mnigrid = cfg.template;
     end
@@ -628,31 +649,29 @@ switch cfg.method
     mnigrid = fixinside(mnigrid);
     
     % spatial normalisation of mri and construction of subject specific sourcemodel positions
-    tmpcfg           = keepfields(cfg, {'spmversion', 'spmmethod'});
-    tmpcfg.nonlinear = cfg.nonlinear;
+    tmpcfg           = keepfields(cfg, {'spmversion', 'spmmethod', 'nonlinear'});
     if isfield(cfg, 'templatemri')
+      % this option is called differently for the two functions
       tmpcfg.template = cfg.templatemri;
     end
     normalise = ft_volumenormalise(tmpcfg, mri);
     
     if ~isfield(normalise, 'params') && ~isfield(normalise, 'initial')
+      % this is for older implementations of FT_VOLUMENORMALISE
       fprintf('applying an inverse warp based on a linear transformation only\n');
       sourcemodel.pos = ft_warp_apply(inv(normalise.cfg.final), mnigrid.pos);
     else
+      % the normalisation from original subject head coordinates to MNI consists of an initial linear, followed by a nonlinear transformation
+      % the reverse transformations need to be done to get from MNI to the original subject head coordinates
+      % first apply the inverse of the nonlinear transformation, followed by the inverse of the initial linear transformation
       sourcemodel.pos = ft_warp_apply(inv(normalise.initial), ft_warp_apply(normalise.params, mnigrid.pos, 'sn2individual'));
     end
-    if isfield(mnigrid, 'dim')
-      sourcemodel.dim   = mnigrid.dim;
-    end
-    if isfield(mnigrid, 'tri')
-      sourcemodel.tri   = mnigrid.tri;
-    end
-    sourcemodel.unit    = mnigrid.unit;
-    sourcemodel.inside  = mnigrid.inside;
-    sourcemodel.params  = normalise.params;
-    sourcemodel.initial = normalise.initial;
+    % copy some of the fields over from the input arguments
+    sourcemodel = copyfields(mri,       sourcemodel, {'unit', 'coordsys'});
+    sourcemodel = copyfields(mnigrid,   sourcemodel, {'dim', 'tri', 'inside'});
+    sourcemodel = copyfields(normalise, sourcemodel, {'params', 'initial'});
     if ft_datatype(mnigrid, 'parcellation')
-      % copy the boolean fields over
+      % copy the boolean fields over from the template MNI grid
       sourcemodel = copyfields(mnigrid, sourcemodel, booleanfields(mnigrid));
     end
     
@@ -665,7 +684,9 @@ switch cfg.method
 end
 
 if isfield(sourcemodel, 'unit')
-  % in most cases the source model will already be in the desired units, but e.g. for "basedonmni" it will be in 'mm'
+  % in most cases the source model will already be in the desired units, but e.g. for
+  % "basedonmni" it will be in 'mm' since in the spatial normalization the MRI and
+  % the MNI template are converted to 'mm'
   sourcemodel = ft_convert_units(sourcemodel, cfg.unit);
 else
   % the units were specified by the user or determined automatically, assign them to the source model
@@ -696,6 +717,9 @@ if strcmp(cfg.spherify, 'yes')
 end
 
 if ~isempty(cfg.moveinward)
+  if ~ismember(cfg.method, {'basedonshape', 'basedoncortex', 'basedonvol', 'basedonfile'})
+    ft_warning('cfg.moveinward is designed to work with surface based sourcemodels, not with 3D grid sourcemodels.')
+  end
   % construct a triangulated boundary of the source compartment
   [pos1, tri1] = headsurface(headmodel, [], 'inwardshift', cfg.moveinward, 'surface', 'brain');
   inside = bounding_mesh(sourcemodel.pos, pos1, tri1);
@@ -730,6 +754,12 @@ end
 % volume conduction model, i.e. inside the brain
 if ~isfield(sourcemodel, 'inside')
   sourcemodel.inside = ft_inside_headmodel(sourcemodel.pos, headmodel, 'grad', sens, 'headshape', cfg.headshape, 'inwardshift', cfg.inwardshift); % this returns a boolean vector
+else
+  if isfield(cfg, 'inwardshift') && isfield(cfg, 'template')
+    % warn about inwardshift not having an effect as inside is already specified as well
+    % warning should only be issued for templates, inwardshift can also be present for surface meshes
+    ft_warning('Inside dipole locations already determined by a template, cfg.inwardshift has no effect.')
+  end
 end
 
 if strcmp(cfg.tight, 'yes')

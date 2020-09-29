@@ -299,7 +299,24 @@ elseif ismeg
       end
 
     case  'openmeeg'
-        % don't do anything, h2em or h2mm generated later in ft_prepare_leadfield
+      % don't do anything, h2em or h2mm generated later in ft_prepare_leadfield
+
+    case 'duneuro'
+
+      %compute transfer matrix
+      if(~isfield(headmodel,'meg_transfer'))
+
+        % set coils and projections
+        coils = sens.coilpos;
+        projections = sens.coilori;
+        headmodel.driver.set_coils_and_projections(coils', projections');
+
+        % compute transfer matrix
+        cfg = [];
+        cfg.solver.reduction   = headmodel.reduction;
+        cfg.solver.intorderadd = headmodel.intorderadd;
+        headmodel.meg_transfer = headmodel.driver.compute_meg_transfer_matrix(cfg);
+      end
 
     case 'simbio'
       ft_error('MEG not yet supported with simbio');
@@ -476,7 +493,7 @@ elseif iseeg
         end
       end
     case  'openmeeg'
-        % don't do anything, h2em or h2mm generated later in ft_prepare_leadfield
+      % don't do anything, h2em or h2mm generated later in ft_prepare_leadfield
 
     case 'fns'
       if isfield(headmodel,'bnd')
@@ -500,20 +517,20 @@ elseif iseeg
       end
 
       if (isfield(headmodel,'transfer') && isfield(headmodel,'elec'))
-          if all(ismember(sens.label,headmodel.elec.label))
-              [sensmember, senslocation] = ismember(sens.label,headmodel.elec.label);
-              if (norm(sens.elecpos - headmodel.elec.elecpos(senslocation,:))<1e-8)
-                  headmodel.transfer = headmodel.transfer(senslocation,:);
-                  headmodel.elec = sens;
-              else
-                  ft_error('Electrode positions do not fit to the given transfer matrix!');
-              end
+        if all(ismember(sens.label,headmodel.elec.label))
+          [sensmember, senslocation] = ismember(sens.label,headmodel.elec.label);
+          if (norm(sens.elecpos - headmodel.elec.elecpos(senslocation,:))<1e-8)
+            headmodel.transfer = headmodel.transfer(senslocation,:);
+            headmodel.elec = sens;
           else
-              ft_error('Transfer matrix does not fit the given set of electrodes!');
+            ft_error('Electrode positions do not fit to the given transfer matrix!');
           end
+        else
+          ft_error('Transfer matrix does not fit the given set of electrodes!');
+        end
       else
-          headmodel.transfer = sb_transfer(headmodel,sens);
-          headmodel.elec = sens;
+        headmodel.transfer = sb_transfer(headmodel,sens);
+        headmodel.elec = sens;
       end
 
     case 'interpolate'

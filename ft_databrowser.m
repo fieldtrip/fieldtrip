@@ -164,6 +164,9 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'elecfile', 'elec'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'gradfile', 'grad'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'optofile', 'opto'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'channelcolormap', 'linecolor'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'anonimize', 'anonymize'}); % fix typo in previous version of the code
+cfg = ft_checkconfig(cfg, 'renamed',    {'anonymise', 'anonymize'}); % use North American and Oxford British spelling
+cfg = ft_checkconfig(cfg, 'renamed',    {'newfigure', 'figure'});
 
 % ensure that the preproc specific options are located in the cfg.preproc substructure
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
@@ -171,11 +174,11 @@ cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
 % set the defaults
 cfg.ylim            = ft_getopt(cfg, 'ylim', 'maxabs');
 cfg.artfctdef       = ft_getopt(cfg, 'artfctdef', struct);
-cfg.selectfeature   = ft_getopt(cfg, 'selectfeature', 'visual');     % string or cell-array
+cfg.selectfeature   = ft_getopt(cfg, 'selectfeature', 'visual');   % string or cell-array
 cfg.selectmode      = ft_getopt(cfg, 'selectmode', 'markartifact');
 cfg.blocksize       = ft_getopt(cfg, 'blocksize');                 % now used for both continuous and non-continuous data, defaulting done below
 cfg.preproc         = ft_getopt(cfg, 'preproc');                   % see preproc for options
-cfg.selfun          = ft_getopt(cfg, 'selfun');                    % default functions: 'simpleFFT', 'multiplotER', 'topoplotER', 'topoplotVAR', 'movieplotER'
+cfg.selfun          = ft_getopt(cfg, 'selfun');                    % default functions are 'simpleFFT', 'multiplotER', 'topoplotER', 'topoplotVAR', 'movieplotER'
 cfg.selcfg          = ft_getopt(cfg, 'selcfg');                    % defaulting done below, requires layouts/etc to be processed
 cfg.seldat          = ft_getopt(cfg, 'seldat', 'current');
 cfg.colorgroups     = ft_getopt(cfg, 'colorgroups', 'sequential');
@@ -213,6 +216,15 @@ cfg.artifactalpha   = ft_getopt(cfg, 'artifactalpha', 0.2);          % for the o
 cfg.allowoverlap    = ft_getopt(cfg, 'allowoverlap', 'no');          % for ft_fetch_data
 cfg.contournum      = ft_getopt(cfg, 'contournum', 0);               % topoplot contour lines
 cfg.trl             = ft_getopt(cfg, 'trl');
+
+% construct the low-level options as key-value pairs, these are passed to FT_READ_HEADER
+headeropt = {};
+headeropt  = ft_setopt(headeropt, 'headerformat',   ft_getopt(cfg, 'headerformat'));        % is passed to low-level function, empty implies autodetection
+headeropt  = ft_setopt(headeropt, 'readbids',       ft_getopt(cfg, 'readbids'));            % is passed to low-level function
+headeropt  = ft_setopt(headeropt, 'coordsys',       ft_getopt(cfg, 'coordsys', 'head'));    % is passed to low-level function
+headeropt  = ft_setopt(headeropt, 'coilaccuracy',   ft_getopt(cfg, 'coilaccuracy'));        % is passed to low-level function
+headeropt  = ft_setopt(headeropt, 'checkmaxfilter', ft_getopt(cfg, 'checkmaxfilter'));      % this allows to read non-maxfiltered neuromag data recorded with internal active shielding
+headeropt  = ft_setopt(headeropt, 'chantype',       ft_getopt(cfg, 'chantype', {}));        % 2017.10.10 AB required for NeuroOmega files
 
 if ~isfield(cfg, 'viewmode')
   % butterfly, vertical, component
@@ -263,7 +275,7 @@ end
 
 if strcmp(cfg.viewmode, 'component')
   % read or create the layout that will be used for the topoplots
-  tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
   if hasdata
     cfg.layout = ft_prepare_layout(tmpcfg, data);
   else
@@ -333,7 +345,7 @@ else
   cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
   cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
   % read the header from file
-  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
+  hdr = ft_read_header(cfg.headerfile, headeropt{:});
   
   if isempty(cfg.continuous)
     if hdr.nTrials==1
@@ -426,7 +438,7 @@ if ischar(cfg.ylim)
     dat = data.trial{sel}(chansel,:);
   else
     % one second of data is read from file to determine the vertical scaling
-    dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', 1, 'endsample', round(hdr.Fs), 'chanindx', chansel, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat, 'headerformat', cfg.headerformat);
+    dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', 1, 'endsample', round(hdr.Fs), 'chanindx', chansel, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat, headeropt{:});
   end % if hasdata
   % convert the data to another numeric precision, i.e. double, single or int32
   if ~isempty(cfg.precision)
@@ -550,7 +562,7 @@ elseif isempty(cfg.selfun) && isempty(cfg.selcfg)
   cfg.selcfg{6} = [];
   cfg.selcfg{6}.audiofile = ft_getopt(cfg, 'audiofile');
   cfg.selcfg{6}.videofile = ft_getopt(cfg, 'videofile');
-  cfg.selcfg{6}.anonimize = ft_getopt(cfg, 'anonimize');
+  cfg.selcfg{6}.anonymize = ft_getopt(cfg, 'anonymize');
   cfg.selfun{6} = 'audiovideo';
 end
 
@@ -570,7 +582,8 @@ opt = [];
 if hasdata
   opt.orgdata   = data;
 else
-  opt.orgdata   = [];      % this means that it will read from cfg.dataset
+  opt.orgdata   = [];        % this means that it will read from cfg.dataset
+  opt.headeropt = headeropt; % these are passed to FT_READ_HEADER and FT_READ_DATA
 end
 if strcmp(cfg.continuous, 'yes')
   opt.trialviewtype = 'segment';
@@ -612,7 +625,7 @@ end
 opt.changedchanflg = true; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
 
 % open a new figure with the specified settings
-h = open_figure(keepfields(cfg, {'newfigure', 'position', 'visible', 'renderer'}));
+h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer'}));
 
 % put appdata in figure
 setappdata(h, 'opt', opt);
@@ -1613,7 +1626,7 @@ else
 end
 
 if isempty(opt.orgdata)
-  dat = ft_read_data(cfg.datafile, 'header', opt.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', ~istrue(cfg.continuous), 'dataformat', cfg.dataformat, 'headerformat', cfg.headerformat);
+  dat = ft_read_data(cfg.datafile, 'header', opt.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', ~istrue(cfg.continuous), 'dataformat', cfg.dataformat, opt.headeropt{:});
 else
   dat = ft_fetch_data(opt.orgdata, 'header', opt.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'allowoverlap', cfg.allowoverlap);
 end

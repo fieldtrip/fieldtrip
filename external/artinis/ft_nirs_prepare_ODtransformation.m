@@ -157,8 +157,7 @@ illegalidx = cellfun(@isempty, typeidx);
 cfg.channel(illegalidx) = [];
 
 if isempty(cfg.channel)
-  warning('no valid NIRS channels found')
-  return;
+  ft_error('no valid NIRS channels found')
 end
 
 % channel indices wrt optode structure
@@ -185,14 +184,14 @@ chromophoreName = {'O2Hb' 'HHb'};
 fid = fopen(fullfile(fileparts(mfilename('fullpath')), 'private', 'Cope_ext_coeff_table.txt'));
 coefs = cell2mat(textscan(fid, '%f %f %f %f %f'));
 
-% extract all transmit combinations that are relevant here
-transmits      = sens.transmits(chanidx, :);
-transmitteridx = transmits>0;
-receiveridx    = transmits<0;
+% extract all optode combinations that are relevant here
+tra            = sens.tra(chanidx, :);
+transmitteridx = tra>0;
+receiveridx    = tra<0;
 optodeidx      = transmitteridx | receiveridx;
 
 % extract the wavelengths
-wavelengths  = sens.wavelength(transmits(transmitteridx));
+wavelengths  = sens.wavelength(tra(transmitteridx));
 wlidx = bsxfun(@minus, coefs(:, 1), wavelengths);
 
 % find the relevant channel combinations

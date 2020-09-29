@@ -11,7 +11,7 @@ cfg = [];
 cfg.method                      = 'convert';
 cfg.dataset                     = [];
 cfg.presentationfile            = './sourcedata/A2002-2-MEG-MOUS-Aud.log';
-cfg.events.writesidecar         = 'replace';
+cfg.writejson                   = 'replace';
 cfg.bidsroot                    = './bids';
 cfg.sub                         = 'A2002';
 cfg.ses                         = 'MEG';
@@ -41,10 +41,10 @@ cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/convert'))
 cfg = [];
 cfg.method                      = 'convert';
 cfg.dataset                     = 'Subject1_MP.cnt';
+cfg.datatype                    = 'eeg';
 cfg.outputfile                  = 'sub-MP_task-visual_eeg.vhdr';
-cfg.eeg.writesidecar            = 'replace';
-cfg.channels.writesidecar       = 'replace';
-cfg.events.writesidecar         = 'replace';
+cfg.writejson                   = 'replace';
+cfg.writetsv                    = 'replace';
 cfg.TaskName                    = 'visual';
 cfg.TaskDescription             = 'Visual response task';
 cfg.Instructions                = 'Press as fast with your right index finger as you see the target appear on screen.';
@@ -83,9 +83,9 @@ data = ft_preprocessing(cfg);
 
 cfg = [];
 cfg.outputfile                  = 'sub-MP_task-visual_eeg.vhdr';
-cfg.eeg.writesidecar            = 'yes';
-cfg.channels.writesidecar       = 'yes';
-cfg.events.writesidecar         = 'yes';
+cfg.datatype                    = 'eeg'; % could also be ieeg or emg
+cfg.writejson                   = 'yes';
+cfg.writetsv                    = 'yes';
 cfg.TaskName                    = 'visual';
 cfg.TaskDescription             = 'Visual response task';
 cfg.Instructions                = 'Press as fast with your right index finger as you see the target appear on screen.';
@@ -105,7 +105,7 @@ cfg.mri.StationName             = 'Sonata';
 cfg.InstitutionName             = 'Radboud University';
 cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
 
-cfg.mri.writesidecar            = 'merge';
+cfg.writejson                   = 'merge';
 data2bids(cfg)
 
 %% Example with realigned and resliced anatomical MRI data in memory
@@ -129,7 +129,6 @@ cfg.outputfile                  = 'sub-EEG_task-attention_eeg.set';
 cfg.InstitutionName             = 'Radboud University';
 cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
 data2bids(cfg)
-
 
 cfg = [];
 cfg.method                      = 'copy';
@@ -183,13 +182,11 @@ cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/mous'));
 
 cfg = [];
 cfg.dataset                     = 'sub-A2002/meg/sub-A2002_task-auditory_meg.ds';
-cfg.meg.writesidecar            = 'replace';
+cfg.writejson                   = 'replace';
 cfg.presentationfile            = 'sourcedata/meg/A2002-2-MEG-MOUS-Aud.log';
 
-cfg.meg.writesidecar            = 'replace';
-cfg.channels.writesidecar       = 'replace';
-cfg.events.writesidecar         = 'replace';
-cfg.coordsystem.writesidecar    = 'replace';
+cfg.writejson                   = 'replace';
+cfg.writetsv                    = 'replace';
 
 cfg.InstitutionName             = 'Radboud University';
 cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
@@ -218,8 +215,8 @@ cfg = [];
 cfg.dataset                     = 'sub-A2002/func/sub-A2002_task-auditory_bold.nii';
 cfg.presentationfile            = 'sourcedata/mri_task/A2002-2-fMRI-MOUS-Aud.log';
 
-cfg.mri.writesidecar            = 'merge';
-cfg.events.writesidecar         = 'replace';
+cfg.writejson                   = 'merge';
+cfg.writetsv                    = 'replace';
 
 cfg.InstitutionName             = 'Radboud University';
 cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';

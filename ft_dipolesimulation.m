@@ -166,9 +166,9 @@ end
 
 % no signal was given, set some additional defaults
 if isempty(cfg.dip.signal)
-  cfg.dip.frequency   = ft_getopt(cfg, 'frequency', ones(Ndipoles,1)*10);
-  cfg.dip.phase       = ft_getopt(cfg, 'phase', zeros(Ndipoles,1));
-  cfg.dip.amplitude   = ft_getopt(cfg, 'amplitude', ones(Ndipoles,1));
+  cfg.dip.frequency   = ft_getopt(cfg.dip, 'frequency', ones(Ndipoles,1)*10);
+  cfg.dip.phase       = ft_getopt(cfg.dip, 'phase', zeros(Ndipoles,1));
+  cfg.dip.amplitude   = ft_getopt(cfg.dip, 'amplitude', ones(Ndipoles,1));
 end
 
 if isfield(cfg.dip, 'frequency')

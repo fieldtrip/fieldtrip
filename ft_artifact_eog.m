@@ -118,7 +118,7 @@ artpadding_oldstyle  = max(ft_getopt(cfg.artfctdef.eog, 'pretim', 0), ft_getopt(
 % settings for preprocessing
 cfg.artfctdef.eog.bpfilter    = ft_getopt(cfg.artfctdef.eog, 'bpfilter',   'yes');
 cfg.artfctdef.eog.bpfreq      = ft_getopt(cfg.artfctdef.eog, 'bpfreq',     [1 15]);
-cfg.artfctdef.eog.bpfiltord   = ft_getopt(cfg.artfctdef.eog, 'bpfiltor',   4);
+cfg.artfctdef.eog.bpfiltord   = ft_getopt(cfg.artfctdef.eog, 'bpfiltord',   4);
 cfg.artfctdef.eog.bpfilttype  = ft_getopt(cfg.artfctdef.eog, 'bpfilttype', 'but');
 cfg.artfctdef.eog.hilbert     = ft_getopt(cfg.artfctdef.eog, 'hilbert',    'yes');
 

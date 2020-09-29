@@ -1,13 +1,12 @@
 function [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, endpadding)
 
-% PREPROC applies various preprocessing steps on a piece of EEG/MEG data
-% that already has been read from a data file.
+% PREPROC applies various preprocessing steps on a single piece of EEG/MEG data
+% that has been read from a data file.
 %
-% This function can serve as a subfunction for all FieldTrip modules that
-% want to preprocess the data, such as PREPROCESSING, ARTIFACT_XXX,
-% TIMELOCKANALYSIS, etc. It ensures consistent handling of both MEG and EEG
-% data and consistency in the use of all preprocessing configuration
-% options.
+% This low-level function serves as a subfunction for all FieldTrip modules that want
+% to preprocess the data, such as FT_PREPROCESSING, FT_ARTIFACT_XXX,
+% FT_TIMELOCKANALYSIS, etc. It ensures consistent handling of both MEG and EEG data
+% and consistency in the use of all preprocessing configuration options.
 %
 % Use as
 %   [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, endpadding)
@@ -27,16 +26,15 @@ function [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, en
 %   time        Ntime x 1 vector with the latency in seconds
 %   cfg         configuration structure, optionally with extra defaults set
 %
-% Note that the number of input channels and the number of output channels
-% can be different, for example when the user specifies that he/she wants
-% to add the implicit EEG reference channel to the data matrix.
+% Note that the number of input channels and the number of output channels can be
+% different, for example when the user specifies that he/she wants to add the
+% implicit EEG reference channel to the data matrix.
 %
-% The filtering of the data can introduce artifacts at the edges, hence it
-% is better to pad the data with some extra signal at the begin and end.
-% After filtering, this padding is removed and the other preprocessing
-% steps are applied to the remainder of the data. The input fields
-% begpadding and endpadding should be specified in samples. You can also
-% leave them empty, which implies that the data is not padded.
+% The filtering of the data can introduce artifacts at the edges, hence it is better
+% to pad the data with some extra signal at the begin and end. After filtering, this
+% padding is removed and the other preprocessing steps are applied to the remainder
+% of the data. The input fields begpadding and endpadding should be specified in
+% samples. You can also leave them empty, which implies that the data is not padded.
 %
 % The configuration can contain
 %   cfg.lpfilter      = 'no' or 'yes'  lowpass filter
@@ -99,19 +97,16 @@ function [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, en
 %   cfg.reref         = 'no' or 'yes' (default = 'no')
 %   cfg.refchannel    = cell-array with new EEG reference channel(s)
 %   cfg.refmethod     = 'avg', 'median', 'rest' or 'bipolar' (default = 'avg')
-%   cfg.leadfield      = leadfield
-%                     if select 'rest','leadfield' is required.
-%                     The leadfield can be a matrix (channels X sources)
-%                     which is calculated by using the forward theory, based on
-%                     the electrode montage, head model and equivalent source
-%                     model. It can also be the output of ft_prepare_leadfield.m
-%                     (e.g. lf.leadfield or lf) based on real head modal using FieldTrip.
+%   cfg.leadfield     = matrix or cell-array, this is required when refmethod is 'rest'
+%                       The leadfield can be a single matrix (channels X sources) which
+%                       is calculated by using the forward theory, based on the
+%                       electrode montage, head model and equivalent source model.
+%                       It can also be the output of FT_PREPARE_LEADFIELD based on a
+%                       realistic head model.
 %   cfg.implicitref   = 'label' or empty, add the implicit EEG reference as zeros (default = [])
 %   cfg.montage       = 'no' or a montage structure (default = 'no')
 %
 % See also FT_READ_DATA, FT_READ_HEADER
-
-% TODO implement decimation and/or resampling
 
 % Copyright (C) 2004-2012, Robert Oostenveld
 %

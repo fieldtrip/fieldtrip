@@ -81,6 +81,7 @@ cfg = ft_checkconfig(cfg, 'renamed',     {'hlcolorneg',           'highlightcolo
 cfg = ft_checkconfig(cfg, 'renamed',     {'zparam', 'parameter'});
 cfg = ft_checkconfig(cfg, 'deprecated',  {'hllinewidthseries'});
 cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam', 'yparam'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'newfigure', 'figure'});
 
 % added several forbidden options
 cfg = ft_checkconfig(cfg, 'forbidden',  {'highlight', ...
@@ -118,7 +119,7 @@ end
 % get the options that are specific for topoplotting
 cfgtopo = keepfields(cfg, {'parameter', 'marker', 'markersymbol', 'markercolor', 'markersize', 'markerfontsize', 'style', 'gridscale', 'interplimits', 'interpolation', 'contournum', 'colorbar', 'shading', 'zlim'});
 % prepare the layout, this only has to be done once
-tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
 cfgtopo.layout = ft_prepare_layout(tmpcfg, stat);
 cfgtopo.showcallinfo = 'no';
 cfgtopo.feedback = 'no';

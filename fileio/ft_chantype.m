@@ -67,9 +67,10 @@ isheader = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'F
 isdata   = isa(input, 'struct')  && ~isheader && (isfield(input, 'hdr') || isfield(input, 'grad') || isfield(input, 'elec') || isfield(input, 'opto'));
 isgrad   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'pnt')  &&  isfield(input, 'ori'); % old style
 iselec   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'pnt')  && ~isfield(input, 'ori'); % old style
-isgrad   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'coilpos')) || isgrad;             % new style
-iselec   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'elecpos')) || iselec;             % new style
-isopto   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'transceiver');
+isnirs   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'fiberpos');                       % old style
+isgrad   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'coilpos'))  || isgrad;            % new style
+iselec   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'elecpos'))  || iselec;            % new style
+isnirs   = (isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'optopos')) || isnirs;            % new style
 islabel  = isa(input, 'cell')    && ~isempty(input) && isa(input{1}, 'char');
 
 if isheader
@@ -322,7 +323,8 @@ elseif ft_senstype(input, 'ctf') && isheader
     end
   end
 
-  if isempty(origSensType)
+  if isempty(origSensType) && mean(strcmp(chantype, 'unknown'))>0.5
+    % only warn in case most of the channels are still unknown
     ft_warning('could not determine chantype from the CTF header');
   end
 

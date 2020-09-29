@@ -93,6 +93,7 @@ data = ft_checkdata(data, 'datatype', {'timelock', 'freq'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim',  'absmax',  'maxabs'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'zparam', 'parameter'});
 cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
+cfg = ft_checkconfig(cfg, 'renamed', {'newfigure', 'figure'});
 
 % set the defaults
 cfg.xlim          = ft_getopt(cfg, 'xlim',          'maxmin');
@@ -121,7 +122,7 @@ if isfield(data, 'freq')
 end
 
 % read or create the layout that will be used for plotting:
-tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
 layout = ft_prepare_layout(tmpcfg, data);
 
 % apply optional baseline correction
@@ -233,7 +234,7 @@ elseif ischar(cfg.zlim) && strcmp(cfg.zlim,'minzero')
 end
 
 % open a new figure with the specified settings
-h = open_figure(keepfields(cfg, {'newfigure', 'position', 'visible', 'renderer'}));
+h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer'}));
 set(h, 'toolbar', 'figure');
 
 if dointeractive

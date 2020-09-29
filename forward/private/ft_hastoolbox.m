@@ -170,6 +170,7 @@ url = {
   'MATNWB'        'see https://neurodatawithoutborders.github.io/matnwb/'
   'MATPLOTLIB'    'see https://nl.mathworks.com/matlabcentral/fileexchange/62729-matplotlib-perceptually-uniform-colormaps'
   'CMOCEAN'       'see https://nl.mathworks.com/matlabcentral/fileexchange/57773-matplotlib-perceptually-uniform-colormaps'
+  'HOMER3'        'see https://github.com/BUNPC/Homer3 and https://github.com/fNIRS/snirf_homer3'
   };
 
 if nargin<2
@@ -190,9 +191,9 @@ fallback_toolbox='';
 
 switch toolbox
   case 'AFNI'
-    dependency={'BrikLoad', 'BrikInfo'};
+    dependency= {'BrikLoad', 'BrikInfo'};
   case 'DSS'
-    dependency={'denss', 'dss_create_state'};
+    dependency= {'denss', 'dss_create_state'};
   case 'EEGLAB'
     dependency = 'runica';
   case 'NWAY'
@@ -423,6 +424,8 @@ switch toolbox
     dependency = {'cmocean'};
   case 'FILEEXCHANGE'
     dependency = is_subdir_in_fieldtrip_path('/external/fileexchange');
+  case 'HOMER3'
+    dependency = {'SnirfClass' 'DataClass' 'AuxClass' 'MeasListClass' 'MetaDataTagsClass' 'ProbeClass' 'StimClass'};
     
     % the following are FieldTrip modules or toolboxes
   case 'FILEIO'

@@ -97,7 +97,7 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.precision     = 'single' or 'double' (default = 'double')
 %   cfg.absdiff       = 'no' or 'yes', computes absolute derivative (i.e. first derivative then rectify)
 %
-% Prperocessing options that only apply to MEG data are
+% Preprocessing options that only apply to MEG data are
 %   cfg.coordsys      = string, 'head' or 'dewar' (default = 'head')
 %   cfg.coilaccuracy  = can be empty or a number (0, 1 or 2) to specify the accuracy (default = [])
 %
@@ -215,14 +215,9 @@ cfg.removeeog      = ft_getopt(cfg, 'removeeog', 'no');
 cfg.precision      = ft_getopt(cfg, 'precision', 'double');
 cfg.padding        = ft_getopt(cfg, 'padding', 0);          % padding is only done when filtering
 cfg.paddir         = ft_getopt(cfg, 'paddir', 'both');
-cfg.headerformat   = ft_getopt(cfg, 'headerformat');        % is passed to low-level function, empty implies autodetection
-cfg.dataformat     = ft_getopt(cfg, 'dataformat');          % is passed to low-level function, empty implies autodetection
-cfg.coordsys       = ft_getopt(cfg, 'coordsys', 'head');    % is passed to low-level function
-cfg.coilaccuracy   = ft_getopt(cfg, 'coilaccuracy');        % is passed to low-level function
-cfg.checkmaxfilter = ft_getopt(cfg, 'checkmaxfilter');      % this allows to read non-maxfiltered neuromag data recorded with internal active shielding
 cfg.montage        = ft_getopt(cfg, 'montage', 'no');
 cfg.updatesens     = ft_getopt(cfg, 'updatesens', 'no');    % in case a montage or rereferencing is specified
-cfg.chantype       = ft_getopt(cfg, 'chantype', {});        %2017.10.10 AB required for NeuroOmega files
+cfg.dataformat     = ft_getopt(cfg, 'dataformat');          % is passed to low-level function, empty implies autodetection
 
 % these options relate to the actual preprocessing, it is necessary to specify here because of padding
 cfg.dftfilter      = ft_getopt(cfg, 'dftfilter', 'no');
@@ -238,6 +233,15 @@ cfg.reref          = ft_getopt(cfg, 'reref', 'no');
 cfg.refchannel     = ft_getopt(cfg, 'refchannel', {});
 cfg.refmethod      = ft_getopt(cfg, 'refmethod', 'avg');
 cfg.implicitref    = ft_getopt(cfg, 'implicitref');
+
+% construct the low-level options as key-value pairs, these are passed to FT_READ_HEADER and FT_READ_DATA
+headeropt = {};
+headeropt  = ft_setopt(headeropt, 'headerformat',   ft_getopt(cfg, 'headerformat'));        % is passed to low-level function, empty implies autodetection
+headeropt  = ft_setopt(headeropt, 'readbids',       ft_getopt(cfg, 'readbids'));            % is passed to low-level function
+headeropt  = ft_setopt(headeropt, 'coordsys',       ft_getopt(cfg, 'coordsys', 'head'));    % is passed to low-level function
+headeropt  = ft_setopt(headeropt, 'coilaccuracy',   ft_getopt(cfg, 'coilaccuracy'));        % is passed to low-level function
+headeropt  = ft_setopt(headeropt, 'checkmaxfilter', ft_getopt(cfg, 'checkmaxfilter'));      % this allows to read non-maxfiltered neuromag data recorded with internal active shielding
+headeropt  = ft_setopt(headeropt, 'chantype',       ft_getopt(cfg, 'chantype', {}));        % 2017.10.10 AB required for NeuroOmega files
 
 if ~isfield(cfg, 'feedback')
   if strcmp(cfg.method, 'channel')
@@ -327,7 +331,7 @@ if hasdata
   cfg.trials = ft_getopt(cfg, 'trials', 'all', 1);
   
   % select trials of interest
-  tmpcfg = keepfields(cfg, {'channel', 'trials', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo'});
   data   = ft_selectdata(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
@@ -401,9 +405,7 @@ else
   cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
   
   % read the header
-  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat,...
-    'coordsys', cfg.coordsys, 'coilaccuracy', cfg.coilaccuracy,...
-    'checkmaxfilter', cfg.checkmaxfilter, 'chantype', cfg.chantype);
+  hdr = ft_read_header(cfg.headerfile, headeropt{:});
   
   % this option relates to reading over trial boundaries in a pseudo-continuous dataset
   if ~isfield(cfg, 'continuous')
@@ -589,7 +591,7 @@ else
       
       % read the raw data with padding on both sides of the trial - this
       % includes datapadding
-      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', rawindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
+      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', rawindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat, headeropt{:});
       
       % convert the data to another numeric precision, i.e. double, single or int32
       if ~isempty(cfg.precision)
@@ -709,4 +711,3 @@ data = dataout;
 ft_postamble provenance data
 ft_postamble history    data
 ft_postamble savevar    data
-

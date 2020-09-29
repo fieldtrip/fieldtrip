@@ -132,30 +132,21 @@ switch cfg.method
     if ~isfield(cfg.artfctdef.tms, 'artpadding'), cfg.artfctdef.tms.artpadding  = 0.01;        end
     if ~isfield(cfg.artfctdef.tms, 'cutoff'),     cfg.artfctdef.tms.cutoff      = 4;           end
     
-    % construct a temporary configuration that can be passed onto artifact_zvalue
-    tmpcfg                  = [];
-    tmpcfg.trl              = cfg.trl;
-    tmpcfg.artfctdef.zvalue = cfg.artfctdef.tms;
-    if isfield(cfg, 'continuous'),   tmpcfg.continuous       = cfg.continuous;    end
-    if isfield(cfg, 'dataformat'),   tmpcfg.dataformat       = cfg.dataformat;    end
-    if isfield(cfg, 'headerformat'), tmpcfg.headerformat     = cfg.headerformat;  end
-    
     % the data is either passed into the function by the user or read from file with cfg.inputfile
     hasdata = exist('data', 'var');
     
+    % construct a temporary configuration that can be passed onto artifact_zvalue
+    tmpcfg = keepfields(cfg, {'trl', 'continuous', 'dataset', 'datafile', 'headerfile', 'dataformat', 'headerformat'});
+    tmpcfg.artfctdef.zvalue = cfg.artfctdef.tms;
+    
     if hasdata
-      % read the header
-      cfg = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
-      fsample = data.fsample;
+      fsample = data.fsample; % get the sampling rate from the data structure
       [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg, data);
     else
-      cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
-      cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
-      hdr = ft_read_header(cfg.headerfile);
-      fsample = hdr.Fs;
-      tmpcfg.datafile    = cfg.datafile;
-      tmpcfg.headerfile  = cfg.headerfile;
       [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg);
+      % FT_ARTIFACT_ZVALUE will call FT_CHECKCONFIG with the dataset2files option
+      hdr = ft_read_header(tmpcfg.headerfile, 'headerformat', tmpcfg.headerformat);
+      fsample = hdr.Fs; % get the sampling rate from the file on disk
     end
     cfg.artfctdef.tms = tmpcfg.artfctdef.zvalue;
     

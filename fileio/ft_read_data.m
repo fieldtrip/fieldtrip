@@ -189,6 +189,12 @@ if ~isempty(endtrial) && mod(endtrial, 1)
   endtrial = round(endtrial);
 end
 
+if endsample<begsample
+  ft_warning('endsample is before begsample, returning empty data');
+  dat = zeros(length(chanindx), 0);
+  return
+end
+
 if strcmp(dataformat, 'compressed')
   % the file is compressed, unzip on the fly
   inflated   = true;
@@ -913,10 +919,14 @@ switch dataformat
     
   case {'homer_nirs'}
     % Homer files are MATLAB files in disguise
-    orig = load(filename, '-mat');
-    dat = orig.d(begsample:endsample, chanindx);
-    dimord = 'samples_chans';
-    
+    % see https://www.nitrc.org/plugins/mwiki/index.php/homer2:Homer_Input_Files#NIRS_data_file_format
+    nirs = load(filename, '-mat');
+    % convert it to a raw data structure according to FT_DATATYPE_RAW
+    data = homer2fieldtrip(nirs);
+    % get the data as a nchan*nsamples matrix
+    dat = ft_fetch_data(data, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx);
+    dimord = 'chans_samples';
+
   case 'itab_raw'
     if any(hdr.orig.data_type==[0 1 2])
       % big endian

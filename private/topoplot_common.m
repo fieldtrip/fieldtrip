@@ -39,7 +39,9 @@ cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'cohrefchannel' 'refchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'zparam', 'parameter'});
 
-cfg.newfigure = ft_getopt(cfg, 'newfigure', 'yes');
+% set the default for the figure, this is handled slightly different than elsewhere
+% because of ft_topoplotIC and ft_topoplotER/TFR making multiple figures
+cfg.figure = ft_getopt(cfg, 'figure', 'yes');
 
 Ndata = numel(varargin);
 if isnumeric(varargin{end})
@@ -57,12 +59,13 @@ if Ndata>1 && ~isnumeric(varargin{end})
   
   for k=1:Ndata
     
-    if k>1 && istrue(cfg.newfigure)
+    if k>1 && istrue(cfg.figure)
       % create a new figure for the additional input arguments
       % ensure that the new figure appears at the same position
       figure('Position', get(gcf, 'Position'), 'Visible', get(gcf, 'Visible'));
     end
-    if ~istrue(cfg.newfigure)
+    if ~istrue(cfg.figure)
+      % make multiple subplots for each topography
       subplot(floor(sqrt(Ndata)), ceil(sqrt(Ndata)), k);
     end
     

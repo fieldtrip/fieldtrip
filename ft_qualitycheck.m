@@ -113,9 +113,11 @@ if strcmp(cfg.analyze,'yes')
   % trial definition
   cfgdef                      = [];
   cfgdef.dataset              = cfg.dataset;
+  cfgdef.trialfun             = 'ft_trialfun_general';
   cfgdef.trialdef.triallength = 10;
   cfgdef.continuous           = 'yes';
   cfgdef                      = ft_definetrial(cfgdef);
+
   ntrials                     = size(cfgdef.trl,1)-1; % remove last trial
   timeunit                    = cfgdef.trialdef.triallength;
   
@@ -205,7 +207,6 @@ if strcmp(cfg.analyze,'yes')
     freq.grad     = info.hdr.grad;
     summary.grad  = info.hdr.grad;
   end
-  
   
   % process trial by trial
   for t = 1:ntrials

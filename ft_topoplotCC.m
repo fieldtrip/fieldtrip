@@ -81,6 +81,7 @@ freq = ft_checkdata(freq, 'cmbrepresentation', 'sparse');
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', {'foi', 'layout'});
+cfg = ft_checkconfig(cfg, 'renamed', {'newfigure', 'figure'});
 
 % set the defaults
 cfg.feedback    = ft_getopt(cfg, 'feedback',    'text');
@@ -92,10 +93,10 @@ cfg.arrowsize   = ft_getopt(cfg, 'arrowsize',   nan);     % length of the arrow 
 cfg.arrowoffset = ft_getopt(cfg, 'arrowoffset', nan);     % absolute, should be in figure units, i.e. the same units as the layout
 cfg.arrowlength = ft_getopt(cfg, 'arrowlength', 0.8);     % relative to the complete line
 cfg.linestyle   = ft_getopt(cfg, 'linestyle',   []);
-cfg.colormap    = ft_getopt(cfg, 'colormap',    colormap);
+cfg.colormap    = ft_getopt(cfg, 'colormap',    []);
 cfg.renderer    = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 
-tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
 lay = ft_prepare_layout(tmpcfg, freq);
 
 beglabel = freq.labelcmb(:,1);
@@ -124,7 +125,7 @@ else
 end
 
 % open a new figure with the specified settings
-open_figure(keepfields(cfg, {'newfigure', 'position', 'visible', 'renderer'}));
+open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer'}));
 
 hold on
 axis equal
@@ -143,7 +144,14 @@ if isnan(cfg.arrowoffset)
   ft_warning('using an arrowoffset of %f', cfg.arrowoffset);
 end
 
-rgb = cfg.colormap;
+if isempty(cfg.colormap)
+  % use the colormap of the current figure, this will create a figure in case there is none
+  rgb = colormap;
+else
+  % use the colormap specified by the user
+  rgb = cfg.colormap;
+end
+
 if ~isempty(colorparam)
   cmin = min(colorparam(:));
   cmax = max(colorparam(:));

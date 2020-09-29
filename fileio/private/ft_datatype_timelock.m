@@ -87,6 +87,10 @@ if isempty(timelock)
   return;
 end
 
+% do some sanity checks
+assert(isfield(timelock, 'time') && isfield(timelock, 'label'), 'inconsistent timelock data structure, some field is missing');
+assert(length(unique(timelock.label))==length(timelock.label), 'channel labels must be unique');
+
 % ensure consistency between the dimord string and the axes that describe the data dimensions
 timelock = fixdimord(timelock);
 

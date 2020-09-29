@@ -31,7 +31,8 @@ function [cfg] = ft_checkconfig(cfg, varargin)
 % Optional input arguments should be specified as key-value pairs and can include
 %   renamed         = {'old',  'new'}        % list the old and new option
 %   renamedval      = {'opt',  'old', 'new'} % list option and old and new value
-%   allowedval      = {'opt', 'allowed1'...} % list of allowed values for a particular option, anything else will throw an error
+%   allowedtype     = {'opt', 'allowed1', ...} % list of allowed data type classes for a particular option, anything else will throw an error
+%   allowedval      = {'opt', 'allowed1', ...} % list of allowed values for a particular option, anything else will throw an error
 %   required        = {'opt1', 'opt2', etc.} % list the required options
 %   allowed         = {'opt1', 'opt2', etc.} % list the allowed options, all other options are forbidden
 %   forbidden       = {'opt1', 'opt2', etc.} % list the forbidden options, these result in an error
@@ -44,7 +45,7 @@ function [cfg] = ft_checkconfig(cfg, varargin)
 %   checksize       = 'yes', 'no'            % remove large fields from the cfg
 %   trackconfig     = 'on', 'off'            % start/end config tracking
 %
-% See also FT_CHECKDATA, FT_DEFAULTS
+% See also FT_CHECKDATA, FT_CHECKOPT, FT_DEFAULTS
 
 % Copyright (C) 2007-2020, Robert Oostenveld, Saskia Haegens
 %
@@ -73,6 +74,7 @@ deprecated      = ft_getopt(varargin, 'deprecated');
 unused          = ft_getopt(varargin, 'unused');
 forbidden       = ft_getopt(varargin, 'forbidden');
 renamedval      = ft_getopt(varargin, 'renamedval');
+allowedtype     = ft_getopt(varargin, 'allowedtype');
 allowedval      = ft_getopt(varargin, 'allowedval');
 createsubcfg    = ft_getopt(varargin, 'createsubcfg');
 createtopcfg    = ft_getopt(varargin, 'createtopcfg');
@@ -229,16 +231,13 @@ if ~isempty(forbidden)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% check for allowed values, give error if non-allowed value is specified
+% check for allowed types and values, give error if incorrect
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~isempty(allowedval) && isfield(cfg, allowedval{1}) ...
-    && ~any(strcmp(cfg.(allowedval{1}), allowedval(2:end)))
-  s = ['The only allowed values for cfg.' allowedval{1} ' are: '];
-  for k = 2:numel(allowedval)
-    s = [s allowedval{k} ', '];
-  end
-  s = s(1:end-2); % strip last comma
-  ft_error(s);
+if ~isempty(allowedtype)
+  ft_checkopt(cfg, allowedtype{1}, allowedtype(2:end), {});
+end
+if ~isempty(allowedval)
+  ft_checkopt(cfg, allowedval{1}, {}, allowedval(2:end));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

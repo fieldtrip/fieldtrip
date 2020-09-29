@@ -274,6 +274,7 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'location', 'interactive', 'auto'});
 cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'coordsys', 'inputcoord', 'inputcoordsys', 'coordinates'});
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2837
 cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
+cfg = ft_checkconfig(cfg, 'renamed', {'newfigure', 'figure'});
 
 if isfield(cfg, 'atlas') && ~isempty(cfg.atlas)
   % the atlas lookup requires the specification of the coordsys
@@ -712,7 +713,7 @@ end
 %% start building the figure
 
 % open a new figure with the specified settings
-h = open_figure(keepfields(cfg, {'newfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
+h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
 set(h, 'color', [1 1 1]);
 
 %% set color and opacity mapping for this figure

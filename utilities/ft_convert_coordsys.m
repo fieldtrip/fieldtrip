@@ -366,7 +366,7 @@ if method>0
   end
   if ~any(ismember(object.coordsys, {'acpc', 'spm', 'mni', 'fsaverage', 'tal'}))
     % this constraint could be relaxed if we would know that the template is expressed in another coordinate system
-    ft_error('affine or non-linear transformation is only supported for data in an SPM-like coordinate systems');
+%     ft_error('affine or non-linear transformation is only supported for data in an SPM-like coordinate systems');
   end
   
   % this requires SPM to be on the path. However, this is not the proper place to
@@ -378,35 +378,33 @@ end
 
 if method==1
   % use spm_affreg
-  
-  switch lower(spm('ver'))
-    case 'spm2'
-      if isdeployed
-        if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using method==1'); end
-      else
-        templatefile = fullfile(spm('Dir'),'templates','T1.mnc');
-      end
-      
-    case 'spm8'
-      if isdeployed
-        if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using method==1'); end
-      else
-        templatefile = fullfile(spm('Dir'),'templates','T1.nii');
-      end
-      
-    case 'spm12'
-      if isdeployed
-        if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using method==1'); end
-      else
-        templatefile = fullfile(spm('Dir'),'toolbox','OldNorm','T1.nii');
-        if ~exist('spm_affreg', 'file')
-          addpath(fullfile(spm('Dir'),'toolbox','OldNorm'));
+  if isempty(templatefile)
+    switch lower(spm('ver'))
+      case 'spm2'
+        if isdeployed
+          if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using method==1'); end
+        else
+          templatefile = fullfile(spm('Dir'),'templates','T1.mnc');
         end
-      end
-      fprintf('using ''OldNorm'' affine registration\n');
-      
-    otherwise
-      ft_error('unsupported SPM version');
+      case 'spm8'
+        if isdeployed
+          if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using method==1'); end
+        elseif isempty(templatefile)
+          templatefile = fullfile(spm('Dir'),'templates','T1.nii');
+        end
+      case 'spm12'
+        if isdeployed
+          if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using method==1'); end
+        else
+          templatefile = fullfile(spm('Dir'),'toolbox','OldNorm','T1.nii');
+          if ~exist('spm_affreg', 'file')
+            addpath(fullfile(spm('Dir'),'toolbox','OldNorm'));
+          end
+        end
+        fprintf('using ''OldNorm'' affine registration\n');
+      otherwise
+        ft_error('unsupported SPM version');
+    end
   end
   template = ft_read_mri(templatefile);
   
@@ -433,36 +431,34 @@ if method==1
   
 elseif method==2
   % use spm_normalise
-  
-  switch lower(spm('ver'))
-    case 'spm2'
-      if isdeployed
-        if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using method==2'); end
-      else
-        templatefile = fullfile(spm('Dir'),'templates','T1.mnc');
-      end
-      
-    case 'spm8'
-      if isdeployed
-        if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using method==2'); end
-      else
-        templatefile = fullfile(spm('Dir'),'templates','T1.nii');
-      end
-      
-    case 'spm12'
-      % this uses the 'OldNorm' functionality, so the path needs to be added, can only be done if non-deployed.
-      if isdeployed
-        if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using method==2'); end
-      else
-        templatefile = fullfile(spm('Dir'),'toolbox','OldNorm','T1.nii');
-        if ~exist('spm_normalise', 'file')
-          addpath(fullfile(spm('Dir'),'toolbox','OldNorm'));
+  if isempty(templatefile)
+    switch lower(spm('ver'))
+      case 'spm2'
+        if isdeployed
+          if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using method==2'); end
+        else
+          templatefile = fullfile(spm('Dir'),'templates','T1.mnc');
         end
-      end
-      fprintf('using ''OldNorm'' normalisation\n');
-      
-    otherwise
-      ft_error('unsupported SPM version');
+      case 'spm8'
+        if isdeployed
+          if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using method==2'); end
+        else
+          templatefile = fullfile(spm('Dir'),'templates','T1.nii');
+        end
+      case 'spm12'
+        % this uses the 'OldNorm' functionality, so the path needs to be added, can only be done if non-deployed.
+        if isdeployed
+          if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using method==2'); end
+        else
+          templatefile = fullfile(spm('Dir'),'toolbox','OldNorm','T1.nii');
+          if ~exist('spm_normalise', 'file')
+            addpath(fullfile(spm('Dir'),'toolbox','OldNorm'));
+          end
+        end
+        fprintf('using ''OldNorm'' normalisation\n');
+      otherwise
+          ft_error('unsupported SPM version');
+    end
   end
   template = ft_read_mri(templatefile);
   

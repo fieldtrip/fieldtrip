@@ -9,7 +9,7 @@ function [dataout] = ft_interpolatenan(cfg, datain)
 % where cfg is a configuration structure and the input data is obtained from FT_PREPROCESSING.
 %
 % The configuration should contain
-%   cfg.method      = string, interpolation method, see HELP INTERP1 (default = 'linear')
+%   cfg.method      = string, interpolation method, see INTERP1 (default = 'linear')
 %   cfg.prewindow   = value, length of data prior to interpolation window, in seconds (default = 1)
 %   cfg.postwindow  = value, length of data after interpolation window, in seconds (default = 1)
 %   cfg.feedback    = string, 'no', 'text', 'textbar', 'gui' (default = 'text')
@@ -74,12 +74,11 @@ end
 datain = ft_checkdata(datain, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
 % check if the input is valid
-cfg = ft_checkconfig(cfg, 'allowedval', {'method', 'nearest', 'linear', 'spline', 'pchip', 'cubic', 'v5cubic', 'makima'});
 cfg = ft_checkopt(cfg, 'prewindow', 'numericscalar');
 cfg = ft_checkopt(cfg, 'postwindow', 'numericscalar');
 
 % get the options
-cfg.method      = ft_getopt(cfg, 'method',    'linear'); % default is linear
+cfg.method      = ft_getopt(cfg, 'method',    'linear'); % default is linear, can be 'nearest', 'linear', 'spline', 'pchip', 'cubic', 'v5cubic', 'makima'
 cfg.prewindow   = ft_getopt(cfg, 'prewindow',  1);       % default is 1 second
 cfg.postwindow  = ft_getopt(cfg, 'postwindow', 1);       % default is 1 seconds
 cfg.feedback    = ft_getopt(cfg, 'feedback', 'etf');

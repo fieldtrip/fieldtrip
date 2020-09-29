@@ -1,13 +1,15 @@
 function [sens] = ft_datatype_sens(sens, varargin)
 
-% FT_DATATYPE_SENS describes the FieldTrip structure that represents an EEG, ECoG, or
-% MEG sensor array. This structure is commonly called "elec" for EEG, "grad" for MEG,
-% "opto" for NIRS, or general "sens" for either one.
+% FT_DATATYPE_SENS describes the FieldTrip structure that represents an MEG, EEG,
+% sEEG, ECoG, or NIRS sensor array. This structure is commonly called "grad" for MEG,
+% "elec" for EEG and intranial EEG, "opto" for NIRS, or in general "sens" if it could
+% be any one.
 %
 % For all sensor types a distinction should be made between the channel (i.e. the
 % output of the transducer that is A/D converted) and the sensor, which may have some
-% spatial extent. E.g. with EEG you can have a bipolar channel, where the position of
-% the channel can be represented as in between the position of the two electrodes.
+% spatial extent. For example in MEG gradiometers are comprised of multiple coils and
+% with EEG you can have a bipolar channel, where the position of the channel can be
+% represented as in between the position of the two electrodes.
 %
 % The structure for MEG gradiometers and/or magnetometers contains
 %    sens.label      = Mx1 cell-array with channel labels
@@ -18,9 +20,7 @@ function [sens] = ft_datatype_sens(sens, varargin)
 %    sens.tra        = MxN matrix to combine coils into channels
 %    sens.balance    = structure containing info about the balancing, See FT_APPLY_MONTAGE
 % and optionally
-%    sens.chanposold = Mx3 matrix with original channel positions (in case
-%                      sens.chanpos has been updated to contain NaNs, e.g.
-%                      after ft_componentanalysis)
+%    sens.chanposold = Mx3 matrix with original channel positions (in case sens.chanpos has been updated to contain NaNs, e.g. after FT_COMPONENTANALYSIS)
 %    sens.chanoriold = Mx3 matrix with original channel orientations
 %    sens.labelold   = Mx1 cell-array with original channel labels
 %
@@ -38,10 +38,8 @@ function [sens] = ft_datatype_sens(sens, varargin)
 %    sens.optopos       = Nx3 matrix with the position of individual optodes
 %    sens.optotype      = Nx1 cell-array with information about the type of optode (receiver or transmitter)
 %    sens.optolabel     = Nx1 cell-array with optode labels
-%    sens.transmits     = NxK matrix, boolean, where N is the number of optodes and K the number of wavelengths. Specifies what optode is transmitting at what wavelength (or nothing at all, which indicates that it is a receiver).
 %    sens.wavelength    = 1xK vector of all wavelengths that were used
-%    sens.laserstrength = 1xK vector of the strength of the emitted light of the lasers
-%    sens.tra           = MxN matrix, boolean, contains information about how receiver and transmitter are combined to form channels
+%    sens.tra           = MxN matrix that specifies for each of the M channels which of the N optodes transmits at which wavelength (positive integer from 1 to K), or receives (negative ingeger from 1 to K)
 %
 % The following fields apply to MEG, EEG, sEEG and ECoG
 %    sens.chantype = Mx1 cell-array with the type of the channel, see FT_CHANTYPE
@@ -52,9 +50,12 @@ function [sens] = ft_datatype_sens(sens, varargin)
 %    sens.fid  = structure with fiducial information
 %
 % Historical fields:
-%    pnt, pos, ori, pnt1, pnt2, fiberpos, fibertype, fiberlabel, transceiver
+%    pnt, pos, ori, pnt1, pnt2, fiberpos, fibertype, fiberlabel, transceiver, transmits, laserstrength
 %
 % Revision history:
+% (2020/latest) Updated the specification of the NIRS sensor definition.
+%   Dropped the laserstrength and renamed transmits into tra for consistency.
+%
 % (2019/latest) Updated the specification of the NIRS sensor definition.
 %   Use "opto" instead of "fibers", see http://bit.ly/33WaqWU for details.
 %
@@ -142,7 +143,7 @@ if ~isempty(distance) && ~any(strcmp(distance, {'m' 'dm' 'cm' 'mm'}))
 end
 
 if strcmp(version, 'latest')
-  version = '2019';
+  version = '2020';
 end
 
 if isempty(sens)
@@ -152,17 +153,46 @@ end
 % this is needed further down
 nchan = length(sens.label);
 
-% there are many cases which deal with either eeg or meg
-ismeg = ft_senstype(sens, 'meg');
+% there are many cases which are MEG, EEG or NIRS specific
+ismeg  = ft_senstype(sens, 'meg');
+iseeg  = ft_senstype(sens, 'eeg');
+isnirs = ft_senstype(sens, 'nirs');
 
 switch version
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  case '2020'
+    % update it to the previous standard version
+    new_argin = ft_setopt(varargin, 'version', '2019');
+    sens      = ft_datatype_sens(sens, new_argin{:});
+    
+    if isnirs
+      sens = renamefields(sens, 'transmits', 'tra'); % this makes it more consistent with EEG and MEG
+      sens = removefields(sens, {'laserstrength'});
+      
+      if isfield(sens, 'optotype') && isfield(sens, 'tra')
+        % the read_artinis_oxy3 file returns the wrong sign for the receivers and transmitters
+        % but since it is p-code, it cannot be fixed
+        correctT = all(sens.tra(:, strcmp(sens.optotype, 'transmitter'))>=0, 'all');
+        correctR = all(sens.tra(:, strcmp(sens.optotype, 'receiver'   ))<=0, 'all');
+        if ~correctT
+          ft_warning('flipping sign for transmitters');
+          sens.tra(:, strcmp(sens.optotype, 'transmitter')) = -sens.tra(:, strcmp(sens.optotype, 'transmitter'));
+        end
+        if ~correctR
+          ft_warning('flipping sign for receivers');
+          sens.tra(:, strcmp(sens.optotype, 'receiver')) = -sens.tra(:, strcmp(sens.optotype, 'receiver'));
+        end
+      end
+      
+    end % ifnirs
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case '2019'
     % update it to the previous standard version
     new_argin = ft_setopt(varargin, 'version', '2016');
     sens      = ft_datatype_sens(sens, new_argin{:});
     
-    if isfield(sens, 'fiberpos') || isfield(sens, 'optopos')
+    if isnirs
       % rename some NIRS field names
       sens = renamefields(sens, 'fiberpos', 'optopos');
       sens = renamefields(sens, 'fibertype', 'optotype');
@@ -173,7 +203,7 @@ switch version
       % especially the chanunit field needs some careful thought when converting between optical densities and chromophore concentrations.
       sens = removefields(sens, {'chantype', 'chanunit'});
     end
-
+    
     % ensure all positions are represented as 3D, not 2D
     fn = {'chanpos', 'optopos', 'elecpos', 'coilpos'};
     for i=1:numel(fn)
@@ -191,27 +221,27 @@ switch version
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case '2016'
-
     % update it to the previous standard version
-    sens = ft_datatype_sens(sens, 'version', '2011v2');
-
+    new_argin = ft_setopt(varargin, 'version', '2011v2');
+    sens      = ft_datatype_sens(sens, new_argin{:});
+    
     % rename from org to old (reverse = false)
     sens = fixoldorg(sens, false);
-
+    
     % ensure that all numbers are represented in double precision
     % this only affects the top-level fields and does not recurse
     sens = ft_struct2double(sens, 1);
-
+    
     % in version 2011v2 this was optional, now it is required
     if ~isfield(sens, 'chantype') || all(strcmp(sens.chantype, 'unknown'))
       sens.chantype = ft_chantype(sens);
     end
-
+    
     % in version 2011v2 this was optional, now it is required
     if ~isfield(sens, 'chanunit') || all(strcmp(sens.chanunit, 'unknown'))
       sens.chanunit = ft_chanunit(sens);
     end
-
+    
     if ~isempty(distance)
       % update the units of distance, this also updates the tra matrix
       sens = ft_convert_units(sens, distance);
@@ -219,7 +249,7 @@ switch version
       % determine the default, this may be needed to set the scaling
       distance = sens.unit;
     end
-
+    
     if ~isempty(amplitude) && isfield(sens, 'tra')
       % update the tra matrix for the units of amplitude, this ensures that
       % the leadfield values remain consistent with the units
@@ -255,14 +285,14 @@ switch version
         amplitude = 'unknown';
       end
     end
-
+    
     % perform some sanity checks
     if ismeg
       sel_m  = ~cellfun(@isempty, regexp(sens.chanunit, '/m$'));
       sel_dm = ~cellfun(@isempty, regexp(sens.chanunit, '/dm$'));
       sel_cm = ~cellfun(@isempty, regexp(sens.chanunit, '/cm$'));
       sel_mm = ~cellfun(@isempty, regexp(sens.chanunit, '/mm$'));
-
+      
       if     strcmp(sens.unit, 'm') && (any(sel_dm) || any(sel_cm) || any(sel_mm))
         ft_error('inconsistent units in input gradiometer');
       elseif strcmp(sens.unit, 'dm') && (any(sel_m) || any(sel_cm) || any(sel_mm))
@@ -272,9 +302,9 @@ switch version
       elseif strcmp(sens.unit, 'mm') && (any(sel_m) || any(sel_dm) || any(sel_cm))
         ft_error('inconsistent units in input gradiometer');
       end
-
+      
       if ~strcmp(amplitude, 'unknown') && ~strcmp(distance, 'unknown')
-
+        
         % the default should be "amplitude/distance" for neuromag and "amplitude" for all others
         if isempty(scaling)
           if ft_senstype(sens, 'neuromag') && ~any(contains(sens.chanunit, '/'))
@@ -285,7 +315,7 @@ switch version
             scaling = 'amplitude';
           end
         end
-
+        
         % update the gradiometer scaling
         if strcmp(scaling, 'amplitude') && isfield(sens, 'tra')
           for i=1:nchan
@@ -309,7 +339,7 @@ switch version
               ft_warning('unexpected channel unit "%s" in channel %d', sens.chanunit{i}, i);
             end % if
           end % for nchan
-
+          
         elseif strcmp(scaling, 'amplitude/distance') && isfield(sens, 'tra')
           for i=1:nchan
             if strcmp(sens.chanunit{i}, amplitude)
@@ -331,10 +361,10 @@ switch version
               ft_warning('unexpected channel unit "%s" in channel %d', sens.chanunit{i}, i);
             end % if
           end % for nchan
-
+          
         end % if strcmp scaling
       end % if amplitude and scaling are not unknown
-
+      
     else
       sel_m  = ~cellfun(@isempty, regexp(sens.chanunit, '/m$'));
       sel_dm = ~cellfun(@isempty, regexp(sens.chanunit, '/dm$'));
@@ -343,37 +373,37 @@ switch version
       if any(sel_m | sel_dm | sel_cm | sel_mm)
         ft_error('scaling of amplitude/distance has not been considered yet for EEG');
       end
-
+      
     end % if iseeg or ismeg
-
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case '2011v2'
-
+    
     % rename from old to org (reverse = true)
     sens = fixoldorg(sens, true);
-
+    
     if ~isempty(amplitude) || ~isempty(distance) || ~isempty(scaling)
       ft_warning('amplitude, distance and scaling are not supported for version "%s"', version);
     end
-
+    
     % This speeds up subsequent calls to ft_senstype and channelposition.
     % However, if it is not more precise than MEG or EEG, don't keep it in
     % the output (see further down).
     if ~isfield(sens, 'type')
       sens.type = ft_senstype(sens);
     end
-
+    
     if isfield(sens, 'pnt')
       if ismeg
         % sensor description is a MEG sensor-array, containing oriented coils
         sens.coilpos = sens.pnt; sens = rmfield(sens, 'pnt');
         sens.coilori = sens.ori; sens = rmfield(sens, 'ori');
       else
-        % sensor description is something else, EEG/ECoG etc
+        % sensor description is something else, EEG/ECoG/sEEG, etc
         sens.elecpos = sens.pnt; sens = rmfield(sens, 'pnt');
       end
     end
-
+    
     if ~isfield(sens, 'chanpos')
       if ismeg
         % sensor description is a MEG sensor-array, containing oriented coils
@@ -402,7 +432,7 @@ switch version
         end
       end
     end
-
+    
     if ~isfield(sens, 'chantype') || all(strcmp(sens.chantype, 'unknown'))
       if ismeg
         sens.chantype = ft_chantype(sens);
@@ -410,12 +440,12 @@ switch version
         % for EEG it is not required
       end
     end
-
+    
     if ~isfield(sens, 'unit')
       % this should be done prior to calling ft_chanunit, since ft_chanunit uses this for planar neuromag channels
       sens = ft_determine_units(sens);
     end
-
+    
     if ~isfield(sens, 'chanunit') || all(strcmp(sens.chanunit, 'unknown'))
       if ismeg
         sens.chanunit = ft_chanunit(sens);
@@ -423,13 +453,13 @@ switch version
         % for EEG it is not required
       end
     end
-
+    
     if any(strcmp(sens.type, {'meg', 'eeg', 'magnetometer', 'electrode', 'unknown'}))
       % this is not sufficiently informative, so better remove it
       % see also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1806
       sens = rmfield(sens, 'type');
     end
-
+    
     if size(sens.chanpos,1)~=length(sens.label) || ...
         isfield(sens, 'tra') && size(sens.tra,1)~=length(sens.label) || ...
         isfield(sens, 'tra') && isfield(sens, 'elecpos') && size(sens.tra,2)~=size(sens.elecpos,1) || ...
@@ -439,13 +469,13 @@ switch version
         isfield(sens, 'chanori') && size(sens.chanori,1)~=length(sens.label)
       ft_error('inconsistent number of channels in sensor description');
     end
-
+    
     if ismeg
       % ensure that the magnetometer/gradiometer balancing is specified
       if ~isfield(sens, 'balance') || ~isfield(sens.balance, 'current')
         sens.balance.current = 'none';
       end
-
+      
       % try to add the chantype and chanunit to the CTF G1BR montage
       if isfield(sens, 'balance') && isfield(sens.balance, 'G1BR') && ~isfield(sens.balance.G1BR, 'chantype')
         sens.balance.G1BR.chantypeorg = repmat({'unknown'}, size(sens.balance.G1BR.labelorg));
@@ -460,7 +490,7 @@ switch version
         sens.balance.G1BR.chantypenew(sel1) = sens.chantype(sel2);
         sens.balance.G1BR.chanunitnew(sel1) = sens.chanunit(sel2);
       end
-
+      
       % idem for G2BR
       if isfield(sens, 'balance') && isfield(sens.balance, 'G2BR') && ~isfield(sens.balance.G2BR, 'chantype')
         sens.balance.G2BR.chantypeorg = repmat({'unknown'}, size(sens.balance.G2BR.labelorg));
@@ -475,7 +505,7 @@ switch version
         sens.balance.G2BR.chantypenew(sel1) = sens.chantype(sel2);
         sens.balance.G2BR.chanunitnew(sel1) = sens.chanunit(sel2);
       end
-
+      
       % idem for G3BR
       if isfield(sens, 'balance') && isfield(sens.balance, 'G3BR') && ~isfield(sens.balance.G3BR, 'chantype')
         sens.balance.G3BR.chantypeorg = repmat({'unknown'}, size(sens.balance.G3BR.labelorg));
@@ -491,11 +521,11 @@ switch version
         sens.balance.G3BR.chanunitnew(sel1) = sens.chanunit(sel2);
       end
     end
-
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   otherwise
     ft_error('converting to version %s is not supported', version);
-
+    
 end % switch
 
 % this makes the display with the "disp" command look better

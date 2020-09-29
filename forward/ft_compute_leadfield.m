@@ -55,6 +55,7 @@ function [lf] = ft_compute_leadfield(dippos, sens, headmodel, varargin)
 %   multiple concentric spheres (up to 4 spheres)
 %   leadfield interpolation using a precomputed sourcemodel
 %   boundary element method (BEM)
+%   finite element method (FEM)
 %
 % See also FT_PREPARE_VOL_SENS, FT_HEADMODEL_ASA, FT_HEADMODEL_BEMCP,
 % FT_HEADMODEL_CONCENTRICSPHERES, FT_HEADMODEL_DIPOLI, FT_HEADMODEL_HALFSPACE,
@@ -271,13 +272,13 @@ elseif ismeg
 
       dsm         = ft_getopt(varargin, 'dsm');
       nonadaptive = ft_getopt(varargin, 'nonadaptive');
-      
+
       [h2sens,ds2sens] = ft_sensinterp_openmeeg(dippos, headmodel, sens);
       if isempty(dsm)
         dsm            = ft_sysmat_openmeeg(dippos, headmodel, sens, nonadaptive);
       end
       lf               = ds2sens + h2sens*headmodel.mat*dsm;
-     
+
     case {'infinite_magneticdipole', 'infinite'}
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % magnetic dipole instead of electric (current) dipole in an infinite vacuum
@@ -320,6 +321,31 @@ elseif ismeg
         % only single dipole
         lf = current_dipole(dippos, coilpos, coilori);
       end
+
+      if isfield(sens, 'tra')
+        % construct the channels from a linear combination of all magnetometer coils
+        lf = sens.tra * lf;
+      end
+
+    case {'duneuro'}
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      % finite element method as implemented in software duneuro
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+      %TODO: involve unit checking
+
+      % compute secondary leadfield numerically
+      lf = leadfield_duneuro(dippos, headmodel);
+
+      % compute primary B-field analytically
+      mu = 4*pi*1e-4; %unit: Tmm/A
+      index = repmat(1:size(dippos,1),3,1);
+      index = index(:);
+      dipoles = [dippos(index,:) repmat(eye(3),size(dippos,1),1)];
+      Bp = compute_B_primary(sens.coilpos, dipoles, sens.coilori);
+
+      % compute full B-field
+      lf = mu/(4*pi) * (Bp - lf);
 
       if isfield(sens, 'tra')
         % construct the channels from a linear combination of all magnetometer coils
@@ -436,13 +462,13 @@ elseif iseeg
 
       dsm         = ft_getopt(varargin, 'dsm');
       nonadaptive = ft_getopt(varargin, 'nonadaptive');
-      
+
       [h2sens,ds2sens] = ft_sensinterp_openmeeg(dippos, headmodel, sens);
       if isempty(dsm)
         dsm            = ft_sysmat_openmeeg(dippos, headmodel, sens, nonadaptive);
       end
       lf               = ds2sens + h2sens*headmodel.mat*dsm;
-      
+
     case {'infinite_currentdipole' 'infinite'}
       lf = eeg_infinite_dipole(dippos, sens.elecpos, headmodel);
 
@@ -462,6 +488,11 @@ elseif iseeg
       ft_hastoolbox('simbio', 1);
       % note that the electrode information is contained in the headmodel (thanks to ft_prepare_vol_sens)
       lf = leadfield_simbio(dippos, headmodel);
+
+
+    case 'duneuro'
+      % note that the electrode information is contained in the headmodel
+      lf = leadfield_duneuro(dippos, headmodel);
 
     case 'metufem'
       p3 = zeros(Ndipoles * 3, 6);

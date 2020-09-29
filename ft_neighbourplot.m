@@ -84,6 +84,7 @@ end
 cfg = ft_checkconfig(cfg, 'renamed', {'elecfile', 'elec'});
 cfg = ft_checkconfig(cfg, 'renamed', {'gradfile', 'grad'});
 cfg = ft_checkconfig(cfg, 'renamed', {'optofile', 'opto'});
+cfg = ft_checkconfig(cfg, 'renamed', {'newfigure', 'figure'});
 
 % set the defaults
 cfg.enableedit = ft_getopt(cfg, 'enableedit', 'no');
@@ -136,7 +137,7 @@ else
 end
 
 % open a new figure with the specified settings
-hf = open_figure(keepfields(cfg, {'newfigure', 'position', 'visible', 'renderer'}));
+hf = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer'}));
 
 axis equal
 axis vis3d

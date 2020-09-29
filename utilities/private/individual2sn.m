@@ -38,7 +38,7 @@ function [warped]= individual2sn(P, input)
 % $Id$
 
 if isfield(P, 'Tr')
-  % this is an old-style representation of the parameters,
+  % this is an old-style representation of the parameters
   
   % check for a sufficiently recent version of SPM
   if ~ft_hastoolbox('spm')
@@ -61,7 +61,7 @@ if isfield(P, 'Tr')
   [iy(:,:,:,1), iy(:,:,:,2), iy(:,:,:,3)] = spm_invdef(Def{1},Def{2},Def{3},VT.dim(1:3),inv(VT.mat),M);
   
 else
-  % this requires spm12 on the path
+  % this is a new- or a mars-style representation of the parameters, it requires spm12 on the path
   ft_hastoolbox('spm12', 1);
 
   fprintf('creating the deformation field and writing it to a temporary file\n');
@@ -72,7 +72,7 @@ else
   V.dat  = file_array(fname, P.image(1).dim(1:3), [spm_type('float32') spm_platform('bigend')], 0, 1, 0);
   V.mat  = P.image(1).mat;
   V.mat0 = P.image(1).mat;
-  V.descrip = 'dummy volume';
+  V.descrip = 'Dummy volume';
   create(V);
   V.dat(:) = 0;
   P.image(1).private = V;

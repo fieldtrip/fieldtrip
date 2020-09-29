@@ -80,8 +80,17 @@ if (ischar(refindx) && strcmp(refindx, 'all')) || isempty(refindx)
 end
 
 % do not allow anything else than a scalar, or 1:nchan as refindx
-if numel(refindx)~=1 && numel(refindx)~=size(tra,1)
-  error('mi can only be computed using a single, or all channels as reference');
+if numel(refindx)~=1 && numel(refindx)==size(tra,1)
+  % ensure column
+  refindx = refindx(:);
+elseif numel(refindx)~=1 && numel(refindx)~=size(tra,1)
+  if ~conditional && isempty(featureindx)
+    % this is for plain mi, which currently allows for more than 1 single
+    % ref
+    refindx = refindx(:)'; % ensure row
+  else
+    error('this variant of mi can only be computed using a single, or all channels as reference');
+  end
 end
 
 switch method
@@ -205,15 +214,16 @@ switch method
       if isempty(sourcelags)
         sourcelags = lags;
       end
-      output = zeros(numel(refindx), nchans, numel(sourcelags), numel(lags)) + nan;  
+      output = zeros(size(refindx,1), nchans, numel(sourcelags), numel(lags)) + nan;  
     else
-      output = zeros(numel(refindx), nchans, numel(lags)) + nan;
+      output = zeros(size(refindx,1), nchans, numel(lags)) + nan;
     end
     
     if precondition
       finitevalstmp = sum(isfinite(input))==size(input,1);
       input(:,finitevalstmp) = copnorm(input(:,finitevalstmp)')';
       input(:,~finitevalstmp) = nan;
+      finitevals = isfinite(input);
     end
     
     % for each lag if combinelags is false
@@ -231,10 +241,16 @@ switch method
         
         end1 = beg1+n1-1;
         end2 = beg2+n1-1;
-        for p = 1:numel(refindx)
-          tmpsource = nan(sum(tra(refindx(p),:)),n);
-          tmpsource(:, beg1:end1) = input(tra(refindx(p),:), beg2:end2);
+        for p = 1:size(refindx,1)
           
+          if ~isequal(tra, eye(size(tra,1)))
+            tmpsource = nan(sum(tra(refindx(p),:)),n);
+            tmpsource(:, beg1:end1) = input(tra(refindx(p),:), beg2:end2);
+          else 
+            tmpsource = nan(size(refindx,2),n);
+            tmpsource(:, beg1:end1) = input(refindx(p,:), beg2:end2);
+          end
+            
           finitevals2 = sum(finitevals,1)&sum(isfinite(tmpsource),1); % this conservatively takes only the non-nan samples across all input data channels
           
           if ~precondition
@@ -614,7 +630,7 @@ switch method
   otherwise
 end
 
-if numel(refindx)==1 %&& ~(~conditional && ~isempty(featureindx))
+if size(refindx,1)==1 %&& ~(~conditional && ~isempty(featureindx))
   siz    = [size(output) 1];
   output = reshape(output,[siz(2:end)]);
 end

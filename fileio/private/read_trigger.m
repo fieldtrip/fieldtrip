@@ -39,7 +39,7 @@ hdr          = ft_getopt(varargin, 'header'             );
 dataformat   = ft_getopt(varargin, 'dataformat'         );
 begsample    = ft_getopt(varargin, 'begsample'          );
 endsample    = ft_getopt(varargin, 'endsample'          );
-chanindx     = ft_getopt(varargin, 'chanindx'           );
+chanindx     = ft_getopt(varargin, 'chanindx'           ); % specify -1 in case you don't want to detect triggers
 detectflank  = ft_getopt(varargin, 'detectflank'        ); % can be bit, up, down, updiff, downdiff, both
 denoise      = ft_getopt(varargin, 'denoise',      true );
 trigshift    = ft_getopt(varargin, 'trigshift',    false); % causes the value of the trigger to be obtained from a sample that is shifted N samples away from the actual flank
@@ -50,6 +50,7 @@ fix4d8192    = ft_getopt(varargin, 'fix4d8192',    false);
 fixbiosemi   = ft_getopt(varargin, 'fixbiosemi',   false);
 fixartinis   = ft_getopt(varargin, 'fixartinis',   false);
 fixstaircase = ft_getopt(varargin, 'fixstaircase', false);
+fixhomer     = ft_getopt(varargin, 'fixhomer',     false);
 threshold    = ft_getopt(varargin, 'threshold'          );
 
 if isempty(hdr)
@@ -82,9 +83,25 @@ else
 end
 
 % detect situations where the channel value changes almost at every sample, which are likely to be noise
-if istrue(denoise)
+if istrue(denoise) && isempty(threshold)
   for i=1:length(chanindx)
-    if (sum(diff(find(diff(dat(i,:))~=0)) == 1)/length(dat(i,:))) > 0.8
+    % look at how often the value changes, for a clean (i.e. binary) channel this will not be very often
+    flanks = find(diff(dat(i,:))~=0);
+    if length(flanks) < 0.3 * size(dat,2)
+      continue
+    end
+    % look at the distance between the flanks, for a clean (i.e. binary) channel there will be quite some time between subsequent flanks
+    if median(diff(flanks)) > 5
+      continue
+    end
+    % look at the skewness of derivative of the channel, it will be large for a channel with an occasional TTL pulse
+    % taking the derivative makes it sensitive for upgoing and downgoing flanks of long TTL pulses
+    if skewness(abs(diff(dat(i,:))))>5
+      ft_warning(['trigger channel ' hdr.label{chanindx(i)} ' looks like analog TTL pulses and will be thresholded']);
+      % use a value halfway the channel-specific extremes
+      threshold_value = midrange(dat(i,:));
+      dat(i,:) = dat(i,:) >= threshold_value;
+    else
       ft_warning(['trigger channel ' hdr.label{chanindx(i)} ' looks like noise and will be ignored']);
       dat(i,:) = 0;
     end
@@ -170,6 +187,16 @@ if fixartinis
   dat = round(10*dat)/10; % steps of 0.1V are to be assumed
 end
 
+if fixhomer
+  for i=1:numel(chanindx)
+    if strcmp(hdr.chantype{chanindx(i)}, 'stimulus')
+      % each of the columns of orig.s represents a stimulus type, 1 means on, 0 means off
+      % negative values have been editted in Homer and should be ignored
+      dat(i,:) = dat(i,:)>0;
+    end
+  end % for each channel
+end
+
 if fixstaircase
   for i=1:numel(chanindx)
     onset  = find(diff([0 dat]>0));
@@ -183,18 +210,23 @@ end
 
 if ~isempty(threshold)
   % the trigger channels contain an analog (and hence noisy) TTL signal and should be thresholded
-  if ischar(threshold) % evaluate string (e.g., threshold = 'nanmedian')
+  if ischar(threshold) % evaluate string (e.g., threshold = 'nanmedian' or 'midrange')
     for i = 1:size(dat,1)
       threshold_value = eval([threshold '(dat(i,:))']);
       % discretize the signal
-      dat(i,dat(i,:)<threshold_value) = 0;
+      dat(i,dat(i,:)< threshold_value) = 0;
       dat(i,dat(i,:)>=threshold_value) = 1;
     end
   else
     % discretize the signal
-    dat(dat<threshold) = 0;
+    dat(dat< threshold) = 0;
     dat(dat>=threshold) = 1;
   end
+end
+
+if isempty(dat)
+  % either no trigger channels were selected, or no samples
+  return
 end
 
 if isempty(detectflank)
@@ -213,52 +245,44 @@ for i=1:length(chanindx)
   trig    = dat(i,:);
   
   if trigpadding
-    pad = trig(1);
+    begpad = trig(1);
+    endpad = trig(end);
   else
-    pad = 0;
+    begpad = 0;
+    endpad = 0;
   end
   
   switch detectflank
-    case 'bit'
-      trig = uint32([pad trig]);
-      for k=1:32
-        bitval = bitget(trig, k);                             % get each of the bits separately
-        for j=find(~bitval(1:end-1) & bitval(2:end))
-          event(end+1).type   = channel;
-          event(end  ).sample = j + begsample - 1;            % assign the sample at which the trigger has gone down
-          event(end  ).value  = 2^(k-1);                      % assign the value represented by this bit
-        end % j
-      end % k
     case 'up'
       % convert the trigger into an event with a value at a specific sample
-      for j=find(diff([pad trig(:)'])>0)
+      for j=find(diff([begpad trig])>0)
         event(end+1).type   = channel;
         event(end  ).sample = j + begsample - 1;            % assign the sample at which the trigger has gone up
         event(end  ).value  = trig(j+trigshift);            % assign the trigger value just _after_ going up
       end
     case 'updiff'
-      for j=find(diff([pad trig(:)'])>0)
+      for j=find(diff([begpad trig])>0)
         event(end+1).type   = channel;
-        event(end  ).sample = j + begsample - 1;            % assign the sample at which the trigger has gone up
-        event(end  ).value  = trig(j+trigshift)-trig(j-1);  % assign the trigger value just _after_ going up minus the value before
+        event(end  ).sample = j + begsample - 1;                      % assign the sample at which the trigger has gone up
+        event(end  ).value  = trig(j+trigshift)-trig(j+trigshift-1);  % assign the trigger value just _after_ going up minus the value before
       end
     case 'down'
       % convert the trigger into an event with a value at a specific sample
-      for j=find(diff([pad trig(:)'])<0)
+      for j=find(diff([trig endpad])<0)
         event(end+1).type   = channel;
-        event(end  ).sample = j + begsample - 1;      % assign the sample at which the trigger has gone down
-        event(end  ).value  = trig(j-1-trigshift);    % assign the trigger value just _before_ going down
+        event(end  ).sample = j + begsample;                % assign the sample at which the trigger has gone down
+        event(end  ).value  = trig(j-trigshift);            % assign the trigger value just _before_ going down
       end
     case 'downdiff'
       % convert the trigger into an event with a value at a specific sample
-      for j=find(diff([pad trig(:)'])<0)
+      for j=find(diff([trig endpad])<0)
         event(end+1).type   = channel;
-        event(end  ).sample = j + begsample - 1;            % assign the sample at which the trigger has gone down
-        event(end  ).value  = trig(j-1)-trig(j+trigshift);  % assign the trigger value just _before_ going up minus the value after
+        event(end  ).sample = j + begsample;                          % assign the sample at which the trigger has gone down
+        event(end  ).value  = trig(j-trigshift)-trig(j-trigshift+1);  % assign the trigger value just _before_ going up minus the value after
       end
     case 'both'
       % convert the trigger into an event with a value at a specific sample
-      difftrace = diff([pad trig(:)']);
+      difftrace = diff([begpad trig endpad]);
       for j=find(difftrace~=0)
         if difftrace(j)>0
           event(end+1).type   = [channel '_up'];        % distinguish between up and down flank
@@ -270,7 +294,34 @@ for i=1:length(chanindx)
           event(end  ).value  = trig(j-1-trigshift);    % assign the trigger value just _before_ going down
         end
       end
+    case {'bit', 'biton'}
+      trig = uint32([begpad trig]);
+      for k=1:32
+        bitval = bitget(trig, k);                           % get each of the bits separately
+        for j=find(~bitval(1:end-1) & bitval(2:end))
+          event(end+1).type   = channel;
+          event(end  ).sample = j + begsample - 1;          % assign the sample at which the bit has gone up
+          event(end  ).value  = 2^(k-1);                    % assign the value represented by this bit
+        end % j
+      end % k
+    case {'bitoff'}
+      trig = uint32([trig endpad]);
+      for k=1:32
+        bitval = bitget(trig, k);                           % get each of the bits separately
+        for j=find(bitval(1:end-1) & ~bitval(2:end))
+          event(end+1).type   = channel;
+          event(end  ).sample = j + begsample;              % assign the sample at which the bit has gone down
+          event(end  ).value  = 2^(k-1);                    % assign the value represented by this bit
+        end % j
+      end % k
     otherwise
       ft_error('incorrect specification of ''detectflank''');
   end
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION to determine the value that is halfway between the minimum and maximum
+% this can be used to threshold, e.g. by specifying this as 'threshold'
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function m = midrange(x)
+m = min(x)/2 + max(x)/2;

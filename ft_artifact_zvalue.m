@@ -147,8 +147,6 @@ end
 
 % set default rejection parameters
 cfg.feedback                     = ft_getopt(cfg,                  'feedback',     'text');
-cfg.headerformat                 = ft_getopt(cfg,                  'headerformat', []);
-cfg.dataformat                   = ft_getopt(cfg,                  'dataformat',   []);
 cfg.memory                       = ft_getopt(cfg,                  'memory',       'high');
 cfg.artfctdef                    = ft_getopt(cfg,                  'artfctdef',    []);
 cfg.artfctdef.zvalue             = ft_getopt(cfg.artfctdef,        'zvalue',       []);
@@ -202,7 +200,7 @@ if ~hasdata
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
 else
   data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
-  cfg  = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
+  cfg  = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile', 'headerformat', 'dataformat'});
   hdr  = ft_fetch_header(data);
 end
 
@@ -581,31 +579,38 @@ artend = find(diff([artval 0])==-1);
 artifact = [artbeg(:) artend(:)];
 
 if strcmp(cfg.artfctdef.zvalue.artfctpeak, 'yes')
-  cnt=1;
-  shift=opt.trl(1,1)-1;
+  cnt    = 1;
+  offset = 0;
+  shift = opt.trl(1,1)-1;
+  tind  = cell(1,opt.numtrl);
+  peaks_ind = cell(1,opt.numtrl);
   for tt=1:opt.numtrl
+    offset = offset;
     if tt==1
-      tind{tt}=find(artifact(:,2)<opt.trl(tt,2));
+      tind{tt} = find(artifact(:,2)<opt.trl(tt,2));
     else
-      tind{tt}=intersect(find(artifact(:,2)<opt.trl(tt,2)),find(artifact(:,2)>opt.trl(tt-1,2)));
+      tind{tt} = intersect(find(artifact(:,2)<opt.trl(tt,2)),find(artifact(:,2)>opt.trl(tt-1,2)));
     end
-    artbegend=[(artifact(tind{tt},1)-opt.trl(tt,1)+1) (artifact(tind{tt},2)-opt.trl(tt,1)+1)];
-    for rr=1:size(artbegend,1)
-      [mx,mxnd]=max(opt.zval{tt}(artbegend(rr,1):artbegend(rr,2)));
-      peaks(cnt)=artifact(tind{tt}(rr),1)+mxnd-1;
-      dssartifact(cnt,1)=max(peaks(cnt)+cfg.artfctdef.zvalue.artfctpeakrange(1)*hdr.Fs,opt.trl(tt,1));
-      dssartifact(cnt,2)=min(peaks(cnt)+cfg.artfctdef.zvalue.artfctpeakrange(2)*hdr.Fs,opt.trl(tt,2));
-      peaks(cnt)=peaks(cnt)-shift;
-      dssartifact(cnt,:)=dssartifact(cnt,:)-shift;
-      cnt=cnt+1;
+    artbegend = [(artifact(tind{tt},1)-opt.trl(tt,1)+1) (artifact(tind{tt},2)-opt.trl(tt,1)+1)];
+    for rr = 1:size(artbegend,1)
+      [mx,mxnd]  = max(opt.zval{tt}(artbegend(rr,1):artbegend(rr,2)));
+      peaks(cnt) = artifact(tind{tt}(rr),1)+mxnd-1;
+      dssartifact(cnt,1) = max(peaks(cnt) + cfg.artfctdef.zvalue.artfctpeakrange(1)*hdr.Fs,opt.trl(tt,1));
+      dssartifact(cnt,2) = min(peaks(cnt) + cfg.artfctdef.zvalue.artfctpeakrange(2)*hdr.Fs,opt.trl(tt,2));
+      peaks(cnt)         = peaks(cnt) - shift;
+      dssartifact(cnt,:) = dssartifact(cnt,:) - shift;
+      cnt = cnt+1;
     end
+    peaks_ind{tt} = peaks(offset+(1:size(artbegend,1))) - opt.trl(tt,1) + 1;
+    offset = offset + size(artbegend,1);
     if tt<opt.numtrl
-      shift=shift+opt.trl(tt+1,1)-opt.trl(tt,2)-1;
+      shift = shift+opt.trl(tt+1,1)-opt.trl(tt,2)-1;
     end
     clear artbegend
   end
-  cfg.artfctdef.zvalue.peaks=peaks';
-  cfg.artfctdef.zvalue.dssartifact=dssartifact;
+  cfg.artfctdef.zvalue.peaks       = peaks(:);
+  cfg.artfctdef.zvalue.dssartifact = dssartifact;
+  cfg.artfctdef.zvalue.peaks_indx  = peaks_ind;
 end
 
 % remember the artifacts that were found

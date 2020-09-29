@@ -105,7 +105,7 @@ end
 % set the defaults
 cfg.appendsens = ft_getopt(cfg, 'appendsens', 'no');
 cfg.appenddim  = ft_getopt(cfg, 'appenddim', []);
-cfg.tolerance  = ft_getopt(cfg, 'tolerance', 1e-5);
+cfg.tolerance  = ft_getopt(cfg, 'tolerance', 1e-5); % this is passed to append_common, which passes it to ft_selectdata
 
 isequaltime  = true;
 isequallabel = true;

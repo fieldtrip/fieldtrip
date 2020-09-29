@@ -18,10 +18,10 @@ function [resliced] = ft_volumereslice(cfg, mri)
 % also be interpolated on a regular voxel grid.
 %
 % For the interpolation methods you should specify
-%   cfg.resolution = number, in physical units
-%   cfg.xrange     = [min max], in physical units
-%   cfg.yrange     = [min max], in physical units
-%   cfg.zrange     = [min max], in physical units
+%   cfg.resolution = number, in units of distance (e.g. mm)
+%   cfg.xrange     = [min max], in units of distance (e.g. mm)
+%   cfg.yrange     = [min max], in units of distance (e.g. mm)
+%   cfg.zrange     = [min max], in units of distance (e.g. mm)
 % or alternatively with
 %   cfg.dim        = [nx ny nz], size of the volume in each direction
 %
@@ -39,7 +39,7 @@ function [resliced] = ft_volumereslice(cfg, mri)
 %
 % See also FT_VOLUMEREALIGN, FT_VOLUMEDOWNSAMPLE, FT_SOURCEINTERPOLATE, FT_SOURCEPLOT
 
-% Copyright (C) 2010-2017, Robert Oostenveld & Jan-Mathijs Schoffelen
+% Copyright (C) 2010-2020, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -97,7 +97,7 @@ else
   cfg.xrange     = ft_getopt(cfg, 'xrange', []);
   cfg.yrange     = ft_getopt(cfg, 'yrange', []);
   cfg.zrange     = ft_getopt(cfg, 'zrange', []);
-  cfg.dim        = ft_getopt(cfg, 'dim', []); % alternatively use ceil(mri.dim./cfg.resolution)
+  cfg.dim        = ft_getopt(cfg, 'dim', []);
   
   if isfield(mri, 'coordsys')
     % use some prior knowledge to optimize the location of the bounding box

@@ -38,7 +38,7 @@ if ischar(cfg.linecolor)
   cfg.linecolor = cfg.linecolor(1:Ncolor);
 elseif isnumeric(cfg.linecolor)
   % ensure it is a Nx3 matrix of the right length
-  cfg.linecolor = repmat(cfg.linecolor, ceil(Ncolor/length(cfg.linecolor)), 1);
+  cfg.linecolor = repmat(cfg.linecolor, ceil(Ncolor/size(cfg.linecolor,1)), 1);
   cfg.linecolor = cfg.linecolor(1:Ncolor,:);
 end
 
