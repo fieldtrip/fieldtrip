@@ -644,7 +644,7 @@ varargin = varargin(1:ndata);
 % loop over data once to initialize
 chanindx = cell(ndata,1);
 label    = cell(1,0);
-if ndata==1 && isequal(cfg.channel,'all')
+if ndata==1 && (isequal(cfg.channel, 'all') || isequal(cfg.channel, varargin{1}.label))
   % the loop across data arguments, as well as the expensive calls to
   % ft_channelselection can be avoided if theres only a single data
   % argument and if 'all' channels are to be returned in the output
