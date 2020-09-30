@@ -644,14 +644,14 @@ varargin = varargin(1:ndata);
 % loop over data once to initialize
 chanindx = cell(ndata,1);
 label    = cell(1,0);
+
 if ndata==1 && (isequal(cfg.channel, 'all') || isequal(cfg.channel, varargin{1}.label))
   % the loop across data arguments, as well as the expensive calls to
-  % ft_channelselection can be avoided if theres only a single data
+  % FT_CHANNELSELECTION can be avoided if there is only a single data
   % argument and if 'all' channels are to be returned in the output
   label = varargin{1}.label(:);
-  
+
 else
-  
   for k = 1:ndata
     selchannel      = cell(0,1);
     selgrad         = [];
@@ -685,8 +685,8 @@ else
   [ix, iy] = match_str(varargin{1}.label, label);
   label1   = varargin{1}.label(:); % ensure column array
   label    = [label1(ix); label(setdiff(1:numel(label),iy))];
-  
-end
+
+end % if ndata==1 and all channels are to be returned
 
 indx = nan+zeros(numel(label), ndata);
 for k = 1:ndata
