@@ -2004,6 +2004,7 @@ switch fileformat
           end
         end
         atlas.coordsys = 'mni';
+        atlas.dim      = atlas.dim(1:3);
     end
     
     
