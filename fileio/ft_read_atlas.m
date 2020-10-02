@@ -1998,7 +1998,7 @@ switch fileformat
             % single precision, do single precision to save memory
             atlas.(fn) = single(atlas.(fn));
           end
-          if any(atlas.(fn)(:)>1)
+          if any(atlas.(fn)(:)>1) & all(atlas.(fn)(:)<=100)
             % convert to probability values, assuming 100 to be max
             atlas.(fn) = atlas.(fn)./100;
           end
