@@ -649,7 +649,7 @@ switch cfg.method
     % see http://www.cis.hut.fi/projects/dss
     ft_hastoolbox('dss', 1);
     
-    params         = removefields(struct(cfg.dss), {'V' 'dV' 'W'});
+    params         = removefields(struct(cfg.dss), {'V' 'dV' 'W' 'indx'});
     params.denf.h  = str2func(cfg.dss.denf.function);
     params.preprocf.h = str2func(cfg.dss.preprocf.function);
     if ~ischar(cfg.numcomponent)
@@ -670,6 +670,9 @@ switch cfg.method
     end
     if isfield(cfg.dss, 'W') && ~isempty(cfg.dss.W)
       state.W = cfg.dss.W;
+    end
+    if isfield(cfg.dss, 'indx') && ~isempty(cfg.dss.indx)
+      state.indx = cfg.dss.indx; %may be needed for dss_core_mim
     end
     
     % increase the amount of information that is displayed on screen
