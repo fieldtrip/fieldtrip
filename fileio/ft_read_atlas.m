@@ -1993,8 +1993,18 @@ switch fileformat
           fn = strrep(fn, ')', '');
           
           atlas.(fn) = tmp.anatomy(:,:,:,m);
+          if ~isa(atlas.(fn), 'double') && ~isa(atlas.(fn), 'single')
+            % ensure that the probabilistic values are either double or
+            % single precision, do single precision to save memory
+            atlas.(fn) = single(atlas.(fn));
+          end
+          if any(atlas.(fn)(:)>1) & all(atlas.(fn)(:)<=100)
+            % convert to probability values, assuming 100 to be max
+            atlas.(fn) = atlas.(fn)./100;
+          end
         end
         atlas.coordsys = 'mni';
+        atlas.dim      = atlas.dim(1:3);
     end
     
     
