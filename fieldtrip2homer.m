@@ -50,7 +50,6 @@ seldat  = startsWith(hdr.chantype, 'nirs');
 selstim = strcmp(hdr.chantype, 'stimulus');
 selaux  = ~seldat & ~selstim;
 
-
 nirs.t = data.time{1};
 nirs.d = dat(seldat, :)';
 nirs.aux = dat(selaux, :)';
