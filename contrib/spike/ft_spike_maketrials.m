@@ -192,8 +192,9 @@ if strcmp(cfg.trlunit,'timestamps')
     spike.trial{iUnit}  = trialNum(:)';
     spike.trialtime     = time;
     if hasWave, spike.waveform{iUnit} = spike.waveform{iUnit}(:,:,sel); end
-    try spike.unit{iUnit} = spike.unit{iUnit}(sel); end       %#ok<*TRYNC>
-    try spike.fourierspctrm{iUnit} = spike.fourierspctrm{iUnit}(sel,:,:); end
+    try spike.unit{iUnit}           = spike.unit{iUnit}(sel); end       %#ok<*TRYNC>
+    try spike.fourierspctrm{iUnit}  = spike.fourierspctrm{iUnit}(sel,:,:); end
+    try spike.amplitude{iUnit}      = spike.amplitude{iUnit}(sel); end
     ts = spike.timestamp{iUnit}(sel);
     spike.timestamp{iUnit} = ts(:)';
   end
@@ -264,6 +265,7 @@ elseif strcmp(cfg.trlunit,'samples')
     spike.timestamp{iUnit}          = spike.timestamp{iUnit}(waveSel);
     try, spike.unit{iUnit}          = spike.unit{iUnit}(waveSel);              end
     try, spike.fourierspctrm{iUnit} = spike.fourierspctrm{iUnit}(waveSel,:,:); end
+    try, spike.amplitude{iUnit}     = spike.amplitude{iUnit}(waveSel);     end 
   end
 end
 
