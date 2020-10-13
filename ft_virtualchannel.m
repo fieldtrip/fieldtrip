@@ -85,6 +85,7 @@ end
 % get the defaults
 cfg.pos          = ft_getopt(cfg, 'pos');
 cfg.parcellation = ft_getopt(cfg, 'parcellation');
+cfg.channel      = ft_getopt(cfg, 'channel',  'all');
 cfg.method       = ft_getopt(cfg, 'method',   'pca');
 cfg.feedback     = ft_getopt(cfg, 'feedback', 'text');
 cfg.numcomponent = ft_getopt(cfg, 'numcomponent', 1);
@@ -147,6 +148,9 @@ if usepos
   
   % create a montage for each of the dipoles, and use ft_apply_montage,
   % followed by a dimensionality reduction step, using ft_componentanalysis
+  unmixing  = cell(1, npos2);
+  topolabel = cell(1, npos2);
+  tmpdata   = cell(1, npos2);
   for i = 1:npos2
     montage          = [];
     montage.tra      = source.filter{indx(i)};
@@ -156,7 +160,14 @@ if usepos
       montage.labelnew{k} = sprintf('virtualchannel%03d_orientation%03d', i, k);
     end
     
-    tmpdata{1,i} = ft_apply_montage(data, montage);
+    % apply the montage to the numeric data
+    tmpdata{1,i}  = ft_apply_montage(data, montage);
+    
+    [i1, i2] = match_str(data.label, montage.labelold);
+    unmixing{1,i}(:,i1) = montage.tra(:,i2);
+    topolabel{1,i}      = data.label(i1);
+    
+    % apply the montage to the sensor description
     sensfields = {'grad' 'elec' 'opto'};
     bname      = sprintf('virtualchannel%03d', i);
     for k = 1:numel(sensfields)
@@ -175,7 +186,8 @@ if usepos
           tmpcfg = rmfield(tmpcfg, 'numcomponent');
         end
         
-        tmpdata{i} = ft_componentanalysis(tmpcfg, tmpdata{i});
+        tmpdata{i}  = ft_componentanalysis(tmpcfg, tmpdata{i});
+        unmixing{i} = tmpdata{i}.unmixing * unmixing{i};
         
         for k = 1:numel(tmpdata{i}.label)
           tmpdata{i}.label{k} = sprintf('virtualchannel%03d_%s%03d', i, cfg.method, k);
@@ -193,7 +205,11 @@ if usepos
   end % for i = # of virtual channels
   
   data_vc = ft_appenddata([], tmpdata{:});
-    
+  
+  data_vc.unmixing  = cat(1, unmixing{:});
+  data_vc.topolabel = topolabel{1}; 
+  
+  
   brainordinate = keepfields(source, {'pos' 'dim' 'tri' 'transform' 'inside' 'unit'});
   brainordinate.index = zeros(npos1, 1);
   brainordinate.index(indx) = indx;
@@ -202,267 +218,35 @@ if usepos
   data_vc.brainordinate = brainordinate;
   
 elseif useparcellation
-
-% keep the transformation matrix
-if isfield(parcellation, 'transform')
-  transform = parcellation.transform;
-else
-  transform = [];
-end
-
-% ensure it is a parcellation, not a segmentation
-parcellation = ft_checkdata(parcellation, 'datatype', 'parcellation', 'parcel lationstyle', 'indexed');
-
-% keep the transformation matrix
-if ~isempty(transform)
-  parcellation.transform = transform;
-end
-
-% ensure it is a source, not a volume
-source = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical');
-
-% ensure that the source and the parcellation are anatomically consistent
-if ~isalmostequal(source.pos, parcellation.pos, 'abstol', 1000000*eps)
-  ft_error('the source positions are not consistent with the parcellation, please use FT_SOURCEINTERPOLATE');
-end
-
-if isempty(cfg.parcellation)
-  % determine the first field that can be used for the parcellation
-  fn = fieldnames(parcellation);
-  for i=1:numel(fn)
-    if isfield(parcellation, [fn{i} 'label'])
-      ft_warning('using "%s" for the parcellation', fn{i});
-      cfg.parcellation = fn{i};
-      break
-    end
-  end
-end
-
-if isempty(cfg.parcellation)
-  ft_error('you should specify the field containing the parcellation');
-end
-
-% determine the fields and corresponding dimords to work on
-fn = fieldnames(source);
-fn = setdiff(fn, {'pos', 'tri', 'inside', 'outside', 'time', 'freq', 'dim', 'transform', 'unit', 'coordsys', 'cfg', 'hdr'}); % remove fields that do not represent the data
-fn = fn(cellfun(@isempty, regexp(fn, 'dimord'))); % remove dimord fields
-fn = fn(cellfun(@isempty, regexp(fn, 'label'))); % remove label fields
-dimord = cell(size(fn));
-for i=1:numel(fn)
-  dimord{i} = getdimord(source, fn{i});
-end
-
-if any(strcmp(cfg.parameter, 'all'))
-  cfg.parameter = fn;
-else
-  [inside, i1, i2] = intersect(cfg.parameter, fn);
-  [outside       ] = setdiff(cfg.parameter, fn);
-  if ~isempty(outside)
-    ft_warning('\nparameter "%s" cannot be parcellated', outside{:});
-  end
-  cfg.parameter = fn(i2);
-  fn     = fn(i2);
-  dimord = dimord(i2);
-end
-
-% although it is technically feasible, don't parcellate the parcellation itself
-sel    = ~strcmp(cfg.parcellation, fn);
-fn     = fn(sel);
-dimord = dimord(sel);
-
-if numel(fn)==0
-  ft_error('there are no source parameters that can be parcellated');
-end
-
-% get the parcellation and the labels that go with it
-seg      = parcellation.(cfg.parcellation);
-seglabel = parcellation.([cfg.parcellation 'label']);
-nseg     = length(seglabel);
-
-if isfield(source, 'inside')
-  % determine the conjunction of the parcellation and the inside source points
-  n0 = numel(source.inside);
-  n1 = sum(source.inside(:));
-  n2 = sum(seg(:)~=0);
-  fprintf('there are in total %d positions, %d positions are inside the brain, %d positions have a label\n', n0, n1, n2);
-  fprintf('%d of the positions inside the brain have a label\n',        sum(seg(source.inside)~=0));
-  fprintf('%d of the labeled positions are inside the brain\n',         sum(source.inside(seg(:)~=0)));
-  fprintf('%d of the positions inside the brain do not have a label\n', sum(seg(source.inside)==0));
-  % discard the positions outside the brain and the positions in the brain that do not have a label
-  seg(~source.inside) = 0;
-end
-
-% start preparing the output data structure
-parcel       = keepfields(source, {'freq','time','cumtapcnt'});
-parcel.label = seglabel;
-
-for i=1:numel(fn)
-  % parcellate each of the desired parameters
-  dat = source.(fn{i});
-  siz = getdimsiz(source, fn{i});
-  siz(contains(tokenize(dimord{i},'_'),'pos')) = nseg;
   
-  if strncmp('{pos_pos}', dimord{i}, 9)
-    fprintf('creating %d*%d parcel combinations for parameter %s by taking the %s\n', numel(seglabel), numel(seglabel), fn{i}, cfg.method);
-    tmp = zeros(siz);
-    ft_progress('init', cfg.feedback, 'computing parcellation');
-    k = 0;
-    K = numel(seglabel)^2;
-    for j1=1:numel(seglabel)
-      for j2=1:numel(seglabel)
-        k = k + 1;
-        ft_progress(k/K, 'computing parcellation for %s combined with %s', seglabel{j1}, seglabel{j2});
-        switch cfg.method
-          case 'mean'
-            tmp(j1,j2,:,:) = cellmean2(dat(seg==j1,seg==j2,:));
-          case 'median'
-            tmp(j1,j2,:,:) = cellmedian2(dat(seg==j1,seg==j2,:));
-          case 'min'
-            tmp(j1,j2,:,:) = cellmin2(dat(seg==j1,seg==j2,:));
-          case 'max'
-            tmp(j1,j2,:,:) = cellmax2(dat(seg==j1,seg==j2,:));
-          case 'eig'
-            tmp(j1,j2,:,:) = celleig2(dat(seg==j1,seg==j2,:));
-          case 'std'
-            tmp(j1,j2,:,:) = cellstd2(dat(seg==j1,seg==j2,:));
-          otherwise
-            ft_error('method %s not implemented for %s', cfg.method, dimord{i});
-        end % switch
-      end % for j2
-    end % for j1
-    ft_progress('close');
-    
-  elseif strncmp('{pos}', dimord{i}, 5)
-    fprintf('creating %d parcels for parameter %s by taking the %s\n', numel(seglabel), fn{i}, cfg.method);
-    tmp = zeros(siz);
-    ft_progress('init', cfg.feedback, 'computing parcellation');
-    for j=1:numel(seglabel)
-      ft_progress(j/numel(seglabel), 'computing parcellation for %s', seglabel{j});
-      switch cfg.method
-        case 'mean'
-          tmp(j,:,:) = cellmean1(dat(seg==j));
-        case 'median'
-          tmp(j,:,:) = cellmedian1(dat(seg==j));
-        case 'min'
-          tmp(j,:,:) = cellmin1(dat(seg==j));
-        case 'max'
-          tmp(j,:,:) = cellmax1(dat(seg==j));
-        case 'eig'
-          tmp(j,:,:) = celleig1(dat(seg==j));
-        case 'std'
-          tmp(j,:,:) = cellstd1(dat(seg==j));
-        otherwise
-          ft_error('method %s not implemented for %s', cfg.method, dimord{i});
-      end % switch
-    end % for
-    ft_progress('close');
-    
-  elseif strncmp('pos_pos', dimord{i}, 7)
-    fprintf('creating %d*%d parcel combinations for parameter %s by taking the %s\n', numel(seglabel), numel(seglabel), fn{i}, cfg.method);
-    siz     = size(dat);
-    siz(1)  = nseg;
-    siz(2)  = nseg;
-    tmp     = nan(siz);
-    ft_progress('init', cfg.feedback, 'computing parcellation');
-    k = 0;
-    K = numel(seglabel)^2;
-    for j1=1:numel(seglabel)
-      for j2=1:numel(seglabel)
-        k = k + 1;
-        ft_progress(k/K, 'computing parcellation for %s combined with %s', seglabel{j1}, seglabel{j2});
-        switch cfg.method
-          case 'mean'
-            tmp(j1,j2,:) = arraymean2(dat(seg==j1,seg==j2,:));
-          case 'median'
-            tmp(j1,j2,:) = arraymedian2(dat(seg==j1,seg==j2,:));
-          case 'min'
-            tmp(j1,j2,:) = arraymin2(dat(seg==j1,seg==j2,:));
-          case 'max'
-            tmp(j1,j2,:) = arraymax2(dat(seg==j1,seg==j2,:));
-          case 'eig'
-            tmp(j1,j2,:) = arrayeig2(dat(seg==j1,seg==j2,:));
-          case 'maxabs'
-            tmp(j1,j2,:) = arraymaxabs2(dat(seg==j1,seg==j2,:));
-          case 'std'
-            tmp(j1,j2,:) = arraystd2(dat(seg==j1,seg==j2,:));
-          otherwise
-            ft_error('method %s not implemented for %s', cfg.method, dimord{i});
-        end % switch
-      end % for j2
-    end % for j1
-    ft_progress('close');
-    
-  elseif strncmp('pos', dimord{i}, 3)
-    fprintf('creating %d parcels for %s by taking the %s\n', numel(seglabel), fn{i}, cfg.method);
-    siz     = size(dat);
-    siz(1)  = nseg;
-    tmp     = nan(siz);
-    ft_progress('init', cfg.feedback, 'computing parcellation');
-    for j=1:numel(seglabel)
-      ft_progress(j/numel(seglabel), 'computing parcellation for %s', seglabel{j});
-      switch cfg.method
-        case 'mean'
-          tmp(j,:) = arraymean1(dat(seg==j,:));
-        case 'mean_thresholded'
-          cfg.mean = ft_getopt(cfg, 'mean', struct('threshold', []));
-          if isempty(cfg.mean.threshold)
-            ft_error('when cfg.method = ''mean_thresholded'', you should specify a cfg.mean.threshold');
-          end
-          if numel(cfg.mean.threshold)==size(dat,1)
-            % assume one threshold per vertex
-            threshold = cfg.mean.threshold(seg==j,:);
-          else
-            threshold = cfg.mean.threshold;
-          end
-          tmp(j,:) = arraymean1(dat(seg==j,:), threshold);
-        case 'median'
-          tmp(j,:) = arraymedian1(dat(seg==j,:));
-        case 'min'
-          tmp(j,:) = arraymin1(dat(seg==j,:));
-        case 'max'
-          tmp(j,:) = arraymax1(dat(seg==j,:));
-        case 'maxabs'
-          tmp(j,:) = arraymaxabs1(dat(seg==j,:));
-        case 'eig'
-          tmp(j,:) = arrayeig1(dat(seg==j,:));
-        case 'std'
-          tmp(j,:)  = arraystd1(dat(seg==j,:));
-        otherwise
-          ft_error('method %s not implemented for %s', cfg.method, dimord{i});
-      end % switch
-    end % for
-    ft_progress('close');
-    
+  % keep the transformation matrix
+  if isfield(parcellation, 'transform')
+    transform = parcellation.transform;
   else
-    ft_error('unsupported dimord %s', dimord{i})
-    
-  end % if pos, pos_pos, {pos}, etc.
+    transform = [];
+  end
   
-  % update the dimord, use chan rather than pos
-  % this makes it look just like timelock or freq data
-  tok = tokenize(dimord{i}, '_');
-  tok(strcmp(tok,  'pos' )) = {'chan'}; % replace pos by chan
-  tok(strcmp(tok, '{pos}')) = {'chan'}; % replace pos by chan
-  tok(strcmp(tok, '{pos'))  = {'chan'}; % replace pos by chan
-  tok(strcmp(tok, 'pos}'))  = {'chan'}; % replace pos by chan
+  % ensure it is a parcellation, not a segmentation
+  parcellation = ft_checkdata(parcellation, 'datatype', 'parcellation', 'parcel lationstyle', 'indexed');
   
-  % squeeze out any singleton oris
-  siz  = [size(tmp) 1]; % add trailing singleton to be sure
-  oris = contains(tok, 'ori') & siz(1:numel(tok))==1;
-  siz(oris) = [];
-  tmp = reshape(tmp, siz);
-  tok(oris) = [];
+  % keep the transformation matrix
+  if ~isempty(transform)
+    parcellation.transform = transform;
+  end
   
-  tmpdimord = sprintf('%s_', tok{:});
-  tmpdimord = tmpdimord(1:end-1);         % exclude the last _
+  % ensure it is a source, not a volume
+  source = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical');
   
-  % store the results in the output structure
-  parcel.(fn{i})            = tmp;
-  parcel.([fn{i} 'dimord']) = tmpdimord;
+  % ensure that the source and the parcellation are anatomically consistent
+  if ~isalmostequal(source.pos, parcellation.pos, 'abstol', 1000000*eps)
+    ft_error('the source positions are not consistent with the parcellation, please use FT_SOURCEINTERPOLATE');
+  end
   
-  % to avoid confusion
-  clear dat tmp tmpdimord j j1 j2
-end % for each of the fields that should be parcellated
+  if isequal(cfg.channel, 'all')
+    cfg.channel = parcellation.(sprintf('%slabel',cfg.parcellation));
+  end
+  
+  
 
 
 
