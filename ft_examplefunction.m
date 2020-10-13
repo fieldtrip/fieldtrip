@@ -75,9 +75,10 @@ cfg = ft_checkconfig(cfg, 'required', {'method', 'foi', 'tapsmofrq'});
 cfg = ft_checkopt(cfg, 'vartrllen', 'double', {0, 1, 2});
 cfg = ft_checkopt(cfg, 'method', 'char', {'mtm', 'convol'});
 
-% get the options
-method    = ft_getopt(cfg, 'method');        % there is no default
-vartrllen = ft_getopt(cfg, 'vartrllen', 2);  % the default is 2
+% check the user-supplied options or set the defaults
+% store them in cfg, so that they end up in dataout.cfg
+cfg.method    = ft_getopt(cfg, 'method');        % there is no default, this wil be []
+cfg.vartrllen = ft_getopt(cfg, 'vartrllen', 2);  % the default is 2
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the actual computation is done in the middle part
