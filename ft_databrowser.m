@@ -1806,9 +1806,9 @@ if strcmp(cfg.plotevents, 'yes')
       
       % compute the time of the event
       eventtim(ievent) = (event(ievent).sample-begsample)/opt.fsample + opt.hlim(1);
-      
-      lh = ft_plot_line([eventtim(ievent) eventtim(ievent)], [-1 1], 'tag', 'event', 'color', eventcol{ievent}, 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1]);
-      
+      % plot events as box or line (when duration = 0)
+      lh = ft_plot_box([eventtim(ievent) eventtim(ievent)+event(ievent).duration/opt.fsample -1 1], 'tag', 'event', 'edgecolor', eventcol{ievent}, 'facealpha', 0.1, 'facecolor', eventcol{ievent},  'hpos', opt.hpos,  'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1]);
+        
       % store this data in the line object so that it can be displayed in the
       % data cursor (see subfunction cb_datacursortext below)
       setappdata(lh, 'ft_databrowser_linetype', 'event');
