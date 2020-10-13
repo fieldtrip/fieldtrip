@@ -126,12 +126,12 @@ if usepos
   
   % identify the indices of the positions in the source structure that are
   % to be used, and check whether a spatial filter exists
-  npos1 = size(source.pos,1);
-  npos2 = size(cfg.pos,1);
-  indx  = zeros(npos2,1);
-  mindist = zeros(npos2,1);
-  for i = 1:npos2
-    dpos = sqrt(sum( (source.pos - cfg.pos(i.*ones(npos1,1),:)).^2, 2));
+  npos  = size(source.pos,1);
+  nvc   = size(cfg.pos,1);
+  indx  = zeros(nvc,1);
+  mindist = zeros(nvc,1);
+  for i = 1:nvc
+    dpos = sqrt(sum( (source.pos - cfg.pos(i.*ones(npos,1),:)).^2, 2));
     [mindist(i), indx(i)] = min(dpos);
     
     % check that the requested positions are at most 1 mm away from the actual
@@ -146,78 +146,9 @@ if usepos
     end
   end
   
-  % create a montage for each of the dipoles, and use ft_apply_montage,
-  % followed by a dimensionality reduction step, using ft_componentanalysis
-  unmixing  = cell(1, npos2);
-  topolabel = cell(1, npos2);
-  tmpdata   = cell(1, npos2);
-  for i = 1:npos2
-    montage          = [];
-    montage.tra      = source.filter{indx(i)};
-    montage.labelold = source.label;
-    montage.labelnew = cell(size(montage.tra,1), 1);
-    for k = 1:size(montage.tra,1)
-      montage.labelnew{k} = sprintf('virtualchannel%03d_orientation%03d', i, k);
-    end
-    
-    % apply the montage to the numeric data
-    tmpdata{1,i}  = ft_apply_montage(data, montage);
-    
-    [i1, i2] = match_str(data.label, montage.labelold);
-    unmixing{1,i}(:,i1) = montage.tra(:,i2);
-    topolabel{1,i}      = data.label(i1);
-    
-    % apply the montage to the sensor description
-    sensfields = {'grad' 'elec' 'opto'};
-    bname      = sprintf('virtualchannel%03d', i);
-    for k = 1:numel(sensfields)
-      if isfield(tmpdata{i}, sensfields{k})
-        ft_info(sprintf('applying the montage to the %s structure\n', sensfields{k}));
-        tmpdata{i}.(sensfields{k}) = ft_apply_montage(tmpdata{i}.grad, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
-      end
-    end
-    
-    compmethods = {'pca' 'runica' 'fastica' 'dss'};
-    switch cfg.method
-      case compmethods
-        
-        tmpcfg     = keepfields(cfg, {'method' cfg.method 'numcomponent'});
-        if isequal(tmpcfg.numcomponent, 'all')
-          tmpcfg = rmfield(tmpcfg, 'numcomponent');
-        end
-        
-        tmpdata{i}  = ft_componentanalysis(tmpcfg, tmpdata{i});
-        unmixing{i} = tmpdata{i}.unmixing * unmixing{i};
-        
-        for k = 1:numel(tmpdata{i}.label)
-          tmpdata{i}.label{k} = sprintf('virtualchannel%03d_%s%03d', i, cfg.method, k);
-        end
-        
-      case 'none'
-        % do nothing
-        
-      otherwise
-        ft_error('currently not yet supported');
-        % the idea would to support a custom function here, with a
-        % function(cfg.(cfg.method), tmpdata{i}) API
-        
-    end % reduction of components
-  end % for i = # of virtual channels
-  
-  data_vc = ft_appenddata([], tmpdata{:});
-  
-  data_vc.unmixing  = cat(1, unmixing{:});
-  data_vc.topolabel = topolabel{1}; 
-  
-  
-  brainordinate = keepfields(source, {'pos' 'dim' 'tri' 'transform' 'inside' 'unit'});
-  brainordinate.index = zeros(npos1, 1);
-  brainordinate.index(indx) = indx;
-  brainordinate.indexlabel  = data_vc.label; % FIXME this only works with one component per vc
-  
-  data_vc.brainordinate = brainordinate;
-  
 elseif useparcellation
+  
+  % do some checks and balances on the input data and cfg
   
   % keep the transformation matrix
   if isfield(parcellation, 'transform')
@@ -233,10 +164,7 @@ elseif useparcellation
   if ~isempty(transform)
     parcellation.transform = transform;
   end
-  
-  % ensure it is a source, not a volume
-  source = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical');
-  
+ 
   % ensure that the source and the parcellation are anatomically consistent
   if ~isalmostequal(source.pos, parcellation.pos, 'abstol', 1000000*eps)
     ft_error('the source positions are not consistent with the parcellation, please use FT_SOURCEINTERPOLATE');
@@ -246,25 +174,103 @@ elseif useparcellation
     cfg.channel = parcellation.(sprintf('%slabel',cfg.parcellation));
   end
   
+  indx = match_str(parcellation.(sprintf('%slabel',cfg.parcellation)), cfg.channel);
+  cfg.channel = parcellation.(sprintf('%slabel',cfg.parcellation))(indx);
   
+  nvc = numel(cfg.channel);
+end
 
-
-
-
-% a brainordinate is a brain location that is specified by either a surface vertex (node) or a volume voxel
-parcel.brainordinate = keepfields(parcellation, {'pos', 'tri', 'dim', 'transform'}); % keep the information about the geometry
-fn = fieldnames(parcellation);
-for i=1:numel(fn)
-  if isfield(parcellation, [fn{i} 'label'])
-    % keep each of the labeled fields from the parcellation
-    parcel.brainordinate.( fn{i}         ) = parcellation.( fn{i}         );
-    parcel.brainordinate.([fn{i} 'label']) = parcellation.([fn{i} 'label']);
+% create a montage for each of the dipoles/parcels, and use ft_apply_montage,
+% followed by a dimensionality reduction step, using ft_componentanalysis
+unmixing  = cell(1, nvc);
+topolabel = cell(1, nvc);
+tmpdata   = cell(1, nvc);
+for i = 1:nvc
+  
+  montage = [];
+  if usepos
+    montage.tra      = source.filter{indx(i)};
+    montage.labelold = source.label;
+    montage.labelnew = cell(size(montage.tra,1), 1);
+    for k = 1:size(montage.tra,1)
+      montage.labelnew{k} = sprintf('virtualchannel%03d_orientation%03d', i, k);
+    end
+    bname = sprintf('virtualchannel%03d', i);
+    
+  elseif useparcellation
+  
+    sel = find(parcellation.(cfg.parcellation)==indx(i));
+    montage.tra      = cat(1, source.filter{sel});
+    montage.labelold = source.label;
+    montage.labelnew = cell(size(montage.tra,1), 1);
+    cnt = 0;
+    for k = numel(sel)
+      for kk = 1:size(source.filter{sel(k)},1)
+        cnt = cnt+1;
+        montage.labelnew{cnt} = sprintf('%s_dipole%03d_orientation%03d', cfg.channel{i}, k, kk);
+      end
+    end
+    bname = cfg.channel{i};
+    
   end
-end
+  
+  % apply the montage to the numeric data
+  tmpdata{1,i}  = ft_apply_montage(data, montage);
+  
+  [i1, i2] = match_str(data.label, montage.labelold);
+  unmixing{1,i}(:,i1) = montage.tra(:,i2);
+  topolabel{1,i}      = data.label(i1);
+  
+  % apply the montage to the sensor description
+  sensfields = {'grad' 'elec' 'opto'};
+  for k = 1:numel(sensfields)
+    if isfield(tmpdata{i}, sensfields{k})
+      ft_info(sprintf('applying the montage to the %s structure\n', sensfields{k}));
+      tmpdata{i}.(sensfields{k}) = ft_apply_montage(tmpdata{i}.grad, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
+    end
+  end
+  
+  compmethods = {'pca' 'runica' 'fastica' 'dss'};
+  switch cfg.method
+    case compmethods
+      
+      tmpcfg     = keepfields(cfg, {'method' cfg.method 'numcomponent'});
+      if isequal(tmpcfg.numcomponent, 'all')
+        tmpcfg = rmfield(tmpcfg, 'numcomponent');
+      end
+      
+      tmpdata{i}  = ft_componentanalysis(tmpcfg, tmpdata{i});
+      unmixing{i} = tmpdata{i}.unmixing * unmixing{i};
+      
+      for k = 1:numel(tmpdata{i}.label)
+        tmpdata{i}.label{k} = sprintf('virtualchannel%03d_%s%03d', i, cfg.method, k);
+      end
+      
+    case 'none'
+      % do nothing
+      
+    otherwise
+      ft_error('currently not yet supported');
+      % the idea would to support a custom function here, with a
+      % function(cfg.(cfg.method), tmpdata{i}) API
+      
+  end % reduction of components
+end % for i = # of virtual channels
 
-end
+data_vc = ft_appenddata([], tmpdata{:});
+
+data_vc.unmixing  = cat(1, unmixing{:});
+data_vc.topolabel = topolabel{1};
 
 
+brainordinate = keepfields(source, {'pos' 'dim' 'tri' 'transform' 'inside' 'unit'});
+brainordinate.index = zeros(npos, 1);
+brainordinate.index(indx) = indx;
+brainordinate.indexlabel  = data_vc.label; % FIXME this only works with one component per vc
+
+data_vc.brainordinate = brainordinate;
+
+% do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous   data source parcellation 
