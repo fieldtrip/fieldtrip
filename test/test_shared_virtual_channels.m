@@ -36,7 +36,7 @@ cfg.sourcemodel.outside = [];
 cfg.lcmv.keepfilter  = 'yes';
 source_idx      = ft_sourceanalysis(cfg, tlock);
 
-
+%% this is the old way of doing it.
 beamformer_lft_coh = source_idx.avg.filter{1};
 beamformer_gam_pow = source_idx.avg.filter{2};
 
@@ -53,6 +53,13 @@ for i=1:length(data_cmb.trial)
   coh_lft_data.trial{i} = beamformer_lft_coh * data_cmb.trial{i}(chansel,:);
   gam_pow_data.trial{i} = beamformer_gam_pow * data_cmb.trial{i}(chansel,:);
 end
+
+%% this is the new way of doing it
+cfg = [];
+cfg.pos = source_idx.pos;
+cfg.method = 'none';
+data_vc = ft_virtualchannel(cfg, data_cmb, source_idx);
+assert(isequal(data_vc.trial{1}(4:6,:),gam_pow_data.trial{1}(1:3,:)));
 
 cfg = [];
 cfg.viewmode = 'vertical';  % you can also specify 'butterfly'
