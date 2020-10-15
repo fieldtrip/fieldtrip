@@ -1934,22 +1934,59 @@ else
   type = hdr.chantype(:);
   units = hdr.chanunit(:);
   sampling_frequency = repmat(hdr.Fs, hdr.nChans, 1);
-  % nirs channels are mostly names 'Rx*-Tx* [*wavelength*] or 'S*-D*
-  % [*wavelength*] 
-  % FIXME: what wiht ADC channels, different formulations...
-  source=cell(length(name), 1); detector=cell(length(name), 1);
-  for i=1:length(name)
-    try
-      parts=regexp(name{i}, 'Rx(?<detectorID>\w+)-Tx(?<sourceID>\w+) \[(?<wavelength>\d+)nm\]', 'names');
-      source{i}=sprintf('Tx%s', parts.sourceID);
-      detector{i}=sprintf('Rx%s', parts.detectorID);
-    catch
-      parts=regexp(name{i}, 'S(?sourceID>\w+)-D(?<detectorID>\w+) \[(?<wavelength>\d+)nm\]', 'names');
-      source{i}=sprintf('S%s', parts.sourceID);
-      detector{i}=sprintf('D%s',parts.detectorID);
+  % find source name, detector name and wavelength of nirs channels
+  source=cell(length(name), 1); detector=cell(length(name), 1); wavelength=nan(length(name),1);
+  if isfield(hdr, 'opto') % else try regexp
+    for i=1:length(name)
+      labelidx=find(strcmp(hdr.opto.label, name{i}));
+      if isempty(labelidx)
+        continue
+      else
+        sampling_frequency(i)=nan; % sampling frequency of nirs channels are not required
+        [~, optoidx, wavelengthidx]=find(hdr.opto.tra(labelidx,:));
+        for k=optoidx
+          if any(strcmp(hdr.opto.optotype{k}, {'receiver', 'detector'}))
+            detector{i}=hdr.opto.optolabel{k};
+          elseif any(strcmp(hdr.opto.optotype{k}, {'transmitter', 'source'}))
+            source{i}=hdr.opto.optolabel{k};
+          end
+        end
+        if abs(wavelengthidx(1))~= abs(wavelengthidx(2))
+          warning('tra matrix is not consistent; ignoring wavelength')
+        else
+          wavelength(i)=hdr.opto.wavelength(abs(wavelengthidx(1)));
+        end
+      end
+    end
+  else % check whether the channel name is a typical nirs channel name ('Rx*-Tx* [*wavelength*] or 'S*-D*
+    % [*wavelength*] )
+    for i=1:length(name)
+      if regexp(name{i}, 'Rx(\w+)-Tx(\w+) \[(\d+)nm\]')
+        parts=regexp(name{i}, 'Rx(?<detectorID>\w+)-Tx(?<sourceID>\w+) \[(?<wavelength>\d+)nm\]', 'names');
+        source{i}=sprintf('Tx%s', parts.sourceID);
+        detector{i}=sprintf('Rx%s', parts.detectorID);
+        wavelength(i)=str2num(parts.wavelength);
+      elseif regexp(name{i}, 'Rx(\w+)-Tx(\w+)')
+        parts=regexp(name{i}, 'Rx(?<detectorID>\w+)-Tx(?<sourceID>\w+)', 'names');
+        source{i}=sprintf('Tx%s', parts.sourceID);
+        detector{i}=sprintf('Rx%s', parts.detectorID);
+      elseif regexp(name{i}, 'S(\w+)-D(\w+) \[(\d+)nm\]')
+        parts=regexp(name{i}, 'S(?sourceID>\w+)-D(?<detectorID>\w+) \[(?<wavelength>\d+)nm\]', 'names');
+        source{i}=sprintf('S%s', parts.sourceID);
+        detector{i}=sprintf('D%s',parts.detectorID);
+        wavelength(i)=str2num(parts.wavelength);
+      elseif regexp(name{i}, 'S(\w+)-D(\w+)')
+        parts=regexp(name{i}, 'S(?sourceID>\w+)-D(?<detectorID>\w+', 'names');
+        source{i}=sprintf('S%s', parts.sourceID);
+        detector{i}=sprintf('D%s',parts.detectorID);
+      else
+        % channel is not recognized as a nirs channel
+        continue
+      end
+      sampling_frequency(i)=nan; % sampling frequency of nirs channels are not required
     end
   end
-  tab = table(name, type, units, sampling_frequency);;
+  tab = table(name, type, units, sampling_frequency, source, detector, wavelength);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
