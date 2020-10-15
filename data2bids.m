@@ -105,6 +105,10 @@ function cfg = data2bids(cfg, varargin)
 % FT_DATATYPE_SENS as an "elec" field in the input data, or you can specify it as
 % cfg.elec or you can specify a filename with electrode information.
 %   cfg.elec                    = structure with electrode positions or filename, see FT_READ_SENS
+% For NIRS data you can specify an optode definition according to
+% FT_DATATYPE_SENS as an "opto" field in the input data, or you can specify
+% it as cfg.opto or you can specify a filename with optode information.
+%   cfg.opto                    = structure with optode positions or filename,see FT_READ_SENS
 %
 % General BIDS options that apply to all data types are
 %   cfg.InstitutionName             = string
@@ -149,6 +153,8 @@ function cfg = data2bids(cfg, varargin)
 % snake_case and represents a list of items
 %   cfg.channels.someoption         = cell-array, please check the MATLAB code
 %   cfg.events.someoption           = cell-array, please check the MATLAB code
+%   cfg.electrodes.someoption       = cell-array, please check the MATLAB code
+%   cfg.optodes.someoption          = cell-array, please check the MATLAB code
 %
 % The implementation in this function corresponds to BIDS version 1.2.0. See
 % https://bids-specification.readthedocs.io/ for the full specification and
@@ -958,6 +964,24 @@ if need_meg_json || need_eeg_json || need_ieeg_json
   end
 end
 
+if need_nirs_json
+  try
+    % try to get the optode definition, either from data.opto or from
+    % cfg.optodes
+    tmpcfg = keepfields(cfg, {'opto'});
+    tmpcfg.senstype='nirs';
+    if ~isempty(varargin)
+      opto = ft_fetch_sens(tmpcfg, varargin{1});
+    else
+      opto = ft_fetch_sens(tmpcfg);
+    end
+    need_optodes_tsv = true;
+  catch
+    % optodes can also be specified as cfg.optodes
+    need_optodes_tsv= ~isnan(cfg.optodes.name);
+  end
+end
+
 need_events_tsv       = need_events_tsv       || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json || need_eyetracker_json || need_motion_json || (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task)) || ~isempty(cfg.events);
 need_channels_tsv     = need_channels_tsv     || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json;
 need_coordsystem_json = need_coordsystem_json || need_meg_json || need_electrodes_tsv || need_nirs_json;
@@ -1359,7 +1383,25 @@ end % need_electrodes_tsv
 %% need_optodes_tsv
 if need_optodes_tsv
   % this is needed for NIRS
-  ft_error('not yet implemented');
+  if isstruct(cfg.optodes)
+    try
+      cfg.optodes = struct2table(cfg.optodes);
+    catch
+      ft_error('incorrect specification of cfg.optodes.');
+    end
+  end
+  
+  % optode details can be specified in cfg.opto, data.opto or cfg.optodes
+  optodes_tsv=opto2table(opto); % this includes the cfg.opto and data.opto
+  optodes_tsv=merge_table(optodes_tsv, cfg.optodes, 'name'); % this includes the cfg.optodes
+  
+    % the default for cfg.electrodes consists of one row where all values are nan, this needs to be removed
+  keep = false(size(optodes_tsv.name));
+  for i=1:numel(optodes_tsv.name)
+    keep(i) = ischar(optodes_tsv.name{i});
+  end
+  optodes_tsv = optodes_tsv(keep,:);
+  
 end % need_optodes_tsv
 
 %% need_coordsystem_json
@@ -2001,6 +2043,34 @@ else
   y = elec.elecpos(:,2);
   z = elec.elecpos(:,3);
   tab = table(name, x, y, z);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION convert opto structure into table
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function tab = opto2table(opto)
+if isempty(opto)
+  tab = table();
+else
+  name = opto.optolabel(:);
+  if all(opto.optopos(:,3)==0) % these are probably template positions
+    ft_info('assuming the optode positions are template positions');
+    x=nan(length(name,1));
+    y=nan(length(name,1));
+    z=nan(length(name,1));
+    template_x=opto.optopos(:,1);
+    template_y=opto.optopos(:,2);
+    template_z=opto.optopos(:,3);
+  else % these are probably recorded optode positions
+    ft_info('assuming the optodes are recorded positions')
+    x = opto.optopos(:,1);
+    y = opto.optopos(:,2);
+    z = opto.optopos(:,3);
+    template_x=nan(length(name),1);
+    template_y=nan(length(name),1);
+    template_z=nan(length(name),1);
+  end
+  tab = table(name, x, y, z, template_x, template_y,template_z);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
