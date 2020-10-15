@@ -189,6 +189,7 @@ for i = 1:nvc
   
   montage = [];
   if usepos
+    
     montage.tra      = source.filter{indx(i)};
     montage.labelold = source.label;
     montage.labelnew = cell(size(montage.tra,1), 1);
@@ -204,70 +205,153 @@ for i = 1:nvc
     montage.labelold = source.label;
     montage.labelnew = cell(size(montage.tra,1), 1);
     cnt = 0;
-    for k = numel(sel)
+    for k = 1:numel(sel)
       for kk = 1:size(source.filter{sel(k)},1)
         cnt = cnt+1;
         montage.labelnew{cnt} = sprintf('%s_dipole%03d_orientation%03d', cfg.channel{i}, k, kk);
       end
     end
-    bname = cfg.channel{i};
+    bname = matlab.lang.makeValidName(cfg.channel{i}); % FIXME not sure how universal this is.
     
   end
   
-  % apply the montage to the numeric data
-  tmpdata{1,i}  = ft_apply_montage(data, montage);
-  
-  [i1, i2] = match_str(data.label, montage.labelold);
-  unmixing{1,i}(:,i1) = montage.tra(:,i2);
-  topolabel{1,i}      = data.label(i1);
-  
-  % apply the montage to the sensor description
-  sensfields = {'grad' 'elec' 'opto'};
-  for k = 1:numel(sensfields)
-    if isfield(tmpdata{i}, sensfields{k})
-      ft_info(sprintf('applying the montage to the %s structure\n', sensfields{k}));
-      tmpdata{i}.(sensfields{k}) = ft_apply_montage(tmpdata{i}.grad, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
+  % apply the montage to the numeric data, but make an exception for the
+  % svd method: this one is much more efficient, in that its implementattion
+  % operates on the covariance matrix directly, bypasses ft_componentanalysis, 
+  % and does not require the intermediate (possibly memory greedy, and slow)
+  % data representation.
+  if ~isequal(cfg.method, 'svd')
+    tmpdata{1,i}  = ft_apply_montage(data, montage, 'feedback', 'none');
+    
+    [i1, i2] = match_str(data.label, montage.labelold);
+    unmixing{1,i}(:,i1) = montage.tra(:,i2);
+    topolabel{1,i}      = data.label(i1);
+    
+    % apply the montage to the sensor description
+    sensfields = {'grad' 'elec' 'opto'};
+    for k = 1:numel(sensfields)
+      if isfield(tmpdata{i}, sensfields{k})
+        ft_info(sprintf('applying the montage to the %s structure\n', sensfields{k}));
+        tmpdata{i}.(sensfields{k}) = ft_apply_montage(tmpdata{i}.grad, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
+      end
     end
-  end
-  
-  compmethods = {'pca' 'runica' 'fastica' 'dss'};
-  switch cfg.method
-    case compmethods
+    
+    compmethods = {'pca' 'runica' 'fastica' 'dss'};
+    switch cfg.method
+      case compmethods
+        
+        tmpcfg     = keepfields(cfg, {'method' cfg.method 'numcomponent'});
+        if isequal(tmpcfg.numcomponent, 'all')
+          tmpcfg = rmfield(tmpcfg, 'numcomponent');
+        end
+        
+        tmpdata{i}  = ft_componentanalysis(tmpcfg, tmpdata{i});
+        unmixing{i} = tmpdata{i}.unmixing * unmixing{i};
+        
+        for k = 1:numel(tmpdata{i}.label)
+          if usepos
+            str = sprintf('virtualchannel%03d', i);
+          else
+            str = cfg.channel{i};
+          end
+        end
+        tmpdata{i}.label{k} = sprintf('%s_%s%03d', str, cfg.method, k);
       
-      tmpcfg     = keepfields(cfg, {'method' cfg.method 'numcomponent'});
-      if isequal(tmpcfg.numcomponent, 'all')
-        tmpcfg = rmfield(tmpcfg, 'numcomponent');
-      end
-      
-      tmpdata{i}  = ft_componentanalysis(tmpcfg, tmpdata{i});
-      unmixing{i} = tmpdata{i}.unmixing * unmixing{i};
-      
-      for k = 1:numel(tmpdata{i}.label)
-        tmpdata{i}.label{k} = sprintf('virtualchannel%03d_%s%03d', i, cfg.method, k);
-      end
-      
-    case 'none'
-      % do nothing
+      case 'none'
+        % do nothing
       
     otherwise
       ft_error('currently not yet supported');
       % the idea would to support a custom function here, with a
       % function(cfg.(cfg.method), tmpdata{i}) API
       
-  end % reduction of components
+    end % reduction of components
+  
+  else
+    
+    [i1, i2] = match_str(data.label, montage.labelold);
+    
+    % ensure that the used channels run from 1:numel(data.label), to be
+    % sure that the to-be-computed covariance matches the labels, not sure
+    % whether this is needed, this could probably also be achieved by doing
+    % a check on the input data's labels, related to the source.filter
+    % labels
+    assert(isequal(i1(:)', 1:numel(data.label)));
+    
+    unmixing{1,i}(:,i1) = montage.tra(:,i2);
+    topolabel{1,i}      = data.label(i1);
+    
+    if ~exist('tlck', 'var')
+      % create a data structure that contains a covariance -> FIXME requires
+      % a check on the input data, for now assume raw data
+      tmpcfg = [];
+      tmpcfg.covariance = 'yes';
+      tlck = ft_timelockanalysis(tmpcfg, data);
+    end  
+    
+    % create a matricial square root of the full covariance matrix
+    [u, s, v] = svd(tlck.cov);
+    Csqrtm    = u*sqrt(s);
+     
+    % don't do the sandwiching for efficiency, we will use only the u
+    % matrix, this yields the same u matrix as the svd on the tlck.cov
+    [u, s, v] = svd(unmixing{1, i} * Csqrtm, 'econ');
+    
+    if isequal(cfg.numcomponent, 'all')
+      ncomp = size(u,2);
+    else
+      ncomp = cfg.numcomponent;
+    end
+    
+    unmixing{1, i} = u(:,1:ncomp)' * unmixing{1, i};
+    label{1, i}    = cell(ncomp,1);
+    if usepos
+      str = sprintf('virtualchannel%03d', i);
+    else
+      str = cfg.channel{i};
+    end
+    for k = 1:ncomp
+      label{1, i}{k} = sprintf('%s_svd%03d', str, k);
+    end
+    
+    
+  end
+  
 end % for i = # of virtual channels
 
-data_vc = ft_appenddata([], tmpdata{:});
+if ~isequal(cfg.method, 'svd')
+  data_vc = ft_appenddata([], tmpdata{:});
+  
+  data_vc.unmixing  = cat(1, unmixing{:});
+  data_vc.topolabel = topolabel{1};
+else
+  % create and apply the compound montage 
+  montage = [];
+  montage.tra = cat(1, unmixing{:});
+  montage.labelnew = cat(1, label{:});
+  montage.labelold = topolabel{1};
+  
+  data_vc = ft_apply_montage(data, montage, 'feedback', 'none');
+    
+  % apply the montage to the sensor description
+  sensfields = {'grad' 'elec' 'opto'};
+  bname      = cfg.parcellation;
+  for k = 1:numel(sensfields)
+    if isfield(tmpdata{i}, sensfields{k})
+      ft_info(sprintf('applying the montage to the %s structure\n', sensfields{k}));
+      data_vc.(sensfields{k}) = ft_apply_montage(data.grad, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
+    end
+  end 
+end
 
-data_vc.unmixing  = cat(1, unmixing{:});
-data_vc.topolabel = topolabel{1};
-
-
-brainordinate = keepfields(source, {'pos' 'dim' 'tri' 'transform' 'inside' 'unit'});
-brainordinate.index = zeros(npos, 1);
-brainordinate.index(indx) = indx;
-brainordinate.indexlabel  = data_vc.label; % FIXME this only works with one component per vc
-
+if usepos
+  brainordinate = keepfields(source, {'pos' 'dim' 'tri' 'transform' 'inside' 'unit'});
+  brainordinate.index = zeros(npos, 1);
+  brainordinate.index(indx) = indx;
+  brainordinate.indexlabel  = data_vc.label; % FIXME this only works with one component per vc
+elseif useparcellation
+  brainordinate = parcellation;
+end
 data_vc.brainordinate = brainordinate;
 
 % do the general cleanup and bookkeeping at the end of the function
