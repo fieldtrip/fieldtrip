@@ -30,7 +30,7 @@ function [data_vc] = ft_virtualchannel(cfg, data, source, parcellation)
 % or
 %   cfg.parcellation = string, name of the field that is used for the
 %                  parcel labels. (default = [])
-%   cfg.channel = string, or cell-array of strings, specifying for which
+%   cfg.parcel = string, or cell-array of strings, specifying for which
 %                  parcels to return the output. (default = 'all')
 %
 % The values within a parcel or parcel-combination can be combined with different methods:
@@ -85,8 +85,8 @@ end
 % get the defaults
 cfg.pos          = ft_getopt(cfg, 'pos');
 cfg.parcellation = ft_getopt(cfg, 'parcellation');
-cfg.channel      = ft_getopt(cfg, 'channel',  'all');
-cfg.method       = ft_getopt(cfg, 'method',   'pca');
+cfg.parcel       = ft_getopt(cfg, 'parcel',   'all');
+cfg.method       = ft_getopt(cfg, 'method',   'svd');
 cfg.feedback     = ft_getopt(cfg, 'feedback', 'text');
 cfg.numcomponent = ft_getopt(cfg, 'numcomponent', 1);
 
@@ -121,6 +121,20 @@ if ~isfield(source, 'filter')
   % FIXME how about the output of ft_dipolefitting?
 end
 
+% FIXME for now support only raw-type data structures, this should be
+% extended to also allow freq (with fourier) and timelock structures,
+% although the latter is probably already covered by the call to checkdata,
+% it should be checked how this is done in ft_megplanar.
+data     = ft_checkdata(data, 'datatype', {'raw', 'raw+comp', 'mvar'}, 'feedback', cfg.feedback);
+[i1, i2] = match_str(data.label, source.label);
+
+% select channels and trials of interest, by default this will select all channels and trials
+tmpcfg = keepfields(cfg, {'trials', 'tolerance', 'showcallinfo'});
+tmpcfg.channel = data.label(i1);
+data   = ft_selectdata(tmpcfg, data);
+% restore the provenance information
+[cfg, data] = rollback_provenance(cfg, data);
+
 % do the actual work
 if usepos
   
@@ -136,7 +150,7 @@ if usepos
     
     % check that the requested positions are at most 1 mm away from the actual
     % positions
-    if mindist(i)>1.*ft_scalingfactor('mm', source.unit)
+    if mindist(i)>1*ft_scalingfactor('mm', source.unit)
       ft_error('the requested dipole position is > 1 mm away from the closest source position');
     end
     
@@ -170,14 +184,14 @@ elseif useparcellation
     ft_error('the source positions are not consistent with the parcellation, please use FT_SOURCEINTERPOLATE');
   end
   
-  if isequal(cfg.channel, 'all')
-    cfg.channel = parcellation.(sprintf('%slabel',cfg.parcellation));
+  if isequal(cfg.parcel, 'all')
+    cfg.parcel = parcellation.(sprintf('%slabel',cfg.parcellation));
   end
   
-  indx = match_str(parcellation.(sprintf('%slabel',cfg.parcellation)), cfg.channel);
-  cfg.channel = parcellation.(sprintf('%slabel',cfg.parcellation))(indx);
+  indx = match_str(parcellation.(sprintf('%slabel',cfg.parcellation)), cfg.parcel);
+  cfg.parcel = parcellation.(sprintf('%slabel',cfg.parcellation))(indx);
   
-  nvc = numel(cfg.channel);
+  nvc = numel(cfg.parcel);
 end
 
 % create a montage for each of the dipoles/parcels, and use ft_apply_montage,
@@ -208,10 +222,10 @@ for i = 1:nvc
     for k = 1:numel(sel)
       for kk = 1:size(source.filter{sel(k)},1)
         cnt = cnt+1;
-        montage.labelnew{cnt} = sprintf('%s_dipole%03d_orientation%03d', cfg.channel{i}, k, kk);
+        montage.labelnew{cnt} = sprintf('%s_dipole%03d_orientation%03d', cfg.parcel{i}, k, kk);
       end
     end
-    bname = matlab.lang.makeValidName(cfg.channel{i}); % FIXME not sure how universal this is.
+    bname = matlab.lang.makeValidName(cfg.parcel{i}); % FIXME not sure how universal this is.
     
   end
   
@@ -300,7 +314,12 @@ for i = 1:nvc
     if isequal(cfg.numcomponent, 'all')
       ncomp = size(u,2);
     else
-      ncomp = cfg.numcomponent;
+      if size(u,2)>=cfg.numcomponent
+        ncomp = cfg.numcomponent;
+      else
+        ncomp = size(u,2);
+        ft_warning(sprintf('using %d components,rather than the requested %d\n', ncomp, cfg.numcomponent));
+      end
     end
     
     unmixing{1, i} = u(:,1:ncomp)' * unmixing{1, i};
@@ -308,7 +327,7 @@ for i = 1:nvc
     if usepos
       str = sprintf('virtualchannel%03d', i);
     else
-      str = cfg.channel{i};
+      str = cfg.parcel{i};
     end
     for k = 1:ncomp
       label{1, i}{k} = sprintf('%s_svd%03d', str, k);
@@ -337,7 +356,7 @@ else
   sensfields = {'grad' 'elec' 'opto'};
   bname      = cfg.parcellation;
   for k = 1:numel(sensfields)
-    if isfield(tmpdata{i}, sensfields{k})
+    if isfield(data_vc, sensfields{k})
       ft_info(sprintf('applying the montage to the %s structure\n', sensfields{k}));
       data_vc.(sensfields{k}) = ft_apply_montage(data.grad, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
     end
