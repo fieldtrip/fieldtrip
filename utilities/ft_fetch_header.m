@@ -49,18 +49,24 @@ hdr.Fs     = data.fsample;
 hdr.label  = data.label(:);
 hdr.nChans = numel(data.label);
 
-% fill in the channel type and units
-if isfield(data, 'hdr')
+% fill in the channel type
+if isfield(data, 'chantype')
+  hdr.chantype = data.chantype(:);
+elseif isfield(data, 'hdr') && isfield(data.hdr, 'chantype')
   % keep them ordered according to the FieldTrip data structure, which might differ from the original header
   [datindx, hdrindx] = match_str(data.label, data.hdr.label);
   hdr.chantype = repmat({'unknown'}, hdr.nChans, 1);
-  if isfield(data.hdr, 'chantype')
-    hdr.chantype(datindx) = data.hdr.chantype(hdrindx);
-  end
+  hdr.chantype(datindx) = data.hdr.chantype(hdrindx);
+end
+
+% fill in the channel unit
+if isfield(data, 'chanunit')
+  hdr.chanunit = data.chanunit(:);
+elseif isfield(data, 'hdr') && isfield(data.hdr, 'chanunit')
+  % keep them ordered according to the FieldTrip data structure, which might differ from the original header
+  [datindx, hdrindx] = match_str(data.label, data.hdr.label);
   hdr.chanunit = repmat({'unknown'}, hdr.nChans, 1);
-  if isfield(data.hdr, 'chanunit')
-    hdr.chanunit(datindx) = data.hdr.chanunit(hdrindx);
-  end
+  hdr.chanunit(datindx) = data.hdr.chanunit(hdrindx);
 end
 
 % try to determine them on the basis of heuristics, when already present they will stay the same

@@ -92,7 +92,7 @@ dirlist = dir(p1);
 filelist1 = {dirlist(~[dirlist.isdir]).name};
 dirlist = dir(p2);
 filelist2 = {dirlist(~[dirlist.isdir]).name};
-if startsWith(entities{2}, 'sub-')
+if numel(entities)>1 && startsWith(entities{2}, 'ses-')
   % there is a sessions level
   dirlist = dir(p3);
   filelist3 = {dirlist(~[dirlist.isdir]).name};
