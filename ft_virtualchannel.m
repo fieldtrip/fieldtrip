@@ -282,8 +282,12 @@ for i = 1:nvc
     else
       str = cfg.parcel{i};
     end
-    for k = 1:ncomp
-      label{1, i}{k} = sprintf('%s_svd%03d', str, k);
+    if ncomp == 1
+      label{1, i}{1} = str;
+    else
+      for k = 1:ncomp
+        label{1, i}{k} = sprintf('%s_svd%03d', str, k);
+      end
     end
     
   else
