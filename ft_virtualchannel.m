@@ -325,8 +325,13 @@ for i = 1:nvc
           else
             str = cfg.channel{i};
           end
+          if numel(tmpdata{i}.label)==1
+            tmpdata{i}.label{k} = sprintf('%s_%03d', str);  
+          else
+            tmpdata{i}.label{k} = sprintf('%s_%03d', str, k);
+          end
         end
-        tmpdata{i}.label{k} = sprintf('%s_%s%03d', str, cfg.method, k);
+        
       
       case 'none'
         % do nothing
