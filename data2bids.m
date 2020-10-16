@@ -1761,12 +1761,13 @@ end % for each modality
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % each of these has a corresponding tsv file
-modality = {'channels', 'electrodes', 'events'};
+modality = {'channels', 'electrodes', 'optodes', 'events'};
 for i=1:numel(modality)
   if eval(sprintf('need_%s_tsv', modality{i}))
     modality_tsv = eval(sprintf('%s_tsv', modality{i}));
+    modality_tsv = remove_empty(modality_tsv)
     
-    if strcmp(modality{i}, 'electrodes')
+    if anystrcmp(modality{i}, {'electrodes', 'optodes'}))
       [p, f] = fileparts(cfg.outputfile);
       f = remove_entity(f, 'task');     % remove _task-something
       f = remove_entity(f, 'acq');      % remove _acq-something
