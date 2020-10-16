@@ -31,7 +31,7 @@ function [data, powindx, hasrpt] = univariate2bivariate(data, inparam, outparam,
 %    GNU General Public License for more details.
 %
 %    You should have received a copy of the GNU General Public License
-%    along with FielddTrip. If not, see <http://www.gnu.org/licenses/>.
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
 
