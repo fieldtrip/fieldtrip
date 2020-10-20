@@ -256,6 +256,8 @@ switch purpose
       'transform'
       'unit'
       'brainordinate'
+      'chantype'
+      'chanunit'
       };
 
   case 'recursesize'
