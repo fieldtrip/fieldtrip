@@ -4,7 +4,7 @@ function test_issue1554()
 % WALLTIME 00:10:00
 % DEPENDENCY ft_spike_maketrials
 
-%% Raw spike structure with 10 spikes randomly distributed in each of a 100 trials (1000 total spikes) 
+%% Raw spike structure with 10 spikes randomly distributed in each of a 100 trials (1000 total spikes)
 spike   = [];
 tsAll   = [];
 events  = [];
