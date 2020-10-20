@@ -198,8 +198,8 @@ end
 estimate.inside  = originside;
 estimate.pos     = origpos;
 if isfield(sourcemodel, 'pow') % here pow is cell
-  estimate.pow( originside,:) = sourcemodel.pow;
-  estimate.pow(~originside,:) = nan;
+  estimate.pow( originside,:,:) = sourcemodel.pow;
+  estimate.pow(~originside,:,:) = nan;
 end
 if isfield(sourcemodel, 'ori') % here ori is cell
   estimate.ori( originside) = sourcemodel.ori;
