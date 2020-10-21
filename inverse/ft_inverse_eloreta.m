@@ -197,7 +197,7 @@ end
 % reassign the estimated values over the inside and outside grid positions
 estimate.inside  = originside;
 estimate.pos     = origpos;
-if isfield(sourcemodel, 'pow') % here pow is cell
+if isfield(sourcemodel, 'pow')
   estimate.pow( originside,:,:) = sourcemodel.pow;
   estimate.pow(~originside,:,:) = nan;
 end
