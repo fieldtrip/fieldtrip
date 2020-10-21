@@ -222,6 +222,7 @@ cfg = ft_checkconfig(cfg, 'renamed', {'events.writesidecar', 'writejson'});
 cfg = ft_checkconfig(cfg, 'renamed', {'channels.writesidecar', 'writejson'});
 cfg = ft_checkconfig(cfg, 'renamed', {'electrodes.writesidecar', 'writejson'});
 cfg = ft_checkconfig(cfg, 'renamed', {'coordsystem.writesidecar', 'writejson'});
+cfg = ft_checkconfig(cfg, 'renamed', {'event', 'events'}); % cfg.event is used elsewhere in FieldTrip, but here it should be cfg.events with an s
 
 % get the options and set the defaults
 cfg.method                  = ft_getopt(cfg, 'method');                     % default is handled below

@@ -97,9 +97,17 @@ try
   end
 end % try
 
+haschantype = false;
+haschanunit = false;
+for i=1:length(varargin)
+  % if one of them has chantype or chanunit, we want it for the others as well
+  haschantype = haschantype || isfield(varargin{i}, 'chantype');
+  haschanunit = haschanunit || isfield(varargin{i}, 'chanunit');
+end
+
 % ensure that the input data is valid for this function
 for i=1:length(varargin)
-  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'raw', 'raw+comp'}, 'feedback', 'no', 'hassampleinfo', cfg.keepsampleinfo);
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'raw', 'raw+comp'}, 'feedback', 'no', 'haschantype', haschantype, 'haschanunit', haschanunit, 'hassampleinfo', cfg.keepsampleinfo);
 end
 
 % set the defaults
@@ -165,9 +173,23 @@ switch cfg.appenddim
         end
         lab = cat(1, lab, varargin{i}.label(:));
       end
+      data.label = lab; % replace the one from append_common
       data.trial = dat;
       data.time  = varargin{1}.time;
-      data.label = lab; % replace the one from append_common
+      if haschantype
+        chantype = varargin{1}.chantype(:);
+        for i=2:numel(varargin)
+          chantype = cat(1, chantype, varargin{i}.chantype(:));
+        end
+        data.chantype = chantype;
+      end
+      if haschanunit
+        chanunit = varargin{1}.chanunit(:);
+        for i=2:numel(varargin)
+          chanunit = cat(1, chanunit, varargin{i}.chanunit(:));
+        end
+        data.chanunit = chanunit;
+      end
     else
       ft_error('data has different time, cannot append over channels');
     end

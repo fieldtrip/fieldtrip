@@ -172,8 +172,8 @@ switch version
       if isfield(sens, 'optotype') && isfield(sens, 'tra')
         % the read_artinis_oxy3 file returns the wrong sign for the receivers and transmitters
         % but since it is p-code, it cannot be fixed
-        correctT = all(sens.tra(:, strcmp(sens.optotype, 'transmitter'))>=0, 'all');
-        correctR = all(sens.tra(:, strcmp(sens.optotype, 'receiver'   ))<=0, 'all');
+        tmp = sens.tra(:, strcmp(sens.optotype, 'transmitter')); correctT = all(tmp(:)>=0);
+        tmp = sens.tra(:, strcmp(sens.optotype, 'receiver'   )); correctR = all(tmp(:)<=0);
         if ~correctT
           ft_warning('flipping sign for transmitters');
           sens.tra(:, strcmp(sens.optotype, 'transmitter')) = -sens.tra(:, strcmp(sens.optotype, 'transmitter'));
