@@ -197,15 +197,19 @@ wlidx = bsxfun(@minus, coefs(:, 1), wavelengths);
 % find the relevant channel combinations
 chancmb = logical([]); % we need to loop here to get size of chancmb
 chanUsed = zeros(numel(chanidx), 1);
+chanCmbMapping = zeros(0, 1); % to map the "sens" indices to "chancmb" indices
+chanCmbMappingCounter = 1; % counts how many wavelengths are used per 
 for c=1:numel(chanidx)
   % skip channel if it already was in another channel combination
   if chanUsed(c)
+    chanCmbMapping(size(chancmb, 2), 1) = 5;
     continue;
   end
   % compute the channel combinations
   tupletidx = sum(bsxfun(@minus, optodeidx, optodeidx(c, :))~=0, 2)==0;
   chanUsed = chanUsed|tupletidx;
-  chancmb(:, end+1) = tupletidx;
+  chancmb(:, end+1) = tupletidx;  
+  chanCmbMapping(c, 1) = size(chancmb, 2);
 end
 
 % do the transformation
@@ -213,18 +217,20 @@ tra      = zeros(size(chancmb, 2)*numel(chromophoreIdx), size(cfg.channel, 1));
 labelnew = cell(1, size(chancmb, 2)*numel(chromophoreIdx));
 
 % transformation has to be done per channel combination
-chanidx = []; % we will use this variable here
+chanidx = []; % we will use this variable here for indexing channels (Rx-Tx cmbs)
+optoidx = []; % we will use this variable here for indexing optodes (individual Rx and Tx)
 for c=1:size(chancmb, 2)
 
-  % find all other channels of the same transmitter / receiver pair
+  % find all other channels of the exact same transmitter / receiver pair
   chanidx = chancmb(:, c);
 
   % extract coefficient idx of these channels
   [coefidx, colidx] = find(wlidx(:, chanidx)==0);
 
   % compute the transmitter/receiver distance in cm
-  dist = sqrt(sum(diff(sens.optopos(optodeidx(c, :), :)).^2));
-
+  optoidx = find(chanidx, 1, 'first'); % we can take 'first' because the transmitter-optodes have to be physically in the exact same spot to form "one" channel
+  dist = sqrt(sum(diff(sens.optopos(optodeidx(optoidx, :), :)).^2));
+    
   % select dpf
   dpf = mean(dpfs(chanidx));
 
