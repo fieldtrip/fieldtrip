@@ -294,6 +294,7 @@ cfg.stim          = ft_getopt(cfg, 'stim');
 cfg.motion        = ft_getopt(cfg, 'motion');
 cfg.channels      = ft_getopt(cfg, 'channels');
 cfg.electrodes    = ft_getopt(cfg, 'electrodes');
+cfg.sources       = ft_getopt(cfg, 'sources');
 cfg.events        = ft_getopt(cfg, 'events');     % this can contain the trial definition as Nx3 array, as table, or an event structure
 cfg.coordsystem   = ft_getopt(cfg, 'coordsystem');
 
@@ -438,7 +439,7 @@ cfg.eeg.HardwareFilters               = ft_getopt(cfg.eeg, 'HardwareFilters'    
 cfg.eeg.SubjectArtefactDescription    = ft_getopt(cfg.eeg, 'SubjectArtefactDescription'  ); % Freeform description of the observed subject artefact and its possible cause (e.g. "Vagus Nerve Stimulator", "non-removable implant"). If this field is left empty, it will be interpreted as absence of  a source of (constantly present) artifacts.
 
 %% iEEG specific fields
-cfg.ieeg.iEEGReference                   = ft_getopt(cfg.ieeg, 'iEEGReference'                  ); % REQUIRED. General description of the reference scheme used and (when applicable) of location of the reference electrode in the raw recordings (e.g. "left mastoid”, “bipolar”, “T01” for electrode with name T01, “intracranial electrode on top of a grid, not included with data”, “upside down electrode”). If different channels have a different reference, this field should have a general description and the channel specific reference should be defined in the _channels.tsv file.
+cfg.ieeg.iEEGReference                   = ft_getopt(cfg.ieeg, 'iEEGReference'                  ); % REQUIRED. General description of the reference scheme used and (when applicable) of location of the reference electrode in the raw recordings (e.g. "left mastoid�?, “bipolar�?, “T01�? for electrode with name T01, “intracranial electrode on top of a grid, not included with data�?, “upside down electrode�?). If different channels have a different reference, this field should have a general description and the channel specific reference should be defined in the _channels.tsv file.
 cfg.ieeg.SamplingFrequency               = ft_getopt(cfg.ieeg, 'SamplingFrequency'              ); % REQUIRED. Sampling frequency (in Hz) of all the iEEG channels in the recording (e.g., 2400). All other channels should have frequency specified as well in the channels.tsv file.
 cfg.ieeg.PowerLineFrequency              = ft_getopt(cfg.ieeg, 'PowerLineFrequency'             ); % REQUIRED. Frequency (in Hz) of the power grid where the iEEG recording was done (i.e. 50 or 60)
 cfg.ieeg.SoftwareFilters                 = ft_getopt(cfg.ieeg, 'SoftwareFilters'                ); % REQUIRED. List of temporal software filters applied or ideally  key:value pairs of pre-applied filters and their parameter values. (n/a if none).
@@ -456,13 +457,13 @@ cfg.ieeg.EMGChannelCount                 = ft_getopt(cfg.ieeg, 'EMGChannelCount'
 cfg.ieeg.MiscChannelCount                = ft_getopt(cfg.ieeg, 'MiscChannelCount'               ); % RECOMMENDED. Number of miscellaneous analog channels for auxiliary  signals
 cfg.ieeg.TriggerChannelCount             = ft_getopt(cfg.ieeg, 'TriggerChannelCount'            ); % RECOMMENDED. Number of channels for digital (TTL bit level) triggers
 cfg.ieeg.RecordingDuration               = ft_getopt(cfg.ieeg, 'RecordingDuration'              ); % RECOMMENDED. Length of the recording in seconds (e.g. 3600)
-cfg.ieeg.RecordingType                   = ft_getopt(cfg.ieeg, 'RecordingType'                  ); % RECOMMENDED. Defines whether the recording is  “continuous” or  “epoched”; this latter limited to time windows about events of interest (e.g., stimulus presentations, subject responses etc.)
+cfg.ieeg.RecordingType                   = ft_getopt(cfg.ieeg, 'RecordingType'                  ); % RECOMMENDED. Defines whether the recording is  “continuous�? or  “epoched�?; this latter limited to time windows about events of interest (e.g., stimulus presentations, subject responses etc.)
 cfg.ieeg.EpochLength                     = ft_getopt(cfg.ieeg, 'EpochLength'                    ); % RECOMMENDED. Duration of individual epochs in seconds (e.g. 1) in case of epoched data
-cfg.ieeg.iEEGGround                      = ft_getopt(cfg.ieeg, 'iEEGGround'                     ); % RECOMMENDED. Description  of the location of the ground electrode (“placed on right mastoid (M2)”).
-cfg.ieeg.iEEGPlacementScheme             = ft_getopt(cfg.ieeg, 'iEEGPlacementScheme'            ); % RECOMMENDED. Freeform description of the placement of the iEEG electrodes. Left/right/bilateral/depth/surface (e.g. “left frontal grid and bilateral hippocampal depth” or “surface strip and STN depth” or “clinical indication bitemporal, bilateral temporal strips and left grid”).
+cfg.ieeg.iEEGGround                      = ft_getopt(cfg.ieeg, 'iEEGGround'                     ); % RECOMMENDED. Description  of the location of the ground electrode (“placed on right mastoid (M2)�?).
+cfg.ieeg.iEEGPlacementScheme             = ft_getopt(cfg.ieeg, 'iEEGPlacementScheme'            ); % RECOMMENDED. Freeform description of the placement of the iEEG electrodes. Left/right/bilateral/depth/surface (e.g. “left frontal grid and bilateral hippocampal depth�? or “surface strip and STN depth�? or “clinical indication bitemporal, bilateral temporal strips and left grid�?).
 cfg.ieeg.iEEGElectrodeGroups             = ft_getopt(cfg.ieeg, 'iEEGElectrodeGroups'            ); % RECOMMENDED. Field to describe the way electrodes are grouped into strips, grids or depth probes e.g. {'grid1': "10x8 grid on left temporal pole", 'strip2': "1x8 electrode strip on xxx"}.
-cfg.ieeg.SubjectArtefactDescription      = ft_getopt(cfg.ieeg, 'SubjectArtefactDescription'     ); % RECOMMENDED. Freeform description of the observed subject artefact and its possible cause (e.g. “door open”, ”nurse walked into room at 2 min”, ”seizure at 10 min”). If this field is left empty, it will be interpreted as absence of artifacts.
-cfg.ieeg.ElectricalStimulation           = ft_getopt(cfg.ieeg, 'ElectricalStimulation'          ); % OPTIONAL. Boolean field to specify if electrical stimulation was done during the recording (options are “true” or “false”). Parameters for event-like stimulation should be specified in the _events.tsv file (see example underneath).
+cfg.ieeg.SubjectArtefactDescription      = ft_getopt(cfg.ieeg, 'SubjectArtefactDescription'     ); % RECOMMENDED. Freeform description of the observed subject artefact and its possible cause (e.g. “door open�?, �?nurse walked into room at 2 min�?, �?seizure at 10 min�?). If this field is left empty, it will be interpreted as absence of artifacts.
+cfg.ieeg.ElectricalStimulation           = ft_getopt(cfg.ieeg, 'ElectricalStimulation'          ); % OPTIONAL. Boolean field to specify if electrical stimulation was done during the recording (options are “true�? or “false�?). Parameters for event-like stimulation should be specified in the _events.tsv file (see example underneath).
 cfg.ieeg.ElectricalStimulationParameters = ft_getopt(cfg.ieeg, 'ElectricalStimulationParameters'); % OPTIONAL. Free form description of stimulation parameters, such as frequency, shape etc. Specific onsets can be specified in the _events.tsv file. Specific shapes can be described here in freeform text.
 
 %% EMG is not part of the official BIDS specification
@@ -528,6 +529,11 @@ cfg.motion.Columns                        = ft_getopt(cfg.motion, 'Columns'     
 cfg.motion.StartTime                      = ft_getopt(cfg.motion, 'StartTime'            );
 cfg.motion.SamplingFrequency              = ft_getopt(cfg.motion, 'SamplingFrequency'    );
 cfg.motion.RecordingDuration              = ft_getopt(cfg.motion, 'RecordingDuration'    );
+cfg.motion.RecodingType                   = ft_getopt(cfg.motion, 'RecordingType'        );
+cfg.motion.EpochLength                    = ft_getopt(cfg.motion, 'EpochLength'          );
+cfg.motion.MotionChannelCount             = ft_getopt(cfg.motion, 'MotionChannelCount'   );
+cfg.motion.SpaceGeometry                  = ft_getopt(cfg.motion, 'SpaceGeometry'        );
+cfg.motoin.SubjectArtefactDescription     = ft_getopt(cfg.motion, 'SubjectArtefactDescription');
 
 %% information for the coordsystem.json file for MEG, EEG and iEEG
 cfg.coordsystem.MEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystem'                            ); % REQUIRED. Defines the coordinate system for the MEG sensors. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in [MEGCoordinateSystemDescription].
@@ -549,6 +555,10 @@ cfg.coordsystem.iEEGCoordinateUnits	                            = ft_getopt(cfg.
 cfg.coordsystem.iEEGCoordinateSystemDescription	                = ft_getopt(cfg.coordsystem, 'iEEGCoordinateSystemDescription'                ); % RECOMMENDED. Freeform text description or link to document describing the iEEG coordinate system system in detail (e.g., "Coordinate system with the origin at anterior commissure (AC), negative y-axis going through the posterior commissure (PC), z-axis going to a mid-hemisperic point which lies superior to the AC-PC line, x-axis going to the right").
 cfg.coordsystem.iEEGCoordinateProcessingDescription             = ft_getopt(cfg.coordsystem, 'iEEGCoordinateProcessingDescription'            ); % RECOMMENDED. Has any post-processing (such as projection) been done on the electrode positions (e.g., "surface_projection", "none").
 cfg.coordsystem.iEEGCoordinateProcessingReference	              = ft_getopt(cfg.coordsystem, 'iEEGCoordinateProcessingReference'              ); % RECOMMENDED. A reference to a paper that defines in more detail the method used to localize the electrodes and to post-process the electrode positions. .
+cfg.coordsystem.MotionCoordinateSystem                          = ft_getopt(cfg.coordsystem, 'MotionCoordinateSystem'                         );
+cfg.coordsystem.MotionRotationRule                              = ft_getopt(cfg.coordsystem, 'MotionRotationRule'                             );
+cfg.coordsystem.MotionRotationOrder                             = ft_getopt(cfg.coordsystem, 'MotionRotationOrder'                            );
+
 cfg.coordsystem.IntendedFor                                     = ft_getopt(cfg.coordsystem, 'IntendedFor'                                    ); % OPTIONAL. Path or list of path relative to the subject subfolder pointing to the structural MRI, possibly of different types if a list is specified, to be used with the MEG recording. The path(s) need(s) to use forward slashes instead of backward slashes (e.g. "ses-<label>/anat/sub-01_T1w.nii.gz").
 cfg.coordsystem.AnatomicalLandmarkCoordinates                   = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinates'                  ); % OPTIONAL. Key:value pairs of the labels and 3-D digitized locations of anatomical landmarks, interpreted following the AnatomicalLandmarkCoordinateSystem, e.g., {"NAS": [12.7,21.3,13.9], "LPA": [5.2,11.3,9.6], "RPA": [20.2,11.3,9.1]}.
 cfg.coordsystem.AnatomicalLandmarkCoordinateSystem              = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinateSystem'             ); % OPTIONAL. Defines the coordinate system for the anatomical landmarks. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in AnatomicalLandmarkCoordinateSystemDescripti on.
@@ -568,6 +578,10 @@ cfg.channels.notch              = ft_getopt(cfg.channels, 'notch'              ,
 cfg.channels.software_filters   = ft_getopt(cfg.channels, 'software_filters'   , nan);  % OPTIONAL. List of temporal and/or spatial software filters applied (e.g. "SSS", "SpatialCompensation"). Note that parameters should be defined in the general MEG sidecar .json file. Indicate n/a in the absence of software filters applied.
 cfg.channels.status             = ft_getopt(cfg.channels, 'status'             , nan);  % OPTIONAL. Data quality observed on the channel (good/bad). A channel is considered bad if its data quality is compromised by excessive noise. Description of noise type SHOULD be provided in [status_description].
 cfg.channels.status_description = ft_getopt(cfg.channels, 'status_description' , nan);  % OPTIONAL. Freeform text description of noise or artifact affecting data quality on the channel. It is meant to explain why the channel was declared bad in [status].
+% motion specific fields
+cfg.channels.source             = ft_getopt(cfg.channels, 'source'             , nan);  % REQUIRED. Label of the object that is being tracked, for example, label of a tracker or a marker. 
+cfg.channels.component          = ft_getopt(cfg.channels, 'component'          , nan);  % REQUIRED. Component of the representational system that the channel contains. 
+cfg.channels.reference_space    = ft_getopt(cfg.channels, 'reference_space'    , nan);
 
 %% columns in the electrodes.tsv
 cfg.electrodes.name             = ft_getopt(cfg.electrodes, 'name'             , nan);  % REQUIRED. Name of the electrode
@@ -577,6 +591,11 @@ cfg.electrodes.z                = ft_getopt(cfg.electrodes, 'z'                ,
 cfg.electrodes.type             = ft_getopt(cfg.electrodes, 'type'             , nan);  % RECOMMENDED. Type of the electrode (e.g., cup, ring, clip-on, wire, needle)
 cfg.electrodes.material         = ft_getopt(cfg.electrodes, 'material'         , nan);  % RECOMMENDED. Material of the electrode, e.g., Tin, Ag/AgCl, Gold
 cfg.electrodes.impedance        = ft_getopt(cfg.electrodes, 'impedance'        , nan);  % RECOMMENDED. Impedance of the electrode in kOhm
+
+%% columns in the sources.tsv (for motion data)
+cfg.sources.name                = ft_getopt(cfg.sources, 'name'                , nan);  % REQUIRED. Label of the source. Entries are required to correspond to column �source� of _channels.tsv. 
+cfg.sources.type                = ft_getopt(cfg.sources, 'type'                , nan);  % REQUIRED.  Type of the source. This can be a physical object that is attached on the body such as a tracker or a marker or a body part whose transform is computed from images or an inverse kinematics model.
+cfg.sources.placement           = ft_getopt(cfg.sources, 'placement'           , nan);  % RECOMMENDED. Placement of the tracked source on the body (e.g., participant, avatar centroid, torso, left arm). It can refer to an external vocabulary for describing body parts.
 
 %% information for the participants.tsv
 cfg.participants = ft_getopt(cfg, 'participants', struct());
@@ -718,6 +737,7 @@ need_events_tsv         = false; % for functional and behavioral experiments
 need_channels_tsv       = false; % only needed for MEG/EEG/iEEG/EMG/NIRS
 need_electrodes_tsv     = false; % only needed when actually present as cfg.electrodes, data.elec or as cfg.elec
 need_optodes_tsv        = false; % only needed when actually present as cfg.optodes, data.opto or as cfg.opto
+need_sources_tsv        = false;
 
 switch typ
   case {'nifti', 'nifti2', 'nifti_fsl'}
@@ -919,9 +939,14 @@ if need_meg_json || need_eeg_json || need_ieeg_json
   end
 end
 
+if need_motion_json
+  need_sources_tsv = true;
+end
+
+    
 need_events_tsv       = need_events_tsv       || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json || need_eyetracker_json || need_motion_json || (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task)) || ~isempty(cfg.events);
-need_channels_tsv     = need_channels_tsv     || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json;
-need_coordsystem_json = need_coordsystem_json || need_meg_json || need_electrodes_tsv;
+need_channels_tsv     = need_channels_tsv     || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json || need_motion_json;
+need_coordsystem_json = need_coordsystem_json || need_meg_json || need_electrodes_tsv || need_motion_json;
 
 if need_emg_json
   ft_warning('EMG data is not yet part of the official BIDS specification');
@@ -1207,7 +1232,6 @@ end
 if need_stim_json
   stim_json.SamplingFrequency = hdr.Fs;
   stim_json.StartTime = nan;
-  stim_json.Columns = hdr.label;
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
@@ -1229,10 +1253,15 @@ end
 
 %% need_motion_json
 if need_motion_json
+  motion_json.EpochLength = hdr.nSamples/hdr.Fs;
   motion_json.SamplingFrequency = hdr.Fs;
   motion_json.StartTime = nan;
-  motion_json.Columns = hdr.label;
   motion_json.RecordingDuration = (hdr.nSamples*hdr.nTrials)/hdr.Fs;
+  if hdr.nTrials==1
+    motion_json.RecordingType='continuous';
+  else
+    motion_json.RecordingType='epoched';
+  end
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
@@ -1275,6 +1304,8 @@ if need_channels_tsv
     type_json = exg_json;
   elseif need_nirs_json
     type_json = nirs_json;
+  elseif need_motion_json
+    type_json = motion_json;
   end
   fn = fieldnames(type_json);
   fn = fn(endsWith(fn, 'ChannelCount'));
@@ -1318,6 +1349,32 @@ if need_optodes_tsv
   % this is needed for NIRS
   ft_error('not yet implemented');
 end % need_optodes_tsv
+
+%% need_sources_tsv
+if need_sources_tsv
+  if isstruct(cfg.sources)
+    try
+      cfg.sources = struct2table(cfg.sources);
+    catch
+      ft_error('incorrect specification of cfg.sources');
+    end
+  end
+  
+  % source details can be specified in cfg.sources or the hdr.sources
+  try
+    sources_tsv = struct2table(hdr.sources);
+  catch
+    ft_error('incorrect specification of hdr.sources');
+  end
+  sources_tsv = merge_table(sources_tsv, cfg.sources, 'name');
+  
+  % the default for cfg.sources consists of one row where all values are nan, this needs to be removed
+  keep = false(size(sources_tsv.name));
+  for i=1:numel(sources_tsv.name)
+    keep(i) = ischar(sources_tsv.name{i});
+  end
+  sources_tsv = sources_tsv(keep,:);
+end  % need_sources_tsv
 
 %% need_coordsystem_json
 if need_coordsystem_json
@@ -1891,7 +1948,12 @@ else
   type = hdr.chantype(:);
   units = hdr.chanunit(:);
   sampling_frequency = repmat(hdr.Fs, hdr.nChans, 1);
-  tab = table(name, type, units, sampling_frequency);;
+  % add motion specific fields (empty columns will be removed in a later
+  % step)
+  source=hdr.chansource(:);
+  component=hdr.chancomponent(:);
+  reference_space=hdr.chanrefspace(:);
+  tab = table(name, type, units, sampling_frequency, source, component, reference_space);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
