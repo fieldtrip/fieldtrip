@@ -1766,9 +1766,9 @@ modality = {'channels', 'electrodes', 'optodes', 'events'};
 for i=1:numel(modality)
   if eval(sprintf('need_%s_tsv', modality{i}))
     modality_tsv = eval(sprintf('%s_tsv', modality{i}));
-    modality_tsv = remove_empty(modality_tsv)
+    modality_tsv = remove_empty(modality_tsv);
     
-    if anystrcmp(modality{i}, {'electrodes', 'optodes'}))
+    if any(strcmp(modality{i}, {'electrodes', 'optodes'}))
       [p, f] = fileparts(cfg.outputfile);
       f = remove_entity(f, 'task');     % remove _task-something
       f = remove_entity(f, 'acq');      % remove _acq-something
@@ -1979,14 +1979,14 @@ else
   units = hdr.chanunit(:);
   sampling_frequency = repmat(hdr.Fs, hdr.nChans, 1);
   % find source name, detector name and wavelength of nirs channels
-  source=cell(length(name), 1); detector=cell(length(name), 1); wavelength=nan(length(name),1);
+  source=cell(length(name), 1); detector=cell(length(name), 1); wavelength=nan(length(name),1); % empty columns will be removed in a later step
   if isfield(hdr, 'opto') % else try regexp
+    sampling_frequency =cell(length(name), 1); % sampling frequency of nirs channels are not required
     for i=1:length(name)
       labelidx=find(strcmp(hdr.opto.label, name{i}));
       if isempty(labelidx)
         continue
       else
-        sampling_frequency(i)=nan; % sampling frequency of nirs channels are not required
         [~, optoidx, wavelengthidx]=find(hdr.opto.tra(labelidx,:));
         for k=optoidx
           if any(strcmp(hdr.opto.optotype{k}, {'receiver', 'detector'}))
@@ -2027,7 +2027,7 @@ else
         % channel is not recognized as a nirs channel
         continue
       end
-      sampling_frequency(i)=nan; % sampling frequency of nirs channels are not required
+      sampling_frequency =cell(length(name), 1);% sampling frequency of nirs channels are not required
     end
   end
   tab = table(name, type, units, sampling_frequency, source, detector, wavelength);
@@ -2229,10 +2229,13 @@ end
 function s = remove_empty(s)
 if isempty(s)
   return
-else
+elseif isstruct(s)
   fn = fieldnames(s);
   fn = fn(structfun(@isempty, s));
   s = removefields(s, fn);
+elseif istable(s)
+  vn = find(all(cellfun(@isempty, s{:,:})));
+  s = removevars(s, vn);    
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
