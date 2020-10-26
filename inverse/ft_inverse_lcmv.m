@@ -17,6 +17,8 @@ function [estimate] = ft_inverse_lcmv(sourcemodel, sens, headmodel, dat, C, vara
 %
 % Additional input arguments should be specified as key-value pairs and can include
 %   'powmethod'        = can be 'trace' or 'lambda1'
+%   'eigenspace'       = can be 'no' or an integer number of components (default = 'no')
+%   'prewhitened'      = whether the data is prewhitened, important for the  eigenspace beamforer, can be 'no' or 'yes' 
 %   'feedback'         = can be 'none', 'gui', 'dial', 'textbar', 'text', 'textcr', 'textnl' (default = 'text')
 %   'fixedori'         = use fixed or free orientation,                   can be 'yes' or 'no'
 %   'projectnoise'     = project noise estimate through filter,           can be 'yes' or 'no'
@@ -75,6 +77,8 @@ end
 % get the optional input arguments, or use defaults
 powmethod      = ft_getopt(varargin, 'powmethod'); % the default for this is set below
 subspace       = ft_getopt(varargin, 'subspace'); % used to implement an "eigenspace beamformer" as described in Sekihara et al. 2002 in HBM
+eigenspace     = ft_getopt(varargin, 'eigenspace',    'no');
+prewhitened    = ft_getopt(varargin, 'prewhitened',   'no');
 feedback       = ft_getopt(varargin, 'feedback',      'text');
 keepfilter     = ft_getopt(varargin, 'keepfilter',    'no');
 keepleadfield  = ft_getopt(varargin, 'keepleadfield', 'no');
@@ -102,6 +106,7 @@ leadfieldopt = ft_setopt(leadfieldopt, 'normalizeparam', ft_getopt(varargin, 'no
 leadfieldopt = ft_setopt(leadfieldopt, 'weight',         ft_getopt(varargin, 'weight'));
 
 % convert the yes/no arguments to the corresponding logical values
+prewhitened    = istrue(prewhitened);
 keepfilter     = istrue(keepfilter);
 keepleadfield  = istrue(keepleadfield);
 keepcov        = istrue(keepcov);
@@ -234,6 +239,32 @@ else
   invC = ft_inv(C, invopt{:});
 end
 
+% eigenspace beamformer
+% based on:
+% Sekihara, K., Nagarajan, S.S., Poeppel, D., Marantz, A., Miyashita, Y., 2002.
+% Application of an MEG eigenspace beamformer to reconstructing spatio-temporal activities of neural sources.
+% Human Brain Mapping 15, 199–215. https://doi.org/10.1002/hbm.10019
+% added by Lau Møller Andersen, lmandersen@cfin.au.dk
+if ~strcmp(eigenspace, 'no')
+  if mod(eigenspace, 1) > 0
+    ft_error('Please supply an integer number of components');
+  end
+  ft_info('Using eigenspace beamformer');
+  M = length(C);
+  Q = eigenspace;
+  
+  [eigvec, eigval] = eig(C);
+  E_S = eigvec(:, (M-Q+1):end);
+  Lambda_S = eigval((M-Q+1):end, (M-Q+1):end); % equation (7)
+  % rotate because "eig" puts strongest vectors and values at the end
+  E_S      = rot90(E_S, 2);
+  Lambda_S = rot90(Lambda_S, 2);
+  
+  invLambda_S = ft_inv(Lambda_S); % should we include invopt?
+  Gamma = E_S * invLambda_S * E_S';
+end
+  
+  
 % compute the square of invC, which might be needed for unitnoisegain or NAI constraint
 invC_squared = invC^2;
 
@@ -324,44 +355,64 @@ for i=1:size(sourcemodel.pos,1)
     end
   
     % construct the spatial filter
-    switch weightnorm
-      case 'nai'
-        % Van Veen's Neural Activity Index
-        % below equation is equivalent to following:
-        % filt = pinv(lf' * invC * lf) * lf' * invC;
-        % filt = filt/sqrt(noise*filt*filt');
-        % the scaling term in the denominator is sqrt of projected noise, as per eqn. 2.67 of Sekihara & Nagarajan 2008 (S&N)
-        if fixedori
-          filt = pinv(sqrt(noise * lf' * invC_squared * lf)) * lf' *invC; % based on S&N eqn. 4.08
-        else
-          ft_error('vector version of nai weight normalization is not implemented');
-        end
-      case 'unitnoisegain'
-        % filt*filt' = I
-        % Unit-noise gain minimum variance (aka Borgiotti-Kaplan) beamformer
-        % below equation is equivalent to following:
-        % filt = pinv(lf' * invC * lf) * lf' * invC;
-        % filt = filt/sqrt(filt*filt');
-        if fixedori
-          filt = pinv(sqrt(lf' * invC_squared * lf)) * lf' *invC; % S&N eqn. 4.15
-        else
-          % compute the matrix that is used for scaling of the filter's rows, as per eqn. 4.83
-          denom = pinv(lf' * invC * lf);
-          gamma = denom * (lf' * invC_squared * lf) * denom;
-          
-          % compute the spatial filter, as per eqn. 4.85
-          filt = diag(1./sqrt(diag(gamma))) * denom * lf' * invC;
-        end
-      case 'arraygain'
-        % filt*lf = ||lf||, applies to scalar leadfield, and to one of the possibilities of the vector version, eqn. 4.75
-        lfn  = lf./norm(lf);
-        filt = pinv(lfn' * invC * lfn) * lfn' * invC; % S&N eqn. 4.09 (scalar version), and eqn. 4.75 (vector version)
- 
-      case {'unitgain' 'no'}
-        % this is the 'standard' unit gain constraint spatial filter: filt*lf=I, applies both to vector and scalar leadfields
-        filt = pinv(lf' * invC * lf) * lf' * invC; % van Veen eqn. 23, use PINV/SVD to cover rank deficient leadfield
-    
-    otherwise
+    if strcmp(eigenspace, 'no')
+      switch weightnorm
+        case 'nai'
+          % Van Veen's Neural Activity Index
+          % below equation is equivalent to following:
+          % filt = pinv(lf' * invC * lf) * lf' * invC;
+          % filt = filt/sqrt(noise*filt*filt');
+          % the scaling term in the denominator is sqrt of projected noise, as per eqn. 2.67 of Sekihara & Nagarajan 2008 (S&N)
+          if fixedori
+            filt = pinv(sqrt(noise * lf' * invC_squared * lf)) * lf' *invC; % based on S&N eqn. 4.08
+          else
+            ft_error('vector version of nai weight normalization is not implemented');
+          end
+        case 'unitnoisegain'
+          % filt*filt' = I
+          % Unit-noise gain minimum variance (aka Borgiotti-Kaplan) beamformer
+          % below equation is equivalent to following:
+          % filt = pinv(lf' * invC * lf) * lf' * invC;
+          % filt = filt/sqrt(filt*filt');
+          if fixedori
+            filt = pinv(sqrt(lf' * invC_squared * lf)) * lf' *invC; % S&N eqn. 4.15
+          else
+            % compute the matrix that is used for scaling of the filter's rows, as per eqn. 4.83
+            denom = pinv(lf' * invC * lf);
+            gamma = denom * (lf' * invC_squared * lf) * denom;
+
+            % compute the spatial filter, as per eqn. 4.85
+            filt = diag(1./sqrt(diag(gamma))) * denom * lf' * invC;
+          end
+        case 'arraygain'
+          % filt*lf = ||lf||, applies to scalar leadfield, and to one of the possibilities of the vector version, eqn. 4.75
+          lfn  = lf./norm(lf);
+          filt = pinv(lfn' * invC * lfn) * lfn' * invC; % S&N eqn. 4.09 (scalar version), and eqn. 4.75 (vector version)
+
+        case {'unitgain' 'no'}
+          % this is the 'standard' unit gain constraint spatial filter: filt*lf=I, applies both to vector and scalar leadfields
+          filt = pinv(lf' * invC * lf) * lf' * invC; % van Veen eqn. 23, use PINV/SVD to cover rank deficient leadfield 
+
+        otherwise
+      end
+    else
+      switch weightnorm
+        case 'nai'
+          ft_error('nai weight normalization for eigenspace beamforming not implemented yet');
+        case 'unitnoisegain'
+          ft_error('unitnoisegain weight normalization for eigenspace beamforming not implemented yet');
+        case 'arraygain'
+          lfn = lf ./ norm(lf);
+          mu = 1 / (lfn' * invC * lfn);
+          filt = mu * lfn' * Gamma;
+        case {'unitgain' 'no'}
+          mu = 1 / (lf' * invC * lf);
+          filt = mu * lf' * Gamma; % equation 10
+        otherwise
+      end
+      if prewhitened
+        filt = filt * (E_S * E_S'); % equation 20
+      end
     end
 
   end
