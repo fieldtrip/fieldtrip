@@ -112,4 +112,3 @@ cfg.lcmv.keepfilter  = 'yes';
 cfg.lcmv.fixedori    = 'yes'; % project on axis of most variance using SVD
 source               = ft_sourceanalysis(cfg, timelock);
 
-keyboard
