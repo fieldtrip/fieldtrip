@@ -26,8 +26,8 @@ freqA = ft_appendfreq(cfg,freq1_s,freq2_s);
 
 % The below assertions are 'incorrect', i.e. they should be throwing an
 % error if this issue is solved
-assert(isequal(freqA.freq, [0;0]));
-assert(~isfield(freqA, 'powspctrm'));
+%assert(isequal(freqA.freq, [0;0]));
+%assert(~isfield(freqA, 'powspctrm'));
 
 % another situation
 freq1=[];
@@ -73,7 +73,7 @@ freqC = ft_appendfreq(cfg,freq1,freq2);
 % freq-field is incorrect, the second assertion should throw an error once
 % this has been solved.
 assert(isequal(freqC.powspctrm, [freq1.powspctrm;freq2.powspctrm]));
-assert(isequal(freqC.freq, [1 2;1 2]));
+%assert(isequal(freqC.freq, [1 2;1 2]));
 
 % the thing that seems to go wrong is the following:
 % line 94 in append_common calls ft_selectdata with multiple inputs (and
@@ -97,4 +97,12 @@ cfg.parameter = 'trial';
 tlckA = ft_appendtimelock(cfg, tlck1, tlck2);
 
 % this is incorrect, too:
-assert(isequal(tlckA.time, [1 2;1 2]));
+%assert(isequal(tlckA.time, [1 2;1 2]));
+
+% snippet of code that directly goes into the function in which it goes
+% wrong
+cfg = [];
+cfg.select = 'union';
+dataout = cell(1,2);
+[dataout{:}] = ft_selectdata(cfg, tlck1, tlck2);
+assert(isequal(size(dataout{1}.time), [1 2]));
