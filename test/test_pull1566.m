@@ -2,7 +2,7 @@ function test_pull1566
 
 % MEM 8gb
 % WALLTIME 00:20:00
-% DEPENDENCY ft_appendfreq append_common ft_selectdata
+% DEPENDENCY ft_appendfreq append_common ft_selectdata ft_appendtimelock
 
 freq1=[];
 freq1.label={'chan1'};
@@ -81,4 +81,20 @@ assert(isequal(freqC.freq, [1 2;1 2]));
 % that the numeric field freq (and possibly also time, as of yet untested)
 % is treated as a 'data field', and appended in the 'unionized' output.
 
+tlck1 = [];
+tlck1.label = {'chan1'};
+tlck1.time  = [1 2];
+tlck1.trial = [0 0];
+tlck1.dimord = 'chan_time';
 
+tlck2 = tlck1;
+tlck2.label = {'chan2'};
+tlck2.trial = [1 1];
+
+cfg = [];
+cfg.appenddim = 'chan';
+cfg.parameter = 'trial';
+tlckA = ft_appendtimelock(cfg, tlck1, tlck2);
+
+% this is incorrect, too:
+assert(isequal(tlckA.time, [1 2;1 2]));
