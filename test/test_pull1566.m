@@ -74,3 +74,11 @@ freqC = ft_appendfreq(cfg,freq1,freq2);
 % this has been solved.
 assert(isequal(freqC.powspctrm, [freq1.powspctrm;freq2.powspctrm]));
 assert(isequal(freqC.freq, [1 2;1 2]));
+
+% the thing that seems to go wrong is the following:
+% line 94 in append_common calls ft_selectdata with multiple inputs (and
+% outputs). Once there is just a single channel in the input data, it seems
+% that the numeric field freq (and possibly also time, as of yet untested)
+% is treated as a 'data field', and appended in the 'unionized' output.
+
+
