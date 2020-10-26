@@ -526,6 +526,10 @@ switch selmode
   case 'union'
     if ~isempty(selindx) && all(isnan(selindx))
       % no selection needs to be made
+    elseif isequal(seldim,1) && any(strcmp({'time' 'freq'}, datfield))
+      % treat this as an exception, because these fields should only be
+      % unionized along the second dimension, so here also no selection
+      % needs to be made
     else
       tmp = data.(datfield);
       siz = size(tmp);
