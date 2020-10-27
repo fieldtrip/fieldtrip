@@ -1,11 +1,16 @@
+function test_pull1573(datadir)
+
+% MEM 8gb
+% WALLTIME 03:30:00
+% DEPENDENCY ft_redefinetrial ft_freqanalysis ft_volumesegment ft_prepare_singleshell ft_sourceanalysis ft_prepare_leadfield ft_sourceinterpolate ft_sourceplot ft_volumenormalise
+
+if nargin==0
+  % datadir points by default to the fileserver at the Donders, use an
+  % input argument if you run this function locally
+  datadir = dccnpath('/home/common/matlab/fieldtrip/data/');
+end
+
 %% INITIALIZE
-
-clear variables
-restoredefaultpath
-
-% add fieldtrip <insert your path>
-addpath /home/lau/matlab/fieldtrip/
-ft_defaults
 
 %% READ DATA AND PREPROCESS
 % data has been got from;
@@ -13,7 +18,7 @@ ft_defaults
 % put subject folder in working directory
 
 cfg = [];
-cfg.dataset = 'SubjectSEF.ds';
+cfg.dataset = fullfile(datadir, 'SubjectSEF.ds');
 cfg.trialdef.eventtype = 'Blue';
 cfg.trialdef.prestim = 0.100;
 cfg.trialdef.poststim = 0.200;
@@ -22,7 +27,7 @@ cfg.continuous = 'yes';
 cfg = ft_definetrial(cfg);
 
 cfg.channel = 'MEG';
-cfg.demean = 'yes';
+cfg.demean  = 'yes';
 cfg.baselinewindow = [-0.100 -0.010];
 
 data = ft_preprocessing(cfg);
@@ -45,7 +50,7 @@ white_timelock.cov = timelock.cov;
 
 %% SEGMENT MRI
 
-load('SubjectSEF_mri.mat');
+load(fullfile(datadir, 'SubjectSEF_mri.mat'));
 
 cfg = [];
 cfg.output = 'brain';
