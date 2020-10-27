@@ -11,6 +11,8 @@ if nargin==0
 end
 
 %% INITIALIZE
+% this should be done outside the function, if it's to be run as a test
+% function on a more or less daily basis
 
 %% READ DATA AND PREPROCESS
 % data has been got from;
@@ -36,17 +38,23 @@ data = ft_preprocessing(cfg);
 
 cfg = [];
 cfg.covariance = 'yes';
+cfg.covariancewindow = [-inf 0];
+baseline = ft_timelockanalysis(cfg, data);
 
+cfg.covariancewindow = [-inf inf];
 timelock = ft_timelockanalysis(cfg, data);
 
-%% CREATE A WHITENED VERSION
+%% CREATE A WHITENED VERSION OF THE DATA
+% for this the whitener should be different than the data that is to be
+% used for the beamformer. Reason: one wants to whiten the noise, but keep
+% the structure in the 'signal'. If you whiten with timelock, you will
+% trivially get an Identity matrix as the data covariance.
 
 cfg = [];
+white_timelock = ft_denoise_prewhiten(cfg, timelock, baseline);
 
-white_timelock = ft_denoise_prewhiten(cfg, timelock, timelock);
-
-% I guess the beamformer needs the original covariance??
-white_timelock.cov = timelock.cov; 
+%% I guess the beamformer needs the original covariance?? NO, this is not what you needtest
+%white_timelock.cov = timelock.cov; 
 
 %% SEGMENT MRI
 
@@ -70,8 +78,8 @@ headmodel = ft_prepare_headmodel(cfg, segmented_mri);
 cfg = [];
 cfg.grad = timelock.grad;
 cfg.headmodel = headmodel;
-cfg.resolution = 1;
-cfg.inwardshift = -1;
+cfg.resolution = .75;
+cfg.inwardshift = -.75;
 
 sourcemodel = ft_prepare_sourcemodel(cfg);
 
@@ -90,8 +98,14 @@ cfg.grad = timelock.grad;
 cfg.headmodel = headmodel;
 cfg.sourcemodel = sourcemodel;
 cfg.channel = 'MEG';
+cfg.singleshell.batchsize = 1000;
 
 leadfield = ft_prepare_leadfield(cfg);
+
+% here's the trick, when using whitened data, the leadfield should also be
+% based on the whitened data
+cfg.grad = white_timelock.grad;
+white_leadfield = ft_prepare_leadfield(cfg);
 
 %% SOURCE ANALYSIS
 
@@ -104,29 +118,37 @@ cfg.sourcemodel = leadfield;
 cfg.headmodel = headmodel;
 cfg.lcmv.keepfilter = 'yes';
 cfg.lcmv.fixedori = 'yes';
-cfg.lcmv.weightnorm = 'arraygain';
+%cfg.lcmv.weightnorm = 'arraygain'; % this is not ideal for a one-to-one
+%comparison, let's switch off for now.
 cfg.lcmv.eigenspace = 'no';
 
 source = ft_sourceanalysis(cfg, timelock);
+
+cfg.sourcemodel = white_leadfield;
 source_white = ft_sourceanalysis(cfg, white_timelock);
 
 % eigenspace
 
+cfg.sourcemodel = leadfield;
 cfg.lcmv.eigenspace = n_components;
 
 source_eigenspace = ft_sourceanalysis(cfg, timelock);
 
+cfg.sourcemodel = white_leadfield;
 cfg.lcmv.prewhitened = 'yes';
 
 source_white_eigenspace = ft_sourceanalysis(cfg, white_timelock);
 
 % subspace
 
+cfg.sourcemodel = leadfield;test
 cfg.lcmv.eigenspace = 'no';
-cfg.lcmv.prewhitened = 'yes';
+cfg.lcmv.prewhitened = 'no';
 cfg.lcmv.subspace = n_components;
 
 source_subspace = ft_sourceanalysis(cfg, timelock);
+
+cfg.sourcemodel = white_leadfield;
 source_white_subspace = ft_sourceanalysis(cfg, white_timelock);
 
 sources = {source source_white ...
@@ -143,37 +165,53 @@ for analysis_index = 1:n_analyses
   
   source = sources{analysis_index};
   
-  % pick time
-  cfg = [];
-  cfg.latency = 0.046;
+  mom  = cat(1, source.avg.mom{:});
+  bmom = std(mom(:,1:nearest(source.time,0)),[],2);
+  sel  = nearest(source.time, 0.046);
+  pow  = abs(mom(:,sel))./bmom;
   
-  source = ft_selectdata(cfg, source);
+  M{analysis_index} = abs(mom)./repmat(bmom, [1 numel(source.time)]);
+  tmp = zeros(size(sourcemodel.inside));
+  tmp(sourcemodel.inside) = pow;
+  sourcemodel.pow = tmp;
+%   
+%   % pick time
+%   cfg = [];
+%   cfg.latency = 0.046;
+%   
+%   source = ft_selectdata(cfg, source);
+%   
+%   % I'm sure there's a nicer way to do this
+%   mom_array = zeros(size(source.mom));
+%   n_sources = length(mom_array);
+%   
+%   for source_index = 1:n_sources
+%     moment = source.mom{source_index};
+%     if isempty(moment)
+%       mom_array(source_index) = NaN;
+%     else
+%       mom_array(source_index) = moment;
+%     end
+%   end
+%   
+%   mom_array = abs(mom_array);
+%   
+%   source.mom_array = mom_array;
   
-  % I'm sure there's a nicer way to do this
-  mom_array = zeros(size(source.mom));
-  n_sources = length(mom_array);
-  
-  for source_index = 1:n_sources
-    moment = source.mom{source_index};
-    if isempty(moment)
-      mom_array(source_index) = NaN;
-    else
-      mom_array(source_index) = moment;
-    end
-  end
-  
-  mom_array = abs(mom_array);
-  
-  source.mom_array = mom_array;
-  
-  cfg = [];
-  cfg.parameter = 'mom_array';
-  
-  source = ft_sourceinterpolate(cfg, source, mri);
-  
-  cfg = [];
-  cfg.funparameter = 'mom_array';
-  
-  ft_sourceplot(cfg, source);
+%   cfg = [];
+%   cfg.parameter = 'pow';
+%   %cfg.parameter = 'mom_array';
+%   
+%   source = ft_sourceinterpolate(cfg, sourcemodel, mri);
+%   %source = ft_sourceinterpolate(cfg, source, mri);
+%   
+%   cfg = [];
+%   cfg.funparameter = 'pow';
+%   cfg.funcolormap = 'viridis';
+%   %cfg.funparameter = 'mom_array';
+%   
+%   ft_sourceplot(cfg, source);
   
 end
+
+keyboard
