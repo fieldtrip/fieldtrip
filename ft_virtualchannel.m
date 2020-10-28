@@ -121,15 +121,26 @@ if ~isfield(source, 'filter')
   % FIXME how about the output of ft_dipolefitting?
 end
 
+% store the original input representation of the data, this is used later on to convert it back
+isfreq = ft_datatype(data, 'freq');
+istlck = ft_datatype(data, 'timelock');  % this will be temporary converted into raw
+
 % FIXME for now support only raw-type data structures, this should be
 % extended to also allow freq (with fourier) and timelock structures,
 % although the latter is probably already covered by the call to checkdata,
 % it should be checked how this is done in ft_megplanar.
-data     = ft_checkdata(data, 'datatype', {'raw', 'raw+comp', 'mvar'}, 'feedback', cfg.feedback);
-[i1, i2] = match_str(data.label, source.label);
+data     = ft_checkdata(data, 'datatype', {'raw', 'raw+comp', 'mvar' 'freq'}, 'feedback', cfg.feedback);
+
+if isfreq
+  % some restrictions apply to frequency data
+  if ~isfield(data, 'fourierspctrm'), ft_error('freq data should contain Fourier spectra'); end
+  if numel(data.freq)>1, ft_error('with spectral input data only a single frequency bin is supported'); end
+  if ~any(strcmp({'svd' 'none'}, cfg.method)), ft_error('with spectral input data only ''svd'' or ''none'' are supported methods'); end
+end
 
 % select channels and trials of interest, by default this will select all channels and trials
-tmpcfg = keepfields(cfg, {'trials', 'tolerance', 'showcallinfo'});
+[i1, i2] = match_str(data.label, source.label);
+tmpcfg   = keepfields(cfg, {'trials', 'tolerance', 'showcallinfo'});
 tmpcfg.channel = data.label(i1);
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
@@ -220,7 +231,7 @@ unmixing2 = cell(1, nvc);
 label_in  = cell(1, nvc);
 label_out = cell(1, nvc);
 
-compmethods = {'pca' 'runica' 'fastica' 'dss'};
+compmethods = {'pca' 'runica' 'fastica' 'dss'}; % FIXME in principle all methods supported in ft_componentanalysis should work
 for i = 1:nvc
   
   montage = [];
@@ -259,18 +270,24 @@ for i = 1:nvc
   % data representation.
   switch cfg.method
     case 'svd'
-          
-      if ~exist('tlck', 'var')
-        % create a data structure that contains a covariance -> FIXME requires
-        % a check on the input data, for now assume raw data
-        tmpcfg = [];
-        tmpcfg.covariance = 'yes';
-        tlck   = ft_timelockanalysis(tmpcfg, data);
+     
+      if ~exist('C', 'var')
+        % create a covariance, or csd matrix that is to be used for the
+        % svd. this needs to be computed only once.
+        if isfreq          
+          tmp = ft_checkdata(data, 'cmbrepresentation', 'fullfast');
+          C   = tmp.crsspctrm;
+        else
+          tmpcfg = [];
+          tmpcfg.covariance = 'yes';
+          tlck   = ft_timelockanalysis(tmpcfg, data);
+          C      = tlck.cov;
+        end
+        
+        % create a matricial square root of the full covariance/csd matrix
+        [u, s, v] = svd(real(C));
+        Csqrtm    = u*sqrt(s);
       end
-      
-      % create a matricial square root of the full covariance matrix
-      [u, s, v] = svd(tlck.cov);
-      Csqrtm    = u*sqrt(s);
       
       % don't do the sandwiching for efficiency, we will use only the u
       % matrix, this yields the same u matrix as the svd on the tlck.cov
@@ -363,6 +380,11 @@ for k = 1:numel(sensfields)
     ft_info(sprintf('applying the montage to the %s structure\n', sensfields{k}));
     data_vc.(sensfields{k}) = ft_apply_montage(data.grad, montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
   end
+end
+
+if istlck
+  % convert the raw structure back into a timelock structure
+  data_vc = ft_checkdata(data_vc, 'datatype', 'timelock');
 end
 
 if usepos
