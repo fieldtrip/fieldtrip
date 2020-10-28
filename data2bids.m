@@ -2034,7 +2034,7 @@ else
   units = hdr.chanunit(:);
   sampling_frequency = repmat(hdr.Fs, hdr.nChans, 1);
   % find source name, detector name and wavelength of nirs channels
-  source=cell(length(name), 1); detector=cell(length(name), 1); wavelength=nan(length(name),1); % empty columns will be removed in a later step
+  source=cell(length(name), 1); detector=cell(length(name), 1); wavelength=cell(length(name),1); % empty columns will be removed in a later step
   if isfield(hdr, 'opto') % else try regexp
     sampling_frequency =cell(length(name), 1); % sampling frequency of nirs channels are not required
     for i=1:length(name)
@@ -2053,7 +2053,7 @@ else
         if abs(wavelengthidx(1))~= abs(wavelengthidx(2))
           warning('tra matrix is not consistent; ignoring wavelength')
         else
-          wavelength(i)=hdr.opto.wavelength(abs(wavelengthidx(1)));
+          wavelength{i}=hdr.opto.wavelength(abs(wavelengthidx(1)));
         end
       end
     end
@@ -2064,7 +2064,7 @@ else
         parts=regexp(name{i}, 'Rx(?<detectorID>\w+)-Tx(?<sourceID>\w+) \[(?<wavelength>\d+)nm\]', 'names');
         source{i}=sprintf('Tx%s', parts.sourceID);
         detector{i}=sprintf('Rx%s', parts.detectorID);
-        wavelength(i)=str2num(parts.wavelength);
+        wavelength{i}=str2num(parts.wavelength);
       elseif regexp(name{i}, 'Rx(\w+)-Tx(\w+)')
         parts=regexp(name{i}, 'Rx(?<detectorID>\w+)-Tx(?<sourceID>\w+)', 'names');
         source{i}=sprintf('Tx%s', parts.sourceID);
@@ -2073,7 +2073,7 @@ else
         parts=regexp(name{i}, 'S(?sourceID>\w+)-D(?<detectorID>\w+) \[(?<wavelength>\d+)nm\]', 'names');
         source{i}=sprintf('S%s', parts.sourceID);
         detector{i}=sprintf('D%s',parts.detectorID);
-        wavelength(i)=str2num(parts.wavelength);
+        wavelength{i}=str2num(parts.wavelength);
       elseif regexp(name{i}, 'S(\w+)-D(\w+)')
         parts=regexp(name{i}, 'S(?sourceID>\w+)-D(?<detectorID>\w+', 'names');
         source{i}=sprintf('S%s', parts.sourceID);
@@ -2085,14 +2085,16 @@ else
       sampling_frequency =cell(length(name), 1);% sampling frequency of nirs channels are not required
     end
   end
-  tab = table(name, type, units, sampling_frequency, source, detector, wavelength);
   % add motion specific fields (empty columns will be removed in a later
   % step)
-  if hdr.chansource
-    source=hdr.chansource(:);
+  component=cell(length(name), 1); reference_space=cell(length(name),1);
+  if isfield(hdr, 'chansource');
+    for i=1:length(name)
+      source{i}=hdr.chansource(i);
+      component{i}=hdr.chancomponent(i);
+      reference_space{i}=hdr.chanrefspace(i);
+    end
   end
-  component=hdr.chancomponent(:);
-  reference_space=hdr.chanrefspace(:);
   tab = table(name, type, units, sampling_frequency, source, detector, wavelength, component, reference_space);
 end
 
@@ -2297,8 +2299,10 @@ elseif isstruct(s)
   fn = fn(structfun(@isempty, s));
   s = removefields(s, fn);
 elseif istable(s)
-  vn = find(all(cellfun(@isempty, s{:,:})));
-  s = removevars(s, vn);
+  try 
+    vn = find(all(cellfun(@isempty, s{:,:})));
+    s = removevars(s, vn);
+  end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
