@@ -73,6 +73,9 @@ cmat = corr([tra1' tra2']);
 cmat = cmat([1 3],[1 3]);
 assert(all(abs(cmat(:))>0.99));
 
+% data_vc1f should be of type freq
+assert(ft_datatype(data_vc1f, 'freq'));
+
 % data_vc2b should be of type timelock
 assert(ft_datatype(data_vc2b, 'timelock'));
 
