@@ -40,16 +40,26 @@ function trl = artifact2trl(artifact)
 
 % trl and artifact are similar, except for the offset column
 if isnumeric(artifact)
-  trl(:,1:2) = artifact(:,1:2);
-  trl(:,3)   = 0;
+  if size(artifact,2)==2
+    % the first two columns are begin and endsample
+    trl(:,1:2) = artifact;
+    trl(:,3)   = 0;
+  elseif size(artifact,2)>2
+    % when present, the third column must be the offset
+    trl = artifact;
+  end
 elseif istable(artifact)
   trl = table();
-  trl.begsample = artifact.begsample;
-  trl.endsample = artifact.endsample;
-  % set the offset to zero
-  trl.offset = zeros(size(trl.begsample));
-  % keep any additional columns
-  trl = cat(2, trl, artifact(:,3:end));
+  if ismember('offset', artifact.Properties.VariableNames)
+    % the artifact matrix already contains an offset
+    trl = artifact;
+  else
+    trl.begsample = artifact.begsample;
+    trl.endsample = artifact.endsample;
+    trl.offset = zeros(size(trl.begsample)); % set the offset to zero
+    % keep any additional columns
+    trl = cat(2, trl, artifact(:,3:end));
+  end
 elseif iscell(artifact)
   % there are multiple types of trials/artifacts, use recursion to loop over them
   trl = cell(size(artifact));
