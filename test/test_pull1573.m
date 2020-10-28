@@ -56,22 +56,25 @@ white_timelock = ft_denoise_prewhiten(cfg, timelock, baseline);
 %% I guess the beamformer needs the original covariance?? NO, this is not what you needtest
 %white_timelock.cov = timelock.cov; 
 
-%% SEGMENT MRI
-
-load(fullfile(datadir, 'SubjectSEF_mri.mat'));
-
-cfg = [];
-cfg.output = 'brain';
-
-segmented_mri = ft_volumesegment(cfg, mri);
-
-%% HEAD MODEL
-
-cfg = [];
-cfg.method = 'singleshell';
-cfg.unit = 'cm';
-
-headmodel = ft_prepare_headmodel(cfg, segmented_mri);
+%% try to skip the headmodel creation part, by loading the file from disk
+try
+  load(fullfile(datadir, 'ftp/tutorial/beamformer_lcmv', 'headmodel.mat'));
+catch
+  %% SEGMENT MRI
+  
+  load(fullfile(datadir, 'SubjectSEF_mri.mat'));
+  
+  cfg        = [];
+  cfg.output = 'brain';
+  segmented_mri = ft_volumesegment(cfg, mri);
+  
+  %% HEAD MODEL
+  
+  cfg        = [];
+  cfg.method = 'singleshell';
+  cfg.unit   = 'cm';
+  headmodel  = ft_prepare_headmodel(cfg, segmented_mri);
+end
 
 %% SOURCE MODEL
 
@@ -117,38 +120,33 @@ cfg.method = 'lcmv';
 cfg.sourcemodel = leadfield;
 cfg.headmodel = headmodel;
 cfg.lcmv.keepfilter = 'yes';
-cfg.lcmv.fixedori = 'yes';
+%cfg.lcmv.fixedori   = 'yes';
 %cfg.lcmv.weightnorm = 'arraygain'; % this is not ideal for a one-to-one
 %comparison, let's switch off for now.
-cfg.lcmv.eigenspace = 'no';
 
-source = ft_sourceanalysis(cfg, timelock);
+cfg.lcmv.eigenspace = 'no';
+source              = ft_sourceanalysis(cfg, timelock);
 
 cfg.sourcemodel = white_leadfield;
-source_white = ft_sourceanalysis(cfg, white_timelock);
+source_white    = ft_sourceanalysis(cfg, white_timelock);
 
 % eigenspace
+cfg.sourcemodel         = leadfield;
+cfg.lcmv.eigenspace     = n_components;
+source_eigenspace       = ft_sourceanalysis(cfg, timelock);
 
-cfg.sourcemodel = leadfield;
-cfg.lcmv.eigenspace = n_components;
-
-source_eigenspace = ft_sourceanalysis(cfg, timelock);
-
-cfg.sourcemodel = white_leadfield;
-cfg.lcmv.prewhitened = 'yes';
-
+cfg.sourcemodel         = white_leadfield;
+cfg.lcmv.prewhitened    = 'yes';
 source_white_eigenspace = ft_sourceanalysis(cfg, white_timelock);
 
 % subspace
+cfg.sourcemodel       = leadfield;
+cfg.lcmv.eigenspace   = 'no';
+cfg.lcmv.prewhitened  = 'no';
+cfg.lcmv.subspace     = n_components;
+source_subspace       = ft_sourceanalysis(cfg, timelock);
 
-cfg.sourcemodel = leadfield;test
-cfg.lcmv.eigenspace = 'no';
-cfg.lcmv.prewhitened = 'no';
-cfg.lcmv.subspace = n_components;
-
-source_subspace = ft_sourceanalysis(cfg, timelock);
-
-cfg.sourcemodel = white_leadfield;
+cfg.sourcemodel       = white_leadfield;
 source_white_subspace = ft_sourceanalysis(cfg, white_timelock);
 
 sources = {source source_white ...
