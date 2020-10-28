@@ -21,6 +21,13 @@ cfg.vartrllength      = 2;
 cfg.covariancewindow  = 'all';
 tlock                 = ft_timelockanalysis(cfg, data_cmb);
 
+cfg        = [];
+cfg.method = 'mtmfft';
+cfg.foi    = 10;
+cfg.taper  = 'hanning';
+cfg.output = 'fourier';
+freq       = ft_freqanalysis(cfg, data_cmb);
+
 % this is old-style stuff. as of end 2020 there's a ft_virtualchannel
 % function that does the virtualchannel creation
 cfg             = [];
@@ -42,12 +49,14 @@ cfg.pos            = source.pos([maxcohindx maxpowindx],:);
 cfg.method         = 'svd';
 cfg.numcomponent   = 1;
 data_vc1           = ft_virtualchannel(cfg, data_cmb, source);
+data_vc1f          = ft_virtualchannel(cfg, freq, source);
 
 cfg                = [];
 cfg.pos            = source.pos([maxcohindx maxpowindx],:);
 cfg.method         = 'pca';
 cfg.numcomponent   = 1;
 data_vc2           = ft_virtualchannel(cfg, data_cmb, source);
+data_vc2b          = ft_virtualchannel(cfg, tlock, source);
 
 % data_vc1 and data_vc2 should be very similar, up to a polarity difference
 % this can be checked from the balancing, as well as from the time domain
@@ -63,6 +72,9 @@ tra2 = data_vc2.grad.balance.virtualchannel.tra(1:2,:);
 cmat = corr([tra1' tra2']);
 cmat = cmat([1 3],[1 3]);
 assert(all(abs(cmat(:))>0.99));
+
+% data_vc2b should be of type timelock
+assert(ft_datatype(data_vc2b, 'timelock'));
 
 cfg                = [];
 cfg.pos            = source.pos([maxcohindx maxpowindx],:);
