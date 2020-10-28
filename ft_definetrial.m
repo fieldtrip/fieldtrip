@@ -44,7 +44,7 @@ function [cfg] = ft_definetrial(cfg)
 % columns can be used by a custom trialfun to provide numeric information
 % about each trial such as trigger codes, response latencies, trial
 % type and response correctness. The additional columns of the "trl"
-% matrix will be represented in data.trialinfo after FT_PREPROCESSING.
+% matrix will be represented in the "trialinfo" field after FT_PREPROCESSING.
 %
 % If FT_TRIALFUN_GENERAL has been used to generate the "trl" matrix, the
 % function may return a fourth column in the trl-matrix, that refers to
@@ -199,6 +199,8 @@ end
 % add the new trials and events to the output configuration
 ft_info('found %d events\n', length(event));
 cfg.event = event;
+
+
 ft_info('created %d trials\n', size(trl,1));
 cfg.trl = trl;
 

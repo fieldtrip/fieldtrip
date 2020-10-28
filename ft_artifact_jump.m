@@ -1,15 +1,14 @@
 function [cfg, artifact] = ft_artifact_jump(cfg, data)
 
-% FT_ARTIFACT_JUMP reads the data segments of interest from file and identifies SQUID
-% jump artifacts.
+% FT_ARTIFACT_JUMP scans data segments of interest for SQUID jump artifacts.
 %
 % Use as
 %   [cfg, artifact] = ft_artifact_jump(cfg)
 % with the configuration options
-%   cfg.dataset     = string with the filename
+%   cfg.dataset    = string with the filename
 % or
-%   cfg.headerfile  = string with the filename
-%   cfg.datafile    = string with the filename
+%   cfg.headerfile = string with the filename
+%   cfg.datafile   = string with the filename
 % and optionally
 %   cfg.headerformat
 %   cfg.dataformat
@@ -19,11 +18,11 @@ function [cfg, artifact] = ft_artifact_jump(cfg, data)
 % where the input data is a structure as obtained from FT_PREPROCESSING.
 %
 % In both cases the configuration should also contain
-%   cfg.trl        = structure that defines the data segments of interest. See FT_DEFINETRIAL
+%   cfg.trl        = structure that defines the data segments of interest, see FT_DEFINETRIAL
 %   cfg.continuous = 'yes' or 'no' whether the file contains continuous data
 %
-% The data is preprocessed (again) with the following configuration parameters,
-% which are optimal for identifying jump artifacts.
+% Prior to artifact detection, the data is preprocessed (again) with the following
+% configuration parameters, which are optimal for identifying SQUID jump artifacts.
 %   cfg.artfctdef.jump.medianfilter  = 'yes'
 %   cfg.artfctdef.jump.medianfiltord = 9
 %   cfg.artfctdef.jump.absdiff       = 'yes'
@@ -33,6 +32,7 @@ function [cfg, artifact] = ft_artifact_jump(cfg, data)
 %   cfg.artfctdef.jump.channel       = Nx1 cell-array with selection of channels, see FT_CHANNELSELECTION for details
 %   cfg.artfctdef.jump.cutoff        = z-value at which to threshold (default = 20)
 %   cfg.artfctdef.jump.trlpadding    = automatically determined based on the filter padding (cfg.padding)
+%   cfg.artfctdef.jump.fltpadding    = automatically determined based on the filter padding (cfg.padding)
 %   cfg.artfctdef.jump.artpadding    = automatically determined based on the filter padding (cfg.padding)
 %
 % The output argument "artifact" is a Nx2 matrix comparable to the "trl" matrix of
@@ -118,11 +118,11 @@ cfg.artfctdef.jump.medianfiltord = ft_getopt(cfg.artfctdef.jump, 'medianfiltord'
 cfg.artfctdef.jump.absdiff       = ft_getopt(cfg.artfctdef.jump, 'absdiff', 'yes'); % compute abs(diff(data)), whereas the order of rectify=yes in combination with derivative=yes would be diff(abs(data)) due to the ordering in preproc
 
 % settings for the zvalue subfunction
-cfg.padding = ft_getopt(cfg, 'padding', 0);
+cfg.padding = ft_getopt(cfg, 'padding', 0); % FIXME I don't understand why this option exists, why not simply have the user specify the other three?
 cfg.artfctdef.jump.cutoff     = ft_getopt(cfg.artfctdef.jump, 'cutoff',     20);
 cfg.artfctdef.jump.channel    = ft_getopt(cfg.artfctdef.jump, 'channel',    'MEG');
 cfg.artfctdef.jump.cumulative = ft_getopt(cfg.artfctdef.jump, 'cumulative', 'no');
-cfg.artfctdef.jump.trlpadding = ft_getopt(cfg.artfctdef.jump, 'trlpadding', 0.5*cfg.padding); % account for bleeding of dftfilter ringing
+cfg.artfctdef.jump.trlpadding = ft_getopt(cfg.artfctdef.jump, 'trlpadding', 0.5*cfg.padding); % deal with the dftfilter ringing
 cfg.artfctdef.jump.fltpadding = ft_getopt(cfg.artfctdef.jump, 'fltpadding', 0.5*cfg.padding);
 cfg.artfctdef.jump.artpadding = ft_getopt(cfg.artfctdef.jump, 'artpadding', 0.5*cfg.padding);
 

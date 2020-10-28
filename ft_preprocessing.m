@@ -8,11 +8,8 @@ function [data] = ft_preprocessing(cfg, data)
 % or
 %   [data] = ft_preprocessing(cfg, data)
 %
-% The first input argument "cfg" is the configuration structure, which
-% contains all details for the dataset filenames, trials and the
-% preprocessing options. You can only do preprocessing after defining the
-% segments of data to be read from the file (i.e. the trials), which is for
-% example done based on the occurence of a trigger in the data.
+% The first input argument "cfg" is the configuration structure, which contains all
+% details for the dataset filename, trials and the preprocessing options.
 %
 % If you are calling FT_PREPROCESSING with only the configuration as first
 % input argument and the data still has to be read from file, you should
@@ -25,8 +22,8 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.continuous   = 'yes' or 'no' whether the file contains continuous data
 %                      (default is determined automatic)
 %
-% Instead of specifying the dataset, you can also explicitely specify the
-% name of the file containing the header information and the name of the
+% Instead of specifying the dataset in the configuration, you can also explicitely
+% specify the name of the file containing the header information and the name of the
 % file containing the data, using
 %   cfg.datafile     = string with the filename
 %   cfg.headerfile   = string with the filename

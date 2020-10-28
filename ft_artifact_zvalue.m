@@ -1,17 +1,19 @@
 function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 
-% FT_ARTIFACT_ZVALUE reads the interesting segments of data from file and identifies
-% artifacts by means of thresholding the z-transformed value of the preprocessed raw
-% data. Depending on the preprocessing options, this method will be sensitive to EOG,
-% muscle or jump artifacts.  This procedure only works on continuously recorded data.
+% FT_ARTIFACT_ZVALUE scans data segments of interest for artifacts by means of
+% thresholding the z-transformed value of the preprocessed raw data. Depending on the
+% preprocessing options, this method will be sensitive to EOG, muscle or jump
+% artifacts.  This procedure only works on continuously recorded data.
 %
 % Use as
 %   [cfg, artifact] = ft_artifact_zvalue(cfg)
 % with the configuration options
-%   cfg.dataset     = string with the filename
+%   cfg.trl        = structure that defines the data segments of interest, see FT_DEFINETRIAL
+%   cfg.continuous = 'yes' or 'no' whether the file contains continuous data
+%   cfg.dataset    = string with the filename
 % or
-%   cfg.headerfile  = string with the filename
-%   cfg.datafile    = string with the filename
+%   cfg.headerfile = string with the filename
+%   cfg.datafile   = string with the filename
 % and optionally
 %   cfg.headerformat
 %   cfg.dataformat
@@ -20,15 +22,15 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %   [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 % where the input data is a structure as obtained from FT_PREPROCESSING.
 %
-% The required configuration settings are:
-%   cfg.trl         = structure that defines the data segments of interest. See FT_DEFINETRIAL
-%   cfg.continuous  = 'yes' or 'no' whether the file contains continuous data (default   = 'yes')
+% In both cases the configuration should also contain
+%   cfg.trl        = structure that defines the data segments of interest, see FT_DEFINETRIAL
+%   cfg.continuous = 'yes' or 'no' whether the file contains continuous data
 % and
-%   cfg.artfctdef.zvalue.channel
-%   cfg.artfctdef.zvalue.cutoff
-%   cfg.artfctdef.zvalue.trlpadding
-%   cfg.artfctdef.zvalue.fltpadding
-%   cfg.artfctdef.zvalue.artpadding
+%   cfg.artfctdef.zvalue.channel    = Nx1 cell-array with selection of channels, see FT_CHANNELSELECTION for details
+%   cfg.artfctdef.zvalue.cutoff     = number, z-value threshold
+%   cfg.artfctdef.zvalue.trlpadding = number in seconds
+%   cfg.artfctdef.zvalue.fltpadding = number in seconds
+%   cfg.artfctdef.zvalue.artpadding = number in seconds
 %
 % If you encounter difficulties with memory usage, you can use
 %   cfg.memory = 'low' or 'high', whether to be memory or computationally efficient, respectively (default = 'high')
@@ -145,9 +147,18 @@ if ft_abort
   return
 end
 
+% for backward compatibility
+cfg = ft_checkconfig(cfg, 'renamed', {'artfctdef.blc',             'artfctdef.demean'});
+cfg = ft_checkconfig(cfg, 'renamed', {'artfctdef.blcwindow'        'artfctdef.baselinewindow'});
+cfg = ft_checkconfig(cfg, 'renamed', {'artfctdef.zvalue.sgn',      'artfctdef.zvalue.channel'});
+cfg = ft_checkconfig(cfg, 'renamed', {'artfctdef.zvalue.feedback', 'artfctdef.zvalue.interactive'});
+
+% set the default options
+cfg.feedback        = ft_getopt(cfg, 'feedback',       'text');
+cfg.memory          = ft_getopt(cfg, 'memory',         'high');
+cfg.representation  = ft_getopt(cfg, 'representation', 'numeric'); % numeric or table
+
 % set default rejection parameters
-cfg.feedback                     = ft_getopt(cfg,                  'feedback',     'text');
-cfg.memory                       = ft_getopt(cfg,                  'memory',       'high');
 cfg.artfctdef                    = ft_getopt(cfg,                  'artfctdef',    []);
 cfg.artfctdef.zvalue             = ft_getopt(cfg.artfctdef,        'zvalue',       []);
 cfg.artfctdef.zvalue.method      = ft_getopt(cfg.artfctdef.zvalue, 'method',       'all');
@@ -160,12 +171,6 @@ cfg.artfctdef.zvalue.interactive = ft_getopt(cfg.artfctdef.zvalue, 'interactive'
 cfg.artfctdef.zvalue.cumulative  = ft_getopt(cfg.artfctdef.zvalue, 'cumulative',   'yes');
 cfg.artfctdef.zvalue.artfctpeak  = ft_getopt(cfg.artfctdef.zvalue, 'artfctpeak',   'no');
 cfg.artfctdef.zvalue.artfctpeakrange  = ft_getopt(cfg.artfctdef.zvalue, 'artfctpeakrange',[0 0]);
-
-% for backward compatibility
-cfg.artfctdef        = ft_checkconfig(cfg.artfctdef,        'renamed', {'blc',      'demean'});
-cfg.artfctdef        = ft_checkconfig(cfg.artfctdef,        'renamed', {'blcwindow' 'baselinewindow'});
-cfg.artfctdef.zvalue = ft_checkconfig(cfg.artfctdef.zvalue, 'renamed', {'sgn',      'channel'});
-cfg.artfctdef.zvalue = ft_checkconfig(cfg.artfctdef.zvalue, 'renamed', {'feedback', 'interactive'});
 
 if isfield(cfg.artfctdef.zvalue, 'artifact')
   ft_notice('zvalue artifact detection has already been done, retaining artifacts\n');
@@ -200,7 +205,7 @@ if ~hasdata
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
 else
   data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
-  cfg  = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile', 'headerformat', 'dataformat'});
+  cfg  = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
   hdr  = ft_fetch_header(data);
 end
 
@@ -613,10 +618,20 @@ if strcmp(cfg.artfctdef.zvalue.artfctpeak, 'yes')
   cfg.artfctdef.zvalue.peaks_indx  = peaks_ind;
 end
 
-% remember the artifacts that were found
-cfg.artfctdef.zvalue.artifact = artifact;
+if strcmp(cfg.representation, 'numeric') && istable(artifact)
+  % convert the table to a numeric array with the columns begsample and endsample
+  artifact = table2array(artifact(:,1:2));
+elseif strcmp(cfg.representation, 'table') && isnumeric(artifact)
+  % convert the numeric array to a table with the columns begsample and endsample
+  begsample = artifact(:,1);
+  endsample = artifact(:,2);
+  artifact = table(begsample, endsample);
+end
+
+% remember the details that were used here and store the detected artifacts
 cfg.artfctdef.zvalue.trl      = trl;              % remember where we have been looking for artifacts
 cfg.artfctdef.zvalue.cutoff   = opt.threshold;    % remember the threshold that was used
+cfg.artfctdef.zvalue.artifact = artifact;
 
 ft_notice('detected %d artifacts\n', size(artifact,1));
 

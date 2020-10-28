@@ -1,15 +1,14 @@
 function [cfg, artifact] = ft_artifact_muscle(cfg, data)
 
-% FT_ARTIFACT_MUSCLE reads the data segments of interest from file and identifies
-% muscle artifacts.
+% FT_ARTIFACT_MUSCLE scans data segments of interest for muscle artifacts.
 %
 % Use as
 %   [cfg, artifact] = ft_artifact_muscle(cfg)
 % with the configuration options
-%   cfg.dataset     = string with the filename
+%   cfg.dataset    = string with the filename
 % or
-%   cfg.headerfile  = string with the filename
-%   cfg.datafile    = string with the filename
+%   cfg.headerfile = string with the filename
+%   cfg.datafile   = string with the filename
 % and optionally
 %   cfg.headerformat
 %   cfg.dataformat
@@ -19,11 +18,11 @@ function [cfg, artifact] = ft_artifact_muscle(cfg, data)
 % where the input data is a structure as obtained from FT_PREPROCESSING.
 %
 % In both cases the configuration should also contain
-%   cfg.trl        = structure that defines the data segments of interest. See FT_DEFINETRIAL
+%   cfg.trl        = structure that defines the data segments of interest, see FT_DEFINETRIAL
 %   cfg.continuous = 'yes' or 'no' whether the file contains continuous data
 %
-% The data is preprocessed (again) with the following configuration parameters,
-% which are optimal for identifying muscle artifacts.
+% Prior to artifact detection, the data is preprocessed (again) with the following
+% configuration parameters, which are optimal for identifying muscle artifacts.
 %   cfg.artfctdef.muscle.bpfilter    = 'yes'
 %   cfg.artfctdef.muscle.bpfreq      = [110 140]
 %   cfg.artfctdef.muscle.bpfiltord   = 8
@@ -126,10 +125,10 @@ cfg.artfctdef.muscle.boxcar      = ft_getopt(cfg.artfctdef.muscle, 'boxcar',    
 
 % settings for the zvalue subfunction
 cfg.artfctdef.muscle.channel    = ft_getopt(cfg.artfctdef.muscle, 'channel',    'MEG');
+cfg.artfctdef.muscle.cutoff     = ft_getopt(cfg.artfctdef.muscle, 'cutoff',     4);
 cfg.artfctdef.muscle.trlpadding = ft_getopt(cfg.artfctdef.muscle, 'trlpadding', 0.1);
 cfg.artfctdef.muscle.fltpadding = ft_getopt(cfg.artfctdef.muscle, 'fltpadding', 0.1);
 cfg.artfctdef.muscle.artpadding = max(ft_getopt(cfg.artfctdef.muscle, 'artpadding', 0.1), artpadding_oldstyle);
-cfg.artfctdef.muscle.cutoff     = ft_getopt(cfg.artfctdef.muscle, 'cutoff',     4);
 
 % construct a temporary configuration that can be passed onto FT_ARTIFACT_ZVALUE
 tmpcfg                  = cfg;
