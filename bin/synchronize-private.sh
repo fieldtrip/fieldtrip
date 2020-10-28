@@ -496,6 +496,38 @@ ARRAY+=(private/find_triangle_neighbours.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# fir_df.m
+
+ARRAY=()
+ARRAY+=(preproc/private/fir_df.m)
+ARRAY+=(specest/private/fir_df.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# fir_filterdcpadded.m
+
+ARRAY=()
+ARRAY+=(preproc/private/fir_filterdcpadded.m)
+ARRAY+=(specest/private/fir_filterdcpadded.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# firws.m
+
+ARRAY=()
+ARRAY+=(preproc/private/firws.m)
+ARRAY+=(specest/private/firws.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# firwsord.m
+
+ARRAY=()
+ARRAY+=(preproc/private/firwsord.m)
+ARRAY+=(specest/private/firwsord.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # fitsphere.m
 
 ARRAY=()
@@ -1355,6 +1387,14 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(connectivity/private/inv3x3.mexw64)
 ARRAY+=(src/inv3x3.mexw64)
+sync ${ARRAY[*]}
+
+################################################################################
+# invfirwsord.m
+
+ARRAY=()
+ARRAY+=(preproc/private/invfirwsord.m)
+ARRAY+=(specest/private/invfirwsord.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -3662,6 +3702,14 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(peer/private/watchdog.mexmaci64)
 ARRAY+=(qsub/private/watchdog.mexmaci64)
+sync ${ARRAY[*]}
+
+################################################################################
+# windows.m
+
+ARRAY=()
+ARRAY+=(preproc/private/windows.m)
+ARRAY+=(specest/private/windows.m)
 sync ${ARRAY[*]}
 
 ################################################################################
