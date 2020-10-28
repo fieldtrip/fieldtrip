@@ -157,6 +157,12 @@ switch version
       data = rmfield(data, 'trialinfo');
     end
     
+    if isfield(data, 'sampleinfo') && istable(data.sampleinfo)
+      % the sampleinfo contains two columns with the begsample and endsample and can always be represented as a numeric array
+      % the trialinfo can be either a numeric array or a table
+      data.sampleinfo = table2array(data.sampleinfo);
+    end
+    
   case '2010v2'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if ~isfield(data, 'fsample')
