@@ -254,13 +254,21 @@ if ~strcmp(eigenspace, 'no')
   Q = eigenspace;
   
   [eigvec, eigval] = eig(C);
-  E_S = eigvec(:, (M-Q+1):end);
-  Lambda_S = eigval((M-Q+1):end, (M-Q+1):end); % equation (7)
-  % rotate because "eig" puts strongest vectors and values at the end
-  E_S      = rot90(E_S, 2);
-  Lambda_S = rot90(Lambda_S, 2);
   
-  invLambda_S = ft_inv(Lambda_S); % should we include invopt?
+  % select the Q largest eigenvalues and the corresponding eigenvectors
+  E_S      = eigvec(:, (M-Q+1):end);
+  Lambda_S = eigval((M-Q+1):end, (M-Q+1):end); % equation (7)
+  
+  % sort from high to low eigenvalues/vectors
+  E_S      = E_S(:,end:-1:1);
+  Lambda_S = Lambda_S(end:-1:1,end:-1:1);
+  
+  % rotate because "eig" puts strongest vectors and values at the end
+  %E_S      = rot90(E_S, 2); -> this is not correct I think, because it also reverse the order of the rows. it should be:
+  %Lambda_S = rot90(Lambda_S, 2); % This should be OK, but for code
+  %consistency I use the same syntax for the order reversal
+  
+  invLambda_S = diag(1./diag(Lambda_S));%ft_inv(Lambda_S); % should we include invopt? -> no, but we should apply the 'vanilla' inv
   Gamma = E_S * invLambda_S * E_S';
 end
   
@@ -403,10 +411,10 @@ for i=1:size(sourcemodel.pos,1)
           ft_error('unitnoisegain weight normalization for eigenspace beamforming not implemented yet');
         case 'arraygain'
           lfn = lf ./ norm(lf);
-          mu = 1 / (lfn' * invC * lfn);
+          mu = pinv(lfn' * invC * lfn);
           filt = mu * lfn' * Gamma;
         case {'unitgain' 'no'}
-          mu = 1 / (lf' * invC * lf);
+          mu = pinv(lf' * invC * lf);
           filt = mu * lf' * Gamma; % equation 10
         otherwise
       end
