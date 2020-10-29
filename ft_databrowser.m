@@ -331,7 +331,7 @@ if hasdata
     end
   else
     if strcmp(cfg.continuous, 'yes') && (numel(data.trial) > 1)
-      ft_warning('interpreting trial-based data as continuous, time-axis is no longer appropriate. t(0) now corresponds to the first sample of the first trial, and t(end) to the last sample of the last trial')
+      ft_warning('interpreting trial-based data as continuous, the time axis now corresponds to the continuous data with the first sample being t=0')
     end
   end
   
@@ -390,6 +390,13 @@ else
   end
   
 end % if hasdata
+
+% the code below expects an Nx3 matrix with begsample, endsample and offset
+if istable(trlorg)
+  trlorg = table2array(trlorg(:,1:3));
+else
+  trlorg = trlorg(:,1:3);
+end
 
 Ntrials = size(trlorg, 1);
 
@@ -504,14 +511,14 @@ if length(artlabel) > 9
 end
 
 % make artdata representing all artifacts in a "raw data" format
-datendsample = max(trlorg(:,2));
+endsample = max(trlorg(:,2));
 
 artdata = [];
-artdata.trial{1}       = convert_event(artifact, 'boolvec', 'endsample', datendsample); % every artifact is a "channel"
-artdata.time{1}        = offset2time(0, hdr.Fs, datendsample);
+artdata.trial{1}       = artifact2boolvec(artifact, 'endsample', endsample); % every artifact is a "channel"
+artdata.time{1}        = offset2time(0, hdr.Fs, endsample);
 artdata.label          = artlabel;
 artdata.fsample        = hdr.Fs;
-artdata.cfg.trl        = [1 datendsample 0];
+artdata.cfg.trl        = [1 endsample 0];
 
 % determine amount of unique event types (for cfg.ploteventlabels)
 if ~isempty(event) && isstruct(event)
@@ -779,7 +786,7 @@ if nargout
   
   % add the updated artifact definitions to the output cfg
   for i=1:length(opt.artdata.label)
-    cfg.artfctdef.(opt.artdata.label{i}).artifact = convert_event(opt.artdata.trial{1}(i,:), 'artifact');
+    cfg.artfctdef.(opt.artdata.label{i}).artifact = boolvec2artifact(opt.artdata.trial{1}(i,:));
   end
   
   % add the updated preproc to the output
@@ -1265,7 +1272,7 @@ switch key
       % 1) artifacts can cross trial boundaries
       % 2) artifacts might not occur inside a trial boundary (when data is segmented differently than during artifact detection)
       % fetch trl representation of current artifact type
-      arttrl = convert_event(opt.artdata.trial{1}(opt.ftsel,:), 'trl');
+      arttrl = boolvec2trl(opt.artdata.trial{1}(opt.ftsel,:));
       % discard artifacts in the future
       curvisend = opt.trlvis(opt.trlop,2);
       arttrl(arttrl(:,1) > curvisend,:) = [];
@@ -1308,7 +1315,7 @@ switch key
       % 1) artifacts can cross trial boundaries
       % 2) artifacts might not occur inside a trial boundary (when data is segmented differently than during artifact detection)
       % fetch trl representation of current artifact type
-      arttrl = convert_event(opt.artdata.trial{1}(opt.ftsel,:), 'trl');
+      arttrl = boolvec2trl(opt.artdata.trial{1}(opt.ftsel,:));
       % discard artifacts in the past
       curvisbeg = opt.trlvis(opt.trlop,1);
       arttrl(arttrl(:,2) < curvisbeg,:) = [];
@@ -1806,7 +1813,7 @@ if strcmp(cfg.plotevents, 'yes')
       
       % compute the time of the event
       eventtim(ievent) = (event(ievent).sample-begsample)/opt.fsample + opt.hlim(1);
-      % if line event --> plot line, else plot event duration as a box 
+      % if line event --> plot line, else plot event duration as a box
       if isempty(event(ievent).duration) || event(ievent).duration==0
         lh = ft_plot_line([eventtim(ievent) eventtim(ievent)], [-1 1], 'tag', 'event', 'color', eventcol{ievent}, 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1]);
       else
