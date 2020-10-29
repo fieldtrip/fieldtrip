@@ -56,14 +56,14 @@ white_timelock = ft_denoise_prewhiten(cfg, timelock, baseline);
 %% I guess the beamformer needs the original covariance?? NO, this is not what you needtest
 %white_timelock.cov = timelock.cov; 
 
+% this is also needed for interpolation later on
+load(fullfile(datadir, 'SubjectSEF_mri.mat'));
+
 %% try to skip the headmodel creation part, by loading the file from disk
 try
   load(fullfile(datadir, 'ftp/tutorial/beamformer_lcmv', 'headmodel.mat'));
 catch
   %% SEGMENT MRI
-  
-  load(fullfile(datadir, 'SubjectSEF_mri.mat'));
-  
   cfg        = [];
   cfg.output = 'brain';
   segmented_mri = ft_volumesegment(cfg, mri);
@@ -165,8 +165,8 @@ for analysis_index = 1:n_analyses
   
   mom  = cat(1, source.avg.mom{:});
   bmom = std(mom(:,1:nearest(source.time,0)),[],2);
-  sel  = nearest(source.time, 0.046);
-  pow  = abs(mom(:,sel))./bmom;
+  sel  = nearest(source.time, [0.04 0.055]);
+  pow  = abs(mean(mom(:,sel(1):sel(2)),2))./bmom;
   
   M{analysis_index} = abs(mom)./repmat(bmom, [1 numel(source.time)]);
   tmp = zeros(size(sourcemodel.inside));
@@ -196,19 +196,19 @@ for analysis_index = 1:n_analyses
 %   
 %   source.mom_array = mom_array;
   
-%   cfg = [];
-%   cfg.parameter = 'pow';
-%   %cfg.parameter = 'mom_array';
-%   
-%   source = ft_sourceinterpolate(cfg, sourcemodel, mri);
-%   %source = ft_sourceinterpolate(cfg, source, mri);
-%   
-%   cfg = [];
-%   cfg.funparameter = 'pow';
-%   cfg.funcolormap = 'viridis';
-%   %cfg.funparameter = 'mom_array';
-%   
-%   ft_sourceplot(cfg, source);
+  cfg = [];
+  cfg.parameter = 'pow';
+  %cfg.parameter = 'mom_array';
+  
+  source = ft_sourceinterpolate(cfg, sourcemodel, mri);
+  %source = ft_sourceinterpolate(cfg, source, mri);
+  
+  cfg = [];
+  cfg.funparameter = 'pow';
+  cfg.funcolormap = 'viridis';
+  %cfg.funparameter = 'mom_array';
+  
+  ft_sourceplot(cfg, source);
   
 end
 
