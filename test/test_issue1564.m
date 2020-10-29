@@ -18,6 +18,8 @@ data.label = arrayfun(@num2str, 1:nchans, 'UniformOutput', false);
 for i=1:ntrials
   data.time{i} = (1:fsample)/fsample;
   data.trial{i} = randn(nchans, fsample);
+  data.sampleinfo(i,1) = (i-1)*fsample + 1 + (i*100); % create some gaps between the trials
+  data.sampleinfo(i,2) = data.sampleinfo(i,1) + fsample - 1;
 end
 
 if strcmp(ft_default.representation, 'numeric')
@@ -26,6 +28,25 @@ else
   trialnum = arrayfun(@num2str, 1:ntrials, 'UniformOutput', false)';
   data.trialinfo = table(trialnum);
 end
+
+%%
+
+cfg = [];
+cfg.continuous = 'no';
+ft_databrowser(cfg, data);
+
+%%
+
+cfg = [];
+cfg.continuous = 'yes';
+ft_databrowser(cfg, data);
+
+%%
+
+cfg = [];
+cfg.continuous = [];
+ft_databrowser(cfg, data);
+
 
 %%
 % close all
@@ -50,6 +71,8 @@ cfg.artfctdef.clip.amplthreshold = 0;
 % explore the detected artifacts in the databrowser
 ft_databrowser(cfg, data_clip);
 
+%%
+
 cfg.artfctdef.reject = 'partial';
 cfg.artfctdef.minaccepttim = 0;
 cfg.artfctdef.feedback = 'yes';
@@ -69,6 +92,7 @@ data_rej = ft_rejectartifact(cfg, data_clip);
 if ~istable(data.trialinfo)
   assert(isequal(data_rej.trialinfo, [1 2 3 4 5 6 7 8 9 10]'));
 end
+
 
 %%
 close all
@@ -109,3 +133,27 @@ if ~istable(data.trialinfo)
   assert(isequal(data_rej.trialinfo, [1 2 3 4 5 6 7 8 9 10]'));
 end
 
+
+%%
+% Although I identified in issue 1564 that the detected jump artifacts could also
+% have their channel in the outpout table, in the end I did not implement it. It
+% would be a lot of work and not really worth it.
+
+close all
+
+data_jump = data;
+data_jump.trial{1}(1,401:end) = data_jump.trial{1}(1,401:end) + 15;
+data_jump.trial{2}(2,601:end) = data_jump.trial{2}(2,601:end) - 15;
+
+cfg = [];
+cfg.artfctdef.jump.channel = 'all';
+cfg.artfctdef.jump.trlpadding = 0;
+cfg.artfctdef.jump.fltpadding = 0;
+cfg.artfctdef.jump.artpadding = 0.1;
+cfg.artfctdef.jump.cutoff = 20;
+cfg.artfctdef.jump.interactive = 'no';
+
+[cfg, artifact] = ft_artifact_jump(cfg, data_jump);
+
+% explore the detected artifacts in the databrowser
+ft_databrowser(cfg, data_jump);

@@ -297,8 +297,14 @@ trialall = trl2boolvec(trl);
 rejectall = zeros(1, max(trl(:,2)));
 for i=1:length(cfg.artfctdef.type)
   if istable(artifact{i})
-    begsample = artifact{i}.begsample;
-    endsample = artifact{i}.endsample;
+    if ~isempty(artifact{i})
+      begsample = artifact{i}.begsample;
+      endsample = artifact{i}.endsample;
+    else
+      % an empty table does not contain any columns
+      begsample = [];
+      endsample = [];
+    end
   else
     begsample = artifact{i}(:,1);
     endsample = artifact{i}(:,2);

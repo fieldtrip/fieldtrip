@@ -331,7 +331,7 @@ if hasdata
     end
   else
     if strcmp(cfg.continuous, 'yes') && (numel(data.trial) > 1)
-      ft_warning('interpreting trial-based data as continuous, time-axis is no longer appropriate. t(0) now corresponds to the first sample of the first trial, and t(end) to the last sample of the last trial')
+      ft_warning('interpreting trial-based data as continuous, the time axis now corresponds to the continuous data with the first sample being t=0')
     end
   end
   

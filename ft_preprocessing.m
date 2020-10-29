@@ -646,7 +646,12 @@ else
     dataout.time               = time;                % vector with the timeaxis for each individual trial
     dataout.trial              = cutdat;
     dataout.fsample            = hdr.Fs;
-    dataout.sampleinfo         = cfg.trl(:,1:2);      % this can be a numeric array or a table
+    if istable(cfg.trl)
+      % we always want the sampleinfo to be numeric
+      dataout.sampleinfo       = table2array(cfg.trl(:,1:2));
+    else
+      dataout.sampleinfo       = cfg.trl(:,1:2);
+    end
     if size(cfg.trl,2) > 3
       dataout.trialinfo        = cfg.trl(:,4:end);    % this can be a numeric array or a table
     end
