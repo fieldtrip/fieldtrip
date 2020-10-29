@@ -120,7 +120,8 @@ cfg.method = 'lcmv';
 cfg.sourcemodel = leadfield;
 cfg.headmodel = headmodel;
 cfg.lcmv.keepfilter = 'yes';
-%cfg.lcmv.fixedori   = 'yes';
+cfg.lcmv.fixedori   = 'yes';
+cfg.lcmv.projectnoise = 'yes';
 %cfg.lcmv.weightnorm = 'arraygain'; % this is not ideal for a one-to-one
 %comparison, let's switch off for now.
 
