@@ -50,7 +50,9 @@ if isnumeric(artifact)
   end
 elseif istable(artifact)
   trl = table();
-  if ismember('offset', artifact.Properties.VariableNames)
+  if isempty(artifact)
+    % an empty table does not contain any columns, the output is empty as well
+  elseif ismember('offset', artifact.Properties.VariableNames)
     % the artifact matrix already contains an offset
     trl = artifact;
   else

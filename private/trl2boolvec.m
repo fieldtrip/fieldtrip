@@ -58,8 +58,14 @@ if isnumeric(trl)
   end
 elseif istable(trl)
   boolvec = false(1, endsample);
-  begsample = trl.begsample;
-  endsample = trl.endsample;
+  if ~isempty(trl)
+    begsample = trl.begsample;
+    endsample = trl.endsample;
+  else
+    % an empty table does not contain any columns
+    begsample = [];
+    endsample = [];
+  end
   for j=1:length(begsample)
     boolvec(1, begsample(j):endsample(j)) = true;
   end
