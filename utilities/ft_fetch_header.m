@@ -37,11 +37,13 @@ for trllop=1:trlnum
   trllen(trllop) = size(data.trial{trllop},2);
 end
 
-% try to get trial definition according to original data file
 if isfield(data, 'sampleinfo')
+  % construct the trial definition according to thew samples from the original data file
   trl = data.sampleinfo;
+  trl(:,3) = 0;
 else
-  trl = [1 sum(trllen)];
+  % construct the trial definition as if it is a continuous piece of data
+  trl = [1 sum(trllen) 0];
 end
 
 % fill in some header details
