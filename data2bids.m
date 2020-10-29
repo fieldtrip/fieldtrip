@@ -165,8 +165,8 @@ function cfg = data2bids(cfg, varargin)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Undocumented options exist for converting some other data types to BIDS:
-% - EMG
-% - EXG
+% - emg
+% - exg
 % - audio
 % - video
 % - eyetracking
@@ -174,12 +174,12 @@ function cfg = data2bids(cfg, varargin)
 % - physio
 % - stim
 %
-% Most of these data types are currently (Aug 2019) not supported in the BIDS
+% Most of these data types are currently (Oct 2020) not supported in the BIDS
 % specification, but this function converts them in a very similar way as the
 % officially supported data types.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Copyright (C) 2018-2019, Robert Oostenveld
+% Copyright (C) 2018-2020, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -270,7 +270,8 @@ for i=1:numel(fn)
 end
 
 if isempty(cfg.datatype)
-  modality = {'meg', 'eeg', 'ieeg', 'emg', 'exg', 'audio', 'video', 'eyetracker', 'physio', 'stim', 'motion', 'nirs'};  for i=1:numel(modality)
+  modality = {'meg', 'eeg', 'ieeg', 'emg', 'exg', 'audio', 'video', 'eyetracker', 'physio', 'stim', 'motion', 'nirs'};
+  for i=1:numel(modality)
     if isfield(cfg, modality{i}) && ~isempty(cfg.(modality{i}))
       % the user specified modality-specific options, assume that the datatype matches
       cfg.datatype = modality{i};
@@ -316,7 +317,7 @@ cfg.dataset_description.Authors             = ft_getopt(cfg.dataset_description,
 cfg.dataset_description.Acknowledgements    = ft_getopt(cfg.dataset_description, 'Acknowledgements'      ); % OPTIONAL. Text acknowledging contributions of individuals or institutions beyond those listed in Authors or Funding.
 cfg.dataset_description.HowToAcknowledge    = ft_getopt(cfg.dataset_description, 'HowToAcknowledge'      ); % OPTIONAL. Instructions how researchers using this dataset should acknowledge the original authors. This field can also be used to define a publication that should be cited in publications that use the dataset.
 cfg.dataset_description.Funding             = ft_getopt(cfg.dataset_description, 'Funding'               ); % OPTIONAL. List of sources of funding (grant numbers)
-cfg.dataset_description.EthicsApprovals     = ft_getopt(cfg.dataset_description, 'EthicsApprovals'      ); % OPTIONAL. List of ethics committee approvals of the research protocols and/or protocol identifiers.
+cfg.dataset_description.EthicsApprovals     = ft_getopt(cfg.dataset_description, 'EthicsApprovals'       ); % OPTIONAL. List of ethics committee approvals of the research protocols and/or protocol identifiers.
 cfg.dataset_description.ReferencesAndLinks  = ft_getopt(cfg.dataset_description, 'ReferencesAndLinks'    ); % OPTIONAL. List of references to publication that contain information on the dataset, or links.
 cfg.dataset_description.DatasetDOI          = ft_getopt(cfg.dataset_description, 'DatasetDOI'            ); % OPTIONAL. The Document Object Identifier of the dataset (not the corresponding paper).
 
@@ -368,7 +369,7 @@ cfg.mri.TotalReadoutTime              = ft_getopt(cfg.mri, 'TotalReadoutTime'   
 cfg.mri.EchoTime                      = ft_getopt(cfg.mri, 'EchoTime'                       ); % The echo time (TE) for the acquisition, specified in seconds. This parameter is REQUIRED if corresponding fieldmap data is present or the data comes from a multi echo sequence. Corresponds to DICOM Tag 0018, 0081 "Echo Time"  (please note that the DICOM term is in milliseconds not seconds).
 cfg.mri.InversionTime                 = ft_getopt(cfg.mri, 'InversionTime'                  ); % The inversion time (TI) for the acquisition, specified in seconds. Inversion time is the time after the middle of inverting RF pulse to middle of excitation pulse to detect the amount of longitudinal magnetization. Corresponds to DICOM Tag 0018, 0082 "Inversion Time"  (please note that the DICOM term is in milliseconds not seconds).
 cfg.mri.SliceTiming                   = ft_getopt(cfg.mri, 'SliceTiming'                    ); % The time at which each slice was acquired within each volume (frame) of  the acquisition.  Slice timing is not slice order -- rather, it  is a list of times (in JSON format) containing the time (in seconds) of each slice acquisition in relation to the beginning of volume acquisition.  The list goes through the slices along the slice axis in the slice encoding dimension (see below). Note that to ensure the proper interpretation of the SliceTiming field, it is important to check if the (optional) SliceEncodingDirection exists. In particular,  if SliceEncodingDirection is negative, the entries in SliceTiming are defined in reverse order with respect to the slice axis (i.e., the final entry in the SliceTiming list is the time of acquisition of slice 0). This parameter is REQUIRED for sparse sequences that do not have the DelayTime field set. In addition without this parameter slice time correction will not be possible.
-cfg.mri.SliceEncodingDirection        = ft_getopt(cfg.mri, 'SliceEncodingDirection'         ); % Possible values = [];                     % "i", "j", "k", "i-", "j-", "k-" (the axis of the NIfTI data along which slices were acquired, and the direction in which SliceTiming is  defined with respect to). "i", "j", "k" identifiers correspond to the first, second and third axis of the data in the NIfTI file. A "-" sign indicates that the contents of SliceTiming are defined in reverse order -- that is, the first entry corresponds to the slice with the largest index, and the final entry corresponds to slice index zero. When present ,the axis defined by SliceEncodingDirection  needs to be consistent with the "slice_dim" field in the NIfTI header. When absent, the entries in SliceTiming must be in the order of increasing slice index as defined by the NIfTI header.
+cfg.mri.SliceEncodingDirection        = ft_getopt(cfg.mri, 'SliceEncodingDirection'         ); % Possible values "i", "j", "k", "i-", "j-", "k-" (the axis of the NIfTI data along which slices were acquired, and the direction in which SliceTiming is  defined with respect to). "i", "j", "k" identifiers correspond to the first, second and third axis of the data in the NIfTI file. A "-" sign indicates that the contents of SliceTiming are defined in reverse order -- that is, the first entry corresponds to the slice with the largest index, and the final entry corresponds to slice index zero. When present ,the axis defined by SliceEncodingDirection  needs to be consistent with the "slice_dim" field in the NIfTI header. When absent, the entries in SliceTiming must be in the order of increasing slice index as defined by the NIfTI header.
 cfg.mri.DwellTime                     = ft_getopt(cfg.mri, 'DwellTime'                      ); % Actual dwell time (in seconds) of the receiver per point in the readout direction, including any oversampling.  For Siemens, this corresponds to DICOM field (0019,1018) (in ns).   This value is necessary for the (optional) readout distortion correction of anatomicals in the HCP Pipelines.  It also usefully provides a handle on the readout bandwidth, which isn't captured in the other metadata tags.  Not to be confused with "EffectiveEchoSpacing", and the frequent mislabeling of echo spacing (which is spacing in the phase encoding direction) as "dwell time" (which is spacing in the readout direction).
 
 %% MR RF & Contrast
@@ -498,12 +499,12 @@ cfg.exg.RecordingType                     = ft_getopt(cfg.exg, 'RecordingType'  
 %% NIRS is not part of the official BIDS specification
 cfg.nirs.SamplingFrequency                 = ft_getopt(cfg.nirs, 'SamplingFrequency'                 );
 cfg.nirs.RecordingDuration                 = ft_getopt(cfg.nirs, 'RecordingDuration'                 );
-% cfg.nirs.RecordingType                     = ft_getopt(cfg.nirs, 'RecordingType'                     ); % not integrated yet 
+% cfg.nirs.RecordingType                     = ft_getopt(cfg.nirs, 'RecordingType'                     ); % not integrated yet
 cfg.nirs.SourceType                        = ft_getopt(cfg.nirs, 'SourceType'                        );
 cfg.nirs.DetectorType                      = ft_getopt(cfg.nirs, 'DetectorType'                      );
 cfg.nirs.NIRSChannelCount                  = ft_getopt(cfg.nirs, 'NIRSChannelCount'                  );
-cfg.nirs.NIRSSourceOptodeCount             = ft_getopt(cfg.nirs, 'NIRSSourceOptodeCount'                   );
-cfg.nirs.NIRSDetectorOptodeCount           = ft_getopt(cfg.nirs, 'NIRSDetectorOptodeCount'                 );
+cfg.nirs.NIRSSourceOptodeCount             = ft_getopt(cfg.nirs, 'NIRSSourceOptodeCount'             );
+cfg.nirs.NIRSDetectorOptodeCount           = ft_getopt(cfg.nirs, 'NIRSDetectorOptodeCount'           );
 cfg.nirs.HeadCircumference                 = ft_getopt(cfg.nirs, 'HeadCircumference'                 );
 cfg.nirs.NIRSPlacementScheme               = ft_getopt(cfg.nirs, 'NIRSPlacementScheme'               );
 cfg.nirs.SubjectArtefactDescription        = ft_getopt(cfg.nirs, 'SubjectArtefactDescription'        );
@@ -528,9 +529,9 @@ cfg.video.AudioSampleRate                 = ft_getopt(cfg.video, 'AudioSampleRat
 cfg.video.AudioChannelCount               = ft_getopt(cfg.video, 'AudioChannelCount'   );
 
 %% physio is part of the official BIDS specification and goes into 'beh' or in 'func'
-cfg.physio.Columns                        = ft_getopt(cfg.physio, 'Columns'              );
-cfg.physio.StartTime                      = ft_getopt(cfg.physio, 'StartTime'            );
-cfg.physio.SamplingFrequency              = ft_getopt(cfg.physio, 'SamplingFrequency'    );
+cfg.physio.Columns                        = ft_getopt(cfg.physio, 'Columns'            );
+cfg.physio.StartTime                      = ft_getopt(cfg.physio, 'StartTime'          );
+cfg.physio.SamplingFrequency              = ft_getopt(cfg.physio, 'SamplingFrequency'  );
 
 %% stim is part of the official BIDS specification and goes into 'beh' or in 'func'
 cfg.stim.Columns                          = ft_getopt(cfg.stim, 'Columns'              );
@@ -589,7 +590,7 @@ cfg.coordsystem.FiducialsCoordinateSystemDescription            = ft_getopt(cfg.
 cfg.channels.name               = ft_getopt(cfg.channels, 'name'               , nan);  % REQUIRED. Channel name (e.g., MRT012, MEG023)
 cfg.channels.type               = ft_getopt(cfg.channels, 'type'               , nan);  % REQUIRED. Type of channel; MUST use the channel types listed below.
 cfg.channels.units              = ft_getopt(cfg.channels, 'units'              , nan);  % REQUIRED. Physical unit of the data values recorded by this channel in SI (see Appendix V: Units for allowed symbols).
-% specific options for EEG/MEG channels 
+% specific options for EEG/MEG channels
 cfg.channels.sampling_frequency = ft_getopt(cfg.channels, 'sampling_frequency' , nan);  % OPTIONAL. Sampling rate of the channel in Hz.
 cfg.channels.description        = ft_getopt(cfg.channels, 'description'        , nan);  % OPTIONAL. Brief free-text description of the channel, or other information of interest. See examples below.
 cfg.channels.low_cutoff         = ft_getopt(cfg.channels, 'low_cutoff'         , nan);  % OPTIONAL. Frequencies used for the high-pass filter applied to the channel in Hz. If no high-pass filter applied, use n/a.
@@ -599,11 +600,10 @@ cfg.channels.software_filters   = ft_getopt(cfg.channels, 'software_filters'   ,
 cfg.channels.status             = ft_getopt(cfg.channels, 'status'             , nan);  % OPTIONAL. Data quality observed on the channel (good/bad). A channel is considered bad if its data quality is compromised by excessive noise. Description of noise type SHOULD be provided in [status_description].
 cfg.channels.status_description = ft_getopt(cfg.channels, 'status_description' , nan);  % OPTIONAL. Freeform text description of noise or artifact affecting data quality on the channel. It is meant to explain why the channel was declared bad in [status].
 % specific options for NIRS channels
+% FIXME optional nirs channel fields (e.g. frequencies for frequency domain NIRS) should still be added here
 cfg.channels.source             = ft_getopt(cfg.channels, 'source'             , nan);  % REQUIRED. Name of the source as specified in the *_optodes.tsv file. n/a for channels that do not contain NIRS signals (acceleration).
 cfg.channels.detector           = ft_getopt(cfg.channels, 'detector'           , nan);  % REQUIRED. Name of the detector as specified in the *_optodes.tsv file. n/a for channels that do not contain NIRS signals (acceleration).
 cfg.channels.wavelength         = ft_getopt(cfg.channels, 'wavelength'         , nan);  % REQUIRED. Wavelength of light in nm. n/a for channels that do not contain raw NIRS signals (acceleration).
-% FIXME: optional nirs channel fields (e.g. frequencies for frequency
-% domain NIRS) should still be added here.
 
 %% columns in the electrodes.tsv
 cfg.electrodes.name             = ft_getopt(cfg.electrodes, 'name'             , nan);  % REQUIRED. Name of the electrode
@@ -1216,14 +1216,13 @@ end
 if need_nirs_json
   nirs_json.SamplingFrequency         = hdr.Fs;
   nirs_json.RecordingDuration         = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-%   nirs_json.EpochLength               = hdr.nSamples/hdr.Fs; % not yet
-%   supported
+  %   nirs_json.EpochLength               = hdr.nSamples/hdr.Fs; % not yet supported
   nirs_json.NIRSChannelCount          = sum(strcmpi(hdr.chantype, 'nirs'));
-%   nirs_json.AUXChannelCount           = sum(strcmpi(hdr.chantype, 'aux')); % not yet supported
-%   nirs_json.MiscChannelCount          = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
+  %   nirs_json.AUXChannelCount           = sum(strcmpi(hdr.chantype, 'aux')); % not yet supported
+  %   nirs_json.MiscChannelCount          = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
   [opto_labels, opto_idx]             = unique(hdr.opto.optolabel); % select unique optodes
-  nirs_json.NIRSSourceOptodeCount           = sum(strcmpi(hdr.opto.optotype(opto_idx), 'transmitter'));
-  nirs_json.NIRSDetectorOptodeCount         = sum (strcmpi(hdr.opto.optotype(opto_idx), 'receiver'));  
+  nirs_json.NIRSSourceOptodeCount     = sum(strcmpi(hdr.opto.optotype(opto_idx), 'transmitter'));
+  nirs_json.NIRSDetectorOptodeCount   = sum (strcmpi(hdr.opto.optotype(opto_idx), 'receiver'));
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
@@ -1396,7 +1395,7 @@ if need_optodes_tsv
   optodes_tsv=opto2table(opto); % this includes the cfg.opto and data.opto
   optodes_tsv=merge_table(optodes_tsv, cfg.optodes, 'name'); % this includes the cfg.optodes
   
-    % the default for cfg.electrodes consists of one row where all values are nan, this needs to be removed
+  % the default for cfg.electrodes consists of one row where all values are nan, this needs to be removed
   keep = false(size(optodes_tsv.name));
   for i=1:numel(optodes_tsv.name)
     keep(i) = ischar(optodes_tsv.name{i});
@@ -2234,8 +2233,12 @@ elseif isstruct(s)
   fn = fn(structfun(@isempty, s));
   s = removefields(s, fn);
 elseif istable(s)
-  vn = find(all(cellfun(@isempty, s{:,:})));
-  s = removevars(s, vn);    
+  remove = false(1,size(s,2));
+  for i=1:size(s,2)
+    % find columns that are non-numeric and where all elements are []
+    remove(i) = ~isnumeric(s{:,i}) && all(cellfun(@isempty, s{:,i}));
+  end
+  s = s(:,~remove);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
