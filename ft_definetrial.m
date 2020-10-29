@@ -195,21 +195,31 @@ ft_info('found %d events\n', length(event));
 cfg.event = event;
 
 if strcmp(cfg.representation, 'numeric') && istable(trl)
-  % convert the table to a numeric array with the columns begsample, endsample and offset
-  trl = table2array(trl(:,1:3));
-  if size(trl,2)>3
-    % keep any additional columns
-    trl = horzcat(trl, table2array(trl(:,4:end)));
+  if isempty(trl)
+    % an empty table does not have columns
+    trl = zeros(0,3);
+  else
+    % convert the table to a numeric array with the columns begsample, endsample and offset
+    trl = table2array(trl(:,1:3));
+    if size(trl,2)>3
+      % keep any additional columns
+      trl = horzcat(trl, table2array(trl(:,4:end)));
+    end
   end
 elseif strcmp(cfg.representation, 'table') && isnumeric(trl)
-  % convert the numeric array to a table with the columns begsample and endsample
-  begsample = trl(:,1);
-  endsample = trl(:,2);
-  offset    = trl(:,3);
-  trl = table(begsample, endsample, offset);
-  for i=4:size(trl,2)
-    % keep any additional columns, they will have default names
-    trl{:,i} = trl(:,i);
+  if isempty(trl)
+    % an empty table does not have columns
+    trl = table();
+  else
+    % convert the numeric array to a table with the columns begsample and endsample
+    begsample = trl(:,1);
+    endsample = trl(:,2);
+    offset    = trl(:,3);
+    trl = table(begsample, endsample, offset);
+    for i=4:size(trl,2)
+      % keep any additional columns, they will have default names
+      trl{:,i} = trl(:,i);
+    end
   end
 end
 
