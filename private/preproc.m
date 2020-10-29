@@ -398,7 +398,7 @@ if ~strcmp(cfg.montage, 'no') && ~isempty(cfg.montage)
   clear tmpdata
 end
 
-if any(any(isnan(dat)))
+if any(isnan(dat(:)))
   % filtering is not possible for at least a selection of the data
   ft_warning('data contains NaNs, no filtering or preprocessing applied');
   
