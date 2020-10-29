@@ -28,6 +28,12 @@ if iscell(state.Y)
 else
   state.wdim = size(state.Y, 1);
 end
+
+% broadcast the block indx (if existing) to the state
+if isfield(state.preprocf.params, 'indx')
+  state.indx = state.preprocf.params.indx;
+end
+
 if ~isfield(state, 'sdim'); state.sdim = state.wdim; end
 
 dss_message(state,1,sprintf('Preprocessed data dimension %i, extracting  %i components.\n', state.wdim, state.sdim));

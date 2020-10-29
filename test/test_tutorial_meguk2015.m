@@ -364,7 +364,7 @@ ft_plot_headmodel(ft_convert_units(vol, 'mm'));
 figure
 hold on; % add the subsequent objects to the same figure
 ft_plot_headshape(headshape);
-ft_plot_sens(ft_convert_units(sens, 'mm'), 'coil', 'yes', 'coildiameter', 10);
+ft_plot_sens(ft_convert_units(sens, 'mm'));%, 'coil', 'yes', 'coildiameter', 10);
 ft_plot_headmodel(ft_convert_units(vol, 'mm'));
 
 % figure
@@ -444,12 +444,11 @@ ft_multiplotTFR(cfg, wavelet)
 %%
 
 cfg = [];
-cfg.sourcemodel.resolution = 7;
+cfg.resolution = 7;
 % cfg.inwardshift = -7; % allow dipoles 10mm outside the brain, this improves interpolation at the edges
-cfg.sourcemodel.unit = 'mm';
 cfg.headmodel = vol;  % from FT
-cfg.grad = sens; % from FT
-cfg.senstype = 'meg';
+cfg.grad      = sens; % from FT
+cfg.senstype  = 'meg';
 cfg.normalize = 'yes';
 grid = ft_prepare_leadfield(cfg, wavelet);
 
@@ -607,10 +606,10 @@ cfg.trials = virtualchannel_raw.trialinfo==3;
 virtualchannel_avg3 = ft_timelockanalysis(cfg, virtualchannel_raw);
 
 figure
-plot(virtualchannel_avg.time, virtualchannel_avg.avg);
+plot(virtualchannel_avg.time, squeeze(mean(virtualchannel_avg.trial)));
 
 figure
-plot(virtualchannel_avg.time, [virtualchannel_avg1.avg; virtualchannel_avg2.avg; virtualchannel_avg3.avg]);
+plot(virtualchannel_avg.time, [squeeze(mean(virtualchannel_avg1.trial))'; squeeze(mean(virtualchannel_avg2.trial))'; squeeze(mean(virtualchannel_avg3.trial))']);
 legend({'1-Famous', '2-Unfamiliar', '3-Scrambled'})
 
 figure
@@ -715,7 +714,7 @@ cfg.preproc.baselinewindow = [-inf 0];
 virtualchannel_avg = ft_timelockanalysis(cfg, virtualchannel_raw);
 
 figure
-plot(virtualchannel_avg.time, virtualchannel_avg.avg)
+plot(virtualchannel_avg.time, squeeze(mean(virtualchannel_avg.trial)))
 legend(virtualchannel_avg.label);
 
 
@@ -804,9 +803,8 @@ freq = ft_freqanalysis(cfg, data_fix);
 %%
 
 cfg = [];
-cfg.sourcemodel.resolution = 7;
+cfg.resolution = 7;
 % cfg.inwardshift = -7; % allow dipoles 10mm outside the brain, this improves interpolation at the edges
-cfg.sourcemodel.unit = 'mm';
 cfg.headmodel = vol;  % from FT
 cfg.grad      = sens; % from FT
 cfg.senstype  = 'meg';
@@ -831,7 +829,7 @@ cfg.frequency = [14 18];
 source = ft_sourceanalysis(cfg, freq);
 
 figure
-plot(source.avg.mom{source.inside(1)}, '.')
+plot(source.avg.mom{find(source.inside,1,'first')}, '.')
 xlabel('real');
 ylabel('imag');
 
@@ -841,7 +839,7 @@ ylabel('imag');
 pos = [21 -64 30];
 
 % compute the nearest grid location
-dif = sourcemodel.pos;
+dif = source.pos;
 dif(:,1) = dif(:,1)-pos(1);
 dif(:,2) = dif(:,2)-pos(2);
 dif(:,3) = dif(:,3)-pos(3);

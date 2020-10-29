@@ -106,6 +106,8 @@ cfg.vartrllength      = 2;
 cfg.covariancewindow  = 'all';
 tlock                 = ft_timelockanalysis(cfg, data_cmb);
 
+% this is old-style stuff. as of end 2020 there's a ft_virtualchannel
+% function that does the virtualchannel creation
 cfg              = [];
 cfg.method       = 'lcmv';
 cfg.headmodel    = hdm;
@@ -115,6 +117,7 @@ cfg.sourcemodel.unit    = sourcemodel.unit;
 cfg.lcmv.keepfilter = 'yes';
 source_idx       = ft_sourceanalysis(cfg, tlock);
 
+%% old style
 beamformer_lft_coh = source_idx.avg.filter{1};
 beamformer_gam_pow = source_idx.avg.filter{2};
 
@@ -149,6 +152,20 @@ for k = 1:length(data_cmb.trial)
   virtualchanneldata.trial{k}(1,:) = u1(:,1)' * beamformer_gam_pow * data_cmb.trial{k}(chansel,:);
   virtualchanneldata.trial{k}(2,:) = u2(:,1)' * beamformer_lft_coh * data_cmb.trial{k}(chansel,:);
 end
+virtualchanneldata_old = virtualchanneldata;
+
+%% new-style
+cfg = [];
+cfg.pos            = source_idx.pos;
+cfg.method         = 'svd';
+cfg.numcomponent   = 1;
+virtualchanneldata = ft_virtualchannel(cfg, data_cmb, source_idx);
+virtualchanneldata.label = {'motor';'visual'}; % note the order is reversed w.r.t. old-style
+
+% do a sanity check on whether the old and new style vcs match more or less
+c = corr([virtualchanneldata_old.trial{1}' virtualchanneldata.trial{1}']);
+assert(c(2,3)>0.99);
+assert(c(1,4)>0.99);
 
 % select the two EMG channels
 cfg = [];
