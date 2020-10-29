@@ -36,15 +36,24 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %   cfg.memory = 'low' or 'high', whether to be memory or computationally efficient, respectively (default = 'high')
 %
 % The optional configuration settings (see below) are:
-%   cfg.artfctdef.zvalue.artfctpeak  = 'yes' or 'no'
-%   cfg.artfctdef.zvalue.interactive = 'yes' or 'no'
+%   cfg.artfctdef.zvalue.artfctpeak       = 'yes' or 'no'
+%   cfg.artfctdef.zvalue.artfctpeakrange  = [begin end]
+%   cfg.artfctdef.zvalue.interactive      = 'yes' or 'no'
 %
 % If you specify cfg.artfctdef.zvalue.artfctpeak='yes', the maximum value of the
 % artifact within its range will be found and saved into cfg.artfctdef.zvalue.peaks.
 %
-% If you specify cfg.artfctdef.zvalue.interactive='yes', a GUI will be started and
-% you can manually accept/reject detected artifacts, and/or change the threshold. To
-% control the graphical interface via keyboard, use the following keys:
+% You can specify cfg.artfctdef.zvalue.artfctpeakrange if you want to use the
+% detected artifacts as input to the DSS method of FT_COMPONENTANALYSIS. The result
+% is saved into cfg.artfctdef.zvalue.dssartifact. The range will automatically
+% respect the trial boundaries, i.e. it will be shorter if peak is near the beginning
+% or end of a trial. Samples between trials will be removed, thus this will not match
+% the sampleinfo of the data structure.
+%
+% If you specify cfg.artfctdef.zvalue.interactive='yes', a graphical user interface
+% will show in which you can manually accept/reject the detected artifacts, and/or
+% change the threshold. To control the graphical interface via keyboard, use the
+% following keys:
 %
 %     q                 : Stop
 %
@@ -65,13 +74,6 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %     downarrow         : Shift the z-threshold down
 %     z                 : Specify the z-threshold
 %     uparrow           : Shift the z-threshold down
-%
-% Use also, e.g. as input to DSS option of ft_componentanalysis
-% cfg.artfctdef.zvalue.artfctpeakrange=[-0.25 0.25], for example to indicate range
-% around peak to include, saved into cfg.artfctdef.zvalue.dssartifact. The default is
-% [0 0]. Range will respect trial boundaries (i.e. be shorter if peak is near
-% beginning or end of trial). Samples between trials will be removed; thus this won't
-% match .sampleinfo of the data structure.
 %
 % Configuration settings related to the preprocessing of the data are
 %   cfg.artfctdef.zvalue.lpfilter      = 'no' or 'yes'  lowpass filter
@@ -152,8 +154,10 @@ cfg = ft_checkconfig(cfg, 'renamed', {'artfctdef.blc',             'artfctdef.de
 cfg = ft_checkconfig(cfg, 'renamed', {'artfctdef.blcwindow'        'artfctdef.baselinewindow'});
 cfg = ft_checkconfig(cfg, 'renamed', {'artfctdef.zvalue.sgn',      'artfctdef.zvalue.channel'});
 cfg = ft_checkconfig(cfg, 'renamed', {'artfctdef.zvalue.feedback', 'artfctdef.zvalue.interactive'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'padding'});
 
 % set the default options
+cfg.continuous      = ft_getopt(cfg, 'continuous',     []);
 cfg.feedback        = ft_getopt(cfg, 'feedback',       'text');
 cfg.memory          = ft_getopt(cfg, 'memory',         'high');
 cfg.representation  = ft_getopt(cfg, 'representation', 'numeric'); % numeric or table
@@ -181,11 +185,11 @@ end
 % clear old warnings from this stack
 ft_warning('-clear')
 
-% flag whether to compute z-value per trial or not, rationale being that if
-% there are fluctuations in the variance across trials (e.g. due to
-% position differences in MEG measurements) which don't have to do with the artifact per se,
-% the detection is compromised (although the data quality is questionable
-% when there is a lot of movement to begin with).
+% flag whether to compute z-value per trial or not, rationale being that if there are
+% fluctuations in the variance across trials (e.g. due to position differences in MEG
+% measurements) which don't have to do with the artifact per se, the detection is
+% compromised (although the data quality is questionable when there is a lot of
+% movement to begin with).
 pertrial    = strcmp(cfg.artfctdef.zvalue.method, 'trial');
 demeantrial = strcmp(cfg.artfctdef.zvalue.method, 'trialdemean');
 if pertrial
@@ -210,7 +214,7 @@ else
 end
 
 % set default cfg.continuous
-if ~isfield(cfg, 'continuous')
+if isempty(cfg.continuous)
   if hdr.nTrials==1
     cfg.continuous = 'yes';
   else
@@ -245,7 +249,7 @@ artpadding = round(cfg.artfctdef.zvalue.artpadding*hdr.Fs);
 trl(:,1)      = trl(:,1) - trlpadding;       % pad the trial with some samples, in order to detect
 trl(:,2)      = trl(:,2) + trlpadding;       % artifacts at the edges of the relevant trials.
 if size(trl,2)>= 3
-  trl(:,3)    = trl(:,3) - trlpadding;     % the offset can ofcourse be adjusted as well
+  trl(:,3)    = trl(:,3) - trlpadding;       % the offset can of course be adjusted as well
 elseif hasdata
   % reconstruct offset
   for tr=1:size(trl,1)
@@ -360,9 +364,8 @@ zmax = cell(1, numtrl);
 zsum = cell(1, numtrl);
 zindx = cell(1, numtrl);
 
-% create a vector that indexes the trials, or is all 1, in order
-% to a per trial z-scoring, or use a static std and mean (used in lines 317
-% and 328)
+% create a vector that indexes the trials, or is all 1, in order to a per trial
+% z-scoring, or use a static std and mean (used in lines 317 and 328)
 if pertrial
   indvec = 1:numtrl;
 else
@@ -383,9 +386,9 @@ for trlop = 1:numtrl
     
     nsmp          = size(dat,2);
     zdata         = (dat - datavg(:,indvec(trlop)*ones(1,nsmp)))./datstd(:,indvec(trlop)*ones(1,nsmp));  % convert the filtered data to z-values
-    zsum{trlop}   = nansum(zdata,1);                   % accumulate the z-values over channels
+    zsum{trlop}   = nansum(zdata,1);                % accumulate the z-values over channels
     [zmax{trlop},ind] = max(zdata,[],1);            % find the maximum z-value and remember it
-    zindx{trlop}      = chanindx(ind);                % also remember the channel number that has the largest z-value
+    zindx{trlop}      = chanindx(ind);              % also remember the channel number that has the largest z-value
   else
     % initialize some matrices
     zmax{trlop}  = -inf + zeros(1,size(dat{trlop},2));
@@ -398,6 +401,7 @@ for trlop = 1:numtrl
     [zmax{trlop},ind] = max(zdata,[],1);              % find the maximum z-value and remember it
     zindx{trlop}      = chanindx(ind);                % also remember the channel number that has the largest z-value
   end
+  
   % This alternative code does the same, but it is much slower
   %   for i=1:size(zmax{trlop},2)
   %       if zdata{trlop}(i)>zmax{trlop}(i)
@@ -414,6 +418,7 @@ if demeantrial
     zsum{trlop} = zsum{trlop}-mean(zsum{trlop},2);
   end
 end
+
 %for sgnlop=1:nchan
 %  % read the data and apply preprocessing options
 %  sumval = 0;
@@ -482,7 +487,7 @@ opt.numtrl       = size(trl,1);
 opt.quit         = 0;
 opt.threshold    = cfg.artfctdef.zvalue.cutoff;
 opt.thresholdsum = thresholdsum;
-opt.trialok      = true(1,opt.numtrl); % OK by means of objective criterion
+opt.trialok      = true(1,opt.numtrl);  % OK by means of objective criterion
 opt.keep         = zeros(1,opt.numtrl); % OK overruled by user +1 to keep, -1 to reject, start all zeros for callback to work
 opt.trl          = trl;
 opt.trlop        = 1;
@@ -1165,4 +1170,3 @@ while p~=0
   h = p;
   p = get(h, 'parent');
 end
-
