@@ -81,6 +81,12 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.layout                  = filename of the layout, see FT_PREPARE_LAYOUT
 %   cfg.elec                    = structure with electrode positions or filename, see FT_READ_SENS
 %   cfg.grad                    = structure with gradiometer definition or filename, see FT_READ_SENS
+% Additional plotting options for the component viewmode:
+%   cfg.gridscale               = scalar, number of points along both directions for interpolation (default = 45 here)
+%   cfg.shading                 = string, 'none', 'flat', 'interp' (default = 'flat')
+%   cfg.interplimits            = string, 'electrodes' or 'mask' (default here = 'mask')
+%   cfg.interpolation           = string, 'nearest', 'linear', 'natural', 'cubic' or 'v4' (default = 'v4')
+%   cfg.contournum              = topoplot contour lines
 %
 % The default font size might be too small or too large, depending on the number of
 % channels. You can use the following options to change the size of text inside the
@@ -216,6 +222,10 @@ cfg.artifactalpha   = ft_getopt(cfg, 'artifactalpha', 0.2);          % for the o
 cfg.allowoverlap    = ft_getopt(cfg, 'allowoverlap', 'no');          % for ft_fetch_data
 cfg.contournum      = ft_getopt(cfg, 'contournum', 0);               % topoplot contour lines
 cfg.trl             = ft_getopt(cfg, 'trl');
+cfg.gridscale       = ft_getopt(cfg, 'gridscale', 45);
+cfg.shading         = ft_getopt(cfg, 'shading', 'flat');
+cfg.interplimits    = ft_getopt(cfg, 'interplim', 'mask');
+cfg.interpolation   = ft_getopt(cfg, 'interpmethod', 'v4');
 
 % construct the low-level options as key-value pairs, these are passed to FT_READ_HEADER
 headeropt = {};
@@ -2067,8 +2077,22 @@ if strcmp(cfg.viewmode, 'component')
       
       % laychan is the actual topo layout, in pixel units for .mat files
       % laytopo is a vertical layout determining where to plot each topo, with one entry per component
+     
+     opt = {'interpmethod', cfg.interpolation, ... 
+      'interplim',    cfg.interplimits, ... 
+      'gridscale',    cfg.gridscale, ... 
+      'outline',      laychan.outline, ... 
+      'shading',      cfg.shading, ... 
+      'isolines',     cfg.contournum, ... 
+      'mask',         laychan.mask, ... 
+      'tag',          'topography', ... 
+      'hpos',         laytopo.pos(laysel,1)-laytopo.width(laysel)/2, ... 
+      'vpos',         laytopo.pos(laysel,2)-laytopo.height(laysel)/2, ... 
+      'width',        laytopo.width(laysel), ... 
+      'height',       laytopo.height(laysel)};
       
-      ft_plot_topo(chanx, chany, chanz, 'mask', laychan.mask, 'interplim', 'mask', 'outline', laychan.outline, 'tag', 'topography', 'hpos', laytopo.pos(laysel,1)-laytopo.width(laysel)/2, 'vpos', laytopo.pos(laysel,2)-laytopo.height(laysel)/2, 'width', laytopo.width(laysel), 'height', laytopo.height(laysel), 'gridscale', 45, 'isolines', cfg.contournum);
+    
+      ft_plot_topo(chanx, chany, chanz, opt{:});
       
       %axis equal
       %drawnow
