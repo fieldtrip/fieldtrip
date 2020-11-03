@@ -33,11 +33,17 @@ if iscell(X)
     indx = ones(1,size(X{1},1));
   end
   uindx = unique(indx);
+  newindx = zeros(1,0);
   for k = 1:numel(uindx)
     ix = indx==uindx(k);
+    [wmat, dwmat] = dss_sphere(cellrowselect(X,ix), sum(ix), [], params);
+    newindx       = cat(2, newindx, ones(1,size(wmat,1)).*uindx(k));
+    iy = newindx==uindx(k);
     
-    [wM(ix,ix), dwM(ix,ix)] = dss_sphere(cellrowselect(X,ix), sum(ix), [], params);
+    wM(iy,ix)  = wmat;
+    dwM(ix,iy) = dwmat;
   end
+  params.indx = newindx;
   
 else
   X = X - repmat(means,1,tdim);

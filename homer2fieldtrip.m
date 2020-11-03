@@ -1,4 +1,4 @@
-function data = homer2fieldtrip(nirs, varargin)
+function [data, event] = homer2fieldtrip(nirs, varargin)
 
 % HOMER2FIELDTRIP converts a continuous raw data structure from Homer to FieldTrip
 % format.
@@ -119,20 +119,28 @@ if isfield(nirs, 'aux')
 end % if aux channels present
 
 if isfield(nirs, 's')
+  
+  % the CondNames field is not always present, it is documented on page 28 in http://www.nmr.mgh.harvard.edu/martinos/software/homer/HOMER2_UsersGuide_121129.pdf
+  if ~isfield(nirs, 'CondNames')
+    if size(nirs.s,2)==1
+      % do not include the column number, there is only one
+      nirs.CondNames = {'s'};
+    else
+      for i=1:size(nirs.s,2)
+        % include the column number
+        nirs.CondNames{i} = sprintf('s%d', i);
+      end
+    end % if single or multiple
+  end
+  
   % concatenate the stimulus channel(s) at the end, consistent with FT_READ_DATA
-  if size(nirs.s,2)==1
+  for i=1:size(nirs.s,2)
     hdr.nChans = hdr.nChans + 1;
-    hdr.label{end+1} = 's';	% do not include the column number, there is only one
+    hdr.label{end+1} = nirs.CondNames{i};
     hdr.chantype{end+1} = 'stimulus';
     hdr.chanunit{end+1} = 'unknown';
-  else
-    for i=1:size(nirs.s,2)
-      hdr.nChans = hdr.nChans + 1;
-      hdr.label{end+1} = sprintf('s%d', i); % include the column number
-      hdr.chantype{end+1} = 'stimulus';
-      hdr.chanunit{end+1} = 'unknown';
-    end
-  end % if single or multiple
+  end
+  
 end % if stimulus channels present
 
 % convert the measurement configuration details to an optode structure
@@ -142,7 +150,7 @@ hdr.opto = homer2opto(nirs.SD);
 hdr.orig = removefields(nirs, {'d', 't', 's', 'aux'});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% construct the FieldTrip raw data structure
+% construct the FieldTrip raw data structure, see also FT_DATATYPE_RAW
 
 data = [];
 data.opto = hdr.opto;
@@ -165,3 +173,10 @@ data.label = data.label(:);
 
 % ensure that the output is according to the most recent standards
 data = ft_checkdata(data, 'datatype', 'raw');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% construct an event structure similar to FT_READ_EVENT
+
+if nargout>1 && isfield(nirs, 's')
+  event = boolvec2event(nirs.s', 'type', nirs.CondNames);
+end

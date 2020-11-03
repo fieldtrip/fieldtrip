@@ -44,7 +44,7 @@ function [cfg] = ft_definetrial(cfg)
 % columns can be used by a custom trialfun to provide numeric information
 % about each trial such as trigger codes, response latencies, trial
 % type and response correctness. The additional columns of the "trl"
-% matrix will be represented in data.trialinfo after FT_PREPROCESSING.
+% matrix will be represented in the "trialinfo" field after FT_PREPROCESSING.
 %
 % If FT_TRIALFUN_GENERAL has been used to generate the "trl" matrix, the
 % function may return a fourth column in the trl-matrix, that refers to
@@ -137,13 +137,9 @@ end
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
 
-if ~isfield(cfg, 'trl') && (~isfield(cfg, 'trialfun') || isempty(cfg.trialfun))
-  % there used to be other system specific trialfuns in previous versions
-  % of FieldTrip, but they are deprecated and not included in recent
-  % versions any more
-  cfg.trialfun = 'ft_trialfun_general';
-  ft_warning('no trialfun was specified, using ft_trialfun_general');
-end
+% set the default options
+cfg.representation  = ft_getopt(cfg, 'representation', 'numeric'); % numeric or table
+cfg.trialfun        = ft_getopt(cfg, 'trialfun', 'ft_trialfun_general');
 
 % create the trial definition for this dataset and condition
 if isfield(cfg, 'trl')
@@ -156,18 +152,18 @@ if isfield(cfg, 'trl')
   else
     event = [];
   end
-
-elseif isfield(cfg, 'trialfun')
-
+  
+else
+  % try to locate the trialfun
   trialfunSpecified = cfg.trialfun;
   cfg.trialfun = ft_getuserfun(cfg.trialfun, 'trialfun');
-
+  
   if isempty(cfg.trialfun)
     ft_error('the specified trialfun ''%s'' was not found', trialfunSpecified);
   else
     ft_info('evaluating trialfunction ''%s''\n', func2str(cfg.trialfun));
   end
-
+  
   % determine the number of outpout arguments of the user-supplied trial function
   try
     % the nargout function in MATLAB 6.5 and older does not work on function handles
@@ -185,9 +181,7 @@ elseif isfield(cfg, 'trialfun')
     [trl, event] = feval(cfg.trialfun, cfg);
   end
   
-else
-  ft_error('cfg.trialfun is not specified, see FT_DEFINETRIAL for help');
-end
+end % if trl or trialfun
 
 if isfield(cfg, 'trialdef') && isfield(cfg.trialdef, 'eventtype') && isequal(cfg.trialdef.eventtype, '?')
   % give a gentle message instead of an error
@@ -199,6 +193,36 @@ end
 % add the new trials and events to the output configuration
 ft_info('found %d events\n', length(event));
 cfg.event = event;
+
+if strcmp(cfg.representation, 'numeric') && istable(trl)
+  if isempty(trl)
+    % an empty table does not have columns
+    trl = zeros(0,3);
+  else
+    % convert the table to a numeric array with the columns begsample, endsample and offset
+    trl = table2array(trl(:,1:3));
+    if size(trl,2)>3
+      % keep any additional columns
+      trl = horzcat(trl, table2array(trl(:,4:end)));
+    end
+  end
+elseif strcmp(cfg.representation, 'table') && isnumeric(trl)
+  if isempty(trl)
+    % an empty table does not have columns
+    trl = table();
+  else
+    % convert the numeric array to a table with the columns begsample and endsample
+    begsample = trl(:,1);
+    endsample = trl(:,2);
+    offset    = trl(:,3);
+    trl = table(begsample, endsample, offset);
+    for i=4:size(trl,2)
+      % keep any additional columns, they will have default names
+      trl{:,i} = trl(:,i);
+    end
+  end
+end
+
 ft_info('created %d trials\n', size(trl,1));
 cfg.trl = trl;
 

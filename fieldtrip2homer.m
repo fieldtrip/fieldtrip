@@ -72,8 +72,8 @@ if ~isempty(event)
       % the type and value need to be combined in the condition name
       event(i).value = sprintf('%s %s', event(i).type, event(i).value);
     end
-    CondNames = unique({event(sel).value});
-    boolvec   = convert_event(event(sel), 'boolvec', 'valuenames', CondNames, 'endsample', length(nirs.t));
+    CondNames       = unique({event(sel).value});
+    boolvec         = event2boolvec(event(sel), 'value', CondNames, 'endsample', length(nirs.t));
     nirs.s          = cat(2, nirs.s, boolvec');
     nirs.CondNames  = cat(2, nirs.CondNames, CondNames);
   end
@@ -82,8 +82,8 @@ if ~isempty(event)
   sel = cellfun(@isnumeric, {event.value});
   if any(sel)
     % use the event type as the condition name
-    CondNames = unique({event(sel).type});
-    boolvec   = convert_event(event(sel), 'boolvec', 'typenames', CondNames, 'endsample', length(nirs.t));
+    CondNames       = unique({event(sel).type});
+    boolvec         = event2boolvec(event(sel), 'type', CondNames, 'endsample', length(nirs.t));
     nirs.s          = cat(2, nirs.s, boolvec');
     nirs.CondNames  = cat(2, nirs.CondNames, CondNames);
   end

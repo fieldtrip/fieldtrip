@@ -12,7 +12,7 @@ load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extend
 [maxval, maxcohindx] = max(source_coh_lft.avg.coh);
 source_coh_lft.pos(maxcohindx, :)
 
-assert(isalmostequal(source_coh_lft.pos(maxcohindx, :), [3.2000   -0.6000   7.4000], 'reltol', 0.001), 'coherence peak location not what it used to be!');
+assert(isalmostequal(source_coh_lft.pos(maxcohindx, :), [2.8000   -0.8000   7.2000], 'reltol', 0.001), 'coherence peak location not what it used to be!');
 
 [maxval, maxpowindx] = max(source_diff.avg.pow);
 source_diff.pos(maxpowindx, :)
@@ -33,10 +33,10 @@ cfg.headmodel   = hdm;
 cfg.sourcemodel.pos    = source_diff.pos([maxcohindx maxpowindx], :);
 cfg.sourcemodel.inside = 1:size(cfg.sourcemodel.pos, 1);
 cfg.sourcemodel.outside = [];
-cfg.keepfilter  = 'yes';
+cfg.lcmv.keepfilter  = 'yes';
 source_idx      = ft_sourceanalysis(cfg, tlock);
 
-
+%% this is the old way of doing it.
 beamformer_lft_coh = source_idx.avg.filter{1};
 beamformer_gam_pow = source_idx.avg.filter{2};
 
@@ -53,6 +53,13 @@ for i=1:length(data_cmb.trial)
   coh_lft_data.trial{i} = beamformer_lft_coh * data_cmb.trial{i}(chansel,:);
   gam_pow_data.trial{i} = beamformer_gam_pow * data_cmb.trial{i}(chansel,:);
 end
+
+%% this is the new way of doing it
+cfg = [];
+cfg.pos = source_idx.pos;
+cfg.method = 'none';
+data_vc = ft_virtualchannel(cfg, data_cmb, source_idx);
+assert(isalmostequal(data_vc.trial{1}(4:6,:),gam_pow_data.trial{1}(1:3,:), 'reltol', 1e-9));
 
 cfg = [];
 cfg.viewmode = 'vertical';  % you can also specify 'butterfly'

@@ -25,15 +25,14 @@ function [cfg, artifact] = ft_artifact_ecg(cfg, data)
 %   cfg.continuous = 'yes' or 'no' whether the file contains continuous data
 % and
 %   cfg.artfctdef.ecg.channel = Nx1 cell-array with selection of channels, see FT_CHANNELSELECTION for details
-%   cfg.artfctdef.ecg.pretim  = 0.05; pre-artifact rejection-interval in seconds
-%   cfg.artfctdef.ecg.psttim  = 0.3;  post-artifact rejection-interval in seconds
-%   cfg.artfctdef.ecg.method  = 'zvalue'; peak-detection method
-%   cfg.artfctdef.ecg.cutoff  = 3; peak-threshold
-%   cfg.artfctdef.ecg.inspect = Nx1 list of channels which will be shown in a QRS-locked average
+%   cfg.artfctdef.ecg.pretim  = pre-artifact rejection interval in seconds (default = 0.05)
+%   cfg.artfctdef.ecg.psttim  = post-artifact rejection interval in seconds (default = 0.3)
+%   cfg.artfctdef.ecg.cutoff  = peak threshold (default = 3)
+%   cfg.artfctdef.ecg.inspect = Nx1 list of channels which will be shown as a QRS-locked average
 %
 % The output argument "artifact" is a Nx2 matrix comparable to the "trl" matrix of
-% FT_DEFINETRIAL. The first column of which specifying the beginsamples of an
-% artifact period, the second column contains the endsamples of the artifactperiods.
+% FT_DEFINETRIAL. The first column of which specifying the begin samples of an
+% artifact period, the second column contains the end samples of the QRS periods.
 %
 % To facilitate data-handling and distributed computing, you can use
 %   cfg.inputfile   =  ...
@@ -85,9 +84,11 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 
 % set the default options
-cfg.feedback      = ft_getopt(cfg, 'feedback',   'text');
-cfg.headerformat  = ft_getopt(cfg, 'headerformat', []);
-cfg.dataformat    = ft_getopt(cfg, 'dataformat',   []);
+cfg.continuous      = ft_getopt(cfg, 'continuous',   []);
+cfg.headerformat    = ft_getopt(cfg, 'headerformat', []);
+cfg.dataformat      = ft_getopt(cfg, 'dataformat',   []);
+cfg.feedback        = ft_getopt(cfg, 'feedback',   'text');
+cfg.representation  = ft_getopt(cfg, 'representation', 'numeric'); % numeric or table
 
 % set the default artifact detection parameters
 cfg.artfctdef               = ft_getopt(cfg, 'artfctdef',              []);
@@ -101,7 +102,6 @@ cfg.artfctdef.ecg.pretim    = ft_getopt(cfg.artfctdef.ecg, 'pretim',   0.05);
 cfg.artfctdef.ecg.psttim    = ft_getopt(cfg.artfctdef.ecg, 'psttim',   0.3);
 cfg.artfctdef.ecg.mindist   = ft_getopt(cfg.artfctdef.ecg, 'mindist',  0.5);
 cfg.artfctdef.ecg.feedback  = ft_getopt(cfg.artfctdef.ecg, 'feedback', 'yes');
-
 
 if ~strcmp(cfg.artfctdef.ecg.method, 'zvalue')
   ft_error('method "%s" is not applicable', cfg.artfctdef.ecg.method);
@@ -121,7 +121,7 @@ else
 end
 
 % set default cfg.continuous
-if ~isfield(cfg, 'continuous')
+if isempty(cfg.continuous)
   if hdr.nTrials==1
     cfg.continuous = 'yes';
   else
@@ -322,7 +322,27 @@ end
 artifact(:,1) = trl(:,1) - trl(:,3) - round(artfctdef.pretim*hdr.Fs);
 artifact(:,2) = trl(:,1) - trl(:,3) + round(artfctdef.psttim*hdr.Fs);
 
-% remember the details that were used here
+if strcmp(cfg.representation, 'numeric') && istable(artifact)
+  if isempty(artifact)
+    % an empty table does not have columns
+    artifact = zeros(0,2);
+  else
+    % convert the table to a numeric array with the columns begsample and endsample
+    artifact = table2array(artifact(:,1:2));
+  end
+elseif strcmp(cfg.representation, 'table') && isnumeric(artifact)
+  if isempty(artifact)
+    % an empty table does not have columns
+    artifact = table();
+  else
+    % convert the numeric array to a table with the columns begsample and endsample
+    begsample = artifact(:,1);
+    endsample = artifact(:,2);
+    artifact = table(begsample, endsample);
+  end
+end
+
+% remember the details that were used here and store the detected artifacts
 cfg.artfctdef.ecg          = artfctdef;
 cfg.artfctdef.ecg.artifact = artifact;
 

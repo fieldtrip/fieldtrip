@@ -81,6 +81,12 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.layout                  = filename of the layout, see FT_PREPARE_LAYOUT
 %   cfg.elec                    = structure with electrode positions or filename, see FT_READ_SENS
 %   cfg.grad                    = structure with gradiometer definition or filename, see FT_READ_SENS
+% Additional plotting options for the component viewmode:
+%   cfg.gridscale               = scalar, number of points along both directions for interpolation (default = 45 here)
+%   cfg.shading                 = string, 'none', 'flat', 'interp' (default = 'flat')
+%   cfg.interplimits            = string, 'electrodes' or 'mask' (default here = 'mask')
+%   cfg.interpolation           = string, 'nearest', 'linear', 'natural', 'cubic' or 'v4' (default = 'v4')
+%   cfg.contournum              = topoplot contour lines
 %
 % The default font size might be too small or too large, depending on the number of
 % channels. You can use the following options to change the size of text inside the
@@ -216,6 +222,10 @@ cfg.artifactalpha   = ft_getopt(cfg, 'artifactalpha', 0.2);          % for the o
 cfg.allowoverlap    = ft_getopt(cfg, 'allowoverlap', 'no');          % for ft_fetch_data
 cfg.contournum      = ft_getopt(cfg, 'contournum', 0);               % topoplot contour lines
 cfg.trl             = ft_getopt(cfg, 'trl');
+cfg.gridscale       = ft_getopt(cfg, 'gridscale', 45);
+cfg.shading         = ft_getopt(cfg, 'shading', 'flat');
+cfg.interplimits    = ft_getopt(cfg, 'interplim', 'mask');
+cfg.interpolation   = ft_getopt(cfg, 'interpmethod', 'v4');
 
 % construct the low-level options as key-value pairs, these are passed to FT_READ_HEADER
 headeropt = {};
@@ -331,7 +341,7 @@ if hasdata
     end
   else
     if strcmp(cfg.continuous, 'yes') && (numel(data.trial) > 1)
-      ft_warning('interpreting trial-based data as continuous, time-axis is no longer appropriate. t(0) now corresponds to the first sample of the first trial, and t(end) to the last sample of the last trial')
+      ft_warning('interpreting trial-based data as continuous, the time axis now corresponds to the continuous data with the first sample being t=0')
     end
   end
   
@@ -390,6 +400,13 @@ else
   end
   
 end % if hasdata
+
+% the code below expects an Nx3 matrix with begsample, endsample and offset
+if istable(trlorg)
+  trlorg = table2array(trlorg(:,1:3));
+else
+  trlorg = trlorg(:,1:3);
+end
 
 Ntrials = size(trlorg, 1);
 
@@ -504,14 +521,14 @@ if length(artlabel) > 9
 end
 
 % make artdata representing all artifacts in a "raw data" format
-datendsample = max(trlorg(:,2));
+endsample = max(trlorg(:,2));
 
 artdata = [];
-artdata.trial{1}       = convert_event(artifact, 'boolvec', 'endsample', datendsample); % every artifact is a "channel"
-artdata.time{1}        = offset2time(0, hdr.Fs, datendsample);
+artdata.trial{1}       = artifact2boolvec(artifact, 'endsample', endsample); % every artifact is a "channel"
+artdata.time{1}        = offset2time(0, hdr.Fs, endsample);
 artdata.label          = artlabel;
 artdata.fsample        = hdr.Fs;
-artdata.cfg.trl        = [1 datendsample 0];
+artdata.cfg.trl        = [1 endsample 0];
 
 % determine amount of unique event types (for cfg.ploteventlabels)
 if ~isempty(event) && isstruct(event)
@@ -779,7 +796,7 @@ if nargout
   
   % add the updated artifact definitions to the output cfg
   for i=1:length(opt.artdata.label)
-    cfg.artfctdef.(opt.artdata.label{i}).artifact = convert_event(opt.artdata.trial{1}(i,:), 'artifact');
+    cfg.artfctdef.(opt.artdata.label{i}).artifact = boolvec2artifact(opt.artdata.trial{1}(i,:));
   end
   
   % add the updated preproc to the output
@@ -1265,7 +1282,7 @@ switch key
       % 1) artifacts can cross trial boundaries
       % 2) artifacts might not occur inside a trial boundary (when data is segmented differently than during artifact detection)
       % fetch trl representation of current artifact type
-      arttrl = convert_event(opt.artdata.trial{1}(opt.ftsel,:), 'trl');
+      arttrl = boolvec2trl(opt.artdata.trial{1}(opt.ftsel,:));
       % discard artifacts in the future
       curvisend = opt.trlvis(opt.trlop,2);
       arttrl(arttrl(:,1) > curvisend,:) = [];
@@ -1308,7 +1325,7 @@ switch key
       % 1) artifacts can cross trial boundaries
       % 2) artifacts might not occur inside a trial boundary (when data is segmented differently than during artifact detection)
       % fetch trl representation of current artifact type
-      arttrl = convert_event(opt.artdata.trial{1}(opt.ftsel,:), 'trl');
+      arttrl = boolvec2trl(opt.artdata.trial{1}(opt.ftsel,:));
       % discard artifacts in the past
       curvisbeg = opt.trlvis(opt.trlop,1);
       arttrl(arttrl(:,2) < curvisbeg,:) = [];
@@ -1806,7 +1823,7 @@ if strcmp(cfg.plotevents, 'yes')
       
       % compute the time of the event
       eventtim(ievent) = (event(ievent).sample-begsample)/opt.fsample + opt.hlim(1);
-      % if line event --> plot line, else plot event duration as a box 
+      % if line event --> plot line, else plot event duration as a box
       if isempty(event(ievent).duration) || event(ievent).duration==0
         lh = ft_plot_line([eventtim(ievent) eventtim(ievent)], [-1 1], 'tag', 'event', 'color', eventcol{ievent}, 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1]);
       else
@@ -2060,8 +2077,22 @@ if strcmp(cfg.viewmode, 'component')
       
       % laychan is the actual topo layout, in pixel units for .mat files
       % laytopo is a vertical layout determining where to plot each topo, with one entry per component
+     
+     opt = {'interpmethod', cfg.interpolation, ... 
+      'interplim',    cfg.interplimits, ... 
+      'gridscale',    cfg.gridscale, ... 
+      'outline',      laychan.outline, ... 
+      'shading',      cfg.shading, ... 
+      'isolines',     cfg.contournum, ... 
+      'mask',         laychan.mask, ... 
+      'tag',          'topography', ... 
+      'hpos',         laytopo.pos(laysel,1)-laytopo.width(laysel)/2, ... 
+      'vpos',         laytopo.pos(laysel,2)-laytopo.height(laysel)/2, ... 
+      'width',        laytopo.width(laysel), ... 
+      'height',       laytopo.height(laysel)};
       
-      ft_plot_topo(chanx, chany, chanz, 'mask', laychan.mask, 'interplim', 'mask', 'outline', laychan.outline, 'tag', 'topography', 'hpos', laytopo.pos(laysel,1)-laytopo.width(laysel)/2, 'vpos', laytopo.pos(laysel,2)-laytopo.height(laysel)/2, 'width', laytopo.width(laysel), 'height', laytopo.height(laysel), 'gridscale', 45, 'isolines', cfg.contournum);
+    
+      ft_plot_topo(chanx, chany, chanz, opt{:});
       
       %axis equal
       %drawnow
