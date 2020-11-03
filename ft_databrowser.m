@@ -208,6 +208,7 @@ cfg.event           = ft_getopt(cfg, 'event');                       % this only
 cfg.continuous      = ft_getopt(cfg, 'continuous');                  % the default is set further down in the code, conditional on the input data
 cfg.ploteventlabels = ft_getopt(cfg, 'ploteventlabels', 'type=value');
 cfg.plotevents      = ft_getopt(cfg, 'plotevents', 'yes');
+cfg.plotartifacts   = ft_getopt(cfg, 'plotartifacts', 'yes');
 cfg.precision       = ft_getopt(cfg, 'precision', 'double');
 cfg.zlim            = ft_getopt(cfg, 'zlim', 'maxmin');
 cfg.compscale       = ft_getopt(cfg, 'compscale', 'global');
@@ -741,44 +742,15 @@ ft_uilayout(h, 'tag', 'labels',  'retag', 'viewui');
 ft_uilayout(h, 'tag', 'buttons', 'retag', 'viewui');
 ft_uilayout(h, 'tag', 'viewui', 'BackgroundColor', [0.8 0.8 0.8], 'hpos', 'auto', 'vpos', 0);
 
+% add a menu to the figure, but only if the current figure does not have subplots
+tmpcfg = cfg;
+if isfield(data, 'cfg')
+  tmpcfg.previous = data.cfg;
+end
+menu_fieldtrip(h, tmpcfg, false);
+
 definetrial_cb(h);
 redraw_cb(h);
-
-% %% Scrollbar
-%
-% % set initial scrollbar value
-% dx = maxtime;
-%
-% % set scrollbar position
-% fig_pos=get(gca, 'position');
-% scroll_pos=[fig_pos(1) fig_pos(2) fig_pos(3) 0.02];
-%
-% % define callback
-% S=['set(gca, ''xlim'',get(gcbo, ''value'')+[ ' num2str(mintime) ', ' num2str(maxtime) '])'];
-%
-% % Creating Uicontrol
-% s=uicontrol('style', 'slider',...
-%     'units', 'normalized', 'position',scroll_pos,...
-%     'callback',S, 'min',0, 'max',0, ...
-%     'visible', 'off'); %'value', xmin
-
-% set initial scrollbar value
-% dx = maxtime;
-%
-% % set scrollbar position
-% fig_pos=get(gca, 'position');
-% scroll_pos=[fig_pos(1) fig_pos(2) fig_pos(3) 0.02];
-%
-% % define callback
-% S=['set(gca, ''xlim'',get(gcbo, ''value'')+[ ' num2str(mintime) ', ' num2str(maxtime) '])'];
-%
-% % Creating Uicontrol
-% s=uicontrol('style', 'slider',...
-%     'units', 'normalized', 'position',scroll_pos,...
-%     'callback',S, 'min',0, 'max',0, ...
-%     'visible', 'off'); %'value', xmin
-%initialize postion of plot
-% set(gca, 'xlim', [xmin xmin+dx]);
 
 if nargout
   % wait until the user interface is closed, get the user data with the updated artifact details
@@ -829,7 +801,7 @@ opt = getappdata(h, 'opt');
 opt.cleanup = true;
 setappdata(h, 'opt', opt);
 uiresume
-end
+end % funcxtion cleanup_cb
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -959,7 +931,7 @@ else
 end % if continuous
 setappdata(h, 'opt', opt);
 setappdata(h, 'cfg', cfg);
-end
+end % function definetrial_cb
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -983,7 +955,8 @@ fprintf('s                  : toggles between cfg.selectmode options\n');
 fprintf('q                  : quit\n');
 fprintf('------------------------------------------------------------------------------------\n')
 fprintf('\n')
-end
+end % function help_cb
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -1056,7 +1029,7 @@ if isempty(cmenulab)
         val = 'trough';
       end
       samp_minmax = begsel + ind_minmax - 1;
-      event_new.type     = 'ft_databrowser_manual';
+      event_new.type     = 'datacursor_manual';
       event_new.sample   = samp_minmax;
       event_new.value    = val;
       event_new.duration = 1;
@@ -1765,25 +1738,37 @@ opt.height = ax(4)-ax(3);
 opt.hlim = [tim(1) tim(end)];
 opt.vlim = cfg.ylim;
 
-delete(findobj(h, 'tag', 'artifact'));
-ft_debug('plotting artifacts...\n');
-
-
-for j = ordervec
-  tmp = diff([0 art(j,:) 0]);
-  artbeg = find(tmp==+1);
-  artend = find(tmp==-1) - 1;
+if strcmp(cfg.plotartifacts, 'yes')
+  delete(findobj(h, 'tag', 'artifact'));
   
-  for k=1:numel(artbeg)
-    xpos = [tim(artbeg(k)) tim(artend(k))] + ([-.5 +.5]./opt.fsample);
-    ft_plot_box([xpos -1 1], 'facecolor', opt.artifactcolors(j,:), 'facealpha', cfg.artifactalpha, 'edgecolor', 'none', 'tag', 'artifact', 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1]);
-  end
-end % for each of the artifact channels
+  for j = ordervec
+    tmp = diff([0 art(j,:) 0]);
+    artbeg = find(tmp==+1);
+    artend = find(tmp==-1) - 1;
+    
+    for k=1:numel(artbeg)
+      xpos = [tim(artbeg(k)) tim(artend(k))] + ([-.5 +.5]./opt.fsample);
+      
+      if artbeg==artend
+        % plot it as a line when it has no duration
+        lh = ft_plot_line(xpos, [-1 1], 'tag', 'artifact', 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1], 'color', opt.artifactcolors(j,:));
+      else
+        % plot it as a box when it has a duration
+        lh = ft_plot_box([xpos -1 1], 'tag', 'artifact', 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1], 'facecolor', opt.artifactcolors(j,:), 'facealpha', cfg.artifactalpha, 'edgecolor', 'none');
+      end
+      
+      % store this data in the line object so that it can be displayed with cb_datacursortext
+      setappdata(lh, 'datacursor_linetype', 'artifact');
+      setappdata(lh, 'datacursor_artifacttime', tim(artbeg(k)));
+      setappdata(lh, 'datacursor_artifacttype', opt.artdata.label{j});
+      
+    end
+  end % for each of the artifact channels
+end % if plot artifacts
 
-if strcmp(cfg.plotevents, 'yes') && ~isempty(opt.event)
-  
+
+if strcmp(cfg.plotevents, 'yes')
   delete(findobj(h, 'tag', 'event'));
-  ft_debug('plotting events...\n');
   
   % save stuff to be able to shift the event labels downwards when they occur close to each other
   eventtime  = NaN(1,numel(event));
@@ -1824,21 +1809,21 @@ if strcmp(cfg.plotevents, 'yes') && ~isempty(opt.event)
     
     % compute the time of the event
     eventtime(i) = (event(i).sample-begsample)/opt.fsample + opt.hlim(1);
+    xpos = [eventtime(i) eventtime(i)+eventduration/opt.fsample];
     
     if isempty(eventduration) || eventduration==0
-      % plot the event as a line when it has no duration
-      lh = ft_plot_line([eventtime(i) eventtime(i)], [-1 1], 'tag', 'event', 'color', eventcol, 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1]);
+      % plot it as a line when it has no duration
+      lh = ft_plot_line(xpos, [-1 1], 'tag', 'event', 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1], 'color', eventcol);
     else
-      % plot the event as a box when it has a duration
-      lh = ft_plot_box([eventtime(i) eventtime(i)+eventduration/opt.fsample -1 1], 'tag', 'event', 'edgecolor', eventcol, 'facealpha', 0.1, 'facecolor', eventcol, 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1]);
+      % plot it as a box when it has a duration
+      lh = ft_plot_box([xpos -1 1], 'tag', 'event', 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1], 'edgecolor', eventcol, 'facealpha', 0.1, 'facecolor', eventcol);
     end
     
-    % store this data in the line object so that it can be displayed in the
-    % data cursor (see subfunction cb_datacursortext below)
-    setappdata(lh, 'ft_databrowser_linetype', 'event');
-    setappdata(lh, 'ft_databrowser_eventtime', eventtime(i));
-    setappdata(lh, 'ft_databrowser_eventtype', eventtype);
-    setappdata(lh, 'ft_databrowser_eventvalue', eventvalue);
+    % store this data in the line object so that it can be displayed with cb_datacursortext
+    setappdata(lh, 'datacursor_linetype', 'event');
+    setappdata(lh, 'datacursor_eventtime', eventtime(i));
+    setappdata(lh, 'datacursor_eventtype', eventtype);
+    setappdata(lh, 'datacursor_eventvalue', eventvalue);
     
     % find the close events (i.e. within 1/10th of the horizontal time axis) and calculate vertical shift for the event labels.
     closeevent = find(eventtime(i)>eventtime(1:i-1)-0.1*diff(opt.hlim) & eventtime(i)<eventtime(1:i-1)+0.1*diff(opt.hlim));
@@ -1921,12 +1906,11 @@ elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
       
       lh = ft_plot_vector(tim, dat(datsel, :)', 'box', false, 'tag', 'timecourse', 'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim, 'color', opt.linecolor(chanindx(i),:), 'linewidth', cfg.linewidth, 'style', cfg.linestyle);
       
-      % store this data in the line object so that it can be displayed in the
-      % data cursor (see subfunction cb_datacursortext below)
-      setappdata(lh, 'ft_databrowser_linetype', 'channel');
-      setappdata(lh, 'ft_databrowser_label', opt.hdr.label(chanindx(i)));
-      setappdata(lh, 'ft_databrowser_xaxis', tim);
-      setappdata(lh, 'ft_databrowser_yaxis', dat(datsel,:));
+      % store this data in the line object so that it can be displayed with cb_datacursortext
+      setappdata(lh, 'datacursor_linetype', 'channel');
+      setappdata(lh, 'datacursor_label', opt.hdr.label(chanindx(i)));
+      setappdata(lh, 'datacursor_xaxis', tim);
+      setappdata(lh, 'datacursor_yaxis', dat(datsel,:));
     end
   end
   
@@ -1988,12 +1972,11 @@ else
       
       lh = ft_plot_vector(tim, dat(datsel, :)', 'box', false, 'tag', 'timecourse', 'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim, 'color', opt.linecolor(chanindx(i),:), 'linewidth', cfg.linewidth, 'style', cfg.linestyle);
       
-      % store this data in the line object so that it can be displayed in the
-      % data cursor (see subfunction cb_datacursortext below)
-      setappdata(lh, 'ft_databrowser_linetype', 'channel');
-      setappdata(lh, 'ft_databrowser_label', opt.hdr.label(chanindx(i)));
-      setappdata(lh, 'ft_databrowser_xaxis', tim);
-      setappdata(lh, 'ft_databrowser_yaxis', dat(datsel,:));
+      % store this data in the line object so that it can be displayed with cb_datacursortext
+      setappdata(lh, 'datacursor_linetype', 'channel');
+      setappdata(lh, 'datacursor_label', opt.hdr.label(chanindx(i)));
+      setappdata(lh, 'datacursor_xaxis', tim);
+      setappdata(lh, 'datacursor_yaxis', dat(datsel,:));
     end
   end
   
@@ -2158,32 +2141,35 @@ end % function redraw_cb
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cursortext = cb_datacursortext(obj, event_obj)
+function cursortext = cb_datacursortext(h, event_obj)
 pos = get(event_obj, 'Position');
 
-linetype = getappdata(event_obj.Target, 'ft_databrowser_linetype');
+linetype = getappdata(event_obj.Target, 'datacursor_linetype');
 
 if strcmp(linetype, 'event')
-  cursortext = sprintf('%s = %d\nt = %g s', getappdata(event_obj.Target, 'ft_databrowser_eventtype'), getappdata(event_obj.Target, 'ft_databrowser_eventvalue'), getappdata(event_obj.Target, 'ft_databrowser_eventtime'));
+  cursortext = sprintf('%s = %s\nt = %g s', getappdata(event_obj.Target, 'datacursor_eventtype'), num2str(getappdata(event_obj.Target, 'datacursor_eventvalue')), getappdata(event_obj.Target, 'datacursor_eventtime'));
+  
+elseif strcmp(linetype, 'artifact')
+  cursortext = sprintf('%s\nt = %g s', getappdata(event_obj.Target, 'datacursor_artifacttype'), getappdata(event_obj.Target, 'datacursor_artifacttime'));
+  
 elseif strcmp(linetype, 'channel')
   % get plotted x axis
   plottedX = get(event_obj.Target, 'xdata');
   
   % determine values of data at real x axis
-  timeAxis = getappdata(event_obj.Target, 'ft_databrowser_xaxis');
-  dataAxis = getappdata(event_obj.Target, 'ft_databrowser_yaxis');
+  timeAxis = getappdata(event_obj.Target, 'datacursor_xaxis');
+  dataAxis = getappdata(event_obj.Target, 'datacursor_yaxis');
   tInd = nearest(plottedX, pos(1));
   
   % get label
-  chanLabel = getappdata(event_obj.Target, 'ft_databrowser_label');
+  chanLabel = getappdata(event_obj.Target, 'datacursor_label');
   chanLabel = chanLabel{1};
   
-  cursortext = sprintf('t = %g\n%s = %g', timeAxis(tInd), chanLabel, dataAxis(tInd));
+  cursortext = sprintf('%s = %g\nt = %g', chanLabel, dataAxis(tInd), timeAxis(tInd));
+  
 else
+  % explicitly tell the user there is no info because the x-axis and y-axis do not correspond to real data values (both are between 0 and 1 always)
   cursortext = '<no cursor available>';
-  % explicitly tell the user there is no info because the x-axis and
-  % y-axis do not correspond to real data values (both are between 0 and
-  % 1 always)
 end
 end % function cb_datacursortext
 

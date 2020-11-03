@@ -33,6 +33,13 @@ else
   data.trialinfo = table(trialnum);
 end
 
+% this is for visualising the provenance
+data.cfg.version.name = 'a';
+data.cfg.previous.version.name = 'b';
+data.cfg.previous.previous.version.name = 'c';
+data.cfg.previous.previous.previous.version.name = 'd';
+data.cfg.previous.previous.previous.previous.version.name = 'e';
+
 %%
 close all
 
@@ -80,13 +87,7 @@ event(3).offset   = 0;
 
 cfg.event = event;
 
-% cfg.ploteventlabels = 'type=value';
-% ft_databrowser(cfg, data);
-% 
-% cfg.ploteventlabels = 'type';
-% ft_databrowser(cfg, data);
-
-cfg.ploteventlabels = 'value';
+cfg.ploteventlabels = 'type=value';
 ft_databrowser(cfg, data);
 
 
