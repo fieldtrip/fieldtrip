@@ -2081,7 +2081,8 @@ if strcmp(cfg.viewmode, 'component')
       % laychan is the actual topo layout, in pixel units for .mat files
       % laytopo is a vertical layout determining where to plot each topo, with one entry per component
       
-      opt = {'interpmethod', cfg.interpolation, ...
+      plotopt = {
+        'interpmethod', cfg.interpolation, ...
         'interplim',    cfg.interplimits, ...
         'gridscale',    cfg.gridscale, ...
         'outline',      laychan.outline, ...
@@ -2094,8 +2095,7 @@ if strcmp(cfg.viewmode, 'component')
         'width',        laytopo.width(laysel), ...
         'height',       laytopo.height(laysel)};
       
-      
-      ft_plot_topo(chanx, chany, chanz, opt{:});
+      ft_plot_topo(chanx, chany, chanz, plotopt{:});
       % axis equal
       % drawnow
     end % for chanindx
