@@ -295,6 +295,28 @@ elseif istrue(cfg.searchlight) && ~isempty(T) && data_is_3D
     adj_dim = [true false(1,numel(cfg.dim)-1)];
   end
   
+  if numel(perf)~=prod(cfg.dim) && all(~adj_dim)
+    dimorig = cfg.dim;
+    cfg.dim = [size(cfg.mvpa.hyperparameter.neighbours{1},1), ...
+               size(cfg.mvpa.hyperparameter.neighbours{2},1)];
+    perf    = reshape(perf, cfg.dim);
+    result.perf_std = reshape(result.perf_std, cfg.dim);
+    
+    if dimorig(1)~=cfg.dim(1)
+      label = cell(cfg.dim(1),1);
+      for k = 1:cfg.dim(1)
+        label{k} = sprintf('feature%04d',k);
+      end
+    end
+    if dimorig(2)~=cfg.dim(2)&&cfg.dim(2)&&isfield(cfg,'latency')
+      timeorig = linspace(cfg.latency(1),cfg.latency(2),size(T,2));
+      time = zeros(1,size(T,1));
+      for k = 1:numel(time)
+        time(k) = mean(timeorig(T(k,:)));
+      end
+    end
+  end
+  
 elseif istrue(cfg.timextime)
   % --- time x time generalisation ---
   [perf, result] = mv_classify_timextime(cfg.mvpa, dat, y);
@@ -312,6 +334,8 @@ elseif data_is_3D && ~istrue(cfg.searchlight)
   adj_dim = [true false(1,numel(cfg.dim)-1)];
   
 else
+  % this is the generic fallback, which seems very similar to the second
+  % instance above...
   if ~isempty(T) && ~isequal(cfg.connectivity, false(size(cfg.connectivity))) && ~isempty(cfg.connectivity)
     cfg.mvpa.hyperparameter.neighbours = {cfg.connectivity T};
     adj_dim = false(size(cfg.dim));
