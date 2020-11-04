@@ -139,7 +139,7 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.CogAtlasID                  = string
 %   cfg.CogPOID                     = string
 %
-% There are more BIDS options for the mri/meg/eeg/ieeg data type specific sidecars.
+% There are more BIDS options for the mri/meg/eeg/ieegÂ data type specific sidecars.
 % Rather than listing them all here, please open this function in the MATLAB editor,
 % and scroll down a bit to see what those are. In general the information in the JSON
 % files is specified by a field that is specified in CamelCase
@@ -421,7 +421,7 @@ cfg.meg.HardwareFilters               = ft_getopt(cfg.meg, 'HardwareFilters'    
 %% Specific EEG fields - if recorded with the MEG system
 cfg.meg.EEGPlacementScheme            = ft_getopt(cfg.meg, 'EEGPlacementScheme'          ); % OPTIONAL. Placement scheme of EEG electrodes. Either the name of a standardised placement system (e.g., "10-20") or a list of standardised electrode names (e.g. ["Cz", "Pz"]).
 cfg.meg.CapManufacturer               = ft_getopt(cfg.meg, 'CapManufacturer'             ); % OPTIONAL. Manufacturer of the EEG cap (e.g. EasyCap)
-cfg.meg.CapManufacturersModelName     = ft_getopt(cfg.meg, 'CapManufacturersModelName'   ); % OPTIONAL. Manufacturer’s designation of the EEG cap model (e.g., M10)
+cfg.meg.CapManufacturersModelName     = ft_getopt(cfg.meg, 'CapManufacturersModelName'   ); % OPTIONAL. Manufacturerâs designation of the EEG cap model (e.g., M10)
 cfg.meg.EEGReference                  = ft_getopt(cfg.meg, 'EEGReference'                ); % OPTIONAL. Description of the type of EEG reference used (e.g., M1 for left mastoid, average, or longitudinal bipolar).
 
 %% EEG specific fields
@@ -448,7 +448,7 @@ cfg.eeg.HardwareFilters               = ft_getopt(cfg.eeg, 'HardwareFilters'    
 cfg.eeg.SubjectArtefactDescription    = ft_getopt(cfg.eeg, 'SubjectArtefactDescription'  ); % Freeform description of the observed subject artefact and its possible cause (e.g. "Vagus Nerve Stimulator", "non-removable implant"). If this field is left empty, it will be interpreted as absence of  a source of (constantly present) artifacts.
 
 %% iEEG specific fields
-cfg.ieeg.iEEGReference                   = ft_getopt(cfg.ieeg, 'iEEGReference'                  ); % REQUIRED. General description of the reference scheme used and (when applicable) of location of the reference electrode in the raw recordings (e.g. "left mastoid�?, “bipolar�?, “T01�? for electrode with name T01, “intracranial electrode on top of a grid, not included with data�?, “upside down electrode�?). If different channels have a different reference, this field should have a general description and the channel specific reference should be defined in the _channels.tsv file.
+cfg.ieeg.iEEGReference                   = ft_getopt(cfg.ieeg, 'iEEGReference'                  ); % REQUIRED. General description of the reference scheme used and (when applicable) of location of the reference electrode in the raw recordings (e.g. "left mastoidâ?, âbipolarâ?, âT01â? for electrode with name T01, âintracranial electrode on top of a grid, not included with dataâ?, âupside down electrodeâ?). If different channels have a different reference, this field should have a general description and the channel specific reference should be defined in the _channels.tsv file.
 cfg.ieeg.SamplingFrequency               = ft_getopt(cfg.ieeg, 'SamplingFrequency'              ); % REQUIRED. Sampling frequency (in Hz) of all the iEEG channels in the recording (e.g., 2400). All other channels should have frequency specified as well in the channels.tsv file.
 cfg.ieeg.PowerLineFrequency              = ft_getopt(cfg.ieeg, 'PowerLineFrequency'             ); % REQUIRED. Frequency (in Hz) of the power grid where the iEEG recording was done (i.e. 50 or 60)
 cfg.ieeg.SoftwareFilters                 = ft_getopt(cfg.ieeg, 'SoftwareFilters'                ); % REQUIRED. List of temporal software filters applied or ideally  key:value pairs of pre-applied filters and their parameter values. (n/a if none).
@@ -466,13 +466,13 @@ cfg.ieeg.EMGChannelCount                 = ft_getopt(cfg.ieeg, 'EMGChannelCount'
 cfg.ieeg.MiscChannelCount                = ft_getopt(cfg.ieeg, 'MiscChannelCount'               ); % RECOMMENDED. Number of miscellaneous analog channels for auxiliary  signals
 cfg.ieeg.TriggerChannelCount             = ft_getopt(cfg.ieeg, 'TriggerChannelCount'            ); % RECOMMENDED. Number of channels for digital (TTL bit level) triggers
 cfg.ieeg.RecordingDuration               = ft_getopt(cfg.ieeg, 'RecordingDuration'              ); % RECOMMENDED. Length of the recording in seconds (e.g. 3600)
-cfg.ieeg.RecordingType                   = ft_getopt(cfg.ieeg, 'RecordingType'                  ); % RECOMMENDED. Defines whether the recording is  “continuous�? or  “epoched�?; this latter limited to time windows about events of interest (e.g., stimulus presentations, subject responses etc.)
+cfg.ieeg.RecordingType                   = ft_getopt(cfg.ieeg, 'RecordingType'                  ); % RECOMMENDED. Defines whether the recording is  âcontinuousâ? or  âepochedâ?; this latter limited to time windows about events of interest (e.g., stimulus presentations, subject responses etc.)
 cfg.ieeg.EpochLength                     = ft_getopt(cfg.ieeg, 'EpochLength'                    ); % RECOMMENDED. Duration of individual epochs in seconds (e.g. 1) in case of epoched data
-cfg.ieeg.iEEGGround                      = ft_getopt(cfg.ieeg, 'iEEGGround'                     ); % RECOMMENDED. Description  of the location of the ground electrode (“placed on right mastoid (M2)�?).
-cfg.ieeg.iEEGPlacementScheme             = ft_getopt(cfg.ieeg, 'iEEGPlacementScheme'            ); % RECOMMENDED. Freeform description of the placement of the iEEG electrodes. Left/right/bilateral/depth/surface (e.g. “left frontal grid and bilateral hippocampal depth�? or “surface strip and STN depth�? or “clinical indication bitemporal, bilateral temporal strips and left grid�?).
+cfg.ieeg.iEEGGround                      = ft_getopt(cfg.ieeg, 'iEEGGround'                     ); % RECOMMENDED. Description  of the location of the ground electrode (âplaced on right mastoid (M2)â?).
+cfg.ieeg.iEEGPlacementScheme             = ft_getopt(cfg.ieeg, 'iEEGPlacementScheme'            ); % RECOMMENDED. Freeform description of the placement of the iEEG electrodes. Left/right/bilateral/depth/surface (e.g. âleft frontal grid and bilateral hippocampal depthâ? or âsurface strip and STN depthâ? or âclinical indication bitemporal, bilateral temporal strips and left gridâ?).
 cfg.ieeg.iEEGElectrodeGroups             = ft_getopt(cfg.ieeg, 'iEEGElectrodeGroups'            ); % RECOMMENDED. Field to describe the way electrodes are grouped into strips, grids or depth probes e.g. {'grid1': "10x8 grid on left temporal pole", 'strip2': "1x8 electrode strip on xxx"}.
-cfg.ieeg.SubjectArtefactDescription      = ft_getopt(cfg.ieeg, 'SubjectArtefactDescription'     ); % RECOMMENDED. Freeform description of the observed subject artefact and its possible cause (e.g. “door open�?, �?nurse walked into room at 2 min�?, �?seizure at 10 min�?). If this field is left empty, it will be interpreted as absence of artifacts.
-cfg.ieeg.ElectricalStimulation           = ft_getopt(cfg.ieeg, 'ElectricalStimulation'          ); % OPTIONAL. Boolean field to specify if electrical stimulation was done during the recording (options are “true�? or “false�?). Parameters for event-like stimulation should be specified in the _events.tsv file (see example underneath).
+cfg.ieeg.SubjectArtefactDescription      = ft_getopt(cfg.ieeg, 'SubjectArtefactDescription'     ); % RECOMMENDED. Freeform description of the observed subject artefact and its possible cause (e.g. âdoor openâ?, â?nurse walked into room at 2 minâ?, â?seizure at 10 minâ?). If this field is left empty, it will be interpreted as absence of artifacts.
+cfg.ieeg.ElectricalStimulation           = ft_getopt(cfg.ieeg, 'ElectricalStimulation'          ); % OPTIONAL. Boolean field to specify if electrical stimulation was done during the recording (options are âtrueâ? or âfalseâ?). Parameters for event-like stimulation should be specified in the _events.tsv file (see example underneath).
 cfg.ieeg.ElectricalStimulationParameters = ft_getopt(cfg.ieeg, 'ElectricalStimulationParameters'); % OPTIONAL. Free form description of stimulation parameters, such as frequency, shape etc. Specific onsets can be specified in the _events.tsv file. Specific shapes can be described here in freeform text.
 
 %% EMG is not part of the official BIDS specification
@@ -1311,6 +1311,14 @@ end
 if need_channels_tsv
   
   if isstruct(cfg.channels)
+    % remove fields with non-informative defaults
+    fn = fieldnames(cfg.channels);
+    for i=1:numel(fn)
+      if isequaln(cfg.channels.(fn{i}), nan)
+        % a single nan means that it was set as default
+        cfg.channels = rmfield(cfg.channels, fn{i});
+      end
+    end
     try
       cfg.channels = struct2table(cfg.channels);
     catch
