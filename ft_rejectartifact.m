@@ -306,8 +306,13 @@ for i=1:length(cfg.artfctdef.type)
       endsample = [];
     end
   else
-    begsample = artifact{i}(:,1);
-    endsample = artifact{i}(:,2);
+    if ~isempty(artifact{i})
+      begsample = artifact{i}(:,1);
+      endsample = artifact{i}(:,2);
+    else
+      begsample = [];
+      endsample = [];
+    end
   end
   for j=1:length(begsample)
     rejectall(begsample(j):endsample(j)) = i;  % the artifact type is coded here
