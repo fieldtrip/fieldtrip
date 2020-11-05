@@ -145,7 +145,7 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %                   requested metrics
 %
 
-% Copyright (C) 2019, Matthias Treder
+% Copyright (C) 2019-2020, Matthias Treder and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -171,21 +171,78 @@ ft_hastoolbox('mvpa-light', 1);
 assert(isnumeric(dat),    'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 assert(isnumeric(design), 'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 
-% cfg: set defaults
-cfg.searchlight     = ft_getopt(cfg, 'searchlight', 'no');
-cfg.timextime       = ft_getopt(cfg, 'timextime',   'no');
-cfg.mvpa            = ft_getopt(cfg, 'mvpa',        []);
-cfg.mvpa.metric     = ft_getopt(cfg.mvpa, 'metric',   'accuracy');
+% cfg: set defaults 
+cfg.searchlight     = ft_getopt(cfg, 'searchlight',  'no');
+cfg.timextime       = ft_getopt(cfg, 'timextime',    'no');
+cfg.reshape3D       = ft_getopt(cfg, 'reshape3D',    'yes');
+cfg.connectivity    = ft_getopt(cfg, 'connectivity', []); % the default is dealt with below
+cfg.neighbours      = ft_getopt(cfg, 'neighbours', []);
+cfg.mvpa            = ft_getopt(cfg, 'mvpa',         []);
+cfg.mvpa.metric     = ft_getopt(cfg.mvpa, 'metric',     'accuracy');
 cfg.mvpa.feedback   = ft_getopt(cfg.mvpa, 'feedback',   'yes');
-cfg.mvpa.neighbours = ft_getopt(cfg.mvpa, 'neighbours', []);
+cfg.mvpa.timwin     = ft_getopt(cfg.mvpa, 'timwin',     []); % in samples because time axis might not be known
+
+% deal with the neighbourhood of the channels/triangulation/voxels
+if isempty(cfg.connectivity)
+  if isfield(cfg, 'dim') && ~isfield(cfg, 'channel') && ~isfield(cfg, 'tri')
+    % input data can be reshaped into a 3D volume, use bwlabeln/spm_bwlabel rather than clusterstat
+    ft_info('using connectivity of voxels in 3-D volume\n');
+    cfg.connectivity = nan;
+    %if isfield(cfg, 'inside')
+    %  cfg = fixinside(cfg, 'index');
+    %end
+  elseif isfield(cfg, 'tri')
+    % input data describes a surface along which neighbours can be defined
+    ft_info('using connectivity of vertices along triangulated surface\n');
+    cfg.connectivity = triangle2connectivity(cfg.tri);
+    if isfield(cfg, 'insideorig')
+      cfg.connectivity = cfg.connectivity(cfg.insideorig, cfg.insideorig);
+    end
+  elseif isfield(cfg, 'avgoverchan') && istrue(cfg.avgoverchan)
+    % channel dimension has been averaged across, no sense in clustering across space
+    cfg.connectivity = true(1);
+  elseif isfield(cfg, 'channel')
+    cfg.neighbours   = ft_getopt(cfg, 'neighbours', []);
+    cfg.connectivity = channelconnectivity(cfg);
+  else
+    % there is no connectivity in the spatial dimension
+    cfg.connectivity = false(size(dat,1));
+  end
+else
+  % use the specified connectivity: op hoop van zegen
+end
+
+if isfield(cfg, 'dim') && isfield(cfg, 'dimord') && contains(cfg.dimord, 'time') && ~isempty(cfg.mvpa.timwin)
+  % create neighourhood matrix for time dimension
+  dimtok = tokenize(cfg.dimord, '_');
+  timdim = find(strcmp(dimtok, 'time'));
+  T = ones(cfg.dim(timdim));
+  T = T - triu(T, floor(cfg.mvpa.timwin./2)) - tril(T, -ceil(cfg.mvpa.timwin./2)) > 0;
+  if isfield(cfg.mvpa, 'time')&&~isempty(cfg.mvpa.time)
+    % this cannot be dealt with by ft_getopt, because the lower level code
+    % will in that case not properly set the default value
+    T = T(cfg.mvpa.time,:);
+  end
+else
+  T = [];
+end
+
+if ~isempty(T) && ~istrue(cfg.searchlight)
+  ft_warning('specifying cfg.searchlight = ''yes'' since you want a moving window mvpa');
+  cfg.searchlight = 'yes';
+end
 
 % flip dimensions such that the number of trials comes first
-dat = dat';
+dat = dat.';
 
 % if cfg.dim has two entries which are non-singleton then the data has been
 % 3D before. We must reshape it from 2D to 3D to run it in MVPA-Light
-data_is_3D = (numel(cfg.dim) > 1 && all(cfg.dim > 1));  % checks whether data was 3D before being reshaped
+data_is_3D = (numel(cfg.dim) > 1 && all(cfg.dim > 1)) && istrue(cfg.reshape3D);  % checks whether data was 3D before being reshaped
 if data_is_3D
+  if isfield(cfg, 'dimord')
+    dimtok = tokenize(cfg.dimord, '_');
+    cfg.mvpa.dimension_names = {'samples' dimtok{1} dimtok{2}};
+  end
   dat = reshape(dat, size(dat,1), cfg.dim(1), cfg.dim(2));
 end
 
@@ -202,101 +259,178 @@ if istrue(cfg.timextime) && ~data_is_3D
   cfg.timextime = 'no';
 end
 
-label = [];
-dim   = [];
-dimord = [];
-
 %% Call MVPA-Light
 
-if strcmp(cfg.searchlight, 'yes')
-  % --- searchlight analysis ---
+if istrue(cfg.searchlight) && isempty(T)
+  % --- searchlight analysis across the spatial dimension ---
 
-  if isstruct(cfg.mvpa.neighbours)
-    cfg.mvpa.neighbours = channelconnectivity(struct('neighbours',cfg.mvpa.neighbours, 'channel', {cfg.channel}));
+  if ~isequal(cfg.connectivity, false(size(cfg.connectivity))) && ~isempty(cfg.connectivity)
+    cfg.mvpa.neighbours = cfg.connectivity;
   end
   [perf, result] = mv_searchlight(cfg.mvpa, dat, y);
   
-  % this preserves any spatial dimension, so no adjustment is done to a
-  % channel list, if present
-  if isfield(cfg, 'channel')
-    label = cfg.channel;
+  % create boolean vector for the update of dimension descriptors at higher
+  % level structure
+  adj_dim = cfg.dim ~= size(perf); % assumes first element to be spatial dimension
+  
+elseif istrue(cfg.searchlight) && ~isempty(T) && data_is_3D
+  % --- searchlight across time, or searchlight across space and time ---
+  
+  if ~isequal(cfg.connectivity, false(size(cfg.connectivity))) && ~isempty(cfg.connectivity)
+    cfg.mvpa.neighbours        = {cfg.connectivity T};
+    cfg.mvpa.sample_dimension  = 1;
+    cfg.mvpa.feature_dimension = [];
+    cfg.mvpa.append            = true;
+  else
+    cfg.mvpa.neighbours        = T;
+    cfg.mvpa.sample_dimension  = 1;
+    cfg.mvpa.feature_dimension = 2; 
   end
-
-  if isfield(cfg, 'dim')
-    dim = cfg.dim;
+  
+  [perf, result] = mv_classify(cfg.mvpa, dat, y);
+  
+  if iscell(cfg.mvpa.neighbours)
+    adj_dim = cfg.dim ~= size(perf);
+  else 
+    adj_dim = [true false(1,numel(cfg.dim)-1)];
   end
-
-elseif strcmp(cfg.timextime, 'yes')
+  
+  if numel(perf)~=prod(cfg.dim) && all(~adj_dim)
+    dimorig = cfg.dim;
+    cfg.dim = [size(cfg.mvpa.hyperparameter.neighbours{1},1), ...
+               size(cfg.mvpa.hyperparameter.neighbours{2},1)];
+    perf    = reshape(perf, cfg.dim);
+    result.perf_std = reshape(result.perf_std, cfg.dim);
+    
+    if dimorig(1)~=cfg.dim(1)
+      label = cell(cfg.dim(1),1);
+      for k = 1:cfg.dim(1)
+        label{k} = sprintf('feature%04d',k);
+      end
+    end
+    if dimorig(2)~=cfg.dim(2)&&cfg.dim(2)&&isfield(cfg,'latency')
+      timeorig = linspace(cfg.latency(1),cfg.latency(2),size(T,2));
+      time = zeros(1,size(T,1));
+      for k = 1:numel(time)
+        time(k) = mean(timeorig(T(k,:)));
+      end
+    end
+  end
+  
+elseif istrue(cfg.timextime)
   % --- time x time generalisation ---
   [perf, result] = mv_classify_timextime(cfg.mvpa, dat, y);
-
+  
   % this does note preserve any spatial dimension, so label should be
   % adjusted
-  label = squeezelabel(label, cfg);
-  dim   = squeezedim(dim, cfg);
+  label = sprintf('combined(%s)', sprintf('%s',cfg.channel{:}));
+  dim   = squeezedim(cfg.dim);
   dimord = 'time_time';
 
-elseif data_is_3D
-  % --- classification across time ---
+elseif data_is_3D && ~istrue(cfg.searchlight)
+  % --- classification across the non-spatial dimension ---
   [perf, result] = mv_classify_across_time(cfg.mvpa, dat, y);
-
-  % this does note preserve any spatial dimension, so label should be
-  % adjusted
-  label = squeezelabel(label, cfg);
-  dim   = squeezedim(dim, cfg);
-
+  
+  adj_dim = [true false(1,numel(cfg.dim)-1)];
+  
 else
-  % --- data has no time dimension, perform only cross-validation ---
+  % this is the generic fallback, which seems very similar to the second
+  % instance above...
+  if ~isempty(T) && ~isequal(cfg.connectivity, false(size(cfg.connectivity))) && ~isempty(cfg.connectivity)
+    cfg.mvpa.hyperparameter.neighbours = {cfg.connectivity T};
+    adj_dim = false(size(cfg.dim));
+  elseif ~isempty(T)
+    cfg.mvpa.hyperparameter.neighbours = {eye(cfg.dim(1)) T};
+    adj_dim = false(size(cfg.dim));
+  else
+    adj_dim = true(size(cfg.dim));
+  end
   [perf, result] = mv_crossvalidate(cfg.mvpa, dat, y);
+  
+  if numel(perf)~=prod(cfg.dim) && all(~adj_dim)
+    dimorig = cfg.dim;
+    cfg.dim = [size(cfg.mvpa.hyperparameter.neighbours{1},1), ...
+               size(cfg.mvpa.hyperparameter.neighbours{2},1)];
+    perf    = reshape(perf, cfg.dim);
+    result.perf_std = reshape(result.perf_std, cfg.dim);
+    
+    if dimorig(1)~=cfg.dim(1)
+      label = cell(cfg.dim(1),1);
+      for k = 1:cfg.dim(1)
+        label{k} = sprintf('feature%04d',k);
+      end
+    end
+    if dimorig(2)~=cfg.dim(2)&&cfg.dim(2)&&isfield(cfg,'latency')
+      timeorig = linspace(cfg.latency(1),cfg.latency(2),size(T,2));
+      time = zeros(1,size(T,1));
+      for k = 1:numel(time)
+        time(k) = mean(timeorig(T(k,:)));
+      end
+    end
+  end
+end
+if ~iscell(cfg.mvpa.metric), cfg.mvpa.metric = {cfg.mvpa.metric}; end
+if ~iscell(perf),            perf            = {perf};            end
 
-  % this does note preserve any spatial dimension, so label should be
-  % adjusted
-  label = squeezelabel(label, cfg);
-  dim   = squeezedim(dim, cfg);
+%% check which data dim descriptors need to be updated 
+shiftflag = zeros(1,numel(perf));
+if ~exist('label', 'var') && (isfield(cfg, 'channel') && adj_dim(1))
+  label = sprintf('combined(%s)', sprintf('%s',cfg.channel{:}));
+  % for consistency higher up, the first dimension of perf should be
+  % singleton
+  for k = 1:numel(perf)
+    siz = size(perf{k});
+    if siz(end) == 1 && siz(1) ~=1
+      shiftflag(k) = -1;
+    end
+  end
+end
 
+if ~exist('dim', 'var') && isfield(cfg, 'dim') 
+  dim = size(perf); % FIXME check whether this is always correct, I doubt it
+end
+
+if isfield(cfg, 'frequency') && ~adj_dim(2)
+  if isfield(cfg, 'latency') && adj_dim(3)
+    time = mean(cfg.latency);
+  end
+elseif isfield(cfg, 'frequency') && adj_dim(2)
+  frequency = mean(cfg.frequency);
+  if isfield(cfg, 'latency') && adj_dim(3)
+    time = mean(cfg.latency);
+  end
+elseif ~isfield(cfg, 'frequency')
+  if isfield(cfg, 'latency') && adj_dim(2)
+    time = mean(cfg.latency);
+  end
 end
 
 %% setup stat struct
 stat = [];
-if ~iscell(cfg.mvpa.metric), cfg.mvpa.metric = {cfg.mvpa.metric}; end
-if ~iscell(perf),            perf            = {perf};            end
 for mm=1:numel(perf)
 
   % Performance metric
-  stat.(cfg.mvpa.metric{mm}) = perf{mm};
+  stat.(cfg.mvpa.metric{mm}) = shiftdim(perf{mm}, shiftflag);
 
   % Std of performance
   if iscell(result.perf_std)
-    stat.([cfg.mvpa.metric{mm} '_std']) = result.perf_std{mm};
+    stat.([cfg.mvpa.metric{mm} '_std']) = shiftdim(result.perf_std{mm}, shiftflag);
   else
-    stat.([cfg.mvpa.metric{mm} '_std']) = result.perf_std;
+    stat.([cfg.mvpa.metric{mm} '_std']) = shiftdim(result.perf_std, shiftflag);
   end
 end
 
 % return the MVPA-Light result struct as well
 stat.mvpa = result;
 
-if ~isempty(label)
-  stat.label = label;
-end
+if exist('label', 'var'),     stat.label  = label;  end
+if exist('dim', 'var'),       stat.dim    = dim;    end
+if exist('dimord', 'var'),    stat.dimord = dimord; end
+if exist('frequency', 'var'), stat.freq   = frequency; end
+if exist('time', 'var'),      stat.time   = time; end
 
-if ~isempty(dim)
-  stat.dim = dim;
-end
 
-if ~isempty(dimord)
-  stat.dimord = dimord;
-end
 
-function label = squeezelabel(label, cfg)
+function dim = squeezedim(dim)
 
-if isfield(cfg, 'channel')
-  label = sprintf('combined(%s)', sprintf('%s',cfg.channel{:}));
-end
-
-function dim = squeezedim(dim, cfg)
-
-if isfield(cfg, 'dim')
-  dim = cfg.dim;
-  dim(1) = 1;
-end
+dim(1) = 1;
