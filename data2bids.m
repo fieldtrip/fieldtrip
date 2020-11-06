@@ -1320,7 +1320,7 @@ if need_channels_tsv
       end
     end
     try
-      cfg.channels = struct2table(cfg.channels);
+      cfg.channels = convert_table(cfg.channels);
     catch
       ft_error('incorrect specification of cfg.channels');
     end
@@ -1368,8 +1368,16 @@ end % if need_channels_tsv
 if need_electrodes_tsv
   
   if isstruct(cfg.electrodes)
+    % remove fields with non-informative defaults
+    fn = fieldnames(cfg.electrodes);
+    for i=1:numel(fn)
+      if isequaln(cfg.electrodes.(fn{i}), nan)
+        % a single nan means that it was set as default
+        cfg.electrodes = rmfield(cfg.electrodes, fn{i});
+      end
+    end
     try
-      cfg.electrodes = struct2table(cfg.electrodes);
+      cfg.electrodes = convert_table(cfg.electrodes);
     catch
       ft_error('incorrect specification of cfg.electrodes.%s', fn{i});
     end
@@ -1390,10 +1398,18 @@ end % need_electrodes_tsv
 
 %% need_optodes_tsv
 if need_optodes_tsv
-  % this is needed for NIRS
+  
   if isstruct(cfg.optodes)
+    % remove fields with non-informative defaults
+    fn = fieldnames(cfg.optodes);
+    for i=1:numel(fn)
+      if isequaln(cfg.optodes.(fn{i}), nan)
+        % a single nan means that it was set as default
+        cfg.optodes = rmfield(cfg.optodes, fn{i});
+      end
+    end
     try
-      cfg.optodes = struct2table(cfg.optodes);
+      cfg.optodes = convert_table(cfg.optodes);
     catch
       ft_error('incorrect specification of cfg.optodes.');
     end
@@ -1866,7 +1882,7 @@ if ~isempty(cfg.bidsroot)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   this = table();
-  this.participant_id = ['sub-' cfg.sub];
+  this.participant_id = {['sub-' cfg.sub]};
   fn = fieldnames(cfg.participants);
   for i=1:numel(fn)
     % write [] as 'n/a'
@@ -1900,7 +1916,7 @@ if ~isempty(cfg.bidsroot)
   
   this = table();
   [~, f, x] = fileparts(cfg.outputfile);
-  this.filename = fullfile(datatype2dirname(cfg.datatype), [f x]);
+  this.filename = {fullfile(datatype2dirname(cfg.datatype), [f x])};
   fn = fieldnames(cfg.scans);
   for i=1:numel(fn)
     % write [] as 'n/a'
@@ -2321,3 +2337,24 @@ else
     end
   end
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function t = convert_table(s)
+assert(isstruct(s));
+assert(numel(s)==1);
+fn = fieldnames(s);
+for i=1:numel(fn)
+  if ischar(s.(fn{i}))
+    % convert to cell-array
+    s.(fn{i}) = {s.(fn{i})};
+  elseif iscell(s.(fn{i}))
+    % ensure it is a column
+    s.(fn{i}) = s.(fn{i})(:);
+  elseif isnumeric(s.(fn{i}))
+    % ensure it is a column
+    s.(fn{i}) = s.(fn{i})(:);
+  end
+end
+t = struct2table(s);
