@@ -326,7 +326,8 @@ elseif istrue(cfg.timextime)
   label = sprintf('combined(%s)', sprintf('%s',cfg.channel{:}));
   dim   = squeezedim(cfg.dim);
   dimord = 'time_time';
-
+  adj_dim = [false false];
+  
 elseif data_is_3D && ~istrue(cfg.searchlight)
   % --- classification across the non-spatial dimension ---
   [perf, result] = mv_classify_across_time(cfg.mvpa, dat, y);
