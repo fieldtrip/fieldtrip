@@ -1706,16 +1706,16 @@ switch cfg.method
         
       case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275'}
         % the data consists of a directory with multiple files inside
-        ft_info('copying %s to %s\n', cfg.dataset, cfg.outputfile);
+        ft_info('copying ''%s'' to ''%s''\n', cfg.dataset, cfg.outputfile);
         copy_ctf_files(cfg.dataset, cfg.outputfile, false);
         
       case {'brainvision_vhdr', 'brainvision_vmrk', 'brainvision_eeg', 'brainvision_dat', 'brainvision_seg'}
         % the data consists of three files and the header file contains pointers to the markers and data
-        ft_info('copying %s to %s\n', cfg.dataset, cfg.outputfile);
+        ft_info('copying ''%s'' to ''%s''\n', cfg.dataset, cfg.outputfile);
         copy_brainvision_files(cfg.dataset, cfg.outputfile, false);
         
       otherwise
-        ft_info('copying %s to %s\n', cfg.dataset, cfg.outputfile);
+        ft_info('copying ''%s'' to ''%s''\n', cfg.dataset, cfg.outputfile);
         copyfile(cfg.dataset, cfg.outputfile);
     end
     
