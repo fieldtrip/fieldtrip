@@ -152,7 +152,6 @@ end
 % get last-used-mouse-button
 lastmousebttn = get(gcf,'selectiontype');
 
-
 switch lower(event)
   
   case lower('WindowButtonDownFcn')
@@ -168,7 +167,7 @@ switch lower(event)
             userData.box   = [];
             set(handle, 'Pointer', 'crosshair');
             if ~isempty(contextmenu) && ~pointonly
-              set(hcmenuopt,'enable','off')
+              set(hcmenuopt,'enable', 'off')
             end
           end
           

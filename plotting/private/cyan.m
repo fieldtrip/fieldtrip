@@ -1,4 +1,4 @@
-function rgb = white
+function rgb = cyan
 
 % returns a predefined color as [red green blue] values
 %
@@ -14,5 +14,5 @@ function rgb = white
 % white        = [255 255 255]/255;
 % yellow       = [255 255   0]/255;
 
-rgb = [255 255 255]/255;
+rgb = [0 255 255]/255;
 

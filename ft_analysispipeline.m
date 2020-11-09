@@ -474,7 +474,6 @@ for i=1:numel(pipeline)
     arrow(base, tip, 'length', 8, 'lineWidth', 1);
   end
 
-
 end % for numel(info)
 
 set(fig, 'WindowButtonUpFcn', @button);
