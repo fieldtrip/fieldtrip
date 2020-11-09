@@ -34,7 +34,7 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.viewmode                = string, 'butterfly', 'vertical', 'component' for visualizing ICA/PCA components (default is 'butterfly')
 %   cfg.plotlabels              = 'yes', 'no' or 'some', whether to plot channel labels in vertical viewmode. The option 'some' plots one label for every ten channels, which is useful if there are many channels (default = 'some')
 %   cfg.plotevents              = 'no' or 'yes', whether to plot event markers. (default is 'yes')
-%   cfg.ploteventlabels         = 'type=value', 'colorvalue' (default = 'type=value');
+%   cfg.ploteventlabels         = 'type=value', 'colorvalue' (default = 'type=value')
 %   cfg.artfctdef.xxx.artifact  = Nx2 matrix with artifact segments see FT_ARTIFACT_xxx functions
 %   cfg.selectfeature           = string, name of feature to be selected/added (default = 'visual')
 %   cfg.selectmode              = 'markartifact', 'markpeakevent', 'marktroughevent' (default = 'markartifact')
@@ -174,60 +174,70 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'channelcolormap', 'linecolor'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'anonimize', 'anonymize'}); % fix typo in previous version of the code
 cfg = ft_checkconfig(cfg, 'renamed',    {'anonymise', 'anonymize'}); % use North American and Oxford British spelling
 cfg = ft_checkconfig(cfg, 'renamed',    {'newfigure', 'figure'});
+cfg = ft_checkconfig(cfg, 'deprecated', {'selectfeature'}); % please specify cfg.artfctdef.xxx and cfg.artfctdef.yyy for each feature
 
 % ensure that the preproc specific options are located in the cfg.preproc substructure
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
 
 % set the defaults
-cfg.ylim            = ft_getopt(cfg, 'ylim', 'maxabs');
-cfg.artfctdef       = ft_getopt(cfg, 'artfctdef', struct);
-cfg.selectfeature   = ft_getopt(cfg, 'selectfeature', 'visual');   % string or cell-array
-cfg.selectmode      = ft_getopt(cfg, 'selectmode', 'markartifact');
-cfg.blocksize       = ft_getopt(cfg, 'blocksize');                 % now used for both continuous and non-continuous data, defaulting done below
-cfg.preproc         = ft_getopt(cfg, 'preproc');                   % see preproc for options
-cfg.selfun          = ft_getopt(cfg, 'selfun');                    % default functions are 'simpleFFT', 'multiplotER', 'topoplotER', 'topoplotVAR', 'movieplotER'
-cfg.selcfg          = ft_getopt(cfg, 'selcfg');                    % defaulting done below, requires layouts/etc to be processed
-cfg.seldat          = ft_getopt(cfg, 'seldat', 'current');
-cfg.colorgroups     = ft_getopt(cfg, 'colorgroups', 'sequential');
-cfg.linecolor       = ft_getopt(cfg, 'linecolor', [0.75 0 0; 0 0 1; 0 1 0; 0.44 0.19 0.63; 0 0.13 0.38;0.5 0.5 0.5;1 0.75 0; 1 0 0; 0.89 0.42 0.04; 0.85 0.59 0.58; 0.57 0.82 0.31; 0 0.69 0.94; 1 0 0.4; 0 0.69 0.31; 0 0.44 0.75]);
-cfg.linestyle       = ft_getopt(cfg, 'linestyle', '-');
-cfg.linewidth       = ft_getopt(cfg, 'linewidth', 0.5);
-cfg.eegscale        = ft_getopt(cfg, 'eegscale');
-cfg.eogscale        = ft_getopt(cfg, 'eogscale');
-cfg.ecgscale        = ft_getopt(cfg, 'ecgscale');
-cfg.emgscale        = ft_getopt(cfg, 'emgscale');
-cfg.megscale        = ft_getopt(cfg, 'megscale');
-cfg.magscale        = ft_getopt(cfg, 'magscale');
-cfg.gradscale       = ft_getopt(cfg, 'gradscale');
-cfg.chanscale       = ft_getopt(cfg, 'chanscale');
-cfg.mychanscale     = ft_getopt(cfg, 'mychanscale');
-cfg.mychan          = ft_getopt(cfg, 'mychan');
-cfg.layout          = ft_getopt(cfg, 'layout');
-cfg.plotlabels      = ft_getopt(cfg, 'plotlabels', 'some');
-cfg.event           = ft_getopt(cfg, 'event');                       % this only exists for backward compatibility and should not be documented
-cfg.continuous      = ft_getopt(cfg, 'continuous');                  % the default is set further down in the code, conditional on the input data
-cfg.ploteventlabels = ft_getopt(cfg, 'ploteventlabels', 'type=value');
-cfg.plotevents      = ft_getopt(cfg, 'plotevents', 'yes');
-cfg.plotartifacts   = ft_getopt(cfg, 'plotartifacts', 'yes');
-cfg.precision       = ft_getopt(cfg, 'precision', 'double');
-cfg.zlim            = ft_getopt(cfg, 'zlim', 'maxmin');
-cfg.compscale       = ft_getopt(cfg, 'compscale', 'global');
-cfg.renderer        = ft_getopt(cfg, 'renderer');
-cfg.fontsize        = ft_getopt(cfg, 'fontsize', 12);
-cfg.fontunits       = ft_getopt(cfg, 'fontunits', 'points');         % inches, centimeters, normalized, points, pixels
-cfg.editfontsize    = ft_getopt(cfg, 'editfontsize', 12);
-cfg.editfontunits   = ft_getopt(cfg, 'editfontunits', 'points');     % inches, centimeters, normalized, points, pixels
-cfg.axisfontsize    = ft_getopt(cfg, 'axisfontsize', 10);
-cfg.axisfontunits   = ft_getopt(cfg, 'axisfontunits', 'points');     % inches, centimeters, normalized, points, pixels
-cfg.verticalpadding = ft_getopt(cfg, 'verticalpadding', 'auto');
-cfg.artifactalpha   = ft_getopt(cfg, 'artifactalpha', 0.2);          % for the opacity of marked artifacts
-cfg.allowoverlap    = ft_getopt(cfg, 'allowoverlap', 'no');          % for ft_fetch_data
-cfg.contournum      = ft_getopt(cfg, 'contournum', 0);               % topoplot contour lines
-cfg.trl             = ft_getopt(cfg, 'trl');
-cfg.gridscale       = ft_getopt(cfg, 'gridscale', 45);
-cfg.shading         = ft_getopt(cfg, 'shading', 'flat');
-cfg.interplimits    = ft_getopt(cfg, 'interplim', 'mask');
-cfg.interpolation   = ft_getopt(cfg, 'interpmethod', 'v4');
+cfg.ylim                = ft_getopt(cfg, 'ylim', 'maxabs');
+cfg.zlim                = ft_getopt(cfg, 'zlim', 'maxmin');
+cfg.artfctdef           = ft_getopt(cfg, 'artfctdef', struct);
+cfg.selectmode          = ft_getopt(cfg, 'selectmode', 'markartifact');
+cfg.blocksize           = ft_getopt(cfg, 'blocksize');                 % now used for both continuous and non-continuous data, defaulting done below
+cfg.preproc             = ft_getopt(cfg, 'preproc');                   % see preproc for options
+cfg.selfun              = ft_getopt(cfg, 'selfun');                    % default functions are 'simpleFFT', 'multiplotER', 'topoplotER', 'topoplotVAR', 'movieplotER'
+cfg.selcfg              = ft_getopt(cfg, 'selcfg');                    % defaulting done below, requires layouts/etc to be processed
+cfg.seldat              = ft_getopt(cfg, 'seldat', 'current');
+cfg.colorgroups         = ft_getopt(cfg, 'colorgroups', 'sequential');
+cfg.linecolor           = ft_getopt(cfg, 'linecolor', [0.75 0 0; 0 0 1; 0 1 0; 0.44 0.19 0.63; 0 0.13 0.38;0.5 0.5 0.5;1 0.75 0; 1 0 0; 0.89 0.42 0.04; 0.85 0.59 0.58; 0.57 0.82 0.31; 0 0.69 0.94; 1 0 0.4; 0 0.69 0.31; 0 0.44 0.75]);
+cfg.linestyle           = ft_getopt(cfg, 'linestyle', '-');
+cfg.linewidth           = ft_getopt(cfg, 'linewidth', 0.5);
+cfg.eegscale            = ft_getopt(cfg, 'eegscale');
+cfg.eogscale            = ft_getopt(cfg, 'eogscale');
+cfg.ecgscale            = ft_getopt(cfg, 'ecgscale');
+cfg.emgscale            = ft_getopt(cfg, 'emgscale');
+cfg.megscale            = ft_getopt(cfg, 'megscale');
+cfg.magscale            = ft_getopt(cfg, 'magscale');
+cfg.gradscale           = ft_getopt(cfg, 'gradscale');
+cfg.chanscale           = ft_getopt(cfg, 'chanscale');
+cfg.mychanscale         = ft_getopt(cfg, 'mychanscale');
+cfg.mychan              = ft_getopt(cfg, 'mychan');
+cfg.layout              = ft_getopt(cfg, 'layout');
+cfg.plotlabels          = ft_getopt(cfg, 'plotlabels', 'some');
+cfg.event               = ft_getopt(cfg, 'event');                       % this only exists for backward compatibility and should not be documented
+cfg.continuous          = ft_getopt(cfg, 'continuous');                  % the default is set further down in the code, conditional on the input data
+cfg.precision           = ft_getopt(cfg, 'precision', 'double');
+cfg.compscale           = ft_getopt(cfg, 'compscale', 'global');
+cfg.renderer            = ft_getopt(cfg, 'renderer');
+cfg.fontsize            = ft_getopt(cfg, 'fontsize', 12);
+cfg.fontunits           = ft_getopt(cfg, 'fontunits', 'points');         % inches, centimeters, normalized, points, pixels
+cfg.editfontsize        = ft_getopt(cfg, 'editfontsize', 12);
+cfg.editfontunits       = ft_getopt(cfg, 'editfontunits', 'points');     % inches, centimeters, normalized, points, pixels
+cfg.axisfontsize        = ft_getopt(cfg, 'axisfontsize', 10);
+cfg.axisfontunits       = ft_getopt(cfg, 'axisfontunits', 'points');     % inches, centimeters, normalized, points, pixels
+cfg.verticalpadding     = ft_getopt(cfg, 'verticalpadding', 'auto');
+cfg.allowoverlap        = ft_getopt(cfg, 'allowoverlap', 'no');          % for ft_fetch_data
+cfg.contournum          = ft_getopt(cfg, 'contournum', 0);               % topoplot contour lines
+cfg.trl                 = ft_getopt(cfg, 'trl');
+cfg.gridscale           = ft_getopt(cfg, 'gridscale', 45);
+cfg.shading             = ft_getopt(cfg, 'shading', 'flat');
+cfg.interplimits        = ft_getopt(cfg, 'interplim', 'mask');
+cfg.interpolation       = ft_getopt(cfg, 'interpmethod', 'v4');
+% set the defaults for plotting the events
+cfg.plotevents          = ft_getopt(cfg, 'plotevents', 'yes');
+cfg.ploteventlabels     = ft_getopt(cfg, 'ploteventlabels', 'type=value');
+cfg.eventalpha          = ft_getopt(cfg, 'artifactalpha', 0.2);          % for the opacity of events
+% set the defaults for plotting the artifacts
+cfg.plotartifacts       = ft_getopt(cfg, 'plotartifacts', 'yes');
+cfg.plotartifactlabels  = ft_getopt(cfg, 'plotartifactlabels', '');
+cfg.artifactalpha       = ft_getopt(cfg, 'artifactalpha', 0.2);          % for the opacity of artifacts
+% add some defaults for preprocessing, none of these is active but they will show up with the cfg.preproc button in the user interface
+cfg.preproc.demean      = ft_getopt(cfg.preproc, 'demean', 'no');
+cfg.preproc.lpfilter    = ft_getopt(cfg.preproc, 'lpfilter', 'no');
+cfg.preproc.lpfreq      = ft_getopt(cfg.preproc, 'lpfreq', 30);
+cfg.preproc.hpfilter    = ft_getopt(cfg.preproc, 'hpfilter', 'no');
+cfg.preproc.hpfreq      = ft_getopt(cfg.preproc, 'hpfreq', 0.5);
 
 % construct the low-level options as key-value pairs, these are passed to FT_READ_HEADER
 headeropt = {};
@@ -243,7 +253,7 @@ if ~isfield(cfg, 'viewmode')
   if hascomp
     cfg.viewmode = 'component';
   else
-    cfg.viewmode = 'butterfly';
+    cfg.viewmode = 'vertical';
   end
 end
 
@@ -293,6 +303,11 @@ if strcmp(cfg.viewmode, 'component')
   else
     cfg.layout = ft_prepare_layout(tmpcfg);
   end
+end
+
+if isempty(fieldnames(cfg.artfctdef)) % note that isempty(struct()) returns false
+  % by default allow the user to specify visual artifacts
+  cfg.artfctdef.visual.artifact = zeros(0,2);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -427,19 +442,6 @@ end
 
 if Ntrials == 0
   ft_error('no trials to display');
-end
-
-if ischar(cfg.selectfeature)
-  % ensure that it is a cell-array
-  cfg.selectfeature = {cfg.selectfeature};
-end
-if ~isempty(cfg.selectfeature)
-  for i=1:length(cfg.selectfeature)
-    if ~isfield(cfg.artfctdef, cfg.selectfeature{i})
-      cfg.artfctdef.(cfg.selectfeature{i})          = [];
-      cfg.artfctdef.(cfg.selectfeature{i}).artifact = zeros(0,2);
-    end
-  end
 end
 
 % determine the vertical scaling
@@ -619,7 +621,7 @@ else
 end
 opt.hdr             = hdr;
 opt.trlop           = 1;          % the active trial being displayed
-opt.ftsel           = find(strcmp(artlabel, cfg.selectfeature)); % current artifact/feature being selected
+opt.artsel          = 1;          % the currently selected artifact/feature
 opt.trlorg          = trlorg;
 opt.fsample         = hdr.Fs;
 opt.linecolor       = linecolor;
@@ -719,7 +721,7 @@ end
 if length(artlabel)>1 % highlight the first one as active
   arth = findobj(h, 'tag', 'artifactui');
   arth = arth(end:-1:1); % order is reversed so reverse it again
-  hsel = [1 2 3] + (opt.ftsel-1) .*3;
+  hsel = [1 2 3] + (opt.artsel-1) .*3;
   set(arth(hsel), 'fontweight', 'bold')
 end
 
@@ -729,7 +731,7 @@ if true % strcmp(cfg.viewmode, 'butterfly')
 end
 
 % 'edit preproc'-button
-uicontrol('tag', 'preproccfg', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'preproc cfg', 'position', [0.91, 0.55 - ((iArt-1)*0.09), 0.08, 0.04], 'callback', @preproc_cfg1_cb)
+uicontrol('tag', 'preproccfg', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'cfg.preproc', 'position', [0.91, 0.55 - ((iArt-1)*0.09), 0.08, 0.04], 'callback', @preproc_cfg1_cb)
 
 ft_uilayout(h, 'tag', 'labels',  'width', 0.10, 'height', 0.05);
 ft_uilayout(h, 'tag', 'buttons', 'width', 0.05, 'height', 0.05);
@@ -992,14 +994,14 @@ if isempty(cmenulab)
   
   if strcmp(cfg.selectmode, 'markartifact')
     % mark or unmark artifacts
-    artval = opt.artdata.trial{1}(opt.ftsel, begsel:endsel);
+    artval = opt.artdata.trial{1}(opt.artsel, begsel:endsel);
     artval = any(artval,1);
     if any(artval)
-      fprintf('there is overlap with the active artifact (%s), disabling this artifact\n',opt.artdata.label{opt.ftsel});
-      opt.artdata.trial{1}(opt.ftsel, begsel:endsel) = 0;
+      fprintf('there is overlap with the active artifact (%s), disabling this artifact\n',opt.artdata.label{opt.artsel});
+      opt.artdata.trial{1}(opt.artsel, begsel:endsel) = 0;
     else
-      fprintf('there is no overlap with the active artifact (%s), marking this as a new artifact\n',opt.artdata.label{opt.ftsel});
-      opt.artdata.trial{1}(opt.ftsel, begsel:endsel) = 1;
+      fprintf('there is no overlap with the active artifact (%s), marking this as a new artifact\n',opt.artdata.label{opt.artsel});
+      opt.artdata.trial{1}(opt.artsel, begsel:endsel) = 1;
     end
     
     % redraw only when marking (so the focus doesn't go back to the databrowser after calling selfuns
@@ -1227,36 +1229,36 @@ cfg = getappdata(h, 'cfg');
 switch key
   case {'1' '2' '3' '4' '5' '6' '7' '8' '9'}
     % switch to another artifact type
-    opt.ftsel = str2double(key);
+    opt.artsel = str2double(key);
     numart = size(opt.artdata.trial{1}, 1);
-    if opt.ftsel > numart
-      fprintf('data has no artifact type %i \n', opt.ftsel)
+    if opt.artsel > numart
+      fprintf('data has no artifact type %i \n', opt.artsel)
     else
       % bold the active one
       arth = findobj(h, 'tag', 'artifactui');
       arth = arth(end:-1:1); % order is reversed so reverse it again
-      hsel = [1 2 3] + (opt.ftsel-1) .*3 ;
+      hsel = [1 2 3] + (opt.artsel-1) .*3 ;
       set(arth(hsel), 'fontweight', 'bold')
       % unbold the passive ones
       set(arth(setdiff(1:numel(arth),hsel)), 'fontweight', 'normal')
       % redraw
       setappdata(h, 'opt', opt);
       setappdata(h, 'cfg', cfg);
-      fprintf('switching to the "%s" artifact\n', opt.artdata.label{opt.ftsel});
+      fprintf('switching to the "%s" artifact\n', opt.artdata.label{opt.artsel});
       redraw_cb(h, eventdata);
     end
   case {'shift+1' 'shift+2' 'shift+3' 'shift+4' 'shift+5' 'shift+6' 'shift+7' 'shift+8' 'shift+9'}
     % go to previous artifact
-    opt.ftsel = str2double(key(end));
+    opt.artsel = str2double(key(end));
     numart = size(opt.artdata.trial{1}, 1);
-    if opt.ftsel > numart
-      fprintf('data has no artifact type %i \n', opt.ftsel)
+    if opt.artsel > numart
+      fprintf('data has no artifact type %i \n', opt.artsel)
     else
       % find the previous occuring artifact, keeping in mind that:
       % 1) artifacts can cross trial boundaries
       % 2) artifacts might not occur inside a trial boundary (when data is segmented differently than during artifact detection)
       % fetch trl representation of current artifact type
-      arttrl = boolvec2trl(opt.artdata.trial{1}(opt.ftsel,:));
+      arttrl = boolvec2trl(opt.artdata.trial{1}(opt.artsel,:));
       % discard artifacts in the future
       curvisend = opt.trlvis(opt.trlop,2);
       arttrl(arttrl(:,1) > curvisend,:) = [];
@@ -1271,14 +1273,14 @@ switch key
         end
       end
       if isempty(newtrlop)
-        fprintf('no earlier %s with "%s" artifact found\n', opt.trialviewtype, opt.artdata.label{opt.ftsel});
+        fprintf('no earlier %s with "%s" artifact found\n', opt.trialviewtype, opt.artdata.label{opt.artsel});
       else
-        fprintf('going to previous %s with "%s" artifact\n', opt.trialviewtype, opt.artdata.label{opt.ftsel});
+        fprintf('going to previous %s with "%s" artifact\n', opt.trialviewtype, opt.artdata.label{opt.artsel});
         opt.trlop = newtrlop;
         % other artifact type potentially selected, bold the active one
         arth = findobj(h, 'tag', 'artifactui');
         arth = arth(end:-1:1); % order is reversed so reverse it again
-        hsel = [1 2 3] + (opt.ftsel-1) .*3 ;
+        hsel = [1 2 3] + (opt.artsel-1) .*3 ;
         set(arth(hsel), 'fontweight', 'bold')
         % unbold the passive ones
         set(arth(setdiff(1:numel(arth),hsel)), 'fontweight', 'normal')
@@ -1290,16 +1292,16 @@ switch key
     end
   case {'control+1' 'control+2' 'control+3' 'control+4' 'control+5' 'control+6' 'control+7' 'control+8' 'control+9' 'alt+1' 'alt+2' 'alt+3' 'alt+4' 'alt+5' 'alt+6' 'alt+7' 'alt+8' 'alt+9'}
     % go to next artifact
-    opt.ftsel = str2double(key(end));
+    opt.artsel = str2double(key(end));
     numart = size(opt.artdata.trial{1}, 1);
-    if opt.ftsel > numart
-      fprintf('data has no artifact type %i \n', opt.ftsel)
+    if opt.artsel > numart
+      fprintf('data has no artifact type %i \n', opt.artsel)
     else
       % find the next occuring artifact, keeping in mind that:
       % 1) artifacts can cross trial boundaries
       % 2) artifacts might not occur inside a trial boundary (when data is segmented differently than during artifact detection)
       % fetch trl representation of current artifact type
-      arttrl = boolvec2trl(opt.artdata.trial{1}(opt.ftsel,:));
+      arttrl = boolvec2trl(opt.artdata.trial{1}(opt.artsel,:));
       % discard artifacts in the past
       curvisbeg = opt.trlvis(opt.trlop,1);
       arttrl(arttrl(:,2) < curvisbeg,:) = [];
@@ -1314,14 +1316,14 @@ switch key
         end
       end
       if isempty(newtrlop)
-        fprintf('no later %s with "%s" artifact found\n', opt.trialviewtype, opt.artdata.label{opt.ftsel});
+        fprintf('no later %s with "%s" artifact found\n', opt.trialviewtype, opt.artdata.label{opt.artsel});
       else
-        fprintf('going to next %s with "%s" artifact\n', opt.trialviewtype, opt.artdata.label{opt.ftsel});
+        fprintf('going to next %s with "%s" artifact\n', opt.trialviewtype, opt.artdata.label{opt.artsel});
         opt.trlop = newtrlop;
         % other artifact type potentially selected, bold the active one
         arth = findobj(h, 'tag', 'artifactui');
         arth = arth(end:-1:1); % order is reversed so reverse it again
-        hsel = [1 2 3] + (opt.ftsel-1) .*3 ;
+        hsel = [1 2 3] + (opt.artsel-1) .*3 ;
         set(arth(hsel), 'fontweight', 'bold')
         % unbold the passive ones
         set(arth(setdiff(1:numel(arth),hsel)), 'fontweight', 'normal')
@@ -1617,7 +1619,8 @@ else
 end
 
 % fetch only the artifacts in the current time window, they are represented as booleans, with one channel per artifact type
-art = ft_fetch_data(opt.artdata, 'begsample', begsample, 'endsample', endsample);
+artdat = ft_fetch_data(opt.artdata, 'begsample', begsample, 'endsample', endsample);
+artlab = opt.artdata.label;
 
 if ~isempty(opt.event) && isstruct(opt.event)
   % select only the events in the current time window
@@ -1663,13 +1666,6 @@ lab = opt.curdata.label;
 tim = opt.curdata.time{1};
 dat = opt.curdata.trial{1};
 
-% to assure current feature is plotted on top
-ordervec = 1:length(opt.artdata.label);
-if numel(opt.ftsel)==1
-  ordervec(opt.ftsel) = [];
-  ordervec(end+1) = opt.ftsel;
-end
-
 % the layout needs to be reconstructed if the channel selection changes
 if strcmp(cfg.viewmode, 'butterfly')
   laytime = [];
@@ -1706,7 +1702,7 @@ ax(2) = max(opt.laytime.pos(:,1) + opt.laytime.width/2);
 ax(3) = min(opt.laytime.pos(:,2) - opt.laytime.height/2);
 ax(4) = max(opt.laytime.pos(:,2) + opt.laytime.height/2);
 % add white space to bottom and top so channels are not out-of-axis for the majority
-% NOTE: there is a second spot where this is done below, specifically for viewmode = component (also need to be here), which should be kept the same as this
+% NOTE there is a second spot where this is done below, specifically for viewmode = component (also need to be here), which should be kept the same as this
 if any(strcmp(cfg.viewmode,{'vertical', 'component'}))
   % determine amount of vertical padding using cfg.verticalpadding
   if ~isnumeric(cfg.verticalpadding) && strcmp(cfg.verticalpadding, 'auto')
@@ -1741,28 +1737,66 @@ opt.vlim = cfg.ylim;
 if strcmp(cfg.plotartifacts, 'yes')
   delete(findobj(h, 'tag', 'artifact'));
   
+  % ensure that the currently active artifact is plotted the last (and hence on top)
+  ordervec = 1:length(artlab);
+  ordervec(opt.artsel) = [];
+  ordervec(end+1) = opt.artsel;
+  
+  % save stuff to be able to shift the labels downwards when they occur close to each other
+  artifacttime = NaN(1,1);
+  artifactshift = zeros(1,1);
+  
+  i = 0;
   for j = ordervec
-    tmp = diff([0 art(j,:) 0]);
+    tmp = diff([0 artdat(j,:) 0]);
     artbeg = find(tmp==+1);
     artend = find(tmp==-1) - 1;
     
+    % construct the text label that will be shown with the artifacts
+    switch cfg.plotartifactlabels
+      case 'type'
+        artifactlabel = artlab{j};
+      otherwise
+        artifactlabel = '';
+    end
+    
     for k=1:numel(artbeg)
-      xpos = [tim(artbeg(k)) tim(artend(k))] + ([-.5 +.5]./opt.fsample);
+      i = i + 1; % it is not a simple loop, there are multiple types of artifacts, times multiple occurences
+      artifacttime(i) = tim(artbeg(k)) + opt.hlim(1);
+      xpos = [tim(artbeg(k)) tim(artend(k))];
       
-      if artbeg==artend
+      if xpos(1)==xpos(2)
         % plot it as a line when it has no duration
         lh = ft_plot_line(xpos, [-1 1], 'tag', 'artifact', 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1], 'color', opt.artifactcolors(j,:));
       else
-        % plot it as a box when it has a duration
-        lh = ft_plot_box([xpos -1 1], 'tag', 'artifact', 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1], 'facecolor', opt.artifactcolors(j,:), 'facealpha', cfg.artifactalpha, 'edgecolor', 'none');
+        % plot it as a box when it has a duration, pad it on either side with half a sample
+        xpos = xpos + [-.5 +.5]./opt.fsample;
+        lh = ft_plot_box([xpos -1 1], 'tag', 'artifact', 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1], 'edgecolor', 'none', 'facecolor', opt.artifactcolors(j,:), 'facealpha', cfg.artifactalpha);
       end
       
       % store this data in the line object so that it can be displayed with cb_datacursortext
       setappdata(lh, 'datacursor_linetype', 'artifact');
-      setappdata(lh, 'datacursor_artifacttime', tim(artbeg(k)));
-      setappdata(lh, 'datacursor_artifacttype', opt.artdata.label{j});
+      setappdata(lh, 'datacursor_artifacttime', artifacttime(i));
+      setappdata(lh, 'datacursor_artifactlabel', artlab{j}); % always use the artifact type in the datacursor
       
-    end
+      % check for events that are within 1/10th of the horizontal time axis and give the event label some vertical shift
+      closeevent = find(artifacttime(i)>(artifacttime(1:i-1)-diff(opt.hlim)/10) & artifacttime(i)<(artifacttime(1:i-1)+diff(opt.hlim)/10));
+      emptyshift = find(diff(sort(artifactshift(closeevent)))>1,1); % find a shift that has not been used by other close events
+      if ~isempty(emptyshift)
+        artifactshift(i) = emptyshift;
+      elseif ~any(artifactshift(closeevent)==0) % restart at 0 when no other close event is plotted at the highest level
+        artifactshift(i) = 0;
+      elseif closeevent
+        artifactshift(i) = max(artifactshift(closeevent))+1;
+      else
+        artifactshift(i) = 0;
+      end
+      
+      % plot the artifact label
+      ft_plot_text(artifacttime(i), -1+artifactshift(i)*.05, artifactlabel, 'tag', 'artifact', 'color',  opt.artifactcolors(j,:), 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1], 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits, 'horizontalalignment', 'left', 'verticalalignment', 'bottom');
+      
+    end % for each artifact
+    
   end % for each of the artifact channels
 end % if plot artifacts
 
@@ -1770,7 +1804,7 @@ end % if plot artifacts
 if strcmp(cfg.plotevents, 'yes')
   delete(findobj(h, 'tag', 'event'));
   
-  % save stuff to be able to shift the event labels downwards when they occur close to each other
+  % save stuff to be able to shift the labels downwards when they occur close to each other
   eventtime  = NaN(1,numel(event));
   eventshift = zeros(1,numel(event));
   
@@ -1780,7 +1814,7 @@ if strcmp(cfg.plotevents, 'yes')
     eventvalue    = event(i).value;
     eventduration = event(i).duration;
     
-    % format the label for the figure
+    % construct the text label that will be shown with the event
     switch cfg.ploteventlabels
       case 'type=value'
         if ~isempty(eventvalue)
@@ -1811,22 +1845,22 @@ if strcmp(cfg.plotevents, 'yes')
     eventtime(i) = (event(i).sample-begsample)/opt.fsample + opt.hlim(1);
     xpos = [eventtime(i) eventtime(i)+eventduration/opt.fsample];
     
-    if isempty(eventduration) || eventduration==0
+    if length(xpos)>1 && xpos(1)==xpos(2)
       % plot it as a line when it has no duration
       lh = ft_plot_line(xpos, [-1 1], 'tag', 'event', 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1], 'color', eventcol);
     else
-      % plot it as a box when it has a duration
-      lh = ft_plot_box([xpos -1 1], 'tag', 'event', 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1], 'edgecolor', eventcol, 'facealpha', 0.1, 'facecolor', eventcol);
+      % plot it as a box when it has a duration, pad it on either side with half a sample
+      xpos = xpos + [-.5 +.5]./opt.fsample;
+      lh = ft_plot_box([xpos -1 1], 'tag', 'event', 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1], 'edgecolor', eventcol, 'facecolor', eventcol, 'facealpha', cfg.eventalpha);
     end
     
     % store this data in the line object so that it can be displayed with cb_datacursortext
     setappdata(lh, 'datacursor_linetype', 'event');
     setappdata(lh, 'datacursor_eventtime', eventtime(i));
-    setappdata(lh, 'datacursor_eventtype', eventtype);
-    setappdata(lh, 'datacursor_eventvalue', eventvalue);
+    setappdata(lh, 'datacursor_eventlabel', sprintf('%s=%s', eventtype, num2str(eventvalue))); % always use type=value in the datacursor
     
-    % find the close events (i.e. within 1/10th of the horizontal time axis) and calculate vertical shift for the event labels.
-    closeevent = find(eventtime(i)>eventtime(1:i-1)-0.1*diff(opt.hlim) & eventtime(i)<eventtime(1:i-1)+0.1*diff(opt.hlim));
+    % check for events that are within 1/10th of the horizontal time axis and give the event label some vertical shift
+    closeevent = find(eventtime(i)>(eventtime(1:i-1)-diff(opt.hlim)/10) & eventtime(i)<(eventtime(1:i-1)+diff(opt.hlim)/10));
     emptyshift = find(diff(sort(eventshift(closeevent)))>1,1); % find a shift that has not been used by other close events
     if ~isempty(emptyshift)
       eventshift(i) = emptyshift;
@@ -1839,7 +1873,7 @@ if strcmp(cfg.plotevents, 'yes')
     end
     
     % plot the event label
-    ft_plot_text(eventtime(i), 0.9-eventshift(i)*.06, eventlabel, 'tag', 'event', 'color', eventcol, 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1], 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits, 'horizontalalignment', 'left');
+    ft_plot_text(eventtime(i), 1-eventshift(i)*.05, eventlabel, 'tag', 'event', 'color', eventcol, 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1], 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits, 'horizontalalignment', 'left', 'verticalalignment', 'top');
   end % for numel(event)
   
 end % if plot events
@@ -1909,8 +1943,8 @@ elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
       % store this data in the line object so that it can be displayed with cb_datacursortext
       setappdata(lh, 'datacursor_linetype', 'channel');
       setappdata(lh, 'datacursor_label', opt.hdr.label(chanindx(i)));
-      setappdata(lh, 'datacursor_xaxis', tim);
-      setappdata(lh, 'datacursor_yaxis', dat(datsel,:));
+      setappdata(lh, 'datacursor_xdata', tim);
+      setappdata(lh, 'datacursor_ydata', dat(datsel,:));
     end
   end
   
@@ -1969,14 +2003,13 @@ else
     laysel = laysels(i);
     
     if ~isempty(datsel) && ~isempty(laysel)
-      
       lh = ft_plot_vector(tim, dat(datsel, :)', 'box', false, 'tag', 'timecourse', 'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim, 'color', opt.linecolor(chanindx(i),:), 'linewidth', cfg.linewidth, 'style', cfg.linestyle);
       
       % store this data in the line object so that it can be displayed with cb_datacursortext
       setappdata(lh, 'datacursor_linetype', 'channel');
       setappdata(lh, 'datacursor_label', opt.hdr.label(chanindx(i)));
-      setappdata(lh, 'datacursor_xaxis', tim);
-      setappdata(lh, 'datacursor_yaxis', dat(datsel,:));
+      setappdata(lh, 'datacursor_xdata', tim);
+      setappdata(lh, 'datacursor_ydata', dat(datsel,:));
     end
   end
   
@@ -2147,18 +2180,18 @@ pos = get(event_obj, 'Position');
 linetype = getappdata(event_obj.Target, 'datacursor_linetype');
 
 if strcmp(linetype, 'event')
-  cursortext = sprintf('%s = %s\nt = %g s', getappdata(event_obj.Target, 'datacursor_eventtype'), num2str(getappdata(event_obj.Target, 'datacursor_eventvalue')), getappdata(event_obj.Target, 'datacursor_eventtime'));
+  cursortext = sprintf('%s\nt = %g s', getappdata(event_obj.Target, 'datacursor_eventlabel'), getappdata(event_obj.Target, 'datacursor_eventtime'));
   
 elseif strcmp(linetype, 'artifact')
-  cursortext = sprintf('%s\nt = %g s', getappdata(event_obj.Target, 'datacursor_artifacttype'), getappdata(event_obj.Target, 'datacursor_artifacttime'));
+  cursortext = sprintf('%s\nt = %g s', getappdata(event_obj.Target, 'datacursor_artifactlabel'), getappdata(event_obj.Target, 'datacursor_artifacttime'));
   
 elseif strcmp(linetype, 'channel')
   % get plotted x axis
   plottedX = get(event_obj.Target, 'xdata');
   
   % determine values of data at real x axis
-  timeAxis = getappdata(event_obj.Target, 'datacursor_xaxis');
-  dataAxis = getappdata(event_obj.Target, 'datacursor_yaxis');
+  timeAxis = getappdata(event_obj.Target, 'datacursor_xdata');
+  dataAxis = getappdata(event_obj.Target, 'datacursor_ydata');
   tInd = nearest(plottedX, pos(1));
   
   % get label
@@ -2168,7 +2201,7 @@ elseif strcmp(linetype, 'channel')
   cursortext = sprintf('%s = %g\nt = %g', chanLabel, dataAxis(tInd), timeAxis(tInd));
   
 else
-  % explicitly tell the user there is no info because the x-axis and y-axis do not correspond to real data values (both are between 0 and 1 always)
+  % explicitly tell the user there is no info because the x-axis and y-axis do not correspond to real data values (both are always between 0 and 1)
   cursortext = '<no cursor available>';
 end
 end % function cb_datacursortext
