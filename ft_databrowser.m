@@ -746,7 +746,7 @@ ft_uilayout(h, 'tag', 'viewui', 'BackgroundColor', [0.8 0.8 0.8], 'hpos', 'auto'
 
 % add a menu to the figure, but only if the current figure does not have subplots
 tmpcfg = cfg;
-if isfield(data, 'cfg')
+if hasdata && isfield(data, 'cfg')
   tmpcfg.previous = data.cfg;
 end
 menu_fieldtrip(h, tmpcfg, false);
