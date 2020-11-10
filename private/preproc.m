@@ -96,7 +96,7 @@ function [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, en
 % Preprocessing options that you should only use for EEG data are
 %   cfg.reref         = 'no' or 'yes' (default = 'no')
 %   cfg.refchannel    = cell-array with new EEG reference channel(s)
-%   cfg.refmethod     = 'avg', 'median', 'rest' or 'bipolar' (default = 'avg')
+%   cfg.refmethod     = 'avg', 'median', 'rest', 'bipolar' or 'laplace' (default = 'avg')
 %   cfg.leadfield     = matrix or cell-array, this is required when refmethod is 'rest'
 %                       The leadfield can be a single matrix (channels X sources) which
 %                       is calculated by using the forward theory, based on the
@@ -264,7 +264,7 @@ if ~isempty(cfg.implicitref) && ~any(match_str(cfg.implicitref,label))
 end
 
 if strcmp(cfg.reref, 'yes')
-  if strcmp(cfg.refmethod, 'bipolar')
+  if strcmp(cfg.refmethod, 'bipolar') || strcmp(cfg.refmethod, 'laplace')
     % this is implemented as a montage that the user does not get to see
     tmpcfg = keepfields(cfg, {'refmethod', 'implicitref', 'refchannel', 'channel'});
     tmpcfg.showcallinfo = 'no';
