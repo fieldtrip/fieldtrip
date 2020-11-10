@@ -101,7 +101,9 @@ function [data] = ft_preprocessing(cfg, data)
 % Preprocessing options that you should only use for EEG data are
 %   cfg.reref         = 'no' or 'yes' (default = 'no')
 %   cfg.refchannel    = cell-array with new EEG reference channel(s), this can be 'all' for a common average reference
-%   cfg.refmethod     = 'avg', 'median', 'rest' or 'bipolar' for bipolar derivation of sequential channels (default = 'avg')
+%   cfg.refmethod     = 'avg', 'median', 'rest' or 'bipolar' (for bipolar derivation of sequential channels)
+%                     or 'laplace'(for Laplacian re-referencing of neighboring channels; 
+%                     recommended for iEEG data)(default = 'avg')
 %   cfg.leadfield      = leadfield
 %                     if select 'rest','leadfield' is required.
 %                     The leadfield can be a matrix (channels X sources)
@@ -674,7 +676,7 @@ if strcmp(cfg.updatesens, 'yes')
   if ~isempty(cfg.montage) && ~isequal(cfg.montage, 'no')
     montage = cfg.montage;
   elseif strcmp(cfg.reref, 'yes')
-    if strcmp(cfg.refmethod, 'bipolar') || strcmp(cfg.refmethod, 'avg')
+    if strcmp(cfg.refmethod, 'bipolar') || strcmp(cfg.refmethod, 'avg') || strcmp(cfg.refmethod, 'laplace')
       tmpcfg = keepfields(cfg, {'refmethod', 'implicitref', 'refchannel', 'channel'});
       tmpcfg.showcallinfo = 'no';
       montage = ft_prepare_montage(tmpcfg, data);
