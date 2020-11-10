@@ -8,7 +8,7 @@ function [montage, cfg] = ft_prepare_montage(cfg, data)
 %   montage = ft_prepare_montage(cfg, data)
 %
 % The configuration can contain the following fields:
-%   cfg.refmethod     = 'avg', 'bioloar', 'comp' (default = 'avg')
+%   cfg.refmethod     = 'avg', 'bipolar', 'comp', 'laplace' (default = 'avg')
 %   cfg.implicitref   = string with the label of the implicit reference, or empty (default = [])
 %   cfg.refchannel    = cell-array with new EEG reference channel(s), this can be 'all' for a common average reference
 %
@@ -141,6 +141,25 @@ switch cfg.refmethod
     montage.labelold = data.label;
     montage.labelnew = data.topolabel;
     montage.tra      = data.topo;
+  
+  case 'laplace'
+    % create a montage for the laplacian derivation of neighboring channels
+    % (each channel is re-referenced against the mean of the two nearest
+    % channels, while channels at the extremities will be re-referenced
+    % against their closest neighbor; this feature is particularly useful
+    % for the preprocessing of iEEG data)
+    montage2          = [];
+    montage2.labelold = montage1.labelnew;
+    montage2.labelnew = montage1.labelnew;
+    tra_neg1           = diag(-0.5*ones(numel(montage1.labelnew)-1,1), 1);
+    tra_neg2           = diag(-0.5*ones(numel(montage1.labelnew)-1,1), -1);
+    tra_plus          = diag(ones(numel(montage1.labelnew),1),0);
+    montage2.tra      = tra_neg1+tra_neg2+tra_plus;
+    montage2.tra(1,2) = -1;
+    montage2.tra(end,end-1) = -1;
+    
+    % apply montage2 to montage1, the result is the combination of both
+    montage = ft_apply_montage(montage1, montage2);  
     
   otherwise
     error('unsupported refmethod=''%s''', cfg.refmethod);
