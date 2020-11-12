@@ -150,13 +150,23 @@ switch cfg.refmethod
     % for the preprocessing of iEEG data)
     montage2          = [];
     montage2.labelold = montage1.labelnew;
-    montage2.labelnew = montage1.labelnew;
-    tra_neg1           = diag(-0.5*ones(numel(montage1.labelnew)-1,1), 1);
-    tra_neg2           = diag(-0.5*ones(numel(montage1.labelnew)-1,1), -1);
-    tra_plus          = diag(ones(numel(montage1.labelnew),1),0);
-    montage2.tra      = tra_neg1+tra_neg2+tra_plus;
-    montage2.tra(1,2) = -1;
-    montage2.tra(end,end-1) = -1;
+    tra_neg1          = diag(-0.5*ones(numel(montage1.labelnew)-1,1), 1);
+    tra_neg2          = diag(-0.5*ones(numel(montage1.labelnew)-1,1), -1);
+    
+    if numel(montage2.labelold) > 2
+        montage2.labelnew = montage1.labelnew;
+        tra_plus          = diag(ones(numel(montage1.labelnew),1),0);
+        montage2.tra      = tra_neg1+tra_neg2+tra_plus;
+        montage2.tra(1,2) = -1;
+        montage2.tra(end,end-1) = -1;
+    else
+        % The following commands are just meant to avoid errors, in case 
+        % only one channel is given as input: the algorithm will behave
+        % exactly as it would in the 'bipolar' case
+        montage2.labelnew = cell(numel(montage1.labelnew),0);
+        tra_plus          = diag(ones(numel(montage1.labelnew)-1,1),-1);
+        montage2.tra      = tra_neg1+tra_neg2+tra_plus(2:end,:);
+    end
     
     % apply montage2 to montage1, the result is the combination of both
     montage = ft_apply_montage(montage1, montage2);  
