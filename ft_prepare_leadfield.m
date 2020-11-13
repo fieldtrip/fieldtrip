@@ -301,7 +301,6 @@ elseif ft_headmodeltype(headmodel, 'duneuro')
   grid.leadfield(grid.inside) = lf;
   for i=1:length(insideindx)
     % compute the leadfield on all grid positions inside the brain
-    ft_progress(i/length(insideindx), 'computing leadfield %d/%d\n', i, length(insideindx));
     thisindx = insideindx(i);
     grid.leadfield{thisindx} = ft_compute_leadfield(grid.pos(thisindx,:), sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
 

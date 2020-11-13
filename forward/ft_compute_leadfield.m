@@ -61,7 +61,7 @@ function [lf] = ft_compute_leadfield(dippos, sens, headmodel, varargin)
 % FT_HEADMODEL_CONCENTRICSPHERES, FT_HEADMODEL_DIPOLI, FT_HEADMODEL_HALFSPACE,
 % FT_HEADMODEL_INFINITE, FT_HEADMODEL_LOCALSPHERES, FT_HEADMODEL_OPENMEEG,
 % FT_HEADMODEL_SINGLESHELL, FT_HEADMODEL_SINGLESPHERE,
-% FT_HEADMODEL_HALFSPACE, FT_HEADMOEL_DUNEURO
+% FT_HEADMODEL_HALFSPACE, FT_HEADMODEL_DUNEURO
 
 % Copyright (C) 2004-2020, Robert Oostenveld
 %
@@ -268,9 +268,6 @@ elseif ismeg
       end
 
     case 'openmeeg'
-      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      % use code from OpenMEEG
-      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       ft_hastoolbox('openmeeg', 1);
 
       dsm         = ft_getopt(varargin, 'dsm');

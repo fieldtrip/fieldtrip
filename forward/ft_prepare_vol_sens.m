@@ -442,7 +442,7 @@ elseif iseeg
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % do postprocessing of volume and electrodes in case of BEM model
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      
+
       % project the electrodes on the skin and determine the bilinear interpolation matrix
       if ~isfield(headmodel, 'tra') && (isfield(headmodel, 'mat') && ~isempty(headmodel.mat))
         % determine boundary corresponding with skin and inner_skull_surface
