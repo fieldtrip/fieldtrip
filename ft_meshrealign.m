@@ -1,7 +1,7 @@
 function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 
-% FT_MESHREALIGN rotates, translates and optionally scales electrode positions. The
-% different methods are described in detail below.
+% FT_MESHREALIGN rotates, translates and optionally scales a surface description of
+% the head or of the cortex. The different methods are described in detail below.
 %
 % INTERACTIVE - You can display the mesh surface together with axis coordinate
 % system, and manually (using the graphical user interface) adjust the rotation,

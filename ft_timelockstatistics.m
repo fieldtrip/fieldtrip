@@ -208,7 +208,7 @@ end
 fn = fieldnames(stat);
 
 % JM HACK:
-if ~isequal(datsiz, cfg.dim),
+if ~isequal(datsiz, cfg.dim)
   % the cfg.dim has been updated by the low-level function, let this one
   % take precedence
   datsiz = cfg.dim;

@@ -1250,6 +1250,14 @@ ARRAY+=(private/headsurface.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# htmlcolors.m
+
+ARRAY=()
+ARRAY+=(private/htmlcolors.m)
+ARRAY+=(plotting/private/htmlcolors.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # ignorefields.m
 
 ARRAY=()
