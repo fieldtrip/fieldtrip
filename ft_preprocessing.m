@@ -8,11 +8,8 @@ function [data] = ft_preprocessing(cfg, data)
 % or
 %   [data] = ft_preprocessing(cfg, data)
 %
-% The first input argument "cfg" is the configuration structure, which
-% contains all details for the dataset filenames, trials and the
-% preprocessing options. You can only do preprocessing after defining the
-% segments of data to be read from the file (i.e. the trials), which is for
-% example done based on the occurence of a trigger in the data.
+% The first input argument "cfg" is the configuration structure, which contains all
+% details for the dataset filename, trials and the preprocessing options.
 %
 % If you are calling FT_PREPROCESSING with only the configuration as first
 % input argument and the data still has to be read from file, you should
@@ -25,8 +22,8 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.continuous   = 'yes' or 'no' whether the file contains continuous data
 %                      (default is determined automatic)
 %
-% Instead of specifying the dataset, you can also explicitely specify the
-% name of the file containing the header information and the name of the
+% Instead of specifying the dataset in the configuration, you can also explicitely
+% specify the name of the file containing the header information and the name of the
 % file containing the data, using
 %   cfg.datafile     = string with the filename
 %   cfg.headerfile   = string with the filename
@@ -437,6 +434,13 @@ else
     cfg.trl = loadvar(cfg.trl, 'trl');
   end
   
+  % the code below expects an Nx3 matrix with begsample, endsample and offset
+  if istable(cfg.trl)
+    trl = table2array(cfg.trl(:,1:3));
+  else
+    trl = cfg.trl(:,1:3);
+  end
+  
   % this should be a cell-array
   if ~iscell(cfg.channel) && ischar(cfg.channel)
     cfg.channel = {cfg.channel};
@@ -492,7 +496,7 @@ else
     ft_error('you should call FT_REJECTARTIFACT prior to FT_PREPROCESSING, please update your scripts');
   end
   
-  ntrl = size(cfg.trl,1);
+  ntrl = size(trl,1);
   if ntrl<1
     ft_error('no trials were selected for preprocessing, see FT_DEFINETRIAL for help');
   end
@@ -540,13 +544,13 @@ else
     
     for i=1:ntrl
       ft_progress(i/ntrl, 'reading and preprocessing trial %d from %d\n', i, ntrl);
-      % non-zero padding is used for filtering and line noise removal
-      nsamples = cfg.trl(i,2)-cfg.trl(i,1)+1;
+      % data padding is used for filtering and line noise removal
+      nsamples = trl(i,2)-trl(i,1)+1;
       if nsamples>padding
         % the trial is already longer than the total length requested
-        begsample  = cfg.trl(i,1);
-        endsample  = cfg.trl(i,2);
-        offset     = cfg.trl(i,3);
+        begsample  = trl(i,1);
+        endsample  = trl(i,2);
+        offset     = trl(i,3);
         begpadding = 0;
         endpadding = 0;
         if padding > 0
@@ -569,12 +573,12 @@ else
         end
         
         if strcmp(cfg.padtype, 'data')
-          begsample  = cfg.trl(i,1) - begpadding;
-          endsample  = cfg.trl(i,2) + endpadding;
+          begsample  = trl(i,1) - begpadding;
+          endsample  = trl(i,2) + endpadding;
         else
           % padding will be done below
-          begsample  = cfg.trl(i,1);
-          endsample  = cfg.trl(i,2);
+          begsample  = trl(i,1);
+          endsample  = trl(i,2);
         end
         if begsample<1
           ft_warning('cannot apply enough padding at begin of file');
@@ -586,7 +590,7 @@ else
           endpadding = endpadding - (endsample - hdr.nSamples*hdr.nTrials);
           endsample  = hdr.nSamples*hdr.nTrials;
         end
-        offset = cfg.trl(i,3) - begpadding;
+        offset = trl(i,3) - begpadding;
       end
       
       % read the raw data with padding on both sides of the trial - this
@@ -637,23 +641,28 @@ else
     end
     
     dataout                    = [];
-    dataout.hdr                = hdr;                  % header details of the datafile
-    dataout.label              = label;                % labels of channels that have been read, can be different from labels in file due to montage
-    dataout.time               = time;                 % vector with the timeaxis for each individual trial
+    dataout.hdr                = hdr;                 % header details of the datafile
+    dataout.label              = label;               % labels of channels that have been read, can be different from labels in file due to montage
+    dataout.time               = time;                % vector with the timeaxis for each individual trial
     dataout.trial              = cutdat;
     dataout.fsample            = hdr.Fs;
-    dataout.sampleinfo         = cfg.trl(:,1:2);
+    if istable(cfg.trl)
+      % we always want the sampleinfo to be numeric
+      dataout.sampleinfo       = table2array(cfg.trl(:,1:2));
+    else
+      dataout.sampleinfo       = cfg.trl(:,1:2);
+    end
     if size(cfg.trl,2) > 3
-      dataout.trialinfo      = cfg.trl(:,4:end);
+      dataout.trialinfo        = cfg.trl(:,4:end);    % this can be a numeric array or a table
     end
     if isfield(hdr, 'grad')
-      dataout.grad             = hdr.grad;             % MEG gradiometer information in header (f.e. headerformat = 'ctf_ds')
+      dataout.grad             = hdr.grad;            % MEG gradiometer information in header (f.e. headerformat = 'ctf_ds')
     end
     if isfield(hdr, 'elec')
-      dataout.elec             = hdr.elec;             % EEG electrode information in header (f.e. headerformat = 'neuromag_fif')
+      dataout.elec             = hdr.elec;            % EEG electrode information in header (f.e. headerformat = 'neuromag_fif')
     end
     if isfield(hdr, 'opto')
-      dataout.opto             = hdr.opto;             % NIRS optode information in header (f.e. headerformat = 'artinis')
+      dataout.opto             = hdr.opto;            % NIRS optode information in header (f.e. headerformat = 'artinis')
     end
     
   end % for all channel groups

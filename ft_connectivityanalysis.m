@@ -1084,12 +1084,13 @@ if exist('powindx', 'var') && ~isempty(powindx)
       if ~isempty(varout)
         varout = varout(keepchn, :, :, :, :);
       end
-      inside = false(zeros(1, size(data.pos, 1)));
+      inside = false(size(data.pos, 1),1);
       inside(data.inside) = true;
       inside = inside(keepchn);
       %       data.inside = find(inside)';
       %       data.outside = find(inside==0)';
       data.pos = data.pos(keepchn, :);
+      data.inside = data.inside(keepchn);
   end % switch dtype
 end
 

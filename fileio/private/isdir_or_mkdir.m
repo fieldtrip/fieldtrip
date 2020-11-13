@@ -11,7 +11,7 @@ p_full=[p filesep];
 % we are looking for strings not containing the file separator, these are
 % the subdirectories. We then store the last character position of each
 % subdirectory in the variable 'match'.
-pat=['[^' filesep ']+'];
+pat=['[^\' filesep ']+'];
 match=regexp(p_full, pat, 'end');
 
 n_subdirs = numel(match);
