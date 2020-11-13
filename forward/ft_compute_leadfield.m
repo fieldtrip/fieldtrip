@@ -335,7 +335,7 @@ elseif ismeg
       %TODO: involve unit checking
 
       % compute secondary leadfield numerically
-      lf = leadfield_duneuro(dippos, headmodel);
+      lf = leadfield_duneuro(dippos, headmodel, 'meg');
 
       % compute primary B-field analytically
       mu = 4*pi*1e-4; %unit: Tmm/A
