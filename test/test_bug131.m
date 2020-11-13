@@ -1,13 +1,12 @@
 function test_bug131
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_prepare_leadfield
+% DEPENDENCY ft_prepare_leadfield
 
 % test the issue related to the scaling of the leadfields in the different implementations
 
-[pnt, tri] = icosahedron162;
+[pnt, tri] = mesh_sphere(162);
 
 % create volume conductor models
 vol = [];
@@ -34,21 +33,21 @@ grad.unit = 'm';
 
 % create dipole grid
 grid = [];
-grid.pos = [0 0 4];
-grid.inside = 1;
-grid.outside = [];
+sourcemodel.pos = [0 0 4];
+sourcemodel.inside = 1;
+sourcemodel.outside = [];
 
 % create leadfield with single sphere
 cfg = [];
-cfg.vol = vol;
-cfg.grid = grid;
+cfg.headmodel = vol;
+cfg.sourcemodel = grid;
 cfg.grad = grad;
 grid1 = ft_prepare_leadfield(cfg);
 
 % create leadfield with singleshell
 cfg = [];
-cfg.vol = vol2;
-cfg.grid = grid;
+cfg.headmodel = vol2;
+cfg.sourcemodel = grid;
 cfg.grad = grad;
 grid2 = ft_prepare_leadfield(cfg);
 
@@ -60,4 +59,3 @@ lf2 = grid2.leadfield{1};
 % yet, this in my understanding then only holds for geometrical objects
 % defined in SI-units, i.e. in meters. This should then be enforced by the
 % higher level function to be able to interpret the units correctly
-

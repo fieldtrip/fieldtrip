@@ -1,12 +1,11 @@
 function test_bug1792
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % this script should not be included in the regression test (yet)
 return
-
-% TEST ft_realtime_headlocalizer
+% DEPENDENCY ft_realtime_headlocalizer
 
 fieldtripdir = mfilename('fullpath');
 fieldtripdir = fileparts(fieldtripdir); % strip the filename
@@ -20,7 +19,7 @@ cfg = [];
 cfg.dataset = dataset;
 cfg.gradfile = dataset;
 cfg.bufferdata = 'first';
-cfg.coilfreq = [293, 307, 314, 321];%, 328];
+cfg.coilfreq = [293, 307, 314, 321]; %, 328];
 %ft_realtime_coillocalizer(cfg);
 ft_realtime_headlocalizer(cfg);
 
@@ -35,5 +34,5 @@ ft_realtime_headlocalizer(cfg);
 % cfg = [];
 % cfg.dataset = 'buffer://localhost:1972';
 % cfg.gradfile = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1792/20130418_test_cHPI.fif');
-% cfg.coilfreq = [293, 307, 314, 321];%, 328];
+% cfg.coilfreq = [293, 307, 314, 321]; %, 328];
 % ft_realtime_headlocalizer(cfg)

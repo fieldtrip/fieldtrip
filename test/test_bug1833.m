@@ -1,9 +1,8 @@
 function test_bug1833
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_plot_mesh ft_read_headshape
+% DEPENDENCY ft_plot_mesh ft_read_headshape
 
 % at this moment (20 November 2012) this test script is known not to work
 % and the bugzilla report is still open

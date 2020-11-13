@@ -1,9 +1,8 @@
 function test_bug62
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_read_mri ft_volumenormalise
+% DEPENDENCY ft_read_mri ft_volumenormalise
 
 % spm_brainwarp is missing from external/spm2
 % this should cause ft_volumenormalise to crash
@@ -44,4 +43,3 @@ cfg.nonlinear = 'yes';
 mri2          = ft_volumenormalise(cfg, mri);
 
 % now it works
-

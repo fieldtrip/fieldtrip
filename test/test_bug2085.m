@@ -1,9 +1,8 @@
 function test_bug2085
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_senstype ft_senslabel
+% DEPENDENCY ft_senstype ft_senslabel
 
 %% create a volume conductor
 vol = [];
@@ -13,7 +12,7 @@ vol.unit = 'cm';
 vol = ft_datatype_headmodel(vol);
 
 %% create a set of sensors
-[pnt, tri] = icosahedron162;
+[pnt, tri] = mesh_sphere(162);
 pnt = pnt .* 10; % convert to cm
 sel = find(pnt(:,3)>0);
 grad.pnt = pnt(sel,:) .* 1.2;
@@ -33,8 +32,8 @@ grad2.type = 'meg'; % this makes ft_senstype much faster
 %% determine the time to compute some leadfields
 
 cfg = [];
-cfg.vol = vol;
-cfg.grid.resolution = 4;
+cfg.headmodel = vol;
+cfg.sourcemodel.resolution = 4;
 cfg.channel = 'all';
 
 cfg.grad = grad1;

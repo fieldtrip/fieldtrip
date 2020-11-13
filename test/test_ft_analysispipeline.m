@@ -1,9 +1,8 @@
 function test_ft_analysispipeline
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 02:53:11
-
-% TEST ft_analysispipeline
+% DEPENDENCY ft_analysispipeline
 
 % the style of this test script is also used in test_ft_datatype and test_bug2185
 

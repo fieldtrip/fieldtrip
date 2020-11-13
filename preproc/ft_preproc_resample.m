@@ -57,14 +57,19 @@ if ~strcmp(method, 'downsample')
 end
 
 % preprocessing fails on channels that contain NaN
-if any(isnan(dat(:)))
+nanchan = any(isnan(dat),2);
+if any(nanchan)
   ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+  if ft_platform_supports('matlabversion', '2020a', inf)
+    % temporarily replace with zero, this is not needed for older MATLAB versions
+    dat(nanchan,:) = 0;
+  end
 end
 
 switch method
   case 'resample'
-    [fold, fnew] = rat(Fold./Fnew);%account for non-integer fs
-    Fnew         = Fold.*(fnew./fold);%get new fs exact
+    [fold, fnew] = rat(Fold./Fnew); %account for non-integer fs
+    Fnew         = Fold.*(fnew./fold); %get new fs exact
     
     % the actual implementation resamples along columns
     datout = resample(dat', fnew, fold)';
@@ -107,8 +112,12 @@ switch method
     ft_error('unsupported resampling method');
 end
 
+if any(nanchan) && ft_platform_supports('matlabversion', '2020a', inf)
+  % replace the zeros back to nan, this is not needed for older MATLAB versions
+  datout(nanchan,:) = nan;
+end
+
 if ~strcmp(method, 'downsample')
   % convert back into the original input format
   datout = cast(datout, typ);
 end
-

@@ -82,7 +82,7 @@ end
 % Extra is user-defined data.
 % TTLValue is the value sent to the computer on a parallel input port.
 
-fid = fopen(filename, 'rb', 'ieee-le');
+fid = fopen_or_error(filename, 'rb', 'ieee-le');
 
 headersize = 16384;
 offset     = headersize;
@@ -197,7 +197,7 @@ if implementation~=1
     sel = sel & tmp;
   end
 
-  % restructure the data into a struct array, by first making cell-arrays out of it ...
+  % restructure the data into a struct-array, by first making cell-arrays out of it ...
   numsel = sum(sel);
   PktStart      = mat2cell(PktStart(sel)     , ones(1,numsel), 1);
   PktId         = mat2cell(PktId(sel)        , ones(1,numsel), 1);

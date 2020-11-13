@@ -113,10 +113,11 @@ if strcmp(cfg.analyze,'yes')
   % trial definition
   cfgdef                      = [];
   cfgdef.dataset              = cfg.dataset;
+  cfgdef.trialfun             = 'ft_trialfun_general';
   cfgdef.trialdef.triallength = 10;
-  %cfgdef.trialdef.ntrials     = 3; % for debugging
   cfgdef.continuous           = 'yes';
   cfgdef                      = ft_definetrial(cfgdef);
+
   ntrials                     = size(cfgdef.trl,1)-1; % remove last trial
   timeunit                    = cfgdef.trialdef.triallength;
   
@@ -206,7 +207,6 @@ if strcmp(cfg.analyze,'yes')
     freq.grad     = info.hdr.grad;
     summary.grad  = info.hdr.grad;
   end
-  
   
   % process trial by trial
   for t = 1:ntrials
@@ -765,7 +765,7 @@ if ismeg
   cfgtopo.colorbar         = 'no';
   cfgtopo.comment          = 'no';
   cfgtopo.style            = 'blank';
-  cfgtopo.layout           = ft_prepare_layout(timelock);
+  cfgtopo.layout           = ft_prepare_layout([], timelock);
   cfgtopo.highlight        = 'on';
   cfgtopo.highlightsymbol  = '.';
   cfgtopo.highlightsize    = 14;
@@ -775,5 +775,6 @@ if ismeg
   data.dimord              = 'chan_freq';
   data.freq                = 1;
   axes(h.TopoMEG);
-  ft_topoplotTFR(cfgtopo, data); clear data;
+  ft_topoplotTFR(cfgtopo, data); % FIXME should this not be ft_topoplotER?
+  clear data
 end

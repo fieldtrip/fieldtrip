@@ -1,9 +1,8 @@
 function test_bug1556
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_statfun_depsamplesFmultivariate ft_statfun_depsamplesFunivariate
+% DEPENDENCY ft_statfun_depsamplesFmultivariate ft_statfun_depsamplesFunivariate
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -87,7 +86,7 @@ cfg.method   = 'analytic';
 cfg.feedback = 'no';
 cfg.alpha    = 5.0000e-02;
 cfg.tail = 1;
-cfg.statistic = 'ft_statfun_depsamplesFunivariate';% computations are based on sums of squares formula
+cfg.statistic = 'ft_statfun_depsamplesFunivariate'; % computations are based on sums of squares formula
 cfg.ivar      = 1;
 cfg.uvar      = 2;
 cfg.design    = [ 1 1 1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3 3 3

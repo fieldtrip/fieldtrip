@@ -88,7 +88,7 @@ cfg = ft_checkconfig(cfg, 'allowed', {'latency', 'trials', 'keeptrials', 'method
 % get the number of trials or change DATA according to cfg.trials
 if  strcmp(cfg.trials,'all')
   cfg.trials = 1:size(psth.trial,1);
-elseif islogical(cfg.trials)
+elseif islogical(cfg.trials) || all(cfg.trials==0 | cfg.trials==1)
   cfg.trials = find(cfg.trials);
 end
 cfg.trials  = sort(cfg.trials(:));

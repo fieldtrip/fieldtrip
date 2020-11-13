@@ -27,7 +27,7 @@ if needdat
   endblock = varargin{3};
 end
 
-fid = fopen(filename, 'rb');
+fid = fopen_or_error(filename, 'rb');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % read the header
@@ -71,7 +71,7 @@ if needhdr
   % if signal.header.VersionNumber ~= 203
   %    disp('Wrong file version! Imput file must be a Poly5/TMS version 2.03 file!');
   %    return;
-  % end;
+  % end
   
   % Signal description
   for g=1:signal.header.NumberOfSignals,

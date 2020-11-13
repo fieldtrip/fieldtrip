@@ -1,9 +1,8 @@
 function test_bug2879
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_sourcestatistics
+% DEPENDENCY ft_sourcestatistics
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2879');
 load(filename)

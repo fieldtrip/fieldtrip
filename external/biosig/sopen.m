@@ -615,7 +615,7 @@ end;
 	                        if (HDR.VERSION == 0) && HDR.FLAG.OVERFLOWDETECTION,   % in case of EDF and OVERFLOWDETECTION
 	                        	fprintf(2,'WARNING SOPEN(EDF): Physical Max/Min values of EDF data are not necessarily defining the dynamic range.\n'); 
 	                        	fprintf(2,'   Hence, OVERFLOWDETECTION might not work correctly. See also EEG2HIST and read \n'); 
-	                        	fprintf(2,'   http://dx.doi.org/10.1016/S1388-2457(99)00172-8 (A. Schlögl et al. Quality Control ... Clin. Neurophysiol. 1999, Dec; 110(12): 2165 - 2170).\n'); 
+	                        	fprintf(2,'   http://dx.doi.org/10.1016/S1388-2457(99)00172-8 (A. Schlï¿½gl et al. Quality Control ... Clin. Neurophysiol. 1999, Dec; 110(12): 2165 - 2170).\n'); 
 	                        	fprintf(2,'   A copy is available here, too: http://pub.ist.ac.at/~schloegl/publications/neurophys1999_2165.pdf \n'); 
 				end;
 			end; 
@@ -1919,7 +1919,7 @@ elseif strmatch(HDR.TYPE,{'CNT';'AVG';'EEG'},'exact')
                 if ~isfield(HDR,'THRESHOLD'),
                 	if HDR.FLAG.OVERFLOWDETECTION,
 	                       fprintf(2,'WARNING SOPEN(CNT): OVERFLOWDETECTION might not work correctly. See also EEG2HIST and read \n'); 
-        	               fprintf(2,'   http://dx.doi.org/10.1016/S1388-2457(99)00172-8 (A. Schlögl et al. Quality Control ... Clin. Neurophysiol. 1999, Dec; 110(12): 2165 - 2170).\n'); 
+        	               fprintf(2,'   http://dx.doi.org/10.1016/S1388-2457(99)00172-8 (A. Schlï¿½gl et al. Quality Control ... Clin. Neurophysiol. 1999, Dec; 110(12): 2165 - 2170).\n'); 
         	               fprintf(2,'   A copy is available here, too: http://pub.ist.ac.at/~schloegl/publications/neurophys1999_2165.pdf \n'); 
         	        end;        
 			[datatyp,limits,datatypes,numbits,GDFTYP]=gdfdatatype(HDR.GDFTYP);
@@ -3568,7 +3568,7 @@ elseif strcmp(HDR.TYPE,'MPEG'),
                         case 0,
                                 HDR.VERSION = 2.5;
                         case 1,
-                                HDR.VERSION = -1;% reserved
+                                HDR.VERSION = -1; % reserved
                         case 2,
                                 HDR.VERSION = 2;
                         case 3,
@@ -5155,7 +5155,7 @@ elseif strcmp(HDR.TYPE,'DDF'),
                         end;			 	
                 end;
                 fseek(HDR.FILE.FID,pos,'bof'); 	% position file identifier
-                if 0;%DataSource(length(DataSource))~=26,
+                if 0; %DataSource(length(DataSource))~=26,
                         fprintf(1,'Warning: DDF header seems to be incorrenct. Contact <alois.schloegl@ist.ac.at> Subject: BIOSIG/DATAFORMAT/DDF  \n');
                 end;
                 HDR.DDF.CPUidentifier  = fread(HDR.FILE.FID,[1,2],'uint8=>char');
@@ -6124,7 +6124,7 @@ elseif strcmp(HDR.TYPE,'BCI2003_Ia+b');
         
         HDR.NRec = length(HDR.Classlabel);
         HDR.FLAG.TRIGGERED = HDR.NRec>1; 
-        HDR.PhysDim = 'µV';
+        HDR.PhysDim = 'ï¿½V';
         HDR.SampleRate = 256; 
         
         if strfind(HDR.FILE.Path,'a34lkt') 
@@ -6867,8 +6867,8 @@ elseif strncmp(HDR.TYPE,'MAT',3),
                 else
                         HDR.SampleRate=tmp.SampleRate;
                 end;
-                HDR.PhysDim = 'µV';
-                fprintf(HDR.FILE.stderr,'Sensitivity not known in %s. 50µV is chosen\n',HDR.FileName);
+                HDR.PhysDim = 'ï¿½V';
+                fprintf(HDR.FILE.stderr,'Sensitivity not known in %s. 50ï¿½V is chosen\n',HDR.FileName);
                         HDR.data = tmp.EEGdata*50;
                 HDR.TYPE = 'native'; 
                 
@@ -6881,8 +6881,8 @@ elseif strncmp(HDR.TYPE,'MAT',3),
                 else
                         HDR.SampleRate=tmp.SampleRate;
                 end;
-                HDR.PhysDim = 'µV';
-                fprintf(HDR.FILE.stderr,'Sensitivity not known in %s. 100µV is chosen\n',HDR.FileName);
+                HDR.PhysDim = 'ï¿½V';
+                fprintf(HDR.FILE.stderr,'Sensitivity not known in %s. 100ï¿½V is chosen\n',HDR.FileName);
                 %signal=tmp.daten.raw(:,1:HDR.NS)*100;
                 HDR.data = tmp.daten.raw*100;
                 HDR.TYPE = 'native'; 
@@ -7062,8 +7062,8 @@ elseif strncmp(HDR.TYPE,'MAT',3),
                 HDR.Calib = sparse(2:HDR.NS+1,1:HDR.NS,HDR.Cal);
                 HDR.PhysMax = max(HDR.data);
                 HDR.PhysMin = min(HDR.data);
-                HDR.DigMax  = HDR.PhysMax;% ./HDR.Cal;
-                HDR.DigMin  = HDR.PhysMin;% ./HDR.Cal;
+                HDR.DigMax  = HDR.PhysMax; % ./HDR.Cal;
+                HDR.DigMin  = HDR.PhysMin; % ./HDR.Cal;
                 HDR.Cal = ones(1,HDR.NS); 
                 HDR.Calib = sparse(2:HDR.NS+1,1:HDR.NS,1);
                 HDR.GDFTYP  = repmat(16,1,HDR.NS);  	%% float
@@ -7249,8 +7249,8 @@ elseif strncmp(HDR.TYPE,'BCI2000',7),
 			[tline,rr] = strtok(rr,[10,13]);
 		end;
 
-                %HDR.PhysDim = 'µV';
-                HDR.PhysDimCode = repmat(4275,HDR.NS,1); % 'µV';
+                %HDR.PhysDim = 'ï¿½V';
+                HDR.PhysDimCode = repmat(4275,HDR.NS,1); % 'ï¿½V';
                 HDR.Calib = [HDR.Off(1)*ones(1,HDR.NS);eye(HDR.NS)]*HDR.Cal(1);
 
 		% decode State Vector Definition 
@@ -8424,10 +8424,10 @@ elseif strncmp(HDR.TYPE,'BrainVision',11),
                                 HDR.Cal(chan) = 1;
                         end;
                         tmp = t2(ix(3)+1:end);
-                        if isequal(tmp,char([194,'µV'])), 
+                        if isequal(tmp,char([194,'ï¿½V'])), 
                                 tmp = tmp(2:3); 
                         elseif isempty(tmp),
-                                tmp = 'µV';
+                                tmp = 'ï¿½V';
                         end; 
                         HDR.PhysDim{chan,1} = tmp; 
                         
@@ -9173,7 +9173,7 @@ elseif strncmp(HDR.TYPE,'ABF',3),
                 t = fread(HDR.FILE.FID,3,'uint16');
 
 % this part is from IMPORT_ABF.M from 
-%     © 2002 - Michele Giugliano, PhD (http://www.giugliano.info) (Bern, Friday March 8th, 2002 - 20:09)
+%     ï¿½ 2002 - Michele Giugliano, PhD (http://www.giugliano.info) (Bern, Friday March 8th, 2002 - 20:09)
 
 HDR.ABF.ScopeOutputInterval  = fread(HDR.FILE.FID,1,'float'); % 174
 HDR.ABF.EpisodeStartToStart  = fread(HDR.FILE.FID,1,'float'); % 178
@@ -9346,7 +9346,7 @@ HDR.ABF.LevelHysteresis      = fread(HDR.FILE.FID,1,'int');   % 1980
 HDR.ABF.TimeHysteresis       = fread(HDR.FILE.FID,1,'int');   % 1982
 HDR.ABF.AllowExternalTags    = fread(HDR.FILE.FID,1,'int16'); % 1986
 HDR.ABF.LowpassFilterType    = fread(HDR.FILE.FID,16,'uint8'); % 1988
-HDR.ABF.HighpassFilterType   = fread(HDR.FILE.FID,16,'uint8');% 2004
+HDR.ABF.HighpassFilterType   = fread(HDR.FILE.FID,16,'uint8'); % 2004
 HDR.ABF.AverageAlgorithm     = fread(HDR.FILE.FID,1,'int16'); % 2020
 HDR.ABF.AverageWeighting     = fread(HDR.FILE.FID,1,'float'); % 2022
 HDR.ABF.UndoPromptStrategy   = fread(HDR.FILE.FID,1,'int16'); % 2026
@@ -9358,20 +9358,20 @@ HDR.ABF.Unused2032           = fread(HDR.FILE.FID,16,'uint8'); % 2032
 % File Structure 2
 HDR.ABF.DACFilePtr           = fread(HDR.FILE.FID,2,'int'); % 2048
 HDR.ABF.DACFileNumEpisodes   = fread(HDR.FILE.FID,2,'int'); % 2056
-HDR.ABF.Unused2              = fread(HDR.FILE.FID,10,'uint8');%2064
+HDR.ABF.Unused2              = fread(HDR.FILE.FID,10,'uint8'); %2064
 %-----------------------------------------------------------------------------
 % Multi-channel Information 2
 HDR.ABF.DACCalibrationFactor = fread(HDR.FILE.FID,4,'float'); % 2074
 HDR.ABF.DACCalibrationOffset = fread(HDR.FILE.FID,4,'float'); % 2090
-HDR.ABF.Unused7              = fread(HDR.FILE.FID,190,'uint8');% 2106
+HDR.ABF.Unused7              = fread(HDR.FILE.FID,190,'uint8'); % 2106
 %-----------------------------------------------------------------------------
 % Epoch Waveform and Pulses 2
 HDR.ABF.WaveformEnable       = fread(HDR.FILE.FID,2,'int16'); % 2296
 HDR.ABF.WaveformSource       = fread(HDR.FILE.FID,2,'int16'); % 2300
 HDR.ABF.InterEpisodeLevel    = fread(HDR.FILE.FID,2,'int16'); % 2304
-HDR.ABF.EpochType            = fread(HDR.FILE.FID,10*2,'int16');% 2308
-HDR.ABF.EpochInitLevel       = fread(HDR.FILE.FID,10*2,'float');% 2348
-HDR.ABF.EpochLevelInc        = fread(HDR.FILE.FID,10*2,'float');% 2428
+HDR.ABF.EpochType            = fread(HDR.FILE.FID,10*2,'int16'); % 2308
+HDR.ABF.EpochInitLevel       = fread(HDR.FILE.FID,10*2,'float'); % 2348
+HDR.ABF.EpochLevelInc        = fread(HDR.FILE.FID,10*2,'float'); % 2428
 HDR.ABF.EpochInitDuration    = fread(HDR.FILE.FID,10*2,'int');  % 2508
 HDR.ABF.EpochDurationInc     = fread(HDR.FILE.FID,10*2,'int');  % 2588
 HDR.ABF.Unused9              = fread(HDR.FILE.FID,40,'uint8');   % 2668

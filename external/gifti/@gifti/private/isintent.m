@@ -9,7 +9,7 @@ function [a, b] = isintent(this,intent)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % Guillaume Flandin
-% $Id$
+% $Id: isintent.m 6345 2015-02-20 12:25:50Z guillaume $
 
 a = [];
 b = [];
@@ -35,6 +35,12 @@ for i=1:length(this(1).data)
             end
         case 'VECTOR'
             [tf, loc] = ismember('normals',intent);
+            if tf
+                a(end+1) = loc;
+                b(end+1) = i;
+            end
+        case 'NODE_INDEX'
+            [tf, loc] = ismember('indices',intent);
             if tf
                 a(end+1) = loc;
                 b(end+1) = i;
@@ -101,7 +107,6 @@ c = {
 'TIME_SERIES'
 'RGB_VECTOR'
 'RGBA_VECTOR'
-'NODE_INDEX'
 'SHAPE'
 'CONNECTIVITY_DENSE'
 'CONNECTIVITY_DENSE_TIME'

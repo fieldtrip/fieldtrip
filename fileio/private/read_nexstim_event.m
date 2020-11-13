@@ -29,7 +29,7 @@ function [event] = read_nexstim_event(filename)
 % trigLine - either 1(GATE), 2(TRIG1) or 3(TRIG2)
 % trigEdge - either 'rising' or 'falling'
 
-fid=fopen(filename,'r','l');
+fid=fopen_or_error(filename,'r','l');
 
 numChannels = 64;
 blockSamples = 14500;

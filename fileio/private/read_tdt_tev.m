@@ -42,12 +42,12 @@ tsq = read_tdt_tsq(tsqfile);
 tev = cell(size(tsq));
 
 % open the nev file
-fidnev = fopen(tevfile, 'rb');
+fidnev = fopen_or_error(tevfile, 'rb');
 % open the sev files
 fidsev = zeros(size(sevfile));
 for i=1:length(sevfile)
   % add the full path
-  fidsev(i) = fopen(fullfile(p, sevfile{i}), 'rb');
+  fidsev(i) = fopen_or_error(fullfile(p, sevfile{i}), 'rb');
 end
 
 for i=1:numel(tsq)

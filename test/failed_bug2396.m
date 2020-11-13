@@ -1,10 +1,8 @@
 function failed_bug2396
 
 % WALLTIME 00:10:00
-% MEM 2000mb
-
-% TEST test_bug2396
-% TEST ft_read_headshape
+% MEM 2gb
+% DEPENDENCY ft_read_headshape
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2396'));
 

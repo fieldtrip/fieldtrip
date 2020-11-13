@@ -1,8 +1,8 @@
 function [hdr] = ft_read_header(filename, varargin)
 
-% FT_READ_HEADER reads header information from a variety of EEG, MEG and LFP
-% files and represents the header information in a common data-independent
-% format. The supported formats are listed below.
+% FT_READ_HEADER reads header information from a variety of EEG, MEG and other time
+% series data files and represents the header information in a common
+% data-independent structure. The supported formats are listed below.
 %
 % Use as
 %   hdr = ft_read_header(filename, ...)
@@ -12,8 +12,11 @@ function [hdr] = ft_read_header(filename, varargin)
 %   'fallback'       = can be empty or 'biosig' (default = [])
 %   'checkmaxfilter' = boolean, whether to check that maxfilter has been correctly applied (default = true)
 %   'chanindx'       = list with channel indices in case of different sampling frequencies (only for EDF)
+%   'chantype'       = string or cell-array with strings, channel types to be read (only for NeuroOmega and BlackRock)
 %   'coordsys'       = string, 'head' or 'dewar' (default = 'head')
-%   'chantype'       = string or cell of strings, channel types to be read (NeuroOmega, BlackRock).
+%   'headerformat'   = name of a MATLAB function that takes the filename as input (default is automatic)
+%   'password'       = password structure for encrypted data set (only for mayo_mef30 and mayo_mef21)
+%   'readbids'       = boolean, whether to read information from the BIDS sidecar files (default = true)
 %
 % This returns a header structure with the following elements
 %   hdr.Fs                  sampling frequency
@@ -25,28 +28,27 @@ function [hdr] = ft_read_header(filename, varargin)
 %   hdr.chantype            Nx1 cell-array with the channel type, see FT_CHANTYPE
 %   hdr.chanunit            Nx1 cell-array with the physical units, see FT_CHANUNIT
 %
+% For continuously recorded data, this will return nSamplesPre=0 and nTrials=1.
+%
 % For some data formats that are recorded on animal electrophysiology
 % systems (e.g. Neuralynx, Plexon), the following optional fields are
 % returned, which allows for relating the timing of spike and LFP data
-%   hdr.FirstTimeStamp      number, represented as 32 bit or 64 bit unsigned integer
+%   hdr.FirstTimeStamp      number, represented as 32-bit or 64-bit unsigned integer
 %   hdr.TimeStampPerSample  number, represented in double precision
-%
-% For continuously recorded data, nSamplesPre=0 and nTrials=1.
-%
-% To use an external reading function, use key-value pair: 'headerformat', FUNCTION_NAME.
-% (Function needs to be on the path, and take as input: filename)
-%
-% Use cfg.chantype='chaninfo' to get hdr.chaninfo table. For BlackRock
-% specify decimation with chantype:skipfactor (e.g. cfg.chantype='analog:10')
 %
 % Depending on the file format, additional header information can be
 % returned in the hdr.orig subfield.
 %
+% To use an external reading function, you can specify an external function as the
+% 'headerformat' option. This function should take the filename as input argument.
+% Please check the code of this function for details, and search for BIDS_TSV as
+% example.
+%
 % The following MEG dataformats are supported
-%   CTF - VSM MedTech (*.ds, *.res4, *.meg4)
-%   Neuromag - Elekta (*.fif)
-%   BTi - 4D Neuroimaging (*.m4d, *.pdf, *.xyz)
-%   Yokogawa (*.ave, *.con, *.raw)
+%   CTF (*.ds, *.res4, *.meg4)
+%   Neuromag/Elekta/Megin (*.fif)
+%   BTi/4D (*.m4d, *.pdf, *.xyz)
+%   Yokogawa/Ricoh (*.ave, *.con, *.raw)
 %   NetMEG (*.nc)
 %   ITAB - Chieti (*.mhd)
 %   Tristan Babysquid (*.fif)
@@ -66,7 +68,9 @@ function [hdr] = ft_read_header(filename, varargin)
 %   TMSi (*.Poly5)
 %   Mega Neurone (directory)
 %   Natus/Nicolet/Nervus (.e files)
-%   Nihon Kohden (*.m00)
+%   Nihon Kohden (*.m00, *.EEG)
+%   Bitalino OpenSignals (*.txt)
+%   OpenBCI (*.txt)
 %
 % The following spike and LFP dataformats are supported
 %   Neuralynx (*.ncs, *.nse, *.nts, *.nev, *.nrd, *.dma, *.log)
@@ -75,19 +79,23 @@ function [hdr] = ft_read_header(filename, varargin)
 %   MPI - Max Planck Institute (*.dap)
 %   Neurosim  (neurosim_spikes, neurosim_signals, neurosim_ds)
 %   Windaq (*.wdq)
+%   NeuroOmega (*.mat transformed from *.mpx)
+%   Neurodata Without Borders: Neurophysiology (*.nwb)
 %
 % The following NIRS dataformats are supported
+%   Artinis - Artinis Medical Systems B.V. (*.oxy3, *.oxy4, *.oxyproj)
 %   BUCN - Birkbeck college, London (*.txt)
+%   SNIRF - Society for functional near-infrared spectroscopy (*.snirf)
 %
 % The following Eyetracker dataformats are supported
 %   EyeLink - SR Research (*.asc)
-%   Tobii - (*.tsv)
 %   SensoMotoric Instruments - (*.txt)
+%   Tobii - (*.tsv)
 %
 % See also FT_READ_DATA, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT,
 % FT_CHANTYPE, FT_CHANUNIT
 
-% Copyright (C) 2003-2016 Robert Oostenveld
+% Copyright (C) 2003-2020 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -118,33 +126,53 @@ if isempty(db_blob)
 end
 
 if iscell(filename)
-  % use recursion to read events from multiple files
+  % use recursion to read the header from multiple files
   ft_warning('concatenating header from %d files', numel(filename));
+  
   hdr = cell(size(filename));
   for i=1:numel(filename)
     hdr{i} = ft_read_header(filename{i}, varargin{:});
   end
-  ntrl = nan(size(filename));
-  nsmp = nan(size(filename));
-  for i=1:numel(filename)
-    assert(isequal(hdr{i}.label, hdr{1}.label));
-    assert(isequal(hdr{i}.Fs, hdr{1}.Fs));
-    ntrl(i) = hdr{i}.nTrials;
-    nsmp(i) = hdr{i}.nSamples;
-  end
-  combined      = hdr{1};
-  combined.orig = hdr; % store the original header details of each file
-  if all(ntrl==1)
-    % each file is a continuous recording
-    combined.nTrials  = ntrl(1);
-    combined.nSamples = sum(nsmp);
-  elseif all(nsmp==nsmp(1))
-    % each file holds segments of the same length
-    combined.nTrials  = sum(ntrl);
-    combined.nSamples = nsmp(1);
+  
+  allhdr = cat(1, hdr{:});
+  if numel(unique([allhdr.label]))==sum([allhdr.nChans])
+    % each file has different channels, concatenate along the channel dimension
+    for i=1:numel(filename)
+      assert(isequal(hdr{i}.Fs, hdr{1}.Fs), 'sampling rates are not consistent over files');
+      assert(isequal(hdr{i}.nSamples, hdr{1}.nSamples), 'number of samples is not consistent over files');
+      assert(isequal(hdr{i}.nTrials, hdr{1}.nTrials), 'number of trials is not consistent over files');
+    end
+    combined          = hdr{1}; % copy the first header as the general one
+    combined.label    = [allhdr.label];
+    combined.chanunit = [allhdr.chanunit];
+    combined.chantype = [allhdr.chantype];
+    combined.nChans   = sum([allhdr.nChans]);
+    combined.orig     = hdr;    % store the original header details of all files
   else
-    ft_error('cannot concatenate files');
-  end
+    % each file has the same channels, concatenate along the time dimension
+    ntrl = nan(size(filename));
+    nsmp = nan(size(filename));
+    for i=1:numel(filename)
+      assert(isequal(hdr{i}.Fs, hdr{1}.Fs), 'sampling rates are not consistent over files');
+      assert(isequal(hdr{i}.label, hdr{1}.label), 'channels are not consistent over files');
+      ntrl(i) = hdr{i}.nTrials;
+      nsmp(i) = hdr{i}.nSamples;
+    end
+    % the subsequent code concatenates the files over time, i.e. each file has the same channels
+    combined      = hdr{1}; % copy the first header as the general one
+    combined.orig = hdr;    % store the original header details of all files
+    if all(ntrl==1)
+      % each file is a continuous recording
+      combined.nTrials  = ntrl(1);
+      combined.nSamples = sum(nsmp);
+    elseif all(nsmp==nsmp(1))
+      % each file holds segments of the same length
+      combined.nTrials  = sum(ntrl);
+      combined.nSamples = nsmp(1);
+    else
+      ft_error('cannot concatenate files');
+    end
+  end % concatenate over channels or over time
   % return the header of the concatenated datafiles
   hdr = combined;
   return
@@ -157,6 +185,10 @@ chanindx       = ft_getopt(varargin, 'chanindx');         % this is used for EDF
 coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
 coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0-2
 chantype       = ft_getopt(varargin, 'chantype', {});
+password       = ft_getopt(varargin, 'password', struct([]));
+readbids       = ft_getopt(varargin, 'readbids', true);
+
+% this should be a cell array
 if ~iscell(chantype); chantype = {chantype}; end
 
 % optionally get the data from the URL and make a temporary local copy
@@ -209,7 +241,7 @@ else
   checkmaxfilter = ft_getopt(varargin, 'checkmaxfilter', true);
   
   if isempty(cache)
-    if any(strcmp(headerformat, {'bci2000_dat', 'eyelink_asc', 'gtec_mat', 'gtec_hdf5', 'mega_neurone', 'smi_txt', 'biosig'}))
+    if any(strcmp(headerformat, {'bci2000_dat', 'eyelink_asc', 'gtec_mat', 'gtec_hdf5', 'mega_neurone', 'nihonkohden_m00', 'smi_txt', 'biosig'}))
       cache = true;
     else
       cache = false;
@@ -254,6 +286,32 @@ if strcmp(coordsys, 'dewar') && ~any(strcmp(headerformat, {'fcdc_buffer', 'ctf_d
   ft_error('dewar coordinates are not supported for %s', headerformat);
 end
 
+if istrue(readbids)
+  % deal with data that is organized according to BIDS
+  % data in a BIDS tsv file (like physio and stim) will be explicitly dealt with in BIDS_TSV
+  [p, f, x] = fileparts(filename);
+  isbids = startsWith(f, 'sub-') && ~strcmp(x, '.tsv');
+  if isbids
+    % try to read the BIDS sidecar files
+    sidecar = bids_sidecar(filename);
+    if ~isempty(sidecar)
+      data_json = read_json(sidecar);
+    end
+    sidecar = bids_sidecar(filename, 'channels');
+    if ~isempty(sidecar)
+      channels_tsv = read_tsv(sidecar);
+    end
+    sidecar = bids_sidecar(filename, 'electrodes');
+    if ~isempty(sidecar)
+      electrodes_tsv = read_tsv(sidecar);
+    end
+    sidecar = bids_sidecar(filename, 'optodes');
+    if ~isempty(sidecar)
+      optodes_tsv = read_tsv(sidecar);
+    end
+  end
+end
+
 % start with an empty header
 hdr = [];
 
@@ -273,7 +331,7 @@ switch headerformat
     %hdr.label       = {orig.channel_data(:).chan_label}';
     hdr.label       = orig.Channel;
     [hdr.grad, elec] = bti2grad(orig);
-    if ~isempty(elec),
+    if ~isempty(elec)
       hdr.elec = elec;
     end
     
@@ -437,19 +495,19 @@ switch headerformat
     % read header for nsX file associated with NEV file
     % use ft_read_event to read event information in .nev file
     
-    ft_hastoolbox('NPMK', 1);   
+    ft_hastoolbox('NPMK', 1);
     % ensure that the filename contains a full path specification,
     % otherwise the low-level function fails
-    [p,n,~] = fileparts(filename);
+    [p,n] = fileparts(filename);
     if isempty(p)
       filename = which(filename);
-      [p,n,~] = fileparts(filename);
+      [p,n] = fileparts(filename);
     end
-		
+    
     NEV = openNEV(filename,'noread','nosave');
     
     %searching for associated nsX file in same folder
-    files=dir(strcat(fullfile(p,n),'.ns*')); 
+    files=dir(strcat(fullfile(p,n),'.ns*'));
     if isempty(files)
       ft_error('no .ns* file associated to %s in %s',n,p);
     end
@@ -471,21 +529,21 @@ switch headerformat
     ft_hastoolbox('NPMK', 1);
     % ensure that the filename contains a full path specification,
     % otherwise the low-level function fails
-    [p, ~, ~] = fileparts(filename);
+    p = fileparts(filename);
     if isempty(p)
       filename = which(filename);
     end
     
     orig = openNSx(filename, 'noread');
-    channelstype=regexp({orig.ElectrodesInfo.Label},'[a-z]\w+','match');
+    channelstype=regexp({orig.ElectrodesInfo.Label},'[A-Za-z]+','match','once');
     chaninfo=table({orig.ElectrodesInfo.ElectrodeID}',...
-      transpose(deblank({orig.ElectrodesInfo.Label})),[channelstype{1,:}]',...
+      transpose(deblank({orig.ElectrodesInfo.Label})),[channelstype]',...
       {orig.ElectrodesInfo.ConnectorBank}',{orig.ElectrodesInfo.ConnectorPin}',...
       transpose(deblank({orig.ElectrodesInfo.AnalogUnits})),...
       'VariableNames',{'id' 'label' 'chantype' 'bank' 'pin' 'unit'});
     
     if isempty(chantype)
-      chantype = unique(cellfun(@(x)x(1),channelstype));
+      chantype = unique(channelstype,'stable');
     end
     
     %selecting channel according to chantype
@@ -500,9 +558,11 @@ switch headerformat
       elseif numel(chantype_split) > 2
         ft_error('Use : to specify skipfactor, e.g. analog:10')
       end
-      chan_sel=strncmpi(orig_label,chantype{c},length(chantype{c}));
+      chan_sel=~cellfun(@isempty,regexp(orig_label,chantype{c}));
       if sum(chan_sel)==0
-        ft_warning(strjoin({'unknown chantype ',chantype{c}}))
+        if ~strcmp(chantype{c},'chaninfo')
+          ft_error('unknown chantype %s, available channels are %s',chantype{c},strjoin(orig_label));
+        end
       else
         channels=[channels, orig_label(chan_sel)];
         channelsunit=[channelsunit, orig_unit(chan_sel)];
@@ -517,14 +577,9 @@ switch headerformat
       ft_error('inconsistent skip factors across channels');
     end
     
-    %If no channel selected print table with available channels and chantypes
+    %If no channel selected issue error specifying available chantypes
     if isempty(channels)
-      chaninfo %printing table for user (should probably create a ft_print_table function
-      ft_warning(['No channel selected, see hdr.chaninfo. \nAvailable CFG.CHANTYPEs are: ',strjoin(unique(chaninfo.chantype),' ')])
-      channelstype=chaninfo.chantype; hdr.chaninfo=chaninfo;
-      if isempty(chantype) || ~strcmpi(chantype{1},'chaninfo')
-        ft_error('Use chantype=''chaninfo'' for ft_read_header to return hdr with hdf.chaninfo')
-      end
+      ft_error('No channel selected. Availabe chantypes are: %s',strjoin(unique(chaninfo.chantype)));
     end
     
     hdr.Fs          = orig.MetaTags.SamplingFreq/skipfactor;
@@ -536,7 +591,8 @@ switch headerformat
     hdr.chantype    = channelstype;
     hdr.chanunit    = channelsunit;
     hdr.orig        = orig;
-    hdr.skipfactor  = skipfactor;
+    hdr.orig.chaninfo = chaninfo;
+    hdr.orig.skipfactor = skipfactor;
     
   case {'brainvision_vhdr', 'brainvision_seg', 'brainvision_eeg', 'brainvision_dat'}
     orig = read_brainvision_vhdr(filename);
@@ -737,6 +793,18 @@ switch headerformat
     % read the header information from shared memory
     hdr = read_shm_header(filename);
     
+    
+  case {'curry_dat', 'curry_cdt'}
+    orig            = load_curry_data_file(filename);
+    hdr             = [];
+    hdr.Fs          = orig.fFrequency;
+    hdr.nChans      = orig.nChannels;
+    hdr.nSamples    = orig.nSamples;
+    hdr.nSamplesPre = sum(orig.time<0);
+    hdr.nTrials     = orig.nTrials;
+    hdr.label       = orig.labels(:);
+    hdr.orig        = orig;
+    
   case 'dataq_wdq'
     orig            = read_wdq_header(filename);
     hdr             = [];
@@ -797,7 +865,7 @@ switch headerformat
   case 'eep_cnt'
     % check that the required low-level toolbox is available
     ft_hastoolbox('eeprobe', 1);
-    % read the first sample from the continous data, this will also return the header
+    % read the first sample from the continuous data, this will also return the header
     orig = read_eep_cnt(filename, 1, 1);
     hdr.Fs          = orig.rate;
     hdr.nSamples    = orig.nsample;
@@ -943,7 +1011,7 @@ switch headerformat
     hdr.orig.CateNames   = CateNames;
     hdr.orig.CatLengths  = CatLengths;
     
-  case {'egi_mff_v1' 'egi_mff'} % this is currently the default
+  case 'egi_mff_v1'
     % The following represents the code that was written by Ingrid, Robert
     % and Giovanni to get started with the EGI mff dataset format. It might
     % not support all details of the file formats.
@@ -951,6 +1019,10 @@ switch headerformat
     % An alternative implementation has been provided by EGI, this is
     % released as fieldtrip/external/egi_mff and referred further down in
     % this function as 'egi_mff_v2'.
+    %
+    % An more recent implementation has been provided by EGI and Arno Delorme, this
+    % is released as https://github.com/arnodelorme/mffmatlabio and referred further
+    % down in this function as 'egi_mff_v3'.
     
     if ~usejava('jvm')
       ft_error('the xml2struct requires MATLAB to be running with the Java virtual machine (JVM)');
@@ -972,7 +1044,7 @@ switch headerformat
     end
     
     % get hdr info from xml files
-    ws = warning('off', 'MATLAB:REGEXP:deprecated'); % due to some small code xml2struct
+    ws = ft_warning('off', 'MATLAB:REGEXP:deprecated'); % due to some small code xml2struct
     xmlfiles = dir( fullfile(filename, '*.xml'));
     disp('reading xml files to obtain header info...')
     for i = 1:numel(xmlfiles)
@@ -984,7 +1056,7 @@ switch headerformat
         orig.xml.(fieldname) = xml2struct(filename_xml);
       end
     end
-    warning(ws); % revert the warning state
+    ft_warning(ws); % revert the warning state
     
     % epochs.xml seems the most common version, but epoch.xml might also
     % occur, so use only one name
@@ -1021,7 +1093,7 @@ switch headerformat
     hdr.nTrials     = 1;
     
     % get channel labels for signal 1 (main net), otherwise create them
-    if isfield(orig.xml, 'sensorLayout') % asuming that signal1 is hdEEG sensornet, and channels are in xml file sensorLayout
+    if isfield(orig.xml, 'sensorLayout') % assuming that signal1 is hdEEG sensornet, and channels are in xml file sensorLayout
       for iSens = 1:numel(orig.xml.sensorLayout.sensors)
         if ~isempty(orig.xml.sensorLayout.sensors(iSens).sensor.name) && ~(isstruct(orig.xml.sensorLayout.sensors(iSens).sensor.name) && numel(fieldnames(orig.xml.sensorLayout.sensors(iSens).sensor.name))==0)
           %only get name when channel is EEG (type 0), or REF (type 1),
@@ -1166,9 +1238,8 @@ switch headerformat
     hdr.orig = orig;
     
   case 'egi_mff_v2'
-    % ensure that the EGI_MFF toolbox is on the path
-    ft_hastoolbox('egi_mff', 1);
-    % ensure that the JVM is running and the jar file is on the path
+    % ensure that the EGI_MFF_V2 toolbox is on the path
+    ft_hastoolbox('egi_mff_v2', 1);
     
     %%%%%%%%%%%%%%%%%%%%%%
     %workaround for MATLAB bug resulting in global variables being cleared
@@ -1181,6 +1252,7 @@ switch headerformat
     end
     %%%%%%%%%%%%%%%%%%%%%%
     
+    % ensure that the JVM is running and the jar file is on the path
     mff_setup;
     
     %%%%%%%%%%%%%%%%%%%%%%
@@ -1203,7 +1275,12 @@ switch headerformat
       % add the full path, including drive letter or slashes as needed.
       filename = fullfile(pwd, filename);
     end
+    
     hdr = read_mff_header(filename);
+    
+  case {'egi_mff_v3' 'egi_mff'} % this is the default
+    ft_hastoolbox('mffmatlabio', 1);
+    hdr = mff_fileio_read_header(filename);
     
   case 'fcdc_buffer'
     % read from a networked buffer for realtime analysis
@@ -1477,32 +1554,12 @@ switch headerformat
     
   case {'homer_nirs'}
     % Homer files are MATLAB files in disguise
-    orig = load(filename, '-mat');
-    
-    hdr.label       = {};
-    hdr.nChans      = size(orig.d,2);
-    hdr.nSamples    = size(orig.d,1);
-    hdr.nSamplesPre = 0;
-    hdr.nTrials     = 1; % assume continuous data, not epoched
-    hdr.Fs          = 1/median(diff(orig.t));
-    
-    % number of wavelengths times sources times detectors
-    assert(numel(orig.SD.Lambda)*orig.SD.nSrcs*orig.SD.nDets >= hdr.nChans);
-    
-    for i=1:hdr.nChans
-      hdr.label{i} = num2str(i);
-    end
-    
-    hdr.chantype = repmat({'nirs'}, hdr.nChans, 1);
-    hdr.chanunit = repmat({'unknown'}, hdr.nChans, 1);
-    
-    % convert the measurement configuration details to an optode structure
-    try
-    end
-    hdr.opto = homer2opto(orig.SD);
-    
-    % keep the header details
-    hdr.orig.SD = orig.SD;
+    % see https://www.nitrc.org/plugins/mwiki/index.php/homer2:Homer_Input_Files#NIRS_data_file_format
+    nirs = load(filename, '-mat');
+    % convert it to a raw data structure according to FT_DATATYPE_RAW
+    data = homer2fieldtrip(nirs);
+    % get the header information as structure
+    hdr = ft_fetch_header(data);
     
   case {'itab_raw' 'itab_mhd'}
     % read the full header information frtom the binary header structure
@@ -1530,7 +1587,7 @@ switch headerformat
     % this is hard-coded for the Jinga-Hi JAGA16 system with 16 channels
     packetsize = (4*2 + 6*2 + 16*43*2); % in bytes
     % read the first packet
-    fid  = fopen(filename, 'r');
+    fid  = fopen_or_error(filename, 'r');
     buf  = fread(fid, packetsize/2, 'uint16');
     fclose(fid);
     
@@ -1596,6 +1653,14 @@ switch headerformat
       end
     end
     hdr.orig = orig;
+    
+  case 'mayo_mef30'
+    ft_hastoolbox('mayo_mef', 1); % make sure mayo_mef exists
+    hdr = read_mayo_mef30(filename, password, sortchannel);
+    
+  case 'mayo_mef21'
+    ft_hastoolbox('mayo_mef', 1); % make sure mayo_mef exists
+    hdr = read_mayo_mef21(filename, password);
     
   case 'mega_neurone'
     % ensure that this external toolbox is on the path
@@ -1986,21 +2051,35 @@ switch headerformat
     hdr.orig = orig;
     
   case 'neuroomega_mat'
-    % These are MATLAB *.mat files created by the software 'Map File Converter' from
-    % the propietary .mpx files recorded by NeuroOmega
-    chantype_dict = {'micro','macro',     'analog', 'micro_lfp','macro_lfp','micro_hp','add_analog';...
-      'CRAW', 'CMacro_RAW','CANALOG', 'CLFP',    'CMacro',   'CSPK'    ,'CADD_ANALOG'};
-    neuroomega_param = {'_KHz','_KHz_Orig','_Gain','_BitResolution','_TimeBegin','_TimeEnd'};
+    % These are MATLAB *.mat files created by the software 'Map File
+    % Converter' from the proprietary .mpx files recorded by NeuroOmega
     
-    % identifying channels to be loaded
+    %defining default if chantype is missing
+    if isempty(chantype) || strcmpi(chantype{1},'chaninfo') || strcmpi(chantype{1},'info')
+      chantype={'micro'};
+    end
+    
+    chantype_dict={'micro','macro',     'analog', 'micro_lfp','macro_lfp','micro_hp','add_analog','emg', 'eeg';...
+      'CRAW', 'CMacro_RAW','CANALOG', 'CLFP',     'CMacro_LFP',   'CSPK' ,'CADD_ANALOG','CEMG', 'CEEG'};
+    neuroomega_param={'_KHz','_KHz_Orig','_Gain','_BitResolution','_TimeBegin','_TimeEnd'};
+    
+    %identifying channels to be loaded
     orig = matfile(filename);
-    fields_orig = who(orig);
+    fields_orig=who(orig);
     
     %is_param=endsWith(fields_orig,neuroomega_param); %Matlab 2017a
     is_param=zeros(length(fields_orig),1);
     for i=1:length(neuroomega_param)
       is_param = is_param | ~cellfun('isempty',regexp(fields_orig,strcat(neuroomega_param(i),'$'),'start'));
     end
+    
+    %creating channel info table
+    channels_all=fields_orig(contains(fields_orig,chantype_dict(2,:)) & ~is_param);
+    %Matching channels to chantypes
+    M=cell2mat(cellfun(@(x) contains(channels_all,x),chantype_dict(2,:),'UniformOutput',false));
+    chantype_ix = sum( cumprod(M == 0, 2), 2) + 1;
+    Fs=cellfun(@(x) orig.([x '_KHz'])*1000,channels_all);
+    chaninfo=table(channels_all,chantype_dict(1,chantype_ix)',Fs,'VariableNames',{'channel' 'chantype' 'Fs'});
     
     channels={}; channelstype={};
     for c = 1:length(chantype)
@@ -2014,10 +2093,11 @@ switch headerformat
           channels=[channels;sel_chan];
           channelstype=[channelstype;repmat(chantype(c),  size(sel_chan))];
         end
-      elseif ~strcmpi(chantype{c},'chaninfo')
+      else
         ft_warning(strjoin({'unknown chantype ',chantype{c}}));
       end
     end
+    
     if ~isempty(channels)
       chan_t=table;
       for i=1:length(channels)
@@ -2030,30 +2110,23 @@ switch headerformat
       Fs=unique(chan_t.Fs);
       T0=unique(chan_t.T0);
       nSamples=unique(chan_t.nSamples);
-      if length(Fs)>1 || length(T0)>1
-        chan_t % printing table for user
-        ft_error('inconsistent channels with different sampling rates or initial times');
+      
+      if length(Fs)>1
+        chan_t %; printing table for user
+        ft_error('inconsistent channels with different sampling rates for %s',filename);
+      end
+      if length(T0)>1
+        chan_t %; printing table for user
+        ft_warning('inconsistent channels with different initial times for %s. Selecting minimum time',filename);
+        T0 = min(T0);
       end
       if length(nSamples)>1
-        chan_t % printing table for user
-        ft_warning('inconsistent number of samples across channels. Selecting minimun nSample')
+        chan_t %; printing table for user
+        ft_warning('inconsistent number of samples across channels for %s. Selecting minimun nSample',filename)
         nSamples=min(nSamples);
       end
-      
-    else % If no channel selected
-      channels=fields_orig(contains(fields_orig,chantype_dict(2,:)) & ~is_param);
-      % Matching channels to chantypes
-      M=cell2mat(cellfun(@(x) contains(channels,x),chantype_dict(2,:),'UniformOutput',false));
-      chantype_ix = sum( cumprod(M == 0, 2), 2) + 1;
-      Fs=cellfun(@(x) orig.([x '_KHz'])*1000,channels);
-      chaninfo=table(channels,chantype_dict(1,chantype_ix)',Fs,'VariableNames',{'channel' 'chantype' 'Fs'});
-      if isempty(chantype)
-        chaninfo % printing channel info for user. ToDo: ft_print_table
-        ft_warning('Define chantype of interest from table above or use ''chaninfo''');
-      elseif ~strcmpi(chantype{1},'chaninfo') || strcmpi(chantype{1},'info')
-        ft_error(['Incorrect cfg.chantype, use one of ',strjoin(unique(chaninfo.chantype),' ')])
-      end
-      Fs=nan; nSamples=nan; channelstype=chaninfo.chantype; hdr.chaninfo=chaninfo;
+    else %If no channel selected
+      Fs=nan; nSamples=nan; channelstype=chaninfo.chantype;
     end
     
     % building header
@@ -2063,11 +2136,14 @@ switch headerformat
     hdr.nSamplesPre = 0;
     hdr.nTrials     = 1;
     hdr.label       = deblank(channels);
-    % store the complete information in hdr.orig ft_read_data and ft_read_event will
-    % get it from there
-    hdr.orig        = orig;
     hdr.chantype    = channelstype;
     hdr.chanunit    = repmat({'uV'},  size(hdr.label));
+    % store the complete information in hdr.orig
+    % ft_read_data and ft_read_event will get it from there
+    hdr.orig        = [];
+    hdr.orig.orig   = orig;
+    hdr.orig.chaninfo = chaninfo;
+    hdr.orig.fields = fields_orig;
     
   case 'neuroprax_eeg'
     orig = np_readfileinfo(filename);
@@ -2152,7 +2228,19 @@ switch headerformat
     hdr = read_neurosim_spikes(filename, headerOnly);
     
   case 'nihonkohden_m00'
-    hdr = read_nihonkohden_hdr(filename);
+    % this is an ASCII file format which is rather inefficient to read
+    if cache
+      % read it once and store the data along with the header
+      [hdr, dat] = read_nihonkohden_m00(filename);
+      hdr.orig.dat = dat;
+    else
+      % read only the header
+      hdr = read_nihonkohden_m00(filename);
+    end
+    
+  case 'nihonkohden_eeg'
+    ft_hastoolbox('brainstorm', 1);
+    hdr = read_brainstorm_header(filename);
     
   case 'nimh_cortex'
     cortex = read_nimh_cortex(filename, 'epp', 'no', 'eog', 'no');
@@ -2230,7 +2318,6 @@ switch headerformat
   case 'neuroshare' % NOTE: still under development
     % check that the required neuroshare toolbox is available
     ft_hastoolbox('neuroshare', 1);
-    
     tmp = read_neuroshare(filename);
     hdr.Fs          = tmp.hdr.analoginfo(end).SampleRate; % take the sampling freq from the last analog channel (assuming this is the same for all chans)
     hdr.nChans      = length(tmp.list.analog(tmp.analog.contcount~=0)); % get the analog channels, only the ones that are not empty
@@ -2240,9 +2327,88 @@ switch headerformat
     hdr.label       = {tmp.hdr.entityinfo(tmp.list.analog(tmp.analog.contcount~=0)).EntityLabel}; %%% contains non-unique chans?
     hdr.orig        = tmp; % remember the original header
     
+  case 'nwb'
+    ft_hastoolbox('MatNWB', 1);	% when I run this locally outside of ft_read_header it does not work for me
+    try
+      c = load('namespaces/core.mat');
+      nwb_version = c.version;
+      nwb_fileversion = util.getSchemaVersion(filename);
+      if ~strcmp(nwb_version, nwb_fileversion)
+        warning(['Installed NWB:N schema version (' nwb_version ') does not match the file''s schema (' nwb_fileversion{1} '). This might result in an error. If so, try to install the matching schema from here: https://github.com/NeurodataWithoutBorders/nwb-schema/releases'])
+      end
+    catch
+      warning('Something might not be alright with your MatNWB path. Will try anyways.')
+    end
+    tmp = nwbRead(filename); % is lazy, so should not be too costly
+    es_key = tmp.searchFor('ElectricalSeries').keys; % find lfp data, which should be an ElectricalSeries object
+    es_key = es_key(~contains(es_key, 'acquisition'));
+    if isempty(es_key)
+      error('Dataset does not contain an LFP signal (i.e., no object of the class ''ElectricalSeries''.')
+    elseif numel(es_key) > 1 % && isempty(additional_user_input) % TODO: Try to sort this out with the user's help
+      % Temporary fix: SpikeEventSeries is a daughter of ElectrialSeries but should not be found here (searchFor update on its way)
+      es_key = es_key(contains(es_key,'lfp','IgnoreCase',true));
+    end
+    if numel(es_key) > 1 % in case we weren't able to sort out a single
+      error('More than one ElectricalSeries present in data. Please specify which signal to use.')
+    else
+      eseries = io.resolvePath(tmp, es_key{1});
+    end
+    if isa(eseries.data, 'types.untyped.DataStub')
+      hdr.nSamples = eseries.data.dims(2);
+    elseif isa(eseries.data, 'types.untyped.DataPipe')
+      hdr.nSamples = eseries.data.internal.maxSize(2);
+    else
+      warning('Cannot determine number of samples in the data.')
+      hdr.nSamples = [];
+    end
+    hdr.Fs          = eseries.starting_time_rate;
+    hdr.nSamplesPre = 0; % for now: hardcoded continuous data
+    hdr.nTrials     = 1; % for now: hardcoded continuous data
+    hdr.label       = {};
+    tmp_ch          = io.resolvePath(tmp, eseries.electrodes.table.path).id.data.load; % electrode names
+    for iCh=1:numel(tmp_ch) % TODO: does that work if nwb ids are strings?
+      if isnumeric(tmp_ch(iCh))
+        hdr.label(iCh,1) = {num2str(tmp_ch(iCh))};
+      else
+        hdr.label(iCh,1) = tmp_ch(iCh);
+      end
+    end
+    hdr.nChans      = numel(hdr.label);
+    [hdr.chanunit{1:hdr.nChans,1}] = deal(eseries.data_unit);
+    hdr.chanunit    = strrep(hdr.chanunit, 'volt', 'V');
+    hdr.chanunit    = strrep(hdr.chanunit, 'micro', 'u');
+    % TODO: hdr.FirstTimeStamp
+    % TODO: hdr.TimeStampPerSample
+    
+    % carry over some metadata
+    hdr.orig        = [];
+    fn = {'general_experimenter', ...
+      'general_institution', ...
+      'general_keywords', ...
+      'general_lab', ...
+      'general_notes', ...
+      'general_related_publications', ...
+      'general_session_id', ...
+      'identifier', ...
+      'session_description', ...
+      'nwb_version', ...
+      'help'};
+    for iFn = 1:numel(fn)
+      if isprop(tmp, fn{iFn}) && ~isempty(tmp.(fn{iFn}))
+        hdr.orig.(fn{iFn}) = tmp.(fn{iFn});
+      end
+    end
   case 'artinis_oxy3'
     ft_hastoolbox('artinis', 1);
     hdr = read_artinis_oxy3(filename);
+    
+  case 'artinis_oxy4'
+    ft_hastoolbox('artinis', 1);
+    hdr = read_artinis_oxy4(filename);
+    
+  case 'artinis_oxyproj'
+    ft_hastoolbox('artinis', 1);
+    hdr = read_oxyproj_header(filename);
     
   case 'plexon_ds'
     hdr = read_plexon_ds(filename);
@@ -2293,6 +2459,42 @@ switch headerformat
     hdr.nChans      = length(orig.VarHeader);
     hdr.Fs          = orig.VarHeader(adindx(1)).WFrequency;     % take the sampling frequency from the first A/D channel
     hdr.nSamples    = max(numsmp(adindx));                      % take the number of samples from the longest A/D channel
+    hdr.nTrials     = 1;                                        % it can always be interpreted as continuous data
+    hdr.nSamplesPre = 0;                                        % and therefore it is not trial based
+    for i=1:hdr.nChans
+      hdr.label{i} = deblank(char(orig.VarHeader(i).Name));
+    end
+    hdr.label = hdr.label(:);
+    hdr.FirstTimeStamp     = orig.FileHeader.Beg;
+    hdr.TimeStampPerSample = orig.FileHeader.Frequency ./ hdr.Fs;
+    % also remember the original header details
+    hdr.orig = orig;
+    
+  case 'plexon_nex5' % this is the default reader for nex5 files
+    orig = read_nex5(filename);
+    numsmp = cell2mat({orig.VarHeader.NumberOfDataPoints});
+    adindx = find(cell2mat({orig.VarHeader.Type})==5);
+    if isempty(adindx)
+      ft_error('file does not contain continuous channels');
+    end
+    % check that all continuous channels have the same sampling rate
+    samplingRates = cell2mat({orig.VarHeader.WFrequency});
+    contSamplingRates = samplingRates(adindx);
+    if any(contSamplingRates~=contSamplingRates(1))
+      ft_error('different sampling rates in continuous data not supported');
+    end
+    hdr.nChans      = length(orig.VarHeader);
+    hdr.Fs          = orig.VarHeader(adindx(1)).WFrequency;    % take the sampling frequency from the first A/D channel
+    hdr.TimeStampPerSample = orig.FileHeader.Frequency ./ hdr.Fs;
+    % for hdr.nSamples, we need to calculate the last timestamp for every continuous channel
+    maxTimestamp = 0;
+    for i = 1:length(adindx)
+      [nex, chanhdr] = read_nex5(filename, 'header', orig, 'channel', adindx(i), 'tsonly', 1);
+      numPointsInLastFragment = numsmp(adindx(i)) - nex.indx(end) - 1;
+      maxTimestamp = max(maxTimestamp, nex.ts(end)+hdr.TimeStampPerSample*(numPointsInLastFragment-1));
+    end
+    
+    hdr.nSamples    = maxTimestamp/hdr.TimeStampPerSample;
     hdr.nTrials     = 1;                                        % it can always be interpreted as continuous data
     hdr.nSamplesPre = 0;                                        % and therefore it is not trial based
     for i=1:hdr.nChans
@@ -2355,6 +2557,20 @@ switch headerformat
     hdr.label = hdr.label(:);
     hdr.nChans = length(hdr.label);
     
+  case {'ricoh_ave', 'ricoh_con', 'ricoh_mrk'}
+    % header can be read with Ricoh MEG Reader
+    hdr = read_ricoh_header(filename);
+    % add a gradiometer structure for forward and inverse modelling
+    hdr.grad = ricoh2grad(hdr);
+    hdr.chantype = ft_chantype(hdr.label);
+    unk = find(strcmp('unknown', hdr.chantype));
+    %  Warning message:
+    if ~isempty(unk)
+      label_unk = hdr.label(unk);
+      no_unk = num2cell(unk);
+      C = [label_unk(:), no_unk(:)] .';
+      ft_warning(['Unknown channel types: (label, no) =' repmat('( %s, %d ) ', 1, length(unk) ) '\n'], C{:})
+    end
     
   case 'smi_txt'
     smi = read_smi_txt(filename);
@@ -2362,31 +2578,20 @@ switch headerformat
     hdr.nSamples            = size(smi.dat,2);
     hdr.nSamplesPre         = 0;
     hdr.nTrials             = 1;
-    hdr.FirstTimeStamp      = smi.trigger(1,1).timestamp;
     
-    % if the header contains the sampling rate use it and if not, compute
-    % it from scratch. If computed, sampling rate might have numerical
-    % issues due to tolerance (the reason that I write the two options)
-    if isfield(smi,'Fs') && ~isempty(smi.Fs);
-      hdr.Fs = smi.Fs;
-      hdr.TimeStampPerSample = 1000./hdr.Fs;
-    else
-      hdr.TimeStampPerSample  = mean(diff(smi.dat(1,:)));
-      hdr.Fs                  = 1000/hdr.TimeStampPerSample;  % these timestamps are in miliseconds
-    end
+    hdr.label               = smi.label;
+    hdr.Fs                  = smi.Fs;
+    hdr.FirstTimeStamp      = smi.timestamp(1);
+    hdr.TimeStampPerSample  = mean(diff(smi.timestamp)); % these timestamps are in microseconds
     
-    if hdr.nChans ~= size(smi.label,1)
-      ft_error('data and header have different number of channels');
-    else
-      hdr.label = smi.label;
-    end
-    
-    % remember the original header details
-    hdr.orig.header = smi.header;
-    % remember all header and data details upon request
     if cache
+      % remember all header and data details upon request
       hdr.orig = smi;
+    else
+      % remember only the original header details
+      hdr.orig.header = smi.header;
     end
+    
     % add channel units when possible.
     for i=1:hdr.nChans
       chanunit = regexp(hdr.label{i,1},'(?<=\[).+?(?=\])','match');
@@ -2470,6 +2675,15 @@ switch headerformat
       hdr = read_yokogawa_header_new(filename);
       % add a gradiometer structure for forward and inverse modelling
       hdr.grad = yokogawa2grad_new(hdr);
+      hdr.chantype = ft_chantype(hdr.label);
+      unk = find(strcmp('unknown', hdr.chantype));
+      %  Warning message:
+      if ~isempty(unk)
+        label_unk = hdr.label(unk);
+        no_unk = num2cell(unk);
+        C = [label_unk(:), no_unk(:)] .';
+        ft_warning(['Unknown channel types: (label, no) =' repmat('( %s, %d ) ', 1, length(unk) ) '\n'], C{:})
+      end
     else
       ft_hastoolbox('yokogawa', 1); % try it with the old version of the toolbox
       hdr = read_yokogawa_header(filename);
@@ -2477,7 +2691,8 @@ switch headerformat
       hdr.grad = yokogawa2grad(hdr);
     end
     
-  case 'riff_wave'
+    
+  case {'audio_wav', 'audio_ogg', 'audio_flac', 'audio_au', 'audio_aiff', 'audio_aif', 'audio_aifc', 'audio_mp3', 'audio_m4a', 'audio_mp4'}
     % prior to MATLAB R2015b this used to be done with "wavread"
     % but the audioinfo/audioread function are at least available from 2012b up
     info = audioinfo(filename);
@@ -2507,35 +2722,39 @@ switch headerformat
     hdr = read_videomeg_vid(filename);
     checkUniqueLabels = false;
     
+  case 'video'
+    hdr = read_video(filename);
+    checkUniqueLabels = false;
+    
   otherwise
-    % attempt to run headerformat as a function
-    % in case using an external read function was desired, this is where it is executed
-    % if it fails, the regular unsupported error message is thrown
-    try
-      hdr = feval(headerformat,filename);
-    catch
-      if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
+    if exist(headerformat, 'file')
+      % attempt to run "headerformat" as a function, this allows the user to specify an external reading function
+      % this is also used for bids_tsv, biopac_acq, motion_c3d, opensignals_txt, qualisys_tsv, sccn_xdf, and possibly others
+      hdr = feval(headerformat, filename);
+    elseif strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
+      try
+        % there is no guarantee that biosig can read it
         hdr = read_biosig_header(filename);
-      else
+      catch
         ft_error('unsupported header format "%s"', headerformat);
       end
+    else
+      ft_error('unsupported header format "%s"', headerformat);
     end
     
 end % switch headerformat
 
 
-% Sometimes, the not all labels are correctly filled in by low-level reading
-% functions. See for example bug #1572.
+% Sometimes, the not all labels are correctly filled in by low-level reading functions. See for example bug #1572.
 % First, make sure that there are enough (potentially empty) labels:
 if numel(hdr.label) < hdr.nChans
   ft_warning('low-level reading function did not supply enough channel labels');
   hdr.label{hdr.nChans} = [];
 end
-
 % Now, replace all empty labels with new name:
 if any(cellfun(@isempty, hdr.label))
   ft_warning('channel labels should not be empty, creating unique labels');
-  hdr.label = fix_empty(hdr.label);
+  hdr.label = fixlabels(hdr.label);
 end
 
 if checkUniqueLabels
@@ -2547,9 +2766,8 @@ if checkUniqueLabels
     for i=1:hdr.nChans
       sel = find(strcmp(hdr.label{i}, hdr.label));
       if length(sel)>1
-        % there is no need to rename the first instance
-        % can be particularly disruptive when part of standard MEG
-        % or EEG channel set, so should be avoided
+        % renaming the first instance is particularly disruptive when the channels are
+        % part of standard MEG or EEG channel set, so that should be avoided
         if any(megflag(sel))
           sel = setdiff(sel, sel(find(megflag(sel), 1)));
         elseif any(eegflag(sel))
@@ -2558,6 +2776,7 @@ if checkUniqueLabels
           sel = sel(2:end);
         end
         for j=1:length(sel)
+          % add a number to the original channel name
           hdr.label{sel(j)} = sprintf('%s-%d', hdr.label{sel(j)}, j);
         end
       end
@@ -2588,10 +2807,46 @@ if isfield(hdr, 'elec')
   hdr.elec = ft_datatype_sens(hdr.elec);
 end
 
-% ensure that these are column arrays
-hdr.label    = hdr.label(:);
-if isfield(hdr, 'chantype'), hdr.chantype = hdr.chantype(:); end
-if isfield(hdr, 'chanunit'), hdr.chanunit = hdr.chanunit(:); end
+% ensure that the output opto is according to the latest definition
+if isfield(hdr, 'opto')
+  try
+    hdr.opto = ft_datatype_sens(hdr.opto);
+  catch
+    % the NIRS optode structure is incomplete when reading/converting it from Homer files
+    ft_warning('optode structure is not compliant with FT_DATATYPE_SENS');
+  end
+end
+
+if istrue(readbids) && isbids
+  % the BIDS sidecar files overrule the information present in the file header itself
+  try, hdr.label     = channels_tsv.name;            end
+  try, hdr.chantype  = channels_tsv.type;            end
+  try, hdr.chanunit  = channels_tsv.units;           end
+  try, hdr.Fs        = data_json.SamplingFrequency;  end
+  if exist('electrodes_tsv', 'var')
+    if isfield(hdr, 'elec')
+      ft_warning('updating the electrode structure with the BIDS sidecar is not yet implemented');
+    else
+      hdr.elec = [];
+      hdr.eleclabel = electrodes_tsv.name;
+      hdr.elecpos   = [electrodes_tsv.x electrodes_tsv.y electrodes_tsv.z];
+    end
+  end
+  if exist('optodes_tsv', 'var')
+    if isfield(hdr, 'opto')
+      ft_warning('updating the optode structure with the BIDS sidecar is not yet implemented');
+    else
+      hdr.opto = [];
+      hdr.optolabel = optodes_tsv.name;
+      hdr.optopos   = [optodes_tsv.x optodes_tsv.y optodes_tsv.z];
+    end
+  end
+end % if readbids and isbids
+
+% ensure that these are column arrays and that they do not have empty entries
+hdr.label = fixlabels(hdr.label);
+if isfield(hdr, 'chantype'), hdr.chantype = fixchantype(hdr.chantype); end
+if isfield(hdr, 'chanunit'), hdr.chanunit = fixchanunit(hdr.chanunit); end
 
 % ensure that these are double precision and not integers, otherwise
 % subsequent computations that depend on these might be messed up
@@ -2614,7 +2869,7 @@ end
 if cache && exist(headerfile, 'file')
   % put the header in the cache
   cacheheader = hdr;
-  % update the header details (including time stampp, size and name)
+  % update the header details (including time stamp, size and name)
   cacheheader.details = dir(headerfile);
   % fprintf('added header to cache\n');
 end
@@ -2675,11 +2930,41 @@ for i=1:length(hdr)
 end
 hdr = tmp;
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION to fill in empty labels
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function labels = fix_empty(labels)
+function labels = fixlabels(labels)
 for i = find(cellfun(@isempty, {labels{:}}))
   labels{i} = sprintf('%d', i);
 end
+labels = labels(:);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION to fill in empty chantype
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function labels = fixchantype(labels)
+sel = cellfun(@isempty, labels);
+labels(sel) = {'unknown'};
+labels = labels(:);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION to fill in empty chanunit
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function labels = fixchanunit(labels)
+sel = cellfun(@isempty, labels);
+labels(sel) = {'unknown'};
+labels = labels(:);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION this is shared with DATA2BIDS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function tsv = read_tsv(filename)
+tsv = readtable(filename, 'Delimiter', 'tab', 'FileType', 'text', 'TreatAsEmpty', 'n/a', 'ReadVariableNames', true);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION this is shared with DATA2BIDS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function json = read_json(filename)
+ft_hastoolbox('jsonlab', 1);
+json = loadjson(filename);
+json = ft_struct2char(json); % convert strings into char-arrays

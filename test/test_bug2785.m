@@ -2,6 +2,7 @@ function test_bug2785
 
 % WALLTIME 00:10:00
 % MEM 1gb
+% DEPENDENCY
 
 %% create some test data
 data = [];
@@ -26,7 +27,6 @@ data.trial =  {
   };
 
 cfg = [];
-cfg.vartrllength = 2;
 avg = ft_timelockanalysis(cfg, data);
 
 assert(avg.dof(1)==7)

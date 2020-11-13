@@ -7,7 +7,7 @@ function [ssmp] = nansum(x, dim)
 % least one of the dimensions should be the same for all cells 
 
 D = checkinput(x);
-if nargin==1 || isempty(dim),
+if nargin==1 || isempty(dim)
   dim = find(D,1,'last');
 elseif ischar(dim) && strcmp(dim, 'cell')
   % sum the cells
@@ -25,6 +25,6 @@ else
   if ~D(dim), error('data can not be concatenated across dimension %d',dim); end
 end
 nx   = max(size(x));
-ssmp = nansum(x, dim);
+ssmp = cellfun(@nansum,x,repmat({dim},[1 nx]),'uniformoutput',false);
 ssmp = sum(cell2mat(ssmp), dim);  
 

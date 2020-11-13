@@ -1,10 +1,8 @@
 function test_tutorial_sensor_analysis(datadir)
 
-% MEM 2500mb
+% MEM 4gb
 % WALLTIME 00:25:00
-
-% TEST test_tutorial_sensor_overview
-% TEST ft_redefinetrial ft_freqanalysis ft_timelockanalysis ft_appenddata ft_prepare_neighbours ft_megplanar ft_combineplanar ft_multiplotER ft_multiplotTFR ft_connectivityanalysis
+% DEPENDENCY ft_redefinetrial ft_freqanalysis ft_timelockanalysis ft_appenddata ft_prepare_neighbours ft_megplanar ft_combineplanar ft_multiplotER ft_multiplotTFR ft_connectivityanalysis
 
 if nargin==0
   datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis');

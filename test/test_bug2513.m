@@ -1,7 +1,8 @@
 function test_bug2513
 
-% WALLTIME 00:40:00
+% WALLTIME 00:60:00
 % MEM 6gb
+% DEPENDENCY
 
 datapath = dccnpath('/home/common/matlab/fieldtrip/data/test');
 

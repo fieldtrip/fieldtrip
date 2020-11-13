@@ -13,6 +13,8 @@ function [varargout] = ft_plot_vector(varargin)
 %   'highlight'       = a logical vector of size Y, where 1 means that the corresponding values in Y are highlighted (according to the highlightstyle)
 %   'highlightstyle'  = can be 'box', 'thickness', 'saturation', 'difference' (default='box')
 %   'color'           = see MATLAB standard line properties and see below
+%   'facecolor'       = color for the highlighted box/difference (default = [0.6 0.6 0.6])
+%   'facealpha'       = transparency for the highlighted box, between 0 and 1 (default = 1)
 %   'linewidth'       = see MATLAB standard line properties
 %   'markersize'      = see MATLAB standard line properties
 %   'markerfacecolor' = see MATLAB standard line properties
@@ -21,7 +23,7 @@ function [varargout] = ft_plot_vector(varargin)
 %   'box'             = draw a box around the local axes, can be 'yes' or 'no'
 %
 % The line color can be specified in a variety of ways
-%   - as a string with one character per line that you want to plot. Supported colors are teh same as in PLOT, i.e. 'bgrcmykw'.
+%   - as a string with one character per line that you want to plot. Supported colors are the same as in PLOT, i.e. 'bgrcmykw'.
 %   - as 'none' if you do not want the lines to be plotted (useful in combination with the difference highlightstyle).
 %   - as a Nx3 matrix, where N=length(x), to use graded RGB colors along the line
 %
@@ -34,7 +36,8 @@ function [varargout] = ft_plot_vector(varargin)
 %   'vlim'            = vertical scaling limits within the local axes
 %
 % When using a local pseudo-axis, you can plot a label next to the data
-%   'label'           = string, label to be plotted at the upper left corner
+%   'label'           = string, label to be plotted in the corner of the box
+%   'labelpos'        = string, position for the label (default = 'upperleft')
 %   'fontcolor'       = string, color specification (default = 'k')
 %   'fontsize'        = number, sets the size of the text (default = 10)
 %   'fontunits'       =
@@ -89,7 +92,7 @@ function [varargout] = ft_plot_vector(varargin)
 %
 % $Id$
 
-ws = warning('on', 'MATLAB:divideByZero');
+ws = ft_warning('on', 'MATLAB:divideByZero');
 
 if nargin>1 && all(cellfun(@isnumeric, varargin(1:2)) | cellfun(@islogical, varargin(1:2)))
   % the function was called like plot(x, y, ...)
@@ -116,6 +119,7 @@ hlim            = ft_getopt(varargin, 'hlim', 'maxmin');
 vlim            = ft_getopt(varargin, 'vlim', 'maxmin');
 style           = ft_getopt(varargin, 'style', '-');
 label           = ft_getopt(varargin, 'label');
+labelpos        = ft_getopt(varargin, 'labelpos', 'upperleft');
 axis            = ft_getopt(varargin, 'axis', false);
 box             = ft_getopt(varargin, 'box', false);
 color           = ft_getopt(varargin, 'color');
@@ -132,6 +136,8 @@ fontsize        = ft_getopt(varargin, 'fontsize',   get(0, 'defaulttextfontsize'
 fontname        = ft_getopt(varargin, 'fontname',   get(0, 'defaulttextfontname'));
 fontweight      = ft_getopt(varargin, 'fontweight', get(0, 'defaulttextfontweight'));
 fontunits       = ft_getopt(varargin, 'fontunits',  get(0, 'defaulttextfontunits'));
+facecolor       = ft_getopt(varargin, 'facecolor', [0.6 0.6 0.6]);
+facealpha       = ft_getopt(varargin, 'facealpha', 1);
 
 % if any(size(vdat)==1)
 %   % ensure that it is a column vector
@@ -244,7 +250,7 @@ if isempty(height) && ~isempty(vlim)
 end
 
 % first shift the horizontal axis to zero
-if any(hlim) ~= 0
+if any(hlim)
   hdat = hdat - (hlim(1)+hlim(2))/2;
   % then scale to length 1
   if (hlim(2)-hlim(1))~=0
@@ -258,12 +264,12 @@ end
 % then shift to the new horizontal position
 hdat = hdat + hpos;
 
-if any(vlim) ~= 0
+if any(vlim)
   % first shift the vertical axis to zero
   vdat = vdat - (vlim(1)+vlim(2))/2;
   % then scale to length 1
   vdat = vdat / (vlim(2)-vlim(1));
-  % then scale to the new width
+  % then scale to the new height
   vdat = vdat .* height;
 end
 % then shift to the new vertical position
@@ -285,7 +291,7 @@ switch highlightstyle
     for i=1:length(begsample)
       begx = hdat(begsample(i));
       endx = hdat(endsample(i));
-      ft_plot_box([begx endx vpos-height/2 vpos+height/2], 'facecolor', [.6 .6 .6], 'edgecolor', 'none', 'parent', parent);
+      ft_plot_box([begx endx vpos-height/2 vpos+height/2], 'facecolor', facecolor, 'facealpha', facealpha, 'edgecolor', 'none', 'parent', parent);
     end
     
   case 'thickness'
@@ -308,12 +314,11 @@ switch highlightstyle
           % plot each line with its own color
           plot(hor,ver,'linewidth',4*linewidth,'linestyle','-','Color', color(j)); % changed 3* to 4*, as 3* appeared to have no effect
         end
-        
       end
     end
     
   case 'saturation'
-    % find the sample number where the highligh begins and ends
+    % find the sample number where the highlight begins and ends
     highlight = ~highlight; % invert the mask
     begsample = find(diff([0 highlight 0])== 1);
     endsample = find(diff([0 highlight 0])==-1)-1;
@@ -331,19 +336,12 @@ switch highlightstyle
         % plot each line with its own color
         h = plot(hdat, vdat(i,:), style, 'LineWidth', linewidth, 'Color', color(i), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
       end
-      if ~isempty(parent)
-        set(h, 'Parent', parent);
-      end
       linecolor = get(h, 'color');
       linecolor = (linecolor * 0.2) + 0.8; % change saturation of color
       for j=1:length(begsample)
         hor = hdat(   begsample(j):endsample(j));
         ver = vdat(i, begsample(j):endsample(j));
         h = plot(hor,ver,'color',linecolor);
-        
-        if ~isempty(parent)
-          set(h, 'Parent', parent);
-        end
       end
     end
     
@@ -360,11 +358,11 @@ switch highlightstyle
     for i=1:length(begsample)
       X = [hdatbeg(1,begsample(i)) hdat(1,begsample(i):endsample(i)) hdatend(1,endsample(i)) hdatend(1,endsample(i)) hdat(1,endsample(i):-1:begsample(i)) hdatbeg(1,begsample(i))];
       Y = [vdatbeg(1,begsample(i)) vdat(1,begsample(i):endsample(i)) vdatend(1,endsample(i)) vdatend(2,endsample(i)) vdat(2,endsample(i):-1:begsample(i)) vdatbeg(2,begsample(i))];
-      h = patch(X, Y, [.6 .6 .6]);
-      set(h, 'linestyle', 'no');
-      if ~isempty(parent)
-        set(h, 'Parent', parent);
+      if isempty(color)
+        color='none'; % this ensures that no edgelines will be plotted on top later on
       end
+      h = patch(X, Y, [.6 .6 .6], 'FaceColor', facecolor, 'FaceAlpha', facealpha);
+      set(h, 'linestyle', 'no');
     end
     
   otherwise
@@ -392,44 +390,44 @@ switch highlightstyle
     elseif ischar(color) && numel(color)==nline
       % plot each line with its own color
       for i=1:size(vdat,1)
-        h = plot(hdat, vdat(i,:), style, 'LineWidth', linewidth, 'Color', color(i), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
+        h(i) = plot(hdat, vdat(i,:), style, 'LineWidth', linewidth, 'Color', color(i), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
       end
     elseif isnumeric(color) && size(color,1)==nline
       % the color is specified as Nx3 matrix with RGB values for each line
       for i=1:size(vdat,1)
-        h = plot(hdat, vdat(i,:), style, 'LineWidth', linewidth, 'Color', color(i,:), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
+        h(i) = plot(hdat, vdat(i,:), style, 'LineWidth', linewidth, 'Color', color(i,:), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
       end
     elseif isnumeric(color) && size(color,1)==npos
       % the color is specified as Nx3 matrix with RGB values and varies over the length of the line
       for i=1:(size(vdat,2)-1)
         for j=1:size(vdat,1)
-          h = plot(hdat(i:i+1), vdat(j,i:i+1), style, 'LineWidth', linewidth, 'Color', mean(color([i i+1],:),1), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
+          h(i,j) = plot(hdat(i:i+1), vdat(j,i:i+1), style, 'LineWidth', linewidth, 'Color', mean(color([i i+1],:),1), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
         end
       end
     else
       ft_warning('do not know how to plot the lines in the appropriate color');
       h = [];
     end
-    if ~isempty(parent)
-      set(h, 'Parent', parent);
-    end
 end % switch highlightstyle
 
-
 if ~isempty(label)
-  boxposition(1) = hpos - width/2;
-  boxposition(2) = hpos + width/2;
-  boxposition(3) = vpos - height/2;
-  boxposition(4) = vpos + height/2;
-  h = text(boxposition(1), boxposition(4), label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
-  if ~isempty(parent)
-    set(h, 'Parent', parent);
+  switch labelpos
+    case 'upperleft'
+      text(hpos - width/2, vpos + height/2, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+    case 'upperright'
+      text(hpos + width/2, vpos + height/2, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+    case 'lowerleft'
+      text(hpos - width/2, vpos - height/2, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+    case 'lowerright'
+      text(hpos + width/2, vpos - height/2, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+    case 'center'
+      text(hpos, vpos, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
   end
 end
 
 if box
-  boxposition = zeros(1,4);
   % this plots a box around the original hpos/vpos with appropriate width/height
+  boxposition = zeros(1,4);
   boxposition(1) = hpos - width/2;
   boxposition(2) = hpos + width/2;
   boxposition(3) = vpos - height/2;
@@ -455,7 +453,7 @@ if ~isempty(axis) && ~strcmp(axis, 'no')
   if xaxis
     % x-axis should touch 0,0
     xrange = hlim;
-
+    
     y_intercept = [0 0]; % If the y-axis crosses zero, the horizontal line should be at y = 0.
     
     % If the y-axis is all positive or negative, it should be as close to
@@ -466,7 +464,7 @@ if ~isempty(axis) && ~strcmp(axis, 'no')
       y_intercept = repmat(max(vlim), 1, 2);
     end %if
     
-    ft_plot_line(xrange, y_intercept,'hpos',hpos,'vpos',vpos,'hlim',hlim,'vlim',vlim,'width',width,'height',height);
+    ft_plot_line(xrange, y_intercept, 'hpos', hpos, 'vpos', vpos, 'hlim', hlim, 'vlim', vlim, 'width', width, 'height', height);
   end
   if yaxis
     yrange = vlim;
@@ -481,11 +479,11 @@ if ~isempty(axis) && ~strcmp(axis, 'no')
       x_intercept = repmat(max(hlim), 1, 2);
     end %if
     
-    ft_plot_line(x_intercept, yrange,'hpos',hpos,'vpos',vpos,'hlim',hlim,'vlim',vlim,'width',width,'height',height);
+    ft_plot_line(x_intercept, yrange, 'hpos', hpos, 'vpos', vpos, 'hlim', hlim, 'vlim', vlim, 'width', width, 'height', height);
   end
 end
 
-set(h,'tag',tag);
+set(h, 'tag', tag);
 
 if ~isempty(parent)
   set(h, 'Parent', parent);
@@ -497,7 +495,7 @@ if nargout == 1
 end
 
 if ~holdflag
-  hold off
+  hold('off')
 end
 
-warning(ws); % revert to original state
+ft_warning(ws); % revert to original state

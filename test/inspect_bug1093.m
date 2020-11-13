@@ -1,6 +1,6 @@
-function cfgnew = test_bug1093
+function test_bug1093
 
-% TEST test_bug1093 ft_artifact_zvalue
+% DEPENDENCY ft_artifact_zvalue
 
 % the original bug was that ft_artifact_zvalue does not adjust the detected
 % artifacts when the threshold is adjusted

@@ -1,7 +1,8 @@
 function test_bug1567
 
-% MEM 1000mb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 fileloc = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1567/');
 
@@ -22,4 +23,4 @@ for i=1:numel(datasets)
      cfg.continuous = 'no';
    end
    data = ft_preprocessing(cfg);
-end;
+end

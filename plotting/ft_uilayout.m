@@ -207,7 +207,7 @@ if ~isempty(hpos)
   elseif isequal(hpos, 'align')
     if isequal(halign, 'right')
       hpos = pos(end,1); % the position of the last element
-    else % default behaviour
+    else % default behavior
       hpos = pos(1,1); % the position of the first element
     end
   elseif isequal(hpos, 'distribute')
@@ -235,7 +235,7 @@ if ~isempty(vpos)
   elseif isequal(vpos, 'align')
     if isequal('valign', 'bottom')
       vpos = pos(end,2); % the position of the last element
-    else % default behaviour
+    else % default behavior
       vpos = pos(1,2); % the position of the first element
     end
   elseif isequal(vpos, 'distribute')

@@ -10,7 +10,7 @@ function state = dss_core_defl(state)
 % Copyright (C) 2004, 2005 DSS MATLAB package team (dss@cis.hut.fi).
 % Distributed by Laboratory of Computer and Information Science,
 % Helsinki University of Technology. http://www.cis.hut.fi/projects/dss/.
-% $Id$
+% $Id: dss_core_defl.m,v 1.25 2005/12/02 12:23:18 jaakkos Exp $
 
 % -- Internal variables
 % wdim            Dimension of the whitened data
@@ -26,13 +26,17 @@ start_time = cputime;
 interrupt_iteration = 0;
 interrupt_component = 0;
 % Dimension of the whitened data
-wdim = size(state.Y, 1);
+if iscell(state.Y)
+  wdim = size(state.Y{1},1);
+else
+  wdim = size(state.Y, 1);
+end
 sdim = state.sdim;
 
 % -- Determine if continuing old calculation or starting new
 if ~isfield(state,'component'); state.component=0; end
 if ~isfield(state,'iteration'); state.iteration=0; end
-if state.component>0 & state.component<=sdim
+if state.component>0 && state.component<=sdim
   dss_message(state,1,sprintf('Continuing on component %d, iteration %d.\n', state.component, state.iteration));
 else
   state.component=1;
@@ -66,8 +70,11 @@ while state.component <= sdim
     end
 
     % -- orthogonalization
-    if component > 1; W = state.W([1:component-1],:);
-    else; W = zeros(wdim,1); end
+    if component > 1
+      W = state.W(1:(component-1),:);
+    else 
+      W = zeros(wdim,1);
+    end
     [state.orthof.params, state.w] = feval(state.orthof.h, state.orthof.params, W, state.w);
     
     % estimate
@@ -103,18 +110,25 @@ while state.component <= sdim
     % ---- calculate new w
     state.w_old = state.w;
     % -- re-estimate projection
-    state.w = state.Y * state.s';
+    if iscell(state.Y)
+      state.w = sum(state.Y * cellctranspose(state.s), 2);
+    else
+      state.w = state.Y * state.s';
+    end
     
     % -- orthogonalization
-    if component > 1; W = state.W([1:component-1],:);
-    else; W = zeros(wdim,1); end
+    if component > 1
+      W = state.W(1:(component-1),:);
+    else
+      W = zeros(wdim,1); 
+    end
     [state.orthof.params, state.w] = feval(state.orthof.h, state.orthof.params, W, state.w);
 
     % check if sign has changed
     signum = sign(state.w' * state.w_old);
     if ~isnan(signum) 
       if signum~=0
-	state.w = signum * state.w;
+	    state.w = signum * state.w;
       end
       % Show progress
       signumstr='-0+';
@@ -129,8 +143,11 @@ while state.component <= sdim
 	  (state.w - state.w_old) * state.gamma;
     
       % -- orthogonalize adapted projection
-      if component > 1; W = state.W([1:component-1],:);
-      else; W = zeros(wdim,1); end
+      if component > 1
+        W = state.W(1:(component-1),:);
+      else
+        W = zeros(wdim,1);
+      end
       [state.orthof.params, state.w] = feval(state.orthof.h, state.orthof.params, W, state.w);
     end
     
@@ -153,15 +170,15 @@ while state.component <= sdim
     state.iteration = state.iteration + 1;
 
     % -- Test keypress interrupt
-    if keyboard_interrupt
-      in = input(['\nENTER ''i'' TO STOP NOW OR ''c'' TO STOP AFTER' ...
-		  ' COMPONENT IS FOUND. ANY OTHER KEY TO CONTINUE: '],'s');
-      if in =='i'
-	interrupt_iteration = 1;
-	break;
-      end
-      if in =='c', interrupt_component = 1; end
-    end
+%     if keyboard_interrupt
+%       in = input(['\nENTER ''i'' TO STOP NOW OR ''c'' TO STOP AFTER' ...
+% 		  ' COMPONENT IS FOUND. ANY OTHER KEY TO CONTINUE: '],'s');
+%       if in =='i'
+% 	interrupt_iteration = 1;
+% 	break;
+%       end
+%       if in =='c', interrupt_component = 1; end
+%     end
       
   end
 
@@ -190,12 +207,3 @@ state.S = state.W * state.Y;
 % -- record the used cpu time
 if ~isfield(state, 'cputime'); state.cputime = 0; end
 state.cputime = state.cputime + cputime - start_time;
-
-
-
-
-
-
-
-
-

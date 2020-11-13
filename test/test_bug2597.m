@@ -1,9 +1,8 @@
 function test_bug2597
 
 % WALLTIME 00:10:00
-% MEM 1500mb
-
-% TEST ft_selectdata
+% MEM 2gb
+% DEPENDENCY ft_selectdata
 
 % this function tests the functionality of ft_selectdata to preserve the
 % ordering of the channels according to the first input argument (thus

@@ -1,7 +1,7 @@
 function [dat] = read_edf(filename, hdr, begsample, endsample, chanindx)
 
 % READ_EDF reads specified samples from an EDF datafile. It neglects all trial or
-% data block boundaries as if the data was acquired in non-continous mode.
+% data block boundaries as if the data was acquired in non-continuous mode.
 %
 % Note that since FieldTrip only accommodates a single sampling rate in a given
 % dataset, whereas EDF allows specification of a sampling rate for each channel.  If
@@ -94,11 +94,7 @@ if needhdr
   cname=computer;
   if cname(1:2)=='PC' SLASH=BSLASH; end
   
-  fid=fopen(FILENAME,'r','ieee-le');
-  if fid<0
-    fprintf(2,['Error LOADEDF: File ' FILENAME ' not found\n']);
-    return;
-  end
+  fid=fopen_or_error(FILENAME,'r','ieee-le');
   
   EDF.FILE.FID=fid;
   EDF.FILE.OPEN = 1;
@@ -115,7 +111,7 @@ if needhdr
   end
   EDF.FileName = [EDF.FILE.Path SLASH EDF.FILE.Name '.' EDF.FILE.Ext];
   
-  H1=char(fread(EDF.FILE.FID,256,'char')');
+  H1=char(fread(EDF.FILE.FID,256,'uint8=>char')');
   EDF.VERSION=H1(1:8);                          % 8 Byte  Versionsnummer
   %if 0 fprintf(2,'LOADEDF: WARNING  Version EDF Format %i',ver); end
   EDF.PID = deblank(H1(9:88));                  % 80 Byte local patient identification
@@ -141,14 +137,14 @@ if needhdr
   EDF.Dur  = str2num(H1(245:252));     % 8 Byte  # duration of data record in sec
   EDF.NS   = str2num(H1(253:256));     % 8 Byte  # of signals
   
-  EDF.Label      = char(fread(EDF.FILE.FID,[16,EDF.NS],'char')');
-  EDF.Transducer = char(fread(EDF.FILE.FID,[80,EDF.NS],'char')');
-  EDF.PhysDim    = char(fread(EDF.FILE.FID,[ 8,EDF.NS],'char')');
+  EDF.Label      = char(fread(EDF.FILE.FID,[16,EDF.NS],'uint8=>char')');
+  EDF.Transducer = char(fread(EDF.FILE.FID,[80,EDF.NS],'uint8=>char')');
+  EDF.PhysDim    = char(fread(EDF.FILE.FID,[ 8,EDF.NS],'uint8=>char')');
   
-  EDF.PhysMin= str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'char')'));
-  EDF.PhysMax= str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'char')'));
-  EDF.DigMin = str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'char')'));
-  EDF.DigMax = str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'char')'));
+  EDF.PhysMin= str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'uint8=>char')'));
+  EDF.PhysMax= str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'uint8=>char')'));
+  EDF.DigMin = str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'uint8=>char')'));
+  EDF.DigMax = str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'uint8=>char')'));
   
   % check validity of DigMin and DigMax
   if (length(EDF.DigMin) ~= EDF.NS)
@@ -178,13 +174,15 @@ if needhdr
     %EDF.PhysMin = EDF.DigMin;
     %EDF.PhysMax = EDF.DigMax;
   end
-  EDF.PreFilt= char(fread(EDF.FILE.FID,[80,EDF.NS],'char')');
-  EDF.SPR = str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'char')'));  % samples per data record
+  EDF.PreFilt= char(fread(EDF.FILE.FID,[80,EDF.NS],'uint8=>char')');
+  EDF.SPR = str2num(char(fread(EDF.FILE.FID,[8,EDF.NS],'uint8=>char')'));  % samples per data record
   
   fseek(EDF.FILE.FID,32*EDF.NS,0);
   
   EDF.Cal = (EDF.PhysMax-EDF.PhysMin)./(EDF.DigMax-EDF.DigMin);
+  EDF.Cal(isnan(EDF.Cal)) = 0;
   EDF.Off = EDF.PhysMin - EDF.Cal .* EDF.DigMin;
+  
   %tmp = find(EDF.Cal < 0);
   %EDF.Cal(tmp) = ones(size(tmp));
   %EDF.Off(tmp) = zeros(size(tmp));
@@ -211,15 +209,15 @@ if needhdr
     else
       EDF.ChanTyp(k)=' ';
     end
-    if findstr(upper(EDF.Label(k,:)),'ECG')
+    if contains(upper(EDF.Label(k,:)),'ECG')
       EDF.ChanTyp(k)='C';
-    elseif findstr(upper(EDF.Label(k,:)),'EKG')
+    elseif contains(upper(EDF.Label(k,:)),'EKG')
       EDF.ChanTyp(k)='C';
-    elseif findstr(upper(EDF.Label(k,:)),'EEG')
+    elseif contains(upper(EDF.Label(k,:)),'EEG')
       EDF.ChanTyp(k)='E';
-    elseif findstr(upper(EDF.Label(k,:)),'EOG')
+    elseif contains(upper(EDF.Label(k,:)),'EOG')
       EDF.ChanTyp(k)='O';
-    elseif findstr(upper(EDF.Label(k,:)),'EMG')
+    elseif contains(upper(EDF.Label(k,:)),'EMG')
       EDF.ChanTyp(k)='M';
     end
   end
@@ -329,7 +327,7 @@ elseif needdat || needevt
   
   % There can be an optional chansel field containing a list of predefined channels.
   % These channels are in that case also the only ones represented in the FieldTrip
-  % header, which means that teh other channels are simply not visible to the naive
+  % header, which means that the other channels are simply not visible to the naive
   % user. This field can be present because the user specified an explicit channel
   % selection in FT_READ_HEADER or because the read_edf function had to automatically
   % choose a subset to cope with heterogenous sampling rates or even both.  In any
@@ -440,9 +438,9 @@ read_16bit_success = true;
 if is_below_2GB
   % use the external mex file, only works for <2GB
   try
-  buf = read_16bit(filename, offset, numwords);
+    buf = read_16bit(filename, offset, numwords);
   catch e
-      read_16bit_success = false;
+    read_16bit_success = false;
   end
 end
 if ~is_below_2GB || ~read_16bit_success

@@ -2,8 +2,7 @@ function test_bug2372
 
 % WALLTIME 00:10:00
 % MEM 2gb
-
-% TEST ft_timelockgrandaverage ft_timelockanalysis
+% DEPENDENCY ft_timelockgrandaverage ft_timelockanalysis
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFC_LP.mat'));
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFIC_LP.mat'));
@@ -17,10 +16,12 @@ tlk2 = ft_timelockanalysis(cfg,dataFIC_LP);
 tlk3 = ft_timelockanalysis(cfg,dataIC_LP);
 
 %% checking for a general ft_timelockgrandaverage
+% the below code is commented out, because it should fail with the new
+% implementation of ft_timelockanalysis
 %here ft_timelockgrandaverage should discard the trial field
-cfg = [];
-cfg.parameter = 'avg';
-gavg = ft_timelockgrandaverage(cfg,tlk1,tlk2,tlk3);
+% cfg = [];
+% cfg.parameter = 'avg';
+% gavg = ft_timelockgrandaverage(cfg,tlk1,tlk2,tlk3);
   
 %% test the cfg.parameter = 'trial' expected error
 try

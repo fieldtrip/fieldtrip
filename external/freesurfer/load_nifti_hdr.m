@@ -15,7 +15,7 @@ function hdr = load_nifti_hdr(niftifile)
 % reading hdr.glmin = ncols when hdr.dim(2) < 0. This
 % is FreeSurfer specific, for handling surfaces.
 %
-% $Id$
+% $Id: load_nifti_hdr.m,v 1.10.4.1 2016/08/02 21:03:47 greve Exp $
 
 
 %
@@ -24,20 +24,18 @@ function hdr = load_nifti_hdr(niftifile)
 % Original Author: Doug Greve
 % CVS Revision Info:
 %    $Author: greve $
-%    $Date: 2007/05/22 05:24:11 $
-%    $Revision$
+%    $Date: 2016/08/02 21:03:47 $
+%    $Revision: 1.10.4.1 $
 %
-% Copyright (C) 2002-2007,
-% The General Hospital Corporation (Boston, MA). 
-% All rights reserved.
+% Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
 %
-% Distribution, usage and copying of this software is covered under the
-% terms found in the License Agreement file named 'COPYING' found in the
-% FreeSurfer source code root directory, and duplicated here:
-% https://surfer.nmr.mgh.harvard.edu/fswiki/FreeSurferOpenSourceLicense
+% Terms and conditions for use, reproduction, distribution and contribution
+% are found in the 'FreeSurfer Software License Agreement' contained
+% in the file 'LICENSE' found in the FreeSurfer distribution, and here:
 %
-% General inquiries: freesurfer@nmr.mgh.harvard.edu
-% Bug reports: analysis-bugs@nmr.mgh.harvard.edu
+% https://surfer.nmr.mgh.harvard.edu/fswiki/FreeSurferSoftwareLicense
+%
+% Reporting: freesurfer@nmr.mgh.harvard.edu
 %
 
 
@@ -128,10 +126,12 @@ end
 % look at xyz units and convert to mm if needed
 xyzunits = bitand(hdr.xyzt_units,7); % 0x7
 switch(xyzunits)
-  case 1, xyzscale = 1000.000; % meters
-  case 2, xyzscale =    1.000; % mm
-  case 3, xyzscale =     .001; % microns
-  case 0, xyzscale =    1.000; % mm -- added by S.S. Dalal, 25.Sep.2013
+ case 1, xyzscale = 1000.000; % meters
+ case 2, xyzscale =    1.000; % mm
+ case 3, xyzscale =     .001; % microns
+ otherwise, 
+  fprintf('WARNING: xyz units code %d is unrecognized, assuming mm\n',xyzunits);
+  xyzscale = 1; % just assume mm
 end
 hdr.pixdim(2:4) = hdr.pixdim(2:4) * xyzscale;
 hdr.srow_x = hdr.srow_x * xyzscale;

@@ -1,9 +1,8 @@
 function test_bug1041
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_freqdescriptives memtic memtoc
+% DEPENDENCY ft_freqdescriptives memtic memtoc
 
 % this is a bug that Jorn reported but that I am not able to reproduce
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1041
@@ -31,4 +30,3 @@ fd = ft_freqdescriptives(cfg, freq);
 if isnan(fd.cfg.callinfo.procmem)
   error('memtoc failed for ft_freqdescriptives');
 end
-

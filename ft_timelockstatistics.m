@@ -70,6 +70,7 @@ ft_preamble debug
 ft_preamble loadvar varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
+ft_preamble randomseed
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -104,20 +105,22 @@ if isempty(cfg.parameter)
 end
 
 % ensure that the data in all inputs has the same channels, time-axis, etc.
-tmpcfg = keepfields(cfg, {'latency', 'avgovertime', 'channel', 'avgoverchan', 'parameter', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'latency', 'avgovertime', 'channel', 'avgoverchan', 'parameter', 'showcallinfo', 'select', 'nanmean'});
 [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
 % restore the provenance information
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 
+% neighbours are required for clustering with multiple channels
 if strcmp(cfg.correctm, 'cluster') && length(varargin{1}.label)>1
-  % this is required for clustering with multiple channels
-  ft_checkconfig(cfg, 'required', 'neighbours');
+  % this is limited to reading neighbours from disk and/or selecting channels
+  % the user should call FT_PREPARE_NEIGHBOURS directly for the actual construction
+  tmpcfg = keepfields(cfg, {'neighbours', 'channel', 'showcallinfo'});
+  cfg.neighbours = ft_prepare_neighbours(tmpcfg);
 end
 
 dimord = getdimord(varargin{1}, cfg.parameter);
 dimtok = tokenize(dimord, '_');
-dimsiz = getdimsiz(varargin{1}, cfg.parameter);
-dimsiz(end+1:length(dimtok)) = 1; % there can be additional trailing singleton dimensions
+dimsiz = getdimsiz(varargin{1}, cfg.parameter, numel(dimtok));
 rptdim = find( strcmp(dimtok, 'subj') |  strcmp(dimtok, 'rpt') |  strcmp(dimtok, 'rpttap'));
 datdim = find(~strcmp(dimtok, 'subj') & ~strcmp(dimtok, 'rpt') & ~strcmp(dimtok, 'rpttap'));
 datsiz = dimsiz(datdim);
@@ -160,7 +163,7 @@ statmethod = ft_getuserfun(cfg.method, 'statistics');
 if isempty(statmethod)
   ft_error('could not find the corresponding function for cfg.method="%s"\n', cfg.method);
 else
-  fprintf('using "%s" for the statistical testing\n', func2str(statmethod));
+  ft_info('using "%s" for the statistical testing\n', func2str(statmethod));
 end
 
 % check that the design completely describes the data
@@ -189,8 +192,32 @@ if ~isstruct(stat)
   stat = struct('prob', stat);
 end
 
+
+% overrule the 'datsiz' if stat has a (possibly updated) dim field
+if isfield(stat, 'dim')
+  datsiz = stat.dim;
+  stat = rmfield(stat, 'dim');
+end
+
+% describe the dimensions of the output data
+if ~isfield(stat, 'dimord')
+  stat.dimord = cfg.dimord;
+end
+
 % the statistical output contains multiple elements, e.g. F-value, beta-weights and probability
 fn = fieldnames(stat);
+
+% JM HACK:
+if ~isequal(datsiz, cfg.dim)
+  % the cfg.dim has been updated by the low-level function, let this one
+  % take precedence
+  datsiz = cfg.dim;
+end
+if ~isequal(varargin{1}.label, cfg.channel)
+  % the cfg.channel has been updated by the low-level function, let this
+  % one take precedence
+  varargin{1}.label = cfg.channel;
+end
 
 for i=1:length(fn)
   if numel(stat.(fn{i}))==prod(datsiz)
@@ -199,17 +226,20 @@ for i=1:length(fn)
   end
 end
 
-% describe the dimensions of the output data
-stat.dimord = cfg.dimord;
+% copy the descripive fields into the output, but only if these are not
+% present (and possibly updated by the statmethod-function
+fieldstobecopied = {'time' 'label' 'elec', 'grad', 'opto'};
+if isfield(stat, 'time'),  fieldstobecopied = fieldstobecopied(~ismember(fieldstobecopied, 'time'));  end
+if isfield(stat, 'label'), fieldstobecopied = fieldstobecopied(~ismember(fieldstobecopied, 'label')); end
 
-% copy the descripive fields into the output
-stat = copyfields(varargin{1}, stat, {'time', 'label', 'elec', 'grad', 'opto'});
+stat = copyfields(varargin{1}, stat, fieldstobecopied);
 
 % these were only present to inform the low-level functions
 cfg = removefields(cfg, {'dim', 'dimord'});
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
+ft_postamble randomseed
 ft_postamble trackconfig
 ft_postamble previous   varargin
 ft_postamble provenance stat

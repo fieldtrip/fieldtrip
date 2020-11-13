@@ -2,30 +2,28 @@ function test_bug3124
 
 % WALLTIME 00:30:00
 % MEM 3gb
-
-% TEST ft_sourceanalysis
+% DEPENDENCY ft_sourceanalysis
 
 %%
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/vol.mat'))
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/dataFIC.mat'))
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/headmodel.mat'))
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/data_all.mat'))
 
 %%
 
 cfg = [];
 cfg.method = 'mtmfft';
 cfg.taper = 'hanning';
-cfg.output = 'powandcsd';
-freq = ft_freqanalysis(cfg, dataFIC);
+cfg.output = 'fourier';
+freq = ft_freqanalysis(cfg, data_all);
 
 %%
 % with 1 cm grid -> 3000 grid points, 1484 inside
 % with 2 cm grid -> 186 grid points
 
 cfg = [];
-cfg.headmodel = vol;
-cfg.grid.resolution = 2;
-cfg.grid.unit = 'cm';
+cfg.headmodel = ft_convert_units(headmodel, 'cm');
+cfg.resolution = 2;
 cfg.channel = 'MEG';
 
 sourcemodel = ft_prepare_leadfield(cfg, freq);
@@ -45,19 +43,19 @@ freq2 = ft_selectdata(fcfg, freq);
 % the result should be at 10 Hz in all cases
 
 cfg = [];
-cfg.headmodel = vol;
-cfg.grid = sourcemodel;
+cfg.headmodel = headmodel;
+cfg.sourcemodel = sourcemodel;
 cfg.frequency = 10;
 source0 = ft_sourceanalysis(cfg, freq);
 
 cfg = [];
-cfg.headmodel = vol;
-cfg.grid = sourcemodel;
+cfg.headmodel = headmodel;
+cfg.sourcemodel = sourcemodel;
 source1 = ft_sourceanalysis(cfg, freq1);
 
 cfg = [];
-cfg.headmodel = vol;
-cfg.grid = sourcemodel;
+cfg.headmodel = headmodel;
+cfg.sourcemodel = sourcemodel;
 source2 = ft_sourceanalysis(cfg, freq2);
 
 assert(isequal(source0.freq, [10]));
@@ -82,19 +80,19 @@ freq2 = ft_selectdata(fcfg, freq);
 % the result should be at 10 Hz in all cases, i.e. averaged from 9-11
 
 cfg = [];
-cfg.headmodel = vol;
-cfg.grid = sourcemodel;
+cfg.headmodel = headmodel;
+cfg.sourcemodel = sourcemodel;
 cfg.frequency = [9 11];
 source0 = ft_sourceanalysis(cfg, freq);
 
 cfg = [];
-cfg.headmodel = vol;
-cfg.grid = sourcemodel;
+cfg.headmodel = headmodel;
+cfg.sourcemodel = sourcemodel;
 source1 = ft_sourceanalysis(cfg, freq1);
 
 cfg = [];
-cfg.headmodel = vol;
-cfg.grid = sourcemodel;
+cfg.headmodel = headmodel;
+cfg.sourcemodel = sourcemodel;
 source2 = ft_sourceanalysis(cfg, freq2);
 
 assert(isequal(source0.freq, [10]));

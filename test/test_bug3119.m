@@ -2,8 +2,7 @@ function test_bug3119
 
 % WALLTIME 00:20:00
 % MEM 2gb
-
-% TEST ft_dipolefitting dipole_fit
+% DEPENDENCY ft_dipolefitting ft_inverse_dipolefit
 
 %% load template mri
 ftdir = fileparts(which('ft_defaults'));
@@ -36,7 +35,7 @@ seg.scalp = scalp; clear scalp;
 seg.skull = skull; clear skull;
 seg = rmfield(seg,'seg');
 
-vol = ft_read_vol(fullfile(ftdir,'template','headmodel','standard_bem.mat'));
+vol = ft_read_headmodel(fullfile(ftdir,'template','headmodel','standard_bem.mat'));
 
 %%
 figure;
@@ -64,7 +63,7 @@ elec.label = label;
 figure;
 hold on
 ft_plot_sens(elec, 'style', 'ob','label','label');
-ft_plot_vol(vol, 'facealpha', 0.5, 'edgecolor', 'none'); % "lighting phong" does not work with opacity
+ft_plot_headmodel(vol, 'facealpha', 0.5, 'edgecolor', 'none'); % "lighting phong" does not work with opacity
 material dull;
 camlight;
 
@@ -74,10 +73,21 @@ cfg.elec            = ft_convert_units(elec,'cm');
 cfg.headmodel       = ft_convert_units(vol,'cm');
 cfg.reducerank      = 3;
 cfg.channel         = 'all';
-cfg.grid.resolution = 1;   % use a 3-D grid with a 1 cm resolution
-cfg.grid.unit       = 'cm';
-grid = ft_prepare_leadfield(cfg);
+cfg.sourcemodel.resolution = 1;   % use a 3-D grid with a 1 cm resolution
+cfg.sourcemodel.unit = 'cm';
+grid1 = ft_prepare_leadfield(cfg);
 
+cfg                 = [];
+cfg.elec            = ft_convert_units(elec,'cm');
+cfg.headmodel       = ft_convert_units(vol,'cm');
+cfg.reducerank      = 3;
+cfg.channel         = 'all';
+cfg.sourcemodel.unit = 'cm';
+cfg.symmetry   = 'x';
+cfg.sourcemodel.xgrid = -7.5:0.5; % this is the axis of symmetry
+cfg.sourcemodel.ygrid = -8:8;
+cfg.sourcemodel.zgrid = -8:8;
+grid2 = ft_prepare_leadfield(cfg);
 
 %% load simulated data
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3119.mat'));
@@ -93,7 +103,7 @@ semilogy(svd(datat1.avg), '.') % this shows two sources in the data
 cfg            = [];
 cfg.channel    = 'all';
 cfg.elec       = ft_convert_units(elec,'cm');
-cfg.grid       = ft_convert_units(grid,'cm'); % note that this grid is incorrect, since Npos*3
+cfg.sourcemodel = ft_convert_units(grid1,'cm'); % note that this grid1 is incorrect, since Npos*3
 cfg.headmodel  = ft_convert_units(vol,'cm');
 cfg.senstype   = 'eeg';
 cfg.latency    = [0.2 0.3];
@@ -113,23 +123,13 @@ catch
 end
 assert(errorthrown, 'the expected error was not thrown');
 
-%% 
+%%
 % let's try some other configurations that should work
-
-cfg                 = [];
-cfg.elec            = ft_convert_units(elec,'cm');
-cfg.headmodel       = ft_convert_units(vol,'cm');
-cfg.reducerank      = 3;
-cfg.channel         = 'all';
-cfg.grid.resolution = 1;
-cfg.grid.unit       = 'cm';
-cfg.symmetry        = 'x';
-grid2 = ft_prepare_leadfield(cfg);
 
 cfg            = [];
 cfg.channel    = 'all';
 cfg.elec       = ft_convert_units(elec,'cm');
-cfg.grid       = ft_convert_units(grid2,'cm');
+cfg.sourcemodel = ft_convert_units(grid2,'cm');
 cfg.headmodel  = ft_convert_units(vol,'cm');
 cfg.senstype   = 'eeg';
 cfg.latency    = [0.2 0.3];
@@ -141,13 +141,13 @@ cfg.numdipoles = 2;
 cfg.symmetry   = 'x';
 
 dipole = ft_dipolefitting(cfg, datat1);
-  
+
 %%
 
 cfg            = [];
 cfg.channel    = 'all';
 cfg.elec       = ft_convert_units(elec,'cm');
-cfg.grid       = ft_convert_units(grid,'cm');
+cfg.sourcemodel = ft_convert_units(grid1,'cm');
 cfg.headmodel  = ft_convert_units(vol,'cm');
 cfg.senstype   = 'eeg';
 cfg.latency    = [0.2 0.3];
@@ -158,12 +158,12 @@ cfg.model      = 'moving';
 
 dipole = ft_dipolefitting(cfg, datat1);
 
-%% 
+%%
 
 cfg            = [];
 cfg.channel    = 'all';
 cfg.elec       = ft_convert_units(elec,'cm');
-cfg.grid       = ft_convert_units(grid,'cm');
+cfg.sourcemodel = ft_convert_units(grid2,'cm');
 cfg.headmodel  = ft_convert_units(vol,'cm');
 cfg.senstype   = 'eeg';
 cfg.latency    = [0.2 0.3];
@@ -187,8 +187,6 @@ fitted.avg = dipole.Vmodel;
 cfg = [];
 cfg.layout = 'elec1005.lay';
 ft_multiplotER(cfg, original, fitted);
-
-
 
 %%
 % figure;

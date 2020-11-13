@@ -1,9 +1,8 @@
 function test_bug1832
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:20:00
-
-% TEST ft_read_mri ft_volumesegment ft_prepare_headmodel ft_prepare_sourcemodel
+% DEPENDENCY ft_read_mri ft_volumesegment ft_prepare_headmodel ft_prepare_sourcemodel
 
 % for the warp template example script:
 % 1) make test script that checks on the units in these objects (with assert)
@@ -14,31 +13,31 @@ template.coordsys = 'spm'; % so that FieldTrip knows how to interpret the coordi
 
 % segment the template brain and construct a volume conduction model (i.e. head model): this is needed
 % for the inside/outside detection of voxels.
-cfg          = [];
+cfg = [];
 template_seg = ft_volumesegment(cfg, template);
 assert(isfield(template_seg, 'unit'), 'unit field in seg missing')
 
-cfg          = [];
-cfg.method   = 'singlesphere';
+cfg = [];
+cfg.method = 'singlesphere';
 template_vol = ft_prepare_headmodel(cfg, template_seg);
 assert(isfield(template_vol, 'unit'), 'unit field in vol missing')
 % construct the dipole grid in the template brain coordinates
 % the source units are in mm
 % the negative inwardshift means an outward shift of the brain surface for inside/outside detection
 cfg = [];
-cfg.grid.xgrid  = -200:10:200;
-cfg.grid.ygrid  = -200:10:200;
-cfg.grid.zgrid  = -200:10:200;
-cfg.grid.tight  = 'yes';
+cfg.sourcemodel.xgrid  = -200:10:200;
+cfg.sourcemodel.ygrid  = -200:10:200;
+cfg.sourcemodel.zgrid  = -200:10:200;
+cfg.sourcemodel.tight  = 'yes';
 cfg.inwardshift = -1.5;
-cfg.vol        = template_vol;
+cfg.headmodel  = template_vol;
 template_grid  = ft_prepare_sourcemodel(cfg);
 assert(isfield(template_grid, 'unit'), 'unit field in grid missing')
 
 % prepare leadfield
-cfg         = [];
-cfg.grid    = ft_convert_units(template_grid, 'cm');
-cfg.vol     = template_vol;
+cfg = [];
+cfg.sourcemodel = ft_convert_units(template_grid, 'cm');
+cfg.headmodel = template_vol;
 cfg.channel = 'EEG';
 cfg.elec = ft_read_sens('standard_1020.elc');
 template_grid_lf     = ft_prepare_leadfield(cfg);

@@ -1,19 +1,17 @@
-function [x, y] = ft_select_box(handle, eventdata, varargin)
+function [x, y] = ft_select_box()
 
-% FT_SELECT_BOX helper function for selecting a rectangular region
-% in the current figure using the mouse.
+% FT_SELECT_BOX helper function for selecting a single rectangular region in the
+% current figure using the mouse. This function is not used as a callabck, but blocks
+% the execution of the code until a selection is made.
 %
 % Use as
-%   [x, y] = ft_select_box(...)
+%   [x, y] = ft_select_box()
 %
 % It returns a 2-element vector x and a 2-element vector y
 % with the corners of the selected region.
 %
-% Optional input arguments should come in key-value pairs and can include
-%   'multiple' = true/false, make multiple selections by dragging, clicking
-%                in one will finalize the selection (default = false)
-%
-% See also FT_SELECT_CHANNEL, FT_SELECT_POINT, FT_SELECT_POINT3D, FT_SELECT_RANGE, FT_SELECT_VOXEL 
+% See also FT_SELECT_CHANNEL, FT_SELECT_POINT, FT_SELECT_POINT3D, FT_SELECT_RANGE,
+% FT_SELECT_VOXEL, GINPUT, RBBOX
 
 % Copyright (C) 2006, Robert Oostenveld
 %
@@ -35,20 +33,19 @@ function [x, y] = ft_select_box(handle, eventdata, varargin)
 %
 % $Id$
 
-% get the optional arguments
-multiple = ft_getopt(varargin, 'multiple', false);
+drawnow
 
-if istrue(multiple)
-  ft_error('not yet implemented');
-else
+try
   k = waitforbuttonpress;
-  point1 = get(gca,'CurrentPoint');    % button down detected
-  finalRect = rbbox;                   % return figure units
-  point2 = get(gca,'CurrentPoint');    % button up detected
-  point1 = point1(1,1:2);              % extract x and y
+  point1 = get(gca, 'CurrentPoint');    % button down detected
+  finalRect = rbbox;                    % return figure units
+  point2 = get(gca, 'CurrentPoint');    % button up detected
+  point1 = point1(1,1:2);               % extract x and y
   point2 = point2(1,1:2);
   x = sort([point1(1) point2(1)]);
   y = sort([point1(2) point2(2)]);
+catch
+  % this happens if the figure is closed
+  x = [];
+  y = [];
 end
-
-

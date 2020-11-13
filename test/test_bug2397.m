@@ -1,9 +1,8 @@
 function test_bug2397
 
-% MEM 2000mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_prepare_mesh
+% DEPENDENCY ft_prepare_mesh
 
 % this pertains to the OpenMEEG pipeline, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2397
 

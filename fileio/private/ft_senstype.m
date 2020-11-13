@@ -57,6 +57,7 @@ function [type] = ft_senstype(input, desired)
 %   'eeg1010'
 %   'eeg1005'
 %   'ext1020'             in case it is a small subset of eeg1020, eeg1010 or eeg1005
+%   'nex5'
 %
 % The optional input argument for the desired type can be any of the above, or any of
 % the following generic classes of acquisition systems
@@ -151,11 +152,12 @@ isdata   = isa(input, 'struct')  && (isfield(input, 'hdr') || isfield(input, 'ti
 isheader = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'Fs');
 isgrad   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'pnt')  &&  isfield(input, 'ori'); % old style
 iselec   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'pnt')  && ~isfield(input, 'ori'); % old style
-isgrad   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'coilpos')) || isgrad;             % new style
-iselec   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'elecpos')) || iselec;             % new style
-isnirs   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'transceiver');
+isnirs   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'fiberpos');                       % old style
+isgrad   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'coilpos'))  || isgrad;            % new style
+iselec   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'elecpos'))  || iselec;            % new style
+isnirs   = (isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'optopos')) || isnirs;            % new style
 islabel  = isa(input, 'cell')    && ~isempty(input) && isa(input{1}, 'char');
-haslabel    = isa(input, 'struct')  && isfield(input, 'label');
+haslabel = isa(input, 'struct')  && isfield(input, 'label');
 
 if ~(isdata || isheader || isgrad || iselec || isnirs || islabel || haslabel) && isfield(input, 'hdr')
   input    = input.hdr;
@@ -163,14 +165,17 @@ if ~(isdata || isheader || isgrad || iselec || isnirs || islabel || haslabel) &&
 end
 
 if isdata
-  % the input may be a data structure which then contains a grad/elec structure, a header or only the labels
-  % preferably look at the data and not the header for the grad, because it might be re-balanced and/or planar
+  % the input may be a data structure which then contains a grad/elec/opto structure, a header or only the labels
+  % preferably look at the data and not the header for the sensors, because it might be re-balanced and/or planar
   if isfield(input, 'grad')
     sens   = input.grad;
     isgrad = true;
   elseif isfield(input, 'elec')
     sens   = input.elec;
     iselec = true;
+  elseif isfield(input, 'opto')
+    sens   = input.opto;
+    isnirs = true;
   elseif issubfield(input, 'hdr.grad')
     sens   = input.hdr.grad;
     isgrad = true;
@@ -244,10 +249,16 @@ elseif isfield(input, 'nChans') && input.nChans==1 && isfield(input, 'label') &&
   % this is a single channel header that was read from a Neuralynx file, might be fcdc_matbin or neuralynx_nsc
   type = 'neuralynx';
   
-elseif issubfield(input, 'orig.FileHeader') &&  issubfield(input, 'orig.VarHeader')
-  % this is a complete header that was read from a Plexon *.nex file using read_plexon_nex
-  type = 'plexon';
-  
+elseif issubfield(input, 'orig.FileHeader') && issubfield(input, 'orig.VarHeader')
+  fh = input.orig.FileHeader;
+  if issubfield(fh, 'NexFileHeader') && ischar(fh.NexFileHeader) && strcmp(fh.NexFileHeader, 'NEX5')
+    % this is a complete header that was read from a Nex Technologies *.nex5 file using read_nex5
+    type = 'nex5';
+  else
+    % this is a complete header that was read from a Plexon *.nex file using read_plexon_nex
+    type = 'plexon';
+  end
+
 elseif issubfield(input, 'orig.stname')
   % this is a complete header that was read from an ITAB dataset
   type = 'itab';

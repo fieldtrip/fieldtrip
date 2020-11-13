@@ -60,7 +60,7 @@ if ~isempty(regexp(getenv('HOSTNAME'), 'mentat'))
   penalty(mentat007) = 0;
 end
 
-% select the slave peer that has the best match with the job requirements
+% select the worker peer that has the best match with the job requirements
 % i.e. the one with the lowest penalty
 [penalty, indx] = sort(penalty);
 

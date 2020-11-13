@@ -1,15 +1,15 @@
 function [pnt, ori, lab] = channelposition(sens)
 
 % CHANNELPOSITION computes the channel positions and orientations from the
-% coils or electrodes
+% MEG coils, EEG electrodes or NIRS optodes
 %
 % Use as
 %   [pos, ori, lab] = channelposition(sens)
-% where sens is an electrode or gradiometer array.
+% where sens is an gradiometer, electrode, or optode array.
 %
 % See also FT_DATATYPE_SENS
 
-% Copyright (C) 2009-2012, Robert Oostenveld & Vladimir Litvak
+% Copyright (C) 2009-2018, Robert Oostenveld & Vladimir Litvak
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -49,12 +49,14 @@ if     ~isfield(sens, 'coilori') && isfield(sens, 'coilpos')
   sens.coilori = nan(size(sens.coilpos));
 elseif ~isfield(sens, 'coilori') && isfield(sens, 'elecpos')
   sens.coilori = nan(size(sens.elecpos));
+elseif ~isfield(sens, 'coilori') && isfield(sens, 'optopos')
+  sens.coilori = nan(size(sens.optopos));
 end
 
 switch ft_senstype(sens)
   case {'ctf64', 'ctf151', 'ctf275' 'bti148', 'bti248', 'bti248grad', 'itab28', 'itab153', 'yokogawa64', 'yokogawa160', 'babysquid74'}
     % the following code applies to systems with only axial gradiometers or magnetometers
-    
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%
     % do the MEG sensors first
     %%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -62,35 +64,35 @@ switch ft_senstype(sens)
     sel        = ft_chantype(sens, 'meg');
     sens.label = sens.label(sel);
     sens.tra   = sens.tra(sel,:);
-    
+
     % subsequently remove the unused coils
     used = any(abs(sens.tra)>0.0001, 1);  % allow a little bit of rounding-off error
     sens.coilpos = sens.coilpos(used,:);
     sens.coilori = sens.coilori(used,:);
     sens.tra     = sens.tra(:,used);
-    
+
     % compute distances from the center of the helmet
     center = mean(sens.coilpos);
     dist   = sqrt(sum((sens.coilpos - repmat(center, size(sens.coilpos, 1), 1)).^2, 2));
-    
+
     % put the corresponding distances instead of non-zero tra entries
     maxval = repmat(max(abs(sens.tra),[],2), [1 size(sens.tra,2)]);
     maxval = min(maxval, ones(size(maxval))); %a value > 1 sometimes leads to problems; this is an empirical fix
     dist = (abs(sens.tra)>0.7.*maxval).*repmat(dist', size(sens.tra, 1), 1);
-    
+
     % for the occasional case where there are nans: -> 0's will be
     % converted to inf anyhow
     dist(isnan(dist)) = 0;
-    
+
     % put infs instead of the zero entries
     dist(~dist) = inf;
-    
+
     % use the matrix to find coils with minimal distance to the center,
     % i.e. the bottom coil in the case of axial gradiometers
     % this only works for a full-rank unbalanced tra-matrix
-    
+
     numcoils = sum(isfinite(dist),2);
-    
+
     if all(numcoils==numcoils(1))
       % add the additional constraint that coils cannot be used twice,
       % i.e. for the position of 2 channels. A row of the dist matrix can end
@@ -99,7 +101,7 @@ switch ft_senstype(sens)
       % FIXME: I don't know whether this works for a vector-gradiometer
       % system. It also does not work when the system has mixed gradiometers
       % and magnetometers
-      
+
       % use the magic that Jan-Mathijs implemented
       tmp      = mode(numcoils);
       niter    = 0;
@@ -116,28 +118,28 @@ switch ft_senstype(sens)
     else
       % assume that the solution is not so hard and just determine the bottom coil
     end
-    
+
     [junk, ind] = min(dist, [], 2);
-    
+
     lab(sel)   = sens.label;
     pnt(sel,:) = sens.coilpos(ind, :);
     ori(sel,:) = sens.coilori(ind, :);
-    
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % then do the references
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     sens = sensorig;
     sel  = ft_chantype(sens, 'ref');
-    
+
     sens.label = sens.label(sel);
     sens.tra   = sens.tra(sel,:);
-    
+
     % subsequently remove the unused coils
     used = any(abs(sens.tra)>0.0001, 1);  % allow a little bit of rounding-off error
     sens.coilpos = sens.coilpos(used,:);
     sens.coilori = sens.coilori(used,:);
     sens.tra = sens.tra(:,used);
-    
+
     [nchan, ncoil] = size(sens.tra);
     refpnt = zeros(nchan,3);
     refori = zeros(nchan,3); % FIXME not sure whether this will work
@@ -148,18 +150,18 @@ switch ft_senstype(sens)
       refori(i,:) = weight * sens.coilori;
     end
     reflab = sens.label;
-    
+
     lab(sel)   = reflab;
     pnt(sel,:) = refpnt;
     ori(sel,:) = refori;
-    
+
     sens = sensorig;
-    
+
   case {'ctf64_planar', 'ctf151_planar', 'ctf275_planar', 'bti148_planar', 'bti248_planar', 'bti248grad_planar', 'itab28_planar', 'itab153_planar', 'yokogawa64_planar', 'yokogawa160_planar'}
     % create a list with planar channel names
     chan = {};
     for i=1:length(sens.label)
-      if ~isempty(findstr(sens.label{i}, '_dH')) || ~isempty(findstr(sens.label{i}, '_dV'))
+      if endsWith(sens.label{i}, '_dH') || endsWith(sens.label{i}, '_dV')
         chan{i} = sens.label{i}(1:(end-3));
       end
     end
@@ -187,7 +189,7 @@ switch ft_senstype(sens)
     lab = lab(ind,:);
     pnt = pnt(ind,:);
     ori = ori(ind,:);
-    
+
   case 'neuromag122'
     % find the matching channel-duplets
     ind = [];
@@ -218,7 +220,7 @@ switch ft_senstype(sens)
     lab = lab(ind,:);
     pnt = pnt(ind,:);
     ori = ori(ind,:);
-    
+
   case 'neuromag306'
     % find the matching channel-triplets
     ind = [];
@@ -253,7 +255,7 @@ switch ft_senstype(sens)
     lab = lab(ind,:);
     pnt = pnt(ind,:);
     ori = ori(ind,:);
-    
+
   otherwise
     % compute the position for each gradiometer or electrode
     nchan = length(sens.label);
@@ -261,36 +263,61 @@ switch ft_senstype(sens)
       nelec = size(sens.elecpos,1); % these are the electrodes
     elseif isfield(sens, 'coilpos')
       ncoil = size(sens.coilpos,1); % these are the coils
+    elseif isfield(sens, 'optopos')
+      nopto = size(sens.optopos,1); % these are the optodes
     end
-    
+
     if ~isfield(sens, 'tra') && isfield(sens, 'elecpos') && nchan==nelec
       % there is one electrode per channel, which means that the channel position is identical to the electrode position
       pnt = sens.elecpos;
-      ori = nan(size(pnt));
+      if isfield(sens, 'elecori')
+        ori = sens.elecori;
+      else
+        ori = nan(size(pnt));
+      end
       lab = sens.label;
-      
+
     elseif isfield(sens, 'tra') && isfield(sens, 'elecpos') && isequal(sens.tra, eye(nelec))
       % there is one electrode per channel, which means that the channel position is identical to the electrode position
       pnt = sens.elecpos;
-      ori = nan(size(pnt));
+      if isfield(sens, 'elecori')
+        ori = sens.elecori;
+      else
+        ori = nan(size(pnt));
+      end
       lab = sens.label;
-      
+
     elseif isfield(sens, 'tra') && isfield(sens, 'elecpos') && isequal(sens.tra, eye(nelec)-1/nelec)
       % there is one electrode per channel, channels are average referenced
       pnt = sens.elecpos;
-      ori = nan(size(pnt));
+      if isfield(sens, 'elecori')
+        ori = sens.elecori;
+      else
+        ori = nan(size(pnt));
+      end
       lab = sens.label;
-      
+
     elseif ~isfield(sens, 'tra') && isfield(sens, 'coilpos') && nchan==ncoil
       % there is one coil per channel, which means that the channel position is identical to the coil position
       pnt = sens.coilpos;
       ori = sens.coilori;
       lab = sens.label;
-      
+
+    elseif ~isfield(sens, 'tra') && isfield(sens, 'optopos') && nchan==nopto
+      % there is one optode per channel, which means that the channel position is identical to the optode position
+      pnt = sens.optopos;
+      if isfield(sens, 'optoori')
+        ori = sens.optoori;
+      else
+        ori = nan(size(pnt));
+      end
+      lab = sens.label;
+
     elseif isfield(sens, 'tra')
       % each channel depends on multiple sensors (electrodes or coils), compute a weighted position for the channel
       % for MEG gradiometer channels this means that the position is in between the two coils
       % for bipolar EEG channels this means that the position is in between the two electrodes
+      % for NIRS channels this means that the position is in between the transmit and receive optode
       pnt = nan(nchan,3);
       ori = nan(nchan,3);
       if isfield(sens, 'coilpos')
@@ -306,14 +333,19 @@ switch ft_senstype(sens)
           weight = weight ./ sum(weight);
           pnt(i,:) = weight * sens.elecpos;
         end
+      elseif isfield(sens, 'optopos')
+        for i=1:nchan
+          weight = abs(sens.tra(i,:));
+          weight = weight ./ sum(weight);
+          pnt(i,:) = weight * sens.optopos;
+        end
       end
       lab = sens.label;
-      
     end
     
 end % switch senstype
 
-n   = size(lab,2);
+n = size(lab,2);
 % this is to fix the planar layouts, which cannot be plotted anyway
 if n>1 && size(lab, 1)>1 % this is to prevent confusion when lab happens to be a row array
   pnt = repmat(pnt, n, 1);

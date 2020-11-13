@@ -39,14 +39,11 @@ function dat = read_egis_data(filename, hdr, begtrial, endtrial, chanindx)
 %
 % $Id$
 
-fh=fopen([filename],'r');
-if fh==-1
-    ft_error('wrong filename')
-end
+fh=fopen_or_error([filename],'r');
 fclose(fh);
 
 [fhdr,chdr,ename,cnames,fcom,ftext] = read_egis_header(filename);
-fh=fopen([filename],'r');
+fh=fopen_or_error([filename],'r');
 fhdr(1)=fread(fh,1,'int32'); %BytOrd
 [str,maxsize,cEndian]=computer;
 if fhdr(1)==16909060
@@ -54,16 +51,16 @@ if fhdr(1)==16909060
         endian = 'ieee-be';
     elseif cEndian == 'L'
         endian = 'ieee-le';
-    end;
+    end
 elseif fhdr(1)==67305985
     if cEndian == 'B'
         endian = 'ieee-le';
     elseif cEndian == 'L'
         endian = 'ieee-be';
-    end;
+    end
 else
     ft_error('This is not an EGIS average file.');
-end;
+end
 
 if fhdr(2) == -1
     fileType = 'ave';
@@ -71,7 +68,7 @@ elseif fhdr(2) == 3
     fileType = 'ses';
 else
     ft_error('This is not an EGIS file.');
-end;
+end
 
 dat=zeros(hdr.nChans,hdr.nSamples,endtrial-begtrial+1);
 
@@ -102,6 +99,6 @@ if fileType == 'ave'
     dat=dat/fhdr(12); %convert to microvolts
 elseif fileType == 'ses'
     dat=dat/5; %convert to microvolts (EGIS sess files created by NetStation use a 5 bins per microvolt scaling)
-end;
+end
 
 fclose(fh);

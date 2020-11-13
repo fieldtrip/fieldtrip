@@ -1,9 +1,8 @@
 function test_bug843
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_topoplotTFR
+% DEPENDENCY ft_topoplotTFR
 
 % it has been reported that the linearly indexed connectivity metrics don't
 % behave robustly in combination with a specified refchannel; also
@@ -48,5 +47,3 @@ cfg.directionality = 'inflow';
 figure;ft_topoplotTFR(cfg,freq);
 cfg.directionality = 'outflow';
 figure;ft_topoplotTFR(cfg,freq);
-
-

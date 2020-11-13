@@ -1,11 +1,10 @@
 function test_bug2376
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY channelposition ft_plot_sens ft_plot_headmodel ft_plot_mesh ft_prepare_vol_sens
 
-% TEST channelposition ft_plot_sens ft_plot_vol ft_plot_mesh ft_prepare_vol_sens
-
-[pnt, tri] = icosahedron162;
+[pnt, tri] = mesh_sphere(162);
 
 % create volume conductor models
 vol = [];
@@ -27,7 +26,7 @@ assert(isequal(sens.chanpos, sens.elecpos))
 
 % the electrodes should be around the sphere at 1 cm distance
 figure
-ft_plot_vol(vol); camlight
+ft_plot_headmodel(vol); camlight
 ft_plot_sens(sens);
 
 [volp, sensp] = ft_prepare_vol_sens(vol, sens);
@@ -35,5 +34,5 @@ assert(isequal(sensp.chanpos, sensp.elecpos))
 
 % the electrodes should be right on the sphere
 figure
-ft_plot_vol(volp); camlight
+ft_plot_headmodel(volp); camlight
 ft_plot_sens(sensp);

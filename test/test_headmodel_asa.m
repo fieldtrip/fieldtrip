@@ -1,9 +1,8 @@
 function test_headmodel_asa
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_headmodel_asa ft_prepare_vol_sens ft_compute_leadfield
+% DEPENDENCY ft_headmodel_asa ft_prepare_vol_sens ft_compute_leadfield
 
 % the standard BEM model that is supplied on the FieldTrip ftp server 
 % and included in EEGLAB was originally constructed in ASA version 2
@@ -16,7 +15,7 @@ elcfile = dccnpath('/home/common/matlab/fieldtrip/template/electrode/standard_10
 
 vol = ft_headmodel_asa(hdmfile);
 figure
-ft_plot_vol(vol, 'facecolor', 'none')
+ft_plot_headmodel(vol, 'facecolor', 'none')
 
 if true
   % read some standard electrode positions

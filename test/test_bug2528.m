@@ -1,9 +1,8 @@
 function test_bug2528
 
 % WALLTIME 00:10:00
-% MEM 1gb
-
-% TEST ft_math ft_selectdata ft_selectdata_new
+% MEM 2gb
+% DEPENDENCY ft_math ft_selectdata ft_selectdata_new
 
 % data1 =
 %           avg: [63x2000 double]

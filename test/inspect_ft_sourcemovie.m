@@ -1,10 +1,8 @@
-% function inspect_ft_sourcemovie
+function inspect_ft_sourcemovie
 
 % MEM 24gb
 % WALLTIME 00:10:00
-
-% TEST inspect_ft_sourcemovie
-% TEST ft_sourcemovie ft_sourceanalysis ft_sourceinterpolate ft_volumenormalize ft_prepare_singleshell ft_prepare_leadfield qsubcellfun qsubfeval qsubget
+% DEPENDENCY ft_sourcemovie ft_sourceanalysis ft_sourceinterpolate ft_volumenormalize ft_prepare_singleshell ft_prepare_leadfield qsubcellfun qsubfeval qsubget
 
 % the frequency and source analysis is based on the tutorials
 
@@ -34,12 +32,12 @@ vol = ft_prepare_singleshell(cfg, segmentedmri);
 
 cfg                 = [];
 cfg.grad            = freqFIC.grad;
-cfg.vol             = vol;
+cfg.headmodel       = vol;
 cfg.reducerank      = 2;
 cfg.normalize       = 'yes';
 cfg.channel         = {'MEG','-MLP31', '-MLO12'};
-cfg.grid.resolution = 1; % use a 3-D grid with a 1 cm resolution
-cfg.grid.unit       = 'cm';
+cfg.sourcemodel.resolution = 1; % use a 3-D grid with a 1 cm resolution
+cfg.sourcemodel.unit       = 'cm';
 grid                = ft_prepare_leadfield(cfg);
 
 %% do the source reconstruction

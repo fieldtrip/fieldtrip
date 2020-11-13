@@ -3,7 +3,7 @@ r = [100 92 88];
 c = [1 1/80 1];
 
 % this is the initial description of the spherical mesh
-[pnt, tri] = icosahedron162;
+[pnt, tri] = mesh_sphere(162);
 
 % create a set of electrodes on the outer surface
 sens.pnt = max(r) * pnt;

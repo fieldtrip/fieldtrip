@@ -68,7 +68,7 @@ elseif isfield(freq, 'crsspctrm')
   % concatenate the real and imaginary part
   avg = [real(spctrm) imag(spctrm)];
 else
-  ft_error('unknown representation of frequency domain data');
+  ft_error('cannot convert this representation of frequency domain data');
 end
 
 timelock        = [];

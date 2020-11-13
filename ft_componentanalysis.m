@@ -4,7 +4,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 % spatio-temporal decompositions of EEG or MEG data. This function computes
 % the topography and timecourses of the components. The output of this
 % function can be further analyzed with FT_TIMELOCKANALYSIS or
-% FT_FREQNANALYSIS.
+% FT_FREQANALYSIS.
 %
 % Use as
 %   [comp] = ft_componentanalysis(cfg, data)
@@ -208,7 +208,7 @@ if isfield(cfg, 'topo') && isfield(cfg, 'topolabel')
   ft_warning(['Specifying cfg.topo (= mixing matrix) to determine component '...
     'timecourses in specified data is deprecated; please specify an '...
     'unmixing matrix instead with cfg.unmixing. '...
-    'Using cfg.unmixing=pinv(cfg.topo) for now to reproduce old behaviour.']);
+    'Using cfg.unmixing=pinv(cfg.topo) for now to reproduce old behavior.']);
   
   cfg.unmixing = pinv(cfg.topo);
   cfg = rmfield(cfg, 'topo');
@@ -252,7 +252,7 @@ switch cfg.method
     % additional options, see BINICA for details
     cfg.binica       = ft_getopt(cfg,        'binica',  []);
     cfg.binica.lrate = ft_getopt(cfg.binica, 'lrate',   0.001);
-  case {'dss' 'dss2'} % JM at present has his own dss, that can deal with cell-array input, specify as dds2
+  case 'dss'
     % additional options, see DSS for details
     cfg.dss               = ft_getopt(cfg,          'dss',      []);
     cfg.dss.denf          = ft_getopt(cfg.dss,      'denf',     []);
@@ -279,9 +279,8 @@ switch cfg.method
 end
 
 % select trials of interest
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo'});
 data   = ft_selectdata(tmpcfg, data);
-
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
 
@@ -375,20 +374,25 @@ elseif ~strcmp(cfg.method, 'predetermined unmixing matrix') && strcmp(cfg.cellmo
   ft_info('concatenating data');
   
   dat = zeros(Nchans, sum(Nsamples));
+  ft_progress('init', cfg.feedback, 'concatenating trials...');
   for trial=1:Ntrials
-    ft_info('.');
+    ft_progress(trial/Ntrials, 'Concatenating trial %d from %d', trial, Ntrials);
     begsample = sum(Nsamples(1:(trial-1))) + 1;
     endsample = sum(Nsamples(1:trial));
     dat(:,begsample:endsample) = data.trial{trial};
   end
-  ft_info('\n');
+  ft_progress('close')
   ft_info('concatenated data matrix size %dx%d\n', size(dat,1), size(dat,2));
   
   hasdatanans = any(~isfinite(dat(:)));
   if hasdatanans
-    ft_info('data contains nans, only using the non-nan samples\n');
+    ft_info('data contains nan or inf, only using the samples without nan or inf\n');
     finitevals = sum(~isfinite(dat))==0;
-    dat        = dat(:,finitevals);
+    if ~any(finitevals)
+      ft_error('no samples remaining');
+    else
+      dat = dat(:,finitevals);
+    end
   end
 else
   ft_info('not concatenating data\n');
@@ -439,7 +443,7 @@ switch cfg.method
     % do the rest of the icasso related processing
     sR = icassoCluster(sR, 'strategy', 'AL', 'simfcn', 'abscorr', 's2d', 'sim2dis', 'L',cfg.numcomponent);
     sR = icassoProjection(sR, 'cca', 's2d', 'sqrtsim2dis', 'epochs', 75);
-    [Iq, mixing, unmixing, ~, index2centrotypes] = icassoResult(sR,cfg.numcomponent);
+    [Iq, mixing, unmixing, dum, index2centrotypes] = icassoResult(sR,cfg.numcomponent);
     
     % this step is done, because in icassoResult mixing is determined to be
     % pinv(unmixing), which yields strange results. Better take it from the
@@ -645,7 +649,7 @@ switch cfg.method
     % see http://www.cis.hut.fi/projects/dss
     ft_hastoolbox('dss', 1);
     
-    params         = struct(cfg.dss);
+    params         = removefields(struct(cfg.dss), {'V' 'dV' 'W' 'indx'});
     params.denf.h  = str2func(cfg.dss.denf.function);
     params.preprocf.h = str2func(cfg.dss.preprocf.function);
     if ~ischar(cfg.numcomponent)
@@ -654,23 +658,26 @@ switch cfg.method
     if isfield(cfg.dss, 'wdim') && ~isempty(cfg.dss.wdim)
       params.wdim = cfg.dss.wdim;
     end
-    if isfield(cfg.dss, 'V') && ~isempty(cfg.dss.V)
-      params.Y = params.V*dat;
-    end
     
     % create the state
     state   = dss_create_state(dat, params);
     if isfield(cfg.dss, 'V') && ~isempty(cfg.dss.V)
       state.V = cfg.dss.V;
+      state.Y = cfg.dss.V*dat;
     end
     if isfield(cfg.dss, 'dV') && ~isempty(cfg.dss.dV)
       state.dV = cfg.dss.dV;
+    end
+    if isfield(cfg.dss, 'W') && ~isempty(cfg.dss.W)
+      state.W = cfg.dss.W;
+    end
+    if isfield(cfg.dss, 'indx') && ~isempty(cfg.dss.indx)
+      state.indx = cfg.dss.indx; %may be needed for dss_core_mim
     end
     
     % increase the amount of information that is displayed on screen
     % state.verbose = 3;
     % start the decomposition
-    % state   = dss(state);  % this is for the DSS toolbox version 0.6 beta
     state   = denss(state);  % this is for the DSS toolbox version 1.0
     
     mixing   = state.A;
@@ -765,7 +772,8 @@ switch cfg.method
     [unmixing, mixing, rho, compdata, time] = bsscca(dat, optarg{:});
     data.trial = mixing*compdata;
     data.time  = time;
-    
+    data       = removefields(data, 'sampleinfo');
+ 
     if size(mixing,1)>numel(data.label)
       for m = 1:(size(mixing,1)-numel(data.label))
         data.label{end+1} = sprintf('refchan%03d',m);

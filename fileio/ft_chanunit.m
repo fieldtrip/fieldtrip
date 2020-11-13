@@ -10,7 +10,7 @@ function chanunit = ft_chanunit(input, desired)
 %   unit = ft_chanunit(hdr, desired)
 %
 % If the desired unit is not specified as second input argument, this
-% function returns a Nchan*1 cell array with a string describing the
+% function returns a Nchan*1 cell-array with a string describing the
 % physical units of each channel, or 'unknown' if those cannot be
 % determined.
 %
@@ -56,8 +56,8 @@ isheader = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'F
 isdata   = isa(input, 'struct')  && ~isheader && (isfield(input, 'hdr') || isfield(input, 'grad') || isfield(input, 'elec') || isfield(input, 'opto'));
 isgrad   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'pnt')  &&  isfield(input, 'ori'); % old style
 iselec   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'pnt')  && ~isfield(input, 'ori'); % old style
-isgrad   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'coilpos')) || isgrad;             % new style 
-iselec   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'elecpos')) || iselec;             % new style 
+isgrad   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'coilpos')) || isgrad;             % new style
+iselec   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'elecpos')) || iselec;             % new style
 isopto   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'transceiver');
 islabel  = isa(input, 'cell')    && ~isempty(input) && isa(input{1}, 'char');
 
@@ -125,13 +125,13 @@ end
 
 if ft_senstype(input, 'unknown')
   % don't bother doing all subsequent checks to determine the type of sensor array
-  
+
 elseif isheader && ft_senstype(input, 'eeg')
   % until now in all stand-alone EEG systems examined the data was in uV
   chanunit(strcmp('eeg',              input.chantype)) = {'uV'};
-  
+
 elseif isheader && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74')) && issubfield(input, 'orig.chs')
-  for i = 1:numchan % make a cell array of units for each channel
+  for i = 1:numchan % make a cell-array of units for each channel
     switch input.orig.chs(i).unit
       case 201 % defined as constants by MNE, see p. 217 of MNE manual
         chanunit{i} = 'T/m';
@@ -145,7 +145,7 @@ elseif isheader && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysq
         chanunit{i} = 'unknown';
     end
   end
-  
+
 elseif iselec && isfield(input, 'chantype')
   % electrode definitions are expressed in SI units, i.e. V
   chanunit(strcmp('eeg',              input.chantype)) = {'V'};
@@ -158,7 +158,7 @@ elseif isgrad && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysqui
   chanunit(strcmp('ecg',              input.chantype)) = {'unknown'}; % FIXME
   chanunit(strcmp('megmag',           input.chantype)) = {'T'};
   chanunit(strcmp('megaxial',         input.chantype)) = {'T'}; % applies to BabySQUID system
-  
+
   if isfield(input, 'tra')
     if all(sum(abs(input.tra),2)==1 | sum(abs(input.tra),2)==2)
       % it is not scaled with distance
@@ -173,15 +173,14 @@ elseif isgrad && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysqui
           ft_warning('assuming that planar MEG channel units are %s', assumption);
         end
       else
-        sel = strcmp('megplanar', input.chantype);
+        sel = strcmp('megplanar', input.chantype) & strcmp('unknown', chanunit);
         if any(sel)
-          chanunit(sel) = {'unknown'};
           ft_warning('cannot determine the units for the planar MEG channels');
         end
       end
     end
   end
-  
+
 elseif (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74')) && isfield(input, 'chantype')
   % determine the units only based on the channel name and type
   chanunit(strcmp('eeg',              input.chantype)) = {'unknown'}; % FIXME
@@ -190,7 +189,7 @@ elseif (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74')) && 
   chanunit(strcmp('ecg',              input.chantype)) = {'unknown'}; % FIXME
   chanunit(strcmp('megmag',           input.chantype)) = {'T'};
   chanunit(strcmp('megaxial',         input.chantype)) = {'T'}; % applies to BabySQUID system
-  
+
   if isfield(input, 'unit')
     assumption = sprintf('T/%s', input.unit);
     sel = strcmp('megplanar', input.chantype);
@@ -199,13 +198,12 @@ elseif (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74')) && 
       ft_warning('assuming that planar MEG channel units are %s, consistent with the geometrical units', assumption);
     end
   else
-    sel = strcmp('megplanar', input.chantype);
+    sel = strcmp('megplanar', input.chantype) & strcmp('unknown', chanunit);
     if any(sel)
-      chanunit(strcmp('megplanar',        input.chantype)) = {'unknown'};
       ft_warning('cannot determine the units for the planar MEG channels');
     end
   end
-  
+
 elseif ft_senstype(input, 'ctf') && isfield(input, 'chantype')
   chanunit(strcmp('eeg',              input.chantype)) = {'V'};
   chanunit(strcmp('emg',              input.chantype)) = {'V'};
@@ -215,11 +213,14 @@ elseif ft_senstype(input, 'ctf') && isfield(input, 'chantype')
   chanunit(strcmp('refmag',           input.chantype)) = {'T'};
   chanunit(strcmp('refgrad',          input.chantype)) = {'T'};
   chanunit(strcmp('clock',            input.chantype)) = {'s'}; % seconds
-  
+
 elseif ft_senstype(input, 'yokogawa') && isfield(input, 'chantype')
   chanunit(strcmp('meggrad',          input.chantype)) = {'T'};
   chanunit(strcmp('megplanar',        input.chantype)) = {'T'}; % I am not sure whether it is T or T/m
-  
+  chanunit(strcmp('eeg',              input.chantype)) = {'V'}; % added at this time
+  chanunit(strcmp('refmag',           input.chantype)) = {'T'}; % added at this time
+  chanunit(strcmp('trigger',          input.chantype)) = {'V'}; % added at this time
+
 elseif ft_senstype(input, 'bti') && isfield(input, 'chantype')
   chanunit(strcmp('meg',                 input.chantype)) = {'T'}; % this was the channel type until approx. 2 November 2012, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1807
   chanunit(strcmp('megmag',              input.chantype)) = {'T'}; % applies for magnetometer 4D/BTi systems
@@ -228,10 +229,10 @@ elseif ft_senstype(input, 'bti') && isfield(input, 'chantype')
   chanunit(strcmp('refmag',              input.chantype)) = {'T'};
   chanunit(strcmp('refgrad',             input.chantype)) = {'T'};
   chanunit(strcmp('ref',                 input.chantype)) = {'T'};
-  
+
 elseif ft_senstype(input, 'itab') && isfield(input, 'chantype')
   chanunit(strcmp('megmag',              input.chantype)) = {'T'};
-  
+
 end % if senstype
 
 % ensure that it is a column vector
@@ -240,7 +241,7 @@ chanunit = chanunit(:);
 if isdata
   % the input was replaced by one of hdr, grad, elec, opto
   [sel1, sel2] = match_str(origlabel, input.label);
-  origunit = repmat({'unknown'}, size(sel1));
+  origunit = repmat({'unknown'}, size(origlabel));
   origunit(sel1) = chanunit(sel2);
   % the hdr, grad, elec or opto structure might have a different set of channels
   chanunit = origunit;

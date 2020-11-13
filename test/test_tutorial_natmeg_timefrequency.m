@@ -2,6 +2,7 @@ function test_tutorial_natmeg_timefrequency
 
 % WALLTIME 00:30:00
 % MEM 4gb
+% DEPENDENCY
 
 % this script executes the MATLAB content from
 % http://www.fieldtriptoolbox.org/tutorial/natmeg/timefrequency
@@ -11,7 +12,7 @@ function test_tutorial_natmeg_timefrequency
 clear all
 close all
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/natmeg'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/workshop/natmeg'));
 
 cfg = [];
 cfg.dataset = 'oddball1_mc_downsampled.fif';
@@ -211,7 +212,7 @@ cfg.xlim         = [0.5 1.0];
 cfg.zlim         = [-4e-12 4e-12];
 cfg.ylim         = [15 25];
 cfg.marker       = 'on';
-cfg.layout       = 'neuromag306eeg1005_natmeg.lay';
+cfg.layout       = 'natmeg_customized_eeg1005.lay';
 
 figure;
 ft_topoplotTFR(cfg, TFR_left_EEG);
@@ -222,7 +223,7 @@ cfg.baselinetype = 'relchange';
 cfg.ylim         = [15 25];
 cfg.xlim         = [0.5 1.0];
 cfg.zlim         = [-1.2 1.2];
-cfg.layout       = 'neuromag306eeg1005_natmeg.lay';
+cfg.layout       = 'natmeg_customized_eeg1005.lay';
 
 figure;
 ft_topoplotTFR(cfg, TFR_left_EEG);
@@ -244,7 +245,7 @@ cfg.xlim         = [0.4 0.8];
 cfg.ylim         = [15 25];
 cfg.zlim         = [-0.2 0.2];
 cfg.marker       = 'on';
-cfg.layout       = 'neuromag306eeg1005_natmeg.lay';
+cfg.layout       = 'natmeg_customized_eeg1005.lay';
 
 figure;
 ft_topoplotTFR(cfg, TFR_diff_EEG);

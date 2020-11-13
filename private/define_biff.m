@@ -1,6 +1,6 @@
 % DEFINE_BIFF script to define the known BIFF chunk types 
 %
-% This function should not be called seperately, it is intended to
+% This function should not be called separately, it is intended to
 % be used from withing read_biff and write_biff.
 %
 % See also READ_BIFF, WRITE_BIFF

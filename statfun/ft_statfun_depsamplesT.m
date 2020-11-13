@@ -1,37 +1,37 @@
 function [s, cfg] = ft_statfun_depsamplesT(cfg, dat, design)
 
-% FT_STATFUN_DEPSAMPLEST calculates the dependent samples T-statistic on the
-% biological data in dat (the dependent variable), using the information on the
-% independent variable (ivar) in design.
+% FT_STATFUN_DEPSAMPLEST calculates the dependent samples t-statistic on the
+% biological data (the dependent variable), using the information on the independent
+% variable (ivar) in the design.
 %
 % Use this function by calling one of the high-level statistics functions as
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
 %   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
-% with the following configuration option
+% with the following configuration option:
 %   cfg.statistic = 'ft_statfun_depsamplesT'
 %
-% Configuration options
+% You can specify the following configuration options:
 %   cfg.computestat    = 'yes' or 'no', calculate the statistic (default='yes')
 %   cfg.computecritval = 'yes' or 'no', calculate the critical values of the test statistics (default='no')
 %   cfg.computeprob    = 'yes' or 'no', calculate the p-values (default='no')
 %
-% The following options are relevant if cfg.computecritval='yes' and/or
-% cfg.computeprob='yes'.
+% The following options are relevant if cfg.computecritval='yes' and/or cfg.computeprob='yes':
 %   cfg.alpha = critical alpha-level of the statistical test (default=0.05)
 %   cfg.tail  = -1, 0, or 1, left, two-sided, or right (default=1)
 %               cfg.tail in combination with cfg.computecritval='yes'
 %               determines whether the critical value is computed at
 %               quantile cfg.alpha (with cfg.tail=-1), at quantiles
 %               cfg.alpha/2 and (1-cfg.alpha/2) (with cfg.tail=0), or at
-%               quantile (1-cfg.alpha) (with cfg.tail=1).
+%               quantile (1-cfg.alpha) (with cfg.tail=1)
 %
-% Design specification
-%   cfg.ivar  = row number of the design that contains the labels of the conditions that must be
-%               compared (default=1). The labels are the numbers 1 and 2.
-%   cfg.uvar  = row number of design that contains the labels of the units-of-observation (subjects or trials)
-%               (default=2). The labels are assumed to be integers ranging from 1 to
-%               the number of units-of-observation.
+% The experimental design is specified as:
+%   cfg.ivar  = independent variable, row number of the design that contains the labels of the conditions to be compared (default=1)
+%   cfg.uvar  = unit variable, row number of design that contains the labels of the units-of-observation, i.e. subjects or trials (default=2)
+%
+% The labels for the independent variable should be specified as the number 1 and 2.
+% The labels for the unit of observation should be integers ranging from 1 to the
+% total number of observations (subjects or trials).
 %
 % See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
 
@@ -55,19 +55,18 @@ function [s, cfg] = ft_statfun_depsamplesT(cfg, dat, design)
 %
 % $Id$
 
-% set defaults
-if ~isfield(cfg, 'computestat'),    cfg.computestat    = 'yes'; end
-if ~isfield(cfg, 'computecritval'), cfg.computecritval = 'no';  end
-if ~isfield(cfg, 'computeprob'),    cfg.computeprob    = 'no';  end
-if ~isfield(cfg, 'alpha'),          cfg.alpha          = 0.05;  end
-if ~isfield(cfg, 'tail'),           cfg.tail           = 1;     end
+% set the defaults
+cfg.computestat    = ft_getopt(cfg, 'computestat', 'yes');
+cfg.computecritval = ft_getopt(cfg, 'computecritval', 'no');
+cfg.computeprob    = ft_getopt(cfg, 'computeprob', 'no');
+cfg.alpha          = ft_getopt(cfg, 'alpha', 0.05);
+cfg.tail           = ft_getopt(cfg, 'tail', 1);
+cfg.ivar           = ft_getopt(cfg, 'ivar', 1);
+cfg.uvar           = ft_getopt(cfg, 'uvar', 2);
 
 % perform some checks on the configuration
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
-  ft_error('P-values can only be calculated if the test statistics are calculated.');
-end
-if ~isfield(cfg,'uvar') || isempty(cfg.uvar)
-  ft_error('uvar must be specified for dependent samples statistics');
+  ft_error('P-values can only be calculated if the test statistics are calculated');
 end
 
 % perform some checks on the design
@@ -81,7 +80,7 @@ end
 nunits = length(design(cfg.uvar, sel1));
 df = nunits - 1;
 if nunits<2
-  ft_error('The data must contain at least two units (usually subjects).')
+  ft_error('The data must contain at least two units of observation (trials or subjects).')
 end
 if (nunits*2)~=(n1+n2)
   ft_error('Invalid specification of the design array.');
@@ -97,10 +96,10 @@ if strcmp(cfg.computestat,'yes')
   poslabelsperunit(:,1) = poslabel1(i);
   [dum,i]          = sort(design(cfg.uvar,poslabel2), 'ascend');
   poslabelsperunit(:,2) = poslabel2(i);
-  
+
   % calculate the differences between the conditions
   diffmat = dat(:,poslabelsperunit(:,1)) - dat(:,poslabelsperunit(:,2));
-  
+
   % calculate the dependent samples t-statistics
   if any(isnan(diffmat(:)))
     avgdiff = nanmean(diffmat,2);
@@ -137,4 +136,3 @@ if strcmp(cfg.computeprob, 'yes')
     s.prob = 1-tcdf(s.stat,s.df);
   end
 end
-

@@ -32,18 +32,16 @@ classdef enet < dml.method
 
   properties
     
-   weights % regression weights (offset last)
-   
-   family = 'gaussian' % gaussian, binomial, or multinomial
-   
-   lambda;      % used lambda(s)
-   alpha = 0.5;   % glmnet mixing parameter
+   weights;                        % regression weights (offset last)
+   family = 'gaussian';            % gaussian, binomial, or multinomial
+   lambda;                         % used lambda(s)
+   alpha     = 0.5;                % glmnet mixing parameter
    validator = dml.crossvalidator; % cross-validator
-
-   performance % cross-validated decoding performance for elements on lambda path
-   path % lambda path followed when estimating decoding performance
-   
-   df % degrees of freedom (not computed if zero)
+   performance;                    % cross-validated decoding performance for elements on lambda path
+   path;                           % lambda path followed when estimating decoding performance
+   df;                             % degrees of freedom (not computed if zero)
+   maxit;                          % max number of iterations
+   nlambda;                        % number of lambda values to explore
    
   end
   
@@ -123,8 +121,10 @@ classdef enet < dml.method
         else
           
             opts = glmnetSet;
-            if ~isempty(obj.alpha), opts.alpha = obj.alpha; end
+            if ~isempty(obj.alpha),  opts.alpha  = obj.alpha;  end
             if ~isempty(obj.lambda), opts.lambda = obj.lambda; end
+            if ~isempty(obj.maxit),  opts.maxit  = obj.maxit;  end
+            if ~isempty(obj.nlambda), opts.nlambda = obj.nlambda; end
           
             obj.weights = obj.estimate(X,Y,obj.family,opts);
             if strcmp(obj.family,'multinomial')
@@ -144,7 +144,9 @@ classdef enet < dml.method
         opts = glmnetSet;
         if ~isempty(obj.alpha), opts.alpha = obj.alpha; end
         if ~isempty(obj.lambda), opts.lambda = obj.lambda; end
-        
+        if ~isempty(obj.maxit),  opts.maxit  = obj.maxit;  end
+        if ~isempty(obj.nlambda), opts.nlambda = obj.nlambda; end
+          
         if ~isscalar(obj.lambda) && ~isempty(obj.validator)
           % find best lambda by using the cross-validator
           

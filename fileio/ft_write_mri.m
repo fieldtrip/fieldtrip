@@ -4,16 +4,17 @@ function [V] = ft_write_mri(filename, dat, varargin)
 % MRI to a file.
 %
 % Use as
-%   ft_write_mri(filename, img, ...)
-% where img represents the 3-D array with image values.
-%
-% The specified filename can already contain the filename extention, but that is not
-% required since it will be added automatically.
+%   ft_write_mri(filename, dat, ...)
+% where the input argument dat represents the 3-D array with the values.
 %
 % Additional options should be specified in key-value pairs and can be
 %   'dataformat'   = string, see below
-%   'transform'    = transformation matrix, specifying the transformation from voxel coordinates to head coordinates
+%   'transform'    = 4x4 homogenous transformation matrix, specifying the transformation from voxel coordinates to head coordinates
+%   'unit'         = string, desired units for the image data on disk, for example 'mm'
 %   'spmversion'   = version of SPM to be used, in case data needs to be written in analyze format
+%
+% The specified filename can already contain the filename extention, but that is not
+% required since it will be added automatically.
 %
 % The supported dataformats are
 %   'analyze'
@@ -45,8 +46,21 @@ function [V] = ft_write_mri(filename, dat, varargin)
 
 % get the options
 transform     = ft_getopt(varargin, 'transform', eye(4));
-spmversion    = ft_getopt(varargin, 'spmversion', 'SPM8');
+spmversion    = ft_getopt(varargin, 'spmversion', 'spm12');
 dataformat    = ft_getopt(varargin, 'dataformat'); % FIXME this is inconsistent with ft_read_mri, which uses 'format'
+unit          = ft_getopt(varargin, 'unit');
+
+% convert the input to the desired units
+if ~isempty(unit)
+  % organize the input data as a FieldTrip structure and estimate its units
+  tmp.anatomy   = dat;
+  tmp.dim       = size(dat);
+  tmp.transform = transform;
+  % convert  the input data to the desired units
+  tmp = ft_convert_units(tmp, unit);
+  % the transformation matrix is the only thing that would have changed
+  transform = tmp.transform;
+end
 
 if isstruct(dat) && isfield(dat, 'anatomy') && isequal(transform, eye(4))
   % this is an anatomical MRI as returned by FT_READ_MRI
@@ -64,8 +78,14 @@ if nargout>0
   V = [];
 end
 
+% ensure that the directory exists if we want to write to a file
+if ~ismember(dataformat, {'empty', 'fcdc_global', 'fcdc_buffer', 'fcdc_mysql'})
+  isdir_or_mkdir(fileparts(filename));
+end
+
 switch dataformat
-  case {'analyze_img' 'analyze_hdr' 'analyze' 'nifti_spm'}
+
+  case {'analyze_img' 'analyze_hdr' 'analyze' 'nifti_img' 'nifti_spm'}
     % analyze data, using SPM
     V = volumewrite_spm(filename, dat, transform, spmversion);
     

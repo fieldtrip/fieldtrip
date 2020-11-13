@@ -1,9 +1,8 @@
 function test_ft_channelcombination
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_channelcombination
+% DEPENDENCY ft_channelcombination
 
 % this function tests the new implementation of ft_channelcombination
 
@@ -42,7 +41,7 @@ function [collect] = ft_channelcombination_old(channelcmb, datachannel, includea
 % FT_CHANNELCOMBINATION creates a cell-array with combinations of EEG/MEG
 % channels for subsequent cross-spectral-density and coherence analysis
 %
-% You should specify channel combinations as a two-column cell array,
+% You should specify channel combinations as a two-column cell-array,
 %   cfg.channelcmb = {  'EMG' 'MLF31'
 %                       'EMG' 'MLF32'
 %                       'EMG' 'MLF33' };
@@ -57,7 +56,7 @@ function [collect] = ft_channelcombination_old(channelcmb, datachannel, includea
 % channel labels. Channels that are not present in the raw datafile
 % are automatically removed from the channel list.
 %
-% Please note that the default behaviour is to exclude symetric
+% Please note that the default behavior is to exclude symetric
 % pairs and auto-combinations.
 %
 % See also FT_CHANNELSELECTION

@@ -2,6 +2,7 @@ function failed_bug3238
 
 % WALLTIME 00:10:00
 % MEM 2gb
+% DEPENDENCY
 
 % this test script is under development and is known to fail at the moment
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3238

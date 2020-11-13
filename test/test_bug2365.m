@@ -1,9 +1,8 @@
 function test_bug2365
 
-% MEM 500mb
+% MEM 3gb
 % WALLTIME 00:10:00
-
-% TEST ft_freqanalysis
+% DEPENDENCY ft_freqanalysis
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2365.mat');
 load(filename); % loads variable 'data'

@@ -1,9 +1,8 @@
 function test_bug1911
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_databrowser
+% DEPENDENCY ft_databrowser
 
 % When ft_movieplotER is called within ft_databrowser by right-clicking on a
 % segment of data and selecting ft_movieplotER the movieplot is opened in the

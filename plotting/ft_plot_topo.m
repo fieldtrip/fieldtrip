@@ -28,7 +28,7 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 %   'hlim'          = horizontal scaling limits within the local axes
 %   'vlim'          = vertical scaling limits within the local axes
 %
-% See also FT_PLOT_TOPO3D, FT_PLOT_LAY, FT_TOPOPLOTER, FT_TOPOPLOTTFR
+% See also FT_PLOT_TOPO3D, FT_PLOT_LAYOUT, FT_TOPOPLOTER, FT_TOPOPLOTTFR
 
 % Copyrights (C) 2009-2013, Giovanni Piantoni, Robert Oostenveld
 %
@@ -53,7 +53,7 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 % these are for speeding up the plotting on subsequent calls
 persistent previous_argin previous_maskimage
 
-ws = warning('on', 'MATLAB:divideByZero');
+ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 hpos          = ft_getopt(varargin, 'hpos',         0);
@@ -163,7 +163,7 @@ if isequal(current_argin, previous_argin)
   maskimage = previous_maskimage;
 elseif ~isempty(mask)
   % convert the mask into a binary image
-  maskimage = zeros(gridscale);%false(gridscale);
+  maskimage = zeros(gridscale); %false(gridscale);
   %hlim      = [min(chanX) max(chanX)];
   %vlim      = [min(chanY) max(chanY)];
   xi        = linspace(hlim(1), hlim(2), gridscale);   % x-axis for interpolation (row vector)
@@ -182,7 +182,7 @@ elseif ~isempty(mask)
     mask{i}(:, 1) = mask{i}(:, 1)*xScaling+hpos;
     mask{i}(:, 2) = mask{i}(:, 2)*yScaling+vpos;
     mask{i}(end+1, :) = mask{i}(1, :);                   % force them to be closed
-    maskimage(inside_contour([Xi(:) Yi(:)], mask{i})) = i;%true;
+    maskimage(inside_contour([Xi(:) Yi(:)], mask{i})) = i; %true;
   end
   
 else
@@ -345,4 +345,4 @@ if ~holdflag
   hold off
 end
 
-warning(ws); % revert to original state
+ft_warning(ws); % revert to original state

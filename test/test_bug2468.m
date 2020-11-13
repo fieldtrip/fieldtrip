@@ -1,9 +1,8 @@
 function test_bug2468
 
-% MEM 1gb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_sourcedescriptives
+% DEPENDENCY ft_sourcedescriptives
 
 % this test function tests the functionality to do projectmom on the output
 % of a pcc-beamformer with a different number of components per dipole.
@@ -12,7 +11,7 @@ filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2468.mat');
 load(filename);
 
 % this is a dirty fix which is intended to be fixed upstream in the
-% analysis pipeline, i.e. in beamformer_pcc
+% analysis pipeline, i.e. in ft_inverse_pcc
 for k = 1:numel(sdata.avg.mom)
   csdlabel{k,1} = repmat({'scandip'}, [1 size(sdata.avg.mom{k},1)]);
 end
@@ -25,9 +24,9 @@ sd             = ft_sourcedescriptives(cfg, sdata);
 % recompute source level pcc data
 cfg                             = [];
 cfg.frequency                   = fdata.freq;
-cfg.vol                         = sourceVol;
-cfg.grid                        = leadfieldModel;
-cfg.grid.filter                 = spatialFilters.avg.filter;
+cfg.headmodel                   = sourceVol;
+cfg.sourcemodel                        = leadfieldModel;
+cfg.sourcemodel.filter                 = spatialFilters.avg.filter;
 cfg.keeptrials                  = 'no';
 cfg.method                      = 'pcc';
 cfg.(cfg.method).keepfilter     = 'yes';

@@ -1,0 +1,7 @@
+version=1
+endian=little
+dataType=float32
+fSample=256.000000
+nChans=16
+nSamples=672
+nEvents=0

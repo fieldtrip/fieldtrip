@@ -1,9 +1,8 @@
 function test_bug2621
 
-% MEM 2gb
-% WALLTIME 00:30:00
-
-% TEST ft_volumesegment
+% MEM 3gb
+% WALLTIME 01:00:00
+% DEPENDENCY ft_volumesegment
 
 
 %read in the mri

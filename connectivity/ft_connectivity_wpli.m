@@ -87,7 +87,7 @@ if dojack && n>2 % n needs to be larger than 2 to get a meaningful variance
     end
     tmp          = num./denom; % avoids doing the division twice
     tmp(isnan(tmp)) = 0; % added for nan support
-    leave1outsum = leave1outsum + tmp;% added this for nan support
+    leave1outsum = leave1outsum + tmp; % added this for nan support
     leave1outssq = leave1outssq + tmp.^2; % added this for nan support
   end
   % compute the sem here

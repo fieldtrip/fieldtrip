@@ -1,9 +1,8 @@
 function test_bug2332
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_apply_montage ft_componentanalysis ft_rejectcomponent
+% DEPENDENCY ft_apply_montage ft_componentanalysis ft_rejectcomponent
 
 %% read some data
 

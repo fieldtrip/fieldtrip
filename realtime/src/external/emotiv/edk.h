@@ -1121,7 +1121,7 @@ extern "C"
         //! Returns number of sample of data stored in the data handle
         /*!
                 \param hData - a handle returned by EE_DataCreate()
-                \param nSampleOut - receives the number of sample of data stored in teh data handle
+                \param nSampleOut - receives the number of sample of data stored in the data handle
                 \return EDK_ERROR_CODE
                 - EDK_ERROR_CODE = EDK_OK if successful
         */

@@ -1,9 +1,8 @@
 function test_scalingfactor
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_scalingfactor ft_convert_units
+% DEPENDENCY ft_scalingfactor ft_convert_units
 
 % since the function to test is in a private directory, we explicitely have to cd into that directory
 [ftver, ftpath] = ft_version;

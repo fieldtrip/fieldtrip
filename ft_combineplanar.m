@@ -7,7 +7,8 @@ function [data] = ft_combineplanar(cfg, data)
 %
 % Use as
 %   [data] = ft_combineplanar(cfg, data)
-% where data contains an averaged planar gradient ERF or single-trial/averaged TFR.
+% where data contains an averaged planar-gradient ERF or single-trial or
+% averaged TFRs.
 %
 % The configuration can contain
 %   cfg.method         = 'sum', 'svd', 'abssvd', or 'complex' (default = 'sum')
@@ -166,26 +167,24 @@ if isfreq
     case 'svd'
       if isfield(data, 'fourierspctrm')
         fbin = nearest(data.freq, cfg.foilim(1)):nearest(data.freq, cfg.foilim(2));
-        Nrpt   = size(data.fourierspctrm,1);
-        Nsgn   = length(sel_dH);
-        Nfrq   = length(fbin);
-        Ntim   = size(data.fourierspctrm,4);
-        %fourier= complex(zeros(Nrpt,Nsgn,Nfrq,Ntim),zeros(Nrpt,Nsgn,Nfrq,Ntim));
-        fourier= nan(Nrpt,Nsgn,Nfrq,Ntim);
+        Nrpt    = size(data.fourierspctrm,1);
+        Nsgn    = length(sel_dH);
+        Nfrq    = length(fbin);
+        Ntim    = size(data.fourierspctrm,4);
+        fourier = nan(Nrpt,Nsgn,Nfrq,Ntim);
         ft_progress('init', cfg.feedback, 'computing the svd');
         for j = 1:Nsgn
           ft_progress(j/Nsgn, 'computing the svd of signal %d/%d\n', j, Nsgn);
           for k = 1:Nfrq
-            dum = reshape(data.fourierspctrm(:,[sel_dH(j) sel_dV(j)],fbin(k),:), [Nrpt 2 Ntim]);
-            dum = permute(dum, [2 3 1]);
-            dum = reshape(dum, [2 Ntim*Nrpt]);
-            timbin = ~isnan(dum(1,:));
-            [loading, ~,  ori, sin_val] = svdfft(dum(:,timbin),2,data.cumtapcnt);
-            dum2   = loading(1,:);
-            dum(1,timbin) = dum2;
-            dum = reshape(dum(1,:),[Ntim Nrpt]);
-            fourier(:,j,k,:) = transpose(dum);
-            data.ori{k} = ori; % to change into a cell
+            fdat = reshape(data.fourierspctrm(:,[sel_dH(j) sel_dV(j)], fbin(k),:), [Nrpt 2 Ntim]);
+            fdat = permute(fdat, [2 3 1]);        % 2 Ntim Nrpt
+            fdat = reshape(fdat, [2 Ntim*Nrpt]);  % 2 Ntim*Nrpt
+            timbin = ~isnan(fdat(1,:));
+            [frot, ut, ori, sin_val] = svdfft(fdat(:,timbin), 2, data.cumtapcnt);
+            dum = nan(Ntim, Nrpt);                % Ntim Nrpt
+            dum(timbin) = frot(1,:);              % Ntim Nrpt, insert the first channel of the rotated data
+            fourier(:,j,k,:) = transpose(dum);    % Nrpt Ntim
+            data.ori{k} = ori;                            % to change into a cell
             data.eta{k} = sin_val(1)/sum(sin_val(2:end)); % to change into a cell
             
             %for m = 1:Ntim
@@ -240,27 +239,27 @@ elseif (israw || istimelock)
       Csmp = cumsum([0 Nsmp]);
       % do a 'fixed orientation' across all trials approach here
       % this is different from the frequency case FIXME
-      tmpdat = zeros(2, sum(Nsmp));
+      tdat = zeros(2, sum(Nsmp));
       for k = 1:Nsgn
         for m = 1:Nrpt
-          tmpdat(:, (Csmp(m)+1):Csmp(m+1)) = data.trial{m}([sel_dH(k) sel_dV(k)],:);
+          tdat(:, (Csmp(m)+1):Csmp(m+1)) = data.trial{m}([sel_dH(k) sel_dV(k)],:);
         end
         if strcmp(cfg.method, 'abssvd')||strcmp(cfg.method, 'svd')
-          [loading, ~,  ori, sin_val] = svdfft(tmpdat,2);
-          data.ori{k} = ori; % to change into a cell
+          [rdat, ut, ori, sin_val] = svdfft(tdat, 2);
+          data.ori{k} = ori;                            % to change into a cell
           data.eta{k} = sin_val(1)/sum(sin_val(2:end)); % to change into a cell
           if strcmp(cfg.method, 'abssvd')
-            tmpdat2 = abs(loading(1,:));
+            rdat = abs(rdat(1,:));
           else
-            tmpdat2 = loading(1,:);
+            rdat = rdat(1,:);
           end
         end
-        tmpdat2 = mat2cell(tmpdat2, 1, Nsmp);
+        rdat = mat2cell(rdat, 1, Nsmp);
         for m = 1:Nrpt
           if k==1, trial{m} = zeros(Nsgn, Nsmp(m)); end
-          trial{m}(k,:) = tmpdat2{m};
+          trial{m}(k,:) = rdat{m};
         end
-      end
+      end % for each MEG channel
       for m = 1:Nrpt
         other = data.trial{m}(sel_other,:);
         trial{m} = [trial{m}; other];

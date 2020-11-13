@@ -1,7 +1,9 @@
 function inspect_bug3157
 
-% WALLTIME 0:10:00
+% WALLTIME 00:10:00
 % MEM 1gb
+% DEPENDENCY
+
 
 %%
 ctf151      = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151/Subject01.ds'));

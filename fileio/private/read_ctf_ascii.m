@@ -5,13 +5,13 @@ function [file] = read_ctf_ascii(filename)
 % The file should be formatted like
 %    Group
 %    {
-%      item1 : value1a value1b value1c 
-%      item2 : value2a value2b value2c 
-%      item3 : value3a value3b value3c 
-%      item4 : value4a value4b value4c 
+%      item1 : value1a value1b value1c
+%      item2 : value2a value2b value2c
+%      item3 : value3a value3b value3c
+%      item4 : value4a value4b value4c
 %    }
 %
-% This fileformat structure is used in 
+% This fileformat structure is used in
 %   params.avg
 %   default.hdm
 %   multiSphere.hdm
@@ -19,7 +19,7 @@ function [file] = read_ctf_ascii(filename)
 % and maybe for other files as well.
 
 % Copyright (C) 2003, Robert Oostenveld
-% 
+%
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
@@ -38,10 +38,7 @@ function [file] = read_ctf_ascii(filename)
 %
 % $Id$
 
-fid = fopen(filename, 'r');
-if fid==-1
-  ft_error(sprintf('could not open file %s', filename));
-end
+fid = fopen_or_error(filename, 'r');
 
 line = '';
 while ischar(line)
@@ -53,7 +50,7 @@ while ischar(line)
   % the line is not empty, which means that we have encountered a chunck of information
   subline = cleanline(fgetl(fid));  % read the {
   subline = cleanline(fgetl(fid));  % read the first item
-  while isempty(findstr(subline, '}'))
+  while ~contains(subline, '}')
     if ~isempty(subline)
       [item, value] = strtok(subline, ':');
       value(1) = ' ';           % remove the :
@@ -62,13 +59,13 @@ while ischar(line)
 
       % turn warnings off
       ws = ft_warning('off');
-      
+
       % the item name should be a real string, otherwise I cannot put it into the structure
       if strcmp(sprintf('%d', str2num(deblank(item))), deblank(item))
         % add something to the start of the string to distinguish it from a number
         item = ['item_' item];
       end
-      
+
       % the value can be either a number or a string, and is put into the structure accordingly
       if isempty(str2num(value))
         % the value appears to be a string
@@ -92,9 +89,8 @@ function line = cleanline(line)
   if isempty(line) || (length(line)==1 && all(line==-1))
     return
   end
-  comment = findstr(line, '//');
+  comment = strfind(line, '//');
   if ~isempty(comment)
     line(min(comment):end) = ' ';
   end
   line = strtrim(line);
-

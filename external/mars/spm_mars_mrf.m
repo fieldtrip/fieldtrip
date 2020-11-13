@@ -286,7 +286,7 @@ if ndims(J)==6 % local J
     % J = log(C_ij/M_j)
     % this code only applied to RAS head? % andy 2013-06-07
 
-    % J = smoothTCM(J,d,Kb);% andy 2015-07-10
+    % J = smoothTCM(J,d,Kb); % andy 2015-07-10
 
     J = single(log(J+tiny));
     J(find(~isfinite(J(:)))) = log(tiny); % fix numerical errors

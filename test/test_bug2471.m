@@ -1,9 +1,8 @@
 function test_bug2471
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_timelockgrandaverage
+% DEPENDENCY ft_timelockgrandaverage
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2471.mat'));
 

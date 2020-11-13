@@ -1,59 +1,65 @@
 function [sens] = ft_datatype_sens(sens, varargin)
 
-% FT_DATATYPE_SENS describes the FieldTrip structure that represents an EEG, ECoG, or
-% MEG sensor array. This structure is commonly called "elec" for EEG, "grad" for MEG,
-% "opto" for NIRS, or general "sens" for either one.
+% FT_DATATYPE_SENS describes the FieldTrip structure that represents an MEG, EEG,
+% sEEG, ECoG, or NIRS sensor array. This structure is commonly called "grad" for MEG,
+% "elec" for EEG and intranial EEG, "opto" for NIRS, or in general "sens" if it could
+% be any one.
 %
 % For all sensor types a distinction should be made between the channel (i.e. the
 % output of the transducer that is A/D converted) and the sensor, which may have some
-% spatial extent. E.g. with EEG you can have a bipolar channel, where the position of
-% the channel can be represented as in between the position of the two electrodes.
+% spatial extent. For example in MEG gradiometers are comprised of multiple coils and
+% with EEG you can have a bipolar channel, where the position of the channel can be
+% represented as in between the position of the two electrodes.
 %
 % The structure for MEG gradiometers and/or magnetometers contains
-%    sens.label    = Mx1 cell-array with channel labels
-%    sens.chanpos  = Mx3 matrix with channel positions
-%    sens.chanori  = Mx3 matrix with channel orientations, used for synthetic planar gradient computation
-%    sens.tra      = MxN matrix to combine coils into channels
-%    sens.coilpos  = Nx3 matrix with coil positions
-%    sens.coilori  = Nx3 matrix with coil orientations
-%    sens.balance  = structure containing info about the balancing, See FT_APPLY_MONTAGE
+%    sens.label      = Mx1 cell-array with channel labels
+%    sens.chanpos    = Mx3 matrix with channel positions
+%    sens.chanori    = Mx3 matrix with channel orientations, used for synthetic planar gradient computation
+%    sens.coilpos    = Nx3 matrix with coil positions
+%    sens.coilori    = Nx3 matrix with coil orientations
+%    sens.tra        = MxN matrix to combine coils into channels
+%    sens.balance    = structure containing info about the balancing, See FT_APPLY_MONTAGE
 % and optionally
-%    sens.chanposold = Mx3 matrix with original channel positions (in case
-%                      sens.chanpos has been updated to contain NaNs, e.g.
-%                      after ft_componentanalysis)
+%    sens.chanposold = Mx3 matrix with original channel positions (in case sens.chanpos has been updated to contain NaNs, e.g. after FT_COMPONENTANALYSIS)
 %    sens.chanoriold = Mx3 matrix with original channel orientations
 %    sens.labelold   = Mx1 cell-array with original channel labels
 %
-% The structure for EEG or ECoG channels contains
-%    sens.label    = Mx1 cell-array with channel labels
-%    sens.elecpos  = Nx3 matrix with electrode positions
-%    sens.chanpos  = Mx3 matrix with channel positions (often the same as electrode positions)
-%    sens.tra      = MxN matrix to combine electrodes into channels
+% The structure for EEG, sEEG or ECoG channels contains
+%    sens.label      = Mx1 cell-array with channel labels
+%    sens.chanpos    = Mx3 matrix with channel positions (often the same as electrode positions)
+%    sens.elecpos    = Nx3 matrix with electrode positions
+%    sens.tra        = MxN matrix to combine electrodes into channels
 % In case sens.tra is not present in the EEG sensor array, the channels
 % are assumed to be average referenced.
 %
 % The structure for NIRS channels contains
-%   sens.optopos        = contains information about the position of the optodes
-%   sens.optotype       = contains information about the type of optode (receiver or transmitter)
-%   sens.chanpos        = contains information about the position of the channels (i.e. average of optopos)
-%   sens.tra            = NxC matrix, boolean, contains information about how receiver and transmitter form channels
-%   sens.wavelength     = 1xM vector of all wavelengths that were used
-%   sens.transmits      = NxM matrix, boolean, where N is the number of optodes and M the number of wavelengths per transmitter. Specifies what optode is transmitting at what wavelength (or nothing at all, which indicates that it is a receiver)
-%   sens.laserstrength  = 1xM vector of the strength of the emitted light of the lasers
+%    sens.label         = Mx1 cell-array with channel labels
+%    sens.chanpos       = Mx3 matrix with position of the channels (usually halfway the transmitter and receiver)
+%    sens.optopos       = Nx3 matrix with the position of individual optodes
+%    sens.optotype      = Nx1 cell-array with information about the type of optode (receiver or transmitter)
+%    sens.optolabel     = Nx1 cell-array with optode labels
+%    sens.wavelength    = 1xK vector of all wavelengths that were used
+%    sens.tra           = MxN matrix that specifies for each of the M channels which of the N optodes transmits at which wavelength (positive integer from 1 to K), or receives (negative ingeger from 1 to K)
 %
-% The following fields apply to MEG and EEG
+% The following fields apply to MEG, EEG, sEEG and ECoG
 %    sens.chantype = Mx1 cell-array with the type of the channel, see FT_CHANTYPE
 %    sens.chanunit = Mx1 cell-array with the units of the channel signal, e.g. 'V', 'fT' or 'T/cm', see FT_CHANUNIT
 %
 % The following fields are optional
-%    sens.type     = string with the type of acquisition system, see FT_SENSTYPE
-%    sens.fid      = structure with fiducial information
+%    sens.type = string with the type of acquisition system, see FT_SENSTYPE
+%    sens.fid  = structure with fiducial information
 %
 % Historical fields:
-%    pnt, pos, ori, pnt1, pnt2
+%    pnt, pos, ori, pnt1, pnt2, fiberpos, fibertype, fiberlabel, transceiver, transmits, laserstrength
 %
 % Revision history:
-% (2016/latest) The chantype and chanunit have become required fields.
+% (2020/latest) Updated the specification of the NIRS sensor definition.
+%   Dropped the laserstrength and renamed transmits into tra for consistency.
+%
+% (2019/latest) Updated the specification of the NIRS sensor definition.
+%   Use "opto" instead of "fibers", see http://bit.ly/33WaqWU for details.
+%
+% (2016) The chantype and chanunit have become required fields.
 %  Original channel details are specified with the suffix "old" rather than "org".
 %  All numeric values are represented in double precision.
 %  It is possible to convert the amplitude and distance units (e.g. from T to fT and
@@ -87,7 +93,7 @@ function [sens] = ft_datatype_sens(sens, varargin)
 % See also FT_READ_SENS, FT_SENSTYPE, FT_CHANTYPE, FT_APPLY_MONTAGE, CTF2GRAD, FIF2GRAD,
 % BTI2GRAD, YOKOGAWA2GRAD, ITAB2GRAD
 
-% Copyright (C) 2011-2016, Robert Oostenveld & Jan-Mathijs Schoffelen
+% Copyright (C) 2011-2020, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -107,7 +113,7 @@ function [sens] = ft_datatype_sens(sens, varargin)
 %
 % $Id$
 
-% undocumented options for the 2016 format
+% undocumented options for the 2016 format and up
 %   amplitude     = string, can be 'T' or 'fT'
 %   distance      = string, can be 'm', 'cm' or 'mm'
 %   scaling       = string, can be 'amplitude' or 'amplitude/distance'
@@ -137,7 +143,7 @@ if ~isempty(distance) && ~any(strcmp(distance, {'m' 'dm' 'cm' 'mm'}))
 end
 
 if strcmp(version, 'latest')
-  version = '2016';
+  version = '2020';
 end
 
 if isempty(sens)
@@ -147,15 +153,77 @@ end
 % this is needed further down
 nchan = length(sens.label);
 
-% there are many cases which deal with either eeg or meg
-ismeg = ft_senstype(sens, 'meg');
+% there are many cases which are MEG, EEG or NIRS specific
+ismeg  = ft_senstype(sens, 'meg');
+iseeg  = ft_senstype(sens, 'eeg');
+isnirs = ft_senstype(sens, 'nirs');
 
 switch version
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  case '2016'
-    
+  case '2020'
     % update it to the previous standard version
-    sens = ft_datatype_sens(sens, 'version', '2011v2');
+    new_argin = ft_setopt(varargin, 'version', '2019');
+    sens      = ft_datatype_sens(sens, new_argin{:});
+    
+    if isnirs
+      sens = renamefields(sens, 'transmits', 'tra'); % this makes it more consistent with EEG and MEG
+      sens = removefields(sens, {'laserstrength'});
+      
+      if isfield(sens, 'optotype') && isfield(sens, 'tra')
+        % the read_artinis_oxy3 file returns the wrong sign for the receivers and transmitters
+        % but since it is p-code, it cannot be fixed
+        tmp = sens.tra(:, strcmp(sens.optotype, 'transmitter')); correctT = all(tmp(:)>=0);
+        tmp = sens.tra(:, strcmp(sens.optotype, 'receiver'   )); correctR = all(tmp(:)<=0);
+        if ~correctT
+          ft_warning('flipping sign for transmitters');
+          sens.tra(:, strcmp(sens.optotype, 'transmitter')) = -sens.tra(:, strcmp(sens.optotype, 'transmitter'));
+        end
+        if ~correctR
+          ft_warning('flipping sign for receivers');
+          sens.tra(:, strcmp(sens.optotype, 'receiver')) = -sens.tra(:, strcmp(sens.optotype, 'receiver'));
+        end
+      end
+      
+    end % ifnirs
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  case '2019'
+    % update it to the previous standard version
+    new_argin = ft_setopt(varargin, 'version', '2016');
+    sens      = ft_datatype_sens(sens, new_argin{:});
+    
+    if isnirs
+      % rename some NIRS field names
+      sens = renamefields(sens, 'fiberpos', 'optopos');
+      sens = renamefields(sens, 'fibertype', 'optotype');
+      sens = renamefields(sens, 'fiberlabel', 'optolabel');
+      sens = renamefields(sens, 'transceiver', 'transmits');
+      
+      % these might be present due to the reading functions but are not part of the user/technical documentation yet, so better not include them for now
+      % especially the chanunit field needs some careful thought when converting between optical densities and chromophore concentrations.
+      sens = removefields(sens, {'chantype', 'chanunit'});
+    end
+    
+    % ensure all positions are represented as 3D, not 2D
+    fn = {'chanpos', 'optopos', 'elecpos', 'coilpos'};
+    for i=1:numel(fn)
+      if isfield(sens, fn{i}) && size(sens.(fn{i}),2)==2
+        ft_notice('converting %s from 2D to 3D', fn{i});
+        sens.(fn{i})(:,3) = 0;
+      end
+    end % for
+    
+    if isfield(sens, 'optolabel')
+      if length(sens.optolabel)~=length(unique(sens.optolabel))
+        ft_warning('non-unique optode labels detected');
+      end
+    end
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  case '2016'
+    % update it to the previous standard version
+    new_argin = ft_setopt(varargin, 'version', '2011v2');
+    sens      = ft_datatype_sens(sens, new_argin{:});
     
     % rename from org to old (reverse = false)
     sens = fixoldorg(sens, false);
@@ -234,62 +302,68 @@ switch version
       elseif strcmp(sens.unit, 'mm') && (any(sel_m) || any(sel_dm) || any(sel_cm))
         ft_error('inconsistent units in input gradiometer');
       end
-
-      % the default should be amplitude/distance for neuromag and amplitude for all others
-      if isempty(scaling)
-        if ft_senstype(sens, 'neuromag')
-          scaling = 'amplitude/distance';
-        elseif ft_senstype(sens, 'yokogawa440')
-          ft_warning('asuming that the default scaling should be amplitude rather than amplitude/distance');
-          scaling = 'amplitude';
-        else
-          scaling = 'amplitude';
-        end
-      end
       
-      % update the gradiometer scaling
-      if strcmp(scaling, 'amplitude') && isfield(sens, 'tra')
-        for i=1:nchan
-          if strcmp(sens.chanunit{i}, [amplitude '/' distance])
-            % this channel is expressed as amplitude per distance
-            coil = find(abs(sens.tra(i,:))~=0);
-            if length(coil)~=2
-              ft_error('unexpected number of coils contributing to channel %d', i);
-            end
-            baseline         = norm(sens.coilpos(coil(1),:) - sens.coilpos(coil(2),:));
-            sens.tra(i,:)    = sens.tra(i,:)*baseline;  % scale with the baseline distance
-            sens.chanunit{i} = amplitude;
-          elseif strcmp(sens.chanunit{i}, amplitude)
-            % no conversion needed
-          else
-            % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3144
-            ft_warning('unexpected channel unit "%s" in channel %d', sens.chanunit{i}, i);
-          end % if
-        end % for
+      if ~strcmp(amplitude, 'unknown') && ~strcmp(distance, 'unknown')
         
-      elseif strcmp(scaling, 'amplitude/distance') && isfield(sens, 'tra')
-        for i=1:nchan
-          if strcmp(sens.chanunit{i}, amplitude)
-            % this channel is expressed as amplitude
-            coil = find(abs(sens.tra(i,:))~=0);
-            if length(coil)==1 || strcmp(sens.chantype{i}, 'megmag')
-              % this is a magnetometer channel, no conversion needed
-              continue
-            elseif length(coil)~=2
-              ft_error('unexpected number of coils (%d) contributing to channel %s (%d)', length(coil), sens.label{i}, i);
-            end
-            baseline         = norm(sens.coilpos(coil(1),:) - sens.coilpos(coil(2),:));
-            sens.tra(i,:)    = sens.tra(i,:)/baseline; % scale with the baseline distance
-            sens.chanunit{i} = [amplitude '/' distance];
-          elseif strcmp(sens.chanunit{i}, [amplitude '/' distance])
-            % no conversion needed
-          else
-            % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3144
-            ft_warning('unexpected channel unit "%s" in channel %d', sens.chanunit{i}, i);
-          end % if
-        end % for
+        % the default should be "amplitude/distance" for neuromag and "amplitude" for all others
+        if isempty(scaling)
+          if ft_senstype(sens, 'neuromag') && ~any(contains(sens.chanunit, '/'))
+            ft_warning('assuming that the default scaling should be amplitude/distance rather than amplitude');
+            scaling = 'amplitude/distance';
+          elseif ft_senstype(sens, 'yokogawa440') && any(contains(sens.chanunit, '/'))
+            ft_warning('assuming that the default scaling should be amplitude rather than amplitude/distance');
+            scaling = 'amplitude';
+          end
+        end
         
-      end % if strcmp scaling
+        % update the gradiometer scaling
+        if strcmp(scaling, 'amplitude') && isfield(sens, 'tra')
+          for i=1:nchan
+            if strcmp(sens.chanunit{i}, [amplitude '/' distance])
+              % this channel is expressed as amplitude per distance
+              coil = find(abs(sens.tra(i,:))~=0);
+              if length(coil)~=2
+                ft_error('unexpected number of coils contributing to channel %d', i);
+              end
+              baseline         = norm(sens.coilpos(coil(1),:) - sens.coilpos(coil(2),:));
+              sens.tra(i,:)    = sens.tra(i,:)*baseline;  % scale with the baseline distance
+              sens.chanunit{i} = amplitude;
+            elseif strcmp(sens.chanunit{i}, amplitude)
+              % no conversion needed
+            elseif isfield(sens, 'balance') && strcmp(sens.balance.current, 'comp')
+              % no conversion needed
+            elseif isfield(sens, 'balance') && strcmp(sens.balance.current, 'planar')
+              % no conversion needed
+            else
+              % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3144
+              ft_warning('unexpected channel unit "%s" in channel %d', sens.chanunit{i}, i);
+            end % if
+          end % for nchan
+          
+        elseif strcmp(scaling, 'amplitude/distance') && isfield(sens, 'tra')
+          for i=1:nchan
+            if strcmp(sens.chanunit{i}, amplitude)
+              % this channel is expressed as amplitude
+              coil = find(abs(sens.tra(i,:))~=0);
+              if length(coil)==1 || strcmp(sens.chantype{i}, 'megmag')
+                % this is a magnetometer channel, no conversion needed
+                continue
+              elseif length(coil)~=2
+                ft_error('unexpected number of coils (%d) contributing to channel %s (%d)', length(coil), sens.label{i}, i);
+              end
+              baseline         = norm(sens.coilpos(coil(1),:) - sens.coilpos(coil(2),:));
+              sens.tra(i,:)    = sens.tra(i,:)/baseline; % scale with the baseline distance
+              sens.chanunit{i} = [amplitude '/' distance];
+            elseif strcmp(sens.chanunit{i}, [amplitude '/' distance])
+              % no conversion needed
+            else
+              % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3144
+              ft_warning('unexpected channel unit "%s" in channel %d', sens.chanunit{i}, i);
+            end % if
+          end % for nchan
+          
+        end % if strcmp scaling
+      end % if amplitude and scaling are not unknown
       
     else
       sel_m  = ~cellfun(@isempty, regexp(sens.chanunit, '/m$'));
@@ -304,10 +378,10 @@ switch version
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case '2011v2'
-
+    
     % rename from old to org (reverse = true)
     sens = fixoldorg(sens, true);
-
+    
     if ~isempty(amplitude) || ~isempty(distance) || ~isempty(scaling)
       ft_warning('amplitude, distance and scaling are not supported for version "%s"', version);
     end
@@ -325,7 +399,7 @@ switch version
         sens.coilpos = sens.pnt; sens = rmfield(sens, 'pnt');
         sens.coilori = sens.ori; sens = rmfield(sens, 'ori');
       else
-        % sensor description is something else, EEG/ECoG etc
+        % sensor description is something else, EEG/ECoG/sEEG, etc
         sens.elecpos = sens.pnt; sens = rmfield(sens, 'pnt');
       end
     end

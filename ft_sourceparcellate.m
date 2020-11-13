@@ -1,4 +1,4 @@
-function parcel = ft_sourceparcellate(cfg, source, parcellation)
+function [parcel] = ft_sourceparcellate(cfg, source, parcellation)
 
 % FT_SOURCEPARCELLATE combines the source-reconstruction parameters over the parcels, for
 % example by averaging all the values in the anatomically or functionally labeled parcel.
@@ -24,6 +24,7 @@ function parcel = ft_sourceparcellate(cfg, source, parcellation)
 %   'min'       take the minimal value
 %   'max'       take the maximal value
 %   'maxabs'    take the signed maxabs value
+%   'std'       take the standard deviation
 %
 % See also FT_SOURCEANALYSIS, FT_DATATYPE_PARCELLATION, FT_DATATYPE_SEGMENTATION
 
@@ -104,7 +105,7 @@ end
 source = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical');
 
 % ensure that the source and the parcellation are anatomically consistent
-if ~isalmostequal(source.pos, parcellation.pos, 'abstol', 1000*eps)
+if ~isalmostequal(source.pos, parcellation.pos, 'abstol', 1000000*eps)
   ft_error('the source positions are not consistent with the parcellation, please use FT_SOURCEINTERPOLATE');
 end
 
@@ -181,10 +182,12 @@ parcel.label = seglabel;
 for i=1:numel(fn)
   % parcellate each of the desired parameters
   dat = source.(fn{i});
+  siz = getdimsiz(source, fn{i});
+  siz(contains(tokenize(dimord{i},'_'),'pos')) = nseg;
   
   if strncmp('{pos_pos}', dimord{i}, 9)
     fprintf('creating %d*%d parcel combinations for parameter %s by taking the %s\n', numel(seglabel), numel(seglabel), fn{i}, cfg.method);
-    tmp = cell(nseg, nseg);
+    tmp = zeros(siz);
     ft_progress('init', cfg.feedback, 'computing parcellation');
     k = 0;
     K = numel(seglabel)^2;
@@ -194,15 +197,17 @@ for i=1:numel(fn)
         ft_progress(k/K, 'computing parcellation for %s combined with %s', seglabel{j1}, seglabel{j2});
         switch cfg.method
           case 'mean'
-            tmp{j1,j2} = cellmean2(dat(seg==j1,seg==j2,:));
+            tmp(j1,j2,:,:) = cellmean2(dat(seg==j1,seg==j2,:));
           case 'median'
-            tmp{j1,j2} = cellmedian2(dat(seg==j1,seg==j2,:));
+            tmp(j1,j2,:,:) = cellmedian2(dat(seg==j1,seg==j2,:));
           case 'min'
-            tmp{j1,j2} = cellmin2(dat(seg==j1,seg==j2,:));
+            tmp(j1,j2,:,:) = cellmin2(dat(seg==j1,seg==j2,:));
           case 'max'
-            tmp{j1,j2} = cellmax2(dat(seg==j1,seg==j2,:));
+            tmp(j1,j2,:,:) = cellmax2(dat(seg==j1,seg==j2,:));
           case 'eig'
-            tmp{j1,j2} = celleig2(dat(seg==j1,seg==j2,:));
+            tmp(j1,j2,:,:) = celleig2(dat(seg==j1,seg==j2,:));
+          case 'std'
+            tmp(j1,j2,:,:) = cellstd2(dat(seg==j1,seg==j2,:));
           otherwise
             ft_error('method %s not implemented for %s', cfg.method, dimord{i});
         end % switch
@@ -212,21 +217,23 @@ for i=1:numel(fn)
     
   elseif strncmp('{pos}', dimord{i}, 5)
     fprintf('creating %d parcels for parameter %s by taking the %s\n', numel(seglabel), fn{i}, cfg.method);
-    tmp = cell(nseg, 1);
+    tmp = zeros(siz);
     ft_progress('init', cfg.feedback, 'computing parcellation');
     for j=1:numel(seglabel)
       ft_progress(j/numel(seglabel), 'computing parcellation for %s', seglabel{j});
       switch cfg.method
         case 'mean'
-          tmp{j} = cellmean1(dat(seg==j));
+          tmp(j,:,:) = cellmean1(dat(seg==j));
         case 'median'
-          tmp{j} = cellmedian1(dat(seg==j));
+          tmp(j,:,:) = cellmedian1(dat(seg==j));
         case 'min'
-          tmp{j} = cellmin1(dat(seg==j));
+          tmp(j,:,:) = cellmin1(dat(seg==j));
         case 'max'
-          tmp{j} = cellmax1(dat(seg==j));
+          tmp(j,:,:) = cellmax1(dat(seg==j));
         case 'eig'
-          tmp{j} = celleig1(dat(seg==j));
+          tmp(j,:,:) = celleig1(dat(seg==j));
+        case 'std'
+          tmp(j,:,:) = cellstd1(dat(seg==j));
         otherwise
           ft_error('method %s not implemented for %s', cfg.method, dimord{i});
       end % switch
@@ -259,6 +266,8 @@ for i=1:numel(fn)
             tmp(j1,j2,:) = arrayeig2(dat(seg==j1,seg==j2,:));
           case 'maxabs'
             tmp(j1,j2,:) = arraymaxabs2(dat(seg==j1,seg==j2,:));
+          case 'std'
+            tmp(j1,j2,:) = arraystd2(dat(seg==j1,seg==j2,:));
           otherwise
             ft_error('method %s not implemented for %s', cfg.method, dimord{i});
         end % switch
@@ -299,6 +308,8 @@ for i=1:numel(fn)
           tmp(j,:) = arraymaxabs1(dat(seg==j,:));
         case 'eig'
           tmp(j,:) = arrayeig1(dat(seg==j,:));
+        case 'std'
+          tmp(j,:)  = arraystd1(dat(seg==j,:));
         otherwise
           ft_error('method %s not implemented for %s', cfg.method, dimord{i});
       end % switch
@@ -313,10 +324,18 @@ for i=1:numel(fn)
   % update the dimord, use chan rather than pos
   % this makes it look just like timelock or freq data
   tok = tokenize(dimord{i}, '_');
-  tok(strcmp(tok,  'pos' )) = { 'chan' }; % replace pos by chan
-  tok(strcmp(tok, '{pos}')) = {'{chan}'}; % replace pos by chan
-  tok(strcmp(tok, '{pos'))  = {'{chan' }; % replace pos by chan
-  tok(strcmp(tok, 'pos}'))  = { 'chan}'}; % replace pos by chan
+  tok(strcmp(tok,  'pos' )) = {'chan'}; % replace pos by chan
+  tok(strcmp(tok, '{pos}')) = {'chan'}; % replace pos by chan
+  tok(strcmp(tok, '{pos'))  = {'chan'}; % replace pos by chan
+  tok(strcmp(tok, 'pos}'))  = {'chan'}; % replace pos by chan
+  
+  % squeeze out any singleton oris
+  siz  = [size(tmp) 1]; % add trailing singleton to be sure
+  oris = contains(tok, 'ori') & siz(1:numel(tok))==1;
+  siz(oris) = [];
+  tmp = reshape(tmp, siz);
+  tok(oris) = [];
+  
   tmpdimord = sprintf('%s_', tok{:});
   tmpdimord = tmpdimord(1:end-1);         % exclude the last _
   
@@ -410,6 +429,13 @@ else
   y = nan(1,size(x,2));
 end
 
+function y = arraystd1(x)
+if ~isempty(x)
+  y = std(x,0, 1);
+else
+  y = nan(1,size(x, 2));
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS to compute something over the first two dimensions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -445,8 +471,13 @@ x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimens
 [dum,ix] = max(abs(x), [], 1);
 y        = x(ix);
 
+function y = arraystd2(x)
+siz = size(x);
+x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimension
+y = arraystd1(x);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTIONS for doing something over the first dimension of a cell array
+% SUBFUNCTIONS for doing something over the first dimension of a cell-array
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function y = cellmean1(x)
 siz = size(x);
@@ -508,8 +539,22 @@ x = cat(1,x{:});
 [u, s] = svds(real(x*x'), 1);
 y = u(:,1)'*x;
 
+function y = cellstd1(x)
+siz = size(x);
+if siz(1)==1 && siz(2)>1
+  siz([2 1]) = siz([1 2]);
+  x = reshape(x, siz);
+end
+y = x{1};
+n = 1;
+for i=2:siz(1)
+  y = y + x{i};
+  n = n + 1;
+end
+y = std(y);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTIONS to compute something over the first two dimensions of a cell array
+% SUBFUNCTIONS to compute something over the first two dimensions of a cell-array
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function y = cellmean2(x)
 siz = size(x);
@@ -535,3 +580,8 @@ function y = celleig2(x)
 siz = size(x);
 x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % represent the first two as a single dimension
 y = celleig1(x);
+
+function y = cellstd2(x)
+siz = size(x);
+x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % represent the first two as a single dimension
+y = cellstd1(x);

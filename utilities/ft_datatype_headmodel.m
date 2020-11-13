@@ -61,9 +61,9 @@ function [headmodel] = ft_datatype_headmodel(headmodel, varargin)
 % fem_simbio -> simbio, concentric -> concentricspheres. Deprecated the fields
 % that indicate the index of the innermost and outermost surfaces.
 %
-% See also FT_DATATYPE, FT_DATATYPE_COMP, FT_DATATYPE_DIP, FT_DATATYPE_FREQ,
-% FT_DATATYPE_MVAR, FT_DATATYPE_RAW, FT_DATATYPE_SOURCE, FT_DATATYPE_SPIKE,
-% FT_DATATYPE_TIMELOCK, FT_DATATYPE_VOLUME
+% See also FT_PREPARE_HEADMODEL, FT_DATATYPE, FT_DATATYPE_COMP, FT_DATATYPE_DIP,
+% FT_DATATYPE_FREQ, FT_DATATYPE_MVAR, FT_DATATYPE_RAW, FT_DATATYPE_SOURCE, 
+% FT_DATATYPE_SPIKE, FT_DATATYPE_TIMELOCK, FT_DATATYPE_VOLUME
 
 % Copyright (C) 2011-2012, Cristiano Micheli, Robert Oostenveld
 %
@@ -125,7 +125,7 @@ switch version
     % first make it consistent with the 2012 version
     headmodel = ft_datatype_headmodel(headmodel, 'version', '2012');
 
-    % then rename (if neccessary the c into cond
+    % then rename (if necessary the c into cond
     if isfield(headmodel, 'c') && ~isfield(headmodel, 'cond')
       headmodel.cond = headmodel.c;
       headmodel = rmfield(headmodel, 'c');

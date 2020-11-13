@@ -2,9 +2,7 @@ function test_bug2502
 
 % WALLTIME 00:10:00
 % MEM 1gb
-
-% TEST ft_freqstatistics
-% TEST ft_selectdata
+% DEPENDENCY ft_freqstatistics ft_selectdata
 
 % see bug 2502 for more info
 

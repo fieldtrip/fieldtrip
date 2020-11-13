@@ -2,9 +2,10 @@ function test_headmodel_bemcp_new_old
 
 % MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 % generate a unit sphere
-[pnt, tri] = icosahedron162;
+[pnt, tri] = mesh_sphere(162);
 
 % create the BEM geometries
 geom = [];

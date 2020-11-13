@@ -9,27 +9,30 @@ function [cfg] = ft_neighbourplot(cfg, data)
 % or as
 %   ft_neighbourplot(cfg, data)
 %
-% where the configuration can contain
+% Where the configuration can contain
 %   cfg.verbose       = string, 'yes' or 'no', whether the function will print feedback text in the command window
 %   cfg.neighbours    = neighbourhood structure, see FT_PREPARE_NEIGHBOURS (optional)
-%   cfg.visible       = string, 'on' or 'off', whether figure will be visible (default = 'on')
-%   cfg.enableedit    = string, 'yes' or 'no', allows the user to flexibly add or remove edges between vertices (default = 'no')
-%                       
+%   cfg.enableedit    = string, 'yes' or 'no', allows you to interactively add or remove edges between vertices (default = 'no')
+%   cfg.visible       = string, 'on' or 'off' whether figure will be visible (default = 'on')
+%   cfg.position      = location and size of the figure, specified as a vector of the form [left bottom width height]
+%   cfg.renderer      = string, 'opengl', 'zbuffer', 'painters', see MATLAB Figure Properties. If this function crashes, you should try 'painters'.
+%
 % and either one of the following options
 %   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
-%   cfg.elec          = structure with electrode definition
-%   cfg.grad          = structure with gradiometer definition
-%   cfg.elecfile      = filename containing electrode definition
-%   cfg.gradfile      = filename containing gradiometer definition
+%   cfg.elec          = structure with electrode positions or filename, see FT_READ_SENS
+%   cfg.grad          = structure with gradiometer definition or filename, see FT_READ_SENS
+%   cfg.opto          = structure with gradiometer definition or filename, see FT_READ_SENS
 %
 % If cfg.neighbours is not defined, this function will call
 % FT_PREPARE_NEIGHBOURS to determine the channel neighbours. The
 % following data fields may also be used by FT_PREPARE_NEIGHBOURS
-%   data.elec     = structure with EEG electrode positions
-%   data.grad     = structure with MEG gradiometer positions
+%   data.elec         = structure with electrode positions
+%   data.grad         = structure with gradiometer definition
+%   data.opto         = structure with optode definition
+%
 % If cfg.neighbours is empty, no neighbouring sensors are assumed.
 %
-% Use cfg.enableedit to create or extend your own neighbourtemplate
+% Use cfg.enableedit to interactively add or remove edges in your own neighbour structure.
 %
 % See also FT_PREPARE_NEIGHBOURS, FT_PREPARE_LAYOUT
 
@@ -60,7 +63,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble debug
-ft_preamble loadvar    data
+ft_preamble loadvar data
 ft_preamble provenance data
 ft_preamble trackconfig
 
@@ -77,9 +80,16 @@ if hasdata
   data = ft_checkdata(data);
 end
 
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'renamed', {'elecfile', 'elec'});
+cfg = ft_checkconfig(cfg, 'renamed', {'gradfile', 'grad'});
+cfg = ft_checkconfig(cfg, 'renamed', {'optofile', 'opto'});
+cfg = ft_checkconfig(cfg, 'renamed', {'newfigure', 'figure'});
+
 % set the defaults
 cfg.enableedit = ft_getopt(cfg, 'enableedit', 'no');
 cfg.visible    = ft_getopt(cfg, 'visible', 'on');
+cfg.renderer   = ft_getopt(cfg, 'renderer', []); % let MATLAB decide on the default
 
 if isfield(cfg, 'neighbours')
   cfg.neighbours = cfg.neighbours;
@@ -101,6 +111,7 @@ if hasdata
 else
   sens = ft_fetch_sens(cfg);
 end
+
 % insert sensors that are not in neighbourhood structure
 if isempty(cfg.neighbours)
   nsel = 1:numel(sens.label);
@@ -124,11 +135,15 @@ else
   % use 3-dimensional data for plotting
   proj = sens.chanpos;
 end
-hf = figure('visible', cfg.visible);
+
+% open a new figure with the specified settings
+hf = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer'}));
+
 axis equal
 axis vis3d
 axis off
-hold on;
+hold on
+
 hl = [];
 for i=1:length(cfg.neighbours)
   this = cfg.neighbours(i);
@@ -187,7 +202,8 @@ for i=1:length(cfg.neighbours)
     ft_error('Channel coordinates are too high dimensional');
   end
 end
-hold off;
+
+hold off
 title('[Click on a sensor to see its label]');
 
 % store what is needed in UserData of figure
@@ -211,17 +227,46 @@ if istrue(cfg.enableedit)
   hf = getparent(hf);
   delete(hf);
 end
-% in any case remove SCALE and COMNT
+
+% remove SCALE and COMNT
 desired = ft_channelselection({'all', '-SCALE', '-COMNT'}, {cfg.neighbours.label});
 
 neighb_idx = ismember({cfg.neighbours.label}, desired);
 cfg.neighbours = cfg.neighbours(neighb_idx);
+
+% this is needed for the figure title
+if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
+  dataname = cfg.dataname;
+elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
+elseif nargin>1
+  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
+else
+  dataname = {};
+end
+
+% set the figure window title
+if ~isempty(dataname)
+  set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
+else
+  set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
+end
+set(gcf, 'NumberTitle', 'off');
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous data
 ft_postamble provenance
+ft_postamble savefig
+
+% add a menu to the figure, but only if the current figure does not have subplots
+menu_fieldtrip(gcf, cfg, false);
+
+if ~ft_nargout
+  % don't return anything
+  clear cfg
+end
 
 end % main function
 
@@ -374,7 +419,7 @@ else
 end
 
 set(gcf, 'UserData', userdata);
-end
+end % subfunction
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -385,7 +430,7 @@ h   = getparent(h);
 userdata.quit = true;
 set(h, 'UserData', userdata);
 uiresume
-end
+end % subfunction
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -396,4 +441,4 @@ while p~=0
   h = p;
   p = get(h, 'parent');
 end
-end
+end % subfunction

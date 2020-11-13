@@ -20,8 +20,7 @@ function [data] = ft_regressconfound(cfg, datain)
 % The following configuration options are supported:
 %   cfg.reject      = vector, [1 X Nconfounds], listing the confounds that
 %                     are to be rejected (default = 'all')
-%   cfg.normalize   = string, 'yes' or 'no', normalization to
-%                     make the confounds orthogonal (default = 'yes')
+%   cfg.normalize   = string, 'yes' or 'no', normalizing confounds (default = 'yes')
 %   cfg.output      = 'residual' (default), 'beta', or 'model'.
 %                     If 'residual' is specified, the output is a data
 %                     structure containing the residuals after regressing
@@ -124,7 +123,7 @@ fprintf('removing confound %s \n', num2str(cfg.reject));
 kprs = setdiff(conflist, cfg.reject); % to be kept
 fprintf('keeping confound %s \n', num2str(kprs));
 
-% confound normalization for orthogonality
+% confound normalization
 if strcmp(cfg.normalize, 'yes')
   fprintf('normalizing the confounds, except the constant \n');
   for c = 1:nconf
@@ -167,8 +166,10 @@ if strcmp(dimtok{1}, '{pos}')
     tmp(:,i,:,:,:) = dat{i}(:,:,:,:);
   end
   dat = tmp;
+  haspermuted = false;
 else
   dat = permute(dat, [rptdim datdim]);
+  haspermuted = true;
 end
 
 dat = reshape(dat, nrpt, []);
@@ -250,9 +251,15 @@ dataout = keepfields(datain, {'label', 'time', 'freq', 'pos', 'dim', 'transform'
 switch cfg.output
   case 'residual'
     dataout.(cfg.parameter) = reshape(Yc, [nrpt dimsiz(datdim)]); % either powspctrm, trial, or pow
+    if haspermuted
+      dataout.(cfg.parameter) = ipermute(dataout.(cfg.parameter), [rptdim datdim]);
+    end
     clear Yc   
   case 'beta'
     dataout.beta = reshape(beta, [nconf, dimsiz(datdim)]);
+    if haspermuted
+      dataout.beta = ipermute(dataout.beta, [rptdim datdim]);
+    end
     if strcmp(cfg.statistics, 'yes') % beta statistics
       fprintf('performing statistics on the regression weights \n');
       dfe        = nrpt - nconf;                                              % degrees of freedom
@@ -266,11 +273,18 @@ switch cfg.output
       % FIXME: drop in replace tcdf from the statfun/private dir
       dataout.stat = reshape(tval, [nconf dimsiz(datdim)]);
       dataout.prob = reshape(prob, [nconf dimsiz(datdim)]);
+      if haspermuted
+        dataout.stat = ipermute(dataout.stat, [rptdim datdim]);
+        dataout.prob = ipermute(dataout.prob, [rptdim datdim]);
+      end
       clear tval prob
     end    
   case 'model'
     dataout.model = keepfields(datain, {'label', 'time', 'freq', 'pos', 'dim', 'transform', 'inside', 'outside', 'trialinfo', 'sampleinfo', 'dimord'});
     dataout.model.(cfg.parameter) = reshape(model, [nrpt, dimsiz(datdim)]);
+    if haspermuted
+      dataout.model.(cfg.parameter) = ipermute(dataout.model.(cfg.parameter), [rptdim datdim]);
+    end
   otherwise
     error('output ''%s'' is not supported', cfg.output);    
 end

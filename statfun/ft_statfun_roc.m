@@ -1,30 +1,35 @@
 function [s, cfg] = ft_statfun_roc(cfg, dat, design)
 
 % FT_STATFUN_ROC computes the area under the curve (AUC) of the Receiver Operator
-% Characteristic (ROC). This is a measure of the separability of the data divided
-% over two conditions. The AUC can be used to test statistical significance of being
-% able to predict on a single observation basis to which condition the observation
-% belongs.
-% 
+% Characteristic (ROC). This is a measure of the separability of the data observed in
+% two conditions. The AUC can be used for statistical testing whether the two
+% conditions can be distinguished on the basis of the data.
+%
 % Use this function by calling one of the high-level statistics functions as
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
 %   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
 % with the following configuration option
-%   cfg.statistic    = 'ft_statfun_roc'
+%   cfg.statistic = 'ft_statfun_roc'
 %
-% Configuration options that are relevant for this function are
-%   cfg.ivar         = number, index into the design matrix with the independent variable
-%   cfg.logtransform = 'yes' or 'no' (default = 'no')
-% 
-% Note that this statfun performs a one sided test in which condition "1"
-% is assumed to be larger than condition "2".
-
-% A low-level example for this function is
-%   a = randn(1,1000) + 1;
-%   b = randn(1,1000);
+% The experimental design is specified as:
+%   cfg.ivar  = independent variable, row number of the design that contains the labels of the conditions to be compared (default=1)
+%
+% The labels for the independent variable should be specified as the number 1 and 2.
+%
+% Note that this statfun performs a one sided test in which condition "1" is assumed
+% to be larger than condition "2". This function does not compute an analytic
+% probability of condition "1" being larger than condition "2", but can be used in a
+% randomization test, including clustering.
+%
+% A low-level example with 10 channel-time-frequency points and 1000 observations per
+% condition goes like this:
+%   dat1 = randn(10,1000) + 1;
+%   dat2 = randn(10,1000);
 %   design = [1*ones(1,1000) 2*ones(1,1000)];
-%   auc = ft_statfun_roc([], [a b], design);
+%   stat = ft_statfun_roc([], [dat1 dat2], design);
+%
+% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
 
 % Copyright (C) 2008, Robert Oostenveld
 %
@@ -46,18 +51,12 @@ function [s, cfg] = ft_statfun_roc(cfg, dat, design)
 %
 % $Id$
 
-if ~isfield(cfg, 'ivar'),         cfg.ivar   =  1;         end
-if ~isfield(cfg, 'logtransform'), cfg.logtransform = 'no'; end
+% set the defaults
+cfg.ivar = ft_getopt(cfg, 'ivar', 1);
 
-if strcmp(cfg.logtransform, 'yes'),
-  dat = log10(dat);
-end
-
-if isfield(cfg, 'numbins')
-  % this function was completely reimplemented on 21 July 2008 by Robert Oostenveld
-  % the old function had a positive bias in the AUC (i.e. the expected value was not 0.5)
-  ft_error('the option cfg.numbins is not supported any more');
-end
+% on-the-fly log transformation is not supported any more, please use FT_MATH instead
+cfg = ft_checkconfig(cfg, 'forbidden', 'logtransform');
+cfg = ft_checkconfig(cfg, 'forbidden', 'numbins');
 
 % start with a quick test to see whether there appear to be NaNs
 if any(isnan(dat(1,:)))
@@ -136,7 +135,7 @@ for k = 1:nobs
 end
 
 % return the area under the curve as the statistic of interest
-s = struct('auc', auc);
+s.stat = auc;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % NUMINT computes a numerical integral of a set of sampled points using
@@ -161,4 +160,3 @@ for i=1:(n-1)
   dy = y(i+1)-y(i);
   z = z + (y0 * dx) + (dy*dx/2);
 end
-

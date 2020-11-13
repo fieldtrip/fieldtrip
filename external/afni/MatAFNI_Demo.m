@@ -190,9 +190,9 @@ clear all
 	InfoDelOut.DATASET_RANK(2) = 2; %two sub-bricks
 	InfoDelOut.BRICK_TYPES = [1 1]; %store data as shorts
 	InfoDelOut.BRICK_STATS = []; %automatically set
-	InfoDelOut.BRICK_FLOAT_FACS = [];%automatically set
+	InfoDelOut.BRICK_FLOAT_FACS = []; %automatically set
 	InfoDelOut.BRICK_LABS = 'Masked Delay~Masked Cross Correlation';
-	InfoDelOut.IDCODE_STRING = '';%automatically set
+	InfoDelOut.IDCODE_STRING = ''; %automatically set
 	InfoDelOut.BRICK_STATAUX = [1 2 3 160 2 2];
 	
 	OptDelOut.Scale = 1;
@@ -231,7 +231,7 @@ clear all
 	InfoNewTSOut.RootName = '';
 	InfoNewTSOut.BRICK_STATS = []; %automatically set
 	InfoNewTSOut.BRICK_FLOAT_FACS = []; %automatically set
-	InfoNewTSOut.IDCODE_STRING = '';%automatically set
+	InfoNewTSOut.IDCODE_STRING = ''; %automatically set
 	 			
 	OptTSOut.Scale = 1;
 	OptTSOut.Prefix = 'Demo1_TS';

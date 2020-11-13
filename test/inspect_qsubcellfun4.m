@@ -1,6 +1,8 @@
 function inspect_qsubcellfun4
 
-% TEST inspect_qsubcellfun4
+% WALLTIME 00:10:00
+% MEM 1gb
+% DEPENDENCY
 
 % this test is designed for executing functions that are private to the function in which qsubcellfun is called
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1891

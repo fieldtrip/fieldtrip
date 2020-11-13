@@ -19,7 +19,7 @@ function ft_write_headshape(filename, bnd, varargin)
 % Optional input arguments should be specified as key-value pairs and
 % can include
 %   'data'        = data matrix, size(1) should be number of vertices
-%   'unit'        = string, e.g. 'mm'
+%   'unit'        = string, desired units for the data on disk, for example 'mm'
 %
 % Supported output formats are
 %   'mne_tri'		MNE surface desciption in ascii format
@@ -81,13 +81,13 @@ if ~isstruct(bnd)
 end
 
 if ~isempty(unit)
-  % convert to the desired units prior to writing to disk
+  % convert the input to the desired units prior to writing to disk
   bnd = ft_convert_units(bnd, unit);
 end
 
 switch fileformat
   case 'mne_pos'
-    fid = fopen(filename, 'wt');
+    fid = fopen_or_error(filename, 'wt');
     % convert to milimeter
     bnd = ft_convert_units(bnd, 'mm');
     n=size(bnd.pnt,1);
@@ -102,7 +102,7 @@ switch fileformat
     fclose(fid);
     
   case 'mne_tri'
-    fid = fopen(filename, 'wt');
+    fid = fopen_or_error(filename, 'wt');
     % convert to milimeter
     bnd = ft_convert_units(bnd, 'mm');
     n=size(bnd.pnt,1);
@@ -185,8 +185,9 @@ switch fileformat
     end
     
   case 'stl'
-    nrm = normals(bnd.pnt, bnd.tri, 'triangle');
-    write_stl(filename, bnd.pnt, bnd.tri, nrm);
+    %nrm = normals(bnd.pnt, bnd.tri, 'triangle');
+    %write_stl(filename, bnd.pnt, bnd.tri, nrm);
+    stlwrite(filename, bnd.tri, bnd.pnt);
     
   case 'gifti'
     ft_hastoolbox('gifti', 1);

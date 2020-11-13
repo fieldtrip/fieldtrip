@@ -86,16 +86,6 @@ freqhigh = ft_checkdata(freqhigh, 'datatype', 'freq', 'feedback', 'yes');
 % but nevertheless did not support between-channel CFC computations
 cfg = ft_checkconfig(cfg, 'forbidden', {'chanlow', 'chanhigh'});
 
-% this function only support CFC computations within channels, not between channels
-if isfield(cfg, 'chanlow') && isfield(cfg, 'chanhigh')
-  if isequal(cfg.chanlow, cfg.chanhigh)
-    cfg.channel = cfg.chanlow;
-    cfg = removefields(cfg, 'chanlow', 'chanhigh');
-  else
-    ft_error('cross-channel CFC not supported, the channel selection should be the same for low and high frequencies')
-  end
-end
-
 cfg.channel    = ft_getopt(cfg, 'channel',  'all');
 cfg.freqlow    = ft_getopt(cfg, 'freqlow',  'all');
 cfg.freqhigh   = ft_getopt(cfg, 'freqhigh', 'all');
@@ -110,7 +100,7 @@ tmpcfg.channel   = cfg.channel;
 tmpcfg.frequency = cfg.freqlow;
 freqlow = ft_selectdata(tmpcfg, freqlow);
 [tmpcfg, freqlow] = rollback_provenance(cfg, freqlow);
-try, cfg.chanlow = tmpcfg.channel;   end
+try, cfg.channel = tmpcfg.channel;   end
 try, cfg.freqlow = tmpcfg.frequency; end
 
 % make selection of frequencies and channels
@@ -119,7 +109,7 @@ tmpcfg.channel   = cfg.channel;
 tmpcfg.frequency = cfg.freqhigh;
 freqhigh = ft_selectdata(tmpcfg, freqhigh);
 [tmpcfg, freqhigh] = rollback_provenance(cfg, freqhigh);
-try, cfg.chanhigh = tmpcfg.channel;   end
+try, cfg.channel  = tmpcfg.channel;   end
 try, cfg.freqhigh = tmpcfg.frequency; end
 
 LF = freqlow.freq;
@@ -131,10 +121,10 @@ nchan  = size(freqlow.fourierspctrm,2); % FIXME the dimord might be different
 % prepare the data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 switch cfg.method
-  
+
   case 'coh'
     % coherence
-    cohdatas = zeros(ntrial,nchan,numel(LF),numel(HF)) ;
+    cohdatas = zeros(ntrial,nchan,numel(LF),numel(HF));
     for  i =1:nchan
       chandataLF = freqlow.fourierspctrm(:,i,:,:);
       chandataHF = freqhigh.fourierspctrm(:,i,:,:);
@@ -143,10 +133,10 @@ switch cfg.method
       end
     end
     cfcdata = cohdatas;
-    
+
   case 'plv'
     % phase locking value
-    plvdatas = zeros(ntrial,nchan,numel(LF),numel(HF)) ;
+    plvdatas = zeros(ntrial,nchan,numel(LF),numel(HF));
     for  i =1:nchan
       chandataLF = freqlow.fourierspctrm(:,i,:,:);
       chandataHF = freqhigh.fourierspctrm(:,i,:,:);
@@ -155,7 +145,7 @@ switch cfg.method
       end
     end
     cfcdata = plvdatas;
-    
+
   case  'mvl'
     % mean vector length
     mvldatas = zeros(ntrial,nchan,numel(LF),numel(HF));
@@ -167,11 +157,11 @@ switch cfg.method
       end
     end
     cfcdata = mvldatas;
-    
+
   case  'mi'
     % modulation index
     nbin       = 20; % number of phase bin
-    pacdatas   = zeros(ntrial,nchan,numel(LF),numel(HF),nbin) ;
+    pacdatas   = zeros(ntrial,nchan,numel(LF),numel(HF),nbin);
     for  i =1:nchan
       chandataLF = freqlow.fourierspctrm(:,i,:,:);
       chandataHF = freqhigh.fourierspctrm(:,i,:,:);
@@ -180,7 +170,7 @@ switch cfg.method
       end
     end
     cfcdata = pacdatas;
-    
+
 end % switch method for data preparation
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -188,7 +178,7 @@ end % switch method for data preparation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 switch cfg.method
-  
+
   case 'coh'
     [ntrial,nchan,nlf,nhf] = size(cfcdata);
     if strcmp(cfg.keeptrials, 'no')
@@ -198,7 +188,7 @@ switch cfg.method
       crsspctrm = abs(cfcdata);
       dimord = 'rpt_chan_freqlow_freqhigh' ;
     end
-    
+
   case 'plv'
     [ntrial,nchan,nlf,nhf] = size(cfcdata);
     if strcmp(cfg.keeptrials, 'no')
@@ -208,7 +198,7 @@ switch cfg.method
       crsspctrm = abs(cfcdata);
       dimord = 'rpt_chan_freqlow_freqhigh' ;
     end
-    
+
   case  'mvl'
     [ntrial,nchan,nlf,nhf] = size(cfcdata);
     if strcmp(cfg.keeptrials, 'no')
@@ -218,10 +208,10 @@ switch cfg.method
       crsspctrm = abs(cfcdata);
       dimord = 'rpt_chan_freqlow_freqhigh' ;
     end
-    
+
   case  'mi'
     [ntrial,nchan,nlf,nhf,nbin] = size(cfcdata);
-    
+
     if strcmp(cfg.keeptrials, 'yes')
       dimord = 'rpt_chan_freqlow_freqhigh' ;
       crsspctrm = zeros(ntrial,nchan,nlf,nhf);
@@ -230,44 +220,44 @@ switch cfg.method
           pac = squeeze(cfcdata(k,n,:,:,:));
           Q =ones(nbin,1)/nbin;                             % uniform distribution
           mi = zeros(nlf,nhf);
-          
+
           for i=1:nlf
             for j=1:nhf
               P = squeeze(pac(i,j,:))/ nansum(pac(i,j,:));  % normalized distribution
               % KL distance
-              mi(i,j) = nansum(P.* (log(P)-log2(Q)))/log(nbin);
+              mi(i,j) = nansum(P.* log2(P./Q))./log2(nbin);
             end
           end
           crsspctrm(k,n,:,:) = mi;
-          
+
         end
       end
-      
+
     else
       dimord = 'chan_freqlow_freqhigh' ;
       crsspctrm = zeros(nchan,nlf,nhf);
       cfcdatamean = squeeze(mean(cfcdata,1));
-      
+
       for k =1:nchan
         pac = squeeze(cfcdatamean(k,:,:,:));
         Q =ones(nbin,1)/nbin;                             % uniform distribution
         mi = zeros(nlf,nhf);
-        
+
         for i=1:nlf
           for j=1:nhf
             P = squeeze(pac(i,j,:))/ nansum(pac(i,j,:));  % normalized distribution
             % KL distance
-            mi(i,j) = nansum(P.* (log(P)-log2(Q)))/log(nbin);
+            mi(i,j) = nansum(P.* log2(P./Q))./log2(nbin);
           end
         end
         crsspctrm(k,:,:) = mi;
       end
-      
+
     end % if keeptrials
-    
+
 end % switch method for actual computation
 
-crossfreq.label      = cfg.chanlow;
+crossfreq.label      = cfg.channel;
 crossfreq.crsspctrm  = crsspctrm;
 crossfreq.dimord     = dimord;
 crossfreq.freqlow    = LF;
@@ -302,11 +292,11 @@ for i = 1:size(LFsig,1)
     Nx  = sum(~isnan(LFsigtemp(i,:) .* LFsigtemp(i,:)));
     Ny  = sum(~isnan(HFsigtemp(j,:) .* HFsigtemp(j,:)));
     Nxy = sum(~isnan(LFsigtemp(i,:) .* HFsigtemp(j,:)));
-    
+
     Px  = LFsig(i,:) * ctranspose(LFsig(i,:)) ./ Nx;
     Py  = HFsig(j,:) * ctranspose(HFsig(j,:)) ./ Ny;
     Cxy = LFsig(i,:) * ctranspose(HFsig(j,:)) ./ Nxy;
-    
+
     cohdata(i,j) = Cxy / sqrt(Px * Py);
   end
 end
@@ -362,7 +352,7 @@ pacdata = zeros(size(LFsigtemp,1),size(HFsigtemp,1),nbin);
 
 Ang  = angle(LFsigtemp);
 Amp  = abs(HFsigtemp);
-[~,bin] = histc(Ang, linspace(-pi,pi,nbin));  % binned low frequency phase
+[dum,bin] = histc(Ang, linspace(-pi,pi,nbin));  % binned low frequency phase
 binamp = zeros (size(HFsigtemp,1),nbin);      % binned amplitude
 
 for i = 1:size(Ang,1)

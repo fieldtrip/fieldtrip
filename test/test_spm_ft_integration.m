@@ -1,11 +1,10 @@
 function test_spm_ft_integration
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY ft_prepare_layout ft_prepare_headmodel ft_compute_leadfield ft_prepare_vol_sens
 
-% TEST ft_prepare_layout ft_prepare_headmodel ft_compute_leadfield ft_prepare_vol_sens
-
-load test_SPM_ft_integration
+load test_spm_ft_integration.mat
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Layouts
@@ -55,7 +54,7 @@ cfg.method = 'concentricspheres';
 vol  = ft_prepare_headmodel(cfg);
 
 clf
-ft_plot_vol(vol, 'edgecolor', [0 0 0], 'facealpha', 0);
+ft_plot_headmodel(vol, 'edgecolor', [0 0 0], 'facealpha', 0);
 hold on
 ft_plot_sens(elec, 'style', '*b');
 clf
@@ -85,7 +84,7 @@ cfg.showcallinfo = 'no';
 vol = ft_prepare_headmodel(cfg, vol);
 
 clf
-ft_plot_vol(vol, 'edgecolor', [0 0 0], 'facealpha', 0);
+ft_plot_headmodel(vol, 'edgecolor', [0 0 0], 'facealpha', 0);
 hold on
 ft_plot_sens(elec, 'style', '*b');
 clf
@@ -105,7 +104,7 @@ cfg.method                 = 'nolte';
 vol                        = ft_prepare_headmodel(cfg);
 
 clf
-ft_plot_vol(vol, 'edgecolor', [0 0 0], 'facealpha', 0);
+ft_plot_headmodel(vol, 'edgecolor', [0 0 0], 'facealpha', 0);
 hold on
 ft_plot_sens(grad, 'style', '*b');
 clf
@@ -124,7 +123,7 @@ cfg.method                 = 'localspheres';
 vol  = ft_prepare_headmodel(cfg);
 
 clf
-ft_plot_vol(vol, 'edgecolor', [0 0 0], 'facealpha', 0);
+ft_plot_headmodel(vol, 'edgecolor', [0 0 0], 'facealpha', 0);
 hold on
 ft_plot_sens(grad, 'style', '*b');
 clf
@@ -141,7 +140,7 @@ vol.type = 'singleshell';
 vol = ft_convert_units(vol, 'mm');
 
 clf
-ft_plot_vol(vol, 'edgecolor', [0 0 0], 'facealpha', 0);
+ft_plot_headmodel(vol, 'edgecolor', [0 0 0], 'facealpha', 0);
 hold on
 ft_plot_sens(grad, 'style', '*b');
 clf

@@ -52,7 +52,7 @@ cortex  = struct;
 % trials are counted with zero-offset
 trial = 0;
 
-i_fid = fopen(filename, 'rb', 'ieee-le');
+i_fid = fopen_or_error(filename, 'rb', 'ieee-le');
 
 % read until the end of file or until the specified trial number
 while ( ~feof (i_fid) && trial<endtrial )
@@ -145,14 +145,14 @@ while ( ~feof (i_fid) && trial<endtrial )
           epp1(s) = epp1(s) + 2047;
         else
           epp1(s) = epp1(s) - 2048;
-        end;
+        end
 
         if (epp2(s) < 0)
           epp2(s) = epp2(s) + 2047;
         else
           epp2(s) = epp2(s) - 2048;
-        end;
-      end;
+        end
+      end
     end; % if skipepp
 
     if skipeog || skiptrial
@@ -175,7 +175,7 @@ while ( ~feof (i_fid) && trial<endtrial )
 
     trial = trial+1;
   end; % if ~isempty(length)
-end;
+end
 
 fclose(i_fid);
 

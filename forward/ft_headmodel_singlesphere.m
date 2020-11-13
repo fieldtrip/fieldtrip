@@ -16,7 +16,7 @@ function headmodel = ft_headmodel_singlesphere(mesh, varargin)
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
-% FIXME document the EEG case
+% FIXME document both EEG and MEG case
 
 % Copyright (C) 2012-2013, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
@@ -58,7 +58,7 @@ end
 % replace pnt with pos
 mesh = fixpos(mesh);
 
-if ~isstruct(mesh) || ~isfield(mesh, 'pos')
+if ~isstruct(mesh) || numel(mesh)>1 || ~isfield(mesh, 'pos')
   ft_error('the input mesh should be a set of points or a single triangulated surface')
 end
 

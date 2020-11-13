@@ -2,8 +2,7 @@ function test_bug2508
 
 % MEM 1gb
 % WALLTIME 00:10:00
-
-% TEST test_bug2508 ft_selectdata ft_selectdata_new
+% DEPENDENCY ft_selectdata ft_selectdata_new
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% check the averaging over dimensions for a simple timelock structure

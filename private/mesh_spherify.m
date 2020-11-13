@@ -36,7 +36,7 @@ end
 % the following code is for debugging
 if fb
   figure
-  [sphere_pnt, sphere_tri] = icosahedron162;
+  [sphere_pnt, sphere_tri] = mesh_sphere(162);
   y = vonmisesfischer(5, [0 0 1], sphere_pnt);
   triplot(sphere_pnt, sphere_tri, y);
 end
@@ -111,7 +111,7 @@ pnt = mscale * pnt;
 
 if fb
   figure
-  [sphere_pnt, sphere_tri] = icosahedron162;
+  [sphere_pnt, sphere_tri] = mesh_sphere(162);
   triplot(sphere_pnt, sphere_tri, [], 'faces_skin');
   triplot(pnt, tri, [], 'faces_skin');
   alpha 0.5
@@ -156,38 +156,3 @@ Cpk = 1;
 y = exp(k * u * x') ./ Cpk;
 y = y(:);
 
-
-function [val] = keyval(key, varargin)
-
-% KEYVAL returns the value that corresponds to the requested key in a
-% key-value pair list of variable input arguments
-%
-% Use as
-%   [val] = keyval(key, varargin)
-%
-% See also VARARGIN
-
-% Copyright (C) 2005-2007, Robert Oostenveld
-
-
-if length(varargin)==1 && iscell(varargin{1})
-  varargin = varargin{1};
-end
-
-if mod(length(varargin),2)
-  ft_error('optional input arguments should come in key-value pairs, i.e. there should be an even number');
-end
-
-keys = varargin(1:2:end);
-vals = varargin(2:2:end);
-
-hit = find(strcmp(key, keys));
-if length(hit)==0
-  % the requested key was not found
-  val = [];
-elseif length(hit)==1  
-  % the requested key was  found
-  val = vals{hit};
-else
-  ft_error('multiple input arguments with the same name');
-end

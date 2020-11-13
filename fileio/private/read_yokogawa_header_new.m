@@ -18,7 +18,7 @@ function hdr = read_yokogawa_header_new(filename)
 %
 % See also READ_YOKOGAWA_DATA_NEW, READ_YOKOGAWA_EVENT
 
-% ** 
+% **
 % Copyright (C) 2005, Robert Oostenveld and 2010, Tilmann Sander-Thoemmes
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
@@ -85,12 +85,12 @@ switch acq_type
     sample_rate = acq_cond.sample_rate;
     sample_count = acq_cond.frame_length;
     pretrigger_length = acq_cond.pretrigger_length;
-    averaged_count = acq_cond.average_count; 
+    averaged_count = acq_cond.average_count;
     if isempty(sample_rate) || isempty(sample_count) || isempty(pretrigger_length) || isempty(averaged_count)
       ft_error('invalid sample rate or sample count or pretrigger length or average count in ', filename);
       return;
     end
-    if acq_cond.multi_trigger.enable 
+    if acq_cond.multi_trigger.enable
       ft_error('multi trigger mode not supported for ', filename);
       return;
     end
@@ -98,12 +98,12 @@ switch acq_type
     sample_rate = acq_cond.sample_rate;
     sample_count = acq_cond.frame_length;
     pretrigger_length = acq_cond.pretrigger_length;
-    actual_epoch_count = acq_cond.average_count; 
+    actual_epoch_count = acq_cond.average_count;
     if isempty(sample_rate) || isempty(sample_count) || isempty(pretrigger_length) || isempty(actual_epoch_count)
       ft_error('invalid sample rate or sample count or pretrigger length or epoch count in ', filename);
       return;
     end
-    if acq_cond.multi_trigger.enable 
+    if acq_cond.multi_trigger.enable
       ft_error('multi trigger mode not supported for ', filename);
       return;
     end
@@ -180,6 +180,14 @@ for i=1:hdr.nChans
     prefix = 'ETC';
   end
   hdr.label{i} = sprintf('%s%03d', prefix, i);
+
+  % overwrite EEG-channel labels
+  if hdr.orig.channel_info.channel(i).type == handles.EegChannel
+    if ~isempty(hdr.orig.channel_info.channel(i).data.name)
+      hdr.label{i} = hdr.orig.channel_info.channel(i).data.name;
+    end
+  end
+
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

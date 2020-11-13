@@ -1,9 +1,8 @@
 function test_bug1607
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_channelrepair ft_topoplotER
+% DEPENDENCY ft_channelrepair ft_topoplotER
 
 % During preprocessing I lost some channels which I got back through
 % ft_channelrepair after which the channel order changed per subject.

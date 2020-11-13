@@ -1,9 +1,8 @@
 function test_bug1168
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_multiplotTFR
+% DEPENDENCY ft_multiplotTFR
 
 
 d.cfg = [];

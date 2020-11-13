@@ -2,9 +2,7 @@ function inspect_bug2722
 
 % WALLTIME 00:10:00
 % MEM 1gb
-
-% TEST test_bug2721
-% TEST ft_multiplotTFR
+% DEPENDENCY ft_multiplotTFR
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2722.mat'));
 

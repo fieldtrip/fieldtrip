@@ -29,11 +29,7 @@ function [mri, hdr] = read_ctf_mri(filename)
 % $Id$
 
 % Some versions require specifying latin1 (ISO-8859-1) character encoding.
-fid = fopen(filename, 'rb', 'ieee-be', 'ISO-8859-1');
-
-if fid<=0
-  ft_error(sprintf('could not open MRI file: %s\n', filename));
-end
+fid = fopen_or_error(filename, 'rb', 'ieee-be', 'ISO-8859-1');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % READ THE IMAGE HEADER
@@ -111,7 +107,7 @@ hdr.transformMatrix = fread(fid,[4 4],'float')'; % transformation matrix head->M
 fseek(fid, 1028, 'bof');
 
 % turn all warnings back on
-warning(ws);
+ft_warning(ws);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % READ THE IMAGE DATA

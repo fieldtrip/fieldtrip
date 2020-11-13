@@ -192,7 +192,7 @@ try
   % execute dipoli and read the resulting file
   dos(exefile);
   ama = loadama(amafile);
-  headmodel = ama2vol(ama);
+  headmodel = ama2headmodel(ama);
   
   % This is to maintain the headmodel.bnd convention (outward oriented), whereas
   % in terms of further calculation it shuold not really matter.

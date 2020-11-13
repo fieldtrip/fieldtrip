@@ -248,28 +248,28 @@ switch interpolate
         cfgint = [];
         cfgint.channel = isinteger;
         raw_int = ft_selectdata(cfgint, raw);
-        [~, raw_int] = rollback_provenance([], raw_int);
+        [dum, raw_int] = rollback_provenance([], raw_int);
         tmpcfg.method = 'nearest';
         raw_int = ft_resampledata(tmpcfg, raw_int);
-        [~, raw_int] = rollback_provenance([], raw_int);
+        [dum, raw_int] = rollback_provenance([], raw_int);
         
         % interpolating other channels using 'pchip', see INTERP1, shape-preserving piecewise cubic interpolation
         cfgint = [];
         cfgint.channel = setdiff(raw.label,isinteger);
         raw_nonint = ft_selectdata(cfgint, raw);
-        [~, raw_nonint] = rollback_provenance([], raw_nonint);
+        [dum, raw_nonint] = rollback_provenance([], raw_nonint);
         tmpcfg.method = 'pchip';
         raw_nonint = ft_resampledata(tmpcfg, raw_nonint);
-        [~, raw_nonint] = rollback_provenance([], raw_nonint);
+        [dum, raw_nonint] = rollback_provenance([], raw_nonint);
         
         % append
         raw = ft_appenddata([],raw_int, raw_nonint);
-        [~, raw] = rollback_provenance([], raw);
+        [dum, raw] = rollback_provenance([], raw);
       else
         % interpolating all channels using 'pchip', see INTERP1, shape-preserving piecewise cubic interpolation
         tmpcfg.method = 'pchip';
         raw = ft_resampledata(tmpcfg, raw);
-        [~, raw] = rollback_provenance([], raw);
+        [dum, raw] = rollback_provenance([], raw);
       end
     end
     

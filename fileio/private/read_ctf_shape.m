@@ -1,7 +1,7 @@
 function [shape] = read_ctf_shape(filename)
 
 % READ_CTF_SHAPE reads headshape points and header information
-% from a CTF *.shape teh accompanying *.shape_info file.
+% from a CTF *.shape the accompanying *.shape_info file.
 %
 % Use as
 %   [shape] = read_ctf_shape(filename)
@@ -33,7 +33,7 @@ if ~strcmp(shape.MRI_Info.COORDINATES, 'HEAD')
   ft_warning('points on head shape are NOT in headcoordinates')
 end
 
-fid = fopen(filename, 'rt');
+fid = fopen_or_error(filename, 'rt');
 num = fscanf(fid, '%d', 1);
 shape.pos = fscanf(fid, '%f', inf);
 shape.pos = reshape(shape.pos, [3 num])';

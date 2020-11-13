@@ -36,7 +36,7 @@ function ft_realtime_signalviewer(cfg)
 % If you want to skip all data that was acquired before you start the RT function,
 % but don't want to miss any data that was acquired while the realtime function is
 % started, then you should use jumptoeof=yes and bufferdata=first. If you want to
-% analyse data from a file, then you should use jumptoeof=no and bufferdata=first.
+% analyze data from a file, then you should use jumptoeof=no and bufferdata=first.
 %
 % To stop this realtime function, you have to press Ctrl-C
 
@@ -132,7 +132,7 @@ while true
     endsample  = hdr.nSamples*hdr.nTrials;
   elseif strcmp(cfg.bufferdata, 'first')
     begsample  = prevSample+1;
-    endsample  = prevSample+blocksize ;
+    endsample  = prevSample+blocksize;
   else
     ft_error('unsupported value for cfg.bufferdata');
   end
@@ -208,7 +208,7 @@ while true
   % shift each of the channels with a given offset
   nchan = size(dat,1);
   for i=1:nchan
-    dat(i,:) = dat(i,:) + (nchan-i-1)*cfg.offset(i);
+    dat(i,:) = dat(i,:) + cfg.offset(i);
   end
   
   % plot the data

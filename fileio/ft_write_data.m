@@ -1,6 +1,6 @@
 function ft_write_data(filename, dat, varargin)
 
-% FT_WRITE_DATA exports electrophysiological data such as EEG to a file. 
+% FT_WRITE_DATA exports electrophysiological data such as EEG to a file.
 %
 % Use as
 %   ft_write_data(filename, dat, ...)
@@ -9,29 +9,33 @@ function ft_write_data(filename, dat, varargin)
 % extension not, it will be added automatically.
 %
 % Additional options should be specified in key-value pairs and can be
-%   'header'         header structure that describes the data, see FT_READ_HEADER
-%   'dataformat'     string, see below
-%   'append'         boolean, not supported for all formats
-%   'chanindx'       1xN array
+%   'header'       = header structure that describes the data, see FT_READ_HEADER
+%   'event'        = event structure that corresponds to the data, see FT_READ_EVENT
+%   'chanindx'     = 1xN array, for selecting a subset of channels from header and data
+%   'dataformat'   = string, see below
+%   'append'       = boolean, not supported for all formats
 %
-% The supported dataformats are
+% The supported dataformats for writing are
 %   edf
 %   gdf
+%   anywave_ades
 %   brainvision_eeg
 %   neuralynx_ncs
 %   neuralynx_sdma
 %   plexon_nex
-%   riff_wave
 %   fcdc_matbin
 %   fcdc_mysql
 %   fcdc_buffer
+%   flac, m4a, mp4, oga, ogg, wav (audio formats)
 %   matlab
+%   homer_nirs
+%   snirf
 %
 % For EEG data formats, the input data is assumed to be scaled in microvolt.
 %
 % See also FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, FT_WRITE_EVENT
 
-% Copyright (C) 2007-2014, Robert Oostenveld
+% Copyright (C) 2007-2020, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -60,7 +64,7 @@ end
 
 % get the options
 append        = ft_getopt(varargin, 'append', false);
-nbits         = ft_getopt(varargin, 'nbits', 16); % for riff_wave
+nbits         = ft_getopt(varargin, 'nbits', 16); % for audio
 chanindx      = ft_getopt(varargin, 'chanindx');
 hdr           = ft_getopt(varargin, 'header');
 evt           = ft_getopt(varargin, 'event');
@@ -71,11 +75,21 @@ if isempty(dataformat)
   dataformat = ft_filetype(filename);
 end
 
+if startsWith(dataformat, 'audio_')
+  % support for  audio formats is implemented in a generic fashion
+  dataformat = dataformat(7:end);
+end
+
 % convert 'yes' or 'no' string into boolean
 append = istrue(append);
 
 % determine the data size
 [nchans, nsamples] = size(dat);
+
+% ensure that the directory exists if we want to write to a file
+if ~ismember(dataformat, {'empty', 'fcdc_global', 'fcdc_buffer', 'fcdc_mysql'})
+  isdir_or_mkdir(fileparts(filename));
+end
 
 switch dataformat
   
@@ -84,7 +98,7 @@ switch dataformat
     % just pretend that we are writing the data, this is only for debugging
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     [numC, numS] = size(dat);
-    fprintf(1,'Pretending to write %i samples from %i channels...\n',numS,numC);
+    ft_info('Pretending to write %i samples from %i channels...\n',numS,numC);
     % Insert a small delay to make this more realitic for testing purposes
     % The time for writing to an actual location will differ and depend on
     % the amount of data
@@ -94,9 +108,14 @@ switch dataformat
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % store it in a global variable, this is only for debugging
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if ~isempty(evt)
+      ft_error('writing events is not supported here, please see FT_WRITE_EVENT');
+    end
+    
     if ~isempty(hdr)
       header_queue = hdr;
     end
+    
     if isempty(data_queue) || ~append
       data_queue = dat;
     else
@@ -105,8 +124,12 @@ switch dataformat
     
   case 'fcdc_buffer'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % network transparent buffer
+    % write to a network transparent buffer for realtime analysis
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if ~isempty(evt)
+      ft_error('writing events is not supported here, please see FT_WRITE_EVENT');
+    end
+    
     if ~isempty(chanindx)
       % assume that the header corresponds to the original multichannel
       % file and that the data represents a subset of channels
@@ -191,12 +214,12 @@ switch dataformat
         buffer('put_hdr', packet, host, port);
         
       catch
-        if ~isempty(strfind(lasterr, 'Buffer size N must be an integer-valued scalar double.'))
+        if contains(lasterr, 'Buffer size N must be an integer-valued scalar double.')
           % this happens if the MATLAB75/toolbox/signal/signal/buffer
           % function is used instead of the FieldTrip buffer
           ft_error('the FieldTrip buffer mex file was not found on your path, it should be in fieldtrip/fileio/private');
           
-        elseif ~isempty(strfind(lasterr, 'failed to create socket')) && (strcmp(host, 'localhost') || strcmp(host, '127.0.0.1'))
+        elseif contains(lasterr, 'failed to create socket') && (strcmp(host, 'localhost') || strcmp(host, '127.0.0.1'))
           
           % start a local instance of the TCP server
           ft_warning('starting FieldTrip buffer on %s:%d', host, port);
@@ -246,13 +269,13 @@ switch dataformat
         packet.nchans    = size(dat,1);
         packet.nsamples  = size(dat,2);
         packet.data_type = find(strcmp(type, class(dat))) - 1; % zero-offset
-        packet.bufsize   = numel(dat) * wordsize{find(strcmp(type, class(dat)))};
+        packet.bufsize   = numel(dat) * wordsize{strcmp(type, class(dat))};
         packet.buf       = dat;
         buffer('put_dat', packet, host, port);
       end % if data larger than chuncksize
     end
     
-  case 'brainvision_eeg'
+  case {'brainvision_eeg', 'brainvision_vhdr'}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % combination of *.eeg and *.vhdr file
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -290,17 +313,18 @@ switch dataformat
       hdr          = old.hdr;
       hdr.nSamples = hdr.nSamples + nsamples;
       
-      % there are no new events
       if isfield(old, 'event')
         event = old.event;
       else
         event = [];
       end
+      % append the existing and the new events
+      event = appendstruct(event, evt);
       
       save(headerfile, 'hdr', 'event', '-v6');
-
+      
       % update the data file
-      [fid,message] = fopen(datafile,'ab','ieee-le');
+      fid = fopen_or_error(datafile,'ab','ieee-le');
       fwrite(fid, dat, hdr.precision);
       fclose(fid);
       
@@ -316,13 +340,15 @@ switch dataformat
       if ~isfield(hdr, 'precision')
         hdr.precision = 'double';
       end
-      % there are no events
-      event = [];
-      % write the header file
+      
+      % rename the variable name for the new events
+      event = evt;
+      
+      % write the header and events to the file
       save(headerfile, 'hdr', 'event', '-v6');
       
       % write the data file
-      [fid,message] = fopen(datafile,'wb','ieee-le');
+      fid = fopen_or_error(datafile,'wb','ieee-le');
       fwrite(fid, dat, hdr.precision);
       fclose(fid);
     end
@@ -332,9 +358,14 @@ switch dataformat
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % write to a MySQL server listening somewhere else on the network
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if ~isempty(evt)
+      ft_error('writing events is not supported here, please see FT_WRITE_EVENT');
+    end
+    
     % check that the required low-level toolbox is available
     ft_hastoolbox('mysql', 1);
     db_open(filename);
+    
     if ~isempty(hdr) && isempty(dat)
       % insert the header information into the database
       if db_blob
@@ -394,24 +425,51 @@ switch dataformat
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     [path, file, ext] = fileparts(filename);
     filename = fullfile(path, [file '.mat']);
-    if      append &&  exist(filename, 'file')
+    
+    if  append &&  exist(filename, 'file')
       % read the previous header and data from MATLAB file
       prev = load(filename);
+      % do a sanity chjeck to ensure that the file content is consistent with the new data
       if ~isempty(hdr) && ~isequal(hdr, prev.hdr)
         ft_error('inconsistent header');
-      else
-        % append the new data to that from the MATLAB file
-        dat = cat(2, prev.dat, dat);
       end
-    elseif  append && ~exist(filename, 'file')
+      
+    elseif append && ~exist(filename, 'file')
       % file does not yet exist, which is not a problem
+      prev = [];
+      
     elseif ~append &&  exist(filename, 'file')
+      % file already exists, delete it and make a new one further down
       ft_warning('deleting existing file ''%s''', filename);
       delete(filename);
+      prev = [];
+      
     elseif ~append && ~exist(filename, 'file')
       % file does not yet exist, which is not a problem
+      prev = [];
     end
-    save(filename, 'dat', 'hdr');
+    
+    if isfield(prev, 'dat')
+      % append the new data to the previous data from from the MATLAB file
+      dat = cat(2, prev.dat, dat);
+    end
+    if isfield(prev, 'event')
+      % append the new events to the previous events from from the MATLAB file
+      event = cat(2, prev.event, evt);
+    else
+      % rename the variable name for the new events
+      event = evt;
+    end
+    
+    % write the data, header and events to the file
+    save(filename, 'dat', 'hdr', 'event');
+    
+  case 'mff'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % MFF files using Phillips plugin
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    ft_hastoolbox('mffmatlabio', 1);
+    mff_fileio_write(filename, hdr, dat, evt);
     
   case 'neuralynx_sdma'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -429,6 +487,9 @@ switch dataformat
     % the number of bits to shift. The channel label is contained in the
     % filename as dataset.chanlabel.bin.
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if ~isempty(evt)
+      ft_error('writing events is not supported');
+    end
     
     statuschannel = {
       'stx'
@@ -464,7 +525,7 @@ switch dataformat
       filename{i} = fullfile(dirname, [file '.' hdr.label{i} '.bin']);
     end
     
-    if ~isdir(dirname)
+    if ~isfolder(dirname)
       mkdir(dirname);
     end
     
@@ -473,13 +534,13 @@ switch dataformat
     for j=1:hdr.nChans
       
       if append==false
-        fid(j) = fopen(filename{j}, 'wb', 'ieee-le');   % open the file
-        magic = format{j};                              % this used to be the channel name
-        magic((end+1):8) = 0;                           % pad with zeros
-        magic(8) = downscale(j);                        % number of bits to shift
-        fwrite(fid(j), magic(1:8));                     % write the 8-byte file header
+        fid(j) = fopen_or_error(filename{j}, 'wb', 'ieee-le'); % open the file
+        magic = format{j};                               % this used to be the channel name
+        magic((end+1):8) = 0;                            % pad with zeros
+        magic(8) = downscale(j);                         % number of bits to shift
+        fwrite(fid(j), magic(1:8));                      % write the 8-byte file header
       else
-        fid(j) = fopen(filename{j}, 'ab', 'ieee-le');   % open the file for appending
+        fid(j) = fopen_or_error(filename{j}, 'ab', 'ieee-le');    % open the file for appending
       end % if append
       
       % convert the data into the correct class
@@ -510,15 +571,26 @@ switch dataformat
       fclose(fid(j));
     end % for each channel
     
-  case 'riff_wave'
+  case {'flac' 'm4a' 'mp4' 'oga' 'ogg' 'wav'}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %     This writes data Y to a Windows WAVE file specified by the file name
-    %     WAVEFILE, with a sample rate of FS Hz and with NBITS number of bits.
-    %     NBITS must be 8, 16, 24, or 32.  For NBITS < 32, amplitude values
-    %     outside the range [-1,+1] are clipped
+    % This writes data Y to a Windows WAVE file specified by the file name
+    % WAVEFILE, with a sample rate of FS Hz and with NBITS number of bits.
+    % NBITS must be 8, 16, 24, or 32.  For NBITS < 32, amplitude values
+    % outside the range [-1,+1] are clipped
+    %
+    % Supported extensions for AUDIOWRITE are:
+    %   .flac
+    % 	.m4a
+    % 	.mp4
+    % 	.oga
+    % 	.ogg
+    % 	.wav
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if append
-      ft_error('appending data is not yet supported for this data format');
+      ft_error('appending data is not supported for this data format');
+    end
+    if ~isempty(evt)
+      ft_error('writing events is not supported');
     end
     
     if nchans~=hdr.nChans && length(chanindx)==nchans
@@ -527,9 +599,17 @@ switch dataformat
       hdr.label  = hdr.label(chanindx);
       hdr.nChans = length(chanindx);
     end
+    
     if nchans~=1
       ft_error('this format only supports single channel continuous data');
     end
+    
+    [p, f, x] = fileparts(filename);
+    if isempty(x)
+      % append the format as extension
+      filename = [filename '.' dataformat];
+    end
+    
     audiowrite(filename, dat, hdr.Fs, 'BitsPerSample', nbits);
     
   case 'plexon_nex'
@@ -538,6 +618,9 @@ switch dataformat
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if append
       ft_error('appending data is not yet supported for this data format');
+    end
+    if ~isempty(evt)
+      ft_error('writing events is not supported');
     end
     
     [path, file] = fileparts(filename);
@@ -574,7 +657,9 @@ switch dataformat
     if append
       ft_error('appending data is not yet supported for this data format');
     end
-    
+    if ~isempty(evt)
+      ft_error('writing events is not supported');
+    end
     if nchans>1
       ft_error('only supported for single-channel data');
     end
@@ -648,6 +733,9 @@ switch dataformat
     if append
       ft_error('appending data is not yet supported for this data format');
     end
+    if ~isempty(evt)
+      ft_error('writing events is not supported');
+    end
     if ~isempty(chanindx)
       % assume that the header corresponds to the original multichannel
       % file and that the data represents a subset of channels
@@ -663,6 +751,9 @@ switch dataformat
     if append
       ft_error('appending data is not yet supported for this data format');
     end
+    if ~isempty(evt)
+      ft_error('writing events is not supported');
+    end
     if ~isempty(chanindx)
       % assume that the header corresponds to the original multichannel
       % file and that the data represents a subset of channels
@@ -671,6 +762,158 @@ switch dataformat
     end
     write_edf(filename, hdr, dat);
     
+  case 'anywave_ades'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % see http://meg.univ-amu.fr/wiki/AnyWave:ADES
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if append
+      ft_error('appending data is not yet supported for this data format');
+    end
+    if ~isempty(evt)
+      ft_error('writing events is not supported');
+    end
+    if ~isempty(chanindx)
+      % assume that the header corresponds to the original multichannel
+      % file and that the data represents a subset of channels
+      hdr.label     = hdr.label(chanindx);
+      hdr.chantype  = hdr.chantype(chanindx);
+      hdr.chanunit  = hdr.chanunit(chanindx);
+      hdr.nChans    = length(chanindx);
+    end
+    
+    dattype = unique(hdr.chantype);
+    datunit = cell(size(dattype));
+    for i=1:numel(dattype)
+      unit = hdr.chanunit(strcmp(hdr.chantype, dattype{i}));
+      if ~all(strcmp(unit, unit{1}))
+        ft_error('channels of the same type with different units are not supported');
+      end
+      datunit{i} = unit{1};
+    end
+    
+    % only change these after checking channel types and units
+    chantype = adestype(hdr.chantype);
+    dattype  = adestype(dattype);
+    
+    % ensure that all channels have the right scaling
+    for i=1:size(dat,1)
+      switch chantype{i}
+        case 'MEG'
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'T');
+        case 'Reference'
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'T');
+        case 'GRAD'
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'T/m');
+        case 'EEG'
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'V');
+        case 'SEEG'
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'V');
+        case 'EMG'
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'V');
+        case 'ECG'
+          dat(i,:) = dat(i,:) * ft_scalingfactor(hdr.chanunit{i}, 'V');
+        otherwise
+          % FIXME I am not sure what scaling to apply
+      end
+    end
+    
+    [p, f, x] = fileparts(filename);
+    filename = fullfile(p, f); % without extension
+    mat2ades(dat, filename, hdr.Fs, hdr.label, chantype, dattype, datunit);
+    
+  case 'homer_nirs'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % https://www.nitrc.org/plugins/mwiki/index.php/homer2:Homer_Input_Files#NIRS_data_file_format
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if append
+      ft_error('appending data is not yet supported for this data format');
+    end
+    if ~isempty(chanindx)
+      % assume that the header corresponds to the original multichannel
+      % file and that the data represents a subset of channels
+      hdr.label  = hdr.label(chanindx);
+      hdr.nChans = length(chanindx);
+    end
+    
+    % convert the input arguments into a FieldTrip raw data structure
+    data = [];
+    data.hdr = hdr;
+    data.trial{1} = dat;
+    data.time{1} = ((1:hdr.nSamples*hdr.nTrials)-1)/hdr.Fs;
+    data.label = hdr.label;
+    data.sampleinfo = [1 size(dat,2)];
+    
+    % convert the raw data structure to Homer format
+    nirs = fieldtrip2homer(data, 'event', evt);
+    
+    % Homer files are MATLAB files in disguise
+    % see https://www.nitrc.org/plugins/mwiki/index.php/homer2:Homer_Input_Files#NIRS_data_file_format
+    save(filename, '-struct', 'nirs'); % save the fields as individual variables in the file
+    
+  case 'snirf'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % https://github.com/fNIRS/snirf
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if append
+      ft_error('appending data is not yet supported for this data format');
+    end
+    if ~isempty(chanindx)
+      % assume that the header corresponds to the original multichannel
+      % file and that the data represents a subset of channels
+      hdr.label  = hdr.label(chanindx);
+      hdr.nChans = length(chanindx);
+    end
+    
+    % this uses the SNIRF reading functions from the Homer3 toolbox
+    ft_hastoolbox('homer3', 1);
+    
+    % convert the input arguments into a FieldTrip raw data structure
+    data = [];
+    data.hdr = hdr;
+    data.trial{1} = dat;
+    data.time{1} = ((1:hdr.nSamples*hdr.nTrials)-1)/hdr.Fs;
+    data.label = hdr.label;
+    data.sampleinfo = [1 size(dat,2)];
+    
+    % convert the raw data structure to Homer format
+    nirs = fieldtrip2homer(data, 'event', evt);
+    
+    % convert the Homer structure to Snirf and write it to disk
+    snirf = SnirfClass(nirs);
+    snirf.Save(filename);
+    
   otherwise
     ft_error('unsupported data format');
 end % switch dataformat
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function type = adestype(type)
+for i=1:numel(type)
+  switch lower(type{i})
+    case 'meggrad'
+      type{i} = 'MEG'; % this is for CTF and BTi/4D
+    case 'megmag'
+      type{i} = 'MEG'; % this is for Neuromag and BTi/4D
+    case 'megplanar'
+      type{i} = 'GRAD'; % this is for Neuromag
+    case {'refmag' 'refgrad'}
+      type{i} = 'Reference';
+    case 'eeg'
+      type{i} = 'EEG';
+    case {'seeg' 'ecog' 'ieeg'}
+      type{i} = 'SEEG'; % all intracranial channels
+    case 'ecg'
+      type{i} = 'ECG';
+    case 'emg'
+      type{i} = 'EMG';
+    case 'trigger'
+      type{i} = 'Trigger';
+    case 'source'
+      type{i} = 'Source'; % virtual channel
+    otherwise
+      type{i} = 'Other';
+  end
+end

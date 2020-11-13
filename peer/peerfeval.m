@@ -22,7 +22,7 @@ function [jobid, puttime] = peerfeval(varargin)
 %   argout = peerget(jobid, 'timeout', inf);
 %   disp(argout);
 %
-% See also PEERGET, PEERCELLFUN, PEERMASTER, PEERSLAVE, FEVAL, DFEVAL, DFEVALASYNC
+% See also PEERGET, PEERCELLFUN, PEERCONTROLLER, PEERWORKER, FEVAL, BATCH
 
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld
@@ -47,7 +47,7 @@ function [jobid, puttime] = peerfeval(varargin)
 % the same input arguments (e.g. from peercellfun)
 persistent previous_argin
 
-% the peer server must be running in master mode
+% the peer server must be running in controller mode
 peer('status', 1);
 
 % check the current status of the maintenance threads
@@ -114,7 +114,7 @@ end
 if ~isempty(previous_argin) && ~isequal(varargin{1}, previous_argin{1})
   % this can be skipped if the previous call used the same function
   if isempty(which(varargin{1}))
-    error('Not a valid M-file (%s).', varargin{1});
+    error('not a valid M-file "%s"', varargin{1});
   end
 end
 
@@ -129,62 +129,62 @@ randomseed = rand(1)*double(intmax);
 options = {'pwd', getcustompwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq, 'randomseed', randomseed, 'nargout', numargout};
 
 % status = 0 means zombie mode, don't accept anything
-% status = 1 means master mode, accept everything
-% status = 2 means idle slave, accept only a single job
-% status = 3 means busy slave, don't accept a new job
+% status = 1 means controller mode, accept everything
+% status = 2 means idle worker, accept only a single job
+% status = 3 means busy worker, don't accept a new job
 
 while isempty(jobid)
-  
+
   if toc(stopwatch)>timeout
     % it took too long to find a peer that was willing to execute the job
     break;
   end
-  
+
   % get the full list of peers
   list = peerlist;
-  
+
   if ~isempty(hostid)
     % only consider peers in the user specified list
     list = list(ismember([list.hostid], hostid));
   end
-  
-  % only peers that are currently in idle or busy slave mode are interesting
+
+  % only peers that are currently in idle or busy worker mode are interesting
   list = list([list.status]==2 | [list.status]==3);
   if isempty(list)
-    error('there is no peer available as slave');
+    error('there is no peer available as worker');
   end
-  
+
   % only peers with enough memory are interesting
   list = list([list.memavail] >= memreq);
   if isempty(list)
-    error('there are no slave peers available that meet the memory requirements');
+    error('there are no worker peers available that meet the memory requirements');
   end
-  
+
   % only peers with enough CPU speed are interesting
   list = list([list.cpuavail] >= cpureq);
   if isempty(list)
-    error('there are no slave peers available that meet the CPU requirements');
+    error('there are no worker peers available that meet the CPU requirements');
   end
-  
+
   % only peers with enough time for a single job are interesting
   list = list([list.timavail] >= timreq);
   if isempty(list)
-    error('there are no slave peers available to execute a job of this duration');
+    error('there are no worker peers available to execute a job of this duration');
   end
-  
-  % only the idle slaves are interesting from now on
-  % the busy slaves may again become relevant on the next attempt
+
+  % only the idle workers are interesting from now on
+  % the busy workers may again become relevant on the next attempt
   list = list([list.status] == 2);
-  
+
   if isempty(list)
-    % at the moment all the appropriate slaves are busy
+    % at the moment all the appropriate workers are busy
     % give the peer network some time to recover
     pause(sleep);
     continue;
   end
-  
+
   list = peerschedule(list, memreq, timreq, cpureq);
-  
+
   for i=1:length(list)
     try
       jobid   = [];
@@ -199,20 +199,19 @@ while isempty(jobid)
       % the peer rejected the job, perhaps because it is busy or perhaps because of allowuser/allowgroup/allowhost
     end
   end % for
-  
+
   if isempty(jobid)
     % the job was not submitted succesfully and another attempt is needed
     % give the peer network some time to recover
     pause(sleep);
     continue;
   end
-  
+
 end % while isempty(jobid)
 
 if isempty(jobid)
-  warning('FieldTrip:peer:noSlaveAvailable', 'none of the slave peers was willing to accept the job');
+  warning('FieldTrip:peer:noSlaveAvailable', 'none of the worker peers was willing to accept the job');
 end
 
 % remember the input arguments to speed up subsequent calls
 previous_argin  = varargin;
-

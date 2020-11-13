@@ -1,8 +1,8 @@
 function [varargout] = ft_notification(varargin)
 
 % FT_NOTIFICATION works mostly like the WARNING and ERROR commands in MATLAB and
-% is called by FT_ERROR, FT_WARNING, FT_NOTICE, FT_INFO, FT_DEBUG. Note that you
-% should not call this function directly.
+% is called by FT_ERROR, FT_WARNING, FT_NOTICE, FT_INFO and FT_DEBUG. Please note
+% that you should not call this function directly.
 %
 % Some examples:
 %  ft_info on
@@ -21,7 +21,7 @@ function [varargout] = ft_notification(varargin)
 %  ft_info clear      % clears the status of all notifications
 %  ft_info timeout 10 % sets the timeout (for 'once') to 10 seconds
 %
-% See also DEFAULTID
+% See also DEFAULTID, FT_ERROR, FT_WARNING, FT_NOTICE, FT_INFO, FT_DEBUG, ERROR, WARNING
 
 % Copyright (C) 2012-2017, Robert Oostenveld, J?rn M. Horschig
 %
@@ -118,7 +118,7 @@ if ~ismember('verbose', {s.identifier})
   switch level
     case 'warning'
       defaultverbose = true;
-      t = warning('query', 'verbose');% get the default state
+      t = warning('query', 'verbose'); % get the default state
       s = setstate(s, 'verbose', t.state);
     otherwise
       s = setstate(s, 'verbose', 'off');
@@ -149,10 +149,13 @@ if strcmp(level, 'warning')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% set the notification state according to the input
+%% set the state according to the input
 
-if numel(varargin)>0 && (isstruct(varargin{1}) || isempty(varargin{1}))
-  ft_default.notification.(level) = varargin{1};
+if numel(varargin)==1 && (isstruct(varargin{1}) || isempty(varargin{1}))
+  for i=1:numel(varargin{1})
+    s = setstate(s, varargin{1}(i).identifier, varargin{1}(i).state);
+  end
+  ft_default.notification.(level) = s;
   return
 end
 
@@ -166,8 +169,10 @@ end
 switch varargin{1}
   case 'on'
     if numel(varargin)>1
-      % switch a specific item on
       msgId = varargin{2};
+      % return the message state of this specific one
+      varargout{1} = getreturnstate(s, msgId);
+      % switch this specific item on
       s = setstate(s, msgId, 'on');
       if strcmp(msgId, 'backtrace')
         defaultbacktrace = false;
@@ -175,19 +180,19 @@ switch varargin{1}
       if strcmp(msgId, 'verbose')
         defaultverbose = false;
       end
-      % return the message state of all
-      varargout{1} = getreturnstate(s, msgId);
     else
-      % switch all on
-      s = setstate(s, 'all', 'on');
       % return the message state of all
       varargout{1} = getreturnstate(s);
+      % switch all on
+      s = setstate(s, 'all', 'on');
     end
     
   case 'off'
     if numel(varargin)>1
-      % switch a specific item off
       msgId = varargin{2};
+      % return the message state of this specific one
+      varargout{1} = getreturnstate(s, msgId);
+      % switch this specific item on
       s = setstate(s, msgId, 'off');
       if strcmp(msgId, 'backtrace')
         defaultbacktrace = false;
@@ -195,27 +200,25 @@ switch varargin{1}
       if strcmp(msgId, 'verbose')
         defaultverbose = false;
       end
-      % return the specific message state
-      varargout{1} = getreturnstate(s, msgId);
     else
-      % switch all off
-      s = setstate(s, 'all', 'off');
       % return the message state of all
       varargout{1} = getreturnstate(s);
+      % switch all off
+      s = setstate(s, 'all', 'off');
     end
     
   case 'once'
     if numel(varargin)>1
-      % switch a specific item to once
       msgId = varargin{2};
-      s = setstate(s, msgId, 'once');
       % return the specific message state
       varargout{1} = getreturnstate(s, msgId);
+      % switch a specific item to once
+      s = setstate(s, msgId, 'once');
     else
-      % switch all to once
-      s = setstate(s, 'all', 'once');
       % return the message state of all
       varargout{1} = getreturnstate(s);
+      % switch all to once
+      s = setstate(s, 'all', 'once');
     end
     
   case 'timeout'
@@ -324,11 +327,18 @@ switch varargin{1}
       msgId = defaultId;
     end
     
+    if varargin{1}(end) =='\'
+      % a lone trailing backslash, '\' , is not a valid control character
+      varargin{1}(end+1) = '\';
+    end
+    
     % store the last notification
     state.message    = strtrim(sprintf(varargin{:})); % remove the trailing newline
     state.identifier = msgId;
-    state.stack      = stack;
-    s = setstate(s, 'last', state);
+    if ~isempty(stack)
+      state.stack      = stack;
+      s = setstate(s, 'last', state);
+    end
     
     if strcmp(msgState, 'on')
       
@@ -339,7 +349,7 @@ switch varargin{1}
         if ~isempty(msgId)
           error(state);
         else
-          error(varargin{:});
+          error(rmfield(state, 'identifier'));
         end
         
       elseif strcmp(level, 'warning')

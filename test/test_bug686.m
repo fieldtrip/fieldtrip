@@ -2,10 +2,9 @@ function test_bug686
 
 % MEM 2gb
 % WALLTIME 00:30:00
+% DEPENDENCY ft_convert_units ft_prepare_headmodel ft_prepare_leadfield ft_prepare_sourcemodel ft_headmodel_openmeeg headsurface
 
-% TEST ft_convert_units ft_prepare_headmodel ft_prepare_leadfield ft_prepare_sourcemodel ft_headmodel_openmeeg headsurface
-
-[pnt, tri] = icosahedron162;
+[pnt, tri] = mesh_sphere(162);
 pnt = pnt .* 10;           % convert to cm
 sel = find(pnt(:,3)>0);    % take the upper hemisphere
 
@@ -82,7 +81,7 @@ catch
   eegvol_dipoli3 = [];
 end
 
-try 
+try
   cfg.method = 'openmeeg';
   cfg.conductivity = 1;
   eegvol_openmeeg1 = ft_prepare_headmodel(cfg, geom1);
@@ -124,22 +123,22 @@ catch
   eegvol_dipoli1_m  = [];
   eegvol_dipoli1_dm = [];
   eegvol_dipoli1_cm = [];
-  eegvol_dipoli1_mm = [];  
+  eegvol_dipoli1_mm = [];
   eegvol_dipoli3_m  = [];
   eegvol_dipoli3_dm = [];
   eegvol_dipoli3_cm = [];
-  eegvol_dipoli3_mm = [];  
+  eegvol_dipoli3_mm = [];
 end
 
-try 
+try
   eegvol_openmeeg1_m  = ft_convert_units(eegvol_openmeeg1, 'm');
   eegvol_openmeeg1_dm = ft_convert_units(eegvol_openmeeg1, 'dm');
   eegvol_openmeeg1_cm = ft_convert_units(eegvol_openmeeg1, 'cm');
-  eegvol_openmeeg1_mm = ft_convert_units(eegvol_openmeeg1, 'mm');  
+  eegvol_openmeeg1_mm = ft_convert_units(eegvol_openmeeg1, 'mm');
   eegvol_openmeeg3_m  = ft_convert_units(eegvol_openmeeg3, 'm');
   eegvol_openmeeg3_dm = ft_convert_units(eegvol_openmeeg3, 'dm');
   eegvol_openmeeg3_cm = ft_convert_units(eegvol_openmeeg3, 'cm');
-  eegvol_openmeeg3_mm = ft_convert_units(eegvol_openmeeg3, 'mm');  
+  eegvol_openmeeg3_mm = ft_convert_units(eegvol_openmeeg3, 'mm');
 catch
   fprintf('Please install OpenMEEG\n')
   % leaving them empty will be interpreted as an infinite volume conductor
@@ -229,10 +228,10 @@ eeg_leadfield = {};
 for i=1:length(eegvol)
   for j=1:length(units)
     cfg             = [];
-    cfg.vol         = eval(sprintf('%s_%s', eegvol{i}, units{j}));
+    cfg.headmodel   = eval(sprintf('%s_%s', eegvol{i}, units{j}));
     cfg.elec        = eval(sprintf('elec_%s', units{j}));
-    cfg.grid.pos    = pos{j};
-    cfg.sourceunits = units{j};
+    cfg.sourcemodel.pos = pos{j};
+    cfg.sourcemodel.unit = units{j};
     grid = ft_prepare_leadfield(cfg);
     eeg_leadfield{i,j} = grid.leadfield{1};
   end
@@ -243,16 +242,16 @@ meg_leadfield = {};
 for i=1:length(megvol)
   for j=1:length(units)
     cfg             = [];
-    cfg.vol         = eval(sprintf('%s_%s', megvol{i}, units{j}));
+    cfg.headmodel   = eval(sprintf('%s_%s', megvol{i}, units{j}));
     cfg.grad        = eval(sprintf('grad_%s', units{j}));
-    cfg.grid.pos    = pos{j};
-    cfg.sourceunits = units{j};
+    cfg.sourcemodel.pos = pos{j};
+    cfg.sourcemodel.unit = units{j};
     grid = ft_prepare_leadfield(cfg);
     meg_leadfield{i,j} = grid.leadfield{1};
   end
 end
 
-%% In the table with scaling factors the columns correspond to m, cm, mm, 
+%% In the table with scaling factors the columns correspond to m, cm, mm,
 % the rows correspond to the different volume conduction models
 
 eeg_table = cellfun(@norm, eeg_leadfield);
@@ -262,5 +261,3 @@ disp(round(log10(eeg_table ./ eeg_table(1,1))))
 disp('meg_table')
 meg_table = cellfun(@norm, meg_leadfield);
 disp(round(log10(meg_table ./ meg_table(1,1))))
-
-

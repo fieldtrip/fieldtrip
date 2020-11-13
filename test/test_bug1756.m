@@ -2,8 +2,7 @@ function test_bug1756
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_voltype ft_prepare_headmodel ft_headmodel_openmeeg
+% DEPENDENCY ft_headmodeltype ft_prepare_headmodel ft_headmodel_openmeeg
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1756'));
 
@@ -60,20 +59,20 @@ cfg.method = 'singleshell'; % realisically shaped single shell approximation, ba
 singleshell = ft_prepare_headmodel(cfg, mesh1);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% ensure ft_voltype works for each of the volume conduction models
+% ensure ft_headmodeltype works for each of the volume conduction models
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-assert(ft_voltype(bemcp, 'bemcp'))
-assert(ft_voltype(dipoli, 'dipoli'))
-assert(ft_voltype(singleshell, 'singleshell'))
-assert(ft_voltype(concentricspheres, 'concentricspheres'))
-assert(ft_voltype(localspheres, 'localspheres'))
-assert(ft_voltype(singlesphere_eeg, 'singlesphere'))
-assert(ft_voltype(singlesphere_meg, 'singlesphere'))
+assert(ft_headmodeltype(bemcp, 'bemcp'))
+assert(ft_headmodeltype(dipoli, 'dipoli'))
+assert(ft_headmodeltype(singleshell, 'singleshell'))
+assert(ft_headmodeltype(concentricspheres, 'concentricspheres'))
+assert(ft_headmodeltype(localspheres, 'localspheres'))
+assert(ft_headmodeltype(singlesphere_eeg, 'singlesphere'))
+assert(ft_headmodeltype(singlesphere_meg, 'singlesphere'))
 
-assert( ft_voltype(bemcp, 'bem'))
-assert( ft_voltype(dipoli, 'bem'))
-assert(~ft_voltype(singleshell, 'bem'))
+assert( ft_headmodeltype(bemcp, 'bem'))
+assert( ft_headmodeltype(dipoli, 'bem'))
+assert(~ft_headmodeltype(singleshell, 'bem'))
 
 % remove the type and see whether the function can recover it
 t_bemcp = rmfield(bemcp,'type');
@@ -86,15 +85,15 @@ t_singlesphere_meg = rmfield(singlesphere_meg,'type');
 
 % these three are unknown, as they cannot be distinguished
 % this is where the original bug crashed on
-assert(ft_voltype(t_bemcp, 'bem'));
-assert(ft_voltype(t_dipoli, 'bem'));
-assert(~ft_voltype(t_singleshell, 'bem'));
-assert(ft_voltype(t_singleshell,'singleshell'))
+assert(ft_headmodeltype(t_bemcp, 'bem'));
+assert(ft_headmodeltype(t_dipoli, 'bem'));
+assert(~ft_headmodeltype(t_singleshell, 'bem'));
+assert(ft_headmodeltype(t_singleshell,'singleshell'))
 % the following ones can still be detected properly
-assert(ft_voltype(t_concentricspheres, 'concentricspheres'))
-assert(ft_voltype(t_localspheres, 'localspheres'))
-assert(ft_voltype(t_singlesphere_eeg, 'singlesphere'))
-assert(ft_voltype(t_singlesphere_meg, 'singlesphere'))
+assert(ft_headmodeltype(t_concentricspheres, 'concentricspheres'))
+assert(ft_headmodeltype(t_localspheres, 'localspheres'))
+assert(ft_headmodeltype(t_singlesphere_eeg, 'singlesphere'))
+assert(ft_headmodeltype(t_singlesphere_meg, 'singlesphere'))
 
 
 

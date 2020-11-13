@@ -7,10 +7,7 @@ function output = read_micromed_trc(filename, begsample, endsample)
 %--------------------------------------------------------------------------
 
 % ---------------- Opening File------------------
-fid=fopen(filename,'rb');
-if fid==-1
-  ft_error('Can''t open *.trc file')
-end
+fid=fopen_or_error(filename,'rb');
 
 %------------------reading patient & recording info----------
 fseek(fid,64,-1);
@@ -170,7 +167,7 @@ else
   for iElec = 1 : header.Num_Chan
          data(iElec,:) = ((data(iElec,:)-header.elec(iElec).LogicGnd)/(header.elec(iElec).LogicMax-header.elec(iElec).LogicMin+1)) ...
         *(header.elec(iElec).PhysMax-header.elec(iElec).PhysMin);
-  end;
+  end
   output = data;
   % FIXME why is this value of -32768 subtracted?
   % FIXME some sort of calibration should be applied to get it into microvolt

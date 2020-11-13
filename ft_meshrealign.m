@@ -1,7 +1,7 @@
-function mesh_realigned = ft_meshrealign(cfg, mesh)
+function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 
-% FT_MESHREALIGN rotates, translates and optionally scales electrode positions. The
-% different methods are described in detail below.
+% FT_MESHREALIGN rotates, translates and optionally scales a surface description of
+% the head or of the cortex. The different methods are described in detail below.
 %
 % INTERACTIVE - You can display the mesh surface together with axis coordinate
 % system, and manually (using the graphical user interface) adjust the rotation,
@@ -17,7 +17,7 @@ function mesh_realigned = ft_meshrealign(cfg, mesh)
 % where the mesh input argument comes from FT_READ_HEADSHAPE or FT_PREPARE_MESH and
 % cfg is a configuration structure that should contain
 %
-%  cfg.method    = string, can be 'interactive' or fiducial' (default = 'interactive')
+%   cfg.method          = string, can be 'interactive' or fiducial' (default = 'interactive')
 %
 % The configuration can furthermore contain
 %   cfg.coordsys        = string, can be 'ctf', 'neuromag', '4d', 'bti', 'itab'
@@ -879,4 +879,3 @@ while p~=0
   h = p;
   p = get(h, 'parent');
 end
-

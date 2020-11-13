@@ -44,7 +44,7 @@ if nargin<3 || isempty(endblock)
   endblock = inf;
 end
 
-fid = fopen(filename, 'rb');
+fid = fopen_or_error(filename, 'rb');
 offset = (begblock-1)*40; % bytes
 fseek(fid, offset, 'cof');
 buf = fread(fid, [40, (endblock-begblock+1)], 'uint8=>uint8');

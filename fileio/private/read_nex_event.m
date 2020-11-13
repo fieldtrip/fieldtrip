@@ -50,7 +50,7 @@ else
   smpfrq = hdr.varheader(adindx(1)).wfrequency;
 end
 
-fid=fopen(filename,'r','ieee-le');
+fid=fopen_or_error(filename,'r','ieee-le');
 event = struct('sample',{},'value',{},'timestamp',{},'type',{}, ...
   'duration',{},'offset',{});
 

@@ -82,7 +82,7 @@ end
 
 % the file starts with a 16*1024 bytes header in ascii, followed by a number of records
 hdr = neuralynx_getheader(filename);
-fid = fopen(filename, 'rb', 'ieee-le');
+fid = fopen_or_error(filename, 'rb', 'ieee-le');
 
 % determine the length of the file
 fseek(fid, 0, 'eof');
@@ -155,7 +155,7 @@ if NRecords>0
   if (ispc), fclose(fid); end
   ts1 = neuralynx_timestamp(filename, 1);
   tsE = neuralynx_timestamp(filename, inf);
-  if (ispc), fid = fopen(filename, 'rb', 'ieee-le'); end
+  if (ispc), fid = fopen_or_error(filename, 'rb', 'ieee-le'); end
   
   hdr.FirstTimeStamp  = ts1;
   hdr.LastTimeStamp   = tsE;
@@ -165,7 +165,7 @@ if NRecords>0
   ts_range_predicted = (NRecords-1)*512*gapCorrectedTimeStampPerSample;
   ts_range_observed  = double(tsE-ts1);
   if abs(ts_range_predicted-ts_range_observed)>minJump
-    ft_warning('discontinuous recording, predicted number of timestamps and observed number of timestamps differ by %2.2f \n Please consult the wiki on http://www.fieldtriptoolbox.org/getting_started/neuralynx?&#discontinuous_recordings',...
+    ft_warning('discontinuous recording, predicted number of timestamps and observed number of timestamps differ by %2.2f\nPlease consult http://www.fieldtriptoolbox.org/faq/discontinuous_neuralynx',...
       abs(ts_range_predicted-ts_range_observed) );
   end
   

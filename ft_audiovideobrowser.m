@@ -15,8 +15,8 @@ function ft_audiovideobrowser(cfg, data)
 %   cfg.videohdr    = header structure of the video data, see FT_READ_HEADER
 %   cfg.audiofile   = string with the filename
 %   cfg.videofile   = string with the filename
-%   cfg.trl         = Nx3 matrix, see FT_DEFINETRIAL
-%   cfg.anonimize   = [x1 x2 y1 y2], range in pixels for placing a bar over the eyes (default = [])
+%   cfg.trl         = Nx3 matrix, expressed in the MEG/EEG data samples, see FT_DEFINETRIAL
+%   cfg.anonymize   = [x1 x2 y1 y2], range in pixels for placing a bar over the eyes (default = [])
 %   cfg.interactive = 'yes' or 'no' (default = 'yes')
 %
 % If you do NOT specify cfg.datahdr, the header must be present in the input data.
@@ -73,9 +73,13 @@ if hasdata
   data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 end
 
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'renamed', {'anonimize', 'anonymize'}); % fix typo in previous version of the code
+cfg = ft_checkconfig(cfg, 'renamed', {'anonymise', 'anonymize'}); % use North American and Oxford British spelling
+
 % get the options from the user or set defaults
 cfg.interactive = ft_getopt(cfg, 'interactive', 'yes');
-cfg.anonimize   = ft_getopt(cfg, 'anonimize');
+cfg.anonymize   = ft_getopt(cfg, 'anonymize');
 % the headers contain the information required for synchronization
 cfg.datahdr     = ft_getopt(cfg, 'datahdr');
 cfg.audiohdr    = ft_getopt(cfg, 'audiohdr');
@@ -83,6 +87,10 @@ cfg.videohdr    = ft_getopt(cfg, 'videohdr');
 % the data is read on the fly
 cfg.audiofile   = ft_getopt(cfg, 'audiofile');
 cfg.videofile   = ft_getopt(cfg, 'videofile');
+
+if isempty(cfg.videofile) && isempty(cfg.audiofile)
+  ft_error('either cfg.videofile or cfg.audiofile should be specified');
+end
 
 if ~isempty(cfg.datahdr)
   % get it from the configuration
@@ -100,25 +108,26 @@ end
 assert(isfield(datahdr, 'FirstTimeStamp'), 'sycnhronization information is missing in the data header');
 assert(isfield(datahdr, 'TimeStampPerSample'), 'sycnhronization information is missing in the data header');
 
-% determine the begin and end samples of the data segments, the corresponding audio and video fragments will be displayes
-if isfield(cfg, 'trl')
-  fprintf('using cfg.trl\n');
-  trl = cfg.trl;
-elseif hasdata && isfield(data, 'sampleinfo')
-  fprintf('using data.sampleinfo\n');
-  trl = data.sampleinfo;
+% determine the begin and end samples of the EEG/MEG data segments, the corresponding audio and video fragments will be displayed
+if hasdata && isfield(data, 'sampleinfo')
+  % construct the trial definition from the sampleinfo and the trialinfo
+  trl = sampleinfo2trl(data);
+elseif isfield(cfg, 'trl') && ischar(cfg.trl)
+  % load the trial information from file
+  trl = loadvar(cfg.trl, 'trl');
 else
-  ft_error('the EEG/MEG data segments should be specified');
+  % use the trial information that was specified
+  trl = cfg.trl;
 end
 
 numtrl = size(trl,1);
 trllop = 1;
 while (true)
-
+  
   fprintf('processing trial %d from %d\n', trllop, numtrl);
   audiodat = [];
   videodat = [];
-
+  
   %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   if ~isempty(cfg.audiofile)
     if isequal(previous_audiofile, cfg.audiofile)
@@ -130,29 +139,49 @@ while (true)
       fprintf('reading the header and timestamps from %s\n', cfg.audiofile);
       audiohdr = ft_read_header(cfg.audiofile);
     end
-
+    
     % the FirstTimeStamp might be expressed as uint32 or uint64
     datahdr.FirstTimeStamp  = double(datahdr.FirstTimeStamp);
     audiohdr.FirstTimeStamp = double(audiohdr.FirstTimeStamp);
-
+    
     begsample    = trl(trllop, 1); % expressed in the MEG/EEG data
     begtimestamp = (begsample-1)*datahdr.TimeStampPerSample + double(datahdr.FirstTimeStamp);
     begsample    = double(begtimestamp - audiohdr.FirstTimeStamp)/audiohdr.TimeStampPerSample + 1; % expressed in the audio data
     begsample    = round(begsample);
-
+    
     endsample    = trl(trllop, 2); % expressed in the MEG/EEG data
     endtimestamp = cast((endsample-1)*datahdr.TimeStampPerSample, 'like', audiohdr.FirstTimeStamp) + datahdr.FirstTimeStamp;
     endsample    = double(endtimestamp - audiohdr.FirstTimeStamp)/audiohdr.TimeStampPerSample + 1; % expressed in the audio data
     endsample    = round(endsample);
-
+    
+    % deal with the case that the MEG/EEG and the audio recordings do not fully overlap
+    begpad = 0;
+    endpad = 0;
+    if begsample<1
+      begpad = 1-begsample;
+      begsample = 1;
+      ft_notice('padding the beginning of the audio with %d silent samples', begpad);
+    end
+    if endsample>videohdr.nTrials*videohdr.nSamples
+      endpad = endsample-videohdr.nTrials*videohdr.nSamples;
+      endsample = videohdr.nTrials*videohdr.nSamples;
+      ft_notice('padding the end of the audio with %d silent samples', endpad);
+    end
+    
     % read the audio data that corresponds to the selected MEG/EEG data
+    ft_info('reading %d audio samples...', endsample-begsample+1);
     audiodat = ft_read_data(cfg.audiofile, 'begsample', begsample, 'endsample', endsample, 'header', audiohdr);
-
+    ft_info('...done');
+    
+    if begpad || endpad
+      audiodat = cat(2, zeros(audiohdr.nChans, begpad), audiodat, zeros(audiohdr.nChans, endpad));
+    end
+    
     % remember the header details to speed up subsequent calls
     previous_audiohdr  = audiohdr;
     previous_audiofile = cfg.audiofile;
   end
-
+  
   %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   if ~isempty(cfg.videofile)
     if isequal(previous_videofile, cfg.videofile)
@@ -164,56 +193,87 @@ while (true)
       fprintf('reading the header and timestamps from %s\n', cfg.videofile);
       videohdr = ft_read_header(cfg.videofile);
     end
-
+    
     % the FirstTimeStamp might be expressed as uint32 or uint64
     datahdr.FirstTimeStamp  = double(datahdr.FirstTimeStamp);
     videohdr.FirstTimeStamp = double(videohdr.FirstTimeStamp);
-
+    
     begsample    = trl(trllop,1); % expressed in the MEG/EEG data
     begtimestamp = (begsample-1)*datahdr.TimeStampPerSample + double(datahdr.FirstTimeStamp);
     begsample    = double(begtimestamp - videohdr.FirstTimeStamp)/videohdr.TimeStampPerSample + 1; % expressed in the audio data
     begsample    = round(begsample);
-
+    
     endsample    = trl(trllop,2); % expressed in the MEG/EEG data
     endtimestamp = cast((endsample-1)*datahdr.TimeStampPerSample, 'like', videohdr.FirstTimeStamp) + datahdr.FirstTimeStamp;
     endsample    = double(endtimestamp - videohdr.FirstTimeStamp)/videohdr.TimeStampPerSample + 1; % expressed in the audio data
     endsample    = round(endsample);
-
-    % read the video data that corresponds to the selected MEG/EEG data
-    videodat = ft_read_data(cfg.videofile, 'begsample', begsample, 'endsample', endsample, 'header', videohdr);
-
-    videodat = uint8(videodat);
-    videodat = reshape(videodat, [videohdr.orig.dim size(videodat,2)]);
-
-    if ~isempty(cfg.anonimize)
-      % place a bar over the eyes
-      videodat(cfg.anonimize(1):cfg.anonimize(2), cfg.anonimize(3):cfg.anonimize(4), :) = 0;
+    
+    % deal with the case that the MEG/EEG and the video recordings do not fully overlap
+    begpad = 0;
+    endpad = 0;
+    if begsample<1
+      begpad = 1-begsample;
+      begsample = 1;
+      ft_notice('padding the beginning of the video with %d empty frames', begpad);
     end
-
+    if endsample>videohdr.nTrials*videohdr.nSamples
+      endpad = endsample-videohdr.nTrials*videohdr.nSamples;
+      endsample = videohdr.nTrials*videohdr.nSamples;
+      ft_notice('padding the end of the video with %d empty frames', endpad);
+    end
+    
+    % read the video data that corresponds to the selected MEG/EEG data, this takes some time
+    ft_info('reading %d video frames...', endsample-begsample+1);
+    videodat = ft_read_data(cfg.videofile, 'begsample', begsample, 'endsample', endsample, 'header', videohdr);
+    ft_info('...done');
+    
+    if begpad || endpad
+      videodat = cat(2, zeros(videohdr.nChans, begpad), videodat, zeros(videohdr.nChans, endpad));
+    end
+    
+    if isfield(videohdr.orig, 'dim')
+      % for VideoMEG files
+      dim = [videohdr.orig.dim size(videodat,2)];
+    else
+      % for generic video files
+      dim = [videohdr.orig.Height videohdr.orig.Width 3 size(videodat,2)];
+    end
+    
+    videodat = uint8(videodat);
+    videodat = reshape(videodat, dim);
+    
+    if ~isempty(cfg.anonymize)
+      % place a bar over the eyes
+      videodat(cfg.anonymize(1):cfg.anonymize(2), cfg.anonymize(3):cfg.anonymize(4), :) = 0;
+    end
+    
     % remember the header details to speed up subsequent calls
     previous_videohdr  = videohdr;
     previous_videofile = cfg.videofile;
   end
+  
   %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-  % FIXME this one does not play automatically
+  % start playing the video and/or audio
+  
   if ~isempty(videodat)
     implay(videodat, videohdr.Fs);
+    % FIXME this one does not play automatically
     drawnow
   end
-
-  % FIXME this one plays automatically
-  % FIXME I don't know how to deal with multiple channels
+  
   if ~isempty(audiodat)
-    for channel=1:size(audiodat,1)
-      soundview(audiodat(channel,:), audiohdr.Fs);
-    end
+    soundview(audiodat', audiohdr.Fs);
+    % FIXME this one plays automatically
     drawnow
   end
-
+  
+  if isempty(videodat) && isempty(audiodat)
+    ft_notice('there is no video and audio corresponding to the selected EEG/MEG data');
+  end
+  
   if istrue(cfg.interactive)
     response = 'x';
-    while ~ismember(response, {'n', 'p', 'q'});
+    while ~ismember(response, {'n', 'p', 'q'})
       response = input('press ''n'' for the next trial, ''p'' for the previous trial or ''q'' to quit: [N/p/q] ', 's');
     end
     switch response
@@ -232,7 +292,7 @@ while (true)
       case 'q'
         break
     end
-
+    
   else
     % not interactive, show the audio/video of all trials
     if trllop<numtrl
@@ -240,9 +300,9 @@ while (true)
     else
       break
     end
-
+    
   end % if interactive
-
+  
 end % while true
 
 % do the general cleanup and bookkeeping at the end of the function

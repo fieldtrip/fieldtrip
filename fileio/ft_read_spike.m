@@ -18,9 +18,12 @@ function [spike] = ft_read_spike(filename, varargin)
 %   'neuralynx_nts'
 %   'plexon_ddt'
 %   'plexon_nex'
+%   'plexon_nex5'
 %   'plexon_plx'
 %   'neuroshare'
 %   'neurosim_spikes'
+%   'wave_clus'
+%   'nwb'
 %
 % The output spike structure usually contains
 %   spike.label     = 1xNchans cell-array, with channel labels
@@ -32,7 +35,7 @@ function [spike] = ft_read_spike(filename, varargin)
 %
 % See also FT_DATATYPE_SPIKE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT
 
-% Copyright (C) 2007-2011 Robert Oostenveld
+% Copyright (C) 2007-2018 Robert Oostenveld, Arjen Stolk
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -87,6 +90,27 @@ switch spikeformat
     spike.waveform  = {};   % this is unknown
     spike.unit      = {};   % this is unknown
     spike.hdr       = H;
+  
+  case 'wave_clus'
+    load(filename, 'cluster_class', 'spikes', 'par'); % load the mat file
+    clusters = sort(unique(cluster_class(:,1))); % detected clusters
+    clusters(clusters==0) = []; % remove rejected cluster (indexed by zeros)
+    nclust = numel(clusters);
+    [p, f, x] = fileparts(filename);
+    t = tokenize(f, '_'); % extract channel name
+    spike.label     = cell(1,nclust);
+    spike.unit      = cell(1,nclust);
+    spike.waveform  = cell(1,nclust);
+    spike.timestamp = cell(1,nclust);
+    spike.hdr       = par;
+    for cl = 1:nclust
+      unit_idx                  = cluster_class(:,1)==cl;
+      spike.label{cl}           = [t{2} '-' num2str(cl)];
+      spike.timestamp{cl}       = cluster_class(unit_idx,2)';
+      spike.waveform{cl}(1,:,:) = spikes(unit_idx,:)';
+      spike.unit{cl}            = cluster_class(unit_idx,1)';
+    end
+    fprintf('note that wave_clus timestamps are typically expressed in millisec and not in samples\n')
     
   case 'neuralynx_nse'
     % single channel file, read all records
@@ -174,6 +198,42 @@ switch spikeformat
     end
     spike.hdr = hdr;
 
+  case 'plexon_nex5'
+    % a single file can contain multiple channels of different types
+    hdr  = read_nex5(filename);
+    typ  = [hdr.VarHeader.Type];
+    chan = 0;
+
+    spike.label     = {};
+    spike.timestamp = {};
+    spike.waveform  = {};
+    spike.unit      = {};
+
+    for i=1:length(typ)
+      if typ(i)==0
+        % neurons, only timestamps
+        nex = read_nex5(filename, 'channel', i);
+        nspike = length(nex.ts);
+        chan = chan + 1;
+        spike.label{chan}     = deblank(hdr.VarHeader(i).Name);
+        spike.waveform{chan}  = zeros(0, nspike);
+        spike.unit{chan}      = nan(1,nspike);
+        % spike.timestamp{chan} are the raw timestamps as recorded by the hardware system
+        spike.timestamp{chan} = nex.ts;
+      elseif typ(i)==3
+        % waveform variables: timestamps and waveforms
+        nex = read_nex5(filename, 'channel', i);
+        chan = chan + 1;
+        nspike = length(nex.ts);
+        spike.label{chan}     = deblank(hdr.VarHeader(i).Name);
+        spike.waveform{chan}  = permute(nex.dat,[3 1 2]);
+        spike.unit{chan}      = nan(1,nspike);
+        % spike.timestamp{chan} are the raw timestamps as recorded by the hardware system
+        spike.timestamp{chan} = nex.ts;
+      end
+    end
+    spike.hdr = hdr;
+
   case 'plexon_plx'
     % read the header information
     hdr   = read_plexon_plx(filename);
@@ -224,7 +284,7 @@ switch spikeformat
     % x.spk.y (containing the waveform info)
     % x.fet.y (containing features: do we need this?)
     
-    if isdir(filename),
+    if isfolder(filename),
       tmp = dir(filename);
       filenames = {tmp.name}';
     end
@@ -271,6 +331,10 @@ switch spikeformat
       spike.unit{k}      = c{k}(sel,3)';
       spike.label{k}     = sprintf('spikegroup%03d',k);
     end
+    
+  case 'nwb'
+    ft_hastoolbox('MatNWB', 1);
+    spike = read_nwb_spike(filename);
      
   otherwise
     ft_error(['unsupported data format (' spikeformat ')']);

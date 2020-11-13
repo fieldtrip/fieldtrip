@@ -1,9 +1,8 @@
 function test_bug1637
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST megplanar_sincos channelconnectivity ft_prepare_neighbours ft_channelselection
+% DEPENDENCY megplanar_sincos channelconnectivity ft_prepare_neighbours ft_channelselection
 
 % this function checks whether megplanar_sincos relies on a fixed channel
 % order or whether this can be totally mixed up (it should be able to deal

@@ -4,12 +4,12 @@ function [data] = ft_denoise_synthetic(cfg, data)
 % preprocessed data and for the corresponding gradiometer definition.
 %
 % Use as
-%   [data] = ft_denoise_synthetic(cfg, data);
-%
+%   [data] = ft_denoise_synthetic(cfg, data)
 % where data should come from FT_PREPROCESSING and the configuration should contain
 %   cfg.gradient = 'none', 'G1BR', 'G2BR' or 'G3BR' specifies the gradiometer
 %                  type to which the data should be changed
 %   cfg.trials   = 'all' or a selection given as a 1xN vector (default = 'all')
+%   cfg.updatesens = 'no' or 'yes' (default = 'yes')
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -63,7 +63,8 @@ end
 cfg = ft_checkconfig(cfg, 'required', {'gradient'});
 
 % set the defaults
-cfg.trials = ft_getopt(cfg, 'trials', 'all', 1);
+cfg.trials     = ft_getopt(cfg, 'trials', 'all', 1);
+cfg.updatesens = ft_getopt(cfg, 'updatesens', 'yes');
 
 % store the original type of the input data
 dtype = ft_datatype(data);
@@ -103,10 +104,13 @@ if ~strcmp(current, 'none')
   catch
     ft_error('unknown balancing for input data');
   end
-  fprintf('converting from "%s" to "none"\n', current);
-  data.grad = ft_apply_montage(data.grad, current_montage, 'keepunused', 'yes', 'inverse', 'yes');
-  data      = ft_apply_montage(data     , current_montage, 'keepunused', 'yes', 'inverse', 'yes');
-  data.grad.balance.current = 'none';
+  fprintf('converting the data from "%s" to "none"\n', current);
+  data = ft_apply_montage(data, current_montage, 'keepunused', 'yes', 'inverse', 'yes');
+  if istrue(cfg.updatesens)
+    fprintf('converting the sensor description from "%s" to "none"\n', current);
+    data.grad = ft_apply_montage(data.grad, current_montage, 'keepunused', 'yes', 'inverse', 'yes');
+    data.grad.balance.current = 'none';
+  end
 end % if current
 
 if ~strcmp(desired, 'none')
@@ -116,9 +120,12 @@ if ~strcmp(desired, 'none')
   catch
     ft_error('unknown balancing for input data');
   end
-  fprintf('converting from "none" to "%s"\n', desired);
-  data.grad = ft_apply_montage(data.grad, desired_montage, 'keepunused', 'yes', 'balancename', desired);
-  data      = ft_apply_montage(data     , desired_montage, 'keepunused', 'yes', 'balancename', desired);
+  fprintf('converting the data from "none" to "%s"\n', desired);
+  data = ft_apply_montage(data, desired_montage, 'keepunused', 'yes', 'balancename', desired);
+  if istrue(cfg.updatesens)
+    fprintf('converting the sensor description from "none" to "%s"\n', desired);
+    data.grad = ft_apply_montage(data.grad, desired_montage, 'keepunused', 'yes', 'balancename', desired);
+  end
 end % if desired
 
 % reorder the channels to stay close to the original ordering
@@ -147,3 +154,4 @@ ft_postamble previous   data
 ft_postamble provenance data
 ft_postamble history    data
 ft_postamble savevar    data
+

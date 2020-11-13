@@ -1,9 +1,8 @@
 function test_bug896
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_multiplotTFR ft_prepare_layout ft_datatype ft_datatype_freq
+% DEPENDENCY ft_multiplotTFR ft_prepare_layout ft_datatype ft_datatype_freq
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug896.mat'));
 
@@ -27,4 +26,3 @@ close
 figure
 ft_multiplotTFR(cfg, stat_coh_full);
 close
-

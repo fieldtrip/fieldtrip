@@ -1,9 +1,8 @@
 function test_bug1162
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_postamble ft_postamble_history ft_freqgrandaverage
+% DEPENDENCY ft_postamble ft_postamble_history ft_freqgrandaverage
 
 timelock1 = [];
 timelock1.label = {'1' '2'};

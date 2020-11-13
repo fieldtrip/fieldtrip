@@ -1,10 +1,8 @@
 function failed_bug2355
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST test_bug2355
-% TEST ft_prepare_sourcemodel
+% DEPENDENCY ft_prepare_sourcemodel
 
 %% make a spherical model fitted to scalp surface, in cm
 vol = [];
@@ -13,7 +11,7 @@ vol.o = [0 0 4];
 vol.unit = 'cm';
 
 %% make a set of electrodes, in cm
-[pnt, tri] = icosahedron162;
+[pnt, tri] = mesh_sphere(162);
 pnt = pnt(pnt(:,3)>0,:); % only above z=0
 pnt = pnt*12;
 pnt(:,3) = pnt(:,3) + 4;
@@ -31,41 +29,41 @@ clear cfg* grid*
 
 cfg1.elec = elec;
 cfg1.vol  = vol;
-cfg1.grid.resolution = 1;
+cfg1.sourcemodel.resolution = 1;
 cfg1.sourceunits = 'cm';
 grid1 = ft_prepare_sourcemodel(cfg1);
 assert(sum(grid1.inside)==2469);
 
 cfg2.elec = elec;
 cfg2.vol  = ft_convert_units(vol, 'mm');
-cfg2.grid.resolution = 1;
+cfg2.sourcemodel.resolution = 1;
 cfg2.sourceunits = 'cm';
 grid2 = ft_prepare_sourcemodel(cfg2);
 assert(sum(grid2.inside)==2469);
 
 cfg3.elec = ft_convert_units(elec, 'mm');
 cfg3.vol  = vol;
-cfg3.grid.resolution = 1;
+cfg3.sourcemodel.resolution = 1;
 cfg3.sourceunits = 'cm';
 grid3 = ft_prepare_sourcemodel(cfg3);
 assert(sum(grid3.inside)==2469);
 
 cfg4.elec = ft_convert_units(elec, 'mm');
 cfg4.vol  = ft_convert_units(vol, 'mm');
-cfg4.grid.resolution = 1;
+cfg4.sourcemodel.resolution = 1;
 cfg4.sourceunits = 'cm';
 grid4 = ft_prepare_sourcemodel(cfg4);
 assert(sum(grid4.inside)==2469);
 
 cfg5.elec = ft_convert_units(elec, 'dm');
 cfg5.vol  = ft_convert_units(vol, 'mm');
-cfg5.grid.resolution = 1;
+cfg5.sourcemodel.resolution = 1;
 cfg5.sourceunits = 'cm';
 grid5 = ft_prepare_sourcemodel(cfg5);
 assert(sum(grid5.inside)==2469);
 
 %% repeat with cfg.xgrid etc. instead of cfg.resolution
-% cfg.sourceunits was used prior to 31 October 2013, now it is cfg.grid.unit
+% cfg.sourceunits was used prior to 31 October 2013, now it is cfg.unit
 
 clear cfg* grid*
 
@@ -73,7 +71,7 @@ cfg1.elec = ft_convert_units(elec, 'dm');
 cfg1.vol  = ft_convert_units(vol, 'mm');
 cfg1.resolution = 1;
 cfg1.sourceunits = 'cm';
-cfg.grid.tight = 'no';
+cfg.sourcemodel.tight = 'no';
 grid1 = ft_prepare_sourcemodel(cfg1);
 assert(sum(grid1.inside)==2469);
 
@@ -95,35 +93,35 @@ grid3 = ft_prepare_sourcemodel(cfg3);
 assert(sum(grid3.inside)==2469);
 
 %% repeat with new name of cfg.sourceunits option
-% cfg.sourceunits was used prior to 31 October 2013, now it is cfg.grid.unit
+% cfg.sourceunits was used prior to 31 October 2013, now it is cfg.unit
 
 clear cfg* grid*
 
 cfg1.elec = elec;
 cfg1.vol  = vol;
-cfg1.grid.resolution = 1;
-cfg1.grid.unit = 'cm';
+cfg1.sourcemodel.resolution = 1;
+cfg1.sourcemodel.unit = 'cm';
 grid1 = ft_prepare_sourcemodel(cfg1);
 assert(sum(grid1.inside)==2469);
 
 cfg2.elec = elec;
 cfg2.vol  = ft_convert_units(vol, 'mm');
-cfg2.grid.resolution = 1;
-cfg2.grid.unit = 'cm';
+cfg2.sourcemodel.resolution = 1;
+cfg2.sourcemodel.unit = 'cm';
 grid2 = ft_prepare_sourcemodel(cfg2);
 assert(sum(grid2.inside)==2469);
 
 cfg3.elec = ft_convert_units(elec, 'mm');
 cfg3.vol  = vol;
-cfg3.grid.resolution = 1;
-cfg3.grid.unit = 'cm';
+cfg3.sourcemodel.resolution = 1;
+cfg3.sourcemodel.unit = 'cm';
 grid3 = ft_prepare_sourcemodel(cfg3);
 assert(sum(grid3.inside)==2469);
 
 cfg4.elec = ft_convert_units(elec, 'mm');
 cfg4.vol  = ft_convert_units(vol, 'mm');
-cfg4.grid.resolution = 1;
-cfg4.grid.unit = 'cm';
+cfg4.sourcemodel.resolution = 1;
+cfg4.sourcemodel.unit = 'cm';
 grid4 = ft_prepare_sourcemodel(cfg4);
 assert(sum(grid4.inside)==2469);
 

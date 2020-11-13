@@ -1,6 +1,6 @@
 % Mesh spectrum
 
-function [L,H,d] = mesh_spectrum(S,n,varargin)
+function [L,H,d] = mesh_spectrum(S,n,mode)
 
 %[L,H,d] = ct_mesh_spectrum(S,n,mode)
 % Compute the mesh laplace matrix and its spectrum
@@ -9,18 +9,21 @@ function [L,H,d] = mesh_spectrum(S,n,varargin)
 % n: number of mesh harmonic functions
 % mode: 'full' for the full graph, 'half' if you want to do the first and
 % the second half independently (this is useful if your graph is composed
-% by two connected components)
+% by two connected components) -> JM note: I don't understand this
 % output,
 % L: mesh laplacian matrix
 % H: matrix containing a mesh harmonic functions per column
 % d: spectrum of the negative Laplacian matrix, its units are 1/space^2
 % (spatial frequencies are obtained as sqrt(d))
 
+if isempty(mode)
+  mode=1;
+end
 
-if nargin==2||varargin{1}==1
+if mode==1
     pnt{1} = S.pos;
     tri{1} = S.tri;
-elseif varargin{1}==2
+elseif mode==2
     pnt{1} = S.pos(1:end/2,:);
     tri{1} = S.tri(1:end/2,:);
     pnt{2} = S.pos(end/2+1:end,:);
@@ -34,7 +37,7 @@ for j = 1:length(pnt)
     elseif length(pnt)==2&&j == 2
         disp('Computing the spectrum of the the second hemisphere')
     end
-    [L{j},~] = mesh_laplacian(pnt{j},tri{j});
+    L{j} = mesh_laplacian(pnt{j},tri{j});
     L{j} = (L{j} + L{j}')/2;
     disp('Computing the spectrum of the negative Laplacian matrix')
     [H{j},D] = eigs(L{j},n,'sm');

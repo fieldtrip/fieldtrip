@@ -1,9 +1,8 @@
 function test_bug3182
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_freqanalysis ft_freqdescriptives
+% DEPENDENCY ft_freqanalysis ft_freqdescriptives
 
 %% generate some data
 

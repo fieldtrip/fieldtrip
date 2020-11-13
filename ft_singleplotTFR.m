@@ -24,7 +24,7 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 %   cfg.ylim           = 'maxmin' or [ymin ymax] (default = 'maxmin')
 %   cfg.zlim           = plotting limits for color dimension, 'maxmin', 'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
 %   cfg.baseline       = 'yes', 'no' or [time1 time2] (default = 'no'), see FT_FREQBASELINE
-%   cfg.baselinetype   = 'absolute', 'relative', 'relchange' or 'db' (default = 'absolute')
+%   cfg.baselinetype   = 'absolute', 'relative', 'relchange', 'normchange', 'db' or 'zscore' (default = 'absolute')
 %   cfg.trials         = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
 %                        see FT_CHANNELSELECTION for details
@@ -34,6 +34,7 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 %   cfg.hotkeys        = enables hotkeys (leftarrow/rightarrow/uparrow/downarrow/pageup/pagedown/m) for dynamic zoom and translation (ctrl+) of the axes and color limits
 %   cfg.colormap       = any sized colormap, see COLORMAP
 %   cfg.colorbar       = 'yes', 'no' (default = 'yes')
+%   cfg.colorbartext   =  string indicating the text next to colorbar
 %   cfg.interactive    = Interactive plot 'yes' or 'no' (default = 'yes')
 %                        In a interactive plot you can select areas and produce a new
 %                        interactive plot when a selected area is clicked. Multiple areas
@@ -44,6 +45,22 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 %                       node, or the outflow from a node is plotted. The
 %                       (default) behavior of this option depends on the dimor
 %                       of the input data (see below).
+%
+% The following options for the scaling of the EEG, EOG, ECG, EMG, MEG and NIRS channels
+% is optional and can be used to bring the absolute numbers of the different
+% channel types in the same range (e.g. fT and uV). The channel types are determined
+% from the input data using FT_CHANNELSELECTION.
+%   cfg.eegscale       = number, scaling to apply to the EEG channels prior to display
+%   cfg.eogscale       = number, scaling to apply to the EOG channels prior to display
+%   cfg.ecgscale       = number, scaling to apply to the ECG channels prior to display
+%   cfg.emgscale       = number, scaling to apply to the EMG channels prior to display
+%   cfg.megscale       = number, scaling to apply to the MEG channels prior to display
+%   cfg.gradscale      = number, scaling to apply to the MEG gradiometer channels prior to display (in addition to the cfg.megscale factor)
+%   cfg.magscale       = number, scaling to apply to the MEG magnetometer channels prior to display (in addition to the cfg.megscale factor)
+%   cfg.nirsscale      = number, scaling to apply to the NIRS channels prior to display
+%   cfg.mychanscale    = number, scaling to apply to the channels specified in cfg.mychan
+%   cfg.mychan         = Nx1 cell-array with selection of channels
+%   cfg.chanscale      = Nx1 vector with scaling factors, one per channel specified in cfg.channel
 %
 % For the plotting of directional connectivity data the cfg.directionality
 % option determines what is plotted. The default value and the supported
@@ -105,7 +122,8 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble debug
-ft_preamble provenance
+ft_preamble loadvar data
+ft_preamble provenance data
 ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
@@ -126,6 +144,7 @@ cfg = ft_checkconfig(cfg, 'renamed',     {'channelindex',   'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'channelname',    'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'cohrefchannel',  'refchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',	   {'zparam',         'parameter'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'newfigure',      'figure'});
 
 % Set the defaults
 cfg.baseline       = ft_getopt(cfg, 'baseline',      'no');
@@ -136,9 +155,9 @@ cfg.ylim           = ft_getopt(cfg, 'ylim',          'maxmin');
 cfg.zlim           = ft_getopt(cfg, 'zlim',          'maxmin');
 cfg.fontsize       = ft_getopt(cfg, 'fontsize',       8);
 cfg.colorbar       = ft_getopt(cfg, 'colorbar',      'yes');
+cfg.colorbartext   = ft_getopt(cfg, 'colorbartext',   '');
 cfg.interactive    = ft_getopt(cfg, 'interactive',   'yes');
 cfg.hotkeys        = ft_getopt(cfg, 'hotkeys',       'yes');
-cfg.renderer       = ft_getopt(cfg, 'renderer',       []);
 cfg.maskalpha      = ft_getopt(cfg, 'maskalpha',      1);
 cfg.maskparameter  = ft_getopt(cfg, 'maskparameter',  []);
 cfg.maskstyle      = ft_getopt(cfg, 'maskstyle',     'opacity');
@@ -148,26 +167,18 @@ cfg.masknans       = ft_getopt(cfg, 'masknans',      'yes');
 cfg.directionality = ft_getopt(cfg, 'directionality', []);
 cfg.figurename     = ft_getopt(cfg, 'figurename',     []);
 cfg.parameter      = ft_getopt(cfg, 'parameter',     'powspctrm');
+cfg.renderer       = ft_getopt(cfg, 'renderer',       []); % let MATLAB decide on the default
 
-% this is needed for the figure title and correct labeling of graphcolor later on
-if nargin>1
-  if isfield(cfg, 'dataname')
-    if iscell(cfg.dataname)
-      dataname = cfg.dataname{1};
-    else
-      dataname = cfg.dataname;
-    end
-  else
-    if ~isempty(inputname(2))
-      dataname = inputname(2);
-    else
-      dataname = ['data' num2str(1, '%02d')];
-    end
-  end
-else  % data provided through cfg.inputfile
+% this is needed for the figure title
+if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
+  dataname = cfg.dataname;
+elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
   dataname = cfg.inputfile;
+elseif nargin>1
+  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
+else
+  dataname = {};
 end
-
 
 %% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
 
@@ -199,11 +210,12 @@ end
 
 % Apply baseline correction:
 if ~strcmp(cfg.baseline, 'no')
+  tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'baselinewindow', 'demean', 'parameter', 'channel'});
   % keep mask-parameter if it is set
   if ~isempty(cfg.maskparameter)
     tempmask = data.(cfg.maskparameter);
   end
-  data = ft_freqbaseline(cfg, data);
+  data = ft_freqbaseline(tmpcfg, data);
   % put mask-parameter back if it is set
   if ~isempty(cfg.maskparameter)
     data.(cfg.maskparameter) = tempmask;
@@ -223,7 +235,6 @@ tmpvar = data;
 tmpchannel  = cfg.channel;
 [cfg, data] = rollback_provenance(cfg, data);
 cfg.channel = tmpchannel;
-
 
 if isfield(tmpvar, cfg.maskparameter) && ~isfield(data, cfg.maskparameter)
   % the mask parameter is not present after ft_selectdata, because it is
@@ -263,10 +274,20 @@ if startsWith(dimord, 'chan_chan_') || startsWith(dimord, 'chancmb_')
   return
 end
 
-% Apply channel-type specific scaling
-tmpcfg = keepfields(cfg, {'parameter', 'chanscale', 'ecgscale', 'eegscale', 'emgscale', 'eogscale', 'gradscale', 'magscale', 'megscale', 'mychan', 'mychanscale'});
-[data] = chanscale_common(tmpcfg, data);
 
+% Apply channel-type specific scaling
+fn = fieldnames(cfg);
+fn = setdiff(fn, {'skipscale', 'showscale', 'gridscale'}); % these are for the layout and plotting, not for CHANSCALE_COMMON
+fn = fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan') | strcmp(fn, 'channel') | strcmp(fn, 'parameter'));
+tmpcfg = keepfields(cfg, fn);
+if ~isempty(tmpcfg)
+  data = chanscale_common(tmpcfg, data);
+  % remove the scaling fields from the configuration, to prevent them from being called again in interactive mode
+  % but keep the parameter and channel field
+  cfg = removefields(cfg, setdiff(fn, {'parameter', 'channel'}));
+else
+  % do nothing
+end
 
 %% Section 3: select the data to be plotted and determine min/max range
 
@@ -337,10 +358,10 @@ if ~isempty(cfg.maskparameter)
     maskmatrix(~maskmatrix) = cfg.maskalpha;
   elseif isnumeric(maskmatrix)
     if strcmp(cfg.maskstyle, 'outline')
-      error('Outline masking with a numeric cfg.maskparameter is not supported. Please use a logical mask instead.')
+      ft_error('Outline masking with a numeric cfg.maskparameter is not supported. Please use a logical mask instead.')
     end
     if cfg.maskalpha ~= 1
-      warning(sprintf('Using field "%s" for masking, cfg.maskalpha is ignored.', cfg.maskparameter))
+      ft_warning('Using field "%s" for masking, cfg.maskalpha is ignored.', cfg.maskparameter)
     end
     % scale mask between 0 and 1
     minval = min(maskmatrix(:));
@@ -354,8 +375,9 @@ end
 
 %% Section 4: do the actual plotting
 
-cla
-hold on
+% open a new figure, or add it to the existing one
+% note that in general adding a TFR to an existing one does not make sense, since they will overlap
+open_figure(keepfields(cfg, {'figure', 'clearfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
 
 zval = mean(datamatrix, 1); % over channels
 zval = reshape(zval, size(zval,2), size(zval,3));
@@ -398,8 +420,10 @@ end
 
 % set colormap
 if isfield(cfg, 'colormap')
-  if ~isnumeric(cfg.colormap)
-    cfg.colormap = colormap(cfg.colormap);
+  if ischar(cfg.colormap)
+    cfg.colormap = ft_colormap(cfg.colormap);
+  elseif iscell(cfg.colormap)
+    cfg.colormap = ft_colormap(cfg.colormap{:});
   end
   if size(cfg.colormap,2)~=3
     ft_error('colormap must be a Nx3 matrix');
@@ -408,16 +432,11 @@ if isfield(cfg, 'colormap')
   end
 end
 
-% Set renderer if specified
-if ~isempty(cfg.renderer)
-  set(gcf, 'renderer', cfg.renderer)
-end
-
 axis xy
 
 if isequal(cfg.colorbar, 'yes')
-  % tag the colorbar so we know which axes are colorbars
-  colorbar('tag', 'ft-colorbar');
+  c = colorbar;
+  ylabel(c, cfg.colorbartext);
 end
 
 % Set callback to adjust color axis
@@ -445,17 +464,19 @@ if isempty(get(gcf, 'Name'))
   else
     chans = '<multiple channels>';
   end
-  if isempty(cfg.figurename)
-    set(gcf, 'Name', sprintf('%d: %s: %s (%s)', double(gcf), mfilename, dataname, chans));
+  if ~isempty(cfg.figurename)
+    set(gcf, 'name', cfg.figurename);
+    set(gcf, 'NumberTitle', 'off');
+  elseif ~isempty(dataname)
+    set(gcf, 'Name', sprintf('%d: %s: %s (%s)', double(gcf), mfilename, join_str(', ', dataname), chans));
     set(gcf, 'NumberTitle', 'off');
   else
-    set(gcf, 'name', cfg.figurename);
+    set(gcf, 'Name', sprintf('%d: %s (%s)', double(gcf), mfilename, chans));
     set(gcf, 'NumberTitle', 'off');
   end
 end
 
 axis tight
-hold off
 
 % Make the figure interactive
 if strcmp(cfg.interactive, 'yes')
@@ -472,22 +493,17 @@ if strcmp(cfg.interactive, 'yes')
   set(gcf, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', false, 'callback', {@select_topoplotTFR}, 'event', 'WindowButtonMotionFcn'});
 end
 
-% add a menu to the figure, but only if the current figure does not have subplots
-% also, delete any possibly existing previous menu, this is safe because delete([]) does nothing
-delete(findobj(gcf, 'type', 'uimenu', 'label', 'FieldTrip'));
-if numel(findobj(gcf, 'type', 'axes', '-not', 'tag', 'ft-colorbar')) <= 1
-  ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
-  uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
-  uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
-end
-
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous data
 ft_postamble provenance
+ft_postamble savefig
 
-if ~nargout
+% add a menu to the figure, but only if the current figure does not have subplots
+menu_fieldtrip(gcf, cfg, false);
+
+if ~ft_nargout
   % don't return anything
   clear cfg
 end

@@ -1,9 +1,8 @@
 function test_tutorial_networkanalysis(datadirs)
 
 % WALLTIME 00:30:00
-% MEM 9gb
-
-% TEST ft_networkanalysis
+% MEM 10gb
+% DEPENDENCY ft_networkanalysis
 
 if nargin==0,
     datadirs{1} = dccnpath('/home/common/matlab/fieldtrip/data');
@@ -136,14 +135,14 @@ load sourcemodel_4k
 figure;
 
 % make the headmodel surface transparent
-ft_plot_vol(hdm, 'edgecolor', 'none'); alpha 0.4           
+ft_plot_headmodel(hdm, 'edgecolor', 'none'); alpha 0.4           
 ft_plot_mesh(ft_convert_units(sourcemodel, 'cm'),'vertexcolor',sourcemodel.sulc);
 ft_plot_sens(dataclean.grad);
 view([0 -90 0])
 
 %% compute the leadfield
 cfg             = [];
-cfg.grid        = sourcemodel;
+cfg.sourcemodel        = sourcemodel;
 cfg.headmodel   = hdm;
 cfg.channel     = {'MEG'};
 lf              = ft_prepare_leadfield(cfg, dataica);
@@ -162,7 +161,7 @@ freq           = ft_freqanalysis(cfg, dataica);
 cfg                   = [];
 cfg.frequency         = freq.freq;
 cfg.method            = 'pcc';
-cfg.grid              = lf;
+cfg.sourcemodel              = lf;
 cfg.headmodel         = hdm;
 cfg.keeptrials        = 'yes';
 cfg.pcc.lambda        = '10%';
@@ -246,7 +245,7 @@ freq_high  = ft_freqanalysis(cfg, dataica);
 cfg                   = [];
 cfg.frequency         = freq.freq;
 cfg.method            = 'pcc';
-cfg.grid              = lf;
+cfg.sourcemodel              = lf;
 cfg.headmodel         = hdm;
 cfg.keeptrials        = 'yes';
 cfg.pcc.lambda        = '10%';
@@ -259,8 +258,8 @@ source = ft_sourceanalysis(cfg, freq);
 cfg                   = [];
 cfg.frequency         = freq.freq;
 cfg.method            = 'pcc';
-cfg.grid              = lf;
-cfg.grid.filter       = source.avg.filter;
+cfg.sourcemodel              = lf;
+cfg.sourcemodel.filter       = source.avg.filter;
 cfg.headmodel         = hdm;
 cfg.keeptrials        = 'yes';
 cfg.pcc.lambda        = '10%';
@@ -343,8 +342,8 @@ chanind = find(mean(tmp,1)==max(mean(tmp,1)));  % find the sensor where power is
 cfg                   = [];
 cfg.frequency         = freq.freq;
 cfg.method            = 'pcc';
-cfg.grid              = lf;
-cfg.grid.filter       = source.avg.filter;
+cfg.sourcemodel              = lf;
+cfg.sourcemodel.filter       = source.avg.filter;
 cfg.headmodel         = hdm;
 cfg.keeptrials        = 'yes';
 cfg.pcc.lambda        = '10%';

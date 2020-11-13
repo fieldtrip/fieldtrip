@@ -2,9 +2,7 @@ function failed_tutorial_ecog_human_anatomy
 
 % MEM 5gb
 % WALLTIME 00:10:00
-
-% TEST test_tutorial_ecog_human_anatomy
-% TEST
+% DEPENDENCY
 
 datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog');
 subj = 'SubjectUCI29';
@@ -14,7 +12,7 @@ cd(subj_dir)
 % use matlab functions that come with freesurfer
 % the subset in FieldTrip is not enough. The problem is freesurfer's
 % license (does it allow to copy their functions to GPLv3 toolbox?)
-[~, recon_file] = system('which recon-all');
+[status, recon_file] = system('which recon-all');
 freesurfer_dir = fileparts(fileparts(recon_file));
 
 addpath(fullfile(freesurfer_dir, 'matlab'))

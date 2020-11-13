@@ -1,9 +1,8 @@
-% function test_bug3354
+function test_bug3354
 
 % WALLTIME 00:20:00
 % MEM 2gb
-
-% TEST ft_selectdata
+% DEPENDENCY ft_selectdata
 
 trial = cell(1,10);
 time  = cell(1,10);
@@ -39,4 +38,3 @@ end
 tmp1 = tlck.time(tlck2.sampleinfo(:,1)-tlck.sampleinfo(:,1)+1);
 tmp2 = tlck2.time(1);
 assert(all(tmp1==tmp2));
-

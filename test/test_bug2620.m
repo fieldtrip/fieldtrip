@@ -1,9 +1,8 @@
 function test_bug2620
 
-% MEM 1gb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_multiplotER ft_multiplotER
+% DEPENDENCY ft_multiplotER ft_multiplotER
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2620.mat'));
 

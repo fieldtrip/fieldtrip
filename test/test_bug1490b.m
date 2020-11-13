@@ -1,9 +1,8 @@
 function test_bug1490b
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_read_header ft_read_data loadcnt
+% DEPENDENCY ft_read_header ft_read_data loadcnt
 
 % this is a second test pertaining to http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1490#c11
 

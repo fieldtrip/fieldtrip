@@ -89,12 +89,12 @@ end
 
 % old data structures may use latency/frequency instead of time/freq. It is
 % unclear when these were introduced and removed again, but they were never
-% used by any FieldTrip function itself
-if isfield(source, 'frequency'),
+% used by any FieldTrip function itself.
+if isfield(source, 'frequency')
   source.freq = source.frequency;
   source      = rmfield(source, 'frequency');
 end
-if isfield(source, 'latency'),
+if isfield(source, 'latency')
   source.time = source.latency;
   source      = rmfield(source, 'latency');
 end
@@ -124,7 +124,7 @@ switch version
     if isfield(source, 'zgrid')
       source = rmfield(source, 'zgrid');
     end
-
+    
     if isfield(source, 'avg') && isstruct(source.avg) && isfield(source, 'trial') && isstruct(source.trial) && ~isempty(intersect(fieldnames(source.avg), fieldnames(source.trial)))
       % it is not possible to convert both since they have the same field names
       ft_warning('removing ''avg'', keeping ''trial''');
@@ -173,7 +173,6 @@ switch version
         nrpt   = datsiz(1);
         datsiz = datsiz(2:end);
         
-        
         if iscell(dat)
           datsiz(1) = nrpt; % swap the size of pos with the size of rpt
           val  = cell(npos,1);
@@ -201,22 +200,22 @@ switch version
             val(:,j,:,:,:) = dat(:,:,:,:);
           end % for all trials
           source.(fn{i}) = val;
-
-%         else
-%           siz = size(dat);
-%           if prod(siz)==npos
-%             siz = [npos nrpt];
-%           elseif siz(1)==npos
-%             siz = [npos nrpt siz(2:end)];
-%           end
-%           val = nan(siz);
-%           % concatenate all data as pos_rpt_etc
-%           val(:,1,:,:,:) = dat(:);
-%           for j=2:length(source.trial)
-%             dat = source.trial(j).(fn{i});
-%             val(:,j,:,:,:) = dat(:);
-%           end % for all trials
-%           source.(fn{i}) = val;
+          
+          %         else
+          %           siz = size(dat);
+          %           if prod(siz)==npos
+          %             siz = [npos nrpt];
+          %           elseif siz(1)==npos
+          %             siz = [npos nrpt siz(2:end)];
+          %           end
+          %           val = nan(siz);
+          %           % concatenate all data as pos_rpt_etc
+          %           val(:,1,:,:,:) = dat(:);
+          %           for j=2:length(source.trial)
+          %             dat = source.trial(j).(fn{i});
+          %             val(:,j,:,:,:) = dat(:);
+          %           end % for all trials
+          %           source.(fn{i}) = val;
           
         end
       end % for each field
@@ -228,13 +227,38 @@ switch version
     % ensure that it has a dimord (or multiple for the different fields)
     source = fixdimord(source);
     
+    if isfield(source, 'inside')
+      % ensure that for positions outside the brain it is [], not nan
+      if isfield(source, 'leadfield')
+        source.leadfield(~source.inside) = {[]};
+      end
+      if isfield(source, 'filter')
+        source.filter(~source.inside) = {[]};
+      end
+    end
+   
+    if isfield(source, 'leadfield') && ~isfield(source, 'label') && isfield(source, 'cfg')
+      % try to determine the channel labels from the cfg
+      label = ft_findcfg(source.cfg, 'channel');
+      if ~isempty(label)
+        source.label = label;
+      end
+    end
+    
+    if isfield(source, 'filter') && ~isfield(source, 'label') && isfield(source, 'cfg')
+      % try to determine the channel labels from the cfg
+      label = ft_findcfg(source.cfg, 'channel');
+      if ~isempty(label)
+        source.label = label;
+      end
+    end
+    
     % ensure that all data fields have the correct dimensions
     fn = getdatfield(source);
     for i=1:numel(fn)
       dimord = getdimord(source, fn{i});
       dimtok = tokenize(dimord, '_');
-      dimsiz = getdimsiz(source, fn{i});
-      dimsiz(end+1:length(dimtok)) = 1; % there can be additional trailing singleton dimensions
+      dimsiz = getdimsiz(source, fn{i}, numel(dimtok));
       if numel(dimsiz)>=3 && strcmp(dimtok{1}, 'dim1') && strcmp(dimtok{2}, 'dim2') && strcmp(dimtok{3}, 'dim3')
         % convert it from voxel-based representation to position-based representation
         try
@@ -244,7 +268,11 @@ switch version
         end
       end
     end
-      
+    
+    % ensure that the structure has all required fields
+    for required={'pos'}
+      assert(isfield(source, required), 'required field "%s" is missing', required{:});
+    end
     
   case '2011'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

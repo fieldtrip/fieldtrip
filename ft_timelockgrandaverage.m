@@ -10,13 +10,13 @@ function [grandavg] = ft_timelockgrandaverage(cfg, varargin)
 %   avg1..N are the ERF/ERP averages as obtained from FT_TIMELOCKANALYSIS
 %
 % and cfg is a configuration structure with
-%  cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
-%                       see FT_CHANNELSELECTION for details
-%  cfg.latency        = [begin end] in seconds or 'all' (default = 'all')
-%  cfg.keepindividual = 'yes' or 'no' (default = 'no')
-%  cfg.normalizevar   = 'N' or 'N-1' (default = 'N-1')
-%  cfg.method         = 'across' (default) or 'within', see below.
-%  cfg.parameter      = string or cell-array indicating which
+%   cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
+%                        see FT_CHANNELSELECTION for details
+%   cfg.latency        = [begin end] in seconds or 'all' (default = 'all')
+%   cfg.keepindividual = 'yes' or 'no' (default = 'no')
+%   cfg.normalizevar   = 'N' or 'N-1' (default = 'N-1')
+%   cfg.method         = 'across' (default) or 'within', see below.
+%   cfg.parameter      = string or cell-array indicating which
 %                        parameter to average. default is set to
 %                        'avg', if it is present in the data.
 %
@@ -39,7 +39,7 @@ function [grandavg] = ft_timelockgrandaverage(cfg, varargin)
 % file on disk and/or the output data will be written to a *.mat file. These mat
 % files should contain only a single variable, corresponding with the
 % input/output structure. For this particular function, the input should be
-% structured as a cell array.
+% structured as a cell-array.
 %
 % See also FT_TIMELOCKANALYSIS, FT_TIMELOCKSTATISTICS, FT_TIMELOCKBASELINE
 
@@ -123,8 +123,8 @@ if strcmp(cfg.parameter,'trial')
 end
 
 Nsubj    = length(varargin);
-dimord   = varargin{1}.dimord;
-hastime  = ~isempty(strfind(varargin{1}.dimord, 'time'));
+dimord   = getdimord(varargin{1}, cfg.parameter);
+hastime  = contains(dimord, 'time');
 hasdof   = isfield(varargin{1}, 'dof');
 
 if ischar(cfg.latency) && strcmp(cfg.latency, 'all')
@@ -241,9 +241,9 @@ switch cfg.method
 end
 
 if strcmp(cfg.keepindividual, 'yes')
-  grandavg.dimord = ['subj_',varargin{1}.dimord];
+  grandavg.dimord = ['subj_', dimord];
 else
-  grandavg.dimord = varargin{1}.dimord;
+  grandavg.dimord = dimord;
 end
 
 % do the general cleanup and bookkeeping at the end of the function

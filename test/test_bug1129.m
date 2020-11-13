@@ -1,9 +1,8 @@
 function test_bug1129
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_preprocessing ft_preproc_bandpassfilter ft_preproc_bandstopfilter ft_preproc_lowpassfilter ft_preproc_highpassfilter
+% DEPENDENCY ft_preprocessing ft_preproc_bandpassfilter ft_preproc_bandstopfilter ft_preproc_lowpassfilter ft_preproc_highpassfilter
 
 % change filter order for 'fir' (fir1) filter type, rather than 25 by
 % default, instead to be based on Fs, low-frequency, and data-length
@@ -237,7 +236,3 @@ figure;plot(linspace(0,1000,1000),abs(fft(y1)));axis([0 40 0 inf])
 
 figure;plot(linspace(0,1000,1000),abs(fft(y5)));axis([0 40 0 inf])
 % hold on;plot(linspace(0,1000,1000),abs(fft(y6)),'r');axis([0 40 0 inf])
-
-
-
-

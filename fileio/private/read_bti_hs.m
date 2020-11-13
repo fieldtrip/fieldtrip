@@ -29,7 +29,7 @@ if nargin == 1
     outfile = [];
 end %if
 
-fid       = fopen(filename, 'r', 'b');
+fid       = fopen_or_error(filename, 'r', 'b');
 version   = fread(fid, 1, '*uint32');
 timestamp = fread(fid, 1, '*int32');
 checksum  = fread(fid, 1, '*int32');
@@ -46,7 +46,7 @@ if(nargout > 0)
 end %if
 
 if(nargin == 2)
-    fid = fopen(outfile, 'wt');
+    fid = fopen_or_error(outfile, 'wt');
     fprintf(fid, '%d\n', nPoints);
     for i = 1:size(points, 2)
         fprintf(fid, '%.3f\t%.3f\t%.3f\n', points(1, i), points(2, i), points(3, i));

@@ -1,9 +1,8 @@
 function test_bug3235
 
-% MEM 2gb
+% MEM 5gb
 % WALLTIME 00:20:00
-
-% TEST ft_volumereslice ft_sourceplot volumepermute volumeflip
+% DEPENDENCY ft_volumereslice ft_sourceplot volumepermute volumeflip
 
 %%
 

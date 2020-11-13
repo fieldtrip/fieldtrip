@@ -27,7 +27,7 @@ if nargin==3
   % for backward compatibility
   depth = varargin{1};
 else
-  depth = keyval('depth', varargin);
+  depth = ft_getopt(varargin, 'depth');
   if isempty(depth)
     % set the default
     depth = inf;
@@ -53,6 +53,7 @@ knowntypes = {
   'logical'         % Logical array
   'char'            % Character array
   'cell'            % Cell array
+  'table'           % Table
   'struct'          % Structure array
   'numeric'         % Integer or floating-point array
   'single'          % Single precision floating-point numeric array
@@ -64,15 +65,15 @@ knowntypes = {
   'uint32'          % 32-bit unsigned integer array
   };
 
+if isempty(location)
+  location = 'array';
+end
+
 for type=knowntypes(:)'
   if isa(a, type{:}) && ~isa(b, type{:})
     message{end+1} = sprintf('different data type in %s', location);
     return
   end
-end
-
-if isempty(location)
-  location = 'array';
 end
 
 if isa(a, 'numeric') || isa(a, 'char') || isa(a, 'logical')
@@ -97,11 +98,11 @@ if isa(a, 'numeric') || isa(a, 'char') || isa(a, 'logical')
     message{end+1} = sprintf('different string in %s: %s ~= %s', location, a, b);
   else
     % use the desired tolerance
-    reltol     = keyval('reltol', varargin{:});       % any value, relative to the mean
-    abstol     = keyval('abstol', varargin{:});       % any value
-    relnormtol = keyval('relnormtol', varargin{:});   % the matrix norm, relative to the mean norm
-    absnormtol = keyval('absnormtol', varargin{:});   % the matrix norm
-    diffabs = keyval('diffabs', varargin{:});
+    reltol     = ft_getopt(varargin, 'reltol');       % any value, relative to the mean
+    abstol     = ft_getopt(varargin, 'abstol');       % any value
+    relnormtol = ft_getopt(varargin, 'relnormtol');   % the matrix norm, relative to the mean norm
+    absnormtol = ft_getopt(varargin, 'absnormtol');   % the matrix norm
+    diffabs    = ft_getopt(varargin, 'diffabs');
     
     if ~isempty(diffabs) && diffabs
       a = abs(a);
@@ -110,7 +111,7 @@ if isa(a, 'numeric') || isa(a, 'char') || isa(a, 'logical')
     
     if ~isempty(abstol) && any(abs(a-b)>abstol)
       message{end+1} = sprintf('different values in %s', location);
-    elseif ~isempty(reltol) && any((abs(a-b)./(0.5*(a+b)))>reltol)
+    elseif ~isempty(reltol) && any((abs(a-b)./(0.5*abs(a+b)))>reltol)
       message{end+1} = sprintf('different values in %s', location);
     elseif isempty(abstol) && isempty(reltol) && any(a~=b)
       message{end+1} = sprintf('different values in %s', location);
@@ -181,6 +182,20 @@ elseif isa(a, 'cell')
     tmp = sprintf('%s{%s}', location, my_ind2sub(siz, i));
     [message] = do_work(ra, rb, depth-1, tmp, message, varargin{:});
   end
+
+elseif isa(a, 'table')
+  if any(size(a)~=size(b))
+    message{end+1} = sprintf('different size of table');
+    return;
+  end
+  if ~isequal(a.Properties, b.Properties)
+    message{end+1} = sprintf('different properties of table');
+    return;
+  end
+  ra = table2cell(a);
+  rb = table2cell(b);
+  tmp = '';
+  [message] = do_work(ra, rb, depth-1, tmp, message, varargin{:});
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -189,7 +204,7 @@ function [str] = my_ind2sub(siz,ndx)
 n = length(siz);
 k = [1 cumprod(siz(1:end-1))];
 ndx = ndx - 1;
-for i = n:-1:1,
+for i = n:-1:1
   tmp(i) = floor(ndx/k(i))+1;
   ndx = rem(ndx,k(i));
 end

@@ -1,9 +1,8 @@
 function test_bug1053
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% TEST ft_datatype_sens
+% DEPENDENCY ft_datatype_sens
 
 % the following was enough to reproduce the bug
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))

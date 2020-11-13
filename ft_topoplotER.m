@@ -1,18 +1,18 @@
 function [cfg] = ft_topoplotER(cfg, varargin)
 
-% FT_TOPOPLOTER plots the topographic distribution over the head
-% of a 2-dimensional data representations such as the event-related
-% fields or potentials or the power- or coherence spectrum.
+% FT_TOPOPLOTER plots the topographic distribution over the head of a 2-dimensional
+% data representations such as the event-related potentials or fields, or a power
+% or connectivity spectrum.
 %
 % Use as
 %   ft_topoplotER(cfg, timelock)
 % or
 %   ft_topoplotER(cfg, freq)
 %
-% The data can be an erp/erf produced by FT_TIMELOCKANALYSIS, a powerspectrum
-% (without time dimension) produced by FT_FREQANALYSIS or a connectivityspectrum
-% produced by FT_CONNECTIVITYANALYSIS.  Also, the output to FT_FREQSTATISTICS
-% and FT_TIMELOCKSTATISTICS can be visualised.
+% The data can be an ERP/ERF produced by FT_TIMELOCKANALYSIS, a power spectrum
+% (without time dimension) produced by FT_FREQANALYSIS or a connectivity spectrum
+% produced by FT_CONNECTIVITYANALYSIS. Also, the output to FT_FREQSTATISTICS and
+% FT_TIMELOCKSTATISTICS can be visualised.
 %
 % The configuration can have the following parameters
 %   cfg.parameter          = field that contains the data to be plotted as color, for example 'avg', 'powspctrm' or 'cohspctrm' (default is automatic)
@@ -47,6 +47,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %                            'SouthOutside'       outside bottom
 %                            'EastOutside'        outside right
 %                            'WestOutside'        outside left
+%   cfg.colorbartext       =  string indicating the text next to colorbar
 %   cfg.interplimits       = limits for interpolation (default = 'head')
 %                            'electrodes' to furthest electrode
 %                            'head' to edge of head
@@ -63,7 +64,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %   cfg.comment            = 'no', 'auto' or 'xlim' (default = 'auto')
 %                            'auto': date, xparam and zparam limits are printed
 %                            'xlim': only xparam limits are printed
-%   cfg.commentpos         = string or two numbers, position of comment (default 'leftbottom')
+%   cfg.commentpos         = string or two numbers, position of the comment (default = 'leftbottom')
 %                            'lefttop' 'leftbottom' 'middletop' 'middlebottom' 'righttop' 'rightbottom'
 %                            'title' to place comment as title
 %                            'layout' to place comment as specified for COMNT in layout
@@ -82,23 +83,21 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %   cfg.interpolatenan     = string 'yes', 'no' (default = 'yes')
 %                            interpolate over channels containing NaNs
 %
-% For the plotting of directional connectivity data the cfg.directionality
-% option determines what is plotted. The default value and the supported
-% functionality depend on the dimord of the input data. If the input data
-% is of dimord 'chan_chan_XXX', the value of directionality determines
-% whether, given the reference channel(s), the columns (inflow), or rows
-% (outflow) are selected for plotting. In this situation the default is
-% 'inflow'. Note that for undirected measures, inflow and outflow should
-% give the same output. If the input data is of dimord 'chancmb_XXX', the
-% value of directionality determines whether the rows in data.labelcmb are
-% selected. With 'inflow' the rows are selected if the refchannel(s) occur in
-% the right column, with 'outflow' the rows are selected if the
-% refchannel(s) occur in the left column of the labelcmb-field. Default in
-% this case is '', which means that all rows are selected in which the
-% refchannel(s) occur. This is to robustly support linearly indexed
-% undirected connectivity metrics. In the situation where undirected
-% connectivity measures are linearly indexed, specifying 'inflow' or
-% 'outflow' can result in unexpected behavior.
+% For the plotting of directional connectivity data the cfg.directionality option
+% determines what is plotted. The default value and the supported functionality
+% depend on the dimord of the input data. If the input data is of dimord
+% 'chan_chan_XXX', the value of directionality determines whether, given the
+% reference channel(s), the columns (inflow), or rows (outflow) are selected for
+% plotting. In this situation the default is 'inflow'. Note that for undirected
+% measures, inflow and outflow should give the same output. If the input data is of
+% dimord 'chancmb_XXX', the value of directionality determines whether the rows in
+% data.labelcmb are selected. With 'inflow' the rows are selected if the
+% refchannel(s) occur in the right column, with 'outflow' the rows are selected if
+% the refchannel(s) occur in the left column of the labelcmb-field. Default in this
+% case is '', which means that all rows are selected in which the refchannel(s)
+% occur. This is to robustly support linearly indexed undirected connectivity
+% metrics. In the situation where undirected connectivity measures are linearly
+% indexed, specifying 'inflow' or 'outflow' can result in unexpected behavior.
 %
 % The layout defines how the channels are arranged. You can specify the
 % layout in a variety of ways:
@@ -134,7 +133,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 % Other options:
 % cfg.labeloffset (offset of labels to their marker, default = 0.005)
 
-% Copyright (C) 2005-2017, F.C. Donders Centre
+% Copyright (C) 2005-2020, F.C. Donders Centre
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -155,7 +154,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 % $Id$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% DEVELOPERS NOTE: This code is organized in a similar fashion for multiplot/singleplot/topoplot 
+% DEVELOPERS NOTE: This code is organized in a similar fashion for multiplot/singleplot/topoplot
 % and for ER/TFR and should remain consistent over those 6 functions.
 % Section 1: general cfg handling that is independent from the data
 % Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
@@ -183,29 +182,23 @@ if ft_abort
   return
 end
 
-% make sure figure window titles are labeled appropriately, pass this onto the actual
-% plotting function. if we don't specify this, the window will be called
-% 'ft_topoplotER', which is confusing to the user
-cfg.funcname = mfilename;
-if nargin>1
-  if ~isfield(cfg, 'dataname')
-    cfg.dataname = [];
-    for k = 2:nargin
-      if isstruct(varargin{k-1})
-        if ~isempty(inputname(k))
-          cfg.dataname{k-1} = inputname(k);
-        else
-          cfg.dataname{k-1} = ['data' num2str(k-1,'%02d')];
-        end
-      end
-    end
-  end
-else  % data provided through cfg.inputfile
-  cfg.dataname = cfg.inputfile;
+% this is needed for the figure title
+if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
+  dataname = cfg.dataname;
+elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
+elseif nargin>1
+  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
+else
+  dataname = {};
 end
 
+% make sure figure window titles are labeled appropriately, pass this onto the actual plotting function
+cfg.funcname = mfilename;
+cfg.dataname = dataname;
+
 % prepare the layout, this should be done only once
-tmpcfg     = removefields(cfg, 'inputfile');
+tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
 cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
 
 % call the common function that is shared between ft_topoplotER and ft_topoplotTFR
@@ -219,7 +212,12 @@ ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous varargin
 ft_postamble provenance
+ft_postamble savefig
 
-if ~nargout
+% add a menu to the figure, but only if the current figure does not have subplots
+menu_fieldtrip(gcf, cfg, false);
+
+if ~ft_nargout
+  % don't return anything
   clear cfg
 end

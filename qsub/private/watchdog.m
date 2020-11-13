@@ -1,9 +1,9 @@
 function watchdog
 
-% WATCHDOG will trigger an exit() if the master disappears or if the allowed time elapsed
+% WATCHDOG will trigger an exit() if the controller disappears or if the allowed time elapsed
 %
 % To enable the watchdog you should do 
-%   watchdog(masterid, time)
+%   watchdog(controllerid, time)
 % and to disable it again
 %   clear watchdog
 

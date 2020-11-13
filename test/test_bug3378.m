@@ -1,5 +1,9 @@
 function test_bug3378
 
+% WALLTIME 00:10:00
+% MEM 2gb
+% DEPENDENCY
+
 data = [];
 data.powspctrm = randn(1,10,20);
 data.time = 1:20;
