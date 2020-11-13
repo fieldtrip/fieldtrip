@@ -401,8 +401,9 @@ end
 if any(isnan(dat(:)))
   % filtering is not possible for at least a selection of the data
   ft_warning('data contains NaNs, no filtering or preprocessing applied');
-  
-else
+end
+
+%else
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % do the filtering on the padded data
@@ -556,7 +557,7 @@ else
     % convert the data to another numeric precision, i.e. double, single or int32
     dat = cast(dat, cfg.precision);
   end
-end % if any(isnan)
+%end % if any(isnan)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % remove the filter padding and do the preprocessing on the remaining trial data
