@@ -10,7 +10,7 @@ function [filt, B, A] = ft_preproc_bandpassfilter(dat,Fs,Fbp,N,type,dir,instabil
 %   dat        data matrix (Nchans X Ntime)
 %   Fsample    sampling frequency in Hz
 %   Fbp        frequency band, specified as [Fhp Flp]
-%   N          optional filter order, default is 4 (but) or dependent upon
+%   N          optional filter order, default is 4 (but) or dependent on
 %              frequency band and data length (fir/firls)
 %   type       optional filter type, can be
 %                'but' Butterworth IIR filter (default)
@@ -129,6 +129,10 @@ if nargin < 12 || isempty(usefftfilt)
 else
   % convert to boolean value
   usefftfilt = istrue(usefftfilt);
+end
+
+if nargin<13 || isempty(handlenan)
+  handlenan = false;
 end
 
 % Filtering does not work on integer data
@@ -286,7 +290,7 @@ switch type
 end
 
 % demean the data before filtering
-meandat = mean(dat,2);
+meandat = nanmean(dat,2);
 dat = bsxfun(@minus, dat, meandat);
 
 try
@@ -299,15 +303,15 @@ catch
       ft_warning('off','backtrace');
       ft_warning('instability detected - reducing the %dth order filter to an %dth order filter', N, N-1);
       ft_warning('on','backtrace');
-      filt = ft_preproc_bandpassfilter(dat,Fs,Fbp,N-1,type,dir,instabilityfix);
+      filt = ft_preproc_bandpassfilter(dat,Fs,Fbp,N-1,type,dir,instabilityfix,df,wintype,dev,plotfiltresp,usefftfilt);
     case 'split'
       N1 = ceil(N/2);
       N2 = floor(N/2);
       ft_warning('off','backtrace');
       ft_warning('instability detected - splitting the %dth order filter in a sequential %dth and a %dth order filter', N, N1, N2);
       ft_warning('on','backtrace');
-      filt = ft_preproc_bandpassfilter(dat ,Fs,Fbp,N1,type,dir,instabilityfix);
-      filt = ft_preproc_bandpassfilter(filt,Fs,Fbp,N2,type,dir,instabilityfix);
+      filt = ft_preproc_bandpassfilter(dat ,Fs,Fbp,N1,type,dir,instabilityfix,df,wintype,dev,plotfiltresp,usefftfilt);
+      filt = ft_preproc_bandpassfilter(filt,Fs,Fbp,N2,type,dir,instabilityfix,df,wintype,dev,plotfiltresp,usefftfilt);
     otherwise
       ft_error('incorrect specification of instabilityfix');
   end % switch

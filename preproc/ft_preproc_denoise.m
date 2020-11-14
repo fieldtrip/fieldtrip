@@ -47,8 +47,8 @@ end
 
 n1 = size(dat,2);
 n2 = size(refdat,2);
-m1 = mean(dat,2);
-m2 = mean(refdat,2);
+m1 = nanmean(dat,2);
+m2 = nanmean(refdat,2);
 
 %remove mean
 refdat  = refdat-m2(:,ones(n2,1));

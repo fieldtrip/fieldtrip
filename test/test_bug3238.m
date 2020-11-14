@@ -1,4 +1,4 @@
-function failed_bug3238
+function test_bug3238
 
 % WALLTIME 00:10:00
 % MEM 2gb
@@ -13,7 +13,7 @@ function failed_bug3238
 
 nchan = 16;
 ntrial = 5;
-ntime = 1000;
+ntime = 10000;
 fsample = 1000;
 
 data = [];
@@ -29,10 +29,10 @@ end
 data.trial{1}(1,:) = nan;
 
 % 2nd trial, time segment is bad for all channels
-data.trial{2}(:,1:100) = nan;
+data.trial{2}(:,1001:1100) = nan;
 
 % 3nd trial, short time segment bad in one channel
-data.trial{3}(2,201:300) = nan;
+data.trial{3}(2,1201:1300) = nan;
 
 % 4th trial, completely bad;
 data.trial{4}(:,:) = nan;
@@ -40,10 +40,10 @@ data.trial{4}(:,:) = nan;
 %% check the nan-awareness of the various ft_preproc_ functions
 label = cell(1,0);
 for k = 1:ntrial
-  datout = ft_preproc_bandpassfilter(data.trial{k}, fsample, [15 25]);
+  datout = ft_preproc_bandpassfilter(data.trial{k}, fsample, [15 25], [], 'firws');
   nnan(:,1,k) = sum(isnan(datout),2);
   label{end+1} = 'bandpassfilter';
-  datout = ft_preproc_bandstopfilter(data.trial{k}, fsample, [15 25]);
+  datout = ft_preproc_bandstopfilter(data.trial{k}, fsample, [15 25], [], 'firws');
   nnan(:,2,k) = sum(isnan(datout),2);
   label{end+1} = 'bandstopfilter';
   datout = ft_preproc_baselinecorrect(data.trial{k});
@@ -61,13 +61,13 @@ for k = 1:ntrial
   datout = ft_preproc_dftfilter(data.trial{k}, fsample, 50);
   nnan(:,7,k) = sum(isnan(datout),2);
   label{end+1} = 'dftfilter';
-  datout = ft_preproc_highpassfilter(data.trial{k}, fsample, 10);
+  datout = ft_preproc_highpassfilter(data.trial{k}, fsample, 10, [], 'firws');
   nnan(:,8,k) = sum(isnan(datout),2);
   label{end+1} = 'highpassfilter';
   datout = ft_preproc_hilbert(data.trial{k});
   nnan(:,9,k) = sum(isnan(datout),2);
   label{end+1} = 'hilbert';
-  datout = ft_preproc_lowpassfilter(data.trial{k}, fsample, 40);
+  datout = ft_preproc_lowpassfilter(data.trial{k}, fsample, 40, [], 'firws');
   nnan(:,10,k) = sum(isnan(datout),2);
   label{end+1} = 'lowpassfilter';
   datout = ft_preproc_medianfilter(data.trial{k}, 5);
