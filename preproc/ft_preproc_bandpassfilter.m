@@ -131,10 +131,6 @@ else
   usefftfilt = istrue(usefftfilt);
 end
 
-if nargin<13 || isempty(handlenan)
-  handlenan = false;
-end
-
 % Filtering does not work on integer data
 if ~isa(dat, 'double') && ~isa(dat, 'single')
   dat = cast(dat, 'double');
