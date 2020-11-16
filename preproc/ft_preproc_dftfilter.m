@@ -109,6 +109,7 @@ end
 
 % Method A): DFT filter
 if strcmp(Flreplace,'zero')
+  
   % determine the largest integer number of line-noise cycles that fits in the data
   n = round(floor(nsamples .* Fl./Fs) * Fs./Fl);
   if all(n==n(1))
@@ -136,10 +137,8 @@ if strcmp(Flreplace,'zero')
   filt = dat - est;                              % subtract estimated signal
   filt = real(filt);
   
-  for i=1:nsamples
-    % add the mean back to the filtered data
-    filt(:,i) = filt(:,i) + meandat;
-  end
+  % add the mean back to the filtered data
+  filt = bsxfun(@plus, filt, meandat);
   
   % Method B): Spectrum Interpolation
 elseif strcmp(Flreplace,'neighbour')
