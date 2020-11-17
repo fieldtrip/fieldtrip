@@ -1122,7 +1122,9 @@ if need_meg_json
   meg_json.MiscChannelCount           = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
   meg_json.TriggerChannelCount        = sum(strcmpi(hdr.chantype, 'trigger'));
   meg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-  meg_json.EpochLength                = hdr.nSamples/hdr.Fs;
+  if hdr.nTrials>1
+    meg_json.EpochLength              = hdr.nSamples/hdr.Fs;
+  end
   if ft_senstype(hdr.grad, 'ctf151')
     meg_json.ContinuousHeadLocalization = any(strcmp(hdr.chantype, 'headloc')); % CTF specific
     meg_json.Manufacturer             = 'CTF';
@@ -1155,7 +1157,9 @@ if need_eeg_json
   eeg_json.TriggerChannelCount        = sum(strcmpi(hdr.chantype, 'trigger'));
   eeg_json.MiscChannelCount           = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
   eeg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-  eeg_json.EpochLength                = hdr.nSamples/hdr.Fs;
+  if hdr.nTrials>1
+    eeg_json.EpochLength              = hdr.nSamples/hdr.Fs;
+  end
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
@@ -1175,7 +1179,9 @@ if need_ieeg_json
   ieeg_json.TriggerChannelCount        = sum(strcmpi(hdr.chantype, 'trigger'));
   ieeg_json.MiscChannelCount           = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
   ieeg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-  ieeg_json.EpochLength                = hdr.nSamples/hdr.Fs;
+  if hdr.nTrials>1
+    ieeg_json.EpochLength              = hdr.nSamples/hdr.Fs;
+  end
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
@@ -1192,7 +1198,9 @@ if need_emg_json
   emg_json.TriggerChannelCount        = sum(strcmpi(hdr.chantype, 'trigger'));
   emg_json.MiscChannelCount           = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
   emg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-  emg_json.EpochLength                = hdr.nSamples/hdr.Fs;
+  if hdr.nTrials>1
+    emg_json.EpochLength              = hdr.nSamples/hdr.Fs;
+  end
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
@@ -1204,7 +1212,9 @@ end
 if need_exg_json
   exg_json.SamplingFrequency          = hdr.Fs;
   exg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-  exg_json.EpochLength                = hdr.nSamples/hdr.Fs;
+  if hdr.nTrials>1
+    exg_json.EpochLength              = hdr.nSamples/hdr.Fs;
+  end
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
@@ -1216,7 +1226,9 @@ end
 if need_nirs_json
   nirs_json.SamplingFrequency         = hdr.Fs;
   nirs_json.RecordingDuration         = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-  %   nirs_json.EpochLength               = hdr.nSamples/hdr.Fs; % not yet supported
+  if hdr.nTrials>1
+    nirs_json.EpochLength             = hdr.nSamples/hdr.Fs;
+  end
   nirs_json.NIRSChannelCount          = sum(strcmpi(hdr.chantype, 'nirs'));
   %   nirs_json.AUXChannelCount           = sum(strcmpi(hdr.chantype, 'aux')); % not yet supported
   %   nirs_json.MiscChannelCount          = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
@@ -1995,66 +2007,81 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function tab = hdr2table(hdr)
 if isempty(hdr)
+  % return an empty table
   tab = table();
-else
-  name = hdr.label(:);
-  type = hdr.chantype(:);
-  units = hdr.chanunit(:);
-  sampling_frequency = repmat(hdr.Fs, hdr.nChans, 1);
-  % find source name, detector name and wavelength of nirs channels
-  source=cell(length(name), 1); detector=cell(length(name), 1); wavelength=nan(length(name),1); % empty columns will be removed in a later step
-  if isfield(hdr, 'opto') % else try regexp
-    sampling_frequency =cell(length(name), 1); % sampling frequency of nirs channels are not required
-    for i=1:length(name)
-      labelidx=find(strcmp(hdr.opto.label, name{i}));
-      if isempty(labelidx)
-        continue
-      else
-        [~, optoidx, wavelengthidx]=find(hdr.opto.tra(labelidx,:));
-        for k=optoidx
-          if any(strcmp(hdr.opto.optotype{k}, {'receiver', 'detector'}))
-            detector{i}=hdr.opto.optolabel{k};
-          elseif any(strcmp(hdr.opto.optotype{k}, {'transmitter', 'source'}))
-            source{i}=hdr.opto.optolabel{k};
-          end
-        end
-        if abs(wavelengthidx(1))~= abs(wavelengthidx(2))
-          warning('tra matrix is not consistent; ignoring wavelength')
-        else
-          wavelength(i)=hdr.opto.wavelength(abs(wavelengthidx(1)));
+  return
+end
+
+% construct the table, this part applies to all modalities
+name = hdr.label(:);
+type = hdr.chantype(:);
+units = hdr.chanunit(:);
+sampling_frequency = repmat(hdr.Fs, hdr.nChans, 1);
+tab = table(name, type, units, sampling_frequency);
+
+% NIRS requires some additional columns
+if isfield(hdr, 'opto')
+  % use the opto structure to determine the source name, detector name and wavelength
+  source     = cell(length(name), 1);
+  detector   = cell(length(name), 1);
+  wavelength = nan(length(name),1); % empty columns will be removed in a later step
+  for i=1:length(name)
+    labelidx=find(strcmp(hdr.opto.label, name{i}));
+    if isempty(labelidx)
+      continue
+    else
+      [~, optoidx, wavelengthidx]=find(hdr.opto.tra(labelidx,:));
+      for k=optoidx
+        if any(strcmp(hdr.opto.optotype{k}, {'receiver', 'detector'}))
+          detector{i}=hdr.opto.optolabel{k};
+        elseif any(strcmp(hdr.opto.optotype{k}, {'transmitter', 'source'}))
+          source{i}=hdr.opto.optolabel{k};
         end
       end
-    end
-  else % check whether the channel name is a typical nirs channel name ('Rx*-Tx* [*wavelength*] or 'S*-D*
-    % [*wavelength*] )
-    for i=1:length(name)
-      if regexp(name{i}, 'Rx(\w+)-Tx(\w+) \[(\d+)nm\]')
-        parts=regexp(name{i}, 'Rx(?<detectorID>\w+)-Tx(?<sourceID>\w+) \[(?<wavelength>\d+)nm\]', 'names');
-        source{i}=sprintf('Tx%s', parts.sourceID);
-        detector{i}=sprintf('Rx%s', parts.detectorID);
-        wavelength(i)=str2num(parts.wavelength);
-      elseif regexp(name{i}, 'Rx(\w+)-Tx(\w+)')
-        parts=regexp(name{i}, 'Rx(?<detectorID>\w+)-Tx(?<sourceID>\w+)', 'names');
-        source{i}=sprintf('Tx%s', parts.sourceID);
-        detector{i}=sprintf('Rx%s', parts.detectorID);
-      elseif regexp(name{i}, 'S(\w+)-D(\w+) \[(\d+)nm\]')
-        parts=regexp(name{i}, 'S(?sourceID>\w+)-D(?<detectorID>\w+) \[(?<wavelength>\d+)nm\]', 'names');
-        source{i}=sprintf('S%s', parts.sourceID);
-        detector{i}=sprintf('D%s',parts.detectorID);
-        wavelength(i)=str2num(parts.wavelength);
-      elseif regexp(name{i}, 'S(\w+)-D(\w+)')
-        parts=regexp(name{i}, 'S(?sourceID>\w+)-D(?<detectorID>\w+', 'names');
-        source{i}=sprintf('S%s', parts.sourceID);
-        detector{i}=sprintf('D%s',parts.detectorID);
+      if abs(wavelengthidx(1))~= abs(wavelengthidx(2))
+        warning('tra matrix is not consistent; ignoring wavelength')
       else
-        % channel is not recognized as a nirs channel
-        continue
+        wavelength(i)=hdr.opto.wavelength(abs(wavelengthidx(1)));
       end
-      sampling_frequency =cell(length(name), 1);% sampling frequency of nirs channels are not required
     end
   end
-  tab = table(name, type, units, sampling_frequency, source, detector, wavelength);
+  % add these columns to the table
+  tab = horzcat(tab, table(source, detector, wavelength));
+  
+elseif ft_chantype(hdr, 'nirs')
+  % deduce the NIRS-specific information from the channel name
+  % which typical is something like 'Rx*-Tx* [*wavelength*] or 'S*-D* [*wavelength*]
+  source     = cell(length(name), 1);
+  detector   = cell(length(name), 1);
+  wavelength = nan(length(name),1); % empty columns will be removed in a later step
+  for i=1:length(name)
+    if regexp(name{i}, 'Rx(\w+)-Tx(\w+) \[(\d+)nm\]')
+      parts=regexp(name{i}, 'Rx(?<detectorID>\w+)-Tx(?<sourceID>\w+) \[(?<wavelength>\d+)nm\]', 'names');
+      source{i}=sprintf('Tx%s', parts.sourceID);
+      detector{i}=sprintf('Rx%s', parts.detectorID);
+      wavelength(i)=str2num(parts.wavelength);
+    elseif regexp(name{i}, 'Rx(\w+)-Tx(\w+)')
+      parts=regexp(name{i}, 'Rx(?<detectorID>\w+)-Tx(?<sourceID>\w+)', 'names');
+      source{i}=sprintf('Tx%s', parts.sourceID);
+      detector{i}=sprintf('Rx%s', parts.detectorID);
+    elseif regexp(name{i}, 'S(\w+)-D(\w+) \[(\d+)nm\]')
+      parts=regexp(name{i}, 'S(?sourceID>\w+)-D(?<detectorID>\w+) \[(?<wavelength>\d+)nm\]', 'names');
+      source{i}=sprintf('S%s', parts.sourceID);
+      detector{i}=sprintf('D%s',parts.detectorID);
+      wavelength(i)=str2num(parts.wavelength);
+    elseif regexp(name{i}, 'S(\w+)-D(\w+)')
+      parts=regexp(name{i}, 'S(?sourceID>\w+)-D(?<detectorID>\w+', 'names');
+      source{i}=sprintf('S%s', parts.sourceID);
+      detector{i}=sprintf('D%s',parts.detectorID);
+    else
+      % this channel is not recognized as a nirs channel
+      continue
+    end
+  end
+  % add these columns to the table
+  tab = horzcat(tab, table(source, detector, wavelength));
 end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION convert elec structure into table
