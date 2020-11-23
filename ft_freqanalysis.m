@@ -288,10 +288,12 @@ switch cfg.method
     
   case 'irasa'
     cfg.taper       = ft_getopt(cfg, 'taper', 'hanning');
+    cfg.output      = ft_getopt(cfg, 'output', 'pow');
+    cfg.pad         = ft_getopt(cfg, 'pad', 'nextpow2');
     if ~isequal(cfg.taper, 'hanning')
       ft_error('the irasa method supports hanning tapers only');
     end
-    if isfield(cfg, 'output') && ~isequal(cfg.output, 'pow')
+    if ~isequal(cfg.output, 'pow')
       ft_error('the irasa method outputs power only');
     end
     if ~isequal(cfg.pad, 'nextpow2')
