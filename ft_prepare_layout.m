@@ -18,16 +18,16 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   layout.mask    = optional cell-array with line segments that determine the area for topographic interpolation
 %   layout.outline = optional cell-array with line segments that represent the head, nose, ears, sulci or other anatomical features
 %
-% There are several ways in which a 2-D layout can be made: 
+% There are several ways in which a 2-D layout can be made:
 % 1) it can be read directly from a layout file
-% 2) it can be created on basis of an image or photo, 
+% 2) it can be created on basis of an image or photo,
 % 3) it can be created from a projection of the 3-D sensor positions in the data, in the configuration, or in an electrode, gradiometer or optode file.
 %
-% Layout files are MATLAB *.mat files containing a single structure representing the layout 
-% (see above). The layout file can also be an ASCII file with the extension *.lay, although 
-% this file format is no longer recommended, since there is less control over the outline 
-% of the head and the mask within which the interpolation is done. A large number of 
-% template layout files is provided in the fieldtrip/template/layout directory. See 
+% Layout files are MATLAB *.mat files containing a single structure representing the layout
+% (see above). The layout file can also be an ASCII file with the extension *.lay, although
+% this file format is no longer recommended, since there is less control over the outline
+% of the head and the mask within which the interpolation is done. A large number of
+% template layout files is provided in the fieldtrip/template/layout directory. See
 % also http://www.fieldtriptoolbox.org/template/layout
 %
 % You can specify any one of the following configuration options
@@ -931,8 +931,8 @@ else
 end
 
 % make the subset as specified in cfg.channel
-cfg.channel = ft_channelselection(cfg.channel, setdiff(layout.label, {'COMNT', 'SCALE'}));  % COMNT and SCALE are not really channels
-chansel = match_str(layout.label, cat(1, cfg.channel(:), 'COMNT', 'SCALE'));                % include COMNT and SCALE, keep all channels in the order of the layout
+cfg.channel = ft_channelselection(cfg.channel, setdiff(layout.label, {'COMNT', 'SCALE'}, 'stable'));  % exclude COMNT and SCALE which are not really channels
+chansel = match_str(layout.label, vertcat(cfg.channel(:), 'COMNT', 'SCALE'));                         % include COMNT and SCALE at the end, keep other channels in the order of the layout
 % return the layout for the subset of channels
 layout.pos    = layout.pos(chansel,:);
 layout.label  = layout.label(chansel);

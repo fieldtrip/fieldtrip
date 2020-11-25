@@ -1587,9 +1587,9 @@ cfg.channelclamped = ft_getopt(cfg, 'channelclamped');
 % temporarily store the originally selected list of channels
 userchan    = cfg.channel;
 
-% add the clamped channels (cfg.channelclamped) at the end of the list
-cfg.channel = setdiff(cfg.channel, cfg.channelclamped);
-cfg.channel = union(cfg.channel, cfg.channelclamped);
+% add the clamped channels at the end of the list
+cfg.channel = setdiff(cfg.channel, cfg.channelclamped, 'stable');
+cfg.channel = vertcat(cfg.channel(:), cfg.channelclamped(:));
 
 % if the number of channels changes, includes past channels
 if numel(cfg.channel)<numel(userchan) + numel(cfg.channelclamped)
