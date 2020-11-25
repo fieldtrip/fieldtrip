@@ -84,8 +84,7 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 %                         for the size of the corresponding patch (default = 1)
 %
 % Other configuration options are
-%   cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'),
-%                       see FT_CHANNELSELECTION for details
+%   cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.frequency     = single number (in Hz)
 %   cfg.latency       = single number in seconds, for time-frequency analysis
 %   cfg.lambda        = number or empty for automatic default
@@ -591,7 +590,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
       
     case 'dics'
       tmpcfg         = keepfields(cfg, {'keeptrials', 'rawtrial', 'refchan', 'channel'});
-      tmpcfg.channel = setdiff(cfg.channel, cfg.refchan); % remove the refchan
+      tmpcfg.channel = setdiff(cfg.channel, cfg.refchan, 'stable'); % remove the refchan, ensure that the ordering does not change, see https://github.com/fieldtrip/fieldtrip/issues/1587
       
       % select the data in the channels and the frequency of interest
       [Cf, Cr, Pr, Ntrials, tmpcfg] = prepare_freq_matrices(tmpcfg, data);

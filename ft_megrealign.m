@@ -157,12 +157,12 @@ if isstruct(cfg.template)
   cfg.template = {cfg.template};
 end
 
-% retain only the MEG channels in the data and temporarily store
-% the rest, these will be added back to the transformed data later.
+% retain only the MEG channels and temporarily store the rest of the channels
+% elsewhere, these will be added back to the transformed data later.
 
 % select trials and channels of interest, first of the non-MEG channels, then of the MEG channels
 tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'}); % don't keep tolerance, it is used differently here
-tmpcfg.channel = setdiff(data.label, ft_channelselection(cfg.channel, data.label));
+tmpcfg.channel = setdiff(data.label, ft_channelselection(cfg.channel, data.label), 'stable');
 rest = ft_selectdata(tmpcfg, data);
 tmpcfg.channel = ft_channelselection(cfg.channel, data.label);
 data = ft_selectdata(tmpcfg, data);
