@@ -591,7 +591,8 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
       
     case 'dics'
       tmpcfg         = keepfields(cfg, {'keeptrials', 'rawtrial', 'refchan', 'channel'});
-      tmpcfg.channel = setdiff(cfg.channel, cfg.refchan); % remove the refchan
+      % tmpcfg.channel = setdiff(cfg.channel, cfg.refchan); % remove the refchan -> this leads to alphabetical reordering: issue 1587
+      tmpcfg.channel(strcmp(cfg.channel, cfg.refchan)) = []; % this keeps the channel order
       
       % select the data in the channels and the frequency of interest
       [Cf, Cr, Pr, Ntrials, tmpcfg] = prepare_freq_matrices(tmpcfg, data);
