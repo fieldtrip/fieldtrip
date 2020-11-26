@@ -156,4 +156,4 @@ cfg.grad = ft_apply_montage(grad, montage);
 cfg.channel = 'MEG';
 sourcemodel = ft_prepare_leadfield(cfg);
 % it should NOT be sorted in alphabetical order, since I flipped it in the grad
-assert(isequal(sourcemodel.label, ~sort(sourcemodel.label)))
+assert(~isequal(sourcemodel.label, sort(sourcemodel.label)))
