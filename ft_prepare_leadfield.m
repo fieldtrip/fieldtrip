@@ -300,13 +300,10 @@ elseif ft_headmodeltype(headmodel, 'duneuro')
   lf = mat2cell(lf, size(lf,1), repmat(3,1,size(lf,2)/3));
   sourcemodel.leadfield(sourcemodel.inside) = lf;
   for i=1:length(insideindx)
-    % compute the leadfield on all grid positions inside the brain
     thisindx = insideindx(i);
-    sourcemodel.leadfield{thisindx} = ft_compute_leadfield(sourcemodel.pos(thisindx,:), sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
-
     if isfield(cfg, 'grid') && isfield(cfg.grid, 'mom')
       % multiply with the normalized dipole moment to get the leadfield in the desired orientation
-      sourcemodel.leadfield{thisindx} = grid.leadfield{thisindx} * grid.mom(:,thisindx);
+      sourcemodel.leadfield{thisindx} = sourcemodel.leadfield{thisindx} * sourcemodel.mom(:,thisindx);
     end
   end % for all grid locations inside the brain
   
