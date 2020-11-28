@@ -78,7 +78,7 @@ std::string SetupgUSBampXMLConfig(std::string device_name,
 	std::string slave = "0",
 	std::string short_cut = "0",
 	std::string device_mode = "3", //1 = analog out, 3 = counter
-	std::string scan_dio = "0",
+	std::string scan_dio = "1",   // 0 = max number of channels is 16, 1 = max number of channels is 17 (16 data channels + 1 trigger line)
 	std::string analog_out_shape = "3",
 	std::string analog_out_frequency = "10",
 	std::string analog_out_amplitude = "100",
