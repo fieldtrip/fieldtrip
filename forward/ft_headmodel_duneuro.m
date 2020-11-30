@@ -112,16 +112,16 @@ else subtract_mean = 'true';
 end
 
 if(isfield(duneuro_settings, 'reduction')) reduction = duneuro_settings.reduction;
-else reduction = '1e-10';
+else reduction = '1e-15';
 end
 
 
 if(isfield(duneuro_settings, 'intorderadd_meg')) intorderadd_meg = duneuro_settings.intorderadd_meg;
-else intorderadd_meg = '0';
+else intorderadd_meg = '2';
 end
 
 if(isfield(duneuro_settings, 'mixedMoments')) mixedMoments = duneuro_settings.mixedMoments;
-else mixedMoments = 'false';
+else mixedMoments = 'true';
 end
 
 if(isfield(duneuro_settings, 'meg_type')) reduction = duneuro_settings.meg_type;
