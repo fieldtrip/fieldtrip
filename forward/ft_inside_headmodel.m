@@ -216,7 +216,7 @@ inside = logical(inside(:));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % local subfunction that is much faster than dsearchn
 
-function indx = my_dsearchn(pos1, pos2)
+function indx = my_dsearchn(pos1, pos2, flag)
 
 % indx = zeros(size(pos2,1),1);
 % mind = inf(size(pos2,1),1);
@@ -253,6 +253,16 @@ function indx = my_dsearchn(pos1, pos2)
 % so it does not change the relative distance, and the first term between
 % brackets only needs to be computed once (below denoted as the 'offset'
 % variable.
+
+if nargin<3
+  flag = true;
+end
+
+if flag && exist('knnsearch', 'file')
+  % use much faster knnsearch if available on the path
+  indx = knnsearch(pos1, pos2);
+  return;
+end
 
 offset = (pos1.^2)*[1;1;1];
 
