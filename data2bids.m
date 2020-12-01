@@ -1541,7 +1541,7 @@ if need_events_tsv
     events_tsv = cfg.events;
     begsample                   = table2array(events_tsv(:,{'begsample'}));
     endsample                   = table2array(events_tsv(:,{'endsample'}));
-    onset                       = begsample./hdr.Fs;
+    onset                       = (begsample-1)./hdr.Fs;
     duration                    = (endsample-begsample+1)./hdr.Fs; 
     table_onset_duration        = table(onset, duration);
     events_tsv                  = [table_onset_duration events_tsv];
