@@ -1542,7 +1542,7 @@ if need_events_tsv
     begsample                   = table2array(events_tsv(:,{'begsample'}));
     endsample                   = table2array(events_tsv(:,{'endsample'}));
     onset                       = (begsample-1)./hdr.Fs;
-    duration                    = (endsample-begsample)./hdr.Fs; 
+    duration                    = (endsample-begsample+1)./hdr.Fs; 
     table_onset_duration        = table(onset, duration);
     events_tsv                  = [table_onset_duration events_tsv];
 
@@ -1563,7 +1563,7 @@ if need_events_tsv
     end
     % convert to the required fields
     onset     = (begsample-1)/hdr.Fs;
-    duration  = (endsample-begsample)/hdr.Fs;
+    duration  = (endsample-begsample+1)/hdr.Fs;
     events_tsv = table(onset, duration, begsample, endsample, offset);
   elseif exist('trigger', 'var')
     % convert the triggers from FT_READ_EVENT into a table
