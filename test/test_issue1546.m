@@ -19,7 +19,8 @@ for rpt = 1:1
 %         'SamplesPerFrame', length(t));
 %     fn = dspobj()';
 
-    fn = cumsum(randn(1,length(t)));
+    % replace pink noise when dsp.ColoredNoise returns licence error
+    fn = cumsum(randn(1,length(t))); 
     
     % add a 10Hz and 60 Hz oscillation
     data.trial{1,rpt} = F * fn + O * cos(2*pi*10*t) + O * cos(2*pi*60*t);

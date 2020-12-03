@@ -561,7 +561,7 @@ for itrial = 1:ntrials
       hastime = false;
     
     case 'irasa_new'
-      [spectrum,ntaper,foi] = ft_specest_irasa_new(dat, time, 'taper', cfg.taper, options{:}, 'feedback', fbopt);
+      [spectrum,ntaper,foi] = ft_specest_irasa_new(dat, time, options{:}, 'feedback', fbopt);
       hastime = false;
 
     case 'wavelet'

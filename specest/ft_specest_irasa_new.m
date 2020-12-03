@@ -1,10 +1,10 @@
 function [spectrum,ntaper,freqoi] = ft_specest_irasa_new(dat, time, varargin)
 
-% FT_SPECEST_IRASA estimates the powerspectral arrythmic component of the
-% time-domain using Irregular-Resampling Auto-Spectral Analysis (IRASA)
+% FT_SPECEST_IRASA estimates fractal components from the orginal
+% power spectrum using Irregular-Resampling Auto-Spectral Analysis (IRASA)
 %
 % Use as
-%   [spectrum,ntaper,freqoi] = ft_specest_irasa(dat,time...)
+%   [spectrum,ntaper,freqoi] = ft_specest_irasa_new(dat,time...)
 % where
 %   dat        = matrix of chan*sample
 %   time       = vector, containing time in seconds for each sample
@@ -13,26 +13,20 @@ function [spectrum,ntaper,freqoi] = ft_specest_irasa_new(dat, time, varargin)
 %   freqoi     = vector of frequencies in spectrum
 %
 % Optional arguments should be specified in key-value pairs and can include
-%   taper      = 'dpss', 'hanning' or many others, see WINDOW (default = 'hanning')
 %   pad        = number, total length of data after zero padding (in seconds)
 %   padtype    = string, indicating type of padding to be used (see ft_preproc_padding, default: zero)
 %   freqoi     = vector, containing frequencies of interest
-%   tapsmofrq  = the amount of spectral smoothing through multi-tapering. Note: 4 Hz smoothing means plus-minus 4 Hz, i.e. a 8 Hz smoothing box
-%   dimord     = 'tap_chan_freq' (default) or 'chan_time_freqtap' for memory efficiency (only used when variable number slepian tapers)
+%   dimord     = string, 'tap_chan_freq' (default) or 'chan_time_freqtap' for memory efficiency (only used when variable number slepian tapers)
 %   polyorder  = number, the order of the polynomial to fitted to and removed from the data prior to the fourier transform (default = 0 -> remove DC-component)
-%   taperopt   = additional taper options to be used in the WINDOW function, see WINDOW
-%   verbose    = output progress to console (0 or 1, default 1)
+%   verbose    = boolean, output progress to console (0 or 1, default 1)
+%   output     = string, indicating type of output('fractal' or 'orignal', default 'fractal')
 %
-% This implements: Wen H, Liu Z. Separating fractal and oscillatory components in the power spectrum of neurophysiological signal. Brain Topogr. 2016 Jan;29(1):13-26.
-%   For application, see Stolk et al., Electrocorticographic dissociation of 
-%   alpha and beta rhythmic activity in the human sensorimotor system. It
-%   is recommended the user first sub-segments the data using ft_redefinetrial 
-%   and specifies cfg.pad = 'nextpow2' when calling ft_frequencyanalysis in 
-%   order to implement steps A and B of the original algorithm in Wen & liu.
-%
+% This implements: Wen.H. & Liu.Z.(2016), Separating fractal and oscillatory components in the power spectrum of neurophysiological signal. Brain Topogr. 29(1):13-26.
+%                  The source script avaible at https://purr.purdue.edu/publications/1987/1
+% 
 % See also FT_FREQANALYSIS, FT_SPECEST_MTMFFT, FT_SPECEST_MTMCONVOL, FT_SPECEST_TFR, FT_SPECEST_HILBERT, FT_SPECEST_WAVELET
-
-% Copyright (C) 2019, Arjen Stolk
+%
+% Copyright (C) 2020, Rui Liu
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -56,30 +50,14 @@ function [spectrum,ntaper,freqoi] = ft_specest_irasa_new(dat, time, varargin)
 persistent previous_argin previous_tap
 
 % get the optional input arguments
-taper     = ft_getopt(varargin, 'taper'); if isempty(taper), ft_error('You must specify a taper'); end
 pad       = ft_getopt(varargin, 'pad');
 padtype   = ft_getopt(varargin, 'padtype', 'zero');
 freqoi    = ft_getopt(varargin, 'freqoi', 'all');
-tapsmofrq = ft_getopt(varargin, 'tapsmofrq');
 dimord    = ft_getopt(varargin, 'dimord', 'tap_chan_freq');
+polyorder = ft_getopt(varargin, 'polyorder', 0);
 fbopt     = ft_getopt(varargin, 'feedback');
 verbose   = ft_getopt(varargin, 'verbose', true);
-polyorder = ft_getopt(varargin, 'polyorder', 0);
-tapopt    = ft_getopt(varargin, 'taperopt');
 output    = ft_getopt(varargin, 'output','fractal');
-hset      = ft_getopt(varargin, 'hset', 1.1:0.05:1.9); % IRASA resampling factors
-
-nhset = length(hset);
-
-if isempty(fbopt)
-    fbopt.i = 1;
-    fbopt.n = 1;
-end
-
-% throw errors for required input
-if isempty(tapsmofrq) && (strcmp(taper, 'dpss') || strcmp(taper, 'sine'))
-    ft_error('you need to specify tapsmofrq when using dpss or sine tapers')
-end
 
 % this does not work on integer data
 dat = cast(dat, 'double');
@@ -93,8 +71,12 @@ fsample = 1./mean(diff(time));
 
 % subset param
 subset_nsample = 2^floor(log2(ndatsample*0.9));% the number of sub-gements in sample is the power of 2 that does not exceed 90% of input data
-subset_num = 10;% the number of sub-segments
-subset_dist = floor((ndatsample  - subset_nsample)/(subset_num - 1)); % distance between sub-segements in sample, to evenly distribute the sub-subsegments within the total length of input data
+subset_num     = 10;% the number of sub-segments
+subset_dist    = floor((ndatsample  - subset_nsample)/(subset_num - 1)); % distance between sub-segements in sample, to evenly distribute the sub-subsegments within the total length of input data
+
+% resampling ratio
+hset  = 1.1:0.05:1.9;
+nhset = length(hset);
 
 % remove polynomial fit from the data -> default is demeaning
 if polyorder >= 0
@@ -125,9 +107,6 @@ elseif strcmp(freqoi,'all') % if input was 'all'
 end
 nfreqboi = length(freqboi);
 nfreqoi  = length(freqoi);
-if (strcmp(taper, 'dpss') || strcmp(taper, 'sine')) && numel(tapsmofrq)~=1 && (numel(tapsmofrq)~=nfreqoi)
-    ft_error('tapsmofrq needs to contain a smoothing parameter for every frequency when requesting variable number of slepian tapers')
-end
 
 % throw a warning if input freqoi is different from output freqoi
 if isnumeric(freqoiinput)
@@ -146,20 +125,21 @@ if isnumeric(freqoiinput)
 end
 
 % determine whether tapers need to be recomputed
-current_argin = {output, time, postpad, taper, tapsmofrq, freqoi, tapopt, dimord}; % reasoning: if time and postpad are equal, it's the same length trial, if the rest is equal then the requested output is equal
+current_argin = {output, time, postpad, freqoi, dimord}; % reasoning: if time and postpad are equal, it's the same length trial, if the rest is equal then the requested output is equal
 if isequal(current_argin, previous_argin)
     % don't recompute tapers
     tap = previous_tap;
 else
     if strcmp(output,'fractal')
-    % (re)compute tapers, 1:mid are upsample tapers, mid+1:end are downsample tapers
-    for ih = 1:nhset
-        [n, d] = rat(hset(ih)); % n > d
-        tmp = hanning(size(resample(zeros(subset_nsample,nchan), n, d),1))';
-        tap{ih,1} = tmp./norm(tmp, 'fro');% for upsampled subsets
-        tmp = hanning(size(resample(zeros(subset_nsample,nchan), d, n),1))';
-        tap{ih+nhset,1} = tmp./norm(tmp, 'fro');% for downsampled subsets
-    end
+        % (re)compute tapers, 1:mid are upsample tapers, mid+1:end are downsample tapers
+        tap = cell(nhset*2,1);
+        for ih = 1:nhset
+            [n, d] = rat(hset(ih)); % n > d
+            tmp = hanning(size(resample(zeros(subset_nsample,nchan), n, d),1))';
+            tap{ih,1} = tmp./norm(tmp, 'fro');% for upsampled subsets
+            tmp = hanning(size(resample(zeros(subset_nsample,nchan), d, n),1))';
+            tap{ih+nhset,1} = tmp./norm(tmp, 'fro');% for downsampled subsets
+        end
     elseif strcmp(output,'mixed')
         tap = hanning(subset_nsample)';
         tap = tap./norm(tap, 'fro');
@@ -167,25 +147,27 @@ else
 end
 
 % set ntaper
-if ~((strcmp(taper,'dpss') || strcmp(taper,'sine')) && numel(tapsmofrq)>1) % variable number of slepian tapers not requested
-    if strcmp(output,'fractal')
-        ntaper = repmat(size(tap,2),nfreqoi,1); % pretend there's only one taper
-    elseif strcmp(output,'mixed')
-        ntaper = repmat(size(tap,1),nfreqoi,1);
-    end
-else % variable number of slepian tapers requested
-    ntaper = cellfun(@size,tap,repmat({1},[1 nfreqoi]));
+if strcmp(output,'fractal')
+    ntaper = repmat(size(tap,2),nfreqoi,1); % pretend there's only one taper
+elseif strcmp(output,'mixed')
+    ntaper = repmat(size(tap,1),nfreqoi,1);
+end
+
+% feedback of computing progress
+if isempty(fbopt)
+    fbopt.i = 1;
+    fbopt.n = 1;
+end
+str = sprintf('nfft: %d samples, datalength: %d samples, %d tapers',endnsample,ndatsample,ntaper(1));
+st  = dbstack;
+if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis')
+  % specest_mtmfft has been called by ft_freqanalysis, meaning that ft_progress has been initialised
+  ft_progress(fbopt.i./fbopt.n, ['processing trial %d/%d ',str,'\n'], fbopt.i, fbopt.n);
+elseif verbose
+  fprintf([str, '\n']);
 end
 
 % compute irasa or fft
-str = sprintf('nfft: %d samples, datalength: %d samples, %d tapers',endnsample,subset_nsample,ntaper(1));
-[st, cws] = dbstack;
-if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis')
-    % specest_mtmfft has been called by ft_freqanalysis, meaning that ft_progress has been initialised
-    ft_progress(fbopt.i./fbopt.n, ['processing trial %d/%d ',str,'\n'], fbopt.i, fbopt.n);
-elseif verbose
-    fprintf([str, '\n']);
-end
 spectrum = cell(ntaper(1),1);
 for itap = 1:ntaper(1)
     %%%%%%%% IRASA %%%%%%%%%%
