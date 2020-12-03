@@ -11,6 +11,46 @@ function [spectrum,ntaper,freqoi] = ft_specest_irasa_new(dat, time, varargin)
 %   spectrum   = matrix of taper*chan*freqoi of fourier coefficients
 %   ntaper     = vector containing number of tapers per element of freqoi
 %   freqoi     = vector of frequencies in spectrum
+%
+% Optional arguments should be specified in key-value pairs and can include
+%   taper      = 'dpss', 'hanning' or many others, see WINDOW (default = 'hanning')
+%   pad        = number, total length of data after zero padding (in seconds)
+%   padtype    = string, indicating type of padding to be used (see ft_preproc_padding, default: zero)
+%   freqoi     = vector, containing frequencies of interest
+%   tapsmofrq  = the amount of spectral smoothing through multi-tapering. Note: 4 Hz smoothing means plus-minus 4 Hz, i.e. a 8 Hz smoothing box
+%   dimord     = 'tap_chan_freq' (default) or 'chan_time_freqtap' for memory efficiency (only used when variable number slepian tapers)
+%   polyorder  = number, the order of the polynomial to fitted to and removed from the data prior to the fourier transform (default = 0 -> remove DC-component)
+%   taperopt   = additional taper options to be used in the WINDOW function, see WINDOW
+%   verbose    = output progress to console (0 or 1, default 1)
+%
+% This implements: Wen H, Liu Z. Separating fractal and oscillatory components in the power spectrum of neurophysiological signal. Brain Topogr. 2016 Jan;29(1):13-26.
+%   For application, see Stolk et al., Electrocorticographic dissociation of 
+%   alpha and beta rhythmic activity in the human sensorimotor system. It
+%   is recommended the user first sub-segments the data using ft_redefinetrial 
+%   and specifies cfg.pad = 'nextpow2' when calling ft_frequencyanalysis in 
+%   order to implement steps A and B of the original algorithm in Wen & liu.
+%
+% See also FT_FREQANALYSIS, FT_SPECEST_MTMFFT, FT_SPECEST_MTMCONVOL, FT_SPECEST_TFR, FT_SPECEST_HILBERT, FT_SPECEST_WAVELET
+
+% Copyright (C) 2019, Arjen Stolk
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 % these are for speeding up computation of tapers on subsequent calls
 persistent previous_argin previous_tap
