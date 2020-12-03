@@ -293,8 +293,28 @@ switch cfg.method
     if ~isequal(cfg.taper, 'hanning')
       ft_error('the irasa method supports hanning tapers only');
     end
-    if ~strcmp(cfg.output, {'pow','fracpow'})
-      ft_error('the irasa method outputs power or fracpow only');
+    if ~isequal(cfg.output, 'pow')
+      ft_error('the irasa method outputs power only');
+    end
+    if ~isequal(cfg.pad, 'nextpow2')
+      ft_warning('consider using cfg.pad=''nextpow2'' for the irasa method');
+    end
+    % check for foi above Nyquist
+    if isfield(cfg, 'foi')
+      if any(cfg.foi > (data.fsample/2))
+        ft_error('frequencies in cfg.foi are above Nyquist')
+      end
+    end
+    
+  case 'irasa_new'
+    cfg.taper       = ft_getopt(cfg, 'taper', 'hanning');
+    cfg.output      = ft_getopt(cfg, 'output', 'fractal');
+    cfg.pad         = ft_getopt(cfg, 'pad', 'nextpow2');
+    if ~isequal(cfg.taper, 'hanning')
+      ft_error('the irasa method supports hanning tapers only');
+    end
+    if ~strcmp(cfg.output, {'fractal','mixed'})
+      ft_error('the irasa method outputs ''fractal'' or ''mixed'' power only');
     end
     if ~isequal(cfg.pad, 'nextpow2')
       ft_warning('consider using cfg.pad=''nextpow2'' for the irasa method');
@@ -345,7 +365,11 @@ if isempty(cfg.pad)
   cfg.pad = 'maxperlen';
 end
 cfg.padtype   = ft_getopt(cfg, 'padtype',   'zero');
-cfg.output    = ft_getopt(cfg, 'output',    'pow');
+if strcmp(cfg.method,'irasa_new')
+    cfg.output    = ft_getopt(cfg, 'output', 'fractal');
+else
+    cfg.output    = ft_getopt(cfg, 'output', 'pow');
+end
 cfg.calcdof   = ft_getopt(cfg, 'calcdof',   'no');
 cfg.channel   = ft_getopt(cfg, 'channel',   'all');
 cfg.precision = ft_getopt(cfg, 'precision', 'double');
@@ -384,7 +408,7 @@ if strcmp(cfg.keeptrials, 'yes') && strcmp(cfg.keeptapers, 'yes')
 end
 
 % Set flags for output
-if ismember(cfg.output, {'pow','fracpow'})
+if ismember(cfg.output, {'pow','fractal','mixed'})
   powflg = 1;
   csdflg = 0;
   fftflg = 0;
@@ -535,7 +559,11 @@ for itrial = 1:ntrials
     case 'irasa'
       [spectrum,ntaper,foi] = ft_specest_irasa(dat, time, 'taper', cfg.taper, options{:}, 'feedback', fbopt);
       hastime = false;
-      
+    
+    case 'irasa_new'
+      [spectrum,ntaper,foi] = ft_specest_irasa_new(dat, time, 'taper', cfg.taper, options{:}, 'feedback', fbopt);
+      hastime = false;
+
     case 'wavelet'
       [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:}, 'feedback', fbopt);
       
@@ -678,7 +706,7 @@ for itrial = 1:ntrials
       
       acttap = logical([ones(ntaper(ifoi),1);zeros(size(spectrum,1)-ntaper(ifoi),1)]);
       if powflg
-        if strcmp(cfg.method, 'irasa') % ft_specest_irasa outputs power and not amplitude
+        if ismember(cfg.method, {'irasa','irasa_new'}) % ft_specest_irasa outputs power and not amplitude
           powdum = spectrum(acttap,:,foiind(ifoi),acttboi);
         else
           powdum = abs(spectrum(acttap,:,foiind(ifoi),acttboi)) .^2;
@@ -768,7 +796,7 @@ for itrial = 1:ntrials
     %rptind = reshape(1:ntrials .* maxtap,[maxtap ntrials]);
     %currrptind = rptind(:,itrial);
     if powflg
-      if strcmp(cfg.method, 'irasa') % ft_specest_irasa outputs power and not amplitude
+      if ismember(cfg.method, {'irasa','irasa_new'}) % ft_specest_irasa outputs power and not amplitude
         powspctrm(currrptind,:,:) = spectrum;
       else
         powspctrm(currrptind,:,:) = abs(spectrum).^2;
