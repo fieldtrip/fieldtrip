@@ -171,7 +171,7 @@ end
 % compute fft
 str = sprintf('nfft: %d samples, datalength: %d samples, %d tapers',endnsample,ndatsample,ntaper(1));
 [st, cws] = dbstack;
-if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis_old')
+if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis')
   % specest_mtmfft has been called by ft_freqanalysis, meaning that ft_progress has been initialised
   ft_progress(fbopt.i./fbopt.n, ['processing trial %d/%d ',str,'\n'], fbopt.i, fbopt.n);
 elseif verbose
