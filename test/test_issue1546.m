@@ -39,7 +39,7 @@ cfg.pad           = 'nextpow2';
 cfg.method        = 'irasa_new';
 cfg.output        = 'fractal';
 fractal = ft_freqanalysis(cfg, data);
-cfg.output        = 'mixed';
+cfg.output        = 'original';
 original = ft_freqanalysis(cfg, data);
 
 % display the spectra in log-log scale
