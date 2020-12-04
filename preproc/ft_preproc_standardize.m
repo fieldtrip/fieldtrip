@@ -14,6 +14,9 @@ function [dat, state] = ft_preproc_standardize(dat, begsample, endsample, state)
 % If no begin and end sample are specified, it will be estimated on the
 % complete data.
 %
+% If the data contains NaNs, these are ignored for the computation, but
+% retained in the output.
+%
 % See also PREPROC
 
 % Copyright (C) 2008, Robert Oostenveld

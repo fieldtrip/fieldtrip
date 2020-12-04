@@ -57,6 +57,9 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, varargin)
 % The line frequency should be specified as a single number for the DFT filter.
 % If omitted, a European default of 50Hz will be assumed
 %
+% If the data contains NaNs, the output of the affected channel(s) will be
+% all(NaN).
+%
 % See also PREPROC
 
 % Undocumented option:

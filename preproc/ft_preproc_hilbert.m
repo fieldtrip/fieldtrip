@@ -19,11 +19,17 @@ function [dat] = ft_preproc_hilbert(dat, option, handlenan, padnan)
 %                'absimag'
 %                'angle'
 %
+% If the data contains NaNs, the output of the affected channel(s) will be
+% all(NaN).
+%
+% See also PREPROC
+
+% Undocumented, and insufficiently tested, options: handlenan and padnan
+% intend to make the function nan-aware, FIXME: needs to be tested more.
+%
 %   handlenan  boolean, can be false (default) or true
 %   padnan     scalar, number of samples to pad the edges of the NaN
 %              samples, to remove the ringing, (default = 0)
-%
-% See also PREPROC
 
 % Copyright (C) 2008, Robert Oostenveld
 %
