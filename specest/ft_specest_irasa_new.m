@@ -139,7 +139,7 @@ else
             tmp = hanning(size(resample(zeros(subset_nsample,nchan), d, n),1))';
             tap{ih+nhset,1} = tmp./norm(tmp, 'fro');% for downsampled subsets
         end
-    elseif strcmp(output, 'mixed')
+    elseif strcmp(output, 'original')
         tap = hanning(subset_nsample)';
         tap = tap./norm(tap, 'fro');
     end
@@ -148,7 +148,7 @@ end
 % set ntaper
 if strcmp(output, 'fractal')
     ntaper = repmat(size(tap,2),nfreqoi,1); % pretend there's only one taper
-elseif strcmp(output, 'mixed')
+elseif strcmp(output, 'original')
     ntaper = repmat(size(tap,1),nfreqoi,1);
 end
 
@@ -210,7 +210,7 @@ for itap = 1:ntaper(1)
         spectrum{itap} = median(pow,3);
         
     %%%%%%%% FFT %%%%%%%%%%
-    elseif strcmp(output,'mixed')
+    elseif strcmp(output,'original')
         pow  = zeros(nchan,nfreqboi);
         for k = 0 : subset_num-1 % loop #subset
             % pair-wised resampling
