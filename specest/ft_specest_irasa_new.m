@@ -16,7 +16,6 @@ function [spectrum,ntaper,freqoi] = ft_specest_irasa_new(dat, time, varargin)
 %   pad        = number, total length of data after zero padding (in seconds)
 %   padtype    = string, indicating type of padding to be used (see ft_preproc_padding, default: zero)
 %   freqoi     = vector, containing frequencies of interest
-%   dimord     = string, 'tap_chan_freq' (default) or 'chan_time_freqtap' for memory efficiency (only used when variable number slepian tapers)
 %   polyorder  = number, the order of the polynomial to fitted to and removed from the data prior to the fourier transform (default = 0 -> remove DC-component)
 %   verbose    = boolean, output progress to console (0 or 1, default 1)
 %   output     = string, indicating type of output('fractal' or 'orignal', default 'fractal')
@@ -53,7 +52,6 @@ persistent previous_argin previous_tap
 pad       = ft_getopt(varargin, 'pad');
 padtype   = ft_getopt(varargin, 'padtype', 'zero');
 freqoi    = ft_getopt(varargin, 'freqoi', 'all');
-dimord    = ft_getopt(varargin, 'dimord', 'tap_chan_freq');
 polyorder = ft_getopt(varargin, 'polyorder', 0);
 fbopt     = ft_getopt(varargin, 'feedback');
 verbose   = ft_getopt(varargin, 'verbose', true);
@@ -100,7 +98,7 @@ if isnumeric(freqoi) % if input is a vector
     freqboi   = round(freqoi ./ (fsample ./ endnsample)) + 1; % is equivalent to: round(freqoi .* endtime) + 1;
     freqboi   = unique(freqboi);
     freqoi    = (freqboi-1) ./ endtime; % boi - 1 because 0 Hz is included in fourier output
-elseif strcmp(freqoi,'all') % if input was 'all'
+elseif strcmp(freqoi, 'all') % if input was 'all'
     freqboilim = round([0 fsample/2] ./ (fsample ./ endnsample)) + 1;
     freqboi    = freqboilim(1):1:freqboilim(2);
     freqoi     = (freqboi-1) ./ endtime;
@@ -125,12 +123,12 @@ if isnumeric(freqoiinput)
 end
 
 % determine whether tapers need to be recomputed
-current_argin = {output, time, postpad, freqoi, dimord}; % reasoning: if time and postpad are equal, it's the same length trial, if the rest is equal then the requested output is equal
+current_argin = {output, time, postpad, freqoi}; % reasoning: if time and postpad are equal, it's the same length trial, if the rest is equal then the requested output is equal
 if isequal(current_argin, previous_argin)
     % don't recompute tapers
     tap = previous_tap;
 else
-    if strcmp(output,'fractal')
+    if strcmp(output, 'fractal')
         % (re)compute tapers, 1:mid are upsample tapers, mid+1:end are downsample tapers
         tap = cell(nhset*2,1);
         for ih = 1:nhset
@@ -140,16 +138,16 @@ else
             tmp = hanning(size(resample(zeros(subset_nsample,nchan), d, n),1))';
             tap{ih+nhset,1} = tmp./norm(tmp, 'fro');% for downsampled subsets
         end
-    elseif strcmp(output,'mixed')
+    elseif strcmp(output, 'mixed')
         tap = hanning(subset_nsample)';
         tap = tap./norm(tap, 'fro');
     end
 end
 
 % set ntaper
-if strcmp(output,'fractal')
+if strcmp(output, 'fractal')
     ntaper = repmat(size(tap,2),nfreqoi,1); % pretend there's only one taper
-elseif strcmp(output,'mixed')
+elseif strcmp(output, 'mixed')
     ntaper = repmat(size(tap,1),nfreqoi,1);
 end
 
@@ -229,8 +227,8 @@ for itap = 1:ntaper(1)
         % average across subsets for noise filtering
         spectrum{itap} = pow / subset_num;
         
-    end%if output
-end%loop taper
+    end % if output
+end % for taper
 
 spectrum = reshape(vertcat(spectrum{:}),[nchan ntaper(1) nfreqboi]); % collecting in a cell-array and later reshaping provides significant speedups
 spectrum = permute(spectrum, [2 1 3]);
