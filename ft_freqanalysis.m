@@ -313,8 +313,8 @@ switch cfg.method
     if ~isequal(cfg.taper, 'hanning')
       ft_error('the irasa method supports hanning tapers only');
     end
-    if ~strcmp(cfg.output, {'fractal','mixed'})
-      ft_error('the irasa method outputs ''fractal'' or ''mixed'' power only');
+    if ~strcmp(cfg.output, {'fractal','original'})
+      ft_error('the irasa method outputs ''fractal'' or ''original'' power only');
     end
     if ~isequal(cfg.pad, 'nextpow2')
       ft_warning('consider using cfg.pad=''nextpow2'' for the irasa method');
@@ -404,7 +404,7 @@ if strcmp(cfg.keeptrials, 'yes') && strcmp(cfg.keeptapers, 'yes')
 end
 
 % Set flags for output
-if ismember(cfg.output, {'pow','fractal','mixed'})
+if ismember(cfg.output, {'pow','fractal','original'})
   powflg = 1;
   csdflg = 0;
   fftflg = 0;
