@@ -421,11 +421,15 @@ else
       trl(1,2) = hdr.nSamples*hdr.nTrials;
       trl(1,3) = -hdr.nSamplesPre;
     else
-      trl = zeros(hdr.nTrials, 3);
-      for i=1:hdr.nTrials
-        trl(i,1) = (i-1)*hdr.nSamples + 1;
-        trl(i,2) = (i  )*hdr.nSamples    ;
-        trl(i,3) = -hdr.nSamplesPre;
+      if isfield(hdr, 'trl')
+        trl = hdr.trl;
+      else
+        trl = zeros(hdr.nTrials, 3);
+	    for i=1:hdr.nTrials
+          trl(i,1) = (i-1)*hdr.nSamples+1;
+          trl(i,2) = (i)*hdr.nSamples;
+          trl(i,3) = -hdr.nSamplesPre;
+	    end
       end
     end
     cfg.trl = trl;
