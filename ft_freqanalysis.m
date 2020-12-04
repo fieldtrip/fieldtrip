@@ -365,11 +365,7 @@ if isempty(cfg.pad)
   cfg.pad = 'maxperlen';
 end
 cfg.padtype   = ft_getopt(cfg, 'padtype',   'zero');
-if strcmp(cfg.method,'irasa_new')
-    cfg.output    = ft_getopt(cfg, 'output', 'fractal');
-else
-    cfg.output    = ft_getopt(cfg, 'output', 'pow');
-end
+cfg.output    = ft_getopt(cfg, 'output',    'pow'); % the default for irasa is set earlier
 cfg.calcdof   = ft_getopt(cfg, 'calcdof',   'no');
 cfg.channel   = ft_getopt(cfg, 'channel',   'all');
 cfg.precision = ft_getopt(cfg, 'precision', 'double');
