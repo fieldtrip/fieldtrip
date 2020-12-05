@@ -193,13 +193,13 @@ if isfield(data, 'csdlabel')
     nori = length(data.csdlabel);
   end
 elseif isfield(data, 'mom') && isfield(data, 'inside') && iscell(data.mom)
-    % this is used in LCMV beamformers
-    size1 = @(x) size(x, 1);
-    len = cellfun(size1, data.mom(data.inside));
-    if all(len==len(1))
-      % they all have the same length
-      nori = len(1);
-    end
+  % this is used in LCMV beamformers
+  size1 = @(x) size(x, 1);
+  len = cellfun(size1, data.mom(data.inside));
+  if all(len==len(1))
+    % they all have the same length
+    nori = len(1);
+  end
 else
   % assume that there are three dipole orientations per source
   nori = 3;
@@ -525,7 +525,7 @@ switch field
     if iscell(data.(field)) && isfield(data, 'label') && datsiz(1)==nchan
       dimord = '{chan}_spike';
     end
-
+    
   case {'time'}
     if iscell(data.(field)) && isfield(data, 'label') && datsiz(1)==nrpt
       dimord = '{rpt}_time';
@@ -678,35 +678,35 @@ end % function
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function warning_dimord_could_not_be_determined(field,data)
-  msg=sprintf('could not determine dimord of "%s" in:',field);
+msg=sprintf('could not determine dimord of "%s" in:',field);
 
-  if isempty(which('evalc'))
-    % May not be available in Octave
-    content=sprintf('object of type ''%s''',class(data));
+if isempty(which('evalc'))
+  % May not be available in Octave
+  content=sprintf('object of type ''%s''',class(data));
+else
+  % in Octave, disp typically shows full data arrays which can result in
+  % very long output. Here we take out the middle part of the output if
+  % the output is very long (more than 40 lines)
+  full_content=evalc('disp(data)');
+  max_pre_post_lines=20;
+  
+  newline_pos=find(full_content==newline);
+  newline_pos=newline_pos(max_pre_post_lines:(end-max_pre_post_lines));
+  
+  if numel(newline_pos)>=2
+    pre_end=newline_pos(1)-1;
+    post_end=newline_pos(end)+1;
+    
+    content=sprintf('%s\n\n... long output omitted ...\n\n%s',...
+      full_content(1:pre_end),...
+      full_content(post_end:end));
   else
-    % in Octave, disp typically shows full data arrays which can result in
-    % very long output. Here we take out the middle part of the output if
-    % the output is very long (more than 40 lines)
-    full_content=evalc('disp(data)');
-    max_pre_post_lines=20;
-
-    newline_pos=find(full_content==newline);
-    newline_pos=newline_pos(max_pre_post_lines:(end-max_pre_post_lines));
-
-    if numel(newline_pos)>=2
-      pre_end=newline_pos(1)-1;
-      post_end=newline_pos(end)+1;
-
-      content=sprintf('%s\n\n... long output omitted ...\n\n%s',...
-                                full_content(1:pre_end),...
-                                full_content(post_end:end));
-    else
-      content=full_content;
-    end
+    content=full_content;
   end
+end
 
-  msg = sprintf('%s\n\n%s', msg, content);
-  ft_warning(msg);
+msg = sprintf('%s\n\n%s', msg, content);
+ft_warning(msg);
 end % function warning_dimord_could_not_be_determined
 
 
