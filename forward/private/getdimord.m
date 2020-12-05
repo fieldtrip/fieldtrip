@@ -211,7 +211,7 @@ if isfield(data, 'topolabel')
 end
 
 if isfield(data, 'timestamp') && iscell(data.timestamp)
-  nspike = length(data.timestamp{1}); % spike data: only for the first channel
+  nspike = length(data.timestamp{1}); % only for the first spike unit
 end
 
 if isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'lag')) && isfield(data, 'coeffs')
@@ -525,7 +525,7 @@ switch field
     if iscell(data.(field)) && isfield(data, 'label') && datsiz(1)==nchan
       dimord = '{chan}_spike';
     end
-    
+
   case {'time'}
     if iscell(data.(field)) && isfield(data, 'label') && datsiz(1)==nrpt
       dimord = '{rpt}_time';
