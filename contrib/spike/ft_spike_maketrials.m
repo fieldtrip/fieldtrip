@@ -259,8 +259,8 @@ elseif strcmp(cfg.trlunit, 'samples')
       trialNum  = ones(1,length(tTrial))*iTrial;
       trialDur  = (1 + cfg.trl(iTrial,2)-cfg.trl(iTrial,1))/Fs;
       
-      time{iUnit}           = [spike.time{iUnit} tTrial(:)'];
-      trial{iUnit}          = [spike.trial{iUnit} trialNum];
+      spike.time{iUnit}     = [spike.time{iUnit} tTrial(:)'];
+      spike.trial{iUnit}    = [spike.trial{iUnit} trialNum];
       if iUnit==1
         trialtime(iTrial,:) = [offset offset+trialDur];
       end
@@ -275,21 +275,18 @@ elseif strcmp(cfg.trlunit, 'samples')
       switch getdimord(spike, fn{i})
         case '{chan}_spike'
           ft_info('making selection in %s', fn{i});
-          spike.(fn{i}){iUnit} = spike.((fn{i})){iUnit}(sel);
+          spike.(fn{i}){iUnit} = spike.((fn{i})){iUnit}(waveSel);
         case '{chan}_spike_lfplabel_freq'
           ft_info('making selection in %s', fn{i});
-          spike.(fn{i}){iUnit} = spike.((fn{i})){iUnit}(sel,:,:);
+          spike.(fn{i}){iUnit} = spike.((fn{i})){iUnit}(waveSel,:,:);
         case '{chan}_lead_time_spike'
           ft_info('making selection in %s', fn{i});
-          spike.(fn{i}){iUnit} = spike.((fn{i})){iUnit}(:,:,sel);
+          spike.(fn{i}){iUnit} = spike.((fn{i})){iUnit}(:,:,waveSel);
         otherwise
           ft_warning('not making selection in %s', fn{i});
       end
     end % for each field
     
-    % add the information to which trial each spike belongs
-    spike.time{iUnit}   = time(:)';
-    spike.trial{iUnit}  = trial(:)';
     spike.trialtime     = trialtime;
     
   end % for iUnit
