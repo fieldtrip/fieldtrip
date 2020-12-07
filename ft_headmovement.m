@@ -281,6 +281,7 @@ switch cfg.method
       tmpcfg.artfctdef.threshold.channel   = {'cluster_id'};
       tmpcfg.artfctdef.threshold.min       = 0.9+k-1;
       tmpcfg.artfctdef.threshold.max       = 1.1+k-1;
+      tmpcfg.artfctdef.threshold.bpfilter  = 'no';
       tmpcfg = ft_artifact_threshold(tmpcfg, tmpdata);
       artifacts = tmpcfg.artfctdef.threshold.artifact;
       
