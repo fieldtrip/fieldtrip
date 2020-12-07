@@ -84,3 +84,16 @@ ft_sourceplot(cfg, atlas);
 
 cfg.method = 'surface';
 ft_sourceplot(cfg, atlas, pial.mesh)
+
+atlas = ft_read_atlas(fullfile(ftpath, '/template/atlas/brainnetome/BNA_MPM_thr25_1.25mm.nii'));
+
+% Plot Melbourne Subcortical Atlas
+atlas = ft_read_atlas(fullfile(ftpath, '/template/atlas/melb_subcortical/melb_sub.mat'));
+
+cfg = [];
+cfg.atlas = atlas;
+cfg.funparameter = 'tissue';
+ft_sourceplot(cfg, atlas);
+
+cfg.method = 'surface';
+ft_sourceplot(cfg, atlas, pial.mesh)
