@@ -145,6 +145,11 @@ if isfield(mesh,'tet')
   headmodel.tet = mesh.tet;
 elseif isfield(mesh,'hex')
   headmodel.hex = mesh.hex;
+  %%assume fieldtrip ordering, reorder to conform to DUNE standard
+  headmodel.hex(:,3) = mesh.hex(:,4);
+  headmodel.hex(:,4) = mesh.hex(:,3);
+  headmodel.hex(:,7) = mesh.hex(:,8);
+  headmodel.hex(:,8) = mesh.hex(:,7);
 else
   error('Element field with tetrahedral or hexahedral information is required!')
 end
