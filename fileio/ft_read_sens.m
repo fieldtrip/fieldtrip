@@ -488,7 +488,42 @@ switch fileformat
     sens.elecpos = [txtData.Loc_X txtData.Loc_Y txtData.Loc_Z];
     
   otherwise
-    ft_error('unknown fileformat for electrodes or gradiometers');
+    % start with an empty array
+    sens = [];
+    
+    % check whether it is a BIDS dataset with an electrodes.tsv
+    [p, f, x] = fileparts(filename);
+    isbids = startsWith(f, 'sub-');
+    if isbids && readbids
+      tsvfile = bids_sidecar(filename, 'electrodes');
+      if ~isempty(tsvfile) && (isempty(senstype) || strcmp(senstype, 'eeg'))
+        % read the electrodes.tsv file
+        electrodes_tsv = read_tsv(tsvfile);
+        sens         = [];
+        sens.label   = electrodes_tsv.name;
+        sens.elecpos = [electrodes_tsv.x electrodes_tsv.y electrodes_tsv.z];
+        % also read the electrodes.json file
+        [p, f, x] = fileparts(tsvfile);
+        jsonfile = fullfile(p, [f '.json']);
+        if exist(jsonfile, 'file')
+          electrodes_json = read_json(jsonfile);
+          ft_warning('the content of the electrodes.json is not uset')
+          % FIXME do something with the content
+        end
+        % also read the coordsystem.json file
+        coordsysfile = bids_sidecar(filename, 'coordsystem');
+        if exist(coordsysfile, 'file')
+          coordsys_json = read_json(coordsysfile);
+          ft_warning('the content of the coordsystem.json is not used')
+          % FIXME do something with the content
+        end
+      end
+    end
+    
+    if isempty(sens)
+      ft_error('unknown fileformat for electrodes or gradiometers');
+    end
+    
 end % switch fileformat
 
 % ensure that the sensor description is up-to-date
@@ -500,6 +535,22 @@ if strcmpi(senstype, 'meg')
   assert(isfield(sens,'coilpos'), 'cannot read gradiometer information from %s', filename);
 elseif strcmpi(senstype, 'eeg')
   assert(isfield(sens,'elecpos'), 'cannot read electrode information from %s', filename);
+elseif strcmpi(senstype, 'nirs')
+  assert(isfield(sens,'optopos'), 'cannot read optode information from %s', filename);
 else
   % it is empty if not specified by the user, in that case either one is fine
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION this is shared with DATA2BIDS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function tsv = read_tsv(filename)
+tsv = readtable(filename, 'Delimiter', 'tab', 'FileType', 'text', 'TreatAsEmpty', 'n/a', 'ReadVariableNames', true);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION this is shared with DATA2BIDS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function json = read_json(filename)
+ft_hastoolbox('jsonlab', 1);
+json = loadjson(filename);
+json = ft_struct2char(json); % convert strings into char-arrays
