@@ -2828,8 +2828,8 @@ if istrue(readbids) && isbids
       ft_warning('updating the electrode structure with the BIDS sidecar is not yet implemented');
     else
       hdr.elec = [];
-      hdr.eleclabel = electrodes_tsv.name;
-      hdr.elecpos   = [electrodes_tsv.x electrodes_tsv.y electrodes_tsv.z];
+      hdr.elec.label = electrodes_tsv.name;
+      hdr.elec.elecpos   = [electrodes_tsv.x electrodes_tsv.y electrodes_tsv.z];
     end
   end
   if exist('optodes_tsv', 'var')
