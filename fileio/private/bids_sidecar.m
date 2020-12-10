@@ -16,7 +16,7 @@ function sidecar = bids_sidecar(filename, suffix)
 %   'eeg'
 %   'ieeg'
 %   'nirs'
-%   'coordsys'
+%   'coordsystem'
 %
 % This supports, but is not restricted to the following tsv sidecar files
 %   'channels'

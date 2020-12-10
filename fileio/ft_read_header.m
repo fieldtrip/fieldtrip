@@ -2824,22 +2824,14 @@ if istrue(readbids) && isbids
   try, hdr.chanunit  = channels_tsv.units;           end
   try, hdr.Fs        = data_json.SamplingFrequency;  end
   if exist('electrodes_tsv', 'var')
-    if isfield(hdr, 'elec')
-      ft_warning('updating the electrode structure with the BIDS sidecar is not yet implemented');
-    else
-      hdr.elec = [];
-      hdr.elec.label = electrodes_tsv.name;
-      hdr.elec.elecpos   = [electrodes_tsv.x electrodes_tsv.y electrodes_tsv.z];
-    end
+    hdr.elec         = [];
+    hdr.elec.label   = electrodes_tsv.name;
+    hdr.elec.elecpos = [electrodes_tsv.x electrodes_tsv.y electrodes_tsv.z];
   end
   if exist('optodes_tsv', 'var')
-    if isfield(hdr, 'opto')
-      ft_warning('updating the optode structure with the BIDS sidecar is not yet implemented');
-    else
-      hdr.opto = [];
-      hdr.optolabel = optodes_tsv.name;
-      hdr.optopos   = [optodes_tsv.x optodes_tsv.y optodes_tsv.z];
-    end
+    hdr.opto         = [];
+    hdr.opto.label   = optodes_tsv.name;
+    hdr.opto.optopos = [optodes_tsv.x optodes_tsv.y optodes_tsv.z];
   end
 end % if readbids and isbids
 
