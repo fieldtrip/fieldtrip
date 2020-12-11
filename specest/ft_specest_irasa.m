@@ -13,23 +13,24 @@ function [spectrum,ntaper,freqoi] = ft_specest_irasa(dat, time, varargin)
 %   freqoi     = vector of frequencies in spectrum
 %
 % Optional arguments should be specified in key-value pairs and can include
+%   output     = string, indicating type of output('fractal' or 'orignal', default 'fractal')
 %   pad        = number, total length of data after zero padding (in seconds)
 %   padtype    = string, indicating type of padding to be used (see ft_preproc_padding, default: zero)
 %   freqoi     = vector, containing frequencies of interest
-%   polyorder  = number, the order of the polynomial to fitted to and removed from the data prior to the fourier transform (default = 0 -> remove DC-component)
+%   polyorder  = number, the order of the polynomial to fitted to and removed from the data prior to the Fourier transform (default = 0, which removes the DC-component)
 %   verbose    = boolean, output progress to console (0 or 1, default 1)
-%   output     = string, indicating type of output('fractal' or 'orignal', default 'fractal')
 %
 % This implements: Wen.H. & Liu.Z.(2016), Separating fractal and oscillatory components in the power 
 % spectrum of neurophysiological signal. Brain Topogr. 29(1):13-26. The source code accompanying the 
 % original paper is avaible from https://purr.purdue.edu/publications/1987/1
 % 
-% For more information about the current version(2020) and application, see https://www.fieldtriptoolbox.org/example/irasa/
+% For more information about the difference between the current and previous version and how to use this 
+% function, please see https://www.fieldtriptoolbox.org/example/irasa/
 % 
 % See also FT_FREQANALYSIS, FT_SPECEST_MTMFFT, FT_SPECEST_MTMCONVOL, FT_SPECEST_TFR, FT_SPECEST_HILBERT, FT_SPECEST_WAVELET
-%
+
 % Copyright (C) 2019, Arjen Stolk
-% Copyright (C) 2020, Rui Liu, Robert Oostenveld
+% Copyright (C) 2020, Rui Liu
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -53,13 +54,13 @@ function [spectrum,ntaper,freqoi] = ft_specest_irasa(dat, time, varargin)
 persistent previous_argin previous_tap
 
 % get the optional input arguments
+output    = ft_getopt(varargin, 'output', 'fractal');
 pad       = ft_getopt(varargin, 'pad');
 padtype   = ft_getopt(varargin, 'padtype', 'zero');
 freqoi    = ft_getopt(varargin, 'freqoi', 'all');
 polyorder = ft_getopt(varargin, 'polyorder', 0);
 fbopt     = ft_getopt(varargin, 'feedback');
 verbose   = ft_getopt(varargin, 'verbose', true);
-output    = ft_getopt(varargin, 'output','fractal');
 
 % this does not work on integer data
 dat = cast(dat, 'double');
