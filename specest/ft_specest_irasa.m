@@ -62,6 +62,11 @@ polyorder = ft_getopt(varargin, 'polyorder', 0);
 fbopt     = ft_getopt(varargin, 'feedback');
 verbose   = ft_getopt(varargin, 'verbose', true);
 
+% check output option
+if ~strcmp(cfg.output, {'fractal','original'})
+    ft_error('The current version ft_specest_irasa outputs ''fractal'' or ''original'' power only. For more information about the update, see https://www.fieldtriptoolbox.org/example/irasa/');
+end
+
 % this does not work on integer data
 dat = cast(dat, 'double');
 if ~isa(dat, 'double') && ~isa(dat, 'single')
