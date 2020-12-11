@@ -28,9 +28,8 @@ function [spectrum,ntaper,freqoi] = ft_specest_irasa(dat, time, varargin)
 % function, please see https://www.fieldtriptoolbox.org/example/irasa/
 % 
 % See also FT_FREQANALYSIS, FT_SPECEST_MTMFFT, FT_SPECEST_MTMCONVOL, FT_SPECEST_TFR, FT_SPECEST_HILBERT, FT_SPECEST_WAVELET
-
-% Copyright (C) 2019, Arjen Stolk
-% Copyright (C) 2020, Rui Liu
+%
+% Copyright (C) 2019-2020, Rui Liu, Arjen Stolk
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
