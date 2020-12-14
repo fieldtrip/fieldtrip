@@ -110,38 +110,38 @@ if needevt
   opts = detectImportOptions(filename,'filetype','text', 'Delimiter', {'\t'} );
   % for some columns we have clear expectations on what they contain
   if any(strcmp(opts.VariableNames, 'onset'))
-    opts = setvaropts(opts, 'onset', 'type', 'double');
+    opts = setvartype(opts, 'onset', 'double');
   end
   if any(strcmp('duration', opts.VariableNames))
-    opts = setvaropts(opts, 'duration', 'type', 'double');
+    opts = setvartype(opts, 'duration', 'double');
   end
   if any(strcmp('sample', opts.VariableNames))
-    opts = setvaropts(opts, 'sample', 'type', 'double');
+    opts = setvartype(opts, 'sample', 'double');
   end
   if any(strcmp('offset', opts.VariableNames))
-    opts = setvaropts(opts, 'offset', 'type', 'double');
+    opts = setvartype(opts, 'offset', 'double');
   end
   if any(strcmp(opts.VariableNames, 'type'))
-    opts = setvaropts(opts, 'type', 'type', 'char');
+    opts = setvartype(opts, 'type', 'char');
   end
   if any(strcmp(opts.VariableNames, 'trial_type'))
-    opts = setvaropts(opts, 'trial_type', 'type', 'char');
+    opts = setvartype(opts, 'trial_type', 'char');
   end
   if any(strcmp(opts.VariableNames, 'event_type'))
-    opts = setvaropts(opts, 'event_type', 'type', 'char');
+    opts = setvartype(opts, 'event_type', 'char');
   end
   if any(strcmp(opts.VariableNames, 'stim_type'))
-    opts = setvaropts(opts, 'event_type', 'type', 'char');
+    opts = setvartype(opts, 'event_type', 'char');
   end
   % initially keep the value as a string, when possible it will be converted to a number later
   if any(strcmp(opts.VariableNames, 'value'))
-    opts = setvaropts(opts, 'value', 'type', 'char');
+    opts = setvartype(opts, 'value', 'char');
   end
   if any(strcmp(opts.VariableNames, 'event_value'))
-    opts = setvaropts(opts, 'event_value', 'type', 'char');
+    opts = setvartype(opts, 'event_value', 'char');
   end
   if any(strcmp(opts.VariableNames, 'stim_value'))
-    opts = setvaropts(opts, 'event_value', 'type', 'char');
+    opts = setvartype(opts, 'event_value', 'char');
   end
   
   % this keeps the type and value column as string, and castst others into doubles right away
