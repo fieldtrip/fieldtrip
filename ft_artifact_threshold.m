@@ -221,22 +221,32 @@ for trlop=1:ntrial
     % this is when a different onset and offset are specified
     switch direction
       case 'up'
-        onset  = find(diff([0 dat(sgnlop,:)>=artfctdef.onset])>0); % find the rising flank
+        onset  = find(diff([0 dat(sgnlop,:)>=artfctdef.onset])>0); % find all rising flanks
         offset = nan(size(onset));
         for i=1:numel(onset)
-          rem = dat(sgnlop,onset(i):end); % this is the remaining data following the artifact onset
-          offset(i) = find(diff([any(rem<=artfctdef.offset,1) 0])>0, 1, 'first'); % find the falling flank
+          rem = dat(sgnlop,onset(i)+1:end); % this is the remaining data following the artifact onset
+          rem = (rem<=artfctdef.offset);   % threshold for the offset
+          if any(rem)
+            offset(i) = find(rem, 1, 'first'); % find the falling flank
+          else
+            offset(i) = length(rem); % take the last sample
+          end
           offset(i) = offset(i) + onset(i);
           % add it to the other artifacts in the boolean vector
           artval(onset(i):offset(i)) = true;
         end
         
       case 'down'
-        onset  = find(diff([0 dat(sgnlop,:)<=artfctdef.onset])>0); % find the rising flank
+        onset  = find(diff([0 dat(sgnlop,:)<=artfctdef.onset])>0); % find all rising flanks
         offset = nan(size(onset));
         for i=1:numel(onset)
-          rem = dat(sgnlop,onset(i):end); % this is the remaining data following the artifact onset
-          offset(i) = find(diff([any(rem>=artfctdef.offset,1) 0])>0, 1, 'first'); % find the falling flank
+          rem = dat(sgnlop,onset(i)+1:end); % this is the remaining data following the artifact onset
+          rem = (rem>=artfctdef.offset);
+          if any(rem)
+            offset(i) = find(rem, 1, 'first'); % find the falling flank
+          else
+            offset(i) = length(rem); % take the last sample
+          end
           offset(i) = offset(i) + onset(i);
           % add it to the other artifacts in the boolean vector
           artval(onset(i):offset(i)) = true;
@@ -267,8 +277,8 @@ for trlop=1:ntrial
     end % for each artifact in this trial
     
     % express them relative to the start of the data, not the start of the trial
-    begsample = begsample + trl(trlop,1);
-    endsample = endsample + trl(trlop,1);
+    begsample = begsample + trl(trlop,1) - 1;
+    endsample = endsample + trl(trlop,1) - 1;
     
     % remember the parts where this channel exceeds the threshold as artifacts
     if ~isempty(begsample)
@@ -280,14 +290,24 @@ end % for trlop
 ft_progress('close');
 
 if strcmp(cfg.representation, 'numeric') && istable(artifact)
-  % convert the table to a numeric array with the columns begsample, endsample and offset
-  artifact = table2array(artifact(:,1:3));
+  if isempty(artifact)
+    % an empty table does not have columns
+    artifact = zeros(0,3);
+  else
+    % convert the table to a numeric array with the columns begsample, endsample and offset
+    artifact = table2array(artifact(:,1:3));
+  end
 elseif strcmp(cfg.representation, 'table') && isnumeric(artifact)
-  % convert the numeric array to a table with the columns begsample, endsample and offset
-  begsample = artifact(:,1);
-  endsample = artifact(:,2);
-  offset    = artifact(:,3);
-  artifact = table(begsample, endsample, offset);
+  if isempty(artifact)
+    % an empty table does not have columns
+    artifact = table();
+  else
+    % convert the numeric array to a table with the columns begsample, endsample and offset
+    begsample = artifact(:,1);
+    endsample = artifact(:,2);
+    offset    = artifact(:,3);
+    artifact = table(begsample, endsample, offset);
+  end
 end
 
 % remember the details that were used here and store the detected artifacts

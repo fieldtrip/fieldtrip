@@ -139,7 +139,7 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.CogAtlasID                  = string
 %   cfg.CogPOID                     = string
 %
-% There are more BIDS options for the mri/meg/eeg/ieeg data type specific sidecars.
+% There are more BIDS options for the mri/meg/eeg/ieegÂ data type specific sidecars.
 % Rather than listing them all here, please open this function in the MATLAB editor,
 % and scroll down a bit to see what those are. In general the information in the JSON
 % files is specified by a field that is specified in CamelCase
@@ -421,7 +421,7 @@ cfg.meg.HardwareFilters               = ft_getopt(cfg.meg, 'HardwareFilters'    
 %% Specific EEG fields - if recorded with the MEG system
 cfg.meg.EEGPlacementScheme            = ft_getopt(cfg.meg, 'EEGPlacementScheme'          ); % OPTIONAL. Placement scheme of EEG electrodes. Either the name of a standardised placement system (e.g., "10-20") or a list of standardised electrode names (e.g. ["Cz", "Pz"]).
 cfg.meg.CapManufacturer               = ft_getopt(cfg.meg, 'CapManufacturer'             ); % OPTIONAL. Manufacturer of the EEG cap (e.g. EasyCap)
-cfg.meg.CapManufacturersModelName     = ft_getopt(cfg.meg, 'CapManufacturersModelName'   ); % OPTIONAL. Manufacturer’s designation of the EEG cap model (e.g., M10)
+cfg.meg.CapManufacturersModelName     = ft_getopt(cfg.meg, 'CapManufacturersModelName'   ); % OPTIONAL. Manufacturerâs designation of the EEG cap model (e.g., M10)
 cfg.meg.EEGReference                  = ft_getopt(cfg.meg, 'EEGReference'                ); % OPTIONAL. Description of the type of EEG reference used (e.g., M1 for left mastoid, average, or longitudinal bipolar).
 
 %% EEG specific fields
@@ -430,7 +430,7 @@ cfg.eeg.SamplingFrequency             = ft_getopt(cfg.eeg, 'SamplingFrequency'  
 cfg.eeg.PowerLineFrequency            = ft_getopt(cfg.eeg, 'PowerLineFrequency'          ); % Frequency (in Hz) of the power grid where the EEG is installed (i.e. 50 or 60).
 cfg.eeg.SoftwareFilters               = ft_getopt(cfg.eeg, 'SoftwareFilters'             ); % List of temporal software filters applied or ideally  key:value pairs of pre-applied filters and their parameter values
 cfg.eeg.CapManufacturer               = ft_getopt(cfg.eeg, 'CapManufacturer'             ); % name of the cap manufacturer
-cfg.eeg.CapModelName                  = ft_getopt(cfg.eeg, 'CapModelName'                ); % Manufacturer's designation of the EEG cap model (e.g. "CAPML128", "actiCAP 64Ch Standard-2")
+cfg.eeg.CapManufacturersModelName     = ft_getopt(cfg.eeg, 'CapManufacturersModelName'   ); % Manufacturer's designation of the EEG cap model (e.g. "CAPML128", "actiCAP 64Ch Standard-2")
 % Manufacturer and ManufacturersModelName are general
 cfg.eeg.EEGChannelCount               = ft_getopt(cfg.eeg, 'EEGChannelCount'             ); % Number of EEG channels included in the recording (e.g. 128).
 cfg.eeg.ECGChannelCount               = ft_getopt(cfg.eeg, 'ECGChannelCount'             ); % Number of ECG channels included in the recording (e.g. 1).
@@ -448,7 +448,7 @@ cfg.eeg.HardwareFilters               = ft_getopt(cfg.eeg, 'HardwareFilters'    
 cfg.eeg.SubjectArtefactDescription    = ft_getopt(cfg.eeg, 'SubjectArtefactDescription'  ); % Freeform description of the observed subject artefact and its possible cause (e.g. "Vagus Nerve Stimulator", "non-removable implant"). If this field is left empty, it will be interpreted as absence of  a source of (constantly present) artifacts.
 
 %% iEEG specific fields
-cfg.ieeg.iEEGReference                   = ft_getopt(cfg.ieeg, 'iEEGReference'                  ); % REQUIRED. General description of the reference scheme used and (when applicable) of location of the reference electrode in the raw recordings (e.g. "left mastoid�?, “bipolar�?, “T01�? for electrode with name T01, “intracranial electrode on top of a grid, not included with data�?, “upside down electrode�?). If different channels have a different reference, this field should have a general description and the channel specific reference should be defined in the _channels.tsv file.
+cfg.ieeg.iEEGReference                   = ft_getopt(cfg.ieeg, 'iEEGReference'                  ); % REQUIRED. General description of the reference scheme used and (when applicable) of location of the reference electrode in the raw recordings (e.g. "left mastoidâ?, âbipolarâ?, âT01â? for electrode with name T01, âintracranial electrode on top of a grid, not included with dataâ?, âupside down electrodeâ?). If different channels have a different reference, this field should have a general description and the channel specific reference should be defined in the _channels.tsv file.
 cfg.ieeg.SamplingFrequency               = ft_getopt(cfg.ieeg, 'SamplingFrequency'              ); % REQUIRED. Sampling frequency (in Hz) of all the iEEG channels in the recording (e.g., 2400). All other channels should have frequency specified as well in the channels.tsv file.
 cfg.ieeg.PowerLineFrequency              = ft_getopt(cfg.ieeg, 'PowerLineFrequency'             ); % REQUIRED. Frequency (in Hz) of the power grid where the iEEG recording was done (i.e. 50 or 60)
 cfg.ieeg.SoftwareFilters                 = ft_getopt(cfg.ieeg, 'SoftwareFilters'                ); % REQUIRED. List of temporal software filters applied or ideally  key:value pairs of pre-applied filters and their parameter values. (n/a if none).
@@ -466,13 +466,13 @@ cfg.ieeg.EMGChannelCount                 = ft_getopt(cfg.ieeg, 'EMGChannelCount'
 cfg.ieeg.MiscChannelCount                = ft_getopt(cfg.ieeg, 'MiscChannelCount'               ); % RECOMMENDED. Number of miscellaneous analog channels for auxiliary  signals
 cfg.ieeg.TriggerChannelCount             = ft_getopt(cfg.ieeg, 'TriggerChannelCount'            ); % RECOMMENDED. Number of channels for digital (TTL bit level) triggers
 cfg.ieeg.RecordingDuration               = ft_getopt(cfg.ieeg, 'RecordingDuration'              ); % RECOMMENDED. Length of the recording in seconds (e.g. 3600)
-cfg.ieeg.RecordingType                   = ft_getopt(cfg.ieeg, 'RecordingType'                  ); % RECOMMENDED. Defines whether the recording is  “continuous�? or  “epoched�?; this latter limited to time windows about events of interest (e.g., stimulus presentations, subject responses etc.)
+cfg.ieeg.RecordingType                   = ft_getopt(cfg.ieeg, 'RecordingType'                  ); % RECOMMENDED. Defines whether the recording is  âcontinuousâ? or  âepochedâ?; this latter limited to time windows about events of interest (e.g., stimulus presentations, subject responses etc.)
 cfg.ieeg.EpochLength                     = ft_getopt(cfg.ieeg, 'EpochLength'                    ); % RECOMMENDED. Duration of individual epochs in seconds (e.g. 1) in case of epoched data
-cfg.ieeg.iEEGGround                      = ft_getopt(cfg.ieeg, 'iEEGGround'                     ); % RECOMMENDED. Description  of the location of the ground electrode (“placed on right mastoid (M2)�?).
-cfg.ieeg.iEEGPlacementScheme             = ft_getopt(cfg.ieeg, 'iEEGPlacementScheme'            ); % RECOMMENDED. Freeform description of the placement of the iEEG electrodes. Left/right/bilateral/depth/surface (e.g. “left frontal grid and bilateral hippocampal depth�? or “surface strip and STN depth�? or “clinical indication bitemporal, bilateral temporal strips and left grid�?).
+cfg.ieeg.iEEGGround                      = ft_getopt(cfg.ieeg, 'iEEGGround'                     ); % RECOMMENDED. Description  of the location of the ground electrode (âplaced on right mastoid (M2)â?).
+cfg.ieeg.iEEGPlacementScheme             = ft_getopt(cfg.ieeg, 'iEEGPlacementScheme'            ); % RECOMMENDED. Freeform description of the placement of the iEEG electrodes. Left/right/bilateral/depth/surface (e.g. âleft frontal grid and bilateral hippocampal depthâ? or âsurface strip and STN depthâ? or âclinical indication bitemporal, bilateral temporal strips and left gridâ?).
 cfg.ieeg.iEEGElectrodeGroups             = ft_getopt(cfg.ieeg, 'iEEGElectrodeGroups'            ); % RECOMMENDED. Field to describe the way electrodes are grouped into strips, grids or depth probes e.g. {'grid1': "10x8 grid on left temporal pole", 'strip2': "1x8 electrode strip on xxx"}.
-cfg.ieeg.SubjectArtefactDescription      = ft_getopt(cfg.ieeg, 'SubjectArtefactDescription'     ); % RECOMMENDED. Freeform description of the observed subject artefact and its possible cause (e.g. “door open�?, �?nurse walked into room at 2 min�?, �?seizure at 10 min�?). If this field is left empty, it will be interpreted as absence of artifacts.
-cfg.ieeg.ElectricalStimulation           = ft_getopt(cfg.ieeg, 'ElectricalStimulation'          ); % OPTIONAL. Boolean field to specify if electrical stimulation was done during the recording (options are “true�? or “false�?). Parameters for event-like stimulation should be specified in the _events.tsv file (see example underneath).
+cfg.ieeg.SubjectArtefactDescription      = ft_getopt(cfg.ieeg, 'SubjectArtefactDescription'     ); % RECOMMENDED. Freeform description of the observed subject artefact and its possible cause (e.g. âdoor openâ?, â?nurse walked into room at 2 minâ?, â?seizure at 10 minâ?). If this field is left empty, it will be interpreted as absence of artifacts.
+cfg.ieeg.ElectricalStimulation           = ft_getopt(cfg.ieeg, 'ElectricalStimulation'          ); % OPTIONAL. Boolean field to specify if electrical stimulation was done during the recording (options are âtrueâ? or âfalseâ?). Parameters for event-like stimulation should be specified in the _events.tsv file (see example underneath).
 cfg.ieeg.ElectricalStimulationParameters = ft_getopt(cfg.ieeg, 'ElectricalStimulationParameters'); % OPTIONAL. Free form description of stimulation parameters, such as frequency, shape etc. Specific onsets can be specified in the _events.tsv file. Specific shapes can be described here in freeform text.
 
 %% EMG is not part of the official BIDS specification
@@ -1122,7 +1122,9 @@ if need_meg_json
   meg_json.MiscChannelCount           = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
   meg_json.TriggerChannelCount        = sum(strcmpi(hdr.chantype, 'trigger'));
   meg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-  meg_json.EpochLength                = hdr.nSamples/hdr.Fs;
+  if hdr.nTrials>1
+    meg_json.EpochLength              = hdr.nSamples/hdr.Fs;
+  end
   if ft_senstype(hdr.grad, 'ctf151')
     meg_json.ContinuousHeadLocalization = any(strcmp(hdr.chantype, 'headloc')); % CTF specific
     meg_json.Manufacturer             = 'CTF';
@@ -1155,7 +1157,9 @@ if need_eeg_json
   eeg_json.TriggerChannelCount        = sum(strcmpi(hdr.chantype, 'trigger'));
   eeg_json.MiscChannelCount           = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
   eeg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-  eeg_json.EpochLength                = hdr.nSamples/hdr.Fs;
+  if hdr.nTrials>1
+    eeg_json.EpochLength              = hdr.nSamples/hdr.Fs;
+  end
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
@@ -1175,7 +1179,9 @@ if need_ieeg_json
   ieeg_json.TriggerChannelCount        = sum(strcmpi(hdr.chantype, 'trigger'));
   ieeg_json.MiscChannelCount           = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
   ieeg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-  ieeg_json.EpochLength                = hdr.nSamples/hdr.Fs;
+  if hdr.nTrials>1
+    ieeg_json.EpochLength              = hdr.nSamples/hdr.Fs;
+  end
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
@@ -1192,7 +1198,9 @@ if need_emg_json
   emg_json.TriggerChannelCount        = sum(strcmpi(hdr.chantype, 'trigger'));
   emg_json.MiscChannelCount           = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
   emg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-  emg_json.EpochLength                = hdr.nSamples/hdr.Fs;
+  if hdr.nTrials>1
+    emg_json.EpochLength              = hdr.nSamples/hdr.Fs;
+  end
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
@@ -1204,7 +1212,9 @@ end
 if need_exg_json
   exg_json.SamplingFrequency          = hdr.Fs;
   exg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-  exg_json.EpochLength                = hdr.nSamples/hdr.Fs;
+  if hdr.nTrials>1
+    exg_json.EpochLength              = hdr.nSamples/hdr.Fs;
+  end
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
@@ -1216,7 +1226,9 @@ end
 if need_nirs_json
   nirs_json.SamplingFrequency         = hdr.Fs;
   nirs_json.RecordingDuration         = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-  %   nirs_json.EpochLength               = hdr.nSamples/hdr.Fs; % not yet supported
+  if hdr.nTrials>1
+    nirs_json.EpochLength             = hdr.nSamples/hdr.Fs;
+  end
   nirs_json.NIRSChannelCount          = sum(strcmpi(hdr.chantype, 'nirs'));
   %   nirs_json.AUXChannelCount           = sum(strcmpi(hdr.chantype, 'aux')); % not yet supported
   %   nirs_json.MiscChannelCount          = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
@@ -1311,8 +1323,16 @@ end
 if need_channels_tsv
   
   if isstruct(cfg.channels)
+    % remove fields with non-informative defaults
+    fn = fieldnames(cfg.channels);
+    for i=1:numel(fn)
+      if isequaln(cfg.channels.(fn{i}), nan)
+        % a single nan means that it was set as default
+        cfg.channels = rmfield(cfg.channels, fn{i});
+      end
+    end
     try
-      cfg.channels = struct2table(cfg.channels);
+      cfg.channels = convert_table(cfg.channels);
     catch
       ft_error('incorrect specification of cfg.channels');
     end
@@ -1360,8 +1380,16 @@ end % if need_channels_tsv
 if need_electrodes_tsv
   
   if isstruct(cfg.electrodes)
+    % remove fields with non-informative defaults
+    fn = fieldnames(cfg.electrodes);
+    for i=1:numel(fn)
+      if isequaln(cfg.electrodes.(fn{i}), nan)
+        % a single nan means that it was set as default
+        cfg.electrodes = rmfield(cfg.electrodes, fn{i});
+      end
+    end
     try
-      cfg.electrodes = struct2table(cfg.electrodes);
+      cfg.electrodes = convert_table(cfg.electrodes);
     catch
       ft_error('incorrect specification of cfg.electrodes.%s', fn{i});
     end
@@ -1382,10 +1410,18 @@ end % need_electrodes_tsv
 
 %% need_optodes_tsv
 if need_optodes_tsv
-  % this is needed for NIRS
+  
   if isstruct(cfg.optodes)
+    % remove fields with non-informative defaults
+    fn = fieldnames(cfg.optodes);
+    for i=1:numel(fn)
+      if isequaln(cfg.optodes.(fn{i}), nan)
+        % a single nan means that it was set as default
+        cfg.optodes = rmfield(cfg.optodes, fn{i});
+      end
+    end
     try
-      cfg.optodes = struct2table(cfg.optodes);
+      cfg.optodes = convert_table(cfg.optodes);
     catch
       ft_error('incorrect specification of cfg.optodes.');
     end
@@ -1500,8 +1536,16 @@ if need_events_tsv
     % use the events table as it is
     events_tsv = cfg.events;
   elseif istable(cfg.events) && all(ismember({'begsample', 'endsample', 'offset'}, fieldnames(cfg.events)))
-    % it is a "trl" matrix formatted as table, use it as it is
+    % it is a "trl" matrix formatted as table, use it as it is, but add
+    % onset and duration
     events_tsv = cfg.events;
+    begsample                   = table2array(events_tsv(:,{'begsample'}));
+    endsample                   = table2array(events_tsv(:,{'endsample'}));
+    onset                       = (begsample-1)./hdr.Fs;
+    duration                    = (endsample-begsample+1)./hdr.Fs; 
+    table_onset_duration        = table(onset, duration);
+    events_tsv                  = [table_onset_duration events_tsv];
+
   elseif isstruct(cfg.events) && ~isempty(cfg.events) && numel(fieldnames(cfg.events))>0
     % it is the output from FT_READ_EVENT
     if exist('hdr', 'var')
@@ -1513,17 +1557,14 @@ if need_events_tsv
     % it is a "trl" matrix formatted as numeric array, convert it to an events table
     begsample = cfg.events(:,1);
     endsample = cfg.events(:,2);
-    offset    = cfg.events(:,3); % this is not used for the events.tsv
-    if any(offset~=0)
-      ft_warning('the offset in the trl matrix is ignored');
-    end
+    offset    = cfg.events(:,3); % this is not used for the events.tsv    
     if size(cfg.events, 2)>3
       ft_warning('additional columns in the trl matrix are ignored');
     end
     % convert to the required fields
     onset     = (begsample-1)/hdr.Fs;
     duration  = (endsample-begsample+1)/hdr.Fs;
-    events_tsv = table(onset, duration);
+    events_tsv = table(onset, duration, begsample, endsample, offset);
   elseif exist('trigger', 'var')
     % convert the triggers from FT_READ_EVENT into a table
     if exist('hdr', 'var')
@@ -1537,9 +1578,13 @@ if need_events_tsv
   else
     ft_warning('no events were specified');
     % make an empty table with columns for onset and duration
-    onset    = [];
-    duration = [];
-    events_tsv = table(onset, duration);
+    onset                   = [];
+    duration                = [];
+    begsample               = [];
+    endsample               = [];
+    offset                  = [];
+
+    events_tsv = table(onset, duration, begsample, endsample, offset);
   end
   
   if isempty(events_tsv)
@@ -1682,16 +1727,16 @@ switch cfg.method
         
       case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275'}
         % the data consists of a directory with multiple files inside
-        ft_info('copying %s to %s\n', cfg.dataset, cfg.outputfile);
+        ft_info('copying ''%s'' to ''%s''\n', cfg.dataset, cfg.outputfile);
         copy_ctf_files(cfg.dataset, cfg.outputfile, false);
         
       case {'brainvision_vhdr', 'brainvision_vmrk', 'brainvision_eeg', 'brainvision_dat', 'brainvision_seg'}
         % the data consists of three files and the header file contains pointers to the markers and data
-        ft_info('copying %s to %s\n', cfg.dataset, cfg.outputfile);
+        ft_info('copying ''%s'' to ''%s''\n', cfg.dataset, cfg.outputfile);
         copy_brainvision_files(cfg.dataset, cfg.outputfile, false);
         
       otherwise
-        ft_info('copying %s to %s\n', cfg.dataset, cfg.outputfile);
+        ft_info('copying ''%s'' to ''%s''\n', cfg.dataset, cfg.outputfile);
         copyfile(cfg.dataset, cfg.outputfile);
     end
     
@@ -1858,7 +1903,7 @@ if ~isempty(cfg.bidsroot)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   this = table();
-  this.participant_id = ['sub-' cfg.sub];
+  this.participant_id = {['sub-' cfg.sub]};
   fn = fieldnames(cfg.participants);
   for i=1:numel(fn)
     % write [] as 'n/a'
@@ -1892,7 +1937,7 @@ if ~isempty(cfg.bidsroot)
   
   this = table();
   [~, f, x] = fileparts(cfg.outputfile);
-  this.filename = fullfile(datatype2dirname(cfg.datatype), [f x]);
+  this.filename = {fullfile(datatype2dirname(cfg.datatype), [f x])};
   fn = fieldnames(cfg.scans);
   for i=1:numel(fn)
     % write [] as 'n/a'
@@ -1971,66 +2016,81 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function tab = hdr2table(hdr)
 if isempty(hdr)
+  % return an empty table
   tab = table();
-else
-  name = hdr.label(:);
-  type = hdr.chantype(:);
-  units = hdr.chanunit(:);
-  sampling_frequency = repmat(hdr.Fs, hdr.nChans, 1);
-  % find source name, detector name and wavelength of nirs channels
-  source=cell(length(name), 1); detector=cell(length(name), 1); wavelength=nan(length(name),1); % empty columns will be removed in a later step
-  if isfield(hdr, 'opto') % else try regexp
-    sampling_frequency =cell(length(name), 1); % sampling frequency of nirs channels are not required
-    for i=1:length(name)
-      labelidx=find(strcmp(hdr.opto.label, name{i}));
-      if isempty(labelidx)
-        continue
-      else
-        [~, optoidx, wavelengthidx]=find(hdr.opto.tra(labelidx,:));
-        for k=optoidx
-          if any(strcmp(hdr.opto.optotype{k}, {'receiver', 'detector'}))
-            detector{i}=hdr.opto.optolabel{k};
-          elseif any(strcmp(hdr.opto.optotype{k}, {'transmitter', 'source'}))
-            source{i}=hdr.opto.optolabel{k};
-          end
-        end
-        if abs(wavelengthidx(1))~= abs(wavelengthidx(2))
-          warning('tra matrix is not consistent; ignoring wavelength')
-        else
-          wavelength(i)=hdr.opto.wavelength(abs(wavelengthidx(1)));
+  return
+end
+
+% construct the table, this part applies to all modalities
+name = hdr.label(:);
+type = hdr.chantype(:);
+units = hdr.chanunit(:);
+sampling_frequency = repmat(hdr.Fs, hdr.nChans, 1);
+tab = table(name, type, units, sampling_frequency);
+
+% NIRS requires some additional columns
+if isfield(hdr, 'opto')
+  % use the opto structure to determine the source name, detector name and wavelength
+  source     = cell(length(name), 1);
+  detector   = cell(length(name), 1);
+  wavelength = nan(length(name),1); % empty columns will be removed in a later step
+  for i=1:length(name)
+    labelidx=find(strcmp(hdr.opto.label, name{i}));
+    if isempty(labelidx)
+      continue
+    else
+      [~, optoidx, wavelengthidx]=find(hdr.opto.tra(labelidx,:));
+      for k=optoidx
+        if any(strcmp(hdr.opto.optotype{k}, {'receiver', 'detector'}))
+          detector{i}=hdr.opto.optolabel{k};
+        elseif any(strcmp(hdr.opto.optotype{k}, {'transmitter', 'source'}))
+          source{i}=hdr.opto.optolabel{k};
         end
       end
-    end
-  else % check whether the channel name is a typical nirs channel name ('Rx*-Tx* [*wavelength*] or 'S*-D*
-    % [*wavelength*] )
-    for i=1:length(name)
-      if regexp(name{i}, 'Rx(\w+)-Tx(\w+) \[(\d+)nm\]')
-        parts=regexp(name{i}, 'Rx(?<detectorID>\w+)-Tx(?<sourceID>\w+) \[(?<wavelength>\d+)nm\]', 'names');
-        source{i}=sprintf('Tx%s', parts.sourceID);
-        detector{i}=sprintf('Rx%s', parts.detectorID);
-        wavelength(i)=str2num(parts.wavelength);
-      elseif regexp(name{i}, 'Rx(\w+)-Tx(\w+)')
-        parts=regexp(name{i}, 'Rx(?<detectorID>\w+)-Tx(?<sourceID>\w+)', 'names');
-        source{i}=sprintf('Tx%s', parts.sourceID);
-        detector{i}=sprintf('Rx%s', parts.detectorID);
-      elseif regexp(name{i}, 'S(\w+)-D(\w+) \[(\d+)nm\]')
-        parts=regexp(name{i}, 'S(?sourceID>\w+)-D(?<detectorID>\w+) \[(?<wavelength>\d+)nm\]', 'names');
-        source{i}=sprintf('S%s', parts.sourceID);
-        detector{i}=sprintf('D%s',parts.detectorID);
-        wavelength(i)=str2num(parts.wavelength);
-      elseif regexp(name{i}, 'S(\w+)-D(\w+)')
-        parts=regexp(name{i}, 'S(?sourceID>\w+)-D(?<detectorID>\w+', 'names');
-        source{i}=sprintf('S%s', parts.sourceID);
-        detector{i}=sprintf('D%s',parts.detectorID);
+      if abs(wavelengthidx(1))~= abs(wavelengthidx(2))
+        warning('tra matrix is not consistent; ignoring wavelength')
       else
-        % channel is not recognized as a nirs channel
-        continue
+        wavelength(i)=hdr.opto.wavelength(abs(wavelengthidx(1)));
       end
-      sampling_frequency =cell(length(name), 1);% sampling frequency of nirs channels are not required
     end
   end
-  tab = table(name, type, units, sampling_frequency, source, detector, wavelength);
+  % add these columns to the table
+  tab = horzcat(tab, table(source, detector, wavelength));
+  
+elseif ft_chantype(hdr, 'nirs')
+  % deduce the NIRS-specific information from the channel name
+  % which typical is something like 'Rx*-Tx* [*wavelength*] or 'S*-D* [*wavelength*]
+  source     = cell(length(name), 1);
+  detector   = cell(length(name), 1);
+  wavelength = nan(length(name),1); % empty columns will be removed in a later step
+  for i=1:length(name)
+    if regexp(name{i}, 'Rx(\w+)-Tx(\w+) \[(\d+)nm\]')
+      parts=regexp(name{i}, 'Rx(?<detectorID>\w+)-Tx(?<sourceID>\w+) \[(?<wavelength>\d+)nm\]', 'names');
+      source{i}=sprintf('Tx%s', parts.sourceID);
+      detector{i}=sprintf('Rx%s', parts.detectorID);
+      wavelength(i)=str2num(parts.wavelength);
+    elseif regexp(name{i}, 'Rx(\w+)-Tx(\w+)')
+      parts=regexp(name{i}, 'Rx(?<detectorID>\w+)-Tx(?<sourceID>\w+)', 'names');
+      source{i}=sprintf('Tx%s', parts.sourceID);
+      detector{i}=sprintf('Rx%s', parts.detectorID);
+    elseif regexp(name{i}, 'S(\w+)-D(\w+) \[(\d+)nm\]')
+      parts=regexp(name{i}, 'S(?sourceID>\w+)-D(?<detectorID>\w+) \[(?<wavelength>\d+)nm\]', 'names');
+      source{i}=sprintf('S%s', parts.sourceID);
+      detector{i}=sprintf('D%s',parts.detectorID);
+      wavelength(i)=str2num(parts.wavelength);
+    elseif regexp(name{i}, 'S(\w+)-D(\w+)')
+      parts=regexp(name{i}, 'S(?sourceID>\w+)-D(?<detectorID>\w+', 'names');
+      source{i}=sprintf('S%s', parts.sourceID);
+      detector{i}=sprintf('D%s',parts.detectorID);
+    else
+      % this channel is not recognized as a nirs channel
+      continue
+    end
+  end
+  % add these columns to the table
+  tab = horzcat(tab, table(source, detector, wavelength));
 end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION convert elec structure into table
@@ -2313,3 +2373,24 @@ else
     end
   end
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function t = convert_table(s)
+assert(isstruct(s));
+assert(numel(s)==1);
+fn = fieldnames(s);
+for i=1:numel(fn)
+  if ischar(s.(fn{i}))
+    % convert to cell-array
+    s.(fn{i}) = {s.(fn{i})};
+  elseif iscell(s.(fn{i}))
+    % ensure it is a column
+    s.(fn{i}) = s.(fn{i})(:);
+  elseif isnumeric(s.(fn{i}))
+    % ensure it is a column
+    s.(fn{i}) = s.(fn{i})(:);
+  end
+end
+t = struct2table(s);

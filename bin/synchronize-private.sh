@@ -1132,6 +1132,7 @@ ARRAY+=(forward/private/getdimord.m)
 ARRAY+=(private/getdimord.m)
 ARRAY+=(test/private/getdimord.m)
 ARRAY+=(utilities/private/getdimord.m)
+ARRAY+=(contrib/spike/private/getdimord.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -1144,6 +1145,7 @@ ARRAY+=(forward/private/getdimsiz.m)
 ARRAY+=(private/getdimsiz.m)
 ARRAY+=(test/private/getdimsiz.m)
 ARRAY+=(utilities/private/getdimsiz.m)
+ARRAY+=(contrib/spike/private/getdimsiz.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -1247,6 +1249,14 @@ ARRAY=()
 ARRAY+=(forward/private/headsurface.m)
 ARRAY+=(plotting/private/headsurface.m)
 ARRAY+=(private/headsurface.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# htmlcolors.m
+
+ARRAY=()
+ARRAY+=(private/htmlcolors.m)
+ARRAY+=(plotting/private/htmlcolors.m)
 sync ${ARRAY[*]}
 
 ################################################################################

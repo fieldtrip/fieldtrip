@@ -1,7 +1,7 @@
 function test_tutorial_mvpa_light
 
-% MEM 9gb
-% WALLTIME 00:20:00
+% MEM 12gb
+% WALLTIME 01:00:00
 % DEPENDENCY ft_timelockstatisitcs ft_statistics_mvpa
 
 %
@@ -147,13 +147,13 @@ stat = ft_timelockstatistics(cfg, dataFIC_LP, dataFC_LP);
 % Note that the metric is now a vector with 900 values, one AUC value for each time point in the trial.
 % It can be plotted as a function of time using
 %
-figure; plot(stat.auc)
+figure; plot(stat.time, stat.auc);
 
 % For a slightly nicer plot, one can again use `mv_plot_result`. As an additional parameter,
 % we can pass the values for the time axis. This makes sure that the x-axis is formatted
 % correctly.
 %
-mv_plot_result(stat.mvpa, dataFC_LP.time{1})
+mv_plot_result(stat.mvpa, stat.time);
 
 % The resultant plot shows AUC across time in the trial. The shaded area
 % is the standard deviation of the AUC metric across the different test sets in the
@@ -178,7 +178,6 @@ cfg.method      = 'mvpa';
 cfg.searchlight = 'yes';
 cfg.design      = [ones(nFIC,1); 2*ones(nFC,1)];
 cfg.latency     = [0.3, 0.7];
-cfg.avgovertime = 'yes';
 stat = ft_timelockstatistics(cfg, dataFIC_LP, dataFC_LP);
 
 % Since we did not specify a classifier and a metric, the default values (LDA as classifier and classification accuracy as metric)
@@ -199,35 +198,23 @@ ft_topoplotER(cfg, stat);
 
 %
 %
-% In the previous analysis, classification has been performed for each channel individually.
-% However, since the MEG channels have a spatial structure,
-% one can also consider groups of neighbouring channels in the searchlight. To do this, we must provide
-% a distance matrix that specifies which channels are neighbours of each other.
+% In the previous analysis, classification has been performed for each channel separately. However, 
+% the spatial arrangement of MEG channels can be exploited in order to group neighbouring channels as 
+% features in the searchlight. We load an existing neighbourhood structure from fieldtrip/neighbours:
 %
-%%% Get layout
-cfg = [];
-cfg.layout      = 'CTF151_helmet.mat';
-cfg.skipscale   = 'yes';
-cfg.skipcomnt   = 'yes';
-cfg.channel     = dataFIC_LP.label;
-lay = ft_prepare_layout(cfg);
 
-%%% Get distance matrix
-nb_mat = squareform(pdist(lay.pos));
+load ctf151_neighb.mat
 
+%
 % We are now ready to re-run the searchlight analysis. We pass the neighbourhood distance matrix
-% via the parameter `cfg.nb`. By setting `cfg.size = 3`  in every iteration
-% the target channel is considered together with its 3 closest neighbouring channels.
+% via the parameter `cfg.neighbours`.
 %
+
   cfg = [] ;  
   cfg.method      = 'mvpa';
   cfg.searchlight = 'yes';
   cfg.design      = [ones(nFIC,1); 2*ones(nFC,1)];
-  cfg.latency     = [0.3, 0.7];
-  cfg.avgovertime = 'yes';
-
-  cfg.mvpa.nb          = nb_mat;
-  cfg.mvpa.size        = 3;
+  cfg.neighbours  = neighbours;
 
   stat = ft_timelockstatistics(cfg, dataFIC_LP, dataFC_LP);
 
@@ -239,10 +226,17 @@ nb_mat = squareform(pdist(lay.pos));
   ft_topoplotER(cfg, stat);
 
   
-% As expected, the resultant topography is slightly more smeared out. Peak classification accuracy is higher which is due to the classifier now combining information across neighbouring channels.
+% As expected, the resultant topography is slightly more smeared out. Peak classification accuracy is higher,
+% which is due to the classifier now combining information across neighbouring channels.
 %
 %
+% 
+%% # Spatiotemporal searchlight analysis
 %
+% In addition using a space-only searchlight, which integrates across the
+% specified latency window (in the above example the 300-700 window post
+% stimulus onset, we can also sweep a searchlight across space AND time,  
+
 %% # Time generalisation (time x time classification)
 %
 % Classification across time does not give insight into whether information is shared across different time points. For example, is the information that the classifier uses early in a trial (t=80 ms) the same that it uses later (t=300ms)? In time generalisation, this question is answered by training the classifier at a certain time point t. The classifer is then tested at the same time point t but it is also tested at all other time points in the trial ([King and Dehaene, 2014](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5635958/)). To perform

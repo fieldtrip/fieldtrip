@@ -6,12 +6,12 @@ function [sourcemodel, cfg] = ft_prepare_leadfield(cfg, data)
 % Use as
 %   [sourcemodel] = ft_prepare_leadfield(cfg, data)
 %
-% It is necessary to input the data on which you want to perform the
-% inverse computations, since that data generally contain the gradiometer
-% information and information about the channels that should be included in
-% the forward model computation. The data structure can be either obtained
-% from FT_PREPROCESSING, FT_FREQANALYSIS or FT_TIMELOCKANALYSIS. If the data is empty,
-% all channels will be included in the forward model.
+% It is necessary to input the data on which you want to perform the inverse
+% computations, since that data generally contain the gradiometer information and
+% information about the channels that should be included in the forward model
+% computation. The data structure can be either obtained from FT_PREPROCESSING,
+% FT_FREQANALYSIS or FT_TIMELOCKANALYSIS. If the data is empty, all channels will be
+% included in the forward model.
 %
 % The configuration should contain
 %   cfg.channel            = Nx1 cell-array with selection of channels (default = 'all'),
@@ -23,6 +23,7 @@ function [sourcemodel, cfg] = ft_prepare_leadfield(cfg, data)
 %   cfg.ygrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
 %   cfg.zgrid      = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
 %   cfg.resolution = number (e.g. 1 cm) for automatic sourcemodel generation
+%
 % Alternatively the position of a few sources at locations of interest can
 % be specified, for example obtained from an anatomical or functional MRI
 %   cfg.sourcemodel.pos        = N*3 matrix with position of each source

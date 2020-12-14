@@ -59,7 +59,7 @@ cfg = [];
 cfg.pos = source_idx.pos;
 cfg.method = 'none';
 data_vc = ft_virtualchannel(cfg, data_cmb, source_idx);
-assert(isequal(data_vc.trial{1}(4:6,:),gam_pow_data.trial{1}(1:3,:)));
+assert(isalmostequal(data_vc.trial{1}(4:6,:),gam_pow_data.trial{1}(1:3,:), 'reltol', 1e-9));
 
 cfg = [];
 cfg.viewmode = 'vertical';  % you can also specify 'butterfly'

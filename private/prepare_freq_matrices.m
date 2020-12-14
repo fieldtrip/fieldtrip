@@ -6,6 +6,11 @@ function [Cf, Cr, Pr, Ntrials, cfg] = prepare_freq_matrices(cfg, freq)
 %
 % This function returns data matrices with a channel order that is consistent
 % with the original channel order in the data.
+%
+% The order of the channels in the output data is according to the input cfg.channel,
+% which therefore must be specified as a cell-array with actual labels, not as an
+% input like 'all' that still needs to be interpreted by FT_CHANNELSELECTION.
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Copyright (C) 2015, Jan-Mathijs Schoffelen
@@ -30,11 +35,12 @@ function [Cf, Cr, Pr, Ntrials, cfg] = prepare_freq_matrices(cfg, freq)
 
 % set the defaults
 cfg = ft_checkconfig(cfg, 'deprecated', 'dicsfix');
-cfg = ft_checkconfig(cfg, 'forbidden', {'frequency' 'latency'});
-cfg.channel    = ft_getopt(cfg, 'channel',    'all');
-cfg.keeptrials = ft_getopt(cfg, 'keeptrials', 1);
-cfg.rawtrial   = ft_getopt(cfg, 'rawtrial',   0);
-cfg.refchan    = ft_getopt(cfg, 'refchan'      );
+cfg = ft_checkconfig(cfg, 'forbidden', {'frequency', 'latency'});
+cfg = ft_checkconfig(cfg, 'required', 'channel'); % this should be a full list
+
+cfg.keeptrials = ft_getopt(cfg, 'keeptrials', 'yes');
+cfg.rawtrial   = ft_getopt(cfg, 'rawtrial', 'no');
+cfg.refchan    = ft_getopt(cfg, 'refchan');
 
 keeptrials = istrue(cfg.keeptrials) || istrue(cfg.rawtrial);
 
@@ -63,7 +69,7 @@ if ~hasfull
   end
 end
 
-% extract the csd-matrix for the channels-of-interest
+% extract the csd-matrix for the channels-of-interest, order them according to cfg.channel
 [dum, chanindx] = match_str(cfg.channel, freq.label);
 
 % update the cfg
@@ -95,4 +101,3 @@ end
 if any(isnan(Cr(:)))
   ft_error('The cross-spectral-density with the reference channel is not complete');
 end
-

@@ -50,7 +50,10 @@ cfg.TaskDescription             = 'Visual response task';
 cfg.Instructions                = 'Press as fast with your right index finger as you see the target appear on screen.';
 cfg.InstitutionName             = 'Radboud University';
 cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
-cfg.channels.status             = 'good'; % all channels are good
+% give some extra information about two of the channels
+cfg.channels.name = {'AF3', 'AF4'}; 
+cfg.channels.status = {'bad', 'good'};
+cfg.channels.impedance = [20e3 5e3];
 data2bids(cfg)
 
 %% Example with a BrainVision EEG dataset on disk that needs to be copied
@@ -69,7 +72,10 @@ cfg.TaskDescription             = 'Visual response task';
 cfg.Instructions                = 'Press as fast with your right index finger as you see the target appear on screen.';
 cfg.InstitutionName             = 'Radboud University';
 cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
-cfg.channels.status             = 'good'; % all channels are good
+% give some extra information about one of the channels
+cfg.channels.name = 'AF3';
+cfg.channels.status = 'bad';
+cfg.channels.impedance = Inf;
 data2bids(cfg)
 
 %% Example with preprocessed EEG data in memory
@@ -104,7 +110,6 @@ cfg.mri.dicomfile               = 'ERIVDBER_030731_R.OOSTERVELD.MR.PAUGAA_ANATOM
 cfg.mri.StationName             = 'Sonata';
 cfg.InstitutionName             = 'Radboud University';
 cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
-
 cfg.writejson                   = 'merge';
 data2bids(cfg)
 

@@ -432,6 +432,8 @@ end
 % update the weights-structure
 weights.time = cfg.reflags;
 weights.rho  = rho;
+weights.covariance = C;
+weights.std        = [std_data;std_refdata];
 if exist('beta_data', 'var')
   weights.mixing = beta_data; 
   weights.beta   = beta_ref;

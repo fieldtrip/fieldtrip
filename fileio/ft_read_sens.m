@@ -13,6 +13,7 @@ function [sens] = ft_read_sens(filename, varargin)
 %   'senstype'       = string, can be 'eeg', 'meg' or 'nirs', specifies which type of sensors to read from the file (default = 'eeg')
 %   'coordsys'       = string, 'head' or 'dewar' (default = 'head')
 %   'coilaccuracy'   = scalar, can be empty or a number (0, 1 or 2) to specify the accuracy (default = [])
+%   'readbids'       = boolean, whether to read information from the BIDS sidecar files (default = true)
 %
 % The electrode, gradiometer and optode structures are defined in more detail
 % in FT_DATATYPE_SENS.
@@ -54,6 +55,7 @@ fileformat     = ft_getopt(varargin, 'fileformat', ft_filetype(filename));
 senstype       = ft_getopt(varargin, 'senstype');         % can be eeg/meg/nirs, default is automatic and eeg when both meg+eeg are present
 coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
 coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0 to 2
+readbids       = ft_getopt(varargin, 'readbids', true);
 
 realtime = any(strcmp(fileformat, {'fcdc_buffer', 'ctf_shm', 'fcdc_mysql'}));
 
@@ -72,7 +74,7 @@ switch fileformat
   % hence we use the standard fieldtrip/fileio ft_read_header function
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case {'ctf_ds', 'ctf_res4', 'ctf_old', 'neuromag_fif', 'neuromag_mne', '4d', '4d_pdf', '4d_m4d', '4d_xyz', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'ricoh_ave', 'ricoh_con', 'itab_raw' 'itab_mhd', 'netmeg'}
-    hdr = ft_read_header(filename, 'headerformat', fileformat, 'coordsys', coordsys, 'coilaccuracy', coilaccuracy);
+    hdr = ft_read_header(filename, 'headerformat', fileformat, 'coordsys', coordsys, 'coilaccuracy', coilaccuracy, 'readbids', readbids);
     % sometimes there can also be electrode position information in the header
     if isfield(hdr, 'elec') && isfield(hdr, 'grad')
       if isempty(senstype)
@@ -101,7 +103,7 @@ switch fileformat
     % hence we use the standard fieldtrip/fileio ft_read_header function
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case {'homer_nirs', 'snirf', 'artinis_oxy3', 'artinis_oxy4', 'artinis_oxyproj', 'nirx_wl1', 'nirx_wl2', 'nirx_tpl'}
-    hdr = ft_read_header(filename, 'headerformat', fileformat, 'coordsys', coordsys);
+    hdr = ft_read_header(filename, 'headerformat', fileformat, 'coordsys', coordsys, 'readbids', readbids);
     if isfield(hdr, 'opto')
       sens = hdr.opto;
     else
@@ -486,7 +488,42 @@ switch fileformat
     sens.elecpos = [txtData.Loc_X txtData.Loc_Y txtData.Loc_Z];
     
   otherwise
-    ft_error('unknown fileformat for electrodes or gradiometers');
+    % start with an empty array
+    sens = [];
+    
+    % check whether it is a BIDS dataset with an electrodes.tsv
+    [p, f, x] = fileparts(filename);
+    isbids = startsWith(f, 'sub-');
+    if isbids && readbids
+      tsvfile = bids_sidecar(filename, 'electrodes');
+      if ~isempty(tsvfile) && (isempty(senstype) || strcmp(senstype, 'eeg'))
+        % read the electrodes.tsv file
+        electrodes_tsv = read_tsv(tsvfile);
+        sens         = [];
+        sens.label   = electrodes_tsv.name;
+        sens.elecpos = [electrodes_tsv.x electrodes_tsv.y electrodes_tsv.z];
+        % also read the electrodes.json file
+        [p, f, x] = fileparts(tsvfile);
+        jsonfile = fullfile(p, [f '.json']);
+        if exist(jsonfile, 'file')
+          electrodes_json = read_json(jsonfile);
+          ft_warning('the content of the electrodes.json is not used')
+          % FIXME do something with the content
+        end
+        % also read the coordsystem.json file
+        coordsysfile = bids_sidecar(filename, 'coordsystem');
+        if exist(coordsysfile, 'file')
+          coordsys_json = read_json(coordsysfile);
+          ft_warning('the content of the coordsystem.json is not used')
+          % FIXME do something with the content
+        end
+      end
+    end
+    
+    if isempty(sens)
+      ft_error('unknown fileformat for electrodes or gradiometers');
+    end
+    
 end % switch fileformat
 
 % ensure that the sensor description is up-to-date
@@ -498,6 +535,22 @@ if strcmpi(senstype, 'meg')
   assert(isfield(sens,'coilpos'), 'cannot read gradiometer information from %s', filename);
 elseif strcmpi(senstype, 'eeg')
   assert(isfield(sens,'elecpos'), 'cannot read electrode information from %s', filename);
+elseif strcmpi(senstype, 'nirs')
+  assert(isfield(sens,'optopos'), 'cannot read optode information from %s', filename);
 else
   % it is empty if not specified by the user, in that case either one is fine
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION this is shared with DATA2BIDS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function tsv = read_tsv(filename)
+tsv = readtable(filename, 'Delimiter', 'tab', 'FileType', 'text', 'TreatAsEmpty', 'n/a', 'ReadVariableNames', true);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION this is shared with DATA2BIDS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function json = read_json(filename)
+ft_hastoolbox('jsonlab', 1);
+json = loadjson(filename);
+json = ft_struct2char(json); % convert strings into char-arrays

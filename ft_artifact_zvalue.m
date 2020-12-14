@@ -624,13 +624,23 @@ if strcmp(cfg.artfctdef.zvalue.artfctpeak, 'yes')
 end
 
 if strcmp(cfg.representation, 'numeric') && istable(artifact)
-  % convert the table to a numeric array with the columns begsample and endsample
-  artifact = table2array(artifact(:,1:2));
+  if isempty(artifact)
+    % an empty table does not have columns
+    artifact = zeros(0,2);
+  else
+    % convert the table to a numeric array with the columns begsample and endsample
+    artifact = table2array(artifact(:,1:2));
+  end
 elseif strcmp(cfg.representation, 'table') && isnumeric(artifact)
-  % convert the numeric array to a table with the columns begsample and endsample
-  begsample = artifact(:,1);
-  endsample = artifact(:,2);
-  artifact = table(begsample, endsample);
+  if isempty(artifact)
+    % an empty table does not have columns
+    artifact = table();
+  else
+    % convert the numeric array to a table with the columns begsample and endsample
+    begsample = artifact(:,1);
+    endsample = artifact(:,2);
+    artifact = table(begsample, endsample);
+  end
 end
 
 % remember the details that were used here and store the detected artifacts

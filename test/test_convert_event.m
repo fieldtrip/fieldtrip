@@ -8,7 +8,8 @@ function test_convert_event
 % fieldtrip/private/convert_event but has been split over multiple functions to
 % provide a better overview of the different conversions.
 
-% there are 4 representations, hence there are 4x3=12 conversions to be tested
+[ftver, ftpath] = ft_version;
+cd(fullfile(ftpath, 'private'));
 
 if false
   % this section helps to get all files opened in the editor
@@ -25,6 +26,8 @@ if false
   edit	trl2boolvec.m
   edit	trl2event.m
 end
+
+% there are 4 representations, hence there are 4x3=12 conversions to be tested
 
 %%
 
@@ -117,4 +120,3 @@ event     = trl2event(trl)
 trl1 = artifact2trl(artifact)
 trl2 = boolvec2trl(boolvec)
 trl3 = event2trl(event)
-
