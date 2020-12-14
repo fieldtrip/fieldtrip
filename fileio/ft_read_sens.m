@@ -507,7 +507,7 @@ switch fileformat
         jsonfile = fullfile(p, [f '.json']);
         if exist(jsonfile, 'file')
           electrodes_json = read_json(jsonfile);
-          ft_warning('the content of the electrodes.json is not uset')
+          ft_warning('the content of the electrodes.json is not used')
           % FIXME do something with the content
         end
         % also read the coordsystem.json file
