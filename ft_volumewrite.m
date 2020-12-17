@@ -110,13 +110,15 @@ cfg.downsample   = ft_getopt(cfg, 'downsample',   1);
 cfg.markorigin   = ft_getopt(cfg, 'markorigin',   'no');
 cfg.markfiducial = ft_getopt(cfg, 'markfiducial', 'no');
 cfg.markcorner   = ft_getopt(cfg, 'markcorner',   'no');
-cfg.scaling      = ft_getopt(cfg, 'scaling',      'no');
+cfg.scaling      = ft_getopt(cfg, 'scaling');
 
-if any(strmatch(cfg.datatype, {'int8', 'int16', 'int32'}))
-  cfg.scaling = 'yes';
+if any(strmatch(cfg.datatype, {'uint8','int8', 'int16', 'int32'}))&&isempty(cfg.scaling)
+  cfg.scaling = 'yes';  
+elseif isempty(cfg.scaling)
+  cfg.scaling = 'no';    
 end
 
-if ~isfield(cfg, 'vmpversion') && strcmp(cfg.filetype, 'vmp');
+if ~isfield(cfg, 'vmpversion') && strcmp(cfg.filetype, 'vmp')
   fprintf('using BrainVoyager version 2 VMP format\n');
   cfg.vmpversion = 2;
 end
