@@ -131,11 +131,13 @@ fseek(fp,round(hdr.vox_offset),'bof');
 switch(hdr.datatype)
  % Note: 'char' seems to work upto matlab 7.1, but 'uchar' needed
  % for 7.2 and higher. 
+ case   1, [hdr.vol, nitemsread] = fread(fp,inf,'*bit1');
  case   2, [hdr.vol, nitemsread] = fread(fp,inf,'*uchar'); %preserve datatype
  case   4, [hdr.vol, nitemsread] = fread(fp,inf,'*short');
  case   8, [hdr.vol, nitemsread] = fread(fp,inf,'*int');
  case  16, [hdr.vol, nitemsread] = fread(fp,inf,'*float');
  case  64, [hdr.vol, nitemsread] = fread(fp,inf,'*double');
+ case 256, [hdr.vol, nitemsread] = fread(fp,inf,'*int8');   
  case 512, [hdr.vol, nitemsread] = fread(fp,inf,'*ushort');
  case 768, [hdr.vol, nitemsread] = fread(fp,inf,'*uint');
  otherwise

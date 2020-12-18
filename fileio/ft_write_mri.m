@@ -45,7 +45,7 @@ function [V] = ft_write_mri(filename, dat, varargin)
 % $Id$
 
 % get the options
-transform     = ft_getopt(varargin, 'transform', eye(4));
+transform     = ft_getopt(varargin, 'transform',  eye(4));
 spmversion    = ft_getopt(varargin, 'spmversion', 'spm12');
 dataformat    = ft_getopt(varargin, 'dataformat'); % FIXME this is inconsistent with ft_read_mri, which uses 'format'
 unit          = ft_getopt(varargin, 'unit');
@@ -163,7 +163,7 @@ switch dataformat
     datatype = class(dat);
     switch(datatype)
       case 'int8'
-        datatype = 'uchar';
+        datatype = 'char';
       case 'int16'
         datatype = 'short';
       case 'int32'
@@ -174,6 +174,8 @@ switch dataformat
         datatype = 'float';
       case 'logical'
         datatype = 'bool';
+      case 'uint8'
+        datatype = 'uchar';
       otherwise
         ft_error('unsupported datatype to write to a nifti file');
     end

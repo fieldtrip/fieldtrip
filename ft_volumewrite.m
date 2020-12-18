@@ -17,23 +17,26 @@ function ft_volumewrite(cfg, volume)
 %   cfg.parameter     = string, describing the functional data to be processed,
 %                         e.g. 'pow', 'coh', 'nai' or 'anatomy'
 %   cfg.filename      = filename without the extension
-%   cfg.filetype      = 'analyze', 'nifti', 'nifti_img', 'analyze_spm', 'mgz',
-%                         'vmp' or 'vmr'
+%   cfg.filetype      = 'analyze_old', 'nifti', 'nifti_img', 'analyze_spm',
+%                       'mgz', 'mgh', 'vmp' or 'vmr'
 %   cfg.vmpversion    = 1 or 2 (default) version of the vmp-format to use
 %
 % The default filetype is 'nifti', which means that a single *.nii file
-% will be written using the freesurfer toolbox. The 'nifti_img' filetype uses SPM for
-% a dual file (*.img/*.hdr) nifti-format file.
+% will be written using code from the freesurfer toolbox. The 'nifti_img' filetype
+% uses SPM for a dual file (*.img/*.hdr) nifti-format file.
 % The analyze, analyze_spm, nifti, nifti_img and mgz filetypes support a homogeneous
 % transformation matrix, the other filetypes do not support a homogeneous transformation
 % matrix and hence will be written in their native coordinate system.
 %
-% You can specify the datatype for the analyze_spm and analyze formats using
+% You can specify the datatype for the nifti, analyze_spm and analyze_old
+% formats. If not specified, the class of the input data will be preserved,
+% if the file format allows.
 %   cfg.datatype      = 'logical', 'uint8', 'int16', 'int32', 'single' or 'double'
 %
 % By default, integer datatypes will be scaled to the maximum value of the
 % physical or statistical parameter, floating point datatypes will not be
-% scaled. This can be modified with
+% scaled. This can be modified, for instance if the data contains only integers with
+% indices into a parcellation, by
 %   cfg.scaling       = 'yes' or 'no'
 %
 % Optional configuration items are
@@ -57,7 +60,7 @@ function ft_volumewrite(cfg, volume)
 % cfg.parameter
 
 % Copyright (C) 2003-2006, Robert Oostenveld, Markus Siegel
-% Copyright (C) 2011, Jan-Mathijs Schoffelen
+% Copyright (C) 2011-2020, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -104,6 +107,7 @@ cfg = ft_checkconfig(cfg, 'required',  {'filename', 'parameter'});
 cfg = ft_checkconfig(cfg, 'renamed',   {'coordinates', 'coordsys'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'datatype', 'bit1', 'logical'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'datatype', 'float', 'single'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'filetype', 'analyze', 'analyze_old'});
 
 % set the defaults
 cfg.filetype     = ft_getopt(cfg, 'filetype',     'nifti');
@@ -115,7 +119,7 @@ cfg.markcorner   = ft_getopt(cfg, 'markcorner',   'no');
 cfg.datatype     = ft_getopt(cfg, 'datatype');
 cfg.scaling      = ft_getopt(cfg, 'scaling');
 
-if any(strcmp(cfg.datatype, {'uint8','int8', 'int16', 'int32'})) && isempty(cfg.scaling)
+if any(strcmp(cfg.datatype, {'logical' 'uint8','int8', 'int16', 'int32'})) && isempty(cfg.scaling)
   cfg.scaling = 'yes';  
 elseif isempty(cfg.scaling)
   cfg.scaling = 'no';    
@@ -194,15 +198,18 @@ end
 data(isnan(data)) = 0;
 
 if strcmp(cfg.scaling, 'yes')
+  
+  ft_info('scaling the data before typecasting the numeric data to %s', cfg.datatype);
   data   = double(data);
-  maxval = max(data(:));
+  maxval = max(abs(data(:)));
+  minval = min(data(:));
   
   % scale the data so that it fits in the desired numerical data format
   switch lower(cfg.datatype)
     case 'logical'
       data = (data~=0);
     case 'uint8'
-      data = uint8((2^8-1) * data./maxval);
+      data = uint8((2^8-1) * (data-minval)./(maxval-minval));
     case 'int8'
       data = int8((2^7-1) * data./maxval);
     case 'int16'
@@ -273,22 +280,26 @@ switch cfg.filetype
     ft_warning('unknown fileformat\n');
 end
 
+[p, f, ext] = fileparts(cfg.filename);
+
 % write the volume data to file
 switch cfg.filetype
   case {'vmr' 'vmp'}
     ft_write_mri(cfg.filename, data, 'dataformat', cfg.filetype, 'vmpversion', cfg.vmpversion);
 
-  case 'analyze'
-    
+  case 'analyze_old'
+    if isempty(ext)
+      cfg.filename = sprintf('%s.img', cfg.filename);
+    end
+    ft_write_mri(cfg.filename, data, 'dataformat', 'analyze_old');
 
   case 'nifti'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % write in nifti format, using functions from  the freesurfer toolbox
     % this format supports a homogeneous transformation matrix
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    [pathstr, name, ext] = fileparts(cfg.filename);
     if isempty(ext)
-      cfg.filename = [cfg.filename,'.nii'];
+      cfg.filename = sprintf('%s.nii', cfg.filename);
     end
     ft_write_mri(cfg.filename, data, 'dataformat', 'nifti', 'transform', transform);
 
@@ -297,9 +308,8 @@ switch cfg.filetype
     % write in nifti dual file format, using functions from  the SPM toolbox
     % this format supports a homogeneous transformation matrix
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    [pathstr, name, ext] = fileparts(cfg.filename);
     if isempty(ext)
-      cfg.filename = [cfg.filename,'.img'];
+      cfg.filename = sprintf('%s.img', cfg.filename);
     end
     ft_write_mri(cfg.filename, data, 'dataformat', 'nifti_img', 'transform', transform);
 
@@ -308,9 +318,8 @@ switch cfg.filetype
     % write in analyze format, using functions from  the SPM toolbox
     % this format supports a homogeneous transformation matrix
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    [pathstr, name, ext] = fileparts(cfg.filename);
     if isempty(ext)
-      cfg.filename = [cfg.filename,'.img'];
+      cfg.filename = sprintf('%s.img', cfg.filename);
     end
     ft_write_mri(cfg.filename, data, 'dataformat', 'analyze', 'transform', transform);
 
@@ -323,9 +332,8 @@ switch cfg.filetype
       ft_warning('Saving in .mgz format is not possible on a PC, saving in .mgh format instead');
       cfg.filetype = 'mgh';
     end
-    [pathstr, name, ext] = fileparts(cfg.filename);
     if isempty(ext)
-      cfg.filename = [cfg.filename,'.',cfg.filetype];
+      cfg.filename = sprintf('%s.%s', cfg.filename, cfg.filetype);
     end
     ft_write_mri(cfg.filename, data, 'dataformat', cfg.filetype, 'transform', transform);
 
