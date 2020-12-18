@@ -45,9 +45,8 @@ function [sens] = ft_datatype_sens(sens, varargin)
 %    sens.chantype = Mx1 cell-array with the type of the channel, see FT_CHANTYPE
 %    sens.chanunit = Mx1 cell-array with the units of the channel signal, e.g. 'V', 'fT' or 'T/cm', see FT_CHANUNIT
 %
-% The following fields are optional
-%    sens.type = string with the type of acquisition system, see FT_SENSTYPE
-%    sens.fid  = structure with fiducial information
+% Optional fields:
+%    type, unit, fid, chantype, chanunit
 %
 % Historical fields:
 %    pnt, pos, ori, pnt1, pnt2, fiberpos, fibertype, fiberlabel, transceiver, transmits, laserstrength
@@ -72,7 +71,7 @@ function [sens] = ft_datatype_sens(sens, varargin)
 % (2011v1) To facilitate determining the position of channels (e.g. for plotting)
 %  in case of balanced MEG or bipolar EEG, an explicit distinction has been made
 %  between chanpos+chanori and coilpos+coilori (for MEG) and chanpos and elecpos
-%  (for EEG). The pnt and ori fields are removed
+%  (for EEG). The pnt and ori fields are removed.
 %
 % (2010) Added support for bipolar or otherwise more complex linear combinations
 %  of EEG electrodes using sens.tra, similar to MEG.
