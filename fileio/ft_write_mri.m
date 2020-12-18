@@ -115,7 +115,7 @@ switch dataformat
       case 'single'
         datatype = 'float';
       case 'logical'
-        datatype = 'uchar';
+        datatype = 'logical';
       otherwise
         ft_error('unsupported datatype to write to Nifti');
     end

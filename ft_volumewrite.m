@@ -417,7 +417,7 @@ switch cfg.filetype
   case 'nifti'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % write in nifti format, using functions from  the freesurfer toolbox
-    % this format supports a homogenous transformation matrix
+    % this format supports a homogeneous transformation matrix
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     [pathstr, name, ext] = fileparts(cfg.filename);
     if isempty(ext)
@@ -428,7 +428,7 @@ switch cfg.filetype
   case 'nifti_img'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % write in nifti dual file format, using functions from  the SPM toolbox
-    % this format supports a homogenous transformation matrix
+    % this format supports a homogeneous transformation matrix
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     [pathstr, name, ext] = fileparts(cfg.filename);
     if isempty(ext)
@@ -439,7 +439,7 @@ switch cfg.filetype
   case 'analyze_spm'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % write in analyze format, using functions from  the SPM toolbox
-    % this format supports a homogenous transformation matrix
+    % this format supports a homogeneous transformation matrix
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     [pathstr, name, ext] = fileparts(cfg.filename);
     if isempty(ext)
@@ -450,7 +450,7 @@ switch cfg.filetype
   case {'mgz' 'mgh'}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % write in freesurfer_mgz format, using functions from  the freesurfer toolbox
-    % this format supports a homogenous transformation matrix
+    % this format supports a homogeneous transformation matrix
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if ispc && strcmp(cfg.filetype, 'mgz')
       ft_warning('Saving in .mgz format is not possible on a PC, saving in .mgh format instead');
