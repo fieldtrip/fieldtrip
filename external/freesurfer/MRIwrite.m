@@ -122,14 +122,16 @@ switch(fmt)
   hdr.intent_code     = 0;
   
   switch(datatype)
-   case 'logical', hdr.datatype = 1;  hdr.bitpix = 1;
+   case 'bool',   hdr.datatype = 1;   hdr.bitpix =   1;
    case 'uchar',  hdr.datatype = 2;   hdr.bitpix = 8*1;
    case 'short',  hdr.datatype = 4;   hdr.bitpix = 8*2;
    case 'int',    hdr.datatype = 8;   hdr.bitpix = 8*4;
    case 'float',  hdr.datatype = 16;  hdr.bitpix = 8*4;
    case 'double', hdr.datatype = 64;  hdr.bitpix = 8*8;
+   case 'char',   hdr.datatype = 256; hdr.bitpix = 8*1; 
    case 'ushort', hdr.datatype = 512; hdr.bitpix = 8*2;
    case 'uint',   hdr.datatype = 768; hdr.bitpix = 8*4;
+   case 'ulong',  hdr.datatype = 1280; hdr.bitpix = 8*8;
    otherwise,
     fprintf('ERROR: unrecognized data type %s\n',datatype);
     return;

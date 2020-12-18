@@ -29,7 +29,7 @@ function ft_volumewrite(cfg, volume)
 % matrix and hence will be written in their native coordinate system.
 %
 % You can specify the datatype for the analyze_spm and analyze formats using
-%   cfg.datatype      = 'bit1', 'uint8', 'int16', 'int32', 'float' or 'double'
+%   cfg.datatype      = 'logical', 'uint8', 'int16', 'int32', 'single' or 'double'
 %
 % By default, integer datatypes will be scaled to the maximum value of the
 % physical or statistical parameter, floating point datatypes will not be
@@ -100,27 +100,25 @@ volume = ft_checkdata(volume, 'datatype', 'volume', 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'forbidden', {'coordsys'});  % the coordinate system should be specified in the data
-cfg = ft_checkconfig(cfg, 'required', {'filename', 'parameter'});
-cfg = ft_checkconfig(cfg, 'renamed',  {'coordinates', 'coordsys'});
+cfg = ft_checkconfig(cfg, 'required',  {'filename', 'parameter'});
+cfg = ft_checkconfig(cfg, 'renamed',   {'coordinates', 'coordsys'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'datatype', 'bit1', 'logical'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'datatype', 'float', 'single'});
 
 % set the defaults
 cfg.filetype     = ft_getopt(cfg, 'filetype',     'nifti');
-cfg.datatype     = ft_getopt(cfg, 'datatype',     'int16');
 cfg.downsample   = ft_getopt(cfg, 'downsample',   1);
 cfg.markorigin   = ft_getopt(cfg, 'markorigin',   'no');
 cfg.markfiducial = ft_getopt(cfg, 'markfiducial', 'no');
 cfg.markcorner   = ft_getopt(cfg, 'markcorner',   'no');
+
+cfg.datatype     = ft_getopt(cfg, 'datatype');
 cfg.scaling      = ft_getopt(cfg, 'scaling');
 
-if any(strmatch(cfg.datatype, {'uint8','int8', 'int16', 'int32'}))&&isempty(cfg.scaling)
+if any(strcmp(cfg.datatype, {'uint8','int8', 'int16', 'int32'})) && isempty(cfg.scaling)
   cfg.scaling = 'yes';  
 elseif isempty(cfg.scaling)
   cfg.scaling = 'no';    
-end
-
-if ~isfield(cfg, 'vmpversion') && strcmp(cfg.filetype, 'vmp')
-  fprintf('using BrainVoyager version 2 VMP format\n');
-  cfg.vmpversion = 2;
 end
 
 % select the parameter that should be written
@@ -141,12 +139,12 @@ end
 
 % copy the data and convert into double values so that it can be scaled later
 transform = volume.transform;
-data      = double(getsubfield(volume, cfg.parameter));
-maxval    = max(data(:));
+data      = getsubfield(volume, cfg.parameter);
 % ensure that the original volume is not used any more
 clear volume
 
 if strcmp(cfg.markfiducial, 'yes')
+  % FIXME THIS DOES NOT WORK, SINCE MINXYZ ETC IS NOT DEFINED
   % FIXME determine the voxel index of the fiducials
   nas = cfg.fiducial.nas;
   lpa = cfg.fiducial.lpa;
@@ -173,6 +171,7 @@ if strcmp(cfg.markfiducial, 'yes')
 end
 
 if strcmp(cfg.markorigin, 'yes')
+  % FIXME THIS DOES NOT WORK, SINCE MINXYZ ETC IS NOT DEFINED
   % FIXME determine the voxel index of the coordinate system origin
   ori = [0 0 0];
   if any(ori<minxyz) || any(ori>maxxyz)
@@ -195,17 +194,22 @@ end
 data(isnan(data)) = 0;
 
 if strcmp(cfg.scaling, 'yes')
+  data   = double(data);
+  maxval = max(data(:));
+  
   % scale the data so that it fits in the desired numerical data format
   switch lower(cfg.datatype)
-    case 'bit1'
+    case 'logical'
       data = (data~=0);
     case 'uint8'
       data = uint8((2^8-1) * data./maxval);
+    case 'int8'
+      data = int8((2^7-1) * data./maxval);
     case 'int16'
       data = int16((2^15-1) * data./maxval);
     case 'int32'
       data = int32((2^31-1) * data./maxval);
-    case {'single' 'float'}
+    case 'single'
       data = single(data ./ maxval);
     case 'double'
       data = double(data ./ maxval);
@@ -214,50 +218,54 @@ if strcmp(cfg.scaling, 'yes')
   end
 end
 
-% The coordinate system employed by the ANALYZE programs is left-handed,
-% with the coordinate origin in the lower left corner. Thus, with the
-% subject lying supine, the coordinate origin is on the right side of
-% the body (x), at the back (y), and at the feet (z).
-
-% Analyze   x = right-left
-% Analyze   y = post-ant
-% Analyze   z = inf-sup
-
-% SPM/MNI   x = left-right
-% SPM/MNI   y = post-ant
-% SPM/MNI   z = inf-sup
-
-% CTF       x = post-ant
-% CTF       y = right-left
-% CTF       z = inf-sup
-
 % The BrainVoyager and Analyze format do not support the specification of
-% the coordinate system using a homogenous transformation axis, therefore
+% the coordinate system using a homogeneous transformation axis, therefore
 % the dimensions of the complete volume has to be reordered by flipping and
 % permuting to correspond with their native coordinate system.
 switch cfg.filetype
   case {'vmp', 'vmr'}
+    if ~isfield(cfg, 'vmpversion')
+      fprintf('using BrainVoyager version 2 VMP format\n');
+      cfg.vmpversion = 2;
+    end
+
     % the reordering for BrainVoyager has been figured out by Markus Siegel
     if any(strcmp(volume.coordsys, {'ctf', '4d', 'bti'}))
       data = permute(data, [2 3 1]);
     elseif any(strcmp(volume.coordsys, {'acpc', 'spm', 'mni', 'tal'}))
       data = permute(data, [2 3 1]);
-      data = flipdim(data, 1);
-      data = flipdim(data, 2);
+      data = flip(data, 1);
+      data = flip(data, 2);
     else
       ft_error('unsupported coordinate system ''%s''', volume.coordsys);
     end
-    siz = size(data);
   case 'analyze'
+    % The coordinate system employed by the ANALYZE programs is left-handed,
+    % with the coordinate origin in the lower left corner. Thus, with the
+    % subject lying supine, the coordinate origin is on the right side of
+    % the body (x), at the back (y), and at the feet (z).
+    
+    % Analyze   x = right-left
+    % Analyze   y = post-ant
+    % Analyze   z = inf-sup
+    
+    % SPM/MNI   x = left-right
+    % SPM/MNI   y = post-ant
+    % SPM/MNI   z = inf-sup
+    
+    % CTF       x = post-ant
+    % CTF       y = right-left
+    % CTF       z = inf-sup
+
     % the reordering of the Analyze format is according to documentation from Darren Webber
     if any(strcmp(volume.coordsys, {'ctf', '4d', 'bti'}))
       data = permute(data, [2 1 3]);
     elseif any(strcmp(volume.coordsys, {'acpc', 'spm', 'mni', 'tal'}))
-      data = flipdim(data, 1);
+      data = flip(data, 1);
     else
       ft_error('unsupported coordinate system ''%s''', volume.coordsys);
     end
-    siz = size(data);
+    
   case {'analyze_spm', 'nifti', 'nifti_img' 'mgz' 'mgh'}
     % this format supports a homogenous transformation matrix
     % nothing needs to be changed
@@ -267,152 +275,11 @@ end
 
 % write the volume data to file
 switch cfg.filetype
-  case 'vmp'
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % write in BrainVoyager VMP format
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    fid = fopen(sprintf('%s.vmp', cfg.filename),'w');
-    if fid < 0
-      ft_error('Cannot write to file %s.vmp\n',cfg.filename);
-    end
+  case {'vmr' 'vmp'}
+    ft_write_mri(cfg.filename, data, 'dataformat', cfg.filetype, 'vmpversion', cfg.vmpversion);
 
-    switch cfg.vmpversion
-      case 1
-        % write the header
-        fwrite(fid, 1, 'short');      % version
-        fwrite(fid, 1, 'short');      % number of maps
-        fwrite(fid, 1, 'short');      % map type
-        fwrite(fid, 0, 'short');      % lag
-
-        fwrite(fid, 0, 'short');      % cluster size
-        fwrite(fid, 1, 'float');      % thresh min
-        fwrite(fid, maxval, 'float'); % thresh max
-        fwrite(fid, 0, 'short');      % df1
-        fwrite(fid, 0, 'short');      % df2
-        fwrite(fid, 0, 'char');       % name
-
-        fwrite(fid, siz, 'short');    % size
-        fwrite(fid, 0, 'short');
-        fwrite(fid, siz(1)-1, 'short');
-        fwrite(fid, 0, 'short');
-        fwrite(fid, siz(2)-1, 'short');
-        fwrite(fid, 0, 'short');
-        fwrite(fid, siz(3)-1, 'short');
-        fwrite(fid, 1, 'short');      % resolution
-
-        % write the data
-        fwrite(fid, data, 'float');
-      case 2
-        % determine relevant subvolume
-        % FIXME, this is not functional at the moment, since earlier in this function all nans have been replaced by zeros
-        minx = min(find(~isnan(max(max(data,[],3),[],2))));
-        maxx = max(find(~isnan(max(max(data,[],3),[],2))));
-        miny = min(find(~isnan(max(max(data,[],3),[],1))));
-        maxy = max(find(~isnan(max(max(data,[],3),[],1))));
-        minz = min(find(~isnan(max(max(data,[],1),[],2))));
-        maxz = max(find(~isnan(max(max(data,[],1),[],2))));
-
-        % write the header
-        fwrite(fid, 2, 'short');      % version
-        fwrite(fid, 1, 'int');        % number of maps
-        fwrite(fid, 1, 'int');        % map type
-        fwrite(fid, 0, 'int');        % lag
-
-        fwrite(fid, 0, 'int');        % cluster size
-        fwrite(fid, 0, 'char');       % cluster enable
-        fwrite(fid, 1, 'float');      % thresh
-        fwrite(fid, maxval, 'float'); % thresh
-        fwrite(fid, 0, 'int');        % df1
-        fwrite(fid, 0, 'int');        % df2
-        fwrite(fid, 0, 'int');        % bonf
-        fwrite(fid, [255,0,0], 'uchar');   % col1
-        fwrite(fid, [255,255,0], 'uchar'); % col2
-        fwrite(fid, 1, 'char');       % enable SMP
-        fwrite(fid, 1, 'float');      % transparency
-        fwrite(fid, 0, 'char');       % name
-
-        fwrite(fid, siz, 'int');      % original size
-        fwrite(fid, minx-1, 'int');
-        fwrite(fid, maxx-1, 'int');
-        fwrite(fid, miny-1, 'int');
-        fwrite(fid, maxy-1, 'int');
-        fwrite(fid, minz-1, 'int');
-        fwrite(fid, maxz-1, 'int');
-        fwrite(fid, 1, 'int');        % resolution
-
-        % write the data
-        fwrite(fid, data(minx:maxx,miny:maxy,minz:maxz), 'float');
-    end
-    fclose(fid);
-
-  case 'vmr'
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % write in BrainVoyager VMR format
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    fid = fopen(sprintf('%s.vmr',cfg.filename),'w');
-    if fid < 0
-      ft_error('Cannot write to file %s.vmr\n',cfg.filename);
-    end
-
-    % data should be scaled between 0 and 225
-    data = data - min(data(:));
-    data = round(225*data./max(data(:)));
-
-    % write the header
-    fwrite(fid, siz, 'ushort');
-    % write the data
-    fwrite(fid, data, 'uint8');
-    fclose(fid);
   case 'analyze'
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % write in Analyze format, using some functions from Darren Webbers toolbox
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    avw = avw_hdr_make;
-
-    % specify the image data and dimensions
-    avw.hdr.dime.dim(2:4) = siz;
-    avw.img = data;
-
-    % orientation 0 means transverse unflipped (axial, radiological)
-    % X direction first,  ft_progressing from patient right to left,
-    % Y direction second, ft_progressing from patient posterior to anterior,
-    % Z direction third,  ft_progressing from patient inferior to superior.
-    avw.hdr.hist.orient = 0;
-
-    % specify voxel size
-    avw.hdr.dime.pixdim(2:4) = [1 1 1];
-    % FIXME, this currently does not work due to all flipping and permuting
-    % resx = x(2)-x(1);
-    % resy = y(2)-y(1);
-    % resz = z(2)-z(1);
-    % avw.hdr.dime.pixdim(2:4) = [resy resx resz];
-
-    % specify the data type
-    switch lower(cfg.datatype)
-      case 'bit1'
-        avw.hdr.dime.datatype = 1;
-        avw.hdr.dime.bitpix   = 1;
-      case 'uint8'
-        avw.hdr.dime.datatype = 2;
-        avw.hdr.dime.bitpix   = 8;
-      case 'int16'
-        avw.hdr.dime.datatype = 4;
-        avw.hdr.dime.bitpix   = 16;
-      case 'int32'
-        avw.hdr.dime.datatype = 8;
-        avw.hdr.dime.bitpix   = 32;
-      case 'float'
-        avw.hdr.dime.datatype = 16;
-        avw.hdr.dime.bitpix   = 32;
-      case 'double'
-        avw.hdr.dime.datatype = 64;
-        avw.hdr.dime.bitpix   = 64;
-      otherwise
-        ft_error('unknown datatype');
-    end
-
-    % write the header and image data
-    avw_img_write(avw, cfg.filename, [], 'ieee-le');
+    
 
   case 'nifti'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
