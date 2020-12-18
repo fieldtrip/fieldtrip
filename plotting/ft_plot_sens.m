@@ -358,17 +358,32 @@ if isempty(ori)
   end
 end % if empty(ori)
 
-if any(isnan(ori(:)))
+if mean(isnan(ori(:)))>0.25
+  % more than a quarter of the sensor orientations cannot be determined
+  % the ones that have been determined probably don't make sense either
   if iseeg
-    ft_notice('orienting EEG electrodes along the z-axis')
+    ft_notice('orienting all EEG electrodes along the z-axis')
   elseif ismeg
-    ft_notice('orienting MEG sensors along the z-axis')
+    ft_notice('orienting all MEG sensors along the z-axis')
   elseif isnirs
-    ft_notice('orienting NIRS optodes along the z-axis')
+    ft_notice('orienting all NIRS optodes along the z-axis')
   end
   ori(:,1) = 0;
   ori(:,2) = 0;
   ori(:,3) = 1;
+elseif any(isnan(ori(:)))
+  % only some of the sensor positions cannot be determined
+  % the others probably do make sense
+  if iseeg
+    ft_notice('orienting some EEG electrodes along the z-axis')
+  elseif ismeg
+    ft_notice('orienting some MEG sensors along the z-axis')
+  elseif isnirs
+    ft_notice('orienting some NIRS optodes along the z-axis')
+  end
+  ori(isnan(ori(:,1)),1) = 0;
+  ori(isnan(ori(:,2)),2) = 0;
+  ori(isnan(ori(:,3)),3) = 1;
 end
 
 if istrue(orientation)

@@ -34,6 +34,7 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   cfg.layout      = filename containg the input layout (*.mat or *.lay file), this can also be a layout
 %                     structure, which is simply returned as-is (see below for details)
 %   cfg.output      = filename (ending in .mat or .lay) to which the layout will be written (default = [])
+%   cfg.feedback    = 'yes' or 'no', whether to show an image of the layout (default = 'no')
 %   cfg.elec        = structure with electrode positions or filename, see FT_READ_SENS
 %   cfg.grad        = structure with gradiometer definition or filename, see FT_READ_SENS
 %   cfg.opto        = structure with optode definition or filename, see FT_READ_SENS
@@ -1156,10 +1157,12 @@ if ~strcmpi(cfg.style, '3d')
 end
 
 % to plot the layout for debugging, you can use this code snippet
-if strcmp(cfg.feedback, 'yes') && ~strcmpi(cfg.style, '3d')
-  tmpcfg = [];
-  tmpcfg.layout = layout;
-  ft_layoutplot(tmpcfg); % FIXME this should use ft_plot_layout
+if strcmp(cfg.feedback, 'yes')
+  if strcmpi(cfg.style, '3d')
+    ft_error('graphical feedback is not implemented for a 3d layout');
+  else
+    ft_plot_layout(layout);
+  end
 end
 
 % to write the layout to a .mat or text file, you can use this code snippet

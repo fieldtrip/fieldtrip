@@ -1,4 +1,4 @@
-function str = printstruct(name, val)
+function str = printstruct(name, val, varargin)
 
 % PRINTSTRUCT converts a MATLAB structure into a multiple-line string that, when
 % evaluated by MATLAB, results in the original structure. It also works for most
@@ -55,6 +55,14 @@ if isa(val, 'config')
   val = struct(val);
 end
 
+% get the options and set defaults
+transposedrow     = ft_getopt(varargin, 'transposedrow', false);      % display a column as a transposed row
+transposedcolumn  = ft_getopt(varargin, 'transposedcolumn', false);   % display a row as a transposed column
+lastnewline       = ft_getopt(varargin, 'lastnewline', false);        % end with a newline
+
+% when called recursively, it should keep the last newline intact
+varargin = ft_setopt(varargin, 'lastnewline', true);
+
 % Note that because we don't know the final size of the string, iteratively appending
 % is actually faster than creating a cell-array and subsequently doing a cat(2,
 % strings{:}). Note also that sprintf() is slow.
@@ -77,10 +85,9 @@ elseif isstruct(val)
     % print it as a struct-array
     str = cell(size(val));
     for i=1:numel(val)
-      str{i} = printstruct(sprintf('%s(%d)', name, i), val(i));
+      str{i} = printstruct(sprintf('%s(%d)', name, i), val(i), varargin{:});
     end
     str = cat(2, str{:});
-    return
   elseif numel(val)==1
     % print it as a named structure
     fn = fieldnames(val);
@@ -91,14 +98,14 @@ elseif isstruct(val)
           line = printstr([name '.' fn{i}], fv);
         case {'single' 'double' 'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64' 'logical'}
           if ismatrix(fv)
-            line = [name '.' fn{i} ' = ' printmat(fv) ';' 10];
+            line = printmat([name '.' fn{i}], fv, transposedrow, transposedcolumn);
           else
             line = '''ERROR: multidimensional arrays are not supported''';
           end
         case 'cell'
-          line = printcell([name '.' fn{i}], fv);
+          line = printcell([name '.' fn{i}], fv, transposedrow, transposedcolumn);
         case 'struct'
-          line = [printstruct([name '.' fn{i}], fv) 10];
+          line = [printstruct([name '.' fn{i}], fv, varargin{:}) 10];
         case 'function_handle'
           line = printstr([name '.' fn{i}], func2str(fv));
         otherwise
@@ -123,9 +130,9 @@ elseif ~isstruct(val)
     case {'char' 'string'}
       str = printstr(name, val);
     case {'double' 'single' 'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64' 'logical'}
-      str = [name ' = ' printmat(val)];
+      str = printmat(name, val, transposedrow, transposedcolumn);
     case 'cell'
-      str = printcell(name, val);
+      str = printcell(name, val, transposedrow, transposedcolumn);
     otherwise
       ft_error('unsupported');
   end
@@ -136,36 +143,14 @@ if isempty(name)
   str = str(4:end);
 end
 
-if str(end)==10
+if str(end)==10 && ~lastnewline
   % remove the last newline
   str = str(1:end-1);
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function str = printcell(name, val)
-siz = size(val);
-if isempty(val)
-  str = sprintf('%s = {};\n', name);
-  return;
-end
-if all(size(val)==1)
-  str = sprintf('%s = { %s };\n', name, printval(val{1}));
-elseif numel(siz) == 2 && siz(2) == 1
-  % print column vector as (non-conjugate) transposed row
-  str = printcell(name, transpose(val));
-  str = sprintf('%s.'';\n', str(1:end-2));
-else
-  str = sprintf('%s = {\n', name);
-  for i=1:siz(1)
-    dum = '';
-    for j=1:(siz(2)-1)
-      dum = [dum ' ' printval(val{i,j}) ',']; % add the element with a comma
-    end
-    dum = [dum ' ' printval(val{i,siz(2)})]; % add the last one without comma
-    
-    str = [str dum 10];
-  end
-  str = sprintf('%s};\n', str);
+if ~nargout
+  disp(str)
+  clear str
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -183,23 +168,59 @@ else
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function str = printmat(val)
+function str = printcell(name, val, transposedrow, transposedcolumn)
+siz = size(val);
+if isempty(val)
+  str = sprintf('%s = {};\n', name);
+elseif all(size(val)==1)
+  str = sprintf('%s = { %s };\n', name, printval(val{1}));
+elseif numel(siz) == 2 && siz(2) == 1 && transposedrow
+  % print column vector as (non-conjugate) transposed row
+  str = printcell(name, transpose(val), false, false);
+  str = sprintf('%s'';\n', str(1:end-2));
+elseif numel(siz) == 2 && siz(1) == 1 && transposedcolumn
+  % print row vector as (non-conjugate) transposed column
+  str = printcell(name, transpose(val), false, false);
+  str = sprintf('%s'';\n', str(1:end-2));
+else
+  str = sprintf('%s = {\n', name);
+  for i=1:siz(1)
+    dum = '';
+    for j=1:(siz(2)-1)
+      dum = [dum ' ' printval(val{i,j}) ',']; % add the element with a comma
+    end
+    dum = [dum ' ' printval(val{i,siz(2)})]; % add the last one without comma
+    
+    str = [str dum 10];
+  end
+  if siz(1)==1
+    str(str==10) = [];
+  end
+  str = sprintf('%s };\n', str);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function str = printmat(name, val, transposedrow, transposedcolumn)
 siz = size(val);
 if numel(val) == 0
-  str = '[]';
+  str = sprintf('%s = [];\n', name);
 elseif numel(val) == 1
   % an integer will never get trailing decimals when using %g
-  str = sprintf('%g', val);
-elseif numel(siz) == 2 && siz(2) == 1
+  str = sprintf('%s = %g', name, val);
+elseif numel(siz) == 2 && siz(2) == 1 && transposedrow
   % print column vector as (non-conjugate) transposed row
-  str = printmat(transpose(val));
-  str = sprintf('%s.''', str);
+  str = printmat(name, transpose(val), false, false);
+  str = sprintf('%s''', str);
+elseif numel(siz) == 2 && siz(1) == 1 && transposedcolumn
+  % print row vector as (non-conjugate) transposed column
+  str = printmat(name, transpose(val), false, false);
+  str = sprintf('%s''', str);
 elseif ismatrix(val)
   if isa(val, 'double')
-    str = mat2str(val);
+    str = sprintf('%s = %s;\n', name, mat2str(val));
   else
     % add class information for non-double numeric matrices
-    str = mat2str(val, 'class');
+    str = sprintf('%s = %s;\n', name, mat2str(val, 'class'));
   end
   str = strrep(str, ';', [';' 10]);
 else
@@ -219,7 +240,7 @@ switch class(val)
     str = ['"' char(val) '"'];
     
   case {'single' 'double' 'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64' 'logical'}
-    str = printmat(val);
+    str = num2str(val);
     
   case 'function_handle'
     str = ['@' func2str(val)];
