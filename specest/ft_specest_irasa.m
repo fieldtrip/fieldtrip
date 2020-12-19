@@ -62,7 +62,7 @@ fbopt     = ft_getopt(varargin, 'feedback');
 verbose   = ft_getopt(varargin, 'verbose', true);
 
 % check output option
-if ~strcmp(cfg.output, {'fractal','original'})
+if ~strcmp(output, {'fractal','original'})
     ft_error('The current version ft_specest_irasa outputs ''fractal'' or ''original'' power only. For more information about the update, see https://www.fieldtriptoolbox.org/example/irasa/');
 end
 
