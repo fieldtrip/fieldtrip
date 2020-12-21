@@ -81,5 +81,3 @@ for k = 1:size(fnames,1)
     end
   end
 end
-
-keyboard
