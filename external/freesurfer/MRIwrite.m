@@ -79,7 +79,7 @@ if(~isfield(mri,'vox2ras0'))  mri.vox2ras0 = eye(4);end
 if(~isfield(mri,'volres'))
     mri.volres = sqrt(sum(mri.vox2ras0(1:3,1:3).^2));
 end
-if(~isfield(mri,'scl_slope')) mri.scl_slope = 1; end
+if(~isfield(mri,'scl_slope')) mri.scl_slope = 0; end
 if(~isfield(mri,'scl_inter')) mri.scl_inter = 0; end
   
 [fspec fstem fmt] = MRIfspec(fstring,0); % 0 = turn off checkdisk
