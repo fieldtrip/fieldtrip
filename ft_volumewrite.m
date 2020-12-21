@@ -30,8 +30,9 @@ function ft_volumewrite(cfg, volume)
 %
 % You can specify the datatype for the nifti, analyze_spm and analyze_old
 % formats. If not specified, the class of the input data will be preserved,
-% if the file format allows.
-%   cfg.datatype      = 'logical', 'uint8', 'int16', 'int32', 'single' or 'double'
+% if the file format allows. Although the higher level function may make an
+% attempt to typecast the data, only nifti(-like) fileformats 
+%   cfg.datatype      = 'uint8', 'int8', 'int16', 'int32', 'single' or 'double'
 %
 % By default, integer datatypes will be scaled to the maximum value of the
 % physical or statistical parameter, floating point datatypes will not be
@@ -144,8 +145,6 @@ end
 % copy the data and convert into double values so that it can be scaled later
 transform = volume.transform;
 data      = getsubfield(volume, cfg.parameter);
-% ensure that the original volume is not used any more
-clear volume
 
 if strcmp(cfg.markfiducial, 'yes')
   % FIXME THIS DOES NOT WORK, SINCE MINXYZ ETC IS NOT DEFINED
@@ -197,17 +196,22 @@ end
 % set not-a-number voxels to zero
 data(isnan(data)) = 0;
 
-if strcmp(cfg.scaling, 'yes')
-  
-  ft_info('scaling the data before typecasting the numeric data to %s', cfg.datatype);
+datatype = class(data);
+if ~isequal(datatype, cfg.datatype)
+  ft_info('datatype of input data is %s, requested output datatype is %s', datatype, cfg.datatype);
+end
+if isequal(cfg.datatype, 'logical')
+  ft_warning('output datatype of logical is not supported, the data will be stored as int8');
+  cfg.datatype = 'int8';
+end
+if istrue(cfg.scaling)
+  ft_info('scaling the data and typecasting from %s to %s', datatype, cfg.datatype);
   data   = double(data);
   maxval = max(abs(data(:)));
   minval = min(data(:));
   
   % scale the data so that it fits in the desired numerical data format
   switch lower(cfg.datatype)
-    case 'logical'
-      data = (data~=0);
     case 'uint8'
       data = uint8((2^8-1) * (data-minval)./(maxval-minval));
     case 'int8'
@@ -223,6 +227,9 @@ if strcmp(cfg.scaling, 'yes')
     otherwise
       ft_error('unknown datatype');
   end
+elseif ~isequal(datatype, cfg.datatype)
+  ft_info('typecasting the numeric data from %s to %s', datatype, cfg.datatype);
+  data = cast(data, cfg.datatype);
 end
 
 % The BrainVoyager and Analyze format do not support the specification of
@@ -239,14 +246,14 @@ switch cfg.filetype
     % the reordering for BrainVoyager has been figured out by Markus Siegel
     if any(strcmp(volume.coordsys, {'ctf', '4d', 'bti'}))
       data = permute(data, [2 3 1]);
-    elseif any(strcmp(volume.coordsys, {'acpc', 'spm', 'mni', 'tal'}))
+    elseif any(strcmp(volume.coordsys, {'acpc', 'spm', 'mni', 'tal', 'ras', 'neuromag'}))
       data = permute(data, [2 3 1]);
       data = flip(data, 1);
       data = flip(data, 2);
     else
       ft_error('unsupported coordinate system ''%s''', volume.coordsys);
     end
-  case 'analyze'
+  case 'analyze_old'
     % The coordinate system employed by the ANALYZE programs is left-handed,
     % with the coordinate origin in the lower left corner. Thus, with the
     % subject lying supine, the coordinate origin is on the right side of
@@ -267,7 +274,7 @@ switch cfg.filetype
     % the reordering of the Analyze format is according to documentation from Darren Webber
     if any(strcmp(volume.coordsys, {'ctf', '4d', 'bti'}))
       data = permute(data, [2 1 3]);
-    elseif any(strcmp(volume.coordsys, {'acpc', 'spm', 'mni', 'tal'}))
+    elseif any(strcmp(volume.coordsys, {'acpc', 'spm', 'mni', 'tal', 'ras', 'neuromag'}))
       data = flip(data, 1);
     else
       ft_error('unsupported coordinate system ''%s''', volume.coordsys);

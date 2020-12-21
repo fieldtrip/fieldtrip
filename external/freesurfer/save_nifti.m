@@ -158,7 +158,6 @@ fwrite(fp,0,'char');
 
 npix = prod(size(hdr.vol));
 switch(hdr.datatype)
- case   1, nitemswritten = fwrite(fp,hdr.vol,'bit1'); 
  case   2, nitemswritten = fwrite(fp,hdr.vol,'uchar'); % dont use char
  case   4, nitemswritten = fwrite(fp,hdr.vol,'short');
  case   8, nitemswritten = fwrite(fp,hdr.vol,'int');

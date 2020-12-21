@@ -137,7 +137,7 @@ switch dataformat
         avw.hdr.dime.datatype = 64;
         avw.hdr.dime.bitpix   = 64;
       otherwise
-        ft_error('unknown datatype');
+        ft_error('unsupported datatype %s to write to analyze_old format', class(dat));
     end
 
     % write the header and image data

@@ -7,6 +7,7 @@ function write_brainvoyager(filename, data, dataformat, vmpversion)
 
 data = double(data);
 siz  = size(data);
+maxval = max(data(:));
 
 [p, f, e] = fileparts(filename);
 filename  = fullfile(p, f);

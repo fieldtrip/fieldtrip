@@ -122,7 +122,6 @@ switch(fmt)
   hdr.intent_code     = 0;
   
   switch(datatype)
-   case 'bool',   hdr.datatype = 1;   hdr.bitpix =   1;
    case 'uchar',  hdr.datatype = 2;   hdr.bitpix = 8*1;
    case 'short',  hdr.datatype = 4;   hdr.bitpix = 8*2;
    case 'int',    hdr.datatype = 8;   hdr.bitpix = 8*4;

@@ -116,7 +116,7 @@ if isempty(verbose), verbose = 1; end
 %------------------------------------------------------------------------
 % MAIN
 if verbose
-    version = '[$Revision$]';
+    version = '????????????????';
     fprintf('\nAVW_IMG_WRITE [v%s]\n',version(12:16));  tic;
 end
 
@@ -181,7 +181,7 @@ if ~exist('verbose','var'), verbose = 1; end
 if ~exist('machine','var'), machine = 'ieee-le'; end
 
 if verbose,
-    version = '[$Revision$]';
+    version = '????????????????';
     fprintf('AVW_HDR_WRITE [v%s]\n',version(12:16));  tic;
 end
 
