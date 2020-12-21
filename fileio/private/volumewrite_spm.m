@@ -81,7 +81,7 @@ switch lower(spmversion)
     N.mat = transform;
     N.mat_intent = 'Aligned';
     N.dat = file_array(filename, dim, 'FLOAT32-LE');
-    %N.dat = file_array(filename, dim, [typ 0], 0, scl_slope, scl_inter);
+    N.dat = file_array(filename, dim, [typ 0], 0, [],[]);%scl_slope, scl_inter);
     create(N);
     switch length(N.dat.dim)
       case 2

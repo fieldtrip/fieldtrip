@@ -24,15 +24,19 @@ function ft_volumewrite(cfg, volume)
 %
 % The default filetype is 'nifti', which means that a single *.nii file
 % will be written using code from the freesurfer toolbox. The 'nifti_img' filetype
-% uses SPM for a dual file (*.img/*.hdr) nifti-format file.
-% The analyze, analyze_spm, nifti, nifti_img and mgz filetypes support a homogeneous
+% uses SPM for a dual file (*.img/*.hdr) nifti-format file. The 'nifti_spm'
+% filetype uses SPM for a single 'nifti' file. 
+% The analyze, analyze_spm, nifti, nifti_img, nifti_spm and mgz filetypes support a homogeneous
 % transformation matrix, the other filetypes do not support a homogeneous transformation
 % matrix and hence will be written in their native coordinate system.
 %
 % You can specify the datatype for the nifti, analyze_spm and analyze_old
 % formats. If not specified, the class of the input data will be preserved,
 % if the file format allows. Although the higher level function may make an
-% attempt to typecast the data, only nifti(-like) fileformats 
+% attempt to typecast the data, only the nifti fileformat preserves the
+% datatype. Also, only when filetype = 'nifti', the slope and intercept
+% parameters are stored in the file, so that, when reading the data from
+% file, the original values are restored (up to the bit resolution).
 %   cfg.datatype      = 'uint8', 'int8', 'int16', 'int32', 'single' or 'double'
 %
 % By default, integer datatypes will be scaled to the maximum value of the
