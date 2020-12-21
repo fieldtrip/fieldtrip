@@ -37,9 +37,9 @@ function [vertices, label, colortable] = read_annotation(filename, varargin)
 %       o struct_names: cell array of structure names
 %       o table:        n x 5 matrix
 %                       Columns 1,2,3 are RGB values for struct color
-%                       Column 4 is a flag (usually 0)
+%                       Column 4 is the transparency value (i.e. 255 - alpha)
 %                       Column 5 is the structure ID, calculated from
-%                       R + G*2^8 + B*2^16 + flag*2^24
+%                       R + G*2^8 + B*2^16
 %                       
 % LABEL VECTOR
 % 
@@ -68,10 +68,6 @@ function [vertices, label, colortable] = read_annotation(filename, varargin)
 %
 % read_annotation.m
 % Original Author: Bruce Fischl
-% CVS Revision Info:
-%    $Author: greve $
-%    $Date: 2014/02/25 19:54:10 $
-%    $Revision: 1.10 $
 %
 % Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
 %
@@ -132,7 +128,7 @@ if(bool)
             colortable.table(i,2) = fread(fp, 1, 'int');
             colortable.table(i,3) = fread(fp, 1, 'int');
             colortable.table(i,4) = fread(fp, 1, 'int');
-            colortable.table(i,5) = colortable.table(i,1) + colortable.table(i,2)*2^8 + colortable.table(i,3)*2^16 + colortable.table(i,4)*2^24;
+            colortable.table(i,5) = colortable.table(i,1) + colortable.table(i,2)*2^8 + colortable.table(i,3)*2^16;
         end
         if verbosity
             disp(['colortable with ' num2str(colortable.numEntries) ' entries read (originally ' colortable.orig_tab ')']);
@@ -170,7 +166,7 @@ if(bool)
             colortable.table(structure,2) = fread(fp, 1, 'int');
             colortable.table(structure,3) = fread(fp, 1, 'int');
             colortable.table(structure,4) = fread(fp, 1, 'int');
-            colortable.table(structure,5) = colortable.table(structure,1) + colortable.table(structure,2)*2^8 + colortable.table(structure,3)*2^16 + colortable.table(structure,4)*2^24;       
+            colortable.table(structure,5) = colortable.table(structure,1) + colortable.table(structure,2)*2^8 + colortable.table(structure,3)*2^16;
 	end
         if verbosity 
           disp(['colortable with ' num2str(colortable.numEntries) ' entries read (originally ' colortable.orig_tab ')']);

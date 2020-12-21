@@ -33,10 +33,6 @@ function hdr = load_analyze(imgfile,hdronly)
 % load_analyze.m
 %
 % Original Author: Doug Greve
-% CVS Revision Info:
-%    $Author: greve $
-%    $Date: 2014/02/25 19:52:38 $
-%    $Revision: 1.6 $
 %
 % Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
 %
