@@ -39,12 +39,16 @@ if 0
   spm_type('uint64')  %           -- 64-bit unsigned integer array
 end
 
-typ       = spm_type(class(data));
+datatype  = class(data);
+if isequal(datatype, 'single'), datatype = 'float32'; end
+if isequal(datatype, 'double'), datatype = 'float64'; end
+
+typ       = spm_type(datatype);
 dim       = size(data);
 if isnan(typ)
   % convert every unsupported data type into double
   data      = double(data);
-  typ       = spm_type(class(data));
+  typ       = spm_type('float64');
 end
 
 switch lower(spmversion)
@@ -80,7 +84,7 @@ switch lower(spmversion)
     N     = nifti;
     N.mat = transform;
     N.mat_intent = 'Aligned';
-    N.dat = file_array(filename, dim, 'FLOAT32-LE');
+    %N.dat = file_array(filename, dim, 'FLOAT32-LE');
     N.dat = file_array(filename, dim, [typ 0], 0, [],[]);%scl_slope, scl_inter);
     create(N);
     switch length(N.dat.dim)

@@ -63,6 +63,7 @@ for m = 1:numel(filetype)
   end
 end
 
+data = cell(size(fnames));
 for k = 1:size(fnames,1)
   for kk = 1:size(fnames,2)
     for kkk = 1:size(fnames,3)
@@ -81,4 +82,7 @@ for k = 1:size(fnames,1)
     end
   end
 end
-keyboard
+
+% FIXME this ideally should contain some check as to whether the values
+% that have been written to disk make sense and/or are a scaled version of
+% the original input data
