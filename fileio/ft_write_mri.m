@@ -172,8 +172,6 @@ switch dataformat
         datatype = 'double';
       case 'single'
         datatype = 'float';
-      case 'logical'
-        datatype = 'bool';
       case 'uint8'
         datatype = 'uchar';
       otherwise

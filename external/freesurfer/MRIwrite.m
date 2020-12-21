@@ -130,7 +130,6 @@ switch(fmt)
    case 'char',   hdr.datatype = 256; hdr.bitpix = 8*1; 
    case 'ushort', hdr.datatype = 512; hdr.bitpix = 8*2;
    case 'uint',   hdr.datatype = 768; hdr.bitpix = 8*4;
-   case 'ulong',  hdr.datatype = 1280; hdr.bitpix = 8*8;
    otherwise,
     fprintf('ERROR: unrecognized data type %s\n',datatype);
     return;
