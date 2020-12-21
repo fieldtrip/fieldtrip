@@ -12,6 +12,8 @@ function [V] = ft_write_mri(filename, dat, varargin)
 %   'transform'    = 4x4 homogenous transformation matrix, specifying the transformation from voxel coordinates to head coordinates
 %   'unit'         = string, desired units for the image data on disk, for example 'mm'
 %   'spmversion'   = version of SPM to be used, in case data needs to be written in analyze format
+%   'scl_slope'    = slope parameter for nifti files
+%   'scl_inter'    = intersect parameter for nifti files
 %
 % The specified filename can already contain the filename extention, but that is not
 % required since it will be added automatically.
@@ -45,10 +47,12 @@ function [V] = ft_write_mri(filename, dat, varargin)
 % $Id$
 
 % get the options
-transform     = ft_getopt(varargin, 'transform', eye(4));
+transform     = ft_getopt(varargin, 'transform',  eye(4));
 spmversion    = ft_getopt(varargin, 'spmversion', 'spm12');
 dataformat    = ft_getopt(varargin, 'dataformat'); % FIXME this is inconsistent with ft_read_mri, which uses 'format'
 unit          = ft_getopt(varargin, 'unit');
+scl_slope     = ft_getopt(varargin, 'scl_slope', 1);
+scl_inter     = ft_getopt(varargin, 'scl_inter', 0);
 
 % convert the input to the desired units
 if ~isempty(unit)
@@ -84,10 +88,68 @@ if ~ismember(dataformat, {'empty', 'fcdc_global', 'fcdc_buffer', 'fcdc_mysql'})
 end
 
 switch dataformat
+  
+  case {'vmr' 'vmp'}
+    % brainvoyager file formats
+    vmpversion = ft_getopt(varargin, 'vmpversion', 2);
+    write_brainvoyager(filename, dat, dataformat, vmpversion);
+    
+  case {'analyze_old'}
+    % analyze format, using old code
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % write in Analyze format, using some functions from Darren Webbers toolbox
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    avw = avw_hdr_make;
 
+    % specify the image data and dimensions
+    avw.hdr.dime.dim(2:4) = size(dat);
+    avw.img = dat;
+
+    % orientation 0 means transverse unflipped (axial, radiological)
+    % X direction first,  progressing from patient right to left,
+    % Y direction second, progressing from patient posterior to anterior,
+    % Z direction third,  progressing from patient inferior to superior.
+    avw.hdr.hist.orient = 0;
+
+    % specify voxel size
+    avw.hdr.dime.pixdim(2:4) = [1 1 1];
+    % FIXME, this currently does not work due to all flipping and permuting
+    % resx = x(2)-x(1);
+    % resy = y(2)-y(1);
+    % resz = z(2)-z(1);
+    % avw.hdr.dime.pixdim(2:4) = [resy resx resz];
+
+    % specify the data type
+    switch class(dat)
+      case 'logical'
+        avw.hdr.dime.datatype = 1;
+        avw.hdr.dime.bitpix   = 1;
+      case 'uint8'
+        avw.hdr.dime.datatype = 2;
+        avw.hdr.dime.bitpix   = 8;
+      case 'int16'
+        avw.hdr.dime.datatype = 4;
+        avw.hdr.dime.bitpix   = 16;
+      case 'int32'
+        avw.hdr.dime.datatype = 8;
+        avw.hdr.dime.bitpix   = 32;
+      case 'single'
+        avw.hdr.dime.datatype = 16;
+        avw.hdr.dime.bitpix   = 32;
+      case 'double'
+        avw.hdr.dime.datatype = 64;
+        avw.hdr.dime.bitpix   = 64;
+      otherwise
+        ft_error('unsupported datatype %s to write to analyze_old format', class(dat));
+    end
+
+    % write the header and image data
+    avw_img_write(avw, filename, [], 'ieee-le');
+    
   case {'analyze_img' 'analyze_hdr' 'analyze' 'nifti_img' 'nifti_spm'}
-    % analyze data, using SPM
-    V = volumewrite_spm(filename, dat, transform, spmversion);
+    % analyze or nifti data, using SPM
+    V = volumewrite_spm(filename, dat, transform, spmversion, scl_slope, scl_inter);
     
   case {'freesurfer_mgz' 'mgz' 'mgh'}
     % mgz data, using Freesurfer
@@ -105,7 +167,7 @@ switch dataformat
     datatype = class(dat);
     switch(datatype)
       case 'int8'
-        datatype = 'uchar';
+        datatype = 'char';
       case 'int16'
         datatype = 'short';
       case 'int32'
@@ -114,10 +176,10 @@ switch dataformat
         datatype = 'double';
       case 'single'
         datatype = 'float';
-      case 'logical'
+      case 'uint8'
         datatype = 'uchar';
       otherwise
-        ft_error('unsupported datatype to write to Nifti');
+        ft_error('unsupported datatype to write to a nifti file');
     end
     
     ndims = numel(size(dat));
@@ -135,6 +197,8 @@ switch dataformat
     mri.vol      = dat;
     mri.vox2ras0 = vox2ras_1to0(transform);
     mri.volres   = sqrt(sum(transform(:,1:3).^2));
+    mri.scl_slope = scl_slope;
+    mri.scl_inter = scl_inter;
     MRIwrite(mri, filename, datatype);
     
   case {'vista'}

@@ -136,6 +136,7 @@ switch(hdr.datatype)
  case   8, [hdr.vol, nitemsread] = fread(fp,inf,'*int');
  case  16, [hdr.vol, nitemsread] = fread(fp,inf,'*float');
  case  64, [hdr.vol, nitemsread] = fread(fp,inf,'*double');
+ case 256, [hdr.vol, nitemsread] = fread(fp,inf,'*int8');   
  case 512, [hdr.vol, nitemsread] = fread(fp,inf,'*ushort');
  case 768, [hdr.vol, nitemsread] = fread(fp,inf,'*uint');
  otherwise

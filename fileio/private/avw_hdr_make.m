@@ -26,7 +26,7 @@ function [ avw ] = avw_hdr_make
 %                    Biomedical Imaging Resource, Mayo Foundation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-version = '[$Revision$]';
+version = '????????????????';
 fprintf('\nAVW_HDR_MAKE [v%s]\n',version(12:16));  tic;
 
 
