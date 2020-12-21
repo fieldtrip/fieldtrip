@@ -1,4 +1,4 @@
-function [Va] = volumewrite_spm(filename, data, transform, spmversion)
+function [Va] = volumewrite_spm(filename, data, transform, spmversion, scl_slope, scl_inter)
 
 % VOLUMEWRITE_SPM writes anatomical or functional MRI volume data to analyze or nifti format
 % using the SPM toolbox.
@@ -11,6 +11,11 @@ function [Va] = volumewrite_spm(filename, data, transform, spmversion)
 
 if nargin<4 || isempty(spmversion)
   spmversion = 'spm12';
+end
+
+if nargin<5
+  scl_slope = 1;
+  scl_inter = 0;
 end
 
 % check whether the required SPM toolbox is available
@@ -67,7 +72,7 @@ switch lower(spmversion)
       Va.n       = 1;
     end
     Va.pinfo   = [1 0 0]';
-    %Va.dt      = [typ 1]; % this is not necessary because assigned in spm_create_vol
+    Va.dt      = [typ 0]; % this is not necessary because assigned in spm_create_vol
     Va         = spm_create_vol(Va);
     Va         = spm_write_vol(Va,data);
     
@@ -76,6 +81,7 @@ switch lower(spmversion)
     N.mat = transform;
     N.mat_intent = 'Aligned';
     N.dat = file_array(filename, dim, 'FLOAT32-LE');
+    %N.dat = file_array(filename, dim, [typ 0], 0, scl_slope, scl_inter);
     create(N);
     switch length(N.dat.dim)
       case 2

@@ -16,7 +16,7 @@ mri.dat2 = reshape(1:8,[2 2 2]);
 mri.dat3 = rand(2,2,2)>0.5;
 
 datatype = {'logical', 'uint8', 'int8', 'int16', 'int32', 'single', 'double'};
-filetype = {'analyze_old', 'nifti', 'nifti_img', 'analyze_spm', 'mgz', 'mgh', 'vmp', 'vmr'};
+filetype = {'analyze_old', 'nifti', 'nifti_img', 'nifti_spm', 'analyze_spm', 'mgz', 'mgh', 'vmp', 'vmr'};
 fname    = fullfile(tempdir, 'issue1618');
 
 ok_table = true(numel(datatype), numel(filetype), 3);
@@ -81,3 +81,4 @@ for k = 1:size(fnames,1)
     end
   end
 end
+keyboard

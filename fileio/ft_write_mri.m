@@ -12,6 +12,8 @@ function [V] = ft_write_mri(filename, dat, varargin)
 %   'transform'    = 4x4 homogenous transformation matrix, specifying the transformation from voxel coordinates to head coordinates
 %   'unit'         = string, desired units for the image data on disk, for example 'mm'
 %   'spmversion'   = version of SPM to be used, in case data needs to be written in analyze format
+%   'scl_slope'    = slope parameter for nifti files
+%   'scl_inter'    = intersect parameter for nifti files
 %
 % The specified filename can already contain the filename extention, but that is not
 % required since it will be added automatically.
@@ -49,6 +51,8 @@ transform     = ft_getopt(varargin, 'transform',  eye(4));
 spmversion    = ft_getopt(varargin, 'spmversion', 'spm12');
 dataformat    = ft_getopt(varargin, 'dataformat'); % FIXME this is inconsistent with ft_read_mri, which uses 'format'
 unit          = ft_getopt(varargin, 'unit');
+scl_slope     = ft_getopt(varargin, 'scl_slope', 1);
+scl_inter     = ft_getopt(varargin, 'scl_inter', 0);
 
 % convert the input to the desired units
 if ~isempty(unit)
@@ -144,8 +148,8 @@ switch dataformat
     avw_img_write(avw, filename, [], 'ieee-le');
     
   case {'analyze_img' 'analyze_hdr' 'analyze' 'nifti_img' 'nifti_spm'}
-    % analyze data, using SPM
-    V = volumewrite_spm(filename, dat, transform, spmversion);
+    % analyze or nifti data, using SPM
+    V = volumewrite_spm(filename, dat, transform, spmversion, scl_slope, scl_inter);
     
   case {'freesurfer_mgz' 'mgz' 'mgh'}
     % mgz data, using Freesurfer
@@ -193,6 +197,8 @@ switch dataformat
     mri.vol      = dat;
     mri.vox2ras0 = vox2ras_1to0(transform);
     mri.volres   = sqrt(sum(transform(:,1:3).^2));
+    mri.scl_slope = scl_slope;
+    mri.scl_inter = scl_inter;
     MRIwrite(mri, filename, datatype);
     
   case {'vista'}

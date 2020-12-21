@@ -18,8 +18,9 @@ function ft_volumewrite(cfg, volume)
 %                         e.g. 'pow', 'coh', 'nai' or 'anatomy'
 %   cfg.filename      = filename without the extension
 %   cfg.filetype      = 'analyze_old', 'nifti', 'nifti_img', 'analyze_spm',
-%                       'mgz', 'mgh', 'vmp' or 'vmr'
+%                       'nifti_spm', 'mgz', 'mgh', 'vmp' or 'vmr'
 %   cfg.vmpversion    = 1 or 2 (default) version of the vmp-format to use
+%   cfg.spmversion    = 'spm12' (default) version of spm to use
 %
 % The default filetype is 'nifti', which means that a single *.nii file
 % will be written using code from the freesurfer toolbox. The 'nifti_img' filetype
@@ -116,6 +117,8 @@ cfg.downsample   = ft_getopt(cfg, 'downsample',   1);
 cfg.markorigin   = ft_getopt(cfg, 'markorigin',   'no');
 cfg.markfiducial = ft_getopt(cfg, 'markfiducial', 'no');
 cfg.markcorner   = ft_getopt(cfg, 'markcorner',   'no');
+cfg.spmversion   = ft_getopt(cfg, 'spmversion',   'spm12');
+
 
 cfg.datatype     = ft_getopt(cfg, 'datatype');
 cfg.scaling      = ft_getopt(cfg, 'scaling');
@@ -201,8 +204,8 @@ if ~isequal(datatype, cfg.datatype)
   ft_info('datatype of input data is %s, requested output datatype is %s', datatype, cfg.datatype);
 end
 if isequal(cfg.datatype, 'logical')
-  ft_warning('output datatype of logical is not supported, the data will be stored as int8');
-  cfg.datatype = 'int8';
+  ft_warning('output datatype of logical is not supported, the data will be stored as uint8');
+  cfg.datatype = 'uint8';
 end
 if istrue(cfg.scaling)
   ft_info('scaling the data and typecasting from %s to %s', datatype, cfg.datatype);
@@ -211,23 +214,37 @@ if istrue(cfg.scaling)
   minval = min(data(:));
   
   % scale the data so that it fits in the desired numerical data format
-  switch lower(cfg.datatype)
+  switch lower(cfg.datatype)    
     case 'uint8'
-      data = uint8((2^8-1) * (data-minval)./(maxval-minval));
+      slope  = (maxval-minval)/(2^8-1);
+      offset = minval; 
     case 'int8'
-      data = int8((2^7-1) * data./maxval);
+      slope  = maxval/(2^7-1);
+      offset = 0;
     case 'int16'
-      data = int16((2^15-1) * data./maxval);
+      slope  = maxval/(2^15-1);
+      offset = 0;
     case 'int32'
-      data = int32((2^31-1) * data./maxval);
+      slope  = maxval/(2^31-1);
+      offset = 0;
     case 'single'
-      data = single(data ./ maxval);
+      slope  = maxval;
+      offset = 0;
     case 'double'
-      data = double(data ./ maxval);
+      slope  = maxval;
+      offset = 0;
     otherwise
       ft_error('unknown datatype');
   end
-elseif ~isequal(datatype, cfg.datatype)
+  data = (data - offset)./slope;
+else
+  % thesea are parameters that can be written to a nifti file, and can be
+  % used to get the data back (close to) its original values
+  slope  = [];
+  offset = [];
+end
+
+if ~isequal(datatype, cfg.datatype)
   ft_info('typecasting the numeric data from %s to %s', datatype, cfg.datatype);
   data = cast(data, cfg.datatype);
 end
@@ -280,7 +297,7 @@ switch cfg.filetype
       ft_error('unsupported coordinate system ''%s''', volume.coordsys);
     end
     
-  case {'analyze_spm', 'nifti', 'nifti_img' 'mgz' 'mgh'}
+  case {'analyze_spm', 'nifti', 'nifti_img' 'nifti_spm' 'mgz' 'mgh'}
     % this format supports a homogenous transformation matrix
     % nothing needs to be changed
   otherwise
@@ -308,7 +325,7 @@ switch cfg.filetype
     if isempty(ext)
       cfg.filename = sprintf('%s.nii', cfg.filename);
     end
-    ft_write_mri(cfg.filename, data, 'dataformat', 'nifti', 'transform', transform);
+    ft_write_mri(cfg.filename, data, 'dataformat', 'nifti', 'transform', transform, 'scl_slope', slope, 'scl_inter', offset);
 
   case 'nifti_img'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -318,7 +335,17 @@ switch cfg.filetype
     if isempty(ext)
       cfg.filename = sprintf('%s.img', cfg.filename);
     end
-    ft_write_mri(cfg.filename, data, 'dataformat', 'nifti_img', 'transform', transform);
+    ft_write_mri(cfg.filename, data, 'dataformat', 'nifti_img', 'transform', transform, 'spmversion', cfg.spmversion);
+
+  case 'nifti_spm'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % write in nifti single file format, using functions from  the SPM toolbox
+    % this format supports a homogeneous transformation matrix
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if isempty(ext)
+      cfg.filename = sprintf('%s.nii', cfg.filename);
+    end
+    ft_write_mri(cfg.filename, data, 'dataformat', 'nifti_spm', 'transform', transform, 'spmversion', cfg.spmversion);
 
   case 'analyze_spm'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -328,7 +355,7 @@ switch cfg.filetype
     if isempty(ext)
       cfg.filename = sprintf('%s.img', cfg.filename);
     end
-    ft_write_mri(cfg.filename, data, 'dataformat', 'analyze', 'transform', transform);
+    ft_write_mri(cfg.filename, data, 'dataformat', 'analyze', 'transform', transform, 'spmversion', cfg.spmversion);
 
   case {'mgz' 'mgh'}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
