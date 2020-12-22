@@ -12,6 +12,7 @@ function [Va] = volumewrite_spm(filename, data, transform, spmversion, scl_slope
 if nargin<4 || isempty(spmversion)
   spmversion = 'spm12';
 end
+spmversion = lower(spmversion);
 
 if nargin<5
   scl_slope = 1;
@@ -40,18 +41,25 @@ if 0
 end
 
 datatype  = class(data);
-if isequal(datatype, 'single'), datatype = 'float32'; end
-if isequal(datatype, 'double'), datatype = 'float64'; end
+dim       = size(data);
+
+% different spm version have different names for double/single
+if isequal(datatype, 'single') && isequal(spmversion, 'spm2'),   datatype = 'float';   end
+if isequal(datatype, 'single') && ~isequal(spmversion, 'spm2'),  datatype = 'float32'; end
+if isequal(datatype, 'double') && ~isequal(spmversion, 'spm2'),  datatype = 'float64'; end
 
 typ       = spm_type(datatype);
-dim       = size(data);
 if isnan(typ)
   % convert every unsupported data type into double
   data      = double(data);
-  typ       = spm_type('float64');
+  if isequal(spmversion, 'spm2')
+    typ = spm_type('double');
+  else
+    typ = spm_type('float64');
+  end
 end
 
-switch lower(spmversion)
+switch spmversion
   case 'spm2'
     %see spm_vol
     Va         = [];
