@@ -57,7 +57,7 @@ output    = ft_getopt(varargin, 'output', 'fractal');
 pad       = ft_getopt(varargin, 'pad');
 padtype   = ft_getopt(varargin, 'padtype', 'zero');
 freqoi    = ft_getopt(varargin, 'freqoi', 'all');
-polyorder = ft_getopt(varargin, 'polyorder', 0);
+polyorder = ft_getopt(varargin, 'polyorder', 1);
 fbopt     = ft_getopt(varargin, 'feedback');
 verbose   = ft_getopt(varargin, 'verbose', true);
 
