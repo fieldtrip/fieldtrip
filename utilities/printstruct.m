@@ -107,7 +107,7 @@ elseif isstruct(val)
         case 'struct'
           line = [printstruct([name '.' fn{i}], fv, varargin{:}) 10];
         case 'function_handle'
-          line = printstr([name '.' fn{i}], func2str(fv));
+          line = printstr([name '.' fn{i}], func2str(fv), linebreaks, transposed);
         otherwise
           ft_error('unsupported');
       end
