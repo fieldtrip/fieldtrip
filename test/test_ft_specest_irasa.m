@@ -96,3 +96,47 @@ catch me
   end
 end
 
+% some added example code to test the effect of bandpass/highpassfiltering
+% on the estimates
+ntrl = 20;
+nsmp = 1000;
+fsample = 1000;
+for k = 1:ntrl
+  data.trial{k} = cumsum(randn(1,nsmp)); % this creates colored noise
+  data.time{k}  = (0:(nsmp-1))./fsample;
+end
+data.label{1} = 'chan01';
+
+cfg = [];
+cfg.method = 'mtmfft';
+cfg.output = 'pow';
+cfg.taper = 'hanning';
+cfg.pad   = 'nextpow2';
+freq = ft_freqanalysis(cfg, data);
+
+cfg.method = 'irasa';
+freqI = ft_freqanalysis(cfg, data);
+
+% what happens if we use bandpassfiltered data?
+cfg2            = [];
+cfg2.bpfilter   = 'yes';
+cfg2.bpfilttype = 'firws';
+cfg2.bpfreq     = [60 150];
+datafilt       = ft_preprocessing(cfg2, data);
+
+cfg2.bpfilter = 'no';
+cfg2.hpfilter = 'yes';
+cfg2.hpfreq   = 60;
+cfg2.hpfilttype = 'firws';
+datafilt2       = ft_preprocessing(cfg2, data);
+
+
+cfg.method = 'mtmfft';
+freqfilt = ft_freqanalysis(cfg, datafilt);
+freqfilt2 = ft_freqanalysis(cfg, datafilt2);
+cfg.method = 'irasa';
+freqfiltI = ft_freqanalysis(cfg, datafilt);
+freqfiltI2 = ft_freqanalysis(cfg, datafilt2);
+
+figure; semilogy(freq.freq, [freq.powspctrm;freqfilt.powspctrm;freqfilt2.powspctrm;freqI.powspctrm;freqfiltI.powspctrm;freqfiltI2.powspctrm]);
+legend({'mtmfft';'mtmfft-bpfiltered';'mtmfft-hpfiltered';'irasa';'irasa-bpfiltered';'irasa-hpfiltered'});

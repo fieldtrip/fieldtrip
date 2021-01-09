@@ -16,10 +16,14 @@ function [dat, ref] = ft_preproc_rereference(dat, refchan, method, handlenan, le
 %              which is calculated by using the forward theory, based on
 %              the electrode montage, head model and equivalent source
 %              model.
-%   handlenan  boolean, can be true or false
+%   handlenan  boolean, can be false (default) or true
 %
-% If the new reference channel is not specified, the data will be
+% If the new reference channel(s) are not specified, the data will be
 % rereferenced to the average of all channels.
+%
+% If the data that is used to compute the new reference contains NaNs,
+% these will spread to all output channels, unless the handlenan flag has
+% been set to true.
 %
 % See also PREPROC
 
@@ -56,6 +60,7 @@ if nargin<3 || isempty(method)
 end
 
 if nargin<4 || isempty(handlenan)
+  % default is not to ignore nans
   handlenan = false;
 end
 

@@ -30,10 +30,6 @@ function hdr = load_analyze_hdr(hdrfile)
 % load_analyze_hdr.m
 %
 % Original Author: Doug Greve
-% CVS Revision Info:
-%    $Author: nicks $
-%    $Date: 2011/03/02 00:04:12 $
-%    $Revision: 1.6 $
 %
 % Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
 %

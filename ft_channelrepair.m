@@ -159,7 +159,7 @@ end
 
 % get selection of channels that are missing and/or bad
 cfg.missingchannel = cat(1, cfg.missingchannel(:), cfg.badchannel(:));
-cfg.missingchannel = setdiff(cfg.missingchannel, data.label);
+cfg.missingchannel = setdiff(cfg.missingchannel, data.label, 'stable');
 cfg.badchannel = ft_channelselection(cfg.badchannel, data.label);
 fprintf('There are %d bad channels\n', length(cfg.badchannel));
 fprintf('There are %d missing channels\n', length(cfg.missingchannel));
@@ -178,8 +178,7 @@ interp.time    = data.time;
 if strcmp(cfg.method, 'weighted') || strcmp(cfg.method, 'average')
 
   if ~isempty(cfg.badchannel)
-    [goodchanlabels, goodchanindcs] = setdiff(data.label, cfg.badchannel);
-    goodchanindcs = sort(goodchanindcs); % undo automatical sorting by setdiff
+    [goodchanlabels, goodchanindcs] = setdiff(data.label, cfg.badchannel, 'stable');
     connectivityMatrix = channelconnectivity(cfg, data);
     connectivityMatrix = connectivityMatrix(:, goodchanindcs); % all chans x good chans
 

@@ -48,6 +48,11 @@ function [filt, B, A] = ft_preproc_lowpassfilter(dat,Fs,Flp,N,type,dir,instabili
 % domain signal is periodic. Another issue pertains to that frequencies are
 % not well defined over short time intervals; particularly for low frequencies.
 %
+% If the data contains NaNs, these will affect the output. With an IIR
+% filter, and/or with FFT-filtering, local NaNs will spread to the whole
+% time series. With a FIR filter, local NaNs will spread locally, depending
+% on the filter order.
+%
 % See also PREPROC
 
 % Copyright (c) 2003-2014, Robert Oostenveld, Arjen Stolk, Andreas Widmann
@@ -278,7 +283,7 @@ switch type
 end
 
 % demean the data before filtering
-meandat = mean(dat,2);
+meandat = nanmean(dat,2);
 dat = bsxfun(@minus, dat, meandat);
 
 try

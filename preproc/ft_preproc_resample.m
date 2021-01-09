@@ -15,6 +15,9 @@ function [datout, tim, Fnew] = ft_preproc_resample(dat, Fold, Fnew, method)
 % delay. For the other two methods you should apply an anti-aliassing
 % filter prior to calling this function.
 %
+% If the data contains NaNs, these are ignored for the computation, but
+% retained in the output.
+%
 % See also PREPROC, FT_PREPROC_LOWPASSFILTER
 
 % Copyright (C) 2006-2012, Robert Oostenveld
