@@ -11,24 +11,35 @@ function crossfreq = ft_crossfrequencyanalysis(cfg, freqlow, freqhigh)
 %
 %   cfg.freqlow    = scalar or vector, selection of frequencies for the low frequency data
 %   cfg.freqhigh   = scalar or vector, selection of frequencies for the high frequency data
+%
+% Channel selection can be specified according to whether one wants to perform within- or 
+% cross-channel analysis.
+%
+% For within-channel analysis (default), one specifies only a single channel
+% selection:
 %   cfg.channel    = cell-array with selection of channels, see FT_CHANNELSELECTION
-%   cfg.method     = string, can be
-%                     'coh' - coherence
-%                     'plv' - phase locking value
-%                     'mvl' - mean vector length
-%                     'mi'  - modulation index
-%   cfg.keeptrials = string, can be 'yes' or 'no'
+%
+% For cross-channel analysis, one specifies two sets:
+%   cfg.chanlow    = cell-array with selection of channels for the low frequency, see FT_CHANNELSELECTION
+%   cfg.chanhigh   = cell-array with selection of channels for the high frequency, see FT_CHANNELSELECTION
 %
 % Various metrics for cross-frequency coupling have been introduced in a number of
 % scientific publications, but these do not use a sonsistent method naming scheme,
 % nor implement it in exactly the same way. The particular implementation in this
 % code tries to follow the most common format, generalizing where possible. If you
 % want details about the algorithms, please look into the code.
+%   cfg.method     = string, can be
+%                     'coh' - coherence
+%                     'plv' - phase locking value
+%                     'mvl' - mean vector length
+%                     'mi'  - modulation index
 %
 % The modulation index implements
 %   Tort A. B. L., Komorowski R., Eichenbaum H., Kopell N. (2010). Measuring Phase-Amplitude
 %   Coupling Between Neuronal Oscillations of Different Frequencies. J Neurophysiol 104:
 %   1195?1210. doi:10.1152/jn.00106.2010
+%
+% cfg.keeptrials = string, can be 'yes' or 'no'
 %
 % See also FT_FREQANALYSIS, FT_CONNECTIVITYANALYSIS
 
@@ -82,40 +93,46 @@ end
 freqlow  = ft_checkdata(freqlow,  'datatype', 'freq', 'feedback', 'yes');
 freqhigh = ft_checkdata(freqhigh, 'datatype', 'freq', 'feedback', 'yes');
 
-% prior to 19 Jan 2017 this function had input options cfg.chanlow and cfg.chanhigh,
-% but nevertheless did not support between-channel CFC computations
-cfg = ft_checkconfig(cfg, 'forbidden', {'chanlow', 'chanhigh'});
+if isfield(cfg, 'chanlow') && isfield(cfg, 'chanhigh')
+    docrosschan = true;
+    cfg.chanlow  = ft_channelselection(cfg.chanlow, freqlow.label);
+    cfg.chanhigh  = ft_channelselection(cfg.chanhigh, freqhigh.label);
+    labelcmb = ft_channelcombination({cfg.chanlow,cfg.chanhigh},union(freqlow.label, freqhigh.label));
+    labelcmb(arrayfun(@(x) strcmp(labelcmb{x,:}), 1:size(labelcmb,1)),:) = []; % remove auto
+else  % within-channel analysis (default)
+    docrosschan = false;
+    % ensure that we are working on the intersection of the channels
+    cfg.channel  = ft_getopt(cfg, 'channel',  'all');
+    cfg.channel  = ft_channelselection(cfg.channel, intersect(freqlow.label, freqhigh.label));
+    cfg.chanlow    = cfg.channel;
+    cfg.chanhigh    = cfg.channel;
+    labelcmb = horzcat(cfg.channel,cfg.channel);
+end
 
-cfg.channel    = ft_getopt(cfg, 'channel',  'all');
 cfg.freqlow    = ft_getopt(cfg, 'freqlow',  'all');
 cfg.freqhigh   = ft_getopt(cfg, 'freqhigh', 'all');
 cfg.keeptrials = ft_getopt(cfg, 'keeptrials');
 
-% ensure that we are working on the intersection of the channels
-cfg.channel  = ft_channelselection(cfg.channel, intersect(freqlow.label, freqhigh.label));
-
 % make selection of frequencies and channels
 tmpcfg = [];
-tmpcfg.channel   = cfg.channel;
+tmpcfg.channel   = cfg.chanlow;
 tmpcfg.frequency = cfg.freqlow;
 freqlow = ft_selectdata(tmpcfg, freqlow);
 [tmpcfg, freqlow] = rollback_provenance(cfg, freqlow);
-try, cfg.channel = tmpcfg.channel;   end
 try, cfg.freqlow = tmpcfg.frequency; end
 
 % make selection of frequencies and channels
 tmpcfg = [];
-tmpcfg.channel   = cfg.channel;
+tmpcfg.channel   = cfg.chanhigh;
 tmpcfg.frequency = cfg.freqhigh;
 freqhigh = ft_selectdata(tmpcfg, freqhigh);
 [tmpcfg, freqhigh] = rollback_provenance(cfg, freqhigh);
-try, cfg.channel  = tmpcfg.channel;   end
 try, cfg.freqhigh = tmpcfg.frequency; end
 
 LF = freqlow.freq;
 HF = freqhigh.freq;
 ntrial = size(freqlow.fourierspctrm,1); % FIXME the dimord might be different
-nchan  = size(freqlow.fourierspctrm,2); % FIXME the dimord might be different
+nchan  = size(labelcmb,1);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % prepare the data
@@ -126,8 +143,8 @@ switch cfg.method
     % coherence
     cohdatas = zeros(ntrial,nchan,numel(LF),numel(HF));
     for  i =1:nchan
-      chandataLF = freqlow.fourierspctrm(:,i,:,:);
-      chandataHF = freqhigh.fourierspctrm(:,i,:,:);
+      chandataLF = freqlow.fourierspctrm(:,strcmp(freqlow.label,labelcmb{i,1}),:,:);
+      chandataHF = freqhigh.fourierspctrm(:,strcmp(freqhigh.label,labelcmb{i,2}),:,:);
       for j = 1:ntrial
         cohdatas(j,i,:,:) = data2coh(squeeze(chandataLF(j,:,:,:)),squeeze(chandataHF(j,:,:,:)));
       end
@@ -138,8 +155,8 @@ switch cfg.method
     % phase locking value
     plvdatas = zeros(ntrial,nchan,numel(LF),numel(HF));
     for  i =1:nchan
-      chandataLF = freqlow.fourierspctrm(:,i,:,:);
-      chandataHF = freqhigh.fourierspctrm(:,i,:,:);
+      chandataLF = freqlow.fourierspctrm(:,strcmp(freqlow.label,labelcmb{i,1}),:,:);
+      chandataHF = freqhigh.fourierspctrm(:,strcmp(freqhigh.label,labelcmb{i,2}),:,:);
       for j = 1:ntrial
         plvdatas(j,i,:,:) = data2plv(squeeze(chandataLF(j,:,:,:)),squeeze(chandataHF(j,:,:,:)));
       end
@@ -150,8 +167,8 @@ switch cfg.method
     % mean vector length
     mvldatas = zeros(ntrial,nchan,numel(LF),numel(HF));
     for  i =1:nchan
-      chandataLF = freqlow.fourierspctrm(:,i,:,:);
-      chandataHF = freqhigh.fourierspctrm(:,i,:,:);
+      chandataLF = freqlow.fourierspctrm(:,strcmp(freqlow.label,labelcmb{i,1}),:,:);
+      chandataHF = freqhigh.fourierspctrm(:,strcmp(freqhigh.label,labelcmb{i,2}),:,:);
       for j = 1:ntrial
         mvldatas(j,i,:,:) = data2mvl(squeeze(chandataLF(j,:,:,:)),squeeze(chandataHF(j,:,:,:)));
       end
@@ -163,8 +180,8 @@ switch cfg.method
     nbin       = 20; % number of phase bin
     pacdatas   = zeros(ntrial,nchan,numel(LF),numel(HF),nbin);
     for  i =1:nchan
-      chandataLF = freqlow.fourierspctrm(:,i,:,:);
-      chandataHF = freqhigh.fourierspctrm(:,i,:,:);
+      chandataLF = freqlow.fourierspctrm(:,strcmp(freqlow.label,labelcmb{i,1}),:,:);
+      chandataHF = freqhigh.fourierspctrm(:,strcmp(freqhigh.label,labelcmb{i,2}),:,:);
       for j = 1:ntrial
         pacdatas(j,i,:,:,:) = data2pac(squeeze(chandataLF(j,:,:,:)),squeeze(chandataHF(j,:,:,:)),nbin);
       end
@@ -257,11 +274,17 @@ switch cfg.method
 
 end % switch method for actual computation
 
-crossfreq.label      = cfg.channel;
 crossfreq.crsspctrm  = crsspctrm;
 crossfreq.dimord     = dimord;
 crossfreq.freqlow    = LF;
 crossfreq.freqhigh   = HF;
+
+if docrosschan
+    crossfreq.labelcmb = labelcmb;
+    crossfreq.dimord   = strrep(crossfreq.dimord,'chan','chancmb');
+else
+    crossfreq.label    = cfg.channel;
+end
 
 ft_postamble debug
 ft_postamble trackconfig
