@@ -18,10 +18,20 @@ function crossfreq = ft_crossfrequencyanalysis(cfg, freqlow, freqhigh)
 % For within-channel analysis (default), one specifies only a single channel
 % selection:
 %   cfg.channel    = cell-array with selection of channels, see FT_CHANNELSELECTION
+% In this case, the "dimord" will be "chan_freqlow_freqhigh"
 %
 % For cross-channel analysis, one specifies two sets:
 %   cfg.chanlow    = cell-array with selection of channels for the low frequency, see FT_CHANNELSELECTION
 %   cfg.chanhigh   = cell-array with selection of channels for the high frequency, see FT_CHANNELSELECTION
+% In this case, the "dimord" will be "chancmb_freqlow_freqhigh" and "label" field will be replaced with
+% "labelcmb" (corresponding to the dimension "chancmb") describing the pairs of channel combinations as 
+%   {'chanlow01' 'chanhigh01';
+%    'chanlow01' 'chanhigh02';
+%    ... ;
+%    'chanlow02' 'chanhigh01';
+%    ...
+%    }
+% N.B.: The order of channels corresponds to their order in the original "label" field
 %
 % Various metrics for cross-frequency coupling have been introduced in a number of
 % scientific publications, but these do not use a sonsistent method naming scheme,
