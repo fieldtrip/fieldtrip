@@ -280,7 +280,9 @@ elseif istrue(cfg.searchlight) && ~isempty(T) && data_is_3D
     cfg.mvpa.neighbours        = {cfg.connectivity T};
     cfg.mvpa.sample_dimension  = 1;
     cfg.mvpa.feature_dimension = [];
-    cfg.mvpa.append            = true;
+    if isequal(cfg.mvpa.classifier, 'naive_bayes')
+      cfg.mvpa.append = true;
+    end
   else
     cfg.mvpa.neighbours        = T;
     cfg.mvpa.sample_dimension  = 1;
