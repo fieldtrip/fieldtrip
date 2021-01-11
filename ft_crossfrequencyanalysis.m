@@ -21,8 +21,10 @@ function crossfreq = ft_crossfrequencyanalysis(cfg, freqlow, freqhigh)
 % In this case, the "dimord" will be "chan_freqlow_freqhigh"
 %
 % For cross-channel analysis, one specifies two sets:
-%   cfg.chanlow    = cell-array with selection of channels for the low frequency, see FT_CHANNELSELECTION
-%   cfg.chanhigh   = cell-array with selection of channels for the high frequency, see FT_CHANNELSELECTION
+%   cfg.chanlow    = cell-array with selection of channels for the phase providing channels from the 
+%                    freqlow data argument, with wildcards allowed, see FT_CHANNELSELECTION
+%   cfg.chanhigh   = cell-array with selection of channels for the amplitude providing channels from the 
+%                    freqhigh data argument, with wildcards allowed, see FT_CHANNELSELECTION
 % In this case, the "dimord" will be "chancmb_freqlow_freqhigh" and "label" field will be replaced with
 % "labelcmb" (corresponding to the dimension "chancmb") describing the pairs of channel combinations as 
 %   {'chanlow01' 'chanhigh01';
@@ -34,7 +36,7 @@ function crossfreq = ft_crossfrequencyanalysis(cfg, freqlow, freqhigh)
 % N.B.: The order of channels corresponds to their order in the original "label" field
 %
 % Various metrics for cross-frequency coupling have been introduced in a number of
-% scientific publications, but these do not use a sonsistent method naming scheme,
+% scientific publications, but these do not use a consistent method naming scheme,
 % nor implement it in exactly the same way. The particular implementation in this
 % code tries to follow the most common format, generalizing where possible. If you
 % want details about the algorithms, please look into the code.
@@ -103,20 +105,23 @@ end
 freqlow  = ft_checkdata(freqlow,  'datatype', 'freq', 'feedback', 'yes');
 freqhigh = ft_checkdata(freqhigh, 'datatype', 'freq', 'feedback', 'yes');
 
+% FIXME the below is a bit hacky but it does the trick
 if isfield(cfg, 'chanlow') && isfield(cfg, 'chanhigh')
-    docrosschan = true;
-    cfg.chanlow  = ft_channelselection(cfg.chanlow, freqlow.label);
-    cfg.chanhigh  = ft_channelselection(cfg.chanhigh, freqhigh.label);
-    labelcmb = ft_channelcombination({cfg.chanlow,cfg.chanhigh},union(freqlow.label, freqhigh.label));
-    labelcmb(arrayfun(@(x) strcmp(labelcmb{x,:}), 1:size(labelcmb,1)),:) = []; % remove auto
-else  % within-channel analysis (default)
-    docrosschan = false;
-    % ensure that we are working on the intersection of the channels
-    cfg.channel  = ft_getopt(cfg, 'channel',  'all');
-    cfg.channel  = ft_channelselection(cfg.channel, intersect(freqlow.label, freqhigh.label));
-    cfg.chanlow    = cfg.channel;
-    cfg.chanhigh    = cfg.channel;
-    labelcmb = horzcat(cfg.channel,cfg.channel);
+  docrosschan   = true;
+  cfg.chanlow   = ft_channelselection(cfg.chanlow, freqlow.label);
+  cfg.chanhigh  = ft_channelselection(cfg.chanhigh, freqhigh.label);
+  labelcmb = ft_channelcombination({cfg.chanlow,cfg.chanhigh},union(freqlow.label, freqhigh.label));
+  labelcmb(arrayfun(@(x) strcmp(labelcmb{x,:}), 1:size(labelcmb,1)),:) = []; % remove auto
+elseif ~isfield(cfg, 'chanlow') && ~isfield(cfg, 'chanhigh')  % within-channel analysis (default)
+  docrosschan = false;
+  % ensure that we are working on the intersection of the channels
+  cfg.channel  = ft_getopt(cfg, 'channel',  'all');
+  cfg.channel  = ft_channelselection(cfg.channel, intersect(freqlow.label, freqhigh.label));
+  cfg.chanlow  = cfg.channel;
+  cfg.chanhigh = cfg.channel;
+  labelcmb = horzcat(cfg.channel,cfg.channel);
+else
+  ft_error('you should either specify both cfg.chanlow and cfg.chanhigh, or none of these options');
 end
 
 cfg.freqlow    = ft_getopt(cfg, 'freqlow',  'all');
@@ -290,10 +295,10 @@ crossfreq.freqlow    = LF;
 crossfreq.freqhigh   = HF;
 
 if docrosschan
-    crossfreq.labelcmb = labelcmb;
-    crossfreq.dimord   = strrep(crossfreq.dimord,'chan','chancmb');
+  crossfreq.labelcmb = labelcmb;
+  crossfreq.dimord   = strrep(crossfreq.dimord,'chan','chancmb');
 else
-    crossfreq.label    = cfg.channel;
+  crossfreq.label    = cfg.channel;
 end
 
 ft_postamble debug
