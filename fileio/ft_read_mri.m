@@ -490,7 +490,7 @@ switch dataformat
       mri.hdr  = removefields(tmp, {'data'});
       mri.anatomy = zeros([index.dim(1:3) tmp.dim(2)]);
       mri.anatomy(vox_index) = tmpdata;
-      mri.dim       = index.dim(1:length(size(tmp.data)));
+      mri.dim       = index.dim(1:3);%index.dim(1:length(size(tmp.data)));
       mri.transform = tmp.transform;
       mri.transform(1:3,1:3) = diag(tmp.vox(1:3))*mri.transform(1:3,1:3);
     end
