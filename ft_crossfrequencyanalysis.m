@@ -263,7 +263,7 @@ switch cfg.method
     else
       dimord = 'chan_freqlow_freqhigh' ;
       crsspctrm = zeros(nchan,nlf,nhf);
-      cfcdatamean = squeeze(mean(cfcdata,1));
+      cfcdatamean = reshape(mean(cfcdata,1),[nchan nlf nhf nbin 1]);
 
       for k =1:nchan
         pac = squeeze(cfcdatamean(k,:,:,:));
