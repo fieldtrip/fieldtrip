@@ -477,20 +477,27 @@ switch dataformat
       tmpdata(isfinite(tmpdata)) = tmp.data(tmpdata(isfinite(tmpdata)));
       
       switch fix2vox_fun
+        case 'magmax'
+          tmpx    = nanmin(tmpdata,[],1).';
+          tmpdata = nanmax(tmpdata,[],1).';
+          tmpdata(abs(tmpx)>tmpdata) = tmpx(abs(tmpx)>tmpdata);
         case 'max'
-          tmpdata = nanmax(tmpdata,[],1);
+          tmpdata = nanmax(tmpdata,[],1).';
         case 'min'
-          tmpdata = nanmin(tmpdata,[],1);
+          tmpdata = nanmin(tmpdata,[],1).';
         case 'mean'
-          tmpdata = nanmean(tmpdata,1);
+          tmpdata = nanmean(tmpdata,1).';
+        case 'none'
+          tmpdata = tmpdata.';
         otherwise
           ft_error('unsupported fixel2voxel operation requested');
       end
       
       mri.hdr  = removefields(tmp, {'data'});
-      mri.anatomy = zeros([index.dim(1:3) tmp.dim(2)]);
-      mri.anatomy(vox_index) = tmpdata;
-      mri.dim       = index.dim(1:length(size(tmp.data)));
+      mri.anatomy = zeros([prod(index.dim(1:3)) size(tmpdata,2)]);
+      mri.anatomy(vox_index,:) = tmpdata;
+      mri.anatomy   = reshape(mri.anatomy, [index.dim(1:3) size(tmpdata,2)]);
+      mri.dim       = size(mri.anatomy) ;%index.dim(1:length(size(tmp.data)));
       mri.transform = tmp.transform;
       mri.transform(1:3,1:3) = diag(tmp.vox(1:3))*mri.transform(1:3,1:3);
     end
