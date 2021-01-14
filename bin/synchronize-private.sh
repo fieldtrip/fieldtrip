@@ -2442,6 +2442,14 @@ ARRAY+=(private/ndgrid.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# nearest.m
+
+ARRAY=()
+ARRAY+=(utilities/nearest.m)
+ARRAY+=(preproc/private/nearest.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # neuralynx_crc.m
 
 ARRAY=()
