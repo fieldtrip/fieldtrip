@@ -42,6 +42,7 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %     'wppc'       weighted pairwise phase consistency
 %     'corr'       Pearson correlation, support for timelock or raw data
 %     'laggedcoherence', lagged coherence estimate
+%     'plm'        phase linearity measurement
 %
 % Additional configuration options are
 %   cfg.channel    = Nx1 cell-array containing a list of channels which are
@@ -66,6 +67,8 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %                     method 'powcorr' and 'amplcorr'.
 %   cfg.bandwidth   = scalar, needed for 'psi', half-bandwidth of the integration
 %                     across frequencies (in Hz, default is the Rayleigh frequency)
+%                     needed for 'plm', half-bandwidth of the integration window (in Hz)
+%   cfg.fsample     = scalar, needed for 'plm', sampling frequency of the data in [Hz]
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -391,6 +394,13 @@ switch cfg.method
     if ~isfield(cfg, 'laggedcoherence'), cfg.laggedcoherence = []; end
     cfg.laggedcoherence.lags = ft_getopt(cfg.laggedcoherence, 'lags', []);
     cfg.laggedcoherence.timeresolved = false;
+    
+   case {'plm'}
+    data = ft_checkdata(data, 'datatype', 'raw');
+    inparam = 'trial';
+    outparam = 'plm';
+  
+    cfg.bandwidth = ft_getopt(cfg, 'bandwidth', 0.5);
     
   otherwise
     ft_error('unknown method % s', cfg.method);
@@ -1036,6 +1046,11 @@ switch cfg.method
     optarg = cat(2, optarg, {'powindx', powindx});
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     data = removefields(data, 'dof'); % the dof is not to be trusted
+    
+  case 'plm'
+    % phase linearity measurement.
+    optarg = {'bandwidth', cfg.bandwidth, 'fsample', cfg.fsample};
+    [datout] = ft_connectivity_plm(data.(inparam), optarg{:});
   
   otherwise
     ft_error('unknown method %s', cfg.method);
