@@ -288,13 +288,10 @@ switch cfg.method
     
   case 'irasa'
     cfg.taper       = ft_getopt(cfg, 'taper', 'hanning');
-    cfg.output      = ft_getopt(cfg, 'output', 'pow');
+    cfg.output      = ft_getopt(cfg, 'output', 'fractal');
     cfg.pad         = ft_getopt(cfg, 'pad', 'nextpow2');
     if ~isequal(cfg.taper, 'hanning')
       ft_error('the irasa method supports hanning tapers only');
-    end
-    if ~isequal(cfg.output, 'pow')
-      ft_error('the irasa method outputs power only');
     end
     if ~isequal(cfg.pad, 'nextpow2')
       ft_warning('consider using cfg.pad=''nextpow2'' for the irasa method');
@@ -345,7 +342,7 @@ if isempty(cfg.pad)
   cfg.pad = 'maxperlen';
 end
 cfg.padtype   = ft_getopt(cfg, 'padtype',   'zero');
-cfg.output    = ft_getopt(cfg, 'output',    'pow');
+cfg.output    = ft_getopt(cfg, 'output',    'pow'); % the default for irasa is set earlier
 cfg.calcdof   = ft_getopt(cfg, 'calcdof',   'no');
 cfg.channel   = ft_getopt(cfg, 'channel',   'all');
 cfg.precision = ft_getopt(cfg, 'precision', 'double');
@@ -384,7 +381,7 @@ if strcmp(cfg.keeptrials, 'yes') && strcmp(cfg.keeptapers, 'yes')
 end
 
 % Set flags for output
-if strcmp(cfg.output, 'pow')
+if ismember(cfg.output, {'pow','fractal','original'})
   powflg = 1;
   csdflg = 0;
   fftflg = 0;
@@ -482,9 +479,9 @@ end
 
 % options that don't change over trials
 if isfield(cfg, 'tapsmofrq')
-  options = {'pad', cfg.pad, 'padtype', cfg.padtype, 'freqoi', cfg.foi, 'tapsmofrq', cfg.tapsmofrq, 'polyorder', cfg.polyremoval};
+  options = {'pad', cfg.pad, 'padtype', cfg.padtype, 'freqoi', cfg.foi, 'tapsmofrq', cfg.tapsmofrq, 'polyorder', cfg.polyremoval, 'output', cfg.output};
 else
-  options = {'pad', cfg.pad, 'padtype', cfg.padtype, 'freqoi', cfg.foi, 'polyorder', cfg.polyremoval};
+  options = {'pad', cfg.pad, 'padtype', cfg.padtype, 'freqoi', cfg.foi, 'polyorder', cfg.polyremoval, 'output', cfg.output};
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -531,11 +528,11 @@ for itrial = 1:ntrials
     case 'mtmfft'
       [spectrum,ntaper,foi] = ft_specest_mtmfft(dat, time, 'taper', cfg.taper, options{:}, 'feedback', fbopt);
       hastime = false;
-      
+    
     case 'irasa'
-      [spectrum,ntaper,foi] = ft_specest_irasa(dat, time, 'taper', cfg.taper, options{:}, 'feedback', fbopt);
+      [spectrum,ntaper,foi] = ft_specest_irasa(dat, time, options{:}, 'feedback', fbopt);
       hastime = false;
-      
+
     case 'wavelet'
       [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:}, 'feedback', fbopt);
       
