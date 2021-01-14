@@ -1,8 +1,10 @@
 function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
-% FT_STATISTICS_MVPA performs multivariate pattern classification
-% on the data. A search parameter can be set to specify which data
-% dimensions so search/loop over. Additionally, generalization (time x time
-% or freq x freq) is implemented. 
+
+% FT_STATISTICS_MVPA performs multivariate pattern classification or 
+% regression using the MVPA-Light toolbox. The function supports
+% cross-validation, searchlight analysis, generalization, nested
+% preprocessing, a variety of classification and regression metrics, as
+% well as statistical testing of these metrics.
 %
 % This function should not be called directly, instead
 % you should call the function that is associated with the type of
@@ -17,153 +19,130 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 % FT_FREQGRANDAVERAGE or FT_SOURCEGRANDAVERAGE respectively.
 %
 % The configuration can contain
-%   cfg.search          = char or cell array, specifies which dimensions to
-%                         search/loop over when the data is multi-dimensional. 
-%                         If cfg.search = 'time' 
-%                         then a separate classification is performed for
-%                         every time point. If cfg.search = 'chan', a
-%                         separate classification is performed for every
-%                         channel. If cfg.search = 'freq', a separate
-%                         classification is performed for every frequency.
-%                         Multiple search dimensions can be given, e.g.
-%                         {'time' 'freq'}. 
-%                         Note that all data dimensions that are not search
-%                         dimensions will be considered as features. E.g.,
-%                         if the data is rpt x chan x time, and
-%                         cfg.search='time', then the channels will be used
-%                         as features, and if cfg.search='chan', the times
-%                         will be used as features, unless either
-%                         cfg.avgovertime or cfg.avgoverchan are true.
-%                         In the search, neighbouring
-%                         channels/times/frequencies can be added as features, 
-%                         see below for more information on how to do this.
-%                         (default values is 'time' if the data has a time 
-%                         dimension, else 'freq' if the data has a frequency
-%                         dimension, else '')
-%   cfg.generalize      = 'no' or 'time' or 'freq'. If 'time', performs time
-%                         generalization (aka time x time classification). 
-%                         The classifier is trained at each time point and 
-%                         tested at every time point. The result is a 
-%                         time x time matrix of classification performance.
-%                         For frequency or time-frequency data, it can be
-%                         alternatively set to 'freq', so that
-%                         generalization is performed across frequencies.
-%                         (default 'no')
+%   cfg.feature         = specifies the name or index of the dimension 
+%                         that serves as features for the classifier or
+%                         regression model. Dimensions that are not
+%                         samples or features act as searchlight
+%                         dimensions. For instance, assume the data is a
+%                         3D array of size [samples x channels x time]. 
+%                         If cfg.feature = 2, the channels serve as 
+%                         features. A classification is then performed for
+%                         each time point (we call time a searchlight
+%                         dimension). Conversely, if cfg.feature = 3, the
+%                         time points serve as features. A classification
+%                         is performed for each channel (channel is a
+%                         searchlight dimension). 
+%                         If cfg.feature = [], then all non-sample
+%                         dimensions serve as searchlight dimensions.
+%                         If the dimensions have names (ie cfg.dimord
+%                         exists), then instead of numbers the feature can
+%                         be specified as a string (e.g. 'chan').
+%                         (default 2)
+%   cfg.generalize      = specifies the name or index of the dimensions
+%                         that serves for generalization (if any). For
+%                         instance, if the data is [samples x channels x
+%                         time], and cfg.generalize = 3, a time x time
+%                         generalization is performed. If cfg.generalize =
+%                         2, a electrode x electrode generalization is
+%                         performed. cfg.generalize must refer to a
+%                         searchlight dimension, therefore its value must
+%                         be different from the value of cfg.feature.
+%                         (default [])
 %   cfg.mvpa            = structure that contains detailed options for the
 %                         MVPA procedure. See
 %                         https://github.com/treder/MVPA-Light for more
-%                         details.
-%   cfg.mvpa.classifier      = 'lda'          Regularised linear discriminant analysis
-%                                        (LDA) (for two classes)
-%                         'multiclass_lda' LDA for more than two classes
-%                         'logreg'       Logistic regression
-%                         'naive_bayes'  Naive Bayes
-%                         'svm'          Support Vector Machine (SVM)
+%                         details on the parameters and the available
+%                         statistical models and metrics.
+%
+%   cfg.mvpa.classifier = string specifying the classifier 
+%                         Available classifiers:
 %                         'ensemble'     Ensemble of classifiers. Any of the other
 %                                        classifiers can be used as a learner.
 %                         'kernel_fda'   Kernel Fisher Discriminant Analysis
-%                          'libsvm'      (requires LIBSVM toolbox)
-%                          'liblinear'   (requires LIBLINEAR toolbox)
-%                          Documentation for each classifier is found at 
-%                          github.com/treder/MVPA-Light/#classifiers
-%   cfg.mvpa.metric          = string, performance metric. Possible metrics:
-%                          accuracy auc tval dval confusion kappa precision
-%                          recall f1. Multiple metrics can be given as a
-%                          cell array eg {'accuracy' 'f1'}.
-%                          Documentation for each metric is found at 
-%                          github.com/treder/MVPA-Light/#metrics
-%   cfg.mvpa.hyperparameter = struct, structure with hyperparameters for the
-%                         classifier (see HYPERPARAMETERS below)
-%   cfg.mvpa.feedback         = 'yes' or 'no', whether or not to print feedback on the console (default 'yes')
+%                         'lda'          Regularised linear discriminant analysis
+%                                        (LDA) (for two classes)
+%                         'logreg'       Logistic regression
+%                         'multiclass_lda' LDA for more than two classes
+%                         'naive_bayes'  Naive Bayes
+%                         'svm'          Support Vector Machine (SVM)
+%                         More details on the classifiers: https://github.com/treder/MVPA-Light#classifiers-for-two-classes-
 %
-% CROSS-VALIDATION is used to obtain a realistic estimate of classification 
-% performance. It is controlled by the following parameters:
-%   cfg.mvpa.cv              = string, cross-validation type, either 'kfold', 'leaveout'
-%                         or 'holdout'. If 'none', no cross-validation is
+%                         Additionally, you can choose 'libsvm' or
+%                         'liblinear' as a model. They provide interfaces
+%                         for logistic regression, SVM, and Support Vector
+%                         Regression. Note that they can act as either
+%                         classifiers or regression models. An installation
+%                         of LIBSVM or LIBLINEAR is required. 
+%   cfg.mvpa.model      = string specifying the regression model. If a
+%                         regression model has been specified,
+%                         cfg.mvpa.classifier should be empty (and vice
+%                         versa). If neither a classifier nor regression
+%                         model is specified, a LDA classifier is used by
+%                         default.
+%
+%                         Available regression models:
+%                         'ridge         Ridge regression
+%                         'kernel_ridge' Kernel Ridge regression
+%                         More details on the regression models: https://github.com/treder/MVPA-Light#regression-models-
+%   cfg.mvpa.metric     = string, classification or regression metric. 
+%                         Classification metrics: accuracy auc confusion 
+%                         dval f1 kappa precision recall tval
+%                         Regression metrics: mae mse r_squared
+%                         
+%   cfg.mvpa.hyperparameter  = struct, structure with hyperparameters for the
+%                         classifier or regression model (see HYPERPARAMETERS below)
+%   cfg.mvpa.feedback   = 'yes' or 'no', whether or not to print feedback on the console (default 'yes')
+%
+% To obtain a realistic estimate of classification performance,
+% cross-validation is used. It is controlled by the following parameters:
+%   cfg.mvpa.cv         = string, cross-validation type, either 'kfold', 'leaveout'
+%                         'holdout', or 'predefined'. If 'none', no cross-validation is
 %                         used and the classifier is tested on the training
 %                         set. (default 'kfold')
-%   cfg.mvpa.k               = number of folds in k-fold cross-validation (default 5)
-%   cfg.mvpa.repeat          = number of times the cross-validation is repeated
+%   cfg.mvpa.k          = number of folds in k-fold cross-validation (default 5)
+%   cfg.mvpa.repeat     = number of times the cross-validation is repeated
 %                         with new randomly assigned folds (default 5)
-%   cfg.mvpa.p               = if cfg.cv is 'holdout', p is the fraction of test
+%   cfg.mvpa.p          = if cfg.cv is 'holdout', p is the fraction of test
 %                         samples (default 0.1)
-%   cfg.mvpa.stratify        = if 1, the class proportions are approximately
+%   cfg.mvpa.stratify   = if 1, the class proportions are approximately
 %                         preserved in each test fold (default 1)
-%
-%
-% PREPROCESSING:  
-% Defines a nested preprocessing pipeline. The preprocessing is applied
-% on the traindata within the cross-validation. Parameters estimated
-% from the train data (e.g. mean, variance) are then used to transform the
-% test data. (see https://github.com/treder/MVPA-Light#preprocessing)
-% .preprocess         - cell array containing the preprocessing pipeline. The
-%                       pipeline is applied in chronological order
-% .preprocess_param   - cell array of preprocessing parameter structs for each
-%                       function. Length of preprocess_param must match length
-%                       of preprocess
+%   cfg.mvpa.fold       = if cv='predefined', fold is a vector of length
+%                         #samples that specifies the fold each sample belongs to
 %
 % HYPERPARAMETERS:
 % Each classifier comes with its own set of hyperparameters, such as
-% regularisation parameters and the kernel. Hyperparameters can be set
+% regularization parameters and the kernel. Hyperparameters can be set
 % using the cfg.hyperparameter substruct. For instance, in LDA, 
-%         cfg.hyperparameter.lambda = 'auto' 
-% sets the lambda regularisation parameter to automatic regularisation.
+% cfg.hyperparameter.lambda = 'auto' sets the lambda regularization parameter.
 %
 % The specification of the hyperparameters is found in the training function
 % for each classifier at github.com/treder/MVPA-Light/tree/master/classifier
 % If a hyperparameter is not specified, default values are used.
 %
-% SEARCH using NEIGHBOURS: 
-% When one or more search dimensions are given, a separate
-% classification is performed for each element along the search dimension
-% (e.g. time, channel, or frequency). Such an analysis highlights which
-% times/channels/frequencies contain discriminative information. 
-% Sometimes it is useful to use a "searchlight" that includes neighbouring
-% channels, time points, of frequencies, as well. To this end, the
-% following optional parameters can be specified:
+% SEARCHLIGHT ANALYSIS:
+% Classification using a feature searchlight approach can highlight which
+% feature(s) are informative. To this end, classification is performed on
+% each feature separately. However, neighbouring features can enter the
+% classification together when specified. Optional parameters:
 %
-% cfg.mvpa.neighbours   = neighbourhood structure, see FT_PREPARE_NEIGHBOURS
-%                         The neighbours must correspond to the search
-%                         dimension. For instance, if cfg.search = 'chan',
-%                         then the neighbours must correspond to channels.
-%                         If cfg.search = 'time', they must correspond to
-%                         the time points. If no neighbours are provided, 
-%                         Alternatively, a matrix can be given whose size 
-%                         matrix must agree with the search dimension (eg
-%                         [channel x channel] or [time x time] matrix).
-%                         This matrix can be either
-%                         a GRAPH consisting of 0's and 1's. A 1 in the
-%                         (i,j)-th element signifies that feature i and feature j
-%                         are neighbours, and a 0 means they are not neighbours
-%                         or a DISTANCE MATRIX, where larger values mean larger distance.
-%                         If no matrix is provided, every feature is only neighbour
-%                         to itself and classification is performed for each feature
-%                         separately.
-%                         Note that multiple neighbour structures can be
-%                         given as a cell array if cfg.search contains
-%                         multiple entries.
-% cfg.mvpa.size         = size of the 'neighbourhood' of a feature.
-%                         number of steps taken through the neighbourhood
-%                         to include neighbours
-%                         0: only the feature itself is considered (no neighbours)
-%                         1: the feature and its immediate neighbours
-%                         2: the feature, its neighbours, and its neighbours'
-%                         neighbours
-%                         3+: neighbours of neighbours of neighbours etc
-%                         (default 1)
-%                         if cfg.neighbours is a distance matrix, size defines the number of
-%                         neighbouring features that enter the classification
-%                         0: only the feature itself is considered (no neighbours)
-%                         1: the feature and its first closest neighbour
-%                            according to the distance matrix
-%                         2+: the 2 closest neighbours etc.
+%   cfg.mvpa.neighbours   = neighbourhood structure, see FT_PREPARE_NEIGHBOURS
+%                           Alternatively, a [features x features] matrix specifying
+%                           which features are neighbours of each other. This
+%                           matrix consists of 0's and 1's. A 1 in the
+%                           (i,j)-th element signifies that feature i and feature j
+%                           are neighbours, and a 0 means they are not neighbours.
+%
+% TODO: for time x time generalisation, in MVPA light we can use two
+% different datasets (one for training the classifier, the other one for
+% testing). This could be realised eg using extra fields in cfg such as
+% cfg.X2 for dataset 2 and cfg.design2 for the second design matrix
 %
 % Returns:
 %   stat        = struct with results. the .metric field contains the
 %                   requested metrics
 %
 
-% Copyright (C) 2019, Matthias Treder
+% Copyright (C) 2019-2020, Matthias Treder and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -189,278 +168,293 @@ ft_hastoolbox('mvpa-light', 1);
 assert(isnumeric(dat),    'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 assert(isnumeric(design), 'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 
-% cfg: set defaults
-cfg.generalize      = ft_getopt(cfg, 'generalize',   'no');
-cfg.mvpa            = ft_getopt(cfg, 'mvpa',        struct());
-cfg.mvpa.classifier = ft_getopt(cfg.mvpa, 'classifier', 'lda');
+% backward compatibility
+cfg.mvpa = ft_checkconfig(cfg.mvpa, 'renamed', {'param', 'hyperparameter'});
+ft_checkconfig(cfg.mvpa, 'deprecated', {'balance' 'normalise' 'replace'});
+
+% cfg: set defaults 
+cfg.feature         = ft_getopt(cfg, 'feature',     2);
+cfg.generalize      = ft_getopt(cfg, 'generalize',  []);
+cfg.connectivity    = ft_getopt(cfg, 'connectivity', []); % the default is dealt with below
+
+cfg.mvpa            = ft_getopt(cfg, 'mvpa',         []);
+cfg.mvpa.neighbours = ft_getopt(cfg, 'neighbours', []);
+cfg.mvpa.classifier = ft_getopt(cfg.mvpa, 'classifier', []);
+cfg.mvpa.model      = ft_getopt(cfg.mvpa, 'model', []);
 cfg.mvpa.metric     = ft_getopt(cfg.mvpa, 'metric',     'accuracy');
 cfg.mvpa.feedback   = ft_getopt(cfg.mvpa, 'feedback',   'yes');
-cfg.mvpa.neighbours = ft_getopt(cfg.mvpa, 'neighbours', []);
-cfg.mvpa.cv         = ft_getopt(cfg.mvpa, 'cv', 'kfold');
+cfg.mvpa.timwin     = ft_getopt(cfg.mvpa, 'timwin',     []); % in samples because time axis might not be known
 
-% check type of cfg parameters
-ft_checkopt(cfg,      'generalize', 'char', {'no', 'time', 'freq'});
-ft_checkopt(cfg,      'mvpa',       'struct');
-ft_checkopt(cfg.mvpa, 'feedback',   'char', {'no', 'yes'});
-ft_checkopt(cfg.mvpa, 'cv',         'char', {'kfold', 'leaveout', 'holdout','none'});
+assert(isempty(cfg.mvpa.classifier) || isempty(cfg.mvpa.model), 'set either a cfg.mvpa.classifier (for classification) or a cfg.mvpa.model (for regression), not both')
 
-% flip dimensions such that trials come first
-dat = dat';
-
-% if cfg.dim has more than one non-singleton entry then the data has been
-% multi-dimensional before. We must reshape it back to run it in MVPA-Light
-n_extra_dim = sum(cfg.dim > 1);
-if numel(cfg.dim) > 1
-  dat = reshape(dat, [size(dat,1), cfg.dim]);
+if isfield(cfg, 'dimord')
+    cfg.mvpa.dimension_names = ft_getopt(cfg.mvpa, 'dimension_names', [{'samples'} tokenize(cfg.dimord, '_')]);
 end
 
-% design is the class labels (clabel)
-clabel = design;
-
-%% check for deprecated notation
-if isfield(cfg, 'timextime')
-    ft_warning('The parameter cfg.timextime has been removed, setting cfg.generalize = ''time'' instead')
-    cfg.generalize = 'time';
-end
-if isfield(cfg, 'searchlight')
-    ft_warning('The parameter cfg.searchlight has been removed, setting cfg.search = ''chan'' instead')
-    cfg.search = {'chan'};
-end
-
-%% check if any cfg parameters are incompatible
-if ~strcmp(cfg.generalize,'no') && isempty(strfind(cfg.dimord, cfg.generalize))
-    ft_error('cfg.generalize is ''%s'' but there is no such dimension since dimord is ''%s''', cfg.generalize, cfg.dimord)
-end
-
-if ~strcmp(cfg.generalize,'no') && n_extra_dim < 1
-  ft_warning('cfg.generalize = ''%s'' but there does not seem to be such a dimension in the data', cfg.generalize);
-  cfg.timextime = 'no';
-end
-
-%% extract dimensions from cfg.dimord or guess them
-if isfield(cfg,'dimord')
-    dimord_cell = [{'rpt'} strsplit(cfg.dimord,'_')];
+% deal with the neighbourhood of the channels/triangulation/voxels
+if isempty(cfg.connectivity)
+  if isfield(cfg, 'dim') && ~isfield(cfg, 'channel') && ~isfield(cfg, 'tri')
+    % input data can be reshaped into a 3D volume, use bwlabeln/spm_bwlabel rather than clusterstat
+    ft_info('using connectivity of voxels in 3-D volume\n');
+    cfg.connectivity = nan;
+    %if isfield(cfg, 'inside')
+    %  cfg = fixinside(cfg, 'index');
+    %end
+  elseif isfield(cfg, 'tri')
+    % input data describes a surface along which neighbours can be defined
+    ft_info('using connectivity of vertices along triangulated surface\n');
+    cfg.connectivity = triangle2connectivity(cfg.tri);
+    if isfield(cfg, 'insideorig')
+      cfg.connectivity = cfg.connectivity(cfg.insideorig, cfg.insideorig);
+    end
+  elseif isfield(cfg, 'avgoverchan') && istrue(cfg.avgoverchan)
+    % channel dimension has been averaged across, no sense in clustering across space
+    cfg.connectivity = true(1);
+  elseif isfield(cfg, 'channel')
+    cfg.neighbours   = ft_getopt(cfg, 'neighbours', []);
+    cfg.connectivity = channelconnectivity(cfg);
+  else
+    % there is no connectivity in the spatial dimension
+    cfg.connectivity = false(size(dat,1));
+  end
 else
-    ft_warning('no dimord found, trying to guess it')
-    % identify the calling function to know whether its timelock or freq data
-    [calling, I] = dbstack;
-    calling = calling(I+1).name;
-    is_timelock = strcmp(calling, 'ft_timelockstatistics');
-    is_freq     = strcmp(calling, 'ft_freqstatistics');
-    dimord_cell = [];
-    if is_timelock, dimord_cell= {'rpt' 'chan' 'time'};
-    elseif is_freq, dimord_cell = {'rpt' 'chan' 'freq' 'time'}; end
-    dimord_cell = dimord_cell(1:n_extra_dim+1);
+  % use the specified connectivity: op hoop van zegen
 end
 
-% if data has been averaged over time/chans we must account for this in dimord
-if isfield(cfg,'avgoverchan') && strcmp(cfg.avgoverchan,'yes'), dimord_cell(ismember(dimord_cell,'chan')) = []; end
-if isfield(cfg,'avgovertime') && strcmp(cfg.avgovertime,'yes'), dimord_cell(ismember(dimord_cell,'time')) = []; end
-if isfield(cfg,'avgoverfreq') && strcmp(cfg.avgoverfreq,'yes'), dimord_cell(ismember(dimord_cell,'freq')) = []; end
-
-cfg.mvpa.dimension_names = get_nice_dimnames(dimord_cell); % nice names for console output in MVPA-Light
-if numel(cfg.mvpa.dimension_names)==1
-    cfg.mvpa.dimension_names = [cfg.mvpa.dimension_names {''}]; % fix to get correct feedback
-end
-
-%% define search dimensions
-ft_checkopt(cfg,     'search',     {'char' 'cell' 'empty'});
-
-if ~(isempty(cfg.generalize) || strcmp(cfg.generalize,'no'))
-    % the search dimension must include the generalization dimension
-    cfg.search = ft_getopt(cfg, 'search', cfg.generalize, true);
-elseif any(ismember(dimord_cell,'time'))
-    cfg.search = ft_getopt(cfg, 'search','time', true);
-elseif any(ismember(dimord_cell,'freq'))
-    cfg.search = ft_getopt(cfg, 'search','freq', true);
+if isfield(cfg, 'dim') && isfield(cfg, 'dimord') && contains(cfg.dimord, 'time') && ~isempty(cfg.mvpa.timwin)
+  % create neighourhood matrix for time dimension
+  dimtok = tokenize(cfg.dimord, '_');
+  timdim = find(strcmp(dimtok, 'time'));
+  T = ones(cfg.dim(timdim));
+  T = T - triu(T, floor(cfg.mvpa.timwin./2)) - tril(T, -ceil(cfg.mvpa.timwin./2)) > 0;
+  if isfield(cfg.mvpa, 'time')&&~isempty(cfg.mvpa.time)
+    % this cannot be dealt with by ft_getopt, because the lower level code
+    % will in that case not properly set the default value
+    T = T(cfg.mvpa.time,:);
+  end
 else
-    cfg.search = ft_getopt(cfg, 'search','',     true);
+  T = [];
 end
 
-if isempty(cfg.search) 
-    n_search = 0;
-elseif ischar(cfg.search)
-    n_search = 1;
-    cfg.search = {cfg.search};
-else
-    n_search = numel(cfg.search);
-end
+% flip dimensions such that the number of trials comes first
+dat = dat.';
 
-% if ~all(ismember(cfg.search, {'time' 'freq' 'chan' ''}))
-%     ft_error('cfg.search can only take the values: time freq chan')
-% end
+% MVPA-Light expects the original multi-dimensional array
+dat = reshape(dat, [size(dat,1) cfg.dim]);
 
-%% sanity checks on search dimension
-% check whether search dimension exists in data
-for ii = 1:numel(cfg.search)
-    if isempty(strfind(cfg.dimord, cfg.search{ii}))
-        ft_error('cfg.search is ''%s'' but there is no such dimension since data since dimord is ''%s''', cfg.search{ii}, cfg.dimord)
+%% convert features and generalize from char to dimension numbers
+if ischar(cfg.feature)
+    assert(isfield(cfg, 'dimord'), 'if cfg.feature is a string then cfg.dimord must exist')
+    cfg.feature = find(ismember(cfg.mvpa.dimension_names, cfg.feature));
+    if isempty(cfg.feature)
+        ft_error(sprintf('cfg.feature = ''%s'' is not found in cfg.dimord', cfg.feature))
     end
 end
 
-% check whether generalization dimension is also a search dimension
-if ~isempty(cfg.generalize) && ~strcmp(cfg.generalize,'no') && ~ismember(cfg.generalize, cfg.search)
-    ft_error('cfg.generalize is ''%s'' but there is no such search dimension since cfg.search is ''%s''', cfg.generalize, strjoin(cfg.search))
+if any(strcmp('chan',cfg.mvpa.dimension_names(cfg.feature)))
+    % combine labels
+    label = sprintf('combined(%s)', sprintf('%s',cfg.channel{:}));
 end
 
-dimord = strjoin(dimord_cell,'_');
-
-%% neighbours
-has_neighbours = ~isempty(cfg.mvpa.neighbours);
-
-if has_neighbours
-    % convert neighbours from struct array to matrix
-    if isstruct(cfg.mvpa.neighbours)
-        cfg.mvpa.neighbours = channelconnectivity(struct('neighbours',cfg.mvpa.neighbours, 'channel', {cfg.channel}));
-    elseif iscell(cfg.mvpa.neighbours)
-        for ii=1:numel(cfg.mvpa.neighbours)
-            if isstruct(cfg.mvpa.neighbours{ii})
-                cfg.mvpa.neighbours{ii} = channelconnectivity(struct('neighbours',cfg.mvpa.neighbours{ii}, 'channel', {cfg.channel}));
-            end
-        end
+if ischar(cfg.generalize)
+    assert(isfield(cfg, 'dimord'), 'if cfg.generalize is a string then cfg.dimord must exist')
+    cfg.generalize = find(ismember(cfg.mvpa.dimension_names, cfg.generalize));
+    if isempty(cfg.generalize)
+        ft_error(sprintf('cfg.generalize = ''%s'' is not contained in cfg.dimord', cfg.generalize))
     end
 end
+
+cfg.mvpa.feature_dimension          = cfg.feature;
+cfg.mvpa.generalization_dimension   = cfg.generalize;
 
 %% Call MVPA-Light
-% MVPA-Light has a number of different high-level functions. Here, we need
-% to assign the FieldTrip data to the most suited high-level function by
-% looking at how many data dimensions there are, how many search dimensions
-% are specified, and whether generalization is required.
-label = [];
-dim   = [];
-stat_dimord = '';
-
-if n_search == 0   
-    % --- there are no search dimensions, so perform just a single cross-validation ---
-    if n_extra_dim <= 1
-        [perf, result] = mv_crossvalidate(cfg.mvpa, dat, clabel);
-    else
-        % we have to use mv_classify because there's multiple feature
-        % dimensions that need to be flattened
-        cfg.mvpa.sample_dimension  = 1;
-        cfg.mvpa.feature_dimension = 2:ndims(dat); % all data dimensions are used as features
-        [perf, result] = mv_classify(cfg.mvpa, dat, clabel);
-    end
-        
-elseif strcmp(cfg.search{1}, 'chan') && (strcmp(dimord,'rpt_chan') || strcmp(dimord,'rpt_chan_time') || strcmp(dimord,'rpt_chan_time'))
-        % --- searchlight across channels ---
-        
-        [perf, result] = mv_searchlight(cfg.mvpa, dat, clabel);
-        
-        % this preserves channels, so no adjustment is done if present
-        if isfield(cfg, 'channel'), label = cfg.channel; end
-        if isfield(cfg, 'dim'),     dim = cfg.dim; end
-        stat_dimord = 'chan';
-
-elseif n_search==1 && ~has_neighbours && (strcmp(dimord,'rpt_chan_freq') || strcmp(dimord,'rpt_chan_time'))
-    % --- 1 search dimension ---
-    % Perform classification (or generalization) across time (or freq)
-    
-    if ~strcmp(cfg.generalize, 'no')
-        % --- time x time or freq x freq generalization ---
-        [perf, result] = mv_classify_timextime(cfg.mvpa, dat, clabel);
-        
-        % this does not preserve any spatial dimension, so label should be
-        % adjusted
-        label = squeezelabel(label, cfg);
-        if isfield(cfg, 'dim')
-            dim = cfg.dim; 
-            dim(1) = dim(2);
-        end
-        stat_dimord = [cfg.generalize '_' cfg.generalize];
-        
-    else
-        % --- classification across time (or frequency) ---
-        % we can use mv_classify_across_time for both time or frequency data
-        [perf, result] = mv_classify_across_time(cfg.mvpa, dat, clabel);
-        
-        % this does not preserve any spatial dimension, so label should be
-        % adjusted
-        label = squeezelabel(label, cfg);
-        dim   = squeezedim(dim, cfg);
-        stat_dimord = cfg.search{1};
-    end
-    
+if isempty(cfg.mvpa.model)
+    % -------- Classification --------
+    [perf, result] = mv_classify(cfg.mvpa, dat, design);
 else
-    % --- mv_classify ---
-    % For all other cases, we use the general-purpose classification
-    % function mv_classify. Set up the dimensions correctly
-    % according to dimord.
-    cfg.mvpa.sample_dimension = find(ismember(dimord_cell, 'rpt'));
-    features = setdiff(dimord_cell, ['rpt' cfg.search]); 
-    cfg.mvpa.feature_dimension = find(ismember(dimord_cell, features));
-    cfg.mvpa.generalization_dimension = find(ismember(dimord_cell, cfg.generalize));    
+    % -------- Regression --------
+    [perf, result] = mv_regress(cfg.mvpa, dat, design);
+end
 
-    [perf, result] = mv_classify(cfg.mvpa, dat, clabel);
-    
-    %%% todo: NEED TO TAKE GENERALIZATION INTO ACCOUNT
-    %%% todo: take metrics with multiple outputs into account
-    stat_dimord = strjoin(cfg.search,'_');
-    
+% build dimord from result struct
+dimord = strrep(result.perf_dimension_names, ' ', '');
+
+% if istrue(cfg.searchlight) && isempty(T)
+%   % --- searchlight analysis across the spatial dimension ---
+% 
+%   if ~isequal(cfg.connectivity, false(size(cfg.connectivity))) && ~isempty(cfg.connectivity)
+%     cfg.mvpa.neighbours = cfg.connectivity;
+%   end
+%   [perf, result] = mv_searchlight(cfg.mvpa, dat, y);
+%   
+%   % create boolean vector for the update of dimension descriptors at higher
+%   % level structure
+%   adj_dim = cfg.dim ~= size(perf); % assumes first element to be spatial dimension
+%   
+% elseif istrue(cfg.searchlight) && ~isempty(T) && data_is_3D
+%   % --- searchlight across time, or searchlight across space and time ---
+%   
+%   if ~isequal(cfg.connectivity, false(size(cfg.connectivity))) && ~isempty(cfg.connectivity)
+%     cfg.mvpa.neighbours        = {cfg.connectivity T};
+%     cfg.mvpa.sample_dimension  = 1;
+%     cfg.mvpa.feature_dimension = [];
+%     if isequal(cfg.mvpa.classifier, 'naive_bayes')
+%       cfg.mvpa.append = true;
+%     end
+%   else
+%     cfg.mvpa.neighbours        = T;
+%     cfg.mvpa.sample_dimension  = 1;
+%     cfg.mvpa.feature_dimension = 2; 
+%   end
+%   
+%   [perf, result] = mv_classify(cfg.mvpa, dat, y);
+%   
+%   if iscell(cfg.mvpa.neighbours)
+%     adj_dim = cfg.dim ~= size(perf);
+%   else 
+%     adj_dim = [true false(1,numel(cfg.dim)-1)];
+%   end
+%   
+%   if numel(perf)~=prod(cfg.dim) && all(~adj_dim)
+%     dimorig = cfg.dim;
+%     cfg.dim = [size(cfg.mvpa.hyperparameter.neighbours{1},1), ...
+%                size(cfg.mvpa.hyperparameter.neighbours{2},1)];
+%     perf    = reshape(perf, cfg.dim);
+%     result.perf_std = reshape(result.perf_std, cfg.dim);
+%     
+%     if dimorig(1)~=cfg.dim(1)
+%       label = cell(cfg.dim(1),1);
+%       for k = 1:cfg.dim(1)
+%         label{k} = sprintf('feature%04d',k);
+%       end
+%     end
+%     if dimorig(2)~=cfg.dim(2)&&cfg.dim(2)&&isfield(cfg,'latency')
+%       timeorig = linspace(cfg.latency(1),cfg.latency(2),size(T,2));
+%       time = zeros(1,size(T,1));
+%       for k = 1:numel(time)
+%         time(k) = mean(timeorig(T(k,:)));
+%       end
+%     end
+%   end
+%   
+% elseif istrue(cfg.timextime)
+%   % --- time x time generalisation ---
+%   [perf, result] = mv_classify_timextime(cfg.mvpa, dat, y);
+%   
+%   % this does note preserve any spatial dimension, so label should be
+%   % adjusted
+%   label = sprintf('combined(%s)', sprintf('%s',cfg.channel{:}));
+%   dim   = squeezedim(cfg.dim);
+%   dimord = 'time_time';
+%   adj_dim = [false false];
+%   
+% elseif data_is_3D && ~istrue(cfg.searchlight)
+%   % --- classification across the non-spatial dimension ---
+%   [perf, result] = mv_classify_across_time(cfg.mvpa, dat, y);
+%   
+%   adj_dim = [true false(1,numel(cfg.dim)-1)];
+%   
+% else
+%   % this is the generic fallback, which seems very similar to the second
+%   % instance above...
+%   if ~isempty(T) && ~isequal(cfg.connectivity, false(size(cfg.connectivity))) && ~isempty(cfg.connectivity)
+%     cfg.mvpa.hyperparameter.neighbours = {cfg.connectivity T};
+%     adj_dim = false(size(cfg.dim));
+%   elseif ~isempty(T)
+%     cfg.mvpa.hyperparameter.neighbours = {eye(cfg.dim(1)) T};
+%     adj_dim = false(size(cfg.dim));
+%   else
+%     adj_dim = true(size(cfg.dim));
+%   end
+%   [perf, result] = mv_crossvalidate(cfg.mvpa, dat, y);
+%   
+%   if numel(perf)~=prod(cfg.dim) && all(~adj_dim)
+%     dimorig = cfg.dim;
+%     cfg.dim = [size(cfg.mvpa.hyperparameter.neighbours{1},1), ...
+%                size(cfg.mvpa.hyperparameter.neighbours{2},1)];
+%     perf    = reshape(perf, cfg.dim);
+%     result.perf_std = reshape(result.perf_std, cfg.dim);
+%     
+%     if dimorig(1)~=cfg.dim(1)
+%       label = cell(cfg.dim(1),1);
+%       for k = 1:cfg.dim(1)
+%         label{k} = sprintf('feature%04d',k);
+%       end
+%     end
+%     if dimorig(2)~=cfg.dim(2)&&cfg.dim(2)&&isfield(cfg,'latency')
+%       timeorig = linspace(cfg.latency(1),cfg.latency(2),size(T,2));
+%       time = zeros(1,size(T,1));
+%       for k = 1:numel(time)
+%         time(k) = mean(timeorig(T(k,:)));
+%       end
+%     end
+%   end
+% end
+
+
+if ~iscell(cfg.mvpa.metric), cfg.mvpa.metric = {cfg.mvpa.metric}; end
+if ~iscell(perf),            perf            = {perf};            end
+
+%% check which data dim descriptors need to be updated 
+shiftflag = zeros(1,numel(perf));
+if ~exist('label', 'var') && (isfield(cfg, 'channel') && adj_dim(1))
+  label = sprintf('combined(%s)', sprintf('%s',cfg.channel{:}));
+  % for consistency higher up, the first dimension of perf should be
+  % singleton
+  for k = 1:numel(perf)
+    siz = size(perf{k});
+    if siz(end) == 1 && siz(1) ~=1
+      shiftflag(k) = -1;
+    end
+  end
+end
+
+if ~exist('dim', 'var') && isfield(cfg, 'dim') 
+  dim = size(perf); % FIXME check whether this is always correct, I doubt it
+end
+
+if isfield(cfg, 'frequency') && ~adj_dim(2)
+  if isfield(cfg, 'latency') && adj_dim(3)
+    time = mean(cfg.latency);
+  end
+elseif isfield(cfg, 'frequency') && adj_dim(2)
+  frequency = mean(cfg.frequency);
+  if isfield(cfg, 'latency') && adj_dim(3)
+    time = mean(cfg.latency);
+  end
+elseif ~isfield(cfg, 'frequency')
+  if isfield(cfg, 'latency') && adj_dim(2)
+    time = mean(cfg.latency);
+  end
 end
 
 %% setup stat struct
 stat = [];
-if ~iscell(cfg.mvpa.metric), cfg.mvpa.metric = {cfg.mvpa.metric}; end
-if ~iscell(perf),            perf            = {perf};            end
 for mm=1:numel(perf)
 
   % Performance metric
-  stat.(cfg.mvpa.metric{mm}) = perf{mm};
+  stat.(cfg.mvpa.metric{mm}) = shiftdim(perf{mm}, shiftflag);
 
   % Std of performance
   if iscell(result.perf_std)
-    stat.([cfg.mvpa.metric{mm} '_std']) = result.perf_std{mm};
+    stat.([cfg.mvpa.metric{mm} '_std']) = shiftdim(result.perf_std{mm}, shiftflag);
   else
-    stat.([cfg.mvpa.metric{mm} '_std']) = result.perf_std;
+    stat.([cfg.mvpa.metric{mm} '_std']) = shiftdim(result.perf_std, shiftflag);
   end
 end
-
-% expand stat_dimord depending on metric: 
-% some metrics give multiple (eg 'dval') or multi-dimensional ('confusion')
-% outputs, usually one per class. stat_dimord hence expanded with 'class'
-% as dimension ?
-% -- todo --
 
 % return the MVPA-Light result struct as well
 stat.mvpa = result;
 
-if ~isempty(label)
-  stat.label = label;
-end
+if exist('label', 'var'),     stat.label  = label;  end
+if exist('dim', 'var'),       stat.dim    = dim;    end
+if exist('dimord', 'var'),    stat.dimord = dimord; end
+if exist('frequency', 'var'), stat.freq   = frequency; end
+if exist('time', 'var'),      stat.time   = time; end
 
-if ~isempty(dim)
-  stat.dim = dim;
-end
 
-if ~isempty(stat_dimord)
-  stat.dimord = stat_dimord;
-end
 
-function label = squeezelabel(label, cfg)
+function dim = squeezedim(dim)
 
-if isfield(cfg, 'channel')
-  label = sprintf('combined(%s)', sprintf('%s',cfg.channel{:}));
-end
-
-function dim = squeezedim(dim, cfg)
-
-if isfield(cfg, 'dim')
-  dim = cfg.dim;
-  dim(1) = 1;
-end
-
-function dim_names_out = get_nice_dimnames(dim_names_in)
-% Creates nicer dimnames 
-
-dim_names_out = cell(numel(dim_names_in),1);
-for ix=1:numel(dim_names_in)
-    switch(dim_names_in{ix})
-        case {'rpt','trial'}, dim_names_out{ix} = 'trials';
-        case 'chan', dim_names_out{ix} = 'channels';
-        case 'time', dim_names_out{ix} = 'time points';
-        case 'freq', dim_names_out{ix} = 'frequencies';
-        otherwise, dim_names_out{ix} = dim_names_in{ix};
-    end
-end
+dim(1) = 1;
 
