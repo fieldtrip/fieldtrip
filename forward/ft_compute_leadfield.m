@@ -278,6 +278,11 @@ elseif ismeg
         dsm            = ft_sysmat_openmeeg(dippos, headmodel, sens, nonadaptive);
       end
       lf               = ds2sens + h2sens*headmodel.mat*dsm;
+      
+      if isfield(sens, 'tra')
+        % compute the leadfield for each gradiometer (linear combination of coils)
+        lf = sens.tra * lf;
+      end
 
     case {'infinite_magneticdipole', 'infinite'}
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
