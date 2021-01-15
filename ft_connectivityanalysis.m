@@ -1051,7 +1051,8 @@ switch cfg.method
     % phase linearity measurement.
     optarg = {'bandwidth', cfg.bandwidth, 'fsample', cfg.fsample};
     [datout] = ft_connectivity_plm(data.(inparam), optarg{:});
-  
+    varout = [];
+    
   otherwise
     ft_error('unknown method %s', cfg.method);
     
