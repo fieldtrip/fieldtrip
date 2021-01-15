@@ -936,12 +936,27 @@ switch typ
       ft_error('cannot determine the type of the data, please specify cfg.datatype');
     end
     
+    % construct the low-level options as key-value pairs, these are passed to FT_READ_HEADER, FT_READ_DATA and FT_READ_EVENT
+    headeropt = {};
+    headeropt = ft_setopt(headeropt, 'headerformat',   ft_getopt(cfg, 'headerformat'));        % is passed to low-level function, empty implies autodetection
+    headeropt = ft_setopt(headeropt, 'chantype',       ft_getopt(cfg, 'chantype', {}));        % 2017.10.10 AB required for NeuroOmega files
+    headeropt = ft_setopt(headeropt, 'checkmaxfilter', false);
+    headeropt = ft_setopt(headeropt, 'readbids',       false);
+    
+    dataopt   = {};
+    dataopt   = ft_setopt(dataopt, 'checkboundary',    false);
+    dataopt   = ft_setopt(dataopt, 'dataformat',       ft_getopt(cfg, 'dataformat'));          % is passed to low-level function, empty implies autodetection
+    
+    eventopt  = {};
+    eventopt  = ft_setopt(eventopt, 'readbids',        false);
+    eventopt  = ft_setopt(eventopt, 'eventformat',     ft_getopt(cfg, 'eventformat'));         % is passed to low-level function, empty implies autodetection
+    
     if ~isempty(cfg.dataset)
-      hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false, 'readbids', false);
+      hdr = ft_read_header(cfg.headerfile, headeropt{:});
       if strcmp(cfg.method, 'convert')
         % the data should be converted and written to disk
-        dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
-        trigger = ft_read_event(cfg.datafile, 'header', hdr, 'readbids', false);
+        dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials, dataopt{:});
+        trigger = ft_read_event(cfg.datafile, 'header', hdr, eventopt{:});
       end
       % FIXME try to get the electrode definition, either from the data or from the configuration
     end
@@ -1542,10 +1557,10 @@ if need_events_tsv
     begsample                   = table2array(events_tsv(:,{'begsample'}));
     endsample                   = table2array(events_tsv(:,{'endsample'}));
     onset                       = (begsample-1)./hdr.Fs;
-    duration                    = (endsample-begsample+1)./hdr.Fs; 
+    duration                    = (endsample-begsample+1)./hdr.Fs;
     table_onset_duration        = table(onset, duration);
     events_tsv                  = [table_onset_duration events_tsv];
-
+    
   elseif isstruct(cfg.events) && ~isempty(cfg.events) && numel(fieldnames(cfg.events))>0
     % it is the output from FT_READ_EVENT
     if exist('hdr', 'var')
@@ -1557,7 +1572,7 @@ if need_events_tsv
     % it is a "trl" matrix formatted as numeric array, convert it to an events table
     begsample = cfg.events(:,1);
     endsample = cfg.events(:,2);
-    offset    = cfg.events(:,3); % this is not used for the events.tsv    
+    offset    = cfg.events(:,3); % this is not used for the events.tsv
     if size(cfg.events, 2)>3
       ft_warning('additional columns in the trl matrix are ignored');
     end
@@ -1583,7 +1598,7 @@ if need_events_tsv
     begsample               = [];
     endsample               = [];
     offset                  = [];
-
+    
     events_tsv = table(onset, duration, begsample, endsample, offset);
   end
   
