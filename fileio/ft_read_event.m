@@ -514,9 +514,8 @@ switch eventformat
               event(end  ).value    = tok{2};
               event(end  ).sample   = str2num(tok{3});
               event(end  ).duration = str2num(tok{4});
-              if size(tok, 2) >= 6
-                event(end).timestamp = datetime(tok{6}, 'InputFormat', ...
-                'yyyyMMddHHmmssSSSSSS');
+              if size(tok, 2) >= 6 && ft_platform_supports('datetime')
+                event(end).timestamp = datetime(tok{6}, 'InputFormat', 'yyyyMMddHHmmssSSSSSS');
               end
             end
           end
