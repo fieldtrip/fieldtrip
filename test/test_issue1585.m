@@ -6,12 +6,15 @@ function test_issue1585
 
 %%
 
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1585'))
+
 % cfg = [];
-% cfg.dataset   = '../eeglab_data.mat';
-% cfg.datatype  = 'eeg';
+% cfg.dataset      = 'eeglab_data.mat';
+% cfg.datatype     = 'eeg';
+
 % cfg.headerformat = 'eeglab_set';
-% cfg.dataformat = 'eeglab_set';
-% cfg.eventformat = 'eeglab_set';
+% cfg.dataformat   = 'eeglab_set';
+% cfg.eventformat  = 'eeglab_set';
 %
 % cfg.method    = 'convert';
 % cfg.bidsroot  = './bids';
