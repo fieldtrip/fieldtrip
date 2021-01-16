@@ -8,19 +8,19 @@ function [event] = ft_read_event(filename, varargin)
 %   [event] = ft_read_event(filename, ...)
 %
 % Additional options should be specified in key-value pairs and can be
-%   'dataformat'     string
-%   'headerformat'   string
-%   'eventformat'    string
-%   'header'         header structure, see FT_READ_HEADER
-%   'detectflank'    string, can be 'up', 'down', 'both', 'updiff', 'downdiff', 'bit' (default is system specific)
-%   'trigshift'      integer, number of samples to shift from flank to detect trigger value (default = 0)
-%   'chanindx'       list with channel numbers for trigger detection, specify -1 in case you don't want to detect triggers (default is automatic)
-%   'threshold'      threshold for analog trigger channels (default is system specific)
-%   'tolerance'      tolerance in samples when merging Neuromag analogue trigger channels (default = 1, meaning that a shift of one sample in both directions is compensated for)
-%   'blocking'       wait for the selected number of events (default = 'no')
-%   'timeout'        amount of time in seconds to wait when blocking (default = 5)
-%   'password'       password structure for encrypted data set (only for mayo_mef30 and mayo_mef21)
-%   'readbids'       boolean, whether to read information from the BIDS sidecar files (default = true)
+%   'dataformat'     = string
+%   'headerformat'   = string
+%   'eventformat'    = string
+%   'header'         = header structure, see FT_READ_HEADER
+%   'detectflank'    = string, can be 'up', 'down', 'both', 'updiff', 'downdiff', 'bit' (default is system specific)
+%   'trigshift'      = integer, number of samples to shift from flank to detect trigger value (default = 0)
+%   'chanindx'       = list with channel numbers for trigger detection, specify -1 in case you don't want to detect triggers (default is automatic)
+%   'threshold'      = threshold for analog trigger channels (default is system specific)
+%   'tolerance'      = tolerance in samples when merging Neuromag analogue trigger channels (default = 1, meaning that a shift of one sample in both directions is compensated for)
+%   'blocking'       = wait for the selected number of events (default = 'no')
+%   'timeout'        = amount of time in seconds to wait when blocking (default = 5)
+%   'password'       = password structure for encrypted data set (only for mayo_mef30 and mayo_mef21)
+%   'readbids'       = 'yes', no', or 'ifmakessense', whether to read information from the BIDS sidecar files (default = 'ifmakessense')
 %
 % This function returns an event structure with the following fields
 %   event.type      = string
@@ -71,7 +71,7 @@ function [event] = ft_read_event(filename, varargin)
 %
 % See also FT_READ_HEADER, FT_READ_DATA, FT_WRITE_EVENT, FT_FILTER_EVENT
 
-% Copyright (C) 2004-2020 Robert Oostenveld
+% Copyright (C) 2004-2021 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -165,12 +165,22 @@ chanindx         = ft_getopt(varargin, 'chanindx');                  % this allo
 trigindx         = ft_getopt(varargin, 'trigindx');                  % deprecated, use chanindx instead
 triglabel        = ft_getopt(varargin, 'triglabel');                 % deprecated, use chanindx instead
 password         = ft_getopt(varargin, 'password', struct([]));
-readbids         = ft_getopt(varargin, 'readbids', true);
+readbids         = ft_getopt(varargin, 'readbids', 'ifmakessense');
 
 % for backward compatibility, added by Robert in Sept 2019
 if ~isempty(trigindx)
   ft_warning('please use ''chanindx'' instead of ''trigindx''')
   chanindx = trigindx;
+end
+
+% for backward compatibility with https://github.com/fieldtrip/fieldtrip/issues/1585
+if islogical(readbids)
+  % it should be either yes/no/ifmakessense
+  if readbids
+    readbids = 'yes';
+  else
+    readbids = 'no';
+  end
 end
 
 % for backward compatibility, added by Robert in Sept 2019
@@ -234,7 +244,7 @@ if strcmp(eventformat, 'brainvision_vhdr')
   end
 end
 
-if readbids && ~isempty(filename)
+if (strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')) && ~isempty(filename)
   % deal with data that is organized according to BIDS
   % data in a BIDS tsv file (like physio and stim) will be explicitly dealt with in BIDS_TSV
   [p, f, x] = fileparts(filename);
@@ -514,6 +524,9 @@ switch eventformat
               event(end  ).value    = tok{2};
               event(end  ).sample   = str2num(tok{3});
               event(end  ).duration = str2num(tok{4});
+              if size(tok, 2) >= 6 && ft_platform_supports('datetime')
+                event(end).timestamp = datetime(tok{6}, 'InputFormat', 'yyyyMMddHHmmssSSSSSS');
+              end
             end
           end
         end
